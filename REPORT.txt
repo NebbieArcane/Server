@@ -1,0 +1,315 @@
+2004-11-16  Flyp
+	* mob_spec_array.c, otherproc.h, specass2.c, spec_procs.c
+	Procedura SporeCloud per area Fenice
+
+2004-11-06  Acidus
+	* db.c, reception.c, act.wizard.c 
+	Introduzione comando show rare per lista obj rari e pg possessori
+
+2003-10-26  Acidus
+	* otherproc.h, specass2.h, spec_procs3.c
+	Introdotte procedure msg_obj e thion_loader per zona Xarah
+
+2003-10-08  Acidus
+	* otherproc.h, specass2.h, spec_procs3.c
+	Introdotta procedura trap_obj per trappole cicliche parametriche
+
+2003-10-04  Acidus
+	* spells2.c, rhyodin.c, rhyodin.h
+	Sistemate varie spell che non funzionavano su pozioni, food e armi (staff).
+        Introdotta procedura Moribondo.
+
+2003-10-02  Thunder
+	* mobact.c, utility.c, protos.h
+	Modificata la AssistFriend. Introdotta la proc IsNullChar.
+
+2003-10-02  Acidus/Thunder
+	* db.c
+	Modificato controllo sulla load_room con -2, e quindi risolti i bug
+	di crash dei file .aux e del poppaggio anomalo di alcune razze ai reboot
+
+2003-09-21  Acidus
+	* spells1.c, spec_procs.c, otherproc.h, protos.h
+	Modificato l'earthquake in modo che funzioni anche su armi.
+	Nuova procedura enter_obj per oggetti teleportanti e nuova procedura zone_obj per oggetti
+        limitati alle stanze specificate
+
+2003-09-21  Acidus
+	* specass2.c, spec_procs.c, protos.h
+	Introdotte procedure Tsuchigumo, Rakda
+
+2003-07-19  Acidus
+	* spec_procs2.c, rhyodin.c
+	modificata la RepairGuy per bug sulle armi create con Forge,
+	corretto il clairvoyance del ragno_intermittente
+
+2003-06-29  Acidus
+	* fight.c, protos.c,otherproc.h,mob_spec_array.c,act.off.c,spells.c,
+	* magic3.c, spec_procs2.c,skills.c
+	introdotta nuova skill nanesca Better Equilibrium e relativa
+	procedura per mob equilibrium_teacher
+
+2003-06-23  Acidus
+	* act.off.c
+	introdotto un tiro salvezza per il quivering palm
+
+2003-06-09  Acidus
+	* spec_procs2.c, mob_spec_array.c, otherproc.h, protos.h
+	create procedure miner_teacher, forge_teacher e
+	determine_teacher per le relative skill
+
+	* constants.c, interpreter.c
+	aggiornati i limiti di livello per la razza dwarf e half giant.
+	Modificate le classi di rollaggio per i nani
+
+	* spells.h, spec_procs2.c, act.info.c
+	introdotta la skill determine established per razza dwarf
+
+	* db.c
+	messo un test sulla load_room per gestire reception con vnum alti
+	come quelle dei castelli
+
+2003-06-02  Acidus/Thunder
+	* skills.c
+	create procedure per skill FORGE e MINER
+
+	* spec_procs2.c
+	i principi non possono andare sotto i 400M xp praccando stat
+
+	* magic.c, magic2.c
+	corretto bug su dispel evil e dispel good, ora la spell si fa
+	solo da allineamenti diversi
+
+	* magic.c
+	corretto bug su energy drain, ora ad ogni drain di perde il 10% 
+	degli xp (come una morte), ma non si perde più il livello e quindi gli hp.
+
+2003-03-25 Acidus
+	* auction.h
+	ridotto tempo dell'asta al 60%
+
+2002-03-24  Thunder  <Thunder@SALVO>
+
+	* act.move.c 1.4:
+	Sistemato il controllo del pkiller nelle stanze peacefull.
+
+2002-03-23  Thunder  <Thunder@SALVO>
+
+	* act.off.c 1.5: Adesso mette il nome corretto del bodyguard.
+
+	* fight.c 1.8:
+	Sistemato il prob che in dual_wield se si rompe un'arma sparice l'altra
+
+	* spec_procs2.c 1.7, spec_procs3.c 1.4:
+	Messo controllo per non far creare troppi mob ai magic_user,
+	servira' se si abilitano i mob poly a castare in automatico.
+
+	* act.move.c 1.3, act.off.c 1.4, fight.c 1.7, mobact.c 1.4, skills.c 1.10:
+	Messi dei controlli per gestire se un mob con track cade in DT,
+	causava crash.
+
+	* doreg.c 1.4, reception.c 1.3, signals.c 1.2, snew.c 1.3, snew.h 1.2, spec_procs2.c 1.6:
+	Sistemati alcuni valori per non far uscire i warning durante la
+	compilazione e riattivato il log dei crash.
+
+2002-03-17  Thunder  <Thunder@SALVO>
+
+	* act.comm.c 1.2, auction.c 1.3, auction.h 1.3, db.c 1.4:
+	Riscritta is_present per gestire quando il venditore e compratore
+	non ci sono piu' e si ricollegano.
+
+	* makefile 1.3: Allineati i files che usano auction.h
+
+2002-03-14  Thunder  <Thunder@SALVO>
+
+	* db.c 1.3:
+	Inserito controllo se si ha spell_mana castato, stima hp adeguato.
+
+	* fight.c 1.6, magic.c 1.3, magic3.c 1.4:
+	Non si puo' castare poison e heatstaff in stanza paecefull.
+
+2002-03-11  Thunder  <Thunder@SALVO>
+
+	* act.info.c 1.6, skills.c 1.9:
+	Corretto il track in poly che fleeava da solo.
+
+	* spec_procs.c 1.5, spec_procs2.c 1.5:
+	Ordinate le prac dai vari guildmaster
+
+	* act.other.c 1.5, protos.h 1.3, utility.c 1.2:
+	Implementata CheckPrac e sistemato il do_practice
+
+	* spell_parser.c 1.5: Modificate 2 descrizioni nelle spell.
+
+2002-03-10  Thunder  <Thunder@SALVO>
+
+	* spell_list.h 1.8: Sistemata la visibilita' per gli immortali.
+
+2002-03-09  Thunder  <Thunder@SALVO>
+
+	* act.other.c 1.4, spec_procs2.c 1.4: Ordino le prac Psi
+
+	* spec_procs3.c 1.3, act.info.c 1.5: Controllo spell_info.
+
+	* spell_list.h 1.7: Corretto il livello di visibilita' dei principi.
+
+2002-03-06  Thunder  <Thunder@SALVO>
+
+	* doreg.c 1.3: Tolgo l'uguale per allinearsi alla wizlist
+
+	* db.c 1.2: La dummy e' un array di 19 char.
+
+	* spell_parser.c 1.4, regen.c 1.3:
+	Controllo che dopo hit_gain sia ancora vivo.
+
+	* spell_parser.c 1.3: Chi e' > DIO puo' castare a tutti.
+
+2002-03-05  Thunder  <Thunder@SALVO>
+
+	* mobact.c 1.3: I mob montati non devono ritornare nella loro stanza.
+
+2002-03-04  Thunder  <Thunder@SALVO>
+
+	* fight.c 1.5: Non si mette il pkill se si muore con veleno o simili.
+
+	* act.wizard.c 1.5:
+	Controllo che ci sia ancora il puntatore valido dopo il controllo
+	degli hp nella do_stat, altrimenti se muore prima il mud crasha.
+
+2002-03-03  Thunder  <Thunder@SALVO>
+
+	* fight.c 1.4: I globe major e minor invulnerab non devono riconoscere
+	quello che non e' nella spell_list.h
+
+2002-02-27  Thunder  <Thunder@SALVO>
+
+	* handler.c 1.2:
+	Inserito il controllo se borsa in EQPESANTE per il bug del peso.
+
+	* act.info.c 1.4: Mostro il peso degli oggetti per fare i test.
+
+2002-02-24  Thunder  <Thunder@SALVO>
+
+	* act.wizard.c 1.4:
+	Migliorata la showsk adesso scrive anche le classi di SKILL_KNOW_...
+
+	* modify.c 1.3:
+	Sistemato il setsk e aggiunta la possibilita' di settare flags
+
+	* act.other.c 1.3:
+	Un po' di controlli sul sorcerer, ridotto il tempo di timeout a 1/3 e
+	di memo a max 2 ore virtuali.
+
+	* spec_procs.c 1.4:
+	Sistemato il bug del sorcerer che memorizzava piu' del dovuto,
+	occhio ai pc vecchi
+
+2002-02-23  Thunder  <Thunder@SALVO>
+
+	* skills.c 1.8: Doorway dei principi non si fa' con poco mana
+
+	* magic3.c 1.3: Nuovo mob per il changestaff 49 ex 6110
+
+2002-02-22  Thunder  <Thunder@SALVO>
+
+	* spec_procs2.c 1.3: Adesso gli immortali possono praccare
+
+2002-02-21  Thunder  <Thunder@SALVO>
+
+	* skills.c 1.7: Aggiunta la key SALVO al doorbash
+
+	* skills.c 1.6: Il doorbash lo fa' chi ne ha la conoscenza.
+
+	* magic2.c 1.3: Il nuovo monsum two e' 9215 ex 9191
+
+	* act.obj2.c 1.2: Non si tolgono oggetti cursati con rem all
+
+2002-02-21  root  <root@SALVO>
+
+	* spec_procs.c 1.3: Controllo che il primo anello e' in un contenitore
+
+2002-02-20  root  <root@SALVO>
+
+	* skills.c 1.5: Messo a log_check il ritorno del find_path oltre il max
+
+	* skills.c 1.4: Non si disarmano i non pk
+
+2002-02-18  root  <root@SALVO>
+
+	* fight.c 1.3: Il flag pkiller va' all'originale
+	del poly
+
+	* act.wizard.c 1.3: Il flag pkiller va' all'originale del poly
+
+	* act.wizard.c 1.2: Rimetto il flag pkiller al ritorno del poly
+	se esiste.
+
+	* spec_procs2.c 1.2: Non serve praccare stat oltre il max
+
+	* act.off.c 1.3: Non si entra in berserk con poco mana
+
+2002-02-17  root  <root@SALVO>
+
+	* act.info.c 1.3: Il who deve riconoscere anche un prince in poly
+
+2002-02-16  root  <root@SALVO>
+
+	* skills.c 1.3: Cosi' si disarmano solo le trappole
+
+	* magic3.c 1.2: Non e' possibile creare un'arma e avere le mani occupate
+
+	* spell_list.h 1.6: Ripreso dalla versione 1.2
+
+	* spell_list.h 1.5: Trovato il metodo migliore per non fa praccare,
+	ritorno alla versione 1.1
+
+	* spec_procs.c 1.2:
+	Risolve il prob delle prac sconosciute dal mageguildmaster
+
+	* spell_list.h 1.4:
+	Trovare un altro metodo per non far praccare quello che non si potrebbe
+
+	* spell_list.h 1.3: I maghi non possono imparare finger
+
+	* fight.c 1.2:
+	Corretto il bug delle prac negative se si muore perdendo il livello
+
+	* magic.c 1.2, makefile 1.2: Non si puo' castare armor se si ha barkskin,
+	rinomina myst in mystsalvo.exe
+
+2002-02-14  root  <root@SALVO>
+
+	* reception.c 1.2: Tolto il controllo di Robin
+
+2002-02-13  root  <root@SALVO>
+
+	* create.mob.c 1.2, interpreter.h 1.2, lucertole.c 1.2, lucertole.h 1.2, magicutils.c 1.2, mail.c 1.2, mail.h 1.2, mind_use1.c 1.2, mindskills1.c 1.3, multiclass.c 1.2, spec_procs3.c 1.2, spell_list.h 1.2, checkfile.c 1.2, regen.c 1.2, release.h 1.2, rhyodin.c 1.2, rhyodin.h 1.2, script.h 1.2, security.c 1.2, shop.c 1.2, snew.c 1.2, sound.c 1.2, specass2.c 1.2, spells.h 1.2, spells1.c 1.2, spells2.c 1.3, status.h 1.2, trap.h 1.2, utility.h 1.2, version.c 1.2, version.h 1.2, vt100c.h 1.2, weather.c 1.2, wizlist.h 1.2, doreg.h 1.2, doreg2.c 1.2, events.c 1.2, events.h 1.2, fight.h 1.2, gilde.c 1.2, gilde.h 1.2, handler.h 1.2, hash.c 1.2, hash.h 1.2, head.c 1.2, heap.c 1.2, heap.h 1.2, limits.c 1.2, limits.h 1.2, magic2.c 1.2, mkrel.c 1.2, mkver.c 1.2, mobact.c 1.2, modify.c 1.2, parser.h 1.2, poly.h 1.2, protos.h 1.2, queue.c 1.2, queue.h 1.2, race.h 1.2, ansi.h 1.2, area.h 1.2, auction.c 1.2, auction.h 1.2, bitarray.h 1.2, breath.h 1.2, bsd.c 1.2, build.h 1.2, carceri.c 1.2, carceri.h 1.2, charlist.c 1.2, charlist.h 1.2, cmdid.h 1.2, comm.h 1.2, db.h 1.2, dbmfunc.c 1.2, debug.h 1.2, doreg.c 1.2:
+	Inseriti gli identificativi dove mancavano
+
+	* act.move.c 1.2, act.off.c 1.2, act.other.c 1.2, mindskills1.c 1.2, spell_parser.c 1.2, act.info.c 1.2, skills.c 1.2, spells2.c 1.2, utils.h 1.2:
+	Tolgo il lag solo da utils.h e non da tutti i wait_state
+
+	* compilazione 1.1.1.1, mail.c 1.1.1.1, mail.h 1.1.1.1, specass2.h 1.1.1.1, spell_list.h 1.1.1.1, spells.h 1.1.1.1, status.h 1.1.1.1, structs.h 1.1.1.1, trap.h 1.1.1.1, utility.h 1.1.1.1, utils.h 1.1.1.1, version.h 1.1.1.1, vt100c.h 1.1.1.1, wizlist.h 1.1.1.1:
+	Nebbie Salvo da Gaia 2001 11 23
+
+	* compilazione 1.1, mail.c 1.1, mail.h 1.1, specass2.h 1.1, spell_list.h 1.1, spells.h 1.1, status.h 1.1, structs.h 1.1, trap.h 1.1, utility.h 1.1, utils.h 1.1, version.h 1.1, vt100c.h 1.1, wizlist.h 1.1:
+	New file.
+
+	* auction.h 1.1.1.1, bitarray.h 1.1.1.1, breath.h 1.1.1.1, build.h 1.1.1.1, carceri.h 1.1.1.1, charlist.h 1.1.1.1, cmdid.h 1.1.1.1, comm.h 1.1.1.1, db.h 1.1.1.1, debug.h 1.1.1.1, events.h 1.1.1.1, fight.h 1.1.1.1, gilde.h 1.1.1.1, handler.h 1.1.1.1, hash.h 1.1.1.1, heap.h 1.1.1.1, interpreter.h 1.1.1.1, limits.h 1.1.1.1, lucertole.h 1.1.1.1, mem_test.h 1.1.1.1, otherproc.h 1.1.1.1, parser.h 1.1.1.1, poly.h 1.1.1.1, protos.h 1.1.1.1, queue.h 1.1.1.1, race.h 1.1.1.1, release.h 1.1.1.1, rhyodin.h 1.1.1.1, roomproc.h 1.1.1.1, script.h 1.1.1.1, signals.h 1.1.1.1, snew.h 1.1.1.1:
+	Nebbie Salvo da Gaia 2001 11 23
+
+	* auction.h 1.1, bitarray.h 1.1, breath.h 1.1, build.h 1.1, carceri.h 1.1, charlist.h 1.1, cmdid.h 1.1, comm.h 1.1, db.h 1.1, debug.h 1.1, events.h 1.1, fight.h 1.1, gilde.h 1.1, handler.h 1.1, hash.h 1.1, heap.h 1.1, interpreter.h 1.1, limits.h 1.1, lucertole.h 1.1, mem_test.h 1.1, otherproc.h 1.1, parser.h 1.1, poly.h 1.1, protos.h 1.1, queue.h 1.1, race.h 1.1, release.h 1.1, rhyodin.h 1.1, roomproc.h 1.1, script.h 1.1, signals.h 1.1, snew.h 1.1:
+	New file.
+
+	* area.h 1.1.1.1, doreg.h 1.1.1.1, magic.c 1.1.1.1, magic2.c 1.1.1.1, magic3.c 1.1.1.1, magicutils.c 1.1.1.1, makefile 1.1.1.1, mem_test.c 1.1.1.1, mind_use1.c 1.1.1.1, mindskills1.c 1.1.1.1, mkrel.c 1.1.1.1, mkver.c 1.1.1.1, mob_spec_array.c 1.1.1.1, mobact.c 1.1.1.1, modify.c 1.1.1.1, multiclass.c 1.1.1.1, opinion.c 1.1.1.1, parser.c 1.1.1.1, pedit.c 1.1.1.1, queue.c 1.1.1.1, reception.c 1.1.1.1, regen.c 1.1.1.1, rhyodin.c 1.1.1.1, security.c 1.1.1.1, shop.c 1.1.1.1, signals.c 1.1.1.1, skills.c 1.1.1.1, snew.c 1.1.1.1, sound.c 1.1.1.1, spec_procs.c 1.1.1.1, spec_procs2.c 1.1.1.1, spec_procs3.c 1.1.1.1, speciali.c 1.1.1.1, spell_parser.c 1.1.1.1, spells1.c 1.1.1.1, spells2.c 1.1.1.1, trap.c 1.1.1.1, version.c 1.1.1.1, weather.c 1.1.1.1:
+	Nebbie Salvo da Gaia 2001 11 23
+
+	* area.h 1.1, doreg.h 1.1, magic.c 1.1, magic2.c 1.1, magic3.c 1.1, magicutils.c 1.1, makefile 1.1, mem_test.c 1.1, mind_use1.c 1.1, mindskills1.c 1.1, mkrel.c 1.1, mkver.c 1.1, mob_spec_array.c 1.1, mobact.c 1.1, modify.c 1.1, multiclass.c 1.1, opinion.c 1.1, parser.c 1.1, pedit.c 1.1, queue.c 1.1, reception.c 1.1, regen.c 1.1, rhyodin.c 1.1, security.c 1.1, shop.c 1.1, signals.c 1.1, skills.c 1.1, snew.c 1.1, sound.c 1.1, spec_procs.c 1.1, spec_procs2.c 1.1, spec_procs3.c 1.1, speciali.c 1.1, spell_parser.c 1.1, spells1.c 1.1, spells2.c 1.1, trap.c 1.1, version.c 1.1, weather.c 1.1:
+	New file.
+
+	* License.doc 1.1.1.1, License2.doc 1.1.1.1, act.comm.c 1.1.1.1, act.info.c 1.1.1.1, act.move.c 1.1.1.1, act.obj1.c 1.1.1.1, act.obj2.c 1.1.1.1, act.off.c 1.1.1.1, act.other.c 1.1.1.1, act.social.c 1.1.1.1, act.wizard.c 1.1.1.1, ansi.h 1.1.1.1, ansi_parser.c 1.1.1.1, auction.c 1.1.1.1, board.c 1.1.1.1, breath.c 1.1.1.1, bsd.c 1.1.1.1, carceri.c 1.1.1.1, charlist.c 1.1.1.1, checkfile.c 1.1.1.1, comm.c 1.1.1.1, constants.c 1.1.1.1, create.c 1.1.1.1, create.mob.c 1.1.1.1, create.obj.c 1.1.1.1, db.c 1.1.1.1, dbmfunc.c 1.1.1.1, doreg.c 1.1.1.1, doreg2.c 1.1.1.1, events.c 1.1.1.1, fight.c 1.1.1.1, gilde.c 1.1.1.1, handler.c 1.1.1.1, hash.c 1.1.1.1, head.c 1.1.1.1, heap.c 1.1.1.1, interpreter.c 1.1.1.1, limits.c 1.1.1.1, lucertole.c 1.1.1.1, specass2.c 1.1.1.1, utility.c 1.1.1.1:
+	Nebbie Salvo da Gaia 2001 11 23
+
+	* License.doc 1.1, License2.doc 1.1, act.comm.c 1.1, act.info.c 1.1, act.move.c 1.1, act.obj1.c 1.1, act.obj2.c 1.1, act.off.c 1.1, act.other.c 1.1, act.social.c 1.1, act.wizard.c 1.1, ansi.h 1.1, ansi_parser.c 1.1, auction.c 1.1, board.c 1.1, breath.c 1.1, bsd.c 1.1, carceri.c 1.1, charlist.c 1.1, checkfile.c 1.1, comm.c 1.1, constants.c 1.1, create.c 1.1, create.mob.c 1.1, create.obj.c 1.1, db.c 1.1, dbmfunc.c 1.1, doreg.c 1.1, doreg2.c 1.1, events.c 1.1, fight.c 1.1, gilde.c 1.1, handler.c 1.1, hash.c 1.1, head.c 1.1, heap.c 1.1, interpreter.c 1.1, limits.c 1.1, lucertole.c 1.1, specass2.c 1.1, utility.c 1.1:
+	New file.
+

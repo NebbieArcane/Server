@@ -1,0 +1,1 @@
+/usr/bin/g++ -DALIGN_TEST -DBLOCK_WRITE -DENABLE_AUCTION -DACCESSI -DIMPL_SECURITY -pg -ggdb3 -Wstrict-prototypes -finline-functions -fno-strength-reduce -pipe -Wall -Wno-unused -DNETBSD -DLINUX -Wwrite-strings -Fpermissive -DLOG_DEBUG -DLOG_DEBUG1 -DALAR  -D_GNU_SOURCE   -c -o act.info.o act.info.c
