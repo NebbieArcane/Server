@@ -1,0 +1,66 @@
+$c0011 2002-03-24  Thunder $c0007
+	* Sistemato il controllo del pkiller nelle stanze peacefull.
+$c0011 2002-03-23  Thunder $c0007
+	* Adesso mette il nome corretto del bodyguard.
+	* Sistemato il prob che in dual_wield se si rompe un'arma sparice l'altra
+	* Messo controllo per non far creare troppi mob hai magic_user
+	* Messi dei controlli per gestire se un mob con track cade in DT
+$c0011 2002-03-17  Thunder $c0007
+	* Riscritta is_present per gestire quando il venditore e compratore
+	non ci sono piu' e si ricollegano.
+$c0011 2002-03-14  Thunder $c0007
+	* Inserito controllo se si ha spell_mana castato, stima hp adeguato.
+	* Non si puo' castare poison e heatstaff in stanza paecefull.
+$c0011 2002-03-11  Thunder $c0007
+	* Corretto il track in poly che fleeava da solo.
+	* Ordinate le prac dai vari guildmaster
+	* Sistemato il practice aggiunto il comando prac a
+$c0011 2002-03-10  Thunder $c0007
+	* Sistemata la visibilita' delle spell per gli immortali.
+$c0011 2002-03-09  Thunder $c0007
+	* Ordinate le prac Psi
+	* Corretto il livello di visibilita' dei principi.
+$c0011 2002-03-06  Thunder $c0007
+	* Allineato il register alla wizlist
+$c0011 2002-03-05  Thunder $c0007
+	* I mob montati non devono ritornare nella loro stanza.
+$c0011 2002-03-04  Thunder $c0007
+	* Non mette il pkill se si muore con veleno o simili.
+$c0011 2002-03-03  Thunder $c0007
+	* I globe major e minor invulnerab non devono riconoscere
+	quello che non e' magico
+$c0011 2002-02-27  Thunder $c0007
+	* Inserito il controllo se borsa in EQPESANTE per il bug del peso.
+$c0011 2002-02-24  Thunder $c0007
+	* Migliorata la showsk adesso scrive anche le classi di SKILL_KNOW_... (per IMMO)
+	* Sistemato il setsk e aggiunta la possibilita' di settare flags (per IMMO)
+	* Un po' di controlli sul sorcerer, ridotto il tempo di timeout a 1/3 e
+	di memo a max 2 ore virtuali.
+	* Sistemato il bug del sorcerer che memorizzava piu' del dovuto
+$c0011 2002-02-23  Thunder $c0007
+	* Doorway dei principi non si fa' con poco mana
+	* Nuovo mob per il changestaff
+$c0011 2002-02-22  Thunder $c0007
+	* Adesso gli immortali possono praccare
+$c0011 2002-02-21  Thunder $c0007
+	* Il doorbash lo fa' chi ne ha la conoscenza.
+	* Il nuovo monsum two
+	* Non si tolgono oggetti cursati con rem all
+$c0011 2002-02-21  Thunder $c0007
+	* Controllo che il primo anello e' in un contenitore e si da' a un mob
+	non causa crash
+$c0011 2002-02-20  Thunder $c0007
+	* Non si disarmano i non pk
+$c0011 2002-02-18  Thunder $c0007
+	* Il flag pkiller da polato va' al posto giusto
+	* Non si puo' praccare stat oltre il max
+	* Non si entra in berserk con poco mana
+$c0011 2002-02-17  Thunder $c0007
+	* Il who deve riconoscere anche un prince in poly
+$c0011 2002-02-16  Thunder $c0007
+	* Si disarmano solo le trappole
+	* Non e' possibile creare un'arma e avere le mani occupate
+	* Risolto il prob delle prac sconosciute dal mageguildmaster
+	* Corretto il bug delle prac negative se si muore perdendo il livello
+	* Non si puo' castare armor se si ha barkskin
+$c0011 ------------------------------------------------------------------------------- $c0007

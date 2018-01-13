@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "Forzo versione e data"
+touch version.c
+cat versione.in >versione.tmp
+cat versione.tmp | ./mkrel >release.h
