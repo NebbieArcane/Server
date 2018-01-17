@@ -174,7 +174,7 @@ LD=$(CC)
 ##    problemi di linkdead non riconosciuti
 ## -DMEMTEST
 ##    Abilita il debug della memoria
-HEADERFILES	=	structs.h area.h comm.h db.h handler.h hash.h heap.h limits.h poly.h race.h script.h spells.h trap.h vt100c.h wizlist.h parser.h mail.h interpreter.h
+HEADERFILES	=	config.h structs.h area.h comm.h db.h handler.h hash.h heap.h limits.h poly.h race.h script.h spells.h trap.h vt100c.h wizlist.h parser.h mail.h interpreter.h
 ## Rimosso da HEADERFILES utils.h	      
 ##
 OBJS = version.o comm.o act.comm.o act.info.o act.move.o act.obj1.o act.obj2.o act.off.o act.other.o act.social.o act.wizard.o handler.o db.o interpreter.o utility.o specass2.o shop.o limits.o mobact.o fight.o modify.o weather.o spells1.o spells2.o spell_parser.o reception.o constants.o spec_procs.o signals.o board.o magic.o magic2.o skills.o opinion.o trap.o magicutils.o multiclass.o hash.o sound.o Heap.o spec_procs2.o magic3.o security.o spec_procs3.o   create.o bsd.o parser.o ansi_parser.o mail.o mindskills1.o   mem_test.o mind_use1.o create.mob.o create.obj.o rhyodin.o gilde.o   charlist.o lucertole.o breath.o snew.o doreg.o locks.o speciali.o   auction.o events.o queue.o regen.o pedit.o
@@ -268,22 +268,8 @@ clean:
 
 myst: 	 ${OBJS}
 
-## $(CC) -o myst $(OBJS)  -lcrypt -lgdbm
-## $(CC) -o myst $(OBJS)  -lcrypt -lgdbm
-
-## if you want to add debugging stuff, uncomment the following, and comment
-##  out the line after that
-##  $(LD) -o $@ -g ${OBJS} /local/lib/gnu/gcc-gnulib /usr/lib/debug/malloc.o
-##  $(LD) -o $@ -g ${OBJS} /usr/lib
-##	$(LD) -v -o $@  ${OBJS}
-##	$(LD) -nostartfiles -o $@ /usr/lib/gcrt0.o -gdb3 ${OBJS} /usr/lib/libgmon.a
-##	$(LD)  $(DEBUGFLAGS) -O0 -o $@ ${OBJS}   
 	$(LD)  $(DEBUGFLAGS) -O0  -o $@ -m32 $(mysql_config --cflags) -pthread ${OBJS} ${LIBS}
-##	$(LD)  $(DEBUGFLAGS) -O4  -o $@ ${OBJS}  -lgdbm
-	
- 
-##  $(LD) -o $@ -g ${OBJS} -L/usr/local/gnu/lib/gcc-lib/sun4-sunos4.1.1/2.3
- 
+	if [ -f myst ] ; then chmod +x myst ; cp -f myst ../myst ; rm -f myst ; fi 
 
 
 
