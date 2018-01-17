@@ -12,7 +12,7 @@ EXTRAFLAGS = -DIMPL_SECURITY
 DEBUGFLAGS = -pg -finline-functions -fno-strength-reduce -pipe -fpermissive 
 
 ## nel caso si usi -DCYGWIN per compilare sotto windows usare anche -DGDBM_STATIC
-MYFLAGS = $(MOREFLAGS) $(EXTRAFLAGS) $(DEBUGFLAGS) -Wall -Wno-unused -DNETBSD -DLINUX #-Wno-write-strings
+MYFLAGS = $(MOREFLAGS) $(EXTRAFLAGS) $(DEBUGFLAGS) -m32 -Wall -Wno-unused -DNETBSD -DLINUX #-Wno-write-strings
 ## -mno-fp-ret-in-387 
 CFLAGS = $(MYFLAGS) -DLOG_DEBUG -DLOG_DEBUG1 -DALAR 
 LIBS = -L/usr/lib/mysql/ -lcrypt -lgdbm -lpthread -lresolv -lmysqlclient -lz -lrt -ldl
