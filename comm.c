@@ -30,6 +30,7 @@
 #include "signals.h"
 #include "auction.h"
 #include "events.h"
+#include "config.h"
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
 #define MAX_CONNECTS 256  /* max number of descriptors (connections) */
@@ -299,6 +300,11 @@ void str2ansi( char *p2, char *p1, int start, int stop )
     int res;
 #endif
     struct passwd *pw;
+#if !defined(DFLT_DIR)
+    mudlog(LOG_SYSERR,"%s","DFLT_DIR non defined, please check config_default.h and create config.h");
+    return 1;
+#endif
+
 /* Devo commentare sto pezzo per problemi di compilazione....  */ 
     mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
     mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
@@ -312,9 +318,10 @@ void str2ansi( char *p2, char *p1, int start, int stop )
     MYSQL_ROW mysqlRow;
 
     char *mysqlServer = "localhost";
-    char *mysqlUser = "root";
-   char *mysqlPassword = "kakka"; /* set me first */
-    char *mysqlDatabase = "mud";
+    char *mysqlUser = MYSQL_USER;
+    //FIXME: credenziali db da define, secret è la password per la vagrant
+   char *mysqlPassword = MYSQL_PASSWORD; /* set me first */
+    char *mysqlDatabase = MYSQL_DB;
 
     if (mysqlConn == NULL) 
     {
@@ -502,8 +509,11 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #endif
 #endif  
     port = DFLT_PORT;
+#if defined(DFLT_DIR)
     dir = DFLT_DIR;
-
+#else
+    dir = "lib";
+#endif
 #if defined(sun) || defined(NETBSD) && !defined(LINUX)
 /*
 **  this block sets the max # of connections.  

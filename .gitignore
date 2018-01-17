@@ -30,5 +30,7 @@
 *.exe
 *.out
 *.app
-
+.vagrant
 myst
+/config.h
+/.cproject
