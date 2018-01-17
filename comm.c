@@ -313,7 +313,8 @@ void str2ansi( char *p2, char *p1, int start, int stop )
 
     char *mysqlServer = "localhost";
     char *mysqlUser = "root";
-   char *mysqlPassword = "kakka"; /* set me first */
+    //FIXME: credenziali db da define, secret è la password per la vagrant
+   char *mysqlPassword = "secret"; /* set me first */
     char *mysqlDatabase = "mud";
 
     if (mysqlConn == NULL) 
