@@ -4,7 +4,6 @@
 /* data files used by the game system */
 #ifndef __DB
 #define __DB 1
-#define DFLT_DIR          "lib"           /* default data directory     */
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
 #define MOB_FILE          "myst.mob"     /* monster prototypes         */
 #define OBJ_FILE          "myst.obj"     /* object prototypes          */
