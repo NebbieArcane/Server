@@ -69,6 +69,12 @@ Vagrant.configure("2") do |config|
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
 	dpkg --add-architecture i386
+	apt-get update
 	apt-get install -y gcc-multilib g++-multilib libgdbm-dev:i386 apache2 make
+	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
+	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections	
+	apt-get install -y mysql-server mysql-client libmysqld-dev:i386
   SHELL
+  config.ssh.forward_x11 = true
+  config.ssh.forward_agent = true
 end
