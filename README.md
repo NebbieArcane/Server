@@ -6,6 +6,7 @@
     * vagrant up
     * vagrant ssh
     * cd /vagrant
+    * make clean && make
 
 The /vagrant folder in the vagrant machine is mounted from teh folder where the vagrantfile resides and is synced 2-way
 
