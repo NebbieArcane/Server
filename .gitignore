@@ -32,3 +32,5 @@
 *.app
 .vagrant
 myst
+/config.h
+/.cproject
