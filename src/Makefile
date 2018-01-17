@@ -269,7 +269,7 @@ clean:
 myst: 	 ${OBJS}
 
 	$(LD)  $(DEBUGFLAGS) -O0  -o $@ -m32 $(mysql_config --cflags) -pthread ${OBJS} ${LIBS}
-	if [ -f myst ] ; then chmod +x myst ; cp -f myst ../myst ; rm -f myst ; fi 
+	if [ -f myst ] ; then chmod +x myst ; cp -f myst ../myst ; cp -f myst ../mudroot/myst ; rm -f myst ; fi 
 
 
 
