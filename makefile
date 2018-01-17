@@ -14,7 +14,8 @@ DEBUGFLAGS = -pg -finline-functions -fno-strength-reduce -pipe -fpermissive
 ## nel caso si usi -DCYGWIN per compilare sotto windows usare anche -DGDBM_STATIC
 MYFLAGS = $(MOREFLAGS) $(EXTRAFLAGS) $(DEBUGFLAGS) -Wall -Wno-unused -DNETBSD -DLINUX #-Wno-write-strings
 ## -mno-fp-ret-in-387 
-CFLAGS = $(MYFLAGS) -DLOG_DEBUG -DLOG_DEBUG1 -DALAR  
+CFLAGS = $(MYFLAGS) -DLOG_DEBUG -DLOG_DEBUG1 -DALAR 
+LIBS = -L/usr/lib/mysql/ -lcrypt -lgdbm -lpthread -lresolv -lmysqlclient -lz -lrt -ldl
 ## -fno-strict-prototype
 ##
 ##define CHECK_RENT_INACTIVE 1
@@ -277,7 +278,7 @@ myst: 	 ${OBJS}
 ##	$(LD) -v -o $@  ${OBJS}
 ##	$(LD) -nostartfiles -o $@ /usr/lib/gcrt0.o -gdb3 ${OBJS} /usr/lib/libgmon.a
 ##	$(LD)  $(DEBUGFLAGS) -O0 -o $@ ${OBJS}   
-	$(LD)  $(DEBUGFLAGS) -O0  -o $@ ${OBJS} -lcrypt -lgdbm -static
+	$(LD)  $(DEBUGFLAGS) -O0  -o $@ $(mysql_config --cflags) -pthread ${OBJS} ${LIBS}
 ##	$(LD)  $(DEBUGFLAGS) -O4  -o $@ ${OBJS}  -lgdbm
 	
  
