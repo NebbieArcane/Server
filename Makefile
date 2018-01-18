@@ -1,2 +1,2 @@
 all:
-	@echo Compile in src, please
+	@(cd src && make clean && make)

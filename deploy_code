@@ -1,0 +1,4 @@
+#!/bin/bash
+if [ -x mudroot/myst ] ; then cp -f mudroot/myst ../Run ; fi
+cp -i pages/* ../Run/lib/
+
