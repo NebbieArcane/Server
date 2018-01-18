@@ -1046,11 +1046,13 @@ void age2(struct char_data *ch, struct time_info_data *g)
   g->ayear=g->year; /* QUi resta l'eta' anagrafica */
   g->year = MAX(17,g->ayear+ch->AgeModifier); /* Qui l'eta' effettiva */
    
-   /* I principi non invecchiano oltre un certo limite*/
-   if (IS_PRINCE(ch)) 
-   {
+/* I principi non invecchiavano oltre un certo limite, poi abbiamo esteso questa procedura a tutti */
+//if (IS_PRINCE(ch))
+//{
       g->year=(MIN(g->year,50));
-   }
+      g->ayear=g->year;
+//}
+    
    
   
 }

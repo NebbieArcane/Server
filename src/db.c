@@ -210,10 +210,10 @@ void boot_db() {
   else
     wizhelp_index = build_help_index(wizhelp_fl, &top_of_wizhelpt);
 
-#if CLEAN_AT_BOOT
+/*#if CLEAN_AT_BOOT
   mudlog(LOG_CHECK, "Clearing inactive players");
   clean_playerfile();
-#endif
+#endif*/
 
   mudlog(LOG_CHECK, "Booting mail system.");
   if (!scan_mail_file()) {
@@ -4559,7 +4559,7 @@ void ConvertPlayerFile(void) {
 
 
 
-void clean_playerfile() {
+/*void clean_playerfile() {
 
   struct junk {
     struct char_file_u dummy;
@@ -4580,9 +4580,9 @@ void clean_playerfile() {
   timeH = time(0);
 
   mudlog(LOG_SYSERR, "time now %i", timeH);
-  /* Probabilmente questa si puo eliminare 
+  * Probabilmente questa si puo eliminare
    
-     ConvertPlayerFile();*/
+     ConvertPlayerFile();*
 
   if ((dir = opendir(PLAYERS_DIR)) != NULL) {
     while ((ent = readdir(dir)) != NULL) {
@@ -4610,14 +4610,14 @@ void clean_playerfile() {
              mudlog(LOG_SYSERR,"Nome: %s",grunt.dummy.name);
             num_processed++;
 
-            /* Fa la lista dei personaggi attivi.. a bit tedious */
+            * Fa la lista dei personaggi attivi.. a bit tedious *
             char *classname[] = {"Mu", "Cl", "Wa", "Th", "Dr", "Mo", "Ba", "So", "Pa","Ra", "Ps", "?", "??"};
             char classes[100];
             classes[0] = '\0';
             int i;
 
             for (i = max = 0; i < MAX_CLASS; i++) {
-              /*calcola il livello piu` alto in max*/
+              *calcola il livello piu` alto in max*
               if (grunt.dummy.level[ i ] > max)
                 max = grunt.dummy.level[ i ];
 
@@ -4634,7 +4634,7 @@ void clean_playerfile() {
                       grunt.dummy.name,
                       classes, grunt.dummy.points.max_hit);
             }
-
+              
             if (max < IMMORTALE) {
               j = (int) max;
               if (j < 5)
@@ -4642,8 +4642,8 @@ void clean_playerfile() {
 
               age = timeH - grunt.dummy.last_logon;
 
-              mudlog(LOG_SYSERR, "*****%s****Last logon: %i***age-->%i", grunt.dummy.name, grunt.dummy.last_logon, age);
-              mudlog(LOG_SYSERR, "*****%s", grunt.dummy.description);
+              mudlog(LOG_SYSERR, "*****%s****Last logon: %i***tempo intercorso-->%i", grunt.dummy.name, grunt.dummy.last_logon, age);
+              mudlog(LOG_SYSERR, "*****%s", grunt.dummy.description); */
               
               
               /* BUG BUG BUG */
@@ -4667,7 +4667,7 @@ void clean_playerfile() {
                 }
               } */
                 
-              /* Avviso di cancellazione imminente*/
+              /* Avviso di cancellazione imminente *
 
               if (!grunt.AXE && age > (long) (j - 1) * (SECS_PER_REAL_DAY * 7) && !IS_SET(grunt.dummy.user_flags, NO_DELETE)) {
                 num_warned++;
@@ -4689,7 +4689,7 @@ void clean_playerfile() {
             fclose(pFile);
 
             if (grunt.AXE) {
-#ifndef NOREGISTER	 
+#ifndef NOREGISTER	 */
 
               /*******
               Flyp: cancellazione da riverificare
@@ -4709,6 +4709,7 @@ void clean_playerfile() {
               system( buf );
               mudlog(LOG_CHECK,"%s cancellato per inattivita'",grunt.dummy.name);
                *************/
+/*
 #else
               mudlog(LOG_CHECK, "%s doveva essere cancellato", grunt.dummy.name);
 #endif
@@ -4718,7 +4719,7 @@ void clean_playerfile() {
           }
         }
       }
-    } /* while */
+    } * while *
   } else {
     mudlog(LOG_ERROR, "Error opening dir %s.", PLAYERS_DIR);
   }
@@ -4727,7 +4728,7 @@ void clean_playerfile() {
   mudlog(LOG_CHECK, "-- %d characters deleted.  ", num_deleted);
   mudlog(LOG_CHECK, "-- %d gods demoted due to inactivity.", num_demoted);
   mudlog(LOG_CHECK, "Cleaning done.");
-}
+} */
 
 #if ENABLE_AUCTION
 
