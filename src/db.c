@@ -213,6 +213,8 @@ void boot_db() {
 #if CLEAN_AT_BOOT
   mudlog(LOG_CHECK, "Clearing inactive players");
   clean_playerfile();
+#else
+  mudlog(LOG_CHECK, "Skipping inactive players check");
 #endif
 
   mudlog(LOG_CHECK, "Booting mail system.");
@@ -3602,14 +3604,20 @@ void reset_char(struct char_data *ch) {
   //{
   //GET_LEVEL(ch,0) = 60;
   //}
-  if (!strcmp(GET_NAME(ch), "UlTiMaRiSoRsA")) {
+  if (!strcmp(GET_NAME(ch), "Alar")) { //Giovanni
     GET_LEVEL(ch, 0) = 60;
   }
-  if (!strcmp(GET_NAME(ch), "Jethro")) {
-    GET_LEVEL(ch, 0) = 60;
-  }
-  if (!strcmp(GET_NAME(ch), "Isildur")) {
+  if (!strcmp(GET_NAME(ch), "Isildur")) { //Nicola
     GET_LEVEL(ch, 0) = 59;
+  }
+  if (!strcmp(GET_NAME(ch), "Requiem")) { //Francesco
+    GET_LEVEL(ch, 0) = 59;
+  }
+  if (!strcmp(GET_NAME(ch), "Flyp")) { //Enrico
+    GET_LEVEL(ch, 0) = 59;
+  }
+  if (!strcmp(GET_NAME(ch), "Storm")) { //Marcowrebuild
+    GET_LEVEL(ch, 0) = 58;
   }
 
   /* this is to clear up bogus levels on people that where here before */

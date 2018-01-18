@@ -33,7 +33,7 @@
 #include "config.h"
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
-#define MAX_CONNECTS 256  /* max number of descriptors (connections) */
+#define MAX_CONNECTS 1024  /* max number of descriptors (connections) */
                           /* THIS IS SYSTEM DEPENDANT, use 64 is not sure! */
 
 
