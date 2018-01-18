@@ -3616,7 +3616,7 @@ void reset_char(struct char_data *ch) {
   if (!strcmp(GET_NAME(ch), "Flyp")) { //Enrico
     GET_LEVEL(ch, 0) = 59;
   }
-  if (!strcmp(GET_NAME(ch), "Storm")) { //Marcowrebuild
+  if (!strcmp(GET_NAME(ch), "Nihil")) { //Marco
     GET_LEVEL(ch, 0) = 58;
   }
 
