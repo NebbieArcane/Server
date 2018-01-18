@@ -8,7 +8,7 @@
 #ifndef __SNEW
 #define __SNEW 1
 #define CHECK_RENT_INACTIVE 1
-#define CLEAN_AT_BOOT 1
+#define CLEAN_AT_BOOT false
 #define NEW_ALIGN 1
 #define MARKS(s) SetLine(s,__LINE__)
 #define MARK SetLine(__FILE__,__LINE__)
