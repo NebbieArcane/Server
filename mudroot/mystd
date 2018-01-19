@@ -19,6 +19,7 @@ while [ $FINE = 0 ]
 do
  if [ -f RELOAD ] ; then
 	#new version requested
+	./mystd &
 	exit
  fi
  if [ -f HALT ] ; then
@@ -29,7 +30,7 @@ do
     fi
  fi
  ps -ax >tmp.log
- if grep -i "myst" tmp.log >/dev/null ; then
+ if grep -v "mystd" tmp.log | grep -v "startmyst" | grep -i "myst" >/dev/null ; then
     sleep 2m
  else
     if [ -f STOP ] ; then
@@ -43,7 +44,8 @@ do
        fi
 	./lib/backup-pg
 	./lib/backup-rent
-        ./startmyst
+	echo "Startmyst " >>Vai.log
+        ./startmyst >>Vai.log
        touch ./LastRun
        sleep 3m
     fi
