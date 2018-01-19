@@ -547,8 +547,8 @@ void obj_store_to_char(struct char_data *ch, struct obj_file_u *st)
   }
   SetStatus( STATUS_OTCAFTERLOOP, NULL );  
 }
-
-
+// date  +%s --date='TZ="Europe/Rome" 00:00 today'
+#define MUD_REBOOT_TIME 1516316400
 void load_char_objs(struct char_data *ch)
 {
    FILE *fl;
@@ -593,17 +593,20 @@ void load_char_objs(struct char_data *ch)
    if (str_cmp(st.owner, GET_NAME(ch)) != 0) 
    {
       mudlog( LOG_PLAYERS | LOG_ERROR, 
-	     "Bad item-file write. %s is losing thier objects" ,GET_NAME( ch ) );
+	     "Bad item-file write. %s is losing his/her objects" ,GET_NAME( ch ) );
       fclose(fl);
       return;
    }
+   /* Nebbie was stopped for 2 years, here we make sure people are not naked.
+    * We fixed a mud epoch :)
+    */
+   st.last_update=st.last_update > MUD_REBOOT_TIME?st.last_update:MUD_REBOOT_TIME;
    
    /*
     * if the character has been out for 12 real hours, they are fully healed
     * upon re-entry.  if they stay out for 24 full hours, all affects are
     * removed, including bad ones.
     */
-   
    mudlog( LOG_CHECK, "  Last update %ld, time %ld.", st.last_update, 
           time(0) );
    
