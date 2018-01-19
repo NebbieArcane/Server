@@ -6980,7 +6980,7 @@ void do_forge( struct char_data *ch, char *arg, int cmd)
     case RACE_DWARF:
       break;
     default:
-      send_to_char("Non sei mica un fabbro esperto!\n\r",ch);
+      send_to_char("Non sei mica un nano!\n\r",ch);
       return;
       break;
   }
@@ -7069,7 +7069,7 @@ void do_forge( struct char_data *ch, char *arg, int cmd)
       else if (percent > 97 && percent <= 99) cdd = cdb+10;
       else cdd = cdb+11;
 
-      //if (!strcmp(itemname,"mazzafrusto")) urka = TRUE; 
+      //if (!strcmp(itemname,"spada")) urka = TRUE;
 
       //Modifico il cdd in base al tipo di oggetto, calcolo il divisore per il peso e
       //il tipo di danno
