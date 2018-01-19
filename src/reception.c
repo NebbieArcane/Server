@@ -1192,6 +1192,10 @@ void PrintLimitedItems()
    {
       if( obj_index[ i ].number > 0 )
       {
+#if NICE_LIMITED
+    	  obj_index[i].number/=2;
+#endif
+
 	 mudlog( LOG_CHECK, "  %5d [%5d] %s", obj_index[ i ].iVNum,
 		obj_index[i].number,
 		obj_index[i].name );
