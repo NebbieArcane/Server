@@ -1,0 +1,4 @@
+#!/bin/bash
+echo You need a ssh access to the server for this to word
+scp nebbie@nebbie.hexkeep.com:Run/lib/players/$1* mudroot/lib/players
+scp nebbie@nebbie.hexkeep.com:Run/lib/rent/$1* mudroot/lib/rent

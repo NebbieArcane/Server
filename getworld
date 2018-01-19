@@ -1,0 +1,3 @@
+#!/bin/bash
+echo You need a ssh access to the server for this to worj
+scp nebbie@nebbie.hexkeep.com:Run/lib/myst.* mudroot/lib
