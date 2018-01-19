@@ -981,13 +981,21 @@ else if(point->connected == CON_MOB_EDITING)
 {
   SetStatus("CommandLoop6");
   PushStatus("MobEdit");
-  MobEdit(point->character,comm);
+  ObjEdit(point->character,comm);
   CheckObjectExDesc( "After MobEdit" );
   CheckCharAffected( "After MobEdit" );
 }
-else
+else if(point->connected == CON_OBJ_FORGING)
 {
   SetStatus("CommandLoop7");
+  PushStatus("UrkaForge");
+  ForgeString(point->character,comm,0);
+  CheckObjectExDesc( "After UrkaForge" );
+  CheckCharAffected( "After UrkaForge" );
+}
+else
+{
+  SetStatus("CommandLoop8");
   PushStatus("Nanny");
   nanny(point, comm);
   CheckObjectExDesc( "After nanny" );
