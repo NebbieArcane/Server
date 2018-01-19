@@ -981,7 +981,7 @@ else if(point->connected == CON_MOB_EDITING)
 {
   SetStatus("CommandLoop6");
   PushStatus("MobEdit");
-  ObjEdit(point->character,comm);
+  MobEdit(point->character,comm);
   CheckObjectExDesc( "After MobEdit" );
   CheckCharAffected( "After MobEdit" );
 }
