@@ -1758,11 +1758,13 @@ if (level >= MAESTRO) {                  /* if level 45> then they can do this *
    }
 
     if (affected_by_spell(victim,SPELL_GLOBE_DARKNESS)) {
-      if (yes || !saves_spell(victim, SAVING_SPELL) ) {    
+      if (yes || !saves_spell(victim, SAVING_SPELL) ) {
+         REMOVE_BIT(victim->specials.affected_by, AFF_GLOBE_DARKNESS);
          affect_from_char(victim,SPELL_GLOBE_DARKNESS);
          send_to_char("Il globo di oscurita' che ti avvolgeva scompare.\n\r",victim);
+         act("Il globo di oscurita' che avvolge $n si dissolve.",FALSE,victim,0,0,TO_ROOM);
       }
-    }    
+    }
     if (affected_by_spell(victim,SPELL_GLOBE_MINOR_INV)) {
       if (yes || !saves_spell(victim, SAVING_SPELL) ) {
          affect_from_char(victim,SPELL_GLOBE_MINOR_INV);
@@ -2422,7 +2424,7 @@ void spell_globe_darkness(byte level, struct char_data *ch,
     af.duration  = level;                  
     af.modifier  = 5;
     af.location  = APPLY_HIDE;
-    af.bitvector = 0;
+    af.bitvector = AFF_GLOBE_DARKNESS;
     affect_to_char(victim, &af);
   } else {
   if (ch != victim)

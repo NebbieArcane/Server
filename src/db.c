@@ -3550,8 +3550,8 @@ void reset_char(struct char_data *ch) {
   if (IS_SET(ch->specials.affected_by2, AFF2_BERSERK)) {
     REMOVE_BIT(ch->specials.affected_by2, AFF2_BERSERK);
   }
-  if (IS_SET(ch->specials.affected_by, AFF_PARRY)) {
-    REMOVE_BIT(ch->specials.affected_by, AFF_PARRY);
+  if (IS_SET(ch->specials.affected_by2, AFF2_PARRY)) {
+    REMOVE_BIT(ch->specials.affected_by2, AFF2_PARRY);
   }
   /*
    * Clear out MAILING flags case there was a crash

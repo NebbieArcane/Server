@@ -205,7 +205,7 @@ int Hit_Location(struct char_data *victim)
 
    /* Check su PARRY e generate random hit location */
 
-    if(IS_SET(victim->specials.affected_by,AFF_PARRY))
+    if(IS_SET(victim->specials.affected_by2, AFF2_PARRY))
 
    {
 
@@ -584,9 +584,9 @@ void stop_fighting(struct char_data *ch)
 
    /* Rimuovo il flag PARRY Gaia 7/2000 */
 
-   if(IS_SET( ch->specials.affected_by, AFF_PARRY ) )
+   if(IS_SET( ch->specials.affected_by2, AFF2_PARRY ) )
    {
-      REMOVE_BIT( ch->specials.affected_by, AFF_PARRY );
+      REMOVE_BIT( ch->specials.affected_by2, AFF2_PARRY );
       act( "$n smette di proteggersi con lo scudo.", FALSE, ch, 0, 0, TO_ROOM );
       act( "Smetti di proteggerti con lo scudo.", FALSE,ch, 0, 0, TO_CHAR );
    }  
@@ -1099,9 +1099,9 @@ void raw_kill(struct char_data *ch,int killedbytype)
 
    /* Rimuovo anche il flag del PARRY Gaia 7/2000 */
 
-   if (IS_SET(ch->specials.affected_by,AFF_PARRY))
+   if (IS_SET(ch->specials.affected_by2, AFF2_PARRY))
    {
-      REMOVE_BIT(ch->specials.affected_by,AFF_PARRY);
+      REMOVE_BIT(ch->specials.affected_by2, AFF2_PARRY);
    }
 
  
@@ -3397,7 +3397,7 @@ DamageResult root_hit( struct char_data *ch, struct char_data *orig_victim,
       se il pg e' in parry il mob non perde move 
       Gaia 7/2000 */   
 
-   if ( !IS_SET(victim->specials.affected_by,AFF_PARRY) ) 
+   if ( !IS_SET(victim->specials.affected_by2, AFF2_PARRY) ) 
     {
    GET_MOVE(ch) -=1; alter_move(ch,0);
     }
@@ -3480,7 +3480,7 @@ void PCAttacks( char_data *pChar )
       ma i suoi attacchi calcolati sono aumentati di uno.
       Gaia (7/2000) */
 
-   if (IS_SET(pChar->specials.affected_by,AFF_PARRY))
+   if (IS_SET(pChar->specials.affected_by2, AFF2_PARRY))
     { 
 
      if (HasClass( pChar, CLASS_RANGER ) && DUAL_WIELD(pChar) )
@@ -3594,7 +3594,7 @@ void PCAttacks( char_data *pChar )
    /* check for the second attack */
    /* Se sei in parry non puoi usare il dual wield Gaia 7/2000 */
    if( DUAL_WIELD( pChar ) && pChar->skills
-       && !IS_SET(pChar->specials.affected_by,AFF_PARRY) )
+       && !IS_SET(pChar->specials.affected_by2, AFF2_PARRY) )
    {
       /* check the skill */
       if( ( perc = number( 1, 101 ) ) <

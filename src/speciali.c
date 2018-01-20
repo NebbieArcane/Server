@@ -859,12 +859,12 @@ int Nightmare( struct char_data *ch, int cmd, char *arg, struct char_data *mob, 
     af.bitvector = AFF_FIRESHIELD;
     affect_to_char(mob, &af);
   }
-  if(!affected_by_spell(mob, SPELL_GLOBE_DARKNESS)) {
+  if(!IS_AFFECTED(mob, AFF_GLOBE_DARKNESS)) {
 		af.type      = SPELL_GLOBE_DARKNESS;
   	af.duration  = 1;                  
     af.modifier  = 5;
     af.location  = APPLY_HIDE;
-    af.bitvector = 0;
+    af.bitvector = AFF_GLOBE_DARKNESS;
     affect_to_char(mob, &af);
   }
   

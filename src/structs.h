@@ -910,8 +910,8 @@ struct room_data
 #define AFF_FIRESHIELD        0x08000000
 #define AFF_GROUP             0x10000000
 #define AFF_TELEPATHY         0x20000000
-#define AFF_PARRY             0x40000000  /* Added by GAIA 2001 */
-#define AFF_UNDEF_AFF_1       0x80000000
+#define AFF_GLOBE_DARKNESS    0x40000000  /* Added by REQUIEM 2018 */
+#define AFF_UNDEF_AFF_1       0x80000000  
 
 /* affects 2 */
 
@@ -919,9 +919,10 @@ struct room_data
 #define AFF2_HEAT_STUFF       0x00000002
 #define AFF2_LOG_ME           0x00000004
 #define AFF2_BERSERK          0x00000008
-#define AFF2_CON_ORDER        0x00000010
-#define AFF2_AFK              0x00000020
-#define AFF2_PKILLER          0x00000040
+#define AFF2_PARRY            0x00000010  /* Added by GAIA 2001 */
+#define AFF2_CON_ORDER        0x00000020
+#define AFF2_AFK              0x00000040
+#define AFF2_PKILLER          0x00000080
 /* modifiers to char's abilities */
 
 #define APPLY_NONE              0
