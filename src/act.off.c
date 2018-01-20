@@ -1720,9 +1720,9 @@ void do_parry( struct char_data *ch, char *arg, int cmd)
      di default finche il comando non viene ridato o il
      combattimento finisce */
  
- if (IS_SET(ch->specials.affected_by,AFF_PARRY)) {
+ if (IS_SET(ch->specials.affected_by2, AFF2_PARRY)) {
    send_to_char("Smetti di proteggerti con lo scudo.\n\r",ch);
-   REMOVE_BIT(ch->specials.affected_by,AFF_PARRY);
+   REMOVE_BIT(ch->specials.affected_by2, AFF2_PARRY);
    return;
   }
  
@@ -1730,7 +1730,7 @@ void do_parry( struct char_data *ch, char *arg, int cmd)
     viene controllato nelle routine di combat (fight.c) volta per volta. */
  
     if (GET_POS(victim) > POSITION_DEAD)     {
-         SET_BIT(ch->specials.affected_by,AFF_PARRY);
+         SET_BIT(ch->specials.affected_by2, AFF2_PARRY);
      act("$c1012$n cerca di proteggersi dai colpi usando lo scudo!", FALSE, ch, 0, victim, TO_ROOM);
      act("$c1012Cerchi di proteggerti con lo scudo.",FALSE,ch,0,0,TO_CHAR);
     }

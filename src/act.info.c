@@ -834,22 +834,21 @@ void show_char_to_char( struct char_data *i, struct char_data *ch, int mode )
     
     if( IS_AFFECTED( i, AFF_SANCTUARY ) )
     {
-      if( !affected_by_spell( i, SPELL_GLOBE_DARKNESS ) )
+      if( !IS_AFFECTED( i, AFF_GLOBE_DARKNESS ) )
 	act( "$c0015$n brilla di luce propria!", FALSE, i, 0, ch, TO_VICT ); 
     }
-
       
     if( IS_AFFECTED( i, AFF_GROWTH ) )
       act( "$c0003$n e` enorme!", FALSE, i, 0, ch, TO_VICT );
       
     if( IS_AFFECTED( i, AFF_FIRESHIELD ) )
     {
-      if( !affected_by_spell( i, SPELL_GLOBE_DARKNESS ) )    
+      if( !IS_AFFECTED( i, AFF_GLOBE_DARKNESS ) )
 	act( "$c0001$n e` avvolt$b in una luce fiammeggiante!", FALSE, i, 0, ch, 
 	     TO_VICT);
     }
 
-    if( affected_by_spell( i, SPELL_GLOBE_DARKNESS ) ) 
+    if( IS_AFFECTED( i, AFF_GLOBE_DARKNESS ) )
       act("$c0008$n e` avvolt$b nell'oscurita`!", FALSE, i, 0, ch, TO_VICT );
     
   }

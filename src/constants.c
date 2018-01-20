@@ -2778,6 +2778,7 @@ const char *affected_bits[] =
   "FIRESHIELD",
   "GROUP",
   "TELEPATHY",
+  "DARKNESS",
   "\n"
 };
 
@@ -2787,6 +2788,7 @@ const char *affected_bits2[] =
   "Heat Stuff",
   "Logging",
   "Berserk",
+  "Parry",
   "Group-Order",
   "AWAY-FROM-KEYBOARD",
   "Pkilled someone",

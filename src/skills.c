@@ -2205,6 +2205,15 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                app_val = IMM_ENERGY ;
                }
                break ;
+               case RACE_GOD      :
+               if( total_bonus > 26 )
+               {
+               special = 1 ;
+               apply = APPLY_IMMUNE ;
+               app_val = IMM_BLUNT ;
+               }
+               break ;
+
                default:
                break;
               }

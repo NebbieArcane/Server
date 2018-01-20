@@ -2695,6 +2695,10 @@ void save_all()
                               if( IS_SET( ch->immune,IMM_DRAIN ) || IS_SET( ch->M_immune,IMM_DRAIN ) )
                                 fa=1;
                               break;
+                              case SPELL_GLOBE_DARKNESS:
+                                if( IS_AFFECTED( ch, AFF_GLOBE_DARKNESS ) )
+                                  fa=1;
+                                break;
                             }
                             if( ch->affected )
                               for( hjp = ch->affected; hjp; hjp = hjp->next )

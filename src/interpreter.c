@@ -424,11 +424,11 @@ void command_interpreter( struct char_data *ch, char *argument )
 
  /* PARRY is removed as HIDE GAIA 2001 */
 
-   if(IS_AFFECTED(ch,AFF_PARRY))
+   if(IS_AFFECTED(ch,AFF2_PARRY))
    {
     act( "$c0006$n smette di ripararsi con lo scudo.", TRUE, ch, 0, 0, TO_ROOM);
     act( "$c0006Smetti di proteggerti con lo scudo.", TRUE, ch, 0, 0, TO_CHAR);
-      REMOVE_BIT( ch->specials.affected_by, AFF_PARRY );
+      REMOVE_BIT( ch->specials.affected_by2, AFF2_PARRY );
    }                                                                                      
 
    if (ch->listening_to)

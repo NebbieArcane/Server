@@ -151,8 +151,8 @@ typedef struct alias_type
 #define AFF_FIRESHIELD        0x08000000
 #define AFF_GROUP             0x10000000
 #define AFF_TELEPATHY         0x20000000
-#define AFF_UNDEF_AFF_1       0x40000000
-#define AFF_UNDEF_AFF_2       0x80000000
+#define AFF_GLOBE_DARKNESS    0x40000000  /* Added by REQUIEM 2018 */
+#define AFF_UNDEF_AFF_1       0x80000000
 
 #define ACT_SPEC       (1<<0)  /* special routine to be called if exist   */
 #define ACT_SENTINEL   (1<<1)  /* this mobile not to be moved             */
