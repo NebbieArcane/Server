@@ -1,4 +1,5 @@
 #!/bin/bash
-if [ -x mudroot/myst ] ; then cp -f mudroot/myst ../Run ; fi
+mkdir -p ../Deploy
+if [ -x mudroot/myst ] ; then cp -f mudroot/myst ../Deploy/mystnew ; fi
 cp -i pages/* ../Run/lib/
 
