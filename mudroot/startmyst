@@ -7,12 +7,12 @@ cp log.txt lastlog.txt
 ./checkcrash 
 #./cleanreg
 # To be fixed
-#if [ -f svl/mystnew ] ; then
-#   saved=mystsv`/bin/date +%Y%m%d`
-#   cp myst $saved
-#   cp svl/myst myst
-#   rm svl/mystnew
-#fi
+if [ -f ../Deploy/mystnew ] ; then
+   saved=mystsv`/bin/date +%Y%m%d`
+   cp myst $saved
+   cp -f ../Deploy/mystnew myst
+   rm -f ../Deploy/mystnew
+fi
 #chmod +s myst
 LOGNAME=`date +%Y%m%d.%H%M`
 
@@ -57,4 +57,4 @@ sleep 1
 #fi
 chown nebbie. *.log
 #./myst -L -M >&log.txt &
-./myst -L -M >log.txt 2>log.txt &
+./myst -L -M 4001  >log.txt 2>log.txt &
