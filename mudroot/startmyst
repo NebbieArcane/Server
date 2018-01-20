@@ -6,7 +6,6 @@ ulimit -c unlimited
 cp log.txt lastlog.txt
 ./checkcrash 
 #./cleanreg
-# To be fixed
 if [ -f ../Deploy/mystnew ] ; then
    saved=mystsv`/bin/date +%Y%m%d`
    cp myst $saved
@@ -57,4 +56,4 @@ sleep 1
 #fi
 chown nebbie. *.log
 #./myst -L -M >&log.txt &
-./myst -L -M 4001  >log.txt 2>log.txt &
+./myst -L -M >log.txt 2>log.txt &
