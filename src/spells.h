@@ -161,7 +161,7 @@ typedef char byte;
 /* druid... */
 #define SPELL_SHILLELAGH            122
 #define SPELL_GOODBERRY             123
-#define SPELL_FLAME_BLADE           124
+#define SPELL_ELEMENTAL_BLADE           124
 #define SPELL_ANIMAL_GROWTH         125
 #define SPELL_INSECT_GROWTH         126
 #define SPELL_CREEPING_DEATH        127

@@ -2188,7 +2188,7 @@ spello(123,
 /*align       */ 0,
 /*ostile      */ 0);
 
-/* cast_flame_blade */
+/* cast_elemental_blade */
 spello(124,
 /*beats       */ 12,
 /*min position*/ POSITION_STANDING,
@@ -2201,7 +2201,7 @@ spello(124,
 /*psIonic     */ IMMORTALE,
 /*mana        */ 10,
 /*target      */ TAR_IGNORE,
-/*funzione    */ cast_flame_blade,
+/*funzione    */ cast_elemental_blade,
 /*spell fail  */ 0,
 /*align       */ 0,
 /*ostile      */ 0);

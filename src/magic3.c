@@ -47,19 +47,21 @@ void spell_tree_travel(byte level, struct char_data *ch,
 void spell_transport_via_plant(byte level, struct char_data *ch,
                      struct char_data *victim, struct obj_data *obj)
 {
-  struct room_data *rp;
-  struct obj_data *o;
 
-  /* find the tree in the room */
+  /*struct room_data *rp;
+    struct obj_data *o;
 
   rp = real_roomp(ch->in_room);
   for (o = rp->contents; o; o = o->next_content) {
     if (ITEM_TYPE(o) == ITEM_TREE)
       break;
   }
+    
+ le righe in commento cercavano l'albero di partenza */
 
-  if (!o) {
-    send_to_char("Devi avere una pianta vicino.\n\r", ch);
+  if (IS_SET(real_roomp(ch->in_room)->room_flags, INDOORS))
+  {
+    send_to_char( "Puoi farlo solo all'aperto.\n\r", ch);
     return;
   }
 
@@ -78,12 +80,12 @@ void spell_transport_via_plant(byte level, struct char_data *ch,
     return;
   }
 
-  act("$n tocca $p, e svanisce lentamente al suo interno!", FALSE, ch, o, 0, TO_ROOM);
-  act("Tocchi $p, e ti dissolvi al suo interno.", FALSE, ch, o, 0, TO_CHAR);
+  act("$c0010$n tocca il suolo per percepire $p, e viene assorbito dalla terra!", FALSE, ch, obj, 0, TO_ROOM);
+  act("$c0010Percepisci $p, e come acqua ti lasci guidare dalla terra alle sue radici.", FALSE, ch, obj, 0, TO_CHAR);
   char_from_room(ch);
   char_to_room(ch, obj->in_room);
-  act("$p si squote leggermente, e $n aparre magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
-  act("Vieni trasportat$b istantaneamente da $p!", FALSE, ch, obj, 0, TO_CHAR);
+  act("$c0010$p si squote leggermente, e $n aparre magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
+  act("$c0010Vieni trasportat$b istantaneamente da $p!", FALSE, ch, obj, 0, TO_CHAR);
   do_look(ch, "\0", 15);
   
 }
@@ -100,7 +102,7 @@ void spell_speak_with_plants(byte level, struct char_data *ch,
     return;
   }
 
-  sprintf(buffer, "%s ti dice 'Ciao $n, come va'?'", 
+  sprintf(buffer, "$c0013%s ti dice 'Ciao $n, come va' oggi?'",
           fname(obj->name));
   act(buffer, FALSE, ch, obj, 0, TO_CHAR);
   act("$p si squote leggermente.", FALSE, ch, obj, 0, TO_ROOM);
@@ -801,11 +803,12 @@ void spell_goodberry(byte level, struct char_data *ch,
 
 
 
-void spell_flame_blade(byte level, struct char_data *ch,
+void spell_elemental_blade(byte level, struct char_data *ch,
                        struct char_data *victim, struct obj_data *obj)
 {
+  int blade_element;
   struct obj_data *tmp_obj;
-
+    
   assert(ch);
   assert((level >= 0) && (level <= ABS_MAX_LVL));
 
@@ -821,13 +824,37 @@ void spell_flame_blade(byte level, struct char_data *ch,
     return;
   }
 
+  blade_element = number(0,2);
+    
   CREATE(tmp_obj, struct obj_data, 1);
   clear_object(tmp_obj);
 
+switch(blade_element) /* REQUIEM 2018 new elements for druid blade */
+{
+case 0:
   tmp_obj->name = strdup("blade flame");
-  tmp_obj->short_description = strdup("una flame blade");
-  tmp_obj->description = strdup("Una flame blade splende qui in terra.");
+  tmp_obj->short_description = strdup("una $c0009flame $c0007blade");
+  tmp_obj->description = strdup("Una lama fiammeggiante splende qui in terra.");
+  tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
+  tmp_obj->affected[0].modifier = 57;
+        break;
+case 1:
+  tmp_obj->name = strdup("blade frost");
+  tmp_obj->short_description = strdup("una $c0014Frost $c0007blade");
+  tmp_obj->description = strdup("Noti una lunga lama di ghiaccio.");
+  tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
+  tmp_obj->affected[0].modifier = 8;
+        break;
+case 2:
+  tmp_obj->name = strdup("blade thunder");
+  tmp_obj->short_description = strdup("una $c0012Thunder $c0007blade");
+  tmp_obj->description = strdup("Un fascio si fulmini e saette e' qui ai tuoi piedi.");
+  tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
+  tmp_obj->affected[0].modifier = 30;
+        break;
+}
 
+    
   tmp_obj->obj_flags.type_flag = ITEM_WEAPON;
   tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_WIELD;
   tmp_obj->obj_flags.value[0] = 0;
@@ -851,14 +878,16 @@ void spell_flame_blade(byte level, struct char_data *ch,
              ITEM_ANTI_PALADIN | ITEM_ANTI_PSI | ITEM_ANTI_MONK );
   }
 
-  tmp_obj->affected[0].location = APPLY_DAMROLL;
-  tmp_obj->affected[0].modifier = 4 + 
-     ( IS_PC( ch ) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel( ch ) ) / 9;
+   /* REQUIEM 2018 Reduced damroll of the blade due weapon_spell improvement... */
+    
+  tmp_obj->affected[1].location = APPLY_DAMROLL;
+  tmp_obj->affected[1].modifier = 3 +
+     ( IS_PC( ch ) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel( ch ) ) / 25;
 
-   /* GAIA 2000 Added hitroll and improved damroll of flame blade */
+   /* GAIA 2000 Added hitroll the blade... */
 
-  tmp_obj->affected[1].location = APPLY_HITROLL;
-  tmp_obj->affected[1].modifier = 1 +
+  tmp_obj->affected[2].location = APPLY_HITROLL;
+  tmp_obj->affected[2].modifier = 1 +
      ( IS_PC( ch ) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel( ch ) ) / 10;
 
   tmp_obj->next = object_list;
