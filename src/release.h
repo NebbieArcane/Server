@@ -1,3 +1,3 @@
 #define MAJORVERSION  3
 #define MINORVERSION  1
-#define RELEASE       6
+#define RELEASE       7
