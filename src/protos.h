@@ -976,7 +976,7 @@ void spell_shillelagh(byte level, struct char_data *ch,
   struct char_data *victim, struct obj_data *obj);
 void spell_goodberry(byte level, struct char_data *ch,
   struct char_data *victim, struct obj_data *obj);
-void spell_flame_blade(byte level, struct char_data *ch,
+void spell_elemental_blade(byte level, struct char_data *ch,
   struct char_data *victim, struct obj_data *obj);
 void spell_animal_growth(byte level, struct char_data *ch,
   struct char_data *victim, struct obj_data *obj);
@@ -1798,7 +1798,7 @@ void cast_shillelagh( byte level, struct char_data *ch, char *arg,
      int type, struct char_data *tar_ch, struct obj_data *tar_obj );
 void cast_goodberry( byte level, struct char_data *ch, char *arg,
      int type, struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_flame_blade( byte level, struct char_data *ch, char *arg,
+void cast_elemental_blade( byte level, struct char_data *ch, char *arg,
      int type, struct char_data *tar_ch, struct obj_data *tar_obj );
 void cast_animal_growth( byte level, struct char_data *ch, char *arg,
      int type, struct char_data *tar_ch, struct obj_data *tar_obj );

@@ -4978,7 +4978,7 @@ int DruidChallenger(struct char_data *ch, int cmd, char *arg, struct char_data *
       if (!ch->equipment[WIELD]) {
 	 if (GetMaxLevel(ch) > 4) {
 	    act("$n pronuncia le parole 'gimme a light'", 1, ch, 0, 0, TO_ROOM);
-	    cast_flame_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+	    cast_elemental_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 	 }
 	 return(TRUE);
       }
@@ -5183,7 +5183,7 @@ int druid( struct char_data *ch, int cmd, char *arg, struct char_data *mob,
               GET_DAMROLL( ch ) ) < 16 )
 	 {
 	    act("$n pronuncia le parole 'gimme a light'", 1, ch, 0, 0, TO_ROOM);
-	    cast_flame_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+	    cast_elemental_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 	    return(TRUE);
 	 }
       }

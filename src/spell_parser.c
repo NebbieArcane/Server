@@ -167,7 +167,7 @@ char *spells[]=
    "feeblemind",
    "shillelagh",
    "goodberry",
-   "flame blade",
+   "elemental blade",
    "animal growth",
    "insect growth",
    "creeping death",
