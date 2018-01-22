@@ -3426,7 +3426,7 @@ void cast_goodberry( byte level, struct char_data *ch, char *arg,
 }
 
 
-void cast_flame_blade( byte level, struct char_data *ch, char *arg,
+void cast_elemental_blade( byte level, struct char_data *ch, char *arg,
                        int type, struct char_data *tar_ch, 
                        struct obj_data *tar_obj )
 {
@@ -3435,7 +3435,7 @@ void cast_flame_blade( byte level, struct char_data *ch, char *arg,
   {
    case SPELL_TYPE_SPELL:
    case SPELL_TYPE_SCROLL:
-    spell_flame_blade(level, ch, ch, 0);
+    spell_elemental_blade(level, ch, ch, 0);
     break;
    default:
     mudlog( LOG_SYSERR, "serious screw-up in flame blade.");
