@@ -1452,11 +1452,11 @@ Save        : Nessuno
 Costo di lancio: 20 mana
 
 Questo spell consente al caster di essere trasportato istantaneamente
-attraverso una coppia di alberi. Prima pero' il caster deve conoscere
-la locazione di un albero e il nome dell'albero dove vuole andare.
-Il caster deve trovarsi presso un'albero se vuole essere trasportato
-all'altro. Devi chiacchierare con gli alberi per trovarli e sapere
-il loro nome. (speak with plants)
+presso uno degli alberi antichi. Prima pero' il caster deve conoscere 
+il nome dell'albero dove vuole andare, deve quindi prima chiacchierare 
+con gli alberi per trovarli e sapere il loro nome. (speak with plants).
+
+Il caster deve trovarsi all'aperto se vuole essere trasportato.
 
 Vedi anche: SPEAK WITH PLANTS
 #
@@ -1686,16 +1686,18 @@ quantita' di frutti di bosco (berries). Sono poco nutrienti, ma curano
 
 Vedi anche: CREATE FOOD, CREATE WATER, CURE LIGHT
 #
-"FLAME BLADE" FLAMEBLADE
-Sintassi    : cast 'flame blade'
+"ELEMENTAL BLADE" ELEMENTALBLADE
+Sintassi    : cast 'elemental blade'
 Accumulazione: -
 Durata      : Permanent
 Livello     : Level 7 druid.
 Save        : Nessuno
 Costo di lancio: 20 mana
 
-Questo spell crea una lama di fuoco il cui danno varia in base
-al livello del druido; ad alti livelli e' veramente molto potente.
+Questo spell crea in maniera casuale una lama di fuoco, ghiaccio o fulmini 
+il cui danno varia in base al livello del druido;
+
+ad alti livelli e' veramente molto potente.
 
 Questo spell e' MOLTO importante se vuoi avanzare oltre il livello 10.
 
