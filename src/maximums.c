@@ -1,5 +1,5 @@
 /* AlarMUD 
- * $Id: limits.c,v 1.2 2002/02/13 12:30:58 root Exp $ 
+ * $Id: maximums.c,v 1.2 2002/02/13 12:30:58 root Exp $
  * */
 #include <stdio.h>
 #include <assert.h>
@@ -1265,7 +1265,7 @@ void gain_exp_regardless( struct char_data *ch, int gain, int iClass,
 
 void gain_condition(struct char_data *ch,int condition,int value)
 {
-   bool intoxicated;
+   bool intoxicated=false;
    if( IS_IMMORTAL( ch ) ) return;
    
    

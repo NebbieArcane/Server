@@ -2,8 +2,8 @@
 /* $Id: constants.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $ */
 /* modificato da Jethro, agosto 2011 */
 
+#include "maximums.h"
 #include "structs.h"
-#include "limits.h"
 #include "trap.h"
 #include "race.h"
 
@@ -1610,7 +1610,7 @@ int RacialHome[MAX_RACE+1][2] =
 /* predator   8*/ { 1, 1 },
 /* parasite   9*/ { 1, 1 },
 /* slime     20*/ { 1, 1 },
-/* demon      1*/ { 7800, 3008 }, //FLyp, mica possiamo farlo nascere nel limbo.... Per ora lo sbattiamo da niobe, ma cambierei
+/* demon      1*/ { 1, 1 },
 /* snake      2*/ { 1, 1 },
 /* herbiv     3*/ { 1, 1 },
 /* tree       4*/ { 1, 1 },

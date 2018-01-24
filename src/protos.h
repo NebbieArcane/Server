@@ -10,7 +10,6 @@
 #include "hash.h"
 #include "heap.h"
 #include "interpreter.h"
-#include "limits.h"
 #include "poly.h"
 #include "race.h"
 #include "script.h"
@@ -21,6 +20,7 @@
 #include "wizlist.h"
 #include "parser.h"
 #include "mail.h"
+#include "maximums.h"
 #ifdef KLUDGE_STRING
 char *strdup(char *); 
 #else

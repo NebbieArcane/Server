@@ -11,7 +11,6 @@
 *      3/6/98 ejg:  Moved defines and structs to queue.c.                 *
 ************************************************************************ */
 
-
 /* function protos need by other modules */
 struct queue *queue_init(void);
 struct q_element *queue_enq(struct queue *q, void *data, long key);
