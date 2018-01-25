@@ -29,7 +29,7 @@
 #include "fight.h"
 #include "signals.h"
 #include "auction.h"
-#include "configuration.h"
+#include "configuration.hpp"
 #include "events.h"
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
