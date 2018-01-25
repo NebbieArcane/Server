@@ -3683,7 +3683,30 @@ fi
 
 
 
-ac_config_headers="$ac_config_headers src/conf.h"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for src/configuration.hpp" >&5
+$as_echo_n "checking for src/configuration.hpp... " >&6; }
+if ${ac_cv_file_src_configuration_hpp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "src/configuration.hpp"; then
+  ac_cv_file_src_configuration_hpp=yes
+else
+  ac_cv_file_src_configuration_hpp=no
+fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_file_src_configuration_hpp" >&5
+$as_echo "$ac_cv_file_src_configuration_hpp" >&6; }
+if test "x$ac_cv_file_src_configuration_hpp" = xyes; then :
+
+else
+
+	as_fn_error $? "please copy src/configuration_default.hpp over src/configuration.hpp and edit it" "$LINENO" 5
+
+fi
+
+ac_config_headers="$ac_config_headers src/config.h"
 
 ac_config_files="$ac_config_files Makefile src/Makefile"
 
@@ -4417,7 +4440,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-    "src/conf.h") CONFIG_HEADERS="$CONFIG_HEADERS src/conf.h" ;;
+    "src/config.h") CONFIG_HEADERS="$CONFIG_HEADERS src/config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
 

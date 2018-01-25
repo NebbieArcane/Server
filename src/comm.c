@@ -29,8 +29,8 @@
 #include "fight.h"
 #include "signals.h"
 #include "auction.h"
+#include "configuration.h"
 #include "events.h"
-#include "config.h"
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
 #define MAX_CONNECTS 1024  /* max number of descriptors (connections) */
