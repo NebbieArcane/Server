@@ -103,7 +103,7 @@ long GetMediumLag(long lastlag);
 long GetLagIndex();
 int IsTest(int test);
 
-inline void CheckCharAffected( char *msg )
+void CheckCharAffected( char *msg )
 {
 #if HEAVY_DEBUG
  Check_p = strdup( "a simple test in CheckCharAffected blank text meaning"
