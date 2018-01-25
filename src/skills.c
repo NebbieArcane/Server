@@ -2277,7 +2277,7 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                       if( total_bonus > 23 )
                       {
                           special = 1 ;
-                          apply = APPLY_M_IMMUNE ;
+                          apply = APPLY_IMMUNE ;
                           app_val = IMM_HOLD ;
                       }
                       break ;
