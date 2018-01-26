@@ -41,7 +41,7 @@ bugs
 /Release/
 utilities/convert
 # http://www.gnu.org/software/automake
-
+Makefile
 Makefile.in
 /ar-lib
 /mdate-sh
@@ -87,3 +87,5 @@ depcomp
 install-sh
 INSTALL
 missing
+src/config.hpp
+src/config.hpp.in
