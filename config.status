@@ -393,8 +393,8 @@ on `(hostname || uname -n) 2>/dev/null | sed 1q`
 "
 
 # Files that config.status was made for.
-config_files=" Makefile src/Makefile"
-config_headers=" src/conf.h"
+config_files=" Makefile src/Makefile utilities/Makefile"
+config_headers=" src/config.hpp"
 config_commands=" depfiles"
 
 ac_cs_usage="\
@@ -547,9 +547,10 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-    "src/conf.h") CONFIG_HEADERS="$CONFIG_HEADERS src/conf.h" ;;
+    "src/config.hpp") CONFIG_HEADERS="$CONFIG_HEADERS src/config.hpp" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "utilities/Makefile") CONFIG_FILES="$CONFIG_FILES utilities/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -619,6 +620,9 @@ S["am__EXEEXT_FALSE"]=""
 S["am__EXEEXT_TRUE"]="#"
 S["LTLIBOBJS"]=""
 S["LIBOBJS"]=""
+S["EGREP"]="/bin/grep -E"
+S["GREP"]="/bin/grep"
+S["CPP"]="g++ -E"
 S["am__fastdepCC_FALSE"]="#"
 S["am__fastdepCC_TRUE"]=""
 S["CCDEPMODE"]="depmode=gcc3"
@@ -672,7 +676,7 @@ S["INSTALL_PROGRAM"]="${INSTALL}"
 S["target_alias"]=""
 S["host_alias"]=""
 S["build_alias"]=""
-S["LIBS"]=""
+S["LIBS"]="-lrt -lresolv -lpthread -ldl -lcrypt "
 S["ECHO_T"]=""
 S["ECHO_N"]="-n"
 S["ECHO_C"]=""
@@ -757,6 +761,55 @@ D["PACKAGE_BUGREPORT"]=" \"\""
 D["PACKAGE_URL"]=" \"\""
 D["PACKAGE"]=" \"myst\""
 D["VERSION"]=" \"3.1.7\""
+D["HAVE_LIBCRYPT"]=" 1"
+D["HAVE_LIBDL"]=" 1"
+D["HAVE_LIBPTHREAD"]=" 1"
+D["HAVE_LIBRESOLV"]=" 1"
+D["HAVE_LIBRT"]=" 1"
+D["STDC_HEADERS"]=" 1"
+D["HAVE_SYS_TYPES_H"]=" 1"
+D["HAVE_SYS_STAT_H"]=" 1"
+D["HAVE_STDLIB_H"]=" 1"
+D["HAVE_STRING_H"]=" 1"
+D["HAVE_MEMORY_H"]=" 1"
+D["HAVE_STRINGS_H"]=" 1"
+D["HAVE_INTTYPES_H"]=" 1"
+D["HAVE_STDINT_H"]=" 1"
+D["HAVE_UNISTD_H"]=" 1"
+D["HAVE_FCNTL_H"]=" 1"
+D["HAVE_LIMITS_H"]=" 1"
+D["HAVE_MALLOC_H"]=" 1"
+D["HAVE_NETDB_H"]=" 1"
+D["HAVE_NETINET_IN_H"]=" 1"
+D["HAVE_STDLIB_H"]=" 1"
+D["HAVE_STRING_H"]=" 1"
+D["HAVE_STRINGS_H"]=" 1"
+D["HAVE_SYS_FILE_H"]=" 1"
+D["HAVE_SYS_SOCKET_H"]=" 1"
+D["HAVE_SYS_TIME_H"]=" 1"
+D["HAVE_UNISTD_H"]=" 1"
+D["HAVE_STDLIB_H"]=" 1"
+D["HAVE_MALLOC"]=" 1"
+D["HAVE_STDLIB_H"]=" 1"
+D["HAVE_REALLOC"]=" 1"
+D["HAVE_BZERO"]=" 1"
+D["HAVE_GETHOSTBYADDR"]=" 1"
+D["HAVE_GETHOSTBYNAME"]=" 1"
+D["HAVE_GETHOSTNAME"]=" 1"
+D["HAVE_GETPAGESIZE"]=" 1"
+D["HAVE_GETTIMEOFDAY"]=" 1"
+D["HAVE_ISASCII"]=" 1"
+D["HAVE_MEMSET"]=" 1"
+D["HAVE_MODF"]=" 1"
+D["HAVE_POW"]=" 1"
+D["HAVE_SELECT"]=" 1"
+D["HAVE_SOCKET"]=" 1"
+D["HAVE_STRCASECMP"]=" 1"
+D["HAVE_STRCHR"]=" 1"
+D["HAVE_STRDUP"]=" 1"
+D["HAVE_STRERROR"]=" 1"
+D["HAVE_STRNCASECMP"]=" 1"
+D["HAVE_STRSTR"]=" 1"
   for (key in D) D_is_set[key] = 1
   FS = ""
 }

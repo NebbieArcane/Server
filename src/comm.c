@@ -308,53 +308,11 @@ void str2ansi( char *p2, char *p1, int start, int stop )
 /* Devo commentare sto pezzo per problemi di compilazione....  */ 
     mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
     mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
-    mudlog(LOG_CHECK, "%s",gdbm_version);
 
 
 /*********/
 
-    MYSQL *mysqlConn = mysql_init(NULL);;
-    MYSQL_RES *mysqlRes;
-    MYSQL_ROW mysqlRow;
 
-    char *mysqlServer = "localhost";
-    char *mysqlUser = MYSQL_USER;
-    //FIXME: credenziali db da define, secret è la password per la vagrant
-   char *mysqlPassword = MYSQL_PASSWORD; /* set me first */
-    char *mysqlDatabase = MYSQL_DB;
-
-    if (mysqlConn == NULL) 
-    {
-      mudlog( LOG_CHECK, "0-----------------> %s\n", mysql_error(mysqlConn));
-      //exit(1);
-    }
-
-   /* Connect to database */
-    if (!mysql_real_connect(mysqlConn, mysqlServer, mysqlUser, mysqlPassword, mysqlDatabase, 0, NULL, 0)) {
-      mudlog( LOG_CHECK, "1--------------------> %s\n", mysql_error(mysqlConn));
-
-      //exit(1);
-    } else {
-      mudlog( LOG_CHECK, "CONNESSO");
-      /* send SQL query */
-      if (mysql_query(mysqlConn, "show tables")) {
-        mudlog( LOG_CHECK, "############################### %s\n", mysql_error(mysqlConn));
-      //exit(1);
-      }
-
-      if(mysqlRes != NULL) {
-        mysqlRes = mysql_use_result(mysqlConn);
-
-   /* output table name */
-        mudlog( LOG_CHECK, "MySQL Tables in mysql database: [%s]\n", mysqlDatabase);
-
-        while ((mysqlRow = mysql_fetch_row(mysqlRes)) != NULL) {
-          mudlog( LOG_CHECK, "%s \n", mysqlRow[0]);
-        }
-      }
-      mysql_free_result(mysqlRes);  
-      mysql_close(mysqlConn);
-    }
 
     
 /*********/

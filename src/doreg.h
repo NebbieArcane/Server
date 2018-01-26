@@ -1,5 +1,6 @@
 /*$Id: doreg.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
+#define __DOREG
 #ifndef __DOREG
 #define __DOREG 
 #include <stdlib.h>

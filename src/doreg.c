@@ -1,5 +1,6 @@
 /*$Id: doreg.c,v 1.4 2002/03/23 16:43:20 Thunder Exp $
 */
+#if 0
 #include <gdbm.h>
 #include <unistd.h>
 #include <crypt.h>
@@ -896,3 +897,4 @@ mudlog(LOG_SYSERR,"PROOOOOOOOOOOOOOOOOT222222222222222!");
    }
    return(FALSE);
 }
+#endif
