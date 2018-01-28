@@ -5,7 +5,6 @@
 #include "release.h"
 #include <string.h>
 #include "version.h"
-//#include "C:\Nebbie\SRC\version.h"
 char *version()
 {
    return VERSION;
