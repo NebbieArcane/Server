@@ -26,6 +26,7 @@
 //#include "vate.h"
 #include "breath.h"
 #include "snew.h"
+#include "utility.h"
 #define SPECFILE "myst.spe"
 #if HASH
 extern struct hash_header room_db;

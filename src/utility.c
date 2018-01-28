@@ -15,6 +15,7 @@
 #include "fight.h"
 #include "snew.h"
 #include "signals.h"
+#include "utility.h"
 extern long SystemFlags;
 extern struct time_data time_info;
 extern struct descriptor_data *descriptor_list;
@@ -726,8 +727,7 @@ int strn_cmp(char *arg1, char *arg2, int n)
   return(strncasecmp(arg1,arg2,n));
 
 }
-
-void mudlog( unsigned uType, char *szString, ... )
+void _mudlog( char* const file,int line,unsigned uType, char* const szString, ... )
 {
   va_list argptr;
   char szBuffer[ LARGE_BUFSIZE ];
@@ -746,35 +746,35 @@ void mudlog( unsigned uType, char *szString, ... )
   
   if( IS_SET( uType, LOG_SYSERR ) )
   {
-    fprintf( stderr, "LSYSERR : %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LSYSERR : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_CHECK ) )
   {
-    fprintf( stderr, "LCHECK  : %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LCHECK  : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_PLAYERS ) )
   {
-    fprintf( stderr, "LPLAYERS: %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LPLAYERS: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_MOBILES ) )
   {
-    fprintf( stderr, "LMOBILES: %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LMOBILES: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_CONNECT ) )
   {
-    fprintf( stderr, "LCONNECT: %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LCONNECT: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_ERROR ) )
   {
-    fprintf( stderr, "LERROR  : %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LERROR  : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_WHO ) )
   {
-    fprintf( stderr, "LWHO    : %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LWHO    : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   if( IS_SET( uType, LOG_SAVE ) )
   {
-    fprintf( stderr, "LSAVE   : %s : %s\n", pchTimeStr, szBuffer );
+    fprintf( stderr, "LSAVE   : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
   }
   fflush(stderr);
   if( !IS_SET( uType, LOG_SILENT ) )

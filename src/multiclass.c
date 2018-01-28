@@ -5,7 +5,7 @@
 
 #include "protos.h"
 #include "snew.h"
-
+#include "utility.h"
 /* extern variables */
 
 extern struct room_data *world;

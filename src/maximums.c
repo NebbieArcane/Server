@@ -9,6 +9,7 @@
 #include "protos.h"
 #include "fight.h"
 #include "snew.h"
+#include "utility.h"
 /* struct room_data *real_roomp(int); */
 
 /*ALAR modificato. Invecchiando il

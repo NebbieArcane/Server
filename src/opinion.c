@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "snew.h"
 #include "protos.h"
+#include "utility.h"
 
 /*
   external stuff

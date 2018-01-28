@@ -9,7 +9,7 @@
 #include "protos.h"
 #include "fight.h"
 #include "snew.h"
-
+#include "utility.h"
 /* Global data */
 
 extern struct room_data *world;

@@ -132,8 +132,9 @@ bool recep_offer(struct char_data *ch,  struct char_data *receptionist,
       }
       return(FALSE);
    }
-   if (forcerent==1) 
+   if (forcerent==1) {
      mudlog( LOG_PLAYERS, "%s is being force rented!", GET_NAME( ch ) );
+   }
    RentItem=0;
    add_obj_cost(ch, receptionist, ch->carrying, cost);
    limited_items +=CountLims(ch->carrying);
@@ -1031,8 +1032,10 @@ void update_obj_file()
 	 
 	 if( ( pCharFile = fopen( szFileName, "r+" ) ) != NULL )
 	 {
+		mudlog("FOPEN %s %d %s",__FILE__,__LINE__,ent->d_name);
 	    if( fread( &ch_st, 1, sizeof( ch_st ), pCharFile ) == sizeof( ch_st ) )
 	    {
+			mudlog("FREAD %s",ent->d_name);
 	       sprintf( szFileName, "%s/%s", RENT_DIR, lower( ch_st.name ) );
 	       /* r+b is for Binary Reading/Writing */
 	       if( ( pObjFile = fopen( szFileName, "r+b") ) != NULL )
@@ -1129,7 +1132,8 @@ void update_obj_file()
 	    }
 	    else
 	    {
-	       mudlog( LOG_ERROR, "Error reading file %s.", szFileName );
+	       mudlog( LOG_ERROR, "Error reading file %s. %d", szFileName, sizeof(ch_st) );
+	       exit(1);
 	    }
 	    fclose( pCharFile );
 	 }

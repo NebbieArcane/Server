@@ -30,7 +30,7 @@
 #include "protos.h"
 #include "events.h"
 #include "fight.h"
-
+#include "utility.h"
 extern int hit_gain(struct char_data *ch);
 extern int move_gain(struct char_data *ch);
 extern int mana_limit(struct char_data *ch);

@@ -13,6 +13,7 @@
 #include <string.h>
 #include "signals.h"
 #include "structs.h"
+#include "utility.h"
 void *ggcalloc (unsigned int nelem, unsigned int size, char *file_name, int line_number);
 void *ggmalloc (unsigned int size, char *file_name, int line_number)
 {
@@ -37,8 +38,9 @@ void *ggcalloc (unsigned int nelem, unsigned int size, char *file_name, int line
 
    SetLine(file_name,-line_number);
    
-   if (! ptr)
+   if (! ptr) {
      mudlog(LOG_ERROR,"Calloc failed in %s at %d",file_name,line_number);
+   }
    fflush(NULL);
    return (ptr);
    
@@ -51,8 +53,9 @@ void *ggrealloc (void *in_ptr, unsigned int size, char *file_name, int line_numb
    out_ptr = realloc (in_ptr, size);
    SetLine(file_name,-line_number);
 
-   if (! out_ptr)
+   if (! out_ptr) {
      mudlog(LOG_ERROR,"realloc failed in %s at %d",file_name,line_number);
+   }
    return (out_ptr);
    
 }
@@ -85,8 +88,9 @@ char *ggstrdup (char *s1, char *file_name, int line_number)
    ptr = (char *) strdup (s1);
    SetLine(file_name,-line_number);
    
-   if (! ptr)
+   if (! ptr) {
      mudlog(LOG_ERROR,"strdup failed in %s at %d",file_name,line_number);
+   }
    return (ptr);
    
 }
@@ -179,8 +183,9 @@ char *ggstrncpy(char *dest,  const char *src, size_t n,char *file_name,int line_
       if (src)
 	ptr=(char *) strncpy(dest,src,n);
    }
-   else
+   else {
      mudlog(LOG_ERROR,"Dest NULL in strncpy in %s at %d",file_name,line_number);
+   }
    SetLine(file_name,-line_number);
    return (char *) ptr;
 }

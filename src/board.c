@@ -11,6 +11,7 @@
 
 #include "protos.h"
 #include "snew.h"
+#include "utility.h"
 
 #define MAX_MSGS 99                    /* Max number of messages.          */
 #define MAX_MESSAGE_LENGTH 2048     /* that should be enough            */

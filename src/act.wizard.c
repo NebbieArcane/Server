@@ -22,6 +22,7 @@
 #include "doreg.h"
 #include "Registered.hpp"
 #include "signals.h"
+#include "utility.h"
 void switch_light(byte why);
 
 /*   external vars  */
@@ -175,7 +176,9 @@ void do_register(struct char_data *ch, char *argument, int cmd)
 	 send_to_char(buf, ch);
       }
    }
-   Nebbie::getRegistered()->doReg(GET_NAME(ch),GET_NAME(victim));
+   Nebbie::Registered toon(GET_NAME(victim));
+   toon.reg(GET_NAME(ch));
+   //Nebbie::getRegistered()->doReg(GET_NAME(ch),GET_NAME(victim));
    //doreg(ch,nparms,parms);
    for (nparms=0;nparms<10;nparms++)
    {
@@ -5987,7 +5990,8 @@ void do_nuke(struct char_data *ch, char *argument , int cmd)
          FALSE, ch, 0, victim, TO_CHAR );
 
     do_purge( ch, GET_NAME( victim ), 0 );
-    Nebbie::getRegistered()->doDel(GET_NAME(victim));
+    Nebbie::Registered toon(GET_NAME(victim));
+    toon.del();
      sprintf( buf, "rm -f %s/%s.*", PLAYERS_DIR, lower( GET_NAME( victim ) ) );
     system( buf );
      mudlog(LOG_PLAYERS,buf);

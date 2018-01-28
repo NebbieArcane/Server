@@ -1,8 +1,6 @@
 /* AlarMUD
  * Questo file serve per avere un punto unico in cui definire oggetti che 
  * voglio avere in TUTTI i file
- * A differenza di utility pero', NON e' definito nelle dependencies, 
- * quindi la sua modifica non causa automaticamente il rebuild del Mud
  * $Id: snew.h,v 1.2 2002/03/23 16:43:20 Thunder Exp $
  * * */
 #ifndef __SNEW
@@ -41,6 +39,7 @@
 #include "specass2.h"
 #include "version.h"
 #include "signals.h"
+#include "utility.h"
 #define MIN_EXP(ch) (titles[GetMaxClass(ch)][GET_AVE_LEVEL(ch)].exp)
 #define Ansi_len(s) (strlen(ParseAnsiColors(FALSE,s)))
 int GetTargetType(struct char_data *ch,struct char_data *target,int ostility);

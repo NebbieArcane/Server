@@ -12,6 +12,7 @@
 #include "snew.h"
 #include "signals.h"
 #include "events.h"
+#include "utility.h"
 #if HASH
 extern struct hash_header room_db;
 #else
@@ -991,7 +992,7 @@ void char_from_room(struct char_data *ch)
             GET_NAME_DESC( ch ) );
     return;
   }
-/* Alar: anticipato il check sulla validità della stanza */  
+/* Alar: anticipato il check sulla validitï¿½ della stanza */  
   rp = real_roomp( ch->in_room );
   if( rp == NULL )
   {

@@ -11,6 +11,7 @@
 
 #include "lucertole.h"
 #include "snew.h"
+#include "utility.h"
 #define RESCUE_VIRGIN  1950
 #define RESCUE_ROOM    1983
 #define SNAKE_GOD      1953

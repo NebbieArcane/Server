@@ -10,6 +10,7 @@
 #include "status.h"
 #include "fight.h"
 #include "snew.h"
+#include "utility.h"
 
 extern struct char_data *character_list;
 extern struct index_data *mob_index;

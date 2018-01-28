@@ -15,11 +15,9 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/resource.h>
-#include <gdbm.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
-#include <mysql/mysql.h>
 
 #include "snew.h"
 
@@ -250,10 +248,10 @@ void str2ansi( char *p2, char *p1, int start, int stop )
 *  main game loop and related stuff                                       *
 ********************************************************************* */
 
-  int __main ()
-  {
-    return(1);
-  }
+  //int __main ()
+  //{
+  //  return(1);
+  //}
 
 /* jdb code - added to try to handle all the different ways the connections
    can die, and try to keep these 'invalid' sockets from getting to select
@@ -305,7 +303,7 @@ void str2ansi( char *p2, char *p1, int start, int stop )
     return 1;
 #endif
 
-/* Devo commentare sto pezzo per problemi di compilazione....  */ 
+/* Devo commentare sto pezzo per problemi di compilazione....  */
     mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
     mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
 
@@ -314,7 +312,7 @@ void str2ansi( char *p2, char *p1, int start, int stop )
 
 
 
-    
+
 /*********/
 
 
@@ -325,7 +323,7 @@ void str2ansi( char *p2, char *p1, int start, int stop )
    {
       mudlog(LOG_CHECK,"Started as root, switching to user %s",MUDUSER);
       pw=getpwnam(MUDUSER);
-      if (!pw) 
+      if (!pw)
       {
 	 mudlog(LOG_ERROR,"Unsuccesful switch, can't run as root");
 	 assert(0);
@@ -338,11 +336,11 @@ void str2ansi( char *p2, char *p1, int start, int stop )
     mudlog(LOG_CHECK," %4d %4d %4d %4d %4d %4d",
      PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
      PULSE_VIOLENCE,PULSE_MOBILE,PULSE_PER_SEC * SECS_PER_MUD_HOUR);
-#if 0   
+#if 1
 #ifdef USE_LAWFUL
    mudlog( LOG_CHECK, "USE_LAWFUL          = %d", USE_LAWFUL);
 #endif
-#ifdef LIMITE_ITEMS
+#ifdef LIMITED_ITEMS
    mudlog( LOG_CHECK, "LIMITED_ITEMS       = %d", LIMITED_ITEMS);
 #endif
 #ifdef SITELOCK
@@ -396,7 +394,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #ifdef DEBUG
    mudlog( LOG_CHECK,  "DEBUG               = %d", DEBUG);
 #endif
-#ifdef LOCKGROVE 
+#ifdef LOCKGROVE
    mudlog( LOG_CHECK,  "LOCKGROVE           = %d", LOCKGROVE);
 #endif
 #ifdef IMPL_SECURITY
@@ -420,7 +418,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #ifdef LOG_MOB
    mudlog( LOG_CHECK, "LOG_MOB             = %d", LOG_MOB);
 #endif
-#ifdef LOG_DEBUG  
+#ifdef LOG_DEBUG
    mudlog( LOG_CHECK,  "LOG_DEBUG           = %d", LOG_DEBUG);
 #endif
 #ifdef OLD_EXP
@@ -432,10 +430,10 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #ifdef NEWER_EXP
    mudlog( LOG_CHECK,  "NEWER_EXP           = %d", NEWER_EXP);
 #endif
-#ifdef NEW_GAIN  
+#ifdef NEW_GAIN
    mudlog( LOG_CHECK, "NEW_GAIN             = %d", NEW_GAIN);
 #endif
-#ifdef NEW_RENT 
+#ifdef NEW_RENT
    mudlog( LOG_CHECK,  "NEW_RENT            = %d", NEW_RENT);
 #endif
 #ifdef NEW_ROLL
@@ -465,7 +463,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #ifdef CYGWIN
    mudlog(LOG_CHECK,"CYGWIN defined");
 #endif
-#endif  
+#endif
     port = DFLT_PORT;
 #if defined(DFLT_DIR)
     dir = DFLT_DIR;
@@ -474,7 +472,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #endif
 #if defined(sun) || defined(NETBSD) && !defined(LINUX)
 /*
-**  this block sets the max # of connections.  
+**  this block sets the max # of connections.
 */
 #if defined(sun)
     res = getrlimit(RLIMIT_NOFILE, &rl);
@@ -486,7 +484,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
     res = getrlimit(RLIMIT_OFILE, &rl);
     rl.rlim_cur = MAX_CONNECTS;
     res = setrlimit(RLIMIT_OFILE, &rl);
-#endif   
+#endif
 
 #endif
 
@@ -551,7 +549,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
       if (!isdigit(*argv[pos]))
       {
         fprintf(stderr, "Usage: %s [-l] [-s] [-d pathname]"
-         " -A -N -R -L -M [ port # ]\n", 
+         " -A -N -R -L -M [ port # ]\n",
          argv[0]);
         assert(0);
       }
@@ -588,7 +586,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 
 #if SITELOCK
       mudlog( LOG_CHECK, "Blanking denied hosts.");
-      for(a = 0 ; a<= MAX_BAN_HOSTS ; a++) 
+      for(a = 0 ; a<= MAX_BAN_HOSTS ; a++)
         strcpy(hostlist[a]," \0\0\0\0");
       numberhosts = 0;
 

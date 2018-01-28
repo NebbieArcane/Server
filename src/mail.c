@@ -94,6 +94,7 @@ Send comments, bug reports, etc. to jelson@server.cs.jhu.edu
 #include <time.h>
 #include "snew.h"
 #include "protos.h"
+#include "utility.h"
 
 extern struct room_data *world;
 extern struct index_data *mob_index;

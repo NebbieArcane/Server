@@ -24,6 +24,7 @@
 #include "queue.h"
 #include "events.h"
 #include "snew.h"
+#include "utility.h"
 
 
 struct event {

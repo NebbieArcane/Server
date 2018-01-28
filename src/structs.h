@@ -122,7 +122,7 @@ struct QuestItem
 #define NICE_PKILL      1
 #define NICE_MULTICLASS 1
 #define DOFLEEFIGHTINGLD 1  /* auto flee se in combat va ld */
-#define ALAR_RENT  		 1		/* se 1 il rent è normale */
+#define ALAR_RENT  		 1		/* se 1 il rent ï¿½ normale */
 #define NEW_RENT  		 0    /* se 1 Il rent non viene calcolato */
 #define LIMITEEQALRIENTRO 0 /* elimina tutto l'eq RARO in inventario al rientro nel mud */
 #define EQPESANTE 		1  /* L'eq pesa anche se indossato */
@@ -363,7 +363,7 @@ struct room_q
 #if 0
   int room_nr;
 #else
-  long room_nr;
+  int room_nr;
 #endif
   struct room_q *next_q;
 };
@@ -598,20 +598,20 @@ struct obj_flag_data
 {
   int value[4];       /* Values of the item (see list)    */
   ubyte type_flag;     /* Type of item                     */
-  unsigned long wear_flags;     /* Where you can wear it            */
-  unsigned long extra_flags;    /* If it hums,glows etc             */
+  unsigned int wear_flags;     /* Where you can wear it            */
+  unsigned int extra_flags;    /* If it hums,glows etc             */
   int weight;         /* Weigt what else                  */
   int cost;           /* Value when sold (gp.)            */
   int cost_per_day;   /* Cost to keep pr. real day        */
   int timer;          /* Timer for object                 */
-  long bitvector;     /* To set chars bits                */
+  int bitvector;     /* To set chars bits                */
 };
 
 /* Used in OBJ_FILE_ELEM *DO*NOT*CHANGE* */
 struct obj_affected_type 
 {
   short location;      /* Which ability to change (APPLY_XXX) */
-  long modifier;      /* How much it changes by      */
+  int modifier;      /* How much it changes by      */
 };
 
 /* ======================== Structure for object ========================*/
@@ -624,7 +624,7 @@ struct obj_data
                                   /* Which abilities in PC to change*/
 
   sh_int sector;                 /* for large rooms      */
-  long char_vnum;                /* for resurrection     */
+  int char_vnum;                /* for resurrection     */
   char oldfilename[ 20 ];
   char *name;                    /* Title of object :get etc.      */
   char *description ;            /* When in room                   */
@@ -1223,7 +1223,7 @@ struct char_special_data
   int edit;                /* edit state */
 
   sbyte mobtype;                        /* mob type simple, A, L, B */ 
-  unsigned long exp_flag;                 /* exp flag for this mob */
+  unsigned int exp_flag;                 /* exp flag for this mob */
   sbyte hp_num_dice;                        /* number of HPS dice */
   unsigned int hp_size_dice;                /* size of HPS dice */
   unsigned int hp_bonus_hps;                /* bonus hps number */
@@ -1329,10 +1329,19 @@ struct affected_type
 {
   short type;           /* The type of spell that caused this      */
   sh_int duration;      /* For how long its effects will last      */
-  long modifier;       /* This is added to apropriate ability     */
-  long location;        /* Tells which ability to change(APPLY_XXX)*/
-  long bitvector;       /* Tells which bits to set (AFF_XXX)       */
+  int modifier;       /* This is added to apropriate ability     */
+  int location;        /* Tells which ability to change(APPLY_XXX)*/
+  int bitvector;       /* Tells which bits to set (AFF_XXX)       */
   struct affected_type *next;
+};
+struct affected_type_u // To be only used in file definition,
+{
+  short type;           /* The type of spell that caused this      */
+  sh_int duration;      /* For how long its effects will last      */
+  int modifier;       /* This is added to apropriate ability     */
+  int location;        /* Tells which ability to change(APPLY_XXX)*/
+  int bitvector;       /* Tells which bits to set (AFF_XXX)       */
+  int next;
 };
 
 struct follow_type
@@ -1347,8 +1356,8 @@ struct follow_type
 struct char_data
 {
   int nMagicNumber;
-  long nr;                         /* monster nr */
-  long in_room;                    /* Location                    */
+  int nr;                         /* monster nr */
+  int in_room;                    /* Location                    */
 
   int term;
   int size;
@@ -1453,7 +1462,7 @@ struct char_file_u
    int iClass;
    ubyte sex;
    ubyte level[ABS_MAX_CLASS];
-   time_t birth;  /* Time of birth of character     */
+   unsigned int birth;  /* Time of birth of character     */
    int played;    /* Number of secs played in total */
    int   race;
    unsigned int weight;
@@ -1463,19 +1472,19 @@ struct char_file_u
    sh_int hometown;
    char description[240];
    bool talks[MAX_TOUNGE];
-   long extra_flags;
+   int extra_flags;
    sh_int load_room;            /* Which room to place char in  */
-   struct char_ability_data abilities;
-   struct char_point_data points;
-   struct char_skill_data skills[MAX_SKILLS];
-   struct affected_type affected[MAX_AFFECT];
+   struct char_ability_data abilities; // No pointers inside, same size on 32 and 64 bit
+   struct char_point_data points; // No pointers inside, same size on 32 and 64 bit
+   struct char_skill_data skills[MAX_SKILLS]; // No pointers inside, same size on 32 and 64 bit
+   struct affected_type_u affected[MAX_AFFECT];
    /* specials */
    byte spells_to_learn;  
    int alignment;     
-   unsigned long affected_by;
-   unsigned long affected_by2;
-   time_t last_logon;  /* Time (in secs) of last logon */
-   unsigned long    act;        /* ACT Flags                    */
+   unsigned int affected_by;
+   unsigned int affected_by2;
+   unsigned int last_logon;  /* Time (in secs) of last logon */
+   unsigned int    act;        /* ACT Flags                    */
    
    /* char data */
    char name[20];
@@ -1486,9 +1495,9 @@ struct char_file_u
    sh_int apply_saving_throw[MAX_SAVES];
    int conditions[MAX_CONDITIONS];
    int startroom;  /* which room the player should start in */
-   long user_flags;        /* no-delete,use ansi,etc... */
+   int user_flags;        /* no-delete,use ansi,etc... */
    int speaks;                /* language currently speakin in */
-   long agemod;   
+   int agemod;
 };
 
 
@@ -1530,8 +1539,8 @@ struct obj_file_u
   char owner[20];    /* Name of player                     */
   int gold_left;     /* Number of goldcoins left at owner  */
   int total_cost;    /* The cost for all items, per day    */
-  long last_update;  /* Time in seconds, when last updated */
-  long minimum_stay; /* For stasis */
+  int last_update;  /* Time in seconds, when last updated */
+  int minimum_stay; /* For stasis */
   int  number;       /* number of objects */
   struct obj_file_elem objects[MAX_OBJ_SAVE];
 };

@@ -11,6 +11,7 @@
 #include "cmdid.h"
 #include "fight.h"
 #include "snew.h"
+#include "utility.h"
 
 extern struct zone_data *zone_table;
 extern struct index_data *mob_index;
@@ -267,7 +268,7 @@ int Piovra( struct char_data *pChar, int nCmd, char *szArg,
 *****************************************************************************/
 #define NANODELLECOLLINE 314
 
-int Moribondo( struct char_data *pChar, int nCmd, char *szArg,
+int MoribondoCarceri( struct char_data *pChar, int nCmd, char *szArg,
                struct char_data *pMob, int nType )
 {
   if( pMob == NULL || pChar == NULL )

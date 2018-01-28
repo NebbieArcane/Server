@@ -27,7 +27,7 @@ consentire la creazione di oggetti e armi con i vnum assegnati,
 #include <ctype.h>
 
 #include "protos.h"
-
+#include "utility.h"
 #define	ARM	1
 #define	OGG	2
 #define	RES	3

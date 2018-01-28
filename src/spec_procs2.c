@@ -14,6 +14,7 @@
 #include "fight.h"
 #include "snew.h"
 #include "utils.h"
+#include "utility.h"
 /*   external vars  */
 
 extern struct room_data *world;
@@ -7269,7 +7270,11 @@ int StatMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, 
 	   stats[number]);
    act(buf,FALSE,ch,0,guildmaster,TO_CHAR);
    prezzo=StatCost(ch,number);
+<<<<<<< f0e7406cbcce38a301e221a1574db24538d3a389
    // Elei-Mi-Shill questa mi sa che non serve più
+=======
+   // Elei-Mi-Shill questa mi sa che non serve pi�
+>>>>>>> Removed gdbm and added source file and line to mudlog
    if (totstat<=TOT_STAT_MINIMUM)
    {
       prezzo/=2;

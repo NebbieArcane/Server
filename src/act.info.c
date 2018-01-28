@@ -25,6 +25,8 @@
 #include "doreg.h"
 #include "signals.h"
 #include "Registered.hpp"
+using Nebbie::Registered;
+
 /* extern variables */
 #if HASH
 extern struct hash_header room_db;
@@ -67,7 +69,6 @@ extern long SystemFlags;
 extern int NumTimeCheck;
 extern struct timeval aTimeCheck[];
 extern int gnTimeCheckIndex;
-
 
 /* extern functions 
 
@@ -4143,7 +4144,7 @@ void do_world(struct char_data *ch, char *argument, int cmd)
 	   top_of_p_table );
    act(buf,FALSE, ch,0,0,TO_CHAR);
    snprintf( buf,999,"$c0005Numero di giocatori registrati      : $c0015%ld",
-		   Nebbie::getRegistered()->Count());
+		   Registered::total());
    act(buf,FALSE, ch,0,0,TO_CHAR);
    
    snprintf( buf,999,"$c0005Numero di tipi di creature nel mondo: $c0015%d",

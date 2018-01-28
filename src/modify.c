@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include "protos.h"
 #include "snew.h"
+#include "utility.h"
 
 
 #define TP_MOB    0

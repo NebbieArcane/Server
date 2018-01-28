@@ -7,6 +7,7 @@
 
 #include "protos.h"
 #include "snew.h" 
+#include "utility.h"
 #define OBJ_MAIN_MENU         0
 #define CHANGE_OBJ_NAME       1
 #define CHANGE_OBJ_SHORT      2

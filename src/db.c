@@ -13,7 +13,6 @@
  **/
 #include <sys/errno.h>
 
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -33,7 +32,9 @@
 #include "doreg.h"
 #include "auction.h"
 #include "utils.h"
-#include "events.h"                                                        
+#include "events.h"
+#include "Registered.hpp"
+using Nebbie::Registered;
 
 #define RENT_INACTIVE 2    /* delete the users rent files after 2 month */
 #define NEW_ZONE_SYSTEM
@@ -200,16 +201,18 @@ void boot_db() {
     perror("Opening obj file");
     abort();
   }
-  if (!(help_fl = fopen(HELP_KWRD_FILE, "r")))
+  if (!(help_fl = fopen(HELP_KWRD_FILE, "r"))) {
     mudlog(LOG_ERROR, "   Could not open help file.");
-  else
+  }
+  else {
     help_index = build_help_index(help_fl, &top_of_helpt);
-
-  if (!(wizhelp_fl = fopen(WIZ_HELP_FILE, "r")))
+  }
+  if (!(wizhelp_fl = fopen(WIZ_HELP_FILE, "r"))) {
     mudlog(LOG_ERROR, "   Could not open wizhelp file.");
-  else
+  }
+  else {
     wizhelp_index = build_help_index(wizhelp_fl, &top_of_wizhelpt);
-
+  }
 #if CLEAN_AT_BOOT
   mudlog(LOG_CHECK, "Clearing inactive players");
   clean_playerfile();
@@ -2723,8 +2726,9 @@ void store_to_char(struct char_file_u *st, struct char_data *ch) {
 
   /*GGPATCH*/
   if (*st->authcode) {
-    CREATE(GET_AUTHCODE(ch), char, REG_CODELEN + 1);
-    strncpy(GET_AUTHCODE(ch), st->authcode, REG_CODELEN);
+
+    CREATE(GET_AUTHCODE(ch), char, Registered::REG_CODELEN + 1);
+    strncpy(GET_AUTHCODE(ch), st->authcode, Registered::REG_CODELEN);
   } else
     GET_AUTHCODE(ch) = 0;
   mudlog(LOG_PLAYERS, "Loading %s registrato come %s",
@@ -2740,8 +2744,21 @@ void store_to_char(struct char_file_u *st, struct char_data *ch) {
 
   /* Add all spell effects */
   for (i = 0; i < MAX_AFFECT; i++) {
-    if (st->affected[i].type)
-      affect_to_char(ch, &st->affected[i]);
+    if (st->affected[i].type) {
+    	/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
+    	 * Now, we copy the data in a temporary structure.
+    	 * Fortunately, the passed value will be copied so we dont need to allocate memory
+    	 */
+
+      struct affected_type temp_affect;
+      temp_affect.bitvector=st->affected[i].bitvector;
+      temp_affect.duration=st->affected[i].duration;
+      temp_affect.location=st->affected[i].location;
+      temp_affect.modifier=st->affected[i].modifier;
+      temp_affect.type=st->affected[i].type;
+      temp_affect.next=(struct affected_type*) NULL;
+      affect_to_char(ch, &temp_affect);
+    }
   }
   mudlog(LOG_SAVE, "<-Mana/Hits dopo affect   : %d/%d", GET_MAX_MANA(ch), GET_MAX_HIT(ch));
 
@@ -2796,8 +2813,15 @@ void char_to_store(struct char_data *ch, struct char_file_u *st) {
   mudlog(LOG_CHECK, "Removing all affects from %s", GET_NAME(ch));
   for (af = ch->affected, i = 0; i < MAX_AFFECT; i++) {
     if (af) {
-      st->affected[i] = *af;
-      st->affected[i].next = 0;
+    	/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
+    	 * Now, we need to assign item per item
+    	 */
+      st->affected[i].bitvector=af->bitvector;
+      st->affected[i].duration =af->duration;
+      st->affected[i].location =af->location;
+      st->affected[i].modifier =af->modifier;
+      st->affected[i].type     =af->type;
+      st->affected[i].next = (struct affected_type*) NULL;
       /* subtract effect of the spell or the effect will be doubled */
       affect_modify(ch, st->affected[i].location,
               st->affected[i].modifier,
@@ -2878,7 +2902,7 @@ void char_to_store(struct char_data *ch, struct char_file_u *st) {
   /*GGPATCH*/
 
   if (GET_AUTHBY(ch) && GET_AUTHCODE(ch))
-    strncpy(st->authcode, GET_AUTHCODE(ch), REG_CODELEN);
+    strncpy(st->authcode, GET_AUTHCODE(ch), Registered::REG_CODELEN);
   else
     *st->authcode = '\0';
 
@@ -4193,11 +4217,12 @@ void InitScripts() {
     }
   }
 
-  if (top_of_scripts)
+  if (top_of_scripts) {
     mudlog(LOG_CHECK, "%d scripts assigned.", top_of_scripts);
-  else
+  }
+  else {
     mudlog(LOG_CHECK, "No scripts found to assign.");
-
+  }
   fclose(f1);
 }
 

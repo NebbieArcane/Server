@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "mem_test.h"
 #include "auction.h" // SALVO aggiunta, modificate righe sotto
+#include "utility.h"
 
 #define SELLER 0 // SALVO per la nuova is_present
 #define BUYER 1 // SALVO per la nuova is_present

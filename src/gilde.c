@@ -10,6 +10,7 @@
 #include "gilde.h"
 #include "charlist.h"
 #include "snew.h"
+#include "utility.h"
 
 typedef struct structSocioGilda
 {

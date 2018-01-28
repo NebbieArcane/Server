@@ -2105,7 +2105,7 @@ void log( char * );
 void vlog_sev( char *szFmt, int nSevLev, ... );
 void vlog( char *szFmt, ... );
 #endif
-void mudlog( unsigned uType, char *szString, ... );
+//void mudlog( unsigned uType, char *szString, ... );
 void buglog( unsigned uType, char *szString, ... );
 void sprintbit(unsigned long vektor, char *names[], char *result);
 void sprinttype(int type, char *names[], char *result);

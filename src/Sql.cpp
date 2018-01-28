@@ -11,15 +11,17 @@
 #include "Sql.hpp"
 #include "configuration.hpp"
 #include "structs.h"
+#include "utility.h"
 #include <string>
 namespace nebbie {
 
-Sql sql_instance();
-Sql* getSql() {
-    return &sql_instance;
+Sql sql_instance;
+Sql *getSql() {
+    return (Sql*) &sql_instance;
 }
 
 Sql::Sql() : disabled(false) {
+#if 0
 	mysqlConn= mysql_init(NULL);
     MYSQL_RES *mysqlRes;
     MYSQL_ROW mysqlRow;
@@ -60,7 +62,7 @@ Sql::Sql() : disabled(false) {
       mysql_close(mysqlConn);
     }
 
-
+#endif
 }
 
 Sql::~Sql() {

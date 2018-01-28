@@ -14,6 +14,7 @@
 #include "protos.h"
 #include "fight.h"
 #include "snew.h"
+#include "utility.h"
 
 extern struct char_data *character_list;
 extern long SystemFlags;

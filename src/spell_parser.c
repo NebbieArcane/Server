@@ -15,6 +15,7 @@
 #include "snew.h"
 #include "status.h"
 #include "auction.h"
+#include "utility.h"
 #define MANA_MU 1
 #define MANA_CL 1
 

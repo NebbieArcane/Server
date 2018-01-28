@@ -2,7 +2,6 @@
 */
 #ifndef H_AUCTION
 #define H_AUCTION 1
-#if ENABLE_AUCTION
 #define PULSE_AUCTION             (6 * PULSE_PER_SEC) /* 10 seconds */ //ACIDUS 2003, ridotto tempo
 #define CHAR_DATA struct char_data
 #define OBJ_DATA struct obj_data
@@ -21,5 +20,4 @@ typedef struct  auction_data AUCTION_DATA; /* auction data */
 extern  AUCTION_DATA  *auction;
 extern void auction_update();
 extern void do_auction_int (struct char_data *ch, char *argument, int cmd);
-#endif
 #endif

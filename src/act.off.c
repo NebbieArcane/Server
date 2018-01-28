@@ -12,6 +12,7 @@
 #include "protos.h"
 #include "fight.h"
 #include "snew.h"
+#include "utility.h"
 
 /* extern variables */
 

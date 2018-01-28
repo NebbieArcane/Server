@@ -10,6 +10,7 @@
 
 #include "fight.h"
 #include "snew.h"
+#include "utility.h"
 extern struct char_data *character_list;
 
 /* struct room_data *real_roomp(int); */
