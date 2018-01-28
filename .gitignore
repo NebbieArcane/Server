@@ -27,11 +27,13 @@
 *.la
 *.a
 *.lib
-
+*.log
 # Executables
 *.exe
 *.out
 *.app
+#logs
+*.log
 .vagrant
 myst
 /config.h
@@ -48,6 +50,7 @@ Makefile.in
 /py-compile
 /test-driver
 /ylwrap
+
 
 # http://www.gnu.org/software/autoconf
 
