@@ -291,17 +291,17 @@ void boot_db() {
     d = (i ? (zone_table[i - 1].top + 1) : 0);
     zone_table[i].bottom = d;
     e = zone_table[i].top;
-    fprintf(stderr, "Performing boot-time init of %d:%s (rooms %d-%d).\n",
+    mudlog(LOG_CHECK, "Performing boot-time init of %d:%s (rooms %d-%d).",
             zone_table[i].num, s, d, e);
     zone_table[i].start = 0;
 
     if (i == 0) {
-      fprintf(stderr, "Performing boot-time reload of static mobs\n");
+      mudlog(LOG_CHECK, "Performing boot-time reload of static mobs.");
       reset_zone(0);
     }
 
     if (i == 1) {
-      mudlog(LOG_CHECK, "Reset of %s\n", s);
+      mudlog(LOG_CHECK, "Reset of %s", s);
       reset_zone(1);
     }
   }
