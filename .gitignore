@@ -90,3 +90,4 @@ missing
 src/config.hpp
 src/config.hpp.in
 config.status
+.autotools
