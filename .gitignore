@@ -1,3 +1,124 @@
+#No dot files
+.*
+# apart gitignore
+!.gitignore
+########################################################################
+#Eclipse
+# From https://raw.githubusercontent.com/github/gitignore/master/Global/Eclipse.gitignore
+
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# PyDev specific (Python IDE for Eclipse)
+*.pydevproject
+
+# CDT-specific (C/C++ Development Tooling)
+.cproject
+
+# CDT- autotools 
+.autotools
+
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific (PHP Development Tools)
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# Tern plugin
+.tern-project
+
+# TeXlipse plugin
+.texlipse
+
+# STS (Spring Tool Suite)
+.springBeans
+
+# Code Recommenders
+.recommenders/
+
+# Scala IDE specific (Scala & Java development for Eclipse)
+.cache-main
+.scala_dependencies
+.worksheet
+
+########################################################################
+# C
+# From https://github.com/github/gitignore/edit/master/C.gitignore
+#
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+
+########################################################################
+# C++
+# From https://github.com/github/gitignore/edit/master/C++.gitignore
+#
 # Prerequisites
 *.d
 
@@ -32,25 +153,30 @@
 *.exe
 *.out
 *.app
-#logs
-*.log
-.vagrant
-myst
-/config.h
-/.cproject
-bugs
-/Debug/
-/Release/
-utilities/convert
-# http://www.gnu.org/software/automake
+
+########################################################################
+#CMAKE
+#From https://github.com/github/gitignore/edit/master/CMake.gitignore
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
 Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+########################################################################
+# AUTOTOOLS
+# From https://raw.githubusercontent.com/github/gitignore/master/Autotools.gitignore
+# http://www.gnu.org/software/automake
+
 Makefile.in
 /ar-lib
 /mdate-sh
 /py-compile
 /test-driver
 /ylwrap
-
 
 # http://www.gnu.org/software/autoconf
 
@@ -85,14 +211,14 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 autom4te.cache
-compile
-depcomp
-install-sh
-INSTALL
-missing
-src/config.hpp
-src/config.hpp.in
-config.status
-.autotools
-/.lesshst
-/sourcelist
+
+########################################################################
+# Locally added
+*.log
+myst
+/config.h
+/.cproject
+bugs
+/Debug/
+/Release/
+utilities/convert
