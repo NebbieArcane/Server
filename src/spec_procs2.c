@@ -3991,12 +3991,12 @@ int miner_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mo
 * Demon teacher for immolation skill
 **/
 
-int demon_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
+int DemonTeacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
 {
    char buf[256];
    static char *n_skills[] =
    {
-      "miner", /* 1 ACIDUS 2003 skill miner */
+      "immolation", /* 1 ACIDUS 2003 skill miner */
       "\n",
    };
    int number=0;

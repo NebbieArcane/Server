@@ -5311,7 +5311,7 @@ void do_mindsummon( struct char_data *ch, char *argument, int cmd)
  }
  
 /**
-* Flyp 20180128 --> immolation, ovvero canibaliaze per i demoni
+* Flyp 20180128 --> immolation, ovvero canibaliaze modificato per i demoni
 **/
 void do_immolation(struct char_data *ch, char *argument, int cmd)
 {
@@ -5322,7 +5322,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
   int count;
   bool num_found=TRUE;
 
-  if (GET_RACE(ch) != RACE_DEMON) {
+  if (GET_RACE(ch) != RACE_DEMON || !ch->skills[SKILL_CANIBALIZE].learned) {
     return;
   }
 
@@ -5387,7 +5387,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
         mana_points = hit_points/2;
         break;
       default:
-        send_to_char("You need to be standing and maybe fighting to do this!");
+        send_to_char("You need to be standing and maybe fighting to do this!",ch);
         break;
     }
 
@@ -5409,15 +5409,15 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
     }
     
     // @TODO: create the skill!
-    if (ch->skills[SKILL_IMMOLATE].learned < dice(1,101) )
+    if (ch->skills[SKILL_IMMOLATION].learned < dice(1,101) )
     {
       send_to_char ("You try to immolate your stamina but the energy escapes before you can harness it.\n\r",ch);
       act("$n yelps in pain.",FALSE,ch,0,0,TO_ROOM);
       GET_HIT(ch) -= hit_points; alter_hit(ch,0);
       update_pos(ch);
       if (GET_POS(ch)==POSITION_DEAD) 
-        die(ch,SKILL_IMMOLATE, NULL);
-      LearnFromMistake(ch, SKILL_IMMOLATE, 0, 95);
+        die(ch,SKILL_IMMOLATION, NULL);
+      LearnFromMistake(ch, SKILL_IMMOLATION, 0, 95);
       WAIT_STATE(ch, PULSE_VIOLENCE*3);
       return;
     }
@@ -5429,7 +5429,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
 
     update_pos(ch);
     if(GET_POS(ch)==POSITION_DEAD)
-      die(ch,SKILL_IMMOLATE, NULL);
+      die(ch,SKILL_IMMOLATION, NULL);
 
     WAIT_STATE(ch, PULSE_VIOLENCE*3);
   }
