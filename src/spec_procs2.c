@@ -32,6 +32,7 @@ extern char *dirs[];
 extern int gSeason;  /* what season is it ? */
 
 #define COSTO_LEZIONI 500
+#define COSTO_IMMOLATION 1
 #define COSTO_PRAC 1000000
 /* Bjs Shit Begin */
 
@@ -3984,6 +3985,132 @@ int miner_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mo
    
    return FALSE;
 }
+
+/** 
+* FLYP 2080129
+* Demon teacher for immolation skill
+**/
+
+int demon_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
+{
+   char buf[256];
+   static char *n_skills[] =
+   {
+      "miner", /* 1 ACIDUS 2003 skill miner */
+      "\n",
+   };
+   int number=0;
+   int charge, sk_num;
+   
+   if (!AWAKE(ch))
+   return(FALSE);
+   
+   if (!cmd)
+   {
+      if (ch->specials.fighting)
+      {
+	 return(fighter(ch, cmd, arg,mob,type));
+      }
+      return(FALSE);
+   }
+   
+   if (!ch->skills)
+   return(FALSE);
+   
+   if (check_soundproof(ch))
+   return(FALSE);
+   
+   for(; *arg==' '; arg++); /* ditch spaces */
+   
+   if (cmd==CMD_PRACTICE)
+   {
+      if (!arg || (strlen(arg) == 0))
+      {
+	 sprintf(buf," immolation    :  %s\n\r",how_good(ch->skills[SKILL_IMMOLATION].learned));
+	 send_to_char(buf,ch);
+	 
+	 return(TRUE);
+      }
+      else
+      {
+	 
+	 number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
+	 if( number == -1 )
+	 {
+	    act( "$N ti dice: 'Non conosco questo skill.'", TRUE, ch, 0, mob,
+		TO_CHAR );
+	    return(TRUE);
+	 }
+	 
+	 charge = GetMaxLevel(ch) * COSTO_IMMOLATION;
+	 switch(number)
+	 {
+	  case 0:
+	  case 1:
+	    sk_num = SKILL_IMMOLATION;
+	    break;
+	  default:
+	    mudlog( LOG_SYSERR, "Strangeness in miner_teacher (%d)", number);
+	    send_to_char("'Ack!  I feel faint!'\n\r", ch);
+	    return(FALSE);
+	 }
+      }
+      
+      if (!IS_IMMORTAL(ch))
+      {
+	 
+	 if( (sk_num == SKILL_IMMOLATION)  && !(GET_RACE(ch) == RACE_DEMON) )
+	 {
+	    act( "$N ti dice: 'Non sei il tipo di persona che possa imparare certe " 
+		"cose'.", TRUE, ch, 0, mob, TO_CHAR );
+	    return(TRUE);
+	 }
+      }
+      
+      if( GET_GOLD( ch ) < charge )
+      {
+	 act( "$N ti dice: 'Ah, ma non hai abbastanza soldi'.",
+	     TRUE, ch, 0, mob, TO_CHAR );
+	 return(TRUE);
+      }
+      
+      if( ch->skills[ sk_num ].learned >= 90 )
+      {
+	 act( "$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
+	     "piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR );
+	 return(TRUE);
+      }
+      
+      if( ch->specials.spells_to_learn <= 0 )
+      {
+	 act( "$N ti dice: 'Devi prima guadagnarti qualche sessione di pratica'.",
+	     TRUE, ch, 0, mob, TO_CHAR );
+	 return(TRUE);
+      }
+      
+      GET_GOLD(ch) -= charge;
+      act( "$N tiene la sua lezione.", TRUE, ch, 0, mob, TO_CHAR );
+      ch->specials.spells_to_learn--;
+      
+      ch->skills[ sk_num ].learned += int_app[ (int)GET_INT( ch ) ].learn;
+      
+      if( !IS_SET(ch->skills[sk_num].flags, SKILL_KNOWN) )
+      SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
+      
+      if( ch->skills[sk_num].learned >= 90 )
+      {
+	 act( "$N ti dice: 'Ora sei un maestro in quest'arte'.",
+	     TRUE, ch, 0, mob, TO_CHAR );
+      }
+      return TRUE;
+   }
+   
+   return FALSE;
+}
+
+/*** FLYP ***/
+
+
 
 int forge_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
 {
