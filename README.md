@@ -7,13 +7,9 @@
         * vagrant up
         * vagrant ssh
         * cd /vagrant
-        * autoreconf
-        * automake --add-missing
-        * ./configure
-        * make
-        * cd bin
+        * build.sh
+        * cd mudroot
         * ./myst
-        * vagrant up
     * DAY BY DAY
         * vagrant up
         * vagrant ssh
