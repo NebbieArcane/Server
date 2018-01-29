@@ -3,7 +3,7 @@ bin_PROGRAMS = myst
 DEBUGFLAGS = -pg -ggdb -finline-functions -fno-strength-reduce -pipe -fpermissive 
 MOREFLAGS = -DALIGN_TEST -DBLOCK_WRITE -DENABLE_AUCTION -DACCESSI
 EXTRAFLAGS = -DIMPL_SECURITY
-MYFLAGS = $(MOREFLAGS) $(EXTRAFLAGS) $(DEBUGFLAGS) -Wno-unused-result -Wno-unused -Wno-write-strings -Wno-endif-labels -DNETBSD -DLINUX 
+MYFLAGS = $(MOREFLAGS) $(EXTRAFLAGS) $(DEBUGFLAGS) -w -Wno-unused-result -Wno-unused -Wno-write-strings -Wno-endif-labels -DNETBSD -DLINUX 
 ## -mno-fp-ret-in-387 
 AM_CFLAGS = -O0 $(MYFLAGS) -DLOG_DEBUG -DLOG_DEBUG1 -DALAR -I/usr/include/mysql 
 #AM_CPPFLAGS =  $(AM_CFLAGS)
