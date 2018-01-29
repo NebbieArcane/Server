@@ -433,6 +433,8 @@
 #define CMD_SETSKILLS       500
 #define CMD_PERDONO         501 //FLYP 2003 Perdono
 
+#define CMD_IMMOLATION	502 //Flyp 20180128 --> canibalize per demoni
+
 
 
 

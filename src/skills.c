@@ -1922,6 +1922,7 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
           acapply=1;  
           break;
          case RACE_TROGMAN  :
+         case RACE_LIZARDMAN:
          case RACE_PATRYN   :
          case RACE_LABRAT   :
          case RACE_SARTAN   :
@@ -2226,7 +2227,7 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                app_val = IMM_BLUNT ;
                }
                break ;
-                      
+
                       /* added by REQUIEM 2018 */
                       
                   case RACE_TROLL :
@@ -2526,7 +2527,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                app_val = 15 ;
                }
                break ;
-                      
                       /* added by REQUIEM 2018 */
                       
                   case RACE_VEGGIE      :
@@ -2576,8 +2576,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                           app_val = 2 ;
                       }
                       break ;
-                    
-                      
                default:
                 break;
               }
@@ -2805,7 +2803,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                app_val = 15 ;
                }
                break ;
-                      
                       /* added by REQUIEM 2018 */
                       
                   case RACE_VEGGIE      :
@@ -2946,7 +2943,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                app_val = 10 ;
                }
                break ;
-                      
                       /* added by REQUIEM 2018 */
          
                   case RACE_VEGGIE      :
@@ -2998,7 +2994,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                           app_val = 100 ;
                       }
                       break ;
-        
                default:
                 break;
               }
@@ -3153,8 +3148,8 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                           special = 1 ;
                           apply = APPLY_STR ;
                           app_val = 2 ;
-                      }
-                      break ;
+               }
+               break ;
                default:
                 break;
               }
@@ -3279,7 +3274,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                app_val = -10 ;
                }
                break ;
-                      
                       /* added by REQUIEM 2018 */
                       
                   case RACE_TROLL    :
@@ -3477,9 +3471,9 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                       {
                           special = 1 ;
                           apply = APPLY_HITNDAM;
-                          app_val = 2 ;
-                      }
-                      break ;
+               app_val = 2 ;
+               }
+               break ;
                default:
                 break;
               }
@@ -3665,9 +3659,9 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
                       {
                           special = 1 ;
                           apply = APPLY_HITNDAM ;
-                          app_val = 2 ;
-                      }
-                      break ;
+               app_val = 2 ;
+               }
+               break ;
                default:
                 break;
               }
@@ -5316,7 +5310,132 @@ void do_mindsummon( struct char_data *ch, char *argument, int cmd)
    WAIT_STATE(ch, PULSE_VIOLENCE*4);
  }
  
+/**
+* Flyp 20180128 --> immolation, ovvero canibaliaze per i demoni
+**/
+void do_immolation(struct char_data *ch, char *argument, int cmd)
+{
+  long hit_points,mana_points;  /* hit_points has to be long for storage */
+  char number[80];  /* NOTE: the argument function returns FULL argument */
+  /* if u just allocate 10 char it will overrun! */
+  /* if the argument returns something > 10 char */
+  int count;
+  bool num_found=TRUE;
 
+  if (GET_RACE(ch) != RACE_DEMON) {
+    return;
+  }
+
+  /**
+  * Per ora commento, ma potrebbe servire il controllo sulla classe
+  if (!HasClass(ch,CLASS_MAGIC_USER))
+  {
+    send_to_char ("You don't have any kind of control over your body like that!\n\r",ch);
+    return;
+  }
+  **/
+
+  if (affected_by_spell(ch,SPELL_FEEBLEMIND))
+  {
+    send_to_char("Der, what is that ?\n\r",ch);
+    return;
+  }
+
+  only_argument (argument,number);
+
+  /* polax version of number validation */
+  /* NOTE: i changed num_found to be initially TRUE */
+
+  for (count=0; num_found && (count < 9) && (number[count] != '\0'); count++)
+  {
+    if ((number[count] < '0') || (number[count] > '9'))   /* leading zero is ok */
+    num_found = FALSE;
+  }
+  
+  /* polax modification ends */ 
+  
+#if 0
+  for (count=0;(!num_found) && (count<9);count++)
+    if ((number[count]>='1') && (number[count]<='9'))
+      num_found=TRUE;
+#endif
+
+  if (!num_found)
+  {
+    send_to_char ("How many life do you want to immolate?\n\r",ch);
+    return;
+  }
+  else 
+    number[count] = '\0';   /* forced the string to be proper length */
+
+  sscanf (number,"%ld",&hit_points);  /* long int conversion */
+
+    if ((hit_points <1) || (hit_points > 65535))
+    {
+    /* bug fix? */
+      send_to_char("You cannot immolate such amount of life!.\n\r",ch);
+      return;
+    }
+
+    // Check position: only standing or fighting.
+    // demons has leech, so don't be too generous with them!
+    switch(GET_POS(ch)) {
+      case POSITION_STANDING:
+        mana_points = hit_points; 
+        break;
+      case POSITION_FIGHTING:
+        mana_points = hit_points/2;
+        break;
+      default:
+        send_to_char("You need to be standing and maybe fighting to do this!");
+        break;
+    }
+
+    if ( mana_points <0 )
+    {
+      send_to_char ("You can't do that, You Knob!\n\r",ch);
+    }
+
+    if ((int)ch->points.hit < (hit_points+5))
+    {
+      send_to_char ("You don't have enough physical stamina to immolate.\n\r",ch);
+      return;
+    }
+
+    if ( (GET_MANA(ch)+mana_points) > (GET_MAX_MANA(ch)) )
+    {
+      send_to_char ("Your mind cannot handle that much extra energy.\n\r",ch);
+      return;
+    }
+    
+    // @TODO: create the skill!
+    if (ch->skills[SKILL_IMMOLATE].learned < dice(1,101) )
+    {
+      send_to_char ("You try to immolate your stamina but the energy escapes before you can harness it.\n\r",ch);
+      act("$n yelps in pain.",FALSE,ch,0,0,TO_ROOM);
+      GET_HIT(ch) -= hit_points; alter_hit(ch,0);
+      update_pos(ch);
+      if (GET_POS(ch)==POSITION_DEAD) 
+        die(ch,SKILL_IMMOLATE, NULL);
+      LearnFromMistake(ch, SKILL_IMMOLATE, 0, 95);
+      WAIT_STATE(ch, PULSE_VIOLENCE*3);
+      return;
+    }
+    
+    send_to_char ("You sucessfully convert your stamina to Mental power.\n\r",ch);
+    act("$n briefly is surrounded by a red aura.",FALSE,ch,0,0,TO_ROOM);
+    GET_HIT(ch) -= hit_points; alter_hit(ch,0);
+    GET_MANA(ch) += mana_points; alter_mana(ch,0);
+
+    update_pos(ch);
+    if(GET_POS(ch)==POSITION_DEAD)
+      die(ch,SKILL_IMMOLATE, NULL);
+
+    WAIT_STATE(ch, PULSE_VIOLENCE*3);
+  }
+
+
+/** Flyp **/
 
 
 void do_canibalize( struct char_data *ch, char *argument, int cmd)
