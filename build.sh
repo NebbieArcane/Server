@@ -1,3 +1,13 @@
 #!/bin/bash
-autoconf && aclocal & automake --add-missing && autoreconf && ./configure && make
+autoheader
+aclocal
+autoconf
+touch sourcelist
+automake --add-missing
+automake
+./configure 
+make dist-clean
+./configure
+make
+
 
