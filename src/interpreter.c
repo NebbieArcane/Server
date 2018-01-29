@@ -1511,7 +1511,7 @@ void argument_interpreter(char *argument,char *first_arg,char *second_arg )
    AddCommand( "setsk", do_setskill, CMD_SETSKILLS, POSITION_DEAD, 
      MAESTRO_DEI_CREATORI );
 //AddCommand("perdono", do_perdono, CMD_PERDONO, POSITION_STANDING, TUTTI ); //FLYP 2003 Perdono
-   AddCommand("immolation", do_immolation, CMD_IMMOLATION, POSITION_STANDING, TUTTI);
+   AddCommand("immolation", do_immolation, CMD_IMMOLATION, POSITION_FIGHTING, TUTTI); // Flyp 20180129: demon can sacrifice life for mana
  }
 
 

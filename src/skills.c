@@ -5315,6 +5315,7 @@ void do_mindsummon( struct char_data *ch, char *argument, int cmd)
 **/
 void do_immolation(struct char_data *ch, char *argument, int cmd)
 {
+  mudlog(LOG_CHECK, "ENTRO IMMOLATION CAZZO!");
   long hit_points,mana_points;  /* hit_points has to be long for storage */
   char number[80];  /* NOTE: the argument function returns FULL argument */
   /* if u just allocate 10 char it will overrun! */
@@ -5322,7 +5323,8 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
   int count;
   bool num_found=TRUE;
 
-  if (GET_RACE(ch) != RACE_DEMON || !ch->skills[SKILL_CANIBALIZE].learned) {
+  if (GET_RACE(ch) != RACE_DEMON || !ch->skills[SKILL_IMMOLATION].learned) {
+    send_to_char("Ma se non hai neanche le corna....", ch);
     return;
   }
 
@@ -5369,6 +5371,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
     number[count] = '\0';   /* forced the string to be proper length */
 
   sscanf (number,"%ld",&hit_points);  /* long int conversion */
+    mudlog(LOG_SYSERR, "read [%i] hit points to sacrifice", hit_points);
 
     if ((hit_points <1) || (hit_points > 65535))
     {
@@ -5376,6 +5379,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
       send_to_char("You cannot immolate such amount of life!.\n\r",ch);
       return;
     }
+    mudlog(LOG_SYSERR, "STARTING IMMOLATION CALCULATIONS");
 
     // Check position: only standing or fighting.
     // demons has leech, so don't be too generous with them!
@@ -5390,6 +5394,8 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
         send_to_char("You need to be standing and maybe fighting to do this!",ch);
         break;
     }
+
+    mudlog(LOG_SYSERR, "I'll try to conbert to [%i] mana", mana_points);
 
     if ( mana_points <0 )
     {
@@ -5407,7 +5413,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
       send_to_char ("Your mind cannot handle that much extra energy.\n\r",ch);
       return;
     }
-    
+    mudlog(LOG_SYSERR, "Immolation level [%i]", ch->skills[SKILL_IMMOLATION].learned);
     // @TODO: create the skill!
     if (ch->skills[SKILL_IMMOLATION].learned < dice(1,101) )
     {
