@@ -8,16 +8,12 @@
 //#include "C:\Nebbie\SRC\version.h"
 char *version()
 {
-   static char buf[6];
-   snprintf(buf,5,"%d.%d",MAJORVERSION,MINORVERSION);
-   return(buf);
+   return VERSION;
 }
 
 char *release()
 {
-      static char buf[2];
-   snprintf(buf,2,"%d",RELEASE);
-   return(buf);
+	return BUILD;
 }
 
 char *compilazione()
