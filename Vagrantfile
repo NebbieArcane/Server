@@ -13,6 +13,8 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "ubuntu/xenial64"
+  config.vm.define  "nebbie"
+  config.vm.hostname = "nebbie"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -45,18 +47,20 @@ Vagrant.configure("2") do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.synced_folder "../Scripts", "/Scripts"
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
   #
-  # config.vm.provider "virtualbox" do |vb|
+  config.vm.provider "virtualbox" do |vb|
   #   # Display the VirtualBox GUI when booting the machine
   #   vb.gui = true
   #
   #   # Customize the amount of memory on the VM:
   #   vb.memory = "1024"
-  # end
+  	vb.name = "nebbie"
+  end
   #
   # View the documentation for the provider you are using for more
   # information on available options.
@@ -71,11 +75,15 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
 	dpkg --add-architecture i386
 	apt-get update
-	apt install -y php7.0-cli
-	apt install -y gcc-multilib g++-multilib libgdbm-dev:i386 apache2 make
+	apt-get install -y git
+	apt-get install -y php7.0-cli
+	apt-get install -y gcc-multilib g++-multilib libgdbm-dev:i386 apache2 make
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
 	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections	
-	apt install -y mysql-server mysql-client libmysqld-dev:i386
+	apt-get install -y mysql-server mysql-client libmysqld-dev:i386
+    git config --global user.email "nebbie@hexkeep.com"
+ 	git config --global user.name "Nebbie Server"
+ 	ln -s /Scripts /home/vagrant/Scripts
   SHELL
   config.ssh.forward_x11 = true
   config.ssh.forward_agent = true
