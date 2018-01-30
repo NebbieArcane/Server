@@ -2258,7 +2258,7 @@ return( dam );
 DamageResult DoDamage( struct char_data *ch, struct char_data *v, int dam, 
   int type, int location)
 {
-
+  char buf[MAX_INPUT_LENGTH];
  if (dam >= 0) 
  {
 
@@ -2294,14 +2294,15 @@ if(!IS_NPC(ch) && GET_RACE(ch) == RACE_DEMON) {
   
   int modWis = wis_app[(int)GET_RWIS(ch)].bonus;
   int randNumb = number(0,GetMaxLevel(ch));
-  int damByTwo = dam/2;
   int leech = MIN((modWis + randNumb)/4, dam); 
 
   // con il check >0 si evitano anche i leech negativi (se un pirla ha con wis con modificatore negativo)
   if(leech>0) {
     GET_HIT(ch)+=leech;
     alter_hit(ch,0);
-    act("You absorb part of the vital energy of your opponent!",TRUE,ch,0,v,TO_CHAR);
+    sprintf(buf, "You absorb %i hp points from the vital energy of your opponent!", leech);
+    act(buf,TRUE,ch,0,v,TO_CHAR);
+    // act("You absorb part of the vital energy of your opponent!",TRUE,ch,0,v,TO_CHAR);
     act("$n absorbs part of the vital energy of your opponent!",TRUE,ch,0,v,TO_ROOM);
   }
 } 
