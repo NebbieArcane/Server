@@ -5414,7 +5414,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
       return;
     }
     mudlog(LOG_SYSERR, "Immolation level [%i]", ch->skills[SKILL_IMMOLATION].learned);
-    // @TODO: create the skill!
+    
     if (ch->skills[SKILL_IMMOLATION].learned < dice(1,101) )
     {
       send_to_char ("You try to immolate your stamina but the energy escapes before you can harness it.\n\r",ch);
@@ -5424,7 +5424,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
       if (GET_POS(ch)==POSITION_DEAD) 
         die(ch,SKILL_IMMOLATION, NULL);
       LearnFromMistake(ch, SKILL_IMMOLATION, 0, 95);
-      WAIT_STATE(ch, PULSE_VIOLENCE*3);
+      WAIT_STATE(ch, PULSE_VIOLENCE*2);
       return;
     }
     
@@ -5437,7 +5437,7 @@ void do_immolation(struct char_data *ch, char *argument, int cmd)
     if(GET_POS(ch)==POSITION_DEAD)
       die(ch,SKILL_IMMOLATION, NULL);
 
-    WAIT_STATE(ch, PULSE_VIOLENCE*3);
+    WAIT_STATE(ch, PULSE_VIOLENCE*1);
   }
 
 

@@ -2258,7 +2258,7 @@ return( dam );
 DamageResult DoDamage( struct char_data *ch, struct char_data *v, int dam, 
   int type, int location)
 {
-  char buf[MAX_INPUT_LENGTH];
+  char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
  if (dam >= 0) 
  {
 
@@ -2290,18 +2290,25 @@ DamageResult DoDamage( struct char_data *ch, struct char_data *v, int dam,
   * Flyp 20180126: implementazione del Leech. (Parte del danno fatto si trasforma in hp)
   * solo player, no mob
   **/
-if(!IS_NPC(ch) && GET_RACE(ch) == RACE_DEMON) {
+if(!IS_NPC(ch) && GET_RACE(ch) == RACE_DEMON && type >= TYPE_HIT && type <= TYPE_BLAST) {
   
   int modWis = wis_app[(int)GET_RWIS(ch)].bonus;
+  mudlog(LOG_CHECK, "Mod WIS [%i]", modWis);
   int randNumb = number(0,GetMaxLevel(ch));
-  int chancheByLevel = (modWis + randNumb)/4;
+  mudlog(LOG_CHECK, "Rand [%i]", randNumb);
+  int chancheByLevel = (modWis + randNumb)/2;
+  mudlog(LOG_CHECK, "ROLLO [%i]", chancheByLevel);
   int leech = MIN(chancheByLevel, dam); 
+  mudlog(LOG_CHECK, "DAM [%i]", dam);
+  mudlog(LOG_CHECK, "Leech [%i]", leech);
 
   // con il check >0 si evitano anche i leech negativi (se un pirla ha con wis con modificatore negativo)
   if(leech>0) {
     GET_HIT(ch)+=leech;
     alter_hit(ch,0);
+    sprintf(buf2, "You dealt a damage with type [%i]. It should be a number between %i and %i. If it was done through a spell, FUCK!", type, TYPE_HIT, TYPE_BLAST);
     sprintf(buf, "You absorb [%i] hp points. You dealt [%i] damages and the random thing is [%i]", leech, dam, chancheByLevel);
+    act(buf2,TRUE,ch,0,v,TO_CHAR);
     act(buf,TRUE,ch,0,v,TO_CHAR);
     // act("You absorb part of the vital energy of your opponent!",TRUE,ch,0,v,TO_CHAR);
     act("$n absorbs part of the vital energy of your opponent!",TRUE,ch,0,v,TO_ROOM);

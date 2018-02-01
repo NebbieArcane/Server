@@ -378,7 +378,7 @@ typedef char byte;
  * fireshield, sanct, etc, will not work!
  * */
 
-
+// Flyp 20180201: this set of types should identify only phisical damage and exclude the spells
 #define TYPE_HIT                     311
 #define TYPE_BLUDGEON                312
 #define TYPE_PIERCE                  313
