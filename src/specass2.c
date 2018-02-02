@@ -43,11 +43,12 @@ long ifp=0;
 char *one_argument(char *argument, char *first_arg );
 int BlockWay( struct char_data *pChar, int nCmd, char *szArg,
 	     struct room_data *pRoom, int nType );
-
+typedef int (*special_proc)( struct char_data *, int, char *, void *, int );
 struct special_proc_entry 
 {
   char *nome;
-  int (*proc)( struct char_data *, int, char *, void *, int );
+  //int (*proc)( struct char_data *, int, char *, void *, int );
+  special_proc proc;
 };
 
 struct RoomSpecialProcEntry 
@@ -190,6 +191,7 @@ void assign_speciales()
    
    struct special_proc_entry otherproc[] = 
    {
+
 #include "otherproc.h"
       { "zFineprocedure", NULL },
    };

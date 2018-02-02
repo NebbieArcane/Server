@@ -2821,7 +2821,7 @@ void char_to_store(struct char_data *ch, struct char_file_u *st) {
       st->affected[i].location =af->location;
       st->affected[i].modifier =af->modifier;
       st->affected[i].type     =af->type;
-      st->affected[i].next = (struct affected_type*) NULL;
+      st->affected[i].next = NULL;
       /* subtract effect of the spell or the effect will be doubled */
       affect_modify(ch, st->affected[i].location,
               st->affected[i].modifier,

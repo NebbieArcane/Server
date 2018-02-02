@@ -222,3 +222,4 @@ bugs
 /Debug/
 /Release/
 utilities/convert
+/build/

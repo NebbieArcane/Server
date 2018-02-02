@@ -1,7 +1,7 @@
 /*
  * general.hpp
  *
- *  Created on: 01 feb 2018
+ *  Created on: 28 gen 2018
  *      Author: giovanni
  *
  * Licensed Material - Property of Hex Keep s.r.l.
@@ -10,7 +10,6 @@
 
 #ifndef GENERAL_HPP_
 #define GENERAL_HPP_
-#include <iostream>
 #include <string>
 using std::string;
 

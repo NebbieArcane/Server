@@ -10,13 +10,23 @@
 
 #ifndef SQL_HPP_
 #define SQL_HPP_
+#if MYSQL_VERSION
 #include <mysql/mysql.h>
+#else if SQLITE_VERSION
+#include <sqlite3.h>
+#endif
+
+
 namespace nebbie {
 
 class Sql {
 private:
     bool disabled;
-    MYSQL *mysqlConn;
+#if MYSQL_VERSION
+    MYSQL *myConn;
+#else if SQLITE_VERSION
+    sqlite3 *myConn;
+#endif
 
 public:
 	Sql();

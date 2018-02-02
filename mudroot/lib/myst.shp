@@ -2231,4 +2231,235 @@
 13
 14
 22
-$~
+$~#4200~
+4249
+4253
+4251
+4252
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+1
+4260
+0
+4355
+1
+13
+14
+24
+#4201~
+4250
+4219
+-1
+-1
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+0
+4261
+0
+4356
+1
+13
+14
+24
+#4202~
+4203
+4204
+4206
+4210
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+1
+4262
+0
+4353
+1
+13
+14
+24
+#4203~
+4260
+4261
+4262
+4263
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+0
+4264
+0
+4350
+1
+13
+14
+24
+#4204~
+4202
+4208
+-1
+-1
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+0
+4266
+0
+4354
+1
+13
+14
+24
+#4205~
+4259
+4258
+-1
+-1
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+1
+4268
+0
+4357
+1
+13
+14
+24
+#4206~
+4257
+4256
+4255
+4254
+-1
+1.5
+0.5
+0
+0
+0
+0
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+0
+1
+4269
+0
+4411
+7
+13
+14
+22
+#5700~
+5709
+0
+0
+0
+0
+1.5
+0.5
+6
+9
+15
+0
+0
+%s Sono desolato.. venduto proprio un attimo fa'!~
+%s E entro quando potresti procurartelo?~
+%s No effendi... non credo di poterti favorire~
+%s Oh effendi... mi spiace ma non posso permettermi questa cifra~
+%s Stai scherzando? Vuoi rovinarmi?~
+%s Derubato ancora una volta... solo %d mone!te~
+%s Per Allah! Mia moglie mi bastonera'.....%d monete!!~
+1
+0
+5718
+0
+5771
+6
+14
+14
+24

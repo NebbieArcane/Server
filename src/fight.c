@@ -1487,7 +1487,7 @@ long GroupLevelRatioExp( struct char_data *ch,int group_max_level,
 
 #define XPDISTRATIO 1.0/2.5
 
-float GroupXPRatio[ABS_MAX_LVL]={
+double GroupXPRatio[ABS_MAX_LVL]={
   0,
   1,
   pow((titles[0][3].exp-titles[0][2].exp)/titles[0][2].exp,XPDISTRATIO),
@@ -4012,47 +4012,47 @@ int GetBonusToAttack( struct char_data *pChar, struct char_data *pNewChar )
 * al suo principe se questi e` in vista.
 * *************************************************************************/
 struct char_data *SwitchVictimToPrince( struct char_data *pAtt, 
-				       struct char_data *pVict)
+		struct char_data *pVict)
 {
-   struct char_data *pTemp=(struct char_data *)NULL;
-   struct char_data *pTemp2=(struct char_data *)NULL;
-   bool isBG;
-   isBG=HAS_BODYGUARD(pVict);
-   PushStatus("SwitchVictimToPrince");
-   if (pVict && pAtt && (HAS_PRINCE(pVict) || isBG)) 
-   {
-      if (isBG) 
-      {
-	 pTemp=get_char_room_vis(pAtt,GET_BODYGUARD(pVict));
-      }
-      if (!pTemp &&HAS_PRINCE(pVict)) 
-      {
-	 pTemp=get_char_room_vis(pAtt,GET_PRINCE(pVict));
-      }
-      if (pTemp &&IS_PRINCE(pTemp) &&HAS_BODYGUARD(pTemp))
-      /* Prince, se con la guardia del corpo riswitcho */
-      {
-	    pTemp2=get_char_room_vis(pAtt,GET_BODYGUARD(pTemp));
-	    if (pTemp2 && in_group_strict(pTemp,pTemp2)) pTemp=pTemp2;
-      }
-      if (pTemp && 
-	  in_group_strict(pTemp,pVict) && 
-	  number(1,19<isBG?GET_DEX(pTemp):20))
-      {
-	 mudlog(LOG_CHECK,"SWITCH3: %s attaccato al posto di %s",
-		GET_NAME(pTemp),GET_NAME(pVict));
-         act("Stavi per essere attaccat$B ma $n interviene!", 
-	     FALSE, pTemp,0,pVict,TO_VICT);
-         act("$N stava per essere attaccat$B ma tu intervieni!", 
-	     FALSE, pTemp,0,pVict,TO_CHAR);
-	 act("$N stava per essere attaccat$B ma $n interviene!",
-	     FALSE, pTemp,0,pVict,TO_NOTVICT);
-	 pVict=pTemp;
-	 
-      }
-   }
-   PopStatus();
-   return(pVict);
+	struct char_data *pTemp=(struct char_data *)NULL;
+	struct char_data *pTemp2=(struct char_data *)NULL;
+	bool isBG;
+	isBG=HAS_BODYGUARD(pVict);
+	PushStatus("SwitchVictimToPrince");
+	if (pVict && pAtt && (HAS_PRINCE(pVict) || isBG))
+	{
+		if (isBG)
+		{
+			pTemp=get_char_room_vis(pAtt,GET_BODYGUARD(pVict));
+		}
+		if (!pTemp &&HAS_PRINCE(pVict))
+		{
+			pTemp=get_char_room_vis(pAtt,GET_PRINCE(pVict));
+		}
+		if (pTemp &&IS_PRINCE(pTemp) &&HAS_BODYGUARD(pTemp))
+			/* Prince, se con la guardia del corpo riswitcho */
+		{
+			pTemp2=get_char_room_vis(pAtt,GET_BODYGUARD(pTemp));
+			if (pTemp2 && in_group_strict(pTemp,pTemp2)) pTemp=pTemp2;
+		}
+		if (pTemp &&
+				in_group_strict(pTemp,pVict) &&
+				number(1,19)<isBG?GET_DEX(pTemp):20)
+		{
+			mudlog(LOG_CHECK,"SWITCH3: %s attaccato al posto di %s",
+					GET_NAME(pTemp),GET_NAME(pVict));
+			act("Stavi per essere attaccat$B ma $n interviene!",
+					FALSE, pTemp,0,pVict,TO_VICT);
+			act("$N stava per essere attaccat$B ma tu intervieni!",
+					FALSE, pTemp,0,pVict,TO_CHAR);
+			act("$N stava per essere attaccat$B ma $n interviene!",
+					FALSE, pTemp,0,pVict,TO_NOTVICT);
+			pVict=pTemp;
+
+		}
+	}
+	PopStatus();
+	return(pVict);
 }
 
 

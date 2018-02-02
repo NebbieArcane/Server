@@ -21,7 +21,7 @@ Sql *getSql() {
 }
 
 Sql::Sql() : disabled(false) {
-#if 0
+#if MYSQL_VERSION
 	mysqlConn= mysql_init(NULL);
     MYSQL_RES *mysqlRes;
     MYSQL_ROW mysqlRow;
