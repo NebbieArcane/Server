@@ -424,7 +424,7 @@ l=1; /* Avoid "" to match the first available string */
 
  /* PARRY is removed as HIDE GAIA 2001 */
 
-     if(IS_AFFECTED(ch,AFF2_PARRY))
+     if(IS_AFFECTED(ch,AFF2_PARRY) && !ch->specials.fighting)
      {
       act( "$c0006$n smette di ripararsi con lo scudo.", TRUE, ch, 0, 0, TO_ROOM);
       act( "$c0006Smetti di proteggerti con lo scudo.", TRUE, ch, 0, 0, TO_CHAR);
