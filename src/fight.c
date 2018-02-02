@@ -260,8 +260,8 @@ bool CheckEquilibrium(struct char_data *ch)
  {
 
    percent = number(1,100);
-     val = (int) (GetMaxLevel(ch) * 0.333); // (livello/51)*17 - 17 è l'apporto massimo dato dal livello
-     val += (int) ((GET_DEX(ch)-5) * 1.417); // (dex-5/12)*17 - 17 è l'apporto massimo dato dalla dex
+     val = (int) (GetMaxLevel(ch) * 0.333); // (livello/51)*17 - 17 Ã¨ l'apporto massimo dato dal livello
+     val += (int) ((GET_DEX(ch)-5) * 1.417); // (dex-5/12)*17 - 17 Ã¨ l'apporto massimo dato dalla dex
 
      if ( percent > val )
        return(FALSE);
@@ -1415,7 +1415,7 @@ long GroupLevelRatioExp( struct char_data *ch,int group_max_level,
       /* Inadatto alle nuove tabelle di gain, dobbiamo 
          aumentare i rapporti altrimenti un novizio che
          gruppa con un principe diventa chump al primo MOB
-         e Allievo al secondo! E' una necessità, non una
+         e Allievo al secondo! E' una necessitÃ , non una
          limitazione!
 
       if ( diff >= 45 )
@@ -2292,27 +2292,18 @@ DamageResult DoDamage( struct char_data *ch, struct char_data *v, int dam,
   **/
 if(!IS_NPC(ch) && GET_RACE(ch) == RACE_DEMON && type >= TYPE_HIT && type <= TYPE_BLAST) {
   
-  int modWis = wis_app[(int)GET_RWIS(ch)].bonus;
-  mudlog(LOG_CHECK, "Mod WIS [%i]", modWis);
-  int randNumb = number(0,GetMaxLevel(ch));
-  mudlog(LOG_CHECK, "Rand [%i]", randNumb);
-  int chancheByLevel = (modWis + randNumb)/2;
-  mudlog(LOG_CHECK, "ROLLO [%i]", chancheByLevel);
-  int leech = MIN(chancheByLevel, dam); 
-  mudlog(LOG_CHECK, "DAM [%i]", dam);
-  mudlog(LOG_CHECK, "Leech [%i]", leech);
-
-  // con il check >0 si evitano anche i leech negativi (se un pirla ha con wis con modificatore negativo)
-  if(leech>0) {
-    GET_HIT(ch)+=leech;
-    alter_hit(ch,0);
-    sprintf(buf2, "You dealt a damage with type [%i]. It should be a number between %i and %i. If it was done through a spell, FUCK!", type, TYPE_HIT, TYPE_BLAST);
-    sprintf(buf, "You absorb [%i] hp points. You dealt [%i] damages and the random thing is [%i]", leech, dam, chancheByLevel);
-    act(buf2,TRUE,ch,0,v,TO_CHAR);
-    act(buf,TRUE,ch,0,v,TO_CHAR);
-    // act("You absorb part of the vital energy of your opponent!",TRUE,ch,0,v,TO_CHAR);
-    act("$n absorbs part of the vital energy of your opponent!",TRUE,ch,0,v,TO_ROOM);
-  }
+    int modWis = wis_app[(int)GET_RWIS(ch)].bonus;
+    int randNumb = number(0,GetMaxLevel(ch));
+    int chancheByLevel = (modWis + randNumb)/2;
+    int leech = MIN(chancheByLevel, dam); 
+  
+    // con il check >0 si evitano anche i leech negativi (se un pirla ha con wis con modificatore negativo)
+    if(leech>0) {
+        GET_HIT(ch)+=leech;
+        alter_hit(ch,0);
+        act("You absorb part of the vital energy of your opponent!",TRUE,ch,0,v,TO_CHAR);
+        act("$n absorbs part of the vital energy of your opponent!",TRUE,ch,0,v,TO_ROOM);
+    }
 } 
 
 return AllLiving;
@@ -2746,7 +2737,7 @@ DamageResult damage( struct char_data *ch, struct char_data *victim,
    { /*this ain't smart, pc's wielding bows? */
 
       /* ACIDUS modifica per berserk in gruppo:
-         ch e vict si attaccano se ch non è in berserk oppure se non è in gruppo
+         ch e vict si attaccano se ch non Ã¨ in berserk oppure se non Ã¨ in gruppo
          con vict */
   if ( !IS_PC(ch) || !IS_SET(ch->specials.affected_by2, AFF2_BERSERK) ||
    ( (ch->master==NULL) && (victim->master==NULL) ) ||

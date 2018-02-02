@@ -41,196 +41,186 @@ extern int gSeason;  /* what season is it ? */
 #define Fountain_Level 20
 
 
-int ghost(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
-{
-   void cast_energy_drain( byte level, struct char_data *ch, char *arg,
-			  int type,struct char_data *tar_ch,
-			  struct obj_data *tar_obj );
+int ghost(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) {
+    void cast_energy_drain( byte level, struct char_data *ch, char *arg, int type,struct char_data *tar_ch, struct obj_data *tar_obj );
    
-   if (cmd || !AWAKE(ch))
-   return(FALSE);
+    if (cmd || !AWAKE(ch)) {
+        return(FALSE);
+    }
    
-   
-   if (ch->specials.fighting &&
-       (ch->specials.fighting->in_room == ch->in_room))
-   {
-      act("$n touches $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
-      act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-      cast_energy_drain( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-			ch->specials.fighting, 0);
+    if (ch->specials.fighting && (ch->specials.fighting->in_room == ch->in_room)) {
+        act("$n touches $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
+        act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
+        cast_energy_drain( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->specials.fighting, 0);
       
-      return TRUE;
-   }
-   return FALSE;
+        return TRUE;
+    }
+    return FALSE;
 }
 
-int druid_protector(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
-{
-   static int b=1;  /* use this as a switch, to avoid double challenges */
+int druid_protector(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) {
+    static int b=1;  /* use this as a switch, to avoid double challenges */
    
-   if (cmd) {
-      if (cmd<=CMD_DOWN && cmd>=CMD_NORTH && IS_PC(ch)) {
-	 if (b) {
-	    b = 0;
-	    send_to_char("Basil Great Druid looks at you\n\r", ch);
-	    if ((ch->in_room == Bandits_Path ) && (cmd == CMD_NORTH)) {
-	       if ((BASIL_GATEKEEPER_MAX_LEVEL < GetMaxLevel(ch)) &&
-		   (GetMaxLevel(ch) < IMMORTALE))     {
-		      if (!check_soundproof(ch)) {
-			 act("Basil the Great Druid tells you 'Begone Unbelievers!'",
-			     TRUE, ch, 0, 0, TO_CHAR);
-		      }
-		      act("Basil Great Druid grins evilly.", TRUE, ch, 0, 0, TO_CHAR);
-		      return(TRUE);
-		   }
-	    }
-	 } else {
-	    b = 1;
-	 }
-	 return(FALSE);
-      } /* cmd 1 - 6 */
-      return(FALSE);
+    if (cmd) {
+        if (cmd<=CMD_DOWN && cmd>=CMD_NORTH && IS_PC(ch)) {
+            if (b) {
+                b = 0;
+                send_to_char("Basil Great Druid looks at you\n\r", ch);
+                    if ((ch->in_room == Bandits_Path ) && (cmd == CMD_NORTH)) {
+                        if ((BASIL_GATEKEEPER_MAX_LEVEL < GetMaxLevel(ch)) && (GetMaxLevel(ch) < IMMORTALE)) {
+                            if (!check_soundproof(ch)) {
+                                act("Basil the Great Druid tells you 'Begone Unbelievers!'", TRUE, ch, 0, 0, TO_CHAR);
+                            }
+                            act("Basil Great Druid grins evilly.", TRUE, ch, 0, 0, TO_CHAR);
+                            return(TRUE);
+                        }
+                    }
+            } else {
+                b = 1;
+            }
+            return(FALSE);
+        } /* cmd 1 - 6 */
+            return(FALSE);
    } else {
-      if (ch->specials.fighting) {
-	 if ((GET_POS(ch) < POSITION_FIGHTING) &&
-	     (GET_POS(ch) > POSITION_STUNNED)){
-		StandUp(ch);
-	     } else {
-		FighterMove(ch);
-	     }
-	 return(FALSE);
-      }
+        if (ch->specials.fighting) {
+            if ((GET_POS(ch) < POSITION_FIGHTING) && (GET_POS(ch) > POSITION_STUNNED)){
+                StandUp(ch);
+            } else {
+                FighterMove(ch);
+            }
+            return(FALSE);
+        }
    }
    return(FALSE);
 } /* end druid_protector */
 
 
-int Magic_Fountain(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int type)
-{
+int Magic_Fountain(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int type) {
    
    char buf[MAX_INPUT_LENGTH];
    
-   if( type != EVENT_COMMAND )
-   return FALSE;
+   if( type != EVENT_COMMAND ) {
+        return FALSE;
+   }
    
    if (cmd==CMD_DRINK || cmd==CMD_FILL) { /* drink */
       
-      only_argument(arg,buf);
+        only_argument(arg,buf);
       
-      if (str_cmp(buf, "fountain") && str_cmp(buf, "water")) {
-	 return(FALSE);
-      }
+        if (str_cmp(buf, "fountain") && str_cmp(buf, "water")) {
+            return(FALSE);
+        }
       
-      send_to_char("You drink from the fountain\n\r", ch);
-      act("$n drinks from the fountain", FALSE, ch, 0, 0, TO_ROOM);
+        send_to_char("You drink from the fountain\n\r", ch);
+        act("$n drinks from the fountain", FALSE, ch, 0, 0, TO_ROOM);
       
       
-      if(GET_COND(ch,THIRST)>20) {
-	 act("You do not feel thirsty.",FALSE,ch,0,0,TO_CHAR);
-	 return(TRUE);
-      }
-      if(GET_COND(ch,FULL)>20) {
-	 act("You do are full.",FALSE,ch,0,0,TO_CHAR);
-	 return(TRUE);
-      }
+        if(GET_COND(ch,THIRST)>20) {
+            act("You do not feel thirsty.",FALSE,ch,0,0,TO_CHAR);
+            return(TRUE);
+        }
       
-      GET_COND(ch,THIRST) = 24;
-      GET_COND(ch,FULL)+=1;
+        if(GET_COND(ch,FULL)>20) {
+            act("You do are full.",FALSE,ch,0,0,TO_CHAR);
+            return(TRUE);
+        }
       
-      switch (number(0, 40)) {
+        GET_COND(ch,THIRST) = 24;
+        GET_COND(ch,FULL)+=1;
+      
+        switch (number(0, 40)) {
 	 
 	 /* Lets try and make 1-10 Good, 11-26 Bad, 27-40 Nothing */
-       case 1:
-	 cast_refresh(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 2:
-	 cast_stone_skin(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 3:
-	 cast_cure_serious(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 4:
-	 cast_cure_light(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 5:
-	 cast_armor(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 6:
-	 cast_bless(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 7:
-	 cast_invisibility(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 8:
-	 cast_strength(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 9:
-	 cast_remove_poison(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 10:
-	 cast_true_seeing(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
+        case 1:
+            cast_refresh(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 2:
+            cast_stone_skin(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 3:
+            cast_cure_serious(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 4:
+            cast_cure_light(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 5:
+            cast_armor(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 6:
+            cast_bless(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 7:
+            cast_invisibility(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 8:
+            cast_strength(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 9:
+            cast_remove_poison(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 10:
+            cast_true_seeing(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
 	 
 	 /* Time for the nasty Spells */
 	 
-       case 11:
-	 cast_dispel_magic(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 12:
-	 cast_teleport(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 13:
-	 cast_web(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 14:
-	 cast_curse(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 15:
-	 cast_blindness(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 16:
-	 cast_weakness(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 17:
-	 cast_poison(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 18:
-	 cast_cause_light(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 19:
-	 cast_cause_critic(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 20:
-	 cast_dispel_magic(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 21:
-	 cast_magic_missile(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 22:
-	 cast_faerie_fire(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 23:
-	 cast_flamestrike(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 24:
-	 cast_burning_hands(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 25:
-	 cast_acid_blast(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
-       case 26:
-	 cast_energy_drain(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-	 break;
+        case 11:
+            cast_dispel_magic(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 12:
+            cast_teleport(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 13:
+            cast_web(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 14:
+            cast_curse(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 15:
+            cast_blindness(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+            break;
+        case 16:
+             cast_weakness(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 17:
+             cast_poison(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 18:
+             cast_cause_light(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 19:
+             cast_cause_critic(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 20:
+             cast_dispel_magic(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 21:
+             cast_magic_missile(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 22:
+             cast_faerie_fire(Fountain_Level, ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 23:
+             cast_flamestrike(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 24:
+             cast_burning_hands(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 25:
+             cast_acid_blast(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
+        case 26:
+             cast_energy_drain(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+             break;
 	 
          /* And of course nothing */
 	 
-       default:
-	 send_to_char("The fluid tastes like dry sand in your mouth.\n\r", ch);
-	 break;
-      }
-      return(TRUE);
+        default:
+             send_to_char("The fluid tastes like dry sand in your mouth.\n\r", ch);
+             break;
+        }
+        return(TRUE);
    }
-   
    /* All commands except fill and drink */
    return(FALSE);
 }
@@ -238,185 +228,166 @@ int Magic_Fountain(struct char_data *ch, int cmd, char *arg, struct room_data *r
 
 /* Bjs Shit End */
 
-int DruidAttackSpells(struct char_data *ch, struct char_data *vict, int level)
-{
-   switch(level) {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-      act("$n pronuncia le parole 'yow!'", 1, ch, 0, 0, TO_ROOM);
-      cast_cause_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-		       vict, 0);
-      return(FALSE);
-      break;
-    case 8:
-    case 9:
-    case 10:
-    case 11:
-    case 12:
-    case 13:
-      if (!IS_SET(vict->M_immune, AFF_POISON) &&
-	  !IS_AFFECTED(vict, AFF_POISON)){
-	     act("$n pronuncia le parole 'yuk'", 1, ch, 0, 0, TO_ROOM);
-	     cast_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-			 vict, 0);
-	     return(FALSE);
-	  } else {
-	     act("$n pronuncia le parole 'ouch'", 1, ch, 0, 0, TO_ROOM);
-	     cast_cause_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-				vict, 0);
-	     return(FALSE);
-	  }
-      break;
-    case 14:
-    case 15:
-    case 16:
-    case 17:
-    case 18:
-    case 19:
-    case 20:
-    case 21:
-      act("$n pronuncia le parole 'OUCH!'", 1, ch, 0, 0, TO_ROOM);
-      cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-			vict, 0);
-      return(FALSE);
-    case 22:
-    case 23:
-    case 24:
-    case 25:
-    case 26:
-    case 27:
-    case 28:
-    case 29:
-    case 30:
-    case 31:
-    case 32:
-    case 33:
-    case 34:
-    case 35:
-    case 36:
-    case 37:
-    case 38:
-    case 39:
-    case 40:
-    case 41:
-    case 42:
-    case 43:
-    case 44:
-      if (!IS_SET(vict->M_immune, IMM_FIRE)) {
-	 act("$n pronuncia le parole 'fwoosh'", 1, ch, 0, 0, TO_ROOM);
-	 cast_firestorm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
-	 return(FALSE);
-      } else {
-	 act("$n pronuncia le parole 'OUCH!'", 1, ch, 0, 0, TO_ROOM);
-	 cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-			   vict, 0);
-	 return(FALSE);
-      }
-      break;
-    default:
-      act("$n pronuncia le parole 'kazappapapapa'", 1, ch, 0, 0, TO_ROOM);
-      cast_chain_lightn(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-			vict, 0);
-      return(FALSE);
-      break;
-   }
+int DruidAttackSpells(struct char_data *ch, struct char_data *vict, int level) {
+    switch(level) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+              act("$n pronuncia le parole 'yow!'", 1, ch, 0, 0, TO_ROOM);
+              cast_cause_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+              return(FALSE);
+              break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+            if (!IS_SET(vict->M_immune, AFF_POISON) && !IS_AFFECTED(vict, AFF_POISON)){
+                act("$n pronuncia le parole 'yuk'", 1, ch, 0, 0, TO_ROOM);
+                cast_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+                return(FALSE);
+            } else {
+                act("$n pronuncia le parole 'ouch'", 1, ch, 0, 0, TO_ROOM);
+                cast_cause_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+                return(FALSE);
+            }
+            break;
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+            act("$n pronuncia le parole 'OUCH!'", 1, ch, 0, 0, TO_ROOM);
+            cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+            return(FALSE);
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        case 26:
+        case 27:
+        case 28:
+        case 29:
+        case 30:
+        case 31:
+        case 32:
+        case 33:
+        case 34:
+        case 35:
+        case 36:
+        case 37:
+        case 38:
+        case 39:
+        case 40:
+        case 41:
+        case 42:
+        case 43:
+        case 44:
+            if (!IS_SET(vict->M_immune, IMM_FIRE)) {
+                act("$n pronuncia le parole 'fwoosh'", 1, ch, 0, 0, TO_ROOM);
+                cast_firestorm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+                return(FALSE);
+            } else {
+                act("$n pronuncia le parole 'OUCH!'", 1, ch, 0, 0, TO_ROOM);
+                cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+                return(FALSE);
+            }
+            break;
+        default:
+            act("$n pronuncia le parole 'kazappapapapa'", 1, ch, 0, 0, TO_ROOM);
+            cast_chain_lightn(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
+            return(FALSE);
+            break;
+    }
 }
 
 
-int Summoner(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
-{
+int Summoner(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) {
    /*   extern struct descriptor_data *descriptor_list; */
-   struct descriptor_data *d;
-   struct char_data *targ=0;
-   struct char_list *i;
-   char buf[255];
+    struct descriptor_data *d;
+    struct char_data *targ=0;
+    struct char_list *i;
+    char buf[255];
    
-   extern char EasySummon;
+    extern char EasySummon;
    
-   if (cmd || !AWAKE(ch))
-   return(FALSE);
-   
-   if (check_soundproof(ch)) 
-   return(FALSE);
-   
-   if (ch->specials.fighting)  
-   return(FALSE);
-   
-   if (check_nomagic(ch, 0, 0))
-   return(TRUE);
-   
-   /*
+    if (cmd || !AWAKE(ch)) {
+        return(FALSE);
+    }
+    
+    if (check_soundproof(ch)) {
+        return(FALSE);
+    }
+    
+    if (ch->specials.fighting) {
+        return(FALSE);
+    }
+    
+    if (check_nomagic(ch, 0, 0)) {
+        return(TRUE);
+    }
+
+    /*
     **  wait till at 75% of hitpoints.
     */
    
-   if (GET_HIT(ch) > ((GET_MAX_HIT(ch)*3)/4)) 
-   {
-      /*
-       **  check for hatreds
-       */
-      if (IS_SET(ch->hatefield, HATE_CHAR)) 
-      {
-	 if (ch->hates.clist) 
-	 {
-	    for (i = ch->hates.clist; i; i = i->next) 
-	    {
-	       if (i->op_ch) 
-	       {  
-		  /* if there is a char_ptr */
-		  targ = i->op_ch;
-		  if (IS_PC(targ)) 
-		  {
-		     sprintf( buf, "You hate %s\n\r", GET_NAME( targ ) );
-		     send_to_char(buf, ch);
-		     break;
-		  }
-	       }
-	       else if( i->name )
-	       {
-		  /* look up the char_ptr */
-		  mudlog( LOG_CHECK, "%s cerca di summonare qualcuno.", 
-			 GET_NAME_DESC( ch ) );
-		  for( d = descriptor_list; d; d = d->next )
-		  {
+    if (GET_HIT(ch) > ((GET_MAX_HIT(ch)*3)/4)) {
+        /*
+        **  check for hatreds
+        */
+        if (IS_SET(ch->hatefield, HATE_CHAR)) {
+            if (ch->hates.clist) {
+                for (i = ch->hates.clist; i; i = i->next)  {
+                    if (i->op_ch) {  
+                    /* if there is a char_ptr */
+                        targ = i->op_ch;
+                        if (IS_PC(targ)) {
+                            sprintf( buf, "You hate %s\n\r", GET_NAME( targ ) );
+                            send_to_char(buf, ch);
+                            break;
+                        }
+                    } else if( i->name ) {
+                        /* look up the char_ptr */
+                        mudlog( LOG_CHECK, "%s cerca di summonare qualcuno.", 
+                        GET_NAME_DESC( ch ) );
+                        for( d = descriptor_list; d; d = d->next ) {
 #if 1
-		     if( d->connected == CON_PLYNG && d->character &&
-			GET_NAME(d->character) &&
-			strcmp( GET_NAME( d->character ), i->name ) == 0 )
-		     {
-			targ = d->character;
-			break;
-		     }                
+                            if( d->connected == CON_PLYNG && d->character && GET_NAME(d->character) && strcmp( GET_NAME( d->character ), i->name ) == 0 ) {
+                                targ = d->character;
+                                break;
+                            }                
 #endif
-		  }
-		  mudlog( LOG_CHECK, "  Ricerca finita." );
-	       }
-	    }
-	 }
-      }
-      if (targ)
-      {
-	 act("$n pronuncia le parole 'Your ass is mine!'.",
-	     1, ch, 0, 0, TO_ROOM);
-	 if (EasySummon == 1)
-	 {
-	    if (!IS_SET(ch->player.iClass, CLASS_PSI))
-	    spell_summon(GetMaxLevel(ch), ch, targ, 0);
-	    else if (ch->skills[SKILL_SUMMON].learned &&
-		     (GET_MAX_HIT(targ) <= GET_HIT(ch)))
-	    do_mindsummon(ch,targ->player.name,0);
-	    else 
-	    do_psi_portal(ch,targ->player.name,0);
-	 }
-	 else
-	 {
-	    if (GetMaxLevel(ch) < 32)
-	    if (number(0,10))
-	    {
+                    }
+                    mudlog( LOG_CHECK, "  Ricerca finita." );
+                }
+            }
+        }
+    }
+    
+    if (targ) {
+        act("$n pronuncia le parole 'Your ass is mine!'.", 1, ch, 0, 0, TO_ROOM);
+        if (EasySummon == 1) {
+            if (!IS_SET(ch->player.iClass, CLASS_PSI)) {
+                spell_summon(GetMaxLevel(ch), ch, targ, 0);
+            } else if (ch->skills[SKILL_SUMMON].learned && (GET_MAX_HIT(targ) <= GET_HIT(ch))) {
+                do_mindsummon(ch,targ->player.name,0);
+            } else {
+                do_psi_portal(ch,targ->player.name,0);
+            } 
+
+        } else {
+            if (GetMaxLevel(ch) < 32) 
+                
+            
+	    if (number(0,10)) {
 	       do_say(ch, "Curses!  Foiled again!\n\r", 0);
 	       return(0);
 	    }
@@ -3986,131 +3957,117 @@ int miner_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mo
    return FALSE;
 }
 
-/** 
-* FLYP 2080129
-* Demon teacher for immolation skill
-**/
-
+/**
+ * @brief FLYP 2080129: Demon teacher for immolation skill
+ * 
+ * @param ch
+ * @param cmd
+ * @param arg
+ * @param mob
+ * @param type
+ * @return 
+ */
 int DemonTeacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
 {
-   char buf[256];
-   static char *n_skills[] =
-   {
-      "immolation",
-      "\n",
-   };
-   int number=0;
-   int charge, sk_num;
+    char buf[256];
+    static char *n_skills[] =
+    {
+        "immolation",
+        "\n",
+    };
+    
+    int number=0;
+    int charge, sk_num;
    
-   if (!AWAKE(ch))
-   return(FALSE);
+    if (!AWAKE(ch)) {
+        return(FALSE);
+    }
+    
+    if (!cmd) {
+        if (ch->specials.fighting) {
+            return(fighter(ch, cmd, arg,mob,type));
+        }
+        return(FALSE);
+    }
    
-   if (!cmd)
-   {
-      if (ch->specials.fighting)
-      {
-	 return(fighter(ch, cmd, arg,mob,type));
-      }
-      return(FALSE);
-   }
+    if (!ch->skills) {
+        return(FALSE);
+    }
+
+    if (check_soundproof(ch)) {
+        return(FALSE);
+    }
+
+    for(; *arg==' '; arg++); /* ditch spaces */
    
-   if (!ch->skills)
-   return(FALSE);
-   
-   if (check_soundproof(ch))
-   return(FALSE);
-   
-   for(; *arg==' '; arg++); /* ditch spaces */
-   
-   if (cmd==CMD_PRACTICE)
-   {
-      if (!arg || (strlen(arg) == 0))
-      {
-	 sprintf(buf," immolation    :  %s\n\r",how_good(ch->skills[SKILL_IMMOLATION].learned));
-	 send_to_char(buf,ch);
-	 
-	 return(TRUE);
-      }
-      else
-      {
-	 
-	 number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
-	 if( number == -1 )
-	 {
-	    act( "$N ti dice: 'Non conosco questo skill.'", TRUE, ch, 0, mob,
-		TO_CHAR );
-	    return(TRUE);
-	 }
-	 
-	 charge = GetMaxLevel(ch) * COSTO_IMMOLATION;
-	 switch(number)
-	 {
-	  case 0:
-	  case 1:
-	    sk_num = SKILL_IMMOLATION;
-	    break;
-	  default:
-	    mudlog( LOG_SYSERR, "Strangeness in miner_teacher (%d)", number);
-	    send_to_char("'Ack!  I feel faint!'\n\r", ch);
-	    return(FALSE);
-	 }
-      }
+    if (cmd==CMD_PRACTICE) {
+        if (!arg || (strlen(arg) == 0)) {
+            sprintf(buf,"Ti posso insegnare questa abilita' demoniaca:\n immolation    :  %s\n\r",how_good(ch->skills[SKILL_IMMOLATION].learned));
+            send_to_char(buf,ch);
+            return(TRUE);
+        } else {
+            number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
+
+            if( number == -1 ) {
+                act( "$N ti dice: 'Non conosco questo skill.'", TRUE, ch, 0, mob, TO_CHAR );
+                return(TRUE);
+            }
+            
+            charge = GetMaxLevel(ch) * COSTO_IMMOLATION;
+            
+            switch(number) {
+                case 0:
+                case 1:
+                sk_num = SKILL_IMMOLATION;
+                break;
+            default:
+                mudlog( LOG_SYSERR, "Strangeness in DemonTeacher (%d)", number);
+                send_to_char("'Ack!  I feel faint!'\n\r", ch);
+                return(FALSE);
+            }
+        }
       
-      if (!IS_IMMORTAL(ch))
-      {
-	 
-	 if( (sk_num == SKILL_IMMOLATION)  && !(GET_RACE(ch) == RACE_DEMON) )
-	 {
-	    act( "$N ti dice: 'Non sei il tipo di persona che possa imparare certe " 
-		"cose'.", TRUE, ch, 0, mob, TO_CHAR );
-	    return(TRUE);
-	 }
-      }
+        if (!IS_IMMORTAL(ch)) {
+
+            if( (sk_num == SKILL_IMMOLATION)  && !(GET_RACE(ch) == RACE_DEMON) ) {
+                act( "$N ti dice: 'Non sei il tipo di persona che possa imparare certe cose'.", TRUE, ch, 0, mob, TO_CHAR );
+                return(TRUE);
+            }
+        }
       
-      if( GET_GOLD( ch ) < charge )
-      {
-	 act( "$N ti dice: 'Ah, ma non hai abbastanza soldi'.",
-	     TRUE, ch, 0, mob, TO_CHAR );
-	 return(TRUE);
-      }
+        if( GET_GOLD( ch ) < charge ) {
+            act( "$N ti dice: 'Ah, ma non hai abbastanza soldi'.", TRUE, ch, 0, mob, TO_CHAR );
+            return(TRUE);
+        }
       
-      if( ch->skills[ sk_num ].learned >= 90 )
-      {
-	 act( "$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
-	     "piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR );
-	 return(TRUE);
-      }
+        if( ch->skills[ sk_num ].learned >= 90 ) {
+            act( "$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti piu\' nulla'.", TRUE, ch, 0, mob, TO_CHAR );
+            return(TRUE);
+        }
       
-      if( ch->specials.spells_to_learn <= 0 )
-      {
-	 act( "$N ti dice: 'Devi prima guadagnarti qualche sessione di pratica'.",
-	     TRUE, ch, 0, mob, TO_CHAR );
-	 return(TRUE);
-      }
+        if( ch->specials.spells_to_learn <= 0 ) {
+            act( "$N ti dice: 'Devi prima guadagnarti qualche sessione di pratica'.", TRUE, ch, 0, mob, TO_CHAR );
+            return(TRUE);
+        }
       
-      GET_GOLD(ch) -= charge;
-      act( "$N tiene la sua lezione.", TRUE, ch, 0, mob, TO_CHAR );
-      ch->specials.spells_to_learn--;
+        GET_GOLD(ch) -= charge;
+        act( "$N ti infonde la sua conoscienza.", TRUE, ch, 0, mob, TO_CHAR );
+
+        ch->specials.spells_to_learn--;
+        ch->skills[ sk_num ].learned += int_app[ (int)GET_INT( ch ) ].learn;
       
-      ch->skills[ sk_num ].learned += int_app[ (int)GET_INT( ch ) ].learn;
+        if( !IS_SET(ch->skills[sk_num].flags, SKILL_KNOWN) ) {
+            SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
+        }
       
-      if( !IS_SET(ch->skills[sk_num].flags, SKILL_KNOWN) )
-      SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
-      
-      if( ch->skills[sk_num].learned >= 90 )
-      {
-	 act( "$N ti dice: 'Ora sei un maestro in quest'arte'.",
-	     TRUE, ch, 0, mob, TO_CHAR );
-      }
-      return TRUE;
-   }
-   
-   return FALSE;
+        if( ch->skills[sk_num].learned >= 90 ) {
+            act( "$N ti dice: 'Ora sei un maestro in quest'arte'.", TRUE, ch, 0, mob, TO_CHAR );
+        }
+        return TRUE;
+    }
+    return FALSE;
 }
-
 /*** FLYP ***/
-
-
 
 int forge_teacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
 {
@@ -7312,7 +7269,7 @@ int StatMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, 
 	   stats[number]);
    act(buf,FALSE,ch,0,guildmaster,TO_CHAR);
    prezzo=StatCost(ch,number);
-   // Elei-Mi-Shill questa mi sa che non serve più
+   // Elei-Mi-Shill questa mi sa che non serve piÃ¹
    if (totstat<=TOT_STAT_MINIMUM)
    {
       prezzo/=2;
