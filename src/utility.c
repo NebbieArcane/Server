@@ -43,15 +43,15 @@ void NailThisSucker( struct char_data *ch);
 
 int EgoBladeSave(struct char_data *ch)
 {
-   int total;
-   
-   if (GetMaxLevel(ch) <= 10) return(FALSE);
-   total = (GetMaxLevel(ch) + GET_STR(ch) + GET_CON(ch));
-   if (GET_HIT(ch) == 0) return(FALSE);
-   total = total - (GET_MAX_HIT(ch) / GET_HIT(ch));
-   if (number(1,101) > total) {
-      return(FALSE);
-   } else return(TRUE);
+ int total;
+ 
+ if (GetMaxLevel(ch) <= 10) return(FALSE);
+ total = (GetMaxLevel(ch) + GET_STR(ch) + GET_CON(ch));
+ if (GET_HIT(ch) == 0) return(FALSE);
+ total = total - (GET_MAX_HIT(ch) / GET_HIT(ch));
+ if (number(1,101) > total) {
+  return(FALSE);
+} else return(TRUE);
 }
 
  /* Added by Gaia 2001 for limited items EGO */
@@ -59,56 +59,56 @@ int EgoBladeSave(struct char_data *ch)
 int EgoSave(struct char_data *ch)
 {
 #ifdef EGO_RARE
-   
+ 
 
-   int total=0;
-   int nlim=0;
-   int LimObj( struct char_data *ch );
-   
-   if (GetMaxLevel(ch) <= 15) return(FALSE);
-   nlim = LimObj( ch ) ;
+ int total=0;
+ int nlim=0;
+ int LimObj( struct char_data *ch );
+ 
+ if (GetMaxLevel(ch) <= 15) return(FALSE);
+ nlim = LimObj( ch ) ;
 
-   if ( nlim <= 1 ) return(TRUE);
+ if ( nlim <= 1 ) return(TRUE);
 
-   total = GetMaxLevel(ch) + GET_CHR(ch)*3 ;
-   if(IS_PRINCE( ch )) total +=50 ;
-   if(HasClass( ch , CLASS_MAGIC_USER|CLASS_SORCERER ))
-      total +=20 ;
-   if( GET_RACE( ch ) == RACE_HALFLING ) total += 50 ;
-   else if( GET_RACE( ch ) == RACE_DWARF || GET_RACE( ch ) == RACE_DARK_DWARF
-    ) total += 30 ;
-   else if( GET_RACE( ch ) == RACE_TROLL ) total -= 40 ;
-   else if( GET_RACE( ch ) == RACE_HALF_GIANT ) total -= 20 ;
+ total = GetMaxLevel(ch) + GET_CHR(ch)*3 ;
+ if(IS_PRINCE( ch )) total +=50 ;
+ if(HasClass( ch , CLASS_MAGIC_USER|CLASS_SORCERER ))
+  total +=20 ;
+if( GET_RACE( ch ) == RACE_HALFLING ) total += 50 ;
+else if( GET_RACE( ch ) == RACE_DWARF || GET_RACE( ch ) == RACE_DARK_DWARF
+  ) total += 30 ;
+ else if( GET_RACE( ch ) == RACE_TROLL ) total -= 40 ;
+else if( GET_RACE( ch ) == RACE_HALF_GIANT ) total -= 20 ;
 
-   total -= 25*(nlim - 1);
+total -= 25*(nlim - 1);
 
-   mudlog( LOG_CHECK, "Total limited %d percent %d", nlim, 
-             total ); 
+mudlog( LOG_CHECK, "Total limited %d percent %d", nlim, 
+ total ); 
 
-   if (total > 50 ) return(TRUE);
-   else if (total < 1 ) return(FALSE);
-   else if (number(1,51) > total) {
-      return(FALSE);
-   } else return(TRUE);
+if (total > 50 ) return(TRUE);
+else if (total < 1 ) return(FALSE);
+else if (number(1,51) > total) {
+  return(FALSE);
+} else return(TRUE);
 #else
- return(TRUE) ;
+return(TRUE) ;
 #endif
 }
 
 int MIN(int a, int b)
 {
-        return a < b ? a:b;
+  return a < b ? a:b;
 }
 
 
 int MAX(int a, int b)
 {
-        return a > b ? a:b;
+  return a > b ? a:b;
 }
 
 unsigned int GetItemClassRestrictions(struct obj_data *obj)
 {
-unsigned  int total=0;
+  unsigned  int total=0;
 
   if (IS_SET(obj->obj_flags.extra_flags, ITEM_ANTI_MAGE)) {
     total += CLASS_MAGIC_USER;
@@ -156,133 +156,133 @@ unsigned  int total=0;
 
 bool isNullChar (struct char_data *ch)
 {
-if (ch == NULL || GET_NAME(ch) == NULL)
-return TRUE;
-else
-return FALSE;
+  if (ch == NULL || GET_NAME(ch) == NULL)
+    return TRUE;
+  else
+    return FALSE;
 }
 
 
 
 int CAN_SEE(struct char_data *s, struct char_data *o)
 {
-   register int iSLev = GetMaxLevel(s);
-   struct room_data *pRoomS;
-   struct room_data *pRoomO;
-   struct affected_type *aff;
-   int s_inv=0;
-   int o_inv=0;
-   if( !o || s->in_room < 0 || o->in_room < 0 )
+ register int iSLev = GetMaxLevel(s);
+ struct room_data *pRoomS;
+ struct room_data *pRoomO;
+ struct affected_type *aff;
+ int s_inv=0;
+ int o_inv=0;
+ if( !o || s->in_room < 0 || o->in_room < 0 )
    return(FALSE);
-   
-   
-   if( o->invis_level > iSLev )
+ 
+ 
+ if( o->invis_level > iSLev )
    return FALSE;                       
-   
-   if( !IS_NPC(s) && iSLev >= IMMORTALE ) 
+ 
+ if( !IS_NPC(s) && iSLev >= IMMORTALE ) 
    return(TRUE);
-   
-   if ( (IS_AFFECTED(s, AFF_BLIND) && !HasClass(s,CLASS_PSI)
-	 &&!IS_AFFECTED(s,AFF_TRUE_SIGHT))
-       || IS_AFFECTED(o, AFF_HIDE))
+ 
+ if ( (IS_AFFECTED(s, AFF_BLIND) && !HasClass(s,CLASS_PSI)
+  &&!IS_AFFECTED(s,AFF_TRUE_SIGHT))
+   || IS_AFFECTED(o, AFF_HIDE))
    return(FALSE);
-   
-   if( IS_AFFECTED( s, AFF_TRUE_SIGHT ) && !IS_AFFECTED(o,AFF_INVISIBLE))
+ 
+ if( IS_AFFECTED( s, AFF_TRUE_SIGHT ) && !IS_AFFECTED(o,AFF_INVISIBLE))
    return(TRUE);
 
-   if( IS_AFFECTED(o, AFF_INVISIBLE) || IS_AFFECTED(s,AFF_BLIND))
+ if( IS_AFFECTED(o, AFF_INVISIBLE) || IS_AFFECTED(s,AFF_BLIND))
+ {
+  if (IS_IMMORTAL(o))
+    return(FALSE);
+  if (IS_AFFECTED(s, AFF_DETECT_INVISIBLE) ||
+   IS_AFFECTED(s,AFF_TRUE_SIGHT))
+  {
+    for(aff = s->affected; aff ; aff = aff->next) 
+    {
+     if((aff->type==SPELL_DETECT_INVISIBLE ||
+      aff->type==SPELL_TRUE_SIGHT) 
+      && aff->location==APPLY_NONE)
+     {
+      s_inv=MAX(aff->modifier,s_inv);
+    }
+    
+  }
+  for(aff = o->affected; aff ; aff = aff->next) 
+  {
+   if(aff->type==SPELL_INVISIBLE&& aff->location==APPLY_NONE) 
    {
-      if (IS_IMMORTAL(o))
-      return(FALSE);
-      if (IS_AFFECTED(s, AFF_DETECT_INVISIBLE) ||
-	  IS_AFFECTED(s,AFF_TRUE_SIGHT))
-      {
-	 for(aff = s->affected; aff ; aff = aff->next) 
-	 {
-	    if((aff->type==SPELL_DETECT_INVISIBLE ||
-		aff->type==SPELL_TRUE_SIGHT) 
-	       && aff->location==APPLY_NONE)
-	    {
-	       s_inv=MAX(aff->modifier,s_inv);
-	    }
-	    
-	 }
-	 for(aff = o->affected; aff ; aff = aff->next) 
-	 {
-	    if(aff->type==SPELL_INVISIBLE&& aff->location==APPLY_NONE) 
-	    {
-	       o_inv=aff->modifier;
-	       break;
-	    }
-	    
-	 }
-	 if (s_inv==0) s_inv=MIN(GetMaxLevel(s)+5,45);
-	 return((o_inv-s_inv)<6);
+    o_inv=aff->modifier;
+    break;
+  }
+  
+}
+if (s_inv==0) s_inv=MIN(GetMaxLevel(s)+5,45);
+return((o_inv-s_inv)<6);
       } /*is affected det_invisible*/ 
-      return(FALSE);
-   }
-   
-   pRoomS = real_roomp( s->in_room );
-   pRoomO = real_roomp( o->in_room );
-   
-   if( ( IS_DARK_P( pRoomS ) || IS_DARK_P( pRoomO ) ) &&
-      !IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DROW))
-   return(FALSE);
-   
-   if( IS_AFFECTED2( o, AFF2_ANIMAL_INVIS ) && IsAnimal( s ) )
-   return(FALSE);
-   
-   return(TRUE);
+return(FALSE);
+}
+
+pRoomS = real_roomp( s->in_room );
+pRoomO = real_roomp( o->in_room );
+
+if( ( IS_DARK_P( pRoomS ) || IS_DARK_P( pRoomO ) ) &&
+  !IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DROW))
+ return(FALSE);
+
+if( IS_AFFECTED2( o, AFF2_ANIMAL_INVIS ) && IsAnimal( s ) )
+ return(FALSE);
+
+return(TRUE);
 }
 
 int CAN_SEE_OBJ( struct char_data *ch, struct obj_data *obj)
 {
-   int num=0;
-   
-   if (IS_IMMORTAL(ch))
+ int num=0;
+ 
+ if (IS_IMMORTAL(ch))
    return(1);
-   
-   
-   
+ 
+ 
+ 
    /* changed the act.info.c, hope this works on traps INSIDE chests etc.. */
    /* msw */
-   
-   if ((ITEM_TYPE(obj) == ITEM_TRAP) && (GET_TRAP_CHARGES(obj) > 0)) 
-   {
-      num = number(1,101);
-      if (CanSeeTrap(num,ch))
-      {
-	 return(TRUE);
-      }
-      else
-      return(FALSE);
+ 
+ if ((ITEM_TYPE(obj) == ITEM_TRAP) && (GET_TRAP_CHARGES(obj) > 0)) 
+ {
+  num = number(1,101);
+  if (CanSeeTrap(num,ch))
+  {
+    return(TRUE);
+  }
+  else
+    return(FALSE);
    } /* not a trap */
-   
-   if (IS_AFFECTED(ch, AFF_TRUE_SIGHT))
+  
+  if (IS_AFFECTED(ch, AFF_TRUE_SIGHT))
    return(1);
 
-   if (IS_AFFECTED(ch, AFF_BLIND))
+ if (IS_AFFECTED(ch, AFF_BLIND))
    return(0);
-   
-   if ((long)(obj->equipped_by)==(long)(ch))
+ 
+ if ((long)(obj->equipped_by)==(long)(ch))
    return(1);
-   
-   if( IS_DARK_P(real_roomp(ch->in_room)) && 
-      !IS_OBJ_STAT(obj, ITEM_GLOW) &&
-      GET_RACE(ch)!=RACE_DROW)
+ 
+ if( IS_DARK_P(real_roomp(ch->in_room)) && 
+  !IS_OBJ_STAT(obj, ITEM_GLOW) &&
+  GET_RACE(ch)!=RACE_DROW)
    return(0);
-   
-   
-   if (!IS_AFFECTED(ch, AFF_DETECT_INVISIBLE) &&
-       IS_OBJ_STAT(obj, ITEM_INVISIBLE))
+ 
+ 
+ if (!IS_AFFECTED(ch, AFF_DETECT_INVISIBLE) &&
+   IS_OBJ_STAT(obj, ITEM_INVISIBLE))
    return(0);
-   if (obj->equipped_by && 
-       affected_by_spell(obj->equipped_by, SPELL_GLOBE_DARKNESS) && 
-       !IS_OBJ_STAT(obj,ITEM_GLOW) && 
-       ( !IS_OBJ_STAT(obj,ITEM_MAGIC) || !IS_AFFECTED(ch,AFF_DETECT_MAGIC))
-       )
+ if (obj->equipped_by && 
+   affected_by_spell(obj->equipped_by, SPELL_GLOBE_DARKNESS) && 
+   !IS_OBJ_STAT(obj,ITEM_GLOW) && 
+   ( !IS_OBJ_STAT(obj,ITEM_MAGIC) || !IS_AFFECTED(ch,AFF_DETECT_MAGIC))
+   )
    return(0);
-   return(1);   
+ return(1);   
 }
 
 int exit_ok( struct room_direction_data *exit, struct room_data **rpp )
@@ -322,59 +322,59 @@ int ObjVnum( struct obj_data *o)
 
 
 void Zwrite( FILE *fp, char cmd, int tf, int arg1, int arg2, int arg3,
-             int arg4, char *desc )
+ int arg4, char *desc )
 {
   char buf[ 256 ], buf2[ 256 ];
 
   switch( cmd )
   {
    case 'O':
-    sprintf( buf, "%c %d %d %d %d %d", cmd, tf, arg1, arg2, arg3, arg4 );
-    break;
+   sprintf( buf, "%c %d %d %d %d %d", cmd, tf, arg1, arg2, arg3, arg4 );
+   break;
    case 'M':
    case 'C':
    case 'E':
    case 'P':
    case 'D':
-    sprintf( buf, "%c %d %d %d %d", cmd, tf, arg1, arg2, arg3 );
-    break;
+   sprintf( buf, "%c %d %d %d %d", cmd, tf, arg1, arg2, arg3 );
+   break;
    default:
-    sprintf( buf, "%c %d %d %d", cmd, tf, arg1, arg2 );
-    break;
-  }
-    
-  if( *desc )
-  {
-    sprintf( buf2, "%s   ; %s\n", buf, desc);
-  }
-  else
-  {
-    sprintf( buf2, "%s\n", buf ); 
-  }
-  fputs( buf2, fp );
+   sprintf( buf, "%c %d %d %d", cmd, tf, arg1, arg2 );
+   break;
+ }
+ 
+ if( *desc )
+ {
+  sprintf( buf2, "%s   ; %s\n", buf, desc);
+}
+else
+{
+  sprintf( buf2, "%s\n", buf ); 
+}
+fputs( buf2, fp );
 }
 
 void RecZwriteObj(FILE *fp, struct obj_data *o)
 {
-   struct obj_data *t;
+ struct obj_data *t;
 
-   if (ITEM_TYPE(o) == ITEM_CONTAINER) 
+ if (ITEM_TYPE(o) == ITEM_CONTAINER) 
+ {
+   for (t = o->contains; t; t=t->next_content) 
    {
-     for (t = o->contains; t; t=t->next_content) 
+     if( t->item_number >= 0 )
      {
-       if( t->item_number >= 0 )
-       {
-         Zwrite( fp, 'P', 1, ObjVnum(t), obj_index[t->item_number].number, 
-                 ObjVnum(o), 0, t->short_description );
-         RecZwriteObj(fp, t);
-       }
+       Zwrite( fp, 'P', 1, ObjVnum(t), obj_index[t->item_number].number, 
+         ObjVnum(o), 0, t->short_description );
+       RecZwriteObj(fp, t);
      }
-   } else {
-     return;
    }
+ } else {
+   return;
+ }
 }
 
- 
+
 int SaveZoneFile(FILE *fp, int start_room, int end_room)
 {
   struct char_data *p;
@@ -382,8 +382,8 @@ int SaveZoneFile(FILE *fp, int start_room, int end_room)
   struct room_data *room;
   char cmd, buf[80];
   int i, j, arg1, arg2, arg3, arg4;
- 
- 
+  
+  
   for (i = start_room; i<=end_room; i++)
   {
     room = real_roomp(i);
@@ -413,7 +413,7 @@ int SaveZoneFile(FILE *fp, int start_room, int end_room)
                 arg3 = j;
                 strcpy(buf, p->equipment[j]->short_description);
                 Zwrite(fp, cmd,1,arg1, arg2, arg3, 0,
-                       buf);
+                 buf);
                 RecZwriteObj(fp, p->equipment[j]);
               }
             }
@@ -453,7 +453,7 @@ int SaveZoneFile(FILE *fp, int start_room, int end_room)
       /*
        *  lastly.. doors
        */
- 
+      
       for (j = 0; j < 6; j++)
       {
         /*
@@ -485,19 +485,19 @@ int SaveZoneFile(FILE *fp, int start_room, int end_room)
   fprintf(fp,"S\n");
   return 1;
 }
- 
- 
+
+
 int LoadZoneFile(FILE *fl, int zon)
 {
   int cmd_no = 0, expand, tmp, cc = 22;
   char buf[81];
- 
+  
   if(zone_table[zon].cmd)
   {
     free(zone_table[zon].cmd);
     zone_table[zon].cmd = NULL;
   }
- 
+  
   /* read the command table */
   cmd_no = 0;
   for (expand = 1;!feof(fl);)
@@ -510,47 +510,47 @@ int LoadZoneFile(FILE *fl, int zon)
        if (cmd_no >= cc) {
          cc += 5;
          if (!(zone_table[zon].cmd =
-                (struct reset_com *) realloc(zone_table[zon].cmd,
-                               (cc * sizeof(struct reset_com)))))  {
-                perror("reset command load");
-                assert(0);
-         }
-       }
+          (struct reset_com *) realloc(zone_table[zon].cmd,
+           (cc * sizeof(struct reset_com)))))  {
+          perror("reset command load");
+        assert(0);
+      }
     }
- 
-    expand = 1;
- 
-    fscanf(fl, " "); /* skip blanks */
-    fscanf(fl, "%c", &zone_table[zon].cmd[cmd_no].command);
- 
-    if (zone_table[zon].cmd[cmd_no].command == 'S')
-      break;
- 
-    if (zone_table[zon].cmd[cmd_no].command == '*')   {
-      expand = 0;
-      fgets(buf, 80, fl); /* skip command */
-      continue;
-    }
- 
-    fscanf(fl, " %d %d %d",
-             &tmp,
-             &zone_table[zon].cmd[cmd_no].arg1,
-             &zone_table[zon].cmd[cmd_no].arg2);
-    zone_table[zon].cmd[cmd_no].if_flag=tmp;
- 
-    switch(zone_table[zon].cmd[cmd_no].command) {
-      case 'M':
-      case 'O':
-      case 'C':
-      case 'E':
-      case 'P':
-      case 'D':
-        fscanf(fl, " %d", &zone_table[zon].cmd[cmd_no].arg3);
-         break;
-    }
-    fgets(buf, 80, fl);       /* read comment */
-    cmd_no++;
   }
+  
+  expand = 1;
+  
+    fscanf(fl, " "); /* skip blanks */
+  fscanf(fl, "%c", &zone_table[zon].cmd[cmd_no].command);
+  
+  if (zone_table[zon].cmd[cmd_no].command == 'S')
+    break;
+  
+  if (zone_table[zon].cmd[cmd_no].command == '*')   {
+    expand = 0;
+      fgets(buf, 80, fl); /* skip command */
+    continue;
+  }
+  
+  fscanf(fl, " %d %d %d",
+   &tmp,
+   &zone_table[zon].cmd[cmd_no].arg1,
+   &zone_table[zon].cmd[cmd_no].arg2);
+  zone_table[zon].cmd[cmd_no].if_flag=tmp;
+  
+  switch(zone_table[zon].cmd[cmd_no].command) {
+    case 'M':
+    case 'O':
+    case 'C':
+    case 'E':
+    case 'P':
+    case 'D':
+    fscanf(fl, " %d", &zone_table[zon].cmd[cmd_no].arg3);
+    break;
+  }
+    fgets(buf, 80, fl);       /* read comment */
+  cmd_no++;
+}
 return 1;
 }
 
@@ -560,14 +560,14 @@ void CleanZone(int zone)
   struct char_data *vict, *next_v;
   struct obj_data *obj, *next_o;
   int start, end, i;
- 
+  
   start=zone?(zone_table[zone-1].top+1):0;
   end=zone_table[zone].top;
 
   for(i=start;i<=end;i++) {
     rp=real_roomp(i);
     if(!rp) continue;
- 
+    
     for (vict = rp->people; vict; vict=next_v) {
       next_v=vict->next_in_room;
       if (IS_NPC(vict) && (!IS_SET(vict->specials.act, ACT_POLYSELF)))
@@ -582,41 +582,41 @@ void CleanZone(int zone)
     }
   }
 }
- 
- 
+
+
 int FindZone(int zone)
 {
-        int i;
+  int i;
   for(i=0;i<=top_of_zone_table;i++)
     if(zone_table[i].num==zone)
-       break;
-  if(zone_table[i].num!=zone)
+     break;
+   if(zone_table[i].num!=zone)
     return(-1);
   else
     return i;
 }
- 
+
 FILE *MakeZoneFile( struct char_data *c, int zone)
 {
   char buf[256];
   FILE *fp;
- 
+  
   sprintf(buf, "zones/%d.zon", zone);
- 
+  
   if ((fp = fopen(buf, "wt")) != NULL)
     return(fp);
   else
     return(0);
- 
+  
 }
- 
+
 FILE *OpenZoneFile(struct char_data *c, int zone)
 {
   char buf[256];
   FILE *fp;
- 
+  
   sprintf(buf, "zones/%d.zon", zone);
- 
+  
   if ((fp = fopen(buf, "rt")) != NULL)
     return(fp);
   else
@@ -627,12 +627,12 @@ int WeaponImmune(struct char_data *ch)
 {
 
   if (IS_SET(IMM_NONMAG, ch->M_immune) ||
-      IS_SET(IMM_PLUS1, ch->M_immune) ||
-      IS_SET(IMM_PLUS2, ch->M_immune) ||
-      IS_SET(IMM_PLUS3, ch->M_immune) ||
-      IS_SET(IMM_PLUS4, ch->M_immune))
+    IS_SET(IMM_PLUS1, ch->M_immune) ||
+    IS_SET(IMM_PLUS2, ch->M_immune) ||
+    IS_SET(IMM_PLUS3, ch->M_immune) ||
+    IS_SET(IMM_PLUS4, ch->M_immune))
     return(TRUE);
-   return(FALSE);
+  return(FALSE);
 
 }
 
@@ -654,10 +654,10 @@ unsigned IsSusc(struct char_data *ch, int bit)
 /* creates a random number in interval [from;to] */
 int number(int from, int to) 
 {
-   if (to - from + 1 )
-        return((random() % (to - from + 1)) + from);
-   else
-       return(from);
+ if (to - from + 1 )
+  return((random() % (to - from + 1)) + from);
+else
+ return(from);
 }
 
 
@@ -672,14 +672,14 @@ int dice(int number, int size)
         assert(size >= 0);
 #else
 /* instead of crashing the mud we set it to 1 */
-if (size <= 0)
+  if (size <= 0)
     size=1;
 #endif
 
   if (size == 0) return(0);
 
   for (r = 1; r <= number; r++) sum += ((random() % size)+1);
-  return(sum);
+    return(sum);
 }
 
 int scan_number(char *text, int *rval)
@@ -697,13 +697,13 @@ int scan_number(char *text, int *rval)
 /* scan 'till found different or end of both                 */
 int str_cmp(char *arg1, char *arg2)
 {
-   int n;
-   if( !arg2 || !arg1 )
-   {
-     return(1);
-   }
-   n=strcasecmp(arg1,arg2);
-   return(n);
+ int n;
+ if( !arg2 || !arg1 )
+ {
+   return(1);
+ }
+ n=strcasecmp(arg1,arg2);
+ return(n);
 }
 
 
@@ -715,15 +715,15 @@ int str_cmp(char *arg1, char *arg2)
 int str_cmp2(char *arg1, char *arg2)
 {
  if( !arg2 || !arg1 || strlen( arg1 ) == 0 )
-    return 1;
-   return(strncasecmp(arg1,arg2,strlen(arg1)));
+  return 1;
+return(strncasecmp(arg1,arg2,strlen(arg1)));
 }
 
 /* returns: 0 if equal, 1 if arg1 > arg2, -1 if arg1 < arg2  */
 /* scan 'till found different, end of both, or n reached     */
 int strn_cmp(char *arg1, char *arg2, int n)
 {
-return(strncasecmp(arg1,arg2,n));
+  return(strncasecmp(arg1,arg2,n));
 
 }
 
@@ -738,7 +738,7 @@ void mudlog( unsigned uType, char *szString, ... )
   lCurrTime = time( 0 );
   pchTimeStr = asctime( localtime( &lCurrTime ) );
   *( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
-      
+  
   va_start( argptr, szString );
   vsprintf( szBuffer, szString, argptr );
   va_end( argptr );
@@ -776,14 +776,14 @@ void mudlog( unsigned uType, char *szString, ... )
   {
     fprintf( stderr, "LSAVE   : %s : %s\n", pchTimeStr, szBuffer );
   }
-   fflush(stderr);
+  fflush(stderr);
   if( !IS_SET( uType, LOG_SILENT ) )
   {
     for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next)
     {
       if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-          GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-          ( pDesc->character->specials.sev & uType ) )
+        GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
+        ( pDesc->character->specials.sev & uType ) )
       {
         send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
         send_to_char( szBuffer, pDesc->character );
@@ -794,114 +794,114 @@ void mudlog( unsigned uType, char *szString, ... )
 }
 void buglog( unsigned uType, char *szString, ... )
 {
-   va_list argptr;
-   char szBuffer[ LARGE_BUFSIZE ];
-   char *pchTimeStr;
-   long lCurrTime;
-   struct descriptor_data *pDesc;
-   FILE *stdlog;
-   lCurrTime = time( 0 );
-   pchTimeStr = asctime( localtime( &lCurrTime ) );
-   *( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
-   
-   va_start( argptr, szString );
-   vsprintf( szBuffer, szString, argptr );
-   va_end( argptr );
-   if ((stdlog=fopen(BUG_FILE,"a")) )
-   {
-      if( IS_SET( uType, LOG_SYSERR ) )
-      {
-	 fprintf( stdlog, "LSYSERR : %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_CHECK ) )
-      {
-	 fprintf( stdlog, "LCHECK  : %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_PLAYERS ) )
-      {
-	 fprintf( stdlog, "LPLAYERS: %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_MOBILES ) )
-      {
-	 fprintf( stdlog, "LMOBILES: %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_CONNECT ) )
-      {
-	 fprintf( stdlog, "LCONNECT: %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_ERROR ) )
-      {
-	 fprintf( stdlog, "LERROR  : %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_WHO ) )
-      {
-	 fprintf( stdlog, "LWHO    : %s : %s\n", pchTimeStr, szBuffer );
-      }
-      if( IS_SET( uType, LOG_SAVE ) )
-      {
-	 fprintf( stdlog, "LSAVE   : %s : %s\n", pchTimeStr, szBuffer );
-      }
-      
-      if( !IS_SET( uType, LOG_SILENT ) )
-      {
-	 for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next)
-	 {
-	    if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-	       GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-	       ( pDesc->character->specials.sev & uType ) )
-	    {
-	       send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
-	       send_to_char( szBuffer, pDesc->character );
-	       send_to_char( "\n\r", pDesc->character );
-	    }
-	 }
-      }
-      fclose(stdlog);
-   }
-   
+ va_list argptr;
+ char szBuffer[ LARGE_BUFSIZE ];
+ char *pchTimeStr;
+ long lCurrTime;
+ struct descriptor_data *pDesc;
+ FILE *stdlog;
+ lCurrTime = time( 0 );
+ pchTimeStr = asctime( localtime( &lCurrTime ) );
+ *( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
+ 
+ va_start( argptr, szString );
+ vsprintf( szBuffer, szString, argptr );
+ va_end( argptr );
+ if ((stdlog=fopen(BUG_FILE,"a")) )
+ {
+  if( IS_SET( uType, LOG_SYSERR ) )
+  {
+    fprintf( stdlog, "LSYSERR : %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_CHECK ) )
+  {
+    fprintf( stdlog, "LCHECK  : %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_PLAYERS ) )
+  {
+    fprintf( stdlog, "LPLAYERS: %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_MOBILES ) )
+  {
+    fprintf( stdlog, "LMOBILES: %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_CONNECT ) )
+  {
+    fprintf( stdlog, "LCONNECT: %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_ERROR ) )
+  {
+    fprintf( stdlog, "LERROR  : %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_WHO ) )
+  {
+    fprintf( stdlog, "LWHO    : %s : %s\n", pchTimeStr, szBuffer );
+  }
+  if( IS_SET( uType, LOG_SAVE ) )
+  {
+    fprintf( stdlog, "LSAVE   : %s : %s\n", pchTimeStr, szBuffer );
+  }
+  
+  if( !IS_SET( uType, LOG_SILENT ) )
+  {
+    for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next)
+    {
+     if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
+      GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
+      ( pDesc->character->specials.sev & uType ) )
+     {
+      send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
+      send_to_char( szBuffer, pDesc->character );
+      send_to_char( "\n\r", pDesc->character );
+    }
+  }
+}
+fclose(stdlog);
+}
+
 }
 
 void sprintbit(unsigned long vektor, char *names[], char *result)
 {
-   long nr;
-   
-   *result = '\0';
-   
-   for(nr=0; vektor; vektor>>=1)
-   {
-      if (IS_SET(1, vektor))
-        if (*names[nr] != '\n') {
-	   strcat(result,names[nr]);
-	   strcat(result," ");
-        } else {
-	   strcat(result,"UNDEFINED");
-	   strcat(result," ");
-        }
-      if (*names[nr] != '\n')
-        nr++;
-   }
-   
-   if (!*result)
-     strcat(result, "NOBITS");
+ long nr;
+ 
+ *result = '\0';
+ 
+ for(nr=0; vektor; vektor>>=1)
+ {
+  if (IS_SET(1, vektor))
+    if (*names[nr] != '\n') {
+      strcat(result,names[nr]);
+      strcat(result," ");
+    } else {
+      strcat(result,"UNDEFINED");
+      strcat(result," ");
+    }
+    if (*names[nr] != '\n')
+      nr++;
+  }
+  
+  if (!*result)
+   strcat(result, "NOBITS");
 }
 
 
 
 void sprinttype(int type, char *names[], char *result)
 {
-   int nr;
-   
-   for(nr=0;(*names[nr]!='\n');nr++);
+ int nr;
+ 
+ for(nr=0;(*names[nr]!='\n');nr++);
    if(type < nr)
      strcpy(result,names[type]);
    else
      strcpy(result,"UNDEFINED");
-}
+ }
 
 
 /* Calculate the REAL time passed over the last t2-t1 centuries (secs) */
-struct time_info_data real_time_passed(time_t t2, time_t t1)
-{
+ struct time_info_data real_time_passed(time_t t2, time_t t1)
+ {
    long secs;
    struct time_info_data now;
    
@@ -917,14 +917,14 @@ struct time_info_data real_time_passed(time_t t2, time_t t1)
    now.year  = -1;
    
    return now;
-}
+ }
 
 
 
 
 /* Calculate the MUD time passed over the last t2-t1 centuries (secs) */
-struct time_info_data mud_time_passed(time_t t2, time_t t1)
-{
+ struct time_info_data mud_time_passed(time_t t2, time_t t1)
+ {
    long secs, monthsecs, daysecs, hoursecs;
    struct time_info_data now;
    
@@ -933,107 +933,107 @@ struct time_info_data mud_time_passed(time_t t2, time_t t1)
    
    if(t2 >= t1)
    {
-      secs = (long) (t2 - t1);
-      
-      now.year = secs/SECS_PER_MUD_YEAR;
-      
-      monthsecs = secs % SECS_PER_MUD_YEAR;
-      now.month = monthsecs/SECS_PER_MUD_MONTH;
-      
-      daysecs = monthsecs % SECS_PER_MUD_MONTH;
-      now.day = daysecs/SECS_PER_MUD_DAY;
-      
-      hoursecs = daysecs % SECS_PER_MUD_DAY;
-      now.hours = hoursecs/SECS_PER_MUD_HOUR;
-   }
-   else
-   {
-      secs = (long) (t1 - t2);
-      
-      now.year = secs/SECS_PER_MUD_YEAR;
-      
-      monthsecs = secs % SECS_PER_MUD_YEAR;
-      now.month = monthsecs/SECS_PER_MUD_MONTH;
-      
-      daysecs = monthsecs % SECS_PER_MUD_MONTH;
-      now.day = daysecs/SECS_PER_MUD_DAY;
-      
-      hoursecs = daysecs % SECS_PER_MUD_DAY;
-      now.hours = hoursecs/SECS_PER_MUD_HOUR;
-      
-      if(now.hours) {
-	 now.hours = 24 - now.hours;
-	 now.day = now.day + 1;
-      }
-      if(now.day) {
-	 now.day = 35 - now.day;
-	 now.month = now.month + 1;
-      }
-      if(now.month) {
-	 now.month = 17 - now.month;
-	 now.year = now.year + 1;
-      }
-      if(now.year)
-	now.year = -now.year;                
-   }
-   return(now);
-   
+    secs = (long) (t2 - t1);
+    
+    now.year = secs/SECS_PER_MUD_YEAR;
+    
+    monthsecs = secs % SECS_PER_MUD_YEAR;
+    now.month = monthsecs/SECS_PER_MUD_MONTH;
+    
+    daysecs = monthsecs % SECS_PER_MUD_MONTH;
+    now.day = daysecs/SECS_PER_MUD_DAY;
+    
+    hoursecs = daysecs % SECS_PER_MUD_DAY;
+    now.hours = hoursecs/SECS_PER_MUD_HOUR;
+  }
+  else
+  {
+    secs = (long) (t1 - t2);
+    
+    now.year = secs/SECS_PER_MUD_YEAR;
+    
+    monthsecs = secs % SECS_PER_MUD_YEAR;
+    now.month = monthsecs/SECS_PER_MUD_MONTH;
+    
+    daysecs = monthsecs % SECS_PER_MUD_MONTH;
+    now.day = daysecs/SECS_PER_MUD_DAY;
+    
+    hoursecs = daysecs % SECS_PER_MUD_DAY;
+    now.hours = hoursecs/SECS_PER_MUD_HOUR;
+    
+    if(now.hours) {
+      now.hours = 24 - now.hours;
+      now.day = now.day + 1;
+    }
+    if(now.day) {
+      now.day = 35 - now.day;
+      now.month = now.month + 1;
+    }
+    if(now.month) {
+      now.month = 17 - now.month;
+      now.year = now.year + 1;
+    }
+    if(now.year)
+     now.year = -now.year;                
+ }
+ return(now);
+ 
 }
 
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data *t)
 {
-   long secs, monthsecs, daysecs, hoursecs;
-   
+ long secs, monthsecs, daysecs, hoursecs;
+ 
    /* eld (6-9-93) -- Hopefully, this will fix the negative month, day, etc.  */
    /*                 problems...                                             */
-   
-   
-   if(t2 >= t1)
-   {
-      secs = (long) (t2 - t1);
-      
-      t->year = secs/SECS_PER_MUD_YEAR;
-      
-      monthsecs = secs % SECS_PER_MUD_YEAR;
-      t->month = monthsecs/SECS_PER_MUD_MONTH;
-      
-      daysecs = monthsecs % SECS_PER_MUD_MONTH;
-      t->day = daysecs/SECS_PER_MUD_DAY;
-      
-      hoursecs = daysecs % SECS_PER_MUD_DAY;
-      t->hours = hoursecs/SECS_PER_MUD_HOUR;
-   }
-   else
-   {
-      
-      secs = (long) (t1 - t2);
-      
-      t->year = secs/SECS_PER_MUD_YEAR;
-      
-      monthsecs = secs % SECS_PER_MUD_YEAR;
-      t->month = monthsecs/SECS_PER_MUD_MONTH;
-      
-      daysecs = monthsecs % SECS_PER_MUD_MONTH;
-      t->day = daysecs/SECS_PER_MUD_DAY;
-      
-      hoursecs = daysecs % SECS_PER_MUD_DAY;
-      t->hours = hoursecs/SECS_PER_MUD_HOUR;
-      
-      if(t->hours) {
-	 t->hours = 24 - t->hours;
-	 t->day = t->day + 1;
-      }
-      if(t->day) {
-	 t->day = 35 - t->day;
-	 t->month = t->month + 1;
-      }
-      if(t->month) {
-	 t->month = 17 - t->month;
-	 t->year = t->year + 1;
-      }
-      if(t->year)
-	t->year = -t->year;                
-   }
+ 
+ 
+ if(t2 >= t1)
+ {
+  secs = (long) (t2 - t1);
+  
+  t->year = secs/SECS_PER_MUD_YEAR;
+  
+  monthsecs = secs % SECS_PER_MUD_YEAR;
+  t->month = monthsecs/SECS_PER_MUD_MONTH;
+  
+  daysecs = monthsecs % SECS_PER_MUD_MONTH;
+  t->day = daysecs/SECS_PER_MUD_DAY;
+  
+  hoursecs = daysecs % SECS_PER_MUD_DAY;
+  t->hours = hoursecs/SECS_PER_MUD_HOUR;
+}
+else
+{
+  
+  secs = (long) (t1 - t2);
+  
+  t->year = secs/SECS_PER_MUD_YEAR;
+  
+  monthsecs = secs % SECS_PER_MUD_YEAR;
+  t->month = monthsecs/SECS_PER_MUD_MONTH;
+  
+  daysecs = monthsecs % SECS_PER_MUD_MONTH;
+  t->day = daysecs/SECS_PER_MUD_DAY;
+  
+  hoursecs = daysecs % SECS_PER_MUD_DAY;
+  t->hours = hoursecs/SECS_PER_MUD_HOUR;
+  
+  if(t->hours) {
+    t->hours = 24 - t->hours;
+    t->day = t->day + 1;
+  }
+  if(t->day) {
+    t->day = 35 - t->day;
+    t->month = t->month + 1;
+  }
+  if(t->month) {
+    t->month = 17 - t->month;
+    t->year = t->year + 1;
+  }
+  if(t->year)
+   t->year = -t->year;                
+}
 }
 
 
@@ -1045,15 +1045,15 @@ void age2(struct char_data *ch, struct time_info_data *g)
   g->year += 17;   /* All players start at 17 */
   g->ayear=g->year; /* QUi resta l'eta' anagrafica */
   g->year = MAX(17,g->ayear+ch->AgeModifier); /* Qui l'eta' effettiva */
-   
+  
 /* I principi non invecchiavano oltre un certo limite, poi abbiamo esteso questa procedura a tutti */
 //if (IS_PRINCE(ch))
 //{
-      g->year=(MIN(g->year,50));
-      g->ayear=g->year;
+  g->year=(MIN(g->year,50));
+  g->ayear=g->year;
 //}
-    
-   
+  
+  
   
 }
 void age3(struct char_data *ch, struct time_info_data *g)
@@ -1062,30 +1062,30 @@ void age3(struct char_data *ch, struct time_info_data *g)
  * modifica solo estetica. In tutte le routine dove l`eta` viene usata
  * si continua ad usare age2
  * */
-   struct time_info_data temp;
-   age2(ch, g);
-   
-   switch(GET_RACE(ch))
-   {
-    case RACE_ELVEN:
-    case RACE_GOLD_ELF:
-    case RACE_WILD_ELF:
-    case RACE_SEA_ELF:
-    case RACE_DARK_ELF:
-      g->ayear+=240;
-      g->year+=240;
-      break;
-    case RACE_DWARF:
-    case RACE_DARK_DWARF:
-      g->ayear+=150;
-      g->year+=150;
-      break;
-    case RACE_HALFLING:
-    case RACE_HALF_ELVEN:
-      g->ayear+=70;
-      g->year+=70;
-      break;
-   }
+ struct time_info_data temp;
+ age2(ch, g);
+ 
+ switch(GET_RACE(ch))
+ {
+  case RACE_ELVEN:
+  case RACE_GOLD_ELF:
+  case RACE_WILD_ELF:
+  case RACE_SEA_ELF:
+  case RACE_DARK_ELF:
+  g->ayear+=240;
+  g->year+=240;
+  break;
+  case RACE_DWARF:
+  case RACE_DARK_DWARF:
+  g->ayear+=150;
+  g->year+=150;
+  break;
+  case RACE_HALFLING:
+  case RACE_HALF_ELVEN:
+  g->ayear+=70;
+  g->year+=70;
+  break;
+}
 }
 
 struct time_info_data age(struct char_data *ch)
@@ -1102,24 +1102,24 @@ struct time_info_data age(struct char_data *ch)
 
 char in_group ( struct char_data *ch1, struct char_data *ch2)
 {
-   bool rt=FALSE;
-   PushStatus("In_group");
-   rt=in_group_internal(ch1,ch2,FALSE);   
-   PopStatus();
-   return(rt);
+ bool rt=FALSE;
+ PushStatus("In_group");
+ rt=in_group_internal(ch1,ch2,FALSE);   
+ PopStatus();
+ return(rt);
 }
 char in_group_strict ( struct char_data *ch1, struct char_data *ch2)
 {
-   bool rt=FALSE;
-   PushStatus("In_group_strict");
-   rt=in_group_internal(ch1,ch2,TRUE);
-   PopStatus();
-   return(rt);
+ bool rt=FALSE;
+ PushStatus("In_group_strict");
+ rt=in_group_internal(ch1,ch2,TRUE);
+ PopStatus();
+ return(rt);
 }
 
 char in_group_internal ( struct char_data *ch1, struct char_data *ch2, int strict)
 {
-   
+ 
    /* 
     *  possibilities:
     *  1.  char is char2`s master
@@ -1131,40 +1131,40 @@ char in_group_internal ( struct char_data *ch1, struct char_data *ch2, int stric
     *   otherwise not true.
     *
     */
-   if (!strict && in_clan(ch1,ch2)) 
-   {
-      MARKS("in_group_internal in utility.c at");
-   return(TRUE);
-   }
-   
-   if (ch1 == ch2)
-   return(TRUE);
-   
-   if ((!ch1) || (!ch2))
-   return(FALSE);
-   
-   if ((!ch1->master) && (!ch2->master))
-   return(FALSE);
-   
-   if (ch1==ch2->master)
-   return(TRUE);
-   
-   if ((ch1->master == ch2) && IS_AFFECTED(ch1,AFF_GROUP))
-   return(TRUE);
-   
-   if (ch1->master == ch2->master) {
-      return(TRUE);
-   }
-   
-   if (MOUNTED(ch1) == ch2 || RIDDEN(ch1) == ch2)
-   return(TRUE);
-   
-   return(FALSE);
+ if (!strict && in_clan(ch1,ch2)) 
+ {
+  MARKS("in_group_internal in utility.c at");
+  return(TRUE);
+}
+
+if (ch1 == ch2)
+ return(TRUE);
+
+if ((!ch1) || (!ch2))
+ return(FALSE);
+
+if ((!ch1->master) && (!ch2->master))
+ return(FALSE);
+
+if (ch1==ch2->master)
+ return(TRUE);
+
+if ((ch1->master == ch2) && IS_AFFECTED(ch1,AFF_GROUP))
+ return(TRUE);
+
+if (ch1->master == ch2->master) {
+  return(TRUE);
+}
+
+if (MOUNTED(ch1) == ch2 || RIDDEN(ch1) == ch2)
+ return(TRUE);
+
+return(FALSE);
 }
 
 char in_clan ( struct char_data *ch1, struct char_data *ch2)
 {
-   
+ 
    /* 
     *  possibilities:
     *  1.  char is char2`s prince
@@ -1174,47 +1174,47 @@ char in_clan ( struct char_data *ch1, struct char_data *ch2)
     *   otherwise not true.
     *
     */
-   if (!IS_PC(ch1) || !(IS_PC(ch2)))
+ if (!IS_PC(ch1) || !(IS_PC(ch2)))
    return(FALSE);
 
-   if (ch1 == ch2)
+ if (ch1 == ch2)
    return(TRUE);
-   
-   if ((!ch1) || (!ch2))
+ 
+ if ((!ch1) || (!ch2))
    return(FALSE);
-   
-   if ((!HAS_PRINCE(ch1)) && (!HAS_PRINCE(ch2)))
-   {
+ 
+ if ((!HAS_PRINCE(ch1)) && (!HAS_PRINCE(ch2)))
+ {
    MARKS(" strcasecmp ok utility.c");
    return(FALSE);
-   }
-   
-   if (IS_VASSALLOOF(ch1,GET_NAME(ch2)))
-   {
+ }
+ 
+ if (IS_VASSALLOOF(ch1,GET_NAME(ch2)))
+ {
    MARKS(" strcasecmp ok utility.c");
    return(TRUE);
-   }
+ }
 
-   if (IS_VASSALLOOF(ch2,GET_NAME(ch1)))
-   {
+ if (IS_VASSALLOOF(ch2,GET_NAME(ch1)))
+ {
    MARKS(" strcasecmp ok utility.c");
    return(TRUE);
-   }
+ }
 
-   if ((!HAS_PRINCE(ch1)) || (!HAS_PRINCE(ch2)))
-   {
+ if ((!HAS_PRINCE(ch1)) || (!HAS_PRINCE(ch2)))
+ {
    MARKS(" strcasecmp ok utility.c");
    return(FALSE);
-   }
+ }
 
-   if (!strcasecmp(GET_PRINCE(ch1),GET_PRINCE(ch2))) 
-   {
+ if (!strcasecmp(GET_PRINCE(ch1),GET_PRINCE(ch2))) 
+ {
    MARKS(" strcasecmp ok utility.c");
    return(TRUE);
-   }
-   
-   MARK;
-   return(FALSE);
+ }
+ 
+ MARK;
+ return(FALSE);
 }
 
 
@@ -1258,32 +1258,32 @@ char getall( char *name, char *newname )
 
   for( ; ( *newname = *name ) != 0; name++,newname++);
    
-  return TRUE;
+    return TRUE;
 }
 
 
 int getabunch( char *name, char  *newname)
 {
-   int num=0;
-   char tmpname[80];
+ int num=0;
+ char tmpname[80];
 
-   tmpname[0] = 0;
-   sscanf(name,"%d*%s",&num,tmpname);
-   if (tmpname[0] == '\0')
-      return(FALSE);
-   if (num < 1)
-      return(FALSE);
-   if (num>9)
-      num = 9;
+ tmpname[0] = 0;
+ sscanf(name,"%d*%s",&num,tmpname);
+ if (tmpname[0] == '\0')
+  return(FALSE);
+if (num < 1)
+  return(FALSE);
+if (num>9)
+  num = 9;
 
-   while (*name != '*')
-       name++;
+while (*name != '*')
+ name++;
 
-   name++;
+name++;
 
-   for (; ( *newname = *name ) != 0; name++,newname++);
+for (; ( *newname = *name ) != 0; name++,newname++);
 
-   return(num);
+ return(num);
 
 }
 
@@ -1299,7 +1299,7 @@ int DetermineExp( struct char_data *mob, int exp_flags)
   if (exp_flags > 400) 
   { 
     mudlog( LOG_ERROR, "Exp flags on %s are > 400 (%d)", GET_NAME(mob), 
-             exp_flags );
+     exp_flags );
   }
 
   /* 
@@ -1314,373 +1314,373 @@ int DetermineExp( struct char_data *mob, int exp_flags)
   {
 
    case 0:   
-    base = 1;
-    phit = 1;
-    sab =  1;
-    break;
+   base = 1;
+   phit = 1;
+   sab =  1;
+   break;
 
    case 1:   
-    base = 8;
-    phit = 2;
-    sab =  2;
-    break;
+   base = 8;
+   phit = 2;
+   sab =  2;
+   break;
 
    case 2: 
-    base = 12;
-    phit = 2;
-    sab =  3;
-    break;
+   base = 12;
+   phit = 2;
+   sab =  3;
+   break;
 
    case 3:
-    base = 17;
-    phit = 3;
-    sab =  4;
-    break;
+   base = 17;
+   phit = 3;
+   sab =  4;
+   break;
 
    case 4:
-    base = 23;
-    phit = 3;
-    sab =  6;
-    break;
+   base = 23;
+   phit = 3;
+   sab =  6;
+   break;
 
    case 5:
-    base = 30;
-    phit = 3;
-    sab =  7;
-    break;
+   base = 30;
+   phit = 3;
+   sab =  7;
+   break;
 
    case 6: 
-    base = 37;
-    phit = 3;
-    sab =  9;
-    break;
+   base = 37;
+   phit = 3;
+   sab =  9;
+   break;
 
    case 7:  
-    base = 47;
-    phit = 4;
-    sab =  12;
-    break;
+   base = 47;
+   phit = 4;
+   sab =  12;
+   break;
 
    case 8:  
-    base = 57;
-    phit = 4;
-    sab  = 14;
-    break;
+   base = 57;
+   phit = 4;
+   sab  = 14;
+   break;
 
    case 9: 
-    base = 70;
-    phit = 4;
-    sab  = 17;
-    break;
+   base = 70;
+   phit = 4;
+   sab  = 17;
+   break;
 
    case 10:
-    base = 84;
-    phit  = 4;
-    sab   = 21;
-    break;
+   base = 84;
+   phit  = 4;
+   sab   = 21;
+   break;
 
    case 11:  
-    base = 101;
-    phit  = 5;
-    sab   = 25;
-    break;
+   base = 101;
+   phit  = 5;
+   sab   = 25;
+   break;
 
    case 12:
-    base = 122;
-    phit  = 5;
-    sab   = 30;
-    break;
+   base = 122;
+   phit  = 5;
+   sab   = 30;
+   break;
 
    case 13: 
-    base = 146;
-    phit  = 5;
-    sab   = 36;
-    break;
+   base = 146;
+   phit  = 5;
+   sab   = 36;
+   break;
 
    case 14:
-    base = 175;
-    phit  = 6;
-    sab   = 44;
-    break;
+   base = 175;
+   phit  = 6;
+   sab   = 44;
+   break;
 
    case 15:
-    base = 209;
-    phit  = 6;
-    sab   = 52;
-    break;
+   base = 209;
+   phit  = 6;
+   sab   = 52;
+   break;
 
    case 16:
-    base = 251;
-    phit  = 6;
-    sab   = 63;
-    break;
+   base = 251;
+   phit  = 6;
+   sab   = 63;
+   break;
 
    case 17:
-    base = 301;
-    phit  = 7;
-    sab   = 75;
-    break;
+   base = 301;
+   phit  = 7;
+   sab   = 75;
+   break;
 
    case 18:
-    base = 362;
-    phit  = 7;
-    sab   = 90;
-    break;
+   base = 362;
+   phit  = 7;
+   sab   = 90;
+   break;
 
    case 19:
-    base = 435;
-    phit  = 8;
-    sab   = 109;
-    break;
+   base = 435;
+   phit  = 8;
+   sab   = 109;
+   break;
 
    case 20: 
-    base = 524;
-    phit  = 8;
-    sab   = 131;
-    break;
+   base = 524;
+   phit  = 8;
+   sab   = 131;
+   break;
 
    case 21: 
-    base = 632;
-    phit  = 9;
-    sab   =  158;
-    break;
+   base = 632;
+   phit  = 9;
+   sab   =  158;
+   break;
 
    case 22:
-    base = 762;
-    phit  = 9;
-    sab   = 190;
-    break;
+   base = 762;
+   phit  = 9;
+   sab   = 190;
+   break;
 
    case 23:  
-    base = 919;
-    phit  = 10;
-    sab   = 230;
-    break;
+   base = 919;
+   phit  = 10;
+   sab   = 230;
+   break;
 
    case 24:
-    base = 1110;
-    phit  = 10;
-    sab   = 277;
-    break;
+   base = 1110;
+   phit  = 10;
+   sab   = 277;
+   break;
 
    case 25: 
-    base = 1339;
-    phit  = 11;
-    sab   = 335;
-    break;
+   base = 1339;
+   phit  = 11;
+   sab   = 335;
+   break;
 
    case 26: 
-    base = 1617;
-    phit  = 12;
-    sab   = 404;
-    break;
+   base = 1617;
+   phit  = 12;
+   sab   = 404;
+   break;
 
    case 27: 
-    base = 1951;
-    phit  = 12;
-    sab   = 488;
-    break;
+   base = 1951;
+   phit  = 12;
+   sab   = 488;
+   break;
 
    case 28: 
-    base = 2354;
-    phit  = 13;
-    sab   = 588;
-    break;
+   base = 2354;
+   phit  = 13;
+   sab   = 588;
+   break;
 
    case 29:
-    base = 2838;
-    phit  = 14;
-    sab   = 710;
-    break;
+   base = 2838;
+   phit  = 14;
+   sab   = 710;
+   break;
 
    case 30: 
-    base = 3421;
-    phit  = 15;
-    sab   = 855;
-    break;
+   base = 3421;
+   phit  = 15;
+   sab   = 855;
+   break;
 
    case 31: 
-    base = 4120;
-    phit  = 16;
-    sab   = 1030;
-    break;
+   base = 4120;
+   phit  = 16;
+   sab   = 1030;
+   break;
 
    case 32:
-    base = 4960;
-    phit  = 17;
-    sab   = 1240;
-    break;
+   base = 4960;
+   phit  = 17;
+   sab   = 1240;
+   break;
 
    case 33:
-    base = 5968;
-    phit  = 18;
-    sab   = 1492;
-    break;
+   base = 5968;
+   phit  = 18;
+   sab   = 1492;
+   break;
 
    case 34:
-    base = 7175;
-    phit = 19;
-    sab  = 1794;
-    break;
-      
+   base = 7175;
+   phit = 19;
+   sab  = 1794;
+   break;
+   
    case 35:
-    base = 8621;
-    phit  = 21;
-    sab   = 2155;
-    break;
+   base = 8621;
+   phit  = 21;
+   sab   = 2155;
+   break;
 
    case 36:
-    base = 10351;
-    phit  = 22;
-    sab   = 2588;
-    break;
+   base = 10351;
+   phit  = 22;
+   sab   = 2588;
+   break;
 
    case 37:
-    base = 12422;
-    phit  = 23;
-    sab   = 3105;
-    break;
+   base = 12422;
+   phit  = 23;
+   sab   = 3105;
+   break;
 
    case 38:
-    base = 14897;
-    phit  = 25;
-    sab   = 3724;
-    break;
+   base = 14897;
+   phit  = 25;
+   sab   = 3724;
+   break;
 
    case 39:
-    base = 17857;
-    phit = 26;
-    sab  = 4464;
-    break;
-    
+   base = 17857;
+   phit = 26;
+   sab  = 4464;
+   break;
+   
    case 40:
-    base = 21394;
-    phit  = 28;
-    sab   = 5348;
-    break;
+   base = 21394;
+   phit  = 28;
+   sab   = 5348;
+   break;
 
    case 41:
-    base = 25619;
-    phit = 29;
-    sab  = 6405;
-    break;
+   base = 25619;
+   phit = 29;
+   sab  = 6405;
+   break;
 
    case 42:
-    base = 30666;
-    phit  = 31;
-    sab   = 7666;
-    break;
+   base = 30666;
+   phit  = 31;
+   sab   = 7666;
+   break;
 
    case 43:
-    base = 36692;
-    phit = 33;
-    sab  = 9173;
-    break;
+   base = 36692;
+   phit = 33;
+   sab  = 9173;
+   break;
 
    case 44:
-    base = 43889;
-    phit  = 35;
-    sab   = 10975;
-    break;
+   base = 43889;
+   phit  = 35;
+   sab   = 10975;
+   break;
 
    case 45:
-    base = 52482;
-    phit = 37;
-    sab  = 13121;
-    break;
+   base = 52482;
+   phit = 37;
+   sab  = 13121;
+   break;
 
    case 46:
-    base = 62742;
-    phit = 40;
-    sab  = 15685;
-    break;
+   base = 62742;
+   phit = 40;
+   sab  = 15685;
+   break;
 
    case 47:
-    base = 74992;
-    phit = 42;
-    sab  = 18748;
-    break;
-    
+   base = 74992;
+   phit = 42;
+   sab  = 18748;
+   break;
+   
    case 48:
-    base = 89618;
-    phit = 45;
-    sab  = 22405;
-    break;
+   base = 89618;
+   phit = 45;
+   sab  = 22405;
+   break;
 
    case 49:
-    base = 107084;
-    phit = 47;
-    sab  = 26771;
-    break;
+   base = 107084;
+   phit = 47;
+   sab  = 26771;
+   break;
 
    case 50:
-    base = 127942;
-    phit = 50;
-    sab  = 31985;
-    break;
+   base = 127942;
+   phit = 50;
+   sab  = 31985;
+   break;
 
    case 51:
-    base = 150000;
-    phit = 53;
-    sab  = 37500;
-    break;
+   base = 150000;
+   phit = 53;
+   sab  = 37500;
+   break;
 
    case 52:
-    base = 170000;
-    phit = 55;
-    sab  = 42500;
-    break;
+   base = 170000;
+   phit = 55;
+   sab  = 42500;
+   break;
 
    case 53:
-    base = 190000;
-    phit = 57;
-    sab  = 47500;
-    break;
+   base = 190000;
+   phit = 57;
+   sab  = 47500;
+   break;
 
    case 54:
-    base = 210000;
-    phit = 59;
-    sab  = 52500;
-    break;
+   base = 210000;
+   phit = 59;
+   sab  = 52500;
+   break;
 
    case 55:
-    base = 230000;
-    phit = 61;
-    sab  = 57500;
-    break;
+   base = 230000;
+   phit = 61;
+   sab  = 57500;
+   break;
 
    case 56:
-    base = 250000;
-    phit = 63;
-    sab  = 62500;
-    break;
+   base = 250000;
+   phit = 63;
+   sab  = 62500;
+   break;
 
    case 57:
-    base = 275000;
-    phit = 65;
-    sab  = 68750;
-    break;
+   base = 275000;
+   phit = 65;
+   sab  = 68750;
+   break;
 
    case 58:
-    base = 300000;
-    phit = 67;
-    sab  = 75000;
-    break;
+   base = 300000;
+   phit = 67;
+   sab  = 75000;
+   break;
 
    case 59:
-    base = 325000;
-    phit = 69;
-    sab  = 71250;
-    break;
+   base = 325000;
+   phit = 69;
+   sab  = 71250;
+   break;
 
    default:
-    base = 350000;
-    phit = 70;
-    sab  = 87500;
-    break;
-  }
+   base = 350000;
+   phit = 70;
+   sab  = 87500;
+   break;
+ }
 
-  return(base + (phit * GET_HIT(mob)) + (sab * exp_flags));
+ return(base + (phit * GET_HIT(mob)) + (sab * exp_flags));
 }
 
 void down_river( unsigned long pulse )
@@ -1688,7 +1688,7 @@ void down_river( unsigned long pulse )
   struct char_data *ch, *tmp;
   struct obj_data *obj_object, *next_obj;
   int rd;
-	int _or;
+  int _or;
   char buf[80];
   struct room_data *rp;
 
@@ -1709,18 +1709,18 @@ void down_river( unsigned long pulse )
             if ((pulse % (real_roomp(ch->in_room))->river_speed)==0)
             {
               if( (real_roomp(ch->in_room))->river_dir <= 5 && 
-                  (real_roomp(ch->in_room))->river_dir >= 0 )
+                (real_roomp(ch->in_room))->river_dir >= 0 )
               {
                 rd = (real_roomp(ch->in_room))->river_dir;
                 for( obj_object = (real_roomp(ch->in_room))->contents;
-                     obj_object; obj_object = next_obj)
+                 obj_object; obj_object = next_obj)
                 {
                   next_obj = obj_object->next_content;
                   if ((real_roomp(ch->in_room))->dir_option[rd])
                   {
                     obj_from_room(obj_object);
                     obj_to_room(obj_object, 
-                          (real_roomp(ch->in_room))->dir_option[rd]->to_room);
+                      (real_roomp(ch->in_room))->dir_option[rd]->to_room);
                   }
                 }
                 /*
@@ -1730,38 +1730,38 @@ void down_river( unsigned long pulse )
                 {
                   rp = real_roomp(ch->in_room);
                   if( rp && rp->dir_option[rd] &&
-                      rp->dir_option[rd]->to_room && 
-                     (EXIT(ch, rd)->to_room != NOWHERE))
+                    rp->dir_option[rd]->to_room && 
+                    (EXIT(ch, rd)->to_room != NOWHERE))
                   {
                     if (ch->specials.fighting)
                     {
                       stop_fighting(ch);
                     }
                     if(IS_IMMORTAL(ch) && 
-                       IS_SET(ch->specials.act, PLR_NOHASSLE))
+                     IS_SET(ch->specials.act, PLR_NOHASSLE))
                     {
                       send_to_char( "L'acqua ti scorre intorno.\n\r", ch );
                     }
                     else
                     {
                       sprintf(buf, 
-                              "La corrente ti trascina %s...\n\r", 
-                              dirsTo[ rd ] );
+                        "La corrente ti trascina %s...\n\r", 
+                        dirsTo[ rd ] );
                       send_to_char(buf,ch);
                       if (RIDDEN(ch))
                         send_to_char(buf,RIDDEN(ch));
-                           
+                      
                       _or = ch->in_room;
                       char_from_room(ch);
                       if (RIDDEN(ch))
                       {
                         char_from_room(RIDDEN(ch));
                         char_to_room(RIDDEN(ch), 
-                                  (real_roomp(_or))->dir_option[rd]->to_room);
+                          (real_roomp(_or))->dir_option[rd]->to_room);
                       }
                       char_to_room(ch,
-                                   (real_roomp(_or))->dir_option[rd]->to_room);
-                           
+                       (real_roomp(_or))->dir_option[rd]->to_room);
+                      
                       do_look(ch, "\0",15);
                       if (RIDDEN(ch))
                       {
@@ -1769,7 +1769,7 @@ void down_river( unsigned long pulse )
                       }
                     }
                     if( IS_SET(RM_FLAGS(ch->in_room), DEATH) && 
-                        GetMaxLevel(ch) < IMMORTALE)
+                      GetMaxLevel(ch) < IMMORTALE)
                     {
                       if (RIDDEN(ch))
                         NailThisSucker(RIDDEN(ch));
@@ -1794,14 +1794,14 @@ void do_WorldSave(struct char_data *ch, char *argument, int cmd)
   FILE *fp;
   struct room_data     *rp;
   struct room_direction_data   *rdd;
- 
+  
   if(!ch->desc)
     return;
-   
-   send_to_char("Comando disabilitato\r\n",ch);
-   return;
+  
+  send_to_char("Comando disabilitato\r\n",ch);
+  return;
 }
- 
+
 
 void RoomSave(struct char_data *ch, long start, long end)
 {
@@ -1814,24 +1814,24 @@ void RoomSave(struct char_data *ch, long start, long end)
 
   rstart = start;
   rend = end;
- 
+  
   if( ( ( rstart <= -1) || (rend <= -1)) ||
-      ( ( rstart > WORLD_SIZE) || (rend > WORLD_SIZE)))
+    ( ( rstart > WORLD_SIZE) || (rend > WORLD_SIZE)))
   {
     send_to_char("I don't know those room #s.  make sure they are all\n\r",ch);
     send_to_char("contiguous.\n\r",ch);
     return;
   }
- 
+  
   send_to_char("Saving\n",ch);
   strcpy(dots, "\0");
- 
+  
   for (i=rstart;i<=rend;i++) 
   {
     rp = real_roomp(i);
     if (rp==NULL)
       continue;
- 
+    
     sprintf(fn, "rooms/%d", i);
     
     if( ( fp = fopen( fn,"w" ) ) == NULL )
@@ -1839,32 +1839,32 @@ void RoomSave(struct char_data *ch, long start, long end)
       send_to_char("Can't write to disk now..try later \n\r",ch);
       return;
     }
- 
+    
     strcat(dots, ".");
- 
+    
     /*
      * strip ^Ms from description
      */
     x = 0;
- 
+    
     if (!rp->description) 
     {
       CREATE(rp->description, char, 8);
       strcpy(rp->description, "Empty");
     }
- 
+    
     for (k = 0; k <= (long)strlen(rp->description); k++) 
     {
       if (rp->description[k] != 13)
         temp[x++] = rp->description[k];
     }
     temp[x] = '\0';
- 
+    
     if (temp[0] == '\0') 
     {
       strcpy(temp, "Empty");
     }
- 
+    
     fprintf(fp,"#%ld\n%s~\n%s~\n",rp->number,rp->name, temp);
     if (!rp->tele_targ) 
     {
@@ -1875,49 +1875,49 @@ void RoomSave(struct char_data *ch, long start, long end)
       if (!IS_SET(TELE_COUNT, rp->tele_mask)) 
       {
         fprintf(fp, "%ld %ld -1 %d %d %d %ld", rp->zone, rp->room_flags,
-                rp->tele_time, rp->tele_targ, 
-                rp->tele_mask, rp->sector_type);
+          rp->tele_time, rp->tele_targ, 
+          rp->tele_mask, rp->sector_type);
       }
       else 
       {
         fprintf(fp, "%ld %ld -1 %d %d %d %d %ld", rp->zone, rp->room_flags,
-                rp->tele_time, rp->tele_targ, 
-                rp->tele_mask, rp->tele_cnt, rp->sector_type);
+          rp->tele_time, rp->tele_targ, 
+          rp->tele_mask, rp->tele_cnt, rp->sector_type);
       } 
     }
     if (rp->sector_type == SECT_WATER_NOSWIM) 
     {
       fprintf( fp," %d %d",rp->river_speed,rp->river_dir);
     }
- 
+    
     if (rp->room_flags & TUNNEL) 
     {
       fprintf(fp, " %d ", (int)rp->moblim);
     }
- 
+    
     fprintf(fp,"\n");     
- 
+    
     for (j=0;j<6;j++) 
     {
       rdd = rp->dir_option[j];
       if (rdd) 
       {
         fprintf(fp,"D%d\n",j);
- 
+        
         if (rdd->general_description && *rdd->general_description) 
         {
           if (strlen(rdd->general_description) > 0) 
           {
             temp[0] = '\0';
             x = 0;
-              
+            
             for (k = 0; k <= (long)strlen(rdd->general_description); k++) 
             {
               if (rdd->general_description[k] != 13)
                 temp[x++] = rdd->general_description[k];
             }
             temp[x] = '\0';
- 
+            
             fprintf(fp,"%s~\n", temp);
           }
           else 
@@ -1929,7 +1929,7 @@ void RoomSave(struct char_data *ch, long start, long end)
         {
           fprintf(fp,"~\n");
         }
- 
+        
         if (rdd->keyword) 
         {
           if (strlen(rdd->keyword)>0)
@@ -1941,7 +1941,7 @@ void RoomSave(struct char_data *ch, long start, long end)
         {
           fprintf(fp, "~\n");
         }
- 
+        
         fprintf(fp,"%ld ", rdd->exit_info);
         fprintf(fp,"%ld ", rdd->key);
         fprintf(fp,"%ld ", rdd->to_room);
@@ -1949,15 +1949,15 @@ void RoomSave(struct char_data *ch, long start, long end)
         fprintf(fp,"\n");
       }
     }
- 
+    
     /*
      * extra descriptions..
      */
- 
+    
     for (exptr = rp->ex_description; exptr; exptr = exptr->next) 
     {
       x = 0;
- 
+      
       if (exptr->description) 
       {
         for (k = 0; k <= (long)strlen(exptr->description); k++) 
@@ -1966,93 +1966,93 @@ void RoomSave(struct char_data *ch, long start, long end)
             temp[x++] = exptr->description[k];
         }
         temp[x] = '\0';
- 
+        
         fprintf(fp,"E\n%s~\n%s~\n", exptr->keyword, temp);
       }
     }
- 
+    
     fprintf(fp,"S\n");
     fclose(fp);
   }
- 
+  
   send_to_char(dots, ch);
   send_to_char("\n\rDone\n\r",ch);
 }
- 
- 
+
+
 void RoomLoad( struct char_data *ch, int start, int end)
 {
   FILE *fp;
   int vnum, found = TRUE;
   char buf[80];
   struct room_data *rp;
- 
- 
+  
+  
   send_to_char("Searching and loading rooms\n\r",ch);
- 
+  
   for(vnum=start;vnum<=end;vnum++) {
- 
+   
     sprintf(buf, "rooms/%d", vnum);
     if ((fp = fopen(buf,"r")) == NULL) {
       found = FALSE;
       send_to_char(".",ch);
       continue;
     }
-        fscanf(fp,"#%*d\n");
+    fscanf(fp,"#%*d\n");
     if ((rp=real_roomp(vnum)) == 0) {  /* empty room */
-      rp = (struct room_data*)malloc(sizeof(struct room_data));
-      if (rp)
+    rp = (struct room_data*)malloc(sizeof(struct room_data));
+    if (rp)
 #ifdef CYGWIN
-        bzero((char *)rp, sizeof(struct room_data));
+      bzero((char *)rp, sizeof(struct room_data));
 #else
-        bzero(rp, sizeof(struct room_data));
+    bzero(rp, sizeof(struct room_data));
 #endif
 #if HASH
                 /* this still does not work and needs work by someone */
-        room_enter(&room_db, vnum, rp);
+    room_enter(&room_db, vnum, rp);
 #else
-        room_enter(room_db, vnum, rp);
+    room_enter(room_db, vnum, rp);
 #endif
-        send_to_char("+",ch);
-    } else {
-      if (rp->people) {
-        act("$n reaches down and scrambles reality.", FALSE, ch, NULL,
-              rp->people, TO_ROOM);
-      }
-      cleanout_room(rp);
-      send_to_char("-",ch);
-    }
- 
-    rp->number = vnum;
-    load_one_room(fp, rp);
-    fclose(fp);
-  }
- 
-  if (!found) {
-    send_to_char("\n\rThe room number(s) that you specified could not all be found.\n\r",ch);
+    send_to_char("+",ch);
   } else {
-    send_to_char("\n\rDone.\n\r",ch);
+    if (rp->people) {
+      act("$n reaches down and scrambles reality.", FALSE, ch, NULL,
+        rp->people, TO_ROOM);
+    }
+    cleanout_room(rp);
+    send_to_char("-",ch);
   }
- 
+  
+  rp->number = vnum;
+  load_one_room(fp, rp);
+  fclose(fp);
+}
+
+if (!found) {
+  send_to_char("\n\rThe room number(s) that you specified could not all be found.\n\r",ch);
+} else {
+  send_to_char("\n\rDone.\n\r",ch);
+}
+
 } 
 
- 
+
 
 void fake_setup_dir(FILE *fl, long room, int dir)
 {
-        int tmp;
-        char *temp;
+  int tmp;
+  char *temp;
 
         temp = fread_string(fl); /* descr */
-        if (temp)
-          free(temp);
+  if (temp)
+    free(temp);
         temp = fread_string(fl); /* key */
-        if (temp)
-          free(temp);
+  if (temp)
+    free(temp);
 
-        fscanf(fl, " %d ", &tmp); 
-        fscanf(fl, " %d ", &tmp);
-        fscanf(fl, " %d ", &tmp);
+  fscanf(fl, " %d ", &tmp); 
+  fscanf(fl, " %d ", &tmp);
+  fscanf(fl, " %d ", &tmp);
 }
 
 
@@ -2115,13 +2115,13 @@ int IsHumanoid( struct char_data *ch)
    case RACE_HALF_OGRE:
    case RACE_HALF_GIANT:
    case RACE_GNOLL:
-    return(TRUE);
-    break;
-    
+   return(TRUE);
+   break;
+   
    default:
-    return(FALSE);
-    break;
-  }
+   return(FALSE);
+   break;
+ }
 
 }
 
@@ -2143,15 +2143,15 @@ int IsRideable( struct char_data *ch)
      case RACE_DRAGON_BRONZE :
      case RACE_DRAGON_COPPER :
      case RACE_DRAGON_BRASS  :
-      return(TRUE);
-      break;
+     return(TRUE);
+     break;
      default:
-      return(FALSE);
-      break;
-    }
-  } 
-  else 
-    return(FALSE);
+     return(FALSE);
+     break;
+   }
+ } 
+ else 
+  return(FALSE);
 }
 
 int IsAnimal( struct char_data *ch)
@@ -2168,13 +2168,13 @@ int IsAnimal( struct char_data *ch)
    case RACE_ROO:
    case RACE_INSECT:
    case RACE_ARACHNID:
-    return(TRUE);
-    break;
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
-  
+   return(FALSE);
+   break;
+ }
+ 
 }
 
 int IsVeggie( struct char_data *ch)
@@ -2187,13 +2187,13 @@ int IsVeggie( struct char_data *ch)
    case RACE_TREE:
    case RACE_VEGGIE:
    case RACE_VEGMAN:
-    return(TRUE);
-    break;
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
-  
+   return(FALSE);
+   break;
+ }
+ 
 }
 
 int IsUndead( struct char_data *ch)
@@ -2211,14 +2211,14 @@ int IsUndead( struct char_data *ch)
    case RACE_UNDEAD_ZOMBIE  :
    case RACE_UNDEAD_SKELETON :
    case RACE_UNDEAD_GHOUL    :
-    
-    return(TRUE);
-    break;
+   
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
-  
+   return(FALSE);
+   break;
+ }
+ 
 }
 
 int IsLycanthrope( struct char_data *ch)
@@ -2226,13 +2226,13 @@ int IsLycanthrope( struct char_data *ch)
   switch (GET_RACE(ch)) 
   {
    case RACE_LYCANTH:
-    return(TRUE);
-    break;
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
-  
+   return(FALSE);
+   break;
+ }
+ 
 }
 
 int IsDiabolic( struct char_data *ch)
@@ -2242,13 +2242,13 @@ int IsDiabolic( struct char_data *ch)
   {
    case RACE_DEMON:
    case RACE_DEVIL:
-    return(TRUE);
-    break;
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
-  
+   return(FALSE);
+   break;
+ }
+ 
 }
 
 int IsReptile( struct char_data *ch)
@@ -2272,12 +2272,12 @@ int IsReptile( struct char_data *ch)
    case RACE_TROGMAN:
    case RACE_LIZARDMAN:
    case RACE_SKEXIE:
-    return(TRUE);
-    break;
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
+   return(FALSE);
+   break;
+ }
 }
 
 int HasHands( struct char_data *ch)
@@ -2315,14 +2315,14 @@ int IsPerson( struct char_data *ch)
    case RACE_GOBLIN:
    case RACE_ORC:
    case RACE_TROLL:
-     return(TRUE);
-    break;
-    
+   return(TRUE);
+   break;
+   
    default:
-    return(FALSE);
-    break;
-    
-  }
+   return(FALSE);
+   break;
+   
+ }
 }
 
 int IsGiantish( struct char_data *ch)
@@ -2332,7 +2332,7 @@ int IsGiantish( struct char_data *ch)
    case RACE_ENFAN:  
    case RACE_GOBLIN:  /* giantish for con's only... */
    case RACE_ORC:
-    
+   
    case RACE_GIANT:
    case RACE_GIANT_HILL   :
    case RACE_GIANT_FROST  :
@@ -2343,15 +2343,15 @@ int IsGiantish( struct char_data *ch)
    case RACE_TYTAN:
    case RACE_TROLL:
    case RACE_DRAAGDIM:
-    
+   
    case RACE_HALF_ORC:
    case RACE_HALF_OGRE:
    case RACE_HALF_GIANT:
-    return(TRUE);
+   return(TRUE);
    default:
-    return(FALSE);
-    break;      
-  }
+   return(FALSE);
+   break;      
+ }
 }
 
 int IsSmall( struct char_data *ch)
@@ -2364,10 +2364,10 @@ int IsSmall( struct char_data *ch)
    case RACE_GOBLIN:
    case RACE_ENFAN:
    case RACE_DEEP_GNOME:
-    return(TRUE);
+   return(TRUE);
    default:
-    return(FALSE);
-  }
+   return(FALSE);
+ }
 }
 
 int IsGiant ( struct char_data *ch)
@@ -2384,15 +2384,15 @@ int IsGiant ( struct char_data *ch)
    case RACE_HALF_GIANT        :
    case RACE_TYTAN:
    case RACE_GOD:
-    return(TRUE);
+   return(TRUE);
    case RACE_TROLL:
-     return((number(1,100)>20));
+   return((number(1,100)>20));
    default:
      /*if (IS_SET(ch->specials.act, ACT_HUGE)) 
        return(TRUE);
      else*/
-       return(FALSE);
-  }
+   return(FALSE);
+ }
 }
 
 int IsExtraPlanar( struct char_data *ch)
@@ -2405,12 +2405,12 @@ int IsExtraPlanar( struct char_data *ch)
    case RACE_ELEMENT:
    case RACE_ASTRAL:
    case RACE_GOD:
-    return(TRUE);
-    break;
+   return(TRUE);
+   break;
    default:
-    return(FALSE);
-    break;
-  }
+   return(FALSE);
+   break;
+ }
 }
 
 int IsOther( struct char_data *ch)
@@ -2424,11 +2424,11 @@ int IsOther( struct char_data *ch)
    case RACE_ELEMENT:
    case RACE_PLANAR:
    case RACE_LYCANTH:
-    return(TRUE);
+   return(TRUE);
    default:
-    return(FALSE);
-    break;
-  }
+   return(FALSE);
+   break;
+ }
 }
 
 int IsGodly( struct char_data *ch)
@@ -2439,35 +2439,35 @@ int IsGodly( struct char_data *ch)
     if (GetMaxLevel(ch) >= 45)
       return(TRUE);
 
-  return FALSE;
-}
-
-
-int IsDragon( struct char_data *ch)
-{
-  switch(GET_RACE(ch))
-  {
-   case RACE_DRAGON:
-   case RACE_DRAGON_RED    :
-   case RACE_DRAGON_BLACK  :
-   case RACE_DRAGON_GREEN  :
-   case RACE_DRAGON_WHITE  :
-   case RACE_DRAGON_BLUE   :
-   case RACE_DRAGON_SILVER :
-   case RACE_DRAGON_GOLD   :
-   case RACE_DRAGON_BRONZE :
-   case RACE_DRAGON_COPPER :
-   case RACE_DRAGON_BRASS  : 
-    return(TRUE);
-    break;
-   default:
-    return(FALSE);
-    break;
+    return FALSE;
   }
-}
 
-void SetHunting( struct char_data *ch, struct char_data *tch)
-{
+
+  int IsDragon( struct char_data *ch)
+  {
+    switch(GET_RACE(ch))
+    {
+     case RACE_DRAGON:
+     case RACE_DRAGON_RED    :
+     case RACE_DRAGON_BLACK  :
+     case RACE_DRAGON_GREEN  :
+     case RACE_DRAGON_WHITE  :
+     case RACE_DRAGON_BLUE   :
+     case RACE_DRAGON_SILVER :
+     case RACE_DRAGON_GOLD   :
+     case RACE_DRAGON_BRONZE :
+     case RACE_DRAGON_COPPER :
+     case RACE_DRAGON_BRASS  : 
+     return(TRUE);
+     break;
+     default:
+     return(FALSE);
+     break;
+   }
+ }
+
+ void SetHunting( struct char_data *ch, struct char_data *tch)
+ {
   int persist, dist;
   
 #if NOTRACK
@@ -2510,7 +2510,7 @@ void SetHunting( struct char_data *ch, struct char_data *tch)
 
 
 void CallForGuard( struct char_data *ch, struct char_data *vict, int lev, 
-                   int area)
+ int area)
 {
   struct char_data *i;
   int type1, type2;
@@ -2518,68 +2518,67 @@ void CallForGuard( struct char_data *ch, struct char_data *vict, int lev,
   switch(area)
   {
    case MIDGAARD:
-    type1 = 3060;
-    type2 = 3069;
-    break;
+   type1 = 3060;
+   type2 = 3069;
+   break;
    case NEWTHALOS:
-    type1 = 3661;
-    type2 = 3682;
-    break;
+   type1 = 3661;
+   type2 = 3682;
+   break;
    case TROGCAVES:
-    type1 = 21114;
-    type2 = 21118;
-    break;
+   type1 = 21114;
+   type2 = 21118;
+   break;
    case OUTPOST:
-    type1 = 21138;
-    type2 = 21139;
-    break;
-    
+   type1 = 21138;
+   type2 = 21139;
+   break;
+   
    case PRYDAIN:
-    type1 = 6606;
-    type2 = 6614;
-    break;
-    
+   type1 = 6606;
+   type2 = 6614;
+   break;
+   
    default:
-    type1 = 3060;
-    type2 = 3069;
-    break;
-  }
-  
+   type1 = 3060;
+   type2 = 3069;
+   break;
+ }
+ 
 
-  if (lev == 0)
-    lev = 3;
+ if (lev == 0)
+  lev = 3;
 
-  for (i = character_list; i && lev>0; i = i->next)
+for (i = character_list; i && lev>0; i = i->next)
+{
+  if (IS_NPC(i) && (i != ch))
   {
-    if (IS_NPC(i) && (i != ch))
+    if (!i->specials.fighting)
     {
-      if (!i->specials.fighting)
+      if (mob_index[i->nr].iVNum == type1)
       {
-        if (mob_index[i->nr].iVNum == type1)
+        if (number(1,6) == 1)
         {
-          if (number(1,6) == 1)
+          if (!IS_SET(i->specials.act, ACT_HUNTING))
           {
-            if (!IS_SET(i->specials.act, ACT_HUNTING))
+            if (vict)
             {
-              if (vict)
-              {
-                SetHunting(i, vict);
-                lev--;
-              }
+              SetHunting(i, vict);
+              lev--;
             }
           }
         }
-        else if (mob_index[i->nr].iVNum == type2)
+      }
+      else if (mob_index[i->nr].iVNum == type2)
+      {
+        if (number(1,6) == 1)
         {
-          if (number(1,6) == 1)
+          if (!IS_SET(i->specials.act, ACT_HUNTING))
           {
-            if (!IS_SET(i->specials.act, ACT_HUNTING))
+            if (vict)
             {
-              if (vict)
-              {
-                SetHunting(i, vict);
-                lev-=2;
-              }
+              SetHunting(i, vict);
+              lev-=2;
             }
           }
         }
@@ -2587,15 +2586,16 @@ void CallForGuard( struct char_data *ch, struct char_data *vict, int lev,
     }
   }
 }
+}
 
 void CallForMobs( struct char_data *pChar, struct char_data *pVict, 
-                  int iLevel, int iMobToCall )
+  int iLevel, int iMobToCall )
 {
   struct char_data *pMobToCall;
   
 
   for( pMobToCall = character_list; pMobToCall && iLevel > 0; 
-       pMobToCall = pMobToCall->next )
+   pMobToCall = pMobToCall->next )
   {
     if( !IS_PC( pMobToCall ) && pMobToCall != pChar )
     {
@@ -2623,7 +2623,7 @@ void CallForMobs( struct char_data *pChar, struct char_data *pVict,
 int StandUp( struct char_data *ch )
 {
   if( GET_POS(ch) < POSITION_FIGHTING &&
-      GET_POS(ch) > POSITION_STUNNED && !ch->desc )
+    GET_POS(ch) > POSITION_STUNNED && !ch->desc )
   {
     if (ch->points.hit > (ch->points.max_hit / 2))
       act("$n si alza velocemente.", 1, ch,0,0,TO_ROOM);
@@ -2652,7 +2652,7 @@ void MakeNiftyAttack( struct char_data *ch)
   if (!ch || !ch->skills)
   {
     mudlog( LOG_SYSERR, "!ch or !ch->skills in MakeNiftyAttack() in "
-                        "MakeNiftyAttack (utility.c)");
+      "MakeNiftyAttack (utility.c)");
     return;
   }
   if (!ch->specials.fighting) 
@@ -2711,10 +2711,10 @@ void FighterMove( struct char_data *ch)
     {
       /* rescue on a 1 or 2, other on a 3 or 4 */
       if( ( IS_AFFECTED( ch, AFF_CHARM ) && ch->master == pFriend &&
-            GET_MAX_HIT( ch ) / 4 < GET_HIT( ch ) &&
-            GET_MAX_HIT( ch->master ) / 2 > GET_HIT( ch->master ) ) ||
-          ( GET_RACE(pFriend) == GET_RACE(ch) && 
-            GET_HIT(pFriend) < GET_HIT(ch) ) )
+        GET_MAX_HIT( ch ) / 4 < GET_HIT( ch ) &&
+        GET_MAX_HIT( ch->master ) / 2 > GET_HIT( ch->master ) ) ||
+        ( GET_RACE(pFriend) == GET_RACE(ch) && 
+          GET_HIT(pFriend) < GET_HIT(ch) ) )
       {
         if (!ch->skills[SKILL_RESCUE].learned)
           ch->skills[SKILL_RESCUE].learned = GetMaxLevel(ch)*3+30;
@@ -2780,11 +2780,11 @@ void MonkMove( struct char_data *ch)
           if (GET_MAX_HIT(ch->specials.fighting) < 2*GET_MAX_HIT(ch))
           {
             if ((!affected_by_spell(ch->specials.fighting, SKILL_QUIV_PALM)) &&
-                (!affected_by_spell(ch, SKILL_QUIV_PALM)) && 
-                ch->in_room == 551)
+              (!affected_by_spell(ch, SKILL_QUIV_PALM)) && 
+              ch->in_room == 551)
             {
               if(ch->specials.fighting->skills[SKILL_QUIV_PALM].learned &&
-                 ch->in_room == 551)
+               ch->in_room == 551)
               {
                 if (!ch->skills[SKILL_QUIV_PALM].learned && ch->in_room == 551)
                   ch->skills[SKILL_QUIV_PALM].learned = GetMaxLevel(ch)*2-5;
@@ -2856,240 +2856,240 @@ int HasObject( struct char_data *ch, int ob_num)
     if (ch->equipment[j])
       found += RecCompObjNum(ch->equipment[j], ob_num);
 
-  if (found > 0)
-    return(TRUE);
+    if (found > 0)
+      return(TRUE);
 
   /* carrying  */
-  for (i = ch->carrying; i; i = i->next_content)
-    found += RecCompObjNum(i, ob_num);
+    for (i = ch->carrying; i; i = i->next_content)
+      found += RecCompObjNum(i, ob_num);
 
-  if (found > 0)
-    return(TRUE);
-  else
-    return(FALSE);
-}
-
-
-int room_of_object(struct obj_data *obj)
-{
-  if (obj->in_room != NOWHERE)
-    return obj->in_room;
-  else if (obj->carried_by)
-    return obj->carried_by->in_room;
-  else if (obj->equipped_by)
-    return obj->equipped_by->in_room;
-  else if (obj->in_obj)
-    return room_of_object(obj->in_obj);
-  else
-    return NOWHERE;
-}
-
-struct char_data *char_holding(struct obj_data *obj)
-{
-  if (obj->in_room != NOWHERE)
-    return NULL;
-  else if (obj->carried_by)
-    return obj->carried_by;
-  else if (obj->equipped_by)
-    return obj->equipped_by;
-  else if (obj->in_obj)
-    return char_holding(obj->in_obj);
-  else
-    return NULL;
-}
-
-
-int RecCompObjNum( struct obj_data *o, int obj_num)
-{
-
-int total=0;
-struct obj_data *i;
-
-  if( o->item_number >= 0 && obj_index[o->item_number].iVNum == obj_num )
-    total = 1;
-
-  if (ITEM_TYPE(o) == ITEM_CONTAINER) {
-    for (i = o->contains; i; i = i->next_content)
-      total += RecCompObjNum( i, obj_num);
-  }
-  return(total);
-
-}
-
-void RestoreChar(struct char_data *ch)
-{
-
-  GET_MANA(ch) = GET_MAX_MANA(ch);
-  GET_HIT(ch) = GET_MAX_HIT(ch);
-  GET_MOVE(ch) = GET_MAX_MOVE(ch); 
-  if (GetMaxLevel(ch) < IMMORTALE) {
-    GET_COND(ch,THIRST) = 24;
-    GET_COND(ch,FULL) = 24;
-  } else {
-    GET_COND(ch,THIRST) = -1;
-    GET_COND(ch,FULL) = -1;
+    if (found > 0)
+      return(TRUE);
+    else
+      return(FALSE);
   }
 
-}
+
+  int room_of_object(struct obj_data *obj)
+  {
+    if (obj->in_room != NOWHERE)
+      return obj->in_room;
+    else if (obj->carried_by)
+      return obj->carried_by->in_room;
+    else if (obj->equipped_by)
+      return obj->equipped_by->in_room;
+    else if (obj->in_obj)
+      return room_of_object(obj->in_obj);
+    else
+      return NOWHERE;
+  }
+
+  struct char_data *char_holding(struct obj_data *obj)
+  {
+    if (obj->in_room != NOWHERE)
+      return NULL;
+    else if (obj->carried_by)
+      return obj->carried_by;
+    else if (obj->equipped_by)
+      return obj->equipped_by;
+    else if (obj->in_obj)
+      return char_holding(obj->in_obj);
+    else
+      return NULL;
+  }
 
 
-void RemAllAffects( struct char_data *ch)
-{
-  spell_dispel_magic(MAESTRO_DEI_CREATORI,ch,ch,0);
+  int RecCompObjNum( struct obj_data *o, int obj_num)
+  {
 
-}
+    int total=0;
+    struct obj_data *i;
 
-int CheckForBlockedMove
+    if( o->item_number >= 0 && obj_index[o->item_number].iVNum == obj_num )
+      total = 1;
+
+    if (ITEM_TYPE(o) == ITEM_CONTAINER) {
+      for (i = o->contains; i; i = i->next_content)
+        total += RecCompObjNum( i, obj_num);
+    }
+    return(total);
+
+  }
+
+  void RestoreChar(struct char_data *ch)
+  {
+
+    GET_MANA(ch) = GET_MAX_MANA(ch);
+    GET_HIT(ch) = GET_MAX_HIT(ch);
+    GET_MOVE(ch) = GET_MAX_MOVE(ch); 
+    if (GetMaxLevel(ch) < IMMORTALE) {
+      GET_COND(ch,THIRST) = 24;
+      GET_COND(ch,FULL) = 24;
+    } else {
+      GET_COND(ch,THIRST) = -1;
+      GET_COND(ch,FULL) = -1;
+    }
+
+  }
+
+
+  void RemAllAffects( struct char_data *ch)
+  {
+    spell_dispel_magic(MAESTRO_DEI_CREATORI,ch,ch,0);
+
+  }
+
+  int CheckForBlockedMove
   (struct char_data *ch, int cmd, char *arg, int room, int dir, int iClass)
-{
-  
-  char buf[256], buf2[256];
-  
-  if (cmd>6 || cmd<1)
-    return(FALSE);
-  
-  strcpy(buf,  "The guard humiliates you, and block your way.\n\r");
-  strcpy(buf2, "The guard humiliates $n, and blocks $s way.");
-  
-  if ((IS_NPC(ch) && (IS_POLICE(ch))) || (GetMaxLevel(ch) >= DIO) ||
+  {
+    
+    char buf[256], buf2[256];
+    
+    if (cmd>6 || cmd<1)
+      return(FALSE);
+    
+    strcpy(buf,  "The guard humiliates you, and block your way.\n\r");
+    strcpy(buf2, "The guard humiliates $n, and blocks $s way.");
+    
+    if ((IS_NPC(ch) && (IS_POLICE(ch))) || (GetMaxLevel(ch) >= DIO) ||
       (IS_AFFECTED(ch, AFF_SNEAK)))
-    return(FALSE);
+      return(FALSE);
 
 
-  if ((ch->in_room == room) && (cmd == dir+1)) {
-    if (!HasClass(ch,iClass))  {
-      act(buf2, FALSE, ch, 0, 0, TO_ROOM);
-      send_to_char(buf, ch);
-      return TRUE;
-    }  
+    if ((ch->in_room == room) && (cmd == dir+1)) {
+      if (!HasClass(ch,iClass))  {
+        act(buf2, FALSE, ch, 0, 0, TO_ROOM);
+        send_to_char(buf, ch);
+        return TRUE;
+      }  
+    }
+    return FALSE;
+
   }
-  return FALSE;
-
-}
 
 
-void TeleportPulseStuff(unsigned long pulse)
-{  
-  register struct char_data *ch;
-  struct char_data *next;
-  int tick, tm;
-  struct room_data *rp, *dest;
-  struct obj_data *obj_object, *temp_obj;
-  struct room_data *apTeleportRoom[ 1000 ];
-  int iMaxTeleportRoom = 0;
-  
+  void TeleportPulseStuff(unsigned long pulse)
+  {  
+    register struct char_data *ch;
+    struct char_data *next;
+    int tick, tm;
+    struct room_data *rp, *dest;
+    struct obj_data *obj_object, *temp_obj;
+    struct room_data *apTeleportRoom[ 1000 ];
+    int iMaxTeleportRoom = 0;
+    
   tm = pulse % PULSE_MOBILE;    /* this is dependent on P_M = 3*P_T */
-  
-  if (tm == 0) 
-  {
-    tick = 0;
-  }
-  else if (tm == PULSE_TELEPORT) 
-  {
-    tick = 1;
-  }
-  else if (tm == PULSE_TELEPORT*2) 
-  {
-    tick = 2;
-  }
-  else
-  {
-    mudlog( LOG_SYSERR, 
-            "TeleportPulseStuff called with pulse not %% of PULSE_MOBILE." );
-    tick = 3;
-  }
-  
-  for( ch = character_list; ch; ch = next )
-  {
-    next = ch->next;
-    if( IS_MOB( ch ) )
+    
+    if (tm == 0) 
     {
-      if( ch->specials.tick == tick && !ch->specials.fighting && 
-          !ch->specials.tick_to_lag )
+      tick = 0;
+    }
+    else if (tm == PULSE_TELEPORT) 
+    {
+      tick = 1;
+    }
+    else if (tm == PULSE_TELEPORT*2) 
+    {
+      tick = 2;
+    }
+    else
+    {
+      mudlog( LOG_SYSERR, 
+        "TeleportPulseStuff called with pulse not %% of PULSE_MOBILE." );
+      tick = 3;
+    }
+    
+    for( ch = character_list; ch; ch = next )
+    {
+      next = ch->next;
+      if( IS_MOB( ch ) )
       {
-        mobile_activity(ch);
+        if( ch->specials.tick == tick && !ch->specials.fighting && 
+          !ch->specials.tick_to_lag )
+        {
+          mobile_activity(ch);
+        }
       }
     }
-  }
 
   /* Non posso tenere uniti i due loop, perche` dopo mobile_activity ch 
    * potrebbe non essere piu` valido */
-  for( ch = character_list; ch; ch = next )
-  {
-    next = ch->next;
-    rp = real_roomp(ch->in_room);
-    if( rp &&
+    for( ch = character_list; ch; ch = next )
+    {
+      next = ch->next;
+      rp = real_roomp(ch->in_room);
+      if( rp &&
         rp->tele_targ > 0 &&
         rp->tele_targ != rp->number &&
         rp->tele_time > 0 &&
         (pulse % rp->tele_time)==0 )
-    {
-      if( IS_SET( rp->tele_mask, TELE_COUNT ) && rp->tele_cnt > 0 )
       {
-        ch->nTeleCount--;
-        if( ch->nTeleCount )
+        if( IS_SET( rp->tele_mask, TELE_COUNT ) && rp->tele_cnt > 0 )
+        {
+          ch->nTeleCount--;
+          if( ch->nTeleCount )
+            continue;
+        }
+        
+        dest = real_roomp(rp->tele_targ);
+        if( !dest )
+        {
+          mudlog( LOG_ERROR, "invalid tele_targ of room %ld", ch->in_room );
           continue;
-      }
-      
-      dest = real_roomp(rp->tele_targ);
-      if( !dest )
-      {
-        mudlog( LOG_ERROR, "invalid tele_targ of room %ld", ch->in_room );
-        continue;
-      }
+        }
         
       /* Qui c'e` un problema: Se la stanza di destinazione e` un altra
        * Teleport e c'e` un personaggio non ancora incontrato nel loop, ma
        * che deve essere trasportato, gli oggetti viaggeranno anche con
        * l'altro personaggio. */
-      obj_object = rp->contents;
-      while (obj_object)
-      {
-        temp_obj = obj_object->next_content;
-        obj_from_room(obj_object);
-        obj_to_room(obj_object, rp->tele_targ);
-        obj_object = temp_obj;
-      }
+        obj_object = rp->contents;
+        while (obj_object)
+        {
+          temp_obj = obj_object->next_content;
+          obj_from_room(obj_object);
+          obj_to_room(obj_object, rp->tele_targ);
+          obj_object = temp_obj;
+        }
         
       char_from_room( ch ); /* the list of people in the room has changed */
-      char_to_room( ch, rp->tele_targ );
+        char_to_room( ch, rp->tele_targ );
 
-      if( IS_SET( TELE_LOOK, rp->tele_mask ) && IS_PC( ch ) )
-      {
-        do_look( ch, "\0", 0 );
-      }
+        if( IS_SET( TELE_LOOK, rp->tele_mask ) && IS_PC( ch ) )
+        {
+          do_look( ch, "\0", 0 );
+        }
 
-      if( IS_SET( dest->room_flags, DEATH ) && !IS_IMMORTAL( ch ) )
-      { 
-        if( !IS_PC( ch ) )
-          mudlog( LOG_ERROR, "%s hit a death trap.", ch->player.short_descr );
-        NailThisSucker( ch );
-        continue;
+        if( IS_SET( dest->room_flags, DEATH ) && !IS_IMMORTAL( ch ) )
+        { 
+          if( !IS_PC( ch ) )
+            mudlog( LOG_ERROR, "%s hit a death trap.", ch->player.short_descr );
+          NailThisSucker( ch );
+          continue;
+        }
+        if( dest->sector_type == SECT_AIR )
+        {
+          check_falling( ch );
+        }
+        
+        apTeleportRoom[ iMaxTeleportRoom ] = rp;
+        iMaxTeleportRoom++;
       }
-      if( dest->sector_type == SECT_AIR )
-      {
-        check_falling( ch );
-      }
-      
-      apTeleportRoom[ iMaxTeleportRoom ] = rp;
-      iMaxTeleportRoom++;
     }
-  }
-  
-  while( iMaxTeleportRoom )
-  {
-    iMaxTeleportRoom--;
-    rp = apTeleportRoom[ iMaxTeleportRoom ];
-
-    if( IS_SET( TELE_RANDOM, rp->tele_mask ) )
+    
+    while( iMaxTeleportRoom )
     {
-      rp->tele_time = number( 1, 10 ) * PULSE_TELEPORT;
+      iMaxTeleportRoom--;
+      rp = apTeleportRoom[ iMaxTeleportRoom ];
+
+      if( IS_SET( TELE_RANDOM, rp->tele_mask ) )
+      {
+        rp->tele_time = number( 1, 10 ) * PULSE_TELEPORT;
+      }
     }
   }
-}
 
-void RiverPulseStuff(unsigned long pulse)
-{
+  void RiverPulseStuff(unsigned long pulse)
+  {
    struct descriptor_data *i;
    register struct char_data *ch;
    struct char_data *tmp;
@@ -3100,186 +3100,186 @@ void RiverPulseStuff(unsigned long pulse)
    struct room_data *rp;
    
    if (pulse < 0) 
-   return;
+     return;
    
    for (i = descriptor_list; i; i=i->next) 
    {
-      if (!i->connected) 
+    if (!i->connected) 
+    {
+      ch = i->character;
+      
+      if (IS_PC(ch) || RIDDEN(ch)) 
       {
-	 ch = i->character;
-	 
-	 if (IS_PC(ch) || RIDDEN(ch)) 
-	 {
-	    if (ch->in_room != NOWHERE) 
-	    {
-	       if ((real_roomp(ch->in_room)->sector_type == SECT_WATER_NOSWIM) ||
-		   (real_roomp(ch->in_room)->sector_type == SECT_UNDERWATER))
-	       {
-		  
-		  if ((real_roomp(ch->in_room))->river_speed > 0) 
-		  {
-		     if ((pulse % (real_roomp(ch->in_room))->river_speed)==0) 
-		     {
-			if (((real_roomp(ch->in_room))->river_dir<=5)&&
-			    ((real_roomp(ch->in_room))->river_dir>=0)) 
-			{
-			   rd = (real_roomp(ch->in_room))->river_dir;
-			   for (obj_object = (real_roomp(ch->in_room))->contents;
-				obj_object; obj_object = next_obj) 
-			   {
-			      next_obj = obj_object->next_content;
-			      if ((real_roomp(ch->in_room))->dir_option[rd])
-			      {
-				 obj_from_room(obj_object);
-				 obj_to_room(obj_object, 
-					     (real_roomp(ch->in_room))->dir_option[rd]->to_room);
-			      }
-			   }
+       if (ch->in_room != NOWHERE) 
+       {
+        if ((real_roomp(ch->in_room)->sector_type == SECT_WATER_NOSWIM) ||
+         (real_roomp(ch->in_room)->sector_type == SECT_UNDERWATER))
+        {
+          
+          if ((real_roomp(ch->in_room))->river_speed > 0) 
+          {
+           if ((pulse % (real_roomp(ch->in_room))->river_speed)==0) 
+           {
+             if (((real_roomp(ch->in_room))->river_dir<=5)&&
+               ((real_roomp(ch->in_room))->river_dir>=0)) 
+             {
+              rd = (real_roomp(ch->in_room))->river_dir;
+              for (obj_object = (real_roomp(ch->in_room))->contents;
+                obj_object; obj_object = next_obj) 
+              {
+               next_obj = obj_object->next_content;
+               if ((real_roomp(ch->in_room))->dir_option[rd])
+               {
+                 obj_from_room(obj_object);
+                 obj_to_room(obj_object, 
+                  (real_roomp(ch->in_room))->dir_option[rd]->to_room);
+               }
+             }
 			   /*
 			    * flyers dont get moved
 			    */
-			   if(IS_IMMORTAL(ch) &&
-			      IS_SET(ch->specials.act, PLR_NOHASSLE)) 
-			   {
-			      send_to_char("The waters swirl and eddy about you.\n\r",
-					   ch);
-			   }
-			   else
-			   {
-			      if(!IS_AFFECTED(ch,AFF_FLYING) ||
-				 (real_roomp(ch->in_room)->sector_type == 
-				  SECT_UNDERWATER)) 
-			      {
-				 if (!MOUNTED(ch)) 
-				 {
-				    rp = real_roomp(ch->in_room);
-				    if (rp && rp->dir_option[rd] &&
-					rp->dir_option[rd]->to_room && 
-					(EXIT(ch, rd)->to_room != NOWHERE)) 
-				    {
-				       if (ch->specials.fighting) 
-				       {
-					  stop_fighting(ch);
-				       }
-				       sprintf( buf, "La corrente ti porta %s...\n\r",
-					       dirsTo[ rd ] );
-				       send_to_char(buf,ch);
-				       if (RIDDEN(ch))
-				       send_to_char(buf,RIDDEN(ch));
-				       _or = ch->in_room;
-				       char_from_room(ch);
-				       if (RIDDEN(ch))  
-				       {
-					  char_from_room(RIDDEN(ch));
-					  char_to_room(RIDDEN(ch),
-						       (real_roomp(_or))->dir_option[rd]->to_room);
-				       }
-				       char_to_room(ch,
-						    (real_roomp(_or))->dir_option[rd]->to_room);
-				       do_look(ch, "\0",15);
-				       if (RIDDEN(ch))
-				       {
-					  do_look(RIDDEN(ch), "\0",15);
-				       }
-				       
-				       
-				       if (IS_SET(RM_FLAGS(ch->in_room), DEATH) && 
-					   GetMaxLevel(ch) < IMMORTALE) 
-				       {
-					  NailThisSucker(ch);
-					  if (RIDDEN(ch))
-					  NailThisSucker(RIDDEN(ch));
-				       }
-				    }
-				 }
-			      }
+             if(IS_IMMORTAL(ch) &&
+               IS_SET(ch->specials.act, PLR_NOHASSLE)) 
+             {
+               send_to_char("The waters swirl and eddy about you.\n\r",
+                ch);
+             }
+             else
+             {
+               if(!IS_AFFECTED(ch,AFF_FLYING) ||
+                 (real_roomp(ch->in_room)->sector_type == 
+                  SECT_UNDERWATER)) 
+               {
+                 if (!MOUNTED(ch)) 
+                 {
+                  rp = real_roomp(ch->in_room);
+                  if (rp && rp->dir_option[rd] &&
+                   rp->dir_option[rd]->to_room && 
+                   (EXIT(ch, rd)->to_room != NOWHERE)) 
+                  {
+                   if (ch->specials.fighting) 
+                   {
+                     stop_fighting(ch);
+                   }
+                   sprintf( buf, "La corrente ti porta %s...\n\r",
+                    dirsTo[ rd ] );
+                   send_to_char(buf,ch);
+                   if (RIDDEN(ch))
+                     send_to_char(buf,RIDDEN(ch));
+                   _or = ch->in_room;
+                   char_from_room(ch);
+                   if (RIDDEN(ch))  
+                   {
+                     char_from_room(RIDDEN(ch));
+                     char_to_room(RIDDEN(ch),
+                       (real_roomp(_or))->dir_option[rd]->to_room);
+                   }
+                   char_to_room(ch,
+                    (real_roomp(_or))->dir_option[rd]->to_room);
+                   do_look(ch, "\0",15);
+                   if (RIDDEN(ch))
+                   {
+                     do_look(RIDDEN(ch), "\0",15);
+                   }
+                   
+                   
+                   if (IS_SET(RM_FLAGS(ch->in_room), DEATH) && 
+                    GetMaxLevel(ch) < IMMORTALE) 
+                   {
+                     NailThisSucker(ch);
+                     if (RIDDEN(ch))
+                       NailThisSucker(RIDDEN(ch));
+                   }
+                 }
+               }
+             }
 			   }                /* end of else for is_immort() */
-			}
-		     }
-		  }
-	       }
-	    }
-	 }
-      }
+           }
+         }
+       }
+     }
+   }
+ }
+}
    } /* end for descriptor */
-   
-   
-   
-   if (!number(0,4)) 
-   {
-      for (ch = character_list; ch; ch = tmp) 
-      {
-	 tmp = ch->next;
-	 
+
+
+
+if (!number(0,4)) 
+{
+  for (ch = character_list; ch; ch = tmp) 
+  {
+    tmp = ch->next;
+    
 	 /*
 	  *   mobiles
 	  */        
-	 if( !IS_PC(ch) && !ch->specials.fighting && ch->player.sounds && 
-	    number(0,5) == 0 ) 
-	 {
-	    if (ch->specials.default_pos > POSITION_SLEEPING) 
-	    {
-	       if (GET_POS(ch) > POSITION_SLEEPING) 
-	       {
+    if( !IS_PC(ch) && !ch->specials.fighting && ch->player.sounds && 
+     number(0,5) == 0 ) 
+    {
+     if (ch->specials.default_pos > POSITION_SLEEPING) 
+     {
+      if (GET_POS(ch) > POSITION_SLEEPING) 
+      {
 		  /*
 		   *  Make the sound;
 		   */
-		  MakeNoise(ch->in_room, ch->player.sounds, 
-			    ch->player.distant_snds);
-	       }
-	       else if (GET_POS(ch) == POSITION_SLEEPING) 
-	       {
+        MakeNoise(ch->in_room, ch->player.sounds, 
+         ch->player.distant_snds);
+      }
+      else if (GET_POS(ch) == POSITION_SLEEPING) 
+      {
 		  /*
 		   * snore 
 		   */         
-		  sprintf(buffer, "%s russa sonoramente.\n\r", 
-			  ch->player.short_descr);
-		  MakeNoise(ch->in_room, buffer, 
-			    "Qualcuno russa sonoramente qui vicino.\n\r");
-	       }
-	    } 
-	    else if (GET_POS(ch) == ch->specials.default_pos) 
-	    {
+        sprintf(buffer, "%s russa sonoramente.\n\r", 
+         ch->player.short_descr);
+        MakeNoise(ch->in_room, buffer, 
+         "Qualcuno russa sonoramente qui vicino.\n\r");
+      }
+    } 
+    else if (GET_POS(ch) == ch->specials.default_pos) 
+    {
 	       /*
 		* Make the sound
 		*/       
-	       MakeNoise(ch->in_room, ch->player.sounds, ch->player.distant_snds);
-	    }
-	 }
-      }      
-   }
-   
-   struct obj_data *pObj, *pNextObj;
-   for( pObj = object_list; pObj ; pObj = pNextObj )
-   {
+      MakeNoise(ch->in_room, ch->player.sounds, ch->player.distant_snds);
+    }
+  }
+}      
+}
+
+struct obj_data *pObj, *pNextObj;
+for( pObj = object_list; pObj ; pObj = pNextObj )
+{
       pNextObj = pObj->next; /* Next in object list */
-      
+  
       /* Sound objects */
-      if( ITEM_TYPE( pObj ) == ITEM_AUDIO )
-      {
-	 if( ( pObj->obj_flags.value[0] && 
-	      ( pulse % pObj->obj_flags.value[0] ) == 0 ) && !number( 0, 2 ) )
-	 {
-	    long lRoom = RecGetObjRoom( pObj );
-	    
+  if( ITEM_TYPE( pObj ) == ITEM_AUDIO )
+  {
+    if( ( pObj->obj_flags.value[0] && 
+     ( pulse % pObj->obj_flags.value[0] ) == 0 ) && !number( 0, 2 ) )
+    {
+     long lRoom = RecGetObjRoom( pObj );
+     
 	    /* broadcast to room */
-	    
-	    if( pObj->action_description)
-	    {
-	       MakeNoise( lRoom, pObj->action_description, 
-			 pObj->action_description );
-	    }
-	 }
-      }
-      else
-      {
-	 if( pObj->item_number >= 0 && obj_index[ pObj->item_number ].func )
-	 {
-	    ( *obj_index[ pObj->item_number].func )( NULL, pulse, NULL, pObj, 
-						    EVENT_TICK );
-	 }
-      }
-   }
+     
+     if( pObj->action_description)
+     {
+      MakeNoise( lRoom, pObj->action_description, 
+        pObj->action_description );
+    }
+  }
+}
+else
+{
+  if( pObj->item_number >= 0 && obj_index[ pObj->item_number ].func )
+  {
+   ( *obj_index[ pObj->item_number].func )( NULL, pulse, NULL, pObj, 
+    EVENT_TICK );
+ }
+}
+}
 }
 
 /*
@@ -3287,32 +3287,32 @@ void RiverPulseStuff(unsigned long pulse)
 */
 int apply_soundproof(struct char_data *ch)
 {
-   struct room_data *rp;
-   
-   if (IS_AFFECTED(ch, AFF_SILENCE)) 
-   {
-      send_to_char("Sei silenziato! Non puoi emettere suoni!\n\r", ch);
-      return(TRUE);
-   }
-   
-   rp = real_roomp(ch->in_room);
-   
-   if (!rp) return(FALSE);  
-   
-   if (IS_SET(rp->room_flags, SILENCE))
-   {
-      send_to_char( "Qui dentro non riesci a sentire nemmeno la tua voce!\n\r",
-		   ch );
+ struct room_data *rp;
+ 
+ if (IS_AFFECTED(ch, AFF_SILENCE)) 
+ {
+  send_to_char("Sei silenziato! Non puoi emettere suoni!\n\r", ch);
+  return(TRUE);
+}
+
+rp = real_roomp(ch->in_room);
+
+if (!rp) return(FALSE);  
+
+if (IS_SET(rp->room_flags, SILENCE))
+{
+  send_to_char( "Qui dentro non riesci a sentire nemmeno la tua voce!\n\r",
+   ch );
       return(TRUE);   /* for shouts, emotes, etc */
-   }
-   
-   if (rp->sector_type == SECT_UNDERWATER)
-   {
-      send_to_char( "Parlare sott'acqua ? Scherzi ?\n\r", ch);
-      return(TRUE);
-   }
-   return(FALSE);
-   
+}
+
+if (rp->sector_type == SECT_UNDERWATER)
+{
+  send_to_char( "Parlare sott'acqua ? Scherzi ?\n\r", ch);
+  return(TRUE);
+}
+return(FALSE);
+
 }
 
 /*
@@ -3369,9 +3369,9 @@ void SpaceForSkills(struct char_data *ch)
 
 
   ch->skills = (struct char_skill_data *)calloc( MAX_SKILLS, 
-                                           sizeof( struct char_skill_data ) );
+   sizeof( struct char_skill_data ) );
 
-    assert(ch->skills != NULL);
+  assert(ch->skills != NULL);
 
 }
 
@@ -3401,9 +3401,9 @@ int LimObj(struct char_data *ch ) // Gaia 2001
   
   tot += CountLims( ch->carrying ) ;
   for ( i=0; i < MAX_WEAR; i++ )
-   {
+  {
     tot += CountLims( ch->equipment[i] );
-   }
+  }
   return(tot);
 }
 
@@ -3415,7 +3415,7 @@ char *lower(char *s)
   int i=0;
   
   strncpy(c, s,999);
-   c[999]='\0';
+  c[999]='\0';
 
   while (c[i]) {
     if (c[i] < 'a' && c[i] >= 'A' && c[i] <= 'Z')
@@ -3432,7 +3432,7 @@ char *replace(char *s,char vecchio,char nuovo)
   int i=0;
   
   strncpy(c, s,999);
-c[999]='\0';
+  c[999]='\0';
   while (c[i]) {
     if (c[i] == vecchio)
       c[i] = nuovo;
@@ -3450,140 +3450,140 @@ int getFreeAffSlot( struct obj_data *obj)
     if (obj->affected[i].location == APPLY_NONE)
       return(i);
 
-  assert(0);
-  return -1;
-}
+    assert(0);
+    return -1;
+  }
 
-void SetRacialStuff( struct char_data *mob)
-{
-
-  switch(GET_RACE(mob)) 
+  void SetRacialStuff( struct char_data *mob)
   {
-   case RACE_BIRD:
-    SET_BIT(mob->specials.affected_by, AFF_FLYING);    
-    break;
-   case RACE_FISH:
-    SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-    break;
-   case RACE_SEA_ELF:
-    SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-    /* e poi prosegue per le altre caratteristiche degli elfi */
-   case RACE_ELVEN:
-   case RACE_DROW:
-   case RACE_GOLD_ELF:
-   case RACE_WILD_ELF:
-    SET_BIT(mob->specials.affected_by,AFF_INFRAVISION);
-    SET_BIT(mob->immune, IMM_CHARM);
-    break; 
-   case RACE_DWARF:
-   case RACE_DARK_DWARF:
-   case RACE_DEEP_GNOME:
-   case RACE_GNOME:
-   case RACE_MFLAYER:
-   case RACE_TROLL:
-   case RACE_ORC:
-   case RACE_GOBLIN:
-   case RACE_HALFLING:
-   case RACE_GNOLL:
-    SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
-    break;
-   case RACE_INSECT:
-   case RACE_ARACHNID:
-    if (IS_PC(mob)) 
+
+    switch(GET_RACE(mob)) 
     {
+     case RACE_BIRD:
+     SET_BIT(mob->specials.affected_by, AFF_FLYING);    
+     break;
+     case RACE_FISH:
+     SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
+     break;
+     case RACE_SEA_ELF:
+     SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
+    /* e poi prosegue per le altre caratteristiche degli elfi */
+     case RACE_ELVEN:
+     case RACE_DROW:
+     case RACE_GOLD_ELF:
+     case RACE_WILD_ELF:
+     SET_BIT(mob->specials.affected_by,AFF_INFRAVISION);
+     SET_BIT(mob->immune, IMM_CHARM);
+     break; 
+     case RACE_DWARF:
+     case RACE_DARK_DWARF:
+     case RACE_DEEP_GNOME:
+     case RACE_GNOME:
+     case RACE_MFLAYER:
+     case RACE_TROLL:
+     case RACE_ORC:
+     case RACE_GOBLIN:
+     case RACE_HALFLING:
+     case RACE_GNOLL:
+     SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
+     break;
+     case RACE_INSECT:
+     case RACE_ARACHNID:
+     if (IS_PC(mob)) 
+     {
       GET_STR(mob) = 18;
       GET_ADD(mob) = 100;
     }
     break;
-   case RACE_DEMON:
+    case RACE_DEMON:
     SET_BIT(mob->M_immune, IMM_FIRE);
     SET_BIT(mob->M_immune, IMM_POISON);
     SET_BIT(mob->specials.affected_by, AFF_FLYING);    
     SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);    
     break;
-   case RACE_LYCANTH:
+    case RACE_LYCANTH:
     SET_BIT(mob->M_immune, IMM_NONMAG);
     break;
-   case RACE_PREDATOR:
+    case RACE_PREDATOR:
     if (mob->skills)
       mob->skills[SKILL_HUNT].learned = 100;
     break;
 
-   case RACE_GIANT_FROST  :
+    case RACE_GIANT_FROST  :
     SET_BIT(mob->M_immune, IMM_COLD);
     SET_BIT(mob->susc,IMM_FIRE);
     break;
-   case RACE_GIANT_FIRE   :
+    case RACE_GIANT_FIRE   :
     SET_BIT(mob->M_immune, IMM_FIRE);
     SET_BIT(mob->susc,IMM_COLD);    
     break;
-   case RACE_GIANT_CLOUD  :
+    case RACE_GIANT_CLOUD  :
     SET_BIT(mob->M_immune, IMM_SLEEP);  /* should be gas... but no IMM_GAS */
     SET_BIT(mob->susc,IMM_ACID);    
     break;
-   case RACE_GIANT_STORM  :
+    case RACE_GIANT_STORM  :
     SET_BIT(mob->M_immune, IMM_ELEC);
     break;
 
-   case RACE_GIANT_STONE  :
+    case RACE_GIANT_STONE  :
     SET_BIT(mob->M_immune, IMM_PIERCE);
     break;
-   case RACE_UNDEAD:
-   case RACE_UNDEAD_VAMPIRE : 
-   case RACE_UNDEAD_LICH    : 
-   case RACE_UNDEAD_WIGHT   :
-   case RACE_UNDEAD_GHAST   :
-   case RACE_UNDEAD_GHOUL   :
-   case RACE_UNDEAD_SPECTRE :   
-   case RACE_UNDEAD_ZOMBIE  :
-   case RACE_UNDEAD_SKELETON : 
+    case RACE_UNDEAD:
+    case RACE_UNDEAD_VAMPIRE : 
+    case RACE_UNDEAD_LICH    : 
+    case RACE_UNDEAD_WIGHT   :
+    case RACE_UNDEAD_GHAST   :
+    case RACE_UNDEAD_GHOUL   :
+    case RACE_UNDEAD_SPECTRE :   
+    case RACE_UNDEAD_ZOMBIE  :
+    case RACE_UNDEAD_SKELETON : 
     SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
     SET_BIT(mob->M_immune,IMM_POISON+IMM_DRAIN+IMM_SLEEP+IMM_HOLD+IMM_CHARM);
     break;
     
-   case RACE_DRAGON_RED    : 
+    case RACE_DRAGON_RED    : 
     SET_BIT(mob->M_immune,IMM_FIRE);
     SET_BIT(mob->susc,IMM_COLD);
     break;
-   case RACE_DRAGON_BLACK  : 
+    case RACE_DRAGON_BLACK  : 
     SET_BIT(mob->M_immune,IMM_ACID);
     break;
 
-   case RACE_DRAGON_GREEN  : 
+    case RACE_DRAGON_GREEN  : 
     SET_BIT(mob->M_immune,IMM_SLEEP);
     break;
 
-   case RACE_DRAGON_WHITE  : 
+    case RACE_DRAGON_WHITE  : 
     SET_BIT(mob->M_immune,IMM_COLD);
     SET_BIT(mob->susc,IMM_FIRE);
     break;
-   case RACE_DRAGON_BLUE   : 
+    case RACE_DRAGON_BLUE   : 
     SET_BIT(mob->M_immune,IMM_ELEC);
     break;
-   case RACE_DRAGON_SILVER : 
+    case RACE_DRAGON_SILVER : 
     SET_BIT(mob->M_immune,IMM_ENERGY);
     break;
-   case RACE_DRAGON_GOLD   : 
+    case RACE_DRAGON_GOLD   : 
     SET_BIT(mob->M_immune,IMM_SLEEP+IMM_ENERGY);
     break;
-   case RACE_DRAGON_BRONZE :
+    case RACE_DRAGON_BRONZE :
     SET_BIT(mob->M_immune,IMM_COLD+IMM_ACID);
     break;
-   case RACE_DRAGON_COPPER :
+    case RACE_DRAGON_COPPER :
     SET_BIT(mob->M_immune,IMM_FIRE);
     break;
-   case RACE_DRAGON_BRASS  : 
+    case RACE_DRAGON_BRASS  : 
     SET_BIT(mob->M_immune,IMM_ELEC);
     break;
- 
-   case RACE_HALF_ELVEN:
-   case RACE_HALF_OGRE:
-   case RACE_HALF_ORC:
-   case RACE_HALF_GIANT:
+    
+    case RACE_HALF_ELVEN:
+    case RACE_HALF_OGRE:
+    case RACE_HALF_ORC:
+    case RACE_HALF_GIANT:
     SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
     break;
 
-   default:
+    default:
     break;
   }
 
@@ -3593,30 +3593,30 @@ void SetRacialStuff( struct char_data *mob)
     switch(GET_RACE(mob)) 
     {
      case RACE_HUMAN:
-      break;
+     break;
 
      case RACE_ELVEN:
      case RACE_GOLD_ELF:
      case RACE_WILD_ELF:
      case RACE_SEA_ELF:
-      AddHatred(mob,OP_RACE,RACE_ORC);
-      break;
+     AddHatred(mob,OP_RACE,RACE_ORC);
+     break;
      case RACE_GNOME:
-      break;
-      
+     break;
+     
      case RACE_DWARF:
-      AddHatred(mob,OP_RACE,RACE_GOBLIN);
-      AddHatred(mob,OP_RACE,RACE_ORC);
-      break;
+     AddHatred(mob,OP_RACE,RACE_GOBLIN);
+     AddHatred(mob,OP_RACE,RACE_ORC);
+     break;
      case RACE_HALFLING:
-      break;
-      
+     break;
+     
      case RACE_LYCANTH:
-      AddHatred(mob,OP_RACE,RACE_HUMAN);
-      break;
-      
+     AddHatred(mob,OP_RACE,RACE_HUMAN);
+     break;
+     
      case RACE_UNDEAD:
-      break;
+     break;
      case RACE_DARK_DWARF:                  /* these guys hate good people */
      case RACE_UNDEAD_VAMPIRE :
      case RACE_UNDEAD_LICH    : 
@@ -3625,91 +3625,91 @@ void SetRacialStuff( struct char_data *mob)
      case RACE_UNDEAD_GHOUL   :
      case RACE_UNDEAD_SPECTRE : 
      AddHatred(mob,OP_GOOD,1000);
-      break;
+     break;
      case RACE_UNDEAD_ZOMBIE  :
-      break;
+     break;
      case RACE_UNDEAD_SKELETON :
-      break;
+     break;
      case RACE_VEGMAN:
-      break;
+     break;
      case RACE_MFLAYER:
-      break;      
+     break;      
      case RACE_DROW:
-      AddHatred(mob,OP_RACE,RACE_ELVEN);
-      break;
+     AddHatred(mob,OP_RACE,RACE_ELVEN);
+     break;
      case RACE_SKEXIE:
-      break;
+     break;
      case RACE_TROGMAN:
-      break;
+     break;
      case RACE_LIZARDMAN:
-      break;
+     break;
      case RACE_SARTAN:
-      break;
+     break;
      case RACE_PATRYN:
-      break;
+     break;
      case RACE_DRAAGDIM:
-      break;
+     break;
      case RACE_ASTRAL: 
-      break;
+     break;
 
      case RACE_HORSE:
-      mob->player.weight = 400;
-      mob->player.height = 175;
-      break;
+     mob->player.weight = 400;
+     mob->player.height = 175;
+     break;
 
      case RACE_ORC:
-      AddHatred(mob,OP_GOOD,1000);
-      AddHatred(mob,OP_RACE,RACE_ELVEN);
-      mob->player.weight = 150;
-      mob->player.height = 140;
-      break;
-      
+     AddHatred(mob,OP_GOOD,1000);
+     AddHatred(mob,OP_RACE,RACE_ELVEN);
+     mob->player.weight = 150;
+     mob->player.height = 140;
+     break;
+     
      case RACE_SMURF:
-      mob->player.weight = 5;
-      mob->player.height = 10;
-      break;
+     mob->player.weight = 5;
+     mob->player.height = 10;
+     break;
 
      case RACE_GOBLIN:
      case RACE_GNOLL:
-      AddHatred(mob,OP_GOOD,1000);
-      AddHatred(mob,OP_RACE,RACE_DWARF);
-      break;
-      
+     AddHatred(mob,OP_GOOD,1000);
+     AddHatred(mob,OP_RACE,RACE_DWARF);
+     break;
+     
      case RACE_ENFAN:
-      mob->player.weight = 120;
-      mob->player.height = 100;
-      break;
+     mob->player.weight = 120;
+     mob->player.height = 100;
+     break;
 
      case RACE_LABRAT:
-      break;
+     break;
      case RACE_INSECT:
-      break;
+     break;
      case RACE_ARACHNID:
-      break;
+     break;
      case RACE_REPTILE:
-      break;
+     break;
      case RACE_DINOSAUR:
-      break;
+     break;
      case RACE_FISH:
-      break;
+     break;
      case RACE_PREDATOR:
-      break;
+     break;
      case RACE_SNAKE:
-      break;
+     break;
      case RACE_HERBIV:
-      break;
+     break;
      case RACE_VEGGIE:
-      break;
+     break;
      case RACE_ELEMENT:
-      break;
+     break;
      case RACE_PRIMATE:
-      break;
-      
+     break;
+     
      case RACE_GOLEM:
-      mob->player.weight = 10+GetMaxLevel(mob)*GetMaxLevel(mob)*2;
-      mob->player.height = 20+MIN(mob->player.weight,600);
-      break;
-      
+     mob->player.weight = 10+GetMaxLevel(mob)*GetMaxLevel(mob)*2;
+     mob->player.height = 20+MIN(mob->player.weight,600);
+     break;
+     
      case RACE_DRAGON:
      case RACE_DRAGON_RED    :
      case RACE_DRAGON_BLACK  :
@@ -3721,68 +3721,68 @@ void SetRacialStuff( struct char_data *mob)
      case RACE_DRAGON_BRONZE :
      case RACE_DRAGON_COPPER :
      case RACE_DRAGON_BRASS  : 
-      mob->player.weight = MAX(60, GetMaxLevel(mob)*GetMaxLevel(mob)*2);
-      mob->player.height = 100+ MIN(mob->player.weight, 500);
-      break;
-      
+     mob->player.weight = MAX(60, GetMaxLevel(mob)*GetMaxLevel(mob)*2);
+     mob->player.height = 100+ MIN(mob->player.weight, 500);
+     break;
+     
      case RACE_BIRD: 
      case RACE_PARASITE: 
      case RACE_SLIME: 
-      mob->player.weight = GetMaxLevel(mob)*(GetMaxLevel(mob)/5);
-      mob->player.height = 10*GetMaxLevel(mob);
-      break;
-      
-      
+     mob->player.weight = GetMaxLevel(mob)*(GetMaxLevel(mob)/5);
+     mob->player.height = 10*GetMaxLevel(mob);
+     break;
+     
+     
      case RACE_GHOST:
-      mob->player.weight = GetMaxLevel(mob)*(GetMaxLevel(mob)/5);
-      mob->player.height = 10*GetMaxLevel(mob);
-      break;
+     mob->player.weight = GetMaxLevel(mob)*(GetMaxLevel(mob)/5);
+     mob->player.height = 10*GetMaxLevel(mob);
+     break;
      case RACE_TROLL: 
-      AddHatred(mob,OP_GOOD,1000);
-      mob->player.height = 200+GetMaxLevel(mob)*15;
-      mob->player.weight = (int)( mob->player.height * 1.5 );
-      break;
-      
+     AddHatred(mob,OP_GOOD,1000);
+     mob->player.height = 200+GetMaxLevel(mob)*15;
+     mob->player.weight = (int)( mob->player.height * 1.5 );
+     break;
+     
      case RACE_GIANT:
      case RACE_GIANT_HILL   :
      case RACE_GIANT_FROST  :
      case RACE_GIANT_FIRE   :
      case RACE_GIANT_CLOUD  :
      case RACE_GIANT_STORM  :
-      mob->player.height = 200+GetMaxLevel(mob)*15;
-      mob->player.weight = (int)( mob->player.height * 1.5 );
-      AddHatred(mob,OP_RACE,RACE_DWARF);
-      break;
-      
+     mob->player.height = 200+GetMaxLevel(mob)*15;
+     mob->player.weight = (int)( mob->player.height * 1.5 );
+     AddHatred(mob,OP_RACE,RACE_DWARF);
+     break;
+     
      case RACE_DEVIL: 
      case RACE_DEMON: 
-      AddHatred(mob,OP_GOOD,1000);
-      mob->player.height = 200+GetMaxLevel(mob)*15;
-      mob->player.weight = (int)( mob->player.height * 1.5 );
-      break;
-      
-      
+     AddHatred(mob,OP_GOOD,1000);
+     mob->player.height = 200+GetMaxLevel(mob)*15;
+     mob->player.weight = (int)( mob->player.height * 1.5 );
+     break;
+     
+     
      case RACE_PLANAR:    
-      mob->player.height = 200+GetMaxLevel(mob)*15;
-      mob->player.weight = (int)( mob->player.height * 1.5 );
-      break;
-      
+     mob->player.height = 200+GetMaxLevel(mob)*15;
+     mob->player.weight = (int)( mob->player.height * 1.5 );
+     break;
+     
      case RACE_GOD: break;
      case RACE_TREE: break;
      case RACE_TYTAN: 
-      mob->player.weight = MAX(500, GetMaxLevel(mob)*GetMaxLevel(mob)*10);
-      mob->player.height = GetMaxLevel(mob)/2*100;
-      break;
-      
+     mob->player.weight = MAX(500, GetMaxLevel(mob)*GetMaxLevel(mob)*10);
+     mob->player.height = GetMaxLevel(mob)/2*100;
+     break;
+     
      case RACE_HALF_ELVEN:
      case RACE_HALF_OGRE:
      case RACE_HALF_ORC:
      case RACE_HALF_GIANT:    
-      break;
+     break;
     } /* end switch */
-  } 
+   } 
   else /* !IS_NPC( mob ) */
-  {
+   {
     switch( GET_RACE( mob ) )
     {
      case RACE_ORC:
@@ -3791,12 +3791,12 @@ void SetRacialStuff( struct char_data *mob)
      case RACE_DARK_DWARF:
      case RACE_DEEP_GNOME:
      case RACE_DEMON:
-      GET_ALIGNMENT( mob ) = -1000;
-      break;
+     GET_ALIGNMENT( mob ) = -1000;
+     break;
      default:
-      break;      
-    }
-  }                   
+     break;      
+   }
+ }                   
 }
 
 int check_nomagic(struct char_data *ch, char *msg_ch, char *msg_rm)
@@ -3933,54 +3933,54 @@ int GetNewRace(struct char_file_u *s)
      case RACE_PRIMATE:
      case RACE_GOBLIN:
      case RACE_TROLL:
-      ok = TRUE;
-      break;
+     ok = TRUE;
+     break;
       /* not a valid race, try again */
      default:
-      ok = FALSE;
-      break;
-    }
-    
-    if( ok )
+     ok = FALSE;
+     break;
+   }
+   
+   if( ok )
+   {
+    for( i = 0; i < MAX_CLASS; i++ )
     {
-      for( i = 0; i < MAX_CLASS; i++ )
+      if( RacialMax[ newrace ][ i ] < ( s->level[ i ] - 10 ) && s->level[i] > 0 )
       {
-        if( RacialMax[ newrace ][ i ] < ( s->level[ i ] - 10 ) && s->level[i] > 0 )
-        {
-          ok = FALSE;
-          break;
-        }
+        ok = FALSE;
+        break;
       }
-     }
-     if( ok )
-     {
+    }
+  }
+  if( ok )
+  {
 /* Se la classe e' okay, provvedo a riportare gli xp al max razziale della
  * classe messa peggio
  * */
   // mudlog( LOG_CHECK, "XP totali: %d ", s->points.exp ) ; 
-	 int xplimit;
-	 int curlevel;
-	 int oldrace;
-	 oldrace=s->race;
-	 for( i = 0; i < MAX_CLASS; i++ )
-	 {
-          if (s->level[i] > 0)
-           {
-	    curlevel=RacialMax[newrace][i] ;
-	    if (curlevel > 1)
+    int xplimit;
+    int curlevel;
+    int oldrace;
+    oldrace=s->race;
+    for( i = 0; i < MAX_CLASS; i++ )
+    {
+      if (s->level[i] > 0)
+      {
+       curlevel=RacialMax[newrace][i] ;
+       if (curlevel > 1)
  //  mudlog( LOG_CHECK, "Livello attuale: %d ", curlevel ) ; 
-	     {
-	       xplimit=titles[i][curlevel].exp;
+       {
+        xplimit=titles[i][curlevel].exp;
  //  mudlog( LOG_CHECK, "Limite Xp per questa classe: %d ", xplimit ) ; 
-	       s->points.exp=MIN(s->points.exp,(xplimit+(s->points.exp/2)));
+        s->points.exp=MIN(s->points.exp,(xplimit+(s->points.exp/2)));
  //  mudlog( LOG_CHECK, "Xp Modificati in: %d ", s->points.exp ) ; 
-	     }
-           }
-	 }
-        break ;
       }
+    }
+  }
+  break ;
+}
   } /* while */
-	 return(newrace);
+return(newrace);
 }
 
 int GetApprox(int num, int perc)
@@ -4014,49 +4014,49 @@ int MountEgoCheck(struct char_data *ch, struct char_data *horse)
     if (ch->skills) {
       drag_ego = GetMaxLevel(horse)*2;
       if (IS_SET(horse->specials.act, ACT_AGGRESSIVE) ||
-          IS_SET(horse->specials.act, ACT_META_AGG)) {
+        IS_SET(horse->specials.act, ACT_META_AGG)) {
         drag_ego += GetMaxLevel(horse);
-      }
-      ride_ego = ch->skills[SKILL_RIDE].learned/10 + GetMaxLevel(ch)/2;
-      if (IS_AFFECTED(ch, AFF_DRAGON_RIDE)) {
-        ride_ego += ((GET_INT(ch) + GET_WIS(ch))/2);
-      }
-      align = GET_ALIGNMENT(ch) - GET_ALIGNMENT(horse);
-      if (align < 0) align = -align;
-      align/=100;
-      align -= 5;
-      drag_ego += align;
-      if (GET_HIT(horse) > 0)
-        drag_ego -= GET_MAX_HIT(horse)/GET_HIT(horse);
-      else 
-            drag_ego = 0;
-      if (GET_HIT(ch) > 0)
-        ride_ego -= GET_MAX_HIT(ch)/GET_HIT(ch);
-      else 
-        ride_ego = 0;
-      
-      check = drag_ego+number(1,10)-(ride_ego+number(1,10));
-      return(check);
-      
-    } else {
-      return(-GetMaxLevel(horse));
     }
-  } else {
-    if (!ch->skills) return(-GetMaxLevel(horse));
-
-    drag_ego = GetMaxLevel(horse);
-
-    if (drag_ego > 15) 
-      drag_ego *= 2;
-
-    ride_ego = ch->skills[SKILL_RIDE].learned/10 + GetMaxLevel(ch);
-
+    ride_ego = ch->skills[SKILL_RIDE].learned/10 + GetMaxLevel(ch)/2;
     if (IS_AFFECTED(ch, AFF_DRAGON_RIDE)) {
-      ride_ego += (GET_INT(ch) + GET_WIS(ch));
+      ride_ego += ((GET_INT(ch) + GET_WIS(ch))/2);
     }
-    check = drag_ego+number(1,5)-(ride_ego+number(1,10));
+    align = GET_ALIGNMENT(ch) - GET_ALIGNMENT(horse);
+    if (align < 0) align = -align;
+    align/=100;
+    align -= 5;
+    drag_ego += align;
+    if (GET_HIT(horse) > 0)
+      drag_ego -= GET_MAX_HIT(horse)/GET_HIT(horse);
+    else 
+      drag_ego = 0;
+    if (GET_HIT(ch) > 0)
+      ride_ego -= GET_MAX_HIT(ch)/GET_HIT(ch);
+    else 
+      ride_ego = 0;
+    
+    check = drag_ego+number(1,10)-(ride_ego+number(1,10));
     return(check);
-  }    
+    
+  } else {
+    return(-GetMaxLevel(horse));
+  }
+} else {
+  if (!ch->skills) return(-GetMaxLevel(horse));
+
+  drag_ego = GetMaxLevel(horse);
+
+  if (drag_ego > 15) 
+    drag_ego *= 2;
+
+  ride_ego = ch->skills[SKILL_RIDE].learned/10 + GetMaxLevel(ch);
+
+  if (IS_AFFECTED(ch, AFF_DRAGON_RIDE)) {
+    ride_ego += (GET_INT(ch) + GET_WIS(ch));
+  }
+  check = drag_ego+number(1,5)-(ride_ego+number(1,10));
+  return(check);
+}    
 } 
 
 int RideCheck( struct char_data *ch, int mod)
@@ -4068,7 +4068,7 @@ int RideCheck( struct char_data *ch, int mod)
       if( number(1,70 ) > MIN( 100, ch->skills[SKILL_RIDE].learned ) + mod )
       {
         if( number( 1, 91 - mod ) > 
-            MIN( 100, ch->skills[SKILL_RIDE].learned ) / 2 )
+          MIN( 100, ch->skills[SKILL_RIDE].learned ) / 2 )
         {
           if( ch->skills[SKILL_RIDE].learned < 90 )
           {
@@ -4083,7 +4083,7 @@ int RideCheck( struct char_data *ch, int mod)
     else
     {
       if( number( 1, 70 ) > ( MIN( 100, ch->skills[SKILL_RIDE].learned ) +
-                              GET_LEVEL( ch, BestMagicClass( ch ) ) + mod ) )
+        GET_LEVEL( ch, BestMagicClass( ch ) ) + mod ) )
         return(FALSE);
     }
   }
@@ -4113,13 +4113,13 @@ int EqWBits( struct char_data *ch, int bits )
     if( ch->equipment[ i ] )
     { 
       if( ( IS_SET( ch->equipment[ i ]->obj_flags.extra_flags, 
-                    ITEM_ONLY_CLASS ) &&
-            IS_SET( ch->equipment[ i ]->obj_flags.extra_flags ^ ITEM_CLASS, 
-                    bits ) ) ||
-          ( !IS_SET( ch->equipment[ i ]->obj_flags.extra_flags,
-                     ITEM_ONLY_CLASS ) &&
-            IS_SET( ch->equipment[ i ]->obj_flags.extra_flags, bits ) ) )
-      
+        ITEM_ONLY_CLASS ) &&
+        IS_SET( ch->equipment[ i ]->obj_flags.extra_flags ^ ITEM_CLASS, 
+          bits ) ) ||
+        ( !IS_SET( ch->equipment[ i ]->obj_flags.extra_flags,
+         ITEM_ONLY_CLASS ) &&
+        IS_SET( ch->equipment[ i ]->obj_flags.extra_flags, bits ) ) )
+        
         return TRUE;
     }
   }
@@ -4133,9 +4133,9 @@ int InvWBits( struct char_data *ch, int bits )
   for( o = ch->carrying; o; o = o->next_content )
   {
     if( ( IS_SET( o->obj_flags.extra_flags, ITEM_ONLY_CLASS ) &&
-          IS_SET( o->obj_flags.extra_flags ^ ITEM_CLASS, bits ) ) ||
-        ( !IS_SET( o->obj_flags.extra_flags, ITEM_ONLY_CLASS ) &&
-          IS_SET( o->obj_flags.extra_flags, bits ) ) )
+      IS_SET( o->obj_flags.extra_flags ^ ITEM_CLASS, bits ) ) ||
+      ( !IS_SET( o->obj_flags.extra_flags, ITEM_ONLY_CLASS ) &&
+        IS_SET( o->obj_flags.extra_flags, bits ) ) )
       return TRUE;
   }
   return FALSE;
@@ -4154,7 +4154,7 @@ void LearnFromMistake( struct char_data *ch, int sknum, int silent, int max )
 {
   if( !ch->skills )
     return;
-    
+  
   if( !IS_SET( ch->skills[ sknum ].flags, SKILL_KNOWN ) ) 
     return;
 
@@ -4177,161 +4177,161 @@ void LearnFromMistake( struct char_data *ch, int sknum, int silent, int max )
       if( ch->skills[ sknum ].learned >= max )
         if( !silent )
           send_to_char( "Hai imparato tutto su questa abilita`!\n\r", ch );
+      }
     }
   }
-}
 
 /* if (!IsOnPmp(roomnumber)) then they are on another plane! */
-int IsOnPmp(int room_nr)
-{
-  if (real_roomp(room_nr))
+  int IsOnPmp(int room_nr)
   {
-    if (!IS_SET(zone_table[real_roomp(room_nr)->zone].reset_mode, ZONE_ASTRAL))
-      return(TRUE);
-    return(FALSE);
-  }
-  else
-  {
-    return(FALSE);
-  }
-
-}
-
-
-int GetSumRaceMaxLevInRoom( struct char_data *ch)
-{
-  struct room_data *rp;
-  struct char_data *i;
-  int sum=0;
-
-  rp = real_roomp(ch->in_room);
-
-  if (!rp) return(0);
-
-  for (i = rp->people; i; i=i->next_in_room) {
-    if (GET_RACE(i) == GET_RACE(ch)) {
-      sum += GetMaxLevel(i);
+    if (real_roomp(room_nr))
+    {
+      if (!IS_SET(zone_table[real_roomp(room_nr)->zone].reset_mode, ZONE_ASTRAL))
+        return(TRUE);
+      return(FALSE);
     }
+    else
+    {
+      return(FALSE);
+    }
+
   }
-  return(sum);
-}
 
-int too_many_followers(struct char_data *ch) 
-{
-  struct follow_type *k;
-  int max_followers,actual_fol;
 
-  max_followers = (int) chr_apply[ (int)GET_CHR(ch) ].num_fol;
-  
-  for(k=ch->followers,actual_fol=0; k; k=k->next) 
-    if (IS_AFFECTED(k->follower, AFF_CHARM)) 
-      actual_fol++;
+  int GetSumRaceMaxLevInRoom( struct char_data *ch)
+  {
+    struct room_data *rp;
+    struct char_data *i;
+    int sum=0;
 
-  if(actual_fol < max_followers)
-    return FALSE;
-  else
-    return TRUE;
-}
+    rp = real_roomp(ch->in_room);
 
-int follow_time(struct char_data *ch)
-{
-  int fol_time=0;
-  fol_time= (int) (24*GET_CHR(ch)/11);
-  return fol_time;
-}
+    if (!rp) return(0);
 
-int ItemAlignClash(struct char_data *ch, struct obj_data *obj)
-{
-  if ((IS_OBJ_STAT(obj, ITEM_ANTI_EVIL) && IS_EVIL(ch)) ||
-      (IS_OBJ_STAT(obj, ITEM_ANTI_GOOD) && IS_GOOD(ch)) ||
-      (IS_OBJ_STAT(obj, ITEM_ANTI_NEUTRAL) && IS_NEUTRAL(ch))) {
-    return(TRUE);
+    for (i = rp->people; i; i=i->next_in_room) {
+      if (GET_RACE(i) == GET_RACE(ch)) {
+        sum += GetMaxLevel(i);
+      }
+    }
+    return(sum);
   }
-  return(FALSE);
-}
 
-int ItemEgoClash(struct char_data *ch, struct obj_data *obj, int bon)
-{
+  int too_many_followers(struct char_data *ch) 
+  {
+    struct follow_type *k;
+    int max_followers,actual_fol;
+
+    max_followers = (int) chr_apply[ (int)GET_CHR(ch) ].num_fol;
+    
+    for(k=ch->followers,actual_fol=0; k; k=k->next) 
+      if (IS_AFFECTED(k->follower, AFF_CHARM)) 
+        actual_fol++;
+
+      if(actual_fol < max_followers)
+        return FALSE;
+      else
+        return TRUE;
+    }
+
+    int follow_time(struct char_data *ch)
+    {
+      int fol_time=0;
+      fol_time= (int) (24*GET_CHR(ch)/11);
+      return fol_time;
+    }
+
+    int ItemAlignClash(struct char_data *ch, struct obj_data *obj)
+    {
+      if ((IS_OBJ_STAT(obj, ITEM_ANTI_EVIL) && IS_EVIL(ch)) ||
+        (IS_OBJ_STAT(obj, ITEM_ANTI_GOOD) && IS_GOOD(ch)) ||
+        (IS_OBJ_STAT(obj, ITEM_ANTI_NEUTRAL) && IS_NEUTRAL(ch))) {
+        return(TRUE);
+    }
+    return(FALSE);
+  }
+
+  int ItemEgoClash(struct char_data *ch, struct obj_data *obj, int bon)
+  {
 
 #ifndef EGO
-  return(0);
+    return(0);
 #else
 
-  int obj_ego, p_ego, tmp;
+    int obj_ego, p_ego, tmp;
 
-  obj_ego = obj->obj_flags.cost;
+    obj_ego = obj->obj_flags.cost;
 
-  if( obj->obj_flags.type_flag == ITEM_KEY || 
+    if( obj->obj_flags.type_flag == ITEM_KEY || 
       obj->obj_flags.type_flag == ITEM_SCROLL ||
       obj->obj_flags.type_flag == ITEM_POTION ||
       obj->obj_flags.type_flag == ITEM_TREASURE ||
       obj->obj_flags.type_flag == ITEM_MONEY )
-    return 0;
-  
-  if( obj_ego >= MIN_COST_ITEM_EGO || obj_ego < 0 )
-  {
+      return 0;
+    
+    if( obj_ego >= MIN_COST_ITEM_EGO || obj_ego < 0 )
+    {
 
-    if( obj_ego < 0 )
-      obj_ego = 50000;
+      if( obj_ego < 0 )
+        obj_ego = 50000;
 
-    obj_ego /= 500;
+      obj_ego /= 500;
 
     /*  alignment stuff */    
 
-    if( IS_OBJ_STAT( obj, ITEM_ANTI_GOOD ) || 
+      if( IS_OBJ_STAT( obj, ITEM_ANTI_GOOD ) || 
         IS_OBJ_STAT( obj, ITEM_ANTI_EVIL ) )
-    {
-      if( IS_NEUTRAL( ch ) )
-        obj_ego += obj_ego / 4;
+      {
+        if( IS_NEUTRAL( ch ) )
+          obj_ego += obj_ego / 4;
+      }
+
+      if( IS_PC( ch ) )
+      {
+        p_ego = GetMaxLevel( ch ) + HowManyClasses( ch );
+
+        if( p_ego > 40 )
+          p_ego = 588 + ( p_ego - 40 ) * 2;
+        else if( p_ego > 30 )
+          p_ego *= p_ego - 29;
+        else if( p_ego > 20 )
+          p_ego += p_ego - 20;
+        
+      } 
+      else 
+      {
+        p_ego = 10000;
+      }
+
+      tmp = ( p_ego * ( ( GET_INT( ch ) + GET_WIS( ch ) ) / 2 - 12 ) ) / 10;
+      tmp = MAX( 0, tmp );
+
+      if( p_ego > 20 && tmp > 0 )
+      {
+        tmp *= GET_HIT( ch );
+        tmp /= GET_MAX_HIT( ch );
+      }
+
+
+      return( p_ego + tmp + bon - obj_ego - number( 0, 2 ) );
     }
 
-    if( IS_PC( ch ) )
-    {
-      p_ego = GetMaxLevel( ch ) + HowManyClasses( ch );
+    return(1);
 
-      if( p_ego > 40 )
-        p_ego = 588 + ( p_ego - 40 ) * 2;
-      else if( p_ego > 30 )
-        p_ego *= p_ego - 29;
-      else if( p_ego > 20 )
-        p_ego += p_ego - 20;
-      
-    } 
-    else 
-    {
-      p_ego = 10000;
-    }
-
-    tmp = ( p_ego * ( ( GET_INT( ch ) + GET_WIS( ch ) ) / 2 - 12 ) ) / 10;
-    tmp = MAX( 0, tmp );
-
-    if( p_ego > 20 && tmp > 0 )
-    {
-      tmp *= GET_HIT( ch );
-      tmp /= GET_MAX_HIT( ch );
-    }
-
-
-    return( p_ego + tmp + bon - obj_ego - number( 0, 2 ) );
+#endif
   }
-
-  return(1);
-
-#endif
-}
 #if PICCHIO
-void *strstr(char *S1, char *S2)
-{
+  void *strstr(char *S1, char *S2)
+  {
    return(NULL);
-}
-char *strchr(char *S1, int C)
-{
+ }
+ char *strchr(char *S1, int C)
+ {
    return(NULL);
-}
+ }
 #endif
 
-void IncrementZoneNr(int nr)
-{
+ void IncrementZoneNr(int nr)
+ {
   struct char_data *c;
   extern struct char_data *character_list;
 
@@ -4375,10 +4375,10 @@ int IsDarkOutside(struct room_data *rp)
 int anti_barbarian_stuff(struct obj_data *obj_object)
 {
   if( IS_OBJ_STAT( obj_object, ITEM_GLOW )  || 
-      IS_OBJ_STAT( obj_object, ITEM_HUM ) ||
-      IS_OBJ_STAT( obj_object, ITEM_MAGIC ) || 
-      IS_OBJ_STAT( obj_object, ITEM_BLESS ) ||              
-      IS_OBJ_STAT( obj_object, ITEM_NODROP ) )
+    IS_OBJ_STAT( obj_object, ITEM_HUM ) ||
+    IS_OBJ_STAT( obj_object, ITEM_MAGIC ) || 
+    IS_OBJ_STAT( obj_object, ITEM_BLESS ) ||              
+    IS_OBJ_STAT( obj_object, ITEM_NODROP ) )
     return TRUE;
   else
     return FALSE;
@@ -4387,12 +4387,12 @@ int anti_barbarian_stuff(struct obj_data *obj_object)
 int CheckGetBarbarianOK( struct char_data *ch, struct obj_data *obj_object )
 {
   if( GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && 
-      anti_barbarian_stuff( obj_object ) && !IS_IMMORTAL( ch ) ) 
+    anti_barbarian_stuff( obj_object ) && !IS_IMMORTAL( ch ) ) 
   {
     act( "Percepisci la magia su $p e rabbrividisci disgustat$b.", FALSE, ch,
-         obj_object, 0, TO_CHAR );
+     obj_object, 0, TO_CHAR );
     act( "$n squote la testa e si rifiuta di prendere $p.", TRUE, ch, 
-         obj_object, 0, TO_ROOM );
+     obj_object, 0, TO_ROOM );
     return FALSE;
   }
 
@@ -4400,25 +4400,25 @@ int CheckGetBarbarianOK( struct char_data *ch, struct obj_data *obj_object )
 }
 
 int CheckGiveBarbarianOK(struct char_data *ch,struct char_data *vict,
-                                                struct obj_data *obj)
+  struct obj_data *obj)
 {
   if( GET_LEVEL(vict,BARBARIAN_LEVEL_IND) != 0 && 
-      anti_barbarian_stuff(obj) && GetMaxLevel(vict)<IMMORTALE )
+    anti_barbarian_stuff(obj) && GetMaxLevel(vict)<IMMORTALE )
   {
     if( AWAKE( vict ) )
     {
       
       act( "Percepisci la magia su $p e rifiuti l'offerta di $N.", FALSE,
-           vict, obj, ch, TO_CHAR );
+       vict, obj, ch, TO_CHAR );
       act( "$n squote la testa e si rifiuta di prendere $p da $N.", TRUE, 
-           vict, obj, ch, TO_NOTVICT );
+       vict, obj, ch, TO_NOTVICT );
       act( "$n squote la testa e si rifiuta di prendere $p.", TRUE,
-           vict, obj, ch, TO_VICT );
+       vict, obj, ch, TO_VICT );
     }
     else
     {
       act( "Forse e` meglio non dare $p a $N neanche se dorme.", FALSE, ch, 
-           obj, vict, TO_CHAR );
+       obj, vict, TO_CHAR );
     }
     
     return FALSE;
@@ -4436,7 +4436,7 @@ int CheckEgoEquip( struct char_data *ch, struct obj_data *obj )
     mudlog( LOG_SYSERR, "!obj || !ch in CheckEgoEquip, utility.c" );
     return(FALSE);
   }
-        
+  
   /*
    * if the item is limited, check its ego.
    * use some funky function to determine if pc's ego is higher than objs'
@@ -4461,7 +4461,7 @@ int CheckEgoEquip( struct char_data *ch, struct obj_data *obj )
         else
         {
           mudlog( LOG_SYSERR, 
-                  "Ch->in_room = NOWHERE on anti-ego item! (equip_char)" );
+            "Ch->in_room = NOWHERE on anti-ego item! (equip_char)" );
         }
       }
     }
@@ -4488,7 +4488,7 @@ int CheckEgoGet(struct char_data *ch, struct obj_data *obj)
   if( j < -10 && GetMaxLevel( ch ) < MAESTRO_DEI_CREATORI )
   {
     act( "Non capisci neanche come prendere un oggetto potente come $p.", 
-         FALSE, ch, obj, 0, TO_CHAR );
+     FALSE, ch, obj, 0, TO_CHAR );
     return FALSE;
   }
 
@@ -4496,7 +4496,7 @@ int CheckEgoGet(struct char_data *ch, struct obj_data *obj)
 }
 
 int CheckEgoGive(struct char_data *ch,struct char_data *vict,
-                 struct obj_data *obj) 
+ struct obj_data *obj) 
 {
   int j=0;
   /*
@@ -4510,14 +4510,14 @@ int CheckEgoGive(struct char_data *ch,struct char_data *vict,
     if (AWAKE(vict))
     {
       act( "Hai quasi paura a prendere un oggetto potente come $p.",0,
-           vict, obj, 0, TO_CHAR); 
+       vict, obj, 0, TO_CHAR); 
       act( "$n rabbrividisce e rifiuta $p.", 0, vict, obj, ch, TO_VICT );
     }
     else
     {
       act( "Non riesci a dare $p a $n.", 0, vict, obj, ch, TO_VICT );
     }
-      
+    
     act( "$N non riesce a dare $p a $n.",0,vict, obj, ch, TO_NOTVICT );
     return(FALSE);
   }
@@ -4538,10 +4538,10 @@ int IsSpecialized(int sk_num)
                                  /* this persons max specialized skills */
 int HowManySpecials(struct char_data *ch)
 {
-int i,ii=0;
+  int i,ii=0;
 
-for (i=0;i<MAX_SPL_LIST;i++)
- if (IsSpecialized(ch->skills[i].special)) ii++;
+  for (i=0;i<MAX_SPL_LIST;i++)
+   if (IsSpecialized(ch->skills[i].special)) ii++;
  return(ii);
 }
 
@@ -4555,22 +4555,22 @@ int CanSeeTrap(int num,struct char_data *ch)
   if (HasClass(ch,CLASS_THIEF))
   {
     return( affected_by_spell(ch,SPELL_FIND_TRAPS) ||
-            ( ch->skills && 
-              num < MIN( 100, ch->skills[SKILL_FIND_TRAP].learned ) &&
-              !MOUNTED(ch) ) );
+      ( ch->skills && 
+        num < MIN( 100, ch->skills[SKILL_FIND_TRAP].learned ) &&
+        !MOUNTED(ch) ) );
   }
   if (HasClass(ch,CLASS_RANGER) && OUTSIDE(ch))
   {
     return( affected_by_spell(ch,SPELL_FIND_TRAPS) ||
-            ( ch->skills && 
-              num < MIN( 100, ch->skills[SKILL_FIND_TRAP].learned ) &&
-              !MOUNTED( ch ) ) );
+      ( ch->skills && 
+        num < MIN( 100, ch->skills[SKILL_FIND_TRAP].learned ) &&
+        !MOUNTED( ch ) ) );
   }
 
   if (affected_by_spell(ch,SPELL_FIND_TRAPS) && !MOUNTED(ch))
     return(TRUE);
-   
-   return(FALSE);
+  
+  return(FALSE);
 }
 
 /* this is where we figure the max limited items the char may rent with    
@@ -4583,28 +4583,28 @@ int MaxLimited(int lev)
 {
  if (lev <= 10) {
    return(2);
-  } else 
+ } else 
  if (lev <= 15) {
    return(4);
-  } else 
+ } else 
  if (lev <= 20) {
    return(6);
-  } else
+ } else
  if (lev <= 25) {
    return(8);
-  } else
+ } else
  if (lev <= 30) {
    return(10);
-  } else
+ } else
  if (lev <= 35) {
    return(12);
-  } else
+ } else
  if (lev <= 40) {
    return(14);
-  } else
+ } else
  if (lev <= 45) {
    return(16);
-  } else
+ } else
  return(MAX_LIM_ITEMS);    
 }
 
@@ -4612,149 +4612,149 @@ int SiteLock (char *site)
 {
 #if SITELOCK
 
-int i,length;
-extern int numberhosts;
-extern char hostlist[MAX_BAN_HOSTS][30];
+  int i,length;
+  extern int numberhosts;
+  extern char hostlist[MAX_BAN_HOSTS][30];
 
- length = MAX(strlen(site),29);
+  length = MAX(strlen(site),29);
 
-for (i=0;i<numberhosts;i++) {
-  if (strncmp(hostlist[i],site,length)==0)
-        return(TRUE);
-   }
+  for (i=0;i<numberhosts;i++) {
+    if (strncmp(hostlist[i],site,length)==0)
+      return(TRUE);
+  }
   return(FALSE);
 #else
- return(FALSE);  
+  return(FALSE);  
 #endif
 }
 
 int MaxDexForRace(struct char_data *ch)
 {
-   if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
-    return(25);
-        switch(GET_RACE(ch)) {
-        case RACE_ELVEN:
-        case RACE_WILD_ELF:
-        case RACE_GOLD_ELF:
-        case RACE_HALFLING:
-	case RACE_DEMON:
-                        return(19);
-                        break;
-        case RACE_DROW:
-        case RACE_GOD:
-                        return(20);
-                        break;
-        case RACE_DWARF:
-        case RACE_HALF_OGRE:
-                        return(17);
-                        break;
-        case RACE_HALF_GIANT:
-                        return(16);
-                        break;                                                
-        default:return(18);
-                break;                
+ if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
+  return(25);
+switch(GET_RACE(ch)) {
+  case RACE_ELVEN:
+  case RACE_WILD_ELF:
+  case RACE_GOLD_ELF:
+  case RACE_HALFLING:
+  case RACE_DEMON:
+  return(19);
+  break;
+  case RACE_DROW:
+  case RACE_GOD:
+  return(20);
+  break;
+  case RACE_DWARF:
+  case RACE_HALF_OGRE:
+  return(17);
+  break;
+  case RACE_HALF_GIANT:
+  return(16);
+  break;                                                
+  default:return(18);
+  break;                
         }/* end switch */
 }
 
 int MaxIntForRace(struct char_data *ch)
 {
-   if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
-    return(25);
-        switch(GET_RACE(ch)) {
-        case RACE_GOLD_ELF:
-	      case RACE_DEMON:
-	      case RACE_GOD:
-        case RACE_GNOME :return(19);
-                        break;
-        case RACE_HALF_GIANT:
-        case RACE_HALF_OGRE:
-                return(17);
-                break;
+ if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
+  return(25);
+switch(GET_RACE(ch)) {
+  case RACE_GOLD_ELF:
+  case RACE_DEMON:
+  case RACE_GOD:
+  case RACE_GNOME :return(19);
+  break;
+  case RACE_HALF_GIANT:
+  case RACE_HALF_OGRE:
+  return(17);
+  break;
 
-        default:return(18);
-                        break;
+  default:return(18);
+  break;
         }/* end switch */
 }
 
 int MaxWisForRace(struct char_data *ch)
 {
-   if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
-    return(25);
-        switch(GET_RACE(ch)) {
-        case RACE_GOLD_ELF:
-        case RACE_WILD_ELF:
-        case RACE_GNOME:
-	case RACE_DEMON:
-                return(17);
-                break;
-        case RACE_HALF_GIANT:
-                return(17);
-                break;                
-        default:return(18);
-                break;
+ if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
+  return(25);
+switch(GET_RACE(ch)) {
+  case RACE_GOLD_ELF:
+  case RACE_WILD_ELF:
+  case RACE_GNOME:
+  case RACE_DEMON:
+  return(17);
+  break;
+  case RACE_HALF_GIANT:
+  return(17);
+  break;                
+  default:return(18);
+  break;
         }/* end switch */
 }
 
 int MaxConForRace(struct char_data *ch)
 {
-   if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
-    return(25);
-        switch(GET_RACE(ch)) {
-         case RACE_HALF_ORC:
-         case RACE_DWARF:
-         case RACE_GOD:
-         case RACE_HALF_OGRE:return(19);
-                                 break;
-         case RACE_ELVEN:
-         case RACE_GOLD_ELF:
-         case RACE_SEA_ELF:
-         case RACE_DROW:
-                         return(17);
-                         break;                                 
-         default:return(18);
-                 break;
+ if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
+  return(25);
+switch(GET_RACE(ch)) {
+ case RACE_HALF_ORC:
+ case RACE_DWARF:
+ case RACE_GOD:
+ case RACE_HALF_OGRE:return(19);
+ break;
+ case RACE_ELVEN:
+ case RACE_GOLD_ELF:
+ case RACE_SEA_ELF:
+ case RACE_DROW:
+ return(17);
+ break;                                 
+ default:return(18);
+ break;
         }/* end switch */
 }
 
 int MaxChrForRace(struct char_data *ch)
 {
-   if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
-    return(25);
-        switch(GET_RACE(ch)) {
-        case RACE_HALF_ORC:
-        case RACE_ORC:
-        case RACE_DROW:
-        case RACE_DWARF:
-        case RACE_DARK_DWARF:
-                return(17);
-                break;
-	case RACE_DEMON:
-		return(15);
-		break;
-        default:return(18);
-                break;
+ if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
+  return(25);
+switch(GET_RACE(ch)) {
+  case RACE_HALF_ORC:
+  case RACE_ORC:
+  case RACE_DROW:
+  case RACE_DWARF:
+  case RACE_DARK_DWARF:
+  return(17);
+  break;
+  case RACE_DEMON:
+  return(15);
+  break;
+  default:return(18);
+  break;
         }/* end switch */
 }
 
 int MaxStrForRace(struct char_data *ch)
 {
 
-   if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
-    return(25);
-   
-   switch(GET_RACE(ch)) {
-    case RACE_TROLL:
-    case RACE_GOD:
-    case RACE_HALF_GIANT:return(19);
-      break;
-      
-    case RACE_HALFLING:
-    case RACE_DEMON:
-    case RACE_GOBLIN:
-      return(17);
-      break;                                
-    default:return(18);
-      break;
+ if (GetMaxLevel(ch) >= MAESTRO_DEL_CREATO)
+  return(25);
+
+switch(GET_RACE(ch)) {
+  case RACE_TROLL:
+  case RACE_GOD:
+  case RACE_HALF_GIANT:return(19);
+  break;
+  
+  case RACE_HALFLING:
+  case RACE_DEMON:
+  case RACE_GOBLIN:
+  return(17);
+  break;                                
+  default:return(18);
+  break;
    }/* end switch */
 }
 
@@ -4791,7 +4791,7 @@ int MEMORIZED( struct char_data *ch, int spl )
 void FORGET( struct char_data *ch, int spl ) 
 {
  if( ch->skills[ spl ].nummem )
-     ch->skills[ spl ].nummem -= 1;
+   ch->skills[ spl ].nummem -= 1;
 }
 
 /* return the amount max a person can memorize a single spell */
@@ -4804,251 +4804,251 @@ int MaxCanMemorize(struct char_data *ch, int spell)
   else
     BONUS = 0; /* multies get less... */
 
-  if( GET_INT( ch ) > 17 )
+    if( GET_INT( ch ) > 17 )
     BONUS += ( GET_INT( ch ) - 17 );  /* +1 spell per intel over 17 */
-    
-  if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 4 ) 
-  {
-    return( 3 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 11 ) 
-  {
-    return( 4 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 16 ) 
-  {
-    return( 5 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 21 ) 
-  {
-    return( 6 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 26 ) 
-  {
-    return( 7 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 31 ) 
-  {
-    return( 8 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 36 ) 
-  {
-    return( 9 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 41 ) 
-  {
-    return( 10 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 46 ) 
-  {
-    return( 11 + BONUS );
-  } 
-  else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 52 ) 
-  {
-    return( 12 + BONUS );
-  } 
-  else /* should never get here, cept for immos */
-    return( (int)( GetMaxLevel( ch ) / 3 ) );
-}
-
-
-
-
-int IS_LINKDEAD(struct char_data *ch)
-{
-  if (IS_PC(ch) && !ch->desc)
-    return(TRUE);
-
-  if( IS_SET( ch->specials.act, ACT_POLYSELF ) && !ch->desc )
-    return(TRUE);
       
-  return(FALSE);
-}
+      if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 4 ) 
+      {
+        return( 3 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 11 ) 
+      {
+        return( 4 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 16 ) 
+      {
+        return( 5 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 21 ) 
+      {
+        return( 6 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 26 ) 
+      {
+        return( 7 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 31 ) 
+      {
+        return( 8 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 36 ) 
+      {
+        return( 9 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 41 ) 
+      {
+        return( 10 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 46 ) 
+      {
+        return( 11 + BONUS );
+      } 
+      else if( GET_LEVEL( ch, SORCERER_LEVEL_IND ) < 52 ) 
+      {
+        return( 12 + BONUS );
+      } 
+  else /* should never get here, cept for immos */
+      return( (int)( GetMaxLevel( ch ) / 3 ) );
+    }
 
-int IS_UNDERGROUND(struct char_data *ch)
-{
-  struct room_data *rp;
 
-  if ((rp = real_roomp(ch->in_room))!=NULL)
-  {
-    if (IS_SET(zone_table[rp->zone].reset_mode, ZONE_UNDER_GROUND)) 
-      return(TRUE);
-  }
- 
-  return(FALSE);
-}
 
-void SetDefaultLang(struct char_data *ch)
-{
-  int i;
-  
-  switch (GET_RACE(ch))
-  {
-   case RACE_ELVEN:
-   case RACE_GOLD_ELF:
-   case RACE_WILD_ELF:
-   case RACE_SEA_ELF:
-   case RACE_DROW:
-    i = LANG_ELVISH;
-    break;
-   case RACE_TROLL:
-   case RACE_HALF_GIANT:
-    i= LANG_GIANTISH;
-    break;
-   case RACE_HALF_OGRE:
-    i=LANG_OGRE;
-    break;
-   case RACE_HALFLING:
-    i=LANG_HALFLING;
-    break;
-   case RACE_DWARF:
-    i=LANG_DWARVISH;
-    break;
-   case RACE_DEEP_GNOME:
-   case RACE_GNOME:
-    i=LANG_GNOMISH;
-    break;
-   default:
-    i= LANG_COMMON;
-    break;
+
+    int IS_LINKDEAD(struct char_data *ch)
+    {
+      if (IS_PC(ch) && !ch->desc)
+        return(TRUE);
+
+      if( IS_SET( ch->specials.act, ACT_POLYSELF ) && !ch->desc )
+        return(TRUE);
+      
+      return(FALSE);
+    }
+
+    int IS_UNDERGROUND(struct char_data *ch)
+    {
+      struct room_data *rp;
+
+      if ((rp = real_roomp(ch->in_room))!=NULL)
+      {
+        if (IS_SET(zone_table[rp->zone].reset_mode, ZONE_UNDER_GROUND)) 
+          return(TRUE);
+      }
+      
+      return(FALSE);
+    }
+
+    void SetDefaultLang(struct char_data *ch)
+    {
+      int i;
+      
+      switch (GET_RACE(ch))
+      {
+       case RACE_ELVEN:
+       case RACE_GOLD_ELF:
+       case RACE_WILD_ELF:
+       case RACE_SEA_ELF:
+       case RACE_DROW:
+       i = LANG_ELVISH;
+       break;
+       case RACE_TROLL:
+       case RACE_HALF_GIANT:
+       i= LANG_GIANTISH;
+       break;
+       case RACE_HALF_OGRE:
+       i=LANG_OGRE;
+       break;
+       case RACE_HALFLING:
+       i=LANG_HALFLING;
+       break;
+       case RACE_DWARF:
+       i=LANG_DWARVISH;
+       break;
+       case RACE_DEEP_GNOME:
+       case RACE_GNOME:
+       i=LANG_GNOMISH;
+       break;
+       default:
+       i= LANG_COMMON;
+       break;
   } /* end switch */
-  ch->skills[i].learned = 95;
-  SET_BIT(ch->skills[i].flags,SKILL_KNOWN);
-        
+       ch->skills[i].learned = 95;
+       SET_BIT(ch->skills[i].flags,SKILL_KNOWN);
+       
   /* end default langauges sets */
-}
+     }
 
-int IsMagicSpell(int spell_num) 
-{
-  int tmp=FALSE;
+     int IsMagicSpell(int spell_num) 
+     {
+      int tmp=FALSE;
 
         /* using non magic items, since everything else is almost magic */
         /* lot smaller switch this way */
-  switch(spell_num)
-  {
-   case SKILL_BACKSTAB:
-   case SKILL_SNEAK:
-   case SKILL_HIDE:
-   case SKILL_PICK_LOCK:
-   case SKILL_KICK:
-   case SKILL_BASH:
-   case SKILL_RESCUE:
-   case SKILL_FIRST_AID:
-   case SKILL_SIGN:
-   case SKILL_RIDE:
-   case SKILL_SWITCH_OPP:
-   case SKILL_DODGE:
-   case SKILL_REMOVE_TRAP:
-   case SKILL_RETREAT:
-   case SKILL_QUIV_PALM:
-   case SKILL_SAFE_FALL:
-   case SKILL_FEIGN_DEATH:
-   case SKILL_HUNT:
-   case SKILL_FIND_TRAP:
-   case SKILL_SPRING_LEAP:
-   case SKILL_DISARM:
-   case SKILL_EVALUATE:
-   case SKILL_SPY:
-   case SKILL_DOORBASH:
-   case SKILL_SWIM:
-   case SKILL_CONS_UNDEAD:
-   case SKILL_CONS_VEGGIE:
-   case SKILL_CONS_DEMON:
-   case SKILL_CONS_ANIMAL:
-   case SKILL_CONS_REPTILE:
-   case SKILL_CONS_PEOPLE:
-   case SKILL_CONS_GIANT:
-   case SKILL_CONS_OTHER:
-   case SKILL_DISGUISE:
-   case SKILL_CLIMB:
-   case SKILL_BERSERK:
-   case SKILL_TAN:
-   case SKILL_AVOID_BACK_ATTACK:
-   case SKILL_FIND_FOOD:
-   case SKILL_FIND_WATER:
-   case SPELL_PRAYER:
-   case SKILL_MEMORIZE:
-   case SKILL_BELLOW:
-   case SKILL_DOORWAY:
-   case SKILL_PORTAL:
-   case SKILL_SUMMON:
-   case SKILL_INVIS:
-   case SKILL_CANIBALIZE:
-   case SKILL_FLAME_SHROUD:
-   case SKILL_AURA_SIGHT:
-   case SKILL_GREAT_SIGHT:
-   case SKILL_PSIONIC_BLAST:
-   case SKILL_HYPNOSIS:
-   case SKILL_MEDITATE:
-   case SKILL_SCRY:
-   case SKILL_ADRENALIZE:
-   case SKILL_RATION:
-   case SKILL_HOLY_WARCRY:
-   case SKILL_HEROIC_RESCUE:
-   case SKILL_DUAL_WIELD:
-   case SKILL_PSI_SHIELD:
-   case SKILL_EAVESDROP:
-   case LANG_COMMON:
-   case LANG_ELVISH:
-   case LANG_HALFLING:
-   case LANG_DWARVISH:
-   case LANG_ORCISH:
-   case LANG_GIANTISH:
-   case LANG_OGRE:
-   case LANG_GNOMISH:
+      switch(spell_num)
+      {
+       case SKILL_BACKSTAB:
+       case SKILL_SNEAK:
+       case SKILL_HIDE:
+       case SKILL_PICK_LOCK:
+       case SKILL_KICK:
+       case SKILL_BASH:
+       case SKILL_RESCUE:
+       case SKILL_FIRST_AID:
+       case SKILL_SIGN:
+       case SKILL_RIDE:
+       case SKILL_SWITCH_OPP:
+       case SKILL_DODGE:
+       case SKILL_REMOVE_TRAP:
+       case SKILL_RETREAT:
+       case SKILL_QUIV_PALM:
+       case SKILL_SAFE_FALL:
+       case SKILL_FEIGN_DEATH:
+       case SKILL_HUNT:
+       case SKILL_FIND_TRAP:
+       case SKILL_SPRING_LEAP:
+       case SKILL_DISARM:
+       case SKILL_EVALUATE:
+       case SKILL_SPY:
+       case SKILL_DOORBASH:
+       case SKILL_SWIM:
+       case SKILL_CONS_UNDEAD:
+       case SKILL_CONS_VEGGIE:
+       case SKILL_CONS_DEMON:
+       case SKILL_CONS_ANIMAL:
+       case SKILL_CONS_REPTILE:
+       case SKILL_CONS_PEOPLE:
+       case SKILL_CONS_GIANT:
+       case SKILL_CONS_OTHER:
+       case SKILL_DISGUISE:
+       case SKILL_CLIMB:
+       case SKILL_BERSERK:
+       case SKILL_TAN:
+       case SKILL_AVOID_BACK_ATTACK:
+       case SKILL_FIND_FOOD:
+       case SKILL_FIND_WATER:
+       case SPELL_PRAYER:
+       case SKILL_MEMORIZE:
+       case SKILL_BELLOW:
+       case SKILL_DOORWAY:
+       case SKILL_PORTAL:
+       case SKILL_SUMMON:
+       case SKILL_INVIS:
+       case SKILL_CANIBALIZE:
+       case SKILL_FLAME_SHROUD:
+       case SKILL_AURA_SIGHT:
+       case SKILL_GREAT_SIGHT:
+       case SKILL_PSIONIC_BLAST:
+       case SKILL_HYPNOSIS:
+       case SKILL_MEDITATE:
+       case SKILL_SCRY:
+       case SKILL_ADRENALIZE:
+       case SKILL_RATION:
+       case SKILL_HOLY_WARCRY:
+       case SKILL_HEROIC_RESCUE:
+       case SKILL_DUAL_WIELD:
+       case SKILL_PSI_SHIELD:
+       case SKILL_EAVESDROP:
+       case LANG_COMMON:
+       case LANG_ELVISH:
+       case LANG_HALFLING:
+       case LANG_DWARVISH:
+       case LANG_ORCISH:
+       case LANG_GIANTISH:
+       case LANG_OGRE:
+       case LANG_GNOMISH:
    case SKILL_ESP:                                /* end skills */
-    
+       
    case TYPE_HIT:                                /* weapon types here */
-   case TYPE_BLUDGEON:
-   case TYPE_PIERCE:
-   case TYPE_SLASH:
-   case TYPE_WHIP:
-   case TYPE_CLAW:
-   case TYPE_BITE:
-   case TYPE_STING:
-   case TYPE_CRUSH:
-   case TYPE_CLEAVE:
-   case TYPE_STAB:
-   case TYPE_SMASH:
-   case TYPE_SMITE:
-   case TYPE_BLAST:
-   case TYPE_SUFFERING:
-   case TYPE_RANGE_WEAPON:
+       case TYPE_BLUDGEON:
+       case TYPE_PIERCE:
+       case TYPE_SLASH:
+       case TYPE_WHIP:
+       case TYPE_CLAW:
+       case TYPE_BITE:
+       case TYPE_STING:
+       case TYPE_CRUSH:
+       case TYPE_CLEAVE:
+       case TYPE_STAB:
+       case TYPE_SMASH:
+       case TYPE_SMITE:
+       case TYPE_BLAST:
+       case TYPE_SUFFERING:
+       case TYPE_RANGE_WEAPON:
     tmp = FALSE;        /* these are NOT magical! */
-    break;
-    
-   default:
+       break;
+       
+       default:
     tmp = TRUE; /* default to IS MAGIC */
-    break;
+       break;
   } /* end switch */
-  
-  return(tmp);
-}
+       
+       return(tmp);
+     }
 
 
-int exist(char *s)
-{
-  int f;
-  
-  f = open( s, O_RDONLY );
-        
-  if( f > 0 )
-  {
-    close(f);
-    return TRUE;
-  }
-  else
-    return FALSE;
-}
-                  
+     int exist(char *s)
+     {
+      int f;
+      
+      f = open( s, O_RDONLY );
+      
+      if( f > 0 )
+      {
+        close(f);
+        return TRUE;
+      }
+      else
+        return FALSE;
+    }
+    
 
         /* Good side just means they are of the first races and on the */
         /* general good side of life, it does NOT refer to alignment */
         /* only good side people can kill bad side people PC's */
-int IsGoodSide(struct char_data *ch)
-{
-  
-  switch(GET_RACE(ch)) {
+    int IsGoodSide(struct char_data *ch)
+    {
+      
+      switch(GET_RACE(ch)) {
 
         case RACE_HUMAN     :
         case RACE_ELVEN     :
@@ -5065,15 +5065,15 @@ int IsGoodSide(struct char_data *ch)
         case RACE_DROW:
         return(TRUE);         
      } /* */
-    
-  return(FALSE);
-}
+        
+        return(FALSE);
+      }
 
         /* this just means the PC is a troll/orc or the like not releated to */
         /* to alignment what-so-ever */
         /* only bad side people can hit and kill good side people PC's */
-int IsBadSide(struct char_data *ch)
-{
+      int IsBadSide(struct char_data *ch)
+      {
         
         switch(GET_RACE(ch))  {
          case RACE_GOBLIN:
@@ -5083,58 +5083,58 @@ int IsBadSide(struct char_data *ch)
          case RACE_MFLAYER:
          return(TRUE);
         } /* */
-        
-  return(FALSE);
-}
+         
+         return(FALSE);
+       }
 
 /* good side can fight bad side people pc to pc fighting only, not used */
 /* for NPC fighting to pc fighting */
-int CanFightEachOther(struct char_data *ch,struct char_data *ch2)
-{
+       int CanFightEachOther(struct char_data *ch,struct char_data *ch2)
+       {
 
-  if( !IS_PC( ch ) || !IS_PC( ch2 ) )
-    return TRUE;
+        if( !IS_PC( ch ) || !IS_PC( ch2 ) )
+          return TRUE;
 
-  if( IS_SET( SystemFlags, SYS_NOKILL ) )
-    return FALSE;
+        if( IS_SET( SystemFlags, SYS_NOKILL ) )
+          return FALSE;
 
-   if( IS_SET( ch->player.user_flags,RACE_WAR ) &&
+        if( IS_SET( ch->player.user_flags,RACE_WAR ) &&
       IS_SET( ch2->player.user_flags,RACE_WAR ) /* &&
       real_roomp(ch->in_room)->sector_type!=SECT_INSIDE &&
       real_roomp(ch->in_room)->sector_type!=SECT_CITY &&
       real_roomp(ch->in_room)->sector_type!=SECT_WATER_SWIM */
-      )
-    return TRUE;
-  return FALSE;
-}
+          )
+          return TRUE;
+        return FALSE;
+      }
 
 
-int fighting_in_room(int room_n)
-{
- struct char_data *ch;
- struct room_data *r;
-                 
-  r=real_roomp(room_n);
-    
-    if(!r) 
-     return FALSE;
-  
-  for(ch=r->people;ch;ch=ch->next_in_room) 
-    if(ch->specials.fighting) 
-       return TRUE;
-  
-  return FALSE;
-}
+      int fighting_in_room(int room_n)
+      {
+       struct char_data *ch;
+       struct room_data *r;
+       
+       r=real_roomp(room_n);
+       
+       if(!r) 
+         return FALSE;
+       
+       for(ch=r->people;ch;ch=ch->next_in_room) 
+        if(ch->specials.fighting) 
+         return TRUE;
+       
+       return FALSE;
+     }
 
 
 /** Perform breadth first search on rooms from start (in_room) **/
 /** until end (tgt_room) is reached. Then return the correct   **/
 /** direction to take from start to reach end.                 **/
 
-void DoNothing( void *pDummy )
-{
-  return;
-}
+     void DoNothing( void *pDummy )
+     {
+      return;
+    }
 
 extern int aRoom[ WORLD_SIZE ]; // E definito in skills.c Non e locale per
                                 // caricare troppo lo stack (WORLD_SIZE e`
@@ -5182,8 +5182,8 @@ int IsRoomDistanceInRange( int nFirstRoom, int nSecondRoom, int nRange )
     {
       exitp = herep->dir_option[ i ];
       if( exit_ok( exitp, &therep ) && 
-          exitp->to_room != NOWHERE &&
-          ( bThruDoors || !IS_SET( exitp->exit_info, EX_CLOSED ) ) )
+        exitp->to_room != NOWHERE &&
+        ( bThruDoors || !IS_SET( exitp->exit_info, EX_CLOSED ) ) )
       {
         /* next room */
         tmp_room = herep->dir_option[ i ]->to_room;
@@ -5204,7 +5204,7 @@ int IsRoomDistanceInRange( int nFirstRoom, int nSecondRoom, int nRange )
             
             /* ancestor for first layer is the direction */
             aRoom[ tmp_room ] = aRoom[ q_head->room_nr ] == -1 ?
-                                i + 1 : aRoom[ q_head->room_nr ];
+            i + 1 : aRoom[ q_head->room_nr ];
           }
         }
         else
@@ -5221,7 +5221,7 @@ int IsRoomDistanceInRange( int nFirstRoom, int nSecondRoom, int nRange )
         }
       }
     }
-  
+    
     /* free queue head and point to next entry */
     tmp_q = q_head->next_q;
     free(q_head);
@@ -5233,7 +5233,7 @@ int IsRoomDistanceInRange( int nFirstRoom, int nSecondRoom, int nRange )
 
 
 void RecurseRoom( long lInRoom, int iLevel, int iMaxLevel, 
-                  unsigned char *achVisitedRooms )
+  unsigned char *achVisitedRooms )
 {
   if( iLevel == 0 )
     achVisitedRooms[ lInRoom ] = 1;
@@ -5244,8 +5244,8 @@ void RecurseRoom( long lInRoom, int iLevel, int iMaxLevel,
       struct room_direction_data *pExit;
       pExit = real_roomp( lInRoom )->dir_option[ iEx ];
       if( pExit && real_roomp( pExit->to_room ) &&
-          ( !achVisitedRooms[ pExit->to_room ] ||
-            achVisitedRooms[ pExit->to_room ] > iLevel + 1 ) )
+        ( !achVisitedRooms[ pExit->to_room ] ||
+          achVisitedRooms[ pExit->to_room ] > iLevel + 1 ) )
       {
         achVisitedRooms[ pExit->to_room ] = iLevel + 1;
         RecurseRoom( pExit->to_room, iLevel + 1, iMaxLevel, achVisitedRooms );
@@ -5255,7 +5255,7 @@ void RecurseRoom( long lInRoom, int iLevel, int iMaxLevel,
 }
 
 bool RecurseRoomChar( long lInRoom, int iLevel, int iMaxLevel, 
-                      unsigned char *achVisitedRooms, char_data *pChar )
+  unsigned char *achVisitedRooms, char_data *pChar )
 {
   if( pChar->in_room == lInRoom )
     return TRUE;
@@ -5269,12 +5269,12 @@ bool RecurseRoomChar( long lInRoom, int iLevel, int iMaxLevel,
       struct room_direction_data *pExit;
       pExit = real_roomp( lInRoom )->dir_option[ iEx ];
       if( pExit && real_roomp( pExit->to_room ) &&
-          ( !achVisitedRooms[ pExit->to_room ] ||
-            achVisitedRooms[ pExit->to_room ] > iLevel + 1 ) )
+        ( !achVisitedRooms[ pExit->to_room ] ||
+          achVisitedRooms[ pExit->to_room ] > iLevel + 1 ) )
       {
         achVisitedRooms[ pExit->to_room ] = iLevel + 1;
         if( RecurseRoomChar( pExit->to_room, iLevel + 1, iMaxLevel, 
-                             achVisitedRooms, pChar ) )
+         achVisitedRooms, pChar ) )
           return TRUE;
       }
     }
@@ -5289,14 +5289,14 @@ bool IsCharInRange( char_data *pChar, char_data *pTarget, int iRange )
   {
     memset( achVisitedRooms, 0, WORLD_SIZE * sizeof( unsigned char ) );
     bool bRetValue = RecurseRoomChar( pChar->in_room, 0, iRange, 
-                                      achVisitedRooms, pTarget );
+      achVisitedRooms, pTarget );
     delete achVisitedRooms;
     return bRetValue;
   }
   else
   {
     mudlog( LOG_ERROR, "Cannot alloc memory in IsCharInRange (%s)", 
-            __FILE__ );
+      __FILE__ );
     return FALSE;
   }
 }
@@ -5306,50 +5306,50 @@ bool ThereIsPCInRoom( long lRoom )
   if( real_roomp( lRoom ) )
   {
     for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
-         pChar = pChar->next_in_room )
+     pChar = pChar->next_in_room )
       if( IS_PC( pChar ) )
         return TRUE;
+    }
+    return FALSE;
   }
-  return FALSE;
-}
-int HowManyPCInRoom( long lRoom )
-{
-  int r=0;
-  if( real_roomp( lRoom ) )
+  int HowManyPCInRoom( long lRoom )
   {
-    for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
-         pChar = pChar->next_in_room )
-      if( IS_PC( pChar ) )
-        r++;
-  }
-  return r;
-}
+    int r=0;
+    if( real_roomp( lRoom ) )
+    {
+      for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
+       pChar = pChar->next_in_room )
+        if( IS_PC( pChar ) )
+          r++;
+      }
+      return r;
+    }
 
-bool CanSeePCInRoom( char_data *pMob )
-{
-  long lRoom = pMob->in_room;
-  if( real_roomp( lRoom ) )
-  {
-    for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
+    bool CanSeePCInRoom( char_data *pMob )
+    {
+      long lRoom = pMob->in_room;
+      if( real_roomp( lRoom ) )
+      {
+        for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
          pChar = pChar->next_in_room )
-      if( IS_PC( pChar ) && CAN_SEE( pMob, pChar ) )
-        return TRUE;
-  }
-  return FALSE;
-}
-int HowManyCanSeePCInRoom( char_data *pMob )
-{
-   int r=0;
-  long lRoom = pMob->in_room;
-  if( real_roomp( lRoom ) )
-  {
-    for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
+          if( IS_PC( pChar ) && CAN_SEE( pMob, pChar ) )
+            return TRUE;
+        }
+        return FALSE;
+      }
+      int HowManyCanSeePCInRoom( char_data *pMob )
+      {
+       int r=0;
+       long lRoom = pMob->in_room;
+       if( real_roomp( lRoom ) )
+       {
+        for( char_data *pChar = real_roomp( lRoom )->people; pChar; 
          pChar = pChar->next_in_room )
-      if( IS_PC( pChar ) && CAN_SEE( pMob, pChar ) )
-        r++;
-  }
-  return r;
-}
+          if( IS_PC( pChar ) && CAN_SEE( pMob, pChar ) )
+            r++;
+        }
+        return r;
+      }
 
 bool CheckPrac (int classe, int id, int liv) // SALVO implemento un controllo su quello che puo' praccare una classe
 {
@@ -5441,70 +5441,70 @@ bool CheckPrac (int classe, int id, int liv) // SALVO implemento un controllo su
 	switch(classe)
 	{
 		case CLASS_MAGIC_USER:
-			if (spell_info[id].min_level_magic && spell_info[id].min_level_magic <= liv)
-				return TRUE;
-			break;
-		case CLASS_CLERIC:
-			if (spell_info[id].min_level_cleric && spell_info[id].min_level_cleric <= liv)
-				return TRUE;
-			break;
-		case CLASS_WARRIOR:
-			for (f=0; kwar[f]; f++)
-			{
-				if (id == kwar[f])
-					return TRUE;
-			}
-			break;
-		case CLASS_THIEF:
-			for (f=0; kthi[f]; f++)
-			{
-				if (id == kthi[f])
-					return TRUE;
-			}
-			break;
-		case CLASS_DRUID:
-			if (spell_info[id].min_level_druid && spell_info[id].min_level_druid <= liv)
-				return TRUE;
-			break;
-		case CLASS_MONK:
-			for (f=0; kmon[f]; f++)
-			{
-				if (id == kmon[f])
-					return TRUE;
-			}
-			break;
-		case CLASS_BARBARIAN:
-			for (f=0; kbar[f]; f++)
-			{
-				if (id == kbar[f])
-					return TRUE;
-			}
-			break;
-		case CLASS_SORCERER:
-			if (spell_info[id].min_level_sorcerer && spell_info[id].min_level_sorcerer <= liv)
-				return TRUE;
-			break;
-		case CLASS_PALADIN:
-			if (spell_info[id].min_level_paladin && spell_info[id].min_level_paladin <= liv)
-				return TRUE;
-			break;
-		case CLASS_RANGER:
-			if (spell_info[id].min_level_ranger && spell_info[id].min_level_ranger <= liv)
-				return TRUE;
-			break;
-		case CLASS_PSI:
-			if (spell_info[id].min_level_psi && spell_info[id].min_level_psi <= liv)
-				return TRUE;
-			break;
+   if (spell_info[id].min_level_magic && spell_info[id].min_level_magic <= liv)
+    return TRUE;
+  break;
+  case CLASS_CLERIC:
+  if (spell_info[id].min_level_cleric && spell_info[id].min_level_cleric <= liv)
+    return TRUE;
+  break;
+  case CLASS_WARRIOR:
+  for (f=0; kwar[f]; f++)
+  {
+    if (id == kwar[f])
+     return TRUE;
+ }
+ break;
+ case CLASS_THIEF:
+ for (f=0; kthi[f]; f++)
+ {
+  if (id == kthi[f])
+   return TRUE;
+}
+break;
+case CLASS_DRUID:
+if (spell_info[id].min_level_druid && spell_info[id].min_level_druid <= liv)
+  return TRUE;
+break;
+case CLASS_MONK:
+for (f=0; kmon[f]; f++)
+{
+  if (id == kmon[f])
+   return TRUE;
+}
+break;
+case CLASS_BARBARIAN:
+for (f=0; kbar[f]; f++)
+{
+  if (id == kbar[f])
+   return TRUE;
+}
+break;
+case CLASS_SORCERER:
+if (spell_info[id].min_level_sorcerer && spell_info[id].min_level_sorcerer <= liv)
+  return TRUE;
+break;
+case CLASS_PALADIN:
+if (spell_info[id].min_level_paladin && spell_info[id].min_level_paladin <= liv)
+  return TRUE;
+break;
+case CLASS_RANGER:
+if (spell_info[id].min_level_ranger && spell_info[id].min_level_ranger <= liv)
+  return TRUE;
+break;
+case CLASS_PSI:
+if (spell_info[id].min_level_psi && spell_info[id].min_level_psi <= liv)
+  return TRUE;
+break;
 		case 0: // SALVO lo considero principe
-		    if (liv != PRINCIPE)
-				return FALSE;
-			for (f=0; kpri[f]; f++)
-			{
-				if (id == kpri[f])
-					return TRUE;
-			}
-			break;
-	}
-	return FALSE;
+    if (liv != PRINCIPE)
+      return FALSE;
+    for (f=0; kpri[f]; f++)
+    {
+      if (id == kpri[f])
+       return TRUE;
+   }
+   break;
+ }
+ return FALSE;
 }

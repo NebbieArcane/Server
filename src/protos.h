@@ -1248,6 +1248,9 @@ void do_find( struct char_data *ch, char *arg, int cmd);
 
 int IS_FOLLOWING( struct char_data *tch, struct char_data *person );
 
+/* Flyp 20180128 --> dichiarazione immolation */
+void do_immolation(struct char_data *ch, char *argument, int cmd);
+
 /* From spec_assign.c */
 int is_murdervict(struct char_data *ch); 
 void assign_mobiles();
@@ -1419,6 +1422,7 @@ int monk_master(struct char_data *ch, int cmd, char *arg, struct char_data *mob,
 int DruidGuildMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) ;
 int Devil(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type);
 int Demon(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type);
+int DemonTeacher(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type);
 void DruidHeal(struct char_data *ch, int level);
 void DruidTree(struct char_data *ch);
 void DruidMob(struct char_data *ch);

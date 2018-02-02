@@ -14,6 +14,7 @@
 { "ClericGuildMaster" , ClericGuildMaster }, 
 { "Cockatrice" , Cockatrice } ,
 { "Demon" , Demon }, 
+{ "DemonTeacher" , DemonTeacher },
 { "Devil" , Devil }, 
 { "DogCatcher" , DogCatcher }, 
 { "DragonHunterLeader" , DragonHunterLeader }, 

@@ -45,8 +45,7 @@ extern char *dirs[];
 
 /* Data declarations */
 
-struct social_type 
-{
+struct social_type {
   char *cmd;
   int next_line;
 };
@@ -61,13 +60,11 @@ struct social_type
 /*************************************/
 /* predicates for find_path function */
 
-int is_target_room_p(int room, void *tgt_room)
-{
+int is_target_room_p(int room, void *tgt_room) {
   return room == *( (int *)tgt_room );
 }
 
-int named_object_on_ground(int room, void *c_data)
-{
+int named_object_on_ground(int room, void *c_data) {
   char *name = (char *)c_data;
   return 0 != get_obj_in_list(name, real_roomp(room)->contents);
 }
@@ -81,8 +78,7 @@ int named_object_on_ground(int room, void *c_data)
 *  Special procedures for rooms                                       *
 ******************************************************************** */
 
-char *how_good(int percent)
-{
+char *how_good(int percent) {
   static char buf[256];
   
   if (percent < 0)
