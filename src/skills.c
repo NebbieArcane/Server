@@ -1922,7 +1922,6 @@ void do_tan( struct char_data *ch, char *arg, int cmd)
           acapply=1;  
           break;
          case RACE_TROGMAN  :
-         case RACE_LIZARDMAN:
          case RACE_PATRYN   :
          case RACE_LABRAT   :
          case RACE_SARTAN   :
