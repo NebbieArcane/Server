@@ -1038,7 +1038,7 @@ void argument_interpreter(char *argument,char *first_arg,char *second_arg )
                  AddCommand("grab",do_grab,65,POSITION_RESTING,TUTTI);
                  AddCommand("remove", do_remove, CMD_REMOVE, POSITION_RESTING, TUTTI );
                  AddCommand("put",do_put,67,POSITION_RESTING,TUTTI);
-                 AddCommand("shutdow",do_shutdow,68,POSITION_DEAD,IMMENSO);
+                 AddCommand("shutdow",do_shutdow,68,POSITION_DEAD,MAESTRO_DEL_CREATO);
                  AddCommand("save",do_save,69,POSITION_SLEEPING,TUTTI);
                  AddCommand("hit",do_hit,70,POSITION_FIGHTING,1);
                  AddCommand("string",do_string,71,POSITION_SLEEPING,DIO);
@@ -1210,7 +1210,7 @@ void argument_interpreter(char *argument,char *first_arg,char *second_arg )
                  AddCommand("rsave",do_rsave,228,POSITION_DEAD,MAESTRO_DEGLI_DEI);
                  AddCommand("rload",do_rload,229,POSITION_DEAD,MAESTRO_DEGLI_DEI);
                  AddCommand("track",do_track,230,POSITION_DEAD,1);
-                 AddCommand("wizlock",do_wizlock,231,POSITION_DEAD,IMMENSO);
+                 AddCommand("wizlock",do_wizlock,231,POSITION_DEAD,MAESTRO_DEL_CREATO);
                  AddCommand("highfive",do_highfive,232,POSITION_DEAD,TUTTI);
                  AddCommand("title",do_title,233,POSITION_DEAD,INIZIATO-1);
                  AddCommand("whozone", do_who, CMD_WHOZONE, POSITION_DEAD, TUTTI );
