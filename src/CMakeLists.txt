@@ -29,6 +29,8 @@ add_definitions(
 	-DALAR
 	-DNETBSD
 	-DLINUX
+	-DIMPL_SECURITY
+	-DNO_REGISTER
 )
 add_compile_options(
 	-ggdb3 
@@ -39,12 +41,13 @@ add_compile_options(
 	-pg
 )
 add_compile_options(
-	-Wno-write-strings
-	-Wno-unused
-	-Wno-trigraphs
-	-Wno-format
-	-Wno-int-to-pointer-cast
-	-Wno-endif-labels
+#	-Wno-write-strings
+#	-Wno-unused
+#	-Wno-trigraphs
+#	-Wno-format
+#	-Wno-int-to-pointer-cast
+#	-Wno-endif-labels
+	-w
 )
 configure_file(config.h.in config.h NEWLINE_STYLE UNIX)
 add_executable(myst ${file_cpp} ${file_hpp})
