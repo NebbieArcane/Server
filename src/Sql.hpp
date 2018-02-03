@@ -12,7 +12,7 @@
 #define SQL_HPP_
 #if MYSQL_VERSION
 #include <mysql/mysql.h>
-#else if SQLITE_VERSION
+#elif SQLITE_VERSION
 #include <sqlite3.h>
 #endif
 
@@ -22,9 +22,9 @@ namespace nebbie {
 class Sql {
 private:
     bool disabled;
-#if MYSQL_VERSION
+#if HAS_MYSQL_VERSION
     MYSQL *myConn;
-#else if SQLITE_VERSION
+#elif HAS_SQLITE_VERSION
     sqlite3 *myConn;
 #endif
 
