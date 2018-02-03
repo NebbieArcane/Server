@@ -1610,7 +1610,7 @@ int RacialHome[MAX_RACE+1][2] =
 /* predator   8*/ { 1, 1 },
 /* parasite   9*/ { 1, 1 },
 /* slime     20*/ { 1, 1 },
-/* demon      1*/ { 1, 1 },
+/* demon      1*/ { 7800, 3008 }, //FLyp, mica possiamo farlo nascere nel limbo.... Per ora lo sbattiamo da niobe, ma cambierei
 /* snake      2*/ { 1, 1 },
 /* herbiv     3*/ { 1, 1 },
 /* tree       4*/ { 1, 1 },

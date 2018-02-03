@@ -1,3 +1,2 @@
-#define MAJORVERSION  3
-#define MINORVERSION  1
-#define RELEASE       9
+#define VERSION  "GITDESCRIBE"
+#define BUILD    "GITBUILD"
