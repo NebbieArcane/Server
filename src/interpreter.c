@@ -1330,7 +1330,7 @@ void argument_interpreter(char *argument,char *first_arg,char *second_arg )
                  AddCommand("find",do_find,332,POSITION_STANDING,1);    
                  AddCommand("bellow",do_bellow,333,POSITION_FIGHTING,1);      
                  AddCommand("carve",do_carve,335,POSITION_STANDING,1);  
-                 AddCommand("nuke",do_nuke,336,POSITION_DEAD,IMMENSO);     
+                 AddCommand("nuke",do_nuke,336,POSITION_DEAD,MAESTRO_DEL_CREATO);
                  AddCommand("skills",do_show_skill,337,POSITION_SLEEPING,TUTTI);
                  
                  AddCommand("doorway",do_doorway,338,POSITION_STANDING,TUTTI);
