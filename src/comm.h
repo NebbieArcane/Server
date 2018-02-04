@@ -15,6 +15,8 @@
 
 
 #define PLAYER_AUTH 0
+#define DFLT_DIR		"lib"				/* default data directory     */
+
 
 char *ParseAnsiColors( int UsingAnsi, char *txt );
 
