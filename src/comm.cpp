@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -559,7 +560,7 @@ mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
         assert(0);
       }
 
-      Uptime = 0;
+      Uptime = time(0);
 
       mudlog( LOG_CHECK, "Running game on port %d.", port);
 
