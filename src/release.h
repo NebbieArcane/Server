@@ -1,2 +1,0 @@
-#define VERSION  "GITDESCRIBE"
-#define BUILD    "GITBUILD"
