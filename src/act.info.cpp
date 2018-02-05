@@ -4093,8 +4093,8 @@ void do_world(struct char_data *ch, char *argument, int cmd)
    extern long mob_count;
    extern long obj_count;
    
-   snprintf( buf, 999,"$c0005Base Source: $c0014AlarMUD$c0005"
-	   " Versione $c0015%s $c0005Release $c0015%s$c0005.", 
+   snprintf( buf, 999,"$c0005Base Source: $c0014AlarMUD\n$c0005"
+	   "Versione $c0015%s\n$c0005Commit: $c0015%s$c0005.",
 	   version(), release() );
    act(buf,FALSE, ch,0,0,TO_CHAR);
    snprintf( buf, 999,"$c0005Compilazione del : $c0014%s.", compilazione());
