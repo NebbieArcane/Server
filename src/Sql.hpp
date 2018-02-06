@@ -21,11 +21,11 @@ namespace nebbie {
 
 class Sql {
 private:
-    bool disabled;
+	bool disabled;
 #if HAS_MYSQL_VERSION
-    MYSQL *myConn;
+	MYSQL* myConn;
 #elif HAS_SQLITE_VERSION
-    sqlite3 *myConn;
+	sqlite3* myConn;
 #endif
 
 public:

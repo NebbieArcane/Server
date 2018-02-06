@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "doreg.h"
-#include "locks.h"
 #include <gdbm.h>
+
+#include "../src/doreg.hpp"
+#include "../src/locks.hpp"
 #if ALAR
 #include "snew.h"
 #include "protos.h"

@@ -1,13 +1,8 @@
-#ifndef CONFIG_H_
-#define CONFIG_H_
-// These values are meaningful inside vagrant machine DO NOT USE ON PRODUCTION, they will not work
-#define DFLT_DIR		"lib"				/* default data directory     */
-#define MYSQL_HOST		"localhost"			/* mysql server */
-#define MYSQL_USER		"root"				/* mysql user */
-#define MYSQL_PASSWORD	"secret"			/* mysql password */
-#define MYSQL_DB		"nebbie"			/* mysql password */
-
-#cmakedefine MYSQL_VERSION
-#cmakedefine BOOST_VERSION
-#cmakedefine SQLITE_VERSION
-#endif /* CONFIG_H_ */
+#ifndef CONFIG_HPP_
+#define CONFIG_HPP_
+#define MYSQL_USER "root" //db user
+#define MYSQL_PASSWORD "secret" // db password
+#define MYSQL_HOST "localhost" //db host
+#define MYSQL_DB "nebbie" //db na,e
+#define SERVER_PORT 4000 //default server port
+#endif /*CONFIG_HPP_*/

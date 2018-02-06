@@ -3,7 +3,8 @@
 /* From input file "<stdin>" */
 #include <stdio.h>
 #include <stdlib.h>
-#include "snew.h"
+
+#include "../src/snew.hpp"
 main()
 { 
    char *riga; 

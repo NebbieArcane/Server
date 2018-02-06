@@ -2,8 +2,9 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "../src/snew.hpp"
 #include "release.h"
-#include "snew.h"
 int main (int argc, char **argv)
 {
   int port, pos=1;

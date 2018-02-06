@@ -19,21 +19,29 @@ private:
 public:
 	Registered(char* pgname);
 	virtual ~Registered();
-	bool get() {return false;}
-	bool reg(char *){return true;}
-	bool del(){return false;}
-/* Static members which operates at top level */
-	static int total() { return 0;} // Returns the total number of registered toons
+	bool get() {
+		return false;
+	}
+	bool reg(char*) {
+		return true;
+	}
+	bool del() {
+		return false;
+	}
+	/* Static members which operates at top level */
+	static int total() {
+		return 0;   // Returns the total number of registered toons
+	}
 
-	const string& getCode() const {
+	const string &getCode() const {
 		return code;
 	}
 
-	const string& getGod() const {
+	const string &getGod() const {
 		return god;
 	}
 
-	void setGod(const string& god) {
+	void setGod(const string &god) {
 		this->god = god;
 	}
 

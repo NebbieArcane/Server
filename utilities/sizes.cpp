@@ -6,7 +6,7 @@
 using std::string;
 using std::cout;
 using std::endl;
-#include "../src/structs.h"
+#include "../src/structs.hpp"
 int main() {
 	char c=0;
 	short s=0;
