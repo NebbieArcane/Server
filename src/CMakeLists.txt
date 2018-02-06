@@ -70,3 +70,4 @@ add_custom_command(TARGET info PRE_BUILD COMMAND ../astyle --options=../astylerc
 #add_custom_command(TARGET myst PRE_LINK COMMAND echo "Before linking")
 add_custom_command(TARGET myst POST_BUILD COMMAND rm -f release.hpp)
 add_custom_command(TARGET myst POST_BUILD COMMAND ./info)
+add_custom_command(TARGET myst POST_BUILD COMMAND mv -f myst ../mudroot/myst)
