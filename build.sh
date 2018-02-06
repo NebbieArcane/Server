@@ -7,7 +7,7 @@ conf="$HOME/Confs/$environment.conf"
 if [ -f $conf ] ; then
 	echo '#ifndef CONFIG_HPP_' >src/config.hpp.in
 	echo '#define CONFIG_HPP_' >>src/config.hpp.in
-	cat  $HOME/Confs/$environment.conf | sed -e 's/#/\/\//' | sed -e 's/=/ /' | sed -e 's/\(.*\)/#define \1/' >>src/config.hpp.in
+	cat  $HOME/Confs/$environment.conf | grep -ve '^#' | sed -e 's/#/\/\//' | sed -e 's/=/ /' | sed -e 's/\(.*\)/#define \1/' >>src/config.hpp.in
 	echo '#endif /*CONFIG_HPP_*/' >>src/config.hpp.in
 	cat src/config.hpp.in
 	rm -f src/release.h
