@@ -224,3 +224,6 @@ bugs
 utilities/convert
 /build/
 /release.h
+mudroot/log.txt
+src/info
+src/config.hpp.in
