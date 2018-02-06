@@ -1,9 +1,0 @@
-----------------------------------------------------------------------
-ATTENZIONE per trovare le righe modificate cercare la key SALVO,
-	i sorgenti sono presi da: salvoFixDaGaia23.11.01
-	+ salvo20020506
-----------------------------------------------------------------------
-2002-05-06  Thunder
-
-	* act.comm.c 2.1: Sistemato eavesdrop in dir non valide.
-
