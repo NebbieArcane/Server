@@ -1968,11 +1968,10 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	char chk[ 161 ];
 	struct extra_descr_data* new_descr;
 
-	SetStatus("Entrato in read_obj_from_file", NULL);
 
 	obj->name = fread_string(f);
 
-	SetStatus("Letto nome oggetto", obj->name);
+	mudlog(LOG_CHECK,"Letto nome oggetto %s", obj->name);
 
 	if (obj->name) {
 		bc += strlen(obj->name);
@@ -1992,7 +1991,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 
 	/* *** numeric data *** */
 
-	SetStatus("Reading numeric data in read_obj_from_file", NULL);
 
 	obj->obj_flags.type_flag = fread_number(f);
 	obj->obj_flags.extra_flags = fread_number(f);
@@ -2005,7 +2003,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	obj->obj_flags.cost = fread_number(f);
 	obj->obj_flags.cost_per_day = fread_number(f);
 
-	SetStatus("Reading Extra description in read_obj_from_file", NULL);
 	/* *** extra descriptions *** */
 
 	obj->ex_description = 0;
@@ -2025,13 +2022,14 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 		obj->ex_description = new_descr;
 	}
 
-	SetStatus("Reading affect in read_obj_from_file", NULL);
+	mudlog(LOG_CHECK,"Reading affect in read_obj_from_file %s","");
 
 	for (i = 0; (i < MAX_OBJ_AFFECT) && (*chk == 'A'); i++) {
 		fscanf(f, " %d ", &tmp);
 		obj->affected[i].location = tmp;
 		fscanf(f, " %d \n", &tmp);
 		obj->affected[i].modifier = tmp;
+		mudlog(LOG_CHECK,"Reading affect %d -> %d",obj->affected[i].location,obj->affected[i].modifier);
 		if (fscanf(f, " %160s \n", chk) != 1) {
 			i++;
 			break;
