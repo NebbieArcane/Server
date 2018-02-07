@@ -1,15 +1,17 @@
-AlarMUD deriva da DikuMud, e ne rispetta la licenza originale, secondo quanto
-indicato in License.doc allegato.
-La licenza originale di DikuMud si applica ad AlarMUD limitatamente al codice
-condiviso.
-Il codice sorgente di AlarMUD non e' Public Domain.
-La versione 2.x di AlarMUD NON e' disponibile.
-E' possibile ottenere i sorgenti di AlarMUD 1.x scrivendo a alar@aspide.it
-Chi decidesse di mettere su un MUD utilizzando AlarMUD e' tenuto ad inserire
-mella schermata di login anche la seguente indicazione:
+AlarMUD deriva da DikuMud, e ne rispetta la licenza originale, che trovate qui
+sotto.
+Per quanto non coperto dalla licenza originale, si applica la licenza MIT
+Se usate AlarMUD dovete mettere nella schermata di login:
 AlarMUD, coded by Alar@aspide.it
-Nei credits dovra' inoltre essere citato
-Giovanni Gargani (Alar) mantainer di AlarMUD. AlarMUD NON e' Public Domain
+Nei credits dovra' inoltre essere citato:
+Giovanni Gargani (Alar) mantainer di AlarMUD. 
+English version
+AlarMud is a "derived work" of DikuMud and inherits its licence, attached below.
+Everything not covered by the origina licence is to be assume covered by MIT licence
+if you use AlarMUD you should put in the login section:
+AlarMUD, coded by Alar@aspide.it
+Also, you must write in credits:
+Giovanni Gargani (Alar) AlarMUD mantainer. 
 8<----------------------------------------------------------------------------
 License.doc
 /* ************************************************************************
