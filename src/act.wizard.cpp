@@ -19,8 +19,6 @@
 #include "protos.hpp"
 #include "cmdid.hpp"
 #include "fight.hpp"
-/*#include "utils.h"*/
-#include "doreg.hpp"
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "utility.hpp"

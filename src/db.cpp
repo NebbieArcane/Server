@@ -24,7 +24,6 @@
 #include <unistd.h>
 
 #include "auction.hpp"
-#include "doreg.hpp"
 #include "events.hpp"
 #include "fight.hpp"
 #include "gilde.hpp"

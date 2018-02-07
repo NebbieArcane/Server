@@ -17,7 +17,6 @@
 
 #include "breath.hpp"
 #include "cmdid.hpp"
-#include "doreg.hpp"
 #include "fight.hpp"
 
 #include "protos.hpp"
