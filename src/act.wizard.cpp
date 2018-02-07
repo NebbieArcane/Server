@@ -19,8 +19,6 @@
 #include "protos.hpp"
 #include "cmdid.hpp"
 #include "fight.hpp"
-/*#include "utils.h"*/
-#include "doreg.hpp"
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "utility.hpp"
@@ -1260,7 +1258,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 		/* stats on room */
 		if (!str_cmp("room", arg1)) {
 			rm = real_roomp(ch->in_room);
-			sprintf(buf, "Room name: %s, Of zone : %ld. V-Number : %ld, R-number : %ld\n\r",
+			sprintf(buf, "Room name: %s, Of zone : %ld. V-Number : %ld, R-number : %d\n\r",
 					rm->name, rm->zone, rm->number, ch->in_room);
 			send_to_char(buf, ch);
 
@@ -1376,8 +1374,8 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 			}
 
 			sprintf( buf2, " $c0014%s $c0005- Name : $c0015%s "
-					 "$c0005[R-Number $c0015%ld$c0005], "
-					 "In room [$c0015%ld$c0005]",
+					 "$c0005[R-Number $c0015%d$c0005], "
+					 "In room [$c0015%d$c0005]",
 					 !IS_NPC(k) ? "PC" : ( !IS_MOB(k) ? "NPC" : "MOB" ),
 					 GET_NAME(k), k->nr, k->in_room);
 			strcat(buf, buf2);
@@ -1728,7 +1726,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 							act(buf,FALSE, ch,0,0,TO_CHAR);
 
 							sprintf( buf,"     $c0005Modifies $c0014%s $c0005by "
-									 "$c0015%ld$c0005 points",
+									 "$c0015%d$c0005 points",
 									 apply_types[aff->location], aff->modifier);
 							act(buf,FALSE, ch,0,0,TO_CHAR);
 
@@ -1764,7 +1762,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 			strcat(buf,"\n\r");
 			send_to_char(buf, ch);
 			sprintf(buf,
-					"Corpse original V-number: [%ld]\r\n",
+					"Corpse original V-number: [%d]\r\n",
 					j->char_vnum);
 			send_to_char(buf, ch);
 			sprintf(buf, "Short description: %s\n\rLong description:\n\r%s\n\r",
@@ -1976,7 +1974,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 			for (i=0; i<MAX_OBJ_AFFECT; i++) {
 				if( j->affected[ i ].location ) {
 					sprinttype( j->affected[ i ].location, apply_types, buf2 );
-					sprintf( buf, "    Affects : %s By %ld\n\r",
+					sprintf( buf, "    Affects : %s By %d\n\r",
 							 buf2, j->affected[ i ].modifier );
 					send_to_char( buf, ch );
 				}

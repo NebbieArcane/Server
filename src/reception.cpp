@@ -1438,7 +1438,8 @@ int ReadObjs( FILE* fl, struct obj_file_u* st) {
 		fclose(fl);
 		return(FALSE);
 	}
-
+	mudlog(LOG_CHECK,"Letta stanza %s %d %d %d %d %d",st->owner,
+		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
 	for (i=0; i<st->number; i++) {
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
 	}
@@ -1692,12 +1693,14 @@ void load_room_objs( int room ) {
 	char buf[200];
 
 	sprintf( buf, "world/%d", room );
+	mudlog(LOG_CHECK,"loading saved room: %s",buf);
 
 	if( ( fl = fopen( buf, "r+b" ) ) != NULL ) {
 		rewind( fl );
 
-		if( ReadObjs( fl, &st ) )
-		{ obj_store_to_room( room, &st ); }
+		if( ReadObjs( fl, &st ) ) {
+			obj_store_to_room( room, &st );
+		}
 
 		fclose( fl );
 		/*save_room( room );*/

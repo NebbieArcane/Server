@@ -2528,7 +2528,7 @@ void spell_identify(byte level, struct char_data* ch,
 					strcat( buf2, "\n\r" );
 					break;
 				default:
-					sprintf(buf2,"%ld\n\r", obj->affected[i].modifier);
+					sprintf(buf2,"%d\n\r", obj->affected[i].modifier);
 					break;
 				}
 				send_to_char(buf2,ch);

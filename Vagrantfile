@@ -6,6 +6,10 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure("2") do |config|
+ 	if Vagrant.has_plugin?("vagrant-timezone")
+    	config.timezone.value =":host"
+    end
+
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
@@ -72,16 +76,19 @@ Vagrant.configure("2") do |config|
   #   apt-get install -y apache2
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
-	dpkg --add-architecture i386
-	#apt-get update
-	apt-get install -y git
-	apt-get install -y php7.0-cli
-	apt-get install -y gcc-multilib g++-multilib libgdbm-dev:i386 apache2 make cmake ninja
+  	echo "Updating apt cache"
+    sudo apt-get -qq  update	
+    echo "Installing dev tools"
+	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev
+	echo "Installing mysql related packages"
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
 	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections	
-	apt-get install -y mysql-server mysql-client libmysqld-dev:i386
+	apt-get install -qq mysql-server mysql-client libmysqld-dev libmysqlcppconn-dev
+	echo "Configuring git"
 	git config --global user.email "nebbie@hexkeep.com"
  	git config --global user.name "Nebbie Server"
+	echo "Mkdir"
+	cd ~vagrant
  	mkdir -p Confs
  	echo 'MYSQL_USER="root" #db user' >Confs/vagrant.conf
  	echo 'MYSQL_PASSWORD="secret" # db password' >>Confs/vagrant.conf
@@ -89,7 +96,9 @@ Vagrant.configure("2") do |config|
  	echo 'MYSQL_DB="nebbie" #db name' >>Confs/vagrant.conf
  	echo 'SERVER_PORT=4000 #default server port' >>Confs/vagrant.conf
  	chown -R vagrant. Confs
- 	#sudo -u vagrant /vagrant/build.sh vagrant
+ 	echo "Building"
+ 	sudo -iu vagrant /vagrant/build.sh vagrant
+ 	exit 0
   SHELL
   config.ssh.forward_x11 = true
   config.ssh.forward_agent = true

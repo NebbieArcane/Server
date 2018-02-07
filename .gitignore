@@ -2,6 +2,8 @@
 .*
 # apart gitignore
 !.gitignore
+# and reavis
+!.travis.yml
 ########################################################################
 #Eclipse
 # From https://raw.githubusercontent.com/github/gitignore/master/Global/Eclipse.gitignore
@@ -224,3 +226,7 @@ bugs
 utilities/convert
 /build/
 /release.h
+mudroot/log.txt
+src/info
+src/config.hpp.in
+/contrib/

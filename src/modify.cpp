@@ -19,9 +19,6 @@
 #define TP_ERROR  2
 
 extern struct descriptor_data* descriptor_list;
-long GetMediumLag(long lastlag);
-
-
 struct room_data* world;              /* dyn alloc'ed array of rooms     */
 
 
@@ -1002,30 +999,10 @@ void show_string( struct descriptor_data* d, const char* input ) {
 	}
 }
 
-void night_watchman() {
-	long tc;
-	struct tm* t_info;
-
-	extern int mudshutdown;
-
-	tc = time(0);
-	t_info = localtime(&tc);
-
-	if( t_info->tm_hour == 8 && t_info->tm_wday > 0 &&
-			t_info->tm_wday < 6 ) {
-		if( t_info->tm_min > 50 ) {
-			mudlog( LOG_CHECK, "Leaving the scene for the serious folks.");
-			send_to_all("Closing down. Thank you for flying AlarMUD.\n\r");
-			mudshutdown = 1;
-		}
-		else if( t_info->tm_min > 40 )
-		{ send_to_all( "ATTENTION: AlarMUD will shut down in 10 minutes.\n\r" ); }
-		else if( t_info->tm_min > 30 )
-		{ send_to_all( "Warning: The game will close in 20 minutes.\n\r" ); }
-	}
-}
 void check_reboot() {
-	long tc;
+	static time_t lastCheck=time(0);
+	static time_t shutdownStart=time(0);
+	time_t tc;
 	struct tm* t_info;
 	FILE* boot;
 	static int TooMuchLag=-1;
@@ -1044,16 +1021,17 @@ void check_reboot() {
 	tc = time(0);
 	t_info = localtime(&tc);
 	if (forceshutdown) {
-		shutdownlevel=(t_info->tm_min-forceshutdown+60) % 60;
+		shutdownlevel=25;
 	}
-	else {
-		shutdownlevel=t_info->tm_min;
-	}
-	if( !bBootSequenceStarted && (t_info->tm_min == 0)) {
+	// If we already on a reboot sequence, checking is pointless
+	if( !bBootSequenceStarted && (tc-lastCheck) >=60) { //Once every minute
+		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,tc-lastCheck);
+		lastCheck=tc;
 		sprintf(REBOOTFILE,"REBOOT%02d",t_info->tm_hour);
 		if(  (boot = fopen( REBOOTFILE, "r+" )) ) {
 			fclose(boot);
 			bBootSequenceStarted=TRUE;
+			shutdownlevel=0;
 		}
 		else {
 			sprintf(REBOOTFILE,"REBOOT.NOW");
@@ -1061,10 +1039,14 @@ void check_reboot() {
 				fclose(boot);
 				unlink(REBOOTFILE);
 				bBootSequenceStarted=TRUE;
+				shutdownlevel=19;
 			}
 		}
 	}
 	else if  (bBootSequenceStarted) {
+		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,tc-lastCheck);
+		shutdownlevel+=((tc-lastCheck)/60);
+		lastCheck=tc;
 		if( shutdownlevel > 30 ) {
 			struct descriptor_data* pDesc;
 			for( pDesc = descriptor_list; pDesc; pDesc = pDesc->next ) {

@@ -89,6 +89,7 @@
 #define ANSI_BK_MAGENTA    "45"
 #define ANSI_BK_CYAN       "46"
 #define ANSI_BK_LT_GRAY    "47"
+char* ansi_parse(char* code );
 
 /*
  #define WINDOW(top, bottom) printf("\033[%d;%dr%s", top, bottom, CLEAR_SCREEN)

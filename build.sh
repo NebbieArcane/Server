@@ -21,6 +21,7 @@ if [ -f $conf ] ; then
 	fi
 	exit 1
 else
+	echo "Could not find config file, maybe \$HOME ($HOME) is wrong" >&2
 	exit 255
 fi
 

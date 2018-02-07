@@ -24,7 +24,6 @@
 #include <unistd.h>
 
 #include "auction.hpp"
-#include "doreg.hpp"
 #include "events.hpp"
 #include "fight.hpp"
 #include "gilde.hpp"
@@ -1968,11 +1967,10 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	char chk[ 161 ];
 	struct extra_descr_data* new_descr;
 
-	SetStatus("Entrato in read_obj_from_file", NULL);
 
 	obj->name = fread_string(f);
 
-	SetStatus("Letto nome oggetto", obj->name);
+	mudlog(LOG_CHECK,"Letto nome oggetto %s", obj->name);
 
 	if (obj->name) {
 		bc += strlen(obj->name);
@@ -1992,7 +1990,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 
 	/* *** numeric data *** */
 
-	SetStatus("Reading numeric data in read_obj_from_file", NULL);
 
 	obj->obj_flags.type_flag = fread_number(f);
 	obj->obj_flags.extra_flags = fread_number(f);
@@ -2005,7 +2002,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	obj->obj_flags.cost = fread_number(f);
 	obj->obj_flags.cost_per_day = fread_number(f);
 
-	SetStatus("Reading Extra description in read_obj_from_file", NULL);
 	/* *** extra descriptions *** */
 
 	obj->ex_description = 0;
@@ -2025,7 +2021,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 		obj->ex_description = new_descr;
 	}
 
-	SetStatus("Reading affect in read_obj_from_file", NULL);
 
 	for (i = 0; (i < MAX_OBJ_AFFECT) && (*chk == 'A'); i++) {
 		fscanf(f, " %d ", &tmp);
@@ -3435,7 +3430,7 @@ int file_to_string(char* name, char* buf) {
 	struct stat info;
 	*buf = '\0';
 	stat(name, &info);
-	mudlog(LOG_CHECK, "File %s lunghezza %ld", name, info.st_size);
+	mudlog(LOG_CHECK, "File %s lunghezza %d", name, info.st_size);
 	if (!(fl = fopen(name, "r"))) {
 		sprintf(tmp, "[%s] file-to-string", name);
 		perror(tmp);
