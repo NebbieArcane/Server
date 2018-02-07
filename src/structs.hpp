@@ -1486,7 +1486,7 @@ struct obj_file_elem {
 	int extra_flags;
 	int weight;
 	int timer;
-	unsigned long bitvector;
+	unsigned int bitvector;
 	char name[128];  /* big, but not horrendously so */
 	char sd[128];
 	char desc[256];
