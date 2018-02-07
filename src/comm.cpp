@@ -1056,11 +1056,6 @@ void game_loop(int s) {
 			CheckCharAffected( "After affect_update" );
 		}
 
-		if (!(pulse % 9600)) { /* ogni 40 minuti controlla il lag */
-			/*pulse = 0;*/
-			if (lawful)
-			{ night_watchman(); }
-		}
 		if (!(pulse % PULSE_EQ)) { /* ogni 5 minuti registra il valore dell'eq */
 			buglog(LOG_CHECK,"Valore medio eq in gioco: %f",AverageEqIndex(-1));
 		}
