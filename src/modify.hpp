@@ -17,7 +17,6 @@ void check_reboot();
 void do_edit(struct char_data* ch, const char* arg, int cmd);
 void do_setskill(struct char_data* ch, const char* arg, int cmd);
 void do_string(struct char_data* ch, const char* arg, int cmd);
-void night_watchman();
 char* one_word(const char* argument,  char* first_arg );
 void page_string(struct descriptor_data* d, const char* str, int keep_internal);
 void quad_arg(char* arg, int* type, const char* name, int* field, char* string);
