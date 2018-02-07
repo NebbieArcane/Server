@@ -227,3 +227,5 @@ utilities/convert
 mudroot/log.txt
 src/info
 src/config.hpp.in
+lib/objects
+lib/mobiles
