@@ -1979,14 +1979,17 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	obj->short_description = fread_string(f);
 	if (obj->short_description) {
 		bc += strlen(obj->short_description);
+		mudlog(LOG_CHECK,"Short description %s", obj->short_description);
 	}
 	obj->description = fread_string(f);
 	if (obj->description) {
 		bc += strlen(obj->description);
+		mudlog(LOG_CHECK,"Description %s", obj->description);
 	}
 	obj->action_description = fread_string(f);
 	if (obj->action_description) {
 		bc += strlen(obj->action_description);
+		mudlog(LOG_CHECK,"Action description %s", obj->action_description);
 	}
 
 	/* *** numeric data *** */
@@ -2017,6 +2020,9 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 		new_descr->description = fread_string(f);
 		if (new_descr->description)
 		{ bc += strlen(new_descr->description); }
+		if (new_descr->description and new_descr->keyword) {
+			mudlog(LOG_CHECK,"Extra description %s =%s", new_descr->keyword,new_descr->description);
+		}
 
 		new_descr->next = obj->ex_description;
 		obj->ex_description = new_descr;
@@ -3433,7 +3439,7 @@ int file_to_string(char* name, char* buf) {
 	struct stat info;
 	*buf = '\0';
 	stat(name, &info);
-	mudlog(LOG_CHECK, "File %s lunghezza %ld", name, info.st_size);
+	mudlog(LOG_CHECK, "File %s lunghezza %d", name, info.st_size);
 	if (!(fl = fopen(name, "r"))) {
 		sprintf(tmp, "[%s] file-to-string", name);
 		perror(tmp);
