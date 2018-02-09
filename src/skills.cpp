@@ -4862,7 +4862,6 @@ void do_mindsummon( struct char_data* ch, char* argument, int cmd) {
 * Flyp 20180128 --> immolation, ovvero canibaliaze modificato per i demoni
 **/
 void do_immolation(struct char_data* ch, char* argument, int cmd) {
-	mudlog(LOG_CHECK, "ENTRO IMMOLATION CAZZO!");
 	long hit_points,mana_points;  /* hit_points has to be long for storage */
 	char number[80];  /* NOTE: the argument function returns FULL argument */
 	/* if u just allocate 10 char it will overrun! */
@@ -4922,7 +4921,6 @@ void do_immolation(struct char_data* ch, char* argument, int cmd) {
 		send_to_char("You cannot immolate such amount of life!.\n\r",ch);
 		return;
 	}
-	mudlog(LOG_SYSERR, "STARTING IMMOLATION CALCULATIONS");
 
 	// Check position: only standing or fighting.
 	// demons has leech, so don't be too generous with them!
@@ -4953,7 +4951,6 @@ void do_immolation(struct char_data* ch, char* argument, int cmd) {
 		send_to_char ("Your mind cannot handle that much extra energy.\n\r",ch);
 		return;
 	}
-	mudlog(LOG_SYSERR, "Immolation level [%i]", ch->skills[SKILL_IMMOLATION].learned);
 
 	if (ch->skills[SKILL_IMMOLATION].learned < dice(1,101) ) {
 		send_to_char ("You try to immolate your stamina but the energy escapes before you can harness it.\n\r",ch);
