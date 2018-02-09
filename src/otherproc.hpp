@@ -14,6 +14,7 @@
 { "ClericGuildMaster",(special_proc) ClericGuildMaster },
 { "Cockatrice",(special_proc) Cockatrice },
 { "Demon",(special_proc) Demon },
+{ "DemonTeacher",(special_proc) DemonTeacher },
 { "Devil",(special_proc) Devil },
 { "DogCatcher",(special_proc) DogCatcher },
 { "DragonHunterLeader",(special_proc) DragonHunterLeader },
