@@ -4022,7 +4022,7 @@ int DemonTeacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 				return(TRUE);
 			}
 
-			charge = GetMaxLevel(ch) * COSTO_IMMOLATION;
+			charge = GetMaxLevel(ch) * COSTO_LEZIONI;
 
 			switch(number) {
 			case 0:
