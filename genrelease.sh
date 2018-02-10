@@ -1,7 +1,7 @@
 #!/bin/bash
 temp=$(git rev-list --tags --max-count=1)
 branch=$(git rev-parse --abbrev-ref HEAD)
-version=$(git describe --tags)
+version=$(git describe --tags --long)
 build=$(git rev-list --count --first-parent $temp)
 build=$(git log --pretty=format:"%f" -n1)
 
