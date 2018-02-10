@@ -1,0 +1,14 @@
+style=java
+lineend=linux
+align-pointer=type
+align-reference=type
+indent-preprocessor
+#indent-preproc-cond
+#indent-preproc-define
+break-closing-braces
+keep-one-line-blocks
+add-one-line-braces
+suffix=none
+indent=force-tab
+attach-return-type
+align-reference=name
