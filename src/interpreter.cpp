@@ -257,13 +257,8 @@ const int goblin_class_choice[]= {
 
 const int demon_class_choice[]= {
 	CLASS_MAGIC_USER,
-	CLASS_WARRIOR,
 	CLASS_THIEF,
-	CLASS_MONK,
-	CLASS_WARRIOR+CLASS_MAGIC_USER,
 	CLASS_MAGIC_USER+CLASS_THIEF,
-	CLASS_MONK+CLASS_THIEF,
-	CLASS_THIEF+CLASS_BARBARIAN,
 	0
 };
 
@@ -965,7 +960,7 @@ void assign_command_pointers () {
 	AddCommand("grab",do_grab,65,POSITION_RESTING,TUTTI);
 	AddCommand("remove", do_remove, CMD_REMOVE, POSITION_RESTING, TUTTI );
 	AddCommand("put",do_put,67,POSITION_RESTING,TUTTI);
-	AddCommand("shutdow",do_shutdow,68,POSITION_DEAD,IMMENSO);
+	AddCommand("shutdow",do_shutdow,68,POSITION_DEAD,MAESTRO_DEI_CREATORI);
 	AddCommand("save",do_save,69,POSITION_SLEEPING,TUTTI);
 	AddCommand("hit",do_hit,70,POSITION_FIGHTING,1);
 	AddCommand("string",do_string,71,POSITION_SLEEPING,DIO);
@@ -1137,7 +1132,7 @@ void assign_command_pointers () {
 	AddCommand("rsave",do_rsave,228,POSITION_DEAD,MAESTRO_DEGLI_DEI);
 	AddCommand("rload",do_rload,229,POSITION_DEAD,MAESTRO_DEGLI_DEI);
 	AddCommand("track",do_track,230,POSITION_DEAD,1);
-	AddCommand("wizlock",do_wizlock,231,POSITION_DEAD,IMMENSO);
+	AddCommand("wizlock",do_wizlock,231,POSITION_DEAD,MAESTRO_DEI_CREATORI);
 	AddCommand("highfive",do_highfive,232,POSITION_DEAD,TUTTI);
 	AddCommand("title",do_title,233,POSITION_DEAD,INIZIATO-1);
 	AddCommand("whozone", do_who, CMD_WHOZONE, POSITION_DEAD, TUTTI );
@@ -1257,7 +1252,7 @@ void assign_command_pointers () {
 	AddCommand("find",do_find,332,POSITION_STANDING,1);
 	AddCommand("bellow",do_bellow,333,POSITION_FIGHTING,1);
 	AddCommand("carve",do_carve,335,POSITION_STANDING,1);
-	AddCommand("nuke",do_nuke,336,POSITION_DEAD,IMMENSO);
+	AddCommand("nuke",do_nuke,336,POSITION_DEAD,MAESTRO_DEI_CREATORI);
 	AddCommand("skills",do_show_skill,337,POSITION_SLEEPING,TUTTI);
 
 	AddCommand("doorway",do_doorway,338,POSITION_STANDING,TUTTI);

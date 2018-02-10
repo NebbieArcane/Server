@@ -863,10 +863,14 @@ int how_many_spell(struct char_data* ch, short skill) {
 bool affected_by_spell( struct char_data* ch, short skill ) {
 	struct affected_type* hjp;
 
-	for (hjp = ch->affected; hjp; hjp = hjp->next)
+	for (hjp = ch->affected; hjp; hjp = hjp->next) {
+		if ((int) hjp < 1000) {
+			mudlog(LOG_SYSERR,"Invalid affected address for %s",GET_NAME(ch));
+			continue;
+		}
 		if ( hjp->type == skill )
 		{ return( TRUE ); }
-
+	}
 	return( FALSE );
 }
 

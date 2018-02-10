@@ -1180,8 +1180,12 @@ void gain_condition(struct char_data* ch,int condition,int value) {
 	intoxicated=(GET_COND(ch, DRUNK) > 0);
 
 	GET_COND(ch, condition)  += value;
-
-	GET_COND(ch,condition) = MAX(0,GET_COND(ch,condition));
+	if (GetMaxLevel(ch) <=5 and (condition == FULL or condition==THIRST)) {
+		GET_COND(ch,condition) = MAX(1,GET_COND(ch,condition));
+	}
+	else {
+		GET_COND(ch,condition) = MAX(0,GET_COND(ch,condition));
+	}
 	GET_COND(ch,condition) = MIN(24,GET_COND(ch,condition));
 	if(GET_COND(ch,condition))
 	{ return; }
