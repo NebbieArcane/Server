@@ -19,8 +19,8 @@
 #include "snew.hpp"
 #include "utility.hpp"
 
-#define DUAL_WIELD(ch) (ch->equipment[WIELD] && ch->equipment[HOLD]&&			ITEM_TYPE(ch->equipment[WIELD])==ITEM_WEAPON && 			ITEM_TYPE(ch->equipment[HOLD])==ITEM_WEAPON)
-#define GET_GRP_LEVEL(ch) (GetMaxLevel(ch)+(GetSecMaxLev(ch)/2)+ 			   (GetThirdMaxLev(ch)/3))
+#define DUAL_WIELD(ch) (ch->equipment[WIELD] && ch->equipment[HOLD] && ITEM_TYPE(ch->equipment[WIELD])==ITEM_WEAPON && 			ITEM_TYPE(ch->equipment[HOLD])==ITEM_WEAPON)
+#define GET_GRP_LEVEL(ch) (GetMaxLevel(ch)+(GetSecMaxLev(ch)/2)+  (GetThirdMaxLev(ch)/3))
 /* Structures */
 
 
@@ -3661,11 +3661,9 @@ struct char_data* SwitchVictimToPrince( struct char_data* pAtt,
 			pTemp2=get_char_room_vis(pAtt,GET_BODYGUARD(pTemp));
 			if (pTemp2 && in_group_strict(pTemp,pTemp2)) { pTemp=pTemp2; }
 		}
-		if (pTemp &&
-				in_group_strict(pTemp,pVict) &&
-				number(1,19)<isBG?GET_DEX(pTemp):20) {
-			mudlog(LOG_CHECK,"SWITCH3: %s attaccato al posto di %s",
-				   GET_NAME(pTemp),GET_NAME(pVict));
+		if (pTemp && in_group_strict(pTemp,pVict) && number(1,19)<(isBG?GET_DEX(pTemp):20)) {
+			_mudlog(__FILE__,__LINE__,LOG_CHECK,"SWITCH1 %s (saver)",GET_NAME(pTemp));
+			_mudlog(__FILE__,__LINE__,LOG_CHECK,"SWITCH2 %s (saved)",GET_NAME(pVict));
 			act("Stavi per essere attaccat$B ma $n interviene!",
 				FALSE, pTemp,0,pVict,TO_VICT);
 			act("$N stava per essere attaccat$B ma tu intervieni!",
