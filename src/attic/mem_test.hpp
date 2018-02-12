@@ -27,9 +27,9 @@
 void* ggmalloc (unsigned int size, char* file_name, int line_number);
 void* ggcalloc (unsigned int nelem, unsigned int size, char* file_name, int line_number);
 void* ggrealloc (void* in_ptr, unsigned int size, char* file_name, int line_number);
-void ggfree (void* ptr, char* file_name, int line_number);
-void ggcfree (void* ptr, char* file_name, int line_number);
-char* ggstrdup (char* s1, char* file_name, int line_number);
+void ggfree (void* ptr, const char* file_name, int line_number);
+void ggcfree (void* ptr, const char* file_name, int line_number);
+char* ggstrdup (char* s1, const char* file_name, int line_number);
 char* ggstrtok (char* s,const char* delim, char* file_name, int line_number);
 int ggstrcmp (const char* s1,const char* s2,char* file_name, int line_number) ;
 int ggstrncmp (const char* s1,const char* s2,size_t n,char* file_name, int line_number) ;

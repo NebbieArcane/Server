@@ -58,14 +58,14 @@ void* ggrealloc (void* in_ptr, unsigned int size, char* file_name, int line_numb
 
 }
 
-void ggfree (void* ptr, char* file_name, int line_number) {
+void ggfree (void* ptr, const char* file_name, int line_number) {
 	SetLine(file_name,line_number);
 	free (ptr);
 	SetLine(file_name,-line_number);
 
 }
 
-void ggcfree (void* ptr, char* file_name, int line_number) {
+void ggcfree (void* ptr, const char* file_name, int line_number) {
 	SetLine(file_name,line_number);
 #ifdef CYGWIN
 	free (ptr);
