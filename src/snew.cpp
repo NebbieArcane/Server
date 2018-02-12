@@ -10,9 +10,6 @@
 #include "protos.hpp"
 //#include "build.h"
 #include "snew.hpp"
-void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc);
-void clone_container_obj( struct obj_data* to, struct obj_data* obj );
-struct obj_data* clone_obj(struct obj_data* obj);
 extern struct char_data* character_list;
 #endif
 #define KEYLIB "keydir"

@@ -35,7 +35,6 @@
 #define gtt_IS_BODYGUARDED 7
 #define gtt_IS_CLAN 8
 #define gtt_LAST 8
-#include "mem_test.hpp"
 #include "structs.hpp"
 #include "specass2.hpp"
 #include "version.hpp"
@@ -56,19 +55,15 @@ int PutKey(char* db,char* chiave, char* value);
 void DelKey(char* db,char* chiave);
 void do_associa(struct char_data* ch, char* argument, int cmd);
 void do_ripudia(struct char_data* ch, char* argument, int cmd);
-void PushStatus(const char* szStatus);
-void PopStatus();
+void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc);
+void clone_container_obj( struct obj_data* to, struct obj_data* obj );
+struct obj_data* clone_obj(struct obj_data* obj);
+
 void do_vomita(struct char_data* ch, char* argument, int cmd);
 int GetStat(struct char_data* ch, int stat);
 long StatCost(struct char_data* ch, int stat); // SALVO meglio se long
 int MaxStat(struct char_data* ch,int stat);
 int SetStat(struct char_data* ch,int stat,int value);
-int MaxStrForRace(struct char_data* ch);
-int MaxIntForRace(struct char_data* ch);
-int MaxWisForRace(struct char_data* ch);
-int MaxDexForRace(struct char_data* ch);
-int MaxConForRace(struct char_data* ch);
-int MaxChrForRace(struct char_data* ch);
 int GetNum(struct char_data* pMob,int pos);
 int GetNumR(struct room_data* pRoom,int pos);
 struct char_data* CloneChar(struct char_data* ch,long nroom);
