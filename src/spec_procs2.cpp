@@ -5180,8 +5180,7 @@ int druid( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 
 	if( !ch->specials.fighting ) {
 		level = number( 1, GetMaxLevel(ch) );
-		if( GET_HIT(ch) < GET_MAX_HIT(ch) ) ;
-		{
+		if( GET_HIT(ch) < GET_MAX_HIT(ch) ) {
 			DruidHeal( ch, level );
 			return(TRUE);
 		}
