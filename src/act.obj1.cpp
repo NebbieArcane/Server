@@ -1170,7 +1170,7 @@ void do_pquest(struct char_data* ch, char* argument, int cmd) {
 	else
 	{ send_to_char( "Non hai ben chiaro il valore delle cose... lascia che ti rinfreschi la memoria:\n\n\r", ch ); }
 	send_to_char( "pquest 0 target        per conoscere i pq\n\r", ch );
-	send_to_char( "pq valore trarget      per assegnare/rimuovere pquest\n\n\r", ch );
+	send_to_char( "pq valore target      per assegnare/rimuovere pquest\n\n\r", ch );
 	return;
 }
 

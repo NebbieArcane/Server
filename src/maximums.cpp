@@ -1235,7 +1235,7 @@ void check_idling(struct char_data* ch) {
 			act( "Sei ferm$b da troppo tempo e finisci nel nulla.", FALSE, ch, 0, 0,
 				 TO_CHAR );
 			char_from_room(ch);
-			char_to_room(ch, 0);  /* Into room number 0 */
+			char_to_room(ch, 1);  /* Into room number 1 */
 			ch->specials.timer=0;
 			if( IS_POLY( ch ) ) { force_return( ch, "", 1 ); }
 
