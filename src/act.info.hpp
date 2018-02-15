@@ -26,7 +26,7 @@ void do_immortal(struct char_data* ch, char* argument, int cmd);
 void do_info(struct char_data* ch, char* argument, int cmd);
 void do_inventory(struct char_data* ch, char* argument, int cmd);
 void do_levels(struct char_data* ch, char* argument, int cmd);
-void do_look(struct char_data* ch, char* argument, int cmd);
+void do_look(struct char_data* ch, const char* argument, int cmd);
 void do_news(struct char_data* ch, char* argument, int cmd);
 void do_prince(struct char_data* ch, char* argument, int cmd);
 void do_read(struct char_data* ch, char* argument, int cmd);

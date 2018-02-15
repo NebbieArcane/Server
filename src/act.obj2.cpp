@@ -11,14 +11,6 @@
 
 #include "protos.hpp"
 #include "snew.hpp"
-/* extern variables */
-
-extern struct str_app_type str_app[];
-extern struct descriptor_data* descriptor_list;
-extern char* drinks[];
-extern int drink_aff[][3];
-extern struct spell_info_type spell_info[];
-
 
 void weight_change_object(struct obj_data* obj, int weight) {
 	struct obj_data* tmp_obj;

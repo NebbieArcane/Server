@@ -10,8 +10,6 @@
 
 #ifndef SRC_ACT_WIZARD_HPP_
 #define SRC_ACT_WIZARD_HPP_
-void clone_container_obj(struct obj_data* to, struct obj_data* obj );
-struct obj_data* clone_obj(struct obj_data* obj);
 void CreateOneRoom(int loc_nr);
 void do_addhost(struct char_data* ch, char* argument, int command);
 void do_advance(struct char_data* ch, char* argument, int cmd);

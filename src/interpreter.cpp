@@ -354,7 +354,7 @@ int search_block(char* arg, char** list, bool exact) {
 }
 
 
-int old_search_block(char* argument,int begin,int length,char** list,int mode) {
+int old_search_block(const char* argument,int begin,int length,const char** list,int mode) {
 	int guess, found, search;
 
 
@@ -1757,10 +1757,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 	extern int plr_tick_count;
 	extern struct RegInfoData RI;
 
-	void do_look(struct char_data *ch, char* argument, int cmd);
-	void load_char_objs(struct char_data *ch);
-	int load_char(char* name, struct char_file_u *char_element);
-	void show_class_selection(struct descriptor_data *d, int r);
 	/*struct RegInfoData *ri;*/
 
 	write(d->descriptor, echo_on, 6);
@@ -2162,6 +2158,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 			STATE(d)=CON_STAT_LIST;
 			return;
 		}
+		/* no break */
 	case CON_ENDHELPRACE:
 		show_race_choice(d);
 		STATE(d) = CON_QRACE;
@@ -2947,6 +2944,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 				break;
 			}
 		}
+		/* no break */
 		case '1':
 			reset_char(d->character);
 			mudlog( LOG_PLAYERS, "M1.Loading %s's equipment",

@@ -23,14 +23,7 @@
 
 int attrefzone=0; //SALVO controllo lag refresh zone init
 int GetAverageLevel(struct char_data* ch);
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern char* spell_wear_off_msg[];
-extern char* spell_wear_off_soon_msg[];
-extern char* spell_wear_off_room_msg[];
-extern char* spell_wear_off_soon_room_msg[];
-extern struct obj_data* object_list;
-extern struct index_data* obj_index;
+
 
 
 struct spell_info_type spell_info[MAX_SPL_LIST];
@@ -39,7 +32,7 @@ struct spell_info_type spell_info[MAX_SPL_LIST];
 #define SPELLFAIL_MOD( cn, sn ) (int)((cn - sn) / 3 * 2)
 #define ABSNEUTRAL 350
 
-char* spells[]= {
+const char* spells[]= {
 	"armor",               /* 1 */
 	"teleport",
 	"bless",

@@ -13,24 +13,12 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "constants.hpp"
+
 
 /* extern variables */
 
-extern struct descriptor_data* descriptor_list;
-extern struct dex_app_type dex_app[];
-extern struct str_app_type str_app[];
-extern char* att_kick_hit_room[];
-extern char* att_kick_hit_victim[];
-extern char* att_kick_hit_ch[];
-extern char* att_kick_miss_room[];
-extern char* att_kick_miss_victim[];
-extern char* att_kick_miss_ch[];
-extern char* att_kick_kill_room[];
-extern char* att_kick_kill_victim[];
-extern  char* att_kick_kill_ch[];
-extern struct char_data* character_list;
 
-extern char* dirsTo[];
 
 
 void StopAllFightingWith( char_data* pChar );

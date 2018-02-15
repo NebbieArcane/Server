@@ -18,4 +18,4 @@ struct hash_header {
 
 
 #define WORLD_SIZE 50000
-#endif _HASH_HPP_
+#endif //_HASH_HPP_

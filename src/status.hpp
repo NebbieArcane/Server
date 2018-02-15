@@ -32,9 +32,4 @@
 #define STATUS_OTCAFTERLOOP    "OTCAFTERLOOP"
 
 #define STATUS_MAX             25
-
-
-void PrintStatus(int level);
-void PrintStatus();
 #endif
-#include "signals.hpp"

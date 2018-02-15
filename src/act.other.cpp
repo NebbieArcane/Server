@@ -12,24 +12,16 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "constants.hpp"
+#include "spell_parser.hpp"
 /* extern variables */
 
-extern struct str_app_type str_app[];
-extern struct descriptor_data* descriptor_list;
-extern struct dex_skill_type dex_app_skill[];
-extern struct spell_info_type spell_info[];
-extern struct char_data* character_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern char*  spells[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern struct int_app_type int_app[26];
 
-void do_gain(struct char_data* ch, char* argument, int cmd) {
+void do_gain(struct char_data* ch, const char* argument, int cmd) {
 
 }
 
-void do_guard(struct char_data* ch, char* argument, int cmd) {
+void do_guard(struct char_data* ch, const char* argument, int cmd) {
 	if (!IS_NPC(ch) || IS_SET(ch->specials.act, ACT_POLYSELF)) {
 		send_to_char("Sorry. you can't just put your brain on autopilot!\n\r",ch);
 		return;
@@ -72,7 +64,7 @@ void do_guard(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_junk(struct char_data* ch, char* argument, int cmd) {
+void do_junk(struct char_data* ch, const char* argument, int cmd) {
 	char arg[100], buf[100], newarg[100];
 	struct obj_data* tmp_object;
 	int num, p, count, value=0,value2=0;
@@ -163,15 +155,15 @@ void do_junk(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 
-void do_qui(struct char_data* ch, char* argument, int cmd) {
+void do_qui(struct char_data* ch, const char* argument, int cmd) {
 	send_to_char("You have to write quit - no less, to quit!\n\r",ch);
 	return;
 }
 
-void do_set_prompt(struct char_data* ch, char* argument, int cmd) {
+void do_set_prompt(struct char_data* ch, const char* argument, int cmd) {
 	static struct def_prompt {
 		int n;
-		char* pr;
+		const char* pr;
 	} prompts[] = {
 		{1, "Nebbie Arcane>> "},
 		{2, "H%h V%v>> "},
@@ -233,12 +225,11 @@ void do_set_prompt(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_title(struct char_data* ch, char* argument, int cmd) {
+void do_title(struct char_data* ch, const char* arg, int cmd) {
 	char buf[512];
 
-
-	/*   char *strdup(char *source); */
-
+	// arg is alwyas coming from player input so it cant be a true const
+	char* argument = const_cast<char*>(arg);
 
 	if (IS_NPC(ch) || !ch->desc)
 	{ return; }
@@ -259,7 +250,7 @@ void do_title(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_quit(struct char_data* ch, char* argument, int cmd) {
+void do_quit(struct char_data* ch, const char* argument, int cmd) {
 
 	if (IS_NPC(ch) || !ch->desc || IS_AFFECTED(ch, AFF_CHARM))
 	{ return; }
@@ -284,7 +275,7 @@ void do_quit(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_save(struct char_data* ch, char* argument, int cmd) {
+void do_save(struct char_data* ch, const char* argument, int cmd) {
 	struct obj_cost cost;
 	struct char_data* tmp;
 	struct obj_data* tl;
@@ -393,12 +384,12 @@ void do_save(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_not_here(struct char_data* ch, char* argument, int cmd) {
+void do_not_here(struct char_data* ch, const char* argument, int cmd) {
 	send_to_char( "Mi dispiace, ma non puoi farlo qui!\n\r",ch);
 }
 
 
-void do_sneak(struct char_data* ch, char* argument, int cmd) {
+void do_sneak(struct char_data* ch, const char* argument, int cmd) {
 	struct affected_type af;
 	byte percent;
 
@@ -448,7 +439,7 @@ void do_sneak(struct char_data* ch, char* argument, int cmd) {
 	{ percent = MIN(1, percent-35); }  /* much easier when silenced */
 
 	if( percent > MIN( 100, ch->skills[SKILL_SNEAK].learned ) +
-			dex_app_skill[ (int)GET_DEX(ch) ].sneak ) {
+			dex_app_skill[ static_cast<int>(GET_DEX(ch)) ].sneak ) {
 		LearnFromMistake(ch, SKILL_SNEAK, 1, 90);
 		WAIT_STATE(ch, PULSE_VIOLENCE);
 		return;
@@ -463,7 +454,7 @@ void do_sneak(struct char_data* ch, char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE);
 
 }
-void do_tspy(struct char_data* ch, char* argument, int cmd) {
+void do_tspy(struct char_data* ch, const char* argument, int cmd) {
 	struct affected_type af;
 
 	if (affected_by_spell(ch, SKILL_TSPY)) {
@@ -501,7 +492,7 @@ void do_tspy(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_hide(struct char_data* ch, char* argument, int cmd) {
+void do_hide(struct char_data* ch, const char* argument, int cmd) {
 	byte percent;
 
 
@@ -539,7 +530,7 @@ void do_hide(struct char_data* ch, char* argument, int cmd) {
 	{ return; }
 
 	if( percent > MIN( 100, ch->skills[SKILL_HIDE].learned ) +
-			dex_app_skill[ (int)GET_DEX( ch ) ].hide ) {
+			dex_app_skill[ static_cast<int>(GET_DEX( ch )) ].hide ) {
 		LearnFromMistake(ch, SKILL_HIDE, 1, 90);
 		WAIT_STATE(ch, PULSE_VIOLENCE*1);
 		return;
@@ -551,7 +542,7 @@ void do_hide(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_steal(struct char_data* ch, char* argument, int cmd) {
+void do_steal(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* victim;
 	struct obj_data* obj;
 	char victim_name[240];
@@ -616,8 +607,8 @@ void do_steal(struct char_data* ch, char* argument, int cmd) {
 	{ return; }
 
 	/* 101% is a complete failure */
-	percent  = number( 1, 101 ) - dex_app_skill[(int)GET_DEX(ch)].p_pocket;
-	percent += dex_app_skill[(int)GET_DEX(victim)].p_pocket;
+	percent  = number( 1, 101 ) - dex_app_skill[static_cast<int>(GET_DEX(ch))].p_pocket;
+	percent += dex_app_skill[static_cast<int>(GET_DEX(victim))].p_pocket;
 	percent -= GetMaxLevel(ch);
 	percent += GET_AVE_LEVEL(victim);
 
@@ -735,7 +726,7 @@ void do_steal(struct char_data* ch, char* argument, int cmd) {
 		}
 		else {
 			/* Steal some gold coins */
-			gold = (int) ((GET_GOLD(victim)*number(1,10))/100);
+			gold = static_cast<int>((GET_GOLD(victim)*number(1,10))/100);
 			gold = MIN(number(5000,10000), gold);
 			if (gold > 0) {
 				GET_GOLD(ch) += gold;
@@ -766,12 +757,10 @@ void do_steal(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_practice(struct char_data* ch, char* arg, int cmd) {
+void do_practice(struct char_data* ch, const char* arg, int cmd) {
 	char buf[MAX_STRING_LENGTH*2], buffer[MAX_STRING_LENGTH*2], temp[20];
 	int i,max;
 
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	buffer[0] = '\0';
 
@@ -1195,7 +1184,7 @@ void do_practice(struct char_data* ch, char* arg, int cmd) {
 
 
 
-void do_idea(struct char_data* ch, char* argument, int cmd) {
+void do_idea(struct char_data* ch, const char* argument, int cmd) {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
 
@@ -1231,7 +1220,7 @@ void do_idea(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_typo(struct char_data* ch, char* argument, int cmd) {
+void do_typo(struct char_data* ch, const char* argument, int cmd) {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
 
@@ -1253,7 +1242,7 @@ void do_typo(struct char_data* ch, char* argument, int cmd) {
 		return;
 	}
 
-	sprintf(str, "**%s[%ld]: %s\n",
+	sprintf(str, "**%s[%d]: %s\n",
 			GET_NAME(ch), ch->in_room, argument);
 	fputs(str, fl);
 	fclose(fl);
@@ -1265,7 +1254,7 @@ void do_typo(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_bug(struct char_data* ch, char* argument, int cmd) {
+void do_bug(struct char_data* ch, const char* argument, int cmd) {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
 	/*
@@ -1287,7 +1276,7 @@ void do_bug(struct char_data* ch, char* argument, int cmd) {
 		return;
 	}
 
-	sprintf(str, "**%s[%ld]: %s\n",
+	sprintf(str, "**%s[%d]: %s\n",
 			GET_NAME(ch), ch->in_room, argument);
 	fputs(str, fl);
 	fclose(fl);
@@ -1296,7 +1285,7 @@ void do_bug(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_brief(struct char_data* ch, char* argument, int cmd) {
+void do_brief(struct char_data* ch, const char* argument, int cmd) {
 	if( IS_NPC( ch ) ) {
 		if( IS_SET( ch->specials.act, ACT_POLYSELF ) ) {
 			send_to_char( "Puoi farlo solo nella tua forma originale.\n\r", ch );
@@ -1315,7 +1304,7 @@ void do_brief(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_compact(struct char_data* ch, char* argument, int cmd) {
+void do_compact(struct char_data* ch, const char* argument, int cmd) {
 	if (IS_NPC(ch))
 	{ return; }
 
@@ -1369,13 +1358,13 @@ char* Tiredness(struct char_data* ch) {
 	return(p);
 
 }
-void do_group(struct char_data* ch, char* argument, int cmd) {
+void do_group(struct char_data* ch, const char* argument, int cmd) {
 	char name[256], buf[256];
 	struct char_data* victim, *k;
 	struct follow_type* f;
 	bool found;
 
-	char* rand_groupname[] = {
+	const char* rand_groupname[] = {
 		"I predatori delle Nebbie",
 		"Il clan mcLeod",
 		"I camminatori",
@@ -1412,9 +1401,10 @@ void do_group(struct char_data* ch, char* argument, int cmd) {
 					GET_MAX_MOVE(k) >0 ) {
 				sprintf(buf, "$c0014    %-15s $c0011(Head of group) $c0006HP:%2.0f%% MANA:%2.0f%% MV:%2.0f%%",
 						fname(k->player.name),
-						((float)GET_HIT(k) / (int)GET_MAX_HIT(k)) * 100.0+0.5,
-						((float)GET_MANA(k)/ (int)GET_MAX_MANA(k)) * 100.0+0.5,
-						((float)GET_MOVE(k)/ (int)GET_MAX_MOVE(k)) * 100.0+0.5);
+						(static_cast<float>(GET_HIT(k)) / static_cast<int>(GET_MAX_HIT(k))) * 100.0+0.5,
+						(static_cast<float>(GET_MANA(k))/ static_cast<int>(GET_MAX_MANA(k))) * 100.0+0.5,
+						(static_cast<float>(GET_MOVE(k))/ static_cast<int>(GET_MAX_MOVE(k))) * 100.0+0.5
+						);
 				act(buf,FALSE,ch, 0, k, TO_CHAR);
 
 			}
@@ -1503,7 +1493,7 @@ void do_group(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_group_name(struct char_data* ch, char* arg, int cmd) {
+void do_group_name(struct char_data* ch, const char* arg, int cmd) {
 	int count;
 	struct follow_type* f;
 
@@ -1533,7 +1523,7 @@ void do_group_name(struct char_data* ch, char* arg, int cmd) {
 
 }
 
-void do_quaff(struct char_data* ch, char* argument, int cmd) {
+void do_quaff(struct char_data* ch, const char* argument, int cmd) {
 	char buf[100];
 	struct obj_data* temp;
 	int i;
@@ -1595,11 +1585,11 @@ void do_quaff(struct char_data* ch, char* argument, int cmd) {
 
 	act("$n quaffs $p.", TRUE, ch, temp, 0, TO_ROOM);
 	act("You quaff $p which dissolves.",FALSE, ch, temp,0, TO_CHAR);
-	for (i=1; i<4; i++)
-		if (temp->obj_flags.value[i] >= 1)
-			((*spell_info[temp->obj_flags.value[i]].spell_pointer)
-			 ((byte) temp->obj_flags.value[0], ch, "", SPELL_TYPE_POTION, ch, temp));
-
+	for (i=1; i<4; i++) {
+		if (temp->obj_flags.value[i] >= 1) {
+			((*spell_info[temp->obj_flags.value[i]].spell_pointer) (static_cast<byte>(temp->obj_flags.value[0]), ch, "", SPELL_TYPE_POTION, ch, temp));
+		}
+	}
 	if (equipped)
 	{ temp = unequip_char(ch, HOLD); }
 
@@ -1610,7 +1600,7 @@ void do_quaff(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_recite(struct char_data* ch, char* argument, int cmd) {
+void do_recite(struct char_data* ch, const char* argument, int cmd) {
 	char buf[100];
 	struct obj_data* scroll, *obj;
 	struct char_data* victim;
@@ -1680,7 +1670,7 @@ void do_recite(struct char_data* ch, char* argument, int cmd) {
 								  "The magic dissolves powerlessly"))
 				{ continue; }
 
-				void (*pSpellFunc)( byte, struct char_data*, char*, int,
+				void (*pSpellFunc)( byte, struct char_data*, const char*, int,
 									struct char_data*, struct obj_data* );
 				pSpellFunc = spell_info[scroll->obj_flags.value[i]].spell_pointer;
 
@@ -1730,7 +1720,7 @@ void do_recite(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_use(struct char_data* ch, char* argument, int cmd) {
+void do_use(struct char_data* ch, const char* argument, int cmd) {
 	char buf[100];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object, *stick;
@@ -1827,7 +1817,7 @@ void do_use(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_plr_noshout(struct char_data* ch, char* argument, int cmd) {
+void do_plr_noshout(struct char_data* ch, const char* argument, int cmd) {
 	char buf[128];
 
 	if (IS_NPC(ch))
@@ -1851,7 +1841,7 @@ void do_plr_noshout(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_plr_nogossip(struct char_data* ch, char* argument, int cmd) {
+void do_plr_nogossip(struct char_data* ch, const char* argument, int cmd) {
 	char buf[128];
 
 	if (IS_NPC(ch))
@@ -1875,7 +1865,7 @@ void do_plr_nogossip(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_plr_noauction(struct char_data* ch, char* argument, int cmd) {
+void do_plr_noauction(struct char_data* ch, const char* argument, int cmd) {
 	char buf[128];
 
 	if (IS_NPC(ch))
@@ -1899,7 +1889,7 @@ void do_plr_noauction(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_plr_notell(struct char_data* ch, char* argument, int cmd) {
+void do_plr_notell(struct char_data* ch, const char* argument, int cmd) {
 	char buf[128];
 
 	if (IS_NPC(ch))
@@ -1924,7 +1914,7 @@ void do_plr_notell(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_alias(struct char_data* ch, char* arg, int cmd) {
+void do_alias(struct char_data* ch, const char* arg, int cmd) {
 	char buf[512], buf2[512];
 	char* p, *p2;
 	int i, num;
@@ -2032,7 +2022,7 @@ void Dismount(struct char_data* ch, struct char_data* h, int pos) {
 
 }
 
-void do_mount(struct char_data* ch, char* arg, int cmd) {
+void do_mount(struct char_data* ch, const char* arg, int cmd) {
 	char name[112];
 	int check;
 	struct char_data* horse;
@@ -2149,11 +2139,12 @@ int CheckContempMemorize( struct char_data* pChar ) {
 
 }
 
-void do_memorize(struct char_data* ch, char* argument, int cmd) {
+void do_memorize(struct char_data* ch, const char* arg, int cmd) {
 
 	int spl,qend;
 	short int duration;
 	struct affected_type af;
+	char* argument = const_cast<char*>(arg);
 
 	if (!IS_PC(ch))
 	{ return; }
@@ -2388,7 +2379,7 @@ void check_memorize(struct char_data* ch, struct affected_type* af) {
 	}
 }
 
-void do_set_afk( struct char_data* ch, char* argument, int cmd ) {
+void do_set_afk( struct char_data* ch, const char* argument, int cmd ) {
 	if (!ch)
 	{ return; }
 	if (IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF))
@@ -2402,7 +2393,7 @@ void do_set_afk( struct char_data* ch, char* argument, int cmd ) {
 
 #define RACE_WAR_MIN_LEVEL 31
 /* this is the level a user can turn race war ON */
-void do_set_flags(struct char_data* ch, char* argument, int cmd) {
+void do_set_flags(struct char_data* ch, const char* argument, int cmd) {
 	char type[255],field[255];
 	if (!ch)
 	{ return; }
@@ -2436,24 +2427,14 @@ void do_set_flags(struct char_data* ch, char* argument, int cmd) {
 
 	if( !strcmp(type,"who") ) {
 		if (!strcmp( "showclasses",field ) || !strcmp( "show",field ) ) {
-#if 0
-			send_to_char( "Il set who al momento non e' attivo.
-						  \n\r", ch );
-#else
 			SET_BIT(ch->player.user_flags,SHOW_CLASSES);
 			send_to_char("Adesso tutti possono leggere le tue classi nel WHO!\n\r",ch);
-#endif
 						  return;
 		}
 		else if (!strcmp( "hideclasses",field ) || !strcmp( "hide",field ) ) {
-#if 0
-			send_to_char( "Il set who al momento non e' attivo.
-						  \n\r", ch );
-#else
 			if(IS_SET(ch->player.user_flags,SHOW_CLASSES))
 				REMOVE_BIT(ch->player.user_flags,SHOW_CLASSES);
 			send_to_char("Adesso le tue classi non appaiono nel WHO!\n\r",ch);
-#endif
 						  return;
 		}
 		else {
@@ -2596,7 +2577,7 @@ void do_set_flags(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_whois(struct char_data* ch, char* argument, int cmd) {
+void do_whois(struct char_data* ch, const char* argument, int cmd) {
 	char name[128],buf[254];
 	struct char_data* finger;
 
@@ -2819,7 +2800,7 @@ void ck_eq_action( struct char_data* ch, struct obj_data* obj ) {
 					if( !IS_SET(ch->specials.affected_by2,AFF2_BERSERK) ) {
 						mudlog( LOG_CHECK, "trying to berserk because of item ");
 						act("BANZAI!!! Morte agli infedeli!!!",FALSE,ch,obj,0,TO_CHAR);
-						act("$n sembra preso da una incontrollabile furia omicida!",TRUE,ch,obj,tmp_ch,TO_ROOM);
+						act("$n sembra preso da una incontrollabile furia omicida!",TRUE,ch,obj,NULL,TO_ROOM);
 						SET_BIT(ch->specials.affected_by2,AFF2_BERSERK);
 					}
 				}

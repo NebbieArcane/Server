@@ -9,9 +9,10 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 
 /* Extern structures */
-#if HASH
+#ifdef HASH
 extern struct hash_header room_db;
 #else
 extern struct room_data* room_db;
@@ -19,8 +20,6 @@ extern struct room_data* room_db;
 extern struct obj_data*  object_list;
 extern struct char_data* character_list;
 extern long SystemFlags;
-extern char* aszWeaponType[];
-extern char* aszWeaponSpecialEffect[];
 /* For future use in blinding those with infravision who are fireballed
    or otherwise subjected to lotsa heat quickly in dark rooms. */
 
@@ -61,7 +60,7 @@ void spell_magic_missile(byte level, struct char_data* ch,
 	if (level <0 || level >ABS_MAX_LVL)
 	{ return; }
 
-	dam = dice((int)(level / 2)+1,4)+(level / 2)+1;
+	dam = dice(static_cast<int>((level / 2))+1,4)+(level / 2)+1;
 
 	if (affected_by_spell(victim,SPELL_SHIELD))
 	{ dam = 0; }
@@ -240,7 +239,7 @@ void spell_energy_drain( byte level, struct char_data* ch,
 				dam = 4;
 				damage(ch, victim, dam, SPELL_ENERGY_DRAIN, 5);
 				if( IS_PC(victim) ) {
-					GET_EXP(victim)=GET_EXP(victim)- ((int) GET_EXP(victim)/10);
+					GET_EXP(victim)=GET_EXP(victim)- (static_cast<int>(GET_EXP(victim))/10);
 					/*if ( GET_EXP(victim)>=200000000 )
 					{
 					       if (HowManyClasses(victim) == 1)
@@ -732,9 +731,9 @@ void spell_create_food(byte level, struct char_data* ch,
 	CREATE(tmp_obj, struct obj_data, 1);
 	clear_object(tmp_obj);
 
-	tmp_obj->name = (char*)strdup("fungo");
-	tmp_obj->short_description =  (char*)strdup("Un fungo magico");
-	tmp_obj->description =  (char*)strdup("Un delizioso fungo magico e' qui a terra.");
+	tmp_obj->name = static_cast<char*>(strdup("fungo"));
+	tmp_obj->short_description =  static_cast<char*>(strdup("Un fungo magico"));
+	tmp_obj->description =  static_cast<char*>(strdup("Un delizioso fungo magico e' qui a terra."));
 
 	tmp_obj->obj_flags.type_flag = ITEM_FOOD;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_HOLD;
@@ -1255,7 +1254,7 @@ void spell_locate_object(byte level, struct char_data* ch,
 			j--;
 		}/* if isname */
 		if ((isgod || (k && !IS_DIO_MINORE(k)))
-#if ZONE_LOCATE
+#ifdef ZONE_LOCATE
 				&& (
 					IS_IMMORTAL(ch) ||
 					real_roomp(ch->in_room)->zone ==
@@ -1676,7 +1675,6 @@ void spell_word_of_recall(byte level, struct char_data* ch,
 						  struct char_data* victim, struct obj_data* obj) {
 	int location;
 
-	void do_look(struct char_data *ch, char* argument, int cmd);
 
 	assert(victim);
 
@@ -2346,7 +2344,7 @@ void spell_comp_languages(byte level, struct char_data* ch,
 			act("Tocchi le tue orecchie, ora riesci a comprende tutto quello che viene detto!", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		af.type      = SPELL_COMP_LANGUAGES;
-		af.duration  = (level<LOW_IMMORTAL) ? (int)level/2 : level;                                  /* one tic only! */
+		af.duration  = (level<LOW_IMMORTAL) ? static_cast<int>(level)/2 : level;                                  /* one tic only! */
 		af.modifier  = 0;
 		af.location  = APPLY_NONE;
 		af.bitvector = 0;
@@ -2382,9 +2380,10 @@ void spell_identify(byte level, struct char_data* ch,
 	struct time_info_data age(struct char_data *ch);
 
 	/* Spell Names */
-	extern char* spells[];
 
 	/* For Objects */
+	/*
+	extern char* spells[];
 	extern char* item_types[];
 	extern char* extra_bits[];
 	extern char* apply_types[];
@@ -2392,7 +2391,7 @@ void spell_identify(byte level, struct char_data* ch,
 	extern char* immunity_names[];
 	extern char* RaceName[];
 	extern char* gaszAlignSlayerBits[];
-
+	*/
 
 	assert(ch && (obj || victim));
 
@@ -2403,7 +2402,7 @@ void spell_identify(byte level, struct char_data* ch,
 		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
 		strcat(buf,buf2);
 		if IS_DIO(ch) {
-			sprintf(buf2," V-Number Originario  %d",(int)obj->char_vnum);
+			sprintf(buf2," V-Number Originario  %d",static_cast<int>(obj->char_vnum));
 			strcat(buf,buf2);
 		}
 
@@ -2412,13 +2411,13 @@ void spell_identify(byte level, struct char_data* ch,
 
 		if (obj->obj_flags.bitvector) {
 			send_to_char("L'oggetto dona le seguenti abilita':  ", ch);
-			sprintbit((unsigned)obj->obj_flags.bitvector,affected_bits,buf);
+			sprintbit(static_cast<unsigned>(obj->obj_flags.bitvector),affected_bits,buf);
 			strcat(buf,"\n\r");
 			send_to_char(buf, ch);
 		}
 
 		send_to_char("L'oggetto e': ", ch);
-		sprintbit( (unsigned)obj->obj_flags.extra_flags,extra_bits,buf);
+		sprintbit( static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 
@@ -2509,7 +2508,7 @@ void spell_identify(byte level, struct char_data* ch,
 					strcat(buf2,"\n\r");
 					break;
 				case APPLY_ATTACKS:
-					sprintf(buf2,"%f\n\r", (double)( obj->affected[i].modifier / 10 ) );
+					sprintf(buf2,"%f\n\r", static_cast<double>( obj->affected[i].modifier / 10 ) );
 					break;
 				case APPLY_WEAPON_SPELL:
 				case APPLY_EAT_SPELL:
@@ -2523,7 +2522,7 @@ void spell_identify(byte level, struct char_data* ch,
 					sprintf( buf2, "%s\n\r", RaceName[ obj->affected[i].modifier ] );
 					break;
 				case APPLY_ALIGN_SLAYER:
-					sprintbit( (unsigned)obj->affected[i].modifier, gaszAlignSlayerBits,
+					sprintbit( static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits,
 							   buf2 );
 					strcat( buf2, "\n\r" );
 					break;

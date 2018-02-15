@@ -6,7 +6,7 @@
 #include "race.hpp"
 #include "structs.hpp"
 #include "trap.hpp"
-
+#include "constants.hpp"
 const char* stats[]= {
 	"STR",
 	"INT",

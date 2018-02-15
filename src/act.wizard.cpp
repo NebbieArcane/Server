@@ -22,40 +22,6 @@
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "utility.hpp"
-void switch_light(byte why);
-
-/*   external vars  */
-
-extern long SystemFlags;
-extern struct weather_data weather_info;
-extern char* system_flag_types[];
-extern struct zone_data* zone_table;
-extern int top_of_zone_table;
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db[];
-#endif
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern int top_of_p_table;
-extern int top_of_mobt;
-extern int top_of_objt;
-extern char rarelist[MAX_STRING_LENGTH*2]; /*Acidus 2004-show rare*/
-extern struct int_app_type int_app[26];
-extern struct wis_app_type wis_app[26];
-extern struct player_index_element* player_table;
-extern char* room_bits[];
-extern struct str_app_type str_app[];
-extern char* spells[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* aszLogMessagesType[];
-extern char* aszWeaponSpecialEffect[];
-extern char* aszWeaponType[];
-
 char EasySummon = 1;
 long numero_mob_obj[100000];
 
@@ -1070,8 +1036,6 @@ void do_goto(struct char_data* ch, char* argument, int cmd) {
 	int loc_nr, location, i;
 	struct char_data* target_mob, *pers, *v;
 	struct obj_data* target_obj;
-
-	void do_look(struct char_data *ch, char* argument, int cmd);
 
 	only_argument(argument, buf);
 	if (!*buf) {

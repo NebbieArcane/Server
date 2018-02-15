@@ -620,7 +620,7 @@ int dice(int number, int size) {
 	return(sum);
 }
 
-int scan_number(char* text, int* rval) {
+int scan_number(const char* text, int* rval) {
 	int        length;
 	if (1!=sscanf(text, " %i %n", rval, &length))
 	{ return 0; }
@@ -632,7 +632,7 @@ int scan_number(char* text, int* rval) {
 
 /* returns: 0 if equal, 1 if arg1 > arg2, -1 if arg1 < arg2  */
 /* scan 'till found different or end of both                 */
-int str_cmp(char* arg1, char* arg2) {
+int str_cmp(const char* arg1, const char* arg2) {
 	int n;
 	if( !arg2 || !arg1 ) {
 		return(1);
@@ -647,7 +647,7 @@ int str_cmp(char* arg1, char* arg2) {
  * x caratteri nel confronto. Dove x e la lunghezza di arg1.
  * Quindi le due stringhe 'pip' e 'pippo' sono considerate uguali.
  */
-int str_cmp2(char* arg1, char* arg2) {
+int str_cmp2(const char* arg1, const char* arg2) {
 	if( !arg2 || !arg1 || strlen( arg1 ) == 0 )
 	{ return 1; }
 	return(strncasecmp(arg1,arg2,strlen(arg1)));
@@ -655,7 +655,7 @@ int str_cmp2(char* arg1, char* arg2) {
 
 /* returns: 0 if equal, 1 if arg1 > arg2, -1 if arg1 < arg2  */
 /* scan 'till found different, end of both, or n reached     */
-int strn_cmp(char* arg1, char* arg2, int n) {
+int strn_cmp(const char* arg1, const char* arg2, int n) {
 	return(strncasecmp(arg1,arg2,n));
 
 }
@@ -769,7 +769,7 @@ void buglog( unsigned uType, char* szString, ... ) {
 
 }
 
-void sprintbit(unsigned long vektor, char* names[], char* result) {
+void sprintbit(unsigned long vektor, const char* names[], char* result) {
 	long nr;
 
 	*result = '\0';
@@ -794,7 +794,7 @@ void sprintbit(unsigned long vektor, char* names[], char* result) {
 
 
 
-void sprinttype(int type, char* names[], char* result) {
+void sprinttype(int type, const char* names[], char* result) {
 	int nr;
 
 	for(nr=0; (*names[nr]!='\n'); nr++);
@@ -3139,8 +3139,9 @@ void SetRacialStuff( struct char_data* mob) {
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
 		break;
 	case RACE_SEA_ELF:
+		/* e poi prosegue per le altre caratteristiche degli elfi */
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-	/* e poi prosegue per le altre caratteristiche degli elfi */
+		/* no break */
 	case RACE_ELVEN:
 	case RACE_DROW:
 	case RACE_GOLD_ELF:
@@ -3469,7 +3470,7 @@ void SetRacialStuff( struct char_data* mob) {
 	}
 }
 
-int check_nomagic(struct char_data* ch, char* msg_ch, char* msg_rm) {
+int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm) {
 	struct room_data* rp;
 
 	rp = real_roomp(ch->in_room);
@@ -3483,7 +3484,7 @@ int check_nomagic(struct char_data* ch, char* msg_ch, char* msg_rm) {
 	return 0;
 }
 
-int check_nomind(struct char_data* ch, char* msg_ch, char* msg_rm) {
+int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm) {
 	struct room_data* rp;
 
 	rp = real_roomp(ch->in_room);
@@ -4203,7 +4204,7 @@ int MaxLimited(int lev) {
 	{ return(MAX_LIM_ITEMS); }
 }
 
-int SiteLock (char* site) {
+int SiteLock (const char* site) {
 #if SITELOCK
 
 	int i,length;
@@ -4967,7 +4968,6 @@ bool CheckPrac (int classe, int id, int liv) { // SALVO implemento un controllo 
 	};
 
 	int f;
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	switch(classe) {
 	case CLASS_MAGIC_USER:

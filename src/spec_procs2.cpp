@@ -1066,6 +1066,7 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 				cast_energy_drain(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				break;
 			}
+			/* no break */
 		case 23:
 		case 24:
 		case 25:
@@ -1575,6 +1576,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 				}
 				break;
 			}
+			/* no break */
 		case 3:
 		case 4:
 		case 5:
@@ -4723,8 +4725,6 @@ int DruidGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data*
 	int number, i, max, smax;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if ((cmd != CMD_PRACTICE) && (cmd != CMD_GAIN)) { return(FALSE); }
 
@@ -6780,8 +6780,6 @@ int RangerGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if (!ch->skills)
 	{ return(FALSE); }
@@ -7160,8 +7158,6 @@ int PsiGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* m
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if (!ch->skills) { return(FALSE); }
 
@@ -7324,8 +7320,6 @@ int PaladinGuildmaster( struct char_data* ch, int cmd, char* arg,
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if (!ch->skills)
 	{ return(FALSE); }
@@ -7488,9 +7482,6 @@ int mage_specialist_guildmaster(struct char_data* ch, int cmd, char* arg, struct
 	char buf[256];
 	int i, number = 0, max;
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
-
 
 	if (!AWAKE(ch))
 	{ return(FALSE); }

@@ -16,7 +16,7 @@ int IsInList( CharElem* pElem, void* pWho ) {
 CharElem* InsertInList( CharElem** pElem, void* pWho, int nTimer ) {
 	CharElem* pCurr;
 
-	pCurr = (CharElem*)calloc( 1, sizeof( CharElem ) );
+	pCurr = static_cast<CharElem*>( calloc( 1, sizeof( CharElem ) ));
 	pCurr->pNext = *pElem;
 	pCurr->pWho = pWho;
 	pCurr->nTimer = nTimer;
@@ -29,7 +29,7 @@ CharElem* InsertInListInt( CharElem** pElem, void* pWho, int nTimer,
 						   int nData ) {
 	CharElem* pCurr;
 
-	pCurr = (CharElem*)calloc( 1, sizeof( CharElem ) );
+	pCurr = static_cast<CharElem*> (calloc( 1, sizeof( CharElem ) ));
 	pCurr->pNext = *pElem;
 	pCurr->pWho = pWho;
 	pCurr->nTimer = nTimer;

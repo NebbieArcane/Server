@@ -31,16 +31,6 @@ void* gpGeneric = NULL;
 
 extern struct descriptor_data* descriptor_list;
 
-void checkpointing( int dummy );
-void shutdown_request( int dummy );
-void logsig( int dummy );
-void hupsig( int dummy );
-void badcrash( int dummy );
-void buscrash( int dummy );
-void PrintStatus();
-void PrintStatus(int level);
-
-
 
 void PrintStatus() {
 	PrintStatus(0);
@@ -68,7 +58,7 @@ void PrintStatus(int level) {
 		}
 	}
 }
-void SetLine(char* srcfile,int srcline) {
+void SetLine(const char* srcfile,int srcline) {
 	int i;
 	i=MIN(strlen(srcfile)+1,MAX_FNAME_LEN);
 	memcpy(currentfile,srcfile,i);
@@ -76,7 +66,7 @@ void SetLine(char* srcfile,int srcline) {
 	currentline=srcline;
 }
 
-void SetStatus( char* szStatus, char* szString, void* pGeneric ) {
+void SetStatus( const char* szStatus, const char* szString, void* pGeneric ) {
 	int i;
 	if( szStatus ) {
 		i=MIN(strlen(szStatus)+1,sizeof(gszMudStatus));
@@ -94,10 +84,10 @@ void SetStatus( char* szStatus, char* szString, void* pGeneric ) {
 		gpGeneric = pGeneric;
 	}
 }
-void SetStatus( char* szStatus) {
+void SetStatus( const char* szStatus) {
 	SetStatus(szStatus,NULL,NULL);
 }
-void SetStatus( char* szStatus, char* szString) {
+void SetStatus( const const char* szStatus, const char* szString) {
 	SetStatus(szStatus,szString,NULL);
 }
 

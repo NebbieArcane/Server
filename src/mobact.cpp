@@ -12,18 +12,6 @@
 #include "status.hpp"
 #include "utility.hpp"
 
-extern struct char_data* character_list;
-extern struct index_data* mob_index;
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct str_app_type str_app[];
-extern struct index_data* mob_index;
-
-extern struct spell_info_type spell_info[];
-
 int top_of_comp = 0;
 
 void mobile_guardian(struct char_data* ch) {

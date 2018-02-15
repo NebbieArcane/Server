@@ -75,7 +75,7 @@ typedef struct alias_type {
 
 struct QuestItem {
 	int item;
-	char* where;
+	const char* where;
 };
 
 /*
@@ -585,7 +585,7 @@ struct obj_flag_data {
 	int cost;           /* Value when sold (gp.)            */
 	int cost_per_day;   /* Cost to keep pr. real day        */
 	int timer;          /* Timer for object                 */
-	int bitvector;     /* To set chars bits                */
+	unsigned int bitvector;     /* To set chars bits                */
 };
 
 /* Used in OBJ_FILE_ELEM *DO*NOT*CHANGE* */
@@ -1597,7 +1597,7 @@ struct descriptor_data {
 	int bufptr;
 	unsigned int bufspace;
 	struct txt_block* large_outbuf;
-#if BLOCK_WRITE
+#ifdef BLOCK_WRITE
 	char* output;
 #else
 	struct txt_q output;          /* q of strings to send       */

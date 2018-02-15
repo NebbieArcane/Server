@@ -19,8 +19,8 @@
 
 
 int _affected_by_s(struct char_data* ch, int skill);
-void actall(char* s1, char* s2, char* s3, struct char_data* ch, struct char_data* vc);
-void act(char* str, int hide_invisible, struct char_data* ch, struct obj_data* obj, void* vict_obj, int type );
+void actall(const char* s1,const char* s2, const char* s3, struct char_data* ch, struct char_data* vc);
+void act(const char* str, int hide_invisible, struct char_data* ch, struct obj_data* obj, void* vict_obj, int type );
 void CheckCharAffected(char* msg );
 inline void CheckObjectExDesc(char* msg );
 void close_socket_fd(int desc);

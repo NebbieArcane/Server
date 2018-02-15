@@ -45,8 +45,6 @@ using Nebbie::Registered;
 /**************************************************************************
  *  declarations of most of the 'global' variables                         *
  ************************************************************************ */
-void assign_speciales();
-void Start_Auction();
 const long beginning_of_time = BEG_OF_TIME;
 int no_mail = 0;
 int top_of_scripts = 0;
@@ -113,14 +111,6 @@ struct time_info_data time_info; /* the infomation about the time   */
 struct weather_data weather_info; /* the infomation about the weather */
 long saved_rooms[WORLD_SIZE];
 long number_of_saved_rooms = 0;
-extern struct descriptor_data* descriptor_list;
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* apply_types[];
-struct index_data* InsertInIndex(struct index_data* pIndex, char* szName,
-								 int nVNum, int* alloc_top, int* top);
-void clean_playerfile(void);
-void ReadTextZone(FILE* fl);
-int CheckKillFile(int iVNum);
 struct script_com* gpComp = NULL;
 struct scripts* gpScript_data = NULL;
 struct reset_q_type gReset_q = {NULL, NULL};
@@ -3050,8 +3040,10 @@ int compare(struct player_index_element* arg1, struct player_index_element
 }
 
 /************************************************************************
- *  procs of a (more or less) general utility nature                     *
+ *  procs of a (more or less) general utility nature
+ *
  ********************************************************************** */
+
 
 int fwrite_string(FILE* fl, char* buf) {
 	if (buf)
@@ -4074,6 +4066,7 @@ int real_mobile(int iVNum) {
 		else
 		{ bot = mid + 1; }
 	}
+	return -1;
 }
 
 /* returns the real number of the object with given virtual number */
@@ -4101,6 +4094,7 @@ int real_object(int nVNum) {
 		else
 		{ bot = mid + 1; }
 	}
+	return -1;
 }
 
 int ObjRoomCount(int nr, struct room_data* rp) {

@@ -7,16 +7,6 @@
 #include "cmdid.hpp"
 #include "snew.hpp"
 #include "hash.hpp"
-int CAN_SEE( struct char_data* s, struct char_data* o );
-int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
-
-#if DEBUG
-
-#define free(obj) fprintf(stderr, "freeing %d\n", sizeof(*obj));\
-	free(obj)
-
-#endif
-
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
 #define TRUE  1
@@ -36,7 +26,7 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 #define CAP(st)  (*(st) = UPPER(*(st)))
 
 #define CREATE(result, type, number)  do {\
-		if (!((result) = (type *) calloc ((number), sizeof(type))))\
+		if (!((result) = static_cast<type *> (calloc ((number), sizeof(type)))))\
 		{ SetStatus("calloc"); abort(); }\
 	} while(0)
 
@@ -353,7 +343,6 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 
 #define EXIT_NUM(room_num, door)  (real_roomp(room_num)->dir_option[door])
 
-int exit_ok(struct room_direction_data*, struct room_data**);
 
 #define CAN_GO(ch, door) (EXIT(ch,door)&&real_roomp(EXIT(ch,door)->to_room) \
 						  && !IS_SET(EXIT(ch, door)->exit_info, EX_CLOSED))
@@ -395,7 +384,7 @@ int exit_ok(struct room_direction_data*, struct room_data**);
 #define IS_THIEF(ch)    (HasClass(ch,CLASS_THIEF))
 #define IS_MONK(ch)    (HasClass(ch,CLASS_MONK))
 /* GGPATCHEND */
-#define ITEM_TYPE(obj)  ((int)(obj)->obj_flags.type_flag)
+#define ITEM_TYPE(obj)  (static_cast<int>((obj)->obj_flags.type_flag))
 
 #define IS_NPC(ch)  (IS_SET((ch)->specials.act, ACT_ISNPC))
 
@@ -417,7 +406,7 @@ int exit_ok(struct room_direction_data*, struct room_data**);
 #endif
 
 inline struct room_data* real_roomp( long lVNum ) {
-#if HASH
+#ifdef HASH
 	extern struct hash_header      room_db;
 	return hash_find( &room_db, lVNum );
 #else

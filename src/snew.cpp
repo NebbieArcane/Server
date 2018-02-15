@@ -152,36 +152,52 @@ long StatCost(struct char_data* ch, int stat) // SALVO meglio se long, modificat
 	switch(vecchia) {
 	case 25:
 		xpcost+=10L; //125
+		/* no break */
 	case 24:
 		xpcost+=10L; //115
+		/* no break */
 	case 23:
 		xpcost+=10L; //105
+		/* no break */
 	case 22:
 		xpcost+=10L; //95
+		/* no break */
 	case 21:
 		xpcost+=10L; //85
+		/* no break */
 	case 20:
 		xpcost+=10L; //75
+		/* no break */
 	case 19:
 		xpcost+=10L; //65
+		/* no break */
 	case 18:
 		xpcost+=10L; //55
+		/* no break */
 	case 17:
 		xpcost+=10L; //45
+		/* no break */
 	case 16:
 		xpcost+=5L;  //35
+		/* no break */
 	case 15:
 		xpcost+=5L;  //30
+		/* no break */
 	case 14:
 		xpcost+=5L;  //25
+		/* no break */
 	case 13:
 		xpcost+=4L;  //20
+		/* no break */
 	case 12:
 		xpcost+=3L;  //16
+		/* no break */
 	case 11:
 		xpcost+=2L;  //13
+		/* no break */
 	case 10:
 		xpcost+=1L;  //11
+		/* no break */
 	default:
 		xpcost+=10L; //10
 	}

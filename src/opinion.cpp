@@ -21,7 +21,6 @@
 
 extern struct index_data* mob_index;
 extern struct room_data* world;
-extern char* RaceName[];
 
 void FreeHates( struct char_data* ch) {
 	struct char_list* k, *n;

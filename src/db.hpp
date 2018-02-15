@@ -4,6 +4,7 @@
 /* data files used by the game system */
 #ifndef __DB
 #define __DB 1
+#include "typedefs.hpp"
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
 #define MOB_FILE          "myst.mob"     /* monster prototypes         */
 #define OBJ_FILE          "myst.obj"     /* object prototypes          */
@@ -142,4 +143,64 @@ struct help_index_element {
 #define ZONE_DESERT          8
 #define ZONE_ARCTIC         16
 #define ZONE_UNDER_GROUND   32
+int fwrite_string (FILE* fl, char* buf);
+void fwrite_flag( FILE* pFile, unsigned long ulFlags );
+void SaveTheWorld();
+void boot_db();
+void reset_time();
+void update_time();
+void build_player_index();
+struct index_data* generate_indices(FILE* fl, int* top, int* sort_top, int* alloc_top, char* dirname) ;
+void cleanout_room(struct room_data* rp);
+void completely_cleanout_room(struct room_data* rp);
+void load_one_room(FILE* fl, struct room_data* rp);
+void boot_world();
+void boot_saved_zones();
+void boot_saved_rooms();
+void allocate_room(long room_number);
+void setup_dir(FILE* fl, long room, int dir);
+void renum_zone_table(int spec_zone);
+void boot_zones();
+struct char_data* read_mobile(int nr, int type);
+struct obj_data* read_object(int nr, int type);
+void zone_update();
+void reset_zone(int zone);
+int is_empty(int zone_nr);
+int load_char(char* name, struct char_file_u* char_element);
+void store_to_char(struct char_file_u* st, struct char_data* ch);
+void char_to_store(struct char_data* ch, struct char_file_u* st);
+int create_entry(char* name);
+void save_char(struct char_data* ch, sh_int load_room, int bonus);
+/* void save_char(struct char_data *ch, sh_int load_room); */
+int compare(struct player_index_element* arg1, struct player_index_element
+			*arg2);
+long fread_number_int( FILE* pFile,char* cmdfile,int cmdline,char* infofile);
+long fread_if_number( FILE* pFile );
+char* fread_string(FILE* fl);
+void free_char(struct char_data* ch);
+void free_obj(struct obj_data* obj);
+int file_to_string(char* name, char* buf);
+void ClearDeadBit(struct char_data* ch);
+void reset_char(struct char_data* ch);
+void clear_char(struct char_data* ch);
+void clear_object(struct obj_data* obj);
+void init_char(struct char_data* ch);
+int real_mobile(int iVNum);
+int real_object(int iVNum);
+int ObjRoomCount(int nr, struct room_data* rp);
+int MobRoomCount(int nr, struct room_data* rp);
+int str_len(char* buf);
+int load();
+void gr();
+int workhours();
+void reboot_text(struct char_data* ch, char* arg, int cmd);
+void InitScripts();
+void ReloadRooms();
+void FreeZone(int zone_nr);
+void write_obj_to_file( struct obj_data* obj, FILE* f );
+void InsertObject( struct obj_data* pObj, int nVNum );
+void InsertMobile( struct char_data* pMob, int nVNum );
+void Start_Auction();
+
+
 #endif

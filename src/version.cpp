@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include "release.hpp"
 #include <string.h>
-char* version() {
+const char* version() {
 	return VERSION;
 }
 
-char* release() {
+const char* release() {
 	return BUILD;
 }
 
-char* compilazione() {
+const char* compilazione() {
 	static char COMPILAZIONE[50];
 	snprintf(COMPILAZIONE,49,"%s %s",__DATE__,__TIME__);
 	return(COMPILAZIONE);

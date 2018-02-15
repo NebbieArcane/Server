@@ -10,15 +10,12 @@
 
 #ifndef SRC_ACT_OFF_HPP_
 #define SRC_ACT_OFF_HPP_
-
+#include "act.wizard.hpp"
+#include "act.info.hpp"
 void do_weapon_load(struct char_data* ch, char* argument, int cmd);
-void do_run(struct char_data* ch, char* argument, int cmd);
-void do_viewfile(struct char_data* ch, char* argument, int cmd);
 struct char_data* get_char_near_room_vis(struct char_data* ch, char* name, long next_room);
 void do_fire(struct char_data* ch, char* argument, int cmd);
 void do_throw(struct char_data* ch, char* argument, int cmd);
-int range_hit(struct char_data* ch, struct char_data* targ, int rng, struct obj_data* missile, int tdir, int max_rng);
-struct char_data* get_char_linear(struct char_data* ch, char* arg, int* rf, int* df);
 void do_hit(struct char_data* ch, char* argument, int cmd);
 void do_slay(struct char_data* ch, char* argument, int cmd);
 void do_kill(struct char_data* ch, char* argument, int cmd);

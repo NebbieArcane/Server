@@ -237,7 +237,7 @@ void init_string_block(struct string_block* sb) {
 	*sb->data = '\0';
 }
 
-void append_to_string_block(struct string_block* sb, char* str) {
+void append_to_string_block(struct string_block* sb, const char* str) {
 	int        len;
 	len = strlen(sb->data) + strlen(str) + 1;
 	if (len > sb->size) {
@@ -2431,7 +2431,7 @@ struct obj_data* create_money( int amount ) {
 /* The routine returns a pointer to the next word in *arg (just like the  */
 /* one_argument routine).                                                 */
 
-int generic_find(char* arg, int bitvector, struct char_data* ch,
+int generic_find(const char* arg, int bitvector, struct char_data* ch,
 				 struct char_data** tar_ch, struct obj_data** tar_obj) {
 	static char* ignore[] = {
 		"the",

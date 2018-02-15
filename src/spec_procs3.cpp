@@ -11,34 +11,10 @@
 #include "snew.hpp"
 #include "specass2.hpp"
 #include "utility.hpp"
-/*   external vars  */
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct weather_data weather_info;
-extern int top_of_world;
-extern struct int_app_type int_app[26];
-extern struct str_app_type str_app[];
-
-extern struct title_type titles[4][ABS_MAX_LVL];
-extern char* dirs[];
-
-extern int gSeason;  /* what season is it ? */
-
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* spells[];
-
-void throw_weapon( struct obj_data* o, int dir, struct char_data* targ,
-				   struct char_data* ch );
-struct char_data* FindMobInRoomWithVNum(int room, int VNum);
 
 /* chess_game() stuff starts here */
 /* Inspiration and original idea by Feith */
 /* Implementation by Gecko */
-#if !GCC27
 #define WHITE 0
 #define BLACK 1
 
@@ -428,7 +404,6 @@ int chess_game(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	}
 	return FALSE;
 }
-#endif
 int AcidBlob(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	struct obj_data* i;
 

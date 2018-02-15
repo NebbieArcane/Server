@@ -16,6 +16,7 @@
 #include <math.h>
 #include "cmdid.hpp"
 #include "protos.hpp"
+#include "structs.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
 
@@ -23,111 +24,14 @@
 #define GET_GRP_LEVEL(ch) (GetMaxLevel(ch)+(GetSecMaxLev(ch)/2)+  (GetThirdMaxLev(ch)/3))
 /* Structures */
 
-
 struct char_data* combat_list = 0;   /* head of l-list of fighting chars    */
 struct char_data* missile_list = 0;   /* head of l-list of fighting chars    */
 struct char_data* combat_next_dude = 0; /* Next dude global trick           */
 struct char_data* missile_next_dude = 0; /* Next dude global trick           */
-extern struct zone_data* zone_table;         /* table of reset data          */
 
-extern struct con_app_type con_app[];
-extern struct index_data* mob_index,*obj_index;
 char PeacefulWorks = 1;  /* set in @set */
 char DestroyedItems;  /* set in MakeScraps */
 
-/* External structures */
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct message_list fight_messages[MAX_MESSAGES];
-extern struct obj_data*  object_list;
-extern struct index_data* mob_index;
-extern struct char_data* character_list;
-extern struct spell_info_type spell_info[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* spells[];
-extern char* ItemDamType[];
-extern int ItemSaveThrows[22][5];
-extern struct str_app_type str_app[];
-extern int WizLock;
-extern struct descriptor_data* descriptor_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct int_app_type int_app[26];
-extern struct wis_app_type wis_app[26];
-extern char* room_bits[];
-extern int thaco[MAX_CLASS][ABS_MAX_LVL];
-
-/**************************************************************************
-* Prototipi per le procedure interne
-* ***********************************************************************/
-int can_see_linear( struct char_data* ch, struct char_data* targ, int* rng,
-					int* dr) ;
-
-int BarbarianToHitMagicBonus ( struct char_data* ch);
-int berserkthaco ( struct char_data* ch);
-int berserkdambonus ( struct char_data* ch, int dam);
-long ExpCaps(struct char_data* ch, int group_count, long total );
-long GroupLevelRatioExp( struct char_data* ch,int group_max_level,
-						 long experincepoints);
-void appear(struct char_data* ch);
-int LevelMod(struct char_data* ch, struct char_data* v, int exp);
-int RatioExp( struct char_data* ch, struct char_data* victim, int total);
-void change_alignment(struct char_data* ch, struct char_data* victim);
-void group_gain(struct char_data* ch, struct char_data* victim);
-int group_loss(struct char_data* ch, int loss);
-void dam_message(int dam, struct char_data* ch, struct char_data* victim,
-				 int w_type, int location);
-int DamCheckDeny(struct char_data* ch, struct char_data* victim, int type);
-int DamDetailsOk( struct char_data* ch, struct char_data* v, int dam,
-				  int type);
-DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
-					   int type, int location );
-void DamageMessages( struct char_data* ch, struct char_data* v, int dam,
-					 int attacktype, int location );
-void increase_blood(int rm);
-int DamageEpilog( struct char_data* ch, struct char_data* victim,
-				  int killedbytype, int dam);
-int GetWeaponType(struct char_data* ch, struct obj_data** wielded);
-int Getw_type(struct obj_data* wielded);
-int HitCheckDeny( struct char_data* ch, struct char_data* victim, int type,
-				  int DistanceWeapon);
-DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,
-						 int w_type,
-						 DamageResult (*dam_func)
-						 ( struct char_data*,
-						   struct char_data*, int,
-						   int, int ), int location);
-int GetWeaponDam(struct char_data* ch, struct char_data* v,
-				 struct bj_data* wielded, int location);
-int LoreBackstabBonus(struct char_data* ch, struct char_data* v);
-DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
-						int type, int w_type,
-						DamageResult (*dam_func)( struct char_data*,
-								struct char_data*,
-								int, int, int ), int location);
-
-DamageResult root_hit( struct char_data* ch, struct char_data* victim, int type,
-					   DamageResult (*dam_func)( struct char_data*,
-							   struct char_data*,
-							   int, int, int ),
-					   int DistanceWeapon, int location);
-DamageResult MissileHit( struct char_data* ch, struct char_data* victim,
-						 int type);
-void BreakLifeSaverObj( struct char_data* ch );
-int BrittleCheck(struct char_data* ch, struct char_data* v, int dam);
-int DamageItem(struct char_data* ch, struct obj_data* o, int num);
-int DamagedByAttack( struct obj_data* i, int dam_type);
-int GetItemDamageType( int type);
-void WeaponSpell( struct char_data* c, struct char_data* v,
-				  struct obj_data* obj, int type );
-int GetFormType(struct char_data* ch);
-int MonkDodge( struct char_data* ch, struct char_data* v, int* dam);
-int Hit_Location( struct char_data* v );
-char* replace_string( char* str, char* weapon, char* weapon_s,
-					  char* location_hit, char* location_hit_s);
-void one_affect_from_char(struct char_data* ch,short skill);
 /* Weapon attack texts */
 struct attack_hit_type attack_hit_text[] = {
 	{"hit",    "hits"},            /* TYPE_HIT      */
@@ -450,7 +354,7 @@ void update_pos( struct char_data* victim ) {
 }
 
 
-int check_peaceful(struct char_data* ch, char* msg) {
+int check_peaceful(struct char_data* ch, const char* msg) {
 	struct room_data* rp;
 
 	extern char PeacefulWorks;
@@ -2426,6 +2330,7 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 				}
 				break;
 			}
+			/* no break */
 		default:
 			break;
 		}

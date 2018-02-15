@@ -21,7 +21,6 @@ typedef unsigned short int ush_int;
 typedef char bool;
 #endif
 typedef char byte;
-#define NULL nullptr
 
 
 

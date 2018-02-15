@@ -43,7 +43,6 @@
 
 #define STATE(d) ((d)->connected)
 
-extern int errno;
 
 /* extern struct char_data *character_list; */
 #if HASH
@@ -2131,7 +2130,7 @@ void send_to_room_except_two
 /* higher-level communication */
 
 /* ACT */
-void actall(char* s1, char* s2, char* s3,
+void actall(const char* s1, const char* s2, const char* s3,
 			struct char_data* ch, struct char_data* vc) {
 	char buf[1024];
 	sprintf(buf,"%s $N",s1);
@@ -2308,7 +2307,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 
 
 }
-void act( char* str, int hide_invisible, struct char_data* ch,
+void act( const char* str, int hide_invisible, struct char_data* ch,
 		  struct obj_data* obj, void* vict_obj, int type ) {
 	struct char_data* to, *z;
 	char buf[MAX_STRING_LENGTH], tmp[5];
@@ -2327,7 +2326,7 @@ void act( char* str, int hide_invisible, struct char_data* ch,
 	{ return; }  /* can't do it. in room -1 */
 
 	if( type == TO_VICT )
-	{ to = (struct char_data*) vict_obj; }
+	{ to = static_cast<struct char_data*>(vict_obj); }
 	else if (type == TO_CHAR)
 	{ to = ch; }
 	else
@@ -2603,6 +2602,7 @@ void construct_prompt( char* outbuf, struct char_data* ch ) {
 					break;
 				case 's':
 					s_flag = 1;
+					/* no break */
 				case 'S':   /* affected spells */
 					*tbuf=0;
 					if( ( i = _affected_by_s( ch, SPELL_FIRESHIELD ) ) != -1 )

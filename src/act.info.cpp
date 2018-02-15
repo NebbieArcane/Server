@@ -26,60 +26,6 @@
 #include "version.hpp"
 using Nebbie::Registered;
 
-/* extern variables */
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct descriptor_data* descriptor_list;
-extern struct char_data* character_list;
-extern struct obj_data* object_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct str_app_type str_app[];
-int update_max_usage(void); //in comm.c
-
-extern int  top_of_world;
-extern int  top_of_zone_table;
-extern int  top_of_mobt;
-extern int  top_of_objt;
-extern int  top_of_p_table;
-
-extern char credits[MAX_STRING_LENGTH];
-extern char news[MAX_STRING_LENGTH];
-extern char wiznews[MAX_STRING_LENGTH];
-extern char info[MAX_STRING_LENGTH];
-extern char wizlist[MAX_STRING_LENGTH*2];
-extern char princelist[MAX_STRING_LENGTH*2];
-extern char immlist[MAX_STRING_LENGTH*2];
-extern char* dirsTo[];
-extern char* where[];
-extern char* color_liquid[];
-extern char* fullness[];
-extern char* RaceName[];
-extern int RacialMax[][MAX_CLASS];
-extern char* spell_desc[];
-extern char* spells[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* system_flag_types[];
-extern char* exits[];
-extern long SystemFlags;
-
-extern int NumTimeCheck;
-extern struct timeval aTimeCheck[];
-extern int gnTimeCheckIndex;
-
-/* extern functions
-
-void page_string(struct descriptor_data *d, char *str, int keep_internal);
-int track( struct char_data *ch, struct char_data *vict);
-int GetApprox(int num, int perc);
-int SpyCheck(struct char_data *ch);
-int remove_trap( struct char_data *ch, struct obj_data *trap);
-struct obj_data *get_obj_in_list_vis(struct char_data *ch, char *name,
-				     struct obj_data *list);
-
-*/
 /* intern functions */
 
 
@@ -1274,7 +1220,7 @@ void list_exits_in_room(struct char_data* ch) {
 }
 
 
-void do_look(struct char_data* ch, char* argument, int cmd) {
+void do_look(struct char_data* ch, const char* argument, int cmd) {
 	char buffer[MAX_STRING_LENGTH];
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
@@ -2551,14 +2497,14 @@ void do_who(struct char_data* ch, char* argument, int cmd) {
 					 "                       ---------------------------\n\r" );
 		count=0;
 		for( person = character_list; person; person = person->next ) {
-			if( !IS_LINKDEAD( person ) && IS_PC( person ) &&
-					OK_NAME( person, name_mask ) &&
-					person->invis_level <= GetMaxLevel( ch ) &&
-					( cmd != CMD_WHOZONE ||
-					  ( real_roomp(person->in_room) &&
+			if( !IS_LINKDEAD( person ) and IS_PC( person ) and
+					OK_NAME( person, name_mask ) and
+					person->invis_level <= GetMaxLevel( ch ) and
+					( cmd != CMD_WHOZONE or
+					  ( real_roomp(person->in_room) and
 						real_roomp(person->in_room)->zone ==
-						real_roomp(ch->in_room)->zone ) )&&
-					( !index(flags,'g') || IS_IMMORTAL(person) ) ) {
+						real_roomp(ch->in_room)->zone ) )and
+					( !index(flags,'g') or IS_IMMORTAL(person) ) ) {
 				if (OK_NAME(person,name_mask)) {
 					count++;
 					color_cnt = (color_cnt++ % 9);  /* range 1 to 9 */
@@ -2760,7 +2706,7 @@ void do_who(struct char_data* ch, char* argument, int cmd) {
 		}
 
 		for( person = character_list; person; person = person->next ) {
-			if( !IS_NPC(person) && CAN_SEE(ch, person) && OK_NAME(person,name_mask) ) {
+			if( !IS_NPC(person) and CAN_SEE(ch, person) and OK_NAME(person,name_mask) ) {
 				count++;
 				if (person->desc == NULL)
 				{ lcount ++; }

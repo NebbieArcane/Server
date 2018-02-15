@@ -26,37 +26,12 @@
 #define Dump         3030
 #define Ivory_Gate   1499
 
-/*   external vars  */
-
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct weather_data weather_info;
-extern int top_of_world;
-extern struct int_app_type int_app[26];
-extern int RacialMax[][MAX_CLASS];
-
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct spell_info_type spell_info[];
-extern char* dirs[];
-
-
-
 /* Data declarations */
 
 struct social_type {
 	char* cmd;
 	int next_line;
 };
-
-/*
-  Brian:  I moved all your stuff to spec_procs2.c
-
-*/
-
 
 
 /*************************************/
@@ -3498,7 +3473,6 @@ int RustMonster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 }
 
 int temple_labrynth_liar(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
-	void do_say(struct char_data *ch, char* argument, int cmd);
 
 	if (cmd || !AWAKE(ch))
 	{ return(0); }
@@ -3543,10 +3517,6 @@ int temple_labrynth_liar(struct char_data* ch, int cmd, char* arg, struct char_d
 int temple_labrynth_sentry(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	struct char_data* tch;
 	int counter;
-
-	void cast_fireball( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *victim, struct obj_data *tar_obj );
-	void do_say(struct char_data *ch, char* argument, int cmd);
 
 	if(cmd || !AWAKE(ch)) { return FALSE; }
 

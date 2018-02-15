@@ -4,9 +4,9 @@
 /*Prototype */
 #ifndef _VERSION_
 #define _VERSION_ 1
-char* version(void);
-char* release(void);
-char* compilazione(void);
+const char* version(void);
+const char* release(void);
+const char* compilazione(void);
 #endif
 
 

@@ -42,26 +42,45 @@ add_compile_options(
 	-pg
 	-std=c++11
 )
-#Warning managements
-add_compile_options(
-#	-Wno-write-strings
-	-Wno-unused
-	-Wno-trigraphs
-	-Wno-format
-	-Wno-int-to-pointer-cast
-	-Wno-endif-labels
-	-w
-)
 configure_file(config.hpp.in config.hpp NEWLINE_STYLE UNIX)
 add_custom_command(OUTPUT release.hpp COMMAND ../genrelease.sh release.hpp )
 add_executable(myst ${file_cpp} ${file_hpp} release.hpp)
 #add_executable(info version.cpp version.hpp release.hpp)
 #target_compile_definitions(info PUBLIC -DSTANDALONE)
-target_compile_options(myst PUBLIC ${MYSQL_STATIC_CFLAGS} )
-target_compile_options(myst PUBLIC ${SQLITE_STATIC_CFLAGS} )
+add_compile_options(${MYSQL_STATIC_CFLAGS} )
+add_compile_options(${SQLITE_STATIC_CFLAGS} )
 target_link_libraries(myst  ${MYSQL_STATIC_LDFLAGS})
 target_link_libraries(myst  ${SQLITE_STATIC_LDFLAGS})
 target_link_libraries(myst ${CRYPT})
+#Warning managements
+target_compile_options(myst PUBLIC
+#	-Werror 
+	-Wall 
+	-Wextra 
+#	-pedantic 
+	-Wno-write-strings
+	-Wcast-align 
+	-Wcast-qual 
+	-Wctor-dtor-privacy 
+	-Wdisabled-optimization 
+	-Wformat=2 
+	-Winit-self 
+	-Wlogical-op 
+	-Wmissing-include-dirs 
+	-Wnoexcept 
+#	-Wold-style-cast 
+	-Woverloaded-virtual 
+	-Wredundant-decls 
+	-Wshadow 
+	-Wsign-promo 
+	-Wstrict-null-sentinel 
+	-Wstrict-overflow=5 
+	-Wundef 
+	-Wno-unused 
+	-Wno-variadic-macros 
+	-Wno-parentheses 
+	-fdiagnostics-show-option
+)
 get_cmake_property(_variableNames VARIABLES)
 #foreach (_variableName ${_variableNames})
 #    message(STATUS "${_variableName}=${${_variableName}}")
@@ -71,3 +90,4 @@ get_cmake_property(_variableNames VARIABLES)
 #add_custom_command(TARGET myst POST_BUILD COMMAND rm -f release.hpp)
 #add_custom_command(TARGET myst POST_BUILD COMMAND ./info)
 #add_custom_command(TARGET myst POST_BUILD COMMAND mv -f myst ../mudroot/myst)
+set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations
