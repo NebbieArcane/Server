@@ -501,11 +501,6 @@ int move_gain(struct char_data* ch)
 int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check=0) {
 	int add_hp;
 
-	if (IS_PRINCE(ch)&&check==0) {
-		mudlog(LOG_PLAYERS, "%s sta tentando di sfruttare il bug gain hp", GET_NAME(ch));
-		return(-1);
-	}
-
 	if (livello>=CHUMP) {
 		if (iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
 				iClass == PALADIN_LEVEL_IND || iClass == RANGER_LEVEL_IND)
@@ -643,7 +638,7 @@ void advance_level(struct char_data* ch, int iClass)
 
 /* Gain maximum in various points */
 {
-	int add_hp, i, check_hp;
+	int i, check_hp;
 
 
 	if (iClass > MAX_CLASS) {
@@ -664,12 +659,8 @@ void advance_level(struct char_data* ch, int iClass)
 	check_hp=GetHpGain(ch,iClass,GET_LEVEL(ch,iClass),0);
 
 	if (check_hp != -1) {
-		//add_hp=GetHpGain(ch,iClass,GET_LEVEL(ch,iClass),0);
+		
 		ch->points.max_hit += MAX( 1, check_hp );
-	}
-	else {
-		send_to_char("Spero sia un errore... comunque il tuo tentativo di sfruttare il bug del gain e' stato loggato e non hai guadagnato nessun hp! Scrivi una mail di pentimento ad Elei o Jethro per evitare spiacevoli conseguenze!", ch);
-
 	}
 
 	if( ch->specials.spells_to_learn < 100 )
