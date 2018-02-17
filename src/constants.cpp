@@ -1588,7 +1588,7 @@ int RacialHome[MAX_RACE+1][2] = {
 	/* predator   8*/ { 1, 1 },
 	/* parasite   9*/ { 1, 1 },
 	/* slime     20*/ { 1, 1 },
-	/* demon      1*/ { 3800, 1157 },
+	/* demon      1*/ { 7800, 1157 },
 	/* snake      2*/ { 1, 1 },
 	/* herbiv     3*/ { 1, 1 },
 	/* tree       4*/ { 1, 1 },
