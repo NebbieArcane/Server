@@ -1,11 +1,10 @@
 language: cpp
-script: ./build.sh
+script: "./build.sh"
 deploy:
   provider: releases
-  skip_cleanup: true
   api_key:
-    secure: my82gEzh/4ZY7FWm/TKVmCn+D+k3Q9ciKBPQLkLO/+OIL4k6/zA8gPQoGDnZUxjSDiq1e/n17a2k174PxIS8zHMIcK6AYjA4rZBO0cQd9i30DzEhKIHdhhHGc4msgyCKCs8BIOGacfINsrl0hMFyqUAQHXg+N6YojVCLrPP4ATv8KPST0IwYsRvkaL/ugU8uyKFm3gw0eiaKUp5Ig93N9nQOt7lssZgRrmuz9EDZoIbAuUyk1jxi/JjVaXXrvon5Huh9HBjVPH8m4AHP6UVYascm68ADsCONDtdDLdHzAS5b81mLX8reMRE/1do5Umds4PM8CS5o1AripwBXBLxO9RMDAjnXcs77VkmLJwVKqrI6ojq0e6yXIsR7u4Yo/josjoU85sYasyZIeR+56ODq0s2ZcJnjUYNhOoLit3ES+OeIWGVYedzj3faTQjmJi4h9MgxzLZQ9Tv5U4NI3QrhmEs95E+XGu8hn9Q/ptA1FdMgvBoeSbn/qbrNRKBjH0o+3Ke45ymhORnrQA5nmOa51T8fZd9LqmVtSMSwcUj2Zwejq1WiuSFjUUmnpQ3RJMdRkVbDhSK9m9/NIQcdxhia4PsyOPhTbEc0DbGVMRee4DlGhqkJ5BAxADwIh1VeTcguJci7DCFZ0FqG4iSUYAwL+YGfaO61Z0IIhlOPhqGP99wI=
-  file: mudroot/myst.zip
+    secure: aHyJPpBAEd7NnGVLCJs+BjcUHkaplkghDA4tXGijtbfkd4eon/QQ8xq2nqUKiTsdiUVxlbS0G281RCaWzV1zjhXL6qWfThhjETkU5LDkSb/hFYZn4uTJGhGoyEtJ7l0p0IQ/3/vTl16WjbDDHhMLre8tChSjl+8tJStflPvvjZvSV3+KpdsC31gTA/wjzjTEA1xGYtUYcLd5U4UI7XE+MtURhPYqQvtVOaDjo7N1ri20CCzu6aIj8sJPaITmUPTNrA6GreNuvw/CBWUE3/2RlNVsK3CcGbb0ZzGrZpbz/jtSy8/+fuQegBYVkXdvFy0GZ5RhJly5YLB/JIDt0D2ElFUwBlUbio9D+r07UoP0mw1aLRHovS4iVAmodoslWY4Ba1BisTGdposvDhMMg8G3Orz9trZ7B4kp6TxACpE3ZDW526EAEPKFTwb+IszIEoHeTNgLWhxvOYLK3WUqL2iiGhAuLeI6tkgFN7CERZKJwtxgBINea/wbyRq5HDiRdfM/djPPFuVsija0GpxqQ3Zxx8CxJZdjblEyzxD8Zq1LtAC6M4vSblevZypImvWXknqE9/pB2q9lLfmwo+tU2ZOxbI4XIp+cVtsKk5tQ7pXYOuJjdPaZo7M3oiLw63JzVKj4uT8v7D0fEyT/qqBJtMkNJbwLU14WJ6Q8n/b2hqr2K6E=
+  file: mudroot/myst
   on:
-    repo: NebbieArcane/Aree
-    tags: true
+    branch: release
+    repo: NebbieArcane/Server
