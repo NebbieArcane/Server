@@ -124,19 +124,19 @@ int GainLevel(struct char_data* ch, int iClass) {
 #endif
 	if (GET_EXP(ch)>=
 			titles[iClass][GET_LEVEL(ch, iClass)+1].exp) {
-		if (GET_LEVEL(ch, iClass) < RacialMax[GET_RACE(ch)][iClass]) {
+		if (GET_LEVEL(ch, iClass) < RacialMax[GET_RACE(ch)][iClass] && !IS_PRINCE(ch)) {
 
-			send_to_char("You raise a level!\n\r", ch);
+			send_to_char("Cresci di un livello!\n\r", ch);
 			advance_level(ch, iClass);
 			set_title(ch);
 			return(TRUE);
 		}
 		else {
-			send_to_char("You are unable to advance further in this class\n\r", ch);
+			send_to_char("Non puoi avanzare oltre in questa classe\n\r", ch);
 		}
 	}
 	else {
-		send_to_char("You haven't got enough experience!\n\r",ch);
+		send_to_char("Non hai abbastanza punti esperienza!\n\r",ch);
 	}
 	return(FALSE);
 }
