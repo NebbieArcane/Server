@@ -3594,6 +3594,7 @@ int GetNewRace(struct char_file_u* s) {
 		case RACE_PRIMATE:
 		case RACE_GOBLIN:
 		case RACE_TROLL:
+        case RACE_DEMON:
 			ok = TRUE;
 			break;
 		/* not a valid race, try again */
