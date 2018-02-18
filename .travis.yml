@@ -1,10 +1,2 @@
 language: cpp
 script: "./build.sh"
-deploy:
-  provider: releases
-  api_key:
-    secure: aHyJPpBAEd7NnGVLCJs+BjcUHkaplkghDA4tXGijtbfkd4eon/QQ8xq2nqUKiTsdiUVxlbS0G281RCaWzV1zjhXL6qWfThhjETkU5LDkSb/hFYZn4uTJGhGoyEtJ7l0p0IQ/3/vTl16WjbDDHhMLre8tChSjl+8tJStflPvvjZvSV3+KpdsC31gTA/wjzjTEA1xGYtUYcLd5U4UI7XE+MtURhPYqQvtVOaDjo7N1ri20CCzu6aIj8sJPaITmUPTNrA6GreNuvw/CBWUE3/2RlNVsK3CcGbb0ZzGrZpbz/jtSy8/+fuQegBYVkXdvFy0GZ5RhJly5YLB/JIDt0D2ElFUwBlUbio9D+r07UoP0mw1aLRHovS4iVAmodoslWY4Ba1BisTGdposvDhMMg8G3Orz9trZ7B4kp6TxACpE3ZDW526EAEPKFTwb+IszIEoHeTNgLWhxvOYLK3WUqL2iiGhAuLeI6tkgFN7CERZKJwtxgBINea/wbyRq5HDiRdfM/djPPFuVsija0GpxqQ3Zxx8CxJZdjblEyzxD8Zq1LtAC6M4vSblevZypImvWXknqE9/pB2q9lLfmwo+tU2ZOxbI4XIp+cVtsKk5tQ7pXYOuJjdPaZo7M3oiLw63JzVKj4uT8v7D0fEyT/qqBJtMkNJbwLU14WJ6Q8n/b2hqr2K6E=
-  file: mudroot/myst
-  on:
-    branch: release
-    repo: NebbieArcane/Server
