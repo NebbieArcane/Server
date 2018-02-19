@@ -6467,13 +6467,13 @@ int in_miniera( struct char_data* ch ) {
 	struct range_vnum_type lista_miniere[MAX_MINIERE]= {
 		{4010,4073}, /* moria, le cave al primo livello - Requiem 2018 */
 		{4100,4125}, /* moria, le cave al terzo livello - Requiem 2018 */
-        {4435,4445},
+		{4435,4445},
 		{4447,4447},
 		{4449,4456},
 		{4459,4459},
-        {6542,6553}, /* luoghi profondi, gorrdar - Requiem 2018 */
-        {16051,16059}, /* mineshaft sulle high mountains - Requiem 2018 */
-        {37375,37382} /* miniere di mordor - Requiem 2018 */
+		{6542,6553}, /* luoghi profondi, gorrdar - Requiem 2018 */
+		{16051,16059}, /* mineshaft sulle high mountains - Requiem 2018 */
+		{37375,37382} /* miniere di mordor - Requiem 2018 */
 	};
 
 	int X=MAX_MINIERE, found=FALSE;
