@@ -6457,7 +6457,7 @@ void do_brew( struct char_data* ch, char* argument, int cmd) {
 
 /* ACIDUS 2003, skill miner */
 
-#define MAX_MINIERE 4  /* numero massimo di righe nella tabella delle miniere */
+#define MAX_MINIERE 9  /* numero massimo di righe nella tabella delle miniere */
 int in_miniera( struct char_data* ch ) {
 	struct range_vnum_type {
 		int da_vnum;
@@ -6465,10 +6465,15 @@ int in_miniera( struct char_data* ch ) {
 	};
 
 	struct range_vnum_type lista_miniere[MAX_MINIERE]= {
-		{4435,4445},
+		{4010,4073}, /* moria, le cave al primo livello - Requiem 2018 */
+		{4100,4125}, /* moria, le cave al terzo livello - Requiem 2018 */
+        {4435,4445},
 		{4447,4447},
 		{4449,4456},
-		{4459,4459}
+		{4459,4459},
+        {6542,6553}, /* luoghi profondi, gorrdar - Requiem 2018 */
+        {16051,16059}, /* mineshaft sulle high mountains - Requiem 2018 */
+        {37375,37382} /* miniere di mordor - Requiem 2018 */
 	};
 
 	int X=MAX_MINIERE, found=FALSE;
@@ -6577,15 +6582,15 @@ void do_miner( struct char_data* ch ) {
 
 			//Testo se esce un metallo (e semmai quale), una pietra preziosa o un mob
 			percent = number(1,100);
-			if (percent <= 30 ) { r_num = real_object(19500); }
-			else if (percent > 30 && percent <= 55) { r_num = real_object(19501); }
-			else if (percent > 55 && percent <= 70) { r_num = real_object(19502); }
-			else if (percent > 70 && percent <= 80) { r_num = real_object(19503); }
-			else if (percent > 80 && percent <= 90) { r_num = real_object(19504); }
-			else if (percent > 90 && percent <= 95) { r_num = real_object(19505); }
-			else if (percent > 95 && percent <= 96) { r_num = real_object(19506); }
-			else if (percent > 96 && percent <= 97) { r_num = real_object(19507); }
-			else if (percent > 97 && percent <= 98) { r_num = real_object(19508); }
+			if (percent <= 30 ) { r_num = real_object(19500); } //rame
+			else if (percent > 30 && percent <= 55) { r_num = real_object(19501); } //piombo
+			else if (percent > 55 && percent <= 70) { r_num = real_object(19502); } //ferro
+			else if (percent > 70 && percent <= 80) { r_num = real_object(19503); } //carbone
+			else if (percent > 80 && percent <= 90) { r_num = real_object(19504); } //stagno
+			else if (percent > 90 && percent <= 95) { r_num = real_object(19505); } //oro
+			else if (percent > 95 && percent <= 96) { r_num = real_object(19506); } //platino
+			else if (percent > 96 && percent <= 97) { r_num = real_object(19507); } //mithril
+			else if (percent > 97 && percent <= 98) { r_num = real_object(19508); } //adamantite
 
 			//in questo caso esce il mob
 			if (percent == 99) {
@@ -6610,43 +6615,43 @@ void do_miner( struct char_data* ch ) {
 				percent = number(1,100);
 				switch (blocco) {
 				case 1:
-					if (percent <= 10 ) { r_num = real_object(19509); }
-					else if (percent > 10 && percent <= 20) { r_num = real_object(19510); }
-					else if (percent > 20 && percent <= 30) { r_num = real_object(19511); }
-					else if (percent > 30 && percent <= 40) { r_num = real_object(19512); }
-					else if (percent > 40 && percent <= 50) { r_num = real_object(19513); }
-					else if (percent > 50 && percent <= 60) { r_num = real_object(19514); }
-					else if (percent > 60 && percent <= 70) { r_num = real_object(19515); }
-					else if (percent > 70 && percent <= 80) { r_num = real_object(19516); }
-					else if (percent > 80 && percent <= 90) { r_num = real_object(19517); }
-					else if (percent > 90) { r_num = real_object(19518); }
+					if (percent <= 10 ) { r_num = real_object(19509); } //quarzo comune
+					else if (percent > 10 && percent <= 20) { r_num = real_object(19510); } //ossidiana
+					else if (percent > 20 && percent <= 30) { r_num = real_object(19511); } //opale
+					else if (percent > 30 && percent <= 40) { r_num = real_object(19512); } //turchese
+					else if (percent > 40 && percent <= 50) { r_num = real_object(19513); } //zircone
+					else if (percent > 50 && percent <= 60) { r_num = real_object(19514); } //lapislazzuli
+					else if (percent > 60 && percent <= 70) { r_num = real_object(19515); } //onice
+					else if (percent > 70 && percent <= 80) { r_num = real_object(19516); } //malachite
+					else if (percent > 80 && percent <= 90) { r_num = real_object(19517); } //ematite
+					else if (percent > 90) { r_num = real_object(19518); } //giada
 					break;
 				case 2:
-					if (percent <= 20 ) { r_num = real_object(19519); }
-					else if (percent > 20 && percent <= 40) { r_num = real_object(19520); }
-					else if (percent > 40 && percent <= 60) { r_num = real_object(19521); }
-					else if (percent > 60 && percent <= 80) { r_num = real_object(19522); }
-					else if (percent > 80) { r_num = real_object(19523); }
+					if (percent <= 20 ) { r_num = real_object(19519); } //resina fossile
+					else if (percent > 20 && percent <= 40) { r_num = real_object(19520); } //crisoberillo
+					else if (percent > 40 && percent <= 60) { r_num = real_object(19521); } //spinello blu
+					else if (percent > 60 && percent <= 80) { r_num = real_object(19522); } //tormalina
+					else if (percent > 80) { r_num = real_object(19523); } //quarzo comune, clone
 					break;
 				case 3:
-					if (percent <= 20 ) { r_num = real_object(19524); }
-					else if (percent > 20 && percent <= 40) { r_num = real_object(19525); }
-					else if (percent > 40 && percent <= 60) { r_num = real_object(19526); }
-					else if (percent > 60 && percent <= 80) { r_num = real_object(19527); }
-					else if (percent > 80) { r_num = real_object(19528); }
+					if (percent <= 20 ) { r_num = real_object(19524); } //quarzo rosa
+					else if (percent > 20 && percent <= 40) { r_num = real_object(19525); } //agata
+					else if (percent > 40 && percent <= 60) { r_num = real_object(19526); } //acquamarina
+					else if (percent > 60 && percent <= 80) { r_num = real_object(19527); } //berillo
+					else if (percent > 80) { r_num = real_object(19528); } //topazio
 					break;
 				case 4:
-					if (percent <= 20 ) { r_num = real_object(19529); }
-					else if (percent > 20 && percent <= 40) { r_num = real_object(19530); }
-					else if (percent > 40 && percent <= 60) { r_num = real_object(19531); }
-					else if (percent > 60 && percent <= 80) { r_num = real_object(19532); }
-					else if (percent > 80) { r_num = real_object(19533); }
+					if (percent <= 20 ) { r_num = real_object(19529); } //spinello nero
+					else if (percent > 20 && percent <= 40) { r_num = real_object(19530); } //fluorite
+					else if (percent > 40 && percent <= 60) { r_num = real_object(19531); } //ametista
+					else if (percent > 60 && percent <= 80) { r_num = real_object(19532); } //corindone
+					else if (percent > 80) { r_num = real_object(19533); } //granato
 					break;
 				case 5:
-					if (percent <= 20 ) { r_num = real_object(19534); }
-					else if (percent > 20 && percent <= 40) { r_num = real_object(19535); }
-					else if (percent > 40 && percent <= 60) { r_num = real_object(19536); }
-					else if (percent > 60 && percent <= 80) { r_num = real_object(19537); }
+					if (percent <= 20 ) { r_num = real_object(19534); } //zaffiro
+					else if (percent > 20 && percent <= 40) { r_num = real_object(19535); } //smeraldo
+					else if (percent > 40 && percent <= 60) { r_num = real_object(19536); } //rubino
+					else if (percent > 60 && percent <= 80) { r_num = real_object(19537); } //diamante
 					else if (percent > 80) {
 						act( "Che gli DEI ti salvino!! Hai risvegliato un BALROG!!",
 							 TRUE, ch, 0, 0, TO_CHAR);
