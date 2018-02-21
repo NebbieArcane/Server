@@ -2087,9 +2087,14 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	return( dam );
 }
 
-DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
-					   int type, int location) {
+/**
+* FLYP 20180221: demon leech + balancing
+**/
+DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int type, int location) {
 
+	int leech = 0;
+	char buf[256];
+	
 	if (dam >= 0) {
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
@@ -2099,6 +2104,12 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
 					!IS_AFFECTED( ch, AFF_FIRESHIELD ) ) {
 				damage( v, ch, dam, SPELL_FIREBALL, location );
 			}
+		}
+
+		if (GET_RACE(ch)==RACE_DEMON) {
+			leech = leechResult(ch, dam);
+			GET_HIT(ch) += leech;
+			alter_hit(ch, 0);
 		}
 
 		update_pos( v );
@@ -2111,6 +2122,75 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
 	}
 
 	return AllLiving;
+}
+
+int leechResult(struct char_data* ch, int dam) {
+	char buf[256];
+
+	int leech = 0;
+	int chNumClass = 0;
+	int bonus = 0;
+	int adjustment = 1;
+	int baseLeech = 5;
+
+	int wisBonus = wis_app[ (int)GET_RWIS(ch) ].bonus;
+	
+	sprintf( buf,"WIS bonus is [%d]", wisBonus );
+	act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	int maxLevel = GetMaxLevel(ch);
+
+	sprintf( buf,"Ch has max level [%d]", maxLevel );
+	act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	baseLeech =  MAX((maxLevel + wisBonus)/5, 1);
+
+	sprintf( buf,"Base leech is [%d]", baseLeech );
+	act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	chNumClass = HowManyClasses(ch);
+
+	if(HasClass(ch, CLASS_MAGIC_USER)) {
+		leech += baseLeech * 3;
+
+		sprintf( buf,"Ch has class MU. leec become [%d]", leech );
+		act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	} else if (HasClass(ch, CLASS_THIEF)) {
+		leech += baseLeech *2;
+
+		sprintf( buf,"Ch has class TH. leec become [%d]", leech );
+		act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	} else if (HasClass(ch, CLASS_WARRIOR)) {
+		leech += baseLeech * 0;
+
+		sprintf( buf,"Ch has class WA. leec become [%d]", leech );
+		act( buf, FALSE, ch, 0, 0, TO_CHAR );
+	} 
+
+	sprintf( buf,"La tua esperienza e` aumentata di %d punti.", exp );
+			
+
+	switch(chNumClass) {
+		case 3:
+			// we don't have 3class demon. we left this switch here for future evolution (if happens)
+		case 2:
+			leech = leech/3;
+			sprintf( buf,"Ch is multiclass. leec become [%d]", leech );
+			act( buf, FALSE, ch, 0, 0, TO_CHAR );
+			break;
+		default:
+			// right now do nothing..
+			break;
+	}
+
+	leech = MIN(dice(1,leech), dam);
+
+	sprintf( buf,"FINAL leech is [%d]", leech );
+	act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	return leech;
 }
 
 
