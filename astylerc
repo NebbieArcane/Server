@@ -12,3 +12,4 @@ suffix=none
 indent=force-tab
 attach-return-type
 align-reference=name
+max-code-length=200

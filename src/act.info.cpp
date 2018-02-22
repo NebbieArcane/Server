@@ -6,7 +6,7 @@
  *  Usage : Informative commands.                                          *
  *************************************************************************
  */
-
+#include "act.info.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

@@ -4,47 +4,18 @@
 *
  * $Id: act.social.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-
+#include "act.social.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include "protos.hpp"
 #include "snew.hpp"
+
 /* extern variables */
 
-extern struct descriptor_data* descriptor_list;
-
-
-struct social_messg {
-	int act_nr;
-	int hide;
-	int min_victim_position; /* Position of victim */
-
-	/* No argument was supplied */
-	char* char_no_arg;
-	char* others_no_arg;
-
-	/* An argument was there, and a victim was found */
-	char* char_found;                /* if NULL, read no further, ignore args */
-	char* others_found;
-	char* vict_found;
-
-	/* An argument was there, but no victim was found */
-	char* not_found;
-
-	/* The victim turned out to be the character */
-	char* char_auto;
-	char* others_auto;
-}* soc_mess_list = 0;
-
-
-
-struct pose_type {
-	int level;          /* minimum level for poser */
-	char* poser_msg[4];  /* message to poser        */
-	char* room_msg[4];   /* message to room         */
-} pose_messages[MAX_MESSAGES];
+struct social_messg * soc_mess_list = 0;
+struct pose_type pose_messages[MAX_MESSAGES];
 
 static int list_top = -1;
 

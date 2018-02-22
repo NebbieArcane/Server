@@ -1,19 +1,9 @@
 /* AlarMUD
  * $Id: db.c,v 1.4 2002/03/17 16:48:47 Thunder Exp $
  * */
-
-/**
-#ifdef CYGWIN
-    #include <sys/errno.h>
-    #define errno (*__errno())
-    extern int *__errno _PARAMS ((void));
-#else
-    extern int errno;
-#endif
- **/
+#include "db.hpp"
 #include <sys/errno.h>
 
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -27,20 +17,16 @@
 #include "events.hpp"
 #include "fight.hpp"
 #include "gilde.hpp"
-
 #include "protos.hpp"
 #include "Registered.hpp"
 #include "snew.hpp"
 #include "status.hpp"
 #include "utils.hpp"
+#include "specass2.hpp"
+#include "spell_parser.hpp"
 using Nebbie::Registered;
 
-#define RENT_INACTIVE 2    /* delete the users rent files after 2 month */
-#define NEW_ZONE_SYSTEM
-#define killfile "killfile"
-#define fread_number(FF)  fread_number_int(FF,__FILE__,__LINE__,curfile)
-#define OBJ_DIR "objects"
-#define MOB_DIR "mobiles"
+
 
 /**************************************************************************
  *  declarations of most of the 'global' variables                         *

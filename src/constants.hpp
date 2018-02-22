@@ -43,7 +43,7 @@ extern const char* drinks[];
 
 extern const char* drinknames[];
 
-int RacialMax[MAX_RACE+1][MAX_CLASS];
+extern int RacialMax[MAX_RACE+1][MAX_CLASS];
 
 extern int RacialHome[MAX_RACE+1][2];
 

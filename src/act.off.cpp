@@ -4,7 +4,7 @@
 * AlarMUD
 * $Id: act.off.c,v 1.5 2002/03/23 20:49:38 Thunder Exp $
 */
-
+#include "act.off.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

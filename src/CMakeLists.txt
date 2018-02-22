@@ -16,8 +16,10 @@ pkg_check_modules(SQLITE sqlite3)
 find_library(CRYPT crypt)
 message(STATUS "MAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}")
 file(GLOB file_hpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.hpp)
+list(SORT file_hpp)
 message(STATUS "file_hpp=${file_hpp}")
 file(GLOB file_cpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.cpp)
+list(SORT file_cpp)
 message(STATUS "file_cpp=${file_cpp}")
 
 add_definitions(
@@ -54,32 +56,33 @@ target_link_libraries(myst  ${SQLITE_STATIC_LDFLAGS})
 target_link_libraries(myst ${CRYPT})
 #Warning managements
 target_compile_options(myst PUBLIC
-#	-Werror 
-	-Wall 
-	-Wextra 
+	-Werror 
+	-w
+#	-Wall 
+#	-Wextra 
 #	-pedantic 
-	-Wno-write-strings
-	-Wcast-align 
-	-Wcast-qual 
-	-Wctor-dtor-privacy 
-	-Wdisabled-optimization 
-	-Wformat=2 
-	-Winit-self 
-	-Wlogical-op 
-	-Wmissing-include-dirs 
-	-Wnoexcept 
+	-Wwrite-strings
+#	-Wcast-align 
+#	-Wcast-qual 
+#	-Wctor-dtor-privacy 
+#	-Wdisabled-optimization 
+#	-Wformat=2 
+#	-Winit-self 
+#	-Wlogical-op 
+#	-Wmissing-include-dirs 
+#	-Wnoexcept 
 #	-Wold-style-cast 
-	-Woverloaded-virtual 
-	-Wredundant-decls 
+#	-Woverloaded-virtual 
+#	-Wredundant-decls 
 	-Wshadow 
-	-Wsign-promo 
-	-Wstrict-null-sentinel 
-	-Wstrict-overflow=5 
-	-Wundef 
-	-Wno-unused 
-	-Wno-variadic-macros 
-	-Wno-parentheses 
-	-fdiagnostics-show-option
+#	-Wsign-promo 
+#	-Wstrict-null-sentinel 
+#	-Wstrict-overflow=5 
+#	-Wundef 
+#    -Wno-unused 
+#	-Wno-variadic-macros 
+#	-Wno-parentheses 
+#	-fdiagnostics-show-option
 )
 get_cmake_property(_variableNames VARIABLES)
 #foreach (_variableName ${_variableNames})

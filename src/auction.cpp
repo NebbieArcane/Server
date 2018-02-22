@@ -8,7 +8,6 @@
 #include <ctype.h>
 #include "protos.hpp"
 #include "utils.hpp"
-#include "mem_test.hpp"
 #include "auction.hpp" // SALVO aggiunta, modificate righe sotto
 #include "utility.hpp"
 
@@ -16,9 +15,6 @@
 #define BUYER 1 // SALVO per la nuova is_present
 #define PULSE_INTERNAL             (2) /* si moltiplica per pulse_auction */
 AUCTION_DATA*  auction;
-extern void talk_auction (char* argument);
-void do_auction_int (struct char_data* ch, char* argument, int cmd);
-void auction_update();
 int advatoi (const char* s);
 int parsebet (const int currentbet, const char* argument);
 
@@ -56,7 +52,7 @@ static bool is_present (int chi, const char* nome) { // SALVO riscritta
 	return FALSE;
 }
 
-void do_auction_int (struct char_data* ch, char* argument, int cmd) {
+void do_auction_int (struct char_data* ch, const char* argument, int cmd) {
 	OBJ_DATA* obj;
 	char arg1[MAX_INPUT_LENGTH];
 	char buf[MAX_STRING_LENGTH];

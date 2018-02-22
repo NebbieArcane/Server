@@ -1,24 +1,42 @@
-/*
- * act.social.hpp
- *
- *  Created on: 06 feb 2018
- *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
- */
+#ifndef __ACT_SOCIAL_HPP
+#define __ACT_SOCIAL_HPP
+#include "structs.hpp"
+#include <stdio.h>
+struct social_messg {
+	int act_nr;
+	int hide;
+	int min_victim_position; /* Position of victim */
 
-#ifndef SRC_ACT_SOCIAL_HPP_
-#define SRC_ACT_SOCIAL_HPP_
+	/* No argument was supplied */
+	char* char_no_arg;
+	char* others_no_arg;
 
-char* fread_action(FILE* fl);
-void boot_social_messages();
-int find_action(int cmd);
-void do_action(struct char_data* ch, char* argument, int cmd);
-void do_insult(struct char_data* ch, char* argument, int cmd);
-void boot_pose_messages();
-void do_pose(struct char_data* ch, char* argument, int cmd);
+	/* An argument was there, and a victim was found */
+	char* char_found;                /* if NULL, read no further, ignore args */
+	char* others_found;
+	char* vict_found;
+
+	/* An argument was there, but no victim was found */
+	char* not_found;
+
+	/* The victim turned out to be the character */
+	char* char_auto;
+	char* others_auto;
+};
+extern struct social_messg * soc_mess_list;
+struct pose_type {
+	int level;          /* minimum level for poser */
+	char* poser_msg[4];  /* message to poser        */
+	char* room_msg[4];   /* message to room         */
+};
+extern struct pose_type pose_messages[MAX_MESSAGES];
 
 
-
-#endif /* SRC_ACT_SOCIAL_HPP_ */
+void boot_pose_messages() ;
+void boot_social_messages() ;
+void do_action(struct char_data* ch, char* argument, int cmd) ;
+void do_insult(struct char_data* ch, char* argument, int cmd) ;
+void do_pose(struct char_data* ch, char* argument, int cmd) ;
+int find_action(int cmd) ;
+char* fread_action(FILE* fl) ;
+#endif // __ACT_SOCIAL_HPP

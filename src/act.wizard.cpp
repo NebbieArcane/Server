@@ -3,25 +3,26 @@
 * $Id: act.wizard.c,v 1.5 2002/03/04 00:35:51 Thunder Exp $
 *
 */
-#define _XOPEN_SOURCE 1
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#ifdef CYGWIN
-#include <crypt.h>
-#endif
 
 #include "snew.hpp"
 #include "interpreter.hpp"
 #include "protos.hpp"
 #include "cmdid.hpp"
 #include "fight.hpp"
+#include "act.wizard.hpp"
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "utility.hpp"
+#include "handler.hpp"
+#include "db.hpp"
+#include "maximums.hpp"
+#include "spell_parser.hpp"
 char EasySummon = 1;
 long numero_mob_obj[100000];
 

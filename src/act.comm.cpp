@@ -5,7 +5,7 @@
  * Modificato per Nebbie2000 da Ryltar
  * $Id: act.comm.c,v 2.1 2002/05/06 09:50:00 Thunder Exp $
  * */
-
+#include "act.comm.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

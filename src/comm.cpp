@@ -2,6 +2,7 @@
 *** AlarMUD        comm.c main communication routines. Based on DIKU and
 ***                       SillyMUD.
 */
+#include "comm.hpp"
 #include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -28,7 +29,9 @@
 #include "signals.hpp"
 #include "snew.hpp"
 #include "status.hpp"
-#include "version.hpp"
+#include "spell_parser.hpp"
+#include "db.hpp"
+
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
 #define MAX_CONNECTS 1024  /* max number of descriptors (connections) */
@@ -43,19 +46,6 @@
 
 #define STATE(d) ((d)->connected)
 
-
-/* extern struct char_data *character_list; */
-#if HASH
-extern struct hash_header room_db;          /* In db.c */
-#else
-extern struct room_data* room_db;          /* In db.c */
-#endif
-
-extern int top_of_world;            /* In db.c */
-extern struct time_info_data time_info;  /* In db.c */
-extern char help[];
-extern char login[];
-extern int RacialMax[][MAX_CLASS];
 unsigned long pulse;
 struct descriptor_data* descriptor_list, *next_to_process;
 struct txt_block* bufpool = 0;  /* pool of large output buffers */
@@ -72,8 +62,6 @@ int rebootgame = 0;         /* reboot the game after a shutdown */
 int no_specials = 0;    /* Suppress ass. of special routines */
 long Uptime;            /* time that the game has been up */
 
-extern long SystemFlags;
-
 #if SITELOCK
 char hostlist[MAX_BAN_HOSTS][30];  /* list of sites to ban           */
 int numberhosts;
@@ -85,11 +73,6 @@ int tics = 0;        /* for extern checkpointing */
 int NumTimeCheck = PULSE_MOBILE; /* dovrebbe essere il piu` grande dei PULSE */
 struct timeval aTimeCheck[ PULSE_MOBILE ];
 int gnTimeCheckIndex = 0;
-
-
-extern struct zone_data* zone_table;
-extern struct char_data* character_list;
-extern struct obj_data* object_list;
 
 
 struct affected_type*  Check_hjp, *Check_old_af;

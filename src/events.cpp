@@ -15,19 +15,16 @@
 *                   is non-NULL.                                          *
 *                   Moved struct event definition from events.h.          *
 ************************************************************************ */
-
-
 #include "events.hpp"
-
 #include <stdlib.h>
 
 #include "hash.hpp"
 #include "queue.hpp"
-#include "snew.hpp"
-#include "structs.hpp"
-#include "utility.hpp"
+//#include "snew.hpp"
+//#include "structs.hpp"
+//#include "utility.hpp"
 #include "utils.hpp"
-
+#include "comm.hpp"
 
 struct event {
 	EVENTFUNC(*func);
@@ -35,18 +32,7 @@ struct event {
 	struct q_element* q_el;
 };
 
-
 struct queue* event_q;          /* the event queue */
-
-
-/* external variables */
-extern unsigned long pulse;
-extern int hit_gain(struct char_data* ch);
-extern int move_gain(struct char_data* ch);
-extern int mana_limit(struct char_data* ch);
-extern int hit_limit(struct char_data* ch);
-extern int move_limit(struct char_data* ch);
-extern int mana_gain(struct char_data* ch);
 
 /* initializes the event queue */
 void event_init(void) {

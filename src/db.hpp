@@ -4,7 +4,10 @@
 /* data files used by the game system */
 #ifndef __DB
 #define __DB 1
-#include "typedefs.hpp"
+#include "structs.hpp"
+#include "hash.hpp"
+#include <stdio.h>
+
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
 #define MOB_FILE          "myst.mob"     /* monster prototypes         */
 #define OBJ_FILE          "myst.obj"     /* object prototypes          */
@@ -36,8 +39,61 @@
 
 #define REAL 0
 #define VIRTUAL 1
+#define RENT_INACTIVE 2    /* delete the users rent files after 2 month */
+#define NEW_ZONE_SYSTEM
+#define killfile "killfile"
+#define fread_number(FF)  fread_number_int(FF,__FILE__,__LINE__,curfile)
+#define OBJ_DIR "objects"
+#define MOB_DIR "mobiles"
+// Refactored stuff
+extern const long beginning_of_time;
+extern int no_mail;
+extern int top_of_scripts;
+extern int top_of_world; /* ref to the top element of world */
+#if HASH
+extern struct hash_header room_db;
+#else
+extern struct room_data* room_db[WORLD_SIZE];
+#endif
+extern struct weather_data weather_info;
+extern struct obj_data* object_list; /* the global linked list of obj's */
+extern struct char_data* character_list; /* global l-list of chars          */
+
+extern struct zone_data* zone_tabl;
+extern int top_of_zone_table;
+extern struct message_list fight_messages[MAX_MESSAGES]; /* fighting messages   */
+extern struct player_index_element* player_table; /* index to player file   */
+extern int top_of_p_table; /* ref to top of table             */
+extern int top_of_p_file;
+extern long total_bc;
+extern long room_count;
+extern long mob_count;
+extern long obj_count;
+extern long total_mbc;
+extern long total_obc;
+extern int top_of_objt;
+extern int top_of_mobt;
+extern struct index_data* mob_index; /* index table for mobile file     */
+extern struct index_data* obj_index; /* index table for object file     */
+extern struct help_index_element* help_index;
+extern struct help_index_element* wizhelp_index;
 
 
+
+extern int mob_tick_count;
+extern char wmotd[MAX_STRING_LENGTH];
+extern char credits[MAX_STRING_LENGTH]; /* the Credits List                */
+extern char news[MAX_STRING_LENGTH]; /* the news                        */
+extern char wiznews[MAX_STRING_LENGTH]; /* wiz news                        */
+extern char motd[MAX_STRING_LENGTH]; /* the messages of today           */
+extern char help[MAX_STRING_LENGTH]; /* the main help page              */
+extern char info[MAX_STRING_LENGTH]; /* the info text                   */
+extern char wizlist[MAX_STRING_LENGTH * 2]; /* the wizlist                     */
+extern char princelist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
+extern char immlist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
+extern char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
+extern char login[MAX_STRING_LENGTH];
+// Old stuff
 /* structure for the reset commands */
 struct reset_com {
 	char command;   /* current command                      */
@@ -84,6 +140,7 @@ struct zone_data {
 	 *  2: Just reset.                           *
 	 */
 };
+extern struct zone_data* zone_table; /* table of reset data */
 
 
 
@@ -134,7 +191,7 @@ struct help_index_element {
 	char* keyword;
 	long pos;
 };
-
+extern struct time_info_data time_info;
 
 #define ZONE_NEVER           0
 #define ZONE_EMPTY           1
@@ -189,6 +246,8 @@ int real_mobile(int iVNum);
 int real_object(int iVNum);
 int ObjRoomCount(int nr, struct room_data* rp);
 int MobRoomCount(int nr, struct room_data* rp);
+void ReadTextZone(FILE* fl) ;
+int CheckKillFile(int iVNum);
 int str_len(char* buf);
 int load();
 void gr();

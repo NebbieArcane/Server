@@ -2,15 +2,15 @@
 /* $Id: act.other.c,v 1.5 2002/03/11 11:33:34 Thunder Exp $
  *
  */
-
+#include "act.other.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 
 #include "fight.hpp"
-#include "protos.hpp"
 #include "snew.hpp"
+#include "protos.hpp"
 #include "utility.hpp"
 #include "constants.hpp"
 #include "spell_parser.hpp"

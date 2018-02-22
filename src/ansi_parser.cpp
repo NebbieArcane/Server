@@ -14,7 +14,6 @@
 
 #include "protos.hpp"
 #include "snew.hpp"
-extern long SystemFlags;
 
 /*
  *   $CMBFG, where M is modier, B is back group color and FG is fore

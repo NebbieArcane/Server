@@ -3,7 +3,7 @@
  * See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
  * $Id: act.move.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
 */
-
+#include "act.move.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

@@ -17,6 +17,8 @@ struct  auction_data {
 };
 typedef struct  auction_data AUCTION_DATA; /* auction data */
 extern  AUCTION_DATA*  auction;
-extern void auction_update();
-extern void do_auction_int (struct char_data* ch, char* argument, int cmd);
+void talk_auction (const char* argument);
+void auction_update();
+void do_auction_int (struct char_data* ch, const char* argument, int cmd);
+
 #endif

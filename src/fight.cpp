@@ -19,6 +19,7 @@
 #include "structs.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 
 #define DUAL_WIELD(ch) (ch->equipment[WIELD] && ch->equipment[HOLD] && ITEM_TYPE(ch->equipment[WIELD])==ITEM_WEAPON && 			ITEM_TYPE(ch->equipment[HOLD])==ITEM_WEAPON)
 #define GET_GRP_LEVEL(ch) (GetMaxLevel(ch)+(GetSecMaxLev(ch)/2)+  (GetThirdMaxLev(ch)/3))
@@ -2720,10 +2721,7 @@ int HitOrMiss(struct char_data* ch, struct char_data* victim, int calc_thaco)
 }
 
 DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,
-						 int w_type,
-						 DamageResult (*dam_func)( struct char_data*,
-								 struct char_data*, int,
-								 int, int ), int location) {
+						 int w_type, pDamageFunc dam_func, int location) {
 	struct obj_data* o;
 
 	if( type <= 0 )
@@ -2958,10 +2956,7 @@ int LoreBackstabBonus(struct char_data* ch, struct char_data* v) {
 }
 
 DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
-						int type, int w_type,
-						DamageResult (*dam_func)( struct char_data*,
-								struct char_data*,
-								int, int, int ), int location) {
+						int type, int w_type,pDamageFunc dam_func, int location) {
 	extern byte backstab_mult[];
 	DamageResult dead;
 
@@ -3000,11 +2995,7 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 
 
 DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,
-					   int type,
-					   DamageResult (*dam_func)( struct char_data*,
-							   struct char_data*,
-							   int, int, int ),
-					   int DistanceWeapon, int location ) {
+					   int type, pDamageFunc dam_func, int DistanceWeapon, int location ) {
 	int w_type, thaco, dam ;
 	struct char_data* tmp_victim, *temp, *victim ;
 	struct obj_data* wielded=0;  /* this is rather important. */

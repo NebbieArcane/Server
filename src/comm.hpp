@@ -3,6 +3,7 @@
 #ifndef __COMM
 #define __COMM 1
 #include "config.hpp"
+#include "structs.hpp"
 #define TO_ROOM    0
 #define TO_VICT    1
 #define TO_NOTVICT 2
@@ -17,52 +18,61 @@
 #define PLAYER_AUTH 0
 #define DFLT_DIR		"lib"				/* default data directory     */
 
+extern struct descriptor_data* descriptor_list;
+extern struct descriptor_data* next_to_process;
+extern int NumTimeCheck ; /* dovrebbe essere il piu` grande dei PULSE */
+extern struct timeval aTimeCheck[ PULSE_MOBILE ];
+extern int gnTimeCheckIndex;
+extern unsigned long pulse;
 
-int _affected_by_s(struct char_data* ch, int skill);
-void actall(const char* s1,const char* s2, const char* s3, struct char_data* ch, struct char_data* vc);
-void act(const char* str, int hide_invisible, struct char_data* ch, struct obj_data* obj, void* vict_obj, int type );
-void CheckCharAffected(char* msg );
-inline void CheckObjectExDesc(char* msg );
-void close_socket_fd(int desc);
-void close_sockets(int s);
-void close_socket(struct descriptor_data* d);
-void coma(int s);
-void construct_prompt(char* outbuf, struct char_data* ch );
-void flush_queues(struct descriptor_data* d);
-void game_loop(int s);
-int get_from_q(struct txt_q* queue, char* dest);
-int init_socket(int port);
-void InitScreen(struct char_data* ch);
-int main(int argc, char** argv);
-int new_connection(int s);
-int new_descriptor(int s);
-void nonblock(int s );
+
+
+void CheckCharAffected( char* msg ) ;
+inline void CheckObjectExDesc( char* msg ) ;
+void InitScreen(struct char_data* ch) ;
 void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void* vict_obj, struct obj_data* obj, char* buf);
-char* ParseAnsiColors(int UsingAnsi, const char* txt );
-int process_input(struct descriptor_data* t);
-int process_output(struct descriptor_data* t);
-void raw_force_all(char* to_force);
-void run_the_game(int port);
-void save_all();
-void send_to_all(const char* messg );
-void send_to_arctic(const char* messg);
-void send_to_char(const char* messg, struct char_data* ch );
-void send_to_desert(const char* messg );
-void send_to_except(const char* messg, struct char_data* ch);
-void send_to_out_other(const char* messg );
-void send_to_outdoor(const char* messg);
+char* ParseAnsiColors( int UsingAnsi, const char* txt ) ;
+void UpdateScreen(struct char_data* ch, int update) ;
+int _affected_by_s(struct char_data* ch, int skill) ;
+void act( const char* str, int hide_invisible, struct char_data* ch,struct obj_data* obj, void* vict_obj, int type );
+void actall(const char* s1, const char* s2, const char* s3,	struct char_data* ch, struct char_data* vc);
+void close_socket(struct descriptor_data* d) ;
+void close_socket_fd( int desc) ;
+void close_sockets(int s) ;
+void coma(int s) ;
+void construct_prompt( char* outbuf, struct char_data* ch ) ;
+void flush_queues(struct descriptor_data* d) ;
+void flush_queues(struct descriptor_data* d) ;
+void game_loop(int s) ;
+int get_from_q(struct txt_q* queue, char* dest) ;
+int init_socket(int port) ;
+int main (int argc, char** argv) ;
+int new_connection(int s) ;
+int new_descriptor(int s) ;
+void nonblock( int s ) ;
+void nonblock(int s) ;
+int process_input(struct descriptor_data* t) ;
+int process_output(struct descriptor_data* t) ;
+int process_output(struct descriptor_data* t) ;
+void raw_force_all( char* to_force);
+void run_the_game(int port) ;
+void save_all() ;
+void send_to_all(const char* messg ) ;
+void send_to_arctic(const char* messg) ;
+void send_to_char( const char* messg, struct char_data* ch ) ;
+void send_to_desert(const char* messg ) ;
+void send_to_except(const char* messg, struct char_data* ch) ;
+void send_to_out_other(const char* messg ) ;
+void send_to_outdoor(const char* messg) ;
+void send_to_room(const char* messg, int room) ;
+void send_to_room_except(const char* messg, int room, struct char_data* ch) ;
 void send_to_room_except_two(const char* messg, int room, struct char_data* ch1, struct char_data* ch2);
-void send_to_room_except(const char* messg, int room, struct char_data* ch);
-void send_to_room(const char* messg, int room);
-void send_to_zone(const char* messg, struct char_data* ch);
-void str2ansi(const char* p2, char* p1, int start, int stop );
-struct timeval timediff(struct timeval* a, struct timeval* b);
-int update_max_usage(void);
-void UpdateScreen(struct char_data* ch, int update);
-int write_to_descriptor(int desc, char* txt);
-void write_to_output(char* txt, struct descriptor_data* t);
-void write_to_q(char* txt, struct txt_q* queue);
-
-
-
+void send_to_zone(const char* messg, struct char_data* ch) ;
+void str2ansi( char* p2, char* p1, int start, int stop ) ;
+struct timeval timediff(struct timeval* a, struct timeval* b) ;
+int update_max_usage(void) ;
+int write_to_descriptor(int desc, char* txt) ;
+int write_to_descriptor( int desc, char* txt) ;
+void write_to_output(char* txt, struct descriptor_data* t) ;
+void write_to_q(char* txt, struct txt_q* queue) ;
 #endif
