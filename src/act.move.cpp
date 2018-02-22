@@ -13,21 +13,8 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "status.hpp"
-/*   external vars  */
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern int rev_dir[];
-extern char* dirs[];
-extern char* dirsFrom[];
-extern char* dirsTo[];
-extern int movement_loss[];
-extern char* exits[];
+#include "db.hpp"
+#include "spell_parser.hpp"
 
 void NotLegalMove(struct char_data* ch) {
 	send_to_char( "Non puoi andare da quella parte...\n\r", ch);
@@ -510,7 +497,7 @@ void DisplayGroupMove(struct char_data* ch, int dir, int was_in, int total) {
 	DisplayMove(ch, dir, was_in, total);
 }
 
-void do_move(struct char_data* ch, const const char* argument, int cmd) {
+void do_move(struct char_data* ch, const char* argument, int cmd) {
 	SetStatus( "do_move started", GET_NAME_DESC( ch ), ch );
 
 	if (RIDDEN(ch)) {
@@ -875,7 +862,7 @@ int canScythe( struct char_data* ch ) {
 	{ return FALSE; }
 }
 
-void do_open_exit(struct char_data* ch, const const char* argument, int cmd) {
+void do_open_exit(struct char_data* ch, const char* argument, int cmd) {
 	void do_miner( struct char_data *ch);
 
 	int door;
@@ -1035,7 +1022,7 @@ void do_open_exit(struct char_data* ch, const const char* argument, int cmd) {
 	}
 }
 
-void do_open(struct char_data* ch, const const char* argument, int cmd) {
+void do_open(struct char_data* ch, const char* argument, int cmd) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct obj_data* obj;
@@ -1093,7 +1080,7 @@ void do_open(struct char_data* ch, const const char* argument, int cmd) {
 }
 
 
-void do_close(struct char_data* ch, const const char* argument, int cmd) {
+void do_close(struct char_data* ch, const char* argument, int cmd) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct room_direction_data* back, *exitp;
@@ -1236,7 +1223,7 @@ void raw_lock_door( struct char_data* ch,
 	}
 }
 
-void do_lock(struct char_data* ch, const const char* argument, int cmd) {
+void do_lock(struct char_data* ch, const char* argument, int cmd) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
 	struct room_direction_data* exitp;
@@ -1295,7 +1282,7 @@ void do_lock(struct char_data* ch, const const char* argument, int cmd) {
 	}
 }
 
-void do_unlock(struct char_data* ch, const const char* argument, int cmd) {
+void do_unlock(struct char_data* ch, const char* argument, int cmd) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
 	struct room_direction_data* exitp;
@@ -1353,7 +1340,7 @@ void do_unlock(struct char_data* ch, const const char* argument, int cmd) {
 }
 
 
-void do_pick(struct char_data* ch, const const char* argument, int cmd) {
+void do_pick(struct char_data* ch, const char* argument, int cmd) {
 	byte percent;
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
@@ -1431,7 +1418,7 @@ void do_pick(struct char_data* ch, const const char* argument, int cmd) {
 	}
 }
 
-void do_enter(struct char_data* ch, const const char* argument, int cmd) {
+void do_enter(struct char_data* ch, const char* argument, int cmd) {
 	int door;
 	char buf[MAX_INPUT_LENGTH], tmp[MAX_STRING_LENGTH];
 	struct room_direction_data*        exitp;
@@ -1466,7 +1453,7 @@ void do_enter(struct char_data* ch, const const char* argument, int cmd) {
 }
 
 
-void do_leave(struct char_data* ch, const const char* argument, int cmd) {
+void do_leave(struct char_data* ch, const char* argument, int cmd) {
 	int door;
 	struct room_direction_data*        exitp;
 	struct room_data*        rp;
@@ -1486,7 +1473,7 @@ void do_leave(struct char_data* ch, const const char* argument, int cmd) {
 }
 
 
-void do_stand(struct char_data* ch, const const char* argument, int cmd) {
+void do_stand(struct char_data* ch, const char* argument, int cmd) {
 	/* can't stand while memorizing! */
 	if (affected_by_spell(ch,SKILL_MEMORIZE)) {
 		affect_from_char(ch,SKILL_MEMORIZE);
@@ -1535,7 +1522,7 @@ void do_stand(struct char_data* ch, const const char* argument, int cmd) {
 }
 
 
-void do_sit(struct char_data* ch, const const char* argument, int cmd) {
+void do_sit(struct char_data* ch, const char* argument, int cmd) {
 	switch(GET_POS(ch)) {
 	case POSITION_STANDING:
 		act("Ti siedi.", FALSE, ch, 0,0, TO_CHAR);
@@ -1569,7 +1556,7 @@ void do_sit(struct char_data* ch, const const char* argument, int cmd) {
 }
 
 
-void do_rest(struct char_data* ch, const const char* argument, int cmd) {
+void do_rest(struct char_data* ch, const char* argument, int cmd) {
 	switch(GET_POS(ch)) {
 	case POSITION_STANDING:
 		act( "Ti fermi a riposare le stanche membra.", FALSE, ch, 0, 0,
