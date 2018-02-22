@@ -10,17 +10,8 @@
 #include "snew.hpp"
 #include "status.hpp"
 #include "utils.hpp" // Gaia 2001
-/* extern variables */
+#include "spell_parser.hpp"
 
-extern struct str_app_type str_app[];
-extern struct descriptor_data* descriptor_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-/* extern functions */
-
-struct obj_data* create_money( int amount );
-char getall(char* name, char* newname);
-int getabunch(char* name, char*  newname);
-int str_cmp2(char* arg1, char* arg2);
 
 /* procedures related to get */
 void get( struct char_data* ch, struct obj_data* obj_object,
@@ -81,7 +72,7 @@ void get( struct char_data* ch, struct obj_data* obj_object,
 	}
 }
 void get_trophy(struct char_data* ch, struct obj_data* ob);
-void do_get(struct char_data* ch, char* argument, int cmd) {
+void do_get(struct char_data* ch,const char* argument, int cmd) {
 	char arg1[MAX_STRING_LENGTH];
 	char arg2[MAX_STRING_LENGTH];
 	char buffer[MAX_STRING_LENGTH];
@@ -511,7 +502,7 @@ void get_trophy(struct char_data* ch, struct obj_data* ob) {
 
 
 
-void do_drop(struct char_data* ch, char* argument, int cmd) {
+void do_drop(struct char_data* ch,const char* argument, int cmd) {
 	char arg[MAX_INPUT_LENGTH];
 	char arg2[ MAX_INPUT_LENGTH ];
 	int amount;
@@ -695,7 +686,7 @@ void do_drop(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_put(struct char_data* ch, char* argument, int cmd) {
+void do_put(struct char_data* ch,const char* argument, int cmd) {
 	char buffer[256];
 	char arg1[128];
 	char arg2[128];
@@ -830,7 +821,7 @@ void do_put(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-int newstrlen(char* p) {
+int newstrlen(const char* p) {
 	int i;
 
 	for(i=0; i<10&&*p; i++,p++);
@@ -901,7 +892,7 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 
 
 
-void do_give(struct char_data* ch, char* argument, int cmd) {
+void do_give(struct char_data* ch,const char* argument, int cmd) {
 	char obj_name[200], vict_name[80], buf[132];
 	char arg[80], newarg[100];
 	int amount, num, p, count;
@@ -1063,7 +1054,7 @@ void do_give(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_pquest(struct char_data* ch, char* argument, int cmd) {
+void do_pquest(struct char_data* ch,const char* argument, int cmd) {
 	char obj_name[200], vict_name[80], buf[132];
 	char arg[80], newarg[100];
 	int punti_quest, num, p, count, old_punti;
