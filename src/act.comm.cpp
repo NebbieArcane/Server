@@ -13,16 +13,10 @@
 #include "auction.hpp"
 #include "protos.hpp"
 #include "snew.hpp"
+#include "constants.hpp"
 
 
-
-/* extern variables */
-
-extern struct room_data* world;
-extern struct descriptor_data* descriptor_list;
-extern char* dirs[];
-
-char* scrambler(struct char_data* ch,char* message) {
+char* scrambler(struct char_data* ch,const char* message) {
 	static char buf[MAX_STRING_LENGTH];
 	int i;
 	int percent=0;
