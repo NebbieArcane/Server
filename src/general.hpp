@@ -12,6 +12,7 @@
 #define GENERAL_HPP_
 #include <iostream>
 #include <string>
+#include <cstddef>
 using std::string;
 
 

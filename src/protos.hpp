@@ -6,7 +6,6 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "hash.hpp"
-#include "heap.hpp"
 #include "mail.hpp"
 #include "maximums.hpp"
 #include "parser.hpp"

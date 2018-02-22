@@ -1,6 +1,6 @@
 /*$Id: magicutils.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
-
+#include "magicutils.hpp"
 #include <stdio.h>
 #include <assert.h>
 
@@ -8,10 +8,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 
-/* Extern structures */
-extern struct room_data* world;
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
+
 
 
 void SwitchStuff( struct char_data* giver, struct char_data* taker) {

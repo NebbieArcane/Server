@@ -12,30 +12,37 @@
 
 #define RU_SORCERER "\n\rHai scelto la classe Magic user. Abbiamo due tipi di maghi qui.\n\rIl Mage (Mago) utilizza il Mana per la sua potenza.\n\rIl Sorcerer (Stregone) utilizza la sua memoria per praticare gli incantesimi.\n\rLo stregone deve sedersi e memorizzare l'incantesimo di sua scelta prima di\n\rpoterlo usare (recall). Si dice che gli stregoni siano piu` deboli ai bassi livellima, una volta\n\racquisita esperienza, possono essere una delle classi piu` potenti.\n\r\n\rBatti 'si' se vuoi essere uno Stregone. Batti return se vuoi essere un mago.\n\rVuoi essere uno stregone ? (si/no): "
 #define NEWBIE_NOTE "Benvenuto a Nebbie Arcane. Di seguito ci sono alcune istruzioni per aiutarti\n\ra cominciare.\n\r\n\r 1) A noi piace che la gente si diverta con il nostro gioco. Ma nessuno e`\n\r    obbligato. Se ti piace sei il benvenuto, altrimenti non disturbare quelli\n\r    che si divertono.\n\r 2) I comandi per i novizi sono HELP, NEWS e COMMANDS. Utilizza HELP per avere\n\r    risposta alle tue domande. Se sei ancora confuso, chiedi in giro.\n\r 3) Per favore, niente insulti o bestemmie nei canali pubblici. Ossia i\n\r    comandi GOSSIP, SHOUT ed AUCTION. La punizione consiste nella rimozione\n\r    dell'abilita` di usare questi comandi.\n\r 4) Non tutti i canali pubblici funzionano attraverso tutto il mondo.\n\r    GOSSIP, AUCTION e TELL funzionano solo nella zona intorno al personaggio.\n\r    Ci sono speciali abilita` ed incantesimi per parlare al mondo intero.     \n\r 5) Il gioco e` una cosa seria :). Ti prego, quindi di usare un nome consono\n\r    all'ambiente in cui stai entrando. Nomi stupidi o troppo spiritosi\n\r    potrebbero rovinare l'atmosfera fantastica del gioco agli altri giocatori.\n\r    Se il nome non dovesse essere adeguato, aspettati la vista di un immortale\n\r    che ti chiedera` di cambiarlo.\n\r 6) Ricorda che noi cerchiamo di avvicinare il gioco di ruolo alla realta`\n\r    (non troppo per la verita` :). Quindi, cose come morire di fame od essere\n\r    troppo stanco per difendersi POSSONO accadere.\n\r"
-int _check_ass_name(char* name);
-int _parse_name(char* arg, char* name);
-void argument_interpreter(char* argument,char* first_arg,char* second_arg );
-void AskRollConfirm(struct descriptor_data* d );
-void assign_command_pointers();
-void check_affected(char* msg);
-void command_interpreter(struct char_data* ch, char* argument );
-int fill_word(char* argument);
-int find_name(char* name);
-void half_chop(char* string, char* arg1, char* arg2);
-int is_abbrev(char* arg1, char* arg2);
-int is_number(char* str );
-void nanny(struct descriptor_data* d, char* arg);
-int old_search_block(const char* argument,int begin,int length,const char** list,int mode);
-char* one_argument(const char* argument, char* first_arg );
-char* OneArgumentNoFill(const char* argument, char* first_arg );
-void only_argument(const char* argument, char* dest);
-void RollPrompt(struct descriptor_data* d );
-int search_block(char* arg, char** list, bool exact);
-void show_class_selection(struct descriptor_data *d, int r);
-void ShowRollInstruction(struct descriptor_data* d );
-void ShowStatInstruction(struct descriptor_data* d );
-int special(struct char_data* ch, int cmd, char* arg);
+
+extern int WizLock;
+extern int Silence;
+extern long SystemFlags;         /* used for making teleport/astral/stuff not work */
+extern int plr_tick_count;
+
+
+void AskRollConfirm( struct descriptor_data* d ) ;
+void InterpretaRoll( struct descriptor_data* d, char* riga );
+char* OneArgumentNoFill( const char* argument, char* first_arg ) ;
+void RollPrompt( struct descriptor_data* d ) ;
+void ShowRollInstruction( struct descriptor_data* d ) ;
+void ShowStatInstruction( struct descriptor_data* d ) ;
 void ThreeArgumentInterpreter(char* pchArgument, char* pchFirstArg, char* pchSecondArg, char* pchThirdArg );
-
-#endif
-
+int _check_ass_name(char* name) ;
+int _parse_name(char* arg, char* name) ;
+void argument_interpreter(char* argument,char* first_arg,char* second_arg ) ;
+void assign_command_pointers () ;
+void check_affected(char* msg) ;
+void command_interpreter( struct char_data* ch, char* argument ) ;
+int fill_word(char* argument) ;
+int find_name(char* name) ;
+void half_chop(char* string, char* arg1, char* arg2) ;
+int is_abbrev(char* arg1, char* arg2) ;
+int is_number( char* str ) ;
+void nanny(struct descriptor_data* d, char* arg) ;
+int old_search_block(const char* argument,int begin,int length,const char** list,int mode) ;
+char* one_argument(const char* argument, char* first_arg ) ;
+void only_argument(const char* argument, char* dest);
+int search_block(char* arg, char** list, bool exact) ;
+void show_class_selection(struct descriptor_data* d, int r) ;
+void show_race_choice(struct descriptor_data* d) ;
+int special(struct char_data* ch, int cmd, char* arg) ;
+#endif // _INTERPRETER_HPP

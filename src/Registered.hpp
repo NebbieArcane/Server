@@ -41,8 +41,8 @@ public:
 		return god;
 	}
 
-	void setGod(const string &god) {
-		this->god = god;
+	void setGod(const string &godName) {
+		god = godName;
 	}
 
 	static const unsigned short REG_PC		=0;

@@ -1,5 +1,6 @@
 /* AlarMUD */
 /* $Id: magic.c,v 1.3 2002/03/14 21:48:56 Thunder Exp $ */
+#include "magic.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -11,15 +12,6 @@
 #include "utility.hpp"
 #include "spell_parser.hpp"
 
-/* Extern structures */
-#ifdef HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
-extern long SystemFlags;
 /* For future use in blinding those with infravision who are fireballed
    or otherwise subjected to lotsa heat quickly in dark rooms. */
 

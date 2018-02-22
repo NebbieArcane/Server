@@ -3,7 +3,6 @@
 #include <sys/file.h>
 #include <time.h>
 
-#if !CYGWIN
 int glock(int fd,int timeout) {
 
 	int rval;
@@ -23,11 +22,3 @@ int gunlock(int fd) {
 
 	return   flock(fd,LOCK_UN + LOCK_NB);
 }
-#else
-int glock(int fd,int timeout) {
-	return 0;
-}
-int gunlock(int fd) {
-	return 0;
-}
-#endif

@@ -2,16 +2,13 @@
 /*AlarMUD*/
 /* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-#define _XOPEN_SOURCE
+#include "interpreter.hpp"
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <stdlib.h>
-#ifdef CYGWIN
-#include <crypt.h>
-#endif
 #include "snew.hpp"
 #include "protos.hpp"
 #include "cmdid.hpp"
@@ -19,29 +16,13 @@
 #include "version.hpp"
 #include "utility.hpp"
 #include "Registered.hpp"
+#include "spell_parser.hpp"
 using Nebbie::Registered;
 #define NOT !
 #define AND &&
 #define OR ||
 #define SEND_TO_Q2(msg,d) write_to_descriptor(d->descriptor,msg);
 #define STATE(d) ((d)->connected)
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern const char*  RaceName[];
-extern const int RacialMax[MAX_RACE+1][MAX_CLASS];
-extern const int RacialHome[MAX_RACE+1][2];
-extern char motd[MAX_STRING_LENGTH];
-extern char wmotd[MAX_STRING_LENGTH];
-extern struct char_data* character_list;
-extern struct player_index_element* player_table;
-extern int top_of_p_table;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern char* pc_class_types[];
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
 
 unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
 unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};

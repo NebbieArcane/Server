@@ -1,5 +1,6 @@
 /*$Id: hash.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
+#include "hash.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,11 +19,7 @@ void init_hash_table(struct hash_header*        ht, int rec_size, int table_size
 }
 
 void init_world(struct room_data* room_db[]) {
-#ifdef CYGWIN
-	bzero((char*)room_db, sizeof(struct room_data*) * WORLD_SIZE);    /* zero out the world */
-#else
 	bzero(room_db, sizeof(struct room_data*) * WORLD_SIZE);   /* zero out the world */
-#endif
 }
 void destroy_hash_table(struct hash_header* ht, void (*gman)(void*)) {
 	int        i;
@@ -167,12 +164,7 @@ void* hash_remove(struct hash_header* ht, long key) {
 			{ break; }
 
 		if (i<ht->klistlen) {
-#ifdef CYGWIN
-			bcopy((const char*)ht->keylist+i+1, (char*)ht->keylist+i,
-#else
-			bcopy(ht->keylist+i+1, ht->keylist+i,
-#endif
-				  (ht->klistlen-i)*sizeof(*ht->keylist));
+			bcopy(ht->keylist+i+1, ht->keylist+i,(ht->klistlen-i)*sizeof(*ht->keylist));
 			ht->klistlen--;
 		}
 
@@ -182,9 +174,7 @@ void* hash_remove(struct hash_header* ht, long key) {
 	return NULL;
 }
 
-void room_iterate( struct room_data* rb[],
-				   void (*func)( int, struct room_data*, void* ),
-				   void* cdata ) {
+void room_iterate( struct room_data* rb[],pIterateFunc func,void* cdata ) {
 	register int        i;
 	for (i=0; i<WORLD_SIZE; i++) {
 		struct room_data*  temp;
@@ -197,9 +187,7 @@ void room_iterate( struct room_data* rb[],
 }
 
 
-void hash_iterate( struct hash_header* ht,
-				   void (*func)( int, void*, void* ),
-				   void* cdata ) {
+void hash_iterate( struct hash_header* ht,pIterateFunc func,void* cdata ) {
 	int        i;
 	for (i=0; i<ht->klistlen; i++) {
 		void*        temp;

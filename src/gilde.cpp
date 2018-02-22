@@ -1,7 +1,6 @@
 /*$Id: gilde.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
 #include "gilde.hpp"
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -192,8 +191,7 @@ int IsGuildGuardRoomFP( int room, void* tgt_room ) {
  * la chiave tenuta.
  ****************************************************************************/
 
-int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,
-					   struct char_data* pMob, int nType ) {
+int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,struct char_data* pMob, int nType ) {
 	int nIndex;
 
 	if( !pMob || !pCh || pMob->nr < 0 ) {
@@ -356,8 +354,7 @@ int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,
  * Procedura di servizio per GuildBanker.
  ****************************************************************************/
 
-void GuildDeposit( struct char_data* pCh, struct char_data* pMob,
-				   char* pArg, int nIndex ) {
+void GuildDeposit( struct char_data* pCh, struct char_data* pMob,char* pArg, int nIndex ) {
 
 	char szBuffer[ 256 ];
 
@@ -413,8 +410,7 @@ void GuildDeposit( struct char_data* pCh, struct char_data* pMob,
  * Procedura di servizio per GuildBanker.
  ****************************************************************************/
 
-void GuildBalance( struct char_data* pCh, struct char_data* pMob,
-				   int nIndex ) {
+void GuildBalance( struct char_data* pCh, struct char_data* pMob,int nIndex ) {
 	if( ( isname( pDatiGilde[ nIndex ].szNomeCapo, GET_NAME( pCh ) ) ||
 			GetMaxLevel( pCh ) >= MAESTRO_DEI_CREATORI ) ) {
 		FILE* pfTotal;
@@ -451,8 +447,7 @@ void GuildBalance( struct char_data* pCh, struct char_data* pMob,
  * Procedura di servizio per GuildBanker.
  ****************************************************************************/
 
-void GuildWithdraw( struct char_data* pCh, struct char_data* pMob,
-					char* pArg, int nIndex ) {
+void GuildWithdraw( struct char_data* pCh, struct char_data* pMob,char* pArg, int nIndex ) {
 	struct char_data* pGuildMaster;
 
 	if( ( ( pGuildMaster = get_char_room( pDatiGilde[ nIndex ].szNomeCapo,
@@ -524,8 +519,7 @@ void GuildWithdraw( struct char_data* pCh, struct char_data* pMob,
  *
  *************************************************************************/
 
-int GuildBanker( struct char_data* pCh, int nCmd, char* pArg,
-				 struct char_data* pMob, int nType ) {
+int GuildBanker( struct char_data* pCh, int nCmd, char* pArg,struct char_data* pMob, int nType ) {
 
 	if( !pMob || !pCh ) {
 		mudlog( LOG_SYSERR, "pCh or pMob == NULL in GuildBank" );
@@ -594,8 +588,7 @@ int GuildBanker( struct char_data* pCh, int nCmd, char* pArg,
  * Procedura di servizio per GuildXPBanker.
  ****************************************************************************/
 
-int GuildBalanceXP( struct char_data* pChar, struct char_data* pMob,
-					int nIndex ) {
+int GuildBalanceXP( struct char_data* pChar, struct char_data* pMob,int nIndex ) {
 	if( ( isname( pDatiGilde[ nIndex ].szNomeCapo, GET_NAME( pChar ) ) ||
 			GetMaxLevel( pChar ) >= MAESTRO_DEI_CREATORI ) ) {
 		CharElem* pCurr;
@@ -679,8 +672,7 @@ int GuildBalanceXP( struct char_data* pChar, struct char_data* pMob,
  * Procedura di servizio per GuildXPBanker.
  ****************************************************************************/
 
-int GuildDepositXP( struct char_data* pChar,  char* szArg,
-					struct char_data* pMob, int nIndex ) {
+int GuildDepositXP( struct char_data* pChar,  char* szArg,struct char_data* pMob, int nIndex ) {
 	int iAlreadyDep = GetIntData( (CharElem*)pMob->act_ptr, pChar );
 	if( iAlreadyDep < GUILD_MAXXP_DEP ) {
 		long lXP = -1;
@@ -765,8 +757,7 @@ int GuildDepositXP( struct char_data* pChar,  char* szArg,
  * Procedura di servizio per GuildXPBanker.
  ****************************************************************************/
 
-int GuildWithdrawXP( struct char_data* pChar,  char* szArg,
-					 struct char_data* pMob, int nIndex ) {
+int GuildWithdrawXP( struct char_data* pChar,  char* szArg,struct char_data* pMob, int nIndex ) {
 	long lXP = -1;
 	sscanf( szArg, "%ld", &lXP );
 	if( lXP > 0 ) {
@@ -877,8 +868,7 @@ int GuildWithdrawXP( struct char_data* pChar,  char* szArg,
  *         prelevato negli ultimi 3 giorni.
  ****************************************************************************/
 
-int GuildXPBanker( struct char_data* pChar, int nCmd, char* szArg,
-				   struct char_data* pMob, int nType ) {
+int GuildXPBanker( struct char_data* pChar, int nCmd, char* szArg,struct char_data* pMob, int nType ) {
 	if( pMob == NULL ) {
 		mudlog( LOG_SYSERR, "pMob == NULL in GuildMemberBook (gilde.c)" );
 		return TRUE;
@@ -957,8 +947,7 @@ int GuildXPBanker( struct char_data* pChar, int nCmd, char* szArg,
  * read <nomelibro> (quest'ultimo comando non e` limitato al solo capogilda).
  * *************************************************************************/
 
-int GuildMemberBook( struct char_data* pChar, int nCmd, char* szArg,
-					 struct obj_data* pObj, int nType ) {
+int GuildMemberBook( struct char_data* pChar, int nCmd, char* szArg,struct obj_data* pObj, int nType ) {
 	if( pObj == NULL ) {
 		mudlog( LOG_SYSERR, "pObj == NULL in GuildMemberBook (gilde.c)" );
 		return TRUE;
@@ -1095,8 +1084,7 @@ int GuildMemberBook( struct char_data* pChar, int nCmd, char* szArg,
  * stanza ed un oggetto.
  * *************************************************************************/
 
-void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,
-									   struct char_data*, int ) ) {
+void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,struct char_data*, int ) ) {
 
 	if( vnum > 0 ) {
 		int rnum;
@@ -1111,8 +1099,7 @@ void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,
 	}
 }
 
-void AssignRoom( int vnum, int (*proc)( struct char_data*, int, char*,
-										struct room_data*, int ) ) {
+void AssignRoom( int vnum, int (*proc)( struct char_data*, int, char*,struct room_data*, int ) ) {
 
 	if( vnum > 0 ) {
 		struct room_data* pRoom;
@@ -1127,8 +1114,7 @@ void AssignRoom( int vnum, int (*proc)( struct char_data*, int, char*,
 	}
 }
 
-void AssignObj( int vnum, int (*proc)( struct char_data*, int, char*,
-									   struct obj_data*, int ) ) {
+void AssignObj( int vnum, int (*proc)( struct char_data*, int, char*,struct obj_data*, int ) ) {
 
 	if( vnum > 0 ) {
 		int rnum;

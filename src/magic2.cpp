@@ -2,6 +2,7 @@
 /*AlarMUD
 * $Id: magic2.c,v 1.3 2002/02/21 12:31:46 Thunder Exp $
  * */
+#include "magic2.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -12,11 +13,8 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 
-/* Extern structures */
-extern struct room_data* world;
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
 
 
 /*

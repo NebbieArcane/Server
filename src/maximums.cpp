@@ -10,6 +10,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 /* struct room_data *real_roomp(int); */
 
 /*ALAR modificato. Invecchiando il
@@ -18,16 +19,6 @@
  * ancora sia il max, che il
  * gain di hp
  * */
-extern struct char_data* character_list;
-extern struct obj_data* object_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct room_data* world;
-extern const char* RaceName[];
-extern int RacialMax[][MAX_CLASS];
-
-extern struct wis_app_type wis_app[];
-extern struct con_app_type con_app[];
-
 
 char* ClassTitles(struct char_data* ch) {
 	unsigned int i, count=0;

@@ -50,5 +50,11 @@ int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mo
 /* SALVO 2006 quest fisse */
 int ItemGiven(struct char_data* pChar, int nCmd, char* szArg, struct char_data* pMmob, int nType);
 int ItemPut(struct char_data* pChar, int nCmd, char* szArg, struct obj_data* pObj, int nType);
-#endif
-
+/* Real internal function */
+char* Aggiungi(char* vecchia,char* nuova) ;
+int FileToArray(char* fname,char* p[]) ;
+void assign_speciales() ;
+int is_murdervict(struct char_data* ch) ;
+int nomecompare(const void* p1, const void* p2) ;
+int xcompare(const void* p1, const void* p2) ;
+#endif // __SPECASS2_HPP

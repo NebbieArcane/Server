@@ -1,6 +1,7 @@
 /*AlarMUD*/
 /* $Id: handler.c,v 1.2 2002/02/27 01:26:55 Thunder Exp $
  * */
+#include "handler.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -13,25 +14,7 @@
 #include "signals.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern struct descriptor_data* descriptor_list;
-extern struct str_app_type str_app[];
-extern struct dex_app_type dex_app[];
-extern struct zone_data* zone_table;
-
-extern int WizLock;
-
-extern int top_of_objt;
-extern long mob_count;
-
+#include "spell_parser.hpp"
 
 int str_cmp2(char* arg1, char* arg2);
 
@@ -2146,8 +2129,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
 
 /* get a character from anywhere in the world, doesn't care much about
    being in the same room... */
-struct char_data* get_char_vis_world(struct char_data* ch, char* name,
-									 int* count) {
+struct char_data* get_char_vis_world(struct char_data* ch, char* name,int* count) {
 	struct char_data* i;
 	int j, number, nPosInList;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2210,8 +2192,7 @@ struct char_data* get_char_vis( struct char_data* ch, char* name ) {
 
 
 
-struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,
-									 struct obj_data* list) {
+struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,struct obj_data* list) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2431,8 +2412,7 @@ struct obj_data* create_money( int amount ) {
 /* The routine returns a pointer to the next word in *arg (just like the  */
 /* one_argument routine).                                                 */
 
-int generic_find(const char* arg, int bitvector, struct char_data* ch,
-				 struct char_data** tar_ch, struct obj_data** tar_obj) {
+int generic_find(const char* arg, int bitvector, struct char_data* ch,struct char_data** tar_ch, struct obj_data** tar_obj) {
 	static char* ignore[] = {
 		"the",
 		"in",

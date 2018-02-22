@@ -10,7 +10,7 @@
 
 #include "Registered.hpp"
 namespace Nebbie {
-Registered::Registered(char* pgname):god(),code() {
+Registered::Registered(char* pgname):code(),god() {
 	// TODO Auto-generated constructor stub
 
 }

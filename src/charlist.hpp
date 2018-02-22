@@ -2,6 +2,7 @@
 */
 #ifndef __CHARLIST_HPP
 #define __CHARLIST_HPP
+#include "general.hpp"
 typedef struct tagCharElem {
 	void* pWho;
 	struct tagCharElem* pNext;
@@ -17,7 +18,7 @@ int IsInList( CharElem* pElem, void* pWho ) ;
 void RemoveFromList( CharElem** pElem, void* pWho ) ;
 void SetIntData( CharElem** pElem, void* pWho, int nData, int iTimer ) ;
 int SumIntData( CharElem* pElem, void* pWho ) ;
-int SumIntDataNeg( CharElem* pElem, void* pWho ) ;
-int SumIntDataPos( CharElem* pElem, void* pWho ) ;
+int SumIntDataNeg( CharElem* pElem, void* pWho = nullptr ) ;
+int SumIntDataPos( CharElem* pElem, void* pWho = nullptr) ;
 void UpdateList( CharElem** pElem ) ;
 #endif // __CHARLIST_HPP

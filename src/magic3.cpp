@@ -1,6 +1,7 @@
 /* AlarMUD */
 /* $Id: magic3.c,v 1.4 2002/03/14 21:48:56 Thunder Exp $
  * */
+#include "magic3.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -11,13 +12,8 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 
-/* Extern structures */
-extern struct room_data* world;
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern long SystemFlags;
 
 #define STATE(d) ((d)->connected)
 #define IS_IMMUNE(ch, bit) (IS_SET((ch)->M_immune, bit))
