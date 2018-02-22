@@ -24,6 +24,9 @@
 #include "signals.hpp"
 #include "snew.hpp"
 #include "version.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "spell_parser.hpp"
 using Nebbie::Registered;
 
 /* intern functions */
@@ -47,7 +50,7 @@ int singular( struct obj_data* o) {
 
 /* Procedures related to 'look' */
 
-void argument_split_2(char* argument, char* first_arg, char* second_arg) {
+void argument_split_2(char* argument,char* first_arg,char* second_arg) {
 	int look_at, begin;
 	begin = 0;
 
@@ -1765,7 +1768,7 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_read(struct char_data* ch, char* argument, int cmd) {
+void do_read(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100];
 
 	/* This is just for now - To be changed later.! */
@@ -1775,7 +1778,7 @@ void do_read(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_examine(struct char_data* ch, char* argument, int cmd) {
+void do_examine(struct char_data* ch,const char* argument, int cmd) {
 	char name[1000], buf[1000];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object;
@@ -1806,7 +1809,7 @@ void do_examine(struct char_data* ch, char* argument, int cmd) {
 /**************************************************************************
  * do_exits visualizza le uscite della locazione.
  **************************************************************************/
-void do_exits(struct char_data* ch, char* argument, int cmd) {
+void do_exits(struct char_data* ch,const char* argument, int cmd) {
 	/* NOTE: Input var 'cmd' is not used. */
 	int door;
 	char buf[1000];
@@ -1858,7 +1861,7 @@ void do_exits(struct char_data* ch, char* argument, int cmd) {
 	{ send_to_char( "Nessuna !\n\r", ch ); }
 }
 
-void do_status( struct char_data* ch, char* argument, int cmd ) {
+void do_status( struct char_data* ch,const char* argument, int cmd ) {
 	static char buf[1000];
 	snprintf( buf, 999,
 			  "$c0005Tu hai $c0015%d$c0005($c0011%d$c0005) hit, "
@@ -1875,7 +1878,7 @@ void do_status( struct char_data* ch, char* argument, int cmd ) {
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 }
 
-void do_score(struct char_data* ch, char* argument, int cmd) {
+void do_score(struct char_data* ch,const char* argument, int cmd) {
 	struct time_info_data playing_time;
 	char buf[1000], buf2[1000];
 	char datanasc[100];
@@ -2198,7 +2201,7 @@ void do_score(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_time(struct char_data* ch, char* argument, int cmd) {
+void do_time(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100];
 	int weekday, day;
 	extern struct time_info_data time_info;
@@ -2226,7 +2229,7 @@ void do_time(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_weather(struct char_data* ch, char* argument, int cmd) {
+void do_weather(struct char_data* ch,const char* argument, int cmd) {
 	extern struct weather_data weather_info;
 	char buf[ 256 ];
 	char* sky_look[] = {
@@ -2249,7 +2252,7 @@ void do_weather(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_help(struct char_data* ch, char* argument, int cmd) {
+void do_help(struct char_data* ch,const char* argument, int cmd) {
 
 	extern int top_of_helpt;
 	extern struct help_index_element* help_index;
@@ -2312,7 +2315,7 @@ void do_help(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_wizhelp(struct char_data* ch, char* arg, int cmd) {
+void do_wizhelp(struct char_data* ch,const char* arg, int cmd) {
 	char buf[1000];
 	int i, j = 1;
 	NODE* n;
@@ -2349,7 +2352,7 @@ void do_wizhelp(struct char_data* ch, char* arg, int cmd) {
 	page_string(ch->desc, buf, 1);
 }
 
-void do_actual_wiz_help(struct char_data* ch, char* argument, int cmd) {
+void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
 
 	extern int top_of_wizhelpt;
 	extern struct help_index_element* wizhelp_index;
@@ -2407,7 +2410,7 @@ void do_actual_wiz_help(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_command_list(struct char_data* ch, char* arg, int cmd) {
+void do_command_list(struct char_data* ch,const char* arg, int cmd) {
 	char buf[MAX_STRING_LENGTH];
 	int i, j = 1;
 	NODE* n;
@@ -2443,7 +2446,7 @@ void do_command_list(struct char_data* ch, char* arg, int cmd) {
 									 strcpy(tmpname2,lower(mask)),\
 									 strlen(mask))==0)
 /*
-int OK_NAME(struct char_data *name, char *mask)
+int OK_NAME(struct char_data *name,const char*mask)
 {
   char n1[80],n2[80];
   if(!*mask) return 1;
@@ -2454,7 +2457,7 @@ int OK_NAME(struct char_data *name, char *mask)
 */
 
 
-void do_who(struct char_data* ch, char* argument, int cmd) {
+void do_who(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* person;
 	char buffer[MAX_STRING_LENGTH*2]="",tbuf[512];
 	int count;
@@ -2854,7 +2857,7 @@ void do_who(struct char_data* ch, char* argument, int cmd) {
 	page_string( ch->desc, buffer, TRUE );
 }
 
-void do_users( struct char_data* ch, char* argument, int cmd ) {
+void do_users( struct char_data* ch,const char* argument, int cmd ) {
 	char buf[MAX_STRING_LENGTH], line[200], buf2[255];
 	extern const char* connected_types[];
 
@@ -2893,14 +2896,14 @@ void do_users( struct char_data* ch, char* argument, int cmd ) {
 
 
 
-void do_inventory(struct char_data* ch, char* argument, int cmd) {
+void do_inventory(struct char_data* ch,const char* argument, int cmd) {
 
 	send_to_char("Stai trasportando:\n\r", ch);
 	list_obj_in_heap(ch->carrying, ch);
 }
 
 
-void do_equipment(struct char_data* ch, char* argument, int cmd) {
+void do_equipment(struct char_data* ch,const char* argument, int cmd) {
 	int j,Worn_Index;
 	bool found;
 	char String[256];
@@ -2928,43 +2931,43 @@ void do_equipment(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_credits(struct char_data* ch, char* argument, int cmd) {
+void do_credits(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_credits (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, credits, 0);
 	mudlog( LOG_SYSERR, "Terminato do_credits (act.info.c)." );
 }
-void do_news(struct char_data* ch, char* argument, int cmd) {
+void do_news(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_news (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, news, 0);
 	mudlog( LOG_SYSERR, "Terminato do_news (act.info.c)." );
 }
-void do_wiznews(struct char_data* ch, char* argument, int cmd) {
+void do_wiznews(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_wiznews (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wiznews, 0);
 	mudlog( LOG_SYSERR, "Terminato do_wiznews (act.info.c)." );
 }
-void do_info(struct char_data* ch, char* argument, int cmd) {
+void do_info(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_info (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, info, 0);
 	mudlog( LOG_SYSERR, "Terminato do_info (act.info.c)." );
 }
-void do_wizlist(struct char_data* ch, char* argument, int cmd) {
+void do_wizlist(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_wizlist (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wizlist, 0);
 	mudlog( LOG_SYSERR, "Terminato do_wizlist (act.info.c)." );
 }
-void do_prince(struct char_data* ch, char* argument, int cmd) {
+void do_prince(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_prince (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, princelist, 0);
 	mudlog( LOG_SYSERR, "Terminato do_prince (act.info.c)." );
 }
-void do_immortal(struct char_data* ch, char* argument, int cmd) {
+void do_immortal(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_immortal (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, immlist, 0);
@@ -3095,7 +3098,7 @@ void do_where_object( struct char_data* ch, struct obj_data* obj,
 	}
 }
 
-void do_where(struct char_data* ch, char* argument, int cmd) {
+void do_where(struct char_data* ch,const char* argument, int cmd) {
 	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	char*        nameonly;
 	register struct char_data* i;
@@ -3204,7 +3207,7 @@ void do_where(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_levels(struct char_data* ch, char* argument, int cmd) {
+void do_levels(struct char_data* ch,const char* argument, int cmd) {
 	int i, RaceMax, iClass;
 	char buf[MAX_STRING_LENGTH*2],buf2[MAX_STRING_LENGTH];
 
@@ -3307,7 +3310,7 @@ void do_levels(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_consider(struct char_data* ch, char* argument, int cmd) {
+void do_consider(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[256], buf[256];
 	int diff;
@@ -3508,7 +3511,7 @@ void do_consider(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_spells(struct char_data* ch, char* argument, int cmd) {
+void do_spells(struct char_data* ch,const char* argument, int cmd) {
 	int spl, i;        /* 16384 */
 	char buf[ 256 ];
 	extern char* spells[];
@@ -3575,7 +3578,7 @@ long GetLagIndex() {
 	return(LagIndex);
 }
 
-void do_world(struct char_data* ch, char* argument, int cmd) {
+void do_world(struct char_data* ch,const char* argument, int cmd) {
 	char buf[1000];
 
 	long ct, ot;
@@ -3673,7 +3676,7 @@ void do_world(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_attribute(struct char_data* ch, char* argument, int cmd) {
+void do_attribute(struct char_data* ch,const char* argument, int cmd) {
 	char buf[MAX_STRING_LENGTH];
 	struct affected_type* aff;
 
@@ -3806,7 +3809,7 @@ void do_attribute(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_value(struct char_data* ch, char* argument, int cmd) {
+void do_value(struct char_data* ch,const char* argument, int cmd) {
 	char buf[1000],buf2[1000], name[1000];
 	struct obj_data* obj=0;
 	struct char_data* vict=0;
@@ -4199,7 +4202,7 @@ char* DescAttacks(float a) {
 }
 
 
-void do_display(struct char_data* ch, char* arg, int cmd) {
+void do_display(struct char_data* ch,const char* arg, int cmd) {
 	int i;
 
 	if(IS_NPC(ch))
@@ -4246,7 +4249,7 @@ void ScreenOff(struct char_data* ch) {
 	send_to_char(VT_HOMECLR, ch);
 }
 
-void do_resize(struct char_data* ch, char* arg, int cmd) {
+void do_resize(struct char_data* ch,const char* arg, int cmd) {
 	int i;
 
 	if(IS_NPC(ch))
@@ -4304,7 +4307,7 @@ int MobLevBonus(struct char_data* ch) {
 	return(t);
 }
 
-void do_show_skill(struct char_data* ch, char* arg, int cmd) {
+void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
 	char buf[254], buffer[MAX_STRING_LENGTH];
 	int i,max;
 
@@ -4554,7 +4557,7 @@ void do_show_skill(struct char_data* ch, char* arg, int cmd) {
 /* to figure out how to look into rooms next to this room. Will be using*/
 /* the code for throwing items. I figure there is no IC reason for a PC */
 /* to have a command like this. Do what ya want on your on MUD                 */
-void do_scan(struct char_data* ch, char* argument, int cmd) {
+void do_scan(struct char_data* ch,const char* argument, int cmd) {
 	extern char* dirsTo[];
 	extern char* dirs[];
 #if 0
@@ -4688,7 +4691,7 @@ void do_scan(struct char_data* ch, char* argument, int cmd) {
 
 void CheckCharAffected( char* msg );
 
-void list_groups( struct char_data* ch, char* szArg, int iCmd ) {
+void list_groups( struct char_data* ch,const char* szArg, int iCmd ) {
 	struct descriptor_data* i;
 	struct char_data* person;
 	struct follow_type* f;
@@ -4779,7 +4782,7 @@ int can_see_linear( struct char_data* ch, struct char_data* targ, int* rng,
  * di ch.
  * ***********************************************************************/
 
-struct char_data* get_char_linear( struct char_data* ch, char* arg, int* rf,
+struct char_data* get_char_linear( struct char_data* ch,const char* arg, int* rf,
 								   int* df ) {
 	long rm;
 	int range = 0;
