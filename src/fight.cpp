@@ -2145,7 +2145,7 @@ int leechResult(struct char_data* ch, int dam) {
 	sprintf( buf,"Ch has max level [%d]", maxLevel );
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
-	baseLeech =  MAX((maxLevel + wisBonus)/5, 1);
+	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
 
 	sprintf( buf,"Base leech is [%d]", baseLeech );
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
