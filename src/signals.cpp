@@ -11,7 +11,7 @@
 #include "status.hpp"
 /* La ridefinizione di funzioni di memoria qui causerebbe ricorsione
  * */
-#define LOG_CRASH 1 // SALVO rimetto il controllo dei crash
+#define LOG_CRASH 0 // Alar, abbiamo gdb, meglio non modificare i crash
 #define MAX_FNAME_LEN 32
 #define STACK_SIZE 15
 int HowManyConnection(int ToAdd);

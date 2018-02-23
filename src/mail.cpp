@@ -106,10 +106,10 @@ int        _parse_name(char* arg, char* name);
 
 mail_index_type*                mail_index = 0; /* list of recs in the mail file  */
 position_list_type*         free_list = 0;  /* list of free positions in file */
-long        file_end_pos = 0; /* length of file */
+int        file_end_pos = 0; /* length of file */
 
 
-void        push_free_list(long pos) {
+void        push_free_list(int pos) {
 	position_list_type* new_pos;
 
 	new_pos = (position_list_type* )malloc(sizeof(position_list_type));
@@ -120,9 +120,9 @@ void        push_free_list(long pos) {
 
 
 
-long        pop_free_list(void) {
+int pop_free_list(void) {
 	position_list_type* old_pos;
-	long        return_value;
+	int        return_value;
 
 	if ((old_pos = free_list) != 0) {
 		return_value = free_list->position;
@@ -156,7 +156,7 @@ mail_index_type* find_char_in_index(char* searchee) {
 
 
 
-void        write_to_file(void* buf, int size, long filepos) {
+void        write_to_file(void* buf, int size, int filepos) {
 	FILE* mail_file;
 
 	mail_file = fopen(MAIL_FILE, "r+b");
@@ -178,7 +178,7 @@ void        write_to_file(void* buf, int size, long filepos) {
 }
 
 
-void        read_from_file(void* buf, int size, long filepos) {
+void        read_from_file(void* buf, int size, int filepos) {
 	FILE* mail_file;
 
 	mail_file = fopen(MAIL_FILE, "r+b");
@@ -198,7 +198,7 @@ void        read_from_file(void* buf, int size, long filepos) {
 
 
 
-void        index_mail(char* raw_name_to_index, long pos) {
+void        index_mail(char* raw_name_to_index, int pos) {
 	mail_index_type*      new_index;
 	position_list_type*   new_position;
 	char        name_to_index[100]; /* I'm paranoid.  so sue me. */
@@ -216,7 +216,7 @@ void        index_mail(char* raw_name_to_index, long pos) {
 
 	if (!(new_index = find_char_in_index(name_to_index))) {
 		/* name not already in index.. add it */
-		new_index = (mail_index_type* )malloc(sizeof(mail_index_type));
+		new_index = (mail_index_type* ) malloc(sizeof(mail_index_type));
 		strncpy(new_index->recipient, name_to_index, NAME_SIZE);
 		new_index->recipient[strlen(name_to_index)] = '\0';
 		new_index->list_start = 0;
@@ -227,7 +227,7 @@ void        index_mail(char* raw_name_to_index, long pos) {
 	}
 
 	/* now, add this position to front of position list */
-	new_position = (position_list_type* )malloc(sizeof(position_list_type));
+	new_position = (position_list_type* ) malloc(sizeof(position_list_type));
 	new_position->position = pos;
 	new_position->next = new_index->list_start;
 	new_index->list_start = new_position;
@@ -238,6 +238,7 @@ void        index_mail(char* raw_name_to_index, long pos) {
 /* scan_file is called once during boot-up.  It scans through the mail file
    and indexes all entries currently in the mail file. */
 int scan_mail_file(void) {
+
 	FILE*                     mail_file;
 	header_block_type  next_block;
 	int        total_messages = 0, block_num = 0;
@@ -290,8 +291,8 @@ int        has_mail(char* recipient) {
 void        store_mail(char* to, char* from, char* message_pointer) {
 	header_block_type          header;
 	data_block_type                data;
-	long        last_address, target_address;
-	char*        msg_txt = message_pointer;
+	int        last_address, target_address;
+	const char*        msg_txt = message_pointer;
 	char*        tmp;
 	int        bytes_written = 0;
 	int        total_length = strlen(message_pointer);
@@ -390,7 +391,7 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 	data_block_type                data;
 	mail_index_type*                  mail_pointer, *prev_mail;
 	position_list_type*          position_pointer;
-	long        mail_address, following_block;
+	int        mail_address, following_block;
 	char*        message, *tmstr, buf[200];
 	size_t                        string_size;
 
@@ -445,8 +446,8 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 		mudlog( LOG_SYSERR, "Mail system disabled!  -- Error #9.");
 		return 0;
 	}
-
-	tmstr = asctime(localtime(&header.mail_time));
+	time_t mtime=static_cast<time_t>(header.mail_time);
+	tmstr = asctime(localtime(&mtime));
 	*(tmstr + strlen(tmstr) - 1) = '\0';
 
 	sprintf(buf, " * * * * * * La posta di Nebbie Arcane * * * * * *\n\r"
