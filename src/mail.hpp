@@ -38,7 +38,7 @@
 #define NAME_SIZE  15
 
 /* size of mail file allocation blocks                */
-#define BLOCK_SIZE 200
+#define BLOCK_SIZE 100
 
 /* NOTE:  Make sure that your block size is big enough -- if not,
    HEADER_BLOCK_DATASIZE will end up negative.  This is a bad thing.
