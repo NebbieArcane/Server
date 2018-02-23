@@ -2107,7 +2107,7 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 		}
 
 		if (GET_RACE(ch)==RACE_DEMON) {
-			leech = leechResult(ch, dam);
+			leech = leechResult(ch, dam, type);
 			GET_HIT(ch) += leech;
 			alter_hit(ch, 0);
 		}
@@ -2124,7 +2124,7 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 	return AllLiving;
 }
 
-int leechResult(struct char_data* ch, int dam) {
+int leechResult(struct char_data* ch, int dam, int type) {
 	char buf[256];
 
 	int leech = 0;
@@ -2148,6 +2148,9 @@ int leechResult(struct char_data* ch, int dam) {
 	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
 
 	sprintf( buf,"Base leech is [%d]", baseLeech );
+	act( buf, FALSE, ch, 0, 0, TO_CHAR );
+
+	sprintf( buf,"Dam tipe is [%d]", type );
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
 	if(HasClass(ch, CLASS_MAGIC_USER)) {
