@@ -295,17 +295,15 @@ void        store_mail(char* to, char* from, char* message_pointer) {
 	char*        tmp;
 	int        bytes_written = 0;
 	int        total_length = strlen(message_pointer);
-    
+
 	assert(sizeof(header_block_type) == sizeof(data_block_type));
-	//assert(sizeof(header_block_type) == BLOCK_SIZE);
-    
-    mudlog( LOG_SYSERR, "original header_block_type size: %d.", sizeof(header_block_type));
+	assert(sizeof(header_block_type) == BLOCK_SIZE);
 
 	if (!*from || !*to || !*message_pointer) {
 		mudlog( LOG_SYSERR, "Mail system -- non-fatal error #5.");
 		return;
 	}
-	memset(&header, 0, sizeof(header)-((sizeof(data_block_type)/BLOCK_SIZE)*(sizeof(data_block_type)-BLOCK_SIZE))); /* clear the record */
+	memset(&header, 0, sizeof(header)); /* clear the record */
 	header.block_type = HEADER_BLOCK;
 	header.next_block = LAST_BLOCK;
 	strncpy(header.txt, msg_txt, HEADER_BLOCK_DATASIZE);
