@@ -14,6 +14,7 @@
 #include "breath.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
+#include "spells1.hpp"
 
 
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) {

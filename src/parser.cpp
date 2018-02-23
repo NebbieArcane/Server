@@ -1,6 +1,7 @@
 /* AlarMUD
  * $Id: parser.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $
  * */
+#include "parser.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,8 +25,7 @@ byte HashTable[256];
 
 
 /* Adds a command to the Command List radix. */
-void AddCommand(char* name, void (*func)( struct char_data*, char*, int ),
-				int number, int min_pos, int min_lev) {
+void AddCommand(char* name, pCommandFunc func, int number, int min_pos, int min_lev) {
 	NODE* n;
 	int len, radix;
 

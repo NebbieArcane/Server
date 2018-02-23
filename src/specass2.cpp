@@ -27,57 +27,14 @@
 #include "snew.hpp"
 //#include "vate.h"
 #include "utility.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
+#include "spec_procs3.hpp"
 #define SPECFILE "myst.spe"
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-void boot_the_shops();
-void assign_the_shopkeepers();
 FILE* fd;
 FILE* fp;
 long ifp=0;
-int BlockWay( struct char_data* pChar, int nCmd, char* szArg,
-			  struct room_data* pRoom, int nType );
-typedef int (*special_proc)( struct char_data*, int, char*, void*, int );
-struct special_proc_entry {
-	char* nome;
-	//int (*proc)( struct char_data *, int, char *, void *, int );
-	special_proc proc;
-};
 
-struct RoomSpecialProcEntry {
-	char* nome;
-	int (*proc)( struct char_data*, int, char*, struct room_data*, int );
-};
-
-int fighter_mage( struct char_data* ch, int cmd, char* arg,
-				  struct char_data* mob, int type );
-int fighter_cleric( struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type);
-int cleric_mage( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type);
-
-int SputoVelenoso( struct char_data* ch, int cmd, char* arg,
-				   struct char_data* mob, int type );
-
-int Pungiglione( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type );
-
-int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
-						  struct char_data* mob, int type );
-
-int SporeCloud( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-
-int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-
-int Ezmerelda( struct char_data* pChar, int iCmd, char* szArg,
-			   struct char_data* pMob, int itype );
 
 /* ********************************************************************
 *  Assignments                                                        *

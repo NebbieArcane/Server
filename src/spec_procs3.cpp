@@ -1,5 +1,6 @@
 /*$Id: spec_procs3.c,v 1.4 2002/03/23 17:15:15 Thunder Exp $
 */
+#include "spec_procs3.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -11,6 +12,11 @@
 #include "snew.hpp"
 #include "specass2.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
+#include "spec_procs.hpp"
 
 /* chess_game() stuff starts here */
 /* Inspiration and original idea by Feith */

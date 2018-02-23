@@ -1,7 +1,7 @@
 /* AlarMUD
 * $Id: spec_procs2.c,v 2.2 2002/05/07 22:31:50 Thunder Exp $
 * */
-
+#include "spec_procs2.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -16,22 +16,11 @@
 #include "utility.hpp"
 #include "utils.hpp"
 #include "aree.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
 /*   external vars  */
-
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct weather_data weather_info;
-extern int top_of_world;
-extern struct int_app_type int_app[26];
-
-extern struct title_type titles[4][ABS_MAX_LVL];
-extern char* dirs[];
-
-extern int gSeason;  /* what season is it ? */
 
 #define COSTO_LEZIONI 500
 #define COSTO_IMMOLATION 1
@@ -1147,8 +1136,7 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 					GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
 				}
-				cast_incendiary_cloud(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict,
-									  0);
+				cast_incendiary_cloud(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict,0);
 				break;
 			}
 		/* ...  case 50: */

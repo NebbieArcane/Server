@@ -8,10 +8,14 @@
  * (c) Copyright Hex Keep s.r.l. 2012-2014
  */
 
-#ifndef SRC_SPELLS2_HPP_
-#define SRC_SPELLS2_HPP_
+#ifndef __SPELLS2_HPP
+#define __SPELLS2_HPP
 #include "typedefs.hpp"
-/* spells2.cpp */
+struct PolyType {
+	char name[20];
+	int  level;
+	int  number;
+};
 void cast_resurrection(byte level, struct char_data *ch, const char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj);
 void cast_major_track(byte level, struct char_data *ch, const char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj);
 void cast_minor_track(byte level, struct char_data *ch, const char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj);
@@ -176,4 +180,4 @@ void cast_prot_dragon_breath_frost(byte level, struct char_data *ch, const char 
 void cast_prot_dragon_breath_elec(byte level, struct char_data *ch, const char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj);
 void cast_prot_dragon_breath_acid(byte level, struct char_data *ch, const char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj);
 void cast_prot_dragon_breath_gas(byte level, struct char_data *ch, const char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj);
-#endif /* SRC_SPELLS2_HPP_ */
+#endif // __SPELLS2_HPP

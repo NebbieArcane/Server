@@ -1,6 +1,6 @@
 #ifndef __BOARD_HPP
 #define __BOARD_HPP
-int board( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
+int board( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,int type);
 int board_check_locks (int bnum, struct char_data* ch) ;
 int board_display_msg(struct char_data* ch, char* arg, int bnum) ;
 void board_load_board() ;

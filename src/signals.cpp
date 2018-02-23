@@ -87,7 +87,7 @@ void SetStatus( const char* szStatus, const char* szString, void* pGeneric ) {
 void SetStatus( const char* szStatus) {
 	SetStatus(szStatus,NULL,NULL);
 }
-void SetStatus( const const char* szStatus, const char* szString) {
+void SetStatus( const char* szStatus, const char* szString) {
 	SetStatus(szStatus,szString,NULL);
 }
 

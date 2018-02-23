@@ -1,6 +1,7 @@
 /* AlarMUD
  * $Id: spec_procs.c,v 2.1 2002/03/27 19:50:22 Thunder Exp $
  * */
+#include "spec_procs.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -13,6 +14,10 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "aree.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
 
 #define INQ_SHOUT 1
 #define INQ_LOOSE 0
@@ -116,11 +121,7 @@ int GainLevel(struct char_data* ch, int iClass) {
 	return(FALSE);
 }
 
-struct char_data* FindMobInRoomWithFunction( int room,
-		int (*func)( struct char_data*,
-					 int, char*,
-					 struct char_data*,
-					 int ) ) {
+struct char_data* FindMobInRoomWithFunction( int room, special_proc func) {
 	struct char_data* temp_char, *targ;
 
 	targ = NULL;
@@ -1418,11 +1419,7 @@ int andy_wilcox(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	return FALSE;
 }
 
-struct char_data* find_mobile_here_with_spec_proc(
-	int (*fcn)(  struct char_data*,
-				 int, char*,
-				 struct char_data*,
-				 int ), int rnumber ) {
+struct char_data* find_mobile_here_with_spec_proc( special_proc fcn, int rnumber ) {
 
 #if !GCC27
 	struct char_data* temp_char;
@@ -2231,8 +2228,6 @@ int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 
 int SputoVelenoso( struct char_data* ch, int cmd, char* arg,
 				   struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -6873,8 +6868,7 @@ int Rakda(struct char_data* ch, int cmd, char* arg, struct obj_data* rakda,
 	return(0);
 }
 
-int nodrop(struct char_data* ch, int cmd, char* arg, struct obj_data* tobj,
-		   int type) {
+int nodrop(struct char_data* ch, int cmd, char* arg, struct obj_data* tobj,int type) {
 	struct char_data* t;
 	struct obj_data* obj, *i;
 	char buf[80], obj_name[80], vict_name[80], *name;

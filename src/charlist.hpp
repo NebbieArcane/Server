@@ -9,7 +9,7 @@ typedef struct tagCharElem {
 	int nTimer;
 	int nIntData;
 } CharElem;
-int AddIntData( CharElem** pElem, void* pWho, int nData, int iTimer ) ;
+int AddIntData( CharElem** pElem, void* pWho, int nData, int iTimer = 0) ;
 void FreeList( CharElem** pElem ) ;
 int GetIntData( CharElem* pElem, void* pWho ) ;
 CharElem* InsertInList( CharElem** pElem, void* pWho, int nTimer ) ;

@@ -1,6 +1,7 @@
 /* AlarMUD
 * $Id: shop.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
+#include "shop.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,19 +9,12 @@
 #include "cmdid.hpp"
 #include "protos.hpp"
 #include "snew.hpp"
+#include "utility.hpp"
+#include "db.hpp"
 #define SHOP_FILE "myst.shp"
 #define MAX_TRADE 5
 #define MAX_PROD 5
 
-
-extern struct str_app_type str_app[];
-extern struct index_data* mob_index;
-extern struct chr_app_type chr_apply[];
-
-
-char* fread_string(FILE* fl);
-char getall( char* name, char*  newname);
-int  getabunch( char* name, char*  newname);
 float  shop_multiplier = 0;
 int gevent = 0; /* Global Event happening currently */
 
@@ -44,13 +38,6 @@ struct shop_data {
 	int open1,open2;        /* When does the shop open?                */
 	int close1,close2;        /* When does the shop close?                */
 };
-
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct time_info_data time_info;
 
 struct shop_data* shop_index;
 int number_of_shops;

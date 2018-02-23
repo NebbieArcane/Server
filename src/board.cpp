@@ -88,8 +88,7 @@ int board_show_board(struct char_data* ch, char* arg, int bnum);
 
 */
 
-int board( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
-		   int type ) {
+int board( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,int type ) {
 	static int has_loaded = 0;
 	int bnum = -1;
 	int obj_num;

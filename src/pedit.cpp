@@ -21,7 +21,7 @@ il controllo sul prince,
 QUESTO OCCORRE DEFINIRE UNA STRATEGIA CHIARA:
 consentire la creazione di oggetti e armi con i vnum assegnati,
 */
-
+#include "pedit.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -141,8 +141,7 @@ int calc_costopq(int i, int p) {
 	return totpq;
 }
 
-int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			   int type) {
+int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type) {
 	char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
 	int cost, ave;
 	struct char_data* vict;

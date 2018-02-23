@@ -1,6 +1,8 @@
 /*$Id: race.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
 /* Race -- Npc, otherwise */
+#ifndef __RACE_HPP
+#define __RACE_HPP
 #define RACE_HALFBREED 0
 #define RACE_HUMAN     1
 #define RACE_ELVEN     2
@@ -101,3 +103,4 @@
 #define RACE_SEA_ELF        84
 
 #define MAX_RACE      84
+#endif // __RACE_HPP

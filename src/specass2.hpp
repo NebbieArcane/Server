@@ -2,6 +2,20 @@
 * $Id: specass2.h,v 1.1.1.1 2002/02/13 11:14:56 root Exp $ */
 #ifndef __SPECASS2__
 #define __SPECASS2__ 1
+
+
+typedef int (*special_proc)( struct char_data*, int, char*, void*, int );
+struct special_proc_entry {
+	char* nome;
+	//int (*proc)( struct char_data *, int, char *, void *, int );
+	special_proc proc;
+};
+typedef int (*room_proc)( struct char_data*, int, char*, struct room_data*, int );
+struct RoomSpecialProcEntry {
+	char* nome;
+	room_proc proc;
+};
+
 int FileToArray(char* fname, char* p[]);
 
 /****************************************************************************

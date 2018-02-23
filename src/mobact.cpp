@@ -1,6 +1,6 @@
 /*AlarMUD*/
 /* $Id: mobact.c,v 2.1 2002/03/25 00:00:04 Thunder Exp $ */
-
+#include "mobact.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@
 #include "snew.hpp"
 #include "status.hpp"
 #include "utility.hpp"
-
+#include "spell_parser.hpp"
 int top_of_comp = 0;
 
 void mobile_guardian(struct char_data* ch) {

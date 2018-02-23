@@ -1,15 +1,12 @@
 /*$Id: security.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-
+#include "security.hpp"
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 #include "snew.hpp"
 #include "utility.hpp"
-/* ATTENZIONE Controllare che corrispondano con i valori definiti in structs.h
-   ed in utility.c */
-//void mudlog( unsigned uType, char *szString, ... );
-#define LOG_CHECK    0x0002
+#include "structs.hpp"
 
 int SecCheck(char* arg, char* site) {
 	char buf[ 255 ];
@@ -23,9 +20,6 @@ int SecCheck(char* arg, char* site) {
 		mudlog( LOG_CHECK, "Unable to open security file for %s.", arg);
 		return(-1);
 	}
-#ifdef CYGWIN
-	hostname = strdup("localhost");
-#endif
 	result=0;
 	while (1) {
 		doloop=fscanf(f1,"%as\n",&hostname);

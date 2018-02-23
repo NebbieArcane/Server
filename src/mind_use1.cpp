@@ -5,14 +5,14 @@
 ***         BenemMUD
 ***         PSI skills
 */
-
+#include "mind_use1.hpp"
 #include <stdio.h>
 #include <string.h>
 
 #include "protos.hpp"
 #include "snew.hpp"
+#include "constants.hpp"
 
-extern char* dirs[];
 
 
 void mind_use_burn( byte level, struct char_data* ch, char* arg, int type,

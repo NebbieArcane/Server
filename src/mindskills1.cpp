@@ -7,7 +7,7 @@
 ***        PSI Skills
 */
 
-
+#include "mindskills1.hpp"
 #include <stdio.h>
 #include <assert.h>
 
@@ -15,9 +15,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
-
-extern struct char_data* character_list;
-extern long SystemFlags;
+#include "spell_parser.hpp"
 
 void mind_burn(byte level, struct char_data* ch,
 			   struct char_data* victim, struct obj_data* obj) {

@@ -2,6 +2,7 @@
 ***  AlarMUD
 * $Id: skills.c,v 1.10 2002/03/23 16:55:46 Thunder Exp $
 */
+#include "skills.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,43 +11,12 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "status.hpp"
+#include "spell_parser.hpp"
 
-int choose_exit(int in_room, int tgt_room, int dvar);
-
-/* struct room_data *real_roomp(int); */
-
-int remove_trap( struct char_data* ch, struct obj_data* trap);
-
-void do_find_traps( struct char_data* ch, char* arg, int cmd);
-void do_find_food( struct char_data* ch, char* arg, int cmd);
-void do_find_water( struct char_data* ch, char* arg, int cmd);
-int canDig( struct char_data* ch);
-void do_miner( struct char_data* ch);
-void do_forge( struct char_data* ch, char* arg, int cmd);
-
-bool is_same_group( struct char_data* ach, struct char_data* bch );
-
-extern char* dirsTo[];
-extern struct char_data* character_list;
-extern struct room_data* world;
-extern struct dex_app_type dex_app[];
-extern long SystemFlags;
-extern struct index_data* obj_index;
 struct hunting_data {
 	char*        name;
 	struct char_data** victim;
 };
-
-
-/*************************************/
-/* predicates for find_path function */
-
-int is_target_room_p(int room, void* tgt_room);
-
-int named_object_on_ground(int room, void* c_data);
-
-/* predicates for find_path function */
-/*************************************/
 
 
 /*
