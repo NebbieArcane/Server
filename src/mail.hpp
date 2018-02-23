@@ -68,10 +68,10 @@ char*        read_delete(char* recipient, char* recipient_formatted);
 #define CHAR_SIZE sizeof(char)
 #define LONG_SIZE sizeof(long)
 
-#define HEADER_BLOCK_DATASIZE (BLOCK_SIZE-1-((CHAR_SIZE*(NAME_SIZE+1)*2)+(3*LONG_SIZE)))
+#define HEADER_BLOCK_DATASIZE (BLOCK_SIZE-1-((CHAR_SIZE*(NAME_SIZE+1)*2)+(3*INT_SIZE)))
 /* size of the data part of a header block */
 
-#define DATA_BLOCK_DATASIZE (BLOCK_SIZE-LONG_SIZE-1)
+#define DATA_BLOCK_DATASIZE (BLOCK_SIZE-INT_SIZE-1)
 /* size of the data part of a data block */
 
 /* note that an extra space is allowed in all string fields for the
@@ -87,15 +87,15 @@ char*        read_delete(char* recipient, char* recipient_formatted);
 */
 #pragma pack(push,4)
 struct header_block_type {
-	long        block_type;          /* is this a header block or data block? */
-	long        next_block;        /* if header block, link to next block   */
+	int        block_type;          /* is this a header block or data block? */
+	int        next_block;        /* if header block, link to next block   */
 	char        from[NAME_SIZE+1]; /* who is this letter from?                 */
 	char        to[NAME_SIZE+1];/* who is this letter to?                 */
-	long        mail_time;        /* when was the letter mailed?                 */
+	int        mail_time;        /* when was the letter mailed?                 */
 	char        txt[HEADER_BLOCK_DATASIZE+1]; /* the actual text        */
 };
 struct data_block_type {
-	long        block_type;          /* -1 if header block, -2 if last data block
+	int        block_type;          /* -1 if header block, -2 if last data block
                                          in mail, otherwise a link to the next */
 	char        txt[DATA_BLOCK_DATASIZE+1]; /* the actual text                 */
 };
@@ -104,7 +104,7 @@ static_assert (sizeof(data_block_type)==BLOCK_SIZE,"Check align, data_block_tpe 
 static_assert (sizeof(header_block_type)==BLOCK_SIZE,"Check align, header_block_tpe size is wrong");
 
 struct position_list_type {
-	long        position;
+	int        position;
 	struct position_list_type* next;
 };
 
