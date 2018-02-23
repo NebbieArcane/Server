@@ -2133,6 +2133,8 @@ int leechResult(struct char_data* ch, int dam) {
 	int adjustment = 1;
 	int baseLeech = 5;
 
+	chNumClass = HowManyClasses(ch);
+	
 	int wisBonus = wis_app[ (int)GET_RWIS(ch) ].bonus;
 	
 	sprintf( buf,"WIS bonus is [%d]", wisBonus );
@@ -2148,21 +2150,21 @@ int leechResult(struct char_data* ch, int dam) {
 	sprintf( buf,"Base leech is [%d]", baseLeech );
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
-	chNumClass = HowManyClasses(ch);
-
 	if(HasClass(ch, CLASS_MAGIC_USER)) {
 		leech += baseLeech * 3;
 
 		sprintf( buf,"Ch has class MU. leec become [%d]", leech );
 		act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
-	} else if (HasClass(ch, CLASS_THIEF)) {
+	}
+	if (HasClass(ch, CLASS_THIEF)) {
 		leech += baseLeech *2;
 
 		sprintf( buf,"Ch has class TH. leec become [%d]", leech );
 		act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
-	} else if (HasClass(ch, CLASS_WARRIOR)) {
+	}
+	if (HasClass(ch, CLASS_WARRIOR)) {
 		leech += baseLeech * 0;
 
 		sprintf( buf,"Ch has class WA. leec become [%d]", leech );
