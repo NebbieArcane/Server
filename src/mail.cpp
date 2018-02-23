@@ -238,6 +238,7 @@ void        index_mail(char* raw_name_to_index, long pos) {
 /* scan_file is called once during boot-up.  It scans through the mail file
    and indexes all entries currently in the mail file. */
 int scan_mail_file(void) {
+
 	FILE*                     mail_file;
 	header_block_type  next_block;
 	int        total_messages = 0, block_num = 0;

@@ -21,6 +21,10 @@
 
 /* command numbers of the "mail", "check", and "receive" commands
    in your interpreter. */
+#include "general.hpp"
+#include <iostream>
+#include <ostream>
+using std::string;
 #define CMD_MAIL        366
 #define CMD_CHECK        367
 #define CMD_RECEIVE        368
@@ -81,8 +85,8 @@ char*        read_delete(char* recipient, char* recipient_formatted);
    them here because we have to be able to differentiate a data block from a
    header block when booting mail system.
 */
-
-struct header_block_type_d {
+#pragma pack(push,4)
+struct header_block_type {
 	long        block_type;          /* is this a header block or data block? */
 	long        next_block;        /* if header block, link to next block   */
 	char        from[NAME_SIZE+1]; /* who is this letter from?                 */
@@ -90,28 +94,24 @@ struct header_block_type_d {
 	long        mail_time;        /* when was the letter mailed?                 */
 	char        txt[HEADER_BLOCK_DATASIZE+1]; /* the actual text        */
 };
-
-struct data_block_type_d {
+struct data_block_type {
 	long        block_type;          /* -1 if header block, -2 if last data block
                                          in mail, otherwise a link to the next */
 	char        txt[DATA_BLOCK_DATASIZE+1]; /* the actual text                 */
 };
+#pragma pack(pop)
+static_assert (sizeof(data_block_type)==BLOCK_SIZE,"Check align, data_block_tpe size is wrong");
+static_assert (sizeof(header_block_type)==BLOCK_SIZE,"Check align, header_block_tpe size is wrong");
 
-typedef struct header_block_type_d header_block_type;
-typedef struct data_block_type_d data_block_type;
-
-struct position_list_type_d {
+struct position_list_type {
 	long        position;
-	struct position_list_type_d* next;
+	struct position_list_type* next;
 };
 
-typedef struct position_list_type_d position_list_type;
 
-struct mail_index_type_d {
+struct mail_index_type {
 	char        recipient[NAME_SIZE+1]; /* who the mail is for */
 	position_list_type*             list_start;  /* list of mail positions    */
-	struct mail_index_type_d* next;
+	struct mail_index_type* next;
 };
-
-typedef struct mail_index_type_d mail_index_type;
 
