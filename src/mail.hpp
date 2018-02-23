@@ -38,7 +38,7 @@
 #define NAME_SIZE  15
 
 /* size of mail file allocation blocks                */
-#define BLOCK_SIZE 200
+#define BLOCK_SIZE 104
 
 /* NOTE:  Make sure that your block size is big enough -- if not,
    HEADER_BLOCK_DATASIZE will end up negative.  This is a bad thing.
@@ -49,6 +49,11 @@
 
    The mail system will always allocate disk space in chunks of size
    BLOCK_SIZE.
+ 
+Requiem 23 02 2018 - dopo il passaggio a 64bit la larghezza corretta per il
+buffer risulta essere 104. Nel mail.cpp è stata inclusa una sottrazione
+per differenza nella riga 308 come misura di sicurezza.
+ 
 */
 
 /* USER CHANGABLE DEFINES ABOVE **
