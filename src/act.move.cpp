@@ -15,6 +15,7 @@
 #include "status.hpp"
 #include "db.hpp"
 #include "spell_parser.hpp"
+#include "trap.hpp"
 
 void NotLegalMove(struct char_data* ch) {
 	send_to_char( "Non puoi andare da quella parte...\n\r", ch);

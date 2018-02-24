@@ -1,7 +1,7 @@
 /*AlarMUD
 * $Id: spell_parser.c,v 1.5 2002/03/11 00:15:36 Thunder Exp $
 */
-
+#include "spell_parser.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -14,6 +14,8 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "spells.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
 #include "status.hpp"
 #include "utility.hpp"
 #define MANA_MU 1

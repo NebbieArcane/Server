@@ -14,6 +14,7 @@
 #include "snew.hpp"
 #include "utility.hpp"
 #include "constants.hpp"
+#include "spell_parser.hpp"
 
 
 /* extern variables */

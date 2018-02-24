@@ -12,6 +12,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 #define RESCUE_VIRGIN  1950
 #define RESCUE_ROOM    1983
 #define SNAKE_GOD      1953

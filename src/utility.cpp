@@ -17,27 +17,8 @@
 #include "signals.hpp"
 #include "snew.hpp"
 #include "aree.hpp"
-extern long SystemFlags;
-extern struct time_data time_info;
-extern struct descriptor_data* descriptor_list;
-extern struct char_data* character_list;
-extern struct index_data* mob_index, *obj_index;
-extern struct chr_app_type chr_apply[];
-extern struct zone_data* zone_table;
-extern struct obj_data* object_list;
-#if HASH
-extern struct hash_header room_db;                          /* In db.c */
-#else
-extern struct room_data* room_db[];                          /* In db.c */
-#endif
-extern char* dirsTo[];
-extern int  RacialMax[][MAX_CLASS];
-extern struct title_type  titles[MAX_CLASS][ABS_MAX_LVL];
-extern int top_of_zone_table;
-extern int top_of_world;
-extern struct descriptor_data* descriptor_list;
-
-
+#include "spell_parser.hpp"
+#include "db.hpp"
 int EgoBladeSave(struct char_data* ch) {
 	int total;
 

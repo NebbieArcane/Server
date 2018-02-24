@@ -19,7 +19,7 @@ int GasBreather		(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 int GoodBlade		(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, int type) ;
 int Interact 		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int ItemGiven		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
-int ItemPut			(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
+int ItemPut			(struct char_data* ch, int cmd, char* arg, struct obj_data* pObj, int nType);
 int LegionariV		(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
 int LightningBreather(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int MOBKilled 		(struct char_data* pChar, int nCmd, char* szArg, struct room_data* pRoom, int nType) ;

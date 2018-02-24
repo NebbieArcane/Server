@@ -1,8 +1,16 @@
 /*$Id: utility.h,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-#if !defined( _UTILITY_H )
-#define _UTILITY_H
+#ifndef __UTILITY_HPP
+#define __UTILITY_HPP
 #include <stdio.h>
+#include "structs.hpp"
+bool isNullChar (struct char_data* ch);
+int LoadZoneFile(FILE* fl, int zon);
+FILE* OpenZoneFile(struct char_data* c, int zone);
+int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
+FILE* MakeZoneFile( struct char_data* c, int zone);
+bool CheckPrac (int classe, int id, int liv);
+struct time_info_data real_time_passed(time_t t2, time_t t1);
 bool ThereIsPCInRoom( long lRoom );
 bool CanSeePCInRoom( struct char_data* pMob );
 int HowManyCanSeePCInRoom( struct char_data* pMob );

@@ -17,6 +17,8 @@
 #include "utility.hpp"
 #include "Registered.hpp"
 #include "spell_parser.hpp"
+#include "create.mob.hpp"
+#include "create.obj.hpp"
 using Nebbie::Registered;
 #define NOT !
 #define AND &&

@@ -66,50 +66,17 @@ char* strdup(char*);
 #include "mail.hpp"
 #include "create.hpp"
 #include "status.hpp"
+#include "trap.hpp"
+#include "magicutils.hpp"
+#include "weather.hpp"
 
-/* From Trap.c */
-
-void do_settrap( struct char_data* ch, char* arg, int cmd);
-int CheckForMoveTrap(struct char_data* ch, int dir);
-int CheckForInsideTrap(struct char_data* ch, struct obj_data* i);
-int CheckForAnyTrap(struct char_data* ch, struct obj_data* i);
-int CheckForGetTrap(struct char_data* ch, struct obj_data* i);
-int TriggerTrap( struct char_data* ch, struct obj_data* i);
-void FindTrapDamage( struct char_data* v, struct obj_data* i);
-void TrapDamage(struct char_data* v, int damtype, int amnt, struct obj_data* t);
-void TrapDam(struct char_data* v, int damtype, int amnt, struct obj_data* t);
-void TrapTeleport(struct char_data* v);
-void TrapSleep(struct char_data* v);
-void InformMess( struct char_data* v);
-
-/* From magicutils.c */
-
-void SwitchStuff( struct char_data* giver, struct char_data* taker);
-void FailCharm( struct char_data* victim, struct char_data* ch );
-void FailSnare( struct char_data* victim, struct char_data* ch );
-void FailSleep( struct char_data* victim, struct char_data* ch );
-void FailPara( struct char_data* victim, struct char_data* ch );
-void FailCalm( struct char_data* victim, struct char_data* ch );
-void FailPoison( struct char_data* victim, struct char_data* ch );
-
-
-/* From spec_assign.c */
-int is_murdervict(struct char_data* ch);
-void assign_mobiles();
-
-/* From spell_parser.c */
-void spello( int nr, byte beat, byte pos, byte mlev, byte clev, byte dlev,
-			 byte slev, byte plev, byte rlev, byte ilev,
-			 ubyte mana, sh_int tar, void (*func)( byte, struct char_data*,
-					 char*, int,
-					 struct char_data*,
-					 struct obj_data* ),
-			 sh_int sf );
 
 /*
+int is_murdervict(struct char_data* ch);
+void assign_mobiles();
 void clone_char(struct char_data *ch);
 void clone_obj(struct obj_data *obj);
-*/
+
 bool circle_follow(struct char_data* ch, struct char_data* victim);
 bool saves_spell(struct char_data* ch, sh_int save_type);
 bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod);
@@ -132,15 +99,6 @@ struct time_info_data real_time_passed(time_t t2, time_t t1);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
 bool CheckPrac (int classe, int id, int liv); // SALVO nuova funzione
-
-/* From weather.c */
-
-void weather_and_time(int mode);
-void another_hour(int mode);
-void ChangeSeason(int month);
-void weather_change();
-void ChangeWeather( int change);
-void GetMonth( int month);
-void switch_light(byte why);
+*/
 
 #endif

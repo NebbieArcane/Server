@@ -12,6 +12,10 @@
 #include "snew.hpp"
 #include "specass2.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
 /* Piccola macro per non riempire il codice di if facendo degli strcmp */
 #define STRSWITCH     if( false ){
 #define CHECK(X,Y)    } else if ( strcmp((X),(Y)) == 0 ) {

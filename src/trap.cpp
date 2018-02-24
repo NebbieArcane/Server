@@ -3,18 +3,17 @@
  * See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
  * $Id: trap.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $
 */
-
+#include "trap.hpp"
 #include <stdio.h>
-
+#include <string.h>
 #include "fight.hpp"
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
-extern struct char_data* character_list;
-
+#include "constants.hpp"
+#include "spell_parser.hpp"
 /* struct room_data *real_roomp(int); */
 
-extern int TrapDir[];
 
 void do_settrap( struct char_data* ch, char* arg, int cmd) {
 

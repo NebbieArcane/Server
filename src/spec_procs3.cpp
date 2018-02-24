@@ -17,6 +17,7 @@
 #include "spells1.hpp"
 #include "spells2.hpp"
 #include "spec_procs.hpp"
+#include "mindskills1.hpp"
 
 /* chess_game() stuff starts here */
 /* Inspiration and original idea by Feith */

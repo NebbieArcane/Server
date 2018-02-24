@@ -11,6 +11,7 @@
 #ifndef SRC_SPELL_PARSER_HPP_
 #define SRC_SPELL_PARSER_HPP_
 #include "typedefs.hpp"
+#include "spells.hpp"
 extern const char* spells[];
 extern struct room_data* world;
 extern struct char_data* character_list;
@@ -23,6 +24,9 @@ extern struct index_data* obj_index;
 extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 /* spell_parser.cpp */
+bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod);
+bool circle_follow(struct char_data* ch, struct char_data* victim);
+bool saves_spell(struct char_data* ch, sh_int save_type);
 void spellid(int nr, struct char_data *ch, int cl, int sl);
 void spello(int nr, byte beat, byte pos, byte mlev, byte clev, byte dlev, byte slev, byte plev, byte rlev, byte ilev, ubyte mana, sh_int tar, void (*func)(byte, struct char_data *, char *, int, struct char_data *, struct obj_data *), sh_int sf, sh_int align, sh_int ostile);
 int SPELL_LEVEL(struct char_data *ch, int sn);

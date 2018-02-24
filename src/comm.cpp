@@ -31,6 +31,8 @@
 #include "status.hpp"
 #include "spell_parser.hpp"
 #include "db.hpp"
+#include "create.mob.hpp"
+#include "create.obj.hpp"
 
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000

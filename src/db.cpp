@@ -24,6 +24,7 @@
 #include "utils.hpp"
 #include "specass2.hpp"
 #include "spell_parser.hpp"
+#include "mail.hpp"
 using Nebbie::Registered;
 
 

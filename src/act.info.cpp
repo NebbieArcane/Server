@@ -27,6 +27,7 @@
 #include "comm.hpp"
 #include "db.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 using Nebbie::Registered;
 
 /* intern functions */
@@ -2131,10 +2132,8 @@ void do_score(struct char_data* ch,const char* argument, int cmd) {
 		act(buf,FALSE,ch,0,0,TO_CHAR);
 	}
 
-	playing_time = real_time_passed((time(0)-ch->player.time.logon) +
-									ch->player.time.played, 0);
-	snprintf(buf,999,"$c0005Hai giocato per $c0015%d$c0005 giorni e "
-			 "$c0015%d$c0005 ore.",
+	playing_time = real_time_passed((time(0)-ch->player.time.logon) + ch->player.time.played, 0);
+	snprintf(buf,999,"$c0005Hai giocato per $c0015%d$c0005 giorni e $c0015%d$c0005 ore.",
 			 playing_time.day,
 			 playing_time.hours);
 	act(buf,FALSE,ch,0,0,TO_CHAR);

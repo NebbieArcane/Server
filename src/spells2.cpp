@@ -10,6 +10,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spell_parser.hpp"
 
 #define MAX_MAGE_POLY 48        /* total number of polies choices */
 
@@ -88,7 +89,7 @@ struct PolyType DruidList[MAX_DRUID_POLY] = {
 
 #define LAST_DRUID_MOB 17           /* last level you get a new poly type */
 
-void cast_resurrection( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_resurrection( byte level, struct char_data* ch, const char* arg, int type,
 						struct char_data* tar_ch, struct obj_data* tar_obj ) {
 
 	switch(type) {
@@ -108,7 +109,7 @@ void cast_resurrection( byte level, struct char_data* ch, const const char* arg,
 }
 
 
-void cast_major_track( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_major_track( byte level, struct char_data* ch, const char* arg, int type,
 					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
 
 	switch(type) {
@@ -140,7 +141,7 @@ void cast_major_track( byte level, struct char_data* ch, const const char* arg, 
 	}
 }
 
-void cast_minor_track( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_minor_track( byte level, struct char_data* ch, const char* arg, int type,
 					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
 
 	switch(type) {
@@ -176,7 +177,7 @@ void cast_minor_track( byte level, struct char_data* ch, const const char* arg, 
 
 }
 
-void cast_mana( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_mana( byte level, struct char_data* ch, const char* arg, int type,
 				struct char_data* tar_ch, struct obj_data* tar_obj ) {
 
 	switch(type) {
@@ -203,7 +204,7 @@ void cast_mana( byte level, struct char_data* ch, const const char* arg, int typ
 	}
 
 }
-void cast_armor( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_armor( byte level, struct char_data* ch, const char* arg, int type,
 				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch (type) {
 	case SPELL_TYPE_SPELL:
@@ -243,7 +244,7 @@ void cast_armor( byte level, struct char_data* ch, const const char* arg, int ty
 	}
 }
 
-void cast_mirror_images( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_mirror_images( byte level, struct char_data* ch, const char* arg, int type,
 						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch (type) {
 	case SPELL_TYPE_SPELL:
@@ -277,7 +278,7 @@ void cast_mirror_images( byte level, struct char_data* ch, const const char* arg
 		break;
 	}
 }
-void cast_stone_skin( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_stone_skin( byte level, struct char_data* ch, const char* arg, int type,
 					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch (type) {
 	case SPELL_TYPE_SPELL:
@@ -312,7 +313,7 @@ void cast_stone_skin( byte level, struct char_data* ch, const const char* arg, i
 	}
 }
 
-void cast_astral_walk( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_astral_walk( byte level, struct char_data* ch, const char* arg, int type,
 					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch (type) {
 	case SPELL_TYPE_WAND:
@@ -330,7 +331,7 @@ void cast_astral_walk( byte level, struct char_data* ch, const const char* arg, 
 }
 
 
-void cast_teleport( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_teleport( byte level, struct char_data* ch, const char* arg, int type,
 					struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch (type) {
 	case SPELL_TYPE_SCROLL:
@@ -361,7 +362,7 @@ void cast_teleport( byte level, struct char_data* ch, const const char* arg, int
 }
 
 
-void cast_bless( byte level, struct char_data* ch, const const char* arg, int type,
+void cast_bless( byte level, struct char_data* ch, const char* arg, int type,
 				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
 
 	switch (type) {

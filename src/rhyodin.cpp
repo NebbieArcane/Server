@@ -13,6 +13,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "spells1.hpp"
+#include "spell_parser.hpp"
 
 extern struct time_info_data time_info;
 extern struct index_data* mob_index;

@@ -1,27 +1,11 @@
 /*$Id: weather.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-
+#include "weather.hpp"
 #include <stdio.h>
 #include <string.h>
 
 #include "protos.hpp"
 #include "snew.hpp"
-/* uses */
-
-extern struct time_info_data time_info;
-extern struct weather_data weather_info;
-extern struct room_data* room_db;
-extern long SystemFlags;
-
-/*In this part. */
-void SaveTheWorld();
-void weather_and_time(int mode);
-void another_hour(int mode);
-void weather_change(void);
-void GetMonth( int month);
-void ChangeWeather( int change);
-void switch_light(byte why);  /* -DM 7/16/92 */
-void PulseMobiles(int type);
 
 /* what stage is moon in?  (1 - 32) */
 unsigned char moontype;

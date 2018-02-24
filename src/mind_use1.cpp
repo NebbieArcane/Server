@@ -12,6 +12,7 @@
 #include "protos.hpp"
 #include "snew.hpp"
 #include "constants.hpp"
+#include "mindskills1.hpp"
 
 
 
