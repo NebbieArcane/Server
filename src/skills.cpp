@@ -1429,15 +1429,7 @@ void slip_in_climb(struct char_data* ch, int dir, int room) {
 	}
 }
 
-#define TAN_SHIELD   67
-#define TAN_JACKET   68
-#define TAN_BOOTS    69
-#define TAN_GLOVES   70
-#define TAN_LEGGINGS 71
-#define TAN_SLEEVES  72
-#define TAN_HELMET   73
-#define TAN_BAG      14
-#define TAN_ARMOR    9602
+
 void do_tan( struct char_data* ch, char* arg, int cmd) {
 	struct obj_data* j=0;
 	struct obj_data* hide;
@@ -3805,78 +3797,6 @@ void do_tan_old( struct char_data* ch, char* arg, int cmd) {
 }
 
 
-#define FOUND_FOOD 21  /* obj that is found if they made it! */
-#define FOUND_FOOD0 1300
-#define FOUND_FOOD1 1301
-#define FOUND_FOOD2 1302
-#define FOUND_FOOD3 1303
-#define FOUND_FOOD4 1304
-#define FOUND_FOOD5 1305
-#define FOUND_FOOD6 1306
-#define FOUND_FOOD7 1307
-#define FOUND_FOOD8 1308
-#define FOUND_FOOD9 1309
-#define FOUND_FOOD10 1310
-#define FOUND_FOOD11 1311
-#define FOUND_FOOD12 1312
-#define FOUND_FOOD13 1313
-#define FOUND_FOOD14 1314
-#define FOUND_FOOD15 1315
-#define FOUND_FOOD16 1316
-#define FOUND_FOOD17 1317
-#define FOUND_FOOD18 1318
-#define FOUND_FOOD19 1319
-#define FOUND_FOOD20 1320
-#define FOUND_FOOD21 1321
-#define FOUND_FOOD22 1322
-#define FOUND_FOOD23 1323
-#define FOUND_FOOD24 1324
-#define FOUND_FOOD25 1325
-#define FOUND_FOOD26 1326
-#define FOUND_FOOD27 1327
-#define FOUND_FOOD28 1328
-#define FOUND_FOOD29 1329
-#define FOUND_FOOD30 1330
-#define FOUND_FOOD31 1331
-#define FOUND_FOOD32 1332
-#define FOUND_FOOD33 1333
-#define FOUND_FOOD34 1334
-#define FOUND_FOOD35 1335
-#define FOUND_FOOD36 1336
-#define FOUND_FOOD37 1337
-#define FOUND_FOOD38 1338
-#define FOUND_FOOD39 1339
-#define FOUND_FOOD40 1340
-#define FOUND_FOOD41 1341
-#define FOUND_FOOD42 1342
-#define FOUND_FOOD43 1343
-#define FOUND_FOOD44 1344
-#define FOUND_FOOD45 1345
-#define FOUND_FOOD46 1346
-#define FOUND_FOOD47 1347
-#define FOUND_FOOD48 1348
-#define FOUND_FOOD49 1349
-#define FOUND_FOOD50 1350
-#define FOUND_FOOD51 1351
-#define FOUND_FOOD52 1352
-#define FOUND_FOOD53 1353
-#define FOUND_FOOD54 1354
-#define FOUND_FOOD55 1355
-#define FOUND_FOOD56 1356
-#define FOUND_FOOD57 1357
-#define FOUND_FOOD58 1358
-#define FOUND_FOOD59 1359
-#define FOUND_FOOD60 1360
-#define FOUND_FOOD61 1361
-#define FOUND_FOOD62 1362
-#define FOUND_FOOD63 1363
-#define FOUND_FOOD64 1364
-#define FOUND_FOOD65 1365
-#define FOUND_FOOD66 1366
-#define FOUND_FOOD67 1367
-#define FOUND_FOOD68 1368
-#define FOUND_FOOD69 1369
-
 void do_find_food( struct char_data* ch, char* arg, int cmd) {
 	int r_num,percent=0;
 	struct obj_data* obj;
@@ -4190,7 +4110,7 @@ void do_find_food_old( struct char_data* ch, char* arg, int cmd) {
 	}
 }
 
-#define FOUND_WATER 13  /* obj found when water found */
+
 
 void do_find_water( struct char_data* ch, char* arg, int cmd) {
 	int r_num,percent=0;

@@ -1,6 +1,6 @@
 /*$Id: spells1.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-
+#include "spells1.hpp"
 #include <stdio.h>
 
 #include "protos.hpp"

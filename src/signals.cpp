@@ -1,5 +1,6 @@
 /* AlarMUD
  * $Id: signals.c,v 1.2 2002/03/23 16:43:20 Thunder Exp $ */
+#include "signals.hpp"
 #include <signal.h>
 #include <stdio.h>
 #include <sys/time.h>

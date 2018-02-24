@@ -85,7 +85,7 @@ Bottom line -- all code you see below was written by me.
 Send comments, bug reports, etc. to jelson@server.cs.jhu.edu
 
 */
-
+#include "mail.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -97,12 +97,6 @@ Send comments, bug reports, etc. to jelson@server.cs.jhu.edu
 #include "snew.hpp"
 #include "utility.hpp"
 
-extern struct room_data* world;
-extern struct index_data* mob_index;
-extern struct obj_data* object_list;
-extern int        no_mail;
-int        find_name(char* name);
-int        _parse_name(char* arg, char* name);
 
 mail_index_type*                mail_index = 0; /* list of recs in the mail file  */
 position_list_type*         free_list = 0;  /* list of free positions in file */

@@ -2,7 +2,7 @@
  * AlarMUD v1
  * $Id: board.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  */
-
+#include "board.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>

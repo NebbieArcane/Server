@@ -1,6 +1,5 @@
 /* AlarMUD
 * $Id: speciali.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $*/
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

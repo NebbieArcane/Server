@@ -1,7 +1,7 @@
 /* Alarmud
 * $Id: reception.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
  * */
-
+#include "reception.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 //#include <sys/time.h>

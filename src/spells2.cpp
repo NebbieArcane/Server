@@ -1,6 +1,7 @@
 /*$Id: spells2.c,v 1.3 2002/02/13 12:30:59 root Exp $
 */
 /*AlarMUD*/
+#include "spells2.hpp"
 #include <stdio.h>
 #include <strings.h>
 #include <stdlib.h>

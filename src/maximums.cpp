@@ -1,6 +1,7 @@
 /* AlarMUD
  * $Id: maximums.c,v 1.2 2002/02/13 12:30:58 root Exp $
  * */
+#include "maximums.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>

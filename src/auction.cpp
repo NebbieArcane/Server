@@ -1,14 +1,13 @@
 
 /*$Id: auction.c,v 1.3 2002/03/17 16:48:47 Thunder Exp $
 */
-#if ENABLE_AUCTION
+#include "auction.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include "protos.hpp"
 #include "utils.hpp"
-#include "auction.hpp" // SALVO aggiunta, modificate righe sotto
 #include "utility.hpp"
 
 #define SELLER 0 // SALVO per la nuova is_present
@@ -312,7 +311,6 @@ void auction_update (void) {
 			} /* switch */
 		} /* if */
 } /* func */
-#endif
 /***************************************************************/
 
 

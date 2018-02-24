@@ -4,7 +4,7 @@
  * See license.doc for distribution terms.
 */
 
-
+#include "opinion.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

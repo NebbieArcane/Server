@@ -5,10 +5,11 @@ cd $(dirname "$0")
 environment=${1:-vagrant}
 conf="$HOME/Confs/$environment.conf"
 if [ -f $conf ] ; then
-	echo '#ifndef CONFIG_HPP_' >src/config.hpp.in
-	echo '#define CONFIG_HPP_' >>src/config.hpp.in
+echo '//Generated file, do not edit' >src/config.hpp.in
+	echo '#ifndef __CONFIG_HPP_' >>src/config.hpp.in
+	echo '#define __CONFIG_HPP_' >>src/config.hpp.in
 	cat  $HOME/Confs/$environment.conf | grep -ve '^#' | sed -e 's/#/\/\//' | sed -e 's/=/ /' | sed -e 's/\(.*\)/#define \1/' >>src/config.hpp.in
-	echo '#endif /*CONFIG_HPP_*/' >>src/config.hpp.in
+	echo '#endif /*__CONFIG_HPP_*/' >>src/config.hpp.in
 	cat src/config.hpp.in
 	rm -f src/release.h
 	rm -f mudroot/myst

@@ -2,11 +2,11 @@
 /* $Id: constants.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $ */
 /* modificato da Jethro, agosto 2011 */
 
+#include "constants.hpp"
 #include "maximums.hpp"
 #include "race.hpp"
 #include "structs.hpp"
 #include "trap.hpp"
-#include "constants.hpp"
 const char* stats[]= {
 	"STR",
 	"INT",

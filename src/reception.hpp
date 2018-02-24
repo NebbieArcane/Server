@@ -1,5 +1,7 @@
 #ifndef __RECEPTION_HPP
 #define __RECEPTION_HPP
+#include <stdio.h>
+#include "structs.hpp"
 void CountLimitedItems( struct obj_file_u* st ) ;
 void PrintLimitedItems() ;
 int ReadObjs( FILE* fl, struct obj_file_u* st) ;

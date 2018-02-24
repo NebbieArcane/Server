@@ -3,6 +3,7 @@
 * $Id: act.wizard.c,v 1.5 2002/03/04 00:35:51 Thunder Exp $
 *
 */
+#include "act.wizard.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -15,7 +16,6 @@
 #include "protos.hpp"
 #include "cmdid.hpp"
 #include "fight.hpp"
-#include "act.wizard.hpp"
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "utility.hpp"

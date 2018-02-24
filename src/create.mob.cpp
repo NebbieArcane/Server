@@ -1,6 +1,6 @@
 /*$Id: create.mob.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
-
+#include "create.mob.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

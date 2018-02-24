@@ -10,7 +10,7 @@
 
 #ifndef SRC_MODIFY_HPP_
 #define SRC_MODIFY_HPP_
-
+#include <stdio.h>
 void bisect_arg(char* arg, int* field, char* string);
 struct help_index_element* build_help_index(FILE* fl, int* num);
 void check_reboot();

@@ -4,7 +4,7 @@
  * AlarMUD v2.0
  * See license.doc for distribution terms.   BenemMUD is based on DIKUMUD
 */
-
+#include "sound.hpp"
 #include <stdio.h>
 #include <string.h>
 

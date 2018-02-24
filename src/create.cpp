@@ -2,6 +2,7 @@
  *
  * $Id: create.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
+#include "create.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

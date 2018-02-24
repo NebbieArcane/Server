@@ -1,5 +1,6 @@
 /*$Id: snew.c,v 1.3 2002/03/23 16:43:20 Thunder Exp $
 */
+#include "snew.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -8,9 +9,6 @@
 #include "structs.hpp"
 #include "status.hpp"
 #include "protos.hpp"
-//#include "build.h"
-#include "snew.hpp"
-extern struct char_data* character_list;
 #endif
 #define KEYLIB "keydir"
 #define BUFLEN 128

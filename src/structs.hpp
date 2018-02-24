@@ -19,36 +19,38 @@ Flyp new define
 #define FOREST_DARK     2
 #define NO_DARK         3
 
-
-#define EVENT_COMMAND         0
-#define EVENT_TICK            1
-#define EVENT_DEATH           2
-#define EVENT_SUMMER          3
-#define EVENT_SPRING          4
-#define EVENT_FALL            5
-#define EVENT_WINTER          6
-#define EVENT_GATHER          7
-#define EVENT_ATTACK          8
-#define EVENT_FOLLOW          9
-#define EVENT_MONTH          10
-#define EVENT_BIRTH          11  /* birth event for the mob.  */
-#define EVENT_FAMINE         12
-#define EVENT_DWARVES_STRIKE 13  /* fitting number, eh? -DM */
-#define EVENT_END_STRIKE     14
-#define EVENT_END_FAMINE     15
-#define EVENT_WEEK           16
-#define EVENT_GOBLIN_RAID    17
-#define EVENT_END_GOB_RAID   18
-#define EVENT_FIGHTING       19
-
-#define DWARVES_STRIKE 1
-#define FAMINE         2
-
-#define SEASON_WINTER  1
-#define SEASON_SPRING  2
-#define SEASON_SUMMER  4
-#define SEASON_FALL    8
-
+enum e_events  {
+	EVENT_COMMAND		=	0,
+	EVENT_TICK			=	1,
+	EVENT_DEATH			=	2,
+	EVENT_SUMMER		=	3,
+	EVENT_SPRING		=	4,
+	EVENT_FALL			=	5,
+	EVENT_WINTER		=	6,
+	EVENT_GATHER		=	7,
+	EVENT_ATTACK		=	8,
+	EVENT_FOLLOW		=	9,
+	EVENT_MONTH			=	10,
+	EVENT_BIRTH			=	11,  /* birth event for the mob.  */
+	EVENT_FAMINE		=	12,
+	EVENT_DWARVES_STRIKE=	13,  /* fitting number, eh? -DM */
+	EVENT_END_STRIKE	=	14,
+	EVENT_END_FAMINE	=	15,
+	EVENT_WEEK			=	16,
+	EVENT_GOBLIN_RAID	=	17,
+	EVENT_END_GOB_RAID	=	18,
+	EVENT_FIGHTING		=	19
+};
+enum e_special_events  {
+	DWARVES_STRIKE	=	1,
+	FAMINE			=	2
+};
+enum e_seasons  {
+	SEASON_WINTER	=	1,
+	SEASON_SPRING	=	2,
+	SEASON_SUMMER	=	4,
+	SEASON_FALL		=	8
+};
 typedef struct alias_type {
 	char* com[10]; /* 10 aliases */
 } Alias;
@@ -901,176 +903,182 @@ struct room_data {
 #define AFF2_PKILLER          0x00000080
 /* modifiers to char's abilities */
 
-#define APPLY_NONE              0
-#define APPLY_BV1               0
-#define APPLY_STR               1
-#define APPLY_DEX               2
-#define APPLY_INT               3
-#define APPLY_WIS               4
-#define APPLY_CON               5
-#define APPLY_CHR               6
-#define APPLY_SEX               7
-#define APPLY_LEVEL             8
-#define APPLY_AGE               9
-#define APPLY_CHAR_WEIGHT      10
-#define APPLY_CHAR_HEIGHT      11
-#define APPLY_MANA             12
-#define APPLY_HIT              13
-#define APPLY_MOVE             14
-#define APPLY_GOLD             15
-#define APPLY_EXP              16
-#define APPLY_AC               17
-#define APPLY_ARMOR            17
-#define APPLY_HITROLL          18
-#define APPLY_DAMROLL          19
-#define APPLY_SAVING_PARA      20
-#define APPLY_SAVING_ROD       21
-#define APPLY_SAVING_PETRI     22
-#define APPLY_SAVING_BREATH    23
-#define APPLY_SAVING_SPELL     24
-#define APPLY_SAVE_ALL         25
-#define APPLY_IMMUNE           26
-#define APPLY_SUSC             27
-#define APPLY_M_IMMUNE         28
-#define APPLY_SPELL            29
-#define APPLY_WEAPON_SPELL     30
-#define APPLY_EAT_SPELL        31
-#define APPLY_BACKSTAB         32
-#define APPLY_KICK             33
-#define APPLY_SNEAK            34
-#define APPLY_HIDE             35
-#define APPLY_BASH             36
-#define APPLY_PICK             37
-#define APPLY_STEAL            38
-#define APPLY_TRACK            39
-#define APPLY_HITNDAM          40
-#define APPLY_SPELLFAIL        41
-#define APPLY_ATTACKS          42
-#define APPLY_HASTE            43
-#define APPLY_SLOW             44
-#define APPLY_BV2              45
-#define APPLY_AFF2             45
-#define APPLY_FIND_TRAPS       46
-#define APPLY_RIDE             47
-#define APPLY_RACE_SLAYER      48
-#define APPLY_ALIGN_SLAYER     49
-#define APPLY_MANA_REGEN       50
-#define APPLY_HIT_REGEN        51
-#define APPLY_MOVE_REGEN       52
-/* Set thirst/hunger/drunk to MOD */
-#define APPLY_MOD_THIRST       53
-#define APPLY_MOD_HUNGER       54
-#define APPLY_MOD_DRUNK        55
+enum e_apply {
+	APPLY_NONE=0,
+	APPLY_STR=1,
+	APPLY_DEX=2,
+	APPLY_INT=3,
+	APPLY_WIS=4,
+	APPLY_CON=5,
+	APPLY_CHR=6,
+	APPLY_SEX=7,
+	APPLY_LEVEL=8,
+	APPLY_AGE=9,
+	APPLY_CHAR_WEIGHT=10,
+	APPLY_CHAR_HEIGHT=11,
+	APPLY_MANA=12,
+	APPLY_HIT=13,
+	APPLY_MOVE=14,
+	APPLY_GOLD=15,
+	APPLY_EXP=16,
+	APPLY_AC=17,
+	APPLY_ARMOR=17,
+	APPLY_HITROLL=18,
+	APPLY_DAMROLL=19,
+	APPLY_SAVING_PARA=20,
+	APPLY_SAVING_ROD=21,
+	APPLY_SAVING_PETRI=22,
+	APPLY_SAVING_BREATH=23,
+	APPLY_SAVING_SPELL=24,
+	APPLY_SAVE_ALL=25,
+	APPLY_IMMUNE=26,
+	APPLY_SUSC=27,
+	APPLY_M_IMMUNE=28,
+	APPLY_SPELL=29,
+	APPLY_WEAPON_SPELL=30,
+	APPLY_EAT_SPELL=31,
+	APPLY_BACKSTAB=32,
+	APPLY_KICK=33,
+	APPLY_SNEAK=34,
+	APPLY_HIDE=35,
+	APPLY_BASH=36,
+	APPLY_PICK=37,
+	APPLY_STEAL=38,
+	APPLY_TRACK=39,
+	APPLY_HITNDAM=40,
+	APPLY_SPELLFAIL=41,
+	APPLY_ATTACKS=42,
+	APPLY_HASTE=43,
+	APPLY_SLOW=44,
+	APPLY_BV2=45,
+	APPLY_AFF2=45,
+	APPLY_FIND_TRAPS=46,
+	APPLY_RIDE=47,
+	APPLY_RACE_SLAYER=48,
+	APPLY_ALIGN_SLAYER=49,
+	APPLY_MANA_REGEN=50,
+	APPLY_HIT_REGEN=51,
+	APPLY_MOVE_REGEN=52,
+	/* Set thirst/hunger/drunk to MOD */
+	APPLY_MOD_THIRST=53,
+	APPLY_MOD_HUNGER=54,
+	APPLY_MOD_DRUNK=55,
 
-/* not implemented */
-#define APPLY_T_STR            56
-#define APPLY_T_INT            57
-#define APPLY_T_DEX            58
-#define APPLY_T_WIS            59
-#define APPLY_T_CON            60
-#define APPLY_T_CHR            61
-#define APPLY_T_HPS            62
-#define APPLY_T_MOVE           63
-#define APPLY_T_MANA           64
-/* Non viene toccato il bitvector */
-#define APPLY_SKIP             65
+	/* not implemented */
+	APPLY_T_STR=56,
+	APPLY_T_INT=57,
+	APPLY_T_DEX=58,
+	APPLY_T_WIS=59,
+	APPLY_T_CON=60,
+	APPLY_T_CHR=61,
+	APPLY_T_HPS=62,
+	APPLY_T_MOVE=63,
+	APPLY_T_MANA=64,
+	/* Non viene toccato il bitvector */
+	APPLY_SKIP=65
+};
 /* 'class' for PC's */
-#define CLASS_MAGIC_USER   1
-#define CLASS_CLERIC       2
-#define CLASS_WARRIOR      4
-#define CLASS_THIEF        8
-#define CLASS_DRUID       16
-#define CLASS_MONK        32
-#define CLASS_BARBARIAN   64
-#define CLASS_SORCERER   128
-#define CLASS_PALADIN    256
-#define CLASS_RANGER     512
-#define CLASS_PSI       1024
-
+enum e_classes {
+	CLASS_MAGIC_USER=1,
+	CLASS_CLERIC=2,
+	CLASS_WARRIOR=4,
+	CLASS_THIEF=8,
+	CLASS_DRUID=16,
+	CLASS_MONK=32,
+	CLASS_BARBARIAN=64,
+	CLASS_SORCERER=128,
+	CLASS_PALADIN=256,
+	CLASS_RANGER=512,
+	CLASS_PSI=1024
+};
 /* sex */
-#define SEX_NEUTRAL   0
-#define SEX_MALE      1
-#define SEX_FEMALE    2
-
+enum e_sex {
+	SEX_NEUTRAL=0,
+	SEX_MALE=1,
+	SEX_FEMALE=2
+};
 /* positions */
-#define POSITION_DEAD       0
-#define POSITION_MORTALLYW  1
-#define POSITION_INCAP      2
-#define POSITION_STUNNED    3
-#define POSITION_SLEEPING   4
-#define POSITION_RESTING    5
-#define POSITION_SITTING    6
-#define POSITION_FIGHTING   7
-#define POSITION_STANDING   8
-#define POSITION_MOUNTED    9
+enum e_positions {
+	POSITION_DEAD=0,
+	POSITION_MORTALLYW=1,
+	POSITION_INCAP=2,
+	POSITION_STUNNED=3,
+	POSITION_SLEEPING=4,
+	POSITION_RESTING=5,
+	POSITION_SITTING=6,
+	POSITION_FIGHTING=7,
+	POSITION_STANDING=8,
+	POSITION_MOUNTED=9
+};
 #define MAX_POSITION        9
-
 #define HIT_INCAP			-3 /* hit level per incapacitato */
 #define HIT_MORTALLYW       -6 /* hit level per mortalmente ferito */
 #define HIT_DEAD	        -11 /* hit level per morto..  */
 
 /* for mobile actions: specials.act */
-#define ACT_SPEC       (1<<0)  /* special routine to be called if exist   */
-#define ACT_SENTINEL   (1<<1)  /* this mobile not to be moved             */
-#define ACT_SCAVENGER  (1<<2)  /* pick up stuff lying around              */
-#define ACT_ISNPC      (1<<3)  /* This bit is set for use with IS_NPC()   */
-#define ACT_NICE_THIEF (1<<4)  /* Set if a thief should NOT be killed     */
-#define ACT_AGGRESSIVE (1<<5)  /* Set if automatic attack on NPC's        */
-#define ACT_STAY_ZONE  (1<<6)  /* MOB Must stay inside its own zone       */
-#define ACT_WIMPY      (1<<7)  /* MOB Will flee when injured, and if      */
-/* aggressive only attack sleeping players */
-#define ACT_ANNOYING   (1<<8)  /* MOB is so utterly irritating that other */
-/* monsters will attack it...              */
-#define ACT_HATEFUL    (1<<9)  /* MOB will attack a PC or NPC matching a  */
-/* specified name                          */
-#define ACT_AFRAID    (1<<10)  /* MOB is afraid of a certain PC or NPC,   */
-/* and will always run away ....           */
-#define ACT_IMMORTAL  (1<<11)  /* MOB is a natural event, can't be kiled  */
-#define ACT_HUNTING   (1<<12)  /* MOB is hunting someone                  */
-#define ACT_DEADLY    (1<<13)  /* MOB has deadly poison                   */
-#define ACT_POLYSELF  (1<<14)  /* MOB is a polymorphed person             */
-#define ACT_META_AGG  (1<<15)  /* MOB is _very_ aggressive                */
-#define ACT_GUARDIAN  (1<<16)  /* MOB will guard master                   */
-#define ACT_ILLUSION  (1<<17)  /* MOB is illusionary                      */
-#define ACT_HUGE      (1<<18)  /* MOB is too large to go indoors          */
-#define ACT_SCRIPT    (1<<19)  /* MOB has a script assigned to it DO NOT SET */
-#define ACT_GREET     (1<<20)  /* MOB greets people */
+enum e_mobact {
+	ACT_SPEC=(1<<0),  /* special routine to be called if exist   */
+	ACT_SENTINEL=(1<<1),  /* this mobile not to be moved             */
+	ACT_SCAVENGER=(1<<2),  /* pick up stuff lying around              */
+	ACT_ISNPC=(1<<3),  /* This bit is set for use with IS_NPC()   */
+	ACT_NICE_THIEF=(1<<4),  /* Set if a thief should NOT be killed     */
+	ACT_AGGRESSIVE=(1<<5),  /* Set if automatic attack on NPC's        */
+	ACT_STAY_ZONE=(1<<6),  /* MOB Must stay inside its own zone       */
+	ACT_WIMPY=(1<<7),  /* MOB Will flee when injured, and if      */
+	/* aggressive only attack sleeping players */
+	ACT_ANNOYING=(1<<8),  /* MOB is so utterly irritating that other */
+	/* monsters will attack it...              */
+	ACT_HATEFUL=(1<<9),  /* MOB will attack a PC or NPC matching a  */
+	/* specified name                          */
+	ACT_AFRAID=(1<<10),  /* MOB is afraid of a certain PC or NPC,   */
+	/* and will always run away ....           */
+	ACT_IMMORTAL=(1<<11),  /* MOB is a natural event, can't be kiled  */
+	ACT_HUNTING=(1<<12),  /* MOB is hunting someone                  */
+	ACT_DEADLY=(1<<13),  /* MOB has deadly poison                   */
+	ACT_POLYSELF=(1<<14),  /* MOB is a polymorphed person             */
+	ACT_META_AGG=(1<<15),  /* MOB is _very_ aggressive                */
+	ACT_GUARDIAN=(1<<16),  /* MOB will guard master                   */
+	ACT_ILLUSION=(1<<17),  /* MOB is illusionary                      */
+	ACT_HUGE=(1<<18),  /* MOB is too large to go indoors          */
+	ACT_SCRIPT=(1<<19),  /* MOB has a script assigned to it DO NOT SET */
+	ACT_GREET=(1<<20),  /* MOB greets people */
 
-#define ACT_MAGIC_USER  (1<<21)
-#define ACT_WARRIOR     (1<<22)
-#define ACT_CLERIC      (1<<23)
-#define ACT_THIEF       (1<<24)
-#define ACT_DRUID       (1<<25)
-#define ACT_MONK        (1<<26)
-#define ACT_BARBARIAN   (1<<27)
-#define ACT_PALADIN     (1<<28)
-#define ACT_RANGER      (1<<29)
-#define ACT_PSI         (1<<30)
-#define ACT_ARCHER      (1<<31)
-
+	ACT_MAGIC_USER=(1<<21),
+	ACT_WARRIOR=(1<<22),
+	ACT_CLERIC=(1<<23),
+	ACT_THIEF=(1<<24),
+	ACT_DRUID=(1<<25),
+	ACT_MONK=(1<<26),
+	ACT_BARBARIAN=(1<<27),
+	ACT_PALADIN=(1<<28),
+	ACT_RANGER=(1<<29),
+	ACT_PSI=(1<<30),
+	ACT_ARCHER=(1<<31)
+};
 /* For players : specials.act */
-#define PLR_BRIEF     (1<<0)
-/* (1<<1) */
-#define PLR_COMPACT   (1<<2)
-#define PLR_DONTSET   (1<<3) /* Dont EVER set */
-#define PLR_WIMPY     (1<<4) /* character will flee when seriously injured */
-#define PLR_NOHASSLE  (1<<5) /* char won't be attacked by aggressives.      */
-#define PLR_STEALTH   (1<<6) /* char won't be announced in a variety of situations */
-#define PLR_HUNTING   (1<<7) /* the player is hunting someone, do a track each look */
-#define PLR_DEAF      (1<<8) /* The player does not hear shouts */
-#define PLR_ECHO      (1<<9) /* Messages (tells, shout,etc) echo back */
-#define PLR_NOGOSSIP  (1<<10) /* New, gossip channel */
-#define PLR_NOAUCTION (1<<11) /* New AUTCION channel */
-#define PLR_NOTHING   (1<<12) /* empty */
-#define PLR_NOTHING2  (1<<13)  /* empty */
-#define PLR_NOSHOUT   (1<<14)/* the player is not allowed to shout */
-#define PLR_FREEZE    (1<<15)/* The player is frozen, must have pissed an immo off */
-#define PLR_NOTELL    (1<<16)  /* The player does not hear tells */
-#define PLR_MAILING   (1<<17)
-#define PLR_EMPTY4    (1<<18)
-#define PLR_EMPTY5    (1<<19)
-#define PLR_NOBEEP    (1<<20)/* ignore all beeps */
-
+enum e_plr_flags {
+	PLR_BRIEF		=	(1<<0),
+	PLR_UNUSED		=	(1<<1),
+	PLR_COMPACT		=	(1<<2),
+	PLR_DONTSET		=	(1<<3),	/* Dont EVER set */
+	PLR_WIMPY		=	(1<<4),	/* character will flee when seriously injured */
+	PLR_NOHASSLE	=	(1<<5),	/* char won't be attacked by aggressives.      */
+	PLR_STEALTH		=	(1<<6),	/* char won't be announced in a variety of situations */
+	PLR_HUNTING		=	(1<<7),	/* the player is hunting someone, do a track each look */
+	PLR_DEAF		=	(1<<8),	/* The player does not hear shouts */
+	PLR_ECHO		=	(1<<9),	/* Messages (tells, shout,etc) echo back */
+	PLR_NOGOSSIP	=	(1<<10),/* New, gossip channel */
+	PLR_NOAUCTION	=	(1<<11),/* New AUTCION channel */
+	PLR_NOTHING		=	(1<<12),/* empty */
+	PLR_NOTHING2	=	(1<<13), /* empty */
+	PLR_NOSHOUT		=	(1<<14),/*, the player is not allowed to shout */
+	PLR_FREEZE		=	(1<<15),/*, The player is frozen, must have pissed an immo off */
+	PLR_NOTELL		=	(1<<16),/* The player does not hear tells */
+	PLR_MAILING		=	(1<<17),
+	PLR_EMPTY4		=	(1<<18),
+	PLR_EMPTY5		=	(1<<19),
+	PLR_NOBEEP		=	(1<<20)	/*, ignore all beeps */
+};
 /* This structure is purely intended to be an easy way to transfer */
 /* and return information about time (real or mudwise).            */
 struct time_info_data {
@@ -1259,20 +1267,22 @@ struct char_special_data {
 };
 
 /* skill_data flags */
-#define SKILL_KNOWN               1
-#define SKILL_KNOWN_CLERIC        2
-#define SKILL_KNOWN_MAGE          4
-#define SKILL_KNOWN_SORCERER      8
-#define SKILL_KNOWN_THIEF        16
-#define SKILL_KNOWN_MONK         32
-#define SKILL_KNOWN_DRUID        64
-#define SKILL_KNOWN_WARRIOR     128
+enum e_skill_known {
+SKILL_KNOWN				=	1,
+SKILL_KNOWN_CLERIC		=	2,
+SKILL_KNOWN_MAGE		=	4,
+SKILL_KNOWN_SORCERER	=	8,
+SKILL_KNOWN_THIEF		=	16,
+SKILL_KNOWN_MONK		=	32,
+SKILL_KNOWN_DRUID		=	64,
+SKILL_KNOWN_WARRIOR		=	128,
 
 /* need to make byte flags, to long or int flags in char_skill_data */
-#define SKILL_KNOWN_BARBARIAN   256
-#define SKILL_KNOWN_PALADIN     512
-#define SKILL_KNOWN_RANGER     1024
-#define SKILL_KNOWN_PSI        2048
+SKILL_KNOWN_BARBARIAN	=	256,
+SKILL_KNOWN_PALADIN		=	512,
+SKILL_KNOWN_RANGER		=	1024,
+SKILL_KNOWN_PSI			=	2048
+};
 /* end */
 
 /* skill_data special */
@@ -1390,28 +1400,28 @@ struct char_data {
 /* ======================================================================== */
 
 /* How much light is in the land ? */
-
-#define SUN_DARK        0
-#define SUN_RISE        1
-#define SUN_LIGHT       2
-#define SUN_SET         3
-#define MOON_SET        4
-#define MOON_RISE       5   /* moon changes -DM 7/16/92  */
-
+enum e_sunlight {
+	SUN_DARK		=	0,
+	SUN_RISE		=	1,
+	SUN_LIGHT		=	2,
+	SUN_SET			=	3,
+	MOON_SET		=	4,
+	MOON_RISE		=	5   /* moon changes -DM 7/16/92  */
+};
 
 
 /* And how is the sky ? */
-
-#define SKY_CLOUDLESS   0
-#define SKY_CLOUDY      1
-#define SKY_RAINING     2
-#define SKY_LIGHTNING   3
-
+enum e_sky {
+	SKY_CLOUDLESS	=	0,
+	SKY_CLOUDY		=	1,
+	SKY_RAINING		=	2,
+	SKY_LIGHTNING	=	3
+};
 struct weather_data {
 	int pressure;        /* How is the pressure ( Mb ) */
 	int change;        /* How fast and what way does it change. */
-	int sky;        /* How is the sky. */
-	int sunlight;        /* And how much sun. */
+	e_sky sky;        /* How is the sky. */
+	e_sunlight sunlight;        /* And how much sun. */
 };
 
 
@@ -1522,47 +1532,47 @@ struct txt_q {
 
 
 /* modes of connectedness */
-
-#define CON_PLYNG    0
-#define CON_NME      1
-#define CON_NMECNF   2
-#define CON_PWDNRM   3
-#define CON_PWDGET   4
-#define CON_PWDCNF   5
-#define CON_QSEX     6
-#define CON_RMOTD    7
-#define CON_SLCT     8
-#define CON_EXDSCR   9
-#define CON_QCLASS  10
-#define CON_LDEAD   11
-#define CON_PWDNEW  12
-#define CON_PWDNCNF 13
-#define CON_WIZLOCK 14
-#define CON_QRACE   15
-#define CON_RACPAR  16
-#define CON_AUTH    17
-#define CON_CITY_CHOICE     18
-#define CON_STAT_LIST       19
-#define CON_QDELETE         20
-#define CON_QDELETE2        21
-#define CON_STAT_LISTV      22
-#define CON_WMOTD           23
-#define CON_EDITING         24
-#define CON_DELETE_ME       25
-#define CON_CHECK_MAGE_TYPE 26
-#define CON_OBJ_EDITING     27
-#define CON_MOB_EDITING     28
-#define CON_RNEWD           29
-#define CON_HELPRACE        30
-#define CON_ENDHELPRACE     31
-#define CON_HELPCLASS       32
-#define CON_ENDHELPCLASS    33
-#define CON_HELPROLL        34
-#define CON_QROLL           35
-#define CON_CONF_ROLL       36
-#define CON_EXTRA2          37
-#define CON_OBJ_FORGING     38
-
+enum e_connection_types {
+	CON_PLYNG			=	0,
+	CON_NME				=	1,
+	CON_NMECNF			=	2,
+	CON_PWDNRM			=	3,
+	CON_PWDGET			=	4,
+	CON_PWDCNF			=	5,
+	CON_QSEX			=	6,
+	CON_RMOTD			=	7,
+	CON_SLCT			=	8,
+	CON_EXDSCR			=	9,
+	CON_QCLASS			=	10,
+	CON_LDEAD			=	11,
+	CON_PWDNEW			=	12,
+	CON_PWDNCNF			=	13,
+	CON_WIZLOCK			=	14,
+	CON_QRACE			=	15,
+	CON_RACPAR			=	16,
+	CON_AUTH			=	17,
+	CON_CITY_CHOICE		=	18,
+	CON_STAT_LIST		=	19,
+	CON_QDELETE			=	20,
+	CON_QDELETE2		=	21,
+	CON_STAT_LISTV		=	22,
+	CON_WMOTD			=	23,
+	CON_EDITING			=	24,
+	CON_DELETE_ME		=	25,
+	CON_CHECK_MAGE_TYPE	=	26,
+	CON_OBJ_EDITING		=	27,
+	CON_MOB_EDITING		=	28,
+	CON_RNEWD			=	29,
+	CON_HELPRACE		=	30,
+	CON_ENDHELPRACE		=	31,
+	CON_HELPCLASS		=	32,
+	CON_ENDHELPCLASS	=	33,
+	CON_HELPROLL		=	34,
+	CON_QROLL			=	35,
+	CON_CONF_ROLL		=	36,
+	CON_EXTRA2			=	37,
+	CON_OBJ_FORGING		=	38
+};
 /* ATTENZIONE se si aggiungono altri stati di connessione, modificare anche
  * l'array connected_types in constants.c
  */

@@ -539,7 +539,6 @@ void spell_astral_walk(byte level, struct char_data* ch,
 void spell_teleport(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
 	int to_room, iTry = 0;
-	extern int top_of_world;      /* ref to the top element of world */
 	struct room_data* room;
 
 	assert(ch && victim);

@@ -1,6 +1,7 @@
 /* AlarMUD
  * $Id: create.obj.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  */
+#include "create.obj.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -756,7 +757,6 @@ void ChangeObjAffect(struct char_data* ch, char* arg, int type) {
 		send_to_char(buf, ch);
 		switch(update) {
 		case APPLY_NONE:
-		/*case APPLY_BV1:*/
 		case APPLY_SKIP:
 		case APPLY_ATTACKS:
 		case APPLY_BV2:

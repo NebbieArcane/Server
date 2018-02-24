@@ -1,5 +1,6 @@
 /* AlarMUD */
 /* $Id: multiclass.c,v 1.2 2002/02/13 12:31:00 root Exp $ */
+#include "multiclass.hpp"
 #include <stdio.h>
 #include <string.h>
 

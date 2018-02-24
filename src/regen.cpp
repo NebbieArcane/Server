@@ -21,7 +21,7 @@
 *  remaining fractional part of the regen                                *
 *                                                 Gaia 2001              *
 ************************************************************************ */
-
+#include "regen.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

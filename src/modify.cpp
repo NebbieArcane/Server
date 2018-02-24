@@ -1,7 +1,7 @@
 /*AlarMUD
 * $Id: modify.c,v 1.3 2002/02/24 18:42:47 Thunder Exp $
  * */
-
+#include "modify.hpp"
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
