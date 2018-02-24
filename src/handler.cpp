@@ -16,7 +16,6 @@
 #include "utility.hpp"
 #include "spell_parser.hpp"
 
-int str_cmp2(char* arg1, char* arg2);
 
 char* fname(char* namelist) {
 #define ML 30

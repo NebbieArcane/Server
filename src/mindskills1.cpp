@@ -238,8 +238,7 @@ void mind_disintegrate( byte level, struct char_data* ch,
  *
  ***************************************************************************/
 
-void mind_telekinesis( byte level, struct char_data* ch,
-					   struct char_data* victim, int dir_num ) {
+void mind_telekinesis( byte level, struct char_data* ch,struct char_data* victim, int dir_num ) {
 
 	if (!ch) {
 		mudlog( LOG_SYSERR, "!ch in telekenisis");

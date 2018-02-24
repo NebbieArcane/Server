@@ -4201,7 +4201,6 @@ void do_reroll(struct char_data* ch, char* argument, int cmd) {
 	send_to_char("Use @ command instead.\n\r", ch);
 }
 
-void do_immortal(struct char_data* ch, char* argument, int cmd);
 void do_immort(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* victim;
 	char buf[100];

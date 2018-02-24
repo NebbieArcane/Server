@@ -880,10 +880,7 @@ void affect_update( unsigned long pulse ) {
 	int location = 5 ; /* Gaia Aggiunto per Poison */
 	int tempolag=0; // SALVO per controllo lag sulle zone init
 
-	extern struct time_info_data time_info;
 	/* Chiamata ogni ora mud, ovvero 4*75 pulse */
-	void update_char_objects( struct char_data *ch ); /* handler.c */
-	void do_save(struct char_data *ch, char* arg, int cmd); /* act.other.c */
 	for (i = character_list; i; i = next_char) {
 		next_char = i->next;
 		if (IS_SET(i->specials.act,PLR_FREEZE)) { continue; }

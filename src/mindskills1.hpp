@@ -17,7 +17,7 @@ void mind_probability_travel(byte level, struct char_data* ch, struct char_data*
 void mind_psi_strength( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_psychic_crush( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_psychic_impersonation( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
-void mind_telekinesis( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+void mind_telekinesis( byte level, struct char_data* ch,struct char_data* victim, int dir_num );
 void mind_teleport(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_tower_iron_will(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_ultra_blast( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);

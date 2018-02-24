@@ -4,7 +4,7 @@ int AcidBlob		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 int AcidBreather	(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AntiSunItem		(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
 int Barbarian		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
-int Beholder		(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
+int Beholder		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int BerserkerItem	(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
 int BlockWay		(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) ;
 int Capo_Fucina 	(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
@@ -20,7 +20,7 @@ int GoodBlade		(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, 
 int Interact 		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int ItemGiven		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int ItemPut			(struct char_data* ch, int cmd, char* arg, struct obj_data* pObj, int nType);
-int LegionariV		(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
+int LegionariV		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int LightningBreather(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int MOBKilled 		(struct char_data* pChar, int nCmd, char* szArg, struct room_data* pRoom, int nType) ;
 int MobBlockWay		(struct char_data* pChar, int nCmd, char* szArg, struct char_data* mob, int type) ;

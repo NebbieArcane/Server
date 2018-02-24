@@ -28,7 +28,7 @@ int RangerGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data
 int RepairGuy( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int Samah( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 void SayHello(struct char_data* ch, struct char_data* t) ;
-int SlotMachine( struct char_data* ch, int cmd, char* arg,struct char_data* mob, int type) ;
+int SlotMachine( struct char_data* ch, int cmd, char* arg,struct obj_data* mob, int type) ;
 int StatMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 void Submit(struct char_data* ch, struct char_data* t) ;
 int Summoner(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;

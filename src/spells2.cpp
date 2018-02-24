@@ -1422,8 +1422,7 @@ void cast_locate_object( byte level, struct char_data* ch, const char* arg, int 
 }
 
 
-void cast_poison( byte level, struct char_data* ch, const char* arg, int type,
-				  struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_poison( byte level, struct char_data* ch, const char* arg, int type,struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch (type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_WAND:

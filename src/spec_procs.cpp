@@ -1014,7 +1014,6 @@ int dump( struct char_data* ch, int cmd, char* arg, struct room_data* rp,
 	struct char_data* tmp_char;
 	int value=0;
 
-	void do_drop(struct char_data *ch, char* argument, int cmd);
 	char* fname(char* namelist);
 
 	if( type != EVENT_COMMAND )
@@ -1073,12 +1072,6 @@ int mayor(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int t
 	static char* path;
 	static int index;
 	static bool move = FALSE;
-
-	void do_move(struct char_data *ch, char* argument, int cmd);
-	void do_open(struct char_data *ch, char* argument, int cmd);
-	void do_lock(struct char_data *ch, char* argument, int cmd);
-	void do_unlock(struct char_data *ch, char* argument, int cmd);
-	void do_close(struct char_data *ch, char* argument, int cmd);
 
 	mob->lStartRoom = 0;
 
@@ -1835,12 +1828,6 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 				 int* cur_line, void** thing) {
 	bool ok;
 
-	void do_move(struct char_data *ch, char* argument, int cmd);
-	void do_open(struct char_data *ch, char* argument, int cmd);
-	void do_lock(struct char_data *ch, char* argument, int cmd);
-	void do_unlock(struct char_data *ch, char* argument, int cmd);
-	void do_close(struct char_data *ch, char* argument, int cmd);
-
 	if (GET_POS(npc) == POSITION_FIGHTING)
 	{ return; }
 
@@ -1956,8 +1943,6 @@ void npc_steal(struct char_data* ch,struct char_data* victim) {
 
 int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 		   int type) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -1976,8 +1961,7 @@ int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 			ch->specials.fighting->in_room == ch->in_room ) {
 		act("$c0010$n morde $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$c0010$n ti morde!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-					 ch->specials.fighting, 0 );
+		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 		return TRUE;
 	}
 	return FALSE;
@@ -1986,8 +1970,6 @@ int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 //Come snake, ma fa anche le skill della classe del mob
 int snake_plus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 				int type) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2015,8 +1997,6 @@ int snake_plus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 
 int Pungiglione( struct char_data* ch, int cmd, char* arg,
 				 struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2036,8 +2016,7 @@ int Pungiglione( struct char_data* ch, int cmd, char* arg,
 		act("$c0010Pungi $N!", 1, ch, 0, ch->specials.fighting, TO_CHAR);
 		act("$c0010$n punge $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$c0010$n ti punge!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-					 ch->specials.fighting, 0 );
+		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 		return TRUE;
 	}
 	return FALSE;
@@ -2045,8 +2024,6 @@ int Pungiglione( struct char_data* ch, int cmd, char* arg,
 
 int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
 						  struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2066,8 +2043,7 @@ int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
 		act("$c0010Pungi $N!", 1, ch, 0, ch->specials.fighting, TO_CHAR);
 		act("$c0010$n punge $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$c0010$n ti punge!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-					 ch->specials.fighting, 0 );
+		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 		return TRUE;
 	}
 	return FALSE;
@@ -2107,12 +2083,6 @@ int SporeCloud( struct char_data* pChar, int nCmd, char* szArg, struct
 
 int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 				struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
-	int Orso_Bianco( struct char_data *pChar, int iCmd, char* szArg,
-					 struct char_data *pMob, int iType );
-	int Psionist( struct char_data *pChar, int iCmd, char* szArg,
-				  struct char_data *pMob, int iType );
 	struct affected_type af;
 	int i;
 	struct char_data* pRagno;
@@ -2153,12 +2123,9 @@ int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 			act("$c0010Mordi $N!", 1, ch, 0, ch->specials.fighting, TO_CHAR);
 			act("$c0010$n morde $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 			act("$c0010$n ti morde!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						 ch->specials.fighting, 0 );
-			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						 ch->specials.fighting, 0 );
-			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						 ch->specials.fighting, 0 );
+			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
+			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
+			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 			return TRUE;
 			break;
 		case 2:
@@ -2501,8 +2468,6 @@ int MidgaardCitizen(struct char_data* ch, int cmd, char* arg, struct char_data* 
 int ghoul(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	struct char_data* tar;
 
-	void cast_paralyze( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2529,8 +2494,6 @@ int CarrionCrawler(struct char_data* ch, int cmd, char* arg, struct char_data* m
 	struct char_data* tar;
 	int i;
 
-	void cast_paralyze( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2635,10 +2598,6 @@ int wraith(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 
 int shadow(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 
-	void cast_chill_touch( byte level, struct char_data *ch, char* arg, int type,
-						   struct char_data *tar_ch, struct obj_data *tar_obj );
-	void cast_weakness( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2647,11 +2606,9 @@ int shadow(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 			(ch->specials.fighting->in_room == ch->in_room)) {
 		act("$n touches $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_chill_touch( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						  ch->specials.fighting, 0);
+		cast_chill_touch( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
 		if (ch->specials.fighting)
-			cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						   ch->specials.fighting, 0);
+			cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
 		return TRUE;
 	}
 	return FALSE;

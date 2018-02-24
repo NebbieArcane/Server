@@ -78,8 +78,7 @@ void argument_split_2(char* argument,char* first_arg,char* second_arg) {
 	begin += look_at;
 }
 
-struct obj_data* get_object_in_equip_vis(struct char_data* ch,
-		char* arg, struct obj_data* equipment[], int* j) {
+struct obj_data* get_object_in_equip_vis(struct char_data* ch,const char* arg, struct obj_data* equipment[], int* j) {
 
 	for( (*j) = 0; (*j) < MAX_WEAR ; (*j)++)
 		if( equipment[ ( *j ) ] )
