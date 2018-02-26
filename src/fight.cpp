@@ -2115,8 +2115,6 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 * FLYP 20180221: demon leech + balancing
 **/
 int leechResult(struct char_data* ch, int dam) {
-	char buf[256];
-
 	int leech = 0;
 	int chNumClass = 0;
 	int bonus = 0;
@@ -2126,39 +2124,17 @@ int leechResult(struct char_data* ch, int dam) {
 	chNumClass = HowManyClasses(ch);
 	
 	int wisBonus = wis_app[ (int)GET_RWIS(ch) ].bonus;
-	
-	sprintf( buf,"WIS bonus is [%d]", wisBonus );
-	act( buf, FALSE, ch, 0, 0, TO_CHAR );
-
 	int maxLevel = GetMaxLevel(ch);
-
-	sprintf( buf,"Ch has max level [%d]", maxLevel );
-	act( buf, FALSE, ch, 0, 0, TO_CHAR );
-
 	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
-
-	sprintf( buf,"Base leech is [%d]", baseLeech );
-	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
 	if(HasClass(ch, CLASS_MAGIC_USER)) {
 		leech += baseLeech * 3;
-
-		sprintf( buf,"Ch has class MU. leec become [%d]", leech );
-		act( buf, FALSE, ch, 0, 0, TO_CHAR );
-
 	}
 	if (HasClass(ch, CLASS_THIEF)) {
 		leech += baseLeech *2;
-
-		sprintf( buf,"Ch has class TH. leec become [%d]", leech );
-		act( buf, FALSE, ch, 0, 0, TO_CHAR );
-
 	}
 	if (HasClass(ch, CLASS_WARRIOR)) {
 		leech += baseLeech * 0;
-
-		sprintf( buf,"Ch has class WA. leec become [%d]", leech );
-		act( buf, FALSE, ch, 0, 0, TO_CHAR );
 	} 
 
 	switch(chNumClass) {
@@ -2166,8 +2142,6 @@ int leechResult(struct char_data* ch, int dam) {
 			// we don't have 3class demon. we left this switch here for future evolution (if happens)
 		case 2:
 			leech = leech/3;
-			sprintf( buf,"Ch is multiclass. leec become [%d]", leech );
-			act( buf, FALSE, ch, 0, 0, TO_CHAR );
 			break;
 		default:
 			// right now do nothing..
@@ -2175,10 +2149,6 @@ int leechResult(struct char_data* ch, int dam) {
 	}
 
 	leech = MIN(dice(1,leech), dam);
-
-	sprintf( buf,"FINAL leech is [%d]", leech );
-	act( buf, FALSE, ch, 0, 0, TO_CHAR );
-
 	return leech;
 }
 
