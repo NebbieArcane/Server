@@ -353,7 +353,7 @@ void reset_time() {
 		   static_cast<int>(time_info.day),
 		   static_cast<int>(time_info.month),
 		   static_cast<int>(time_info.year)
-	);
+		  );
 
 	weather_info.pressure = 960;
 	if ((time_info.month >= 7) && (time_info.month <= 12))
