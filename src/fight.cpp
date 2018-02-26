@@ -2087,9 +2087,6 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	return( dam );
 }
 
-/**
-* FLYP 20180221: demon leech + balancing
-**/
 DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int type, int location) {
 
 	int leech = 0;
@@ -2106,12 +2103,6 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 			}
 		}
 
-		if (GET_RACE(ch)==RACE_DEMON) {
-			leech = leechResult(ch, dam, type);
-			GET_HIT(ch) += leech;
-			alter_hit(ch, 0);
-		}
-
 		update_pos( v );
 
 		/* Nel caso qui sotto, il soggetto e` stato ucciso dal fireshield,
@@ -2124,6 +2115,9 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 	return AllLiving;
 }
 
+/**
+* FLYP 20180221: demon leech + balancing
+**/
 int leechResult(struct char_data* ch, int dam, int type) {
 	char buf[256];
 
@@ -2148,9 +2142,6 @@ int leechResult(struct char_data* ch, int dam, int type) {
 	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
 
 	sprintf( buf,"Base leech is [%d]", baseLeech );
-	act( buf, FALSE, ch, 0, 0, TO_CHAR );
-
-	sprintf( buf,"Dam tipe is [%d]", type );
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
 	if(HasClass(ch, CLASS_MAGIC_USER)) {
@@ -3171,9 +3162,22 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 		dead = (*dam_func)(ch, v, dam, w_type, location);
 	}
 
+	/** FLYP: Move the leech here, this should avoid to be allied to the wepon spell */
+
+	int leech;
+
+	if (GET_RACE(ch) == RACE_DEMON) {
+		leech = leechResult(ch, dam, type);
+		GET_HIT(ch) += leech;
+		alter_hit(ch, 0);
+	}
+
+
 	/*  if the victim survives, lets hit him with a weapon spell */
 	if( dead == AllLiving )
 	{ WeaponSpell( ch, v, 0, w_type ); }
+
+
 
 	return dead;
 }
