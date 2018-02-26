@@ -2088,9 +2088,6 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 }
 
 DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int type, int location) {
-
-	int leech = 0;
-	char buf[256];
 	
 	if (dam >= 0) {
 		GET_HIT(v) -=dam;
@@ -2103,23 +2100,6 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 			}
 		}
 		update_pos( v );
-
-		/** FLYP: Move the leech here, this should avoid to be apllied to the wepon spell */
-		if (GET_RACE(ch) == RACE_DEMON && dam > 0) {
-			leech = leechResult(ch, dam);
-			GET_HIT(ch) += leech;
-			alter_hit(ch, 0);
-
-			if (leech > 0) {
-				act("You regenerate!",TRUE,v,0,ch,TO_CHAR);
-				// Message for ch
-				act("Assorbi parte dell'energia vitale tolta al tuo avversario",
-						TRUE, v, 0, ch, TO_CHAR);
-				act("$n è infuso di energia vitale", TRUE, v, 0, ch,
-						TO_ROOM);
-				// Message for room
-			}
-		}
 
 		/* Nel caso qui sotto, il soggetto e` stato ucciso dal fireshield,
 		 * a meno che, ovviamente, ch non sia uguale a victim.
@@ -2599,6 +2579,9 @@ DamageResult damage( struct char_data* ch, struct char_data* victim,
 	{ return SubjectDead; }
 
 	DamageMessages( ch, victim, dam, attacktype, location );
+
+
+
 
 	if( DamageEpilog( ch, victim, attacktype, dam ) )
 	{ return VictimDead; }
@@ -3177,11 +3160,57 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 		dead = (*dam_func)(ch, v, dam, w_type, location);
 	}
 
+	/** FLYP: if a demon do damage, it will leech vital energy */
+	if (canLeech(ch, v) && dam > 0) {
+		int leech = 0;
+
+		leech = leechResult(ch, dam);
+		GET_HIT(ch) += leech;
+		alter_hit(ch, 0);
+
+		if (leech > 0) {
+
+			if (leech <= 5) {
+				// Message for ch
+				act("Assaggi l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_CHAR);
+				act("$n assaggia l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_ROOM);
+			} else if (leech > 5 && leech < 11) {
+				// Message for ch
+				act("Assorbi l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_CHAR);
+				act("$n assorbe l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_ROOM);
+			} else {
+				act("Banchetti con l'energia vitale di $N.", TRUE, ch, 0,
+						v, TO_CHAR);
+				act("$n banchetta con l'energia vitale di $N.", TRUE, ch, 0,
+						v, TO_ROOM);
+			}
+
+			// Message for room
+			act("$N sembra più debole.", TRUE, ch, 0, v, TO_ROOM);
+		}
+	}
+
 	/*  if the victim survives, lets hit him with a weapon spell */
 	if( dead == AllLiving )
 	{ WeaponSpell( ch, v, 0, w_type ); }
 
 	return dead;
+}
+
+int canLeech(struct char_data* ch, struct char_data* victim) {
+	if(
+			GET_RACE(ch) != RACE_DEMON ||
+			GET_RACE(victim) == RACE_UNDEAD ||
+			GET_RACE(victim)==RACE_GHOST ||
+			(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
+		return 0;
+	}
+
+	return 1;
 }
 
 
