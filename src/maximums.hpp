@@ -2,6 +2,7 @@
 */
 #ifndef __MAXIMUMS_HPP
 #define __MAXIMUMS_HPP
+#include "config.hpp"
 
 struct title_type {
 	const char* title_m;

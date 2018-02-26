@@ -9,9 +9,16 @@
  */
 
 #include "Registered.hpp"
-namespace Nebbie {
+#include "utility.hpp"
+namespace Alarmud {
 Registered::Registered(char* pgname):code(),god() {
 	// TODO Auto-generated constructor stub
+	LOG_INFO(::boost::format("P4 %s %s %s %s") % "P1" % "P2" % "P3" %"P4");
+	mudlog(LOG_CHECK,"P0");
+	//mudlog(LOG_CHECK,"P1 %s","P1");
+	//mudlog(LOG_CHECK,"P2 %s %s","P1","P2");
+	//mudlog(LOG_CHECK,"P3 %s %s %s","P1","P2","P3");
+	//mudlog(LOG_CHECK,"P4 %s %s %s %s","P1","P2","P3","P4");
 
 }
 

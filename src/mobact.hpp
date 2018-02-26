@@ -1,5 +1,6 @@
 #ifndef __MOBACT_HPP
 #define __MOBACT_HPP
+#include "config.hpp"
 int AssistFriend( struct char_data* ch) ;
 void CommandAssign( char* arg, void (*p)( char*, struct char_data* ) ) ;
 int CommandSearch(char* arg) ;

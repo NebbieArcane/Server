@@ -1,5 +1,6 @@
 #ifndef __MIND_USE1_HPP
 #define __MIND_USE1_HPP
+#include "config.hpp"
 #include "typedefs.hpp"
 void mind_use_burn( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
 void mind_use_cell_adjustment( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );

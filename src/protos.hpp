@@ -51,7 +51,7 @@ char* strdup(char*);
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
-#include "reception.hpp"	
+#include "reception.hpp"
 #include "security.hpp"
 #include "shop.hpp"
 #include "signals.hpp"

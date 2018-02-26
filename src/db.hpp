@@ -4,6 +4,7 @@
 /* data files used by the game system */
 #ifndef __DB
 #define __DB 1
+#include "config.hpp"
 #include "structs.hpp"
 #include "hash.hpp"
 #include <stdio.h>

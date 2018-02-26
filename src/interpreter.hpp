@@ -2,6 +2,7 @@
 */
 #ifndef __SRC_INTERPRETER_HPP
 #define __SRC_INTERPRETER_HPP
+#include "config.hpp"
 #define STAT_MIN_VAL 7
 #define STAT_MAX_SUM 29
 #define MENU         "\n\rBenvenuto su Nebbie Arcane\n\r\n\r0) Esci da Nebbie Arcane.\n\r1) Inizia il gioco a Myst\n\r2) Inserisci la descrizione del personaggio.\n\r3) Leggi la storia di Nebbie Arcane.\n\r4) Cambia la password.\n\rC) Cancella questo personaggio! (Solo dal livello chump)\n\r\n\r   Fai la tua scelta: "

@@ -1,5 +1,6 @@
 #ifndef __SPEC_PROCS2_HPP
 #define __SPEC_PROCS2_HPP
+#include "config.hpp"
 int AbyssGateKeeper( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int Demon(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int DemonTeacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;

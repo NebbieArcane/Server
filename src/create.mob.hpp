@@ -1,5 +1,6 @@
 #ifndef __CREATE_MOB_HPP
 #define __CREATE_MOB_HPP
+#include "config.hpp"
 void ChangeMobActFlags(struct char_data* ch, char* arg, int type) ;
 void ChangeMobAffFlags(struct char_data* ch, char* arg, int type) ;
 void ChangeMobAlign(struct char_data* ch, char* arg, int type) ;

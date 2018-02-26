@@ -1,5 +1,6 @@
 #ifndef __CREATE_OBJ_HPP
 #define __CREATE_OBJ_HPP
+#include "config.hpp"
 void ChangeAffectMod(struct char_data* ch, char* arg, int type) ;
 void ChangeObjAffect(struct char_data* ch, char* arg, int type) ;
 void ChangeObjAffects(struct char_data* ch, char* arg, int type) ;

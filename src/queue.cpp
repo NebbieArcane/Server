@@ -135,9 +135,9 @@ void* queue_head(struct queue* q) {
 	{ return NULL; }
 
 	data = q->head[i]->data;
-	MARK;
+
 	queue_deq(q, q->head[i]);
-	MARK;
+
 	return data;
 }
 

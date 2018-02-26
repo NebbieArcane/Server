@@ -651,7 +651,7 @@ void advance_level(struct char_data* ch, int iClass)
 	check_hp=GetHpGain(ch,iClass,GET_LEVEL(ch,iClass),0);
 
 	if (check_hp != -1) {
-		
+
 		ch->points.max_hit += MAX( 1, check_hp );
 	}
 
@@ -883,10 +883,9 @@ void set_title(struct char_data* ch) {
 	strcpy(GET_TITLE(ch), buf);
 
 }
-#define EQINDEX 600.0
 int gain_corretto(struct char_data* ch,int gain) {
 	if ( !IS_PC(ch) || gain <= 0 ) { return(gain); } // Gaia 2001
-#ifdef NEW_EQ_GAIN // Gaia 2001
+#if NEW_EQ_GAIN // Gaia 2001
 	float eqindex=0.0;
 	float eqratio=0.0;
 	float tmp=0.0;
@@ -1078,7 +1077,8 @@ void gain_exp( struct char_data* ch, int gain ) {
 						if( GET_EXP( ch ) > titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp ) {
 							send_to_char( "Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch );
 							GET_EXP( ch ) = titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1;
-							mudlog(LOG_SYSERR,"(LIMITS)Sto cazzone maxxa la classe %d a %d",i,titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1);
+							mudlog(LOG_SYSERR,"(LIMITS)Maxxa la classe %d a %d",i,
+								   (titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1));
 						}
 					}
 				}
@@ -1140,7 +1140,8 @@ void gain_exp_regardless( struct char_data* ch, int gain, int iClass,
 						send_to_char( "Cresci di un livello!\n\r", ch );
 						advance_level( ch, iClass );
 						is_altered = TRUE;
-						mudlog(LOG_SYSERR,"(LIMITS2)Sto cazzone maxxa la classe %d a %d",i,titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1);
+						mudlog(LOG_SYSERR,"(LIMITS2)Maxxa la classe %d a %d",i,
+							   (titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1));
 					}
 				}
 			}

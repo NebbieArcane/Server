@@ -492,7 +492,8 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,i
 						obj->affected[temp].modifier = atol(parmstr) ;
 						tot_costoxp +=static_cast<int>(calc_costoxp(iCom, atoi(parmstr)));
 						tot_costopq +=static_cast<int>(calc_costopq(iCom, atoi(parmstr)));
-						mudlog(LOG_PLAYERS,"%s modifica %s %s su %s e paga %d xp o %d pq", GET_NAME(ch),comandi[iCom].com,parmstr,obj->name,static_cast<int>(calc_costoxp(iCom,atoi(parmstr))),static_cast<int>(calc_costopq(iCom,atoi(parmstr))));
+						mudlog(LOG_PLAYERS,"%s modifica %s %s su %s e paga %d xp o %d pq", GET_NAME(ch),comandi[iCom].com,parmstr,obj->name,static_cast<int>(calc_costoxp(iCom,atoi(parmstr))),
+							   static_cast<int>(calc_costopq(iCom,atoi(parmstr))));
 						ha_modificato = TRUE;
 					}
 					else {

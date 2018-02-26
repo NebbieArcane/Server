@@ -412,7 +412,7 @@ void spell_turn(byte level, struct char_data* ch,
 			/* Ramo vuoto... nulla di fatto */
 		}
 		else if (!IsUndead(victim)) {
-			MARK;
+
 			act("$n ha appena cercato di scacciarti.. poverino!", TRUE, ch, 0, victim, TO_VICT);
 			act("$N pensa che $n sia molto strano.", TRUE, ch, 0, victim, TO_NOTVICT);
 			act("Um... $N non e' un Non-Morto...", TRUE, ch, 0, victim, TO_CHAR);
@@ -421,7 +421,7 @@ void spell_turn(byte level, struct char_data* ch,
 			act("Cerchi di scacciare $N da qui.", TRUE, ch, 0, victim, TO_CHAR);
 			if (diff >= 0 && (!saves_spell(victim, SAVING_SPELL) || diff > 0)) {
 				if (diff > 0) {
-					MARK;
+
 					act("$n scaccia $N da questo piano di esistenza.",TRUE,ch,0,victim,TO_NOTVICT);
 					act("Scacci $N da questo piano di esistenza.", TRUE, ch, 0, victim, TO_CHAR);
 					act("$n ti scaccia da questo piano di esistenza.", TRUE, ch, 0, victim,TO_VICT);
@@ -429,7 +429,7 @@ void spell_turn(byte level, struct char_data* ch,
 					extract_char(victim);
 				}
 				else {
-					MARK;
+
 					act("$n scaccia $N da qui.",TRUE,ch,0,victim,TO_NOTVICT);
 					act("Scacci $N da qui.", TRUE, ch, 0, victim, TO_CHAR);
 					act("$n ti scaccia da qui.", TRUE, ch, 0, victim,TO_VICT);
@@ -450,7 +450,7 @@ void spell_turn(byte level, struct char_data* ch,
 					do_flee(victim,"",0);
 				}
 			}
-			MARK;
+
 			/* Fine chek tiro salvezza */
 
 		}

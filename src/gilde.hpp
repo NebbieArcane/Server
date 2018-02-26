@@ -1,5 +1,6 @@
 #ifndef __GILDE_HPP
 #define __GILDE_HPP
+#include "config.hpp"
 void AppendToGuildList( int nIndex, char* szNomeMembro ) ;
 void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,struct char_data*, int ) ) ;
 void AssignObj( int vnum, int (*proc)( struct char_data*, int, char*,struct obj_data*, int ) ) ;

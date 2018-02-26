@@ -1,5 +1,6 @@
 #ifndef _ACT_MOVE_HPP
 #define _ACT_MOVE_HPP
+#include "config.hpp"
 int AddToCharHeap( struct char_data* heap[50], int* top, int total[50],struct char_data* k) ;
 void DisplayGroupMove(struct char_data* ch, int dir, int was_in, int total) ;
 void DisplayMove( struct char_data* ch, int dir, int was_in, int total) ;

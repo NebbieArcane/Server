@@ -1,5 +1,6 @@
 #ifndef __SPEC_PROCS3_HPP
 #define __SPEC_PROCS3_HPP
+#include "config.hpp"
 int AcidBlob		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AcidBreather	(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AntiSunItem		(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;

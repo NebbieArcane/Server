@@ -21,7 +21,7 @@ void weight_change_object(struct obj_data* obj, int weight) {
 		weight = 0 - (GET_OBJ_WEIGHT(obj) -1);
 		mudlog( LOG_ERROR, "Bad weight change on %s, carried by %s.",
 				obj->name,
-				obj->carried_by ? GET_NAME_DESC( obj->carried_by ) : "none" );
+				(obj->carried_by ? GET_NAME_DESC( obj->carried_by ) : "none") );
 	}
 
 	if (obj->in_room != NOWHERE) {

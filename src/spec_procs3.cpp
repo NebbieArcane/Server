@@ -4144,7 +4144,8 @@ int Interact ( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 		}
 
 		if ( strstr( argument,"nani") ) {
-			act("$N ti dice 'Partendo da myst:\n\rSegui  la strada carovaniera dell'est...\n\rquando le montagne ti sbarreranno il passaggio,\n\recco che guardando verso nord potrai intravedere l'opera dei nani...\n\rma sta attento perche' non sono i soli a vivere da quelle parti...'", FALSE, ch, 0, mob, TO_CHAR);
+			act("$N ti dice 'Partendo da myst:\n\rSegui  la strada carovaniera dell'est...\n\rquando le montagne ti sbarreranno il passaggio,\n\recco che guardando verso nord potrai intravedere l'opera dei nani...\n\rma sta attento perche' non sono i soli a vivere da quelle parti...'",
+				FALSE, ch, 0, mob, TO_CHAR);
 			return TRUE;
 		}
 		else {

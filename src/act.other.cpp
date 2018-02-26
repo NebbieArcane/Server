@@ -355,9 +355,9 @@ void do_save(struct char_data* ch, const char* argument, int cmd) {
 		 * risolversi il problema.
 		 * */
 		/*save_char( ch, AUTO_RENT );  */
-		MARK;
+
 		tmp->carrying = tl;
-		MARK;
+
 		for( i = 0; i < MAX_WEAR; i++ ) {
 			tmp->equipment[ i ] = teq[ i ];
 			if( ch->equipment[ i ] && ch->equipment[ i ]->in_room != -1 ) {
@@ -367,9 +367,9 @@ void do_save(struct char_data* ch, const char* argument, int cmd) {
 				equip_char( ch, o, i );  /* equip the correct slot */
 			}
 		}
-		MARK;
+
 		save_char( ch, AUTO_RENT, 0 );
-		MARK;
+
 
 	}
 	else {
@@ -1404,7 +1404,7 @@ void do_group(struct char_data* ch, const char* argument, int cmd) {
 						(static_cast<float>(GET_HIT(k)) / static_cast<int>(GET_MAX_HIT(k))) * 100.0+0.5,
 						(static_cast<float>(GET_MANA(k))/ static_cast<int>(GET_MAX_MANA(k))) * 100.0+0.5,
 						(static_cast<float>(GET_MOVE(k))/ static_cast<int>(GET_MAX_MOVE(k))) * 100.0+0.5
-						);
+					   );
 				act(buf,FALSE,ch, 0, k, TO_CHAR);
 
 			}
@@ -1726,17 +1726,17 @@ void do_use(struct char_data* ch, const char* argument, int cmd) {
 	struct obj_data* tmp_object, *stick;
 
 	int bits;
-	MARK;
+
 	argument = one_argument(argument,buf);
-	MARK;
+
 	if (ch->equipment[HOLD] == 0 ||
 			!isname(buf, ch->equipment[HOLD]->name)) {
-		MARK;
+
 		act("You do not hold that item in your hand.",FALSE,ch,0,0,TO_CHAR);
-		MARK;
+
 		return;
 	}
-	MARK;
+
 #if 0
 	if (!IS_PC(ch) && ch->master) {
 		act("$n looks confused, and shrugs helplessly", FALSE, ch, 0, 0, TO_ROOM);
@@ -1751,7 +1751,7 @@ void do_use(struct char_data* ch, const char* argument, int cmd) {
 	stick = ch->equipment[HOLD];
 
 	if (stick->obj_flags.type_flag == ITEM_STAFF)  {
-		MARK;
+
 		act("$n taps $p three times on the ground.",TRUE, ch, stick, 0,TO_ROOM);
 		act("You tap $p three times on the ground.",FALSE,ch, stick, 0,TO_CHAR);
 		if (stick->obj_flags.value[2] > 0) {  /* Is there any charges left? */
@@ -1770,10 +1770,10 @@ void do_use(struct char_data* ch, const char* argument, int cmd) {
 		}
 	}
 	else if (stick->obj_flags.type_flag == ITEM_WAND) {
-		MARK;
+
 		bits = generic_find(argument, FIND_CHAR_ROOM | FIND_OBJ_INV |
 							FIND_OBJ_ROOM | FIND_OBJ_EQUIP, ch, &tmp_char, &tmp_object);
-		MARK;
+
 		if (bits) {
 			struct spell_info_type*        spellp;
 
@@ -2429,13 +2429,13 @@ void do_set_flags(struct char_data* ch, const char* argument, int cmd) {
 		if (!strcmp( "showclasses",field ) || !strcmp( "show",field ) ) {
 			SET_BIT(ch->player.user_flags,SHOW_CLASSES);
 			send_to_char("Adesso tutti possono leggere le tue classi nel WHO!\n\r",ch);
-						  return;
+			return;
 		}
 		else if (!strcmp( "hideclasses",field ) || !strcmp( "hide",field ) ) {
 			if(IS_SET(ch->player.user_flags,SHOW_CLASSES))
-				REMOVE_BIT(ch->player.user_flags,SHOW_CLASSES);
+			{ REMOVE_BIT(ch->player.user_flags,SHOW_CLASSES); }
 			send_to_char("Adesso le tue classi non appaiono nel WHO!\n\r",ch);
-						  return;
+			return;
 		}
 		else {
 			send_to_char("Uso: set who show(classes)/hide(classes) \n\r",ch);

@@ -2608,7 +2608,7 @@ int shadow(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 		act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
 		cast_chill_touch( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
 		if (ch->specials.fighting)
-			cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
+		{ cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr); }
 		return TRUE;
 	}
 	return FALSE;

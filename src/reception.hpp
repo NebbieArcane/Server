@@ -1,5 +1,6 @@
 #ifndef __RECEPTION_HPP
 #define __RECEPTION_HPP
+#include "config.hpp"
 #include <stdio.h>
 #include "structs.hpp"
 void CountLimitedItems( struct obj_file_u* st ) ;

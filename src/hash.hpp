@@ -2,6 +2,7 @@
 */
 #ifndef __HASH_HPP_
 #define __HASH_HPP_
+#include "config.hpp"
 struct hash_link {
 	int        key;
 	struct hash_link* next;

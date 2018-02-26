@@ -1,5 +1,6 @@
 #ifndef _ACT_INFO_HPP
 #define _ACT_INFO_HPP
+#include "config.hpp"
 char* AlignDesc(int a) ;
 char* ArmorDesc(int a) ;
 char* DamRollDesc(int a) ;

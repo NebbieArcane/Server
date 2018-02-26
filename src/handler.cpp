@@ -744,13 +744,13 @@ void affect_to_char( struct char_data* ch, struct affected_type* af ) {
 
 
 	CREATE(affected_alloc, struct affected_type, 1);
-	MARK;
+
 	*affected_alloc = *af;
 	affected_alloc->next = ch->affected;
 	ch->affected = affected_alloc;
 	affect_modify(ch, af->location,af->modifier,af->bitvector, TRUE);
 	affect_total(ch);
-	MARK;
+
 }
 
 
@@ -1853,22 +1853,12 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	extern struct char_data* combat_list;
 
 #ifndef NOEVENTS
-	mudlog(LOG_SILENT,"Cancelling EVENTS in extract_char");
-	mudlog(LOG_SILENT,"Eventi per %s. Eventi %d,%d,%d",
-		   GET_NAME(ch),
-		   GET_POINTS_EVENT(ch,0),
-		   GET_POINTS_EVENT(ch,1),
-		   GET_POINTS_EVENT(ch,2));
 	/* cancel point updates */
 	for (w = 0; w < 3; w++)
 		if (GET_POINTS_EVENT(ch, w)) {
-			mudlog(LOG_SILENT,"Cancellazione evento %d. Stato: %d",
-				   w,
-				   GET_POINTS_EVENT(ch,w));
 			event_cancel(GET_POINTS_EVENT(ch, w));
 			GET_POINTS_EVENT(ch, w) = NULL;
 		}
-	mudlog(LOG_SILENT,"Cancelled EVENTS in extract_char");
 #endif
 	if( ch == NULL ) {
 		mudlog( LOG_SYSERR, "ch == NULL in extract_char_smarter (handler.c)" );
@@ -1881,7 +1871,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	}
 
 
-	mudlog( LOG_CHECK | LOG_SILENT, "Extracting char %s (ADDR: %p, magic %d)",
+	mudlog( LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d)",
 			GET_NAME_DESC( ch ), ch, ch->nMagicNumber );
 
 	if( !IS_NPC( ch ) && !ch->desc ) {

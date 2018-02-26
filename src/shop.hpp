@@ -1,5 +1,6 @@
 #ifndef __SHOP_HPP
 #define __SHOP_HPP
+#include "config.hpp"
 extern int gevent;
 extern struct shop_data* shop_index;
 extern int number_of_shops;

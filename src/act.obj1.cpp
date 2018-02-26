@@ -854,7 +854,6 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 	if (!in_clan(ch,victim) ||
 			(!IS_VASSALLOOF(ch,GET_NAME(victim))&&
 			 !IS_VASSALLOOF(victim,GET_NAME(ch)))) {
-		MARKS("givexp in act.obj1.c");
 		send_to_char("Scordatelo!\n",ch);
 		return;
 	}

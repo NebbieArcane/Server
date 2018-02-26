@@ -25,7 +25,9 @@
 #include "specass2.hpp"
 #include "spell_parser.hpp"
 #include "mail.hpp"
-using Nebbie::Registered;
+#include "utility.hpp"
+#include "weather.hpp"
+using Alarmud::Registered;
 
 
 
@@ -290,11 +292,11 @@ void boot_db() {
 
 /* reset the time in the game from file */
 void reset_time() {
-	extern unsigned char moontype;
+	//extern unsigned char moontype;
 
 
 
-	struct time_info_data mud_time_passed(time_t t2, time_t t1);
+	//struct time_info_data mud_time_passed(time_t t2, time_t t1);
 
 	time_info = mud_time_passed(time(0), beginning_of_time);
 
@@ -347,8 +349,11 @@ void reset_time() {
 	}
 
 	mudlog(LOG_CHECK, "   Current Gametime: %dH %dD %dM %dY.",
-		   time_info.hours, time_info.day,
-		   time_info.month, time_info.year);
+		   static_cast<int>(time_info.hours),
+		   static_cast<int>(time_info.day),
+		   static_cast<int>(time_info.month),
+		   static_cast<int>(time_info.year)
+	);
 
 	weather_info.pressure = 960;
 	if ((time_info.month >= 7) && (time_info.month <= 12))
@@ -1450,7 +1455,7 @@ struct char_data* read_mobile(int nr, int type) {
 	fseek(mob_f, mob_index[nr].pos, 0);
 
 	CREATE(mob, struct char_data, 1);
-	MARK;
+
 	if (!mob) {
 		mudlog(LOG_SYSERR, "Cannot create mob?! db.c read_mobile");
 		return (FALSE);
@@ -1947,8 +1952,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 
 	obj->name = fread_string(f);
 
-	mudlog(LOG_CHECK,"Letto nome oggetto %s", obj->name);
-
 	if (obj->name) {
 		bc += strlen(obj->name);
 	}
@@ -2096,9 +2099,9 @@ struct obj_data* read_object(int nr, int type) {
 	}
 
 	SetStatus("before CREATE object", NULL);
-	MARK;
+
 	CREATE(obj, struct obj_data, 1);
-	MARK;
+
 	bc = sizeof (struct obj_data);
 
 	SetStatus("before clear_object", NULL);
@@ -3000,7 +3003,7 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	st.load_room = load_room;
 	st.last_logon += bonus * 60 * 60 * 24;
 	strcpy(st.pwd, ch->desc->pwd);
-	MARK;
+
 	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
 	if ((fl = fopen(szFileName, "r+b")) == NULL) {
 		if ((fl = fopen(szFileName, "wb")) == NULL) {
@@ -3013,7 +3016,7 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	rewind(fl);
 	fwrite(&st, sizeof ( struct char_file_u), 1, fl);
 	fclose(fl);
-	MARK;
+
 }
 /* void save_char(struct char_data *ch, sh_int load_room)
 {
@@ -3092,7 +3095,7 @@ char* fread_string(FILE* f1) {
 		if (pReturnString == NULL)
 		{ mudlog(LOG_ERROR, "Fread_string:Errore nel ritornare la stringa %s", buf); }
 		fflush(NULL);
-		MARK;
+
 	}
 
 	return pReturnString;
@@ -3225,22 +3228,11 @@ void free_char(struct char_data* ch) {
 		if (auction->buyer == ch) { auction->buyer = NULL; }
 	}
 #ifndef NOEVENTS
-	mudlog(LOG_SILENT, "Cancelling EVENTS in free_char");
-	mudlog(LOG_SILENT, "Eventi per %s. Eventi %d,%d,%d",
-		   GET_NAME(ch),
-		   GET_POINTS_EVENT(ch, 0),
-		   GET_POINTS_EVENT(ch, 1),
-		   GET_POINTS_EVENT(ch, 2));
 	/* cancel point updates */
 	for (i = 0; i < 3; i++)
 		if (GET_POINTS_EVENT(ch, i)) {
-			mudlog(LOG_SILENT, "Cancellazione evento %d. Stato: %d",
-				   i,
-				   GET_POINTS_EVENT(ch, i));
-			event_cancel(GET_POINTS_EVENT(ch, i));
 			GET_POINTS_EVENT(ch, i) = NULL;
 		}
-	mudlog(LOG_SILENT, "Cancelled EVENTS in free_char");
 #endif
 
 	if (ch->nMagicNumber != CHAR_VALID_MAGIC) {
@@ -3355,7 +3347,7 @@ void free_char(struct char_data* ch) {
 		ch->nMagicNumber = CHAR_FREEDED_MAGIC;
 		free(ch);
 	}
-	MARK;
+
 }
 
 /* release memory allocated for an obj struct */
@@ -3411,8 +3403,7 @@ int file_to_string(char* name, char* buf) {
 	stat(name, &info);
 	mudlog(LOG_CHECK, "File %s lunghezza %d", name, info.st_size);
 	if (!(fl = fopen(name, "r"))) {
-		sprintf(tmp, "[%s] file-to-string", name);
-		perror(tmp);
+		mudlog(LOG_ERROR, "Unable to open %s, continuing", name);
 		*buf = '\0';
 		return (-1);
 	}
@@ -3727,11 +3718,12 @@ void reset_char(struct char_data* ch) {
 
 	{
 		if ((ch->player.time.played / SECS_PER_REAL_HOUR) < (ratio * GetTotLevel(ch))) {
+			int minplayed=(ch->player.time.played % SECS_PER_REAL_HOUR) / 60;
 			buglog(LOG_PLAYERS, "%s ha fatto %d livelli in %5d ore e %2d minuti",
 				   GET_NAME(ch),
 				   GetTotLevel(ch),
-				   ch->player.time.played / SECS_PER_REAL_HOUR,
-				   (ch->player.time.played % SECS_PER_REAL_HOUR) / 60);
+				   (ch->player.time.played / SECS_PER_REAL_HOUR),
+				   minplayed);
 		}
 	}
 

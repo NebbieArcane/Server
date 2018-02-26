@@ -23,6 +23,7 @@
    in your interpreter. */
 #ifndef __MAIL_HPP
 #define __MAIL_HPP
+#include "config.hpp"
 #include "general.hpp"
 #include <iostream>
 #include <ostream>

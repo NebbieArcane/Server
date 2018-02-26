@@ -1,5 +1,6 @@
 #ifndef _ACT_OBJ1_HPP
 #define _ACT_OBJ1_HPP
+#include "config.hpp"
 void do_drop(struct char_data* ch,const char* argument, int cmd) ;
 void do_get(struct char_data* ch,const char* argument, int cmd) ;
 void do_give(struct char_data* ch,const char* argument, int cmd) ;

@@ -38,24 +38,24 @@ void PrintStatus() {
 }
 void PrintStatus(int level) {
 	int i=0;
-	mudlog( LOG_SYSERR | LOG_SILENT, "Connections from start: %d",
+	mudlog( LOG_SYSERR, "Connections from start: %d",
 			HowManyConnection(0));
 	if (level==1) {
-		mudlog(LOG_SYSERR | LOG_SILENT,"CurrentTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR | LOG_SILENT, "Mud status: '%s'",
+		mudlog(LOG_SYSERR,"CurrentTrack %s at %d",currentfile,currentline);
+		mudlog( LOG_SYSERR, "Mud status: '%s'",
 				gszMudStatus );
 	}
 	else {
 
-		mudlog(LOG_SYSERR | LOG_SILENT,"LastTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR | LOG_SILENT, "Mud status when crashed: '%s'",
+		mudlog(LOG_SYSERR,"LastTrack %s at %d",currentfile,currentline);
+		mudlog( LOG_SYSERR, "Mud status when crashed: '%s'",
 				gszMudStatus );
 	}
-	mudlog( LOG_SYSERR | LOG_SILENT, "  Last Name '%s'", gszName );
+	mudlog( LOG_SYSERR, "  Last Name '%s'", gszName );
 	if (gnPtr>=0) {
-		mudlog(LOG_SYSERR | LOG_SILENT,    " Calling Stack");
+		mudlog(LOG_SYSERR,    " Calling Stack");
 		for (i=0; i<=gnPtr; i++) {
-			mudlog(LOG_SYSERR | LOG_SILENT, "       %2d.%s",i,gszStack[i]);
+			mudlog(LOG_SYSERR, "       %2d.%s",i,gszStack[i]);
 		}
 	}
 }

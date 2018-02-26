@@ -1,5 +1,6 @@
 #ifndef __SPEC_PROCS_HPP
 #define __SPEC_PROCS_HPP
+#include "config.hpp"
 #include "specass2.hpp"
 int AGGRESSIVE(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AbbarachDragon(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;

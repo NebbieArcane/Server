@@ -10,8 +10,9 @@
 
 #ifndef REGISTERED_HPP_
 #define REGISTERED_HPP_
+#include "config.hpp"
 #include "general.hpp"
-namespace Nebbie {
+namespace Alarmud {
 class Registered {
 private:
 	string code;

@@ -2,6 +2,8 @@
 */
 #ifndef __SPELLS
 #define __SPELLS
+#include "config.hpp"
+
 #include <sys/types.h>
 
 typedef char sbyte;
@@ -474,7 +476,7 @@ typedef char byte;
 
 /* Attacktypes with grammar */
 typedef void (*spellFunction) (byte level, struct char_data* ch, const char* arg, int type,
-		 struct char_data* tar_ch, struct obj_data* tar_obj);
+							   struct char_data* tar_ch, struct obj_data* tar_obj);
 struct spell_info_type {
 	spellFunction spell_pointer;
 	byte minimum_position;  /* Position for caster                         */

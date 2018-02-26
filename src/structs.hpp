@@ -88,37 +88,6 @@ struct QuestItem {
  * PLAYER_AUTH is defined in comm.h
  */
 
-/* I define all these as TRUE, see makefile for more info */
-/* I flag "stabili" vengono impostati qui per alleggerire il make file */
-#define NOSCRAP         0
-#define LIMITED_ITEMS   1
-#define SITELOCK        1
-#define NODUPLICATES    1
-#define EGO             0
-#define EGO_BLADE       1
-#define SUSPENDREGISTER 1
-#define LEVEL_LOSS      1
-#define NEWER_EXP       1
-#define FAST_TRACK      1
-#define NEW_GAIN        1
-#define NEW_ROLL        1
-#define NEW_CONNECT     1
-#define NEW_BASH        1
-#define LOW_GOLD        0
-#define DEATH_FIX       1
-#define ZONE_COMM_ONLY  1
-#define PREVENT_PKILL   1
-#define LAG_MOBILES     1
-#define NICE_PKILL      1
-#define NICE_MULTICLASS 1
-#define DOFLEEFIGHTINGLD 1  /* auto flee se in combat va ld */
-#define ALAR_RENT  		 1		/* se 1 il rent � normale */
-#define NEW_RENT  		 0    /* se 1 Il rent non viene calcolato */
-#define LIMITEEQALRIENTRO 0 /* elimina tutto l'eq RARO in inventario al rientro nel mud */
-#define EQPESANTE 		1  /* L'eq pesa anche se indossato */
-/*#define NEW_EQ_GAIN     1*/  /* la qualita' dell'equip influenza gli XP
-                              che si guadagnano uccidendo i mobs  */
-//#define CYGWIN 1
 /*
  * efficiency stuff
  */
@@ -1268,20 +1237,20 @@ struct char_special_data {
 
 /* skill_data flags */
 enum e_skill_known {
-SKILL_KNOWN				=	1,
-SKILL_KNOWN_CLERIC		=	2,
-SKILL_KNOWN_MAGE		=	4,
-SKILL_KNOWN_SORCERER	=	8,
-SKILL_KNOWN_THIEF		=	16,
-SKILL_KNOWN_MONK		=	32,
-SKILL_KNOWN_DRUID		=	64,
-SKILL_KNOWN_WARRIOR		=	128,
+	SKILL_KNOWN				=	1,
+	SKILL_KNOWN_CLERIC		=	2,
+	SKILL_KNOWN_MAGE		=	4,
+	SKILL_KNOWN_SORCERER	=	8,
+	SKILL_KNOWN_THIEF		=	16,
+	SKILL_KNOWN_MONK		=	32,
+	SKILL_KNOWN_DRUID		=	64,
+	SKILL_KNOWN_WARRIOR		=	128,
 
-/* need to make byte flags, to long or int flags in char_skill_data */
-SKILL_KNOWN_BARBARIAN	=	256,
-SKILL_KNOWN_PALADIN		=	512,
-SKILL_KNOWN_RANGER		=	1024,
-SKILL_KNOWN_PSI			=	2048
+	/* need to make byte flags, to long or int flags in char_skill_data */
+	SKILL_KNOWN_BARBARIAN	=	256,
+	SKILL_KNOWN_PALADIN		=	512,
+	SKILL_KNOWN_RANGER		=	1024,
+	SKILL_KNOWN_PSI			=	2048
 };
 /* end */
 

@@ -11,7 +11,9 @@
 *      3/6/98 ejg:  Changed return type of EVENTFUNC from void to long.   *
 *                   Moved struct event definition to events.c.            *
 ************************************************************************ */
-
+#ifndef __EVENTS_HPP
+#define __EVENTS_HPP
+#include "config.hpp"
 #define EVENTFUNC(name) long (name)(void *event_obj)
 
 
@@ -23,4 +25,4 @@ void event_process(void);
 long event_time(struct event* event);
 void event_free_all(void);
 
-
+#endif //__EVENTS_HPP

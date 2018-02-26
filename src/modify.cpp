@@ -1025,7 +1025,7 @@ void check_reboot() {
 	}
 	// If we already on a reboot sequence, checking is pointless
 	if( !bBootSequenceStarted && (tc-lastCheck) >=60) { //Once every minute
-		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,tc-lastCheck);
+		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
 		lastCheck=tc;
 		sprintf(REBOOTFILE,"REBOOT%02d",t_info->tm_hour);
 		if(  (boot = fopen( REBOOTFILE, "r+" )) ) {
@@ -1044,7 +1044,7 @@ void check_reboot() {
 		}
 	}
 	else if  (bBootSequenceStarted) {
-		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,tc-lastCheck);
+		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
 		shutdownlevel+=((tc-lastCheck)/60);
 		lastCheck=tc;
 		if( shutdownlevel > 30 ) {

@@ -2,6 +2,7 @@
 */
 #ifndef __TRAP_HPP
 #define __TRAP_HPP
+#include "config.hpp"
 #define TRAP_EFFECT_TYPE   0
 #define TRAP_DAM_TYPE      1
 #define TRAP_LEVEL         2

@@ -46,7 +46,7 @@ void flush_queues(struct descriptor_data* d) ;
 void game_loop(int s) ;
 int get_from_q(struct txt_q* queue, char* dest) ;
 int init_socket(int port) ;
-int main (int argc, char** argv) ;
+int comm_main (int argc, char** argv) ;
 int new_connection(int s) ;
 int new_descriptor(int s) ;
 void nonblock( int s ) ;

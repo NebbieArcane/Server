@@ -2,6 +2,7 @@
 * $Id: specass2.h,v 1.1.1.1 2002/02/13 11:14:56 root Exp $ */
 #ifndef __SPECASS2__
 #define __SPECASS2__ 1
+#include "config.hpp"
 
 
 typedef int (*special_proc)( struct char_data*, int, char*, void*, int );

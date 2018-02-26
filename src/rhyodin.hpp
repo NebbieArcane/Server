@@ -6,6 +6,7 @@
 ***************************************************************************/
 #if !defined(_RHYODIN_H)
 #define _RHYODIN_H
+#include "config.hpp"
 
 int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 			  int type );

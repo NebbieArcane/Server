@@ -2,6 +2,7 @@
 *** AlarMUD        comm.c main communication routines. Based on DIKU and
 ***                       SillyMUD.
 */
+
 #include "comm.hpp"
 #include <errno.h>
 #include <stdio.h>
@@ -240,104 +241,69 @@ void close_socket_fd( int desc) {
 #endif
 }
 
-int main (int argc, char** argv) {
+int comm_main (int argc, char** argv) {
 	int port, pos=1;
 	char* dir;
-
-	extern int WizLock;
-#ifdef CYGWIN
-	extern char* gdbm_version;
-#endif
 
 #ifdef SITELOCK
 	int a;
 #endif
 
-#if defined(sun) || defined(NETBSD) && !defined(LINUX)
-	struct rlimit rl;
-	int res;
-#endif
 	struct passwd* pw;
-#if !defined(DFLT_DIR)
-	mudlog(LOG_SYSERR,"%s","DFLT_DIR non defined, please check config_default.h and create config.h");
-	return 1;
-#endif
 
-	/* Devo commentare sto pezzo per problemi di compilazione....  */
 	mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
 	mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
 
-
-	/*********/
-
-
-
-
-	/*********/
-
-
-
-
-	/**** PROVA CORE
-	   if (!geteuid())
-	   {
-	      mudlog(LOG_CHECK,"Started as root, switching to user %s",MUDUSER);
-	      pw=getpwnam(MUDUSER);
-	      if (!pw)
-	      {
-		 mudlog(LOG_ERROR,"Unsuccesful switch, can't run as root");
-		 assert(0);
-	      }
-	      else
-	      setuid(pw->pw_uid);
-	   }
-	****/
 	mudlog(LOG_CHECK,"Pulse: zone river teleport violence mobile tick");
-	mudlog(LOG_CHECK," %4d %4d %4d %4d %4d %4d",
+	mudlog(LOG_CHECK," %       4d   %4d      %4d      %4d    %4d  %4d",
 		   PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
-		   PULSE_VIOLENCE,PULSE_MOBILE,PULSE_PER_SEC * SECS_PER_MUD_HOUR);
-#if 1
-#ifdef USE_LAWFUL
-	mudlog( LOG_CHECK, "USE_LAWFUL          = %d", USE_LAWFUL);
-#endif
-#ifdef LIMITED_ITEMS
-	mudlog( LOG_CHECK, "LIMITED_ITEMS       = %d", LIMITED_ITEMS);
-#endif
-#ifdef SITELOCK
-	mudlog( LOG_CHECK, "SITELOCK            = %d", SITELOCK);
-#endif
-#ifdef NODUPLICATES
-	mudlog( LOG_CHECK, "NODUPLICATES        = %d", NODUPLICATES);
-#endif
-#ifdef EGO
-	mudlog( LOG_CHECK, "EGO                 = %d", EGO);
-#endif
-#ifdef LEVEL_LOSS
-	mudlog( LOG_CHECK,  "LEVEL_LOSS          = %d", LEVEL_LOSS);
-#endif
-#ifdef LOW_GOLD
-	mudlog( LOG_CHECK,  "LOW_GOLD            = %d", LOW_GOLD);
-#endif
-#ifdef ZONE_COMM_ONLY
-	mudlog( LOG_CHECK,  "ZONE_COMM_ONLY      = %d", ZONE_COMM_ONLY);
-#endif
-#ifdef PREVENT_PKILL
-	mudlog( LOG_CHECK,  "PREVENT_PKILL       = %d", PREVENT_PKILL);
-#endif
-#ifdef LAG_MOBILES
-	mudlog( LOG_CHECK,  "LAG_MOBILES         = %d", LAG_MOBILES);
-#endif
-#ifdef FAST_TRACK
-	mudlog( LOG_CHECK,  "FAST_TRACK          = %d", FAST_TRACK);
-#endif
+		   PULSE_VIOLENCE,PULSE_MOBILE,(PULSE_PER_SEC * SECS_PER_MUD_HOUR));
+
+	LOG_DEFINE(ACCESSI);
+	LOG_DEFINE(ALAR);
+	LOG_DEFINE(ALAR_RENT);
+	LOG_DEFINE(CHECK_RENT_INACTIVE);
+	LOG_DEFINE(CLEAN_AT_BOOT);
+	LOG_DEFINE(DEATH_FIX);
+	LOG_DEFINE(DOFLEEFIGHTINGLD);
+	LOG_DEFINE(EGO);
+	LOG_DEFINE(EGO_BLADE);
+	LOG_DEFINE(ENABLE_AUCTION);
+	LOG_DEFINE(EQPESANTE);
+	LOG_DEFINE(FAST_TRACK);
+	LOG_DEFINE(HEAVY_DEBUG);
+	LOG_DEFINE(IMPL_SECURITY);
+	LOG_DEFINE(LAG_MOBILES);
+	LOG_DEFINE(LEVEL_LOSS);
+	LOG_DEFINE(LIMITED_ITEMS);
+	LOG_DEFINE(LIMITEEQALRIENTRO);
+	LOG_DEFINE(LINUX);
+	LOG_DEFINE(LOG);
+	LOG_DEFINE(LOG_DEBUG);
+	LOG_DEFINE(LOG_DEBUG1);
+	LOG_DEFINE(LOW_GOLD);
+	LOG_DEFINE(NETBSD);
+	LOG_DEFINE(NEW_ALIGN);
+	LOG_DEFINE(NEW_BASH);
+	LOG_DEFINE(NEW_CONNECT);
+	LOG_DEFINE(NEW_EQ_GAIN);
+	LOG_DEFINE(NEW_GAIN);
+	LOG_DEFINE(NEW_RENT);
+	LOG_DEFINE(NEW_ROLL);
+	LOG_DEFINE(NEWER_EXP);
+	LOG_DEFINE(NICE_LIMITED);
+	LOG_DEFINE(NICE_MULTICLASS);
+	LOG_DEFINE(NICE_PKILL);
+	LOG_DEFINE(NO_REGISTER);
+	LOG_DEFINE(NODUPLICATES);
+	LOG_DEFINE(NOSCRAP);
+	LOG_DEFINE(PREVENT_PKILL);
+	LOG_DEFINE(SITELOCK);
+	LOG_DEFINE(SUSPENDREGISTER);
+	LOG_DEFINE(ZONE_COMM_ONLY);
+#if 0
 #ifdef BLOCK_WRITE
 	mudlog( LOG_CHECK,  "BLOCK_WRITE         = %d", BLOCK_WRITE);
-#endif
-#ifdef CLEAN_AT_BOOT
-	mudlog( LOG_CHECK,  "CLEAN_AT BOOT       = %d", CLEAN_AT_BOOT);
-#endif
-#ifdef CHECK_RENT_INACTIVE
-	mudlog( LOG_CHECK,  "CHECK_RENT_INACTIVE = %d", CHECK_RENT_INACTIVE);
 #endif
 #ifdef STRANGE_WHACK
 	mudlog( LOG_CHECK,  "STRANGE_WACK        = %d", STRANGE_WACK);
@@ -356,9 +322,6 @@ int main (int argc, char** argv) {
 #endif
 #ifdef LOCKGROVE
 	mudlog( LOG_CHECK,  "LOCKGROVE           = %d", LOCKGROVE);
-#endif
-#ifdef IMPL_SECURITY
-	mudlog( LOG_CHECK,  "IMPL_SECURITY       = %d", IMPL_SECURITY);
 #endif
 #ifdef KLUDGEEM
 	mudlog( LOG_CHECK,  "KLUDGE_MEM          = %d", KLUDGE_MEM);
@@ -577,20 +540,17 @@ void run_the_game(int port) {
 	mudlog( LOG_CHECK, "Signal trapping.");
 	signal_setup();
 
-#ifdef USE_LAWFUL
-
-	if (lawful && load() >= 6) {
-		mudlog( LOG_CHECK, "System load too high at startup.");
-		coma(1);
-	}
-
-#endif
-
 	event_init();
 
 	boot_db();
 
 	mudlog( LOG_CHECK, "Entering game loop.");
+	LOG_DBG("Debug");
+	LOG_TRACE("Trace");
+	LOG_INFO("Info");
+	LOG_WARN("Warning");
+	LOG_ALERT("Error");
+	LOG_FATAL("Fatal");
 
 	game_loop(s);
 
@@ -817,11 +777,11 @@ void game_loop(int s) {
 				if (point->character)
 				{ point->character->specials.timer = 0; }
 				point->prompt_mode = 1;
-				MARK;
+
 				CheckObjectExDesc( "Before players interpreter" );
-				MARK;
+
 				CheckCharAffected( "Before players interpreter" );
-				MARK;
+
 				SetStatus("Check bp passati");
 				if (point->str) {
 					SetStatus("CommandLoop1");
@@ -1056,29 +1016,29 @@ void game_loop(int s) {
 
 int get_from_q(struct txt_q* queue, char* dest) {
 	struct txt_block* tmp;
-	MARK;
+
 	/* Q empty? */
 	if (!queue)
 	{ return(0); }
 	if(!queue->head)
 	{ return(0); }
-	MARK;
+
 	if (!dest) {
 		mudlog( LOG_SYSERR, "Sending message to null destination." );
 		return(0);
 	}
-	MARK;
+
 	tmp = queue->head;
-	MARK;
+
 	if (dest && queue->head->text)
 	{ strcpy(dest, queue->head->text); }
-	MARK;
+
 	queue->head = queue->head->next;
-	MARK;
+
 	free(tmp->text);
-	MARK;
+
 	free(tmp);
-	MARK;
+
 	return(1);
 }
 
@@ -1140,11 +1100,11 @@ void write_to_output(char* txt, struct descriptor_data* t) {
 		tmpoutbuf[127]=0;
 		PushStatus (tmpoutbuf);
 		strcat(t->output, txt);
-		MARK;
+
 		PopStatus();
 		t->bufspace -= size;
 		t->bufptr = strlen(t->output);
-		MARK;
+
 	}
 	else {
 		/* otherwise, try to switch to a large buffer */
@@ -1206,27 +1166,27 @@ struct timeval timediff(struct timeval* a, struct timeval* b) {
 /* Empty the queues before closing connection */
 void flush_queues(struct descriptor_data* d) {
 	char dummy[MAX_STRING_LENGTH];
-	MARK;
+
 	while (get_from_q(&d->output, dummy));
-	MARK;
+
 	while (get_from_q(&d->input, dummy));
-	MARK;
+
 }
 #else
 void flush_queues(struct descriptor_data* d) {
 	char buf2[MAX_STRING_LENGTH];
-	MARK;
+
 	if (d->large_outbuf) {
-		MARK;
+
 		d->large_outbuf->next = bufpool;
-		MARK;
+
 		bufpool = d->large_outbuf;
-		MARK;
+
 	}
-	MARK;
+
 	while (get_from_q(&d->input, buf2))
 		;
-	MARK;
+
 }
 #endif
 
@@ -1369,9 +1329,9 @@ int new_descriptor(int s) {
 		{ maxdesc = desc; }
 	}
 
-	MARK;
+
 	CREATE(newd, struct descriptor_data, 1);
-	MARK;
+
 	if (!newd) {
 		sprintf( buf,"Mi dispiace... Non posso lasciarti entrare adesso. "
 				 "Riprova piu` tardi.\n\r");
@@ -1388,10 +1348,10 @@ int new_descriptor(int s) {
 		return(0);
 	}
 
-	MARK;
+
 	/* find info */
 	size = sizeof(sock);
-	MARK;
+
 	if (getpeername(desc, (struct sockaddr*) & sock, &size) < 0) {
 		perror("getpeername");
 		*newd->host = '\0';
@@ -1421,7 +1381,7 @@ int new_descriptor(int s) {
 
 
 	/* end newer code */
-	MARK;
+
 	/* init desc data */
 	newd->descriptor = desc;
 	newd->connected  = CON_NME;
@@ -1448,7 +1408,7 @@ int new_descriptor(int s) {
 	newd->original =  NULL;
 	newd->snoop.snooping =  NULL;
 	newd->snoop.snoop_by =  NULL;
-	MARK;
+
 	/* prepend to list */
 
 	descriptor_list = newd;
@@ -1458,7 +1418,7 @@ int new_descriptor(int s) {
 		ParseAnsiColors(TRUE,"$c0007"
 						"Come vuoi essere conosciuto su Nebbie Arcane? "),
 		newd );
-	MARK;
+
 	return(0);
 }
 
@@ -1720,24 +1680,24 @@ void close_socket(struct descriptor_data* d) {
 	if( !d )
 	{ return; }
 
-	MARK;
+
 	close(d->descriptor);
-	MARK;
+
 	flush_queues(d);
-	MARK;
+
 	if (d->descriptor == maxdesc)
 	{ --maxdesc; }
-	MARK;
+
 	/* Forget snooping */
 	if( d->snoop.snooping )
 	{ d->snoop.snooping->desc->snoop.snoop_by = 0; }
-	MARK;
+
 	if( d->snoop.snoop_by ) {
 		send_to_char( "La tua vittima non e` piu` fra noi.\n\r",
 					  d->snoop.snoop_by );
 		d->snoop.snoop_by->desc->snoop.snooping = 0;
 	}
-	MARK;
+
 	if( d->character ) {
 		if( d->connected == CON_PLYNG ) {
 			do_save( d->character, "", 0 );
@@ -1777,11 +1737,11 @@ void close_socket(struct descriptor_data* d) {
 	else
 	{ mudlog( LOG_CONNECT, "Losing descriptor without char." ); }
 
-	MARK;
+
 	if( next_to_process == d )           /* to avoid crashing the process loop */
 	{ next_to_process = next_to_process->next; }
 
-	MARK;
+
 	if( d == descriptor_list ) /* this is the head of the list */
 	{ descriptor_list = descriptor_list->next; }
 	else { /* This is somewhere inside the list */
@@ -1806,7 +1766,7 @@ void close_socket(struct descriptor_data* d) {
 		}
 
 	}/* end inside the list */
-	MARK;
+
 	if (d) {
 		if (d->connected == CON_PLYNG) {
 
@@ -1819,7 +1779,7 @@ void close_socket(struct descriptor_data* d) {
 		free(d);
 		PopStatus();
 	}
-	MARK;
+
 }
 
 
@@ -1850,65 +1810,8 @@ void nonblock(int s) {
 #endif
 
 
-#define COMA_SIGN "\n\rAvalon e` attualmente inattivo per il carico eccessivo della CPU.\n\rTi prego di riprovare piu` tardi.\n\r\n\n\r   Tristemente,\n\r\n\r    Lo staff\n\r\n\r"
 
 
-/* sleep while the load is too high */
-void coma(int s) {
-#ifdef USE_LAWFUL
-
-	fd_set input_set;
-	static struct timeval timeout = {
-		60,
-		0
-	};
-	int conn;
-
-	int workhours(void);
-	int load(void);
-
-	mudlog( LOG_CHECK, "Entering comatose state.");
-
-	sigsetmask(sigmask(SIGUSR1) | sigmask(SIGUSR2) | sigmask(SIGINT) |
-			   sigmask(SIGPIPE) | sigmask(SIGALRM) | sigmask(SIGTERM) |
-			   sigmask(SIGURG) | sigmask(SIGXCPU) | sigmask(SIGHUP));
-
-
-	while (descriptor_list)
-	{ close_socket(descriptor_list); }
-
-	FD_ZERO(&input_set);
-	do {
-		FD_SET(s, &input_set);
-		if (select(64, &input_set, 0, 0, &timeout) < 0) {
-			perror("coma select");
-			assert(0);
-		}
-		if (FD_ISSET(s, &input_set))        {
-			if (load() < 6) {
-				mudlog( LOG_CHECK, "Leaving coma with visitor.");
-				sigsetmask(0);
-				return;
-			}
-			if ((conn = new_connection(s)) >= 0)     {
-				write_to_descriptor(conn, COMA_SIGN);
-				sleep(2);
-				close(conn);
-			}
-		}
-
-		tics = 1;
-		if (workhours())  {
-			mudlog( LOG_CHECK, "Working hours collision during coma. Exit.");
-			assert(0);
-		}
-	}
-	while (load() >= 6);
-
-	mudlog( LOG_CHECK, "Leaving coma.");
-	sigsetmask(0);
-#endif
-}
 
 /******************************************************************
 *        Public routines for system-to-player-communication          *
@@ -2412,7 +2315,6 @@ int _affected_by_s(struct char_data* ch, int skill) {
 	{ return fs-1; }
 }
 
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
 
 void construct_prompt( char* outbuf, struct char_data* ch ) {
 	struct room_data* rm;
@@ -2587,7 +2489,7 @@ void construct_prompt( char* outbuf, struct char_data* ch ) {
 					break;
 				case 's':
 					s_flag = 1;
-					/* no break */
+				/* no break */
 				case 'S':   /* affected spells */
 					*tbuf=0;
 					if( ( i = _affected_by_s( ch, SPELL_FIRESHIELD ) ) != -1 )
@@ -2648,18 +2550,11 @@ void construct_prompt( char* outbuf, struct char_data* ch ) {
 						{ *tbuf=0; }
 						break;
 					default:
-#if 0
-						mudlog( LOG_PLAYERS,
-								"Invalid Immmortal Prompt code '%c'",*pr_scan);
-#endif
 						*tbuf=0;
 						break;
 					}
 					break;
 				default:
-#if 0
-					mudlog( LOG_PLAYERS,"Invalid Prompt code '%c'",*pr_scan);
-#endif
 					*tbuf=0;
 					break;
 				}
@@ -2676,19 +2571,7 @@ void construct_prompt( char* outbuf, struct char_data* ch ) {
 		 * in questa routine. Lo riannullo */
 		ch->specials.fighting=NULL;
 	}
-
-
-#if 0
-	if( IS_SET( SystemFlags, SYS_LOGALL ) ) {
-		if (IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-			mudlog( LOG_PLAYERS | LOG_SILENT,"[%d] %s: prompt end (%s)", ch->in_room,
-					ch->player.name, outbuf );
-		}
-	}
-#endif
 }
-
-
 void UpdateScreen(struct char_data* ch, int update) {
 	char buf[255];
 	int size;

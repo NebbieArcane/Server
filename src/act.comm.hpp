@@ -1,5 +1,6 @@
 #ifndef _ACT_COMM_HPP
 #define _ACT_COMM_HPP
+#include "config.hpp"
 char RandomChar() ;
 char* RandomWord() ;
 void do_ask(struct char_data* ch, const char* argument, int cmd) ;

@@ -1,5 +1,6 @@
 #ifndef __SPECIALI_HPP
 #define __SPECIALI_HPP
+#include "config.hpp"
 #include "structs.hpp"
 int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoom, int type ) ;
 int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data* pMob, int nType ) ;

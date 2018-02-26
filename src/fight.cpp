@@ -1488,12 +1488,10 @@ int group_loss( struct char_data* ch,int loss) {
 	int victlevel=0;
 	if( !IS_AFFECTED( ch, AFF_GROUP ) )
 	{ return(loss); }
-	PushStatus("Group-Loss");
 	loss/=100;
 	if( !( k = ch->master ) )
 	{ k = ch; } /*Questo PC non ha master.. vuol dire che era il leader*/
 	victlevel=GET_AVE_LEVEL(ch);
-	PushStatus("Followers");
 	for( f = k->followers; f; f = f->next ) {
 		if( IS_AFFECTED( f->follower, AFF_GROUP )) {
 			diff=(GET_AVE_LEVEL(f->follower)-victlevel);
@@ -1506,7 +1504,7 @@ int group_loss( struct char_data* ch,int loss) {
 				mudlog(LOG_PLAYERS,"GD dead:%s(%d), perdita=%d, diff=%d, %s(%d) perde:%d",
 					   GET_NAME(ch),
 					   GET_AVE_LEVEL(ch),
-					   loss*100,diff,
+					   (loss*100),diff,
 					   GET_NAME(f->follower),
 					   GET_AVE_LEVEL(f->follower),lose);
 				if (lose>0) {
@@ -1516,9 +1514,7 @@ int group_loss( struct char_data* ch,int loss) {
 			}
 		}
 	}
-	PopStatus();
 	if (k!=ch) {
-		PushStatus("k");
 		if( IS_AFFECTED( k, AFF_GROUP )) {
 			diff=(GET_AVE_LEVEL(k)-victlevel);
 			if (diff>0) {
@@ -1530,7 +1526,7 @@ int group_loss( struct char_data* ch,int loss) {
 				mudlog(LOG_PLAYERS,"GD dead:%s(%d), perdita=%d, diff=%d, %s(%d) perde:%d",
 					   GET_NAME(ch),
 					   GET_AVE_LEVEL(ch),
-					   loss*100,
+					   (loss*100),
 					   diff,
 					   GET_NAME(k),
 					   GET_AVE_LEVEL(k),
@@ -1541,9 +1537,7 @@ int group_loss( struct char_data* ch,int loss) {
 				}
 			}
 		}
-		PopStatus();
 	}
-	PopStatus();
 	return(loss*MAX(70,multi));
 }
 
@@ -2331,7 +2325,7 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 				}
 				break;
 			}
-			/* no break */
+		/* no break */
 		default:
 			break;
 		}
@@ -3374,7 +3368,7 @@ void perform_violence(unsigned long pulse)
 					/* Continue in a straight line */
 					if( clearpath( ch, ch->in_room, ch->specials.charge_dir ) ) {
 						do_move( ch, "\0", ch->specials.charge_dir + 1 );
-						MARK;
+
 						if (!ch || ch->nMagicNumber != CHAR_VALID_MAGIC) { // SALVO controllo che non sia caduto in DT
 							ch = pNext;
 							break;
@@ -3558,8 +3552,8 @@ struct char_data* SwitchVictimToPrince( struct char_data* pAtt,
 			if (pTemp2 && in_group_strict(pTemp,pTemp2)) { pTemp=pTemp2; }
 		}
 		if (pTemp && in_group_strict(pTemp,pVict) && number(1,19)<(isBG?GET_DEX(pTemp):20)) {
-			_mudlog(__FILE__,__LINE__,LOG_CHECK,"SWITCH1 %s (saver)",GET_NAME(pTemp));
-			_mudlog(__FILE__,__LINE__,LOG_CHECK,"SWITCH2 %s (saved)",GET_NAME(pVict));
+			mudlog(LOG_CHECK,"SWITCH1 %s (saver)",GET_NAME(pTemp));
+			mudlog(LOG_CHECK,"SWITCH2 %s (saved)",GET_NAME(pVict));
 			act("Stavi per essere attaccat$B ma $n interviene!",
 				FALSE, pTemp,0,pVict,TO_VICT);
 			act("$N stava per essere attaccat$B ma tu intervieni!",

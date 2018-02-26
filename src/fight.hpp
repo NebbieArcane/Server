@@ -6,14 +6,15 @@
  * *************************************************************************/
 #ifndef __FIGHT_HPP
 #define __FIGHT_HPP
+#include "config.hpp"
 
 #include "structs.hpp"
 enum DamageResult {
 	AllLiving, SubjectDead, VictimDead
 };
 typedef DamageResult (*pDamageFunc)( struct char_data*,
-		   struct char_data*,
-		   int, int, int );
+									 struct char_data*,
+									 int, int, int );
 int BarbarianToHitMagicBonus( struct char_data* ch ) ;
 void BreakLifeSaverObj( struct char_data* ch) ;
 int BrittleCheck(struct char_data* ch, struct char_data* v, int dam) ;

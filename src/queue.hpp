@@ -14,6 +14,7 @@
 /* function protos need by other modules */
 #ifndef __QUEUE_HPP
 #define __QUEUE_HPP
+#include "config.hpp"
 struct queue* queue_init(void);
 struct q_element* queue_enq(struct queue* q, void* data, long key);
 void queue_deq(struct queue* q, struct q_element* qe);

@@ -10,23 +10,10 @@
 
 #ifndef SQL_HPP_
 #define SQL_HPP_
-#if MYSQL_VERSION
-#include <mysql/mysql.h>
-#elif SQLITE_VERSION
-#include <sqlite3.h>
-#endif
-
-
-namespace nebbie {
-
+#include "config.hpp"
+namespace Alarmud {
+//	MYSQL or sqlite3
 class Sql {
-private:
-	bool disabled;
-#if HAS_MYSQL_VERSION
-	MYSQL* myConn;
-#elif HAS_SQLITE_VERSION
-	sqlite3* myConn;
-#endif
 
 public:
 	Sql();

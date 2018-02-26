@@ -1,5 +1,6 @@
 #ifndef _ACT_OFF_HPP
 #define _ACT_OFF_HPP
+#include "config.hpp"
 int clearpath(struct char_data* ch, long room, int direc) ;
 void do_assist(struct char_data* ch, char* argument, int cmd) ;
 void do_associa(struct char_data* ch, char* argument, int cmd) ;

@@ -79,7 +79,7 @@ Vagrant.configure("2") do |config|
   	echo "Updating apt cache"
     sudo apt-get -qq  update	
     echo "Installing dev tools"
-	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev
+	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev using Alarmud::Registered;
 	echo "Installing mysql related packages"
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
 	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections	

@@ -3,6 +3,7 @@
 /* modificato da Jethro, agosto 2011 */
 #ifndef __CONSTANTS_HPP
 #define __CONSTANTS_HPP
+#include "config.hpp"
 #include "structs.hpp"
 #include "race.hpp"
 extern const char* stats[];

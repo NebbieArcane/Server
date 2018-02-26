@@ -1917,8 +1917,8 @@ void cast_dragon_breath(byte level, struct char_data* ch, const char* arg, int t
 	if (scan->vnum==0) {
 		send_to_char("Hey, this potion isn't in my list!\n\r", ch);
 		mudlog( LOG_SYSERR, "unlisted breath potion %s %d",
-				potion->short_description, potion->item_number >= 0 ?
-				obj_index[potion->item_number].iVNum : 0 );
+				(potion->short_description, potion->item_number >= 0 ?
+				 obj_index[potion->item_number].iVNum : 0) );
 		return;
 	}
 

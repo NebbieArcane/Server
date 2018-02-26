@@ -1683,17 +1683,17 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 						check_peaceful(ch, "Questa zona sembra refrattaria alla magia!\n\r"))
 				{ return; }
 			}
-			MARK;
+
 			/* for seeing what the other guys are doing test */
 
 			if( IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI ) {
 				mudlog( LOG_CHECK, "%s cast %s", GET_NAME(ch), ori_argument );
 			}
-			MARK;
+
 			if( !IS_SET( spell_info[spl].targets, TAR_IGNORE ) ) {
 				mudlog(LOG_CHECK,"NOT TAR_IGNORE");
 				argument = one_argument(argument, name);
-				MARK;
+
 				if( *name ) {
 					if( IS_SET( spell_info[spl].targets, TAR_CHAR_ROOM ) ) {
 						if( ( tar_char = get_char_room_vis( ch, name ) ) ) {
@@ -1702,17 +1702,17 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 									tar_char->attackers < 6 ||
 									tar_char->specials.fighting == ch) {
 								target_ok = TRUE;
-								MARK;
+
 							}
 
 							else {
 								send_to_char( "Volano troppi schiaffi qui intorno!\n\r", ch);
-								MARK;
+
 								target_ok = FALSE;
 							}
 						}
 						else {
-							MARK;
+
 							target_ok = FALSE;
 						}
 					}

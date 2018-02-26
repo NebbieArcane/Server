@@ -65,9 +65,9 @@ void event_cancel(struct event* event) {
 		mudlog(LOG_SYSERR,"Attempted to cancel a NULL event"); // Gaia 2001
 		return;
 	}
-	MARK;
+
 	queue_deq(event_q, event->q_el);
-	MARK;
+
 	if (event->event_obj)
 	{ free(event->event_obj); }
 	if (event)

@@ -1,5 +1,6 @@
 #ifndef _ACT_OBJ2_HPP
 #define _ACT_OBJ2_HPP
+#include "config.hpp"
 int IsRestricted(struct obj_data* obj, int Class) ;
 void do_drink(struct char_data* ch,const char* argument, int cmd) ;
 void do_eat(struct char_data* ch,const char* argument, int cmd) ;

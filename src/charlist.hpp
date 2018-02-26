@@ -2,6 +2,7 @@
 */
 #ifndef __CHARLIST_HPP
 #define __CHARLIST_HPP
+#include "config.hpp"
 #include "general.hpp"
 typedef struct tagCharElem {
 	void* pWho;

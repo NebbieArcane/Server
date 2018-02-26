@@ -1,5 +1,6 @@
 #ifndef _ACT_WIZARD_HPP
 #define _ACT_WIZARD_HPP
+#include "config.hpp"
 void CreateOneRoom( int loc_nr) ;
 void clone_container_obj( struct obj_data* to, struct obj_data* obj ) ;
 struct obj_data* clone_obj(struct obj_data* obj) ;
@@ -65,7 +66,7 @@ void do_system(struct char_data* ch, char* argument, int cmd) ;
 void do_trans(struct char_data* ch, char* argument, int cmd) ;
 void do_viewfile(struct char_data* ch, char* argument, int cmd) ;
 void do_wizlock(struct char_data* ch, char* argument, int cmd) ;
-void do_wreset (struct char_data* ch, char* argument, int cmd) ; 
+void do_wreset (struct char_data* ch, char* argument, int cmd) ;
 void do_zclean(struct char_data* ch, char* argument, int cmdnum) ;
 void do_zload(struct char_data* ch, char* argument, int cmdnum) ;
 void do_zsave(struct char_data* ch, char* argument, int cmdnum) ;

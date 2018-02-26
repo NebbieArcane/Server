@@ -1,5 +1,6 @@
 #ifndef __REGEN_HPP
 #define __REGEN_HPP
+#include "config.hpp"
 #include "events.hpp"
 EVENTFUNC(points_event) ;
 void alter_hit(struct char_data* ch, int amount) ;

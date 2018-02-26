@@ -6,6 +6,7 @@
  *  Usage : Informative commands.                                          *
  *************************************************************************
  */
+#include "config.hpp"
 #include "act.info.hpp"
 #include <stdio.h>
 #include <string.h>
@@ -28,7 +29,7 @@
 #include "db.hpp"
 #include "spell_parser.hpp"
 #include "utility.hpp"
-using Nebbie::Registered;
+using Alarmud::Registered;
 
 /* intern functions */
 
@@ -443,7 +444,6 @@ void ShowAltezzaCostituzione( struct char_data* pChar, struct char_data* pTo ) {
 		"magr$b",
 		"gracile"
 	};
-
 	if( !pChar || !pTo ) {
 		mudlog( LOG_SYSERR,
 				"!pChar || !pTo in ShowAltezzaCostituzione (act.info.c)." );

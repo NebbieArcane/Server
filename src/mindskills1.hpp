@@ -1,5 +1,6 @@
 #ifndef __MINDSKILLS1_HPP
 #define __MINDSKILLS1_HPP
+#include "config.hpp"
 #include "typedefs.hpp"
 void mind_burn(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_cell_adjustment(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);

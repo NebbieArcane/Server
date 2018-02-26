@@ -1,5 +1,6 @@
 #ifndef __SPELLS1_HPP
 #define __SPELLS1_HPP
+#include "config.hpp"
 #include "typedefs.hpp"
 void cast_acid_blast		( byte level, struct char_data* ch, char* arg, int type, struct char_data* victim, struct obj_data* tar_obj );
 void cast_burning_hands		( byte level, struct char_data* ch, char* arg, int type, struct char_data* victim, struct obj_data* tar_obj );

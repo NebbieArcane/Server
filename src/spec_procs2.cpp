@@ -1055,7 +1055,7 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 				cast_energy_drain(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				break;
 			}
-			/* no break */
+		/* no break */
 		case 23:
 		case 24:
 		case 25:
@@ -1564,7 +1564,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 				}
 				break;
 			}
-			/* no break */
+		/* no break */
 		case 3:
 		case 4:
 		case 5:

@@ -1,5 +1,6 @@
 #ifndef __MAGICUTILS_HPP
 #define __MAGICUTILS_HPP
+#include "config.hpp"
 void FailCalm(struct char_data* victim, struct char_data* ch) ;
 void FailCharm(struct char_data* victim, struct char_data* ch) ;
 void FailPara(struct char_data* victim, struct char_data* ch) ;

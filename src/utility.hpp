@@ -2,8 +2,10 @@
 */
 #ifndef __UTILITY_HPP
 #define __UTILITY_HPP
+#include "config.hpp"
 #include <stdio.h>
 #include "structs.hpp"
+
 bool isNullChar (struct char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
 FILE* OpenZoneFile(struct char_data* c, int zone);
@@ -15,7 +17,6 @@ bool ThereIsPCInRoom( long lRoom );
 bool CanSeePCInRoom( struct char_data* pMob );
 int HowManyCanSeePCInRoom( struct char_data* pMob );
 void fake_setup_dir(FILE* fl, long room, int dir);
-#define mudlog(...) _mudlog(__FILE__,__LINE__,__VA_ARGS__)
 char getall(char* name, char* newname);
 char in_clan(struct char_data* ch1, struct char_data* ch2);
 char in_group_internal(struct char_data* ch1, struct char_data* ch2, int strict);
@@ -129,7 +130,6 @@ unsigned IsResist(struct char_data* ch, int bit);
 unsigned IsSusc(struct char_data* ch, int bit);
 void age2(struct char_data* ch, struct time_info_data* g);
 void age3(struct char_data* ch, struct time_info_data* g);
-void buglog(unsigned uType, char* szString, ...);
 void CallForGuard(struct char_data* ch, struct char_data* vict, int lev, int area);
 void CallForMobs(struct char_data* pChar, struct char_data* pVict, int iLevel, int iMobToCall);
 void CleanZone(int zone);
@@ -144,7 +144,6 @@ void IncrementZoneNr(int nr);
 void LearnFromMistake(struct char_data* ch, int sknum, int silent, int max);
 void MakeNiftyAttack(struct char_data* ch);
 void MonkMove(struct char_data* ch);
-void _mudlog(const char* const file, int line, unsigned uType, const char* const szString, ...);
 void* Mymalloc(long size);
 void RecurseRoom(long lInRoom, int iLevel, int iMaxLevel, unsigned char* achVisitedRooms);
 void RemAllAffects(struct char_data* ch);
@@ -159,4 +158,7 @@ void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
 void sprinttype(int type, const char* names[], char* result);
 void TeleportPulseStuff(unsigned long pulse);
+struct time_info_data mud_time_passed(time_t t2, time_t t1);
+void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
+
 #endif

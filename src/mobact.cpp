@@ -561,7 +561,7 @@ void mobile_activity(struct char_data* ch) {
 			if( ( tmp_ch = FindVictim(ch) ) != NULL ) {
 				if( check_peaceful( ch, "You can't seem to exercise your violent "
 									"tendencies.\n\r" ) ) {
-					MARK;
+
 					act("$n ruggisce impotente.", TRUE, ch, 0, 0, TO_ROOM);
 				}
 				else {

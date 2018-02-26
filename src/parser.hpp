@@ -4,6 +4,7 @@
 #ifndef __PARSER_HPP
 #define __PARSER_HPP
 #define MAGIC    96  /* Magic number for the hash table */
+#include "config.hpp"
 #include "structs.hpp"
 
 typedef struct command_node NODE;

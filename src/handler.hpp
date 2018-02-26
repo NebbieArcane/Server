@@ -2,6 +2,7 @@
 */
 #ifndef __HANDLER_HPP
 #define __HANDLER_HPP
+#include "config.hpp"
 
 #define FIND_CHAR_ROOM     1
 #define FIND_CHAR_WORLD    2

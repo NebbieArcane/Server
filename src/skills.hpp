@@ -1,6 +1,7 @@
 /* src/skills.cpp */
 #ifndef __SKILLS__HPP
 #define __SKILLS__HPP
+#include "config.hpp"
 enum e_find_result {
 	FOUND_WATER= 13,  /* obj found when water found */
 	FOUND_FOOD = 21,  /* obj that is found if they made it! */

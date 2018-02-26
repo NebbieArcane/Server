@@ -5,17 +5,8 @@
  * * */
 #ifndef __SNEW
 #define __SNEW 1
+#include "config.hpp"
 
-#define CHECK_RENT_INACTIVE 1
-#define NICE_LIMITED true
-#define CLEAN_AT_BOOT false
-#define NEW_ALIGN 1
-#define MARKS(s) SetLine(s,__LINE__)
-#define MARK SetLine(__FILE__,__LINE__)
-#define GIOVANNI 1
-#define MAX_ALIAS 10
-#define BEG_OF_TIME 827100000
-#define PRINCEEXP 400000000
 #define STR 0
 #define INT 1
 #define WIS 2

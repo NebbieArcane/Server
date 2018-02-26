@@ -4,8 +4,9 @@
  * lucertole.c contiene le procedure speciali per la foresta delle
  * lucertole di Benem
  * **********************************************************************/
-#if !defined( _LUCERTOLE_H )
+#ifndef _LUCERTOLE_H
 #define _LUCERTOLE_H
+#include "config.hpp"
 
 int Lizardman( struct char_data* ch, int cmd, char* arg,
 			   struct char_data* mob, int type );

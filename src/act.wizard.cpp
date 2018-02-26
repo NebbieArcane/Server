@@ -23,6 +23,7 @@
 #include "db.hpp"
 #include "maximums.hpp"
 #include "spell_parser.hpp"
+using Alarmud::Registered;
 char EasySummon = 1;
 long numero_mob_obj[100000];
 
@@ -125,7 +126,7 @@ void do_register(struct char_data* ch, char* argument, int cmd) {
 			send_to_char(buf, ch);
 		}
 	}
-	Nebbie::Registered toon(GET_NAME(victim));
+	Registered toon(GET_NAME(victim));
 	toon.reg(GET_NAME(ch));
 	//Nebbie::getRegistered()->doReg(GET_NAME(ch),GET_NAME(victim));
 	//doreg(ch,nparms,parms);
@@ -5142,7 +5143,8 @@ void do_drainlevel(struct char_data* ch, char* argument, int cmd) {
 
 		/* do it here! */
 
-		send_to_char("You are struck by a black beam from above, it hurts!\rThe life force from your body fades and you feel yourself lose\rmemories of old times and battles.\rThe feeling fades and you shiver at a cold gust of wind.\n\r",victim);
+		send_to_char("You are struck by a black beam from above, it hurts!\rThe life force from your body fades and you feel yourself lose\rmemories of old times and battles.\rThe feeling fades and you shiver at a cold gust of wind.\n\r",
+					 victim);
 
 		sprintf(buf,"You drain %d level(s) How Evil!\n\r",numtolose);
 		send_to_char(buf,ch);
@@ -5396,7 +5398,7 @@ void do_nuke(struct char_data* ch, char* argument, int cmd) {
 			 FALSE, ch, 0, victim, TO_CHAR );
 
 		do_purge( ch, GET_NAME( victim ), 0 );
-		Nebbie::Registered toon(GET_NAME(victim));
+		Registered toon(GET_NAME(victim));
 		toon.del();
 		sprintf( buf, "rm -f %s/%s.*", PLAYERS_DIR, lower( GET_NAME( victim ) ) );
 		system( buf );
@@ -5921,7 +5923,7 @@ void do_wreset (struct char_data* ch, char* argument, int cmd) { // SALVO aggiun
 	if( !IS_PC( ch ) )
 	{ return; }
 
-	mudlog( LOG_CHECK, "Comando wreset eseguito da %s su %d zone.", (ch!=NULL) ? GET_NAME(ch) : "(null)", top_of_zone_table+1);
+	mudlog( LOG_CHECK, "Comando wreset eseguito da %s su %d zone.", ((ch!=NULL) ? GET_NAME(ch) : "(null)"), (top_of_zone_table+1));
 	for (i = 0; i <= top_of_zone_table; i++) {
 		if( zone_table[i].start == 0 ) {
 			char*  s;

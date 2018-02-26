@@ -320,7 +320,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	else {
 		if (forcerent>1) {
 			mudlog(LOG_CHECK,"%s: autostoring %d days (%d coins)",GET_NAME(ch),
-				   forcerent*2,cost->total_cost);
+				   (forcerent*2),cost->total_cost);
 			GET_GOLD(ch)-=cost->total_cost;
 			cost->total_cost = 0;
 
@@ -537,7 +537,7 @@ void load_char_objs(struct char_data* ch) {
 	}
 
 	if (str_cmp(st.owner, GET_NAME(ch)) != 0) {
-		mudlog( LOG_PLAYERS | LOG_ERROR,
+		mudlog( LOG_ERROR,
 				"Bad item-file write. %s is losing his/her objects",GET_NAME( ch ) );
 		fclose(fl);
 		return;
@@ -723,7 +723,7 @@ void put_obj_in_store( struct obj_data* obj, struct obj_file_u* st ) {
 	{ strcpy(oe->name, obj->name); }
 	else {
 		mudlog( LOG_SYSERR, "object %d has no name!",
-				obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0 );
+				(obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0) );
 		*oe->name = '\0';
 	}
 
@@ -731,7 +731,7 @@ void put_obj_in_store( struct obj_data* obj, struct obj_file_u* st ) {
 	{ strcpy( oe->sd, obj->short_description ); }
 	else {
 		mudlog( LOG_SYSERR, "object %d has no short description!",
-				obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0 );
+				(obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0) );
 		*oe->sd = '\0';
 	}
 	if( obj->description )
@@ -886,8 +886,7 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 	st.total_cost = cost->total_cost;
 	st.last_update = time(0);
 	st.minimum_stay = 0; /* XXX where does this belong? */
-	mudlog( LOG_PLAYERS | LOG_SILENT, "save_obj: %s",
-			GET_NAME( ch ));
+	mudlog( LOG_PLAYERS, "save_obj: %s",GET_NAME( ch ));
 
 	cur_depth=0;
 
@@ -912,11 +911,11 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 	if (bDelete)
 	{ ch->carrying = 0; }
 
-	mudlog( LOG_PLAYERS | LOG_SILENT, "Saving %d objects of %s:%d",
+	mudlog( LOG_PLAYERS, "Saving %d objects of %s:%d",
 			st.number, GET_NAME( ch ), GET_GOLD( ch ) );
 
 	update_file(ch, &st);
-	mudlog( LOG_PLAYERS | LOG_SILENT, "Saved  %d objects of %s:%d",
+	mudlog( LOG_PLAYERS, "Saved  %d objects of %s:%d",
 			st.number, GET_NAME( ch ), GET_GOLD( ch ) );
 }
 
@@ -1654,9 +1653,6 @@ void obj_store_to_room( int room, struct obj_file_u* st ) {
 			strcpy( obj->name, st->objects[ i ].name );
 			strcpy(obj->short_description, st->objects[ i ].sd);
 			strcpy(obj->description, st->objects[ i ].desc);
-			mudlog(LOG_CHECK,"Loading saved obj: %d (%s)",
-				   st->objects[ i ].item_number,
-				   obj->short_description);
 
 
 			for( j = 0; j < MAX_OBJ_AFFECT; j++ )

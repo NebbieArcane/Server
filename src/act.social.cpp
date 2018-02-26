@@ -14,7 +14,7 @@
 
 /* extern variables */
 
-struct social_messg * soc_mess_list = 0;
+struct social_messg* soc_mess_list = 0;
 struct pose_type pose_messages[MAX_MESSAGES];
 
 static int list_top = -1;

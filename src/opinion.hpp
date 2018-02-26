@@ -1,5 +1,6 @@
 #ifndef __OPINION_HPP
 #define __OPINION_HPP
+#include "config.hpp"
 int AddFeared( struct char_data* ch, struct char_data* pud) ;
 int AddFears( struct char_data* ch, int parm_type, int parm) ;
 int AddHated( struct char_data* ch, struct char_data* pud) ;

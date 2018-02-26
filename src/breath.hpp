@@ -7,6 +7,7 @@
 
 #ifndef __BREATH_HPP
 #define __BREATH_HPP
+#include "config.hpp"
 struct breath_victim {
 	struct char_data* ch;
 	int yesno; /* 1 0 */

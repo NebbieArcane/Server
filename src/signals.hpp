@@ -3,6 +3,7 @@
  * */
 #ifndef __SIGNALS
 #define __SIGNALS 1
+#include "config.hpp"
 #define LPUSH SetLine(__FILE__,__LINE__)
 float AverageEqIndex(float toadd);
 void SetLine(const char* srcfile,int srcline);

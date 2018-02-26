@@ -1,5 +1,6 @@
 #ifndef __ACT_SOCIAL_HPP
 #define __ACT_SOCIAL_HPP
+#include "config.hpp"
 #include "structs.hpp"
 #include <stdio.h>
 struct social_messg {
@@ -23,7 +24,7 @@ struct social_messg {
 	char* char_auto;
 	char* others_auto;
 };
-extern struct social_messg * soc_mess_list;
+extern struct social_messg* soc_mess_list;
 struct pose_type {
 	int level;          /* minimum level for poser */
 	char* poser_msg[4];  /* message to poser        */

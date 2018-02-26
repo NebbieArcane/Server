@@ -77,7 +77,7 @@ int is_ok(struct char_data* keeper, struct char_data* ch, int shop_nr) {
 }
 long obj_cost(struct obj_data* temp1,struct char_data* ch,int shop_nr,int vende) {
 	long cost;
-	float profitto;
+	double profitto;
 	cost=0;
 	profitto=0.0;
 	profitto=vende?shop_index[shop_nr].profit_sell:shop_index[shop_nr].profit_buy;
@@ -115,7 +115,10 @@ long obj_cost(struct obj_data* temp1,struct char_data* ch,int shop_nr,int vende)
 	}
 
 	if(cost < 0) { cost=0; }
-	mudlog(LOG_CHECK,"obj_cost: profitto:%f actualcost:%d",profitto,(long)cost);
+	mudlog(LOG_CHECK,"obj_cost: profitto:%d.%d actualcost:%d",
+		   static_cast<long>(profitto),
+		   (static_cast<long>(profitto *1000) % 1000),
+		   (long)cost);
 	return(cost);
 }
 

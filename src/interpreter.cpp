@@ -19,7 +19,7 @@
 #include "spell_parser.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
-using Nebbie::Registered;
+using Alarmud::Registered;
 #define NOT !
 #define AND &&
 #define OR ||
@@ -514,28 +514,28 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 									!IS_SET( ch->specials.act, ACT_POLYSELF ) ) ) )
 
 						{
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]ACMD %s:%s", ch->in_room, ch->player.name,
 									argument);
 						}
 						else if( n->log ) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]CCMD %s:%s", ch->in_room, ch->player.name,
 									argument);
 						}
 						else if( IS_AFFECTED2( ch, AFF2_LOG_ME ) ) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]PCMD %s:%s", ch->in_room, ch->player.name,
 									argument);
 						}
 						else if( GetMaxLevel( ch ) >= IMMORTALE &&
 								 GetMaxLevel( ch ) < 60 ) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]ICMD %s:%s", ch->in_room, ch->player.name,
 									argument );
 						}
 						else if (GET_GOLD(ch) > 2000000) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]GCMD %s:%s", ch->in_room, ch->player.name,
 									argument );
 						}
@@ -543,14 +543,10 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 						/* special() restituisce TRUE se il comando e` stato
 						 * interpretato da una procedura speciale.
 						 */
-						PushStatus(argument);
-						MARKS("Prima del test procedure speciali");
 						if( no_specials || !special( ch, n->number, buf2 ) ) {
 							/* Finalmente viene esequito il comando */
-							MARKS("Esecuzione comando");
 							( ( *n->func )( ch, buf2, n->number ) );
 						}
-						PopStatus();
 					}
 				}
 				else
@@ -791,7 +787,6 @@ int special(struct char_data* ch, int cmd, char* arg) {
 	register struct obj_data* i;
 	register struct char_data* k;
 	int j;
-	MARKS("Special procedure");
 	if( ch->in_room == NOWHERE ) {
 		char_to_room( ch, 3001 );
 		return FALSE;
@@ -799,14 +794,11 @@ int special(struct char_data* ch, int cmd, char* arg) {
 
 	/* special in room? */
 	if( real_roomp( ch->in_room )->funct ) {
-		PushStatus(real_roomp( ch->in_room )->specname);
 		if( ( *real_roomp( ch->in_room )->funct )( ch, cmd, arg,
 				real_roomp( ch->in_room ),
 				EVENT_COMMAND ) ) {
-			PopStatus();
 			return( TRUE );
 		}
-		PopStatus();
 	}
 
 	/* special in equipment list? */
@@ -1866,10 +1858,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 	case CON_PWDNRM:        /* get pwd for known player        */
 		/* skip whitespaces */
 		for( ; isspace(*arg); arg++);
-#if KGB
-		mudlog( LOG_PLAYERS | LOG_SILENT,
-				"%s ha inserito la password '%s'", GET_NAME( d->character ), arg );
-#endif
 		if (!*arg) {
 			PushStatus("Password check");
 			close_socket(d);
@@ -2006,14 +1994,16 @@ void nanny(struct descriptor_data* d, char* arg) {
 			{ d->character->invis_level = GetMaxLevel(d->character); }
 			HowManyConnection(1);
 			/* Le ombre vengono loggate ma non viene dato l'avviso on line*/
-			if (GetMaxLevel(d->character) >= MAESTRO_DEL_CREATO)
-				mudlog( LOG_CONNECT | LOG_SILENT, "%s [HOST:%s] has connected.",
-						GET_NAME(d->character),
-						d->host );
-			else
+			if (GetMaxLevel(d->character) >= MAESTRO_DEL_CREATO) {
 				mudlog( LOG_CONNECT, "%s [HOST:%s] has connected.",
 						GET_NAME(d->character),
 						d->host );
+			}
+			else {
+				mudlog( LOG_CONNECT, "%s [HOST:%s] has connected.",
+						GET_NAME(d->character),
+						d->host );
+			}
 			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
 												USE_ANSI ),
 										motd ), d);
@@ -2141,7 +2131,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 			STATE(d)=CON_STAT_LIST;
 			return;
 		}
-		/* no break */
+	/* no break */
 	case CON_ENDHELPRACE:
 		show_race_choice(d);
 		STATE(d) = CON_QRACE;

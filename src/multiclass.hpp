@@ -1,5 +1,6 @@
 #ifndef __MULTICLASS_HPP
 #define __MULTICLASS_HPP
+#include "config.hpp"
 int BestClassBIT(struct char_data* ch) ;
 int BestClassIND(struct char_data* ch) ;
 int BestFightingClass(struct char_data* ch) ;

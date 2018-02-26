@@ -640,115 +640,6 @@ int strn_cmp(const char* arg1, const char* arg2, int n) {
 	return(strncasecmp(arg1,arg2,n));
 
 }
-void _mudlog( const char* const file,int line,unsigned uType, const char* const szString, ... ) {
-
-	va_list argptr;
-	char szBuffer[ LARGE_BUFSIZE ];
-	char* pchTimeStr;
-	long lCurrTime;
-	struct descriptor_data* pDesc;
-
-	lCurrTime = time( 0 );
-	pchTimeStr = asctime( localtime( &lCurrTime ) );
-	*( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
-
-	va_start( argptr, szString );
-	vsprintf( szBuffer, szString, argptr );
-	va_end( argptr );
-
-
-	if( IS_SET( uType, LOG_SYSERR ) ) {
-		fprintf( stderr, "LSYSERR : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_CHECK ) ) {
-		fprintf( stderr, "LCHECK  : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_PLAYERS ) ) {
-		fprintf( stderr, "LPLAYERS: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_MOBILES ) ) {
-		fprintf( stderr, "LMOBILES: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_CONNECT ) ) {
-		fprintf( stderr, "LCONNECT: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_ERROR ) ) {
-		fprintf( stderr, "LERROR  : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_WHO ) ) {
-		fprintf( stderr, "LWHO    : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_SAVE ) ) {
-		fprintf( stderr, "LSAVE   : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	fflush(stderr);
-	if( !IS_SET( uType, LOG_SILENT ) ) {
-		for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
-			if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-					GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-					( pDesc->character->specials.sev & uType ) ) {
-				send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
-				send_to_char( szBuffer, pDesc->character );
-				send_to_char( "\n\r", pDesc->character );
-			}
-		}
-	}
-}
-void buglog( unsigned uType, char* szString, ... ) {
-	va_list argptr;
-	char szBuffer[ LARGE_BUFSIZE ];
-	char* pchTimeStr;
-	long lCurrTime;
-	struct descriptor_data* pDesc;
-	FILE* stdlog;
-	lCurrTime = time( 0 );
-	pchTimeStr = asctime( localtime( &lCurrTime ) );
-	*( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
-
-	va_start( argptr, szString );
-	vsprintf( szBuffer, szString, argptr );
-	va_end( argptr );
-	if ((stdlog=fopen(BUG_FILE,"a")) ) {
-		if( IS_SET( uType, LOG_SYSERR ) ) {
-			fprintf( stdlog, "LSYSERR : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_CHECK ) ) {
-			fprintf( stdlog, "LCHECK  : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_PLAYERS ) ) {
-			fprintf( stdlog, "LPLAYERS: %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_MOBILES ) ) {
-			fprintf( stdlog, "LMOBILES: %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_CONNECT ) ) {
-			fprintf( stdlog, "LCONNECT: %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_ERROR ) ) {
-			fprintf( stdlog, "LERROR  : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_WHO ) ) {
-			fprintf( stdlog, "LWHO    : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_SAVE ) ) {
-			fprintf( stdlog, "LSAVE   : %s : %s\n", pchTimeStr, szBuffer );
-		}
-
-		if( !IS_SET( uType, LOG_SILENT ) ) {
-			for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
-				if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-						GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-						( pDesc->character->specials.sev & uType ) ) {
-					send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
-					send_to_char( szBuffer, pDesc->character );
-					send_to_char( "\n\r", pDesc->character );
-				}
-			}
-		}
-		fclose(stdlog);
-	}
-
-}
 
 void sprintbit(unsigned long vektor, const char* names[], char* result) {
 	long nr;
@@ -1005,7 +896,6 @@ char in_group_internal ( struct char_data* ch1, struct char_data* ch2, int stric
 	 *
 	 */
 	if (!strict && in_clan(ch1,ch2)) {
-		MARKS("in_group_internal in utility.c at");
 		return(TRUE);
 	}
 
@@ -1055,31 +945,26 @@ char in_clan ( struct char_data* ch1, struct char_data* ch2) {
 	{ return(FALSE); }
 
 	if ((!HAS_PRINCE(ch1)) && (!HAS_PRINCE(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(FALSE);
 	}
 
 	if (IS_VASSALLOOF(ch1,GET_NAME(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(TRUE);
 	}
 
 	if (IS_VASSALLOOF(ch2,GET_NAME(ch1))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(TRUE);
 	}
 
 	if ((!HAS_PRINCE(ch1)) || (!HAS_PRINCE(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(FALSE);
 	}
 
 	if (!strcasecmp(GET_PRINCE(ch1),GET_PRINCE(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(TRUE);
 	}
 
-	MARK;
+
 	return(FALSE);
 }
 
@@ -3122,7 +3007,7 @@ void SetRacialStuff( struct char_data* mob) {
 	case RACE_SEA_ELF:
 		/* e poi prosegue per le altre caratteristiche degli elfi */
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-		/* no break */
+	/* no break */
 	case RACE_ELVEN:
 	case RACE_DROW:
 	case RACE_GOLD_ELF:
@@ -3576,7 +3461,7 @@ int GetNewRace(struct char_file_u* s) {
 		case RACE_PRIMATE:
 		case RACE_GOBLIN:
 		case RACE_TROLL:
-        case RACE_DEMON:
+		case RACE_DEMON:
 			ok = TRUE;
 			break;
 		/* not a valid race, try again */
