@@ -12,6 +12,7 @@
 enum DamageResult {
 	AllLiving, SubjectDead, VictimDead
 };
+
 typedef DamageResult (*pDamageFunc)( struct char_data*,
 									 struct char_data*,
 									 int, int, int );
@@ -62,8 +63,8 @@ void NailThisSucker( struct char_data* ch) ;
 void PCAttacks( char_data* pChar ) ;
 int PreProcDam(struct char_data* ch, int type, int dam, int classe) ;
 int RatioExp( struct char_data* ch, struct char_data* victim, int total) ;
-int SetCharFighting(struct char_data* ch, struct char_data* v) ;
-int SetVictFighting(struct char_data* ch, struct char_data* v) ;
+int SetCharFighting(struct char_data* ch, struct char_data* v);
+int SetVictFighting(struct char_data* ch, struct char_data* v);
 int SkipImmortals(struct char_data* v, int amnt,int attacktype) ;
 void StopAllFightingWith( char_data* pChar ) ;
 struct char_data* SwitchVictimToPrince( struct char_data* pAtt,struct char_data* pVict);
@@ -92,7 +93,12 @@ char* replace_string(char* str, char* weapon, char* weapon_s,char* location_hit,
 DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,int type, pDamageFunc dam_func, int DistanceWeapon, int location);
 void save_exp_to_file(struct char_data* ch,int xp) ;
 void set_fighting(struct char_data* ch, struct char_data* vict) ;
-void shoot( struct char_data* ch, struct char_data* victim) ;
+void shoot( struct char_data* ch, struct char_data* victim);
 void stop_fighting(struct char_data* ch) ;
 void update_pos( struct char_data* victim ) ;
+// FLYP 20180221: moved the keech calculation to a function
+int leechResult(struct char_data* ch, int dam);
+int canLeech(struct char_data* ch, struct char_data* victim);
 #endif // __FIGHT_HPP
+
+

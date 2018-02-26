@@ -1986,9 +1986,8 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	return( dam );
 }
 
-DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
-					   int type, int location) {
-
+DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int type, int location) {
+	
 	if (dam >= 0) {
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
@@ -1999,7 +1998,6 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
 				damage( v, ch, dam, SPELL_FIREBALL, location );
 			}
 		}
-
 		update_pos( v );
 
 		/* Nel caso qui sotto, il soggetto e` stato ucciso dal fireshield,
@@ -2010,6 +2008,47 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
 	}
 
 	return AllLiving;
+}
+
+/**
+* FLYP 20180221: demon leech + balancing
+**/
+int leechResult(struct char_data* ch, int dam) {
+	int leech = 0;
+	int chNumClass = 0;
+	int bonus = 0;
+	int adjustment = 1;
+	int baseLeech = 5;
+
+	chNumClass = HowManyClasses(ch);
+	
+	int wisBonus = wis_app[ (int)GET_RWIS(ch) ].bonus;
+	int maxLevel = GetMaxLevel(ch);
+	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
+
+	if(HasClass(ch, CLASS_MAGIC_USER)) {
+		leech += baseLeech * 3;
+	}
+	if (HasClass(ch, CLASS_THIEF)) {
+		leech += baseLeech *2;
+	}
+	if (HasClass(ch, CLASS_WARRIOR)) {
+		leech += baseLeech * 0;
+	} 
+
+	switch(chNumClass) {
+		case 3:
+			// we don't have 3class demon. we left this switch here for future evolution (if happens)
+		case 2:
+			leech = leech/3;
+			break;
+		default:
+			// right now do nothing..
+			break;
+	}
+
+	leech = MIN(dice(1,leech), dam);
+	return leech;
 }
 
 
@@ -2410,6 +2449,9 @@ DamageResult damage( struct char_data* ch, struct char_data* victim,
 	{ return SubjectDead; }
 
 	DamageMessages( ch, victim, dam, attacktype, location );
+
+
+
 
 	if( DamageEpilog( ch, victim, attacktype, dam ) )
 	{ return VictimDead; }
@@ -2953,6 +2995,8 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 						int type, int w_type,pDamageFunc dam_func, int location) {
 	extern byte backstab_mult[];
 	DamageResult dead;
+	char buf[256];
+	int leech;
 
 	if( type == SKILL_BACKSTAB ) {
 		int tmp;
@@ -2980,11 +3024,57 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 		dead = (*dam_func)(ch, v, dam, w_type, location);
 	}
 
+	/** FLYP: if a demon do damage, it will leech vital energy */
+	if (canLeech(ch, v) && dam > 0) {
+		int leech = 0;
+
+		leech = leechResult(ch, dam);
+		GET_HIT(ch) += leech;
+		alter_hit(ch, 0);
+
+		if (leech > 0) {
+
+			if (leech <= 5) {
+				// Message for ch
+				act("Assaggi l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_CHAR);
+				act("$n assaggia l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_ROOM);
+			} else if (leech > 5 && leech < 11) {
+				// Message for ch
+				act("Assorbi l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_CHAR);
+				act("$n assorbe l'energia vitale di $N.", TRUE, ch, 0, v,
+						TO_ROOM);
+			} else {
+				act("Banchetti con l'energia vitale di $N.", TRUE, ch, 0,
+						v, TO_CHAR);
+				act("$n banchetta con l'energia vitale di $N.", TRUE, ch, 0,
+						v, TO_ROOM);
+			}
+
+			// Message for room
+			act("$N sembra più debole.", TRUE, ch, 0, v, TO_ROOM);
+		}
+	}
+
 	/*  if the victim survives, lets hit him with a weapon spell */
 	if( dead == AllLiving )
 	{ WeaponSpell( ch, v, 0, w_type ); }
 
 	return dead;
+}
+
+int canLeech(struct char_data* ch, struct char_data* victim) {
+	if(
+			GET_RACE(ch) != RACE_DEMON ||
+			GET_RACE(victim) == RACE_UNDEAD ||
+			GET_RACE(victim)==RACE_GHOST ||
+			(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
+		return 0;
+	}
+
+	return 1;
 }
 
 
