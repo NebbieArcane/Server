@@ -2106,18 +2106,17 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 
 		/** FLYP: Move the leech here, this should avoid to be apllied to the wepon spell */
 		if (GET_RACE(ch) == RACE_DEMON && dam > 0) {
-			leech = leechResult(ch, dam, type);
+			leech = leechResult(ch, dam);
 			GET_HIT(ch) += leech;
 			alter_hit(ch, 0);
 
 			if (leech > 0) {
+				act("You regenerate!",TRUE,v,0,ch,TO_CHAR);
 				// Message for ch
 				act("Assorbi parte dell'energia vitale tolta al tuo avversario",
-						0, pChar, pTmp, pTmp, TO_CHAR);
-				act("$n è infuso di energia vitale", 0, pChar, pTmp, pTmp,
+						TRUE, v, 0, ch, TO_CHAR);
+				act("$n è infuso di energia vitale", TRUE, v, 0, ch,
 						TO_ROOM);
-
-				act(buf, FALSE, ch, 0, 0, TO_CHAR);
 				// Message for room
 			}
 		}
@@ -2135,7 +2134,7 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 /**
 * FLYP 20180221: demon leech + balancing
 **/
-int leechResult(struct char_data* ch, int dam, int type) {
+int leechResult(struct char_data* ch, int dam) {
 	char buf[256];
 
 	int leech = 0;
