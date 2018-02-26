@@ -52,5 +52,6 @@ char_data* Fighting( char_data* pChar );
 
 // FLYP 20180221: moved the keech calculation to a function
 int leechResult(struct char_data* ch, int dam);
+int canLeech(struct char_data* ch, struct char_data* victim);
 
 #endif
