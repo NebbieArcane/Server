@@ -2102,8 +2102,25 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 				damage( v, ch, dam, SPELL_FIREBALL, location );
 			}
 		}
-
 		update_pos( v );
+
+		/** FLYP: Move the leech here, this should avoid to be apllied to the wepon spell */
+		if (GET_RACE(ch) == RACE_DEMON && dam > 0) {
+			leech = leechResult(ch, dam, type);
+			GET_HIT(ch) += leech;
+			alter_hit(ch, 0);
+
+			if (leech > 0) {
+				// Message for ch
+				act("Assorbi parte dell'energia vitale tolta al tuo avversario",
+						0, pChar, pTmp, pTmp, TO_CHAR);
+				act("$n è infuso di energia vitale", 0, pChar, pTmp, pTmp,
+						TO_ROOM);
+
+				act(buf, FALSE, ch, 0, 0, TO_CHAR);
+				// Message for room
+			}
+		}
 
 		/* Nel caso qui sotto, il soggetto e` stato ucciso dal fireshield,
 		 * a meno che, ovviamente, ch non sia uguale a victim.
@@ -2164,9 +2181,6 @@ int leechResult(struct char_data* ch, int dam, int type) {
 		sprintf( buf,"Ch has class WA. leec become [%d]", leech );
 		act( buf, FALSE, ch, 0, 0, TO_CHAR );
 	} 
-
-	sprintf( buf,"La tua esperienza e` aumentata di %d punti.", exp );
-			
 
 	switch(chNumClass) {
 		case 3:
@@ -3135,6 +3149,8 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 								int, int, int ), int location) {
 	extern byte backstab_mult[];
 	DamageResult dead;
+	char buf[256];
+	int leech;
 
 	if( type == SKILL_BACKSTAB ) {
 		int tmp;
@@ -3162,22 +3178,9 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 		dead = (*dam_func)(ch, v, dam, w_type, location);
 	}
 
-	/** FLYP: Move the leech here, this should avoid to be allied to the wepon spell */
-
-	int leech;
-
-	if (GET_RACE(ch) == RACE_DEMON) {
-		leech = leechResult(ch, dam, type);
-		GET_HIT(ch) += leech;
-		alter_hit(ch, 0);
-	}
-
-
 	/*  if the victim survives, lets hit him with a weapon spell */
 	if( dead == AllLiving )
 	{ WeaponSpell( ch, v, 0, w_type ); }
-
-
 
 	return dead;
 }
