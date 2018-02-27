@@ -1,7 +1,7 @@
 language: cpp
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev 
+  - sudo apt-get -qq install git php-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev 
   - sudo apt-get -qq install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev liblog4cxx-dev
   
 script: "./build.sh"
