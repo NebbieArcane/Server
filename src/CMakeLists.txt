@@ -50,7 +50,7 @@ target_compile_options(myst PUBLIC ${SQLITE_STATIC_CFLAGS} )
 target_link_libraries(myst  ${SQLITE_STATIC_LDFLAGS})
 
 #Curl
-pkg_check_modules(CURL curlcpp)
+pkg_check_modules(CURL curlpp)
 target_compile_options(myst PUBLIC ${CURL_STATIC_CFLAGS} )
 target_link_libraries(myst  ${CURL_STATIC_LDFLAGS})
 
