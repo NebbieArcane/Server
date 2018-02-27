@@ -46,4 +46,3 @@
 #define TRUE true
 #include "flags.hpp"
 #include "logging.hpp"
-
