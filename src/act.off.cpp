@@ -1030,23 +1030,28 @@ void do_bash(struct char_data* ch, char* argument, int cmd) {
 
 		}
 		LearnFromMistake( ch, SKILL_BASH, 0, 90 );
-		if ( CheckEquilibrium(ch) ) //Acidus 2003 - skill better equilibrium
-			WAIT_STATE( ch, PULSE_VIOLENCE * 2 ) // bash
-			else
-			{ WAIT_STATE( ch, PULSE_VIOLENCE * 3 ); } // bash
+		if ( CheckEquilibrium(ch) ) {//Acidus 2003 - skill better equilibrium
+			WAIT_STATE( ch, PULSE_VIOLENCE * 2 ); // bash
+		}
+		else {
+			WAIT_STATE( ch, PULSE_VIOLENCE * 3 );  // bash
+		}
 	}
 	else {
 		if (!CheckMirror(victim)) {
 			ActionAlignMod(ch,victim,cmd);
 			if( GET_POS( victim ) > POSITION_DEAD ) {
 				if( damage( ch, victim, 2, SKILL_BASH, location ) != VictimDead ) {
-					if ( CheckEquilibrium(victim) )
-						WAIT_STATE( victim, PULSE_VIOLENCE * 1 ) // bash
-						else
-						{ WAIT_STATE( victim, PULSE_VIOLENCE * 2 ); } // bash
+					if ( CheckEquilibrium(victim) ) {
+						WAIT_STATE( victim, PULSE_VIOLENCE * 1 ); // bash
+					}
+					else {
+						WAIT_STATE( victim, PULSE_VIOLENCE * 2 );  // bash
+					}
 
-					if( HasHands( victim ) || IS_SET(victim->specials.act,ACT_POLYSELF))
-					{ GET_POS( victim ) = POSITION_SITTING; }
+					if( HasHands( victim ) || IS_SET(victim->specials.act,ACT_POLYSELF)) {
+						GET_POS( victim ) = POSITION_SITTING;
+					}
 				}
 			}
 			WAIT_STATE( ch, PULSE_VIOLENCE * 2 );
@@ -1422,10 +1427,12 @@ void do_kick(struct char_data* ch, char* argument, int cmd) {
 			}
 		}
 	}
-	if (HasClass(ch,CLASS_MONK))
-		WAIT_STATE(ch, PULSE_VIOLENCE*1)
-		else
-		{ WAIT_STATE(ch, PULSE_VIOLENCE*2); }
+	if (HasClass(ch,CLASS_MONK)) {
+		WAIT_STATE(ch, PULSE_VIOLENCE*1);
+	}
+	else {
+		WAIT_STATE(ch, PULSE_VIOLENCE*2);
+	}
 }
 
 /* Skill di parata, evita un numero di attacchi pari al proprio

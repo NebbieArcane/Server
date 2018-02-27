@@ -1987,7 +1987,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 }
 
 DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int type, int location) {
-	
+
 	if (dam >= 0) {
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
@@ -2021,7 +2021,7 @@ int leechResult(struct char_data* ch, int dam) {
 	int baseLeech = 5;
 
 	chNumClass = HowManyClasses(ch);
-	
+
 	int wisBonus = wis_app[ (int)GET_RWIS(ch) ].bonus;
 	int maxLevel = GetMaxLevel(ch);
 	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
@@ -2034,17 +2034,17 @@ int leechResult(struct char_data* ch, int dam) {
 	}
 	if (HasClass(ch, CLASS_WARRIOR)) {
 		leech += baseLeech * 0;
-	} 
+	}
 
 	switch(chNumClass) {
-		case 3:
-			// we don't have 3class demon. we left this switch here for future evolution (if happens)
-		case 2:
-			leech = leech/3;
-			break;
-		default:
-			// right now do nothing..
-			break;
+	case 3:
+	// we don't have 3class demon. we left this switch here for future evolution (if happens)
+	case 2:
+		leech = leech/3;
+		break;
+	default:
+		// right now do nothing..
+		break;
 	}
 
 	leech = MIN(dice(1,leech), dam);
@@ -3037,20 +3037,22 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 			if (leech <= 5) {
 				// Message for ch
 				act("Assaggi l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_CHAR);
+					TO_CHAR);
 				act("$n assaggia l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_ROOM);
-			} else if (leech > 5 && leech < 11) {
+					TO_ROOM);
+			}
+			else if (leech > 5 && leech < 11) {
 				// Message for ch
 				act("Assorbi l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_CHAR);
+					TO_CHAR);
 				act("$n assorbe l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_ROOM);
-			} else {
+					TO_ROOM);
+			}
+			else {
 				act("Banchetti con l'energia vitale di $N.", TRUE, ch, 0,
-						v, TO_CHAR);
+					v, TO_CHAR);
 				act("$n banchetta con l'energia vitale di $N.", TRUE, ch, 0,
-						v, TO_ROOM);
+					v, TO_ROOM);
 			}
 
 			// Message for room
@@ -3067,10 +3069,10 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 
 int canLeech(struct char_data* ch, struct char_data* victim) {
 	if(
-			GET_RACE(ch) != RACE_DEMON ||
-			GET_RACE(victim) == RACE_UNDEAD ||
-			GET_RACE(victim)==RACE_GHOST ||
-			(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
+		GET_RACE(ch) != RACE_DEMON ||
+		GET_RACE(victim) == RACE_UNDEAD ||
+		GET_RACE(victim)==RACE_GHOST ||
+		(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
 		return 0;
 	}
 

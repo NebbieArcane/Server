@@ -6,6 +6,11 @@
 #include "config.hpp"
 #include "structs.hpp"
 #include "race.hpp"
+#define EQINDEX 600.0
+#define MAX_ALIAS 10
+#define BEG_OF_TIME 827100000
+#define PRINCEEXP 400000000
+
 extern const char* stats[];
 /*Messaggi per quando una spell scade*/
 extern const char* spell_wear_off_msg[];

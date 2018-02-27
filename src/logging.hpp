@@ -28,8 +28,10 @@ extern boost::format  my_fmt(const std::string &f_string);
 #define mudlog_LOG_RANK(level,...) LOG4CXX_TRACE(::logger,"LRANK " << my_fmt FORMAT(__VA_ARGS__))
 
 #define mudlog(level,...) {mudlog_##level(level,__VA_ARGS__);godTrace(level,__VA_ARGS__);}
-
 #define buglog(level,...) {LOG4CXX_INFO(::buglogger, #level << my_fmt FORMAT(__VA_ARGS__));godTrace(level,__VA_ARGS__);}
+
+
+
 // Note that TRACE level is compiled out in release (non-debug) mode.
 #define LOG_TRACE(x) LOG4CXX_TRACE(::logger, x)
 #define LOG_DBG(x) LOG4CXX_DEBUG(::logger, x)

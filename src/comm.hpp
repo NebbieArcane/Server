@@ -8,7 +8,7 @@
 #define TO_VICT    1
 #define TO_NOTVICT 2
 #define TO_CHAR    3
-#ifndef BLOCK_WRITE
+#if not BLOCK_WRITE
 #define SEND_TO_Q(messg, desc)  write_to_q((messg), &(desc)->output)
 #else
 #define SEND_TO_Q(messg, desc)  write_to_output((messg), desc)
@@ -24,6 +24,7 @@ extern int NumTimeCheck ; /* dovrebbe essere il piu` grande dei PULSE */
 extern struct timeval aTimeCheck[ PULSE_MOBILE ];
 extern int gnTimeCheckIndex;
 extern unsigned long pulse;
+extern bool no_specials;
 
 
 
@@ -46,7 +47,7 @@ void flush_queues(struct descriptor_data* d) ;
 void game_loop(int s) ;
 int get_from_q(struct txt_q* queue, char* dest) ;
 int init_socket(int port) ;
-int comm_main (int argc, char** argv) ;
+int run (int argc, const char* argv) ;
 int new_connection(int s) ;
 int new_descriptor(int s) ;
 void nonblock( int s ) ;
@@ -75,4 +76,7 @@ int write_to_descriptor(int desc, char* txt) ;
 int write_to_descriptor( int desc, char* txt) ;
 void write_to_output(char* txt, struct descriptor_data* t) ;
 void write_to_q(char* txt, struct txt_q* queue) ;
+long GetMediumLag(long lastlag);
+long GetLagIndex();
+int IsTest(int test);
 #endif

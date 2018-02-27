@@ -2,7 +2,7 @@
 *** AlarMUD        comm.c main communication routines. Based on DIKU and
 ***                       SillyMUD.
 */
-
+#include "config.hpp"
 #include "comm.hpp"
 #include <errno.h>
 #include <stdio.h>
@@ -21,9 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
-
 #include "auction.hpp"
-#include "config.hpp"
 #include "events.hpp"
 #include "fight.hpp"
 #include "protos.hpp"
@@ -58,11 +56,10 @@ int     buf_switches;           /* # of switches from small to large buf */
 
 /* int slow_nameserver = FALSE; */
 
-int lawful = 0;                /* work like the game regulator */
 int slow_death = 0;     /* Shut her down, Martha, she's sucking mud */
 int mudshutdown = 0;       /* clean shutdown */
 int rebootgame = 0;         /* reboot the game after a shutdown */
-int no_specials = 0;    /* Suppress ass. of special routines */
+bool no_specials = false;    /* Suppress ass. of special routines */
 long Uptime;            /* time that the game has been up */
 
 #if SITELOCK
@@ -81,11 +78,8 @@ int gnTimeCheckIndex = 0;
 struct affected_type*  Check_hjp, *Check_old_af;
 struct char_data* Check_c;
 char* Check_p = NULL;
-long GetMediumLag(long lastlag);
-long GetLagIndex();
-int IsTest(int test);
 
-void CheckCharAffected( char* msg ) {
+inline void CheckCharAffected( char* msg ) {
 #if HEAVY_DEBUG
 	Check_p = strdup( "a simple test in CheckCharAffected blank text meaning"
 					  " nothing to anyone intelligent anyways.... go get'em!"
@@ -241,251 +235,28 @@ void close_socket_fd( int desc) {
 #endif
 }
 
-int comm_main (int argc, char** argv) {
-	int port, pos=1;
-	char* dir;
+int run (int port, const char* dir) {
 
-#ifdef SITELOCK
-	int a;
-#endif
 
 	struct passwd* pw;
-
-	mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
-	mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
-
-	mudlog(LOG_CHECK,"Pulse: zone river teleport violence mobile tick");
-	mudlog(LOG_CHECK," %       4d   %4d      %4d      %4d    %4d  %4d",
-		   PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
-		   PULSE_VIOLENCE,PULSE_MOBILE,(PULSE_PER_SEC * SECS_PER_MUD_HOUR));
-
-	LOG_DEFINE(ACCESSI);
-	LOG_DEFINE(ALAR);
-	LOG_DEFINE(ALAR_RENT);
-	LOG_DEFINE(CHECK_RENT_INACTIVE);
-	LOG_DEFINE(CLEAN_AT_BOOT);
-	LOG_DEFINE(DEATH_FIX);
-	LOG_DEFINE(DOFLEEFIGHTINGLD);
-	LOG_DEFINE(EGO);
-	LOG_DEFINE(EGO_BLADE);
-	LOG_DEFINE(ENABLE_AUCTION);
-	LOG_DEFINE(EQPESANTE);
-	LOG_DEFINE(FAST_TRACK);
-	LOG_DEFINE(HEAVY_DEBUG);
-	LOG_DEFINE(IMPL_SECURITY);
-	LOG_DEFINE(LAG_MOBILES);
-	LOG_DEFINE(LEVEL_LOSS);
-	LOG_DEFINE(LIMITED_ITEMS);
-	LOG_DEFINE(LIMITEEQALRIENTRO);
-	LOG_DEFINE(LINUX);
-	LOG_DEFINE(LOG);
-	LOG_DEFINE(LOG_DEBUG);
-	LOG_DEFINE(LOG_DEBUG1);
-	LOG_DEFINE(LOW_GOLD);
-	LOG_DEFINE(NETBSD);
-	LOG_DEFINE(NEW_ALIGN);
-	LOG_DEFINE(NEW_BASH);
-	LOG_DEFINE(NEW_CONNECT);
-	LOG_DEFINE(NEW_EQ_GAIN);
-	LOG_DEFINE(NEW_GAIN);
-	LOG_DEFINE(NEW_RENT);
-	LOG_DEFINE(NEW_ROLL);
-	LOG_DEFINE(NEWER_EXP);
-	LOG_DEFINE(NICE_LIMITED);
-	LOG_DEFINE(NICE_MULTICLASS);
-	LOG_DEFINE(NICE_PKILL);
-	LOG_DEFINE(NO_REGISTER);
-	LOG_DEFINE(NODUPLICATES);
-	LOG_DEFINE(NOSCRAP);
-	LOG_DEFINE(PREVENT_PKILL);
-	LOG_DEFINE(SITELOCK);
-	LOG_DEFINE(SUSPENDREGISTER);
-	LOG_DEFINE(ZONE_COMM_ONLY);
-#if 0
-#ifdef BLOCK_WRITE
-	mudlog( LOG_CHECK,  "BLOCK_WRITE         = %d", BLOCK_WRITE);
-#endif
-#ifdef STRANGE_WHACK
-	mudlog( LOG_CHECK,  "STRANGE_WACK        = %d", STRANGE_WACK);
-#endif
-#ifdef HASH
-	mudlog( LOG_CHECK,  "HASH                = %d", HASH);
-#endif
-#ifdef NOTRACK
-	mudlog( LOG_CHECK,  "NOTRACK             = %d", NOTRACK);
-#endif
-#ifdef PLAYER_AUTH
-	mudlog( LOG_CHECK,  "PLAYER_AUTH         = %d", PLAYER_AUTH);
-#endif
-#ifdef DEBUG
-	mudlog( LOG_CHECK,  "DEBUG               = %d", DEBUG);
-#endif
-#ifdef LOCKGROVE
-	mudlog( LOG_CHECK,  "LOCKGROVE           = %d", LOCKGROVE);
-#endif
-#ifdef KLUDGEEM
-	mudlog( LOG_CHECK,  "KLUDGE_MEM          = %d", KLUDGE_MEM);
-#endif
-#ifdef KLUDGE_STRING
-	mudlog( LOG_CHECK,  "KLUDGE_STRING       = %d", KLUDGE_STRING);
-#endif
-#ifdef SAVEWORLD
-	mudlog( LOG_CHECK,  "SAVEWORLD           = %d", SAVEWORLD);
-#endif
-#ifdef QUEST_GAIN
-	mudlog( LOG_CHECK,  "QUEST_GAIN          = %d", QUEST_GAIN);
-#endif
-#ifdef USE_EGOS
-	mudlog( LOG_CHECK,  "USE_EGOS            = %d", USE_EGOS);
-#endif
-#ifdef LOG_MOB
-	mudlog( LOG_CHECK, "LOG_MOB             = %d", LOG_MOB);
-#endif
-#ifdef LOG_DEBUG
-	mudlog( LOG_CHECK,  "LOG_DEBUG           = %d", LOG_DEBUG);
-#endif
-#ifdef OLD_EXP
-	mudlog( LOG_CHECK,  "OLD_EXP             = %d", OLD_EXP);
-#endif
-#ifdef NEW_EXP
-	mudlog( LOG_CHECK,  "NEW_EXP             = %d", NEW_EXP);
-#endif
-#ifdef NEWER_EXP
-	mudlog( LOG_CHECK,  "NEWER_EXP           = %d", NEWER_EXP);
-#endif
-#ifdef NEW_GAIN
-	mudlog( LOG_CHECK, "NEW_GAIN             = %d", NEW_GAIN);
-#endif
-#ifdef NEW_RENT
-	mudlog( LOG_CHECK,  "NEW_RENT            = %d", NEW_RENT);
-#endif
-#ifdef NEW_ROLL
-	mudlog( LOG_CHECK,  "NEW_ROLL            = %d", NEW_ROLL);
-#endif
-#ifdef NEW_CONNECT
-	mudlog( LOG_CHECK, "NEW_CONNECT         = %d", NEW_CONNECT);
-#endif
-#ifdef ACCESSI
-	mudlog( LOG_CHECK, "ACCESSI             = %d", ACCESSI);
-#endif
-#ifdef PERSONAL_LOCKOUTS
-	mudlog( LOG_CHECK,  "PERSONAL_LOCKOUTS   = %d", PERSONAL_PERM_LOCKOUTS);
-#endif
-#ifdef NEW_BASH
-	mudlog( LOG_CHECK,  "NEW_BASH            = %d", NEW_BASH);
-#endif
-#ifdef sun
-	mudlog(LOG_CHECK,"sun defined");
-#endif
-#ifdef LINUX
-	mudlog(LOG_CHECK,"LINUX defined");
-#endif
-#ifdef NETBSD
-	mudlog(LOG_CHECK,"NETBSD defined");
-#endif
-#ifdef CYGWIN
-	mudlog(LOG_CHECK,"CYGWIN defined");
-#endif
-#endif
-	port = DFLT_PORT;
 #if defined(DFLT_DIR)
 	dir = DFLT_DIR;
 #else
 	dir = "lib";
 #endif
-#if defined(sun) || defined(NETBSD) && !defined(LINUX)
-	/*
-	**  this block sets the max # of connections.
-	*/
-#if defined(sun)
-	res = getrlimit(RLIMIT_NOFILE, &rl);
-	rl.rlim_cur = MAX_CONNECTS;
-	res = setrlimit(RLIMIT_NOFILE, &rl);
-#endif
 
-#if defined(NETBSD)
-	res = getrlimit(RLIMIT_OFILE, &rl);
-	rl.rlim_cur = MAX_CONNECTS;
-	res = setrlimit(RLIMIT_OFILE, &rl);
-#endif
+	mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
+	mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
 
-#endif
-
-	while ((pos < argc) && (*(argv[pos]) == '-')) {
-		switch (*(argv[pos] + 1)) {
-		case 'l':
-			lawful = 1;
-			mudlog( LOG_CHECK, "Lawful mode selected.");
-			break;
-		case 'd':
-			if (*(argv[pos] + 2))
-			{ dir = argv[pos] + 2; }
-			else if (++pos < argc)
-			{ dir = argv[pos]; }
-			else {
-				mudlog( LOG_ERROR, "Directory arg expected after option -d.");
-				assert(0);
-			}
-			break;
-		case 's':
-			no_specials = 1;
-			mudlog( LOG_CHECK, "Suppressing assignment of special routines.");
-			break;
-
-		case 'A':
-			SET_BIT(SystemFlags,SYS_NOANSI);
-			mudlog( LOG_CHECK, "Disabling ALL color");
-			break;
-		case 'N':
-			SET_BIT(SystemFlags,SYS_SKIPDNS);
-			mudlog( LOG_CHECK, "Disabling DNS");
-			break;
-		case 'R':
-			SET_BIT(SystemFlags,SYS_REQAPPROVE);
-			mudlog( LOG_CHECK, "Newbie authorizes enabled");
-			break;
-		case 'L':
-			SET_BIT(SystemFlags,SYS_LOGALL);
-			mudlog( LOG_CHECK, "Logging all users");
-			break;
-		case 'M':
-			SET_BIT(SystemFlags,SYS_LOGMOB);
-			mudlog( LOG_CHECK, "Logging all mobs");
-			break;
-		case 'T':
-			IsTest(1);
-			mudlog( LOG_CHECK, "Test run");
-			break;
-
-		default:
-			mudlog( LOG_ERROR, "Unknown loption -%c in argument string.",
-					*(argv[pos] + 1));
-			break;
-		}
-		pos++;
-	}
-
-	if (pos < argc)
-		if (!isdigit(*argv[pos])) {
-			fprintf(stderr, "Usage: %s [-l] [-s] [-d pathname]"
-					" -A -N -R -L -M [ port # ]\n",
-					argv[0]);
-			assert(0);
-		}
-		else if ((port = atoi(argv[pos])) <= 1024) {
-			printf("Illegal port #\n");
-			assert(0);
-		}
-
+	mudlog(LOG_CHECK,"Pulse: zone river teleport violence mobile tick");
+	mudlog(LOG_CHECK,"        %4d   %4d      %4d      %4d    %4d  %4d",
+		   PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
+		   PULSE_VIOLENCE,PULSE_MOBILE,(PULSE_PER_SEC * SECS_PER_MUD_HOUR));
+	mudlog(LOG_CHECK,"Reading data from ./%s",dir);
+	printFlags();
 	Uptime = time(0);
 
 	mudlog( LOG_CHECK, "Running game on port %d.", port);
-
-	if (chdir(dir) < 0) {
-		perror("chdir");
-		assert(0);
-	}
-
 	mudlog( LOG_CHECK, "Using %s as data directory.", dir);
 	mudlog( LOG_CHECK, "Pid: %d",getpid());
 	mudlog(LOG_CHECK,"Host: %s",HostName());
@@ -502,7 +273,7 @@ int comm_main (int argc, char** argv) {
 
 #if SITELOCK
 	mudlog( LOG_CHECK, "Blanking denied hosts.");
-	for(a = 0 ; a<= MAX_BAN_HOSTS ; a++)
+	for(int a = 0 ; a<= MAX_BAN_HOSTS ; a++)
 	{ strcpy(hostlist[a]," \0\0\0\0"); }
 	numberhosts = 0;
 
@@ -569,9 +340,6 @@ void run_the_game(int port) {
 void game_loop(int s) {
 	fd_set input_set, output_set, exc_set;
 
-#if TITAN
-	static int cap;
-#endif
 	struct timeval last_time, now, timespent, timeout, null_time;
 	static struct timeval opt_time;
 	char comm[MAX_INPUT_LENGTH];
@@ -589,7 +357,7 @@ void game_loop(int s) {
 
 	opt_time.tv_usec = OPT_USEC;  /* Init time values */
 	opt_time.tv_sec = 0;
-#ifdef NETBSD
+#if NETBSD
 	gettimeofday(&last_time, NULL);
 #else
 	gettimeofday(&last_time, (struct timeval*) 0);
@@ -624,26 +392,6 @@ void game_loop(int s) {
 
 		FD_SET(s, &input_set);
 		/* Attivo il selettore della mother connection */
-#if defined( TITAN )
-		maxdesc = 0;
-		if (cap < 20)
-		{ cap = 20; }
-		for (point = descriptor_list; point; point = point->next) {
-			if (point->descriptor <= cap && point->descriptor >= cap-20) {
-				FD_SET(point->descriptor, &input_set);
-				FD_SET(point->descriptor, &exc_set);
-				FD_SET(point->descriptor, &output_set);
-			}
-
-			if (maxdesc < point->descriptor)
-			{ maxdesc = point->descriptor; }
-		}
-
-		if (cap > maxdesc)
-		{ cap = 0; }
-		else
-		{ cap += 20; }
-#else
 		for (point = descriptor_list; point; point = point->next)
 			/* Attivo i descrittori per tutti i player connessi */
 		{
@@ -655,11 +403,11 @@ void game_loop(int s) {
 			{ maxdesc = point->descriptor; }
 			/* Mi porto in maxdesc il numero piu' alto di descrittore */
 		}
-#endif
+
 		SetStatus( STATUS_INITLOOP, "time" );
 
 		/* check out the time */
-#ifdef NETBSD
+#if NETBSD
 		gettimeofday(&now, NULL);
 #else
 		gettimeofday(&now, (struct timeval*) 0);
@@ -849,7 +597,7 @@ void game_loop(int s) {
 		for (point = descriptor_list; point; point = next_point) {
 			next_point = point->next;
 
-#ifndef BLOCK_WRITE
+#if not BLOCK_WRITE
 			if (FD_ISSET(point->descriptor, &output_set) && point->output.head)
 #else
 			if (FD_ISSET(point->descriptor, &output_set) && *(point->output))
@@ -942,8 +690,6 @@ void game_loop(int s) {
 			CheckCharAffected( "Before zone_update" );
 			SetStatus( STATUS_PULSEZONE, NULL );
 			zone_update();
-			if (lawful)
-			{ gr(); }
 			check_reboot();
 			CheckObjectExDesc( "After check_reboot" );
 			CheckCharAffected( "After check_reboot" );
@@ -1162,7 +908,7 @@ struct timeval timediff(struct timeval* a, struct timeval* b) {
 
 
 
-#ifndef BLOCK_WRITE
+#if not BLOCK_WRITE
 /* Empty the queues before closing connection */
 void flush_queues(struct descriptor_data* d) {
 	char dummy[MAX_STRING_LENGTH];
@@ -1233,7 +979,7 @@ int init_socket(int port) {
 	}
 
 
-#ifdef NETBSD
+#if NETBSD
 	if ( bind( s, (struct sockaddr*) &sa, sizeof(sa) ) < 0 )
 #else
 	if (bind(s, &sa, sizeof(sa), 0) < 0)
@@ -1394,7 +1140,7 @@ int new_descriptor(int s) {
 	*newd->last_input= '\0';
 	mudlog( LOG_CONNECT, "New connection from addr [HOST:%s]: %d: %d (wait: %d)", newd->host,
 			desc, maxdesc,newd->wait );
-#ifndef BLOCK_WRITE
+#if not BLOCK_WRITE
 	newd->output.head = NULL;
 #else
 	newd->output=newd->small_outbuf;
@@ -1424,7 +1170,7 @@ int new_descriptor(int s) {
 
 
 
-#ifndef BLOCK_WRITE
+#if not BLOCK_WRITE
 int process_output(struct descriptor_data* t) {
 	char i[MAX_STRING_LENGTH + MAX_STRING_LENGTH];
 

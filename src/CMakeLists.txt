@@ -22,7 +22,7 @@ add_executable(info version.cpp release.hpp)
 target_compile_definitions(info PUBLIC STANDALONE)
 
 #Boost
-find_package( Boost COMPONENTS system thread filesystem program_options REQUIRED )
+find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 include_directories(
 	${Boost_INCLUDE_DIRS}
 )

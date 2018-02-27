@@ -320,7 +320,6 @@ void mobile_activity(struct char_data* ch) {
 	struct char_data* tmp_ch;
 
 	int k;
-	extern int no_specials;
 
 	if( ch == NULL ) {
 		mudlog( LOG_SYSERR, "ch == NULL in mobile_activity (mobact.c)" );

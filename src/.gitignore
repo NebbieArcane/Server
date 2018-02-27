@@ -2,7 +2,7 @@
 /configuration.h
 /stamp-h1
 /release.h
-/config.hpp
-/config.hpp.in
+!config.hpp.in
+config.hpp
 /cov-int/
 /release.hpp

@@ -3,6 +3,7 @@
 * $Id: act.wizard.c,v 1.5 2002/03/04 00:35:51 Thunder Exp $
 *
 */
+#include "config.hpp"
 #include "act.wizard.hpp"
 #include <stdio.h>
 #include <string.h>
@@ -4704,7 +4705,7 @@ void do_debug(struct char_data* ch, char* argument, int cmd) {
 		/*    malloc_debug(i); */
 		sprintf(arg, "malloc debug level set to %d\n\r", i);
 #else
-		sprintf(arg, "Debug level set to %d. May not be implemented\n\r", i);
+		sprintf(arg, "Debug level set to %d. Probably not implemented\n\r", i);
 #endif
 		send_to_char(arg, ch);
 	}

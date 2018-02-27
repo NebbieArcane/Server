@@ -142,7 +142,6 @@ void FrozeHim(struct char_data* ch, int hp) {
 /* body of the booting system */
 void boot_db() {
 	int i;
-	extern int no_specials;
 
 	mudlog(LOG_CHECK, "Boot db -- BEGIN.");
 
@@ -353,7 +352,7 @@ void reset_time() {
 		   static_cast<int>(time_info.day),
 		   static_cast<int>(time_info.month),
 		   static_cast<int>(time_info.year)
-	);
+		  );
 
 	weather_info.pressure = 960;
 	if ((time_info.month >= 7) && (time_info.month <= 12))
@@ -4105,18 +4104,6 @@ int str_len(char* buf) {
 	while (buf[ i ] != '\0')
 	{ i++; }
 	return (i);
-}
-
-int load() {
-	return (0);
-}
-
-void gr() {
-	return;
-}
-
-int workhours() {
-	return (0);
 }
 
 void reboot_text(struct char_data* ch, char* arg, int cmd) {

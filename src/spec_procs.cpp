@@ -435,14 +435,14 @@ int ClericGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	for (; *arg == ' '; arg++);
 
 	if (HasClass(ch, CLASS_CLERIC)) {
-#ifdef QUEST_GAIN
+#if QUEST_GAIN
 		if( cmd == CMD_GAIN || cmd == CMD_GIVE ) /*gain or give */
 #else
 		if( cmd == CMD_GAIN ) /*gain */
 #endif
 		{
 			if (GET_LEVEL(ch,CLERIC_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
-#ifdef QUEST_GAIN
+#if QUEST_GAIN
 				MakeQuest(ch, guildmaster, CLERIC_LEVEL_IND, arg, cmd);
 #else
 				if( GET_EXP(ch) <

@@ -9,9 +9,9 @@
 #include "hash.hpp"
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
-#define TRUE  1
+//#define TRUE  1
 
-#define FALSE 0
+//#define FALSE 0
 
 #define LOWER(c) (((c)>='A'  && (c) <= 'Z') ? ((c)+('a'-'A')) : (c))
 
@@ -48,21 +48,6 @@
 
 #define IS_RARE( obj ) ( obj->obj_flags.cost >= LIM_ITEM_COST_MIN ) // Gaia 2001
 
-#if 0
-#if HASH
-#define real_roomp( lVNum ) ( hash_find( &room_db, lVNum ) )
-#else
-#define real_roomp( lVNum ) \
-	( ( lVNum < WORLD_SIZE && lVNum > -1 ) ? room_db[ lVNun ] : 0 )
-#endif
-#endif
-
-#if 0
-#define IS_DARK(room)  (real_roomp(room)->light<=0 && \
-						((IS_SET(real_roomp(room)->room_flags, DARK)) || real_roomp(room)->dark))
-
-#define IS_LIGHT(room)  (real_roomp(room)->light>0 || (!IS_SET(real_roomp(room)->room_flags, DARK) || !real_roomp(room)->dark))
-#else
 
 #define IS_DARK_P(proom) ( !IS_SET( (proom)->room_flags, BRIGHT ) && \
 						   (proom)->light <= 0 && \
@@ -82,9 +67,6 @@
 						 real_roomp(room)->light>0 || \
 						 ( !IS_SET( real_roomp(room)->room_flags, DARK ) || \
 						   !IsDarkOutside( real_roomp(room) ) ) )
-#endif
-
-
 
 #define SET_BIT(var,bit)  ((var) = (var) | (bit))
 
@@ -245,7 +227,7 @@
 				   !IS_AFFECTED(ch, AFF_PARALYSIS) )
 
 #if 1 // se messo a 0 si elimina il lag
-#ifndef LAG_MOBILES
+#if not LAG_MOBILES
 #define WAIT_STATE(ch, cycle)  (((ch)->desc) ? (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)) : 0)
 #else
 #define WAIT_STATE(ch, cycle)  if((ch)->desc) (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)); else ch->specials.tick_to_lag = (cycle);
@@ -406,7 +388,7 @@
 #endif
 
 inline struct room_data* real_roomp( long lVNum ) {
-#ifdef HASH
+#if HASH
 	extern struct hash_header      room_db;
 	return hash_find( &room_db, lVNum );
 #else

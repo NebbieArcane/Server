@@ -369,7 +369,6 @@ int old_search_block(const char* argument,int begin,int length,const char** list
 
 void command_interpreter( struct char_data* ch, char* argument ) {
 	char buf[254];
-	extern int no_specials;
 	NODE* n;
 	char buf1[255], buf2[255];
 	struct char_data* temp;

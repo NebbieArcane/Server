@@ -18,12 +18,6 @@
 #include "utils.hpp"
 #include "vt100c.hpp"
 #include "wizlist.hpp"
-/*
-#ifdef KLUDGE_STRING
-char* strdup(char*);
-#else
-#endif
-*/
 #include "fight.hpp"
 #include "regen.hpp"
 #include "opinion.hpp"
