@@ -3160,7 +3160,7 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 			}
 
 			// Message for room
-			act("$N sembra più debole.", TRUE, ch, 0, v, TO_ROOM);
+			act("$N sembra piu' debole.", TRUE, ch, 0, v, TO_ROOM);
 		}
 	}
 
@@ -3174,6 +3174,7 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 int canLeech(struct char_data* ch, struct char_data* victim) {
 	if(
 			GET_RACE(ch) != RACE_DEMON ||
+			!HasClass(ch, CLASS_MAGIC_USER) ||
 			GET_RACE(victim) == RACE_UNDEAD ||
 			GET_RACE(victim)==RACE_GHOST ||
 			(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
