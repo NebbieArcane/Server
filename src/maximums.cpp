@@ -65,7 +65,7 @@ int graf(int age, int p0, int p1, int p2, int p3, int p4, int p5, int p6) {
 /* The three MAX functions define a characters Effective maximum */
 /* Which is NOT the same as the ch->points.max_xxxx !!!          */
 int mana_limit(struct char_data* ch) {
-	int max, tmp;
+	int max, tmp, chClasses;
 
 	max = 0;
 
@@ -120,7 +120,14 @@ int mana_limit(struct char_data* ch) {
 		max += 100;
 	}
 
-	max /= HowManyClasses(ch);
+	chClasses = HowManyClasses(ch);	
+	
+	if(chClasses) {
+		max /= HowManyClasses(ch);	
+	} else {
+		mudlog(LOG_ERROR, "Character with no levels! Name [%s]", ch->player.name);
+	}
+	
 
 	/*
 	 * new classes should be inserted here.

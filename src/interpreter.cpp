@@ -1047,7 +1047,7 @@ void assign_command_pointers () {
 	AddCommand("use", do_use, CMD_USE, POSITION_SITTING, 1 );
 	AddCommand("where",do_where,173,POSITION_DEAD,1);
 	AddCommand("levels",do_levels,174,POSITION_DEAD,TUTTI);
-	AddCommand("register",do_register,175,POSITION_DEAD,4);
+	AddCommand("register",do_register,175,POSITION_DEAD,IMMENSO);
 
 	AddCommand("pray",do_pray,176,POSITION_SITTING,1);
 

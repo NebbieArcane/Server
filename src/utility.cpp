@@ -191,13 +191,16 @@ int CAN_SEE(struct char_data* s, struct char_data* o) {
 
 	pRoomS = real_roomp( s->in_room );
 	pRoomO = real_roomp( o->in_room );
+	if (pRoomS and pRoomO) {
 
-	if( ( IS_DARK_P( pRoomS ) || IS_DARK_P( pRoomO ) ) &&
-			!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DROW))
-	{ return(FALSE); }
-
-	if( IS_AFFECTED2( o, AFF2_ANIMAL_INVIS ) && IsAnimal( s ) )
-	{ return(FALSE); }
+		if( ( IS_DARK_P( pRoomS ) || IS_DARK_P( pRoomO ) ) &&
+				!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DROW)) {
+			return(FALSE);
+		}
+	}
+	if( IS_AFFECTED2( o, AFF2_ANIMAL_INVIS ) && IsAnimal( s ) ) {
+			return(FALSE);
+		}
 
 	return(TRUE);
 }

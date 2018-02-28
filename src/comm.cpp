@@ -1926,11 +1926,13 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			}
 
-			while( ( *point = *( i++ ) ) != 0 )
-			{ ++point; }
+			if(point && i) {
+				while( ( *point = *( i++ ) ) != 0 ) { 
+					++point;
+				}
 
-			++strp;
-
+				++strp;
+			}
 		}
 		else if( !( *( point++ ) = *( strp++ ) ) )
 		{ break; }

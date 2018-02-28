@@ -79,7 +79,7 @@ void spell_transport_via_plant(byte level, struct char_data* ch,
 	act("$c0010Percepisci $p, e come acqua ti lasci guidare dalla terra alle sue radici.", FALSE, ch, obj, 0, TO_CHAR);
 	char_from_room(ch);
 	char_to_room(ch, obj->in_room);
-	act("$c0010$p si squote leggermente, e $n aparre magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
+	act("$c0010$p si squote leggermente, e $n appare magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
 	act("$c0010Vieni trasportat$b istantaneamente da $p!", FALSE, ch, obj, 0, TO_CHAR);
 	do_look(ch, "\0", 15);
 
@@ -867,8 +867,8 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 
 	tmp_obj->item_number = -1;
 
-	act("$p appeare nelle tue mani.",TRUE,ch,tmp_obj,0,TO_CHAR);
-	act("$p appeare nelle mani di $n.",TRUE,ch,tmp_obj,0,TO_ROOM);
+	act("$p appare nelle tue mani.",TRUE,ch,tmp_obj,0,TO_CHAR);
+	act("$p appare nelle mani di $n.",TRUE,ch,tmp_obj,0,TO_ROOM);
 }
 
 
