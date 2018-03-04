@@ -612,126 +612,114 @@ struct obj_data {
 #define AUTO_RENT  -2    /* other special room, for auto-renting */
 
 /* Bitvector For 'room_flags' */
-
-#define DARK             1
-#define DEATH            2
-#define NO_MOB           4
-#define INDOORS          8
-#define PEACEFUL        16  /* No fighting */
-#define NOSTEAL         32  /* No Thieving */
-#define NO_SUM          64  /* no summoning */
-#define NO_MAGIC       128
-#define TUNNEL         256 /* Limited #s of people in room */
-#define PRIVATE        512
-#define SILENCE       1024
-#define LARGE         2048
-#define NO_DEATH      4096
-#define SAVE_ROOM     8192 /* room will save eq and load at reboot */
-#define NO_TRACK     16384
-#define NO_MIND      32768
-#define DESERTIC     65536
-#define ARTIC       131072
-#define UNDERGROUND 262144
-#define HOT         524288
-#define WET        1048576
-#define COLD       2097152
-#define DRY        4194304
-#define BRIGHT     8388608
-#define NO_ASTRAL 16777216
-#define NO_REGAIN 33554432
-#define RM_1      67108864
-#define RM_2     134217728
-#define RM_3     268435456
-#define RM_4     536870912
-#define RM_5    1073741824
-
+enum e_room_flags {
+	DARK		=	1,
+	DEATH		=	2,
+	NO_MOB		=	4,
+	INDOORS		=	8,
+	PEACEFUL		=	16  /* No fighting */,
+	NOSTEAL		=	32  /* No Thieving */,
+	NO_SUM		=	64  /* no summoning */,
+	NO_MAGIC		=	128,
+	TUNNEL		=	256 /* Limited #s of people in room */,
+	PRIVATE		=	512,
+	SILENCE		=	1024,
+	LARGE		=	2048,
+	NO_DEATH		=	4096,
+	SAVE_ROOM		=	8192 /* room will save eq and load at reboot */,
+	NO_TRACK		=	16384,
+	NO_MIND		=	32768,
+	DESERTIC		=	65536,
+	ARTIC		=	131072,
+	UNDERGROUND		=	262144,
+	HOT		=	524288,
+	WET		=	1048576,
+	COLD		=	2097152,
+	DRY		=	4194304,
+	BRIGHT		=	8388608,
+	NO_ASTRAL		=	16777216,
+	NO_REGAIN		=	33554432,
+	RM_1		=	67108864,
+	RM_2		=	134217728,
+	RM_3		=	268435456,
+	RM_4		=	536870912,
+	RM_5		=	1073741824
+};
 
 /* For 'dir_option' */
+enum e_exit_dir {
+	NORTH		=	0,
+	EAST		=	1,
+	SOUTH		=	2,
+	WEST		=	3,
+	UP		=	4,
+	DOWN		=	5
+};
 
-#define NORTH          0
-#define EAST           1
-#define SOUTH          2
-#define WEST           3
-#define UP             4
-#define DOWN           5
-
-#define EX_ISDOOR         1
-#define EX_CLOSED         2
-#define EX_LOCKED         4
-#define EX_SECRET         8
-#define EX_NOTBASH       16
-#define EX_PICKPROOF     32
-#define EX_CLIMB         64
-#define EX_MALE         128
-#define EX_NOLOOKT      256
+enum e_exit_types {
+	EX_ISDOOR		=	1,
+	EX_CLOSED		=	2,
+	EX_LOCKED		=	4,
+	EX_SECRET		=	8,
+	EX_NOTBASH		=	16,
+	EX_PICKPROOF		=	32,
+	EX_CLIMB		=	64,
+	EX_MALE		=	128,
+	EX_NOLOOKT		=	256
+};
 
 /* For 'Sector types' */
-
-#define SECT_INSIDE          0
-#define SECT_CITY            1
-#define SECT_FIELD           2
-#define SECT_FOREST          3
-#define SECT_HILLS           4
-#define SECT_MOUNTAIN        5
-#define SECT_WATER_SWIM      6
-#define SECT_WATER_NOSWIM    7
-#define SECT_AIR             8
-#define SECT_UNDERWATER      9
-#define SECT_DESERT          10
-#define SECT_TREE            11
-#define SECT_DARKCITY        12
-
-#define TELE_LOOK            1
-#define TELE_COUNT           2
-#define TELE_RANDOM          4
-#define TELE_SPIN            8
-
-#define LARGE_NONE           0
-#define LARGE_WATER          1
-#define LARGE_AIR            2
-#define LARGE_IMPASS         4
-
+enum e_sector_types {
+	SECT_INSIDE			=	0,
+	SECT_CITY			=	1,
+	SECT_FIELD			=	2,
+	SECT_FOREST			=	3,
+	SECT_HILLS			=	4,
+	SECT_MOUNTAIN		=	5,
+	SECT_WATER_SWIM		=	6,
+	SECT_WATER_NOSWIM	=	7,
+	SECT_AIR			=	8,
+	SECT_UNDERWATER		=	9,
+	SECT_DESERT			=	10,
+	SECT_TREE			=	11,
+	SECT_DARKCITY		=	12
+};
+enum e_teleports {
+	TELE_LOOK		=	1,
+	TELE_COUNT		=	2,
+	TELE_RANDOM		=	4,
+	TELE_SPIN		=	8
+};
+enum e_large_flags {
+	LARGE_NONE		=	0,
+	LARGE_WATER		=	1,
+	LARGE_AIR		=	2,
+	LARGE_IMPASS	=	4,
+};
 
 struct large_room_data {
-#if 0
-	unsigned int flags[9];
-#else
 	long flags[9];
-#endif
 };
 
 struct room_direction_data {
 	char* general_description;    /* When look DIR.                  */
 	char* keyword;                /* for open/close                  */
 
-#if 0
-	sh_int exit_info;             /* Exit info                       */
-	int key;                      /* Key's number (-1 for no key)    */
-	int to_room;                  /* Where direction leeds (NOWHERE) */
-	int open_cmd;                      /* cmd needed to OPEN/CLOSE door   */
-#else
 	long exit_info;             /* Exit info                       */
 	long key;                      /* Key's number (-1 for no key)    */
 	long to_room;                  /* Where direction leeds (NOWHERE) */
 	long open_cmd;                      /* cmd needed to OPEN/CLOSE door   */
-#endif
 
 };
 
 /* ========================= Structure for room ========================== */
 struct room_data {
 	/* sh_int */
-#if 0
-	sh_int number;               /* Rooms number                       */
-	sh_int zone;                 /* Room zone (for resetting)          */
-	sh_int continent;            /* Which continent/mega-zone          */
-	sh_int sector_type;             /* sector type (move/hide)            */
-#else
 	long number;               /* Rooms number                       */
 	long zone;                 /* Room zone (for resetting)          */
 	long continent;            /* Which continent/mega-zone          */
 	long sector_type;             /* sector type (move/hide)            */
-#endif
+
 	byte blood;					/*Per il sangue nelle stanze		*/
 	byte dig;					/*Per la skill miner		*/
 
@@ -775,30 +763,31 @@ struct room_data {
 /* The following defs and structures are related to char_data   */
 
 /* For 'equipment' */
-
-#define WEAR_LIGHT      0
-#define WEAR_FINGER_R   1
-#define WEAR_FINGER_L   2
-#define WEAR_NECK_1     3
-#define WEAR_NECK_2     4
-#define WEAR_BODY       5
-#define WEAR_HEAD       6
-#define WEAR_LEGS       7
-#define WEAR_FEET       8
-#define WEAR_HANDS      9
-#define WEAR_ARMS      10
-#define WEAR_SHIELD    11
-#define WEAR_ABOUT     12
-#define WEAR_WAISTE    13
-#define WEAR_WRIST_R   14
-#define WEAR_WRIST_L   15
-#define WIELD          16
-#define HOLD           17
-#define WEAR_BACK      18
-#define WEAR_EAR_R     19
-#define WEAR_EAR_L     20
-#define WEAR_EYES      21
-#define LOADED_WEAPON  22
+enum e_wear_as {
+	WEAR_LIGHT		=	0,
+	WEAR_FINGER_R	=	1,
+	WEAR_FINGER_L	=	2,
+	WEAR_NECK_1		=	3,
+	WEAR_NECK_2		=	4,
+	WEAR_BODY		=	5,
+	WEAR_HEAD		=	6,
+	WEAR_LEGS		=	7,
+	WEAR_FEET		=	8,
+	WEAR_HANDS		=	9,
+	WEAR_ARMS		=	10,
+	WEAR_SHIELD		=	11,
+	WEAR_ABOUT		=	12,
+	WEAR_WAISTE		=	13,
+	WEAR_WRIST_R	=	14,
+	WEAR_WRIST_L	=	15,
+	WIELD			=	16,
+	HOLD			=	17,
+	WEAR_BACK		=	18,
+	WEAR_EAR_R		=	19,
+	WEAR_EAR_L		=	20,
+	WEAR_EYES		=	21,
+	LOADED_WEAPON	=	22
+};
 #define MAX_WEAR_POS   22
 
 /* For 'char_player_data' */
@@ -819,57 +808,59 @@ struct room_data {
 
 /* Predifined  conditions */
 #define MAX_CONDITIONS 5  /* USER FILE, DO NOT CHANGE */
-
-#define DRUNK        0
-#define FULL         1
-#define THIRST       2
+enum e_conditions {
+	DRUNK		=	0,
+	FULL		=	1,
+	THIRST		=	2
+}
 
 /* Bitvector for 'affected_by' */
-#define AFF_NONE              0x00000000
-#define AFF_BLIND             0x00000001
-#define AFF_INVISIBLE         0x00000002
-#define AFF_DETECT_EVIL       0x00000004
-#define AFF_DETECT_INVISIBLE  0x00000008
-#define AFF_DETECT_MAGIC      0x00000010
-#define AFF_SENSE_LIFE        0x00000020
-#define AFF_LIFE_PROT         0x00000040
-#define AFF_SANCTUARY         0x00000080
-#define AFF_DRAGON_RIDE       0x00000100
-#define AFF_GROWTH            0x00000200 /* this was the one that was missing*/
+enum e_affected_by {
+	AFF_NONE			=	0x00000000,
+	AFF_BLIND			=	0x00000001,
+	AFF_INVISIBLE		=	0x00000002,
+	AFF_DETECT_EVIL		=	0x00000004,
+	AFF_DETECT_INVISIBLE=	0x00000008,
+	AFF_DETECT_MAGIC	=	0x00000010,
+	AFF_SENSE_LIFE		=	0x00000020,
+	AFF_LIFE_PROT		=	0x00000040,
+	AFF_SANCTUARY		=	0x00000080,
+	AFF_DRAGON_RIDE		=	0x00000100,
+	AFF_GROWTH			=	0x00000200 /* this was the one that was missing*/,
+	AFF_CURSE			=	0x00000400,
+	AFF_FLYING			=	0x00000800,
+	AFF_POISON			=	0x00001000,
+	AFF_TREE_TRAVEL		=	0x00002000,
+	AFF_PARALYSIS		=	0x00004000,
+	AFF_INFRAVISION		=	0x00008000,
+	AFF_WATERBREATH		=	0x00010000,
+	AFF_SLEEP			=	0x00020000,
+	AFF_TRAVELLING		=	0x00040000  /* i.e. can't be stoned */,
+	AFF_SNEAK			=	0x00080000,
+	AFF_HIDE			=	0x00100000,
+	AFF_SILENCE			=	0x00200000,
+	AFF_CHARM			=	0x00400000,
+	AFF_FOLLOW			=	0x00800000,
+	AFF_PROTECT_FROM_EVIL=	0x01000000  /*  */,
+	AFF_TRUE_SIGHT		=	0x02000000,
+	AFF_SCRYING			=	0x04000000   /* seeing other rooms */,
+	AFF_FIRESHIELD		=	0x08000000,
+	AFF_GROUP			=	0x10000000,
+	AFF_TELEPATHY		=	0x20000000,
+	AFF_GLOBE_DARKNESS	=	0x40000000  /* Added by REQUIEM 2018 */,
+	AFF_UNDEF_AFF_1		=	0x80000000,
+}
+enum e_affected_by2 {
+	AFF2_ANIMAL_INVIS	=	0x00000001,
+	AFF2_HEAT_STUFF		=	0x00000002,
+	AFF2_LOG_ME			=	0x00000004,
+	AFF2_BERSERK		=	0x00000008,
+	AFF2_PARRY			=	0x00000010  /* Added by GAIA 2001 */,
+	AFF2_CON_ORDER		=	0x00000020,
+	AFF2_AFK			=	0x00000040,
+	AFF2_PKILLER		=	0x00000080
+}
 
-#define AFF_CURSE             0x00000400
-#define AFF_FLYING            0x00000800
-#define AFF_POISON            0x00001000
-#define AFF_TREE_TRAVEL       0x00002000
-#define AFF_PARALYSIS         0x00004000
-#define AFF_INFRAVISION       0x00008000
-#define AFF_WATERBREATH       0x00010000
-#define AFF_SLEEP             0x00020000
-#define AFF_TRAVELLING        0x00040000  /* i.e. can't be stoned */
-#define AFF_SNEAK             0x00080000
-#define AFF_HIDE              0x00100000
-#define AFF_SILENCE           0x00200000
-#define AFF_CHARM             0x00400000
-#define AFF_FOLLOW            0x00800000
-#define AFF_PROTECT_FROM_EVIL 0x01000000  /*  */
-#define AFF_TRUE_SIGHT        0x02000000
-#define AFF_SCRYING           0x04000000   /* seeing other rooms */
-#define AFF_FIRESHIELD        0x08000000
-#define AFF_GROUP             0x10000000
-#define AFF_TELEPATHY         0x20000000
-#define AFF_GLOBE_DARKNESS    0x40000000  /* Added by REQUIEM 2018 */
-#define AFF_UNDEF_AFF_1       0x80000000
-
-/* affects 2 */
-
-#define AFF2_ANIMAL_INVIS     0x00000001
-#define AFF2_HEAT_STUFF       0x00000002
-#define AFF2_LOG_ME           0x00000004
-#define AFF2_BERSERK          0x00000008
-#define AFF2_PARRY            0x00000010  /* Added by GAIA 2001 */
-#define AFF2_CON_ORDER        0x00000020
-#define AFF2_AFK              0x00000040
-#define AFF2_PKILLER          0x00000080
 /* modifiers to char's abilities */
 
 enum e_apply {
