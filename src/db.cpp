@@ -736,7 +736,7 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 	mudlog(LOG_CHECK, "Done!");
 	/* scan for directory entrys */
 	if ((dir = opendir(dirname)) == NULL) {
-		mudlog(LOG_ERROR, "unable to open index directory %s", dirname);
+		mudlog(LOG_CHECK, "Ignored missing directory %s", dirname);
 		return (index);
 	}
 	while ((ent = readdir(dir)) != NULL) {
