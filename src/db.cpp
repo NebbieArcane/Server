@@ -2315,14 +2315,12 @@ void reset_zone(int zone) {
 			case 'M': /* read a mobile */
 				SetStatus("Command M", rbuf);
 				rp = real_roomp(ZCMD.arg3);
-				if ((ZCMD.arg2 == 0 ||
-						mob_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
-						(ZCMD.arg4 == 0 || MobRoomCount(real_mobile(ZCMD.arg1), rp)
-						 < ZCMD.arg4) &&
-						!fighting_in_room(ZCMD.arg3) &&
-						!CheckKillFile(mob_index[ZCMD.arg1].iVNum) &&
-						(pMob = read_mobile(ZCMD.arg1, REAL)) != NULL &&
-						rp != NULL) {
+				if ((ZCMD.arg2 == 0 || mob_index[ ZCMD.arg1 ].number < ZCMD.arg2) // World cap
+						&& (ZCMD.arg4 == 0 || MobRoomCount(real_mobile(ZCMD.arg1), rp) < ZCMD.arg4) // Room cap
+						&& !fighting_in_room(ZCMD.arg3)  //Combattimento in corso
+						&& !CheckKillFile(mob_index[ZCMD.arg1].iVNum)  //Disabilitato dal kill file
+						&& (pMob = read_mobile(ZCMD.arg1, REAL)) != NULL // Mob esiste
+						&& rp != NULL) { // stanza esiste
 					pLastMob = pMaster = pMob;
 					pMob->specials.zone = zone;
 					char_to_room(pMob, ZCMD.arg3);
@@ -2348,16 +2346,13 @@ void reset_zone(int zone) {
 
 			case 'C': /* read a mobile.  Charm them to follow prev. */
 				SetStatus("Command C", rbuf);
-				if ((ZCMD.arg2 != 0 ||
-						mob_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
-						(ZCMD.arg4 == 0 || MobRoomCount(ZCMD.arg1, rp)
-						 < ZCMD.arg4) &&
-						!CheckKillFile(mob_index[ ZCMD.arg1 ].iVNum) &&
-						pMaster &&
-						(pMob = read_mobile(ZCMD.arg1, REAL)) != NULL) {
+				if ((ZCMD.arg2 == 0 || mob_index[ ZCMD.arg1 ].number < ZCMD.arg2)
+						&& (ZCMD.arg4 == 0 || MobRoomCount(real_mobile(ZCMD.arg1), rp) < ZCMD.arg4)
+						&& !CheckKillFile(mob_index[ ZCMD.arg1 ].iVNum)
+						&& pMaster
+						&& (pMob = read_mobile(ZCMD.arg1, REAL)) != NULL) {
 					pLastMob = pMob;
 					pMob->specials.zone = zone;
-
 					if (GET_RACE(pMob) > RACE_GNOME &&
 							!strchr(zone_table[ zone ].races, GET_RACE(pMob)))
 						zone_table[ zone ].races[ strlen(zone_table[ zone ].races) ] =
@@ -2379,12 +2374,12 @@ void reset_zone(int zone) {
 			case 'Z': /* set the last mobile to this zone */
 				SetStatus("Command Z", rbuf);
 				if (pLastMob) {
-					pLastMob->specials.zone = ZCMD.arg1;
+					pLastMob->specials.zone = zone;
 
 					if (GET_RACE(pLastMob) > RACE_GNOME &&
-							!strchr(zone_table[ ZCMD.arg1 ].races,
+							!strchr(zone_table[ zone].races,
 									GET_RACE(pLastMob)))
-						zone_table[ZCMD.arg1].races[strlen(zone_table[ZCMD.arg1].races)] =
+						zone_table[zone].races[strlen(zone_table[zone].races)] =
 							GET_RACE(pLastMob);
 				}
 				break;
@@ -2393,14 +2388,10 @@ void reset_zone(int zone) {
 				SetStatus("Command O", rbuf);
 				pObj = NULL;
 				nLastCmd = FALSE;
-				if (ZCMD.arg1 >= 0 &&
-						(ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
+				if (ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
 				   ) {
-					if (ZCMD.arg3 >= 0 &&
-							((rp = real_roomp(ZCMD.arg3)) != NULL)) {
-						if (ZCMD.arg4 == 0 ||
-								ObjRoomCount(ZCMD.arg1, rp)
-								< ZCMD.arg4) {
+					if (ZCMD.arg3 >= 0 & ((rp = real_roomp(ZCMD.arg3)) != NULL)) {
+						if (ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) {
 							if ((pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 								obj_to_room(pObj, ZCMD.arg3);
 								nLastCmd = TRUE;
