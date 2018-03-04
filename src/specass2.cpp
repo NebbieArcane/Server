@@ -27,9 +27,9 @@
 #include "snew.hpp"
 //#include "vate.h"
 #include "utility.hpp"
-#include "spec_procs.hpp"
-#include "spec_procs2.hpp"
-#include "spec_procs3.hpp"
+#include "specass2.hpp"
+#include "specialproc_other.hpp"
+#include "specialproc_room.hpp"
 #define SPECFILE "myst.spe"
 FILE* fd;
 FILE* fp;
@@ -128,20 +128,6 @@ char* Aggiungi(char* vecchia,char* nuova) {
 void assign_speciales() {
 	int lastroomproc=0;
 	int lastotherproc=0;
-
-	struct special_proc_entry otherproc[] = {
-
-#include "otherproc.hpp"
-		{ "zFineprocedure", NULL },
-	};
-
-
-
-	struct RoomSpecialProcEntry roomproc[] = {
-#include "roomproc.hpp"
-		{ "zFineprocedure", NULL },
-	};
-
 	struct special_proc_entry* op;
 	struct RoomSpecialProcEntry* _or;
 	struct room_data* rp;

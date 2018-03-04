@@ -1,13 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMud
 * $Id: act.info.c,v 1.6 2002/03/11 21:15:20 Thunder Exp $
  * */
-
-/*
- *  Usage : Informative commands.                                          *
- *************************************************************************
- */
-#include "config.hpp"
-#include "act.info.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -15,20 +14,53 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
 #include "breath.hpp"
 #include "cmdid.hpp"
-#include "fight.hpp"
-
-#include "protos.hpp"
-#include "Registered.hpp"
-#include "signals.hpp"
-#include "snew.hpp"
-#include "version.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "modify.hpp"
+#include "multiclass.hpp"
+#include "parser.hpp"
+#include "race.hpp"          // for RACE_DARK_DWARF, RACE_DROW, RACE_DWARF
+#include "Registered.hpp"
+#include "signals.hpp"
+#include "skills.hpp"
+#include "snew.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
+#include "specialproc_other.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"        // for spell_info_type, SKILL_EVALUATE, SPELL_G...
+#include "trap.hpp"
 #include "utility.hpp"
+#include "version.hpp"
+#include "vt100c.hpp"
+
+namespace Alarmud {
+
+/*
+ *  Usage : Informative commands.                                          *
+ *************************************************************************
+ */
+
+
 using Alarmud::Registered;
 
 /* intern functions */
@@ -4831,3 +4863,5 @@ struct char_data* get_char_linear( struct char_data* ch,const char* arg, int* rf
 	}
 	return NULL;
 }
+} // namespace Alarmud
+

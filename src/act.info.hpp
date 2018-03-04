@@ -1,11 +1,18 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 #ifndef _ACT_INFO_HPP
 #define _ACT_INFO_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 char* AlignDesc(int a) ;
 char* ArmorDesc(int a) ;
 char* DamRollDesc(int a) ;
-char* DescArmorf(float f) ; /* theirs / yours */
 char* DescAttacks(float a) ;
+char* DescArmorf(float f) ; /* theirs / yours */
 char* DescDamage(float dam) ;
 char* DescRatio(float f) ; /* theirs / yours */
 char* DescRatioF(float f) ; /* theirs / yours */
@@ -75,4 +82,6 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) ;
 int singular( struct obj_data* o) ;
 int which_number_mobile(struct char_data* ch, struct char_data* mob) ;
 int which_number_object( struct obj_data* obj ) ;
+} // namespace Alarmud
 #endif // _ACT_INFO_HPP
+

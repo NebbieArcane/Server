@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * AlarMUD v1.0   Released 12/1994
  * See license.doc for distribution terms.   AlarMUD is based on DIKUMUD
@@ -5,15 +10,34 @@
  * Modificato per Nebbie2000 da Ryltar
  * $Id: act.comm.c,v 2.1 2002/05/06 09:50:00 Thunder Exp $
  * */
-#include "act.comm.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "auction.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
 #include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.comm.hpp"
+#include "auction.hpp"
+#include "cmdid.hpp"      // for CMD_GTELL, CMD_THINK_SUPERNI, CMD_WHISPER
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "regen.hpp"
+#include "signals.hpp"    // for PopStatus, PushStatus
+#include "spells.hpp"
+#include "utility.hpp"    // for apply_soundproof, check_soundproof, number
+namespace Alarmud {
+
 
 
 char* scrambler(struct char_data* ch,const char* message) {
@@ -1262,4 +1286,6 @@ void do_eavesdrop(struct char_data* ch, const char* argument, int cmd) {
 	{ send_to_char("Non c'e' nulla da quella parte...\r\n", ch); }
 }
 
+
+} // namespace Alarmud
 
