@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef _ACT_OBJ2_HPP
 #define _ACT_OBJ2_HPP
-#include "config.hpp"
+namespace Alarmud {
 int IsRestricted(struct obj_data* obj, int Class) ;
 void do_drink(struct char_data* ch,const char* argument, int cmd) ;
 void do_eat(struct char_data* ch,const char* argument, int cmd) ;
@@ -16,4 +23,6 @@ void name_to_drinkcon(struct obj_data* obj,int type) ;
 void perform_wear( struct char_data* ch, struct obj_data* obj_object,long keyword);
 void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) ;
 void weight_change_object(struct obj_data* obj, int weight) ;
+} // namespace Alarmud
 #endif // _ACT_OBJ2_HPP
+

@@ -1,19 +1,56 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
 /* $Id: act.other.c,v 1.5 2002/03/11 11:33:34 Thunder Exp $
  *
  */
-#include "act.other.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "fight.hpp"
-#include "snew.hpp"
-#include "protos.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
 #include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.other.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "ansi_parser.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "fight.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "modify.hpp"
+#include "multiclass.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "snew.hpp"
+#include "snew.hpp"
+#include "spec_procs.hpp"
 #include "spell_parser.hpp"
+#include "spell_parser.hpp"
+#include "utility.hpp"
+namespace Alarmud {
+
 /* extern variables */
 
 
@@ -2817,4 +2854,6 @@ void ck_eq_action( struct char_data* ch, struct obj_data* obj ) {
 
 	}
 }
+
+} // namespace Alarmud
 

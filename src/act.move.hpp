@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef _ACT_MOVE_HPP
 #define _ACT_MOVE_HPP
-#include "config.hpp"
+namespace Alarmud {
 int AddToCharHeap( struct char_data* heap[50], int* top, int total[50],struct char_data* k) ;
 void DisplayGroupMove(struct char_data* ch, int dir, int was_in, int total) ;
 void DisplayMove( struct char_data* ch, int dir, int was_in, int total) ;
@@ -34,4 +41,6 @@ void open_door(struct char_data* ch, int dir) ;
 void raw_lock_door( struct char_data* ch,struct room_direction_data* exitp, int door);
 void raw_open_door(struct char_data* ch, int dir) ;
 void raw_unlock_door( struct char_data* ch, struct room_direction_data* exitp, int door);
+} // namespace Alarmud
 #endif // _ACT_MOVE_HPP
+

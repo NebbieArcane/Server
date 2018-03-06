@@ -1,20 +1,45 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
 * DaleMUD v2.0        Released 2/1994
 * See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
 * AlarMUD
 * $Id: act.off.c,v 1.5 2002/03/23 20:49:38 Thunder Exp $
 */
-#include "act.off.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
 #include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.off.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.other.hpp"
+#include "comm.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "snew.hpp"
 #include "spell_parser.hpp"
+
+namespace Alarmud {
+
 
 
 /* extern variables */
@@ -2501,3 +2526,5 @@ void do_stopfight( struct char_data* pChar, char* szArgument, int nCmd ) {
 	{ send_to_char( "Ma se non stai combattendo!\n\r", pChar ); }
 
 }
+} // namespace Alarmud
+

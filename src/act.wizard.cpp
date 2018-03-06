@@ -1,20 +1,32 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: act.wizard.c,v 1.5 2002/03/04 00:35:51 Thunder Exp $
 *
 */
-#include "config.hpp"
-#include "act.wizard.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.wizard.hpp"
 #include "snew.hpp"
 #include "interpreter.hpp"
-#include "protos.hpp"
 #include "cmdid.hpp"
 #include "fight.hpp"
 #include "Registered.hpp"
@@ -24,6 +36,21 @@
 #include "db.hpp"
 #include "maximums.hpp"
 #include "spell_parser.hpp"
+#include "comm.hpp"
+#include "modify.hpp"
+#include "multiclass.hpp"
+#include "reception.hpp"
+#include "act.info.hpp"
+#include "act.other.hpp"
+#include "parser.hpp"
+#include "weather.hpp"
+#include "ansi_parser.hpp"
+#include "regen.hpp"
+#include "spec_procs.hpp"
+#include "magicutils.hpp"
+namespace Alarmud {
+
+
 using Alarmud::Registered;
 char EasySummon = 1;
 long numero_mob_obj[100000];
@@ -1700,7 +1727,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 							sprintf(buf,"     Expires in %3d hours, Bits set ",
 									aff->duration);
 							send_to_char(buf,ch);
-							if (aff->location != APPLY_BV2)
+							if (aff->location != APPLY_AFF2)
 							{ sprintbit((unsigned)aff->bitvector,affected_bits,buf); }
 							else
 							{ sprintbit((unsigned)aff->bitvector,affected_bits2,buf); }
@@ -5980,3 +6007,5 @@ if (get_char(buf))
 
 }
 */
+} // namespace Alarmud
+

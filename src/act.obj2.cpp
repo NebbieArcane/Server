@@ -1,17 +1,40 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * AlarMUD
  * $Id: act.obj2.c,v 1.2 2002/02/21 10:58:37 Thunder Exp $
  */
-#include "act.obj2.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "protos.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.obj2.hpp"
+#include "act.info.hpp"
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "regen.hpp"
 #include "spell_parser.hpp"
+#include "trap.hpp"
+#include "utility.hpp"    // for str_cmp, getabunch, getall, CAN_SEE_OBJ
+namespace Alarmud {
+
 
 void weight_change_object(struct obj_data* obj, int weight) {
 	struct obj_data* tmp_obj;
@@ -1489,3 +1512,5 @@ void do_remove(struct char_data* ch,const char* argument, int cmd) {
 
 	check_falling(ch);
 }
+} // namespace Alarmud
+

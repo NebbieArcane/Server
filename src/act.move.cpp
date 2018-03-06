@@ -1,21 +1,48 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * DaleMUD v2.0        Released 2/1994
  * See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
  * $Id: act.move.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
 */
-#include "act.move.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "cmdid.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.move.hpp"
+#include "act.info.hpp"
+#include "act.off.hpp"       // for clearpath
+#include "act.other.hpp"
+#include "cmdid.hpp"         // for CMD_DIG, CMD_SCYTHE, CMD_LIFT, CMD_PULL
+#include "comm.hpp"
+#include "config.hpp"        // for FALSE, TRUE
+#include "db.hpp"            // for index_data
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "status.hpp"
-#include "db.hpp"
-#include "spell_parser.hpp"
-#include "trap.hpp"
+#include "handler.hpp"       // for fname, generic_find, char_from_room, cha...
+#include "interpreter.hpp"   // for one_argument, only_argument, search_block
+#include "multiclass.hpp"
+#include "regen.hpp"
+#include "signals.hpp"       // for SetStatus
+#include "spell_parser.hpp"  // for SpellWearOff, stop_follower, add_follower
+#include "spells.hpp"        // for SKILL_MEDITATE, SKILL_MEMORIZE, SKILL_PI...
+#include "trap.hpp"          // for CheckForMoveTrap
+#include "utility.hpp"       // for exit_ok, FallOffMount, LearnFromMistake
+
+namespace Alarmud {
+
 
 void NotLegalMove(struct char_data* ch) {
 	send_to_char( "Non puoi andare da quella parte...\n\r", ch);
@@ -1826,3 +1853,5 @@ void do_run(struct char_data* ch, const char* argument, int cmd) {
 		act( "Sei troppo esaust$b per correre ancora.", FALSE, ch, 0, 0, TO_CHAR );
 	}
 }
+} // namespace Alarmud
+

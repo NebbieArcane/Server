@@ -1,5 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef _ACT_OTHER_HPP
 #define _ACT_OTHER_HPP
+namespace Alarmud {
 int CanMemorize(struct char_data* ch) ;
 int CheckContempMemorize( struct char_data* pChar ) ;
 char* Condition(struct char_data* ch) ;
@@ -45,4 +53,6 @@ void do_typo(struct char_data* ch, const char* argument, int cmd) ;
 void do_use(struct char_data* ch, const char* argument, int cmd) ;
 void do_whois(struct char_data* ch, const char* argument, int cmd) ;
 void parse_eq_action( struct char_data* ch, struct obj_data* obj ) ;
+} // namespace Alarmud
 #endif // _ACT_OTHER_HPP
+

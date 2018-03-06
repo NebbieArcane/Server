@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef _ACT_WIZARD_HPP
 #define _ACT_WIZARD_HPP
-#include "config.hpp"
+namespace Alarmud {
 void CreateOneRoom( int loc_nr) ;
 void clone_container_obj( struct obj_data* to, struct obj_data* obj ) ;
 struct obj_data* clone_obj(struct obj_data* obj) ;
@@ -78,4 +85,6 @@ void print_room(int rnum, struct room_data* rp, struct string_block* sb) ;
 void purge_one_room(int rnum, struct room_data* rp, int* range) ;
 void roll_abilities(struct char_data* ch) ;
 void show_room_zone(int rnum, struct room_data* rp,struct show_room_zone_struct* srzs);
+} // namespace Alarmud
 #endif // _ACT_WIZARD_HPP
+

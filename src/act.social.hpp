@@ -1,8 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __ACT_SOCIAL_HPP
 #define __ACT_SOCIAL_HPP
-#include "config.hpp"
-#include "structs.hpp"
-#include <stdio.h>
+namespace Alarmud {
 struct social_messg {
 	int act_nr;
 	int hide;
@@ -40,4 +45,6 @@ void do_insult(struct char_data* ch, char* argument, int cmd) ;
 void do_pose(struct char_data* ch, char* argument, int cmd) ;
 int find_action(int cmd) ;
 char* fread_action(FILE* fl) ;
+} // namespace Alarmud
 #endif // __ACT_SOCIAL_HPP
+

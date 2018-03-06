@@ -1,17 +1,43 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD
  *
  * $Id: act.obj1.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-#include "act.obj1.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.obj1.hpp"
+#include "act.info.hpp"
+#include "act.other.hpp"
+#include "cmdid.hpp"      // for CMD_GET
+#include "comm.hpp"
+#include "db.hpp"         // for read_object, real_object, REAL
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "signals.hpp"    // for SetStatus
 #include "snew.hpp"
-#include "status.hpp"
-#include "utils.hpp" // Gaia 2001
 #include "spell_parser.hpp"
+#include "trap.hpp"
+#include "utility.hpp"    // for str_cmp, getabunch, getall, CAN_SEE_OBJ
+namespace Alarmud {
+
 
 
 /* procedures related to get */
@@ -1165,4 +1191,6 @@ void do_pquest(struct char_data* ch,const char* argument, int cmd) {
 	return;
 }
 
+
+} // namespace Alarmud
 

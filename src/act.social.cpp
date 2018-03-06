@@ -1,16 +1,37 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 *  DaleMUD v2.0        Released 2/1994
 *  See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
 *
  * $Id: act.social.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-#include "act.social.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.social.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "multiclass.hpp"
 #include "snew.hpp"
+namespace Alarmud {
+
 
 /* extern variables */
 
@@ -320,3 +341,5 @@ void do_pose(struct char_data* ch, char* argument, int cmd) {
 	act(pose_messages[to_pose].room_msg[iClass], 0, ch, 0, 0, TO_ROOM);
 
 }
+} // namespace Alarmud
+

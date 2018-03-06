@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef _ACT_OFF_HPP
 #define _ACT_OFF_HPP
-#include "config.hpp"
+namespace Alarmud {
 int clearpath(struct char_data* ch, long room, int direc) ;
 void do_assist(struct char_data* ch, char* argument, int cmd) ;
 void do_associa(struct char_data* ch, char* argument, int cmd) ;
@@ -31,4 +38,6 @@ void do_wimp(struct char_data* ch, char* argument, int cmd) ;
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) ;
 void throw_object(struct obj_data* o, int dir, int from) ;
 void throw_weapon( struct obj_data* o, int dir, struct char_data* targ,struct char_data* ch );
+} // namespace Alarmud
 #endif // _ACT_OFF_HPP
+
