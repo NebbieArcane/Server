@@ -1,25 +1,50 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD */
 /* $Id: fight.c,v 2.0 2002/03/24 19:46:06 Thunder Exp $ */
-
-/* File modificato da GAIA nel 7/2000 per aggiungere la locazione
-   negli oggetti DamageResult. Inoltre implementato il comando
-   PARRY e la dipendenza del danno dalla locazione colpita.
-   Per trovare le zone modificate cercare la keyword Gaia */
-#include "config.hpp"
-#include "fight.hpp"
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "cmdid.hpp"
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "fight.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magicutils.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
 #include "spell_parser.hpp"
+
+namespace Alarmud {
+
+/* File modificato da GAIA nel 7/2000 per aggiungere la locazione
+   negli oggetti DamageResult. Inoltre implementato il comando
+   PARRY e la dipendenza del danno dalla locazione colpita.
+   Per trovare le zone modificate cercare la keyword Gaia */
+
 
 #define DUAL_WIELD(ch) (ch->equipment[WIELD] && ch->equipment[HOLD] && ITEM_TYPE(ch->equipment[WIELD])==ITEM_WEAPON && 			ITEM_TYPE(ch->equipment[HOLD])==ITEM_WEAPON)
 #define GET_GRP_LEVEL(ch) (GetMaxLevel(ch)+(GetSecMaxLev(ch)/2)+  (GetThirdMaxLev(ch)/3))
@@ -1055,7 +1080,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 				af.type=SPELL_NO_MESSAGE;
 				af.duration=MAX(5,20+GetMaxLevel(killer)-GetMaxLevel(ch));
 				af.modifier=0;
-				af.location=APPLY_BV2;
+				af.location=APPLY_AFF2;
 				af.bitvector=AFF2_PKILLER;
 				if (killer!=ch) { // SALVO non si puo' mettere il pkill per un suicidio
 					if (IS_POLY(killer))  // SALVO il flag pkiller va' all'originale, corretto
@@ -4859,4 +4884,6 @@ void increase_blood(int rm) {
 	RM_BLOOD(rm) = MIN(RM_BLOOD(rm) +1, 10);
 	/*mudlog(LOG_ERROR,"Blood %d nella stanza %d",RM_BLOOD(rm),rm);*/
 }
+
+} // namespace Alarmud
 

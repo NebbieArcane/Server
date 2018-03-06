@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /****************************************************************************
  * AlarMUD. Server per MUD.
  *
@@ -6,15 +11,35 @@
  *
  * $Id: breath.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-#include "breath.hpp"
+/***************************  System  include ************************************/
 #include <stdlib.h>
 #include <stdio.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
 #include "breath.hpp"
+#include "act.off.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "modify.hpp"
+#include "regen.hpp"
 #include "snew.hpp"
+#include "spells.hpp"
 #include "spells1.hpp"
+#include "spells2.hpp"
+#include "structs.hpp"
+namespace Alarmud {
+
 
 
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) {
@@ -191,4 +216,6 @@ void do_breath(struct char_data* ch, char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE*2);
 }
 extern struct index_data* mob_index;
+
+} // namespace Alarmud
 

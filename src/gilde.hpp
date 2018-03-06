@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #ifndef __GILDE_HPP
 #define __GILDE_HPP
-#include "config.hpp"
 void AppendToGuildList( int nIndex, char* szNomeMembro ) ;
 void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,struct char_data*, int ) ) ;
 void AssignObj( int vnum, int (*proc)( struct char_data*, int, char*,struct obj_data*, int ) ) ;
@@ -22,3 +29,5 @@ int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,struct char_d
 void RemoveFromGuildList( int nIndex, char* szNomeMembro ) ;
 void UpdateGuildListFile( int nIndex ) ;
 #endif // __GILDE_HPP
+} // namespace Alarmud
+

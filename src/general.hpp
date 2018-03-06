@@ -1,21 +1,15 @@
-/*
- * general.hpp
- *
- *  Created on: 01 feb 2018
- *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef GENERAL_HPP_
 #define GENERAL_HPP_
+/***************************  System  include ************************************/
 #include <iostream>
 #include <string>
 #include <cstddef>
-using std::string;
-
-
-
-
+/***************************  Local    include ************************************/
+using namespace std;
 #endif /* GENERAL_HPP_ */
+
+

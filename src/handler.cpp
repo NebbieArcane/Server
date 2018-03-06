@@ -1,20 +1,46 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
 /* $Id: handler.c,v 1.2 2002/02/27 01:26:55 Thunder Exp $
  * */
-#include "handler.hpp"
+/***************************  System  include ************************************/
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
 #include <stdlib.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "handler.hpp"
+#include "act.info.hpp"
+#include "act.obj2.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "events.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "signals.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "interpreter.hpp"
+#include "modify.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+
+namespace Alarmud {
+
 
 
 char* fname(char* namelist) {
@@ -285,7 +311,7 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	else if (loc == APPLY_WEAPON_SPELL) {
 		return;
 	}
-	else if (loc == APPLY_BV2) {
+	else if (loc == APPLY_AFF2) {
 		if (add) {
 			SET_BIT(ch->specials.affected_by2, bitv);
 		}
@@ -307,7 +333,7 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 
 	switch(loc) {
 	case APPLY_NONE:
-	case APPLY_BV2:
+	case APPLY_AFF2:
 		break;
 
 	case APPLY_STR: {
@@ -2494,3 +2520,5 @@ void AddAffects( struct char_data* ch, struct obj_data* o) {
 		}
 	}
 }
+} // namespace Alarmud
+

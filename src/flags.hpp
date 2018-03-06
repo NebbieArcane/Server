@@ -1,9 +1,17 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * flags.hpp
  *
  *  Created on: 24 feb 2018
  *      Author: giovanni
  */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 
 #ifndef __FLAGS_HPP_
 #define __FLAGS_HPP_
@@ -310,6 +318,19 @@ logDefineStatus(SUSPENDREGISTER)
 logDefineStatus(ZONE_COMM_ONLY)
 #endif
 
+#ifndef USE_MYSQL
+#define USE_MYSQL		true
+#else
+logDefineStatus(USE_MYSQL)
+#endif
+
+#ifndef USE_SQLITE
+#define USE_SQLITE		false
+#else
+logDefineStatus(USE_SQLITE)
+#endif
 
 
 #endif /* __FLAGS_HPP_ */
+} // namespace Alarmud
+

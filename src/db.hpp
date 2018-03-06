@@ -1,13 +1,19 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: db.h,v 1.2 2002/02/13 12:30:57 root Exp $
  * */
+/***************************  System  include ************************************/
+#include <stdio.h>
+/***************************  Local    include ************************************/
+#include "hash.hpp"
+namespace Alarmud {
 /* data files used by the game system */
 #ifndef __DB
 #define __DB 1
-#include "config.hpp"
-#include "structs.hpp"
-#include "hash.hpp"
-#include <stdio.h>
 
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
 #define MOB_FILE          "myst.mob"     /* monster prototypes         */
@@ -261,3 +267,5 @@ void Start_Auction();
 
 
 #endif
+} // namespace Alarmud
+

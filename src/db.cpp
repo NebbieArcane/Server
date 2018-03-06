@@ -1,33 +1,46 @@
-/* AlarMUD
- * $Id: db.c,v 1.4 2002/03/17 16:48:47 Thunder Exp $
- * */
-#include "db.hpp"
-#include <sys/errno.h>
-
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
+#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-
-#include "auction.hpp"
-#include "events.hpp"
-#include "fight.hpp"
-#include "gilde.hpp"
-#include "protos.hpp"
-#include "Registered.hpp"
-#include "snew.hpp"
-#include "status.hpp"
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
 #include "utils.hpp"
-#include "specass2.hpp"
-#include "spell_parser.hpp"
+/***************************  Local    include ************************************/
+#include "db.hpp"
+#include "auction.hpp"
+#include "comm.hpp"
+#include "act.other.hpp"
+#include "mobact.hpp"
+#include "modify.hpp"
 #include "mail.hpp"
-#include "utility.hpp"
+#include "fight.hpp"
+#include "act.social.hpp"
+#include "gilde.hpp"
+#include "interpreter.hpp"
+#include "spell_parser.hpp"
+#include "reception.hpp"
 #include "weather.hpp"
-using Alarmud::Registered;
+#include "handler.hpp"
+#include "opinion.hpp"
+#include "Registered.hpp"
+#include "regen.hpp"
+#include "script.hpp"
+#include "wizlist.hpp"
+
+
+namespace Alarmud {
 
 
 
@@ -4590,3 +4603,4 @@ void Start_Auction() {
 
 }
 #endif
+}

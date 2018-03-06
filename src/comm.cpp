@@ -1,9 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* $Id: comm.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
 *** AlarMUD        comm.c main communication routines. Based on DIKU and
 ***                       SillyMUD.
 */
-#include "config.hpp"
-#include "comm.hpp"
+/***************************  System  include ************************************/
 #include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -21,17 +25,41 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+
+/***************************  Local    include ************************************/
+#include "comm.hpp"
 #include "auction.hpp"
-#include "events.hpp"
-#include "fight.hpp"
-#include "protos.hpp"
-#include "signals.hpp"
-#include "snew.hpp"
-#include "status.hpp"
-#include "spell_parser.hpp"
-#include "db.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "ansi_parser.hpp"
+#include "create.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
+#include "db.hpp"
+#include "events.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "mobact.hpp"
+#include "modify.hpp"
+#include "signals.hpp"
+#include "skills.hpp"
+#include "snew.hpp"
+#include "spell_parser.hpp"
+#include "status.hpp"
+#include "vt100c.hpp"
+#include "weather.hpp"
+
+namespace Alarmud {
 
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
@@ -2493,3 +2521,5 @@ int update_max_usage(void) {
 
 	return max_usage;
 }
+} // namespace Alarmud
+

@@ -1,8 +1,12 @@
-/*$Id: handler.h,v 1.2 2002/02/13 12:30:58 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __HANDLER_HPP
 #define __HANDLER_HPP
-#include "config.hpp"
+namespace Alarmud {
 
 #define FIND_CHAR_ROOM     1
 #define FIND_CHAR_WORLD    2
@@ -10,7 +14,6 @@
 #define FIND_OBJ_ROOM      8
 #define FIND_OBJ_WORLD    16
 #define FIND_OBJ_EQUIP    32
-#include "typedefs.hpp"
 
 void AddAffects( struct char_data* ch, struct obj_data* o) ;
 void CheckCharList() ;
@@ -68,4 +71,6 @@ int split_string(char* str, char* sep, char** argv);
 struct obj_data* unequip_char(struct char_data* ch, int pos) ;
 void update_char_objects( struct char_data* ch ) ;
 void update_object( struct obj_data* obj, int use) ;
+} // namespace Alarmud
 #endif // _HANDLER_HPP
+

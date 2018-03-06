@@ -51,7 +51,6 @@
 namespace Alarmud {
 
 
-using Alarmud::Registered;
 char EasySummon = 1;
 long numero_mob_obj[100000];
 

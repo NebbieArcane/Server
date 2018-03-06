@@ -1,8 +1,12 @@
-/*$Id: hash.h,v 1.2 2002/02/13 12:30:58 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __HASH_HPP_
 #define __HASH_HPP_
-#include "config.hpp"
+namespace Alarmud {
 struct hash_link {
 	int        key;
 	struct hash_link* next;
@@ -33,4 +37,6 @@ struct room_data* room_find( struct room_data* room_db[], long key) ;
 struct room_data* room_find_or_create(struct room_data* rb[], long key) ;
 void room_iterate( struct room_data* rb[],pIterateFunc func,void* cdata );
 int room_remove(struct room_data* rb[], long key) ;
+} // namespace Alarmud
 #endif // __HASH_HPP
+

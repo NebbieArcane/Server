@@ -1,14 +1,15 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: fight.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
-/****************************************************************************
- * In questo file ci sono i prototipi e le strutture usate per le procedure
- * nel modulo FIGHT
- * *************************************************************************/
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __FIGHT_HPP
 #define __FIGHT_HPP
-#include "config.hpp"
-
-#include "structs.hpp"
+namespace Alarmud {
 enum DamageResult {
 	AllLiving, SubjectDead, VictimDead
 };
@@ -99,6 +100,6 @@ void update_pos( struct char_data* victim ) ;
 // FLYP 20180221: moved the keech calculation to a function
 int leechResult(struct char_data* ch, int dam);
 int canLeech(struct char_data* ch, struct char_data* victim);
+} // namespace Alarmud
 #endif // __FIGHT_HPP
-
 

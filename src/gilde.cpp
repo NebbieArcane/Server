@@ -1,16 +1,38 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: gilde.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
-#include "gilde.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "gilde.hpp"
+#include "act.comm.hpp"
+#include "act.move.hpp"
+#include "act.obj2.hpp"
+#include "act.social.hpp"
 #include "charlist.hpp"
-#include "cmdid.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "skills.hpp"
+namespace Alarmud {
+
 
 typedef struct structSocioGilda {
 	char szNomeSocio[ 21 ];
@@ -1177,3 +1199,5 @@ void BootGuilds() {
 		fclose( pfDatiGilde );
 	}
 }
+} // namespace Alarmud
+

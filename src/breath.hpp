@@ -1,13 +1,20 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /****************************************************************************
  * BenemMUD. Server per MUD.
  * $Id: breath.h,v 1.2 2002/02/13 12:30:57 root Exp $
  * Files: breath.c breath.h
  * Contengono le funzioni per la gestione dei soffi dei draghi.
  * */
-
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __BREATH_HPP
 #define __BREATH_HPP
-#include "config.hpp"
+namespace Alarmud {
+
 struct breath_victim {
 	struct char_data* ch;
 	int yesno; /* 1 0 */
@@ -31,4 +38,6 @@ struct breath_victim* choose_victims(struct char_data* ch,struct char_data* firs
 void do_breath(struct char_data* ch, char* argument, int cmd) ;
 void free_victims(struct breath_victim* head) ;
 void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, bfuncp) ;
+} // namespace Alarmud
 #endif // __BREATH_HPP
+

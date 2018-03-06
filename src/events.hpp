@@ -1,5 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: events.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 /* ************************************************************************
 *  File: events.h                                                         *
 *                                                                         *
@@ -13,7 +21,6 @@
 ************************************************************************ */
 #ifndef __EVENTS_HPP
 #define __EVENTS_HPP
-#include "config.hpp"
 #define EVENTFUNC(name) long (name)(void *event_obj)
 
 
@@ -26,3 +33,5 @@ long event_time(struct event* event);
 void event_free_all(void);
 
 #endif //__EVENTS_HPP
+} // namespace Alarmud
+

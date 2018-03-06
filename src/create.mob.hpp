@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __CREATE_MOB_HPP
 #define __CREATE_MOB_HPP
-#include "config.hpp"
+namespace Alarmud {
 void ChangeMobActFlags(struct char_data* ch, char* arg, int type) ;
 void ChangeMobAffFlags(struct char_data* ch, char* arg, int type) ;
 void ChangeMobAlign(struct char_data* ch, char* arg, int type) ;
@@ -26,4 +33,6 @@ void MobEdit(struct char_data* ch, char* arg) ;
 void MobHitReturn(struct char_data* ch, char* arg, int type) ;
 void UpdateMobMenu(struct char_data* ch) ;
 void do_medit(struct char_data* ch, char* argument, int cmd) ;
+} // namespace Alarmud
 #endif // __CREATE_MOB_HPP
+

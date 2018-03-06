@@ -1,14 +1,34 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: auction.c,v 1.3 2002/03/17 16:48:47 Thunder Exp $
 */
-#include "auction.hpp"
+/***************************  System  include ************************************/
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
 #include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "auction.hpp"
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
 #include "utility.hpp"
+
+namespace Alarmud {
+
 
 #define SELLER 0 // SALVO per la nuova is_present
 #define BUYER 1 // SALVO per la nuova is_present
@@ -433,4 +453,6 @@ int parsebet (const int currentbet, const char* argument) {
 
 	return newbet;        /* return the calculated bet */
 }
+
+} // namespace Alarmud
 

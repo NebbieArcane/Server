@@ -61,8 +61,6 @@ namespace Alarmud {
  */
 
 
-using Alarmud::Registered;
-
 /* intern functions */
 
 

@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __CREATE_OBJ_HPP
 #define __CREATE_OBJ_HPP
-#include "config.hpp"
+namespace Alarmud {
 void ChangeAffectMod(struct char_data* ch, char* arg, int type) ;
 void ChangeObjAffect(struct char_data* ch, char* arg, int type) ;
 void ChangeObjAffects(struct char_data* ch, char* arg, int type) ;
@@ -19,4 +26,6 @@ void ObjEdit(struct char_data* ch, char* arg) ;
 void ObjHitReturn(struct char_data* ch, char* arg, int type) ;
 void UpdateObjMenu(struct char_data* ch) ;
 void do_oedit(struct char_data* ch, char* argument, int cmd) ;
+} // namespace Alarmud
 #endif // __CREATE_OBJ_HPP
+

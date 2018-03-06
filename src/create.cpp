@@ -1,15 +1,35 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  *
  * $Id: create.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-#include "create.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "create.hpp"
+#include "comm.hpp"
 #include "snew.hpp"
+#include "structs.hpp"
 #include "utility.hpp"
+#include "vt100c.hpp"
+
+namespace Alarmud {
+
 #define MAIN_MENU           0
 
 #define CHANGE_NAME         1
@@ -75,9 +95,6 @@ char* aszExitName[] = {
 	"up",
 	"down"
 };
-
-void ChangeExitKeyword( struct room_data* rp, struct char_data* ch, char* arg,
-						int type);
 
 void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, char* arg, int type) {
 	int i, row, update;
@@ -638,3 +655,5 @@ void DeleteExit( struct room_data* rp, struct char_data* ch, char* arg,
 	ch->specials.edit = MAIN_MENU;
 	UpdateRoomMenu(ch);
 }
+} // namespace Alarmud
+

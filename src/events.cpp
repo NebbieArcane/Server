@@ -1,5 +1,29 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: events.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
+/***************************  System  include ************************************/
+#include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "events.hpp"
+#include "hash.hpp"
+#include "queue.hpp"
+//#include "snew.hpp"
+//#include "utility.hpp"
+#include "comm.hpp"
+namespace Alarmud {
 /* ************************************************************************
 *  File: events.c                                                         *
 *                                                                         *
@@ -15,16 +39,7 @@
 *                   is non-NULL.                                          *
 *                   Moved struct event definition from events.h.          *
 ************************************************************************ */
-#include "events.hpp"
-#include <stdlib.h>
 
-#include "hash.hpp"
-#include "queue.hpp"
-//#include "snew.hpp"
-//#include "structs.hpp"
-//#include "utility.hpp"
-#include "utils.hpp"
-#include "comm.hpp"
 
 struct event {
 	EVENTFUNC(*func);
@@ -122,3 +137,5 @@ void event_free_all(void) {
 	queue_free(event_q);
 #endif
 }
+} // namespace Alarmud
+

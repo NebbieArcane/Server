@@ -1,9 +1,15 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: comm.h,v 1.2 2002/02/13 12:30:57 root Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #ifndef __COMM
 #define __COMM 1
-#include "config.hpp"
-#include "structs.hpp"
 #define TO_ROOM    0
 #define TO_VICT    1
 #define TO_NOTVICT 2
@@ -80,3 +86,5 @@ long GetMediumLag(long lastlag);
 long GetLagIndex();
 int IsTest(int test);
 #endif
+} // namespace Alarmud
+

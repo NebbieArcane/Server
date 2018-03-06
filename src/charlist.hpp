@@ -1,9 +1,15 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: charlist.h,v 1.2 2002/02/13 12:30:57 root Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef __CHARLIST_HPP
 #define __CHARLIST_HPP
-#include "config.hpp"
-#include "general.hpp"
+namespace Alarmud {
 typedef struct tagCharElem {
 	void* pWho;
 	struct tagCharElem* pNext;
@@ -22,4 +28,6 @@ int SumIntData( CharElem* pElem, void* pWho ) ;
 int SumIntDataNeg( CharElem* pElem, void* pWho = nullptr ) ;
 int SumIntDataPos( CharElem* pElem, void* pWho = nullptr) ;
 void UpdateList( CharElem** pElem ) ;
+} // namespace Alarmud
 #endif // __CHARLIST_HPP
+

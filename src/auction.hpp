@@ -1,8 +1,15 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: auction.h,v 1.3 2002/03/17 16:48:47 Thunder Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef H_AUCTION
 #define H_AUCTION 1
-#include "config.hpp"
+namespace Alarmud {
 #define PULSE_AUCTION             (6 * PULSE_PER_SEC) /* 10 seconds */ //ACIDUS 2003, ridotto tempo
 #define CHAR_DATA struct char_data
 #define OBJ_DATA struct obj_data
@@ -21,5 +28,6 @@ extern  AUCTION_DATA*  auction;
 void talk_auction (const char* argument);
 void auction_update();
 void do_auction_int (struct char_data* ch, const char* argument, int cmd);
-
+} // namespace Alarmud
 #endif
+

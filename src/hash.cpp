@@ -1,12 +1,27 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: hash.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
-#include "hash.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "hash.hpp"
+namespace Alarmud {
 
-#include "protos.hpp"
-#include "snew.hpp"
 #define        HASH_KEY(ht,key) ( (((unsigned int)(key)) * 17) % (ht)->table_size )
 
 void init_hash_table(struct hash_header*        ht, int rec_size, int table_size) {
@@ -200,3 +215,5 @@ void hash_iterate( struct hash_header* ht,pIterateFunc func,void* cdata ) {
 		{ i--; }        /* Hit this slot again. */
 	}
 }
+} // namespace Alarmud
+
