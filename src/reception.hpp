@@ -1,8 +1,16 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 #ifndef __RECEPTION_HPP
 #define __RECEPTION_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
-#include "structs.hpp"
+/***************************  Local    include ************************************/
+namespace Alarmud {
+extern int DontShow;
+
 void CountLimitedItems( struct obj_file_u* st ) ;
 void PrintLimitedItems() ;
 int ReadObjs( FILE* fl, struct obj_file_u* st) ;
@@ -26,4 +34,6 @@ void update_file(struct char_data* ch, struct obj_file_u* st) ;
 void update_obj_file() ;
 void write_char_extra( struct char_data* ch) ;
 void zero_rent( struct char_data* ch) ;
+} // namespace Alarmud
 #endif // __RECEPTION_HPP
+
