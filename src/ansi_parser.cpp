@@ -1,18 +1,34 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: ansi_parser.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
 * *** DaleMUD        ANSI_PARSER.C
 ***                Parser ansi colors for act();
 */
-
-#include "ansi_parser.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "ansi_parser.hpp"
+#include "interpreter.hpp"
+namespace Alarmud {
 
 
-#include "protos.hpp"
-#include "snew.hpp"
+
 
 /*
  *   $CMBFG, where M is modier, B is back group color and FG is fore
@@ -168,3 +184,5 @@ char* ansi_parse(char* code ) {
 	sprintf( szResult, "\033[%s;%s;%sm", m, b, f );
 	return szResult;
 }
+} // namespace Alarmud
+
