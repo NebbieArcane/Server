@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * spell_parser.hpp
  *
@@ -7,12 +12,13 @@
  * Licensed Material - Property of Hex Keep s.r.l.
  * (c) Copyright Hex Keep s.r.l. 2012-2014
  */
-
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef SRC_SPELL_PARSER_HPP_
 #define SRC_SPELL_PARSER_HPP_
-#include "config.hpp"
-#include "typedefs.hpp"
 #include "spells.hpp"
+namespace Alarmud {
+
 extern const char* spells[];
 extern struct room_data* world;
 extern struct char_data* character_list;
@@ -23,6 +29,7 @@ extern const char* spell_wear_off_soon_room_msg[];
 extern struct obj_data* object_list;
 extern struct index_data* obj_index;
 extern struct spell_info_type spell_info[MAX_SPL_LIST];
+extern int attrefzone=0; //SALVO controllo lag refresh zone init
 
 /* spell_parser.cpp */
 bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod);
@@ -49,4 +56,6 @@ char* skip_spaces(char* string);
 void do_cast(struct char_data* ch, char* argument, int cmd);
 void assign_spell_pointers(void);
 void check_falling_obj(struct obj_data* obj, int room);
+} // namespace Alarmud
 #endif /* SRC_SPELL_PARSER_HPP_ */
+
