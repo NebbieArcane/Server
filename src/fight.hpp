@@ -13,7 +13,12 @@ namespace Alarmud {
 enum DamageResult {
 	AllLiving, SubjectDead, VictimDead
 };
-
+extern struct char_data* combat_list;   /* head of l-list of fighting chars    */
+extern struct char_data* missile_list;   /* head of l-list of fighting chars    */
+extern struct char_data* combat_next_dude; /* Next dude global trick           */
+extern struct char_data* missile_next_dude; /* Next dude global trick           */
+extern char PeacefulWorks;  /* set in @set */
+extern char DestroyedItems;  /* set in MakeScraps */
 typedef DamageResult (*pDamageFunc)( struct char_data*,
 									 struct char_data*,
 									 int, int, int );
