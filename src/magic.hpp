@@ -1,8 +1,14 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* src/magic.cpp */
 #ifndef __MAGIC_HPP
 #define __MAGIC_HPP
-#include "config.hpp"
-#include "typedefs.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 void heat_blind(struct char_data* ch);
 void spell_magic_missile(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_chill_touch(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
@@ -69,3 +75,5 @@ void spell_lightning_breath(byte level, struct char_data* ch, struct char_data* 
 void spell_wizard_eye(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_disintegrate(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 #endif
+} // namespace Alarmud
+

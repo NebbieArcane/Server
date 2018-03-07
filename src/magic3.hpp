@@ -1,8 +1,14 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* src/magic3.cpp */
 #ifndef __MAGIC3_HPP
 #define __MAGIC3_HPP
-#include "config.hpp"
-#include "typedefs.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 void spell_tree_travel(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_transport_via_plant(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_speak_with_plants(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
@@ -52,4 +58,6 @@ void spell_teleport_wo_error(byte level, struct char_data* ch, struct char_data*
 void spell_portal(byte level, struct char_data* ch, struct char_data* tmp_ch, struct obj_data* obj);
 void spell_mount(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_dragon_ride(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+} // namespace Alarmud
 #endif
+

@@ -1,8 +1,12 @@
-/*$Id: interpreter.h,v 1.2 2002/02/13 12:31:00 root Exp $
-*/
-#ifndef __SRC_INTERPRETER_HPP
-#define __SRC_INTERPRETER_HPP
-#include "config.hpp"
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __INTERPRETER_HPP
+#define __INTERPRETER_HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #define STAT_MIN_VAL 7
 #define STAT_MAX_SUM 29
 #define MENU         "\n\rBenvenuto su Nebbie Arcane\n\r\n\r0) Esci da Nebbie Arcane.\n\r1) Inizia il gioco a Myst\n\r2) Inserisci la descrizione del personaggio.\n\r3) Leggi la storia di Nebbie Arcane.\n\r4) Cambia la password.\n\rC) Cancella questo personaggio! (Solo dal livello chump)\n\r\n\r   Fai la tua scelta: "
@@ -47,3 +51,5 @@ void show_class_selection(struct descriptor_data* d, int r) ;
 void show_race_choice(struct descriptor_data* d) ;
 int special(struct char_data* ch, int cmd, char* arg) ;
 #endif // _INTERPRETER_HPP
+} // namespace Alarmud
+

@@ -8,6 +8,7 @@
 #ifndef _ACT_WIZARD_HPP
 #define _ACT_WIZARD_HPP
 namespace Alarmud {
+extern char EasySummon;
 void CreateOneRoom( int loc_nr) ;
 void clone_container_obj( struct obj_data* to, struct obj_data* obj ) ;
 struct obj_data* clone_obj(struct obj_data* obj) ;

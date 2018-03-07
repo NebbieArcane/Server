@@ -5,13 +5,13 @@
 //  Original intial comments
 /* AlarMUD */
 /* $Id: constants.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $ */
+#ifndef __CONSTANTS_HPP
+#define __CONSTANTS_HPP
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 #include "race.hpp"
 namespace Alarmud {
 /* modificato da Jethro, agosto 2011 */
-#ifndef __CONSTANTS_HPP
-#define __CONSTANTS_HPP
 #define EQINDEX 600.0
 #define MAX_ALIAS 10
 #define BEG_OF_TIME 827100000
@@ -174,6 +174,6 @@ extern const char* att_kick_hit_ch[];
 extern const char* att_kick_hit_victim[];
 
 extern const char* att_kick_hit_room[];
-#endif
 } // namespace Alarmud
+#endif
 

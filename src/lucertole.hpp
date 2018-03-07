@@ -1,12 +1,19 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: lucertole.h,v 1.2 2002/02/13 12:31:00 root Exp $
 */
+#ifndef _LUCERTOLE_HPP
+#define _LUCERTOLE_HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 /*************************************************************************
  * lucertole.c contiene le procedure speciali per la foresta delle
  * lucertole di Benem
  * **********************************************************************/
-#ifndef _LUCERTOLE_H
-#define _LUCERTOLE_H
-#include "config.hpp"
 
 int Lizardman( struct char_data* ch, int cmd, char* arg,
 			   struct char_data* mob, int type );
@@ -38,3 +45,5 @@ int Rampicante( struct char_data* pChar, int iCmd, char* szArgument,
 
 
 #endif
+} // namespace Alarmud
+

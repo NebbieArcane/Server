@@ -9,12 +9,12 @@
  *  Created on: 24 feb 2018
  *      Author: giovanni
  */
+#ifndef __FLAGS_HPP_
+#define __FLAGS_HPP_
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
-#ifndef __FLAGS_HPP_
-#define __FLAGS_HPP_
 
 // Ok, questo è cevellotico, ma comodo per avere la certezza che i flag definiti qui vengono anche visualizzati al boot
 // Quando viene incluso la prima volta, tutte le macro sono non definite e quindi le definisce, ignorando logDefineStatus.
@@ -329,8 +329,6 @@ logDefineStatus(USE_MYSQL)
 #else
 logDefineStatus(USE_SQLITE)
 #endif
-
-
-#endif /* __FLAGS_HPP_ */
 } // namespace Alarmud
+#endif /* __FLAGS_HPP_ */
 

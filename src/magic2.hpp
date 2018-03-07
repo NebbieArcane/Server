@@ -1,8 +1,14 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* src/magic2.cpp */
 #ifndef __MAGIC2_HPP
 #define __MAGIC2_HPP
-#include "config.hpp"
-#include "typedefs.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 void spell_resurrection(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_cause_light(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_cause_critical(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
@@ -69,4 +75,6 @@ void spell_prot_dragon_breath_frost(byte level, struct char_data* ch, struct cha
 void spell_prot_dragon_breath_elec(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_prot_dragon_breath_acid(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_prot_dragon_breath_gas(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+} // namespace Alarmud
 #endif
+

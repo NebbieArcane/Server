@@ -6,14 +6,14 @@
 /* AlarMUD
 * $Id: db.h,v 1.2 2002/02/13 12:30:57 root Exp $
  * */
+#ifndef __DB_HPP
+#define __DB_HPP
 /***************************  System  include ************************************/
 #include <stdio.h>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
 namespace Alarmud {
 /* data files used by the game system */
-#ifndef __DB
-#define __DB 1
 
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
 #define MOB_FILE          "myst.mob"     /* monster prototypes         */
@@ -84,6 +84,13 @@ extern struct index_data* mob_index; /* index table for mobile file     */
 extern struct index_data* obj_index; /* index table for object file     */
 extern struct help_index_element* help_index;
 extern struct help_index_element* wizhelp_index;
+extern int top_of_wizhelpt;
+extern int top_of_helpt;
+
+extern FILE* mob_f; /* file containing mob prototypes  */
+extern FILE* obj_f; /* obj prototypes                  */
+extern FILE* help_fl; /* file for help texts (HELP <kwd>)*/
+extern FILE* wizhelp_fl; /* file for wizhelp */
 
 
 
@@ -264,8 +271,7 @@ void write_obj_to_file( struct obj_data* obj, FILE* f );
 void InsertObject( struct obj_data* pObj, int nVNum );
 void InsertMobile( struct char_data* pMob, int nVNum );
 void Start_Auction();
-
-
-#endif
 } // namespace Alarmud
+#endif
+
 

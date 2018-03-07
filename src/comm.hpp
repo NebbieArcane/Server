@@ -5,11 +5,11 @@
 //  Original intial comments
 /*$Id: comm.h,v 1.2 2002/02/13 12:30:57 root Exp $
 */
+#ifndef __COMM_HPP
+#define __COMM_HPP
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
-#ifndef __COMM
-#define __COMM 1
 #define TO_ROOM    0
 #define TO_VICT    1
 #define TO_NOTVICT 2
@@ -31,7 +31,17 @@ extern struct timeval aTimeCheck[ PULSE_MOBILE ];
 extern int gnTimeCheckIndex;
 extern unsigned long pulse;
 extern bool no_specials;
+extern int slow_death;     /* Shut her down, Martha, she's sucking mud */
+extern int mudshutdown;       /* clean shutdown */
+extern int rebootgame;         /* reboot the game after a shutdown */
+extern bool no_specials;    /* Suppress ass. of special routines */
+extern long Uptime;            /* time that the game has been up */
+extern int tics;
 
+#if SITELOCK
+extern char hostlist[MAX_BAN_HOSTS][30];  /* list of sites to ban           */
+extern int numberhosts;
+#endif
 
 
 void CheckCharAffected( char* msg ) ;
@@ -85,6 +95,6 @@ void write_to_q(char* txt, struct txt_q* queue) ;
 long GetMediumLag(long lastlag);
 long GetLagIndex();
 int IsTest(int test);
-#endif
 } // namespace Alarmud
+#endif
 
