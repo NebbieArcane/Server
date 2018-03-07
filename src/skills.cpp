@@ -2302,7 +2302,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 20 ;
 						}
 						break ;
-					case RACE_DROW     :
+					case RACE_DARK_ELF     :
 						if( total_bonus > 22 ) {
 							special = 1 ;
 							apply = APPLY_INT ;
@@ -2665,7 +2665,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 10 ;
 						}
 						break ;
-					case RACE_DROW     :
+					case RACE_DARK_ELF     :
 						if( total_bonus > 22 ) {
 							special = 1 ;
 							apply = APPLY_DEX ;
@@ -2826,7 +2826,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 30 ;
 						}
 						break ;
-					case RACE_DROW      :
+					case RACE_DARK_ELF      :
 						if( total_bonus > 22 ) {
 							special = 1 ;
 							apply = APPLY_MANA ;
@@ -3094,7 +3094,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 
 					/* added by REQUIEM 2018 */
 
-					case RACE_DROW    :
+					case RACE_DARK_ELF    :
 						if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_INT;
@@ -3253,7 +3253,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 10 ;
 						}
 						break ;
-					case RACE_DROW    :
+					case RACE_DARK_ELF    :
 						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_FIND_TRAPS ;
@@ -3568,7 +3568,7 @@ void do_tan_old( struct char_data* ch, char* arg, int cmd) {
 					sprintf(hidetype,"enfan hide");
 					lev=(int)lev/2;
 					break;
-				case RACE_DROW     :
+				case RACE_DARK_ELF     :
 					sprintf(hidetype,"drow hide");
 					lev=(int)lev/2;
 					break;
