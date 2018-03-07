@@ -1,0 +1,54 @@
+/* GENERATED FILE DO NOT TOUCH
+ * Generated from <TMPL_VAR GENERATOR>
+ */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#include "config.hpp"
+#include "boost/algorithm/string.hpp"
+#include "autoenums.hpp"
+namespace Alarmud {
+namespace G {
+<TMPL_LOOP LOOP_ENUMS>
+<TMPL_VAR ENUM ESCAPE="LOWERCASE"> encode_<TMPL_VAR ENUM ESCAPE="LOWERCASE">(std::string s,<TMPL_VAR ENUM ESCAPE="LOWERCASE"> fallback) {
+	boost::algorithm::to_upper(s);
+	<TMPL_LOOP VALUES>
+	if (s == "<TMPL_VAR NAME ESCAPE="UPPERCASE">") return <TMPL_VAR NAME ESCAPE="UPPERCASE">;
+	</TMPL_LOOP>
+	return fallback;
+}
+
+std::string translate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> e) {
+	switch(e) {
+	<TMPL_LOOP VALUES>
+	case <TMPL_VAR NAME ESCAPE="UPPERCASE">:
+		return "<TMPL_VAR NAME ESCAPE="UPPERCASE">";
+	</TMPL_LOOP>
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value) {
+	switch(value) {
+		<TMPL_LOOP VALUES>
+		<TMPL_IF VALUE>
+		case <TMPL_VAR NAME ESCAPE="UPPERCASE">:
+		<TMPL_ELSE>
+			<TMPL_IF ZERO_IS_VALID>
+		case <TMPL_VAR NAME ESCAPE="UPPERCASE">:
+			</TMPL_IF>
+		</TMPL_IF>
+		</TMPL_LOOP>
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
+</TMPL_LOOP>
+} // namespace G
+}//namespace gates
