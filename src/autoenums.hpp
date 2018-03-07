@@ -691,9 +691,10 @@ enum e_log_levels {
 	LOG_SAVE                                     =128,
 	LOG_MAIL                                     =256,
 	LOG_RANK                                     =512,
+	LOG_ALWAYS                                   =1024,
 	LOG_SILENT                                   =32768
 };
-#define E_LOG_LEVELS_COUNT 11
+#define E_LOG_LEVELS_COUNT 12
 #define E_LOG_LEVELS_MIN 1
 #define E_LOG_LEVELS_MAX 32768
 #define E_LOG_LEVELS_KEY "e_log_levels"

@@ -2113,6 +2113,7 @@ e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback) {
 	if (s == "LOG_SAVE") return LOG_SAVE;
 	if (s == "LOG_MAIL") return LOG_MAIL;
 	if (s == "LOG_RANK") return LOG_RANK;
+	if (s == "LOG_ALWAYS") return LOG_ALWAYS;
 	if (s == "LOG_SILENT") return LOG_SILENT;
 	return fallback;
 }
@@ -2139,6 +2140,8 @@ std::string translate(const e_log_levels e) {
 		return "LOG_MAIL";
 	case LOG_RANK:
 		return "LOG_RANK";
+	case LOG_ALWAYS:
+		return "LOG_ALWAYS";
 	case LOG_SILENT:
 		return "LOG_SILENT";
 	default:
@@ -2157,6 +2160,7 @@ bool enum_validate(const e_log_levels value) {
 		case LOG_SAVE:
 		case LOG_MAIL:
 		case LOG_RANK:
+		case LOG_ALWAYS:
 		case LOG_SILENT:
 		return true;
 		default:

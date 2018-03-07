@@ -528,6 +528,7 @@ l'array connected_types in constants.c
 ** LOG_SAVE                                     =128
 ** LOG_MAIL                                     =256
 ** LOG_RANK                                     =512
+** LOG_ALWAYS                                   =1024
 ** LOG_SILENT                                   =32768
 == Enumerations ==
 
