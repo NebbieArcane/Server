@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __MOBACT_HPP
 #define __MOBACT_HPP
-#include "config.hpp"
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 int AssistFriend( struct char_data* ch) ;
 void CommandAssign( char* arg, void (*p)( char*, struct char_data* ) ) ;
 int CommandSearch(char* arg) ;
@@ -30,4 +37,6 @@ void mobile_guardian(struct char_data* ch) ;
 void mobile_wander(struct char_data* ch) ;
 void noop(char* arg, struct char_data* ch) ;
 void sgoto(char* arg, struct char_data* ch) ;
+} // namespace Alarmud
 #endif // __MOBACT_HPP
+

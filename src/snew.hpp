@@ -1,11 +1,16 @@
-/* AlarMUD
- * Questo file serve per avere un punto unico in cui definire oggetti che
- * voglio avere in TUTTI i file
- * $Id: snew.h,v 1.2 2002/03/23 16:43:20 Thunder Exp $
- * * */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __SNEW
 #define __SNEW 1
-#include "config.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+#include "specass2.hpp"
+#include "version.hpp"
+#include "signals.hpp"
+#include "utility.hpp"
+namespace Alarmud {
 
 #define STR 0
 #define INT 1
@@ -26,11 +31,6 @@
 #define gtt_IS_BODYGUARDED 7
 #define gtt_IS_CLAN 8
 #define gtt_LAST 8
-#include "structs.hpp"
-#include "specass2.hpp"
-#include "version.hpp"
-#include "signals.hpp"
-#include "utility.hpp"
 #define MIN_EXP(ch) (titles[GetMaxClass(ch)][GET_AVE_LEVEL(ch)].exp)
 #define Ansi_len(s) (strlen(ParseAnsiColors(FALSE,s)))
 int GetTargetType(struct char_data* ch,struct char_data* target,int ostility);
@@ -59,4 +59,6 @@ int GetNum(struct char_data* pMob,int pos);
 int GetNumR(struct room_data* pRoom,int pos);
 struct char_data* CloneChar(struct char_data* ch,long nroom);
 float GetCharBonusIndex(struct char_data* ch);
+} // namespace Alarmud
 #endif
+

@@ -1,8 +1,12 @@
-/*$Id: maximums.h,v 1.2 2002/02/13 12:30:58 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __MAXIMUMS_HPP
 #define __MAXIMUMS_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 
 struct title_type {
 	const char* title_m;
@@ -31,4 +35,6 @@ int mana_limit(struct char_data* ch) ;
 int move_gain(struct char_data* ch) ;
 int move_limit(struct char_data* ch) ;
 void set_title(struct char_data* ch) ;
+} // namespace Alarmud
 #endif // __MAXIMUMS_HPP
+

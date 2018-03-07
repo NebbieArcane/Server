@@ -1,7 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __MINDSKILLS1_HPP
 #define __MINDSKILLS1_HPP
-#include "config.hpp"
-#include "typedefs.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 void mind_burn(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_cell_adjustment(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_chameleon( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
@@ -22,4 +27,6 @@ void mind_telekinesis( byte level, struct char_data* ch,struct char_data* victim
 void mind_teleport(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_tower_iron_will(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void mind_ultra_blast( byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+} // namespace Alarmud
 #endif // __MINDSKILLS1_HPP
+

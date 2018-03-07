@@ -38,7 +38,6 @@
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "parser.hpp"
-#include "race.hpp"          // for RACE_DARK_DWARF, RACE_DROW, RACE_DWARF
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
@@ -1308,7 +1307,7 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 	{ send_to_char("Non riesci a vedere un tubo, sei cieco!\n\r", ch); }
 	else if( (IS_DARK_P(pRoomWithChar)) && (!IS_IMMORTAL(ch)) &&
 			 (!IS_AFFECTED(ch, AFF_TRUE_SIGHT))&&
-			 GET_RACE(ch)!=RACE_DROW && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
+			 GET_RACE(ch)!=RACE_DARK_ELF && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
 			 GET_RACE(ch)!=RACE_DEEP_GNOME ) {
 		send_to_char( "E` molto buio qui...\n\r", ch );
 		if(IS_AFFECTED(ch, AFF_INFRAVISION)) {
@@ -2159,7 +2158,7 @@ void do_score(struct char_data* ch,const char* argument, int cmd) {
 	act(buf,FALSE,ch,0,0,TO_CHAR);
 
 	/* Drow fight -4 in lighted rooms! */
-	if (!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DROW &&
+	if (!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
 			!affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
 		snprintf(buf,999,"$c0011La luce nell'area ti da molto dolore$c0009!");
 		act(buf,FALSE,ch,0,0,TO_CHAR);

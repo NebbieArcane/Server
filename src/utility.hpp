@@ -1,10 +1,13 @@
-/*$Id: utility.h,v 1.2 2002/02/13 12:30:59 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __UTILITY_HPP
 #define __UTILITY_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
-#include "structs.hpp"
+/***************************  Local    include ************************************/
+namespace Alarmud {
 
 bool isNullChar (struct char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
@@ -160,5 +163,6 @@ void sprinttype(int type, const char* names[], char* result);
 void TeleportPulseStuff(unsigned long pulse);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
-
+} // namespace Alarmud
 #endif
+

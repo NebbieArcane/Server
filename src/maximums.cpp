@@ -222,7 +222,7 @@ int move_limit(struct char_data* ch) {
 
 	if (GET_RACE(ch) == RACE_DWARF || GET_RACE(ch) == RACE_GNOME)
 	{ max -= 35; }
-	else if (GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_DROW  ||
+	else if (GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_DARK_ELF  ||
 			 GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
 			 GET_RACE(ch) == RACE_SEA_ELF ||
 			 GET_RACE(ch)== RACE_HALF_ELVEN)
@@ -290,7 +290,7 @@ int mana_gain(struct char_data* ch) {
 			GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
 			GET_RACE(ch) == RACE_SEA_ELF ||
 			GET_RACE(ch) == RACE_DEMON ||
-			GET_RACE(ch) == RACE_DROW || GET_RACE(ch) == RACE_HALF_ELVEN )
+			GET_RACE(ch) == RACE_DARK_ELF || GET_RACE(ch) == RACE_HALF_ELVEN )
 	{ gain+=2; }
 
 	if( GET_COND(ch, DRUNK) > 10 )

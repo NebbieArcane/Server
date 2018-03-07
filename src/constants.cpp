@@ -18,7 +18,6 @@
 /***************************  Local    include ************************************/
 #include "constants.hpp"
 #include "maximums.hpp"
-#include "race.hpp"
 #include "trap.hpp"
 namespace Alarmud {
 /* modificato da Jethro, agosto 2011 */

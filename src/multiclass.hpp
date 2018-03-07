@@ -1,6 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #ifndef __MULTICLASS_HPP
 #define __MULTICLASS_HPP
-#include "config.hpp"
 int BestClassBIT(struct char_data* ch) ;
 int BestClassIND(struct char_data* ch) ;
 int BestFightingClass(struct char_data* ch) ;
@@ -21,3 +28,5 @@ int HowManyClasses(struct char_data* ch) ;
 int OnlyClass( struct char_data* pChar, int nClass ) ;
 void StartLevels(struct char_data* ch) ;
 #endif // __MULTICLASS_HPP
+} // namespace Alarmud
+

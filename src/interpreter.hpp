@@ -46,7 +46,7 @@ void nanny(struct descriptor_data* d, char* arg) ;
 int old_search_block(const char* argument,int begin,int length,const char** list,int mode) ;
 char* one_argument(const char* argument, char* first_arg ) ;
 void only_argument(const char* argument, char* dest);
-int search_block(char* arg, char** list, bool exact) ;
+int search_block(char* arg, const char** list, bool exact) ;
 void show_class_selection(struct descriptor_data* d, int r) ;
 void show_race_choice(struct descriptor_data* d) ;
 int special(struct char_data* ch, int cmd, char* arg) ;

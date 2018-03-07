@@ -1,6 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __SPEC_PROCS2_HPP
 #define __SPEC_PROCS2_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 int AbyssGateKeeper( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int Demon(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int DemonTeacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
@@ -67,4 +73,6 @@ int real_fox(struct char_data* ch, int cmd, char* arg, struct char_data* mob, in
 int real_rabbit(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int sailor(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int scraps(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
+} // namespace Alarmud
 #endif // __SPEC_PROCS2_HPP
+

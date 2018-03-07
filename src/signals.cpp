@@ -25,7 +25,6 @@
 #include "signals.hpp"
 #include "comm.hpp"
 #include "db.hpp"
-#include "status.hpp"
 namespace Alarmud {
 
 /* La ridefinizione di funzioni di memoria qui causerebbe ricorsione
@@ -59,14 +58,12 @@ void PrintStatus(int level) {
 			HowManyConnection(0));
 	if (level==1) {
 		mudlog(LOG_SYSERR,"CurrentTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR, "Mud status: '%s'",
-				gszMudStatus );
+		mudlog( LOG_SYSERR, "Mud status: '%s'",gszMudStatus );
 	}
 	else {
 
 		mudlog(LOG_SYSERR,"LastTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR, "Mud status when crashed: '%s'",
-				gszMudStatus );
+		mudlog( LOG_SYSERR, "Mud status when crashed: '%s'",gszMudStatus );
 	}
 	mudlog( LOG_SYSERR, "  Last Name '%s'", gszName );
 	if (gnPtr>=0) {
@@ -177,7 +174,7 @@ void checkpointing( int dummy ) {
 		abort();
 	}
 	else {
-		mudlog( LOG_CHECK, "CHECKPOINT: tics updated" );
+		mudlog( LOG_SAVE, "CHECKPOINT: tics updated" );
 		tics = 0;
 	}
 	if( signal( SIGVTALRM, checkpointing ) == SIG_ERR ) {

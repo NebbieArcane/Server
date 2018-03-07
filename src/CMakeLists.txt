@@ -6,7 +6,7 @@ include(FindPkgConfig)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(CMAKE_CXX_FLAGS "-g -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ggdb3 -fpermissive 	-finline-functions 	-fno-strength-reduce -pipe -pg")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -E -x c++ -P -C -traditional-cpp")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -E -P -C -traditional-cpp")
 #Retrieves headers
 file(GLOB file_hpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.hpp)
 list(SORT file_hpp)
@@ -76,8 +76,8 @@ target_compile_options(myst PUBLIC
 	-w
 #	-Wall 
 #	-Wextra 
-#	-pedantic 
-	-Wwrite-strings
+#	-Wpedantic 
+	-Wno-write-strings
 #	-Wcast-align 
 #	-Wcast-qual 
 #	-Wctor-dtor-privacy 
@@ -95,18 +95,19 @@ target_compile_options(myst PUBLIC
 #	-Wstrict-null-sentinel 
 #	-Wstrict-overflow=5 
 #	-Wundef 
-#    -Wno-unused 
+#   -Wno-unused 
 #	-Wno-variadic-macros 
 #	-Wno-parentheses 
 #	-fdiagnostics-show-option
+#	-w
 )
 get_cmake_property(_variableNames VARIABLES)
 foreach (_variableName ${_variableNames})
     #message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
-add_custom_command(TARGET info PRE_BUILD COMMAND ../astyle --options=../astylerc *.?pp)
+add_custom_target(style ../astyle --options=../astylerc *.?pp)
 #add_custom_command(TARGET myst PRE_LINK COMMAND echo "Before linking")
 #add_custom_command(TARGET myst POST_BUILD COMMAND rm -f release.hpp)
-add_custom_command(TARGET myst POST_BUILD COMMAND ./info)
+add_custom_command(TARGET info POST_BUILD COMMAND ./info)
 add_custom_command(TARGET myst POST_BUILD COMMAND cp -f myst ../mudroot/myst)
 set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations

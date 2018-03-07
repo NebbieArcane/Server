@@ -1,5 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: vt100c.h,v 1.2 2002/02/13 12:30:59 root Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 /*
  * File: VT100C.H
  * Usage: VT100 code definitions
@@ -45,3 +53,5 @@
 #define INFO_MOVE          4
 #define INFO_EXP           8
 #define INFO_GOLD          16
+} // namespace Alarmud
+

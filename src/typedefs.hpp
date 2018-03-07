@@ -1,17 +1,14 @@
-/*
- * typedefs.hpp
- *
- *  Created on: 06 feb 2018
- *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef SRC_TYPEDEFS_HPP_
 #define SRC_TYPEDEFS_HPP_
+/***************************  System  include ************************************/
 #include <sys/types.h>
-#include <assert.h>
+/***************************  Local    include ************************************/
+namespace Alarmud {
+
 
 typedef char sbyte;
 typedef unsigned char ubyte;
@@ -21,8 +18,6 @@ typedef unsigned short int ush_int;
 typedef char bool;
 #endif
 typedef char byte;
-
-
-
-
+} // namespace Alarmud
 #endif /* SRC_TYPEDEFS_HPP_ */
+

@@ -58,8 +58,7 @@ namespace Alarmud {
   Chiama altri fantasmi se attaccato.
 ****************************************************************************/
 
-int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type ) {
+int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type ) {
 	struct char_data* ghost, *t, *master;
 	int i;
 

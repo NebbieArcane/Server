@@ -1,12 +1,16 @@
-/*$Id: rhyodin.h,v 1.2 2002/02/13 12:30:59 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /***************************************************************************
-  rhyodin.c contiene per procedure speciale per la zona di Rhyodin e la
+  rhyodin.cpp contiene per procedure speciale per la zona di Rhyodin e la
   sua quest.
 ***************************************************************************/
-#if !defined(_RHYODIN_H)
-#define _RHYODIN_H
-#include "config.hpp"
+#ifndef __RHYODIN_HPP
+#define __RHYODIN_HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 
 int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 			  int type );
@@ -45,4 +49,6 @@ int Orso_Bianco( struct char_data* ch, int cmd, char* arg,
 int Moribondo( struct char_data* pChar, int nCmd, char* szArg,
 			   struct char_data* pMob, int nType );
 
+} // namespace Alarmud
 #endif
+

@@ -39,7 +39,6 @@
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
 #include "spells.hpp"
-#include "status.hpp"
 #include "trap.hpp"
 
 namespace Alarmud {

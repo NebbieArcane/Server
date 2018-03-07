@@ -59,7 +59,7 @@ void godTrace(unsigned uType, const char* const szString, ... ) {
 	for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
 		if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
 				GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-				( pDesc->character->specials.sev & uType ) ) {
+				( pDesc->character->specials.sev & uType or uType & LOG_CONNECT) ) {
 			send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
 			send_to_char( szBuffer, pDesc->character );
 			send_to_char( "\n\r", pDesc->character );
@@ -67,7 +67,6 @@ void godTrace(unsigned uType, const char* const szString, ... ) {
 	}
 }
 namespace Alarmud {
-
 void log_init(string log_filename,unsigned short debug_level) {
 	log_configure(logger,log_filename,".log")->setLevel(get_level(debug_level));
 	log_configure(errlogger,"errors",".log")->setLevel(log4cxx::Level::getError());

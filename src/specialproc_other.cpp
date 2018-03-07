@@ -28,7 +28,7 @@ struct special_proc_entry otherproc[] = {
 	{ "AGGRESSIVE",(special_proc) AGGRESSIVE },
 	{ "AbbarachDragon",(special_proc)AbbarachDragon },
 	{ "AbyssGateKeeper",(special_proc) AbyssGateKeeper },
-	{ "Ankheg",(special_proc)(special_proc) Ankheg },
+	{ "Ankheg",(special_proc) Ankheg },
 	{ "banshee_lorelai",(special_proc) banshee_lorelai },
 	{ "Beholder",(special_proc) Beholder },
 	{ "BerserkerItem",(special_proc) BerserkerItem },

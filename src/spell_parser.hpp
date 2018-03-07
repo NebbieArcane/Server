@@ -20,24 +20,14 @@
 namespace Alarmud {
 
 extern const char* spells[];
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern const char* spell_wear_off_msg[];
-extern const char* spell_wear_off_soon_msg[];
-extern const char* spell_wear_off_room_msg[];
-extern const char* spell_wear_off_soon_room_msg[];
-extern struct obj_data* object_list;
-extern struct index_data* obj_index;
 extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern int attrefzone=0; //SALVO controllo lag refresh zone init
 
 /* spell_parser.cpp */
 bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod);
 bool circle_follow(struct char_data* ch, struct char_data* victim);
 bool saves_spell(struct char_data* ch, sh_int save_type);
 void spellid(int nr, struct char_data* ch, int cl, int sl);
-void spello(int nr, byte beat, byte pos, byte mlev, byte clev, byte dlev, byte slev, byte plev, byte rlev, byte ilev, ubyte mana, sh_int tar, void (*func)(byte, struct char_data*, char*, int,
-			struct char_data*, struct obj_data*), sh_int sf, sh_int align, sh_int ostile);
+void spello(int nr, byte beat, byte pos, byte mlev, byte clev, byte dlev, byte slev, byte plev, byte rlev, byte ilev, ubyte mana, sh_int tar, spellFunction, sh_int sf, sh_int align, sh_int ostile);
 int SPELL_LEVEL(struct char_data* ch, int sn);
 void SpellWearOffSoon(int s, struct char_data* ch);
 int check_falling(struct char_data* ch);

@@ -55,7 +55,6 @@
 #include "skills.hpp"
 #include "snew.hpp"
 #include "spell_parser.hpp"
-#include "status.hpp"
 #include "vt100c.hpp"
 #include "weather.hpp"
 
@@ -334,25 +333,24 @@ void run_the_game(int port) {
 	event_init();
 
 	boot_db();
+	LOG_DBG("Verbosity 6: LWHO error level enabled");
+	LOG_TRACE("Verbosity 5 : LSAVE,LMAIL,LRANK error level enabled");
+	LOG_INFO("Verbosity 4: LPLAYERS error level enabled");
+	LOG_WARN("Verbosity 3: LCHECK error level enabled");
+	LOG_ALERT("Verbosity 2: LERROR LCONNECT error level enabled");
+	LOG_FATAL("Verbosity 1: LSYSERR LSERVICE error level enabled");
 
-	mudlog( LOG_CHECK, "Entering game loop.");
-	LOG_DBG("Debug");
-	LOG_TRACE("Trace");
-	LOG_INFO("Info");
-	LOG_WARN("Warning");
-	LOG_ALERT("Error");
-	LOG_FATAL("Fatal");
-
+	mudlog( LOG_ALWAYS, "Entering game loop.");
 	game_loop(s);
 
 	close_sockets(s);
 
 
 	if (rebootgame) {
-		mudlog( LOG_CHECK, "Rebooting.");
+		mudlog( LOG_ALWAYS, "Rebooting.");
 	}
 
-	mudlog( LOG_CHECK, "Normal termination of game.");
+	mudlog( LOG_ALWAYS, "Normal termination of game.");
 }
 
 /* Accept new connects, relay commands, and call 'heartbeat-functs' */

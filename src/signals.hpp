@@ -1,9 +1,12 @@
-/* Alarmud
- * $Id: signals.h,v 1.1.1.1 2002/02/13 11:14:55 root Exp $
- * */
-#ifndef __SIGNALS
-#define __SIGNALS 1
-#include "config.hpp"
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __SIGNALS_HPP
+#define __SIGNALS_HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #define LPUSH SetLine(__FILE__,__LINE__)
 float AverageEqIndex(float toadd);
 void SetLine(const char* srcfile,int srcline);
@@ -20,4 +23,6 @@ void hupsig( int dummy );
 void badcrash( int dummy );
 void PrintStatus();
 void PrintStatus(int level);
+} // namespace Alarmud
 #endif
+

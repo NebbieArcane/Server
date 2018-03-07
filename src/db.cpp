@@ -545,7 +545,7 @@ void build_player_index() {
 						{ max = Player.level[ j ]; }
 					}
 					if (max >= (ABS_MAX_LVL + 1)) {
-						mudlog(LOG_CHECK,
+						mudlog(LOG_ERROR,
 							   "ERR: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
 							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
 							   static_cast<unsigned int>(Player.level[2]), static_cast<unsigned int>(Player.level[3]), static_cast<unsigned int>(Player.level[4]),
@@ -562,7 +562,7 @@ void build_player_index() {
 							   "GOD: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
 							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
 							   static_cast<unsigned int>(Player.level[2]), static_cast<unsigned int>(Player.level[3]), static_cast<unsigned int>(Player.level[4]),
-							   static_cast<unsigned int>(Player.level[5]), static_cast<unsigned int>(Player.level[6]), Player.level[7]);
+							   static_cast<unsigned int>(Player.level[5]), static_cast<unsigned int>(Player.level[6]), static_cast<unsigned int>(Player.level[7]));
 
 						list_wiz.lookup[max].stuff[list_wiz.number[max]].name =
 							(char*) strdup(Player.name);
@@ -883,21 +883,26 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 
 	sprintf(curfile, "Letto flags= %ld , sector= %ld \n", rp->room_flags, rp->sector_type);
 	if (tmp == -1) {
-		sprintf(curfile, "Stanza con settore -1\n");
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s\n",rp->number,rp->name);
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletime %d\n",rp->number,rp->name,tmp);
 		rp->tele_time = tmp;
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletarget %d\n",rp->number,rp->name,tmp);
 		rp->tele_targ = tmp;
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telemask %d\n",rp->number,rp->name,tmp);
 		rp->tele_mask = tmp;
 		if (IS_SET(TELE_COUNT, rp->tele_mask)) {
 			tmp = fread_number(fl);
+			sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telecount %d\n",rp->number,rp->name,tmp);
 			rp->tele_cnt = tmp;
 		}
 		else {
 			rp->tele_cnt = 0;
 		}
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s true sector %d\n",rp->number,rp->name,tmp);
 		rp->sector_type = tmp;
 	}
 	else {
@@ -3110,7 +3115,7 @@ long fread_number_int(FILE* pFile, char* cmdfile, int cmdline, char* infofile) {
 
 	if (!isdigit(c)) {
 		memo[l] = 0;
-		mudlog(LOG_ERROR, "Fread_number: bad format ? line %s", memo);
+		mudlog(LOG_ERROR, "Fread_number: bad char %c line %s", c,memo);
 		PrintStatus(1);
 		ungetc(c, pFile);
 		return 0;
@@ -3846,7 +3851,7 @@ void init_char(struct char_data* ch) {
 		break;
 
 	case RACE_ELVEN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 	case RACE_SEA_ELF:

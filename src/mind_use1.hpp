@@ -1,7 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __MIND_USE1_HPP
 #define __MIND_USE1_HPP
-#include "config.hpp"
-#include "typedefs.hpp"
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 void mind_use_burn( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
 void mind_use_cell_adjustment( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
 void mind_use_chameleon( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
@@ -22,4 +28,6 @@ void mind_use_telekinesis( byte level, struct char_data* ch, char* arg, int type
 void mind_use_teleport( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
 void mind_use_tower_iron_will( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
 void mind_use_ultra_blast( byte level, struct char_data* ch, char* arg, int type,struct char_data* victim, struct obj_data* tar_obj );
+} // namespace Alarmud
 #endif // __MIND_USE1_HPP
+

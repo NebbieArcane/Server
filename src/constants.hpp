@@ -9,7 +9,6 @@
 #define __CONSTANTS_HPP
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
-#include "race.hpp"
 namespace Alarmud {
 /* modificato da Jethro, agosto 2011 */
 #define EQINDEX 600.0

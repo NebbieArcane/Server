@@ -27,7 +27,6 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "spec_procs.hpp"
-#include "status.hpp"
 
 namespace Alarmud {
 
@@ -964,7 +963,7 @@ void update_obj_file() {
 					if( ( pObjFile = fopen( szFileName, "r+b") ) != NULL ) {
 						if( ReadObjs( pObjFile, &st ) ) {
 							if( str_cmp( st.owner, ch_st.name ) == 0 ) {
-								mudlog( LOG_CHECK, " Processing %s.", st.owner );
+								mudlog( LOG_SAVE, " Processing %s.", st.owner );
 								days_passed = ((time(0) - st.last_update) / SECS_PER_REAL_DAY);
 								secs_lost = ((time(0) - st.last_update) % SECS_PER_REAL_DAY);
 
@@ -973,7 +972,7 @@ void update_obj_file() {
 									ch_st.load_room = NOWHERE;
 									st.last_update = time(0)+3600;  /* one hour grace period */
 
-									mudlog( LOG_CHECK, "   Deautorenting %s", st.owner);
+									mudlog( LOG_SAVE, "   Deautorenting %s", st.owner);
 
 #if LIMITED_ITEMS
 									CountLimitedItems(&st);
@@ -1009,7 +1008,7 @@ void update_obj_file() {
 
 										}
 										else {
-											mudlog( LOG_CHECK, "   Updating %s", st.owner );
+											mudlog( LOG_SAVE, "   Updating %s", st.owner );
 #if 0
 											st.gold_left -= st.total_cost * days_passed;
 											st.last_update = time( 0 ) - secs_lost;
@@ -1102,7 +1101,7 @@ void PrintLimitedItems() {
 			obj_index[i].number/=2;
 #endif
 
-			mudlog( LOG_CHECK, "  %5d [%5d] %s", obj_index[ i ].iVNum,
+			mudlog( LOG_SAVE, "  %5d [%5d] %s", obj_index[ i ].iVNum,
 					obj_index[i].number,
 					obj_index[i].name );
 		}
@@ -1447,7 +1446,7 @@ int ReadObjs( FILE* fl, struct obj_file_u* st) {
 		fclose(fl);
 		return(FALSE);
 	}
-	mudlog(LOG_CHECK,"Letta stanza %s %d %d %d %d %d",st->owner,
+	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
 	for (i=0; i<st->number; i++) {
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);

@@ -27,33 +27,6 @@ template <typename T>
 inline int enum_to_int(T value) {
     return static_cast<int>(value);
 }
-#define	ALL_DARK                                     1 
-#define	FOREST_DARK                                  2 
-#define	NO_DARK                                      3 
-#define	ABS_MAX_EXP                                  2000000000 
-#define	MAX_XP                                       2147483647 
-#define	MAX_STAT                                     6 
-#define	BIT_POOF_IN                                  1 
-#define	BIT_POOF_OUT                                 2 
-#define	MAX_WEAR_POS                                 22 
-#define	MAX_TOUNGE                                   3 
-#define	MAX_NEW_LANGUAGES                            10 
-#define	MAX_SKILLS                                   350 
-#define	MAX_WEAR                                     23 
-#define	MAX_AFFECT                                   40 
-#define	MAX_SAVES                                    8 
-#define	MAX_CONDITIONS                               5 
-#define	MAX_CLASS                                    11 
-#define	OLD_MAX_CLASS                                4 
-#define	ABS_MAX_CLASS                                20 
-#define	MAX_POSITION                                 9 
-#define	HIT_INCAP                                    -3 
-#define	HIT_MORTALLYW                                -6 
-#define	HIT_DEAD                                     -11 
-#define	SKILL_SPECIALIZED                            1 
-#define	SKILL_UNDEFINED                              2 
-#define	SKILL_UNDEFINED2                             4 
-#define	ABS_MAX_LVL                                  70 
 
 // Enum type: E_AFFECTED_BY -- start
 enum e_affected_by {
@@ -93,7 +66,7 @@ Bitvector for 'affected_by'*/
 	AFF_GLOBE_DARKNESS                           =1073741824, /*Added by REQUIEM 2018*/
 	AFF_UNDEF_AFF_1                              =2147483648
 };
-#define E_AFFECTED_BY_COUNT 34
+#define E_AFFECTED_BY_COUNT 33
 #define E_AFFECTED_BY_MIN 0
 #define E_AFFECTED_BY_MAX 2147483648
 #define E_AFFECTED_BY_KEY "e_affected_by"
@@ -112,7 +85,7 @@ enum e_affected_by2 {
 	AFF2_AFK                                     =64,
 	AFF2_PKILLER                                 =128
 };
-#define E_AFFECTED_BY2_COUNT 9
+#define E_AFFECTED_BY2_COUNT 8
 #define E_AFFECTED_BY2_MIN 1
 #define E_AFFECTED_BY2_MAX 128
 #define E_AFFECTED_BY2_KEY "e_affected_by2"
@@ -191,7 +164,7 @@ modifiers to char's abilities*/
 	APPLY_T_MANA                                 =64,
 	APPLY_SKIP                                   =65 /*Non viene toccato il bitvector*/
 };
-#define E_APPLY_COUNT 67
+#define E_APPLY_COUNT 66
 #define E_APPLY_MIN 0
 #define E_APPLY_MAX 65
 #define E_APPLY_KEY "e_apply"
@@ -215,7 +188,7 @@ multiclassing stuff*/
 	RANGER_LEVEL_IND                             =9,
 	PSI_LEVEL_IND                                =10
 };
-#define E_CLASS_INDEX_COUNT 12
+#define E_CLASS_INDEX_COUNT 11
 #define E_CLASS_INDEX_MIN 0
 #define E_CLASS_INDEX_MAX 10
 #define E_CLASS_INDEX_KEY "e_class_index"
@@ -237,7 +210,7 @@ enum e_classes {
 	CLASS_RANGER                                 =512,
 	CLASS_PSI                                    =1024
 };
-#define E_CLASSES_COUNT 12
+#define E_CLASSES_COUNT 11
 #define E_CLASSES_MIN 1
 #define E_CLASSES_MAX 1024
 #define E_CLASSES_KEY "e_classes"
@@ -251,7 +224,7 @@ enum e_conditions {
 	FULL                                         =1,
 	THIRST                                       =2
 };
-#define E_CONDITIONS_COUNT 4
+#define E_CONDITIONS_COUNT 3
 #define E_CONDITIONS_MIN 0
 #define E_CONDITIONS_MAX 2
 #define E_CONDITIONS_KEY "e_conditions"
@@ -305,7 +278,7 @@ l'array connected_types in constants.c*/
 	CON_EXTRA2                                   =37,
 	CON_OBJ_FORGING                              =38
 };
-#define E_CONNECTION_TYPES_COUNT 40
+#define E_CONNECTION_TYPES_COUNT 39
 #define E_CONNECTION_TYPES_MIN 0
 #define E_CONNECTION_TYPES_MAX 38
 #define E_CONNECTION_TYPES_KEY "e_connection_types"
@@ -321,7 +294,7 @@ enum e_damage_type {
 	BLOW_DAMAGE                                  =4,
 	ACID_DAMAGE                                  =5
 };
-#define E_DAMAGE_TYPE_COUNT 6
+#define E_DAMAGE_TYPE_COUNT 5
 #define E_DAMAGE_TYPE_MIN 1
 #define E_DAMAGE_TYPE_MAX 5
 #define E_DAMAGE_TYPE_KEY "e_damage_type"
@@ -352,7 +325,7 @@ enum e_events {
 	EVENT_END_GOB_RAID                           =18,
 	EVENT_FIGHTING                               =19
 };
-#define E_EVENTS_COUNT 21
+#define E_EVENTS_COUNT 20
 #define E_EVENTS_MIN 0
 #define E_EVENTS_MAX 19
 #define E_EVENTS_KEY "e_events"
@@ -371,7 +344,7 @@ For 'dir_option'*/
 	UP                                           =4,
 	DOWN                                         =5
 };
-#define E_EXIT_DIR_COUNT 7
+#define E_EXIT_DIR_COUNT 6
 #define E_EXIT_DIR_MIN 0
 #define E_EXIT_DIR_MAX 5
 #define E_EXIT_DIR_KEY "e_exit_dir"
@@ -391,7 +364,7 @@ enum e_exit_types {
 	EX_MALE                                      =128,
 	EX_NOLOOKT                                   =256
 };
-#define E_EXIT_TYPES_COUNT 10
+#define E_EXIT_TYPES_COUNT 9
 #define E_EXIT_TYPES_MIN 1
 #define E_EXIT_TYPES_MAX 256
 #define E_EXIT_TYPES_KEY "e_exit_types"
@@ -409,13 +382,96 @@ enum e_fear_type {
 	FEAR_GOOD                                    =32,
 	FEAR_VNUM                                    =64
 };
-#define E_FEAR_TYPE_COUNT 8
+#define E_FEAR_TYPE_COUNT 7
 #define E_FEAR_TYPE_MIN 1
 #define E_FEAR_TYPE_MAX 64
 #define E_FEAR_TYPE_KEY "e_fear_type"
 
 #define E_FEAR_TYPE_ACCEPT_ZERO true
 // Enum type: E_FEAR_TYPE -- end
+
+// Enum type: E_FIND_RESULT -- start
+enum e_find_result {
+	FOUND_WATER                                  =13, /*obj found when water found*/
+	FOUND_FOOD                                   =21, /*obj that is found if they made it!*/
+	FOUND_FOOD0                                  =1300,
+	FOUND_FOOD1                                  =1301,
+	FOUND_FOOD2                                  =1302,
+	FOUND_FOOD3                                  =1303,
+	FOUND_FOOD4                                  =1304,
+	FOUND_FOOD5                                  =1305,
+	FOUND_FOOD6                                  =1306,
+	FOUND_FOOD7                                  =1307,
+	FOUND_FOOD8                                  =1308,
+	FOUND_FOOD9                                  =1309,
+	FOUND_FOOD10                                 =1310,
+	FOUND_FOOD11                                 =1311,
+	FOUND_FOOD12                                 =1312,
+	FOUND_FOOD13                                 =1313,
+	FOUND_FOOD14                                 =1314,
+	FOUND_FOOD15                                 =1315,
+	FOUND_FOOD16                                 =1316,
+	FOUND_FOOD17                                 =1317,
+	FOUND_FOOD18                                 =1318,
+	FOUND_FOOD19                                 =1319,
+	FOUND_FOOD20                                 =1320,
+	FOUND_FOOD21                                 =1321,
+	FOUND_FOOD22                                 =1322,
+	FOUND_FOOD23                                 =1323,
+	FOUND_FOOD24                                 =1324,
+	FOUND_FOOD25                                 =1325,
+	FOUND_FOOD26                                 =1326,
+	FOUND_FOOD27                                 =1327,
+	FOUND_FOOD28                                 =1328,
+	FOUND_FOOD29                                 =1329,
+	FOUND_FOOD30                                 =1330,
+	FOUND_FOOD31                                 =1331,
+	FOUND_FOOD32                                 =1332,
+	FOUND_FOOD33                                 =1333,
+	FOUND_FOOD34                                 =1334,
+	FOUND_FOOD35                                 =1335,
+	FOUND_FOOD36                                 =1336,
+	FOUND_FOOD37                                 =1337,
+	FOUND_FOOD38                                 =1338,
+	FOUND_FOOD39                                 =1339,
+	FOUND_FOOD40                                 =1340,
+	FOUND_FOOD41                                 =1341,
+	FOUND_FOOD42                                 =1342,
+	FOUND_FOOD43                                 =1343,
+	FOUND_FOOD44                                 =1344,
+	FOUND_FOOD45                                 =1345,
+	FOUND_FOOD46                                 =1346,
+	FOUND_FOOD47                                 =1347,
+	FOUND_FOOD48                                 =1348,
+	FOUND_FOOD49                                 =1349,
+	FOUND_FOOD50                                 =1350,
+	FOUND_FOOD51                                 =1351,
+	FOUND_FOOD52                                 =1352,
+	FOUND_FOOD53                                 =1353,
+	FOUND_FOOD54                                 =1354,
+	FOUND_FOOD55                                 =1355,
+	FOUND_FOOD56                                 =1356,
+	FOUND_FOOD57                                 =1357,
+	FOUND_FOOD58                                 =1358,
+	FOUND_FOOD59                                 =1359,
+	FOUND_FOOD60                                 =1360,
+	FOUND_FOOD61                                 =1361,
+	FOUND_FOOD62                                 =1362,
+	FOUND_FOOD63                                 =1363,
+	FOUND_FOOD64                                 =1364,
+	FOUND_FOOD65                                 =1365,
+	FOUND_FOOD66                                 =1366,
+	FOUND_FOOD67                                 =1367,
+	FOUND_FOOD68                                 =1368,
+	FOUND_FOOD69                                 =1369
+};
+#define E_FIND_RESULT_COUNT 72
+#define E_FIND_RESULT_MIN 13
+#define E_FIND_RESULT_MAX 1369
+#define E_FIND_RESULT_KEY "e_find_result"
+
+#define E_FIND_RESULT_ACCEPT_ZERO true
+// Enum type: E_FIND_RESULT -- end
 
 // Enum type: E_HATE_TYPE -- start
 enum e_hate_type {
@@ -427,7 +483,7 @@ enum e_hate_type {
 	HATE_GOOD                                    =32,
 	HATE_VNUM                                    =64
 };
-#define E_HATE_TYPE_COUNT 8
+#define E_HATE_TYPE_COUNT 7
 #define E_HATE_TYPE_MIN 1
 #define E_HATE_TYPE_MAX 64
 #define E_HATE_TYPE_KEY "e_hate_type"
@@ -456,13 +512,128 @@ enum e_immunity_type {
 	IMM_PLUS3                                    =65536,
 	IMM_PLUS4                                    =131072
 };
-#define E_IMMUNITY_TYPE_COUNT 19
+#define E_IMMUNITY_TYPE_COUNT 18
 #define E_IMMUNITY_TYPE_MIN 1
 #define E_IMMUNITY_TYPE_MAX 131072
 #define E_IMMUNITY_TYPE_KEY "e_immunity_type"
 
 #define E_IMMUNITY_TYPE_ACCEPT_ZERO true
 // Enum type: E_IMMUNITY_TYPE -- end
+
+// Enum type: E_ITEM_FLAG -- start
+enum e_item_flag {
+/*
+Bitvector for 'extra_flags'*/
+	ITEM_GLOW                                    =1,
+	ITEM_HUM                                     =2,
+	ITEM_METAL                                   =4, /*undefined...*/
+	ITEM_MINERAL                                 =8, /*undefined?*/
+	ITEM_ORGANIC                                 =16, /*undefined?*/
+	ITEM_INVISIBLE                               =32,
+	ITEM_MAGIC                                   =64,
+	ITEM_NODROP                                  =128,
+	ITEM_BLESS                                   =256,
+	ITEM_ANTI_GOOD                               =512, /*not usable by good people*/
+	ITEM_ANTI_EVIL                               =1024, /*not usable by evil people*/
+	ITEM_ANTI_NEUTRAL                            =2048, /*not usable by neutral people*/
+	ITEM_ANTI_CLERIC                             =4096,
+	ITEM_ANTI_MAGE                               =8192,
+	ITEM_ANTI_THIEF                              =16384,
+	ITEM_ANTI_FIGHTER                            =32768,
+	ITEM_BRITTLE                                 =65536, /*weapons that break after 1 hit  armor that breaks when hit?*/
+	ITEM_RESISTANT                               =131072, /*resistant to damage*/
+	ITEM_IMMUNE                                  =262144, /*Item is immune to scrapping*/
+	ITEM_ANTI_MEN                                =524288, /*men can't wield*/
+	ITEM_ANTI_WOMEN                              =1048576, /*women can't wield*/
+	ITEM_ANTI_SUN                                =2097152, /*item is sensitive to being in the sun*/
+	ITEM_ANTI_BARBARIAN                          =4194304,
+	ITEM_ANTI_RANGER                             =8388608,
+	ITEM_ANTI_PALADIN                            =16777216,
+	ITEM_ANTI_PSI                                =33554432,
+	ITEM_ANTI_MONK                               =67108864,
+	ITEM_ANTI_DRUID                              =134217728,
+	ITEM_ONLY_CLASS                              =268435456,
+	ITEM_DIG                                     =536870912,
+	ITEM_SCYTHE                                  =1073741824,
+	ITEM_ANTI_SORCERER                           =2147483648
+};
+#define E_ITEM_FLAG_COUNT 32
+#define E_ITEM_FLAG_MIN 1
+#define E_ITEM_FLAG_MAX 2147483648
+#define E_ITEM_FLAG_KEY "e_item_flag"
+
+#define E_ITEM_FLAG_ACCEPT_ZERO true
+// Enum type: E_ITEM_FLAG -- end
+
+// Enum type: E_ITEM_TYPE -- start
+enum e_item_type {
+	ITEM_LIGHT                                   =1,
+	ITEM_SCROLL                                  =2,
+	ITEM_WAND                                    =3,
+	ITEM_STAFF                                   =4,
+	ITEM_WEAPON                                  =5,
+	ITEM_FIREWEAPON                              =6,
+	ITEM_MISSILE                                 =7,
+	ITEM_TREASURE                                =8,
+	ITEM_ARMOR                                   =9,
+	ITEM_POTION                                  =10,
+	ITEM_WORN                                    =11,
+	ITEM_OTHER                                   =12,
+	ITEM_TRASH                                   =13,
+	ITEM_TRAP                                    =14,
+	ITEM_CONTAINER                               =15,
+	ITEM_NOTE                                    =16,
+	ITEM_DRINKCON                                =17,
+	ITEM_KEY                                     =18,
+	ITEM_FOOD                                    =19,
+	ITEM_MONEY                                   =20,
+	ITEM_PEN                                     =21,
+	ITEM_BOAT                                    =22,
+	ITEM_AUDIO                                   =23,
+	ITEM_BOARD                                   =24,
+	ITEM_TREE                                    =25,
+	ITEM_ROCK                                    =26
+};
+#define E_ITEM_TYPE_COUNT 26
+#define E_ITEM_TYPE_MIN 1
+#define E_ITEM_TYPE_MAX 26
+#define E_ITEM_TYPE_KEY "e_item_type"
+
+#define E_ITEM_TYPE_ACCEPT_ZERO true
+// Enum type: E_ITEM_TYPE -- end
+
+// Enum type: E_ITEM_WEAR -- start
+enum e_item_wear {
+/*
+Bitvector For 'wear_flags'*/
+	ITEM_TAKE                                    =1,
+	ITEM_WEAR_FINGER                             =2,
+	ITEM_WEAR_NECK                               =4,
+	ITEM_WEAR_BODY                               =8,
+	ITEM_WEAR_HEAD                               =16,
+	ITEM_WEAR_LEGS                               =32,
+	ITEM_WEAR_FEET                               =64,
+	ITEM_WEAR_HANDS                              =128,
+	ITEM_WEAR_ARMS                               =256,
+	ITEM_WEAR_SHIELD                             =512,
+	ITEM_WEAR_ABOUT                              =1024,
+	ITEM_WEAR_WAISTE                             =2048,
+	ITEM_WEAR_WRIST                              =4096,
+	ITEM_WIELD                                   =8192,
+	ITEM_HOLD                                    =16384,
+	ITEM_THROW                                   =32768,
+	ITEM_LIGHT_SOURCE                            =65536, /*UNUSED  CHECKS ONLY FOR ITEM_LIGHT*/
+	ITEM_WEAR_BACK                               =131072,
+	ITEM_WEAR_EAR                                =262144,
+	ITEM_WEAR_EYE                                =524288
+};
+#define E_ITEM_WEAR_COUNT 20
+#define E_ITEM_WEAR_MIN 1
+#define E_ITEM_WEAR_MAX 524288
+#define E_ITEM_WEAR_KEY "e_item_wear"
+
+#define E_ITEM_WEAR_ACCEPT_ZERO true
+// Enum type: E_ITEM_WEAR -- end
 
 // Enum type: E_LARGE_FLAGS -- start
 enum e_large_flags {
@@ -471,13 +642,64 @@ enum e_large_flags {
 	LARGE_AIR                                    =2,
 	LARGE_IMPASS                                 =4
 };
-#define E_LARGE_FLAGS_COUNT 5
+#define E_LARGE_FLAGS_COUNT 4
 #define E_LARGE_FLAGS_MIN 0
 #define E_LARGE_FLAGS_MAX 4
 #define E_LARGE_FLAGS_KEY "e_large_flags"
 
 #define E_LARGE_FLAGS_ACCEPT_ZERO true
 // Enum type: E_LARGE_FLAGS -- end
+
+// Enum type: E_LIQUIDS -- start
+enum e_liquids {
+/*
+Some different kind of liquids*/
+	LIQ_WATER                                    =0,
+	LIQ_BEER                                     =1,
+	LIQ_WINE                                     =2,
+	LIQ_ALE                                      =3,
+	LIQ_DARKALE                                  =4,
+	LIQ_WHISKY                                   =5,
+	LIQ_LEMONADE                                 =6,
+	LIQ_FIREBRT                                  =7,
+	LIQ_LOCALSPC                                 =8,
+	LIQ_SLIME                                    =9,
+	LIQ_MILK                                     =10,
+	LIQ_TEA                                      =11,
+	LIQ_COFFE                                    =12,
+	LIQ_BLOOD                                    =13,
+	LIQ_SALTWATER                                =14,
+	LIQ_COKE                                     =15
+};
+#define E_LIQUIDS_COUNT 16
+#define E_LIQUIDS_MIN 0
+#define E_LIQUIDS_MAX 15
+#define E_LIQUIDS_KEY "e_liquids"
+
+#define E_LIQUIDS_ACCEPT_ZERO true
+// Enum type: E_LIQUIDS -- end
+
+// Enum type: E_LOG_LEVELS -- start
+enum e_log_levels {
+	LOG_SYSERR                                   =1,
+	LOG_CHECK                                    =2,
+	LOG_PLAYERS                                  =4,
+	LOG_MOBILES                                  =8,
+	LOG_CONNECT                                  =16,
+	LOG_ERROR                                    =32,
+	LOG_WHO                                      =64,
+	LOG_SAVE                                     =128,
+	LOG_MAIL                                     =256,
+	LOG_RANK                                     =512,
+	LOG_SILENT                                   =32768
+};
+#define E_LOG_LEVELS_COUNT 11
+#define E_LOG_LEVELS_MIN 1
+#define E_LOG_LEVELS_MAX 32768
+#define E_LOG_LEVELS_KEY "e_log_levels"
+
+#define E_LOG_LEVELS_ACCEPT_ZERO true
+// Enum type: E_LOG_LEVELS -- end
 
 // Enum type: E_MOB_FLAGS -- start
 enum e_mob_flags {
@@ -516,7 +738,7 @@ for mobile actions: specials.act*/
 	ACT_PSI                                      =1073741824,
 	ACT_ARCHER                                   =2147483648
 };
-#define E_MOB_FLAGS_COUNT 33
+#define E_MOB_FLAGS_COUNT 32
 #define E_MOB_FLAGS_MIN 1
 #define E_MOB_FLAGS_MAX 2147483648
 #define E_MOB_FLAGS_KEY "e_mob_flags"
@@ -534,7 +756,7 @@ enum e_opinion_op {
 	OP_GOOD                                      =6,
 	OP_VNUM                                      =7
 };
-#define E_OPINION_OP_COUNT 8
+#define E_OPINION_OP_COUNT 7
 #define E_OPINION_OP_MIN 1
 #define E_OPINION_OP_MAX 7
 #define E_OPINION_OP_KEY "e_opinion_op"
@@ -568,7 +790,7 @@ For players : specials.act*/
 	PLR_EMPTY5                                   =524288,
 	PLR_NOBEEP                                   =1048576 /*ignore all beeps*/
 };
-#define E_PLAYER_FLAGS_COUNT 22
+#define E_PLAYER_FLAGS_COUNT 21
 #define E_PLAYER_FLAGS_MIN 1
 #define E_PLAYER_FLAGS_MAX 1048576
 #define E_PLAYER_FLAGS_KEY "e_player_flags"
@@ -591,13 +813,111 @@ positions*/
 	POSITION_STANDING                            =8,
 	POSITION_MOUNTED                             =9
 };
-#define E_POSITIONS_COUNT 11
+#define E_POSITIONS_COUNT 10
 #define E_POSITIONS_MIN 0
 #define E_POSITIONS_MAX 9
 #define E_POSITIONS_KEY "e_positions"
 
 #define E_POSITIONS_ACCEPT_ZERO true
 // Enum type: E_POSITIONS -- end
+
+// Enum type: E_RACES -- start
+enum e_races {
+/*
+list of races*/
+	RACE_HALFBREED                               =0,
+	RACE_HUMAN                                   =1, /*playable*/
+	RACE_ELVEN                                   =2,
+	RACE_DWARF                                   =3,
+	RACE_HALFLING                                =4, /*plauable*/
+	RACE_GNOME                                   =5,
+	RACE_REPTILE                                 =6,
+	RACE_SPECIAL                                 =7,
+	RACE_LYCANTH                                 =8,
+	RACE_DRAGON                                  =9,
+	RACE_UNDEAD                                  =10,
+	RACE_ORC                                     =11,
+	RACE_INSECT                                  =12,
+	RACE_ARACHNID                                =13,
+	RACE_DINOSAUR                                =14,
+	RACE_FISH                                    =15,
+	RACE_BIRD                                    =16,
+	RACE_GIANT                                   =17, /*generic giant more specials down*/
+	RACE_PREDATOR                                =18,
+	RACE_PARASITE                                =19,
+	RACE_SLIME                                   =20,
+	RACE_DEMON                                   =21,
+	RACE_SNAKE                                   =22,
+	RACE_HERBIV                                  =23,
+	RACE_TREE                                    =24,
+	RACE_VEGGIE                                  =25,
+	RACE_ELEMENT                                 =26,
+	RACE_PLANAR                                  =27,
+	RACE_DEVIL                                   =28,
+	RACE_GHOST                                   =29,
+	RACE_GOBLIN                                  =30,
+	RACE_TROLL                                   =31, /*playable*/
+	RACE_VEGMAN                                  =32,
+	RACE_MFLAYER                                 =33,
+	RACE_PRIMATE                                 =34,
+	RACE_ENFAN                                   =35,
+	RACE_DARK_ELF                                =36, /*playable*/
+	RACE_GOLEM                                   =37,
+	RACE_SKEXIE                                  =38,
+	RACE_TROGMAN                                 =39,
+	RACE_PATRYN                                  =40,
+	RACE_LABRAT                                  =41,
+	RACE_SARTAN                                  =42,
+	RACE_TYTAN                                   =43,
+	RACE_SMURF                                   =44,
+	RACE_ROO                                     =45,
+	RACE_HORSE                                   =46,
+	RACE_DRAAGDIM                                =47,
+	RACE_ASTRAL                                  =48,
+	RACE_GOD                                     =49,
+	RACE_GIANT_HILL                              =50,
+	RACE_GIANT_FROST                             =51,
+	RACE_GIANT_FIRE                              =52,
+	RACE_GIANT_CLOUD                             =53,
+	RACE_GIANT_STORM                             =54,
+	RACE_GIANT_STONE                             =55,
+	RACE_DRAGON_RED                              =56,
+	RACE_DRAGON_BLACK                            =57,
+	RACE_DRAGON_GREEN                            =58,
+	RACE_DRAGON_WHITE                            =59,
+	RACE_DRAGON_BLUE                             =60,
+	RACE_DRAGON_SILVER                           =61,
+	RACE_DRAGON_GOLD                             =62,
+	RACE_DRAGON_BRONZE                           =63,
+	RACE_DRAGON_COPPER                           =64,
+	RACE_DRAGON_BRASS                            =65,
+	RACE_UNDEAD_VAMPIRE                          =66,
+	RACE_UNDEAD_LICH                             =67,
+	RACE_UNDEAD_WIGHT                            =68,
+	RACE_UNDEAD_GHAST                            =69,
+	RACE_UNDEAD_SPECTRE                          =70,
+	RACE_UNDEAD_ZOMBIE                           =71,
+	RACE_UNDEAD_SKELETON                         =72,
+	RACE_UNDEAD_GHOUL                            =73,
+	RACE_HALF_ELVEN                              =74, /*playable*/
+	RACE_HALF_OGRE                               =75, /*playable*/
+	RACE_HALF_ORC                                =76, /*playable*/
+	RACE_HALF_GIANT                              =77, /*playable*/
+	RACE_LIZARDMAN                               =78,
+	RACE_DARK_DWARF                              =79, /*evil*/
+	RACE_DEEP_GNOME                              =80, /*evil*/
+	RACE_GNOLL                                   =81,
+	RACE_GOLD_ELF                                =82, /*playable*/
+	RACE_WILD_ELF                                =83, /*playable*/
+	RACE_SEA_ELF                                 =84 /*playable*/
+};
+#define E_RACES_COUNT 85
+#define E_RACES_MIN 0
+#define E_RACES_MAX 84
+#define E_RACES_KEY "e_races"
+
+#define E_RACES_ACCEPT_ZERO true
+// Enum type: E_RACES -- end
 
 // Enum type: E_ROOM_FLAGS -- start
 enum e_room_flags {
@@ -635,7 +955,7 @@ Bitvector For 'room_flags'*/
 	RM_4                                         =536870912,
 	RM_5                                         =1073741824
 };
-#define E_ROOM_FLAGS_COUNT 32
+#define E_ROOM_FLAGS_COUNT 31
 #define E_ROOM_FLAGS_MIN 1
 #define E_ROOM_FLAGS_MAX 1073741824
 #define E_ROOM_FLAGS_KEY "e_room_flags"
@@ -650,7 +970,7 @@ enum e_seasons {
 	SEASON_SUMMER                                =4,
 	SEASON_FALL                                  =8
 };
-#define E_SEASONS_COUNT 5
+#define E_SEASONS_COUNT 4
 #define E_SEASONS_MIN 1
 #define E_SEASONS_MAX 8
 #define E_SEASONS_KEY "e_seasons"
@@ -676,7 +996,7 @@ For 'Sector types'*/
 	SECT_TREE                                    =11,
 	SECT_DARKCITY                                =12
 };
-#define E_SECTOR_TYPES_COUNT 14
+#define E_SECTOR_TYPES_COUNT 13
 #define E_SECTOR_TYPES_MIN 0
 #define E_SECTOR_TYPES_MAX 12
 #define E_SECTOR_TYPES_KEY "e_sector_types"
@@ -692,7 +1012,7 @@ sex*/
 	SEX_MALE                                     =1,
 	SEX_FEMALE                                   =2
 };
-#define E_SEX_COUNT 4
+#define E_SEX_COUNT 3
 #define E_SEX_MIN 0
 #define E_SEX_MAX 2
 #define E_SEX_KEY "e_sex"
@@ -717,7 +1037,7 @@ skill_data flags*/
 	SKILL_KNOWN_RANGER                           =1024, /*need to make byte flags, to long or int flags in char_skill_data*/
 	SKILL_KNOWN_PSI                              =2048 /*need to make byte flags, to long or int flags in char_skill_data*/
 };
-#define E_SKILL_KNOWN_COUNT 13
+#define E_SKILL_KNOWN_COUNT 12
 #define E_SKILL_KNOWN_MIN 1
 #define E_SKILL_KNOWN_MAX 2048
 #define E_SKILL_KNOWN_KEY "e_skill_known"
@@ -734,7 +1054,7 @@ And how is the sky ?*/
 	SKY_RAINING                                  =2,
 	SKY_LIGHTNING                                =3
 };
-#define E_SKY_COUNT 5
+#define E_SKY_COUNT 4
 #define E_SKY_MIN 0
 #define E_SKY_MAX 3
 #define E_SKY_KEY "e_sky"
@@ -753,7 +1073,7 @@ enum e_speaks {
 	SPEAK_OGRE                                   =7,
 	SPEAK_GNOMISH                                =8
 };
-#define E_SPEAKS_COUNT 9
+#define E_SPEAKS_COUNT 8
 #define E_SPEAKS_MIN 1
 #define E_SPEAKS_MAX 8
 #define E_SPEAKS_KEY "e_speaks"
@@ -766,7 +1086,7 @@ enum e_special_events {
 	DWARVES_STRIKE                               =1,
 	FAMINE                                       =2
 };
-#define E_SPECIAL_EVENTS_COUNT 3
+#define E_SPECIAL_EVENTS_COUNT 2
 #define E_SPECIAL_EVENTS_MIN 1
 #define E_SPECIAL_EVENTS_MAX 2
 #define E_SPECIAL_EVENTS_KEY "e_special_events"
@@ -785,7 +1105,7 @@ How much light is in the land ?*/
 	MOON_SET                                     =4,
 	MOON_RISE                                    =5 /*moon changes -DM 7/16/92*/
 };
-#define E_SUNLIGHT_COUNT 7
+#define E_SUNLIGHT_COUNT 6
 #define E_SUNLIGHT_MIN 0
 #define E_SUNLIGHT_MAX 5
 #define E_SUNLIGHT_KEY "e_sunlight"
@@ -808,13 +1128,33 @@ system flags defined on the fly and by wizards for this boot*/
 	SYS_NOANSI                                   =256, /*disable ansi colors world wide*/
 	SYS_LOGMOB                                   =512 /*log ALL mob ti system log*/
 };
-#define E_SYS_FLAGS_COUNT 11
+#define E_SYS_FLAGS_COUNT 10
 #define E_SYS_FLAGS_MIN 1
 #define E_SYS_FLAGS_MAX 512
 #define E_SYS_FLAGS_KEY "e_sys_flags"
 
 #define E_SYS_FLAGS_ACCEPT_ZERO true
 // Enum type: E_SYS_FLAGS -- end
+
+// Enum type: E_TAN_RESULT -- start
+enum e_tan_result {
+	TAN_SHIELD                                   =67,
+	TAN_JACKET                                   =68,
+	TAN_BOOTS                                    =69,
+	TAN_GLOVES                                   =70,
+	TAN_LEGGINGS                                 =71,
+	TAN_SLEEVES                                  =72,
+	TAN_HELMET                                   =73,
+	TAN_BAG                                      =14,
+	TAN_ARMOR                                    =9602
+};
+#define E_TAN_RESULT_COUNT 9
+#define E_TAN_RESULT_MIN 14
+#define E_TAN_RESULT_MAX 9602
+#define E_TAN_RESULT_KEY "e_tan_result"
+
+#define E_TAN_RESULT_ACCEPT_ZERO true
+// Enum type: E_TAN_RESULT -- end
 
 // Enum type: E_TELEPORTS -- start
 enum e_teleports {
@@ -823,7 +1163,7 @@ enum e_teleports {
 	TELE_RANDOM                                  =4,
 	TELE_SPIN                                    =8
 };
-#define E_TELEPORTS_COUNT 5
+#define E_TELEPORTS_COUNT 4
 #define E_TELEPORTS_MIN 1
 #define E_TELEPORTS_MAX 8
 #define E_TELEPORTS_KEY "e_teleports"
@@ -850,7 +1190,7 @@ user flags*/
 	CAN_OBJ_EDIT                                 =4096, /*this user can use oedit to edit objects*/
 	CAN_MOB_EDIT                                 =8192 /*this user can use medit to edit mobs*/
 };
-#define E_USER_FLAGS_COUNT 15
+#define E_USER_FLAGS_COUNT 14
 #define E_USER_FLAGS_MIN 1
 #define E_USER_FLAGS_MAX 8192
 #define E_USER_FLAGS_KEY "e_user_flags"
@@ -858,8 +1198,8 @@ user flags*/
 #define E_USER_FLAGS_ACCEPT_ZERO true
 // Enum type: E_USER_FLAGS -- end
 
-// Enum type: E_WEAR_AS -- start
-enum e_wear_as {
+// Enum type: E_WEAR -- start
+enum e_wear {
 	WEAR_LIGHT                                   =0,
 	WEAR_FINGER_R                                =1,
 	WEAR_FINGER_L                                =2,
@@ -884,13 +1224,70 @@ enum e_wear_as {
 	WEAR_EYES                                    =21,
 	LOADED_WEAPON                                =22
 };
-#define E_WEAR_AS_COUNT 24
-#define E_WEAR_AS_MIN 0
-#define E_WEAR_AS_MAX 22
-#define E_WEAR_AS_KEY "e_wear_as"
+#define E_WEAR_COUNT 23
+#define E_WEAR_MIN 0
+#define E_WEAR_MAX 22
+#define E_WEAR_KEY "e_wear"
 
-#define E_WEAR_AS_ACCEPT_ZERO true
-// Enum type: E_WEAR_AS -- end
+#define E_WEAR_ACCEPT_ZERO true
+// Enum type: E_WEAR -- end
+
+//#defines
+#define	ALL_DARK                                     1 
+#define	FOREST_DARK                                  2 
+#define	NO_DARK                                      3 
+#define	ABS_MAX_EXP                                  2000000000 
+#define	MAX_XP                                       2147483647 
+#define	MAX_STAT                                     6 
+#define	BIT_POOF_IN                                  1 
+#define	BIT_POOF_OUT                                 2 
+#define	MAX_WEAR_POS                                 E_WEAR_MAX 
+#define	MAX_TOUNGE                                   3 
+#define	MAX_NEW_LANGUAGES                            10 
+#define	MAX_SKILLS                                   350 
+#define	MAX_WEAR                                     E_WEAR_COUNT 
+#define	MAX_AFFECT                                   40 
+#define	MAX_SAVES                                    8 
+#define	MAX_CONDITIONS                               5 
+#define	MAX_CLASS                                    11 
+#define	OLD_MAX_CLASS                                4 
+#define	ABS_MAX_CLASS                                20 
+#define	MAX_POSITION                                 9 
+#define	HIT_INCAP                                    -3 
+#define	HIT_MORTALLYW                                -6 
+#define	HIT_DEAD                                     -11 
+#define	SKILL_SPECIALIZED                            1 
+#define	SKILL_UNDEFINED                              2 
+#define	SKILL_UNDEFINED2                             4 
+#define	ABS_MAX_LVL                                  70 
+#define	MAX_RACE                                     E_RACES_COUNT 
+#define	STATUS_BEFORELOOP                            "BEFORELOOP" 
+#define	STATUS_INITLOOP                              "INITLOOP" 
+#define	STATUS_AFTERPCOM                             "AFTERPCOM" 
+#define	STATUS_PULSEZONE                             "PULSEZONE" 
+#define	STATUS_PULSERIVER                            "PULSERIVER" 
+#define	STATUS_PULSETELEPORT                         "PULSETELEPORT" 
+#define	STATUS_PULSEVIOLENCE                         "PULSEVIOLENCE" 
+#define	STATUS_PERFORMVIOLENCE                       "PERFORMVIOLENCE" 
+#define	STATUS_MUDHOUR                               "MUDHOUR" 
+#define	STATUS_AFFECTUPDATE                          "AFFECTUPDATE" 
+#define	STATUS_ENDLOOP                               "ENDLOOP" 
+#define	STATUS_CALLINGSCRIPT                         "CALLINGSCRIPT" 
+#define	STATUS_ENDSCRIPT                             "ENDSCRIPT" 
+#define	STATUS_CALLINGSPEC                           "CALLINGSPEC" 
+#define	STATUS_ENDSPEC                               "ENDSPEC" 
+#define	STATUS_OTCBEFORELOOP                         "OTCBEFORELOOP" 
+#define	STATUS_OTCREALOBJECT                         "OTCREALOBJECT" 
+#define	STATUS_OTCREADOBJECT                         "OTCREADOBJECT" 
+#define	STATUS_OTCCOPYVALUE                          "OTCCOPYVALUE" 
+#define	STATUS_OTCFREESTRING                         "OTCFREESTRING" 
+#define	STATUS_OTCALLOCSTRING                        "OTCALLOCSTRING" 
+#define	STATUS_OTCCOPYSTRING                         "OTCCOPYSTRING" 
+#define	STATUS_OTCCOPYAFFECT                         "OTCCOPYAFFECT" 
+#define	STATUS_OTCBAGTREE                            "OTCBAGTREE" 
+#define	STATUS_OTCENDLOOP                            "OTCENDLOOP" 
+#define	STATUS_OTCAFTERLOOP                          "OTCAFTERLOOP" 
+#define	STATUS_MAX                                   25 
 
 namespace G {
 extern e_affected_by encode_e_affected_by(std::string s,e_affected_by fallback = AFF_NONE);
@@ -941,6 +1338,10 @@ extern e_fear_type encode_e_fear_type(std::string s,e_fear_type fallback = FEAR_
 extern std::string translate(const e_fear_type e);
 extern bool enum_validate(const e_fear_type value);
 extern std::ostream & operator<<(std::ostream &out,const e_fear_type value);
+extern e_find_result encode_e_find_result(std::string s,e_find_result fallback = FOUND_WATER);
+extern std::string translate(const e_find_result e);
+extern bool enum_validate(const e_find_result value);
+extern std::ostream & operator<<(std::ostream &out,const e_find_result value);
 extern e_hate_type encode_e_hate_type(std::string s,e_hate_type fallback = HATE_SEX);
 extern std::string translate(const e_hate_type e);
 extern bool enum_validate(const e_hate_type value);
@@ -949,10 +1350,30 @@ extern e_immunity_type encode_e_immunity_type(std::string s,e_immunity_type fall
 extern std::string translate(const e_immunity_type e);
 extern bool enum_validate(const e_immunity_type value);
 extern std::ostream & operator<<(std::ostream &out,const e_immunity_type value);
+extern e_item_flag encode_e_item_flag(std::string s,e_item_flag fallback = ITEM_GLOW);
+extern std::string translate(const e_item_flag e);
+extern bool enum_validate(const e_item_flag value);
+extern std::ostream & operator<<(std::ostream &out,const e_item_flag value);
+extern e_item_type encode_e_item_type(std::string s,e_item_type fallback = ITEM_LIGHT);
+extern std::string translate(const e_item_type e);
+extern bool enum_validate(const e_item_type value);
+extern std::ostream & operator<<(std::ostream &out,const e_item_type value);
+extern e_item_wear encode_e_item_wear(std::string s,e_item_wear fallback = ITEM_TAKE);
+extern std::string translate(const e_item_wear e);
+extern bool enum_validate(const e_item_wear value);
+extern std::ostream & operator<<(std::ostream &out,const e_item_wear value);
 extern e_large_flags encode_e_large_flags(std::string s,e_large_flags fallback = LARGE_NONE);
 extern std::string translate(const e_large_flags e);
 extern bool enum_validate(const e_large_flags value);
 extern std::ostream & operator<<(std::ostream &out,const e_large_flags value);
+extern e_liquids encode_e_liquids(std::string s,e_liquids fallback = LIQ_WATER);
+extern std::string translate(const e_liquids e);
+extern bool enum_validate(const e_liquids value);
+extern std::ostream & operator<<(std::ostream &out,const e_liquids value);
+extern e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback = LOG_SYSERR);
+extern std::string translate(const e_log_levels e);
+extern bool enum_validate(const e_log_levels value);
+extern std::ostream & operator<<(std::ostream &out,const e_log_levels value);
 extern e_mob_flags encode_e_mob_flags(std::string s,e_mob_flags fallback = ACT_SPEC);
 extern std::string translate(const e_mob_flags e);
 extern bool enum_validate(const e_mob_flags value);
@@ -969,6 +1390,10 @@ extern e_positions encode_e_positions(std::string s,e_positions fallback = POSIT
 extern std::string translate(const e_positions e);
 extern bool enum_validate(const e_positions value);
 extern std::ostream & operator<<(std::ostream &out,const e_positions value);
+extern e_races encode_e_races(std::string s,e_races fallback = RACE_HALFBREED);
+extern std::string translate(const e_races e);
+extern bool enum_validate(const e_races value);
+extern std::ostream & operator<<(std::ostream &out,const e_races value);
 extern e_room_flags encode_e_room_flags(std::string s,e_room_flags fallback = DARK);
 extern std::string translate(const e_room_flags e);
 extern bool enum_validate(const e_room_flags value);
@@ -1009,6 +1434,10 @@ extern e_sys_flags encode_e_sys_flags(std::string s,e_sys_flags fallback = SYS_N
 extern std::string translate(const e_sys_flags e);
 extern bool enum_validate(const e_sys_flags value);
 extern std::ostream & operator<<(std::ostream &out,const e_sys_flags value);
+extern e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback = TAN_SHIELD);
+extern std::string translate(const e_tan_result e);
+extern bool enum_validate(const e_tan_result value);
+extern std::ostream & operator<<(std::ostream &out,const e_tan_result value);
 extern e_teleports encode_e_teleports(std::string s,e_teleports fallback = TELE_LOOK);
 extern std::string translate(const e_teleports e);
 extern bool enum_validate(const e_teleports value);
@@ -1017,10 +1446,10 @@ extern e_user_flags encode_e_user_flags(std::string s,e_user_flags fallback = NO
 extern std::string translate(const e_user_flags e);
 extern bool enum_validate(const e_user_flags value);
 extern std::ostream & operator<<(std::ostream &out,const e_user_flags value);
-extern e_wear_as encode_e_wear_as(std::string s,e_wear_as fallback = WEAR_LIGHT);
-extern std::string translate(const e_wear_as e);
-extern bool enum_validate(const e_wear_as value);
-extern std::ostream & operator<<(std::ostream &out,const e_wear_as value);
+extern e_wear encode_e_wear(std::string s,e_wear fallback = WEAR_LIGHT);
+extern std::string translate(const e_wear e);
+extern bool enum_validate(const e_wear value);
+extern std::ostream & operator<<(std::ostream &out,const e_wear value);
 } // namespace G
 template<typename T>
 std::string t(T e) {
@@ -1163,6 +1592,17 @@ struct Stack <gates::e_fear_type> {
 };
 
 template <>
+struct Stack <gates::e_find_result> {
+    static void push (lua_State* L, gates::e_find_result s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_find_result get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_find_result>(E_FIND_RESULT_KEY,stringa,static_cast<gates::e_find_result>(E_FIND_RESULT_MIN));
+    }
+};
+
+template <>
 struct Stack <gates::e_hate_type> {
     static void push (lua_State* L, gates::e_hate_type s) {
         lua_pushstring (L, t(s).c_str());
@@ -1185,6 +1625,39 @@ struct Stack <gates::e_immunity_type> {
 };
 
 template <>
+struct Stack <gates::e_item_flag> {
+    static void push (lua_State* L, gates::e_item_flag s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_item_flag get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_item_flag>(E_ITEM_FLAG_KEY,stringa,static_cast<gates::e_item_flag>(E_ITEM_FLAG_MIN));
+    }
+};
+
+template <>
+struct Stack <gates::e_item_type> {
+    static void push (lua_State* L, gates::e_item_type s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_item_type get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_item_type>(E_ITEM_TYPE_KEY,stringa,static_cast<gates::e_item_type>(E_ITEM_TYPE_MIN));
+    }
+};
+
+template <>
+struct Stack <gates::e_item_wear> {
+    static void push (lua_State* L, gates::e_item_wear s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_item_wear get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_item_wear>(E_ITEM_WEAR_KEY,stringa,static_cast<gates::e_item_wear>(E_ITEM_WEAR_MIN));
+    }
+};
+
+template <>
 struct Stack <gates::e_large_flags> {
     static void push (lua_State* L, gates::e_large_flags s) {
         lua_pushstring (L, t(s).c_str());
@@ -1192,6 +1665,28 @@ struct Stack <gates::e_large_flags> {
     static gates::e_large_flags get (lua_State* L, int index) {
         string stringa(luaL_checkstring(L,index));
         return gates::globals()->get<gates::e_large_flags>(E_LARGE_FLAGS_KEY,stringa,static_cast<gates::e_large_flags>(E_LARGE_FLAGS_MIN));
+    }
+};
+
+template <>
+struct Stack <gates::e_liquids> {
+    static void push (lua_State* L, gates::e_liquids s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_liquids get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_liquids>(E_LIQUIDS_KEY,stringa,static_cast<gates::e_liquids>(E_LIQUIDS_MIN));
+    }
+};
+
+template <>
+struct Stack <gates::e_log_levels> {
+    static void push (lua_State* L, gates::e_log_levels s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_log_levels get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_log_levels>(E_LOG_LEVELS_KEY,stringa,static_cast<gates::e_log_levels>(E_LOG_LEVELS_MIN));
     }
 };
 
@@ -1236,6 +1731,17 @@ struct Stack <gates::e_positions> {
     static gates::e_positions get (lua_State* L, int index) {
         string stringa(luaL_checkstring(L,index));
         return gates::globals()->get<gates::e_positions>(E_POSITIONS_KEY,stringa,static_cast<gates::e_positions>(E_POSITIONS_MIN));
+    }
+};
+
+template <>
+struct Stack <gates::e_races> {
+    static void push (lua_State* L, gates::e_races s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_races get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_races>(E_RACES_KEY,stringa,static_cast<gates::e_races>(E_RACES_MIN));
     }
 };
 
@@ -1350,6 +1856,17 @@ struct Stack <gates::e_sys_flags> {
 };
 
 template <>
+struct Stack <gates::e_tan_result> {
+    static void push (lua_State* L, gates::e_tan_result s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::e_tan_result get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::e_tan_result>(E_TAN_RESULT_KEY,stringa,static_cast<gates::e_tan_result>(E_TAN_RESULT_MIN));
+    }
+};
+
+template <>
 struct Stack <gates::e_teleports> {
     static void push (lua_State* L, gates::e_teleports s) {
         lua_pushstring (L, t(s).c_str());
@@ -1372,13 +1889,13 @@ struct Stack <gates::e_user_flags> {
 };
 
 template <>
-struct Stack <gates::e_wear_as> {
-    static void push (lua_State* L, gates::e_wear_as s) {
+struct Stack <gates::e_wear> {
+    static void push (lua_State* L, gates::e_wear s) {
         lua_pushstring (L, t(s).c_str());
     }
-    static gates::e_wear_as get (lua_State* L, int index) {
+    static gates::e_wear get (lua_State* L, int index) {
         string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_wear_as>(E_WEAR_AS_KEY,stringa,static_cast<gates::e_wear_as>(E_WEAR_AS_MIN));
+        return gates::globals()->get<gates::e_wear>(E_WEAR_KEY,stringa,static_cast<gates::e_wear>(E_WEAR_MIN));
     }
 };
 

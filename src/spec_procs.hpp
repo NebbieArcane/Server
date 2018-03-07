@@ -1,7 +1,14 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __SPEC_PROCS_HPP
 #define __SPEC_PROCS_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #include "specass2.hpp"
+#include "specialproc_other.hpp"
+namespace Alarmud {
 int AGGRESSIVE(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AbbarachDragon(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int BiosKaiThanatos( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
@@ -111,4 +118,6 @@ int zm_stunned_followers(struct char_data* zmaster) ;
 int zm_tired(struct char_data* zmaster) ;
 int zombie_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type);
 int zone_obj( struct char_data* ch, int cmd, char* arg, struct obj_data* tobj,int type);
+} // namespace Alarmud
 #endif // __SPEC_PROCS_HPP
+

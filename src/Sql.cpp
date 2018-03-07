@@ -44,18 +44,23 @@ Sql* Sql::where(const string field, const string op, const string value) {
 Sql* Sql::where(const string glue, const string field, const string op,
 		const string value) {
 	_where.append(" ").append(glue).append(field).append(" ").append(op).append(" ").append(value);
+	return this;
 }
 
 Sql* Sql::from(const string table) {
+	return this;
 }
 
 Sql* Sql::select(const string field) {
+	return this;
 }
 
 Sql* Sql::select(const std::vector<string> fields) {
+	return this;
 }
 
 Sql* Sql::limit(const unsigned long limit) {
+	return this;
 }
 
 } // namespace Alarmud

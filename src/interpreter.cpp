@@ -86,7 +86,7 @@ const int race_choice[]= {
 	RACE_HALF_ORC,
 	RACE_HALF_OGRE,
 	RACE_HALF_GIANT,
-	RACE_DROW,                /* bad guys here */
+	RACE_DARK_ELF,                /* bad guys here */
 #if 1 /*Era 0, adesso tutte le razze gia' previste sono abilitate. GGPATCH*/
 	RACE_ORC,             /*Nascono allo shire */
 	RACE_GOBLIN,          /*Nascono allo shire */
@@ -346,7 +346,7 @@ char* fill[]= {
 };
 
 
-int search_block(char* arg, char** list, bool exact) {
+int search_block(char* arg, const char** list, bool exact) {
 	register int i,l;
 
 	/* Make into lower case, and get length of string */
@@ -464,15 +464,18 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 	for(; isspace(*argument); argument++) ;
 
 	if( *argument && *argument != '\n' ) {
+		godTrace(LOG_SYSERR,"1Argument:",argument);
 		if( !isalpha( *argument ) ) {
+			godTrace(LOG_SYSERR,"2Argument:",argument);
 			buf1[0] = *argument;
 			buf1[1] = '\0';
-			if( argument + 1 )
+			if(*( argument + 1) )
 			{ strcpy( buf2, argument + 1 ); }
 			else
 			{ buf2[0] = '\0'; }
 		}
 		else {
+			godTrace(LOG_SYSERR,"3Argument:",argument);
 			register int i;
 			half_chop(argument, buf1, buf2);
 			i = 0;
@@ -1600,6 +1603,7 @@ void ShowStatInstruction( struct descriptor_data* d ) {
 }
 void ShowRollInstruction( struct descriptor_data* d ) {
 	char buf[ 200 ];
+	char temp[200];
 
 	sprintf( buf, "Hai scelto la creazione del personaggio per esperti.\n\r");
 	SEND_TO_Q( buf, d );
@@ -1622,8 +1626,8 @@ void ShowRollInstruction( struct descriptor_data* d ) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(buf,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d\n\r\n\r",buf,
+	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
+	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d\n\r\n\r",temp,
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1638,8 +1642,8 @@ void ShowRollInstruction( struct descriptor_data* d ) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(buf,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",buf,
+	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
+	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",temp,
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1682,6 +1686,7 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 #define GOON     0
 {
 	char buf[ 254 ];
+	char temp[254];
 	short doafter=GOON;
 	int FO,IN,SA,AG,CO,CA,t;
 	char c7[2]="\0";
@@ -1713,7 +1718,7 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 		CO=MIN(MaxConForRace(d->character)-STAT_MIN_VAL,CO);
 		CA=MIN(MaxChrForRace(d->character)-STAT_MIN_VAL,CA);
 		sprintf(buf,"Ecco le stats risultanti dalla tua scelta:\n\r");
-		sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
+		sprintf(temp,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
 				IN+STAT_MIN_VAL,
 				SA+STAT_MIN_VAL,
 				AG+STAT_MIN_VAL,
@@ -1721,7 +1726,7 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 				CA+STAT_MIN_VAL,(!*c7?"\0":"piu' la randomizzazione (-1/+1)"));
 		if (t<STAT_MAX_SUM)
 			sprintf(buf,"%sATTENZIONE. Hai usato solo %2d dei %2d disponibili\n\r",
-					buf,t,STAT_MAX_SUM);
+					temp,t,STAT_MAX_SUM);
 		SEND_TO_Q(buf,d);
 	}
 	d->stat[0]=(char)FO;
@@ -2465,7 +2470,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 				break;
 			}
 
-			case RACE_DROW: {
+			case RACE_DARK_ELF: {
 				ii=0;
 				while (d->character->player.iClass==0 && dark_elf_class_choice[ii] !=0) {
 					if (atoi(arg) == ii)
@@ -3284,7 +3289,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 			SEND_TO_Q(buf,d);
 		} /* end for */
 		break;
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		for (i=0; dark_elf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)dark_elf_class_choice[i],pc_class_types, buf2);

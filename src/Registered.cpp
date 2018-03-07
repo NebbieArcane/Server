@@ -17,8 +17,6 @@
 /***************************  Local    include ************************************/
 #include "Registered.hpp"
 namespace Alarmud {
-
-namespace Alarmud {
 Registered::Registered(char* pgname):code(),god() {
 	// TODO Auto-generated constructor stub
 
@@ -27,7 +25,6 @@ Registered::Registered(char* pgname):code(),god() {
 
 Registered::~Registered() {
 	// TODO Auto-generated destructor stub
-}
 }
 } // namespace Alarmud
 

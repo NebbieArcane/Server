@@ -627,7 +627,7 @@ void boot_the_shops() {
 	for(;;)    {
 		buf = fread_string(shop_f);
 		if(*buf == '#') {      /* a new shop */
-			mudlog(LOG_CHECK,"Booting shop %s",buf);
+			mudlog(LOG_SAVE,"Booting shop %s",buf);
 
 			if(!number_of_shops)        /* first shop */
 			{ CREATE(shop_index, struct shop_data, 1); }
@@ -641,7 +641,7 @@ void boot_the_shops() {
 
 			for(count=0; count<MAX_PROD; count++) {
 				fscanf(shop_f,"%d \n", &temp);
-				mudlog(LOG_CHECK,"Obj %d",temp);
+				mudlog(LOG_SAVE,"Obj %d",temp);
 				if (temp >= 0)
 					shop_index[number_of_shops].producing[count]=
 						real_object(temp);
@@ -677,7 +677,7 @@ void boot_the_shops() {
 				   &shop_index[number_of_shops].temper2);
 			fscanf(shop_f,"%d \n",
 				   &shop_index[number_of_shops].keeper);
-			mudlog(LOG_CHECK,"ShopKeeper is %d",shop_index[number_of_shops].keeper);
+			mudlog(LOG_SAVE,"ShopKeeper is %d",shop_index[number_of_shops].keeper);
 			shop_index[number_of_shops].keeper =
 				real_mobile(shop_index[number_of_shops].keeper);
 

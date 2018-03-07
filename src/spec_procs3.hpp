@@ -1,6 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __SPEC_PROCS3_HPP
 #define __SPEC_PROCS3_HPP
-#include "config.hpp"
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 int AcidBlob		(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AcidBreather	(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 int AntiSunItem		(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) ;
@@ -81,4 +87,6 @@ int timnus			(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 int trap_obj		(struct char_data* ch,int i,char* arg,struct obj_data* obj,int ev) ;
 void trap_obj_damage(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;
 int winger			(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
+} // namespace Alarmud
 #endif // __SPEC_PROCS3_HPP
+

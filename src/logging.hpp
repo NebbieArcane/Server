@@ -24,11 +24,12 @@ using std::string;
 extern boost::format  my_fmt(const std::string &f_string);
 //#define mudlog(level,...) { LOG_INFO(#level << " " << my_fmt FORMAT(__VA_ARGS__)); }
 #define mudlog_LOG_SYSERR(level,...) {LOG4CXX_FATAL(errlogger,"LSYSERR  " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_FATAL(logger,"LSYSERR  " << my_fmt FORMAT(__VA_ARGS__))}
-#define mudlog_LOG_ERROR(level,...) {LOG4CXX_ERROR(errlogger,"LERROR " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_FATAL(logger,"LERROR  " << my_fmt FORMAT(__VA_ARGS__))}
+#define mudlog_LOG_ALWAYS(level,...) LOG4CXX_FATAL(logger,"LSERVICE  " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_ERROR(level,...) {LOG4CXX_ERROR(errlogger,"LERROR " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_ERROR(logger,"LERROR  " << my_fmt FORMAT(__VA_ARGS__))}
 #define mudlog_LOG_CHECK(level,...) LOG4CXX_WARN(logger,"LCHECK " << my_fmt FORMAT(__VA_ARGS__))
 #define mudlog_LOG_PLAYERS(level,...) LOG4CXX_DEBUG(logger,"LPLAYERS " << my_fmt FORMAT(__VA_ARGS__))
 #define mudlog_LOG_MOBILES(level,...) LOG4CXX_DEBUG(logger,"LMOBILES " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_CONNECT(level,...) LOG4CXX_INFO(logger,"LCONNECT " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_CONNECT(level,...) LOG4CXX_ERROR(logger,"LCONNECT " << my_fmt FORMAT(__VA_ARGS__))
 #define mudlog_LOG_WHO(level,...) LOG4CXX_INFO(logger,"LWHO " << my_fmt FORMAT(__VA_ARGS__))
 #define mudlog_LOG_SAVE(level,...) LOG4CXX_TRACE(logger,"LSAVE " << my_fmt FORMAT(__VA_ARGS__))
 #define mudlog_LOG_MAIL(level,...) LOG4CXX_TRACE(logger,"LMAIL " << my_fmt FORMAT(__VA_ARGS__))
@@ -42,8 +43,8 @@ extern boost::format  my_fmt(const std::string &f_string);
 #define LOG_DBG(x)   LOG4CXX_DEBUG(logger, x)
 #define LOG_INFO(x)  LOG4CXX_INFO(logger, x)
 #define LOG_WARN(x)  LOG4CXX_WARN(logger, x)
-#define LOG_ALERT(x) {LOG4CXX_ERROR(errlogger, x);LOG4CXX_ERROR(errlogger, x)}
-#define LOG_FATAL(x) {LOG4CXX_FATAL(errlogger, x);LOG4CXX_FATAL(errlogger, x)}
+#define LOG_ALERT(x) {LOG4CXX_ERROR(logger, x);LOG4CXX_ERROR(errlogger, x)}
+#define LOG_FATAL(x) {LOG4CXX_FATAL(logger, x);LOG4CXX_FATAL(errlogger, x)}
 
 extern log4cxx::LoggerPtr logger;
 extern log4cxx::LoggerPtr buglogger;

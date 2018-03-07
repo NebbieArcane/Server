@@ -1878,7 +1878,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	case RACE_HUMAN:
 	case RACE_ELVEN:
 	case RACE_DWARF:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_ORC:
 	case RACE_LYCANTH:
 	case RACE_TROLL:

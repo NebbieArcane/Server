@@ -1,12 +1,18 @@
-
-/* AlarMUD
- * $Id: utils.h,v 1.2 2002/02/13 11:55:50 root Exp $ +/
- * */
-#ifndef __UTILS__
-#define __UTILS__ 1
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __UTILS__HPP
+#define __UTILS__HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #include "cmdid.hpp"
 #include "snew.hpp"
 #include "hash.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+namespace Alarmud {
+
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
 //#define TRUE  1
@@ -406,8 +412,6 @@ inline struct room_data* real_roomp( long lVNum ) {
 	{ \
 		if WEARING(ch,dummy) result++; \
 	}
-#endif
-
 #define REMOVE_FROM_LIST(item, head, next)  \
 	if ((item) == (head))        \
 		head = (item)->next;      \
@@ -418,4 +422,7 @@ inline struct room_data* real_roomp( long lVNum ) {
 		if (temp)             \
 			temp->next = (item)->next; \
 	}                    \
+
+} // namespace Alarmud
+#endif
 

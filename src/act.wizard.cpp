@@ -120,7 +120,7 @@ void do_auth(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 void do_register(struct char_data* ch, char* argument, int cmd) {
-	struct char_data* victim;
+	struct char_data* victim = nullptr;
 	char buf[255];
 	char name[MAX_INPUT_LENGTH];
 	char* parms[10];
@@ -3742,7 +3742,7 @@ void roll_abilities(struct char_data* ch) {
 			 ch->abilities.dex++;
 			 ch->abilities.str--;
 		      }
-		      else if (GET_RACE(ch) == RACE_DROW)
+		      else if (GET_RACE(ch) == RACE_DARK_ELF)
 		      {
 			 ch->abilities.dex+=2;
 			 ch->abilities.con--;
@@ -3902,7 +3902,7 @@ void do_start(struct char_data* ch) {
 
 	/* set default speaking language */
 	switch(GET_RACE(ch)) {
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 	case RACE_SEA_ELF:
@@ -3962,7 +3962,7 @@ void do_start(struct char_data* ch) {
 			ch->skills[SKILL_BACKSTAB].learned = 10;
 			ch->skills[SKILL_PICK_LOCK].learned = 5;
 		}
-		else if (GET_RACE(ch) == RACE_DROW) {
+		else if (GET_RACE(ch) == RACE_DARK_ELF) {
 			ch->skills[SKILL_SNEAK].learned = 20;
 			ch->skills[SKILL_HIDE].learned =  15;
 			ch->skills[SKILL_STEAL].learned = 25;

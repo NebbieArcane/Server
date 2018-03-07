@@ -222,7 +222,7 @@ int CAN_SEE(struct char_data* s, struct char_data* o) {
 	if (pRoomS and pRoomO) {
 
 		if( ( IS_DARK_P( pRoomS ) || IS_DARK_P( pRoomO ) ) &&
-				!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DROW)) {
+				!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DARK_ELF)) {
 			return(FALSE);
 		}
 	}
@@ -264,7 +264,7 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj) {
 
 	if( IS_DARK_P(real_roomp(ch->in_room)) &&
 			!IS_OBJ_STAT(obj, ITEM_GLOW) &&
-			GET_RACE(ch)!=RACE_DROW)
+			GET_RACE(ch)!=RACE_DARK_ELF)
 	{ return(0); }
 
 
@@ -1835,7 +1835,7 @@ int IsHumanoid( struct char_data* ch) {
 	case RACE_LIZARDMAN:
 	case RACE_SKEXIE:
 	case RACE_TYTAN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLEM:
 	case RACE_DEMON:
 	case RACE_DRAAGDIM:
@@ -2016,7 +2016,7 @@ int IsPerson( struct char_data* ch) {
 	switch(GET_RACE(ch)) {
 	case RACE_HUMAN:
 	case RACE_ELVEN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_DWARF:
 	case RACE_DARK_DWARF:
 	case RACE_HALFLING:
@@ -3040,7 +3040,7 @@ void SetRacialStuff( struct char_data* mob) {
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
 	/* no break */
 	case RACE_ELVEN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 		SET_BIT(mob->specials.affected_by,AFF_INFRAVISION);
@@ -3202,7 +3202,7 @@ void SetRacialStuff( struct char_data* mob) {
 			break;
 		case RACE_MFLAYER:
 			break;
-		case RACE_DROW:
+		case RACE_DARK_ELF:
 			AddHatred(mob,OP_RACE,RACE_ELVEN);
 			break;
 		case RACE_SKEXIE:
@@ -3470,7 +3470,7 @@ int GetNewRace(struct char_file_u* s) {
 		case RACE_HALFLING:
 		case RACE_GNOME:
 		case RACE_ORC:
-		case RACE_DROW:
+		case RACE_DARK_ELF:
 		case RACE_MFLAYER:
 		case RACE_DARK_DWARF:
 		case RACE_DEEP_GNOME:
@@ -4127,7 +4127,7 @@ int MaxDexForRace(struct char_data* ch) {
 	case RACE_DEMON:
 		return(19);
 		break;
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOD:
 		return(20);
 		break;
@@ -4197,7 +4197,7 @@ int MaxConForRace(struct char_data* ch) {
 	case RACE_ELVEN:
 	case RACE_GOLD_ELF:
 	case RACE_SEA_ELF:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		return(17);
 		break;
 	default:
@@ -4212,7 +4212,7 @@ int MaxChrForRace(struct char_data* ch) {
 	switch(GET_RACE(ch)) {
 	case RACE_HALF_ORC:
 	case RACE_ORC:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_DWARF:
 	case RACE_DARK_DWARF:
 		return(17);
@@ -4357,7 +4357,7 @@ void SetDefaultLang(struct char_data* ch) {
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 	case RACE_SEA_ELF:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		i = LANG_ELVISH;
 		break;
 	case RACE_TROLL:
@@ -4526,7 +4526,7 @@ int IsGoodSide(struct char_data* ch) {
 	case RACE_HALF_OGRE   :
 	case RACE_HALF_ORC    :
 	case RACE_HALF_GIANT  :
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		return(TRUE);
 	} /* */
 

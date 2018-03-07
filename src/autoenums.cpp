@@ -2535,6 +2535,368 @@ std::ostream & operator<<(std::ostream &out,const e_positions value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
+e_races encode_e_races(std::string s,e_races fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "RACE_HALFBREED") return RACE_HALFBREED;
+	if (s == "RACE_HUMAN") return RACE_HUMAN;
+	if (s == "RACE_ELVEN") return RACE_ELVEN;
+	if (s == "RACE_DWARF") return RACE_DWARF;
+	if (s == "RACE_HALFLING") return RACE_HALFLING;
+	if (s == "RACE_GNOME") return RACE_GNOME;
+	if (s == "RACE_REPTILE") return RACE_REPTILE;
+	if (s == "RACE_SPECIAL") return RACE_SPECIAL;
+	if (s == "RACE_LYCANTH") return RACE_LYCANTH;
+	if (s == "RACE_DRAGON") return RACE_DRAGON;
+	if (s == "RACE_UNDEAD") return RACE_UNDEAD;
+	if (s == "RACE_ORC") return RACE_ORC;
+	if (s == "RACE_INSECT") return RACE_INSECT;
+	if (s == "RACE_ARACHNID") return RACE_ARACHNID;
+	if (s == "RACE_DINOSAUR") return RACE_DINOSAUR;
+	if (s == "RACE_FISH") return RACE_FISH;
+	if (s == "RACE_BIRD") return RACE_BIRD;
+	if (s == "RACE_GIANT") return RACE_GIANT;
+	if (s == "RACE_PREDATOR") return RACE_PREDATOR;
+	if (s == "RACE_PARASITE") return RACE_PARASITE;
+	if (s == "RACE_SLIME") return RACE_SLIME;
+	if (s == "RACE_DEMON") return RACE_DEMON;
+	if (s == "RACE_SNAKE") return RACE_SNAKE;
+	if (s == "RACE_HERBIV") return RACE_HERBIV;
+	if (s == "RACE_TREE") return RACE_TREE;
+	if (s == "RACE_VEGGIE") return RACE_VEGGIE;
+	if (s == "RACE_ELEMENT") return RACE_ELEMENT;
+	if (s == "RACE_PLANAR") return RACE_PLANAR;
+	if (s == "RACE_DEVIL") return RACE_DEVIL;
+	if (s == "RACE_GHOST") return RACE_GHOST;
+	if (s == "RACE_GOBLIN") return RACE_GOBLIN;
+	if (s == "RACE_TROLL") return RACE_TROLL;
+	if (s == "RACE_VEGMAN") return RACE_VEGMAN;
+	if (s == "RACE_MFLAYER") return RACE_MFLAYER;
+	if (s == "RACE_PRIMATE") return RACE_PRIMATE;
+	if (s == "RACE_ENFAN") return RACE_ENFAN;
+	if (s == "RACE_DARK_ELF") return RACE_DARK_ELF;
+	if (s == "RACE_GOLEM") return RACE_GOLEM;
+	if (s == "RACE_SKEXIE") return RACE_SKEXIE;
+	if (s == "RACE_TROGMAN") return RACE_TROGMAN;
+	if (s == "RACE_PATRYN") return RACE_PATRYN;
+	if (s == "RACE_LABRAT") return RACE_LABRAT;
+	if (s == "RACE_SARTAN") return RACE_SARTAN;
+	if (s == "RACE_TYTAN") return RACE_TYTAN;
+	if (s == "RACE_SMURF") return RACE_SMURF;
+	if (s == "RACE_ROO") return RACE_ROO;
+	if (s == "RACE_HORSE") return RACE_HORSE;
+	if (s == "RACE_DRAAGDIM") return RACE_DRAAGDIM;
+	if (s == "RACE_ASTRAL") return RACE_ASTRAL;
+	if (s == "RACE_GOD") return RACE_GOD;
+	if (s == "RACE_GIANT_HILL") return RACE_GIANT_HILL;
+	if (s == "RACE_GIANT_FROST") return RACE_GIANT_FROST;
+	if (s == "RACE_GIANT_FIRE") return RACE_GIANT_FIRE;
+	if (s == "RACE_GIANT_CLOUD") return RACE_GIANT_CLOUD;
+	if (s == "RACE_GIANT_STORM") return RACE_GIANT_STORM;
+	if (s == "RACE_GIANT_STONE") return RACE_GIANT_STONE;
+	if (s == "RACE_DRAGON_RED") return RACE_DRAGON_RED;
+	if (s == "RACE_DRAGON_BLACK") return RACE_DRAGON_BLACK;
+	if (s == "RACE_DRAGON_GREEN") return RACE_DRAGON_GREEN;
+	if (s == "RACE_DRAGON_WHITE") return RACE_DRAGON_WHITE;
+	if (s == "RACE_DRAGON_BLUE") return RACE_DRAGON_BLUE;
+	if (s == "RACE_DRAGON_SILVER") return RACE_DRAGON_SILVER;
+	if (s == "RACE_DRAGON_GOLD") return RACE_DRAGON_GOLD;
+	if (s == "RACE_DRAGON_BRONZE") return RACE_DRAGON_BRONZE;
+	if (s == "RACE_DRAGON_COPPER") return RACE_DRAGON_COPPER;
+	if (s == "RACE_DRAGON_BRASS") return RACE_DRAGON_BRASS;
+	if (s == "RACE_UNDEAD_VAMPIRE") return RACE_UNDEAD_VAMPIRE;
+	if (s == "RACE_UNDEAD_LICH") return RACE_UNDEAD_LICH;
+	if (s == "RACE_UNDEAD_WIGHT") return RACE_UNDEAD_WIGHT;
+	if (s == "RACE_UNDEAD_GHAST") return RACE_UNDEAD_GHAST;
+	if (s == "RACE_UNDEAD_SPECTRE") return RACE_UNDEAD_SPECTRE;
+	if (s == "RACE_UNDEAD_ZOMBIE") return RACE_UNDEAD_ZOMBIE;
+	if (s == "RACE_UNDEAD_SKELETON") return RACE_UNDEAD_SKELETON;
+	if (s == "RACE_UNDEAD_GHOUL") return RACE_UNDEAD_GHOUL;
+	if (s == "RACE_HALF_ELVEN") return RACE_HALF_ELVEN;
+	if (s == "RACE_HALF_OGRE") return RACE_HALF_OGRE;
+	if (s == "RACE_HALF_ORC") return RACE_HALF_ORC;
+	if (s == "RACE_HALF_GIANT") return RACE_HALF_GIANT;
+	if (s == "RACE_LIZARDMAN") return RACE_LIZARDMAN;
+	if (s == "RACE_DARK_DWARF") return RACE_DARK_DWARF;
+	if (s == "RACE_DEEP_GNOME") return RACE_DEEP_GNOME;
+	if (s == "RACE_GNOLL") return RACE_GNOLL;
+	if (s == "RACE_GOLD_ELF") return RACE_GOLD_ELF;
+	if (s == "RACE_WILD_ELF") return RACE_WILD_ELF;
+	if (s == "RACE_SEA_ELF") return RACE_SEA_ELF;
+	return fallback;
+}
+
+std::string translate(const e_races e) {
+	switch(e) {
+	case RACE_HALFBREED:
+		return "RACE_HALFBREED";
+	case RACE_HUMAN:
+		return "RACE_HUMAN";
+	case RACE_ELVEN:
+		return "RACE_ELVEN";
+	case RACE_DWARF:
+		return "RACE_DWARF";
+	case RACE_HALFLING:
+		return "RACE_HALFLING";
+	case RACE_GNOME:
+		return "RACE_GNOME";
+	case RACE_REPTILE:
+		return "RACE_REPTILE";
+	case RACE_SPECIAL:
+		return "RACE_SPECIAL";
+	case RACE_LYCANTH:
+		return "RACE_LYCANTH";
+	case RACE_DRAGON:
+		return "RACE_DRAGON";
+	case RACE_UNDEAD:
+		return "RACE_UNDEAD";
+	case RACE_ORC:
+		return "RACE_ORC";
+	case RACE_INSECT:
+		return "RACE_INSECT";
+	case RACE_ARACHNID:
+		return "RACE_ARACHNID";
+	case RACE_DINOSAUR:
+		return "RACE_DINOSAUR";
+	case RACE_FISH:
+		return "RACE_FISH";
+	case RACE_BIRD:
+		return "RACE_BIRD";
+	case RACE_GIANT:
+		return "RACE_GIANT";
+	case RACE_PREDATOR:
+		return "RACE_PREDATOR";
+	case RACE_PARASITE:
+		return "RACE_PARASITE";
+	case RACE_SLIME:
+		return "RACE_SLIME";
+	case RACE_DEMON:
+		return "RACE_DEMON";
+	case RACE_SNAKE:
+		return "RACE_SNAKE";
+	case RACE_HERBIV:
+		return "RACE_HERBIV";
+	case RACE_TREE:
+		return "RACE_TREE";
+	case RACE_VEGGIE:
+		return "RACE_VEGGIE";
+	case RACE_ELEMENT:
+		return "RACE_ELEMENT";
+	case RACE_PLANAR:
+		return "RACE_PLANAR";
+	case RACE_DEVIL:
+		return "RACE_DEVIL";
+	case RACE_GHOST:
+		return "RACE_GHOST";
+	case RACE_GOBLIN:
+		return "RACE_GOBLIN";
+	case RACE_TROLL:
+		return "RACE_TROLL";
+	case RACE_VEGMAN:
+		return "RACE_VEGMAN";
+	case RACE_MFLAYER:
+		return "RACE_MFLAYER";
+	case RACE_PRIMATE:
+		return "RACE_PRIMATE";
+	case RACE_ENFAN:
+		return "RACE_ENFAN";
+	case RACE_DARK_ELF:
+		return "RACE_DARK_ELF";
+	case RACE_GOLEM:
+		return "RACE_GOLEM";
+	case RACE_SKEXIE:
+		return "RACE_SKEXIE";
+	case RACE_TROGMAN:
+		return "RACE_TROGMAN";
+	case RACE_PATRYN:
+		return "RACE_PATRYN";
+	case RACE_LABRAT:
+		return "RACE_LABRAT";
+	case RACE_SARTAN:
+		return "RACE_SARTAN";
+	case RACE_TYTAN:
+		return "RACE_TYTAN";
+	case RACE_SMURF:
+		return "RACE_SMURF";
+	case RACE_ROO:
+		return "RACE_ROO";
+	case RACE_HORSE:
+		return "RACE_HORSE";
+	case RACE_DRAAGDIM:
+		return "RACE_DRAAGDIM";
+	case RACE_ASTRAL:
+		return "RACE_ASTRAL";
+	case RACE_GOD:
+		return "RACE_GOD";
+	case RACE_GIANT_HILL:
+		return "RACE_GIANT_HILL";
+	case RACE_GIANT_FROST:
+		return "RACE_GIANT_FROST";
+	case RACE_GIANT_FIRE:
+		return "RACE_GIANT_FIRE";
+	case RACE_GIANT_CLOUD:
+		return "RACE_GIANT_CLOUD";
+	case RACE_GIANT_STORM:
+		return "RACE_GIANT_STORM";
+	case RACE_GIANT_STONE:
+		return "RACE_GIANT_STONE";
+	case RACE_DRAGON_RED:
+		return "RACE_DRAGON_RED";
+	case RACE_DRAGON_BLACK:
+		return "RACE_DRAGON_BLACK";
+	case RACE_DRAGON_GREEN:
+		return "RACE_DRAGON_GREEN";
+	case RACE_DRAGON_WHITE:
+		return "RACE_DRAGON_WHITE";
+	case RACE_DRAGON_BLUE:
+		return "RACE_DRAGON_BLUE";
+	case RACE_DRAGON_SILVER:
+		return "RACE_DRAGON_SILVER";
+	case RACE_DRAGON_GOLD:
+		return "RACE_DRAGON_GOLD";
+	case RACE_DRAGON_BRONZE:
+		return "RACE_DRAGON_BRONZE";
+	case RACE_DRAGON_COPPER:
+		return "RACE_DRAGON_COPPER";
+	case RACE_DRAGON_BRASS:
+		return "RACE_DRAGON_BRASS";
+	case RACE_UNDEAD_VAMPIRE:
+		return "RACE_UNDEAD_VAMPIRE";
+	case RACE_UNDEAD_LICH:
+		return "RACE_UNDEAD_LICH";
+	case RACE_UNDEAD_WIGHT:
+		return "RACE_UNDEAD_WIGHT";
+	case RACE_UNDEAD_GHAST:
+		return "RACE_UNDEAD_GHAST";
+	case RACE_UNDEAD_SPECTRE:
+		return "RACE_UNDEAD_SPECTRE";
+	case RACE_UNDEAD_ZOMBIE:
+		return "RACE_UNDEAD_ZOMBIE";
+	case RACE_UNDEAD_SKELETON:
+		return "RACE_UNDEAD_SKELETON";
+	case RACE_UNDEAD_GHOUL:
+		return "RACE_UNDEAD_GHOUL";
+	case RACE_HALF_ELVEN:
+		return "RACE_HALF_ELVEN";
+	case RACE_HALF_OGRE:
+		return "RACE_HALF_OGRE";
+	case RACE_HALF_ORC:
+		return "RACE_HALF_ORC";
+	case RACE_HALF_GIANT:
+		return "RACE_HALF_GIANT";
+	case RACE_LIZARDMAN:
+		return "RACE_LIZARDMAN";
+	case RACE_DARK_DWARF:
+		return "RACE_DARK_DWARF";
+	case RACE_DEEP_GNOME:
+		return "RACE_DEEP_GNOME";
+	case RACE_GNOLL:
+		return "RACE_GNOLL";
+	case RACE_GOLD_ELF:
+		return "RACE_GOLD_ELF";
+	case RACE_WILD_ELF:
+		return "RACE_WILD_ELF";
+	case RACE_SEA_ELF:
+		return "RACE_SEA_ELF";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_races value) {
+	switch(value) {
+		case RACE_HALFBREED:
+		case RACE_HUMAN:
+		case RACE_ELVEN:
+		case RACE_DWARF:
+		case RACE_HALFLING:
+		case RACE_GNOME:
+		case RACE_REPTILE:
+		case RACE_SPECIAL:
+		case RACE_LYCANTH:
+		case RACE_DRAGON:
+		case RACE_UNDEAD:
+		case RACE_ORC:
+		case RACE_INSECT:
+		case RACE_ARACHNID:
+		case RACE_DINOSAUR:
+		case RACE_FISH:
+		case RACE_BIRD:
+		case RACE_GIANT:
+		case RACE_PREDATOR:
+		case RACE_PARASITE:
+		case RACE_SLIME:
+		case RACE_DEMON:
+		case RACE_SNAKE:
+		case RACE_HERBIV:
+		case RACE_TREE:
+		case RACE_VEGGIE:
+		case RACE_ELEMENT:
+		case RACE_PLANAR:
+		case RACE_DEVIL:
+		case RACE_GHOST:
+		case RACE_GOBLIN:
+		case RACE_TROLL:
+		case RACE_VEGMAN:
+		case RACE_MFLAYER:
+		case RACE_PRIMATE:
+		case RACE_ENFAN:
+		case RACE_DARK_ELF:
+		case RACE_GOLEM:
+		case RACE_SKEXIE:
+		case RACE_TROGMAN:
+		case RACE_PATRYN:
+		case RACE_LABRAT:
+		case RACE_SARTAN:
+		case RACE_TYTAN:
+		case RACE_SMURF:
+		case RACE_ROO:
+		case RACE_HORSE:
+		case RACE_DRAAGDIM:
+		case RACE_ASTRAL:
+		case RACE_GOD:
+		case RACE_GIANT_HILL:
+		case RACE_GIANT_FROST:
+		case RACE_GIANT_FIRE:
+		case RACE_GIANT_CLOUD:
+		case RACE_GIANT_STORM:
+		case RACE_GIANT_STONE:
+		case RACE_DRAGON_RED:
+		case RACE_DRAGON_BLACK:
+		case RACE_DRAGON_GREEN:
+		case RACE_DRAGON_WHITE:
+		case RACE_DRAGON_BLUE:
+		case RACE_DRAGON_SILVER:
+		case RACE_DRAGON_GOLD:
+		case RACE_DRAGON_BRONZE:
+		case RACE_DRAGON_COPPER:
+		case RACE_DRAGON_BRASS:
+		case RACE_UNDEAD_VAMPIRE:
+		case RACE_UNDEAD_LICH:
+		case RACE_UNDEAD_WIGHT:
+		case RACE_UNDEAD_GHAST:
+		case RACE_UNDEAD_SPECTRE:
+		case RACE_UNDEAD_ZOMBIE:
+		case RACE_UNDEAD_SKELETON:
+		case RACE_UNDEAD_GHOUL:
+		case RACE_HALF_ELVEN:
+		case RACE_HALF_OGRE:
+		case RACE_HALF_ORC:
+		case RACE_HALF_GIANT:
+		case RACE_LIZARDMAN:
+		case RACE_DARK_DWARF:
+		case RACE_DEEP_GNOME:
+		case RACE_GNOLL:
+		case RACE_GOLD_ELF:
+		case RACE_WILD_ELF:
+		case RACE_SEA_ELF:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_races value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
 e_room_flags encode_e_room_flags(std::string s,e_room_flags fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "DARK") return DARK;
@@ -3301,7 +3663,7 @@ std::ostream & operator<<(std::ostream &out,const e_user_flags value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_wear_as encode_e_wear_as(std::string s,e_wear_as fallback) {
+e_wear encode_e_wear(std::string s,e_wear fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "WEAR_LIGHT") return WEAR_LIGHT;
 	if (s == "WEAR_FINGER_R") return WEAR_FINGER_R;
@@ -3329,7 +3691,7 @@ e_wear_as encode_e_wear_as(std::string s,e_wear_as fallback) {
 	return fallback;
 }
 
-std::string translate(const e_wear_as e) {
+std::string translate(const e_wear e) {
 	switch(e) {
 	case WEAR_LIGHT:
 		return "WEAR_LIGHT";
@@ -3381,7 +3743,7 @@ std::string translate(const e_wear_as e) {
 		return "UNKNOWN";
 	}
 }
-bool enum_validate(const e_wear_as value) {
+bool enum_validate(const e_wear value) {
 	switch(value) {
 		case WEAR_LIGHT:
 		case WEAR_FINGER_R:
@@ -3411,7 +3773,7 @@ bool enum_validate(const e_wear_as value) {
 		return false;
 	}
 }
-std::ostream & operator<<(std::ostream &out,const e_wear_as value) {
+std::ostream & operator<<(std::ostream &out,const e_wear value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }

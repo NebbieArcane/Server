@@ -621,6 +621,96 @@ l'array connected_types in constants.c
 ** POSITION_MOUNTED                             =9
 == Enumerations ==
 
+=== enum e_races ===
+
+*list of races
+** RACE_HALFBREED                               =0
+** RACE_HUMAN                                   =1playable
+** RACE_ELVEN                                   =2
+** RACE_DWARF                                   =3
+** RACE_HALFLING                                =4plauable
+** RACE_GNOME                                   =5
+** RACE_REPTILE                                 =6
+** RACE_SPECIAL                                 =7
+** RACE_LYCANTH                                 =8
+** RACE_DRAGON                                  =9
+** RACE_UNDEAD                                  =10
+** RACE_ORC                                     =11
+** RACE_INSECT                                  =12
+** RACE_ARACHNID                                =13
+** RACE_DINOSAUR                                =14
+** RACE_FISH                                    =15
+** RACE_BIRD                                    =16
+** RACE_GIANT                                   =17generic giant more specials down
+** RACE_PREDATOR                                =18
+** RACE_PARASITE                                =19
+** RACE_SLIME                                   =20
+** RACE_DEMON                                   =21
+** RACE_SNAKE                                   =22
+** RACE_HERBIV                                  =23
+** RACE_TREE                                    =24
+** RACE_VEGGIE                                  =25
+** RACE_ELEMENT                                 =26
+** RACE_PLANAR                                  =27
+** RACE_DEVIL                                   =28
+** RACE_GHOST                                   =29
+** RACE_GOBLIN                                  =30
+** RACE_TROLL                                   =31playable
+** RACE_VEGMAN                                  =32
+** RACE_MFLAYER                                 =33
+** RACE_PRIMATE                                 =34
+** RACE_ENFAN                                   =35
+** RACE_DARK_ELF                                =36playable
+** RACE_GOLEM                                   =37
+** RACE_SKEXIE                                  =38
+** RACE_TROGMAN                                 =39
+** RACE_PATRYN                                  =40
+** RACE_LABRAT                                  =41
+** RACE_SARTAN                                  =42
+** RACE_TYTAN                                   =43
+** RACE_SMURF                                   =44
+** RACE_ROO                                     =45
+** RACE_HORSE                                   =46
+** RACE_DRAAGDIM                                =47
+** RACE_ASTRAL                                  =48
+** RACE_GOD                                     =49
+** RACE_GIANT_HILL                              =50
+** RACE_GIANT_FROST                             =51
+** RACE_GIANT_FIRE                              =52
+** RACE_GIANT_CLOUD                             =53
+** RACE_GIANT_STORM                             =54
+** RACE_GIANT_STONE                             =55
+** RACE_DRAGON_RED                              =56
+** RACE_DRAGON_BLACK                            =57
+** RACE_DRAGON_GREEN                            =58
+** RACE_DRAGON_WHITE                            =59
+** RACE_DRAGON_BLUE                             =60
+** RACE_DRAGON_SILVER                           =61
+** RACE_DRAGON_GOLD                             =62
+** RACE_DRAGON_BRONZE                           =63
+** RACE_DRAGON_COPPER                           =64
+** RACE_DRAGON_BRASS                            =65
+** RACE_UNDEAD_VAMPIRE                          =66
+** RACE_UNDEAD_LICH                             =67
+** RACE_UNDEAD_WIGHT                            =68
+** RACE_UNDEAD_GHAST                            =69
+** RACE_UNDEAD_SPECTRE                          =70
+** RACE_UNDEAD_ZOMBIE                           =71
+** RACE_UNDEAD_SKELETON                         =72
+** RACE_UNDEAD_GHOUL                            =73
+** RACE_HALF_ELVEN                              =74playable
+** RACE_HALF_OGRE                               =75playable
+** RACE_HALF_ORC                                =76playable
+** RACE_HALF_GIANT                              =77playable
+** RACE_LIZARDMAN                               =78
+** RACE_DARK_DWARF                              =79evil
+** RACE_DEEP_GNOME                              =80evil
+** RACE_GNOLL                                   =81
+** RACE_GOLD_ELF                                =82playable
+** RACE_WILD_ELF                                =83playable
+** RACE_SEA_ELF                                 =84playable
+== Enumerations ==
+
 === enum e_room_flags ===
 
 *Bitvector For 'room_flags'
@@ -806,7 +896,7 @@ l'array connected_types in constants.c
 ** CAN_MOB_EDIT                                 =8192this user can use medit to edit mobs
 == Enumerations ==
 
-=== enum e_wear_as ===
+=== enum e_wear ===
 
 
 ** WEAR_LIGHT                                   =0
@@ -842,11 +932,11 @@ l'array connected_types in constants.c
 **MAX_STAT                                     6 
 **BIT_POOF_IN                                  1 
 **BIT_POOF_OUT                                 2 
-**MAX_WEAR_POS                                 22 
+**MAX_WEAR_POS                                 E_WEAR_MAX 
 **MAX_TOUNGE                                   3 
 **MAX_NEW_LANGUAGES                            10 
 **MAX_SKILLS                                   350 
-**MAX_WEAR                                     23 
+**MAX_WEAR                                     E_WEAR_COUNT 
 **MAX_AFFECT                                   40 
 **MAX_SAVES                                    8 
 **MAX_CONDITIONS                               5 
@@ -861,5 +951,33 @@ l'array connected_types in constants.c
 **SKILL_UNDEFINED                              2 
 **SKILL_UNDEFINED2                             4 
 **ABS_MAX_LVL                                  70 
+**MAX_RACE                                     E_RACES_COUNT 
+**STATUS_BEFORELOOP                            "BEFORELOOP" 
+**STATUS_INITLOOP                              "INITLOOP" 
+**STATUS_AFTERPCOM                             "AFTERPCOM" 
+**STATUS_PULSEZONE                             "PULSEZONE" 
+**STATUS_PULSERIVER                            "PULSERIVER" 
+**STATUS_PULSETELEPORT                         "PULSETELEPORT" 
+**STATUS_PULSEVIOLENCE                         "PULSEVIOLENCE" 
+**STATUS_PERFORMVIOLENCE                       "PERFORMVIOLENCE" 
+**STATUS_MUDHOUR                               "MUDHOUR" 
+**STATUS_AFFECTUPDATE                          "AFFECTUPDATE" 
+**STATUS_ENDLOOP                               "ENDLOOP" 
+**STATUS_CALLINGSCRIPT                         "CALLINGSCRIPT" 
+**STATUS_ENDSCRIPT                             "ENDSCRIPT" 
+**STATUS_CALLINGSPEC                           "CALLINGSPEC" 
+**STATUS_ENDSPEC                               "ENDSPEC" 
+**STATUS_OTCBEFORELOOP                         "OTCBEFORELOOP" 
+**STATUS_OTCREALOBJECT                         "OTCREALOBJECT" 
+**STATUS_OTCREADOBJECT                         "OTCREADOBJECT" 
+**STATUS_OTCCOPYVALUE                          "OTCCOPYVALUE" 
+**STATUS_OTCFREESTRING                         "OTCFREESTRING" 
+**STATUS_OTCALLOCSTRING                        "OTCALLOCSTRING" 
+**STATUS_OTCCOPYSTRING                         "OTCCOPYSTRING" 
+**STATUS_OTCCOPYAFFECT                         "OTCCOPYAFFECT" 
+**STATUS_OTCBAGTREE                            "OTCBAGTREE" 
+**STATUS_OTCENDLOOP                            "OTCENDLOOP" 
+**STATUS_OTCAFTERLOOP                          "OTCAFTERLOOP" 
+**STATUS_MAX                                   25 
 
 

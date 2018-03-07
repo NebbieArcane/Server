@@ -1,5 +1,15 @@
-/*$Id: mail.h,v 1.2 2002/02/13 12:31:00 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __MAIL_HPP
+#define __MAIL_HPP
+/***************************  System  include ************************************/
+//#include <iostream>
+//#include <ostream>
+/***************************  Local    include ************************************/
+//#include "general.hpp"
+namespace Alarmud {
 /* ************************************************************************
 *   File: mail.h                                        Part of CircleMUD *
 *  Usage: header file for mail system                                     *
@@ -21,13 +31,6 @@
 
 /* command numbers of the "mail", "check", and "receive" commands
    in your interpreter. */
-#ifndef __MAIL_HPP
-#define __MAIL_HPP
-#include "config.hpp"
-#include "general.hpp"
-#include <iostream>
-#include <ostream>
-using std::string;
 #define CMD_MAIL        366
 #define CMD_CHECK        367
 #define CMD_RECEIVE        368
@@ -133,4 +136,6 @@ void read_from_file(void* buf, int size, int filepos) ;
 int scan_mail_file(void) ;
 void store_mail(char* to, char* from, char* message_pointer) ;
 void write_to_file(void* buf, int size, int filepos) ;
+} // namespace Alarmud
 #endif // __MAIL_HPP
+

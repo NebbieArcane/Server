@@ -1735,7 +1735,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
-				case RACE_DROW     :
+				case RACE_DARK_ELF     :
 					sprintf(hidetype,"drow hide");
 					acapply=-2;
 					lev=(int)lev/2;
@@ -3277,9 +3277,9 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
                             app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
-                            special = 1 ;
-                            apply = APPLY_SUSC ;
-                            app_val = IMM_ACID ;
+							special = 1 ;
+							apply = APPLY_SUSC ;
+							app_val = IMM_ACID ;
 						}
 						break ;
 					case RACE_SKEXIE    :
@@ -3293,7 +3293,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_HITNDAM ;
-							app_val = 1 ;
+							app_val = 2 ;
 						}
 						break ;
 					default:
