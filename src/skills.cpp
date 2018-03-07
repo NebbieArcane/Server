@@ -1899,38 +1899,38 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_SNAKE    :
-						if( total_bonus > 22 ) {
-							special = 1 ;
-							apply = APPLY_IMMUNE ;
-							app_val = IMM_POISON ;
-						}
-						else if( total_bonus > 24 ) {
+						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_POISON ;
+						}
+						else if( total_bonus > 22 ) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
 							app_val = IMM_POISON ;
 						}
 						break ;
 					case RACE_TREE     :
-						if( total_bonus > 23 ) {
-							special = 1 ;
-							apply = APPLY_IMMUNE ;
-							app_val = IMM_PIERCE ;
-						}
-						else if( total_bonus > 25 ) {
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
 							app_val = IMM_SLASH ;
 						}
-						break ;
-					case RACE_DEVIL    :
-						if( total_bonus > 23 ) {
+						else if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
-							app_val = IMM_FIRE ;
+							app_val = IMM_PIERCE ;
 						}
-						else if( total_bonus > 25 ) {
+						break ;
+					case RACE_DEVIL    :
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_FIRE ;
+						}
+						else if( total_bonus > 23 ) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
 							app_val = IMM_FIRE ;
 						}
 						break ;
@@ -2043,15 +2043,15 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					/* added by REQUIEM 2018 */
 
 					case RACE_TROLL :
-						if( total_bonus > 23 ) {
-							special = 1 ;
-							apply = APPLY_SUSC ;
-							app_val = IMM_FIRE ;
-						}
-						else if( total_bonus > 25 ) {
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_DAMROLL ;
 							app_val = 2 ;
+						}
+						else if( total_bonus > 23 ) {
+							special = 1 ;
+							apply = APPLY_SUSC ;
+							app_val = IMM_FIRE ;
 						}
 						break ;
 					case RACE_SLIME      :
@@ -2062,15 +2062,15 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_ORC :
-						if( total_bonus > 23 ) {
+						if( total_bonus > 25 ) {
+                            special = 1 ;
+                            apply = APPLY_DAMROLL ;
+                            app_val = 1 ;
+						}
+						else if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_CHR ;
 							app_val = -1 ;
-						}
-						else if( total_bonus > 25 ) {
-							special = 1 ;
-							apply = APPLY_DAMROLL ;
-							app_val = 1 ;
 						}
 						break ;
 					case RACE_GOLEM      :
@@ -2132,38 +2132,38 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_SNAKE    :
-						if( total_bonus > 22 ) {
-							special = 1 ;
-							apply = APPLY_IMMUNE ;
-							app_val = IMM_POISON ;
-						}
-						else if( total_bonus > 24 ) {
+						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_POISON ;
+						}
+						else if( total_bonus > 22 ) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
 							app_val = IMM_POISON ;
 						}
 						break ;
 					case RACE_TREE     :
-						if( total_bonus > 23 ) {
-							special = 1 ;
-							apply = APPLY_IMMUNE ;
-							app_val = IMM_PIERCE ;
-						}
-						else if( total_bonus > 25 ) {
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
 							app_val = IMM_SLASH ;
 						}
-						break ;
-					case RACE_DEVIL    :
-						if( total_bonus > 23 ) {
+						else if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
-							app_val = IMM_FIRE ;
+							app_val = IMM_PIERCE ;
 						}
-						else if( total_bonus > 25 ) {
+						break ;
+					case RACE_DEVIL    :
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_FIRE ;
+						}
+						else if( total_bonus > 23 ) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
 							app_val = IMM_FIRE ;
 						}
 						break ;
@@ -2318,15 +2318,15 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_TROLL :
-						if( total_bonus > 23 ) {
+						if( total_bonus > 25 ) {
+                            special = 1 ;
+                            apply = APPLY_DAMROLL ;
+                            app_val = 1 ;
+						}
+						else if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_SUSC ;
 							app_val = IMM_ACID ;
-						}
-						else if( total_bonus > 25 ) {
-							special = 1 ;
-							apply = APPLY_DAMROLL ;
-							app_val = 1 ;
 						}
 						break ;
 					case RACE_SKEXIE      :
@@ -2339,7 +2339,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					case RACE_TYTAN      :
 						if( total_bonus > 24 ) {
 							special = 1 ;
-							apply = APPLY_HITNDAM ;
+							apply = APPLY_DAMROLL ;
 							app_val = 2 ;
 						}
 						break ;
@@ -2372,38 +2372,38 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_SNAKE    :
-						if( total_bonus > 22 ) {
-							special = 1 ;
-							apply = APPLY_IMMUNE ;
-							app_val = IMM_POISON ;
-						}
-						else if( total_bonus > 24 ) {
+						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_POISON ;
+						}
+						else if( total_bonus > 22 ) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
 							app_val = IMM_POISON ;
 						}
 						break ;
 					case RACE_TREE     :
-						if( total_bonus > 23 ) {
-							special = 1 ;
-							apply = APPLY_IMMUNE ;
-							app_val = IMM_PIERCE ;
-						}
-						else if( total_bonus > 25 ) {
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
 							app_val = IMM_SLASH ;
 						}
-						break ;
-					case RACE_DEVIL    :
-						if( total_bonus > 23 ) {
+						else if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
-							app_val = IMM_FIRE ;
+							app_val = IMM_PIERCE ;
 						}
-						else if( total_bonus > 25 ) {
+						break ;
+					case RACE_DEVIL    :
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_FIRE ;
+						}
+						else if( total_bonus > 23 ) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
 							app_val = IMM_FIRE ;
 						}
 						break ;
@@ -2558,15 +2558,15 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_TROLL     :
-						if( total_bonus > 23 ) {
-							special = 1 ;
-							apply = APPLY_SUSC ;
-							app_val = IMM_FIRE ;
-						}
-						else if( total_bonus > 25 ) {
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_DAMROLL ;
 							app_val = 2 ;
+						}
+						else if( total_bonus > 23 ) {
+							special = 1 ;
+							apply = APPLY_SUSC ;
+							app_val = IMM_FIRE ;
 						}
 						break ;
 					case RACE_SLIME     :
@@ -3133,7 +3133,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					case RACE_TYTAN    :
 						if( total_bonus > 23 ) {
 							special = 1 ;
-							apply = APPLY_HITNDAM;
+							apply = APPLY_DAMROLL;
 							app_val = 2 ;
 						}
 						break ;
@@ -3262,32 +3262,32 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						}
 						break ;
 					case RACE_DROW    :
-						if( total_bonus > 23 ) {
+						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_FIND_TRAPS ;
-							app_val = 30 ;
+							app_val = 100 ;
 						}
 						else if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_FIND_TRAPS ;
 							app_val = 60 ;
 						}
-						else if( total_bonus > 25 ) {
+						else if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_FIND_TRAPS ;
-							app_val = 100 ;
+							app_val = 30 ;
 						}
 						break ;
 					case RACE_TROLL    :
-						if( total_bonus > 23 ) {
-							special = 1 ;
-							apply = APPLY_SUSC ;
-							app_val = IMM_ACID ;
+						if( total_bonus > 24 ) {
+                            special = 1 ;
+                            apply = APPLY_DAMROLL ;
+                            app_val = 1 ;
 						}
-						else if( total_bonus > 24 ) {
-							special = 1 ;
-							apply = APPLY_DAMROLL ;
-							app_val = 1 ;
+						else if( total_bonus > 23 ) {
+                            special = 1 ;
+                            apply = APPLY_SUSC ;
+                            app_val = IMM_ACID ;
 						}
 						break ;
 					case RACE_SKEXIE    :
@@ -3301,7 +3301,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_HITNDAM ;
-							app_val = 2 ;
+							app_val = 1 ;
 						}
 						break ;
 					default:
