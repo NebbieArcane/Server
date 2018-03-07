@@ -55,13 +55,7 @@
 
 namespace Alarmud {
 
-/*
- *  Usage : Informative commands.                                          *
- *************************************************************************
- */
-
-
-/* intern functions */
+int attrefzone=0;
 
 
 int HowManyConnection(int ToAdd) {
@@ -1204,7 +1198,6 @@ void list_exits_in_room(struct char_data* ch) {
 	int door,seeit=FALSE;
 	char buf[MAX_STRING_LENGTH],buf2[MAX_STRING_LENGTH];
 	struct room_direction_data*        exitdata;
-	extern char* listexits[];
 
 	*buf = '\0';
 
@@ -1914,13 +1907,9 @@ void do_score(struct char_data* ch,const char* argument, int cmd) {
 	char datanasc[100];
 	struct time_info_data my_age;
 	struct time_info_data my_birth;
-	extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
 
 	struct time_info_data mud_time_passed(time_t t2, time_t t1);
 	int weekday, day;
-	extern struct time_info_data time_info;
-	extern const char* weekdays[];
-	extern const char* month_name[];
 
 	const long beginning_of_time=BEG_OF_TIME;
 
@@ -1937,11 +1926,13 @@ void do_score(struct char_data* ch,const char* argument, int cmd) {
 			 my_birth.year>0?" dopo Nebbie":" avanti Nebbie");
 	snprintf(buf,999,"%s\n\rHai $c0015%d$c0005 anni.", datanasc,my_age.ayear);
 	if (my_age.year != my_age.ayear) {
-		snprintf(buf,999,"%s\nMa ne dimostri $c0015%d$c0005\n",buf,my_age.year);
+		char app[35];
+		snprintf(app,"\nMa ne dimostri $c0015%d$c0005.",34,my_age.year);
+		strcat(buf,app);
 	}
 
 	if ((my_age.month == my_birth.month) && (my_age.day == my_birth.month)) {
-		strcat(buf,"$c0015 Oggi e` il tuo compleanno!!");
+		strcat(buf,"\n$c0015 Oggi e` il tuo compleanno!!");
 	}
 
 	act(buf,FALSE, ch,0,0,TO_CHAR);
@@ -2232,9 +2223,6 @@ void do_score(struct char_data* ch,const char* argument, int cmd) {
 void do_time(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100];
 	int weekday, day;
-	extern struct time_info_data time_info;
-	extern const char* weekdays[];
-	extern const char* month_name[];
 
 	snprintf(buf, 99,"Sono le %d del%s, ",
 			 ((time_info.hours % 12 == 0) ? 12 : ((time_info.hours) % 12)),
@@ -2258,7 +2246,6 @@ void do_time(struct char_data* ch,const char* argument, int cmd) {
 
 
 void do_weather(struct char_data* ch,const char* argument, int cmd) {
-	extern struct weather_data weather_info;
 	char buf[ 256 ];
 	char* sky_look[] = {
 		"sereno",
@@ -2281,11 +2268,6 @@ void do_weather(struct char_data* ch,const char* argument, int cmd) {
 
 
 void do_help(struct char_data* ch,const char* argument, int cmd) {
-
-	extern int top_of_helpt;
-	extern struct help_index_element* help_index;
-	extern FILE* help_fl;
-	extern char help[MAX_STRING_LENGTH];
 
 	int chk, bot, top, mid, minlen;
 	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
@@ -2347,7 +2329,6 @@ void do_wizhelp(struct char_data* ch,const char* arg, int cmd) {
 	char buf[1000];
 	int i, j = 1;
 	NODE* n;
-	extern struct radix_list radix_head[];
 
 	if(IS_NPC(ch))
 	{ return; }
@@ -2381,10 +2362,6 @@ void do_wizhelp(struct char_data* ch,const char* arg, int cmd) {
 }
 
 void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
-
-	extern int top_of_wizhelpt;
-	extern struct help_index_element* wizhelp_index;
-	extern FILE* wizhelp_fl;
 
 	int chk, bot, top, mid, minlen;
 	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
@@ -2442,7 +2419,6 @@ void do_command_list(struct char_data* ch,const char* arg, int cmd) {
 	char buf[MAX_STRING_LENGTH];
 	int i, j = 1;
 	NODE* n;
-	extern struct radix_list radix_head[];
 
 	if(IS_NPC(ch))
 	{ return; }
@@ -2887,7 +2863,6 @@ void do_who(struct char_data* ch,const char* argument, int cmd) {
 
 void do_users( struct char_data* ch,const char* argument, int cmd ) {
 	char buf[MAX_STRING_LENGTH], line[200], buf2[255];
-	extern const char* connected_types[];
 
 	struct descriptor_data* d;
 
@@ -3542,7 +3517,6 @@ void do_consider(struct char_data* ch,const char* argument, int cmd) {
 void do_spells(struct char_data* ch,const char* argument, int cmd) {
 	int spl, i;        /* 16384 */
 	char buf[ 256 ];
-	extern char* spells[];
 	struct string_block sb;
 
 	if( IS_NPC( ch ) ) {
@@ -3611,10 +3585,6 @@ void do_world(struct char_data* ch,const char* argument, int cmd) {
 
 	long ct, ot;
 	char* tmstr, *otmstr;
-	extern long Uptime;
-	extern long room_count;
-	extern long mob_count;
-	extern long obj_count;
 
 	snprintf( buf, 999,"$c0005Base Source: $c0014AlarMUD\n$c0005"
 			  "Versione $c0015%s\n$c0005Commit: $c0015%s$c0005.",
@@ -3685,8 +3655,6 @@ void do_world(struct char_data* ch,const char* argument, int cmd) {
 	/**** SALVO controllo lag refresh zone init */
 	if (IS_IMMORTAL(ch)) {
 		int i,c;
-		extern struct zone_data* zone_table;
-		extern int attrefzone;
 		for (i = c = 0; i <= top_of_zone_table; i++)
 			if( zone_table[i].start != 0 )
 			{ c++; }
@@ -3846,9 +3814,6 @@ void do_value(struct char_data* ch,const char* argument, int cmd) {
 
 
 	/* For Objects */
-	extern char* item_types[];
-	extern char* extra_bits[];
-	extern char* affected_bits[];
 
 
 	if (!HasClass(ch, CLASS_THIEF|CLASS_RANGER)) {
@@ -4308,7 +4273,6 @@ void do_resize(struct char_data* ch,const char* arg, int cmd) {
 
 int MobLevBonus(struct char_data* ch) {
 	int t=0;
-	extern struct index_data* mob_index;
 
 	if( mob_index[ ch->nr ].func == magic_user ||IS_SET( ch->specials.act,ACT_MAGIC_USER ) )
 	{ t+=5; }
@@ -4586,8 +4550,6 @@ void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
 /* the code for throwing items. I figure there is no IC reason for a PC */
 /* to have a command like this. Do what ya want on your on MUD                 */
 void do_scan(struct char_data* ch,const char* argument, int cmd) {
-	extern char* dirsTo[];
-	extern char* dirs[];
 #if 0
 	static char* keywords[]= {
 		"north",

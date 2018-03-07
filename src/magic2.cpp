@@ -1,20 +1,36 @@
-
-/*AlarMUD
-* $Id: magic2.c,v 1.3 2002/02/21 12:31:46 Thunder Exp $
- * */
-#include "magic2.hpp"
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "magic2.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "magic.hpp"
+#include "magicutils.hpp"
+#include "regen.hpp"
 #include "spell_parser.hpp"
 
+namespace Alarmud {
 
 
 /*
@@ -2107,7 +2123,7 @@ void spell_faerie_fire (byte level, struct char_data* ch,
 	af.type      = SPELL_FAERIE_FIRE;
 	af.duration  = level;
 	af.modifier  = 20;
-	af.location  = APPLY_ARMOR;
+	af.location  = APPLY_AC;
 	af.bitvector = 0;
 
 	affect_to_char(victim, &af);
@@ -2695,3 +2711,5 @@ void spell_prot_dragon_breath_gas(byte level, struct char_data* ch,
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
 }
+} // namespace Alarmud
+

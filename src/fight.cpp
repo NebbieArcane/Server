@@ -384,8 +384,6 @@ void update_pos( struct char_data* victim ) {
 int check_peaceful(struct char_data* ch, const char* msg) {
 	struct room_data* rp;
 
-	extern char PeacefulWorks;
-
 	if (!PeacefulWorks) { return(0); }
 
 	if (!ch)
@@ -532,8 +530,6 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 
 	/*   char *strdup(char *source); */
 
-	struct obj_data* create_money( int amount );
-
 	CREATE(corpse, struct obj_data, 1);
 	clear_object(corpse);
 
@@ -546,13 +542,13 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 								   killedbytype == TYPE_CLEAVE ) ) {
 			if( ( r_num = real_object( SEVERED_HEAD ) ) >= 0 ) {
 				cp = read_object(r_num, REAL);
-				sprintf(buf,"head severed %s",corpse->name);
+				snprintf(buf,MAX_INPUT_LENGTH -1,"head severed %s",corpse->name);
 				cp->name=strdup(buf);
-				sprintf( buf,"the severed head of %s",
+				snprintf( buf,MAX_INPUT_LENGTH -1,"the severed head of %s",
 						 (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
 				cp->short_description=strdup(buf);
 				cp->action_description=strdup(buf);
-				sprintf(buf,"%s is lying on the ground.",buf);
+				strncat(buf," is lying on the ground.",MAX_INPUT_LENGTH -strlen(buf) -1);
 				cp->description=strdup(buf);
 
 				cp->obj_flags.type_flag = ITEM_CONTAINER;
@@ -2212,8 +2208,6 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 	char buf[256];
 	struct room_data* rp;
 
-	extern char DestroyedItems;
-
 	if( IS_LINKDEAD( victim ) ) {
 		if( GET_POS( victim ) != POSITION_DEAD ) {
 			do_flee(victim,"\0",0);
@@ -2569,7 +2563,6 @@ int Getw_type(struct obj_data* wielded) {
 int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 				 int DistanceWeapon) {
 	struct room_data* rp;
-	extern char PeacefulWorks;
 
 	rp = real_roomp(ch->in_room);
 	if (rp && rp->room_flags&PEACEFUL && PeacefulWorks) {
@@ -2686,7 +2679,6 @@ int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 
 int CalcThaco(struct char_data* ch, struct char_data* victim) {
 	int calc_thaco;
-	extern struct str_app_type str_app[];
 
 	/* Calculate the raw armor including magic armor */
 	/* The lower AC, the better                      */
@@ -2744,7 +2736,6 @@ int HitOrMiss(struct char_data* ch, struct char_data* victim, int calc_thaco)
 
 {
 	int diceroll, victim_ac;
-	extern struct dex_app_type dex_app[];
 	struct obj_data* wielded=0;  /* this is rather important. */
 	long indice = 0;
 
@@ -2808,7 +2799,6 @@ int GetWeaponDam(struct char_data* ch, struct char_data* v,
 				 struct obj_data* wielded, int location ) {
 	int dam, j;
 	struct obj_data* obj;
-	extern struct str_app_type str_app[];
 	long indice=0;
 
 	dam  = str_app[STRENGTH_APPLY_INDEX(ch)].todam;
@@ -3021,7 +3011,6 @@ int LoreBackstabBonus(struct char_data* ch, struct char_data* v) {
 
 DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 						int type, int w_type,pDamageFunc dam_func, int location) {
-	extern byte backstab_mult[];
 	DamageResult dead;
 	char buf[256];
 	int leech;
@@ -3992,8 +3981,6 @@ void MakeScrap( struct char_data* ch,struct char_data* v, struct obj_data* obj) 
 	char buf[200];
 	struct obj_data* t, *x;
 
-	extern char DestroyedItems;
-
 	act("$p falls to the ground in scraps.", TRUE, ch, obj, 0, TO_CHAR);
 	act("$p falls to the ground in scraps.", TRUE, ch, obj, 0, TO_ROOM);
 
@@ -4744,7 +4731,6 @@ int range_hit( struct char_data* ch, struct char_data* targ, int rng, struct
 	};
 	int opdir[] = { 2, 3, 0, 1, 5, 4 }, rmod, cdir, rang, cdr;
 	char buf[MAX_STRING_LENGTH];
-	extern struct dex_app_type dex_app[];
 
 	if (!IS_NPC(ch)) {
 		calc_thaco=20;

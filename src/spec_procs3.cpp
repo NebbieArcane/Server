@@ -1,23 +1,57 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: spec_procs3.c,v 1.4 2002/03/23 17:15:15 Thunder Exp $
 */
-#include "spec_procs3.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spec_procs3.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "board.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "specass2.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "mail.hpp"
+#include "mindskills1.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
 #include "spell_parser.hpp"
-#include "spells.hpp"
 #include "spells1.hpp"
 #include "spells2.hpp"
-#include "spec_procs.hpp"
-#include "mindskills1.hpp"
+#include "trap.hpp"
+namespace Alarmud {
+
 
 /* chess_game() stuff starts here */
 /* Inspiration and original idea by Feith */
@@ -969,7 +1003,6 @@ int raven_iron_golem(struct char_data* ch, int cmd, char* arg, struct char_data*
 #if EGO_BLADE
 
 int EvilBlade(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, int type) {
-	extern struct str_app_type str_app[];
 	struct obj_data* obj, *blade;
 	struct char_data* joe, *holder;
 	struct char_data* lowjoe = 0;
@@ -1240,7 +1273,6 @@ int EvilBlade(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, in
 }
 
 int GoodBlade(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, int type) {
-	extern struct str_app_type str_app[];
 	struct obj_data* obj, *blade;
 	struct char_data* joe, *holder;
 	struct char_data* lowjoe = 0;
@@ -4718,3 +4750,5 @@ int ItemPut(struct char_data* pChar, int nCmd, char* szArg, struct obj_data* pOb
 /*******************************/
 /* SALVO 2006 fine Quest fisse */
 /*******************************/
+} // namespace Alarmud
+

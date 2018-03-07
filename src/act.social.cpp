@@ -32,9 +32,6 @@
 #include "snew.hpp"
 namespace Alarmud {
 
-
-/* extern variables */
-
 struct social_messg* soc_mess_list = 0;
 struct pose_type pose_messages[MAX_MESSAGES];
 

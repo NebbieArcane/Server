@@ -1,18 +1,36 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: mind_use1.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "mind_use1.hpp"
+#include "comm.hpp"
+#include "handler.hpp"
+#include "mindskills1.hpp"
+#include "spells.hpp"
+
+namespace Alarmud {
 
 /*
 ***         BenemMUD
 ***         PSI skills
 */
-#include "mind_use1.hpp"
-#include <stdio.h>
-#include <string.h>
 
-#include "protos.hpp"
-#include "snew.hpp"
-#include "constants.hpp"
-#include "mindskills1.hpp"
 
 
 
@@ -338,4 +356,6 @@ void mind_use_intensify( byte level, struct char_data* ch, char* arg, int type,
 		break;
 	}
 }
+
+} // namespace Alarmud
 

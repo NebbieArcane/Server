@@ -1,30 +1,46 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD
 * $Id: spell_parser.c,v 1.5 2002/03/11 00:15:36 Thunder Exp $
 */
-#include "spell_parser.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "auction.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spell_parser.hpp"
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
 #include "breath.hpp"
-#include "cmdid.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "spells.hpp"
-#include "spells1.hpp"
-#include "spells2.hpp"
-#include "status.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+
+namespace Alarmud {
+
 #define MANA_MU 1
 #define MANA_CL 1
 
 /* Global data */
 
-int attrefzone=0; //SALVO controllo lag refresh zone init
-int GetAverageLevel(struct char_data* ch);
 
 
 
@@ -486,10 +502,7 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 void spello( int nr, byte beat, byte pos,
 			 byte mlev, byte clev, byte dlev,
 			 byte slev, byte plev, byte rlev, byte ilev,
-			 ubyte mana, sh_int tar, void (*func)( byte, struct char_data*,
-					 char*, int,
-					 struct char_data*,
-					 struct obj_data* ),
+			 ubyte mana, sh_int tar, spellFunction func,
 			 sh_int sf,
 			 sh_int align,
 			 sh_int ostile) {
@@ -1311,9 +1324,6 @@ void say_spell( struct char_data* ch, int si ) {
 
 	int j, offs;
 	struct char_data* temp_char;
-//  extern struct syllable syls[];
-
-
 
 	strcpy(buf, "");
 	strcpy(splwd, spells[si-1]);
@@ -2112,7 +2122,6 @@ void assign_spell_pointers() {
 		spell_info[i].min_level_psi      = 0;
 	}
 
-#include "spell_list.hpp"
 }
 
 
@@ -2223,4 +2232,6 @@ void check_falling_obj( struct obj_data* obj, int room) {
 		return;
 	}
 }
+
+} // namespace Alarmud
 

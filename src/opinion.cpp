@@ -1,26 +1,40 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
 * $Id: opinion.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $
  *  AlarMUD v2.0
  * See license.doc for distribution terms.
 */
-
-#include "opinion.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "opinion.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+namespace Alarmud {
+
+
 
 /*
-  external stuff
 */
 
-extern struct index_data* mob_index;
-extern struct room_data* world;
 
 void FreeHates( struct char_data* ch) {
 	struct char_list* k, *n;
@@ -509,7 +523,6 @@ void ZeroFeared(struct char_data* ch, struct char_data* v) {
 */
 void DeleteHatreds(struct char_data* ch) {
 	struct char_data* i;
-	extern struct char_data* character_list;
 
 	for (i = character_list; i; i = i->next) {
 		if (Hates(i, ch))
@@ -520,10 +533,11 @@ void DeleteHatreds(struct char_data* ch) {
 
 void DeleteFears(struct char_data* ch) {
 	struct char_data* i;
-	extern struct char_data* character_list;
 
 	for (i = character_list; i; i = i->next) {
 		if (Fears(i, ch))
 		{ RemFeared(i, ch); }
 	}
 }
+} // namespace Alarmud
+

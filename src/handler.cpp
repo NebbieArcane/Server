@@ -1740,7 +1740,6 @@ void object_list_new_owner(struct obj_data* list, struct char_data* ch) {
 /* Extract an object from the world */
 void extract_obj(struct obj_data* obj) {
 	struct obj_data* temp1, *temp2;
-	extern long obj_count;
 	int i;
 
 	if( obj == NULL ) {
@@ -1874,9 +1873,6 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
 	int l, was_in, j, w;
-
-	extern long mob_count;
-	extern struct char_data* combat_list;
 
 #ifndef NOEVENTS
 	/* cancel point updates */

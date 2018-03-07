@@ -1,12 +1,27 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: security.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-#include "security.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "snew.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "security.hpp"
+
+namespace Alarmud {
 
 int SecCheck(char* arg, char* site) {
 	char buf[ 255 ];
@@ -42,4 +57,6 @@ int SecCheck(char* arg, char* site) {
 
 	return(result);
 }
+
+} // namespace Alarmud
 

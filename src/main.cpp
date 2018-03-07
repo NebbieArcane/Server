@@ -1,9 +1,25 @@
-#include "config.hpp"
-#include "comm.hpp"
-#include "interpreter.hpp"
-#include "utils.hpp"
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
 #include <iostream>
 #include <boost/program_options.hpp>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "main.hpp"
+#include "comm.hpp"
+#include "interpreter.hpp"
+namespace Alarmud {
 
 using std::string;
 using std::endl;
@@ -33,7 +49,7 @@ int main(int argc, char** argv) {
 	("newbie_approve,R","Requests approvation for new players")
 	("ansi_off,A","Disables all colors")
 	("test_mode,T","Developer mode, disables password checking")
-	("verbose_log,v",po::value<unsigned short> (& debug_level)->default_value(3),"Log verbosity level")
+	("verbose_log,v",po::value<unsigned short> (& debug_level)->default_value(2),"Log verbosity level")
 	("directory,d",po::value<string>(&dir)->default_value(dir),"Data directory")
 	("nospecials,s",po::value<bool>(&no_specials)->default_value(false),"Disable specials procedures")
 //    ;
@@ -69,7 +85,7 @@ int main(int argc, char** argv) {
 		int pid = fork();
 
 		if(pid < 0) {
-			LOG_FATAL("Error forking sysD daemon.");
+			LOG4CXX_FATAL(logger,"Error forking sysD daemon.");
 		}
 		else if(pid > 0) {
 			// Parent exit.
@@ -78,7 +94,7 @@ int main(int argc, char** argv) {
 		}
 
 		if(setsid() < 0) {
-			LOG_FATAL("ERROR setting session : " << strerror(errno));
+			LOG4CXX_FATAL(logger,"ERROR setting session : " << strerror(errno));
 		}
 
 		fclose(stdin);
@@ -87,11 +103,15 @@ int main(int argc, char** argv) {
 	}
 	Alarmud::log_init("alarmud", debug_level);
 	if (chdir(dir.c_str()) < 0) {
-		LOG4CXX_FATAL(::logger,"Unable to change dir to " << dir);
+		LOG4CXX_FATAL(logger,"Unable to change dir to " << dir);
 		perror("chdir");
 		assert(0);
 	}
-	LOG4CXX_TRACE(::logger,"Boost version " << BOOST_VERSION);
+	LOG4CXX_TRACE(logger,"Boost version " << BOOST_VERSION);
 	run(port,dir.c_str());
 	return 0;
+}
+} // namespace Alarmud
+int main(int argc, char** argv) {
+	return Alarmud::main(argc,argv);
 }

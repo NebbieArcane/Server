@@ -1,19 +1,44 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: magic3.c,v 1.4 2002/03/14 21:48:56 Thunder Exp $
  * */
-#include "magic3.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "magic3.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magicutils.hpp"
+#include "modify.hpp"
+#include "regen.hpp"
 #include "spell_parser.hpp"
 
+namespace Alarmud {
 
 #define STATE(d) ((d)->connected)
 #define IS_IMMUNE(ch, bit) (IS_SET((ch)->M_immune, bit))
@@ -366,7 +391,7 @@ void spell_familiar(byte level, struct char_data* ch,
 	af.type      = SPELL_FAMILIAR;
 	af.duration  = 24;
 	af.modifier  = -1;
-	af.location  = APPLY_ARMOR;
+	af.location  = APPLY_AC;
 	af.bitvector = 0;
 	affect_to_char(ch, &af);
 
@@ -1799,7 +1824,7 @@ void spell_invis_to_animals(byte level, struct char_data* ch,
 		af.type      = SPELL_INVIS_TO_ANIMALS;
 		af.duration  = 24;
 		af.modifier  = 0;
-		af.location  = APPLY_BV2;
+		af.location  = APPLY_AFF2;
 		af.bitvector = AFF2_ANIMAL_INVIS;
 		affect_to_char(victim, &af);
 	}
@@ -2033,7 +2058,6 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 void spell_silence(byte level, struct char_data* ch,
 				   struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
-	extern struct index_data* mob_index;
 
 	assert(ch && victim);
 
@@ -2112,7 +2136,7 @@ void spell_heat_stuff(byte level, struct char_data* ch,
 		af.type = SPELL_HEAT_STUFF;
 		af.duration = level;
 		af.modifier = 0;
-		af.location = APPLY_BV2;
+		af.location = APPLY_AFF2;
 		af.bitvector = AFF2_HEAT_STUFF;
 
 		affect_to_char(victim, &af);
@@ -2254,10 +2278,6 @@ void spell_know_monster( byte level, struct char_data* ch,
 						 struct char_data* victim, struct obj_data* obj ) {
 	char buf[256], buf2[256];
 	int exp, lev, hits;
-
-	extern char* pc_class_types[];
-	extern char* immunity_names[];
-	extern char* RaceName[];
 
 	/*
 	 * depending on level, give info.. sometimes inaccurate
@@ -2614,4 +2634,6 @@ void spell_dragon_ride(byte level, struct char_data* ch,
 	af.bitvector = AFF_DRAGON_RIDE;
 	affect_to_char(ch, &af);
 }
+
+} // namespace Alarmud
 

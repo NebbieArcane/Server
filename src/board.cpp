@@ -64,7 +64,6 @@ int min_remove_level[] = { 51, 51, 51, 1, 1, 1 };
 struct board boards[NUM_BOARDS];
 struct board* curr_board;
 struct message* curr_msg;
-extern struct char_data* character_list;
 
 /* This sets the minimum level needed to read/write/look at these boards
    mainly included to enable the creation of a "wizard-only" board        */

@@ -1,17 +1,48 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
 ***  AlarMUD
 * $Id: skills.c,v 1.10 2002/03/23 16:55:46 Thunder Exp $
 */
-#include "skills.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "skills.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "status.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magicutils.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "spec_procs.hpp"
 #include "spell_parser.hpp"
+#include "trap.hpp"
+
+namespace Alarmud {
+
 
 struct hunting_data {
 	char*        name;
@@ -968,14 +999,14 @@ void do_mantra( struct char_data* ch, char* arg, int cmd) {
 		af.type = SKILL_MANTRA;
 		af.duration =sulcorpo;
 		af.modifier = -MAX(90,2*sulcorpo);
-		af.location = APPLY_ARMOR;
+		af.location = APPLY_AC;
 		af.bitvector = 0;
 		affect_to_char(ch, &af);
 
 		af.type = SPELL_NO_MESSAGE;
 		af.duration = 2;
 		af.modifier = MAX(90,2*sulcorpo);
-		af.location = APPLY_ARMOR;
+		af.location = APPLY_AC;
 		af.bitvector = 0;
 		affect_to_char(ch, &af);
 		/* L`effetto della spell inizia solo dopo 2 tick */
@@ -1293,7 +1324,6 @@ void do_disguise(struct char_data* ch, char* argument, int cmd) {
 
 /* Skill for climbing walls and the like -DM */
 void do_climb( struct char_data* ch, char* arg, int cmd) {
-	extern char* dirs[];
 	int dir;
 	struct room_direction_data* exitp;
 	int was_in, roll;
@@ -2052,7 +2082,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					case RACE_TYTAN :
 						if( total_bonus > 23 ) {
 							special = 1 ;
-							apply = APPLY_ARMOR ;
+							apply = APPLY_AC ;
 							app_val = -30 ;
 						}
 						break ;
@@ -7680,3 +7710,5 @@ void do_forge( struct char_data* ch, char* arg, int cmd) {
 	}
 
 }
+} // namespace Alarmud
+

@@ -1,6 +1,34 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: pedit.c,v 2.4 2002/06/03 22:53:09 Thunder Exp $
 * */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "pedit.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "spec_procs.hpp"
+#include "spell_parser.hpp"
+namespace Alarmud {
 
 /*
 PER AGGANCIARE LA PROCEDURA:
@@ -21,22 +49,11 @@ il controllo sul prince,
 QUESTO OCCORRE DEFINIRE UNA STRATEGIA CHIARA:
 consentire la creazione di oggetti e armi con i vnum assegnati,
 */
-#include "pedit.hpp"
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include "protos.hpp"
-#include "utility.hpp"
-#include "constants.hpp"
-#include "spell_parser.hpp"
 #define	ARM	1
 #define	OGG	2
 #define	RES	3
 #define	IMM	4
 
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
 
 struct lista_comandi {
 	int	cmd;			// num comando
@@ -458,6 +475,11 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,i
 						}
 						else
 						{ temp = ciclo; }
+					if (temp<0) {
+						act("$N ti dice 'Non capisco'", FALSE,
+							ch, 0, editman, TO_CHAR);
+						return true;
+					}
 					arg = one_argument(arg, parmstr);
 					if (atol(parmstr) <= 0L && !(comandi[iCom].cmd == 7 || comandi[iCom].cmd == 17)) {
 						act("$N ti dice 'Non e' che mi diresti anche il valore?'", FALSE,
@@ -515,3 +537,5 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,i
 	}
 	return (FALSE);
 }
+} // namespace Alarmud
+

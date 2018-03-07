@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * Sql.cpp
  *
@@ -7,14 +12,23 @@
  * Licensed Material - Property of Hex Keep s.r.l.
  * (c) Copyright Hex Keep s.r.l. 2012-2014
  */
-
-#include "Sql.hpp"
+/***************************  System  include ************************************/
 #include <string>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "Sql.hpp"
 #include "utility.hpp"
 namespace Alarmud {
 
-Sql::Sql() {
+Sql::Sql() :_query(),_where(""),_select(""),_from(""),_fields(""),_limit("") {
 
 
 }
@@ -44,4 +58,5 @@ Sql* Sql::select(const std::vector<string> fields) {
 Sql* Sql::limit(const unsigned long limit) {
 }
 
-} /* namespace nebbie */
+} // namespace Alarmud
+

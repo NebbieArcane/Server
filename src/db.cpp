@@ -37,8 +37,6 @@
 #include "Registered.hpp"
 #include "regen.hpp"
 #include "script.hpp"
-#include "wizlist.hpp"
-
 
 namespace Alarmud {
 
@@ -91,10 +89,10 @@ char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
 char login[MAX_STRING_LENGTH];
 
 
-FILE* mob_f, /* file containing mob prototypes  */
-	  *obj_f, /* obj prototypes                  */
-	  *help_fl, /* file for help texts (HELP <kwd>)*/
-	  *wizhelp_fl; /* file for wizhelp */
+FILE* mob_f; /* file containing mob prototypes  */
+FILE* obj_f; /* obj prototypes                  */
+FILE* help_fl; /* file for help texts (HELP <kwd>)*/
+FILE* wizhelp_fl; /* file for wizhelp */
 
 struct index_data* mob_index; /* index table for mobile file     */
 struct index_data* obj_index; /* index table for object file     */
@@ -304,9 +302,6 @@ void boot_db() {
 
 /* reset the time in the game from file */
 void reset_time() {
-	//extern unsigned char moontype;
-
-
 
 	//struct time_info_data mud_time_passed(time_t t2, time_t t1);
 
@@ -552,9 +547,9 @@ void build_player_index() {
 					if (max >= (ABS_MAX_LVL + 1)) {
 						mudlog(LOG_CHECK,
 							   "ERR: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
-							   Player.name, Player.level[0], Player.level[1],
-							   Player.level[2], Player.level[3], Player.level[4],
-							   Player.level[5], Player.level[6], Player.level[7]);
+							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
+							   static_cast<unsigned int>(Player.level[2]), static_cast<unsigned int>(Player.level[3]), static_cast<unsigned int>(Player.level[4]),
+							   static_cast<unsigned int>(Player.level[5]), static_cast<unsigned int>(Player.level[6]), static_cast<unsigned int>(Player.level[7]));
 						mudlog(LOG_CHECK,
 							   "ERR: %s", szFileName);
 					}
@@ -565,9 +560,9 @@ void build_player_index() {
 							 (max == PRINCIPE)) {
 						mudlog(LOG_CHECK,
 							   "GOD: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
-							   Player.name, Player.level[0], Player.level[1],
-							   Player.level[2], Player.level[3], Player.level[4],
-							   Player.level[5], Player.level[6], Player.level[7]);
+							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
+							   static_cast<unsigned int>(Player.level[2]), static_cast<unsigned int>(Player.level[3]), static_cast<unsigned int>(Player.level[4]),
+							   static_cast<unsigned int>(Player.level[5]), static_cast<unsigned int>(Player.level[6]), Player.level[7]);
 
 						list_wiz.lookup[max].stuff[list_wiz.number[max]].name =
 							(char*) strdup(Player.name);
@@ -1453,9 +1448,6 @@ struct char_data* read_mobile(int nr, int type) {
 	struct char_data* mob;
 	char letter;
 
-	extern int mob_tick_count;
-	extern long mob_count;
-
 	i = nr;
 	if (type == VIRTUAL) {
 		if ((nr = real_mobile(nr)) < 0) {
@@ -2096,9 +2088,6 @@ struct obj_data* read_object(int nr, int type) {
 	long bc;
 	char buf[100];
 
-	extern long obj_count;
-	extern long total_obc;
-
 	SetStatus("read_object start", NULL);
 	i = nr;
 	if (type == VIRTUAL) {
@@ -2590,12 +2579,12 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	{ ch->player.level[i] = st->level[i]; }
 
 	/* to make sure all levels above the normal are 0 */
-	for (i = MAX_CLASS; i <= ABS_MAX_CLASS; i++)
+	for (i = MAX_CLASS; i < ABS_MAX_CLASS; i++)
 	{ ch->player.level[i] = 0; }
 	ch->points.exp = st->points.exp;
 
 	/* azzero i contatori delle posizioni */
-	for (i = 0; i <= MAX_POSITION; i++)
+	for (i = 0; i < MAX_POSITION; i++)
 	{ GET_TEMPO_IN(ch, i) = 0; }
 
 	GET_POS_PREV(ch) = POSITION_STANDING;
@@ -2793,7 +2782,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	mudlog(LOG_SAVE, "Saving %s.dat", GET_NAME(ch));
 	/* inizializzo area dummy */
-	strcpy(st->dummy, "1234567890123456789"); // SALVO la dummy e un array di 19
+	strcpy(st->dummy, "123456789012345678"); // SALVO la dummy e un array di 19
 	for (i = 0; i < MAX_WEAR; i++) {
 		if (ch->equipment[i])
 		{ char_eq[i] = unequip_char(ch, i); }
@@ -3423,7 +3412,6 @@ void ClearDeadBit(struct char_data* ch) {
 /* clear some of the the working variables of a char */
 void reset_char(struct char_data* ch) {
 	struct affected_type* af;
-	extern struct dex_app_type dex_app[];
 	double ratio = 0.0;
 	int i;
 	double absmaxhp;

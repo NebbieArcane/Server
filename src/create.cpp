@@ -74,9 +74,6 @@ namespace Alarmud {
 
 #define ENTER_CHECK        1
 
-extern const char* room_bits[];
-extern const char* exit_bits[];
-extern const char* sector_types[];
 
 
 char* edit_menu = "    1) Name                       2) Description\n\r"
@@ -479,7 +476,6 @@ void AddExitToRoom( struct room_data* rp, struct char_data* ch, char* arg,
 	char buf[255];
 
 #if 0
-	extern char* exit_bits[];
 #endif
 
 	dir = ch->specials.edit - CHANGE_EXIT_NORTH;

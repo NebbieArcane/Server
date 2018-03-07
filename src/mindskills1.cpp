@@ -1,21 +1,46 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: mindskills1.c,v 1.3 2002/02/13 12:31:00 root Exp $
 */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <assert.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "mindskills1.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic3.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
+
+namespace Alarmud {
 
 
 /*
-***        BenemMUD
 ***        PSI Skills
 */
 
-#include "mindskills1.hpp"
-#include <stdio.h>
-#include <assert.h>
 
-#include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
-#include "spell_parser.hpp"
 
 void mind_burn(byte level, struct char_data* ch,
 			   struct char_data* victim, struct obj_data* obj) {
@@ -57,7 +82,6 @@ void mind_burn(byte level, struct char_data* ch,
 void mind_teleport(byte level, struct char_data* ch,
 				   struct char_data* victim, struct obj_data* obj) {
 	int to_room, iTry = 0;
-	extern int top_of_world;      /* ref to the top element of world */
 	struct room_data* room;
 
 	if (!ch || !victim)
@@ -668,4 +692,6 @@ void mind_domination(byte level, struct char_data* ch,
 
 {
 }
+
+} // namespace Alarmud
 

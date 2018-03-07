@@ -56,13 +56,6 @@ namespace Alarmud {
 
 #define ENTER_CHECK        1
 
-extern struct index_data* obj_index;         /* index table for object file     */
-extern const char* item_types[];
-extern const char* extra_bits[];
-extern const char* wear_bits[];
-extern const char* apply_types[];
-extern const char* immunity_names[];
-extern const char* affected_bits[];
 
 
 char* obj_edit_menu = "    1) Name                    2) Short description\n\r"

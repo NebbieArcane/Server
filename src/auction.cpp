@@ -39,7 +39,6 @@ int parsebet (const int currentbet, const char* argument);
 
 static bool is_present (int chi, const char* nome) { // SALVO riscritta
 	struct descriptor_data* d;
-	extern struct descriptor_data* descriptor_list;
 
 	if (chi == SELLER) {
 		if (auction->seller

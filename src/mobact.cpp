@@ -1,17 +1,49 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
 /* $Id: mobact.c,v 2.1 2002/03/25 00:00:04 Thunder Exp $ */
-#include "mobact.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "mobact.hpp"
+#include "act.comm.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "status.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "opinion.hpp"
+#include "script.hpp"
+#include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
+#include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"
+#include "status.hpp"
+#include "trap.hpp"
+
+namespace Alarmud {
+
 int top_of_comp = 0;
 
 void mobile_guardian(struct char_data* ch) {
@@ -48,7 +80,6 @@ void mobile_wander(struct char_data* ch) {
 	int        door, _or;
 	struct room_direction_data*        exitp;
 	struct room_data*        rp;
-	extern int rev_dir[];
 
 	if (GET_POS(ch) != POSITION_STANDING)
 	{ return; }
@@ -1187,3 +1218,5 @@ void MobHit(struct char_data* ch, struct char_data* v, int type) {
 		hit(ch,v,0);
 	}
 }
+} // namespace Alarmud
+

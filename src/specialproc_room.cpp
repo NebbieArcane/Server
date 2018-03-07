@@ -1,8 +1,25 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
 #include "specialproc_room.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
 #include "lucertole.hpp"
+namespace Alarmud {
 struct RoomSpecialProcEntry roomproc[] = {
 	{ "BlockWay", BlockWay },
 	{ "CapannaVillaggio", CapannaVillaggio },
@@ -25,3 +42,5 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "MOBKilled", MOBKilled },   // SALVO 2006 Quest fisse
 	{ "zFineprocedure", NULL },
 };
+} // namespace Alarmud
+

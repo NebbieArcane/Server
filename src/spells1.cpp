@@ -1,22 +1,32 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: spells1.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-#include "spells1.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spells1.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "spells.hpp"
+namespace Alarmud {
 
-#include "protos.hpp"
-#include "snew.hpp"
 
 /* Global data */
-
-extern struct room_data* world;
-extern struct char_data* character_list;
-
-/* Extern functions */
-
-
-char in_group(struct char_data* ch1, struct char_data* ch2);
-
-
 
 void cast_burning_hands( byte level, struct char_data* ch, char* arg, int type,
 						 struct char_data* victim, struct obj_data* tar_obj ) {
@@ -36,7 +46,6 @@ void cast_burning_hands( byte level, struct char_data* ch, char* arg, int type,
 
 void cast_call_lightning( byte level, struct char_data* ch, char* arg, int type,
 						  struct char_data* victim, struct obj_data* tar_obj ) {
-	extern struct weather_data weather_info;
 
 	switch (type) {
 	case SPELL_TYPE_SPELL:
@@ -535,3 +544,5 @@ void cast_disintegrate( byte level, struct char_data* ch, char* arg, int type,
 		break;
 	}
 }
+} // namespace Alarmud
+

@@ -1,30 +1,40 @@
-/* Alarmud
-* $Id: reception.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
- * */
-#include "reception.hpp"
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 //#include <sys/time.h>
 #include <time.h>
 #include <dirent.h>
 #include <string.h>
-
-#include "protos.hpp"
-
-#include "signals.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "reception.hpp"
+#include "act.other.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "spec_procs.hpp"
 #include "status.hpp"
-#include "version.hpp"
+
+namespace Alarmud {
+
+
 #define OBJ_SAVE_FILE "pcobjs.obj"
 #define OBJ_FILE_FREE "\0\0\0"
 #define IS_RENT 127
-extern struct room_data* world;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern char rarelist[MAX_STRING_LENGTH*2]; /*Acidus 2004-show rare*/
-extern int top_of_objt;
-extern struct player_index_element* player_table;
-extern int top_of_p_table;
 
 int cur_depth = 0;
 int DontShow = 0;
@@ -1737,4 +1747,6 @@ void save_room( int room ) {
 		}
 	}
 }
+
+} // namespace Alarmud
 

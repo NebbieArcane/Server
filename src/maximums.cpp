@@ -1,17 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: maximums.c,v 1.2 2002/02/13 12:30:58 root Exp $
  * */
-#include "maximums.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "maximums.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
 #include "spell_parser.hpp"
+
+namespace Alarmud {
+
 /* struct room_data *real_roomp(int); */
 
 /*ALAR modificato. Invecchiando il
@@ -692,9 +714,6 @@ void advance_level(struct char_data* ch, int iClass)
 
 void drop_level(struct char_data* ch, int iClass, int goddrain) {
 	int add_hp, lin_class;
-
-	extern struct wis_app_type wis_app[];
-	extern struct con_app_type con_app[];
 
 	if (!goddrain) {
 		if (GetMaxLevel(ch) >= IMMORTALE)
@@ -1494,4 +1513,6 @@ void ClassSpecificStuff( struct char_data* ch) {
 	}
 }
 
+
+} // namespace Alarmud
 

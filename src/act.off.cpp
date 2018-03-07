@@ -42,10 +42,6 @@ namespace Alarmud {
 
 
 
-/* extern variables */
-
-
-
 
 void StopAllFightingWith( char_data* pChar );
 
@@ -1557,7 +1553,6 @@ void do_shoot(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* mob;
 	struct obj_data* weapon;
 	int i,dir,room_num=0,room_count, MAX_DISTANCE_SHOOT;
-	extern char* listexits[];
 
 	if (check_peaceful(ch,"You feel too peaceful to contemplate violence.\n\r"))
 	{ return; }
@@ -2437,7 +2432,6 @@ void do_throw(struct char_data* ch, char* argument, int cmd) {
 	char arg1[100],arg2[100];
 	int rng, tdir;
 	struct char_data* targ;
-	extern struct str_app_type str_app[];
 
 	half_chop(argument, arg1, arg2);
 	if( !*arg1 || !*arg2 ) {

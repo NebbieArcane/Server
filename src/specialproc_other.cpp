@@ -1,9 +1,29 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/***************************  System  include ************************************/
+/***************************  General include ************************************/
 #include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
 #include "specialproc_other.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
 #include "lucertole.hpp"
+#include "rhyodin.hpp"
+#include "breath.hpp"
+#include "board.hpp"
+#include "reception.hpp"
+namespace Alarmud {
 struct special_proc_entry otherproc[] = {
 	{ "AGGRESSIVE",(special_proc) AGGRESSIVE },
 	{ "AbbarachDragon",(special_proc)AbbarachDragon },
@@ -202,3 +222,5 @@ struct special_proc_entry otherproc[] = {
 	{ "ItemPut",(special_proc)ItemPut },  // SALVO 2006 Quest fisse
 	{ "zFineprocedure", NULL },
 };
+} // namespace Alarmud
+

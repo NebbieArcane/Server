@@ -53,9 +53,6 @@ typedef struct {
 	TSocioGilda* pListaSoci;
 } TDatiGilda;
 
-extern struct index_data* obj_index;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct index_data* mob_index;
 
 TDatiGilda* pDatiGilde = NULL;
 

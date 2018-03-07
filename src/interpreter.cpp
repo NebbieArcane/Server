@@ -1,25 +1,58 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
-/* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
- * */
-#include "interpreter.hpp"
+/***************************  System  include ************************************/
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "snew.hpp"
-#include "protos.hpp"
-#include "cmdid.hpp"
-#include "breath.hpp"
-#include "version.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "interpreter.hpp"
 #include "Registered.hpp"
-#include "spell_parser.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "breath.hpp"
+#include "comm.hpp"
+#include "create.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
-using Alarmud::Registered;
+#include "db.hpp"
+#include "handler.hpp"
+#include "mail.hpp"
+#include "modify.hpp"
+#include "parser.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "security.hpp"
+#include "skills.hpp"
+#include "spec_procs3.hpp"
+#include "spell_parser.hpp"
+
+namespace Alarmud {
+
+/* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
+ * */
 #define NOT !
 #define AND &&
 #define OR ||
@@ -1726,10 +1759,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 	struct char_data* tmp_ch;
 	struct room_data* rp; // Gaia 2001
 	struct descriptor_data* k;
-	extern struct descriptor_data* descriptor_list;
-	extern int WizLock;
-	extern int plr_tick_count;
-	extern struct RegInfoData RI;
 
 	/*struct RegInfoData *ri;*/
 
@@ -3138,7 +3167,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 void show_class_selection(struct descriptor_data* d, int r) {
 	int i=0;
 	char buf[254],buf2[254];
-	extern char* pc_class_types[];
 
 	sprintf( buf, "\n\rSeleziona la classe di %s.\n\r\n\r",
 			 GET_NAME( d->character ) );
@@ -3395,4 +3423,6 @@ void check_affected(char* msg) {
 	return;
 }
 
+
+} // namespace Alarmud
 

@@ -51,9 +51,6 @@
 #include "utility.hpp"
 namespace Alarmud {
 
-/* extern variables */
-
-
 void do_gain(struct char_data* ch, const char* argument, int cmd) {
 
 }
@@ -2647,7 +2644,7 @@ void do_ego_eq_action( struct char_data* ch ) {
 	int j, i ;
 	struct obj_data* obj ;
 
-	for (j = 0; j <= MAX_WEAR; j++) {
+	for (j = 0; j <= E_WEAR_AS_MAX; j++) {
 		if (ch->equipment[j] && ch->equipment[j]->item_number>=0) {
 			obj = ch->equipment[j];
 			parse_eq_action( ch, obj );

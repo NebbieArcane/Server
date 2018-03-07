@@ -56,10 +56,6 @@ namespace Alarmud {
 
 #define ENTER_CHECK        1
 
-extern const char* action_bits[];
-extern const char* affected_bits[];
-extern const char* RaceName[];
-extern const char* immunity_names[];
 
 
 char* mob_edit_menu = "    1) Name                    2) Short description\n\r"

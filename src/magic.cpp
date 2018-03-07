@@ -1,16 +1,44 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: magic.c,v 1.3 2002/03/14 21:48:56 Thunder Exp $ */
-#include "magic.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "magic.hpp"
+#include "act.info.hpp"
+#include "act.obj2.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic2.hpp"
+#include "magicutils.hpp"
+#include "modify.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
 #include "spell_parser.hpp"
+#include "spells2.hpp"
+namespace Alarmud {
+
 
 /* For future use in blinding those with infravision who are fireballed
    or otherwise subjected to lotsa heat quickly in dark rooms. */
@@ -430,8 +458,6 @@ void spell_call_lightning(byte level, struct char_data* ch,
 						  struct char_data* victim, struct obj_data* obj) {
 	int dam;
 
-	extern struct weather_data weather_info;
-
 	assert(victim && ch);
 	if (level <0 || level >ABS_MAX_LVL)
 	{ return; }
@@ -749,8 +775,6 @@ void spell_create_food(byte level, struct char_data* ch,
 void spell_create_water(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
 	int water;
-
-	extern struct weather_data weather_info;
 	void name_to_drinkcon(struct obj_data *obj,int type);
 	void name_from_drinkcon(struct obj_data *obj);
 
@@ -1828,7 +1852,6 @@ void RawSummon( struct char_data* v, struct char_data* c) {
 	long   target;
 	struct obj_data* o, *n;
 	int    j;
-	extern char EasySummon;
 	char buf[400];
 
 	/* this section run if the mob is above 3 levels above the caster */
@@ -2374,14 +2397,6 @@ void spell_identify(byte level, struct char_data* ch,
 
 	/* For Objects */
 	/*
-	extern char* spells[];
-	extern char* item_types[];
-	extern char* extra_bits[];
-	extern char* apply_types[];
-	extern char* affected_bits[];
-	extern char* immunity_names[];
-	extern char* RaceName[];
-	extern char* gaszAlignSlayerBits[];
 	*/
 
 	assert(ch && (obj || victim));
@@ -2481,7 +2496,7 @@ void spell_identify(byte level, struct char_data* ch,
 		for (i=0; i<MAX_OBJ_AFFECT; i++) {
 			if ((obj->affected[i].location != APPLY_NONE) &&
 					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location !=APPLY_BV2) &&
+					(obj->affected[i].location !=APPLY_AFF2) &&
 					(obj->affected[i].location !=APPLY_SKIP)) {
 				if (!found) {
 					send_to_char("Ti puo' dare: \n\r", ch);
@@ -2586,7 +2601,7 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 		for (i=0; i < MAX_OBJ_AFFECT; i++) {
 			if (obj->affected[i].location == APPLY_NONE)
 			{ count++; }
-			if (obj->affected[i].location == APPLY_ARMOR ||
+			if (obj->affected[i].location == APPLY_AC ||
 					obj->affected[i].location == APPLY_SAVE_ALL ||
 					obj->affected[i].location == APPLY_SAVING_PARA ||
 					obj->affected[i].location == APPLY_SAVING_ROD ||
@@ -2608,7 +2623,7 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 
 		SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
 
-		obj->affected[i].location = APPLY_ARMOR;
+		obj->affected[i].location = APPLY_AC;
 		obj->affected[i].modifier = -1;
 		if (level >= APPRENDISTA)
 		{ obj->affected[i].modifier -= 1; }
@@ -2912,4 +2927,6 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 
 	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);
 }
+
+} // namespace Alarmud
 

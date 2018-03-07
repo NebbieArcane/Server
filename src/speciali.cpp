@@ -1,20 +1,41 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: speciali.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $*/
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
-#include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "specass2.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "speciali.hpp"
+#include "act.comm.hpp"
+#include "act.off.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magic3.hpp"
+#include "opinion.hpp"
 #include "spell_parser.hpp"
-#include "spells.hpp"
 #include "spells1.hpp"
-#include "spells2.hpp"
+
+namespace Alarmud {
+
 /* Piccola macro per non riempire il codice di if facendo degli strcmp */
 #define STRSWITCH     if( false ){
 #define CHECK(X,Y)    } else if ( strcmp((X),(Y)) == 0 ) {
@@ -885,3 +906,5 @@ int Nightmare( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 }
 
 /***** NEO ORSHINGAL END *****/
+} // namespace Alarmud
+

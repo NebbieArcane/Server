@@ -1,11 +1,32 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: weather.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-#include "weather.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "weather.hpp"
+#include "aree.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "interpreter.hpp"
+#include "mobact.hpp"
 
-#include "protos.hpp"
-#include "snew.hpp"
+namespace Alarmud {
+
 
 /* what stage is moon in?  (1 - 32) */
 unsigned char moontype;
@@ -137,7 +158,6 @@ void another_hour(int mode) {
 }
 
 void ChangeSeason(int month) {
-	extern int gSeason;
 	switch (month) {
 	case 0:
 	case 1:
@@ -385,7 +405,6 @@ void GetMonth( int month) {
 }
 
 void switch_light(byte why) {
-	extern int gLightLevel;
 
 	switch(why) {
 	case MOON_SET:
@@ -409,3 +428,5 @@ void switch_light(byte why) {
 		break;
 	}
 }
+} // namespace Alarmud
+

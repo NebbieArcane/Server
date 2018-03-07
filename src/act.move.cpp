@@ -720,7 +720,6 @@ int AddToCharHeap( struct char_data* heap[50], int* top, int total[50],
 int find_door(struct char_data* ch, char* type, char* dir) {
 	char buf[MAX_STRING_LENGTH];
 	int door;
-	extern char* dirs[];
 	struct room_direction_data* exitp;
 
 	if( *dir ) {

@@ -1,8 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: utility.c,v 1.2 2002/03/11 11:33:34 Thunder Exp $
  * */
-#include "utility.hpp"
-
+/***************************  System  include ************************************/
 #include <malloc.h>
 #include <string.h>
 #include <ctype.h>
@@ -11,14 +15,38 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
-
-#include "fight.hpp"
-#include "protos.hpp"
-#include "signals.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "utility.hpp"
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
 #include "aree.hpp"
-#include "spell_parser.hpp"
+#include "comm.hpp"
 #include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic2.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "skills.hpp"
+#include "sound.hpp"
+#include "spell_parser.hpp"
+#include "trap.hpp"
+#include "weather.hpp"
+
+namespace Alarmud {
+
+
 int EgoBladeSave(struct char_data* ch) {
 	int total;
 
@@ -3825,7 +3853,6 @@ char* strchr(char* S1, int C) {
 
 void IncrementZoneNr(int nr) {
 	struct char_data* c;
-	extern struct char_data* character_list;
 
 	if (nr > top_of_zone_table)
 	{ return; }
@@ -3845,7 +3872,6 @@ void IncrementZoneNr(int nr) {
 }
 
 int IsDarkOutside(struct room_data* rp) {
-	extern int gLightLevel;
 
 	if( gLightLevel >= 4 )
 	{ return FALSE; }
@@ -4077,8 +4103,6 @@ int SiteLock (const char* site) {
 #if SITELOCK
 
 	int i,length;
-	extern int numberhosts;
-	extern char hostlist[MAX_BAN_HOSTS][30];
 
 	length = MAX(strlen(site),29);
 
@@ -4572,7 +4596,6 @@ void DoNothing( void* pDummy ) {
 	return;
 }
 
-extern int aRoom[ WORLD_SIZE ]; // E definito in skills.c Non e locale per
 // caricare troppo lo stack (WORLD_SIZE e`
 // uguale a 50000)
 
@@ -4902,3 +4925,5 @@ bool CheckPrac (int classe, int id, int liv) { // SALVO implemento un controllo 
 	}
 	return FALSE;
 }
+} // namespace Alarmud
+

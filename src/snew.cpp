@@ -1,14 +1,32 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: snew.c,v 1.3 2002/03/23 16:43:20 Thunder Exp $
 */
-#include "snew.hpp"
+/***************************  System  include ************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#ifdef ALAR
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
-#include "status.hpp"
-#include "protos.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "snew.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+namespace Alarmud {
+#ifdef ALAR
 #endif
 #define KEYLIB "keydir"
 #define BUFLEN 128
@@ -18,7 +36,6 @@ char* lower(char* s) {
 }
 #endif
 int TestMode=0;
-extern struct index_data* mob_index;
 char hname[128];
 int  test=0;
 char* ggdup(const char* s) {
@@ -491,8 +508,6 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	struct obj_data* ocopy;
 	char letter;
 	char buf[512];
-	extern int mob_tick_count;
-	extern long mob_count;
 
 	CREATE(mob, struct char_data, 1);
 
@@ -614,7 +629,6 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 float GetCharBonusIndex(struct char_data* ch) {
 	/* Calcola un indice in base al valore dell'equipaggiamento
 	 * */
-	extern char* apply_types[];
 	long i;
 	long j;
 	long mod=0;
@@ -700,7 +714,7 @@ float GetCharBonusIndex(struct char_data* ch) {
 					break;
 				case APPLY_GOLD:
 					break;
-				case APPLY_ARMOR:
+				case APPLY_AC:
 					thismod-=mod*2;
 					break;
 				case APPLY_HITROLL:
@@ -825,4 +839,6 @@ void do_setalign(struct char_data* ch,char* argument,int cmd) {
 	return;
 }
 
+
+} // namespace Alarmud
 

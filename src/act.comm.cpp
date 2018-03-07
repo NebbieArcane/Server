@@ -114,7 +114,6 @@ void do_report(struct char_data* ch, const char* argument, int cmd) {
 void do_shout(struct char_data* ch, const char* argument, int cmd) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
-	extern int Silence;
 
 	if (!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
 		send_to_char("Non puoi urlare!!\n\r", ch);
@@ -179,7 +178,6 @@ void do_shout(struct char_data* ch, const char* argument, int cmd) {
 
 
 void do_gossip(struct char_data* ch, const char* argument, int cmd) {
-	extern int Silence;
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
@@ -241,7 +239,6 @@ void do_gossip(struct char_data* ch, const char* argument, int cmd) {
 void do_auction(struct char_data* ch, const char* argument, int cmd) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
-	extern int Silence;
 
 	if (!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
 		send_to_char("Non puoi gridare, parlare od annunciare.\n\r", ch);
@@ -271,7 +268,6 @@ void do_auction(struct char_data* ch, const char* argument, int cmd) {
 }
 
 void talk_auction(const char* argument) {
-	extern int Silence;
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 

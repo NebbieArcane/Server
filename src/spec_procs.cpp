@@ -1,23 +1,56 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: spec_procs.c,v 2.1 2002/03/27 19:50:22 Thunder Exp $
  * */
-#include "spec_procs.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include "breath.hpp"
-#include "cmdid.hpp"
-#include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spec_procs.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
 #include "aree.hpp"
+#include "breath.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic2.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
+#include "spec_procs2.hpp"
+#include "spec_procs3.hpp"
 #include "spell_parser.hpp"
-#include "spells.hpp"
 #include "spells1.hpp"
 #include "spells2.hpp"
+
+namespace Alarmud {
+
 
 #define INQ_SHOUT 1
 #define INQ_LOOSE 0
@@ -171,8 +204,6 @@ int MageGuildMaster( struct char_data* ch, int cmd, char* arg,
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-//  extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if( type != EVENT_COMMAND )
 	{ return FALSE; }
@@ -402,8 +433,6 @@ int ClericGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-//  extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if( type != EVENT_COMMAND )
 	{ return FALSE; }
@@ -635,7 +664,6 @@ int ThiefGuildMaster( struct char_data* ch, int cmd, char* arg,
 		}
 		/**** SALVO skills prince ****/
 		else if (IS_PRINCE(ch) && !HasClass( ch, CLASS_THIEF ) && cmd !=CMD_GAIN) {
-			extern char* spells[];
 			if (!*arg) {
 				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
 						ch->specials.spells_to_learn);
@@ -860,7 +888,6 @@ int WarriorGuildMaster(struct char_data* ch, int cmd, char* arg,
 		}
 		/**** SALVO skills prince ****/
 		else if (IS_PRINCE(ch) && !HasClass(ch, CLASS_WARRIOR) && cmd !=CMD_GAIN) {
-			extern char* spells[];
 			if (!*arg) {
 				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
 						ch->specials.spells_to_learn);
@@ -1214,7 +1241,6 @@ int andy_wilcox(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	struct char_data* temp_char;
 	struct char_data* andy;
 	int num, i, cost;
-//   extern struct pub_beers sold_here[];
 	struct pub_beers* scan;
 
 
@@ -4518,7 +4544,6 @@ int Donation(struct char_data* ch, int cmd, char* arg, struct room_data* rp,
  * house routine for saved items.
 */
 
-extern int DontShow; /* per recep / offer */
 int House(struct char_data* ch, int cmd, char* arg,
 		  struct room_data* rp, int type) {
 	struct obj_cost cost;
@@ -5797,8 +5822,6 @@ int Tyrannosaurus_swallower(struct char_data* ch, int cmd, char* arg, struct cha
 	struct char_data* targ;
 	struct room_data* rp;
 	int i;
-
-	extern char DestroyedItems;
 
 	if (cmd && cmd != 156) { return(FALSE); }
 
@@ -7110,3 +7133,5 @@ int BiosKaiThanatos( struct char_data* ch, int cmd, char* arg,
 	mudlog( LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
 	return TRUE;
 }
+} // namespace Alarmud
+

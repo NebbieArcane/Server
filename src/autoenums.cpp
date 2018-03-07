@@ -1145,6 +1145,316 @@ std::ostream & operator<<(std::ostream &out,const e_fear_type value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
+e_find_result encode_e_find_result(std::string s,e_find_result fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "FOUND_WATER") return FOUND_WATER;
+	if (s == "FOUND_FOOD") return FOUND_FOOD;
+	if (s == "FOUND_FOOD0") return FOUND_FOOD0;
+	if (s == "FOUND_FOOD1") return FOUND_FOOD1;
+	if (s == "FOUND_FOOD2") return FOUND_FOOD2;
+	if (s == "FOUND_FOOD3") return FOUND_FOOD3;
+	if (s == "FOUND_FOOD4") return FOUND_FOOD4;
+	if (s == "FOUND_FOOD5") return FOUND_FOOD5;
+	if (s == "FOUND_FOOD6") return FOUND_FOOD6;
+	if (s == "FOUND_FOOD7") return FOUND_FOOD7;
+	if (s == "FOUND_FOOD8") return FOUND_FOOD8;
+	if (s == "FOUND_FOOD9") return FOUND_FOOD9;
+	if (s == "FOUND_FOOD10") return FOUND_FOOD10;
+	if (s == "FOUND_FOOD11") return FOUND_FOOD11;
+	if (s == "FOUND_FOOD12") return FOUND_FOOD12;
+	if (s == "FOUND_FOOD13") return FOUND_FOOD13;
+	if (s == "FOUND_FOOD14") return FOUND_FOOD14;
+	if (s == "FOUND_FOOD15") return FOUND_FOOD15;
+	if (s == "FOUND_FOOD16") return FOUND_FOOD16;
+	if (s == "FOUND_FOOD17") return FOUND_FOOD17;
+	if (s == "FOUND_FOOD18") return FOUND_FOOD18;
+	if (s == "FOUND_FOOD19") return FOUND_FOOD19;
+	if (s == "FOUND_FOOD20") return FOUND_FOOD20;
+	if (s == "FOUND_FOOD21") return FOUND_FOOD21;
+	if (s == "FOUND_FOOD22") return FOUND_FOOD22;
+	if (s == "FOUND_FOOD23") return FOUND_FOOD23;
+	if (s == "FOUND_FOOD24") return FOUND_FOOD24;
+	if (s == "FOUND_FOOD25") return FOUND_FOOD25;
+	if (s == "FOUND_FOOD26") return FOUND_FOOD26;
+	if (s == "FOUND_FOOD27") return FOUND_FOOD27;
+	if (s == "FOUND_FOOD28") return FOUND_FOOD28;
+	if (s == "FOUND_FOOD29") return FOUND_FOOD29;
+	if (s == "FOUND_FOOD30") return FOUND_FOOD30;
+	if (s == "FOUND_FOOD31") return FOUND_FOOD31;
+	if (s == "FOUND_FOOD32") return FOUND_FOOD32;
+	if (s == "FOUND_FOOD33") return FOUND_FOOD33;
+	if (s == "FOUND_FOOD34") return FOUND_FOOD34;
+	if (s == "FOUND_FOOD35") return FOUND_FOOD35;
+	if (s == "FOUND_FOOD36") return FOUND_FOOD36;
+	if (s == "FOUND_FOOD37") return FOUND_FOOD37;
+	if (s == "FOUND_FOOD38") return FOUND_FOOD38;
+	if (s == "FOUND_FOOD39") return FOUND_FOOD39;
+	if (s == "FOUND_FOOD40") return FOUND_FOOD40;
+	if (s == "FOUND_FOOD41") return FOUND_FOOD41;
+	if (s == "FOUND_FOOD42") return FOUND_FOOD42;
+	if (s == "FOUND_FOOD43") return FOUND_FOOD43;
+	if (s == "FOUND_FOOD44") return FOUND_FOOD44;
+	if (s == "FOUND_FOOD45") return FOUND_FOOD45;
+	if (s == "FOUND_FOOD46") return FOUND_FOOD46;
+	if (s == "FOUND_FOOD47") return FOUND_FOOD47;
+	if (s == "FOUND_FOOD48") return FOUND_FOOD48;
+	if (s == "FOUND_FOOD49") return FOUND_FOOD49;
+	if (s == "FOUND_FOOD50") return FOUND_FOOD50;
+	if (s == "FOUND_FOOD51") return FOUND_FOOD51;
+	if (s == "FOUND_FOOD52") return FOUND_FOOD52;
+	if (s == "FOUND_FOOD53") return FOUND_FOOD53;
+	if (s == "FOUND_FOOD54") return FOUND_FOOD54;
+	if (s == "FOUND_FOOD55") return FOUND_FOOD55;
+	if (s == "FOUND_FOOD56") return FOUND_FOOD56;
+	if (s == "FOUND_FOOD57") return FOUND_FOOD57;
+	if (s == "FOUND_FOOD58") return FOUND_FOOD58;
+	if (s == "FOUND_FOOD59") return FOUND_FOOD59;
+	if (s == "FOUND_FOOD60") return FOUND_FOOD60;
+	if (s == "FOUND_FOOD61") return FOUND_FOOD61;
+	if (s == "FOUND_FOOD62") return FOUND_FOOD62;
+	if (s == "FOUND_FOOD63") return FOUND_FOOD63;
+	if (s == "FOUND_FOOD64") return FOUND_FOOD64;
+	if (s == "FOUND_FOOD65") return FOUND_FOOD65;
+	if (s == "FOUND_FOOD66") return FOUND_FOOD66;
+	if (s == "FOUND_FOOD67") return FOUND_FOOD67;
+	if (s == "FOUND_FOOD68") return FOUND_FOOD68;
+	if (s == "FOUND_FOOD69") return FOUND_FOOD69;
+	return fallback;
+}
+
+std::string translate(const e_find_result e) {
+	switch(e) {
+	case FOUND_WATER:
+		return "FOUND_WATER";
+	case FOUND_FOOD:
+		return "FOUND_FOOD";
+	case FOUND_FOOD0:
+		return "FOUND_FOOD0";
+	case FOUND_FOOD1:
+		return "FOUND_FOOD1";
+	case FOUND_FOOD2:
+		return "FOUND_FOOD2";
+	case FOUND_FOOD3:
+		return "FOUND_FOOD3";
+	case FOUND_FOOD4:
+		return "FOUND_FOOD4";
+	case FOUND_FOOD5:
+		return "FOUND_FOOD5";
+	case FOUND_FOOD6:
+		return "FOUND_FOOD6";
+	case FOUND_FOOD7:
+		return "FOUND_FOOD7";
+	case FOUND_FOOD8:
+		return "FOUND_FOOD8";
+	case FOUND_FOOD9:
+		return "FOUND_FOOD9";
+	case FOUND_FOOD10:
+		return "FOUND_FOOD10";
+	case FOUND_FOOD11:
+		return "FOUND_FOOD11";
+	case FOUND_FOOD12:
+		return "FOUND_FOOD12";
+	case FOUND_FOOD13:
+		return "FOUND_FOOD13";
+	case FOUND_FOOD14:
+		return "FOUND_FOOD14";
+	case FOUND_FOOD15:
+		return "FOUND_FOOD15";
+	case FOUND_FOOD16:
+		return "FOUND_FOOD16";
+	case FOUND_FOOD17:
+		return "FOUND_FOOD17";
+	case FOUND_FOOD18:
+		return "FOUND_FOOD18";
+	case FOUND_FOOD19:
+		return "FOUND_FOOD19";
+	case FOUND_FOOD20:
+		return "FOUND_FOOD20";
+	case FOUND_FOOD21:
+		return "FOUND_FOOD21";
+	case FOUND_FOOD22:
+		return "FOUND_FOOD22";
+	case FOUND_FOOD23:
+		return "FOUND_FOOD23";
+	case FOUND_FOOD24:
+		return "FOUND_FOOD24";
+	case FOUND_FOOD25:
+		return "FOUND_FOOD25";
+	case FOUND_FOOD26:
+		return "FOUND_FOOD26";
+	case FOUND_FOOD27:
+		return "FOUND_FOOD27";
+	case FOUND_FOOD28:
+		return "FOUND_FOOD28";
+	case FOUND_FOOD29:
+		return "FOUND_FOOD29";
+	case FOUND_FOOD30:
+		return "FOUND_FOOD30";
+	case FOUND_FOOD31:
+		return "FOUND_FOOD31";
+	case FOUND_FOOD32:
+		return "FOUND_FOOD32";
+	case FOUND_FOOD33:
+		return "FOUND_FOOD33";
+	case FOUND_FOOD34:
+		return "FOUND_FOOD34";
+	case FOUND_FOOD35:
+		return "FOUND_FOOD35";
+	case FOUND_FOOD36:
+		return "FOUND_FOOD36";
+	case FOUND_FOOD37:
+		return "FOUND_FOOD37";
+	case FOUND_FOOD38:
+		return "FOUND_FOOD38";
+	case FOUND_FOOD39:
+		return "FOUND_FOOD39";
+	case FOUND_FOOD40:
+		return "FOUND_FOOD40";
+	case FOUND_FOOD41:
+		return "FOUND_FOOD41";
+	case FOUND_FOOD42:
+		return "FOUND_FOOD42";
+	case FOUND_FOOD43:
+		return "FOUND_FOOD43";
+	case FOUND_FOOD44:
+		return "FOUND_FOOD44";
+	case FOUND_FOOD45:
+		return "FOUND_FOOD45";
+	case FOUND_FOOD46:
+		return "FOUND_FOOD46";
+	case FOUND_FOOD47:
+		return "FOUND_FOOD47";
+	case FOUND_FOOD48:
+		return "FOUND_FOOD48";
+	case FOUND_FOOD49:
+		return "FOUND_FOOD49";
+	case FOUND_FOOD50:
+		return "FOUND_FOOD50";
+	case FOUND_FOOD51:
+		return "FOUND_FOOD51";
+	case FOUND_FOOD52:
+		return "FOUND_FOOD52";
+	case FOUND_FOOD53:
+		return "FOUND_FOOD53";
+	case FOUND_FOOD54:
+		return "FOUND_FOOD54";
+	case FOUND_FOOD55:
+		return "FOUND_FOOD55";
+	case FOUND_FOOD56:
+		return "FOUND_FOOD56";
+	case FOUND_FOOD57:
+		return "FOUND_FOOD57";
+	case FOUND_FOOD58:
+		return "FOUND_FOOD58";
+	case FOUND_FOOD59:
+		return "FOUND_FOOD59";
+	case FOUND_FOOD60:
+		return "FOUND_FOOD60";
+	case FOUND_FOOD61:
+		return "FOUND_FOOD61";
+	case FOUND_FOOD62:
+		return "FOUND_FOOD62";
+	case FOUND_FOOD63:
+		return "FOUND_FOOD63";
+	case FOUND_FOOD64:
+		return "FOUND_FOOD64";
+	case FOUND_FOOD65:
+		return "FOUND_FOOD65";
+	case FOUND_FOOD66:
+		return "FOUND_FOOD66";
+	case FOUND_FOOD67:
+		return "FOUND_FOOD67";
+	case FOUND_FOOD68:
+		return "FOUND_FOOD68";
+	case FOUND_FOOD69:
+		return "FOUND_FOOD69";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_find_result value) {
+	switch(value) {
+		case FOUND_WATER:
+		case FOUND_FOOD:
+		case FOUND_FOOD0:
+		case FOUND_FOOD1:
+		case FOUND_FOOD2:
+		case FOUND_FOOD3:
+		case FOUND_FOOD4:
+		case FOUND_FOOD5:
+		case FOUND_FOOD6:
+		case FOUND_FOOD7:
+		case FOUND_FOOD8:
+		case FOUND_FOOD9:
+		case FOUND_FOOD10:
+		case FOUND_FOOD11:
+		case FOUND_FOOD12:
+		case FOUND_FOOD13:
+		case FOUND_FOOD14:
+		case FOUND_FOOD15:
+		case FOUND_FOOD16:
+		case FOUND_FOOD17:
+		case FOUND_FOOD18:
+		case FOUND_FOOD19:
+		case FOUND_FOOD20:
+		case FOUND_FOOD21:
+		case FOUND_FOOD22:
+		case FOUND_FOOD23:
+		case FOUND_FOOD24:
+		case FOUND_FOOD25:
+		case FOUND_FOOD26:
+		case FOUND_FOOD27:
+		case FOUND_FOOD28:
+		case FOUND_FOOD29:
+		case FOUND_FOOD30:
+		case FOUND_FOOD31:
+		case FOUND_FOOD32:
+		case FOUND_FOOD33:
+		case FOUND_FOOD34:
+		case FOUND_FOOD35:
+		case FOUND_FOOD36:
+		case FOUND_FOOD37:
+		case FOUND_FOOD38:
+		case FOUND_FOOD39:
+		case FOUND_FOOD40:
+		case FOUND_FOOD41:
+		case FOUND_FOOD42:
+		case FOUND_FOOD43:
+		case FOUND_FOOD44:
+		case FOUND_FOOD45:
+		case FOUND_FOOD46:
+		case FOUND_FOOD47:
+		case FOUND_FOOD48:
+		case FOUND_FOOD49:
+		case FOUND_FOOD50:
+		case FOUND_FOOD51:
+		case FOUND_FOOD52:
+		case FOUND_FOOD53:
+		case FOUND_FOOD54:
+		case FOUND_FOOD55:
+		case FOUND_FOOD56:
+		case FOUND_FOOD57:
+		case FOUND_FOOD58:
+		case FOUND_FOOD59:
+		case FOUND_FOOD60:
+		case FOUND_FOOD61:
+		case FOUND_FOOD62:
+		case FOUND_FOOD63:
+		case FOUND_FOOD64:
+		case FOUND_FOOD65:
+		case FOUND_FOOD66:
+		case FOUND_FOOD67:
+		case FOUND_FOOD68:
+		case FOUND_FOOD69:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_find_result value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
 e_hate_type encode_e_hate_type(std::string s,e_hate_type fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "HATE_SEX") return HATE_SEX;
@@ -1289,6 +1599,384 @@ std::ostream & operator<<(std::ostream &out,const e_immunity_type value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
+e_item_flag encode_e_item_flag(std::string s,e_item_flag fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "ITEM_GLOW") return ITEM_GLOW;
+	if (s == "ITEM_HUM") return ITEM_HUM;
+	if (s == "ITEM_METAL") return ITEM_METAL;
+	if (s == "ITEM_MINERAL") return ITEM_MINERAL;
+	if (s == "ITEM_ORGANIC") return ITEM_ORGANIC;
+	if (s == "ITEM_INVISIBLE") return ITEM_INVISIBLE;
+	if (s == "ITEM_MAGIC") return ITEM_MAGIC;
+	if (s == "ITEM_NODROP") return ITEM_NODROP;
+	if (s == "ITEM_BLESS") return ITEM_BLESS;
+	if (s == "ITEM_ANTI_GOOD") return ITEM_ANTI_GOOD;
+	if (s == "ITEM_ANTI_EVIL") return ITEM_ANTI_EVIL;
+	if (s == "ITEM_ANTI_NEUTRAL") return ITEM_ANTI_NEUTRAL;
+	if (s == "ITEM_ANTI_CLERIC") return ITEM_ANTI_CLERIC;
+	if (s == "ITEM_ANTI_MAGE") return ITEM_ANTI_MAGE;
+	if (s == "ITEM_ANTI_THIEF") return ITEM_ANTI_THIEF;
+	if (s == "ITEM_ANTI_FIGHTER") return ITEM_ANTI_FIGHTER;
+	if (s == "ITEM_BRITTLE") return ITEM_BRITTLE;
+	if (s == "ITEM_RESISTANT") return ITEM_RESISTANT;
+	if (s == "ITEM_IMMUNE") return ITEM_IMMUNE;
+	if (s == "ITEM_ANTI_MEN") return ITEM_ANTI_MEN;
+	if (s == "ITEM_ANTI_WOMEN") return ITEM_ANTI_WOMEN;
+	if (s == "ITEM_ANTI_SUN") return ITEM_ANTI_SUN;
+	if (s == "ITEM_ANTI_BARBARIAN") return ITEM_ANTI_BARBARIAN;
+	if (s == "ITEM_ANTI_RANGER") return ITEM_ANTI_RANGER;
+	if (s == "ITEM_ANTI_PALADIN") return ITEM_ANTI_PALADIN;
+	if (s == "ITEM_ANTI_PSI") return ITEM_ANTI_PSI;
+	if (s == "ITEM_ANTI_MONK") return ITEM_ANTI_MONK;
+	if (s == "ITEM_ANTI_DRUID") return ITEM_ANTI_DRUID;
+	if (s == "ITEM_ONLY_CLASS") return ITEM_ONLY_CLASS;
+	if (s == "ITEM_DIG") return ITEM_DIG;
+	if (s == "ITEM_SCYTHE") return ITEM_SCYTHE;
+	if (s == "ITEM_ANTI_SORCERER") return ITEM_ANTI_SORCERER;
+	return fallback;
+}
+
+std::string translate(const e_item_flag e) {
+	switch(e) {
+	case ITEM_GLOW:
+		return "ITEM_GLOW";
+	case ITEM_HUM:
+		return "ITEM_HUM";
+	case ITEM_METAL:
+		return "ITEM_METAL";
+	case ITEM_MINERAL:
+		return "ITEM_MINERAL";
+	case ITEM_ORGANIC:
+		return "ITEM_ORGANIC";
+	case ITEM_INVISIBLE:
+		return "ITEM_INVISIBLE";
+	case ITEM_MAGIC:
+		return "ITEM_MAGIC";
+	case ITEM_NODROP:
+		return "ITEM_NODROP";
+	case ITEM_BLESS:
+		return "ITEM_BLESS";
+	case ITEM_ANTI_GOOD:
+		return "ITEM_ANTI_GOOD";
+	case ITEM_ANTI_EVIL:
+		return "ITEM_ANTI_EVIL";
+	case ITEM_ANTI_NEUTRAL:
+		return "ITEM_ANTI_NEUTRAL";
+	case ITEM_ANTI_CLERIC:
+		return "ITEM_ANTI_CLERIC";
+	case ITEM_ANTI_MAGE:
+		return "ITEM_ANTI_MAGE";
+	case ITEM_ANTI_THIEF:
+		return "ITEM_ANTI_THIEF";
+	case ITEM_ANTI_FIGHTER:
+		return "ITEM_ANTI_FIGHTER";
+	case ITEM_BRITTLE:
+		return "ITEM_BRITTLE";
+	case ITEM_RESISTANT:
+		return "ITEM_RESISTANT";
+	case ITEM_IMMUNE:
+		return "ITEM_IMMUNE";
+	case ITEM_ANTI_MEN:
+		return "ITEM_ANTI_MEN";
+	case ITEM_ANTI_WOMEN:
+		return "ITEM_ANTI_WOMEN";
+	case ITEM_ANTI_SUN:
+		return "ITEM_ANTI_SUN";
+	case ITEM_ANTI_BARBARIAN:
+		return "ITEM_ANTI_BARBARIAN";
+	case ITEM_ANTI_RANGER:
+		return "ITEM_ANTI_RANGER";
+	case ITEM_ANTI_PALADIN:
+		return "ITEM_ANTI_PALADIN";
+	case ITEM_ANTI_PSI:
+		return "ITEM_ANTI_PSI";
+	case ITEM_ANTI_MONK:
+		return "ITEM_ANTI_MONK";
+	case ITEM_ANTI_DRUID:
+		return "ITEM_ANTI_DRUID";
+	case ITEM_ONLY_CLASS:
+		return "ITEM_ONLY_CLASS";
+	case ITEM_DIG:
+		return "ITEM_DIG";
+	case ITEM_SCYTHE:
+		return "ITEM_SCYTHE";
+	case ITEM_ANTI_SORCERER:
+		return "ITEM_ANTI_SORCERER";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_item_flag value) {
+	switch(value) {
+		case ITEM_GLOW:
+		case ITEM_HUM:
+		case ITEM_METAL:
+		case ITEM_MINERAL:
+		case ITEM_ORGANIC:
+		case ITEM_INVISIBLE:
+		case ITEM_MAGIC:
+		case ITEM_NODROP:
+		case ITEM_BLESS:
+		case ITEM_ANTI_GOOD:
+		case ITEM_ANTI_EVIL:
+		case ITEM_ANTI_NEUTRAL:
+		case ITEM_ANTI_CLERIC:
+		case ITEM_ANTI_MAGE:
+		case ITEM_ANTI_THIEF:
+		case ITEM_ANTI_FIGHTER:
+		case ITEM_BRITTLE:
+		case ITEM_RESISTANT:
+		case ITEM_IMMUNE:
+		case ITEM_ANTI_MEN:
+		case ITEM_ANTI_WOMEN:
+		case ITEM_ANTI_SUN:
+		case ITEM_ANTI_BARBARIAN:
+		case ITEM_ANTI_RANGER:
+		case ITEM_ANTI_PALADIN:
+		case ITEM_ANTI_PSI:
+		case ITEM_ANTI_MONK:
+		case ITEM_ANTI_DRUID:
+		case ITEM_ONLY_CLASS:
+		case ITEM_DIG:
+		case ITEM_SCYTHE:
+		case ITEM_ANTI_SORCERER:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_item_flag value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
+e_item_type encode_e_item_type(std::string s,e_item_type fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "ITEM_LIGHT") return ITEM_LIGHT;
+	if (s == "ITEM_SCROLL") return ITEM_SCROLL;
+	if (s == "ITEM_WAND") return ITEM_WAND;
+	if (s == "ITEM_STAFF") return ITEM_STAFF;
+	if (s == "ITEM_WEAPON") return ITEM_WEAPON;
+	if (s == "ITEM_FIREWEAPON") return ITEM_FIREWEAPON;
+	if (s == "ITEM_MISSILE") return ITEM_MISSILE;
+	if (s == "ITEM_TREASURE") return ITEM_TREASURE;
+	if (s == "ITEM_ARMOR") return ITEM_ARMOR;
+	if (s == "ITEM_POTION") return ITEM_POTION;
+	if (s == "ITEM_WORN") return ITEM_WORN;
+	if (s == "ITEM_OTHER") return ITEM_OTHER;
+	if (s == "ITEM_TRASH") return ITEM_TRASH;
+	if (s == "ITEM_TRAP") return ITEM_TRAP;
+	if (s == "ITEM_CONTAINER") return ITEM_CONTAINER;
+	if (s == "ITEM_NOTE") return ITEM_NOTE;
+	if (s == "ITEM_DRINKCON") return ITEM_DRINKCON;
+	if (s == "ITEM_KEY") return ITEM_KEY;
+	if (s == "ITEM_FOOD") return ITEM_FOOD;
+	if (s == "ITEM_MONEY") return ITEM_MONEY;
+	if (s == "ITEM_PEN") return ITEM_PEN;
+	if (s == "ITEM_BOAT") return ITEM_BOAT;
+	if (s == "ITEM_AUDIO") return ITEM_AUDIO;
+	if (s == "ITEM_BOARD") return ITEM_BOARD;
+	if (s == "ITEM_TREE") return ITEM_TREE;
+	if (s == "ITEM_ROCK") return ITEM_ROCK;
+	return fallback;
+}
+
+std::string translate(const e_item_type e) {
+	switch(e) {
+	case ITEM_LIGHT:
+		return "ITEM_LIGHT";
+	case ITEM_SCROLL:
+		return "ITEM_SCROLL";
+	case ITEM_WAND:
+		return "ITEM_WAND";
+	case ITEM_STAFF:
+		return "ITEM_STAFF";
+	case ITEM_WEAPON:
+		return "ITEM_WEAPON";
+	case ITEM_FIREWEAPON:
+		return "ITEM_FIREWEAPON";
+	case ITEM_MISSILE:
+		return "ITEM_MISSILE";
+	case ITEM_TREASURE:
+		return "ITEM_TREASURE";
+	case ITEM_ARMOR:
+		return "ITEM_ARMOR";
+	case ITEM_POTION:
+		return "ITEM_POTION";
+	case ITEM_WORN:
+		return "ITEM_WORN";
+	case ITEM_OTHER:
+		return "ITEM_OTHER";
+	case ITEM_TRASH:
+		return "ITEM_TRASH";
+	case ITEM_TRAP:
+		return "ITEM_TRAP";
+	case ITEM_CONTAINER:
+		return "ITEM_CONTAINER";
+	case ITEM_NOTE:
+		return "ITEM_NOTE";
+	case ITEM_DRINKCON:
+		return "ITEM_DRINKCON";
+	case ITEM_KEY:
+		return "ITEM_KEY";
+	case ITEM_FOOD:
+		return "ITEM_FOOD";
+	case ITEM_MONEY:
+		return "ITEM_MONEY";
+	case ITEM_PEN:
+		return "ITEM_PEN";
+	case ITEM_BOAT:
+		return "ITEM_BOAT";
+	case ITEM_AUDIO:
+		return "ITEM_AUDIO";
+	case ITEM_BOARD:
+		return "ITEM_BOARD";
+	case ITEM_TREE:
+		return "ITEM_TREE";
+	case ITEM_ROCK:
+		return "ITEM_ROCK";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_item_type value) {
+	switch(value) {
+		case ITEM_LIGHT:
+		case ITEM_SCROLL:
+		case ITEM_WAND:
+		case ITEM_STAFF:
+		case ITEM_WEAPON:
+		case ITEM_FIREWEAPON:
+		case ITEM_MISSILE:
+		case ITEM_TREASURE:
+		case ITEM_ARMOR:
+		case ITEM_POTION:
+		case ITEM_WORN:
+		case ITEM_OTHER:
+		case ITEM_TRASH:
+		case ITEM_TRAP:
+		case ITEM_CONTAINER:
+		case ITEM_NOTE:
+		case ITEM_DRINKCON:
+		case ITEM_KEY:
+		case ITEM_FOOD:
+		case ITEM_MONEY:
+		case ITEM_PEN:
+		case ITEM_BOAT:
+		case ITEM_AUDIO:
+		case ITEM_BOARD:
+		case ITEM_TREE:
+		case ITEM_ROCK:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_item_type value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
+e_item_wear encode_e_item_wear(std::string s,e_item_wear fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "ITEM_TAKE") return ITEM_TAKE;
+	if (s == "ITEM_WEAR_FINGER") return ITEM_WEAR_FINGER;
+	if (s == "ITEM_WEAR_NECK") return ITEM_WEAR_NECK;
+	if (s == "ITEM_WEAR_BODY") return ITEM_WEAR_BODY;
+	if (s == "ITEM_WEAR_HEAD") return ITEM_WEAR_HEAD;
+	if (s == "ITEM_WEAR_LEGS") return ITEM_WEAR_LEGS;
+	if (s == "ITEM_WEAR_FEET") return ITEM_WEAR_FEET;
+	if (s == "ITEM_WEAR_HANDS") return ITEM_WEAR_HANDS;
+	if (s == "ITEM_WEAR_ARMS") return ITEM_WEAR_ARMS;
+	if (s == "ITEM_WEAR_SHIELD") return ITEM_WEAR_SHIELD;
+	if (s == "ITEM_WEAR_ABOUT") return ITEM_WEAR_ABOUT;
+	if (s == "ITEM_WEAR_WAISTE") return ITEM_WEAR_WAISTE;
+	if (s == "ITEM_WEAR_WRIST") return ITEM_WEAR_WRIST;
+	if (s == "ITEM_WIELD") return ITEM_WIELD;
+	if (s == "ITEM_HOLD") return ITEM_HOLD;
+	if (s == "ITEM_THROW") return ITEM_THROW;
+	if (s == "ITEM_LIGHT_SOURCE") return ITEM_LIGHT_SOURCE;
+	if (s == "ITEM_WEAR_BACK") return ITEM_WEAR_BACK;
+	if (s == "ITEM_WEAR_EAR") return ITEM_WEAR_EAR;
+	if (s == "ITEM_WEAR_EYE") return ITEM_WEAR_EYE;
+	return fallback;
+}
+
+std::string translate(const e_item_wear e) {
+	switch(e) {
+	case ITEM_TAKE:
+		return "ITEM_TAKE";
+	case ITEM_WEAR_FINGER:
+		return "ITEM_WEAR_FINGER";
+	case ITEM_WEAR_NECK:
+		return "ITEM_WEAR_NECK";
+	case ITEM_WEAR_BODY:
+		return "ITEM_WEAR_BODY";
+	case ITEM_WEAR_HEAD:
+		return "ITEM_WEAR_HEAD";
+	case ITEM_WEAR_LEGS:
+		return "ITEM_WEAR_LEGS";
+	case ITEM_WEAR_FEET:
+		return "ITEM_WEAR_FEET";
+	case ITEM_WEAR_HANDS:
+		return "ITEM_WEAR_HANDS";
+	case ITEM_WEAR_ARMS:
+		return "ITEM_WEAR_ARMS";
+	case ITEM_WEAR_SHIELD:
+		return "ITEM_WEAR_SHIELD";
+	case ITEM_WEAR_ABOUT:
+		return "ITEM_WEAR_ABOUT";
+	case ITEM_WEAR_WAISTE:
+		return "ITEM_WEAR_WAISTE";
+	case ITEM_WEAR_WRIST:
+		return "ITEM_WEAR_WRIST";
+	case ITEM_WIELD:
+		return "ITEM_WIELD";
+	case ITEM_HOLD:
+		return "ITEM_HOLD";
+	case ITEM_THROW:
+		return "ITEM_THROW";
+	case ITEM_LIGHT_SOURCE:
+		return "ITEM_LIGHT_SOURCE";
+	case ITEM_WEAR_BACK:
+		return "ITEM_WEAR_BACK";
+	case ITEM_WEAR_EAR:
+		return "ITEM_WEAR_EAR";
+	case ITEM_WEAR_EYE:
+		return "ITEM_WEAR_EYE";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_item_wear value) {
+	switch(value) {
+		case ITEM_TAKE:
+		case ITEM_WEAR_FINGER:
+		case ITEM_WEAR_NECK:
+		case ITEM_WEAR_BODY:
+		case ITEM_WEAR_HEAD:
+		case ITEM_WEAR_LEGS:
+		case ITEM_WEAR_FEET:
+		case ITEM_WEAR_HANDS:
+		case ITEM_WEAR_ARMS:
+		case ITEM_WEAR_SHIELD:
+		case ITEM_WEAR_ABOUT:
+		case ITEM_WEAR_WAISTE:
+		case ITEM_WEAR_WRIST:
+		case ITEM_WIELD:
+		case ITEM_HOLD:
+		case ITEM_THROW:
+		case ITEM_LIGHT_SOURCE:
+		case ITEM_WEAR_BACK:
+		case ITEM_WEAR_EAR:
+		case ITEM_WEAR_EYE:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_item_wear value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
 e_large_flags encode_e_large_flags(std::string s,e_large_flags fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "LARGE_NONE") return LARGE_NONE;
@@ -1324,6 +2012,158 @@ bool enum_validate(const e_large_flags value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_large_flags value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
+e_liquids encode_e_liquids(std::string s,e_liquids fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "LIQ_WATER") return LIQ_WATER;
+	if (s == "LIQ_BEER") return LIQ_BEER;
+	if (s == "LIQ_WINE") return LIQ_WINE;
+	if (s == "LIQ_ALE") return LIQ_ALE;
+	if (s == "LIQ_DARKALE") return LIQ_DARKALE;
+	if (s == "LIQ_WHISKY") return LIQ_WHISKY;
+	if (s == "LIQ_LEMONADE") return LIQ_LEMONADE;
+	if (s == "LIQ_FIREBRT") return LIQ_FIREBRT;
+	if (s == "LIQ_LOCALSPC") return LIQ_LOCALSPC;
+	if (s == "LIQ_SLIME") return LIQ_SLIME;
+	if (s == "LIQ_MILK") return LIQ_MILK;
+	if (s == "LIQ_TEA") return LIQ_TEA;
+	if (s == "LIQ_COFFE") return LIQ_COFFE;
+	if (s == "LIQ_BLOOD") return LIQ_BLOOD;
+	if (s == "LIQ_SALTWATER") return LIQ_SALTWATER;
+	if (s == "LIQ_COKE") return LIQ_COKE;
+	return fallback;
+}
+
+std::string translate(const e_liquids e) {
+	switch(e) {
+	case LIQ_WATER:
+		return "LIQ_WATER";
+	case LIQ_BEER:
+		return "LIQ_BEER";
+	case LIQ_WINE:
+		return "LIQ_WINE";
+	case LIQ_ALE:
+		return "LIQ_ALE";
+	case LIQ_DARKALE:
+		return "LIQ_DARKALE";
+	case LIQ_WHISKY:
+		return "LIQ_WHISKY";
+	case LIQ_LEMONADE:
+		return "LIQ_LEMONADE";
+	case LIQ_FIREBRT:
+		return "LIQ_FIREBRT";
+	case LIQ_LOCALSPC:
+		return "LIQ_LOCALSPC";
+	case LIQ_SLIME:
+		return "LIQ_SLIME";
+	case LIQ_MILK:
+		return "LIQ_MILK";
+	case LIQ_TEA:
+		return "LIQ_TEA";
+	case LIQ_COFFE:
+		return "LIQ_COFFE";
+	case LIQ_BLOOD:
+		return "LIQ_BLOOD";
+	case LIQ_SALTWATER:
+		return "LIQ_SALTWATER";
+	case LIQ_COKE:
+		return "LIQ_COKE";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_liquids value) {
+	switch(value) {
+		case LIQ_WATER:
+		case LIQ_BEER:
+		case LIQ_WINE:
+		case LIQ_ALE:
+		case LIQ_DARKALE:
+		case LIQ_WHISKY:
+		case LIQ_LEMONADE:
+		case LIQ_FIREBRT:
+		case LIQ_LOCALSPC:
+		case LIQ_SLIME:
+		case LIQ_MILK:
+		case LIQ_TEA:
+		case LIQ_COFFE:
+		case LIQ_BLOOD:
+		case LIQ_SALTWATER:
+		case LIQ_COKE:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_liquids value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
+e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "LOG_SYSERR") return LOG_SYSERR;
+	if (s == "LOG_CHECK") return LOG_CHECK;
+	if (s == "LOG_PLAYERS") return LOG_PLAYERS;
+	if (s == "LOG_MOBILES") return LOG_MOBILES;
+	if (s == "LOG_CONNECT") return LOG_CONNECT;
+	if (s == "LOG_ERROR") return LOG_ERROR;
+	if (s == "LOG_WHO") return LOG_WHO;
+	if (s == "LOG_SAVE") return LOG_SAVE;
+	if (s == "LOG_MAIL") return LOG_MAIL;
+	if (s == "LOG_RANK") return LOG_RANK;
+	if (s == "LOG_SILENT") return LOG_SILENT;
+	return fallback;
+}
+
+std::string translate(const e_log_levels e) {
+	switch(e) {
+	case LOG_SYSERR:
+		return "LOG_SYSERR";
+	case LOG_CHECK:
+		return "LOG_CHECK";
+	case LOG_PLAYERS:
+		return "LOG_PLAYERS";
+	case LOG_MOBILES:
+		return "LOG_MOBILES";
+	case LOG_CONNECT:
+		return "LOG_CONNECT";
+	case LOG_ERROR:
+		return "LOG_ERROR";
+	case LOG_WHO:
+		return "LOG_WHO";
+	case LOG_SAVE:
+		return "LOG_SAVE";
+	case LOG_MAIL:
+		return "LOG_MAIL";
+	case LOG_RANK:
+		return "LOG_RANK";
+	case LOG_SILENT:
+		return "LOG_SILENT";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_log_levels value) {
+	switch(value) {
+		case LOG_SYSERR:
+		case LOG_CHECK:
+		case LOG_PLAYERS:
+		case LOG_MOBILES:
+		case LOG_CONNECT:
+		case LOG_ERROR:
+		case LOG_WHO:
+		case LOG_SAVE:
+		case LOG_MAIL:
+		case LOG_RANK:
+		case LOG_SILENT:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_log_levels value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
@@ -2284,6 +3124,64 @@ bool enum_validate(const e_sys_flags value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_sys_flags value) {
+	out << value << "(" << G::translate(value) << ")";
+	return out;
+}
+e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback) {
+	boost::algorithm::to_upper(s);
+	if (s == "TAN_SHIELD") return TAN_SHIELD;
+	if (s == "TAN_JACKET") return TAN_JACKET;
+	if (s == "TAN_BOOTS") return TAN_BOOTS;
+	if (s == "TAN_GLOVES") return TAN_GLOVES;
+	if (s == "TAN_LEGGINGS") return TAN_LEGGINGS;
+	if (s == "TAN_SLEEVES") return TAN_SLEEVES;
+	if (s == "TAN_HELMET") return TAN_HELMET;
+	if (s == "TAN_BAG") return TAN_BAG;
+	if (s == "TAN_ARMOR") return TAN_ARMOR;
+	return fallback;
+}
+
+std::string translate(const e_tan_result e) {
+	switch(e) {
+	case TAN_SHIELD:
+		return "TAN_SHIELD";
+	case TAN_JACKET:
+		return "TAN_JACKET";
+	case TAN_BOOTS:
+		return "TAN_BOOTS";
+	case TAN_GLOVES:
+		return "TAN_GLOVES";
+	case TAN_LEGGINGS:
+		return "TAN_LEGGINGS";
+	case TAN_SLEEVES:
+		return "TAN_SLEEVES";
+	case TAN_HELMET:
+		return "TAN_HELMET";
+	case TAN_BAG:
+		return "TAN_BAG";
+	case TAN_ARMOR:
+		return "TAN_ARMOR";
+	default:
+		return "UNKNOWN";
+	}
+}
+bool enum_validate(const e_tan_result value) {
+	switch(value) {
+		case TAN_SHIELD:
+		case TAN_JACKET:
+		case TAN_BOOTS:
+		case TAN_GLOVES:
+		case TAN_LEGGINGS:
+		case TAN_SLEEVES:
+		case TAN_HELMET:
+		case TAN_BAG:
+		case TAN_ARMOR:
+		return true;
+		default:
+		return false;
+	}
+}
+std::ostream & operator<<(std::ostream &out,const e_tan_result value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }

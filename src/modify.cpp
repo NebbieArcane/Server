@@ -1,24 +1,46 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD
 * $Id: modify.c,v 1.3 2002/02/24 18:42:47 Thunder Exp $
  * */
-#include "modify.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "modify.hpp"
+#include "act.info.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "mail.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+
+namespace Alarmud {
+
 
 
 #define TP_MOB    0
 #define TP_OBJ    1
 #define TP_ERROR  2
 
-extern struct descriptor_data* descriptor_list;
 struct room_data* world;              /* dyn alloc'ed array of rooms     */
 
 
@@ -1010,7 +1032,6 @@ void check_reboot() {
 	static int shutdownlevel=0;
 	static int forceshutdown=0;
 	char REBOOTFILE[15];
-	extern int mudshutdown, rebootgame;
 	if (GetMediumLag(0)> 400000) {
 		if (TooMuchLag<20) { TooMuchLag++; }
 	}
@@ -1096,4 +1117,6 @@ void check_reboot() {
 
 	return;
 }
+
+} // namespace Alarmud
 

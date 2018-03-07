@@ -246,7 +246,6 @@ char* ParseAnsiColors( int UsingAnsi, const char* txt ) {
 
 void close_socket_fd( int desc) {
 	struct descriptor_data* d;
-	/*  extern struct descriptor_data *descriptor_list; */
 
 #if defined( LOG_DEBUG )
 	mudlog( LOG_CHECK, "begin close_socket_fd" );
@@ -317,19 +316,12 @@ int run (int port, const char* dir) {
 }
 
 
-
-#define PROFILE(x)
-
-
 /* Init sockets, run game, and cleanup sockets */
 void run_the_game(int port) {
 	int s;
-	PROFILE(extern etext();)
 
 	void signal_setup(void);
 	int load(void);
-
-	PROFILE(monstartup((int) 2, etext);)
 
 	descriptor_list = NULL;
 
@@ -355,7 +347,6 @@ void run_the_game(int port) {
 
 	close_sockets(s);
 
-	PROFILE(monitor(0);)
 
 	if (rebootgame) {
 		mudlog( LOG_CHECK, "Rebooting.");
@@ -375,9 +366,6 @@ void game_loop(int s) {
 	struct descriptor_data* point, *next_point;
 	int mask;
 
-	/*  extern struct descriptor_data *descriptor_list; */
-	extern unsigned long pulse;
-	extern int maxdesc;
 	int idx;
 
 	null_time.tv_sec = 0;

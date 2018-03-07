@@ -1,15 +1,33 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: signals.c,v 1.2 2002/03/23 16:43:20 Thunder Exp $ */
-#include "signals.hpp"
+/***************************  System  include ************************************/
 #include <signal.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "signals.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "status.hpp"
+namespace Alarmud {
+
 /* La ridefinizione di funzioni di memoria qui causerebbe ricorsione
  * */
 #define LOG_CRASH 0 // Alar, abbiamo gdb, meglio non modificare i crash
@@ -30,7 +48,6 @@ char gszStack[STACK_SIZE][150]= {
 void* gpGeneric = NULL;
 
 
-extern struct descriptor_data* descriptor_list;
 
 
 void PrintStatus() {
@@ -152,7 +169,6 @@ void signal_setup() {
 }
 
 void checkpointing( int dummy ) {
-	extern int tics;
 
 	if (!tics) {
 		mudlog( LOG_SYSERR, "CHECKPOINT shutdown: tics not updated" );
@@ -172,7 +188,6 @@ void checkpointing( int dummy ) {
 }
 
 void shutdown_request( int dummy ) {
-	extern int mudshutdown;
 
 	mudlog( LOG_CHECK, "Received USR2 - shutdown request");
 	mudshutdown = 1;
@@ -182,7 +197,6 @@ void shutdown_request( int dummy ) {
 /* kick out players etc */
 void hupsig( int dummy ) {
 	int i;
-	extern int mudshutdown, rebootgame;
 
 	mudlog( LOG_CHECK, "Received SIGHUP, SIGINT, or SIGTERM. Shutting down");
 
@@ -253,3 +267,5 @@ float AverageEqIndex(float toadd) {
 	curmedia+=toadd/numerocasi;
 	return(curmedia);
 }
+} // namespace Alarmud
+

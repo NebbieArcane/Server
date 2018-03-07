@@ -1,17 +1,41 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: spells2.c,v 1.3 2002/02/13 12:30:59 root Exp $
 */
-/*AlarMUD*/
-#include "spells2.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <strings.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spells2.hpp"
+#include "act.move.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magic3.hpp"
+#include "regen.hpp"
 #include "spell_parser.hpp"
+
+namespace Alarmud {
+/*AlarMUD*/
+
 
 #define MAX_MAGE_POLY 48        /* total number of polies choices */
 
@@ -688,7 +712,6 @@ void cast_clone( byte level, struct char_data* ch, const char* arg, int type,
 void cast_control_weather( byte level,struct char_data* ch, const char* arg, int type,
 						   struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	char buffer[MAX_STRING_LENGTH];
-	extern struct weather_data weather_info;
 
 	switch (type) {
 	case SPELL_TYPE_SPELL:
@@ -4201,3 +4224,5 @@ void cast_prot_dragon_breath_gas( byte level, struct char_data* ch, const char* 
 	}
 
 }
+} // namespace Alarmud
+

@@ -1,18 +1,45 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: lucertole.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
-#include "lucertole.hpp"
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "lucertole.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "modify.hpp"
+#include "opinion.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
 #include "spell_parser.hpp"
+#include "spells2.hpp"
+
+namespace Alarmud {
+
+
 #define RESCUE_VIRGIN  1950
 #define RESCUE_ROOM    1983
 #define SNAKE_GOD      1953
@@ -584,4 +611,6 @@ int Rampicante( struct char_data* pChar, int iCmd, char* szArgument,
 	return FALSE;
 }
 
+
+} // namespace Alarmud
 

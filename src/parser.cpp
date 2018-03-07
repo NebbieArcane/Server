@@ -1,13 +1,29 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: parser.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $
  * */
-#include "parser.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "protos.hpp" /* function prototypes for parser functions */
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "parser.hpp"
 #include "snew.hpp"
+namespace Alarmud {
+
 
 /* Sorted selection of the commands for quick lookup */
 struct radix_list radix_head[27];
@@ -165,4 +181,6 @@ char* FindCommandName(int num) {
 				if(n->number==num) { return n->name; }
 	return NULL;
 }
+
+} // namespace Alarmud
 

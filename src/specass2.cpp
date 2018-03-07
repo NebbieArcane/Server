@@ -1,35 +1,51 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: specass2.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
-/**
-#ifdef CYGWIN
+/***************************  System  include ************************************/
 	#include <sys/errno.h>
-	#define errno (*__errno())
-	extern int *__errno _PARAMS ((void));
-#else
-	extern int errno;
-#endif
-**/
-#include "specass2.hpp"
-
 #include <sys/errno.h>
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
-#include "breath.hpp"
-#include "lucertole.hpp"
-#include "protos.hpp"
-#include "rhyodin.hpp"
-#include "snew.hpp"
-//#include "vate.h"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
 #include "specass2.hpp"
+#include "breath.hpp"
+#include "db.hpp"
+#include "interpreter.hpp"
+#include "lucertole.hpp"
+#include "rhyodin.hpp"
+#include "shop.hpp"
+#include "snew.hpp"
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
+#include "utility.hpp"
+
+namespace Alarmud {
+/**
+#ifdef CYGWIN
+	#define errno (*__errno())
+#else
+#endif
+**/
+
+
+
+
 #define SPECFILE "myst.spe"
 FILE* fd;
 FILE* fp;
@@ -255,4 +271,6 @@ void assign_speciales() {
 	assign_the_shopkeepers();
 }
 
+
+} // namespace Alarmud
 

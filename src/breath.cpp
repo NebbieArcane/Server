@@ -215,7 +215,6 @@ void do_breath(struct char_data* ch, char* argument, int cmd) {
 
 	WAIT_STATE(ch, PULSE_VIOLENCE*2);
 }
-extern struct index_data* mob_index;
 
 } // namespace Alarmud
 

@@ -1,16 +1,37 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: shop.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
-#include "shop.hpp"
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "shop.hpp"
+#include "act.comm.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
 #include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "regen.hpp"
+
+namespace Alarmud {
+
 #define SHOP_FILE "myst.shp"
 #define MAX_TRADE 5
 #define MAX_PROD 5
@@ -157,7 +178,7 @@ void shopping_buy( char* arg, struct char_data* ch,
 	{ return; }
 
 	if(keeper->generic != 0)
-		for(i = 0; i <= MAX_TRADE; i++) {
+		for(i = 0; i < MAX_TRADE; i++) {
 			if(keeper->generic == FAMINE)
 				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
 					mult = shop_multiplier; /* famine, we sell food, so we */
@@ -411,7 +432,6 @@ void shopping_list( char* arg, struct char_data* ch,
 					struct char_data* keeper, int shop_nr) {
 	char buf[MAX_STRING_LENGTH], buf2[100],buf3[100];
 	struct obj_data* temp1;
-	extern char* drinks[];
 	int found_obj;
 	int i;
 	float mult = 0;
@@ -422,7 +442,7 @@ void shopping_list( char* arg, struct char_data* ch,
 
 
 	if(keeper->generic != 0)
-		for(i = 0; i <= MAX_TRADE; i++) {
+		for(i = 0; i < MAX_TRADE; i++) {
 			if(keeper->generic == FAMINE)
 				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
 					mult = shop_multiplier; /* we're in a famine, we sell food, so we */
@@ -699,4 +719,6 @@ void assign_the_shopkeepers() {
 	}
 	mudlog(LOG_CHECK,"Assign shopkeepers done");
 }
+
+} // namespace Alarmud
 

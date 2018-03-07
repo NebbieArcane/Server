@@ -51,7 +51,7 @@
 namespace Alarmud {
 
 
-char EasySummon = 1;
+char EasySummon = true;
 long numero_mob_obj[100000];
 
 void do_auth(struct char_data* ch, char* argument, int cmd) {
@@ -153,8 +153,10 @@ void do_register(struct char_data* ch, char* argument, int cmd) {
 			send_to_char(buf, ch);
 		}
 	}
-	Registered toon(GET_NAME(victim));
-	toon.reg(GET_NAME(ch));
+	if (victim) {
+		Registered toon(GET_NAME(victim));
+		toon.reg(GET_NAME(ch));
+	}
 	//Nebbie::getRegistered()->doReg(GET_NAME(ch),GET_NAME(victim));
 	//doreg(ch,nparms,parms);
 	for (nparms=0; nparms<10; nparms++) {
@@ -626,7 +628,6 @@ void do_listhosts(struct char_data* ch, char* argument, int command) {
 }
 
 void do_silence(struct char_data* ch, char* argument, int cmd) {
-	extern int Silence;
 	if( GetMaxLevel(ch) < DIO || !IS_PC( ch ) ) {
 		send_to_char("You cannot Silence.\n\r",ch);
 		return;
@@ -651,11 +652,7 @@ void do_wizlock(struct char_data* ch, char* argument, int cmd) {
 	int a, length, b;
 	char buf[255];
 
-	extern int numberhosts;
-	extern char hostlist[MAX_BAN_HOSTS][30];
-
 #endif
-	extern int WizLock;
 
 
 	if ((GetMaxLevel(ch) < DIO) || (IS_NPC(ch))) {
@@ -1191,7 +1188,6 @@ void do_goto(struct char_data* ch, char* argument, int cmd) {
 
 
 void do_stat(struct char_data* ch, char* argument, int cmd) {
-	extern char* spells[];
 	struct affected_type* aff;
 	char arg1[MAX_STRING_LENGTH];
 	char buf[MAX_STRING_LENGTH];
@@ -1210,32 +1206,10 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 	bool found;
 
 	/* for objects */
-	extern char* item_types[];
-	extern char* wear_bits[];
-	extern char* extra_bits[];
-	extern char* drinks[];
 
 	/* for rooms */
-	extern char* dirs[];
-
-	extern char* exit_bits[];
-	extern char* sector_types[];
 
 	/* for chars */
-	extern char* equipment_types[];
-	extern char* affected_bits[];
-	extern char* affected_bits2[];
-	extern char* immunity_names[];
-	extern char* special_user_flags[];
-	extern char* apply_types[];
-	extern char* pc_class_types[];
-	extern char* npc_class_types[];
-	extern char* action_bits[];
-	extern char* player_bits[];
-	extern char* position_types[];
-	extern char* connected_types[];
-	extern char* RaceName[];
-	extern struct str_app_type str_app[];
 
 	if( !IS_PC(ch) )
 	{ return; }
@@ -1456,7 +1430,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 				if (IS_MAESTRO_DEL_CREATO(ch)) {
 					sprintf(buf,"$c0005Pos. DEA MOR INC STU SLE RES SIT FIG STA MOU");
 					act(buf,FALSE,ch,0,0,TO_CHAR);
-					sprintf(buf,"$c0014     %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld"
+					sprintf(buf,"$c0014     %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld"
 							,GET_TEMPO_IN(k,0)
 							,GET_TEMPO_IN(k,1)
 							,GET_TEMPO_IN(k,2)
@@ -1465,8 +1439,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 							,GET_TEMPO_IN(k,5)
 							,GET_TEMPO_IN(k,6)
 							,GET_TEMPO_IN(k,7)
-							,GET_TEMPO_IN(k,8)
-							,GET_TEMPO_IN(k,9));
+							,GET_TEMPO_IN(k,8));
 					act(buf,FALSE,ch,0,0,TO_CHAR);
 					sprintf(buf,"$c0005Pos prev. : $c0014%d",GET_POS_PREV(k));
 					act(buf,FALSE,ch,0,0,TO_CHAR);
@@ -1988,10 +1961,6 @@ void do_ooedit(struct char_data* ch, char* argument, int cmd) {
 	int iVNum;
 
 	/* for objects
-	extern char *item_types[];
-	extern char *wear_bits[];
-	extern char *extra_bits[];
-	extern char *drinks[];
 	*/
 
 	if (IS_NPC(ch))
@@ -2310,10 +2279,6 @@ void do_set(struct char_data* ch, char* argument, int cmd) {
 	int parm2 = 0;
 	char buf[256];
 	unsigned long lparm = 0;
-
-
-	extern char PeacefulWorks;
-	extern char EasySummon;
 
 
 	if ((GetMaxLevel(ch) < MAESTRO_DEL_CREATO) || (IS_NPC(ch)))
@@ -2801,14 +2766,14 @@ void do_set(struct char_data* ch, char* argument, int cmd) {
 	}
 	else if (!strcmp(field, "kill")) {
 		if (PeacefulWorks) {
-			PeacefulWorks = FALSE;
-			EasySummon = FALSE;
+			PeacefulWorks = false;
+			EasySummon = false;
 			mudlog( LOG_PLAYERS, "Peaceful rooms and Easy Summon disabled by %s",
 					GET_NAME(ch));
 		}
 		else {
-			PeacefulWorks = TRUE;
-			EasySummon = TRUE;
+			PeacefulWorks = true;
+			EasySummon = true;
 			mudlog( LOG_ERROR, "Peaceful rooms and Easy Summon enabled by %s",
 					GET_NAME(ch));
 		}
@@ -2968,7 +2933,6 @@ void do_shutdow(struct char_data* ch, char* argument, int cmd) {
 
 
 void do_shutdown(struct char_data* ch, char* argument, int cmd) {
-	extern int mudshutdown, rebootgame;
 	char buf[100], arg[MAX_INPUT_LENGTH];
 
 	if (IS_NPC(ch))
@@ -3015,7 +2979,7 @@ void do_shutdown(struct char_data* ch, char* argument, int cmd) {
 			sprintf( buf, "Crashed by %s.\n\r", GET_NAME( ch ) );
 			send_to_all(buf);
 			mudlog( LOG_PLAYERS, "Crashed by %s.\n\r", GET_NAME( ch ) );
-			mudshutdown=3/0;
+			assert(false);
 		}
 		else
 		{ send_to_char("Go shut down someone your own size.\n\r", ch); }
@@ -3308,8 +3272,6 @@ void do_mload(struct char_data* ch, char* argument, int cmd) {
 	char num[100];
 	int number;
 
-	extern int top_of_mobt;
-
 	if (IS_NPC(ch))
 	{ return; }
 
@@ -3450,7 +3412,6 @@ void do_oload(struct char_data* ch, char* argument, int cmd) {
 void purge_one_room(int rnum, struct room_data* rp, int* range) {
 	struct char_data*        ch;
 	struct obj_data*        obj;
-	extern long room_count;
 
 	if( !IS_PC( ch ) )
 	{ return; }
@@ -4475,8 +4436,6 @@ void print_room(int rnum, struct room_data* rp, struct string_block* sb) {
 	char buf[MAX_STRING_LENGTH];
 	int dink,bits, scan;
 
-	extern char* sector_types[];
-
 	if((rp->sector_type < 0) || (rp->sector_type > 9)) {
 		/* non-optimal */
 		rp->sector_type = 0;
@@ -4809,7 +4768,6 @@ void do_create( struct char_data* ch, char* argument, int cmd) {
 
 void CreateOneRoom( int loc_nr) {
 	struct room_data* rp;
-	extern int top_of_zone_table;
 
 	char buf[256];
 
@@ -4943,8 +4901,6 @@ void do_cset(struct char_data* ch, char* arg, int cmd) {
 	char buf[1000], buf1[255], buf2[255], buf3[255], buf4[255];
 	int i, radix;
 	NODE* n;
-	extern struct radix_list radix_head[];
-	extern byte HashTable[];
 
 	if(IS_NPC(ch))
 	{ return; }
@@ -5532,7 +5488,6 @@ void do_force_rent( struct char_data* ch, char* argument, int cmd ) {
 }
 
 void do_ghost(struct char_data* ch, char* argument, int cmd) {
-	extern int plr_tick_count;
 	char find_name[80];
 	struct char_file_u tmp_store;
 	struct char_data* tmp_ch,*vict;
@@ -5833,10 +5788,6 @@ void do_clone(struct char_data* ch, char* argument, int cmd) {
 void do_viewfile(struct char_data* ch, char* argument, int cmd) {
 	char namefile[20];
 	char bigbuf[32000];
-	extern char motd[MAX_STRING_LENGTH];
-	extern char wmotd[MAX_STRING_LENGTH];
-
-	/*    extern char titlescreen[MAX_STRING_LENGTH]; */
 
 	only_argument(argument, namefile);
 	if(!strcmp(namefile,"bug"))
