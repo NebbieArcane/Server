@@ -1,7 +1,7 @@
 language: cpp
 before_install:
   - sudo apt-get -y update
-  - sudo apt-get -y install libconfig++-dev lnav libsqlite3-dev libcurlpp-dev liblog4cxx-dev libmysqlcppconn-dev libcurl4-openssl-dev
+  - sudo apt-get -y install libconfig++-dev libcurlpp-dev liblog4cxx-dev libmysqlcppconn-dev libcurl4-openssl-dev
   - sudo apt-get -y install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev
 dist: xenial  
 script: "./build.sh"
