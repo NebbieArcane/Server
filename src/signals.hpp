@@ -13,6 +13,7 @@ void SetLine(const char* srcfile,int srcline);
 void SetStatus( const char* szStatus);
 void SetStatus( const char* szStatus, const char* szString);
 void SetStatus( const char* szStatus, const char* szString, void* pGeneric );
+void signal_setup();
 void PushStatus(const char* szStatus);
 void PopStatus();
 void buscrash(int dummy);
