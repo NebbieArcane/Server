@@ -51,8 +51,8 @@ target_link_libraries(myst  ${SQLITE_STATIC_LDFLAGS})
 
 #Curl
 pkg_check_modules(CURL curlpp)
-target_compile_options(myst PUBLIC ${CURL_STATIC_CFLAGS} )
-target_link_libraries(myst  ${CURL_STATIC_LDFLAGS})
+#target_compile_options(myst PUBLIC ${CURL_STATIC_CFLAGS} )
+#target_link_libraries(myst  ${CURL_STATIC_LDFLAGS})
 
 #Libconfig
 pkg_check_modules(CONF libconfig++)
