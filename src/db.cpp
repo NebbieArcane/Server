@@ -34,6 +34,8 @@
 #include "weather.hpp"
 #include "handler.hpp"
 #include "opinion.hpp"
+#include "spell_list.hpp"
+
 #include "Registered.hpp"
 #include "regen.hpp"
 #include "script.hpp"
@@ -249,6 +251,9 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Loading pose messages.");
 	boot_pose_messages();
+
+	mudlog(LOG_CHECK, "Loading spells.");
+	boot_spells();
 
 	mudlog(LOG_CHECK, "Assigning function pointers:");
 	if (!no_specials) {
