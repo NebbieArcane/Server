@@ -13,3 +13,11 @@ indent=force-tab
 attach-return-type
 align-reference=name
 max-code-length=200
+add-braces
+attach-return-type
+attach-return-type-decl
+ignore-exclude-errors
+exclude=autoenums.cpp
+exclude=autoenums.hpp
+exclude=config.hpp
+exclude=release.hpp
