@@ -271,21 +271,21 @@ int run (int port, const char* dir) {
 	dir = "lib";
 #endif
 
-	mudlog( LOG_CHECK, "Starting game ver %s rel %s ", version(), release() );
-	mudlog( LOG_CHECK, "Compiled on %s",compilazione() );
+	mudlog( LOG_ALWAYS, "Starting game ver %s rel %s ", version(), release() );
+	mudlog( LOG_ALWAYS, "Compiled on %s",compilazione() );
 
-	mudlog(LOG_CHECK,"Pulse: zone river teleport violence mobile tick");
-	mudlog(LOG_CHECK,"        %4d   %4d      %4d      %4d    %4d  %4d",
+	mudlog(LOG_ALWAYS,"Pulse: zone river teleport violence mobile tick");
+	mudlog(LOG_ALWAYS,"        %4d   %4d      %4d      %4d    %4d  %4d",
 		   PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
 		   PULSE_VIOLENCE,PULSE_MOBILE,(PULSE_PER_SEC * SECS_PER_MUD_HOUR));
-	mudlog(LOG_CHECK,"Reading data from ./%s",dir);
+	mudlog(LOG_ALWAYS,"Reading data from ./%s",dir);
 	printFlags();
 	Uptime = time(0);
 
-	mudlog( LOG_CHECK, "Running game on port %d.", port);
-	mudlog( LOG_CHECK, "Using %s as data directory.", dir);
-	mudlog( LOG_CHECK, "Pid: %d",getpid());
-	mudlog(LOG_CHECK,"Host: %s",HostName());
+	mudlog( LOG_ALWAYS, "Running game on port %d.", port);
+	mudlog( LOG_ALWAYS, "Using %s as data directory.", dir);
+	mudlog( LOG_ALWAYS, "Pid: %d",getpid());
+	mudlog(LOG_ALWAYS,"Host: %s",HostName());
 	/* scrive il proprio pid in 'dir' */
 	FILE* fd;
 	fd=fopen(PIDFILE,"w");
