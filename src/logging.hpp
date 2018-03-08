@@ -36,7 +36,7 @@ extern boost::format  my_fmt(const std::string &f_string);
 #define mudlog_LOG_RANK(level,...) LOG4CXX_TRACE(logger,"LRANK " << my_fmt FORMAT(__VA_ARGS__))
 
 #define mudlog(level,...) {mudlog_##level(level,__VA_ARGS__);godTrace(level,__VA_ARGS__);}
-#define buglog(level,...) {LOG4CXX_INFO(buglogger, #level << my_fmt FORMAT(__VA_ARGS__));godTrace(level,__VA_ARGS__);}
+#define buglog(level,...) {LOG4CXX_INFO(buglogger, #level << " " << my_fmt FORMAT(__VA_ARGS__));godTrace(level,__VA_ARGS__);}
 
 // Note that TRACE level is compiled out in release (non-debug) mode.
 #define LOG_TRACE(x) LOG4CXX_TRACE(logger, x)
@@ -50,11 +50,8 @@ extern log4cxx::LoggerPtr logger;
 extern log4cxx::LoggerPtr buglogger;
 extern log4cxx::LoggerPtr errlogger;
 void godTrace(unsigned uType, const char* const szString, ...);
-namespace Alarmud {
-void log_init(string log_filename,unsigned short debug_level);
-log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix);
+log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole);
 log4cxx::LevelPtr get_level(unsigned short debug_level);
-}
 } // namespace Alarmud
 #endif /* LOGGING_HPP_ */
 

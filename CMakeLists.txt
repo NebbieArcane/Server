@@ -8,6 +8,8 @@ if (NOT EXISTS src/config.hpp.in)
 endif()
 enable_language(CXX)
 include(UsePkgConfig)
+include(./PrecompiledHeader.cmake)
+
 # The version number.
 set (myst_VERSION_MAJOR 3)
 set (myst_VERSION_MINOR 1)

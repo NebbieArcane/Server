@@ -275,7 +275,7 @@ int run (int port, const char* dir) {
 	mudlog( LOG_ALWAYS, "Compiled on %s",compilazione() );
 
 	mudlog(LOG_ALWAYS,"Pulse: zone river teleport violence mobile tick");
-	mudlog(LOG_ALWAYS,"        %4d   %4d      %4d      %4d    %4d  %4d",
+	mudlog(LOG_ALWAYS,"       %4d   %4d      %4d      %4d    %4d  %4d",
 		   PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
 		   PULSE_VIOLENCE,PULSE_MOBILE,(PULSE_PER_SEC * SECS_PER_MUD_HOUR));
 	mudlog(LOG_ALWAYS,"Reading data from ./%s",dir);

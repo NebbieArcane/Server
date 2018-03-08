@@ -2,16 +2,8 @@
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
-//  Original intial comments
-/*
- * logging.cpp
- *
- *  Created on: 10 feb 2018
- *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
- */
+#ifndef __LOGGING_HPP
+#define __LOGGING_HPP
 /***************************  System  include ************************************/
 #include <stdarg.h>
 #include <log4cxx/logger.h>
@@ -32,10 +24,11 @@
 #include "logging.hpp"
 #include "comm.hpp"
 #include "multiclass.hpp"
+#include "general.hpp"
+#if HAS_LOG
 namespace Alarmud {
 
 
-#if HAS_LOG
 log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("MainLogger"));
 log4cxx::LoggerPtr buglogger(log4cxx::Logger::getLogger("BugLogger"));
 log4cxx::LoggerPtr errlogger(log4cxx::Logger::getLogger("ErrLogger"));
@@ -66,41 +59,25 @@ void godTrace(unsigned uType, const char* const szString, ... ) {
 		}
 	}
 }
-namespace Alarmud {
-void log_init(string log_filename,unsigned short debug_level) {
-	log_configure(logger,log_filename,".log")->setLevel(get_level(debug_level));
-	log_configure(errlogger,"errors",".log")->setLevel(log4cxx::Level::getError());
-	log_configure(buglogger,"bugs","")->setLevel(log4cxx::Level::getAll());
-}
 constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n";
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
-log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix) {
+log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
 	logname.append(suffix);
 	log4cxx::helpers::Pool p;
-	if (logname!="bugs") {
-		log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
-		log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logname,false));
-		r->setMaxBackupIndex(5);
-		r->setMaximumFileSize(10240);
-		r->setBufferedIO(false);
-		r->setBufferSize(1024);
-		r->activateOptions(p);
-		logger->addAppender(r);
-		if (logname!="errors.log") {
-			log4cxx::ConsoleAppenderPtr r2(new log4cxx::ConsoleAppender(l));
-			logger->addAppender(r2);
-		}
+	log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
+	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logname,(logname=="bugs")?true:false));
+	r->setMaxBackupIndex(5);
+	r->setMaximumFileSize(10240);
+	r->setBufferedIO(false);
+	r->setBufferSize(1024);
+	r->activateOptions(p);
+	logger->addAppender(r);
+	if (inConsole) {
+		cout << "Logger " << logname << "." << suffix << " on console " << std::endl;
+		log4cxx::ConsoleAppenderPtr r2(new log4cxx::ConsoleAppender(l));
+		logger->addAppender(r2);
 	}
-	else {
-		log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
-		log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logname));
-		r->setMaxBackupIndex(15);
-		r->setMaximumFileSize(10240);
-		r->setBufferedIO(false);
-		r->setBufferSize(1024);
-		r->activateOptions(p);
-		logger->addAppender(r);
-	}
+	logger->setLevel(debugLevel);
 	return logger;
 }
 
@@ -134,8 +111,7 @@ log4cxx::LevelPtr get_level(unsigned short debug_level) {
 	}
 	return level;
 }
-}
-
-#endif
 } // namespace Alarmud
+#endif
+#endif // __LOGGING_HPP
 
