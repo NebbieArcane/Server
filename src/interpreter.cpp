@@ -597,7 +597,7 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 
 }
 
-void argument_interpreter(char* argument,char* first_arg,char* second_arg ) {
+void argument_interpreter(const char* argument,char* first_arg,char* second_arg ) {
 	int look_at, begin;
 
 	begin = 0;
@@ -788,7 +788,7 @@ int is_abbrev(char* arg1, char* arg2) {
  * del primo argomento.
  * Come bonus, tmp1 e tmp2 sono fillate a zero
  * */
-void half_chop(char* string, char* arg1, char* arg2) {
+void half_chop(const char* string, char* arg1, char* arg2) {
 	char* tmp1;
 	char* tmp2;
 	char* p1;
