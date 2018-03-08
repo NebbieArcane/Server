@@ -2055,9 +2055,9 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						break ;
 					case RACE_ORC :
 						if( total_bonus > 25 ) {
-                            special = 1 ;
-                            apply = APPLY_DAMROLL ;
-                            app_val = 1 ;
+							special = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
 							special = 1 ;
@@ -2311,9 +2311,9 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						break ;
 					case RACE_TROLL :
 						if( total_bonus > 25 ) {
-                            special = 1 ;
-                            apply = APPLY_DAMROLL ;
-                            app_val = 1 ;
+							special = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
 							special = 1 ;
@@ -3272,9 +3272,9 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						break ;
 					case RACE_TROLL    :
 						if( total_bonus > 24 ) {
-                            special = 1 ;
-                            apply = APPLY_DAMROLL ;
-                            app_val = 1 ;
+							special = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
 							special = 1 ;

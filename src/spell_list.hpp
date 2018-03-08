@@ -11,6 +11,6 @@
 #include <sys/types.h>
 /***************************  Local    include ************************************/
 namespace Alarmud {
-	void boot_spells();
+void boot_spells();
 }
 #endif // __SPELL_LIST__HPP

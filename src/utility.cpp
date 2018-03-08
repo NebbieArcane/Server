@@ -227,8 +227,8 @@ int CAN_SEE(struct char_data* s, struct char_data* o) {
 		}
 	}
 	if( IS_AFFECTED2( o, AFF2_ANIMAL_INVIS ) && IsAnimal( s ) ) {
-			return(FALSE);
-		}
+		return(FALSE);
+	}
 
 	return(TRUE);
 }

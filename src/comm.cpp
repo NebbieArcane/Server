@@ -319,9 +319,6 @@ int run (int port, const char* dir) {
 void run_the_game(int port) {
 	int s;
 
-	void signal_setup(void);
-	int load(void);
-
 	descriptor_list = NULL;
 
 	mudlog( LOG_CHECK, "Opening mother connection.");
@@ -1941,7 +1938,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 			}
 
 			if(point && i) {
-				while( ( *point = *( i++ ) ) != 0 ) { 
+				while( ( *point = *( i++ ) ) != 0 ) {
 					++point;
 				}
 

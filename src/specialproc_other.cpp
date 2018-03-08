@@ -49,11 +49,11 @@ struct special_proc_entry otherproc[] = {
 	{ "DruidChallenger",(special_proc) DruidChallenger },
 	{ "DruidGuildMaster",(special_proc) DruidGuildMaster },
 	{ "DwarvenMiners",(special_proc) DwarvenMiners },
-	#if EGO
+#if EGO
 	{ "EvilBlade",(special_proc) EvilBlade },
 	{ "GoodBlade",(special_proc) GoodBlade },
 	{ "NeutralBlade",(special_proc) NeutralBlade },
-	#endif
+#endif
 	{ "EditMaster",(special_proc)EditMaster},
 	{ "Esattore",(special_proc)Esattore},
 	{ "ForceMobToAction",(special_proc) ForceMobToAction },
@@ -130,9 +130,9 @@ struct special_proc_entry otherproc[] = {
 	{ "behir",(special_proc) behir },
 	{ "blink",(special_proc) blink },
 	{ "board",(special_proc) board },
-	#if !GCC27
+#if !GCC27
 	{ "chess_game",(special_proc) chess_game },
-	#endif
+#endif
 	{ "coldcaster",(special_proc) coldcaster },
 	{ "creceptionist",(special_proc) creceptionist },
 	{ "creeping_death",(special_proc) creeping_death },

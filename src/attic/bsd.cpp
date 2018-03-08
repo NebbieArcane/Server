@@ -49,8 +49,7 @@ static int findbucket();
 #endif
 
 #ifdef KLUDGE_STRING
-char*
-strdup(str)
+char* strdup(str)
 const char* str;
 {
 	int len;
@@ -70,8 +69,7 @@ const char* str;
 /*
  * Find the first occurrence of find in s.
  */
-char*
-strstr(s, find)
+char* strstr(s, find)
 register const char* s, *find;
 {
 	register char c, sc;
@@ -166,8 +164,7 @@ static        u_int nmalloc[NBUCKETS];
 
 #define        ASSERT(p)   if (!(p)) botch("p")
 #include <stdio.h>
-static
-botch(s)
+static botch(s)
 char* s;
 {
 	fprintf(stderr, "\r\nassertion botched: %s\r\n", s);
@@ -180,8 +177,7 @@ char* s;
 
 #endif
 
-void*
-malloc(nbytes)
+void* malloc(nbytes)
 size_t nbytes;
 {
 	register union overhead* op;
@@ -266,8 +262,7 @@ size_t nbytes;
 /*
  * Allocate more memory to the indicated bucket.
  */
-static void
-morecore(bucket)
+static void morecore(bucket)
 int bucket;
 {
 	register union overhead* op;
@@ -309,8 +304,7 @@ int bucket;
 	}
 }
 
-void
-free(cp)
+void free(cp)
 void* cp;
 {
 	register int size;
@@ -351,8 +345,7 @@ void* cp;
  */
 int realloc_srchlen = 4;        /* 4 should be plenty, -1 =>'s whole list */
 
-void*
-realloc(cp, nbytes)
+void* realloc(cp, nbytes)
 void* cp;
 size_t nbytes;
 {
@@ -424,8 +417,7 @@ size_t nbytes;
  * header starts at ``freep''.  If srchlen is -1 search the whole list.
  * Return bucket number, or -1 if not found.
  */
-static
-findbucket(freep, srchlen)
+static findbucket(freep, srchlen)
 union overhead* freep;
 int srchlen;
 {
@@ -477,8 +469,7 @@ char* s;
 #endif
 
 
-void*
-calloc(num, size)
+void* calloc(num, size)
 size_t num;
 register size_t size;
 {
@@ -490,8 +481,7 @@ register size_t size;
 	return(p);
 }
 
-void
-cfree(p)
+void cfree(p)
 void* p;
 {
 	(void)free(p);

@@ -37,7 +37,8 @@ namespace Alarmud {
 /*AlarMUD*/
 
 
-#define MAX_MAGE_POLY 48        /* total number of polies choices */
+#define MAX_MAGE_POLY 48
+/* total number of polies choices */
 
 struct PolyType PolyList[MAX_MAGE_POLY] = {
 	{"goblin",      4, 5100},

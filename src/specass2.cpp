@@ -7,7 +7,7 @@
 * $Id: specass2.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
 /***************************  System  include ************************************/
-	#include <sys/errno.h>
+#include <sys/errno.h>
 #include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>

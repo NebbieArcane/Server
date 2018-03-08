@@ -545,7 +545,7 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 				snprintf(buf,MAX_INPUT_LENGTH -1,"head severed %s",corpse->name);
 				cp->name=strdup(buf);
 				snprintf( buf,MAX_INPUT_LENGTH -1,"the severed head of %s",
-						 (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+						  (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
 				cp->short_description=strdup(buf);
 				cp->action_description=strdup(buf);
 				strncat(buf," is lying on the ground.",MAX_INPUT_LENGTH -strlen(buf) -1);

@@ -24,12 +24,12 @@ using namespace sql;
 namespace Alarmud {
 class SqlMysql {
 public:
-    Driver* driver;
-    Connection* db;
+	Driver* driver;
+	Connection* db;
 	SqlMysql();
 	virtual ~SqlMysql();
-	const PreparedStatement * prepare(const string query);
-	   ResultSet* execute();
+	const PreparedStatement* prepare(const string query);
+	ResultSet* execute();
 	ResultSet* execute(const PreparedStatement* stm);
 
 };

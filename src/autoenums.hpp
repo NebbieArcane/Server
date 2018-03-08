@@ -17,7 +17,7 @@ namespace Alarmud {
 
 template <typename T>
 inline unsigned char enum_to_ubyte(T value) {
-    return value>255?0:static_cast<unsigned char>(value);
+	return value>255?0:static_cast<unsigned char>(value);
 }
 
 //Template for enum to int
@@ -25,13 +25,13 @@ inline unsigned char enum_to_ubyte(T value) {
 
 template <typename T>
 inline int enum_to_int(T value) {
-    return static_cast<int>(value);
+	return static_cast<int>(value);
 }
 
 // Enum type: E_AFFECTED_BY -- start
 enum e_affected_by {
-/*
-Bitvector for 'affected_by'*/
+	/*
+	Bitvector for 'affected_by'*/
 	AFF_NONE                                     =0,
 	AFF_BLIND                                    =1,
 	AFF_INVISIBLE                                =2,
@@ -95,8 +95,8 @@ enum e_affected_by2 {
 
 // Enum type: E_APPLY -- start
 enum e_apply {
-/*
-modifiers to char's abilities*/
+	/*
+	modifiers to char's abilities*/
 	APPLY_NONE                                   =0,
 	APPLY_STR                                    =1,
 	APPLY_DEX                                    =2,
@@ -174,8 +174,8 @@ modifiers to char's abilities*/
 
 // Enum type: E_CLASS_INDEX -- start
 enum e_class_index {
-/*
-multiclassing stuff*/
+	/*
+	multiclassing stuff*/
 	MAGE_LEVEL_IND                               =0,
 	CLERIC_LEVEL_IND                             =1,
 	WARRIOR_LEVEL_IND                            =2,
@@ -234,10 +234,10 @@ enum e_conditions {
 
 // Enum type: E_CONNECTION_TYPES -- start
 enum e_connection_types {
-/*
-modes of connectedness
-ATTENZIONE se si aggiungono altri stati di connessione, modificare anche
-l'array connected_types in constants.c*/
+	/*
+	modes of connectedness
+	ATTENZIONE se si aggiungono altri stati di connessione, modificare anche
+	l'array connected_types in constants.c*/
 	CON_PLYNG                                    =0,
 	CON_NME                                      =1,
 	CON_NMECNF                                   =2,
@@ -335,8 +335,8 @@ enum e_events {
 
 // Enum type: E_EXIT_DIR -- start
 enum e_exit_dir {
-/*
-For 'dir_option'*/
+	/*
+	For 'dir_option'*/
 	NORTH                                        =0,
 	EAST                                         =1,
 	SOUTH                                        =2,
@@ -522,8 +522,8 @@ enum e_immunity_type {
 
 // Enum type: E_ITEM_FLAG -- start
 enum e_item_flag {
-/*
-Bitvector for 'extra_flags'*/
+	/*
+	Bitvector for 'extra_flags'*/
 	ITEM_GLOW                                    =1,
 	ITEM_HUM                                     =2,
 	ITEM_METAL                                   =4, /*undefined...*/
@@ -604,8 +604,8 @@ enum e_item_type {
 
 // Enum type: E_ITEM_WEAR -- start
 enum e_item_wear {
-/*
-Bitvector For 'wear_flags'*/
+	/*
+	Bitvector For 'wear_flags'*/
 	ITEM_TAKE                                    =1,
 	ITEM_WEAR_FINGER                             =2,
 	ITEM_WEAR_NECK                               =4,
@@ -652,8 +652,8 @@ enum e_large_flags {
 
 // Enum type: E_LIQUIDS -- start
 enum e_liquids {
-/*
-Some different kind of liquids*/
+	/*
+	Some different kind of liquids*/
 	LIQ_WATER                                    =0,
 	LIQ_BEER                                     =1,
 	LIQ_WINE                                     =2,
@@ -704,8 +704,8 @@ enum e_log_levels {
 
 // Enum type: E_MOB_FLAGS -- start
 enum e_mob_flags {
-/*
-for mobile actions: specials.act*/
+	/*
+	for mobile actions: specials.act*/
 	ACT_SPEC                                     =1, /*special routine to be called if exist*/
 	ACT_SENTINEL                                 =2, /*this mobile not to be moved*/
 	ACT_SCAVENGER                                =4, /*pick up stuff lying around*/
@@ -767,8 +767,8 @@ enum e_opinion_op {
 
 // Enum type: E_PLAYER_FLAGS -- start
 enum e_player_flags {
-/*
-For players : specials.act*/
+	/*
+	For players : specials.act*/
 	PLR_BRIEF                                    =1,
 	PLR_UNUSED                                   =2,
 	PLR_COMPACT                                  =4,
@@ -801,8 +801,8 @@ For players : specials.act*/
 
 // Enum type: E_POSITIONS -- start
 enum e_positions {
-/*
-positions*/
+	/*
+	positions*/
 	POSITION_DEAD                                =0,
 	POSITION_MORTALLYW                           =1,
 	POSITION_INCAP                               =2,
@@ -824,8 +824,8 @@ positions*/
 
 // Enum type: E_RACES -- start
 enum e_races {
-/*
-list of races*/
+	/*
+	list of races*/
 	RACE_HALFBREED                               =0,
 	RACE_HUMAN                                   =1, /*playable*/
 	RACE_ELVEN                                   =2,
@@ -922,8 +922,8 @@ list of races*/
 
 // Enum type: E_ROOM_FLAGS -- start
 enum e_room_flags {
-/*
-Bitvector For 'room_flags'*/
+	/*
+	Bitvector For 'room_flags'*/
 	DARK                                         =1,
 	DEATH                                        =2,
 	NO_MOB                                       =4,
@@ -981,8 +981,8 @@ enum e_seasons {
 
 // Enum type: E_SECTOR_TYPES -- start
 enum e_sector_types {
-/*
-For 'Sector types'*/
+	/*
+	For 'Sector types'*/
 	SECT_INSIDE                                  =0,
 	SECT_CITY                                    =1,
 	SECT_FIELD                                   =2,
@@ -1007,8 +1007,8 @@ For 'Sector types'*/
 
 // Enum type: E_SEX -- start
 enum e_sex {
-/*
-sex*/
+	/*
+	sex*/
 	SEX_NEUTRAL                                  =0,
 	SEX_MALE                                     =1,
 	SEX_FEMALE                                   =2
@@ -1023,8 +1023,8 @@ sex*/
 
 // Enum type: E_SKILL_KNOWN -- start
 enum e_skill_known {
-/*
-skill_data flags*/
+	/*
+	skill_data flags*/
 	SKILL_KNOWN                                  =1,
 	SKILL_KNOWN_CLERIC                           =2,
 	SKILL_KNOWN_MAGE                             =4,
@@ -1048,8 +1048,8 @@ skill_data flags*/
 
 // Enum type: E_SKY -- start
 enum e_sky {
-/*
-And how is the sky ?*/
+	/*
+	And how is the sky ?*/
 	SKY_CLOUDLESS                                =0,
 	SKY_CLOUDY                                   =1,
 	SKY_RAINING                                  =2,
@@ -1097,8 +1097,8 @@ enum e_special_events {
 
 // Enum type: E_SUNLIGHT -- start
 enum e_sunlight {
-/*
-How much light is in the land ?*/
+	/*
+	How much light is in the land ?*/
 	SUN_DARK                                     =0,
 	SUN_RISE                                     =1,
 	SUN_LIGHT                                    =2,
@@ -1116,8 +1116,8 @@ How much light is in the land ?*/
 
 // Enum type: E_SYS_FLAGS -- start
 enum e_sys_flags {
-/*
-system flags defined on the fly and by wizards for this boot*/
+	/*
+	system flags defined on the fly and by wizards for this boot*/
 	SYS_NOPORTAL                                 =1, /*no one can portal*/
 	SYS_NOASTRAL                                 =2, /*no one can astral*/
 	SYS_NOSUMMON                                 =4, /*no one can summon*/
@@ -1174,8 +1174,8 @@ enum e_teleports {
 
 // Enum type: E_USER_FLAGS -- start
 enum e_user_flags {
-/*
-user flags*/
+	/*
+	user flags*/
 	NO_DELETE                                    =1, /*do not delete me  well until 6 months pass!*/
 	USE_ANSI                                     =2, /*we use ANSI color  yeah!*/
 	RACE_WAR                                     =4, /*if enabled they can be hit by opposing race*/
@@ -1234,227 +1234,227 @@ enum e_wear {
 // Enum type: E_WEAR -- end
 
 //#defines
-#define	ALL_DARK                                     1 
-#define	FOREST_DARK                                  2 
-#define	NO_DARK                                      3 
-#define	ABS_MAX_EXP                                  2000000000 
-#define	MAX_XP                                       2147483647 
-#define	MAX_STAT                                     6 
-#define	BIT_POOF_IN                                  1 
-#define	BIT_POOF_OUT                                 2 
-#define	MAX_WEAR_POS                                 E_WEAR_MAX 
-#define	MAX_TOUNGE                                   3 
-#define	MAX_NEW_LANGUAGES                            10 
-#define	MAX_SKILLS                                   350 
-#define	MAX_WEAR                                     E_WEAR_COUNT 
-#define	MAX_AFFECT                                   40 
-#define	MAX_SAVES                                    8 
-#define	MAX_CONDITIONS                               5 
-#define	MAX_CLASS                                    11 
-#define	OLD_MAX_CLASS                                4 
-#define	ABS_MAX_CLASS                                20 
-#define	MAX_POSITION                                 9 
-#define	HIT_INCAP                                    -3 
-#define	HIT_MORTALLYW                                -6 
-#define	HIT_DEAD                                     -11 
-#define	SKILL_SPECIALIZED                            1 
-#define	SKILL_UNDEFINED                              2 
-#define	SKILL_UNDEFINED2                             4 
-#define	ABS_MAX_LVL                                  70 
-#define	MAX_RACE                                     E_RACES_COUNT 
-#define	STATUS_BEFORELOOP                            "BEFORELOOP" 
-#define	STATUS_INITLOOP                              "INITLOOP" 
-#define	STATUS_AFTERPCOM                             "AFTERPCOM" 
-#define	STATUS_PULSEZONE                             "PULSEZONE" 
-#define	STATUS_PULSERIVER                            "PULSERIVER" 
-#define	STATUS_PULSETELEPORT                         "PULSETELEPORT" 
-#define	STATUS_PULSEVIOLENCE                         "PULSEVIOLENCE" 
-#define	STATUS_PERFORMVIOLENCE                       "PERFORMVIOLENCE" 
-#define	STATUS_MUDHOUR                               "MUDHOUR" 
-#define	STATUS_AFFECTUPDATE                          "AFFECTUPDATE" 
-#define	STATUS_ENDLOOP                               "ENDLOOP" 
-#define	STATUS_CALLINGSCRIPT                         "CALLINGSCRIPT" 
-#define	STATUS_ENDSCRIPT                             "ENDSCRIPT" 
-#define	STATUS_CALLINGSPEC                           "CALLINGSPEC" 
-#define	STATUS_ENDSPEC                               "ENDSPEC" 
-#define	STATUS_OTCBEFORELOOP                         "OTCBEFORELOOP" 
-#define	STATUS_OTCREALOBJECT                         "OTCREALOBJECT" 
-#define	STATUS_OTCREADOBJECT                         "OTCREADOBJECT" 
-#define	STATUS_OTCCOPYVALUE                          "OTCCOPYVALUE" 
-#define	STATUS_OTCFREESTRING                         "OTCFREESTRING" 
-#define	STATUS_OTCALLOCSTRING                        "OTCALLOCSTRING" 
-#define	STATUS_OTCCOPYSTRING                         "OTCCOPYSTRING" 
-#define	STATUS_OTCCOPYAFFECT                         "OTCCOPYAFFECT" 
-#define	STATUS_OTCBAGTREE                            "OTCBAGTREE" 
-#define	STATUS_OTCENDLOOP                            "OTCENDLOOP" 
-#define	STATUS_OTCAFTERLOOP                          "OTCAFTERLOOP" 
-#define	STATUS_MAX                                   25 
+#define	ALL_DARK                                     1
+#define	FOREST_DARK                                  2
+#define	NO_DARK                                      3
+#define	ABS_MAX_EXP                                  2000000000
+#define	MAX_XP                                       2147483647
+#define	MAX_STAT                                     6
+#define	BIT_POOF_IN                                  1
+#define	BIT_POOF_OUT                                 2
+#define	MAX_WEAR_POS                                 E_WEAR_MAX
+#define	MAX_TOUNGE                                   3
+#define	MAX_NEW_LANGUAGES                            10
+#define	MAX_SKILLS                                   350
+#define	MAX_WEAR                                     E_WEAR_COUNT
+#define	MAX_AFFECT                                   40
+#define	MAX_SAVES                                    8
+#define	MAX_CONDITIONS                               5
+#define	MAX_CLASS                                    11
+#define	OLD_MAX_CLASS                                4
+#define	ABS_MAX_CLASS                                20
+#define	MAX_POSITION                                 9
+#define	HIT_INCAP                                    -3
+#define	HIT_MORTALLYW                                -6
+#define	HIT_DEAD                                     -11
+#define	SKILL_SPECIALIZED                            1
+#define	SKILL_UNDEFINED                              2
+#define	SKILL_UNDEFINED2                             4
+#define	ABS_MAX_LVL                                  70
+#define	MAX_RACE                                     E_RACES_COUNT
+#define	STATUS_BEFORELOOP                            "BEFORELOOP"
+#define	STATUS_INITLOOP                              "INITLOOP"
+#define	STATUS_AFTERPCOM                             "AFTERPCOM"
+#define	STATUS_PULSEZONE                             "PULSEZONE"
+#define	STATUS_PULSERIVER                            "PULSERIVER"
+#define	STATUS_PULSETELEPORT                         "PULSETELEPORT"
+#define	STATUS_PULSEVIOLENCE                         "PULSEVIOLENCE"
+#define	STATUS_PERFORMVIOLENCE                       "PERFORMVIOLENCE"
+#define	STATUS_MUDHOUR                               "MUDHOUR"
+#define	STATUS_AFFECTUPDATE                          "AFFECTUPDATE"
+#define	STATUS_ENDLOOP                               "ENDLOOP"
+#define	STATUS_CALLINGSCRIPT                         "CALLINGSCRIPT"
+#define	STATUS_ENDSCRIPT                             "ENDSCRIPT"
+#define	STATUS_CALLINGSPEC                           "CALLINGSPEC"
+#define	STATUS_ENDSPEC                               "ENDSPEC"
+#define	STATUS_OTCBEFORELOOP                         "OTCBEFORELOOP"
+#define	STATUS_OTCREALOBJECT                         "OTCREALOBJECT"
+#define	STATUS_OTCREADOBJECT                         "OTCREADOBJECT"
+#define	STATUS_OTCCOPYVALUE                          "OTCCOPYVALUE"
+#define	STATUS_OTCFREESTRING                         "OTCFREESTRING"
+#define	STATUS_OTCALLOCSTRING                        "OTCALLOCSTRING"
+#define	STATUS_OTCCOPYSTRING                         "OTCCOPYSTRING"
+#define	STATUS_OTCCOPYAFFECT                         "OTCCOPYAFFECT"
+#define	STATUS_OTCBAGTREE                            "OTCBAGTREE"
+#define	STATUS_OTCENDLOOP                            "OTCENDLOOP"
+#define	STATUS_OTCAFTERLOOP                          "OTCAFTERLOOP"
+#define	STATUS_MAX                                   25
 
 namespace G {
 extern e_affected_by encode_e_affected_by(std::string s,e_affected_by fallback = AFF_NONE);
 extern std::string translate(const e_affected_by e);
 extern bool enum_validate(const e_affected_by value);
-extern std::ostream & operator<<(std::ostream &out,const e_affected_by value);
+extern std::ostream &operator<<(std::ostream &out,const e_affected_by value);
 extern e_affected_by2 encode_e_affected_by2(std::string s,e_affected_by2 fallback = AFF2_ANIMAL_INVIS);
 extern std::string translate(const e_affected_by2 e);
 extern bool enum_validate(const e_affected_by2 value);
-extern std::ostream & operator<<(std::ostream &out,const e_affected_by2 value);
+extern std::ostream &operator<<(std::ostream &out,const e_affected_by2 value);
 extern e_apply encode_e_apply(std::string s,e_apply fallback = APPLY_NONE);
 extern std::string translate(const e_apply e);
 extern bool enum_validate(const e_apply value);
-extern std::ostream & operator<<(std::ostream &out,const e_apply value);
+extern std::ostream &operator<<(std::ostream &out,const e_apply value);
 extern e_class_index encode_e_class_index(std::string s,e_class_index fallback = MAGE_LEVEL_IND);
 extern std::string translate(const e_class_index e);
 extern bool enum_validate(const e_class_index value);
-extern std::ostream & operator<<(std::ostream &out,const e_class_index value);
+extern std::ostream &operator<<(std::ostream &out,const e_class_index value);
 extern e_classes encode_e_classes(std::string s,e_classes fallback = CLASS_MAGIC_USER);
 extern std::string translate(const e_classes e);
 extern bool enum_validate(const e_classes value);
-extern std::ostream & operator<<(std::ostream &out,const e_classes value);
+extern std::ostream &operator<<(std::ostream &out,const e_classes value);
 extern e_conditions encode_e_conditions(std::string s,e_conditions fallback = DRUNK);
 extern std::string translate(const e_conditions e);
 extern bool enum_validate(const e_conditions value);
-extern std::ostream & operator<<(std::ostream &out,const e_conditions value);
+extern std::ostream &operator<<(std::ostream &out,const e_conditions value);
 extern e_connection_types encode_e_connection_types(std::string s,e_connection_types fallback = CON_PLYNG);
 extern std::string translate(const e_connection_types e);
 extern bool enum_validate(const e_connection_types value);
-extern std::ostream & operator<<(std::ostream &out,const e_connection_types value);
+extern std::ostream &operator<<(std::ostream &out,const e_connection_types value);
 extern e_damage_type encode_e_damage_type(std::string s,e_damage_type fallback = FIRE_DAMAGE);
 extern std::string translate(const e_damage_type e);
 extern bool enum_validate(const e_damage_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_damage_type value);
+extern std::ostream &operator<<(std::ostream &out,const e_damage_type value);
 extern e_events encode_e_events(std::string s,e_events fallback = EVENT_COMMAND);
 extern std::string translate(const e_events e);
 extern bool enum_validate(const e_events value);
-extern std::ostream & operator<<(std::ostream &out,const e_events value);
+extern std::ostream &operator<<(std::ostream &out,const e_events value);
 extern e_exit_dir encode_e_exit_dir(std::string s,e_exit_dir fallback = NORTH);
 extern std::string translate(const e_exit_dir e);
 extern bool enum_validate(const e_exit_dir value);
-extern std::ostream & operator<<(std::ostream &out,const e_exit_dir value);
+extern std::ostream &operator<<(std::ostream &out,const e_exit_dir value);
 extern e_exit_types encode_e_exit_types(std::string s,e_exit_types fallback = EX_ISDOOR);
 extern std::string translate(const e_exit_types e);
 extern bool enum_validate(const e_exit_types value);
-extern std::ostream & operator<<(std::ostream &out,const e_exit_types value);
+extern std::ostream &operator<<(std::ostream &out,const e_exit_types value);
 extern e_fear_type encode_e_fear_type(std::string s,e_fear_type fallback = FEAR_SEX);
 extern std::string translate(const e_fear_type e);
 extern bool enum_validate(const e_fear_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_fear_type value);
+extern std::ostream &operator<<(std::ostream &out,const e_fear_type value);
 extern e_find_result encode_e_find_result(std::string s,e_find_result fallback = FOUND_WATER);
 extern std::string translate(const e_find_result e);
 extern bool enum_validate(const e_find_result value);
-extern std::ostream & operator<<(std::ostream &out,const e_find_result value);
+extern std::ostream &operator<<(std::ostream &out,const e_find_result value);
 extern e_hate_type encode_e_hate_type(std::string s,e_hate_type fallback = HATE_SEX);
 extern std::string translate(const e_hate_type e);
 extern bool enum_validate(const e_hate_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_hate_type value);
+extern std::ostream &operator<<(std::ostream &out,const e_hate_type value);
 extern e_immunity_type encode_e_immunity_type(std::string s,e_immunity_type fallback = IMM_FIRE);
 extern std::string translate(const e_immunity_type e);
 extern bool enum_validate(const e_immunity_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_immunity_type value);
+extern std::ostream &operator<<(std::ostream &out,const e_immunity_type value);
 extern e_item_flag encode_e_item_flag(std::string s,e_item_flag fallback = ITEM_GLOW);
 extern std::string translate(const e_item_flag e);
 extern bool enum_validate(const e_item_flag value);
-extern std::ostream & operator<<(std::ostream &out,const e_item_flag value);
+extern std::ostream &operator<<(std::ostream &out,const e_item_flag value);
 extern e_item_type encode_e_item_type(std::string s,e_item_type fallback = ITEM_LIGHT);
 extern std::string translate(const e_item_type e);
 extern bool enum_validate(const e_item_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_item_type value);
+extern std::ostream &operator<<(std::ostream &out,const e_item_type value);
 extern e_item_wear encode_e_item_wear(std::string s,e_item_wear fallback = ITEM_TAKE);
 extern std::string translate(const e_item_wear e);
 extern bool enum_validate(const e_item_wear value);
-extern std::ostream & operator<<(std::ostream &out,const e_item_wear value);
+extern std::ostream &operator<<(std::ostream &out,const e_item_wear value);
 extern e_large_flags encode_e_large_flags(std::string s,e_large_flags fallback = LARGE_NONE);
 extern std::string translate(const e_large_flags e);
 extern bool enum_validate(const e_large_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_large_flags value);
+extern std::ostream &operator<<(std::ostream &out,const e_large_flags value);
 extern e_liquids encode_e_liquids(std::string s,e_liquids fallback = LIQ_WATER);
 extern std::string translate(const e_liquids e);
 extern bool enum_validate(const e_liquids value);
-extern std::ostream & operator<<(std::ostream &out,const e_liquids value);
+extern std::ostream &operator<<(std::ostream &out,const e_liquids value);
 extern e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback = LOG_SYSERR);
 extern std::string translate(const e_log_levels e);
 extern bool enum_validate(const e_log_levels value);
-extern std::ostream & operator<<(std::ostream &out,const e_log_levels value);
+extern std::ostream &operator<<(std::ostream &out,const e_log_levels value);
 extern e_mob_flags encode_e_mob_flags(std::string s,e_mob_flags fallback = ACT_SPEC);
 extern std::string translate(const e_mob_flags e);
 extern bool enum_validate(const e_mob_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_mob_flags value);
+extern std::ostream &operator<<(std::ostream &out,const e_mob_flags value);
 extern e_opinion_op encode_e_opinion_op(std::string s,e_opinion_op fallback = OP_SEX);
 extern std::string translate(const e_opinion_op e);
 extern bool enum_validate(const e_opinion_op value);
-extern std::ostream & operator<<(std::ostream &out,const e_opinion_op value);
+extern std::ostream &operator<<(std::ostream &out,const e_opinion_op value);
 extern e_player_flags encode_e_player_flags(std::string s,e_player_flags fallback = PLR_BRIEF);
 extern std::string translate(const e_player_flags e);
 extern bool enum_validate(const e_player_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_player_flags value);
+extern std::ostream &operator<<(std::ostream &out,const e_player_flags value);
 extern e_positions encode_e_positions(std::string s,e_positions fallback = POSITION_DEAD);
 extern std::string translate(const e_positions e);
 extern bool enum_validate(const e_positions value);
-extern std::ostream & operator<<(std::ostream &out,const e_positions value);
+extern std::ostream &operator<<(std::ostream &out,const e_positions value);
 extern e_races encode_e_races(std::string s,e_races fallback = RACE_HALFBREED);
 extern std::string translate(const e_races e);
 extern bool enum_validate(const e_races value);
-extern std::ostream & operator<<(std::ostream &out,const e_races value);
+extern std::ostream &operator<<(std::ostream &out,const e_races value);
 extern e_room_flags encode_e_room_flags(std::string s,e_room_flags fallback = DARK);
 extern std::string translate(const e_room_flags e);
 extern bool enum_validate(const e_room_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_room_flags value);
+extern std::ostream &operator<<(std::ostream &out,const e_room_flags value);
 extern e_seasons encode_e_seasons(std::string s,e_seasons fallback = SEASON_WINTER);
 extern std::string translate(const e_seasons e);
 extern bool enum_validate(const e_seasons value);
-extern std::ostream & operator<<(std::ostream &out,const e_seasons value);
+extern std::ostream &operator<<(std::ostream &out,const e_seasons value);
 extern e_sector_types encode_e_sector_types(std::string s,e_sector_types fallback = SECT_INSIDE);
 extern std::string translate(const e_sector_types e);
 extern bool enum_validate(const e_sector_types value);
-extern std::ostream & operator<<(std::ostream &out,const e_sector_types value);
+extern std::ostream &operator<<(std::ostream &out,const e_sector_types value);
 extern e_sex encode_e_sex(std::string s,e_sex fallback = SEX_NEUTRAL);
 extern std::string translate(const e_sex e);
 extern bool enum_validate(const e_sex value);
-extern std::ostream & operator<<(std::ostream &out,const e_sex value);
+extern std::ostream &operator<<(std::ostream &out,const e_sex value);
 extern e_skill_known encode_e_skill_known(std::string s,e_skill_known fallback = SKILL_KNOWN);
 extern std::string translate(const e_skill_known e);
 extern bool enum_validate(const e_skill_known value);
-extern std::ostream & operator<<(std::ostream &out,const e_skill_known value);
+extern std::ostream &operator<<(std::ostream &out,const e_skill_known value);
 extern e_sky encode_e_sky(std::string s,e_sky fallback = SKY_CLOUDLESS);
 extern std::string translate(const e_sky e);
 extern bool enum_validate(const e_sky value);
-extern std::ostream & operator<<(std::ostream &out,const e_sky value);
+extern std::ostream &operator<<(std::ostream &out,const e_sky value);
 extern e_speaks encode_e_speaks(std::string s,e_speaks fallback = SPEAK_COMMON);
 extern std::string translate(const e_speaks e);
 extern bool enum_validate(const e_speaks value);
-extern std::ostream & operator<<(std::ostream &out,const e_speaks value);
+extern std::ostream &operator<<(std::ostream &out,const e_speaks value);
 extern e_special_events encode_e_special_events(std::string s,e_special_events fallback = DWARVES_STRIKE);
 extern std::string translate(const e_special_events e);
 extern bool enum_validate(const e_special_events value);
-extern std::ostream & operator<<(std::ostream &out,const e_special_events value);
+extern std::ostream &operator<<(std::ostream &out,const e_special_events value);
 extern e_sunlight encode_e_sunlight(std::string s,e_sunlight fallback = SUN_DARK);
 extern std::string translate(const e_sunlight e);
 extern bool enum_validate(const e_sunlight value);
-extern std::ostream & operator<<(std::ostream &out,const e_sunlight value);
+extern std::ostream &operator<<(std::ostream &out,const e_sunlight value);
 extern e_sys_flags encode_e_sys_flags(std::string s,e_sys_flags fallback = SYS_NOPORTAL);
 extern std::string translate(const e_sys_flags e);
 extern bool enum_validate(const e_sys_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_sys_flags value);
+extern std::ostream &operator<<(std::ostream &out,const e_sys_flags value);
 extern e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback = TAN_SHIELD);
 extern std::string translate(const e_tan_result e);
 extern bool enum_validate(const e_tan_result value);
-extern std::ostream & operator<<(std::ostream &out,const e_tan_result value);
+extern std::ostream &operator<<(std::ostream &out,const e_tan_result value);
 extern e_teleports encode_e_teleports(std::string s,e_teleports fallback = TELE_LOOK);
 extern std::string translate(const e_teleports e);
 extern bool enum_validate(const e_teleports value);
-extern std::ostream & operator<<(std::ostream &out,const e_teleports value);
+extern std::ostream &operator<<(std::ostream &out,const e_teleports value);
 extern e_user_flags encode_e_user_flags(std::string s,e_user_flags fallback = NO_DELETE);
 extern std::string translate(const e_user_flags e);
 extern bool enum_validate(const e_user_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_user_flags value);
+extern std::ostream &operator<<(std::ostream &out,const e_user_flags value);
 extern e_wear encode_e_wear(std::string s,e_wear fallback = WEAR_LIGHT);
 extern std::string translate(const e_wear e);
 extern bool enum_validate(const e_wear value);
-extern std::ostream & operator<<(std::ostream &out,const e_wear value);
+extern std::ostream &operator<<(std::ostream &out,const e_wear value);
 } // namespace G
 template<typename T>
 std::string t(T e) {
-    return G::translate(e);
+	return G::translate(e);
 }
 
 }//namespace Alarmud

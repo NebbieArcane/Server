@@ -142,14 +142,15 @@ int mana_limit(struct char_data* ch) {
 		max += 100;
 	}
 
-	chClasses = HowManyClasses(ch);	
-	
+	chClasses = HowManyClasses(ch);
+
 	if(chClasses) {
-		max /= HowManyClasses(ch);	
-	} else {
+		max /= HowManyClasses(ch);
+	}
+	else {
 		mudlog(LOG_ERROR, "Character with no levels! Name [%s]", ch->player.name);
 	}
-	
+
 
 	/*
 	 * new classes should be inserted here.

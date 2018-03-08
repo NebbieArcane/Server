@@ -19,16 +19,16 @@
 #endif
 #if USE_MYSQL
 #if HAS_MYSQL
-	#include "SqlMysql.hpp"
+#include "SqlMysql.hpp"
 #else
 #error Mysql requested but not available
 #endif
 #endif
 #if USE_SQLITE
 #if HAS_SQLITE
-	#include "SqlSqlite.hpp"
+#include "SqlSqlite.hpp"
 #else
-#error Sqlite3 requested but not available	
+#error Sqlite3 requested but not available
 #endif
 #endif
 namespace Alarmud {
@@ -39,32 +39,32 @@ class Sql
 	: public SqlMysql
 #endif
 #if USE_SQLITE
-	: public SqlSqlite
+	  : public SqlSqlite
 #endif
 
 {
 
-	public:
-		const static Sql& getInstance() {
-			static Sql instance;
-			return instance;
-		}
-		virtual ~Sql();
-	protected:
-		stringstream _query;
-		string _where;
-		string _select;
-		string _from;
-		string _fields;
-		string _limit;
-	public:
-		Sql();
-		Sql* where(const string field,const string op,const string value);
-		Sql* where(const string glue,const string field,const string op,const string value);
-		Sql* from(const string table);
-		Sql* select(const string field);
-		Sql* select(const std::vector<string> fields);
-		Sql* limit(const unsigned long limit);
+public:
+	const static Sql &getInstance() {
+		static Sql instance;
+		return instance;
+	}
+	virtual ~Sql();
+protected:
+	stringstream _query;
+	string _where;
+	string _select;
+	string _from;
+	string _fields;
+	string _limit;
+public:
+	Sql();
+	Sql* where(const string field,const string op,const string value);
+	Sql* where(const string glue,const string field,const string op,const string value);
+	Sql* from(const string table);
+	Sql* select(const string field);
+	Sql* select(const std::vector<string> fields);
+	Sql* limit(const unsigned long limit);
 };
 
 } // namespace Alarmud
