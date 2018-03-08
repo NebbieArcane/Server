@@ -89,18 +89,18 @@ int main(int argc, char** argv) {
 		}
 		else if(pid > 0) {
 			// Parent exit.
-			cout << "Demonized" <<endl;
+			cout << "Demonized " << pid <<endl;
 			exit(0);
 		}
 
 		if(setsid() < 0) {
 			LOG4CXX_FATAL(logger,"ERROR setting session : " << strerror(errno));
 		}
-
-		fclose(stdin);
+		// Inside forked process
 		fclose(stdout);
 		fclose(stderr);
 	}
+	fclose(stdin);
 	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
 	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
 	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);

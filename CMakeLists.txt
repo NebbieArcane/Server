@@ -6,7 +6,7 @@ add_subdirectory(src)
 if (NOT EXISTS src/config.hpp.in)
 	message(FATAL_ERROR "Se è la prima volta che compili, devi lanciare ./build.sh")
 endif()
-enable_language(CXX)
+#enable_language(CLANG)
 include(UsePkgConfig)
 include(./PrecompiledHeader.cmake)
 

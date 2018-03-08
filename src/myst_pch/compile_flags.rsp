@@ -1,0 +1,7 @@
+-I/usr/include
+-I/usr/include/mysql
+-Werror
+-w
+-Wno-write-strings
+-Wshadow
+

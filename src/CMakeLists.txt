@@ -5,7 +5,7 @@ project (Alarmud)
 include(FindPkgConfig)
 include(../PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb3 -fpermissive -finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_CXX_FLAGS "-O0 -std=c++11 -ggdb3 -fpermissive -finline-functions -fno-strength-reduce -pipe -pg")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -E -P -C -traditional-cpp")
 #Retrieves headers
 file(GLOB file_hpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.hpp)

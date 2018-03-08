@@ -11,6 +11,7 @@
 #include <log4cxx/fileappender.h>
 #include <log4cxx/rollingfileappender.h>
 #include <log4cxx/consoleappender.h>
+#include <boost/filesystem.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -62,11 +63,14 @@ void godTrace(unsigned uType, const char* const szString, ... ) {
 constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n";
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
 log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
-	logname.append(suffix);
+	bool append = (logname==bugs);
+	int numLogs= (logname==bugs)?5:100;
+	string logfile(boost::filesystem::current_path().string());
+	logfile.append("/").append(logname).append(suffix);
 	log4cxx::helpers::Pool p;
 	log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
-	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logname,(logname=="bugs")?true:false));
-	r->setMaxBackupIndex(5);
+	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
+	r->setMaxBackupIndex(numLogs);
 	r->setMaximumFileSize(10240);
 	r->setBufferedIO(false);
 	r->setBufferSize(1024);

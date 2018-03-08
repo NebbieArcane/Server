@@ -305,11 +305,6 @@ int run (int port, const char* dir) {
 
 #endif
 
-
-
-	/* close stdin */
-	close(0);
-
 	run_the_game(port);
 	return(0);
 }
