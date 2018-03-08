@@ -541,7 +541,7 @@ void do_write(struct char_data* ch, const char* argument, int cmd) {
 }
 
 char* RandomWord() {
-	static char* string[50] = {
+	static char* stringa[50] = {
 		"argle",
 		"bargle",
 		"glop",
@@ -594,12 +594,12 @@ char* RandomWord() {
 		"bipsnop"   /* 50 */
 	};
 
-	return( string[ number( 0, 49 ) ] );
+	return( stringa[ number( 0, 49 ) ] );
 
 }
 char RandomChar() {
-	static char string[] = "abcdefghijklmnopqrstuwxyz23456789\0";
-	return( string[ number( 0, strlen(string)-1 ) ] );
+	static char stringa[] = "abcdefghijklmnopqrstuwxyz23456789\0";
+	return( stringa[ number( 0, strlen(stringa)-1 ) ] );
 
 }
 
