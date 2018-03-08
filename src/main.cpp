@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 	("demonize,D","Run as daemon")
 	("log_players,L","Logs all players' actions")
 	("log_mobs,M","Logs all mobs' actions")
-	("disable_DNS,N","Disables DNS")
+	("disable_dns,N","Disables DNS")
 	("newbie_approve,R","Requests approvation for new players")
 	("ansi_off,A","Disables all colors")
 	("test_mode,T","Developer mode, disables password checking")
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 	if(vm.count("log_players")) { SET_BIT(SystemFlags,SYS_LOGALL); }
 	if(vm.count("newbie_approve")) { SET_BIT(SystemFlags,SYS_REQAPPROVE); }
 	if(vm.count("log_mobs")) { SET_BIT(SystemFlags,SYS_LOGMOB); }
-	if(vm.count("Demonize")) {
+	if(vm.count("demonize")) {
 		int pid = fork();
 
 		if(pid < 0) {
@@ -101,9 +101,12 @@ int main(int argc, char** argv) {
 		fclose(stdout);
 		fclose(stderr);
 	}
-	Alarmud::log_init("alarmud", debug_level);
+	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
+	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
+	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);
 	if (chdir(dir.c_str()) < 0) {
 		LOG4CXX_FATAL(logger,"Unable to change dir to " << dir);
+		LOG4CXX_FATAL(errlogger,"Unable to change dir to " << dir);
 		perror("chdir");
 		assert(0);
 	}
