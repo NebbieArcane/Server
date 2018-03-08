@@ -12,6 +12,8 @@ environment=${1:-vagrant}
 conf="$HOME/Confs/$environment.conf"
 if [ -f $conf ] ; then
 	. $conf
+else
+	echo "No Conf file for $environment present, using builtin defaults"
 fi
 php=$(which php)
 if [ -z "$php" ] ; then
@@ -23,7 +25,6 @@ else
 	cp *.?pp ../src/
 	)
 fi
-echo "No Conf file for $environment present, using builtin defaults"
 rm -f src/release.h
 rm -f mudroot/myst
 rm -f  CMakeCache.txt
