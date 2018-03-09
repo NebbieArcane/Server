@@ -31,7 +31,9 @@ rm -f mudroot/myst
 rm -rf build
 ( PATH="/usr/lib/cache:$PATH" CXX=g++ CC=gcc mkdir -p build && cd build && cmake -U "alarmud*" -U "CMAKE_HOME_DIRECTORY" -U "CMAKE_CACHEFILE_DIR" .. )  
 cmake --build build --clean-first
-if [ -x src/myst ] ; then
+if [ -x mudroot/myst ] ; then
+	echo "Ready" 
 	exit 0
 fi
+echo "Myst executable not found"
 exit 1
