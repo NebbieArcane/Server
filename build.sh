@@ -26,11 +26,12 @@ else
 	)
 fi
 rm -f src/release.h
+rm -f src/myst src/info
 rm -f mudroot/myst
-rm -f  CMakeCache.txt
-cmake . && make clean && make
+rm -rf build
+( PATH="/usr/lib/cache:$PATH" CXX=g++ CC=gcc mkdir -p build && cd build && cmake -U "alarmud*" -U "CMAKE_HOME_DIRECTORY" -U "CMAKE_CACHEFILE_DIR" .. )  
+cmake --build build --clean-first
 if [ -x src/myst ] ; then
-	cp src/myst mudroot/myst
 	exit 0
 fi
 exit 1

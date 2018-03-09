@@ -17,8 +17,8 @@
 /***************************  System  include ************************************/
 #include <string>
 #include <log4cxx/logger.h>
+#include <boost/format.hpp>
 /***************************  Local    include ************************************/
-#include "boost/format.hpp"
 namespace Alarmud {
 using std::string;
 extern boost::format  my_fmt(const std::string &f_string);
