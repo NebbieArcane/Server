@@ -64,15 +64,15 @@ constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n"
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
 log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
 	bool append = (logname=="bugs");
-	int numLogs= (logname=="bugs")?5:100;
+	int numLogs= (logname=="bugs")?5:20ls;
 	string logfile(boost::filesystem::current_path().string());
 	logfile.append("/").append(logname).append(suffix);
 	log4cxx::helpers::Pool p;
 	log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
 	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
 	r->setMaxBackupIndex(numLogs);
-	r->setMaximumFileSize(10240);
-	r->setBufferedIO(false);
+	r->setMaximumFileSize("200M");
+	r->setBufferedIO(true);
 	r->setBufferSize(1024);
 	r->activateOptions(p);
 	logger->addAppender(r);
