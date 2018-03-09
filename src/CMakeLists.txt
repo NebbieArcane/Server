@@ -9,10 +9,10 @@ foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CX
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
 include(FindPkgConfig)
-include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
+#include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb3 -fpermissive -pipe") #-finline-functions -fno-strength-reduce -pipe -pg")
-set(CMAKE_CC_FLAGS "-ggdb3 -fpermissive -pipe") #-finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb3 -fpermissive -finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_C_FLAGS "-std=c++11 -ggdb3 -fpermissive -finline-functions -fno-strength-reduce -pipe -pg")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -E -P -C -traditional-cpp")
 #Retrieves headers
 file(GLOB file_hpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.hpp)
@@ -22,12 +22,13 @@ list(SORT file_hpp)
 #Retrieves code
 file(GLOB file_cpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.cpp)
 list(SORT file_cpp)
+list(REVERSE file_cpp)
 #message(STATUS "file_cpp=${file_cpp}")
 
-add_executable(myst  pchheader.h ${file_cpp} ${file_hpp} release.hpp)
-add_executable(info pchheader.h version.cpp release.hpp)
+add_executable(myst  ${file_cpp} ${file_hpp} release.hpp)
+add_executable(info  version.cpp release.hpp)
 target_compile_definitions(info PUBLIC STANDALONE)
-add_precompiled_header(myst pchheader.h pchheader.cpp FORCEINCLUDE)
+#add_precompiled_header(myst pchheader.h FORCEINCLUDE)
 
 #Boost
 find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
@@ -76,7 +77,7 @@ target_link_libraries(myst ${CRYPT})
 # Generate configuration file
 configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UNIX)
 # Generate release version
-add_custom_command(OUTPUT release.hpp COMMAND ${CMAKE_SOURCE_DIR}/genrelease.sh release.hpp )
+add_custom_command(OUTPUT release.hpp COMMAND ${CMAKE_SOURCE_DIR}/genrelease.sh ${CMAKE_SOURCE_DIR}/src/release.hpp )
 
 #Warning managements
 target_compile_options(myst PUBLIC

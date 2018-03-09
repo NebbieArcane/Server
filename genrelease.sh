@@ -2,7 +2,9 @@
 temp=$(git rev-list --tags --max-count=1)
 branch=$(git rev-parse --abbrev-ref HEAD)
 version=$(git describe --tags --long)
-build=$(git rev-list --count --first-parent $temp)
+if [ -z "$version" ] ; then
+	version=$(git describe)
+fi
 build=$(git log --pretty=format:"%f" -n1)
 
 #REVISION   = $(shell git rev-list $(LAST_TAG).. --count)

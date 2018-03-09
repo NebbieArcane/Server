@@ -9,7 +9,7 @@ foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CX
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
 include(UsePkgConfig)
-include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
+#include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 
 # The version number.
 set (myst_VERSION_MAJOR 3)
