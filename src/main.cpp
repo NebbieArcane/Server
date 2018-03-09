@@ -81,6 +81,9 @@ int main(int argc, char** argv) {
 	if(vm.count("log_players")) { SET_BIT(SystemFlags,SYS_LOGALL); }
 	if(vm.count("newbie_approve")) { SET_BIT(SystemFlags,SYS_REQAPPROVE); }
 	if(vm.count("log_mobs")) { SET_BIT(SystemFlags,SYS_LOGMOB); }
+	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
+	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
+	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);
 	if(vm.count("demonize")) {
 		int pid = fork();
 
@@ -101,9 +104,6 @@ int main(int argc, char** argv) {
 		fclose(stderr);
 	}
 	fclose(stdin);
-	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
-	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
-	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);
 	if (chdir(dir.c_str()) < 0) {
 		LOG4CXX_FATAL(logger,"Unable to change dir to " << dir);
 		LOG4CXX_FATAL(errlogger,"Unable to change dir to " << dir);
