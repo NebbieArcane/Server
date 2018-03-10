@@ -3,10 +3,10 @@ temp=$(git rev-list --tags --max-count=1)
 branch=$(git rev-parse --abbrev-ref HEAD)
 version=$(git describe --tags --long)
 if [ -z "$version" ] ; then
-	version=$(git describe)
+	version=$(git describe --always)
 fi
 build=$(git log --pretty=format:"%f" -n1)
-
+echo Tag: $branch $version $build
 #REVISION   = $(shell git rev-list $(LAST_TAG).. --count)
 #ROOTDIR    = $(shell git rev-parse --show-toplevel)
 outfile=${1:-release.hpp}

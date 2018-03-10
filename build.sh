@@ -36,8 +36,8 @@ cd build
 cmake .. 
 jobs=$(cat makejobs)
 folder=$(pwd)
-sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.in > ../src/Makefile
-sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.in > ../Makefile
+sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
+sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile
 make -j$jobs
 )  
 if [ -x mudroot/myst ] ; then
