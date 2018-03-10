@@ -1,13 +1,14 @@
 #src cmake
+set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations
 #set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations
 cmake_minimum_required (VERSION 3.5)
 project (alarmud)
 enable_language(CXX)
 set (CMAKE_USE_RELATIVE_PATHS true)
-message(STATUS "src")
-foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CXX_KNOWN_FEATURES CMAKE_CURRENT_SOURCE_DIR)
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+#message(STATUS "src")
+#foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CXX_KNOWN_FEATURES CMAKE_CURRENT_SOURCE_DIR)
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -22,9 +23,10 @@ list(SORT file_hpp)
 #Retrieves code
 file(GLOB file_cpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.cpp)
 list(SORT file_cpp)
-list(REVERSE file_cpp)
+#list(REVERSE file_cpp)
 #message(STATUS "file_cpp=${file_cpp}")
 
+#add_executable(myst  ${file_cpp} joined.h release.hpp)
 add_executable(myst  ${file_cpp} ${file_hpp} release.hpp)
 add_executable(info  version.cpp release.hpp)
 target_compile_definitions(info PUBLIC STANDALONE)
@@ -119,4 +121,3 @@ add_custom_target(style ${CMAKE_SOURCE_DIR}/astyle -r -Q --options=${CMAKE_SOURC
 #add_custom_command(TARGET myst POST_BUILD COMMAND rm -f release.hpp)
 add_custom_command(TARGET info POST_BUILD COMMAND ./info)
 add_custom_command(TARGET myst POST_BUILD COMMAND cp -f myst ${CMAKE_SOURCE_DIR}/mudroot/myst)
-set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations

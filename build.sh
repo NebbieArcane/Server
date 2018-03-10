@@ -29,8 +29,17 @@ rm -f src/release.h
 rm -f src/myst src/info
 rm -f mudroot/myst
 rm -rf build
-( PATH="/usr/lib/cache:$PATH" CXX=g++ CC=gcc mkdir -p build && cd build && cmake -U "alarmud*" -U "CMAKE_HOME_DIRECTORY" -U "CMAKE_CACHEFILE_DIR" .. )  
-cmake --build build --clean-first
+(
+export PATH="/usr/lib/cache:$PATH" 
+mkdir -p build 
+cd build 
+cmake .. 
+jobs=$(cat makejobs)
+folder=$(pwd)
+sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.in > ../src/Makefile
+sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.in > ../Makefile
+make -j$jobs
+)  
 if [ -x mudroot/myst ] ; then
 	echo "Ready" 
 	exit 0
