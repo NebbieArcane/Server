@@ -2,8 +2,6 @@
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
-#ifndef __LOGGING_HPP
-#define __LOGGING_HPP
 /***************************  System  include ************************************/
 #include <stdarg.h>
 #include <log4cxx/logger.h>
@@ -64,7 +62,7 @@ constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n"
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
 log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
 	bool append = (logname=="bugs");
-	int numLogs= (logname=="bugs")?5:20ls;
+	int numLogs= (logname=="bugs")?5:20;
 	string logfile(boost::filesystem::current_path().string());
 	logfile.append("/").append(logname).append(suffix);
 	log4cxx::helpers::Pool p;
@@ -117,5 +115,4 @@ log4cxx::LevelPtr get_level(unsigned short debug_level) {
 }
 } // namespace Alarmud
 #endif
-#endif // __LOGGING_HPP
 
