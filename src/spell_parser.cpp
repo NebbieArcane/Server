@@ -1444,14 +1444,18 @@ bool EqNotForCaster(struct char_data* ch, int spl) {
 	{ return(FALSE); }
 }
 /* Assumes that *argument does start with first letter of chopped string */
-void do_cast(struct char_data* ch, char* argument, int cmd) {
+void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 
 	struct obj_data* tar_obj;
 	struct char_data* tar_char;
 	struct char_data* tmp_char;
 	char name[MAX_INPUT_LENGTH];
-	char ori_argument[256];     /* make a copy of argument for log */
-	int qend, spl, i, align_cost;
+	char work[256];     /* works on a copy of argument */
+	char* argument=work;
+	int qend=0;
+	int spl=0;
+	int i=0;
+	int align_cost=0;
 	int caster_level=-1;
 	int spell_level=100;
 	bool target_ok;
@@ -1494,13 +1498,10 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 	if( cmd != CMD_MIND && apply_soundproof(ch) )
 	{ return; }
 
-	argument = skip_spaces(argument);
+	strncpy(argument,ori_argument,256);
+	argument[255]='\0';
 
-	/* did not want to invoke strcpy.. so added this loop to copy string [polax] */
-	for(i=0; argument[i] && (i < 255); i++) /* enforce bound check on i */
-	{ ori_argument[i] = argument[i]; }
-	ori_argument[i] = '\0';  /* ensure proper null termination */
-	/* modification end */
+	argument = skip_spaces(argument);
 
 	/* If there is no chars in argument */
 	if (!(*argument)) {
@@ -2085,7 +2086,9 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 		}        /* if GET_POS < min_pos */
 		return;
 	}
-
+	if (spl > 0) {
+		mudlog(LOG_SYSERR,"Spellid %d cmid %d command %s",spl,cmd,ori_argument);
+	}
 
 	switch (number(1,5)) {
 	case 1:

@@ -43,7 +43,7 @@ void die_follower(struct char_data* ch);
 void add_follower(struct char_data* ch, struct char_data* leader);
 void say_spell(struct char_data* ch, int si);
 char* skip_spaces(char* string);
-void do_cast(struct char_data* ch, char* argument, int cmd);
+void do_cast(struct char_data* ch, const char* argument, int cmd);
 void assign_spell_pointers(void);
 void check_falling_obj(struct obj_data* obj, int room);
 } // namespace Alarmud
