@@ -1133,9 +1133,9 @@ void spell_commune(byte level, struct char_data* ch,
 
 }
 
-#define ANISUM1  9007
-#define ANISUM2  9014
-#define ANISUM3  9021
+#define ANISUM1  72
+#define ANISUM2  78
+#define ANISUM3  84
 
 void spell_animal_summon(byte level, struct char_data* ch,
 						 struct char_data* victim, struct obj_data* obj) {
