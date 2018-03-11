@@ -26,16 +26,9 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 namespace Alarmud {
-#ifdef ALAR
-#endif
 #define KEYLIB "keydir"
 #define BUFLEN 128
-#ifndef ALAR
-char* lower(char* s) {
-	return(s);
-}
-#endif
-int TestMode=0;
+bool TestMode=false;
 char hname[128];
 int  test=0;
 char* ggdup(const char* s) {
@@ -52,13 +45,14 @@ char* HostName() {
 	if (!*hname) { gethostname(hname,127); }
 	return hname;
 }
-int IsTest(int test) {
+bool IsTest() {
+	return TestMode ;
+}
+bool SetTest(bool test) {
 	TestMode=test;
-	return(1);
+	return TestMode;
 }
-int IsTest() {
-	return(TestMode);
-}
+
 
 char* GetKey(char* db,char* chiave) {
 	char buf[BUFLEN];

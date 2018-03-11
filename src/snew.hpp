@@ -40,7 +40,8 @@ void ActionAlignMod(struct char_data* ch,struct char_data* victimi,int ostility)
 char* GetTargetTypeString(int target);
 int GetAverageLevel(struct char_data* ch);
 char* HostName();
-int IsTest();
+bool IsTest();
+bool SetTest(bool test=true);
 char* GetKey(char* db, char* chiave);
 int PutKey(char* db,char* chiave, char* value);
 void DelKey(char* db,char* chiave);

@@ -19,6 +19,7 @@
 #include "main.hpp"
 #include "comm.hpp"
 #include "interpreter.hpp"
+#include "snew.hpp"
 namespace Alarmud {
 
 using std::string;
@@ -76,6 +77,17 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	cout << endl;
+#ifdef master
+	debug_level=99;
+#endif
+#ifdef devel
+	debug_level=99;
+	SetTest(true);
+#endif
+#ifdef vagrant
+	debug_level=99;
+	SetTest(true);
+#endif
 	if(vm.count("ansi_off")) { SET_BIT(SystemFlags,SYS_NOANSI); }
 	if(vm.count("disable_DNS")) { SET_BIT(SystemFlags,SYS_SKIPDNS); }
 	if(vm.count("log_players")) { SET_BIT(SystemFlags,SYS_LOGALL); }
@@ -109,6 +121,12 @@ int main(int argc, char** argv) {
 		LOG4CXX_FATAL(errlogger,"Unable to change dir to " << dir);
 		perror("chdir");
 		assert(0);
+	}
+	FILE* fd;
+	fd=fopen("../alarmud.pid","w");
+	if (fd) {
+		fprintf(fd,"%d",getpid());
+		fclose(fd);
 	}
 	LOG4CXX_TRACE(logger,"Boost version " << BOOST_VERSION);
 	run(port,dir.c_str());
