@@ -3,12 +3,13 @@
 # In ambiente di sviluppo va lanciato solo se si aggiunge un nuovo file
 set -o allexport
 cd $(dirname "$0")
-MYSQL_USER="root" #db user'
-MYSQL_PASSWORD="secret" # db password
-MYSQL_HOST="localhost" #db host
-MYSQL_DB="nebbie" #db name
-SERVER_PORT=4002 #default server port
+MYSQL_USER=${MYSQL_USER:-root} #db user'
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-secret} # db password
+MYSQL_HOST=${MYSQL_HOST:-localhost} #db host
+MYSQL_DB=${MYSQL_DB:-nebbie} #db name
+SERVER_PORT=${SERVER_PORT:-4002} #default server port
 environment=${1:-vagrant}
+ENVIRONMENT=$environment
 conf="$HOME/Confs/$environment.conf"
 if [ -f $conf ] ; then
 	. $conf
