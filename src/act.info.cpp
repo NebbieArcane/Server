@@ -1903,30 +1903,36 @@ void do_status( struct char_data* ch,const char* argument, int cmd ) {
 void do_score(struct char_data* ch,const char* argument, int cmd) {
 	struct time_info_data playing_time;
 	char buf[1000], buf2[1000];
-	char datanasc[100];
+	char datanasc[200];
 	struct time_info_data my_age;
 	struct time_info_data my_birth;
 
-	struct time_info_data mud_time_passed(time_t t2, time_t t1);
+	//struct time_info_data mud_time_passed(time_t t2, time_t t1);
 	int weekday, day;
-
-	const long beginning_of_time=BEG_OF_TIME;
-
 	my_birth=mud_time_passed(beginning_of_time,ch->player.time.birth);
 	age3(ch, &my_age);
 	weekday = ((35*my_birth.month)+my_birth.day+1) % 7;/* 35 days in a month */
 	day = my_birth.day + 1;   /* day in [1..35] */
-	my_birth.year=(time_info.year-my_age.ayear);
-	snprintf(datanasc,99,"$c0005Sei nat$b nel %s, %d^ del %s, nell'anno %d %s.",
+	if (IS_IMMENSO(ch)) {
+		my_birth.year=-1;
+		my_age.year=time_info.year+1;
+		my_age.ayear=my_age.year;
+	}
+	else {
+		my_birth.year=(time_info.year-my_age.ayear);
+	}
+	snprintf(datanasc,sizeof datanasc,"$c0005Sei nat$b nel %s, %d^ del %s, nell'anno %d %s.",
 			 weekdays[weekday]+3,
 			 day,
 			 month_name[ (int)my_birth.month ],
-			 abs(my_birth.year),
-			 my_birth.year>0?" dopo Nebbie":" avanti Nebbie");
+			 my_birth.year,
+			 (my_birth.year>0?" dopo Nebbie":" avanti Nebbie"));
+
 	snprintf(buf,999,"%s\n\rHai $c0015%d$c0005 anni.", datanasc,my_age.ayear);
+	//FIXME: check for buffer overrun
 	if (my_age.year != my_age.ayear) {
-		char app[35];
-		snprintf(app,"\nMa ne dimostri $c0015%d$c0005.",34,my_age.year);
+		char app[50];
+		snprintf(app,sizeof app,"\nMa ne dimostri $c0015%d$c0005.",my_age.year);
 		strcat(buf,app);
 	}
 
