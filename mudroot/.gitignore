@@ -1,3 +1,4 @@
 /myst.pid
 *.log
 *.txt
+/alarmud.pid
