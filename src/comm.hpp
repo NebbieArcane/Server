@@ -94,7 +94,6 @@ void write_to_output(char* txt, struct descriptor_data* t) ;
 void write_to_q(char* txt, struct txt_q* queue) ;
 long GetMediumLag(long lastlag);
 long GetLagIndex();
-int IsTest(int test);
 } // namespace Alarmud
 #endif
 

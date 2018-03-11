@@ -265,20 +265,16 @@ int run (int port, const char* dir) {
 
 
 	struct passwd* pw;
-#if defined(DFLT_DIR)
-	dir = DFLT_DIR;
-#else
-	dir = "lib";
-#endif
 
 	mudlog( LOG_ALWAYS, "Starting game ver %s rel %s ", version(), release() );
 	mudlog( LOG_ALWAYS, "Compiled on %s",compilazione() );
 
-	mudlog(LOG_ALWAYS,"Pulse: zone river teleport violence mobile tick");
-	mudlog(LOG_ALWAYS,"       %4d   %4d      %4d      %4d    %4d  %4d",
+	mudlog(LOG_ALWAYS,"Pulse:%-10s%-10s%-10s%-10s%-10s%-10s","zone","river","teleport","violence","mobile","tick");
+	mudlog(LOG_ALWAYS,"Value:%10d%10d%10d%10d%10d%10d",
 		   PULSE_ZONE, PULSE_RIVER,PULSE_TELEPORT,
 		   PULSE_VIOLENCE,PULSE_MOBILE,(PULSE_PER_SEC * SECS_PER_MUD_HOUR));
 	mudlog(LOG_ALWAYS,"Reading data from ./%s",dir);
+	mudlog(LOG_ALWAYS,"Test mode: %s",(IsTest()?"ON":"off"));
 	printFlags();
 	Uptime = time(0);
 
