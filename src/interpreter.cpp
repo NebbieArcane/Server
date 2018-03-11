@@ -464,9 +464,7 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 	for(; isspace(*argument); argument++) ;
 
 	if( *argument && *argument != '\n' ) {
-		godTrace(LOG_SYSERR,"1Argument:",argument);
 		if( !isalpha( *argument ) ) {
-			godTrace(LOG_SYSERR,"2Argument:",argument);
 			buf1[0] = *argument;
 			buf1[1] = '\0';
 			if(*( argument + 1) )
@@ -475,7 +473,6 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 			{ buf2[0] = '\0'; }
 		}
 		else {
-			godTrace(LOG_SYSERR,"3Argument:",argument);
 			register int i;
 			half_chop(argument, buf1, buf2);
 			i = 0;
