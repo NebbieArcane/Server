@@ -252,9 +252,6 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Loading pose messages.");
 	boot_pose_messages();
 
-	mudlog(LOG_CHECK, "Loading spells.");
-	boot_spells();
-
 	mudlog(LOG_CHECK, "Assigning function pointers:");
 	if (!no_specials) {
 		mudlog(LOG_CHECK, "   Mobiles, Objects, Rooms.");
@@ -265,8 +262,11 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "   Commands.");
 	assign_command_pointers();
+
 	mudlog(LOG_CHECK, "   Spells.");
 	assign_spell_pointers();
+	boot_spells();
+
 
 	mudlog(LOG_CHECK, "Updating characters with saved items:");
 	update_obj_file();
