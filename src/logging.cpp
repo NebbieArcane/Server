@@ -62,7 +62,7 @@ constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n"
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
 log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
 	bool append = (logname=="bugs");
-	int numLogs= (logname=="bugs")?5:20;
+	int numLogs= (logname=="bugs")?5:10;
 	string logfile(boost::filesystem::current_path().string());
 	logfile.append("/").append(logname).append(suffix);
 	log4cxx::helpers::Pool p;
@@ -70,7 +70,7 @@ log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,strin
 	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
 	r->setMaxBackupIndex(numLogs);
 	r->setMaximumFileSize("200M");
-	r->setBufferedIO(true);
+	r->setBufferedIO(false); // We depend on the final log line being always written.
 	r->setBufferSize(1024);
 	r->activateOptions(p);
 	logger->addAppender(r);
@@ -108,7 +108,7 @@ log4cxx::LevelPtr get_level(unsigned short debug_level) {
 		level=log4cxx::Level::getTrace();
 		break;
 	default:
-		level=log4cxx::Level::getInfo();
+		level=log4cxx::Level::getAll();
 		break;
 	}
 	return level;
