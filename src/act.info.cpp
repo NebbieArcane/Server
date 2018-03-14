@@ -1,12 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMud
 * $Id: act.info.c,v 1.6 2002/03/11 21:15:20 Thunder Exp $
  * */
-
-/*
- *  Usage : Informative commands.                                          *
- *************************************************************************
- */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -14,73 +14,47 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
 #include "breath.hpp"
 #include "cmdid.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-
-#include "protos.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "modify.hpp"
+#include "multiclass.hpp"
+#include "parser.hpp"
 #include "Registered.hpp"
 #include "signals.hpp"
+#include "skills.hpp"
 #include "snew.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
+#include "specialproc_other.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"        // for spell_info_type, SKILL_EVALUATE, SPELL_G...
+#include "trap.hpp"
+#include "utility.hpp"
 #include "version.hpp"
-using Nebbie::Registered;
+#include "vt100c.hpp"
 
-/* extern variables */
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct descriptor_data* descriptor_list;
-extern struct char_data* character_list;
-extern struct obj_data* object_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct str_app_type str_app[];
-int update_max_usage(void); //in comm.c
+namespace Alarmud {
 
-extern int  top_of_world;
-extern int  top_of_zone_table;
-extern int  top_of_mobt;
-extern int  top_of_objt;
-extern int  top_of_p_table;
-
-extern char credits[MAX_STRING_LENGTH];
-extern char news[MAX_STRING_LENGTH];
-extern char wiznews[MAX_STRING_LENGTH];
-extern char info[MAX_STRING_LENGTH];
-extern char wizlist[MAX_STRING_LENGTH*2];
-extern char princelist[MAX_STRING_LENGTH*2];
-extern char immlist[MAX_STRING_LENGTH*2];
-extern char* dirsTo[];
-extern char* where[];
-extern char* color_liquid[];
-extern char* fullness[];
-extern char* RaceName[];
-extern int RacialMax[][MAX_CLASS];
-extern char* spell_desc[];
-extern char* spells[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* system_flag_types[];
-extern char* exits[];
-extern long SystemFlags;
-
-extern int NumTimeCheck;
-extern struct timeval aTimeCheck[];
-extern int gnTimeCheckIndex;
-
-/* extern functions
-
-void page_string(struct descriptor_data *d, char *str, int keep_internal);
-int track( struct char_data *ch, struct char_data *vict);
-int GetApprox(int num, int perc);
-int SpyCheck(struct char_data *ch);
-int remove_trap( struct char_data *ch, struct obj_data *trap);
-struct obj_data *get_obj_in_list_vis(struct char_data *ch, char *name,
-				     struct obj_data *list);
-
-*/
-/* intern functions */
+int attrefzone=0;
 
 
 int HowManyConnection(int ToAdd) {
@@ -101,7 +75,7 @@ int singular( struct obj_data* o) {
 
 /* Procedures related to 'look' */
 
-void argument_split_2(char* argument, char* first_arg, char* second_arg) {
+void argument_split_2(char* argument,char* first_arg,char* second_arg) {
 	int look_at, begin;
 	begin = 0;
 
@@ -128,8 +102,7 @@ void argument_split_2(char* argument, char* first_arg, char* second_arg) {
 	begin += look_at;
 }
 
-struct obj_data* get_object_in_equip_vis(struct char_data* ch,
-		char* arg, struct obj_data* equipment[], int* j) {
+struct obj_data* get_object_in_equip_vis(struct char_data* ch,const char* arg, struct obj_data* equipment[], int* j) {
 
 	for( (*j) = 0; (*j) < MAX_WEAR ; (*j)++)
 		if( equipment[ ( *j ) ] )
@@ -494,7 +467,6 @@ void ShowAltezzaCostituzione( struct char_data* pChar, struct char_data* pTo ) {
 		"magr$b",
 		"gracile"
 	};
-
 	if( !pChar || !pTo ) {
 		mudlog( LOG_SYSERR,
 				"!pChar || !pTo in ShowAltezzaCostituzione (act.info.c)." );
@@ -1225,7 +1197,6 @@ void list_exits_in_room(struct char_data* ch) {
 	int door,seeit=FALSE;
 	char buf[MAX_STRING_LENGTH],buf2[MAX_STRING_LENGTH];
 	struct room_direction_data*        exitdata;
-	extern char* listexits[];
 
 	*buf = '\0';
 
@@ -1274,7 +1245,7 @@ void list_exits_in_room(struct char_data* ch) {
 }
 
 
-void do_look(struct char_data* ch, char* argument, int cmd) {
+void do_look(struct char_data* ch, const char* argument, int cmd) {
 	char buffer[MAX_STRING_LENGTH];
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
@@ -1336,7 +1307,7 @@ void do_look(struct char_data* ch, char* argument, int cmd) {
 	{ send_to_char("Non riesci a vedere un tubo, sei cieco!\n\r", ch); }
 	else if( (IS_DARK_P(pRoomWithChar)) && (!IS_IMMORTAL(ch)) &&
 			 (!IS_AFFECTED(ch, AFF_TRUE_SIGHT))&&
-			 GET_RACE(ch)!=RACE_DROW && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
+			 GET_RACE(ch)!=RACE_DARK_ELF && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
 			 GET_RACE(ch)!=RACE_DEEP_GNOME ) {
 		send_to_char( "E` molto buio qui...\n\r", ch );
 		if(IS_AFFECTED(ch, AFF_INFRAVISION)) {
@@ -1819,7 +1790,7 @@ void do_look(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_read(struct char_data* ch, char* argument, int cmd) {
+void do_read(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100];
 
 	/* This is just for now - To be changed later.! */
@@ -1829,7 +1800,7 @@ void do_read(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_examine(struct char_data* ch, char* argument, int cmd) {
+void do_examine(struct char_data* ch,const char* argument, int cmd) {
 	char name[1000], buf[1000];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object;
@@ -1860,7 +1831,7 @@ void do_examine(struct char_data* ch, char* argument, int cmd) {
 /**************************************************************************
  * do_exits visualizza le uscite della locazione.
  **************************************************************************/
-void do_exits(struct char_data* ch, char* argument, int cmd) {
+void do_exits(struct char_data* ch,const char* argument, int cmd) {
 	/* NOTE: Input var 'cmd' is not used. */
 	int door;
 	char buf[1000];
@@ -1912,7 +1883,7 @@ void do_exits(struct char_data* ch, char* argument, int cmd) {
 	{ send_to_char( "Nessuna !\n\r", ch ); }
 }
 
-void do_status( struct char_data* ch, char* argument, int cmd ) {
+void do_status( struct char_data* ch,const char* argument, int cmd ) {
 	static char buf[1000];
 	snprintf( buf, 999,
 			  "$c0005Tu hai $c0015%d$c0005($c0011%d$c0005) hit, "
@@ -1929,40 +1900,44 @@ void do_status( struct char_data* ch, char* argument, int cmd ) {
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 }
 
-void do_score(struct char_data* ch, char* argument, int cmd) {
+void do_score(struct char_data* ch,const char* argument, int cmd) {
 	struct time_info_data playing_time;
 	char buf[1000], buf2[1000];
-	char datanasc[100];
+	char datanasc[200];
 	struct time_info_data my_age;
 	struct time_info_data my_birth;
-	extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
 
-	struct time_info_data mud_time_passed(time_t t2, time_t t1);
+	//struct time_info_data mud_time_passed(time_t t2, time_t t1);
 	int weekday, day;
-	extern struct time_info_data time_info;
-	extern const char* weekdays[];
-	extern const char* month_name[];
-
-	const long beginning_of_time=BEG_OF_TIME;
-
 	my_birth=mud_time_passed(beginning_of_time,ch->player.time.birth);
 	age3(ch, &my_age);
 	weekday = ((35*my_birth.month)+my_birth.day+1) % 7;/* 35 days in a month */
 	day = my_birth.day + 1;   /* day in [1..35] */
-	my_birth.year=(time_info.year-my_age.ayear);
-	snprintf(datanasc,99,"$c0005Sei nat$b nel %s, %d^ del %s, nell'anno %d %s.",
+	if (IS_IMMENSO(ch)) {
+		my_birth.year=-1;
+		my_age.year=time_info.year+1;
+		my_age.ayear=my_age.year;
+	}
+	else {
+		my_birth.year=(time_info.year-my_age.ayear);
+	}
+	snprintf(datanasc,sizeof datanasc,"$c0005Sei nat$b nel %s, %d^ del %s, nell'anno %d %s.",
 			 weekdays[weekday]+3,
 			 day,
 			 month_name[ (int)my_birth.month ],
-			 abs(my_birth.year),
-			 my_birth.year>0?" dopo Nebbie":" avanti Nebbie");
+			 my_birth.year,
+			 (my_birth.year>0?" dopo Nebbie":" avanti Nebbie"));
+
 	snprintf(buf,999,"%s\n\rHai $c0015%d$c0005 anni.", datanasc,my_age.ayear);
+	//FIXME: check for buffer overrun
 	if (my_age.year != my_age.ayear) {
-		snprintf(buf,999,"%s\nMa ne dimostri $c0015%d$c0005\n",buf,my_age.year);
+		char app[50];
+		snprintf(app,sizeof app,"\nMa ne dimostri $c0015%d$c0005.",my_age.year);
+		strcat(buf,app);
 	}
 
 	if ((my_age.month == my_birth.month) && (my_age.day == my_birth.month)) {
-		strcat(buf,"$c0015 Oggi e` il tuo compleanno!!");
+		strcat(buf,"\n$c0015 Oggi e` il tuo compleanno!!");
 	}
 
 	act(buf,FALSE, ch,0,0,TO_CHAR);
@@ -2182,16 +2157,14 @@ void do_score(struct char_data* ch, char* argument, int cmd) {
 		act(buf,FALSE,ch,0,0,TO_CHAR);
 	}
 
-	playing_time = real_time_passed((time(0)-ch->player.time.logon) +
-									ch->player.time.played, 0);
-	snprintf(buf,999,"$c0005Hai giocato per $c0015%d$c0005 giorni e "
-			 "$c0015%d$c0005 ore.",
+	playing_time = real_time_passed((time(0)-ch->player.time.logon) + ch->player.time.played, 0);
+	snprintf(buf,999,"$c0005Hai giocato per $c0015%d$c0005 giorni e $c0015%d$c0005 ore.",
 			 playing_time.day,
 			 playing_time.hours);
 	act(buf,FALSE,ch,0,0,TO_CHAR);
 
 	/* Drow fight -4 in lighted rooms! */
-	if (!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DROW &&
+	if (!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
 			!affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
 		snprintf(buf,999,"$c0011La luce nell'area ti da molto dolore$c0009!");
 		act(buf,FALSE,ch,0,0,TO_CHAR);
@@ -2252,12 +2225,9 @@ void do_score(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_time(struct char_data* ch, char* argument, int cmd) {
+void do_time(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100];
 	int weekday, day;
-	extern struct time_info_data time_info;
-	extern const char* weekdays[];
-	extern const char* month_name[];
 
 	snprintf(buf, 99,"Sono le %d del%s, ",
 			 ((time_info.hours % 12 == 0) ? 12 : ((time_info.hours) % 12)),
@@ -2280,8 +2250,7 @@ void do_time(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_weather(struct char_data* ch, char* argument, int cmd) {
-	extern struct weather_data weather_info;
+void do_weather(struct char_data* ch,const char* argument, int cmd) {
 	char buf[ 256 ];
 	char* sky_look[] = {
 		"sereno",
@@ -2303,12 +2272,7 @@ void do_weather(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_help(struct char_data* ch, char* argument, int cmd) {
-
-	extern int top_of_helpt;
-	extern struct help_index_element* help_index;
-	extern FILE* help_fl;
-	extern char help[MAX_STRING_LENGTH];
+void do_help(struct char_data* ch,const char* argument, int cmd) {
 
 	int chk, bot, top, mid, minlen;
 	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
@@ -2366,11 +2330,10 @@ void do_help(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_wizhelp(struct char_data* ch, char* arg, int cmd) {
+void do_wizhelp(struct char_data* ch,const char* arg, int cmd) {
 	char buf[1000];
 	int i, j = 1;
 	NODE* n;
-	extern struct radix_list radix_head[];
 
 	if(IS_NPC(ch))
 	{ return; }
@@ -2403,11 +2366,7 @@ void do_wizhelp(struct char_data* ch, char* arg, int cmd) {
 	page_string(ch->desc, buf, 1);
 }
 
-void do_actual_wiz_help(struct char_data* ch, char* argument, int cmd) {
-
-	extern int top_of_wizhelpt;
-	extern struct help_index_element* wizhelp_index;
-	extern FILE* wizhelp_fl;
+void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
 
 	int chk, bot, top, mid, minlen;
 	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
@@ -2461,11 +2420,10 @@ void do_actual_wiz_help(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_command_list(struct char_data* ch, char* arg, int cmd) {
+void do_command_list(struct char_data* ch,const char* arg, int cmd) {
 	char buf[MAX_STRING_LENGTH];
 	int i, j = 1;
 	NODE* n;
-	extern struct radix_list radix_head[];
 
 	if(IS_NPC(ch))
 	{ return; }
@@ -2497,7 +2455,7 @@ void do_command_list(struct char_data* ch, char* arg, int cmd) {
 									 strcpy(tmpname2,lower(mask)),\
 									 strlen(mask))==0)
 /*
-int OK_NAME(struct char_data *name, char *mask)
+int OK_NAME(struct char_data *name,const char*mask)
 {
   char n1[80],n2[80];
   if(!*mask) return 1;
@@ -2508,7 +2466,7 @@ int OK_NAME(struct char_data *name, char *mask)
 */
 
 
-void do_who(struct char_data* ch, char* argument, int cmd) {
+void do_who(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* person;
 	char buffer[MAX_STRING_LENGTH*2]="",tbuf[512];
 	int count;
@@ -2551,14 +2509,14 @@ void do_who(struct char_data* ch, char* argument, int cmd) {
 					 "                       ---------------------------\n\r" );
 		count=0;
 		for( person = character_list; person; person = person->next ) {
-			if( !IS_LINKDEAD( person ) && IS_PC( person ) &&
-					OK_NAME( person, name_mask ) &&
-					person->invis_level <= GetMaxLevel( ch ) &&
-					( cmd != CMD_WHOZONE ||
-					  ( real_roomp(person->in_room) &&
+			if( !IS_LINKDEAD( person ) and IS_PC( person ) and
+					OK_NAME( person, name_mask ) and
+					person->invis_level <= GetMaxLevel( ch ) and
+					( cmd != CMD_WHOZONE or
+					  ( real_roomp(person->in_room) and
 						real_roomp(person->in_room)->zone ==
-						real_roomp(ch->in_room)->zone ) )&&
-					( !index(flags,'g') || IS_IMMORTAL(person) ) ) {
+						real_roomp(ch->in_room)->zone ) )and
+					( !index(flags,'g') or IS_IMMORTAL(person) ) ) {
 				if (OK_NAME(person,name_mask)) {
 					count++;
 					color_cnt = (color_cnt++ % 9);  /* range 1 to 9 */
@@ -2760,7 +2718,7 @@ void do_who(struct char_data* ch, char* argument, int cmd) {
 		}
 
 		for( person = character_list; person; person = person->next ) {
-			if( !IS_NPC(person) && CAN_SEE(ch, person) && OK_NAME(person,name_mask) ) {
+			if( !IS_NPC(person) and CAN_SEE(ch, person) and OK_NAME(person,name_mask) ) {
 				count++;
 				if (person->desc == NULL)
 				{ lcount ++; }
@@ -2908,9 +2866,8 @@ void do_who(struct char_data* ch, char* argument, int cmd) {
 	page_string( ch->desc, buffer, TRUE );
 }
 
-void do_users( struct char_data* ch, char* argument, int cmd ) {
+void do_users( struct char_data* ch,const char* argument, int cmd ) {
 	char buf[MAX_STRING_LENGTH], line[200], buf2[255];
-	extern const char* connected_types[];
 
 	struct descriptor_data* d;
 
@@ -2947,14 +2904,14 @@ void do_users( struct char_data* ch, char* argument, int cmd ) {
 
 
 
-void do_inventory(struct char_data* ch, char* argument, int cmd) {
+void do_inventory(struct char_data* ch,const char* argument, int cmd) {
 
 	send_to_char("Stai trasportando:\n\r", ch);
 	list_obj_in_heap(ch->carrying, ch);
 }
 
 
-void do_equipment(struct char_data* ch, char* argument, int cmd) {
+void do_equipment(struct char_data* ch,const char* argument, int cmd) {
 	int j,Worn_Index;
 	bool found;
 	char String[256];
@@ -2982,43 +2939,43 @@ void do_equipment(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_credits(struct char_data* ch, char* argument, int cmd) {
+void do_credits(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_credits (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, credits, 0);
 	mudlog( LOG_SYSERR, "Terminato do_credits (act.info.c)." );
 }
-void do_news(struct char_data* ch, char* argument, int cmd) {
+void do_news(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_news (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, news, 0);
 	mudlog( LOG_SYSERR, "Terminato do_news (act.info.c)." );
 }
-void do_wiznews(struct char_data* ch, char* argument, int cmd) {
+void do_wiznews(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_wiznews (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wiznews, 0);
 	mudlog( LOG_SYSERR, "Terminato do_wiznews (act.info.c)." );
 }
-void do_info(struct char_data* ch, char* argument, int cmd) {
+void do_info(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_info (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, info, 0);
 	mudlog( LOG_SYSERR, "Terminato do_info (act.info.c)." );
 }
-void do_wizlist(struct char_data* ch, char* argument, int cmd) {
+void do_wizlist(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_wizlist (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wizlist, 0);
 	mudlog( LOG_SYSERR, "Terminato do_wizlist (act.info.c)." );
 }
-void do_prince(struct char_data* ch, char* argument, int cmd) {
+void do_prince(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_prince (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, princelist, 0);
 	mudlog( LOG_SYSERR, "Terminato do_prince (act.info.c)." );
 }
-void do_immortal(struct char_data* ch, char* argument, int cmd) {
+void do_immortal(struct char_data* ch,const char* argument, int cmd) {
 	mudlog( LOG_SYSERR, "%s ha iniziato do_immortal (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, immlist, 0);
@@ -3149,7 +3106,7 @@ void do_where_object( struct char_data* ch, struct obj_data* obj,
 	}
 }
 
-void do_where(struct char_data* ch, char* argument, int cmd) {
+void do_where(struct char_data* ch,const char* argument, int cmd) {
 	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	char*        nameonly;
 	register struct char_data* i;
@@ -3258,7 +3215,7 @@ void do_where(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_levels(struct char_data* ch, char* argument, int cmd) {
+void do_levels(struct char_data* ch,const char* argument, int cmd) {
 	int i, RaceMax, iClass;
 	char buf[MAX_STRING_LENGTH*2],buf2[MAX_STRING_LENGTH];
 
@@ -3361,7 +3318,7 @@ void do_levels(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_consider(struct char_data* ch, char* argument, int cmd) {
+void do_consider(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[256], buf[256];
 	int diff;
@@ -3562,10 +3519,9 @@ void do_consider(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_spells(struct char_data* ch, char* argument, int cmd) {
+void do_spells(struct char_data* ch,const char* argument, int cmd) {
 	int spl, i;        /* 16384 */
 	char buf[ 256 ];
-	extern char* spells[];
 	struct string_block sb;
 
 	if( IS_NPC( ch ) ) {
@@ -3629,15 +3585,11 @@ long GetLagIndex() {
 	return(LagIndex);
 }
 
-void do_world(struct char_data* ch, char* argument, int cmd) {
+void do_world(struct char_data* ch,const char* argument, int cmd) {
 	char buf[1000];
 
 	long ct, ot;
 	char* tmstr, *otmstr;
-	extern long Uptime;
-	extern long room_count;
-	extern long mob_count;
-	extern long obj_count;
 
 	snprintf( buf, 999,"$c0005Base Source: $c0014AlarMUD\n$c0005"
 			  "Versione $c0015%s\n$c0005Commit: $c0015%s$c0005.",
@@ -3708,8 +3660,6 @@ void do_world(struct char_data* ch, char* argument, int cmd) {
 	/**** SALVO controllo lag refresh zone init */
 	if (IS_IMMORTAL(ch)) {
 		int i,c;
-		extern struct zone_data* zone_table;
-		extern int attrefzone;
 		for (i = c = 0; i <= top_of_zone_table; i++)
 			if( zone_table[i].start != 0 )
 			{ c++; }
@@ -3727,7 +3677,7 @@ void do_world(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_attribute(struct char_data* ch, char* argument, int cmd) {
+void do_attribute(struct char_data* ch,const char* argument, int cmd) {
 	char buf[MAX_STRING_LENGTH];
 	struct affected_type* aff;
 
@@ -3860,7 +3810,7 @@ void do_attribute(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_value(struct char_data* ch, char* argument, int cmd) {
+void do_value(struct char_data* ch,const char* argument, int cmd) {
 	char buf[1000],buf2[1000], name[1000];
 	struct obj_data* obj=0;
 	struct char_data* vict=0;
@@ -3869,9 +3819,6 @@ void do_value(struct char_data* ch, char* argument, int cmd) {
 
 
 	/* For Objects */
-	extern char* item_types[];
-	extern char* extra_bits[];
-	extern char* affected_bits[];
 
 
 	if (!HasClass(ch, CLASS_THIEF|CLASS_RANGER)) {
@@ -4253,7 +4200,7 @@ char* DescAttacks(float a) {
 }
 
 
-void do_display(struct char_data* ch, char* arg, int cmd) {
+void do_display(struct char_data* ch,const char* arg, int cmd) {
 	int i;
 
 	if(IS_NPC(ch))
@@ -4300,7 +4247,7 @@ void ScreenOff(struct char_data* ch) {
 	send_to_char(VT_HOMECLR, ch);
 }
 
-void do_resize(struct char_data* ch, char* arg, int cmd) {
+void do_resize(struct char_data* ch,const char* arg, int cmd) {
 	int i;
 
 	if(IS_NPC(ch))
@@ -4331,7 +4278,6 @@ void do_resize(struct char_data* ch, char* arg, int cmd) {
 
 int MobLevBonus(struct char_data* ch) {
 	int t=0;
-	extern struct index_data* mob_index;
 
 	if( mob_index[ ch->nr ].func == magic_user ||IS_SET( ch->specials.act,ACT_MAGIC_USER ) )
 	{ t+=5; }
@@ -4358,7 +4304,7 @@ int MobLevBonus(struct char_data* ch) {
 	return(t);
 }
 
-void do_show_skill(struct char_data* ch, char* arg, int cmd) {
+void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
 	char buf[254], buffer[MAX_STRING_LENGTH];
 	int i,max;
 
@@ -4608,9 +4554,7 @@ void do_show_skill(struct char_data* ch, char* arg, int cmd) {
 /* to figure out how to look into rooms next to this room. Will be using*/
 /* the code for throwing items. I figure there is no IC reason for a PC */
 /* to have a command like this. Do what ya want on your on MUD                 */
-void do_scan(struct char_data* ch, char* argument, int cmd) {
-	extern char* dirsTo[];
-	extern char* dirs[];
+void do_scan(struct char_data* ch,const char* argument, int cmd) {
 #if 0
 	static char* keywords[]= {
 		"north",
@@ -4742,7 +4686,7 @@ void do_scan(struct char_data* ch, char* argument, int cmd) {
 
 void CheckCharAffected( char* msg );
 
-void list_groups( struct char_data* ch, char* szArg, int iCmd ) {
+void list_groups( struct char_data* ch,const char* szArg, int iCmd ) {
 	struct descriptor_data* i;
 	struct char_data* person;
 	struct follow_type* f;
@@ -4833,7 +4777,7 @@ int can_see_linear( struct char_data* ch, struct char_data* targ, int* rng,
  * di ch.
  * ***********************************************************************/
 
-struct char_data* get_char_linear( struct char_data* ch, char* arg, int* rf,
+struct char_data* get_char_linear( struct char_data* ch,const char* arg, int* rf,
 								   int* df ) {
 	long rm;
 	int range = 0;
@@ -4884,3 +4828,5 @@ struct char_data* get_char_linear( struct char_data* ch, char* arg, int* rf,
 	}
 	return NULL;
 }
+} // namespace Alarmud
+

@@ -1,22 +1,48 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: rhyodin.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-#include "rhyodin.hpp"
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "rhyodin.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
 #include "aree.hpp"
 #include "charlist.hpp"
-#include "cmdid.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
+#include "spec_procs2.hpp"
+#include "spell_parser.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
 
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern struct char_data* character_list;
+namespace Alarmud {
+
+
 
 
 #define START_ROOM      21276
@@ -32,8 +58,7 @@ extern struct char_data* character_list;
   Chiama altri fantasmi se attaccato.
 ****************************************************************************/
 
-int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type ) {
+int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type ) {
 	struct char_data* ghost, *t, *master;
 	int i;
 
@@ -1749,3 +1774,5 @@ int Moribondo( struct char_data* pChar, int nCmd, char* szArg,
 	}
 	return FALSE;
 }
+} // namespace Alarmud
+

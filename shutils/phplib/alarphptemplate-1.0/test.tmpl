@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Pagina di prova</title>
+<TMPL_INCLUDE NAME=../../dati/tmpl/netgate/include/head.txt>
+</head>
+<body>
+Usa &lt; e &gt;<TMPL_VAR NAME="WELCOME"> <TMPL_VAR NAME=method><br>
+<TMPL_IF NAME=PLUTO>
+  PLUTO was true
+<TMPL_ELSEIF NAME=PIPPO>
+  WELCOME was true
+<TMPL_ELSE>
+  Not PLUTO nor PIPPO was true
+</TMPL_IF>
+<ul>
+<TMPL_LOOP NAME=GIRO>
+<li>Giro numero  <TMPL_VAR NAME=__COUNTER__>. <TMPL_VAR NAME=NOME> <TMPL_VAR NAME=nomignolo></li>
+</TMPL_LOOP>
+</ul>
+<ol>
+<TMPL_LOOP NAME=GIRETTO>
+<li>Giro numero  
+<tmpl_if name=__first__>Primo</tmpl_if>
+<tmpl_if name=__last__>Ultimo</tmpl_if>
+<tmpl_if name=__inner__>interno</tmpl_if>
+
+. <TMPL_VAR NAME=NOME></li>
+</TMPL_LOOP>
+</ol>
+<br>Nome fuori dal loop: <TMPL_VAR NAME=NOME><br>
+<TMPL_VAR NAME=DICT_GENERICO>
+</body>
+</html>

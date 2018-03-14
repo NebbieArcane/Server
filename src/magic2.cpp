@@ -1,22 +1,36 @@
-
-/*AlarMUD
-* $Id: magic2.c,v 1.3 2002/02/21 12:31:46 Thunder Exp $
- * */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "magic2.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "magic.hpp"
+#include "magicutils.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
 
-/* Extern structures */
-extern struct room_data* world;
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
+namespace Alarmud {
 
 
 /*
@@ -414,7 +428,7 @@ void spell_turn(byte level, struct char_data* ch,
 			/* Ramo vuoto... nulla di fatto */
 		}
 		else if (!IsUndead(victim)) {
-			MARK;
+
 			act("$n ha appena cercato di scacciarti.. poverino!", TRUE, ch, 0, victim, TO_VICT);
 			act("$N pensa che $n sia molto strano.", TRUE, ch, 0, victim, TO_NOTVICT);
 			act("Um... $N non e' un Non-Morto...", TRUE, ch, 0, victim, TO_CHAR);
@@ -423,7 +437,7 @@ void spell_turn(byte level, struct char_data* ch,
 			act("Cerchi di scacciare $N da qui.", TRUE, ch, 0, victim, TO_CHAR);
 			if (diff >= 0 && (!saves_spell(victim, SAVING_SPELL) || diff > 0)) {
 				if (diff > 0) {
-					MARK;
+
 					act("$n scaccia $N da questo piano di esistenza.",TRUE,ch,0,victim,TO_NOTVICT);
 					act("Scacci $N da questo piano di esistenza.", TRUE, ch, 0, victim, TO_CHAR);
 					act("$n ti scaccia da questo piano di esistenza.", TRUE, ch, 0, victim,TO_VICT);
@@ -431,7 +445,7 @@ void spell_turn(byte level, struct char_data* ch,
 					extract_char(victim);
 				}
 				else {
-					MARK;
+
 					act("$n scaccia $N da qui.",TRUE,ch,0,victim,TO_NOTVICT);
 					act("Scacci $N da qui.", TRUE, ch, 0, victim, TO_CHAR);
 					act("$n ti scaccia da qui.", TRUE, ch, 0, victim,TO_VICT);
@@ -452,7 +466,7 @@ void spell_turn(byte level, struct char_data* ch,
 					do_flee(victim,"",0);
 				}
 			}
-			MARK;
+
 			/* Fine chek tiro salvezza */
 
 		}
@@ -2109,7 +2123,7 @@ void spell_faerie_fire (byte level, struct char_data* ch,
 	af.type      = SPELL_FAERIE_FIRE;
 	af.duration  = level;
 	af.modifier  = 20;
-	af.location  = APPLY_ARMOR;
+	af.location  = APPLY_AC;
 	af.bitvector = 0;
 
 	affect_to_char(victim, &af);
@@ -2697,3 +2711,5 @@ void spell_prot_dragon_breath_gas(byte level, struct char_data* ch,
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
 }
+} // namespace Alarmud
+

@@ -1,36 +1,46 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
 * DaleMUD v2.0        Released 2/1994
 * See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
 * AlarMUD
 * $Id: act.off.c,v 1.5 2002/03/23 20:49:38 Thunder Exp $
 */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.off.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.other.hpp"
+#include "comm.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
 #include "snew.hpp"
-#include "utility.hpp"
+#include "spell_parser.hpp"
 
-/* extern variables */
+namespace Alarmud {
 
-extern struct descriptor_data* descriptor_list;
-extern struct dex_app_type dex_app[];
-extern struct str_app_type str_app[];
-extern char* att_kick_hit_room[];
-extern char* att_kick_hit_victim[];
-extern char* att_kick_hit_ch[];
-extern char* att_kick_miss_room[];
-extern char* att_kick_miss_victim[];
-extern char* att_kick_miss_ch[];
-extern char* att_kick_kill_room[];
-extern char* att_kick_kill_victim[];
-extern  char* att_kick_kill_ch[];
-extern struct char_data* character_list;
 
-extern char* dirsTo[];
 
 
 void StopAllFightingWith( char_data* pChar );
@@ -1041,23 +1051,28 @@ void do_bash(struct char_data* ch, char* argument, int cmd) {
 
 		}
 		LearnFromMistake( ch, SKILL_BASH, 0, 90 );
-		if ( CheckEquilibrium(ch) ) //Acidus 2003 - skill better equilibrium
-			WAIT_STATE( ch, PULSE_VIOLENCE * 2 ) // bash
-			else
-			{ WAIT_STATE( ch, PULSE_VIOLENCE * 3 ); } // bash
+		if ( CheckEquilibrium(ch) ) {//Acidus 2003 - skill better equilibrium
+			WAIT_STATE( ch, PULSE_VIOLENCE * 2 ); // bash
+		}
+		else {
+			WAIT_STATE( ch, PULSE_VIOLENCE * 3 );  // bash
+		}
 	}
 	else {
 		if (!CheckMirror(victim)) {
 			ActionAlignMod(ch,victim,cmd);
 			if( GET_POS( victim ) > POSITION_DEAD ) {
 				if( damage( ch, victim, 2, SKILL_BASH, location ) != VictimDead ) {
-					if ( CheckEquilibrium(victim) )
-						WAIT_STATE( victim, PULSE_VIOLENCE * 1 ) // bash
-						else
-						{ WAIT_STATE( victim, PULSE_VIOLENCE * 2 ); } // bash
+					if ( CheckEquilibrium(victim) ) {
+						WAIT_STATE( victim, PULSE_VIOLENCE * 1 ); // bash
+					}
+					else {
+						WAIT_STATE( victim, PULSE_VIOLENCE * 2 );  // bash
+					}
 
-					if( HasHands( victim ) || IS_SET(victim->specials.act,ACT_POLYSELF))
-					{ GET_POS( victim ) = POSITION_SITTING; }
+					if( HasHands( victim ) || IS_SET(victim->specials.act,ACT_POLYSELF)) {
+						GET_POS( victim ) = POSITION_SITTING;
+					}
 				}
 			}
 			WAIT_STATE( ch, PULSE_VIOLENCE * 2 );
@@ -1433,10 +1448,12 @@ void do_kick(struct char_data* ch, char* argument, int cmd) {
 			}
 		}
 	}
-	if (HasClass(ch,CLASS_MONK))
-		WAIT_STATE(ch, PULSE_VIOLENCE*1)
-		else
-		{ WAIT_STATE(ch, PULSE_VIOLENCE*2); }
+	if (HasClass(ch,CLASS_MONK)) {
+		WAIT_STATE(ch, PULSE_VIOLENCE*1);
+	}
+	else {
+		WAIT_STATE(ch, PULSE_VIOLENCE*2);
+	}
 }
 
 /* Skill di parata, evita un numero di attacchi pari al proprio
@@ -1536,7 +1553,6 @@ void do_shoot(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* mob;
 	struct obj_data* weapon;
 	int i,dir,room_num=0,room_count, MAX_DISTANCE_SHOOT;
-	extern char* listexits[];
 
 	if (check_peaceful(ch,"You feel too peaceful to contemplate violence.\n\r"))
 	{ return; }
@@ -1862,7 +1878,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	case RACE_HUMAN:
 	case RACE_ELVEN:
 	case RACE_DWARF:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_ORC:
 	case RACE_LYCANTH:
 	case RACE_TROLL:
@@ -2416,7 +2432,6 @@ void do_throw(struct char_data* ch, char* argument, int cmd) {
 	char arg1[100],arg2[100];
 	int rng, tdir;
 	struct char_data* targ;
-	extern struct str_app_type str_app[];
 
 	half_chop(argument, arg1, arg2);
 	if( !*arg1 || !*arg2 ) {
@@ -2505,3 +2520,5 @@ void do_stopfight( struct char_data* pChar, char* szArgument, int nCmd ) {
 	{ send_to_char( "Ma se non stai combattendo!\n\r", pChar ); }
 
 }
+} // namespace Alarmud
+

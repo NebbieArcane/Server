@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* ************************************************************************
 *   File: mail.c                                        Part of CircleMUD *
 *  Usage: Internal funcs and player spec-procs of mud-mail system         *
@@ -7,6 +12,32 @@
 *  Copyright (C) 1993 by the Trustees of the Johns Hopkins University     *
 *  CircleMUD is based on DikuMUD, Copyright (C) 1990, 1991.               *
 ************************************************************************ */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <ctype.h>
+#include <string.h>
+#include <time.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "mail.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs3.hpp"
+#include "spells.hpp"
+namespace Alarmud {
 
 /******* MUD MAIL SYSTEM MAIN FILE ***************************************/
 /* AlarMUD
@@ -86,23 +117,7 @@ Send comments, bug reports, etc. to jelson@server.cs.jhu.edu
 
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
 
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
-
-extern struct room_data* world;
-extern struct index_data* mob_index;
-extern struct obj_data* object_list;
-extern int        no_mail;
-int        find_name(char* name);
-int        _parse_name(char* arg, char* name);
 
 mail_index_type*                mail_index = 0; /* list of recs in the mail file  */
 position_list_type*         free_list = 0;  /* list of free positions in file */
@@ -647,4 +662,6 @@ void        postmaster_receive_mail(struct char_data* ch, int cmd, char* arg) {
 }
 
 
+
+} // namespace Alarmud
 

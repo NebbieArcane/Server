@@ -1,36 +1,47 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD
 * $Id: spell_parser.c,v 1.5 2002/03/11 00:15:36 Thunder Exp $
 */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "auction.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spell_parser.hpp"
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
 #include "breath.hpp"
-#include "cmdid.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "spells.hpp"
-#include "status.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+
+namespace Alarmud {
+
 #define MANA_MU 1
 #define MANA_CL 1
 
 /* Global data */
 
-int attrefzone=0; //SALVO controllo lag refresh zone init
-int GetAverageLevel(struct char_data* ch);
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern char* spell_wear_off_msg[];
-extern char* spell_wear_off_soon_msg[];
-extern char* spell_wear_off_room_msg[];
-extern char* spell_wear_off_soon_room_msg[];
-extern struct obj_data* object_list;
-extern struct index_data* obj_index;
+
 
 
 struct spell_info_type spell_info[MAX_SPL_LIST];
@@ -39,7 +50,7 @@ struct spell_info_type spell_info[MAX_SPL_LIST];
 #define SPELLFAIL_MOD( cn, sn ) (int)((cn - sn) / 3 * 2)
 #define ABSNEUTRAL 350
 
-char* spells[]= {
+const char* spells[]= {
 	"armor",               /* 1 */
 	"teleport",
 	"bless",
@@ -491,10 +502,7 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 void spello( int nr, byte beat, byte pos,
 			 byte mlev, byte clev, byte dlev,
 			 byte slev, byte plev, byte rlev, byte ilev,
-			 ubyte mana, sh_int tar, void (*func)( byte, struct char_data*,
-					 char*, int,
-					 struct char_data*,
-					 struct obj_data* ),
+			 ubyte mana, sh_int tar, spellFunction func,
 			 sh_int sf,
 			 sh_int align,
 			 sh_int ostile) {
@@ -885,10 +893,7 @@ void affect_update( unsigned long pulse ) {
 	int location = 5 ; /* Gaia Aggiunto per Poison */
 	int tempolag=0; // SALVO per controllo lag sulle zone init
 
-	extern struct time_info_data time_info;
 	/* Chiamata ogni ora mud, ovvero 4*75 pulse */
-	void update_char_objects( struct char_data *ch ); /* handler.c */
-	void do_save(struct char_data *ch, char* arg, int cmd); /* act.other.c */
 	for (i = character_list; i; i = next_char) {
 		next_char = i->next;
 		if (IS_SET(i->specials.act,PLR_FREEZE)) { continue; }
@@ -1319,9 +1324,6 @@ void say_spell( struct char_data* ch, int si ) {
 
 	int j, offs;
 	struct char_data* temp_char;
-//  extern struct syllable syls[];
-
-
 
 	strcpy(buf, "");
 	strcpy(splwd, spells[si-1]);
@@ -1442,14 +1444,18 @@ bool EqNotForCaster(struct char_data* ch, int spl) {
 	{ return(FALSE); }
 }
 /* Assumes that *argument does start with first letter of chopped string */
-void do_cast(struct char_data* ch, char* argument, int cmd) {
+void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 
 	struct obj_data* tar_obj;
 	struct char_data* tar_char;
 	struct char_data* tmp_char;
 	char name[MAX_INPUT_LENGTH];
-	char ori_argument[256];     /* make a copy of argument for log */
-	int qend, spl, i, align_cost;
+	char work[256];     /* works on a copy of argument */
+	char* argument=work;
+	int qend=0;
+	int spl=0;
+	int i=0;
+	int align_cost=0;
 	int caster_level=-1;
 	int spell_level=100;
 	bool target_ok;
@@ -1492,13 +1498,10 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 	if( cmd != CMD_MIND && apply_soundproof(ch) )
 	{ return; }
 
-	argument = skip_spaces(argument);
+	strncpy(argument,ori_argument,256);
+	argument[255]='\0';
 
-	/* did not want to invoke strcpy.. so added this loop to copy string [polax] */
-	for(i=0; argument[i] && (i < 255); i++) /* enforce bound check on i */
-	{ ori_argument[i] = argument[i]; }
-	ori_argument[i] = '\0';  /* ensure proper null termination */
-	/* modification end */
+	argument = skip_spaces(argument);
 
 	/* If there is no chars in argument */
 	if (!(*argument)) {
@@ -1691,17 +1694,17 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 						check_peaceful(ch, "Questa zona sembra refrattaria alla magia!\n\r"))
 				{ return; }
 			}
-			MARK;
+
 			/* for seeing what the other guys are doing test */
 
 			if( IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI ) {
 				mudlog( LOG_CHECK, "%s cast %s", GET_NAME(ch), ori_argument );
 			}
-			MARK;
+
 			if( !IS_SET( spell_info[spl].targets, TAR_IGNORE ) ) {
 				mudlog(LOG_CHECK,"NOT TAR_IGNORE");
 				argument = one_argument(argument, name);
-				MARK;
+
 				if( *name ) {
 					if( IS_SET( spell_info[spl].targets, TAR_CHAR_ROOM ) ) {
 						if( ( tar_char = get_char_room_vis( ch, name ) ) ) {
@@ -1710,17 +1713,17 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 									tar_char->attackers < 6 ||
 									tar_char->specials.fighting == ch) {
 								target_ok = TRUE;
-								MARK;
+
 							}
 
 							else {
 								send_to_char( "Volano troppi schiaffi qui intorno!\n\r", ch);
-								MARK;
+
 								target_ok = FALSE;
 							}
 						}
 						else {
-							MARK;
+
 							target_ok = FALSE;
 						}
 					}
@@ -2083,7 +2086,9 @@ void do_cast(struct char_data* ch, char* argument, int cmd) {
 		}        /* if GET_POS < min_pos */
 		return;
 	}
-
+	if (spl > 0) {
+		mudlog(LOG_SYSERR,"Spellid %d cmid %d command %s",spl,cmd,ori_argument);
+	}
 
 	switch (number(1,5)) {
 	case 1:
@@ -2120,7 +2125,6 @@ void assign_spell_pointers() {
 		spell_info[i].min_level_psi      = 0;
 	}
 
-#include "spell_list.hpp"
 }
 
 
@@ -2231,4 +2235,6 @@ void check_falling_obj( struct obj_data* obj, int room) {
 		return;
 	}
 }
+
+} // namespace Alarmud
 

@@ -1,13 +1,30 @@
-/* AlarMUD
- * $Id: create.obj.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
- */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "protos.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "create.obj.hpp"
+#include "comm.hpp"
+#include "interpreter.hpp"
+#include "handler.hpp"
 #include "utility.hpp"
+#include "vt100c.hpp"
+
+namespace Alarmud {
+
 #define OBJ_MAIN_MENU         0
 #define CHANGE_OBJ_NAME       1
 #define CHANGE_OBJ_SHORT      2
@@ -39,13 +56,6 @@
 
 #define ENTER_CHECK        1
 
-extern struct index_data* obj_index;         /* index table for object file     */
-extern const char* item_types[];
-extern const char* extra_bits[];
-extern const char* wear_bits[];
-extern const char* apply_types[];
-extern const char* immunity_names[];
-extern const char* affected_bits[];
 
 
 char* obj_edit_menu = "    1) Name                    2) Short description\n\r"
@@ -756,10 +766,9 @@ void ChangeObjAffect(struct char_data* ch, char* arg, int type) {
 		send_to_char(buf, ch);
 		switch(update) {
 		case APPLY_NONE:
-		/*case APPLY_BV1:*/
 		case APPLY_SKIP:
 		case APPLY_ATTACKS:
-		case APPLY_BV2:
+		case APPLY_AFF2:
 			send_to_char("\n\rNote: Not implemented!.\n\r",ch);
 			break;
 		case APPLY_STR:
@@ -797,7 +806,7 @@ void ChangeObjAffect(struct char_data* ch, char* arg, int type) {
 		case APPLY_SAVING_BREATH:
 		case APPLY_SAVING_SPELL:
 		case APPLY_SAVE_ALL:
-		case APPLY_ARMOR:
+		case APPLY_AC:
 			send_to_char("\n\rNote: Modifier will make field go up modifier number "
 						 "of points.\n\r",ch);
 			send_to_char("      Positive modifier will make field go up, negative "
@@ -1285,4 +1294,6 @@ void ChangeObjValue(struct char_data* ch, char* arg, int type) {
 }
 
 
+
+} // namespace Alarmud
 

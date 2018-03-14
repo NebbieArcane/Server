@@ -1,8 +1,15 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: cmdid.h,v 1.2 2002/02/13 12:30:57 root Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #ifndef _CMDID_H
 #define _CMDID_H
-
+namespace Alarmud {
 #define CMD_NORTH             1
 #define CMD_EAST              2
 #define CMD_SOUTH             3
@@ -432,15 +439,9 @@
 #define CMD_RESETSKILLS     499
 #define CMD_SETSKILLS       500
 #define CMD_PERDONO         501 //FLYP 2003 Perdono
-
 #define CMD_IMMOLATION	502 //Flyp 20180128 --> canibalize per demoni
-
-
-
-
-
-
-
 #define MAX_CMD_LIST        509
+} // namespace Alarmud
 
 #endif
+

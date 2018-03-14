@@ -1,12 +1,34 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: create.mob.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "create.mob.hpp"
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
 #include "snew.hpp"
+#include "structs.hpp"
+#include "vt100c.hpp"
+
+namespace Alarmud {
+
 
 #define MOB_MAIN_MENU         0
 #define CHANGE_MOB_NAME       1
@@ -34,10 +56,6 @@
 
 #define ENTER_CHECK        1
 
-extern const char* action_bits[];
-extern const char* affected_bits[];
-extern const char* RaceName[];
-extern const char* immunity_names[];
 
 
 char* mob_edit_menu = "    1) Name                    2) Short description\n\r"
@@ -1206,4 +1224,6 @@ void ChangeMobDsound(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
+
+} // namespace Alarmud
 

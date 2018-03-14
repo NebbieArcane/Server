@@ -1,18 +1,28 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: multiclass.c,v 1.2 2002/02/13 12:31:00 root Exp $ */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "multiclass.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
-/* extern variables */
+namespace Alarmud {
 
-extern struct room_data* world;
-extern struct descriptor_data* descriptor_list;
-extern struct room_data* world;
-extern struct dex_app_type dex_app[];
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
 
 int GetClassLevel(struct char_data* ch, int iClass) {
 
@@ -435,3 +445,5 @@ int BestClassBIT(struct char_data* ch) {
 
 	return(iClass);
 }
+} // namespace Alarmud
+

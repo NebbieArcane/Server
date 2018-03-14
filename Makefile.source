@@ -1,0 +1,8 @@
+%: 
+	make -C FOLDER -jMAKEJOBS $@
+	
+all:
+	make -C FOLDER -jMAKEJOBS $@
+
+.SILENT: all
+

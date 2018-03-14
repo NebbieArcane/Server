@@ -1,17 +1,13 @@
-/*$Id: spells.h,v 1.2 2002/02/13 12:30:59 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __SPELLS
 #define __SPELLS
-#include <sys/types.h>
-
-typedef char sbyte;
-typedef unsigned char ubyte;
-typedef short int sh_int;
-typedef unsigned short int ush_int;
-#if !defined( __cplusplus ) || defined( DEFINE_BOOL )
-typedef char bool;
-#endif
-typedef char byte;
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+#include "typedefs.hpp"
+namespace Alarmud {
 
 
 #define MAX_BUF_LENGTH              240
@@ -429,16 +425,16 @@ typedef char byte;
 #define SAVING_SPELL  4
 
 
-#define TAR_IGNORE         (1<< 0)
-#define TAR_CHAR_ROOM         (1<< 1)
-#define TAR_CHAR_WORLD         (1<< 2)
-#define TAR_FIGHT_SELF         (1<< 3)
-#define TAR_FIGHT_VICT         (1<< 4)
-#define TAR_SELF_ONLY         (1<< 5) /* Only a check, use with ei. TAR_CHAR_ROOM */
-#define TAR_SELF_NONO         (1<< 6) /* Only a check, use with ei. TAR_CHAR_ROOM */
-#define TAR_OBJ_INV         (1<< 7)
-#define TAR_OBJ_ROOM         (1<< 8)
-#define TAR_OBJ_WORLD         (1<< 9)
+#define TAR_IGNORE         (1<<0)
+#define TAR_CHAR_ROOM         (1<<1)
+#define TAR_CHAR_WORLD         (1<<2)
+#define TAR_FIGHT_SELF         (1<<3)
+#define TAR_FIGHT_VICT         (1<<4)
+#define TAR_SELF_ONLY         (1<<5) /* Only a check, use with ei. TAR_CHAR_ROOM */
+#define TAR_SELF_NONO         (1<<6) /* Only a check, use with ei. TAR_CHAR_ROOM */
+#define TAR_OBJ_INV         (1<<7)
+#define TAR_OBJ_ROOM         (1<<8)
+#define TAR_OBJ_WORLD         (1<<9)
 #define TAR_OBJ_EQUIP         (1<<10)
 #define TAR_NAME         (1<<11)
 #define TAR_VIOLENT         (1<<12)
@@ -473,11 +469,11 @@ typedef char byte;
 
 
 /* Attacktypes with grammar */
+typedef void (*spellFunction) (byte, struct char_data*, const char*, int,struct char_data*, struct obj_data*);
+
 
 struct spell_info_type {
-	void (*spell_pointer)
-	(byte level, struct char_data* ch, char* arg, int type,
-	 struct char_data* tar_ch, struct obj_data* tar_obj);
+	spellFunction spell_pointer;
 	byte minimum_position;  /* Position for caster                         */
 	ubyte min_usesmana;     /* Amount of mana used by a spell         */
 	byte beats;             /* Heartbeats until ready for next */
@@ -498,4 +494,6 @@ struct attack_hit_type {
 	char* singular;
 	char* plural;
 };
+} // namespace Alarmud
 #endif
+

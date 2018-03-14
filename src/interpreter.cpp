@@ -1,47 +1,63 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
-/* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
- * */
-#define _XOPEN_SOURCE
+/***************************  System  include ************************************/
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <stdlib.h>
-#ifdef CYGWIN
-#include <crypt.h>
-#endif
-#include "snew.hpp"
-#include "protos.hpp"
-#include "cmdid.hpp"
-#include "breath.hpp"
-#include "version.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "interpreter.hpp"
 #include "Registered.hpp"
-using Nebbie::Registered;
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "breath.hpp"
+#include "comm.hpp"
+#include "create.hpp"
+#include "create.mob.hpp"
+#include "create.obj.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "mail.hpp"
+#include "modify.hpp"
+#include "parser.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "security.hpp"
+#include "skills.hpp"
+#include "spec_procs3.hpp"
+#include "spell_parser.hpp"
+
+namespace Alarmud {
+
+/* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
+ * */
 #define NOT !
 #define AND &&
 #define OR ||
 #define SEND_TO_Q2(msg,d) write_to_descriptor(d->descriptor,msg);
 #define STATE(d) ((d)->connected)
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern const char*  RaceName[];
-extern const int RacialMax[MAX_RACE+1][MAX_CLASS];
-extern const int RacialHome[MAX_RACE+1][2];
-extern char motd[MAX_STRING_LENGTH];
-extern char wmotd[MAX_STRING_LENGTH];
-extern struct char_data* character_list;
-extern struct player_index_element* player_table;
-extern int top_of_p_table;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern char* pc_class_types[];
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
 
 unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
 unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};
@@ -70,7 +86,7 @@ const int race_choice[]= {
 	RACE_HALF_ORC,
 	RACE_HALF_OGRE,
 	RACE_HALF_GIANT,
-	RACE_DROW,                /* bad guys here */
+	RACE_DARK_ELF,                /* bad guys here */
 #if 1 /*Era 0, adesso tutte le razze gia' previste sono abilitate. GGPATCH*/
 	RACE_ORC,             /*Nascono allo shire */
 	RACE_GOBLIN,          /*Nascono allo shire */
@@ -330,7 +346,7 @@ char* fill[]= {
 };
 
 
-int search_block(char* arg, char** list, bool exact) {
+int search_block(char* arg, const char** list, bool exact) {
 	register int i,l;
 
 	/* Make into lower case, and get length of string */
@@ -354,7 +370,7 @@ int search_block(char* arg, char** list, bool exact) {
 }
 
 
-int old_search_block(char* argument,int begin,int length,char** list,int mode) {
+int old_search_block(const char* argument,int begin,int length,const char** list,int mode) {
 	int guess, found, search;
 
 
@@ -386,7 +402,6 @@ int old_search_block(char* argument,int begin,int length,char** list,int mode) {
 
 void command_interpreter( struct char_data* ch, char* argument ) {
 	char buf[254];
-	extern int no_specials;
 	NODE* n;
 	char buf1[255], buf2[255];
 	struct char_data* temp;
@@ -452,7 +467,7 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 		if( !isalpha( *argument ) ) {
 			buf1[0] = *argument;
 			buf1[1] = '\0';
-			if( argument + 1 )
+			if(*( argument + 1) )
 			{ strcpy( buf2, argument + 1 ); }
 			else
 			{ buf2[0] = '\0'; }
@@ -531,28 +546,28 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 									!IS_SET( ch->specials.act, ACT_POLYSELF ) ) ) )
 
 						{
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]ACMD %s:%s", ch->in_room, ch->player.name,
 									argument);
 						}
 						else if( n->log ) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]CCMD %s:%s", ch->in_room, ch->player.name,
 									argument);
 						}
 						else if( IS_AFFECTED2( ch, AFF2_LOG_ME ) ) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]PCMD %s:%s", ch->in_room, ch->player.name,
 									argument);
 						}
 						else if( GetMaxLevel( ch ) >= IMMORTALE &&
 								 GetMaxLevel( ch ) < 60 ) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]ICMD %s:%s", ch->in_room, ch->player.name,
 									argument );
 						}
 						else if (GET_GOLD(ch) > 2000000) {
-							mudlog( LOG_CHECK | LOG_SILENT,
+							mudlog( LOG_CHECK,
 									"[%5ld]GCMD %s:%s", ch->in_room, ch->player.name,
 									argument );
 						}
@@ -560,14 +575,10 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 						/* special() restituisce TRUE se il comando e` stato
 						 * interpretato da una procedura speciale.
 						 */
-						PushStatus(argument);
-						MARKS("Prima del test procedure speciali");
 						if( no_specials || !special( ch, n->number, buf2 ) ) {
 							/* Finalmente viene esequito il comando */
-							MARKS("Esecuzione comando");
 							( ( *n->func )( ch, buf2, n->number ) );
 						}
-						PopStatus();
 					}
 				}
 				else
@@ -583,7 +594,7 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 
 }
 
-void argument_interpreter(char* argument,char* first_arg,char* second_arg ) {
+void argument_interpreter(const char* argument,char* first_arg,char* second_arg ) {
 	int look_at, begin;
 
 	begin = 0;
@@ -774,7 +785,7 @@ int is_abbrev(char* arg1, char* arg2) {
  * del primo argomento.
  * Come bonus, tmp1 e tmp2 sono fillate a zero
  * */
-void half_chop(char* string, char* arg1, char* arg2) {
+void half_chop(const char* string, char* arg1, char* arg2) {
 	char* tmp1;
 	char* tmp2;
 	char* p1;
@@ -808,7 +819,6 @@ int special(struct char_data* ch, int cmd, char* arg) {
 	register struct obj_data* i;
 	register struct char_data* k;
 	int j;
-	MARKS("Special procedure");
 	if( ch->in_room == NOWHERE ) {
 		char_to_room( ch, 3001 );
 		return FALSE;
@@ -816,14 +826,11 @@ int special(struct char_data* ch, int cmd, char* arg) {
 
 	/* special in room? */
 	if( real_roomp( ch->in_room )->funct ) {
-		PushStatus(real_roomp( ch->in_room )->specname);
 		if( ( *real_roomp( ch->in_room )->funct )( ch, cmd, arg,
 				real_roomp( ch->in_room ),
 				EVENT_COMMAND ) ) {
-			PopStatus();
 			return( TRUE );
 		}
-		PopStatus();
 	}
 
 	/* special in equipment list? */
@@ -1593,6 +1600,7 @@ void ShowStatInstruction( struct descriptor_data* d ) {
 }
 void ShowRollInstruction( struct descriptor_data* d ) {
 	char buf[ 200 ];
+	char temp[200];
 
 	sprintf( buf, "Hai scelto la creazione del personaggio per esperti.\n\r");
 	SEND_TO_Q( buf, d );
@@ -1615,8 +1623,8 @@ void ShowRollInstruction( struct descriptor_data* d ) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(buf,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d\n\r\n\r",buf,
+	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
+	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d\n\r\n\r",temp,
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1631,8 +1639,8 @@ void ShowRollInstruction( struct descriptor_data* d ) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(buf,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",buf,
+	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
+	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",temp,
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1675,6 +1683,7 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 #define GOON     0
 {
 	char buf[ 254 ];
+	char temp[254];
 	short doafter=GOON;
 	int FO,IN,SA,AG,CO,CA,t;
 	char c7[2]="\0";
@@ -1706,7 +1715,7 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 		CO=MIN(MaxConForRace(d->character)-STAT_MIN_VAL,CO);
 		CA=MIN(MaxChrForRace(d->character)-STAT_MIN_VAL,CA);
 		sprintf(buf,"Ecco le stats risultanti dalla tua scelta:\n\r");
-		sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
+		sprintf(temp,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
 				IN+STAT_MIN_VAL,
 				SA+STAT_MIN_VAL,
 				AG+STAT_MIN_VAL,
@@ -1714,7 +1723,7 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 				CA+STAT_MIN_VAL,(!*c7?"\0":"piu' la randomizzazione (-1/+1)"));
 		if (t<STAT_MAX_SUM)
 			sprintf(buf,"%sATTENZIONE. Hai usato solo %2d dei %2d disponibili\n\r",
-					buf,t,STAT_MAX_SUM);
+					temp,t,STAT_MAX_SUM);
 		SEND_TO_Q(buf,d);
 	}
 	d->stat[0]=(char)FO;
@@ -1752,15 +1761,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 	struct char_data* tmp_ch;
 	struct room_data* rp; // Gaia 2001
 	struct descriptor_data* k;
-	extern struct descriptor_data* descriptor_list;
-	extern int WizLock;
-	extern int plr_tick_count;
-	extern struct RegInfoData RI;
 
-	void do_look(struct char_data *ch, char* argument, int cmd);
-	void load_char_objs(struct char_data *ch);
-	int load_char(char* name, struct char_file_u *char_element);
-	void show_class_selection(struct descriptor_data *d, int r);
 	/*struct RegInfoData *ri;*/
 
 	write(d->descriptor, echo_on, 6);
@@ -1887,10 +1888,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 	case CON_PWDNRM:        /* get pwd for known player        */
 		/* skip whitespaces */
 		for( ; isspace(*arg); arg++);
-#if KGB
-		mudlog( LOG_PLAYERS | LOG_SILENT,
-				"%s ha inserito la password '%s'", GET_NAME( d->character ), arg );
-#endif
 		if (!*arg) {
 			PushStatus("Password check");
 			close_socket(d);
@@ -2027,14 +2024,16 @@ void nanny(struct descriptor_data* d, char* arg) {
 			{ d->character->invis_level = GetMaxLevel(d->character); }
 			HowManyConnection(1);
 			/* Le ombre vengono loggate ma non viene dato l'avviso on line*/
-			if (GetMaxLevel(d->character) >= MAESTRO_DEL_CREATO)
-				mudlog( LOG_CONNECT | LOG_SILENT, "%s [HOST:%s] has connected.",
-						GET_NAME(d->character),
-						d->host );
-			else
+			if (GetMaxLevel(d->character) >= MAESTRO_DEL_CREATO) {
 				mudlog( LOG_CONNECT, "%s [HOST:%s] has connected.",
 						GET_NAME(d->character),
 						d->host );
+			}
+			else {
+				mudlog( LOG_CONNECT, "%s [HOST:%s] has connected.",
+						GET_NAME(d->character),
+						d->host );
+			}
 			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
 												USE_ANSI ),
 										motd ), d);
@@ -2162,6 +2161,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 			STATE(d)=CON_STAT_LIST;
 			return;
 		}
+	/* no break */
 	case CON_ENDHELPRACE:
 		show_race_choice(d);
 		STATE(d) = CON_QRACE;
@@ -2467,7 +2467,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 				break;
 			}
 
-			case RACE_DROW: {
+			case RACE_DARK_ELF: {
 				ii=0;
 				while (d->character->player.iClass==0 && dark_elf_class_choice[ii] !=0) {
 					if (atoi(arg) == ii)
@@ -2947,6 +2947,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 				break;
 			}
 		}
+		/* no break */
 		case '1':
 			reset_char(d->character);
 			mudlog( LOG_PLAYERS, "M1.Loading %s's equipment",
@@ -3168,7 +3169,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 void show_class_selection(struct descriptor_data* d, int r) {
 	int i=0;
 	char buf[254],buf2[254];
-	extern char* pc_class_types[];
 
 	sprintf( buf, "\n\rSeleziona la classe di %s.\n\r\n\r",
 			 GET_NAME( d->character ) );
@@ -3286,7 +3286,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 			SEND_TO_Q(buf,d);
 		} /* end for */
 		break;
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		for (i=0; dark_elf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)dark_elf_class_choice[i],pc_class_types, buf2);
@@ -3425,4 +3425,6 @@ void check_affected(char* msg) {
 	return;
 }
 
+
+} // namespace Alarmud
 

@@ -1,15 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: maximums.c,v 1.2 2002/02/13 12:30:58 root Exp $
  * */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "maximums.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
+
+namespace Alarmud {
+
 /* struct room_data *real_roomp(int); */
 
 /*ALAR modificato. Invecchiando il
@@ -18,16 +42,6 @@
  * ancora sia il max, che il
  * gain di hp
  * */
-extern struct char_data* character_list;
-extern struct obj_data* object_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct room_data* world;
-extern const char* RaceName[];
-extern int RacialMax[][MAX_CLASS];
-
-extern struct wis_app_type wis_app[];
-extern struct con_app_type con_app[];
-
 
 char* ClassTitles(struct char_data* ch) {
 	unsigned int i, count=0;
@@ -128,14 +142,15 @@ int mana_limit(struct char_data* ch) {
 		max += 100;
 	}
 
-	chClasses = HowManyClasses(ch);	
-	
+	chClasses = HowManyClasses(ch);
+
 	if(chClasses) {
-		max /= HowManyClasses(ch);	
-	} else {
+		max /= HowManyClasses(ch);
+	}
+	else {
 		mudlog(LOG_ERROR, "Character with no levels! Name [%s]", ch->player.name);
 	}
-	
+
 
 	/*
 	 * new classes should be inserted here.
@@ -208,7 +223,7 @@ int move_limit(struct char_data* ch) {
 
 	if (GET_RACE(ch) == RACE_DWARF || GET_RACE(ch) == RACE_GNOME)
 	{ max -= 35; }
-	else if (GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_DROW  ||
+	else if (GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_DARK_ELF  ||
 			 GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
 			 GET_RACE(ch) == RACE_SEA_ELF ||
 			 GET_RACE(ch)== RACE_HALF_ELVEN)
@@ -276,7 +291,7 @@ int mana_gain(struct char_data* ch) {
 			GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
 			GET_RACE(ch) == RACE_SEA_ELF ||
 			GET_RACE(ch) == RACE_DEMON ||
-			GET_RACE(ch) == RACE_DROW || GET_RACE(ch) == RACE_HALF_ELVEN )
+			GET_RACE(ch) == RACE_DARK_ELF || GET_RACE(ch) == RACE_HALF_ELVEN )
 	{ gain+=2; }
 
 	if( GET_COND(ch, DRUNK) > 10 )
@@ -666,7 +681,7 @@ void advance_level(struct char_data* ch, int iClass)
 	check_hp=GetHpGain(ch,iClass,GET_LEVEL(ch,iClass),0);
 
 	if (check_hp != -1) {
-		
+
 		ch->points.max_hit += MAX( 1, check_hp );
 	}
 
@@ -700,9 +715,6 @@ void advance_level(struct char_data* ch, int iClass)
 
 void drop_level(struct char_data* ch, int iClass, int goddrain) {
 	int add_hp, lin_class;
-
-	extern struct wis_app_type wis_app[];
-	extern struct con_app_type con_app[];
 
 	if (!goddrain) {
 		if (GetMaxLevel(ch) >= IMMORTALE)
@@ -898,10 +910,9 @@ void set_title(struct char_data* ch) {
 	strcpy(GET_TITLE(ch), buf);
 
 }
-#define EQINDEX 600.0
 int gain_corretto(struct char_data* ch,int gain) {
 	if ( !IS_PC(ch) || gain <= 0 ) { return(gain); } // Gaia 2001
-#ifdef NEW_EQ_GAIN // Gaia 2001
+#if NEW_EQ_GAIN // Gaia 2001
 	float eqindex=0.0;
 	float eqratio=0.0;
 	float tmp=0.0;
@@ -1093,7 +1104,8 @@ void gain_exp( struct char_data* ch, int gain ) {
 						if( GET_EXP( ch ) > titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp ) {
 							send_to_char( "Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch );
 							GET_EXP( ch ) = titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1;
-							mudlog(LOG_SYSERR,"(LIMITS)Sto cazzone maxxa la classe %d a %d",i,titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1);
+							mudlog(LOG_SYSERR,"(LIMITS)Maxxa la classe %d a %d",i,
+								   (titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1));
 						}
 					}
 				}
@@ -1155,7 +1167,8 @@ void gain_exp_regardless( struct char_data* ch, int gain, int iClass,
 						send_to_char( "Cresci di un livello!\n\r", ch );
 						advance_level( ch, iClass );
 						is_altered = TRUE;
-						mudlog(LOG_SYSERR,"(LIMITS2)Sto cazzone maxxa la classe %d a %d",i,titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1);
+						mudlog(LOG_SYSERR,"(LIMITS2)Maxxa la classe %d a %d",i,
+							   (titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1));
 					}
 				}
 			}
@@ -1501,4 +1514,6 @@ void ClassSpecificStuff( struct char_data* ch) {
 	}
 }
 
+
+} // namespace Alarmud
 

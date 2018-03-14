@@ -1,16 +1,15 @@
-/*
- * modify.hpp
- *
- *  Created on: 06 feb 2018
- *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
- */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 
 #ifndef SRC_MODIFY_HPP_
 #define SRC_MODIFY_HPP_
-
+/***************************  System  include ************************************/
+#include <stdio.h>
+/***************************  Local    include ************************************/
+#include "db.hpp"
+namespace Alarmud {
 void bisect_arg(char* arg, int* field, char* string);
 struct help_index_element* build_help_index(FILE* fl, int* num);
 void check_reboot();
@@ -22,7 +21,6 @@ void page_string(struct descriptor_data* d, const char* str, int keep_internal);
 void quad_arg(char* arg, int* type, const char* name, int* field, char* string);
 void show_string(struct descriptor_data* d, const char* input );
 void string_add(struct descriptor_data* d,  char* str);
-
-
-
+} // namespace Alarmud
 #endif /* SRC_MODIFY_HPP_ */
+

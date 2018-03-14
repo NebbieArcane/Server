@@ -1,20 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * AlarMUD v2.0        Released 2/1994
  * See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
  * $Id: trap.c,v 1.1.1.1 2002/02/13 11:14:54 root Exp $
 */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
-
+#include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "trap.hpp"
+#include "act.info.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
-extern struct char_data* character_list;
+#include "handler.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
+#include "spells2.hpp"
 
+namespace Alarmud {
 /* struct room_data *real_roomp(int); */
 
-extern int TrapDir[];
 
 void do_settrap( struct char_data* ch, char* arg, int cmd) {
 
@@ -228,7 +247,6 @@ void TrapDam(struct char_data* v, int damtype, int amnt, struct obj_data* t) {
 
 void TrapTeleport(struct char_data* v) {
 	int to_room,iTry = 0;
-	extern int top_of_world;      /* ref to the top element of world */
 	struct room_data* room;
 
 	if (saves_spell(v,SAVING_SPELL)) {
@@ -324,4 +342,6 @@ void InformMess( struct char_data* v) {
 		break;
 	}
 }
+
+} // namespace Alarmud
 

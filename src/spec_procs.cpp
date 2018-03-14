@@ -1,18 +1,56 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: spec_procs.c,v 2.1 2002/03/27 19:50:22 Thunder Exp $
  * */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include "breath.hpp"
-#include "cmdid.hpp"
-#include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spec_procs.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
 #include "aree.hpp"
+#include "breath.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic2.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
+#include "spec_procs2.hpp"
+#include "spec_procs3.hpp"
+#include "spell_parser.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
+
+namespace Alarmud {
+
 
 #define INQ_SHOUT 1
 #define INQ_LOOSE 0
@@ -26,37 +64,12 @@
 #define Dump         3030
 #define Ivory_Gate   1499
 
-/*   external vars  */
-
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct weather_data weather_info;
-extern int top_of_world;
-extern struct int_app_type int_app[26];
-extern int RacialMax[][MAX_CLASS];
-
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct spell_info_type spell_info[];
-extern char* dirs[];
-
-
-
 /* Data declarations */
 
 struct social_type {
 	char* cmd;
 	int next_line;
 };
-
-/*
-  Brian:  I moved all your stuff to spec_procs2.c
-
-*/
-
 
 
 /*************************************/
@@ -141,11 +154,7 @@ int GainLevel(struct char_data* ch, int iClass) {
 	return(FALSE);
 }
 
-struct char_data* FindMobInRoomWithFunction( int room,
-		int (*func)( struct char_data*,
-					 int, char*,
-					 struct char_data*,
-					 int ) ) {
+struct char_data* FindMobInRoomWithFunction( int room, special_proc func) {
 	struct char_data* temp_char, *targ;
 
 	targ = NULL;
@@ -195,8 +204,6 @@ int MageGuildMaster( struct char_data* ch, int cmd, char* arg,
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-//  extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if( type != EVENT_COMMAND )
 	{ return FALSE; }
@@ -426,8 +433,6 @@ int ClericGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-//  extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if( type != EVENT_COMMAND )
 	{ return FALSE; }
@@ -459,14 +464,14 @@ int ClericGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	for (; *arg == ' '; arg++);
 
 	if (HasClass(ch, CLASS_CLERIC)) {
-#ifdef QUEST_GAIN
+#if QUEST_GAIN
 		if( cmd == CMD_GAIN || cmd == CMD_GIVE ) /*gain or give */
 #else
 		if( cmd == CMD_GAIN ) /*gain */
 #endif
 		{
 			if (GET_LEVEL(ch,CLERIC_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
-#ifdef QUEST_GAIN
+#if QUEST_GAIN
 				MakeQuest(ch, guildmaster, CLERIC_LEVEL_IND, arg, cmd);
 #else
 				if( GET_EXP(ch) <
@@ -659,7 +664,6 @@ int ThiefGuildMaster( struct char_data* ch, int cmd, char* arg,
 		}
 		/**** SALVO skills prince ****/
 		else if (IS_PRINCE(ch) && !HasClass( ch, CLASS_THIEF ) && cmd !=CMD_GAIN) {
-			extern char* spells[];
 			if (!*arg) {
 				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
 						ch->specials.spells_to_learn);
@@ -884,7 +888,6 @@ int WarriorGuildMaster(struct char_data* ch, int cmd, char* arg,
 		}
 		/**** SALVO skills prince ****/
 		else if (IS_PRINCE(ch) && !HasClass(ch, CLASS_WARRIOR) && cmd !=CMD_GAIN) {
-			extern char* spells[];
 			if (!*arg) {
 				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
 						ch->specials.spells_to_learn);
@@ -1038,7 +1041,6 @@ int dump( struct char_data* ch, int cmd, char* arg, struct room_data* rp,
 	struct char_data* tmp_char;
 	int value=0;
 
-	void do_drop(struct char_data *ch, char* argument, int cmd);
 	char* fname(char* namelist);
 
 	if( type != EVENT_COMMAND )
@@ -1097,12 +1099,6 @@ int mayor(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int t
 	static char* path;
 	static int index;
 	static bool move = FALSE;
-
-	void do_move(struct char_data *ch, char* argument, int cmd);
-	void do_open(struct char_data *ch, char* argument, int cmd);
-	void do_lock(struct char_data *ch, char* argument, int cmd);
-	void do_unlock(struct char_data *ch, char* argument, int cmd);
-	void do_close(struct char_data *ch, char* argument, int cmd);
 
 	mob->lStartRoom = 0;
 
@@ -1245,7 +1241,6 @@ int andy_wilcox(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	struct char_data* temp_char;
 	struct char_data* andy;
 	int num, i, cost;
-//   extern struct pub_beers sold_here[];
 	struct pub_beers* scan;
 
 
@@ -1443,11 +1438,7 @@ int andy_wilcox(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	return FALSE;
 }
 
-struct char_data* find_mobile_here_with_spec_proc(
-	int (*fcn)(  struct char_data*,
-				 int, char*,
-				 struct char_data*,
-				 int ), int rnumber ) {
+struct char_data* find_mobile_here_with_spec_proc( special_proc fcn, int rnumber ) {
 
 #if !GCC27
 	struct char_data* temp_char;
@@ -1863,12 +1854,6 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 				 int* cur_line, void** thing) {
 	bool ok;
 
-	void do_move(struct char_data *ch, char* argument, int cmd);
-	void do_open(struct char_data *ch, char* argument, int cmd);
-	void do_lock(struct char_data *ch, char* argument, int cmd);
-	void do_unlock(struct char_data *ch, char* argument, int cmd);
-	void do_close(struct char_data *ch, char* argument, int cmd);
-
 	if (GET_POS(npc) == POSITION_FIGHTING)
 	{ return; }
 
@@ -1984,8 +1969,6 @@ void npc_steal(struct char_data* ch,struct char_data* victim) {
 
 int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 		   int type) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2004,8 +1987,7 @@ int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 			ch->specials.fighting->in_room == ch->in_room ) {
 		act("$c0010$n morde $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$c0010$n ti morde!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-					 ch->specials.fighting, 0 );
+		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 		return TRUE;
 	}
 	return FALSE;
@@ -2014,8 +1996,6 @@ int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 //Come snake, ma fa anche le skill della classe del mob
 int snake_plus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 				int type) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2043,8 +2023,6 @@ int snake_plus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 
 int Pungiglione( struct char_data* ch, int cmd, char* arg,
 				 struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2064,8 +2042,7 @@ int Pungiglione( struct char_data* ch, int cmd, char* arg,
 		act("$c0010Pungi $N!", 1, ch, 0, ch->specials.fighting, TO_CHAR);
 		act("$c0010$n punge $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$c0010$n ti punge!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-					 ch->specials.fighting, 0 );
+		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 		return TRUE;
 	}
 	return FALSE;
@@ -2073,8 +2050,6 @@ int Pungiglione( struct char_data* ch, int cmd, char* arg,
 
 int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
 						  struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2094,8 +2069,7 @@ int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
 		act("$c0010Pungi $N!", 1, ch, 0, ch->specials.fighting, TO_CHAR);
 		act("$c0010$n punge $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$c0010$n ti punge!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-					 ch->specials.fighting, 0 );
+		cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 		return TRUE;
 	}
 	return FALSE;
@@ -2135,12 +2109,6 @@ int SporeCloud( struct char_data* pChar, int nCmd, char* szArg, struct
 
 int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 				struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
-	int Orso_Bianco( struct char_data *pChar, int iCmd, char* szArg,
-					 struct char_data *pMob, int iType );
-	int Psionist( struct char_data *pChar, int iCmd, char* szArg,
-				  struct char_data *pMob, int iType );
 	struct affected_type af;
 	int i;
 	struct char_data* pRagno;
@@ -2181,12 +2149,9 @@ int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 			act("$c0010Mordi $N!", 1, ch, 0, ch->specials.fighting, TO_CHAR);
 			act("$c0010$n morde $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 			act("$c0010$n ti morde!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						 ch->specials.fighting, 0 );
-			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						 ch->specials.fighting, 0 );
-			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						 ch->specials.fighting, 0 );
+			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
+			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
+			cast_poison( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr );
 			return TRUE;
 			break;
 		case 2:
@@ -2256,8 +2221,6 @@ int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 
 int SputoVelenoso( struct char_data* ch, int cmd, char* arg,
 				   struct char_data* mob, int type ) {
-	void cast_poison( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2531,8 +2494,6 @@ int MidgaardCitizen(struct char_data* ch, int cmd, char* arg, struct char_data* 
 int ghoul(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	struct char_data* tar;
 
-	void cast_paralyze( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2559,8 +2520,6 @@ int CarrionCrawler(struct char_data* ch, int cmd, char* arg, struct char_data* m
 	struct char_data* tar;
 	int i;
 
-	void cast_paralyze( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2665,10 +2624,6 @@ int wraith(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 
 int shadow(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 
-	void cast_chill_touch( byte level, struct char_data *ch, char* arg, int type,
-						   struct char_data *tar_ch, struct obj_data *tar_obj );
-	void cast_weakness( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2677,11 +2632,9 @@ int shadow(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 			(ch->specials.fighting->in_room == ch->in_room)) {
 		act("$n touches $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_chill_touch( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						  ch->specials.fighting, 0);
+		cast_chill_touch( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
 		if (ch->specials.fighting)
-			cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						   ch->specials.fighting, 0);
+		{ cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr); }
 		return TRUE;
 	}
 	return FALSE;
@@ -3498,7 +3451,6 @@ int RustMonster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 }
 
 int temple_labrynth_liar(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
-	void do_say(struct char_data *ch, char* argument, int cmd);
 
 	if (cmd || !AWAKE(ch))
 	{ return(0); }
@@ -3543,10 +3495,6 @@ int temple_labrynth_liar(struct char_data* ch, int cmd, char* arg, struct char_d
 int temple_labrynth_sentry(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	struct char_data* tch;
 	int counter;
-
-	void cast_fireball( byte level, struct char_data *ch, char* arg, int type,
-						struct char_data *victim, struct obj_data *tar_obj );
-	void do_say(struct char_data *ch, char* argument, int cmd);
 
 	if(cmd || !AWAKE(ch)) { return FALSE; }
 
@@ -4596,7 +4544,6 @@ int Donation(struct char_data* ch, int cmd, char* arg, struct room_data* rp,
  * house routine for saved items.
 */
 
-extern int DontShow; /* per recep / offer */
 int House(struct char_data* ch, int cmd, char* arg,
 		  struct room_data* rp, int type) {
 	struct obj_cost cost;
@@ -5876,8 +5823,6 @@ int Tyrannosaurus_swallower(struct char_data* ch, int cmd, char* arg, struct cha
 	struct room_data* rp;
 	int i;
 
-	extern char DestroyedItems;
-
 	if (cmd && cmd != 156) { return(FALSE); }
 
 	if( cmd == 156 ) {
@@ -6903,8 +6848,7 @@ int Rakda(struct char_data* ch, int cmd, char* arg, struct obj_data* rakda,
 	return(0);
 }
 
-int nodrop(struct char_data* ch, int cmd, char* arg, struct obj_data* tobj,
-		   int type) {
+int nodrop(struct char_data* ch, int cmd, char* arg, struct obj_data* tobj,int type) {
 	struct char_data* t;
 	struct obj_data* obj, *i;
 	char buf[80], obj_name[80], vict_name[80], *name;
@@ -7189,3 +7133,5 @@ int BiosKaiThanatos( struct char_data* ch, int cmd, char* arg,
 	mudlog( LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
 	return TRUE;
 }
+} // namespace Alarmud
+

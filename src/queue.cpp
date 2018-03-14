@@ -1,5 +1,26 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: queue.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
+/***************************  System  include ************************************/
+#include <stdlib.h>
+#include <limits.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "queue.hpp"
+#include "comm.hpp"
+namespace Alarmud {
 /* ************************************************************************
 *  File: queue.c                                                          *
 *                                                                         *
@@ -11,15 +32,7 @@
 *      3/6/98 ejg:  Moved defines and structs from queue.h.               *
 ************************************************************************ */
 
-#include "queue.hpp"
 
-#include <stdlib.h>
-#include <limits.h>
-#include "string.h"
-#include "hash.hpp"
-#include "snew.hpp"
-#include "structs.hpp"
-#include "utils.hpp"
 
 
 /* number of queues to use (reduces enqueue cost) */
@@ -35,15 +48,6 @@ struct q_element {
 	struct q_element* prev, *next;
 };
 
-
-/* external variables */
-extern unsigned long pulse;
-extern int hit_gain(struct char_data* ch);
-extern int move_gain(struct char_data* ch);
-extern int mana_limit(struct char_data* ch);
-extern int hit_limit(struct char_data* ch);
-extern int move_limit(struct char_data* ch);
-extern int mana_gain(struct char_data* ch);
 
 /* returns a new, initialized queue */
 struct queue* queue_init(void) {
@@ -135,9 +139,9 @@ void* queue_head(struct queue* q) {
 	{ return NULL; }
 
 	data = q->head[i]->data;
-	MARK;
+
 	queue_deq(q, q->head[i]);
-	MARK;
+
 	return data;
 }
 
@@ -179,3 +183,5 @@ void queue_free(struct queue* q) {
 	if (q)
 	{ free(q); }
 }
+} // namespace Alarmud
+

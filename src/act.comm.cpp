@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * AlarMUD v1.0   Released 12/1994
  * See license.doc for distribution terms.   AlarMUD is based on DIKUMUD
@@ -5,24 +10,37 @@
  * Modificato per Nebbie2000 da Ryltar
  * $Id: act.comm.c,v 2.1 2002/05/06 09:50:00 Thunder Exp $
  * */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.comm.hpp"
 #include "auction.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
+#include "cmdid.hpp"      // for CMD_GTELL, CMD_THINK_SUPERNI, CMD_WHISPER
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "regen.hpp"
+#include "signals.hpp"    // for PopStatus, PushStatus
+#include "spells.hpp"
+#include "utility.hpp"    // for apply_soundproof, check_soundproof, number
+namespace Alarmud {
 
 
 
-/* extern variables */
-
-extern struct room_data* world;
-extern struct descriptor_data* descriptor_list;
-extern char* dirs[];
-
-char* scrambler(struct char_data* ch,char* message) {
+char* scrambler(struct char_data* ch,const char* message) {
 	static char buf[MAX_STRING_LENGTH];
 	int i;
 	int percent=0;
@@ -38,7 +56,7 @@ char* scrambler(struct char_data* ch,char* message) {
 }
 
 #define scramble(ch,msg) (msg)
-void do_say( struct char_data* ch, char* argument, int cmd ) {
+void do_say( struct char_data* ch, const char* argument, int cmd ) {
 	int i;
 	char buf[MAX_INPUT_LENGTH+40];
 
@@ -59,7 +77,7 @@ void do_say( struct char_data* ch, char* argument, int cmd ) {
 	}
 }
 
-void do_report(struct char_data* ch, char* argument, int cmd) {
+void do_report(struct char_data* ch, const char* argument, int cmd) {
 	char buf[100];
 
 
@@ -93,10 +111,9 @@ void do_report(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_shout(struct char_data* ch, char* argument, int cmd) {
+void do_shout(struct char_data* ch, const char* argument, int cmd) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
-	extern int Silence;
 
 	if (!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
 		send_to_char("Non puoi urlare!!\n\r", ch);
@@ -160,8 +177,7 @@ void do_shout(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_gossip(struct char_data* ch, char* argument, int cmd) {
-	extern int Silence;
+void do_gossip(struct char_data* ch, const char* argument, int cmd) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
@@ -220,10 +236,9 @@ void do_gossip(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_auction(struct char_data* ch, char* argument, int cmd) {
+void do_auction(struct char_data* ch, const char* argument, int cmd) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
-	extern int Silence;
 
 	if (!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
 		send_to_char("Non puoi gridare, parlare od annunciare.\n\r", ch);
@@ -249,46 +264,10 @@ void do_auction(struct char_data* ch, char* argument, int cmd) {
 			return;
 		}
 	}
-
-#if ENABLE_AUCTION
 	do_auction_int(ch,argument,cmd);
-#else
-	if (!(*argument))
-	{ send_to_char("Annunciare ? D'accordo, ma che cosa ?\n\r", ch); }
-	else {
-		if (IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			snprintf(buf1,MAX_INPUT_LENGTH+39,"$c0010Tu annunci '%s'", argument);
-			act(buf1,FALSE, ch,0,0,TO_CHAR);
-		}
-		snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0010[$c0015$n$c0010] annuncia '%s'", scramble(ch,argument));
-
-		for (i = descriptor_list; i; i = i->next) {
-			if( i->character != ch && !i->connected &&
-					(IS_NPC(i->character) ||
-					 (!IS_SET(i->character->specials.act, PLR_NOSHOUT) &&
-					  !IS_SET(i->character->specials.act, PLR_NOAUCTION))) &&
-					!check_soundproof(i->character)) {
-# if ZONE_COMM_ONLY
-				/* gossip in zone only */
-				if (i->character->in_room != NOWHERE) {
-					if( real_roomp(ch->in_room)->zone ==
-							real_roomp(i->character->in_room)->zone
-							||GetMaxLevel(i->character) >=IMMORTALE
-							||GetMaxLevel(ch) >= IMMORTALE ) {
-						act(buf1, 0, ch, 0, i->character, TO_VICT);
-					}
-				}
-# else
-				act(buf1, 0, ch, 0, i->character, TO_VICT);
-# endif
-			}
-		}
-	}
-#endif
 }
 
-void talk_auction(char* argument) {
-	extern int Silence;
+void talk_auction(const char* argument) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
@@ -310,7 +289,7 @@ void talk_auction(char* argument) {
 
 
 
-void do_commune(struct char_data* ch, char* argument, int cmd) {
+void do_commune(struct char_data* ch, const char* argument, int cmd) {
 	static char buf1[MAX_INPUT_LENGTH];
 	struct descriptor_data* i;
 	int livello;
@@ -343,7 +322,7 @@ void do_commune(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_tell(struct char_data* ch, char* argument, int cmd) {
+void do_tell(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH+20],
 		 buf[MAX_INPUT_LENGTH+60];
@@ -419,7 +398,7 @@ void do_tell(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_whisper(struct char_data* ch, char* argument, int cmd) {
+void do_whisper(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH],
 		 buf[MAX_INPUT_LENGTH];
@@ -460,7 +439,7 @@ void do_whisper(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_ask(struct char_data* ch, char* argument, int cmd) {
+void do_ask(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH],
 		 buf[MAX_INPUT_LENGTH];
@@ -505,7 +484,7 @@ void do_ask(struct char_data* ch, char* argument, int cmd) {
 
 #define MAX_NOTE_LENGTH 1000      /* arbitrary */
 
-void do_write(struct char_data* ch, char* argument, int cmd) {
+void do_write(struct char_data* ch, const char* argument, int cmd) {
 	struct obj_data* paper = 0, *pen = 0;
 	char papername[MAX_INPUT_LENGTH], penname[MAX_INPUT_LENGTH],
 		 buf[MAX_STRING_LENGTH];
@@ -562,7 +541,7 @@ void do_write(struct char_data* ch, char* argument, int cmd) {
 }
 
 char* RandomWord() {
-	static char* string[50] = {
+	static char* stringa[50] = {
 		"argle",
 		"bargle",
 		"glop",
@@ -615,16 +594,16 @@ char* RandomWord() {
 		"bipsnop"   /* 50 */
 	};
 
-	return( string[ number( 0, 49 ) ] );
+	return( stringa[ number( 0, 49 ) ] );
 
 }
 char RandomChar() {
-	static char string[] = "abcdefghijklmnopqrstuwxyz23456789\0";
-	return( string[ number( 0, strlen(string)-1 ) ] );
+	static char stringa[] = "abcdefghijklmnopqrstuwxyz23456789\0";
+	return( stringa[ number( 0, strlen(stringa)-1 ) ] );
 
 }
 
-void do_sign(struct char_data* ch, char* argument, int cmd) {
+void do_sign(struct char_data* ch, const char* argument, int cmd) {
 	int i;
 	char buf[MAX_INPUT_LENGTH+40];
 	char buf2[MAX_INPUT_LENGTH];
@@ -659,7 +638,7 @@ void do_sign(struct char_data* ch, char* argument, int cmd) {
 		diff = strlen(buf);
 
 		while (p) {
-			if (ch->skills && number(1,75+strlen(p))<ch->skills[SKILL_SIGN].learned) {
+			if (ch->skills and number(1,75+strlen(p))<ch->skills[SKILL_SIGN].learned) {
 				strcat(buf2, p);
 			}
 			else {
@@ -699,7 +678,7 @@ void do_sign(struct char_data* ch, char* argument, int cmd) {
 }
 
 /* speak elvish, speak dwarvish, etc...                    */
-void do_speak(struct char_data* ch, char* argument, int cmd) {
+void do_speak(struct char_data* ch, const char* argument, int cmd) {
 	char buf[255];
 	int i;
 
@@ -802,7 +781,7 @@ void thief_listen(struct char_data* ch,struct char_data* victim, char* frase,int
 }
 
 /* this is where we do the language says */
-void do_new_say(struct char_data* ch, char* argument, int cmd) {
+void do_new_say(struct char_data* ch, const char* argument, int cmd) {
 	int i, learned, skill_num;
 	char buf[MAX_INPUT_LENGTH+40];
 	char buf2[MAX_INPUT_LENGTH];
@@ -895,7 +874,7 @@ void do_new_say(struct char_data* ch, char* argument, int cmd) {
 
 
 		while (p) {
-			if (number(1,75+strlen(p))<learned || GetMaxLevel(ch) >= IMMORTALE) {
+			if ((number(1,75+strlen(p))<learned) or (GetMaxLevel(ch) >= IMMORTALE)) {
 				strcat(buf2, p);
 			}
 			else {
@@ -955,7 +934,7 @@ void do_new_say(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_gtell(struct char_data* ch, char* argument, int cmd) {
+void do_gtell(struct char_data* ch, const char* argument, int cmd) {
 	int i;
 	struct char_data* k;
 	struct follow_type* f;
@@ -1030,7 +1009,7 @@ void do_gtell(struct char_data* ch, char* argument, int cmd) {
  * and changed it to work with mine :) Heh msw
  */
 
-void do_split(struct char_data* ch, char* argument, int cmd) {
+void do_split(struct char_data* ch, const char* argument, int cmd) {
 
 	bool is_same_group( struct char_data *ach, struct char_data *bch );
 
@@ -1107,7 +1086,7 @@ void do_split(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_pray( struct char_data* ch, char* argument, int cmd ) {
+void do_pray( struct char_data* ch, const char* argument, int cmd ) {
 	struct affected_type af;
 	char buf1[MAX_INPUT_LENGTH * 2];
 	char GodName[MAX_INPUT_LENGTH];
@@ -1182,7 +1161,7 @@ bool is_same_group( struct char_data* ach, struct char_data* bch ) {
 }
 
 
-void do_telepathy( struct char_data* ch, char* argument, int cmd ) {
+void do_telepathy( struct char_data* ch, const char* argument, int cmd ) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH+20],
 		 buf[MAX_INPUT_LENGTH+60];
@@ -1265,7 +1244,7 @@ void do_telepathy( struct char_data* ch, char* argument, int cmd ) {
 	}
 }
 
-void do_eavesdrop(struct char_data* ch, char* argument, int cmd) {
+void do_eavesdrop(struct char_data* ch, const char* argument, int cmd) {
 	char buf[MAX_STRING_LENGTH];
 	struct room_direction_data* exitp;
 	int dir;
@@ -1303,4 +1282,6 @@ void do_eavesdrop(struct char_data* ch, char* argument, int cmd) {
 	{ send_to_char("Non c'e' nulla da quella parte...\r\n", ch); }
 }
 
+
+} // namespace Alarmud
 

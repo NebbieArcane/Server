@@ -1,8 +1,12 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: utility.c,v 1.2 2002/03/11 11:33:34 Thunder Exp $
  * */
-#include "utility.hpp"
-
+/***************************  System  include ************************************/
 #include <malloc.h>
 #include <string.h>
 #include <ctype.h>
@@ -11,31 +15,36 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdarg.h>
-
-#include "fight.hpp"
-#include "protos.hpp"
-#include "signals.hpp"
-#include "snew.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "utility.hpp"
+#include "act.info.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
 #include "aree.hpp"
-extern long SystemFlags;
-extern struct time_data time_info;
-extern struct descriptor_data* descriptor_list;
-extern struct char_data* character_list;
-extern struct index_data* mob_index, *obj_index;
-extern struct chr_app_type chr_apply[];
-extern struct zone_data* zone_table;
-extern struct obj_data* object_list;
-#if HASH
-extern struct hash_header room_db;                          /* In db.c */
-#else
-extern struct room_data* room_db[];                          /* In db.c */
-#endif
-extern char* dirsTo[];
-extern int  RacialMax[][MAX_CLASS];
-extern struct title_type  titles[MAX_CLASS][ABS_MAX_LVL];
-extern int top_of_zone_table;
-extern int top_of_world;
-extern struct descriptor_data* descriptor_list;
+#include "comm.hpp"
+#include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic2.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "skills.hpp"
+#include "sound.hpp"
+#include "spell_parser.hpp"
+#include "trap.hpp"
+#include "weather.hpp"
+
+namespace Alarmud {
 
 
 int EgoBladeSave(struct char_data* ch) {
@@ -213,13 +222,13 @@ int CAN_SEE(struct char_data* s, struct char_data* o) {
 	if (pRoomS and pRoomO) {
 
 		if( ( IS_DARK_P( pRoomS ) || IS_DARK_P( pRoomO ) ) &&
-				!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DROW)) {
+				!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DARK_ELF)) {
 			return(FALSE);
 		}
 	}
 	if( IS_AFFECTED2( o, AFF2_ANIMAL_INVIS ) && IsAnimal( s ) ) {
-			return(FALSE);
-		}
+		return(FALSE);
+	}
 
 	return(TRUE);
 }
@@ -255,7 +264,7 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj) {
 
 	if( IS_DARK_P(real_roomp(ch->in_room)) &&
 			!IS_OBJ_STAT(obj, ITEM_GLOW) &&
-			GET_RACE(ch)!=RACE_DROW)
+			GET_RACE(ch)!=RACE_DARK_ELF)
 	{ return(0); }
 
 
@@ -623,7 +632,7 @@ int dice(int number, int size) {
 	return(sum);
 }
 
-int scan_number(char* text, int* rval) {
+int scan_number(const char* text, int* rval) {
 	int        length;
 	if (1!=sscanf(text, " %i %n", rval, &length))
 	{ return 0; }
@@ -635,7 +644,7 @@ int scan_number(char* text, int* rval) {
 
 /* returns: 0 if equal, 1 if arg1 > arg2, -1 if arg1 < arg2  */
 /* scan 'till found different or end of both                 */
-int str_cmp(char* arg1, char* arg2) {
+int str_cmp(const char* arg1, const char* arg2) {
 	int n;
 	if( !arg2 || !arg1 ) {
 		return(1);
@@ -650,7 +659,7 @@ int str_cmp(char* arg1, char* arg2) {
  * x caratteri nel confronto. Dove x e la lunghezza di arg1.
  * Quindi le due stringhe 'pip' e 'pippo' sono considerate uguali.
  */
-int str_cmp2(char* arg1, char* arg2) {
+int str_cmp2(const char* arg1, const char* arg2) {
 	if( !arg2 || !arg1 || strlen( arg1 ) == 0 )
 	{ return 1; }
 	return(strncasecmp(arg1,arg2,strlen(arg1)));
@@ -658,121 +667,12 @@ int str_cmp2(char* arg1, char* arg2) {
 
 /* returns: 0 if equal, 1 if arg1 > arg2, -1 if arg1 < arg2  */
 /* scan 'till found different, end of both, or n reached     */
-int strn_cmp(char* arg1, char* arg2, int n) {
+int strn_cmp(const char* arg1, const char* arg2, int n) {
 	return(strncasecmp(arg1,arg2,n));
 
 }
-void _mudlog( const char* const file,int line,unsigned uType, const char* const szString, ... ) {
 
-	va_list argptr;
-	char szBuffer[ LARGE_BUFSIZE ];
-	char* pchTimeStr;
-	long lCurrTime;
-	struct descriptor_data* pDesc;
-
-	lCurrTime = time( 0 );
-	pchTimeStr = asctime( localtime( &lCurrTime ) );
-	*( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
-
-	va_start( argptr, szString );
-	vsprintf( szBuffer, szString, argptr );
-	va_end( argptr );
-
-
-	if( IS_SET( uType, LOG_SYSERR ) ) {
-		fprintf( stderr, "LSYSERR : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_CHECK ) ) {
-		fprintf( stderr, "LCHECK  : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_PLAYERS ) ) {
-		fprintf( stderr, "LPLAYERS: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_MOBILES ) ) {
-		fprintf( stderr, "LMOBILES: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_CONNECT ) ) {
-		fprintf( stderr, "LCONNECT: %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_ERROR ) ) {
-		fprintf( stderr, "LERROR  : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_WHO ) ) {
-		fprintf( stderr, "LWHO    : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	if( IS_SET( uType, LOG_SAVE ) ) {
-		fprintf( stderr, "LSAVE   : %s in %s:%d: %s\n",pchTimeStr,file,line,szBuffer );
-	}
-	fflush(stderr);
-	if( !IS_SET( uType, LOG_SILENT ) ) {
-		for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
-			if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-					GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-					( pDesc->character->specials.sev & uType ) ) {
-				send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
-				send_to_char( szBuffer, pDesc->character );
-				send_to_char( "\n\r", pDesc->character );
-			}
-		}
-	}
-}
-void buglog( unsigned uType, char* szString, ... ) {
-	va_list argptr;
-	char szBuffer[ LARGE_BUFSIZE ];
-	char* pchTimeStr;
-	long lCurrTime;
-	struct descriptor_data* pDesc;
-	FILE* stdlog;
-	lCurrTime = time( 0 );
-	pchTimeStr = asctime( localtime( &lCurrTime ) );
-	*( pchTimeStr + strlen( pchTimeStr ) - 1 ) = '\0';
-
-	va_start( argptr, szString );
-	vsprintf( szBuffer, szString, argptr );
-	va_end( argptr );
-	if ((stdlog=fopen(BUG_FILE,"a")) ) {
-		if( IS_SET( uType, LOG_SYSERR ) ) {
-			fprintf( stdlog, "LSYSERR : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_CHECK ) ) {
-			fprintf( stdlog, "LCHECK  : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_PLAYERS ) ) {
-			fprintf( stdlog, "LPLAYERS: %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_MOBILES ) ) {
-			fprintf( stdlog, "LMOBILES: %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_CONNECT ) ) {
-			fprintf( stdlog, "LCONNECT: %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_ERROR ) ) {
-			fprintf( stdlog, "LERROR  : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_WHO ) ) {
-			fprintf( stdlog, "LWHO    : %s : %s\n", pchTimeStr, szBuffer );
-		}
-		if( IS_SET( uType, LOG_SAVE ) ) {
-			fprintf( stdlog, "LSAVE   : %s : %s\n", pchTimeStr, szBuffer );
-		}
-
-		if( !IS_SET( uType, LOG_SILENT ) ) {
-			for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
-				if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-						GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-						( pDesc->character->specials.sev & uType ) ) {
-					send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
-					send_to_char( szBuffer, pDesc->character );
-					send_to_char( "\n\r", pDesc->character );
-				}
-			}
-		}
-		fclose(stdlog);
-	}
-
-}
-
-void sprintbit(unsigned long vektor, char* names[], char* result) {
+void sprintbit(unsigned long vektor, const char* names[], char* result) {
 	long nr;
 
 	*result = '\0';
@@ -797,7 +697,7 @@ void sprintbit(unsigned long vektor, char* names[], char* result) {
 
 
 
-void sprinttype(int type, char* names[], char* result) {
+void sprinttype(int type, const char* names[], char* result) {
 	int nr;
 
 	for(nr=0; (*names[nr]!='\n'); nr++);
@@ -1027,7 +927,6 @@ char in_group_internal ( struct char_data* ch1, struct char_data* ch2, int stric
 	 *
 	 */
 	if (!strict && in_clan(ch1,ch2)) {
-		MARKS("in_group_internal in utility.c at");
 		return(TRUE);
 	}
 
@@ -1077,31 +976,26 @@ char in_clan ( struct char_data* ch1, struct char_data* ch2) {
 	{ return(FALSE); }
 
 	if ((!HAS_PRINCE(ch1)) && (!HAS_PRINCE(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(FALSE);
 	}
 
 	if (IS_VASSALLOOF(ch1,GET_NAME(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(TRUE);
 	}
 
 	if (IS_VASSALLOOF(ch2,GET_NAME(ch1))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(TRUE);
 	}
 
 	if ((!HAS_PRINCE(ch1)) || (!HAS_PRINCE(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(FALSE);
 	}
 
 	if (!strcasecmp(GET_PRINCE(ch1),GET_PRINCE(ch2))) {
-		MARKS(" strcasecmp ok utility.c");
 		return(TRUE);
 	}
 
-	MARK;
+
 	return(FALSE);
 }
 
@@ -1941,7 +1835,7 @@ int IsHumanoid( struct char_data* ch) {
 	case RACE_LIZARDMAN:
 	case RACE_SKEXIE:
 	case RACE_TYTAN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLEM:
 	case RACE_DEMON:
 	case RACE_DRAAGDIM:
@@ -2122,7 +2016,7 @@ int IsPerson( struct char_data* ch) {
 	switch(GET_RACE(ch)) {
 	case RACE_HUMAN:
 	case RACE_ELVEN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_DWARF:
 	case RACE_DARK_DWARF:
 	case RACE_HALFLING:
@@ -3142,10 +3036,11 @@ void SetRacialStuff( struct char_data* mob) {
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
 		break;
 	case RACE_SEA_ELF:
+		/* e poi prosegue per le altre caratteristiche degli elfi */
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-	/* e poi prosegue per le altre caratteristiche degli elfi */
+	/* no break */
 	case RACE_ELVEN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 		SET_BIT(mob->specials.affected_by,AFF_INFRAVISION);
@@ -3307,7 +3202,7 @@ void SetRacialStuff( struct char_data* mob) {
 			break;
 		case RACE_MFLAYER:
 			break;
-		case RACE_DROW:
+		case RACE_DARK_ELF:
 			AddHatred(mob,OP_RACE,RACE_ELVEN);
 			break;
 		case RACE_SKEXIE:
@@ -3472,7 +3367,7 @@ void SetRacialStuff( struct char_data* mob) {
 	}
 }
 
-int check_nomagic(struct char_data* ch, char* msg_ch, char* msg_rm) {
+int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm) {
 	struct room_data* rp;
 
 	rp = real_roomp(ch->in_room);
@@ -3486,7 +3381,7 @@ int check_nomagic(struct char_data* ch, char* msg_ch, char* msg_rm) {
 	return 0;
 }
 
-int check_nomind(struct char_data* ch, char* msg_ch, char* msg_rm) {
+int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm) {
 	struct room_data* rp;
 
 	rp = real_roomp(ch->in_room);
@@ -3575,7 +3470,7 @@ int GetNewRace(struct char_file_u* s) {
 		case RACE_HALFLING:
 		case RACE_GNOME:
 		case RACE_ORC:
-		case RACE_DROW:
+		case RACE_DARK_ELF:
 		case RACE_MFLAYER:
 		case RACE_DARK_DWARF:
 		case RACE_DEEP_GNOME:
@@ -3597,7 +3492,7 @@ int GetNewRace(struct char_file_u* s) {
 		case RACE_PRIMATE:
 		case RACE_GOBLIN:
 		case RACE_TROLL:
-        case RACE_DEMON:
+		case RACE_DEMON:
 			ok = TRUE;
 			break;
 		/* not a valid race, try again */
@@ -3958,7 +3853,6 @@ char* strchr(char* S1, int C) {
 
 void IncrementZoneNr(int nr) {
 	struct char_data* c;
-	extern struct char_data* character_list;
 
 	if (nr > top_of_zone_table)
 	{ return; }
@@ -3978,7 +3872,6 @@ void IncrementZoneNr(int nr) {
 }
 
 int IsDarkOutside(struct room_data* rp) {
-	extern int gLightLevel;
 
 	if( gLightLevel >= 4 )
 	{ return FALSE; }
@@ -4206,12 +4099,10 @@ int MaxLimited(int lev) {
 	{ return(MAX_LIM_ITEMS); }
 }
 
-int SiteLock (char* site) {
+int SiteLock (const char* site) {
 #if SITELOCK
 
 	int i,length;
-	extern int numberhosts;
-	extern char hostlist[MAX_BAN_HOSTS][30];
 
 	length = MAX(strlen(site),29);
 
@@ -4236,7 +4127,7 @@ int MaxDexForRace(struct char_data* ch) {
 	case RACE_DEMON:
 		return(19);
 		break;
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOD:
 		return(20);
 		break;
@@ -4306,7 +4197,7 @@ int MaxConForRace(struct char_data* ch) {
 	case RACE_ELVEN:
 	case RACE_GOLD_ELF:
 	case RACE_SEA_ELF:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		return(17);
 		break;
 	default:
@@ -4321,7 +4212,7 @@ int MaxChrForRace(struct char_data* ch) {
 	switch(GET_RACE(ch)) {
 	case RACE_HALF_ORC:
 	case RACE_ORC:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_DWARF:
 	case RACE_DARK_DWARF:
 		return(17);
@@ -4466,7 +4357,7 @@ void SetDefaultLang(struct char_data* ch) {
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 	case RACE_SEA_ELF:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		i = LANG_ELVISH;
 		break;
 	case RACE_TROLL:
@@ -4635,7 +4526,7 @@ int IsGoodSide(struct char_data* ch) {
 	case RACE_HALF_OGRE   :
 	case RACE_HALF_ORC    :
 	case RACE_HALF_GIANT  :
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 		return(TRUE);
 	} /* */
 
@@ -4705,7 +4596,6 @@ void DoNothing( void* pDummy ) {
 	return;
 }
 
-extern int aRoom[ WORLD_SIZE ]; // E definito in skills.c Non e locale per
 // caricare troppo lo stack (WORLD_SIZE e`
 // uguale a 50000)
 
@@ -4970,7 +4860,6 @@ bool CheckPrac (int classe, int id, int liv) { // SALVO implemento un controllo 
 	};
 
 	int f;
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	switch(classe) {
 	case CLASS_MAGIC_USER:
@@ -5036,3 +4925,5 @@ bool CheckPrac (int classe, int id, int liv) { // SALVO implemento un controllo 
 	}
 	return FALSE;
 }
+} // namespace Alarmud
+

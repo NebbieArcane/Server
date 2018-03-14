@@ -1,20 +1,32 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: sound.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "sound.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+
+namespace Alarmud {
 /*
  * AlarMUD v2.0
  * See license.doc for distribution terms.   BenemMUD is based on DIKUMUD
 */
-
-#include <stdio.h>
-#include <string.h>
-
-#include "protos.hpp"
-#include "snew.hpp"
-
-/* extern variables */
-
-extern struct obj_data* object_list;
-extern struct char_data* character_list;
 
 int RecGetObjRoom(struct obj_data* obj) {
 	if (obj->in_room != NOWHERE) {
@@ -32,7 +44,7 @@ int RecGetObjRoom(struct obj_data* obj) {
 	return NOWHERE;
 }
 
-void MakeNoise(int room, char* local_snd, char* distant_snd) {
+void MakeNoise(int room, const char* local_snd, const char* distant_snd) {
 	int door;
 	struct char_data* ch;
 	struct room_data* rp, *orp;
@@ -131,4 +143,6 @@ void MakeSound(unsigned long pulse) {
 	}
 }
 
+
+} // namespace Alarmud
 

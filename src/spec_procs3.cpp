@@ -1,44 +1,61 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: spec_procs3.c,v 1.4 2002/03/23 17:15:15 Thunder Exp $
 */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spec_procs3.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "board.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "specass2.hpp"
-#include "utility.hpp"
-/*   external vars  */
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct weather_data weather_info;
-extern int top_of_world;
-extern struct int_app_type int_app[26];
-extern struct str_app_type str_app[];
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "mail.hpp"
+#include "mindskills1.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
+#include "spell_parser.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
+#include "trap.hpp"
+namespace Alarmud {
 
-extern struct title_type titles[4][ABS_MAX_LVL];
-extern char* dirs[];
-
-extern int gSeason;  /* what season is it ? */
-
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* spells[];
-
-void throw_weapon( struct obj_data* o, int dir, struct char_data* targ,
-				   struct char_data* ch );
-struct char_data* FindMobInRoomWithVNum(int room, int VNum);
 
 /* chess_game() stuff starts here */
 /* Inspiration and original idea by Feith */
 /* Implementation by Gecko */
-#if !GCC27
 #define WHITE 0
 #define BLACK 1
 
@@ -428,7 +445,6 @@ int chess_game(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	}
 	return FALSE;
 }
-#endif
 int AcidBlob(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	struct obj_data* i;
 
@@ -987,7 +1003,6 @@ int raven_iron_golem(struct char_data* ch, int cmd, char* arg, struct char_data*
 #if EGO_BLADE
 
 int EvilBlade(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, int type) {
-	extern struct str_app_type str_app[];
 	struct obj_data* obj, *blade;
 	struct char_data* joe, *holder;
 	struct char_data* lowjoe = 0;
@@ -1258,7 +1273,6 @@ int EvilBlade(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, in
 }
 
 int GoodBlade(struct char_data* ch, int cmd, char* arg,struct obj_data* tobj, int type) {
-	extern struct str_app_type str_app[];
 	struct obj_data* obj, *blade;
 	struct char_data* joe, *holder;
 	struct char_data* lowjoe = 0;
@@ -4162,7 +4176,8 @@ int Interact ( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 		}
 
 		if ( strstr( argument,"nani") ) {
-			act("$N ti dice 'Partendo da myst:\n\rSegui  la strada carovaniera dell'est...\n\rquando le montagne ti sbarreranno il passaggio,\n\recco che guardando verso nord potrai intravedere l'opera dei nani...\n\rma sta attento perche' non sono i soli a vivere da quelle parti...'", FALSE, ch, 0, mob, TO_CHAR);
+			act("$N ti dice 'Partendo da myst:\n\rSegui  la strada carovaniera dell'est...\n\rquando le montagne ti sbarreranno il passaggio,\n\recco che guardando verso nord potrai intravedere l'opera dei nani...\n\rma sta attento perche' non sono i soli a vivere da quelle parti...'",
+				FALSE, ch, 0, mob, TO_CHAR);
 			return TRUE;
 		}
 		else {
@@ -4735,3 +4750,5 @@ int ItemPut(struct char_data* pChar, int nCmd, char* szArg, struct obj_data* pOb
 /*******************************/
 /* SALVO 2006 fine Quest fisse */
 /*******************************/
+} // namespace Alarmud
+

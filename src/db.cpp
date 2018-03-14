@@ -1,52 +1,52 @@
-/* AlarMUD
- * $Id: db.c,v 1.4 2002/03/17 16:48:47 Thunder Exp $
- * */
-
-/**
-#ifdef CYGWIN
-    #include <sys/errno.h>
-    #define errno (*__errno())
-    extern int *__errno _PARAMS ((void));
-#else
-    extern int errno;
-#endif
- **/
-#include <sys/errno.h>
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
 #include <stdlib.h>
-#include <unistd.h>
-
-#include "auction.hpp"
-#include "events.hpp"
-#include "fight.hpp"
-#include "gilde.hpp"
-
-#include "protos.hpp"
-#include "Registered.hpp"
-#include "snew.hpp"
-#include "status.hpp"
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
 #include "utils.hpp"
-using Nebbie::Registered;
+/***************************  Local    include ************************************/
+#include "db.hpp"
+#include "auction.hpp"
+#include "comm.hpp"
+#include "act.other.hpp"
+#include "mobact.hpp"
+#include "modify.hpp"
+#include "mail.hpp"
+#include "fight.hpp"
+#include "act.social.hpp"
+#include "gilde.hpp"
+#include "interpreter.hpp"
+#include "spell_parser.hpp"
+#include "reception.hpp"
+#include "weather.hpp"
+#include "handler.hpp"
+#include "opinion.hpp"
+#include "spell_list.hpp"
 
-#define RENT_INACTIVE 2    /* delete the users rent files after 2 month */
-#define NEW_ZONE_SYSTEM
-#define killfile "killfile"
-#define fread_number(FF)  fread_number_int(FF,__FILE__,__LINE__,curfile)
-#define OBJ_DIR "objects"
-#define MOB_DIR "mobiles"
+#include "Registered.hpp"
+#include "regen.hpp"
+#include "script.hpp"
+
+namespace Alarmud {
+
+
 
 /**************************************************************************
  *  declarations of most of the 'global' variables                         *
  ************************************************************************ */
-void assign_speciales();
-void Start_Auction();
 const long beginning_of_time = BEG_OF_TIME;
 int no_mail = 0;
 int top_of_scripts = 0;
@@ -91,10 +91,10 @@ char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
 char login[MAX_STRING_LENGTH];
 
 
-FILE* mob_f, /* file containing mob prototypes  */
-	  *obj_f, /* obj prototypes                  */
-	  *help_fl, /* file for help texts (HELP <kwd>)*/
-	  *wizhelp_fl; /* file for wizhelp */
+FILE* mob_f; /* file containing mob prototypes  */
+FILE* obj_f; /* obj prototypes                  */
+FILE* help_fl; /* file for help texts (HELP <kwd>)*/
+FILE* wizhelp_fl; /* file for wizhelp */
 
 struct index_data* mob_index; /* index table for mobile file     */
 struct index_data* obj_index; /* index table for object file     */
@@ -113,14 +113,6 @@ struct time_info_data time_info; /* the infomation about the time   */
 struct weather_data weather_info; /* the infomation about the weather */
 long saved_rooms[WORLD_SIZE];
 long number_of_saved_rooms = 0;
-extern struct descriptor_data* descriptor_list;
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* apply_types[];
-struct index_data* InsertInIndex(struct index_data* pIndex, char* szName,
-								 int nVNum, int* alloc_top, int* top);
-void clean_playerfile(void);
-void ReadTextZone(FILE* fl);
-int CheckKillFile(int iVNum);
 struct script_com* gpComp = NULL;
 struct scripts* gpScript_data = NULL;
 struct reset_q_type gReset_q = {NULL, NULL};
@@ -163,7 +155,6 @@ void FrozeHim(struct char_data* ch, int hp) {
 /* body of the booting system */
 void boot_db() {
 	int i;
-	extern int no_specials;
 
 	mudlog(LOG_CHECK, "Boot db -- BEGIN.");
 
@@ -271,8 +262,11 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "   Commands.");
 	assign_command_pointers();
+
 	mudlog(LOG_CHECK, "   Spells.");
 	assign_spell_pointers();
+	boot_spells();
+
 
 	mudlog(LOG_CHECK, "Updating characters with saved items:");
 	update_obj_file();
@@ -313,11 +307,8 @@ void boot_db() {
 
 /* reset the time in the game from file */
 void reset_time() {
-	extern unsigned char moontype;
 
-
-
-	struct time_info_data mud_time_passed(time_t t2, time_t t1);
+	//struct time_info_data mud_time_passed(time_t t2, time_t t1);
 
 	time_info = mud_time_passed(time(0), beginning_of_time);
 
@@ -370,8 +361,11 @@ void reset_time() {
 	}
 
 	mudlog(LOG_CHECK, "   Current Gametime: %dH %dD %dM %dY.",
-		   time_info.hours, time_info.day,
-		   time_info.month, time_info.year);
+		   static_cast<int>(time_info.hours),
+		   static_cast<int>(time_info.day),
+		   static_cast<int>(time_info.month),
+		   static_cast<int>(time_info.year)
+		  );
 
 	weather_info.pressure = 960;
 	if ((time_info.month >= 7) && (time_info.month <= 12))
@@ -556,11 +550,11 @@ void build_player_index() {
 						{ max = Player.level[ j ]; }
 					}
 					if (max >= (ABS_MAX_LVL + 1)) {
-						mudlog(LOG_CHECK,
+						mudlog(LOG_ERROR,
 							   "ERR: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
-							   Player.name, Player.level[0], Player.level[1],
-							   Player.level[2], Player.level[3], Player.level[4],
-							   Player.level[5], Player.level[6], Player.level[7]);
+							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
+							   static_cast<unsigned int>(Player.level[2]), static_cast<unsigned int>(Player.level[3]), static_cast<unsigned int>(Player.level[4]),
+							   static_cast<unsigned int>(Player.level[5]), static_cast<unsigned int>(Player.level[6]), static_cast<unsigned int>(Player.level[7]));
 						mudlog(LOG_CHECK,
 							   "ERR: %s", szFileName);
 					}
@@ -571,9 +565,9 @@ void build_player_index() {
 							 (max == PRINCIPE)) {
 						mudlog(LOG_CHECK,
 							   "GOD: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
-							   Player.name, Player.level[0], Player.level[1],
-							   Player.level[2], Player.level[3], Player.level[4],
-							   Player.level[5], Player.level[6], Player.level[7]);
+							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
+							   static_cast<unsigned int>(Player.level[2]), static_cast<unsigned int>(Player.level[3]), static_cast<unsigned int>(Player.level[4]),
+							   static_cast<unsigned int>(Player.level[5]), static_cast<unsigned int>(Player.level[6]), static_cast<unsigned int>(Player.level[7]));
 
 						list_wiz.lookup[max].stuff[list_wiz.number[max]].name =
 							(char*) strdup(Player.name);
@@ -755,7 +749,7 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 	mudlog(LOG_CHECK, "Done!");
 	/* scan for directory entrys */
 	if ((dir = opendir(dirname)) == NULL) {
-		mudlog(LOG_ERROR, "unable to open index directory %s", dirname);
+		mudlog(LOG_CHECK, "Ignored missing directory %s", dirname);
 		return (index);
 	}
 	while ((ent = readdir(dir)) != NULL) {
@@ -894,21 +888,26 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 
 	sprintf(curfile, "Letto flags= %ld , sector= %ld \n", rp->room_flags, rp->sector_type);
 	if (tmp == -1) {
-		sprintf(curfile, "Stanza con settore -1\n");
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s\n",rp->number,rp->name);
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletime %d\n",rp->number,rp->name,tmp);
 		rp->tele_time = tmp;
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletarget %d\n",rp->number,rp->name,tmp);
 		rp->tele_targ = tmp;
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telemask %d\n",rp->number,rp->name,tmp);
 		rp->tele_mask = tmp;
 		if (IS_SET(TELE_COUNT, rp->tele_mask)) {
 			tmp = fread_number(fl);
+			sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telecount %d\n",rp->number,rp->name,tmp);
 			rp->tele_cnt = tmp;
 		}
 		else {
 			rp->tele_cnt = 0;
 		}
 		tmp = fread_number(fl);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s true sector %d\n",rp->number,rp->name,tmp);
 		rp->sector_type = tmp;
 	}
 	else {
@@ -1459,9 +1458,6 @@ struct char_data* read_mobile(int nr, int type) {
 	struct char_data* mob;
 	char letter;
 
-	extern int mob_tick_count;
-	extern long mob_count;
-
 	i = nr;
 	if (type == VIRTUAL) {
 		if ((nr = real_mobile(nr)) < 0) {
@@ -1473,7 +1469,7 @@ struct char_data* read_mobile(int nr, int type) {
 	fseek(mob_f, mob_index[nr].pos, 0);
 
 	CREATE(mob, struct char_data, 1);
-	MARK;
+
 	if (!mob) {
 		mudlog(LOG_SYSERR, "Cannot create mob?! db.c read_mobile");
 		return (FALSE);
@@ -1970,8 +1966,6 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 
 	obj->name = fread_string(f);
 
-	mudlog(LOG_CHECK,"Letto nome oggetto %s", obj->name);
-
 	if (obj->name) {
 		bc += strlen(obj->name);
 	}
@@ -2104,9 +2098,6 @@ struct obj_data* read_object(int nr, int type) {
 	long bc;
 	char buf[100];
 
-	extern long obj_count;
-	extern long total_obc;
-
 	SetStatus("read_object start", NULL);
 	i = nr;
 	if (type == VIRTUAL) {
@@ -2119,9 +2110,9 @@ struct obj_data* read_object(int nr, int type) {
 	}
 
 	SetStatus("before CREATE object", NULL);
-	MARK;
+
 	CREATE(obj, struct obj_data, 1);
-	MARK;
+
 	bc = sizeof (struct obj_data);
 
 	SetStatus("before clear_object", NULL);
@@ -2309,24 +2300,6 @@ void reset_zone(int zone) {
 	int d, e;
 
 
-	if (zone == 0 && !done) {
-		done = TRUE;
-
-		for (i = 0; i < WORLD_SIZE; i += 1000) {
-			sprintf(buf, "world/mobs.%d", i);
-			fl = fopen(buf, "r");
-			if (!fl) {
-				mudlog(LOG_ERROR, "Unable to load scratch zone file for update.");
-				return;
-			}
-			ReadTextZone(fl);
-			fclose(fl);
-		}
-		return;
-	}
-
-
-
 	s = zone_table[zone].name;
 	d = (zone ? (zone_table[zone - 1].top + 1) : 0);
 	zone_table[zone].bottom = d;
@@ -2354,14 +2327,12 @@ void reset_zone(int zone) {
 			case 'M': /* read a mobile */
 				SetStatus("Command M", rbuf);
 				rp = real_roomp(ZCMD.arg3);
-				if ((ZCMD.arg2 == 0 ||
-						mob_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
-						(ZCMD.arg4 == 0 || MobRoomCount(real_mobile(ZCMD.arg1), rp)
-						 < ZCMD.arg4) &&
-						!fighting_in_room(ZCMD.arg3) &&
-						!CheckKillFile(mob_index[ZCMD.arg1].iVNum) &&
-						(pMob = read_mobile(ZCMD.arg1, REAL)) != NULL &&
-						rp != NULL) {
+				if ((ZCMD.arg2 == 0 || mob_index[ ZCMD.arg1 ].number < ZCMD.arg2) // World cap
+						&& (ZCMD.arg4 == 0 || MobRoomCount(real_mobile(ZCMD.arg1), rp) < ZCMD.arg4) // Room cap
+						&& !fighting_in_room(ZCMD.arg3)  //Combattimento in corso
+						&& !CheckKillFile(mob_index[ZCMD.arg1].iVNum)  //Disabilitato dal kill file
+						&& (pMob = read_mobile(ZCMD.arg1, REAL)) != NULL // Mob esiste
+						&& rp != NULL) { // stanza esiste
 					pLastMob = pMaster = pMob;
 					pMob->specials.zone = zone;
 					char_to_room(pMob, ZCMD.arg3);
@@ -2387,16 +2358,13 @@ void reset_zone(int zone) {
 
 			case 'C': /* read a mobile.  Charm them to follow prev. */
 				SetStatus("Command C", rbuf);
-				if ((ZCMD.arg2 != 0 ||
-						mob_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
-						(ZCMD.arg4 == 0 || MobRoomCount(ZCMD.arg1, rp)
-						 < ZCMD.arg4) &&
-						!CheckKillFile(mob_index[ ZCMD.arg1 ].iVNum) &&
-						pMaster &&
-						(pMob = read_mobile(ZCMD.arg1, REAL)) != NULL) {
+				if ((ZCMD.arg2 == 0 || mob_index[ ZCMD.arg1 ].number < ZCMD.arg2)
+						&& (ZCMD.arg4 == 0 || MobRoomCount(real_mobile(ZCMD.arg1), rp) < ZCMD.arg4)
+						&& !CheckKillFile(mob_index[ ZCMD.arg1 ].iVNum)
+						&& pMaster
+						&& (pMob = read_mobile(ZCMD.arg1, REAL)) != NULL) {
 					pLastMob = pMob;
 					pMob->specials.zone = zone;
-
 					if (GET_RACE(pMob) > RACE_GNOME &&
 							!strchr(zone_table[ zone ].races, GET_RACE(pMob)))
 						zone_table[ zone ].races[ strlen(zone_table[ zone ].races) ] =
@@ -2418,12 +2386,12 @@ void reset_zone(int zone) {
 			case 'Z': /* set the last mobile to this zone */
 				SetStatus("Command Z", rbuf);
 				if (pLastMob) {
-					pLastMob->specials.zone = ZCMD.arg1;
+					pLastMob->specials.zone = zone;
 
 					if (GET_RACE(pLastMob) > RACE_GNOME &&
-							!strchr(zone_table[ ZCMD.arg1 ].races,
+							!strchr(zone_table[ zone].races,
 									GET_RACE(pLastMob)))
-						zone_table[ZCMD.arg1].races[strlen(zone_table[ZCMD.arg1].races)] =
+						zone_table[zone].races[strlen(zone_table[zone].races)] =
 							GET_RACE(pLastMob);
 				}
 				break;
@@ -2432,14 +2400,10 @@ void reset_zone(int zone) {
 				SetStatus("Command O", rbuf);
 				pObj = NULL;
 				nLastCmd = FALSE;
-				if (ZCMD.arg1 >= 0 &&
-						(ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
+				if (ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
 				   ) {
-					if (ZCMD.arg3 >= 0 &&
-							((rp = real_roomp(ZCMD.arg3)) != NULL)) {
-						if (ZCMD.arg4 == 0 ||
-								ObjRoomCount(ZCMD.arg1, rp)
-								< ZCMD.arg4) {
+					if (ZCMD.arg3 >= 0 & ((rp = real_roomp(ZCMD.arg3)) != NULL)) {
+						if (ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) {
 							if ((pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 								obj_to_room(pObj, ZCMD.arg3);
 								nLastCmd = TRUE;
@@ -2625,12 +2589,12 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	{ ch->player.level[i] = st->level[i]; }
 
 	/* to make sure all levels above the normal are 0 */
-	for (i = MAX_CLASS; i <= ABS_MAX_CLASS; i++)
+	for (i = MAX_CLASS; i < ABS_MAX_CLASS; i++)
 	{ ch->player.level[i] = 0; }
 	ch->points.exp = st->points.exp;
 
 	/* azzero i contatori delle posizioni */
-	for (i = 0; i <= MAX_POSITION; i++)
+	for (i = 0; i < MAX_POSITION; i++)
 	{ GET_TEMPO_IN(ch, i) = 0; }
 
 	GET_POS_PREV(ch) = POSITION_STANDING;
@@ -2828,7 +2792,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	mudlog(LOG_SAVE, "Saving %s.dat", GET_NAME(ch));
 	/* inizializzo area dummy */
-	strcpy(st->dummy, "1234567890123456789"); // SALVO la dummy e un array di 19
+	strcpy(st->dummy, "123456789012345678"); // SALVO la dummy e un array di 19
 	for (i = 0; i < MAX_WEAR; i++) {
 		if (ch->equipment[i])
 		{ char_eq[i] = unequip_char(ch, i); }
@@ -3023,7 +2987,7 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	st.load_room = load_room;
 	st.last_logon += bonus * 60 * 60 * 24;
 	strcpy(st.pwd, ch->desc->pwd);
-	MARK;
+
 	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
 	if ((fl = fopen(szFileName, "r+b")) == NULL) {
 		if ((fl = fopen(szFileName, "wb")) == NULL) {
@@ -3036,7 +3000,7 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	rewind(fl);
 	fwrite(&st, sizeof ( struct char_file_u), 1, fl);
 	fclose(fl);
-	MARK;
+
 }
 /* void save_char(struct char_data *ch, sh_int load_room)
 {
@@ -3050,8 +3014,10 @@ int compare(struct player_index_element* arg1, struct player_index_element
 }
 
 /************************************************************************
- *  procs of a (more or less) general utility nature                     *
+ *  procs of a (more or less) general utility nature
+ *
  ********************************************************************** */
+
 
 int fwrite_string(FILE* fl, char* buf) {
 	if (buf)
@@ -3113,7 +3079,7 @@ char* fread_string(FILE* f1) {
 		if (pReturnString == NULL)
 		{ mudlog(LOG_ERROR, "Fread_string:Errore nel ritornare la stringa %s", buf); }
 		fflush(NULL);
-		MARK;
+
 	}
 
 	return pReturnString;
@@ -3154,7 +3120,7 @@ long fread_number_int(FILE* pFile, char* cmdfile, int cmdline, char* infofile) {
 
 	if (!isdigit(c)) {
 		memo[l] = 0;
-		mudlog(LOG_ERROR, "Fread_number: bad format ? line %s", memo);
+		mudlog(LOG_ERROR, "Fread_number: bad char %c line %s", c,memo);
 		PrintStatus(1);
 		ungetc(c, pFile);
 		return 0;
@@ -3246,22 +3212,11 @@ void free_char(struct char_data* ch) {
 		if (auction->buyer == ch) { auction->buyer = NULL; }
 	}
 #ifndef NOEVENTS
-	mudlog(LOG_SILENT, "Cancelling EVENTS in free_char");
-	mudlog(LOG_SILENT, "Eventi per %s. Eventi %d,%d,%d",
-		   GET_NAME(ch),
-		   GET_POINTS_EVENT(ch, 0),
-		   GET_POINTS_EVENT(ch, 1),
-		   GET_POINTS_EVENT(ch, 2));
 	/* cancel point updates */
 	for (i = 0; i < 3; i++)
 		if (GET_POINTS_EVENT(ch, i)) {
-			mudlog(LOG_SILENT, "Cancellazione evento %d. Stato: %d",
-				   i,
-				   GET_POINTS_EVENT(ch, i));
-			event_cancel(GET_POINTS_EVENT(ch, i));
 			GET_POINTS_EVENT(ch, i) = NULL;
 		}
-	mudlog(LOG_SILENT, "Cancelled EVENTS in free_char");
 #endif
 
 	if (ch->nMagicNumber != CHAR_VALID_MAGIC) {
@@ -3376,7 +3331,7 @@ void free_char(struct char_data* ch) {
 		ch->nMagicNumber = CHAR_FREEDED_MAGIC;
 		free(ch);
 	}
-	MARK;
+
 }
 
 /* release memory allocated for an obj struct */
@@ -3432,8 +3387,7 @@ int file_to_string(char* name, char* buf) {
 	stat(name, &info);
 	mudlog(LOG_CHECK, "File %s lunghezza %d", name, info.st_size);
 	if (!(fl = fopen(name, "r"))) {
-		sprintf(tmp, "[%s] file-to-string", name);
-		perror(tmp);
+		mudlog(LOG_ERROR, "Unable to open %s, continuing", name);
 		*buf = '\0';
 		return (-1);
 	}
@@ -3468,7 +3422,6 @@ void ClearDeadBit(struct char_data* ch) {
 /* clear some of the the working variables of a char */
 void reset_char(struct char_data* ch) {
 	struct affected_type* af;
-	extern struct dex_app_type dex_app[];
 	double ratio = 0.0;
 	int i;
 	double absmaxhp;
@@ -3748,11 +3701,12 @@ void reset_char(struct char_data* ch) {
 
 	{
 		if ((ch->player.time.played / SECS_PER_REAL_HOUR) < (ratio * GetTotLevel(ch))) {
+			int minplayed=(ch->player.time.played % SECS_PER_REAL_HOUR) / 60;
 			buglog(LOG_PLAYERS, "%s ha fatto %d livelli in %5d ore e %2d minuti",
 				   GET_NAME(ch),
 				   GetTotLevel(ch),
-				   ch->player.time.played / SECS_PER_REAL_HOUR,
-				   (ch->player.time.played % SECS_PER_REAL_HOUR) / 60);
+				   (ch->player.time.played / SECS_PER_REAL_HOUR),
+				   minplayed);
 		}
 	}
 
@@ -3902,7 +3856,7 @@ void init_char(struct char_data* ch) {
 		break;
 
 	case RACE_ELVEN:
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 	case RACE_SEA_ELF:
@@ -4074,6 +4028,7 @@ int real_mobile(int iVNum) {
 		else
 		{ bot = mid + 1; }
 	}
+	return -1;
 }
 
 /* returns the real number of the object with given virtual number */
@@ -4101,6 +4056,7 @@ int real_object(int nVNum) {
 		else
 		{ bot = mid + 1; }
 	}
+	return -1;
 }
 
 int ObjRoomCount(int nr, struct room_data* rp) {
@@ -4132,18 +4088,6 @@ int str_len(char* buf) {
 	while (buf[ i ] != '\0')
 	{ i++; }
 	return (i);
-}
-
-int load() {
-	return (0);
-}
-
-void gr() {
-	return;
-}
-
-int workhours() {
-	return (0);
 }
 
 void reboot_text(struct char_data* ch, char* arg, int cmd) {
@@ -4409,192 +4353,6 @@ void SaveTheWorld() {
 #endif
 }
 
-void ReadTextZone(FILE* fl) {
-	char c, buf[255], count = 0, last_cmd = 1;
-	int i, j, k, tmp, zone = 0, rcount;
-	struct char_data* mob = NULL, *master = NULL, *pLastMob = NULL;
-	struct room_data* rp;
-	struct obj_data* obj, *obj_to;
-	assert(0);
-	while (1) {
-		count++;
-		fscanf(fl, " "); /* skip blanks */
-		fscanf(fl, "%c", &c);
-
-
-		if (c == 'S' || c == EOF)
-		{ break; }
-
-		if (c == '*') {
-			fgets(buf, 80, fl); /* skip command */
-			continue;
-		}
-
-		fscanf(fl, " %d %d %d", &tmp, &i, &j);
-		if (c == 'M' || c == 'O' || c == 'C' || c == 'E' || c == 'P' || c == 'D')
-		{ fscanf(fl, " %d", &k); }
-
-		if (c == 'O')
-		{ fscanf(fl, " %d", &rcount); }
-
-		fgets(buf, 80, fl); /* read comment */
-		if (last_cmd || tmp <= 0) {
-			switch (c) {
-			case 'M': /* read a mobile */
-				i = real_mobile(i);
-				rp = real_roomp(k);
-				if ((j == 0 || mob_index[ i ].number < j) &&
-						!CheckKillFile(mob_index[ i ].iVNum) &&
-						(mob = read_mobile(i, REAL)) != NULL &&
-						rp != NULL) {
-					char_to_room(mob, k);
-
-					if (IS_SET(mob->specials.act, ACT_SENTINEL))
-					{ mob->lStartRoom = k; }
-
-					last_cmd = TRUE;
-					master = pLastMob = mob;
-				}
-				else {
-					master = pLastMob = mob = NULL;
-					last_cmd = FALSE;
-				}
-				if (rp == NULL)
-				{ mudlog(LOG_ERROR, "Cannot find room #%d", k); }
-				break;
-
-			case 'C': /* read a mobile.  Charm them to follow prev. */
-				i = real_mobile(i);
-				if ((j == 0 || mob_index[i].number < j) &&
-						!CheckKillFile(mob_index[i].iVNum) && master &&
-						(mob = read_mobile(i, REAL)) != NULL) {
-					pLastMob = mob;
-					char_to_room(mob, master->in_room);
-					/* add the charm bit to the dude.  */
-					add_follower(mob, master);
-					SET_BIT(mob->specials.affected_by, AFF_CHARM);
-					SET_BIT(mob->specials.act, k);
-					last_cmd = TRUE;
-				}
-				else {
-					last_cmd = FALSE;
-					mob = pLastMob = NULL;
-				}
-				break;
-
-			case 'Z': /* set the last mobile to this zone */
-				if (pLastMob) {
-					pLastMob->specials.zone = i;
-
-					if (GET_RACE(pLastMob) > RACE_GNOME &&
-							!strchr(zone_table[ i ].races, GET_RACE(pLastMob)))
-						zone_table[i].races[strlen(zone_table[i].races)] =
-							GET_RACE(pLastMob);
-				}
-				break;
-
-			case 'O': /* read an object */
-				obj = NULL;
-				last_cmd = FALSE;
-				i = real_object(i);
-				if (i >= 0 && (j == 0 || obj_index[i].number < j)) {
-					if (k > 0 && (rp = real_roomp(k)) != NULL) {
-						if (rcount == 0 || ObjRoomCount(i, rp) < rcount) {
-							if ((obj = read_object(i, REAL)) != NULL) {
-								obj_to_room(obj, k);
-								last_cmd = TRUE;
-							}
-						}
-					}
-					else {
-						mudlog(LOG_ERROR, "Cannot find room #%d", k);
-					}
-				}
-				break;
-
-			case 'P': /* object to object */
-				i = real_object(i);
-				if (i >= 0 && (j == 0 || obj_index[ i ].number < j) &&
-						(obj_to = get_obj_num(k)) != NULL &&
-						(obj = read_object(i, REAL)) != NULL) {
-					obj_to_obj(obj, obj_to);
-					last_cmd = 1;
-				}
-				else {
-					obj = obj_to = NULL;
-					last_cmd = 0;
-				}
-				break;
-
-			case 'G': /* obj_to_char */
-				i = real_object(i);
-				if (i >= 0 && (j == 0 || obj_index[i].number < j) && pLastMob &&
-						(obj = read_object(i, REAL)) != NULL)
-				{ obj_to_char(obj, pLastMob); }
-				break;
-
-			case 'H': /* hatred to char */
-				if (pLastMob)
-				{ AddHatred(pLastMob, i, j); }
-				break;
-
-			case 'F': /* fear to char */
-				if (pLastMob)
-				{ AddFears(pLastMob, i, j); }
-				break;
-
-			case 'E': /* object to equipment list */
-				i = real_object(i);
-				if (i >= 0 && (j == 0 || obj_index[i].number < j) && pLastMob &&
-						(obj = read_object(i, REAL)) != NULL) {
-					if (!pLastMob->equipment[k]) {
-						equip_char(pLastMob, obj, k);
-					}
-					else {
-						mudlog(LOG_ERROR, "eq error - zone %d, item %d, mob %d, loc %d",
-							   zone, obj_index[ i ].iVNum,
-							   mob_index[ pLastMob->nr ].iVNum, k);
-					}
-				}
-				break;
-
-			case 'D': /* set state of door */
-				rp = real_roomp(i);
-				if (rp && rp->dir_option[ j ]) {
-					if (!IS_SET(rp->dir_option[ j ]->exit_info, EX_ISDOOR)) {
-						mudlog(LOG_ERROR, "Door error - zone %d, loc %d (fixed)",
-							   zone, i);
-						SET_BIT(rp->dir_option[ j ]->exit_info, EX_ISDOOR);
-					}
-
-					switch (k) {
-					case 0:
-						REMOVE_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
-						REMOVE_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
-						break;
-					case 1:
-						SET_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
-						REMOVE_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
-						break;
-					case 2:
-						SET_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
-						SET_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
-						break;
-					}
-				}
-				else {
-					/* that exit doesn't exist anymore */
-					mudlog(LOG_ERROR, "Exit error - zone %d, loc %d",
-						   zone, i);
-				}
-				break;
-
-			default:
-				break;
-			}
-		}
-	}
-}
 
 int ENomeValido(char* pchNome) {
 	if (pchNome) {
@@ -4843,3 +4601,4 @@ void Start_Auction() {
 
 }
 #endif
+}

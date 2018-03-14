@@ -1,4 +1,8 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /****************************************************************************
  * AlarMUD. Server per MUD.
  *
@@ -7,24 +11,38 @@
  *
  * $Id: breath.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-#define NEW_BREATH 1
+/***************************  System  include ************************************/
 #include <stdlib.h>
 #include <stdio.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
 #include "breath.hpp"
+#include "act.off.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "modify.hpp"
+#include "regen.hpp"
 #include "snew.hpp"
-extern struct index_data* mob_index;
+#include "spells.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
+#include "structs.hpp"
+namespace Alarmud {
 
-struct breath_victim {
-	struct char_data* ch;
-	int yesno; /* 1 0 */
-	struct breath_victim* next;
-};
 
-struct breath_victim* choose_victims(struct char_data* ch,
-									 struct char_data* first_victim) {
+
+struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) {
 	/* this is goofy, dopey extraordinaire */
 	struct char_data* cons;
 	struct breath_victim* head = NULL, *temp=NULL;
@@ -67,11 +85,7 @@ void free_victims(struct breath_victim* head) {
 	}
 }
 
-void breath_weapon( struct char_data* ch, struct char_data* target,
-					int mana_cost, void (*func)( byte, struct char_data*,
-							char*, int,
-							struct char_data*,
-							struct obj_data* ) ) {
+void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, bfuncp func) {
 	struct breath_victim* hitlist, *scan;
 	struct char_data* tmp;
 	int        victim;
@@ -115,11 +129,7 @@ void breath_weapon( struct char_data* ch, struct char_data* target,
 	free_victims(hitlist);
 }
 
-void use_breath_weapon( struct char_data* ch, struct char_data* target,
-						int cost, void (*func)( byte, struct char_data*,
-								char*, int,
-								struct char_data*,
-								struct obj_data* ) ) {
+void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, bfuncp func) {
 	if (GET_MANA(ch)>=0) {
 		breath_weapon(ch, target, cost, func);
 	}
@@ -149,57 +159,13 @@ static bfuncp breaths[] = {
 	cast_lightning_breath,
 	0
 };
-#if !NEW_BREATH
-struct breather breath_monsters[] = {
-	{ 230,   55, breaths+0 },
-	{ 233,   55, breaths+4 },
-	{ 243,   55, breaths+2 },
-	{ 3670,  30, breaths+2 },
-	{ 3674,  45, breaths+6 },
-	{ 3675,  45, breaths+8 },
-	{ 3676,  30, breaths+6 },
-	{ 3952,  20, breaths+8 },
-	{ 5005,  45, breaths+4 },
-	{ 6112,  55, breaths+4 },
-	{ 6635,  55, breaths+0 },
-	{ 6609,  30, breaths+0 },
-	{ 6642,  45, breaths+2 },
-	{ 6801,  55, breaths+2 },
-	{ 6802,  55, breaths+2 },
-	{ 6824,  55, breaths+0 },
-	{ 7040,  55, breaths+6 },
-	{ 9217,  45, breaths+4 },
-	{ 9418,  45, breaths+2 },
-	{ 9419,  45, breaths+2 },
 
-	{ 15858, 45, breaths+0 },
-	{ 15879, 30, breaths+0 },
-	{ 16620, 45, breaths+0 },
-	{ 16700, 45, breaths+4 },
-	{ 16738, 75, breaths+6 },
-	{ 17304, 20, breaths+2 },
-	{ 18003, 20, breaths+8 },
-	{ 20002, 55, breaths+6 },
-	{ 20017, 55, breaths+6 },
-	{ 20016, 55, breaths+6 },
-	{ 20016, 55, breaths+6 },
-	{ 25009, 30, breaths+6 },
-	{ 25504, 30, breaths+4 },
-	{ 27016, 30, breaths+6 },
-	{ -1 },
-};
-#endif
-int BreathWeapon( struct char_data* ch, int cmd, char* arg,
-				  struct char_data* mob, int type) {
+int BreathWeapon( struct char_data* ch, int cmd, char* arg,struct char_data* mob, int type) {
 	int        count;
-#if NEW_BREATH
 	char* p;
 	char p2[255];
 	int cost;
 	int tipo;
-#else
-	struct breather* scan;
-#endif
 	if( type != EVENT_TICK )
 	{ return FALSE; }
 
@@ -207,28 +173,6 @@ int BreathWeapon( struct char_data* ch, int cmd, char* arg,
 	if( AWAKE( mob ) && mob->specials.fighting &&
 			mob->specials.fighting->in_room == mob->in_room ) {
 
-#if !NEW_BREATH
-		for (scan = breath_monsters;
-				scan->vnum >= 0 && scan->vnum != MobVnum( mob );
-				scan++)
-			;
-
-		if (scan->vnum < 0) {
-			mudlog( LOG_ERROR, "monster %s tries to breath, but isn't listed.",
-					mob->player.short_descr);
-			return FALSE;
-		}
-		for (count=0; scan->breaths[count]; count++)
-			;
-
-		if (count<1) {
-			mudlog( LOG_ERROR, "monster %s has no breath weapons",
-					mob->player.short_descr);
-			return FALSE;
-		}
-		use_breath_weapon(mob, mob->specials.fighting, scan->cost,
-						  scan->breaths[dice(1,count)-1]);
-#else
 		p=mob_index[mob->nr].specparms;
 		p=one_argument(p,p2);
 		cost=abs(atoi(p2));
@@ -241,7 +185,6 @@ int BreathWeapon( struct char_data* ch, int cmd, char* arg,
 		use_breath_weapon(mob, mob->specials.fighting, cost,
 						  breaths[dice(1,count-1)]);
 
-#endif
 	}
 
 	return (FALSE);
@@ -272,5 +215,6 @@ void do_breath(struct char_data* ch, char* argument, int cmd) {
 
 	WAIT_STATE(ch, PULSE_VIOLENCE*2);
 }
-extern struct index_data* mob_index;
+
+} // namespace Alarmud
 

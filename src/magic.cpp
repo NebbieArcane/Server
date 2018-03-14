@@ -1,26 +1,45 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: magic.c,v 1.3 2002/03/14 21:48:56 Thunder Exp $ */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "magic.hpp"
+#include "act.info.hpp"
+#include "act.obj2.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic2.hpp"
+#include "magicutils.hpp"
+#include "modify.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "skills.hpp"
+#include "spell_parser.hpp"
+#include "spells2.hpp"
+namespace Alarmud {
 
-/* Extern structures */
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
-extern long SystemFlags;
-extern char* aszWeaponType[];
-extern char* aszWeaponSpecialEffect[];
+
 /* For future use in blinding those with infravision who are fireballed
    or otherwise subjected to lotsa heat quickly in dark rooms. */
 
@@ -61,7 +80,7 @@ void spell_magic_missile(byte level, struct char_data* ch,
 	if (level <0 || level >ABS_MAX_LVL)
 	{ return; }
 
-	dam = dice((int)(level / 2)+1,4)+(level / 2)+1;
+	dam = dice(static_cast<int>((level / 2))+1,4)+(level / 2)+1;
 
 	if (affected_by_spell(victim,SPELL_SHIELD))
 	{ dam = 0; }
@@ -240,7 +259,7 @@ void spell_energy_drain( byte level, struct char_data* ch,
 				dam = 4;
 				damage(ch, victim, dam, SPELL_ENERGY_DRAIN, 5);
 				if( IS_PC(victim) ) {
-					GET_EXP(victim)=GET_EXP(victim)- ((int) GET_EXP(victim)/10);
+					GET_EXP(victim)=GET_EXP(victim)- (static_cast<int>(GET_EXP(victim))/10);
 					/*if ( GET_EXP(victim)>=200000000 )
 					{
 					       if (HowManyClasses(victim) == 1)
@@ -439,8 +458,6 @@ void spell_call_lightning(byte level, struct char_data* ch,
 						  struct char_data* victim, struct obj_data* obj) {
 	int dam;
 
-	extern struct weather_data weather_info;
-
 	assert(victim && ch);
 	if (level <0 || level >ABS_MAX_LVL)
 	{ return; }
@@ -548,7 +565,6 @@ void spell_astral_walk(byte level, struct char_data* ch,
 void spell_teleport(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
 	int to_room, iTry = 0;
-	extern int top_of_world;      /* ref to the top element of world */
 	struct room_data* room;
 
 	assert(ch && victim);
@@ -732,9 +748,9 @@ void spell_create_food(byte level, struct char_data* ch,
 	CREATE(tmp_obj, struct obj_data, 1);
 	clear_object(tmp_obj);
 
-	tmp_obj->name = (char*)strdup("fungo");
-	tmp_obj->short_description =  (char*)strdup("Un fungo magico");
-	tmp_obj->description =  (char*)strdup("Un delizioso fungo magico e' qui a terra.");
+	tmp_obj->name = static_cast<char*>(strdup("fungo"));
+	tmp_obj->short_description =  static_cast<char*>(strdup("Un fungo magico"));
+	tmp_obj->description =  static_cast<char*>(strdup("Un delizioso fungo magico e' qui a terra."));
 
 	tmp_obj->obj_flags.type_flag = ITEM_FOOD;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_HOLD;
@@ -759,8 +775,6 @@ void spell_create_food(byte level, struct char_data* ch,
 void spell_create_water(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
 	int water;
-
-	extern struct weather_data weather_info;
 	void name_to_drinkcon(struct obj_data *obj,int type);
 	void name_from_drinkcon(struct obj_data *obj);
 
@@ -1255,7 +1269,7 @@ void spell_locate_object(byte level, struct char_data* ch,
 			j--;
 		}/* if isname */
 		if ((isgod || (k && !IS_DIO_MINORE(k)))
-#if ZONE_LOCATE
+#ifdef ZONE_LOCATE
 				&& (
 					IS_IMMORTAL(ch) ||
 					real_roomp(ch->in_room)->zone ==
@@ -1676,7 +1690,6 @@ void spell_word_of_recall(byte level, struct char_data* ch,
 						  struct char_data* victim, struct obj_data* obj) {
 	int location;
 
-	void do_look(struct char_data *ch, char* argument, int cmd);
 
 	assert(victim);
 
@@ -1839,7 +1852,6 @@ void RawSummon( struct char_data* v, struct char_data* c) {
 	long   target;
 	struct obj_data* o, *n;
 	int    j;
-	extern char EasySummon;
 	char buf[400];
 
 	/* this section run if the mob is above 3 levels above the caster */
@@ -2346,7 +2358,7 @@ void spell_comp_languages(byte level, struct char_data* ch,
 			act("Tocchi le tue orecchie, ora riesci a comprende tutto quello che viene detto!", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		af.type      = SPELL_COMP_LANGUAGES;
-		af.duration  = (level<LOW_IMMORTAL) ? (int)level/2 : level;                                  /* one tic only! */
+		af.duration  = (level<LOW_IMMORTAL) ? static_cast<int>(level)/2 : level;                                  /* one tic only! */
 		af.modifier  = 0;
 		af.location  = APPLY_NONE;
 		af.bitvector = 0;
@@ -2382,17 +2394,10 @@ void spell_identify(byte level, struct char_data* ch,
 	struct time_info_data age(struct char_data *ch);
 
 	/* Spell Names */
-	extern char* spells[];
 
 	/* For Objects */
-	extern char* item_types[];
-	extern char* extra_bits[];
-	extern char* apply_types[];
-	extern char* affected_bits[];
-	extern char* immunity_names[];
-	extern char* RaceName[];
-	extern char* gaszAlignSlayerBits[];
-
+	/*
+	*/
 
 	assert(ch && (obj || victim));
 
@@ -2403,7 +2408,7 @@ void spell_identify(byte level, struct char_data* ch,
 		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
 		strcat(buf,buf2);
 		if IS_DIO(ch) {
-			sprintf(buf2," V-Number Originario  %d",(int)obj->char_vnum);
+			sprintf(buf2," V-Number Originario  %d",static_cast<int>(obj->char_vnum));
 			strcat(buf,buf2);
 		}
 
@@ -2412,13 +2417,13 @@ void spell_identify(byte level, struct char_data* ch,
 
 		if (obj->obj_flags.bitvector) {
 			send_to_char("L'oggetto dona le seguenti abilita':  ", ch);
-			sprintbit((unsigned)obj->obj_flags.bitvector,affected_bits,buf);
+			sprintbit(static_cast<unsigned>(obj->obj_flags.bitvector),affected_bits,buf);
 			strcat(buf,"\n\r");
 			send_to_char(buf, ch);
 		}
 
 		send_to_char("L'oggetto e': ", ch);
-		sprintbit( (unsigned)obj->obj_flags.extra_flags,extra_bits,buf);
+		sprintbit( static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 
@@ -2491,7 +2496,7 @@ void spell_identify(byte level, struct char_data* ch,
 		for (i=0; i<MAX_OBJ_AFFECT; i++) {
 			if ((obj->affected[i].location != APPLY_NONE) &&
 					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location !=APPLY_BV2) &&
+					(obj->affected[i].location !=APPLY_AFF2) &&
 					(obj->affected[i].location !=APPLY_SKIP)) {
 				if (!found) {
 					send_to_char("Ti puo' dare: \n\r", ch);
@@ -2509,7 +2514,7 @@ void spell_identify(byte level, struct char_data* ch,
 					strcat(buf2,"\n\r");
 					break;
 				case APPLY_ATTACKS:
-					sprintf(buf2,"%f\n\r", (double)( obj->affected[i].modifier / 10 ) );
+					sprintf(buf2,"%f\n\r", static_cast<double>( obj->affected[i].modifier / 10 ) );
 					break;
 				case APPLY_WEAPON_SPELL:
 				case APPLY_EAT_SPELL:
@@ -2523,7 +2528,7 @@ void spell_identify(byte level, struct char_data* ch,
 					sprintf( buf2, "%s\n\r", RaceName[ obj->affected[i].modifier ] );
 					break;
 				case APPLY_ALIGN_SLAYER:
-					sprintbit( (unsigned)obj->affected[i].modifier, gaszAlignSlayerBits,
+					sprintbit( static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits,
 							   buf2 );
 					strcat( buf2, "\n\r" );
 					break;
@@ -2596,7 +2601,7 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 		for (i=0; i < MAX_OBJ_AFFECT; i++) {
 			if (obj->affected[i].location == APPLY_NONE)
 			{ count++; }
-			if (obj->affected[i].location == APPLY_ARMOR ||
+			if (obj->affected[i].location == APPLY_AC ||
 					obj->affected[i].location == APPLY_SAVE_ALL ||
 					obj->affected[i].location == APPLY_SAVING_PARA ||
 					obj->affected[i].location == APPLY_SAVING_ROD ||
@@ -2618,7 +2623,7 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 
 		SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
 
-		obj->affected[i].location = APPLY_ARMOR;
+		obj->affected[i].location = APPLY_AC;
 		obj->affected[i].modifier = -1;
 		if (level >= APPRENDISTA)
 		{ obj->affected[i].modifier -= 1; }
@@ -2922,4 +2927,6 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 
 	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);
 }
+
+} // namespace Alarmud
 

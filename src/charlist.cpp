@@ -1,10 +1,27 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: charlist.c,v 1.2 2002/02/13 12:30:57 root Exp $
 */
-#include "charlist.hpp"
-
+/***************************  System  include ************************************/
 #include <stdlib.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "charlist.hpp"
 #include "snew.hpp"
+namespace Alarmud {
+
+
 int IsInList( CharElem* pElem, void* pWho ) {
 	CharElem* pCurr;
 	for( pCurr = pElem; pCurr; pCurr = pCurr->pNext )
@@ -16,7 +33,7 @@ int IsInList( CharElem* pElem, void* pWho ) {
 CharElem* InsertInList( CharElem** pElem, void* pWho, int nTimer ) {
 	CharElem* pCurr;
 
-	pCurr = (CharElem*)calloc( 1, sizeof( CharElem ) );
+	pCurr = static_cast<CharElem*>( calloc( 1, sizeof( CharElem ) ));
 	pCurr->pNext = *pElem;
 	pCurr->pWho = pWho;
 	pCurr->nTimer = nTimer;
@@ -29,7 +46,7 @@ CharElem* InsertInListInt( CharElem** pElem, void* pWho, int nTimer,
 						   int nData ) {
 	CharElem* pCurr;
 
-	pCurr = (CharElem*)calloc( 1, sizeof( CharElem ) );
+	pCurr = static_cast<CharElem*> (calloc( 1, sizeof( CharElem ) ));
 	pCurr->pNext = *pElem;
 	pCurr->pWho = pWho;
 	pCurr->nTimer = nTimer;
@@ -160,3 +177,5 @@ void FreeList( CharElem** pElem ) {
 		free( pCurr );
 	}
 }
+} // namespace Alarmud
+

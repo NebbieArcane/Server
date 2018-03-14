@@ -1,28 +1,47 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
 /* $Id: mobact.c,v 2.1 2002/03/25 00:00:04 Thunder Exp $ */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "cmdid.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "mobact.hpp"
+#include "act.comm.hpp"
+#include "act.obj1.hpp"
+#include "act.obj2.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "status.hpp"
-#include "utility.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "opinion.hpp"
+#include "script.hpp"
+#include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
+#include "spec_procs3.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
+#include "trap.hpp"
 
-extern struct char_data* character_list;
-extern struct index_data* mob_index;
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct str_app_type str_app[];
-extern struct index_data* mob_index;
-
-extern struct spell_info_type spell_info[];
+namespace Alarmud {
 
 int top_of_comp = 0;
 
@@ -60,7 +79,6 @@ void mobile_wander(struct char_data* ch) {
 	int        door, _or;
 	struct room_direction_data*        exitp;
 	struct room_data*        rp;
-	extern int rev_dir[];
 
 	if (GET_POS(ch) != POSITION_STANDING)
 	{ return; }
@@ -332,7 +350,6 @@ void mobile_activity(struct char_data* ch) {
 	struct char_data* tmp_ch;
 
 	int k;
-	extern int no_specials;
 
 	if( ch == NULL ) {
 		mudlog( LOG_SYSERR, "ch == NULL in mobile_activity (mobact.c)" );
@@ -573,7 +590,7 @@ void mobile_activity(struct char_data* ch) {
 			if( ( tmp_ch = FindVictim(ch) ) != NULL ) {
 				if( check_peaceful( ch, "You can't seem to exercise your violent "
 									"tendencies.\n\r" ) ) {
-					MARK;
+
 					act("$n ruggisce impotente.", TRUE, ch, 0, 0, TO_ROOM);
 				}
 				else {
@@ -1200,3 +1217,5 @@ void MobHit(struct char_data* ch, struct char_data* v, int type) {
 		hit(ch,v,0);
 	}
 }
+} // namespace Alarmud
+

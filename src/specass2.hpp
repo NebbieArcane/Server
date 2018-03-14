@@ -1,7 +1,17 @@
-/* AlarMUD
-* $Id: specass2.h,v 1.1.1.1 2002/02/13 11:14:56 root Exp $ */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef __SPECASS2__
-#define __SPECASS2__ 1
+#define __SPECASS2__
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
+
+
+
+
+
 int FileToArray(char* fname, char* p[]);
 
 /****************************************************************************
@@ -50,5 +60,13 @@ int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mo
 /* SALVO 2006 quest fisse */
 int ItemGiven(struct char_data* pChar, int nCmd, char* szArg, struct char_data* pMmob, int nType);
 int ItemPut(struct char_data* pChar, int nCmd, char* szArg, struct obj_data* pObj, int nType);
-#endif
+/* Real internal function */
+char* Aggiungi(char* vecchia,char* nuova) ;
+int FileToArray(char* fname,char* p[]) ;
+void assign_speciales() ;
+int is_murdervict(struct char_data* ch) ;
+int nomecompare(const void* p1, const void* p2) ;
+int xcompare(const void* p1, const void* p2) ;
+} // namespace Alarmud
+#endif // __SPECASS2_HPP
 

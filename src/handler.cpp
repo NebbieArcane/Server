@@ -1,39 +1,47 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD*/
 /* $Id: handler.c,v 1.2 2002/02/27 01:26:55 Thunder Exp $
  * */
+/***************************  System  include ************************************/
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
 #include <stdlib.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "handler.hpp"
+#include "act.info.hpp"
+#include "act.obj2.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "events.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "signals.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern struct descriptor_data* descriptor_list;
-extern struct str_app_type str_app[];
-extern struct dex_app_type dex_app[];
-extern struct zone_data* zone_table;
+#include "interpreter.hpp"
+#include "modify.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "spec_procs3.hpp"
+#include "spell_parser.hpp"
 
-extern int WizLock;
-
-extern int top_of_objt;
-extern long mob_count;
+namespace Alarmud {
 
 
-int str_cmp2(char* arg1, char* arg2);
 
 char* fname(char* namelist) {
 #define ML 30
@@ -237,7 +245,7 @@ void init_string_block(struct string_block* sb) {
 	*sb->data = '\0';
 }
 
-void append_to_string_block(struct string_block* sb, char* str) {
+void append_to_string_block(struct string_block* sb, const char* str) {
 	int        len;
 	len = strlen(sb->data) + strlen(str) + 1;
 	if (len > sb->size) {
@@ -303,7 +311,7 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	else if (loc == APPLY_WEAPON_SPELL) {
 		return;
 	}
-	else if (loc == APPLY_BV2) {
+	else if (loc == APPLY_AFF2) {
 		if (add) {
 			SET_BIT(ch->specials.affected_by2, bitv);
 		}
@@ -325,7 +333,7 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 
 	switch(loc) {
 	case APPLY_NONE:
-	case APPLY_BV2:
+	case APPLY_AFF2:
 		break;
 
 	case APPLY_STR: {
@@ -762,13 +770,13 @@ void affect_to_char( struct char_data* ch, struct affected_type* af ) {
 
 
 	CREATE(affected_alloc, struct affected_type, 1);
-	MARK;
+
 	*affected_alloc = *af;
 	affected_alloc->next = ch->affected;
 	ch->affected = affected_alloc;
 	affect_modify(ch, af->location,af->modifier,af->bitvector, TRUE);
 	affect_total(ch);
-	MARK;
+
 }
 
 
@@ -1732,7 +1740,6 @@ void object_list_new_owner(struct obj_data* list, struct char_data* ch) {
 /* Extract an object from the world */
 void extract_obj(struct obj_data* obj) {
 	struct obj_data* temp1, *temp2;
-	extern long obj_count;
 	int i;
 
 	if( obj == NULL ) {
@@ -1867,26 +1874,13 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	struct descriptor_data* t_desc;
 	int l, was_in, j, w;
 
-	extern long mob_count;
-	extern struct char_data* combat_list;
-
 #ifndef NOEVENTS
-	mudlog(LOG_SILENT,"Cancelling EVENTS in extract_char");
-	mudlog(LOG_SILENT,"Eventi per %s. Eventi %d,%d,%d",
-		   GET_NAME(ch),
-		   GET_POINTS_EVENT(ch,0),
-		   GET_POINTS_EVENT(ch,1),
-		   GET_POINTS_EVENT(ch,2));
 	/* cancel point updates */
 	for (w = 0; w < 3; w++)
 		if (GET_POINTS_EVENT(ch, w)) {
-			mudlog(LOG_SILENT,"Cancellazione evento %d. Stato: %d",
-				   w,
-				   GET_POINTS_EVENT(ch,w));
 			event_cancel(GET_POINTS_EVENT(ch, w));
 			GET_POINTS_EVENT(ch, w) = NULL;
 		}
-	mudlog(LOG_SILENT,"Cancelled EVENTS in extract_char");
 #endif
 	if( ch == NULL ) {
 		mudlog( LOG_SYSERR, "ch == NULL in extract_char_smarter (handler.c)" );
@@ -1899,7 +1893,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	}
 
 
-	mudlog( LOG_CHECK | LOG_SILENT, "Extracting char %s (ADDR: %p, magic %d)",
+	mudlog( LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d)",
 			GET_NAME_DESC( ch ), ch, ch->nMagicNumber );
 
 	if( !IS_NPC( ch ) && !ch->desc ) {
@@ -2146,8 +2140,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
 
 /* get a character from anywhere in the world, doesn't care much about
    being in the same room... */
-struct char_data* get_char_vis_world(struct char_data* ch, char* name,
-									 int* count) {
+struct char_data* get_char_vis_world(struct char_data* ch, char* name,int* count) {
 	struct char_data* i;
 	int j, number, nPosInList;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2210,8 +2203,7 @@ struct char_data* get_char_vis( struct char_data* ch, char* name ) {
 
 
 
-struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,
-									 struct obj_data* list) {
+struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,struct obj_data* list) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2431,8 +2423,7 @@ struct obj_data* create_money( int amount ) {
 /* The routine returns a pointer to the next word in *arg (just like the  */
 /* one_argument routine).                                                 */
 
-int generic_find(char* arg, int bitvector, struct char_data* ch,
-				 struct char_data** tar_ch, struct obj_data** tar_obj) {
+int generic_find(const char* arg, int bitvector, struct char_data* ch,struct char_data** tar_ch, struct obj_data** tar_obj) {
 	static char* ignore[] = {
 		"the",
 		"in",
@@ -2525,3 +2516,5 @@ void AddAffects( struct char_data* ch, struct obj_data* o) {
 		}
 	}
 }
+} // namespace Alarmud
+

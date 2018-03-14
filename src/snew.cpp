@@ -1,29 +1,34 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: snew.c,v 1.3 2002/03/23 16:43:20 Thunder Exp $
 */
+/***************************  System  include ************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#ifdef ALAR
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
-#include "status.hpp"
-#include "protos.hpp"
-//#include "build.h"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
 #include "snew.hpp"
-void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc);
-void clone_container_obj( struct obj_data* to, struct obj_data* obj );
-struct obj_data* clone_obj(struct obj_data* obj);
-extern struct char_data* character_list;
-#endif
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+namespace Alarmud {
 #define KEYLIB "keydir"
 #define BUFLEN 128
-#ifndef ALAR
-char* lower(char* s) {
-	return(s);
-}
-#endif
-int TestMode=0;
-extern struct index_data* mob_index;
+bool TestMode=false;
 char hname[128];
 int  test=0;
 char* ggdup(const char* s) {
@@ -40,13 +45,14 @@ char* HostName() {
 	if (!*hname) { gethostname(hname,127); }
 	return hname;
 }
-int IsTest(int test) {
+bool IsTest() {
+	return TestMode ;
+}
+bool SetTest(bool test) {
 	TestMode=test;
-	return(1);
+	return TestMode;
 }
-int IsTest() {
-	return(TestMode);
-}
+
 
 char* GetKey(char* db,char* chiave) {
 	char buf[BUFLEN];
@@ -155,36 +161,52 @@ long StatCost(struct char_data* ch, int stat) // SALVO meglio se long, modificat
 	switch(vecchia) {
 	case 25:
 		xpcost+=10L; //125
+	/* no break */
 	case 24:
 		xpcost+=10L; //115
+	/* no break */
 	case 23:
 		xpcost+=10L; //105
+	/* no break */
 	case 22:
 		xpcost+=10L; //95
+	/* no break */
 	case 21:
 		xpcost+=10L; //85
+	/* no break */
 	case 20:
 		xpcost+=10L; //75
+	/* no break */
 	case 19:
 		xpcost+=10L; //65
+	/* no break */
 	case 18:
 		xpcost+=10L; //55
+	/* no break */
 	case 17:
 		xpcost+=10L; //45
+	/* no break */
 	case 16:
 		xpcost+=5L;  //35
+	/* no break */
 	case 15:
 		xpcost+=5L;  //30
+	/* no break */
 	case 14:
 		xpcost+=5L;  //25
+	/* no break */
 	case 13:
 		xpcost+=4L;  //20
+	/* no break */
 	case 12:
 		xpcost+=3L;  //16
+	/* no break */
 	case 11:
 		xpcost+=2L;  //13
+	/* no break */
 	case 10:
 		xpcost+=1L;  //11
+	/* no break */
 	default:
 		xpcost+=10L; //10
 	}
@@ -294,17 +316,13 @@ int GetTargetType(struct char_data* ch,struct char_data* target,int ostility) {
 						 GET_NAME(t))))
 		{ tt=gtt_IS_BODYGUARDED; }
 	}
-	MARKS("snew dopo strcasecmp sospetto");
 	if (in_clan(ch,t)) { tt=gtt_IS_CLAN; }
-	MARKS("dopo in_clan in snew.c");
 	if (ch->specials.fighting && ch->specials.fighting==t) {
-		MARKS("dopo test su fighting snew.c");
 		if(tt < gtt_IS_FRIEND)
 		{ tt=gtt_IS_ENEMY; }
 		else
 		{ tt=gtt_IS_PLAYER; }
 	}
-	MARK;
 	return(tt);
 }
 int modifier[]= {
@@ -353,8 +371,12 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		ftargettype=gtt_IS_SELF;
 	}
 	mudlog(LOG_CHECK,"GTT1:ostility: %d %s vs %s->%s = %s->%s",
-		   ostility,GET_NAME(ch),GET_NAME(victim),fighted?GET_NAME(fighted):"none",
-		   targets[targettype],targets[ftargettype]);
+		   ostility,
+		   GET_NAME(ch),
+		   GET_NAME(victim),
+		   (fighted?GET_NAME(fighted):"none"),
+		   targets[targettype],
+		   targets[ftargettype]);
 	/* Verifica eventuale necessita' di inversione
 	 * L'inversione viene valutata solo se ostility < 0
 	 * In caso di azioni aggressive conta sempre il target reale
@@ -384,7 +406,10 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		 * */
 	}
 	mudlog(LOG_CHECK,"GTT2:ostility: %d %s vs %s->%s = %s",
-		   ostility,GET_NAME(ch),GET_NAME(victim),fighted?GET_NAME(fighted):"none",
+		   ostility,
+		   GET_NAME(ch),
+		   GET_NAME(victim),
+		   (fighted?GET_NAME(fighted):"none"),
 		   targets[targettype]);
 
 	if (ostility < 0 )
@@ -477,8 +502,6 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	struct obj_data* ocopy;
 	char letter;
 	char buf[512];
-	extern int mob_tick_count;
-	extern long mob_count;
 
 	CREATE(mob, struct char_data, 1);
 
@@ -600,7 +623,6 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 float GetCharBonusIndex(struct char_data* ch) {
 	/* Calcola un indice in base al valore dell'equipaggiamento
 	 * */
-	extern char* apply_types[];
 	long i;
 	long j;
 	long mod=0;
@@ -686,7 +708,7 @@ float GetCharBonusIndex(struct char_data* ch) {
 					break;
 				case APPLY_GOLD:
 					break;
-				case APPLY_ARMOR:
+				case APPLY_AC:
 					thismod-=mod*2;
 					break;
 				case APPLY_HITROLL:
@@ -811,4 +833,6 @@ void do_setalign(struct char_data* ch,char* argument,int cmd) {
 	return;
 }
 
+
+} // namespace Alarmud
 

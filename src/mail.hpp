@@ -1,5 +1,15 @@
-/*$Id: mail.h,v 1.2 2002/02/13 12:31:00 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __MAIL_HPP
+#define __MAIL_HPP
+/***************************  System  include ************************************/
+//#include <iostream>
+//#include <ostream>
+/***************************  Local    include ************************************/
+//#include "general.hpp"
+namespace Alarmud {
 /* ************************************************************************
 *   File: mail.h                                        Part of CircleMUD *
 *  Usage: header file for mail system                                     *
@@ -21,10 +31,6 @@
 
 /* command numbers of the "mail", "check", and "receive" commands
    in your interpreter. */
-#include "general.hpp"
-#include <iostream>
-#include <ostream>
-using std::string;
 #define CMD_MAIL        366
 #define CMD_CHECK        367
 #define CMD_RECEIVE        368
@@ -114,4 +120,22 @@ struct mail_index_type {
 	position_list_type*             list_start;  /* list of mail positions    */
 	struct mail_index_type* next;
 };
+
+mail_index_type* find_char_in_index(char* searchee) ;
+struct char_data* find_mailman(struct char_data* ch) ;
+int has_mail(char* recipient) ;
+void index_mail(char* raw_name_to_index, int pos) ;
+int mail_ok(struct char_data* ch) ;
+int pop_free_list(void) ;
+void postmaster_check_mail(struct char_data* ch, int cmd, char* arg) ;
+void postmaster_receive_mail(struct char_data* ch, int cmd, char* arg) ;
+void postmaster_send_mail(struct char_data* ch, int cmd, char* arg) ;
+void push_free_list(int pos) ;
+char* read_delete(char* recipient, char* recipient_formatted);
+void read_from_file(void* buf, int size, int filepos) ;
+int scan_mail_file(void) ;
+void store_mail(char* to, char* from, char* message_pointer) ;
+void write_to_file(void* buf, int size, int filepos) ;
+} // namespace Alarmud
+#endif // __MAIL_HPP
 

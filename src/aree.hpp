@@ -1,5 +1,13 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: area.h,v 1.2 2002/02/13 12:30:57 root Exp $
 */
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #ifndef _AREE_HPP
 #define _AREE_HPP
 
@@ -17,3 +25,5 @@
 #define PRYDAIN   6
 
 #endif
+} // namespace Alarmud
+

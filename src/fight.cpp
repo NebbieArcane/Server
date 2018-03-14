@@ -1,23 +1,50 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*AlarMUD */
 /* $Id: fight.c,v 2.0 2002/03/24 19:46:06 Thunder Exp $ */
-
-/* File modificato da GAIA nel 7/2000 per aggiungere la locazione
-   negli oggetti DamageResult. Inoltre implementato il comando
-   PARRY e la dipendenza del danno dalla locazione colpita.
-   Per trovare le zone modificate cercare la keyword Gaia */
-
-#include "fight.hpp"
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "cmdid.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "fight.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magicutils.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "reception.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
+
+namespace Alarmud {
+
+/* File modificato da GAIA nel 7/2000 per aggiungere la locazione
+   negli oggetti DamageResult. Inoltre implementato il comando
+   PARRY e la dipendenza del danno dalla locazione colpita.
+   Per trovare le zone modificate cercare la keyword Gaia */
+
 
 #define DUAL_WIELD(ch) (ch->equipment[WIELD] && ch->equipment[HOLD] && ITEM_TYPE(ch->equipment[WIELD])==ITEM_WEAPON && 			ITEM_TYPE(ch->equipment[HOLD])==ITEM_WEAPON)
 #define GET_GRP_LEVEL(ch) (GetMaxLevel(ch)+(GetSecMaxLev(ch)/2)+  (GetThirdMaxLev(ch)/3))
@@ -28,106 +55,10 @@ struct char_data* combat_list = 0;   /* head of l-list of fighting chars    */
 struct char_data* missile_list = 0;   /* head of l-list of fighting chars    */
 struct char_data* combat_next_dude = 0; /* Next dude global trick           */
 struct char_data* missile_next_dude = 0; /* Next dude global trick           */
-extern struct zone_data* zone_table;         /* table of reset data          */
-
-extern struct con_app_type con_app[];
-extern struct index_data* mob_index,*obj_index;
 char PeacefulWorks = 1;  /* set in @set */
 char DestroyedItems;  /* set in MakeScraps */
 
-/* External structures */
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct message_list fight_messages[MAX_MESSAGES];
-extern struct obj_data*  object_list;
-extern struct index_data* mob_index;
-extern struct char_data* character_list;
-extern struct spell_info_type spell_info[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* spells[];
-extern char* ItemDamType[];
-extern int ItemSaveThrows[22][5];
-extern struct str_app_type str_app[];
-extern int WizLock;
-extern struct descriptor_data* descriptor_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct int_app_type int_app[26];
-extern struct wis_app_type wis_app[26];
-extern char* room_bits[];
-extern int thaco[MAX_CLASS][ABS_MAX_LVL];
 
-/**************************************************************************
-* Prototipi per le procedure interne
-* ***********************************************************************/
-int can_see_linear( struct char_data* ch, struct char_data* targ, int* rng,
-					int* dr) ;
-
-int BarbarianToHitMagicBonus ( struct char_data* ch);
-int berserkthaco ( struct char_data* ch);
-int berserkdambonus ( struct char_data* ch, int dam);
-long ExpCaps(struct char_data* ch, int group_count, long total );
-long GroupLevelRatioExp( struct char_data* ch,int group_max_level,
-						 long experincepoints);
-void appear(struct char_data* ch);
-int LevelMod(struct char_data* ch, struct char_data* v, int exp);
-int RatioExp( struct char_data* ch, struct char_data* victim, int total);
-void change_alignment(struct char_data* ch, struct char_data* victim);
-void group_gain(struct char_data* ch, struct char_data* victim);
-int group_loss(struct char_data* ch, int loss);
-void dam_message(int dam, struct char_data* ch, struct char_data* victim,
-				 int w_type, int location);
-int DamCheckDeny(struct char_data* ch, struct char_data* victim, int type);
-int DamDetailsOk( struct char_data* ch, struct char_data* v, int dam,
-				  int type);
-DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam,
-					   int type, int location );
-void DamageMessages( struct char_data* ch, struct char_data* v, int dam,
-					 int attacktype, int location );
-void increase_blood(int rm);
-int DamageEpilog( struct char_data* ch, struct char_data* victim,
-				  int killedbytype, int dam);
-int GetWeaponType(struct char_data* ch, struct obj_data** wielded);
-int Getw_type(struct obj_data* wielded);
-int HitCheckDeny( struct char_data* ch, struct char_data* victim, int type,
-				  int DistanceWeapon);
-DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,
-						 int w_type,
-						 DamageResult (*dam_func)
-						 ( struct char_data*,
-						   struct char_data*, int,
-						   int, int ), int location);
-int GetWeaponDam(struct char_data* ch, struct char_data* v,
-				 struct bj_data* wielded, int location);
-int LoreBackstabBonus(struct char_data* ch, struct char_data* v);
-DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
-						int type, int w_type,
-						DamageResult (*dam_func)( struct char_data*,
-								struct char_data*,
-								int, int, int ), int location);
-
-DamageResult root_hit( struct char_data* ch, struct char_data* victim, int type,
-					   DamageResult (*dam_func)( struct char_data*,
-							   struct char_data*,
-							   int, int, int ),
-					   int DistanceWeapon, int location);
-DamageResult MissileHit( struct char_data* ch, struct char_data* victim,
-						 int type);
-void BreakLifeSaverObj( struct char_data* ch );
-int BrittleCheck(struct char_data* ch, struct char_data* v, int dam);
-int DamageItem(struct char_data* ch, struct obj_data* o, int num);
-int DamagedByAttack( struct obj_data* i, int dam_type);
-int GetItemDamageType( int type);
-void WeaponSpell( struct char_data* c, struct char_data* v,
-				  struct obj_data* obj, int type );
-int GetFormType(struct char_data* ch);
-int MonkDodge( struct char_data* ch, struct char_data* v, int* dam);
-int Hit_Location( struct char_data* v );
-char* replace_string( char* str, char* weapon, char* weapon_s,
-					  char* location_hit, char* location_hit_s);
-void one_affect_from_char(struct char_data* ch,short skill);
 /* Weapon attack texts */
 struct attack_hit_type attack_hit_text[] = {
 	{"hit",    "hits"},            /* TYPE_HIT      */
@@ -450,10 +381,8 @@ void update_pos( struct char_data* victim ) {
 }
 
 
-int check_peaceful(struct char_data* ch, char* msg) {
+int check_peaceful(struct char_data* ch, const char* msg) {
 	struct room_data* rp;
-
-	extern char PeacefulWorks;
 
 	if (!PeacefulWorks) { return(0); }
 
@@ -601,8 +530,6 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 
 	/*   char *strdup(char *source); */
 
-	struct obj_data* create_money( int amount );
-
 	CREATE(corpse, struct obj_data, 1);
 	clear_object(corpse);
 
@@ -615,13 +542,13 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 								   killedbytype == TYPE_CLEAVE ) ) {
 			if( ( r_num = real_object( SEVERED_HEAD ) ) >= 0 ) {
 				cp = read_object(r_num, REAL);
-				sprintf(buf,"head severed %s",corpse->name);
+				snprintf(buf,MAX_INPUT_LENGTH -1,"head severed %s",corpse->name);
 				cp->name=strdup(buf);
-				sprintf( buf,"the severed head of %s",
-						 (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+				snprintf( buf,MAX_INPUT_LENGTH -1,"the severed head of %s",
+						  (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
 				cp->short_description=strdup(buf);
 				cp->action_description=strdup(buf);
-				sprintf(buf,"%s is lying on the ground.",buf);
+				strncat(buf," is lying on the ground.",MAX_INPUT_LENGTH -strlen(buf) -1);
 				cp->description=strdup(buf);
 
 				cp->obj_flags.type_flag = ITEM_CONTAINER;
@@ -1149,7 +1076,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 				af.type=SPELL_NO_MESSAGE;
 				af.duration=MAX(5,20+GetMaxLevel(killer)-GetMaxLevel(ch));
 				af.modifier=0;
-				af.location=APPLY_BV2;
+				af.location=APPLY_AFF2;
 				af.bitvector=AFF2_PKILLER;
 				if (killer!=ch) { // SALVO non si puo' mettere il pkill per un suicidio
 					if (IS_POLY(killer))  // SALVO il flag pkiller va' all'originale, corretto
@@ -1601,7 +1528,7 @@ int group_loss( struct char_data* ch,int loss) {
 				mudlog(LOG_PLAYERS,"GD dead:%s(%d), perdita=%d, diff=%d, %s(%d) perde:%d",
 					   GET_NAME(ch),
 					   GET_AVE_LEVEL(ch),
-					   loss*100,diff,
+					   (loss*100),diff,
 					   GET_NAME(f->follower),
 					   GET_AVE_LEVEL(f->follower),lose);
 				if (lose>0) {
@@ -1611,9 +1538,7 @@ int group_loss( struct char_data* ch,int loss) {
 			}
 		}
 	}
-	PopStatus();
 	if (k!=ch) {
-		PushStatus("k");
 		if( IS_AFFECTED( k, AFF_GROUP )) {
 			diff=(GET_AVE_LEVEL(k)-victlevel);
 			if (diff>0) {
@@ -1625,7 +1550,7 @@ int group_loss( struct char_data* ch,int loss) {
 				mudlog(LOG_PLAYERS,"GD dead:%s(%d), perdita=%d, diff=%d, %s(%d) perde:%d",
 					   GET_NAME(ch),
 					   GET_AVE_LEVEL(ch),
-					   loss*100,
+					   (loss*100),
 					   diff,
 					   GET_NAME(k),
 					   GET_AVE_LEVEL(k),
@@ -1636,9 +1561,7 @@ int group_loss( struct char_data* ch,int loss) {
 				}
 			}
 		}
-		PopStatus();
 	}
-	PopStatus();
 	return(loss*MAX(70,multi));
 }
 
@@ -2088,7 +2011,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 }
 
 DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int type, int location) {
-	
+
 	if (dam >= 0) {
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
@@ -2122,7 +2045,7 @@ int leechResult(struct char_data* ch, int dam) {
 	int baseLeech = 5;
 
 	chNumClass = HowManyClasses(ch);
-	
+
 	int wisBonus = wis_app[ (int)GET_RWIS(ch) ].bonus;
 	int maxLevel = GetMaxLevel(ch);
 	baseLeech =  MAX((maxLevel + wisBonus)/10, 1);
@@ -2135,17 +2058,17 @@ int leechResult(struct char_data* ch, int dam) {
 	}
 	if (HasClass(ch, CLASS_WARRIOR)) {
 		leech += baseLeech * 0;
-	} 
+	}
 
 	switch(chNumClass) {
-		case 3:
-			// we don't have 3class demon. we left this switch here for future evolution (if happens)
-		case 2:
-			leech = leech/3;
-			break;
-		default:
-			// right now do nothing..
-			break;
+	case 3:
+	// we don't have 3class demon. we left this switch here for future evolution (if happens)
+	case 2:
+		leech = leech/3;
+		break;
+	default:
+		// right now do nothing..
+		break;
 	}
 
 	leech = MIN(dice(1,leech), dam);
@@ -2284,8 +2207,6 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 	int exp;
 	char buf[256];
 	struct room_data* rp;
-
-	extern char DestroyedItems;
 
 	if( IS_LINKDEAD( victim ) ) {
 		if( GET_POS( victim ) != POSITION_DEAD ) {
@@ -2465,6 +2386,7 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 				}
 				break;
 			}
+		/* no break */
 		default:
 			break;
 		}
@@ -2641,7 +2563,6 @@ int Getw_type(struct obj_data* wielded) {
 int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 				 int DistanceWeapon) {
 	struct room_data* rp;
-	extern char PeacefulWorks;
 
 	rp = real_roomp(ch->in_room);
 	if (rp && rp->room_flags&PEACEFUL && PeacefulWorks) {
@@ -2758,7 +2679,6 @@ int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 
 int CalcThaco(struct char_data* ch, struct char_data* victim) {
 	int calc_thaco;
-	extern struct str_app_type str_app[];
 
 	/* Calculate the raw armor including magic armor */
 	/* The lower AC, the better                      */
@@ -2771,7 +2691,7 @@ int CalcThaco(struct char_data* ch, struct char_data* victim) {
 	{ calc_thaco = 20; }
 
 	/*  Drow are -4 to hit during daylight or lighted rooms. */
-	if( !IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DROW && IS_PC(ch)
+	if( !IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF && IS_PC(ch)
 			&& !affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
 		calc_thaco += 4;
 	}
@@ -2816,7 +2736,6 @@ int HitOrMiss(struct char_data* ch, struct char_data* victim, int calc_thaco)
 
 {
 	int diceroll, victim_ac;
-	extern struct dex_app_type dex_app[];
 	struct obj_data* wielded=0;  /* this is rather important. */
 	long indice = 0;
 
@@ -2857,10 +2776,7 @@ int HitOrMiss(struct char_data* ch, struct char_data* victim, int calc_thaco)
 }
 
 DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,
-						 int w_type,
-						 DamageResult (*dam_func)( struct char_data*,
-								 struct char_data*, int,
-								 int, int ), int location) {
+						 int w_type, pDamageFunc dam_func, int location) {
 	struct obj_data* o;
 
 	if( type <= 0 )
@@ -2883,7 +2799,6 @@ int GetWeaponDam(struct char_data* ch, struct char_data* v,
 				 struct obj_data* wielded, int location ) {
 	int dam, j;
 	struct obj_data* obj;
-	extern struct str_app_type str_app[];
 	long indice=0;
 
 	dam  = str_app[STRENGTH_APPLY_INDEX(ch)].todam;
@@ -3095,11 +3010,7 @@ int LoreBackstabBonus(struct char_data* ch, struct char_data* v) {
 }
 
 DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
-						int type, int w_type,
-						DamageResult (*dam_func)( struct char_data*,
-								struct char_data*,
-								int, int, int ), int location) {
-	extern byte backstab_mult[];
+						int type, int w_type,pDamageFunc dam_func, int location) {
 	DamageResult dead;
 	char buf[256];
 	int leech;
@@ -3143,20 +3054,22 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 			if (leech <= 5) {
 				// Message for ch
 				act("Assaggi l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_CHAR);
+					TO_CHAR);
 				act("$n assaggia l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_ROOM);
-			} else if (leech > 5 && leech < 11) {
+					TO_ROOM);
+			}
+			else if (leech > 5 && leech < 11) {
 				// Message for ch
 				act("Assorbi l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_CHAR);
+					TO_CHAR);
 				act("$n assorbe l'energia vitale di $N.", TRUE, ch, 0, v,
-						TO_ROOM);
-			} else {
+					TO_ROOM);
+			}
+			else {
 				act("Banchetti con l'energia vitale di $N.", TRUE, ch, 0,
-						v, TO_CHAR);
+					v, TO_CHAR);
 				act("$n banchetta con l'energia vitale di $N.", TRUE, ch, 0,
-						v, TO_ROOM);
+					v, TO_ROOM);
 			}
 
 			// Message for room
@@ -3173,11 +3086,11 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 
 int canLeech(struct char_data* ch, struct char_data* victim) {
 	if(
-			GET_RACE(ch) != RACE_DEMON ||
-			!HasClass(ch, CLASS_MAGIC_USER) ||
-			GET_RACE(victim) == RACE_UNDEAD ||
-			GET_RACE(victim)==RACE_GHOST ||
-			(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
+		GET_RACE(ch) != RACE_DEMON ||
+		!HasClass(ch, CLASS_MAGIC_USER) ||
+		GET_RACE(victim) == RACE_UNDEAD ||
+		GET_RACE(victim)==RACE_GHOST ||
+		(GET_RACE(victim) >= RACE_UNDEAD_VAMPIRE && GET_RACE(victim)<=RACE_UNDEAD_GHOUL)) {
 		return 0;
 	}
 
@@ -3186,11 +3099,7 @@ int canLeech(struct char_data* ch, struct char_data* victim) {
 
 
 DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,
-					   int type,
-					   DamageResult (*dam_func)( struct char_data*,
-							   struct char_data*,
-							   int, int, int ),
-					   int DistanceWeapon, int location ) {
+					   int type, pDamageFunc dam_func, int DistanceWeapon, int location ) {
 	int w_type, thaco, dam ;
 	struct char_data* tmp_victim, *temp, *victim ;
 	struct obj_data* wielded=0;  /* this is rather important. */
@@ -3569,7 +3478,6 @@ void perform_violence(unsigned long pulse)
 					/* Continue in a straight line */
 					if( clearpath( ch, ch->in_room, ch->specials.charge_dir ) ) {
 						do_move( ch, "\0", ch->specials.charge_dir + 1 );
-						MARK;
 						if (!ch || ch->nMagicNumber != CHAR_VALID_MAGIC) { // SALVO controllo che non sia caduto in DT
 							ch = pNext;
 							break;
@@ -3753,8 +3661,8 @@ struct char_data* SwitchVictimToPrince( struct char_data* pAtt,
 			if (pTemp2 && in_group_strict(pTemp,pTemp2)) { pTemp=pTemp2; }
 		}
 		if (pTemp && in_group_strict(pTemp,pVict) && number(1,19)<(isBG?GET_DEX(pTemp):20)) {
-			_mudlog(__FILE__,__LINE__,LOG_CHECK,"SWITCH1 %s (saver)",GET_NAME(pTemp));
-			_mudlog(__FILE__,__LINE__,LOG_CHECK,"SWITCH2 %s (saved)",GET_NAME(pVict));
+			mudlog(LOG_CHECK,"SWITCH1 %s (saver)",GET_NAME(pTemp));
+			mudlog(LOG_CHECK,"SWITCH2 %s (saved)",GET_NAME(pVict));
 			act("Stavi per essere attaccat$B ma $n interviene!",
 				FALSE, pTemp,0,pVict,TO_VICT);
 			act("$N stava per essere attaccat$B ma tu intervieni!",
@@ -4072,8 +3980,6 @@ int DamageOneItem( struct char_data* ch, int dam_type, struct obj_data* obj) {
 void MakeScrap( struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 	char buf[200];
 	struct obj_data* t, *x;
-
-	extern char DestroyedItems;
 
 	act("$p falls to the ground in scraps.", TRUE, ch, obj, 0, TO_CHAR);
 	act("$p falls to the ground in scraps.", TRUE, ch, obj, 0, TO_ROOM);
@@ -4825,7 +4731,6 @@ int range_hit( struct char_data* ch, struct char_data* targ, int rng, struct
 	};
 	int opdir[] = { 2, 3, 0, 1, 5, 4 }, rmod, cdir, rang, cdr;
 	char buf[MAX_STRING_LENGTH];
-	extern struct dex_app_type dex_app[];
 
 	if (!IS_NPC(ch)) {
 		calc_thaco=20;
@@ -4965,4 +4870,6 @@ void increase_blood(int rm) {
 	RM_BLOOD(rm) = MIN(RM_BLOOD(rm) +1, 10);
 	/*mudlog(LOG_ERROR,"Blood %d nella stanza %d",RM_BLOOD(rm),rm);*/
 }
+
+} // namespace Alarmud
 

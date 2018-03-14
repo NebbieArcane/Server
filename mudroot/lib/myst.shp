@@ -486,7 +486,7 @@
 0
 3007
 0
-3002
+8663
 0
 28
 0
@@ -955,6 +955,64 @@
 14
 14
 24
+#6200~
+715
+717
+-1
+-1
+-1
+1.5
+0.5
+2
+3
+10
+4
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+1
+0
+6244
+0
+6243
+9
+13
+14
+20
+#8635~
+8636
+8635
+-1
+-1
+-1
+1.5
+0.5
+8
+10
+0
+0
+0
+%s Hey amico non ce l'ho ma te la posso procurare...domani.~
+%s Si? cosa vorresti vendermi esattamente? io non vedo niente del genere, mi prendi in giro?~
+%s Ma per chi mi hai preso, non compro quella roba!~
+%s Hey amico, non ho i soldi ora ma se me lo lasci, un giorno te lo paghero'!~
+%s Forse mi stai prendendo in giro? Ti sembro un tipo da prendere in giro?.~
+%s d%, ma guarda che prezzo ti ho fatto, praticamente regalato!~
+%s Tieni queste %d monete e stai attento a come spenderle.~
+0
+0
+8635
+0
+8643
+0
+28
+0
+0
 #9601~
 9605
 3084
@@ -2461,5 +2519,61 @@ $~#4200~
 5771
 6
 14
+14
+24
+#6200~
+715
+717
+-1
+-1
+-1
+1.5
+0.5
+2
+3
+10
+4
+0
+%s Ah no, guardi! Io quelle cose li' non le vendo proprio!~
+%s Non mi sembra che Lei abbia nulla del genere.~
+%s Mi dispiace ma non tratto l'usato.~
+%s Mi dispiace ma non ho abbastanza denaro al momento.~
+%s Forse dovrebbe orientarsi su qualcosa di meno costoso.~
+%s Per sole %d monete, lei ha fatto un ottimo affare.~
+%s Ecco a lei %d monete.~
+1
+0
+6244
+0
+6243
+9
+13
+14
+20
+#8635~
+8636
+8635
+-1
+1.5
+0.5
+8
+10
+0
+0
+0
+%s Hey amico non ce l'ho ma te la posso procurare...domani.~
+%s Si? cosa vorresti vendermi esattamente? io non vedo niente del genere, mi prendi in giro?~
+%s Ma per chi mi hai preso, non compro quella roba!~
+%s Hey amico, non ho i soldi ora ma se me lo lasci, un giorno te lo paghero'!~
+%s Forse mi stai prendendo in giro? Ti sembro un tipo da prendere in giro?.~
+%s d%, ma guarda che prezzo ti ho fatto, praticamente regalato!~
+%s Tieni queste %d monete e stai attento a come spenderle.~
+0
+0
+8635
+0
+8643
+0
+13
 14
 24

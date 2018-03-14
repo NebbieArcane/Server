@@ -1,10 +1,19 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
 **        Ansi color Codes
 **        DaleMUD 2.0, msw addtions
 **        03/07/94
 ** $Id: ansi.h,v 1.2 2002/02/13 12:30:57 root Exp $
 */
-
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+#ifndef __ANSI_PARSER_HPP
+#define __ANSI_PARSER_HPP
+namespace Alarmud {
 #define CLEAR_CURSOR_TO_END    "\033[0K" /* Clear from cursor to end of line */
 #define CLEAR_BEGIN_TO_CURSOR  "\033[1K" /* Clear from begin of line to cursor */
 #define CLEAR_LINE             "\033[2K" /* Clear line containing cursor */
@@ -90,8 +99,9 @@
 #define ANSI_BK_CYAN       "46"
 #define ANSI_BK_LT_GRAY    "47"
 char* ansi_parse(char* code );
-
 /*
  #define WINDOW(top, bottom) printf("\033[%d;%dr%s", top, bottom, CLEAR_SCREEN)
 */
+} // namespace Alarmud
+#endif //__ANSI_PARSER_HPP
 

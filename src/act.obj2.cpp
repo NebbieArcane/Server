@@ -1,23 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * AlarMUD
  * $Id: act.obj2.c,v 1.2 2002/02/21 10:58:37 Thunder Exp $
  */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
-
-#include "protos.hpp"
-#include "snew.hpp"
-/* extern variables */
-
-extern struct str_app_type str_app[];
-extern struct descriptor_data* descriptor_list;
-extern char* drinks[];
-extern int drink_aff[][3];
-extern struct spell_info_type spell_info[];
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.obj2.hpp"
+#include "act.info.hpp"
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "maximums.hpp"
+#include "multiclass.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
+#include "trap.hpp"
+#include "utility.hpp"    // for str_cmp, getabunch, getall, CAN_SEE_OBJ
+namespace Alarmud {
 
 
 void weight_change_object(struct obj_data* obj, int weight) {
@@ -28,7 +44,7 @@ void weight_change_object(struct obj_data* obj, int weight) {
 		weight = 0 - (GET_OBJ_WEIGHT(obj) -1);
 		mudlog( LOG_ERROR, "Bad weight change on %s, carried by %s.",
 				obj->name,
-				obj->carried_by ? GET_NAME_DESC( obj->carried_by ) : "none" );
+				(obj->carried_by ? GET_NAME_DESC( obj->carried_by ) : "none") );
 	}
 
 	if (obj->in_room != NOWHERE) {
@@ -68,7 +84,6 @@ void name_from_drinkcon(struct obj_data* obj) {
 
 void name_to_drinkcon(struct obj_data* obj,int type) {
 	char* new_name;
-	extern char* drinknames[];
 
 	CREATE(new_name,char,strlen(obj->name)+strlen(drinknames[type])+2);
 	sprintf(new_name,"%s %s",drinknames[type],obj->name);
@@ -78,7 +93,7 @@ void name_to_drinkcon(struct obj_data* obj,int type) {
 
 
 
-void do_drink(struct char_data* ch, char* argument, int cmd) {
+void do_drink(struct char_data* ch,const char* argument, int cmd) {
 	char buf[255];
 	struct obj_data* temp;
 	struct affected_type af;
@@ -184,7 +199,7 @@ void do_drink(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_eat(struct char_data* ch, char* argument, int cmd) {
+void do_eat(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100];
 	int j, num;
 	struct obj_data* temp;
@@ -245,7 +260,7 @@ void do_eat(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_pour(struct char_data* ch, char* argument, int cmd) {
+void do_pour(struct char_data* ch,const char* argument, int cmd) {
 	char arg1[132];
 	char arg2[132];
 	char buf[256];
@@ -358,7 +373,7 @@ void do_pour(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 
-void do_sip(struct char_data* ch, char* argument, int cmd) {
+void do_sip(struct char_data* ch,const char* argument, int cmd) {
 	struct affected_type af;
 	char arg[MAX_STRING_LENGTH];
 	char buf[MAX_STRING_LENGTH];
@@ -439,7 +454,7 @@ void do_sip(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_taste(struct char_data* ch, char* argument, int cmd) {
+void do_taste(struct char_data* ch,const char* argument, int cmd) {
 	struct affected_type af;
 	char arg[80];
 	struct obj_data* temp;
@@ -1150,7 +1165,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 }
 
 
-void do_wear(struct char_data* ch, char* argument, int cmd) {
+void do_wear(struct char_data* ch,const char* argument, int cmd) {
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
 	char buf[256];
@@ -1297,7 +1312,7 @@ void do_wear(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_wield(struct char_data* ch, char* argument, int cmd) {
+void do_wield(struct char_data* ch,const char* argument, int cmd) {
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
 	char buffer[MAX_INPUT_LENGTH];
@@ -1322,7 +1337,7 @@ void do_wield(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_grab(struct char_data* ch, char* argument, int cmd) {
+void do_grab(struct char_data* ch,const char* argument, int cmd) {
 	char arg1[128];
 	char arg2[128];
 	char buffer[256];
@@ -1349,7 +1364,7 @@ void do_grab(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_remove(struct char_data* ch, char* argument, int cmd) {
+void do_remove(struct char_data* ch,const char* argument, int cmd) {
 	char arg1[128],*T,*P;
 	char buffer[256];
 	int Rem_List[20],Num_Equip;
@@ -1496,3 +1511,5 @@ void do_remove(struct char_data* ch, char* argument, int cmd) {
 
 	check_falling(ch);
 }
+} // namespace Alarmud
+

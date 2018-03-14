@@ -1,14 +1,35 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  *
  * $Id: create.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "create.hpp"
+#include "comm.hpp"
 #include "snew.hpp"
+#include "structs.hpp"
 #include "utility.hpp"
+#include "vt100c.hpp"
+
+namespace Alarmud {
+
 #define MAIN_MENU           0
 
 #define CHANGE_NAME         1
@@ -53,9 +74,6 @@
 
 #define ENTER_CHECK        1
 
-extern const char* room_bits[];
-extern const char* exit_bits[];
-extern const char* sector_types[];
 
 
 char* edit_menu = "    1) Name                       2) Description\n\r"
@@ -74,9 +92,6 @@ char* aszExitName[] = {
 	"up",
 	"down"
 };
-
-void ChangeExitKeyword( struct room_data* rp, struct char_data* ch, char* arg,
-						int type);
 
 void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, char* arg, int type) {
 	int i, row, update;
@@ -461,7 +476,6 @@ void AddExitToRoom( struct room_data* rp, struct char_data* ch, char* arg,
 	char buf[255];
 
 #if 0
-	extern char* exit_bits[];
 #endif
 
 	dir = ch->specials.edit - CHANGE_EXIT_NORTH;
@@ -637,3 +651,5 @@ void DeleteExit( struct room_data* rp, struct char_data* ch, char* arg,
 	ch->specials.edit = MAIN_MENU;
 	UpdateRoomMenu(ch);
 }
+} // namespace Alarmud
+

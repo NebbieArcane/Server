@@ -1,30 +1,39 @@
-/* Alarmud
-* $Id: reception.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
- * */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 //#include <sys/time.h>
 #include <time.h>
 #include <dirent.h>
 #include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "reception.hpp"
+#include "act.other.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "spec_procs.hpp"
 
-#include "protos.hpp"
+namespace Alarmud {
 
-#include "signals.hpp"
-#include "snew.hpp"
-#include "status.hpp"
-#include "version.hpp"
+
 #define OBJ_SAVE_FILE "pcobjs.obj"
 #define OBJ_FILE_FREE "\0\0\0"
 #define IS_RENT 127
-extern struct room_data* world;
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern char rarelist[MAX_STRING_LENGTH*2]; /*Acidus 2004-show rare*/
-extern int top_of_objt;
-extern struct player_index_element* player_table;
-extern int top_of_p_table;
 
 int cur_depth = 0;
 int DontShow = 0;
@@ -320,7 +329,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	else {
 		if (forcerent>1) {
 			mudlog(LOG_CHECK,"%s: autostoring %d days (%d coins)",GET_NAME(ch),
-				   forcerent*2,cost->total_cost);
+				   (forcerent*2),cost->total_cost);
 			GET_GOLD(ch)-=cost->total_cost;
 			cost->total_cost = 0;
 
@@ -537,7 +546,7 @@ void load_char_objs(struct char_data* ch) {
 	}
 
 	if (str_cmp(st.owner, GET_NAME(ch)) != 0) {
-		mudlog( LOG_PLAYERS | LOG_ERROR,
+		mudlog( LOG_ERROR,
 				"Bad item-file write. %s is losing his/her objects",GET_NAME( ch ) );
 		fclose(fl);
 		return;
@@ -723,7 +732,7 @@ void put_obj_in_store( struct obj_data* obj, struct obj_file_u* st ) {
 	{ strcpy(oe->name, obj->name); }
 	else {
 		mudlog( LOG_SYSERR, "object %d has no name!",
-				obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0 );
+				(obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0) );
 		*oe->name = '\0';
 	}
 
@@ -731,7 +740,7 @@ void put_obj_in_store( struct obj_data* obj, struct obj_file_u* st ) {
 	{ strcpy( oe->sd, obj->short_description ); }
 	else {
 		mudlog( LOG_SYSERR, "object %d has no short description!",
-				obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0 );
+				(obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0) );
 		*oe->sd = '\0';
 	}
 	if( obj->description )
@@ -886,8 +895,7 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 	st.total_cost = cost->total_cost;
 	st.last_update = time(0);
 	st.minimum_stay = 0; /* XXX where does this belong? */
-	mudlog( LOG_PLAYERS | LOG_SILENT, "save_obj: %s",
-			GET_NAME( ch ));
+	mudlog( LOG_PLAYERS, "save_obj: %s",GET_NAME( ch ));
 
 	cur_depth=0;
 
@@ -912,11 +920,11 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 	if (bDelete)
 	{ ch->carrying = 0; }
 
-	mudlog( LOG_PLAYERS | LOG_SILENT, "Saving %d objects of %s:%d",
+	mudlog( LOG_PLAYERS, "Saving %d objects of %s:%d",
 			st.number, GET_NAME( ch ), GET_GOLD( ch ) );
 
 	update_file(ch, &st);
-	mudlog( LOG_PLAYERS | LOG_SILENT, "Saved  %d objects of %s:%d",
+	mudlog( LOG_PLAYERS, "Saved  %d objects of %s:%d",
 			st.number, GET_NAME( ch ), GET_GOLD( ch ) );
 }
 
@@ -955,7 +963,7 @@ void update_obj_file() {
 					if( ( pObjFile = fopen( szFileName, "r+b") ) != NULL ) {
 						if( ReadObjs( pObjFile, &st ) ) {
 							if( str_cmp( st.owner, ch_st.name ) == 0 ) {
-								mudlog( LOG_CHECK, " Processing %s.", st.owner );
+								mudlog( LOG_SAVE, " Processing %s.", st.owner );
 								days_passed = ((time(0) - st.last_update) / SECS_PER_REAL_DAY);
 								secs_lost = ((time(0) - st.last_update) % SECS_PER_REAL_DAY);
 
@@ -964,7 +972,7 @@ void update_obj_file() {
 									ch_st.load_room = NOWHERE;
 									st.last_update = time(0)+3600;  /* one hour grace period */
 
-									mudlog( LOG_CHECK, "   Deautorenting %s", st.owner);
+									mudlog( LOG_SAVE, "   Deautorenting %s", st.owner);
 
 #if LIMITED_ITEMS
 									CountLimitedItems(&st);
@@ -1000,7 +1008,7 @@ void update_obj_file() {
 
 										}
 										else {
-											mudlog( LOG_CHECK, "   Updating %s", st.owner );
+											mudlog( LOG_SAVE, "   Updating %s", st.owner );
 #if 0
 											st.gold_left -= st.total_cost * days_passed;
 											st.last_update = time( 0 ) - secs_lost;
@@ -1093,7 +1101,7 @@ void PrintLimitedItems() {
 			obj_index[i].number/=2;
 #endif
 
-			mudlog( LOG_CHECK, "  %5d [%5d] %s", obj_index[ i ].iVNum,
+			mudlog( LOG_SAVE, "  %5d [%5d] %s", obj_index[ i ].iVNum,
 					obj_index[i].number,
 					obj_index[i].name );
 		}
@@ -1438,7 +1446,7 @@ int ReadObjs( FILE* fl, struct obj_file_u* st) {
 		fclose(fl);
 		return(FALSE);
 	}
-	mudlog(LOG_CHECK,"Letta stanza %s %d %d %d %d %d",st->owner,
+	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
 	for (i=0; i<st->number; i++) {
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
@@ -1654,9 +1662,6 @@ void obj_store_to_room( int room, struct obj_file_u* st ) {
 			strcpy( obj->name, st->objects[ i ].name );
 			strcpy(obj->short_description, st->objects[ i ].sd);
 			strcpy(obj->description, st->objects[ i ].desc);
-			mudlog(LOG_CHECK,"Loading saved obj: %d (%s)",
-				   st->objects[ i ].item_number,
-				   obj->short_description);
 
 
 			for( j = 0; j < MAX_OBJ_AFFECT; j++ )
@@ -1741,4 +1746,6 @@ void save_room( int room ) {
 		}
 	}
 }
+
+} // namespace Alarmud
 

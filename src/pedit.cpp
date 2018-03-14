@@ -1,6 +1,34 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: pedit.c,v 2.4 2002/06/03 22:53:09 Thunder Exp $
 * */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "pedit.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "spec_procs.hpp"
+#include "spell_parser.hpp"
+namespace Alarmud {
 
 /*
 PER AGGANCIARE LA PROCEDURA:
@@ -21,22 +49,13 @@ il controllo sul prince,
 QUESTO OCCORRE DEFINIRE UNA STRATEGIA CHIARA:
 consentire la creazione di oggetti e armi con i vnum assegnati,
 */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-
-#include "protos.hpp"
-#include "utility.hpp"
 #define	ARM	1
 #define	OGG	2
 #define	RES	3
 #define	IMM	4
 
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
 
-typedef struct lista_comandi {
+struct lista_comandi {
 	int	cmd;			// num comando
 	char	com[20];		// stringa comando
 	int	tipo;			// oggetto o arma
@@ -70,7 +89,7 @@ static lista_comandi comandi[] = {
 
 #define	MAXCOM		18
 
-static char* aiuto_modifica[] = {
+const char* aiuto_modifica[] = {
 	"$c0015Da questo momento fino al termine devi utilizzare sempre il comando $c0010ASK$c0015:",
 	"$c0015Parametri del comando $c0010MODIFICA$c0015 <$c0011CAMPO$c0015> <$c0011VALORE$c0015>",
 	"$c0015I principi possono specificare il tipo di pagamento, xp o pq$c0015",
@@ -97,7 +116,7 @@ static char* aiuto_modifica[] = {
 	"\n"
 };
 
-static void SayMenu(struct char_data* pCh, char* apchMenu[]) {
+void SayMenu(struct char_data* pCh, const char* apchMenu[]) {
 	int i;
 	char buf[200];
 
@@ -107,13 +126,13 @@ static void SayMenu(struct char_data* pCh, char* apchMenu[]) {
 	}
 }
 
-static bool ha_modificato = FALSE;
-static long tot_costoxp = 0L;
-static long tot_costopq = 0L;
-static bool ok_costo = FALSE;
-static int modifica = FALSE;
-static int pagamento = 0; // 0=pq  1=xp
-static char modifica_obj[40] = "";
+bool ha_modificato = FALSE;
+long tot_costoxp = 0L;
+long tot_costopq = 0L;
+bool ok_costo = FALSE;
+int modifica = FALSE;
+int pagamento = 0; // 0=pq  1=xp
+char modifica_obj[40] = "";
 
 static struct char_data* find_editman(struct char_data* ch) {
 	struct char_data* editman;
@@ -129,18 +148,17 @@ static struct char_data* find_editman(struct char_data* ch) {
 int calc_costoxp(int i, int p) {
 	int  tot;
 
-	tot = MAX(0,(int)(comandi[i].costoxp * p/comandi[i].add));
+	tot = MAX(0,static_cast<int>(comandi[i].costoxp * p/comandi[i].add));
 	return tot*1000000L;
 }
 int calc_costopq(int i, int p) {
 	int  totpq;
 
-	totpq = MAX(0,(int)(comandi[i].costopq * p/comandi[i].add));
+	totpq = MAX(0,static_cast<int>(comandi[i].costopq * p/comandi[i].add));
 	return totpq;
 }
 
-int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			   int type) {
+int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type) {
 	char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
 	int cost, ave;
 	struct char_data* vict;
@@ -207,7 +225,7 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 		}
 
 		if (vict->specials.fighting) {
-			act("$N ti dice 'Non vedi che sto combattendo??'", FALSE,
+			act("$N ti dice 'Non vedi che sto combattendo!?'", FALSE,
 				ch, 0, editman, TO_CHAR);
 			return (TRUE);
 		}
@@ -317,8 +335,6 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 
 			if (!strcmp(field, "stato")) {
 				char scom[256];
-				extern char* extra_bits[], *affected_bits[],
-					   *immunity_names[], *apply_types[], *spells[];
 
 				sprintf(scom, "$c0015Nome:$c0007 %s  $c0015Descr:$c0007 %s \n\r",
 						obj->name, obj->short_description);
@@ -352,7 +368,7 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 										apply_types[obj->affected[temp].location], buf2);
 							}
 							else
-								sprintf(scom, "Applica a $c0015%s$c0007 %ld \n\r",
+								sprintf(scom, "Applica a $c0015%s$c0007 %d \n\r",
 										apply_types[obj->affected[temp].location],
 										obj->affected[temp].modifier);
 							send_to_char(scom, ch);
@@ -459,6 +475,11 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 						}
 						else
 						{ temp = ciclo; }
+					if (temp<0) {
+						act("$N ti dice 'Non capisco'", FALSE,
+							ch, 0, editman, TO_CHAR);
+						return true;
+					}
 					arg = one_argument(arg, parmstr);
 					if (atol(parmstr) <= 0L && !(comandi[iCom].cmd == 7 || comandi[iCom].cmd == 17)) {
 						act("$N ti dice 'Non e' che mi diresti anche il valore?'", FALSE,
@@ -473,14 +494,14 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 					if (iSpell < MAX_OBJ_AFFECT && iMagie < 1
 							&& atol(parmstr) <= comandi[iCom].max ) {
 						if (pagamento) {
-							if ((GET_EXP(ch)-400000000L) < tot_costoxp + (int)(calc_costoxp(iCom, atoi(parmstr)))) {
+							if ((GET_EXP(ch)-400000000L) < tot_costoxp + static_cast<int>(calc_costoxp(iCom, atoi(parmstr)))) {
 								act("$N ti dice 'Spiacente, non hai abbastanza XP.'", FALSE,
 									ch, 0, editman, TO_CHAR);
 								return (TRUE);
 							}
 						}
 						else {
-							if (GET_RUNEDEI(ch)-1 < tot_costopq + (int)(calc_costopq(iCom, atoi(parmstr)))) {
+							if (GET_RUNEDEI(ch)-1 < tot_costopq + static_cast<int>(calc_costopq(iCom, atoi(parmstr)))) {
 								act("$N ti dice 'Spiacente, non hai abbastanza punti quest.'", FALSE,
 									ch, 0, editman, TO_CHAR);
 								return (TRUE);
@@ -491,9 +512,10 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 						obj->affected[temp].location = comandi[iCom].azione;
 						/*			obj->affected[temp].modifier = (atol(parmstr) * comandi[iCom].add); */
 						obj->affected[temp].modifier = atol(parmstr) ;
-						tot_costoxp +=(int)(calc_costoxp(iCom, atoi(parmstr)));
-						tot_costopq +=(int)(calc_costopq(iCom, atoi(parmstr)));
-						mudlog(LOG_PLAYERS,"%s modifica %s %s su %s e paga %d xp o %d pq", GET_NAME(ch),comandi[iCom].com,parmstr,obj->name,(int)(calc_costoxp(iCom,atoi(parmstr))),(int)(calc_costopq(iCom,atoi(parmstr))));
+						tot_costoxp +=static_cast<int>(calc_costoxp(iCom, atoi(parmstr)));
+						tot_costopq +=static_cast<int>(calc_costopq(iCom, atoi(parmstr)));
+						mudlog(LOG_PLAYERS,"%s modifica %s %s su %s e paga %d xp o %d pq", GET_NAME(ch),comandi[iCom].com,parmstr,obj->name,static_cast<int>(calc_costoxp(iCom,atoi(parmstr))),
+							   static_cast<int>(calc_costopq(iCom,atoi(parmstr))));
 						ha_modificato = TRUE;
 					}
 					else {
@@ -515,3 +537,5 @@ int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	}
 	return (FALSE);
 }
+} // namespace Alarmud
+

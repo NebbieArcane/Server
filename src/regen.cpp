@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* ************************************************************************
 *  File: regen.c                                                          *
 *                                                                         *
@@ -5,6 +10,26 @@
 *                                                                         *
 *  Written by Eric Green (ejg3@cornell.edu)                               *
 ************************************************************************ */
+/***************************  System  include ************************************/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "regen.hpp"
+#include "fight.hpp"
+#include "spells.hpp"
+
+namespace Alarmud {
 
 /*************************************************************************
 *                                                                        *
@@ -22,23 +47,6 @@
 *                                                 Gaia 2001              *
 ************************************************************************ */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include "events.hpp"
-#include "fight.hpp"
-#include "protos.hpp"
-#include "utility.hpp"
-extern int hit_gain(struct char_data* ch);
-extern int move_gain(struct char_data* ch);
-extern int mana_limit(struct char_data* ch);
-extern int hit_limit(struct char_data* ch);
-extern int move_limit(struct char_data* ch);
-extern int mana_gain(struct char_data* ch);
-extern int MIN(int a,int b);
-extern void update_pos( struct char_data* victim );
 void alter_mana(struct char_data* ch, int amount);
 void alter_move(struct char_data* ch, int amount);
 
@@ -332,3 +340,5 @@ void alter_move(struct char_data* ch, int amount) {
 		}
 	}
 }
+} // namespace Alarmud
+

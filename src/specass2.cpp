@@ -1,83 +1,56 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: specass2.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
-/**
-#ifdef CYGWIN
-	#include <sys/errno.h>
-	#define errno (*__errno())
-	extern int *__errno _PARAMS ((void));
-#else
-	extern int errno;
-#endif
-**/
-#include "specass2.hpp"
-
+/***************************  System  include ************************************/
 #include <sys/errno.h>
-
-
-
+#include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "specass2.hpp"
 #include "breath.hpp"
+#include "db.hpp"
+#include "interpreter.hpp"
 #include "lucertole.hpp"
-#include "protos.hpp"
 #include "rhyodin.hpp"
+#include "shop.hpp"
 #include "snew.hpp"
-//#include "vate.h"
+#include "specialproc_other.hpp"
+#include "specialproc_room.hpp"
 #include "utility.hpp"
-#define SPECFILE "myst.spe"
-#if HASH
-extern struct hash_header room_db;
+
+namespace Alarmud {
+/**
+#ifdef CYGWIN
+	#define errno (*__errno())
 #else
-extern struct room_data* room_db;
 #endif
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-void boot_the_shops();
-void assign_the_shopkeepers();
+**/
+
+
+
+
+#define SPECFILE "myst.spe"
 FILE* fd;
 FILE* fp;
 long ifp=0;
-int BlockWay( struct char_data* pChar, int nCmd, char* szArg,
-			  struct room_data* pRoom, int nType );
-typedef int (*special_proc)( struct char_data*, int, char*, void*, int );
-struct special_proc_entry {
-	char* nome;
-	//int (*proc)( struct char_data *, int, char *, void *, int );
-	special_proc proc;
-};
 
-struct RoomSpecialProcEntry {
-	char* nome;
-	int (*proc)( struct char_data*, int, char*, struct room_data*, int );
-};
-
-int fighter_mage( struct char_data* ch, int cmd, char* arg,
-				  struct char_data* mob, int type );
-int fighter_cleric( struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type);
-int cleric_mage( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type);
-
-int SputoVelenoso( struct char_data* ch, int cmd, char* arg,
-				   struct char_data* mob, int type );
-
-int Pungiglione( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type );
-
-int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
-						  struct char_data* mob, int type );
-
-int SporeCloud( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-
-int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-
-int Ezmerelda( struct char_data* pChar, int iCmd, char* szArg,
-			   struct char_data* pMob, int itype );
 
 /* ********************************************************************
 *  Assignments                                                        *
@@ -171,20 +144,6 @@ char* Aggiungi(char* vecchia,char* nuova) {
 void assign_speciales() {
 	int lastroomproc=0;
 	int lastotherproc=0;
-
-	struct special_proc_entry otherproc[] = {
-
-#include "otherproc.hpp"
-		{ "zFineprocedure", NULL },
-	};
-
-
-
-	struct RoomSpecialProcEntry roomproc[] = {
-#include "roomproc.hpp"
-		{ "zFineprocedure", NULL },
-	};
-
 	struct special_proc_entry* op;
 	struct RoomSpecialProcEntry* _or;
 	struct room_data* rp;
@@ -312,4 +271,6 @@ void assign_speciales() {
 	assign_the_shopkeepers();
 }
 
+
+} // namespace Alarmud
 

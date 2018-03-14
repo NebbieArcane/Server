@@ -1,14 +1,32 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
  * $Id: signals.c,v 1.2 2002/03/23 16:43:20 Thunder Exp $ */
+/***************************  System  include ************************************/
 #include <signal.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "signals.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+namespace Alarmud {
 
-#include "protos.hpp"
-#include "status.hpp"
 /* La ridefinizione di funzioni di memoria qui causerebbe ricorsione
  * */
 #define LOG_CRASH 0 // Alar, abbiamo gdb, meglio non modificare i crash
@@ -29,17 +47,6 @@ char gszStack[STACK_SIZE][150]= {
 void* gpGeneric = NULL;
 
 
-extern struct descriptor_data* descriptor_list;
-
-void checkpointing( int dummy );
-void shutdown_request( int dummy );
-void logsig( int dummy );
-void hupsig( int dummy );
-void badcrash( int dummy );
-void buscrash( int dummy );
-void PrintStatus();
-void PrintStatus(int level);
-
 
 
 void PrintStatus() {
@@ -47,28 +54,26 @@ void PrintStatus() {
 }
 void PrintStatus(int level) {
 	int i=0;
-	mudlog( LOG_SYSERR | LOG_SILENT, "Connections from start: %d",
+	mudlog( LOG_SYSERR, "Connections from start: %d",
 			HowManyConnection(0));
 	if (level==1) {
-		mudlog(LOG_SYSERR | LOG_SILENT,"CurrentTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR | LOG_SILENT, "Mud status: '%s'",
-				gszMudStatus );
+		mudlog(LOG_SYSERR,"CurrentTrack %s at %d",currentfile,currentline);
+		mudlog( LOG_SYSERR, "Mud status: '%s'",gszMudStatus );
 	}
 	else {
 
-		mudlog(LOG_SYSERR | LOG_SILENT,"LastTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR | LOG_SILENT, "Mud status when crashed: '%s'",
-				gszMudStatus );
+		mudlog(LOG_SYSERR,"LastTrack %s at %d",currentfile,currentline);
+		mudlog( LOG_SYSERR, "Mud status when crashed: '%s'",gszMudStatus );
 	}
-	mudlog( LOG_SYSERR | LOG_SILENT, "  Last Name '%s'", gszName );
+	mudlog( LOG_SYSERR, "  Last Name '%s'", gszName );
 	if (gnPtr>=0) {
-		mudlog(LOG_SYSERR | LOG_SILENT,    " Calling Stack");
+		mudlog(LOG_SYSERR,    " Calling Stack");
 		for (i=0; i<=gnPtr; i++) {
-			mudlog(LOG_SYSERR | LOG_SILENT, "       %2d.%s",i,gszStack[i]);
+			mudlog(LOG_SYSERR, "       %2d.%s",i,gszStack[i]);
 		}
 	}
 }
-void SetLine(char* srcfile,int srcline) {
+void SetLine(const char* srcfile,int srcline) {
 	int i;
 	i=MIN(strlen(srcfile)+1,MAX_FNAME_LEN);
 	memcpy(currentfile,srcfile,i);
@@ -76,7 +81,7 @@ void SetLine(char* srcfile,int srcline) {
 	currentline=srcline;
 }
 
-void SetStatus( char* szStatus, char* szString, void* pGeneric ) {
+void SetStatus( const char* szStatus, const char* szString, void* pGeneric ) {
 	int i;
 	if( szStatus ) {
 		i=MIN(strlen(szStatus)+1,sizeof(gszMudStatus));
@@ -94,10 +99,10 @@ void SetStatus( char* szStatus, char* szString, void* pGeneric ) {
 		gpGeneric = pGeneric;
 	}
 }
-void SetStatus( char* szStatus) {
+void SetStatus( const char* szStatus) {
 	SetStatus(szStatus,NULL,NULL);
 }
-void SetStatus( char* szStatus, char* szString) {
+void SetStatus( const char* szStatus, const char* szString) {
 	SetStatus(szStatus,szString,NULL);
 }
 
@@ -161,7 +166,6 @@ void signal_setup() {
 }
 
 void checkpointing( int dummy ) {
-	extern int tics;
 
 	if (!tics) {
 		mudlog( LOG_SYSERR, "CHECKPOINT shutdown: tics not updated" );
@@ -170,7 +174,7 @@ void checkpointing( int dummy ) {
 		abort();
 	}
 	else {
-		mudlog( LOG_CHECK, "CHECKPOINT: tics updated" );
+		mudlog( LOG_SAVE, "CHECKPOINT: tics updated" );
 		tics = 0;
 	}
 	if( signal( SIGVTALRM, checkpointing ) == SIG_ERR ) {
@@ -181,7 +185,6 @@ void checkpointing( int dummy ) {
 }
 
 void shutdown_request( int dummy ) {
-	extern int mudshutdown;
 
 	mudlog( LOG_CHECK, "Received USR2 - shutdown request");
 	mudshutdown = 1;
@@ -191,7 +194,6 @@ void shutdown_request( int dummy ) {
 /* kick out players etc */
 void hupsig( int dummy ) {
 	int i;
-	extern int mudshutdown, rebootgame;
 
 	mudlog( LOG_CHECK, "Received SIGHUP, SIGINT, or SIGTERM. Shutting down");
 
@@ -262,3 +264,5 @@ float AverageEqIndex(float toadd) {
 	curmedia+=toadd/numerocasi;
 	return(curmedia);
 }
+} // namespace Alarmud
+

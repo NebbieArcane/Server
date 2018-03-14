@@ -1,18 +1,25 @@
-/*$Id: utility.h,v 1.2 2002/02/13 12:30:59 root Exp $
-*/
-#if !defined( _UTILITY_H )
-#define _UTILITY_H
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __UTILITY_HPP
+#define __UTILITY_HPP
+/***************************  System  include ************************************/
 #include <stdio.h>
+/***************************  Local    include ************************************/
+namespace Alarmud {
+
+bool isNullChar (struct char_data* ch);
+int LoadZoneFile(FILE* fl, int zon);
+FILE* OpenZoneFile(struct char_data* c, int zone);
+int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
+FILE* MakeZoneFile( struct char_data* c, int zone);
+bool CheckPrac (int classe, int id, int liv);
+struct time_info_data real_time_passed(time_t t2, time_t t1);
 bool ThereIsPCInRoom( long lRoom );
 bool CanSeePCInRoom( struct char_data* pMob );
-int HowManyPCInRoom( long lRoom );
 int HowManyCanSeePCInRoom( struct char_data* pMob );
-void _mudlog( const char* const file,int line,unsigned uType,const char* const szString, ... );
 void fake_setup_dir(FILE* fl, long room, int dir);
-char* fread_string(FILE* fl);
-int check_falling(struct char_data* ch);
-void NailThisSucker( struct char_data* ch);
-#define mudlog(...) _mudlog(__FILE__,__LINE__,__VA_ARGS__)
 char getall(char* name, char* newname);
 char in_clan(struct char_data* ch1, struct char_data* ch2);
 char in_group_internal(struct char_data* ch1, struct char_data* ch2, int strict);
@@ -32,8 +39,8 @@ int CheckEgoGive(struct char_data* ch, struct char_data* vict, struct obj_data* 
 int CheckForBlockedMove(struct char_data* ch, int cmd, char* arg, int room, int dir, int iClass);
 int CheckGetBarbarianOK(struct char_data* ch, struct obj_data* obj_object);
 int CheckGiveBarbarianOK(struct char_data* ch, struct char_data* vict, struct obj_data* obj);
-int check_nomagic(struct char_data* ch, char* msg_ch, char* msg_rm);
-int check_nomind(struct char_data* ch, char* msg_ch, char* msg_rm);
+int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm);
+int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_soundproof(struct char_data* ch);
 int CountLims(struct obj_data* obj);
 int DetermineExp(struct char_data* mob, int exp_flags);
@@ -109,12 +116,12 @@ int ObjVnum(struct obj_data* o);
 int RecCompObjNum(struct obj_data* o, int obj_num);
 int RideCheck(struct char_data* ch, int mod);
 int room_of_object(struct obj_data* obj);
-int scan_number(char* text, int* rval);
-int SiteLock(char* site);
+int scan_number(const char* text, int* rval);
+int SiteLock(const char* site);
 int StandUp(struct char_data* ch);
-int str_cmp2(char* arg1, char* arg2);
-int str_cmp(char* arg1, char* arg2);
-int strn_cmp(char* arg1, char* arg2, int n);
+int str_cmp2(const char* arg1, const char* arg2);
+int str_cmp(const char* arg1, const char* arg2);
+int strn_cmp(const char* arg1, const char* arg2, int n);
 int too_many_followers(struct char_data* ch);
 int WeaponImmune(struct char_data* ch);
 struct char_data* char_holding(struct obj_data* obj);
@@ -126,7 +133,6 @@ unsigned IsResist(struct char_data* ch, int bit);
 unsigned IsSusc(struct char_data* ch, int bit);
 void age2(struct char_data* ch, struct time_info_data* g);
 void age3(struct char_data* ch, struct time_info_data* g);
-void buglog(unsigned uType, char* szString, ...);
 void CallForGuard(struct char_data* ch, struct char_data* vict, int lev, int area);
 void CallForMobs(struct char_data* pChar, struct char_data* pVict, int iLevel, int iMobToCall);
 void CleanZone(int zone);
@@ -141,7 +147,6 @@ void IncrementZoneNr(int nr);
 void LearnFromMistake(struct char_data* ch, int sknum, int silent, int max);
 void MakeNiftyAttack(struct char_data* ch);
 void MonkMove(struct char_data* ch);
-void _mudlog(const char* const file, int line, unsigned uType, const char* const szString, ...);
 void* Mymalloc(long size);
 void RecurseRoom(long lInRoom, int iLevel, int iMaxLevel, unsigned char* achVisitedRooms);
 void RemAllAffects(struct char_data* ch);
@@ -153,7 +158,11 @@ void SetDefaultLang(struct char_data* ch);
 void SetHunting(struct char_data* ch, struct char_data* tch);
 void SetRacialStuff(struct char_data* mob);
 void SpaceForSkills(struct char_data* ch);
-void sprintbit(unsigned long vektor, char* names[], char* result);
-void sprinttype(int type, char* names[], char* result);
+void sprintbit(unsigned long vektor, const char* names[], char* result);
+void sprinttype(int type, const char* names[], char* result);
 void TeleportPulseStuff(unsigned long pulse);
+struct time_info_data mud_time_passed(time_t t2, time_t t1);
+void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
+} // namespace Alarmud
 #endif
+

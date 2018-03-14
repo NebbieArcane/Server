@@ -1,26 +1,41 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: shop.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "shop.hpp"
+#include "act.comm.hpp"
+#include "act.social.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "regen.hpp"
 
-#include "cmdid.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
+namespace Alarmud {
+
 #define SHOP_FILE "myst.shp"
 #define MAX_TRADE 5
 #define MAX_PROD 5
 
-
-extern struct str_app_type str_app[];
-extern struct index_data* mob_index;
-extern struct chr_app_type chr_apply[];
-
-
-char* fread_string(FILE* fl);
-char getall( char* name, char*  newname);
-int  getabunch( char* name, char*  newname);
 float  shop_multiplier = 0;
 int gevent = 0; /* Global Event happening currently */
 
@@ -44,13 +59,6 @@ struct shop_data {
 	int open1,open2;        /* When does the shop open?                */
 	int close1,close2;        /* When does the shop close?                */
 };
-
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db;
-#endif
-extern struct time_info_data time_info;
 
 struct shop_data* shop_index;
 int number_of_shops;
@@ -90,7 +98,7 @@ int is_ok(struct char_data* keeper, struct char_data* ch, int shop_nr) {
 }
 long obj_cost(struct obj_data* temp1,struct char_data* ch,int shop_nr,int vende) {
 	long cost;
-	float profitto;
+	double profitto;
 	cost=0;
 	profitto=0.0;
 	profitto=vende?shop_index[shop_nr].profit_sell:shop_index[shop_nr].profit_buy;
@@ -128,7 +136,10 @@ long obj_cost(struct obj_data* temp1,struct char_data* ch,int shop_nr,int vende)
 	}
 
 	if(cost < 0) { cost=0; }
-	mudlog(LOG_CHECK,"obj_cost: profitto:%f actualcost:%d",profitto,(long)cost);
+	mudlog(LOG_CHECK,"obj_cost: profitto:%d.%d actualcost:%d",
+		   static_cast<long>(profitto),
+		   (static_cast<long>(profitto *1000) % 1000),
+		   (long)cost);
 	return(cost);
 }
 
@@ -167,7 +178,7 @@ void shopping_buy( char* arg, struct char_data* ch,
 	{ return; }
 
 	if(keeper->generic != 0)
-		for(i = 0; i <= MAX_TRADE; i++) {
+		for(i = 0; i < MAX_TRADE; i++) {
 			if(keeper->generic == FAMINE)
 				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
 					mult = shop_multiplier; /* famine, we sell food, so we */
@@ -421,7 +432,6 @@ void shopping_list( char* arg, struct char_data* ch,
 					struct char_data* keeper, int shop_nr) {
 	char buf[MAX_STRING_LENGTH], buf2[100],buf3[100];
 	struct obj_data* temp1;
-	extern char* drinks[];
 	int found_obj;
 	int i;
 	float mult = 0;
@@ -432,7 +442,7 @@ void shopping_list( char* arg, struct char_data* ch,
 
 
 	if(keeper->generic != 0)
-		for(i = 0; i <= MAX_TRADE; i++) {
+		for(i = 0; i < MAX_TRADE; i++) {
 			if(keeper->generic == FAMINE)
 				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
 					mult = shop_multiplier; /* we're in a famine, we sell food, so we */
@@ -617,7 +627,7 @@ void boot_the_shops() {
 	for(;;)    {
 		buf = fread_string(shop_f);
 		if(*buf == '#') {      /* a new shop */
-			mudlog(LOG_CHECK,"Booting shop %s",buf);
+			mudlog(LOG_SAVE,"Booting shop %s",buf);
 
 			if(!number_of_shops)        /* first shop */
 			{ CREATE(shop_index, struct shop_data, 1); }
@@ -631,7 +641,7 @@ void boot_the_shops() {
 
 			for(count=0; count<MAX_PROD; count++) {
 				fscanf(shop_f,"%d \n", &temp);
-				mudlog(LOG_CHECK,"Obj %d",temp);
+				mudlog(LOG_SAVE,"Obj %d",temp);
 				if (temp >= 0)
 					shop_index[number_of_shops].producing[count]=
 						real_object(temp);
@@ -667,7 +677,7 @@ void boot_the_shops() {
 				   &shop_index[number_of_shops].temper2);
 			fscanf(shop_f,"%d \n",
 				   &shop_index[number_of_shops].keeper);
-			mudlog(LOG_CHECK,"ShopKeeper is %d",shop_index[number_of_shops].keeper);
+			mudlog(LOG_SAVE,"ShopKeeper is %d",shop_index[number_of_shops].keeper);
 			shop_index[number_of_shops].keeper =
 				real_mobile(shop_index[number_of_shops].keeper);
 
@@ -709,4 +719,6 @@ void assign_the_shopkeepers() {
 	}
 	mudlog(LOG_CHECK,"Assign shopkeepers done");
 }
+
+} // namespace Alarmud
 

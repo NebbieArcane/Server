@@ -1,17 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * AlarMUD v1
  * $Id: board.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  */
-
+/***************************  System  include ************************************/
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "board.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "modify.hpp"
 #include "snew.hpp"
+#include "structs.hpp"
 #include "utility.hpp"
+namespace Alarmud {
+
 
 #define MAX_MSGS 99                    /* Max number of messages.          */
 #define MAX_MESSAGE_LENGTH 2048     /* that should be enough            */
@@ -42,7 +64,6 @@ int min_remove_level[] = { 51, 51, 51, 1, 1, 1 };
 struct board boards[NUM_BOARDS];
 struct board* curr_board;
 struct message* curr_msg;
-extern struct char_data* character_list;
 
 /* This sets the minimum level needed to read/write/look at these boards
    mainly included to enable the creation of a "wizard-only" board        */
@@ -88,8 +109,7 @@ int board_show_board(struct char_data* ch, char* arg, int bnum);
 
 */
 
-int board( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
-		   int type ) {
+int board( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,int type ) {
 	static int has_loaded = 0;
 	int bnum = -1;
 	int obj_num;
@@ -584,4 +604,6 @@ int board_check_locks (int bnum, struct char_data* ch) {
 	board_lock[bnum].locked_for = 0;
 	return(0);
 }
+
+} // namespace Alarmud
 

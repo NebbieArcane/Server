@@ -1,62 +1,57 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: act.wizard.c,v 1.5 2002/03/04 00:35:51 Thunder Exp $
 *
 */
-#define _XOPEN_SOURCE 1
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#ifdef CYGWIN
-#include <crypt.h>
-#endif
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.wizard.hpp"
 #include "snew.hpp"
 #include "interpreter.hpp"
-#include "protos.hpp"
 #include "cmdid.hpp"
 #include "fight.hpp"
 #include "Registered.hpp"
 #include "signals.hpp"
 #include "utility.hpp"
-void switch_light(byte why);
+#include "handler.hpp"
+#include "db.hpp"
+#include "maximums.hpp"
+#include "spell_parser.hpp"
+#include "comm.hpp"
+#include "modify.hpp"
+#include "multiclass.hpp"
+#include "reception.hpp"
+#include "act.info.hpp"
+#include "act.other.hpp"
+#include "parser.hpp"
+#include "weather.hpp"
+#include "ansi_parser.hpp"
+#include "regen.hpp"
+#include "spec_procs.hpp"
+#include "magicutils.hpp"
+namespace Alarmud {
 
-/*   external vars  */
 
-extern long SystemFlags;
-extern struct weather_data weather_info;
-extern char* system_flag_types[];
-extern struct zone_data* zone_table;
-extern int top_of_zone_table;
-#if HASH
-extern struct hash_header room_db;
-#else
-extern struct room_data* room_db[];
-#endif
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct index_data* mob_index;
-extern struct index_data* obj_index;
-extern int top_of_p_table;
-extern int top_of_mobt;
-extern int top_of_objt;
-extern char rarelist[MAX_STRING_LENGTH*2]; /*Acidus 2004-show rare*/
-extern struct int_app_type int_app[26];
-extern struct wis_app_type wis_app[26];
-extern struct player_index_element* player_table;
-extern char* room_bits[];
-extern struct str_app_type str_app[];
-extern char* spells[];
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
-extern char* aszLogMessagesType[];
-extern char* aszWeaponSpecialEffect[];
-extern char* aszWeaponType[];
-
-char EasySummon = 1;
+char EasySummon = true;
 long numero_mob_obj[100000];
 
 void do_auth(struct char_data* ch, char* argument, int cmd) {
@@ -125,7 +120,7 @@ void do_auth(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 void do_register(struct char_data* ch, char* argument, int cmd) {
-	struct char_data* victim;
+	struct char_data* victim = nullptr;
 	char buf[255];
 	char name[MAX_INPUT_LENGTH];
 	char* parms[10];
@@ -158,8 +153,10 @@ void do_register(struct char_data* ch, char* argument, int cmd) {
 			send_to_char(buf, ch);
 		}
 	}
-	Nebbie::Registered toon(GET_NAME(victim));
-	toon.reg(GET_NAME(ch));
+	if (victim) {
+		Registered toon(GET_NAME(victim));
+		toon.reg(GET_NAME(ch));
+	}
 	//Nebbie::getRegistered()->doReg(GET_NAME(ch),GET_NAME(victim));
 	//doreg(ch,nparms,parms);
 	for (nparms=0; nparms<10; nparms++) {
@@ -631,7 +628,6 @@ void do_listhosts(struct char_data* ch, char* argument, int command) {
 }
 
 void do_silence(struct char_data* ch, char* argument, int cmd) {
-	extern int Silence;
 	if( GetMaxLevel(ch) < DIO || !IS_PC( ch ) ) {
 		send_to_char("You cannot Silence.\n\r",ch);
 		return;
@@ -656,11 +652,7 @@ void do_wizlock(struct char_data* ch, char* argument, int cmd) {
 	int a, length, b;
 	char buf[255];
 
-	extern int numberhosts;
-	extern char hostlist[MAX_BAN_HOSTS][30];
-
 #endif
-	extern int WizLock;
 
 
 	if ((GetMaxLevel(ch) < DIO) || (IS_NPC(ch))) {
@@ -1071,8 +1063,6 @@ void do_goto(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* target_mob, *pers, *v;
 	struct obj_data* target_obj;
 
-	void do_look(struct char_data *ch, char* argument, int cmd);
-
 	only_argument(argument, buf);
 	if (!*buf) {
 		send_to_char("You must supply a room number or a name.\n\r", ch);
@@ -1198,7 +1188,6 @@ void do_goto(struct char_data* ch, char* argument, int cmd) {
 
 
 void do_stat(struct char_data* ch, char* argument, int cmd) {
-	extern char* spells[];
 	struct affected_type* aff;
 	char arg1[MAX_STRING_LENGTH];
 	char buf[MAX_STRING_LENGTH];
@@ -1217,32 +1206,10 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 	bool found;
 
 	/* for objects */
-	extern char* item_types[];
-	extern char* wear_bits[];
-	extern char* extra_bits[];
-	extern char* drinks[];
 
 	/* for rooms */
-	extern char* dirs[];
-
-	extern char* exit_bits[];
-	extern char* sector_types[];
 
 	/* for chars */
-	extern char* equipment_types[];
-	extern char* affected_bits[];
-	extern char* affected_bits2[];
-	extern char* immunity_names[];
-	extern char* special_user_flags[];
-	extern char* apply_types[];
-	extern char* pc_class_types[];
-	extern char* npc_class_types[];
-	extern char* action_bits[];
-	extern char* player_bits[];
-	extern char* position_types[];
-	extern char* connected_types[];
-	extern char* RaceName[];
-	extern struct str_app_type str_app[];
 
 	if( !IS_PC(ch) )
 	{ return; }
@@ -1463,7 +1430,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 				if (IS_MAESTRO_DEL_CREATO(ch)) {
 					sprintf(buf,"$c0005Pos. DEA MOR INC STU SLE RES SIT FIG STA MOU");
 					act(buf,FALSE,ch,0,0,TO_CHAR);
-					sprintf(buf,"$c0014     %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld"
+					sprintf(buf,"$c0014     %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld"
 							,GET_TEMPO_IN(k,0)
 							,GET_TEMPO_IN(k,1)
 							,GET_TEMPO_IN(k,2)
@@ -1472,8 +1439,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 							,GET_TEMPO_IN(k,5)
 							,GET_TEMPO_IN(k,6)
 							,GET_TEMPO_IN(k,7)
-							,GET_TEMPO_IN(k,8)
-							,GET_TEMPO_IN(k,9));
+							,GET_TEMPO_IN(k,8));
 					act(buf,FALSE,ch,0,0,TO_CHAR);
 					sprintf(buf,"$c0005Pos prev. : $c0014%d",GET_POS_PREV(k));
 					act(buf,FALSE,ch,0,0,TO_CHAR);
@@ -1733,7 +1699,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 							sprintf(buf,"     Expires in %3d hours, Bits set ",
 									aff->duration);
 							send_to_char(buf,ch);
-							if (aff->location != APPLY_BV2)
+							if (aff->location != APPLY_AFF2)
 							{ sprintbit((unsigned)aff->bitvector,affected_bits,buf); }
 							else
 							{ sprintbit((unsigned)aff->bitvector,affected_bits2,buf); }
@@ -1995,10 +1961,6 @@ void do_ooedit(struct char_data* ch, char* argument, int cmd) {
 	int iVNum;
 
 	/* for objects
-	extern char *item_types[];
-	extern char *wear_bits[];
-	extern char *extra_bits[];
-	extern char *drinks[];
 	*/
 
 	if (IS_NPC(ch))
@@ -2317,10 +2279,6 @@ void do_set(struct char_data* ch, char* argument, int cmd) {
 	int parm2 = 0;
 	char buf[256];
 	unsigned long lparm = 0;
-
-
-	extern char PeacefulWorks;
-	extern char EasySummon;
 
 
 	if ((GetMaxLevel(ch) < MAESTRO_DEL_CREATO) || (IS_NPC(ch)))
@@ -2808,14 +2766,14 @@ void do_set(struct char_data* ch, char* argument, int cmd) {
 	}
 	else if (!strcmp(field, "kill")) {
 		if (PeacefulWorks) {
-			PeacefulWorks = FALSE;
-			EasySummon = FALSE;
+			PeacefulWorks = false;
+			EasySummon = false;
 			mudlog( LOG_PLAYERS, "Peaceful rooms and Easy Summon disabled by %s",
 					GET_NAME(ch));
 		}
 		else {
-			PeacefulWorks = TRUE;
-			EasySummon = TRUE;
+			PeacefulWorks = true;
+			EasySummon = true;
 			mudlog( LOG_ERROR, "Peaceful rooms and Easy Summon enabled by %s",
 					GET_NAME(ch));
 		}
@@ -2975,7 +2933,6 @@ void do_shutdow(struct char_data* ch, char* argument, int cmd) {
 
 
 void do_shutdown(struct char_data* ch, char* argument, int cmd) {
-	extern int mudshutdown, rebootgame;
 	char buf[100], arg[MAX_INPUT_LENGTH];
 
 	if (IS_NPC(ch))
@@ -3022,7 +2979,7 @@ void do_shutdown(struct char_data* ch, char* argument, int cmd) {
 			sprintf( buf, "Crashed by %s.\n\r", GET_NAME( ch ) );
 			send_to_all(buf);
 			mudlog( LOG_PLAYERS, "Crashed by %s.\n\r", GET_NAME( ch ) );
-			mudshutdown=3/0;
+			assert(false);
 		}
 		else
 		{ send_to_char("Go shut down someone your own size.\n\r", ch); }
@@ -3315,8 +3272,6 @@ void do_mload(struct char_data* ch, char* argument, int cmd) {
 	char num[100];
 	int number;
 
-	extern int top_of_mobt;
-
 	if (IS_NPC(ch))
 	{ return; }
 
@@ -3457,7 +3412,6 @@ void do_oload(struct char_data* ch, char* argument, int cmd) {
 void purge_one_room(int rnum, struct room_data* rp, int* range) {
 	struct char_data*        ch;
 	struct obj_data*        obj;
-	extern long room_count;
 
 	if( !IS_PC( ch ) )
 	{ return; }
@@ -3788,7 +3742,7 @@ void roll_abilities(struct char_data* ch) {
 			 ch->abilities.dex++;
 			 ch->abilities.str--;
 		      }
-		      else if (GET_RACE(ch) == RACE_DROW)
+		      else if (GET_RACE(ch) == RACE_DARK_ELF)
 		      {
 			 ch->abilities.dex+=2;
 			 ch->abilities.con--;
@@ -3948,7 +3902,7 @@ void do_start(struct char_data* ch) {
 
 	/* set default speaking language */
 	switch(GET_RACE(ch)) {
-	case RACE_DROW:
+	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
 	case RACE_SEA_ELF:
@@ -4008,7 +3962,7 @@ void do_start(struct char_data* ch) {
 			ch->skills[SKILL_BACKSTAB].learned = 10;
 			ch->skills[SKILL_PICK_LOCK].learned = 5;
 		}
-		else if (GET_RACE(ch) == RACE_DROW) {
+		else if (GET_RACE(ch) == RACE_DARK_ELF) {
 			ch->skills[SKILL_SNEAK].learned = 20;
 			ch->skills[SKILL_HIDE].learned =  15;
 			ch->skills[SKILL_STEAL].learned = 25;
@@ -4236,7 +4190,6 @@ void do_reroll(struct char_data* ch, char* argument, int cmd) {
 	send_to_char("Use @ command instead.\n\r", ch);
 }
 
-void do_immortal(struct char_data* ch, char* argument, int cmd);
 void do_immort(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* victim;
 	char buf[100];
@@ -4482,8 +4435,6 @@ void do_stealth(struct char_data* ch, char* argument, int cmd) {
 void print_room(int rnum, struct room_data* rp, struct string_block* sb) {
 	char buf[MAX_STRING_LENGTH];
 	int dink,bits, scan;
-
-	extern char* sector_types[];
 
 	if((rp->sector_type < 0) || (rp->sector_type > 9)) {
 		/* non-optimal */
@@ -4739,7 +4690,7 @@ void do_debug(struct char_data* ch, char* argument, int cmd) {
 		/*    malloc_debug(i); */
 		sprintf(arg, "malloc debug level set to %d\n\r", i);
 #else
-		sprintf(arg, "Debug level set to %d. May not be implemented\n\r", i);
+		sprintf(arg, "Debug level set to %d. Probably not implemented\n\r", i);
 #endif
 		send_to_char(arg, ch);
 	}
@@ -4817,7 +4768,6 @@ void do_create( struct char_data* ch, char* argument, int cmd) {
 
 void CreateOneRoom( int loc_nr) {
 	struct room_data* rp;
-	extern int top_of_zone_table;
 
 	char buf[256];
 
@@ -4951,8 +4901,6 @@ void do_cset(struct char_data* ch, char* arg, int cmd) {
 	char buf[1000], buf1[255], buf2[255], buf3[255], buf4[255];
 	int i, radix;
 	NODE* n;
-	extern struct radix_list radix_head[];
-	extern byte HashTable[];
 
 	if(IS_NPC(ch))
 	{ return; }
@@ -5178,7 +5126,8 @@ void do_drainlevel(struct char_data* ch, char* argument, int cmd) {
 
 		/* do it here! */
 
-		send_to_char("You are struck by a black beam from above, it hurts!\rThe life force from your body fades and you feel yourself lose\rmemories of old times and battles.\rThe feeling fades and you shiver at a cold gust of wind.\n\r",victim);
+		send_to_char("You are struck by a black beam from above, it hurts!\rThe life force from your body fades and you feel yourself lose\rmemories of old times and battles.\rThe feeling fades and you shiver at a cold gust of wind.\n\r",
+					 victim);
 
 		sprintf(buf,"You drain %d level(s) How Evil!\n\r",numtolose);
 		send_to_char(buf,ch);
@@ -5432,7 +5381,7 @@ void do_nuke(struct char_data* ch, char* argument, int cmd) {
 			 FALSE, ch, 0, victim, TO_CHAR );
 
 		do_purge( ch, GET_NAME( victim ), 0 );
-		Nebbie::Registered toon(GET_NAME(victim));
+		Registered toon(GET_NAME(victim));
 		toon.del();
 		sprintf( buf, "rm -f %s/%s.*", PLAYERS_DIR, lower( GET_NAME( victim ) ) );
 		system( buf );
@@ -5539,7 +5488,6 @@ void do_force_rent( struct char_data* ch, char* argument, int cmd ) {
 }
 
 void do_ghost(struct char_data* ch, char* argument, int cmd) {
-	extern int plr_tick_count;
 	char find_name[80];
 	struct char_file_u tmp_store;
 	struct char_data* tmp_ch,*vict;
@@ -5840,10 +5788,6 @@ void do_clone(struct char_data* ch, char* argument, int cmd) {
 void do_viewfile(struct char_data* ch, char* argument, int cmd) {
 	char namefile[20];
 	char bigbuf[32000];
-	extern char motd[MAX_STRING_LENGTH];
-	extern char wmotd[MAX_STRING_LENGTH];
-
-	/*    extern char titlescreen[MAX_STRING_LENGTH]; */
 
 	only_argument(argument, namefile);
 	if(!strcmp(namefile,"bug"))
@@ -5957,7 +5901,7 @@ void do_wreset (struct char_data* ch, char* argument, int cmd) { // SALVO aggiun
 	if( !IS_PC( ch ) )
 	{ return; }
 
-	mudlog( LOG_CHECK, "Comando wreset eseguito da %s su %d zone.", (ch!=NULL) ? GET_NAME(ch) : "(null)", top_of_zone_table+1);
+	mudlog( LOG_CHECK, "Comando wreset eseguito da %s su %d zone.", ((ch!=NULL) ? GET_NAME(ch) : "(null)"), (top_of_zone_table+1));
 	for (i = 0; i <= top_of_zone_table; i++) {
 		if( zone_table[i].start == 0 ) {
 			char*  s;
@@ -6013,3 +5957,5 @@ if (get_char(buf))
 
 }
 */
+} // namespace Alarmud
+

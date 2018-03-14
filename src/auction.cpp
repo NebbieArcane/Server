@@ -1,30 +1,44 @@
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: auction.c,v 1.3 2002/03/17 16:48:47 Thunder Exp $
 */
-#if ENABLE_AUCTION
+/***************************  System  include ************************************/
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
 #include "utils.hpp"
-#include "mem_test.hpp"
-#include "auction.hpp" // SALVO aggiunta, modificate righe sotto
+/***************************  Local    include ************************************/
+#include "auction.hpp"
+#include "comm.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
 #include "utility.hpp"
+
+namespace Alarmud {
+
 
 #define SELLER 0 // SALVO per la nuova is_present
 #define BUYER 1 // SALVO per la nuova is_present
 #define PULSE_INTERNAL             (2) /* si moltiplica per pulse_auction */
 AUCTION_DATA*  auction;
-extern void talk_auction (char* argument);
-void do_auction_int (struct char_data* ch, char* argument, int cmd);
-void auction_update();
 int advatoi (const char* s);
 int parsebet (const int currentbet, const char* argument);
 
 static bool is_present (int chi, const char* nome) { // SALVO riscritta
 	struct descriptor_data* d;
-	extern struct descriptor_data* descriptor_list;
 
 	if (chi == SELLER) {
 		if (auction->seller
@@ -56,7 +70,7 @@ static bool is_present (int chi, const char* nome) { // SALVO riscritta
 	return FALSE;
 }
 
-void do_auction_int (struct char_data* ch, char* argument, int cmd) {
+void do_auction_int (struct char_data* ch, const char* argument, int cmd) {
 	OBJ_DATA* obj;
 	char arg1[MAX_INPUT_LENGTH];
 	char buf[MAX_STRING_LENGTH];
@@ -316,7 +330,6 @@ void auction_update (void) {
 			} /* switch */
 		} /* if */
 } /* func */
-#endif
 /***************************************************************/
 
 
@@ -439,4 +452,6 @@ int parsebet (const int currentbet, const char* argument) {
 
 	return newbet;        /* return the calculated bet */
 }
+
+} // namespace Alarmud
 

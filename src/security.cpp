@@ -1,15 +1,27 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: security.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "security.hpp"
 
-#include "snew.hpp"
-#include "utility.hpp"
-/* ATTENZIONE Controllare che corrispondano con i valori definiti in structs.h
-   ed in utility.c */
-//void mudlog( unsigned uType, char *szString, ... );
-#define LOG_CHECK    0x0002
+namespace Alarmud {
 
 int SecCheck(char* arg, char* site) {
 	char buf[ 255 ];
@@ -23,9 +35,6 @@ int SecCheck(char* arg, char* site) {
 		mudlog( LOG_CHECK, "Unable to open security file for %s.", arg);
 		return(-1);
 	}
-#ifdef CYGWIN
-	hostname = strdup("localhost");
-#endif
 	result=0;
 	while (1) {
 		doloop=fscanf(f1,"%as\n",&hostname);
@@ -48,4 +57,6 @@ int SecCheck(char* arg, char* site) {
 
 	return(result);
 }
+
+} // namespace Alarmud
 

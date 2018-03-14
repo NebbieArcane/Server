@@ -1,3 +1,8 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
  * Sql.cpp
  *
@@ -7,66 +12,56 @@
  * Licensed Material - Property of Hex Keep s.r.l.
  * (c) Copyright Hex Keep s.r.l. 2012-2014
  */
-
-#include "Sql.hpp"
-#include "config.hpp"
+/***************************  System  include ************************************/
 #include <string>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "Sql.hpp"
 #include "utility.hpp"
-namespace nebbie {
+namespace Alarmud {
 
-Sql sql_instance;
-Sql* getSql() {
-	return (Sql*) &sql_instance;
+Sql::Sql() :_query(),_where(""),_select(""),_from(""),_fields(""),_limit("") {
+
+
 }
-
-Sql::Sql() : disabled(false) {
-#if MYSQL_VERSION
-	mysqlConn= mysql_init(NULL);
-	MYSQL_RES* mysqlRes;
-	MYSQL_ROW mysqlRow;
-
-
-	if (mysqlConn == NULL) {
-		mudlog( LOG_CHECK, "0-----------------> %s\n", mysql_error(mysqlConn));
-		disabled=true;
-		return;
-		//exit(1);
-	}
-
-	/* Connect to database */
-	if (!mysql_real_connect(mysqlConn, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, 0, NULL, 0)) {
-		mudlog( LOG_CHECK, "1--------------------> %s\n", mysql_error(mysqlConn));
-
-		//exit(1);
-	}
-	else {
-		mudlog( LOG_CHECK, "CONNESSO");
-		/* send SQL query */
-		if (mysql_query(mysqlConn, "show tables")) {
-			mudlog( LOG_CHECK, "############################### %s\n", mysql_error(mysqlConn));
-			//exit(1);
-		}
-
-		if(mysqlRes != NULL) {
-			mysqlRes = mysql_use_result(mysqlConn);
-
-			/* output table name */
-			mudlog( LOG_CHECK, "MySQL Tables in mysql database: [%s]\n", MYSQL_DB);
-
-			while ((mysqlRow = mysql_fetch_row(mysqlRes)) != NULL) {
-				mudlog( LOG_CHECK, "%s \n", mysqlRow[0]);
-			}
-		}
-		mysql_free_result(mysqlRes);
-		mysql_close(mysqlConn);
-	}
-
-#endif
-}
-
 Sql::~Sql() {
 	// TODO Auto-generated destructor stub
 }
-} /* namespace nebbie */
+
+Sql* Sql::where(const string field, const string op, const string value) {
+	_where.append(field).append(" ").append(op).append(" ").append(value);
+	return this;
+}
+
+Sql* Sql::where(const string glue, const string field, const string op,
+				const string value) {
+	_where.append(" ").append(glue).append(field).append(" ").append(op).append(" ").append(value);
+	return this;
+}
+
+Sql* Sql::from(const string table) {
+	return this;
+}
+
+Sql* Sql::select(const string field) {
+	return this;
+}
+
+Sql* Sql::select(const std::vector<string> fields) {
+	return this;
+}
+
+Sql* Sql::limit(const unsigned long limit) {
+	return this;
+}
+
+} // namespace Alarmud
+

@@ -1,27 +1,23 @@
-
-/* AlarMUD
- * $Id: utils.h,v 1.2 2002/02/13 11:55:50 root Exp $ +/
- * */
-#ifndef __UTILS__
-#define __UTILS__ 1
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __UTILS__HPP
+#define __UTILS__HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #include "cmdid.hpp"
 #include "snew.hpp"
 #include "hash.hpp"
-int CAN_SEE( struct char_data* s, struct char_data* o );
-int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
-
-#if DEBUG
-
-#define free(obj) fprintf(stderr, "freeing %d\n", sizeof(*obj));\
-	free(obj)
-
-#endif
+#include "maximums.hpp"
+#include "multiclass.hpp"
+namespace Alarmud {
 
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
-#define TRUE  1
+//#define TRUE  1
 
-#define FALSE 0
+//#define FALSE 0
 
 #define LOWER(c) (((c)>='A'  && (c) <= 'Z') ? ((c)+('a'-'A')) : (c))
 
@@ -36,7 +32,7 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 #define CAP(st)  (*(st) = UPPER(*(st)))
 
 #define CREATE(result, type, number)  do {\
-		if (!((result) = (type *) calloc ((number), sizeof(type))))\
+		if (!((result) = static_cast<type *> (calloc ((number), sizeof(type)))))\
 		{ SetStatus("calloc"); abort(); }\
 	} while(0)
 
@@ -58,21 +54,6 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 
 #define IS_RARE( obj ) ( obj->obj_flags.cost >= LIM_ITEM_COST_MIN ) // Gaia 2001
 
-#if 0
-#if HASH
-#define real_roomp( lVNum ) ( hash_find( &room_db, lVNum ) )
-#else
-#define real_roomp( lVNum ) \
-	( ( lVNum < WORLD_SIZE && lVNum > -1 ) ? room_db[ lVNun ] : 0 )
-#endif
-#endif
-
-#if 0
-#define IS_DARK(room)  (real_roomp(room)->light<=0 && \
-						((IS_SET(real_roomp(room)->room_flags, DARK)) || real_roomp(room)->dark))
-
-#define IS_LIGHT(room)  (real_roomp(room)->light>0 || (!IS_SET(real_roomp(room)->room_flags, DARK) || !real_roomp(room)->dark))
-#else
 
 #define IS_DARK_P(proom) ( !IS_SET( (proom)->room_flags, BRIGHT ) && \
 						   (proom)->light <= 0 && \
@@ -92,9 +73,6 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 						 real_roomp(room)->light>0 || \
 						 ( !IS_SET( real_roomp(room)->room_flags, DARK ) || \
 						   !IsDarkOutside( real_roomp(room) ) ) )
-#endif
-
-
 
 #define SET_BIT(var,bit)  ((var) = (var) | (bit))
 
@@ -255,7 +233,7 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 				   !IS_AFFECTED(ch, AFF_PARALYSIS) )
 
 #if 1 // se messo a 0 si elimina il lag
-#ifndef LAG_MOBILES
+#if not LAG_MOBILES
 #define WAIT_STATE(ch, cycle)  (((ch)->desc) ? (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)) : 0)
 #else
 #define WAIT_STATE(ch, cycle)  if((ch)->desc) (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)); else ch->specials.tick_to_lag = (cycle);
@@ -353,7 +331,6 @@ int CAN_SEE_OBJ( struct char_data* ch, struct obj_data* obj );
 
 #define EXIT_NUM(room_num, door)  (real_roomp(room_num)->dir_option[door])
 
-int exit_ok(struct room_direction_data*, struct room_data**);
 
 #define CAN_GO(ch, door) (EXIT(ch,door)&&real_roomp(EXIT(ch,door)->to_room) \
 						  && !IS_SET(EXIT(ch, door)->exit_info, EX_CLOSED))
@@ -395,7 +372,7 @@ int exit_ok(struct room_direction_data*, struct room_data**);
 #define IS_THIEF(ch)    (HasClass(ch,CLASS_THIEF))
 #define IS_MONK(ch)    (HasClass(ch,CLASS_MONK))
 /* GGPATCHEND */
-#define ITEM_TYPE(obj)  ((int)(obj)->obj_flags.type_flag)
+#define ITEM_TYPE(obj)  (static_cast<int>((obj)->obj_flags.type_flag))
 
 #define IS_NPC(ch)  (IS_SET((ch)->specials.act, ACT_ISNPC))
 
@@ -435,8 +412,6 @@ inline struct room_data* real_roomp( long lVNum ) {
 	{ \
 		if WEARING(ch,dummy) result++; \
 	}
-#endif
-
 #define REMOVE_FROM_LIST(item, head, next)  \
 	if ((item) == (head))        \
 		head = (item)->next;      \
@@ -447,4 +422,7 @@ inline struct room_data* real_roomp( long lVNum ) {
 		if (temp)             \
 			temp->next = (item)->next; \
 	}                    \
+
+} // namespace Alarmud
+#endif
 

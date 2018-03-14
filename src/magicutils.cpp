@@ -1,18 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: magicutils.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <assert.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "magicutils.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-
-/* Extern structures */
-extern struct room_data* world;
-extern struct obj_data*  object_list;
-extern struct char_data* character_list;
-
+#include "handler.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magicutils.hpp"
+#include "modify.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "spell_parser.hpp"
+namespace Alarmud {
 
 void SwitchStuff( struct char_data* giver, struct char_data* taker) {
 	struct obj_data* obj, *next;
@@ -194,3 +215,5 @@ void FailPoison(struct char_data* victim, struct char_data* ch) {
 					  victim);
 	}
 }
+} // namespace Alarmud
+

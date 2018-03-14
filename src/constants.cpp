@@ -1,11 +1,26 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD */
 /* $Id: constants.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $ */
-/* modificato da Jethro, agosto 2011 */
-
-#include "maximums.hpp"
-#include "race.hpp"
+/***************************  System  include ************************************/
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
 #include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "constants.hpp"
+#include "maximums.hpp"
 #include "trap.hpp"
+namespace Alarmud {
+/* modificato da Jethro, agosto 2011 */
 
 const char* stats[]= {
 	"STR",
@@ -4223,3 +4238,5 @@ const char* att_kick_hit_room[] = {
 	"$n scatta in piedi e centra $N con un gran calcio.",
 	"."
 };
+} // namespace Alarmud
+

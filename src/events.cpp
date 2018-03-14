@@ -1,5 +1,29 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*$Id: events.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
+/***************************  System  include ************************************/
+#include <stdlib.h>
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "events.hpp"
+#include "hash.hpp"
+#include "queue.hpp"
+//#include "snew.hpp"
+//#include "utility.hpp"
+#include "comm.hpp"
+namespace Alarmud {
 /* ************************************************************************
 *  File: events.c                                                         *
 *                                                                         *
@@ -17,36 +41,13 @@
 ************************************************************************ */
 
 
-#include "events.hpp"
-
-#include <stdlib.h>
-
-#include "hash.hpp"
-#include "queue.hpp"
-#include "snew.hpp"
-#include "structs.hpp"
-#include "utility.hpp"
-#include "utils.hpp"
-
-
 struct event {
 	EVENTFUNC(*func);
 	void* event_obj;
 	struct q_element* q_el;
 };
 
-
 struct queue* event_q;          /* the event queue */
-
-
-/* external variables */
-extern unsigned long pulse;
-extern int hit_gain(struct char_data* ch);
-extern int move_gain(struct char_data* ch);
-extern int mana_limit(struct char_data* ch);
-extern int hit_limit(struct char_data* ch);
-extern int move_limit(struct char_data* ch);
-extern int mana_gain(struct char_data* ch);
 
 /* initializes the event queue */
 void event_init(void) {
@@ -79,9 +80,9 @@ void event_cancel(struct event* event) {
 		mudlog(LOG_SYSERR,"Attempted to cancel a NULL event"); // Gaia 2001
 		return;
 	}
-	MARK;
+
 	queue_deq(event_q, event->q_el);
-	MARK;
+
 	if (event->event_obj)
 	{ free(event->event_obj); }
 	if (event)
@@ -136,3 +137,5 @@ void event_free_all(void) {
 	queue_free(event_q);
 #endif
 }
+} // namespace Alarmud
+

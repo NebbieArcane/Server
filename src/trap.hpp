@@ -1,5 +1,12 @@
-/*$Id: trap.h,v 1.2 2002/02/13 12:30:59 root Exp $
-*/
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __TRAP_HPP
+#define __TRAP_HPP
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
+namespace Alarmud {
 #define TRAP_EFFECT_TYPE   0
 #define TRAP_DAM_TYPE      1
 #define TRAP_LEVEL         2
@@ -34,4 +41,20 @@
 #define GET_TRAP_EFF(obj) (obj)->obj_flags.value[TRAP_EFFECT_TYPE]
 #define GET_TRAP_CHARGES(obj) (obj)->obj_flags.value[TRAP_CHARGES]
 #define GET_TRAP_DAM_TYPE(obj) (obj)->obj_flags.value[TRAP_DAM_TYPE]
+
+int CheckForAnyTrap(struct char_data* ch, struct obj_data* i) ;
+int CheckForGetTrap(struct char_data* ch, struct obj_data* i) ;
+int CheckForInsideTrap(struct char_data* ch, struct obj_data* i) ;
+int CheckForMoveTrap(struct char_data* ch, int dir) ;
+void FindTrapDamage( struct char_data* v, struct obj_data* i) ;
+void InformMess( struct char_data* v) ;
+void TrapDam(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;
+void TrapDamage(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;
+void TrapPoison(struct char_data* v, struct obj_data* t) ;
+void TrapSleep(struct char_data* v) ;
+void TrapTeleport(struct char_data* v) ;
+int TriggerTrap( struct char_data* ch, struct obj_data* i) ;
+void do_settrap( struct char_data* ch, char* arg, int cmd) ;
+} // namespace Alarmud
+#endif // __TRAP_HPP
 

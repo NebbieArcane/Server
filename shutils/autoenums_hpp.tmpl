@@ -1,0 +1,98 @@
+/* GENERATED FILE DO NOT TOUCH
+ * Generated from <TMPL_VAR GENERATOR>
+ */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#include <string>
+#include "config.hpp"
+#ifndef __AUTOENUMS_HPP_
+#define __AUTOENUMS_HPP_
+//#include "globals.hpp"
+//#include "LuaBridge.hpp"
+namespace Alarmud {
+
+//Template for enum to unsigned byte
+
+
+template <typename T>
+inline unsigned char enum_to_ubyte(T value) {
+    return value>255?0:static_cast<unsigned char>(value);
+}
+
+//Template for enum to int
+
+
+template <typename T>
+inline int enum_to_int(T value) {
+    return static_cast<int>(value);
+}
+
+<TMPL_LOOP LOOP_ENUMS>
+// Enum type: <TMPL_VAR ENUM ESCAPE="UPPERCASE"> -- start
+enum <TMPL_VAR ENUM ESCAPE="LOWERCASE"> {
+<TMPL_IF COMMENT>/*
+<TMPL_VAR COMMENT>
+*/
+</TMPL_IF>
+<TMPL_LOOP VALUES>
+	<TMPL_VAR NAME ESCAPE="UPPERCASE"><TMPL_VAR FILLER>=<TMPL_VAR VALUE><TMPL_UNLESS __last__>,</TMPL_UNLESS><TMPL_IF COMMENT> /*<TMPL_VAR COMMENT>*/</TMPL_IF>
+
+</TMPL_LOOP>
+};
+#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_COUNT <TMPL_VAR COUNT>
+
+#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_MIN <TMPL_VAR MIN>
+
+#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_MAX <TMPL_VAR MAX>
+
+#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_KEY "<TMPL_VAR ENUM ESCAPE="LOWERCASE">"
+
+#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_ACCEPT_ZERO <TMPL_IF ZERO_IS_VALID>true<TMPL_ELSE>false</TMPL_IF>
+
+// Enum type: <TMPL_VAR ENUM ESCAPE="UPPERCASE"> -- end
+
+</TMPL_LOOP>
+//#defines
+<TMPL_LOOP LOOP_DEFINES>
+<TMPL_IF COMMENT>/*
+<TMPL_VAR COMMENT>
+*/
+</TMPL_IF>
+#define	<TMPL_VAR NAME ESCAPE="UPPERCASE"><TMPL_VAR FILLER><TMPL_VAR VALUE> <TMPL_IF COMMENT> /*<TMPL_VAR COMMENT>*/</TMPL_IF>
+
+</TMPL_LOOP>
+
+namespace G {
+<TMPL_LOOP LOOP_ENUMS>
+extern <TMPL_VAR ENUM ESCAPE="LOWERCASE"> encode_<TMPL_VAR ENUM ESCAPE="LOWERCASE">(std::string s,<TMPL_VAR ENUM ESCAPE="LOWERCASE"> fallback = <TMPL_LOOP VALUES><TMPL_IF __first__><TMPL_VAR NAME ESCAPE="UPPERCASE"></TMPL_IF></TMPL_LOOP>);
+extern std::string translate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> e);
+extern bool enum_validate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value);
+extern std::ostream & operator<<(std::ostream &out,const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value);
+</TMPL_LOOP>
+} // namespace G
+template<typename T>
+std::string t(T e) {
+    return G::translate(e);
+}
+
+}//namespace Alarmud
+/* Ready for Lua
+namespace luabridge {
+<TMPL_LOOP LOOP_ENUMS>
+template <>
+struct Stack <gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE">> {
+    static void push (lua_State* L, gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE"> s) {
+        lua_pushstring (L, t(s).c_str());
+    }
+    static gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE"> get (lua_State* L, int index) {
+        string stringa(luaL_checkstring(L,index));
+        return gates::globals()->get<gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE">>(<TMPL_VAR ENUM ESCAPE="UPPERCASE">_KEY,stringa,static_cast<gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE">>(<TMPL_VAR ENUM ESCAPE="UPPERCASE">_MIN));
+    }
+};
+
+</TMPL_LOOP>
+}
+*/
+#endif /* __AUTOENUMS_HPP_ */

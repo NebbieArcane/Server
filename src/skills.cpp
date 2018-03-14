@@ -1,52 +1,53 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /*
 ***  AlarMUD
 * $Id: skills.c,v 1.10 2002/03/23 16:55:46 Thunder Exp $
 */
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "skills.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "act.wizard.hpp"
+#include "comm.hpp"
+#include "db.hpp"
 #include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "status.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magicutils.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "spec_procs.hpp"
+#include "spell_parser.hpp"
+#include "trap.hpp"
 
-int choose_exit(int in_room, int tgt_room, int dvar);
+namespace Alarmud {
 
-/* struct room_data *real_roomp(int); */
 
-int remove_trap( struct char_data* ch, struct obj_data* trap);
-
-void do_find_traps( struct char_data* ch, char* arg, int cmd);
-void do_find_food( struct char_data* ch, char* arg, int cmd);
-void do_find_water( struct char_data* ch, char* arg, int cmd);
-int canDig( struct char_data* ch);
-void do_miner( struct char_data* ch);
-void do_forge( struct char_data* ch, char* arg, int cmd);
-
-bool is_same_group( struct char_data* ach, struct char_data* bch );
-
-extern char* dirsTo[];
-extern struct char_data* character_list;
-extern struct room_data* world;
-extern struct dex_app_type dex_app[];
-extern long SystemFlags;
-extern struct index_data* obj_index;
 struct hunting_data {
 	char*        name;
 	struct char_data** victim;
 };
-
-
-/*************************************/
-/* predicates for find_path function */
-
-int is_target_room_p(int room, void* tgt_room);
-
-int named_object_on_ground(int room, void* c_data);
-
-/* predicates for find_path function */
-/*************************************/
 
 
 /*
@@ -998,14 +999,14 @@ void do_mantra( struct char_data* ch, char* arg, int cmd) {
 		af.type = SKILL_MANTRA;
 		af.duration =sulcorpo;
 		af.modifier = -MAX(90,2*sulcorpo);
-		af.location = APPLY_ARMOR;
+		af.location = APPLY_AC;
 		af.bitvector = 0;
 		affect_to_char(ch, &af);
 
 		af.type = SPELL_NO_MESSAGE;
 		af.duration = 2;
 		af.modifier = MAX(90,2*sulcorpo);
-		af.location = APPLY_ARMOR;
+		af.location = APPLY_AC;
 		af.bitvector = 0;
 		affect_to_char(ch, &af);
 		/* L`effetto della spell inizia solo dopo 2 tick */
@@ -1323,7 +1324,6 @@ void do_disguise(struct char_data* ch, char* argument, int cmd) {
 
 /* Skill for climbing walls and the like -DM */
 void do_climb( struct char_data* ch, char* arg, int cmd) {
-	extern char* dirs[];
 	int dir;
 	struct room_direction_data* exitp;
 	int was_in, roll;
@@ -1459,15 +1459,7 @@ void slip_in_climb(struct char_data* ch, int dir, int room) {
 	}
 }
 
-#define TAN_SHIELD   67
-#define TAN_JACKET   68
-#define TAN_BOOTS    69
-#define TAN_GLOVES   70
-#define TAN_LEGGINGS 71
-#define TAN_SLEEVES  72
-#define TAN_HELMET   73
-#define TAN_BAG      14
-#define TAN_ARMOR    9602
+
 void do_tan( struct char_data* ch, char* arg, int cmd) {
 	struct obj_data* j=0;
 	struct obj_data* hide;
@@ -1743,7 +1735,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
-				case RACE_DROW     :
+				case RACE_DARK_ELF     :
 					sprintf(hidetype,"drow hide");
 					acapply=-2;
 					lev=(int)lev/2;
@@ -2063,9 +2055,9 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						break ;
 					case RACE_ORC :
 						if( total_bonus > 25 ) {
-                            special = 1 ;
-                            apply = APPLY_DAMROLL ;
-                            app_val = 1 ;
+							special = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
 							special = 1 ;
@@ -2090,7 +2082,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					case RACE_TYTAN :
 						if( total_bonus > 23 ) {
 							special = 1 ;
-							apply = APPLY_ARMOR ;
+							apply = APPLY_AC ;
 							app_val = -30 ;
 						}
 						break ;
@@ -2310,7 +2302,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 20 ;
 						}
 						break ;
-					case RACE_DROW     :
+					case RACE_DARK_ELF     :
 						if( total_bonus > 22 ) {
 							special = 1 ;
 							apply = APPLY_INT ;
@@ -2319,9 +2311,9 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						break ;
 					case RACE_TROLL :
 						if( total_bonus > 25 ) {
-                            special = 1 ;
-                            apply = APPLY_DAMROLL ;
-                            app_val = 1 ;
+							special = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
 							special = 1 ;
@@ -2673,7 +2665,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 10 ;
 						}
 						break ;
-					case RACE_DROW     :
+					case RACE_DARK_ELF     :
 						if( total_bonus > 22 ) {
 							special = 1 ;
 							apply = APPLY_DEX ;
@@ -2834,7 +2826,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 30 ;
 						}
 						break ;
-					case RACE_DROW      :
+					case RACE_DARK_ELF      :
 						if( total_bonus > 22 ) {
 							special = 1 ;
 							apply = APPLY_MANA ;
@@ -3102,7 +3094,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 
 					/* added by REQUIEM 2018 */
 
-					case RACE_DROW    :
+					case RACE_DARK_ELF    :
 						if( total_bonus > 23 ) {
 							special = 1 ;
 							apply = APPLY_INT;
@@ -3261,7 +3253,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							app_val = 10 ;
 						}
 						break ;
-					case RACE_DROW    :
+					case RACE_DARK_ELF    :
 						if( total_bonus > 25 ) {
 							special = 1 ;
 							apply = APPLY_FIND_TRAPS ;
@@ -3280,14 +3272,14 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						break ;
 					case RACE_TROLL    :
 						if( total_bonus > 24 ) {
-                            special = 1 ;
-                            apply = APPLY_DAMROLL ;
-                            app_val = 1 ;
+							special = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 1 ;
 						}
 						else if( total_bonus > 23 ) {
-                            special = 1 ;
-                            apply = APPLY_SUSC ;
-                            app_val = IMM_ACID ;
+							special = 1 ;
+							apply = APPLY_SUSC ;
+							app_val = IMM_ACID ;
 						}
 						break ;
 					case RACE_SKEXIE    :
@@ -3301,7 +3293,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_HITNDAM ;
-							app_val = 1 ;
+							app_val = 2 ;
 						}
 						break ;
 					default:
@@ -3576,7 +3568,7 @@ void do_tan_old( struct char_data* ch, char* arg, int cmd) {
 					sprintf(hidetype,"enfan hide");
 					lev=(int)lev/2;
 					break;
-				case RACE_DROW     :
+				case RACE_DARK_ELF     :
 					sprintf(hidetype,"drow hide");
 					lev=(int)lev/2;
 					break;
@@ -3834,78 +3826,6 @@ void do_tan_old( struct char_data* ch, char* arg, int cmd) {
 	}
 }
 
-
-#define FOUND_FOOD 21  /* obj that is found if they made it! */
-#define FOUND_FOOD0 1300
-#define FOUND_FOOD1 1301
-#define FOUND_FOOD2 1302
-#define FOUND_FOOD3 1303
-#define FOUND_FOOD4 1304
-#define FOUND_FOOD5 1305
-#define FOUND_FOOD6 1306
-#define FOUND_FOOD7 1307
-#define FOUND_FOOD8 1308
-#define FOUND_FOOD9 1309
-#define FOUND_FOOD10 1310
-#define FOUND_FOOD11 1311
-#define FOUND_FOOD12 1312
-#define FOUND_FOOD13 1313
-#define FOUND_FOOD14 1314
-#define FOUND_FOOD15 1315
-#define FOUND_FOOD16 1316
-#define FOUND_FOOD17 1317
-#define FOUND_FOOD18 1318
-#define FOUND_FOOD19 1319
-#define FOUND_FOOD20 1320
-#define FOUND_FOOD21 1321
-#define FOUND_FOOD22 1322
-#define FOUND_FOOD23 1323
-#define FOUND_FOOD24 1324
-#define FOUND_FOOD25 1325
-#define FOUND_FOOD26 1326
-#define FOUND_FOOD27 1327
-#define FOUND_FOOD28 1328
-#define FOUND_FOOD29 1329
-#define FOUND_FOOD30 1330
-#define FOUND_FOOD31 1331
-#define FOUND_FOOD32 1332
-#define FOUND_FOOD33 1333
-#define FOUND_FOOD34 1334
-#define FOUND_FOOD35 1335
-#define FOUND_FOOD36 1336
-#define FOUND_FOOD37 1337
-#define FOUND_FOOD38 1338
-#define FOUND_FOOD39 1339
-#define FOUND_FOOD40 1340
-#define FOUND_FOOD41 1341
-#define FOUND_FOOD42 1342
-#define FOUND_FOOD43 1343
-#define FOUND_FOOD44 1344
-#define FOUND_FOOD45 1345
-#define FOUND_FOOD46 1346
-#define FOUND_FOOD47 1347
-#define FOUND_FOOD48 1348
-#define FOUND_FOOD49 1349
-#define FOUND_FOOD50 1350
-#define FOUND_FOOD51 1351
-#define FOUND_FOOD52 1352
-#define FOUND_FOOD53 1353
-#define FOUND_FOOD54 1354
-#define FOUND_FOOD55 1355
-#define FOUND_FOOD56 1356
-#define FOUND_FOOD57 1357
-#define FOUND_FOOD58 1358
-#define FOUND_FOOD59 1359
-#define FOUND_FOOD60 1360
-#define FOUND_FOOD61 1361
-#define FOUND_FOOD62 1362
-#define FOUND_FOOD63 1363
-#define FOUND_FOOD64 1364
-#define FOUND_FOOD65 1365
-#define FOUND_FOOD66 1366
-#define FOUND_FOOD67 1367
-#define FOUND_FOOD68 1368
-#define FOUND_FOOD69 1369
 
 void do_find_food( struct char_data* ch, char* arg, int cmd) {
 	int r_num,percent=0;
@@ -4220,7 +4140,7 @@ void do_find_food_old( struct char_data* ch, char* arg, int cmd) {
 	}
 }
 
-#define FOUND_WATER 13  /* obj found when water found */
+
 
 void do_find_water( struct char_data* ch, char* arg, int cmd) {
 	int r_num,percent=0;
@@ -7790,3 +7710,5 @@ void do_forge( struct char_data* ch, char* arg, int cmd) {
 	}
 
 }
+} // namespace Alarmud
+

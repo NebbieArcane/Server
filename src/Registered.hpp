@@ -1,17 +1,13 @@
-/*
- * Registered.hpp
- *
- *  Created on: 25 gen 2018
- *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 #ifndef REGISTERED_HPP_
 #define REGISTERED_HPP_
+/***************************  System  include ************************************/
+/***************************  Local    include ************************************/
 #include "general.hpp"
-namespace Nebbie {
+namespace Alarmud {
 class Registered {
 private:
 	string code;
@@ -41,8 +37,8 @@ public:
 		return god;
 	}
 
-	void setGod(const string &god) {
-		this->god = god;
+	void setGod(const string &godName) {
+		god = godName;
 	}
 
 	static const unsigned short REG_PC		=0;
@@ -61,3 +57,4 @@ public:
 };
 }
 #endif /* REGISTERED_HPP_ */
+

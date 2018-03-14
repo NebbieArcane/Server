@@ -1,37 +1,55 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 * $Id: spec_procs2.c,v 2.2 2002/05/07 22:31:50 Thunder Exp $
 * */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include "cmdid.hpp"
-#include "fight.hpp"
-#include "protos.hpp"
-#include "snew.hpp"
-#include "status.hpp"
-#include "utility.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
 #include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "spec_procs2.hpp"
+#include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
+#include "act.off.hpp"
+#include "act.other.hpp"
+#include "act.wizard.hpp"
 #include "aree.hpp"
-/*   external vars  */
+#include "comm.hpp"
+#include "db.hpp"
+#include "fight.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "magic.hpp"
+#include "magic2.hpp"
+#include "magic3.hpp"
+#include "mobact.hpp"
+#include "opinion.hpp"
+#include "regen.hpp"
+#include "shop.hpp"
+#include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs3.hpp"
+#include "spell_parser.hpp"
+#include "spells1.hpp"
+#include "spells2.hpp"
 
-extern struct room_data* world;
-extern struct char_data* character_list;
-extern struct descriptor_data* descriptor_list;
-extern struct index_data* obj_index;
-extern struct time_info_data time_info;
-extern struct index_data* mob_index;
-extern struct weather_data weather_info;
-extern int top_of_world;
-extern struct int_app_type int_app[26];
-
-extern struct title_type titles[4][ABS_MAX_LVL];
-extern char* dirs[];
-
-extern int gSeason;  /* what season is it ? */
+namespace Alarmud {
 
 #define COSTO_LEZIONI 500
 #define COSTO_IMMOLATION 1
@@ -318,13 +336,10 @@ int DruidAttackSpells(struct char_data* ch, struct char_data* vict, int level) {
 
 
 int Summoner(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
-	/*   extern struct descriptor_data *descriptor_list; */
 	struct descriptor_data* d;
 	struct char_data* targ=0;
 	struct char_list* i;
 	char buf[255];
-
-	extern char EasySummon;
 
 	if (cmd || !AWAKE(ch)) {
 		return(FALSE);
@@ -382,7 +397,7 @@ int Summoner(struct char_data* ch, int cmd, char* arg, struct char_data* mob, in
 
 		if (targ) {
 			act("$n pronuncia le parole 'Your ass is mine!'.", 1, ch, 0, 0, TO_ROOM);
-			if (EasySummon == 1) {
+			if (EasySummon) {
 				if (!IS_SET(ch->player.iClass, CLASS_PSI)) {
 					spell_summon(GetMaxLevel(ch), ch, targ, 0);
 				}
@@ -467,7 +482,6 @@ int T1000( struct char_data* ch, char* line, int cmd, struct char_data* mob, int
 	int count;
 	struct descriptor_data* i;
 
-	/*    extern struct descriptor_data *descriptor_list; */
 
 	if (ch->specials.hunting == 0)
 	{ ch->generic = T1000_SEARCHING; }
@@ -1066,6 +1080,7 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 				cast_energy_drain(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				break;
 			}
+		/* no break */
 		case 23:
 		case 24:
 		case 25:
@@ -1146,8 +1161,7 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 					GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
 				}
-				cast_incendiary_cloud(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict,
-									  0);
+				cast_incendiary_cloud(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict,0);
 				break;
 			}
 		/* ...  case 50: */
@@ -1575,6 +1589,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 				}
 				break;
 			}
+		/* no break */
 		case 3:
 		case 4:
 		case 5:
@@ -2247,8 +2262,6 @@ int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,
 	char obj_name[50], vict_name[50];
 	struct char_data* vict;
 	struct obj_data* obj;
-
-	extern struct QuestItem QuestList[4][IMMORTAL];
 
 #if EASY_LEVELS
 	if (GET_LEVEL(ch, iClass) > 0) {  /* for now.. so as not to give it away */
@@ -4424,7 +4437,6 @@ int monk_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 		}
 		/**** SALVO skills prince ****/
 		if (IS_PRINCE(ch) && !HasClass(ch, CLASS_MONK)) {
-			extern char* spells[];
 			if (!*arg) {
 				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
 						ch->specials.spells_to_learn);
@@ -4723,8 +4735,6 @@ int DruidGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data*
 	int number, i, max, smax;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if ((cmd != CMD_PRACTICE) && (cmd != CMD_GAIN)) { return(FALSE); }
 
@@ -5180,8 +5190,7 @@ int druid( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 
 	if( !ch->specials.fighting ) {
 		level = number( 1, GetMaxLevel(ch) );
-		if( GET_HIT(ch) < GET_MAX_HIT(ch) ) ;
-		{
+		if( GET_HIT(ch) < GET_MAX_HIT(ch) ) {
 			DruidHeal( ch, level );
 			return(TRUE);
 		}
@@ -6282,8 +6291,6 @@ int camino( struct char_data* ch, int cmd, char* arg,
 
 
 
-extern int gevent;
-extern float shop_multiplier;
 
 int DwarvenMiners(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	if(type == EVENT_COMMAND)
@@ -6555,7 +6562,6 @@ int barbarian_guildmaster(struct char_data* ch, int cmd, char* arg, struct char_
 		}
 		/**** SALVO skills prince ****/
 		else if (IS_PRINCE(ch) && !HasClass( ch, CLASS_BARBARIAN ) && cmd !=CMD_GAIN) {
-			extern char* spells[];
 			if (!*arg) {
 				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
 						ch->specials.spells_to_learn);
@@ -6781,8 +6787,6 @@ int RangerGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if (!ch->skills)
 	{ return(FALSE); }
@@ -6962,7 +6966,6 @@ int StatMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	int curstat=0;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* stats[];
 
 	if (check_soundproof(ch))
 	{ return(FALSE); }
@@ -7161,8 +7164,6 @@ int PsiGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* m
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if (!ch->skills) { return(FALSE); }
 
@@ -7325,8 +7326,6 @@ int PaladinGuildmaster( struct char_data* ch, int cmd, char* arg,
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
 
 	if (!ch->skills)
 	{ return(FALSE); }
@@ -7489,9 +7488,6 @@ int mage_specialist_guildmaster(struct char_data* ch, int cmd, char* arg, struct
 	char buf[256];
 	int i, number = 0, max;
 	struct char_data* guildmaster;
-	extern char* spells[];
-	extern struct spell_info_type spell_info[MAX_SPL_LIST];
-
 
 	if (!AWAKE(ch))
 	{ return(FALSE); }
@@ -7605,4 +7601,6 @@ int mage_specialist_guildmaster(struct char_data* ch, int cmd, char* arg, struct
 	}
 	return(magic_user(ch, cmd, arg, ch, 0));
 }
+
+} // namespace Alarmud
 

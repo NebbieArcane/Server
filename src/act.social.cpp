@@ -1,50 +1,39 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
 /* AlarMUD
 *  DaleMUD v2.0        Released 2/1994
 *  See license.doc for distribution terms.   DaleMUD is based on DIKUMUD
 *
  * $Id: act.social.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
-
+/***************************  System  include ************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "protos.hpp"
+/***************************  General include ************************************/
+#include "config.hpp"
+#include "typedefs.hpp"
+#include "flags.hpp"
+#include "autoenums.hpp"
+#include "structs.hpp"
+#include "logging.hpp"
+#include "constants.hpp"
+#include "utils.hpp"
+/***************************  Local    include ************************************/
+#include "act.social.hpp"
+#include "comm.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "interpreter.hpp"
+#include "multiclass.hpp"
 #include "snew.hpp"
-/* extern variables */
+namespace Alarmud {
 
-extern struct descriptor_data* descriptor_list;
-
-
-struct social_messg {
-	int act_nr;
-	int hide;
-	int min_victim_position; /* Position of victim */
-
-	/* No argument was supplied */
-	char* char_no_arg;
-	char* others_no_arg;
-
-	/* An argument was there, and a victim was found */
-	char* char_found;                /* if NULL, read no further, ignore args */
-	char* others_found;
-	char* vict_found;
-
-	/* An argument was there, but no victim was found */
-	char* not_found;
-
-	/* The victim turned out to be the character */
-	char* char_auto;
-	char* others_auto;
-}* soc_mess_list = 0;
-
-
-
-struct pose_type {
-	int level;          /* minimum level for poser */
-	char* poser_msg[4];  /* message to poser        */
-	char* room_msg[4];   /* message to room         */
-} pose_messages[MAX_MESSAGES];
+struct social_messg* soc_mess_list = 0;
+struct pose_type pose_messages[MAX_MESSAGES];
 
 static int list_top = -1;
 
@@ -349,3 +338,5 @@ void do_pose(struct char_data* ch, char* argument, int cmd) {
 	act(pose_messages[to_pose].room_msg[iClass], 0, ch, 0, 0, TO_ROOM);
 
 }
+} // namespace Alarmud
+
