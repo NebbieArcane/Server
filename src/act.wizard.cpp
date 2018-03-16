@@ -93,21 +93,19 @@ void do_auth(struct char_data* ch, char* argument, int cmd) {
 		one_argument(argument, word);
 		if (str_cmp(word,"yes")==0) {
 			d->character->generic = NEWBIE_START;
-			mudlog( LOG_PLAYERS,"%s has just accepted %s into the game.",
-					ch->player.name,name);
+			mudlog( LOG_PLAYERS,"%s has just accepted %s into the game.",ch->player.name,name);
 			SEND_TO_Q("You have been accepted.  Press enter\n\r", d);
 		}
 		else if (str_cmp(word,"no")==0) {
 			SEND_TO_Q("You have been denied.  Press enter\n\r", d);
-			mudlog( LOG_PLAYERS,"%s has just denied %s from the game.",
-					ch->player.name,name);
+			mudlog( LOG_PLAYERS,"%s has just denied %s from the game.",ch->player.name,name);
 			d->character->generic = NEWBIE_AXE;
 		}
 		else {
 			only_argument( argument, szMessage );
 			SEND_TO_Q( szMessage, d);
 			SEND_TO_Q( "\n\r", d);
-			sprintf( buf, "Hai mandato '%s' a %.20s\n\r", szMessage,
+			safe_sprintf( buf, "Hai mandato '%s' a %.20s\n\r", szMessage,
 					 GET_NAME(d->character) );
 			send_to_char(buf, ch);
 			return;
@@ -3216,7 +3214,7 @@ void do_return(struct char_data* ch, char* argument, int cmd) {
 void do_force(struct char_data* ch, char* argument, int cmd) {
 	struct descriptor_data* i;
 	struct char_data* vict;
-	char name[100], to_force[100],buf[100];
+	char name[100], to_force[100],buf[150];
 
 	if( !IS_PC( ch ) && cmd != 0 )
 	{ return; }
@@ -3235,8 +3233,7 @@ void do_force(struct char_data* ch, char* argument, int cmd) {
 			}
 			else {
 				if( !IS_NPC( ch ) && !IS_SET( ch->specials.act, PLR_STEALTH ) ) {
-					sprintf(buf, "$n ti ha obbligat$B a '%s'.", to_force);
-					act(buf, FALSE, ch, 0, vict, TO_VICT);
+					safe_sprintf(buf,"$n ti ha obbligat$B a '%s'.", to_force);
 				}
 				send_to_char("Ok.\n\r", ch);
 				command_interpreter(vict, to_force);
@@ -5544,12 +5541,12 @@ void do_ghost(struct char_data* ch, char* argument, int cmd) {
 
 void do_mforce(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* vict;
-	char name[100], to_force[100],buf[100];
+	char name[100], to_force[100],buf[150];
 
 	if (IS_NPC(ch) && (cmd != 0))
 	{ return; }
-
 	half_chop(argument, name, to_force);
+	mudlog(LOG_ALWAYS,"%s -> %s = %s",argument,name,to_force);
 
 	if (!*name || !*to_force)
 	{ send_to_char("Who do you wish to force to do what?\n\r", ch); }
@@ -5561,7 +5558,7 @@ void do_mforce(struct char_data* ch, char* argument, int cmd) {
 				send_to_char("Oh no you don't!!\n\r", ch);
 			}
 			else {
-				sprintf(buf, "$n has forced you to '%s'.", to_force);
+				safe_sprintf(buf, "$n has forced you to '%s'.", to_force);
 				act(buf, FALSE, ch, 0, vict, TO_VICT);
 				send_to_char("Ok.\n\r", ch);
 				command_interpreter(vict, to_force);
