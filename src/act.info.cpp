@@ -4398,18 +4398,18 @@ void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
 	case 'd': {
 		if (!HasClass(ch, CLASS_DRUID)) {
 			send_to_char("Scommetto che pensi di essere un druido.\n\r", ch);
+			send_to_char("I bet you think you're a druid.\n\r", ch);
 			return;
 		}
 		send_to_char("La tua classe puo` imparare i seguenti spells:\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
 				if( spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_druid<IMMORTALE) {
+						spell_info[i+1].min_level_druid==max) {
 					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_druid,
 							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r"  );
-					if (strlen(buf)+strlen(buffer) > MAX_STRING_LENGTH-2)
+					strcat(buf," \n\r");
+					if (strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2)
 					{ break; }
 					strcat(buffer, buf);
 					strcat(buffer, "\r");
