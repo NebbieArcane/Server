@@ -455,7 +455,7 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 			mudlog( LOG_SYSERR, "Error in character name.  Changed to 'Error'");
 			free(ch->player.name);
 			ch->player.name = (char*)malloc(6);
-			strcpy(ch->player.name, "Error");
+			strncpy(ch->player.name, "Error\0",6);
 			/*    return; Vediamo se stracrasha o no.... */
 		}
 	} /* Fine if IS_NPC */
@@ -785,26 +785,26 @@ int is_abbrev(char* arg1, char* arg2) {
  * del primo argomento.
  * Come bonus, tmp1 e tmp2 sono fillate a zero
  * */
-void half_chop(const char* string, char* arg1, char* arg2) {
+void half_chop(const char* argument, char* arg1, char* arg2) {
 	char* tmp1;
 	char* tmp2;
 	char* p1;
 	char* p2;
 	int i;
 	i=0;
-	tmp1=(char*)calloc(1,strlen(string)+1);
-	tmp2=(char*)calloc(1,strlen(string)+1);
+	tmp1=(char*)calloc(1,strlen(argument)+1);
+	tmp2=(char*)calloc(1,strlen(argument)+1);
 	p1=tmp1;
 	p2=tmp2;
-	for (; isspace(*string); string++);
+	for (; isspace(*argument); argument++);
 
-	for (; !isspace(*p1 = *string) && *string && i <49; i++,string++, p1++);
+	for (; !isspace(*p1 = *argument) && *argument && i <49; i++,argument++, p1++);
 	*p1='\0';
 	for (; isspace(*p1) && *p1; p1++);
 
-	for (; isspace(*string); string++);
+	for (; isspace(*argument); argument++);
 
-	for (; ( *p2 = *string ) != 0; string++, p2++);
+	for (; ( *p2 = *argument ) != 0; argument++, p2++);
 	/* Poto tmp1 a 49 caratteri ovvero a una stringa lunga max 50 */
 
 	strncpy(arg1,tmp1,50);
