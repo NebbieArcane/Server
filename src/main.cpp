@@ -77,14 +77,14 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	cout << endl;
-#ifdef master
+#ifdef env_master
 	debug_level=99;
 #endif
-#ifdef devel
+#ifdef env_devel
 	debug_level=99;
 	SetTest(true);
 #endif
-#ifdef vagrant
+#ifdef env_vagrant
 	debug_level=99;
 	SetTest(true);
 #endif
