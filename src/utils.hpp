@@ -423,6 +423,8 @@ inline struct room_data* real_roomp( long lVNum ) {
 			temp->next = (item)->next; \
 	}                    \
 
+#define safe_sprintf(a,...) {snprintf(a,sizeof a -1,__VA_ARGS__) ; a[sizeof a -1]='\0';}
+
 } // namespace Alarmud
 #endif
 
