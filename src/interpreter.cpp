@@ -11,6 +11,8 @@
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -400,7 +402,7 @@ int old_search_block(const char* argument,int begin,int length,const char** list
 	return ( found ? guess : -1 );
 }
 
-void command_interpreter( struct char_data* ch, char* argument ) {
+void command_interpreter( struct char_data* ch, const char* argument ) {
 	char buf[254];
 	NODE* n;
 	char buf1[255], buf2[255];
@@ -473,9 +475,8 @@ void command_interpreter( struct char_data* ch, char* argument ) {
 			{ buf2[0] = '\0'; }
 		}
 		else {
-			register int i;
+			int i=0;
 			half_chop(argument, buf1, buf2);
-			i = 0;
 			while(buf1[i] != '\0') {
 				buf1[i] = LOWER(buf1[i]);
 				i++;
@@ -778,14 +779,30 @@ int is_abbrev(char* arg1, char* arg2) {
 
 
 
-/* return first 'word' plus trailing substring of input string */
-/* Si aspetta che il primo parametro sia il nome di un personaggio
- * Siccome potrebbe non essere e potrei quindi trovarmi con un buffer
- * overrun, eseguo in temporanei e poi copio solo i primi 50 caratteri
- * del primo argomento.
- * Come bonus, tmp1 e tmp2 sono fillate a zero
- * */
-void half_chop(const char* argument, char* arg1, char* arg2) {
+/**
+ * Split the string in two at the first space
+ * Arguments returned are guaranteed to not be longer than requeste.
+ * Default length is 99 for both arguments
+ */
+void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t len2) {
+	std::string work(argument);
+	boost::algorithm::trim_all(work);
+	std::vector<std::string> parts;
+	split(parts,work,boost::algorithm::is_any_of(" "),boost::algorithm::token_compress_on);
+	boost::algorithm::erase_head(work,parts[0].length());
+	work=work.substr(0,len1);
+	parts[0]=parts[0].substr(0,len2);
+	//NOTE: using strcpy is safe here because we already mad both strings the right len
+	mudlog(LOG_ALWAYS,"name: %s  arg: %s",parts[0],work);
+	strcpy(arg1,parts[0].c_str());
+	strcpy(arg2,work.c_str());
+	mudlog(LOG_ALWAYS,"name: %s  arg: %s",arg1,arg2);
+	return;
+/*
+
+
+
+	mudlog(LOG_ALWAYS,"Passed %s(%d), Sizeof arg1=%d arg2=%d, Len arg1=%d arg2=%d",argument,strlen(argument),sizeof *arg1,sizeof *arg2,sizeof arg1,sizeof arg2);
 	char* tmp1;
 	char* tmp2;
 	char* p1;
@@ -805,12 +822,11 @@ void half_chop(const char* argument, char* arg1, char* arg2) {
 	for (; isspace(*argument); argument++);
 
 	for (; ( *p2 = *argument ) != 0; argument++, p2++);
-	/* Poto tmp1 a 49 caratteri ovvero a una stringa lunga max 50 */
-
 	strncpy(arg1,tmp1,50);
 	strcpy(arg2,tmp2);
 	free(tmp1);
 	free(tmp2);
+	*/
 }
 
 
