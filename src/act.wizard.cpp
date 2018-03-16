@@ -3214,7 +3214,13 @@ void do_return(struct char_data* ch, char* argument, int cmd) {
 
 
 void do_force(struct char_data* ch, char* argument, int cmd) {
-	struct descriptor_data* i;
+	
+    if (strlen(argument) > 80) {
+        send_to_char("Line too long, truncated to 80.\n", ch);
+        *(argument + 81) = '\0';
+    }
+    
+    struct descriptor_data* i;
 	struct char_data* vict;
 	char name[100], to_force[100],buf[100];
 
@@ -5543,7 +5549,13 @@ void do_ghost(struct char_data* ch, char* argument, int cmd) {
 
 
 void do_mforce(struct char_data* ch, char* argument, int cmd) {
-	struct char_data* vict;
+    
+    if (strlen(argument) > 80) {
+        send_to_char("Line too long, truncated to 80.\n", ch);
+        *(argument + 81) = '\0';
+    }
+    
+    struct char_data* vict;
 	char name[100], to_force[100],buf[100];
 
 	if (IS_NPC(ch) && (cmd != 0))
