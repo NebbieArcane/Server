@@ -177,7 +177,7 @@ void do_imptest(struct char_data* ch, char* arg, int cmd) {
 		send_to_char("Test mode off",ch);
 		return;
 	}
-	send_to_char("Settest on/off");
+	send_to_char("Settest on/off",ch);
 	return;
 
 #if 0
