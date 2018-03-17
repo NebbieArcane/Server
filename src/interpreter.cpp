@@ -1909,7 +1909,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 		}
 
 		else {
-			if (!IsTest()) {
+			if (!IsTest() or IS_IMMORTAL(d->character)) {
 				if( strncmp( (char*)crypt( arg, d->pwd ), d->pwd, strlen(d->pwd) ) ) {
 					write_to_descriptor(d->descriptor,"Password errata.\n\r");
 					mudlog( LOG_PLAYERS,
@@ -1924,7 +1924,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 					return;
 				}
 			}
-
 #if IMPL_SECURITY
 			if( top_of_p_table > 0 ) {
 				if( GetMaxLevel( d->character ) >= 59 ) {
