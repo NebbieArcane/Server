@@ -792,11 +792,9 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 	boost::algorithm::erase_head(work,parts[0].length());
 	work=work.substr(0,len1);
 	parts[0]=parts[0].substr(0,len2);
-	//NOTE: using strcpy is safe here because we already mad both strings the right len
-	mudlog(LOG_ALWAYS,"name: %s  arg: %s",parts[0],work);
+	//NOTE: using strcpy is safe here because we (hopefully) already made both strings the right length
 	strcpy(arg1,parts[0].c_str());
 	strcpy(arg2,work.c_str());
-	mudlog(LOG_ALWAYS,"name: %s  arg: %s",arg1,arg2);
 	return;
 /*
 
