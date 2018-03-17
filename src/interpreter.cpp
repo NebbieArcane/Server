@@ -1455,7 +1455,7 @@ void assign_command_pointers () {
 				MAESTRO_DEI_CREATORI );
 //AddCommand("perdono", do_perdono, CMD_PERDONO, POSITION_STANDING, TUTTI ); //FLYP 2003 Perdono
 	AddCommand("immolate", do_immolation, CMD_IMMOLATION, POSITION_FIGHTING, TUTTI); // Flyp 20180129: demon can sacrifice life for mana
-	AddCommand("SetTest",do_imptest,CMD_IMPTEST,POSITION_DEAD,MAESTRO_DEL_CREATO));
+	AddCommand("SetTest",do_imptest,CMD_IMPTEST,POSITION_DEAD,MAESTRO_DEL_CREATO);
 }
 
 
