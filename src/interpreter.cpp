@@ -790,11 +790,11 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 	std::vector<std::string> parts;
 	split(parts,work,boost::algorithm::is_any_of(" "),boost::algorithm::token_compress_on);
 	boost::algorithm::erase_head(work,parts[0].length());
-	work=work.substr(0,len1);
-	parts[0]=parts[0].substr(0,len2);
-	//NOTE: using strcpy is safe here because we (hopefully) already made both strings the right length
-	strcpy(arg1,parts[0].c_str());
-	strcpy(arg2,work.c_str());
+	//NOTE: better safe than sorry, using strncpy
+	strncpy(arg1,parts[0].substr(0,len2).c_str(),len1-1);
+	strncpy(arg2,work.substr(0,len1).c_str(),len2-1);
+	arg1[len1]='\0';
+	arg2[len2]='\0';
 	return;
 /*
 
