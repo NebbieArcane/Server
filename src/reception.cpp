@@ -1611,7 +1611,7 @@ void write_char_extra( struct char_data* ch) {
 		fprintf(fp, "realname:%s\n", ch->specials.realname);
 	}
 
-	fprintf(fp,"version:%s%s",version(),release());
+	fprintf(fp,"version:%s\n",version());
 
 	if (ch->specials.A_list) {
 		for (i=0; i<10; i++) {
