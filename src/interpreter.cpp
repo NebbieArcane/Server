@@ -786,7 +786,12 @@ int is_abbrev(char* arg1, char* arg2) {
  */
 void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t len2) {
 	std::string work(argument);
-	boost::algorithm::trim_all(work);
+	try {
+		boost::algorithm::trim_all(work);
+	}
+	catch (exception &e) {
+		LOG_ALERT("Chopping " << work << " " << e.what());
+	}
 	std::vector<std::string> parts;
 	split(parts,work,boost::algorithm::is_any_of(" "),boost::algorithm::token_compress_on);
 	boost::algorithm::erase_head(work,parts[0].length());
