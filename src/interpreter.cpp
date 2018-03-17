@@ -3052,18 +3052,18 @@ void nanny(struct descriptor_data* d, char* arg) {
 			if( !GetMaxLevel(d->character))
 			{ do_start(d->character); }
 			if( has_mail( d->character->player.name ) )
-				send_to_char( "$c0014C'e` posta per te dallo scriba.\n\r\n\r",
+				send_to_char( "$c0014C'e` posta per te dallo scriba.$c0007\n\r\n\r",
 							  d->character );
-			sprintf(buf,"%s%s",version(),release());
+			sprintf(buf,"%s",version());
 			do_look(d->character, "",15);
 			if( !d->character->specials.lastversion ||
 					strcmp(d->character->specials.lastversion,buf ) )
 				send_to_char(
-					"$c0115           C'E` UNA NUOVA VERSIONE DI MYST IN LINEA.\n\r",
+					"$c0115           C'E` UNA NUOVA VERSIONE DI MYST IN LINEA                   $c0007.\n\r",
 					d->character );
 			if (IsTest())
 				send_to_char(
-					"                 $c0115SEI SU MYST2!!!!!!!!!!!!!!!!!!!!!\n\r",
+					"                 $c0115SEI SU MYST2!!!!!!!!!!!!!!!!!!!!!                    $c0007\n\r",
 					d->character );
 			d->prompt_mode = 1;
 			if (IS_SET(d->character->player.user_flags,RACE_WAR))
