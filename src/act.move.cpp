@@ -36,6 +36,7 @@
 #include "multiclass.hpp"
 #include "regen.hpp"
 #include "signals.hpp"       // for SetStatus
+#include "skills.hpp"
 #include "spell_parser.hpp"  // for SpellWearOff, stop_follower, add_follower
 #include "spells.hpp"        // for SKILL_MEDITATE, SKILL_MEMORIZE, SKILL_PI...
 #include "trap.hpp"          // for CheckForMoveTrap
