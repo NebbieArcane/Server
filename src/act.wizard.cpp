@@ -35,6 +35,7 @@
 #include "handler.hpp"
 #include "db.hpp"
 #include "maximums.hpp"
+#include "snew.hpp"
 #include "spell_parser.hpp"
 #include "comm.hpp"
 #include "modify.hpp"
@@ -165,10 +166,19 @@ void do_register(struct char_data* ch, char* argument, int cmd) {
 
 void do_imptest(struct char_data* ch, char* arg, int cmd) {
 	char buf[255];
-
-	SET_BIT(ch->player.user_flags,USE_ANSI);
 	sprintf(buf,"%s",ansi_parse(arg));
-	send_to_char(buf,ch);
+	if (!strcasecmp(buf,"on")) {
+		SetTest(true);
+		send_to_char("Test mode on",ch);
+		return;
+	}
+	if (!strcasecmp(buf,"off")) {
+		SetTest(true);
+		send_to_char("Test mode off",ch);
+		return;
+	}
+	send_to_char("Settest on/off");
+	return;
 
 #if 0
 	struct char_data* i;
