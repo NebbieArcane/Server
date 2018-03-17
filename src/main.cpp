@@ -88,6 +88,7 @@ int main(int argc, char** argv) {
 	debug_level=99;
 	SetTest(true);
 #endif
+	if (vm.count("test_mode")) { SetTest(true);}
 	if(vm.count("ansi_off")) { SET_BIT(SystemFlags,SYS_NOANSI); }
 	if(vm.count("disable_DNS")) { SET_BIT(SystemFlags,SYS_SKIPDNS); }
 	if(vm.count("log_players")) { SET_BIT(SystemFlags,SYS_LOGALL); }
