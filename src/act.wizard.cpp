@@ -1018,7 +1018,7 @@ void do_at(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* target_mob;
 	struct obj_data* target_obj;
 
-	half_chop(argument, sizeof loc_str -1, sizeof command -1);
+	half_chop(argument,loc_str,command, sizeof loc_str -1, sizeof command -1);
 	if (!*loc_str) {
 		send_to_char("You must supply a room number or a name.\n\r", ch);
 		return;
