@@ -49,7 +49,8 @@ int main(int argc, char** argv) {
 	("disable_dns,N","Disables DNS")
 	("newbie_approve,R","Requests approvation for new players")
 	("ansi_off,A","Disables all colors")
-	("test_mode,T","Developer mode, disables password checking")
+	("test_mode,t","Developer mode, disables password checking")
+	("version,V","Display version and terminates")
 	("verbose_log,v",po::value<unsigned short> (& debug_level)->default_value(2),"Log verbosity level")
 	("directory,d",po::value<string>(&dir)->default_value(dir),"Data directory")
 	("nospecials,s",po::value<bool>(&no_specials)->default_value(false),"Disable specials procedures")
@@ -71,6 +72,10 @@ int main(int argc, char** argv) {
 		cout << e.what() << endl;
 	}
 	po::notify(vm);
+	if(vm.count("version")) {
+		cout << version() << endl;
+		exit(0);
+	}
 	if(vm.count("help") or !vm.count("port")) {
 		cout << argv[0] << " <port> <options>" << endl;
 		cout << opt << endl;

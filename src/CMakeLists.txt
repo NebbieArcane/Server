@@ -26,10 +26,7 @@ list(SORT file_cpp)
 #list(REVERSE file_cpp)
 #message(STATUS "file_cpp=${file_cpp}")
 
-#add_executable(myst  ${file_cpp} joined.h release.hpp)
 add_executable(myst  ${file_cpp} ${file_hpp} release.hpp)
-add_executable(info  version.cpp release.hpp)
-target_compile_definitions(info PUBLIC STANDALONE)
 #add_precompiled_header(myst pchheader.h FORCEINCLUDE)
 
 #Boost
@@ -119,5 +116,4 @@ endforeach()
 add_custom_target(style ${CMAKE_SOURCE_DIR}/astyle -r -Q --options=${CMAKE_SOURCE_DIR}/astylerc "./*.cpp,*.hpp")
 #add_custom_command(TARGET myst PRE_LINK COMMAND echo "Before linking")
 #add_custom_command(TARGET myst POST_BUILD COMMAND rm -f release.hpp)
-add_custom_command(TARGET info POST_BUILD COMMAND ./info)
-add_custom_command(TARGET myst POST_BUILD COMMAND cp -f myst ${CMAKE_SOURCE_DIR}/mudroot/myst)
+add_custom_command(TARGET myst POST_BUILD COMMAND myst -V && cp -f myst ${CMAKE_SOURCE_DIR}/mudroot/myst)
