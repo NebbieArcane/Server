@@ -321,12 +321,12 @@ void run_the_game(int port) {
 	event_init();
 
 	boot_db();
-	LOG_DBG(  "Verbosity 6: LWHO error level enabled");
-	LOG_TRACE("Verbosity 5: LSAVE,LMAIL,LRANK error level enabled");
-	LOG_INFO( "Verbosity 4: LPLAYERS error level enabled");
-	LOG_WARN( "Verbosity 3: LCHECK error level enabled");
-	LOG_ALERT("Verbosity 2: LERROR LCONNECT error level enabled");
 	LOG_FATAL("Verbosity 1: LSYSERR LSERVICE error level enabled");
+	LOG_ALERT("Verbosity 2: LERROR LCONNECT error level also enabled");
+	LOG_WARN( "Verbosity 3: LCHECK error level also enabled");
+	LOG_INFO( "Verbosity 4: LPLAYERS error level also enabled");
+	LOG_TRACE("Verbosity 5: LSAVE,LMAIL,LRANK error level also enabled");
+	LOG_DBG(  "Verbosity 6: LWHO error level also enabled");
 
 	mudlog( LOG_ALWAYS, "Entering game loop.");
 	game_loop(s);
