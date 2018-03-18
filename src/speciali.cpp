@@ -162,7 +162,7 @@ int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data*
 ****************************************************************************/
 int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	char* p;
-	char num [8], par2[256], runa[256], buf[128], mail[]=STAFF_MAIL;
+	char num [8], par2[256], runa[256], buf[128], mail[]=STAFF_EMAIL;
 	struct obj_data* obj;
 	int i,number,num2,xp,gold, nalign, tmpalign,max,xp2,xpcum,k,trueGain;
 	short chrace;
