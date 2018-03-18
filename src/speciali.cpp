@@ -162,7 +162,7 @@ int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data*
 ****************************************************************************/
 int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
 	char* p;
-	char num [8], par2[256], runa[256], buf[128], mail[128]="flyp@e4a.it,nebbiearcane@yahoo.it,elei-mi-shill@munoi-ana-inen.com,gnocera@tin.it";
+	char num [8], par2[256], runa[256], buf[128], mail[]=STAFF_MAIL;
 	struct obj_data* obj;
 	int i,number,num2,xp,gold, nalign, tmpalign,max,xp2,xpcum,k,trueGain;
 	short chrace;
@@ -185,7 +185,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("Una colonna di luce ti colpisce! Senti un piacevole calore pervadere il tuo corpo!\r\nLentamente la colonna di luce si dissolve, sbiadendo fino a lasciarti un aura bianchissima\r\nattorno al corpo: sai di essere sotto la protezione della luce degli dei!\r\n",
 				false,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"AEL\". La sua carne sembra bruciare,\r\nmentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"AEL\". La sua carne sembra bruciare,\r\nmentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("$N viene avvolt$b da una colonna di luce accecante. Mentre la luce sbiadisce\r\n e riesci a rimettere a fuoco la stanza, vedi che $N e' circondat$b da una intensa aura bianca.\r\n",FALSE,ch,0,ch,
 				TO_ROOM);
 			spell_sanctuary(52,ch,ch,0);
@@ -205,7 +205,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> IDENTIFY");
 			act("Reciti solennemente la parole del Potere \"INEN\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono\r\nfino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"INEN\". La sua carne sembra bruciare,\r\nmentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"INEN\". La sua carne sembra bruciare,\r\nmentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			for (i=0; i<3; i++) {
 				number = real_object(32992);
 				obj = read_object(number, REAL);
@@ -231,7 +231,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> CREATE FOOD");
 			act("Reciti solennemente la parole del Potere \"GHIA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"GHIA\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"GHIA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			for (i=0; i<5; i++) {
 				number = real_object(32991);
 				obj = read_object(number, REAL);
@@ -257,7 +257,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> FIRESHIELD");
 			act("Reciti solennemente la parole del Potere \"ZIR\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"ZIR\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"ZIR\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Cominci a bruciare come una torcia, ma i lembi di fuoco che ti circondano non ti provocano\r\nalcun dolore, anzi, ti danno un gran senso di protezione!\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N viene avvolt$b da possenti fiamme, ma sembra essere in grado di controllarle!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_fireshield(52,ch,ch,0);
@@ -277,7 +277,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> TREETRAVEL");
 			act("Reciti solennemente la parole del Potere \"SIDAMISHIDA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"SIDAMISHIDA\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"SIDAMISHIDA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Ti senti in completa comunione con la natura: ora sai di poter viaggiare utilizzando\r\nle sacre vie dei druidi!\r\n",FALSE,mob,0,ch,TO_VICT);
 			spell_tree_travel(52,ch,ch,0);
 			GET_RUNEDEI( ch ) -= 8;
@@ -296,7 +296,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> WATER BREATH");
 			act("Reciti solennemente la parole del Potere \"ELU\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"ELU\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"ELU\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Per un attimo ti senti strozzare...\n\r...ti manca il fiato...\r\n...pensi di morire...\r\n ma ad un tratto tutto passa e senti di poter respirare ovunque!\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N Strabuzza gli occhi e si tienen la gola: SEMBRA SOFFOCARE!! Ad un tratto inspira profondamente e tutto sembra passato..\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_water_breath(52,ch,ch,0);
@@ -316,7 +316,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> STRENGTH");
 			act("Reciti solennemente la parole del Potere \"TIDE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"TIDE\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"TIDE\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Ti senti pieno di vigore. I tuoi muscoli si gonfiano e tutto quello che porti ti sembra piu' leggero!\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N si erge in tutta la sua potenza ed i suoi muscoli si gonfiano!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_strength(52,ch,ch,0);
@@ -336,7 +336,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> MINOR TRACK");
 			act("Reciti solennemente la parole del Potere \"FUEL\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"FUEL\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"FUEL\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti una voce: \"Concentrati sulla tua preda e questa non ti potra' sfuggire!\"\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("Gli occhi di $N sono attraversati da un lampo di luce!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_track(52,ch,ch,0);
@@ -356,7 +356,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> MAJOR TRACK");
 			act("Reciti solennemente la parole del Potere \"BEIO\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"BEIO\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"BEIO\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti una voce: \"Concentrati sulla tua preda e questa non ti potra' sfuggire!\"\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("Gli occhi di $N sono attraversati da un lampo di luce!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_track(52,ch,ch,NULL);
@@ -376,7 +376,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT DRAG BREATH");
 			act("Reciti solennemente la parole del Potere \"AELGUD\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"AELGUD\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"AELGUD\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti la tua pelle bruciare, stirarsi fino all'inverosimile...\r\nUna visione ti attraversa la mente: un possente drago ti soffia addosso tutta la sua rabbia,\r\nma tu non vacilli e passi indenne!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -397,7 +397,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT FIRE");
 			act("Reciti solennemente la parole del Potere \"GUDORIZIR\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"GUDORIZIR\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"GUDORIZIR\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti la tua pelle bruciare, stirarsi fino all'inverosimile...\r\nUna visione ti attraversa la mente: vieni colpito in pieno da una enorme palla infuocata,\r\nma tu non vacilli e passi indenne!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -418,7 +418,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT ELECTRICITY");
 			act("Reciti solennemente la parole del Potere \"GUDORISHAFF\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"GUDORISHAFF\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"GUDORISHAFF\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti la tua pelle bruciare, stirarsi fino all'inverosimile...\r\nUna visione ti attraversa la mente: un fulmine esplode nel cielo sereno e ti colpisce in pieno,\r\nma tu non vacilli e passi indenne!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -439,7 +439,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT COLD");
 			act("Reciti solennemente la parole del Potere \"GUDORILAKRA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"GUDORILAKRA\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"GUDORILAKRA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti la tua pelle bruciare, stirarsi fino all'inverosimile...\r\nUna visione ti attraversa la mente: un vento gelido si alza distruggendo\r\ntutto quello che colpisce con lame di ghiaccio e sei nel centro di questa bufera, ma tu non vacilli e passi indenne!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -460,7 +460,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT ENERGY");
 			act("Reciti solennemente la parole del Potere \"GUDORIELEI\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"GUDORIELEI\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"GUDORIELEI\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Senti la tua pelle bruciare, stirarsi fino all'inverosimile...\r\nUna visione ti attraversa la mente: una strana nube attraversata da fulmini multicolore avanza verso di te distruggendo tutto quello che incontra fino ad inglobarti al suo interno, ma tu non vacilli e passi indenne!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -481,7 +481,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> TS");
 			act("Reciti solennemente la parole del Potere \"IAEELIA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"IAEELIA\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"IAEELIA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Un dolore lancinante ti attraversa la testa ed hai come l'impressione che i tuoi occhi stiano per esplodere...\r\nMa tutto passa presto e sai che ora nulla sara' celato alla tua Vista!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... ad un tratto tutto passa ed i suoi occhi brillano di una strana luce azzurrina!\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -502,7 +502,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> DETECT INVI");
 			act("Reciti solennemente la parole del Potere \"ELIA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"ELIA\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"ELIA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Un dolore lancinante ti attraversa la testa ed hai come l'impressione che i tuoi occhi stiano per esplodere...\r\nMa tutto passa presto e sai che ora la magia non potra' piu' nascodere qualcuno o qualcosa alla tua Vista!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... ad un tratto tutto passa ed i suoi occhi brillano di una strana luce porpora!\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -559,7 +559,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 						act("Reciti solennemente la parole del Potere \"ENE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 							FALSE,mob,0,ch,TO_VICT);
 						act("Il sacerdote ti dice \"Capisco il tuo desiderio di sapere, ma per volere degli ho considerato solo una parte delle Rune che volevi consacrare agli Dei!\"\r\n",FALSE,mob,0,ch,TO_VICT);
-						act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
+						act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
 						act("Strane immagini vorticano davanti ai tuoi occhi... Stai rivivendo le epiche gesta di Eroi di antico passato!\r\nQuando la tua visione termina, e' come se TU abbia vissuto in prima persona quelle avventure!\r\n",
 							FALSE,mob,0,ch,TO_VICT);
 						act("$N trema scosso da brividi, in preda ad una strana trance mistica, ma in un lungo istante tutto cio' passa...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
@@ -583,7 +583,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				GET_RUNEDEI( ch ) -= num2;
 				act("Reciti solennemente la parole del Potere \"ENE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 					FALSE,mob,0,ch,TO_VICT);
-				act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
+				act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
 				act("Strane immagini vorticano davanti ai tuoi occhi... Stai rivivendo le epiche gesta di Eroi di antico passato!\r\nQuando la tua visione termina, e' come se TU abbia vissuto in prima persona quelle avventure!\r\n",
 					FALSE,mob,0,ch,TO_VICT);
 				act("$N trema scosso da brividi, in preda ad una strana trance mistica, ma in un lungo istante tutto cio' passa...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
@@ -602,7 +602,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 					act("Reciti solennemente la parole del Potere \"ENE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 						FALSE,mob,0,ch,TO_VICT);
 					act("Il sacerdote ti dice \"Capisco il tuo desiderio di sapere, ma per volere degli ho considerato solo una parte delle Rune che volevi consacrare agli Dei!\"\r\n",FALSE,mob,0,ch,TO_VICT);
-					act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
+					act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
 					act("Strane immagini vorticano davanti ai tuoi occhi... Stai rivivendo le epiche gesta di Eroi di antico passato!\r\nQuando la tua visione termina, � come se TU abbia vissuto in prima persona quelle avventure!\r\n",
 						FALSE,mob,0,ch,TO_VICT);
 					act("$N trema scosso da brividi, in preda ad una strana trance mistica, ma in un lungo istante tutto cio' passa...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
@@ -633,7 +633,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> COINS");
 			act("Reciti solennemente la parole del Potere \"ANE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"ANE\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"ANE\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Le tue tasche si fanno piu' pesanti, mentre una voce nella tua testa ti dice \"Premio la tua avidita' eroe! Oppure vuoi usare le tue ricchezze per il bene degli altri?\"\r\n",FALSE,mob,0,ch,
 				TO_VICT);
 			act("Le tasche di $N si gonfiano improvvisamente!\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -655,7 +655,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> CURE BLINDNESS");
 			act("Reciti solennemente la parole del Potere \"ELEI\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"ELEI\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"ELEI\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Un dolore lancinante ti attraversa la testa ed hai come l'impressione che i tuoi occhi stiano per esplodere...\r\nMa tutto passa presto e quando riapri gli occhi, ti accorgi di poter vedere di nuovo!\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... Un bagliore attraversa i suoi occhi e poi si spegne\r\n",FALSE,ch,0,ch,TO_ROOM);
@@ -676,7 +676,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> REMOVE PARALYSIS");
 			act("Reciti solennemente la parole del Potere \"ITEL\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
-			act("$N declama con voce imponente la parola \"ITEL\". La sua carne sembra bruciare, mentre le rune che aveva tautate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
+			act("$N declama con voce imponente la parola \"ITEL\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Il tuo corpo brucia pervaso da un immenso calore... Quando questa sensazione passa, ti accorgi di essere di nuovo padrone dei tuoi movimenti.\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... ad un tratto tutto passa ed il suo corpo si muove di nuovo!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_remove_paralysis(52,ch,ch,0);

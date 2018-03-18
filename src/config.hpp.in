@@ -24,6 +24,7 @@
 #ifdef CURL_VERSION_STRING
 #define CURL_VERSION "@CURL_VERSION_STRING@"
 #endif
+#define STAFF_EMAIL "staff@nebbie.it"
 #define HAS_LOG true
 #define VV_1(a,...) % a
 #define VV_2(a,...) % a VV_1(__VA_ARGS__)
