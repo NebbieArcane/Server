@@ -6,8 +6,8 @@
 /*$Id: queue.c,v 1.2 2002/02/13 12:30:58 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdlib.h>
-#include <limits.h>
+#include <cstdlib>
+#include <climits>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

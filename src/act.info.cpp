@@ -7,12 +7,11 @@
 * $Id: act.info.c,v 1.6 2002/03/11 21:15:20 Thunder Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
-#include <stdlib.h>
-#include <sys/time.h>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <ctime>
+#include <cstdlib>
 #include <unistd.h>
 /***************************  General include ************************************/
 #include "config.hpp"

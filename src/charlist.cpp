@@ -6,7 +6,7 @@
 /*$Id: charlist.c,v 1.2 2002/02/13 12:30:57 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdlib.h>
+#include <cstdlib>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

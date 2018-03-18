@@ -7,11 +7,11 @@
 /* $Id: magic3.c,v 1.4 2002/03/14 21:48:56 Thunder Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <cassert>
+#include <cstring>
+#include <cstdlib>
+#include <ctime>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

@@ -6,10 +6,10 @@
 /*$Id: spells2.c,v 1.3 2002/02/13 12:30:59 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 #include <strings.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

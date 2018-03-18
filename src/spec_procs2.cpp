@@ -7,11 +7,11 @@
 * $Id: spec_procs2.c,v 2.2 2002/05/07 22:31:50 Thunder Exp $
 * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <cstdlib>
+#include <ctime>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

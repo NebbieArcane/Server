@@ -6,8 +6,8 @@
 /*$Id: magicutils.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <assert.h>
+#include <cstdio>
+#include <cassert>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

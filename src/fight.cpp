@@ -6,12 +6,12 @@
 /*AlarMUD */
 /* $Id: fight.c,v 2.0 2002/03/24 19:46:06 Thunder Exp $ */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
+#include <cstdio>
+#include <cstring>
+#include <cassert>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

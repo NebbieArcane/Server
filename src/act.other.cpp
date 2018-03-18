@@ -8,10 +8,10 @@
  *
  */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <cstdlib>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

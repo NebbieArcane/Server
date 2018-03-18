@@ -6,12 +6,12 @@
 /* AlarMUD
  * $Id: signals.c,v 1.2 2002/03/23 16:43:20 Thunder Exp $ */
 /***************************  System  include ************************************/
-#include <signal.h>
-#include <stdio.h>
+#include <csignal>
+#include <cstdio>
 #include <sys/time.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

@@ -8,13 +8,13 @@
  * */
 /***************************  System  include ************************************/
 #include <malloc.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
+#include <cstring>
+#include <cctype>
+#include <ctime>
 #include <sys/file.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
-#include <stdarg.h>
+#include <cstdarg>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

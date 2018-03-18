@@ -7,11 +7,11 @@
 /* $Id: handler.c,v 1.2 2002/02/27 01:26:55 Thunder Exp $
  * */
 /***************************  System  include ************************************/
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdio>
+#include <cctype>
+#include <cassert>
+#include <cstdlib>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

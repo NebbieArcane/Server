@@ -6,8 +6,8 @@
 /*$Id: mind_use1.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

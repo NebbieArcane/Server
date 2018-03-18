@@ -5,12 +5,12 @@
 //  Original intial comments
 /*AlarMUD*/
 /***************************  System  include ************************************/
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
+#include <cstring>
+#include <cctype>
+#include <cstdio>
 #include <arpa/telnet.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 /***************************  General include ************************************/

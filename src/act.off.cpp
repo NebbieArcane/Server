@@ -10,9 +10,9 @@
 * $Id: act.off.c,v 1.5 2002/03/23 20:49:38 Thunder Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

@@ -6,7 +6,7 @@
 #ifndef __RECEPTION_HPP
 #define __RECEPTION_HPP
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 extern int DontShow;

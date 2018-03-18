@@ -3,11 +3,11 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <cstdio>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

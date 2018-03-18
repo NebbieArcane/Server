@@ -8,11 +8,11 @@
  * $Id: board.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  */
 /***************************  System  include ************************************/
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstring>
+#include <cstdio>
+#include <cctype>
+#include <cstdlib>
+#include <ctime>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

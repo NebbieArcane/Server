@@ -9,9 +9,9 @@
  * $Id: act.move.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
  */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

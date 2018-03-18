@@ -13,12 +13,12 @@
 *  CircleMUD is based on DikuMUD, Copyright (C) 1990, 1991.               *
 ************************************************************************ */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
+#include <cctype>
+#include <cstring>
+#include <ctime>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

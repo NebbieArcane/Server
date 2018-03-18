@@ -6,9 +6,9 @@
 /*$Id: create.mob.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

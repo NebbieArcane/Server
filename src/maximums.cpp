@@ -7,10 +7,10 @@
  * $Id: maximums.c,v 1.2 2002/02/13 12:30:58 root Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

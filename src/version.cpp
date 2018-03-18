@@ -3,7 +3,7 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 /***************************  General include ************************************/
 /***************************  Local    include ************************************/
 #include "version.hpp"

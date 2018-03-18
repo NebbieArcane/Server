@@ -5,7 +5,7 @@
 #ifndef __UTILITY_HPP
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 

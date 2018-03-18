@@ -9,7 +9,7 @@
 #ifndef __DB_HPP
 #define __DB_HPP
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
 namespace Alarmud {

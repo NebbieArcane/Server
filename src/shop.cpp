@@ -7,9 +7,9 @@
 * $Id: shop.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

@@ -6,7 +6,7 @@
 #ifndef SRC_MODIFY_HPP_
 #define SRC_MODIFY_HPP_
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 /***************************  Local    include ************************************/
 #include "db.hpp"
 namespace Alarmud {

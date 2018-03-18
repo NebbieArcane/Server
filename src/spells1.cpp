@@ -6,7 +6,7 @@
 /*$Id: spells1.c,v 1.2 2002/02/13 12:30:59 root Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
+#include <cstdio>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

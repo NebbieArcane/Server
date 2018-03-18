@@ -11,10 +11,10 @@
 *  Written by Eric Green (ejg3@cornell.edu)                               *
 ************************************************************************ */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

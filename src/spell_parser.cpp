@@ -7,10 +7,10 @@
 * $Id: spell_parser.c,v 1.5 2002/03/11 00:15:36 Thunder Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

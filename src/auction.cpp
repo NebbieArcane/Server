@@ -6,10 +6,10 @@
 /*$Id: auction.c,v 1.3 2002/03/17 16:48:47 Thunder Exp $
 */
 /***************************  System  include ************************************/
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <cctype>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

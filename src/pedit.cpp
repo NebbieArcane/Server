@@ -7,10 +7,10 @@
  * $Id: pedit.c,v 2.4 2002/06/03 22:53:09 Thunder Exp $
 * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cctype>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

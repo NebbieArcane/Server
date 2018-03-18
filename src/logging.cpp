@@ -3,7 +3,7 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 /***************************  System  include ************************************/
-#include <stdarg.h>
+#include <cstdarg>
 #include <log4cxx/logger.h>
 #include <log4cxx/patternlayout.h>
 #include <log4cxx/fileappender.h>

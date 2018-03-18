@@ -11,9 +11,9 @@
  * $Id: act.comm.c,v 2.1 2002/05/06 09:50:00 Thunder Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

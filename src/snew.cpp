@@ -6,10 +6,10 @@
 /*$Id: snew.c,v 1.3 2002/03/23 16:43:20 Thunder Exp $
 */
 /***************************  System  include ************************************/
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <unistd.h>
-#include <string.h>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

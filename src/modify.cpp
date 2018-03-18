@@ -7,11 +7,11 @@
 * $Id: modify.c,v 1.3 2002/02/24 18:42:47 Thunder Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cctype>
+#include <cstring>
+#include <ctime>
+#include <cstdlib>
 #include <unistd.h>
 /***************************  General include ************************************/
 #include "config.hpp"

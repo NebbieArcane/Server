@@ -8,9 +8,9 @@
  * $Id: create.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"

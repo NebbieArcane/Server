@@ -8,9 +8,9 @@
 * $Id: skills.c,v 1.10 2002/03/23 16:55:46 Thunder Exp $
 */
 /***************************  System  include ************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
