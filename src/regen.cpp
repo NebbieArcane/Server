@@ -111,7 +111,7 @@ EVENTFUNC(points_event) {
 			&& !EgoSave( ch ) ) { do_ego_eq_action( ch ); }
 
 #endif
-
+	mudlog(LOG_CHECK,"Regen: %s",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
 	mudlog(LOG_CHECK,"RegenGeneric: %s", GET_NAME(ch));
 
 	rp = real_roomp(ch->in_room);
