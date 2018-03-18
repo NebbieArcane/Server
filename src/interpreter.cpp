@@ -795,7 +795,7 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 	size_t space=work.find_first_of(" ");
 	if (space==std::string::npos) { // No space found, only one argument
 		arg2[0]='\0';
-		std::strcpy(arg1,work.substr(0,len1).c_str(),len1);
+		std::strcpy(arg1,work.substr(0,len1).c_str());
 	}
 	else {
 		std::strcpy(arg1,work.substr(0,min<size_t>(space-1,len1)).c_str());
