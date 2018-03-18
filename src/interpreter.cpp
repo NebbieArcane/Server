@@ -803,6 +803,7 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 		boost::algorithm::trim_left(work);
 		std::strcpy(arg2,work.substr(0,len2).c_str());
 	}
+	mudlog(LOG_CHECK,"Half Chopped %s to [%s] and [%s]",argument, arg1,arg2);
 	return;
 /*
 
