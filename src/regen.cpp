@@ -81,6 +81,12 @@ EVENTFUNC(points_event) {
 
 	time = REGEN_EVENTS_DELAY;
 	ch = regen->ch;
+	if (ch->nMagicNumber != CHAR_VALID_MAGIC)  {
+		if (event_obj) {
+			free(event_obj);
+		}
+		return 0;
+	}
 	type = regen->type;
 
 	GET_POINTS_EVENT(ch, type) = NULL;
@@ -98,8 +104,9 @@ EVENTFUNC(points_event) {
 	/* aggiungo controllo per PG rentati o link dead */
 
 	if (!IS_NPC(ch) && !ch->desc ) {
-		if (event_obj)
-		{ free(event_obj); }
+		if (event_obj) {
+			free(event_obj);
+		}
 		return 0;
 	}
 
@@ -111,7 +118,16 @@ EVENTFUNC(points_event) {
 			&& !EgoSave( ch ) ) { do_ego_eq_action( ch ); }
 
 #endif
-	mudlog(LOG_CHECK,"Regen: %s",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
+	if (ch->desc) {
+		mudlog(LOG_CHECK,"Regen: %s",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
+		if (!ch->desc->ch) {
+			mudlog(LOG_ERROR,"Player in state %s with no character in descriptor",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
+			if (event_obj) {
+				free(event_obj);
+			}
+			return 0;
+		}
+	}
 	mudlog(LOG_CHECK,"RegenGeneric: %s", GET_NAME(ch));
 
 	rp = real_roomp(ch->in_room);
