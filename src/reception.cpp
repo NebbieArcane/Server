@@ -1616,7 +1616,7 @@ void write_char_extra( struct char_data* ch) {
 	if (ch->specials.A_list) {
 		for (i=0; i<10; i++) {
 			if (GET_ALIAS(ch, i)) {
-				fprintf(fp, "%d: %s\n", i, GET_ALIAS(ch, i));
+				fprintf(fp, "%d: %s\n", i, replace(GET_ALIAS(ch, i),'\n','\0'));
 			}
 		}
 	}

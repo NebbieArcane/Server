@@ -120,7 +120,7 @@ EVENTFUNC(points_event) {
 #endif
 	if (ch->desc) {
 		mudlog(LOG_CHECK,"Regen: %s",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
-		if (!ch->desc->ch) {
+		if (!ch->desc->character) {
 			mudlog(LOG_ERROR,"Player in state %s with no character in descriptor",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
 			if (event_obj) {
 				free(event_obj);
