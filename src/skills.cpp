@@ -6331,7 +6331,7 @@ void do_sending( struct char_data* ch, char* argument, int cmd) {
 		GET_MANA(ch) -=5;
 		alter_mana(ch,0);
 	}
-	half_chop(argument,target_name,message,sizeof name -1,sizeof message -1);
+	half_chop(argument,target_name,message,sizeof target_name -1,sizeof message -1);
 	if( !(target=get_char_vis_world(ch,target_name,NULL)) ) {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;
