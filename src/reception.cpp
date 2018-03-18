@@ -1553,7 +1553,7 @@ void load_char_extra(struct char_data* ch) {
 						if (n >=0 && n <= 9) {
 							/* set up alias */
 							sprintf(tmp, "%d %s", n, s+1);
-							do_alias(ch, tmp, 260);
+							do_alias(ch, replace(tmp,'\n','\0'), CMD_ALIAS);
 						}
 					}
 				}
