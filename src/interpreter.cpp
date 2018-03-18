@@ -476,7 +476,7 @@ void command_interpreter( struct char_data* ch, const char* argument ) {
 		}
 		else {
 			int i=0;
-			half_chop(argument, buf1, buf2);
+			half_chop(argument, buf1, buf2,sizeof buf1 -1,sizeof buf2 -1);
 			while(buf1[i] != '\0') {
 				buf1[i] = LOWER(buf1[i]);
 				i++;
@@ -787,19 +787,22 @@ int is_abbrev(char* arg1, char* arg2) {
 void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t len2) {
 	std::string work(argument);
 	try {
-		boost::algorithm::trim_all(work);
+		boost::algorithm::trim_left(work);
 	}
 	catch (exception &e) {
 		LOG_ALERT("Chopping " << work << " " << e.what());
 	}
-	std::vector<std::string> parts;
-	split(parts,work,boost::algorithm::is_any_of(" "),boost::algorithm::token_compress_on);
-	boost::algorithm::erase_head(work,parts[0].length());
-	//NOTE: better safe than sorry, using strncpy
-	strncpy(arg1,parts[0].substr(0,len2).c_str(),len1-1);
-	strncpy(arg2,work.substr(0,len1).c_str(),len2-1);
-	arg1[len1]='\0';
-	arg2[len2]='\0';
+	size_t space=work.find_first_of(" ");
+	if (space==std::string::npos) { // No space found, only one argument
+		arg2[0]='\0';
+		std::strcpy(arg1,work.substr(0,len1).c_str(),len1);
+	}
+	else {
+		std::strcpy(arg1,work.substr(0,min<size_t>(space-1,len1)).c_str());
+		work=work.substr(space);
+		boost::algorithm::trim_left(work);
+		std::strcpy(arg2,work.substr(0,len2).c_str());
+	}
 	return;
 /*
 
