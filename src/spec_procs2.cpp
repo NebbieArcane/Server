@@ -533,7 +533,7 @@ int jive_box( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
 			break;
 
 		case CMD_TELL:
-			half_chop( arg, tmp, buf );
+			half_chop( arg, tmp, buf,sizeof tmp -1,sizeof buf -1 );
 			invert( buf, buf2 );
 			sprintf( buf3, "%s %s", tmp, buf2 );
 			do_tell( ch, buf3, cmd );
@@ -541,7 +541,7 @@ int jive_box( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
 			break;
 
 		case CMD_WHISPER:
-			half_chop( arg, tmp, buf );
+			half_chop( arg, tmp, buf,sizeof tmp -1,sizeof buf -1  );
 			invert( buf, buf2 );
 			sprintf( buf3, "%s %s", tmp, buf2 );
 			do_whisper( ch, buf3, cmd );
@@ -549,7 +549,7 @@ int jive_box( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
 			break;
 
 		case CMD_ASK:
-			half_chop( arg, tmp, buf );
+			half_chop( arg, tmp, buf,sizeof tmp -1,sizeof buf -1  );
 			invert( buf, buf2 );
 			sprintf( buf3, "%s %s", tmp, buf2 );
 			do_ask( ch, buf3, cmd );

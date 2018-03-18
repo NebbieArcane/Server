@@ -331,7 +331,7 @@ void do_tell(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument,name,message);
+	half_chop(argument,name,message,sizeof name -1,sizeof message -1);
 
 	if(!*name || !*message) {
 		send_to_char("A chi e` che vuoi parlare ?\n\r", ch);
@@ -406,7 +406,7 @@ void do_whisper(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument,name,message);
+	half_chop(argument,name,message,sizeof name -1, sizeof message -1);
 
 	if(!*name || !*message)
 	{ send_to_char("A chi vuoi sussurrare ? e cosa ?\n\r", ch); }
@@ -447,7 +447,7 @@ void do_ask(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument,name,message);
+	half_chop(argument,name,message,sizeof name -1,sizeof message -1);
 
 	if(!*name || !*message)
 	{ send_to_char( "A chi vuoi chiedere... e cosa ?\n\r", ch); }
@@ -1166,7 +1166,7 @@ void do_telepathy( struct char_data* ch, const char* argument, int cmd ) {
 	char name[100], message[MAX_INPUT_LENGTH+20],
 		 buf[MAX_INPUT_LENGTH+60];
 
-	half_chop( argument, name, message );
+	half_chop( argument, name, message ,sizeof name -1,sizeof message -1);
 
 	if( !HasClass( ch, CLASS_PSI ) && !IS_AFFECTED( ch, AFF_TELEPATHY ) ) {
 		send_to_char( "Cosa pensi di essere ? Un telepate ?\n\r", ch );

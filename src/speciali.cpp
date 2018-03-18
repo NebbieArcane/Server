@@ -173,7 +173,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 	num2=0;
 
 	if( type == EVENT_COMMAND && cmd == CMD_SAY) {
-		half_chop(arg,runa,par2);
+		half_chop(arg,runa,par2,sizeof runa -1,sizeof par2 -1 );
 		if(isdigit(*par2)) { num2=atoi(par2); }
 
 

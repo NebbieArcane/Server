@@ -4338,7 +4338,7 @@ void do_carve( struct char_data* ch, char* argument, int cmd) {
 		return;
 	}
 
-	half_chop(argument,arg1,arg2);
+	half_chop(argument,arg1,arg2,sizeof arg1 -1,sizeof arg2 -1);
 	corpse=get_obj_in_list_vis(ch,arg1,(real_roomp(ch->in_room)->contents));
 
 	if(!corpse)  {
@@ -6331,7 +6331,7 @@ void do_sending( struct char_data* ch, char* argument, int cmd) {
 		GET_MANA(ch) -=5;
 		alter_mana(ch,0);
 	}
-	half_chop(argument,target_name,message);
+	half_chop(argument,target_name,message,sizeof name -1,sizeof message -1);
 	if( !(target=get_char_vis_world(ch,target_name,NULL)) ) {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;

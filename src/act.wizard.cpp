@@ -1018,7 +1018,7 @@ void do_at(struct char_data* ch, char* argument, int cmd) {
 	struct char_data* target_mob;
 	struct obj_data* target_obj;
 
-	half_chop(argument, loc_str, command);
+	half_chop(argument, sizeof loc_str -1, sizeof command -1);
 	if (!*loc_str) {
 		send_to_char("You must supply a room number or a name.\n\r", ch);
 		return;
@@ -3229,7 +3229,7 @@ void do_force(struct char_data* ch, char* argument, int cmd) {
 	if( !IS_PC( ch ) && cmd != 0 )
 	{ return; }
 
-	half_chop(argument, name, to_force);
+	half_chop(argument, name, to_force,sizeof name -1,sizeof to_force -1);
 
 	if (!*name || !*to_force)
 	{ send_to_char("Chi vuoi forzare ed a fare cosa ?\n\r", ch); }
@@ -5555,7 +5555,7 @@ void do_mforce(struct char_data* ch, char* argument, int cmd) {
 
 	if (IS_NPC(ch) && (cmd != 0))
 	{ return; }
-	half_chop(argument, name, to_force);
+	half_chop(argument, name, to_force,sizeof name -1, sizeof to_force -1);
 	mudlog(LOG_ALWAYS,"%s -> %s = %s",argument,name,to_force);
 
 	if (!*name || !*to_force)

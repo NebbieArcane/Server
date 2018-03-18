@@ -40,11 +40,6 @@
 
 namespace Alarmud {
 
-
-
-
-void StopAllFightingWith( char_data* pChar );
-
 void do_ripudia(struct char_data* ch, char* argument, int cmd) {
 	char arg[80];
 	struct char_data* victim=NULL;
@@ -495,7 +490,7 @@ void do_order(struct char_data* ch, char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument, name, message);
+	half_chop(argument, name, message,sizeof name -1,sizeof message -1);
 
 	/* Gia' che me lo sto passando faccio pure le traduzioni :-) */
 
@@ -622,7 +617,7 @@ void do_order_old(struct char_data* ch, char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument, name, message);
+	half_chop(argument, name, message,sizeof name -1,sizeof message -1);
 
 	if (!*name || !*message)
 	{ send_to_char("Order who to do what?\n\r", ch); }
@@ -2340,7 +2335,7 @@ void do_weapon_load( struct char_data* ch, char* argument, int cmd ) {
 		}
 	}
 
-	half_chop( argument, arg1, arg2 );
+	half_chop( argument, arg1, arg2,sizeof arg1 -1,sizeof arg1 -1 );
 	if( !*arg1 ) {
 		send_to_char( "Che proiettile vuoi caricare ?\n\r",ch);
 		return;
@@ -2433,7 +2428,7 @@ void do_throw(struct char_data* ch, char* argument, int cmd) {
 	int rng, tdir;
 	struct char_data* targ;
 
-	half_chop(argument, arg1, arg2);
+	half_chop(argument, arg1, arg2,sizeof arg1 -1,sizeof arg2 -1);
 	if( !*arg1 || !*arg2 ) {
 		send_to_char( "Il giusto formato per throw e`: "
 					  "throw <oggetto> [<dir> at] <target>.\n\r", ch );
