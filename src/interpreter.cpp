@@ -1857,8 +1857,8 @@ void nanny(struct descriptor_data* d, char* arg) {
 
 			for( k=descriptor_list; k; k = k->next ) {
 				if ((k->character != d->character) && k->character) {
-					sprintf(buf,"%s",GET_NAME( k->original?k->original:k->character)  );
-					if ( !str_cmp( buf,GET_NAME(d->character ) ) ) {
+					struct char_data* test = (k->original?k->original:k->character);
+					if ( (test and GET_NAME(test) and str_cmp(GET_NAME(test),GET_NAME(d->character)))) {
 #if !defined ( NEW_CONNECT )
 						sprintf( buf, "%s e` gia` nel gioco, non puoi riconnetterti."
 								 "\n\r",buf );
