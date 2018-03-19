@@ -2939,46 +2939,32 @@ void do_equipment(struct char_data* ch,const char* argument, int cmd) {
 
 
 void do_credits(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_credits (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, credits, 0);
-	mudlog( LOG_SYSERR, "Terminato do_credits (act.info.c)." );
 }
 void do_news(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_news (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, news, 0);
-	mudlog( LOG_SYSERR, "Terminato do_news (act.info.c)." );
 }
 void do_wiznews(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_wiznews (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wiznews, 0);
-	mudlog( LOG_SYSERR, "Terminato do_wiznews (act.info.c)." );
 }
 void do_info(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_info (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, info, 0);
-	mudlog( LOG_SYSERR, "Terminato do_info (act.info.c)." );
 }
 void do_wizlist(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_wizlist (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wizlist, 0);
-	mudlog( LOG_SYSERR, "Terminato do_wizlist (act.info.c)." );
 }
 void do_prince(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_prince (act.info.c).",GET_NAME(ch));
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, princelist, 0);
-	mudlog( LOG_SYSERR, "Terminato do_prince (act.info.c)." );
 }
 void do_immortal(struct char_data* ch,const char* argument, int cmd) {
-	mudlog( LOG_SYSERR, "%s ha iniziato do_immortal (act.info.c).",GET_NAME(ch) );
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, immlist, 0);
-	mudlog( LOG_SYSERR, "Terminato do_immortal (act.info.c)." );
 }
 
 int which_number_object( struct obj_data* obj ) {
