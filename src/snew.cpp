@@ -297,24 +297,32 @@ int SetStat(struct char_data* ch,int stat,int value)
 }
 
 int GetTargetType(struct char_data* ch,struct char_data* target,int ostility) {
-	struct char_data* t;
+	struct char_data* t = target;
+	char* name=nullptr;
 	int tt=gtt_IS_NONE;
-	t=target;
 	if (!ch || !t) { return(tt); }
 	if (ch == t) { return(gtt_IS_SELF); }
 	if (in_group(ch,t)) { tt=gtt_IS_FRIEND; }
 	else if (IS_POLY(t)) { tt=gtt_IS_POLY; }
 	else if (IS_PC(t)) { tt=gtt_IS_PLAYER; }
-	if (ch->specials.supporting && *ch->specials.supporting) {
-		if (!(strcasecmp(ch->specials.supporting,
-						 GET_NAME(t))))
-		{ tt=gtt_IS_SUPPORTED; }
+	if (IS_NPC(t)) {
+		name=t->player.short_descr;
 	}
+	else {
+		name=t->player.name;
+	}
+	if (name) {
+		if (ch->specials.supporting && *ch->specials.supporting) {
+			if (!(strcasecmp(ch->specials.supporting,name))) {
+				tt=gtt_IS_SUPPORTED;
+			}
+		}
 
-	if (ch->specials.bodyguarding && *ch->specials.bodyguarding) {
-		if (!(strcasecmp(ch->specials.bodyguarding,
-						 GET_NAME(t))))
-		{ tt=gtt_IS_BODYGUARDED; }
+		if (ch->specials.bodyguarding && *ch->specials.bodyguarding) {
+			if (!(strcasecmp(ch->specials.bodyguarding,name))) {
+				tt=gtt_IS_BODYGUARDED;
+			}
+		}
 	}
 	if (in_clan(ch,t)) { tt=gtt_IS_CLAN; }
 	if (ch->specials.fighting && ch->specials.fighting==t) {
