@@ -1861,13 +1861,13 @@ void nanny(struct descriptor_data* d, char* arg) {
 					if ( (test and GET_NAME(test) and str_cmp(GET_NAME(test),GET_NAME(d->character)))) {
 #if !defined ( NEW_CONNECT )
 						sprintf( buf, "%s e` gia` nel gioco, non puoi riconnetterti."
-								 "\n\r",buf );
+								 "\n\r",test );
 						SEND_TO_Q( buf, d);
 						SEND_TO_Q("Nome: ", d);
 #else
 						d->AlreadyInGame=TRUE;
 						d->ToBeKilled=k;
-						mudlog(LOG_CONNECT,"%s : gia' in gioco.",buf);
+						mudlog(LOG_CONNECT,"%s : gia' in gioco.",test);
 
 #endif
 					}
