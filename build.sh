@@ -26,6 +26,8 @@ else
 	cp *.?pp ../src/
 	)
 fi
+rm -f CMakeCache.txt
+rm -f src/CMakeCache.txt
 rm -f src/release.h
 rm -f src/myst src/info
 rm -f mudroot/myst

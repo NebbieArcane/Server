@@ -1476,9 +1476,6 @@ void close_socket(struct descriptor_data* d) {
 
 		}
 		else {
-			if( GET_NAME( d->character ) ) {
-				mudlog( LOG_CONNECT, "Losing player: %s.", GET_NAME(d->character));
-			}
 			free_char(d->character);
 		}
 	}
