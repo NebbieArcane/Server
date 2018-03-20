@@ -378,13 +378,10 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		targettype=gtt_IS_SELF;
 		ftargettype=gtt_IS_SELF;
 	}
-	mudlog(LOG_CHECK,"GTT1:ostility: %d %s vs %s->%s = %s->%s",
-		   ostility,
-		   GET_NAME(ch),
-		   GET_NAME(victim),
-		   (fighted?GET_NAME(fighted):"none"),
-		   targets[targettype],
-		   targets[ftargettype]);
+	if (victim and victim->nMagicNumber!= CHAR_VALID_MAGIC) return;
+	if (fighted and fighted->nMagicNumber!= CHAR_VALID_MAGIC) return;
+	if (ch and ch->nMagicNumber!= CHAR_VALID_MAGIC) return;
+
 	/* Verifica eventuale necessita' di inversione
 	 * L'inversione viene valutata solo se ostility < 0
 	 * In caso di azioni aggressive conta sempre il target reale
@@ -413,12 +410,6 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		 * Questa branca c'e' solo per poter mettere il commento
 		 * */
 	}
-	mudlog(LOG_CHECK,"GTT2:ostility: %d %s vs %s->%s = %s",
-		   ostility,
-		   GET_NAME(ch),
-		   GET_NAME(victim),
-		   (fighted?GET_NAME(fighted):"none"),
-		   targets[targettype]);
 
 	if (ostility < 0 )
 	{ alignmod=ostility; }
