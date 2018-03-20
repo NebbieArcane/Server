@@ -119,7 +119,6 @@ EVENTFUNC(points_event) {
 
 #endif
 	if (ch->desc) {
-		mudlog(LOG_CHECK,"Regen: %s",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
 		if (!ch->desc->character) {
 			mudlog(LOG_ERROR,"Player in state %s with no character in descriptor",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
 			if (event_obj) {
@@ -128,7 +127,6 @@ EVENTFUNC(points_event) {
 			return 0;
 		}
 	}
-	mudlog(LOG_CHECK,"RegenGeneric: %s", GET_NAME(ch));
 
 	rp = real_roomp(ch->in_room);
 
@@ -143,7 +141,6 @@ EVENTFUNC(points_event) {
 	switch (type) {
 	case REGEN_HIT:
 
-		mudlog(LOG_CHECK,"RegenHit: %s", GET_NAME(ch));
 
 		hgain = hit_gain(ch);
 		if( hgain > 0 && regainroom == 0 ) { gain = 0 ; }
@@ -164,7 +161,6 @@ EVENTFUNC(points_event) {
 			GET_HIT(ch) = MIN( (GET_HIT(ch) +  gain), GET_MAX_HIT(ch));
 			if (GET_HIT(ch) < GET_MAX_HIT(ch)) {
 				/* reenqueue the event. NOW AT A FIXED TIME */
-				mudlog(LOG_CHECK,"Requeue Hits: %s", GET_NAME(ch));
 				GET_POINTS_EVENT(ch, REGEN_HIT) =
 					event_create(points_event, regen, time);
 			}
@@ -207,7 +203,6 @@ EVENTFUNC(points_event) {
 		break;
 
 	case REGEN_MANA:
-		mudlog(LOG_CHECK,"RegenMana: %s", GET_NAME(ch));
 
 		fGain = modf(((double)(mana_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
 		fGain = fGain*(double)(r_mult) ;
@@ -223,7 +218,6 @@ EVENTFUNC(points_event) {
 
 		if (GET_MANA(ch) < GET_MAX_MANA(ch)) {
 			/* reenqueue the event */
-			mudlog(LOG_CHECK,"Requeue Mana: %s", GET_NAME(ch));
 			GET_POINTS_EVENT(ch, REGEN_MANA) =
 				event_create(points_event, regen, time);
 		}
@@ -236,7 +230,6 @@ EVENTFUNC(points_event) {
 		break;
 
 	case REGEN_MOVE:
-		mudlog(LOG_CHECK,"RegenMove: %s", GET_NAME(ch));
 		fGain = modf(((double)(move_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
 		fGain = fGain*(double)(r_mult) ;
 		gain = (int)( dum );
@@ -250,7 +243,6 @@ EVENTFUNC(points_event) {
 		GET_MOVE(ch) = MIN((GET_MOVE(ch) + gain), GET_MAX_MOVE(ch));
 		if (GET_MOVE(ch) < GET_MAX_MOVE(ch)) {
 			/* reenqueue the event */
-			mudlog(LOG_CHECK,"Requeue Move: %s", GET_NAME(ch));
 			GET_POINTS_EVENT(ch, REGEN_MOVE) =
 				event_create(points_event, regen, time);
 		}
@@ -264,7 +256,7 @@ EVENTFUNC(points_event) {
 
 	default:
 		sprintf(logbuf, "Unknown points event type %d", type);
-		mudlog(LOG_SYSERR,logbuf);
+		mudlog(LOG_ERROR,logbuf);
 		break;
 	}
 	/* kill this event
