@@ -6048,7 +6048,9 @@ int SlotMachine( struct char_data* ch, int cmd, char* arg,
 
 	if( type != EVENT_COMMAND && cmd != CMD_PULL )
 	{ return FALSE; }
-
+	if (!arg) {
+		return FALSE; //Called with a null pointer as string
+	}
 	while( *arg && isspace( *arg ) )
 	{ arg++; }
 	if( !strlen( arg ) || strncasecmp( arg, "leva", strlen( arg ) ) )
