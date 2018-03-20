@@ -221,7 +221,7 @@ void do_hit(struct char_data* ch, char* argument, int cmd) {
 					return;
 				}
 				if( GET_POS(ch)>=POSITION_STANDING && !ch->specials.fighting ) {
-					if( hit(ch, victim, TYPE_UNDEFINED) != SubjectDead ) {
+					if( hit(ch, victim, TYPE_UNDEFINED) == AllLiving ) { // Attempting align check on a dead victim could crash the mud
 						ActionAlignMod(ch,victim,cmd);
 						WAIT_STATE(ch, PULSE_VIOLENCE+2);
 					}
