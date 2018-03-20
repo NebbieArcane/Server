@@ -3120,7 +3120,7 @@ long fread_number_int(FILE* pFile, char* cmdfile, int cmdline, char* infofile) {
 
 	if (!isdigit(c)) {
 		memo[l] = 0;
-		mudlog(LOG_ERROR, "Fread_number: bad char %c line %s", c,memo);
+		mudlog(LOG_ERROR, "Fread_number: bad char %c line %s Info: ", c,memo,infofile);
 		PrintStatus(1);
 		ungetc(c, pFile);
 		return 0;
