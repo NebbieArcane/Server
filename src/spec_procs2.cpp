@@ -1742,7 +1742,7 @@ int ninja_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 				break;
 			case 2:
 				sk_num = SKILL_DOORBASH;
-				if( !HasClass( ch, CLASS_WARRIOR ) && !HasClass( ch, CLASS_PALADIN ) ) {
+				if( !HasClass( ch, CLASS_WARRIOR ) && !HasClass( ch, CLASS_PALADIN ) && !HasClass( ch, CLASS_RANGER ) ) {
 					send_to_char
 					("'You do not possess the necessary fighting skills'\n\r",ch);
 					return(TRUE);
@@ -4993,7 +4993,7 @@ int DruidChallenger(struct char_data* ch, int cmd, char* arg, struct char_data* 
 			DruidHeal(ch, level);
 			return(TRUE);
 		}
-		if (!ch->equipment[WIELD]) {
+		if (!ch->equipment[WIELD] && number(0,100) > 95) {
 			if (GetMaxLevel(ch) > 4) {
 				act("$n pronuncia le parole 'gimme a light'", 1, ch, 0, 0, TO_ROOM);
 				cast_elemental_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);

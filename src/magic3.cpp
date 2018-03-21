@@ -304,14 +304,6 @@ void spell_haste(byte level, struct char_data* ch,
 	send_to_char("Perdi conoscenza\n\r",victim);
 	GET_POS(victim) = POSITION_STUNNED;
 
-	if (!IS_NPC(victim))
-	{ victim->player.time.birth -= SECS_PER_MUD_YEAR; }
-	else {
-		if (victim->desc && victim->desc->original)
-		{ victim->desc->original->player.time.birth -= SECS_PER_MUD_YEAR; }
-	}
-
-
 	if (!in_group(ch, victim)) {
 		if (!IS_PC(ch))
 		{ hit(victim, ch, TYPE_UNDEFINED); }
