@@ -1189,7 +1189,7 @@ void equip_char(struct char_data* ch, struct obj_data* obj, int pos) {
 			return;
 		}
 
-		if( ItemAlignClash(ch, obj) && (GetMaxLevel(ch) < MAESTRO_DEI_CREATORI)) {
+		if( !IS_NPC(ch) && ItemAlignClash(ch, obj) && (GetMaxLevel(ch) < MAESTRO_DEI_CREATORI)) {
 			if (ch->in_room != NOWHERE) {
 				act( "You are zapped by $p and instantly drop it.", FALSE, ch, obj, 0,
 					 TO_CHAR);
