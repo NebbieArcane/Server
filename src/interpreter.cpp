@@ -1490,14 +1490,21 @@ int _parse_name(char* arg, char* name) {
 	/* skip whitespaces */
 	for (; isspace(*arg); arg++);
 	for (i = 0; ( *name = *arg ) != 0; arg++, i++, name++) {
-		if ((*arg <0) || !isalpha(*arg) || i > 15 )
-		{ return(1); }
+		if ((*arg <0) || !isalpha(*arg) || i > 15 ) {
+			// If the current char is a '@' we are in account mode
+#if ACCOUNT_MODE
+			if (i<=15 and *arg=='@') {
+				return 2;
+			}
+#endif
+			return 1 ;
+		}
 	}
 
 	if (!i)
-	{ return(1); }
+	{ return 1; }
 
-	return(0);
+	return 0;
 }
 
 #define ASSHOLE_FNAME "asshole.list"
@@ -1799,9 +1806,8 @@ void nanny(struct descriptor_data* d, char* arg) {
 			return;
 		}
 		else {
-#if defined (NEW_CONNECT)
 			d->AlreadyInGame=FALSE;
-#endif
+
 			if(_parse_name(arg, tmp_name)) {
 				SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
 				SEND_TO_Q("Nome: ", d);
@@ -1859,17 +1865,9 @@ void nanny(struct descriptor_data* d, char* arg) {
 				if ((k->character != d->character) && k->character) {
 					struct char_data* test = (k->original?k->original:k->character);
 					if ( (test and GET_NAME(test) and !str_cmp(GET_NAME(test),GET_NAME(d->character)))) {
-#if !defined ( NEW_CONNECT )
-						sprintf( buf, "%s e` gia` nel gioco, non puoi riconnetterti."
-								 "\n\r",test );
-						SEND_TO_Q( buf, d);
-						SEND_TO_Q("Nome: ", d);
-#else
 						d->AlreadyInGame=TRUE;
 						d->ToBeKilled=k;
 						mudlog(LOG_CONNECT,"%s : gia' in gioco.",GET_NAME(test));
-
-#endif
 					}
 				}
 
@@ -1957,20 +1955,15 @@ void nanny(struct descriptor_data* d, char* arg) {
 #endif
 			/* Ok, il ragazzo ha azzeccato la password */
 			d->wait=0;
-#if defined ( NEW_CONNECT )
 			/* Se era gia` in gioco assumo ld non riconosciuto e disconnetto il
 			  * vecchio char*/
 
 			if (d->AlreadyInGame)
 
 			{
-				mudlog( LOG_PLAYERS, "%s[HOST:%s] riconnesso su se stesso.", GET_NAME(d->character),
-						d->host );
-				PushStatus("Riconnessione");
+				mudlog( LOG_PLAYERS, "%s[HOST:%s] riconnesso su se stesso.", GET_NAME(d->character),d->host );
 				close_socket(d->ToBeKilled);
-				PopStatus();
 			}
-#endif
 #ifdef ACCESSI
 #ifndef NOREGISTER
 			mudlog(LOG_PLAYERS,"%s: verifica codice",GET_NAME(d->character));
@@ -2938,11 +2931,9 @@ void nanny(struct descriptor_data* d, char* arg) {
 			system( buf );
 			sprintf( buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
 			system( buf );
-			PushStatus("killedself");
 			Registered toon(GET_NAME(d->character));
 			toon.del();
 			close_socket(d);
-			PopStatus();
 		}
 		else {
 			SEND_TO_Q(MENU,d);
