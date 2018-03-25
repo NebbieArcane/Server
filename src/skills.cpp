@@ -2758,8 +2758,8 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					case RACE_DRAGON_BRASS :
 						if( total_bonus > 22 ) {
 							special = 1 ;
-							apply = APPLY_HITNDAM;
-							app_val = 1 ;
+							apply = APPLY_DAMROLL ;
+							app_val = 2 ;
 						}
 						break ;
 					case RACE_UNDEAD   :
