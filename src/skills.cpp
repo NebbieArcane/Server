@@ -1571,7 +1571,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 				   oggetto */
 
 				case RACE_HALFBREED :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"halfbreed leather");
 					acapply=-1;
 					break;
 				case RACE_HUMAN     :
@@ -1605,7 +1605,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					break;
 				case RACE_SPECIAL  :
 				case RACE_LYCANTH  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"hairy leather");
 					acapply=2;
 					break;
 				case RACE_DRAGON   :
@@ -1657,15 +1657,15 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					acapply=3;
 					break;
 				case RACE_PREDATOR :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"elastic leather");
 					acapply=1;
 					break;
 				case RACE_PARASITE :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"purulent leather");
 					acapply=1;
 					break;
 				case RACE_SLIME    :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"transparent leather");
 					acapply=0;
 					lev=(int)lev/2;
 					break;
@@ -1690,11 +1690,11 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					acapply=2;
 					break;
 				case RACE_ELEMENT  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"colored leather");
 					acapply=1;
 					break;
 				case RACE_PLANAR   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"planar leather");
 					acapply=1;
 					break;
 				case RACE_DEVIL    :
@@ -1727,7 +1727,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 					acapply=1;
 					break;
 				case RACE_PRIMATE  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"monkey leather");
 					acapply=0;
 					break;
 				case RACE_ENFAN    :
@@ -3293,7 +3293,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						if( total_bonus > 24 ) {
 							special = 1 ;
 							apply = APPLY_HITNDAM ;
-							app_val = 2 ;
+							app_val = 1 ;
 						}
 						break ;
 					default:
@@ -3358,474 +3358,6 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 		}
 	}
 }
-
-void do_tan_old( struct char_data* ch, char* arg, int cmd) {
-	struct obj_data* j=0;
-	struct obj_data* hide;
-	char itemname[80],itemtype[80],hidetype[80],buf[MAX_STRING_LENGTH];
-	int percent=0;
-	int acapply=0;
-	int acbonus=0;
-	int lev=0;
-	int r_num=0;
-
-	if (IS_NPC(ch))
-	{ return; }
-
-	if (!ch->skills)
-	{ return; }
-	if (MOUNTED(ch)) {
-		send_to_char("Not from this mount you cannot!\n\r",ch);
-		return;
-	}
-
-	if (IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-		if (!HasClass(ch,CLASS_BARBARIAN|CLASS_WARRIOR|CLASS_RANGER)) {
-			send_to_char("What do you think you are, A tanner?\n\r",ch);
-			return;
-		}
-	}
-
-	arg = one_argument(arg,itemname);
-	arg = one_argument(arg,itemtype);
-
-	if (!*itemname) {
-		send_to_char("Tan what?\n\r",ch);
-		return;
-	}
-
-	if (!*itemtype) {
-		send_to_char("I see that, but what do you wanna make?\n\r",ch);
-		return;
-	}
-
-	if( !( j = get_obj_in_list_vis( ch, itemname,
-									real_roomp( ch->in_room )->contents ) ) ) {
-		send_to_char("Where did that carcuss go?\n\r",ch);
-		return;
-	}
-	else {
-		/* affect[0] == race of corpse, affect[1] == level of corpse */
-		if( j->affected[0].modifier !=0 && j->affected[1].modifier !=0 ) {
-			percent = number(1,101); /* 101% is a complete failure */
-
-			if( ch->skills && ch->skills[ SKILL_TAN ].learned &&
-					GET_POS( ch ) > POSITION_SLEEPING ) {
-				if (percent > ch->skills[SKILL_TAN].learned) {
-					/* FAILURE! */
-					j->affected[1].modifier=0; /* make corpse unusable for another tan */
-
-					sprintf( buf,
-							 "You hack at %s but manage to only destroy the hide.\n\r",
-							 j->short_description );
-					send_to_char(buf,ch);
-
-					sprintf( buf, "%s tries to skins %s for it's hide, but destroys it.",
-							 GET_NAME(ch),j->short_description );
-					act( buf,TRUE, ch, 0, 0, TO_ROOM );
-					LearnFromMistake( ch, SKILL_TAN, 0, 95 );
-					WAIT_STATE( ch, PULSE_VIOLENCE * 3 );
-					return;
-				}
-
-
-				/* item not a corpse if v3 = 0 */
-				if( !j->obj_flags.value[ 3 ] ) {
-					send_to_char("Sorry, this is not a carcuss.\n\r",ch);
-					return;
-				}
-
-				lev = j->affected[1].modifier;
-
-				switch(j->affected[0].modifier) {
-				/* We could use a array using the race as a pointer */
-				/* but this way makes it more visable and easier to handle */
-				/* however it is ugly. */
-
-				case RACE_HALFBREED :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_HUMAN     :
-					sprintf(hidetype,"human leather");
-					lev=(int)lev/2;
-					break;
-				case RACE_ELVEN     :
-					sprintf(hidetype,"elf hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_DWARF     :
-					sprintf(hidetype,"dwarf hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_HALFLING  :
-					sprintf(hidetype,"halfing hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_GNOME     :
-					sprintf(hidetype,"gnome hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_REPTILE  :
-					sprintf(hidetype,"reptile hide");
-					break;
-				case RACE_SPECIAL  :
-				case RACE_LYCANTH  :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_DRAGON   :
-					sprintf(hidetype,"dragon hide");
-					break;
-				case RACE_UNDEAD   :
-				case RACE_UNDEAD_VAMPIRE :
-				case RACE_UNDEAD_LICH    :
-				case RACE_UNDEAD_WIGHT   :
-				case RACE_UNDEAD_GHAST   :
-				case RACE_UNDEAD_SPECTRE :
-				case RACE_UNDEAD_ZOMBIE  :
-				case RACE_UNDEAD_SKELETON :
-				case RACE_UNDEAD_GHOUL    :
-					sprintf(hidetype,"rotting hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_ORC      :
-					sprintf(hidetype,"orc hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_INSECT   :
-					sprintf(hidetype,"insectiod hide");
-					break;
-				case RACE_ARACHNID :
-					sprintf(hidetype,"hairy leather");
-					lev=(int)lev/2;
-					break;
-				case RACE_DINOSAUR :
-					sprintf(hidetype,"thick leather");
-					break;
-				case RACE_FISH     :
-					sprintf(hidetype,"fishy hide");
-					break;
-				case RACE_BIRD     :
-					sprintf(hidetype,"feathery hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_GIANT    :
-					sprintf(hidetype,"giantish hide");
-					break;
-				case RACE_PREDATOR :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_PARASITE :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_SLIME    :
-					sprintf(hidetype,"leather");
-					lev=(int)lev/2;
-					break;
-				case RACE_DEMON    :
-					sprintf(hidetype,"demon hide");
-					break;
-				case RACE_SNAKE    :
-					sprintf(hidetype,"snake hide");
-					break;
-				case RACE_HERBIV   :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_TREE     :
-					sprintf(hidetype,"bark hide");
-					break;
-				case RACE_VEGGIE   :
-					sprintf(hidetype,"green hide");
-					break;
-				case RACE_ELEMENT  :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_PLANAR   :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_DEVIL    :
-					sprintf(hidetype,"devil hide");
-					break;
-				case RACE_GHOST    :
-					sprintf(hidetype,"ghostly hide");
-					break;
-				case RACE_GOBLIN   :
-					sprintf(hidetype,"goblin hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_TROLL    :
-					sprintf(hidetype,"troll leather");
-					break;
-				case RACE_VEGMAN   :
-					sprintf(hidetype,"green hide");
-					break;
-				case RACE_MFLAYER  :
-					sprintf(hidetype,"mindflayer hide");
-					break;
-				case RACE_PRIMATE  :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_ENFAN    :
-					sprintf(hidetype,"enfan hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_DARK_ELF     :
-					sprintf(hidetype,"drow hide");
-					lev=(int)lev/2;
-					break;
-				case RACE_GOLEM    :
-				case RACE_SKEXIE   :
-				case RACE_TROGMAN  :
-				case RACE_LIZARDMAN:
-				case RACE_PATRYN   :
-				case RACE_LABRAT   :
-				case RACE_SARTAN   :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_TYTAN   :
-					sprintf(hidetype,"tytan hide");
-					break;
-				case RACE_SMURF    :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_ROO      :
-					sprintf(hidetype,"roo hide");
-					break;
-				case RACE_HORSE    :
-				case RACE_DRAAGDIM :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_ASTRAL   :
-					sprintf(hidetype,"strange hide");
-					break;
-				case RACE_GOD      :
-					sprintf(hidetype,"leather");
-					break;
-				case RACE_GIANT_HILL   :
-					sprintf(hidetype,"hill giant hide");
-					break;
-				case RACE_GIANT_FROST  :
-					sprintf(hidetype,"frost giant hide");
-					break;
-				case RACE_GIANT_FIRE   :
-					sprintf(hidetype,"fire giant hide");
-					break;
-				case RACE_GIANT_CLOUD  :
-					sprintf(hidetype,"cloud giant hide");
-					break;
-				case RACE_GIANT_STORM  :
-					sprintf(hidetype,"storm giant hide");
-					break;
-				case RACE_GIANT_STONE  :
-					sprintf(hidetype,"stone giant hide");
-					acapply++;
-					acbonus++;
-					break;
-				case RACE_DRAGON_RED   :
-					sprintf(hidetype,"red dragon hide");
-					acapply += 2;
-					acbonus += 3;
-					break;
-				case RACE_DRAGON_BLACK :
-					sprintf(hidetype,"black dragon hide");
-					acapply++;
-					acbonus++;
-					break;
-				case RACE_DRAGON_GREEN :
-					sprintf(hidetype,"green dragon hide");
-					acapply++;
-					acbonus++;
-					break;
-				case RACE_DRAGON_WHITE :
-					sprintf(hidetype,"white dragon hide");
-					acapply++;
-					acbonus++;
-					break;
-				case RACE_DRAGON_BLUE  :
-					sprintf(hidetype,"blue dragon hide");
-					acapply++;
-					acbonus++;
-					break;
-				case RACE_DRAGON_SILVER:
-					sprintf(hidetype,"silver dragon hide");
-					acapply += 2;
-					acbonus += 2;
-					break;
-				case RACE_DRAGON_GOLD  :
-					sprintf(hidetype,"gold dragon hide");
-					acapply += 2;
-					acbonus += 3;
-					break;
-				case RACE_DRAGON_BRONZE:
-					sprintf(hidetype,"bronze dragon hide");
-					acapply++;
-					acbonus += 2;
-					break;
-				case RACE_DRAGON_COPPER:
-					sprintf(hidetype,"copper dragon hide");
-					acapply++;
-					acbonus += 2;
-					break;
-				case RACE_DRAGON_BRASS :
-					sprintf(hidetype,"brass dragon hide");
-					acapply++;
-					acbonus += 2;
-					break;
-				default:
-					sprintf(hidetype,"leather");
-					break;
-
-				} /* end switch race of carcuss */
-
-				/* figure out what type of armor it is and make it. */
-
-				acbonus += (int)lev / 10;  /* 1-6 */
-				acapply += (int)lev / 10;  /* 1-6 */
-
-
-				/* class bonus */
-
-				if (HasClass(ch,CLASS_RANGER)) {
-					acbonus+=1;
-				}
-
-				/* racial bonus */
-
-
-				if (acbonus<0)
-				{ acbonus=0; }
-				if (acapply<0)
-				{ acapply=0; }
-
-				if (!strcmp(itemtype,"shield")) {
-					if ((r_num = real_object(TAN_SHIELD)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					acapply++;
-					acbonus++;
-					strcat(hidetype," shield");
-				}
-				else if (!strcmp(itemtype,"jacket")) {
-					if ((r_num = real_object(TAN_JACKET)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					acapply+=5;
-					acbonus+=2;
-					strcat(hidetype," jacket");
-				}
-				else if (!strcmp(itemtype,"boots")) {
-					if ((r_num = real_object(TAN_BOOTS)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					acapply--;
-					if (acapply <0)
-					{ acapply=0; }
-					acbonus--;
-					if (acbonus <0)
-					{ acbonus=0; }
-					strcat(hidetype," pair of boots");
-				}
-				else if (!strcmp(itemtype,"gloves")) {
-					if ((r_num = real_object(TAN_GLOVES)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-
-					acapply--;
-					if (acapply<0)
-					{ acapply=0; }
-					acbonus--;
-					if (acbonus<0)
-					{ acbonus=0; }
-					strcat(hidetype," pair of gloves");
-				}
-				else if (!strcmp(itemtype,"leggings")) {
-					if ((r_num = real_object(TAN_LEGGINGS)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					acapply++;
-					acbonus++;
-					strcat(hidetype," set of leggings");
-				}
-				else if (!strcmp(itemtype,"sleeves")) {
-					if ((r_num = real_object(TAN_SLEEVES)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					acapply++;
-					acbonus++;
-					strcat(hidetype," set of sleeves");
-				}
-				else  if (!strcmp(itemtype,"helmet")) {
-					if ((r_num = real_object(TAN_HELMET)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					acapply--;
-					if (acapply<0)
-					{ acapply=0; }
-					acbonus--;
-					if (acbonus<0)
-					{ acbonus=0; }
-					strcat(hidetype," helmet");
-				}
-				else  if (!strcmp(itemtype,"bag")) {
-					if ((r_num = real_object(TAN_BAG)) >= 0) {
-						hide = read_object(r_num, REAL);
-						obj_to_char(hide,ch);
-					}
-					strcat(hidetype," bag");
-				}
-				else {
-					send_to_char("Illegal type of equipment!\n\r",ch);
-					return;
-				}
-
-				sprintf(buf,"%s name %s",itemtype,hidetype);
-				do_ooedit(ch,buf,0);
-
-				sprintf(buf,"%s ldesc A %s lies here",itemtype,hidetype);
-				do_ooedit(ch,buf,0);
-
-				sprintf(buf,"%s sdesc a %s",itemtype, hidetype);
-				do_ooedit(ch,buf,0);
-
-				/* we do not mess with vX if the thing is a bag */
-				if (strcmp(itemtype,"bag")) {
-					sprintf(buf,"%s v0 %d",itemtype,acapply);
-					do_ooedit(ch,buf,0);
-					/* I think v1 is how many times it can be hit, so lev of
-					 * corpse /10 times */
-					sprintf(buf,"%s v1 %d",itemtype,(int)lev/10);
-					do_ooedit(ch,buf,0);
-					/* add in AC bonus here */
-					sprintf(buf,"%s aff1 %d 17",itemtype,0-acbonus);
-					do_ooedit(ch,buf,0);
-				}                 /* was not a bag ^ */
-
-				j->affected[1].modifier=0; /* make corpse unusable for another tan */
-
-				sprintf( buf,"You hack at the %s and finally make the %s.\n\r",
-						 j->short_description,itemtype);
-				send_to_char(buf,ch);
-
-				sprintf( buf,"%s skins %s for it's hide.",GET_NAME(ch),
-						 j->short_description);
-				act(buf,TRUE, ch, 0, 0, TO_ROOM);
-				WAIT_STATE(ch, PULSE_VIOLENCE*1);
-				return;
-			}
-		}
-		else {
-			send_to_char("Sorry, nothing left of the carcuss to make a item with.\n\r",ch);
-			return;
-		}
-	}
-}
-
 
 void do_find_food( struct char_data* ch, char* arg, int cmd) {
 	int r_num,percent=0;
