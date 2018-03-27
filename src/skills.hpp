@@ -60,7 +60,6 @@ void do_sending( struct char_data* ch, char* argument, int cmd) ;
 void do_spy( struct char_data* ch, char* arg, int cmd) ;
 void do_swim( struct char_data* ch, char* arg, int cmd) ;
 void do_tan( struct char_data* ch, char* arg, int cmd) ;
-void do_tan_old( struct char_data* ch, char* arg, int cmd) ;
 void do_track(struct char_data* ch, char* argument, int cmd) ;
 void donothing( void* pDummy ) ;
 int find_path( int in_room, int (*predicate)( int, void* ), void* c_data, int depth, int in_zone);
