@@ -294,6 +294,10 @@ int RawMove(struct char_data* ch, int dir, int bCheckSpecial) {
 		need_movement = (movement_loss[from_here->sector_type]
 				+ movement_loss[to_here->sector_type]) / 2;
 	}
+    
+    if (affected_by_spell(ch, SPELL_HASTE)) {
+        need_movement = need_movement*4;
+    }
 
 	/*
 	 **   Movement in water_nowswim
@@ -335,6 +339,10 @@ int RawMove(struct char_data* ch, int dir, int bCheckSpecial) {
 				}
 			}
 		}
+        
+        if (affected_by_spell(ch, SPELL_HASTE)) {
+            need_movement = need_movement*4;
+        }
 	}
 
 	/*

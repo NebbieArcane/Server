@@ -561,16 +561,6 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_HASTE:
-		if (mod > 0) {
-			if (WizLock)
-			{ fprintf(stderr, "current mult = %f\n", ch->mult_att); }
-			ch->mult_att = ch->mult_att * 2.0;
-			if (WizLock)
-			{ fprintf(stderr, "new mult = %f\n", ch->mult_att); }
-		}
-		else if (mod < 0) {
-			ch->mult_att = ch->mult_att / 2.0;
-		}
 		break;
 
 	case APPLY_SLOW:
