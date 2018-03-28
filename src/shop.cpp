@@ -29,6 +29,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "regen.hpp"
+#include "spec_procs.hpp"
 
 namespace Alarmud {
 
@@ -520,8 +521,6 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 	struct char_data* keeper;
 	int shop_nr;
 
-	int citizen(struct char_data *ch, int cmd, char* arg, struct char_data *mob, int type);
-
 	if(type == EVENT_DWARVES_STRIKE) {
 		ch->generic = DWARVES_STRIKE;
 		return FALSE;
@@ -545,7 +544,7 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 	for (temp_char = real_roomp(ch->in_room)->people; (!keeper) && (temp_char) ;
 			temp_char = temp_char->next_in_room)
 		if (IS_MOB(temp_char))
-			if (mob_index[temp_char->nr].func == shop_keeper)
+			if (mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(shop_keeper))
 			{ keeper = temp_char; }
 
 
@@ -709,7 +708,7 @@ void assign_the_shopkeepers() {
 	mudlog(LOG_CHECK,"Assign shopkeepers");
 
 	for(temp1=0 ; temp1<number_of_shops ; temp1++) {
-		mob_index[shop_index[temp1].keeper].func = shop_keeper;
+		mob_index[shop_index[temp1].keeper].func = reinterpret_cast<genericspecial_func>(shop_keeper);
 		mob_index[shop_index[temp1].keeper].specname = strdup("shop_keeper");
 		mob_index[shop_index[temp1].keeper].specparms = strdup("none");
 		mudlog(LOG_CHECK,"%d. Loaded %s (%d)",

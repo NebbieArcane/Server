@@ -9,19 +9,14 @@
 /***************************  Local    include ************************************/
 #ifndef __FIGHT_HPP
 #define __FIGHT_HPP
+#include "typedefs.hpp"
 namespace Alarmud {
-enum DamageResult {
-	AllLiving, SubjectDead, VictimDead
-};
 extern struct char_data* combat_list;   /* head of l-list of fighting chars    */
 extern struct char_data* missile_list;   /* head of l-list of fighting chars    */
 extern struct char_data* combat_next_dude; /* Next dude global trick           */
 extern struct char_data* missile_next_dude; /* Next dude global trick           */
 extern char PeacefulWorks;  /* set in @set */
 extern char DestroyedItems;  /* set in MakeScraps */
-typedef DamageResult (*pDamageFunc)( struct char_data*,
-									 struct char_data*,
-									 int, int, int );
 int BarbarianToHitMagicBonus( struct char_data* ch ) ;
 void BreakLifeSaverObj( struct char_data* ch) ;
 int BrittleCheck(struct char_data* ch, struct char_data* v, int dam) ;
@@ -54,13 +49,13 @@ int Getw_type(struct obj_data* wielded) ;
 long GroupLevelRatioExp( struct char_data* ch,int group_max_level,long experiencepoints);
 int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type, int DistanceWeapon);
 int HitOrMiss(struct char_data* ch, struct char_data* victim, int calc_thaco);
-DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,int type, int w_type,pDamageFunc dam_func, int location);
+DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,int type, int w_type,damage_func dam_func, int location);
 int Hit_Location(struct char_data* victim) ;
 int ItemSave( struct obj_data* i, int dam_type) ;
 int LevelMod( struct char_data* ch, struct char_data* v, int exp ) ;
 int LoreBackstabBonus(struct char_data* ch, struct char_data* v) ;
 void MakeScrap( struct char_data* ch,struct char_data* v, struct obj_data* obj) ;
-DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,int w_type, pDamageFunc dam_func, int location);
+DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,int w_type, damage_func dam_func, int location);
 DamageResult MissileDamage( struct char_data* ch, struct char_data* victim,int dam, int attacktype, int location );
 DamageResult MissileHit( struct char_data* ch, struct char_data* victim,int type );
 int MonkDodge( struct char_data* ch, struct char_data* v, int* dam) ;
@@ -95,8 +90,8 @@ void make_corpse(struct char_data* ch, int killedbytype) ;
 void perform_violence(unsigned long pulse);
 int range_hit( struct char_data* ch, struct char_data* targ, int rng, struct obj_data* missile, int tdir, int max_rng);
 void raw_kill(struct char_data* ch,int killedbytype) ;
-char* replace_string(char* str, char* weapon, char* weapon_s,char* location_hit, char* location_hit_s);
-DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,int type, pDamageFunc dam_func, int DistanceWeapon, int location);
+char* replace_string(const char* str, const char* weapon, const char* weapon_s, const char* location_hit, const char* location_hit_s);
+DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,int type, damage_func dam_func, int DistanceWeapon, int location);
 void save_exp_to_file(struct char_data* ch,int xp) ;
 void set_fighting(struct char_data* ch, struct char_data* vict) ;
 void shoot( struct char_data* ch, struct char_data* victim);

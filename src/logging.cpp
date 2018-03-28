@@ -69,7 +69,8 @@ log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,strin
 	log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
 	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
 	r->setMaxBackupIndex(numLogs);
-	r->setMaximumFileSize("200M");
+	log4cxx::LogString size("200M");
+	r->setMaxFileSize("200M");
 	r->setBufferedIO(false); // We depend on the final log line being always written.
 	r->setBufferSize(1024);
 	r->activateOptions(p);

@@ -12,6 +12,7 @@
 #include <cctype>
 #include <ctime>
 #include <cstdlib>
+#include <cstdint>
 #include <unistd.h>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -74,7 +75,7 @@ int singular( struct obj_data* o) {
 
 /* Procedures related to 'look' */
 
-void argument_split_2(char* argument,char* first_arg,char* second_arg) {
+void argument_split_2(const char* argument,char* first_arg,char* second_arg) {
 	int look_at, begin;
 	begin = 0;
 
@@ -449,7 +450,7 @@ void ShowAltezzaCostituzione( struct char_data* pChar, struct char_data* pTo ) {
 	float fRapp;
 	char szBuf[ 256 ];
 
-	char* DescAltezze[] = {
+	const char* DescAltezze[] = {
 		"altissim$b",
 		"molto alt$b",
 		"alt$b",
@@ -458,7 +459,7 @@ void ShowAltezzaCostituzione( struct char_data* pChar, struct char_data* pTo ) {
 		"molto bass$b"
 	};
 
-	char* DescCostituzione[] = {
+	const char* DescCostituzione[] = {
 		"$c0010VERAMENTE gross$b$c0007",
 		"gross$b",
 		"robust$b",
@@ -1255,23 +1256,11 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 	struct obj_data* tmp_object, *found_object;
 	struct char_data* tmp_char;
 	char* tmp_desc;
-	static char* keywords[]= {
-		"north",
-		"east",
-		"south",
-		"west",
-		"up",
-		"down",
-		"in",
-		"at",
-		"",  /* Look at '' case */
-		"room",
-		"\n"
-	};
+
 	static int bNotShowTitle = 0;
 	struct room_data* pRoomWithChar;
 
-	char* blood_messages[] = {
+	const char* blood_messages[] = {
 		"$c0009Non si deve vedere questo.",
 		"$c0009C'e' un po di sangue qui a terra.",
 		"$c0009C'e' del sangue ai tuoi piedi.",
@@ -1325,7 +1314,7 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 			keyword_no = 6;
 		}
 		else {
-			keyword_no = search_block(arg1, keywords, FALSE);
+			keyword_no = search_block(arg1, lookKeywords, FALSE);
 		}
 
 		if ((keyword_no == -1) && *arg1) {
@@ -2251,7 +2240,7 @@ void do_time(struct char_data* ch,const char* argument, int cmd) {
 
 void do_weather(struct char_data* ch,const char* argument, int cmd) {
 	char buf[ 256 ];
-	char* sky_look[] = {
+	const char* sky_look[] = {
 		"sereno",
 		"nuvoloso",
 		"piovoso",
@@ -2529,12 +2518,12 @@ void do_who(struct char_data* ch,const char* argument, int cmd) {
 									 "sneaking around":
 									 real_roomp(person->in_room)->name);
 							if (GetMaxLevel(ch) >= IMMORTALE)
-							{ sprintf(tbuf+strlen(tbuf)," [%ld]", person->in_room); }
+							{ sprintf(tbuf+strlen(tbuf)," [%d]", person->in_room); }
 						}
 					}
 					else {
 						char levels[40]="", classes[20]="";
-						char* classname[]= { "Mu","Cl","Wa","Th","Dr","Mo","Ba","So","Pa",
+						const char* classname[]= { "Mu","Cl","Wa","Th","Dr","Mo","Ba","So","Pa",
 											 "Ra","Ps"
 										   };
 						int i,total,classn;
@@ -3034,7 +3023,7 @@ void do_where_person( struct char_data* ch, struct char_data* person,
 			  "Nowhere"));
 
 	if (GetMaxLevel(ch) >= DIO)
-	{ sprintf(buf+strlen(buf),"[%ld]", person->in_room); }
+	{ sprintf(buf+strlen(buf),"[%d]", person->in_room); }
 
 	strcpy(buf+strlen(buf), "\n\r");
 
@@ -3117,14 +3106,14 @@ void do_where(struct char_data* ch,const char* argument, int cmd) {
 						CAN_SEE(ch, d->character)) {
 					if (d->original)   /* If switched */
 						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "%-20s - %s [%ld] Nel corpo di %s\n\r",
+								 "%-20s - %s [%d] Nel corpo di %s\n\r",
 								 d->original->player.name,
 								 real_roomp(d->character->in_room)->name,
 								 d->character->in_room,
 								 fname(d->character->player.name));
 					else
 						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "%-20s - %s [%ld]\n\r",
+								 "%-20s - %s [%d]\n\r",
 								 d->character->player.name,
 								 real_roomp(d->character->in_room)->name,
 								 d->character->in_room);
@@ -3898,7 +3887,7 @@ void do_value(struct char_data* ch,const char* argument, int cmd) {
 	}
 }
 
-char* AlignDesc(int a) {
+const char* AlignDesc(int a) {
 	if (a<= -990) {
 		return("Perfid$b come un Demone!");
 	}
@@ -3933,7 +3922,7 @@ char* AlignDesc(int a) {
 		return("Angelic$b");
 	}
 }
-char* EqDesc(float a) {
+const char* EqDesc(float a) {
 	if (a >= 1400) {
 		return("meglio di quanto credevo possibile!!");
 	}
@@ -3963,7 +3952,7 @@ char* EqDesc(float a) {
 	}
 }
 
-char* SpellfailDesc(int a) {
+const char* SpellfailDesc(int a) {
 	if (a >= 100) {
 		return("Terribile");
 	}
@@ -3985,7 +3974,7 @@ char* SpellfailDesc(int a) {
 }
 
 
-char* ArmorDesc(int a) {
+const char* ArmorDesc(int a) {
 	if (a >= 90) {
 		return("come se fossi nud$b");
 	}
@@ -4015,7 +4004,7 @@ char* ArmorDesc(int a) {
 	}
 }
 
-char* HitRollDesc(int a) {
+const char* HitRollDesc(int a) {
 	if (a < -5) {
 		return("pessimo");
 	}
@@ -4040,7 +4029,7 @@ char* HitRollDesc(int a) {
 
 }
 
-char* DamRollDesc(int a) {
+const char* DamRollDesc(int a) {
 	if (a < -5) {
 		return("pessimo");
 	}
@@ -4064,7 +4053,7 @@ char* DamRollDesc(int a) {
 	}
 }
 
-char* DescRatio(float f) { /* theirs / yours */
+const char* DescRatio(float f) { /* theirs / yours */
 	if (f > 1.0) {
 		return("maggiore del tuo");
 	}
@@ -4087,7 +4076,7 @@ char* DescRatio(float f) { /* theirs / yours */
 		return("estremamente piu` basso del tuo");
 	}
 }
-char* DescArmorf(float f) { /* theirs / yours */
+const char* DescArmorf(float f) { /* theirs / yours */
 	if (f > 110.0) {
 		return("estremamente peggiore della tua");
 	}
@@ -4112,7 +4101,7 @@ char* DescArmorf(float f) { /* theirs / yours */
 }
 
 
-char* DescRatioF(float f) { /* theirs / yours */
+const char* DescRatioF(float f) { /* theirs / yours */
 	if (f > 1.0) {
 		return("maggiore della tua");
 	}
@@ -4136,7 +4125,7 @@ char* DescRatioF(float f) { /* theirs / yours */
 	}
 }
 
-char* DescDamage(float dam) {
+const char* DescDamage(float dam) {
 	if (dam < 1.0) {
 		return("minimo");
 	}
@@ -4163,7 +4152,7 @@ char* DescDamage(float dam) {
 	}
 }
 
-char* DescAttacks(float a) {
+const char* DescAttacks(float a) {
 	if (a < 1.0) {
 		return("pochi");
 	}
@@ -4264,15 +4253,15 @@ void do_resize(struct char_data* ch,const char* arg, int cmd) {
 int MobLevBonus(struct char_data* ch) {
 	int t=0;
 
-	if( mob_index[ ch->nr ].func == magic_user ||IS_SET( ch->specials.act,ACT_MAGIC_USER ) )
+	if( reinterpret_cast<uintptr_t>(mob_index[ ch->nr ].func) == reinterpret_cast<uintptr_t>(magic_user) ||IS_SET( ch->specials.act,ACT_MAGIC_USER ) )
 	{ t+=5; }
 
-	if( mob_index[ch->nr].func == BreathWeapon )
+	if( reinterpret_cast<uintptr_t>(mob_index[ch->nr].func) == reinterpret_cast<uintptr_t>(BreathWeapon) )
 	{ t+=7; }
-	if( mob_index[ch->nr].func == fighter || IS_SET(ch->specials.act,ACT_WARRIOR ) )
+	if( reinterpret_cast<uintptr_t>(mob_index[ch->nr].func) == reinterpret_cast<uintptr_t>(fighter) || IS_SET(ch->specials.act,ACT_WARRIOR ) )
 	{ t+=3; }
 
-	if( mob_index[ch->nr].func == snake )
+	if( reinterpret_cast<uintptr_t>(mob_index[ch->nr].func) == reinterpret_cast<uintptr_t>(snake) )
 	{ t+=3; }
 
 	t += (int)( ( ch->mult_att - 1 ) * 3 );
@@ -4540,18 +4529,7 @@ void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
 /* the code for throwing items. I figure there is no IC reason for a PC */
 /* to have a command like this. Do what ya want on your on MUD                 */
 void do_scan(struct char_data* ch,const char* argument, int cmd) {
-#if 0
-	static char* keywords[]= {
-		"north",
-		"east",
-		"south",
-		"west",
-		"up",
-		"down",
-		"\n"
-	};
-#endif
-	char* dir_desc[] = {
+	static const char* dir_desc[] = {
 		"a nord",
 		"ad est",
 		"a sud",
@@ -4559,7 +4537,7 @@ void do_scan(struct char_data* ch,const char* argument, int cmd) {
 		"in alto",
 		"in basso"
 	};
-	char* rng_desc[] = {
+	static const char* rng_desc[] = {
 		"qui",
 		"qui accanto",
 		"nelle vicinanze",
@@ -4724,7 +4702,6 @@ void list_groups( struct char_data* ch,const char* szArg, int iCmd ) {
 		}
 	}
 	strcat(buf,"\n\r$c0015[---------- Fine lista --------------]\n\r");
-	CheckCharAffected( "In list_group before page_string" );
 	page_string(ch->desc,buf,1);
 }
 
@@ -4768,15 +4745,7 @@ struct char_data* get_char_linear( struct char_data* ch,const char* arg, int* rf
 	int range = 0;
 	struct char_data* spud;
 	char tmpname[ MAX_STRING_LENGTH ];
-	char* keywords[] = {
-		"north",
-		"east",
-		"south",
-		"west",
-		"up",
-		"down",
-		"\n"
-	};
+
 
 
 	arg = one_argument( arg, tmpname );
@@ -4787,7 +4756,7 @@ struct char_data* get_char_linear( struct char_data* ch,const char* arg, int* rf
 		return spud;
 	}
 
-	*df = search_block( tmpname, keywords, FALSE);
+	*df = search_block( tmpname, exitKeywords, FALSE);
 	if( *df < 0 )
 	{ return NULL; }
 

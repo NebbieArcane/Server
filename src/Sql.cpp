@@ -1,67 +1,73 @@
-/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
- *ALARMUD* AlarMUD 2.0
- *ALARMUD* See COPYING for licence information
- *ALARMUD*/
-//  Original intial comments
 /*
  * Sql.cpp
  *
- *  Created on: 25 gen 2018
+ *  Created on: 24 mar 2018
  *      Author: giovanni
- *
- * Licensed Material - Property of Hex Keep s.r.l.
- * (c) Copyright Hex Keep s.r.l. 2012-2014
  */
-/***************************  System  include ************************************/
-#include <string>
-/***************************  General include ************************************/
-#include "config.hpp"
-#include "typedefs.hpp"
-#include "flags.hpp"
-#include "autoenums.hpp"
-#include "structs.hpp"
-#include "logging.hpp"
-#include "constants.hpp"
-#include "utils.hpp"
-/***************************  Local    include ************************************/
 #include "Sql.hpp"
-#include "utility.hpp"
+#include <iostream>
+using std::string;
+using std::endl;
+using std::cout;
 namespace Alarmud {
-
-Sql::Sql() :_query(),_where(""),_select(""),_from(""),_fields(""),_limit("") {
-
-
+#if USE_MYSQL
+const odb::database* Sql::getMysql() {
+	thread_local static const odb::database* db (new odb::mysql::database (MYSQL_USER,MYSQL_PASSWORD,MYSQL_DB,MYSQL_HOST));
+	return db;
 }
-Sql::~Sql() {
-	// TODO Auto-generated destructor stub
+#endif
+#if USE_SQLITE
+const odb::database* Sql::getSqlite() {
+	thread_local static const odb::database* db (new odb::sqlite::database (MYSQL_DB ".db"));
+	return db;
 }
-
-Sql* Sql::where(const string field, const string op, const string value) {
-	_where.append(field).append(" ").append(op).append(" ").append(value);
-	return this;
+#endif
+void Sql::dbUpdate() {
+	/**
+	 * generates mysql schema
+	 */
+#if USE_MYSQL
+	{
+		DB* db=Sql::getMysql();
+		odb::schema_version v = db->schema_version ("account");
+		odb::schema_version bv (odb::schema_catalog::base_version (*db,"account"));
+		odb::schema_version cv (odb::schema_catalog::current_version (*db,"account"));
+		cout << "Schema " << v << " " << bv << " " << cv << endl;
+		if (v==0) {
+			try {
+				odb::transaction t (db->begin ());
+				t.tracer(odb::stderr_full_tracer);
+				odb::schema_catalog::create_schema(*db,"account");
+				t.commit();
+			}
+			catch (std::exception &e) {
+				cout << e.what() << " in " << __LINE__ << endl;
+			}
+			try {
+				odb::transaction t (db->begin ());
+				t.tracer(odb::stderr_full_tracer);
+				db->execute("INSERT INTO legacy SELECT name,realname,email1,email2 FROM registered;");
+				t.commit();
+			}
+			catch (std::exception &e) {
+				cout << e.what() << " in " << __LINE__ << endl;
+			}
+		}
+		else if(v>=bv and v < cv) {
+			try {
+			odb::transaction t (db->begin ());
+			t.tracer(odb::stderr_full_tracer);
+			odb::schema_catalog::migrate (*db,cv,"account");
+			t.commit ();
+			}
+			catch (std::exception &e) {
+				cout << e.what() << " in " << __LINE__ << endl;
+			}
+		}
+	}
+#endif
 }
+Sql::~Sql();
+Sql::Sql();
 
-Sql* Sql::where(const string glue, const string field, const string op,
-				const string value) {
-	_where.append(" ").append(glue).append(field).append(" ").append(op).append(" ").append(value);
-	return this;
-}
-
-Sql* Sql::from(const string table) {
-	return this;
-}
-
-Sql* Sql::select(const string field) {
-	return this;
-}
-
-Sql* Sql::select(const std::vector<string> fields) {
-	return this;
-}
-
-Sql* Sql::limit(const unsigned long limit) {
-	return this;
-}
-
-} // namespace Alarmud
-
+} /* namespace Alarmud */

@@ -12,6 +12,7 @@
 #include <cctype>
 #include <cassert>
 #include <cstdlib>
+#include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -63,7 +64,7 @@ char* fname(char* namelist) {
 }
 
 
-int split_string(char* str, char* sep, char** argv)
+int split_string(char* str, const char* sep, char** argv)
 /* str must be writable */
 {
 	char*        s;
@@ -72,7 +73,7 @@ int split_string(char* str, char* sep, char** argv)
 
 	s = strtok(str, sep);
 	SetLine(__FILE__,__LINE__);
-	if ((int)s) {
+	if (s) {
 		SetLine(__FILE__,__LINE__);
 		argv[argc++] = s;
 		SetLine(__FILE__,__LINE__);
@@ -1015,7 +1016,7 @@ bool affected_by_spell( struct char_data* ch, short skill ) {
 	struct affected_type* hjp;
 
 	for (hjp = ch->affected; hjp; hjp = hjp->next) {
-		if ((int) hjp < 1000) {
+		if (reinterpret_cast<uintptr_t>(hjp) < 1000) {
 			mudlog(LOG_SYSERR,"Invalid affected address for %s",GET_NAME(ch));
 			continue;
 		}
@@ -1309,9 +1310,9 @@ void equip_char(struct char_data* ch, struct obj_data* obj, int pos) {
 
 		/* no checks on super ego items, they do it already */
 		if( obj->item_number >= 0 &&
-				( obj_index[obj->item_number].func == EvilBlade ||
-				  obj_index[obj->item_number].func == NeutralBlade ||
-				  obj_index[obj->item_number].func == GoodBlade ) ) {
+				( obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(EvilBlade) ||
+				  obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(NeutralBlade) ||
+				  obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(GoodBlade) ) ) {
 			/* do nothing */
 		}
 		else {
@@ -2237,7 +2238,7 @@ struct char_data* get_char_near_room_vis(struct char_data* ch, char* name, long 
 	return(i);
 }
 
-struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
+struct char_data* get_char_room_vis(struct char_data* ch, const char* name) {
 	struct char_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2283,7 +2284,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
 
 /* get a character from anywhere in the world, doesn't care much about
    being in the same room... */
-struct char_data* get_char_vis_world(struct char_data* ch, char* name,int* count) {
+struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int* count) {
 	struct char_data* i;
 	int j, number, nPosInList;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2334,7 +2335,7 @@ struct char_data* get_char_vis_world(struct char_data* ch, char* name,int* count
 }
 
 
-struct char_data* get_char_vis( struct char_data* ch, char* name ) {
+struct char_data* get_char_vis( struct char_data* ch, const char* name ) {
 	struct char_data* i;
 
 	/* check location */
@@ -2346,7 +2347,7 @@ struct char_data* get_char_vis( struct char_data* ch, char* name ) {
 
 
 
-struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,struct obj_data* list) {
+struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,struct obj_data* list) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2567,14 +2568,6 @@ struct obj_data* create_money( int amount ) {
 /* one_argument routine).                                                 */
 
 int generic_find(const char* arg, int bitvector, struct char_data* ch,struct char_data** tar_ch, struct obj_data** tar_obj) {
-	static char* ignore[] = {
-		"the",
-		"in",
-		"on",
-		"at",
-		"\n"
-	};
-
 	int i;
 	char name[256];
 	bool found;
@@ -2588,7 +2581,7 @@ int generic_find(const char* arg, int bitvector, struct char_data* ch,struct cha
 		for(i=0; (name[i] = *(arg+i)) && (name[i]!=' '); i++)   ;
 		name[i] = 0;
 		arg+=i;
-		if( search_block( name, ignore, TRUE ) > -1 )
+		if( search_block( name, ignoreKeywords, TRUE ) > -1 )
 		{ found = TRUE; }
 	}
 

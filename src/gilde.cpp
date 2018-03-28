@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -196,7 +197,7 @@ void RemoveFromGuildList( int nIndex, char* szNomeMembro ) {
 /* predicates for find_path function */
 
 int IsGuildGuardRoomFP( int room, void* tgt_room ) {
-	return room == (int)tgt_room;
+	return abs(room) == reinterpret_cast<uintptr_t>(tgt_room);
 }
 
 /****************************************************************************
@@ -324,7 +325,7 @@ int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,struct char_d
 			int iDir;
 
 			iDir = find_path( pMob->in_room, IsGuildGuardRoomFP,
-							  (void*)pDatiGilde[ nIndex ].nGuardiaRoom, -5000, 0 );
+							  reinterpret_cast<void*>(pDatiGilde[ nIndex ].nGuardiaRoom), -5000, 0 );
 			if( iDir >= 0 ) {
 				go_direction( pMob, iDir );
 				return TRUE;
@@ -1103,7 +1104,7 @@ int GuildMemberBook( struct char_data* pChar, int nCmd, char* szArg,struct obj_d
  * stanza ed un oggetto.
  * *************************************************************************/
 
-void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,struct char_data*, int ) ) {
+void AssignMob( int vnum, genericspecial_func proc ) {
 
 	if( vnum > 0 ) {
 		int rnum;
@@ -1118,7 +1119,7 @@ void AssignMob( int vnum, int (*proc)( struct char_data*, int, char*,struct char
 	}
 }
 
-void AssignRoom( int vnum, int (*proc)( struct char_data*, int, char*,struct room_data*, int ) ) {
+void AssignRoom( int vnum, roomspecial_func proc ) {
 
 	if( vnum > 0 ) {
 		struct room_data* pRoom;
@@ -1133,7 +1134,7 @@ void AssignRoom( int vnum, int (*proc)( struct char_data*, int, char*,struct roo
 	}
 }
 
-void AssignObj( int vnum, int (*proc)( struct char_data*, int, char*,struct obj_data*, int ) ) {
+void AssignObj( int vnum, genericspecial_func proc ) {
 
 	if( vnum > 0 ) {
 		int rnum;

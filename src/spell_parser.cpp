@@ -502,7 +502,7 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 void spello( int nr, byte beat, byte pos,
 			 byte mlev, byte clev, byte dlev,
 			 byte slev, byte plev, byte rlev, byte ilev,
-			 ubyte mana, sh_int tar, spellFunction func,
+			 ubyte mana, sh_int tar, spell_func func,
 			 sh_int sf,
 			 sh_int align,
 			 sh_int ostile) {

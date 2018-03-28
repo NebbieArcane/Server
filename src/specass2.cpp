@@ -98,35 +98,35 @@ int FileToArray(char* fname,char* p[]) {
 	if (!fp) {
 		return(ifp);
 	}
-
+	void* trash;
 	while (!feof(fp)) {
 		if (fgets(buf,1023,fp)) {
 			if (buf[0]) {
 				if (csize==ifp) {
 					csize+=10;
-					realloc(p,(csize)* sizeof(char*));
+					trash=realloc(p,(csize)* sizeof(char*));
 					p[ifp++]=strdup(buf);
 				}
 
 			}
 		}
 	}
-	realloc(p,ifp * (sizeof(char*)));
+	trash=realloc(p,ifp * (sizeof(char*)));
 	fclose(fp);
 	return(ifp);
 }
 
 int xcompare(const void* p1, const void* p2) {
-	struct special_proc_entry* s1,*s2;
-	s1 = (struct special_proc_entry*)p1;
-	s2 = (struct special_proc_entry*)p2;
+	struct genericspecial_func_entry* s1,*s2;
+	s1 = (struct genericspecial_func_entry*)p1;
+	s2 = (struct genericspecial_func_entry*)p2;
 	return strcasecmp(s1->nome,s2->nome);
 }
 int nomecompare(const void* p1, const void* p2) {
 	char* s1;
-	struct special_proc_entry* s2;
+	struct genericspecial_func_entry* s2;
 	s1 = (char*)p1;
-	s2 = (struct special_proc_entry*)p2;
+	s2 = (struct genericspecial_func_entry*)p2;
 	return strcasecmp(s1,s2->nome);
 }
 
@@ -135,7 +135,7 @@ int nomecompare(const void* p1, const void* p2) {
 char* Aggiungi(char* vecchia,char* nuova) {
 	int l;
 	l=vecchia?0:strlen(vecchia);
-	realloc(vecchia,l+strlen(nuova));
+	void* trash=realloc(vecchia,l+strlen(nuova));
 	strcat(vecchia,nuova);
 	return(vecchia);
 
@@ -143,7 +143,7 @@ char* Aggiungi(char* vecchia,char* nuova) {
 void assign_speciales() {
 	int lastroomproc=0;
 	int lastotherproc=0;
-	struct special_proc_entry* op;
+	struct genericspecial_func_entry* op;
 	struct RoomSpecialProcEntry* _or;
 	struct room_data* rp;
 	int i, rnum;
@@ -177,7 +177,7 @@ void assign_speciales() {
 
 	mudlog(LOG_CHECK,"Generic sort...[%3d]",lastotherproc);
 	qsort(otherproc,lastotherproc,
-		  sizeof(struct special_proc_entry),xcompare);
+		  sizeof(struct genericspecial_func_entry),xcompare);
 
 	mudlog(LOG_CHECK,"Done!");
 	fd=fopen(SPECFILE,"r");
@@ -205,11 +205,11 @@ void assign_speciales() {
 		case 'm':
 			rnum = real_mobile(vnum);
 			if ((rnum<0) ||
-					!(op=(struct special_proc_entry*)
+					!(op=(struct genericspecial_func_entry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
-								 sizeof(struct special_proc_entry),
+								 sizeof(struct genericspecial_func_entry),
 								 nomecompare))
 			   ) {
 				mudlog( LOG_ERROR,
@@ -224,11 +224,11 @@ void assign_speciales() {
 		case 'o':
 			rnum = real_object(vnum);
 			if ((rnum<0) ||
-					!(op=(struct special_proc_entry*)
+					!(op=(struct genericspecial_func_entry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
-								 sizeof(struct special_proc_entry),
+								 sizeof(struct genericspecial_func_entry),
 								 nomecompare))
 			   ) {
 				mudlog( LOG_ERROR,

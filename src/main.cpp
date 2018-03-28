@@ -6,6 +6,7 @@
 /***************************  System  include ************************************/
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <boost/scoped_ptr.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -20,12 +21,15 @@
 #include "comm.hpp"
 #include "interpreter.hpp"
 #include "snew.hpp"
+#include "Sql.hpp"
 namespace Alarmud {
 
 using std::string;
 using std::endl;
 using std::cout;
 int main(int argc, char** argv) {
+
+
 #ifdef DFLT_PORT
 	int port=DFLT_PORT;
 #else
@@ -72,6 +76,7 @@ int main(int argc, char** argv) {
 		cout << e.what() << endl;
 	}
 	po::notify(vm);
+	Sql::dbUpdate();
 	if(vm.count("version")) {
 		cout << version() << endl;
 		exit(0);
@@ -135,6 +140,7 @@ int main(int argc, char** argv) {
 		fclose(fd);
 	}
 	LOG4CXX_TRACE(logger,"Boost version " << BOOST_VERSION);
+	Sql::dbUpdate();
 	run(port,dir.c_str());
 	return 0;
 }

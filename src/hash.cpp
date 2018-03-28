@@ -189,7 +189,7 @@ void* hash_remove(struct hash_header* ht, long key) {
 	return NULL;
 }
 
-void room_iterate( struct room_data* rb[],pIterateFunc func,void* cdata ) {
+void room_iterate( struct room_data* rb[],iterate_func func,void* cdata ) {
 	register int        i;
 	for (i=0; i<WORLD_SIZE; i++) {
 		struct room_data*  temp;
@@ -202,7 +202,7 @@ void room_iterate( struct room_data* rb[],pIterateFunc func,void* cdata ) {
 }
 
 
-void hash_iterate( struct hash_header* ht,pIterateFunc func,void* cdata ) {
+void hash_iterate( struct hash_header* ht,iterate_func func,void* cdata ) {
 	int        i;
 	for (i=0; i<ht->klistlen; i++) {
 		void*        temp;
@@ -210,7 +210,7 @@ void hash_iterate( struct hash_header* ht,pIterateFunc func,void* cdata ) {
 
 		key = ht->keylist[i];
 		temp = hash_find(ht, key);
-		(*func)(key, temp, cdata);
+		(*func)(key,  static_cast<struct room_data*>(temp),cdata);
 		if (ht->keylist[i]!=key) /* They must have deleted this room */
 		{ i--; }        /* Hit this slot again. */
 	}

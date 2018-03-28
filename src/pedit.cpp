@@ -137,7 +137,7 @@ char modifica_obj[40] = "";
 static struct char_data* find_editman(struct char_data* ch) {
 	struct char_data* editman;
 
-	editman = FindMobInRoomWithFunction(ch->in_room, EditMaster);
+	editman = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(EditMaster));
 
 	if (!editman)
 	{ send_to_char("Whoa!  Non c'e' la persona giusta.\n\r", ch); }

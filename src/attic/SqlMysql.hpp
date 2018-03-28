@@ -5,34 +5,36 @@
 #ifndef __SQLMYSQL_HPP_
 #define __SQLMYSQL_HPP_
 /***************************  System  include ************************************/
-/*
-#include <mysql_connection.h>
-#include <mysql_driver.h>
+#include "mysql_connection.h"
+#include "mysql_driver.h"
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
-*/
-namespace sql { class Connection; }
-namespace sql { class Driver; }
-namespace sql { class PreparedStatement; }
-namespace sql { class ResultSet; }
-namespace sql { class exception; }
+#include <boost/shared_ptr.hpp>
 using namespace sql;
 /***************************  Local    include ************************************/
 namespace Alarmud {
+typedef boost::shared_ptr<PreparedStatement> SqlStatement;
 class SqlMysql {
 public:
-	Driver* driver;
-	Connection* db;
 	SqlMysql();
 	virtual ~SqlMysql();
-	const PreparedStatement* prepare(const string query);
+	SqlStatement prepare(const string &query);
 	ResultSet* execute();
-	ResultSet* execute(const PreparedStatement* stm);
+	ResultSet* executeQuery(const PreparedStatement* stm);
+	template<typename T>
+	void push(SqlStatement stm,int index,T value);
+private:
+	Driver* driver;
+	Connection* db;
+	std::map<string,SqlStatement> cache;
+
 
 };
 } // namespace Alarmud
+
+
 #endif /* __SQLMYSQL_HPP_ */
 

@@ -3342,6 +3342,7 @@ void cast_commune( byte level, struct char_data* ch, const char* arg,
 				   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+		   /* no break */
 	case SPELL_TYPE_SCROLL:
 		spell_commune(level, ch, 0, 0);
 		break;

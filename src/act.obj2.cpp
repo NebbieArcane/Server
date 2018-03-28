@@ -1172,26 +1172,6 @@ void do_wear(struct char_data* ch,const char* argument, int cmd) {
 	char buffer[MAX_INPUT_LENGTH];
 	struct obj_data* obj_object, *next_obj;
 	int keyword;
-	static char* keywords[] = {
-		"finger",
-		"neck",
-		"body",
-		"head",
-		"legs",
-		"feet",
-		"hands",
-		"arms",
-		"about",
-		"waist",
-		"wrist",
-		"wield",
-		"hold",
-		"shield",
-		"back",
-		"ears",
-		"eye",
-		"\n"
-	};
 
 	argument_interpreter(argument, arg1, arg2);
 	if (*arg1) {
@@ -1251,7 +1231,7 @@ void do_wear(struct char_data* ch,const char* argument, int cmd) {
 			obj_object = get_obj_in_list_vis(ch, arg1, ch->carrying);
 			if (obj_object) {
 				if (*arg2) {
-					keyword = search_block(arg2, keywords, FALSE); /* Partial Match */
+					keyword = search_block(arg2, eqKeywords, FALSE); /* Partial Match */
 					if (keyword == -1) {
 						snprintf(buf, 255,"Non puoi indossare nulla su un %s.\n\r", arg2);
 						send_to_char(buf, ch);

@@ -4,15 +4,14 @@
  *ALARMUD*/
 #ifndef __SPECIALPROC_ROOM_HPP
 #define __SPECIALPROC_ROOM_HPP
-#define SPECIALPROC_ROOM(name) int (name)( struct char_data*, int, char*, struct room_data*, int )
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "typedefs.hpp"
 namespace Alarmud {
 
-typedef SPECIALPROC_ROOM(*room_proc);
 struct RoomSpecialProcEntry {
-	char* nome;
-	room_proc proc;
+	const char* nome;
+	roomspecial_func proc;
 };
 extern struct RoomSpecialProcEntry roomproc[];
 } // namespace Alarmud

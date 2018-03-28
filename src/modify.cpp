@@ -44,7 +44,7 @@ namespace Alarmud {
 struct room_data* world;              /* dyn alloc'ed array of rooms     */
 
 
-char* string_fields[] = {
+const char* string_fields[] = {
 	"name",
 	"short",
 	"long",
@@ -56,7 +56,7 @@ char* string_fields[] = {
 	"\n"
 };
 
-char* room_fields[] = {
+const char* room_fields[] = {
 	"name",   /* 1 */
 	"desc",
 	"fs",
@@ -91,7 +91,7 @@ unsigned int room_length[] = {
 	50
 };
 
-char* skill_fields[] = {
+const char* skill_fields[] = {
 	"learned",
 	"affected",
 	"duration",
@@ -173,7 +173,7 @@ void string_add(struct descriptor_data* d, char* str) {
 #undef MAX_STR
 
 /* interpret an argument for do_string */
-void quad_arg(char* arg, int* type, char* name, int* field, char* string) {
+void quad_arg(const char* arg, int* type, char* name, int* field, char* string) {
 	char buf[MAX_STRING_LENGTH];
 
 
@@ -209,7 +209,7 @@ void quad_arg(char* arg, int* type, char* name, int* field, char* string) {
 /* modification of malloc'ed strings in chars/objects */
 void do_string(struct char_data* ch, const char* arg, int cmd) {
 
-	char name[MAX_STRING_LENGTH], string[MAX_STRING_LENGTH];
+	char name[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
 	struct extra_descr_data* ed, *tmp;
 	int field, type;
 	struct char_data* mob;
@@ -217,7 +217,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 	if (IS_NPC(ch))
 	{ return; }
 
-	quad_arg(arg, &type, name, &field, string);
+	quad_arg(arg, &type, name, &field, buffer);
 
 	if (type == TP_ERROR) {
 		send_to_char( "Syntax:\n\rstring ('obj'|'char') <name> <field> "
@@ -243,7 +243,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 				send_to_char("You can't change that field for players.", ch);
 				return;
 			}
-			if (!*string) {
+			if (!*buffer) {
 				send_to_char("You have to supply a name!\n\r", ch);
 				return;
 			}
@@ -257,7 +257,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 				send_to_char("That field is for monsters only.\n\r", ch);
 				return;
 			}
-			if (!*string) {
+			if (!*buffer) {
 				send_to_char("You have to supply a description!\n\r", ch);
 				return;
 			}
@@ -315,7 +315,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 
 		switch(field) {
 		case 1:
-			if (!*string) {
+			if (!*buffer) {
 				send_to_char("You have to supply a keyword.\n\r", ch);
 				return;
 			}
@@ -324,7 +324,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			}
 			break;
 		case 2:
-			if (!*string) {
+			if (!*buffer) {
 				send_to_char("You have to supply a keyword.\n\r", ch);
 				return;
 			}
@@ -336,7 +336,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			ch->desc->str = &obj->description;
 			break;
 		case 4:
-			if (!*string) {
+			if (!*buffer) {
 				send_to_char("You have to supply a keyword.\n\r", ch);
 				return;
 			}
@@ -347,13 +347,13 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 					ed->nMagicNumber = EXDESC_VALID_MAGIC;
 					ed->next = obj->ex_description;
 					obj->ex_description = ed;
-					ed->keyword =  strdup( string );
+					ed->keyword =  strdup( buffer );
 					ed->description = NULL;
 					ch->desc->str = &ed->description;
 					send_to_char("New field.\n\r", ch);
 					break;
 				}
-				else if (!str_cmp(ed->keyword, string)) { /* the field exists */
+				else if (!str_cmp(ed->keyword, buffer)) { /* the field exists */
 					free(ed->description);
 					ed->description = NULL;
 					ch->desc->str = &ed->description;
@@ -365,7 +365,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			return; /* the stndrd (see below) procedure does not apply here */
 			break;
 		case 6: /* deletion */
-			if (!*string) {
+			if (!*buffer) {
 				send_to_char("You must supply a field name.\n\r", ch);
 				return;
 			}
@@ -382,7 +382,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 					send_to_char("No field with that keyword.\n\r", ch);
 					return;
 				}
-				else if (!str_cmp(ed->keyword, string)) {
+				else if (!str_cmp(ed->keyword, buffer)) {
 					free(ed->keyword);
 					free(ed->description);
 
@@ -414,14 +414,14 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 		free(*ch->desc->str);
 	}
 
-	if (*string) {
+	if (*buffer) {
 		/* there was a string in the argument array */
-		if (strlen(string) > length[field - 1]) {
+		if (strlen(buffer) > length[field - 1]) {
 			send_to_char("String too long - truncated.\n\r", ch);
-			*(string + length[field - 1]) = '\0';
+			*(buffer + length[field - 1]) = '\0';
 		}
-		CREATE(*ch->desc->str, char, strlen(string) + 1);
-		strcpy(*ch->desc->str, string);
+		CREATE(*ch->desc->str, char, strlen(buffer) + 1);
+		strcpy(*ch->desc->str, buffer);
 		ch->desc->str = 0;
 		send_to_char("Ok.\n\r", ch);
 	}
@@ -803,7 +803,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 ********************************************************************** */
 
 #ifndef ALAR
-void do_setskill(struct char_data* ch, char* arg, int cmd) {
+void do_setskill(struct char_data* ch,const char* argument, int cmd) {
 	send_to_char("This routine is disabled untill it fitts\n\r", ch);
 	send_to_char("The new structures (sorry Quinn) ....Bombman\n\r", ch);
 	return;
@@ -854,7 +854,7 @@ void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
 /* One_Word is like one_argument, execpt that words in quotes "" are */
 /* regarded as ONE word                                              */
 
-char* one_word(const char* argument, char* first_arg ) {
+char* one_word(char* argument, char* first_arg ) {
 	int begin, look_at;
 
 	begin = 0;
@@ -948,7 +948,7 @@ struct help_index_element* build_help_index(FILE* fl, int* num) {
 
 
 
-void page_string(struct descriptor_data* d, const char* str, int keep_internal) {
+void page_string(struct descriptor_data* d, char* str, int keep_internal) {
 	if (!d)
 	{ return; }
 

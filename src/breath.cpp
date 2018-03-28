@@ -85,7 +85,7 @@ void free_victims(struct breath_victim* head) {
 	}
 }
 
-void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, bfuncp func) {
+void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, breath_func func) {
 	struct breath_victim* hitlist, *scan;
 	struct char_data* tmp;
 	int        victim;
@@ -129,7 +129,7 @@ void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost
 	free_victims(hitlist);
 }
 
-void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, bfuncp func) {
+void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, breath_func func) {
 	if (GET_MANA(ch)>=0) {
 		breath_weapon(ch, target, cost, func);
 	}
@@ -145,7 +145,7 @@ void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost,
 }
 
 
-static bfuncp breaths[] = {
+static breath_func breaths[] = {
 	cast_acid_breath,
 	0,
 	cast_frost_breath,
@@ -191,7 +191,7 @@ int BreathWeapon( struct char_data* ch, int cmd, char* arg,struct char_data* mob
 }
 
 
-bfuncp bweapons[] = {
+breath_func bweapons[] = {
 	cast_geyser,
 	cast_fire_breath,
 	cast_gas_breath,
@@ -200,11 +200,11 @@ bfuncp bweapons[] = {
 	cast_lightning_breath
 };
 
-void do_breath(struct char_data* ch, char* argument, int cmd) {
+void do_breath(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char        name[MAX_STRING_LENGTH];
 	int        count, manacost;
-	bfuncp weapon;
+	breath_func weapon;
 
 	if (check_peaceful(ch,"That wouldn't be nice at all.\n\r"))
 	{ return; }

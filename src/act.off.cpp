@@ -40,7 +40,7 @@
 
 namespace Alarmud {
 
-void do_ripudia(struct char_data* ch, char* argument, int cmd) {
+void do_ripudia(struct char_data* ch,const char* argument, int cmd) {
 	char arg[80];
 	struct char_data* victim=NULL;
 	only_argument(argument, arg);
@@ -100,7 +100,7 @@ void do_ripudia(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_associa(struct char_data* ch, char* argument, int cmd) {
+void do_associa(struct char_data* ch,const char* argument, int cmd) {
 	char arg[80];
 	long costobase=500000;
 	long costo;
@@ -171,7 +171,7 @@ void do_associa(struct char_data* ch, char* argument, int cmd) {
 		TRUE,ch,NULL,victim,TO_NOTVICT);
 	return;
 }
-void do_vomita(struct char_data* ch, char* argument, int cmd) {
+void do_vomita(struct char_data* ch,const char* argument, int cmd) {
 	act("Ti  ficchi un dito in gola e cerchi di vomitare... che schifo!",
 		TRUE,ch,NULL,NULL,TO_CHAR);
 	act("$n si ficca un dito in gola....!",
@@ -196,7 +196,7 @@ void do_vomita(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 
-void do_hit(struct char_data* ch, char* argument, int cmd) {
+void do_hit(struct char_data* ch,const char* argument, int cmd) {
 	char arg[80];
 	struct char_data* victim;
 
@@ -268,7 +268,7 @@ void do_hit(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_slay(struct char_data* ch, char* argument, int cmd) {
+void do_slay(struct char_data* ch,const char* argument, int cmd) {
 	static char arg[MAX_INPUT_LENGTH];
 	struct char_data* victim;
 
@@ -297,7 +297,7 @@ void do_slay(struct char_data* ch, char* argument, int cmd) {
 		}
 	}
 }
-void do_kill(struct char_data* ch, char* argument, int cmd) {
+void do_kill(struct char_data* ch,const char* argument, int cmd) {
 	static char arg[MAX_INPUT_LENGTH];
 	struct char_data* victim;
 
@@ -327,7 +327,7 @@ void do_kill(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_backstab(struct char_data* ch, char* argument, int cmd) {
+void do_backstab(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[256];
 	byte percent, base=0;
@@ -478,7 +478,7 @@ void do_backstab(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_order(struct char_data* ch, char* argument, int cmd) {
+void do_order(struct char_data* ch,const char* argument, int cmd) {
 	char name[100], message[256];
 	char buf[256];
 	bool found = FALSE;
@@ -605,7 +605,7 @@ void do_order(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_order_old(struct char_data* ch, char* argument, int cmd) {
+void do_order_old(struct char_data* ch,const char* argument, int cmd) {
 	char name[100], message[256];
 	char buf[256];
 	bool found = FALSE;
@@ -715,7 +715,7 @@ void do_order_old(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_flee(struct char_data* ch, char* argument, int cmd) {
+void do_flee(struct char_data* ch,const char* argument, int cmd) {
 	int i, attempt, loose, die, percent, charm;
 	int panic=FALSE;
 	int bonus=0;
@@ -922,7 +922,7 @@ void do_flee(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_bash(struct char_data* ch, char* argument, int cmd) {
+void do_bash(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[256];
 	int percent=0;
@@ -1078,7 +1078,7 @@ void do_bash(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_rescue(struct char_data* ch, char* argument, int cmd) {
+void do_rescue(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim, *tmp_ch;
 	int percent;
 	char victim_name[240];
@@ -1182,7 +1182,7 @@ void do_rescue(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_support(struct char_data* ch, char* argument, int cmd) {
+void do_support(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char victim_name[240];
 
@@ -1218,7 +1218,7 @@ void do_support(struct char_data* ch, char* argument, int cmd) {
 	ActionAlignMod(ch,victim,cmd);
 	ch->specials.supporting=strdup(victim_name);
 }
-void do_bodyguard(struct char_data* ch, char* argument, int cmd) {
+void do_bodyguard(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim,*lg;
 	char victim_name[240];
 
@@ -1284,7 +1284,7 @@ void do_bodyguard(struct char_data* ch, char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE); /* same as hit */
 }
 
-void do_assist(struct char_data* ch, char* argument, int cmd) {
+void do_assist(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim, *tmp_ch;
 	char victim_name[240];
 
@@ -1342,7 +1342,7 @@ void do_assist(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_kick(struct char_data* ch, char* argument, int cmd) {
+void do_kick(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[80];
 	int dam;
@@ -1514,7 +1514,7 @@ void do_parry( struct char_data* ch, char* arg, int cmd) {
 
 
 
-void do_wimp(struct char_data* ch, char* argument, int cmd) {
+void do_wimp(struct char_data* ch,const char* argument, int cmd) {
 
 	/* sets the character in wimpy mode.  */
 	char name[80];
@@ -1538,7 +1538,7 @@ void do_wimp(struct char_data* ch, char* argument, int cmd) {
 
 }
 
-void do_shoot(struct char_data* ch, char* argument, int cmd) {
+void do_shoot(struct char_data* ch,const char* argument, int cmd) {
 #if 0
 	char arg[80],dirstr[80],name[80];
 	char buf[255];
@@ -1677,7 +1677,7 @@ void do_shoot(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_springleap(struct char_data* ch, char* argument, int cmd) {
+void do_springleap(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[256];
 	byte percent;
@@ -2084,7 +2084,7 @@ void throw_weapon( struct obj_data* o, int dir, struct char_data* targ,
 	int broken=FALSE;
 	char buf[MAX_STRING_LENGTH];
 	struct char_data* spud, *next_spud;
-	char* dir_name[] = {
+	const char* dir_name[] = {
 		"da nord",
 		"da est",
 		"da sud",
@@ -2362,7 +2362,7 @@ void do_weapon_load( struct char_data* ch, char* argument, int cmd ) {
 	WAIT_STATE( ch, PULSE_VIOLENCE * 3 );
 }
 
-void do_fire(struct char_data* ch, char* argument, int cmd ) {
+void do_fire(struct char_data* ch,const char* argument, int cmd ) {
 	struct obj_data* fw, *ms;
 	char arg[MAX_STRING_LENGTH];
 	struct char_data* targ;
@@ -2422,7 +2422,7 @@ void do_fire(struct char_data* ch, char* argument, int cmd ) {
 
 
 
-void do_throw(struct char_data* ch, char* argument, int cmd) {
+void do_throw(struct char_data* ch,const char* argument, int cmd) {
 	struct obj_data* pObjThrow;
 	char arg1[100],arg2[100];
 	int rng, tdir;

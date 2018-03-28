@@ -710,6 +710,9 @@ e_connection_types encode_e_connection_types(std::string s,e_connection_types fa
 	if (s == "CON_CONF_ROLL") return CON_CONF_ROLL;
 	if (s == "CON_EXTRA2") return CON_EXTRA2;
 	if (s == "CON_OBJ_FORGING") return CON_OBJ_FORGING;
+	if (s == "CON_ACCOUNT_NAME") return CON_ACCOUNT_NAME;
+	if (s == "CON_ACCOUNT_PWD") return CON_ACCOUNT_PWD;
+	if (s == "CON_ACCOUNT_TOON") return CON_ACCOUNT_TOON;
 	return fallback;
 }
 
@@ -793,6 +796,12 @@ std::string translate(const e_connection_types e) {
 		return "CON_EXTRA2";
 	case CON_OBJ_FORGING:
 		return "CON_OBJ_FORGING";
+	case CON_ACCOUNT_NAME:
+		return "CON_ACCOUNT_NAME";
+	case CON_ACCOUNT_PWD:
+		return "CON_ACCOUNT_PWD";
+	case CON_ACCOUNT_TOON:
+		return "CON_ACCOUNT_TOON";
 	default:
 		return "UNKNOWN";
 	}
@@ -838,6 +847,9 @@ bool enum_validate(const e_connection_types value) {
 		case CON_CONF_ROLL:
 		case CON_EXTRA2:
 		case CON_OBJ_FORGING:
+		case CON_ACCOUNT_NAME:
+		case CON_ACCOUNT_PWD:
+		case CON_ACCOUNT_TOON:
 		return true;
 		default:
 		return false;

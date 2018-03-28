@@ -229,7 +229,7 @@ int SentinelBackHome( struct char_data* pMob ) {
 	 *
 	 * */
 
-	iDir = find_path( pMob->in_room, IsMobStartRoom, pMob, -5000, 0 );
+	iDir = find_path( pMob->in_room, reinterpret_cast<find_func>(IsMobStartRoom), pMob, -5000, 0 );
 	if( iDir >= 0 ) {
 		go_direction( pMob, iDir );
 		return TRUE;
@@ -988,7 +988,7 @@ void DoScript(struct char_data* ch) {
 	{ DoScript(ch); }
 }
 
-int CommandSearch(char* arg) {
+int CommandSearch(const char* arg) {
 	int i;
 
 	for(i = 0; i < top_of_comp; i++)
@@ -998,7 +998,7 @@ int CommandSearch(char* arg) {
 	return(-1);
 }
 
-void CommandAssign( char* arg, void (*p)( char*, struct char_data* ) ) {
+void CommandAssign( const char* arg, script_func p ) {
 	if(top_of_comp == 0)
 	{ gpComp = (struct script_com*)malloc(sizeof(struct script_com)); }
 	else

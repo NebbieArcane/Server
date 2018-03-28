@@ -41,7 +41,7 @@ byte HashTable[256];
 
 
 /* Adds a command to the Command List radix. */
-void AddCommand(char* name, pCommandFunc func, int number, int min_pos, int min_lev) {
+void AddCommand(char* name, command_func func, int number, int min_pos, int min_lev) {
 	NODE* n;
 	int len, radix;
 

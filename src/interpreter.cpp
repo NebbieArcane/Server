@@ -50,6 +50,7 @@
 #include "skills.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#include "Sql.hpp"
 
 namespace Alarmud {
 
@@ -765,15 +766,8 @@ int fill_word(char* argument) {
 
 
 /* determine if a given string is an abbreviation of another */
-int is_abbrev(char* arg1, char* arg2) {
-	if (!*arg1)
-	{ return(0); }
-
-	for (; *arg1; arg1++, arg2++)
-		if (LOWER(*arg1) != LOWER(*arg2))
-		{ return(0); }
-
-	return(1);
+int is_abbrev(const char* arg1, const char* arg2) {
+	return (!strncasecmp(arg1,arg2,strlen(arg1)));
 }
 
 
@@ -837,7 +831,7 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 
 
 
-int special(struct char_data* ch, int cmd, char* arg) {
+int special(struct char_data* ch, int cmd, const char* arg) {
 	register struct obj_data* i;
 	register struct char_data* k;
 	int j;
@@ -1490,10 +1484,10 @@ int _parse_name(char* arg, char* name) {
 	/* skip whitespaces */
 	for (; isspace(*arg); arg++);
 	for (i = 0; ( *name = *arg ) != 0; arg++, i++, name++) {
-		if ((*arg <0) || !isalpha(*arg) || i > 15 ) {
+		if ((*arg <0) || !isalpha(*arg)) {
 			// If the current char is a '@' we are in account mode
 #if ACCOUNT_MODE
-			if (i<=15 and *arg=='@') {
+			if (*arg=='@') {
 				return 2;
 			}
 #endif
@@ -1501,7 +1495,7 @@ int _parse_name(char* arg, char* name) {
 		}
 	}
 
-	if (!i)
+	if (!i or i >15)
 	{ return 1; }
 
 	return 0;
@@ -1781,8 +1775,76 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 }
 #endif
 
-/* deal with newcomers and other non-playing sockets */
 
+/**
+ * Attempts to login to a global account
+ *
+ */
+bool accountLogin(struct descriptor_data* d,const char* arg) {
+	using std::string;
+	switch(STATE(d)) {
+	case CON_ACCOUNT_NAME:
+		mudlog(LOG_CONNECT,"Status ACCOUNT NAME %s",arg);
+		/**
+		 * We dont want to be used as an email verification service so no check on email itself, we only clean it from spaces
+		 */
+		{
+			string email(arg);
+			boost::replace_all(email," ","");
+			d->AccountData.email=email;
+			email.insert(0,"Benvenuto ").append(". ").append("Digita la tua password per favore (o b per ricominciare): ");
+			SEND_TO_Q(email.c_str(),d);
+			STATE(d)=CON_ACCOUNT_PWD;
+		}
+		break;
+	case CON_ACCOUNT_PWD:
+		mudlog(LOG_CONNECT,"Status ACCOUNT PWD %s",arg);
+		if (!strcmp(arg,"b")) {
+			STATE(d)=CON_NME;
+			SEND_TO_Q("Ricomiciamo. Come ti chiami?\r\n",d);
+			return false;
+		}
+		try {
+			DB* db=Sql::getMysql();
+			odb::session s;
+			odb::transaction t(db->begin());
+			t.tracer(odb::stderr_full_tracer);
+			mudlog(LOG_CONNECT,"Current mail: %s",d->AccountData.email.c_str())
+			user &ac=d->AccountData;
+			bool found=db->query_one<user>(userQuery::email==d->AccountData.email,ac);
+			if (found and !strcmp(arg,d->AccountData.password.c_str())) {
+				string message("Benvenuto ");
+				message.append(d->AccountData.nickname).append("\r\n");
+				STATE(d)=CON_NME;
+				mudlog(LOG_CONNECT,"Succesfull connection for %s",d->AccountData.realname.c_str());
+				SEND_TO_Q("Ecco la lista dei tuoi personaggi:\r\n",d);
+				{
+					short n=0;
+					constexpr int nlen=5;
+					char order[nlen]="";
+					for (user::toonVector::iterator i=d->AccountData.toons.begin() ; i!= d->AccountData.toons.end();++i) {
+						++n;
+						snprintf(order,nlen-1,"%3d. ",n);
+						SEND_TO_Q(order,d);
+						SEND_TO_Q(i->lock()->name.c_str(),d);
+						SEND_TO_Q("\r\n",d);
+					}
+				}
+			}
+			t.commit();
+		}
+		catch (odb::exception &e) {
+			mudlog(LOG_SYSERR,"Error accessing database for user %s: %s",d->AccountData.email.c_str(),e.what());
+		}
+		SEND_TO_Q("Riprova (digita <b> per rinunciare).",d);
+		break;
+	default:
+		mudlog(LOG_CONNECT,"Unmanaged Status  %s",G::translate(STATE(d)));
+		break;
+	}
+	return true;
+}
+/* deal with newcomers and other non-playing sockets */
 void nanny(struct descriptor_data* d, char* arg) {
 	char buf[ 254 ];
 	int count=0, oops=FALSE, index=0;
@@ -1793,10 +1855,14 @@ void nanny(struct descriptor_data* d, char* arg) {
 	struct descriptor_data* k;
 
 	/*struct RegInfoData *ri;*/
-
+	mudlog(LOG_CONNECT,"Nannying %s (%s)",arg,G::translate(static_cast<e_connection_types>(STATE(d))));
 	write(d->descriptor, echo_on, 6);
 	/*GGPATCH Inserita possibilita' di tornare indietro con "B"  */
 	switch (STATE(d)) {
+	case CON_ACCOUNT_NAME:
+	case CON_ACCOUNT_PWD:
+	case CON_ACCOUNT_TOON:
+		if (accountLogin(d,arg)) return;
 	case CON_NME:                /* wait for input of name        */
 		for (; isspace(*arg); arg++)  ;
 		if (!*arg) {
@@ -1807,18 +1873,18 @@ void nanny(struct descriptor_data* d, char* arg) {
 		}
 		else {
 			d->AlreadyInGame=FALSE;
+			int rc=_parse_name(arg, tmp_name);
+			mudlog(LOG_CONNECT,"Parsename result %d",rc);
 
-			if(_parse_name(arg, tmp_name)) {
-				SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
-				SEND_TO_Q("Nome: ", d);
+			if (rc==2) {
+				STATE(d)=CON_ACCOUNT_NAME;
+				mudlog(LOG_CONNECT,"Calling account login (%s)",G::translate(STATE(d)));
+				accountLogin(d,arg);
 				return;
 			}
-			if( SiteLock( d->host ) ) {
-				SEND_TO_Q("Sorry, this site is temporarily banned.\n\r",d);
-				STATE(d)=CON_WIZLOCK;
-				PushStatus("Banned site");
-				close_socket(d);
-				PopStatus();
+			if(rc==1) {
+				SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
+				SEND_TO_Q("Nome: ", d);
 				return;
 			}
 			if (!d->character) {
@@ -1878,7 +1944,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 			STATE(d) = CON_PWDNRM;
 			return;
 		}
-
 	case CON_NMECNF:        /* wait for conf. of new name        */
 		/* skip whitespaces */
 		for( ; isspace(*arg); arg++ );
@@ -2713,9 +2778,9 @@ void nanny(struct descriptor_data* d, char* arg) {
 		{ ScreenOff(d->character); }
 		SEND_TO_Q(MENU, d);
 		STATE(d) = CON_SLCT;
-		if (WizLock || SiteLock(d->host)) {
+		if (WizLock) {
 			if (GetMaxLevel(d->character) < DIO) {
-				sprintf(buf, "Sorry, the game is locked up for repair or your site is bannedr\n\r");
+				sprintf(buf, "Sorry, the game is locked up for repair.\n\r");
 				SEND_TO_Q(buf,d);
 				STATE(d) = CON_WIZLOCK;
 			}
@@ -2726,9 +2791,9 @@ void nanny(struct descriptor_data* d, char* arg) {
 
 		SEND_TO_Q(MENU, d);
 		STATE(d) = CON_SLCT;
-		if (WizLock || SiteLock(d->host)) {
+		if (WizLock ) {
 			if (GetMaxLevel(d->character) < DIO) {
-				sprintf(buf, "Sorry, the game is locked up for repair or your site is banned.\n\r");
+				sprintf(buf, "Sorry, the game is locked up for repair.\n\r");
 				SEND_TO_Q(buf,d);
 				STATE(d) = CON_WIZLOCK;
 			}

@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <fstream>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -24,38 +25,32 @@
 namespace Alarmud {
 
 int SecCheck(char* arg, char* site) {
-	char buf[ 255 ];
 	int  result=0;
-	int doloop=0;
-	FILE* f1;
-	char* hostname;
-	snprintf(buf,250,"security/%s",arg);
-	buf[250]=0;
-	if(!(f1 = fopen(buf, "rt"))) {
+	string fname("security/");
+	string compare(site);
+	fname.append(arg);
+	std::ifstream securefile(arg);
+	if (securefile.fail()) {
 		mudlog( LOG_CHECK, "Unable to open security file for %s.", arg);
 		return(-1);
 	}
-	result=0;
-	while (1) {
-		doloop=fscanf(f1,"%as\n",&hostname);
-		mudlog( LOG_CHECK, "Checking %s against %s.",site,hostname);
-		if( hostname && *hostname && !strncmp( site, hostname, strlen( hostname ) ) ) {
+	fname.erase();
+	while (securefile >> fname ) {
+		if (fname==compare) {
 			result=1;
-			free(hostname);
 			break;
 		}
-		if (doloop < 1)
-		{ break; }
-		else
-		{ free(hostname); }
-	}
-	fclose(f1);
-	if (result <1)
-		mudlog( LOG_CHECK, "Site %s not allowed for %s. Security Violation.",
-				site,
-				arg);
+		else {
+			mudlog( LOG_CHECK, "Checking site %s n for %s.",fname.c_str(),arg);
 
-	return(result);
+		}
+	}
+	securefile.close();
+	if (result <1) {
+		mudlog( LOG_SYSERR, "Site %s not allowed for %s. Security Violation.",site,arg);
+	}
+	return result;
+
 }
 
 } // namespace Alarmud

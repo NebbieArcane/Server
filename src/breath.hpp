@@ -13,6 +13,7 @@
 /***************************  Local    include ************************************/
 #ifndef __BREATH_HPP
 #define __BREATH_HPP
+#include "typedefs.hpp"
 namespace Alarmud {
 
 struct breath_victim {
@@ -22,22 +23,20 @@ struct breath_victim {
 };
 
 
-typedef void (*bfuncp)( char, struct char_data*, char*, int,
-						struct char_data*, struct obj_data* );
 
 struct breather {
 	int vnum;
 	int cost;
-	bfuncp* breaths;
+	breath_func* breaths;
 };
 
-extern bfuncp bweapons[];
+extern breath_func bweapons[];
 int BreathWeapon( struct char_data* ch, int cmd, char* arg,struct char_data* mob, int type) ;
-void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, bfuncp) ;
+void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, breath_func) ;
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) ;
-void do_breath(struct char_data* ch, char* argument, int cmd) ;
+void do_breath(struct char_data* ch,const char* argument, int cmd) ;
 void free_victims(struct breath_victim* head) ;
-void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, bfuncp) ;
+void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, breath_func) ;
 } // namespace Alarmud
 #endif // __BREATH_HPP
 

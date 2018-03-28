@@ -89,11 +89,6 @@ int rebootgame = 0;         /* reboot the game after a shutdown */
 bool no_specials = false;    /* Suppress ass. of special routines */
 long Uptime;            /* time that the game has been up */
 
-#if SITELOCK
-char hostlist[MAX_BAN_HOSTS][30];  /* list of sites to ban           */
-int numberhosts;
-#endif
-
 int maxdesc, avail_descs;
 int tics = 0;        /* for extern checkpointing */
 
@@ -106,63 +101,8 @@ struct affected_type*  Check_hjp, *Check_old_af;
 struct char_data* Check_c;
 char* Check_p = NULL;
 
-inline void CheckCharAffected( char* msg ) {
-#if HEAVY_DEBUG
-	Check_p = strdup( "a simple test in CheckCharAffected blank text meaning"
-					  " nothing to anyone intelligent anyways.... go get'em!"
-					  " Okay.... lets see if we can wack an link list somewhere" );
 
-	for( Check_c = character_list; Check_c; Check_c = Check_c->next ) {
-		if( Check_c->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR, "Invalid magic number %d in check: %s",
-					Check_c->nMagicNumber, msg );
-			SetStatus( "Aborting from check", msg, Check_c );
-			abort();
-		}
-
-		if( Check_c->affected ) {
-			for( Check_hjp = Check_c->affected; Check_hjp;
-					Check_old_af = Check_hjp, Check_hjp = Check_hjp->next) {
-				if( Check_hjp->type > MAX_EXIST_SPELL || Check_hjp->type < 0) {
-					mudlog( LOG_SYSERR, "Bogus hjp->type for %s in check: %s.",
-							GET_NAME_DESC( Check_c ), msg  );
-					mudlog( LOG_SYSERR, " string in old_af: '%s'", Check_old_af);
-					mudlog( LOG_SYSERR, " string in cur_af: '%s'", Check_hjp);
-					SetStatus( "Aborting from check", msg, Check_c );
-					abort();
-				}
-			}
-		}
-	}
-	free(Check_p);
-#endif
-	return;
-}
-
-inline void CheckObjectExDesc( char* msg ) {
-#if HEAVY_DEBUG
-	struct obj_data* pObj = NULL;
-	struct extra_descr_data* pExDesc = NULL;
-
-	for( pObj = object_list; pObj; pObj = pObj->next ) {
-		for( pExDesc = pObj->ex_description; pExDesc; pExDesc = pExDesc->next ) {
-			if( pExDesc->nMagicNumber != EXDESC_VALID_MAGIC ) {
-				mudlog( LOG_SYSERR, "Invalid extra description in check: %s.", msg );
-				abort();
-			}
-		}
-	}
-#endif
-	return;
-}
-
-
-
-
-
-
-
-void str2ansi( char* p2, char* p1, int start, int stop ) {
+void str2ansi( char* p2, const char* p1, int start, int stop ) {
 	int i,j;
 
 	if( ( start > stop ) || ( start < 0 ) )
@@ -190,7 +130,7 @@ char* ParseAnsiColors( int UsingAnsi, const char* txt ) {
 	static char buf [MAX_STRING_LENGTH ] = "";
 	char tmp[20];
 
-	register int i,l,f = 0;
+	int i,l,f = 0;
 
 	buf[ 0 ] = 0;
 	for( i=0, l=0; *txt; ) {
@@ -264,8 +204,6 @@ void close_socket_fd( int desc) {
 int run (int port, const char* dir) {
 
 
-	struct passwd* pw;
-
 	mudlog( LOG_ALWAYS, "Starting game ver %s rel %s ", version(), release() );
 	mudlog( LOG_ALWAYS, "Compiled on %s",compilazione() );
 
@@ -292,14 +230,6 @@ int run (int port, const char* dir) {
 
 	srandom(0);
 	WizLock = FALSE;
-
-#if SITELOCK
-	mudlog( LOG_CHECK, "Blanking denied hosts.");
-	for(int a = 0 ; a<= MAX_BAN_HOSTS ; a++)
-	{ strcpy(hostlist[a]," \0\0\0\0"); }
-	numberhosts = 0;
-
-#endif
 
 	run_the_game(port);
 	return(0);
@@ -359,11 +289,7 @@ void game_loop(int s) {
 
 	opt_time.tv_usec = OPT_USEC;  /* Init time values */
 	opt_time.tv_sec = 0;
-#if NETBSD
-	gettimeofday(&last_time, NULL);
-#else
-	gettimeofday(&last_time, (struct timeval*) 0);
-#endif
+	gettimeofday(&last_time, nullptr);
 
 	for( idx = 0; idx < NumTimeCheck; idx++ )
 	{ aTimeCheck[ idx ] = last_time; }
@@ -374,17 +300,11 @@ void game_loop(int s) {
 	/* !! Change if more needed !! */
 	avail_descs = getdtablesize() - 2; /* never used, pointless? */
 
-#if !defined(CYGWIN)
-	mask = sigmask(SIGUSR1) | sigmask(SIGUSR2) | sigmask(SIGINT) |
-		   sigmask(SIGPIPE) | sigmask(SIGALRM) | sigmask(SIGTERM) |
-		   sigmask(SIGURG) | sigmask(SIGXCPU) | sigmask(SIGHUP);
-#endif
 
 	/* Main loop */
 	while( !mudshutdown ) {
 		/* Valore medio del lag */
 		GetMediumLag(GetLagIndex());
-		SetStatus( STATUS_INITLOOP, "none" );
 
 		/* Check what's happening out there */
 
@@ -406,34 +326,18 @@ void game_loop(int s) {
 			/* Mi porto in maxdesc il numero piu' alto di descrittore */
 		}
 
-		SetStatus( STATUS_INITLOOP, "time" );
 
 		/* check out the time */
-#if NETBSD
-		gettimeofday(&now, NULL);
-#else
-		gettimeofday(&now, (struct timeval*) 0);
-#endif
 
 		aTimeCheck[ gnTimeCheckIndex ] = now;
 		gnTimeCheckIndex++;
 		if( gnTimeCheckIndex >= NumTimeCheck )
 		{ gnTimeCheckIndex = 0; }
 
-		timespent = timediff(&now, &last_time);
-		timeout = timediff(&opt_time, &timespent);
-		last_time.tv_sec = now.tv_sec + timeout.tv_sec;
-		last_time.tv_usec = now.tv_usec + timeout.tv_usec;
-		if (last_time.tv_usec >= 1000000) {
-			last_time.tv_usec -= 1000000;
-			last_time.tv_sec++;
-		}
 
-#if !defined(CYGWIN)
-		sigsetmask(mask);
-#endif
-
-		SetStatus( STATUS_INITLOOP, "first select" );
+		/**
+		 * Select called with null time do not block
+		 */
 
 		if (select(maxdesc + 1, &input_set, &output_set, &exc_set, &null_time)
 				< 0) {
@@ -444,27 +348,43 @@ void game_loop(int s) {
 				write_to_descriptor(point->descriptor, "\n\r");
 			}
 		}
-		SetStatus( STATUS_INITLOOP, "second select" );
-
-		if (select(0, (fd_set*) 0, (fd_set*) 0, (fd_set*) 0, &timeout) < 0) {
-			mudlog(LOG_CHECK,"Select sleep: %s",strerror(errno));
-			/*assert(0);*/
+		/**
+		 * Select called with no descriptor and a timeout, it's basically a sleep call
+		 * In timeout we calculated the next tick reference accounting for the time spent housekeeping
+		 */
+		do {
+			gettimeofday(&now, nullptr);
+			timespent = timediff(&now, &last_time);
+			timeout = timediff(&opt_time, &timespent);
+			last_time.tv_sec = now.tv_sec + timeout.tv_sec;
+			last_time.tv_usec = now.tv_usec + timeout.tv_usec;
+			if (last_time.tv_usec >= 1000000) {
+				last_time.tv_usec -= 1000000;
+				last_time.tv_sec++;
+			}
+			if (timeout.tv_sec>0 or timeout.tv_usec>0) {
+				if (select(0, (fd_set*) 0, (fd_set*) 0, (fd_set*) 0, &timeout) < 0) {
+					mudlog(LOG_CHECK,"Select sleep: %s",strerror(errno));
+					/*assert(0);*/
+				}
+			}
+			else {
+				break;
+			}
 		}
+		while(errno==EINTR);
 
-#if !defined(CYGWIN)
-		sigsetmask(0);
-#endif
 
 		/* Respond to whatever might be happening */
 		SetStatus( STATUS_INITLOOP, "Check if new connection" );
 
 		/* New connection? */
 		if( FD_ISSET( s, &input_set ) ) {
-			mudlog( LOG_CHECK, "New connection started" );
+			mudlog( LOG_CONNECT, "New connection started" );
 			if (new_descriptor(s) < 0) {
 				perror("New connection");
 			}
-			mudlog( LOG_CHECK, "Connection stabilited" );
+			mudlog( LOG_CONNECT, "Connection stabilited" );
 		}
 
 		/* kick out the freaky folks */
@@ -476,24 +396,18 @@ void game_loop(int s) {
 			if( FD_ISSET( point->descriptor, &exc_set ) ) {
 				FD_CLR( point->descriptor, &input_set );
 				FD_CLR( point->descriptor, &output_set );
-				PushStatus("Attive");
 				close_socket( point );
-				PopStatus();
 			}
 		}
-		SetStatus( STATUS_INITLOOP, "Collecting input" );
-
+		// Reading from ready descriptors
 		for (point = descriptor_list; point; point = next_point) {
 			next_point = point->next;
 			if (FD_ISSET(point->descriptor, &input_set))
 				if (process_input(point) < 0) {
-					PushStatus("Input");
 					close_socket(point);
-					PopStatus();
 				}
 
 		}
-		SetStatus( STATUS_INITLOOP, "Processing players" );
 
 		/* process_commands; */
 		for( point = descriptor_list; point; point = next_to_process ) {
@@ -504,98 +418,52 @@ void game_loop(int s) {
 				GET_TEMPO_IN(point->character,GET_POS(point->character))++;
 			}
 			else {
-				if ((point->wait<-1) &&
-						(abs(point->wait) > abs(MAXIDLESTARTTIME)) &&
-						(point->connected !=CON_PLYNG)) {
+				if ((point->wait<-1) && (abs(point->wait) > abs(MAXIDLESTARTTIME)) && (point->connected !=CON_PLYNG)) {
+					// Was not doing anything useful, probably waiting at initial prompt
 					mudlog (LOG_CHECK,"Fried dummy connection from [HOST:%s]",point->host);
 					write_to_descriptor(point->descriptor,"Timeout!\n\r");
-					PushStatus("Fritturamista");
 					close_socket(point);
-					PopStatus();
 				}
 			}
 			if( ( --( point->wait ) <= 0 ) && get_from_q( &point->input, comm ) ) {
-				if( point->character && point->connected == CON_PLYNG &&
-						point->character->specials.was_in_room != NOWHERE ) {
+				if( point->character && point->connected == CON_PLYNG && point->character->specials.was_in_room != NOWHERE ) {
 					point->character->specials.was_in_room = NOWHERE;
 					act("$n e` rientrat$b.", TRUE, point->character, 0, 0, TO_ROOM);
 				}
-				SetStatus((char*)"Commandloop",
-						  point->character?GET_NAME(point->character):(char*)"connecting");
 				point->wait = 1;
-				SetStatus("CommandLoop0");
-				if (point->character)
-				{ point->character->specials.timer = 0; }
+				if (point->character) {
+					point->character->specials.timer = 0;
+				}
 				point->prompt_mode = 1;
-
-				CheckObjectExDesc( "Before players interpreter" );
-
-				CheckCharAffected( "Before players interpreter" );
-
-				SetStatus("Check bp passati");
 				if (point->str) {
-					SetStatus("CommandLoop1");
-					PushStatus("String_add");
 					string_add(point, comm);
-					CheckObjectExDesc( "After string_add" );
-					CheckCharAffected( "After string_add" );
 				}
 				else if( point->connected == CON_PLYNG && !point->showstr_point ) {
-					SetStatus("CommandLoop2");
-					PushStatus("Command_interp");
 					command_interpreter( point->character, comm );
-					CheckObjectExDesc( "After command_interpreter" );
-					CheckCharAffected( "After command_interpreter" );
 				}
 				else if( point->showstr_point ) {
-					SetStatus("CommandLoop3");
-					PushStatus("Show_string");
 					show_string( point, comm );
-					CheckObjectExDesc( "After show_string" );
-					CheckCharAffected( "After show_string" );
 				}
 				else if(point->connected == CON_EDITING) {
-					SetStatus("CommandLoop4");
-					PushStatus("RoomEdit");
 					RoomEdit(point->character,comm);
-					CheckObjectExDesc( "After RoomEdit" );
-					CheckCharAffected( "After RoomEdit" );
 				}
 				else if(point->connected == CON_OBJ_EDITING) {
-					SetStatus("CommandLoop5");
-					PushStatus("ObjEdit");
 					ObjEdit(point->character,comm);
-					CheckObjectExDesc( "After ObjEdit" );
-					CheckCharAffected( "After ObjEdit" );
 				}
 				else if(point->connected == CON_MOB_EDITING) {
-					SetStatus("CommandLoop6");
-					PushStatus("MobEdit");
 					MobEdit(point->character,comm);
-					CheckObjectExDesc( "After MobEdit" );
-					CheckCharAffected( "After MobEdit" );
 				}
 				else if(point->connected == CON_OBJ_FORGING) {
-					SetStatus("CommandLoop7");
-					PushStatus("UrkaForge");
 					ForgeString(point->character,comm,0);
-					CheckObjectExDesc( "After UrkaForge" );
-					CheckCharAffected( "After UrkaForge" );
 				}
 				else {
-					SetStatus("CommandLoop8");
-					PushStatus("Nanny");
 					nanny(point, comm);
-					CheckObjectExDesc( "After nanny" );
-					CheckCharAffected( "After nanny" );
 				}
-				PopStatus();
 			}
 		}
 
 		/* either they are out of the game */
 		/* or they want a prompt.          */
-		SetStatus("Close loop");
 		for (point = descriptor_list; point; point = next_point) {
 			next_point = point->next;
 
@@ -605,15 +473,12 @@ void game_loop(int s) {
 			if (FD_ISSET(point->descriptor, &output_set) && *(point->output))
 #endif
 				if (process_output(point) < 0) {
-					PushStatus("Loop chiusura");
 					close_socket(point);
-					PopStatus();
 				}
 
 				else
 				{ point->prompt_mode = 1; }
 		}
-		SetStatus("Prompt loop");
 
 		/* give the people some prompts  */
 		for (point = descriptor_list; point; point = point->next) {
@@ -680,7 +545,6 @@ void game_loop(int s) {
 			}
 		}
 
-		SetStatus( "HeartBeat", "none" );
 		/* handle heartbeat stuff */
 		/* Note: pulse now changes every 1/4 sec  */
 
@@ -688,13 +552,8 @@ void game_loop(int s) {
 		event_process();
 
 		if (!(pulse % PULSE_ZONE)) {
-			CheckObjectExDesc( "Before zone_update" );
-			CheckCharAffected( "Before zone_update" );
-			SetStatus( STATUS_PULSEZONE, NULL );
 			zone_update();
 			check_reboot();
-			CheckObjectExDesc( "After check_reboot" );
-			CheckCharAffected( "After check_reboot" );
 		}
 
 		if (!(pulse % PULSE_MAXUSAGE)) {
@@ -702,32 +561,16 @@ void game_loop(int s) {
 		}
 
 		if (!(pulse % PULSE_RIVER)) {
-			CheckObjectExDesc( "Before RiverPulseStuff" );
-			CheckCharAffected( "Before RiverPulseStuff" );
-			SetStatus( STATUS_PULSERIVER, NULL );
 			RiverPulseStuff(pulse);
-			CheckObjectExDesc( "After RiverPulseStuff" );
-			CheckCharAffected( "After RiverPulseStuff" );
 		}
 
 		if (!(pulse % PULSE_TELEPORT)) {
-			CheckObjectExDesc( "Before TeleportPulseStuff" );
-			CheckCharAffected( "Before TeleportPulseStuff" );
-			SetStatus( STATUS_PULSETELEPORT, NULL );
 			TeleportPulseStuff(pulse);
-			CheckObjectExDesc( "After TeleportPulseStuff" );
-			CheckCharAffected( "After TeleportPulseStuff" );
 		}
 
 		if (!(pulse % PULSE_VIOLENCE)) {
-			CheckObjectExDesc( "Before check_mobile_activity" );
-			CheckCharAffected( "Before check_mobile_activity" );
-			SetStatus( STATUS_PULSEVIOLENCE, NULL );
 			check_mobile_activity(pulse);
-			SetStatus( STATUS_PERFORMVIOLENCE, NULL );
 			perform_violence( pulse );
-			CheckObjectExDesc( "After perform_violence" );
-			CheckCharAffected( "After perform_violence" );
 		}
 #if ENABLE_AUCTION
 		if (!(pulse % (PULSE_AUCTION)) ) {
@@ -735,17 +578,11 @@ void game_loop(int s) {
 		}
 #endif
 		if (!(pulse % (SECS_PER_MUD_HOUR*PULSE_PER_SEC))) {
-			CheckObjectExDesc( "Before weather_and_time" );
-			CheckCharAffected( "Before weather_and_time" );
-			SetStatus( STATUS_MUDHOUR, NULL );
 			weather_and_time(1);
-
-			SetStatus( STATUS_AFFECTUPDATE, NULL );
 			affect_update(pulse);  /* things have been sped up by combining */
-			if ( time_info.hours == 1 )
-			{ update_time(); }
-			CheckObjectExDesc( "After affect_update" );
-			CheckCharAffected( "After affect_update" );
+			if ( time_info.hours == 1 ) {
+				update_time();
+			}
 		}
 
 		if (!(pulse % PULSE_EQ)) { /* ogni 5 minuti registra il valore dell'eq */
@@ -753,7 +590,6 @@ void game_loop(int s) {
 		}
 
 		tics++;        /* tics since last checkpoint signal */
-		SetStatus( STATUS_ENDLOOP, NULL );
 	} /* main loop ebd */
 }
 
@@ -831,7 +667,7 @@ void write_to_q(char* txt, struct txt_q* queue) {
 
 
 #if BLOCK_WRITE
-void write_to_output(char* txt, struct descriptor_data* t) {
+void write_to_output(const char* txt, struct descriptor_data* t) {
 	unsigned int size;
 	static char tmpoutbuf[128];
 	size = strlen(txt);
@@ -889,21 +725,59 @@ void write_to_output(char* txt, struct descriptor_data* t) {
 }
 #endif
 
-
-struct timeval timediff(struct timeval* a, struct timeval* b) {
-	struct timeval rslt, tmp;
-
-	tmp = *a;
-
-	if ((rslt.tv_usec = tmp.tv_usec - b->tv_usec) < 0) {
-		rslt.tv_usec += 1000000;
-		--(tmp.tv_sec);
+void timealter(struct timeval& t,long long interval) {
+	if (interval==0) return; //Shortcut
+	constexpr useconds_t u=1000000;
+	bool negative=interval < 0LL;
+	interval=abs(interval);
+	time_t secs=interval/u;
+	useconds_t usecs=interval % u;
+	if (negative) {
+		if (t.tv_usec < usecs >u) {
+			t.tv_sec-1;
+			t.tv_usec=u-(usecs-t.tv_usec);
+		}
+		else {
+			t.tv_sec-=usecs;
+		}
 	}
-	if ((rslt.tv_sec = tmp.tv_sec - b->tv_sec) < 0) {
+	else {
+		t.tv_usec+=usecs;
+		if (t.tv_usec>u) {
+			t.tv_usec-u;
+			t.tv_sec++;
+		}
+	}
+}
+/**
+ * Returns a - b as timeval
+ */
+struct timeval timediff(struct timeval* a, struct timeval* b) {
+	struct timeval rslt;
+
+	rslt.tv_usec=a->tv_usec;
+	rslt.tv_sec=a->tv_sec;
+	if (rslt.tv_usec > b->tv_usec) {
+		rslt.tv_usec -= b->tv_usec;
+	}
+	else {
+		rslt.tv_usec = rslt.tv_usec + 1000000 - b->tv_usec;
+		if (rslt.tv_sec>0) {
+			--rslt.tv_sec;
+		}
+		else {
+			rslt.tv_usec = 0;
+			rslt.tv_sec =0;
+		}
+	}
+	if (rslt.tv_sec >=b->tv_sec) {
+		rslt.tv_sec -=b->tv_sec;
+	}
+	else {
 		rslt.tv_usec = 0;
 		rslt.tv_sec =0;
 	}
-	return(rslt);
+	return rslt;
 }
 
 
@@ -1250,7 +1124,7 @@ int process_output(struct descriptor_data* t) {
 #endif
 
 #if 1         /* reset to use this code, lets see if it helps */
-int write_to_descriptor(int desc, char* txt) {
+int write_to_descriptor(int desc, const char* txt) {
 	int sofar, thisround, total;
 
 	total = strlen(txt);
@@ -1778,10 +1652,12 @@ void actall(const char* s1, const char* s2, const char* s3,
 void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void* vict_obj, struct obj_data* obj, char* buf)
 
 {
-	register char* strp, *point, *i;
+	char* strp;
+	char* point;
+	const char* i;
 	char tmp[5];
 
-	for( strp = str, point = buf;;) {
+	for( strp = const_cast<char*>(str), point = buf;;) {
 		if (*strp == '$') {
 			switch( *( ++strp ) ) {
 			case 'n':
@@ -2003,7 +1879,7 @@ void act( const char* str, int hide_invisible, struct char_data* ch,
 }
 
 
-void raw_force_all( char* to_force)
+void raw_force_all( const char* to_force)
 
 {
 	struct descriptor_data* i;
@@ -2066,7 +1942,9 @@ int _affected_by_s(struct char_data* ch, int skill) {
 void construct_prompt( char* outbuf, struct char_data* ch ) {
 	struct room_data* rm;
 	struct char_data* tmp=0;
-	char tbuf[255],*pr_scan,*mask;
+	char tbuf[255];
+	const char* pr_scan;
+	const char* mask;
 	long l,exp,texp;
 	int i,s_flag=0;
 	int IsSupporting=0;

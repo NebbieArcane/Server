@@ -58,7 +58,7 @@ namespace Alarmud {
 
 
 
-char* mob_edit_menu = "    1) Name                    2) Short description\n\r"
+const char* mob_edit_menu = "    1) Name                    2) Short description\n\r"
 					  "    3) Long description        4) Description\n\r"
 					  "    5) Action flags            6) Affect flags\n\r"
 					  "    7) Alignment               8) Maximum hitpoints\n\r"
@@ -71,32 +71,32 @@ char* mob_edit_menu = "    1) Name                    2) Short description\n\r"
 					  "   21) Distant sounds\n\r\n\r";
 
 
-void ChangeMobName(struct char_data* ch, char* arg, int type);
-void ChangeMobShort(struct char_data* ch, char* arg, int type);
-void ChangeMobLong(struct char_data* ch, char* arg, int type);
-void ChangeMobDesc(struct char_data* ch, char* arg, int type);
-void ChangeMobActFlags(struct char_data* ch, char* arg, int type);
-void ChangeMobAffFlags(struct char_data* ch, char* arg, int type);
+void ChangeMobName(struct char_data* ch, const char* arg, int type);
+void ChangeMobShort(struct char_data* ch, const char* arg, int type);
+void ChangeMobLong(struct char_data* ch, const char* arg, int type);
+void ChangeMobDesc(struct char_data* ch, const char* arg, int type);
+void ChangeMobActFlags(struct char_data* ch, const char* arg, int type);
+void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type);
 void UpdateMobMenu(struct char_data* ch);
-void ChangeMobAlign(struct char_data* ch, char* arg, int type);
-void ChangeMobHitp(struct char_data* ch, char* arg, int type);
-void ChangeMobArmor(struct char_data* ch, char* arg, int type);
-void ChangeMobDamplus(struct char_data* ch, char* arg, int type);
-void ChangeMobDamsize(struct char_data* ch, char* arg, int type);
-void ChangeMobDamnumb(struct char_data* ch, char* arg, int type);
-void ChangeMobMultatt(struct char_data* ch, char* arg, int type);
-void ChangeMobExp(struct char_data* ch, char* arg, int type);
-void ChangeMobDpos(struct char_data* ch, char* arg, int type);
-void MobHitReturn(struct char_data* ch, char* arg, int type);
-void ChangeMobRace(struct char_data* ch, char* arg, int type);
-void ChangeMobImmune(struct char_data* ch, char* arg, int type);
-void ChangeMobResist(struct char_data* ch, char* arg, int type);
-void ChangeMobSuscep(struct char_data* ch, char* arg, int type);
-void ChangeMobSound(struct char_data* ch, char* arg, int type);
-void ChangeMobDsound(struct char_data* ch, char* arg, int type);
+void ChangeMobAlign(struct char_data* ch, const char* arg, int type);
+void ChangeMobHitp(struct char_data* ch, const char* arg, int type);
+void ChangeMobArmor(struct char_data* ch, const char* arg, int type);
+void ChangeMobDamplus(struct char_data* ch, const char* arg, int type);
+void ChangeMobDamsize(struct char_data* ch, const char* arg, int type);
+void ChangeMobDamnumb(struct char_data* ch, const char* arg, int type);
+void ChangeMobMultatt(struct char_data* ch, const char* arg, int type);
+void ChangeMobExp(struct char_data* ch, const char* arg, int type);
+void ChangeMobDpos(struct char_data* ch, const char* arg, int type);
+void MobHitReturn(struct char_data* ch, const char* arg, int type);
+void ChangeMobRace(struct char_data* ch, const char* arg, int type);
+void ChangeMobImmune(struct char_data* ch, const char* arg, int type);
+void ChangeMobResist(struct char_data* ch, const char* arg, int type);
+void ChangeMobSuscep(struct char_data* ch, const char* arg, int type);
+void ChangeMobSound(struct char_data* ch, const char* arg, int type);
+void ChangeMobDsound(struct char_data* ch, const char* arg, int type);
 
 
-void ChangeMobActFlags(struct char_data* ch, char* arg, int type) {
+void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
 
@@ -143,7 +143,7 @@ void ChangeMobActFlags(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobAffFlags(struct char_data* ch, char* arg, int type) {
+void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
 	int a, row, update;
 	char buf[255];
 	long i, check=0;
@@ -199,7 +199,7 @@ void ChangeMobAffFlags(struct char_data* ch, char* arg, int type) {
 
 
 
-void do_medit(struct char_data* ch, char* argument, int cmd) {
+void do_medit(struct char_data* ch,const char* argument, int cmd) {
 	char name[20];
 	struct char_data* mob;
 	int i;
@@ -267,7 +267,7 @@ void UpdateMobMenu(struct char_data* ch) {
 }
 
 
-void MobEdit(struct char_data* ch, char* arg) {
+void MobEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.medit == MOB_MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
 			ch->desc->connected = CON_PLYNG;
@@ -443,7 +443,7 @@ void MobEdit(struct char_data* ch, char* arg) {
 }
 
 
-void ChangeMobName(struct char_data* ch, char* arg, int type) {
+void ChangeMobName(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 
@@ -474,7 +474,7 @@ void ChangeMobName(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeMobShort(struct char_data* ch, char* arg, int type) {
+void ChangeMobShort(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 
@@ -505,7 +505,7 @@ void ChangeMobShort(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeMobLong(struct char_data* ch, char* arg, int type) {
+void ChangeMobLong(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 
@@ -537,7 +537,7 @@ void ChangeMobLong(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobDesc(struct char_data* ch, char* arg, int type) {
+void ChangeMobDesc(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 
@@ -564,7 +564,7 @@ void ChangeMobDesc(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobAlign(struct char_data* ch, char* arg, int type) {
+void ChangeMobAlign(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	long change;
@@ -601,7 +601,7 @@ void ChangeMobAlign(struct char_data* ch, char* arg, int type) {
 
 
 
-void ChangeMobHitp(struct char_data* ch, char* arg, int type) {
+void ChangeMobHitp(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	int change;
@@ -635,7 +635,7 @@ void ChangeMobHitp(struct char_data* ch, char* arg, int type) {
 
 
 
-void ChangeMobArmor(struct char_data* ch, char* arg, int type) {
+void ChangeMobArmor(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	signed int change;
@@ -670,7 +670,7 @@ void ChangeMobArmor(struct char_data* ch, char* arg, int type) {
 
 
 
-void ChangeMobDamplus(struct char_data* ch, char* arg, int type) {
+void ChangeMobDamplus(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	int change;
@@ -704,7 +704,7 @@ void ChangeMobDamplus(struct char_data* ch, char* arg, int type) {
 
 
 
-void ChangeMobDamsize(struct char_data* ch, char* arg, int type) {
+void ChangeMobDamsize(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	int change;
@@ -737,7 +737,7 @@ void ChangeMobDamsize(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobDamnumb(struct char_data* ch, char* arg, int type) {
+void ChangeMobDamnumb(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	int change;
@@ -773,7 +773,7 @@ void ChangeMobDamnumb(struct char_data* ch, char* arg, int type) {
 
 
 
-void ChangeMobMultatt(struct char_data* ch, char* arg, int type) {
+void ChangeMobMultatt(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	int change;
@@ -815,7 +815,7 @@ void ChangeMobMultatt(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void MobHitReturn(struct char_data* ch, char* arg, int type) {
+void MobHitReturn(struct char_data* ch, const char* arg, int type) {
 
 	if(type != ENTER_CHECK) {
 		ch->specials.medit = MOB_MAIN_MENU;
@@ -828,7 +828,7 @@ void MobHitReturn(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeMobExp(struct char_data* ch, char* arg, int type) {
+void ChangeMobExp(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	long change, expamount;
@@ -876,7 +876,7 @@ void ChangeMobExp(struct char_data* ch, char* arg, int type) {
 	if(mob->specials.mobtype=='S')
 	{ sprintf(buf, "Current Mob Exp: %d", GET_EXP(mob)); }
 	else
-	{ sprintf(buf, "Current Mob Expflag: %ld", mob->specials.exp_flag); }
+	{ sprintf(buf, "Current Mob Expflag: %d", mob->specials.exp_flag); }
 	send_to_char(buf, ch);
 	if(mob->specials.mobtype=='S')
 	{ send_to_char("\n\r\n\rNew Exp Amount: ", ch); }
@@ -887,7 +887,7 @@ void ChangeMobExp(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobDpos(struct char_data* ch, char* arg, int type) {
+void ChangeMobDpos(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 	int change;
@@ -929,7 +929,7 @@ void ChangeMobDpos(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobRace(struct char_data* ch, char* arg, int type) {
+void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
 	int update,row=2,i,a=0,column;
 	char buf[255];
 
@@ -991,7 +991,7 @@ void ChangeMobRace(struct char_data* ch, char* arg, int type) {
 				  "main menu.\n\r--> ", ch );
 }
 
-void ChangeMobResist(struct char_data* ch, char* arg, int type) {
+void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
 	char buf[255];
 
@@ -1048,7 +1048,7 @@ void ChangeMobResist(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobImmune(struct char_data* ch, char* arg, int type) {
+void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
 	char buf[255];
 
@@ -1105,7 +1105,7 @@ void ChangeMobImmune(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobSuscep(struct char_data* ch, char* arg, int type) {
+void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
 	char buf[255];
 
@@ -1157,7 +1157,7 @@ void ChangeMobSuscep(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobSound(struct char_data* ch, char* arg, int type) {
+void ChangeMobSound(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 
@@ -1191,7 +1191,7 @@ void ChangeMobSound(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeMobDsound(struct char_data* ch, char* arg, int type) {
+void ChangeMobDsound(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct char_data* mob;
 

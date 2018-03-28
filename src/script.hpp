@@ -7,6 +7,7 @@
 */
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "typedefs.hpp"
 namespace Alarmud {
 
 struct foo_data {
@@ -22,7 +23,7 @@ struct scripts {
 extern struct scripts* gpScript_data;
 
 struct script_com {
-	void (*p) (char* arg, struct char_data* ch);
+	script_func p;
 	char* arg;
 };
 

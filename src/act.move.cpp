@@ -908,9 +908,9 @@ void do_open_exit(struct char_data* ch, const char* argument, int cmd) {
 	struct room_direction_data* exitp, *back;
 	struct room_data* rp;
 
-	char* cmdnameT = NULL;
-	char* cmdnameP = NULL;
-	char* cmdnameI = NULL;
+	const char* cmdnameT = NULL;
+	const char* cmdnameP = NULL;
+	const char* cmdnameI = NULL;
 	/*=FindCommandName(cmd);*/
 
 	switch (cmd) {
@@ -1768,9 +1768,6 @@ void do_run(struct char_data* ch, const char* argument, int cmd) {
 	char buff[MAX_INPUT_LENGTH];
 	int keyno, was_in;
 	struct room_direction_data* exitdata;
-	static char* keywords[] = { "north", "east", "south", "west", "up", "down",
-			"\n" };
-
 	only_argument(argument, buff);
 
 	if (!*buff) {
@@ -1778,7 +1775,7 @@ void do_run(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 
-	keyno = search_block(buff, keywords, FALSE);
+	keyno = search_block(buff, exitKeywords, FALSE);
 
 	if (keyno == -1) {
 		act("Mi spiace ma quella non e` una direzione in cui correre.", FALSE,

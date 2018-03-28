@@ -76,15 +76,15 @@ namespace Alarmud {
 
 
 
-char* edit_menu = "    1) Name                       2) Description\n\r"
+const char* edit_menu = "    1) Name                       2) Description\n\r"
 				  "    3) Flags                      4) Sector Type\n\r"
 				  "    5) Exits\n\r\n\r";
 
-char* exit_menu = "    1) North                      2) East\n\r"
+const char* exit_menu = "    1) North                      2) East\n\r"
 				  "    3) South                      4) West\n\r"
 				  "    5) Up                         6) Down\n\r"
 				  "\n\r";
-char* aszExitName[] = {
+const char* aszExitName[] = {
 	"north",
 	"east",
 	"south",
@@ -93,7 +93,7 @@ char* aszExitName[] = {
 	"down"
 };
 
-void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, char* arg, int type) {
+void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
 
@@ -139,7 +139,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, char* arg, int 
 }
 
 
-void do_redit(struct char_data* ch, char* arg, int cmd) {
+void do_redit(struct char_data* ch,const char* argument, int cmd) {
 	struct room_data* rp;
 
 	rp = real_roomp(ch->in_room);
@@ -197,7 +197,7 @@ void UpdateRoomMenu(struct char_data* ch) {
 }
 
 
-void RoomEdit(struct char_data* ch, char* arg) {
+void RoomEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.edit == MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
 			ch->desc->connected = CON_PLYNG;
@@ -297,8 +297,7 @@ void RoomEdit(struct char_data* ch, char* arg) {
 }
 
 
-void ChangeRoomName( struct room_data* rp, struct char_data* ch, char* arg,
-					 int type ) {
+void ChangeRoomName( struct room_data* rp, struct char_data* ch, const char* arg,int type ) {
 	char buf[255];
 
 	if(type != ENTER_CHECK)
@@ -328,7 +327,7 @@ void ChangeRoomName( struct room_data* rp, struct char_data* ch, char* arg,
 }
 
 
-void ChangeRoomDesc(struct room_data* rp, struct char_data* ch, char* arg, int type) {
+void ChangeRoomDesc(struct room_data* rp, struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 
 	if( type != ENTER_CHECK ) {
@@ -352,7 +351,7 @@ void ChangeRoomDesc(struct room_data* rp, struct char_data* ch, char* arg, int t
 }
 
 
-void ChangeRoomType(struct room_data* rp, struct char_data* ch, char* arg, int type) {
+void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
 
@@ -424,7 +423,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, char* arg, int t
 }
 
 
-void ChangeExitDir( struct room_data* rp, struct char_data* ch, char* arg,
+void ChangeExitDir( struct room_data* rp, struct char_data* ch, const char* arg,
 					int type) {
 	int update;
 	char buf[1024];
@@ -470,7 +469,7 @@ void ChangeExitDir( struct room_data* rp, struct char_data* ch, char* arg,
 }
 
 
-void AddExitToRoom( struct room_data* rp, struct char_data* ch, char* arg,
+void AddExitToRoom( struct room_data* rp, struct char_data* ch, const char* arg,
 					int type) {
 	int update, dir, row, i = 0;
 	char buf[255];
@@ -532,7 +531,7 @@ void AddExitToRoom( struct room_data* rp, struct char_data* ch, char* arg,
 }
 
 
-void ChangeExitNumber(struct room_data* rp, struct char_data* ch, char* arg, int type) {
+void ChangeExitNumber(struct room_data* rp, struct char_data* ch, const char* arg, int type) {
 	int dir, update;
 	char buf[255];
 
@@ -570,7 +569,7 @@ void ChangeExitNumber(struct room_data* rp, struct char_data* ch, char* arg, int
 }
 
 
-void ChangeKeyNumber( struct room_data* rp, struct char_data* ch, char* arg,
+void ChangeKeyNumber( struct room_data* rp, struct char_data* ch, const char* arg,
 					  int type ) {
 	int dir;
 	int update;
@@ -611,7 +610,7 @@ void ChangeKeyNumber( struct room_data* rp, struct char_data* ch, char* arg,
 	send_to_char( buf, ch );
 }
 
-void ChangeExitKeyword( struct room_data* rp, struct char_data* ch, char* arg,
+void ChangeExitKeyword( struct room_data* rp, struct char_data* ch, const char* arg,
 						int type) {
 	char buf[ 255 ];
 	int dir = ch->specials.edit - CHANGE_EXIT_KEYWORD_NORTH;
@@ -619,10 +618,10 @@ void ChangeExitKeyword( struct room_data* rp, struct char_data* ch, char* arg,
 	if( rp->dir_option[ dir ]->keyword )
 	{ free( rp->dir_option[ dir ]->keyword ); }
 
-	if( *arg == '\n' || *arg == '\r' )
-	{ *arg = '\0'; }
-
 	rp->dir_option[dir]->keyword = (char*)strdup( arg );
+	if (rp->dir_option[dir]->keyword[0]=='\n' or rp->dir_option[dir]->keyword[0]=='\r') {
+		rp->dir_option[dir]->keyword[0]='0';
+	}
 
 	sprintf(buf, VT_HOMECLR);
 	send_to_char(buf, ch);
@@ -646,7 +645,7 @@ void ChangeExitKeyword( struct room_data* rp, struct char_data* ch, char* arg,
 }
 
 
-void DeleteExit( struct room_data* rp, struct char_data* ch, char* arg,
+void DeleteExit( struct room_data* rp, struct char_data* ch, const char* arg,
 				 int type) {
 	ch->specials.edit = MAIN_MENU;
 	UpdateRoomMenu(ch);

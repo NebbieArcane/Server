@@ -25,10 +25,17 @@ extern void printFlags();
 #define logDefineStatus(macroname) LOG4CXX_TRACE(::logger,::boost::format("LCONF %-30s: %s") % #macroname % (macroname?"ON":"off"))
 #endif
 #ifndef ACCESSI
-#define ACCESSI			true
+#define ACCESSI				true
 #else
 logDefineStatus(ACCESSI)
 #endif
+
+#ifndef ACCOUNT_MODE
+#define ACCOUNT_MODE		true
+#else
+logDefineStatus(ACCOUNT_MODE)
+#endif
+
 
 #ifndef ALAR
 #define ALAR				true
@@ -298,12 +305,6 @@ logDefineStatus(QUEST_GAIN)
 #define SAVEWORLD			false
 #else
 logDefineStatus(SAVEWORLD)
-#endif
-
-#ifndef SITELOCK
-#define SITELOCK			true
-#else
-logDefineStatus(SITELOCK)
 #endif
 
 #ifndef SUSPENDREGISTER

@@ -12,6 +12,8 @@
 #include <cstdio>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
+#include "specialproc_other.hpp"
+#include "specialproc_room.hpp"
 namespace Alarmud {
 /* data files used by the game system */
 
@@ -164,7 +166,7 @@ struct index_data {
 	int iVNum;      /* virtual number of this mob/obj           */
 	long pos;       /* file position of this field              */
 	int number;     /* number of existing units of this mob/obj        */
-	int (*func)( struct char_data*, int, char*, void*, int );
+	genericspecial_func func;
 	/* special procedure for this mob/obj       */
 	char* specname;
 	char* specparms;
@@ -221,7 +223,7 @@ void boot_db();
 void reset_time();
 void update_time();
 void build_player_index();
-struct index_data* generate_indices(FILE* fl, int* top, int* sort_top, int* alloc_top, char* dirname) ;
+struct index_data* generate_indices(FILE* fl, int* top, int* sort_top, int* alloc_top, const char* dirname) ;
 void cleanout_room(struct room_data* rp);
 void completely_cleanout_room(struct room_data* rp);
 void load_one_room(FILE* fl, struct room_data* rp);
@@ -245,12 +247,12 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus);
 /* void save_char(struct char_data *ch, sh_int load_room); */
 int compare(struct player_index_element* arg1, struct player_index_element
 			*arg2);
-long fread_number_int( FILE* pFile,char* cmdfile,int cmdline,char* infofile);
+long fread_number_int( FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
 long fread_if_number( FILE* pFile );
 char* fread_string(FILE* fl);
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
-int file_to_string(char* name, char* buf);
+int file_to_string(const char* name, char* buf);
 void ClearDeadBit(struct char_data* ch);
 void reset_char(struct char_data* ch);
 void clear_char(struct char_data* ch);

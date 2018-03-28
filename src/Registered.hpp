@@ -25,8 +25,8 @@ public:
 		return false;
 	}
 	/* Static members which operates at top level */
-	static int total() {
-		return 0;   // Returns the total number of registered toons
+	static unsigned long total() {
+		return 0UL;   // Returns the total number of registered toons
 	}
 
 	const string &getCode() const {

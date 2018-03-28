@@ -148,7 +148,7 @@ int lizardman_shaman( struct char_data* ch, int cmd, char* arg,
 #define Abitante 1905
 int village_woman( struct char_data* ch, int cmd, char* arg,
 				   struct char_data* mob, int type ) {
-	char* aszInvocazioni[ 10 ] = {
+	const char* aszInvocazioni[ 10 ] = {
 		"Aiuto!",
 		"Fermati! Che fai!",
 		"Ma perche` ? Che ti ho fatto!",
