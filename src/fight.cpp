@@ -3233,7 +3233,7 @@ void PCAttacks( char_data* pChar ) {
 
     /* REQUIEM 2018 random haste */
     
-    if (affected_by_spell(pChar, SPELL_HASTE)) {
+    if (affected_by_spell(pChar, SPELL_HASTE) || IS_AFFECTED( pChar, APPLY_HASTE )) {
      
         fAttacks += number(0.0,fAttacks);
         mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
