@@ -2400,8 +2400,9 @@ void spell_firestorm(byte level, struct char_data* ch,
 				if ( saves_spell(tmp_victim, SAVING_SPELL) )
 				{ dam >>= 1; }
 				heat_blind(tmp_victim);
-				MissileDamage(ch, tmp_victim, dam, SPELL_BURNING_HANDS, 5);
-				spell_fear(level, ch, tmp_victim, 0);
+				if (MissileDamage(ch, tmp_victim, dam, SPELL_BURNING_HANDS, 5) == AllLiving) {
+					spell_fear(level, ch, tmp_victim, 0);
+				}
 			}
 			else {
 				act("Riesci a schivare le fiamme!\n\r",
