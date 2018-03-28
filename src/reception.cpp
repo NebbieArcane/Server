@@ -260,7 +260,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 
 		/* Controllo se sono in una rece di un castello e aggiusto il conto ***Flyp 20020214 *** */
-		if ( FindMobInRoomWithFunction(receptionist->in_room, creceptionist) ) {
+		if ( FindMobInRoomWithFunction(receptionist->in_room, reinterpret_cast<genericspecial_func>(creceptionist)) ) {
 			cost->total_cost=(int) (cost->total_cost*0.8);
 			sprintf(buf, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%d$c0007 monete al giorno.'", cost->total_cost);
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
@@ -275,9 +275,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 				sprintf(buf,"$n ti dice 'Poiche` hai barato.....  prenotando  %d giorni, "
 						"ci rimetti anche la camicia.",
 						forcerent);
-				mudlog( LOG_CHECK,"%s ci ha provato e ora ha %d coins.",
-						GET_NAME(ch),GET_GOLD(ch));
-
+				mudlog( LOG_CHECK,"%s ci ha provato e ora ha %d coins.",GET_NAME(ch),GET_GOLD(ch));
 			}
 			else {
 				sprintf(buf,"$n ti dice 'Poiche` hai prenotato per %d giorni, "
@@ -1140,7 +1138,7 @@ int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 	for (temp_char = real_roomp(ch->in_room)->people; (temp_char) && (!recep);
 			temp_char = temp_char->next_in_room)
 		if (IS_MOB(temp_char))
-			if (mob_index[temp_char->nr].func == receptionist)
+			if (mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(receptionist))
 			{ recep = temp_char; }
 
 	if (!recep) {
@@ -1269,7 +1267,7 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 	for (temp_char = real_roomp(ch->in_room)->people; (temp_char) && (!recep);
 			temp_char = temp_char->next_in_room)
 		if (IS_MOB(temp_char))
-			if (mob_index[temp_char->nr].func == creceptionist)
+			if (mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(creceptionist))
 			{ recep = temp_char; }
 
 	if (!recep) {

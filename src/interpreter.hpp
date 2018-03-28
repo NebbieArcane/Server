@@ -40,7 +40,7 @@ void command_interpreter( struct char_data* ch, const char* argument ) ;
 int fill_word(char* argument) ;
 int find_name(char* name) ;
 void half_chop(const char* string, char* arg1, char* arg2,size_t len1=99,size_t len2=99) ;
-int is_abbrev(char* arg1, char* arg2) ;
+int is_abbrev(const char* arg1, const char* arg2) ;
 int is_number( char* str ) ;
 void nanny(struct descriptor_data* d, char* arg) ;
 int old_search_block(const char* argument,int begin,int length,const char** list,int mode) ;
@@ -49,7 +49,7 @@ void only_argument(const char* argument, char* dest);
 int search_block(char* arg, const char** list, bool exact) ;
 void show_class_selection(struct descriptor_data* d, int r) ;
 void show_race_choice(struct descriptor_data* d) ;
-int special(struct char_data* ch, int cmd, char* arg) ;
+int special(struct char_data* ch, int cmd, const char* arg) ;
 #endif // _INTERPRETER_HPP
 } // namespace Alarmud
 

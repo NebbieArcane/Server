@@ -9,8 +9,8 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 int AssistFriend( struct char_data* ch) ;
-void CommandAssign( char* arg, void (*p)( char*, struct char_data* ) ) ;
-int CommandSearch(char* arg) ;
+void CommandAssign( const char* arg, void (*p)( char*, struct char_data* ) ) ;
+int CommandSearch(const char* arg) ;
 void CommandSetup() ;
 void DoScript(struct char_data* ch) ;
 void FindABetterWeapon(struct char_data* mob) ;

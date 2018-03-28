@@ -675,7 +675,7 @@ int compare_index(const void* p1, const void* p2) {
 
 /* generate index table for object or monster file */
 struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
-									int* alloc_top, char* dirname) {
+									int* alloc_top, const char* dirname) {
 	FILE* f;
 	DIR* dir;
 	struct index_data* index;
@@ -890,24 +890,24 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 	if (tmp == -1) {
 		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s\n",rp->number,rp->name);
 		tmp = fread_number(fl);
-		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletime %d\n",rp->number,rp->name,tmp);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletime %ld\n",rp->number,rp->name,tmp);
 		rp->tele_time = tmp;
 		tmp = fread_number(fl);
-		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletarget %d\n",rp->number,rp->name,tmp);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s teletarget %ld\n",rp->number,rp->name,tmp);
 		rp->tele_targ = tmp;
 		tmp = fread_number(fl);
-		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telemask %d\n",rp->number,rp->name,tmp);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telemask %ld\n",rp->number,rp->name,tmp);
 		rp->tele_mask = tmp;
 		if (IS_SET(TELE_COUNT, rp->tele_mask)) {
 			tmp = fread_number(fl);
-			sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telecount %d\n",rp->number,rp->name,tmp);
+			sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s telecount %ld\n",rp->number,rp->name,tmp);
 			rp->tele_cnt = tmp;
 		}
 		else {
 			rp->tele_cnt = 0;
 		}
 		tmp = fread_number(fl);
-		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s true sector %d\n",rp->number,rp->name,tmp);
+		sprintf(curfile, "Stanza con settore -1 (teleport) room: %ld %s true sector %ld\n",rp->number,rp->name,tmp);
 		rp->sector_type = tmp;
 	}
 	else {
@@ -1472,7 +1472,7 @@ struct char_data* read_mobile(int nr, int type) {
 
 	if (!mob) {
 		mudlog(LOG_SYSERR, "Cannot create mob?! db.c read_mobile");
-		return (FALSE);
+		return nullptr;
 	}
 
 	bc = sizeof (struct char_data);
@@ -2061,7 +2061,7 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 	fwrite_string(f, obj->description);
 	fwrite_string(f, obj->action_description);
 
-	fprintf(f, "%d %ld %ld\n", obj->obj_flags.type_flag,
+	fprintf(f, "%d %d %d\n", obj->obj_flags.type_flag,
 			obj->obj_flags.extra_flags, obj->obj_flags.wear_flags);
 	fprintf(f, "%d %d %d %d\n", obj->obj_flags.value[0], obj->obj_flags.value[1],
 			obj->obj_flags.value[2], obj->obj_flags.value[3]);
@@ -2078,7 +2078,7 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 
 	for (i = 0; i < MAX_OBJ_AFFECT; i++) {
 		if (obj->affected[i].location != APPLY_NONE)
-			fprintf(f, "A\n%d %ld\n", obj->affected[i].location,
+			fprintf(f, "A\n%d %d\n", obj->affected[i].location,
 					obj->affected[i].modifier);
 	}
 
@@ -2810,12 +2810,12 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 			st->affected[i].location =af->location;
 			st->affected[i].modifier =af->modifier;
 			st->affected[i].type     =af->type;
-			st->affected[i].next = NULL;
+			st->affected[i].next = 0;
 			/* subtract effect of the spell or the effect will be doubled */
 			affect_modify(ch, st->affected[i].location,
 						  st->affected[i].modifier,
 						  st->affected[i].bitvector, FALSE);
-			sprintf(buf, "Saving %s modifies %s by %ld points",
+			sprintf(buf, "Saving %s modifies %s by %d points",
 					GET_NAME(ch),
 					apply_types[st->affected[i].location],
 					st->affected[i].modifier);
@@ -3090,7 +3090,7 @@ char* fread_string(FILE* f1) {
  * carattere | le due porzioni di numero vengono addizionate. Ad esempio
  * 4|128 diventa 132. Molto utile per i flags.
  ****************************************************************************/
-long fread_number_int(FILE* pFile, char* cmdfile, int cmdline, char* infofile) {
+long fread_number_int(FILE* pFile, const char* cmdfile, int cmdline, const char* infofile) {
 	long number;
 	bool sign;
 	char c;
@@ -3379,7 +3379,7 @@ void free_obj(struct obj_data* obj) {
 }
 
 /* read contents of a text file, and place in buf */
-int file_to_string(char* name, char* buf) {
+int file_to_string(const char* name, char* buf) {
 	FILE* fl;
 	char tmp[100];
 	struct stat info;
@@ -4466,7 +4466,7 @@ void clean_playerfile() {
 						num_processed++;
 
 						/* Fa la lista dei personaggi attivi.. a bit tedious */
-						char* classname[] = {"Mu", "Cl", "Wa", "Th", "Dr", "Mo", "Ba", "So", "Pa","Ra", "Ps", "?", "??"};
+						const char* classname[] = {"Mu", "Cl", "Wa", "Th", "Dr", "Mo", "Ba", "So", "Pa","Ra", "Ps", "?", "??"};
 						char classes[100];
 						classes[0] = '\0';
 						int i;

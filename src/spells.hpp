@@ -469,11 +469,10 @@ namespace Alarmud {
 
 
 /* Attacktypes with grammar */
-typedef void (*spellFunction) (byte, struct char_data*, const char*, int,struct char_data*, struct obj_data*);
 
 
 struct spell_info_type {
-	spellFunction spell_pointer;
+	spell_func spell_pointer;
 	byte minimum_position;  /* Position for caster                         */
 	ubyte min_usesmana;     /* Amount of mana used by a spell         */
 	byte beats;             /* Heartbeats until ready for next */
@@ -491,8 +490,8 @@ struct spell_info_type {
 	sh_int ostility_level;
 };
 struct attack_hit_type {
-	char* singular;
-	char* plural;
+	const char* singular;
+	const char* plural;
 };
 } // namespace Alarmud
 #endif

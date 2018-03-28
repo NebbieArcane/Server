@@ -6,8 +6,11 @@
 #define __STRUCTS
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
-namespace Alarmud {
 #include "typedefs.hpp"
+#include "odb/account.hpp"
+#include "specialproc_other.hpp"
+#include "specialproc_room.hpp"
+namespace Alarmud {
 
 /*
 Flyp new define
@@ -385,7 +388,7 @@ struct room_data {
 	long room_flags;             /* DEATH,DARK ... etc                 */
 	byte light;                  /* Number of lightsources in room     */
 	ubyte dark;
-	int (*funct)( struct char_data*, int, char*, struct room_data*, int);
+	roomspecial_func funct;
 	/* special procedure                  */
 	char* specname;
 	char* specparms;
@@ -828,8 +831,8 @@ struct snoop_data {
 	struct char_data* snooping; /* Who is this char snooping */
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
-
 struct descriptor_data {
+	user AccountData;
 	int descriptor;                    /* file descriptor for socket */
 
 	char* name;                /* ptr to name for mail system */
@@ -837,7 +840,7 @@ struct descriptor_data {
 	char host[50];                /* hostname                   */
 	char pwd[12];                 /* password                   */
 	int pos;                      /* position in player-file    */
-	int connected;                /* mode of 'connectedness'    */
+	e_connection_types connected;                /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
 	char* showstr_head;              /* for paging through texts   */
 	char* showstr_point;              /*       -                    */
@@ -864,7 +867,6 @@ struct descriptor_data {
 	struct char_data* original;   /* original char              */
 	struct snoop_data snoop;      /* to snoop people.           */
 	struct descriptor_data* next; /* link to next descriptor    */
-#if defined ( ALAR )
 	/* Questi campi mi servono per tenere traccia della presenza del player
 	 * in eventuale ld non riconosciuto, fra l'accettazione del nome e quella
 	 * della password
@@ -872,7 +874,6 @@ struct descriptor_data {
 	bool AlreadyInGame;                  /* flag di presenza */
 	struct descriptor_data* ToBeKilled;  /* descrittore gia' in gioco,
 					 * da killare */
-#endif
 	/*campo per decifrare il tipo di rollata
 	 */
 #if defined (NEW_ROLL)

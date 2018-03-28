@@ -58,33 +58,14 @@ namespace Alarmud {
 
 
 
-char* obj_edit_menu = "    1) Name                    2) Short description\n\r"
+const char* obj_edit_menu = "    1) Name                    2) Short description\n\r"
 					  "    3) Description             4) Type\n\r"
 					  "    5) Wear positions          6) Extra flags\n\r"
 					  "    7) Weight                  8) Value\n\r"
 					  "    9) Rent cost              10) Extra affects\n\r"
 					  "   11) Object values\n\r\n\r";
 
-void ChangeObjWear(struct char_data* ch, char* arg, int type);
-void UpdateObjMenu(struct char_data* ch);
-void ChangeObjName(struct char_data* ch, char* arg, int type);
-void ChangeObjShort(struct char_data* ch, char* arg, int type);
-void ChangeObjDesc(struct char_data* ch, char* arg, int type);
-void ChangeObjType(struct char_data* ch, char* arg, int type);
-void ChangeObjFlags(struct char_data* ch, char* arg, int type);
-void ChangeObjWeight(struct char_data* ch, char* arg, int type);
-void ChangeObjPrice(struct char_data* ch, char* arg, int type);
-void ChangeObjCost(struct char_data* ch, char* arg, int type);
-void ChangeObjAffects(struct char_data* ch, char* arg, int type);
-void ChangeObjAffect(struct char_data* ch, char* arg, int type);
-void ChangeAffectMod(struct char_data* ch, char* arg, int type);
-void ChangeObjValues(struct char_data* ch, char* arg, int type);
-void ChangeObjValue(struct char_data* ch, char* arg, int type);
-void ObjHitReturn(struct char_data* ch, char* arg, int type);
-
-
-
-void ChangeObjFlags(struct char_data* ch, char* arg, int type) {
+void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
 	char buf[255];
 
@@ -140,7 +121,7 @@ void ChangeObjFlags(struct char_data* ch, char* arg, int type) {
 
 
 
-void ChangeObjWear(struct char_data* ch, char* arg, int type) {
+void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
 	char buf[255];
 
@@ -192,7 +173,7 @@ void ChangeObjWear(struct char_data* ch, char* arg, int type) {
 }
 
 
-void do_oedit(struct char_data* ch, char* argument, int cmd) {
+void do_oedit(struct char_data* ch,const char* argument, int cmd) {
 	char name[20];
 	struct obj_data* obj;
 	int i;
@@ -267,7 +248,7 @@ void UpdateObjMenu(struct char_data* ch) {
 }
 
 
-void ObjEdit(struct char_data* ch, char* arg) {
+void ObjEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.oedit == OBJ_MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
 			ch->desc->connected = CON_PLYNG;
@@ -393,7 +374,7 @@ void ObjEdit(struct char_data* ch, char* arg) {
 }
 
 
-void ChangeObjName(struct char_data* ch, char* arg, int type) {
+void ChangeObjName(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct obj_data* obj;
 
@@ -424,7 +405,7 @@ void ChangeObjName(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeObjShort(struct char_data* ch, char* arg, int type) {
+void ChangeObjShort(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct obj_data* obj;
 
@@ -455,7 +436,7 @@ void ChangeObjShort(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeObjDesc(struct char_data* ch, char* arg, int type) {
+void ChangeObjDesc(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct obj_data* obj;
 
@@ -487,7 +468,7 @@ void ChangeObjDesc(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeObjType(struct char_data* ch, char* arg, int type) {
+void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
 
@@ -536,7 +517,7 @@ void ChangeObjType(struct char_data* ch, char* arg, int type) {
 	send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
 }
 
-void ChangeObjWeight(struct char_data* ch, char* arg, int type) {
+void ChangeObjWeight(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct obj_data* obj;
 	long change;
@@ -569,7 +550,7 @@ void ChangeObjWeight(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeObjCost(struct char_data* ch, char* arg, int type) {
+void ChangeObjCost(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct obj_data* obj;
 	long change;
@@ -601,7 +582,7 @@ void ChangeObjCost(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ObjHitReturn(struct char_data* ch, char* arg, int type) {
+void ObjHitReturn(struct char_data* ch, const char* arg, int type) {
 
 	if(type != ENTER_CHECK) {
 		ch->specials.oedit = OBJ_MAIN_MENU;
@@ -615,7 +596,7 @@ void ObjHitReturn(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeObjPrice(struct char_data* ch, char* arg, int type) {
+void ChangeObjPrice(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
 	struct obj_data* obj;
 	long change;
@@ -647,7 +628,7 @@ void ChangeObjPrice(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeObjAffects(struct char_data* ch, char* arg, int type) {
+void ChangeObjAffects(struct char_data* ch, const char* arg, int type) {
 	int update;
 	char buf[1024];
 
@@ -704,7 +685,7 @@ void ChangeObjAffects(struct char_data* ch, char* arg, int type) {
 	return;
 }
 
-void ChangeObjAffect(struct char_data* ch, char* arg, int type) {
+void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 	int update,affect = 1, row = 0, i, a = 0, column = 0;
 	unsigned check;
 	char buf[1024];
@@ -933,7 +914,7 @@ void ChangeObjAffect(struct char_data* ch, char* arg, int type) {
 	send_to_char("Select the apply number or hit enter for the main menu.\n\r--> ",ch);
 }
 
-void ChangeAffectMod(struct char_data* ch, char* arg, int type) {
+void ChangeAffectMod(struct char_data* ch, const char* arg, int type) {
 	signed long update;
 	int affect = 1;
 	bool skill=FALSE;
@@ -997,7 +978,7 @@ void ChangeAffectMod(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeObjValues(struct char_data* ch, char* arg, int type) {
+void ChangeObjValues(struct char_data* ch, const char* arg, int type) {
 	int update;
 	char buf[1024];
 
@@ -1050,7 +1031,7 @@ void ChangeObjValues(struct char_data* ch, char* arg, int type) {
 }
 
 
-void ChangeObjValue(struct char_data* ch, char* arg, int type) {
+void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 	int value = 0;
 	long update;
 	char buf[1024];

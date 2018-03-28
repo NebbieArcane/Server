@@ -520,7 +520,7 @@ int move_gain(struct char_data* ch)
 	return (gain);
 }
 
-int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check=0) {
+int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check) {
 	int add_hp;
 
 	if (livello>=CHUMP) {

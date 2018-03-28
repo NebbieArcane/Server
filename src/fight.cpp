@@ -915,9 +915,9 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 
 	death_cry( ch );
 
-	if( IS_MOB( ch ) && !IS_SET( ch->specials.act, ACT_POLYSELF ) &&
-			mob_index[ ch->nr ].func )
-	{ (*mob_index[ch->nr].func)( ch, 0, "", ch, EVENT_DEATH ); }
+	if( IS_MOB( ch ) && !IS_SET( ch->specials.act, ACT_POLYSELF ) && mob_index[ ch->nr ].func ) {
+		(*mob_index[ch->nr].func)( ch, 0, const_cast<char*>(""), ch, EVENT_DEATH );
+	}
 
 	/*
 	 * give them some food and water so they don't whine.
@@ -1132,9 +1132,9 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			if(loss>20000000) { loss=20000000; } // Capapggio della hole per tutti a 20MXp
 			gain_exp(ch,-loss);
 			mudlog(LOG_PLAYERS,"%s ha perso %d(%d) xp",GET_NAME(ch),loss,oldloss);
-#endif NEWER
-#endif NEW
-#endif OLD
+#endif //NEWER
+#endif //NEW
+#endif //OLD
 #if NICE_PKILL
 		}
 #endif
@@ -1565,8 +1565,8 @@ int group_loss( struct char_data* ch,int loss) {
 	return(loss*MAX(70,multi));
 }
 
-char* replace_string(char* str, char* weapon, char* weapon_s,
-					 char* location_hit, char* location_hit_s) {
+char* replace_string(const char* str, const char* weapon, const char* weapon_s,
+					 const char* location_hit, const char* location_hit_s) {
 	static char buf[256];
 	char* cp;
 
@@ -1615,9 +1615,9 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	int snum;
 
 	static struct dam_weapon_type {
-		char* to_room;
-		char* to_char;
-		char* to_victim;
+		const char* to_room;
+		const char* to_char;
+		const char* to_victim;
 	} dam_weapons[] = {
 
 		{
@@ -2785,7 +2785,7 @@ int HitOrMiss(struct char_data* ch, struct char_data* victim, int calc_thaco)
 }
 
 DamageResult MissVictim( struct char_data* ch, struct char_data* v, int type,
-						 int w_type, pDamageFunc dam_func, int location) {
+						 int w_type, damage_func dam_func, int location) {
 	struct obj_data* o;
 
 	if( type <= 0 )
@@ -3019,7 +3019,7 @@ int LoreBackstabBonus(struct char_data* ch, struct char_data* v) {
 }
 
 DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
-						int type, int w_type,pDamageFunc dam_func, int location) {
+						int type, int w_type,damage_func dam_func, int location) {
 	DamageResult dead;
 	char buf[256];
 	int leech;
@@ -3108,7 +3108,7 @@ int canLeech(struct char_data* ch, struct char_data* victim) {
 
 
 DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,
-					   int type, pDamageFunc dam_func, int DistanceWeapon, int location ) {
+					   int type, damage_func dam_func, int DistanceWeapon, int location ) {
 	int w_type, thaco, dam ;
 	struct char_data* tmp_victim, *temp, *victim ;
 	struct obj_data* wielded=0;  /* this is rather important. */
@@ -4778,7 +4778,7 @@ int range_hit( struct char_data* ch, struct char_data* targ, int rng, struct
 	/* Does the roll, damage, messages, and everything */
 
 	int calc_thaco, i, dam = 0, diceroll, victim_ac, location;
-	char* dir_name[] = {
+	const char* dir_name[] = {
 		"da nord",
 		"da est",
 		"da sud",

@@ -1,6 +1,6 @@
 # Root cmake
 cmake_minimum_required (VERSION 3.5)
-project (alarmud)
+project (myst)
 enable_language(CXX)
 include(ProcessorCount)
 ProcessorCount(N)
@@ -19,10 +19,6 @@ endif()
 
 set (CMAKE_USE_RELATIVE_PATHS true)
 add_subdirectory(src)
-message(STATUS "root")
-foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CXX_KNOWN_FEATURES CMAKE_CURRENT_SOURCE_DIR)
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
 include(UsePkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 

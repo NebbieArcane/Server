@@ -38,12 +38,6 @@ extern bool no_specials;    /* Suppress ass. of special routines */
 extern long Uptime;            /* time that the game has been up */
 extern int tics;
 
-#if SITELOCK
-extern char hostlist[MAX_BAN_HOSTS][30];  /* list of sites to ban           */
-extern int numberhosts;
-#endif
-
-
 void CheckCharAffected( char* msg ) ;
 inline void CheckObjectExDesc( char* msg ) ;
 void InitScreen(struct char_data* ch) ;
@@ -71,7 +65,7 @@ void nonblock(int s) ;
 int process_input(struct descriptor_data* t) ;
 int process_output(struct descriptor_data* t) ;
 int process_output(struct descriptor_data* t) ;
-void raw_force_all( char* to_force);
+void raw_force_all( const char* to_force);
 void run_the_game(int port) ;
 void save_all() ;
 void send_to_all(const char* messg ) ;
@@ -85,12 +79,11 @@ void send_to_room(const char* messg, int room) ;
 void send_to_room_except(const char* messg, int room, struct char_data* ch) ;
 void send_to_room_except_two(const char* messg, int room, struct char_data* ch1, struct char_data* ch2);
 void send_to_zone(const char* messg, struct char_data* ch) ;
-void str2ansi( char* p2, char* p1, int start, int stop ) ;
+void str2ansi( char* p2, const char* p1, int start, int stop ) ;
 struct timeval timediff(struct timeval* a, struct timeval* b) ;
 int update_max_usage(void) ;
-int write_to_descriptor(int desc, char* txt) ;
-int write_to_descriptor( int desc, char* txt) ;
-void write_to_output(char* txt, struct descriptor_data* t) ;
+int write_to_descriptor(int desc, const char* txt) ;
+void write_to_output(const char* txt, struct descriptor_data* t) ;
 void write_to_q(char* txt, struct txt_q* queue) ;
 long GetMediumLag(long lastlag);
 long GetLagIndex();

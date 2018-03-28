@@ -83,55 +83,6 @@ void DelKey(char* db,char* chiave) {
 	unlink(buf);
 	return;
 }
-int IsInString(char* nuova,char* vecchia) {
-	return (int) strstr(vecchia,lower(nuova));
-}
-void Squeeze(char* riga) {
-	char* p,*s;
-	int skip=0;
-	printf("p%d.%s\n",strlen(riga),riga);
-	for (p=riga,s=riga; *p; p++) {
-		*s=*p;
-		if (*p!=' ')
-		{ skip=0; }
-		if (!skip)
-		{ s++; }
-		if (*p==' ')
-		{ skip=1; }
-	}
-	*s='\0';
-	printf("d%d.%s\n",strlen(riga),riga);
-	realloc(riga,strlen(riga)+1);
-}
-
-void RemoveFromString(char* nuova, char* vecchia) {
-	char* p;
-	int l,i;
-	p=strstr(vecchia,lower(nuova));
-	if (p) {
-		for (i=0,l=strlen(nuova); i<l; p++,i++) {
-			*p=' ';
-		}
-		printf("RM:Ecco cosa passo a squeeze: %s\n",vecchia);
-		Squeeze(vecchia);
-	}
-}
-
-void AddToString(char* nuova,char* old) {
-	int l=0;
-	printf("%d %d\n",strlen(nuova),strlen(old));
-	printf("AD1%s\n",old);
-	RemoveFromString(nuova,old);
-	printf("AD2%s\n",old);
-	l=strlen(old)+strlen(nuova)+2;
-	realloc(old,l);
-	printf("AD3%s\n",old);
-	strcat(old," ");
-	strcat(old,nuova);
-	printf("AD:Ecco cosa passo a squeeze: %s\n",old);
-	Squeeze(old);
-	return;
-}
 int GetStat(struct char_data* ch, int stat) {
 	switch(stat) {
 	case STR:
@@ -345,7 +296,7 @@ int modifier[]= {
 	30,
 	30
 };
-char* targets[]= {
+const char* targets[]= {
 	"none",
 	"self",
 	"enemy",
@@ -468,7 +419,7 @@ void ActionAlignMod(struct char_data* ch,struct char_data* victim,int cmd) {
 
 }
 
-char* GetTargetTypeString(int target) {
+const char* GetTargetTypeString(int target) {
 	if (target > gtt_LAST) { target=0; }
 	return(targets[target]);
 }
@@ -506,7 +457,7 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 
 	if (!mob) {
 		mudlog( LOG_SYSERR, "Cannot create mob?! clonechar");
-		return(FALSE);
+		return nullptr;
 	}
 
 	clear_char(mob);

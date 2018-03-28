@@ -9,7 +9,7 @@
 #define _ACT_COMM_HPP
 namespace Alarmud {
 char RandomChar() ;
-char* RandomWord() ;
+const char* RandomWord() ;
 void do_ask(struct char_data* ch, const char* argument, int cmd) ;
 void do_auction(struct char_data* ch, const char* argument, int cmd) ;
 void do_commune(struct char_data* ch, const char* argument, int cmd) ;

@@ -8,24 +8,24 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
-char* AlignDesc(int a) ;
-char* ArmorDesc(int a) ;
-char* DamRollDesc(int a) ;
-char* DescAttacks(float a) ;
-char* DescArmorf(float f) ; /* theirs / yours */
-char* DescDamage(float dam) ;
-char* DescRatio(float f) ; /* theirs / yours */
-char* DescRatioF(float f) ; /* theirs / yours */
-char* EqDesc(float a) ;
+const char* AlignDesc(int a) ;
+const char* ArmorDesc(int a) ;
+const char* DamRollDesc(int a) ;
+const char* DescAttacks(float a) ;
+const char* DescArmorf(float f) ; /* theirs / yours */
+const char* DescDamage(float dam) ;
+const char* DescRatio(float f) ; /* theirs / yours */
+const char* DescRatioF(float f) ; /* theirs / yours */
+const char* EqDesc(float a) ;
 long GetLagIndex() ;
 long GetMediumLag(long lastlag) ;
-char* HitRollDesc(int a) ;
+const char* HitRollDesc(int a) ;
 int HowManyConnection(int ToAdd) ;
 int MobLevBonus(struct char_data* ch) ;
 void ScreenOff(struct char_data* ch) ;
 void ShowAltezzaCostituzione( struct char_data* pChar, struct char_data* pTo ) ;
-char* SpellfailDesc(int a) ;
-void argument_split_2(char* argument,char* first_arg,char* second_arg) ;
+const char* SpellfailDesc(int a) ;
+void argument_split_2(const char* argument,char* first_arg,char* second_arg) ;
 int can_see_linear( struct char_data* ch, struct char_data* targ, int* rng,int* dr);
 void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) ;
 void do_attribute(struct char_data* ch,const char* argument, int cmd) ;

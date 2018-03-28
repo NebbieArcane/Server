@@ -36,6 +36,9 @@ Vagrant.configure("2") do |config|
   # via 127.0.0.1 to disable public access
   # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
   config.vm.network "forwarded_port", guest: 4000, host: 4000, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 4001, host: 4001, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 4002, host: 4002, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 10000, host: 10001, host_ip: "127.0.0.1"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -64,6 +67,7 @@ Vagrant.configure("2") do |config|
      vb.memory = 2048
   	  vb.cpus = 6
   	  vb.name = "nebbieserver"
+	  vb.linked_clone = true if Gem::Version.new(Vagrant::VERSION) >= Gem::Version.new('1.8.0')  	  
   end
   #
   # View the documentation for the provider you are using for more
@@ -82,6 +86,7 @@ Vagrant.configure("2") do |config|
     echo "Installing dev tools"
 	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb libcurl4-openssl-dev
 	apt-get -qq install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev liblog4cxx-dev
+	apt-get -qq install libboost-date-time-dev odb libodb-dev libodb-mysql-dev libodb-sqlite-dev libodb-boost-dev
 	echo "Installing mysql related packages"
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
 	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections	

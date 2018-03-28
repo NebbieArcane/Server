@@ -61,7 +61,7 @@ namespace Alarmud {
 #define Fountain_Level 20
 
 
-int ghost(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(ghost) {
 	void cast_energy_drain( byte level, struct char_data *ch, char* arg, int type,struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch)) {
@@ -78,7 +78,7 @@ int ghost(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int t
 	return FALSE;
 }
 
-int druid_protector(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(druid_protector) {
 	static int b=1;  /* use this as a switch, to avoid double challenges */
 
 	if (cmd) {
@@ -335,7 +335,7 @@ int DruidAttackSpells(struct char_data* ch, struct char_data* vict, int level) {
 }
 
 
-int Summoner(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(Summoner) {
 	struct descriptor_data* d;
 	struct char_data* targ=0;
 	struct char_list* i;
@@ -455,7 +455,7 @@ int Summoner(struct char_data* ch, int cmd, char* arg, struct char_data* mob, in
 /*---------------end of summoner---------------*/
 
 
-int monk(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(monk) {
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -519,8 +519,7 @@ void invert(char* arg1, char* arg2) {
 	*(arg2 + i) = '\0';
 }
 
-int jive_box( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
-			  int type) {
+OBJSPECIAL_FUNC(jive_box) {
 	char buf[255], buf2[255], buf3[255], tmp[255];
 
 	if( type == EVENT_COMMAND ) {
@@ -585,7 +584,7 @@ int jive_box( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
 }
 
 
-int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(magic_user) {
 	struct char_data* vict;
 
 	byte lspell;
@@ -1190,9 +1189,8 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 }
 
 
-int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-		   int type) {
-    struct char_data* vict;
+MOBSPECIAL_FUNC(cleric) {
+	struct char_data* vict;
     struct char_data* injuried;
     struct room_data* rp;
     struct char_data* tmp, *tmp2;
@@ -1232,8 +1230,6 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	{ return(FALSE); }
 
 	if( !ch->specials.fighting ) {
-  
-        
         /* added by Requiem 2018, i chierici se charmati
          curano chi sta messo peggio in gruppo,  se non 
          stanno combattendo in prima persona */
@@ -1259,9 +1255,8 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if( injuried != ch ) {
 					mudlog( LOG_CHECK, "heal su player - prima: %d",GET_MANA(ch));
-                    GET_MANA(ch) -= 50;
+					GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
-                    mudlog( LOG_CHECK, "heal su player - dopo: %d",GET_MANA(ch));
 				}
 			}
 			else if (lspell > 12 && (GET_MANA(ch) >= 25 || injuried == ch)) {
@@ -1688,9 +1683,9 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	}
 }
 /* maestro mercenario */
-int ninja_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(ninja_master) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"disarm",   /* No. 245 */
 		"doorbash", /* No. 259 */
 		"spy",
@@ -1876,18 +1871,16 @@ int ninja_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 	return(FALSE);
 }
 
-int RepairGuy( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(RepairGuy) {
 	char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
 	int cost, ave, iVNum;
 	struct char_data* vict;
 	struct obj_data* obj;
-	int (*rep_guy)( struct char_data*, int, char*, struct char_data*, int );
 	/* special procedure for this mob/obj       */
 
 	if (!AWAKE(ch))
 	{ return(FALSE); }
 
-	rep_guy = RepairGuy;
 
 	if (IS_NPC(ch)) {
 		if(cmd == CMD_GIVE) {
@@ -1903,7 +1896,7 @@ int RepairGuy( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 			{ return(FALSE); }
 			if (!IS_NPC(vict))
 			{ return(FALSE); }
-			if (mob_index[vict->nr].func == rep_guy) {
+			if (mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
 				send_to_char("Nah, you really wouldn't want to do that.",ch);
 				return(TRUE);
 			}
@@ -1943,7 +1936,7 @@ int RepairGuy( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 		if (!IS_NPC(vict))
 		{ return(FALSE); }
 
-		if (mob_index[vict->nr].func == rep_guy) {
+		if (mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
 			/* we have the repair guy, and we can give him the stuff */
 			act("You give $p to $N.",TRUE,ch,obj,vict,TO_CHAR);
 			act("$n gives $p to $N.",TRUE,ch,obj,vict,TO_ROOM);
@@ -2127,7 +2120,7 @@ int RepairGuy( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 }
 
 
-int Samah( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(Samah) {
 	char* p, buf[256];
 	struct char_data* Sammy;  /* Samah's own referent pointer */
 	struct char_data* t, *t2, *t3;
@@ -2143,7 +2136,7 @@ int Samah( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 				GetMaxLevel(ch) == IMMENSO)
 		{ return(FALSE); }
 
-		Sammy = (struct char_data*)FindMobInRoomWithFunction(ch->in_room, Samah);
+		Sammy = (struct char_data*)FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 		for (; *arg==' '; arg++); /* skip whitespace */
 		strcpy(buf, arg);
@@ -2281,8 +2274,7 @@ int Samah( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 
 
 
-int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,
-			   char* arg, int cmd) {
+int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,char* arg, int cmd) {
 	char obj_name[50], vict_name[50];
 	struct char_data* vict;
 	struct obj_data* obj;
@@ -2371,7 +2363,7 @@ int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,
 }
 
 
-int AbyssGateKeeper( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(AbyssGateKeeper) {
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2695,7 +2687,7 @@ void GreetPeople(struct char_data* ch) {
 
 #define PRISON_ROOM 2639
 #define PRISON_LET_OUT_ROOM 2640
-int PrisonGuard( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(PrisonGuard) {
 	char* p, buf[256];
 	struct char_data* PGuard;  /* guards own referent pointer */
 	struct char_data* t, *t2, *t3;
@@ -2709,8 +2701,7 @@ int PrisonGuard( struct char_data* ch, int cmd, char* arg, struct char_data* mob
 	if (ch->in_room != PRISON_ROOM)
 	{ return(FALSE); }
 
-	PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,
-			 PrisonGuard);
+	PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	for (t=character_list,i=0; t; t= t2) {
 		t2=t->next;
@@ -2780,8 +2771,7 @@ int PrisonGuard( struct char_data* ch, int cmd, char* arg, struct char_data* mob
 		if (cmd) {
 			if (IS_IMMORTAL(ch)) { return(FALSE); }
 
-			PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,
-					 PrisonGuard);
+			PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 			for (; *arg==' '; arg++); /* skip whitespace */
 			strcpy(buf, arg);
@@ -3070,7 +3060,7 @@ int GenericCityguardHateUndead(struct char_data* ch, int cmd, char* arg, struct 
 	return(FALSE);
 }
 
-int GenericCityguard(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(GenericCityguard) {
 	struct char_data* tch, *evil;
 	int max_evil;
 
@@ -3330,14 +3320,14 @@ int DogCatcher( struct char_data* ch, int cmd, char* arg,
 }
 
 
-int PrydainGuard(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(PrydainGuard) {
 	return(GenericCityguardHateUndead(ch,cmd,arg,mob,PRYDAIN));
 }
 
 
-int sailor(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(sailor) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"swim",
 		"\n",
 	};
@@ -3417,9 +3407,9 @@ int sailor(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 	return(FALSE);
 }
 
-int loremaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(loremaster) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"undead lore",
 		"vegetable lore",
 		"animal lore",
@@ -3658,9 +3648,9 @@ int loremaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	return(FALSE);
 }
 
-int hunter(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(hunter) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"hunt",
 		"find traps",
 		"disarm traps",
@@ -3800,9 +3790,9 @@ int hunter(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 	return FALSE;
 }
 
-int determine_teacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(determine_teacher) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"determine established", /* 1 ACIDUS 2003 skill determine established */
 		"\n",
 	};
@@ -3902,9 +3892,9 @@ int determine_teacher(struct char_data* ch, int cmd, char* arg, struct char_data
 	return FALSE;
 }
 
-int miner_teacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(miner_teacher) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"miner", /* 1 ACIDUS 2003 skill miner */
 		"\n",
 	};
@@ -4014,9 +4004,9 @@ int miner_teacher(struct char_data* ch, int cmd, char* arg, struct char_data* mo
  * @param type
  * @return
  */
-int DemonTeacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(DemonTeacher) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"immolation",
 		"\n",
 	};
@@ -4115,9 +4105,9 @@ int DemonTeacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 }
 /*** FLYP ***/
 
-int forge_teacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(forge_teacher) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"forge", /* 1 ACIDUS 2003 skill forge */
 		"\n",
 	};
@@ -4217,9 +4207,9 @@ int forge_teacher(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 	return FALSE;
 }
 
-int equilibrium_teacher(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(equilibrium_teacher) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"better equilibrium", /* 1 ACIDUS 2003 skill better equilibrium */
 		"\n",
 	};
@@ -4322,7 +4312,7 @@ int equilibrium_teacher(struct char_data* ch, int cmd, char* arg, struct char_da
 int archer_instructor( struct char_data* ch, int cmd, char* arg,
 					   struct char_data* mob, int type ) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"spot",
 		"\n",
 	};
@@ -4417,9 +4407,9 @@ int archer_instructor( struct char_data* ch, int cmd, char* arg,
 }
 
 
-int monk_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(monk_master) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"quivering palm", /* No. 245 */
 		"finger",
 		"feign death", /* No. 259 */
@@ -4755,7 +4745,7 @@ int monk_master(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	return(FALSE);
 }
 
-int DruidGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(DruidGuildMaster) {
 	int number, i, max, smax;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
@@ -4769,7 +4759,7 @@ int DruidGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data*
 
 	if (check_soundproof(ch)) { return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, DruidGuildMaster);
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	if (!guildmaster) { return(FALSE); }
 
@@ -4917,11 +4907,11 @@ int DruidGuildMaster(struct char_data* ch, int cmd, char* arg, struct char_data*
 
 /* TESTING */
 
-int Devil(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(Devil) {
 	return(magic_user(ch, cmd, arg, mob, type));
 }
 
-int Demon(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(Demon) {
 	return(magic_user(ch, cmd, arg, mob, type));
 
 }
@@ -4983,7 +4973,7 @@ void DruidMob(struct char_data* ch) {
 
 }
 
-int DruidChallenger(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(DruidChallenger) {
 	struct room_data* rp;
 	int level;
 	struct char_data* vict;
@@ -5387,7 +5377,7 @@ int druid( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	return FALSE;
 }
 
-int MonkChallenger(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(MonkChallenger) {
 	struct char_data* vict;
 
 	if (cmd) { return(FALSE); }
@@ -5801,7 +5791,7 @@ int portal( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
 	return FALSE;
 }
 
-int scraps(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) {
+OBJSPECIAL_FUNC(scraps) {
 	if( type == EVENT_TICK ) {
 		if (obj->obj_flags.value[0])
 		{ obj->obj_flags.value[0]--; }
@@ -5822,7 +5812,7 @@ int scraps(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int t
 
 #define ATTACK_ROOM 3004
 
-int attack_rats(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(attack_rats) {
 	int dir;
 
 	if(type == EVENT_COMMAND)
@@ -6274,8 +6264,7 @@ int astral_portal( struct char_data* ch, int cmd, char* arg,
 	return(FALSE);
 }
 
-int camino( struct char_data* ch, int cmd, char* arg,
-			struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(camino) {
 	char buf[256];
 	long j;
 	struct char_data* portal;
@@ -6318,7 +6307,7 @@ int camino( struct char_data* ch, int cmd, char* arg,
 
 
 
-int DwarvenMiners(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(DwarvenMiners) {
 	if(type == EVENT_COMMAND)
 	{ return(FALSE); }
 
@@ -6420,7 +6409,7 @@ int DwarvenMiners(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 
 /* From the appendages of Gecko... (now you know who to blame =) */
 
-int real_rabbit(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(real_rabbit) {
 	struct char_data* i;
 
 	if (cmd || !AWAKE(ch) || ch->specials.fighting)
@@ -6447,7 +6436,7 @@ int real_rabbit(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	return FALSE;
 }
 
-int real_fox(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(real_fox) {
 	struct char_data* i;
 	struct obj_data*  j, *k, *next;
 
@@ -6490,7 +6479,7 @@ int real_fox(struct char_data* ch, int cmd, char* arg, struct char_data* mob, in
 holy hand-grenade of antioch code
 */
 
-int antioch_grenade(struct char_data* ch, int cmd, char* arg, struct obj_data* obj, int type) {
+OBJSPECIAL_FUNC(antioch_grenade) {
 
 	if (type == EVENT_TICK) {
 		if (obj->obj_flags.value[0])
@@ -6529,9 +6518,9 @@ int antioch_grenade(struct char_data* ch, int cmd, char* arg, struct obj_data* o
 }
 
 
-int barbarian_guildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(barbarian_guildmaster) {
 	char buf[256];
-	static char* n_skills[] = {
+	const static char* n_skills[] = {
 		"disarm",           /*  1 */
 		"doorbash",         /*  2 */
 		"spy",              /*  3 */
@@ -6808,7 +6797,7 @@ int barbarian_guildmaster(struct char_data* ch, int cmd, char* arg, struct char_
 	return(FALSE);
 }
 
-int RangerGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(RangerGuildmaster) {
 
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
@@ -6823,7 +6812,7 @@ int RangerGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	if (IS_DIO(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, RangerGuildmaster);
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	if (!guildmaster) { return(FALSE); }
 
@@ -6983,7 +6972,7 @@ int RangerGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data
 	return(FALSE);
 }
 
-int StatMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(StatMaster) {
 	/* Fino a questo valore la progressione dev essere quasi gratis */
 #define TOT_STAT_MINIMUM 6*9
 	int number, i;
@@ -6999,7 +6988,7 @@ int StatMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	if (IS_DIO(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, StatMaster);
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	if (!guildmaster) { return(FALSE); }
 
@@ -7095,7 +7084,7 @@ int StatMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	return(TRUE);
 }
 
-int XpMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(XpMaster) {
 
 	int livello;
 	int numero;
@@ -7109,7 +7098,7 @@ int XpMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, in
 	if (IS_DIO(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, XpMaster);
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 	level_bonus=GetMaxLevel(guildmaster)-GetMaxLevel(ch);
 	if (!guildmaster) { return(FALSE); }
 
@@ -7185,7 +7174,7 @@ int XpMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, in
 
 
 
-int PsiGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(PsiGuildmaster) {
 
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
@@ -7198,7 +7187,7 @@ int PsiGuildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* m
 	if (IS_IMMORTAL(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, PsiGuildmaster);
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	if (!guildmaster) { return(FALSE); }
 
@@ -7362,7 +7351,7 @@ int PaladinGuildmaster( struct char_data* ch, int cmd, char* arg,
 	if (IS_IMMORTAL(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction( ch->in_room, PaladinGuildmaster );
+	guildmaster = FindMobInRoomWithFunction( ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__) );
 
 	if( !guildmaster )
 	{ return(FALSE); }
@@ -7510,7 +7499,7 @@ int PaladinGuildmaster( struct char_data* ch, int cmd, char* arg,
 
 
 #define SPELL_SPECIAL_COST 1000000   /* 1000k to specialize per spell */
-int mage_specialist_guildmaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(mage_specialist_guildmaster) {
 	char buf[256];
 	int i, number = 0, max;
 	struct char_data* guildmaster;
@@ -7530,7 +7519,7 @@ int mage_specialist_guildmaster(struct char_data* ch, int cmd, char* arg, struct
 	if (check_soundproof(ch)) { return(FALSE); }
 
 	guildmaster =
-		FindMobInRoomWithFunction(ch->in_room, mage_specialist_guildmaster);
+		FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	if (!guildmaster) { return(FALSE); }
 

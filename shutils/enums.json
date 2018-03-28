@@ -1932,7 +1932,7 @@
 			}
 		},
 		"e_connection_types": {
-			"comment": "modes of connectedness\nATTENZIONE se si aggiungono altri stati di connessione, modificare anche\nl'array connected_types in constants.c\n",
+			"comment": "modes of connectedness\nATTENZIONE se si aggiungono altri stati di connessione, modificare anche\nl'array connected_types in constants.cpp\n",
 			"CON_PLYNG": {
 				"value": 0,
 				"comment": ""
@@ -2087,6 +2087,18 @@
 			},
 			"CON_OBJ_FORGING": {
 				"value": 38,
+				"comment": ""
+			},
+			"CON_ACCOUNT_NAME": {
+				"value": 39,
+				"comment": ""
+			},
+			"CON_ACCOUNT_PWD": {
+				"value": 40,
+				"comment": ""
+			},
+			"CON_ACCOUNT_TOON": {
+				"value": 41,
 				"comment": ""
 			}
 		},

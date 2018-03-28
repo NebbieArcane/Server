@@ -111,7 +111,6 @@ void do_get(struct char_data* ch,const char* argument, int cmd) {
 	char newarg[1000];
 	int num, p;
 
-	SetStatus( "Entered in do_get", GET_NAME_DESC( ch ), argument );
 
 	argument_interpreter(argument, arg1, arg2);
 

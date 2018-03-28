@@ -237,7 +237,7 @@ enum e_connection_types {
 /*
 modes of connectedness
 ATTENZIONE se si aggiungono altri stati di connessione, modificare anche
-l'array connected_types in constants.c*/
+l'array connected_types in constants.cpp*/
 	CON_PLYNG                                    =0,
 	CON_NME                                      =1,
 	CON_NMECNF                                   =2,
@@ -276,11 +276,14 @@ l'array connected_types in constants.c*/
 	CON_QROLL                                    =35,
 	CON_CONF_ROLL                                =36,
 	CON_EXTRA2                                   =37,
-	CON_OBJ_FORGING                              =38
+	CON_OBJ_FORGING                              =38,
+	CON_ACCOUNT_NAME                             =39,
+	CON_ACCOUNT_PWD                              =40,
+	CON_ACCOUNT_TOON                             =41
 };
-#define E_CONNECTION_TYPES_COUNT 39
+#define E_CONNECTION_TYPES_COUNT 42
 #define E_CONNECTION_TYPES_MIN 0
-#define E_CONNECTION_TYPES_MAX 38
+#define E_CONNECTION_TYPES_MAX 41
 #define E_CONNECTION_TYPES_KEY "e_connection_types"
 
 #define E_CONNECTION_TYPES_ACCEPT_ZERO true

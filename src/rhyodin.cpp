@@ -58,7 +58,7 @@ namespace Alarmud {
   Chiama altri fantasmi se attaccato.
 ****************************************************************************/
 
-int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type ) {
+MOBSPECIAL_FUNC(keystone) {
 	struct char_data* ghost, *t, *master;
 	int i;
 
@@ -118,15 +118,9 @@ int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,in
   Chiama altri fantasmi se attaccato.
 ****************************************************************************/
 
-int ghostsoldier( struct char_data* ch, int cmd, char* arg,
-				  struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(ghostsoldier) {
 	struct char_data* tch, *good, *master;
 	int max_good;
-	int (*gs)( struct char_data*, int, char*, struct char_data*, int );
-	int (*gc)( struct char_data*, int, char*, struct char_data*, int );
-
-	gs = ghostsoldier;
-	gc = keystone;
 
 	if (cmd) { return(FALSE); }
 
@@ -140,8 +134,8 @@ int ghostsoldier( struct char_data* ch, int cmd, char* arg,
 	good = 0;
 
 	for( tch = real_roomp( ch->in_room )->people; tch; tch = tch->next_in_room ) {
-		if (!(mob_index[tch->nr].func == gs) && /* Another ghost soldier? */
-				!(mob_index[tch->nr].func == gc) && /* The ghost captain? */
+		if (!(mob_index[tch->nr].func == reinterpret_cast<genericspecial_func>(ghostsoldier)) && /* Another ghost soldier? */
+				!(mob_index[tch->nr].func == reinterpret_cast<genericspecial_func>(keystone)) && /* The ghost captain? */
 				(GET_ALIGNMENT(tch) > max_good) &&  /* More good than prev? */
 				!IS_IMMORTAL(tch) &&                /* A god? */
 				(GET_RACE(tch) >= 4)) {             /* Attack only npc races */
@@ -183,7 +177,7 @@ int ghostsoldier( struct char_data* ch, int cmd, char* arg,
 	return FALSE;
 }
 
-char* quest_one[] = {
+const char* quest_one[] = {
 	"'Il secondo oggetto che devi trovare e` l'anello di Tlanic.",
 	"Tlanic era un guerriero elfo che lascio` Rhyodin cinque anni",
 	"dopo Lorces. Porto` il suo anello con se` come portafortuna.",
@@ -193,7 +187,7 @@ char* quest_one[] = {
 	"\n"
 };
 
-char* quest_two[] = {
+const char* quest_two[] = {
 	"'Devi sapere che molte lune dalla partenza di Tlanic, suo fratello",
 	"Evistar ando` in sua ricerca.",
 	"Evistar, al contrario del fratello, non era un grande",
@@ -204,16 +198,16 @@ char* quest_two[] = {
 	"\n"
 };
 
-char* quest_three[] = {
+const char* quest_three[] = {
 	"'Purtroppo, nemmeno Evistar fece mai ritorno, e passarono anni prima che",
-	"un potente mago decise di cercare la via verso il nord.",
+	"un potente mago decidesse di cercare la via verso il nord.",
 	"Il suo nome era C*zarnak. Si crede che sia morto nelle caverne",
 	"come gli altri. Indossava un cerchio incantato intorno alla testa.",
 	"Riportamelo e ti diro` di piu`.'",
 	"\n"
 };
 
-char* necklace[] = {
+const char* necklace[] = {
 	"'Mi hai riportato tutti gli oggetti degli eroi morti nella",
 	"ricerca della via di uscita dal reame.",
 	"In piu` hai trovato la via attraverso le montagne, provando la",
@@ -225,7 +219,7 @@ char* necklace[] = {
 	"\n"
 };
 
-char* nonecklace[] = {
+const char* nonecklace[] = {
 	"'Mi hai riportato tutti gli oggetti degli eroi morti nella",
 	"ricerca della via di uscita dal reame di Rhyodin.",
 	"In piu` hai trovato la via attraverso le montagne, provando la",
@@ -237,7 +231,7 @@ char* nonecklace[] = {
 	"\n"
 };
 
-char* quest_intro[] = {
+const char* quest_intro[] = {
 	"'Vuoi conoscere la storia di Rhyodin ? Bene. Devi sapere",
 	"che Rhyodin e` un reame a sudest dell'Alpes Oppidum.",
 	"Un giorno, l'unica grande strada sotterranea che collegava",
@@ -249,7 +243,7 @@ char* quest_intro[] = {
 	"\n"
 };
 
-void SayQuest( struct char_data* pCh, char* apchQuest[] ) {
+void SayQuest( struct char_data* pCh, const char* apchQuest[] ) {
 	int i;
 	char buf[ 100 ];
 
@@ -918,8 +912,7 @@ int trogcook( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 			return TRUE;
 		}
 
-	corpse = get_obj_in_list_vis( ch,"corpse",
-								  real_roomp( ch->in_room )->contents );
+	corpse = get_obj_in_list_vis( ch,"corpse",real_roomp( ch->in_room )->contents );
 	if( corpse ) {
 		do_get( ch, "corpse", -1 );
 		act( "$c0015[$c0013$n$c0015] ridacchia 'Nella zuppa con il resto!'",
@@ -1034,7 +1027,7 @@ int golgar( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
   sera, mangiare all'ora di pranzo ecc...
 *****************************************************************************/
 
-char* lattimore_descs[] = {
+const char* lattimore_descs[] = {
 	"A small orc cerca di scassinare un armadietto.\n\r",
 	"A small orc cammina risoluto per la stanza.\n\r",
 	"A small orc mangia dello stufato di ratto.\n\r",
@@ -1377,6 +1370,7 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 						{ return TRUE; }
 						break;
 					}
+					/* no break */
 				/* Il break qui non ci va, perche` se la chiave data a Lattimore
 				   non e` il rod (CrowBar) deve fare quello che fa per qualunque
 				   altro oggetto */

@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <ctime>
+#include <boost/algorithm/string.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -55,7 +56,7 @@ namespace Alarmud {
 char EasySummon = true;
 long numero_mob_obj[100000];
 
-void do_auth(struct char_data* ch, char* argument, int cmd) {
+void do_auth(struct char_data* ch,const char* argument, int cmd) {
 	char name[50], word[20], szMessage[ MAX_INPUT_LENGTH + 1 ];
 	char buf[ MAX_INPUT_LENGTH + MAX_INPUT_LENGTH ];
 	int done=FALSE;
@@ -118,7 +119,7 @@ void do_auth(struct char_data* ch, char* argument, int cmd) {
 	}
 	return;
 }
-void do_register(struct char_data* ch, char* argument, int cmd) {
+void do_register(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim = nullptr;
 	char buf[255];
 	char name[MAX_INPUT_LENGTH];
@@ -164,9 +165,9 @@ void do_register(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 
-void do_imptest(struct char_data* ch, char* arg, int cmd) {
+void do_imptest(struct char_data* ch,const char* argument, int cmd) {
 	char buf[255];
-	sprintf(buf,"%s",ansi_parse(arg));
+	sprintf(buf,"%s",ansi_parse(argument));
 	if (!strcasecmp(buf,"on")) {
 		SetTest(true);
 		send_to_char("Test mode on",ch);
@@ -199,7 +200,7 @@ void do_imptest(struct char_data* ch, char* arg, int cmd) {
 
 }
 
-void do_passwd(struct char_data* ch, char* argument, int cmdnum) {
+void do_passwd(struct char_data* ch,const char* argument, int cmd) {
 	/*   int player_i, pos;*/
 	char name[30], npasswd[20], pass[20], buf[256];
 	char szFileName[50];
@@ -210,7 +211,7 @@ void do_passwd(struct char_data* ch, char* argument, int cmdnum) {
 
 	/*  sets the specified user's password. */
 	/*  get user's name: */
-	sprintf(buf,"Invocato come %d.\n\r",cmdnum);
+	sprintf(buf,"Invocato come %d.\n\r",cmd);
 	send_to_char(buf, ch);
 
 	argument = one_argument(argument, name);
@@ -218,8 +219,8 @@ void do_passwd(struct char_data* ch, char* argument, int cmdnum) {
 
 	/*   Look up character */
 
-	if( (cmdnum==CMD_SAVE) || load_char( name, &tmp_store ) ) {
-		if (cmdnum==CMD_SAVE) {
+	if( (cmd==CMD_SAVE) || load_char( name, &tmp_store ) ) {
+		if (cmd==CMD_SAVE) {
 			victim = get_char_vis_world( ch, name, &count ) ;
 			if (!victim || !IS_PC(victim)) {
 				sprintf(buf,"Devi prima ghostare %s.\n\r",name);
@@ -239,7 +240,7 @@ void do_passwd(struct char_data* ch, char* argument, int cmdnum) {
 			sprintf(buf,"Crypted pwd2 is %s\n\r",tmp_store.pwd);
 			send_to_char(buf,ch);
 		}
-		else if (cmdnum==CMD_CHPWD) {
+		else if (cmd==CMD_CHPWD) {
 			/*  encrypt new password. */
 			if (!*npasswd || strlen(npasswd) > 10 || strlen(npasswd)<5) {
 				send_to_char("Illegal password\n\r", ch);
@@ -260,11 +261,11 @@ void do_passwd(struct char_data* ch, char* argument, int cmdnum) {
 		}
 		fwrite( &tmp_store, sizeof( tmp_store ), 1, fl );
 		fclose( fl );
-		if (cmdnum==CMD_CHPWD) {
+		if (cmd==CMD_CHPWD) {
 			sprintf(buf,"OK, password for %s changed to %s"
 					"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n",name,npasswd);
 		}
-		else if (cmdnum==CMD_SAVE) {
+		else if (cmd==CMD_SAVE) {
 			sprintf(buf,"OK, %s saved\r\n",name);
 		}
 		send_to_char(buf,ch);
@@ -273,12 +274,13 @@ void do_passwd(struct char_data* ch, char* argument, int cmdnum) {
 	{ send_to_char("I don't recognize that name\n\r", ch); }
 }
 
-void do_setsev(struct char_data* ch, char* arg, int cmd) {
+void do_setsev(struct char_data* ch,const char* argument, int cmd) {
 	char buf[255];
 	char buf2[255];
 	int sev;
+	char* arg;
 
-	arg = one_argument(arg, buf);
+	arg = one_argument(argument, buf);
 
 	if( !IS_PC( ch ) )
 	{ return; }
@@ -320,49 +322,16 @@ void do_setsev(struct char_data* ch, char* arg, int cmd) {
 }
 
 
-/* Bamfin and bamfout - courtesy of DM from Epic */
-void dsearch(char* string, char* tmp) {
-	char* c, buf[255], buf2[255], buf3[255];
-	int i, j;
-
-	i = 0;
-	while(i == 0) {
-		if(strchr(string, '~')==NULL) {
-			i = 1;
-			strcpy(tmp, string);
+void bamf(struct char_data* ch,const char* argument,int cmd) {
+	string work(argument);
+	boost::algorithm::trim(work);
+	if (work.length()==0) {
+		if (cmd==CMD_BAMFIN) {
+			send_to_char("Bamfin <bamf definition>\n\r", ch);
 		}
 		else {
-			c = strchr(string, '~');
-			j = c-string;
-			switch(string[j+1]) {
-			case 'N':
-				strcpy(buf2, "$n");
-				break;
-			case 'H':
-				strcpy(buf2, "$s");
-				break;
-			default:
-				strcpy(buf2, "");
-				break;
-			}
-			strcpy(buf, string);
-			buf[j] = '\0';
-			strcpy(buf3, (string+j+2));
-			sprintf(tmp, "%s%s%s",buf, buf2, buf3);
-			sprintf(string, tmp);
-
+			send_to_char("Bamfout <bamf definition>\n\r", ch);
 		}
-	}
-}
-
-void do_bamfin(struct char_data* ch, char* arg, int cmd) {
-	char buf[255];
-	unsigned int len;
-
-	for (; *arg == ' '; arg++);  /* pass all those spaces */
-
-	if(!*arg) {
-		send_to_char("Bamfin <bamf definition>\n\r", ch);
 		send_to_char(" Additional arguments can include ~N for where you\n\r", ch);
 		send_to_char(" Want your name (if you want your name).  If you use\n\r",ch);
 		send_to_char(" ~H, it puts in either his or her depending on your\n\r",ch);
@@ -371,91 +340,71 @@ void do_bamfin(struct char_data* ch, char* arg, int cmd) {
 		return;
 	}
 
-	if(!strncmp(arg, "def",3)) {
-		REMOVE_BIT(ch->specials.pmask, BIT_POOF_IN);
-		free(ch->specials.poofin);
-		ch->specials.poofin = 0;
+	if (work=="def") {
+		if (cmd==CMD_BAMFIN) {
+			REMOVE_BIT(ch->specials.pmask,BIT_POOF_IN);
+			free(ch->specials.poofin);
+			ch->specials.poofin = nullptr;
+		}
+		else {
+			REMOVE_BIT(ch->specials.pmask,BIT_POOF_OUT);
+			free(ch->specials.poofout);
+			ch->specials.poofout = nullptr;
+		}
 		send_to_char("Ok.\n\r", ch);
 		return;
 	}
-
-	len = strlen(arg);
-
-	if(len > 150) {
+	boost::replace_all(work,"~N","$n");
+	boost::replace_all(work,"~H","$s");
+	size_t len = work.length();
+	if (len>150) {
+		work=work.substr(0,150);
 		send_to_char("String too long.  Truncated to:\n\r", ch);
-		arg[150] = '\0';
-		sprintf(buf, "%s\n\r", arg);
-		send_to_char(buf, ch);
+		send_to_char(work.c_str(), ch);
 		len = 150;
 	}
+	if (cmd==CMD_BAMFIN) {
 
-	if (ch->specials.poofin && len >= strlen(ch->specials.poofin)) {
-		free(ch->specials.poofin);
-		ch->specials.poofin = (char*)malloc(len+1);
+		if (ch->specials.poofin) {
+			ch->specials.poofin=static_cast<char*>(realloc(ch->specials.poofin,len+1));
+		}
+		else {
+			 ch->specials.poofin = static_cast<char*>(malloc(len+1));
+		}
+		if (!ch->specials.poofin) {
+			send_to_char("Something went wrong. No bamfin set.\n\r", ch);
+			REMOVE_BIT(ch->specials.pmask, BIT_POOF_IN);
+			return;
+		}
+		strncpy(ch->specials.poofin,work.c_str(),len);
+		SET_BIT(ch->specials.pmask, BIT_POOF_IN);
 	}
 	else {
-		if (!ch->specials.poofin)
-		{ ch->specials.poofin = (char*)malloc(len+1); }
+		if (ch->specials.poofout) {
+			ch->specials.poofout=static_cast<char*>(realloc(ch->specials.poofout,len+1));
+		}
+		else {
+			 ch->specials.poofout = static_cast<char*>(malloc(len+1));
+		}
+		if (!ch->specials.poofout) {
+			send_to_char("Something went wrong. No bamfout set.\n\r", ch);
+			REMOVE_BIT(ch->specials.pmask, BIT_POOF_OUT);
+			return;
+		}
+		strncpy(ch->specials.poofout,work.c_str(),len);
+		SET_BIT(ch->specials.pmask, BIT_POOF_OUT);
 	}
 
-	strcpy(buf, arg);
-	dsearch(buf, ch->specials.poofin);
-	SET_BIT(ch->specials.pmask, BIT_POOF_IN);
-	send_to_char("Ok.\n\r", ch);
-	return;
+}
+void do_bamfin(struct char_data* ch,const char* argument, int cmd) {
+	return bamf(ch,argument,cmd);
 }
 
-void do_bamfout(struct char_data* ch, char* arg, int cmd) {
-	char buf[255];
-	unsigned int len;
-
-	for (; *arg == ' '; arg++);  /* pass all those spaces */
-
-	if(!*arg) {
-		send_to_char("Bamfout <bamf definition>\n\r", ch);
-		send_to_char("  Additional arguments can include ~N for where you\n\r", ch);
-		send_to_char("  Want your name (if you want your name). If you use\n\r",ch);
-		send_to_char("  ~H, it puts in either his or her depending on your\n\r",ch);
-		send_to_char("  sex.  If you use the keyword 'def' for your bamf,\n\r", ch);
-		send_to_char("  it turns on the default bamf.  \n\r", ch);
-		return;
-	}
-
-	if(!strncmp(arg, "def", 3)) {
-		REMOVE_BIT(ch->specials.pmask, BIT_POOF_OUT);
-		free(ch->specials.poofout);
-		ch->specials.poofout = 0;
-		send_to_char("Ok.\n\r", ch);
-		return;
-	}
-
-	len = strlen(arg);
-
-	if(len > 150) {
-		send_to_char("String too long.  Truncated to:\n\r", ch);
-		arg[150] = '\0';
-		sprintf(buf, "%s\n\r", arg);
-		send_to_char(buf, ch);
-		len = 150;
-	}
-
-	if (ch->specials.poofout && len >= strlen(ch->specials.poofout)) {
-		free(ch->specials.poofout);
-		ch->specials.poofout = (char*)malloc(len+1);
-	}
-	else if (!ch->specials.poofout) {
-		ch->specials.poofout = (char*)malloc(len+1);
-	}
-
-
-	strcpy(buf, arg);
-	dsearch(buf, ch->specials.poofout);
-	SET_BIT(ch->specials.pmask, BIT_POOF_OUT);
-	send_to_char("Ok.\n\r", ch);
-	return;
+void do_bamfout(struct char_data* ch,const char* argument, int cmd) {
+	return bamf(ch,argument,cmd);
 }
 
-void do_zsave(struct char_data* ch, char* argument, int cmdnum) {
+void do_zsave(struct char_data* ch,const char* argument, int cmd) {
 	int start_room, end_room, zone;
 	char c;
 	FILE* fp;
@@ -512,7 +461,7 @@ void do_zsave(struct char_data* ch, char* argument, int cmdnum) {
 
 }
 
-void do_zload(struct char_data* ch, char* argument, int cmdnum) {
+void do_zload(struct char_data* ch,const char* argument, int cmd) {
 	int zone;
 	FILE* fp;
 
@@ -558,7 +507,7 @@ void do_zload(struct char_data* ch, char* argument, int cmdnum) {
 	send_to_char("Ok\r\n",ch);
 }
 
-void do_zclean(struct char_data* ch, char* argument, int cmdnum) {
+void do_zclean(struct char_data* ch,const char* argument, int cmd) {
 	int zone=-1;
 	struct room_data*      rp;
 
@@ -584,7 +533,7 @@ void do_zclean(struct char_data* ch, char* argument, int cmdnum) {
 	send_to_char("4 3 2 1 0, Boom!\r\n",ch);
 }
 
-void do_highfive(struct char_data* ch, char* argument, int cmd) {
+void do_highfive(struct char_data* ch,const char* argument, int cmd) {
 	char buf[80];
 	char mess[120];
 	struct char_data* tch;
@@ -626,16 +575,16 @@ void do_highfive(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_addhost(struct char_data* ch, char* argument, int command) {
+void do_addhost(struct char_data* ch,const char* argument, int cmd) {
 }
 
-void do_removehost(struct char_data* ch, char* argument, int command) {
+void do_removehost(struct char_data* ch,const char* argument, int cmd) {
 }
 
-void do_listhosts(struct char_data* ch, char* argument, int command) {
+void do_listhosts(struct char_data* ch,const char* argument, int cmd) {
 }
 
-void do_silence(struct char_data* ch, char* argument, int cmd) {
+void do_silence(struct char_data* ch,const char* argument, int cmd) {
 	if( GetMaxLevel(ch) < DIO || !IS_PC( ch ) ) {
 		send_to_char("You cannot Silence.\n\r",ch);
 		return;
@@ -654,150 +603,14 @@ void do_silence(struct char_data* ch, char* argument, int cmd) {
 				GET_NAME( ch ) );
 	}
 }
-void do_wizlock(struct char_data* ch, char* argument, int cmd) {
-#if SITELOCK
-	char* test;
-	int a, length, b;
-	char buf[255];
+void do_wizlock(struct char_data* ch,const char* argument, int cmd) {
 
-#endif
-
-
-	if ((GetMaxLevel(ch) < DIO) || (IS_NPC(ch))) {
+	if ((GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) || (IS_NPC(ch))) {
 		send_to_char("You cannot WizLock.\n\r",ch);
 		return;
 	}
 
 
-#if SITELOCK
-	/* 4 commands */
-	/* all,  add (place),  list,  rem  (place) */
-
-	for(test = argument; *test && isspace(*test) ; test++);
-	if (!*test) { return; }
-	argument = test;
-
-	/*
-	**  get first piece..
-	*/
-
-	argument = one_argument(argument, buf);
-	if (!*buf) {
-		send_to_char("Wizlock {all | off | add <host> | rem <host> | list}\n\r", ch);
-		return;
-	}
-
-	if (str_cmp(buf, "all")==0) {
-
-		if (WizLock) {
-			send_to_char("Its already on!\n\r", ch);
-		}
-		else {
-			send_to_char("WizLock is now on\n\r",ch);
-			mudlog( LOG_PLAYERS, "WizLock is now on.");
-			WizLock = TRUE;
-		}
-
-	}
-	else if (str_cmp(buf, "off")==0) {
-
-		if (!WizLock) {
-			send_to_char("Its already off!\n\r", ch);
-		}
-		else {
-			send_to_char("WizLock is now off\n\r",ch);
-			mudlog( LOG_PLAYERS, "WizLock is now off.");
-			WizLock = FALSE;
-		}
-
-	}
-	else if (str_cmp(buf, "add")==0) {
-
-		argument = one_argument(argument,buf);
-		if (!*buf) {
-			send_to_char("Wizlock add <host_name>\n\r", ch);
-			return;
-		}
-		length = strlen(buf);
-		if ((length <= 3) || (length >= 30)) {
-			send_to_char("Host is too long or short, please try again\n\r", ch);
-			return;
-		}
-		for( a = 0 ; a <= numberhosts-1 ; a++) {
-			if (strncmp(hostlist[a],buf,length) == 0) {
-				send_to_char("Host is already in database\n\r", ch);
-				return;
-			}
-		}
-		strcpy(hostlist[numberhosts],buf);
-		mudlog( LOG_PLAYERS, "%s has added host %s to the access denied list.",
-				GET_NAME(ch),hostlist[numberhosts]);
-		numberhosts++;
-		return;
-
-	}
-	else if (str_cmp(buf, "rem")==0) {
-
-		if (numberhosts <= 0) {
-			send_to_char("Host list is empty.\n\r", ch);
-			return;
-		}
-
-		for(test = argument; *test && isspace(*test) ; test++);
-		if (!*test) {
-			send_to_char("Wizlock rem <host_name>\n\r", ch);
-			return;
-		}
-		argument = test;
-
-		argument = one_argument(argument, buf);
-
-		if (!*buf) {
-			send_to_char("Wizlock rem <host_name>\n\r", ch);
-			return;
-		}
-
-		length = strlen(buf);
-		if ((length <= 3) || (length >= 30)) {
-			send_to_char("Host length is bad, please try again\n\r", ch);
-			return;
-		}
-
-		for( a = 0 ; a <= numberhosts-1 ; a++) {
-			if (strncmp(hostlist[a],buf,length) == 0) {
-				for( b = a ; b <= numberhosts ; b++)
-				{ strcpy(hostlist[b],hostlist[b+1]); }
-				mudlog( LOG_PLAYERS,
-						"%s has removed host %s from the access denied list.",
-						GET_NAME(ch),hostlist[numberhosts]);
-				numberhosts--;
-				return;
-			}
-		}
-		send_to_char("Host is not in database\n\r", ch);
-		return;
-
-	}
-	else if (str_cmp(buf, "list")==0) {
-
-		if (numberhosts <= 0) {
-			send_to_char("Host list is empty.\n\r", ch);
-			return;
-		}
-		for( a = 0 ; a <= numberhosts-1 ; a++) {
-			sprintf(buf,"Host: %s\n",hostlist[a]);
-			send_to_char(buf, ch);
-		}
-		return;
-
-	}
-	else {
-		send_to_char("Wizlock {all | add <host> | rem <host> | list}\n\r", ch);
-		return;
-	}
-
-
-#else
 	if (WizLock) {
 		send_to_char("WizLock is now off\n\r",ch);
 		mudlog( LOG_PLAYERS, "Wizlock is now off.");
@@ -808,12 +621,11 @@ void do_wizlock(struct char_data* ch, char* argument, int cmd) {
 		mudlog( LOG_PLAYERS, "WizLock is now on.");
 		WizLock = TRUE;
 	}
-#endif
 	return;
 
 }
 
-void do_rload(struct char_data* ch, char* argument, int cmd) {
+void do_rload(struct char_data* ch,const char* argument, int cmd) {
 
 	char i;
 	int start= -1, end = -2;
@@ -851,7 +663,7 @@ void do_rload(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_rsave(struct char_data* ch, char* argument, int cmd) {
+void do_rsave(struct char_data* ch,const char* argument, int cmd) {
 	long start= -1, end = -2, i;
 
 	if (IS_NPC(ch)) { return; }
@@ -892,7 +704,7 @@ void do_rsave(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_emote( struct char_data* ch, char* argument, int cmd ) {
+void do_emote( struct char_data* ch, const char* argument, int cmd ) {
 	int i;
 	char buf[ MAX_INPUT_LENGTH * 2 ];
 
@@ -920,7 +732,7 @@ void do_emote( struct char_data* ch, char* argument, int cmd ) {
 
 
 
-void do_echo(struct char_data* ch, char* argument, int cmd) {
+void do_echo(struct char_data* ch,const char* argument, int cmd) {
 	int i;
 	char buf[MAX_INPUT_LENGTH];
 
@@ -945,7 +757,7 @@ void do_echo(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_system(struct char_data* ch, char* argument, int cmd) {
+void do_system(struct char_data* ch,const char* argument, int cmd) {
 	int i;
 	char buf[256];
 
@@ -961,7 +773,7 @@ void do_system(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_trans(struct char_data* ch, char* argument, int cmd) {
+void do_trans(struct char_data* ch,const char* argument, int cmd) {
 	struct descriptor_data* i;
 	struct char_data* victim;
 	char buf[100];
@@ -1012,7 +824,7 @@ void do_trans(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_at(struct char_data* ch, char* argument, int cmd) {
+void do_at(struct char_data* ch,const char* argument, int cmd) {
 	char command[MAX_INPUT_LENGTH], loc_str[MAX_INPUT_LENGTH];
 	int loc_nr, location, original_loc;
 	struct char_data* target_mob;
@@ -1065,7 +877,7 @@ void do_at(struct char_data* ch, char* argument, int cmd) {
 		}
 }
 
-void do_goto(struct char_data* ch, char* argument, int cmd) {
+void do_goto(struct char_data* ch,const char* argument, int cmd) {
 	char buf[MAX_INPUT_LENGTH];
 	int loc_nr, location, i;
 	struct char_data* target_mob, *pers, *v;
@@ -1195,7 +1007,7 @@ void do_goto(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_stat(struct char_data* ch, char* argument, int cmd) {
+void do_stat(struct char_data* ch,const char* argument, int cmd) {
 	struct affected_type* aff;
 	char arg1[MAX_STRING_LENGTH];
 	char buf[MAX_STRING_LENGTH];
@@ -1961,7 +1773,7 @@ void do_stat(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_ooedit(struct char_data* ch, char* argument, int cmd) {
+void do_ooedit(struct char_data* ch,const char* argument, int cmd) {
 	char item[80], field[20],parmstr[MAX_STRING_LENGTH];
 	char parmstr2[MAX_STRING_LENGTH];
 
@@ -2280,7 +2092,7 @@ void do_showskills( struct char_data* ch, char* argument, int cmd ) {
 	}
 }
 
-void do_set(struct char_data* ch, char* argument, int cmd) {
+void do_set(struct char_data* ch,const char* argument, int cmd) {
 	char field[100], name[100], parmstr[100];
 	struct char_data* mob;
 	int parm = 0;
@@ -2934,13 +2746,13 @@ void do_set(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_shutdow(struct char_data* ch, char* argument, int cmd) {
+void do_shutdow(struct char_data* ch,const char* argument, int cmd) {
 	send_to_char("If you want to shut something down - say so!\n\r", ch);
 }
 
 
 
-void do_shutdown(struct char_data* ch, char* argument, int cmd) {
+void do_shutdown(struct char_data* ch,const char* argument, int cmd) {
 	char buf[100], arg[MAX_INPUT_LENGTH];
 
 	if (IS_NPC(ch))
@@ -2995,7 +2807,7 @@ void do_shutdown(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_snoop(struct char_data* ch, char* argument, int cmd) {
+void do_snoop(struct char_data* ch,const char* argument, int cmd) {
 	static char arg[MAX_STRING_LENGTH];
 	struct char_data* victim;
 
@@ -3065,7 +2877,7 @@ void do_snoop(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_switch(struct char_data* ch, char* argument, int cmd) {
+void do_switch(struct char_data* ch,const char* argument, int cmd) {
 	static char arg[80];
 	struct char_data* victim;
 
@@ -3113,7 +2925,7 @@ void do_switch(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void force_return(struct char_data* ch, char* argument, int cmd) {
+void force_return(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* mob = NULL, *per = NULL;
 
 	if( !IS_PC( ch ) )
@@ -3167,7 +2979,7 @@ void force_return(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_return(struct char_data* ch, char* argument, int cmd) {
+void do_return(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* mob = NULL, *per = NULL;
 
 	mudlog( LOG_CHECK, "%s is being returned.", ch->player.name );
@@ -3221,7 +3033,7 @@ void do_return(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_force(struct char_data* ch, char* argument, int cmd) {
+void do_force(struct char_data* ch,const char* argument, int cmd) {
 	struct descriptor_data* i;
 	struct char_data* vict;
 	char name[100], to_force[100],buf[150];
@@ -3274,7 +3086,7 @@ void do_force(struct char_data* ch, char* argument, int cmd) {
 /*************************************************************************
  *  do_mload porta una creatura in vita.
  *************************************************************************/
-void do_mload(struct char_data* ch, char* argument, int cmd) {
+void do_mload(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* mob;
 	char num[100];
 	int number;
@@ -3314,7 +3126,7 @@ void do_mload(struct char_data* ch, char* argument, int cmd) {
 /****************************************************************************
  * do_oload crea un oggetto
  ****************************************************************************/
-void do_oload(struct char_data* ch, char* argument, int cmd) {
+void do_oload(struct char_data* ch,const char* argument, int cmd) {
 	struct obj_data* obj;
 	char num[100], buf[100];
 	int number;
@@ -3455,7 +3267,7 @@ void purge_one_room(int rnum, struct room_data* rp, int* range) {
 
 
 /* clean a room of all mobiles and objects */
-void do_purge(struct char_data* ch, char* argument, int cmd) {
+void do_purge(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* vict, *next_v;
 	struct obj_data* obj, *next_o;
 
@@ -4026,7 +3838,7 @@ void do_start(struct char_data* ch) {
 }
 
 
-void do_advance(struct char_data* ch, char* argument, int cmd) {
+void do_advance(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char name[100], level[100], achClass[100];
 	int adv, newlevel, lin_class;
@@ -4193,11 +4005,11 @@ void do_advance(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_reroll(struct char_data* ch, char* argument, int cmd) {
+void do_reroll(struct char_data* ch,const char* argument, int cmd) {
 	send_to_char("Use @ command instead.\n\r", ch);
 }
 
-void do_immort(struct char_data* ch, char* argument, int cmd) {
+void do_immort(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char buf[100];
 	int i;
@@ -4243,7 +4055,7 @@ void do_immort(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_restore(struct char_data* ch, char* argument, int cmd) {
+void do_restore(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char buf[100];
 	int i;
@@ -4331,7 +4143,7 @@ void do_restore(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_noshout(struct char_data* ch, char* argument, int cmd) {
+void do_noshout(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* vict;
 	struct obj_data* dummy;
 	char buf[MAX_INPUT_LENGTH];
@@ -4373,7 +4185,7 @@ void do_noshout(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_nohassle(struct char_data* ch, char* argument, int cmd) {
+void do_nohassle(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* vict;
 	struct obj_data* dummy;
 	char buf[MAX_INPUT_LENGTH];
@@ -4406,7 +4218,7 @@ void do_nohassle(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_stealth(struct char_data* ch, char* argument, int cmd) {
+void do_stealth(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* vict;
 	struct obj_data* dummy;
 	char buf[MAX_INPUT_LENGTH];
@@ -4513,7 +4325,7 @@ void show_room_zone(int rnum, struct room_data* rp,
 	print_room(rnum, rp, srzs->sb);
 }
 
-void do_show(struct char_data* ch, char* argument, int cmd) {
+void do_show(struct char_data* ch,const char* argument, int cmd) {
 	char keynome[512];
 	int zone;
 	char buf[MAX_STRING_LENGTH], zonenum[MAX_INPUT_LENGTH];
@@ -4538,7 +4350,7 @@ void do_show(struct char_data* ch, char* argument, int cmd) {
 								"lifespan age     rooms     reset\n\r" );
 
 		for( zone = 0; zone<=top_of_zone_table; zone++ ) {
-			char* mode;
+			const char* mode;
 			zd = zone_table+zone;
 			switch(zd->reset_mode) {
 			case 0:
@@ -4608,17 +4420,17 @@ void do_show(struct char_data* ch, char* argument, int cmd) {
 		append_to_string_block(&sb, "VNUM  rnum type         name [BITS]\n\r");
 		if (is_abbrev(zonenum, "death")) {
 #if HASH
-			hash_iterate(&room_db, print_death_room, &sb);
+			hash_iterate(&room_db, reinterpret_cast<iterate_func>(print_death_room), &sb);
 #else
-			room_iterate(room_db, print_death_room, &sb);
+			room_iterate(room_db, reinterpret_cast<iterate_func>(print_death_room), &sb);
 #endif
 
 		}
 		else if (is_abbrev(zonenum, "private")) {
 #if HASH
-			hash_iterate(&room_db, print_private_room, &sb);
+			hash_iterate(&room_db, reinterpret_cast<iterate_func>(print_private_room), &sb);
 #else
-			room_iterate(room_db, print_private_room, &sb);
+			room_iterate(room_db, reinterpret_cast<iterate_func>(print_private_room), &sb);
 #endif
 
 		}
@@ -4638,9 +4450,9 @@ void do_show(struct char_data* ch, char* argument, int cmd) {
 			srzs.blank = 0;
 			srzs.sb = &sb;
 #if HASH
-			hash_iterate(&room_db, show_room_zone, &srzs);
+			hash_iterate(&room_db, reinterpret_cast<iterate_func>(show_room_zone), &srzs);
 #else
-			room_iterate(room_db, show_room_zone, &srzs);
+			room_iterate(room_db, reinterpret_cast<iterate_func>(show_room_zone), &srzs);
 #endif
 
 			if (srzs.blank) {
@@ -4679,7 +4491,7 @@ void do_show(struct char_data* ch, char* argument, int cmd) {
 }
 
 
-void do_debug(struct char_data* ch, char* argument, int cmd) {
+void do_debug(struct char_data* ch,const char* argument, int cmd) {
 	char        arg[MAX_INPUT_LENGTH];
 	int        i;
 
@@ -4703,7 +4515,7 @@ void do_debug(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_invis(struct char_data* ch, char* argument, int cmd) {
+void do_invis(struct char_data* ch,const char* argument, int cmd) {
 	char        buf[MAX_INPUT_LENGTH];
 	int        level;
 
@@ -4801,7 +4613,7 @@ void CreateOneRoom( int loc_nr) {
 	rp->description = (char*)strdup("Empty\n");
 }
 
-void do_set_log(struct char_data* ch, char* arg, int cmd) {
+void do_set_log(struct char_data* ch,const char* argument, int cmd) {
 	char name[255];
 	struct char_data* victim;
 	struct obj_data* dummy;
@@ -4809,13 +4621,13 @@ void do_set_log(struct char_data* ch, char* arg, int cmd) {
 	if(IS_NPC(ch))
 	{ return; }
 
-	only_argument(arg, name);
+	only_argument(argument, name);
 	if(!*name) {
 		send_to_char("Usage:log <character>\n\r", ch);
 		return;
 	}
 
-	if(!generic_find(arg, FIND_CHAR_WORLD, ch, &victim, &dummy)) {
+	if(!generic_find(argument, FIND_CHAR_WORLD, ch, &victim, &dummy)) {
 		send_to_char("No such person in the world.\n\r", ch);
 		return;
 	}
@@ -4840,11 +4652,11 @@ void do_set_log(struct char_data* ch, char* arg, int cmd) {
 
 void PulseMobiles(int cmd);
 
-void do_event(struct char_data* ch, char* arg, int cmd) {
+void do_event(struct char_data* ch,const char* argument, int cmd) {
 	int i;
 	char buf[255];
 
-	only_argument(arg, buf);
+	only_argument(argument, buf);
 	if(IS_NPC(ch))
 	{ return; }
 
@@ -4858,7 +4670,7 @@ void do_event(struct char_data* ch, char* arg, int cmd) {
 	PulseMobiles( i );
 }
 
-void do_beep(struct char_data* ch, char* argument, int cmd) {
+void do_beep(struct char_data* ch,const char* argument, int cmd) {
 	char buf[255], name[255];
 	struct char_data* victim;
 	struct obj_data* dummy;
@@ -4904,14 +4716,14 @@ void do_beep(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_cset(struct char_data* ch, char* arg, int cmd) {
+void do_cset(struct char_data* ch,const char* argument, int cmd) {
 	char buf[1000], buf1[255], buf2[255], buf3[255], buf4[255];
 	int i, radix;
 	NODE* n;
 
 	if(IS_NPC(ch))
 	{ return; }
-
+	char* arg=const_cast<char*>(argument);
 	arg = one_argument(arg, buf1);
 	arg = one_argument(arg, buf2);
 	arg = one_argument(arg, buf3);
@@ -5010,7 +4822,7 @@ void do_cset(struct char_data* ch, char* arg, int cmd) {
 
 /* Stolen from Merc21 code. */
 
-void do_disconnect(struct char_data* ch, char* argument, int cmd ) {
+void do_disconnect(struct char_data* ch,const char* argument, int cmd ) {
 	char arg[255];
 	struct descriptor_data* d;
 	struct char_data* victim;
@@ -5047,7 +4859,7 @@ void do_disconnect(struct char_data* ch, char* argument, int cmd ) {
 }
 
 /* From Merc21 Code, added by msw */
-void do_freeze(struct char_data* ch, char* argument, int cmd) {
+void do_freeze(struct char_data* ch,const char* argument, int cmd) {
 	char arg[MAX_STRING_LENGTH];
 	struct char_data* victim;
 
@@ -5093,7 +4905,7 @@ void do_freeze(struct char_data* ch, char* argument, int cmd) {
 
 /* Added by msw, to drain levels of morts/immos */
 
-void do_drainlevel(struct char_data* ch, char* argument, int cmd) {
+void do_drainlevel(struct char_data* ch,const char* argument, int cmd) {
 	char arg[MAX_STRING_LENGTH];
 	char buf[MAX_STRING_LENGTH];
 	int numtolose, i;
@@ -5157,7 +4969,7 @@ void do_drainlevel(struct char_data* ch, char* argument, int cmd) {
 	}
 }
 
-void do_god_interven(struct char_data* ch, char* argument, int cmd) {
+void do_god_interven(struct char_data* ch,const char* argument, int cmd) {
 	char arg[128];
 	char buf[255];
 	argument= one_argument(argument,arg);
@@ -5338,7 +5150,7 @@ void do_god_interven(struct char_data* ch, char* argument, int cmd) {
 	{ send_to_char("Godly powers you have, but how do you wanna use them?\n",ch); }
 }
 
-void do_nuke(struct char_data* ch, char* argument, int cmd) {
+void do_nuke(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* victim;
 	char buf[254], arg[254];
 
@@ -5494,7 +5306,7 @@ void do_force_rent( struct char_data* ch, char* argument, int cmd ) {
 	} /* higher than presons level */
 }
 
-void do_ghost(struct char_data* ch, char* argument, int cmd) {
+void do_ghost(struct char_data* ch,const char* argument, int cmd) {
 	char find_name[80];
 	struct char_file_u tmp_store;
 	struct char_data* tmp_ch,*vict;
@@ -5549,7 +5361,7 @@ void do_ghost(struct char_data* ch, char* argument, int cmd) {
 
 
 
-void do_mforce(struct char_data* ch, char* argument, int cmd) {
+void do_mforce(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* vict;
 	char name[100], to_force[100],buf[150];
 
@@ -5632,7 +5444,7 @@ void clone_container_obj( struct obj_data* to, struct obj_data* obj ) {
 	}
 }
 
-void do_clone(struct char_data* ch, char* argument, int cmd) {
+void do_clone(struct char_data* ch,const char* argument, int cmd) {
 	struct char_data* mob, *mcopy;
 	struct obj_data* obj, *ocopy;
 	char type[100], name[100],buf[100];
@@ -5792,7 +5604,7 @@ void do_clone(struct char_data* ch, char* argument, int cmd) {
 	return;
 }
 
-void do_viewfile(struct char_data* ch, char* argument, int cmd) {
+void do_viewfile(struct char_data* ch,const char* argument, int cmd) {
 	char namefile[20];
 	char bigbuf[32000];
 
@@ -5825,7 +5637,7 @@ void do_viewfile(struct char_data* ch, char* argument, int cmd) {
 	page_string(ch->desc,bigbuf,1);
 }
 
-void do_osave(struct char_data* ch, char* argument, int cmd) {
+void do_osave(struct char_data* ch,const char* argument, int cmd) {
 	FILE* f;
 	struct obj_data* obj;
 	char oname[128],field[120],buf[254];

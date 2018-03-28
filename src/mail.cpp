@@ -526,7 +526,7 @@ struct char_data* find_mailman(struct char_data* ch) {
 	if (!mail_ok(ch))
 	{ return 0; }
 
-	mailman = FindMobInRoomWithFunction(ch->in_room, PostMaster);
+	mailman = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(PostMaster));
 
 	if (!mailman)
 	{ send_to_char("Whoa!  Buggy post office.  Please report this.  Error #10.\n\r", ch); }

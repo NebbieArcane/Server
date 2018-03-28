@@ -540,8 +540,8 @@ void do_write(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-char* RandomWord() {
-	static char* stringa[50] = {
+const char* RandomWord() {
+	const static char* stringa[50] = {
 		"argle",
 		"bargle",
 		"glop",
@@ -684,7 +684,7 @@ void do_speak(struct char_data* ch, const char* argument, int cmd) {
 
 #define MAX_LANGS 8
 
-	char* lang_list[MAX_LANGS] = {
+	const char* lang_list[MAX_LANGS] = {
 		"common",
 		"elvish",
 		"halfling",

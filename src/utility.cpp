@@ -1545,7 +1545,7 @@ void down_river( unsigned long pulse ) {
 	}
 }
 
-void do_WorldSave(struct char_data* ch, char* argument, int cmd) {
+void do_WorldSave(struct char_data* ch,const char* argument, int cmd) {
 	char temp[2048], buf[128];
 	long rstart, rend, i, j,x,k;
 	struct extra_descr_data* exptr;
@@ -4097,23 +4097,6 @@ int MaxLimited(int lev) {
 	}
 	else
 	{ return(MAX_LIM_ITEMS); }
-}
-
-int SiteLock (const char* site) {
-#if SITELOCK
-
-	int i,length;
-
-	length = MAX(strlen(site),29);
-
-	for (i=0; i<numberhosts; i++) {
-		if (strncmp(hostlist[i],site,length)==0)
-		{ return(TRUE); }
-	}
-	return(FALSE);
-#else
-	return(FALSE);
-#endif
 }
 
 int MaxDexForRace(struct char_data* ch) {
