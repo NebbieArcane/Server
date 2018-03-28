@@ -294,7 +294,13 @@ void spell_haste(byte level, struct char_data* ch,
 
 
 	af.type      = SPELL_HASTE;
-	af.duration  = level/2;
+    
+    if (OnlyClass(ch,CLASS_MAGIC_USER|CLASS_SORCERER)) {
+	af.duration  = 4;
+    } else {
+        af.duration  = 1;
+    }
+    
 	af.modifier  = 1;
 	af.location  = APPLY_HASTE;
 	af.bitvector = 0;

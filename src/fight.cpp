@@ -3240,7 +3240,7 @@ void PCAttacks( char_data* pChar ) {
         
         if (fAttacks > sAttacks) {
             mudlog(LOG_CHECK,"riduce il mov di = %d*10",((int)(fAttacks-sAttacks)));
-            GET_MOVE(pChar) -= 10*((int)(fAttacks-sAttacks));
+            GET_MOVE(pChar) -= 1*((int)(fAttacks-sAttacks));
             alter_move(pChar, 0);
         }
         
