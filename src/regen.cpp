@@ -207,9 +207,6 @@ EVENTFUNC(points_event) {
 		fGain = modf(((double)(mana_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
 		fGain = fGain*(double)(r_mult) ;
 		gain = (int)( dum );
-            if (affected_by_spell(pChar, SPELL_HASTE) || IS_AFFECTED( pChar, APPLY_HASTE )) {
-                gain /= 2;
-            }
 		rnd =  ( rand()% r_mult) ;
 		/* Here we add a line that on average helps to take
 		   into account fractional gains */
@@ -236,6 +233,9 @@ EVENTFUNC(points_event) {
 		fGain = modf(((double)(move_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
 		fGain = fGain*(double)(r_mult) ;
 		gain = (int)( dum );
+            if (affected_by_spell(ch, SPELL_HASTE) || IS_AFFECTED( ch, APPLY_HASTE )) {
+                gain /= 2;
+            }
 		rnd =  ( rand()% r_mult) ;
 		/* Here we add a line that on average helps to take
 		   into account fractional gains */
