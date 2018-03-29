@@ -28,6 +28,7 @@
 #include "regen.hpp"
 #include "fight.hpp"
 #include "spells.hpp"
+#include "handler.hpp"
 
 namespace Alarmud {
 
