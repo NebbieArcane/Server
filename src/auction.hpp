@@ -25,7 +25,6 @@ struct  auction_data {
 };
 typedef struct  auction_data AUCTION_DATA; /* auction data */
 extern  AUCTION_DATA*  auction;
-void talk_auction (const char* argument);
 void auction_update();
 ACTION_FUNC(do_auction_int);
 } // namespace Alarmud

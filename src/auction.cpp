@@ -20,6 +20,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
+#include "act.comm.hpp"
 #include "auction.hpp"
 #include "comm.hpp"
 #include "handler.hpp"

@@ -3452,7 +3452,6 @@ int ObjIsOnGround( struct char_data* ch, const char* argument ) {
  * curati, liberati dalla magia e dal veleno.
  ***************************************************************************/
 
-int SentinelBackHome( struct char_data* pMob );
 
 #define MINVALUETOHEAL 1000
 MOBSPECIAL_FUNC(PrimoAlbero) {

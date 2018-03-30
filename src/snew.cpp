@@ -20,11 +20,12 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
-#include "snew.hpp"
+#include "act.wizard.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "snew.hpp"
 namespace Alarmud {
 #define KEYLIB "keydir"
 #define BUFLEN 128

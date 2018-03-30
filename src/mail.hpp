@@ -65,11 +65,6 @@ namespace Alarmud {
 ***************************************************************************
 **   DON'T TOUCH DEFINES BELOW  */
 
-int        scan_file(void);
-int        has_mail(char* recipient);
-void        store_mail(char* to, char* from, char* message_pointer);
-char*        read_delete(char* recipient, char* recipient_formatted);
-
 #define INT_SIZE  sizeof(int)
 #define CHAR_SIZE sizeof(char)
 #define LONG_SIZE sizeof(long)
@@ -120,10 +115,12 @@ struct mail_index_type {
 	position_list_type*             list_start;  /* list of mail positions    */
 	struct mail_index_type* next;
 };
-
+int        scan_file(void);
+int        has_mail(char* recipient);
+void        store_mail(char* to, char* from, char* message_pointer);
+char*        read_delete(char* recipient, char* recipient_formatted);
 mail_index_type* find_char_in_index(char* searchee) ;
 struct char_data* find_mailman(struct char_data* ch) ;
-int has_mail(char* recipient) ;
 void index_mail(char* raw_name_to_index, int pos) ;
 int mail_ok(struct char_data* ch) ;
 int pop_free_list(void) ;
@@ -131,10 +128,8 @@ void postmaster_check_mail(struct char_data* ch, int cmd, const char* arg) ;
 void postmaster_receive_mail(struct char_data* ch, int cmd, const char* arg) ;
 void postmaster_send_mail(struct char_data* ch, int cmd, const char* arg) ;
 void push_free_list(int pos) ;
-char* read_delete(char* recipient, char* recipient_formatted);
 void read_from_file(void* buf, int size, int filepos) ;
 int scan_mail_file(void) ;
-void store_mail(char* to, char* from, char* message_pointer) ;
 void write_to_file(void* buf, int size, int filepos) ;
 } // namespace Alarmud
 #endif // __MAIL_HPP

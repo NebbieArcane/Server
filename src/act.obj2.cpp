@@ -1455,7 +1455,7 @@ ACTION_FUNC(do_remove) {
 								  ch);
 					return;
 				}
-#ifdef EGO
+#if EGO
 				/* if it is a limited items check if the PC EGO is strong enough
 				   Gaia 2001 */
 				if( IS_RARE( obj_object ) && !EgoSave( ch ) ) {

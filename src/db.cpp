@@ -976,10 +976,6 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 			break;
 		case 'S': /* end of current room */
 
-#if BYTE_COUNT
-			if (bc >= 1000)
-			{ fprintf(stderr, "Byte count for this room[%d]: %d\n", rp->number, bc); }
-#endif
 			total_bc += bc;
 			room_count++;
 
@@ -1893,10 +1889,6 @@ struct char_data* read_mobile(int nr, int type) {
 
 	mob_index[ nr ].number++;
 
-#if BYTE_COUNT
-	fprintf(stderr, "Mobile [%d]: byte count: %d\n", mob_index[nr].iVNum, bc);
-#endif
-
 	total_mbc += bc;
 	mob_count++;
 
@@ -2173,9 +2165,7 @@ struct obj_data* read_object(int nr, int type) {
 	obj_index[nr].number++;
 
 	obj_count++;
-#if BYTE_COUNT
-	fprintf(stderr, "Object [%d] uses %d bytes\n", obj_index[nr].iVNum, bc);
-#endif
+
 	total_obc += bc;
 
 	SetStatus("ending read_object", NULL);

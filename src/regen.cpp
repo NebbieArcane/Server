@@ -48,9 +48,6 @@ namespace Alarmud {
 *                                                 Gaia 2001              *
 ************************************************************************ */
 
-void alter_mana(struct char_data* ch, int amount);
-void alter_move(struct char_data* ch, int amount);
-
 /* Planer point types for events */
 #define REGEN_HIT      0
 #define REGEN_MANA     1

@@ -1429,18 +1429,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 
 struct char_data* find_mobile_here_with_spec_proc( genericspecial_func fcn, int rnumber ) {
 
-#if !GCC27
-	struct char_data* temp_char;
-
-	for (temp_char = real_roomp(rnumber)->people; temp_char ;
-			temp_char = temp_char->next_in_room)
-		if (IS_MOB(temp_char) &&
-				mob_index[temp_char->nr].func == fcn)
-		{ return temp_char; }
-	return NULL;
-#else
 	return(FindMobInRoomWithFunction(rnumber,fcn));
-#endif
 }
 
 MOBSPECIAL_FUNC(eric_johnson)

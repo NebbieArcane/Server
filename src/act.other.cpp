@@ -135,7 +135,7 @@ ACTION_FUNC(do_junk) {
 				("You can't let go of it, it must be CURSED!\n\r", ch);
 				return;
 			}
-#ifdef EGO
+#if EGO
 			/* if it is a limited items check if the PC EGO is strong enough
 			   Gaia 2001 */
 			if( IS_RARE( tmp_object ) && !EgoSave( ch ) ) {
@@ -692,7 +692,7 @@ ACTION_FUNC(do_steal) {
 			if( !CheckEgoGet(ch, obj)) {
 				return;
 			}
-#ifdef EGO
+#if EGO
 
 			if(obj->obj_flags.cost >= LIM_ITEM_COST_MIN  && !EgoSave( ch )) {
 				act("Provi a rubare $p, ma poi cambi idea.",FALSE, ch, obj,0, TO_CHAR);

@@ -2275,16 +2275,6 @@ int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,const char
 	struct char_data* vict;
 	struct obj_data* obj;
 
-#if EASY_LEVELS
-	if (GET_LEVEL(ch, iClass) > 0) {  /* for now.. so as not to give it away */
-		if (cmd == CMD_GAIN) {
-			GainLevel(ch, iClass);
-			return(TRUE);
-		}
-		return(FALSE);
-	}
-#endif
-
 	if( cmd == CMD_GIVE ) {
 		arg = one_argument(arg,obj_name);
 		arg = one_argument(arg, vict_name);

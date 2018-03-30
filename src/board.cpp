@@ -76,14 +76,6 @@ char save_file[NUM_BOARDS][20] = {
 };
 
 
-/* These are the binary files in which to save/load messages */
-
-void board_write_msg(struct char_data* ch, char* arg, int bnum);
-int board_display_msg(struct char_data* ch, char* arg, int bnum);
-int board_remove_msg(struct char_data* ch, char* arg, int bnum);
-void board_save_board( int bnum );
-void board_load_board();
-int board_show_board(struct char_data* ch, char* arg, int bnum);
 
 /* board.c version 1.2 - Jun 1991 by Twilight.
  *

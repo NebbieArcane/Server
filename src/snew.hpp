@@ -6,6 +6,7 @@
 #define __SNEW 1
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "act.off.hpp"
 #include "specass2.hpp"
 #include "version.hpp"
 #include "signals.hpp"
@@ -45,13 +46,6 @@ bool SetTest(bool test=true);
 char* GetKey(char* db, char* chiave);
 int PutKey(char* db,char* chiave, char* value);
 void DelKey(char* db,char* chiave);
-ACTION_FUNC(do_associa);
-ACTION_FUNC(do_ripudia);
-void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc);
-void clone_container_obj( struct obj_data* to, struct obj_data* obj );
-struct obj_data* clone_obj(struct obj_data* obj);
-
-ACTION_FUNC(do_vomita);
 int GetStat(struct char_data* ch, int stat);
 long StatCost(struct char_data* ch, int stat); // SALVO meglio se long
 int MaxStat(struct char_data* ch,int stat);

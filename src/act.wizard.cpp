@@ -4496,14 +4496,7 @@ ACTION_FUNC(do_debug) {
 		send_to_char("valid values are 0, 1 and 2\n\r", ch);
 	}
 	else {
-#if DEBUG
-
-		/* never had this function, disabled for now */
-		/*    malloc_debug(i); */
-		sprintf(tmp, "malloc debug level set to %d\n\r", i);
-#else
 		sprintf(tmp, "Debug level set to %d. Probably not implemented\n\r", i);
-#endif
 		send_to_char(tmp, ch);
 	}
 }

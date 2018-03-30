@@ -3759,10 +3759,7 @@ int ItemAlignClash(struct char_data* ch, struct obj_data* obj) {
 
 int ItemEgoClash(struct char_data* ch, struct obj_data* obj, int bon) {
 
-#ifndef EGO
-	return(0);
-#else
-
+#if EGO
 	int obj_ego, p_ego, tmp;
 
 	obj_ego = obj->obj_flags.cost;
@@ -3817,17 +3814,11 @@ int ItemEgoClash(struct char_data* ch, struct obj_data* obj, int bon) {
 	}
 
 	return(1);
+#else
+	return(0);
 
 #endif
 }
-#if PICCHIO
-void* strstr(char* S1, char* S2) {
-	return(NULL);
-}
-char* strchr(char* S1, int C) {
-	return(NULL);
-}
-#endif
 
 void IncrementZoneNr(int nr) {
 	struct char_data* c;
