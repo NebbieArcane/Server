@@ -38,20 +38,18 @@
 #include "utility.hpp"    // for apply_soundproof, check_soundproof, number
 namespace Alarmud {
 
-
-
 char* scrambler(struct char_data* ch,const char* message) {
 	static char buf[MAX_STRING_LENGTH];
 	int i;
 	int percent=0;
-	PushStatus("Scramble");
 	percent=GET_INT(ch);
 	strncat(buf,message,MAX_STRING_LENGTH-1);
 	buf[MAX_STRING_LENGTH-1]='\0';
-	for (i=0; buf[i]; i++)
-		if (number(0,15) > percent)
-		{ buf[i]=RandomChar(); }
-	PopStatus();
+	for (i=0; buf[i]; i++) {
+		if (number(0,15) > percent){
+			buf[i]=RandomChar();
+		}
+	}
 	return buf;
 }
 

@@ -1469,9 +1469,6 @@ void down_river( unsigned long localPulse ) {
 	char buf[80];
 	struct room_data* rp;
 
-	if (localPulse < 0)
-	{ return; }
-
 	for (ch = character_list; ch; ch = tmp) {
 		tmp = ch->next;
 		if (!IS_NPC(ch)) {
@@ -2702,9 +2699,6 @@ void RiverPulseStuff(unsigned long localPulse) {
 	int rd, _or;
 	char buf[80], buffer[100];
 	struct room_data* rp;
-
-	if (localPulse < 0)
-	{ return; }
 
 	for (i = descriptor_list; i; i=i->next) {
 		if (!i->connected) {

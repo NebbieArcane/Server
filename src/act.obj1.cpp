@@ -1138,7 +1138,6 @@ ACTION_FUNC(do_pquest) {
 				}
 				act( "Ad un gesto della mano di $n, alcune rune tetuate sul corpo di $N lentamente sbiadisco.", TRUE, ch, 0, vict, TO_NOTVICT );
 				GET_RUNEDEI( vict ) += punti_quest;
-				if (GET_RUNEDEI (vict) < 0) { GET_RUNEDEI(vict) =0; }
 				save_char( ch, AUTO_RENT, 0 );
 				mudlog( LOG_PLAYERS, "%s toglie %d rune degli Dei a %s, ne aveva %d", GET_NAME( ch ), -punti_quest, GET_NAME( vict ), old_punti);
 				return;
