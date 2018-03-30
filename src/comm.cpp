@@ -489,8 +489,8 @@ void game_loop(int s) {
 				else if( point->showstr_point )
 					write_to_descriptor( point->descriptor,
 										 point->connected == CON_PLYNG ?
-										 (char*)"[Batti INVIO per continuare/Q per uscire] " :
-										 (char*)"[Batti INVIO] " );
+										 "[Batti INVIO per continuare/Q per uscire] " :
+										 "[Batti INVIO] " );
 				else if( point->connected == CON_PLYNG ) {
 					if(point->character->term == VT100) {
 						struct char_data* ch;
@@ -1637,66 +1637,66 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 		if (*strp == '$') {
 			switch( *( ++strp ) ) {
 			case 'n':
-				i = (char*)PERS( ch, to );
+				i = PERS( ch, to );
 				break;
 			case 'N':
 				if( vict_obj != NULL )
-				{ i = (char*)PERS( (struct char_data*) vict_obj, to ); }
+				{ i =PERS( (struct char_data*) vict_obj, to ); }
 				else {
 					mudlog( LOG_SYSERR, "$N e vict_obj == NULL in act(comm.c)" );
 					i = "";
 				}
 				break;
 			case 'b':
-				i = (char*)SSLF( ch );
+				i = SSLF( ch );
 				break;
 			case 'B':
 				if( vict_obj != NULL )
-				{ i = (char*)SSLF( (struct char_data*) vict_obj ); }
+				{ i = SSLF( (struct char_data*) vict_obj ); }
 				else {
 					mudlog( LOG_SYSERR, "$B e vict_obj == NULL in act(comm.c)" );
 					i = "";
 				}
 				break;
 			case 'd':
-				i = (char*)LEGLI( ch );
+				i = LEGLI( ch );
 				break;
 			case 'D':
 				if( vict_obj != NULL )
-				{ i = (char*)LEGLI( (struct char_data*) vict_obj ); }
+				{ i = LEGLI( (struct char_data*) vict_obj ); }
 				else {
 					mudlog( LOG_SYSERR, "$D e vict_obj == NULL in act(comm.c)" );
 					i = "";
 				}
 				break;
 			case 'm':
-				i = (char*)HMHR( ch );
+				i = HMHR( ch );
 				break;
 			case 'M':
 				if( vict_obj != NULL )
-				{ i = (char*)HMHR( (struct char_data*) vict_obj ); }
+				{ i = HMHR( (struct char_data*) vict_obj ); }
 				else {
 					mudlog( LOG_SYSERR, "$M e vict_obj == NULL in act(comm.c)" );
 					i = "";
 				}
 				break;
 			case 's':
-				i = (char*)HSHR( ch );
+				i = HSHR( ch );
 				break;
 			case 'S':
 				if( vict_obj != NULL )
-				{ i = (char*)HSHR( (struct char_data*) vict_obj ); }
+				{ i = HSHR( (struct char_data*) vict_obj ); }
 				else {
 					mudlog( LOG_SYSERR, "$S e vict_obj == NULL in act(comm.c)" );
 					i = "";
 				}
 				break;
 			case 'e':
-				i = (char*)HSSH(ch);
+				i = HSSH(ch);
 				break;
 			case 'E':
 				if( vict_obj != NULL )
-				{ i = (char*)HSSH( (struct char_data*) vict_obj ); }
+				{ i = HSSH( (struct char_data*) vict_obj ); }
 				else {
 					mudlog( LOG_SYSERR, "$E e vict_obj == NULL in act(comm.c)" );
 					i = "";
@@ -1704,7 +1704,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			case 'o':
 				if( obj != NULL )
-				{ i = (char*)OBJN( obj, to ); }
+				{ i = OBJN( obj, to ); }
 				else {
 					mudlog( LOG_SYSERR, "$o e obj == NULL in act(comm.c)" );
 					i = "";
@@ -1712,7 +1712,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			case 'O':
 				if( vict_obj != NULL )
-				{ i = (char*)OBJN( (struct obj_data*) vict_obj, to ); }
+				{ i = OBJN( (struct obj_data*) vict_obj, to ); }
 				else {
 					mudlog( LOG_SYSERR, "$O e vict_obj == NULL in act(comm.c)" );
 					i = "";
@@ -1720,7 +1720,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			case 'p':
 				if( obj != NULL )
-				{ i = (char*)OBJS( obj, to ); }
+				{ i = OBJS( obj, to ); }
 				else {
 					mudlog( LOG_SYSERR, "$p e obj == NULL in act(comm.c)" );
 					i = "";
@@ -1728,7 +1728,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			case 'P':
 				if( vict_obj != NULL )
-				{ i = (char*)OBJS( (struct obj_data*) vict_obj, to ); }
+				{ i = OBJS( (struct obj_data*) vict_obj, to ); }
 				else {
 					mudlog( LOG_SYSERR, "$P e vict_obj == NULL in act(comm.c)" );
 					i = "";
@@ -1736,7 +1736,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			case 'a':
 				if( obj != NULL )
-				{ i = (char*)SANA(obj); }
+				{ i = SANA(obj); }
 				else {
 					mudlog( LOG_SYSERR, "$a e obj == NULL in act(comm.c)" );
 					i = "";
@@ -1744,7 +1744,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 				break;
 			case 'A':
 				if( vict_obj != NULL )
-				{ i = (char*)SANA( (struct obj_data*) vict_obj ); }
+				{ i = SANA( (struct obj_data*) vict_obj ); }
 				else {
 					mudlog( LOG_SYSERR, "$A e vict_obj == NULL in act(comm.c)" );
 					i = "";

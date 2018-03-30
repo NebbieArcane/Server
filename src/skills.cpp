@@ -545,7 +545,7 @@ void donothing( void* pDummy ) {
 int aRoom[ WORLD_SIZE ]; // E` definita esterna in modo da non sovraccaricare
 // lo stack. Inoltre viene usata anche in utility.c
 
-int find_path( int in_room, find_func predicate, void* c_data,
+int find_path( int in_room, find_func predicate, const void* c_data,
 			   int depth, int in_zone) {
 	struct room_q* tmp_q, *q_head, *q_tail;
 	int i, tmp_room, count=0, thru_doors;
@@ -647,11 +647,11 @@ int find_path( int in_room, find_func predicate, void* c_data,
 }
 
 int choose_exit_global(int in_room, int tgt_room, int depth) {
-	return find_path(in_room, is_target_room_p, &tgt_room, depth, 0);
+	return find_path(in_room, is_target_room_p, reinterpret_cast<const void*>(tgt_room), depth, 0);
 }
 
 int choose_exit_in_zone(int in_room, int tgt_room, int depth) {
-	return find_path(in_room, is_target_room_p, &tgt_room, depth, 1);
+	return find_path(in_room, is_target_room_p, reinterpret_cast<const void*>(tgt_room), depth, 1);
 }
 
 void go_direction(struct char_data* ch, int dir) {

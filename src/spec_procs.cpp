@@ -75,12 +75,12 @@ struct social_type {
 /*************************************/
 /* predicates for find_path function */
 
-int is_target_room_p(int room, void* tgt_room) {
-	return room == *( (int*)tgt_room );
+FIND_FUNC(is_target_room_p) {
+	return room == reinterpret_cast<const intptr_t>(tgt_room );
 }
 
-int named_object_on_ground(int room, void* c_data) {
-	char* name = (char*)c_data;
+FIND_FUNC(named_object_on_ground) {
+	const char* name = reinterpret_cast<const char*>(tgt_room);
 	return 0 != get_obj_in_list(name, real_roomp(room)->contents);
 }
 
@@ -1396,8 +1396,8 @@ MOBSPECIAL_FUNC(andy_wilcox)
 			}
 			else {
 				act((scan->actflag&ACT_OVER_21) ?
-					(char*)"$n tells you 'Drink in good health' and gives you $p" :
-					(char*)"$n tells you 'Enjoy' and gives you $p",
+					"$n tells you 'Drink in good health' and gives you $p" :
+					"$n tells you 'Enjoy' and gives you $p",
 					FALSE, andy, temp1, ch, TO_VICT);
 			}
 		}
@@ -4040,8 +4040,7 @@ MOBSPECIAL_FUNC(zombie_master)
 			act("$n searches for bodies.", FALSE, zmaster, 0,0, TO_ROOM);
 			return TRUE;
 		}
-		else if ( 0<=(dir = find_path(zmaster->in_room,
-									  named_object_on_ground, (char*)"corpse", -200, 0))) {
+		else if ( 0<=(dir = find_path(zmaster->in_room,named_object_on_ground, "corpse", -200, 0))) {
 			go_direction(zmaster, dir);
 			return TRUE;
 		}

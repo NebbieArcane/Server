@@ -667,9 +667,9 @@ void read_object_to_memory(int nVNum) {
 }
 
 int compare_index(const void* p1, const void* p2) {
-	struct index_data* s1, *s2;
-	s1 = (struct index_data*) p1;
-	s2 = (struct index_data*) p2;
+	const struct index_data* s1, *s2;
+	s1 = static_cast<const struct index_data*>(p1);
+	s2 = static_cast<const struct index_data*>(p2);
 	return (s1->iVNum - s2->iVNum);
 }
 

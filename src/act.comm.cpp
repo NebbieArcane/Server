@@ -667,7 +667,7 @@ ACTION_FUNC(do_speak) {
 	send_to_char(buf,ch);
 }
 
-void thief_listen(struct char_data* ch,struct char_data* victim, char* frase,int cmd) {
+void thief_listen(struct char_data* ch,struct char_data* victim, const char* frase,int cmd) {
 	char* p=NULL;
 	char* np=NULL;
 	struct char_data* t;
@@ -691,7 +691,7 @@ void thief_listen(struct char_data* ch,struct char_data* victim, char* frase,int
 						t->skills[SKILL_TSPY].learned>0 &&
 						affected_by_spell(t,SKILL_TSPY)) {
 					percent=GetMaxLevel(ch)-GetMaxLevel(t);
-					for(p=strdup(frase),np=p; *p; p++)
+					for(p=strdup(frase),np=p; *p; p++) {
 						if ((percent+number(20,120)+malus)>t->skills[SKILL_TSPY].learned) {
 							if ((malus+number(1,40)-GET_INT(t))>(0)) {
 								if(number(0,20)) {
@@ -705,6 +705,7 @@ void thief_listen(struct char_data* ch,struct char_data* victim, char* frase,int
 
 							}
 						}
+					}
 					act( "$c0013Riesci ad origliare: '$T'", FALSE,
 						 t, 0, np, TO_CHAR);
 					free(np);
@@ -890,7 +891,7 @@ ACTION_FUNC(do_gtell) {
 		return;
 	}
 	else {
-		thief_listen(ch,ch,(char*) arg+i,cmd);
+		thief_listen(ch,ch,arg+i,cmd);
 		if (ch->master)
 		{ k = ch->master; }
 		else
@@ -1039,12 +1040,9 @@ ACTION_FUNC(do_pray) {
 		send_to_char( "Vuoi pregare. Ottimo, ma chi ? "
 					  "(pray <NomeDio> <preghiera>)\n\r", ch );
 	else {
-		ii = (int)( GetMaxLevel( ch ) * 1.5 );
+		ii = ( GetMaxLevel( ch ) * 1.5  + 20);
 		one_argument(arg,GodName);
 		mudlog(LOG_CHECK,"%s ha pregato %s",GET_NAME(ch),GodName);
-		if (!str_cmp2(GodName,GET_AUTHBY(ch)?GET_AUTHBY(ch):(char*)"<>")) {
-			ii+=20;
-		}
 		if( HasClass( ch, CLASS_CLERIC | CLASS_DRUID ) )
 		{ ii +=10; }  /* clerics get a 10% bonus :) */
 

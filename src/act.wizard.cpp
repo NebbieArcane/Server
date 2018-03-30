@@ -3225,11 +3225,8 @@ ACTION_FUNC(do_oload) {
 
 
 void purge_one_room(int rnum, struct room_data* rp, int* range) {
-	struct char_data*        ch;
-	struct obj_data*        obj;
-
-	if( !IS_PC( ch ) )
-	{ return; }
+	struct char_data* ch=nullptr;
+	struct obj_data* obj=nullptr;
 
 	if( rnum==0 ||                           /* purge the void?  I think not */
 			rnum < range[0] || rnum > range[1])

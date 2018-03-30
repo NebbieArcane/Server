@@ -90,17 +90,14 @@ int is_murdervict(struct char_data* ch) {
 	return FALSE;
 }
 
-int xcompare(const void* p1, const void* p2) {
-	struct OtherSpecialProcEntry* s1,*s2;
-	s1 = (struct OtherSpecialProcEntry*)p1;
-	s2 = (struct OtherSpecialProcEntry*)p2;
+int xcompare(const void * p1, const void* p2) {
+	const struct OtherSpecialProcEntry* s1=reinterpret_cast<const struct OtherSpecialProcEntry*>(p1);
+	const struct OtherSpecialProcEntry* s2=reinterpret_cast<const struct OtherSpecialProcEntry*>(p2);
 	return strcasecmp(s1->nome,s2->nome);
 }
-int nomecompare(const void* p1, const void* p2) {
-	char* s1;
-	struct OtherSpecialProcEntry* s2;
-	s1 = (char*)p1;
-	s2 = (struct OtherSpecialProcEntry*)p2;
+int nomecompare(const void* p1,const void* p2) {
+	const char* s1 = reinterpret_cast<const char*>(p1);
+	const struct OtherSpecialProcEntry* s2=reinterpret_cast<const struct OtherSpecialProcEntry*>(p2);
 	return strcasecmp(s1,s2->nome);
 }
 

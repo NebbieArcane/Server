@@ -63,7 +63,7 @@ void do_tan( struct char_data* ch,const char* arg, int cmd) ;
 void do_tan_old( struct char_data* ch,const char* arg, int cmd) ;
 void do_track(struct char_data* ch,const char* argument, int cmd) ;
 void donothing( void* pDummy ) ;
-int find_path( int in_room, find_func predicate, void* c_data, int depth, int in_zone);
+int find_path( int in_room, find_func predicate, const void* c_data, int depth, int in_zone);
 void go_direction(struct char_data* ch, int dir) ;
 int in_miniera( struct char_data* ch ) ;
 int named_mobile_in_room(int room, struct hunting_data* c_data) ;

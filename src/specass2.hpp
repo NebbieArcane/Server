@@ -10,8 +10,8 @@ namespace Alarmud {
 
 void assign_speciales() ;
 int is_murdervict(struct char_data* ch) ;
-int nomecompare(const void* p1, const void* p2) ;
-int xcompare(const void* p1, const void* p2) ;
+int nomecompare(const void* p1, const void* p2);
+int xcompare(const void* p1, const void* p2);
 } // namespace Alarmud
 #endif // __SPECASS2_HPP
 

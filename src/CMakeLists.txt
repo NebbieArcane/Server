@@ -94,8 +94,8 @@ endforeach()
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb3 -fpermissive -finline-functions -fno-strength-reduce -pipe -pg")
-set(CMAKE_C_FLAGS "-std=c++11 -ggdb3 -fpermissive -finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_C_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -E -P -C -traditional-cpp")
 #Retrieves headers
 file(GLOB file_hpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.hpp)
@@ -178,19 +178,20 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wno-unknown-pragmas
 	-Wno-variadic-macros 
 	-Wno-unused-parameter
+	-Wno-format-nonliteral
 	-Werror
 	-Wall 
 	-Wextra 
+	-Wformat=2 
 #	-Wpedantic 
-#	-Wcast-align 
-#	-Wcast-qual 
+	-Wcast-align 
+	-Wcast-qual 
 #	-Wctor-dtor-privacy 
 #	-Wdisabled-optimization 
-#	-Wformat=2 
 #	-Winit-self 
 #	-Wlogical-op 
 #	-Wmissing-include-dirs 
-#	-Wnoexcept 
+	-Wnoexcept 
 #	-Wold-style-cast 
 #	-Woverloaded-virtual 
 #	-Wredundant-decls 
