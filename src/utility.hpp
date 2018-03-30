@@ -36,7 +36,7 @@ int CanSeeTrap(int num, struct char_data* ch);
 int CheckEgoEquip(struct char_data* ch, struct obj_data* obj);
 int CheckEgoGet(struct char_data* ch, struct obj_data* obj);
 int CheckEgoGive(struct char_data* ch, struct char_data* vict, struct obj_data* obj);
-int CheckForBlockedMove(struct char_data* ch, int cmd, char* arg, int room, int dir, int iClass);
+int CheckForBlockedMove(struct char_data* ch, int cmd, const char* arg, int room, int dir, int iClass);
 int CheckGetBarbarianOK(struct char_data* ch, struct obj_data* obj_object);
 int CheckGiveBarbarianOK(struct char_data* ch, struct char_data* vict, struct obj_data* obj);
 int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm);
@@ -138,7 +138,6 @@ void CleanZone(int zone);
 void DevelopHatred(struct char_data* ch, struct char_data* v);
 void DoNothing(void* pDummy);
 void down_river(unsigned long pulse);
-void do_WorldSave(struct char_data* ch,const char* argument, int cmd);
 void FallOffMount(struct char_data* ch, struct char_data* h);
 void FighterMove(struct char_data* ch);
 void FORGET(struct char_data* ch, int spl);
@@ -162,6 +161,9 @@ void sprinttype(int type, const char* names[], char* result);
 void TeleportPulseStuff(unsigned long pulse);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
+char RandomChar() ;
+const char* RandomWord() ;
+
 } // namespace Alarmud
 #endif
 

@@ -336,7 +336,7 @@ const int dark_elf_class_choice[]= {
 	0
 };
 
-char* fill[]= {
+const char* fill[]= {
 	"in",
 	"from",
 	"with",
@@ -347,8 +347,28 @@ char* fill[]= {
 	"to",
 	"\n"
 };
-
-
+int search_block(const char* arg, const char** list, bool exact) {
+	size_t l=std::max(strlen(arg),1UL);
+	for(int i=0;** (list+i) != '\n'; i++) {
+		if (exact) {
+			if(!strcasecmp(arg, *(list+i))) {
+				return(i);
+			}
+		}
+		else {
+			if(!strncasecmp(arg, *(list+i),l)) {
+				return(i);
+			}
+		}
+	}
+	return -1;
+}
+int old_search_block(const char* argument,int begin,int length,const char** list,int mode) {
+	std::string key(argument);
+	int rc=search_block(key.substr(begin,length).c_str(),list,mode);
+	return rc>=0?rc+1:rc;
+}
+#if 0
 int search_block(char* arg, const char** list, bool exact) {
 	register int i,l;
 
@@ -402,7 +422,7 @@ int old_search_block(const char* argument,int begin,int length,const char** list
 
 	return ( found ? guess : -1 );
 }
-
+#endif
 void command_interpreter( struct char_data* ch, const char* argument ) {
 	char buf[254];
 	NODE* n;
@@ -699,7 +719,7 @@ int is_number( char* str ) {
 /* find the first sub-argument of a string, return pointer to first char in
  *  primary argument, following the sub-arg
  */
-char* one_argument(const char* argument, char* first_arg ) {
+const char* one_argument(const char* argument, char* first_arg ) {
 	/* Ritorna un argomento, ignorando le parole definite in filler */
 	int begin,look_at;
 
@@ -724,7 +744,7 @@ char* one_argument(const char* argument, char* first_arg ) {
 	return(argument+begin);
 }
 
-char* OneArgumentNoFill( const char* argument, char* first_arg ) {
+const char* OneArgumentNoFill( const char* argument, char* first_arg ) {
 	int begin,look_at;
 
 	begin = 0;
@@ -757,7 +777,7 @@ void only_argument(const char* argument, char* dest)
 
 
 
-int fill_word(char* argument) {
+int fill_word(const char* argument) {
 	return ( search_block(argument,fill,TRUE) >= 0);
 }
 
@@ -1478,7 +1498,7 @@ int find_name(char* name) {
 }
 
 
-int _parse_name(char* arg, char* name) {
+int parse_name(const char* arg, char* name) {
 	int i;
 
 	/* skip whitespaces */
@@ -1873,7 +1893,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 		}
 		else {
 			d->AlreadyInGame=FALSE;
-			int rc=_parse_name(arg, tmp_name);
+			int rc=parse_name(arg, tmp_name);
 			mudlog(LOG_CONNECT,"Parsename result %d",rc);
 
 			if (rc==2) {
@@ -2985,7 +3005,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 		for (; isspace(*arg); arg++);
 
 		if (!strcmp(arg,"si") && strcmp("Guest",GET_NAME(d->character)) ) {
-			char buf[256];
 
 			mudlog( LOG_PLAYERS, "%s just killed self!",
 					GET_NAME( d->character ) );
@@ -3492,7 +3511,7 @@ void check_affected(char* msg) {
 			for(hjp=c->affected; hjp; hjp=hjp->next)
 				if(hjp->type > MAX_EXIST_SPELL || hjp->type < 0) {
 					sprintf(buf,"bogus hjp->type for (%s).", GET_NAME(c));
-					fprintf(f,buf);
+					fprintf(f,"%s",buf);
 					/*          abort();    in test site this will be ok.. */
 				}
 

@@ -158,7 +158,7 @@ int calc_costopq(int i, int p) {
 	return totpq;
 }
 
-int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type) {
+MOBSPECIAL_FUNC(EditMaster) {
 	char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
 	int cost, ave;
 	struct char_data* vict;

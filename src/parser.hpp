@@ -32,14 +32,14 @@ struct radix_list {
 extern struct radix_list radix_head[27];
 extern byte HashTable[256];
 
-void AddCommand(char* name, command_func,int number, int min_pos, int min_lev);
+void AddCommand(const char* name, command_func,int number, int min_pos, int min_lev);
 void AddNodeTail(NODE* n, int length, int radix) ;
 char* FindCommandName(int num) ;
-int FindCommandNumber(char* cmd) ;
-NODE* FindValidCommand(char* name) ;
+int FindCommandNumber(const char* cmd) ;
+NODE* FindValidCommand(const char* name) ;
 void GenerateHash() ;
 void InitRadix() ;
-NODE* SearchForNodeByName(NODE* head, char* name, int len) ;
+NODE* SearchForNodeByName(NODE* head, const char* name, int len) ;
 } // namespace Alarmud
 #endif // __PARSER_HPP
 

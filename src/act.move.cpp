@@ -533,12 +533,12 @@ void DisplayGroupMove(struct char_data* ch, int dir, int was_in, int total) {
 	DisplayMove(ch, dir, was_in, total);
 }
 
-void do_move(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_move) {
 	SetStatus("do_move started", GET_NAME_DESC(ch), ch);
 
 	if (RIDDEN(ch)) {
 		if (RideCheck(RIDDEN(ch), 0)) {
-			do_move(RIDDEN(ch), argument, cmd);
+			do_move(RIDDEN(ch), arg, cmd);
 			SetStatus("Returning from move 1", NULL);
 			return;
 		} else {
@@ -901,7 +901,7 @@ int canScythe(struct char_data* ch) {
 	}
 }
 
-void do_open_exit(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_open_exit) {
 
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
@@ -962,7 +962,7 @@ void do_open_exit(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 
-	argument_interpreter(argument, type, dir);
+	argument_interpreter(arg, type, dir);
 
 	if (!*type) {
 		//ACIDUS 2003 - skill miner
@@ -1064,18 +1064,18 @@ void do_open_exit(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_open(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_open) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct obj_data* obj;
 	struct char_data* victim;
 	struct room_direction_data* exitp;
 
-	argument_interpreter(argument, type, dir);
+	argument_interpreter(arg, type, dir);
 
 	if (!*type) {
 		send_to_char("Cosa vuoi aprire ?\n\r", ch);
-	} else if (generic_find(argument, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
+	} else if (generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 			&obj)) {
 
 		/* this is an object */
@@ -1117,7 +1117,7 @@ void do_open(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_close(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_close) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct room_direction_data* back, *exitp;
@@ -1125,11 +1125,11 @@ void do_close(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* victim;
 	struct room_data* rp;
 
-	argument_interpreter(argument, type, dir);
+	argument_interpreter(arg, type, dir);
 
 	if (!*type) {
 		send_to_char("Cosa vuoi chiudere?\n\r", ch);
-	} else if (generic_find(argument, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
+	} else if (generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 			&obj)) {
 
 		/* this is an object */
@@ -1250,18 +1250,18 @@ void raw_lock_door(struct char_data* ch, struct room_direction_data* exitp,
 	}
 }
 
-void do_lock(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_lock) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
 	struct room_direction_data* exitp;
 	struct obj_data* obj;
 	struct char_data* victim;
 
-	argument_interpreter(argument, type, dir);
+	argument_interpreter(arg, type, dir);
 
 	if (!*type) {
 		send_to_char("Cosa vuoi chiudere a chiave ?\n\r", ch);
-	} else if (generic_find(argument, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
+	} else if (generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 			&obj)) {
 
 		/* this is an object */
@@ -1312,18 +1312,18 @@ void do_lock(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_unlock(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_unlock) {
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
 	struct room_direction_data* exitp;
 	struct obj_data* obj;
 	struct char_data* victim;
 
-	argument_interpreter(argument, type, dir);
+	argument_interpreter(arg, type, dir);
 
 	if (!*type) {
 		send_to_char("Che cosa vuaoi aprire ?\n\r", ch);
-	} else if (generic_find(argument, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
+	} else if (generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 			&obj)) {
 
 		/* this is an object */
@@ -1371,7 +1371,7 @@ void do_unlock(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_pick(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_pick) {
 	byte percent;
 	int door;
 	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
@@ -1379,7 +1379,7 @@ void do_pick(struct char_data* ch, const char* argument, int cmd) {
 	struct obj_data* obj;
 	struct char_data* victim;
 
-	argument_interpreter(argument, type, dir);
+	argument_interpreter(arg, type, dir);
 
 	percent = number(1, 101); /* 101% is a complete failure */
 
@@ -1402,7 +1402,7 @@ void do_pick(struct char_data* ch, const char* argument, int cmd) {
 
 	if (!*type) {
 		send_to_char("Che cosa vuoi forzare ?\n\r", ch);
-	} else if (generic_find(argument, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
+	} else if (generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 			&obj)) {
 
 		/* this is an object */
@@ -1454,13 +1454,13 @@ void do_pick(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_enter(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_enter) {
 	int door;
 	char buf[MAX_INPUT_LENGTH], tmp[MAX_STRING_LENGTH];
 	struct room_direction_data* exitp;
 	struct room_data* rp;
 
-	one_argument(argument, buf);
+	one_argument(arg, buf);
 
 	if (*buf) { /* an argument was supplied, search for door keyword */
 		for (door = 0; door <= 5; door++)
@@ -1486,7 +1486,7 @@ void do_enter(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_leave(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_leave) {
 	int door;
 	struct room_direction_data* exitp;
 	struct room_data* rp;
@@ -1505,7 +1505,7 @@ void do_leave(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_stand(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_stand) {
 	/* can't stand while memorizing! */
 	if (affected_by_spell(ch, SKILL_MEMORIZE)) {
 		affect_from_char(ch, SKILL_MEMORIZE);
@@ -1554,7 +1554,7 @@ void do_stand(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_sit(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_sit) {
 	switch (GET_POS(ch)) {
 	case POSITION_STANDING:
 		act("Ti siedi.", FALSE, ch, 0, 0, TO_CHAR);
@@ -1588,7 +1588,7 @@ void do_sit(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_rest(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_rest) {
 	switch (GET_POS(ch)) {
 	case POSITION_STANDING:
 		act("Ti fermi a riposare le stanche membra.", FALSE, ch, 0, 0,
@@ -1626,7 +1626,7 @@ void do_rest(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_sleep(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_sleep) {
 
 	switch (GET_POS(ch)) {
 	case POSITION_STANDING:
@@ -1655,17 +1655,17 @@ void do_sleep(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_wake(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_wake) {
 	struct char_data* tmp_char;
-	char arg[MAX_STRING_LENGTH];
+	char tmp[MAX_STRING_LENGTH];
 
-	one_argument(argument, arg);
-	if (*arg) {
+	one_argument(arg, tmp);
+	if (*tmp) {
 		if (GET_POS(ch) == POSITION_SLEEPING) {
 			act("Non puoi svegliare la gente se tu stess$b stai dormendo !",
 			FALSE, ch, 0, 0, TO_CHAR);
 		} else {
-			tmp_char = get_char_room_vis(ch, arg);
+			tmp_char = get_char_room_vis(ch, tmp);
 			if (tmp_char) {
 				if (tmp_char == ch) {
 					act(
@@ -1716,11 +1716,11 @@ void do_wake(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_follow(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_follow) {
 	char name[160];
 	struct char_data* leader;
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (*name) {
 		if (!(leader = get_char_room_vis(ch, name))) {
@@ -1764,11 +1764,11 @@ void do_follow(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_run(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_run) {
 	char buff[MAX_INPUT_LENGTH];
 	int keyno, was_in;
 	struct room_direction_data* exitdata;
-	only_argument(argument, buff);
+	only_argument(arg, buff);
 
 	if (!*buff) {
 		send_to_char("In quale direzione vuoi correre ?.\n\r", ch);

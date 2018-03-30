@@ -535,7 +535,7 @@ struct char_data* find_mailman(struct char_data* ch) {
 }
 
 
-void        postmaster_send_mail(struct char_data* ch, int cmd, char* arg) {
+void postmaster_send_mail(struct char_data* ch, int cmd, const char* arg) {
 	struct char_data* mailman;
 	char        buf[MAX_BUF_LENGTH], recipient[MAX_INPUT_LENGTH], *tmp;
 
@@ -564,7 +564,7 @@ void        postmaster_send_mail(struct char_data* ch, int cmd, char* arg) {
 		return;
 	}
 
-	_parse_name(arg, recipient);
+	parse_name(arg, recipient);
 
 	if( !find_name( recipient ) ) {
 		act("$n tells you, 'Never heard of that person!'",
@@ -590,7 +590,7 @@ void        postmaster_send_mail(struct char_data* ch, int cmd, char* arg) {
 }
 
 
-void        postmaster_check_mail(struct char_data* ch, int cmd, char* arg) {
+void        postmaster_check_mail(struct char_data* ch, int cmd, const char* arg) {
 	struct char_data* mailman;
 	char        buf[200], recipient[100], *tmp;
 
@@ -598,7 +598,7 @@ void        postmaster_check_mail(struct char_data* ch, int cmd, char* arg) {
 	if (!(mailman = find_mailman(ch)))
 	{ return; }
 
-	_parse_name(GET_NAME(ch), recipient);
+	parse_name(GET_NAME(ch), recipient);
 
 	for (tmp = recipient; *tmp; tmp++)
 	{ *tmp = tolower(*tmp); }
@@ -611,7 +611,7 @@ void        postmaster_check_mail(struct char_data* ch, int cmd, char* arg) {
 }
 
 
-void        postmaster_receive_mail(struct char_data* ch, int cmd, char* arg) {
+void        postmaster_receive_mail(struct char_data* ch, int cmd, const char* arg) {
 	struct char_data* mailman;
 	char        buf[200], recipient[100], *tmp;
 	struct obj_data* tmp_obj;
@@ -620,7 +620,7 @@ void        postmaster_receive_mail(struct char_data* ch, int cmd, char* arg) {
 	if (!(mailman = find_mailman(ch)))
 	{ return; }
 
-	_parse_name(GET_NAME(ch), recipient);
+	parse_name(GET_NAME(ch), recipient);
 
 	for (tmp = recipient; *tmp; tmp++)
 	{ *tmp = tolower(*tmp); }

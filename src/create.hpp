@@ -8,9 +8,9 @@
 #define __CREATE_HPP
 namespace Alarmud {
 void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg, int type);
-void do_redit(struct char_data* ch, char* arg, int cmd);
+ACTION_FUNC(do_redit);
 void UpdateRoomMenu(struct char_data* ch);
-void RoomEdit(struct char_data* ch, char* arg);
+void RoomEdit(struct char_data* ch, const char* arg);
 void ChangeRoomName(struct room_data* rp, struct char_data* ch, const char* arg, int type);
 void ChangeRoomDesc(struct room_data* rp, struct char_data* ch, const char* arg, int type);
 void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg, int type);

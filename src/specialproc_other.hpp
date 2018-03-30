@@ -8,11 +8,11 @@
 /***************************  Local    include ************************************/
 #include "typedefs.hpp"
 namespace Alarmud {
-struct special_proc_func_entry {
+struct OtherSpecialProcEntry {
 	const char* nome;
 	genericspecial_func proc;
 };
-extern struct special_proc_entry otherproc[];
+extern struct OtherSpecialProcEntry otherproc[];
 } // namespace Alarmud
 #endif /* __SPECIALPROC_HPP */
 

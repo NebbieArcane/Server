@@ -199,7 +199,7 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
 
 
 
-void do_medit(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_medit) {
 	char name[20];
 	struct char_data* mob;
 	int i;
@@ -214,13 +214,13 @@ void do_medit(struct char_data* ch,const char* argument, int cmd) {
 	{ return; }      /* the ch->desc->str field will cause problems... */
 
 
-	for (i = 0; *(argument + i) == ' '; i++);
-	if (!*(argument + i)) {
+	for (i = 0; *(arg + i) == ' '; i++);
+	if (!*(arg + i)) {
 		send_to_char("Medit who?\n\r", ch);
 		return;
 	}
 
-	argument = one_argument(argument, name);
+	arg = one_argument(arg, name);
 
 	if (!(mob = (struct char_data*)get_char_room_vis(ch, name)))         {
 		send_to_char("I don't see that mobile here.\n\r",ch);

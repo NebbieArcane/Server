@@ -70,12 +70,12 @@ static bool is_present (int chi, const char* nome) { // SALVO riscritta
 	return FALSE;
 }
 
-void do_auction_int (struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_auction_int) {
 	OBJ_DATA* obj;
 	char arg1[MAX_INPUT_LENGTH];
 	char buf[MAX_STRING_LENGTH];
 
-	argument = one_argument (argument, arg1);
+	arg = one_argument (arg, arg1);
 
 	if (IS_NPC(ch)) /* NPC can be extracted at any time and thus can't auction! */
 	{ return; }
@@ -373,14 +373,14 @@ int advatoi (const char* s)
 	   works:) (read: it seems to work:)
 	*/
 
-	char string[MAX_INPUT_LENGTH]; /* a buffer to hold a copy of the argument */
-	char* stringptr = string; /* a pointer to the buffer so we can move around */
+	char buffer[MAX_INPUT_LENGTH]; /* a buffer to hold a copy of the argument */
+	char* stringptr = buffer; /* a pointer to the buffer so we can move around */
 	char tempstring[2];       /* a small temp buffer to pass to atoi*/
 	int number = 0;           /* number to be returned */
 	int multiplier = 0;       /* multiplier used to get the extra digits right */
 
 
-	strcpy (string,s);        /* working copy */
+	strcpy (buffer,s);        /* working copy */
 
 	while ( isdigit (*stringptr)) { /* as long as the current character is a digit */
 		strncpy (tempstring,stringptr,1);           /* copy first digit */
@@ -424,10 +424,10 @@ int advatoi (const char* s)
 int parsebet (const int currentbet, const char* argument) {
 
 	int newbet = 0;                /* a variable to temporarily hold the new bet */
-	char string[MAX_INPUT_LENGTH]; /* a buffer to modify the bet string */
-	char* stringptr = string;      /* a pointer we can move around */
+	char buffer[MAX_INPUT_LENGTH]; /* a buffer to modify the bet string */
+	char* stringptr = buffer;      /* a pointer we can move around */
 
-	strcpy (string,argument);      /* make a work copy of argument */
+	strcpy (buffer,argument);      /* make a work copy of argument */
 
 
 	if (*stringptr) {             /* check for an empty string */

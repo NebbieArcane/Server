@@ -97,7 +97,7 @@ int is_ok(struct char_data* keeper, struct char_data* ch, int shop_nr) {
 		return(TRUE);
 	};
 }
-long obj_cost(struct obj_data* temp1,struct char_data* ch,int shop_nr,int vende) {
+long object_cost(struct obj_data* temp1,struct char_data* ch,int shop_nr,int vende) {
 	long cost;
 	double profitto;
 	cost=0;
@@ -223,7 +223,7 @@ void shopping_buy( char* arg, struct char_data* ch,
 		extract_obj(temp1);
 		return;
 	}
-	actualcost=(long)(obj_cost(temp1,ch,shop_nr,0)* mult);
+	actualcost=(long)(object_cost(temp1,ch,shop_nr,0)* mult);
 	if ( GET_GOLD(ch) < actualcost) {
 		sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
 		do_tell(keeper,buf,19);
@@ -349,7 +349,7 @@ void shopping_sell( char* arg, struct char_data* ch,
 		do_tell(keeper,buf,19);
 		return;
 	}
-	actualcost = obj_cost(temp1,ch,shop_nr,1);
+	actualcost = object_cost(temp1,ch,shop_nr,1);
 
 	if ( GET_GOLD(keeper) < actualcost) {
 		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
@@ -423,7 +423,7 @@ void shopping_value( char* arg, struct char_data* ch,
 	}
 
 	sprintf(buf,"%s I'll give you %d gold coins for that!",
-			GET_NAME(ch),(int)(obj_cost(temp1,ch,shop_nr,1)));
+			GET_NAME(ch),(int)(object_cost(temp1,ch,shop_nr,1)));
 	do_tell(keeper,buf,19);
 
 	return;
@@ -460,7 +460,7 @@ void shopping_list( char* arg, struct char_data* ch,
 	found_obj = FALSE;
 	if(keeper->carrying)
 		for(temp1=keeper->carrying; temp1; temp1 = temp1->next_content) {
-			actualcost=obj_cost(temp1,ch,shop_nr,0);
+			actualcost=object_cost(temp1,ch,shop_nr,0);
 
 			if((CAN_SEE_OBJ(ch,temp1)) && (temp1->obj_flags.cost>0)) {
 				found_obj = TRUE;

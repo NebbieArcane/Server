@@ -254,8 +254,7 @@ void SayQuest( struct char_data* pCh, const char* apchQuest[] ) {
 	}
 }
 
-int Valik( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-		   int type ) {
+MOBSPECIAL_FUNC(Valik) {
 
 #define Valik_Wandering   0
 #define Valik_Meditating  1
@@ -520,8 +519,7 @@ struct GuardianListNames* NewGuardianList() {
 		pNewList->num_names = 0;
 	}
 	else
-		mudlog( LOG_SYSERR, "Problemi nell'allocare memoria in NewGuardianList"
-				"(rhyodin.c)." );
+		mudlog( LOG_SYSERR, "Problemi nell'allocare memoria in NewGuardianList");
 	return pNewList;
 }
 
@@ -539,19 +537,21 @@ void FreeGuardianList( struct GuardianListNames* pGList ) {
 	int i;
 	if( pGList ) {
 		for( i = 0; i < pGList->num_names; i++ ) {
-			if( pGList->names[ i ] )
-			{ free( pGList->names[ i ] ); }
+			if( pGList->names[ i ] ) {
+				free( pGList->names[ i ] );
+			}
 		}
-		if( pGList->names )
-		{ free( pGList->names ); }
+		if( pGList->names ) {
+			free( pGList->names );
+		}
 		free( pGList );
 	}
-	else
-	{ mudlog( LOG_SYSERR, "pGList == NULL in FreeGuardianList(rhyodin)" ); }
+	else{
+		mudlog( LOG_SYSERR, "pGList == NULL" );
+	}
 }
 
-int guardian( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type) {
+MOBSPECIAL_FUNC(guardian) {
 #define RHYODIN_FILE "rhyodin"
 #define Necklace 21122
 #define RHYODIN_PREMIO 5000000
@@ -742,8 +742,7 @@ int guardian( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
   Viene attaccata al ragno nella cava dei trigloditi.
 ****************************************************************************/
 
-int web_slinger( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(web_slinger) {
 	struct char_data* vict;
 
 	if( ( cmd || !AWAKE(ch) ) || IS_AFFECTED( ch, AFF_BLIND ) )
@@ -781,8 +780,7 @@ int web_slinger( struct char_data* ch, int cmd, char* arg,
   so don't have a lot of wandering NPCs around it.
 ***************************************************************************/
 
-int trapper( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			 int type ) {
+MOBSPECIAL_FUNC(trapper) {
 	struct char_data* tch;
 
 	if( cmd || !AWAKE(ch) )
@@ -834,8 +832,7 @@ int trapper( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
   Inoltre, se non stanno combattendo, attaccano il piu` buono nella stanza.
 ***************************************************************************/
 
-int troguard( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type) {
+MOBSPECIAL_FUNC(troguard) {
 	struct char_data* tch, *good;
 	int max_good;
 
@@ -888,8 +885,7 @@ int troguard( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
   Il cuoco dei trogloditi se trova un animale lo attacca. Se c'e` un corpo
   lo mette nella pentola.
 *****************************************************************************/
-int trogcook( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type) {
+MOBSPECIAL_FUNC(trogcook) {
 	struct char_data* tch;
 	struct obj_data* corpse;
 	char buf[MAX_INPUT_LENGTH];
@@ -930,8 +926,7 @@ int trogcook( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 #define DEITY 21124
 #define DEITY_NAME "golgar"
 
-int shaman( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			int type ) {
+MOBSPECIAL_FUNC(shaman) {
 	struct char_data* god, *tch;
 
 	if( cmd || !AWAKE(ch) )
@@ -972,8 +967,7 @@ int shaman( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 
 #define SHAMAN_NAME "shaman"
 
-int golgar( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			int type ) {
+MOBSPECIAL_FUNC(golgar) {
 	struct char_data* shaman, *tch;
 
 	if(cmd)
@@ -1058,69 +1052,68 @@ const char* lattimore_descs[] = {
 #define CrowBar   21114
 #define PostKey   21150
 
-int lattimore( struct char_data* pChar, int nCmd, char* szArg,
-			   struct char_data* pMob, int nType ) {
+MOBSPECIAL_FUNC(lattimore) {
 	struct char_data* pTarget;
 	struct obj_data* pObj;
 	char szObjName[ 80 ], szPlayerName[ 80 ];
 	int nDir;
 
-	pMob->lStartRoom = 0;
+	mob->lStartRoom = 0;
 
-	if( nType == EVENT_TICK ) {
-		if( pMob->master ) {
-			FreeList( (CharElem**)&pMob->act_ptr );
+	if( type == EVENT_TICK ) {
+		if( mob->master ) {
+			FreeList( (CharElem**)&mob->act_ptr );
 			return FALSE;
 		}
 
-		if( !AWAKE( pMob ) )
+		if( !AWAKE( mob ) )
 		{ return FALSE; }
 
-		if( pMob->specials.fighting ) {
-			if( !IS_MOB( pMob->specials.fighting ) &&
-					CAN_SEE( pMob, pMob->specials.fighting ) )
-			{ AddIntData( (CharElem**)&pMob->act_ptr, pMob->specials.fighting, -5 ); }
+		if( mob->specials.fighting ) {
+			if( !IS_MOB( mob->specials.fighting ) &&
+					CAN_SEE( mob, mob->specials.fighting ) )
+			{ AddIntData( (CharElem**)&mob->act_ptr, mob->specials.fighting, -5 ); }
 
-			if( GetIntData( (CharElem*)pMob->act_ptr, pMob->specials.fighting ) < 0 ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 6 ] );
-				pMob->generic = Lattimore_Run;
+			if( GetIntData( (CharElem*)mob->act_ptr, mob->specials.fighting ) < 0 ) {
+				strcpy( mob->player.long_descr, lattimore_descs[ 6 ] );
+				mob->generic = Lattimore_Run;
 			}
 
 			return FALSE;
 		}
 
-		switch( pMob->generic ) {
+		switch( mob->generic ) {
 		/* This case is used at startup, and after player interaction*/
 		case Lattimore_Initialize:
 
 			if( time_info.hours < 5 || time_info.hours > 21 ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 3 ] );
-				if( pMob->in_room != Barracks ) {
-					char_from_room( pMob );
-					char_to_room( pMob, Barracks);
+				strcpy( mob->player.long_descr, lattimore_descs[ 3 ] );
+				if( mob->in_room != Barracks ) {
+					char_from_room( mob );
+					char_to_room( mob, Barracks);
 				}
-				pMob->generic = Lattimore_Hiding;
+				mob->generic = Lattimore_Hiding;
 			}
 			else if( time_info.hours < 11 ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 4 ] );
-				if( pMob->in_room != Barracks ) {
-					char_from_room( pMob );
-					char_to_room( pMob, Barracks );
+				strcpy( mob->player.long_descr, lattimore_descs[ 4 ] );
+				if( mob->in_room != Barracks ) {
+					char_from_room( mob );
+					char_to_room( mob, Barracks );
 				}
-				pMob->generic = Lattimore_Sleeping;
+				mob->generic = Lattimore_Sleeping;
 			}
 			else if( time_info.hours < 16 ||
 					 ( time_info.hours > 17 && time_info.hours < 22 ) ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 0 ] );
-				if( pMob->in_room != Barracks ) {
-					char_from_room( pMob );
-					char_to_room( pMob, Barracks );
+				strcpy( mob->player.long_descr, lattimore_descs[ 0 ] );
+				if( mob->in_room != Barracks ) {
+					char_from_room( mob );
+					char_to_room( mob, Barracks );
 				}
-				pMob->generic = Lattimore_Lockers;
+				mob->generic = Lattimore_Lockers;
 			}
 			else if( time_info.hours < 19 ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 1 ] );
-				pMob->generic = Lattimore_FoodRun;
+				strcpy( mob->player.long_descr, lattimore_descs[ 1 ] );
+				mob->generic = Lattimore_FoodRun;
 			}
 			return FALSE;
 			break;
@@ -1128,40 +1121,40 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 		case Lattimore_Lockers:
 
 			if( time_info.hours == 17 ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 1 ] );
-				pMob->generic = Lattimore_FoodRun;
+				strcpy( mob->player.long_descr, lattimore_descs[ 1 ] );
+				mob->generic = Lattimore_FoodRun;
 			}
 			else if( time_info.hours > 21 || time_info.hours < 5 ) {
 				act( "$n alza la testa come per ascoltare qualcosa.",
-					 FALSE, pMob, 0, 0, TO_ROOM);
+					 FALSE, mob, 0, 0, TO_ROOM);
 				act( "$n, con lo sguardo spaventato, si infila sotto un letto.",
-					 FALSE, pMob, 0, 0, TO_ROOM);
-				strcpy( pMob->player.long_descr, lattimore_descs[ 3 ] );
-				pMob->generic = Lattimore_Hiding;
+					 FALSE, mob, 0, 0, TO_ROOM);
+				strcpy( mob->player.long_descr, lattimore_descs[ 3 ] );
+				mob->generic = Lattimore_Hiding;
 			}
 			return FALSE;
 			break;
 
 		case Lattimore_FoodRun:
 
-			if( pMob->in_room != Kitchen ) {
-				nDir = choose_exit_global( pMob->in_room, Kitchen, 100 );
+			if( mob->in_room != Kitchen ) {
+				nDir = choose_exit_global( mob->in_room, Kitchen, 100 );
 				if( nDir < 0 ) {
-					do_say( pMob, "Ragazzi, mi sono perso!'", 0 );
-					nDir = choose_exit_global( pMob->in_room, Barracks, 100 );
+					do_say( mob, "Ragazzi, mi sono perso!'", 0 );
+					nDir = choose_exit_global( mob->in_room, Barracks, 100 );
 					if( nDir < 0 ) {
-						char_from_room( pMob );
-						char_to_room( pMob, Barracks );
+						char_from_room( mob );
+						char_to_room( mob, Barracks );
 					}
 				}
 				else
-				{ go_direction( pMob, nDir ); }
+				{ go_direction( mob, nDir ); }
 			}
 			else {
 				act( "$n prende una pentola dall'armadio ed inizia a farsi uno "
-					 "stufato.", FALSE, pMob, 0, 0, TO_ROOM );
-				strcpy( pMob->player.long_descr, lattimore_descs[ 2 ] );
-				pMob->generic = Lattimore_Eating;
+					 "stufato.", FALSE, mob, 0, 0, TO_ROOM );
+				strcpy( mob->player.long_descr, lattimore_descs[ 2 ] );
+				mob->generic = Lattimore_Eating;
 			}
 			return FALSE;
 			break;
@@ -1170,39 +1163,39 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 
 			if( time_info.hours > 18 ) {
 				act( "$n si frega lo stomaco e sorride soddisfatt$b.",
-					 FALSE, pMob, 0, 0, TO_ROOM);
-				strcpy( pMob->player.long_descr, lattimore_descs[ 1 ] );
-				pMob->generic = Lattimore_GoHome;
+					 FALSE, mob, 0, 0, TO_ROOM);
+				strcpy( mob->player.long_descr, lattimore_descs[ 1 ] );
+				mob->generic = Lattimore_GoHome;
 			}
 			else if( !number( 0, 2 ) ) {
 				act( "$n prende del pane dal forno.",
-					 FALSE, pMob, 0, 0, TO_ROOM );
+					 FALSE, mob, 0, 0, TO_ROOM );
 				act( "$n intinge il pane nello stufato e se lo mangia.",
-					 FALSE, pMob, 0, 0, TO_ROOM );
+					 FALSE, mob, 0, 0, TO_ROOM );
 			}
 			return FALSE;
 			break;
 
 		case Lattimore_GoHome:
 
-			if( pMob->in_room != Barracks ) {
-				nDir = choose_exit_global( pMob->in_room, Barracks, 100 );
+			if( mob->in_room != Barracks ) {
+				nDir = choose_exit_global( mob->in_room, Barracks, 100 );
 				if( nDir < 0 ) {
-					do_say( pMob, "Ragazzi, mi sono perso!", 0 );
-					nDir = choose_exit_global( pMob->in_room, Kitchen, 100 );
+					do_say( mob, "Ragazzi, mi sono perso!", 0 );
+					nDir = choose_exit_global( mob->in_room, Kitchen, 100 );
 					if( nDir < 0 ) {
-						char_from_room( pMob );
-						char_to_room( pMob, Barracks );
+						char_from_room( mob );
+						char_to_room( mob, Barracks );
 					}
 				}
 				else
-				{ go_direction( pMob, nDir ); }
+				{ go_direction( mob, nDir ); }
 			}
 			else {
 				act( "$n tira fuori un grimaldello e prova ad aprire un'altro "
-					 "armadietto.", FALSE, pMob, 0, 0, TO_ROOM );
-				strcpy( pMob->player.long_descr, lattimore_descs[ 0 ] );
-				pMob->generic = Lattimore_Lockers;
+					 "armadietto.", FALSE, mob, 0, 0, TO_ROOM );
+				strcpy( mob->player.long_descr, lattimore_descs[ 0 ] );
+				mob->generic = Lattimore_Lockers;
 			}
 			return FALSE;
 			break;
@@ -1210,8 +1203,8 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 		case Lattimore_Hiding:
 
 			if( time_info.hours > 5 && time_info.hours < 22 ) {
-				strcpy( pMob->player.long_descr, lattimore_descs[ 4 ] );
-				pMob->generic = Lattimore_Sleeping;
+				strcpy( mob->player.long_descr, lattimore_descs[ 4 ] );
+				mob->generic = Lattimore_Sleeping;
 			}
 			return FALSE;
 			break;
@@ -1220,50 +1213,50 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 
 			if( time_info.hours > 11 ) {
 				act( "$n si sveglia e si stiracchia con uno sbadiglio.",
-					 FALSE, pMob, 0, 0, TO_ROOM );
+					 FALSE, mob, 0, 0, TO_ROOM );
 				act( "$n tira fuori un grimaldello e prova ad aprire un altro "
-					 "armadietto.", FALSE, pMob, 0, 0, TO_ROOM );
-				strcpy( pMob->player.long_descr, lattimore_descs[ 0 ] );
-				pMob->generic = Lattimore_Lockers;
+					 "armadietto.", FALSE, mob, 0, 0, TO_ROOM );
+				strcpy( mob->player.long_descr, lattimore_descs[ 0 ] );
+				mob->generic = Lattimore_Lockers;
 			}
 			return FALSE;
 			break;
 
 		case Lattimore_Run:
 
-			if( pMob->in_room != Storeroom && pMob->in_room != Trap ) {
-				if( pMob->in_room == EarthQ )
+			if( mob->in_room != Storeroom && mob->in_room != Trap ) {
+				if( mob->in_room == EarthQ )
 				{ return FALSE; }
-				nDir = choose_exit_global( pMob->in_room, Storeroom, 100 );
+				nDir = choose_exit_global( mob->in_room, Storeroom, 100 );
 				if( nDir < 0 ) {
-					do_say( pMob, "Ragazzi, mi sono perso!'", 0 );
-					nDir = choose_exit_global( pMob->in_room, Kitchen, 100 );
+					do_say( mob, "Ragazzi, mi sono perso!'", 0 );
+					nDir = choose_exit_global( mob->in_room, Kitchen, 100 );
 					if( nDir < 0 ) {
-						char_from_room( pMob );
-						char_to_room( pMob, Barracks );
+						char_from_room( mob );
+						char_to_room( mob, Barracks );
 					}
 				}
 				else
-				{ go_direction( pMob, nDir ); }
+				{ go_direction( mob, nDir ); }
 			}
-			else if( pMob->in_room == Trap ) {
+			else if( mob->in_room == Trap ) {
 				static int nTrapCounter = 0;
-				if( !IS_AFFECTED( pMob, AFF_FLYING ) ) {
+				if( !IS_AFFECTED( mob, AFF_FLYING ) ) {
 					/* Get him up off the floor */
 					act( "$n sogghigna e sale velocemente su un barile.",
-						 FALSE, pMob, 0, 0, TO_ROOM );
-					SET_BIT( pMob->specials.affected_by, AFF_FLYING );
-					strcpy( pMob->player.long_descr, lattimore_descs[ 5 ] );
+						 FALSE, mob, 0, 0, TO_ROOM );
+					SET_BIT( mob->specials.affected_by, AFF_FLYING );
+					strcpy( mob->player.long_descr, lattimore_descs[ 5 ] );
 					nTrapCounter = 0;
 				}
 				else
 				{ nTrapCounter++; }
 				/* Wait a while, then go home */
 				if( nTrapCounter == 50 ) {
-					pMob->generic = Lattimore_GoHome;
-					REMOVE_BIT( pMob->specials.affected_by, AFF_FLYING );
-					strcpy( pMob->player.long_descr, lattimore_descs[ 1 ] );
-					go_direction( pMob, 1 );
+					mob->generic = Lattimore_GoHome;
+					REMOVE_BIT( mob->specials.affected_by, AFF_FLYING );
+					strcpy( mob->player.long_descr, lattimore_descs[ 1 ] );
+					go_direction( mob, 1 );
 				}
 			}
 			return FALSE;
@@ -1271,103 +1264,105 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 
 		case Lattimore_Item:
 
-			if( pMob->in_room != Conf ) {
-				nDir = choose_exit_global( pMob->in_room, Conf, 100 );
+			if( mob->in_room != Conf ) {
+				nDir = choose_exit_global( mob->in_room, Conf, 100 );
 				if( nDir < 0 ) {
-					do_say( pMob, "Ragazzi, mi sono perso!", 0 );
-					nDir = choose_exit_global( pMob->in_room, Barracks, 100 );
+					do_say( mob, "Ragazzi, mi sono perso!", 0 );
+					nDir = choose_exit_global( mob->in_room, Barracks, 100 );
 					if( nDir < 0 ) {
-						char_from_room( pMob );
-						char_to_room( pMob, Barracks );
+						char_from_room( mob );
+						char_to_room( mob, Barracks );
 					}
 				}
 				else
-				{ go_direction( pMob, nDir ); }
+				{ go_direction( mob, nDir ); }
 			}
 			else {
-				for( pTarget = real_roomp( pMob->in_room )->people; pTarget;
+				for( pTarget = real_roomp( mob->in_room )->people; pTarget;
 						pTarget = pTarget->next_in_room ) {
-					if( !IS_NPC( pTarget ) && CAN_SEE( pMob, pTarget ) ) {
-						if( GetIntData( (CharElem*)pMob->act_ptr, pTarget ) >= 20 ) {
+					if( !IS_NPC( pTarget ) && CAN_SEE( mob, pTarget ) ) {
+						if( GetIntData( (CharElem*)mob->act_ptr, pTarget ) >= 20 ) {
 							act( "$n si infila sotto il grande tavolo.",
-								 FALSE, pMob, 0, 0, TO_ROOM );
+								 FALSE, mob, 0, 0, TO_ROOM );
 							pObj = read_object( PostKey, VIRTUAL );
 							if( ( IS_CARRYING_N( pTarget ) + 1 ) < CAN_CARRY_N( pTarget ) ) {
 								act( "$N esce fuori da sotto il tavolo e ti da $p.",
-									 FALSE, pTarget, pObj, pMob, TO_CHAR );
+									 FALSE, pTarget, pObj, mob, TO_CHAR );
 								act( "$n esce fuori da sotto il tavolo con $p che da a $N.",
-									 FALSE, pMob, pObj, pTarget, TO_NOTVICT );
+									 FALSE, mob, pObj, pTarget, TO_NOTVICT );
 								obj_to_char( pObj, pTarget );
 							}
 							else {
 								act( "$n esce fuori da sotto il tavolo e getta $p per $N.",
-									 FALSE, pMob, pObj, pTarget, TO_ROOM );
-								obj_to_room( pObj, pMob->in_room );
+									 FALSE, mob, pObj, pTarget, TO_ROOM );
+								obj_to_room( pObj, mob->in_room );
 							}
-							RemoveFromList( (CharElem**)&pMob->act_ptr, pTarget );
+							RemoveFromList( (CharElem**)&mob->act_ptr, pTarget );
 							break;
 						}
 					}
 				}
 				/* Dude's not here - oh well, go home. */
-				pMob->generic = Lattimore_GoHome;
+				mob->generic = Lattimore_GoHome;
 			}
 			return FALSE;
 			break;
 
 		default:
-			pMob->generic = Lattimore_Initialize;
+			mob->generic = Lattimore_Initialize;
 			return FALSE;
 			break;
 
 		}
 	}
-	else if( nType == EVENT_COMMAND && nCmd == CMD_GIVE ) {
-		szArg = one_argument( szArg, szObjName );
+	else if( type == EVENT_COMMAND && cmd == CMD_GIVE ) {
+		arg = one_argument( arg, szObjName );
 		if( *szObjName &&
-				( pObj = get_obj_in_list_vis( pChar, szObjName, pChar->carrying ) ) ) {
-			only_argument( szArg, szPlayerName );
-			if( *szPlayerName && get_char_room_vis( pChar, szPlayerName ) == pMob ) {
-				act( "Dai $p a $N.", TRUE, pChar, pObj, pMob, TO_CHAR );
-				act( "$n da` $p a $N.", TRUE, pChar, pObj, pMob, TO_ROOM );
+				( pObj = get_obj_in_list_vis( ch, szObjName, ch->carrying ) ) ) {
+			only_argument( arg, szPlayerName );
+			if( *szPlayerName && get_char_room_vis( ch, szPlayerName ) == mob ) {
+				act( "Dai $p a $N.", TRUE, ch, pObj, mob, TO_CHAR );
+				act( "$n da` $p a $N.", TRUE, ch, pObj, mob, TO_ROOM );
 
 				switch( pObj->obj_flags.type_flag ) {
 				case ITEM_FOOD:
 					if( pObj->obj_flags.value[ 3 ] ) {
 						act( "$n annusa $p e lo getta disgustat$b.",
-							 TRUE, pMob, pObj, 0, TO_ROOM );
+							 TRUE, mob, pObj, 0, TO_ROOM );
 						obj_from_char( pObj );
-						obj_to_room( pObj, pMob->in_room );
-						if( !IS_MOB( pChar ) && CAN_SEE( pMob, pChar) )
-						{ AddIntData( (CharElem**)&pMob->act_ptr, pChar, -5 ); }
+						obj_to_room( pObj, mob->in_room );
+						if( !IS_MOB( ch ) && CAN_SEE( mob, ch) )
+						{ AddIntData( (CharElem**)&mob->act_ptr, ch, -5 ); }
 						else
 						{ return TRUE; }
 					}
 					else {
 						act( "$n prende $p e lo ingoia affamat$b.",
-							 TRUE, pMob, pObj, 0, TO_ROOM );
+							 TRUE, mob, pObj, 0, TO_ROOM );
 						extract_obj( pObj );
-						if( !IS_MOB( pChar ) && CAN_SEE( pMob, pChar ) )
-						{ AddIntData( (CharElem**)&pMob->act_ptr, pChar, 4 ); }
+						if( !IS_MOB( ch ) && CAN_SEE( mob, ch ) )
+						{ AddIntData( (CharElem**)&mob->act_ptr, ch, 4 ); }
 						else
 						{ return TRUE; }
 					}
 					break;
 				case ITEM_KEY:
 					/* What he really wants */
-					if( pObj->item_number >= 0 &&
-							obj_index[ pObj->item_number ].iVNum == CrowBar ) {
-						act( "$n prende $p salta su e giu` contento.",
-							 TRUE, pMob, pObj, 0, TO_ROOM );
-						obj_from_char( pObj );
-						if( !pMob->equipment[ HOLD ] )
-						{ equip_char( pMob, pObj, HOLD ); }
-						else
-						{ obj_to_char( pObj, pMob ); }
-						if( !IS_MOB( pChar ) && CAN_SEE( pMob, pChar ) )
-						{ AddIntData( (CharElem**)&pMob->act_ptr, pChar, 20 ); }
-						else
-						{ return TRUE; }
+					if (pObj->item_number>= 0&& obj_index[ pObj->item_number ].iVNum == CrowBar) {
+						act("$n prende $p salta su e giu` contento.", TRUE, mob,pObj, 0, TO_ROOM);
+						obj_from_char(pObj);
+						if (!mob->equipment[HOLD]) {
+							equip_char(mob, pObj, HOLD);
+						}
+						else {
+							obj_to_char(pObj, mob);
+						}
+						if (!IS_MOB(ch) && CAN_SEE(mob, ch)) {
+							AddIntData((CharElem**) &mob->act_ptr, ch, 20);
+						}
+						else {
+							return TRUE;
+						}
 						break;
 					}
 					/* no break */
@@ -1376,29 +1371,29 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
 				   altro oggetto */
 				default:
 					/* Any other types of items */
-					act( "$n guarda a $p con curiosita`.", TRUE, pMob, pObj, 0, TO_ROOM );
-					if( !IS_MOB( pChar ) && CAN_SEE( pMob, pChar ) )
-					{ AddIntData( (CharElem**)&pMob->act_ptr, pChar, 1 ); }
+					act( "$n guarda a $p con curiosita`.", TRUE, mob, pObj, 0, TO_ROOM );
+					if( !IS_MOB( ch ) && CAN_SEE( mob, ch ) )
+					{ AddIntData( (CharElem**)&mob->act_ptr, ch, 1 ); }
 					else
 					{ return TRUE; }
 					break;
 				}
 				/* They gave something to him, and the status was affected,
 				   now we set the pointer according to the status value */
-				if( GetIntData( (CharElem*)pMob->act_ptr, pChar ) < 0 ) {
-					strcpy( pMob->player.long_descr, lattimore_descs[ 6 ] );
-					pMob->generic = Lattimore_Run;
+				if( GetIntData( (CharElem*)mob->act_ptr, ch ) < 0 ) {
+					strcpy( mob->player.long_descr, lattimore_descs[ 6 ] );
+					mob->generic = Lattimore_Run;
 				}
-				else if( GetIntData( (CharElem*)pMob->act_ptr, pChar ) >= 20 ) {
-					strcpy( pMob->player.long_descr, lattimore_descs[ 6 ] );
-					pMob->generic = Lattimore_Item;
+				else if( GetIntData( (CharElem*)mob->act_ptr, ch ) >= 20 ) {
+					strcpy( mob->player.long_descr, lattimore_descs[ 6 ] );
+					mob->generic = Lattimore_Item;
 				}
 				return TRUE;
 			}
 		}
 	}
-	else if( nType == EVENT_DEATH ) {
-		FreeList( (CharElem**)&pMob->act_ptr );
+	else if( type == EVENT_DEATH ) {
+		FreeList( (CharElem**)&mob->act_ptr );
 	}
 	return FALSE;
 }
@@ -1407,9 +1402,7 @@ int lattimore( struct char_data* pChar, int nCmd, char* szArg,
   Hai! Questo fa male. Mentre combatte casta chill touch, cone of cold o
   ice storm. Meglio evitarlo.
 ****************************************************************************/
-
-int coldcaster( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(coldcaster) {
 	struct char_data* vict;
 	byte lspell;
 	struct affected_type af;
@@ -1467,8 +1460,7 @@ int coldcaster( struct char_data* ch, int cmd, char* arg,
 
 }
 
-int behir( struct char_data* ch, int cmd, char* arg,
-		   struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(behir) {
 	struct char_data* vict;
 	byte lspell;
 
@@ -1525,8 +1517,7 @@ int behir( struct char_data* ch, int cmd, char* arg,
 	return(TRUE);
 }
 
-int ragno_intermittente( struct char_data* ch, int cmd, char* arg,
-						 struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(ragno_intermittente) {
 	struct char_data* vict;
 	struct affected_type af;
 	int i;
@@ -1594,7 +1585,7 @@ int ragno_intermittente( struct char_data* ch, int cmd, char* arg,
 	return FALSE;
 }
 
-int hit_sucker(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(hit_sucker) {
 	struct char_data* tar;
 	int i;
 
@@ -1636,7 +1627,7 @@ int hit_sucker(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	return FALSE;
 }
 
-int Ankheg(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(Ankheg) {
 	struct char_data* vict;
 
 	if (cmd || (type != EVENT_TICK) || !AWAKE(ch))
@@ -1667,35 +1658,34 @@ int Ankheg(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int 
 }
 
 
-int Orso_Bianco( struct char_data* pChar, int iCmd, char* szArg,
-				 struct char_data* pMob, int iType ) {
-	if( iType == EVENT_TICK ) {
-		if( pMob->specials.fighting && AWAKE( pMob ) ) {
-			struct char_data* pVictim = pMob->specials.fighting;
+MOBSPECIAL_FUNC(Orso_Bianco) {
+	if( type == EVENT_TICK ) {
+		if( mob->specials.fighting && AWAKE( mob ) ) {
+			struct char_data* pVictim = mob->specials.fighting;
 
-			if( GET_POS( pMob ) < POSITION_FIGHTING &&
-					GET_POS( pMob ) > POSITION_STUNNED ) {
-				StandUp( pMob );
+			if( GET_POS( mob ) < POSITION_FIGHTING &&
+					GET_POS( mob ) > POSITION_STUNNED ) {
+				StandUp( mob );
 				return TRUE;
 			}
 			else if( number( 1, 3 ) > 1 ) {
-				if( HitOrMiss( pMob, pVictim, CalcThaco( pMob, pVictim ) ) ) {
-					act( "Stritoli violentemente $N!", TRUE, pMob, NULL, pMob->specials.fighting,
+				if( HitOrMiss( mob, pVictim, CalcThaco( mob, pVictim ) ) ) {
+					act( "Stritoli violentemente $N!", TRUE, mob, NULL, mob->specials.fighting,
 						 TO_CHAR );
-					act( "$n stritola violentemente $N!", TRUE, pMob, NULL, pMob->specials.fighting,
+					act( "$n stritola violentemente $N!", TRUE, mob, NULL, mob->specials.fighting,
 						 TO_NOTVICT );
-					act( "$n ti stritola violentemente!", TRUE, pMob, NULL, pMob->specials.fighting,
+					act( "$n ti stritola violentemente!", TRUE, mob, NULL, mob->specials.fighting,
 						 TO_VICT );
-					int iDam = number( (int) (GetMaxLevel( pMob )/3), (int) (GetMaxLevel( pMob )*1.5) );
+					int iDam = number( (int) (GetMaxLevel( mob )/3), (int) (GetMaxLevel( mob )*1.5) );
 
-					if( damage( pMob, pVictim, iDam, TYPE_CRUSH, 7 ) == AllLiving ) {
+					if( damage( mob, pVictim, iDam, TYPE_CRUSH, 7 ) == AllLiving ) {
 						if( iDam >= 70 ) {
 							act( "$c0011La stretta di $n fa perdere i sensi a $N",
-								 TRUE, pMob, NULL, pVictim, TO_NOTVICT );
+								 TRUE, mob, NULL, pVictim, TO_NOTVICT );
 							act( "$c0011La stretta di $n ti fa perdere i sensi", TRUE,
-								 pMob, NULL, pVictim, TO_VICT );
+								 mob, NULL, pVictim, TO_VICT );
 							act( "$c0011La tua stretta fa perdere i sensi a $N", TRUE,
-								 pMob, NULL, pVictim, TO_CHAR );
+								 mob, NULL, pVictim, TO_CHAR );
 
 							if( pVictim->specials.fighting )
 							{ stop_fighting( pVictim ); }
@@ -1704,21 +1694,21 @@ int Orso_Bianco( struct char_data* pChar, int iCmd, char* szArg,
 							GET_POS( pVictim ) = POSITION_STUNNED;
 							WAIT_STATE( pVictim, 2 * PULSE_VIOLENCE );
 
-							send_to_zone( " \n\r", pMob);
-							send_to_zone( "Un pauroso ruggito nelle vicinanze ti scuote dentro!\n\r", pMob);
+							send_to_zone( " \n\r", mob);
+							send_to_zone( "Un pauroso ruggito nelle vicinanze ti scuote dentro!\n\r", mob);
 
 						}
 					}
 				}
 				else {
-					act( "Provi a stritolare $N!", TRUE, pMob, NULL, pMob->specials.fighting,
+					act( "Provi a stritolare $N!", TRUE, mob, NULL, mob->specials.fighting,
 						 TO_CHAR );
-					act( "$n prova a stritolare $N!", TRUE, pMob, NULL, pMob->specials.fighting,
+					act( "$n prova a stritolare $N!", TRUE, mob, NULL, mob->specials.fighting,
 						 TO_NOTVICT );
-					act( "$n prova a stritolarti!", TRUE, pMob, NULL, pMob->specials.fighting,
+					act( "$n prova a stritolarti!", TRUE, mob, NULL, mob->specials.fighting,
 						 TO_VICT );
 
-					damage( pMob, pVictim, 0, TYPE_BLUDGEON, 7 );
+					damage( mob, pVictim, 0, TYPE_BLUDGEON, 7 );
 				}
 				return TRUE;
 			}
@@ -1732,34 +1722,32 @@ int Orso_Bianco( struct char_data* pChar, int iCmd, char* szArg,
   aiuta, dice una frase (diversa a second del mob).
 *****************************************************************************/
 
-int Moribondo( struct char_data* pChar, int nCmd, char* szArg,
-			   struct char_data* pMob, int nType ) {
-	if( pMob == NULL || pChar == NULL ) {
-		mudlog( LOG_SYSERR,
-				"pMob == NULL || pChar == NULL in Moribondo( carceri.h )" );
+MOBSPECIAL_FUNC(Moribondo) {
+	if( mob == NULL || ch == NULL ) {
+		mudlog( LOG_SYSERR,"mob == NULL || ch == NULL");
 		return FALSE;
 	}
 
-	if( nType == EVENT_TICK ) {
-		switch( pMob->generic ) {
+	if( type == EVENT_TICK ) {
+		switch( mob->generic ) {
 		case 0:
-			GET_HIT( pMob ) = -3; /*** SALVO questo non rigenera deve aspettare aiuto :-) ***/
-			GET_POS( pMob ) = POSITION_INCAP;
-			pMob->generic = 1;
+			GET_HIT( mob ) = -3; /*** SALVO questo non rigenera deve aspettare aiuto :-) ***/
+			GET_POS( mob ) = POSITION_INCAP;
+			mob->generic = 1;
 			break;
 		case 1:
-			pMob->generic = 0;
-			if( GET_HIT( pMob ) > 10 ) {
+			mob->generic = 0;
+			if( GET_HIT( mob ) > 10 ) {
 				act( "$c0013[$c0015Rakda$c0013] ti manda il messaggio 'Per me non c'e' piu' alcuna speranza'$c0007",
-					 FALSE, pMob, 0, 0, TO_ROOM );
-				pMob->generic = 2;
+					 FALSE, mob, 0, 0, TO_ROOM );
+				mob->generic = 2;
 			}
 			break;
 		case 2:
-			if( !pMob->specials.fighting ) {
+			if( !mob->specials.fighting ) {
 				act( "$c0013[$c0015Rakda$c0013] ti manda il messaggio 'Salvate il mio libro, trovatelo, che almeno lui continui a vivere...'$c0007",
-					 FALSE, pMob, 0, 0, TO_ROOM );
-				pMob->generic = 0;
+					 FALSE, mob, 0, 0, TO_ROOM );
+				mob->generic = 0;
 			}
 			break;
 		default:

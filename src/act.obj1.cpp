@@ -98,8 +98,7 @@ void get( struct char_data* ch, struct obj_data* obj_object,
 		/* failed barb or ego item check */
 	}
 }
-void get_trophy(struct char_data* ch, struct obj_data* ob);
-void do_get(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_get) {
 	char arg1[MAX_STRING_LENGTH];
 	char arg2[MAX_STRING_LENGTH];
 	char buffer[MAX_STRING_LENGTH];
@@ -112,7 +111,7 @@ void do_get(struct char_data* ch,const char* argument, int cmd) {
 	int num, p;
 
 
-	argument_interpreter(argument, arg1, arg2);
+	argument_interpreter(arg, arg1, arg2);
 
 	/* get type */
 	if (!*arg1) {
@@ -528,9 +527,9 @@ void get_trophy(struct char_data* ch, struct obj_data* ob) {
 
 
 
-void do_drop(struct char_data* ch,const char* argument, int cmd) {
-	char arg[MAX_INPUT_LENGTH];
-	char arg2[ MAX_INPUT_LENGTH ];
+ACTION_FUNC(do_drop) {
+	char tmp[MAX_INPUT_LENGTH];
+	char tmp2[ MAX_INPUT_LENGTH ];
 	int amount;
 	char buffer[MAX_STRING_LENGTH];
 	struct obj_data* tmp_object;
@@ -539,47 +538,12 @@ void do_drop(struct char_data* ch,const char* argument, int cmd) {
 	char newarg[1000];
 	int num, p;
 
-#if 0
-	char* s;
-	s = one_argument( argument, arg );
-	if( is_number( arg ) ) {
-		amount = atoi( arg );
-		strcpy( arg, s );
+	argument_interpreter(arg, tmp, tmp2);
 
-		if( 0 != str_cmp( "coins", arg ) && 0 != str_cmp( "coin", arg ) ) {
-			send_to_char( "Sorry, you can't do that (yet)...\n\r",ch);
-			return;
-		}
-
-		if( amount < 0 ) {
-			send_to_char( "Sorry, you can't do that!\n\r", ch );
-			return;
-		}
-		if( GET_GOLD( ch ) < amount ) {
-			send_to_char( "You haven't got that many coins!\n\r", ch );
-			return;
-		}
-		send_to_char("OK.\n\r",ch);
-		if(amount==0)
-		{ return; }
-
-		act("$n drops some gold.", FALSE, ch, 0, 0, TO_ROOM);
-		tmp_object = create_money(amount);
-		obj_to_room(tmp_object,ch->in_room);
-		GET_GOLD(ch)-=amount;
-		return;
-	}
-	else {
-		only_argument(argument, arg);
-	}
-#endif
-
-	argument_interpreter(argument, arg, arg2);
-
-	if( *arg && *arg2 ) {
-		if( is_number( arg ) && ( str_cmp2( "coin", arg2 ) == 0 ||
-								  str_cmp2( "monet", arg2 ) == 0 ) ) {
-			if( ( amount = atoi( arg ) ) > 0 ) {
+	if( *tmp && *tmp2 ) {
+		if( is_number( tmp ) && ( str_cmp2( "coin", tmp2 ) == 0 ||
+								  str_cmp2( "monet", tmp2 ) == 0 ) ) {
+			if( ( amount = atoi( tmp ) ) > 0 ) {
 				if( GET_GOLD( ch ) < amount ) {
 					send_to_char( "Non hai tutte quelle monete!\n\r", ch );
 				}
@@ -608,8 +572,8 @@ void do_drop(struct char_data* ch,const char* argument, int cmd) {
 
 		return;
 	}
-	else if( *arg ) {
-		if( !str_cmp( arg, "all" ) ) {
+	else if( *tmp ) {
+		if( !str_cmp( tmp, "all" ) ) {
 			for(tmp_object = ch->carrying;
 					tmp_object;
 					tmp_object = next_obj) {
@@ -650,13 +614,13 @@ void do_drop(struct char_data* ch,const char* argument, int cmd) {
 			struct obj_data* pObjList;
 			int bFound = FALSE;
 			/* &&&&&& */
-			if( getall( arg, newarg ) == TRUE ) {
+			if( getall( tmp, newarg ) == TRUE ) {
 				num = -1;
-				strcpy(arg,newarg);
+				strcpy(tmp,newarg);
 			}
-			else if( ( p = getabunch( arg,newarg ) ) != 0 ) {
+			else if( ( p = getabunch( tmp,newarg ) ) != 0 ) {
 				num = p;
-				strcpy(arg,newarg);
+				strcpy(tmp,newarg);
 			}
 			else {
 				num = 1;
@@ -665,7 +629,7 @@ void do_drop(struct char_data* ch,const char* argument, int cmd) {
 			pObjList = ch->carrying;
 
 			while( num != 0 ) {
-				tmp_object = get_obj_in_list_vis( ch, arg, pObjList );
+				tmp_object = get_obj_in_list_vis( ch, tmp, pObjList );
 
 				if( tmp_object ) {
 					pObjList = tmp_object->next_content;
@@ -695,7 +659,7 @@ void do_drop(struct char_data* ch,const char* argument, int cmd) {
 				{ break; }
 			}
 			if( !bFound ) {
-				sprintf( buffer,"Non hai nessun %s.\n\r", arg );
+				sprintf( buffer,"Non hai nessun %s.\n\r", tmp );
 				send_to_char( buffer, ch );
 			}
 #if NODUPLICATES
@@ -712,7 +676,7 @@ void do_drop(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_put(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_put) {
 	char buffer[256];
 	char arg1[128];
 	char arg2[128];
@@ -723,7 +687,7 @@ void do_put(struct char_data* ch,const char* argument, int cmd) {
 	char newarg[100];
 	int num, p;
 
-	argument_interpreter(argument, arg1, arg2);
+	argument_interpreter(arg, arg1, arg2);
 
 	if (*arg1) {
 		if (*arg2) {
@@ -917,22 +881,22 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 
 
 
-void do_give(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_give) {
 	char obj_name[200], vict_name[80], buf[132];
-	char arg[80], newarg[100];
+	char tmp[80], newarg[100];
 	int amount, num, p, count;
 	struct char_data* vict;
 	struct obj_data* obj;
 
-	argument = one_argument( argument, obj_name );
+	arg = one_argument( arg, obj_name );
 	if( is_number( obj_name ) ) {
 		if( newstrlen( obj_name ) >= 10 )
 		{ obj_name[ 10 ] = '\0'; }
 		amount = atoi( obj_name );
-		argument = one_argument( argument, arg );
-		if( str_cmp2( "coin", arg ) &&
-				str_cmp2( "monet", arg ) &&
-				str_cmp2("xp",arg)) {
+		arg = one_argument( arg, tmp );
+		if( str_cmp2( "coin", tmp ) &&
+				str_cmp2( "monet", tmp ) &&
+				str_cmp2("xp",tmp)) {
 			send_to_char( "Eh?\n\r",ch);
 			return;
 		}
@@ -941,7 +905,7 @@ void do_give(struct char_data* ch,const char* argument, int cmd) {
 			return;
 		}
 
-		argument = one_argument( argument, vict_name );
+		arg = one_argument( arg, vict_name );
 
 		if( !*vict_name ) {
 			send_to_char( "A chi vuoi dare delle monete?\n\r", ch );
@@ -950,7 +914,7 @@ void do_give(struct char_data* ch,const char* argument, int cmd) {
 			send_to_char( "Non vedi nessuno con quel nome.\n\r", ch );
 		}
 		else {
-			if (!str_cmp2("xp",arg)) {
+			if (!str_cmp2("xp",tmp)) {
 				givexp(ch,vict,amount);
 				return;
 			}
@@ -977,15 +941,14 @@ void do_give(struct char_data* ch,const char* argument, int cmd) {
 			GET_GOLD( vict ) += amount;
 			save_char( ch, AUTO_RENT, 0 );
 			if( GET_GOLD(vict) > 500000 && amount > 100000 ) {
-				mudlog( LOG_PLAYERS, "%s gave %d coins to %s", GET_NAME( ch ),
-						amount, GET_NAME( vict ) );
+				mudlog( LOG_PLAYERS, "%s gave %d coins to %s", GET_NAME( ch ),amount, GET_NAME( vict ) );
 			}
 		}
 
 		return;
 	}
 	else {
-		argument=one_argument(argument, vict_name);
+		arg=one_argument(arg, vict_name);
 
 
 		if( !*obj_name || !*vict_name ) {
@@ -1079,19 +1042,20 @@ void do_give(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_pquest(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_pquest) {
+
 	char obj_name[200], vict_name[80], buf[132];
-	char arg[80], newarg[100];
+	char tmp[80], newarg[100];
 	int punti_quest, num, p, count, old_punti;
 	struct char_data* vict;
 	struct obj_data* obj;
 
-	argument = one_argument( argument, obj_name );
+	arg = one_argument( arg, obj_name );
 	if( is_number( obj_name ) ) {
 		if( newstrlen( obj_name ) >= 10 )
 		{ obj_name[ 10 ] = '\0'; }
 		punti_quest = atoi( obj_name );
-		argument = one_argument( argument, vict_name );
+		arg = one_argument( arg, vict_name );
 
 		if (punti_quest ==0) {
 			if( !( vict = get_char_room_vis( ch, vict_name ) ) ) {

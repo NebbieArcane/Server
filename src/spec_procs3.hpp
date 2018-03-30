@@ -33,7 +33,7 @@ ROOMSPECIAL_FUNC(MOBKilled);
 MOBSPECIAL_FUNC(MobBlockWay);
 OBJSPECIAL_FUNC(ModHit);
 OBJSPECIAL_FUNC(NeutralBlade);
-int ObjIsOnGround	(struct char_data* ch, char* argument ) ;
+int ObjIsOnGround	(struct char_data* ch, const char* argument ) ;
 MOBSPECIAL_FUNC(Paladin);
 MOBSPECIAL_FUNC(PostMaster);
 MOBSPECIAL_FUNC(PrimoAlbero);

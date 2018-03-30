@@ -1460,7 +1460,7 @@ int DetermineExp( struct char_data* mob, int exp_flags) {
 	return(base + (phit * GET_HIT(mob)) + (sab * exp_flags));
 }
 
-void down_river( unsigned long pulse ) {
+void down_river( unsigned long localPulse ) {
 	struct char_data* ch, *tmp;
 	struct obj_data* obj_object, *next_obj;
 	int rd;
@@ -1468,7 +1468,7 @@ void down_river( unsigned long pulse ) {
 	char buf[80];
 	struct room_data* rp;
 
-	if (pulse < 0)
+	if (localPulse < 0)
 	{ return; }
 
 	for (ch = character_list; ch; ch = tmp) {
@@ -1477,7 +1477,7 @@ void down_river( unsigned long pulse ) {
 			if (ch->in_room != NOWHERE) {
 				if (real_roomp(ch->in_room)->sector_type == SECT_WATER_NOSWIM) {
 					if ((real_roomp(ch->in_room))->river_speed > 0) {
-						if ((pulse % (real_roomp(ch->in_room))->river_speed)==0) {
+						if ((localPulse % (real_roomp(ch->in_room))->river_speed)==0) {
 							if( (real_roomp(ch->in_room))->river_dir <= 5 &&
 									(real_roomp(ch->in_room))->river_dir >= 0 ) {
 								rd = (real_roomp(ch->in_room))->river_dir;
@@ -1543,21 +1543,6 @@ void down_river( unsigned long pulse ) {
 			}
 		}
 	}
-}
-
-void do_WorldSave(struct char_data* ch,const char* argument, int cmd) {
-	char temp[2048], buf[128];
-	long rstart, rend, i, j,x,k;
-	struct extra_descr_data* exptr;
-	FILE* fp;
-	struct room_data*     rp;
-	struct room_direction_data*   rdd;
-
-	if(!ch->desc)
-	{ return; }
-
-	send_to_char("Comando disabilitato\r\n",ch);
-	return;
 }
 
 
@@ -2578,7 +2563,7 @@ void RemAllAffects( struct char_data* ch) {
 }
 
 int CheckForBlockedMove
-(struct char_data* ch, int cmd, char* arg, int room, int dir, int iClass) {
+(struct char_data* ch, int cmd, const char* arg, int room, int dir, int iClass) {
 
 	char buf[256], buf2[256];
 
@@ -2605,7 +2590,7 @@ int CheckForBlockedMove
 }
 
 
-void TeleportPulseStuff(unsigned long pulse) {
+void TeleportPulseStuff(unsigned long localPulse) {
 	register struct char_data* ch;
 	struct char_data* next;
 	int tick, tm;
@@ -2614,7 +2599,7 @@ void TeleportPulseStuff(unsigned long pulse) {
 	struct room_data* apTeleportRoom[ 1000 ];
 	int iMaxTeleportRoom = 0;
 
-	tm = pulse % PULSE_MOBILE;    /* this is dependent on P_M = 3*P_T */
+	tm = localPulse % PULSE_MOBILE;    /* this is dependent on P_M = 3*P_T */
 
 	if (tm == 0) {
 		tick = 0;
@@ -2650,7 +2635,7 @@ void TeleportPulseStuff(unsigned long pulse) {
 				rp->tele_targ > 0 &&
 				rp->tele_targ != rp->number &&
 				rp->tele_time > 0 &&
-				(pulse % rp->tele_time)==0 ) {
+				(localPulse % rp->tele_time)==0 ) {
 			if( IS_SET( rp->tele_mask, TELE_COUNT ) && rp->tele_cnt > 0 ) {
 				ch->nTeleCount--;
 				if( ch->nTeleCount )
@@ -2707,7 +2692,7 @@ void TeleportPulseStuff(unsigned long pulse) {
 	}
 }
 
-void RiverPulseStuff(unsigned long pulse) {
+void RiverPulseStuff(unsigned long localPulse) {
 	struct descriptor_data* i;
 	register struct char_data* ch;
 	struct char_data* tmp;
@@ -2717,7 +2702,7 @@ void RiverPulseStuff(unsigned long pulse) {
 	char buf[80], buffer[100];
 	struct room_data* rp;
 
-	if (pulse < 0)
+	if (localPulse < 0)
 	{ return; }
 
 	for (i = descriptor_list; i; i=i->next) {
@@ -2730,7 +2715,7 @@ void RiverPulseStuff(unsigned long pulse) {
 							(real_roomp(ch->in_room)->sector_type == SECT_UNDERWATER)) {
 
 						if ((real_roomp(ch->in_room))->river_speed > 0) {
-							if ((pulse % (real_roomp(ch->in_room))->river_speed)==0) {
+							if ((localPulse % (real_roomp(ch->in_room))->river_speed)==0) {
 								if (((real_roomp(ch->in_room))->river_dir<=5)&&
 										((real_roomp(ch->in_room))->river_dir>=0)) {
 									rd = (real_roomp(ch->in_room))->river_dir;
@@ -2848,7 +2833,7 @@ void RiverPulseStuff(unsigned long pulse) {
 		/* Sound objects */
 		if( ITEM_TYPE( pObj ) == ITEM_AUDIO ) {
 			if( ( pObj->obj_flags.value[0] &&
-					( pulse % pObj->obj_flags.value[0] ) == 0 ) && !number( 0, 2 ) ) {
+					( localPulse % pObj->obj_flags.value[0] ) == 0 ) && !number( 0, 2 ) ) {
 				long lRoom = RecGetObjRoom( pObj );
 
 				/* broadcast to room */
@@ -2861,7 +2846,7 @@ void RiverPulseStuff(unsigned long pulse) {
 		}
 		else {
 			if( pObj->item_number >= 0 && obj_index[ pObj->item_number ].func ) {
-				( *obj_index[ pObj->item_number].func )( NULL, pulse, NULL, pObj,
+				( *obj_index[ pObj->item_number].func )( NULL, localPulse, NULL, pObj,
 						EVENT_TICK );
 			}
 		}
@@ -4907,6 +4892,68 @@ bool CheckPrac (int classe, int id, int liv) { // SALVO implemento un controllo 
 		break;
 	}
 	return FALSE;
+}
+const char* RandomWord() {
+	const static char* stringa[50] = {
+		"argle",
+		"bargle",
+		"glop",
+		"glyph",
+		"hussamah",  /* 5 */
+		"rodina",
+		"mustafah",
+		"angina",
+		"il",
+		"fribble",  /* 10 */
+		"fnort",
+		"frobozz",
+		"zarp",
+		"ripple",
+		"yrk",    /* 15 */
+		"yid",
+		"yerf",
+		"oork",
+		"grapple",
+		"rosso",   /* 20 */
+		"blu",
+		"tu",
+		"me",
+		"ftagn",
+		"hastur",   /* 25 */
+		"brob",
+		"gnort",
+		"lram",
+		"truck",
+		"uccidi",    /* 30 */
+		"cthulhu",
+		"huzzah",
+		"acetacitacilicio",
+		"idroxipropilene",
+		"summah",     /* 35 */
+		"hummah",
+		"biscotti",
+		"ema",
+		"voglia",
+		"wadapatang",   /* 40 */
+		"pterodactilo",
+		"frob",
+		"yuma",
+		"gomma",
+		"lo-pan",   /* 45 */
+		"sushi",
+		"yaya",
+		"yoyodine",
+		"yaazr",
+		"bipsnop"   /* 50 */
+	};
+
+	return( stringa[ number( 0, 49 ) ] );
+
+}
+char RandomChar() {
+	static char stringa[] = "abcdefghijklmnopqrstuwxyz23456789\0";
+	return( stringa[ number( 0, strlen(stringa)-1 ) ] );
+
 }
 } // namespace Alarmud
 

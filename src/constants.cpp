@@ -1461,7 +1461,7 @@ const int sharp[] = {
 	0     /* Pierce   */
 };
 
-const char* where[] = {
+const char* eqWhere[] = {
 	"<come luce>             ",
 	"<sul dito destro>       ",
 	"<sul dito sinistro>     ",

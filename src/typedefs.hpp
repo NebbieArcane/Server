@@ -38,6 +38,7 @@ typedef GENERICSPECIAL_FUNC((*genericspecial_func));
 // Room speciam procedureMob/object special procedure
 #define ROOMSPECIAL_FUNC(name) int name( struct char_data* ch, int cmd, const char* arg, struct room_data* room, int type )
 typedef ROOMSPECIAL_FUNC((*roomspecial_func));
+
 #define OBJSPECIAL_FUNC(name) int name( struct char_data* ch, int cmd, const char* arg, struct obj_data* obj, int type )
 typedef OBJSPECIAL_FUNC((*objspecial_func));
 
@@ -49,11 +50,12 @@ typedef BREATH_FUNC((*breath_func));
 //cast_<something>
 #define SPELL_FUNC(name) void name (byte, struct char_data*, const char*, int,struct char_data*, struct obj_data*)
 typedef SPELL_FUNC((*spell_func)) ;
+
 #define SCRIPT_FUNC(name) void  name (const char* arg, struct char_data* ch)
 typedef SCRIPT_FUNC((*script_func)) ;
 
-
-
+#define ACTION_FUNC(name) void name( struct char_data* ch, const char* arg, int cmd)
+typedef ACTION_FUNC((*action_func)) ;
 
 
 } // namespace Alarmud

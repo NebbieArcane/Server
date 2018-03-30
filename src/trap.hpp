@@ -54,7 +54,7 @@ void TrapPoison(struct char_data* v, struct obj_data* t) ;
 void TrapSleep(struct char_data* v) ;
 void TrapTeleport(struct char_data* v) ;
 int TriggerTrap( struct char_data* ch, struct obj_data* i) ;
-void do_settrap( struct char_data* ch, char* arg, int cmd) ;
+ACTION_FUNC(do_settrap) ;
 } // namespace Alarmud
 #endif // __TRAP_HPP
 

@@ -3382,10 +3382,10 @@ void free_obj(struct obj_data* obj) {
 int file_to_string(const char* name, char* buf) {
 	FILE* fl;
 	char tmp[100];
-	struct stat info;
+	struct stat fileinfo;
 	*buf = '\0';
-	stat(name, &info);
-	mudlog(LOG_CHECK, "File %s lunghezza %d", name, info.st_size);
+	stat(name, &fileinfo);
+	mudlog(LOG_CHECK, "File %s lunghezza %d", name, fileinfo.st_size);
 	if (!(fl = fopen(name, "r"))) {
 		mudlog(LOG_ERROR, "Unable to open %s, continuing", name);
 		*buf = '\0';
@@ -3397,8 +3397,7 @@ int file_to_string(const char* name, char* buf) {
 
 		if (!feof(fl)) {
 			if (strlen(buf) + strlen(tmp) + 2 > MAX_STRING_LENGTH) {
-				mudlog(LOG_ERROR,
-					   "fl->strng: string too big (db.c, file_to_string)");
+				mudlog(LOG_ERROR,"fl->strng: string too big");
 				*buf = '\0';
 				fclose(fl);
 				return (-1);
@@ -4090,7 +4089,7 @@ int str_len(char* buf) {
 	return (i);
 }
 
-void reboot_text(struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(reboot_text) {
 	struct char_data* p;
 	int i;
 
@@ -4129,7 +4128,7 @@ void reboot_text(struct char_data* ch, char* arg, int cmd) {
 void InitScripts() {
 	char buf[255], buf2[255];
 	FILE* f1, *f2;
-	int i, count;
+	int count;
 	struct char_data* mob;
 
 	if (!gpScript_data)
@@ -4151,8 +4150,7 @@ void InitScripts() {
 	}
 
 	if (gpScript_data) {
-		int i = 0;
-		for (; i < top_of_scripts; i++) {
+		for (int i=0; i < top_of_scripts; i++) {
 			free(gpScript_data[i].script);
 			free(gpScript_data[i].filename);
 		}
@@ -4165,6 +4163,7 @@ void InitScripts() {
 	gpScript_data = (struct scripts*) malloc(sizeof (struct scripts));
 
 	while (1) {
+		int i;
 		if (fgets(buf, 254, f1) == NULL)
 		{ break; }
 
@@ -4601,4 +4600,20 @@ void Start_Auction() {
 
 }
 #endif
+
+ACTION_FUNC(do_WorldSave) {
+	char temp[2048], buf[128];
+	long rstart, rend, i, j,x,k;
+	struct extra_descr_data* exptr;
+	FILE* fp;
+	struct room_data*     rp;
+	struct room_direction_data*   rdd;
+
+	if(!ch->desc)
+	{ return; }
+
+	send_to_char("Comando disabilitato\r\n",ch);
+	return;
+}
+
 }

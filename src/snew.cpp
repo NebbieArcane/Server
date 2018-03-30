@@ -30,7 +30,6 @@ namespace Alarmud {
 #define BUFLEN 128
 bool TestMode=false;
 char hname[128];
-int  test=0;
 char* ggdup(const char* s) {
 	char* p=NULL;
 	if (s) {
@@ -48,8 +47,8 @@ char* HostName() {
 bool IsTest() {
 	return TestMode ;
 }
-bool SetTest(bool test) {
-	TestMode=test;
+bool SetTest(bool value) {
+	TestMode=value;
 	return TestMode;
 }
 
@@ -425,7 +424,7 @@ const char* GetTargetTypeString(int target) {
 }
 
 int GetNum(struct char_data* pMob,int pos) {
-	char* p;
+	const char* p;
 	char appo[256];
 	int rval;
 	for(p=mob_index[pMob->nr].specparms; pos>0; pos--) {
@@ -434,7 +433,7 @@ int GetNum(struct char_data* pMob,int pos) {
 	return(atoi(appo));
 }
 int GetNumR(struct room_data* pRoom,int pos) {
-	char* p;
+	const char* p;
 	char appo[256];
 	int rval;
 	for(p=real_roomp(pRoom->number)->specparms; pos>0; pos--) {
@@ -759,7 +758,7 @@ float GetCharBonusIndex(struct char_data* ch) {
 	}
 	return indice;
 }
-void do_setalign(struct char_data* ch,char* argument,int cmd) {
+ACTION_FUNC(do_setalign) {
 	long oldalign;
 	long gold;
 	gold=MAX(0,(GetMaxLevel(ch)-1) * 20000 * HowManyClasses(ch));
@@ -769,11 +768,11 @@ void do_setalign(struct char_data* ch,char* argument,int cmd) {
 	}
 	else {
 		oldalign=GET_ALIGNMENT(ch);
-		if (!strcasecmp(argument,"evil"))
+		if (!strcasecmp(arg,"evil"))
 		{ GET_ALIGNMENT(ch)=-1000; }
-		else if (!strcasecmp(argument,"neutral"))
+		else if (!strcasecmp(arg,"neutral"))
 		{ GET_ALIGNMENT(ch)=0; }
-		else if (!strcasecmp(argument,"good"))
+		else if (!strcasecmp(arg,"good"))
 		{ GET_ALIGNMENT(ch)=1000; }
 		else
 		{ send_to_char("Gli allineamenti possibili sono solo Evil, Neutral e Good\n\r",ch); }

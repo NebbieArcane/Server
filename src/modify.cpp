@@ -173,7 +173,7 @@ void string_add(struct descriptor_data* d, char* str) {
 #undef MAX_STR
 
 /* interpret an argument for do_string */
-void quad_arg(const char* arg, int* type, char* name, int* field, char* string) {
+void quad_arg(const char* arg, int* type, char* name, int* field, char* buffer) {
 	char buf[MAX_STRING_LENGTH];
 
 
@@ -198,7 +198,7 @@ void quad_arg(const char* arg, int* type, char* name, int* field, char* string) 
 
 	/* string */
 	for( ; isspace(*arg); arg++ );
-	for( ; ( *string = *arg ); arg++, string++ );
+	for( ; ( *buffer = *arg ); arg++, buffer++ );
 
 	return;
 }
@@ -207,7 +207,7 @@ void quad_arg(const char* arg, int* type, char* name, int* field, char* string) 
 
 
 /* modification of malloc'ed strings in chars/objects */
-void do_string(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_string) {
 
 	char name[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
 	struct extra_descr_data* ed, *tmp;
@@ -436,7 +436,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 
 
 
-void bisect_arg(const char* arg, int* field, char* string) {
+void bisect_arg(const char* arg, int* field, char* buffer) {
 	char buf[MAX_INPUT_LENGTH];
 
 
@@ -447,19 +447,19 @@ void bisect_arg(const char* arg, int* field, char* string) {
 
 	/* string */
 	for( ; isspace(*arg); arg++ );
-	for( ; ( *string = *arg ); arg++, string++ );
+	for( ; ( *buffer = *arg ); arg++, buffer++ );
 
 	return;
 }
 
 
-void do_edit(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_edit) {
 	int field, dflags, dir, exroom, dkey, rspeed, rdir, open_cmd,
 		tele_room, tele_time, tele_mask, moblim, tele_cnt;
 	int r_flags;
 	int s_type;
 	unsigned int i;
-	char string[512], sdflags[30];
+	char buffer[512], sdflags[30];
 	struct extra_descr_data* ed, *tmp;
 	struct room_data*        rp;
 
@@ -478,7 +478,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		return;
 	}
 
-	bisect_arg(arg, &field, string);
+	bisect_arg(arg, &field, buffer);
 
 	if (!field)        {
 		send_to_char("No field by that name. Try 'help edit'.\n\r", ch);
@@ -497,7 +497,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		ch->desc->str = &rp->description;
 		break;
 	case 3:
-		sscanf(string,"%u %d ",&r_flags,&s_type);
+		sscanf(buffer,"%u %d ",&r_flags,&s_type);
 		if ((r_flags < 0)  || (s_type < 0) || (s_type > 11)) {
 			send_to_char("didn't quite get those, please try again.\n\r",ch);
 			send_to_char("flags must be 0 or positive, and sectors must be from 0 to 11\n\r",ch);
@@ -520,7 +520,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 	case 4:
 
 		open_cmd=-1; /* no cmd by default */
-		sscanf(string,"%d %s %d %d %d", &dir, sdflags, &dkey, &exroom, &open_cmd);
+		sscanf(buffer,"%d %s %d %d %d", &dir, sdflags, &dkey, &exroom, &open_cmd);
 
 		/*
 		 * check if the exit exists
@@ -607,7 +607,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		}
 
 		if (rp->dir_option[dir]->exit_info>0) {
-			string[0] = 0;
+			buffer[0] = 0;
 			send_to_char("enter keywords, 1 line only. \n\r",ch);
 			send_to_char("terminate with an @ on the same line.\n\r",ch);
 			ch->desc->str = &rp->dir_option[dir]->keyword;
@@ -619,10 +619,10 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 
 	case 5:
 		dir = -1;
-		sscanf(string,"%d", &dir);
+		sscanf(buffer,"%d", &dir);
 		if ((dir >=0) && (dir <= 5)) {
 			send_to_char("Enter text, term. with '@' on a blank line",ch);
-			string[0] = 0;
+			buffer[0] = 0;
 			if (rp->dir_option[dir]) {
 				ch->desc->str = &rp->dir_option[dir]->general_description;
 			}
@@ -642,7 +642,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		/*
 		  extra descriptions
 		  */
-		if (!*string)          {
+		if (!*buffer)          {
 			send_to_char("You have to supply a keyword.\n\r", ch);
 			return;
 		}
@@ -652,14 +652,14 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 				CREATE(ed, struct extra_descr_data, 1);
 				ed->next = rp->ex_description;
 				rp->ex_description = ed;
-				CREATE(ed->keyword, char, strlen(string) + 1);
-				strcpy(ed->keyword, string);
+				CREATE(ed->keyword, char, strlen(buffer) + 1);
+				strcpy(ed->keyword, buffer);
 				ed->description = 0;
 				ch->desc->str = &ed->description;
 				send_to_char("New field.\n\r", ch);
 				break;
 			}
-			else if (!str_cmp(ed->keyword, string)) {
+			else if (!str_cmp(ed->keyword, buffer)) {
 				/* the field exists */
 				free(ed->description);
 				ed->description = 0;
@@ -675,7 +675,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		/*  this is where the river stuff will go */
 		rspeed = 0;
 		rdir = 0;
-		sscanf(string,"%d %d ",&rspeed,&rdir);
+		sscanf(buffer,"%d %d ",&rspeed,&rdir);
 		if ((rdir>= 0) && (rdir <= 5)) {
 			rp->river_speed = rspeed;
 			rp->river_dir = rdir;
@@ -690,7 +690,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		tele_room = -1;
 		tele_time = -1;
 		tele_mask = -1;
-		sscanf(string,"%d %d %d",&tele_time,&tele_room,&tele_mask);
+		sscanf(buffer,"%d %d %d",&tele_time,&tele_room,&tele_mask);
 		if (tele_room < 0 || tele_time < 0 || tele_mask < 0) {
 			send_to_char(" edit tele <time> <room_nr> <tele-flags>\n\r", ch);
 			return;
@@ -698,7 +698,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		}
 		else {
 			if (IS_SET(TELE_COUNT, tele_mask)) {
-				sscanf(string,"%d %d %d %d",
+				sscanf(buffer,"%d %d %d %d",
 					   &tele_time, &tele_room, &tele_mask, &tele_cnt);
 				if (tele_cnt < 0) {
 					send_to_char
@@ -723,7 +723,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 
 		return;
 	case 9:
-		if (sscanf(string, "%d", &moblim) < 1) {
+		if (sscanf(buffer, "%d", &moblim) < 1) {
 			send_to_char("edit tunn <mob_limit>\n\r", ch);
 			return;
 			break;
@@ -739,7 +739,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		/*
 		  deletion
 		  */
-		if (!*string)          {
+		if (!*buffer)          {
 			send_to_char("You must supply a field name.\n\r", ch);
 			return;
 		}
@@ -749,7 +749,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 				send_to_char("No field with that keyword.\n\r", ch);
 				return;
 			}
-			else if (!str_cmp(ed->keyword, string)) {
+			else if (!str_cmp(ed->keyword, buffer)) {
 				free(ed->keyword);
 				if (ed->description)
 				{ free(ed->description); }
@@ -779,13 +779,13 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		free(*ch->desc->str);
 	}
 
-	if (*string) {   /* there was a string in the argument array */
-		if (strlen(string) > room_length[field - 1])        {
+	if (*buffer) {   /* there was a string in the argument array */
+		if (strlen(buffer) > room_length[field - 1])        {
 			send_to_char("String too long - truncated.\n\r", ch);
-			*(string + length[field - 1]) = '\0';
+			*(buffer + length[field - 1]) = '\0';
 		}
-		CREATE(*ch->desc->str, char, strlen(string) + 1);
-		strcpy(*ch->desc->str, string);
+		CREATE(*ch->desc->str, char, strlen(buffer) + 1);
+		strcpy(*ch->desc->str, buffer);
 		ch->desc->str = 0;
 		send_to_char("Ok.\n\r", ch);
 	}
@@ -803,13 +803,13 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 ********************************************************************** */
 
 #ifndef ALAR
-void do_setskill(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_setskill) {
 	send_to_char("This routine is disabled untill it fitts\n\r", ch);
 	send_to_char("The new structures (sorry Quinn) ....Bombman\n\r", ch);
 	return;
 }
 #else
-void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
+ACTION_FUNC(do_setskill) {
 	char buf[ 256 ];
 	struct char_data* mob;
 	char sskill[256];
@@ -820,11 +820,11 @@ void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
 	int ivalue;
 	int ispecial;
 	int iflags;
-	argument = one_argument( argument, buf );
-	argument = one_argument( argument, sskill );
-	argument = one_argument( argument, svalue );
-	argument = one_argument( argument, sspecial);
-	argument = one_argument( argument, sflags);
+	arg = one_argument( arg, buf );
+	arg = one_argument( arg, sskill );
+	arg = one_argument( arg, svalue );
+	arg = one_argument( arg, sspecial);
+	arg = one_argument( arg, sflags);
 	iskill=atoi(sskill);
 	ivalue=atoi(svalue);
 	ispecial=atoi(sspecial);
@@ -854,31 +854,31 @@ void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
 /* One_Word is like one_argument, execpt that words in quotes "" are */
 /* regarded as ONE word                                              */
 
-char* one_word(char* argument, char* first_arg ) {
+char* one_word(char* arg, char* first_arg ) {
 	int begin, look_at;
 
 	begin = 0;
 
 	do {
-		for ( ; isspace(*(argument + begin)); begin++);
+		for ( ; isspace(*(arg + begin)); begin++);
 
-		if (*(argument+begin) == '\"') {
+		if (*(arg+begin) == '\"') {
 			/* is it a quote */
 
 			begin++;
 
-			for( look_at=0; (*(argument+begin+look_at) >= ' ') &&
-					(*(argument+begin+look_at) != '\"') ; look_at++)
-			{ *(first_arg + look_at) = LOWER(*(argument + begin + look_at)); }
+			for( look_at=0; (*(arg+begin+look_at) >= ' ') &&
+					(*(arg+begin+look_at) != '\"') ; look_at++)
+			{ *(first_arg + look_at) = LOWER(*(arg + begin + look_at)); }
 
-			if (*(argument+begin+look_at) == '\"')
+			if (*(arg+begin+look_at) == '\"')
 			{ begin++; }
 
 		}
 		else {
 
-			for (look_at=0; *(argument+begin+look_at) > ' ' ; look_at++)
-			{ *(first_arg + look_at) = LOWER(*(argument + begin + look_at)); }
+			for (look_at=0; *(arg+begin+look_at) > ' ' ; look_at++)
+			{ *(first_arg + look_at) = LOWER(*(arg + begin + look_at)); }
 
 		}
 
@@ -887,7 +887,7 @@ char* one_word(char* argument, char* first_arg ) {
 	}
 	while (fill_word(first_arg));
 
-	return(argument+begin);
+	return(arg+begin);
 }
 
 
@@ -948,24 +948,27 @@ struct help_index_element* build_help_index(FILE* fl, int* num) {
 
 
 
-void page_string(struct descriptor_data* d, char* str, int keep_internal) {
+void page_string(struct descriptor_data* d, const char* str, int keep_internal) {
 	if (!d)
 	{ return; }
 
 	if (keep_internal)        {
 		CREATE(d->showstr_head, char, strlen(str) + 1);
-		strcpy(d->showstr_head, str);
+		// Let's hope the caller is right: I assume that the passed string is a temporary one and need to be stored in showstr_head
+		strcpy(d->showstr_head, const_cast<char*>(str));
 		d->showstr_point = d->showstr_head;
 	}
-	else
-	{ d->showstr_point = str; }
+	else {
+		free(d->showstr_head);
+		d->showstr_head=nullptr;
+		d->showstr_point = str;
+	}
 
 	show_string(d, "");
 }
 
 void show_string( struct descriptor_data* d, const char* input ) {
 	char buffer[ MAX_STRING_LENGTH ], buf[ MAX_INPUT_LENGTH ];
-	register char* scan, *chk;
 	int lines = 0, toggle = 1;
 	int i;
 	one_argument( input, buf );
@@ -973,9 +976,9 @@ void show_string( struct descriptor_data* d, const char* input ) {
 	if( *buf ) {
 		if( d->showstr_head ) {
 			free( d->showstr_head );
-			d->showstr_head = 0;
+			d->showstr_head = nullptr;
 		}
-		d->showstr_point = 0;
+		d->showstr_point = nullptr;
 		return;
 	}
 
@@ -993,28 +996,27 @@ void show_string( struct descriptor_data* d, const char* input ) {
 	}
 
 	/* show a chunk */
-	for( scan = buffer;; scan++, d->showstr_point++ ) {
-		if( ( ( ( *scan = *d->showstr_point ) == '\n' ) || ( *scan == '\r' ) ) &&
-				( ( toggle = -toggle ) < 0 ) ) {
+	for( char* scan = buffer;; scan++, d->showstr_point++ ) {
+		if( ( ( ( *scan = *d->showstr_point ) == '\n' ) || ( *scan == '\r' ) ) && ( ( toggle = -toggle ) < 0 ) ) {
 			lines++;
-			if( strlen( buffer ) > MAX_STRING_LENGTH - 265 )
-			{ i = lines; }
+			if( strlen( buffer ) > MAX_STRING_LENGTH - 265 ) {
+				i = lines;
+			}
 		}
 		else if( !*scan || ( lines >= i ) ) {
 			*scan = '\0';
 
-			PushStatus("SEND_TO_Q inn page string");
 			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
 												USE_ANSI ), buffer ), d );
-			PopStatus();
 			/* see if this is the end (or near the end) of the string */
-			for( chk = d->showstr_point; *chk && isspace( *chk ); chk++ );
+			const char* chk;
+			for(chk = d->showstr_point; *chk && isspace( *chk ); chk++ );
 			if( !*chk ) {
 				if( d->showstr_head ) {
 					free( d->showstr_head );
-					d->showstr_head = 0;
+					d->showstr_head = nullptr;
 				}
-				d->showstr_point = 0;
+				d->showstr_point = nullptr;
 			}
 			return;
 		}

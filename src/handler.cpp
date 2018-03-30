@@ -44,7 +44,7 @@ namespace Alarmud {
 
 
 
-char* fname(char* namelist) {
+const char* fname(const char* namelist) {
 #define ML 30
 	static char holder[ML];
 	int i=ML;
@@ -1463,7 +1463,7 @@ int get_number(char** name) {
 }
 
 /* Search a given list for an object, and return a pointer to that object */
-struct obj_data* get_obj_in_list(char* name, struct obj_data* list) {
+struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1509,7 +1509,7 @@ struct obj_data* get_obj_in_list_num(int num, struct obj_data* list) {
 
 
 /*search the entire world for an object, and return a pointer  */
-struct obj_data* get_obj(char* name) {
+struct obj_data* get_obj(const char* name) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1552,7 +1552,7 @@ struct obj_data* get_obj_num(int nr) {
 
 
 /* search a room for a char, and return a pointer if found..  */
-struct char_data* get_char_room(char* name, int room) {
+struct char_data* get_char_room(const char* name, int room) {
 	struct char_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1594,7 +1594,7 @@ struct char_data* get_char_room(char* name, int room) {
 
 
 /* search all over the world for a char, and return a pointer if found */
-struct char_data* get_char(char* name) {
+struct char_data* get_char(const char* name) {
 	struct char_data* i;
 	int j, number, nPosInList;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2226,7 +2226,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 * which incorporate the actual player-data.
 *********************************************************************** */
 
-struct char_data* get_char_near_room_vis(struct char_data* ch, char* name, long next_room) {
+struct char_data* get_char_near_room_vis(struct char_data* ch, const char* name, long next_room) {
 	long store_room;
 	struct char_data* i;
 
@@ -2377,7 +2377,7 @@ struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,stru
 	return(0);
 }
 
-struct obj_data* get_obj_vis_world(struct char_data* ch, char* name,
+struct obj_data* get_obj_vis_world(struct char_data* ch, const char* name,
 								   int* count) {
 	struct obj_data* i;
 	int j, number;
@@ -2418,7 +2418,7 @@ struct obj_data* get_obj_vis_world(struct char_data* ch, char* name,
 }
 
 /*search the entire world for an object, and return a pointer  */
-struct obj_data* get_obj_vis( struct char_data* ch, char* name ) {
+struct obj_data* get_obj_vis( struct char_data* ch, const char* name ) {
 	struct obj_data* i;
 
 	/* scan items carried */
@@ -2433,7 +2433,7 @@ struct obj_data* get_obj_vis( struct char_data* ch, char* name ) {
 	return get_obj_vis_world(ch, name, NULL);
 }
 
-struct obj_data* get_obj_vis_accessible(struct char_data* ch, char* name) {
+struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];

@@ -8,7 +8,7 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
-int EditMaster(struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type) ;
+MOBSPECIAL_FUNC(EditMaster);
 void SayMenu(struct char_data* pCh, const char* apchMenu[]) ;
 int calc_costopq(int i, int p) ;
 int calc_costoxp(int i, int p) ;

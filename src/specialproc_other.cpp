@@ -14,17 +14,19 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
+#include "pedit.hpp"
 #include "specialproc_other.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
+#include "speciali.hpp"
 #include "lucertole.hpp"
 #include "rhyodin.hpp"
 #include "breath.hpp"
 #include "board.hpp"
 #include "reception.hpp"
 namespace Alarmud {
-struct special_proc_entry otherproc[] = {
+struct OtherSpecialProcEntry otherproc[] = {
 	{ "AGGRESSIVE",(genericspecial_func) AGGRESSIVE },
 	{ "AbbarachDragon",(genericspecial_func)AbbarachDragon },
 	{ "AbyssGateKeeper",(genericspecial_func) AbyssGateKeeper },

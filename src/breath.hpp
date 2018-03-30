@@ -31,10 +31,10 @@ struct breather {
 };
 
 extern breath_func bweapons[];
-int BreathWeapon( struct char_data* ch, int cmd, char* arg,struct char_data* mob, int type) ;
-void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, breath_func) ;
+MOBSPECIAL_FUNC(BreathWeapon) ;
+void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, breath_func);
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) ;
-void do_breath(struct char_data* ch,const char* argument, int cmd) ;
+ACTION_FUNC(do_breath) ;
 void free_victims(struct breath_victim* head) ;
 void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, breath_func) ;
 } // namespace Alarmud

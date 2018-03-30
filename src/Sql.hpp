@@ -12,10 +12,10 @@ namespace Alarmud {
 class Sql {
 public:
 #if USE_MYSQL
-	const static odb::database* getMysql();
+	static odb::database* getMysql();
 #endif
 #if USE_SQLITE
-	const static odb::database* getSqlite();
+	static odb::database* getSqlite();
 #endif
 	void static dbUpdate();
 	virtual ~Sql();

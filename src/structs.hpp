@@ -390,7 +390,7 @@ struct room_data {
 	ubyte dark;
 	roomspecial_func funct;
 	/* special procedure                  */
-	char* specname;
+	const char* specname;
 	char* specparms;
 	struct obj_data* contents;   /* List of items in room              */
 	struct char_data* people;    /* List of NPC / PC in room           */
@@ -843,7 +843,7 @@ struct descriptor_data {
 	e_connection_types connected;                /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
 	char* showstr_head;              /* for paging through texts   */
-	char* showstr_point;              /*       -                    */
+	const char* showstr_point;              /*       -                    */
 	char** str;                   /* for the modify-str system  */
 	unsigned int max_str;                  /* -                          */
 	int prompt_mode;              /* control of prompt-printing */

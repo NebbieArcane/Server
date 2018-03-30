@@ -8,13 +8,13 @@
 #ifndef SRC_ODB_ACCOUNT_HXX_
 #define SRC_ODB_ACCOUNT_HXX_
 #pragma db model version(1,1,open)
-#include "../act.comm.hpp"
 #include <boost/smart_ptr.hpp>
 #include <odb/core.hxx>
 #include <odb/vector.hxx>
 #include <odb/boost/smart-ptr/lazy-ptr.hxx>
 #include <odb/nullable.hxx>
 #include <string>
+#include "../utility.hpp"
 
 namespace Alarmud {
 using std::string;

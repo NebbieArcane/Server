@@ -60,7 +60,7 @@ void godTrace(unsigned uType, const char* const szString, ... ) {
 }
 constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n";
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
-log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
+log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &loggerInstance,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
 	bool append = (logname=="bugs");
 	int numLogs= (logname=="bugs")?5:10;
 	string logfile(boost::filesystem::current_path().string());
@@ -74,14 +74,14 @@ log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,strin
 	r->setBufferedIO(false); // We depend on the final log line being always written.
 	r->setBufferSize(1024);
 	r->activateOptions(p);
-	logger->addAppender(r);
+	loggerInstance->addAppender(r);
 	if (inConsole) {
 		cout << "Logger " << logname << "." << suffix << " on console " << std::endl;
 		log4cxx::ConsoleAppenderPtr r2(new log4cxx::ConsoleAppender(l));
-		logger->addAppender(r2);
+		loggerInstance->addAppender(r2);
 	}
-	logger->setLevel(debugLevel);
-	return logger;
+	loggerInstance->setLevel(debugLevel);
+	return loggerInstance;
 }
 
 log4cxx::LevelPtr get_level(unsigned short debug_level) {

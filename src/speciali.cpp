@@ -46,14 +46,14 @@ namespace Alarmud {
 /****************************************************************************
 *  Blocca il passaggio in una certa direzione. Room Procedure
 ****************************************************************************/
-int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data* pRoom, int nType ) {
-	char* p;
+ROOMSPECIAL_FUNC(sBlockWay) {
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=pRoom->specparms;
+	p=room->specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -61,10 +61,10 @@ int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data*
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) ||
-				( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))
-				&& !IS_PRINCE( pChar )) { // Gaia 2001
+	if(type == EVENT_COMMAND ) {
+		if( (cmd != ndir) ||
+				( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))
+				&& !IS_PRINCE( ch )) { // Gaia 2001
 			return(FALSE);
 		}
 		else {
@@ -73,7 +73,7 @@ int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data*
 			}
 
 			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,pChar);
+			send_to_char(lev2,ch);
 			return TRUE;
 		}
 	}
@@ -82,15 +82,14 @@ int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data*
 /****************************************************************************
 *  Blocca il passaggio in una certa direzione. Mob/Obj Procedure
 ****************************************************************************/
-int sMobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
-				  struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(sMobBlockWay) {
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -98,9 +97,9 @@ int sMobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) ||
-				( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))) {
+	if( type == EVENT_COMMAND ) {
+		if( (cmd != ndir) ||
+				( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))) {
 			return(FALSE);
 		}
 		else {
@@ -108,22 +107,21 @@ int sMobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(lev2,"%s\r\n",msg);
-			act(msg, FALSE, pMob, 0, pChar, TO_VICT);
-			act("$n dice qualcosa a $N.", FALSE, pMob, 0, pChar, TO_NOTVICT);
+			act(msg, FALSE, mob, 0, ch, TO_VICT);
+			act("$n dice qualcosa a $N.", FALSE, mob, 0, ch, TO_NOTVICT);
 			return TRUE;
 		}
 	}
 	return FALSE;
 }
-int sEgoWeapon( struct char_data* pChar, int nCmd, char* szArg,
-				struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(sEgoWeapon) {
+	const char* p;
 	char pcname[256];
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	if (strlen(p)>255)
 	{ return FALSE; }
 	p=one_argument(p,pcname);
-	if( nType == EVENT_COMMAND ) {
+	if( type == EVENT_COMMAND ) {
 		return TRUE;
 	}
 	return FALSE;
@@ -137,16 +135,16 @@ int sEgoWeapon( struct char_data* pChar, int nCmd, char* szArg,
 *  Il Mobbo cambia il tipo di danno - va passato alla speciale il codice del danno
 *  *Flyp*
 ***********************************************************************************/
-int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(ChangeDam) {
+	const char* p;
 	char dam[256];
 	int damType;
 
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	p=one_argument(p,dam);
 	damType=atoi(dam);
 
-	pMob->specials.attack_type=damType;
+	mob->specials.attack_type=damType;
 
 	return FALSE;
 
@@ -160,8 +158,8 @@ int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data*
 *  Libro degli eroi - Casta lo spell e scala le rune
 *  *Flyp*
 ****************************************************************************/
-int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
-	char* p;
+MOBSPECIAL_FUNC(LibroEroi) {
+	const char* p;
 	char num [8], par2[256], runa[256], buf[128], mail[]=STAFF_EMAIL;
 	struct obj_data* obj;
 	int i,number,num2,xp,gold, nalign, tmpalign,max,xp2,xpcum,k,trueGain;
@@ -704,8 +702,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 *	 Alla speciale si passa -1000 per far passare evil, 0 neutral, 1000 good
 *  *Flyp*
 ****************************************************************************/
-int MobBlockAlign( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
-	char* p;
+MOBSPECIAL_FUNC(MobBlockAlign) {
+	const char* p;
 	char dir[256];
 	char align[256];
 	char msg[256];
@@ -754,8 +752,8 @@ int MobBlockAlign( struct char_data* ch, int cmd, char* arg, struct char_data* m
 *	 Alla speciale si passa -1000 per far passare evil, 0 neutral, 1000 good
 *  *Flyp*
 ****************************************************************************/
-int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoom, int type ) {
-	char* p;
+ROOMSPECIAL_FUNC(BlockAlign) {
+	const char* p;
 	char dir[256];
 	char align[256];
 	char msg[256];
@@ -763,7 +761,7 @@ int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoo
 	int ndir, nalign, tmpalign;
 
 	if( type == EVENT_COMMAND ) {
-		p=pRoom->specparms;
+		p=room->specparms;
 		p=one_argument(p,dir);
 
 		p=one_argument(p,align);
@@ -797,13 +795,12 @@ int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoo
 	return FALSE;
 }
 
-int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(LadroOfferte) {
 	char buf[256], buf2[256];
 
 	one_argument(arg,buf);
 	only_argument(arg,buf2);
 
-	sprintf(arg,buf2);
 	if( type == EVENT_COMMAND ) {
 		if( cmd == CMD_GET ) {
 			if ((strstr(buf,"monete"))||(strstr(buf2,"monete"))) {
@@ -819,8 +816,8 @@ int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mo
 
 /***** NEO ORSHINGAL START *****/
 
-int Vampire_Summoner( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
-	char* p;
+MOBSPECIAL_FUNC(Vampire_Summoner) {
+	const char* p;
 	char nmob[256];
 	int check, nummob;
 	struct char_data* mobtmp;
@@ -876,7 +873,7 @@ int Vampire_Summoner( struct char_data* ch, int cmd, char* arg, struct char_data
 	return false;
 }
 
-int Nightmare( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(Nightmare) {
 	struct affected_type af;
 	int num;
 

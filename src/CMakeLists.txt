@@ -178,7 +178,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-fpermissive
 	-Wendif-labels	
 	-Wwrite-strings
-	-Wno-shadow
+	-Wshadow
 	-Wno-enum-compare
 	-Werror
 #	-w

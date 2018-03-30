@@ -168,7 +168,7 @@ struct index_data {
 	int number;     /* number of existing units of this mob/obj        */
 	genericspecial_func func;
 	/* special procedure for this mob/obj       */
-	char* specname;
+	const char* specname;
 	char* specparms;
 	void* data;
 	char* name;
@@ -265,7 +265,7 @@ int MobRoomCount(int nr, struct room_data* rp);
 void ReadTextZone(FILE* fl) ;
 int CheckKillFile(int iVNum);
 int str_len(char* buf);
-void reboot_text(struct char_data* ch, char* arg, int cmd);
+ACTION_FUNC(reboot_text);
 void InitScripts();
 void ReloadRooms();
 void FreeZone(int zone_nr);
@@ -273,6 +273,8 @@ void write_obj_to_file( struct obj_data* obj, FILE* f );
 void InsertObject( struct obj_data* pObj, int nVNum );
 void InsertMobile( struct char_data* pMob, int nVNum );
 void Start_Auction();
+ACTION_FUNC(do_WorldSave);
+
 } // namespace Alarmud
 #endif
 
