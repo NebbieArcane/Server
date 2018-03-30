@@ -150,7 +150,7 @@ int find_action(int cmd) {
 
 
 
-void do_action(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_action) {
 	int act_nr;
 	char buf[MAX_INPUT_LENGTH];
 	struct social_messg* action;
@@ -166,7 +166,7 @@ void do_action(struct char_data* ch, const char* argument, int cmd) {
 	action = &soc_mess_list[ act_nr ];
 
 	if( action->char_found )
-	{ only_argument(argument, buf); }
+	{ only_argument(arg, buf); }
 	else
 	{ *buf = '\0'; }
 
@@ -220,15 +220,15 @@ void do_action(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_insult(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_insult) {
 	static char buf[100];
-	static char arg[MAX_STRING_LENGTH];
+	static char tmp[MAX_STRING_LENGTH];
 	struct char_data* victim;
 
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if(*arg) {
-		if(!(victim = get_char_room_vis(ch, arg))) {
+	if(*tmp) {
+		if(!(victim = get_char_room_vis(ch, tmp))) {
 			send_to_char("Can't hear you!\n\r", ch);
 		}
 		else {
@@ -302,7 +302,7 @@ void boot_pose_messages() {
 	fclose(fl);
 }
 
-void do_pose(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_pose) {
 	int to_pose;
 	int counter;
 	int lev, iClass;

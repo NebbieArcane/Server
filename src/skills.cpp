@@ -54,7 +54,7 @@ struct hunting_data {
 **  Disarm:
 */
 
-void do_disarm(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_disarm) {
 	char name[ MAX_INPUT_LENGTH ];
 	int percent;
 	struct char_data* victim;
@@ -72,7 +72,7 @@ void do_disarm(struct char_data* ch,const char* argument, int cmd) {
 	/*
 	 *   get victim
 	 */
-	only_argument(argument, name);
+	only_argument(arg, name);
 	if (!(victim = get_char_room_vis(ch, name))) {
 		if (ch->specials.fighting) {
 			victim = ch->specials.fighting;
@@ -218,7 +218,7 @@ void do_disarm(struct char_data* ch,const char* argument, int cmd) {
 }
 /* finger: nuova skill dei monaci: acceca l'avversario */
 
-void do_finger(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_finger) {
 	char name[ MAX_INPUT_LENGTH ];
 	int percent;
 	struct char_data* victim;
@@ -235,7 +235,7 @@ void do_finger(struct char_data* ch,const char* argument, int cmd) {
 	/*
 	 *   get victim
 	 */
-	only_argument(argument, name);
+	only_argument(arg, name);
 	if (!(victim = get_char_room_vis(ch, name))) {
 		if (ch->specials.fighting) {
 			victim = ch->specials.fighting;
@@ -344,7 +344,7 @@ int named_mobile_in_room(int room, struct hunting_data* c_data) {
 	return 0;
 }
 
-void do_track(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_track) {
 	char name[256], buf[256], found=FALSE;
 	int dist, code;
 	struct hunting_data        huntd;
@@ -355,7 +355,7 @@ void do_track(struct char_data* ch,const char* argument, int cmd) {
 	return;
 #endif
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	found = FALSE;
 	for (scan = character_list; scan; scan = scan->next)
@@ -721,7 +721,7 @@ void ChangeAlignmentDoorBash( struct char_data* pChar, int nAmount ) {
 /*
  * skill to allow fighters to break down doors
  */
-void do_doorbash( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_doorbash) {
 	int dir;
 	int ok;
 	struct room_direction_data* exitp;
@@ -906,7 +906,7 @@ void do_doorbash( struct char_data* ch,const char* arg, int cmd) {
  * skill to allow anyone to move through rivers and underwater
 */
 
-void do_swim( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_swim) {
 
 	struct affected_type af;
 	byte percent;
@@ -960,7 +960,7 @@ void do_swim( struct char_data* ch,const char* arg, int cmd) {
  * skill to allow monks to lower AC
 */
 
-void do_mantra( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_mantra) {
 
 	struct affected_type af;
 	int sulcorpo=0,i=0;
@@ -1019,7 +1019,7 @@ void do_mantra( struct char_data* ch,const char* arg, int cmd) {
 * skill to allow monks to regen hp
 * */
 
-void do_daimoku( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_daimoku) {
 
 	int sulcorpo;
 	int dummy;
@@ -1075,7 +1075,7 @@ int SpyCheck( struct char_data* ch ) {
 
 }
 
-void do_spy( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_spy) {
 
 	struct affected_type af;
 	byte percent;
@@ -1158,7 +1158,7 @@ int remove_trap( struct char_data* ch, struct obj_data* trap) {
 	}
 }
 
-void do_feign_death( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_feign_death) {
 	struct room_data* rp;
 	struct char_data* t;
 
@@ -1216,7 +1216,7 @@ void do_feign_death( struct char_data* ch,const char* arg, int cmd) {
 }
 
 
-void do_first_aid( struct char_data* ch,const char* arg, int cmd ) {
+ACTION_FUNC(do_first_aid) {
 	struct affected_type af;
 	int exp_level = 0;
 
@@ -1275,7 +1275,7 @@ void do_first_aid( struct char_data* ch,const char* arg, int cmd ) {
 }
 
 
-void do_disguise(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_disguise) {
 	struct affected_type af;
 
 	if (!ch->skills) { return; }
@@ -1323,7 +1323,7 @@ void do_disguise(struct char_data* ch,const char* argument, int cmd) {
 }
 
 /* Skill for climbing walls and the like -DM */
-void do_climb( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_climb) {
 	int dir;
 	struct room_direction_data* exitp;
 	int was_in, roll;
@@ -1460,7 +1460,7 @@ void slip_in_climb(struct char_data* ch, int dir, int room) {
 }
 
 
-void do_tan( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_tan) {
 	struct obj_data* j=0;
 	struct obj_data* hide;
 	char itemname[80],itemtype[80],hidetype[80],buf[MAX_STRING_LENGTH];
@@ -3359,7 +3359,7 @@ void do_tan( struct char_data* ch,const char* arg, int cmd) {
 	}
 }
 
-void do_find_food( struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_find_food) {
 	int r_num,percent=0;
 	struct obj_data* obj;
 	struct room_data* pRoom;
@@ -3623,7 +3623,7 @@ void do_find_food( struct char_data* ch, const char* arg, int cmd) {
 	}
 }
 
-void do_find_food_old( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_find_food_old) {
 	int r_num,percent=0;
 	struct obj_data* obj;
 
@@ -3674,7 +3674,7 @@ void do_find_food_old( struct char_data* ch,const char* arg, int cmd) {
 
 
 
-void do_find_water( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_find_water) {
 	int r_num,percent=0;
 	struct obj_data* obj;
 
@@ -3724,7 +3724,7 @@ void do_find_water( struct char_data* ch,const char* arg, int cmd) {
 	}
 }
 
-void do_find_traps( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_find_traps) {
 	if (!ch->skills)
 	{ return; }
 
@@ -3746,7 +3746,7 @@ void do_find_traps( struct char_data* ch,const char* arg, int cmd) {
 }
 
 
-void do_find( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_find) {
 	char findwhat[30];
 
 	if (!ch->skills)
@@ -3767,7 +3767,7 @@ void do_find( struct char_data* ch,const char* arg, int cmd) {
 	{ send_to_char("Find what?!?!?\n\r",ch); }
 }
 
-void do_bellow( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_bellow) {
 	struct char_data* vict,*tmp;
 
 	if (!ch->skills)
@@ -3848,7 +3848,7 @@ void do_bellow( struct char_data* ch,const char* arg, int cmd) {
 }
 
 /* ranger skill */
-void do_carve( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_carve) {
 	char arg1[MAX_STRING_LENGTH];
 	char arg2[MAX_STRING_LENGTH];
 	char buffer[MAX_STRING_LENGTH];
@@ -3870,7 +3870,7 @@ void do_carve( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	half_chop(argument,arg1,arg2,sizeof arg1 -1,sizeof arg2 -1);
+	half_chop(arg,arg1,arg2,sizeof arg1 -1,sizeof arg2 -1);
 	corpse=get_obj_in_list_vis(ch,arg1,(real_roomp(ch->in_room)->contents));
 
 	if(!corpse)  {
@@ -3925,7 +3925,7 @@ void do_carve( struct char_data* ch,const char* argument, int cmd) {
 
 }
 
-void do_doorway( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_doorway) {
 	char target_name[140];
 	struct char_data* target;
 	int location;
@@ -3950,7 +3950,7 @@ void do_doorway( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument(argument,target_name);
+	only_argument(arg,target_name);
 	if ( !(target=get_char_vis_world(ch,target_name,NULL)) ) {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;
@@ -4018,7 +4018,7 @@ void do_doorway( struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_psi_portal( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_psi_portal) {
 	char target_name[140];
 	struct char_data* target;
 	struct char_data* follower;
@@ -4047,7 +4047,7 @@ void do_psi_portal( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument(argument,target_name);
+	only_argument(arg,target_name);
 	if ( !(target=get_char_vis_world(ch,target_name,NULL)) ) {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;
@@ -4166,7 +4166,7 @@ void do_psi_portal( struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_mindsummon( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_mindsummon) {
 	char target_name[140];
 	struct char_data* target;
 	int location;
@@ -4191,7 +4191,7 @@ void do_mindsummon( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument(argument,target_name);
+	only_argument(arg,target_name);
 	if ( !(target=get_char_vis_world(ch,target_name,NULL)) )   {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;
@@ -4313,7 +4313,7 @@ void do_mindsummon( struct char_data* ch,const char* argument, int cmd) {
 /**
 * Flyp 20180128 --> immolation, ovvero canibaliaze modificato per i demoni
 **/
-void do_immolation(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_immolation) {
 	long hit_points,mana_points;  /* hit_points has to be long for storage */
 	char number[80];  /* NOTE: the argument function returns FULL argument */
 	/* if u just allocate 10 char it will overrun! */
@@ -4340,7 +4340,7 @@ void do_immolation(struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument (argument,number);
+	only_argument (arg,number);
 
 	/* polax version of number validation */
 	/* NOTE: i changed num_found to be initially TRUE */
@@ -4435,7 +4435,7 @@ void do_immolation(struct char_data* ch,const char* argument, int cmd) {
 /** Flyp **/
 
 
-void do_canibalize( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_canibalize) {
 	long hit_points,mana_points;  /* hit_points has to be long for storage */
 	char number[80];  /* NOTE: the argument function returns FULL argument */
 	/* if u just allocate 10 char it will overrun! */
@@ -4458,7 +4458,7 @@ void do_canibalize( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument (argument,number);
+	only_argument (arg,number);
 
 	/* polax version of number validation */
 	/* NOTE: i changed num_found to be initially TRUE */
@@ -4538,7 +4538,7 @@ void do_canibalize( struct char_data* ch,const char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE*3);
 }
 
-void do_flame_shroud( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_flame_shroud) {
 	struct affected_type af;
 
 	if (!ch->skills)
@@ -4596,7 +4596,7 @@ void do_flame_shroud( struct char_data* ch,const char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE*2);
 }
 
-void do_aura_sight( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_aura_sight) {
 	if (!ch->skills)
 	{ return; }
 
@@ -4647,7 +4647,7 @@ void do_aura_sight( struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_great_sight( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_great_sight) {
 	if (!ch->skills)
 	{ return; }
 
@@ -4697,7 +4697,7 @@ void do_great_sight( struct char_data* ch,const char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE*2);
 }
 
-void do_blast( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_blast) {
 	struct char_data* victim;
 	char name[240];
 	int potency,level,dam = 0;
@@ -4706,7 +4706,7 @@ void do_blast( struct char_data* ch,const char* argument, int cmd) {
 	if( !ch->skills )
 	{ return; }
 
-	only_argument(argument,name);
+	only_argument(arg,name);
 
 	if( IS_PC( ch ) || IS_SET( ch->specials.act, ACT_POLYSELF ) )
 		if( !HasClass(ch,CLASS_PSI) ) {
@@ -4930,7 +4930,7 @@ void do_blast( struct char_data* ch,const char* argument, int cmd) {
 	{ WAIT_STATE( ch, PULSE_VIOLENCE * 2 ); }  // blast
 }
 
-void do_hypnosis( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_hypnosis) {
 	char target_name[140];
 	struct char_data* victim;
 	struct affected_type af;
@@ -4959,7 +4959,7 @@ void do_hypnosis( struct char_data* ch,const char* argument, int cmd) {
 	{ return; }
 
 
-	only_argument( argument, target_name );
+	only_argument( arg, target_name );
 	victim = get_char_room_vis( ch, target_name );
 
 	if( !victim ) {
@@ -5057,7 +5057,7 @@ void do_hypnosis( struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_scry( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_scry) {
 	char target_name[140];
 	struct char_data* target;
 	int location,old_location;
@@ -5083,7 +5083,7 @@ void do_scry( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument(argument,target_name);
+	only_argument(arg,target_name);
 	if ( !(target=get_char_vis_world(ch,target_name,NULL)) ) {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;
@@ -5127,7 +5127,7 @@ void do_scry( struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_invisibililty( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_invisibililty) {
 	if (!ch->skills)
 	{ return; }
 
@@ -5176,7 +5176,7 @@ void do_invisibililty( struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_adrenalize( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_adrenalize) {
 	char target_name[140];
 	struct char_data* target;
 	struct affected_type af;
@@ -5201,7 +5201,7 @@ void do_adrenalize( struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	only_argument (argument,target_name);
+	only_argument (arg,target_name);
 	if ( !(target=get_char_room_vis(ch,target_name)) ) {
 		send_to_char ("You can't seem to find that person anywhere.\n\r",ch);
 		return;
@@ -5256,7 +5256,7 @@ void do_adrenalize( struct char_data* ch,const char* argument, int cmd) {
 	act ("$n touches you on the forehead lightly, you feel energy ulimited!",TRUE,ch,0,target,TO_VICT);
 }
 
-void do_meditate( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_meditate) {
 	struct affected_type af;
 
 	if (!ch->skills)
@@ -5317,7 +5317,7 @@ int IS_FOLLOWING(struct char_data* tch, struct char_data* person) {
 	return (person == tch && IS_AFFECTED(person,AFF_GROUP) && IS_AFFECTED(tch,AFF_GROUP));
 }
 
-void do_heroic_rescue( struct char_data* ch,const char* arguement, int command ) {
+ACTION_FUNC(do_heroic_rescue) {
 	struct char_data* dude, *enemy;
 	int grp = 0, first = 1, rescue, rescued = 0,torescue = 0;
 
@@ -5416,7 +5416,7 @@ void do_heroic_rescue( struct char_data* ch,const char* arguement, int command )
 
 
 
-void do_blessing(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_blessing) {
 	int rating, factor, level;
 	struct char_data* test, *dude;
 	struct affected_type af;
@@ -5425,7 +5425,7 @@ void do_blessing(struct char_data* ch,const char* argument, int cmd) {
 	if (!ch->skills)
 	{ return; }
 
-	only_argument(argument,dude_name);
+	only_argument(arg,dude_name);
 
 	if (IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
 		if (!HasClass(ch,CLASS_PALADIN)) {
@@ -5547,7 +5547,7 @@ void do_blessing(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_lay_on_hands (struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_lay_on_hands) {
 	struct char_data* victim;
 	struct affected_type af;
 	int wounds, healing;
@@ -5556,7 +5556,7 @@ void do_lay_on_hands (struct char_data* ch,const char* argument, int cmd) {
 	if (!ch->skills)
 	{ return; }
 
-	only_argument(argument, victim_name);
+	only_argument(arg, victim_name);
 
 	if (IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
 		if (!HasClass(ch,CLASS_PALADIN)) {
@@ -5618,7 +5618,7 @@ void do_lay_on_hands (struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_holy_warcry (struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_holy_warcry) {
 	char name[140];
 	int dam, dif,level;
 	struct char_data* dude;
@@ -5626,7 +5626,7 @@ void do_holy_warcry (struct char_data* ch,const char* argument, int cmd) {
 	if (!ch->skills)
 	{ return; }
 
-	only_argument(argument,name);
+	only_argument(arg,name);
 
 	if (IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
 		if (!HasClass(ch,CLASS_PALADIN) && !IS_PRINCE(ch)) {
@@ -5708,7 +5708,7 @@ void do_holy_warcry (struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_psi_shield( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_psi_shield) {
 	struct affected_type af;
 
 	if (!ch->skills)
@@ -5763,7 +5763,7 @@ void do_psi_shield( struct char_data* ch,const char* argument, int cmd) {
 
 }
 
-void do_esp( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_esp) {
 	struct affected_type af;
 
 	if (!ch->skills)
@@ -5815,7 +5815,7 @@ void do_esp( struct char_data* ch,const char* argument, int cmd) {
 	affect_to_char (ch,&af);
 }
 
-void do_sending( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_sending) {
 	struct char_data* target;
 	int skill_check=0;
 	char target_name[140],buf[1024], message[MAX_INPUT_LENGTH+20];
@@ -5863,7 +5863,7 @@ void do_sending( struct char_data* ch,const char* argument, int cmd) {
 		GET_MANA(ch) -=5;
 		alter_mana(ch,0);
 	}
-	half_chop(argument,target_name,message,sizeof target_name -1,sizeof message -1);
+	half_chop(arg,target_name,message,sizeof target_name -1,sizeof message -1);
 	if( !(target=get_char_vis_world(ch,target_name,NULL)) ) {
 		send_to_char ("You can't sense that person anywhere.\n\r",ch);
 		return;
@@ -5899,7 +5899,7 @@ void do_sending( struct char_data* ch,const char* argument, int cmd) {
 	act(buf, TRUE, ch, 0, target, TO_CHAR);
 }
 
-void do_brew( struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_brew) {
 	if (!ch->skills)
 	{ return; }
 
@@ -6359,7 +6359,7 @@ void ForgeGraphic( struct char_data* ch, int urka) {
 	}
 }
 
-void do_forge( struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_forge) {
 	int r_num,percent,bonus,class_bonus,cdb,cdd,dex_malus,urka=0;
 	int numdice,sizedice,peso,div_peso,peso_old,damtype,valore,rent,hold,nling,vling;
 	int VNum,i,exp;

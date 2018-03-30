@@ -72,7 +72,7 @@ void MakeNoise(int room, const char* local_snd, const char* distant_snd) {
 	}
 }
 
-void MakeSound(unsigned long pulse) {
+void MakeSound(unsigned long localPulse) {
 	int room;
 	char buffer[128];
 	struct obj_data* obj;
@@ -85,7 +85,7 @@ void MakeSound(unsigned long pulse) {
 	for (obj = object_list; obj; obj = obj->next) {
 		if (ITEM_TYPE(obj) == ITEM_AUDIO) {
 			if (((obj->obj_flags.value[0]) &&
-					(pulse % obj->obj_flags.value[0])==0) ||
+					(localPulse % obj->obj_flags.value[0])==0) ||
 					(!number(0,5))) {
 				if (obj->carried_by) {
 					room = obj->carried_by->in_room;

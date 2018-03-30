@@ -93,14 +93,14 @@ void name_to_drinkcon(struct obj_data* obj,int type) {
 
 
 
-void do_drink(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_drink) {
 	char buf[255];
 	struct obj_data* temp;
 	struct affected_type af;
 	int amount;
 
 
-	only_argument(argument,buf);
+	only_argument(arg,buf);
 
 	if(!(temp = get_obj_in_list_vis(ch,buf,ch->carrying))) {
 		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
@@ -199,13 +199,13 @@ void do_drink(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_eat(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_eat) {
 	char buf[100];
 	int j, num;
 	struct obj_data* temp;
 	struct affected_type af;
 
-	one_argument(argument,buf);
+	one_argument(arg,buf);
 
 	if(!(temp = get_obj_in_list_vis(ch,buf,ch->carrying)))  {
 		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
@@ -260,7 +260,7 @@ void do_eat(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_pour(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_pour) {
 	char arg1[132];
 	char arg2[132];
 	char buf[256];
@@ -268,7 +268,7 @@ void do_pour(struct char_data* ch,const char* argument, int cmd) {
 	struct obj_data* to_obj;
 	int temp;
 
-	argument_interpreter(argument, arg1, arg2);
+	argument_interpreter(arg, arg1, arg2);
 
 	if(!*arg1) { /* No arguments */
 		act("What do you want to pour from?",FALSE,ch,0,0,TO_CHAR);
@@ -373,15 +373,15 @@ void do_pour(struct char_data* ch,const char* argument, int cmd) {
 	return;
 }
 
-void do_sip(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_sip) {
 	struct affected_type af;
-	char arg[MAX_STRING_LENGTH];
+	char tmp[MAX_STRING_LENGTH];
 	char buf[MAX_STRING_LENGTH];
 	struct obj_data* temp;
 
-	one_argument(argument,arg);
+	one_argument(arg,tmp);
 
-	if(!(temp = get_obj_in_list_vis(ch,arg,ch->carrying)))    {
+	if(!(temp = get_obj_in_list_vis(ch,tmp,ch->carrying)))    {
 		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
@@ -454,20 +454,20 @@ void do_sip(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_taste(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_taste) {
 	struct affected_type af;
-	char arg[80];
+	char tmp[80];
 	struct obj_data* temp;
 
-	one_argument(argument,arg);
+	one_argument(arg,tmp);
 
-	if(!(temp = get_obj_in_list_vis(ch,arg,ch->carrying)))    {
+	if(!(temp = get_obj_in_list_vis(ch,tmp,ch->carrying)))    {
 		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(temp->obj_flags.type_flag==ITEM_DRINKCON)    {
-		do_sip(ch,argument,0);
+		do_sip(ch,arg,0);
 		return;
 	}
 
@@ -1165,7 +1165,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 }
 
 
-void do_wear(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_wear) {
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
 	char buf[256];
@@ -1173,7 +1173,7 @@ void do_wear(struct char_data* ch,const char* argument, int cmd) {
 	struct obj_data* obj_object, *next_obj;
 	int keyword;
 
-	argument_interpreter(argument, arg1, arg2);
+	argument_interpreter(arg, arg1, arg2);
 	if (*arg1) {
 		if (!strcmp(arg1,"all")) {
 			/* elimino il wear all in combattimento Gaia 2001 */
@@ -1292,14 +1292,14 @@ void do_wear(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_wield(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_wield) {
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
 	char buffer[MAX_INPUT_LENGTH];
 	struct obj_data* obj_object;
 	int keyword = 12;
 
-	argument_interpreter(argument, arg1, arg2);
+	argument_interpreter(arg, arg1, arg2);
 	if (*arg1) {
 		obj_object = get_obj_in_list_vis(ch, arg1, ch->carrying);
 		if (obj_object) {
@@ -1317,13 +1317,13 @@ void do_wield(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_grab(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_grab) {
 	char arg1[128];
 	char arg2[128];
 	char buffer[256];
 	struct obj_data* obj_object;
 
-	argument_interpreter(argument, arg1, arg2);
+	argument_interpreter(arg, arg1, arg2);
 
 	if (*arg1) {
 		obj_object = get_obj_in_list(arg1, ch->carrying);
@@ -1344,7 +1344,7 @@ void do_grab(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_remove(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_remove) {
 	char arg1[128],*T,*P;
 	char buffer[256];
 	int Rem_List[20],Num_Equip;
@@ -1352,7 +1352,7 @@ void do_remove(struct char_data* ch,const char* argument, int cmd) {
 	struct obj_data* loaded_object;    /* Gaia 2001 */
 	int j;
 
-	one_argument(argument, arg1);
+	one_argument(arg, arg1);
 
 	if( *arg1 ) {
 		if (!strcmp(arg1,"all"))

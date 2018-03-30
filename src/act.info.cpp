@@ -819,7 +819,7 @@ void show_char_to_char( struct char_data* i, struct char_data* ch, int mode ) {
 			for( j=0; j< MAX_WEAR; j++ ) {
 				if( i->equipment[ j ] ) {
 					if( CAN_SEE_OBJ( ch, i->equipment[ j ] ) ) {
-						send_to_char( where[ j ], ch );
+						send_to_char( eqWhere[ j ], ch );
 						show_obj_to_char( i->equipment[ j ], ch, 1 );
 					}
 				}
@@ -1100,7 +1100,7 @@ void show_mult_char_to_char( struct char_data* i, struct char_data* ch,
 			for( j=0; j< MAX_WEAR; j++) {
 				if( i->equipment[ j ] ) {
 					if( CAN_SEE_OBJ(ch,i->equipment[j])) {
-						send_to_char( where[j], ch );
+						send_to_char( eqWhere[j], ch );
 						show_obj_to_char( i->equipment[ j ], ch, 1 );
 					}
 				}
@@ -1245,7 +1245,7 @@ void list_exits_in_room(struct char_data* ch) {
 }
 
 
-void do_look(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_look) {
 	char buffer[MAX_STRING_LENGTH];
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
@@ -1303,14 +1303,14 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 		}
 	}
 	else {
-		only_argument(argument, arg1);
+		only_argument(arg, arg1);
 
 		if(0==strn_cmp(arg1,"at",2) && isspace(arg1[2])) {
-			only_argument(argument+3, arg2);
+			only_argument(arg+3, arg2);
 			keyword_no = 7;
 		}
 		else if (0==strn_cmp(arg1,"in",2) && isspace(arg1[2])) {
-			only_argument(argument+3, arg2);
+			only_argument(arg+3, arg2);
 			keyword_no = 6;
 		}
 		else {
@@ -1319,7 +1319,7 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 
 		if ((keyword_no == -1) && *arg1) {
 			keyword_no = 7;
-			only_argument(argument, arg2);
+			only_argument(arg, arg2);
 		}
 
 
@@ -1778,25 +1778,25 @@ void do_look(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_read(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_read) {
 	char buf[100];
 
 	/* This is just for now - To be changed later.! */
-	snprintf(buf,99,"at %s",argument);
+	snprintf(buf,99,"at %s",arg);
 	do_look(ch,buf,15);
 }
 
 
 
-void do_examine(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_examine) {
 	char name[1000], buf[1000];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object;
 
-	snprintf(buf,999,"at %s",argument);
+	snprintf(buf,999,"at %s",arg);
 	do_look( ch, buf, 15 );
 
-	one_argument(argument, name);
+	one_argument(arg, name);
 
 	if (!*name) {
 		send_to_char("Esaminare che cosa ?\n\r", ch);
@@ -1810,7 +1810,7 @@ void do_examine(struct char_data* ch,const char* argument, int cmd) {
 		if ((GET_ITEM_TYPE(tmp_object)==ITEM_DRINKCON) ||
 				(GET_ITEM_TYPE(tmp_object)==ITEM_CONTAINER)) {
 			send_to_char("Quando ci guardi dentro, vedi:\n\r", ch);
-			snprintf(buf,999,"in %s",argument);
+			snprintf(buf,999,"in %s",arg);
 			do_look(ch,buf,15);
 		}
 	}
@@ -1819,7 +1819,7 @@ void do_examine(struct char_data* ch,const char* argument, int cmd) {
 /**************************************************************************
  * do_exits visualizza le uscite della locazione.
  **************************************************************************/
-void do_exits(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_exits) {
 	/* NOTE: Input var 'cmd' is not used. */
 	int door;
 	char buf[1000];
@@ -1871,7 +1871,7 @@ void do_exits(struct char_data* ch,const char* argument, int cmd) {
 	{ send_to_char( "Nessuna !\n\r", ch ); }
 }
 
-void do_status( struct char_data* ch,const char* argument, int cmd ) {
+ACTION_FUNC(do_status) {
 	static char buf[1000];
 	snprintf( buf, 999,
 			  "$c0005Tu hai $c0015%d$c0005($c0011%d$c0005) hit, "
@@ -1888,7 +1888,7 @@ void do_status( struct char_data* ch,const char* argument, int cmd ) {
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 }
 
-void do_score(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_score) {
 	struct time_info_data playing_time;
 	char buf[1000], buf2[1000];
 	char datanasc[200];
@@ -2213,7 +2213,7 @@ void do_score(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_time(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_time) {
 	char buf[100];
 	int weekday, day;
 
@@ -2238,7 +2238,7 @@ void do_time(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_weather(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_weather) {
 	char buf[ 256 ];
 	const char* sky_look[] = {
 		"sereno",
@@ -2260,7 +2260,7 @@ void do_weather(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_help(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_help) {
 
 	int chk, bot, top, mid, minlen;
 	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
@@ -2269,11 +2269,11 @@ void do_help(struct char_data* ch,const char* argument, int cmd) {
 	if (!ch->desc)
 	{ return; }
 
-	for(; isspace(*argument); argument++) ;
+	for(; isspace(*arg); arg++) ;
 
 
 
-	if (*argument) {
+	if (*arg) {
 		if (!help_index) {
 			send_to_char( "L'help non e` disponibile.\n\r", ch);
 			return;
@@ -2283,9 +2283,9 @@ void do_help(struct char_data* ch,const char* argument, int cmd) {
 
 		for (;;) {
 			mid = (bot + top) / 2;
-			minlen = strlen(argument);
+			minlen = strlen(arg);
 
-			if (!(chk = strn_cmp(argument, help_index[mid].keyword, minlen))) {
+			if (!(chk = strn_cmp(arg, help_index[mid].keyword, minlen))) {
 				fseek(help_fl, help_index[mid].pos, 0);
 				*buffer = '\0';
 				for (;;) {
@@ -2318,7 +2318,7 @@ void do_help(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_wizhelp(struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_wizhelp) {
 	char buf[1000];
 	int i, j = 1;
 	NODE* n;
@@ -2354,7 +2354,7 @@ void do_wizhelp(struct char_data* ch,const char* arg, int cmd) {
 	page_string(ch->desc, buf, 1);
 }
 
-void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_actual_wiz_help) {
 
 	int chk, bot, top, mid, minlen;
 	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
@@ -2363,10 +2363,10 @@ void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
 	if (!ch->desc)
 	{ return; }
 
-	for(; isspace(*argument); argument++)  ;
+	for(; isspace(*arg); arg++)  ;
 
 
-	if (*argument) {
+	if (*arg) {
 		if (!wizhelp_index) {
 			send_to_char( "Il wizhelp non e` disponibile.\n\r", ch);
 			return;
@@ -2376,9 +2376,9 @@ void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
 
 		for (;;) {
 			mid = (bot + top) / 2;
-			minlen = strlen(argument);
+			minlen = strlen(arg);
 
-			if(!(chk = strn_cmp(argument, wizhelp_index[mid].keyword, minlen))) {
+			if(!(chk = strn_cmp(arg, wizhelp_index[mid].keyword, minlen))) {
 				fseek(wizhelp_fl, wizhelp_index[mid].pos, 0);
 				*buffer = '\0';
 				for (;;) {
@@ -2408,7 +2408,7 @@ void do_actual_wiz_help(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_command_list(struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_command_list) {
 	char buf[MAX_STRING_LENGTH];
 	int i, j = 1;
 	NODE* n;
@@ -2454,7 +2454,7 @@ int OK_NAME(struct char_data *name,const char*mask)
 */
 
 
-void do_who(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_who) {
 	struct char_data* person;
 	char buffer[MAX_STRING_LENGTH*2]="",tbuf[512];
 	int count;
@@ -2469,13 +2469,13 @@ void do_who(struct char_data* ch,const char* argument, int cmd) {
 	char ttbuf[256];
 
 	/*  check for an arg */
-	argument = one_argument(argument,tbuf);
+	arg = one_argument(arg,tbuf);
 	if(tbuf[0]=='-' && tbuf[1]!='\0')
 	{ strcpy(flags,tbuf+1); }
 	else
 	{ strcpy(name_mask,tbuf); }
-	if(*argument) {
-		argument = one_argument(argument,tbuf);
+	if(*arg) {
+		arg = one_argument(arg,tbuf);
 		if(tbuf[0]=='-' && tbuf[1]!='\0')
 		{ strcpy(flags,tbuf+1); }
 		else
@@ -2854,7 +2854,7 @@ void do_who(struct char_data* ch,const char* argument, int cmd) {
 	page_string( ch->desc, buffer, TRUE );
 }
 
-void do_users( struct char_data* ch,const char* argument, int cmd ) {
+ACTION_FUNC(do_users) {
 	char buf[MAX_STRING_LENGTH], line[200], buf2[255];
 
 	struct descriptor_data* d;
@@ -2892,14 +2892,14 @@ void do_users( struct char_data* ch,const char* argument, int cmd ) {
 
 
 
-void do_inventory(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_inventory) {
 
 	send_to_char("Stai trasportando:\n\r", ch);
 	list_obj_in_heap(ch->carrying, ch);
 }
 
 
-void do_equipment(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_equipment) {
 	int j,Worn_Index;
 	bool found;
 	char String[256];
@@ -2909,7 +2909,7 @@ void do_equipment(struct char_data* ch,const char* argument, int cmd) {
 	for (Worn_Index = j=0; j< MAX_WEAR; j++) {
 		if (ch->equipment[j]) {
 			Worn_Index++;
-			snprintf(String,255,"[%2d] %s",Worn_Index,where[j]);
+			snprintf(String,255,"[%2d] %s",Worn_Index,eqWhere[j]);
 			send_to_char(String,ch);
 			if (CAN_SEE_OBJ(ch,ch->equipment[j])) {
 				show_obj_to_char(ch->equipment[j],ch,1);
@@ -2927,38 +2927,38 @@ void do_equipment(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_credits(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_credits) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, credits, 0);
 }
-void do_news(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_news) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, news, 0);
 }
-void do_wiznews(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_wiznews) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wiznews, 0);
 }
-void do_info(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_info) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, info, 0);
 }
-void do_wizlist(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_wizlist) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, wizlist, 0);
 }
-void do_prince(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_prince) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, princelist, 0);
 }
-void do_immortal(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_immortal) {
 	SET_BIT(ch->player.user_flags,USE_PAGING);
 	page_string(ch->desc, immlist, 0);
 }
 
 int which_number_object( struct obj_data* obj ) {
 	struct obj_data* i;
-	char* name;
+	const char* name;
 	int number;
 
 	name = fname( obj->name );
@@ -2985,7 +2985,7 @@ char* numbered_object( struct char_data* ch, struct obj_data* obj) {
 
 int which_number_mobile(struct char_data* ch, struct char_data* mob) {
 	struct char_data*        i;
-	char*        name;
+	const char*        name;
 	int        number;
 
 	name = fname(mob->player.name);
@@ -3080,7 +3080,7 @@ void do_where_object( struct char_data* ch, struct obj_data* obj,
 	}
 }
 
-void do_where(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_where) {
 	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	char*        nameonly;
 	register struct char_data* i;
@@ -3089,7 +3089,7 @@ void do_where(struct char_data* ch,const char* argument, int cmd) {
 	int        number, count;
 	struct string_block        sb;
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!*name) {
 		if (GetMaxLevel(ch) < DIO) {
@@ -3189,7 +3189,7 @@ void do_where(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_levels(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_levels) {
 	int i, RaceMax, iClass;
 	char buf[MAX_STRING_LENGTH*2],buf2[MAX_STRING_LENGTH];
 
@@ -3204,14 +3204,14 @@ void do_levels(struct char_data* ch,const char* argument, int cmd) {
 	 *  get the class
 	 */
 
-	for (; isspace(*argument); argument++);
+	for (; isspace(*arg); arg++);
 
-	if (!*argument) {
+	if (!*arg) {
 		send_to_char("Devi fornire una classe !\n\r", ch);
 		return;
 	}
 
-	switch(*argument) {
+	switch(*arg) {
 	case 'C':
 	case 'c':
 		iClass = CLERIC_LEVEL_IND;
@@ -3263,7 +3263,7 @@ void do_levels(struct char_data* ch,const char* argument, int cmd) {
 		break;
 
 	default:
-		snprintf(buf, (MAX_STRING_LENGTH*2)-1,"Non riconosco %s\n\r", argument);
+		snprintf(buf, (MAX_STRING_LENGTH*2)-1,"Non riconosco %s\n\r", arg);
 		send_to_char(buf,ch);
 		return;
 		break;
@@ -3292,12 +3292,12 @@ void do_levels(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_consider(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_consider) {
 	struct char_data* victim;
 	char name[256], buf[256];
 	int diff;
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if( !( victim = get_char_room_vis(ch, name) ) ) {
 		send_to_char("Chi stai considerando di uccidere ?\n\r", ch);
@@ -3493,7 +3493,7 @@ void do_consider(struct char_data* ch,const char* argument, int cmd) {
 
 }
 
-void do_spells(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_spells) {
 	int spl, i;        /* 16384 */
 	char buf[ 256 ];
 	struct string_block sb;
@@ -3559,7 +3559,7 @@ long GetLagIndex() {
 	return(LagIndex);
 }
 
-void do_world(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_world) {
 	char buf[1000];
 
 	long ct, ot;
@@ -3651,7 +3651,7 @@ void do_world(struct char_data* ch,const char* argument, int cmd) {
 
 }
 
-void do_attribute(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_attribute) {
 	char buf[MAX_STRING_LENGTH];
 	struct affected_type* aff;
 
@@ -3784,7 +3784,7 @@ void do_attribute(struct char_data* ch,const char* argument, int cmd) {
 	}
 }
 
-void do_value(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_value) {
 	char buf[1000],buf2[1000], name[1000];
 	struct obj_data* obj=0;
 	struct char_data* vict=0;
@@ -3800,7 +3800,7 @@ void do_value(struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	argument = one_argument(argument, name);
+	arg = one_argument(arg, name);
 
 	if ((obj = get_obj_in_list_vis(ch, name, ch->carrying))==0) {
 		if ((vict = get_char_room_vis(ch, name))==0) {
@@ -3808,7 +3808,7 @@ void do_value(struct char_data* ch,const char* argument, int cmd) {
 			return;
 		}
 		else {
-			only_argument(argument, name);
+			only_argument(arg, name);
 			if ((obj = get_obj_in_list_vis(ch, name, vict->carrying))==0) {
 				act("Non vedi $p addosso a $N", FALSE, ch, obj, vict, TO_CHAR);
 				act("$n ti sta esaminando", FALSE, ch, 0, vict, TO_VICT);
@@ -4174,7 +4174,7 @@ const char* DescAttacks(float a) {
 }
 
 
-void do_display(struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_display) {
 	int i;
 
 	if(IS_NPC(ch))
@@ -4221,7 +4221,7 @@ void ScreenOff(struct char_data* ch) {
 	send_to_char(VT_HOMECLR, ch);
 }
 
-void do_resize(struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_resize) {
 	int i;
 
 	if(IS_NPC(ch))
@@ -4278,7 +4278,7 @@ int MobLevBonus(struct char_data* ch) {
 	return(t);
 }
 
-void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
+ACTION_FUNC(do_show_skill) {
 	char buf[254], buffer[MAX_STRING_LENGTH];
 	int i,max;
 
@@ -4528,7 +4528,7 @@ void do_show_skill(struct char_data* ch,const char* arg, int cmd) {
 /* to figure out how to look into rooms next to this room. Will be using*/
 /* the code for throwing items. I figure there is no IC reason for a PC */
 /* to have a command like this. Do what ya want on your on MUD                 */
-void do_scan(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_scan) {
 	static const char* dir_desc[] = {
 		"a nord",
 		"ad est",
@@ -4579,7 +4579,7 @@ void do_scan(struct char_data* ch,const char* argument, int cmd) {
 
 	}  /* was mortal */
 
-	argument_split_2(argument,arg1,arg2);
+	argument_split_2(arg,arg1,arg2);
 	sd = search_block(arg1, dirs, FALSE);
 	if (sd==-1) {
 		smin = 0;

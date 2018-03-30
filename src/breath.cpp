@@ -160,9 +160,9 @@ static breath_func breaths[] = {
 	0
 };
 
-int BreathWeapon( struct char_data* ch, int cmd, char* arg,struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(BreathWeapon) {
 	int        count;
-	char* p;
+	const char* p;
 	char p2[255];
 	int cost;
 	int tipo;
@@ -200,7 +200,7 @@ breath_func bweapons[] = {
 	cast_lightning_breath
 };
 
-void do_breath(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_breath) {
 	struct char_data* victim;
 	char        name[MAX_STRING_LENGTH];
 	int        count, manacost;
@@ -209,9 +209,9 @@ void do_breath(struct char_data* ch,const char* argument, int cmd) {
 	if (check_peaceful(ch,"That wouldn't be nice at all.\n\r"))
 	{ return; }
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
-	BreathWeapon(ch, CMD_BREATH, (char*) NULL,ch,0);
+	BreathWeapon(ch, CMD_BREATH, "",ch,0);
 
 	WAIT_STATE(ch, PULSE_VIOLENCE*2);
 }

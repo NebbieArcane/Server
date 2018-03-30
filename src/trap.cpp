@@ -35,7 +35,7 @@ namespace Alarmud {
 /* struct room_data *real_roomp(int); */
 
 
-void do_settrap( struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(do_settrap) {
 
 	/* parse for directions */
 

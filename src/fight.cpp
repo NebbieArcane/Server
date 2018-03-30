@@ -3022,7 +3022,6 @@ DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 						int type, int w_type,damage_func dam_func, int location) {
 	DamageResult dead;
 	char buf[256];
-	int leech;
 
 	if( type == SKILL_BACKSTAB ) {
 		int tmp;
@@ -3109,7 +3108,6 @@ int canLeech(struct char_data* ch, struct char_data* victim) {
 
 DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,
 					   int type, damage_func dam_func, int DistanceWeapon, int location ) {
-	int w_type, thaco, dam ;
 	struct char_data* tmp_victim, *temp, *victim ;
 	struct obj_data* wielded=0;  /* this is rather important. */
 
@@ -3127,7 +3125,7 @@ DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,
 		alter_move(ch,0);
 	}
 
-	w_type = GetWeaponType(ch, &wielded);
+	int w_type = GetWeaponType(ch, &wielded);
 	if (w_type == TYPE_HIT)
 	{ w_type = GetFormType(ch); }  /* races have different types of attack */
 
@@ -3154,15 +3152,16 @@ DamageResult root_hit( struct char_data* ch, struct char_data* orig_victim,
 	/* in pratica ogni volte che ci si mena con una terza persona presente
 	   si vede se per caso non parte una randellata fuori bersaglio Gaia 2001 */
 
-	thaco = CalcThaco(ch, victim);
+	int tohit = CalcThaco(ch, victim);
 
 	/* Modifico la chiamata a GetWeaponDam
 	   per aggiungere la HIT LOCATION Gaia 7/2000 */
 
-	if (HitOrMiss(ch, victim, thaco))
+	if (HitOrMiss(ch, victim, tohit))
 
 	{
-		if ((dam = GetWeaponDam(ch, victim, wielded, location)) > 0) {
+		int dam = GetWeaponDam(ch, victim, wielded, location);
+		if (dam > 0) {
 			return HitVictim(ch, victim, dam, type, w_type, dam_func, location);
 		}
 		else {
@@ -3416,9 +3415,7 @@ void NPCAttacks( char_data* pChar ) {
 
 /* control the fights going on */
 
-void perform_violence(unsigned long pulse)
-
-{
+void perform_violence(unsigned long currentPulse) {
 	struct char_data* ch;
 	int tdir, cmv, max_cmv, caught, rng, tdr;
 

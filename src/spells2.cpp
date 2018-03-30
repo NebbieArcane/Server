@@ -3080,7 +3080,7 @@ void cast_golem( byte level, struct char_data* ch, const char* arg,
 
 void cast_command( byte level, struct char_data* ch, const char* arg,
 				   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	char* p;
+	const char* p;
 	char buf[128];
 	/* have to parse the argument to get the command */
 
@@ -3304,7 +3304,7 @@ void cast_insect_growth( byte level, struct char_data* ch, const char* arg,
 
 void cast_creeping_death( byte level, struct char_data* ch, const char* arg,
 						  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	char* p;
+	const char* p;
 	int i;
 
 

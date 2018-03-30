@@ -319,7 +319,7 @@ void MobScavenge(struct char_data* ch) {
 }
 
 
-void check_mobile_activity(unsigned long pulse) {
+void check_mobile_activity(unsigned long localPulse) {
 	register struct char_data* ch;
 	struct char_data* pNextChar;
 
@@ -1021,7 +1021,7 @@ void CommandSetup() {
 	CommandAssign("stop", end2);
 }
 
-void noop(char* arg, struct char_data* ch) {
+SCRIPT_FUNC(noop) {
 	int i;
 
 	if(ch->waitp > 0) {
@@ -1050,12 +1050,11 @@ void noop(char* arg, struct char_data* ch) {
 	return;
 }
 
-void end2(char* arg, struct char_data* ch) {
+SCRIPT_FUNC(end2) {
 	ch->commandp = 0;
 }
 
-void sgoto(char* arg, struct char_data* ch) {
-	char* p;
+SCRIPT_FUNC(sgoto) {
 	struct char_data* mob;
 	int dir, room;
 
@@ -1063,15 +1062,19 @@ void sgoto(char* arg, struct char_data* ch) {
 		if( *arg == '$' ) {
 			/* this is a creature name to follow */
 			arg++;
-			p = strtok(arg, " ");
-			if ((mob = get_char_vis(ch, p)) == NULL) {
-				fprintf( stderr, "%s couldn't find mob by name %s\n",
-						 gpScript_data[ch->script].filename, p);
-				ch->commandp++;
-				return;
-			}
-			else {
-				room = mob->in_room;
+			string mobname(arg);
+			size_t p=mobname.find(" ");
+			if (p!=string::npos) {
+				mob = get_char_vis(ch, mobname.substr(0,p).c_str());
+				if (!mob) {
+					fprintf( stderr, "%s couldn't find mob by name %s\n",
+							 gpScript_data[ch->script].filename, mobname.c_str());
+					ch->commandp++;
+					return;
+				}
+				else {
+					room = mob->in_room;
+				}
 			}
 		}
 		else {
@@ -1079,8 +1082,7 @@ void sgoto(char* arg, struct char_data* ch) {
 		}
 	}
 	else {
-		mudlog( LOG_ERROR, "Error in script %s, no destination for goto",
-				gpScript_data[ch->script].filename);
+		mudlog( LOG_ERROR, "Error in script %s, no destination for goto",gpScript_data[ch->script].filename);
 		ch->commandp++;
 		return;
 	}
@@ -1103,7 +1105,7 @@ void sgoto(char* arg, struct char_data* ch) {
 	ch->commandp++;
 }
 
-void do_act(char* arg, struct char_data* ch) {
+SCRIPT_FUNC(do_act) {
 	int bits;
 	if (arg) {
 		bits = atoi(arg);
@@ -1117,7 +1119,7 @@ void do_act(char* arg, struct char_data* ch) {
 	return;
 }
 
-void do_jmp(char* arg, struct char_data* ch) {
+SCRIPT_FUNC(do_jmp) {
 	int i;
 	char buf[255];
 
@@ -1138,7 +1140,7 @@ void do_jmp(char* arg, struct char_data* ch) {
 	ch->commandp++;
 }
 
-void do_jsr(char* arg, struct char_data* ch) {
+SCRIPT_FUNC(do_jsr) {
 	int i;
 	char buf[ 256 ];
 
@@ -1154,13 +1156,12 @@ void do_jsr(char* arg, struct char_data* ch) {
 		}
 	}
 
-	mudlog( LOG_ERROR, "Label %s undefined in script assigned to %s. Ignoring.",
-			arg, GET_NAME(ch));
+	mudlog( LOG_ERROR, "Label %s undefined in script assigned to %s. Ignoring.",arg, GET_NAME(ch));
 
 	ch->commandp++;
 }
 
-void do_rts(char* arg, struct char_data* ch) {
+SCRIPT_FUNC(do_rts) {
 	ch->commandp = ch->commandp2;
 	ch->commandp2 = 0;
 }

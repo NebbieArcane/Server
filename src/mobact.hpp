@@ -27,16 +27,16 @@ int SameRace( struct char_data* ch1, struct char_data* ch2) ;
 int SentinelBackHome( struct char_data* pMob ) ;
 int UseViolentHeldItem( struct char_data* ch ) ;
 void check_mobile_activity(unsigned long pulse) ;
-void do_act(char* arg, struct char_data* ch) ;
-void do_jmp(char* arg, struct char_data* ch) ;
-void do_jsr(char* arg, struct char_data* ch) ;
-void do_rts(char* arg, struct char_data* ch) ;
-void end2(char* arg, struct char_data* ch) ;
-void mobile_activity(struct char_data* ch) ;
-void mobile_guardian(struct char_data* ch) ;
-void mobile_wander(struct char_data* ch) ;
-void noop(char* arg, struct char_data* ch) ;
-void sgoto(char* arg, struct char_data* ch) ;
+void mobile_activity(struct char_data* ch);
+void mobile_guardian(struct char_data* ch);
+void mobile_wander(struct char_data* ch);
+SCRIPT_FUNC(do_act);
+SCRIPT_FUNC(do_jmp);
+SCRIPT_FUNC(do_jsr);
+SCRIPT_FUNC(do_rts);
+SCRIPT_FUNC(end2);
+SCRIPT_FUNC(noop);
+SCRIPT_FUNC(sgoto);
 } // namespace Alarmud
 #endif // __MOBACT_HPP
 

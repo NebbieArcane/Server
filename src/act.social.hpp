@@ -40,9 +40,9 @@ extern struct pose_type pose_messages[MAX_MESSAGES];
 
 void boot_pose_messages() ;
 void boot_social_messages() ;
-void do_action(struct char_data* ch, const char* argument, int cmd) ;
-void do_insult(struct char_data* ch, const char* argument, int cmd) ;
-void do_pose(struct char_data* ch, const char* argument, int cmd) ;
+ACTION_FUNC(do_action) ;
+ACTION_FUNC(do_insult) ;
+ACTION_FUNC(do_pose) ;
 int find_action(int cmd) ;
 char* fread_action(FILE* fl) ;
 } // namespace Alarmud

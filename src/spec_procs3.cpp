@@ -1003,7 +1003,8 @@ MOBSPECIAL_FUNC(raven_iron_golem) {
 #if EGO_BLADE
 
 OBJSPECIAL_FUNC(EvilBlade) {
-	struct obj_data* obj, *blade;
+
+	struct obj_data* xobj, *blade;
 	struct char_data* joe, *holder;
 	struct char_data* lowjoe = 0;
 	char arg1[128], buf[250];
@@ -1016,13 +1017,11 @@ OBJSPECIAL_FUNC(EvilBlade) {
 	if (!real_roomp(ch->in_room))
 	{ return(FALSE); }
 
-	for (obj = real_roomp(ch->in_room)->contents;
-			obj ; obj = obj->next_content) {
-		if( obj->item_number >= 0 &&
-				obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__) ) {
+	for (xobj = real_roomp(ch->in_room)->contents;xobj ; xobj = xobj->next_content) {
+		if( xobj->item_number >= 0 &&
+				obj_index[xobj->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__) ) {
 			/* I am on the floor */
-			for (joe = real_roomp(ch->in_room)->people; joe ;
-					joe = joe->next_in_room) {
+			for (joe = real_roomp(ch->in_room)->people; joe ; joe = joe->next_in_room) {
 				if ((GET_ALIGNMENT(joe) <= -400) && (!IS_IMMORTAL(joe))) {
 					if (lowjoe) {
 						if (GET_ALIGNMENT(joe) < GET_ALIGNMENT(lowjoe)) {
@@ -1034,27 +1033,27 @@ OBJSPECIAL_FUNC(EvilBlade) {
 				}
 			}
 			if (lowjoe) {
-				if (CAN_GET_OBJ(lowjoe, obj)) {
-					obj_from_room(obj);
-					obj_to_char(obj,lowjoe);
+				if (CAN_GET_OBJ(lowjoe, xobj)) {
+					obj_from_room(xobj);
+					obj_to_char(xobj,lowjoe);
 
-					sprintf(buf,"%s leaps into your hands!\n\r",obj->short_description);
+					sprintf(buf,"%s leaps into your hands!\n\r",xobj->short_description);
 					send_to_char(buf,lowjoe);
 
 					sprintf(buf,"%s jumps from the floor and leaps into %s's hands!\n\r",
-							obj->short_description,GET_NAME(lowjoe));
+							xobj->short_description,GET_NAME(lowjoe));
 					act(buf,FALSE, lowjoe, 0, 0, TO_ROOM);
 
 					if (!EgoBladeSave(lowjoe)) {
 						if (!lowjoe->equipment[WIELD]) {
-							sprintf(buf,"%s forces you to wield it!\n\r",obj->short_description);
+							sprintf(buf,"%s forces you to wield it!\n\r",xobj->short_description);
 							send_to_char(buf,lowjoe);
-							wear(lowjoe, obj, 12);
+							wear(lowjoe, xobj, 12);
 							return(FALSE);
 						}
 						else {
 							sprintf(buf,"You can feel %s attept to make you wield it.\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,lowjoe);
 							return(FALSE);
 						}
@@ -1065,16 +1064,16 @@ OBJSPECIAL_FUNC(EvilBlade) {
 	}
 	for (holder = real_roomp(ch->in_room)->people; holder ;
 			holder = holder->next_in_room) {
-		for (obj = holder->carrying; obj ; obj = obj->next_content) {
-			if( obj->item_number >= 0 && obj_index[obj->item_number].func &&
-					obj_index[obj->item_number].func != reinterpret_cast<genericspecial_func>(board) ) {
+		for (xobj = holder->carrying; xobj ; xobj = xobj->next_content) {
+			if( xobj->item_number >= 0 && obj_index[xobj->item_number].func &&
+					obj_index[xobj->item_number].func != reinterpret_cast<genericspecial_func>(board) ) {
 				/*held*/
 				if (holder->equipment[WIELD]) {
 					if ((!EgoBladeSave(holder)) && (!EgoBladeSave(holder))) {
 						sprintf(buf,"%s gets pissed off that you are wielding another weapon!\n\r",
-								obj->short_description);
+								xobj->short_description);
 						send_to_char(buf,holder);
-						sprintf(buf,"%s knocks %s out of your hands!!\n\r",obj->short_description,
+						sprintf(buf,"%s knocks %s out of your hands!!\n\r",xobj->short_description,
 								holder->equipment[WIELD]->short_description);
 						send_to_char(buf,holder);
 						blade = unequip_char(holder,WIELD);
@@ -1082,9 +1081,9 @@ OBJSPECIAL_FUNC(EvilBlade) {
 						{ obj_to_room(blade,holder->in_room); }
 						if (!holder->equipment[WIELD]) {
 							sprintf(buf,"%s forces you to wield it!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,holder);
-							wear(holder, obj, 12);
+							wear(holder, xobj, 12);
 							return(FALSE);
 						}
 					}
@@ -1093,9 +1092,9 @@ OBJSPECIAL_FUNC(EvilBlade) {
 					if (!EgoBladeSave(holder)) {
 						if (!holder->equipment[WIELD]) {
 							sprintf(buf,"%s forces you yto wield it!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,holder);
-							wear(holder, obj, 12);
+							wear(holder, xobj, 12);
 							return(FALSE);
 						}
 					}
@@ -1103,7 +1102,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 				if (affected_by_spell(holder,SPELL_CHARM_PERSON)) {
 					affect_from_char(holder,SPELL_CHARM_PERSON);
 					sprintf(buf,"Due to the %s, you feel less enthused about your master.\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 			}
@@ -1113,38 +1112,38 @@ OBJSPECIAL_FUNC(EvilBlade) {
 					obj_index[holder->equipment[WIELD]->item_number].func &&
 					obj_index[holder->equipment[WIELD]->item_number].func != reinterpret_cast<genericspecial_func>(board) ) {
 				/*YES! I am being held!*/
-				obj = holder->equipment[WIELD];
+				xobj = holder->equipment[WIELD];
 				if (affected_by_spell(holder,SPELL_CHARM_PERSON)) {
 					affect_from_char(holder,SPELL_CHARM_PERSON);
 					sprintf(buf,"Due to the %s, you feel less enthused about your master.\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 				if (holder->specials.fighting) {
 					sprintf(buf,"%s almost sings in your hand!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
-					sprintf(buf,"You can hear $n's %s almost sing with joy!",obj->short_description);
+					sprintf(buf,"You can hear $n's %s almost sing with joy!",xobj->short_description);
 					act(buf,FALSE, holder, 0, 0, TO_ROOM);
 					if ((holder == ch) && (cmd == 151)) {
 						if (EgoBladeSave(ch) && EgoBladeSave(ch)) {
 							sprintf(buf,"You can feel %s attempt to stay in the fight!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							return(FALSE);
 						}
 						else {
 							sprintf(buf,"%s laughs at your attempt to flee from a fight!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s gives you a little warning...\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s twists around and smacks you!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"Wow! $n's %s just whipped around and smacked $m one!",
-									obj->short_description);
+									xobj->short_description);
 							act(buf,FALSE, ch, 0, 0, TO_ROOM);
 							GET_HIT(ch) -= 25;
 							alter_hit(ch,0);
@@ -1162,16 +1161,16 @@ OBJSPECIAL_FUNC(EvilBlade) {
 					if (strcmp(arg1,"all") == 0) {
 						if (!EgoBladeSave(ch)) {
 							sprintf(buf,"%s laughs at your attempt remove it!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s gives you a little warning...\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s twists around and smacks you!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"Wow! $n's %s just whipped around and smacked $m one!",
-									obj->short_description);
+									xobj->short_description);
 							act(buf,FALSE, ch, 0, 0, TO_ROOM);
 
 							GET_HIT(ch) -= 25;
@@ -1185,25 +1184,25 @@ OBJSPECIAL_FUNC(EvilBlade) {
 						}
 						else {
 							sprintf(buf,"You can feel %s attempt to stay wielded!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							return(FALSE);
 						}
 					}
 					else {
-						if (isname(arg1,obj->name)) {
+						if (isname(arg1,xobj->name)) {
 							if (!EgoBladeSave(ch)) {
 								sprintf(buf,"%s laughs at your attempt to remove it!\n\r",
-										obj->short_description);
+										xobj->short_description);
 								send_to_char(buf,ch);
 								sprintf(buf,"%s gives you a little warning...\n\r",
-										obj->short_description);
+										xobj->short_description);
 								send_to_char(buf,ch);
 								sprintf(buf,"%s twists around and smacks you!\n\r",
-										obj->short_description);
+										xobj->short_description);
 								send_to_char(buf,ch);
 								sprintf(buf,"Wow! $n's %s just whipped around and smacked $m one!",
-										obj->short_description);
+										xobj->short_description);
 								act(buf,FALSE, ch, 0, 0, TO_ROOM);
 
 								GET_HIT(ch) -= 25;
@@ -1216,7 +1215,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 								return(TRUE);
 							}
 							else {
-								sprintf(buf,"You can feel %s attempt to stay wielded!\n\r",obj->short_description);
+								sprintf(buf,"You can feel %s attempt to stay wielded!\n\r",xobj->short_description);
 								send_to_char(buf,ch);
 								return(FALSE);
 							}
@@ -1240,14 +1239,14 @@ OBJSPECIAL_FUNC(EvilBlade) {
 					if (!EgoBladeSave(holder)) {
 						if (GET_POS(holder) != POSITION_STANDING) {
 							sprintf(buf,"%s yanks you yo your feet!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							GET_POS(holder) = POSITION_STANDING;
 						}
 						sprintf(buf,"%s leaps out of control!!\n\r",
-								obj->short_description);
+								xobj->short_description);
 						send_to_char(buf,holder);
-						sprintf(buf,"%s jumps for $n's neck!",obj->short_description);
+						sprintf(buf,"%s jumps for $n's neck!",xobj->short_description);
 						act(buf,FALSE, lowjoe, 0, 0, TO_ROOM);
 						do_hit(holder,lowjoe->player.name, 0);
 						return(TRUE);
@@ -1258,10 +1257,10 @@ OBJSPECIAL_FUNC(EvilBlade) {
 				}
 				if ((cmd == 70) && (holder == ch)) {
 					sprintf(buf,"%s almost sings in your hands!!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,ch);
 					sprintf(buf,"You can hear $n's %s almost sing with joy!",
-							obj->short_description);
+							xobj->short_description);
 
 					act(buf,FALSE, ch, 0, 0, TO_ROOM);
 					return(FALSE);
@@ -1273,7 +1272,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 }
 
 OBJSPECIAL_FUNC(GoodBlade) {
-	struct obj_data* obj, *blade;
+	struct obj_data* xobj, *blade;
 	struct char_data* joe, *holder;
 	struct char_data* lowjoe = 0;
 	char arg1[128], buf[250];
@@ -1288,10 +1287,10 @@ OBJSPECIAL_FUNC(GoodBlade) {
 	if (!real_roomp(ch->in_room))
 	{ return(FALSE); }
 
-	for( obj = real_roomp(ch->in_room)->contents;
-			obj ; obj = obj->next_content ) {
-		if( obj->item_number >= 0 &&
-				obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__) ) {
+	for( xobj = real_roomp(ch->in_room)->contents;
+			xobj ; xobj = xobj->next_content ) {
+		if( xobj->item_number >= 0 &&
+				obj_index[xobj->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__) ) {
 			/* I am on the floor */
 			for (joe = real_roomp(ch->in_room)->people; joe ;
 					joe = joe->next_in_room) {
@@ -1306,27 +1305,27 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				}
 			}
 			if (lowjoe) {
-				if (CAN_GET_OBJ(lowjoe, obj)) {
-					obj_from_room(obj);
-					obj_to_char(obj,lowjoe);
+				if (CAN_GET_OBJ(lowjoe, xobj)) {
+					obj_from_room(xobj);
+					obj_to_char(xobj,lowjoe);
 
-					sprintf(buf,"%s leaps into your hands!\n\r",obj->short_description);
+					sprintf(buf,"%s leaps into your hands!\n\r",xobj->short_description);
 					send_to_char(buf,lowjoe);
 
 					sprintf(buf,"%s jumps from the floor and leaps into %s's hands!\n\r",
-							obj->short_description,GET_NAME(lowjoe));
+							xobj->short_description,GET_NAME(lowjoe));
 					act(buf,FALSE, lowjoe, 0, 0, TO_ROOM);
 
 					if (!EgoBladeSave(lowjoe)) {
 						if (!lowjoe->equipment[WIELD]) {
-							sprintf(buf,"%s forces you to wield it!\n\r",obj->short_description);
+							sprintf(buf,"%s forces you to wield it!\n\r",xobj->short_description);
 							send_to_char(buf,lowjoe);
-							wear(lowjoe, obj, 12);
+							wear(lowjoe, xobj, 12);
 							return(FALSE);
 						}
 						else {
 							sprintf(buf,"You can feel %s attept to make you wield it.\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,lowjoe);
 							return(FALSE);
 						}
@@ -1337,16 +1336,16 @@ OBJSPECIAL_FUNC(GoodBlade) {
 	}
 	for (holder = real_roomp(ch->in_room)->people; holder ;
 			holder = holder->next_in_room) {
-		for (obj = holder->carrying; obj ; obj = obj->next_content) {
-			if( obj->item_number >= 0 && obj_index[obj->item_number].func &&
-					(void*)obj_index[obj->item_number].func != (void*)board ) {
+		for (xobj = holder->carrying; xobj ; xobj = xobj->next_content) {
+			if( xobj->item_number >= 0 && obj_index[xobj->item_number].func &&
+					(void*)obj_index[xobj->item_number].func != (void*)board ) {
 				/*held*/
 				if (holder->equipment[WIELD]) {
 					if ((!EgoBladeSave(holder)) && (!EgoBladeSave(holder))) {
 						sprintf(buf,"%s gets pissed off that you are wielding another weapon!\n\r",
-								obj->short_description);
+								xobj->short_description);
 						send_to_char(buf,holder);
-						sprintf(buf,"%s knocks %s out of your hands!!\n\r",obj->short_description,
+						sprintf(buf,"%s knocks %s out of your hands!!\n\r",xobj->short_description,
 								holder->equipment[WIELD]->short_description);
 						send_to_char(buf,holder);
 						blade = unequip_char(holder,WIELD);
@@ -1354,9 +1353,9 @@ OBJSPECIAL_FUNC(GoodBlade) {
 						{ obj_to_room(blade,holder->in_room); }
 						if (!holder->equipment[WIELD]) {
 							sprintf(buf,"%s forces you to wield it!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,holder);
-							wear(holder, obj, 12);
+							wear(holder, xobj, 12);
 							return(FALSE);
 						}
 					}
@@ -1365,9 +1364,9 @@ OBJSPECIAL_FUNC(GoodBlade) {
 					if (!EgoBladeSave(holder)) {
 						if (!holder->equipment[WIELD]) {
 							sprintf(buf,"%s forces you yto wield it!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,holder);
-							wear(holder, obj, 12);
+							wear(holder, xobj, 12);
 							return(FALSE);
 						}
 					}
@@ -1375,7 +1374,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				if (affected_by_spell(holder,SPELL_CHARM_PERSON)) {
 					affect_from_char(holder,SPELL_CHARM_PERSON);
 					sprintf(buf,"Due to the effects of %s, you feel less enthused about your master.\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 			}
@@ -1385,13 +1384,13 @@ OBJSPECIAL_FUNC(GoodBlade) {
 					obj_index[holder->equipment[WIELD]->item_number].func &&
 					(void*)obj_index[holder->equipment[WIELD]->item_number].func != (void*)board ) {
 				/*YES! I am being held!*/
-				obj = holder->equipment[WIELD];
+				xobj = holder->equipment[WIELD];
 
 				/* remove charm */
 				if (affected_by_spell(holder,SPELL_CHARM_PERSON)) {
 					affect_from_char(holder,SPELL_CHARM_PERSON);
 					sprintf(buf,"Due to the effects of %s, you feel less enthused about your master.\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 
@@ -1399,7 +1398,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				if (affected_by_spell(holder,SPELL_BLINDNESS)) {
 					affect_from_char(holder,SPELL_BLINDNESS);
 					sprintf(buf,"%s hums in your hands, you can see!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 
@@ -1407,7 +1406,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				if (affected_by_spell(holder,SPELL_CHILL_TOUCH)) {
 					affect_from_char(holder,SPELL_CHILL_TOUCH);
 					sprintf(buf,"%s hums in your hands, you feel warm again!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 
@@ -1416,7 +1415,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				if (affected_by_spell(holder,SPELL_SLOW)) {
 					affect_from_char(holder,SPELL_SLOW);
 					sprintf(buf,"%s hums in your hands, you feel yourself speed back up!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 
@@ -1424,14 +1423,14 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				if (affected_by_spell(holder,SPELL_POISON)) {
 					affect_from_char(holder,SPELL_POISON);
 					sprintf(buf,"%s hums in your hands, the sick feeling fades!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
 				}
 
 				/* wielder is hurt, heal them */
 				if ((number(1,101) > 90) && GET_HIT(holder) < GET_MAX_HIT(holder)/2) {
-					act("You get a gentle warm pulse from $p, you feel MUCH better!",FALSE,holder,obj,0,TO_CHAR);
-					act("$n smiles as $p pulses in $s hands!",FALSE,holder,obj,0,TO_ROOM);
+					act("You get a gentle warm pulse from $p, you feel MUCH better!",FALSE,holder,xobj,0,TO_CHAR);
+					act("$n smiles as $p pulses in $s hands!",FALSE,holder,xobj,0,TO_ROOM);
 					GET_HIT(holder) = (GET_MAX_HIT(holder)-number(1,10));
 					alter_hit(holder,0);
 					return(FALSE);
@@ -1439,29 +1438,29 @@ OBJSPECIAL_FUNC(GoodBlade) {
 
 				if (holder->specials.fighting) {
 					sprintf(buf,"%s almost sings in your hand!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,holder);
-					sprintf(buf,"You can hear %s almost sing with joy in $n's hands!",obj->short_description);
+					sprintf(buf,"You can hear %s almost sing with joy in $n's hands!",xobj->short_description);
 					act(buf,FALSE, holder, 0, 0, TO_ROOM);
 					if ((holder == ch) && (cmd == 151)) {
 						if (EgoBladeSave(ch) && EgoBladeSave(ch)) {
 							sprintf(buf,"You can feel %s attempt to stay in the fight!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							return(FALSE);
 						}
 						else {
 							sprintf(buf,"%s laughs at your attempt to flee from a fight!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s gives you a little warning...\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s twists around and smacks you!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"Wow! $n's %s just whipped around and smacked $m one!",
-									obj->short_description);
+									xobj->short_description);
 							act(buf,FALSE, ch, 0, 0, TO_ROOM);
 							GET_HIT(ch) -= 10;
 							alter_hit(ch,0);
@@ -1479,16 +1478,16 @@ OBJSPECIAL_FUNC(GoodBlade) {
 					if (strcmp(arg1,"all") == 0) {
 						if (!EgoBladeSave(ch)) {
 							sprintf(buf,"%s laughs at your attempt remove it!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s gives you a little warning...\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"%s twists around and smacks you!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							sprintf(buf,"Wow! $n's %s just whipped around and smacked $m one!",
-									obj->short_description);
+									xobj->short_description);
 							act(buf,FALSE, ch, 0, 0, TO_ROOM);
 
 							GET_HIT(ch) -= 10;
@@ -1502,25 +1501,25 @@ OBJSPECIAL_FUNC(GoodBlade) {
 						}
 						else {
 							sprintf(buf,"You can feel %s attempt to stay wielded!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							return(FALSE);
 						}
 					}
 					else {
-						if (isname(arg1,obj->name)) {
+						if (isname(arg1,xobj->name)) {
 							if (!EgoBladeSave(ch)) {
 								sprintf(buf,"%s laughs at your attempt to remove it!\n\r",
-										obj->short_description);
+										xobj->short_description);
 								send_to_char(buf,ch);
 								sprintf(buf,"%s gives you a little warning...\n\r",
-										obj->short_description);
+										xobj->short_description);
 								send_to_char(buf,ch);
 								sprintf(buf,"%s twists around and smacks you!\n\r",
-										obj->short_description);
+										xobj->short_description);
 								send_to_char(buf,ch);
 								sprintf(buf,"Wow! $n's %s just whipped around and smacked $m one!",
-										obj->short_description);
+										xobj->short_description);
 								act(buf,FALSE, ch, 0, 0, TO_ROOM);
 
 								GET_HIT(ch) -= 10;
@@ -1533,7 +1532,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 								return(TRUE);
 							}
 							else {
-								sprintf(buf,"You can feel %s attempt to stay wielded!\n\r",obj->short_description);
+								sprintf(buf,"You can feel %s attempt to stay wielded!\n\r",xobj->short_description);
 								send_to_char(buf,ch);
 								return(FALSE);
 							}
@@ -1557,14 +1556,14 @@ OBJSPECIAL_FUNC(GoodBlade) {
 					if (!EgoBladeSave(holder)) {
 						if (GET_POS(holder) != POSITION_STANDING) {
 							sprintf(buf,"%s yanks you yo your feet!\n\r",
-									obj->short_description);
+									xobj->short_description);
 							send_to_char(buf,ch);
 							GET_POS(holder) = POSITION_STANDING;
 						}
 						sprintf(buf,"%s leaps out of control!!\n\r",
-								obj->short_description);
+								xobj->short_description);
 						send_to_char(buf,holder);
-						sprintf(buf,"%s howls out for $n's neck!",obj->short_description);
+						sprintf(buf,"%s howls out for $n's neck!",xobj->short_description);
 						act(buf,FALSE, lowjoe, 0, 0, TO_ROOM);
 						do_hit(holder,lowjoe->player.name, 0);
 						return(TRUE);
@@ -1575,10 +1574,10 @@ OBJSPECIAL_FUNC(GoodBlade) {
 				}
 				if ((cmd == 70) && (holder == ch)) {
 					sprintf(buf,"%s almost sings in your hands!!\n\r",
-							obj->short_description);
+							xobj->short_description);
 					send_to_char(buf,ch);
 					sprintf(buf,"You can hear $n's %s almost sing with joy!",
-							obj->short_description);
+							xobj->short_description);
 
 					act(buf,FALSE, ch, 0, 0, TO_ROOM);
 					return(FALSE);
@@ -1691,8 +1690,7 @@ MOBSPECIAL_FUNC(LightningBreather) {
 	return(FALSE);
 }
 
-int magic_user_imp( struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(magic_user_imp) {
 	struct char_data* vict;
 	byte lspell;
 	char buf[254];
@@ -2479,8 +2477,7 @@ MOBSPECIAL_FUNC(TreeThrowerMob) {
 
 */
 
-int Paladin( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			 int type) {
+MOBSPECIAL_FUNC(Paladin) {
 
 	struct char_data* vict, *tch;
 	char    buf[255];
@@ -3041,8 +3038,7 @@ OBJSPECIAL_FUNC(AntiSunItem) {
 	return FALSE;
 }
 
-int Beholder( struct char_data* ch, int cmd, char* arg,
-			  struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(Beholder) {
 	int action=0;
 
 	if( type != EVENT_TICK || !AWAKE(mob) )
@@ -3417,7 +3413,7 @@ MOBSPECIAL_FUNC(Barbarian) {
   ObjIsOnGround restituisce TRUE se l'oggetto in arg e` nella stanza del
   carattere.
 ***************************************************************************/
-int ObjIsOnGround( struct char_data* ch, char* argument ) {
+int ObjIsOnGround( struct char_data* ch, const char* argument ) {
 	char arg1[ MAX_STRING_LENGTH ];
 	char arg2[ MAX_STRING_LENGTH ];
 
@@ -3461,8 +3457,7 @@ int ObjIsOnGround( struct char_data* ch, char* argument ) {
 int SentinelBackHome( struct char_data* pMob );
 
 #define MINVALUETOHEAL 1000
-int PrimoAlbero( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(PrimoAlbero) {
 	typedef struct tagAvvertiti {
 		struct char_data* pAvvertito;
 		struct tagAvvertiti* pNext;
@@ -3628,8 +3623,7 @@ int PrimoAlbero( struct char_data* ch, int cmd, char* arg,
 #define OBJ_INSEGNA5LEGIO 14009
 #define IsLegionarioV( ch ) ( (ch)->nr == 12014 || (ch)->nr == 12015 ||                               (ch)->nr == 12016 || (ch)->nr == 12017 ||                               (ch)->nr == 12021 || (ch)->nr == 12038 ||                               (ch)->nr == 12045 )
 
-int LegionariV( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(LegionariV) {
 	if( type == EVENT_TICK && AWAKE( mob ) ) {
 		if( mob->specials.fighting && !check_soundproof( mob ) ) {
 			if( number( 1, 6 ) > 3 ) {
@@ -3656,18 +3650,17 @@ int LegionariV( struct char_data* ch, int cmd, char* arg,
 			} /* if( number( 1, 6 ) > 3 ) */
 		} /* if( mob->specials.fighting && !check_soundproof( mob ) ) */
 		else if( !mob->specials.fighting ) {
-			struct char_data* pChar;
-			for( pChar = real_roomp( mob->in_room )->people; pChar;
-					pChar = pChar->next_in_room ) {
-				if( CAN_SEE( mob, pChar ) ) {
+			for( struct char_data* p = real_roomp( mob->in_room )->people; p;
+					p = p->next_in_room ) {
+				if( CAN_SEE( mob, p ) ) {
 					struct obj_data* pObj;
-					for( pObj = pChar->carrying; pObj; pObj = pObj->next_content ) {
+					for( pObj = p->carrying; pObj; pObj = pObj->next_content ) {
 						if( CAN_SEE_OBJ( mob, pObj ) && pObj->item_number >= 0 &&
 								obj_index[ pObj->item_number ].iVNum == OBJ_INSEGNA5LEGIO ) {
 							act( "$c0015$n$c0011 punta il dito verso $N e dice "
-								 "'Ma quella e` la nostra insegna'.", FALSE, mob, 0, pChar,
+								 "'Ma quella e` la nostra insegna'.", FALSE, mob, 0, p,
 								 TO_ROOM );
-							hit( mob, pChar, TYPE_UNDEFINED );
+							hit( mob, p, TYPE_UNDEFINED );
 							return TRUE;
 						}
 					}
@@ -3683,13 +3676,13 @@ int LegionariV( struct char_data* ch, int cmd, char* arg,
 *  Teleporta i presenti se all`interno di certi livelli. Room Procedure
 * ****************************************************************************/
 ROOMSPECIAL_FUNC(sTeleport) {
-	char* p;
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=pRoom->specparms;
+	p=room->specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -3697,9 +3690,9 @@ ROOMSPECIAL_FUNC(sTeleport) {
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) ||
-				( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))) {
+	if( type == EVENT_COMMAND ) {
+		if( (cmd != ndir) ||
+				( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))) {
 			return(FALSE);
 		}
 		else {
@@ -3708,7 +3701,7 @@ ROOMSPECIAL_FUNC(sTeleport) {
 			}
 
 			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,pChar);
+			send_to_char(lev2,ch);
 			return TRUE;
 		}
 	}
@@ -3718,13 +3711,13 @@ ROOMSPECIAL_FUNC(sTeleport) {
 *  Blocca il passaggio in una certa direzione. Room Procedure
 ****************************************************************************/
 ROOMSPECIAL_FUNC(BlockWay) {
-	char* p;
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=pRoom->specparms;
+	p=room->specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -3732,8 +3725,8 @@ ROOMSPECIAL_FUNC(BlockWay) {
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) || ( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))) {
+	if( type == EVENT_COMMAND ) {
+		if( (cmd != ndir) || ( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))) {
 			return(FALSE);
 		}
 		else {
@@ -3742,7 +3735,7 @@ ROOMSPECIAL_FUNC(BlockWay) {
 			}
 
 			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,pChar);
+			send_to_char(lev2,ch);
 			return TRUE;
 		}
 	}
@@ -3751,15 +3744,14 @@ ROOMSPECIAL_FUNC(BlockWay) {
 /****************************************************************************
 *  Blocca il passaggio in una certa direzione. Mob/Obj Procedure
 ****************************************************************************/
-int MobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
-				 struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(MobBlockWay) {
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -3767,9 +3759,9 @@ int MobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) ||
-				( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))) {
+	if( type == EVENT_COMMAND ) {
+		if( (cmd != ndir) ||
+				( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))) {
 			return(FALSE);
 		}
 		else {
@@ -3777,58 +3769,55 @@ int MobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(lev2,"%s\r\n",msg);
-			act(msg, FALSE, pMob, 0, pChar, TO_VICT);
-			act("$n dice qualcosa a $N.", FALSE, pMob, 0, pChar, TO_NOTVICT);
+			act(msg, FALSE, mob, 0, ch, TO_VICT);
+			act("$n dice qualcosa a $N.", FALSE, mob, 0, ch, TO_NOTVICT);
 			return TRUE;
 		}
 	}
 	return FALSE;
 }
-int spTest( struct char_data* pChar, int nCmd, char* szArg,
-			struct char_data* pMob, int nType ) {
+MOBSPECIAL_FUNC(spTest){
 	char msg[256];
 	sprintf(msg,"Char=%s Mob=%s Arg=%s evento=%d comando=%d",
-			GET_NAME(pChar),GET_NAME(pMob),szArg,nType,nCmd);
-	act(msg, FALSE, pMob, 0, pChar, TO_ROOM);
+			GET_NAME(ch),GET_NAME(mob),arg,type,cmd);
+	act(msg, FALSE, mob, 0, ch, TO_ROOM);
 	return(FALSE);
 }
 
-int Esattore( struct char_data* pChar, int nCmd, char* szArg,
-			  struct char_data* pMob, int nType ) {
+MOBSPECIAL_FUNC(Esattore) {
 	long xp;
 	char buf[512];
-	if (nCmd != CMD_GIVE)
+	if (cmd != CMD_GIVE)
 	{ return(FALSE); }
 	/* Questo mob consente di togliersi xp. Viene usato da
 	 * superni 58 - 59 per esigere i pagamenti in xp
 	 * Per evitare abusi, deve essere il PC stesso che dona gli xp
 	 * */
-	xp=abs(atoi(szArg)/HowManyClasses(pChar));
-	if (xp > GET_EXP(pChar)) {
-		do_say(pMob,"Non hai abbastanza esperienza",CMD_SAY);
+	xp=abs(atoi(arg)/HowManyClasses(ch));
+	if (xp > GET_EXP(ch)) {
+		do_say(mob,"Non hai abbastanza esperienza",CMD_SAY);
 		return(FALSE);
 	}
-	GET_EXP(pChar)-=(xp);
+	GET_EXP(ch)-=(xp);
 	sprintf(buf,"%s ha donato %ld punti esperienza (per ogni classe) per la gloria del Clan",
-			GET_NAME(pChar),xp);
-	do_shout(pMob,buf,CMD_SAY);
+			GET_NAME(ch),xp);
+	do_shout(mob,buf,CMD_SAY);
 	return(TRUE);
 }
 
-int spGeneric( struct char_data* pChar, int nCmd, char* szArg,
-			   struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(spGeneric) {
+	const char* p;
 	char msg[256];
-	if (pMob == pChar) { return(FALSE); }
-	p=mob_index[pMob->nr].specparms;
+	if (mob == ch) { return(FALSE); }
+	p=mob_index[mob->nr].specparms;
 	sprintf(msg,"Char=%s Mob=%s Arg=%s evento=%d comando=%d",
-			GET_NAME(pChar),GET_NAME(pMob),szArg,nType,nCmd);
-	act(msg, FALSE, pMob, 0, pChar, TO_ROOM);
+			GET_NAME(ch),GET_NAME(mob),arg,type,cmd);
+	act(msg, FALSE, mob, 0, ch, TO_ROOM);
 	return(FALSE);
 }
 
-int ForceMobToAction( struct char_data* pChar, int nCmd, char* szArg,
-					  struct char_data* pMob, int nType )
+
+MOBSPECIAL_FUNC(ForceMobToAction)
 /*Specparms:
 * ncmd1: comando (numero) trigger
 * trg1: 1=si, 0=no(se si, l'oggetto del comando deve essere il mob che ha la
@@ -3843,39 +3832,39 @@ int ForceMobToAction( struct char_data* pChar, int nCmd, char* szArg,
 * */
 
 {
-	char* p;
+	const char* p;
 	char cmd1[256];
 	char trg1[256];
-	char mob[256];
+	char mobnum[256];
 	char cmd2[256];
 	char trg2[256];
 	char msg[256];
-	char info[256];
+	char actinfo[256];
 	char buf[1024];
 	int ncmd1,ntrg1,nmob,ntrg2;
 	struct char_data* killer;
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	p=one_argument(p,cmd1);
 	p=one_argument(p,trg1);
-	p=one_argument(p,mob);
+	p=one_argument(p,mobnum);
 	p=one_argument(p,cmd2);
 	p=one_argument(p,trg2);
 	only_argument(p,msg);
-	szArg=one_argument(szArg,info);
+	arg=one_argument(arg,actinfo);
 	ncmd1=atoi(cmd1);
 	ntrg1=atoi(trg1);
-	nmob=atoi(mob);
+	nmob=atoi(mobnum);
 	ntrg2=atoi(trg2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd == ncmd1) && (pChar!=pMob)) {
+	if( type == EVENT_COMMAND ) {
+		if( (cmd == ncmd1) && (ch!=mob)) {
 			if (!ntrg1 ||
-					!strncasecmp(GET_NAME(pMob),info,strlen(info)) && strlen(info)) {
+					!strncasecmp(GET_NAME(mob),actinfo,strlen(actinfo)) && strlen(actinfo)) {
 				/* Il comando aveva come target il mob della special! */
-				killer=FindMobInRoomWithVNum(real_roomp(pChar->in_room)->number,
+				killer=FindMobInRoomWithVNum(real_roomp(ch->in_room)->number,
 											 nmob);
 				if (!killer) { return(FALSE); }
 				if (ntrg2) {
-					sprintf(buf,"%s %s",cmd2,GET_NAME(pChar));
+					sprintf(buf,"%s %s",cmd2,GET_NAME(ch));
 					command_interpreter(killer,buf);
 					sprintf(buf,"%s",msg);
 					command_interpreter(killer,buf);
@@ -3883,7 +3872,7 @@ int ForceMobToAction( struct char_data* pChar, int nCmd, char* szArg,
 				else {
 					sprintf(buf,"%s",msg);
 					command_interpreter(killer,buf);
-					sprintf(buf,"%s %s",cmd2,GET_NAME(pChar));
+					sprintf(buf,"%s %s",cmd2,GET_NAME(ch));
 					command_interpreter(killer,buf);
 				}
 
@@ -3964,7 +3953,7 @@ OBJSPECIAL_FUNC(trap_obj) {
 	int level=0;
 	int true_type=0;
 	char buf[50], msg[256];
-	char* p;
+	const char* p;
 	char ctipo[256];
 	char ctick[256];
 	char clevel[256];
@@ -3973,7 +3962,6 @@ OBJSPECIAL_FUNC(trap_obj) {
 		//funziona solo se droppato
 		if (obj->in_room == NOWHERE) { return(FALSE); }
 
-		char msg[256];
 		p=obj_index[obj->item_number].specparms;
 		p=one_argument(p,ctipo);
 		p=one_argument(p,ctick);
@@ -4061,8 +4049,7 @@ OBJSPECIAL_FUNC(ModHit) {
 
 #define WARLOCK_MOB 18419
 #define WARLOCK_ROOM 18463
-int banshee_lorelai(struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(banshee_lorelai) {
 	struct char_data* pWarlock;
 	struct char_data* vict;
 
@@ -4368,17 +4355,17 @@ OBJSPECIAL_FUNC(msg_obj) {
 
 	//if (type != EVENT_COMMAND) return(FALSE);
 
-	if ( tobj->iGeneric==0 ) {
+	if ( obj->iGeneric==0 ) {
 
-		if (tobj->in_room == NOWHERE) { return(FALSE); }
-		rp = real_roomp(tobj->in_room);
+		if (obj->in_room == NOWHERE) { return(FALSE); }
+		rp = real_roomp(obj->in_room);
 
 		for( tmp = rp->people; tmp; tmp = tmp2 ) {
 			tmp2 = tmp->next_in_room;
 			if( IS_PC(tmp) || IS_POLY(tmp) ) {
-				sscanf(obj_index[tobj->item_number].specparms,"%d %d",&num_msg,&diffusione);
-				numero = room_of_object(tobj);
-				tobj->iGeneric=1;                  //al prossimo giro il msg non compare pi�
+				sscanf(obj_index[obj->item_number].specparms,"%d %d",&num_msg,&diffusione);
+				numero = room_of_object(obj);
+				obj->iGeneric=1;                  //al prossimo giro il msg non compare pi�
 
 				switch (num_msg) {
 				case 1:
@@ -4474,8 +4461,8 @@ OBJSPECIAL_FUNC(thion_loader) {
 	struct char_data* pThion;
 
 
-	if ( tobj->iGeneric==0 ) {
-		for (tmp = tobj->contains; tmp; tmp = tmp->next_content) {
+	if ( obj->iGeneric==0 ) {
+		for (tmp = obj->contains; tmp; tmp = tmp->next_content) {
 			iVnum = (tmp->item_number >= 0) ? obj_index[tmp->item_number].iVNum : 0;
 			switch (iVnum) {
 			case 19705:
@@ -4503,7 +4490,7 @@ OBJSPECIAL_FUNC(thion_loader) {
 				break;
 			}
 			if (x1+x2+x3+x4+x5+x6+x7 == 7) {
-				numero = room_of_object(tobj);
+				numero = room_of_object(obj);
 				send_to_room(" \n\r",numero);
 				send_to_room("Non appena poni l'ultimo pezzo nell'altare le pareti del tempio cominciano a vibrare, mentre il\n\r",numero);
 				send_to_room("pavimento pare lentamente sfaldarsi sotto i tuoi piedi. L' $c0008Altare$c0007 sembra animarsi,\n\r",numero);
@@ -4539,7 +4526,7 @@ OBJSPECIAL_FUNC(thion_loader) {
 				obj_to_obj(sub_object, obj_object);
 
 
-				tobj->iGeneric=1;                  //al prossimo giro non accade pi� nulla
+				obj->iGeneric=1;                  //al prossimo giro non accade piu' nulla
 			}
 
 		}
@@ -4626,15 +4613,15 @@ genera Thion.
 */
 
 ROOMSPECIAL_FUNC(MOBKilled) {
-	if( nType == EVENT_DEATH && pChar->in_room == pRoom->number ) {
-		char* p;
+	if( type == EVENT_DEATH && ch->in_room == room->number ) {
+		const char* p;
 		char killed[8];
 		int iKilled, iTipo;
 		char tipo[3];
 		char premio[25];
 		long lPremio;
 		char sideprocedure[25];
-		p=pRoom->specparms;
+		p=room->specparms;
 		p=one_argument(p,killed);
 		iKilled = atoi(killed);
 		p=one_argument(p,tipo);
@@ -4642,26 +4629,26 @@ ROOMSPECIAL_FUNC(MOBKilled) {
 		p=one_argument(p,premio);
 		lPremio = atol(premio);
 		only_argument(p,sideprocedure);
-		if (GET_MOB_VNUM(pChar) == iKilled) {
+		if (GET_MOB_VNUM(ch) == iKilled) {
 			if (iTipo == 2) {
 				char buf[80];
 				sprintf(buf,"Complimenti hai vinto %s rune degli eroi.",premio);
-				act(buf, FALSE, pChar, 0, pChar, TO_ROOM);
+				act(buf, FALSE, ch, 0, ch, TO_ROOM);
 			}
 			else {
-				act("ATTENZIONE il tipo di premio implementato e' solo il 2 ovvero in rune.", FALSE, pChar, 0, pChar, TO_ROOM);
+				act("ATTENZIONE il tipo di premio implementato e' solo il 2 ovvero in rune.", FALSE, ch, 0, ch, TO_ROOM);
 			}
 		}
 		else {
-			act("ATTENZIONE il mob morto non e' quello della quest.", FALSE, pChar, 0, pChar, TO_ROOM);
+			act("ATTENZIONE il mob morto non e' quello della quest.", FALSE, ch, 0, ch, TO_ROOM);
 		}
 	}
 	return FALSE;
 }
 
 MOBSPECIAL_FUNC(ItemGiven) {
-	if( nCmd == CMD_GIVE) {
-		char* p;
+	if( cmd == CMD_GIVE) {
+		const char* p;
 		char oggetto[8];
 		int iOggetto, iTipo;
 		char tipo[3];
@@ -4671,7 +4658,7 @@ MOBSPECIAL_FUNC(ItemGiven) {
 		char obj_name[80];
 		struct obj_data* obj;
 
-		p=mob_index[pMob->nr].specparms;
+		p=mob_index[mob->nr].specparms;
 		p=one_argument(p,oggetto);
 		iOggetto = atoi(oggetto);
 		p=one_argument(p,tipo);
@@ -4679,13 +4666,11 @@ MOBSPECIAL_FUNC(ItemGiven) {
 		p=one_argument(p,premio);
 		lPremio = atol(premio);
 		only_argument(p,sideprocedure);
-		szArg=one_argument(szArg,obj_name);
-		if ((obj = get_obj_in_list_vis(pChar, obj_name, pChar->carrying))) {
-			struct char_data* mob;
+		arg=one_argument(arg,obj_name);
+		if ((obj = get_obj_in_list_vis(ch, obj_name, ch->carrying))) {
 			char mob_name[80];
-
-			szArg=one_argument(szArg,mob_name);
-			if (GET_OBJ_VNUM(obj) == iOggetto && (mob = get_char_room_vis(pChar, mob_name))) {
+			arg=one_argument(arg,mob_name);
+			if (GET_OBJ_VNUM(obj) == iOggetto && (mob = get_char_room_vis(ch, mob_name))) {
 				if (iTipo == 2) {
 					char buf[80];
 					sprintf(buf,"Complimenti hai vinto %s rune degli eroi.\n\r",premio);
@@ -4701,8 +4686,8 @@ MOBSPECIAL_FUNC(ItemGiven) {
 }
 
 OBJSPECIAL_FUNC(ItemPut) {
-	if (nCmd == CMD_PUT) {
-		char* p;
+	if (cmd == CMD_PUT) {
+		const char* p;
 		char oggetto[8];
 		int iOggetto, iTipo;
 		char tipo[3];
@@ -4712,7 +4697,7 @@ OBJSPECIAL_FUNC(ItemPut) {
 		char obj_name1[80];
 		struct obj_data* obj1;
 
-		p=obj_index[pObj->item_number].specparms;
+		p=obj_index[obj->item_number].specparms;
 		p=one_argument(p,oggetto);
 		iOggetto = atoi(oggetto);
 		p=one_argument(p,tipo);
@@ -4720,15 +4705,15 @@ OBJSPECIAL_FUNC(ItemPut) {
 		p=one_argument(p,premio);
 		lPremio = atol(premio);
 		only_argument(p,sideprocedure);
-		szArg=one_argument(szArg,obj_name1);
-		if ((obj1 = get_obj_in_list_vis(pChar, obj_name1, pChar->carrying))) {
+		arg=one_argument(arg,obj_name1);
+		if ((obj1 = get_obj_in_list_vis(ch, obj_name1, ch->carrying))) {
 			int bits;
 			struct char_data* tmp_char;
 			struct obj_data* obj2;
 			char obj_name2[80];
 
-			szArg=one_argument(szArg,obj_name2);
-			bits = generic_find( obj_name2, FIND_OBJ_INV | FIND_OBJ_ROOM, pChar, &tmp_char, &obj2 );
+			arg=one_argument(arg,obj_name2);
+			bits = generic_find( obj_name2, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &tmp_char, &obj2 );
 			if (GET_OBJ_VNUM(obj1) == iOggetto && obj2) {
 				if (iTipo == 2) {
 					char buf[80];

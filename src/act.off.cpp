@@ -40,16 +40,16 @@
 
 namespace Alarmud {
 
-void do_ripudia(struct char_data* ch,const char* argument, int cmd) {
-	char arg[80];
+ACTION_FUNC(do_ripudia) {
+	char tmp[80];
 	struct char_data* victim=NULL;
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if (*arg) {
-		victim = get_char_room_vis(ch, arg);
+	if (*tmp) {
+		victim = get_char_room_vis(ch, tmp);
 	}
 	if (!victim) {
-		if (strcasecmp(arg,GET_PRINCE(ch))) {
+		if (strcasecmp(tmp,GET_PRINCE(ch))) {
 			act("Capisco la concitazione.... ma non ne sei vassall$b!!",
 				TRUE,ch,NULL,NULL,TO_CHAR);
 		}
@@ -100,8 +100,8 @@ void do_ripudia(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_associa(struct char_data* ch,const char* argument, int cmd) {
-	char arg[80];
+ACTION_FUNC(do_associa) {
+	char tmp[80];
 	long costobase=500000;
 	long costo;
 	struct char_data* victim=NULL;
@@ -109,10 +109,10 @@ void do_associa(struct char_data* ch,const char* argument, int cmd) {
 		send_to_char("Presuntuosetto, eh?\n\r",ch);
 		return;
 	}
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if (*arg) {
-		victim = get_char_room_vis(ch, arg);
+	if (*tmp) {
+		victim = get_char_room_vis(ch, tmp);
 	}
 	if (!victim) {
 		send_to_char("Ottima idea nominare dei vassalli....."
@@ -160,18 +160,18 @@ void do_associa(struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 	GET_GOLD(ch)=GET_GOLD(ch)-costo;
-	snprintf(arg,79,"Il che ti costa %d monete d'oro!",(int)costo);
+	snprintf(tmp,79,"Il che ti costa %d monete d'oro!",(int)costo);
 	GET_PRINCE(victim)=strdup(GET_NAME(ch));
 	act("Nomini $N tu$B vassall$B",
 		TRUE,ch,NULL,victim,TO_CHAR);
-	act(arg,TRUE,ch,NULL,victim,TO_CHAR);
+	act(tmp,TRUE,ch,NULL,victim,TO_CHAR);
 	act("Ti inginocchi e giuri fedelta' a $n",
 		TRUE,ch,NULL,victim,TO_VICT);
 	act("$N si inginocchia e $n l$B nomina su$B vassall$B!",
 		TRUE,ch,NULL,victim,TO_NOTVICT);
 	return;
 }
-void do_vomita(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_vomita) {
 	act("Ti  ficchi un dito in gola e cerchi di vomitare... che schifo!",
 		TRUE,ch,NULL,NULL,TO_CHAR);
 	act("$n si ficca un dito in gola....!",
@@ -196,18 +196,18 @@ void do_vomita(struct char_data* ch,const char* argument, int cmd) {
 	return;
 }
 
-void do_hit(struct char_data* ch,const char* argument, int cmd) {
-	char arg[80];
+ACTION_FUNC(do_hit) {
+	char tmp[80];
 	struct char_data* victim;
 
 	if (check_peaceful(ch,
 					   "You feel too peaceful to contemplate violence.\n\r"))
 	{ return; }
 
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if (*arg) {
-		victim = get_char_room_vis(ch, arg);
+	if (*tmp) {
+		victim = get_char_room_vis(ch, tmp);
 		if (victim) {
 			if (victim == ch) {
 				send_to_char("You hit yourself..OUCH!.\n\r", ch);
@@ -268,17 +268,17 @@ void do_hit(struct char_data* ch,const char* argument, int cmd) {
 	}
 }
 
-void do_slay(struct char_data* ch,const char* argument, int cmd) {
-	static char arg[MAX_INPUT_LENGTH];
+ACTION_FUNC(do_slay) {
+	static char tmp[MAX_INPUT_LENGTH];
 	struct char_data* victim;
 
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if (!*arg) {
+	if (!*tmp) {
 		send_to_char("Uccidere chi?\n\r", ch);
 	}
 	else {
-		if (!(victim = get_char_room_vis(ch, arg)))
+		if (!(victim = get_char_room_vis(ch, tmp)))
 		{ send_to_char("They aren't here.\n\r", ch); }
 		else {
 
@@ -297,22 +297,22 @@ void do_slay(struct char_data* ch,const char* argument, int cmd) {
 		}
 	}
 }
-void do_kill(struct char_data* ch,const char* argument, int cmd) {
-	static char arg[MAX_INPUT_LENGTH];
+ACTION_FUNC(do_kill) {
+	static char tmp[MAX_INPUT_LENGTH];
 	struct char_data* victim;
 
 	if ((GetMaxLevel(ch) < CREATORE) || IS_NPC(ch)) {
-		do_hit(ch, argument, 0);
+		do_hit(ch, arg, 0);
 		return;
 	}
 
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if (!*arg) {
+	if (!*tmp) {
 		send_to_char("Kill who?\n\r", ch);
 	}
 	else {
-		if (!(victim = get_char_room_vis(ch, arg)))
+		if (!(victim = get_char_room_vis(ch, tmp)))
 		{ send_to_char("They aren't here.\n\r", ch); }
 		else if (ch == victim)
 		{ send_to_char("Your mother would be so sad.. :(\n\r", ch); }
@@ -327,7 +327,7 @@ void do_kill(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_backstab(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_backstab) {
 	struct char_data* victim;
 	char name[256];
 	byte percent, base=0;
@@ -338,7 +338,7 @@ void do_backstab(struct char_data* ch,const char* argument, int cmd) {
 	if( check_peaceful(ch, "C'e` troppa pace qui per essere violenti.\n\r"))
 	{ return; }
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!(victim = get_char_room_vis(ch, name))) {
 		send_to_char("Chi vuoi accoltellare?\n\r", ch);
@@ -478,7 +478,7 @@ void do_backstab(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_order(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_order) {
 	char name[100], message[256];
 	char buf[256];
 	bool found = FALSE;
@@ -490,7 +490,7 @@ void do_order(struct char_data* ch,const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument, name, message,sizeof name -1,sizeof message -1);
+	half_chop(arg, name, message,sizeof name -1,sizeof message -1);
 
 	/* Gia' che me lo sto passando faccio pure le traduzioni :-) */
 
@@ -605,7 +605,7 @@ void do_order(struct char_data* ch,const char* argument, int cmd) {
 	}
 }
 
-void do_order_old(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_order_old) {
 	char name[100], message[256];
 	char buf[256];
 	bool found = FALSE;
@@ -617,7 +617,7 @@ void do_order_old(struct char_data* ch,const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument, name, message,sizeof name -1,sizeof message -1);
+	half_chop(arg, name, message,sizeof name -1,sizeof message -1);
 
 	if (!*name || !*message)
 	{ send_to_char("Order who to do what?\n\r", ch); }
@@ -715,13 +715,13 @@ void do_order_old(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_flee(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_flee) {
 	int i, attempt, loose, die, percent, charm;
 	int panic=FALSE;
 	int bonus=0;
 
 	void gain_exp(struct char_data *ch, int gain);
-	int special(struct char_data *ch, int cmd, char* arg);
+	int special(struct char_data *ch, int cmd, char* tmp);
 	char buf[250];
 	if (IS_AFFECTED(ch, AFF_PARALYSIS))
 	{ return; }
@@ -922,7 +922,7 @@ void do_flee(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_bash(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_bash) {
 	struct char_data* victim;
 	char name[256];
 	int percent=0;
@@ -956,7 +956,7 @@ void do_bash(struct char_data* ch,const char* argument, int cmd) {
 	}
 
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if( !( victim = get_char_room_vis( ch, name ) ) ) {
 		if( ch->specials.fighting ) {
@@ -1078,7 +1078,7 @@ void do_bash(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_rescue(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_rescue) {
 	struct char_data* victim, *tmp_ch;
 	int percent;
 	char victim_name[240];
@@ -1109,7 +1109,7 @@ void do_rescue(struct char_data* ch,const char* argument, int cmd) {
 		}
 	}
 
-	only_argument(argument, victim_name);
+	only_argument(arg, victim_name);
 
 	if (!(victim = get_char_room_vis(ch, victim_name))) {
 		if (HAS_PRINCE(ch)) {
@@ -1182,12 +1182,12 @@ void do_rescue(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_support(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_support) {
 	struct char_data* victim;
 	char victim_name[240];
 
 
-	only_argument(argument, victim_name);
+	only_argument(arg, victim_name);
 
 	if (!(victim = get_char_room_vis(ch, victim_name))) {
 		send_to_char("Chi vorresti supportare, esattamente?\n\r", ch);
@@ -1218,12 +1218,12 @@ void do_support(struct char_data* ch,const char* argument, int cmd) {
 	ActionAlignMod(ch,victim,cmd);
 	ch->specials.supporting=strdup(victim_name);
 }
-void do_bodyguard(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_bodyguard) {
 	struct char_data* victim,*lg;
 	char victim_name[240];
 
 
-	only_argument(argument, victim_name);
+	only_argument(arg, victim_name);
 
 	if (!(victim = get_char_room_vis(ch, victim_name))) {
 		send_to_char("Di chi vorresti fare la guardia del corpo.. esattamente?\n\r", ch);
@@ -1284,14 +1284,14 @@ void do_bodyguard(struct char_data* ch,const char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE); /* same as hit */
 }
 
-void do_assist(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_assist) {
 	struct char_data* victim, *tmp_ch;
 	char victim_name[240];
 
 	if (check_peaceful(ch,"Noone should need assistance here.\n\r"))
 	{ return; }
 
-	only_argument(argument, victim_name);
+	only_argument(arg, victim_name);
 
 	if (!(victim = get_char_room_vis(ch, victim_name))) {
 		send_to_char("Who do you want to assist?\n\r", ch);
@@ -1342,7 +1342,7 @@ void do_assist(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-void do_kick(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_kick) {
 	struct char_data* victim;
 	char name[80];
 	int dam;
@@ -1369,7 +1369,7 @@ void do_kick(struct char_data* ch,const char* argument, int cmd) {
 		}
 	}
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!(victim = get_char_room_vis(ch, name))) {
 		if (ch->specials.fighting) {
@@ -1455,9 +1455,9 @@ void do_kick(struct char_data* ch,const char* argument, int cmd) {
    Se lo skill riesce gli attacchi vengono automaticamente
    indirizzati sullo scudo. Gaia( 7/2000 ) */
 
-void do_parry( struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(do_parry) {
 	int skillcheck=0;
-	char argument[100],name[100];
+	char name[100];
 	struct char_data* victim;
 
 	if (check_peaceful(ch,
@@ -1469,7 +1469,7 @@ void do_parry( struct char_data* ch, char* arg, int cmd) {
 	{ return; }
 #endif
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!(victim = get_char_room_vis(ch, name))) {
 		if (ch->specials.fighting)     {
@@ -1514,12 +1514,12 @@ void do_parry( struct char_data* ch, char* arg, int cmd) {
 
 
 
-void do_wimp(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_wimp) {
 
 	/* sets the character in wimpy mode.  */
 	char name[80];
 	short value;
-	only_argument(argument, name);
+	only_argument(arg, name);
 	if (!*name) {
 		snprintf(name,79,"Current wimpy level is: %d",ch->specials.WimpyLevel);
 		send_to_char(name,ch);
@@ -1538,9 +1538,9 @@ void do_wimp(struct char_data* ch,const char* argument, int cmd) {
 
 }
 
-void do_shoot(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_shoot) {
 #if 0
-	char arg[80],dirstr[80],name[80];
+	char tmp[80],dirstr[80],name[80];
 	char buf[255];
 	struct char_data* victim;
 	struct room_data* this_room,*to_room,*next_room;
@@ -1552,12 +1552,12 @@ void do_shoot(struct char_data* ch,const char* argument, int cmd) {
 	if (check_peaceful(ch,"You feel too peaceful to contemplate violence.\n\r"))
 	{ return; }
 
-	argument =  one_argument(argument, arg);
+	arg =  one_argument(arg, tmp);
 
 	mudlog( LOG_CHECK, "begin do_shoot" );
 
-	if (*arg) {
-		victim = get_char_room_vis(ch, arg);
+	if (*tmp) {
+		victim = get_char_room_vis(ch, tmp);
 
 		if (!victim) {
 			i = ch->in_room;
@@ -1577,7 +1577,7 @@ void do_shoot(struct char_data* ch,const char* argument, int cmd) {
 
 
 
-			switch(*arg) {
+			switch(*tmp) {
 			case 'N':
 			case 'n':
 				dir=0;
@@ -1609,9 +1609,9 @@ void do_shoot(struct char_data* ch,const char* argument, int cmd) {
 				break;
 			} /* end switch */
 
-			argument= one_argument(argument,name);
+			arg= one_argument(arg,name);
 			if (strn_cmp(name,"at",2) && isspace(name[2]))
-			{ argument=one_argument(argument,name); }
+			{ arg=one_argument(arg,name); }
 
 
 			if (!exit_ok(EXIT_NUM(i,dir),NULL)) {
@@ -1677,7 +1677,7 @@ void do_shoot(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_springleap(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_springleap) {
 	struct char_data* victim;
 	char name[256];
 	byte percent;
@@ -1695,7 +1695,7 @@ void do_springleap(struct char_data* ch,const char* argument, int cmd) {
 			return;
 		}
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!(victim = get_char_room_vis(ch, name))) {
 		if (ch->specials.fighting) {
@@ -1770,7 +1770,7 @@ void do_springleap(struct char_data* ch,const char* argument, int cmd) {
 }
 
 
-void do_quivering_palm( struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(do_quivering_palm) {
 	struct char_data* victim;
 	struct affected_type af;
 	byte percent;
@@ -1995,7 +1995,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	}
 }
 
-void do_berserk( struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(do_berserk) {
 	int skillcheck=0;
 	char argument[100],name[100];
 	struct char_data* victim;
@@ -2020,7 +2020,7 @@ void do_berserk( struct char_data* ch, char* arg, int cmd) {
 	{ return; }
 #endif
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!(victim = get_char_room_vis(ch, name))) {
 		if (ch->specials.fighting)     {
@@ -2304,7 +2304,7 @@ int clearpath(struct char_data* ch, long room, int direc) {
 	return real_roomp( room )->dir_option[ direc ]->to_room;
 }
 
-void do_weapon_load( struct char_data* ch, char* argument, int cmd ) {
+ACTION_FUNC(do_weapon_load) {
 	struct obj_data* fw, *ms;
 	char arg1[MAX_STRING_LENGTH], arg2[MAX_STRING_LENGTH];
 
@@ -2335,7 +2335,7 @@ void do_weapon_load( struct char_data* ch, char* argument, int cmd ) {
 		}
 	}
 
-	half_chop( argument, arg1, arg2,sizeof arg1 -1,sizeof arg1 -1 );
+	half_chop( arg, arg1, arg2,sizeof arg1 -1,sizeof arg1 -1 );
 	if( !*arg1 ) {
 		send_to_char( "Che proiettile vuoi caricare ?\n\r",ch);
 		return;
@@ -2362,9 +2362,9 @@ void do_weapon_load( struct char_data* ch, char* argument, int cmd ) {
 	WAIT_STATE( ch, PULSE_VIOLENCE * 3 );
 }
 
-void do_fire(struct char_data* ch,const char* argument, int cmd ) {
+ACTION_FUNC(do_fire) {
 	struct obj_data* fw, *ms;
-	char arg[MAX_STRING_LENGTH];
+	char tmp[MAX_STRING_LENGTH];
 	struct char_data* targ;
 	int tdir, rng, dr;
 
@@ -2374,14 +2374,14 @@ void do_fire(struct char_data* ch,const char* argument, int cmd ) {
 		send_to_char( "Devi impugnare un'arma per lanciare proiettili!\n\r", ch );
 		return;
 	}
-	only_argument(argument, arg);
+	only_argument(arg, tmp);
 
-	if( !*arg ) {
+	if( !*tmp ) {
 		send_to_char( "Il giusto formato per fire (o shoot) e`: "
 					  "fire [<dir> at] <target>\n\r",ch);
 		return;
 	}
-	targ = get_char_linear( ch, arg, &rng, &dr );
+	targ = get_char_linear( ch, tmp, &rng, &dr );
 	if( targ && targ == ch ) {
 		send_to_char( "Non puoi colpire te stesso!\n\r", ch );
 		return;
@@ -2422,13 +2422,13 @@ void do_fire(struct char_data* ch,const char* argument, int cmd ) {
 
 
 
-void do_throw(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_throw) {
 	struct obj_data* pObjThrow;
 	char arg1[100],arg2[100];
 	int rng, tdir;
 	struct char_data* targ;
 
-	half_chop(argument, arg1, arg2,sizeof arg1 -1,sizeof arg2 -1);
+	half_chop(arg, arg1, arg2,sizeof arg1 -1,sizeof arg2 -1);
 	if( !*arg1 || !*arg2 ) {
 		send_to_char( "Il giusto formato per throw e`: "
 					  "throw <oggetto> [<dir> at] <target>.\n\r", ch );
@@ -2494,25 +2494,25 @@ void do_throw(struct char_data* ch,const char* argument, int cmd) {
 	}
 }
 
-void do_stopfight( struct char_data* pChar, char* szArgument, int nCmd ) {
-	if( pChar == NULL ) {
+ACTION_FUNC(do_stopfight) {
+	if( ch == NULL ) {
 		mudlog( LOG_SYSERR, "pChar == NULL in do_stopfight( act.off.c )" );
 		return;
 	}
 
-	if( pChar->specials.fighting ) {
-		if( !IS_SET( pChar->specials.affected_by2, AFF2_BERSERK ) ) {
-			stop_fighting( pChar );
-			WAIT_STATE( pChar, PULSE_VIOLENCE );
-			act( "Hai smesso di combattere.", TRUE, pChar, 0, 0, TO_CHAR );
-			act( "$n smette di combattere.", TRUE, pChar, 0, 0, TO_ROOM );
+	if( ch->specials.fighting ) {
+		if( !IS_SET( ch->specials.affected_by2, AFF2_BERSERK ) ) {
+			stop_fighting( ch );
+			WAIT_STATE( ch, PULSE_VIOLENCE );
+			act( "Hai smesso di combattere.", TRUE, ch, 0, 0, TO_CHAR );
+			act( "$n smette di combattere.", TRUE, ch, 0, 0, TO_ROOM );
 		}
 		else
 			send_to_char( "Tutto quello a cui pensi adesso, e` alla tua "
-						  "battaglia\n\r", pChar );
+						  "battaglia\n\r", ch );
 	}
 	else
-	{ send_to_char( "Ma se non stai combattendo!\n\r", pChar ); }
+	{ send_to_char( "Ma se non stai combattendo!\n\r", ch); }
 
 }
 } // namespace Alarmud

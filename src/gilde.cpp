@@ -145,7 +145,7 @@ void UpdateGuildListFile( int nIndex ) {
 
 
 
-int IsInGuildList( int nIndex, char* szNomeMembro ) {
+int IsInGuildList( int nIndex, const char* szNomeMembro ) {
 	TSocioGilda* pSocio;
 
 	for( pSocio = pDatiGilde[ nIndex ].pListaSoci; pSocio;
@@ -157,7 +157,7 @@ int IsInGuildList( int nIndex, char* szNomeMembro ) {
 	return FALSE;
 }
 
-void AppendToGuildList( int nIndex, char* szNomeMembro ) {
+void AppendToGuildList( int nIndex, const char* szNomeMembro ) {
 	TSocioGilda* pSocio = (TSocioGilda*)calloc( 1, sizeof( TSocioGilda ) );
 	if( pSocio ) {
 		strncpy( pSocio->szNomeSocio, szNomeMembro,
@@ -173,7 +173,7 @@ void AppendToGuildList( int nIndex, char* szNomeMembro ) {
 	}
 }
 
-void RemoveFromGuildList( int nIndex, char* szNomeMembro ) {
+void RemoveFromGuildList( int nIndex, const char* szNomeMembro ) {
 	TSocioGilda** ppSocio;
 	int bRemoved = FALSE;
 
@@ -211,155 +211,154 @@ int IsGuildGuardRoomFP( int room, void* tgt_room ) {
  * la chiave tenuta.
  ****************************************************************************/
 
-int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,struct char_data* pMob, int nType ) {
+MOBSPECIAL_FUNC(PlayersGuildGuard) {
 	int nIndex;
 
-	if( !pMob || !pCh || pMob->nr < 0 ) {
-		mudlog( LOG_SYSERR,
-				"!pMob || !pCh || pMob->nr < 0 in PlayersGuildGuard (gilde.c)" );
+	if( !mob || !ch || mob->nr < 0 ) {
+		mudlog( LOG_SYSERR,"!mob || !ch || mob->nr < 0" );
 		return FALSE;
 	}
 
-	nIndex = pMob->generic;
+	nIndex = mob->generic;
 
 	if( !nIndex ) {
 
 		for( nIndex = 0; pDatiGilde[ nIndex ].nGuardia &&
 				pDatiGilde[ nIndex ].nGuardia !=
-				mob_index[ pMob->nr ].iVNum; nIndex++ );
+				mob_index[ mob->nr ].iVNum; nIndex++ );
 
 		if( !pDatiGilde[ nIndex ].nGuardia ) {
 			mudlog( LOG_ERROR,
 					"PlayersGuildMaster assigned to wrong mob '%s' (%ld).",
-					GET_NAME( pMob ), pMob->nr );
-			mob_index[ pMob->nr ].func = NULL;
+					GET_NAME( mob ), mob->nr );
+			mob_index[ mob->nr ].func = NULL;
 		}
-		pMob->generic = nIndex + 1;
+		mob->generic = nIndex + 1;
 	}
 	else {
 		nIndex--;
 	}
 
-	if( nType == EVENT_COMMAND && AWAKE( pMob ) ) {
-		if( nCmd >= CMD_NORTH && nCmd <= CMD_DOWN ) {
-			if( pMob->in_room == pDatiGilde[ nIndex ].nGuardiaRoom &&
-					pDatiGilde[ nIndex ].nDir == nCmd - 1 ) {
-				if( !IsInGuildList( nIndex, GET_NAME( pCh ) ) &&
-						strcasecmp( GET_NAME( pCh ),
+	if( type == EVENT_COMMAND && AWAKE( mob ) ) {
+		if( cmd >= CMD_NORTH && cmd <= CMD_DOWN ) {
+			if( mob->in_room == pDatiGilde[ nIndex ].nGuardiaRoom &&
+					pDatiGilde[ nIndex ].nDir == cmd - 1 ) {
+				if( !IsInGuildList( nIndex, GET_NAME( ch ) ) &&
+						strcasecmp( GET_NAME( ch ),
 									pDatiGilde[ nIndex ].szNomeCapo ) != 0 &&
-						( GetMaxLevel( pCh ) < MAESTRO_DEI_CREATORI ||
-						  !IS_SET( pCh->specials.act, PLR_NOHASSLE ) ) ) {
-					do_action( pMob, "", CMD_SHAKE );
+						( GetMaxLevel( ch ) < MAESTRO_DEI_CREATORI ||
+						  !IS_SET( ch->specials.act, PLR_NOHASSLE ) ) ) {
+					do_action( mob, "", CMD_SHAKE );
 					act( "$c0015[$c0005$N$c0015] ti dice 'Dove credi di andare tu ? "
-						 "L'ingresso e` riservato!'", FALSE, pCh, 0, pMob, TO_CHAR );
+						 "L'ingresso e` riservato!'", FALSE, ch, 0, mob, TO_CHAR );
 					act( "$c0015[$c0005$N$c0015] dice a $n 'Dove credi di andare tu ? "
-						 "L'ingresso e` riservato!'", FALSE, pCh, 0, pMob, TO_ROOM );
+						 "L'ingresso e` riservato!'", FALSE, ch, 0, mob, TO_ROOM );
 					return TRUE;
 				}
 			} /* O la stanza o la direzione non sono quelle controllate. */
 		}
-		else if( nCmd == CMD_DOORBASH ) {
-			do_action( pMob, GET_NAME( pCh ), CMD_GLARE );
+		else if( cmd == CMD_DOORBASH ) {
+			do_action( mob, GET_NAME( ch ), CMD_GLARE );
 			act( "$c0015[$c0005$N$c0015] ti dice 'Non ci pensare neppure.'",
-				 FALSE, pCh, 0, pMob, TO_CHAR );
+				 FALSE, ch, 0, mob, TO_CHAR );
 			act( "$c0015[$c0005$N$c0015] dice a $n 'Non ci pensare neppure.'",
-				 FALSE, pCh, 0, pMob, TO_ROOM );
+				 FALSE, ch, 0, mob, TO_ROOM );
 			return TRUE;
 		}
-		else if( nCmd == CMD_ASK ) {
+		else if( cmd == CMD_ASK ) {
 			char szBuffer[ 180 ];
-			one_argument( pArg, szBuffer );
-			if( isname( szBuffer, GET_NAME( pMob ) ) ) {
-				do_ask( pCh, pArg, CMD_ASK );
-				pArg = one_argument( pArg, szBuffer );
-				if( isname( pDatiGilde[ nIndex ].szNomeCapo, GET_NAME( pCh ) ) ) {
-					char chEorA = ( GET_SEX( pCh ) == SEX_FEMALE ? 'a' : 'e' );
-					if( pMob->equipment[ HOLD ] &&
-							isname2( pArg, pMob->equipment[ HOLD ]->name ) ) {
+			one_argument( arg, szBuffer );
+			if( isname( szBuffer, GET_NAME( mob ) ) ) {
+				do_ask( ch, arg, CMD_ASK );
+				arg = one_argument( arg, szBuffer );
+				if( isname( pDatiGilde[ nIndex ].szNomeCapo, GET_NAME( ch ) ) ) {
+					char chEorA = ( GET_SEX( ch ) == SEX_FEMALE ? 'a' : 'e' );
+					if( mob->equipment[ HOLD ] &&
+							isname2( arg, mob->equipment[ HOLD ]->name ) ) {
 						sprintf( szBuffer, "%s Certo signor%c, subito signor%c",
-								 GET_NAME( pCh ), chEorA, chEorA );
-						do_tell( pMob, szBuffer, CMD_TELL );
-						act( "$n da` $p a $N", TRUE, pMob, pMob->equipment[ HOLD ], pCh,
+								 GET_NAME( ch ), chEorA, chEorA );
+						do_tell( mob, szBuffer, CMD_TELL );
+						act( "$n da` $p a $N", TRUE, mob, mob->equipment[ HOLD ], ch,
 							 TO_NOTVICT );
-						act( "$n ti da` $p", TRUE, pMob, pMob->equipment[ HOLD ], pCh,
+						act( "$n ti da` $p", TRUE, mob, mob->equipment[ HOLD ], ch,
 							 TO_VICT );
-						obj_to_char( unequip_char( pMob, HOLD ), pCh );
+						obj_to_char( unequip_char( mob, HOLD ), ch );
 					}
 					else {
 						sprintf( szBuffer, "%s Mi dispiace signor%c, ma non ce l'ho",
-								 GET_NAME( pCh ), chEorA );
-						do_tell( pMob, szBuffer, CMD_TELL );
+								 GET_NAME( ch ), chEorA );
+						do_tell( mob, szBuffer, CMD_TELL );
 					}
 				}
 				else {
 					act( "$N continua la sua guardia, ignorando le tue richieste.",
-						 TRUE, pCh, NULL, pMob, TO_CHAR );
+						 TRUE, ch, NULL, mob, TO_CHAR );
 					act( "$N continua la sua guardia, ignorando le richieste di $n.",
-						 TRUE, pCh, NULL, pMob, TO_ROOM );
+						 TRUE, ch, NULL, mob, TO_ROOM );
 				}
 				return TRUE;
 			}
 		}
 	}
-	else if( nType == EVENT_DEATH ) {
-		if( pMob->equipment[ HOLD ] ) {
-			struct obj_data* pObj = unequip_char( pMob, HOLD );
+	else if( type == EVENT_DEATH ) {
+		if( mob->equipment[ HOLD ] ) {
+			struct obj_data* pObj = unequip_char( mob, HOLD );
 			act( "$n, con un ultimo sforzo disperato, distrugge $p.",
-				 TRUE, pMob, pObj, 0, TO_ROOM );
+				 TRUE, mob, pObj, 0, TO_ROOM );
 			extract_obj( pObj );
 		}
 	}
-	else if( nType == EVENT_TICK ) {
-		if( !AWAKE( pMob ) ) {
-			if( !IS_AFFECTED( pMob, AFF_SLEEP ) ) {
-				do_wake( pMob, "", 0 );
+	else if( type == EVENT_TICK ) {
+		if( !AWAKE( mob ) ) {
+			if( !IS_AFFECTED( mob, AFF_SLEEP ) ) {
+				do_wake( mob, "", 0 );
 				return TRUE;
 			}
 		}
-		else if( GET_POS( pMob ) > POSITION_SLEEPING &&
-				 GET_POS( pMob ) < POSITION_FIGHTING ) {
-			do_stand( pMob, "", 0 );
+		else if( GET_POS( mob ) > POSITION_SLEEPING &&
+				 GET_POS( mob ) < POSITION_FIGHTING ) {
+			do_stand( mob, "", 0 );
 			return TRUE;
 		}
-		else if( pMob->in_room != pDatiGilde[ nIndex ].nGuardiaRoom ) {
+		else if( mob->in_room != pDatiGilde[ nIndex ].nGuardiaRoom ) {
 			int iDir;
 
-			iDir = find_path( pMob->in_room, IsGuildGuardRoomFP,
+			iDir = find_path( mob->in_room, IsGuildGuardRoomFP,
 							  reinterpret_cast<void*>(pDatiGilde[ nIndex ].nGuardiaRoom), -5000, 0 );
 			if( iDir >= 0 ) {
-				go_direction( pMob, iDir );
+				go_direction( mob, iDir );
 				return TRUE;
 			}
 		}
-		else if( !pMob->equipment[HOLD] && pMob->carrying ) {
+		else if( !mob->equipment[HOLD] && mob->carrying ) {
 			struct obj_data* pObj;
-			for( pObj = pMob->carrying; pObj; pObj = pObj->next_content ) {
+			for( pObj = mob->carrying; pObj; pObj = pObj->next_content ) {
 				if( CAN_WEAR( pObj, ITEM_HOLD ) ) {
-					perform_wear( pMob, pObj, 13 );
+					perform_wear( mob, pObj, 13 );
 					obj_from_char( pObj );
-					equip_char( pMob, pObj, HOLD );
+					equip_char( mob, pObj, HOLD );
 					return TRUE;
 				}
 			}
 		}
 		else {
 			struct char_data* pCapo;
-			pCapo = get_char_room_vis( pMob, pDatiGilde[ nIndex ].szNomeCapo );
+			pCapo = get_char_room_vis( mob, pDatiGilde[ nIndex ].szNomeCapo );
 
 			if( pCapo != NULL ) {
 				if( !number( 0, 10 ) ) {
-					do_action( pMob, GET_NAME( pCapo ), CMD_KNEEL );
+					do_action( mob, GET_NAME( pCapo ), CMD_KNEEL );
 					if( GET_SEX( pCapo ) == SEX_MALE ) {
 						act( "$c0015[$c0005$N$c0015] ti dice 'Ai suoi ordini signore, "
-							 "benvenuto.'", FALSE, pCapo, 0, pMob, TO_CHAR );
+							 "benvenuto.'", FALSE, pCapo, 0, mob, TO_CHAR );
 						act( "$c0015[$c0005$N$c0015] dice a $n 'Ai suoi ordini signore, "
-							 "benvenuto.'", FALSE, pCapo, 0, pMob, TO_ROOM );
+							 "benvenuto.'", FALSE, pCapo, 0, mob, TO_ROOM );
 					}
 					else if( GET_SEX( pCapo ) == SEX_FEMALE ) {
 						act( "$c0015[$c0005$N$c0015] ti dice 'Ai suoi ordini signora, "
-							 "benvenuta.'", FALSE, pCapo, 0, pMob, TO_CHAR );
+							 "benvenuta.'", FALSE, pCapo, 0, mob, TO_CHAR );
 						act( "$c0015[$c0005$N$c0015] dice a $n 'Ai suoi ordini signora, "
-							 "benvenuta.'", FALSE, pCapo, 0, pMob, TO_ROOM );
+							 "benvenuta.'", FALSE, pCapo, 0, mob, TO_ROOM );
 					}
 					return TRUE;
 				}
@@ -374,15 +373,15 @@ int PlayersGuildGuard( struct char_data* pCh, int nCmd, char* pArg,struct char_d
  * Procedura di servizio per GuildBanker.
  ****************************************************************************/
 
-void GuildDeposit( struct char_data* pCh, struct char_data* pMob,char* pArg, int nIndex ) {
+void GuildDeposit( struct char_data* ch, struct char_data* mob,const char* arg, int nIndex ) {
 
 	char szBuffer[ 256 ];
 
 	long lGold = -1;
 
-	sscanf( pArg, "%ld", &lGold );
+	sscanf( arg, "%ld", &lGold );
 	if( lGold > 0 ) {
-		if( lGold <= GET_GOLD( pCh ) ) {
+		if( lGold <= GET_GOLD( ch ) ) {
 			FILE* pfTotal;
 			char szFileName[ 256 ];
 
@@ -395,34 +394,34 @@ void GuildDeposit( struct char_data* pCh, struct char_data* pMob,char* pArg, int
 				rewind( pfTotal );
 				lTotalGold += lGold;
 				fprintf( pfTotal, "%ld\n", lTotalGold );
-				GET_GOLD( pCh ) -= lGold;
+				GET_GOLD( ch ) -= lGold;
 				fclose( pfTotal );
 
 				act( "$c0013[$c0015$N$c0013] ti dice 'Grazie di aver "
-					 "contribuito alla prosperita` della gilda'", FALSE, pCh,
-					 NULL, pMob, TO_CHAR );
+					 "contribuito alla prosperita` della gilda'", FALSE, ch,
+					 NULL, mob, TO_CHAR );
 				sprintf( szBuffer, "$n deposita %ld monete nelle casse della gilda.",
 						 lGold );
-				act( szBuffer, TRUE, pCh, NULL, NULL, TO_ROOM );
+				act( szBuffer, TRUE, ch, NULL, NULL, TO_ROOM );
 
 			}
 			else {
 				act( "$c0013[$c0015$N$c0013] ti dice 'Acc., non trovo il registro.",
-					 FALSE, pCh, NULL, pMob, TO_CHAR );
+					 FALSE, ch, NULL, mob, TO_CHAR );
 				mudlog( LOG_ERROR, "Cannot open file %s in GuildBank",
 						szFileName );
 			}
 		}
 		else {
 			act( "$c0013[$c0015$N$c0013] ti dice 'Non mi sembra che "
-				 "tu abbia tutte quelle monete'", FALSE, pCh, NULL, pMob,
+				 "tu abbia tutte quelle monete'", FALSE, ch, NULL, mob,
 				 TO_CHAR );
 		}
 	}
 	else {
 		act( "$c0013[$c0015$N$c0013] ti dice 'Non ho capito "
-			 "quante monete indende versare. Puo` ripetere ?'", FALSE, pCh,
-			 NULL, pMob, TO_CHAR );
+			 "quante monete indende versare. Puo` ripetere ?'", FALSE, ch,
+			 NULL, mob, TO_CHAR );
 	}
 }
 
@@ -467,7 +466,7 @@ void GuildBalance( struct char_data* pCh, struct char_data* pMob,int nIndex ) {
  * Procedura di servizio per GuildBanker.
  ****************************************************************************/
 
-void GuildWithdraw( struct char_data* pCh, struct char_data* pMob,char* pArg, int nIndex ) {
+void GuildWithdraw( struct char_data* pCh, struct char_data* pMob,const char* pArg, int nIndex ) {
 	struct char_data* pGuildMaster;
 
 	if( ( ( pGuildMaster = get_char_room( pDatiGilde[ nIndex ].szNomeCapo,
@@ -539,56 +538,56 @@ void GuildWithdraw( struct char_data* pCh, struct char_data* pMob,char* pArg, in
  *
  *************************************************************************/
 
-int GuildBanker( struct char_data* pCh, int nCmd, char* pArg,struct char_data* pMob, int nType ) {
+MOBSPECIAL_FUNC(GuildBanker) {
 
-	if( !pMob || !pCh ) {
+	if( !mob || !ch ) {
 		mudlog( LOG_SYSERR, "pCh or pMob == NULL in GuildBank" );
 		return FALSE;
 	}
 
-	if( nType == EVENT_COMMAND &&
-			( nCmd == CMD_DEPOSIT || nCmd == CMD_WITHDRAW || nCmd == CMD_BALANCE ) ) {
+	if( type == EVENT_COMMAND &&
+			( cmd == CMD_DEPOSIT || cmd == CMD_WITHDRAW || cmd == CMD_BALANCE ) ) {
 		int nIndex;
 		for( nIndex = 0; pDatiGilde[ nIndex ].nBanchiereXP &&
 				pDatiGilde[ nIndex ].nBanchiereXP !=
-				mob_index[ pMob->nr ].iVNum; nIndex++ );
+				mob_index[ mob->nr ].iVNum; nIndex++ );
 
 		if( pDatiGilde[ nIndex ].nBanchiere ) {
 
 			if( pDatiGilde[ nIndex ].nBanca &&
-					pMob->in_room != pDatiGilde[ nIndex ].nBanca )
+					mob->in_room != pDatiGilde[ nIndex ].nBanca )
 			{ return FALSE; }
 
-			if( IS_PC( pCh ) ) {
+			if( IS_PC( ch ) ) {
 
-				if( IsInGuildList( nIndex, GET_NAME( pCh ) ) ||
-						strcasecmp( GET_NAME( pCh ),
+				if( IsInGuildList( nIndex, GET_NAME( ch ) ) ||
+						strcasecmp( GET_NAME( ch ),
 									pDatiGilde[ nIndex ].szNomeCapo ) == 0 ||
-						( GetMaxLevel( pCh ) >= MAESTRO_DEI_CREATORI &&
-						  IS_SET( pCh->specials.act, PLR_NOHASSLE ) ) ) {
-					switch( nCmd ) {
+						( GetMaxLevel( ch ) >= MAESTRO_DEI_CREATORI &&
+						  IS_SET( ch->specials.act, PLR_NOHASSLE ) ) ) {
+					switch( cmd ) {
 					case CMD_DEPOSIT:
-						GuildDeposit( pCh, pMob, pArg, nIndex );
+						GuildDeposit( ch, mob, arg, nIndex );
 						break;
 
 					case CMD_BALANCE:
-						GuildBalance( pCh, pMob, nIndex );
+						GuildBalance( ch, mob, nIndex );
 						break;
 
 					case CMD_WITHDRAW:
-						GuildWithdraw( pCh, pMob, pArg, nIndex );
+						GuildWithdraw( ch, mob, arg, nIndex );
 						break;
 					}
 				}
 				else {
 					char pMsg[] = "$c0015[$c0005$N$c0015] dice 'Mi dispiace, ma solo i "
 								  "membri della gilda possono usare la banca'";
-					act( pMsg, FALSE, pCh, NULL, pMob, TO_CHAR );
-					act( pMsg, FALSE, pCh, NULL, pMob, TO_ROOM );
+					act( pMsg, FALSE, ch, NULL, mob, TO_CHAR );
+					act( pMsg, FALSE, ch, NULL, mob, TO_ROOM );
 				}
 			}
 			else {
-				act( "Solo i giocatori possono usare la banca.", FALSE, pCh,
+				act( "Solo i giocatori possono usare la banca.", FALSE, ch,
 					 NULL, NULL, TO_CHAR );
 			}
 
@@ -597,7 +596,7 @@ int GuildBanker( struct char_data* pCh, int nCmd, char* pArg,struct char_data* p
 		else {
 			mudlog( LOG_ERROR,
 					"GuildXPBanker assigned to wrong mob '%s' (%ld).",
-					GET_NAME( pMob ), pMob->nr );
+					GET_NAME( mob ), mob->nr );
 		}
 	}
 
@@ -692,7 +691,7 @@ int GuildBalanceXP( struct char_data* pChar, struct char_data* pMob,int nIndex )
  * Procedura di servizio per GuildXPBanker.
  ****************************************************************************/
 
-int GuildDepositXP( struct char_data* pChar,  char* szArg,struct char_data* pMob, int nIndex ) {
+int GuildDepositXP( struct char_data* pChar,  const char* szArg,struct char_data* pMob, int nIndex ) {
 	int iAlreadyDep = GetIntData( (CharElem*)pMob->act_ptr, pChar );
 	if( iAlreadyDep < GUILD_MAXXP_DEP ) {
 		long lXP = -1;
@@ -777,7 +776,7 @@ int GuildDepositXP( struct char_data* pChar,  char* szArg,struct char_data* pMob
  * Procedura di servizio per GuildXPBanker.
  ****************************************************************************/
 
-int GuildWithdrawXP( struct char_data* pChar,  char* szArg,struct char_data* pMob, int nIndex ) {
+int GuildWithdrawXP( struct char_data* pChar,  const char* szArg,struct char_data* pMob, int nIndex ) {
 	long lXP = -1;
 	sscanf( szArg, "%ld", &lXP );
 	if( lXP > 0 ) {
@@ -888,54 +887,54 @@ int GuildWithdrawXP( struct char_data* pChar,  char* szArg,struct char_data* pMo
  *         prelevato negli ultimi 3 giorni.
  ****************************************************************************/
 
-int GuildXPBanker( struct char_data* pChar, int nCmd, char* szArg,struct char_data* pMob, int nType ) {
-	if( pMob == NULL ) {
+MOBSPECIAL_FUNC(GuildXPBanker) {
+	if( mob == NULL ) {
 		mudlog( LOG_SYSERR, "pMob == NULL in GuildMemberBook (gilde.c)" );
 		return TRUE;
 	}
-	else if( pMob->nr >= 0 ) {
-		if( nType == EVENT_COMMAND &&
-				( nCmd == CMD_DEPOSIT || nCmd == CMD_WITHDRAW ||
-				  nCmd == CMD_BALANCE ) ) {
+	else if( mob->nr >= 0 ) {
+		if( type == EVENT_COMMAND &&
+				( cmd == CMD_DEPOSIT || cmd == CMD_WITHDRAW ||
+				  cmd == CMD_BALANCE ) ) {
 			int i;
 			for( i = 0; pDatiGilde[ i ].nBanchiereXP &&
 					pDatiGilde[ i ].nBanchiereXP !=
-					mob_index[ pMob->nr ].iVNum; i++ );
+					mob_index[ mob->nr ].iVNum; i++ );
 
 			if( pDatiGilde[ i ].nBanchiereXP ) {
 
 				if( pDatiGilde[ i ].nBancaXP &&
-						pMob->in_room != pDatiGilde[ i ].nBancaXP )
+						mob->in_room != pDatiGilde[ i ].nBancaXP )
 				{ return FALSE; }
 
-				if( IS_PC( pChar ) ) {
+				if( IS_PC( ch ) ) {
 
-					if( IsInGuildList( i, GET_NAME( pChar ) ) ||
-							strcasecmp( GET_NAME( pChar ),
+					if( IsInGuildList( i, GET_NAME( ch ) ) ||
+							strcasecmp( GET_NAME( ch ),
 										pDatiGilde[ i ].szNomeCapo ) == 0 ||
-							( GetMaxLevel( pChar ) >= MAESTRO_DEI_CREATORI &&
-							  IS_SET( pChar->specials.act, PLR_NOHASSLE ) ) ) {
-						switch( nCmd ) {
+							( GetMaxLevel( ch ) >= MAESTRO_DEI_CREATORI &&
+							  IS_SET( ch->specials.act, PLR_NOHASSLE ) ) ) {
+						switch( cmd ) {
 						case CMD_BALANCE:
-							GuildBalanceXP( pChar, pMob, i );
+							GuildBalanceXP( ch, mob, i );
 							break;
 						case CMD_DEPOSIT:
-							GuildDepositXP( pChar,  szArg, pMob, i );
+							GuildDepositXP( ch,  arg, mob, i );
 							break;
 						case CMD_WITHDRAW:
-							GuildWithdrawXP( pChar,  szArg, pMob, i );
+							GuildWithdrawXP( ch,  arg, mob, i );
 							break;
 						}
 					}
 					else {
 
 						act( "$c0013[$c0015$N$c0013] dice 'Mi dispiace, ma solo i "
-							 "membri della gilda possono usare la banca'", FALSE, pChar,
-							 NULL, pMob, TO_CHAR );
+							 "membri della gilda possono usare la banca'", FALSE, ch,
+							 NULL, mob, TO_CHAR );
 					}
 				}
 				else {
-					act( "Solo i giocatori possono usare la banca.", FALSE, pChar,
+					act( "Solo i giocatori possono usare la banca.", FALSE, ch,
 						 NULL, NULL, TO_CHAR );
 				}
 
@@ -944,15 +943,15 @@ int GuildXPBanker( struct char_data* pChar, int nCmd, char* szArg,struct char_da
 			else {
 				mudlog( LOG_ERROR,
 						"GuildXPBanker assigned to wrong mob '%s' (%ld).",
-						GET_NAME( pMob ), pMob->nr );
+						GET_NAME( mob ), mob->nr );
 			}
 
 		}
-		else if( nType == EVENT_TICK ) {
-			UpdateList( (CharElem**)&pMob->act_ptr );
+		else if( type == EVENT_TICK ) {
+			UpdateList( (CharElem**)&mob->act_ptr );
 		}
-		else if( nType == EVENT_DEATH ) {
-			FreeList( (CharElem**)&pMob->act_ptr );
+		else if( type == EVENT_DEATH ) {
+			FreeList( (CharElem**)&mob->act_ptr );
 		}
 	}
 
@@ -967,121 +966,121 @@ int GuildXPBanker( struct char_data* pChar, int nCmd, char* szArg,struct char_da
  * read <nomelibro> (quest'ultimo comando non e` limitato al solo capogilda).
  * *************************************************************************/
 
-int GuildMemberBook( struct char_data* pChar, int nCmd, char* szArg,struct obj_data* pObj, int nType ) {
-	if( pObj == NULL ) {
+OBJSPECIAL_FUNC(GuildMemberBook) {
+	if( obj == NULL ) {
 		mudlog( LOG_SYSERR, "pObj == NULL in GuildMemberBook (gilde.c)" );
 		return TRUE;
 	}
-	else if( pObj->item_number >= 0 ) {
-		if( nType == EVENT_COMMAND && ( nCmd == CMD_READ || nCmd == CMD_WRITE ||
-										nCmd == CMD_REMOVE ) ) {
+	else if( obj->item_number >= 0 ) {
+		if( type == EVENT_COMMAND && ( cmd == CMD_READ || cmd == CMD_WRITE ||
+										cmd == CMD_REMOVE ) ) {
 			int i;
 			for( i = 0; pDatiGilde[ i ].nLibroSoci &&
 					pDatiGilde[ i ].nLibroSoci !=
-					obj_index[ pObj->item_number ].iVNum; i++ );
+					obj_index[ obj->item_number ].iVNum; i++ );
 
 			if( pDatiGilde[ i ].nLibroSoci ) {
-				if( nCmd == CMD_READ ) {
+				if( cmd == CMD_READ ) {
 					char szArgument[ 256 ];
-					one_argument( szArg, szArgument );
-					if( get_obj_vis_accessible( pChar, szArgument ) == pObj ) {
+					one_argument( arg, szArgument );
+					if( get_obj_vis_accessible( ch, szArgument ) == obj ) {
 						char szBuffer[ 256 ];
 						TSocioGilda* pSocio;
-						act( "Questo e` $p", FALSE, pChar, pObj, NULL, TO_CHAR );
+						act( "Questo e` $p", FALSE, ch, obj, NULL, TO_CHAR );
 						sprintf( szBuffer, "Il capo della gilda e` %c%s.",
 								 UPPER( pDatiGilde[ i ].szNomeCapo[ 0 ] ),
 								 pDatiGilde[ i ].szNomeCapo + 1 );
-						act( szBuffer, FALSE, pChar, NULL, NULL, TO_CHAR );
-						act( "I membri della gilda sono:", FALSE, pChar, NULL,
+						act( szBuffer, FALSE, ch, NULL, NULL, TO_CHAR );
+						act( "I membri della gilda sono:", FALSE, ch, NULL,
 							 NULL, TO_CHAR );
-						act( "$n esamina $p", TRUE, pChar, pObj, NULL, TO_ROOM );
+						act( "$n esamina $p", TRUE, ch, obj, NULL, TO_ROOM );
 
 						for( pSocio = pDatiGilde[ i ].pListaSoci; pSocio;
 								pSocio = pSocio->pNext ) {
-							act( pSocio->szNomeSocio, FALSE, pChar, NULL, NULL,  TO_CHAR );
+							act( pSocio->szNomeSocio, FALSE, ch, NULL, NULL,  TO_CHAR );
 						}
 						return TRUE;
 					}
 				}
-				else if( nCmd == CMD_WRITE ) {
+				else if( cmd == CMD_WRITE ) {
 					char szNomeMembro[ 256 ];
 					char szNomeLibro[ 256 ];
 					struct char_data* pMembro;
 
-					argument_interpreter( szArg, szNomeMembro, szNomeLibro );
+					argument_interpreter( arg, szNomeMembro, szNomeLibro );
 
-					if( get_obj_vis( pChar, szNomeLibro ) == pObj ) {
-						if( strcasecmp( GET_NAME( pChar ),
+					if( get_obj_vis( ch, szNomeLibro ) == obj ) {
+						if( strcasecmp( GET_NAME( ch ),
 										pDatiGilde[ i ].szNomeCapo ) == 0 ) {
-							if( ( pMembro = get_char_room_vis( pChar, szNomeMembro ) ) !=
+							if( ( pMembro = get_char_room_vis( ch, szNomeMembro ) ) !=
 									NULL ) {
-								if( pMembro != pChar ) {
+								if( pMembro != ch ) {
 									if( IS_PC( pMembro ) ) {
 										if( !IsInGuildList( i, GET_NAME( pMembro ) ) ) {
 											AppendToGuildList( i, GET_NAME( pMembro ) );
-											act( "$n scrive il nome di $N su $p.", TRUE, pChar,
-												 pObj, pMembro, TO_NOTVICT );
-											act( "$n scrive il tuo nome su $p.", TRUE, pChar, pObj,
+											act( "$n scrive il nome di $N su $p.", TRUE, ch,
+												 obj, pMembro, TO_NOTVICT );
+											act( "$n scrive il tuo nome su $p.", TRUE, ch, obj,
 												 pMembro, TO_VICT );
-											act( "Scrivi il nome di $N su $p.", TRUE, pChar, pObj,
+											act( "Scrivi il nome di $N su $p.", TRUE, ch, obj,
 												 pMembro, TO_CHAR );
 										}
 										else {
-											act( "$N e` gia` membro della gilda.", TRUE, pChar, NULL,
+											act( "$N e` gia` membro della gilda.", TRUE, ch, NULL,
 												 pMembro, TO_CHAR );
 										}
 									}
 									else {
 										act( "Puoi iscrivere solo giocatori nella tua gilda.",
-											 TRUE, pChar, NULL, NULL, TO_CHAR );
+											 TRUE, ch, NULL, NULL, TO_CHAR );
 									}
 								}
 								else {
-									act( "Ma tu sei gia` il capo.", TRUE, pChar, NULL, NULL,
+									act( "Ma tu sei gia` il capo.", TRUE, ch, NULL, NULL,
 										 TO_CHAR );
 								}
 							}
 							else {
 								act( "Il nuovo membro deve essere presente durante "
-									 "l'iscrizione.", FALSE, pChar, NULL, NULL, TO_CHAR );
+									 "l'iscrizione.", FALSE, ch, NULL, NULL, TO_CHAR );
 							}
 						}
 						else {
 							act( "Mi dispiace, ma solo il capo della gilda puo` aggiungere "
-								 "nuovi membri.", FALSE, pChar, NULL, NULL, TO_CHAR );
+								 "nuovi membri.", FALSE, ch, NULL, NULL, TO_CHAR );
 						}
 						return TRUE;
 					}
 				}
-				else if( nCmd == CMD_REMOVE ) {
+				else if( cmd == CMD_REMOVE ) {
 					char szNomeMembro[ 256 ];
 					char szNomeLibro[ 256 ];
 
-					argument_interpreter( szArg, szNomeMembro, szNomeLibro );
+					argument_interpreter( arg, szNomeMembro, szNomeLibro );
 
-					if( get_obj_vis( pChar, szNomeLibro ) == pObj ) {
-						if( strcasecmp( GET_NAME( pChar ),
+					if( get_obj_vis( ch, szNomeLibro ) == obj ) {
+						if( strcasecmp( GET_NAME( ch ),
 										pDatiGilde[ i ].szNomeCapo ) == 0 ) {
 							if( IsInGuildList( i, szNomeMembro ) ) {
-								if( strcasecmp( szNomeMembro, GET_NAME( pChar ) ) != 0 ) {
+								if( strcasecmp( szNomeMembro, GET_NAME( ch ) ) != 0 ) {
 									RemoveFromGuildList( i, szNomeMembro );
-									act( "$n cancella un nome da $p", TRUE, pChar, pObj, NULL,
+									act( "$n cancella un nome da $p", TRUE, ch, obj, NULL,
 										 TO_ROOM );
-									act( "Fatto.", FALSE, pChar, NULL, NULL, TO_CHAR );
+									act( "Fatto.", FALSE, ch, NULL, NULL, TO_CHAR );
 								}
 								else {
 									act( "Non puoi cancellarti dalla lista. Tu sei il capo!",
-										 FALSE, pChar, NULL, NULL, TO_CHAR );
+										 FALSE, ch, NULL, NULL, TO_CHAR );
 								}
 							}
 							else {
-								act( "Quel nome non e` presente nella lista.", FALSE, pChar,
+								act( "Quel nome non e` presente nella lista.", FALSE, ch,
 									 NULL, NULL, TO_CHAR );
 							}
 						}
 						else {
 							act( "Mi dispiace, ma solo il capo della gilda puo` cancellare "
-								 "i membri.", FALSE, pChar, NULL, NULL, TO_CHAR );
+								 "i membri.", FALSE, ch, NULL, NULL, TO_CHAR );
 						}
 						return TRUE;
 					}
@@ -1104,17 +1103,15 @@ int GuildMemberBook( struct char_data* pChar, int nCmd, char* szArg,struct obj_d
  * stanza ed un oggetto.
  * *************************************************************************/
 
-void AssignMob( int vnum, genericspecial_func proc ) {
+void AssignMob( int vnum, mobspecial_func proc ) {
 
 	if( vnum > 0 ) {
 		int rnum;
 		if( ( rnum = real_mobile( vnum ) ) < 0 ) {
-			mudlog( LOG_ERROR,
-					"Mobile %d not found in database. AssignMob (gilde.c)",
-					vnum );
+			mudlog( LOG_ERROR,"Mobile %d not found in database.",vnum );
 		}
 		else {
-			mob_index[ rnum ].func = proc;
+			mob_index[ rnum ].func = reinterpret_cast<genericspecial_func>(proc);
 		}
 	}
 }
@@ -1124,9 +1121,7 @@ void AssignRoom( int vnum, roomspecial_func proc ) {
 	if( vnum > 0 ) {
 		struct room_data* pRoom;
 		if( ( pRoom = real_roomp( vnum ) ) == NULL ) {
-			mudlog( LOG_ERROR,
-					"Room %d not found in database. AssignRoom (gilde.c)",
-					vnum );
+			mudlog( LOG_ERROR,"Room %d not found in database.",vnum );
 		}
 		else {
 			pRoom->funct = proc;
@@ -1134,7 +1129,7 @@ void AssignRoom( int vnum, roomspecial_func proc ) {
 	}
 }
 
-void AssignObj( int vnum, genericspecial_func proc ) {
+void AssignObj( int vnum, objspecial_func proc ) {
 
 	if( vnum > 0 ) {
 		int rnum;
@@ -1144,7 +1139,7 @@ void AssignObj( int vnum, genericspecial_func proc ) {
 					vnum );
 		}
 		else {
-			obj_index[ rnum ].func = proc;
+			obj_index[ rnum ].func = reinterpret_cast<genericspecial_func>(proc);
 		}
 	}
 }
@@ -1190,8 +1185,7 @@ void BootGuilds() {
 			}
 		}
 		else {
-			mudlog( LOG_ERROR,
-					"Cannot alloc memory for pDatiGilde in BootGilde (gilde.c)" );
+			mudlog( LOG_ERROR,"Cannot alloc memory for pDatiGilde" );
 		}
 
 		fclose( pfDatiGilde );

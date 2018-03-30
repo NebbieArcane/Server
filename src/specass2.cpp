@@ -47,8 +47,8 @@ namespace Alarmud {
 
 #define SPECFILE "myst.spe"
 FILE* fd;
-FILE* fp;
-long ifp=0;
+//FILE* fp;
+//long ifp=0;
 
 
 /* ********************************************************************
@@ -117,16 +117,16 @@ int FileToArray(char* fname,char* p[]) {
 }
 
 int xcompare(const void* p1, const void* p2) {
-	struct genericspecial_func_entry* s1,*s2;
-	s1 = (struct genericspecial_func_entry*)p1;
-	s2 = (struct genericspecial_func_entry*)p2;
+	struct OtherSpecialProcEntry* s1,*s2;
+	s1 = (struct OtherSpecialProcEntry*)p1;
+	s2 = (struct OtherSpecialProcEntry*)p2;
 	return strcasecmp(s1->nome,s2->nome);
 }
 int nomecompare(const void* p1, const void* p2) {
 	char* s1;
-	struct genericspecial_func_entry* s2;
+	struct OtherSpecialProcEntry* s2;
 	s1 = (char*)p1;
-	s2 = (struct genericspecial_func_entry*)p2;
+	s2 = (struct OtherSpecialProcEntry*)p2;
 	return strcasecmp(s1,s2->nome);
 }
 
@@ -143,12 +143,12 @@ char* Aggiungi(char* vecchia,char* nuova) {
 void assign_speciales() {
 	int lastroomproc=0;
 	int lastotherproc=0;
-	struct genericspecial_func_entry* op;
+	struct OtherSpecialProcEntry* op;
 	struct RoomSpecialProcEntry* _or;
 	struct room_data* rp;
 	int i, rnum;
 	char buf[256];
-	char* p;
+	const char* p;
 	char procedura[256];
 	char parms[256];
 	char svnum[256];
@@ -177,7 +177,7 @@ void assign_speciales() {
 
 	mudlog(LOG_CHECK,"Generic sort...[%3d]",lastotherproc);
 	qsort(otherproc,lastotherproc,
-		  sizeof(struct genericspecial_func_entry),xcompare);
+		  sizeof(struct OtherSpecialProcEntry),xcompare);
 
 	mudlog(LOG_CHECK,"Done!");
 	fd=fopen(SPECFILE,"r");
@@ -205,11 +205,11 @@ void assign_speciales() {
 		case 'm':
 			rnum = real_mobile(vnum);
 			if ((rnum<0) ||
-					!(op=(struct genericspecial_func_entry*)
+					!(op=(struct OtherSpecialProcEntry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
-								 sizeof(struct genericspecial_func_entry),
+								 sizeof(struct OtherSpecialProcEntry),
 								 nomecompare))
 			   ) {
 				mudlog( LOG_ERROR,
@@ -224,11 +224,11 @@ void assign_speciales() {
 		case 'o':
 			rnum = real_object(vnum);
 			if ((rnum<0) ||
-					!(op=(struct genericspecial_func_entry*)
+					!(op=(struct OtherSpecialProcEntry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
-								 sizeof(struct genericspecial_func_entry),
+								 sizeof(struct OtherSpecialProcEntry),
 								 nomecompare))
 			   ) {
 				mudlog( LOG_ERROR,

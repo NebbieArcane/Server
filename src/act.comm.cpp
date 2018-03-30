@@ -56,28 +56,28 @@ char* scrambler(struct char_data* ch,const char* message) {
 }
 
 #define scramble(ch,msg) (msg)
-void do_say( struct char_data* ch, const char* argument, int cmd ) {
+ACTION_FUNC(do_say) {
 	int i;
 	char buf[MAX_INPUT_LENGTH+40];
 
 	if( apply_soundproof( ch ) )
 	{ return; }
 
-	for( i = 0; *(argument + i) == ' '; i++ );
+	for( i = 0; *(arg + i) == ' '; i++ );
 
-	if (!*(argument + i))
+	if (!*(arg + i))
 	{ send_to_char("Si, ma COSA vuoi dire ?\n\r", ch); }
 	else {
-		snprintf(buf,MAX_INPUT_LENGTH+39,"$c0015[$c0005$n$c0015] dice '%s'", scramble(ch,argument + i));
+		snprintf(buf,MAX_INPUT_LENGTH+39,"$c0015[$c0005$n$c0015] dice '%s'", scramble(ch,arg + i));
 		act(buf,FALSE,ch,0,0,TO_ROOM);
 		if (IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf(buf,MAX_INPUT_LENGTH+39,"Tu dici '%s'\n\r", argument + i);
+			snprintf(buf,MAX_INPUT_LENGTH+39,"Tu dici '%s'\n\r", arg + i);
 			send_to_char(buf, ch);
 		}
 	}
 }
 
-void do_report(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_report) {
 	char buf[100];
 
 
@@ -111,7 +111,7 @@ void do_report(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_shout(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_shout) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
@@ -131,7 +131,7 @@ void do_shout(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	for (; *argument == ' '; argument++);
+	for (; *arg == ' '; arg++);
 
 	if( ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
 		if( !IS_IMMORTAL(ch->master)) {
@@ -145,14 +145,14 @@ void do_shout(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 
-	if (!(*argument))
+	if (!(*arg))
 	{ send_to_char("Vuoi urlare ? Ottimo ! Ma COSA ??\n\r", ch); }
 	else {
 		if (IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			snprintf(buf1,MAX_INPUT_LENGTH+39,"$c0009Tu gridi '%s'", argument);
+			snprintf(buf1,MAX_INPUT_LENGTH+39,"$c0009Tu gridi '%s'", arg);
 			act(buf1,FALSE, ch,0,0,TO_CHAR);
 		}
-		snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0009[$c0015$n$c0009] grida '%s'", scramble(ch,argument));
+		snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0009[$c0015$n$c0009] grida '%s'", scramble(ch,arg));
 
 		act( "$c0009[$c0015$n$c0009] alza la testa e grida forte", FALSE, ch, 0, 0,
 			 TO_ROOM);
@@ -177,7 +177,7 @@ void do_shout(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_gossip(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_gossip) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
@@ -199,7 +199,7 @@ void do_gossip(struct char_data* ch, const char* argument, int cmd) {
 	if( apply_soundproof( ch ) )
 	{ return; }
 
-	for( ; *argument == ' '; argument++ );
+	for( ; *arg == ' '; arg++ );
 
 	if( ch->master && IS_AFFECTED( ch, AFF_CHARM ) ) {
 		if( !IS_IMMORTAL( ch->master ) ) {
@@ -208,14 +208,14 @@ void do_gossip(struct char_data* ch, const char* argument, int cmd) {
 		}
 	}
 
-	if( !( *argument ) )
+	if( !( *arg ) )
 	{ send_to_char( "Parlare ? Ma di COSA !\n\r", ch ); }
 	else {
 		if( IS_NPC( ch ) || IS_SET( ch->specials.act, PLR_ECHO ) ) {
-			snprintf( buf1,MAX_INPUT_LENGTH+39,"$c0011Tu dici '%s'", argument );
+			snprintf( buf1,MAX_INPUT_LENGTH+39,"$c0011Tu dici '%s'", arg );
 			act( buf1, FALSE, ch, 0, 0, TO_CHAR );
 		}
-		snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0011[$c0015$n$c0011] vi dice '%s'", scramble(ch,argument));
+		snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0011[$c0015$n$c0011] vi dice '%s'", scramble(ch,arg));
 		for( i = descriptor_list; i; i = i->next ) {
 			if( i->character != ch && !i->connected &&
 					( IS_NPC( i->character ) ||
@@ -236,7 +236,7 @@ void do_gossip(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_auction(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_auction) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
@@ -256,7 +256,7 @@ void do_auction(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	for (; *argument == ' '; argument++);
+	for (; *arg == ' '; arg++);
 
 	if (ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
 		if (!IS_IMMORTAL(ch->master)) {
@@ -264,14 +264,14 @@ void do_auction(struct char_data* ch, const char* argument, int cmd) {
 			return;
 		}
 	}
-	do_auction_int(ch,argument,cmd);
+	do_auction_int(ch,arg,cmd);
 }
 
-void talk_auction(const char* argument) {
+void talk_auction(const char* arg) {
 	char buf1[MAX_INPUT_LENGTH+40];
 	struct descriptor_data* i;
 
-	snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0010[$c0015AUCTION$c0010] '%s'", argument);
+	snprintf(buf1,MAX_INPUT_LENGTH+39, "$c0010[$c0015AUCTION$c0010] '%s'", arg);
 	for( i = descriptor_list; i; i = i->next ) {
 		if( !i->connected &&
 				( IS_NPC( i->character ) ||
@@ -289,7 +289,7 @@ void talk_auction(const char* argument) {
 
 
 
-void do_commune(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_commune) {
 	static char buf1[MAX_INPUT_LENGTH];
 	struct descriptor_data* i;
 	int livello;
@@ -302,16 +302,16 @@ void do_commune(struct char_data* ch, const char* argument, int cmd) {
 		livello=IMMORTALE;
 		strcpy(sep,"::");
 	}
-	for (; *argument == ' '; argument++);
+	for (; *arg == ' '; arg++);
 
-	if (!(*argument))
+	if (!(*arg))
 	{ send_to_char("Comunicare fra gli Dei e` ottimo, ma COSA ?\n\r",ch); }
 	else {
 		if (IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			snprintf(buf1,MAX_INPUT_LENGTH+1,"$c0014Tu pensi %s '%s'", sep,argument);
+			snprintf(buf1,MAX_INPUT_LENGTH+1,"$c0014Tu pensi %s '%s'", sep,arg);
 			act(buf1,FALSE, ch,0,0,TO_CHAR);
 		}
-		snprintf(buf1, MAX_INPUT_LENGTH, "$c0014%s$c0015$n$c0014%s '%s'", sep,sep,argument);
+		snprintf(buf1, MAX_INPUT_LENGTH, "$c0014%s$c0015$n$c0014%s '%s'", sep,sep,arg);
 
 		for (i = descriptor_list; i; i = i->next)
 			if( i->character != ch && !i->connected && !IS_NPC(i->character) &&
@@ -322,7 +322,7 @@ void do_commune(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_tell(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_tell) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH+20],
 		 buf[MAX_INPUT_LENGTH+60];
@@ -331,7 +331,7 @@ void do_tell(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument,name,message,sizeof name -1,sizeof message -1);
+	half_chop(arg,name,message,sizeof name -1,sizeof message -1);
 
 	if(!*name || !*message) {
 		send_to_char("A chi e` che vuoi parlare ?\n\r", ch);
@@ -398,7 +398,7 @@ void do_tell(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_whisper(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_whisper) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH],
 		 buf[MAX_INPUT_LENGTH];
@@ -406,7 +406,7 @@ void do_whisper(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument,name,message,sizeof name -1, sizeof message -1);
+	half_chop(arg,name,message,sizeof name -1, sizeof message -1);
 
 	if(!*name || !*message)
 	{ send_to_char("A chi vuoi sussurrare ? e cosa ?\n\r", ch); }
@@ -439,7 +439,7 @@ void do_whisper(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_ask(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_ask) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH],
 		 buf[MAX_INPUT_LENGTH];
@@ -447,7 +447,7 @@ void do_ask(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	half_chop(argument,name,message,sizeof name -1,sizeof message -1);
+	half_chop(arg,name,message,sizeof name -1,sizeof message -1);
 
 	if(!*name || !*message)
 	{ send_to_char( "A chi vuoi chiedere... e cosa ?\n\r", ch); }
@@ -484,12 +484,12 @@ void do_ask(struct char_data* ch, const char* argument, int cmd) {
 
 #define MAX_NOTE_LENGTH 1000      /* arbitrary */
 
-void do_write(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_write) {
 	struct obj_data* paper = 0, *pen = 0;
 	char papername[MAX_INPUT_LENGTH], penname[MAX_INPUT_LENGTH],
 		 buf[MAX_STRING_LENGTH];
 
-	argument_interpreter(argument, papername, penname);
+	argument_interpreter(arg, papername, penname);
 
 	if (!ch->desc)
 	{ return; }
@@ -540,70 +540,9 @@ void do_write(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-const char* RandomWord() {
-	const static char* stringa[50] = {
-		"argle",
-		"bargle",
-		"glop",
-		"glyph",
-		"hussamah",  /* 5 */
-		"rodina",
-		"mustafah",
-		"angina",
-		"il",
-		"fribble",  /* 10 */
-		"fnort",
-		"frobozz",
-		"zarp",
-		"ripple",
-		"yrk",    /* 15 */
-		"yid",
-		"yerf",
-		"oork",
-		"grapple",
-		"rosso",   /* 20 */
-		"blu",
-		"tu",
-		"me",
-		"ftagn",
-		"hastur",   /* 25 */
-		"brob",
-		"gnort",
-		"lram",
-		"truck",
-		"uccidi",    /* 30 */
-		"cthulhu",
-		"huzzah",
-		"acetacitacilicio",
-		"idroxipropilene",
-		"summah",     /* 35 */
-		"hummah",
-		"biscotti",
-		"ema",
-		"voglia",
-		"wadapatang",   /* 40 */
-		"pterodactilo",
-		"frob",
-		"yuma",
-		"gomma",
-		"lo-pan",   /* 45 */
-		"sushi",
-		"yaya",
-		"yoyodine",
-		"yaazr",
-		"bipsnop"   /* 50 */
-	};
 
-	return( stringa[ number( 0, 49 ) ] );
 
-}
-char RandomChar() {
-	static char stringa[] = "abcdefghijklmnopqrstuwxyz23456789\0";
-	return( stringa[ number( 0, strlen(stringa)-1 ) ] );
-
-}
-
-void do_sign(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_sign) {
 	int i;
 	char buf[MAX_INPUT_LENGTH+40];
 	char buf2[MAX_INPUT_LENGTH];
@@ -612,9 +551,9 @@ void do_sign(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* t;
 	struct room_data* rp;
 
-	for (i = 0; *(argument + i) == ' '; i++);
+	for (i = 0; *(arg + i) == ' '; i++);
 
-	if (!*(argument + i))
+	if (!*(arg + i))
 	{ send_to_char( "Daccordo, ma cosa vuoi dire ?\n\r", ch); }
 	else {
 
@@ -627,10 +566,10 @@ void do_sign(struct char_data* ch, const char* argument, int cmd) {
 			return;
 		}
 
-		strcpy(buf, argument+i);
+		strcpy(buf, arg+i);
 		buf2[0] = '\0';
 		/*
-		  work through the argument, word by word.  if you fail your
+		  work through the arg, word by word.  if you fail your
 		  skill roll, the word comes out garbled.
 		  */
 		p = strtok(buf, " ");  /* first word */
@@ -671,14 +610,14 @@ void do_sign(struct char_data* ch, const char* argument, int cmd) {
 		}
 
 		if (IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf(buf,MAX_INPUT_LENGTH+39,"Tu hai detto '%s'\n\r", argument + i);
+			snprintf(buf,MAX_INPUT_LENGTH+39,"Tu hai detto '%s'\n\r", arg + i);
 			send_to_char(buf, ch);
 		}
 	}
 }
 
 /* speak elvish, speak dwarvish, etc...                    */
-void do_speak(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_speak) {
 	char buf[255];
 	int i;
 
@@ -695,7 +634,7 @@ void do_speak(struct char_data* ch, const char* argument, int cmd) {
 		"gnomish"
 	};
 
-	only_argument(argument,buf);
+	only_argument(arg,buf);
 
 	if (buf[0] == '\0') {
 		send_to_char("In quale lingua vuoi parlare ?\n\r",ch);
@@ -781,7 +720,7 @@ void thief_listen(struct char_data* ch,struct char_data* victim, char* frase,int
 }
 
 /* this is where we do the language says */
-void do_new_say(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_new_say) {
 	int i, learned, skill_num;
 	char buf[MAX_INPUT_LENGTH+40];
 	char buf2[MAX_INPUT_LENGTH];
@@ -791,12 +730,12 @@ void do_new_say(struct char_data* ch, const char* argument, int cmd) {
 	struct char_data* t;
 	struct room_data* rp;
 
-	if (!argument)
+	if (!arg)
 	{ return; }
 
-	for( i = 0; *(argument + i) == ' '; i++);
+	for( i = 0; *(arg + i) == ' '; i++);
 
-	if (!argument[i])
+	if (!arg[i])
 	{ send_to_char("Ok, ma cosa hai da dire ?\n\r", ch); }
 	else {
 
@@ -858,14 +797,14 @@ void do_new_say(struct char_data* ch, const char* argument, int cmd) {
 		/* end finding language */
 
 
-		strcpy(buf, argument+i);
+		strcpy(buf, arg+i);
 		buf2[0] = '\0';
 
 		/* we use this for ESP and immortals and comprehend lang */
 		snprintf(buf3,MAX_INPUT_LENGTH+39,"$c0015[$c0005$n$c0015] dice '%s'",buf);
 
 		/*
-		  work through the argument, word by word.  if you fail your
+		  work through the arg, word by word.  if you fail your
 		  skill roll, the word comes out garbled.
 		  */
 		p = strtok(buf, " ");  /* first word */
@@ -926,7 +865,7 @@ void do_new_say(struct char_data* ch, const char* argument, int cmd) {
 		}
 
 		if (IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf( buf,MAX_INPUT_LENGTH+39,"$c0015Tu dici '%s'", argument + i );
+			snprintf( buf,MAX_INPUT_LENGTH+39,"$c0015Tu dici '%s'", arg + i );
 			act(buf,FALSE, ch,0,0,TO_CHAR);
 		}
 	}
@@ -934,7 +873,7 @@ void do_new_say(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_gtell(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_gtell) {
 	int i;
 	struct char_data* k;
 	struct follow_type* f;
@@ -943,9 +882,9 @@ void do_gtell(struct char_data* ch, const char* argument, int cmd) {
 	if (apply_soundproof(ch))
 	{ return; }
 
-	for (i = 0; *(argument + i) == ' '; i++);
+	for (i = 0; *(arg + i) == ' '; i++);
 
-	if(!*(argument+i)) {
+	if(!*(arg+i)) {
 		send_to_char("Cosa vuoi dire al gruppo ?\n\r", ch);
 		return;
 	}
@@ -955,7 +894,7 @@ void do_gtell(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 	else {
-		thief_listen(ch,ch,(char*) argument+i,cmd);
+		thief_listen(ch,ch,(char*) arg+i,cmd);
 		if (ch->master)
 		{ k = ch->master; }
 		else
@@ -972,7 +911,7 @@ void do_gtell(struct char_data* ch, const char* argument, int cmd) {
 				else if (!check_soundproof(f->follower)) {
 					snprintf(buf,MAX_STRING_LENGTH-1,"$c0012[$c0015%s$c0012] dice al gruppo '%s'",
 							 (IS_NPC(ch) ? ch->player.short_descr :
-							  GET_NAME(ch)), argument+i);
+							  GET_NAME(ch)), arg+i);
 					act(buf, FALSE,f->follower,0,0,TO_CHAR);
 				} /* !soundproof */
 			}
@@ -990,14 +929,14 @@ void do_gtell(struct char_data* ch, const char* argument, int cmd) {
 				else if (!check_soundproof(ch->master)) {
 					snprintf( buf,MAX_STRING_LENGTH-1,"$c0012[$c0015%s$c0012] dice al gruppo '%s'",
 							  (IS_NPC(ch) ? ch->player.short_descr :
-							   GET_NAME(ch)), argument+i);
+							   GET_NAME(ch)), arg+i);
 					act(buf, FALSE,ch->master,0,0,TO_CHAR);
 				} /* !soundproof */
 			}
 		}         /* end master send */
 
 		if (IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			snprintf(buf,MAX_STRING_LENGTH-1,"$c0012Tu dici al gruppo '%s'",argument+i);
+			snprintf(buf,MAX_STRING_LENGTH-1,"$c0012Tu dici al gruppo '%s'",arg+i);
 			act(buf, FALSE,ch,0,0,TO_CHAR);
 		} /* if echo */
 
@@ -1009,23 +948,21 @@ void do_gtell(struct char_data* ch, const char* argument, int cmd) {
  * and changed it to work with mine :) Heh msw
  */
 
-void do_split(struct char_data* ch, const char* argument, int cmd) {
-
-	bool is_same_group( struct char_data *ach, struct char_data *bch );
+ACTION_FUNC(do_split) {
 
 	char buf[MAX_STRING_LENGTH];
-	char arg[MAX_INPUT_LENGTH];
+	char tmp[MAX_INPUT_LENGTH];
 	struct char_data* gch;
 	int members, amount, share, extra;
 
-	one_argument( argument, arg );
+	one_argument( arg, tmp );
 
-	if ( arg[0] == '\0' ) {
+	if ( tmp[0] == '\0' ) {
 		send_to_char( "Quanto vuoi dividere ?\n\r", ch );
 		return;
 	}
 
-	amount = atoi( arg );
+	amount = atoi( tmp );
 
 	if ( amount < 0 ) {
 		send_to_char( "Non cercare di fare il furbo con il tuo gruppo.\n\r", ch );
@@ -1086,7 +1023,7 @@ void do_split(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_pray( struct char_data* ch, const char* argument, int cmd ) {
+ACTION_FUNC(do_pray) {
 	struct affected_type af;
 	char buf1[MAX_INPUT_LENGTH * 2];
 	char GodName[MAX_INPUT_LENGTH];
@@ -1101,13 +1038,13 @@ void do_pray( struct char_data* ch, const char* argument, int cmd ) {
 		return;
 	}
 
-	for( ; *argument == ' '; argument++ );
-	if( !( *argument ) )
+	for( ; *arg == ' '; arg++ );
+	if( !( *arg ) )
 		send_to_char( "Vuoi pregare. Ottimo, ma chi ? "
 					  "(pray <NomeDio> <preghiera>)\n\r", ch );
 	else {
 		ii = (int)( GetMaxLevel( ch ) * 1.5 );
-		one_argument(argument,GodName);
+		one_argument(arg,GodName);
 		mudlog(LOG_CHECK,"%s ha pregato %s",GET_NAME(ch),GodName);
 		if (!str_cmp2(GodName,GET_AUTHBY(ch)?GET_AUTHBY(ch):(char*)"<>")) {
 			ii+=20;
@@ -1116,7 +1053,7 @@ void do_pray( struct char_data* ch, const char* argument, int cmd ) {
 		{ ii +=10; }  /* clerics get a 10% bonus :) */
 
 		if( IS_NPC( ch ) || IS_SET( ch->specials.act, PLR_ECHO ) ) {
-			snprintf(buf1,(MAX_INPUT_LENGTH*2)-1,"Tu preghi '%s'\n\r", argument );
+			snprintf(buf1,(MAX_INPUT_LENGTH*2)-1,"Tu preghi '%s'\n\r", arg );
 			send_to_char( buf1, ch );
 		}
 		buf1[160]=0;
@@ -1128,10 +1065,10 @@ void do_pray( struct char_data* ch, const char* argument, int cmd ) {
 						( GetMaxLevel( i->character ) >= IMMORTALE ) ) {
 					if (!str_cmp2(GodName,GET_NAME(i->character)))
 						snprintf( buf1, (MAX_INPUT_LENGTH*2)-1,
-								  "$c0013[$c0015$n$c0013] TI PREGA: '%s'", argument);
+								  "$c0013[$c0015$n$c0013] TI PREGA: '%s'", arg);
 					else
 						snprintf( buf1, (MAX_INPUT_LENGTH*2)-1,
-								  "$c0014[$c0015$n$c0014] prega :'%s'", argument);
+								  "$c0014[$c0015$n$c0014] prega :'%s'", arg);
 					act( buf1, 0, ch, 0, i->character, TO_VICT );
 				}
 
@@ -1161,12 +1098,12 @@ bool is_same_group( struct char_data* ach, struct char_data* bch ) {
 }
 
 
-void do_telepathy( struct char_data* ch, const char* argument, int cmd ) {
+ACTION_FUNC(do_telepathy) {
 	struct char_data* vict;
 	char name[100], message[MAX_INPUT_LENGTH+20],
 		 buf[MAX_INPUT_LENGTH+60];
 
-	half_chop( argument, name, message ,sizeof name -1,sizeof message -1);
+	half_chop( arg, name, message ,sizeof name -1,sizeof message -1);
 
 	if( !HasClass( ch, CLASS_PSI ) && !IS_AFFECTED( ch, AFF_TELEPATHY ) ) {
 		send_to_char( "Cosa pensi di essere ? Un telepate ?\n\r", ch );
@@ -1244,11 +1181,11 @@ void do_telepathy( struct char_data* ch, const char* argument, int cmd ) {
 	}
 }
 
-void do_eavesdrop(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_eavesdrop) {
 	char buf[MAX_STRING_LENGTH];
 	struct room_direction_data* exitp;
 	int dir;
-	one_argument(argument, buf);
+	one_argument(arg, buf);
 
 
 	if (!*buf) {

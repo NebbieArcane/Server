@@ -53,7 +53,7 @@ extern const char* month_name[17];
 
 extern const int sharp[];
 
-extern const char* where[];
+extern const char* eqWhere[];
 
 extern const char* drinks[];
 

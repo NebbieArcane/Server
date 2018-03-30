@@ -44,34 +44,33 @@ namespace Alarmud {
 #define RESCUE_ROOM    1983
 #define SNAKE_GOD      1953
 
-int Lizardman( struct char_data* pChar, int iCmd, char* szArg,
-			   struct char_data* pMob, int iType ) {
-	if( iType == EVENT_TICK ) {
-		if( pMob->specials.fighting && AWAKE( pMob ) ) {
-			struct char_data* pVictim = pMob->specials.fighting;
+MOBSPECIAL_FUNC(Lizardman) {
+	if( type == EVENT_TICK ) {
+		if( mob->specials.fighting && AWAKE( mob ) ) {
+			struct char_data* pVictim = mob->specials.fighting;
 
-			if( GET_POS( pMob ) < POSITION_FIGHTING &&
-					GET_POS( pMob ) > POSITION_STUNNED ) {
-				StandUp( pMob );
+			if( GET_POS( mob ) < POSITION_FIGHTING &&
+					GET_POS( mob ) > POSITION_STUNNED ) {
+				StandUp( mob );
 				return TRUE;
 			}
 			else if( number( 1, 3 ) == 1 ) {
-				act( "$n rotea violentemente la coda.", TRUE, pMob, NULL, NULL,
+				act( "$n rotea violentemente la coda.", TRUE, mob, NULL, NULL,
 					 TO_ROOM );
 
-				act( "Ruoti violentemente la coda.", TRUE, pMob, NULL, NULL,
+				act( "Ruoti violentemente la coda.", TRUE, mob, NULL, NULL,
 					 TO_CHAR );
-				if( HitOrMiss( pMob, pVictim, CalcThaco( pMob, pVictim ) ) ) {
-					int iDam = number( GetMaxLevel( pMob ), GetMaxLevel( pMob ) * 2 );
+				if( HitOrMiss( mob, pVictim, CalcThaco( mob, pVictim ) ) ) {
+					int iDam = number( GetMaxLevel( mob ), GetMaxLevel( mob ) * 2 );
 
-					if( damage( pMob, pVictim, iDam, TYPE_BLUDGEON, 7 ) == AllLiving ) {
+					if( damage( mob, pVictim, iDam, TYPE_BLUDGEON, 7 ) == AllLiving ) {
 						if( iDam >= 30 ) {
 							act( "$c0011Il colpo di coda di $n fa perdere i sensi a $N",
-								 TRUE, pMob, NULL, pVictim, TO_NOTVICT );
+								 TRUE, mob, NULL, pVictim, TO_NOTVICT );
 							act( "$c0011Il colpo di coda di $n ti fa perdere i sensi", TRUE,
-								 pMob, NULL, pVictim, TO_VICT );
+								 mob, NULL, pVictim, TO_VICT );
 							act( "$c0011Il tuo colpo di coda fa perdere i sensi a $N", TRUE,
-								 pMob, NULL, pVictim, TO_CHAR );
+								 mob, NULL, pVictim, TO_CHAR );
 
 							if( pVictim->specials.fighting )
 							{ stop_fighting( pVictim ); }
@@ -83,7 +82,7 @@ int Lizardman( struct char_data* pChar, int iCmd, char* szArg,
 					}
 				}
 				else {
-					damage( pMob, pVictim, 0, TYPE_BLUDGEON, 7 );
+					damage( mob, pVictim, 0, TYPE_BLUDGEON, 7 );
 				}
 				return TRUE;
 			}
@@ -94,8 +93,7 @@ int Lizardman( struct char_data* pChar, int iCmd, char* szArg,
 
 
 
-int lizardman_shaman( struct char_data* ch, int cmd, char* arg,
-					  struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(lizardman_shaman) {
 	if( type == EVENT_TICK && AWAKE( mob ) ) {
 		if( mob->specials.fighting ) {
 			if( !Lizardman( ch, cmd, arg, mob, type ) ) {
@@ -146,8 +144,7 @@ int lizardman_shaman( struct char_data* ch, int cmd, char* arg,
 }
 
 #define Abitante 1905
-int village_woman( struct char_data* ch, int cmd, char* arg,
-				   struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(village_woman) {
 	const char* aszInvocazioni[ 10 ] = {
 		"Aiuto!",
 		"Fermati! Che fai!",
@@ -191,8 +188,7 @@ int village_woman( struct char_data* ch, int cmd, char* arg,
 	return FALSE;
 }
 
-int snake_avt2( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(snake_avt2) {
 	if (!AWAKE(ch))
 	{ return(FALSE); }
 
@@ -341,8 +337,7 @@ void MakePortal( int iFromRoom, int iToRoom ) {
 
 
 
-int snake_avt( struct char_data* ch, int cmd, char* arg,
-			   struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(snake_avt) {
 	if( type == EVENT_DEATH && mob->in_room == RESCUE_ROOM ) {
 		struct char_data* pVergine;
 		MakePortal( mob->in_room, 3005 );
@@ -372,8 +367,7 @@ int snake_avt( struct char_data* ch, int cmd, char* arg,
 }
 
 
-int virgin_sac(struct char_data* ch, int cmd, char* arg,
-			   struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(virgin_sac) {
 	struct char_data* pPaladino;
 
 	if( type == EVENT_DEATH && ch->in_room == RESCUE_ROOM ) {
@@ -415,8 +409,7 @@ int virgin_sac(struct char_data* ch, int cmd, char* arg,
 	return(FALSE);
 }
 
-int snake_guardian( struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(snake_guardian) {
 	if (!AWAKE(ch))
 	{ return(FALSE); }
 
@@ -450,35 +443,34 @@ int snake_guardian( struct char_data* ch, int cmd, char* arg,
 
 #define PRIMO_OGGETTO 1970
 
-int CapannaVillaggio( struct char_data* pChar, int iCmd, char* szArgument,
-					  struct room_data* pRoom, int iType ) {
+ROOMSPECIAL_FUNC(CapannaVillaggio) {
 	static int bGiaFatto = FALSE;
 
-	if( iType == EVENT_COMMAND && iCmd == CMD_PULL ) {
+	if( type == EVENT_COMMAND && cmd == CMD_PULL ) {
 		char szArg[ 256 ];
 
-		one_argument( szArgument, szArg );
+		one_argument( arg, szArg );
 
 		if( !strcasecmp( szArg, "catena" ) ) {
 			if( !bGiaFatto ) {
 				struct obj_data* pOggetto;
 
 				act( "Come tiri la catena, una nuvola di fuliggine viene giu` dalla "
-					 "cappa.", FALSE, pChar, NULL, NULL, TO_CHAR );
+					 "cappa.", FALSE, ch, NULL, NULL, TO_CHAR );
 				act( "$n tira la catena ed una nuvola di fuliggine viene giu` dalla "
-					 "cappa avvolgendol$b.", TRUE, pChar, NULL, NULL, TO_ROOM );
+					 "cappa avvolgendol$b.", TRUE, ch, NULL, NULL, TO_ROOM );
 				pOggetto = read_object( PRIMO_OGGETTO + number( 0, 9 ), VIRTUAL );
 				if( pOggetto ) {
 					send_to_room( "Oltre alla fuliggine ti e` sembrato sia venuto giu` "
-								  "qualcos'altro.\n\r", pChar->in_room );
+								  "qualcos'altro.\n\r", ch->in_room );
 
-					obj_to_room( pOggetto, pChar->in_room );
+					obj_to_room( pOggetto, ch->in_room );
 				}
 				bGiaFatto = TRUE;
 			}
 			else {
-				act( "E` gia tirata al massimo.", FALSE, pChar, NULL, NULL, TO_CHAR );
-				act( "$n cerca di tirare la catena, ma senza effetto.", TRUE, pChar,
+				act( "E` gia tirata al massimo.", FALSE, ch, NULL, NULL, TO_CHAR );
+				act( "$n cerca di tirare la catena, ma senza effetto.", TRUE, ch,
 					 NULL, NULL, TO_ROOM );
 			}
 			return TRUE;
@@ -493,25 +485,24 @@ int CapannaVillaggio( struct char_data* pChar, int iCmd, char* szArgument,
  * serpente, si finisce incantati da questi E si ha un ritardo di 5 turni.
  * *************************************************************************/
 
-int ColloSerpente( struct char_data* pChar, int iCmd, char* szArgument,
-				   struct room_data* pRoom, int iType ) {
-	if( iType == EVENT_COMMAND && iCmd == CMD_LOOK ) {
+ROOMSPECIAL_FUNC(ColloSerpente) {
+	if( type == EVENT_COMMAND && cmd == CMD_LOOK ) {
 		char szArg[ 256 ];
 
-		one_argument( szArgument, szArg );
+		one_argument( arg, szArg );
 
 		if( !strcasecmp( szArg, "occhi" ) || !strcasecmp( szArg, "occhio" ) ) {
 
 			char* pExDesc = find_ex_description( szArg,
-												 real_roomp( pChar->in_room)->ex_description );
+												 real_roomp( ch->in_room)->ex_description );
 			if( pExDesc ) {
-				page_string( pChar->desc, pExDesc, 0);
+				page_string( ch->desc, pExDesc, 0);
 
-				act( "La vista degli occhi del serpente ti incanta!", FALSE, pChar,
+				act( "La vista degli occhi del serpente ti incanta!", FALSE, ch,
 					 NULL, NULL, TO_CHAR );
 				act( "$n si e` incantat$b a guardare gli occhi del serpente.", TRUE,
-					 pChar, NULL, NULL, TO_ROOM );
-				WAIT_STATE( pChar, PULSE_VIOLENCE * 10 );
+					 ch, NULL, NULL, TO_ROOM );
+				WAIT_STATE( ch, PULSE_VIOLENCE * 10 );
 
 				return TRUE;
 			}
@@ -530,80 +521,79 @@ int ColloSerpente( struct char_data* pChar, int iCmd, char* szArgument,
  * presi dalle vertigine e si cade verso il basso, anche se si sta volando.
  * *************************************************************************/
 
-int Rampicante( struct char_data* pChar, int iCmd, char* szArgument,
-				struct room_data* pRoom, int iType ) {
-	if( iType == EVENT_COMMAND && iCmd == CMD_LOOK ) {
+ROOMSPECIAL_FUNC(Rampicante) {
+	if( type == EVENT_COMMAND && cmd == CMD_LOOK ) {
 		char szArg[ 256 ];
 
-		one_argument( szArgument, szArg );
+		one_argument( arg, szArg );
 
 		if( *szArg && !strncasecmp( szArg, "down", strlen( szArg ) ) ) {
-			if( !saves_spell( pChar, SAVING_PARA ) &&
-					( IS_NPC( pChar ) ||
-					  !IS_SET( pChar->specials.act, PLR_NOHASSLE ) ) ) {
-				if( !IS_AFFECTED( pChar, AFF_FLYING ) ) {
+			if( !saves_spell( ch, SAVING_PARA ) &&
+					( IS_NPC( ch ) ||
+					  !IS_SET( ch->specials.act, PLR_NOHASSLE ) ) ) {
+				if( !IS_AFFECTED( ch, AFF_FLYING ) ) {
 					send_to_char( "Oh no! L'altezza ti da` le vertigini, facendoti "
-								  "mollare la presa...\n\r", pChar );
+								  "mollare la presa...\n\r", ch );
 					act( "$n guarda verso il basso, viene preso dalle vertigini e molla "
-						 "la presa.", TRUE, pChar, NULL, NULL, TO_ROOM );
+						 "la presa.", TRUE, ch, NULL, NULL, TO_ROOM );
 				}
-				else if( affected_by_spell( pChar, SPELL_FLY ) ) {
+				else if( affected_by_spell( ch, SPELL_FLY ) ) {
 					send_to_char( "Oh no! L'altezza ti da` le vertigini, facendoti "
-								  "perdere il controllo sul volo...\n\r", pChar );
+								  "perdere il controllo sul volo...\n\r", ch );
 					act( "$n guarda verso il basso, viene preso dalle vertigini e "
-						 "perde il controllo sul volo...", TRUE, pChar, NULL, NULL,
+						 "perde il controllo sul volo...", TRUE, ch, NULL, NULL,
 						 TO_ROOM );
-					affect_from_char( pChar, SPELL_FLY );
+					affect_from_char( ch, SPELL_FLY );
 				}
-				else if( affected_by_spell( pChar, SKILL_LEVITATION ) ) {
+				else if( affected_by_spell( ch, SKILL_LEVITATION ) ) {
 					send_to_char( "Oh no! L'altezza ti da` le vertigini, facendoti "
-								  "perdere la concentrazione...\n\r", pChar );
+								  "perdere la concentrazione...\n\r", ch );
 					act( "$n guarda verso il basso, viene preso dalle vertigini e "
-						 "perde la concentrazione...", TRUE, pChar, NULL, NULL,
+						 "perde la concentrazione...", TRUE, ch, NULL, NULL,
 						 TO_ROOM );
-					affect_from_char( pChar, SKILL_LEVITATION );
+					affect_from_char( ch, SKILL_LEVITATION );
 				}
 				else {
 					send_to_char( "Oh no! L'altezza ti da` le vertigini, ma, per "
 								  "fortuna, qualcosa ti impedisce di cadere.\n\r",
-								  pChar );
+								  ch );
 				}
 
-				if( !IS_AFFECTED( pChar, AFF_FLYING ) ) {
-					act( "$n cade verso il basso.", TRUE, pChar, NULL, NULL, TO_ROOM );
-					char_from_room( pChar );
-					char_to_room( pChar, 1947 );
+				if( !IS_AFFECTED( ch, AFF_FLYING ) ) {
+					act( "$n cade verso il basso.", TRUE, ch, NULL, NULL, TO_ROOM );
+					char_from_room( ch );
+					char_to_room( ch, 1947 );
 					act( "$n arriva giu` dall'alto e si schianta sul terreno!", FALSE,
-						 pChar, NULL, NULL, TO_ROOM );
+						 ch, NULL, NULL, TO_ROOM );
 
-					if( pChar->skills &&
-							number(1,101) < pChar->skills[SKILL_SAFE_FALL].learned ) {
+					if( ch->skills &&
+							number(1,101) < ch->skills[SKILL_SAFE_FALL].learned ) {
 						send_to_char( "Cadi verso il basso, ma in qualche modo riesci a "
-									  "rallentare la caduta.\n\r", pChar );
+									  "rallentare la caduta.\n\r", ch );
 					}
 					else {
 						send_to_char( "Cadi verso il basso e ti schianti sul terreno!\n\r",
-									  pChar );
+									  ch );
 
-						DamageAllStuff( pChar, BLOW_DAMAGE );
+						DamageAllStuff( ch, BLOW_DAMAGE );
 					}
 
-					if( GET_HIT( pChar ) > 30 )
-					{ GET_HIT( pChar ) -= number( 30, GET_HIT( pChar ) ); }
+					if( GET_HIT( ch ) > 30 )
+					{ GET_HIT( ch ) -= number( 30, GET_HIT( ch ) ); }
 					else
-					{ GET_HIT( pChar ) = 0; }
+					{ GET_HIT( ch ) = 0; }
 
 					/*** SALVO non rieco a capire perche', potrebbe ancora avere diversi hp
 					        e quindi non so' se fargli ripartire la rigenerazione !!! ***/
-					GET_POS( pChar ) = POSITION_STUNNED;
+					GET_POS( ch ) = POSITION_STUNNED;
 				}
 
-				WAIT_STATE( pChar, PULSE_VIOLENCE * 5 );
+				WAIT_STATE( ch, PULSE_VIOLENCE * 5 );
 			}
 			else {
 
 				send_to_char( "Oh no! L'altezza ti da le vertigini, ma, per "
-							  "fortuna, ti passano presto.", pChar );
+							  "fortuna, ti passano presto.", ch );
 			}
 			return TRUE;
 		}

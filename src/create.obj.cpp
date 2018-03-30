@@ -173,7 +173,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 }
 
 
-void do_oedit(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_oedit) {
 	char name[20];
 	struct obj_data* obj;
 	int i;
@@ -193,13 +193,13 @@ void do_oedit(struct char_data* ch,const char* argument, int cmd) {
 		return;
 	}
 
-	for (i = 0; *(argument + i) == ' '; i++);
-	if (!*(argument + i)) {
+	for (i = 0; *(arg + i) == ' '; i++);
+	if (!*(arg + i)) {
 		send_to_char("Oedit what?\n\r", ch);
 		return;
 	}
 
-	argument = one_argument(argument, name);
+	arg = one_argument(arg, name);
 
 	if (!(obj = (struct obj_data*)get_obj_vis_accessible(ch, name)))         {
 		send_to_char("I don't see that object here.\n\r",ch);

@@ -62,7 +62,6 @@ namespace Alarmud {
 
 
 MOBSPECIAL_FUNC(ghost) {
-	void cast_energy_drain( byte level, struct char_data *ch, char* arg, int type,struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch)) {
 		return(FALSE);
@@ -118,7 +117,7 @@ MOBSPECIAL_FUNC(druid_protector) {
 } /* end druid_protector */
 
 
-int Magic_Fountain(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(Magic_Fountain) {
 
 	char buf[MAX_INPUT_LENGTH];
 
@@ -509,72 +508,69 @@ int T1000( struct char_data* ch, char* line, int cmd, struct char_data* mob, int
 }
 #endif
 
-void invert(char* arg1, char* arg2) {
-	register int i = 0;
-	register int len = MIN( strlen(arg1) - 1, 253 );
-
-	for( i = 0; i <= len; i++ ) {
-		*(arg2 + i) = *(arg1 + (len - i));
-	}
-	*(arg2 + i) = '\0';
+void invert(const char* arg1, char* arg2, size_t len) {
+	string alpha(arg1);
+	std::reverse(alpha.begin(),alpha.end());
+	std::strcpy(arg2,alpha.substr(0,len).c_str());
 }
 
 OBJSPECIAL_FUNC(jive_box) {
-	char buf[255], buf2[255], buf3[255], tmp[255];
+	constexpr size_t len=255;
+	char buf[len+1], buf2[len+1], buf3[len+1], tmp[len+1];
 
 	if( type == EVENT_COMMAND ) {
 		switch(cmd) {
 		case CMD_SAY:
 		case CMD_SAY_APICE:
-			invert( arg, buf );
+			invert( arg, buf,len );
 			do_say( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_TELL:
-			half_chop( arg, tmp, buf,sizeof tmp -1,sizeof buf -1 );
-			invert( buf, buf2 );
-			sprintf( buf3, "%s %s", tmp, buf2 );
-			do_tell( ch, buf3, cmd );
+			half_chop( arg, tmp, buf,len,len );
+			invert( buf, buf2,len );
+			sprintf( buf, "%s %s", tmp, buf2 );
+			do_tell( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_WHISPER:
-			half_chop( arg, tmp, buf,sizeof tmp -1,sizeof buf -1  );
-			invert( buf, buf2 );
-			sprintf( buf3, "%s %s", tmp, buf2 );
-			do_whisper( ch, buf3, cmd );
+			half_chop( arg, tmp, buf,len  );
+			invert( buf, buf2,len );
+			sprintf( buf, "%s %s", tmp, buf2 );
+			do_whisper( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_ASK:
 			half_chop( arg, tmp, buf,sizeof tmp -1,sizeof buf -1  );
-			invert( buf, buf2 );
-			sprintf( buf3, "%s %s", tmp, buf2 );
-			do_ask( ch, buf3, cmd );
+			invert( buf, buf2,len );
+			sprintf( buf, "%s %s", tmp, buf2 );
+			do_ask( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_GOSSIP:
-			invert( arg, buf );
+			invert( arg, buf ,len);
 			do_gossip( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_AUCTION:
-			invert( arg, buf );
+			invert( arg, buf,len );
 			do_auction( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_GTELL:
-			invert( arg, buf );
+			invert( arg, buf ,len);
 			do_gtell( ch, buf, cmd );
 			return TRUE;
 			break;
 
 		case CMD_SHOUT:
-			invert( arg, buf );
+			invert( arg, buf,len );
 			do_shout( ch, buf, cmd );
 			return TRUE;
 			break;
@@ -2274,7 +2270,7 @@ MOBSPECIAL_FUNC(Samah) {
 
 
 
-int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,char* arg, int cmd) {
+int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,const char* arg, int cmd) {
 	char obj_name[50], vict_name[50];
 	struct char_data* vict;
 	struct obj_data* obj;
@@ -2385,8 +2381,7 @@ MOBSPECIAL_FUNC(AbyssGateKeeper) {
 
 bool IsCharInRange( char_data* pChar, char_data* pTarget, int iRange );
 
-int creeping_death( struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(creeping_death) {
 	struct char_data* t, *next;
 	struct room_data* rp;
 	struct obj_data* co, *o;
@@ -2919,7 +2914,7 @@ MOBSPECIAL_FUNC(PrisonGuard) {
 
 }
 
-int GenericCityguardHateUndead(struct char_data* ch, int cmd, char* arg, struct char_data* mob,int type) {
+MOBSPECIAL_FUNC(GenericCityguardHateUndead) {
 	struct char_data* tch, *evil;
 	int max_evil;
 
@@ -3118,8 +3113,7 @@ MOBSPECIAL_FUNC(GenericCityguard) {
 
 #define HOLDING_MAX  10   /* max mobs that can be in tank :) */
 #define HOLDING_TANK 60  /* room number to drop the mobs in */
-int DogCatcher( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(DogCatcher) {
 	char buf[128];
 	struct char_data* tch;
 
@@ -4309,8 +4303,7 @@ MOBSPECIAL_FUNC(equilibrium_teacher) {
 	return FALSE;
 }
 
-int archer_instructor( struct char_data* ch, int cmd, char* arg,
-					   struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(archer_instructor) {
 	char buf[256];
 	const static char* n_skills[] = {
 		"spot",
@@ -5169,8 +5162,7 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 	return FALSE;
 }
 
-int druid( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-		   int type ) {
+MOBSPECIAL_FUNC(druid) {
 	struct room_data* rp;
 	int level;
 	struct char_data* vict;
@@ -5405,7 +5397,7 @@ MOBSPECIAL_FUNC(MonkChallenger) {
 #define DRUID_MOB 600
 #define MONK_MOB  650
 
-int druid_challenge_prep_room(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(druid_challenge_prep_room) {
 	struct room_data* me, *chal;
 	int i, newr;
 	struct obj_data* o;
@@ -5480,8 +5472,7 @@ int druid_challenge_prep_room(struct char_data* ch, int cmd, char* arg, struct r
 
 }
 
-
-int druid_challenge_room(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(druid_challenge_room) {
 	struct char_data* i;
 	struct room_data* me;
 	int rm;
@@ -5570,7 +5561,7 @@ int druid_challenge_room(struct char_data* ch, int cmd, char* arg, struct room_d
 }
 
 
-int monk_challenge_room(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(monk_challenge_room) {
 	struct char_data* i;
 	struct room_data* me;
 	int rm;
@@ -5658,7 +5649,7 @@ int monk_challenge_room(struct char_data* ch, int cmd, char* arg, struct room_da
 
 }
 
-int monk_challenge_prep_room(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(monk_challenge_prep_room) {
 	struct room_data* me, *chal;
 	int i, newr;
 	struct obj_data* o;
@@ -5739,8 +5730,7 @@ int monk_challenge_prep_room(struct char_data* ch, int cmd, char* arg, struct ro
 
 
 /************************************************************************/
-int portal( struct char_data* ch, int cmd, char* arg, struct obj_data* obj,
-			int type ) {
+OBJSPECIAL_FUNC(portal) {
 	struct obj_data* port;
 	char obj_name[50];
 	struct room_data* rp; // Gaia 2001
@@ -5843,8 +5833,7 @@ MOBSPECIAL_FUNC(attack_rats) {
 #define WHERE_TO_SIT 3007 /* tavern */
 #define WHO_TO_CALL  3063 /* mercenary */
 
-int DragonHunterLeader( struct char_data* ch, int cmd, char* arg,
-						struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(DragonHunterLeader) {
 	register struct char_data* i, *j;
 	int found = FALSE, dir, count;
 	char buf[255];
@@ -6006,8 +5995,7 @@ int DragonHunterLeader( struct char_data* ch, int cmd, char* arg,
 	return(FALSE);
 }
 
-int HuntingMercenary( struct char_data* ch, int cmd, char* arg,
-					  struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(HuntingMercenary) {
 	int dir;
 
 	if(type == EVENT_COMMAND)
@@ -6053,8 +6041,7 @@ int HuntingMercenary( struct char_data* ch, int cmd, char* arg,
 	return(FALSE);
 }
 
-int SlotMachine( struct char_data* ch, int cmd, char* arg,
-				 struct obj_data* obj, int type ) {
+OBJSPECIAL_FUNC(SlotMachine) {
 	int c, i[3], ind = 0;
 	char buf[255];
 	static long jackpot = 25;
@@ -6187,14 +6174,10 @@ int SlotMachine( struct char_data* ch, int cmd, char* arg,
 
 #define AST_MOB_NUM 2715
 
-int astral_portal( struct char_data* ch, int cmd, char* arg,
-				   struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(astral_portal) {
 	char buf[256];
 	long j;
 	struct char_data* portal;
-	/*#if NEW_ASTRAL*/
-	char* p;
-	/*#else*/
 
 	long destination[20];
 
@@ -6223,7 +6206,7 @@ int astral_portal( struct char_data* ch, int cmd, char* arg,
 
 	j=0;
 	/*#if NEW_ASTRAL*/
-	p=GET_SPEC_PARM(mob);
+	const char* p=GET_SPEC_PARM(mob);
 	p=one_argument(p,buf);
 	j=abs(atol(buf));
 	/*#endif*/
@@ -6268,11 +6251,10 @@ MOBSPECIAL_FUNC(camino) {
 	char buf[256];
 	long j;
 	struct char_data* portal;
-	char* p;
 
 	j=0;
 
-	p=GET_SPEC_PARM(mob);
+	const char* p=GET_SPEC_PARM(mob);
 	p=one_argument(p,buf);
 	j=abs(atol(buf));
 
@@ -7034,8 +7016,8 @@ MOBSPECIAL_FUNC(StatMaster) {
 		{ number=i; }
 	}
 	if(number == -1) {
-		arg[20]='\0';
-		sprintf(buf,"$N ti dice '%s?...Spiegati meglio......'",arg);
+		string tmp(arg);
+		sprintf(buf,"$N ti dice '%s?...Spiegati meglio......'",tmp.substr(0,20).c_str());
 		act(buf, FALSE,ch,0,guildmaster,TO_CHAR);
 		return(TRUE);
 	}
@@ -7336,8 +7318,7 @@ MOBSPECIAL_FUNC(PsiGuildmaster) {
 	return FALSE;
 }
 
-int PaladinGuildmaster( struct char_data* ch, int cmd, char* arg,
-						struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(PaladinGuildmaster) {
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;

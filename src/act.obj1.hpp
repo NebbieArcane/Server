@@ -8,11 +8,11 @@
 #ifndef _ACT_OBJ1_HPP
 #define _ACT_OBJ1_HPP
 namespace Alarmud {
-void do_drop(struct char_data* ch,const char* argument, int cmd) ;
-void do_get(struct char_data* ch,const char* argument, int cmd) ;
-void do_give(struct char_data* ch,const char* argument, int cmd) ;
-void do_pquest(struct char_data* ch,const char* argument, int cmd) ;
-void do_put(struct char_data* ch,const char* argument, int cmd) ;
+ACTION_FUNC(do_drop) ;
+ACTION_FUNC(do_get) ;
+ACTION_FUNC(do_give) ;
+ACTION_FUNC(do_pquest) ;
+ACTION_FUNC(do_put) ;
 void get( struct char_data* ch, struct obj_data* obj_object,struct obj_data* sub_object );
 void get_trophy(struct char_data* ch, struct obj_data* ob) ;
 void givexp(struct char_data* ch, struct char_data* victim, int amount);

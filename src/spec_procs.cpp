@@ -199,8 +199,7 @@ struct char_data* FindMobInRoomWithVNum( int room, int VNum) {
 
 }
 
-int MageGuildMaster( struct char_data* ch, int cmd, char* arg,
-					 struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(MageGuildMaster) {
 	int number, i, max;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
@@ -611,8 +610,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 	return(FALSE);
 }
 
-int ThiefGuildMaster( struct char_data* ch, int cmd, char* arg,
-					  struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(ThiefGuildMaster) {
 	char buf[256];
 	struct char_data* guildmaster;
 	const static char* n_skills[] = {
@@ -648,7 +646,7 @@ int ThiefGuildMaster( struct char_data* ch, int cmd, char* arg,
 	if( check_soundproof(ch))
 	{ return FALSE; }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(ThiefGuildMaster));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	for(; *arg==' '; arg++); /* ditch spaces */
 	if( cmd == CMD_PRACTICE || cmd == CMD_GAIN ) {
@@ -841,8 +839,7 @@ int ThiefGuildMaster( struct char_data* ch, int cmd, char* arg,
 	return(FALSE);
 }
 
-int WarriorGuildMaster(struct char_data* ch, int cmd, char* arg,
-					   struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(WarriorGuildMaster) {
 	char buf[256];
 	struct char_data* guildmaster;
 	const static char* n_skills[] = {
@@ -872,7 +869,7 @@ int WarriorGuildMaster(struct char_data* ch, int cmd, char* arg,
 	if (check_soundproof(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(WarriorGuildMaster));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
 	for(; *arg==' '; arg++); /* ditch spaces */
 	if (cmd==CMD_PRACTICE || cmd==CMD_GAIN) {
@@ -1034,14 +1031,11 @@ int WarriorGuildMaster(struct char_data* ch, int cmd, char* arg,
 }
 
 
-int dump( struct char_data* ch, int cmd, char* arg, struct room_data* rp,
-		  int type) {
+ROOMSPECIAL_FUNC(dump) {
 	struct obj_data* k;
 	char buf[100];
 	struct char_data* tmp_char;
 	int value=0;
-
-	char* fname(char* namelist);
 
 	if( type != EVENT_COMMAND )
 	{ return FALSE; }
@@ -1454,20 +1448,20 @@ MOBSPECIAL_FUNC(eric_johnson)
 {
 	/* if more than one eric johnson exists in a game, it will
 	   get confused because of the state variables */
-#define        E_HACKING        0
-#define        E_SLEEPING        1
-#define        E_SHORT_BEER_RUN 2
-#define        E_LONG_BEER_RUN        3
+#define E_HACKING        0
+#define E_SLEEPING        1
+#define E_SHORT_BEER_RUN 2
+#define E_LONG_BEER_RUN        3
 #define E_STOCK_FRIDGE        4
-#define        E_SKYDIVING        5
+#define E_SKYDIVING        5
 #define Erics_Lair        3941
 #define DanjerKitchen        3904
 #define DanjerLiving        3901
 #define DanjerPorch        3900
-	static int        fighting=0, state=E_HACKING;
+	static int fighting=0, state=E_HACKING;
 	struct obj_data* temp1;
-	struct char_data*        eric, *temp_char;
-	char        buf[100];
+	struct char_data* eric, *temp_char;
+	char buf[100];
 
 	eric = 0;
 
@@ -1546,9 +1540,8 @@ MOBSPECIAL_FUNC(eric_johnson)
 			}
 			break;
 		}
-
+		const char* s="";
 		switch(state) {
-			char* s;
 		case E_SLEEPING:
 			if (time_info.hours>9 && time_info.hours<12) {
 				do_wake(eric, "", -1);
@@ -1694,7 +1687,8 @@ MOBSPECIAL_FUNC(eric_johnson)
 		case E_LONG_BEER_RUN: {
 			static struct char_data* andy = 0;
 			int        dir;
-			static char**        scan,*shopping_list[] =
+			static const char** scan;
+			static const char*shopping_list[] =
 			{ "guinness", "harp", "sierra", "2.harp", NULL };
 
 			for (temp_char = character_list; temp_char; temp_char = temp_char->next)
@@ -1728,9 +1722,9 @@ MOBSPECIAL_FUNC(eric_johnson)
 				for (scan = shopping_list; *scan; scan++) {
 					if (NULL == get_obj_in_list_vis(eric, *scan,
 													eric->carrying)) {
-						char*        s;
-						s = (scan[0][1] == '.') ? scan[0]+2 : scan[0];
-						sprintf(buf, "buy %s", s);
+						const char* search;
+						search = (scan[0][1] == '.') ? scan[0]+2 : scan[0];
+						sprintf(buf, "buy %s", search);
 						command_interpreter(eric, buf);
 						if (NULL == get_obj_in_list_vis(eric, *scan,
 														eric->carrying)) {
@@ -1962,8 +1956,7 @@ void npc_steal(struct char_data* ch,struct char_data* victim) {
 }
 
 
-int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-		   int type) {
+MOBSPECIAL_FUNC(snake) {
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -1989,8 +1982,7 @@ int snake( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 }
 
 //Come snake, ma fa anche le skill della classe del mob
-int snake_plus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-				int type) {
+MOBSPECIAL_FUNC(snake_plus) {
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2016,8 +2008,7 @@ int snake_plus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	return FALSE;
 }
 
-int Pungiglione( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(Pungiglione) {
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2043,8 +2034,7 @@ int Pungiglione( struct char_data* ch, int cmd, char* arg,
 	return FALSE;
 }
 
-int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
-						  struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(Pungiglione_maggiore) {
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2072,26 +2062,25 @@ int Pungiglione_maggiore( struct char_data* ch, int cmd, char* arg,
 
 
 /*FLYP 2004 SporeCloud-Fenice*/
-int SporeCloud( struct char_data* pChar, int nCmd, char* szArg, struct
-				char_data* pMob, int nType ) {
+MOBSPECIAL_FUNC(SporeCloud) {
 	struct char_data* tmp_victim, *temp;
 
-	assert(pChar);
+	assert(ch);
 
-	if( nType == EVENT_COMMAND && nCmd == CMD_BASH && strlen(szArg)>0 &&
-			strstr(GET_NAME(pMob), szArg) ) {
-		act("Ti schianti contro $n!\r\n",FALSE,pMob,0,pChar,TO_VICT);
-		act("Da $n si leva una nuvola di spore!\r\n",FALSE,pMob,0,pChar,TO_VICT);
-		act("La tua vista si offusca per qualche secondo, fatichi a respirare..\r\n",FALSE,pMob,0,pChar,TO_VICT );
-		act("$N si schianta contro $n!\r\n",FALSE,pMob,0,pChar,TO_NOTVICT);
-		act("Da $n si leva una nuvola di spore! Fatichi a respirare..\r\n",FALSE,pMob,0,pChar,TO_NOTVICT);
+	if( type == EVENT_COMMAND && cmd == CMD_BASH && strlen(arg)>0 &&
+			strstr(GET_NAME(mob), arg) ) {
+		act("Ti schianti contro $n!\r\n",FALSE,mob,0,ch,TO_VICT);
+		act("Da $n si leva una nuvola di spore!\r\n",FALSE,mob,0,ch,TO_VICT);
+		act("La tua vista si offusca per qualche secondo, fatichi a respirare..\r\n",FALSE,mob,0,ch,TO_VICT );
+		act("$N si schianta contro $n!\r\n",FALSE,mob,0,ch,TO_NOTVICT);
+		act("Da $n si leva una nuvola di spore! Fatichi a respirare..\r\n",FALSE,mob,0,ch,TO_NOTVICT);
 
 		for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 			temp = tmp_victim->next;
-			if ( (pChar->in_room == tmp_victim->in_room) && !IS_IMMORTAL(tmp_victim) && (pMob != tmp_victim))
-			{ damage(tmp_victim, tmp_victim, GetMaxLevel(pMob),SPELL_POISON, 5); }
+			if ( (ch->in_room == tmp_victim->in_room) && !IS_IMMORTAL(tmp_victim) && (mob != tmp_victim))
+			{ damage(tmp_victim, tmp_victim, GetMaxLevel(mob),SPELL_POISON, 5); }
 			else
-			{ act("Osservando le spore vedi le piante che diventeranno...",FALSE, pChar, 0, tmp_victim, TO_VICT); }
+			{ act("Osservando le spore vedi le piante che diventeranno...",FALSE, ch, 0, tmp_victim, TO_VICT); }
 		}
 	}
 	else {
@@ -2102,8 +2091,7 @@ int SporeCloud( struct char_data* pChar, int nCmd, char* szArg, struct
 }
 
 
-int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(Tsuchigumo) {
 	struct affected_type af;
 	int i;
 	struct char_data* pRagno;
@@ -2214,8 +2202,7 @@ int Tsuchigumo( struct char_data* ch, int cmd, char* arg,
 	return FALSE;
 }
 
-int SputoVelenoso( struct char_data* ch, int cmd, char* arg,
-				   struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(SputoVelenoso) {
 
 	if( type != EVENT_TICK || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2576,9 +2563,6 @@ MOBSPECIAL_FUNC(WizardGuard) {
 
 
 MOBSPECIAL_FUNC(vampire) {
-	void cast_energy_drain(byte level,struct char_data *ch, char* arg,int type,
-						   struct char_data *tar_ch,struct obj_data *tar_obj);
-
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
 
@@ -2586,12 +2570,10 @@ MOBSPECIAL_FUNC(vampire) {
 			(ch->specials.fighting->in_room == ch->in_room)) {
 		act("$n touches $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
-		cast_energy_drain( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-						   ch->specials.fighting, 0);
+		cast_energy_drain( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, 0);
 		if (ch->specials.fighting &&
 				(ch->specials.fighting->in_room == ch->in_room)) {
-			cast_energy_drain( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
-							   ch->specials.fighting, 0);
+			cast_energy_drain( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, 0);
 		}
 		return TRUE;
 	}
@@ -2599,7 +2581,6 @@ MOBSPECIAL_FUNC(vampire) {
 }
 
 MOBSPECIAL_FUNC(wraith) {
-	void cast_energy_drain( byte level, struct char_data *ch, char* arg, int type,          struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return(FALSE); }
@@ -2639,9 +2620,6 @@ MOBSPECIAL_FUNC(shadow) {
 
 MOBSPECIAL_FUNC(geyser) {
 
-	void cast_geyser( byte level, struct char_data *ch, char* arg, int type,
-					  struct char_data *tar_ch, struct obj_data *tar_obj );
-
 	if (cmd || !AWAKE(ch))
 	{ return FALSE; }
 
@@ -2655,12 +2633,8 @@ MOBSPECIAL_FUNC(geyser) {
 }
 
 
-int green_slime( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type) {
+MOBSPECIAL_FUNC(green_slime) {
 	struct char_data* cons;
-
-	void cast_green_slime( byte level, struct char_data *ch, char* arg, int type,
-						   struct char_data *tar_ch, struct obj_data *tar_obj );
 
 	if (cmd || !AWAKE(ch))
 	{ return FALSE; }
@@ -2673,8 +2647,7 @@ int green_slime( struct char_data* ch, int cmd, char* arg,
 }
 
 
-int DracoLich( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			   int type) {
+MOBSPECIAL_FUNC(DracoLich) {
 	return FALSE;
 }
 
@@ -3158,16 +3131,15 @@ MOBSPECIAL_FUNC(regenerator) {
 	return FALSE;
 }
 
-int replicant( struct char_data* ch, int cmd, char* arg,
-			   struct char_data* mob1, int type ) {
-	struct char_data* mob;
+MOBSPECIAL_FUNC(replicant) {
+	struct char_data* mymob;
 
 	if( type == EVENT_TICK ) {
 		if (GET_HIT(ch) < GET_MAX_HIT(ch)) {
 			act( "Gocce del sangue di $n cadono a terra e si trasformano!",
 				 TRUE, ch, 0, 0, TO_ROOM);
-			mob = read_mobile(ch->nr, REAL);
-			char_to_room(mob, ch->in_room);
+			mymob = read_mobile(ch->nr, REAL);
+			char_to_room(mymob, ch->in_room);
 			act( "Ora ci sono due opponenti integri di fronte a te.",
 				 TRUE, ch, 0, 0, TO_ROOM );
 			GET_HIT(ch) = GET_MAX_HIT(ch);
@@ -3184,8 +3156,7 @@ int replicant( struct char_data* ch, int cmd, char* arg,
 #define TYT_TELL 3
 #define TYT_HIT  4
 
-int Tytan( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-		   int type) {
+MOBSPECIAL_FUNC(Tytan) {
 	struct char_data* vict;
 
 	if (cmd || !AWAKE(ch))
@@ -3721,8 +3692,7 @@ MOBSPECIAL_FUNC(MidgaardCityguard) {
 
 
 #define ONE_RING 1105
-int Ringwraith( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(Ringwraith) {
 	static char      buf[ 256 ];
 	struct char_data* victim;
 	static int       howmanyrings = 0;
@@ -4088,7 +4058,7 @@ MOBSPECIAL_FUNC(zombie_master)
 	return FALSE;
 }
 
-int pet_shops(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(pet_shops) {
 	char buf[MAX_STRING_LENGTH], pet_name[256];
 	int pet_room;
 	struct char_data* pet;
@@ -4155,7 +4125,7 @@ int pet_shops(struct char_data* ch, int cmd, char* arg, struct room_data* rp, in
 	return(FALSE);
 }
 
-int Fountain(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(Fountain) {
 
 	int bits, water;
 	char buf[MAX_INPUT_LENGTH];
@@ -4253,7 +4223,7 @@ int Fountain(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int
 	return(FALSE);
 }
 
-int bank (struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(bank) {
 
 	static char buf[256];
 	int money,tassa;
@@ -4363,7 +4333,7 @@ int bank (struct char_data* ch, int cmd, char* arg, struct room_data* rp, int ty
 /* The (keys) must all be stored in a room which is (virtually)  */
 /* adjacent to the room of the lock smith.                       */
 
-int pray_for_items(struct char_data* ch, int cmd, char* arg, struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(pray_for_items) {
 	char buf[256];
 	int key_room, gold;
 	bool found;
@@ -4516,8 +4486,7 @@ int kings_hall(struct char_data* ch, int cmd, char* arg) {
 /*
 **  donation room
 */
-int Donation(struct char_data* ch, int cmd, char* arg, struct room_data* rp,
-			 int type) {
+ROOMSPECIAL_FUNC(Donation) {
 	char check[40];
 
 	if( type != EVENT_COMMAND || (cmd != 10 && cmd != 167) ) {
@@ -4539,8 +4508,7 @@ int Donation(struct char_data* ch, int cmd, char* arg, struct room_data* rp,
  * house routine for saved items.
 */
 
-int House(struct char_data* ch, int cmd, char* arg,
-		  struct room_data* rp, int type) {
+ROOMSPECIAL_FUNC(House) {
 	struct obj_cost cost;
 	int save_room;
 
@@ -4614,8 +4582,7 @@ int SaveRoomContens( struct char_data* pChar, int nCmd, char* pchArg,
    monster currently in the section is 14th.  It should require a fairly
    large party to sweep the section. */
 
-int sisyphus( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type ) {
+MOBSPECIAL_FUNC(sisyphus) {
 	static int b=1;  /* use this as a switch, to avoid double challenges */
 
 	if( cmd ) {
@@ -6020,7 +5987,7 @@ OBJSPECIAL_FUNC(soap) {
 	return TRUE;
 }
 
-void String_mob(struct char_data* ch, struct char_data* vict, char* stringa, int campo) {
+void String_mob(struct char_data* ch, struct char_data* vict, const char* stringa, int campo) {
 	switch (campo) {
 	case 1: //short_descr
 		ch->desc->str = &vict->player.short_descr;
@@ -6625,9 +6592,8 @@ void RakdaCast(struct char_data* ch, struct char_data* vict) {
 	} /* end switch */
 }
 
-int Rakda(struct char_data* ch, int cmd, char* arg, struct obj_data* rakda,
-		  int type) {
-	struct obj_data* obj;
+OBJSPECIAL_FUNC(Rakda) {
+	struct obj_data* rakda=obj;
 	char buf[256], appo[256];
 	char_data* mage;
 	char_data* vict;
@@ -6991,10 +6957,8 @@ OBJSPECIAL_FUNC(nodrop) {
 	return(FALSE);
 }
 
-int BiosKaiThanatos( struct char_data* ch, int cmd, char* arg,
-					 struct char_data* mob, int type)
+MOBSPECIAL_FUNC(BiosKaiThanatos) {
 #define MIN_WEARING 10
-{
 	FILE* fdeath;
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* god;

@@ -76,7 +76,6 @@ int main(int argc, char** argv) {
 		cout << e.what() << endl;
 	}
 	po::notify(vm);
-	Sql::dbUpdate();
 	if(vm.count("version")) {
 		cout << version() << endl;
 		exit(0);

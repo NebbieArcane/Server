@@ -13,11 +13,11 @@ namespace Alarmud {
 void bisect_arg(char* arg, int* field, char* string);
 struct help_index_element* build_help_index(FILE* fl, int* num);
 void check_reboot();
-void do_edit(struct char_data* ch, const char* arg, int cmd);
-void do_setskill(struct char_data* ch, const char* arg, int cmd);
-void do_string(struct char_data* ch, const char* arg, int cmd);
+ACTION_FUNC(do_edit);
+ACTION_FUNC(do_setskill);
+ACTION_FUNC(do_string);
 char* one_word(char* argument,  char* first_arg );
-void page_string(struct descriptor_data* d, char* str, int keep_internal);
+void page_string(struct descriptor_data* d, const char* str, int keep_internal);
 void quad_arg(const char* arg, int* type, char* name, int* field, char* string);
 void show_string(struct descriptor_data* d, const char* input );
 void string_add(struct descriptor_data* d,  char* str);

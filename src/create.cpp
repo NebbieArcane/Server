@@ -139,7 +139,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
 }
 
 
-void do_redit(struct char_data* ch,const char* argument, int cmd) {
+ACTION_FUNC(do_redit) {
 	struct room_data* rp;
 
 	rp = real_roomp(ch->in_room);

@@ -41,7 +41,7 @@ byte HashTable[256];
 
 
 /* Adds a command to the Command List radix. */
-void AddCommand(char* name, command_func func, int number, int min_pos, int min_lev) {
+void AddCommand(const char* name, command_func func, int number, int min_pos, int min_lev) {
 	NODE* n;
 	int len, radix;
 
@@ -113,7 +113,7 @@ void AddNodeTail(NODE* n, int length, int radix) {
 ** NOTE: This uses partial matching, change strncmp to strcmp for full matching
 ** Return value is the node if it exists, or NULL if it does not.
 */
-NODE* SearchForNodeByName(NODE* head, char* name, int len) {
+NODE* SearchForNodeByName(NODE* head, const char* name, int len) {
 	register NODE* i;
 
 	i = head;
@@ -147,7 +147,7 @@ void InitRadix() {
 /* This will do all of the validation and search for a NODE by name.
 ** Will return a pointer to the NODE if it exists, NULL if it doesn't.
 */
-NODE* FindValidCommand(char* name) {
+NODE* FindValidCommand(const char* name) {
 	register int len;
 	register int radix;
 
@@ -162,7 +162,7 @@ NODE* FindValidCommand(char* name) {
 
 /* some useful&stupid functions */
 
-int FindCommandNumber(char* cmd) {
+int FindCommandNumber(const char* cmd) {
 	int     i;
 	NODE*    n;
 	for(i=0; i<27; i++)

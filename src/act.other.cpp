@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <boost/algorithm/string.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -51,19 +52,19 @@
 #include "utility.hpp"
 namespace Alarmud {
 
-void do_gain(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_gain) {
 
 }
 
-void do_guard(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_guard) {
 	if (!IS_NPC(ch) || IS_SET(ch->specials.act, ACT_POLYSELF)) {
 		send_to_char("Sorry. you can't just put your brain on autopilot!\n\r",ch);
 		return;
 	}
 
-	for(; isspace(*argument); argument++);
+	for(; isspace(*arg); arg++);
 
-	if (!*argument) {
+	if (!*arg) {
 		if (IS_SET(ch->specials.act, ACT_GUARDIAN)) {
 			act("$n relaxes.", FALSE, ch, 0, 0, TO_ROOM);
 			send_to_char("You relax.\n\r",ch);
@@ -77,7 +78,7 @@ void do_guard(struct char_data* ch, const char* argument, int cmd) {
 		}
 	}
 	else {
-		if (!str_cmp(argument,"on")) {
+		if (!str_cmp(arg,"on")) {
 			if (!IS_SET(ch->specials.act, ACT_GUARDIAN)) {
 				SET_BIT(ch->specials.act, ACT_GUARDIAN);
 				act("$n alertly watches you.", FALSE, ch, 0, ch->master, TO_VICT);
@@ -85,7 +86,7 @@ void do_guard(struct char_data* ch, const char* argument, int cmd) {
 				send_to_char("You snap to attention\n\r", ch);
 			}
 		}
-		else if (!str_cmp(argument,"off")) {
+		else if (!str_cmp(arg,"off")) {
 			if (IS_SET(ch->specials.act, ACT_GUARDIAN)) {
 				act("$n relaxes.", FALSE, ch, 0, 0, TO_ROOM);
 				send_to_char("You relax.\n\r",ch);
@@ -98,8 +99,8 @@ void do_guard(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_junk(struct char_data* ch, const char* argument, int cmd) {
-	char arg[100], buf[100], newarg[100];
+ACTION_FUNC(do_junk) {
+	char tmp[100], buf[100], newarg[100];
 	struct obj_data* tmp_object;
 	int num, p, count, value=0,value2=0;
 
@@ -107,15 +108,15 @@ void do_junk(struct char_data* ch, const char* argument, int cmd) {
 	 *   get object name & verify
 	 */
 
-	only_argument(argument, arg);
-	if (*arg) {
-		if (getall(arg,newarg) != 0 ) {
+	only_argument(arg, tmp);
+	if (*tmp) {
+		if (getall(tmp,newarg) != 0 ) {
 			num = -1;
-			strcpy(arg,newarg);
+			strcpy(tmp,newarg);
 		}
-		else if ((p = getabunch(arg,newarg)) != 0 ) {
+		else if ((p = getabunch(tmp,newarg)) != 0 ) {
 			num = p;
-			strcpy(arg,newarg);
+			strcpy(tmp,newarg);
 		}
 		else {
 			num = 1;
@@ -127,7 +128,7 @@ void do_junk(struct char_data* ch, const char* argument, int cmd) {
 	}
 	count = 0;
 	while (num != 0) {
-		tmp_object = get_obj_in_list_vis(ch, arg, ch->carrying);
+		tmp_object = get_obj_in_list_vis(ch, tmp, ch->carrying);
 		if (tmp_object) {
 			if (IS_OBJ_STAT(tmp_object,ITEM_NODROP)  && !IS_IMMORTAL( ch ) ) {
 				send_to_char
@@ -189,12 +190,12 @@ void do_junk(struct char_data* ch, const char* argument, int cmd) {
 	return;
 }
 
-void do_qui(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_qui) {
 	send_to_char("You have to write quit - no less, to quit!\n\r",ch);
 	return;
 }
 
-void do_set_prompt(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_set_prompt) {
 	static struct def_prompt {
 		int n;
 		const char* pr;
@@ -224,10 +225,10 @@ void do_set_prompt(struct char_data* ch, const char* argument, int cmd) {
 	}
 
 
-	for(; isspace(*argument); argument++);
+	for(; isspace(*arg); arg++);
 
-	if (*argument) {
-		if((n=atoi(argument))!=0) {
+	if (*arg) {
+		if((n=atoi(arg))!=0) {
 			if(n>39 && !IS_IMMORTAL(ch)) {
 				send_to_char("Eh?\r\n",ch);
 				return;
@@ -247,7 +248,7 @@ void do_set_prompt(struct char_data* ch, const char* argument, int cmd) {
 		else {
 			if(ch->specials.prompt)
 			{ free(ch->specials.prompt); }
-			ch->specials.prompt = strdup(argument);
+			ch->specials.prompt = strdup(arg);
 		}
 	}
 	else {
@@ -259,32 +260,26 @@ void do_set_prompt(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_title(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_title) {
 	char buf[512];
 
-	// arg is alwyas coming from player input so it cant be a true const
-	char* argument = const_cast<char*>(arg);
 
 	if (IS_NPC(ch) || !ch->desc)
 	{ return; }
+	string argument(arg);
+	boost::trim_left(argument);
 
-	for(; isspace(*argument); argument++)  ;
-
-	if (*argument) {
-
-		if (strlen(argument) > 80) {
-			send_to_char("Line too long, truncated\n", ch);
-			*(argument + 81) = '\0';
-		}
-		sprintf(buf, "Il tuo titolo adesso e' : <%s>\n\r", argument);
-		send_to_char(buf, ch);
+	if (argument.length()>80) {
+		send_to_char("Line too long, truncated\n", ch);
 		free(ch->player.title);
-		ch->player.title = strdup(argument);
+		ch->player.title = strdup(argument.substr(0,80).c_str());
+		sprintf(buf, "Il tuo titolo adesso e' : <%s>\n\r", ch->player.title);
+		send_to_char(buf, ch);
 	}
 
 }
 
-void do_quit(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_quit) {
 
 	if (IS_NPC(ch) || !ch->desc || IS_AFFECTED(ch, AFF_CHARM))
 	{ return; }
@@ -309,7 +304,7 @@ void do_quit(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_save(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_save) {
 	struct obj_cost cost;
 	struct char_data* tmp;
 	struct obj_data* tl;
@@ -330,7 +325,7 @@ void do_save(struct char_data* ch, const char* argument, int cmd) {
 	if (IS_NPC(ch) && !(IS_SET(ch->specials.act, ACT_POLYSELF))) {
 		return;
 	}
-	argument=one_argument(argument,buf);
+	arg=one_argument(arg,buf);
 	if (IS_MAESTRO_DEL_CREATO(ch) && *buf) {
 		do_passwd(ch,buf,CMD_SAVE);
 		return;
@@ -418,12 +413,12 @@ void do_save(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_not_here(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_not_here) {
 	send_to_char( "Mi dispiace, ma non puoi farlo qui!\n\r",ch);
 }
 
 
-void do_sneak(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_sneak) {
 	struct affected_type af;
 	byte percent;
 
@@ -488,7 +483,7 @@ void do_sneak(struct char_data* ch, const char* argument, int cmd) {
 	WAIT_STATE(ch, PULSE_VIOLENCE);
 
 }
-void do_tspy(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_tspy) {
 	struct affected_type af;
 
 	if (affected_by_spell(ch, SKILL_TSPY)) {
@@ -526,7 +521,7 @@ void do_tspy(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_hide(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_hide) {
 	byte percent;
 
 
@@ -576,7 +571,7 @@ void do_hide(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_steal(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_steal) {
 	struct char_data* victim;
 	struct obj_data* obj;
 	char victim_name[240];
@@ -594,8 +589,8 @@ void do_steal(struct char_data* ch, const char* argument, int cmd) {
 	{ return; }
 
 
-	argument = one_argument(argument, obj_name);
-	only_argument(argument, victim_name);
+	arg = one_argument(arg, obj_name);
+	only_argument(arg, victim_name);
 
 	if (!HasClass(ch, CLASS_THIEF)) {
 		send_to_char("Non sei un ladro!\n\r", ch);
@@ -791,7 +786,7 @@ void do_steal(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_practice(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_practice) {
 	char buf[MAX_STRING_LENGTH*2], buffer[MAX_STRING_LENGTH*2], temp[20];
 	int i,max;
 
@@ -1218,7 +1213,7 @@ void do_practice(struct char_data* ch, const char* arg, int cmd) {
 
 
 
-void do_idea(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_idea) {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
 
@@ -1228,9 +1223,9 @@ void do_idea(struct char_data* ch, const char* argument, int cmd) {
 	}
 
 	/* skip whites */
-	for (; isspace(*argument); argument++);
+	for (; isspace(*arg); arg++);
 
-	if (!*argument)        {
+	if (!*arg)        {
 		send_to_char
 		("That doesn't sound like a good idea to me.. Sorry.\n\r",ch);
 		return;
@@ -1241,7 +1236,7 @@ void do_idea(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 
-	sprintf(str, "**%s: %s\n", GET_NAME(ch), argument);
+	sprintf(str, "**%s: %s\n", GET_NAME(ch), arg);
 
 	fputs(str, fl);
 	fclose(fl);
@@ -1254,7 +1249,7 @@ void do_idea(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_typo(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_typo) {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
 
@@ -1264,9 +1259,9 @@ void do_typo(struct char_data* ch, const char* argument, int cmd) {
 	}
 
 	/* skip whites */
-	for (; isspace(*argument); argument++);
+	for (; isspace(*arg); arg++);
 
-	if (!*argument)        {
+	if (!*arg)        {
 		send_to_char("I beg your pardon?\n\r",         ch);
 		return;
 	}
@@ -1277,7 +1272,7 @@ void do_typo(struct char_data* ch, const char* argument, int cmd) {
 	}
 
 	sprintf(str, "**%s[%d]: %s\n",
-			GET_NAME(ch), ch->in_room, argument);
+			GET_NAME(ch), ch->in_room, arg);
 	fputs(str, fl);
 	fclose(fl);
 	send_to_char("Ok. thanks.\n\r", ch);
@@ -1288,7 +1283,7 @@ void do_typo(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_bug(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_bug) {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
 	/*
@@ -1298,9 +1293,9 @@ void do_bug(struct char_data* ch, const char* argument, int cmd) {
 	 *       }
 	 * */
 	/* skip whites */
-	for (; isspace(*argument); argument++);
+	for (; isspace(*arg); arg++);
 
-	if (!*argument)        {
+	if (!*arg)        {
 		send_to_char("Pardon?\n\r",ch);
 		return;
 	}
@@ -1311,7 +1306,7 @@ void do_bug(struct char_data* ch, const char* argument, int cmd) {
 	}
 
 	sprintf(str, "**%s[%d]: %s\n",
-			GET_NAME(ch), ch->in_room, argument);
+			GET_NAME(ch), ch->in_room, arg);
 	fputs(str, fl);
 	fclose(fl);
 	send_to_char("Non sempre riesco a leggere i bug.\n\rPer cose urgenti scrivetemi a alar@aspide.it. Grazie!", ch);
@@ -1319,7 +1314,7 @@ void do_bug(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_brief(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_brief) {
 	if( IS_NPC( ch ) ) {
 		if( IS_SET( ch->specials.act, ACT_POLYSELF ) ) {
 			send_to_char( "Puoi farlo solo nella tua forma originale.\n\r", ch );
@@ -1338,7 +1333,7 @@ void do_brief(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_compact(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_compact) {
 	if (IS_NPC(ch))
 	{ return; }
 
@@ -1392,7 +1387,7 @@ char* Tiredness(struct char_data* ch) {
 	return(p);
 
 }
-void do_group(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_group) {
 	char name[256], buf[256];
 	struct char_data* victim, *k;
 	struct follow_type* f;
@@ -1410,7 +1405,7 @@ void do_group(struct char_data* ch, const char* argument, int cmd) {
 
 	const int nMaxGroupName = 6;
 
-	only_argument(argument, name);
+	only_argument(arg, name);
 
 	if (!*name) {
 		if (!IS_AFFECTED(ch, AFF_GROUP)) {
@@ -1527,7 +1522,7 @@ void do_group(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_group_name(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_group_name) {
 	int count;
 	struct follow_type* f;
 
@@ -1557,7 +1552,7 @@ void do_group_name(struct char_data* ch, const char* arg, int cmd) {
 
 }
 
-void do_quaff(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_quaff) {
 	char buf[100];
 	struct obj_data* temp;
 	int i;
@@ -1565,7 +1560,7 @@ void do_quaff(struct char_data* ch, const char* argument, int cmd) {
 
 	equipped = FALSE;
 
-	only_argument(argument,buf);
+	only_argument(arg,buf);
 
 	if (!(temp = get_obj_in_list_vis(ch,buf,ch->carrying))) {
 		temp = ch->equipment[HOLD];
@@ -1634,7 +1629,7 @@ void do_quaff(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_recite(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_recite) {
 	char buf[100];
 	struct obj_data* scroll, *obj;
 	struct char_data* victim;
@@ -1648,7 +1643,7 @@ void do_recite(struct char_data* ch, const char* argument, int cmd) {
 	if (!ch->skills)
 	{ return; }
 
-	argument = one_argument(argument,buf);
+	arg = one_argument(arg,buf);
 
 	if (!(scroll = get_obj_in_list_vis(ch,buf,ch->carrying))) {
 		scroll = ch->equipment[HOLD];
@@ -1664,8 +1659,8 @@ void do_recite(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 
-	if (*argument) {
-		bits = generic_find(argument, FIND_OBJ_INV | FIND_OBJ_ROOM |
+	if (*arg) {
+		bits = generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM |
 							FIND_OBJ_EQUIP | FIND_CHAR_ROOM, ch, &victim, &obj);
 		if (bits == 0) {
 			send_to_char("No such thing around to recite the scroll on.\n\r", ch);
@@ -1754,14 +1749,14 @@ void do_recite(struct char_data* ch, const char* argument, int cmd) {
 
 
 
-void do_use(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_use) {
 	char buf[100];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object, *stick;
 
 	int bits;
 
-	argument = one_argument(argument,buf);
+	arg = one_argument(arg,buf);
 
 	if (ch->equipment[HOLD] == 0 ||
 			!isname(buf, ch->equipment[HOLD]->name)) {
@@ -1805,7 +1800,7 @@ void do_use(struct char_data* ch, const char* argument, int cmd) {
 	}
 	else if (stick->obj_flags.type_flag == ITEM_WAND) {
 
-		bits = generic_find(argument, FIND_CHAR_ROOM | FIND_OBJ_INV |
+		bits = generic_find(arg, FIND_CHAR_ROOM | FIND_OBJ_INV |
 							FIND_OBJ_ROOM | FIND_OBJ_EQUIP, ch, &tmp_char, &tmp_object);
 
 		if (bits) {
@@ -1851,13 +1846,13 @@ void do_use(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_plr_noshout(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_plr_noshout) {
 	char buf[128];
 
 	if (IS_NPC(ch))
 	{ return; }
 
-	only_argument(argument, buf);
+	only_argument(arg, buf);
 
 	if (!*buf) {
 		if (IS_SET(ch->specials.act, PLR_DEAF)) {
@@ -1875,13 +1870,13 @@ void do_plr_noshout(struct char_data* ch, const char* argument, int cmd) {
 
 }
 
-void do_plr_nogossip(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_plr_nogossip) {
 	char buf[128];
 
 	if (IS_NPC(ch))
 	{ return; }
 
-	only_argument(argument, buf);
+	only_argument(arg, buf);
 
 	if (!*buf) {
 		if (IS_SET(ch->specials.act, PLR_NOGOSSIP)) {
@@ -1899,13 +1894,13 @@ void do_plr_nogossip(struct char_data* ch, const char* argument, int cmd) {
 
 }
 
-void do_plr_noauction(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_plr_noauction) {
 	char buf[128];
 
 	if (IS_NPC(ch))
 	{ return; }
 
-	only_argument(argument, buf);
+	only_argument(arg, buf);
 
 	if (!*buf) {
 		if (IS_SET(ch->specials.act, PLR_NOAUCTION)) {
@@ -1923,13 +1918,13 @@ void do_plr_noauction(struct char_data* ch, const char* argument, int cmd) {
 
 }
 
-void do_plr_notell(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_plr_notell) {
 	char buf[128];
 
 	if (IS_NPC(ch))
 	{ return; }
 
-	only_argument(argument, buf);
+	only_argument(arg, buf);
 
 	if (!*buf) {
 		if (IS_SET(ch->specials.act, PLR_NOTELL)) {
@@ -1948,7 +1943,7 @@ void do_plr_notell(struct char_data* ch, const char* argument, int cmd) {
 }
 
 
-void do_alias(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_alias) {
 	char buf[512], buf2[512];
 	char* p, *p2;
 	int i, num;
@@ -2056,7 +2051,7 @@ void Dismount(struct char_data* ch, struct char_data* h, int pos) {
 
 }
 
-void do_mount(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_mount) {
 	char name[112];
 	int check;
 	struct char_data* horse;
@@ -2173,12 +2168,12 @@ int CheckContempMemorize( struct char_data* pChar ) {
 
 }
 
-void do_memorize(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_memorize) {
 
 	int spl,qend;
 	short int duration;
 	struct affected_type af;
-	char* argument = const_cast<char*>(arg);
+	const char* argument=arg;
 
 	if (!IS_PC(ch))
 	{ return; }
@@ -2296,8 +2291,8 @@ void do_memorize(struct char_data* ch, const char* arg, int cmd) {
 		return;
 	}
 
-	for( qend = 1; *(argument + qend) && ( *(argument + qend) != '\'' ) ; qend++ )
-	{ *(argument + qend) = LOWER( *(argument + qend) ); }
+	for( qend = 1; *(argument + qend) && ( *(argument + qend) != '\'' ) ; qend++ );
+	//{ *(argument + qend) = LOWER( *(argument + qend) ); }
 
 	if( *(argument + qend) != '\'') {
 		send_to_char( "Gli incantesimi vanno circondati dal simbolo sacro: '\n\r",
@@ -2413,7 +2408,7 @@ void check_memorize(struct char_data* ch, struct affected_type* af) {
 	}
 }
 
-void do_set_afk( struct char_data* ch, const char* argument, int cmd ) {
+ACTION_FUNC(do_set_afk) {
 	if (!ch)
 	{ return; }
 	if (IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF))
@@ -2427,12 +2422,12 @@ void do_set_afk( struct char_data* ch, const char* argument, int cmd ) {
 
 #define RACE_WAR_MIN_LEVEL 31
 /* this is the level a user can turn race war ON */
-void do_set_flags(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_set_flags) {
 	char type[255],field[255];
 	if (!ch)
 	{ return; }
 
-	argument = one_argument(argument,type);
+	arg = one_argument(arg,type);
 
 	if (!*type) {
 		send_to_char("Actually supported:\n\r"
@@ -2448,7 +2443,7 @@ void do_set_flags(struct char_data* ch, const char* argument, int cmd) {
 		return;
 	}
 
-	argument = OneArgumentNoFill(argument,field);
+	arg = OneArgumentNoFill(arg,field);
 
 	if( !strcmp( "who",type) &&  (!*field)) {
 		send_to_char( "Usa 'set who showclasses/hideclasses'\n\r"
@@ -2539,8 +2534,8 @@ void do_set_flags(struct char_data* ch, const char* argument, int cmd) {
 	}
 	else if (!strcmp(type,"group")) {
 		if (!strcmp(field,"name")) {
-			if (argument)
-			{ do_group_name(ch,argument,0); }
+			if (arg)
+			{ do_group_name(ch,arg,0); }
 		}
 		else if (!strcmp(field,"order")) {
 			if (IS_SET(ch->specials.affected_by2,AFF2_CON_ORDER)) {
@@ -2611,11 +2606,11 @@ void do_set_flags(struct char_data* ch, const char* argument, int cmd) {
 	}
 }
 
-void do_whois(struct char_data* ch, const char* argument, int cmd) {
+ACTION_FUNC(do_whois) {
 	char name[128],buf[254];
 	struct char_data* finger;
 
-	argument= one_argument(argument,name);
+	arg= one_argument(arg,name);
 
 	if (!*name) {
 		send_to_char("Finger whom?!?!\n\r",ch);

@@ -1010,12 +1010,11 @@ int new_descriptor(int s) {
 	newd->wait = -1;
 	newd->prompt_mode = 0;
 	*newd->buf = '\0';
-	newd->str =  NULL;
-	newd->showstr_head =  NULL;
-	newd->showstr_point = NULL;
+	newd->str =  nullptr;
+	newd->showstr_head =  nullptr;
+	newd->showstr_point = nullptr;
 	*newd->last_input= '\0';
-	mudlog( LOG_CONNECT, "New connection from addr [HOST:%s]: %d: %d (wait: %d)", newd->host,
-			desc, maxdesc,newd->wait );
+	mudlog( LOG_CONNECT, "New connection from addr [HOST:%s]: %d: %d (wait: %d)", newd->host,desc, maxdesc,newd->wait );
 #if not BLOCK_WRITE
 	newd->output.head = NULL;
 #else

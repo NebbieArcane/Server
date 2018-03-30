@@ -11,6 +11,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -874,7 +876,7 @@ void CheckSpecialties(struct char_data* ch, struct affected_type* af)
 	}
 }
 
-void affect_update( unsigned long pulse ) {
+void affect_update( unsigned long localPulse ) {
 	static struct affected_type* af, *next_af_dude;
 	register struct char_data* i;
 	register struct obj_data* j;
@@ -1069,7 +1071,7 @@ void affect_update( unsigned long pulse ) {
 					* Controllo per classe
 					* */
 					if(HasClass(i,CLASS_MONK)) {
-						if (pulse % (PULSE_TICK*
+						if (localPulse % (PULSE_TICK*
 									 MAX((GET_LEVEL(i,MONK_LEVEL_IND)-29),1)
 									)
 						   )
@@ -1126,39 +1128,6 @@ void affect_update( unsigned long pulse ) {
 				ObjFromCorpse(j);
 			}
 		}
-
-#if 0
-		else {
-			/* Sound objects */
-			if( ITEM_TYPE( j ) == ITEM_AUDIO ) {
-				if( ( j->obj_flags.value[0] &&
-						( pulse % j->obj_flags.value[0] ) == 0 ) || !number(0,5) ) {
-					if (j->carried_by) {
-						room = j->carried_by->in_room;
-					}
-					else if( j->equipped_by ) {
-						room = j->equipped_by->in_room;
-					}
-					else if( j->in_room != NOWHERE ) {
-						room = j->in_room;
-					}
-					else {
-						room = RecGetObjRoom(j);
-					}
-					/* broadcast to room */
-
-					if (j->action_description && number(1,12) <3 ) {
-						MakeNoise( room, j->action_description, j->action_description );
-					}
-				}
-			}
-			else {
-				if( j->item_number >= 0 && obj_index[j->item_number].func ) {
-					( *obj_index[j->item_number].func )( 0, 0, 0, j, EVENT_TICK );
-				}
-			}
-		}
-#endif
 	}
 }
 
@@ -1404,10 +1373,10 @@ bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod) {
 
 
 
-char* skip_spaces(char* string) {
-	for(; *string && (*string)==' '; string++);
+char* skip_spaces(const char* buffer) {
+	for(; *buffer && (*buffer)==' '; buffer++);
 
-	return(string);
+	return const_cast<char*>(buffer);
 }
 
 bool EqNotForCaster(struct char_data* ch, int spl) {
@@ -1444,14 +1413,12 @@ bool EqNotForCaster(struct char_data* ch, int spl) {
 	{ return(FALSE); }
 }
 /* Assumes that *argument does start with first letter of chopped string */
-void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
+ACTION_FUNC(do_cast) {
 
 	struct obj_data* tar_obj;
 	struct char_data* tar_char;
 	struct char_data* tmp_char;
 	char name[MAX_INPUT_LENGTH];
-	char work[256];     /* works on a copy of argument */
-	char* argument=work;
 	int qend=0;
 	int spl=0;
 	int i=0;
@@ -1498,9 +1465,11 @@ void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 	if( cmd != CMD_MIND && apply_soundproof(ch) )
 	{ return; }
 
-	strncpy(argument,ori_argument,256);
-	argument[255]='\0';
-
+	char work[256];     /* works on a copy of arg */
+	strncpy(work,arg,255);
+	work[255]='\0';
+	// Argument is just a constant pointer to work
+	const char* argument=work;
 	argument = skip_spaces(argument);
 
 	/* If there is no chars in argument */
@@ -1514,10 +1483,9 @@ void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 		return;
 	}
 
-	/* Locate the last quote && lowercase the magic words (if any) */
+	/* Locate the last quote  */
 
-	for (qend=1; *(argument+qend) && (*(argument+qend) != '\'') ; qend++)
-	{ *(argument+qend) = LOWER(*(argument+qend)); }
+	for (qend=1; *(argument+qend) && (*(argument+qend) != '\'') ; qend++);
 
 	if( *( argument + qend ) != '\'') {
 		send_to_char("Usa sempre i simboli sacri della magia: '\n\r",ch);
@@ -1530,12 +1498,6 @@ void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 		send_to_char("Fantastico! Non e` successo nulla!\n\r",ch);
 		return;
 	}
-#if 0
-	if (spl == SPELL_POLY_SELF) {
-		send_to_char("Questa spell e' stata temporaneamente eliminata\n\r",ch);
-		return;
-	}
-#endif
 
 	/* mobs do not get  skills so we just check it for PC`s */
 
@@ -1698,7 +1660,7 @@ void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 			/* for seeing what the other guys are doing test */
 
 			if( IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI ) {
-				mudlog( LOG_CHECK, "%s cast %s", GET_NAME(ch), ori_argument );
+				mudlog( LOG_CHECK, "%s cast %s", GET_NAME(ch), arg );
 			}
 
 			if( !IS_SET( spell_info[spl].targets, TAR_IGNORE ) ) {
@@ -2066,7 +2028,7 @@ void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 					GET_ALIGNMENT(ch)+=align_cost;
 					mudlog(LOG_CHECK,"Char %s spell %s intrinseca: %5d",
 						   GET_NAME(ch),
-						   ori_argument,
+						   arg,
 						   align_cost);
 					/* Relativa */
 				}
@@ -2087,7 +2049,7 @@ void do_cast(struct char_data* ch, const char* ori_argument, int cmd) {
 		return;
 	}
 	if (spl > 0) {
-		mudlog(LOG_SYSERR,"Spellid %d cmid %d command %s",spl,cmd,ori_argument);
+		mudlog(LOG_SYSERR,"Spellid %d cmid %d command %s",spl,cmd,arg);
 	}
 
 	switch (number(1,5)) {
