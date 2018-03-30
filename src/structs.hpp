@@ -6,6 +6,7 @@
 #define __STRUCTS
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+
 #include "typedefs.hpp"
 #include "odb/account.hpp"
 #include "specialproc_other.hpp"

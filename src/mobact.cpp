@@ -660,7 +660,7 @@ int UseViolentHeldItem( struct char_data* ch ) {
 	if( ch->equipment[ HOLD ] && HasHands( ch ) && ch->specials.fighting ) {
 		struct obj_data* obj;
 		obj = ch->equipment[ HOLD ];
-		if( !obj->obj_flags.value[2] <= 0 ) {
+		if( obj->obj_flags.value[2] > 0 ) {
 			/* item has charges */
 			if( IS_SET( spell_info[ obj->obj_flags.value[ 3 ] ].targets,
 						TAR_VIOLENT ) ) {

@@ -1867,7 +1867,7 @@ bool accountLogin(struct descriptor_data* d,const char* arg) {
 /* deal with newcomers and other non-playing sockets */
 void nanny(struct descriptor_data* d, char* arg) {
 	char buf[ 254 ];
-	int count=0, oops=FALSE, index=0;
+	int index=0;
 	char tmp_name[20];
 	struct char_file_u tmp_store;
 	struct char_data* tmp_ch;
@@ -2380,8 +2380,6 @@ void nanny(struct descriptor_data* d, char* arg) {
 		for (; isspace(*arg); arg++);
 
 		d->character->player.iClass = 0;
-		count=0;
-		oops=FALSE;
 
 		switch (*arg) {
 		case '0':

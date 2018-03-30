@@ -274,7 +274,6 @@ EVENTFUNC(points_event) {
 void alter_hit(struct char_data* ch, int amount) {
 	struct regen_event_obj* regen;
 	long time;
-	int gain;
 	time = REGEN_EVENTS_DELAY;
 
 	if ( amount > 0) {
@@ -306,7 +305,6 @@ void alter_hit(struct char_data* ch, int amount) {
 void alter_mana(struct char_data* ch, int amount) {
 	struct regen_event_obj* regen;
 	long time;
-	int gain;
 	time = REGEN_EVENTS_DELAY;
 
 	GET_MANA(ch) = MIN(GET_MANA(ch) - amount, GET_MAX_MANA(ch));
@@ -332,7 +330,6 @@ void alter_mana(struct char_data* ch, int amount) {
 void alter_move(struct char_data* ch, int amount) {
 	struct regen_event_obj* regen;
 	long time;
-	int gain;
 	time = REGEN_EVENTS_DELAY;
 
 	GET_MOVE(ch) = MIN(GET_MOVE(ch) - amount, GET_MAX_MOVE(ch));

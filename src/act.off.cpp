@@ -1456,18 +1456,12 @@ ACTION_FUNC(do_kick) {
    indirizzati sullo scudo. Gaia( 7/2000 ) */
 
 ACTION_FUNC(do_parry) {
-	int skillcheck=0;
 	char name[100];
 	struct char_data* victim;
 
 	if (check_peaceful(ch,
 					   "You feel too peaceful to contemplate violence.\n\r"))
 	{ return; }
-
-#if 0
-	if (!IS_PC(ch) && cmd && !IS_SET(ch->specials.act,ACT_POLYSELF))
-	{ return; }
-#endif
 
 	only_argument(arg, name);
 
@@ -1997,7 +1991,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 
 ACTION_FUNC(do_berserk) {
 	int skillcheck=0;
-	char argument[100],name[100];
+	char name[100];
 	struct char_data* victim;
 
 	if ((!ch->skills) && IS_PC(ch)) {

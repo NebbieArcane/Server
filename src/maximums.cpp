@@ -948,7 +948,6 @@ void gain_exp_rev( struct char_data* ch, int gain ) {
 	char buf[256];
 	short chrace;
 	int nClassiNonMaxxate=0;
-	float tmp=0.0;
 	save_char(ch,AUTO_RENT, 0);
 	gain=gain_corretto(ch,gain);
 	if( !IS_PC( ch ) && ch->master && IS_AFFECTED( ch, AFF_CHARM ) ) {
@@ -1049,7 +1048,6 @@ void gain_exp( struct char_data* ch, int gain ) {
 	short chrace;
 	short nClassiNonMaxxate=0;
 	save_char(ch,AUTO_RENT, 0 );
-	float tmp=0.0;
 	gain=gain_corretto(ch,gain);
 	if( !IS_PC( ch ) && ch->master && IS_AFFECTED( ch, AFF_CHARM ) ) {
 		if( ch->master->in_room == ch->in_room ) {

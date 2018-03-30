@@ -312,7 +312,6 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 	long targettype;
 	long ftargettype=0;
 	struct char_data* fighted;
-	char minibuf[50];
 	if (!ch ) { return; }
 	if (!IS_PC(ch)) { return; }
 	if (!victim) { victim=ch; }
@@ -426,7 +425,6 @@ const char* GetTargetTypeString(int target) {
 int GetNum(struct char_data* pMob,int pos) {
 	const char* p;
 	char appo[256];
-	int rval;
 	for(p=mob_index[pMob->nr].specparms; pos>0; pos--) {
 		p=one_argument(p,appo);
 	}
@@ -435,7 +433,6 @@ int GetNum(struct char_data* pMob,int pos) {
 int GetNumR(struct room_data* pRoom,int pos) {
 	const char* p;
 	char appo[256];
-	int rval;
 	for(p=real_roomp(pRoom->number)->specparms; pos>0; pos--) {
 		p=one_argument(p,appo);
 	}
@@ -446,10 +443,8 @@ int GetNumR(struct room_data* pRoom,int pos) {
 struct char_data* CloneChar(struct char_data* ch, long nroom) {
 
 	int i,j;
-	long tmp, tmp2, tmp3, bc=0;
 	struct char_data* mob;
 	struct obj_data* ocopy;
-	char letter;
 	char buf[512];
 
 	CREATE(mob, struct char_data, 1);

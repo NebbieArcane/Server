@@ -480,6 +480,7 @@ int track( struct char_data* ch, struct char_data* vict) {
 		send_to_char(buf, ch);
 		return(TRUE);
 	}
+	return false;
 }
 
 int dir_track( struct char_data* ch, struct char_data* vict) {
@@ -3367,7 +3368,7 @@ ACTION_FUNC(do_find_food) {
 	if (!ch->skills)
 	{ return; }
 
-	if (!ch->skills[SKILL_FIND_FOOD].learned >0) {
+	if (ch->skills[SKILL_FIND_FOOD].learned <=0) {
 		send_to_char("Cerchi qualcosa da mangiare, ma non ne sei capace.\n\r",ch);
 		return;
 	}
@@ -3630,7 +3631,7 @@ ACTION_FUNC(do_find_food_old) {
 	if (!ch->skills)
 	{ return; }
 
-	if (!ch->skills[SKILL_FIND_FOOD].learned >0) {
+	if (ch->skills[SKILL_FIND_FOOD].learned <=0) {
 		send_to_char("You search blindly for anything, but fail.\n\r.",ch);
 		return;
 	}
@@ -3681,7 +3682,7 @@ ACTION_FUNC(do_find_water) {
 	if (!ch->skills)
 	{ return; }
 
-	if (!ch->skills[SKILL_FIND_WATER].learned >0) {
+	if (ch->skills[SKILL_FIND_WATER].learned <=0) {
 		send_to_char("You search blindly for anything, but fail.\n\r.",ch);
 		return;
 	}
@@ -5286,8 +5287,8 @@ ACTION_FUNC(do_meditate) {
 	}
 
 	if (  ch->specials.conditions[FULL] == 0  /*hungry or*/
-			| ch->specials.conditions[THIRST] == 0  /*thirsty or*/
-			| ch->specials.conditions[DRUNK] > 0) {   /*alcohol in blood*/
+			or ch->specials.conditions[THIRST] == 0  /*thirsty or*/
+			or ch->specials.conditions[DRUNK] > 0) {   /*alcohol in blood*/
 		send_to_char ("Your body has certain needs that have to be met before you can meditate.\n\r",ch);
 		return;
 	}
@@ -5959,7 +5960,7 @@ void do_miner( struct char_data* ch ) {
 		return;
 	}
 
-	if (!ch->skills[SKILL_MINER].learned >0) {
+	if (ch->skills[SKILL_MINER].learned <=0) {
 		send_to_char("Non sei addestrato a scavare.\n\r",ch);
 		return;
 	}
@@ -6169,8 +6170,6 @@ void do_miner( struct char_data* ch ) {
 
 void ForgeString(struct char_data* ch, const char* arg, int type) {
 	char buf[255];
-	char itemname[255];
-	char appo[255];
 	struct obj_data* obj;
 
 	if(type != 1)
@@ -6368,12 +6367,12 @@ ACTION_FUNC(do_forge) {
 	char itemname[25];
 	char itemmetal[25];
 	char itemdesc[80];
-	char nomestring[80],buf[MAX_STRING_LENGTH];
+	char buf[MAX_STRING_LENGTH];
 
 	if (!ch->skills)
 	{ return; }
 
-	if (!ch->skills[SKILL_FORGE].learned >0) {
+	if (ch->skills[SKILL_FORGE].learned <=0) {
 		send_to_char("Pensi di essere un fabbro?\n\r.",ch);
 		return;
 	}

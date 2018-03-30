@@ -117,8 +117,9 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	   completamente indenne!
 	   Gaia 2001 */
 
-	if( IS_SET( ch->specials.act, ACT_POLYSELF) || IS_PC( ch )
-			&& !EgoSave( ch ) ) { do_ego_eq_action( ch ); }
+	if( IS_SET( ch->specials.act, ACT_POLYSELF) || (IS_PC( ch ) && !EgoSave( ch )) ) {
+		do_ego_eq_action( ch );
+	}
 
 #endif
 
@@ -297,7 +298,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 			sprintf(buf, "$n ti dice 'Hai %d oggetti rari. Cosa vuoi fare? Aprire un supermarket?'",
 					limited_items);
 		else if (limited_items >= 10)
-			sprintf(buf, "$n ti dice 'WOW! Hai %d oggetti  rari. Pensi di essere sol$b a giocare????'",
+			sprintf(buf, "$n ti dice 'WOW! Hai %d oggetti  rari. Pensi di essere sol$b a giocare?!?'",
 					limited_items);
 
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
@@ -511,8 +512,6 @@ void load_char_objs(struct char_data* ch) {
 	long timegold;
 	struct obj_file_u st;
 	char tbuf[200];
-	int limited_items_carrying;
-	struct obj_data* tmp, *tmp_next_obj;
 	/*
 	 * load in aliases and poofs first
 	 */
@@ -935,7 +934,7 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 void update_obj_file() {
 	struct obj_file_u st;
 	struct char_file_u ch_st;
-	long days_passed, secs_lost;
+	long days_passed;
 
 
 	FILE* pObjFile;
@@ -963,7 +962,6 @@ void update_obj_file() {
 							if( str_cmp( st.owner, ch_st.name ) == 0 ) {
 								mudlog( LOG_SAVE, " Processing %s.", st.owner );
 								days_passed = ((time(0) - st.last_update) / SECS_PER_REAL_DAY);
-								secs_lost = ((time(0) - st.last_update) % SECS_PER_REAL_DAY);
 
 								if( ch_st.load_room == AUTO_RENT ) {
 									/* this person was autorented */
@@ -1210,7 +1208,7 @@ int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 		else
 		{ giorni=atoi(arg); }
 		if (giorni<2) {
-			act("$N ti dice 'Per quanti giorni???'",FALSE,ch,0,recep,TO_CHAR);
+			act("$N ti dice 'Per quanti giorni?!?'",FALSE,ch,0,recep,TO_CHAR);
 			PopStatus();
 			return(TRUE);
 		}
@@ -1247,8 +1245,6 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 	int save_room;
 	sh_int action_tabel[9];
 	unsigned long giorni = 0;
-	bool castlerece=FALSE;
-	char buf[MAX_STRING_LENGTH];
 
 	if (!ch->desc)
 	{ return(FALSE); } /* You've forgot FALSE - NPC couldn't leave */
@@ -1348,7 +1344,7 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 		else
 		{ giorni=atoi(arg); }
 		if (giorni<2) {
-			act("$N ti dice 'Per quanti giorni???'",FALSE,ch,0,recep,TO_CHAR);
+			act("$N ti dice 'Per quanti giorni?!?'",FALSE,ch,0,recep,TO_CHAR);
 			PopStatus();
 			return(TRUE);
 		}

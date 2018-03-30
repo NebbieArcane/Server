@@ -516,7 +516,7 @@ void invert(const char* arg1, char* arg2, size_t len) {
 
 OBJSPECIAL_FUNC(jive_box) {
 	constexpr size_t len=255;
-	char buf[len+1], buf2[len+1], buf3[len+1], tmp[len+1];
+	char buf[len+1], buf2[len+1], tmp[len+1];
 
 	if( type == EVENT_COMMAND ) {
 		switch(cmd) {

@@ -1725,7 +1725,6 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 
 int DamCheckDeny( struct char_data* ch, struct char_data* victim, int type ) {
 	struct room_data* rp;
-	char buf[MAX_INPUT_LENGTH];
 
 	/*  assert(GET_POS(victim) > POSITION_DEAD);  */
 
@@ -2040,8 +2039,6 @@ DamageResult DoDamage( struct char_data* ch, struct char_data* v, int dam, int t
 int leechResult(struct char_data* ch, int dam) {
 	int leech = 0;
 	int chNumClass = 0;
-	int bonus = 0;
-	int adjustment = 1;
 	int baseLeech = 5;
 
 	chNumClass = HowManyClasses(ch);
@@ -3021,7 +3018,6 @@ int LoreBackstabBonus(struct char_data* ch, struct char_data* v) {
 DamageResult HitVictim( struct char_data* ch, struct char_data* v, int dam,
 						int type, int w_type,damage_func dam_func, int location) {
 	DamageResult dead;
-	char buf[256];
 
 	if( type == SKILL_BACKSTAB ) {
 		int tmp;

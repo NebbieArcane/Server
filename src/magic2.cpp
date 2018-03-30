@@ -412,10 +412,9 @@ void spell_dispel_good(byte level, struct char_data* ch,
 void spell_turn(byte level, struct char_data* ch,
 				struct char_data* victim, struct obj_data* obj) {
 	struct char_data* next_victim;
-	int diff,i;
+	int diff;
 	assert(ch);
 	assert((level >= 1) && (level<=ABS_MAX_LVL));
-	PushStatus("spell_turn");
 	/* Potenziato:
 	 * Adesso se il tiro salvezza fallisce o la differenza di livello
 	 * supera 20 il mob viene eliminato
@@ -472,7 +471,6 @@ void spell_turn(byte level, struct char_data* ch,
 		}
 
 	}
-	PopStatus();
 }
 
 
@@ -591,7 +589,6 @@ void spell_poly_self(byte level, struct char_data* ch,
 					 struct char_data* mob, struct obj_data* obj) {
 
 	char* buf;
-	struct affected_by* af=NULL;
 
 	/* Check to make sure that there is no snooping going on.  */
 	if (!ch->desc || ch->desc->snoop.snooping) {
@@ -607,9 +604,7 @@ void spell_poly_self(byte level, struct char_data* ch,
 	/* Put mobile in correct room */
 
 	char_to_room(mob, ch->in_room);
-	PushStatus("Switchstuff");
 	SwitchStuff(ch, mob);
-	PopStatus();
 
 	/* move char to storage */
 

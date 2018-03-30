@@ -70,7 +70,7 @@ int is_ok(struct char_data* keeper, struct char_data* ch, int shop_nr) {
 			   "Come back later!",17);
 		return(FALSE);
 	}
-	else if (shop_index[shop_nr].close1<time_info.hours)
+	else if (shop_index[shop_nr].close1<time_info.hours) {
 		if (shop_index[shop_nr].open2>time_info.hours) {
 			do_say(keeper,
 				   "Sorry, we have closed, but come back later.",17);
@@ -81,8 +81,8 @@ int is_ok(struct char_data* keeper, struct char_data* ch, int shop_nr) {
 				   "Sorry, come back tomorrow.",17);
 			return(FALSE);
 		};
-
-	if(!(CAN_SEE(keeper,ch)))        {
+	}
+	if(!(CAN_SEE(keeper,ch))) {
 		do_say(keeper,
 			   "I don't trade with someone I can't see!",17);
 		return(FALSE);
@@ -434,16 +434,14 @@ void shopping_list( char* arg, struct char_data* ch,
 	char buf[MAX_STRING_LENGTH], buf2[100],buf3[100];
 	struct obj_data* temp1;
 	int found_obj;
-	int i;
-	float mult = 0;
 	long actualcost;
-
 	if(!(is_ok(keeper,ch,shop_nr)))
 	{ return; }
-
-
-	if(keeper->generic != 0)
-		for(i = 0; i < MAX_TRADE; i++) {
+	// Famine and strike price raising... non functional
+#if 0
+	float mult=0.0
+	if(keeper->generic != 0) {
+		for(int i = 0; i < MAX_TRADE; i++) {
 			if(keeper->generic == FAMINE)
 				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
 					mult = shop_multiplier; /* we're in a famine, we sell food, so we */
@@ -455,7 +453,8 @@ void shopping_list( char* arg, struct char_data* ch,
 					break;
 				}
 		}
-
+	}
+#endif
 	strcpy(buf,"You can buy:\n\r");
 	found_obj = FALSE;
 	if(keeper->carrying)

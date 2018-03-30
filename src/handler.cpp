@@ -276,7 +276,7 @@ int isname(const char* str, const char* namelist) {
 	SetLine(__FILE__,__LINE__);
 	xargc = split_string(names, "- \t\n\r,", xargv);
 	SetLine(__FILE__,__LINE__);
-	if (!argc || !argv) { return(0); }
+	if (!argc) { return(0); }
 	SetLine(__FILE__,__LINE__);
 	s = argv[argc-1];
 	SetLine(__FILE__,__LINE__);
@@ -1103,8 +1103,10 @@ void char_to_room(struct char_data* ch, long room) {
 	if( !rp ) {
 		room = 0;
 		rp = real_roomp(room);
-		if( !rp )
-		{ assert( ("Stanza zero inesistente",0) ); }
+		if( !rp ) {
+			mudlog(LOG_SYSERR,"Stanza zero inesistente");
+			assert(false);
+		}
 	}
 	ch->next_in_room = rp->people;
 	rp->people = ch;
@@ -2445,37 +2447,39 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 	{ return(0); }
 
 	/* scan items carried */
-	for (i = ch->carrying, j=1; i && j<=number; i = i->next_content)
-		if (isname(tmp, i->name) && CAN_SEE_OBJ(ch, i))
+	for (i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
+		if (isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
 			if (j == number)
 			{ return(i); }
 			else
 			{ j++; }
-
-	for( i = real_roomp(ch->in_room)->contents; i && j<=number;
-			i = i->next_content )
-		if (isname(tmp, i->name) && CAN_SEE_OBJ(ch, i))
+		}
+	}
+	for( i = real_roomp(ch->in_room)->contents; i && j<=number;i = i->next_content ) {
+		if (isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
 			if (j==number)
 			{ return(i); }
 			else
 			{ j++; }
-
+		}
+	}
 	/* scan items carried */
-	for (i = ch->carrying, j=1; i && j<=number; i = i->next_content)
-		if (isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i))
+	for (i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
+		if (isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
 			if (j == number)
 			{ return(i); }
 			else
 			{ j++; }
-
-	for( i = real_roomp(ch->in_room)->contents; i && j<=number;
-			i = i->next_content )
-		if (isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i))
+		}
+	}
+	for( i = real_roomp(ch->in_room)->contents; i && j<=number;i = i->next_content ) {
+		if (isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
 			if (j==number)
 			{ return(i); }
 			else
 			{ j++; }
-
+		}
+	}
 	return 0;
 }
 

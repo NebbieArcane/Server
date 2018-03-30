@@ -80,7 +80,7 @@ ACTION_FUNC(do_auction_int) {
 	if (IS_NPC(ch)) /* NPC can be extracted at any time and thus can't auction! */
 	{ return; }
 
-	if (arg1[0] == '\0')
+	if (arg1[0] == '\0') {
 		if (auction->item != NULL) {
 			if (auction->bet > 0) {
 				sprintf (buf, "Offerta corrente, fatta da %s, per %s e' %d monete.\n\rOggetto messo all' asta da %s.\n\r",
@@ -103,10 +103,10 @@ ACTION_FUNC(do_auction_int) {
 			send_to_char ("Mettere all'asta COSA?\n\r",ch);
 			return;
 		}
-
+	}
 	if (IS_IMMORTAL(ch) && (!str_cmp(arg1,"purge")
 							|| (!str_cmp(arg1,"stop"))
-							|| (!str_cmp(arg1,"halt"))))
+							|| (!str_cmp(arg1,"halt")))) {
 		if (auction->item == NULL) {
 			send_to_char ("Non c'e' nessuna asta in corso da fermare.\n\r",ch);
 			return;
@@ -143,8 +143,8 @@ ACTION_FUNC(do_auction_int) {
 			/****/
 			return;
 		}
-
-	if (cmd==CMD_BID)
+	}
+	if (cmd==CMD_BID) {
 		if (auction->item != NULL) {
 			int newbet;
 
@@ -192,7 +192,7 @@ ACTION_FUNC(do_auction_int) {
 			send_to_char ("Al momento non c'e' niente in vendita.\n\r",ch);
 			return;
 		}
-
+	}
 	/* finally... */
 
 	obj = get_obj_in_list (arg1, ch->carrying); /* does char have the item ? */
@@ -202,7 +202,7 @@ ACTION_FUNC(do_auction_int) {
 		return;
 	}
 
-	if (auction->item == NULL)
+	if (auction->item == NULL) {
 		switch (GET_ITEM_TYPE(obj)) {
 
 		default:
@@ -236,6 +236,7 @@ ACTION_FUNC(do_auction_int) {
 			return;
 
 		} /* switch */
+	}
 	else {
 		act ("Riprova piu' tardi - attualmente e' in corso l'asta per $p!",
 			 0,ch,auction->item,NULL,TO_CHAR);
@@ -442,11 +443,12 @@ int parsebet (const int currentbet, const char* argument) {
 		}
 		else {
 			printf ("considering: * x \n\r"); /* SALVO anche questa da me finisce nel log */
-			if ((*stringptr == '*') || (*stringptr == 'x')) /* multiply */
+			if ((*stringptr == '*') || (*stringptr == 'x')) { /* multiply */
 				if (strlen (stringptr) == 1) /* only x specified, assume default */
 				{ newbet = currentbet * 2 ; } /* default: twice */
 				else /* user specified a number */
 				{ newbet = currentbet * atoi (++stringptr); } /* cut off the first char */
+			}
 		}
 	}
 

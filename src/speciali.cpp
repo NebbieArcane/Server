@@ -63,12 +63,11 @@ ROOMSPECIAL_FUNC(sBlockWay) {
 	nlev2=atoi(lev2);
 	if(type == EVENT_COMMAND ) {
 		if( (cmd != ndir) ||
-				( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))
-				&& !IS_PRINCE( ch )) { // Gaia 2001
+				( (GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2) && !IS_PRINCE( ch ))) { // Gaia 2001
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
@@ -103,7 +102,7 @@ MOBSPECIAL_FUNC(sMobBlockWay) {
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(lev2,"%s\r\n",msg);
@@ -159,10 +158,9 @@ MOBSPECIAL_FUNC(ChangeDam) {
 *  *Flyp*
 ****************************************************************************/
 MOBSPECIAL_FUNC(LibroEroi) {
-	const char* p;
-	char num [8], par2[256], runa[256], buf[128], mail[]=STAFF_EMAIL;
+	char par2[256], runa[256], buf[128], mail[]=STAFF_EMAIL;
 	struct obj_data* obj;
-	int i,number,num2,xp,gold, nalign, tmpalign,max,xp2,xpcum,k,trueGain;
+	int i,number,num2,xp,gold, max,xpcum,k,trueGain;
 	short chrace;
 
 	/*if( GetMaxLevel(ch)>51)
@@ -523,7 +521,6 @@ MOBSPECIAL_FUNC(LibroEroi) {
 			{ return true; }
 
 			xp=num2*(GetMaxLevel(ch))*10000;
-			xp2=0;
 			xpcum=0;
 			k=0;
 			max=0;
@@ -735,7 +732,7 @@ MOBSPECIAL_FUNC(MobBlockAlign) {
 		if( (cmd != ndir) || (tmpalign==nalign))
 		{ return(FALSE); }
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			//sprintf(lev2,"%s\r\n",msg);
@@ -784,7 +781,7 @@ ROOMSPECIAL_FUNC(BlockAlign) {
 		if( (cmd != ndir) || (tmpalign==nalign))
 		{ return(FALSE); }
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(dir,"%s\r\n",msg);
@@ -819,9 +816,8 @@ MOBSPECIAL_FUNC(LadroOfferte) {
 MOBSPECIAL_FUNC(Vampire_Summoner) {
 	const char* p;
 	char nmob[256];
-	int check, nummob;
+	int nummob;
 	struct char_data* mobtmp;
-	static struct char_data* tmp;
 
 	if ((GET_POS(mob)==POSITION_FIGHTING) && (number(0,9)<6)) {
 		// Summon control added by EleiMiShill
@@ -875,7 +871,6 @@ MOBSPECIAL_FUNC(Vampire_Summoner) {
 
 MOBSPECIAL_FUNC(Nightmare) {
 	struct affected_type af;
-	int num;
 
 	if(!IS_AFFECTED(mob, AFF_FIRESHIELD)) {
 		af.type      = SPELL_FIRESHIELD;
@@ -892,12 +887,6 @@ MOBSPECIAL_FUNC(Nightmare) {
 		af.location  = APPLY_HIDE;
 		af.bitvector = AFF_GLOBE_DARKNESS;
 		affect_to_char(mob, &af);
-	}
-
-	if(RIDDEN(mob)) {
-		if(RIDDEN(mob)==ch) {
-			GET_HIT(ch)-10;
-		}
 	}
 	return false;
 }

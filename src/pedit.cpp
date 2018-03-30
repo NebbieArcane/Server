@@ -159,13 +159,11 @@ int calc_costopq(int i, int p) {
 }
 
 MOBSPECIAL_FUNC(EditMaster) {
-	char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
-	int cost, ave;
+	char obj_name[80], vict_name[80];
 	struct char_data* vict;
 	struct char_data* editman;
 	struct obj_data* obj;
 	char field[20], comando[20], parmstr[MAX_STRING_LENGTH];
-	char parmstr2[MAX_STRING_LENGTH];
 	int iVNum, iCom, iSpell, iMagie, ciclo, temp;
 
 	if (!AWAKE(ch))
@@ -402,15 +400,9 @@ MOBSPECIAL_FUNC(EditMaster) {
 			switch (comandi[iCom].cmd) {
 			case 0:			// fine
 				if (!ha_modificato) {
-					struct extra_descr_data* new_descr, *tmp_descr;
 
 					mudlog(LOG_PLAYERS,"%s non ha modificato %s", GET_NAME(ch), obj->name);
-					/*		  CREATE(new_descr, struct extra_descr_data, 1); // SALVO vedere perche' non funziona
-							  new_descr->nMagicNumber = EXDESC_VALID_MAGIC;
-					 		  new_descr->keyword = strdup("EditMaster");
-							  new_descr->description = strdup("Oggetto modificato");
-							  new_descr->next = 0;
-							  obj->ex_description = new_descr; */
+
 				}
 				else if (pagamento) {
 					GET_RUNEDEI(ch) -= 1;

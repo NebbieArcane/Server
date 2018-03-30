@@ -130,10 +130,10 @@ char* ParseAnsiColors( int UsingAnsi, const char* txt ) {
 	static char buf [MAX_STRING_LENGTH ] = "";
 	char tmp[20];
 
-	int i,l,f = 0;
+	int f = 0;
 
 	buf[ 0 ] = 0;
-	for( i=0, l=0; *txt; ) {
+	for( int l=0; *txt; ) {
 		if( *txt == '\\' && *( txt + 1 ) == '$' ) {
 			txt += 2;
 			buf[ l++ ] = '$';
@@ -280,7 +280,6 @@ void game_loop(int s) {
 	char comm[MAX_INPUT_LENGTH];
 	char promptbuf[255];
 	struct descriptor_data* point, *next_point;
-	int mask;
 
 	int idx;
 
@@ -470,14 +469,16 @@ void game_loop(int s) {
 #if not BLOCK_WRITE
 			if (FD_ISSET(point->descriptor, &output_set) && point->output.head)
 #else
-			if (FD_ISSET(point->descriptor, &output_set) && *(point->output))
+			if (FD_ISSET(point->descriptor, &output_set) && *(point->output)) {
 #endif
 				if (process_output(point) < 0) {
 					close_socket(point);
 				}
 
-				else
-				{ point->prompt_mode = 1; }
+				else {
+					point->prompt_mode = 1;
+				}
+			}
 		}
 
 		/* give the people some prompts  */
@@ -725,30 +726,6 @@ void write_to_output(const char* txt, struct descriptor_data* t) {
 }
 #endif
 
-void timealter(struct timeval& t,long long interval) {
-	if (interval==0) return; //Shortcut
-	constexpr useconds_t u=1000000;
-	bool negative=interval < 0LL;
-	interval=abs(interval);
-	time_t secs=interval/u;
-	useconds_t usecs=interval % u;
-	if (negative) {
-		if (t.tv_usec < usecs >u) {
-			t.tv_sec-1;
-			t.tv_usec=u-(usecs-t.tv_usec);
-		}
-		else {
-			t.tv_sec-=usecs;
-		}
-	}
-	else {
-		t.tv_usec+=usecs;
-		if (t.tv_usec>u) {
-			t.tv_usec-u;
-			t.tv_sec++;
-		}
-	}
-}
 /**
  * Returns a - b as timeval
  */
@@ -1820,7 +1797,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 void act( const char* str, int hide_invisible, struct char_data* ch,
 		  struct obj_data* obj, void* vict_obj, int type ) {
 	struct char_data* to, *z;
-	char buf[MAX_STRING_LENGTH], tmp[5];
+	char buf[MAX_STRING_LENGTH];
 
 	if( ch == NULL ) {
 		mudlog( LOG_SYSERR, "ch == NULL in act (comm.c). str == %s", str );

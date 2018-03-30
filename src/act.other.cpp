@@ -2636,10 +2636,9 @@ ACTION_FUNC(do_whois) {
 }
 
 void do_ego_eq_action( struct char_data* ch ) {
-	int j, i ;
 	struct obj_data* obj ;
 
-	for (j = 0; j < MAX_WEAR; j++) {
+	for (int j = 0; j < MAX_WEAR; j++) {
 		if (ch->equipment[j] && ch->equipment[j]->item_number>=0) {
 			obj = ch->equipment[j];
 			parse_eq_action( ch, obj );
@@ -2653,7 +2652,9 @@ void parse_eq_action( struct char_data* ch, struct obj_data* obj ) {
 }
 
 void ck_eq_action( struct char_data* ch, struct obj_data* obj ) {
-	int j, i, keyword, gone = 0 ;
+	int keyword=0;
+	int gone=0;
+	int j = 0 ;
 	struct char_data* tmp_ch ;
 	struct obj_data* tmp_obj ;
 	struct room_data* ch_room ;

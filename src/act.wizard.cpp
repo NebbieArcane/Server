@@ -626,7 +626,7 @@ ACTION_FUNC(do_wizlock) {
 
 ACTION_FUNC(do_rload) {
 
-	char i;
+	int8_t i;
 	int start= -1, end = -2;
 
 	if (IS_NPC(ch))
@@ -1727,7 +1727,7 @@ ACTION_FUNC(do_stat) {
 			send_to_char(buf, ch);
 
 			strcpy(buf, "\n\rSpecial procedure : ");
-			if (j->item_number >= 0)
+			if (j->item_number >= 0) {
 				if (obj_index[j->item_number].func) {
 					strcat(buf,"Exists ");
 					strcat(buf,obj_index[j->item_number].specname);
@@ -1736,6 +1736,7 @@ ACTION_FUNC(do_stat) {
 				}
 				else
 				{ strcat(buf,"NO"); }
+			}
 			strcat(buf,"\r\n");
 			send_to_char(buf, ch);
 
@@ -1777,7 +1778,6 @@ ACTION_FUNC(do_ooedit) {
 	char parmstr2[MAX_STRING_LENGTH];
 
 	struct obj_data*  j=0;
-	int iVNum;
 
 	/* for objects
 	*/
@@ -1830,7 +1830,6 @@ ACTION_FUNC(do_ooedit) {
 	/* object */
 
 	if( ( j = (struct obj_data*)get_obj_in_list_vis( ch, item, ch->carrying ) ) ) {
-		iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
 
 		if (!strcmp(field,"name")) {
 			free(j->name);

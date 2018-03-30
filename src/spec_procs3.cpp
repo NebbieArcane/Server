@@ -897,7 +897,6 @@ MOBSPECIAL_FUNC(strahd_vampire) {
 MOBSPECIAL_FUNC(banshee) {
 
 	struct char_data* tmp;
-	int victim;
 
 	if (cmd) { return(FALSE); }
 	if (!AWAKE(mob)) { return(FALSE); }
@@ -910,7 +909,6 @@ MOBSPECIAL_FUNC(banshee) {
 					continue;
 				}
 				else {
-					victim=1;
 					act("$n wails loudly draining the life from your body!", TRUE, ch, 0, 0, TO_ROOM);
 					/* do wail damage stuff here */
 				}
@@ -2200,7 +2198,7 @@ MOBSPECIAL_FUNC(cleric_imp) {
 		case 18:
 		case 19:
 		default:
-			act("$n utters the words 'Hurts, doesn't it??'.",1,ch,0,0,TO_ROOM);
+			act("$n utters the words 'Hurts, doesn't it?!?'.",1,ch,0,0,TO_ROOM);
 			cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			break;
 		}
@@ -3696,7 +3694,7 @@ ROOMSPECIAL_FUNC(sTeleport) {
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
@@ -3730,7 +3728,7 @@ ROOMSPECIAL_FUNC(BlockWay) {
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
@@ -3765,7 +3763,7 @@ MOBSPECIAL_FUNC(MobBlockWay) {
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(lev2,"%s\r\n",msg);
@@ -3810,8 +3808,8 @@ MOBSPECIAL_FUNC(spGeneric) {
 	char msg[256];
 	if (mob == ch) { return(FALSE); }
 	p=mob_index[mob->nr].specparms;
-	sprintf(msg,"Char=%s Mob=%s Arg=%s evento=%d comando=%d",
-			GET_NAME(ch),GET_NAME(mob),arg,type,cmd);
+	sprintf(msg,"Char=%s Mob=%s Arg=%s evento=%d comando=%d parms=%s",
+			GET_NAME(ch),GET_NAME(mob),arg,type,cmd,p?p:"");
 	act(msg, FALSE, mob, 0, ch, TO_ROOM);
 	return(FALSE);
 }
@@ -3857,8 +3855,7 @@ MOBSPECIAL_FUNC(ForceMobToAction)
 	ntrg2=atoi(trg2);
 	if( type == EVENT_COMMAND ) {
 		if( (cmd == ncmd1) && (ch!=mob)) {
-			if (!ntrg1 ||
-					!strncasecmp(GET_NAME(mob),actinfo,strlen(actinfo)) && strlen(actinfo)) {
+			if (!ntrg1 || (!strncasecmp(GET_NAME(mob),actinfo,strlen(actinfo)) && strlen(actinfo))) {
 				/* Il comando aveva come target il mob della special! */
 				killer=FindMobInRoomWithVNum(real_roomp(ch->in_room)->number,
 											 nmob);
@@ -3952,7 +3949,7 @@ OBJSPECIAL_FUNC(trap_obj) {
 	int tick=0;
 	int level=0;
 	int true_type=0;
-	char buf[50], msg[256];
+	char msg[256];
 	const char* p;
 	char ctipo[256];
 	char ctick[256];
@@ -4156,7 +4153,7 @@ MOBSPECIAL_FUNC(Interact) {
 			}
 		}
 		else {
-			act("$N ti dice: 'Machecazz' stai a di'???'!!", FALSE, ch, 0, mob, TO_CHAR);
+			act("$N ti dice: 'Machecazz' stai a di'?!?'!!", FALSE, ch, 0, mob, TO_CHAR);
 			return TRUE;
 		}
 
@@ -4166,7 +4163,7 @@ MOBSPECIAL_FUNC(Interact) {
 			return TRUE;
 		}
 		else {
-			act("$N ti dice: 'Machecazz' stai a di'???'!!", FALSE, ch, 0, mob, TO_CHAR);
+			act("$N ti dice: 'Machecazz' stai a di'?!?'!!", FALSE, ch, 0, mob, TO_CHAR);
 			return TRUE;
 		}
 
@@ -4180,7 +4177,6 @@ MOBSPECIAL_FUNC(Interact) {
 #define N_TAB 76        //Lunghezza massima della tabella dei componenti
 MOBSPECIAL_FUNC(Capo_Fucina) {
 	struct obj_data* obj;
-	char buf[200];
 	int iVNum, found, i, k, c, r_num, built;
 	struct tab_lingotti {
 		int comb;                 //numero combinazione
@@ -4347,7 +4343,6 @@ MOBSPECIAL_FUNC(Capo_Fucina) {
 }
 
 OBJSPECIAL_FUNC(msg_obj) {
-	char buf[255];
 	int numero;
 	int num_msg, diffusione;  //diffusione: 1=stanza, 2=zona, 3=mondo
 	struct room_data* rp;
@@ -4445,7 +4440,6 @@ OBJSPECIAL_FUNC(msg_obj) {
 #define THION_MOB 19719
 #define THION_ROOM 19755
 OBJSPECIAL_FUNC(thion_loader) {
-	char buf[255];
 	int numero, iVnum, percent, r_num, r_num2;
 	int x1 = 0;
 	int x2 = 0;
@@ -4454,7 +4448,6 @@ OBJSPECIAL_FUNC(thion_loader) {
 	int x5 = 0;
 	int x6 = 0;
 	int x7 = 0;
-	struct room_data* rp;
 	struct obj_data* tmp;
 	struct obj_data* obj_object;
 	struct obj_data* sub_object;
@@ -4619,7 +4612,6 @@ ROOMSPECIAL_FUNC(MOBKilled) {
 		int iKilled, iTipo;
 		char tipo[3];
 		char premio[25];
-		long lPremio;
 		char sideprocedure[25];
 		p=room->specparms;
 		p=one_argument(p,killed);
@@ -4627,7 +4619,6 @@ ROOMSPECIAL_FUNC(MOBKilled) {
 		p=one_argument(p,tipo);
 		iTipo = atoi(tipo);
 		p=one_argument(p,premio);
-		lPremio = atol(premio);
 		only_argument(p,sideprocedure);
 		if (GET_MOB_VNUM(ch) == iKilled) {
 			if (iTipo == 2) {
@@ -4653,7 +4644,6 @@ MOBSPECIAL_FUNC(ItemGiven) {
 		int iOggetto, iTipo;
 		char tipo[3];
 		char premio[25];
-		long lPremio;
 		char sideprocedure[25];
 		char obj_name[80];
 		struct obj_data* obj;
@@ -4664,7 +4654,6 @@ MOBSPECIAL_FUNC(ItemGiven) {
 		p=one_argument(p,tipo);
 		iTipo = atoi(tipo);
 		p=one_argument(p,premio);
-		lPremio = atol(premio);
 		only_argument(p,sideprocedure);
 		arg=one_argument(arg,obj_name);
 		if ((obj = get_obj_in_list_vis(ch, obj_name, ch->carrying))) {
@@ -4692,7 +4681,6 @@ OBJSPECIAL_FUNC(ItemPut) {
 		int iOggetto, iTipo;
 		char tipo[3];
 		char premio[25];
-		long lPremio;
 		char sideprocedure[25];
 		char obj_name1[80];
 		struct obj_data* obj1;
@@ -4703,18 +4691,14 @@ OBJSPECIAL_FUNC(ItemPut) {
 		p=one_argument(p,tipo);
 		iTipo = atoi(tipo);
 		p=one_argument(p,premio);
-		lPremio = atol(premio);
 		only_argument(p,sideprocedure);
 		arg=one_argument(arg,obj_name1);
 		if ((obj1 = get_obj_in_list_vis(ch, obj_name1, ch->carrying))) {
-			int bits;
-			struct char_data* tmp_char;
-			struct obj_data* obj2;
+			struct obj_data* obj2=nullptr;
 			char obj_name2[80];
 
 			arg=one_argument(arg,obj_name2);
-			bits = generic_find( obj_name2, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &tmp_char, &obj2 );
-			if (GET_OBJ_VNUM(obj1) == iOggetto && obj2) {
+			if ((GET_OBJ_VNUM(obj1) == iOggetto) && obj2) {
 				if (iTipo == 2) {
 					char buf[80];
 					sprintf(buf,"Complimenti hai vinto %s rune degli eroi.\n\r",premio);

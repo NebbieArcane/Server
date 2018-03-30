@@ -577,7 +577,6 @@ void SpellWearOffSoon(int s, struct char_data* ch) {
 int check_falling( struct char_data* ch) {
 	struct room_data* rp, *targ;
 	int done, count, saved;
-	int location = 5 ; /* Gaia Aggiunto per location */
 
 
 	if (IS_IMMORTAL(ch))         /* so if this guy is using redit the mud does not */
@@ -891,9 +890,6 @@ void affect_update( unsigned long localPulse ) {
 	int ggtmp=0;
 	int posprev=0;
 	int regainroom=0;
-	int room=0;
-	int location = 5 ; /* Gaia Aggiunto per Poison */
-	int tempolag=0; // SALVO per controllo lag sulle zone init
 
 	/* Chiamata ogni ora mud, ovvero 4*75 pulse */
 	for (i = character_list; i; i = next_char) {
@@ -1426,14 +1422,11 @@ ACTION_FUNC(do_cast) {
 	int caster_level=-1;
 	int spell_level=100;
 	bool target_ok;
-	int enemy_mod = 0;
-	int target= 0;
 	int tlev=0;
 	int slev=0;
 	int max, cost;
 	int nDado;
 	int sf_pejus = 0;
-	int alignforcheck=0;
 	int spell_align=0;
 	int caster_align=0;
 	char szbuf[100];

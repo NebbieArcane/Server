@@ -2094,8 +2094,6 @@ MOBSPECIAL_FUNC(SporeCloud) {
 MOBSPECIAL_FUNC(Tsuchigumo) {
 	struct affected_type af;
 	int i;
-	struct char_data* pRagno;
-	struct char_data* vict;
 	struct room_data* rp;
 	struct char_data* tmp, *tmp2;
 
@@ -2161,12 +2159,11 @@ MOBSPECIAL_FUNC(Tsuchigumo) {
 			break;
 		case 4:
 			if (GET_HIT(ch) < (GET_MAX_HIT(ch)/2)) {
-				act( "$n si scompone in tanti ragni piu' piccoli.",
-					 FALSE, mob, NULL, pRagno, TO_ROOM );
+				act( "$n si scompone in tanti ragni piu' piccoli.",FALSE, mob, NULL, nullptr, TO_ROOM );
 				act( " ", FALSE, mob, NULL, mob, TO_ROOM );
-
+				struct char_data* pRagno=nullptr;
 				for (i=10; i; i--) {
-					if( ( pRagno = read_mobile( real_mobile(19935), REAL ) ) ) {
+					if( ( 	pRagno = read_mobile( real_mobile(19935), REAL ) ) ) {
 						char_to_room( pRagno, ch->in_room );
 					}
 				}
@@ -3916,10 +3913,10 @@ int zm_stunned_followers(struct char_data* zmaster) {
 
 void zm_init_combat(struct char_data* zmaster, struct char_data* target) {
 	struct follow_type*        fwr;
-	for (fwr = zmaster->followers; fwr; fwr = fwr->next)
+	for (fwr = zmaster->followers; fwr; fwr = fwr->next) {
 		if (IS_AFFECTED(fwr->follower, AFF_CHARM) &&
 				fwr->follower->specials.fighting==NULL &&
-				fwr->follower->in_room == target->in_room)
+				fwr->follower->in_room == target->in_room) {
 			if (GET_POS(fwr->follower) == POSITION_STANDING) {
 				hit(fwr->follower, target, TYPE_UNDEFINED);
 			}
@@ -3927,6 +3924,8 @@ void zm_init_combat(struct char_data* zmaster, struct char_data* target) {
 					 GET_POS(fwr->follower)<POSITION_FIGHTING) {
 				do_stand(fwr->follower, "", -1);
 			}
+		}
+	}
 }
 
 int zm_kill_fidos(struct char_data* zmaster) {
@@ -5874,8 +5873,7 @@ MOBSPECIAL_FUNC(Tyrannosaurus_swallower) {
 
 
 OBJSPECIAL_FUNC(enter_obj) {
-	struct char_data* t;
-	char obj_key[80], room_vnum[80], chiave[100], buf[255];
+	char obj_key[80], chiave[100];
 	int numero;
 
 
@@ -6016,7 +6014,6 @@ void String_mob(struct char_data* ch, struct char_data* vict, const char* string
 void RakdaGraphic(struct char_data* ch, struct char_data* vict1) {
 	int i;
 	char buf[250];
-	char* stringa;
 	struct char_data* vict2;
 
 //send_to_all("graphic.\n\r");
@@ -6843,34 +6840,51 @@ OBJSPECIAL_FUNC(nodrop) {
 	}
 
 	/* Look in the room first, in get case */
-	if(cmd == CMD_GET)
-		for (i=real_roomp(ch->in_room)->contents,j=1; i&&(j<=num); i=i->next_content)
-			if (i->item_number>=0)
-				if (do_all || isname(name, i->name))
+	if(cmd == CMD_GET)  {
+		for (i=real_roomp(ch->in_room)->contents,j=1; i&&(j<=num); i=i->next_content) {
+			if (i->item_number>=0) {
+				if (do_all || isname(name, i->name)) {
 					if(do_all || j == num) {
 						if ((void*)obj_index[i->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
 							xobj = i;
 							break;
 						}
 					}
-					else { ++j; }
-
+					else {
+						++j;
+					}
+				}
+			}
+		}
+	}
 	/* Check the character's inventory for give, drop, steal. */
-	if(!xobj)
+	if(!xobj) {
 		/* Don't bother with get anymore */
-		if(cmd == 10) { return(FALSE); }
-	for (i = ch->carrying,j=1; i&&(j<=num); i=i->next_content)
-		if (i->item_number>=0)
-			if (do_all || isname(name, i->name))
-				if(do_all || j == num) {
-					if ((void*)obj_index[i->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+		if(cmd == 10) {
+			return(FALSE);
+		}
+	}
+	for (i = ch->carrying, j = 1; i && (j <= num); i = i->next_content) {
+		if (i->item_number >= 0) {
+			if (do_all || isname(name, i->name)) {
+				if (do_all || j == num) {
+					if ((void*) obj_index[i->item_number].func
+							== reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
 						xobj = i;
 						break;
 					}
-					else if(!do_all) { return(FALSE); }
+					else {
+						if (!do_all) {
+							return (FALSE);
+						}
+					}
 				}
-				else { ++j; }
-
+				else {
+					++j;
+				}
+			}
+		}
+	}
 	/* Musta been something else */
 	if(!xobj)
 	{ return(FALSE); }

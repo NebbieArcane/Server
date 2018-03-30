@@ -107,8 +107,6 @@ void SetStatus( const char* szStatus, const char* szString) {
 }
 
 void PushStatus( const char* szStatus, const char* szNome ) {
-	int i;
-
 	gnPtr++;
 	if (gnPtr>=STACK_SIZE)
 	{ return; }

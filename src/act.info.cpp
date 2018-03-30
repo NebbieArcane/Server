@@ -1636,7 +1636,7 @@ ACTION_FUNC(do_look) {
 			if (RM_BLOOD(ch->in_room) > 0) {
 				/* mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
 				 * */
-				act(blood_messages[RM_BLOOD(ch->in_room)], FALSE, ch, 0, 0, TO_CHAR);
+				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, 0, 0, TO_CHAR);
 			}
 			else {
 				/*   mudlog(LOG_ERROR,"Blood trovato:
@@ -1758,7 +1758,7 @@ ACTION_FUNC(do_look) {
 			}
 			if (RM_BLOOD(ch->in_room) > 0) {
 				mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
-				act(blood_messages[RM_BLOOD(ch->in_room)], FALSE, ch, 0, 0, TO_CHAR);
+				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, 0, 0, TO_CHAR);
 			}
 			else {
 				mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
@@ -2458,7 +2458,6 @@ ACTION_FUNC(do_who) {
 	struct char_data* person;
 	char buffer[MAX_STRING_LENGTH*2]="",tbuf[512];
 	int count;
-	char color_cnt=1;
 	char flags[20]="";
 	char name_mask[40]="";
 	char tmpname1[80],tmpname2[80];
@@ -2507,7 +2506,6 @@ ACTION_FUNC(do_who) {
 					( !index(flags,'g') or IS_IMMORTAL(person) ) ) {
 				if (OK_NAME(person,name_mask)) {
 					count++;
-					color_cnt = (color_cnt++ % 9);  /* range 1 to 9 */
 
 					if( cmd == CMD_WHOZONE ) {
 						/* it's a whozone command */
@@ -3704,12 +3702,12 @@ ACTION_FUNC(do_attribute) {
 					 25+
 					 (HowManyClasses(ch)-1)*5;
 		iSpellfail+=((
-						 EqWBits(ch,ITEM_ANTI_MAGE) && HasClass(ch,CLASS_MAGIC_USER) ||
-						 EqWBits(ch,ITEM_ANTI_CLERIC) && HasClass(ch,CLASS_CLERIC) ||
-						 EqWBits(ch,ITEM_ANTI_DRUID) && HasClass(ch,CLASS_DRUID) ||
-						 EqWBits(ch,ITEM_ANTI_PALADIN) && HasClass(ch,CLASS_PALADIN) ||
-						 EqWBits(ch,ITEM_ANTI_RANGER) && HasClass(ch,CLASS_RANGER) ||
-						 EqWBits(ch,ITEM_ANTI_PSI) && HasClass(ch,CLASS_PSI))?20:0);
+						 (EqWBits(ch,ITEM_ANTI_MAGE) && HasClass(ch,CLASS_MAGIC_USER)) ||
+						 (EqWBits(ch,ITEM_ANTI_CLERIC) && HasClass(ch,CLASS_CLERIC)) ||
+						 (EqWBits(ch,ITEM_ANTI_DRUID) && HasClass(ch,CLASS_DRUID)) ||
+						 (EqWBits(ch,ITEM_ANTI_PALADIN) && HasClass(ch,CLASS_PALADIN)) ||
+						 (EqWBits(ch,ITEM_ANTI_RANGER) && HasClass(ch,CLASS_RANGER)) ||
+						 (EqWBits(ch,ITEM_ANTI_PSI) && HasClass(ch,CLASS_PSI)))?20:0);
 		snprintf(buf,MAX_STRING_LENGTH-1,
 				 "$c0005La tua capacita' di lanciare incantesimi e'$c0014 %s",
 				 SpellfailDesc(IS_IMMORTAL(ch)?0:iSpellfail));

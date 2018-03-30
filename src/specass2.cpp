@@ -89,32 +89,6 @@ int is_murdervict(struct char_data* ch) {
 
 	return FALSE;
 }
-int FileToArray(char* fname,char* p[]) {
-	FILE* fp;
-	char buf[1024];
-	int ifp=0;
-	int csize=0;
-	fp=fopen(fname,"r");
-	if (!fp) {
-		return(ifp);
-	}
-	void* trash;
-	while (!feof(fp)) {
-		if (fgets(buf,1023,fp)) {
-			if (buf[0]) {
-				if (csize==ifp) {
-					csize+=10;
-					trash=realloc(p,(csize)* sizeof(char*));
-					p[ifp++]=strdup(buf);
-				}
-
-			}
-		}
-	}
-	trash=realloc(p,ifp * (sizeof(char*)));
-	fclose(fp);
-	return(ifp);
-}
 
 int xcompare(const void* p1, const void* p2) {
 	struct OtherSpecialProcEntry* s1,*s2;
@@ -131,15 +105,6 @@ int nomecompare(const void* p1, const void* p2) {
 }
 
 /* assign special procedures to mobiles */
-
-char* Aggiungi(char* vecchia,char* nuova) {
-	int l;
-	l=vecchia?0:strlen(vecchia);
-	void* trash=realloc(vecchia,l+strlen(nuova));
-	strcat(vecchia,nuova);
-	return(vecchia);
-
-}
 void assign_speciales() {
 	int lastroomproc=0;
 	int lastotherproc=0;
