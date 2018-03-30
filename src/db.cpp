@@ -558,11 +558,10 @@ void build_player_index() {
 						mudlog(LOG_CHECK,
 							   "ERR: %s", szFileName);
 					}
-					else if (max >= IMMORTAL ||
+					else if (max >= IMMORTAL) {
 							 /*		       (max==PRINCIPE && Player.points.exp>=PRINCEEXP) */
 							 /**Modifica Urhar sull' esperienza dei principi: con il nuovo livello
 							    il check sui px non e' piu' necessario */
-							 (max == PRINCIPE)) {
 						mudlog(LOG_CHECK,
 							   "GOD: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
 							   Player.name, static_cast<unsigned int>(Player.level[0]), static_cast<unsigned int>(Player.level[1]),
