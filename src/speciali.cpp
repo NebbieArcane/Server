@@ -806,7 +806,7 @@ int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mo
 	sprintf(arg,buf2);
 	if( type == EVENT_COMMAND ) {
 		if( cmd == CMD_GET ) {
-			if ((strstr(buf,"coins"))||(strstr(buf2,"coins"))) {
+			if ((strstr(buf,"monete"))||(strstr(buf2,"monete"))) {
 				do_kill(mob,GET_NAME(ch),0);
 				return FALSE;
 			}
