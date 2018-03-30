@@ -847,7 +847,7 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 		return;
 	}
 	if (amount<=1) {
-		send_to_char("E bravo furbone.... vuoi donare xp negativi????!\n",ch);
+		send_to_char("E bravo furbone.... vuoi donare xp negativi?!\n",ch);
 		return;
 	}
 	nc=HowManyClasses(ch);
@@ -1045,10 +1045,8 @@ ACTION_FUNC(do_give) {
 ACTION_FUNC(do_pquest) {
 
 	char obj_name[200], vict_name[80], buf[132];
-	char tmp[80], newarg[100];
-	int punti_quest, num, p, count, old_punti;
+	int punti_quest,  old_punti;
 	struct char_data* vict;
-	struct obj_data* obj;
 
 	arg = one_argument( arg, obj_name );
 	if( is_number( obj_name ) ) {

@@ -201,10 +201,7 @@ breath_func bweapons[] = {
 };
 
 ACTION_FUNC(do_breath) {
-	struct char_data* victim;
 	char        name[MAX_STRING_LENGTH];
-	int        count, manacost;
-	breath_func weapon;
 
 	if (check_peaceful(ch,"That wouldn't be nice at all.\n\r"))
 	{ return; }

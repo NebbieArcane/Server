@@ -42,7 +42,6 @@ void godTrace(unsigned uType, const char* const szString, ... ) {
 
 	va_list argptr;
 	char szBuffer[ LARGE_BUFSIZE ];
-	char* pchTimeStr;
 	struct descriptor_data* pDesc;
 
 	va_start( argptr, szString );

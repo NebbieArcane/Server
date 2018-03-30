@@ -224,7 +224,6 @@ void spell_energy_drain( byte level, struct char_data* ch,
 						 struct char_data* victim, struct obj_data* obj) {
 	int dam;
 	int tmp;
-	int par;
 	void set_title(struct char_data *ch);
 	void gain_exp(struct char_data *ch, int gain);
 

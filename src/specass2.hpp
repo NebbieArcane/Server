@@ -8,8 +8,6 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
-char* Aggiungi(char* vecchia,char* nuova) ;
-int FileToArray(char* fname,char* p[]) ;
 void assign_speciales() ;
 int is_murdervict(struct char_data* ch) ;
 int nomecompare(const void* p1, const void* p2) ;

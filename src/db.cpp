@@ -2285,17 +2285,18 @@ void ExecuteZoneCommand(ZoneCommand* pZC, NumberType NT) {
 /* going out of range or a variable not getting assigned. msw */
 
 void reset_zone(int zone) {
-	int cmd_no, nLastCmd = TRUE, i;
+	int cmd_no, nLastCmd = TRUE;
 	char buf[256];
 	char rbuf[256];
 	struct char_data* pMob = NULL;
 	struct char_data* pMaster = NULL;
 	struct obj_data* pObj, *pCont;
 	struct room_data* rp;
-	FILE* fl;
-	static int done = FALSE;
+	//static int done = FALSE;
 	struct char_data* pLastMob = 0;
-	struct obj_data* pLastCont = 0;
+	// Qui veniva messo il puntatore all'ultimo container utilizzato, dato che poi non veniva mai utilizzato
+	// Lascio commentato nel caso scopra invece che mi era sfuggito l'utilizzo
+	//struct obj_data* pLastCont = 0;
 	char* s;
 	int d, e;
 
@@ -2402,13 +2403,13 @@ void reset_zone(int zone) {
 				nLastCmd = FALSE;
 				if (ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
 				   ) {
-					if (ZCMD.arg3 >= 0 & ((rp = real_roomp(ZCMD.arg3)) != NULL)) {
+					if ((ZCMD.arg3 >= 0 && (rp = real_roomp(ZCMD.arg3)) != NULL)) {
 						if (ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) {
 							if ((pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 								obj_to_room(pObj, ZCMD.arg3);
 								nLastCmd = TRUE;
-								if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
-								{ pLastCont = pObj; }
+								//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
+								//{ pLastCont = pObj; }
 							}
 						}
 					}
@@ -2442,8 +2443,8 @@ void reset_zone(int zone) {
 						 obj_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
 						pLastMob && (pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 					obj_to_char(pObj, pLastMob);
-					if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
-					{ pLastCont = pObj; }
+					//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
+					//{ pLastCont = pObj; }
 				}
 				break;
 
@@ -2466,8 +2467,8 @@ void reset_zone(int zone) {
 						pLastMob && (pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 					if (!pLastMob->equipment[ ZCMD.arg3 ]) {
 						equip_char(pLastMob, pObj, ZCMD.arg3);
-						if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
-						{ pLastCont = pObj; }
+						//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
+						//{ pLastCont = pObj; }
 					}
 					else {
 						mudlog(LOG_ERROR, "eq error - zone %d, cmd %d, "
@@ -2778,7 +2779,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 
 /* copy vital data from a players char-structure to the file structure */
 void char_to_store(struct char_data* ch, struct char_file_u* st) {
-	int i, aff;
+	int i;
 	struct affected_type* af;
 	struct obj_data* char_eq[MAX_WEAR];
 	char buf[300];
@@ -2962,8 +2963,6 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	struct char_file_u st;
 	FILE* fl;
 	char szFileName[ 200 ];
-	char mode[4];
-	int expand;
 	struct char_data* tmp = NULL;
 
 	if (!IS_PC(ch))
@@ -3420,7 +3419,6 @@ void ClearDeadBit(struct char_data* ch) {
 
 /* clear some of the the working variables of a char */
 void reset_char(struct char_data* ch) {
-	struct affected_type* af;
 	double ratio = 0.0;
 	int i;
 	double absmaxhp;
@@ -4423,7 +4421,6 @@ void clean_playerfile() {
 	struct dirent* ent;
 
 	time_t timeH;
-	char buf[80];
 	int j, max, num_warned, num_processed, num_deleted, num_demoted, ones;
 	long age;
 	long life;
@@ -4602,13 +4599,6 @@ void Start_Auction() {
 #endif
 
 ACTION_FUNC(do_WorldSave) {
-	char temp[2048], buf[128];
-	long rstart, rend, i, j,x,k;
-	struct extra_descr_data* exptr;
-	FILE* fp;
-	struct room_data*     rp;
-	struct room_direction_data*   rdd;
-
 	if(!ch->desc)
 	{ return; }
 

@@ -180,9 +180,9 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wwrite-strings
 	-Wshadow
 	-Wno-enum-compare
+	-Wno-unknown-pragmas
 	-Werror
-#	-w
-#	-Wall 
+	-Wall 
 #	-Wextra 
 #	-Wpedantic 
 #	-Wno-write-strings

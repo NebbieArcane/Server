@@ -678,7 +678,7 @@ void sprintbit(unsigned long vektor, const char* names[], char* result) {
 	*result = '\0';
 
 	for(nr=0; vektor; vektor>>=1) {
-		if (IS_SET(1, vektor))
+		if (IS_SET(1, vektor)) {
 			if (*names[nr] != '\n') {
 				strcat(result,names[nr]);
 				strcat(result," ");
@@ -687,8 +687,10 @@ void sprintbit(unsigned long vektor, const char* names[], char* result) {
 				strcat(result,"UNDEFINED");
 				strcat(result," ");
 			}
-		if (*names[nr] != '\n')
-		{ nr++; }
+		}
+		if (*names[nr] != '\n'){
+			nr++;
+		}
 	}
 
 	if (!*result)
@@ -862,7 +864,6 @@ void age3(struct char_data* ch, struct time_info_data* g) {
 	 * modifica solo estetica. In tutte le routine dove l`eta` viene usata
 	 * si continua ad usare age2
 	 * */
-	struct time_info_data temp;
 	age2(ch, g);
 
 	switch(GET_RACE(ch)) {
@@ -3501,8 +3502,6 @@ int GetNewRace(struct char_file_u* s) {
 			// mudlog( LOG_CHECK, "XP totali: %d ", s->points.exp ) ;
 			int xplimit;
 			int curlevel;
-			int oldrace;
-			oldrace=s->race;
 			for( i = 0; i < MAX_CLASS; i++ ) {
 				if (s->level[i] > 0) {
 					curlevel=RacialMax[newrace][i] ;
@@ -4572,7 +4571,6 @@ int IsRoomDistanceInRange( int nFirstRoom, int nSecondRoom, int nRange ) {
 
 	int i, tmp_room, count = 0, bThruDoors;
 	struct room_data* herep, *therep;
-	struct room_data* startp;
 	struct room_direction_data* exitp;
 
 	/* If start = destination we are done */
@@ -4587,7 +4585,6 @@ int IsRoomDistanceInRange( int nFirstRoom, int nSecondRoom, int nRange ) {
 		bThruDoors = TRUE;
 	}
 
-	startp = real_roomp( nFirstRoom );
 
 	memset( aRoom, 0, sizeof( aRoom ) );
 	aRoom[ nFirstRoom ] = -1;

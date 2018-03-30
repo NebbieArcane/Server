@@ -197,7 +197,7 @@ void RemoveFromGuildList( int nIndex, const char* szNomeMembro ) {
 /* predicates for find_path function */
 
 int IsGuildGuardRoomFP( int room, void* tgt_room ) {
-	return abs(room) == reinterpret_cast<uintptr_t>(tgt_room);
+	return abs(room) == reinterpret_cast<intptr_t>(tgt_room);
 }
 
 /****************************************************************************

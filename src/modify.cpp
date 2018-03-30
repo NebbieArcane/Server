@@ -1025,7 +1025,6 @@ void show_string( struct descriptor_data* d, const char* input ) {
 
 void check_reboot() {
 	static time_t lastCheck=time(0);
-	static time_t shutdownStart=time(0);
 	time_t tc;
 	struct tm* t_info;
 	FILE* boot;

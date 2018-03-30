@@ -237,8 +237,6 @@ ACTION_FUNC(do_gossip) {
 
 
 ACTION_FUNC(do_auction) {
-	char buf1[MAX_INPUT_LENGTH+40];
-	struct descriptor_data* i;
 
 	if (!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
 		send_to_char("Non puoi gridare, parlare od annunciare.\n\r", ch);
@@ -832,7 +830,7 @@ ACTION_FUNC(do_new_say) {
 		/*
 		  buf2 is now the "corrected" string.
 		  */
-		if (!*buf2 || !buf2) {
+		if (!*buf2 ) {
 			send_to_char("OK, ma cosa hai da dire ?\n\r", ch);
 			return;
 		}
