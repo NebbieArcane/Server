@@ -1916,13 +1916,14 @@ void cast_identify( byte level, struct char_data* ch, const char* arg, int type,
 #define MAX_BREATHS 3
 struct pbreath {
 	int        vnum, spell[MAX_BREATHS];
-} breath_potions[] = {
+};
+struct pbreath breath_potions[] = {
 	{ 3970, {SPELL_FIRE_BREATH, 0} },
 	{ 3971, {SPELL_GAS_BREATH, 0} },
 	{ 3972, {SPELL_FROST_BREATH, 0} },
 	{ 3973, {SPELL_ACID_BREATH, 0} },
 	{ 3974, {SPELL_LIGHTNING_BREATH, 0} },
-	{ 0 },
+	{ 0 ,{0,0}},
 };
 
 void cast_dragon_breath(byte level, struct char_data* ch, const char* arg, int type,

@@ -174,18 +174,14 @@ add_custom_command(OUTPUT release.hpp COMMAND ${CMAKE_SOURCE_DIR}/genrelease.sh 
 
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
-#	-Wfatal-errors
-	-fpermissive
-	-Wendif-labels	
-	-Wwrite-strings
-	-Wshadow
 	-Wno-enum-compare
 	-Wno-unknown-pragmas
+	-Wno-variadic-macros 
+	-Wno-unused-parameter
 	-Werror
 	-Wall 
-#	-Wextra 
+	-Wextra 
 #	-Wpedantic 
-#	-Wno-write-strings
 #	-Wcast-align 
 #	-Wcast-qual 
 #	-Wctor-dtor-privacy 
@@ -198,13 +194,11 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #	-Wold-style-cast 
 #	-Woverloaded-virtual 
 #	-Wredundant-decls 
-#	-Wshadow 
 #	-Wsign-promo 
 #	-Wstrict-null-sentinel 
 #	-Wstrict-overflow=5 
 #	-Wundef 
 #   -Wno-unused 
-#	-Wno-variadic-macros 
 #	-Wno-parentheses 
 #	-fdiagnostics-show-option
 #	-w

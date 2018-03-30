@@ -860,7 +860,7 @@ int new_connection(int s) {
 #else
 	unsigned  int i;
 #endif
-	unsigned  int t;
+	 int t;
 
 	i = sizeof( isa );
 #if 0
