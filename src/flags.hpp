@@ -80,16 +80,19 @@ logDefineStatus(DOFLEEFIGHTINGLD)
 #endif
 /* auto flee se in combat va ld */
 #ifndef EGO
-#define EGO				false
+#define EGO				true
 #else
 logDefineStatus(EGO)
 #endif
+
+
 
 #ifndef EGO_BLADE
 #define EGO_BLADE			true
 #else
 logDefineStatus(EGO_BLADE)
 #endif
+
 
 #ifndef ENABLE_AUCTION
 #define ENABLE_AUCTION		true
@@ -107,6 +110,12 @@ logDefineStatus(EQPESANTE)
 #define FAST_TRACK			true
 #else
 logDefineStatus(FAST_TRACK)
+#endif
+
+#ifndef GROUP_DEATH
+#define GROUP_DEATH			false
+#else
+logDefineStatus(GROUP_DEATH)
 #endif
 
 #ifndef HASH

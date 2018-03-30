@@ -15,7 +15,6 @@ int BestMagicClass(struct char_data* ch) ;
 int BestThiefClass(struct char_data* ch) ;
 int CountBits(int iClass) ;
 int GetALevel(struct char_data* ch, int which) ;
-int GetAverageLevel(struct char_data* ch) ;
 int GetClassLevel(struct char_data* ch, int iClass) ;
 int GetHighClass(struct char_data* ch);
 int GetMaxClass(struct char_data* ch);

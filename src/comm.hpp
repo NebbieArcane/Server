@@ -38,8 +38,6 @@ extern bool no_specials;    /* Suppress ass. of special routines */
 extern long Uptime;            /* time that the game has been up */
 extern int tics;
 
-void CheckCharAffected( char* msg ) ;
-inline void CheckObjectExDesc( char* msg ) ;
 void InitScreen(struct char_data* ch) ;
 void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void* vict_obj, struct obj_data* obj, char* buf);
 char* ParseAnsiColors( int UsingAnsi, const char* txt ) ;
@@ -53,17 +51,14 @@ void close_sockets(int s) ;
 void coma(int s) ;
 void construct_prompt( char* outbuf, struct char_data* ch ) ;
 void flush_queues(struct descriptor_data* d) ;
-void flush_queues(struct descriptor_data* d) ;
 void game_loop(int s) ;
 int get_from_q(struct txt_q* queue, char* dest) ;
 int init_socket(int port) ;
 int run (int argc, const char* argv) ;
 int new_connection(int s) ;
 int new_descriptor(int s) ;
-void nonblock( int s ) ;
 void nonblock(int s) ;
 int process_input(struct descriptor_data* t) ;
-int process_output(struct descriptor_data* t) ;
 int process_output(struct descriptor_data* t) ;
 void raw_force_all( const char* to_force);
 void run_the_game(int port) ;
@@ -85,8 +80,6 @@ int update_max_usage(void) ;
 int write_to_descriptor(int desc, const char* txt) ;
 void write_to_output(const char* txt, struct descriptor_data* t) ;
 void write_to_q(char* txt, struct txt_q* queue) ;
-long GetMediumLag(long lastlag);
-long GetLagIndex();
 } // namespace Alarmud
 #endif
 

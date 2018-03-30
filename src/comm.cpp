@@ -38,6 +38,7 @@
 /***************************  Local    include ************************************/
 #include "comm.hpp"
 #include "auction.hpp"
+#include "act.info.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "ansi_parser.hpp"

@@ -290,7 +290,7 @@ int scan_mail_file(void) {
 
 /* HAS_MAIL */
 /* a simple little function which tells you if the guy has mail or not */
-int        has_mail(char* recipient) {
+int has_mail(char* recipient) {
 	if (find_char_in_index(recipient))
 	{ return 1; }
 	return 0;

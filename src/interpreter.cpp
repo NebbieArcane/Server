@@ -70,8 +70,6 @@ long SystemFlags=0;         /* used for making teleport/astral/stuff not work */
 int plr_tick_count=0;
 
 
-void show_race_choice(struct descriptor_data* d);
-
 /* this is how we tell which race gets which class ! */
 /* to add a new class seletion add the CLASS_NAME above the */
 /* message 'NEW CLASS SELETIONS HERE'  */

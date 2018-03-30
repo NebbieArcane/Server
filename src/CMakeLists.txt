@@ -186,23 +186,26 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #	-Wpedantic 
 	-Wcast-align 
 	-Wcast-qual 
-#	-Wctor-dtor-privacy 
+	-Wctor-dtor-privacy 
 #	-Wdisabled-optimization 
-#	-Winit-self 
-#	-Wlogical-op 
-#	-Wmissing-include-dirs 
+	-Winit-self 
+	-Wlogical-op 
+	-Wmissing-include-dirs 
 	-Wnoexcept 
 #	-Wold-style-cast 
-#	-Woverloaded-virtual 
-#	-Wredundant-decls 
-#	-Wsign-promo 
-#	-Wstrict-null-sentinel 
-#	-Wstrict-overflow=5 
-#	-Wundef 
-#   -Wno-unused 
-#	-Wno-parentheses 
-#	-fdiagnostics-show-option
-#	-w
+	-Woverloaded-virtual 
+	-Wredundant-decls 
+	-Wsign-promo 
+	-Wstrict-null-sentinel 
+	-Wstrict-overflow=5 
+	-Wundef 
+	-Wparentheses 
+	-Wchkp
+	-Wchar-subscripts
+	-Wuninitialized
+	-fdiagnostics-show-option
+	-fdelete-null-pointer-checks
+
 )
 get_cmake_property(_variableNames VARIABLES)
 foreach (_variableName ${_variableNames})

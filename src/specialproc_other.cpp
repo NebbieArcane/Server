@@ -132,9 +132,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "behir",(genericspecial_func) behir },
 	{ "blink",(genericspecial_func) blink },
 	{ "board",(genericspecial_func) board },
-#if !GCC27
 	{ "chess_game",(genericspecial_func) chess_game },
-#endif
 	{ "coldcaster",(genericspecial_func) coldcaster },
 	{ "creceptionist",(genericspecial_func) creceptionist },
 	{ "creeping_death",(genericspecial_func) creeping_death },

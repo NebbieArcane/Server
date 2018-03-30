@@ -111,7 +111,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	cost->no_carried = 0;
 	cost->ok = TRUE; /* Use if any "-1" objects */
 
-#ifdef EGO
+#if EGO
 	/* Chiamata per il controllo dell'EGO dell'eq raro
 	   per evitare che uno possa entrare e rentare
 	   completamente indenne!
