@@ -30,7 +30,7 @@ typedef ITERATE_FUNC((*iterate_func));
 #define COMMAND_FUNC(name) void name(struct char_data* ch, const char* arg, int cmd)
 typedef COMMAND_FUNC((*command_func));
 // Called by findpath
-#define FIND_FUNC(name) int name( int, void*)
+#define FIND_FUNC(name) int name( int room, const void* tgt_room)
 typedef FIND_FUNC((*find_func));
 // Mob/object special procedure
 #define GENERICSPECIAL_FUNC(name) int name( struct char_data* ch, int cmd, const char* arg, void* generic, int type)

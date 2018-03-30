@@ -29,7 +29,7 @@ ACTION_FUNC(do_write) ;
 bool is_same_group( struct char_data* ach, struct char_data* bch ) ;
 char* scrambler(struct char_data* ch,const char* message) ;
 void talk_auction(const char* argument) ;
-void thief_listen(struct char_data* ch,struct char_data* victim, char* frase,int cmd) ;
+void thief_listen(struct char_data* ch,struct char_data* victim,const char* frase,int cmd) ;
 } // namespace Alarmud
 #endif // _ACT_COMM_HPP
 

@@ -195,8 +195,7 @@ void RemoveFromGuildList( int nIndex, const char* szNomeMembro ) {
 
 /*************************************/
 /* predicates for find_path function */
-
-int IsGuildGuardRoomFP( int room, void* tgt_room ) {
+FIND_FUNC(IsGuildGuardRoomFP) {
 	return abs(room) == reinterpret_cast<intptr_t>(tgt_room);
 }
 
@@ -323,8 +322,7 @@ MOBSPECIAL_FUNC(PlayersGuildGuard) {
 		else if( mob->in_room != pDatiGilde[ nIndex ].nGuardiaRoom ) {
 			int iDir;
 
-			iDir = find_path( mob->in_room, IsGuildGuardRoomFP,
-							  reinterpret_cast<void*>(pDatiGilde[ nIndex ].nGuardiaRoom), -5000, 0 );
+			iDir = find_path( mob->in_room, IsGuildGuardRoomFP,reinterpret_cast<const void*>(pDatiGilde[ nIndex ].nGuardiaRoom), -5000, 0 );
 			if( iDir >= 0 ) {
 				go_direction( mob, iDir );
 				return TRUE;
