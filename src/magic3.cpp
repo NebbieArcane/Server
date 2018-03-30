@@ -295,10 +295,20 @@ void spell_haste(byte level, struct char_data* ch,
 
 	af.type      = SPELL_HASTE;
     
-    if (OnlyClass(ch,CLASS_MAGIC_USER|CLASS_SORCERER)) {
-	af.duration  = 4;
-    } else {
-        af.duration  = 1;
+    switch (HowManyClasses(ch)) {
+            
+        case 1:
+            af.duration  = 4;
+            break;
+        case 2:
+            af.duration  = 2;
+            break;
+        case 3:
+            af.duration  = 1;
+            break;
+        default:
+            break;
+            
     }
     
 	af.modifier  = 1;
