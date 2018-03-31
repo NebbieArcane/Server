@@ -4047,7 +4047,7 @@ int trap_obj(struct char_data* ch,int i,char* arg,struct obj_data* obj,int ev) {
 	return (FALSE);
 }
 
-/* Idem come sorap, ma modifica il to-hit */
+/* Idem come spora, ma modifica il to-hit */
 int ModHit(struct char_data* ch,int i,char* arg,struct obj_data* obj,int ev) {
 	int bonus=0;
 	char buf[50];
