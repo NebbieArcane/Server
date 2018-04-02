@@ -31,7 +31,8 @@ MACRO(ODB_GENERATE dbtype header)
     ADD_CUSTOM_COMMAND(
         OUTPUT ${ODB_GENERATED_FILES}
         COMMAND odb 
-        		--profile boost/smart-ptr
+        		--profile boost/smart-ptr 
+        		--profile boost/date-time
         		--std c++11 
         		-d ${dbtype} 
         		--generate-query 
@@ -61,6 +62,7 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
         OUTPUT ${schemaFile}
         COMMAND odb  
         		--profile boost/smart-ptr
+        		--profile boost/date-time
         		--std c++11
         		-m dynamic
         		-d common
@@ -87,15 +89,11 @@ set (MYSQL_USER $ENV{MYSQL_USER})
 set (MYSQL_PASSWORD $ENV{MYSQL_PASSWORD})
 set (MYSQL_HOST $ENV{MYSQL_HOST})
 set (MYSQL_DB $ENV{MYSQL_DB})
-message(STATUS "src")
-foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CXX_KNOWN_FEATURES CMAKE_CURRENT_SOURCE_DIR)
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
-set(CMAKE_C_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
+set(CMAKE_C_FLAGS "-std=c++11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -E -P -C -traditional-cpp")
 #Retrieves headers
 file(GLOB file_hpp LIST_DIRECTORIES false RELATIVE ${CMAKE_SOURCE_DIR}/src/ *.hpp)
@@ -174,11 +172,14 @@ add_custom_command(OUTPUT release.hpp COMMAND ${CMAKE_SOURCE_DIR}/genrelease.sh 
 
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
+#	-Wfatal-errors
 	-Wno-enum-compare
 	-Wno-unknown-pragmas
 	-Wno-variadic-macros 
 	-Wno-unused-parameter
 	-Wno-format-nonliteral
+	-Wno-switch
+	-Wno-unused
 	-Werror
 	-Wall 
 	-Wextra 
@@ -207,10 +208,10 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-fdelete-null-pointer-checks
 
 )
-get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-    #message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
 add_custom_target(style ${CMAKE_SOURCE_DIR}/astyle -r -Q --options=${CMAKE_SOURCE_DIR}/astylerc "./*.cpp,*.hpp")
 #add_custom_command(TARGET ${CMAKE_PROJECT_NAME} PRE_LINK COMMAND echo "Before linking")
 #add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND rm -f release.hpp)
