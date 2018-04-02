@@ -26,8 +26,8 @@ ADD_CUSTOM_COMMAND(
 	COMMENT "Updating release.hpp"
 )
 ADD_CUSTOM_COMMAND(
-	OUTPUT notexists
-	COMMAND git log --pretty=format:"%h" -n1 >${CMAKE_SOURCE_DIR}/lastcommit
+	OUTPUT ${CMAKE_SOURCE_DIR}/lastcommit notexists
+	COMMAND ${CMAKE_SOURCE_DIR}/genlastcommit.sh ${CMAKE_SOURCE_DIR}/lastcommit
 	COMMENT "Updating lastcommit"
 )
 ENDMACRO()
