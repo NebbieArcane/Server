@@ -8,7 +8,8 @@ MACRO(AUTOENUMS)
 		COMMAND ./codegen.sh
 		DEPENDS ${CMAKE_SOURCE_DIR}/shutils/enums.json
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/shutils/
-        COMMENT "Generate autoenums")
+        COMMENT "Generating  autoenums"
+	)
     ADD_CUSTOM_TARGET(autoenums 
     	DEPENDS ${files}
         COMMENT "Checking if re-generation is required for autoenums")
@@ -16,8 +17,19 @@ MACRO(AUTOENUMS)
     ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} autoenums)
     
     target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${files})
-    
-		
+ENDMACRO()
+MACRO(RELEASE)
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${CMAKE_SOURCE_DIR}/src/release.hpp
+	COMMAND ${CMAKE_SOURCE_DIR}/genrelease.sh ${CMAKE_SOURCE_DIR}/src/release.hpp
+	DEPENDS ${CMAKE_SOURCE_DIR}/lastcommit
+	COMMENT "Updating release.hpp"
+)
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${CMAKE_SOURCE_DIR}/lastcommit
+	COMMAND git log --pretty=format:"%h" -n1 >${CMAKE_SOURCE_DIR}/lastcommit
+	COMMENT "Updating lastcommit"
+)
 ENDMACRO()
 MACRO(ODB_GENERATE dbtype header)
     SET(cxxFile "${CMAKE_SOURCE_DIR}/src/odb/${header}-odb.cxx")
@@ -34,32 +46,41 @@ MACRO(ODB_GENERATE dbtype header)
         		--profile boost/smart-ptr 
         		--profile boost/date-time
         		--std c++11 
+        		-m dynamic
+        		-d common
         		-d ${dbtype} 
         		--generate-query 
         		--generate-prepared
                 --show-sloc
          		--generate-session       
+                --schema-format separate
+                --at-once
+                --schema-name ${dbschema}
+                --input-name ${CMAKE_PROJECT_NAME}
                 -o ${CMAKE_SOURCE_DIR}/src/odb
                 ${CMAKE_SOURCE_DIR}/src/odb/${header}.hpp
         DEPENDS ${CMAKE_SOURCE_DIR}/src/odb/${header}.hpp
-        COMMENT "Generate database support code for ${header}.hpp")
-
+        COMMENT "Generate database support code for ${header}.hpp"
+	)
     ADD_CUSTOM_TARGET(${header}.hpp DEPENDS ${ODB_GENERATED_FILES}
-                      COMMENT "Checking if classes regeneration is required for ${header}.hpp")
-
-    ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} ${header}.hpp)
+                      COMMENT "Checking if classes regeneration is required for ${header}.hpp"
+	)
+    ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} ${header}.hpp
+	)
 ENDMACRO()
 MACRO(ODB_GENERATE_DB dbtype dbschema)
-#	set(headers "${ARGN}")
-#	foreach(header IN LISTS headers)
-#	    message(STATUS "Generating ${header}")
-#	    ODB_GENERATE(${dbtype} ${header})
-#	endforeach()
-	ODB_GENERATE(${dbtype} ${dbschema})
-	set(schemaFile "${CMAKE_SOURCE_DIR}/src/odb/${CMAKE_PROJECT_NAME}-schema-${dbtype}.cxx")
-	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${schemaFile})
+#	ODB_GENERATE(${dbtype} ${dbschema})
+    SET(cxxFile 	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb.cxx")
+    SET(hxxFile 	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb.hxx")
+    SET(ixxFile 	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb.ixx")
+	SET(cxxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.cxx")
+	SET(hxxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.hxx")
+	SET(ixxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.ixx")
+	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${cxxFile} ${cxxSchema})
+    SET(ODB_GENERATED_FILES ${cxxFile} ${hxxFile} ${ixxFile} ${cxxSchema} ${hxxSchema} ${ixxSchema})
+
     ADD_CUSTOM_COMMAND(
-        OUTPUT ${schemaFile}
+        OUTPUT ${ODB_GENERATED_FILES}
         COMMAND odb  
         		--profile boost/smart-ptr
         		--profile boost/date-time
@@ -67,21 +88,25 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
         		-m dynamic
         		-d common
         		-d ${dbtype} 
-                --generate-schema-only
+        		--generate-query 
+        		--generate-prepared
+                --show-sloc
+         		--generate-session       
                 --schema-format separate
                 --at-once
                 --schema-name ${dbschema}
-                --input-name ${CMAKE_PROJECT_NAME}
+                --input-name ${dbschema}
                 ${dbschema}.hpp
         DEPENDS ${CMAKE_SOURCE_DIR}/src/odb/${dbschema}.hpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/odb/
-        COMMENT "Generate database schema")
-
-    ADD_CUSTOM_TARGET(${dbschema} DEPENDS ${schemaFile}
-                      COMMENT "Checking if schema regeration is required for ${schemaFile}")
-
-    ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} ${dbschema})
-	
+        COMMENT "Generating  ${ODB_GENERATED_FILES}"
+	)
+    ADD_CUSTOM_TARGET(${dbschema} 
+    	DEPENDS ${ODB_GENERATED_FILES}
+        COMMENT "Checking if ODB Files need to be regenerated from ${dbschema}.hpp"
+	)
+    ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} ${dbschema}
+    )
 ENDMACRO()
 enable_language(CXX)
 set (CMAKE_USE_RELATIVE_PATHS true)
@@ -168,7 +193,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME} ${CRYPT})
 # Generate configuration file
 configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UNIX)
 # Generate release version
-add_custom_command(OUTPUT release.hpp COMMAND ${CMAKE_SOURCE_DIR}/genrelease.sh ${CMAKE_SOURCE_DIR}/src/release.hpp )
+
 
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
@@ -215,6 +240,9 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 add_custom_target(style ${CMAKE_SOURCE_DIR}/astyle -r -Q --options=${CMAKE_SOURCE_DIR}/astylerc "./*.cpp,*.hpp")
 #add_custom_command(TARGET ${CMAKE_PROJECT_NAME} PRE_LINK COMMAND echo "Before linking")
 #add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND rm -f release.hpp)
-add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_PROJECT_NAME} -V && cp -f ${CMAKE_PROJECT_NAME} ${CMAKE_SOURCE_DIR}/mudroot/${CMAKE_PROJECT_NAME})
+add_custom_command(
+	TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_PROJECT_NAME} -V && cp -f ${CMAKE_PROJECT_NAME} ${CMAKE_SOURCE_DIR}/mudroot/${CMAKE_PROJECT_NAME}
+)
+RELEASE()
 ODB_GENERATE_DB(mysql account)
 AUTOENUMS()
