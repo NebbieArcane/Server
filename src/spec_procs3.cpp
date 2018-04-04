@@ -3623,7 +3623,7 @@ int PrimoAlbero( struct char_data* ch, int cmd, char* arg,
 /***************************************************************************
  * LegionariV viene attaccata ai legionari della V legione.
  * Se attaccati si chiamano fra loro, altrimenti attaccano se qualcuno
- * ha l'insegna della V legione (oggetto #14900)
+ * ha l'insegna della V legione (oggetto #14009)
  ***************************************************************************/
 #define OBJ_INSEGNA5LEGIO 14009
 #define IsLegionarioV( ch ) ( (ch)->nr == 12014 || (ch)->nr == 12015 ||                               (ch)->nr == 12016 || (ch)->nr == 12017 ||                               (ch)->nr == 12021 || (ch)->nr == 12038 ||                               (ch)->nr == 12045 )
@@ -4047,7 +4047,7 @@ int trap_obj(struct char_data* ch,int i,char* arg,struct obj_data* obj,int ev) {
 	return (FALSE);
 }
 
-/* Idem come sorap, ma modifica il to-hit */
+/* Idem come spora, ma modifica il to-hit */
 int ModHit(struct char_data* ch,int i,char* arg,struct obj_data* obj,int ev) {
 	int bonus=0;
 	char buf[50];

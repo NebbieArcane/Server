@@ -3181,11 +3181,11 @@ DamageResult hit(struct char_data* ch, struct char_data* victim,
 }
 
 void PCAttacks( char_data* pChar ) {
-    float sAttacks = pChar->mult_att;
 	float fAttacks = pChar->mult_att;
 	struct obj_data* pTmp = NULL;
 	struct obj_data* pWeapon = NULL; // SALVO la setto NULL mi serve per dopo
-	int perc;
+	int perc, dice;
+    float extra_attacks;
 
 	/* Controlla se il tipo e' in parrying, in questo caso
 	   diminuisce gli attacchi di uno per ogni attacco
@@ -3235,14 +3235,32 @@ void PCAttacks( char_data* pChar ) {
     
     if (affected_by_spell(pChar, SPELL_HASTE)) {
      
-        fAttacks += number(0.0,fAttacks);
-        mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
+        extra_attacks = number(0.0,fAttacks);
         
-        if (fAttacks > sAttacks) {
-            mudlog(LOG_CHECK,"riduce il mov di = %d*10",((int)(fAttacks-sAttacks)));
-            GET_MOVE(pChar) -= 10*((int)(fAttacks-sAttacks));
+        /* diamo una mano ai ladri */
+        dice = number(0,2);
+        if(HasClass(pChar, CLASS_THIEF) && dice > 0) {
+            switch(dice) {
+                case 1:
+                    extra_attacks += 0.5;
+                    mudlog(LOG_CHECK,"Adding random 0.5 bonus attack for thieves affected by haste.");
+                    break;
+                case 2:
+                    extra_attacks += 1.0;
+                    mudlog(LOG_CHECK,"Adding random 1 bonus attack for thieves affected by haste.");
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        if (extra_attacks > 0.0) {
+            GET_MOVE(pChar) -= number(1,3)*((int)(extra_attacks));
             alter_move(pChar, 0);
         }
+        
+        fAttacks += extra_attacks;
+        mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
         
     }
 

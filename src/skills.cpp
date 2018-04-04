@@ -1870,7 +1870,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						obj_to_char(hide,ch);
 					}
 					acapply++;
-					acbonus++;
+					acbonus+=3;
 					strcat(hidetype," shield");
 
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 26 */
