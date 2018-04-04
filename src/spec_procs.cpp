@@ -122,8 +122,7 @@ char* how_good(int percent) {
 
 int GainLevel(struct char_data* ch, int iClass) {
 	/* PRIMA DEL NUOVO LIVELLO */
-#ifndef NOREGISTER
-#ifndef SUSPENDREGISTER
+#if not NOREGISTER
 	if (! GET_AUTHBY(ch) && GetMaxLevel(ch)>=CHUMP-2) {
 		if (GetMaxLevel(ch)==CHUMP-2) { /* Sta livellando il decimo */
 			send_to_char("Prima del prossimo livello devi invocare il favore di un Dio! (help register)\n\r",ch);
@@ -133,7 +132,6 @@ int GainLevel(struct char_data* ch, int iClass) {
 			return(FALSE);
 		}
 	}
-#endif
 #endif
 	if (GET_EXP(ch)>=
 			titles[iClass][GET_LEVEL(ch, iClass)+1].exp) {

@@ -2963,7 +2963,7 @@ int LimObj(struct char_data* ch ) { // Gaia 2001
 }
 
 
-char* lower(char* s) {
+char* lower(const char* s) {
 	static char c[1000];
 	static char* p;
 	int i=0;

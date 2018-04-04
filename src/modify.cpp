@@ -1033,10 +1033,10 @@ void check_reboot() {
 	static int shutdownlevel=0;
 	static int forceshutdown=0;
 	char REBOOTFILE[15];
-	if (GetMediumLag(0)> 400000) {
+	if (GetLagIndex()> 400000) {
 		if (TooMuchLag<20) { TooMuchLag++; }
 	}
-	if (GetMediumLag(0)<250000) {
+	if (GetLagIndex()<250000) {
 		if (TooMuchLag>-20)  { TooMuchLag--; }
 	}
 

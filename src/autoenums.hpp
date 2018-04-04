@@ -277,13 +277,15 @@ l'array connected_types in constants.cpp*/
 	CON_CONF_ROLL                                =36,
 	CON_EXTRA2                                   =37,
 	CON_OBJ_FORGING                              =38,
-	CON_ACCOUNT_NAME                             =39,
-	CON_ACCOUNT_PWD                              =40,
-	CON_ACCOUNT_TOON                             =41
+	CON_ACCOUNT_NAME                             =39, /*Richiesto login sull'account'*/
+	CON_ACCOUNT_PWD                              =40, /*Email riconosciuta, chiediamo la password*/
+	CON_ACCOUNT_TOON                             =41, /*Account password ok, propongo lista personaggi*/
+	CON_REGISTER                                =42, /*Connetto il pg all'accountutto pronto, lo riconnetto o mando al menu*/
+	CON_PWDOK                                    =43 /*Tutto pronto, lo riconnetto o mando al menu*/
 };
-#define E_CONNECTION_TYPES_COUNT 42
+#define E_CONNECTION_TYPES_COUNT 43
 #define E_CONNECTION_TYPES_MIN 0
-#define E_CONNECTION_TYPES_MAX 41
+#define E_CONNECTION_TYPES_MAX 42
 #define E_CONNECTION_TYPES_KEY "e_connection_types"
 
 #define E_CONNECTION_TYPES_ACCEPT_ZERO true
@@ -684,22 +686,23 @@ Some different kind of liquids*/
 
 // Enum type: E_LOG_LEVELS -- start
 enum e_log_levels {
-	LOG_SYSERR                                   =1,
-	LOG_CHECK                                    =2,
-	LOG_PLAYERS                                  =4,
-	LOG_MOBILES                                  =8,
-	LOG_CONNECT                                  =16,
-	LOG_ERROR                                    =32,
-	LOG_WHO                                      =64,
-	LOG_SAVE                                     =128,
-	LOG_MAIL                                     =256,
-	LOG_RANK                                     =512,
-	LOG_ALWAYS                                   =1024,
-	LOG_SILENT                                   =32768
+	LOG_ALWAYS                                   =0, /*Shown at verbosity 0 and above*/
+	LOG_SYSERR                                   =1, /*Shown at verbosity 1 and above*/
+	LOG_CHECK                                    =2, /*Shown at verbosity 3 and above*/
+	LOG_PLAYERS                                  =4, /*Shown at verbosity 4 and above*/
+	LOG_MOBILES                                  =8, /*Shown at verbosity 4 and above*/
+	LOG_CONNECT                                  =16, /*Shown at verbosity 2 and above*/
+	LOG_ERROR                                    =32, /*Shown at verbosity 2 and above*/
+	LOG_WHO                                      =64, /*Shown at verbosity 6 and above*/
+	LOG_SAVE                                     =128, /*Shown at verbosity 5 and above*/
+	LOG_MAIL                                     =256, /*Shown at verbosity 5 and above*/
+	LOG_RANK                                     =512, /*Shown at verbosity 5 and above*/
+	LOG_WORLD                                    =1024, /*Shown at verbosity 6 and above*/
+	LOG_QUERY                                    =2048 /*Shown at verbosity 5 and above*/
 };
-#define E_LOG_LEVELS_COUNT 12
-#define E_LOG_LEVELS_MIN 1
-#define E_LOG_LEVELS_MAX 32768
+#define E_LOG_LEVELS_COUNT 13
+#define E_LOG_LEVELS_MIN 0
+#define E_LOG_LEVELS_MAX 2048
 #define E_LOG_LEVELS_KEY "e_log_levels"
 
 #define E_LOG_LEVELS_ACCEPT_ZERO true
@@ -1374,7 +1377,7 @@ extern e_liquids encode_e_liquids(std::string s,e_liquids fallback = LIQ_WATER);
 extern std::string translate(const e_liquids e);
 extern bool enum_validate(const e_liquids value);
 extern std::ostream & operator<<(std::ostream &out,const e_liquids value);
-extern e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback = LOG_SYSERR);
+extern e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback = LOG_ALWAYS);
 extern std::string translate(const e_log_levels e);
 extern bool enum_validate(const e_log_levels value);
 extern std::ostream & operator<<(std::ostream &out,const e_log_levels value);

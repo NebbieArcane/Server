@@ -710,7 +710,7 @@ void assign_the_shopkeepers() {
 		mob_index[shop_index[temp1].keeper].func = reinterpret_cast<genericspecial_func>(shop_keeper);
 		mob_index[shop_index[temp1].keeper].specname = strdup("shop_keeper");
 		mob_index[shop_index[temp1].keeper].specparms = strdup("none");
-		mudlog(LOG_CHECK,"%d. Loaded %s (%d)",
+		mudlog(LOG_WORLD,"%d. Loaded %s (%d)",
 			   temp1,
 			   mob_index[shop_index[temp1].keeper].name,
 			   mob_index[shop_index[temp1].keeper].iVNum);

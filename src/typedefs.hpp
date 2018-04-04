@@ -6,6 +6,7 @@
 #define SRC_TYPEDEFS_HPP_
 /***************************  System  include ************************************/
 //#include <sys/types.h>
+#include <string>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
@@ -22,8 +23,9 @@ enum DamageResult {
 struct char_data;
 struct room_data;
 struct obj_data;
-#define DAMAGE_FUNC(name) DamageResult damage_func( struct char_data*,struct char_data*,int, int, int )
+#define DAMAGE_FUNC(name) DamageResult name( struct char_data*,struct char_data*,int, int, int )
 typedef DAMAGE_FUNC((*damage_func));
+
 #define ITERATE_FUNC(name) void name ( int, struct room_data*, void* )
 typedef ITERATE_FUNC((*iterate_func));
 //do_<something>
@@ -56,6 +58,10 @@ typedef SCRIPT_FUNC((*script_func)) ;
 
 #define ACTION_FUNC(name) void name( struct char_data* ch, const char* arg, int cmd)
 typedef ACTION_FUNC((*action_func)) ;
+
+#define NANNY_FUNC(name) bool name(struct descriptor_data* d)
+typedef NANNY_FUNC((*nanny_func));
+
 
 
 } // namespace Alarmud

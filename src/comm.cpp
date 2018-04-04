@@ -25,6 +25,9 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <pwd.h>
+#include <string>
+#include <chrono>
+#include <thread>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -36,7 +39,6 @@
 #include "utils.hpp"
 
 /***************************  Local    include ************************************/
-#include "comm.hpp"
 #include "auction.hpp"
 #include "act.info.hpp"
 #include "act.other.hpp"
@@ -58,8 +60,13 @@
 #include "spell_parser.hpp"
 #include "vt100c.hpp"
 #include "weather.hpp"
+#include "comm.hpp"
 
 namespace Alarmud {
+using std::chrono::steady_clock;
+using std::chrono::microseconds;
+using std::chrono::time_point;
+using std::chrono::duration_cast;
 
 #define PIDFILE "myst.pid"
 #define MAXIDLESTARTTIME 1000
@@ -71,7 +78,6 @@ namespace Alarmud {
 #define DFLT_PORT 4000        /* default port */
 #define MAX_NAME_LENGTH 15
 #define MAX_HOSTNAME   256
-#define OPT_USEC 250000       /* time delay corresponding to 4 passes/sec */
 
 #define STATE(d) ((d)->connected)
 
@@ -93,9 +99,9 @@ long Uptime;            /* time that the game has been up */
 int maxdesc, avail_descs;
 int tics = 0;        /* for extern checkpointing */
 
-int NumTimeCheck = PULSE_MOBILE; /* dovrebbe essere il piu` grande dei PULSE */
-struct timeval aTimeCheck[ PULSE_MOBILE ];
-int gnTimeCheckIndex = 0;
+
+uint64_t aTimeCheck[ PULSE_MOBILE ];
+uint16_t NumTimeCheck = sizeof(aTimeCheck); /* dovrebbe essere il piu` grande dei PULSE */
 
 
 struct affected_type*  Check_hjp, *Check_old_af;
@@ -255,7 +261,7 @@ void run_the_game(int port) {
 	LOG_FATAL("Verbosity 1: LSYSERR LSERVICE error level enabled");
 	LOG_ALERT("Verbosity 2: LERROR LCONNECT error level also enabled");
 	LOG_WARN( "Verbosity 3: LCHECK error level also enabled");
-	LOG_INFO( "Verbosity 4: LPLAYERS error level also enabled");
+	LOG_INFO( "Verbosity 4: LPLAYERS LMOBILES error level also enabled");
 	LOG_TRACE("Verbosity 5: LSAVE,LMAIL,LRANK error level also enabled");
 	LOG_DBG(  "Verbosity 6: LWHO error level also enabled");
 
@@ -276,38 +282,24 @@ void run_the_game(int port) {
 void game_loop(int s) {
 	fd_set input_set, output_set, exc_set;
 
-	struct timeval last_time, now, timespent, timeout, null_time;
 	static struct timeval opt_time;
 	char comm[MAX_INPUT_LENGTH];
 	char promptbuf[255];
 	struct descriptor_data* point, *next_point;
 
-	int idx;
-
-	null_time.tv_sec = 0;
-	null_time.tv_usec = 0;
-
-	opt_time.tv_usec = OPT_USEC;  /* Init time values */
-	opt_time.tv_sec = 0;
-	gettimeofday(&last_time, nullptr);
-
-	for( idx = 0; idx < NumTimeCheck; idx++ )
-	{ aTimeCheck[ idx ] = last_time; }
+	for( uint i = 0; i < sizeof(aTimeCheck); i++ ){
+		aTimeCheck[ i ] = OPT_USEC;
+	}
 
 	maxdesc = s;
 
 
 	/* !! Change if more needed !! */
 	avail_descs = getdtablesize() - 2; /* never used, pointless? */
-
-
+	std::chrono::time_point<steady_clock,steady_clock::duration> next_tick=steady_clock::now();
 	/* Main loop */
 	while( !mudshutdown ) {
-		/* Valore medio del lag */
-		GetMediumLag(GetLagIndex());
-
-		/* Check what's happening out there */
-
+		next_tick+= microseconds(OPT_USEC); // In caso di lag, il tick successivo avviene prima
 		FD_ZERO(&input_set);
 		FD_ZERO(&output_set);
 		FD_ZERO(&exc_set);
@@ -327,18 +319,10 @@ void game_loop(int s) {
 		}
 
 
-		/* check out the time */
-
-		aTimeCheck[ gnTimeCheckIndex ] = now;
-		gnTimeCheckIndex++;
-		if( gnTimeCheckIndex >= NumTimeCheck )
-		{ gnTimeCheckIndex = 0; }
-
-
 		/**
 		 * Select called with null time do not block
 		 */
-
+		static timeval null_time({0,0});
 		if (select(maxdesc + 1, &input_set, &output_set, &exc_set, &null_time)
 				< 0) {
 			mudlog(LOG_ERROR,"Select poll: %s",strerror(errno));
@@ -349,35 +333,16 @@ void game_loop(int s) {
 			}
 		}
 		/**
-		 * Select called with no descriptor and a timeout, it's basically a sleep call
-		 * In timeout we calculated the next tick reference accounting for the time spent housekeeping
+		 * Changed timing out selct with thread_sleep as a first step to a multithuread version
+		 * We could at least move the non playing sockets to their own thread
 		 */
 		do {
-			gettimeofday(&now, nullptr);
-			timespent = timediff(&now, &last_time);
-			timeout = timediff(&opt_time, &timespent);
-			last_time.tv_sec = now.tv_sec + timeout.tv_sec;
-			last_time.tv_usec = now.tv_usec + timeout.tv_usec;
-			if (last_time.tv_usec >= 1000000) {
-				last_time.tv_usec -= 1000000;
-				last_time.tv_sec++;
-			}
-			if (timeout.tv_sec>0 or timeout.tv_usec>0) {
-				if (select(0, (fd_set*) 0, (fd_set*) 0, (fd_set*) 0, &timeout) < 0) {
-					mudlog(LOG_CHECK,"Select sleep: %s",strerror(errno));
-					/*assert(0);*/
-				}
-			}
-			else {
-				break;
-			}
+			  std::this_thread::sleep_until(next_tick);
 		}
-		while(errno==EINTR);
+		while(next_tick > steady_clock::now());
 
 
 		/* Respond to whatever might be happening */
-		SetStatus( STATUS_INITLOOP, "Check if new connection" );
-
 		/* New connection? */
 		if( FD_ISSET( s, &input_set ) ) {
 			mudlog( LOG_CONNECT, "New connection started" );
@@ -389,8 +354,6 @@ void game_loop(int s) {
 
 		/* kick out the freaky folks */
 		/* Se ci sono eccezioni sul descrittore lo chiude */
-		SetStatus( STATUS_INITLOOP, "Check delle connesioni attive" );
-
 		for (point = descriptor_list; point; point = next_point) {
 			next_point = point->next;
 			if( FD_ISSET( point->descriptor, &exc_set ) ) {
@@ -592,6 +555,22 @@ void game_loop(int s) {
 		}
 
 		tics++;        /* tics since last checkpoint signal */
+		/**
+		 * Changed timing out select with thread_sleep as a first step to a multithuread version
+		 * We could at least move the non playing sockets to their own thread
+		 * Also moved to the end of the loop
+		 */
+		microseconds lag(1);
+		do {
+			  std::this_thread::sleep_until(next_tick);
+			  lag=duration_cast<microseconds>(steady_clock::now()-next_tick);
+		}
+		while(lag.count()<0);
+		/* check out the time */
+		aTimeCheck[ NumTimeCheck % sizeof(aTimeCheck)] = lag.count()+OPT_USEC;
+		NumTimeCheck++;
+
+
 	} /* main loop ebd */
 }
 
@@ -678,16 +657,13 @@ void write_to_output(const char* txt, struct descriptor_data* t) {
 	if (t->bufptr < 0 || !txt) {
 		return;
 	}
-	PushStatus("write_to_output");
 	/* if we have enough space, just write to buffer and that's it! */
 	if (t->bufspace >= size) {
 		snprintf(tmpoutbuf,127,"wto: output=%ld bufptr=%ld size=%d/%d txt=%s",
 				 (long)t->output,(long)t->bufptr,size,SMALL_BUFSIZE,txt);
 		tmpoutbuf[127]=0;
-		PushStatus (tmpoutbuf);
 		strcat(t->output, txt);
 
-		PopStatus();
 		t->bufspace -= size;
 		t->bufptr = strlen(t->output);
 
@@ -700,8 +676,7 @@ void write_to_output(const char* txt, struct descriptor_data* t) {
 			t->bufptr = -1;
 			buf_overflows++;
 			mudlog( LOG_ERROR, "over flow stat in write_to_output, comm.c");
-			PopStatus();
-			return;
+						return;
 		}
 
 		buf_switches++;
@@ -723,8 +698,7 @@ void write_to_output(const char* txt, struct descriptor_data* t) {
 		t->bufspace = LARGE_BUFSIZE-1 - strlen(t->output);
 		t->bufptr = strlen(t->output);
 	}
-	PopStatus();
-}
+	}
 #endif
 
 /**
@@ -916,10 +890,8 @@ int new_descriptor(int s) {
 
 		for (d = descriptor_list; d; d = d->next) {
 			if (!d->character) {
-				PushStatus("Sbatto fuori i linkdead");
-				close_socket(d);
-				PopStatus();
-			}
+								close_socket(d);
+							}
 
 		}
 		return(0);
@@ -939,10 +911,8 @@ int new_descriptor(int s) {
 		close(desc);
 		for (d = descriptor_list; d; d = d->next) {
 			if (!d->character) {
-				PushStatus("Fallita allocazione newd");
-				close_socket(d);
-				PopStatus();
-			}
+								close_socket(d);
+							}
 
 		}
 		return(0);
@@ -1015,7 +985,9 @@ int new_descriptor(int s) {
 	SEND_TO_Q( login, newd );
 	SEND_TO_Q(
 		ParseAnsiColors(TRUE,"$c0007"
-						"Come vuoi essere conosciuto su Nebbie Arcane? "),
+						"$c0011Inserisci l'$c0012email del tuo account$c0011 o il $c0004nome$c0011 di un personaggio.\r\n"
+				        "Se non hai un account, potrai crearlo in gioco col comando `register`.\r\n"
+						"$c0007Come vuoi essere conosciuto su Nebbie Arcane? "),
 		newd );
 
 	return(0);
@@ -1267,11 +1239,8 @@ void close_sockets(int s) {
 	mudlog( LOG_CHECK, "Closing all sockets.");
 
 	while (descriptor_list) {
-		PushStatus("close_sockets");
 		close_socket(descriptor_list);
-		PopStatus();
 	}
-
 	close(s);
 }
 
@@ -1371,10 +1340,8 @@ void close_socket(struct descriptor_data* d) {
 				d->showstr_head=0;
 			}
 		}
-		PushStatus("Before free in comm.c close_socket");
-		free(d);
-		PopStatus();
-	}
+				free(d);
+			}
 
 }
 

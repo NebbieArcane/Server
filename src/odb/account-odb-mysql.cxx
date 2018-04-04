@@ -28,18 +28,2342 @@
 
 namespace odb
 {
+  // toonExtra
+  //
+
+  template struct query_columns<
+    ::Alarmud::toonExtra,
+    id_mysql,
+    access::object_traits_impl< ::Alarmud::toonExtra, id_mysql > >;
+
+  struct access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::extra_statement_cache_type
+  {
+    extra_statement_cache_type (
+      mysql::connection&,
+      image_type&,
+      id_image_type&,
+      mysql::binding&,
+      mysql::binding&)
+    {
+    }
+  };
+
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::id_type
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  id (const image_type& i)
+  {
+    mysql::database* db (0);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    id_type id;
+    {
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        id,
+        i.name_value,
+        i.name_size,
+        i.name_null);
+    }
+
+    return id;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  grow (image_type& i,
+        my_bool* t)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (t);
+
+    bool grew (false);
+
+    // name
+    //
+    if (t[0UL])
+    {
+      i.name_value.capacity (i.name_size);
+      grew = true;
+    }
+
+    // classes
+    //
+    if (t[1UL])
+    {
+      i.classes_value.capacity (i.classes_size);
+      grew = true;
+    }
+
+    return grew;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  bind (MYSQL_BIND* b,
+        image_type& i,
+        mysql::statement_kind sk)
+  {
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    using namespace mysql;
+
+    std::size_t n (0);
+
+    // name
+    //
+    if (sk != statement_update)
+    {
+      b[n].buffer_type = MYSQL_TYPE_STRING;
+      b[n].buffer = i.name_value.data ();
+      b[n].buffer_length = static_cast<unsigned long> (
+        i.name_value.capacity ());
+      b[n].length = &i.name_size;
+      b[n].is_null = &i.name_null;
+      n++;
+    }
+
+    // classes
+    //
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.classes_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.classes_value.capacity ());
+    b[n].length = &i.classes_size;
+    b[n].is_null = &i.classes_null;
+    n++;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  bind (MYSQL_BIND* b, id_image_type& i)
+  {
+    std::size_t n (0);
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.id_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.id_value.capacity ());
+    b[n].length = &i.id_size;
+    b[n].is_null = &i.id_null;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  init (image_type& i,
+        const object_type& o,
+        mysql::statement_kind sk)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    using namespace mysql;
+
+    bool grew (false);
+
+    // name
+    //
+    if (sk == statement_insert)
+    {
+      ::std::string const& v =
+        o.name;
+
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.name_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.name_value,
+        size,
+        is_null,
+        v);
+      i.name_null = is_null;
+      i.name_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.name_value.capacity ());
+    }
+
+    // classes
+    //
+    {
+      ::std::string const& v =
+        o.classes;
+
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.classes_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.classes_value,
+        size,
+        is_null,
+        v);
+      i.classes_null = is_null;
+      i.classes_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.classes_value.capacity ());
+    }
+
+    return grew;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  init (object_type& o,
+        const image_type& i,
+        database* db)
+  {
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    // name
+    //
+    {
+      ::std::string& v =
+        o.name;
+
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        v,
+        i.name_value,
+        i.name_size,
+        i.name_null);
+    }
+
+    // classes
+    //
+    {
+      ::std::string& v =
+        o.classes;
+
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        v,
+        i.classes_value,
+        i.classes_size,
+        i.classes_null);
+    }
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  init (id_image_type& i, const id_type& id)
+  {
+    bool grew (false);
+    {
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.id_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.id_value,
+        size,
+        is_null,
+        id);
+      i.id_null = is_null;
+      i.id_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.id_value.capacity ());
+    }
+
+    if (grew)
+      i.version++;
+  }
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::persist_statement[] =
+  "INSERT INTO `toonExtra` "
+  "(`name`, "
+  "`classes`) "
+  "VALUES "
+  "(?, ?)";
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::find_statement[] =
+  "SELECT "
+  "`toonExtra`.`name`, "
+  "`toonExtra`.`classes` "
+  "FROM `toonExtra` "
+  "WHERE `toonExtra`.`name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::update_statement[] =
+  "UPDATE `toonExtra` "
+  "SET "
+  "`classes`=? "
+  "WHERE `name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::erase_statement[] =
+  "DELETE FROM `toonExtra` "
+  "WHERE `name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::query_statement[] =
+  "SELECT "
+  "`toonExtra`.`name`, "
+  "`toonExtra`.`classes` "
+  "FROM `toonExtra`";
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::erase_query_statement[] =
+  "DELETE FROM `toonExtra`";
+
+  const char access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::table_name[] =
+  "`toonExtra`";
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  persist (database& db, const object_type& obj)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    callback (db,
+              obj,
+              callback_event::pre_persist);
+
+    image_type& im (sts.image ());
+    binding& imb (sts.insert_image_binding ());
+
+    if (init (im, obj, statement_insert))
+      im.version++;
+
+    if (im.version != sts.insert_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_insert);
+      sts.insert_image_version (im.version);
+      imb.version++;
+    }
+
+    insert_statement& st (sts.persist_statement ());
+    if (!st.execute ())
+      throw object_already_persistent ();
+
+    callback (db,
+              obj,
+              callback_event::post_persist);
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  update (database& db, const object_type& obj)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    using namespace mysql;
+    using mysql::update_statement;
+
+    callback (db, obj, callback_event::pre_update);
+
+    mysql::transaction& tr (mysql::transaction::current ());
+    mysql::connection& conn (tr.connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    const id_type& id (
+      obj.name);
+    id_image_type& idi (sts.id_image ());
+    init (idi, id);
+
+    image_type& im (sts.image ());
+    if (init (im, obj, statement_update))
+      im.version++;
+
+    bool u (false);
+    binding& imb (sts.update_image_binding ());
+    if (im.version != sts.update_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_update);
+      sts.update_image_version (im.version);
+      imb.version++;
+      u = true;
+    }
+
+    binding& idb (sts.id_image_binding ());
+    if (idi.version != sts.update_id_image_version () ||
+        idb.version == 0)
+    {
+      if (idi.version != sts.id_image_version () ||
+          idb.version == 0)
+      {
+        bind (idb.bind, idi);
+        sts.id_image_version (idi.version);
+        idb.version++;
+      }
+
+      sts.update_id_image_version (idi.version);
+
+      if (!u)
+        imb.version++;
+    }
+
+    update_statement& st (sts.update_statement ());
+    if (st.execute () == 0)
+      throw object_not_persistent ();
+
+    callback (db, obj, callback_event::post_update);
+    pointer_cache_traits::update (db, obj);
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  erase (database& db, const id_type& id)
+  {
+    using namespace mysql;
+
+    ODB_POTENTIALLY_UNUSED (db);
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    id_image_type& i (sts.id_image ());
+    init (i, id);
+
+    binding& idb (sts.id_image_binding ());
+    if (i.version != sts.id_image_version () || idb.version == 0)
+    {
+      bind (idb.bind, i);
+      sts.id_image_version (i.version);
+      idb.version++;
+    }
+
+    if (sts.erase_statement ().execute () != 1)
+      throw object_not_persistent ();
+
+    pointer_cache_traits::erase (db, id);
+  }
+
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::pointer_type
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  find (database& db, const id_type& id)
+  {
+    using namespace mysql;
+
+    {
+      pointer_type p (pointer_cache_traits::find (db, id));
+
+      if (!pointer_traits::null_ptr (p))
+        return p;
+    }
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    if (l.locked ())
+    {
+      if (!find_ (sts, &id))
+        return pointer_type ();
+    }
+
+    pointer_type p (
+      access::object_factory<object_type, pointer_type>::create ());
+    pointer_traits::guard pg (p);
+
+    pointer_cache_traits::insert_guard ig (
+      pointer_cache_traits::insert (db, id, p));
+
+    object_type& obj (pointer_traits::get_ref (p));
+
+    if (l.locked ())
+    {
+      select_statement& st (sts.find_statement ());
+      ODB_POTENTIALLY_UNUSED (st);
+
+      callback (db, obj, callback_event::pre_load);
+      init (obj, sts.image (), &db);
+      load_ (sts, obj, false);
+      sts.load_delayed (0);
+      l.unlock ();
+      callback (db, obj, callback_event::post_load);
+      pointer_cache_traits::load (ig.position ());
+    }
+    else
+      sts.delay_load (id, obj, ig.position ());
+
+    ig.release ();
+    pg.release ();
+    return p;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  find (database& db, const id_type& id, object_type& obj)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    if (!find_ (sts, &id))
+      return false;
+
+    select_statement& st (sts.find_statement ());
+    ODB_POTENTIALLY_UNUSED (st);
+
+    reference_cache_traits::position_type pos (
+      reference_cache_traits::insert (db, id, obj));
+    reference_cache_traits::insert_guard ig (pos);
+
+    callback (db, obj, callback_event::pre_load);
+    init (obj, sts.image (), &db);
+    load_ (sts, obj, false);
+    sts.load_delayed (0);
+    l.unlock ();
+    callback (db, obj, callback_event::post_load);
+    reference_cache_traits::load (pos);
+    ig.release ();
+    return true;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  reload (database& db, object_type& obj)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    const id_type& id  (
+      obj.name);
+
+    if (!find_ (sts, &id))
+      return false;
+
+    select_statement& st (sts.find_statement ());
+    ODB_POTENTIALLY_UNUSED (st);
+
+    callback (db, obj, callback_event::pre_load);
+    init (obj, sts.image (), &db);
+    load_ (sts, obj, true);
+    sts.load_delayed (0);
+    l.unlock ();
+    callback (db, obj, callback_event::post_load);
+    return true;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  find_ (statements_type& sts,
+         const id_type* id)
+  {
+    using namespace mysql;
+
+    id_image_type& i (sts.id_image ());
+    init (i, *id);
+
+    binding& idb (sts.id_image_binding ());
+    if (i.version != sts.id_image_version () || idb.version == 0)
+    {
+      bind (idb.bind, i);
+      sts.id_image_version (i.version);
+      idb.version++;
+    }
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    select_statement& st (sts.find_statement ());
+
+    st.execute ();
+    auto_result ar (st);
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      if (grow (im, sts.select_image_truncated ()))
+        im.version++;
+
+      if (im.version != sts.select_image_version ())
+      {
+        bind (imb.bind, im, statement_select);
+        sts.select_image_version (im.version);
+        imb.version++;
+        st.refetch ();
+      }
+    }
+
+    return r != select_statement::no_data;
+  }
+
+  result< access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::object_type >
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    std::string text (query_statement);
+    if (!q.empty ())
+    {
+      text += " ";
+      text += q.clause ();
+    }
+
+    q.init_parameters ();
+    shared_ptr<select_statement> st (
+      new (shared) select_statement (
+        conn,
+        text,
+        false,
+        true,
+        q.parameters_binding (),
+        imb));
+
+    st->execute ();
+
+    shared_ptr< odb::object_result_impl<object_type> > r (
+      new (shared) mysql::object_result_impl<object_type> (
+        q, st, sts, 0));
+
+    return result<object_type> (r);
+  }
+
+  result< access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::object_type >
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  query (database& db, const odb::query_base& q)
+  {
+    return query (db, query_base_type (q));
+  }
+
+  unsigned long long access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  erase_query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    std::string text (erase_query_statement);
+    if (!q.empty ())
+    {
+      text += ' ';
+      text += q.clause ();
+    }
+
+    q.init_parameters ();
+    delete_statement st (
+      conn,
+      text,
+      q.parameters_binding ());
+
+    return st.execute ();
+  }
+
+  unsigned long long access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  erase_query (database& db, const odb::query_base& q)
+  {
+    return erase_query (db, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      static_cast<mysql::connection&> (c));
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    std::string text (query_statement);
+    if (!q.empty ())
+    {
+      text += " ";
+      text += q.clause ();
+    }
+
+    shared_ptr<mysql::prepared_query_impl> r (
+      new (shared) mysql::prepared_query_impl (conn));
+    r->name = n;
+    r->execute = &execute_query;
+    r->query = q;
+    r->stmt.reset (
+      new (shared) select_statement (
+        conn,
+        text,
+        false,
+        true,
+        r->query.parameters_binding (),
+        imb));
+
+    return r;
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  prepare_query (connection& c, const char* n, const odb::query_base& q)
+  {
+    return prepare_query (c, n, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::
+  execute_query (prepared_query_impl& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::prepared_query_impl& pq (
+      static_cast<mysql::prepared_query_impl&> (q));
+    shared_ptr<select_statement> st (
+      odb::details::inc_ref (
+        static_cast<select_statement*> (pq.stmt.get ())));
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    // The connection used by the current transaction and the
+    // one used to prepare this statement must be the same.
+    //
+    assert (&conn == &st->connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    pq.query.init_parameters ();
+    st->execute ();
+
+    return shared_ptr<result_impl> (
+      new (shared) mysql::object_result_impl<object_type> (
+        pq.query, st, sts, 0));
+  }
+
+  static const
+  access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  function_table_type function_table_Alarmud_toonExtra_ =
+  {
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::persist,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::find,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::find,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::reload,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::update,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::erase,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::erase,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::query,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::erase_query,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::prepare_query,
+    &access::object_traits_impl< ::Alarmud::toonExtra, id_mysql >::execute_query
+  };
+
+  static const object_function_table_entry< ::Alarmud::toonExtra, id_mysql >
+  function_table_entry_Alarmud_toonExtra_ (
+    &function_table_Alarmud_toonExtra_);
+
+  // toonRent
+  //
+
+  template struct query_columns<
+    ::Alarmud::toonRent,
+    id_mysql,
+    access::object_traits_impl< ::Alarmud::toonRent, id_mysql > >;
+
+  struct access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::extra_statement_cache_type
+  {
+    extra_statement_cache_type (
+      mysql::connection&,
+      image_type&,
+      id_image_type&,
+      mysql::binding&,
+      mysql::binding&)
+    {
+    }
+  };
+
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::id_type
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  id (const image_type& i)
+  {
+    mysql::database* db (0);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    id_type id;
+    {
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        id,
+        i.name_value,
+        i.name_size,
+        i.name_null);
+    }
+
+    return id;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  grow (image_type& i,
+        my_bool* t)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (t);
+
+    bool grew (false);
+
+    // name
+    //
+    if (t[0UL])
+    {
+      i.name_value.capacity (i.name_size);
+      grew = true;
+    }
+
+    // vnum
+    //
+    t[1UL] = 0;
+
+    return grew;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  bind (MYSQL_BIND* b,
+        image_type& i,
+        mysql::statement_kind sk)
+  {
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    using namespace mysql;
+
+    std::size_t n (0);
+
+    // name
+    //
+    if (sk != statement_update)
+    {
+      b[n].buffer_type = MYSQL_TYPE_STRING;
+      b[n].buffer = i.name_value.data ();
+      b[n].buffer_length = static_cast<unsigned long> (
+        i.name_value.capacity ());
+      b[n].length = &i.name_size;
+      b[n].is_null = &i.name_null;
+      n++;
+    }
+
+    // vnum
+    //
+    b[n].buffer_type = MYSQL_TYPE_LONGLONG;
+    b[n].is_unsigned = 1;
+    b[n].buffer = &i.vnum_value;
+    b[n].is_null = &i.vnum_null;
+    n++;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  bind (MYSQL_BIND* b, id_image_type& i)
+  {
+    std::size_t n (0);
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.id_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.id_value.capacity ());
+    b[n].length = &i.id_size;
+    b[n].is_null = &i.id_null;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  init (image_type& i,
+        const object_type& o,
+        mysql::statement_kind sk)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    using namespace mysql;
+
+    bool grew (false);
+
+    // name
+    //
+    if (sk == statement_insert)
+    {
+      ::std::string const& v =
+        o.name;
+
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.name_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.name_value,
+        size,
+        is_null,
+        v);
+      i.name_null = is_null;
+      i.name_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.name_value.capacity ());
+    }
+
+    // vnum
+    //
+    {
+      long unsigned int const& v =
+        o.vnum;
+
+      bool is_null (false);
+      mysql::value_traits<
+          long unsigned int,
+          mysql::id_ulonglong >::set_image (
+        i.vnum_value, is_null, v);
+      i.vnum_null = is_null;
+    }
+
+    return grew;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  init (object_type& o,
+        const image_type& i,
+        database* db)
+  {
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    // name
+    //
+    {
+      ::std::string& v =
+        o.name;
+
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        v,
+        i.name_value,
+        i.name_size,
+        i.name_null);
+    }
+
+    // vnum
+    //
+    {
+      long unsigned int& v =
+        o.vnum;
+
+      mysql::value_traits<
+          long unsigned int,
+          mysql::id_ulonglong >::set_value (
+        v,
+        i.vnum_value,
+        i.vnum_null);
+    }
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  init (id_image_type& i, const id_type& id)
+  {
+    bool grew (false);
+    {
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.id_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.id_value,
+        size,
+        is_null,
+        id);
+      i.id_null = is_null;
+      i.id_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.id_value.capacity ());
+    }
+
+    if (grew)
+      i.version++;
+  }
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::persist_statement[] =
+  "INSERT INTO `toonRent` "
+  "(`name`, "
+  "`vnum`) "
+  "VALUES "
+  "(?, ?)";
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::find_statement[] =
+  "SELECT "
+  "`toonRent`.`name`, "
+  "`toonRent`.`vnum` "
+  "FROM `toonRent` "
+  "WHERE `toonRent`.`name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::update_statement[] =
+  "UPDATE `toonRent` "
+  "SET "
+  "`vnum`=? "
+  "WHERE `name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::erase_statement[] =
+  "DELETE FROM `toonRent` "
+  "WHERE `name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::query_statement[] =
+  "SELECT "
+  "`toonRent`.`name`, "
+  "`toonRent`.`vnum` "
+  "FROM `toonRent`";
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::erase_query_statement[] =
+  "DELETE FROM `toonRent`";
+
+  const char access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::table_name[] =
+  "`toonRent`";
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  persist (database& db, const object_type& obj)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    callback (db,
+              obj,
+              callback_event::pre_persist);
+
+    image_type& im (sts.image ());
+    binding& imb (sts.insert_image_binding ());
+
+    if (init (im, obj, statement_insert))
+      im.version++;
+
+    if (im.version != sts.insert_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_insert);
+      sts.insert_image_version (im.version);
+      imb.version++;
+    }
+
+    insert_statement& st (sts.persist_statement ());
+    if (!st.execute ())
+      throw object_already_persistent ();
+
+    callback (db,
+              obj,
+              callback_event::post_persist);
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  update (database& db, const object_type& obj)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    using namespace mysql;
+    using mysql::update_statement;
+
+    callback (db, obj, callback_event::pre_update);
+
+    mysql::transaction& tr (mysql::transaction::current ());
+    mysql::connection& conn (tr.connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    const id_type& id (
+      obj.name);
+    id_image_type& idi (sts.id_image ());
+    init (idi, id);
+
+    image_type& im (sts.image ());
+    if (init (im, obj, statement_update))
+      im.version++;
+
+    bool u (false);
+    binding& imb (sts.update_image_binding ());
+    if (im.version != sts.update_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_update);
+      sts.update_image_version (im.version);
+      imb.version++;
+      u = true;
+    }
+
+    binding& idb (sts.id_image_binding ());
+    if (idi.version != sts.update_id_image_version () ||
+        idb.version == 0)
+    {
+      if (idi.version != sts.id_image_version () ||
+          idb.version == 0)
+      {
+        bind (idb.bind, idi);
+        sts.id_image_version (idi.version);
+        idb.version++;
+      }
+
+      sts.update_id_image_version (idi.version);
+
+      if (!u)
+        imb.version++;
+    }
+
+    update_statement& st (sts.update_statement ());
+    if (st.execute () == 0)
+      throw object_not_persistent ();
+
+    callback (db, obj, callback_event::post_update);
+    pointer_cache_traits::update (db, obj);
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  erase (database& db, const id_type& id)
+  {
+    using namespace mysql;
+
+    ODB_POTENTIALLY_UNUSED (db);
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    id_image_type& i (sts.id_image ());
+    init (i, id);
+
+    binding& idb (sts.id_image_binding ());
+    if (i.version != sts.id_image_version () || idb.version == 0)
+    {
+      bind (idb.bind, i);
+      sts.id_image_version (i.version);
+      idb.version++;
+    }
+
+    if (sts.erase_statement ().execute () != 1)
+      throw object_not_persistent ();
+
+    pointer_cache_traits::erase (db, id);
+  }
+
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::pointer_type
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  find (database& db, const id_type& id)
+  {
+    using namespace mysql;
+
+    {
+      pointer_type p (pointer_cache_traits::find (db, id));
+
+      if (!pointer_traits::null_ptr (p))
+        return p;
+    }
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    if (l.locked ())
+    {
+      if (!find_ (sts, &id))
+        return pointer_type ();
+    }
+
+    pointer_type p (
+      access::object_factory<object_type, pointer_type>::create ());
+    pointer_traits::guard pg (p);
+
+    pointer_cache_traits::insert_guard ig (
+      pointer_cache_traits::insert (db, id, p));
+
+    object_type& obj (pointer_traits::get_ref (p));
+
+    if (l.locked ())
+    {
+      select_statement& st (sts.find_statement ());
+      ODB_POTENTIALLY_UNUSED (st);
+
+      callback (db, obj, callback_event::pre_load);
+      init (obj, sts.image (), &db);
+      load_ (sts, obj, false);
+      sts.load_delayed (0);
+      l.unlock ();
+      callback (db, obj, callback_event::post_load);
+      pointer_cache_traits::load (ig.position ());
+    }
+    else
+      sts.delay_load (id, obj, ig.position ());
+
+    ig.release ();
+    pg.release ();
+    return p;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  find (database& db, const id_type& id, object_type& obj)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    if (!find_ (sts, &id))
+      return false;
+
+    select_statement& st (sts.find_statement ());
+    ODB_POTENTIALLY_UNUSED (st);
+
+    reference_cache_traits::position_type pos (
+      reference_cache_traits::insert (db, id, obj));
+    reference_cache_traits::insert_guard ig (pos);
+
+    callback (db, obj, callback_event::pre_load);
+    init (obj, sts.image (), &db);
+    load_ (sts, obj, false);
+    sts.load_delayed (0);
+    l.unlock ();
+    callback (db, obj, callback_event::post_load);
+    reference_cache_traits::load (pos);
+    ig.release ();
+    return true;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  reload (database& db, object_type& obj)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    const id_type& id  (
+      obj.name);
+
+    if (!find_ (sts, &id))
+      return false;
+
+    select_statement& st (sts.find_statement ());
+    ODB_POTENTIALLY_UNUSED (st);
+
+    callback (db, obj, callback_event::pre_load);
+    init (obj, sts.image (), &db);
+    load_ (sts, obj, true);
+    sts.load_delayed (0);
+    l.unlock ();
+    callback (db, obj, callback_event::post_load);
+    return true;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  find_ (statements_type& sts,
+         const id_type* id)
+  {
+    using namespace mysql;
+
+    id_image_type& i (sts.id_image ());
+    init (i, *id);
+
+    binding& idb (sts.id_image_binding ());
+    if (i.version != sts.id_image_version () || idb.version == 0)
+    {
+      bind (idb.bind, i);
+      sts.id_image_version (i.version);
+      idb.version++;
+    }
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    select_statement& st (sts.find_statement ());
+
+    st.execute ();
+    auto_result ar (st);
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      if (grow (im, sts.select_image_truncated ()))
+        im.version++;
+
+      if (im.version != sts.select_image_version ())
+      {
+        bind (imb.bind, im, statement_select);
+        sts.select_image_version (im.version);
+        imb.version++;
+        st.refetch ();
+      }
+    }
+
+    return r != select_statement::no_data;
+  }
+
+  result< access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::object_type >
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    std::string text (query_statement);
+    if (!q.empty ())
+    {
+      text += " ";
+      text += q.clause ();
+    }
+
+    q.init_parameters ();
+    shared_ptr<select_statement> st (
+      new (shared) select_statement (
+        conn,
+        text,
+        false,
+        true,
+        q.parameters_binding (),
+        imb));
+
+    st->execute ();
+
+    shared_ptr< odb::object_result_impl<object_type> > r (
+      new (shared) mysql::object_result_impl<object_type> (
+        q, st, sts, 0));
+
+    return result<object_type> (r);
+  }
+
+  result< access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::object_type >
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  query (database& db, const odb::query_base& q)
+  {
+    return query (db, query_base_type (q));
+  }
+
+  unsigned long long access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  erase_query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    std::string text (erase_query_statement);
+    if (!q.empty ())
+    {
+      text += ' ';
+      text += q.clause ();
+    }
+
+    q.init_parameters ();
+    delete_statement st (
+      conn,
+      text,
+      q.parameters_binding ());
+
+    return st.execute ();
+  }
+
+  unsigned long long access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  erase_query (database& db, const odb::query_base& q)
+  {
+    return erase_query (db, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      static_cast<mysql::connection&> (c));
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    std::string text (query_statement);
+    if (!q.empty ())
+    {
+      text += " ";
+      text += q.clause ();
+    }
+
+    shared_ptr<mysql::prepared_query_impl> r (
+      new (shared) mysql::prepared_query_impl (conn));
+    r->name = n;
+    r->execute = &execute_query;
+    r->query = q;
+    r->stmt.reset (
+      new (shared) select_statement (
+        conn,
+        text,
+        false,
+        true,
+        r->query.parameters_binding (),
+        imb));
+
+    return r;
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  prepare_query (connection& c, const char* n, const odb::query_base& q)
+  {
+    return prepare_query (c, n, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::
+  execute_query (prepared_query_impl& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::prepared_query_impl& pq (
+      static_cast<mysql::prepared_query_impl&> (q));
+    shared_ptr<select_statement> st (
+      odb::details::inc_ref (
+        static_cast<select_statement*> (pq.stmt.get ())));
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    // The connection used by the current transaction and the
+    // one used to prepare this statement must be the same.
+    //
+    assert (&conn == &st->connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    pq.query.init_parameters ();
+    st->execute ();
+
+    return shared_ptr<result_impl> (
+      new (shared) mysql::object_result_impl<object_type> (
+        pq.query, st, sts, 0));
+  }
+
+  static const
+  access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  function_table_type function_table_Alarmud_toonRent_ =
+  {
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::persist,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::find,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::find,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::reload,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::update,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::erase,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::erase,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::query,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::erase_query,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::prepare_query,
+    &access::object_traits_impl< ::Alarmud::toonRent, id_mysql >::execute_query
+  };
+
+  static const object_function_table_entry< ::Alarmud::toonRent, id_mysql >
+  function_table_entry_Alarmud_toonRent_ (
+    &function_table_Alarmud_toonRent_);
+
+  // toonBank
+  //
+
+  template struct query_columns<
+    ::Alarmud::toonBank,
+    id_mysql,
+    access::object_traits_impl< ::Alarmud::toonBank, id_mysql > >;
+
+  struct access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::extra_statement_cache_type
+  {
+    extra_statement_cache_type (
+      mysql::connection&,
+      image_type&,
+      id_image_type&,
+      mysql::binding&,
+      mysql::binding&)
+    {
+    }
+  };
+
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::id_type
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  id (const image_type& i)
+  {
+    mysql::database* db (0);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    id_type id;
+    {
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        id,
+        i.name_value,
+        i.name_size,
+        i.name_null);
+    }
+
+    return id;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  grow (image_type& i,
+        my_bool* t)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (t);
+
+    bool grew (false);
+
+    // name
+    //
+    if (t[0UL])
+    {
+      i.name_value.capacity (i.name_size);
+      grew = true;
+    }
+
+    // vnum
+    //
+    t[1UL] = 0;
+
+    return grew;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  bind (MYSQL_BIND* b,
+        image_type& i,
+        mysql::statement_kind sk)
+  {
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    using namespace mysql;
+
+    std::size_t n (0);
+
+    // name
+    //
+    if (sk != statement_update)
+    {
+      b[n].buffer_type = MYSQL_TYPE_STRING;
+      b[n].buffer = i.name_value.data ();
+      b[n].buffer_length = static_cast<unsigned long> (
+        i.name_value.capacity ());
+      b[n].length = &i.name_size;
+      b[n].is_null = &i.name_null;
+      n++;
+    }
+
+    // vnum
+    //
+    b[n].buffer_type = MYSQL_TYPE_LONGLONG;
+    b[n].is_unsigned = 1;
+    b[n].buffer = &i.vnum_value;
+    b[n].is_null = &i.vnum_null;
+    n++;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  bind (MYSQL_BIND* b, id_image_type& i)
+  {
+    std::size_t n (0);
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.id_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.id_value.capacity ());
+    b[n].length = &i.id_size;
+    b[n].is_null = &i.id_null;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  init (image_type& i,
+        const object_type& o,
+        mysql::statement_kind sk)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    using namespace mysql;
+
+    bool grew (false);
+
+    // name
+    //
+    if (sk == statement_insert)
+    {
+      ::std::string const& v =
+        o.name;
+
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.name_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.name_value,
+        size,
+        is_null,
+        v);
+      i.name_null = is_null;
+      i.name_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.name_value.capacity ());
+    }
+
+    // vnum
+    //
+    {
+      long unsigned int const& v =
+        o.vnum;
+
+      bool is_null (false);
+      mysql::value_traits<
+          long unsigned int,
+          mysql::id_ulonglong >::set_image (
+        i.vnum_value, is_null, v);
+      i.vnum_null = is_null;
+    }
+
+    return grew;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  init (object_type& o,
+        const image_type& i,
+        database* db)
+  {
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    // name
+    //
+    {
+      ::std::string& v =
+        o.name;
+
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        v,
+        i.name_value,
+        i.name_size,
+        i.name_null);
+    }
+
+    // vnum
+    //
+    {
+      long unsigned int& v =
+        o.vnum;
+
+      mysql::value_traits<
+          long unsigned int,
+          mysql::id_ulonglong >::set_value (
+        v,
+        i.vnum_value,
+        i.vnum_null);
+    }
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  init (id_image_type& i, const id_type& id)
+  {
+    bool grew (false);
+    {
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.id_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.id_value,
+        size,
+        is_null,
+        id);
+      i.id_null = is_null;
+      i.id_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.id_value.capacity ());
+    }
+
+    if (grew)
+      i.version++;
+  }
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::persist_statement[] =
+  "INSERT INTO `toonBank` "
+  "(`name`, "
+  "`vnum`) "
+  "VALUES "
+  "(?, ?)";
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::find_statement[] =
+  "SELECT "
+  "`toonBank`.`name`, "
+  "`toonBank`.`vnum` "
+  "FROM `toonBank` "
+  "WHERE `toonBank`.`name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::update_statement[] =
+  "UPDATE `toonBank` "
+  "SET "
+  "`vnum`=? "
+  "WHERE `name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::erase_statement[] =
+  "DELETE FROM `toonBank` "
+  "WHERE `name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::query_statement[] =
+  "SELECT "
+  "`toonBank`.`name`, "
+  "`toonBank`.`vnum` "
+  "FROM `toonBank`";
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::erase_query_statement[] =
+  "DELETE FROM `toonBank`";
+
+  const char access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::table_name[] =
+  "`toonBank`";
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  persist (database& db, const object_type& obj)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    callback (db,
+              obj,
+              callback_event::pre_persist);
+
+    image_type& im (sts.image ());
+    binding& imb (sts.insert_image_binding ());
+
+    if (init (im, obj, statement_insert))
+      im.version++;
+
+    if (im.version != sts.insert_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_insert);
+      sts.insert_image_version (im.version);
+      imb.version++;
+    }
+
+    insert_statement& st (sts.persist_statement ());
+    if (!st.execute ())
+      throw object_already_persistent ();
+
+    callback (db,
+              obj,
+              callback_event::post_persist);
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  update (database& db, const object_type& obj)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    using namespace mysql;
+    using mysql::update_statement;
+
+    callback (db, obj, callback_event::pre_update);
+
+    mysql::transaction& tr (mysql::transaction::current ());
+    mysql::connection& conn (tr.connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    const id_type& id (
+      obj.name);
+    id_image_type& idi (sts.id_image ());
+    init (idi, id);
+
+    image_type& im (sts.image ());
+    if (init (im, obj, statement_update))
+      im.version++;
+
+    bool u (false);
+    binding& imb (sts.update_image_binding ());
+    if (im.version != sts.update_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_update);
+      sts.update_image_version (im.version);
+      imb.version++;
+      u = true;
+    }
+
+    binding& idb (sts.id_image_binding ());
+    if (idi.version != sts.update_id_image_version () ||
+        idb.version == 0)
+    {
+      if (idi.version != sts.id_image_version () ||
+          idb.version == 0)
+      {
+        bind (idb.bind, idi);
+        sts.id_image_version (idi.version);
+        idb.version++;
+      }
+
+      sts.update_id_image_version (idi.version);
+
+      if (!u)
+        imb.version++;
+    }
+
+    update_statement& st (sts.update_statement ());
+    if (st.execute () == 0)
+      throw object_not_persistent ();
+
+    callback (db, obj, callback_event::post_update);
+    pointer_cache_traits::update (db, obj);
+  }
+
+  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  erase (database& db, const id_type& id)
+  {
+    using namespace mysql;
+
+    ODB_POTENTIALLY_UNUSED (db);
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    id_image_type& i (sts.id_image ());
+    init (i, id);
+
+    binding& idb (sts.id_image_binding ());
+    if (i.version != sts.id_image_version () || idb.version == 0)
+    {
+      bind (idb.bind, i);
+      sts.id_image_version (i.version);
+      idb.version++;
+    }
+
+    if (sts.erase_statement ().execute () != 1)
+      throw object_not_persistent ();
+
+    pointer_cache_traits::erase (db, id);
+  }
+
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::pointer_type
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  find (database& db, const id_type& id)
+  {
+    using namespace mysql;
+
+    {
+      pointer_type p (pointer_cache_traits::find (db, id));
+
+      if (!pointer_traits::null_ptr (p))
+        return p;
+    }
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    if (l.locked ())
+    {
+      if (!find_ (sts, &id))
+        return pointer_type ();
+    }
+
+    pointer_type p (
+      access::object_factory<object_type, pointer_type>::create ());
+    pointer_traits::guard pg (p);
+
+    pointer_cache_traits::insert_guard ig (
+      pointer_cache_traits::insert (db, id, p));
+
+    object_type& obj (pointer_traits::get_ref (p));
+
+    if (l.locked ())
+    {
+      select_statement& st (sts.find_statement ());
+      ODB_POTENTIALLY_UNUSED (st);
+
+      callback (db, obj, callback_event::pre_load);
+      init (obj, sts.image (), &db);
+      load_ (sts, obj, false);
+      sts.load_delayed (0);
+      l.unlock ();
+      callback (db, obj, callback_event::post_load);
+      pointer_cache_traits::load (ig.position ());
+    }
+    else
+      sts.delay_load (id, obj, ig.position ());
+
+    ig.release ();
+    pg.release ();
+    return p;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  find (database& db, const id_type& id, object_type& obj)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    if (!find_ (sts, &id))
+      return false;
+
+    select_statement& st (sts.find_statement ());
+    ODB_POTENTIALLY_UNUSED (st);
+
+    reference_cache_traits::position_type pos (
+      reference_cache_traits::insert (db, id, obj));
+    reference_cache_traits::insert_guard ig (pos);
+
+    callback (db, obj, callback_event::pre_load);
+    init (obj, sts.image (), &db);
+    load_ (sts, obj, false);
+    sts.load_delayed (0);
+    l.unlock ();
+    callback (db, obj, callback_event::post_load);
+    reference_cache_traits::load (pos);
+    ig.release ();
+    return true;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  reload (database& db, object_type& obj)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    statements_type::auto_lock l (sts);
+
+    const id_type& id  (
+      obj.name);
+
+    if (!find_ (sts, &id))
+      return false;
+
+    select_statement& st (sts.find_statement ());
+    ODB_POTENTIALLY_UNUSED (st);
+
+    callback (db, obj, callback_event::pre_load);
+    init (obj, sts.image (), &db);
+    load_ (sts, obj, true);
+    sts.load_delayed (0);
+    l.unlock ();
+    callback (db, obj, callback_event::post_load);
+    return true;
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  find_ (statements_type& sts,
+         const id_type* id)
+  {
+    using namespace mysql;
+
+    id_image_type& i (sts.id_image ());
+    init (i, *id);
+
+    binding& idb (sts.id_image_binding ());
+    if (i.version != sts.id_image_version () || idb.version == 0)
+    {
+      bind (idb.bind, i);
+      sts.id_image_version (i.version);
+      idb.version++;
+    }
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    select_statement& st (sts.find_statement ());
+
+    st.execute ();
+    auto_result ar (st);
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      if (grow (im, sts.select_image_truncated ()))
+        im.version++;
+
+      if (im.version != sts.select_image_version ())
+      {
+        bind (imb.bind, im, statement_select);
+        sts.select_image_version (im.version);
+        imb.version++;
+        st.refetch ();
+      }
+    }
+
+    return r != select_statement::no_data;
+  }
+
+  result< access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::object_type >
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    std::string text (query_statement);
+    if (!q.empty ())
+    {
+      text += " ";
+      text += q.clause ();
+    }
+
+    q.init_parameters ();
+    shared_ptr<select_statement> st (
+      new (shared) select_statement (
+        conn,
+        text,
+        false,
+        true,
+        q.parameters_binding (),
+        imb));
+
+    st->execute ();
+
+    shared_ptr< odb::object_result_impl<object_type> > r (
+      new (shared) mysql::object_result_impl<object_type> (
+        q, st, sts, 0));
+
+    return result<object_type> (r);
+  }
+
+  result< access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::object_type >
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  query (database& db, const odb::query_base& q)
+  {
+    return query (db, query_base_type (q));
+  }
+
+  unsigned long long access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  erase_query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    std::string text (erase_query_statement);
+    if (!q.empty ())
+    {
+      text += ' ';
+      text += q.clause ();
+    }
+
+    q.init_parameters ();
+    delete_statement st (
+      conn,
+      text,
+      q.parameters_binding ());
+
+    return st.execute ();
+  }
+
+  unsigned long long access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  erase_query (database& db, const odb::query_base& q)
+  {
+    return erase_query (db, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      static_cast<mysql::connection&> (c));
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    std::string text (query_statement);
+    if (!q.empty ())
+    {
+      text += " ";
+      text += q.clause ();
+    }
+
+    shared_ptr<mysql::prepared_query_impl> r (
+      new (shared) mysql::prepared_query_impl (conn));
+    r->name = n;
+    r->execute = &execute_query;
+    r->query = q;
+    r->stmt.reset (
+      new (shared) select_statement (
+        conn,
+        text,
+        false,
+        true,
+        r->query.parameters_binding (),
+        imb));
+
+    return r;
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  prepare_query (connection& c, const char* n, const odb::query_base& q)
+  {
+    return prepare_query (c, n, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
+  execute_query (prepared_query_impl& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::prepared_query_impl& pq (
+      static_cast<mysql::prepared_query_impl&> (q));
+    shared_ptr<select_statement> st (
+      odb::details::inc_ref (
+        static_cast<select_statement*> (pq.stmt.get ())));
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    // The connection used by the current transaction and the
+    // one used to prepare this statement must be the same.
+    //
+    assert (&conn == &st->connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_object<object_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.select_image_binding ());
+
+    if (im.version != sts.select_image_version () ||
+        imb.version == 0)
+    {
+      bind (imb.bind, im, statement_select);
+      sts.select_image_version (im.version);
+      imb.version++;
+    }
+
+    pq.query.init_parameters ();
+    st->execute ();
+
+    return shared_ptr<result_impl> (
+      new (shared) mysql::object_result_impl<object_type> (
+        pq.query, st, sts, 0));
+  }
+
+  static const
+  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  function_table_type function_table_Alarmud_toonBank_ =
+  {
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::persist,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::find,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::find,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::reload,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::update,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::erase,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::erase,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::query,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::erase_query,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::prepare_query,
+    &access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::execute_query
+  };
+
+  static const object_function_table_entry< ::Alarmud::toonBank, id_mysql >
+  function_table_entry_Alarmud_toonBank_ (
+    &function_table_Alarmud_toonBank_);
+
   // toon
   //
 
-  const char alias_traits<  ::Alarmud::user,
+  const char alias_traits<  ::Alarmud::toonExtra,
     id_mysql,
-    access::object_traits_impl< ::Alarmud::toon, id_mysql >::owner_id_tag>::
-  table_name[] = "`owner_id`";
+    access::object_traits_impl< ::Alarmud::toon, id_mysql >::data_tag>::
+  table_name[] = "`data`";
 
   template struct query_columns<
-    ::Alarmud::user,
+    ::Alarmud::toonExtra,
     id_mysql,
-    query_columns_base< ::Alarmud::toon, id_mysql >::owner_id_alias_ >;
+    query_columns_base< ::Alarmud::toon, id_mysql >::data_alias_ >;
+
+  const query_columns_base< ::Alarmud::toon, id_mysql >::data_type_
+  query_columns_base< ::Alarmud::toon, id_mysql >::data;
 
   template struct query_columns<
     ::Alarmud::toon,
@@ -53,15 +2377,372 @@ namespace odb
 
   struct access::object_traits_impl< ::Alarmud::toon, id_mysql >::extra_statement_cache_type
   {
+    mysql::container_statements_impl< rentItems_traits > rentItems;
+    mysql::container_statements_impl< bankItems_traits > bankItems;
+
     extra_statement_cache_type (
-      mysql::connection&,
+      mysql::connection& c,
       image_type&,
       id_image_type&,
-      mysql::binding&,
+      mysql::binding& id,
       mysql::binding&)
+    : rentItems (c, id),
+      bankItems (c, id)
     {
     }
   };
+
+  // rentItems
+  //
+
+  const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  select_statement[] =
+  "SELECT "
+  "`toonRent`.`name` "
+  "FROM `toonRent` "
+  "WHERE `toonRent`.`name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  insert_statement[] =
+  "";
+
+  const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  delete_statement[] =
+  "";
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  bind (MYSQL_BIND* b,
+        const MYSQL_BIND* id,
+        std::size_t id_size,
+        data_image_type& d)
+  {
+    using namespace mysql;
+
+    statement_kind sk (statement_select);
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    size_t n (0);
+
+    // object_id
+    //
+    if (id != 0)
+      std::memcpy (&b[n], id, id_size * sizeof (id[0]));
+    n += id_size;
+
+    // value
+    //
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = d.value_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      d.value_value.capacity ());
+    b[n].length = &d.value_size;
+    b[n].is_null = &d.value_null;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  grow (data_image_type& i,
+        my_bool* t)
+  {
+    bool grew (false);
+
+    // value
+    //
+    if (t[0UL])
+    {
+      i.value_value.capacity (i.value_size);
+      grew = true;
+    }
+
+    if (grew)
+      i.version++;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  init (value_type& v,
+        const data_image_type& i,
+        database* db)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    // value
+    //
+    {
+      typedef object_traits< ::Alarmud::toonRent > obj_traits;
+      typedef odb::pointer_traits< value_type > ptr_traits;
+
+      if (i.value_null)
+        v = ptr_traits::pointer_type ();
+      else
+      {
+        obj_traits::id_type id;
+        mysql::value_traits<
+            obj_traits::id_type,
+            mysql::id_string >::set_value (
+          id,
+          i.value_value,
+          i.value_size,
+          i.value_null);
+
+        v = ptr_traits::pointer_type (
+          *static_cast<mysql::database*> (db), id);
+      }
+    }
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  insert (index_type, const value_type&, void*)
+  {
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  select (index_type&, value_type& v, void* d)
+  {
+    using namespace mysql;
+    using mysql::select_statement;
+
+    statements_type& sts (*static_cast< statements_type* > (d));
+    data_image_type& di (sts.data_image ());
+
+    init (v, di, &sts.connection ().database ());
+
+    select_statement& st (sts.select_statement ());
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      grow (di, sts.select_image_truncated ());
+
+      if (sts.data_binding_test_version ())
+      {
+        bind (sts.data_bind (), 0, sts.id_binding ().count, di);
+        sts.data_binding_update_version ();
+        st.refetch ();
+      }
+    }
+
+    return r != select_statement::no_data;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  delete_ (void*)
+  {
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::rentItems_traits::
+  load (container_type& c,
+        statements_type& sts)
+  {
+    using namespace mysql;
+    using mysql::select_statement;
+
+    const binding& id (sts.id_binding ());
+
+    if (sts.data_binding_test_version ())
+    {
+      bind (sts.data_bind (), id.bind, id.count, sts.data_image ());
+      sts.data_binding_update_version ();
+    }
+
+    select_statement& st (sts.select_statement ());
+    st.execute ();
+    auto_result ar (st);
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      data_image_type& di (sts.data_image ());
+      grow (di, sts.select_image_truncated ());
+
+      if (sts.data_binding_test_version ())
+      {
+        bind (sts.data_bind (), 0, id.count, di);
+        sts.data_binding_update_version ();
+        st.refetch ();
+      }
+    }
+
+    bool more (r != select_statement::no_data);
+
+    functions_type& fs (sts.functions ());
+    fs.ordered_ = false;
+    container_traits_type::load (c, more, fs);
+  }
+
+  // bankItems
+  //
+
+  const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  select_statement[] =
+  "SELECT "
+  "`toonBank`.`name` "
+  "FROM `toonBank` "
+  "WHERE `toonBank`.`name`=?";
+
+  const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  insert_statement[] =
+  "";
+
+  const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  delete_statement[] =
+  "";
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  bind (MYSQL_BIND* b,
+        const MYSQL_BIND* id,
+        std::size_t id_size,
+        data_image_type& d)
+  {
+    using namespace mysql;
+
+    statement_kind sk (statement_select);
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    size_t n (0);
+
+    // object_id
+    //
+    if (id != 0)
+      std::memcpy (&b[n], id, id_size * sizeof (id[0]));
+    n += id_size;
+
+    // value
+    //
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = d.value_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      d.value_value.capacity ());
+    b[n].length = &d.value_size;
+    b[n].is_null = &d.value_null;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  grow (data_image_type& i,
+        my_bool* t)
+  {
+    bool grew (false);
+
+    // value
+    //
+    if (t[0UL])
+    {
+      i.value_value.capacity (i.value_size);
+      grew = true;
+    }
+
+    if (grew)
+      i.version++;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  init (value_type& v,
+        const data_image_type& i,
+        database* db)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+
+    // value
+    //
+    {
+      typedef object_traits< ::Alarmud::toonBank > obj_traits;
+      typedef odb::pointer_traits< value_type > ptr_traits;
+
+      if (i.value_null)
+        v = ptr_traits::pointer_type ();
+      else
+      {
+        obj_traits::id_type id;
+        mysql::value_traits<
+            obj_traits::id_type,
+            mysql::id_string >::set_value (
+          id,
+          i.value_value,
+          i.value_size,
+          i.value_null);
+
+        v = ptr_traits::pointer_type (
+          *static_cast<mysql::database*> (db), id);
+      }
+    }
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  insert (index_type, const value_type&, void*)
+  {
+  }
+
+  bool access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  select (index_type&, value_type& v, void* d)
+  {
+    using namespace mysql;
+    using mysql::select_statement;
+
+    statements_type& sts (*static_cast< statements_type* > (d));
+    data_image_type& di (sts.data_image ());
+
+    init (v, di, &sts.connection ().database ());
+
+    select_statement& st (sts.select_statement ());
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      grow (di, sts.select_image_truncated ());
+
+      if (sts.data_binding_test_version ())
+      {
+        bind (sts.data_bind (), 0, sts.id_binding ().count, di);
+        sts.data_binding_update_version ();
+        st.refetch ();
+      }
+    }
+
+    return r != select_statement::no_data;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  delete_ (void*)
+  {
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::bankItems_traits::
+  load (container_type& c,
+        statements_type& sts)
+  {
+    using namespace mysql;
+    using mysql::select_statement;
+
+    const binding& id (sts.id_binding ());
+
+    if (sts.data_binding_test_version ())
+    {
+      bind (sts.data_bind (), id.bind, id.count, sts.data_image ());
+      sts.data_binding_update_version ();
+    }
+
+    select_statement& st (sts.select_statement ());
+    st.execute ();
+    auto_result ar (st);
+    select_statement::result r (st.fetch ());
+
+    if (r == select_statement::truncated)
+    {
+      data_image_type& di (sts.data_image ());
+      grow (di, sts.select_image_truncated ());
+
+      if (sts.data_binding_test_version ())
+      {
+        bind (sts.data_bind (), 0, id.count, di);
+        sts.data_binding_update_version ();
+        st.refetch ();
+      }
+    }
+
+    bool more (r != select_statement::no_data);
+
+    functions_type& fs (sts.functions ());
+    fs.ordered_ = false;
+    container_traits_type::load (c, more, fs);
+  }
 
   access::object_traits_impl< ::Alarmud::toon, id_mysql >::id_type
   access::object_traits_impl< ::Alarmud::toon, id_mysql >::
@@ -109,9 +2790,29 @@ namespace odb
       grew = true;
     }
 
+    // title
+    //
+    if (t[2UL])
+    {
+      i.title_value.capacity (i.title_size);
+      grew = true;
+    }
+
+    // lastlogin
+    //
+    t[3UL] = 0;
+
     // owner_id
     //
-    t[2UL] = 0;
+    t[4UL] = 0;
+
+    // data
+    //
+    if (t[5UL])
+    {
+      i.data_value.capacity (i.data_size);
+      grew = true;
+    }
 
     return grew;
   }
@@ -150,6 +2851,23 @@ namespace odb
     b[n].is_null = &i.password_null;
     n++;
 
+    // title
+    //
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.title_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.title_value.capacity ());
+    b[n].length = &i.title_size;
+    b[n].is_null = &i.title_null;
+    n++;
+
+    // lastlogin
+    //
+    b[n].buffer_type = MYSQL_TYPE_DATETIME;
+    b[n].buffer = &i.lastlogin_value;
+    b[n].is_null = &i.lastlogin_null;
+    n++;
+
     // owner_id
     //
     b[n].buffer_type = MYSQL_TYPE_LONGLONG;
@@ -157,6 +2875,19 @@ namespace odb
     b[n].buffer = &i.owner_id_value;
     b[n].is_null = &i.owner_id_null;
     n++;
+
+    // data
+    //
+    if (sk == statement_select)
+    {
+      b[n].buffer_type = MYSQL_TYPE_STRING;
+      b[n].buffer = i.data_value.data ();
+      b[n].buffer_length = static_cast<unsigned long> (
+        i.data_value.capacity ());
+      b[n].length = &i.data_size;
+      b[n].is_null = &i.data_null;
+      n++;
+    }
   }
 
   void access::object_traits_impl< ::Alarmud::toon, id_mysql >::
@@ -227,29 +2958,53 @@ namespace odb
       grew = grew || (cap != i.password_value.capacity ());
     }
 
+    // title
+    //
+    {
+      ::std::string const& v =
+        o.title;
+
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.title_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.title_value,
+        size,
+        is_null,
+        v);
+      i.title_null = is_null;
+      i.title_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.title_value.capacity ());
+    }
+
+    // lastlogin
+    //
+    {
+      ::boost::posix_time::ptime const& v =
+        o.lastlogin;
+
+      bool is_null (true);
+      mysql::value_traits<
+          ::boost::posix_time::ptime,
+          mysql::id_datetime >::set_image (
+        i.lastlogin_value, is_null, v);
+      i.lastlogin_null = is_null;
+    }
+
     // owner_id
     //
     {
-      ::boost::shared_ptr< ::Alarmud::user > const& v =
+      long long unsigned int const& v =
         o.owner_id;
 
-      typedef object_traits< ::Alarmud::user > obj_traits;
-      typedef odb::pointer_traits< ::boost::shared_ptr< ::Alarmud::user > > ptr_traits;
-
-      bool is_null (ptr_traits::null_ptr (v));
-      if (!is_null)
-      {
-        const obj_traits::id_type& id (
-          obj_traits::id (ptr_traits::get_ref (v)));
-
-        mysql::value_traits<
-            obj_traits::id_type,
-            mysql::id_ulonglong >::set_image (
-          i.owner_id_value, is_null, id);
-        i.owner_id_null = is_null;
-      }
-      else
-        i.owner_id_null = 1;
+      bool is_null (false);
+      mysql::value_traits<
+          long long unsigned int,
+          mysql::id_ulonglong >::set_image (
+        i.owner_id_value, is_null, v);
+      i.owner_id_null = is_null;
     }
 
     return grew;
@@ -294,34 +3049,73 @@ namespace odb
         i.password_null);
     }
 
+    // title
+    //
+    {
+      ::std::string& v =
+        o.title;
+
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        v,
+        i.title_value,
+        i.title_size,
+        i.title_null);
+    }
+
+    // lastlogin
+    //
+    {
+      ::boost::posix_time::ptime& v =
+        o.lastlogin;
+
+      mysql::value_traits<
+          ::boost::posix_time::ptime,
+          mysql::id_datetime >::set_value (
+        v,
+        i.lastlogin_value,
+        i.lastlogin_null);
+    }
+
     // owner_id
     //
     {
-      ::boost::shared_ptr< ::Alarmud::user >& v =
+      long long unsigned int& v =
         o.owner_id;
 
-      typedef object_traits< ::Alarmud::user > obj_traits;
-      typedef odb::pointer_traits< ::boost::shared_ptr< ::Alarmud::user > > ptr_traits;
+      mysql::value_traits<
+          long long unsigned int,
+          mysql::id_ulonglong >::set_value (
+        v,
+        i.owner_id_value,
+        i.owner_id_null);
+    }
 
-      if (i.owner_id_null)
+    // data
+    //
+    {
+      ::Alarmud::toon::extraPtr& v =
+        o.data;
+
+      typedef object_traits< ::Alarmud::toonExtra > obj_traits;
+      typedef odb::pointer_traits< ::Alarmud::toon::extraPtr > ptr_traits;
+
+      if (i.data_null)
         v = ptr_traits::pointer_type ();
       else
       {
         obj_traits::id_type id;
         mysql::value_traits<
             obj_traits::id_type,
-            mysql::id_ulonglong >::set_value (
+            mysql::id_string >::set_value (
           id,
-          i.owner_id_value,
-          i.owner_id_null);
+          i.data_value,
+          i.data_size,
+          i.data_null);
 
-        // If a compiler error points to the line below, then
-        // it most likely means that a pointer used in a member
-        // cannot be initialized from an object pointer.
-        //
         v = ptr_traits::pointer_type (
-          static_cast<mysql::database*> (db)->load<
-            obj_traits::object_type > (id));
+          *static_cast<mysql::database*> (db), id);
       }
     }
   }
@@ -354,22 +3148,30 @@ namespace odb
   "INSERT INTO `toon` "
   "(`name`, "
   "`password`, "
+  "`title`, "
+  "`lastlogin`, "
   "`owner_id`) "
   "VALUES "
-  "(?, ?, ?)";
+  "(?, ?, ?, ?, ?)";
 
   const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::find_statement[] =
   "SELECT "
   "`toon`.`name`, "
   "`toon`.`password`, "
-  "`toon`.`owner_id` "
+  "`toon`.`title`, "
+  "`toon`.`lastlogin`, "
+  "`toon`.`owner_id`, "
+  "`data`.`name` "
   "FROM `toon` "
+  "LEFT JOIN `toonExtra` AS `data` ON `data`.`name`=`toon`.`name` "
   "WHERE `toon`.`name`=?";
 
   const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::update_statement[] =
   "UPDATE `toon` "
   "SET "
   "`password`=?, "
+  "`title`=?, "
+  "`lastlogin`=?, "
   "`owner_id`=? "
   "WHERE `name`=?";
 
@@ -381,9 +3183,12 @@ namespace odb
   "SELECT\n"
   "`toon`.`name`,\n"
   "`toon`.`password`,\n"
-  "`toon`.`owner_id`\n"
+  "`toon`.`title`,\n"
+  "`toon`.`lastlogin`,\n"
+  "`toon`.`owner_id`,\n"
+  "`data`.`name`\n"
   "FROM `toon`\n"
-  "LEFT JOIN `user` AS `owner_id` ON `owner_id`.`id`=`toon`.`owner_id`";
+  "LEFT JOIN `toonExtra` AS `data` ON `data`.`name`=`toon`.`name`";
 
   const char access::object_traits_impl< ::Alarmud::toon, id_mysql >::erase_query_statement[] =
   "DELETE FROM `toon`";
@@ -688,6 +3493,38 @@ namespace odb
     }
 
     return r != select_statement::no_data;
+  }
+
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::
+  load_ (statements_type& sts,
+         object_type& obj,
+         bool reload)
+  {
+    ODB_POTENTIALLY_UNUSED (reload);
+
+    extra_statement_cache_type& esc (sts.extra_statement_cache ());
+
+    // rentItems
+    //
+    {
+      ::Alarmud::toon::rentVector& v =
+        obj.rentItems;
+
+      rentItems_traits::load (
+        v,
+        esc.rentItems);
+    }
+
+    // bankItems
+    //
+    {
+      ::Alarmud::toon::bankVector& v =
+        obj.bankItems;
+
+      bankItems_traits::load (
+        v,
+        esc.bankItems);
+    }
   }
 
   result< access::object_traits_impl< ::Alarmud::toon, id_mysql >::object_type >
@@ -1013,17 +3850,8 @@ namespace odb
           i.value_size,
           i.value_null);
 
-        // If a compiler error points to the line below, then
-        // it most likely means that a pointer used in a member
-        // cannot be initialized from an object pointer.
-        //
         v = ptr_traits::pointer_type (
-          static_cast<mysql::database*> (db)->load<
-            obj_traits::object_type > (id));
-
-        if (odb::pointer_traits<ptr_traits::strong_pointer_type>::null_ptr (
-              ptr_traits::lock (v)))
-          throw session_required ();
+          *static_cast<mysql::database*> (db), id);
       }
     }
   }
@@ -1043,13 +3871,6 @@ namespace odb
     data_image_type& di (sts.data_image ());
 
     init (v, di, &sts.connection ().database ());
-
-    if (sts.data_binding_test_version ())
-    {
-      const binding& id (sts.id_binding ());
-      bind (sts.data_bind (), id.bind, id.count, di);
-      sts.data_binding_update_version ();
-    }
 
     select_statement& st (sts.select_statement ());
     select_statement::result r (st.fetch ());
@@ -1092,7 +3913,6 @@ namespace odb
     select_statement& st (sts.select_statement ());
     st.execute ();
     auto_result ar (st);
-    st.cache ();
     select_statement::result r (st.fetch ());
 
     if (r == select_statement::truncated)
@@ -1168,19 +3988,19 @@ namespace odb
     //
     t[0UL] = 0;
 
-    // nickname
+    // login
     //
     if (t[1UL])
     {
-      i.nickname_value.capacity (i.nickname_size);
+      i.login_value.capacity (i.login_size);
       grew = true;
     }
 
-    // realname
+    // nickname
     //
     if (t[2UL])
     {
-      i.realname_value.capacity (i.realname_size);
+      i.nickname_value.capacity (i.nickname_size);
       grew = true;
     }
 
@@ -1192,13 +4012,9 @@ namespace odb
       grew = true;
     }
 
-    // backup_email
+    // registered
     //
-    if (t[4UL])
-    {
-      i.backup_email_value.capacity (i.backup_email_size);
-      grew = true;
-    }
+    t[4UL] = 0;
 
     // password
     //
@@ -1208,17 +4024,17 @@ namespace odb
       grew = true;
     }
 
-    // token
-    //
-    if (t[6UL])
-    {
-      i.token_value.capacity (i.token_size);
-      grew = true;
-    }
-
     // level
     //
-    t[7UL] = 0;
+    t[6UL] = 0;
+
+    // backup_email
+    //
+    if (t[7UL])
+    {
+      i.backup_email_value.capacity (i.backup_email_size);
+      grew = true;
+    }
 
     return grew;
   }
@@ -1245,6 +4061,16 @@ namespace odb
       n++;
     }
 
+    // login
+    //
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.login_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.login_value.capacity ());
+    b[n].length = &i.login_size;
+    b[n].is_null = &i.login_null;
+    n++;
+
     // nickname
     //
     b[n].buffer_type = MYSQL_TYPE_STRING;
@@ -1253,16 +4079,6 @@ namespace odb
       i.nickname_value.capacity ());
     b[n].length = &i.nickname_size;
     b[n].is_null = &i.nickname_null;
-    n++;
-
-    // realname
-    //
-    b[n].buffer_type = MYSQL_TYPE_STRING;
-    b[n].buffer = i.realname_value.data ();
-    b[n].buffer_length = static_cast<unsigned long> (
-      i.realname_value.capacity ());
-    b[n].length = &i.realname_size;
-    b[n].is_null = &i.realname_null;
     n++;
 
     // email
@@ -1275,14 +4091,11 @@ namespace odb
     b[n].is_null = &i.email_null;
     n++;
 
-    // backup_email
+    // registered
     //
-    b[n].buffer_type = MYSQL_TYPE_STRING;
-    b[n].buffer = i.backup_email_value.data ();
-    b[n].buffer_length = static_cast<unsigned long> (
-      i.backup_email_value.capacity ());
-    b[n].length = &i.backup_email_size;
-    b[n].is_null = &i.backup_email_null;
+    b[n].buffer_type = MYSQL_TYPE_DATETIME;
+    b[n].buffer = &i.registered_value;
+    b[n].is_null = &i.registered_null;
     n++;
 
     // password
@@ -1295,22 +4108,22 @@ namespace odb
     b[n].is_null = &i.password_null;
     n++;
 
-    // token
-    //
-    b[n].buffer_type = MYSQL_TYPE_STRING;
-    b[n].buffer = i.token_value.data ();
-    b[n].buffer_length = static_cast<unsigned long> (
-      i.token_value.capacity ());
-    b[n].length = &i.token_size;
-    b[n].is_null = &i.token_null;
-    n++;
-
     // level
     //
     b[n].buffer_type = MYSQL_TYPE_SHORT;
     b[n].is_unsigned = 1;
     b[n].buffer = &i.level_value;
     b[n].is_null = &i.level_null;
+    n++;
+
+    // backup_email
+    //
+    b[n].buffer_type = MYSQL_TYPE_STRING;
+    b[n].buffer = i.backup_email_value.data ();
+    b[n].buffer_length = static_cast<unsigned long> (
+      i.backup_email_value.capacity ());
+    b[n].length = &i.backup_email_size;
+    b[n].is_null = &i.backup_email_null;
     n++;
   }
 
@@ -1352,6 +4165,27 @@ namespace odb
       i.id_null = is_null;
     }
 
+    // login
+    //
+    {
+      ::std::string const& v =
+        o.login;
+
+      bool is_null (false);
+      std::size_t size (0);
+      std::size_t cap (i.login_value.capacity ());
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_image (
+        i.login_value,
+        size,
+        is_null,
+        v);
+      i.login_null = is_null;
+      i.login_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.login_value.capacity ());
+    }
+
     // nickname
     //
     {
@@ -1371,27 +4205,6 @@ namespace odb
       i.nickname_null = is_null;
       i.nickname_size = static_cast<unsigned long> (size);
       grew = grew || (cap != i.nickname_value.capacity ());
-    }
-
-    // realname
-    //
-    {
-      ::std::string const& v =
-        o.realname;
-
-      bool is_null (false);
-      std::size_t size (0);
-      std::size_t cap (i.realname_value.capacity ());
-      mysql::value_traits<
-          ::std::string,
-          mysql::id_string >::set_image (
-        i.realname_value,
-        size,
-        is_null,
-        v);
-      i.realname_null = is_null;
-      i.realname_size = static_cast<unsigned long> (size);
-      grew = grew || (cap != i.realname_value.capacity ());
     }
 
     // email
@@ -1415,25 +4228,18 @@ namespace odb
       grew = grew || (cap != i.email_value.capacity ());
     }
 
-    // backup_email
+    // registered
     //
     {
-      ::std::string const& v =
-        o.backup_email;
+      ::boost::posix_time::ptime const& v =
+        o.registered;
 
       bool is_null (true);
-      std::size_t size (0);
-      std::size_t cap (i.backup_email_value.capacity ());
       mysql::value_traits<
-          ::std::string,
-          mysql::id_string >::set_image (
-        i.backup_email_value,
-        size,
-        is_null,
-        v);
-      i.backup_email_null = is_null;
-      i.backup_email_size = static_cast<unsigned long> (size);
-      grew = grew || (cap != i.backup_email_value.capacity ());
+          ::boost::posix_time::ptime,
+          mysql::id_datetime >::set_image (
+        i.registered_value, is_null, v);
+      i.registered_null = is_null;
     }
 
     // password
@@ -1457,27 +4263,6 @@ namespace odb
       grew = grew || (cap != i.password_value.capacity ());
     }
 
-    // token
-    //
-    {
-      ::std::string const& v =
-        o.token;
-
-      bool is_null (false);
-      std::size_t size (0);
-      std::size_t cap (i.token_value.capacity ());
-      mysql::value_traits<
-          ::std::string,
-          mysql::id_string >::set_image (
-        i.token_value,
-        size,
-        is_null,
-        v);
-      i.token_null = is_null;
-      i.token_size = static_cast<unsigned long> (size);
-      grew = grew || (cap != i.token_value.capacity ());
-    }
-
     // level
     //
     {
@@ -1490,6 +4275,27 @@ namespace odb
           mysql::id_ushort >::set_image (
         i.level_value, is_null, v);
       i.level_null = is_null;
+    }
+
+    // backup_email
+    //
+    {
+      ::odb::nullable< ::std::basic_string< char > > const& v =
+        o.backup_email;
+
+      bool is_null (true);
+      std::size_t size (0);
+      std::size_t cap (i.backup_email_value.capacity ());
+      mysql::value_traits<
+          ::odb::nullable< ::std::basic_string< char > >,
+          mysql::id_string >::set_image (
+        i.backup_email_value,
+        size,
+        is_null,
+        v);
+      i.backup_email_null = is_null;
+      i.backup_email_size = static_cast<unsigned long> (size);
+      grew = grew || (cap != i.backup_email_value.capacity ());
     }
 
     return grew;
@@ -1518,6 +4324,21 @@ namespace odb
         i.id_null);
     }
 
+    // login
+    //
+    {
+      ::std::string& v =
+        o.login;
+
+      mysql::value_traits<
+          ::std::string,
+          mysql::id_string >::set_value (
+        v,
+        i.login_value,
+        i.login_size,
+        i.login_null);
+    }
+
     // nickname
     //
     {
@@ -1531,21 +4352,6 @@ namespace odb
         i.nickname_value,
         i.nickname_size,
         i.nickname_null);
-    }
-
-    // realname
-    //
-    {
-      ::std::string& v =
-        o.realname;
-
-      mysql::value_traits<
-          ::std::string,
-          mysql::id_string >::set_value (
-        v,
-        i.realname_value,
-        i.realname_size,
-        i.realname_null);
     }
 
     // email
@@ -1563,19 +4369,18 @@ namespace odb
         i.email_null);
     }
 
-    // backup_email
+    // registered
     //
     {
-      ::std::string& v =
-        o.backup_email;
+      ::boost::posix_time::ptime& v =
+        o.registered;
 
       mysql::value_traits<
-          ::std::string,
-          mysql::id_string >::set_value (
+          ::boost::posix_time::ptime,
+          mysql::id_datetime >::set_value (
         v,
-        i.backup_email_value,
-        i.backup_email_size,
-        i.backup_email_null);
+        i.registered_value,
+        i.registered_null);
     }
 
     // password
@@ -1593,21 +4398,6 @@ namespace odb
         i.password_null);
     }
 
-    // token
-    //
-    {
-      ::std::string& v =
-        o.token;
-
-      mysql::value_traits<
-          ::std::string,
-          mysql::id_string >::set_value (
-        v,
-        i.token_value,
-        i.token_size,
-        i.token_null);
-    }
-
     // level
     //
     {
@@ -1620,6 +4410,21 @@ namespace odb
         v,
         i.level_value,
         i.level_null);
+    }
+
+    // backup_email
+    //
+    {
+      ::odb::nullable< ::std::basic_string< char > >& v =
+        o.backup_email;
+
+      mysql::value_traits<
+          ::odb::nullable< ::std::basic_string< char > >,
+          mysql::id_string >::set_value (
+        v,
+        i.backup_email_value,
+        i.backup_email_size,
+        i.backup_email_null);
     }
   }
 
@@ -1639,39 +4444,39 @@ namespace odb
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::persist_statement[] =
   "INSERT INTO `user` "
   "(`id`, "
+  "`login`, "
   "`nickname`, "
-  "`realname`, "
   "`email`, "
-  "`backup_email`, "
+  "`registered`, "
   "`password`, "
-  "`token`, "
-  "`level`) "
+  "`level`, "
+  "`backup_email`) "
   "VALUES "
   "(?, ?, ?, ?, ?, ?, ?, ?)";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::find_statement[] =
   "SELECT "
   "`user`.`id`, "
+  "`user`.`login`, "
   "`user`.`nickname`, "
-  "`user`.`realname`, "
   "`user`.`email`, "
-  "`user`.`backup_email`, "
+  "`user`.`registered`, "
   "`user`.`password`, "
-  "`user`.`token`, "
-  "`user`.`level` "
+  "`user`.`level`, "
+  "`user`.`backup_email` "
   "FROM `user` "
   "WHERE `user`.`id`=?";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::update_statement[] =
   "UPDATE `user` "
   "SET "
+  "`login`=?, "
   "`nickname`=?, "
-  "`realname`=?, "
   "`email`=?, "
-  "`backup_email`=?, "
+  "`registered`=?, "
   "`password`=?, "
-  "`token`=?, "
-  "`level`=? "
+  "`level`=?, "
+  "`backup_email`=? "
   "WHERE `id`=?";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::erase_statement[] =
@@ -1681,13 +4486,13 @@ namespace odb
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::query_statement[] =
   "SELECT "
   "`user`.`id`, "
+  "`user`.`login`, "
   "`user`.`nickname`, "
-  "`user`.`realname`, "
   "`user`.`email`, "
-  "`user`.`backup_email`, "
+  "`user`.`registered`, "
   "`user`.`password`, "
-  "`user`.`token`, "
-  "`user`.`level` "
+  "`user`.`level`, "
+  "`user`.`backup_email` "
   "FROM `user`";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::erase_query_statement[] =

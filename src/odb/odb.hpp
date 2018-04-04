@@ -28,6 +28,9 @@ namespace Alarmud {
 	odbTypes(user);
 	odbTypes(legacy);
 	odbTypes(toon);
+	odbTypes(toonExtra);
+	odbTypes(toonRent);
+	odbTypes(toonBank);
 	typedef odb::database DB;
 } /*namespace Alarmud */
 #endif /* SRC_ODB_ODB_HPP_ */

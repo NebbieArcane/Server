@@ -268,10 +268,10 @@ logDefineStatus(NICE_MULTICLASS)
 logDefineStatus(NICE_PKILL)
 #endif
 
-#ifndef NO_REGISTER
-#define NO_REGISTER		true
+#ifndef NOREGISTER
+#define NOREGISTER		true
 #else
-logDefineStatus(NO_REGISTER)
+logDefineStatus(NOREGISTER)
 #endif
 
 #ifndef NODUPLICATES

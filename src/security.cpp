@@ -24,7 +24,7 @@
 
 namespace Alarmud {
 
-int SecCheck(char* arg, char* site) {
+int SecCheck(const char* arg, const char* site) {
 	int  result=0;
 	string fname("security/");
 	string compare(site);

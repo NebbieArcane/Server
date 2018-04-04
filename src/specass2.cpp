@@ -120,14 +120,14 @@ void assign_speciales() {
 	for (i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++) {
 		lastotherproc++;
 		if (IsTest())
-		{ mudlog(LOG_CHECK,"Generic special: [%3d] %s",lastotherproc,otherproc[i].nome); }
+		{ mudlog(LOG_WORLD,"Generic special: [%3d] %s",lastotherproc,otherproc[i].nome); }
 	}
 	mudlog(LOG_CHECK,"Generic procedure: %d (%d)",lastotherproc,i);
 
 	for (i=0; strcmp(roomproc[i].nome,"zFineprocedure"); i++) {
 		lastroomproc++;
 		if (IsTest())
-		{ mudlog(LOG_CHECK,"Room special: [%3d] %s",lastroomproc,roomproc[i].nome); }
+		{ mudlog(LOG_WORLD,"Room special: [%3d] %s",lastroomproc,roomproc[i].nome); }
 	}
 	mudlog(LOG_CHECK,"Room procedure: %d (%d)",lastroomproc,i);
 

@@ -2091,15 +2091,23 @@
 			},
 			"CON_ACCOUNT_NAME": {
 				"value": 39,
-				"comment": ""
+				"comment": "Richiesto login sull'account'"
 			},
 			"CON_ACCOUNT_PWD": {
 				"value": 40,
-				"comment": ""
+				"comment": "Email riconosciuta, chiediamo la password"
 			},
 			"CON_ACCOUNT_TOON": {
 				"value": 41,
-				"comment": ""
+				"comment": "Account password ok, propongo lista personaggi"
+			},
+			"CON_REGISTER": {
+				"value": 42,
+				"comment": "Registro il pg sull'account"
+			},
+			"CON_PWDOK": {
+				"value": 43,
+				"comment": "Tutto pronto, lo riconnetto o mando al menu"
 			}
 		},
 		"e_class_index": {
@@ -2809,53 +2817,57 @@
 		},
 		"e_log_levels": {
 			"comment": "",
+			"LOG_ALWAYS": {
+				"value": 0,
+				"comment": "Shown at verbosity 0 and above"
+			},
 			"LOG_SYSERR": {
 				"value": 1,
-				"comment": ""
+				"comment": "Shown at verbosity 1 and above"
 			},
 			"LOG_CHECK": {
 				"value": 2,
-				"comment": ""
+				"comment": "Shown at verbosity 3 and above"
 			},
 			"LOG_PLAYERS": {
 				"value": 4,
-				"comment": ""
+				"comment": "Shown at verbosity 4 and above"
 			},
 			"LOG_MOBILES": {
 				"value": 8,
-				"comment": ""
+				"comment": "Shown at verbosity 4 and above"
 			},
 			"LOG_CONNECT": {
 				"value": 16,
-				"comment": ""
+				"comment": "Shown at verbosity 2 and above"
 			},
 			"LOG_ERROR": {
 				"value": 32,
-				"comment": ""
+				"comment": "Shown at verbosity 2 and above"
 			},
 			"LOG_WHO": {
 				"value": 64,
-				"comment": ""
+				"comment": "Shown at verbosity 6 and above"
 			},
 			"LOG_SAVE": {
 				"value": 128,
-				"comment": ""
+				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_MAIL": {
 				"value": 256,
-				"comment": ""
+				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_RANK": {
 				"value": 512,
-				"comment": ""
+				"comment": "Shown at verbosity 5 and above"
 			},
-			"LOG_ALWAYS": {
+			"LOG_WORLD": {
 				"value": 1024,
-				"comment": ""
+				"comment": "Shown at verbosity 6 and above"
 			},
-			"LOG_SILENT": {
-				"value": 32768,
-				"comment": ""
+			"LOG_QUERY": {
+				"value": 2048,
+				"comment": "Shown at verbosity 5 and above"
 			}
 		},
 		"e_item_type": {
