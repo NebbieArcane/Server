@@ -234,7 +234,7 @@ EVENTFUNC(points_event) {
 		fGain = modf(((double)(move_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
 		fGain = fGain*(double)(r_mult) ;
 		gain = (int)( dum );
-            if (affected_by_spell(ch, SPELL_HASTE) || IS_AFFECTED( ch, APPLY_HASTE )) {
+            if (affected_by_spell(ch, SPELL_HASTE)) {
                 gain /= 2;
             }
 		rnd =  ( rand()% r_mult) ;

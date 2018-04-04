@@ -301,7 +301,7 @@ void spell_haste(byte level, struct char_data* ch,
             af.duration  = 4;
             break;
         case 2:
-            af.duration  = 2;
+            af.duration  = 1;
             break;
         case 3:
             af.duration  = 1;
@@ -311,7 +311,7 @@ void spell_haste(byte level, struct char_data* ch,
             
     }
     
-	af.modifier  = 1;
+	af.modifier  = 0;
 	af.location  = APPLY_HASTE;
 	af.bitvector = 0;
 	affect_to_char(victim, &af);
@@ -349,8 +349,8 @@ void spell_slow(byte level, struct char_data* ch,
 
 	af.type      = SPELL_SLOW;
 	af.duration  = level;
-	af.modifier  = -1;
-	af.location  = APPLY_HASTE;
+	af.modifier  = 1;
+	af.location  = APPLY_SLOW;
 	af.bitvector = 0;
 	affect_to_char(victim, &af);
 

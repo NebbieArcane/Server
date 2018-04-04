@@ -55,6 +55,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, char* name) ;
 struct obj_data* get_obj_vis_world(struct char_data* ch, char* name,int* count);
 int how_many_spell(struct char_data* ch, short skill) ;
 void init_string_block(struct string_block* sb) ;
+void reset_original_numattacks(struct char_data* ch) ;
 int isname(const char* str, const char* namelist) ;
 int isname2(const char* str, const char* namelist) ;
 void obj_from_char(struct obj_data* object) ;

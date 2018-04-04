@@ -92,6 +92,155 @@ int split_string(char* str, char* sep, char** argv)
 	SetLine(__FILE__,__LINE__);
 	return argc;
 }
+    
+void reset_original_numattacks(struct char_data* ch) {
+
+int mklev;
+    
+ch->mult_att = 1.0;
+
+	if ( HasClass(ch, CLASS_WARRIOR)  || HasClass(ch, CLASS_MONK) ||
+			HasClass(ch,CLASS_BARBARIAN) || HasClass(ch, CLASS_PALADIN) ||
+			HasClass(ch,CLASS_RANGER)) {
+
+		if (HasClass(ch, CLASS_BARBARIAN)) {
+			ch->mult_att+=(GET_LEVEL(ch, BARBARIAN_LEVEL_IND)*.05);
+		}
+		else if (HasClass(ch, CLASS_RANGER)) {
+			ch->mult_att+=(GET_LEVEL(ch, RANGER_LEVEL_IND)*.05);
+		}
+		else if (HasClass(ch, CLASS_PALADIN)) {
+			ch->mult_att+=(GET_LEVEL(ch, PALADIN_LEVEL_IND)*.05);
+			if (GET_ALIGNMENT(ch) >= 350) {
+				SET_BIT(ch->specials.affected_by,AFF_DETECT_EVIL);
+				SET_BIT(ch->specials.affected_by,AFF_PROTECT_FROM_EVIL);
+			}
+		}
+		else if (HasClass(ch, CLASS_WARRIOR)) {
+			ch->mult_att+=(GET_LEVEL(ch, WARRIOR_LEVEL_IND)*.05);
+		}
+		else {
+			ch->mult_att+= (GET_LEVEL(ch, MONK_LEVEL_IND)/16.0);
+			/* fix up damage stuff */
+			mklev = GET_LEVEL(ch, MONK_LEVEL_IND) ; // Gaia 2001
+			if(IS_SINGLE(ch)) { mklev++ ; }
+			switch(mklev) {
+			case 1:
+			case 2:
+			case 3:
+				ch->specials.damnodice = 1;
+				ch->specials.damsizedice = 3;
+				break;
+			case 4:
+			case 5:
+				ch->specials.damnodice = 1;
+				ch->specials.damsizedice = 4;
+				break;
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+				ch->specials.damnodice = 1;
+				ch->specials.damsizedice = 6;
+				break;
+			case 12:
+			case 13:
+			case 14:
+				ch->specials.damnodice = 2;
+				ch->specials.damsizedice = 3;
+				break;
+			case 15:
+			case 16:
+			case 17:
+			case 18:
+			case 19:
+				ch->specials.damnodice = 2;
+				ch->specials.damsizedice = 4;
+				break;
+			case 20:
+			case 21:
+				ch->specials.damnodice = 3;
+				ch->specials.damsizedice = 3;
+				break;
+			case 22:
+			case 23:
+			case 24:
+			case 25:
+			case 26:
+				ch->specials.damnodice = 3;
+				ch->specials.damsizedice = 4;
+				break;
+			case 27:
+			case 28:
+			case 29:
+				ch->specials.damnodice = 4;
+				ch->specials.damsizedice = 3;
+				break;
+			case 30:
+			case 31:
+			case 32:
+			case 33:
+			case 34:
+				ch->specials.damnodice = 4;
+				ch->specials.damsizedice = 4;
+				break;
+			case 35:
+			case 36:
+				ch->specials.damnodice = 4;
+				ch->specials.damsizedice = 5;
+				break;
+			case 37:
+			case 38:
+			case 39:
+			case 40:
+			case 41:
+				ch->specials.damnodice = 5;
+				ch->specials.damsizedice = 4;
+				break;
+			case 42:
+			case 43:
+			case 44:
+				ch->specials.damnodice = 6;
+				ch->specials.damsizedice = 4;
+				break;
+			case 45:
+			case 46:
+			case 47:
+			case 48:
+			case 49:
+				ch->specials.damnodice = 6;
+				ch->specials.damsizedice = 5;
+				break;
+			case 50:
+				ch->specials.damnodice = 8;
+				ch->specials.damsizedice = 4;
+				break; // Gaia 2001
+			case 51:
+				ch->specials.damnodice = 7;
+				ch->specials.damsizedice = 5; // Gaia 2001
+				break;
+			case 52: // Gaia 2001
+				ch->specials.damnodice = 8;
+				ch->specials.damsizedice = 5;
+				break;
+			default:
+				ch->specials.damnodice=1;
+				ch->specials.damsizedice = 2;
+				break;
+			}
+		}
+	}
+	else {
+		ch->mult_att+=(GetMaxLevel(ch)*0.01);
+		if (HasClass(ch,CLASS_CLERIC))
+		{ ch->mult_att+=0.5; }
+		if (HasClass(ch,CLASS_DRUID))
+		{ ch->mult_att+=0.6; }
+	}
+	mudlog(LOG_PLAYERS,"%s: numatcks resetted to = %f",GET_NAME(ch),ch->mult_att);
+}
 
 /*****************************************************************************
  * Restituisce TRUE se str e` un nome della lista dei nomi in namelist.
@@ -561,7 +710,20 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_HASTE:
-		break;
+        /* REQUIEM 2018 - applico un incremento del num. di attacchi fisso, se haste deriva da eq */
+		
+        if (mod > 0) {
+            mudlog(LOG_PLAYERS,"%s: num attacks altered by equip = %d",GET_NAME(ch),mod);
+            ch->mult_att += float(mod);
+        }
+            
+        if(affected_by_spell(ch, SPELL_HASTE) || mod < 0) {
+            /* ricalcolo il numero di attacchi originali */
+            reset_original_numattacks(ch);
+        }
+            
+        
+        break;
 
 	case APPLY_SLOW:
 		if (mod > 0)
