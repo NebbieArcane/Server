@@ -206,9 +206,10 @@ l'array connected_types in constants.cpp
 ** CON_CONF_ROLL                                =36
 ** CON_EXTRA2                                   =37
 ** CON_OBJ_FORGING                              =38
-** CON_ACCOUNT_NAME                             =39
-** CON_ACCOUNT_PWD                              =40
-** CON_ACCOUNT_TOON                             =41
+** CON_ACCOUNT_NAME                             =39Richiesto login sull'account'
+** CON_ACCOUNT_PWD                              =40Email riconosciuta, chiediamo la password
+** CON_ACCOUNT_TOON                             =41Account password ok, propongo lista personaggi
+** CON_PWDOK                                    =42Tutto pronto, lo riconnetto o mando al menu
 == Enumerations ==
 
 === enum e_damage_type ===
@@ -521,18 +522,19 @@ l'array connected_types in constants.cpp
 === enum e_log_levels ===
 
 
-** LOG_SYSERR                                   =1
-** LOG_CHECK                                    =2
-** LOG_PLAYERS                                  =4
-** LOG_MOBILES                                  =8
-** LOG_CONNECT                                  =16
-** LOG_ERROR                                    =32
-** LOG_WHO                                      =64
-** LOG_SAVE                                     =128
-** LOG_MAIL                                     =256
-** LOG_RANK                                     =512
-** LOG_ALWAYS                                   =1024
-** LOG_SILENT                                   =32768
+** LOG_ALWAYS                                   =0Shown at verbosity 0 and above
+** LOG_SYSERR                                   =1Shown at verbosity 1 and above
+** LOG_CHECK                                    =2Shown at verbosity 3 and above
+** LOG_PLAYERS                                  =4Shown at verbosity 4 and above
+** LOG_MOBILES                                  =8Shown at verbosity 4 and above
+** LOG_CONNECT                                  =16Shown at verbosity 2 and above
+** LOG_ERROR                                    =32Shown at verbosity 2 and above
+** LOG_WHO                                      =64Shown at verbosity 6 and above
+** LOG_SAVE                                     =128Shown at verbosity 5 and above
+** LOG_MAIL                                     =256Shown at verbosity 5 and above
+** LOG_RANK                                     =512Shown at verbosity 5 and above
+** LOG_WORLD                                    =1024Shown at verbosity 6 and above
+** LOG_QUERY                                    =2048Shown at verbosity 5 and above
 == Enumerations ==
 
 === enum e_mob_flags ===

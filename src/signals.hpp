@@ -21,6 +21,7 @@ void checkpointing( int dummy );
 void shutdown_request( int dummy );
 void logsig( int dummy );
 void hupsig( int dummy );
+void diesig( int dummy );
 void badcrash( int dummy );
 void PrintStatus();
 void PrintStatus(int level);

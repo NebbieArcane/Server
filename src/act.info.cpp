@@ -3538,23 +3538,12 @@ ACTION_FUNC(do_spells) {
 	destroy_string_block( &sb );
 }
 
-long GetMediumLag(long lastlag) {
-	static long Medialag=0;
-	if (lastlag)
-	{ Medialag=(Medialag+lastlag)/2; }
-	return(Medialag);
-}
-
-long GetLagIndex() {
-	struct timeval TotalDiff = timediff( &aTimeCheck[ gnTimeCheckIndex == 0 ?
-														  NumTimeCheck - 1 :
-														  gnTimeCheckIndex - 1 ],
-										 &aTimeCheck[ gnTimeCheckIndex ] );
-	long LagIndex;
-	LagIndex=( ( TotalDiff.tv_sec * 1000000L ) + ( TotalDiff.tv_usec ) ) /
-			 NumTimeCheck ;
-	GetMediumLag(LagIndex);
-	return(LagIndex);
+double GetLagIndex() {
+	uint64_t lag=0.0;
+	for (uint i=0;i< sizeof(aTimeCheck);++i) {
+		lag+=aTimeCheck[0];
+	}
+	return static_cast<double>(lag)/sizeof(aTimeCheck)/1000000.0;
 }
 
 ACTION_FUNC(do_world) {
@@ -3581,9 +3570,9 @@ ACTION_FUNC(do_world) {
 	snprintf(buf, 999, "$c0005Orario attuale    : $c0015%s $c0005", tmstr);
 	act(buf,FALSE, ch,0,0,TO_CHAR);
 
-	snprintf( buf,999, "$c0005Indice di attesa: $c0015%ld $c0005usec", GetLagIndex() );
+	snprintf( buf,999, "$c0005Indice di attesa desiderato: $c0015%.6f $c0005secs", static_cast<double>(OPT_USEC)/1000000.0);
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
-	snprintf( buf, 999,"$c0005Indice medio   : $c0015%ld $c0005usec", GetMediumLag(0) );
+	snprintf( buf, 999,"$c0005Indice di attesa attuale   : $c0015%.6f $c0005sec", GetLagIndex() );
 	act( buf, FALSE, ch, 0, 0, TO_CHAR );
 
 	if (GetMaxLevel(ch) >=IMMORTALE) {

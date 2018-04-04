@@ -7,6 +7,7 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 
+#include <string>
 #include "typedefs.hpp"
 #include "odb/account.hpp"
 #include "specialproc_other.hpp"
@@ -190,6 +191,8 @@ typedef struct {
 /*
  *  old stuff.
  */
+#define OPT_USEC 250000       /* time delay corresponding to 4 passes/sec */
+
 #define PULSE_PER_SEC  4
 #define PULSE_PER_MIN  (60 * PULSE_PER_SEC)
 #define PULSE_MAXUSAGE		 10
@@ -834,6 +837,7 @@ struct snoop_data {
 };
 struct descriptor_data {
 	user AccountData;
+	string currentInput;
 	int descriptor;                    /* file descriptor for socket */
 
 	char* name;                /* ptr to name for mail system */

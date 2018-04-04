@@ -17,8 +17,7 @@ const char* DescDamage(float dam) ;
 const char* DescRatio(float f) ; /* theirs / yours */
 const char* DescRatioF(float f) ; /* theirs / yours */
 const char* EqDesc(float a) ;
-long GetLagIndex() ;
-long GetMediumLag(long lastlag) ;
+double GetLagIndex() ;
 const char* HitRollDesc(int a) ;
 int HowManyConnection(int ToAdd) ;
 int MobLevBonus(struct char_data* ch) ;

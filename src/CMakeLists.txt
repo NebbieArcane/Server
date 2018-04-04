@@ -55,7 +55,7 @@ MACRO(ODB_GENERATE dbtype header)
          		--generate-session       
                 --schema-format separate
                 --at-once
-                --schema-name ${dbschema}
+                --schema-name ${dbschema}-schema
                 --input-name ${CMAKE_PROJECT_NAME}
                 -o ${CMAKE_SOURCE_DIR}/src/odb
                 ${CMAKE_SOURCE_DIR}/src/odb/${header}.hpp
@@ -76,8 +76,9 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 	SET(cxxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.cxx")
 	SET(hxxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.hxx")
 	SET(ixxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.ixx")
-	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${cxxFile} ${cxxSchema})
-    SET(ODB_GENERATED_FILES ${cxxFile} ${hxxFile} ${ixxFile} ${cxxSchema} ${hxxSchema} ${ixxSchema})
+	SET(Schema		"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-schema-${dbtype}.cxx")
+	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${cxxFile} ${cxxSchema} ${Schema})
+    SET(ODB_GENERATED_FILES ${cxxFile} ${cxxSchema} ${Schema})
 
     ADD_CUSTOM_COMMAND(
         OUTPUT ${ODB_GENERATED_FILES}
@@ -91,7 +92,8 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
         		--generate-query 
         		--generate-prepared
                 --show-sloc
-         		--generate-session       
+         		--generate-session     
+         		--generate-schema  
                 --schema-format separate
                 --at-once
                 --schema-name ${dbschema}
@@ -199,7 +201,7 @@ configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UN
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #	-Wfatal-errors
 	-Wno-enum-compare
-	-Wno-unknown-pragmas
+#	-Wno-unknown-pragmas
 	-Wno-variadic-macros 
 	-Wno-unused-parameter
 	-Wno-format-nonliteral

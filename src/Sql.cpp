@@ -12,6 +12,7 @@ using std::string;
 using std::endl;
 using std::cout;
 namespace Alarmud {
+odb::session odbSession;
 #if USE_MYSQL
 odb::database* Sql::getMysql() {
 	thread_local static odb::database* db (new odb::mysql::database (MYSQL_USER,MYSQL_PASSWORD,MYSQL_DB,MYSQL_HOST));
@@ -71,9 +72,21 @@ void Sql::dbUpdate() {
 		}
 		catch (std::exception &e) {
 			mudlog(LOG_SYSERR,"DB error: %s",e.what());
+			assert(false);
 			return;
 		}
 	}
 #endif
+}
+
+void sqlTrace::execute(odb::connection& c, const char* statement) {
+	mudlog(LOG_QUERY,statement);
+}
+sqlTrace logTracer;
+
+Sql::~Sql() {
+}
+
+Sql::Sql() {
 }
 } /* namespace Alarmud */

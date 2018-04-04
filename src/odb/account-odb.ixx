@@ -2,8 +2,340 @@
 // compiler for C++.
 //
 
+#include <odb/database.hxx>
+
 namespace odb
 {
+  // toonExtra
+  //
+
+  inline
+  access::object_traits< ::Alarmud::toonExtra >::id_type
+  access::object_traits< ::Alarmud::toonExtra >::
+  id (const object_type& o)
+  {
+    return o.name;
+  }
+
+  inline
+  void access::object_traits< ::Alarmud::toonExtra >::
+  callback (database& db, object_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits< ::Alarmud::toonExtra >::
+  callback (database& db, const object_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  persist (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->persist (db, o);
+  }
+
+  inline
+  access::object_traits_impl< ::Alarmud::toonExtra, id_common >::pointer_type
+  access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  find (database& db, const id_type& id)
+  {
+    return function_table[db.id ()]->find1 (db, id);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  find (database& db, const id_type& id, object_type& o)
+  {
+    return function_table[db.id ()]->find2 (db, id, o);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  reload (database& db, object_type& o)
+  {
+    return function_table[db.id ()]->reload (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  update (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->update (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  erase (database& db, const id_type& id)
+  {
+    function_table[db.id ()]->erase1 (db, id);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  erase (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->erase2 (db, o);
+  }
+
+  inline
+  result< access::object_traits_impl< ::Alarmud::toonExtra, id_common >::object_type >
+  access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  unsigned long long access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  erase_query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->erase_query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
+  }
+
+  // toonRent
+  //
+
+  inline
+  access::object_traits< ::Alarmud::toonRent >::id_type
+  access::object_traits< ::Alarmud::toonRent >::
+  id (const object_type& o)
+  {
+    return o.name;
+  }
+
+  inline
+  void access::object_traits< ::Alarmud::toonRent >::
+  callback (database& db, object_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits< ::Alarmud::toonRent >::
+  callback (database& db, const object_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  persist (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->persist (db, o);
+  }
+
+  inline
+  access::object_traits_impl< ::Alarmud::toonRent, id_common >::pointer_type
+  access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  find (database& db, const id_type& id)
+  {
+    return function_table[db.id ()]->find1 (db, id);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  find (database& db, const id_type& id, object_type& o)
+  {
+    return function_table[db.id ()]->find2 (db, id, o);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  reload (database& db, object_type& o)
+  {
+    return function_table[db.id ()]->reload (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  update (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->update (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  erase (database& db, const id_type& id)
+  {
+    function_table[db.id ()]->erase1 (db, id);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  erase (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->erase2 (db, o);
+  }
+
+  inline
+  result< access::object_traits_impl< ::Alarmud::toonRent, id_common >::object_type >
+  access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  unsigned long long access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  erase_query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->erase_query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toonRent, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
+  }
+
+  // toonBank
+  //
+
+  inline
+  access::object_traits< ::Alarmud::toonBank >::id_type
+  access::object_traits< ::Alarmud::toonBank >::
+  id (const object_type& o)
+  {
+    return o.name;
+  }
+
+  inline
+  void access::object_traits< ::Alarmud::toonBank >::
+  callback (database& db, object_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits< ::Alarmud::toonBank >::
+  callback (database& db, const object_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  persist (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->persist (db, o);
+  }
+
+  inline
+  access::object_traits_impl< ::Alarmud::toonBank, id_common >::pointer_type
+  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  find (database& db, const id_type& id)
+  {
+    return function_table[db.id ()]->find1 (db, id);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  find (database& db, const id_type& id, object_type& o)
+  {
+    return function_table[db.id ()]->find2 (db, id, o);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  reload (database& db, object_type& o)
+  {
+    return function_table[db.id ()]->reload (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  update (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->update (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  erase (database& db, const id_type& id)
+  {
+    function_table[db.id ()]->erase1 (db, id);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  erase (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->erase2 (db, o);
+  }
+
+  inline
+  result< access::object_traits_impl< ::Alarmud::toonBank, id_common >::object_type >
+  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  unsigned long long access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  erase_query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->erase_query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
+  }
+
   // toon
   //
 
@@ -31,6 +363,87 @@ namespace odb
     ODB_POTENTIALLY_UNUSED (db);
     ODB_POTENTIALLY_UNUSED (x);
     ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toon, id_common >::
+  persist (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->persist (db, o);
+  }
+
+  inline
+  access::object_traits_impl< ::Alarmud::toon, id_common >::pointer_type
+  access::object_traits_impl< ::Alarmud::toon, id_common >::
+  find (database& db, const id_type& id)
+  {
+    return function_table[db.id ()]->find1 (db, id);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toon, id_common >::
+  find (database& db, const id_type& id, object_type& o)
+  {
+    return function_table[db.id ()]->find2 (db, id, o);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::toon, id_common >::
+  reload (database& db, object_type& o)
+  {
+    return function_table[db.id ()]->reload (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toon, id_common >::
+  update (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->update (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toon, id_common >::
+  erase (database& db, const id_type& id)
+  {
+    function_table[db.id ()]->erase1 (db, id);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::toon, id_common >::
+  erase (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->erase2 (db, o);
+  }
+
+  inline
+  result< access::object_traits_impl< ::Alarmud::toon, id_common >::object_type >
+  access::object_traits_impl< ::Alarmud::toon, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  unsigned long long access::object_traits_impl< ::Alarmud::toon, id_common >::
+  erase_query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->erase_query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::toon, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::toon, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
   }
 
   // user
@@ -62,6 +475,87 @@ namespace odb
     ODB_POTENTIALLY_UNUSED (e);
   }
 
+  inline
+  void access::object_traits_impl< ::Alarmud::user, id_common >::
+  persist (database& db, object_type& o)
+  {
+    function_table[db.id ()]->persist (db, o);
+  }
+
+  inline
+  access::object_traits_impl< ::Alarmud::user, id_common >::pointer_type
+  access::object_traits_impl< ::Alarmud::user, id_common >::
+  find (database& db, const id_type& id)
+  {
+    return function_table[db.id ()]->find1 (db, id);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::user, id_common >::
+  find (database& db, const id_type& id, object_type& o)
+  {
+    return function_table[db.id ()]->find2 (db, id, o);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::user, id_common >::
+  reload (database& db, object_type& o)
+  {
+    return function_table[db.id ()]->reload (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::user, id_common >::
+  update (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->update (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::user, id_common >::
+  erase (database& db, const id_type& id)
+  {
+    function_table[db.id ()]->erase1 (db, id);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::user, id_common >::
+  erase (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->erase2 (db, o);
+  }
+
+  inline
+  result< access::object_traits_impl< ::Alarmud::user, id_common >::object_type >
+  access::object_traits_impl< ::Alarmud::user, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  unsigned long long access::object_traits_impl< ::Alarmud::user, id_common >::
+  erase_query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->erase_query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::user, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::user, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
+  }
+
   // legacy
   //
 
@@ -90,64 +584,86 @@ namespace odb
     ODB_POTENTIALLY_UNUSED (x);
     ODB_POTENTIALLY_UNUSED (e);
   }
-}
-
-namespace odb
-{
-  // toon
-  //
 
   inline
-  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::
-  erase (database& db, const object_type& obj)
+  void access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  persist (database& db, const object_type& o)
   {
-    callback (db, obj, callback_event::pre_erase);
-    erase (db, id (obj));
-    callback (db, obj, callback_event::post_erase);
+    function_table[db.id ()]->persist (db, o);
   }
 
   inline
-  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::
-  load_ (statements_type& sts,
-         object_type& obj,
-         bool)
+  access::object_traits_impl< ::Alarmud::legacy, id_common >::pointer_type
+  access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  find (database& db, const id_type& id)
   {
-    ODB_POTENTIALLY_UNUSED (sts);
-    ODB_POTENTIALLY_UNUSED (obj);
-  }
-
-  // user
-  //
-
-  inline
-  void access::object_traits_impl< ::Alarmud::user, id_mysql >::
-  erase (database& db, const object_type& obj)
-  {
-    callback (db, obj, callback_event::pre_erase);
-    erase (db, id (obj));
-    callback (db, obj, callback_event::post_erase);
-  }
-
-  // legacy
-  //
-
-  inline
-  void access::object_traits_impl< ::Alarmud::legacy, id_mysql >::
-  erase (database& db, const object_type& obj)
-  {
-    callback (db, obj, callback_event::pre_erase);
-    erase (db, id (obj));
-    callback (db, obj, callback_event::post_erase);
+    return function_table[db.id ()]->find1 (db, id);
   }
 
   inline
-  void access::object_traits_impl< ::Alarmud::legacy, id_mysql >::
-  load_ (statements_type& sts,
-         object_type& obj,
-         bool)
+  bool access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  find (database& db, const id_type& id, object_type& o)
   {
-    ODB_POTENTIALLY_UNUSED (sts);
-    ODB_POTENTIALLY_UNUSED (obj);
+    return function_table[db.id ()]->find2 (db, id, o);
+  }
+
+  inline
+  bool access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  reload (database& db, object_type& o)
+  {
+    return function_table[db.id ()]->reload (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  update (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->update (db, o);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  erase (database& db, const id_type& id)
+  {
+    function_table[db.id ()]->erase1 (db, id);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  erase (database& db, const object_type& o)
+  {
+    function_table[db.id ()]->erase2 (db, o);
+  }
+
+  inline
+  result< access::object_traits_impl< ::Alarmud::legacy, id_common >::object_type >
+  access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  unsigned long long access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  erase_query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->erase_query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::object_traits_impl< ::Alarmud::legacy, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
   }
 }
 

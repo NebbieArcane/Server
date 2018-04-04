@@ -713,6 +713,7 @@ e_connection_types encode_e_connection_types(std::string s,e_connection_types fa
 	if (s == "CON_ACCOUNT_NAME") return CON_ACCOUNT_NAME;
 	if (s == "CON_ACCOUNT_PWD") return CON_ACCOUNT_PWD;
 	if (s == "CON_ACCOUNT_TOON") return CON_ACCOUNT_TOON;
+	if (s == "CON_PWDOK") return CON_PWDOK;
 	return fallback;
 }
 
@@ -802,6 +803,8 @@ std::string translate(const e_connection_types e) {
 		return "CON_ACCOUNT_PWD";
 	case CON_ACCOUNT_TOON:
 		return "CON_ACCOUNT_TOON";
+	case CON_PWDOK:
+		return "CON_PWDOK";
 	default:
 		return "UNKNOWN";
 	}
@@ -850,6 +853,7 @@ bool enum_validate(const e_connection_types value) {
 		case CON_ACCOUNT_NAME:
 		case CON_ACCOUNT_PWD:
 		case CON_ACCOUNT_TOON:
+		case CON_PWDOK:
 		return true;
 		default:
 		return false;
@@ -2115,6 +2119,7 @@ std::ostream & operator<<(std::ostream &out,const e_liquids value) {
 }
 e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback) {
 	boost::algorithm::to_upper(s);
+	if (s == "LOG_ALWAYS") return LOG_ALWAYS;
 	if (s == "LOG_SYSERR") return LOG_SYSERR;
 	if (s == "LOG_CHECK") return LOG_CHECK;
 	if (s == "LOG_PLAYERS") return LOG_PLAYERS;
@@ -2125,13 +2130,15 @@ e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback) {
 	if (s == "LOG_SAVE") return LOG_SAVE;
 	if (s == "LOG_MAIL") return LOG_MAIL;
 	if (s == "LOG_RANK") return LOG_RANK;
-	if (s == "LOG_ALWAYS") return LOG_ALWAYS;
-	if (s == "LOG_SILENT") return LOG_SILENT;
+	if (s == "LOG_WORLD") return LOG_WORLD;
+	if (s == "LOG_QUERY") return LOG_QUERY;
 	return fallback;
 }
 
 std::string translate(const e_log_levels e) {
 	switch(e) {
+	case LOG_ALWAYS:
+		return "LOG_ALWAYS";
 	case LOG_SYSERR:
 		return "LOG_SYSERR";
 	case LOG_CHECK:
@@ -2152,16 +2159,17 @@ std::string translate(const e_log_levels e) {
 		return "LOG_MAIL";
 	case LOG_RANK:
 		return "LOG_RANK";
-	case LOG_ALWAYS:
-		return "LOG_ALWAYS";
-	case LOG_SILENT:
-		return "LOG_SILENT";
+	case LOG_WORLD:
+		return "LOG_WORLD";
+	case LOG_QUERY:
+		return "LOG_QUERY";
 	default:
 		return "UNKNOWN";
 	}
 }
 bool enum_validate(const e_log_levels value) {
 	switch(value) {
+		case LOG_ALWAYS:
 		case LOG_SYSERR:
 		case LOG_CHECK:
 		case LOG_PLAYERS:
@@ -2172,8 +2180,8 @@ bool enum_validate(const e_log_levels value) {
 		case LOG_SAVE:
 		case LOG_MAIL:
 		case LOG_RANK:
-		case LOG_ALWAYS:
-		case LOG_SILENT:
+		case LOG_WORLD:
+		case LOG_QUERY:
 		return true;
 		default:
 		return false;

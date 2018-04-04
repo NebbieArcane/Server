@@ -6,6 +6,7 @@
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
@@ -25,7 +26,7 @@ char in_clan(struct char_data* ch1, struct char_data* ch2);
 char in_group_internal(struct char_data* ch1, struct char_data* ch2, int strict);
 char in_group_strict(struct char_data* ch1, struct char_data* ch2);
 char in_group(struct char_data* ch1, struct char_data* ch2);
-char* lower(char* s);
+char* lower(const char* s);
 char* replace(char* s, char vecchio, char nuovo);
 int anti_barbarian_stuff(struct obj_data* obj_object);
 int apply_soundproof(struct char_data* ch);
@@ -163,6 +164,16 @@ struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
 char RandomChar() ;
 const char* RandomWord() ;
+template <typename T>
+T tonumber(std::string source,T fallback) {
+	try {
+		return boost::lexical_cast<T>(source);
+	}
+	catch(...) {
+
+	}
+	return fallback;
+}
 
 } // namespace Alarmud
 #endif

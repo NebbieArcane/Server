@@ -2976,6 +2976,10 @@ const char* aszLogMessagesType[] = {
 	"ERROR",
 	"WHO",
 	"SAVE",
+	"MAIL",
+	"RANK",
+	"WORLD",
+	"QUERY",
 	"\n"
 };
 

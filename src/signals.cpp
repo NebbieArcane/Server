@@ -23,6 +23,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "signals.hpp"
+#include "act.info.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 namespace Alarmud {
@@ -32,7 +33,6 @@ namespace Alarmud {
 #define LOG_CRASH 0 // Alar, abbiamo gdb, meglio non modificare i crash
 #define MAX_FNAME_LEN 32
 #define STACK_SIZE 15
-int HowManyConnection(int ToAdd);
 int gnPtr =-1;
 
 char currentfile[MAX_FNAME_LEN+1]="";
@@ -142,9 +142,9 @@ void signal_setup() {
 
 	signal(SIGHUP, hupsig);
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGINT, hupsig);
+	signal(SIGINT, diesig);
 	signal(SIGALRM, logsig);
-	signal(SIGTERM, hupsig);
+	signal(SIGTERM, diesig);
 #if LOG_CRASH
 	signal( SIGSEGV, badcrash );
 	signal( SIGBUS, buscrash );
@@ -181,30 +181,32 @@ void checkpointing( int dummy ) {
 	}
 
 }
-
+void hupsig(int dummy) {
+	mudlog( LOG_ALWAYS, "Received SIGHUP %d",dummy);
+	reload_files_and_scripts();
+}
 void shutdown_request( int dummy ) {
 
-	mudlog( LOG_CHECK, "Received USR2 - shutdown request");
+	mudlog( LOG_ALWAYS, "Received USR2 - shutdown request %d",dummy);
 	mudshutdown = 1;
 }
 
 
 /* kick out players etc */
-void hupsig( int dummy ) {
-	int i;
+void diesig( int dummy ) {
 
-	mudlog( LOG_CHECK, "Received SIGHUP, SIGINT, or SIGTERM. Shutting down");
+	mudlog( LOG_ALWAYS, "Received SIGINT, or SIGTERM. Shutting down %d",dummy);
 
 	raw_force_all("return");
 	raw_force_all("save");
-	for (i=0; i<30; i++) {
+	for (int i=0; i<30; i++) {
 		SaveTheWorld();
 	}
 	mudshutdown = rebootgame = 1;
 }
 
 void logsig( int dummy ) {
-	mudlog( LOG_CHECK, "Signal logsig received. Ignoring." );
+	mudlog( LOG_ALWAYS, "Signal SIGALARM received. Ignoring. %d",dummy );
 	signal( SIGALRM, logsig );
 }
 

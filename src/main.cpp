@@ -42,7 +42,18 @@ int main(int argc, char** argv) {
 #endif
 	string server_name="starting";
 	string comment="";
-	unsigned short debug_level=0;
+	unsigned short debug_level=2;
+#ifdef env_master
+	debug_level=99;
+#endif
+#ifdef env_devel
+	debug_level=99;
+	SetTest(true);
+#endif
+#ifdef env_vagrant
+	debug_level=99;
+	SetTest(true);
+#endif
 	namespace po = boost::program_options ;
 	po::options_description opt("Allowed options");
 	opt.add_options()
@@ -55,7 +66,7 @@ int main(int argc, char** argv) {
 	("ansi_off,A","Disables all colors")
 	("test_mode,t","Developer mode, disables password checking")
 	("version,V","Display version and terminates")
-	("verbose_log,v",po::value<unsigned short> (& debug_level)->default_value(2),"Log verbosity level")
+	("verbose_log,v",po::value<unsigned short> (& debug_level)->default_value(debug_level),"Log verbosity level")
 	("directory,d",po::value<string>(&dir)->default_value(dir),"Data directory")
 	("nospecials,s",po::value<bool>(&no_specials)->default_value(false),"Disable specials procedures")
 //    ;
@@ -86,17 +97,7 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	cout << endl;
-#ifdef env_master
-	debug_level=99;
-#endif
-#ifdef env_devel
-	debug_level=99;
-	SetTest(true);
-#endif
-#ifdef env_vagrant
-	debug_level=99;
-	SetTest(true);
-#endif
+
 	if(vm.count("test_mode")) { SetTest(true);}
 	if(vm.count("ansi_off")) { SET_BIT(SystemFlags,SYS_NOANSI); }
 	if(vm.count("disable_DNS")) { SET_BIT(SystemFlags,SYS_SKIPDNS); }
@@ -106,6 +107,7 @@ int main(int argc, char** argv) {
 	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
 	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
 	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);
+	log_configure(querylogger,"query",".log",log4cxx::Level::getAll(),true);
 	if(vm.count("demonize")) {
 		int pid = fork();
 

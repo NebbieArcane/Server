@@ -25,7 +25,7 @@
 //cmakedefine MYSQL_VERSION
 #cmakedefine MYSQL_VERSION "@MYSQL_VERSION@"
 #define HAS_MYSQL defined(MYSQL_VERSION)
-#cmakedefine BOOST_VERSION "@Boost_VERSION@"
+// Boost is mandatory
 #define HAS_BOOST defined(BOOST_VERSION)
 #cmakedefine CURL_VERSION_STRING "@CURL_VERSION_STRING@"
 #define HAS_CURL defined(CURL_VERSION)

@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <ctime>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
+
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -50,6 +52,7 @@
 #include "regen.hpp"
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
+#include "Sql.hpp"
 namespace Alarmud {
 
 
@@ -119,50 +122,128 @@ ACTION_FUNC(do_auth) {
 	}
 	return;
 }
-ACTION_FUNC(do_register) {
-	struct char_data* victim = nullptr;
-	char buf[255];
-	char name[MAX_INPUT_LENGTH];
-	char* parms[10];
-	int count =1;
-	int nparms;
-	for (nparms=0; nparms<10; nparms++) {
-		parms[nparms]=(char*) NULL;
+void plrRegister(struct char_data* ch, 	std::vector<string> &parts) {
+}
+void wizRegister(struct char_data* ch, 	std::vector<string> &parts) {
+	thread_local static string entropy("abcdefghijkmnopqrstuwxyz23456789ABCDEFGHJKLMNPQRSTUVZ.,");
+	using std::invalid_argument;
+	send_to_char("\r\nReceived\r\n",ch);
+	char n[]="0";
+	for (auto s: parts) {
+		send_to_char(n,ch);
+		n[0]++;
+		send_to_char(s.c_str(),ch);
+		send_to_char("\r\n",ch);
 	}
-
-	if( !IS_PC( ch ) )
-	{ return; }
-
-	/* parse the argument */
-	for (nparms=0; *arg; nparms++) {
-		arg = one_argument(arg,name);
-		if (*name) {
-			parms[nparms]=strdup(lower(name));
+	if (parts.size()==0) {
+		send_to_char(
+				"$c0011"
+				"Con questo comando puoi registrare un giocatore e eventualmente assegnargli dei personaggi\r\n"
+				"Sintassi:\r\n"
+				"register account <email> <nickname> <nome cognome> -> crea l'account (viene inviato un token alla mail)\r\n"
+				"register reset <email> <password> -> resetta la password\r\n"
+				"register add <personaggio> <email> -> assegna un personaggio a un account\r\n"
+				"register list <email> -> elenca tutti i personaggi di un account\r\n"
+				"register list <personaggio> -> come sopra ma cerca l'account a partire da un personaggio\r\n"
+				"$c0007"
+				,ch);
+		return;
+	}
+	try {
+		if (parts[0]=="account") {
+			if (parts.size()<4) {
+				throw invalid_argument("Usa 'register account <email> <nickname> <nome cognome>'");
+			}
+			string email(parts[1]);
+			string nickname(parts[2]);
+			string realname;
+			for (auto s : boost::make_iterator_range(parts.begin()+2,parts.end())) {
+				realname+=s+" ";
+			}
+			random_shuffle(entropy.begin(),entropy.end());
+			user account(nickname,realname,email,crypt(entropy.substr(0,10).c_str(),entropy.substr(11,2).c_str()));
+			boost::format fmt("$c00%s Registrazione %s per %s$c0007");
+			if (Sql::save(account)) {
+				fmt % "10" % "riuscita" % email;
+			}
+			else {
+				fmt % "09" % "fallita" % email;
+			}
+			send_to_char(fmt.str().c_str(),ch);
 		}
-
-	}
-
-	if ( parms[0] && IS_CREATORE(ch) ) {
-		if (!(victim = get_char_vis_world( ch, (nparms==1) ? parms[0] : parms[1], &count ) ) ) {
-			sprintf(buf,"%s non e` in linea.\n\r",(nparms==1) ? parms[0] : parms[1]);
-			send_to_char(buf, ch);
+		else if (parts[0]=="reset") {
+			if (parts.size()<3) {
+				throw invalid_argument("Usa 'register reset <email> <password> -> resetta la password (max 10 caratteri)'");
+			}
+			string email(parts[1]);
+			string password(parts[2].substr(0.10));
+			userQuery q(userQuery::email == email);
+			auto account(Sql::getOne<user>(q));
+			if (account) {
+				random_shuffle(entropy.begin(),entropy.end());
+				account->password=crypt(password.c_str(),entropy.substr(0,2).c_str());
+				boost::format fmt("$c00%s Password reset %s per %s$c0007 (%s)");
+				if (Sql::save(*account,true)) {
+					fmt % "10" % "riuscito" % email % password;
+				}
+				else {
+					fmt % "09" % "fallito" % email % password;
+				}
+				send_to_char(fmt.str().c_str(),ch);
+			}
+			else {
+				boost::format fmt("$c0009 Not found $c0007[$c0004%s$c0007]");
+				fmt % email;
+				send_to_char(fmt.str().c_str(),ch);
+			}
+		}
+		else if (parts[0]=="level") {
+			if (parts.size()<3) {
+				throw invalid_argument("Usa 'register reset <email> <password> -> resetta la password (max 10 caratteri)'");
+			}
+			string email(parts[1]);
+			unsigned short level=tonumber(parts[2],0);
+			userQuery q(userQuery::email == email);
+			auto account(Sql::getOne<user>(q));
+			if (account) {
+				account->level;
+				boost::format fmt("$c00%s Password reset %s per %s$c0007 (%d)");
+				if (Sql::save(*account,true)) {
+					fmt % "10" % "riuscito" % email % level;
+				}
+				else {
+					fmt % "09" % "fallito" % email % level;
+				}
+				send_to_char(fmt.str().c_str(),ch);
+			}
+			else {
+				boost::format fmt("$c0009 Not found $c0007[$c0004%s$c0007]");
+				fmt % email;
+				send_to_char(fmt.str().c_str(),ch);
+			}
 		}
 		else {
-			sprintf(buf,"$c0005Registrato da $c0014%s $c0005come $c0014%s$c0007\n\r",
-					GET_AUTHBY(victim),GET_AUTHCODE(victim));
-			send_to_char(buf, ch);
+			boost::format fmt("Unrecognized command: %s");
+			fmt % parts[0];
+			send_to_char(fmt.str().c_str(),ch);
 		}
 	}
-	if (victim) {
-		Registered toon(GET_NAME(victim));
-		toon.reg(GET_NAME(ch));
+	catch(invalid_argument &e) {
+		send_to_char(e.what(),ch);
 	}
-	//Nebbie::getRegistered()->doReg(GET_NAME(ch),GET_NAME(victim));
-	//doreg(ch,nparms,parms);
-	for (nparms=0; nparms<10; nparms++) {
-		free(parms[nparms]);
+
+}
+ACTION_FUNC(do_register) {
+	string input(arg);
+	boost::algorithm::trim_all(input);
+	std::vector<string> parts;
+	if (input.length()>0) boost::algorithm::split(parts,input,boost::algorithm::is_space(),boost::algorithm::token_compress_on);
+	if (IS_CREATORE(ch)) {
+		wizRegister(ch,parts);
 	}
-	return;
+	else {
+		plrRegister(ch,parts);
+	}
 }
 
 ACTION_FUNC(do_imptest) {
@@ -298,16 +379,21 @@ ACTION_FUNC(do_setsev) {
 	else {
 		send_to_char( "\n\rCon il comando setsev <numero> puoi cambiare il tipo di messaggi di sistema\n\r", ch );
 		send_to_char( "visualizzati. Il numero e` un vettore di bit con il seguente significato:\n\r\n\r", ch );
-		send_to_char( "  # Nome    Descrizione\n\r", ch );
-		send_to_char( "  1 SYSERR  Messaggi di errore grave. Comunicarli ad Alar appena possibile.\n\r", ch );
-		send_to_char( "  2 CHECK   Messaggi di controllo. Possono essere ignorati.\n\r", ch );
-		send_to_char( "  4 PLAYERS Messaggi riguardanti i giocatori (morti ed altri eventi).\n\r", ch );
-		send_to_char( "  8 MOBILES Messaggi riguardanti i mobs.\n\r", ch );
+		send_to_char( "   # Nome    Descrizione\n\r", ch );
+		send_to_char( "   1 SYSERR  Messaggi di errore grave. Comunicarli ad Alar appena possibile.\n\r", ch );
+		send_to_char( "   2 CHECK   Messaggi di controllo. Possono essere ignorati.\n\r", ch );
+		send_to_char( "   4 PLAYERS Messaggi riguardanti i giocatori (morti ed altri eventi).\n\r", ch );
+		send_to_char( "   8 MOBILES Messaggi riguardanti i mobs.\n\r", ch );
 		if (IS_MAESTRO_DEGLI_DEI(ch))
-		{ send_to_char( " 16 CONNECT Messaggi riguardanti le nuove connessioni.\n\r", ch ); }
-		send_to_char( " 32 ERROR   Messaggi di errore non gravi riguardanti il database od altro.\n\r", ch );
-		send_to_char( " 64 WHO     Messaggi Informativi sui giocatori.\n\r", ch );
-		send_to_char( "128 SAVE    Messaggi riguardanti il salvataggio dei giocatori.\n\r\n\r", ch );
+		{ send_to_char( "  16 CONNECT Messaggi riguardanti le nuove connessioni.\n\r", ch ); }
+		send_to_char( "  32 ERROR   Messaggi di errore non gravi riguardanti il database od altro.\n\r", ch );
+		send_to_char( "  64 WHO     Messaggi Informativi sui giocatori.\n\r", ch );
+		send_to_char( " 128 SAVE    Messaggi riguardanti il salvataggio dei giocatori.\n\r", ch );
+		send_to_char( " 256 MAIL    Messaggi riguardanti il sistema deelle mail.\n\r", ch );
+		send_to_char( " 512 RANK    Messaggi riguardanti i livelli.\n\r", ch );
+		send_to_char( "1024 WORLD   Messaggi riguardanti il mondo.\n\r", ch );
+		send_to_char( "2048 QUERY   Messaggi riguardanti le query sul db.\n\r", ch );
+		send_to_char( "\r\n", ch );
 		send_to_char( "Vi prego di tenere attivo almeno SYSERR in modo da individuare eventuali\n\r", ch );
 		send_to_char( "bugs.\n\r\n\r", ch );
 

@@ -31,6 +31,9 @@ namespace odb
           db.execute ("DROP TABLE IF EXISTS `legacy`");
           db.execute ("DROP TABLE IF EXISTS `user`");
           db.execute ("DROP TABLE IF EXISTS `toon`");
+          db.execute ("DROP TABLE IF EXISTS `toonBank`");
+          db.execute ("DROP TABLE IF EXISTS `toonRent`");
+          db.execute ("DROP TABLE IF EXISTS `toonExtra`");
           db.execute ("CREATE TABLE IF NOT EXISTS `schema_version` (\n"
                       "  `name` VARCHAR(255) NOT NULL PRIMARY KEY,\n"
                       "  `version` BIGINT UNSIGNED NOT NULL,\n"
@@ -48,22 +51,36 @@ namespace odb
       {
         case 1:
         {
+          db.execute ("CREATE TABLE `toonExtra` (\n"
+                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
+                      "  `classes` TEXT NOT NULL)\n"
+                      " ENGINE=InnoDB");
+          db.execute ("CREATE TABLE `toonRent` (\n"
+                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
+                      "  `vnum` BIGINT UNSIGNED NOT NULL)\n"
+                      " ENGINE=InnoDB");
+          db.execute ("CREATE TABLE `toonBank` (\n"
+                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
+                      "  `vnum` BIGINT UNSIGNED NOT NULL)\n"
+                      " ENGINE=InnoDB");
           db.execute ("CREATE TABLE `toon` (\n"
                       "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
                       "  `password` varchar(128) NOT NULL,\n"
-                      "  `owner_id` BIGINT UNSIGNED NULL)\n"
+                      "  `title` varchar(128) NOT NULL,\n"
+                      "  `lastlogin` DATETIME NULL,\n"
+                      "  `owner_id` BIGINT UNSIGNED NOT NULL)\n"
                       " ENGINE=InnoDB");
           db.execute ("CREATE INDEX `owner_id_i`\n"
                       "  ON `toon` (`owner_id`)");
           db.execute ("CREATE TABLE `user` (\n"
                       "  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+                      "  `login` VARCHAR(255) NOT NULL,\n"
                       "  `nickname` VARCHAR(255) NOT NULL,\n"
-                      "  `realname` VARCHAR(255) NOT NULL,\n"
                       "  `email` VARCHAR(255) NOT NULL,\n"
-                      "  `backup_email` VARCHAR(255) NULL,\n"
+                      "  `registered` DATETIME NULL,\n"
                       "  `password` VARCHAR(128) NOT NULL,\n"
-                      "  `token` VARCHAR(128) NOT NULL,\n"
-                      "  `level` SMALLINT UNSIGNED NOT NULL)\n"
+                      "  `level` SMALLINT UNSIGNED NOT NULL DEFAULT 0,\n"
+                      "  `backup_email` VARCHAR(255) NULL)\n"
                       " ENGINE=InnoDB");
           db.execute ("CREATE UNIQUE INDEX `email_i`\n"
                       "  ON `user` (`email`)");

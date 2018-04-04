@@ -31,6 +31,7 @@ namespace Alarmud {
 log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("MainLogger"));
 log4cxx::LoggerPtr buglogger(log4cxx::Logger::getLogger("BugLogger"));
 log4cxx::LoggerPtr errlogger(log4cxx::Logger::getLogger("ErrLogger"));
+log4cxx::LoggerPtr querylogger(log4cxx::Logger::getLogger("QueryLogger"));
 boost::format  my_fmt(const std::string &f_string) {
 	using namespace boost::io;
 	boost::format fmter(f_string);
