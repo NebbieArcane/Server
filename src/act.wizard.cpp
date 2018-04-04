@@ -2105,75 +2105,68 @@ ACTION_FUNC(do_resetskills) {
 }
 
 ACTION_FUNC(do_showskills) {
-	char buf[ 256 ];
-	struct char_data* mob;
-	struct string_block sb;
+		int i;
+		struct char_data* mob;
+		string sb;
 
-	if( !IS_PC( ch ) )
-	{ return; }
+		if( !IS_PC( ch ) )
+		{ return; }
 
-	if( GetMaxLevel( ch ) < MAESTRO_DEL_CREATO || !IS_PC( ch ) || cmd != CMD_SHOWSKILLS )
-	{ return; }
+		if( GetMaxLevel( ch ) < MAESTRO_DEL_CREATO || !IS_PC( ch ) || cmd != CMD_SHOWSKILLS )
+		{ return; }
 
-	arg = one_argument( arg, buf );
-	if (!*buf) {
-		send_to_char("showsk <nomepc>",ch);
-		return;
-	}
-	if( ( mob = get_char_vis( ch, buf ) ) == NULL ) {
-		for( int i = 0; i < MAX_EXIST_SPELL; i++ ) {
-			sprintf( buf, "[%3d] %-30s", i + 1, spells[ i ]);
-			strcat( buf,"\n\r" );
-			append_to_string_block( &sb, buf );
+		argument = one_argument( argument, buf );
+		if (!*buf) {
+			send_to_char("showsk <nomepc>",ch);
+			return;
 		}
-		append_to_string_block( &sb, "\n\r" );
-		page_string_block( &sb, ch );
-		destroy_string_block( &sb );
-	}
-	else if( mob->skills == NULL )
-	{ send_to_char( "Il giocatore non ha skills.\n\r", ch ); }
-	else {
-		init_string_block( &sb );
-		sprintf( buf, "NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r\n\r");
-		append_to_string_block( &sb, buf );
-		sprintf( buf, "%-5s %-30s %-3s %-14s %s\n\r", "SkNum", "Nome", "Val", "Conoscenza", "flags");
-		append_to_string_block( &sb, buf );
-		for( int i = 0; i < MAX_EXIST_SPELL; i++ ) {
-			if( spells[ i ] && *spells[i] != '\n' && mob->skills[i+1].learned) {
-				char sflags[256]; // SALVO faccio vedere le classi di skills
-
-				sprintf(sflags," %d [",(unsigned int)mob->skills[ i + 1 ].flags);
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN))
-				{ strcat(sflags,"ok "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_CLERIC))
-				{ strcat(sflags,"C "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_MAGE))
-				{ strcat(sflags,"M "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_SORCERER))
-				{ strcat(sflags,"S "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_THIEF))
-				{ strcat(sflags,"T "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_MONK))
-				{ strcat(sflags,"K "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_DRUID))
-				{ strcat(sflags,"D "); }
-				if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_WARRIOR))
-				{ strcat(sflags,"W "); }
-				strcat(sflags,"]");
-				sprintf( buf, "[%3d] %-30s %3d %-14s %s %s\n\r", i + 1, spells[ i ],
-						 mob->skills[ i + 1 ].learned,
-						 how_good( mob->skills[ i + 1 ].learned ),
-						 (IsSpecialized( mob->skills[ i + 1 ].special )) ? "(special)" : "",
-						 sflags );
-				append_to_string_block( &sb, buf );
+		if( ( mob = get_char_vis( ch, buf ) ) == NULL ) {
+			boost::format fmt("[%3d] %-30s\r\n");
+			for( i = 0; i < MAX_EXIST_SPELL; i++ ) {
+				fmt % (i+1) % spells[i];
+				sb.append(fmt.str());
+				fmt.clear();
 			}
+			sb.append("\r\n");
+			page_string( ch->desc, sb.c_str() ,true);
 		}
-		append_to_string_block( &sb, "\n\r" );
-		page_string_block( &sb, ch );
-		destroy_string_block( &sb );
+		else if( mob->skills == NULL )
+		{ send_to_char( "Il giocatore non ha skills.\n\r", ch ); }
+		else {
+			int i;
+			sb.append("NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r\n\r");
+			sb.append("SkNum  Nome                           Val Conoscenza    flags");
+			append_to_string_block( &sb, buf );
+			for( i = 0; i < MAX_EXIST_SPELL; i++ ) {
+				boost::format fmt("[%3d] %-30s %3d %-14s %s %s\n\r");
+				if( spells[ i ] && *spells[i] != '\n' && mob->skills[i+1].learned) {
+					string sflags; // SALVO faccio vedere le classi di skills
+					sflags.append(" ").append(number(1,(unsigned int)mob->skills[ i + 1 ].flags)).append(" [");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN)) sflags.append("ok ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_CLERIC)) sflags.append("C ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_MAGE)) sflags.append("M ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_SORCERER)) sflags.append("S ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_THIEF)) sflags.append("T ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_MONK)) sflags.append("K ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_DRUID)) sflags.append("D ");
+					if (IS_SET(mob->skills[ i + 1 ].flags, SKILL_KNOWN_WARRIOR)) sflags.append("W ");
+					sflags.append("]");
+					fmt % (i + 1)
+						% ( spells[ i ])
+						%  mob->skills[ i + 1 ].learned
+						% how_good( mob->skills[ i + 1 ].learned )
+						% (IsSpecialized( mob->skills[ i + 1 ].special ) ? "(special)" : "")
+					    % sflags.c_str();
+					sb.append(sflags);
+					fmt.clear();
+					append_to_string_block( &sb, buf );
+				}
+			}
+			sb.append("\r\n");
+			page_string( ch->desc, sb.c_str() ,true);
+		}
 	}
 }
-
 ACTION_FUNC(do_set) {
 	char field[100], name[100], parmstr[100];
 	struct char_data* mob;
