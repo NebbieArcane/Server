@@ -875,8 +875,8 @@ void ChangeObjAffect(struct char_data* ch, char* arg, int type) {
 						 "numbers will do the opposite.\n\r",ch);
 			break;
 		case APPLY_HASTE:
-			send_to_char("\n\rNote: Positive modifier will double attacks number,"
-						 "negative will halve.\n\r", ch );
+			send_to_char("\n\rNote: Valori positivi = num. attacchi guadagnati,"
+						 "i negativi saranno ignorati.\n\r", ch );
 			break;
 		case APPLY_SLOW:
 			send_to_char("\n\rNote: Positive modifier will halve attacks number,"
