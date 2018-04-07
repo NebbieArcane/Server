@@ -117,8 +117,9 @@ MOBSPECIAL_FUNC(sEgoWeapon) {
 	const char* p;
 	char pcname[256];
 	p=mob_index[mob->nr].specparms;
-	if (strlen(p)>255)
-	{ return FALSE; }
+	if(strlen(p)>255) {
+		return FALSE;
+	}
 	p=one_argument(p,pcname);
 	if( type == EVENT_COMMAND ) {
 		return TRUE;
@@ -170,7 +171,9 @@ MOBSPECIAL_FUNC(LibroEroi) {
 
 	if( type == EVENT_COMMAND && cmd == CMD_SAY) {
 		half_chop(arg,runa,par2,sizeof runa -1,sizeof par2 -1 );
-		if(isdigit(*par2)) { num2=atoi(par2); }
+		if(isdigit(*par2)) {
+			num2=atoi(par2);
+		}
 
 
 		STRSWITCH
@@ -517,18 +520,21 @@ MOBSPECIAL_FUNC(LibroEroi) {
 		CHECK ("ene",runa)
 		if (GET_RUNEDEI(ch)>=num2) {
 
-			if (num2<=0||!num2)
-			{ return true; }
+			if(num2<=0||!num2) {
+				return true;
+			}
 
 			xp=num2*(GetMaxLevel(ch))*10000;
 			xpcum=0;
 			k=0;
 			max=0;
 
-			if( ch->desc && ch->desc->original )
-			{ chrace = ch->desc->original->race; }
-			else
-			{ chrace = GET_RACE( ch ); }
+			if(ch->desc && ch->desc->original) {
+				chrace = ch->desc->original->race;
+			}
+			else {
+				chrace = GET_RACE(ch);
+			}
 
 			/* Calcolo il maxxaggio */
 			for (i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
@@ -723,14 +729,18 @@ MOBSPECIAL_FUNC(MobBlockAlign) {
 		tmpalign=GET_ALIGNMENT(ch);
 
 		//definiamo gli allineamenti
-		if (tmpalign<=-350)
-		{ tmpalign=-1000; }
-		else if (tmpalign>=350)
-		{ tmpalign=1000; }
-		else
-		{ tmpalign=0; }
-		if( (cmd != ndir) || (tmpalign==nalign))
-		{ return(FALSE); }
+		if(tmpalign<=-350) {
+			tmpalign=-1000;
+		}
+		else if(tmpalign>=350) {
+			tmpalign=1000;
+		}
+		else {
+			tmpalign=0;
+		}
+		if((cmd != ndir) || (tmpalign==nalign)) {
+			return(FALSE);
+		}
 		else {
 			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
@@ -771,15 +781,19 @@ ROOMSPECIAL_FUNC(BlockAlign) {
 		tmpalign=GET_ALIGNMENT(ch);
 
 		//definiamo gli allineamenti
-		if (tmpalign<=-350)
-		{ tmpalign=-1000; }
-		else if (tmpalign>=350)
-		{ tmpalign=1000; }
-		else
-		{ tmpalign=0; }
+		if(tmpalign<=-350) {
+			tmpalign=-1000;
+		}
+		else if(tmpalign>=350) {
+			tmpalign=1000;
+		}
+		else {
+			tmpalign=0;
+		}
 
-		if( (cmd != ndir) || (tmpalign==nalign))
-		{ return(FALSE); }
+		if((cmd != ndir) || (tmpalign==nalign)) {
+			return(FALSE);
+		}
 		else {
 			if (!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");

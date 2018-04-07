@@ -209,7 +209,8 @@ l'array connected_types in constants.cpp
 ** CON_ACCOUNT_NAME                             =39Richiesto login sull'account'
 ** CON_ACCOUNT_PWD                              =40Email riconosciuta, chiediamo la password
 ** CON_ACCOUNT_TOON                             =41Account password ok, propongo lista personaggi
-** CON_PWDOK                                    =42Tutto pronto, lo riconnetto o mando al menu
+** CON_REGISTER                                 =42Registro il pg sull'account
+** CON_PWDOK                                    =43Tutto pronto, lo riconnetto o mando al menu
 == Enumerations ==
 
 === enum e_damage_type ===

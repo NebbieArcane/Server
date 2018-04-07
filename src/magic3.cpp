@@ -307,7 +307,7 @@ void spell_haste(byte level, struct char_data* ch,
     
     if(GET_INT(victim) < dice) {
         send_to_char("La tua mente non riesce a coordinare l'accellerazione degli impulsi del tuo corpo... Perdi conoscenza!\n\r",victim);
-        GET_POS(victim) = POSITION_STUNNED;
+	GET_POS(victim) = POSITION_STUNNED;
     }
 
 	if (!in_group(ch, victim)) {
@@ -384,6 +384,7 @@ void spell_familiar(byte level, struct char_data* ch,
 	{ f = read_mobile(WOLF, VIRTUAL); }
 
 	char_to_room(f, ch->in_room);
+
 
 	af.type      = SPELL_FAMILIAR;
 	af.duration  = 24;
@@ -819,14 +820,13 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 	}
 
 	blade_element = number(0,( IS_PC( ch ) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel( ch ) ) / 17);
-    
+
 	CREATE(tmp_obj, struct obj_data, 1);
 	clear_object(tmp_obj);
 
 	switch(blade_element) { /* REQUIEM 2018 new elements for druid blade */
-	
     /* fino al liv 16 crei solo fire blades */
-    case 0:
+	case 0:
 		tmp_obj->name = strdup("blade flame");
 		tmp_obj->short_description = strdup("una $c0009flame $c0007blade");
 		tmp_obj->description = strdup("Una lama fiammeggiante splende qui in terra.");
@@ -1208,7 +1208,6 @@ void spell_animal_summon(byte level, struct char_data* ch,
 		char_to_room(mob, ch->in_room);
         RelateMobToCaster(ch, mob);
 		act( "$n arriva improvvisamente.", FALSE, mob, 0, 0, TO_ROOM);
-        
 		if( too_many_followers( ch ) ) {
 			act( "$N guarda alla dimensione del tuo gruppo e si rifiuta di "
 				 "seguirti!", TRUE, ch, 0, victim, TO_CHAR);

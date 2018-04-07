@@ -25,12 +25,12 @@
 //#include "world-odb.hxx"
 #define odbTypes(nome) typedef odb::result<nome> nome##Rows;typedef odb::query<nome> nome##Query
 namespace Alarmud {
-	odbTypes(user);
-	odbTypes(legacy);
-	odbTypes(toon);
-	odbTypes(toonExtra);
-	odbTypes(toonRent);
-	odbTypes(toonBank);
-	typedef odb::database DB;
+odbTypes(user);
+odbTypes(legacy);
+odbTypes(toon);
+odbTypes(toonExtra);
+odbTypes(toonRent);
+odbTypes(toonBank);
+typedef odb::database DB;
 } /*namespace Alarmud */
 #endif /* SRC_ODB_ODB_HPP_ */

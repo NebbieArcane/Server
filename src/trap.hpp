@@ -46,14 +46,14 @@ int CheckForAnyTrap(struct char_data* ch, struct obj_data* i) ;
 int CheckForGetTrap(struct char_data* ch, struct obj_data* i) ;
 int CheckForInsideTrap(struct char_data* ch, struct obj_data* i) ;
 int CheckForMoveTrap(struct char_data* ch, int dir) ;
-void FindTrapDamage( struct char_data* v, struct obj_data* i) ;
-void InformMess( struct char_data* v) ;
+void FindTrapDamage(struct char_data* v, struct obj_data* i) ;
+void InformMess(struct char_data* v) ;
 void TrapDam(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;
 void TrapDamage(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;
 void TrapPoison(struct char_data* v, struct obj_data* t) ;
 void TrapSleep(struct char_data* v) ;
 void TrapTeleport(struct char_data* v) ;
-int TriggerTrap( struct char_data* ch, struct obj_data* i) ;
+int TriggerTrap(struct char_data* ch, struct obj_data* i) ;
 ACTION_FUNC(do_settrap) ;
 } // namespace Alarmud
 #endif // __TRAP_HPP

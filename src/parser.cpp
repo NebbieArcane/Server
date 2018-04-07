@@ -56,8 +56,8 @@ void AddCommand(const char* name, command_func func, int number, int min_pos, in
 	n->previous = NULL;
 	n->log = 0;
 
-	radix = HashTable[ (int)(*name) ];
-	len = strlen( name );
+	radix = HashTable[(int)(*name) ];
+	len = strlen(name);
 
 	AddNodeTail(n, len, radix);
 }
@@ -70,12 +70,15 @@ void GenerateHash() {
 	register int i;
 
 	for(i = 0; i <= 255; i++)
-		if((i >= 'a') && (i <= 'z'))
-		{ HashTable[i] = i - MAGIC; }
-		else if((i >= 'A') && (i <= 'Z'))
-		{ HashTable[i] = i - (MAGIC - 32); }
-		else
-		{ HashTable[i] = 0; }
+		if((i >= 'a') && (i <= 'z')) {
+			HashTable[i] = i - MAGIC;
+		}
+		else if((i >= 'A') && (i <= 'Z')) {
+			HashTable[i] = i - (MAGIC - 32);
+		}
+		else {
+			HashTable[i] = 0;
+		}
 }
 
 
@@ -101,8 +104,9 @@ void AddNodeTail(NODE* n, int length, int radix) {
 		n->previous = i;
 		radix_head[radix].number++;
 		n->next = NULL;
-		if(radix_head[radix].max_len < length)
-		{ radix_head[radix].max_len = length; }
+		if(radix_head[radix].max_len < length) {
+			radix_head[radix].max_len = length;
+		}
 	}
 }
 
@@ -118,8 +122,9 @@ NODE* SearchForNodeByName(NODE* head, const char* name, int len) {
 
 	i = head;
 	while(i) {
-		if(!(strncmp(i->name, name, len)))
-		{ return(i); }
+		if(!(strncmp(i->name, name, len))) {
+			return(i);
+		}
 		i = i->next;
 	}
 
@@ -151,11 +156,12 @@ NODE* FindValidCommand(const char* name) {
 	register int len;
 	register int radix;
 
-	radix = HashTable[ (int)(*name) ];
+	radix = HashTable[(int)(*name) ];
 	len = strlen(name);
 
-	if(radix_head[radix].number && len <= radix_head[radix].max_len)
-	{ return(SearchForNodeByName(radix_head[radix].next, name, len)); }
+	if(radix_head[radix].number && len <= radix_head[radix].max_len) {
+		return(SearchForNodeByName(radix_head[radix].next, name, len));
+	}
 
 	return(NULL);
 }
@@ -168,7 +174,9 @@ int FindCommandNumber(const char* cmd) {
 	for(i=0; i<27; i++)
 		if(radix_head[i].number)
 			for(n=radix_head[i].next; n; n=n->next)
-				if(strcmp(cmd,n->name)==0) { return n->number; }
+				if(strcmp(cmd,n->name)==0) {
+					return n->number;
+				}
 	return -1;
 }
 
@@ -178,7 +186,9 @@ char* FindCommandName(int num) {
 	for(i=0; i<27; i++)
 		if(radix_head[i].number)
 			for(n=radix_head[i].next; n; n=n->next)
-				if(n->number==num) { return n->name; }
+				if(n->number==num) {
+					return n->name;
+				}
 	return NULL;
 }
 

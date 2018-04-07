@@ -86,7 +86,6 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
         }
     }
 }
-
 void SwitchStuff( struct char_data* giver, struct char_data* taker) {
 	struct obj_data* obj, *next;
 	float ratio;

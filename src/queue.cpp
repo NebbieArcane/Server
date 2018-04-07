@@ -70,17 +70,18 @@ struct q_element* queue_enq(struct queue* q, void* data, long key) {
 
 	bucket = key % NUM_EVENT_QUEUES;   /* which queue does this go in */
 
-	if (!q->head[bucket]) { /* queue is empty */
+	if(!q->head[bucket]) {  /* queue is empty */
 		q->head[bucket] = qe;
 		q->tail[bucket] = qe;
 	}
 
 	else {
-		for (i = q->tail[bucket]; i; i = i->prev) {
+		for(i = q->tail[bucket]; i; i = i->prev) {
 
-			if (i->key < key) { /* found insertion point */
-				if (i == q->tail[bucket])
-				{ q->tail[bucket] = qe; }
+			if(i->key < key) {  /* found insertion point */
+				if(i == q->tail[bucket]) {
+					q->tail[bucket] = qe;
+				}
 				else {
 					qe->next = i->next;
 					i->next->prev = qe;
@@ -92,7 +93,7 @@ struct q_element* queue_enq(struct queue* q, void* data, long key) {
 			}
 		}
 
-		if (i == NULL) { /* insertion point is front of list */
+		if(i == NULL) {  /* insertion point is front of list */
 			qe->next = q->head[bucket];
 			q->head[bucket] = qe;
 			qe->next->prev = qe;
@@ -110,18 +111,23 @@ void queue_deq(struct queue* q, struct q_element* qe) {
 	/*assert(qe);*/
 	i = qe->key % NUM_EVENT_QUEUES;
 
-	if (qe->prev == NULL)
-	{ q->head[i] = qe->next; }
-	else
-	{ qe->prev->next = qe->next; }
+	if(qe->prev == NULL) {
+		q->head[i] = qe->next;
+	}
+	else {
+		qe->prev->next = qe->next;
+	}
 
-	if (qe->next == NULL)
-	{ q->tail[i] = qe->prev; }
-	else
-	{ qe->next->prev = qe->prev; }
+	if(qe->next == NULL) {
+		q->tail[i] = qe->prev;
+	}
+	else {
+		qe->next->prev = qe->prev;
+	}
 
-	if (qe)
-	{ free(qe); }
+	if(qe) {
+		free(qe);
+	}
 }
 
 
@@ -135,8 +141,9 @@ void* queue_head(struct queue* q) {
 
 	i = pulse % NUM_EVENT_QUEUES;
 
-	if (!q->head[i])
-	{ return NULL; }
+	if(!q->head[i]) {
+		return NULL;
+	}
 
 	data = q->head[i]->data;
 
@@ -155,10 +162,12 @@ long queue_key(struct queue* q) {
 
 	i = pulse % NUM_EVENT_QUEUES;
 
-	if (q->head[i])
-	{ return q->head[i]->key; }
-	else
-	{ return LONG_MAX; }
+	if(q->head[i]) {
+		return q->head[i]->key;
+	}
+	else {
+		return LONG_MAX;
+	}
 }
 
 
@@ -173,15 +182,17 @@ void queue_free(struct queue* q) {
 	int i;
 	struct q_element* qe, *next_qe;
 
-	for (i = 0; i < NUM_EVENT_QUEUES; i++)
-		for (qe = q->head[i]; qe; qe = next_qe) {
+	for(i = 0; i < NUM_EVENT_QUEUES; i++)
+		for(qe = q->head[i]; qe; qe = next_qe) {
 			next_qe = qe->next;
-			if (qe)
-			{ free(qe); }
+			if(qe) {
+				free(qe);
+			}
 		}
 
-	if (q)
-	{ free(q); }
+	if(q) {
+		free(q);
+	}
 }
 } // namespace Alarmud
 

@@ -101,8 +101,8 @@ struct data_block_type {
 	char        txt[DATA_BLOCK_DATASIZE+1]; /* the actual text                 */
 };
 #pragma pack(pop)
-static_assert (sizeof(data_block_type)==BLOCK_SIZE,"Check align, data_block_tpe size is wrong");
-static_assert (sizeof(header_block_type)==BLOCK_SIZE,"Check align, header_block_tpe size is wrong");
+static_assert(sizeof(data_block_type)==BLOCK_SIZE,"Check align, data_block_tpe size is wrong");
+static_assert(sizeof(header_block_type)==BLOCK_SIZE,"Check align, header_block_tpe size is wrong");
 
 struct position_list_type {
 	int        position;

@@ -2132,7 +2132,7 @@ MOBSPECIAL_FUNC(Samah) {
 				GetMaxLevel(ch) == IMMENSO)
 		{ return(FALSE); }
 
-		Sammy = (struct char_data*)FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+		Sammy = (struct char_data*)FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(Samah));
 
 		for (; *arg==' '; arg++); /* skip whitespace */
 		strcpy(buf, arg);
@@ -2686,7 +2686,7 @@ MOBSPECIAL_FUNC(PrisonGuard) {
 	if (ch->in_room != PRISON_ROOM)
 	{ return(FALSE); }
 
-	PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(PrisonGuard));
 
 	for (t=character_list,i=0; t; t= t2) {
 		t2=t->next;
@@ -2756,7 +2756,7 @@ MOBSPECIAL_FUNC(PrisonGuard) {
 		if (cmd) {
 			if (IS_IMMORTAL(ch)) { return(FALSE); }
 
-			PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(__FUNCTION__));
+			PGuard = (struct char_data*)FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(PrisonGuard));
 
 			for (; *arg==' '; arg++); /* skip whitespace */
 			strcpy(buf, arg);
@@ -4742,7 +4742,7 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 
 	if (check_soundproof(ch)) { return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(DruidGuildMaster));
 
 	if (!guildmaster) { return(FALSE); }
 
@@ -6784,7 +6784,7 @@ MOBSPECIAL_FUNC(RangerGuildmaster) {
 	if (IS_DIO(ch))
 	{ return(FALSE); }
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RangerGuildmaster));
 
 	if (!guildmaster) { return(FALSE); }
 

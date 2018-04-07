@@ -24,19 +24,19 @@
 #define strcat(s1,s2) ggstrcat(s1,s2,__FILE__,__LINE__)
 #define strncat(s1,s2,n) ggstrncat(s1,s2,n,__FILE__,__LINE__)
 
-void* ggmalloc (unsigned int size, char* file_name, int line_number);
-void* ggcalloc (unsigned int nelem, unsigned int size, char* file_name, int line_number);
-void* ggrealloc (void* in_ptr, unsigned int size, char* file_name, int line_number);
-void ggfree (void* ptr, const char* file_name, int line_number);
-void ggcfree (void* ptr, const char* file_name, int line_number);
-char* ggstrdup (char* s1, const char* file_name, int line_number);
-char* ggstrtok (char* s,const char* delim, char* file_name, int line_number);
-int ggstrcmp (const char* s1,const char* s2,char* file_name, int line_number) ;
-int ggstrncmp (const char* s1,const char* s2,size_t n,char* file_name, int line_number) ;
-int ggstrcasecmp (const char* s1,const char* s2,char* file_name, int line_number) ;
-int ggstrncasecmp (const char* s1,const char* s2, size_t n,char* file_name, int line_number) ;
+void* ggmalloc(unsigned int size, char* file_name, int line_number);
+void* ggcalloc(unsigned int nelem, unsigned int size, char* file_name, int line_number);
+void* ggrealloc(void* in_ptr, unsigned int size, char* file_name, int line_number);
+void ggfree(void* ptr, const char* file_name, int line_number);
+void ggcfree(void* ptr, const char* file_name, int line_number);
+char* ggstrdup(char* s1, const char* file_name, int line_number);
+char* ggstrtok(char* s,const char* delim, char* file_name, int line_number);
+int ggstrcmp(const char* s1,const char* s2,char* file_name, int line_number) ;
+int ggstrncmp(const char* s1,const char* s2,size_t n,char* file_name, int line_number) ;
+int ggstrcasecmp(const char* s1,const char* s2,char* file_name, int line_number) ;
+int ggstrncasecmp(const char* s1,const char* s2, size_t n,char* file_name, int line_number) ;
 char* ggstrcpy(char* dest, const char* src,char* file_name, int line_number);
 char* ggstrncpy(char* dest,  const char* src, size_t n,char* file_name,int line_number);
-char* ggstrcat (char* dest, const char* src,char* file_name,int line_number);
-char* ggstrncat (char* dest, const char* src,size_t n,char* file_name,int line_number);
+char* ggstrcat(char* dest, const char* src,char* file_name,int line_number);
+char* ggstrncat(char* dest, const char* src,size_t n,char* file_name,int line_number);
 #endif

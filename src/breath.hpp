@@ -32,11 +32,11 @@ struct breather {
 
 extern breath_func bweapons[];
 MOBSPECIAL_FUNC(BreathWeapon) ;
-void breath_weapon( struct char_data* ch, struct char_data* target,int mana_cost, breath_func);
+void breath_weapon(struct char_data* ch, struct char_data* target,int mana_cost, breath_func);
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) ;
 ACTION_FUNC(do_breath) ;
 void free_victims(struct breath_victim* head) ;
-void use_breath_weapon( struct char_data* ch, struct char_data* target,int cost, breath_func) ;
+void use_breath_weapon(struct char_data* ch, struct char_data* target,int cost, breath_func) ;
 } // namespace Alarmud
 #endif // __BREATH_HPP
 

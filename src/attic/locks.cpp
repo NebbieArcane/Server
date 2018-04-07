@@ -8,10 +8,11 @@ int glock(int fd,int timeout) {
 	int rval;
 	int start;
 	start=time((time_t)NULL);
-	while ((rval=flock(fd,LOCK_EX + LOCK_NB))!=0) {
+	while((rval=flock(fd,LOCK_EX + LOCK_NB))!=0) {
 
-		if (timeout<(time((time_t)NULL)-start))
-		{ break; }
+		if(timeout<(time((time_t)NULL)-start)) {
+			break;
+		}
 	}
 
 	return !rval;

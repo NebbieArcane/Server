@@ -216,8 +216,8 @@ extern struct time_info_data time_info;
 #define ZONE_DESERT          8
 #define ZONE_ARCTIC         16
 #define ZONE_UNDER_GROUND   32
-int fwrite_string (FILE* fl, char* buf);
-void fwrite_flag( FILE* pFile, unsigned long ulFlags );
+int fwrite_string(FILE* fl, char* buf);
+void fwrite_flag(FILE* pFile, unsigned long ulFlags);
 void SaveTheWorld();
 void boot_db();
 void reset_time();
@@ -248,8 +248,8 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus);
 /* void save_char(struct char_data *ch, sh_int load_room); */
 int compare(struct player_index_element* arg1, struct player_index_element
 			*arg2);
-long fread_number_int( FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
-long fread_if_number( FILE* pFile );
+long fread_number_int(FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
+long fread_if_number(FILE* pFile);
 char* fread_string(FILE* fl);
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
@@ -271,9 +271,9 @@ ACTION_FUNC(reboot_text);
 void InitScripts();
 void ReloadRooms();
 void FreeZone(int zone_nr);
-void write_obj_to_file( struct obj_data* obj, FILE* f );
-void InsertObject( struct obj_data* pObj, int nVNum );
-void InsertMobile( struct char_data* pMob, int nVNum );
+void write_obj_to_file(struct obj_data* obj, FILE* f);
+void InsertObject(struct obj_data* pObj, int nVNum);
+void InsertMobile(struct char_data* pMob, int nVNum);
 void Start_Auction();
 ACTION_FUNC(do_WorldSave);
 

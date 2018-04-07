@@ -26,34 +26,36 @@
 #include "SqlMysql.hpp"
 namespace Alarmud {
 constexpr int RETRY=5;
-SqlMysql::SqlMysql() : driver(nullptr),db(nullptr){
+SqlMysql::SqlMysql() : driver(nullptr),db(nullptr) {
 }
 
 SqlMysql::~SqlMysql() {
 	// TODO Auto-generated destructor stub
 }
- 	SqlStatement SqlMysql::prepare(const std::string &query) {
+SqlStatement SqlMysql::prepare(const std::string &query) {
 	int retry=5;
 	try {
-		if (!db) {
-			while (--retry) {
-					db=driver->connect(MYSQL_HOST,MYSQL_USER,MYSQL_PASSWORD);
+		if(!db) {
+			while(--retry) {
+				db=driver->connect(MYSQL_HOST,MYSQL_USER,MYSQL_PASSWORD);
 			}
 		}
 		else {
-			if (!db->isValid() or db->isClosed()) db->reconnect();
+			if(!db->isValid() or db->isClosed()) {
+				db->reconnect();
+			}
 		}
 	}
-	catch (sql::SQLException &e) {
+	catch(sql::SQLException &e) {
 		mudlog(LOG_ERROR,"Error connecting to db (%d): %s",(RETRY-retry),e.what());
 	}
-	if (!retry) {
+	if(!retry) {
 		mudlog(LOG_SYSERR,"Gave up attempting to connect to dabatase");
 	}
 	try {
 		return cache[query];
 	}
-	catch (std::out_of_range &e) {
+	catch(std::out_of_range &e) {
 		cache[query]=SqlStatement(db->prepareStatement(query));
 	}
 	return cache[query];
@@ -82,7 +84,7 @@ void SqlMysql::pushInt(SqlStatement stm,const int index,const int32_t &data) {
 void SqlMysql::pushDouble(SqlStatement stm,const int index,const double &data) {
 	stm->setDouble(index, data);
 }
-void SqlMysql::push(SqlStatement stm,const int index,const boost::posix_time::ptime& data) {
+void SqlMysql::push(SqlStatement stm,const int index,const boost::posix_time::ptime &data) {
 	if(data.is_not_a_date_time()) {
 		try {
 			stm->setNull(index, 0);
@@ -92,7 +94,7 @@ void SqlMysql::push(SqlStatement stm,const int index,const boost::posix_time::pt
 		}
 	}
 	boost::posix_time::ptime start(boost::gregorian::date(1970,1,1));
-	if (data > start ) {
+	if(data > start) {
 		stm->setUInt64(index,(data-start).total_seconds());
 	}
 	else {
