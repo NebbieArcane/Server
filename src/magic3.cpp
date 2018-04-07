@@ -862,7 +862,7 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		break;
     /* al liv 51 aggiungi earth alle possibilità */
 	case 3:
-		tmp_obj->name = strdup("earth thunder");
+		tmp_obj->name = strdup("blade earth");
 		tmp_obj->short_description = strdup("una $c0010Earth $c0007blade");
 		tmp_obj->description = strdup("Una lunga roccia a forma di foglia attira la tua attenzione.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
