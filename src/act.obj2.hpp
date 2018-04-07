@@ -20,7 +20,7 @@ ACTION_FUNC(do_wear) ;
 ACTION_FUNC(do_wield) ;
 void name_from_drinkcon(struct obj_data* obj) ;
 void name_to_drinkcon(struct obj_data* obj,int type) ;
-void perform_wear( struct char_data* ch, struct obj_data* obj_object,long keyword);
+void perform_wear(struct char_data* ch, struct obj_data* obj_object,long keyword);
 void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) ;
 void weight_change_object(struct obj_data* obj, int weight) ;
 } // namespace Alarmud

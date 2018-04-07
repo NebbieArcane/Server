@@ -199,7 +199,7 @@ configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UN
 
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
-#	-Wfatal-errors
+	-Wfatal-errors
 	-Wno-enum-compare
 #	-Wno-unknown-pragmas
 	-Wno-variadic-macros 
@@ -239,7 +239,10 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #foreach (_variableName ${_variableNames})
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
-add_custom_target(style ${CMAKE_SOURCE_DIR}/astyle -r -Q --options=${CMAKE_SOURCE_DIR}/astylerc "./*.cpp,*.hpp")
+add_custom_target(style 
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+	COMMAND ../astyle -r -Q --options=../astylerc "./*.cpp,*.hpp"
+)
 #add_custom_command(TARGET ${CMAKE_PROJECT_NAME} PRE_LINK COMMAND echo "Before linking")
 #add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND rm -f release.hpp)
 add_custom_command(

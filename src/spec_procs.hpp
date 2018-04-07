@@ -9,8 +9,8 @@
 #include "specass2.hpp"
 #include "specialproc_other.hpp"
 namespace Alarmud {
-struct char_data* FindMobInRoomWithFunction( int room,genericspecial_func);
-struct char_data* FindMobInRoomWithVNum( int room, int VNum) ;
+struct char_data* FindMobInRoomWithFunction(int room,genericspecial_func);
+struct char_data* FindMobInRoomWithVNum(int room, int VNum) ;
 int GainLevel(struct char_data* ch, int iClass) ;
 int chalice(struct char_data* ch, int cmd, char* arg) ;
 void exec_social(struct char_data* npc, char* cmd, int next_line,int* cur_line, void** thing);

@@ -65,7 +65,7 @@ MOBSPECIAL_FUNC(real_fox) ;
 MOBSPECIAL_FUNC(real_rabbit) ;
 MOBSPECIAL_FUNC(sailor) ;
 OBJSPECIAL_FUNC(scraps) ;
-int MakeQuest( struct char_data* ch, struct char_data* gm, int iClass,const char* arg, int cmd);
+int MakeQuest(struct char_data* ch, struct char_data* gm, int iClass,const char* arg, int cmd);
 void DruidHeal(struct char_data* ch, int level) ;
 void DruidMob(struct char_data* ch) ;
 void DruidTree(struct char_data* ch) ;

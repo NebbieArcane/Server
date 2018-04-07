@@ -30,24 +30,24 @@ int SecCheck(const char* arg, const char* site) {
 	string compare(site);
 	fname.append(arg);
 	std::ifstream securefile(arg);
-	if (securefile.fail()) {
-		mudlog( LOG_CHECK, "Unable to open security file for %s.", arg);
+	if(securefile.fail()) {
+		mudlog(LOG_CHECK, "Unable to open security file for %s.", arg);
 		return(-1);
 	}
 	fname.erase();
-	while (securefile >> fname ) {
-		if (fname==compare) {
+	while(securefile >> fname) {
+		if(fname==compare) {
 			result=1;
 			break;
 		}
 		else {
-			mudlog( LOG_CHECK, "Checking site %s n for %s.",fname.c_str(),arg);
+			mudlog(LOG_CHECK, "Checking site %s n for %s.",fname.c_str(),arg);
 
 		}
 	}
 	securefile.close();
-	if (result <1) {
-		mudlog( LOG_SYSERR, "Site %s not allowed for %s. Security Violation.",site,arg);
+	if(result <1) {
+		mudlog(LOG_SYSERR, "Site %s not allowed for %s. Security Violation.",site,arg);
 	}
 	return result;
 

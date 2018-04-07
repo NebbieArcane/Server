@@ -19,13 +19,14 @@ void SmartStrCpy(char* s1, const char* s2) { /* ignore trailing spaces and \n */
 	int i;
 
 	i = strlen(s2);
-	while (s2[i] <= ' ')
-	{ i--; }
+	while(s2[i] <= ' ') {
+		i--;
+	}
 
 	/* null terminate s1 */
 	s1[i+1]='\0';
 
-	while (i>=0) {
+	while(i>=0) {
 		s1[i] = s2[i];
 		i--;
 	}
@@ -36,18 +37,18 @@ void StringHeap(char* string, struct StrHeap* Heap) {
 	unsigned char found=FALSE;
 	int i;
 
-	if (!string || !*string) {
+	if(!string || !*string) {
 		return;   /* don't bother adding if null string */
 	}
 
-	for (i=0; i<Heap->uniq&&!found; i++) {
-		if (!strcmp(string, Heap->str[i].string)) {
+	for(i=0; i<Heap->uniq&&!found; i++) {
+		if(!strcmp(string, Heap->str[i].string)) {
 			Heap->str[i].total++;
 			found=TRUE;
 		}
 	}
-	if (!found) {
-		if (Heap->str) {
+	if(!found) {
+		if(Heap->str) {
 			/* increase size by 1 */
 			Heap->str = (struct StrHeapList*)
 						realloc(Heap->str, sizeof(struct StrHeapList)*Heap->uniq+1);
@@ -82,9 +83,9 @@ void DisplayStringHeap
 	char buf[256];
 	int i;
 
-	for (i=0; i<Heap->uniq; i++) {
-		if (type != TO_CHAR) {
-			if (Heap->str[i].total > 1) {
+	for(i=0; i<Heap->uniq; i++) {
+		if(type != TO_CHAR) {
+			if(Heap->str[i].total > 1) {
 				snprintf(buf, 255,  "%s [%d]", Heap->str[i].string, Heap->str[i].total);
 			}
 			else {
@@ -92,28 +93,28 @@ void DisplayStringHeap
 			}
 		}
 		else {
-			if (Heap->str[i].total > 1) {
+			if(Heap->str[i].total > 1) {
 				snprintf(buf, 255,  "%s [%d]\n\r", Heap->str[i].string, Heap->str[i].total);
 			}
 			else {
 				snprintf(buf,  255, "%s\n\r", Heap->str[i].string);
 			}
 		}
-		if (type == TO_CHAR) {
+		if(type == TO_CHAR) {
 			send_to_char(buf, ch);
 		}
 		else {
-			if (ch->in_room > -1) {
+			if(ch->in_room > -1) {
 				act(buf, FALSE, ch, 0, 0, TO_ROOM);
 			}
 		}
 
-		if (destroy) {
+		if(destroy) {
 			/* free everything */
 			free(Heap->str[i].string);
 		}
 	}
-	if (destroy) {
+	if(destroy) {
 		free(Heap->str);
 		free(Heap);
 	}
@@ -127,7 +128,7 @@ main() {
 
 	H = InitHeap();
 
-	for (i=1; i<10; i++) {
+	for(i=1; i<10; i++) {
 		scanf("%s", buf);
 		StringHeap(buf, H);
 	}

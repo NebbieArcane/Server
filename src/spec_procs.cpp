@@ -96,26 +96,36 @@ FIND_FUNC(named_object_on_ground) {
 char* how_good(int percent) {
 	static char buf[256];
 
-	if (percent < 0)
-	{ strcpy(buf, " (ehm.... GUF! Avvisa Alar.....)"); }
-	else if (percent == 0)
-	{ strcpy(buf, " ($c0012sconosciuta$c0007)"); }
-	else if (percent <= 10)
-	{ strcpy(buf, " ($c0009pessima$c0007)"); }
-	else if (percent <= 20)
-	{ strcpy(buf, " ($c0009scarsa$c0007)"); }
-	else if (percent <= 40)
-	{ strcpy(buf, " ($c0011povera$c0007)"); }
-	else if (percent <= 55)
-	{ strcpy(buf, " ($c0011media$c0007)"); }
-	else if (percent <= 70)
-	{ strcpy(buf, " ($c0011discreta$c0007)"); }
-	else if (percent <= 80)
-	{ strcpy(buf, " ($c0010buona$c0007)"); }
-	else if (percent <= 85)
-	{ strcpy(buf, " ($c0010molto buona$c0007)"); }
-	else
-	{ strcpy(buf, " ($c0010Superba$c0007)"); }
+	if(percent < 0) {
+		strcpy(buf, " (ehm.... GUF! Avvisa Alar.....)");
+	}
+	else if(percent == 0) {
+		strcpy(buf, " ($c0012sconosciuta$c0007)");
+	}
+	else if(percent <= 10) {
+		strcpy(buf, " ($c0009pessima$c0007)");
+	}
+	else if(percent <= 20) {
+		strcpy(buf, " ($c0009scarsa$c0007)");
+	}
+	else if(percent <= 40) {
+		strcpy(buf, " ($c0011povera$c0007)");
+	}
+	else if(percent <= 55) {
+		strcpy(buf, " ($c0011media$c0007)");
+	}
+	else if(percent <= 70) {
+		strcpy(buf, " ($c0011discreta$c0007)");
+	}
+	else if(percent <= 80) {
+		strcpy(buf, " ($c0010buona$c0007)");
+	}
+	else if(percent <= 85) {
+		strcpy(buf, " ($c0010molto buona$c0007)");
+	}
+	else {
+		strcpy(buf, " ($c0010Superba$c0007)");
+	}
 
 	return (buf);
 }
@@ -162,8 +172,9 @@ struct char_data* FindMobInRoomWithFunction( int room, genericspecial_func func)
 				temp_char = temp_char->next_in_room) {
 
 			if (IS_MOB(temp_char)) {
-				if (mob_index[temp_char->nr].func == func)
-				{ targ = temp_char; }
+				if(mob_index[temp_char->nr].func == func) {
+					targ = temp_char;
+				}
 			}
 		}
 	}
@@ -184,8 +195,9 @@ struct char_data* FindMobInRoomWithVNum( int room, int VNum) {
 		for( temp_char = real_roomp(room)->people; (!targ) && (temp_char);
 				temp_char = temp_char->next_in_room) {
 			if (IS_MOB(temp_char)) {
-				if (mob_index[temp_char->nr].iVNum == VNum)
-				{ targ = temp_char; }
+				if(mob_index[temp_char->nr].iVNum == VNum) {
+					targ = temp_char;
+				}
 			}
 		}
 	}
@@ -202,25 +214,31 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
-	if (!ch->skills)
-	{ return(FALSE); }
+	if(!ch->skills) {
+		return(FALSE);
+	}
 
-	if (IS_IMMORTAL(ch))
-	{ return(FALSE); }
+	if(IS_IMMORTAL(ch)) {
+		return(FALSE);
+	}
 
-	if (check_soundproof(ch))
-	{ return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 
 	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MageGuildMaster));
 
-	if (!guildmaster)
-	{ return(FALSE); }
+	if(!guildmaster) {
+		return(FALSE);
+	}
 
-	if( cmd != CMD_PRACTICE && cmd != CMD_GAIN )
-	{ return(FALSE); }
+	if(cmd != CMD_PRACTICE && cmd != CMD_GAIN) {
+		return(FALSE);
+	}
 
 	if (IS_NPC(ch)) {
 		act("$N ti dice 'Ti sembro un addestratore di animali ?'", FALSE,
@@ -280,8 +298,9 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 				for(max=1; max<=GET_LEVEL(ch,(HasClass(ch,CLASS_MAGIC_USER)) ? MAGE_LEVEL_IND :SORCERER_LEVEL_IND); max++) { // SALVO ordino le prac mageguild
 					for(i=0; *spells[i] != '\n'; i++) {
 						if (HasClass(ch,CLASS_MAGIC_USER)) {
-							if (spell_info[ i + 1 ].min_level_magic != max)
-							{ continue; }
+							if(spell_info[ i + 1 ].min_level_magic != max) {
+								continue;
+							}
 							if( spell_info[ i + 1 ].spell_pointer &&
 									spell_info[ i + 1 ].min_level_magic <=
 									GET_LEVEL_CASTER( ch, MAGE_LEVEL_IND ) &&
@@ -294,8 +313,9 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 							}
 						}
 						else if (HasClass(ch,CLASS_SORCERER)) {
-							if (spell_info[ i + 1 ].min_level_sorcerer != max)
-							{ continue; }
+							if(spell_info[ i + 1 ].min_level_sorcerer != max) {
+								continue;
+							}
 							if( spell_info[ i + 1 ].spell_pointer &&
 									spell_info[ i + 1 ].min_level_sorcerer <= // SALVO mi pare che qui non sia min_level_magic
 									GET_LEVEL_CASTER( ch, SORCERER_LEVEL_IND ) &&
@@ -357,13 +377,16 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 
 				if( !IS_SET( ch->skills[ number ].flags, SKILL_KNOWN ) ) {
 					SET_BIT( ch->skills[ number ].flags, SKILL_KNOWN );
-					if( HasClass( ch, CLASS_SORCERER ) )
-					{ SET_BIT( ch->skills[ number ].flags, SKILL_KNOWN_SORCERER ); }
-					else
-					{ SET_BIT( ch->skills[ number ].flags, SKILL_KNOWN_MAGE ); }
+					if(HasClass(ch, CLASS_SORCERER)) {
+						SET_BIT(ch->skills[ number ].flags, SKILL_KNOWN_SORCERER);
 				}
-				else if( HasClass( ch, CLASS_SORCERER ) && !IS_SET( ch->skills[ number ].flags,SKILL_KNOWN_SORCERER )) // SALVO metto un eventuale controllo sul sorcerer
-				{ SET_BIT( ch->skills[ number ].flags, SKILL_KNOWN_SORCERER ); }
+					else {
+						SET_BIT(ch->skills[ number ].flags, SKILL_KNOWN_MAGE);
+					}
+				}
+				else if(HasClass(ch, CLASS_SORCERER) && !IS_SET(ch->skills[ number ].flags,SKILL_KNOWN_SORCERER)) {    // SALVO metto un eventuale controllo sul sorcerer
+					SET_BIT(ch->skills[ number ].flags, SKILL_KNOWN_SORCERER);
+				}
 
 				ch->skills[ number ].learned += int_app[ (int)GET_INT( ch ) ].learn;
 
@@ -417,8 +440,9 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 
 		ch->skills[ number ].learned += int_app[ (int)GET_INT(ch) ].learn;
 
-		if (ch->skills[number].learned >= 95)
-		{ send_to_char("Hai imparato tutto.\n\r", ch); }
+		if(ch->skills[number].learned >= 95) {
+			send_to_char("Hai imparato tutto.\n\r", ch);
+		}
 		return TRUE;
 	}
 	/**** fine skills prince ****/
@@ -431,26 +455,32 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* guildmaster;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
-	if( !ch->skills )
-	{ return FALSE; }
+	if(!ch->skills) {
+		return FALSE;
+	}
 
-	if( check_soundproof( ch ) )
-	{ return FALSE; }
+	if(check_soundproof(ch)) {
+		return FALSE;
+	}
 
-	if( IS_IMMORTAL( ch ) )
-	{ return FALSE; }
+	if(IS_IMMORTAL(ch)) {
+		return FALSE;
+	}
 
 	guildmaster = FindMobInRoomWithFunction( ch->in_room, reinterpret_cast<genericspecial_func>(ClericGuildMaster) );
 
-	if( !guildmaster )
-	{ return FALSE; }
+	if(!guildmaster) {
+		return FALSE;
+	}
 
 	if( cmd != CMD_PRACTICE && cmd != CMD_GAIN &&
-			cmd != CMD_GIVE )
-	{ return(FALSE); }
+			cmd != CMD_GIVE) {
+		return(FALSE);
+	}
 
 	if (IS_NPC(ch)) {
 		act("$N tells you 'What do i look like, an animal trainer?'", FALSE,
@@ -495,8 +525,9 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 			send_to_char("You can practice any of these spells:\n\r", ch);
 			for(max=1; max<=GET_LEVEL(ch,CLERIC_LEVEL_IND); max++) { // SALVO ordino le prac clericguild
 				for(i=0; *spells[i] != '\n'; i++) {
-					if (spell_info[i+1].min_level_cleric != max)
-					{ continue; }
+					if(spell_info[i+1].min_level_cleric != max) {
+						continue;
+					}
 					if (spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_cleric <=
 							 GET_LEVEL_CASTER(ch,CLERIC_LEVEL_IND)) &&
@@ -600,8 +631,9 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 
 		ch->skills[ number ].learned += int_app[ (int)GET_INT(ch) ].learn;
 
-		if (ch->skills[number].learned >= 95)
-		{ send_to_char("Hai imparato tutto.\n\r", ch); }
+		if(ch->skills[number].learned >= 95) {
+			send_to_char("Hai imparato tutto.\n\r", ch);
+		}
 		return TRUE;
 	}
 	/**** fine skills prince ****/
@@ -628,8 +660,9 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 	int number=0;
 	int sk_num;
 
-	if( !AWAKE( ch ) )
-	{ return(FALSE); }
+	if(!AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if( type != EVENT_COMMAND ) {
 		if( ch->specials.fighting ) {
@@ -638,11 +671,13 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 		return(FALSE);
 	}
 
-	if( !ch->skills )
-	{ return FALSE; }
+	if(!ch->skills) {
+		return FALSE;
+	}
 
-	if( check_soundproof(ch))
-	{ return FALSE; }
+	if(check_soundproof(ch)) {
+		return FALSE;
+	}
 
 	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
@@ -700,8 +735,9 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 
 			ch->skills[ number ].learned += int_app[ (int)GET_INT(ch) ].learn;
 
-			if (ch->skills[number].learned >= 95)
-			{ send_to_char("Hai imparato tutto.\n\r", ch); }
+			if(ch->skills[number].learned >= 95) {
+				send_to_char("Hai imparato tutto.\n\r", ch);
+			}
 			return TRUE;
 		}
 		/**** fine skills prince ****/
@@ -851,8 +887,9 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 	int number=0;
 	int sk_num;
 
-	if (!AWAKE(ch))
-	{ return(FALSE); }
+	if(!AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (!cmd) {
 		if (ch->specials.fighting) {
@@ -861,11 +898,13 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 		return(FALSE);
 	}
 
-	if (!ch->skills)
-	{ return(FALSE); }
+	if(!ch->skills) {
+		return(FALSE);
+	}
 
-	if (check_soundproof(ch))
-	{ return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 
 	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
@@ -923,8 +962,9 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 
 			ch->skills[ number ].learned += int_app[ (int)GET_INT(ch) ].learn;
 
-			if (ch->skills[number].learned >= 95)
-			{ send_to_char("Hai imparato tutto.\n\r", ch); }
+			if(ch->skills[number].learned >= 95) {
+				send_to_char("Hai imparato tutto.\n\r", ch);
+			}
 			return TRUE;
 		}
 		/**** fine skills prince ****/
@@ -1035,21 +1075,24 @@ ROOMSPECIAL_FUNC(dump) {
 	struct char_data* tmp_char;
 	int value=0;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
 	for( k = real_roomp(ch->in_room)->contents; k ;
 			k = real_roomp(ch->in_room)->contents) {
 		sprintf(buf, "The %s vanish in a puff of smoke.\n\r",fname(k->name));
 		for( tmp_char = real_roomp(ch->in_room)->people; tmp_char;
 				tmp_char = tmp_char->next_in_room )
-			if( CAN_SEE_OBJ(tmp_char, k) )
-			{ send_to_char(buf,tmp_char); }
+			if(CAN_SEE_OBJ(tmp_char, k)) {
+				send_to_char(buf,tmp_char);
+			}
 		extract_obj(k);
 	}
 
-	if(cmd!=CMD_DROP)
-	{ return(FALSE); }
+	if(cmd!=CMD_DROP) {
+		return(FALSE);
+	}
 
 	do_drop(ch, arg, cmd);
 
@@ -1060,8 +1103,9 @@ ROOMSPECIAL_FUNC(dump) {
 		sprintf(buf, "The %s vanish in a puff of smoke.\n\r",fname(k->name));
 		for( tmp_char = real_roomp(ch->in_room)->people; tmp_char;
 				tmp_char = tmp_char->next_in_room ) {
-			if (CAN_SEE_OBJ(tmp_char, k))
-			{ send_to_char(buf,tmp_char); }
+			if(CAN_SEE_OBJ(tmp_char, k)) {
+				send_to_char(buf,tmp_char);
+			}
 		}
 		value+=(MIN(1000,MAX(k->obj_flags.cost/4,1)));
 		extract_obj(k);
@@ -1073,10 +1117,12 @@ ROOMSPECIAL_FUNC(dump) {
 		act( "$n has been awarded for being a good citizen.", TRUE, ch, 0,0,
 			 TO_ROOM);
 
-		if( GetMaxLevel(ch) < 3 )
-		{ gain_exp( ch, MIN( 100, value ) ); }
-		else
-		{ GET_GOLD(ch) += value; }
+		if(GetMaxLevel(ch) < 3) {
+			gain_exp(ch, MIN(100, value));
+		}
+		else {
+			GET_GOLD(ch) += value;
+		}
 	}
 	return TRUE;
 }
@@ -1116,7 +1162,9 @@ MOBSPECIAL_FUNC(mayor) {
 
 	if (cmd || !move || (GET_POS(ch) < POSITION_SLEEPING) ||
 			(GET_POS(ch) == POSITION_FIGHTING)) {
-		if (!ch->specials.fighting) { return(FALSE); }
+		if(!ch->specials.fighting) {
+			return(FALSE);
+		}
 		return(fighter(ch, cmd, arg, mob, type));
 	}
 
@@ -1139,35 +1187,47 @@ MOBSPECIAL_FUNC(mayor) {
 		break;
 
 	case 'a' :
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 		act("$n says 'Hello Honey!'",FALSE,ch,0,0,TO_ROOM);
 		act("$n smirks.",FALSE,ch,0,0,TO_ROOM);
 		break;
 
 	case 'b' :
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 		act("$n says 'What a view! I must get something done about that dump!'",
 			FALSE,ch,0,0,TO_ROOM);
 		break;
 
 	case 'c' :
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 		act("$n says 'Vandals! Youngsters nowadays have no respect for anything!'",
 			FALSE,ch,0,0,TO_ROOM);
 		break;
 
 	case 'd' :
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 		act("$n says 'Good day, citizens!'", FALSE, ch, 0,0,TO_ROOM);
 		break;
 
 	case 'e' :
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 		act("$n says 'I hereby declare the bazaar open!'",FALSE,ch,0,0,TO_ROOM);
 		break;
 
 	case 'E' :
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 		act("$n says 'I hereby declare ShadowSpring closed!'",FALSE,ch,0,0,TO_ROOM);
 		break;
 
@@ -1238,12 +1298,15 @@ MOBSPECIAL_FUNC(andy_wilcox)
 
 	andy = 0;
 
-	if (check_soundproof(ch)) { return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 	for (temp_char = real_roomp(ch->in_room)->people; (!andy) && (temp_char) ;
 			temp_char = temp_char->next_in_room)
 		if (IS_MOB(temp_char))
-			if (mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__))
-			{ andy = temp_char; }
+			if(mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+				andy = temp_char;
+			}
 	if (open==0 && time_info.hours == 11) {
 		open = 1;
 		do_unlock(andy, "door", 0);
@@ -1269,8 +1332,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 	case CMD_DISARM:
 		only_argument(arg, argm);
 
-		if (andy == ch)
-		{ return TRUE; }
+		if(andy == ch) {
+			return TRUE;
+		}
 		if (andy == get_char_room(argm, ch->in_room)) {
 			int        hitsleft;
 			act("$n says 'Get this, $N wants to kill me', and\n falls down laughing.", FALSE, andy, 0, ch, TO_ROOM);
@@ -1296,8 +1360,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		break;
 
 	case CMD_STEAL:
-		if (andy == ch)
-		{ return TRUE; }
+		if(andy == ch) {
+			return TRUE;
+		}
 		do_action(andy, ch->player.name, 130 /* slap */);
 		act("$n tells you 'Who the hell do you think you are?'",
 			FALSE, andy, 0, ch, TO_VICT);
@@ -1308,8 +1373,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 	case CMD_CAST:
 	case CMD_RECITE:
 	case CMD_USE:
-		if (andy == ch)
-		{ return TRUE; }
+		if(andy == ch) {
+			return TRUE;
+		}
 		do_action(andy, ch->player.name, 94 /* poke */);
 		act("$n tells you 'Hey, no funny stuff.'.", FALSE, andy, 0, ch, TO_VICT);
 		return TRUE;
@@ -1337,7 +1403,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		if( ( num = getabunch( argm, newarg ) ) != 0 ) {
 			strcpy(argm,newarg);
 		}
-		if (num == 0) { num = 1; }
+		if(num == 0) {
+			num = 1;
+		}
 #endif
 
 		if(!( temp1 = get_obj_in_list_vis(ch,argm,andy->carrying)))      {
@@ -1346,8 +1414,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		}
 		for (scan = sold_here; scan->container>=0; scan++) {
 			if( temp1->item_number >= 0 &&
-					scan->container == obj_index[temp1->item_number].iVNum)
-			{ break; }
+					scan->container == obj_index[temp1->item_number].iVNum) {
+				break;
+			}
 		}
 		if (scan->container<0)      {
 			act("$n tells you 'Sorry, that's not for sale.'", FALSE, andy, 0, ch, TO_VICT);
@@ -1372,8 +1441,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		cost *= 9;
 		cost /=10;
 		cost++;
-		if (temp2)
-		{ extract_obj(temp2); }
+		if(temp2) {
+			extract_obj(temp2);
+		}
 
 		for (; num>0; num--) {
 			if (GET_GOLD(ch) < cost) {
@@ -1415,8 +1485,9 @@ MOBSPECIAL_FUNC(andy_wilcox)
 			sprintf(buf,"%s for %d gold coins.\n\r", temp1->short_description, cost);
 			send_to_char(buf, ch);
 			extract_obj(temp1);
-			if (temp2)
-			{ extract_obj(temp2); }
+			if(temp2) {
+				extract_obj(temp2);
+			}
 		}
 		return TRUE;
 		break;
@@ -1452,19 +1523,23 @@ MOBSPECIAL_FUNC(eric_johnson)
 
 	eric = 0;
 
-	if (check_soundproof(ch)) { return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 
 	eric = FindMobInRoomWithFunction(ch->in_room,reinterpret_cast<genericspecial_func>(eric_johnson));
 	for (temp_char = real_roomp(ch->in_room)->people; (!eric) && (temp_char) ;
 			temp_char = temp_char->next_in_room)
 		if (IS_MOB(temp_char))
-			if ((void*)mob_index[temp_char->nr].func == (void*)eric_johnson)
-			{ eric = temp_char; }
+			if((void*)mob_index[temp_char->nr].func == (void*)eric_johnson) {
+				eric = temp_char;
+			}
 
 	if (ch==eric) {
 
-		if (cmd!=0)
-		{ return FALSE; } /* prevent recursion when eric wants to move */
+		if(cmd!=0) {
+			return FALSE;    /* prevent recursion when eric wants to move */
+		}
 
 		if (!fighting && ch->specials.fighting) {
 			act("$n says 'What the fuck?'", FALSE, eric, 0, 0, TO_ROOM);
@@ -1488,10 +1563,12 @@ MOBSPECIAL_FUNC(eric_johnson)
 					af.location = APPLY_NONE;
 					af.bitvector = AFF_SLEEP;
 					affect_join(target, &af, FALSE, FALSE);
-					if (target->specials.fighting)
-					{ stop_fighting(target); }
-					if (eric->specials.fighting)
-					{ stop_fighting(eric); }
+					if(target->specials.fighting) {
+						stop_fighting(target);
+					}
+					if(eric->specials.fighting) {
+						stop_fighting(eric);
+					}
 					act("$N is out cold.", FALSE, eric, 0, target, TO_NOTVICT);
 					act("You are out cold.", FALSE, eric, 0, target, TO_VICT);
 					GET_POS(target) = POSITION_SLEEPING;
@@ -1557,14 +1634,16 @@ MOBSPECIAL_FUNC(eric_johnson)
 					dir = choose_exit_global(eric->in_room, DanjerPorch, -100);
 				}
 				if (dir<0) {
-					if (dice(1,2)==1)
-					{ act("$n says 'Shit, I'm totally lost.", FALSE, eric, 0,0,TO_ROOM); }
+					if(dice(1,2)==1) {
+						act("$n says 'Shit, I'm totally lost.", FALSE, eric, 0,0,TO_ROOM);
+					}
 					else
 						act("$n says 'Can you show me the way back to the DanjerHaus?'",
 							FALSE, eric, 0,0, TO_ROOM);
 				}
-				else
-				{ go_direction(eric, dir); }
+				else {
+					go_direction(eric, dir);
+				}
 
 			}
 			else {
@@ -1680,8 +1759,9 @@ MOBSPECIAL_FUNC(eric_johnson)
 
 			for (temp_char = character_list; temp_char; temp_char = temp_char->next)
 				if (IS_MOB(temp_char))
-					if ((void*)mob_index[temp_char->nr].func == (void*)andy_wilcox)
-					{ andy = temp_char; }
+					if((void*)mob_index[temp_char->nr].func == (void*)andy_wilcox) {
+						andy = temp_char;
+					}
 
 			if (eric->in_room != andy->in_room) {
 				if (eric->in_room == DanjerPorch) {
@@ -1702,8 +1782,9 @@ MOBSPECIAL_FUNC(eric_johnson)
 						FALSE, eric, 0,0, TO_ROOM);
 					state = E_HACKING;
 				}
-				else
-				{ go_direction(eric, dir); }
+				else {
+					go_direction(eric, dir);
+				}
 			}
 			else {
 				for (scan = shopping_list; *scan; scan++) {
@@ -1778,8 +1859,9 @@ MOBSPECIAL_FUNC(eric_johnson)
 						act("$n says 'What the hell, I just bought this?!'", FALSE, eric,
 							0, 0, TO_ROOM);
 						do_drop(eric, "sixpack", -1 /* irrelevant */);
-						if (NULL == get_obj_in_list_vis(eric, "sixpack", eric->carrying))
-						{ state = E_HACKING; }
+						if(NULL == get_obj_in_list_vis(eric, "sixpack", eric->carrying)) {
+							state = E_HACKING;
+						}
 					}
 				}
 				else {
@@ -1830,8 +1912,9 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 				 int* cur_line, void** thing) {
 	bool ok;
 
-	if (GET_POS(npc) == POSITION_FIGHTING)
-	{ return; }
+	if(GET_POS(npc) == POSITION_FIGHTING) {
+		return;
+	}
 
 	ok = TRUE;
 
@@ -1862,17 +1945,21 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 		break;
 
 	case 'w' :
-		if (GET_POS(npc) != POSITION_SLEEPING)
-		{ ok = FALSE; }
-		else
-		{ GET_POS(npc) = POSITION_STANDING; }
+		if(GET_POS(npc) != POSITION_SLEEPING) {
+			ok = FALSE;
+		}
+		else {
+			GET_POS(npc) = POSITION_STANDING;
+		}
 		break;
 
 	case 's' :
-		if (GET_POS(npc) <= POSITION_SLEEPING)
-		{ ok = FALSE; }
-		else
-		{ GET_POS(npc) = POSITION_SLEEPING; }
+		if(GET_POS(npc) <= POSITION_SLEEPING) {
+			ok = FALSE;
+		}
+		else {
+			GET_POS(npc) = POSITION_SLEEPING;
+		}
 		break;
 
 	case 'c' :  /* Find char in room */
@@ -1906,18 +1993,21 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 		break;
 
 	case '?' : /* Test a random number */
-		if (atoi(cmd+1) <= number(1,100))
-		{ ok = FALSE; }
+		if(atoi(cmd+1) <= number(1,100)) {
+			ok = FALSE;
+		}
 		break;
 
 	default:
 		break;
 	}  /* End Switch */
 
-	if (ok)
-	{ (*cur_line)++; }
-	else
-	{ (*cur_line) += next_line; }
+	if(ok) {
+		(*cur_line)++;
+	}
+	else {
+		(*cur_line) += next_line;
+	}
 }
 
 
@@ -1925,8 +2015,12 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 void npc_steal(struct char_data* ch,struct char_data* victim) {
 	int gold;
 
-	if(IS_NPC(victim)) { return; }
-	if(GetMaxLevel(victim)>MAX_MORT) { return; }
+	if(IS_NPC(victim)) {
+		return;
+	}
+	if(GetMaxLevel(victim)>MAX_MORT) {
+		return;
+	}
 
 	if (AWAKE(victim) && (number(0,GetMaxLevel(ch)) == 0)) {
 		act("You discover that $n has $s hands in your wallet.",FALSE,ch,0,victim,TO_VICT);
@@ -1945,18 +2039,22 @@ void npc_steal(struct char_data* ch,struct char_data* victim) {
 
 MOBSPECIAL_FUNC(snake) {
 
-	if( type != EVENT_TICK || !AWAKE(ch))
-	{ return(FALSE); }
-
-	if( GET_POS(ch) == POSITION_SITTING ) {
-		if( ch->specials.fighting )
-		{ GET_POS(ch) = POSITION_FIGHTING; }
-		else
-		{ GET_POS(ch) = POSITION_STANDING; }
+	if(type != EVENT_TICK || !AWAKE(ch)) {
+		return(FALSE);
 	}
 
-	if( GET_POS(ch) != POSITION_FIGHTING )
-	{ return FALSE; }
+	if( GET_POS(ch) == POSITION_SITTING ) {
+		if(ch->specials.fighting) {
+			GET_POS(ch) = POSITION_FIGHTING;
+		}
+		else {
+			GET_POS(ch) = POSITION_STANDING;
+		}
+	}
+
+	if(GET_POS(ch) != POSITION_FIGHTING) {
+		return FALSE;
+	}
 
 	if( ch->specials.fighting &&
 			ch->specials.fighting->in_room == ch->in_room ) {
@@ -1971,18 +2069,22 @@ MOBSPECIAL_FUNC(snake) {
 //Come snake, ma fa anche le skill della classe del mob
 MOBSPECIAL_FUNC(snake_plus) {
 
-	if( type != EVENT_TICK || !AWAKE(ch))
-	{ return(FALSE); }
-
-	if( GET_POS(ch) == POSITION_SITTING ) {
-		if( ch->specials.fighting )
-		{ GET_POS(ch) = POSITION_FIGHTING; }
-		else
-		{ GET_POS(ch) = POSITION_STANDING; }
+	if(type != EVENT_TICK || !AWAKE(ch)) {
+		return(FALSE);
 	}
 
-	if( GET_POS(ch) != POSITION_FIGHTING )
-	{ return FALSE; }
+	if( GET_POS(ch) == POSITION_SITTING ) {
+		if(ch->specials.fighting) {
+			GET_POS(ch) = POSITION_FIGHTING;
+		}
+		else {
+			GET_POS(ch) = POSITION_STANDING;
+		}
+	}
+
+	if(GET_POS(ch) != POSITION_FIGHTING) {
+		return FALSE;
+	}
 
 	if( ch->specials.fighting &&
 			ch->specials.fighting->in_room == ch->in_room ) {
@@ -1997,18 +2099,22 @@ MOBSPECIAL_FUNC(snake_plus) {
 
 MOBSPECIAL_FUNC(Pungiglione) {
 
-	if( type != EVENT_TICK || !AWAKE(ch))
-	{ return(FALSE); }
-
-	if( GET_POS(ch) == POSITION_SITTING ) {
-		if( ch->specials.fighting )
-		{ GET_POS(ch) = POSITION_FIGHTING; }
-		else
-		{ GET_POS(ch) = POSITION_STANDING; }
+	if(type != EVENT_TICK || !AWAKE(ch)) {
+		return(FALSE);
 	}
 
-	if( GET_POS(ch) != POSITION_FIGHTING )
-	{ return FALSE; }
+	if( GET_POS(ch) == POSITION_SITTING ) {
+		if(ch->specials.fighting) {
+			GET_POS(ch) = POSITION_FIGHTING;
+		}
+		else {
+			GET_POS(ch) = POSITION_STANDING;
+		}
+	}
+
+	if(GET_POS(ch) != POSITION_FIGHTING) {
+		return FALSE;
+	}
 
 	if( ch->specials.fighting &&
 			ch->specials.fighting->in_room == ch->in_room ) {
@@ -2023,18 +2129,22 @@ MOBSPECIAL_FUNC(Pungiglione) {
 
 MOBSPECIAL_FUNC(Pungiglione_maggiore) {
 
-	if( type != EVENT_TICK || !AWAKE(ch))
-	{ return(FALSE); }
-
-	if( GET_POS(ch) == POSITION_SITTING ) {
-		if( ch->specials.fighting )
-		{ GET_POS(ch) = POSITION_FIGHTING; }
-		else
-		{ GET_POS(ch) = POSITION_STANDING; }
+	if(type != EVENT_TICK || !AWAKE(ch)) {
+		return(FALSE);
 	}
 
-	if( GET_POS(ch) != POSITION_FIGHTING )
-	{ return FALSE; }
+	if( GET_POS(ch) == POSITION_SITTING ) {
+		if(ch->specials.fighting) {
+			GET_POS(ch) = POSITION_FIGHTING;
+		}
+		else {
+			GET_POS(ch) = POSITION_STANDING;
+		}
+	}
+
+	if(GET_POS(ch) != POSITION_FIGHTING) {
+		return FALSE;
+	}
 
 	if( ch->specials.fighting &&
 			ch->specials.fighting->in_room == ch->in_room ) {
@@ -2064,10 +2174,12 @@ MOBSPECIAL_FUNC(SporeCloud) {
 
 		for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 			temp = tmp_victim->next;
-			if ( (ch->in_room == tmp_victim->in_room) && !IS_IMMORTAL(tmp_victim) && (mob != tmp_victim))
-			{ damage(tmp_victim, tmp_victim, GetMaxLevel(mob),SPELL_POISON, 5); }
-			else
-			{ act("Osservando le spore vedi le piante che diventeranno...",FALSE, ch, 0, tmp_victim, TO_VICT); }
+			if((ch->in_room == tmp_victim->in_room) && !IS_IMMORTAL(tmp_victim) && (mob != tmp_victim)) {
+				damage(tmp_victim, tmp_victim, GetMaxLevel(mob),SPELL_POISON, 5);
+			}
+			else {
+				act("Osservando le spore vedi le piante che diventeranno...",FALSE, ch, 0, tmp_victim, TO_VICT);
+			}
 		}
 	}
 	else {
@@ -2084,14 +2196,17 @@ MOBSPECIAL_FUNC(Tsuchigumo) {
 	struct room_data* rp;
 	struct char_data* tmp, *tmp2;
 
-	if( type != EVENT_TICK || !AWAKE(ch))
-	{ return(FALSE); }
+	if(type != EVENT_TICK || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if( GET_POS(ch) == POSITION_SITTING ) {
-		if( ch->specials.fighting )
-		{ GET_POS(ch) = POSITION_FIGHTING; }
-		else
-		{ GET_POS(ch) = POSITION_STANDING; }
+		if(ch->specials.fighting) {
+			GET_POS(ch) = POSITION_FIGHTING;
+		}
+		else {
+			GET_POS(ch) = POSITION_STANDING;
+		}
 	}
 
 	if( GET_POS(ch) != POSITION_FIGHTING ) {
@@ -2188,18 +2303,22 @@ MOBSPECIAL_FUNC(Tsuchigumo) {
 
 MOBSPECIAL_FUNC(SputoVelenoso) {
 
-	if( type != EVENT_TICK || !AWAKE(ch))
-	{ return(FALSE); }
-
-	if( GET_POS(ch) == POSITION_SITTING ) {
-		if( ch->specials.fighting )
-		{ GET_POS(ch) = POSITION_FIGHTING; }
-		else
-		{ GET_POS(ch) = POSITION_STANDING; }
+	if(type != EVENT_TICK || !AWAKE(ch)) {
+		return(FALSE);
 	}
 
-	if( GET_POS(ch) != POSITION_FIGHTING )
-	{ return FALSE; }
+	if( GET_POS(ch) == POSITION_SITTING ) {
+		if(ch->specials.fighting) {
+			GET_POS(ch) = POSITION_FIGHTING;
+		}
+		else {
+			GET_POS(ch) = POSITION_STANDING;
+		}
+	}
+
+	if(GET_POS(ch) != POSITION_FIGHTING) {
+		return FALSE;
+	}
 
 	if( ch->specials.fighting &&
 			ch->specials.fighting->in_room == ch->in_room ) {
@@ -2215,8 +2334,9 @@ MOBSPECIAL_FUNC(SputoVelenoso) {
 
 MOBSPECIAL_FUNC(PaladinGuildGuard) {
 
-	if (!AWAKE(ch))
-	{ return(FALSE); }
+	if(!AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (!cmd) {
 		if (ch->specials.fighting) {
@@ -2224,7 +2344,9 @@ MOBSPECIAL_FUNC(PaladinGuildGuard) {
 		}
 	}
 	else if (cmd >= CMD_NORTH && cmd <= CMD_DOWN) {
-		if ((cmd == CMD_EAST) || (cmd == CMD_NORTH)  || (cmd == CMD_WEST)) { return(FALSE); }
+		if((cmd == CMD_EAST) || (cmd == CMD_NORTH)  || (cmd == CMD_WEST)) {
+			return(FALSE);
+		}
 		if (!HasClass(ch, CLASS_PALADIN)) {
 			send_to_char
 			("The guard shakes his head, and blocks your way.\n\r", ch);
@@ -2264,7 +2386,9 @@ MOBSPECIAL_FUNC(GameGuard) {
 		}
 		return(FALSE);
 	}
-	else { return(FALSE); }
+	else {
+		return(FALSE);
+	}
 }
 
 int GreyParamedic(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int types) {
@@ -2284,10 +2408,13 @@ int GreyParamedic(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 						vict = vict->next_in_room ) {
 					if (((float)GET_HIT(vict)/(float)hit_limit(vict) <
 							(float)GET_HIT(most_hurt)/(float)hit_limit(most_hurt))
-							&& (CAN_SEE(ch, vict)))
-					{ most_hurt = vict; }
+							&& (CAN_SEE(ch, vict))) {
+						most_hurt = vict;
 				}
-				if (!most_hurt) { return(FALSE); } /* nobody here */
+				}
+				if(!most_hurt) {
+					return(FALSE);    /* nobody here */
+				}
 				if (IS_AFFECTED(most_hurt,AFF_TEAM_GREY)) {
 
 					if ((float)GET_HIT(most_hurt)/(float)hit_limit(most_hurt) >
@@ -2305,8 +2432,9 @@ int GreyParamedic(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 								act("$n looks at you.", 1, ch, 0, most_hurt, TO_VICT);
 							}
 
-							if (check_nomagic(ch, 0, 0))
-							{ return(TRUE); }
+							if(check_nomagic(ch, 0, 0)) {
+								return(TRUE);
+							}
 
 							act("$n utters the words 'judicandus dies'.",
 								1, ch, 0, 0, TO_ROOM);
@@ -2319,8 +2447,9 @@ int GreyParamedic(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 				else {   /* Other Team? */
 					if (IS_AFFECTED(most_hurt,AFF_TEAM_AMBER)) {
 
-						if (check_nomagic(ch, 0, 0))
-						{ return(TRUE); }
+						if(check_nomagic(ch, 0, 0)) {
+							return(TRUE);
+						}
 
 						act("$n utters the words 'die punk'.",
 							1, ch, 0, 0, TO_ROOM);
@@ -2328,7 +2457,9 @@ int GreyParamedic(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 										 SPELL_TYPE_SPELL, most_hurt, 0);
 						return(TRUE);
 					}
-					else { return(FALSE); }
+					else {
+						return(FALSE);
+					}
 				}
 			}
 			else {  /* I'm asleep or sitting */
@@ -2356,10 +2487,13 @@ MOBSPECIAL_FUNC(AmberParamedic) {
 						vict = vict->next_in_room ) {
 					if (((float)GET_HIT(vict)/(float)hit_limit(vict) <
 							(float)GET_HIT(most_hurt)/(float)hit_limit(most_hurt))
-							&& (CAN_SEE(ch, vict)))
-					{ most_hurt = vict; }
+							&& (CAN_SEE(ch, vict))) {
+						most_hurt = vict;
 				}
-				if (!most_hurt) { return(FALSE); } /* nobody here */
+				}
+				if(!most_hurt) {
+					return(FALSE);    /* nobody here */
+				}
 				if (IS_AFFECTED(most_hurt,AFF_TEAM_AMBER)) {
 
 					if ((float)GET_HIT(most_hurt)/(float)hit_limit(most_hurt) >
@@ -2377,8 +2511,9 @@ MOBSPECIAL_FUNC(AmberParamedic) {
 								act("$n looks at you.", 1, ch, 0, most_hurt, TO_VICT);
 							}
 
-							if (check_nomagic(ch, 0, 0))
-							{ return(TRUE); }
+							if(check_nomagic(ch, 0, 0)) {
+								return(TRUE);
+							}
 
 							act("$n utters the words 'judicandus dies'.",
 								1, ch, 0, 0, TO_ROOM);
@@ -2391,8 +2526,9 @@ MOBSPECIAL_FUNC(AmberParamedic) {
 				else {   /* Other Team? */
 					if (IS_AFFECTED(most_hurt,AFF_TEAM_GREY)) {
 
-						if (check_nomagic(ch, 0, 0))
-						{ return(TRUE); }
+						if(check_nomagic(ch, 0, 0)) {
+							return(TRUE);
+						}
 
 						act("$n utters the words 'die punk'.",
 							1, ch, 0, 0, TO_ROOM);
@@ -2400,7 +2536,9 @@ MOBSPECIAL_FUNC(AmberParamedic) {
 										 SPELL_TYPE_SPELL, most_hurt, 0);
 						return(TRUE);
 					}
-					else { return(FALSE); }
+					else {
+						return(FALSE);
+					}
 				}
 			}
 			else {  /* I'm asleep or sitting */
@@ -2414,8 +2552,9 @@ MOBSPECIAL_FUNC(AmberParamedic) {
 
 
 MOBSPECIAL_FUNC(blink) {
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 
 	if (GET_HIT(ch) < (int)GET_MAX_HIT(ch) / 3) {
@@ -2431,13 +2570,16 @@ MOBSPECIAL_FUNC(blink) {
 
 
 MOBSPECIAL_FUNC(MidgaardCitizen) {
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		fighter(ch, cmd, arg,mob,type);
 
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 
 		if (number(0,18) == 0) {
 			do_shout(ch, "Guards! Help me! Please!", 0);
@@ -2446,8 +2588,9 @@ MOBSPECIAL_FUNC(MidgaardCitizen) {
 			act("$n shouts 'Guards!  Help me! Please!'", TRUE, ch, 0, 0, TO_ROOM);
 		}
 
-		if (ch->specials.fighting)
-		{ CallForGuard(ch, ch->specials.fighting, 3, MIDGAARD); }
+		if(ch->specials.fighting) {
+			CallForGuard(ch, ch->specials.fighting, 3, MIDGAARD);
+		}
 
 		return(TRUE);
 
@@ -2461,8 +2604,9 @@ MOBSPECIAL_FUNC(ghoul) {
 	struct char_data* tar;
 
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	tar = ch->specials.fighting;
 
@@ -2487,12 +2631,14 @@ MOBSPECIAL_FUNC(CarrionCrawler) {
 	int i;
 
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	for (i=0; i<8; i++) {
-		if ((tar = FindAHatee(ch)) == NULL)
-		{ tar = FindVictim(ch); }
+		if((tar = FindAHatee(ch)) == NULL) {
+			tar = FindVictim(ch);
+		}
 
 		if( tar && tar->in_room == ch->in_room ) {
 			if( HitOrMiss( ch, tar, CalcThaco( ch, tar ) ) ) {
@@ -2512,8 +2658,9 @@ MOBSPECIAL_FUNC(WizardGuard) {
 	struct char_data* tch, *evil;
 	int max_evil;
 
-	if (cmd || !AWAKE(ch))
-	{ return (FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return (FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		fighter(ch, cmd, arg,mob,type);
@@ -2547,8 +2694,9 @@ MOBSPECIAL_FUNC(WizardGuard) {
 
 
 MOBSPECIAL_FUNC(vampire) {
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting &&
 			(ch->specials.fighting->in_room == ch->in_room)) {
@@ -2566,8 +2714,9 @@ MOBSPECIAL_FUNC(vampire) {
 
 MOBSPECIAL_FUNC(wraith) {
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 
 	if( ch->specials.fighting &&
@@ -2585,16 +2734,18 @@ MOBSPECIAL_FUNC(wraith) {
 MOBSPECIAL_FUNC(shadow) {
 
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting &&
 			(ch->specials.fighting->in_room == ch->in_room)) {
 		act("$n touches $N!", 1, ch, 0, ch->specials.fighting, TO_NOTVICT);
 		act("$n touches you!", 1, ch, 0, ch->specials.fighting, TO_VICT);
 		cast_chill_touch( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
-		if (ch->specials.fighting)
-		{ cast_weakness( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr); }
+		if(ch->specials.fighting) {
+			cast_weakness(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,ch->specials.fighting, nullptr);
+		}
 		return TRUE;
 	}
 	return FALSE;
@@ -2604,8 +2755,9 @@ MOBSPECIAL_FUNC(shadow) {
 
 MOBSPECIAL_FUNC(geyser) {
 
-	if (cmd || !AWAKE(ch))
-	{ return FALSE; }
+	if(cmd || !AWAKE(ch)) {
+		return FALSE;
+	}
 
 	if( number( 0, 3 ) == 0 ) {
 		act( "Tu erutti.", 1, ch, 0, 0, TO_CHAR);
@@ -2620,12 +2772,14 @@ MOBSPECIAL_FUNC(geyser) {
 MOBSPECIAL_FUNC(green_slime) {
 	struct char_data* cons;
 
-	if (cmd || !AWAKE(ch))
-	{ return FALSE; }
+	if(cmd || !AWAKE(ch)) {
+		return FALSE;
+	}
 
 	for( cons = real_roomp(ch->in_room)->people; cons; cons = cons->next_in_room )
-		if((!IS_NPC(cons)) && (GetMaxLevel(cons)<IMMORTALE))
-		{ cast_green_slime( GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, cons, 0); }
+		if((!IS_NPC(cons)) && (GetMaxLevel(cons)<IMMORTALE)) {
+			cast_green_slime(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, cons, 0);
+		}
 
 	return FALSE;
 }
@@ -2638,8 +2792,9 @@ MOBSPECIAL_FUNC(DracoLich) {
 
 MOBSPECIAL_FUNC(Drow) {
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (!ch->specials.fighting) {
 		if( !IS_UNDERGROUND(ch) && !IS_DARK( ch->in_room ) &&
@@ -2692,14 +2847,18 @@ MOBSPECIAL_FUNC(Leader) {
 MOBSPECIAL_FUNC(thief) {
 	struct char_data* cons;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
-	if(GET_POS(ch)!=POSITION_STANDING) { return FALSE; }
+	if(GET_POS(ch)!=POSITION_STANDING) {
+		return FALSE;
+	}
 
 	for(cons = real_roomp(ch->in_room)->people; cons; cons = cons->next_in_room )
-		if((!IS_NPC(cons)) && (GetMaxLevel(cons)<IMMORTALE) && (number(1,5)==1))
-		{ npc_steal(ch,cons); }
+		if((!IS_NPC(cons)) && (GetMaxLevel(cons)<IMMORTALE) && (number(1,5)==1)) {
+			npc_steal(ch,cons);
+		}
 
 	return(FALSE);
 }
@@ -2746,16 +2905,18 @@ MOBSPECIAL_FUNC(guild_guard) {
 
 
 MOBSPECIAL_FUNC(Inquisitor) {
-	if( cmd || !AWAKE( ch ) )
-	{ return FALSE; }
+	if(cmd || !AWAKE(ch)) {
+		return FALSE;
+	}
 
 	if( ch->specials.fighting ) {
 		return( fighter( ch, cmd, arg, mob, type ) );
 	}
 
 	if(ch->generic == INQ_SHOUT ) {
-		if( !check_soundproof( ch ) )
-		{ do_shout( ch, "NESSUNO vuole l'Inquisizione Spagnola!", 0 ); }
+		if(!check_soundproof(ch)) {
+			do_shout(ch, "NESSUNO vuole l'Inquisizione Spagnola!", 0);
+		}
 		ch->generic = 0;
 		return TRUE;
 	}
@@ -2786,8 +2947,9 @@ MOBSPECIAL_FUNC(puff) {
 		return(TRUE);
 	}
 
-	if (cmd)
-	{ return FALSE; }
+	if(cmd) {
+		return FALSE;
+	}
 
 	if (ch->generic == 1) {
 		do_shout(ch, "When will we get there?", 0);
@@ -2795,8 +2957,9 @@ MOBSPECIAL_FUNC(puff) {
 	}
 
 
-	if (check_soundproof(ch))
-	{ return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 
 	switch (number(0, 250)) {
 	case 0:
@@ -2869,8 +3032,9 @@ MOBSPECIAL_FUNC(puff) {
 		}
 	}
 	case 11:
-		if (!number(0,30))
-		{ do_shout(ch, "NOT!!!", 0); }
+		if(!number(0,30)) {
+			do_shout(ch, "NOT!!!", 0);
+		}
 		return(1);
 	case 12:
 		do_say(ch, "Bad news.  Termites.", 0);
@@ -2956,15 +3120,17 @@ MOBSPECIAL_FUNC(puff) {
 		return(TRUE);
 		break;
 	case 26:
-		if (number(0,100)==0)
-		{ do_shout(ch, "What is the greatest joy?", 0); }
+		if(number(0,100)==0) {
+			do_shout(ch, "What is the greatest joy?", 0);
+		}
 		break;
 	case 27:
 		do_say(ch, "Have you see Seneca ? Gads he is slow...", 0);
 		return(TRUE);
 	case 28:
-		if (number(0,50))
-		{ do_shout(ch, "SAVE!  I'm running out of cute things to say!", 0); }
+		if(number(0,50)) {
+			do_shout(ch, "SAVE!  I'm running out of cute things to say!", 0);
+		}
 		do_force(ch, "all save", 0);
 		return(TRUE);
 	case 29:
@@ -3084,16 +3250,18 @@ MOBSPECIAL_FUNC(puff) {
 		do_emote(ch, "moshes into you almost causing you to fall.", 0);
 		return(TRUE);
 	case 52:
-		if (!number(0,30))
-		{ do_shout(ch, "Everybody pray to Xanathon!", 0); }
+		if(!number(0,30)) {
+			do_shout(ch, "Everybody pray to Xanathon!", 0);
+		}
 		return(TRUE);
 	case 53:
 		do_say(ch, "You know I always liked you the best don't you?", 0);
 		do_emote(ch, "winks seductively at you.", 0);
 		return(TRUE);
 	case 54:
-		if (!number(0,30))
-		{ do_shout(ch, "Ack! Who prayed to Wert!", 0); }
+		if(!number(0,30)) {
+			do_shout(ch, "Ack! Who prayed to Wert!", 0);
+		}
 		return(TRUE);
 
 	default:
@@ -3143,8 +3311,9 @@ MOBSPECIAL_FUNC(replicant) {
 MOBSPECIAL_FUNC(Tytan) {
 	struct char_data* vict;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		return(magic_user(ch, cmd, arg, mob, type));
@@ -3223,8 +3392,9 @@ MOBSPECIAL_FUNC(AbbarachDragon) {
 
 	struct char_data* targ;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if( !ch->specials.fighting ) {
 		targ = (struct char_data*)FindAnyVictim(ch);
@@ -3248,18 +3418,21 @@ MOBSPECIAL_FUNC(fido) {
 	register struct room_data* rp;
 	char found = FALSE;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
-	if ((rp = real_roomp(ch->in_room)) == 0)
-	{ return(FALSE); }
+	if((rp = real_roomp(ch->in_room)) == 0) {
+		return(FALSE);
+	}
 
 	for (v = rp->people; (v && (!found)); v = next) {
 		next = v->next_in_room;
 		if ((IS_NPC(v)) && (mob_index[v->nr].iVNum == 100) &&
 				CAN_SEE(ch, v)) {  /* is a zombie */
-			if (v->specials.fighting)
-			{ stop_fighting(v); }
+			if(v->specials.fighting) {
+				stop_fighting(v);
+			}
 			make_corpse( v, 0 );
 			extract_char(v);
 			found = TRUE;
@@ -3287,8 +3460,9 @@ MOBSPECIAL_FUNC(fido) {
 
 MOBSPECIAL_FUNC(janitor) {
 	struct obj_data* i;
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 	PushStatus("janitor");
 
 	for (i = real_roomp(ch->in_room)->contents; i; i = i->next_content) {
@@ -3310,15 +3484,23 @@ MOBSPECIAL_FUNC(janitor) {
 MOBSPECIAL_FUNC(tormentor) {
 	return(FALSE);
 	mudlog(LOG_CHECK,"tormentor 1");
-	if(!ch) { return(FALSE); }
+	if(!ch) {
+		return(FALSE);
+	}
 	mudlog(LOG_CHECK,"tormentor 2");
-	if (!cmd) { return(FALSE); }
+	if(!cmd) {
+		return(FALSE);
+	}
 	mudlog(LOG_CHECK,"tormentor 3");
 
-	if (IS_IMMORTAL(ch)) { return(FALSE); }
+	if(IS_IMMORTAL(ch)) {
+		return(FALSE);
+	}
 	mudlog(LOG_CHECK,"tormentor 4");
 
-	if (!IS_PC(ch)) { return(FALSE); }
+	if(!IS_PC(ch)) {
+		return(FALSE);
+	}
 	mudlog(LOG_CHECK,"tormentor 5");
 
 	return(TRUE);
@@ -3330,19 +3512,22 @@ MOBSPECIAL_FUNC(RustMonster) {
 	struct obj_data* t_item;
 	int t_pos;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	/*
 	 **   find a victim
 	 */
 	vict = ch->specials.fighting;
 
-	if( !vict )
-	{ vict = FindVictim(ch); }
+	if(!vict) {
+		vict = FindVictim(ch);
+	}
 
-	if (!vict)
-	{ return(FALSE); }
+	if(!vict) {
+		return(FALSE);
+	}
 
 	/*
 	 **   choose an item of armor or a weapon that is metal
@@ -3402,10 +3587,13 @@ MOBSPECIAL_FUNC(RustMonster) {
 
 MOBSPECIAL_FUNC(temple_labrynth_liar) {
 
-	if (cmd || !AWAKE(ch))
-	{ return(0); }
+	if(cmd || !AWAKE(ch)) {
+		return(0);
+	}
 
-	if (check_soundproof(ch)) { return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 
 	switch (number(0, 15)) {
 	case 0:
@@ -3446,13 +3634,21 @@ MOBSPECIAL_FUNC(temple_labrynth_sentry) {
 	struct char_data* tch;
 	int counter;
 
-	if(cmd || !AWAKE(ch)) { return FALSE; }
+	if(cmd || !AWAKE(ch)) {
+		return FALSE;
+	}
 
-	if(GET_POS(ch)!=POSITION_FIGHTING) { return FALSE; }
+	if(GET_POS(ch)!=POSITION_FIGHTING) {
+		return FALSE;
+	}
 
-	if(!ch->specials.fighting) { return FALSE; }
+	if(!ch->specials.fighting) {
+		return FALSE;
+	}
 
-	if (check_soundproof(ch)) { return(FALSE); }
+	if(check_soundproof(ch)) {
+		return(FALSE);
+	}
 
 	/* Find a dude to do very evil things upon ! */
 
@@ -3461,12 +3657,15 @@ MOBSPECIAL_FUNC(temple_labrynth_sentry) {
 			act("The sentry snaps out of his trance and ...", 1, ch, 0, 0, TO_ROOM);
 			do_say(ch, "You will die for your insolence, pig-dog!", 0);
 			for ( counter = 0 ; counter < 4 ; counter++ )
-				if (check_nomagic(ch, 0, 0))
-				{ return(FALSE); }
-			if ( GET_POS(tch) > POSITION_SITTING)
-			{ cast_fireball(15, ch, "", SPELL_TYPE_SPELL, tch, 0); }
-			else
-			{ return TRUE; }
+				if(check_nomagic(ch, 0, 0)) {
+					return(FALSE);
+				}
+			if(GET_POS(tch) > POSITION_SITTING) {
+				cast_fireball(15, ch, "", SPELL_TYPE_SPELL, tch, 0);
+			}
+			else {
+				return TRUE;
+			}
 			return TRUE;
 		}
 		else {
@@ -3487,17 +3686,21 @@ int Whirlwind (struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 	const char* names[] = { "Loki", "Belgarath", 0};
 	int i = 0;
 
-	if (ch->in_room == -1) { return(FALSE); }
+	if(ch->in_room == -1) {
+		return(FALSE);
+	}
 
 	if (cmd == 0 && ch->generic == WW_LOOSE)  {
 		for (tmp = real_roomp(ch->in_room)->people; tmp ; tmp = tmp->next_in_room) {
 			while (names[i])  {
 				if ( !strcmp(GET_NAME(tmp), names[i] ) && ch->generic == WW_LOOSE)  {
 					/* start following */
-					if (circle_follow(ch, tmp))
-					{ return(FALSE); }
-					if (ch->master)
-					{ stop_follower(ch); }
+					if(circle_follow(ch, tmp)) {
+						return(FALSE);
+					}
+					if(ch->master) {
+						stop_follower(ch);
+					}
 					add_follower(ch, tmp);
 					ch->generic = WW_FOLLOW;
 				}
@@ -3520,8 +3723,9 @@ MOBSPECIAL_FUNC(NudgeNudge) {
 
 	struct char_data* vict;
 
-	if (cmd || !AWAKE(ch))
-	{ return (FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return (FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		return(FALSE);
@@ -3534,26 +3738,30 @@ MOBSPECIAL_FUNC(NudgeNudge) {
 		** find a victim
 		*/
 		vict = FindVictim(ch);
-		if (!vict)
-		{ return(FALSE); }
+		if(!vict) {
+			return(FALSE);
+		}
 		/* start following */
 		if (circle_follow(ch, vict)) {
 			return(FALSE);
 		}
-		if (ch->master)
-		{ stop_follower(ch); }
+		if(ch->master) {
+			stop_follower(ch);
+		}
 		add_follower(ch, vict);
 		ch->generic = NN_FOLLOW;
-		if (!check_soundproof(ch))
-		{ do_say (ch, "Good Evenin' Squire!", 0 ); }
+		if(!check_soundproof(ch)) {
+			do_say(ch, "Good Evenin' Squire!", 0);
+		}
 		act ("$n nudges you.", FALSE, ch, 0, 0, TO_CHAR);
 		act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 		break;
 	case NN_FOLLOW:
 		switch(number(0,20)) {
 		case 0:
-			if (!check_soundproof(ch))
-			{ do_say  (ch, "Is your wife a goer?  Know what I mean, eh?", 0 ); }
+			if(!check_soundproof(ch)) {
+				do_say(ch, "Is your wife a goer?  Know what I mean, eh?", 0);
+			}
 			act ("$n nudges you.", FALSE, ch, 0, 0, TO_CHAR);
 			act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			break;
@@ -3566,8 +3774,9 @@ MOBSPECIAL_FUNC(NudgeNudge) {
 			act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			act ("$n nudges you.", FALSE, ch, 0, 0, TO_CHAR);
 			act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
-			if (!check_soundproof(ch))
-			{ do_say  (ch, "Say no more!  Say no MORE!", 0); }
+			if(!check_soundproof(ch)) {
+				do_say(ch, "Say no more!  Say no MORE!", 0);
+			}
 			break;
 		case 2:
 			if (!check_soundproof(ch)) {
@@ -3580,28 +3789,32 @@ MOBSPECIAL_FUNC(NudgeNudge) {
 			act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			break;
 		case 3:
-			if (!check_soundproof(ch))
-			{ do_say  (ch, "A nod's as good as a wink to a blind bat, eh?", 0); }
+			if(!check_soundproof(ch)) {
+				do_say(ch, "A nod's as good as a wink to a blind bat, eh?", 0);
+			}
 			act ("$n nudges you.", FALSE, ch, 0, 0, TO_CHAR);
 			act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			act ("$n nudges you.", FALSE, ch, 0, 0, TO_CHAR);
 			act ("$n nudges $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			break;
 		case 4:
-			if (!check_soundproof(ch))
-			{ do_say  (ch, "You're WICKED, eh!  WICKED!", 0); }
+			if(!check_soundproof(ch)) {
+				do_say(ch, "You're WICKED, eh!  WICKED!", 0);
+			}
 			act ("$n winks at you.", FALSE, ch, 0, 0, TO_CHAR);
 			act ("$n winks at you.", FALSE, ch, 0, 0, TO_CHAR);
 			act ("$n winks at $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			act ("$n winks at $N.", FALSE, ch, 0, ch->master, TO_ROOM);
 			break;
 		case 5:
-			if (!check_soundproof(ch))
-			{ do_say  (ch, "Wink. Wink.", 0); }
+			if(!check_soundproof(ch)) {
+				do_say(ch, "Wink. Wink.", 0);
+			}
 			break;
 		case 6:
-			if (!check_soundproof(ch))
-			{ do_say  (ch, "Nudge. Nudge.", 0); }
+			if(!check_soundproof(ch)) {
+				do_say(ch, "Nudge. Nudge.", 0);
+			}
 			break;
 		case 7:
 		case 8:
@@ -3615,8 +3828,9 @@ MOBSPECIAL_FUNC(NudgeNudge) {
 		/*
 		**  Stop following
 		*/
-		if (!check_soundproof(ch))
-		{ do_say(ch, "Evening, Squire", 0); }
+		if(!check_soundproof(ch)) {
+			do_say(ch, "Evening, Squire", 0);
+		}
 		stop_follower(ch);
 		ch->generic = NN_LOOSE;
 		break;
@@ -3630,11 +3844,13 @@ MOBSPECIAL_FUNC(NudgeNudge) {
 MOBSPECIAL_FUNC(AGGRESSIVE) {
 	struct char_data* i, *next;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
-	if (check_peaceful(ch, ""))
-	{ return FALSE; }
+	if(check_peaceful(ch, "")) {
+		return FALSE;
+	}
 
 	if (ch->in_room > -1) {
 		for (i = real_roomp(ch->in_room)->people; i; i = next) {
@@ -3651,13 +3867,16 @@ MOBSPECIAL_FUNC(AGGRESSIVE) {
 }
 
 MOBSPECIAL_FUNC(citizen) {
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		fighter(ch, cmd, arg,mob,type);
 
-		if (check_soundproof(ch)) { return(FALSE); }
+		if(check_soundproof(ch)) {
+			return(FALSE);
+		}
 
 		if (number(0,18) == 0) {
 			do_shout(ch, "Guards! Help me! Please!", 0);
@@ -3711,8 +3930,9 @@ MOBSPECIAL_FUNC(Ringwraith) {
 				get_obj_vis_world( ch, "999.primo anello.", &howmanyrings );
 				ch->generic = 20;
 			}
-			else
-			{ ch->generic--; }
+			else {
+				ch->generic--;
+			}
 		}
 
 		if( howmanyrings > 0 ) {
@@ -3773,12 +3993,15 @@ MOBSPECIAL_FUNC(Ringwraith) {
 							if( IS_NPC( victim ) ) {
 								act( "$N da` velocemente l'Anello a $n.", FALSE, ch, NULL,
 									 victim, TO_ROOM);
-								if (ring->carried_by)
-								{ obj_from_char(ring); }
-								else if (ring->equipped_by)
-								{ unequip_char(victim, ring->eq_pos); }
-								else if (ring->in_obj) // SALVO l'anello e' in un obj
-								{ obj_from_obj(ring); }
+								if(ring->carried_by) {
+									obj_from_char(ring);
+								}
+								else if(ring->equipped_by) {
+									unequip_char(victim, ring->eq_pos);
+								}
+								else if(ring->in_obj) { // SALVO l'anello e' in un obj
+									obj_from_obj(ring);
+								}
 								obj_to_char(ring, ch);
 							}
 							else {
@@ -3838,8 +4061,9 @@ MOBSPECIAL_FUNC(Ringwraith) {
 		}
 	}
 	else if( type == EVENT_DEATH ) {
-		if( ch->act_ptr )
-		{ free( ch->act_ptr ); }
+		if(ch->act_ptr) {
+			free(ch->act_ptr);
+		}
 	}
 	return FALSE;
 }
@@ -3848,8 +4072,9 @@ MOBSPECIAL_FUNC(WarrenGuard) {
 	struct char_data* tch, *good;
 	int max_good;
 
-	if (cmd || !AWAKE(ch))
-	{ return (FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return (FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		fighter(ch, cmd, arg,mob,type);
@@ -3859,8 +4084,9 @@ MOBSPECIAL_FUNC(WarrenGuard) {
 	max_good = -1000;
 	good = 0;
 
-	if (check_peaceful(ch, ""))
-	{ return FALSE; }
+	if(check_peaceful(ch, "")) {
+		return FALSE;
+	}
 
 	for (tch=real_roomp(ch->in_room)->people; tch; tch = tch->next_in_room) {
 		if (tch->specials.fighting) {
@@ -3893,8 +4119,9 @@ int zm_tired(struct char_data* zmaster) {
 int zm_stunned_followers(struct char_data* zmaster) {
 	struct follow_type*        fwr;
 	for (fwr = zmaster->followers; fwr; fwr = fwr->next)
-		if (GET_POS(fwr->follower)==POSITION_STUNNED)
-		{ return TRUE; }
+		if(GET_POS(fwr->follower)==POSITION_STUNNED) {
+			return TRUE;
+		}
 	return FALSE;
 }
 
@@ -3962,8 +4189,9 @@ MOBSPECIAL_FUNC(zombie_master)
 
 	zmaster = find_mobile_here_with_spec_proc(reinterpret_cast<genericspecial_func>(zombie_master), ch->in_room);
 
-	if (cmd!=0 || ch != zmaster || !AWAKE(ch))
-	{ return FALSE; }
+	if(cmd!=0 || ch != zmaster || !AWAKE(ch)) {
+		return FALSE;
+	}
 
 	if (!check_peaceful(ch, "") &&
 			(zm_kill_fidos(zmaster) || zm_kill_aggressor(zmaster))
@@ -3974,8 +4202,9 @@ MOBSPECIAL_FUNC(zombie_master)
 
 	switch (GET_POS(zmaster)) {
 	case POSITION_RESTING:
-		if (!zm_tired(zmaster))
-		{ do_stand(zmaster, "", -1); }
+		if(!zm_tired(zmaster)) {
+			do_stand(zmaster, "", -1);
+		}
 		break;
 	case POSITION_SITTING:
 		if (!zm_stunned_followers(zmaster)) {
@@ -4002,8 +4231,9 @@ MOBSPECIAL_FUNC(zombie_master)
 							FALSE, zmaster, 0,0, TO_ROOM);
 			}
 			else {
-				if (check_nomagic(ch, 0, 0))
-				{ return(FALSE); }
+				if(check_nomagic(ch, 0, 0)) {
+					return(FALSE);
+				}
 
 				if (!check_soundproof(ch)) {
 					act("$n says 'Wonderful, another loyal follower!' and grins maniacly.",
@@ -4048,8 +4278,9 @@ ROOMSPECIAL_FUNC(pet_shops) {
 	int pet_room;
 	struct char_data* pet;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
 	pet_room = ch->in_room+1;
 
@@ -4122,8 +4353,9 @@ ROOMSPECIAL_FUNC(Fountain) {
 	void name_from_drinkcon(struct obj_data *obj);
 
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
 	if (cmd==248) {
 		/* fill */
@@ -4132,7 +4364,9 @@ ROOMSPECIAL_FUNC(Fountain) {
 		bits = generic_find(buf, FIND_OBJ_INV | FIND_OBJ_ROOM |
 							FIND_OBJ_EQUIP, ch, &tmp_char, &obj);
 
-		if (!bits) { return(FALSE); }
+		if(!bits) {
+			return(FALSE);
+		}
 
 		if (ITEM_TYPE(obj) !=ITEM_DRINKCON) {
 			send_to_char("Questo non e` un contenitore per liquidi!\n\r", ch);
@@ -4198,8 +4432,9 @@ ROOMSPECIAL_FUNC(Fountain) {
 
 		GET_COND(ch,THIRST) = 24;
 
-		if(GET_COND(ch,THIRST)>20)
-		{ act("Ti sei dissetato.",FALSE,ch,0,0,TO_CHAR); }
+		if(GET_COND(ch,THIRST)>20) {
+			act("Ti sei dissetato.",FALSE,ch,0,0,TO_CHAR);
+		}
 
 		return(TRUE);
 	}
@@ -4214,13 +4449,15 @@ ROOMSPECIAL_FUNC(bank) {
 	int money,tassa;
 	float tasso_bancario=0.05;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
 	money = atoi(arg);
 
-	if (IS_NPC(ch))
-	{ return(FALSE); }
+	if(IS_NPC(ch)) {
+		return(FALSE);
+	}
 
 	save_char(ch, ch->in_room, 0);
 
@@ -4325,11 +4562,13 @@ ROOMSPECIAL_FUNC(pray_for_items) {
 	struct obj_data* tmp_obj, *obj;
 	struct extra_descr_data* ext;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
-	if (cmd != 176) /* You must pray to get the stuff */
-	{ return FALSE; }
+	if(cmd != 176) { /* You must pray to get the stuff */
+		return FALSE;
+	}
 
 	key_room = 1+ch->in_room;
 
@@ -4401,8 +4640,9 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 											real_roomp(ch->in_room)->contents))
 				&& CAN_SEE_OBJ(ch, chalice))
 			if (!(chalice = get_obj_in_list_num(achl,
-												real_roomp(ch->in_room)->contents)) && CAN_SEE_OBJ(ch, chalice))
-			{ return(0); }
+											   real_roomp(ch->in_room)->contents)) && CAN_SEE_OBJ(ch, chalice)) {
+				return(0);
+			}
 
 		/* we found a chalice.. now try to get us */
 		do_get(ch, arg, cmd);
@@ -4415,8 +4655,9 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 		return(1);
 		break;
 	case 67: /* put */
-		if (!(chalice = get_obj_in_list_num(chl, ch->carrying)))
-		{ return(0); }
+		if(!(chalice = get_obj_in_list_num(chl, ch->carrying))) {
+			return(0);
+		}
 
 		argument_interpreter(arg, buf1, buf2);
 		if (!str_cmp(buf1, "chalice") && !str_cmp(buf2, "altar")) {
@@ -4429,8 +4670,9 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 		break;
 	case 176: /* pray */
 		if (!(chalice = get_obj_in_list_num(achl,
-											real_roomp(ch->in_room)->contents)))
-		{ return(0); }
+										   real_roomp(ch->in_room)->contents))) {
+			return(0);
+		}
 
 		do_action(ch, arg, cmd);  /* pray */
 		send_to_char(CHAL_ACT, ch);
@@ -4451,8 +4693,9 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 
 
 int kings_hall(struct char_data* ch, int cmd, char* arg) {
-	if (cmd != 176)
-	{ return(0); }
+	if(cmd != 176) {
+		return(0);
+	}
 
 	do_action(ch, arg, 176);
 
@@ -4497,10 +4740,13 @@ ROOMSPECIAL_FUNC(House) {
 	struct obj_cost cost;
 	int save_room;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
-	if (IS_NPC(ch)) { return(FALSE); }
+	if(IS_NPC(ch)) {
+		return(FALSE);
+	}
 
 	/* if (cmd != rent) ignore */
 	if (cmd != CMD_RENT) {
@@ -4515,8 +4761,9 @@ ROOMSPECIAL_FUNC(House) {
 			send_to_char("E nemmeno in casa del tuo Principe!!\n\r",ch);
 			return(FALSE);
 		}
-		else
-		{ send_to_char("Pero' sei in casa del tuo Principe!!\n\r",ch); }
+		else {
+			send_to_char("Pero' sei in casa del tuo Principe!!\n\r",ch);
+		}
 
 	}
 	DontShow=1;
@@ -4528,8 +4775,9 @@ ROOMSPECIAL_FUNC(House) {
 		act("Il maggiordomo accompagna $n nella sua stanza.",FALSE,ch,0,ch,TO_NOTVICT);
 		save_obj(ch, &cost,1);
 		save_room = ch->in_room;
-		if (ch->specials.start_room != 2) /* hell */
-		{ ch->specials.start_room = save_room; }
+		if(ch->specials.start_room != 2) { /* hell */
+			ch->specials.start_room = save_room;
+		}
 		extract_char(ch);  /* you don't delete CHARACTERS when you extract
 them */
 		save_char(ch, save_room, 0);
@@ -4633,8 +4881,9 @@ MOBSPECIAL_FUNC(sisyphus) {
 
 
 MOBSPECIAL_FUNC(jabberwocky) {
-	if (cmd)
-	{ return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		if ((GET_POS(ch) < POSITION_FIGHTING) &&
@@ -4650,8 +4899,9 @@ MOBSPECIAL_FUNC(jabberwocky) {
 }
 
 MOBSPECIAL_FUNC(flame) {
-	if (cmd)
-	{ return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 	if (ch->specials.fighting) {
 		if ((GET_POS(ch) < POSITION_FIGHTING) &&
 				(GET_POS(ch) > POSITION_STUNNED)) {
@@ -4666,7 +4916,9 @@ MOBSPECIAL_FUNC(flame) {
 }
 
 MOBSPECIAL_FUNC(banana) {
-	if (!cmd) { return(FALSE); }
+	if(!cmd) {
+		return(FALSE);
+	}
 
 	if ((cmd >= 1) && (cmd <= 6) &&
 			(GET_POS(ch) == POSITION_STANDING) &&
@@ -4701,10 +4953,13 @@ MOBSPECIAL_FUNC(paramedics) {
 						vict = vict->next_in_room ) {
 					if (((float)GET_HIT(vict)/(float)hit_limit(vict) <
 							(float)GET_HIT(most_hurt)/(float)hit_limit(most_hurt))
-							&& (CAN_SEE(ch, vict)))
-					{ most_hurt = vict; }
+							&& (CAN_SEE(ch, vict))) {
+						most_hurt = vict;
 				}
-				if (!most_hurt) { return(FALSE); } /* nobody here */
+				}
+				if(!most_hurt) {
+					return(FALSE);    /* nobody here */
+				}
 
 				if ((float)GET_HIT(most_hurt)/(float)hit_limit(most_hurt) >
 						0.66) {
@@ -4720,8 +4975,9 @@ MOBSPECIAL_FUNC(paramedics) {
 							act("$n looks at $N.", 1, ch, 0, most_hurt, TO_NOTVICT);
 							act("$n looks at you.", 1, ch, 0, most_hurt, TO_VICT);
 						}
-						if (check_nomagic(ch, 0, 0))
-						{ return(FALSE); }
+						if(check_nomagic(ch, 0, 0)) {
+							return(FALSE);
+						}
 
 						act("$n utters the words 'judicandus dies' in unison.",
 							1, ch, 0, 0, TO_ROOM);
@@ -4743,15 +4999,21 @@ MOBSPECIAL_FUNC(jugglernaut) {
 	struct obj_data* tmp_obj;
 	int i, j;
 
-	if (cmd) { return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 
 	if (GET_POS(ch) == POSITION_STANDING) {
 
-		if (random()%3) { return FALSE; }
+		if(random()%3) {
+			return FALSE;
+		}
 
 		/* juggle something */
 
-		if (IS_CARRYING_N(ch) < 1) { return FALSE; }
+		if(IS_CARRYING_N(ch) < 1) {
+			return FALSE;
+		}
 
 		i = random()%IS_CARRYING_N(ch);
 		j = 0;
@@ -4810,12 +5072,15 @@ MOBSPECIAL_FUNC(delivery_elf) {
 #define ELF_RETURN_TOWER   5
 #define ELF_RETURN_HOME    6
 
-	if (cmd) { return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 
 	return(FALSE);
 
-	if (ch->specials.fighting)
-	{ return FALSE; }
+	if(ch->specials.fighting) {
+		return FALSE;
+	}
 
 	switch(ch->generic) {
 
@@ -4954,7 +5219,9 @@ MOBSPECIAL_FUNC(delivery_elf) {
 MOBSPECIAL_FUNC(delivery_beast) {
 	struct obj_data* o;
 
-	if (cmd) { return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 
 	return(FALSE);
 
@@ -4983,8 +5250,9 @@ MOBSPECIAL_FUNC(Keftab) {
 	int found, targ_item;
 	struct char_data* i;
 
-	if (cmd)
-	{ return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 
 	if (!ch->specials.hunting) {
 		/* find a victim */
@@ -5001,8 +5269,9 @@ MOBSPECIAL_FUNC(Keftab) {
 					}
 					else {
 						targ_item++;
-						if (targ_item > SWORD_ANCIENTS+20)
-						{ found = TRUE; }
+						if(targ_item > SWORD_ANCIENTS+20) {
+							found = TRUE;
+						}
 					}
 				}
 			}
@@ -5019,8 +5288,9 @@ MOBSPECIAL_FUNC(Keftab) {
 			}
 			else {
 				targ_item++;
-				if( targ_item > SWORD_ANCIENTS+20 )
-				{ found = TRUE; }
+				if(targ_item > SWORD_ANCIENTS+20) {
+					found = TRUE;
+				}
 			}
 		}
 		ch->specials.hunting = 0;
@@ -5031,8 +5301,9 @@ MOBSPECIAL_FUNC(Keftab) {
 MOBSPECIAL_FUNC(StormGiant) {
 	struct char_data* vict;
 
-	if (cmd)
-	{ return(FALSE); }
+	if(cmd) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		if ((GET_POS(ch) < POSITION_FIGHTING) &&
@@ -5045,9 +5316,12 @@ MOBSPECIAL_FUNC(StormGiant) {
 			}
 			else {
 				act("$n creates a lightning bolt", TRUE, ch, 0,0,TO_ROOM);
-				if ((vict = FindAHatee(ch)) == NULL)
-				{ vict = FindVictim(ch); }
-				if (!vict) { return(FALSE); }
+				if((vict = FindAHatee(ch)) == NULL) {
+					vict = FindVictim(ch);
+				}
+				if(!vict) {
+					return(FALSE);
+				}
 				cast_lightning_bolt(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 
 				/* do nothing */
@@ -5068,8 +5342,9 @@ MOBSPECIAL_FUNC(Kraken) {
 
 MOBSPECIAL_FUNC(fighter) {
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		if (GET_POS(ch) == POSITION_FIGHTING) {
@@ -5117,8 +5392,9 @@ MOBSPECIAL_FUNC(fighter) {
 
 MOBSPECIAL_FUNC(NewThalosMayor) {
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		return(FALSE);
@@ -5376,8 +5652,9 @@ MOBSPECIAL_FUNC(SultanGuard) {
 
 
 MOBSPECIAL_FUNC(NewThalosCitizen) {
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
 	if (ch->specials.fighting) {
 		fighter(ch, cmd, arg, mob, type);
@@ -5391,8 +5668,9 @@ MOBSPECIAL_FUNC(NewThalosCitizen) {
 				act("$n shouts 'Guards!  Help me! Please!'", TRUE, ch, 0, 0, TO_ROOM);
 			}
 
-			if (ch->specials.fighting)
-			{ CallForGuard(ch, ch->specials.fighting, 3, NEWTHALOS); }
+			if(ch->specials.fighting) {
+				CallForGuard(ch, ch->specials.fighting, 3, NEWTHALOS);
+			}
 
 			return(TRUE);
 		}
@@ -5438,10 +5716,13 @@ MOBSPECIAL_FUNC(magic_user2) {
 	struct char_data* vict;
 	byte lspell;
 
-	if (cmd || !AWAKE(ch))
-	{ return(FALSE); }
+	if(cmd || !AWAKE(ch)) {
+		return(FALSE);
+	}
 
-	if (!ch->specials.fighting) { return FALSE; }
+	if(!ch->specials.fighting) {
+		return FALSE;
+	}
 
 	if ((GET_POS(ch) > POSITION_STUNNED) &&
 			(GET_POS(ch) < POSITION_FIGHTING)) {
@@ -5449,20 +5730,25 @@ MOBSPECIAL_FUNC(magic_user2) {
 		return(TRUE);
 	}
 
-	if (check_nomagic(ch, 0, 0))
-	{ return(FALSE); }
+	if(check_nomagic(ch, 0, 0)) {
+		return(FALSE);
+	}
 
 	vict = ch->specials.fighting;
 
-	if (!vict)
-	{ vict = FindVictim(ch); }
+	if(!vict) {
+		vict = FindVictim(ch);
+	}
 
-	if (!vict)
-	{ return(FALSE); }
+	if(!vict) {
+		return(FALSE);
+	}
 
 	lspell = number(0,GetMaxLevel(ch)); /* gen number from 0 to level */
 
-	if (lspell < 1) { lspell = 1; }
+	if(lspell < 1) {
+		lspell = 1;
+	}
 
 	if ((vict!=ch->specials.fighting) && (lspell>19) && (!IS_AFFECTED(ch, AFF_FIRESHIELD))) {
 		act("$n utters the words 'Fireshield'.", 1, ch, 0, 0, TO_ROOM);
@@ -5753,7 +6039,9 @@ Smart thief special
 
 Thief(struct char_data* ch, char* arg, ind cmd, struct char_data* mob, int type) {
 
-	if (cmd || !AWAKE(ch)) { return; }
+	if(cmd || !AWAKE(ch)) {
+		return;
+	}
 
 }
 
@@ -5771,7 +6059,9 @@ MOBSPECIAL_FUNC(Tyrannosaurus_swallower) {
 	struct room_data* rp;
 	int i;
 
-	if (cmd && cmd != 156) { return(FALSE); }
+	if(cmd && cmd != 156) {
+		return(FALSE);
+	}
 
 	if( cmd == 156 ) {
 		send_to_char("You're much too afraid to steal anything!\n\r", ch);
@@ -5823,8 +6113,9 @@ MOBSPECIAL_FUNC(Tyrannosaurus_swallower) {
 				  top item on item_list now that corpse has been made.
 				  */
 				rp = real_roomp(ch->in_room);
-				if (!rp)
-				{ return(FALSE); }
+				if(!rp) {
+					return(FALSE);
+				}
 				for (co = rp->contents; co; co = co->next_content) {
 					if (IS_CORPSE(co)) {
 						/* assume 1st corpse is victim's */
@@ -5863,16 +6154,19 @@ OBJSPECIAL_FUNC(enter_obj) {
 	int numero;
 
 
-	if (type != EVENT_COMMAND)
-	{ return(FALSE); }
+	if(type != EVENT_COMMAND) {
+		return(FALSE);
+	}
 
-	if (cmd != 7)
-	{ return(FALSE); }
+	if(cmd != 7) {
+		return(FALSE);
+	}
 
 	arg = one_argument(arg,obj_key);
 
-	if (!*obj_key)
-	{ return(FALSE); }
+	if(!*obj_key) {
+		return(FALSE);
+	}
 	char *p=chiave;
 	sscanf(obj_index[obj->item_number].specparms,"%100s %d",p,&numero);
 
@@ -5894,7 +6188,9 @@ OBJSPECIAL_FUNC(enter_obj) {
 		act( "$c0008$n compare all'improvviso dal nulla.$c0007",
 			 FALSE, ch, obj, 0, TO_ROOM);
 	}
-	else { return(FALSE); }
+	else {
+		return(FALSE);
+	}
 
 	return(TRUE);
 }
@@ -5931,27 +6227,34 @@ OBJSPECIAL_FUNC(soap) {
 	struct char_data* t;
 	char dummy[80], name[80];
 
-	if( type != EVENT_COMMAND )
-	{ return(FALSE); }
+	if(type != EVENT_COMMAND) {
+		return(FALSE);
+	}
 
-	if( cmd != 172 )
-	{ return(FALSE); }
+	if(cmd != 172) {
+		return(FALSE);
+	}
 
-	if (!(obj = ch->equipment[HOLD]))
-	{ return(FALSE); }
-	if( obj->item_number < 0 || (void*)obj_index[obj->item_number].func != soap )
-	{ return(FALSE); }
+	if(!(obj = ch->equipment[HOLD])) {
+		return(FALSE);
+	}
+	if(obj->item_number < 0 || (void*)obj_index[obj->item_number].func != soap) {
+		return(FALSE);
+	}
 
 	arg = one_argument(arg, dummy);
-	if(!(*dummy))
-	{ return(FALSE); }
+	if(!(*dummy)) {
+		return(FALSE);
+	}
 	only_argument(arg, name);
-	if(!(*name))
-	{ return(FALSE); }
+	if(!(*name)) {
+		return(FALSE);
+	}
 
 	t = get_char_room_vis( ch, name );
-	if( !t )
-	{ return( FALSE ); }
+	if(!t) {
+		return(FALSE);
+	}
 
 	if (affected_by_spell(t,SPELL_WEB)) {
 		affect_from_char(t,SPELL_WEB);
@@ -6006,7 +6309,9 @@ void RakdaGraphic(struct char_data* ch, struct char_data* vict1) {
 
 	i = number(1,60);
 
-	if (!(vict2=vict1)) { vict2 = (struct char_data*)FindAnyVictim(ch); }
+	if(!(vict2=vict1)) {
+		vict2 = (struct char_data*)FindAnyVictim(ch);
+	}
 
 	switch(i) {
 	case 1:
@@ -6457,9 +6762,13 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 		act( "$c0013Un enorme piede calloso si materializza e ti schiaccia!!$c0007", TRUE, vict, 0,0,TO_CHAR);
 
 		amnt = SkipImmortals(vict, amnt,TYPE_BLUDGEON);
-		if (amnt == -1) { return; }
+		if(amnt == -1) {
+			return;
+		}
 
-		if (IS_AFFECTED(vict, AFF_SANCTUARY)) { amnt = MAX((int)(amnt/2), 0); }
+		if(IS_AFFECTED(vict, AFF_SANCTUARY)) {
+			amnt = MAX((int)(amnt/2), 0);
+		}
 
 		amnt = PreProcDam(vict, TYPE_BLUDGEON, amnt, -1);
 		DamageStuff(vict, TYPE_BLUDGEON, amnt, 5);
@@ -6469,12 +6778,18 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 		update_pos(vict);
 		break;
 	case 2:
-		if (!IsHumanoid(ch)) { return; }
+		if(!IsHumanoid(ch)) {
+			return;
+		}
 		act( "$c0013Due grosse catene si materializzano alle caviglie di $n!!$c0007", TRUE, vict, 0,0,TO_ROOM);
 		act( "$c0013Due grosse catene si materializzano alle tue caviglie!!$c0007", TRUE, vict, 0,0,TO_CHAR);
 
-		if (IsImmune(vict, IMM_HOLD)) { return; }
-		if ( (IsResist(vict, IMM_HOLD)) && (number(1,2)==1) ) { return; }
+		if(IsImmune(vict, IMM_HOLD)) {
+			return;
+		}
+		if((IsResist(vict, IMM_HOLD)) && (number(1,2)==1)) {
+			return;
+		}
 
 		GET_MOVE(vict)=0;
 		alter_move(vict,0);
@@ -6486,8 +6801,12 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 			act( "$c0013Il terreno si anima e ingloba $n che viene pietrificato!!$c0007", TRUE, vict, 0,0,TO_ROOM);
 			act( "$c0013Il terreno si anima, ti ingloba e vieni pietrificato!!$c0007", TRUE, vict, 0,0,TO_CHAR);
 
-			if (IsImmune(vict, IMM_HOLD)) { return; }
-			if ( (IsResist(vict, IMM_HOLD)) && (number(1,2)==1) ) { return; }
+			if(IsImmune(vict, IMM_HOLD)) {
+				return;
+			}
+			if((IsResist(vict, IMM_HOLD)) && (number(1,2)==1)) {
+				return;
+			}
 
 			af.type      = SPELL_PARALYSIS;
 			af.duration  = 10;
@@ -6512,7 +6831,9 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 		}
 		break;
 	case 5:
-		if (!IsHumanoid(ch)) { return; }
+		if(!IsHumanoid(ch)) {
+			return;
+		}
 		act( "$c0013La bocca di $n si riempie di fango!!$c0007", TRUE, vict, 0,0,TO_ROOM);
 		act( "$c0013La tua bocca si riempie di fango!!$c0007", TRUE, vict, 0,0,TO_CHAR);
 
@@ -6594,7 +6915,9 @@ OBJSPECIAL_FUNC(Rakda) {
 	}
 
 	//se e' droppato non si attiva
-	if (rakda->in_room != NOWHERE) { return(0); }
+	if(rakda->in_room != NOWHERE) {
+		return(0);
+	}
 
 	//esegue controlli di EGO una volta su 20, per non appesantire il sistema
 	if (number(1,10)==1) {
@@ -6655,12 +6978,18 @@ OBJSPECIAL_FUNC(Rakda) {
 		}
 	}
 
-	if (!(mage=rakda->equipped_by)) { return(0); }
-	if (IS_NPC(mage)) { return(0); }
+	if(!(mage=rakda->equipped_by)) {
+		return(0);
+	}
+	if(IS_NPC(mage)) {
+		return(0);
+	}
 
 	//vedo se e' in combattimento o no (lo e' anche se il suo tank lo e')
 	if (!(vict = mage->specials.fighting)) {
-		if (mage->master) { vict = mage->master->specials.fighting; }
+		if(mage->master) {
+			vict = mage->master->specials.fighting;
+		}
 	}
 
 
@@ -6671,18 +7000,38 @@ OBJSPECIAL_FUNC(Rakda) {
 		if ( vict ) {
 			if ( (GET_RACE(vict) == RACE_DEMON) || (GET_RACE(vict) == RACE_DEVIL) ) {
 				j = number(1,100);
-				if (j<=50) { i=80; }       //spell aggressive
-				else if (j<=70) { i=100; } //attacchi speciali maggiori
-				else { i=85; }             //attacchi speciali minori
+				if(j<=50) {
+					i=80;    //spell aggressive
 			}
-			else { i = number(1,100); }
+				else if(j<=70) {
+					i=100;    //attacchi speciali maggiori
+				}
+				else {
+					i=85;    //attacchi speciali minori
+				}
+			}
+			else {
+				i = number(1,100);
+			}
 
-			if (i<=40 ) { return(0); }
-			else if (i<=70) { RakdaGraphic(mage,vict); }
-			else if (i<=80) { RakdaCast(mage,vict); }
-			else if (i<=85) { RakdaMinor(mage,vict); }
-			else if (i<=98) { RakdaGraphic(mage,vict); }
-			else if (IS_EVIL( vict )) { RakdaMajor(mage,vict); }
+			if(i<=40) {
+				return(0);
+			}
+			else if(i<=70) {
+				RakdaGraphic(mage,vict);
+			}
+			else if(i<=80) {
+				RakdaCast(mage,vict);
+			}
+			else if(i<=85) {
+				RakdaMinor(mage,vict);
+			}
+			else if(i<=98) {
+				RakdaGraphic(mage,vict);
+			}
+			else if(IS_EVIL(vict)) {
+				RakdaMajor(mage,vict);
+			}
 			return(0);
 		}
 		return(0);
@@ -6792,8 +7141,9 @@ OBJSPECIAL_FUNC(nodrop) {
 	bool do_all;
 	int j, num;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
 	switch(cmd) {
 	case CMD_GET: /* Get */
@@ -6806,11 +7156,14 @@ OBJSPECIAL_FUNC(nodrop) {
 	}
 
 
-	if (type != EVENT_COMMAND)
-	{ return(FALSE); }
+	if(type != EVENT_COMMAND) {
+		return(FALSE);
+	}
 
 	arg = one_argument(arg, obj_name);
-	if (!*obj_name) { return(FALSE); }
+	if(!*obj_name) {
+		return(FALSE);
+	}
 
 	xobj = 0x0;
 	do_all = FALSE;
@@ -6822,7 +7175,9 @@ OBJSPECIAL_FUNC(nodrop) {
 	else {
 		strcpy(buf,obj_name);
 		name = buf;
-		if(!(num = get_number(&name))) { return(FALSE); }
+		if(!(num = get_number(&name))) {
+			return(FALSE);
+		}
 	}
 
 	/* Look in the room first, in get case */
@@ -6872,18 +7227,22 @@ OBJSPECIAL_FUNC(nodrop) {
 		}
 	}
 	/* Musta been something else */
-	if(!xobj)
-	{ return(FALSE); }
+	if(!xobj) {
+		return(FALSE);
+	}
 
 	if( cmd == 72 || cmd == 156 ) {
 		only_argument(arg, vict_name);
-		if( !*vict_name )
-		{ return FALSE; }
-		else if( !( t = get_char_room_vis( ch, vict_name ) ) )
-		{ return FALSE; }
+		if(!*vict_name) {
+			return FALSE;
 	}
-	else
-	{ t = NULL; } /* Non viene usato per gli altri comandi. */
+		else if(!(t = get_char_room_vis(ch, vict_name))) {
+			return FALSE;
+		}
+	}
+	else {
+		t = NULL;    /* Non viene usato per gli altri comandi. */
+	}
 
 	switch(cmd) {
 	case 10:
@@ -6893,10 +7252,16 @@ OBJSPECIAL_FUNC(nodrop) {
 			act("$n tries to get $p, but it disintegrates in his hand!",
 				FALSE, ch, xobj, 0, TO_ROOM);
 			extract_obj(xobj);
-			if(do_all) { return(FALSE); }
-			else { return(TRUE); }
+			if(do_all) {
+				return(FALSE);
 		}
-		else { return(FALSE); }
+			else {
+				return(TRUE);
+			}
+		}
+		else {
+			return(FALSE);
+		}
 
 	case 60:
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
@@ -6910,10 +7275,16 @@ OBJSPECIAL_FUNC(nodrop) {
 			obj_to_room(i, ch->in_room);
 			obj_from_char(xobj);
 			extract_obj(xobj);
-			if(do_all) { return(FALSE); }
-			else { return(TRUE); }
+			if(do_all) {
+				return(FALSE);
 		}
-		else { return(FALSE); }
+			else {
+				return(TRUE);
+			}
+		}
+		else {
+			return(FALSE);
+		}
 
 	case 72:
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
@@ -6925,12 +7296,20 @@ OBJSPECIAL_FUNC(nodrop) {
 				act("As $n tries to give $p to $N, it vanishes!",
 					FALSE, ch, xobj, t, TO_ROOM);
 				extract_obj(xobj);
-				if(do_all) { return(FALSE); }
-				else { return(TRUE); }
+				if(do_all) {
+					return(FALSE);
 			}
-			else { return(FALSE); }
+				else {
+					return(TRUE);
 		}
-		else { return(FALSE); }
+			}
+			else {
+				return(FALSE);
+			}
+		}
+		else {
+			return(FALSE);
+		}
 
 	case 156: /* Steal */
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
@@ -6940,7 +7319,9 @@ OBJSPECIAL_FUNC(nodrop) {
 			act("$N tried to steal something from $n!",FALSE,t,xobj,ch,TO_ROOM);
 			return(TRUE);
 		}
-		else { return(FALSE); }
+		else {
+			return(FALSE);
+		}
 
 	case CMD_REMOVE:
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
@@ -6948,7 +7329,9 @@ OBJSPECIAL_FUNC(nodrop) {
 				FALSE, ch, xobj, t, TO_CHAR);
 			return(TRUE);
 		}
-		else { return(FALSE); }
+		else {
+			return(FALSE);
+		}
 
 	default:
 		return(FALSE);
@@ -6963,13 +7346,15 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 	char buf[MAX_INPUT_LENGTH];
 	struct char_data* god;
 
-	if( type != EVENT_COMMAND )
-	{ return FALSE; }
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
 
 	god = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
 
-	if (!god)
-	{ return(FALSE); }
+	if(!god) {
+		return(FALSE);
+	}
 	switch(cmd) {
 	case CMD_SACRIFICE :
 		break;
@@ -6988,8 +7373,9 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		break;
 	}
 
-	if( cmd != CMD_SACRIFICE )
-	{ return(FALSE); }
+	if(cmd != CMD_SACRIFICE) {
+		return(FALSE);
+	}
 
 	if (IS_NPC(ch)) {
 		act("$N ti dice 'Non hai dunque il coraggio di mostrare il tuo vero volto?'",

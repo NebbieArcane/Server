@@ -80,17 +80,18 @@ int is_murdervict(struct char_data* ch) {
 
 	};
 
-	if( ch->nr >= 0 ) {
-		for( i = 0; mutype[i] >= 0; i++ ) {
-			if (mob_index[ch->nr].iVNum == mutype[i])
-			{ return TRUE; }
+	if(ch->nr >= 0) {
+		for(i = 0; mutype[i] >= 0; i++) {
+			if(mob_index[ch->nr].iVNum == mutype[i]) {
+				return TRUE;
+			}
 		}
 	}
 
 	return FALSE;
 }
 
-int xcompare(const void * p1, const void* p2) {
+int xcompare(const void* p1, const void* p2) {
 	const struct OtherSpecialProcEntry* s1=reinterpret_cast<const struct OtherSpecialProcEntry*>(p1);
 	const struct OtherSpecialProcEntry* s2=reinterpret_cast<const struct OtherSpecialProcEntry*>(p2);
 	return strcasecmp(s1->nome,s2->nome);
@@ -117,17 +118,19 @@ void assign_speciales() {
 	int vnum;
 	char cmd[256];
 
-	for (i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++) {
+	for(i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++) {
 		lastotherproc++;
-		if (IsTest())
-		{ mudlog(LOG_WORLD,"Generic special: [%3d] %s",lastotherproc,otherproc[i].nome); }
+		if(IsTest()) {
+			mudlog(LOG_WORLD,"Generic special: [%3d] %s",lastotherproc,otherproc[i].nome);
+		}
 	}
 	mudlog(LOG_CHECK,"Generic procedure: %d (%d)",lastotherproc,i);
 
-	for (i=0; strcmp(roomproc[i].nome,"zFineprocedure"); i++) {
+	for(i=0; strcmp(roomproc[i].nome,"zFineprocedure"); i++) {
 		lastroomproc++;
-		if (IsTest())
-		{ mudlog(LOG_WORLD,"Room special: [%3d] %s",lastroomproc,roomproc[i].nome); }
+		if(IsTest()) {
+			mudlog(LOG_WORLD,"Room special: [%3d] %s",lastroomproc,roomproc[i].nome);
+		}
 	}
 	mudlog(LOG_CHECK,"Room procedure: %d (%d)",lastroomproc,i);
 
@@ -143,14 +146,15 @@ void assign_speciales() {
 
 	mudlog(LOG_CHECK,"Done!");
 	fd=fopen(SPECFILE,"r");
-	if (!fd) {
+	if(!fd) {
 		mudlog(LOG_ERROR,"Error opening %s: %s",SPECFILE,strerror(errno));
 		return;
 	}
-	while (!feof(fd)) {
+	while(!feof(fd)) {
 		fgets(buf,255,fd);
-		if (*buf&& buf[strlen(buf)-1]=='\n')
-		{ buf[strlen(buf)-1]='\0'; }
+		if(*buf&& buf[strlen(buf)-1]=='\n') {
+			buf[strlen(buf)-1]='\0';
+		}
 		vnum=-1;
 		procedura[0]='\0';
 		cmd[0]='\0';
@@ -161,21 +165,21 @@ void assign_speciales() {
 		p=one_argument(p,procedura);
 		only_argument(p,parms);
 		vnum=atoi(svnum);
-		switch (cmd[0]) {
+		switch(cmd[0]) {
 		case '*':
 			break;
 		case 'm':
 			rnum = real_mobile(vnum);
-			if ((rnum<0) ||
+			if((rnum<0) ||
 					!(op=(struct OtherSpecialProcEntry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
 								 sizeof(struct OtherSpecialProcEntry),
 								 nomecompare))
-			   ) {
-				mudlog( LOG_ERROR,
-						"mobile_assign: Mobile %d not found in database.",vnum);
+			  ) {
+				mudlog(LOG_ERROR,
+					   "mobile_assign: Mobile %d not found in database.",vnum);
 			}
 			else {
 				mob_index[rnum].func = op->proc;
@@ -185,16 +189,16 @@ void assign_speciales() {
 			break;
 		case 'o':
 			rnum = real_object(vnum);
-			if ((rnum<0) ||
+			if((rnum<0) ||
 					!(op=(struct OtherSpecialProcEntry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
 								 sizeof(struct OtherSpecialProcEntry),
 								 nomecompare))
-			   ) {
-				mudlog( LOG_ERROR,
-						"obj_assign: Object %d not found in database.",vnum);
+			  ) {
+				mudlog(LOG_ERROR,
+					   "obj_assign: Object %d not found in database.",vnum);
 			}
 			else {
 				obj_index[rnum].func = op->proc;
@@ -204,16 +208,16 @@ void assign_speciales() {
 			break;
 		case 'r':
 			rp = real_roomp(vnum);
-			if ((!rp) ||
+			if((!rp) ||
 					!(_or=(struct RoomSpecialProcEntry*)
 						  bsearch(&procedura,
 								  roomproc,
 								  lastroomproc,
 								  sizeof(struct RoomSpecialProcEntry),
 								  nomecompare))
-			   ) {
-				mudlog( LOG_ERROR, "assign_rooms: Room %d not found in database.",
-						vnum);
+			  ) {
+				mudlog(LOG_ERROR, "assign_rooms: Room %d not found in database.",
+					   vnum);
 			}
 			else {
 				rp->funct=_or->proc;

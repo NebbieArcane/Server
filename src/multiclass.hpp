@@ -24,7 +24,7 @@ int GetThirdMaxLev(struct char_data* ch) ;
 int GetTotLevel(struct char_data* ch) ;
 int HasClass(struct char_data* ch, int iClass) ;
 int HowManyClasses(struct char_data* ch) ;
-int OnlyClass( struct char_data* pChar, int nClass ) ;
+int OnlyClass(struct char_data* pChar, int nClass) ;
 void StartLevels(struct char_data* ch) ;
 #endif // __MULTICLASS_HPP
 } // namespace Alarmud

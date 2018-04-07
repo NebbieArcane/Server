@@ -280,12 +280,12 @@ l'array connected_types in constants.cpp*/
 	CON_ACCOUNT_NAME                             =39, /*Richiesto login sull'account'*/
 	CON_ACCOUNT_PWD                              =40, /*Email riconosciuta, chiediamo la password*/
 	CON_ACCOUNT_TOON                             =41, /*Account password ok, propongo lista personaggi*/
-	CON_REGISTER                                =42, /*Connetto il pg all'accountutto pronto, lo riconnetto o mando al menu*/
+	CON_REGISTER                                 =42, /*Registro il pg sull'account*/
 	CON_PWDOK                                    =43 /*Tutto pronto, lo riconnetto o mando al menu*/
 };
-#define E_CONNECTION_TYPES_COUNT 43
+#define E_CONNECTION_TYPES_COUNT 44
 #define E_CONNECTION_TYPES_MIN 0
-#define E_CONNECTION_TYPES_MAX 42
+#define E_CONNECTION_TYPES_MAX 43
 #define E_CONNECTION_TYPES_KEY "e_connection_types"
 
 #define E_CONNECTION_TYPES_ACCEPT_ZERO true

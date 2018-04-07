@@ -10,16 +10,16 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
-bool isNullChar (struct char_data* ch);
+bool isNullChar(struct char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
-FILE* MakeZoneFile( struct char_data* c, int zone);
-bool CheckPrac (int classe, int id, int liv);
+FILE* MakeZoneFile(struct char_data* c, int zone);
+bool CheckPrac(int classe, int id, int liv);
 struct time_info_data real_time_passed(time_t t2, time_t t1);
-bool ThereIsPCInRoom( long lRoom );
-bool CanSeePCInRoom( struct char_data* pMob );
-int HowManyCanSeePCInRoom( struct char_data* pMob );
+bool ThereIsPCInRoom(long lRoom);
+bool CanSeePCInRoom(struct char_data* pMob);
+int HowManyCanSeePCInRoom(struct char_data* pMob);
 void fake_setup_dir(FILE* fl, long room, int dir);
 char getall(char* name, char* newname);
 char in_clan(struct char_data* ch1, struct char_data* ch2);

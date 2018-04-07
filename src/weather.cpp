@@ -43,8 +43,9 @@ int gLightLevel = 4;  /* defaults to sunlight */
 
 void weather_and_time(int mode) {
 	another_hour(mode);
-	if(mode)
-	{ weather_change(); }
+	if(mode) {
+		weather_change();
+	}
 }
 
 void another_hour(int mode) {
@@ -55,25 +56,26 @@ void another_hour(int mode) {
 
 	tmp = time_info.hours;
 
-	if (mode) {
+	if(mode) {
 
 		/* as a test, save a piece of the world every mud hour */
 		SaveTheWorld();
-		if (tmp == 0) {
-			for (i=0; i<29; i++) /* save the rest of the world automatically */
-			{ SaveTheWorld(); }
+		if(tmp == 0) {
+			for(i=0; i<29; i++) { /* save the rest of the world automatically */
+				SaveTheWorld();
+			}
 		}
-		if (tmp == gMoonRise) {
-			if (moontype < 4) {
+		if(tmp == gMoonRise) {
+			if(moontype < 4) {
 				strcpy(moon, "nuova");
 			}
-			else if (moontype < 12) {
+			else if(moontype < 12) {
 				strcpy(moon, "crescente");
 			}
-			else if (moontype < 20) {
+			else if(moontype < 20) {
 				strcpy(moon, "piena");
 			}
-			else  if (moontype < 28) {
+			else  if(moontype < 28) {
 				strcpy(moon, "calante");
 			}
 			else {
@@ -86,41 +88,41 @@ void another_hour(int mode) {
 				gLightLevel++;   /* brighter during these moons */
 			}
 		}
-		if (tmp == gSunRise && !IS_SET(SystemFlags,SYS_ECLIPS)) {
+		if(tmp == gSunRise && !IS_SET(SystemFlags,SYS_ECLIPS)) {
 			weather_info.sunlight = SUN_RISE;
 			send_to_outdoor("Il sole comincia a sorgere dall'orizzonte.\n\r");
 		}
-		if (tmp == gSunRise+1&& !IS_SET(SystemFlags,SYS_ECLIPS)) {
+		if(tmp == gSunRise+1&& !IS_SET(SystemFlags,SYS_ECLIPS)) {
 			weather_info.sunlight = SUN_LIGHT;
 			switch_light(SUN_LIGHT);
-			send_to_outdoor( "Il giorno e` iniziato e la luce del sole comincia a "
-							 "splendere.\n\r");
+			send_to_outdoor("Il giorno e` iniziato e la luce del sole comincia a "
+							"splendere.\n\r");
 		}
-		if (tmp == gSunSet && !IS_SET(SystemFlags,SYS_ECLIPS)) {
+		if(tmp == gSunSet && !IS_SET(SystemFlags,SYS_ECLIPS)) {
 			weather_info.sunlight = SUN_SET;
-			send_to_outdoor( "Il sole cala lentamente nell'orizzonte orientale.\n\r");
+			send_to_outdoor("Il sole cala lentamente nell'orizzonte orientale.\n\r");
 		}
-		if (tmp == gSunSet+1) {
+		if(tmp == gSunSet+1) {
 			weather_info.sunlight = SUN_DARK;
 			switch_light(SUN_DARK);
 			send_to_outdoor("La notte e` iniziata stendendo il suo velo oscuro.\n\r");
 		}
-		if (tmp == gMoonSet) {
+		if(tmp == gMoonSet) {
 			if((moontype > 15) && (moontype < 25)) {
 				switch_light(MOON_SET);
-				send_to_outdoor( "Un velo di oscurita` cala nuovamente appena la luna "
-								 "tramonta.\n\r");
+				send_to_outdoor("Un velo di oscurita` cala nuovamente appena la luna "
+								"tramonta.\n\r");
 			}
 			else {
 				send_to_outdoor("La luna tramonta lentamente.\n\r");
 			}
 
 		}
-		if (tmp == 12) {
+		if(tmp == 12) {
 			send_to_outdoor("Il sole e` esattamente sopra di te.\n\r");
 		}
 
-		if (time_info.hours > 23) { /* Changed by HHS due to bug ???*/
+		if(time_info.hours > 23) {  /* Changed by HHS due to bug ???*/
 			time_info.hours -= 24;
 			time_info.day++;
 			switch(time_info.day) {
@@ -137,10 +139,11 @@ void another_hour(int mode) {
 			ChangeSeason(time_info.month);
 
 			moontype++;
-			if (moontype > 32)
-			{ moontype = 1; }
+			if(moontype > 32) {
+				moontype = 1;
+			}
 
-			if (time_info.day>34) {
+			if(time_info.day>34) {
 				time_info.day = 0;
 				time_info.month++;
 				GetMonth(time_info.month);
@@ -158,7 +161,7 @@ void another_hour(int mode) {
 }
 
 void ChangeSeason(int month) {
-	switch (month) {
+	switch(month) {
 	case 0:
 	case 1:
 	case 2:
@@ -203,10 +206,12 @@ void ChangeSeason(int month) {
 void weather_change() {
 	int diff, change;
 
-	if((time_info.month>=9)&&(time_info.month<=16))
-	{ diff=(weather_info.pressure>985 ? -2 : 2); }
-	else
-	{ diff=(weather_info.pressure>1015? -2 : 2); }
+	if((time_info.month>=9)&&(time_info.month<=16)) {
+		diff=(weather_info.pressure>985 ? -2 : 2);
+	}
+	else {
+		diff=(weather_info.pressure>1015? -2 : 2);
+	}
 
 	weather_info.change += (dice(1,4)*diff+dice(2,6)-dice(2,6));
 
@@ -222,47 +227,59 @@ void weather_change() {
 
 	switch(weather_info.sky) {
 	case SKY_CLOUDLESS : {
-		if (weather_info.pressure<990)
-		{ change = 1; }
-		else if (weather_info.pressure<1010)
-			if(dice(1,4)==1)
-			{ change = 1; }
+		if(weather_info.pressure<990) {
+			change = 1;
+		}
+		else if(weather_info.pressure<1010)
+			if(dice(1,4)==1) {
+				change = 1;
+			}
 		break;
 	}
 	case SKY_CLOUDY : {
-		if (weather_info.pressure<970)
-		{ change = 2; }
-		else if (weather_info.pressure<990)
-			if(dice(1,4)==1)
-			{ change = 2; }
-			else
-			{ change = 0; }
-		else if (weather_info.pressure>1030)
-			if(dice(1,4)==1)
-			{ change = 3; }
+		if(weather_info.pressure<970) {
+			change = 2;
+		}
+		else if(weather_info.pressure<990)
+			if(dice(1,4)==1) {
+				change = 2;
+			}
+			else {
+				change = 0;
+			}
+		else if(weather_info.pressure>1030)
+			if(dice(1,4)==1) {
+				change = 3;
+			}
 
 		break;
 	}
 	case SKY_RAINING : {
-		if (weather_info.pressure<970)
-			if(dice(1,4)==1)
-			{ change = 4; }
-			else
-			{ change = 0; }
-		else if (weather_info.pressure>1030)
-		{ change = 5; }
-		else if (weather_info.pressure>1010)
-			if(dice(1,4)==1)
-			{ change = 5; }
+		if(weather_info.pressure<970)
+			if(dice(1,4)==1) {
+				change = 4;
+			}
+			else {
+				change = 0;
+			}
+		else if(weather_info.pressure>1030) {
+			change = 5;
+		}
+		else if(weather_info.pressure>1010)
+			if(dice(1,4)==1) {
+				change = 5;
+			}
 
 		break;
 	}
 	case SKY_LIGHTNING : {
-		if (weather_info.pressure>1010)
-		{ change = 6; }
-		else if (weather_info.pressure>990)
-			if(dice(1,4)==1)
-			{ change = 6; }
+		if(weather_info.pressure>1010) {
+			change = 6;
+		}
+		else if(weather_info.pressure>990)
+			if(dice(1,4)==1) {
+				change = 6;
+			}
 
 		break;
 	}
@@ -277,12 +294,14 @@ void weather_change() {
 
 }
 
-void ChangeWeather( int change) {
+void ChangeWeather(int change) {
 
-	if (change < 0)
-	{ change = 0; }
-	if (change > 7)
-	{ change = 6; }
+	if(change < 0) {
+		change = 0;
+	}
+	if(change > 7) {
+		change = 6;
+	}
 
 	switch(change) {
 	case 0 :
@@ -293,17 +312,17 @@ void ChangeWeather( int change) {
 		break;
 	}
 	case 2 : {
-		if ((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert( "Un forte vento  comincia a soffiare attraverso "
-							"il paese.\n\r");
+		if((time_info.month > 3) && (time_info.month < 14)) {
+			send_to_desert("Un forte vento  comincia a soffiare attraverso "
+						   "il paese.\n\r");
 			send_to_arctic("Comincia a nevicare.\n\r");
 			send_to_out_other("Inizia a piovere.\n\r");
 		}
 		else {
-			send_to_desert( "Un forte vento freddo comincia a soffiare "
-							"attraverso il paese.\n\r" );
-			send_to_arctic( "Comincia a nevicare forte.\n\r" );
-			send_to_out_other( "Comincia a nevicare.\n\r" );
+			send_to_desert("Un forte vento freddo comincia a soffiare "
+						   "attraverso il paese.\n\r");
+			send_to_arctic("Comincia a nevicare forte.\n\r");
+			send_to_out_other("Comincia a nevicare.\n\r");
 		}
 		weather_info.sky=SKY_RAINING;
 		break;
@@ -314,47 +333,47 @@ void ChangeWeather( int change) {
 		break;
 	}
 	case 4 : {
-		if ((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert( "Sei nel mezzo di in una tempesta di sabbia.\n\r");
-			send_to_arctic( "Sei nel mezzo di una tempesta di neve.\n\r");
-			send_to_out_other( "Sei nel mezzo di un accecante temporale.\n\r");
+		if((time_info.month > 3) && (time_info.month < 14)) {
+			send_to_desert("Sei nel mezzo di in una tempesta di sabbia.\n\r");
+			send_to_arctic("Sei nel mezzo di una tempesta di neve.\n\r");
+			send_to_out_other("Sei nel mezzo di un accecante temporale.\n\r");
 		}
 		else {
-			send_to_desert( "Sei nel mezzo di una tempesta di sabbia.\n\r");
-			send_to_arctic( "Sei nel mezzo di una tempesta di neve.\n\r");
-			send_to_out_other( "Sei nel mezzo di una tormenta. \n\r" );
+			send_to_desert("Sei nel mezzo di una tempesta di sabbia.\n\r");
+			send_to_arctic("Sei nel mezzo di una tempesta di neve.\n\r");
+			send_to_out_other("Sei nel mezzo di una tormenta. \n\r");
 		}
 		weather_info.sky=SKY_LIGHTNING;
 		break;
 	}
 	case 5 : {
-		if ((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert( "La tempesta di sabbia si placa lentamente.\n\r");
-			send_to_arctic( "La tempesta di neve si calma lentamente.\n\r");
-			send_to_out_other( "La tormenta di pioggia cala piano piano.\n\r" );
+		if((time_info.month > 3) && (time_info.month < 14)) {
+			send_to_desert("La tempesta di sabbia si placa lentamente.\n\r");
+			send_to_arctic("La tempesta di neve si calma lentamente.\n\r");
+			send_to_out_other("La tormenta di pioggia cala piano piano.\n\r");
 		}
 		else {
-			send_to_desert( "La tempesta di sabbia si placa lentamente.\n\r");
-			send_to_arctic( "Ha semmo di nevicare.\n\r");
-			send_to_out_other( "Ha smesso di nevicare.\n\r");
+			send_to_desert("La tempesta di sabbia si placa lentamente.\n\r");
+			send_to_arctic("Ha semmo di nevicare.\n\r");
+			send_to_out_other("Ha smesso di nevicare.\n\r");
 		}
 		weather_info.sky=SKY_CLOUDY;
 		break;
 	}
 	case 6 : {
-		if ((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert( "La tempesta si e` placata, ma il vento soffia "
-							"ancora forte.\n\r");
-			send_to_arctic( "La tempesta di neve si e` calmata ma nevica "
-							"ancora.\n\r");
-			send_to_out_other( "Il temporale e` finito, ma piove ancora.\n\r");
+		if((time_info.month > 3) && (time_info.month < 14)) {
+			send_to_desert("La tempesta si e` placata, ma il vento soffia "
+						   "ancora forte.\n\r");
+			send_to_arctic("La tempesta di neve si e` calmata ma nevica "
+						   "ancora.\n\r");
+			send_to_out_other("Il temporale e` finito, ma piove ancora.\n\r");
 		}
 		else {
-			send_to_desert( "La tempesta si e` placata, ma il vento soffia "
-							"ancora forte.\n\r");
-			send_to_arctic( "La tempesta di neve si e` calmata ma nevica "
-							"ancora.\n\r");
-			send_to_out_other( "La tormenta si e` calmata, ma nevica ancora.\n\r");
+			send_to_desert("La tempesta si e` placata, ma il vento soffia "
+						   "ancora forte.\n\r");
+			send_to_arctic("La tempesta di neve si e` calmata ma nevica "
+						   "ancora.\n\r");
+			send_to_out_other("La tormenta si e` calmata, ma nevica ancora.\n\r");
 		}
 		weather_info.sky=SKY_RAINING;
 		break;
@@ -364,41 +383,42 @@ void ChangeWeather( int change) {
 	}
 }
 
-void GetMonth( int month) {
-	if (month < 0)
-	{ return; }
+void GetMonth(int month) {
+	if(month < 0) {
+		return;
+	}
 
-	if (month <= 1) {
+	if(month <= 1) {
 		send_to_outdoor(" Si gela qui fuori.\n\r");
 	}
-	else if (month <=2) {
+	else if(month <=2) {
 		send_to_outdoor(" Fa molto freddo.\n\r");
 	}
-	else if (month <=3) {
+	else if(month <=3) {
 		send_to_outdoor(" Oggi e` un po' meno freddo.\n\r");
 	}
-	else if (month == 4) {
+	else if(month == 4) {
 		send_to_outdoor(" Cominciano a sbocciare i fiori.\n\r");
 		PulseMobiles(EVENT_SPRING);
 	}
-	else if (month == 8) {
+	else if(month == 8) {
 		send_to_outdoor(" C'e` un'afa qui fuori.\n\r");
 		PulseMobiles(EVENT_SUMMER);
 	}
-	else if (month == 12) {
+	else if(month == 12) {
 		send_to_outdoor(" Comincia ad alzarsi il vento.\n\r");
 		PulseMobiles(EVENT_FALL);
 	}
-	else if (month == 13) {
+	else if(month == 13) {
 		send_to_outdoor(" Comincia a far freddo.\n\r");
 	}
-	else if (month == 14) {
+	else if(month == 14) {
 		send_to_outdoor(" La foglie cominciano a cambiare colore.\n\r");
 	}
-	else if (month == 15) {
+	else if(month == 15) {
 		send_to_outdoor(" Fa veramente freddo.\n\r");
 	}
-	else if (month == 16) {
+	else if(month == 16) {
 		send_to_outdoor(" Si gela qui fuori.\n\r");
 		PulseMobiles(EVENT_WINTER);
 	}
@@ -408,23 +428,23 @@ void switch_light(byte why) {
 
 	switch(why) {
 	case MOON_SET:
-		mudlog( LOG_CHECK, "setting all rooms to dark" );
+		mudlog(LOG_CHECK, "setting all rooms to dark");
 		gLightLevel = 0;
 		break;
 	case SUN_LIGHT:
-		mudlog( LOG_CHECK, "setting all rooms to light" );
+		mudlog(LOG_CHECK, "setting all rooms to light");
 		gLightLevel = 4;
 		break;
 	case SUN_DARK:
-		mudlog( LOG_CHECK, "setting all rooms to dark" );
+		mudlog(LOG_CHECK, "setting all rooms to dark");
 		gLightLevel = 0;
 		break;
 	case MOON_RISE:
-		mudlog( LOG_CHECK, "setting all non-forest to light" );
+		mudlog(LOG_CHECK, "setting all non-forest to light");
 		gLightLevel = 1;
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Unknown switch on switch_light" );
+		mudlog(LOG_SYSERR, "Unknown switch on switch_light");
 		break;
 	}
 }

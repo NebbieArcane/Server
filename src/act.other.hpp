@@ -9,19 +9,19 @@
 #define _ACT_OTHER_HPP
 namespace Alarmud {
 int CanMemorize(struct char_data* ch) ;
-int CheckContempMemorize( struct char_data* pChar ) ;
+int CheckContempMemorize(struct char_data* pChar) ;
 char* Condition(struct char_data* ch) ;
 void Dismount(struct char_data* ch, struct char_data* h, int pos) ;
 char* Tiredness(struct char_data* ch) ;
-int TotalMaxCanMem( struct char_data* ch ) ;
-int TotalMemorized( struct char_data* ch ) ;
+int TotalMaxCanMem(struct char_data* ch) ;
+int TotalMemorized(struct char_data* ch) ;
 void check_memorize(struct char_data* ch, struct affected_type* af) ;
-void ck_eq_action( struct char_data* ch, struct obj_data* obj ) ;
+void ck_eq_action(struct char_data* ch, struct obj_data* obj) ;
 ACTION_FUNC(do_alias) ;
 ACTION_FUNC(do_brief) ;
 ACTION_FUNC(do_bug) ;
 ACTION_FUNC(do_compact) ;
-void do_ego_eq_action( struct char_data* ch ) ;
+void do_ego_eq_action(struct char_data* ch) ;
 ACTION_FUNC(do_gain) ;
 ACTION_FUNC(do_group) ;
 ACTION_FUNC(do_group_name) ;
@@ -52,7 +52,7 @@ ACTION_FUNC(do_tspy) ;
 ACTION_FUNC(do_typo) ;
 ACTION_FUNC(do_use) ;
 ACTION_FUNC(do_whois) ;
-void parse_eq_action( struct char_data* ch, struct obj_data* obj ) ;
+void parse_eq_action(struct char_data* ch, struct obj_data* obj) ;
 } // namespace Alarmud
 #endif // _ACT_OTHER_HPP
 

@@ -127,7 +127,7 @@ int        file_end_pos = 0; /* length of file */
 void        push_free_list(int pos) {
 	position_list_type* new_pos;
 
-	new_pos = (position_list_type* )malloc(sizeof(position_list_type));
+	new_pos = (position_list_type*)malloc(sizeof(position_list_type));
 	new_pos->position = pos;
 	new_pos->next = free_list;
 	free_list = new_pos;
@@ -139,14 +139,15 @@ int pop_free_list(void) {
 	position_list_type* old_pos;
 	int        return_value;
 
-	if ((old_pos = free_list) != 0) {
+	if((old_pos = free_list) != 0) {
 		return_value = free_list->position;
 		free_list = old_pos->next;
 		free(old_pos);
 		return return_value;
 	}
-	else
-	{ return file_end_pos; }
+	else {
+		return file_end_pos;
+	}
 }
 
 
@@ -155,12 +156,12 @@ int pop_free_list(void) {
 mail_index_type* find_char_in_index(char* searchee) {
 	mail_index_type* temp_rec;
 
-	if (!*searchee) {
-		mudlog( LOG_SYSERR, "Mail system -- non fatal error #1.");
+	if(!*searchee) {
+		mudlog(LOG_SYSERR, "Mail system -- non fatal error #1.");
 		return 0;
 	}
 
-	for (temp_rec = mail_index;
+	for(temp_rec = mail_index;
 			(temp_rec && str_cmp(temp_rec->recipient, searchee));
 			temp_rec = temp_rec->next)
 		;
@@ -176,8 +177,8 @@ void        write_to_file(void* buf, int size, int filepos) {
 
 	mail_file = fopen(MAIL_FILE, "r+b");
 
-	if (filepos % BLOCK_SIZE) {
-		mudlog( LOG_SYSERR, "Mail system -- fatal error #2!!!");
+	if(filepos % BLOCK_SIZE) {
+		mudlog(LOG_SYSERR, "Mail system -- fatal error #2!!!");
 		no_mail = 1;
 		return;
 	}
@@ -198,8 +199,8 @@ void        read_from_file(void* buf, int size, int filepos) {
 
 	mail_file = fopen(MAIL_FILE, "r+b");
 
-	if (filepos % BLOCK_SIZE) {
-		mudlog( LOG_SYSERR, "Mail system -- fatal error #3!!!");
+	if(filepos % BLOCK_SIZE) {
+		mudlog(LOG_SYSERR, "Mail system -- fatal error #3!!!");
 		no_mail = 1;
 		return;
 	}
@@ -220,18 +221,19 @@ void        index_mail(char* raw_name_to_index, int pos) {
 	char*        src;
 	int        i;
 
-	if (!raw_name_to_index || !*raw_name_to_index) {
-		mudlog( LOG_SYSERR, "Mail system -- non-fatal error #4.");
+	if(!raw_name_to_index || !*raw_name_to_index) {
+		mudlog(LOG_SYSERR, "Mail system -- non-fatal error #4.");
 		return;
 	}
 
-	for (src = raw_name_to_index, i = 0; *src; )
-	{ name_to_index[i++] = tolower(*src++); }
+	for(src = raw_name_to_index, i = 0; *src;) {
+		name_to_index[i++] = tolower(*src++);
+	}
 	name_to_index[i] = 0;
 
-	if (!(new_index = find_char_in_index(name_to_index))) {
+	if(!(new_index = find_char_in_index(name_to_index))) {
 		/* name not already in index.. add it */
-		new_index = (mail_index_type* ) malloc(sizeof(mail_index_type));
+		new_index = (mail_index_type*) malloc(sizeof(mail_index_type));
 		strncpy(new_index->recipient, name_to_index, NAME_SIZE);
 		new_index->recipient[strlen(name_to_index)] = '\0';
 		new_index->list_start = 0;
@@ -242,7 +244,7 @@ void        index_mail(char* raw_name_to_index, int pos) {
 	}
 
 	/* now, add this position to front of position list */
-	new_position = (position_list_type* ) malloc(sizeof(position_list_type));
+	new_position = (position_list_type*) malloc(sizeof(position_list_type));
 	new_position->position = pos;
 	new_position->next = new_index->list_start;
 	new_index->list_start = new_position;
@@ -258,32 +260,33 @@ int scan_mail_file(void) {
 	header_block_type  next_block;
 	int        total_messages = 0, block_num = 0;
 
-	if (!(mail_file = fopen(MAIL_FILE, "r"))) {
-		mudlog( LOG_CHECK, "Mail file non-existant... creating new file.");
+	if(!(mail_file = fopen(MAIL_FILE, "r"))) {
+		mudlog(LOG_CHECK, "Mail file non-existant... creating new file.");
 		mail_file = fopen(MAIL_FILE, "w");
 		fclose(mail_file);
 		return 1;
 	}
 
-	while (fread(&next_block, sizeof(header_block_type), 1, mail_file)) {
-		if (next_block.block_type == HEADER_BLOCK) {
+	while(fread(&next_block, sizeof(header_block_type), 1, mail_file)) {
+		if(next_block.block_type == HEADER_BLOCK) {
 			index_mail(next_block.to, block_num * BLOCK_SIZE);
 			total_messages++;
 		}
-		else if (next_block.block_type == DELETED_BLOCK)
-		{ push_free_list(block_num * BLOCK_SIZE); }
+		else if(next_block.block_type == DELETED_BLOCK) {
+			push_free_list(block_num * BLOCK_SIZE);
+		}
 		block_num++;
 	}
 
 	file_end_pos = ftell(mail_file);
 	fclose(mail_file);
-	mudlog( LOG_CHECK, "   %ld bytes read.", file_end_pos);
-	if (file_end_pos % BLOCK_SIZE) {
-		mudlog( LOG_SYSERR, "Error booting mail system -- Mail file corrupt!");
-		mudlog( LOG_SYSERR, "Mail disabled!");
+	mudlog(LOG_CHECK, "   %ld bytes read.", file_end_pos);
+	if(file_end_pos % BLOCK_SIZE) {
+		mudlog(LOG_SYSERR, "Error booting mail system -- Mail file corrupt!");
+		mudlog(LOG_SYSERR, "Mail disabled!");
 		return 0;
 	}
-	mudlog( LOG_CHECK, "   Mail file read -- %d messages.", total_messages);
+	mudlog(LOG_CHECK, "   Mail file read -- %d messages.", total_messages);
 	return 1;
 } /* end of scan_file */
 
@@ -291,8 +294,9 @@ int scan_mail_file(void) {
 /* HAS_MAIL */
 /* a simple little function which tells you if the guy has mail or not */
 int has_mail(char* recipient) {
-	if (find_char_in_index(recipient))
-	{ return 1; }
+	if(find_char_in_index(recipient)) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -315,8 +319,8 @@ void        store_mail(char* to, char* from, char* message_pointer) {
 	assert(sizeof(header_block_type) == sizeof(data_block_type));
 	assert(sizeof(header_block_type) == BLOCK_SIZE);
 
-	if (!*from || !*to || !*message_pointer) {
-		mudlog( LOG_SYSERR, "Mail system -- non-fatal error #5.");
+	if(!*from || !*to || !*message_pointer) {
+		mudlog(LOG_SYSERR, "Mail system -- non-fatal error #5.");
 		return;
 	}
 	memset(&header, 0, sizeof(header)); /* clear the record */
@@ -325,8 +329,9 @@ void        store_mail(char* to, char* from, char* message_pointer) {
 	strncpy(header.txt, msg_txt, HEADER_BLOCK_DATASIZE);
 	strncpy(header.from, from, NAME_SIZE);
 	strncpy(header.to, to, NAME_SIZE);
-	for (tmp = header.to; *tmp; tmp++)
-	{ *tmp = tolower(*tmp); }
+	for(tmp = header.to; *tmp; tmp++) {
+		*tmp = tolower(*tmp);
+	}
 	header.mail_time = time(0);
 	header.txt[HEADER_BLOCK_DATASIZE] = header.from[NAME_SIZE] = header.to[NAME_SIZE] = '\0';
 
@@ -334,8 +339,9 @@ void        store_mail(char* to, char* from, char* message_pointer) {
 	index_mail(to, target_address);           /* add it to mail index in memory */
 	write_to_file(&header, BLOCK_SIZE, target_address);
 
-	if (strlen(msg_txt) <= HEADER_BLOCK_DATASIZE)
-	{ return; } /* that was the whole message */
+	if(strlen(msg_txt) <= HEADER_BLOCK_DATASIZE) {
+		return;    /* that was the whole message */
+	}
 
 	bytes_written = HEADER_BLOCK_DATASIZE;
 	msg_txt += HEADER_BLOCK_DATASIZE; /* move pointer to next bit of text */
@@ -370,7 +376,7 @@ void        store_mail(char* to, char* from, char* message_pointer) {
 	        works much like DOS' FAT.
 	     */
 
-	while (bytes_written < total_length) {
+	while(bytes_written < total_length) {
 		last_address = target_address;
 		target_address = pop_free_list();
 
@@ -410,32 +416,32 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 	char*        message, *tmstr, buf[200];
 	size_t                        string_size;
 
-	if (!*recipient || !*recipient_formatted) {
-		mudlog( LOG_SYSERR, "Mail system -- non-fatal error #6.");
+	if(!*recipient || !*recipient_formatted) {
+		mudlog(LOG_SYSERR, "Mail system -- non-fatal error #6.");
 		return 0;
 	}
-	if (!(mail_pointer = find_char_in_index(recipient))) {
-		mudlog( LOG_SYSERR,
-				"Mail system -- post office spec_proc error?  Error #7.");
+	if(!(mail_pointer = find_char_in_index(recipient))) {
+		mudlog(LOG_SYSERR,
+			   "Mail system -- post office spec_proc error?  Error #7.");
 		return 0;
 	}
-	if (!(position_pointer = mail_pointer->list_start)) {
-		mudlog( LOG_SYSERR, "Mail system -- non-fatal error #8.");
+	if(!(position_pointer = mail_pointer->list_start)) {
+		mudlog(LOG_SYSERR, "Mail system -- non-fatal error #8.");
 		return 0;
 	}
 
-	if (!(position_pointer->next)) { /* just 1 entry in list. */
+	if(!(position_pointer->next)) {  /* just 1 entry in list. */
 		mail_address = position_pointer->position;
 		free(position_pointer);
 
 		/* now free up the actual name entry */
-		if (mail_index == mail_pointer) { /* name is 1st in list */
+		if(mail_index == mail_pointer) {  /* name is 1st in list */
 			mail_index = mail_pointer->next;
 			free(mail_pointer);
 		}
 		else {
 			/* find entry before the one we're going to del */
-			for (prev_mail = mail_index;
+			for(prev_mail = mail_index;
 					prev_mail->next != mail_pointer;
 					prev_mail = prev_mail->next)
 				;
@@ -445,8 +451,9 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 	}
 	else {
 		/* move to next-to-last record */
-		while (position_pointer->next->next)
-		{ position_pointer = position_pointer->next; }
+		while(position_pointer->next->next) {
+			position_pointer = position_pointer->next;
+		}
 		mail_address = position_pointer->next->position;
 		free(position_pointer->next);
 		position_pointer->next = 0;
@@ -455,10 +462,10 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 	/* ok, now lets do some readin'! */
 	read_from_file(&header, BLOCK_SIZE, mail_address);
 
-	if (header.block_type != HEADER_BLOCK) {
-		mudlog( LOG_SYSERR, "Oh dear." );
+	if(header.block_type != HEADER_BLOCK) {
+		mudlog(LOG_SYSERR, "Oh dear.");
 		no_mail = 1;
-		mudlog( LOG_SYSERR, "Mail system disabled!  -- Error #9.");
+		mudlog(LOG_SYSERR, "Mail system disabled!  -- Error #9.");
 		return 0;
 	}
 	time_t mtime=static_cast<time_t>(header.mail_time);
@@ -486,7 +493,7 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 	write_to_file(&header, BLOCK_SIZE, mail_address);
 	push_free_list(mail_address);
 
-	while (following_block != LAST_BLOCK) {
+	while(following_block != LAST_BLOCK) {
 		read_from_file(&data, BLOCK_SIZE, following_block);
 
 		string_size = (CHAR_SIZE * (strlen(message) + strlen(data.txt) + 1));
@@ -507,7 +514,7 @@ char*        read_delete(char* recipient, char* recipient_formatted)
 
 
 int        mail_ok(struct char_data* ch) {
-	if (no_mail) {
+	if(no_mail) {
 		send_to_char("Sorry, the message system is having technical difficulties.\n\r",
 					 ch);
 		return 0;
@@ -523,13 +530,15 @@ int        mail_ok(struct char_data* ch) {
 struct char_data* find_mailman(struct char_data* ch) {
 	struct char_data* mailman;
 
-	if (!mail_ok(ch))
-	{ return 0; }
+	if(!mail_ok(ch)) {
+		return 0;
+	}
 
 	mailman = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(PostMaster));
 
-	if (!mailman)
-	{ send_to_char("Whoa!  Buggy post office.  Please report this.  Error #10.\n\r", ch); }
+	if(!mailman) {
+		send_to_char("Whoa!  Buggy post office.  Please report this.  Error #10.\n\r", ch);
+	}
 
 	return mailman;
 }
@@ -540,23 +549,24 @@ void postmaster_send_mail(struct char_data* ch, int cmd, const char* arg) {
 	char        buf[MAX_BUF_LENGTH], recipient[MAX_INPUT_LENGTH], *tmp;
 
 
-	if (!(mailman = find_mailman(ch)))
-	{ return; }
+	if(!(mailman = find_mailman(ch))) {
+		return;
+	}
 
-	if (GetMaxLevel(ch) < MIN_MAIL_LEVEL) {
+	if(GetMaxLevel(ch) < MIN_MAIL_LEVEL) {
 		sprintf(buf, "$n tells you, 'Sorry, you have to be level %d to send mail!'",
 				MIN_MAIL_LEVEL);
 		act(buf, FALSE, mailman, 0, ch, TO_VICT);
 		return;
 	}
 
-	if (!*arg) { /* you'll get no argument from me! */
+	if(!*arg) {  /* you'll get no argument from me! */
 		act("$n tells you, 'Who did you want me to send this to?'",
 			FALSE, mailman, 0, ch, TO_VICT);
 		return;
 	}
 
-	if (GET_GOLD(ch) < STAMP_PRICE) {
+	if(GET_GOLD(ch) < STAMP_PRICE) {
 		sprintf(buf, "$n tells you, 'It will costs %d coins to deliever this.'\n\r"
 				"$n tells you, '...which I see you can't afford.'",
 				STAMP_PRICE);
@@ -566,14 +576,15 @@ void postmaster_send_mail(struct char_data* ch, int cmd, const char* arg) {
 
 	parse_name(arg, recipient);
 
-	if( !find_name( recipient ) ) {
+	if(!find_name(recipient)) {
 		act("$n tells you, 'Never heard of that person!'",
 			FALSE, mailman, 0, ch, TO_VICT);
 		return;
 	}
 
-	for (tmp = recipient; *tmp; tmp++)
-	{ *tmp = tolower(*tmp); }
+	for(tmp = recipient; *tmp; tmp++) {
+		*tmp = tolower(*tmp);
+	}
 
 	act("$n starts to write a note.", TRUE, ch, 0, 0, TO_ROOM);
 	sprintf(buf, "$n tells you, 'I'll take %d coins for the delivery.'\n\r"
@@ -595,18 +606,22 @@ void        postmaster_check_mail(struct char_data* ch, int cmd, const char* arg
 	char        buf[200], recipient[100], *tmp;
 
 
-	if (!(mailman = find_mailman(ch)))
-	{ return; }
+	if(!(mailman = find_mailman(ch))) {
+		return;
+	}
 
 	parse_name(GET_NAME(ch), recipient);
 
-	for (tmp = recipient; *tmp; tmp++)
-	{ *tmp = tolower(*tmp); }
+	for(tmp = recipient; *tmp; tmp++) {
+		*tmp = tolower(*tmp);
+	}
 
-	if (has_mail(recipient))
-	{ sprintf(buf, "$n tells you, 'You DO have waiting mail.'"); }
-	else
-	{ sprintf(buf, "$n tells you, 'Sorry, you DON'T have any messages waiting.'"); }
+	if(has_mail(recipient)) {
+		sprintf(buf, "$n tells you, 'You DO have waiting mail.'");
+	}
+	else {
+		sprintf(buf, "$n tells you, 'Sorry, you DON'T have any messages waiting.'");
+	}
 	act(buf, FALSE, mailman, 0, ch, TO_VICT);
 }
 
@@ -617,21 +632,23 @@ void        postmaster_receive_mail(struct char_data* ch, int cmd, const char* a
 	struct obj_data* tmp_obj;
 
 
-	if (!(mailman = find_mailman(ch)))
-	{ return; }
+	if(!(mailman = find_mailman(ch))) {
+		return;
+	}
 
 	parse_name(GET_NAME(ch), recipient);
 
-	for (tmp = recipient; *tmp; tmp++)
-	{ *tmp = tolower(*tmp); }
+	for(tmp = recipient; *tmp; tmp++) {
+		*tmp = tolower(*tmp);
+	}
 
-	if (!has_mail(recipient)) {
+	if(!has_mail(recipient)) {
 		sprintf(buf, "$n tells you, 'Sorry, you don't have any messages waiting.'");
 		act(buf, FALSE, mailman, 0, ch, TO_VICT);
 		return;
 	}
 
-	while (has_mail(recipient)) {
+	while(has_mail(recipient)) {
 		CREATE(tmp_obj, struct obj_data, 1);
 		clear_object(tmp_obj);
 
@@ -646,8 +663,9 @@ void        postmaster_receive_mail(struct char_data* ch, int cmd, const char* a
 		tmp_obj->obj_flags.cost_per_day = 10;
 
 		tmp_obj->action_description = read_delete(recipient, GET_NAME(ch));
-		if (!tmp_obj->action_description)
-		{ tmp_obj->action_description = strdup("Mail system error - please report.  Error #11.\n\r"); }
+		if(!tmp_obj->action_description) {
+			tmp_obj->action_description = strdup("Mail system error - please report.  Error #11.\n\r");
+		}
 
 		tmp_obj->next = object_list;
 		object_list = tmp_obj;

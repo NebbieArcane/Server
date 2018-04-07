@@ -49,8 +49,8 @@ public:
 	typedef odb::vector<rentPtr> rentVector;
 	typedef odb::boost::lazy_shared_ptr<toonBank> bankPtr;
 	typedef odb::vector<bankPtr> bankVector;
-	toon(){};
-	toon(const char* name,const char* password) :name(name),password(password),title(""),lastlogin(boost::posix_time::not_a_date_time),owner_id(0){}
+	toon() {};
+	toon(const char* name,const char* password) :name(name),password(password),title(""),lastlogin(boost::posix_time::not_a_date_time),owner_id(0) {}
 	string name;
 	string password;
 	string title;
@@ -75,8 +75,8 @@ public:
 	toonVector toons;
 	string choosen;
 	bool authorized;
-	user(){};
-	user(const string &login,const string &nickname,const string& email,const string& password=""):
+	user() {};
+	user(const string &login,const string &nickname,const string &email,const string &password=""):
 		login(login),
 		nickname(nickname),
 		email(email),

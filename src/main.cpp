@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 		po::store(po::command_line_parser(argc, argv).
 				  options(all).positional(positional).run(), vm);
 	}
-	catch (po::unknown_option &e) {
+	catch(po::unknown_option &e) {
 		cout << e.what() << endl;
 	}
 	po::notify(vm);
@@ -98,12 +98,24 @@ int main(int argc, char** argv) {
 	}
 	cout << endl;
 
-	if(vm.count("test_mode")) { SetTest(true);}
-	if(vm.count("ansi_off")) { SET_BIT(SystemFlags,SYS_NOANSI); }
-	if(vm.count("disable_DNS")) { SET_BIT(SystemFlags,SYS_SKIPDNS); }
-	if(vm.count("log_players")) { SET_BIT(SystemFlags,SYS_LOGALL); }
-	if(vm.count("newbie_approve")) { SET_BIT(SystemFlags,SYS_REQAPPROVE); }
-	if(vm.count("log_mobs")) { SET_BIT(SystemFlags,SYS_LOGMOB); }
+	if(vm.count("test_mode")) {
+		SetTest(true);
+	}
+	if(vm.count("ansi_off")) {
+		SET_BIT(SystemFlags,SYS_NOANSI);
+	}
+	if(vm.count("disable_DNS")) {
+		SET_BIT(SystemFlags,SYS_SKIPDNS);
+	}
+	if(vm.count("log_players")) {
+		SET_BIT(SystemFlags,SYS_LOGALL);
+	}
+	if(vm.count("newbie_approve")) {
+		SET_BIT(SystemFlags,SYS_REQAPPROVE);
+	}
+	if(vm.count("log_mobs")) {
+		SET_BIT(SystemFlags,SYS_LOGMOB);
+	}
 	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
 	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
 	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);
@@ -128,7 +140,7 @@ int main(int argc, char** argv) {
 		fclose(stderr);
 	}
 	fclose(stdin);
-	if (chdir(dir.c_str()) < 0) {
+	if(chdir(dir.c_str()) < 0) {
 		LOG4CXX_FATAL(logger,"Unable to change dir to " << dir);
 		LOG4CXX_FATAL(errlogger,"Unable to change dir to " << dir);
 		perror("chdir");
@@ -136,7 +148,7 @@ int main(int argc, char** argv) {
 	}
 	FILE* fd;
 	fd=fopen("../alarmud.pid","w");
-	if (fd) {
+	if(fd) {
 		fprintf(fd,"%d",getpid());
 		fclose(fd);
 	}

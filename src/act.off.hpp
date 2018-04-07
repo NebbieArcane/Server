@@ -37,7 +37,7 @@ ACTION_FUNC(do_weapon_load) ;
 ACTION_FUNC(do_wimp) ;
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) ;
 void throw_object(struct obj_data* o, int dir, int from) ;
-void throw_weapon( struct obj_data* o, int dir, struct char_data* targ,struct char_data* ch );
+void throw_weapon(struct obj_data* o, int dir, struct char_data* targ,struct char_data* ch);
 } // namespace Alarmud
 #endif // _ACT_OFF_HPP
 

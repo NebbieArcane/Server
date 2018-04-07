@@ -120,7 +120,7 @@ void SayMenu(struct char_data* pCh, const char* apchMenu[]) {
 	int i;
 	char buf[200];
 
-	for (i = 0; *apchMenu[i] != '\n'; i++) {
+	for(i = 0; *apchMenu[i] != '\n'; i++) {
 		sprintf(buf, "%s\n\r", apchMenu[i]);
 		send_to_char(buf, pCh);
 	}
@@ -139,8 +139,9 @@ static struct char_data* find_editman(struct char_data* ch) {
 
 	editman = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(EditMaster));
 
-	if (!editman)
-	{ send_to_char("Whoa!  Non c'e' la persona giusta.\n\r", ch); }
+	if(!editman) {
+		send_to_char("Whoa!  Non c'e' la persona giusta.\n\r", ch);
+	}
 
 	return editman;
 }
@@ -166,83 +167,91 @@ MOBSPECIAL_FUNC(EditMaster) {
 	char field[20], comando[20], parmstr[MAX_STRING_LENGTH];
 	int iVNum, iCom, iSpell, iMagie, ciclo, temp;
 
-	if (!AWAKE(ch))
-	{ return (FALSE); }
+	if(!AWAKE(ch)) {
+		return (FALSE);
+	}
 
-	if ( MobCountInRoom( real_roomp(mob->in_room)->people ) < 2 && modifica == TRUE ) {
-		mudlog(LOG_PLAYERS,"Il PG e' andato via in EditMaster" );
+	if(MobCountInRoom(real_roomp(mob->in_room)->people) < 2 && modifica == TRUE) {
+		mudlog(LOG_PLAYERS,"Il PG e' andato via in EditMaster");
 		modifica = FALSE;
 		return (FALSE);
 	}
 
-	if (!(editman = find_editman(ch)))
-	{ return (FALSE); }
+	if(!(editman = find_editman(ch))) {
+		return (FALSE);
+	}
 
-	if (IS_NPC(ch)) {
-		if (cmd == CMD_GIVE || cmd == CMD_ASK) {
+	if(IS_NPC(ch)) {
+		if(cmd == CMD_GIVE || cmd == CMD_ASK) {
 			arg = one_argument(arg, obj_name);
-			if (!*obj_name)
-			{ return (FALSE); }
-			if (!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
-			{ return (FALSE); }
+			if(!*obj_name) {
+				return (FALSE);
+			}
+			if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying))) {
+				return (FALSE);
+			}
 			arg = one_argument(arg, vict_name);
-			if (!*vict_name)
-			{ return (FALSE); }
-			if (!(vict = get_char_room_vis(ch, vict_name)))
-			{ return (FALSE); }
-			if (editman) {
+			if(!*vict_name) {
+				return (FALSE);
+			}
+			if(!(vict = get_char_room_vis(ch, vict_name))) {
+				return (FALSE);
+			}
+			if(editman) {
 				act("$N ti dice 'Che cosa fai qui?? non farmi perdere tempo.'", FALSE,
 					ch, 0, editman, TO_CHAR);
 				return (TRUE);
 			}
 		}
-		else
-		{ return (FALSE); }
+		else {
+			return (FALSE);
+		}
 	}
 
-	if (cmd == CMD_GIVE && !modifica) {
+	if(cmd == CMD_GIVE && !modifica) {
 		arg = one_argument(arg, obj_name);
-		if (!*obj_name) {
+		if(!*obj_name) {
 			act("$N ti dice 'Che cosa vorresti darmi?'", FALSE,
 				ch, 0, editman, TO_CHAR);
 			return (TRUE);
 		}
-		if (!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying))) {
+		if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying))) {
 			act("$N ti dice 'Non vedo cosa vorresti darmi.'", FALSE,
 				ch, 0, editman, TO_CHAR);
 			return (TRUE);
 		}
 		arg = one_argument(arg, vict_name);
-		if (!*vict_name) {
+		if(!*vict_name) {
 			send_to_char("A chi?\n\r", ch);
 			return (TRUE);
 		}
-		if (!(vict = get_char_room_vis(ch, vict_name))) {
+		if(!(vict = get_char_room_vis(ch, vict_name))) {
 			send_to_char("A chi?\n\r", ch);
 			return (TRUE);
 		}
 
-		if (vict->specials.fighting) {
+		if(vict->specials.fighting) {
 			act("$N ti dice 'Non vedi che sto combattendo!?'", FALSE,
 				ch, 0, editman, TO_CHAR);
 			return (TRUE);
 		}
 
-		if (!IS_NPC(vict))
-		{ return (FALSE); }
+		if(!IS_NPC(vict)) {
+			return (FALSE);
+		}
 
-		if ((ITEM_TYPE(obj) == ITEM_ARMOR || ITEM_TYPE(obj) == ITEM_WEAPON)) {
+		if((ITEM_TYPE(obj) == ITEM_ARMOR || ITEM_TYPE(obj) == ITEM_WEAPON)) {
 			if(GET_RUNEDEI(ch)<1) {
 				act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE,
 					ch, 0, editman, TO_CHAR);
 				return (TRUE);
 			}
 
-			act( "Dai $p a $N.", TRUE, ch, obj, editman, TO_CHAR );
-			act( "$n da` $p a $N.", TRUE, ch, obj, editman, TO_ROOM );
+			act("Dai $p a $N.", TRUE, ch, obj, editman, TO_CHAR);
+			act("$n da` $p a $N.", TRUE, ch, obj, editman, TO_ROOM);
 
-			obj_from_char( obj );
-			obj_to_char( obj, editman );
+			obj_from_char(obj);
+			obj_to_char(obj, editman);
 
 
 			act("$N ti dice 'Ok, vediamo un po' che si puo' fare ...'", FALSE,
@@ -260,28 +269,28 @@ MOBSPECIAL_FUNC(EditMaster) {
 				ch, 0, editman, TO_CHAR);
 		return (TRUE);
 	}
-	else if (cmd == CMD_ASK && modifica) {
+	else if(cmd == CMD_ASK && modifica) {
 
 		arg = one_argument(arg, comando);
 
-		if (!*arg || !*comando || strcmp(comando, "modifica")) {
+		if(!*arg || !*comando || strcmp(comando, "modifica")) {
 			send_to_char("Prova a usare 'Ask $c0010modifica$c0007 $c0011aiuto$c0007'.\n\r", ch);
 			return (TRUE);
 		}
 
 		arg = one_argument(arg, field);
 
-		if (!*field) {
-			send_to_char ("Modificare che cosa?!? Usa '$c0010modifica$c0015 $c0011aiuto$c0015'.\n\r", ch);
+		if(!*field) {
+			send_to_char("Modificare che cosa?!? Usa '$c0010modifica$c0015 $c0011aiuto$c0015'.\n\r", ch);
 			return (TRUE);
 		}
 
-		if (IS_PRINCE(ch) && !strcmp(field, "pago")) {
+		if(IS_PRINCE(ch) && !strcmp(field, "pago")) {
 			SetStatus("EditMaster", field);
 			arg = one_argument(arg, parmstr);
-			if (!strcmp(parmstr, "xp")) {
-				if (ha_modificato) {
-					if ((GET_EXP(ch) - 400000000) < tot_costoxp ) {
+			if(!strcmp(parmstr, "xp")) {
+				if(ha_modificato) {
+					if((GET_EXP(ch) - 400000000) < tot_costoxp) {
 						act("$N ti dice 'Non hai abbastanza esperienza per pagare il mio prezzo!'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return (TRUE);
@@ -291,9 +300,9 @@ MOBSPECIAL_FUNC(EditMaster) {
 				act("$N ti dice 'Va bene, visto che sei tu accetto il pagamento in XP'", FALSE,
 					ch, 0, editman, TO_CHAR);
 			}
-			else if (!strcmp(parmstr, "pq")) {
-				if (ha_modificato) {
-					if (GET_RUNEDEI(ch) <  tot_costopq + 1) {
+			else if(!strcmp(parmstr, "pq")) {
+				if(ha_modificato) {
+					if(GET_RUNEDEI(ch) <  tot_costopq + 1) {
 						act("$N ti dice 'Non hai abbastanza punti quest per pagarmi!'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return (TRUE);
@@ -309,7 +318,7 @@ MOBSPECIAL_FUNC(EditMaster) {
 			return (TRUE);
 		}
 
-		if (!strcmp(field, "aiuto")) {
+		if(!strcmp(field, "aiuto")) {
 			SetStatus("EditMaster", field);
 			SayMenu(ch, aiuto_modifica);
 			return (TRUE);
@@ -317,50 +326,50 @@ MOBSPECIAL_FUNC(EditMaster) {
 
 		SetStatus("EditMaster", "get_obj_in_list_vis");
 
-		if (!(obj = get_obj_in_list_vis(editman, modifica_obj, editman->carrying))) {
+		if(!(obj = get_obj_in_list_vis(editman, modifica_obj, editman->carrying))) {
 			send_to_char("OPS!! non trovo piu' l'oggetto?!?\n\r", ch);
 			modifica = FALSE;
 			return (TRUE);
 		}
 		SetStatus("EditMaster", obj->name);
-		if (obj) {
+		if(obj) {
 			iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
 
-			if (!iVNum) {
+			if(!iVNum) {
 				send_to_char("Quale sarebbe l'oggetto?!?\n\r", ch);
 				return (TRUE);
 			}
 
-			if (!strcmp(field, "stato")) {
+			if(!strcmp(field, "stato")) {
 				char scom[256];
 
 				sprintf(scom, "$c0015Nome:$c0007 %s  $c0015Descr:$c0007 %s \n\r",
 						obj->name, obj->short_description);
 				send_to_char(scom, ch);
-				if (ITEM_TYPE(obj) == ITEM_WEAPON) {
+				if(ITEM_TYPE(obj) == ITEM_WEAPON) {
 					sprintf(scom, "$c0015Arma:$c0007 %dD%d \n\r",
 							obj->obj_flags.value[1], obj->obj_flags.value[2]);
 					send_to_char(scom, ch);
-					for (temp = 0; temp < MAX_OBJ_AFFECT; temp++)
-						if (obj->affected[temp].location == APPLY_WEAPON_SPELL) {
+					for(temp = 0; temp < MAX_OBJ_AFFECT; temp++)
+						if(obj->affected[temp].location == APPLY_WEAPON_SPELL) {
 							sprintf(scom, "$c0015Magia:$c0007 %s \n\r",
 									spells[obj->affected[temp].modifier - 1]);
 							send_to_char(scom, ch);
 						}
 
 				}
-				else if (ITEM_TYPE(obj) == ITEM_ARMOR) {
-					for (temp = 0; temp < MAX_OBJ_AFFECT; temp++)
-						if (obj->affected[temp].location) {
+				else if(ITEM_TYPE(obj) == ITEM_ARMOR) {
+					for(temp = 0; temp < MAX_OBJ_AFFECT; temp++)
+						if(obj->affected[temp].location) {
 							char buf2[256];
 
-							if (obj->affected[temp].location == APPLY_SPELL) {
+							if(obj->affected[temp].location == APPLY_SPELL) {
 								sprintbit(obj->affected[temp].modifier, affected_bits, buf2);
 								sprintf(scom, "$c0015Magia:$c0007 %s da %s \n\r",
 										apply_types[obj->affected[temp].location], buf2);
 							}
-							else if (obj->affected[temp].location == APPLY_IMMUNE
-									 || obj->affected[temp].location == APPLY_M_IMMUNE) {
+							else if(obj->affected[temp].location == APPLY_IMMUNE
+									|| obj->affected[temp].location == APPLY_M_IMMUNE) {
 								sprintbit(obj->affected[temp].modifier, immunity_names, buf2);
 								sprintf(scom, "Protezione tipo: $c0015%s$c0007 %s \n\r",
 										apply_types[obj->affected[temp].location], buf2);
@@ -374,9 +383,10 @@ MOBSPECIAL_FUNC(EditMaster) {
 				}
 				sprintf(scom, "Pagamento in %s.\n\r", (pagamento) ? "xp" : "pq");
 				send_to_char(scom, ch);
-				if (ha_modificato) {
-					if (pagamento)
-					{ sprintf(scom, "Spesa modifiche %ld xp.\n\r", tot_costoxp); }
+				if(ha_modificato) {
+					if(pagamento) {
+						sprintf(scom, "Spesa modifiche %ld xp.\n\r", tot_costoxp);
+					}
 					else {
 						sprintf(scom, "Spesa modifiche %ld pq.\n\r", tot_costopq + 1);
 					}
@@ -387,24 +397,25 @@ MOBSPECIAL_FUNC(EditMaster) {
 				return (TRUE);
 			}
 
-			for (iCom = 0; iCom < MAXCOM; iCom++)
-				if (!strcmp(field, comandi[iCom].com))
-				{ break; }
+			for(iCom = 0; iCom < MAXCOM; iCom++)
+				if(!strcmp(field, comandi[iCom].com)) {
+					break;
+				}
 
-			if (iCom == MAXCOM) {
+			if(iCom == MAXCOM) {
 				act("$N ti dice 'Non capisco. Cosa stai cercando di dirmi?!?'", FALSE,
 					ch, 0, editman, TO_CHAR);
 				return (TRUE);
 			}
 
-			switch (comandi[iCom].cmd) {
+			switch(comandi[iCom].cmd) {
 			case 0:			// fine
-				if (!ha_modificato) {
+				if(!ha_modificato) {
 
 					mudlog(LOG_PLAYERS,"%s non ha modificato %s", GET_NAME(ch), obj->name);
 
 				}
-				else if (pagamento) {
+				else if(pagamento) {
 					GET_RUNEDEI(ch) -= 1;
 					GET_EXP(ch) -= MAX(0,tot_costoxp);
 					mudlog(LOG_PLAYERS,"%s fine modifica in XP %s con %d xp e %d pq totale costo %ld.", GET_NAME(ch),obj->name,GET_EXP(ch),GET_RUNEDEI(ch),tot_costoxp);
@@ -419,12 +430,12 @@ MOBSPECIAL_FUNC(EditMaster) {
 				ha_modificato = FALSE;
 				strcpy(modifica_obj, "");
 				modifica = FALSE;
-				act( "$N da` $p a $n.", TRUE, ch, obj, editman, TO_ROOM );
-				act( "$N ti da` $p.", TRUE, ch, obj, editman, TO_CHAR );
+				act("$N da` $p a $n.", TRUE, ch, obj, editman, TO_ROOM);
+				act("$N ti da` $p.", TRUE, ch, obj, editman, TO_CHAR);
 				act("$N ti dice 'Ok. Ecco fatto! Buona fortuna!'", FALSE,
 					ch, 0, editman, TO_CHAR);
-				obj_from_char( obj );
-				obj_to_char( obj, ch );
+				obj_from_char(obj);
+				obj_to_char(obj, ch);
 				return (TRUE);
 				break;
 			case 1:			// aiuto
@@ -433,16 +444,16 @@ MOBSPECIAL_FUNC(EditMaster) {
 				break;
 			}
 
-			if (ITEM_TYPE(obj) == ITEM_ARMOR || ITEM_WEAPON ) {
+			if(ITEM_TYPE(obj) == ITEM_ARMOR || ITEM_WEAPON) {
 
-				if (comandi[iCom].tipo != 0 && comandi[iCom].tipo != OGG
+				if(comandi[iCom].tipo != 0 && comandi[iCom].tipo != OGG
 						&& comandi[iCom].tipo != RES && comandi[iCom].tipo != IMM) {
 					act("$N ti dice 'Spiacente, non sono in grado di fare quello che mi chiedi.'", FALSE,
 						ch, 0, editman, TO_CHAR);
 					return (TRUE);
 				}
 
-				switch (comandi[iCom].cmd) {
+				switch(comandi[iCom].cmd) {
 				case 2:		// move
 				case 3:		// mana
 				case 4:		// hp
@@ -459,41 +470,43 @@ MOBSPECIAL_FUNC(EditMaster) {
 				case 15:	// int
 				case 16:	// chr
 				case 17:	// spellfail
-					for (ciclo = MAX_OBJ_AFFECT - 1, iSpell = iMagie = 0, temp = -1; ciclo >= 0; ciclo--)
-						if (obj->affected[ciclo].location) {
+					for(ciclo = MAX_OBJ_AFFECT - 1, iSpell = iMagie = 0, temp = -1; ciclo >= 0; ciclo--)
+						if(obj->affected[ciclo].location) {
 							iSpell++;
-							if (obj->affected[ciclo].location == comandi[iCom].azione)
-							{ iMagie++; }
+							if(obj->affected[ciclo].location == comandi[iCom].azione) {
+								iMagie++;
+							}
 						}
-						else
-						{ temp = ciclo; }
-					if (temp<0) {
+						else {
+							temp = ciclo;
+						}
+					if(temp<0) {
 						act("$N ti dice 'Non capisco'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return true;
 					}
 					arg = one_argument(arg, parmstr);
-					if (atol(parmstr) <= 0L && !(comandi[iCom].cmd == 7 || comandi[iCom].cmd == 17)) {
+					if(atol(parmstr) <= 0L && !(comandi[iCom].cmd == 7 || comandi[iCom].cmd == 17)) {
 						act("$N ti dice 'Non e' che mi diresti anche il valore?'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return (TRUE);
 					}
-					else if (atol(parmstr) >= 0L && (comandi[iCom].cmd == 7 || comandi[iCom].cmd == 17)) {
+					else if(atol(parmstr) >= 0L && (comandi[iCom].cmd == 7 || comandi[iCom].cmd == 17)) {
 						act("$N ti dice 'Non e' che mi diresti anche il valore?'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return (TRUE);
 					}
-					if (iSpell < MAX_OBJ_AFFECT && iMagie < 1
-							&& atol(parmstr) <= comandi[iCom].max ) {
-						if (pagamento) {
-							if ((GET_EXP(ch)-400000000L) < tot_costoxp + static_cast<int>(calc_costoxp(iCom, atoi(parmstr)))) {
+					if(iSpell < MAX_OBJ_AFFECT && iMagie < 1
+							&& atol(parmstr) <= comandi[iCom].max) {
+						if(pagamento) {
+							if((GET_EXP(ch)-400000000L) < tot_costoxp + static_cast<int>(calc_costoxp(iCom, atoi(parmstr)))) {
 								act("$N ti dice 'Spiacente, non hai abbastanza XP.'", FALSE,
 									ch, 0, editman, TO_CHAR);
 								return (TRUE);
 							}
 						}
 						else {
-							if (GET_RUNEDEI(ch)-1 < tot_costopq + static_cast<int>(calc_costopq(iCom, atoi(parmstr)))) {
+							if(GET_RUNEDEI(ch)-1 < tot_costopq + static_cast<int>(calc_costopq(iCom, atoi(parmstr)))) {
 								act("$N ti dice 'Spiacente, non hai abbastanza punti quest.'", FALSE,
 									ch, 0, editman, TO_CHAR);
 								return (TRUE);
@@ -524,7 +537,7 @@ MOBSPECIAL_FUNC(EditMaster) {
 				ch, 0, editman, TO_CHAR);
 		return (TRUE);
 	}
-	else if (modifica) {
+	else if(modifica) {
 		return (TRUE);
 	}
 	return (FALSE);

@@ -113,7 +113,9 @@ EVENTFUNC(points_event) {
 	 Gaia 2001 */
 
 	if( IS_SET( ch->specials.act, ACT_POLYSELF) || IS_PC( ch )
-			&& !EgoSave( ch ) ) { do_ego_eq_action( ch ); }
+			&& !EgoSave(ch)) {
+		do_ego_eq_action(ch);
+	}
 
 #endif
 	if (ch->desc) {
@@ -128,8 +130,9 @@ EVENTFUNC(points_event) {
 
 	rp = real_roomp(ch->in_room);
 
-	if (!IS_NPC( ch ) && rp && rp->room_flags&NO_REGAIN)
-	{ regainroom=0; }
+	if(!IS_NPC(ch) && rp && rp->room_flags&NO_REGAIN) {
+		regainroom=0;
+	}
 
 	/*   In the old version we increment type of points by one.
 	     If not at max, reenqueue the event. Now we increase at fixed
@@ -141,7 +144,9 @@ EVENTFUNC(points_event) {
 
 
 		hgain = hit_gain(ch);
-		if( hgain > 0 && regainroom == 0 ) { gain = 0 ; }
+		if(hgain > 0 && regainroom == 0) {
+			gain = 0 ;
+		}
 
 		if ( hgain > 0 ) {
 
@@ -152,7 +157,9 @@ EVENTFUNC(points_event) {
 			/* Here we add a line that on average helps to take
 			   into account fractional gains */
 
-			if ( rnd < fGain ) { gain++ ; }
+			if(rnd < fGain) {
+				gain++ ;
+			}
 
 			/*     mudlog(LOG_CHECK, "Total hit_gain: %d \n\r", gain); */
 
@@ -172,16 +179,19 @@ EVENTFUNC(points_event) {
 			gain = hgain/NUMBER_REGEN_EVENTS ;
 
 			if( IS_AFFECTED(ch,AFF_POISON)) {
-				if( damage( ch, ch, -1*gain, SPELL_POISON, 5 ) == VictimDead )
-				{ return 0; }
+				if(damage(ch, ch, -1*gain, SPELL_POISON, 5) == VictimDead) {
+					return 0;
+				}
 			}
 			else if(IS_AFFECTED2(ch,AFF2_HEAT_STUFF)) {
-				if( damage( ch, ch, -1*gain, SPELL_HEAT_STUFF, 5 ) == VictimDead )
-				{ return 0; }
+				if(damage(ch, ch, -1*gain, SPELL_HEAT_STUFF, 5) == VictimDead) {
+					return 0;
+				}
 			}
 			else {
-				if( damage( ch, ch, -1*gain, TYPE_SUFFERING, 5 ) == VictimDead )
-				{ return 0; }
+				if(damage(ch, ch, -1*gain, TYPE_SUFFERING, 5) == VictimDead) {
+					return 0;
+				}
 			}
 		}
 
@@ -196,8 +206,9 @@ EVENTFUNC(points_event) {
 			free(event_obj);
 		}
 
-		if (GET_POS(ch) <= POSITION_STUNNED)
-		{ update_pos(ch); }
+		if(GET_POS(ch) <= POSITION_STUNNED) {
+			update_pos(ch);
+		}
 		break;
 
 	case REGEN_MANA:
@@ -209,8 +220,12 @@ EVENTFUNC(points_event) {
 		/* Here we add a line that on average helps to take
 		   into account fractional gains */
 
-		if ( rnd < fGain ) { gain++ ; }
-		if(gain > 0 && regainroom == 0) { gain = 0 ; }
+		if(rnd < fGain) {
+			gain++ ;
+		}
+		if(gain > 0 && regainroom == 0) {
+			gain = 0 ;
+		}
 
 		GET_MANA(ch) = MIN((GET_MANA(ch) + gain), GET_MAX_MANA(ch));
 
@@ -231,13 +246,16 @@ EVENTFUNC(points_event) {
 		fGain = modf(((double)(move_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
 		fGain = fGain*(double)(r_mult) ;
 		gain = (int)( dum );
-
 		rnd =  ( rand()% r_mult) ;
 		/* Here we add a line that on average helps to take
 		   into account fractional gains */
 
-		if ( rnd < fGain ) { gain++ ; }
-		if(gain > 0 && regainroom == 0) { gain = 0 ; }
+		if(rnd < fGain) {
+			gain++ ;
+		}
+		if(gain > 0 && regainroom == 0) {
+			gain = 0 ;
+		}
 
 		GET_MOVE(ch) = MIN((GET_MOVE(ch) + gain), GET_MAX_MOVE(ch));
 		if (GET_MOVE(ch) < GET_MAX_MOVE(ch)) {

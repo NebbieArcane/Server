@@ -37,7 +37,7 @@ OSql::OSql() : index(0),_query(),
 #if USE_SQLITE
 	SqlSqlite()
 #endif
-		{
+{
 
 }
 OSql::~OSql() {
@@ -50,7 +50,7 @@ OSql* OSql::where(const string field, const string op, const string value) {
 }
 
 OSql* OSql::where(const string glue, const string field, const string op,
-				const string value) {
+				  const string value) {
 	_query << " " << glue << " " << field << " " << op << value;
 	return this;
 }
@@ -69,8 +69,8 @@ OSql* OSql::select(const string field) {
 OSql* OSql::select(const tfields fields) {
 	_query.str(string());
 	_query << "SELECT ";
-	for (tfields::const_iterator it=fields.begin();it!=fields.end();++it) {
-		if (it!=fields.begin()) {
+	for(tfields::const_iterator it=fields.begin(); it!=fields.end(); ++it) {
+		if(it!=fields.begin()) {
 			_query << ",";
 		}
 		_query << it->data();
@@ -83,7 +83,7 @@ OSql* OSql::limit(const unsigned long limit) {
 	return this;
 }
 
-OSql *OSql::prepare() {
+OSql* OSql::prepare() {
 }
 
 const string OSql::query() {
@@ -100,9 +100,9 @@ OSql* OSql::closeParens() {
 }
 template<typename T>
 void OSql::push(SqlStatement stm,T data) {
-	if (boost::is_arithmetic<T>()) {
-		if (boost::is_signed<T>())  {
-			if (boost::is_convertible<T,int32_t>()) {
+	if(boost::is_arithmetic<T>()) {
+		if(boost::is_signed<T>())  {
+			if(boost::is_convertible<T,int32_t>()) {
 				stm->setInt(index,data);
 			}
 			else {
@@ -110,7 +110,7 @@ void OSql::push(SqlStatement stm,T data) {
 			}
 		}
 		else {
-			if (boost::is_convertible<T,uint32_t>()) {
+			if(boost::is_convertible<T,uint32_t>()) {
 				stm->setUInt(index,data);
 			}
 			else {

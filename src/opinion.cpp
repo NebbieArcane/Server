@@ -36,48 +36,50 @@ namespace Alarmud {
 */
 
 
-void FreeHates( struct char_data* ch) {
+void FreeHates(struct char_data* ch) {
 	struct char_list* k, *n;
 
-	for (k=ch->hates.clist; k; k = n) {
+	for(k=ch->hates.clist; k; k = n) {
 		n = k->next;
-		free( k );
+		free(k);
 	}
 
 	ch->hates.clist = NULL;
-	REMOVE_BIT( ch->hatefield, HATE_CHAR );
-	if( !ch->hatefield )
-	{ REMOVE_BIT( ch->specials.act, ACT_HATEFUL ); }
+	REMOVE_BIT(ch->hatefield, HATE_CHAR);
+	if(!ch->hatefield) {
+		REMOVE_BIT(ch->specials.act, ACT_HATEFUL);
+	}
 }
 
 
-void FreeFears( struct char_data* ch) {
+void FreeFears(struct char_data* ch) {
 	struct char_list* k, *n;
 
-	for (k=ch->fears.clist; k; k = n) {
+	for(k=ch->fears.clist; k; k = n) {
 		n = k->next;
-		free( k );
+		free(k);
 	}
 
 	ch->fears.clist = NULL;
 	REMOVE_BIT(ch->fearfield, FEAR_CHAR);
-	if (!ch->fearfield)
-	{ REMOVE_BIT(ch->specials.act, ACT_AFRAID); }
+	if(!ch->fearfield) {
+		REMOVE_BIT(ch->specials.act, ACT_AFRAID);
+	}
 }
 
 
-int RemHated( struct char_data* ch, struct char_data* pud) {
+int RemHated(struct char_data* ch, struct char_data* pud) {
 	struct char_list* t, **ppOp;
 
-	if( IS_PC( ch ) ) {
+	if(IS_PC(ch)) {
 		return FALSE;
 	}
 
-	if (pud) {
-		for( ppOp = &ch->hates.clist; *ppOp; ) {
-			if( (*ppOp)->op_ch ) {
-				if( (*ppOp)->op_ch == pud ) {
-					if (IS_IMMORTAL(pud)) {
+	if(pud) {
+		for(ppOp = &ch->hates.clist; *ppOp;) {
+			if((*ppOp)->op_ch) {
+				if((*ppOp)->op_ch == pud) {
+					if(IS_IMMORTAL(pud)) {
 						send_to_char("$c0004Qualcuno smette di odiarti.\n\r",pud);
 					}
 					t = *ppOp;
@@ -87,8 +89,8 @@ int RemHated( struct char_data* ch, struct char_data* pud) {
 				}
 			}
 			else {
-				if( !strcmp( (*ppOp)->name, GET_NAME( pud ) ) ) {
-					if (IS_IMMORTAL(pud)) {
+				if(!strcmp((*ppOp)->name, GET_NAME(pud))) {
+					if(IS_IMMORTAL(pud)) {
 						send_to_char("$c0004Qualcuno smette di odiarti.\n\r",pud);
 					}
 					t = *ppOp;
@@ -101,54 +103,60 @@ int RemHated( struct char_data* ch, struct char_data* pud) {
 		}
 	}
 
-	if( !ch->hates.clist )
-	{ REMOVE_BIT( ch->hatefield, HATE_CHAR ); }
-	if( !ch->hatefield )
-	{ REMOVE_BIT( ch->specials.act, ACT_HATEFUL ); }
+	if(!ch->hates.clist) {
+		REMOVE_BIT(ch->hatefield, HATE_CHAR);
+	}
+	if(!ch->hatefield) {
+		REMOVE_BIT(ch->specials.act, ACT_HATEFUL);
+	}
 
-	return( (pud) ? TRUE : FALSE);
+	return((pud) ? TRUE : FALSE);
 }
 
 
 
-int AddHated( struct char_data* ch, struct char_data* pud) {
+int AddHated(struct char_data* ch, struct char_data* pud) {
 	struct char_list* newpud;
 
-	if (ch == pud)
-	{ return(FALSE); }
+	if(ch == pud) {
+		return(FALSE);
+	}
 
-	if( IS_PC( ch ) ) {
+	if(IS_PC(ch)) {
 		return FALSE;
 	}
 
-	if (pud) {
-		if (!CAN_SEE(ch, pud))
-		{ return(FALSE); }
+	if(pud) {
+		if(!CAN_SEE(ch, pud)) {
+			return(FALSE);
+		}
 
 		CREATE(newpud, struct char_list, 1);
 		newpud->op_ch = pud;
 		strcpy(newpud->name, GET_NAME(pud));
 		newpud->next = ch->hates.clist;
 		ch->hates.clist = newpud;
-		if (!IS_SET(ch->specials.act, ACT_HATEFUL))
-		{ SET_BIT(ch->specials.act, ACT_HATEFUL); }
-		if (!IS_SET(ch->hatefield, HATE_CHAR))
-		{ SET_BIT(ch->hatefield, HATE_CHAR); }
+		if(!IS_SET(ch->specials.act, ACT_HATEFUL)) {
+			SET_BIT(ch->specials.act, ACT_HATEFUL);
+		}
+		if(!IS_SET(ch->hatefield, HATE_CHAR)) {
+			SET_BIT(ch->hatefield, HATE_CHAR);
+		}
 
-		if (pud->in_room != ch->in_room) {
+		if(pud->in_room != ch->in_room) {
 			/* log("setting hunt because mob was not in same as attacker"); */
 			SetHunting(ch,pud);
 		}
 
-		if (IS_IMMORTAL(pud)) {
+		if(IS_IMMORTAL(pud)) {
 			send_to_char("$c0004Qualcuno ti sta odiando.\n\r",pud);
 		}
 	}
-	return( (pud) ? TRUE : FALSE );
+	return((pud) ? TRUE : FALSE);
 }
 
-int AddHatred( struct char_data* ch, int parm_type, int parm) {
-	if( IS_PC( ch ) ) {
+int AddHatred(struct char_data* ch, int parm_type, int parm) {
+	if(IS_PC(ch)) {
 		return FALSE;
 	}
 
@@ -178,7 +186,7 @@ int AddHatred( struct char_data* ch, int parm_type, int parm) {
 		ch->hates.vnum = parm;
 		break;
 	default:
-		mudlog( LOG_ERROR, "Invaild parm type in AddHatred (Opinion.c)" );
+		mudlog(LOG_ERROR, "Invaild parm type in AddHatred (Opinion.c)");
 		return FALSE;
 		break;
 	}
@@ -186,44 +194,49 @@ int AddHatred( struct char_data* ch, int parm_type, int parm) {
 	return TRUE;
 }
 
-void RemHatred( struct char_data* ch, unsigned short bitv) {
-	if( IS_PC( ch ) ) {
+void RemHatred(struct char_data* ch, unsigned short bitv) {
+	if(IS_PC(ch)) {
 		return;
 	}
 
 	REMOVE_BIT(ch->hatefield, bitv);
-	if (!ch->hatefield)
-	{ REMOVE_BIT(ch->specials.act, ACT_HATEFUL); }
+	if(!ch->hatefield) {
+		REMOVE_BIT(ch->specials.act, ACT_HATEFUL);
+	}
 }
 
 
-int Hates( struct char_data* ch, struct char_data* v) {
+int Hates(struct char_data* ch, struct char_data* v) {
 	struct char_list* i;
 
-	if (IS_AFFECTED(ch, AFF_PARALYSIS))
-	{ return(FALSE); }
+	if(IS_AFFECTED(ch, AFF_PARALYSIS)) {
+		return(FALSE);
+	}
 
-	if (ch == v)
-	{ return(FALSE); }
+	if(ch == v) {
+		return(FALSE);
+	}
 
-	if (IS_SET(ch->hatefield, HATE_CHAR)) {
-		if (ch->hates.clist) {
-			for (i = ch->hates.clist; i; i = i->next) {
-				if (i->op_ch) {
-					if ((i->op_ch == v) &&
-							(!strcmp(i->name, GET_NAME(v))))
-					{ return(TRUE); }
+	if(IS_SET(ch->hatefield, HATE_CHAR)) {
+		if(ch->hates.clist) {
+			for(i = ch->hates.clist; i; i = i->next) {
+				if(i->op_ch) {
+					if((i->op_ch == v) &&
+							(!strcmp(i->name, GET_NAME(v)))) {
+						return(TRUE);
+					}
 				}
 				else {
-					if (!strcmp(i->name, GET_NAME(v)))
-					{ return(TRUE); }
+					if(!strcmp(i->name, GET_NAME(v))) {
+						return(TRUE);
+					}
 				}
 			}
 		}
 	}
-	if (IS_SET(ch->hatefield, HATE_RACE)) {
-		if (ch->hates.race != -1) {
-			if (ch->hates.race == GET_RACE(v)) {
+	if(IS_SET(ch->hatefield, HATE_RACE)) {
+		if(ch->hates.race != -1) {
+			if(ch->hates.race == GET_RACE(v)) {
 				char buf[256];
 				snprintf(buf, 255, "Odi la razza %s\n\r", RaceName[GET_RACE(v)]);
 				send_to_char(buf, ch);
@@ -232,110 +245,124 @@ int Hates( struct char_data* ch, struct char_data* v) {
 		}
 	}
 
-	if (IS_SET(ch->hatefield, HATE_SEX)) {
-		if (ch->hates.sex == GET_SEX(v))
-		{ return(TRUE); }
-	}
-	if (IS_SET(ch->hatefield, HATE_GOOD)) {
-		if (ch->hates.good < GET_ALIGNMENT(v))
-		{ return(TRUE); }
-	}
-	if (IS_SET(ch->hatefield, HATE_EVIL)) {
-		if (ch->hates.evil > GET_ALIGNMENT(v))
-		{ return(TRUE); }
-	}
-	if (IS_SET(ch->hatefield, HATE_CLASS)) {
-		if (HasClass(v, ch->hates.iClass)) {
+	if(IS_SET(ch->hatefield, HATE_SEX)) {
+		if(ch->hates.sex == GET_SEX(v)) {
 			return(TRUE);
 		}
 	}
-	if (IS_SET(ch->hatefield, HATE_VNUM)) {
-		if (ch->hates.vnum == mob_index[v->nr].iVNum)
-		{ return(TRUE); }
+	if(IS_SET(ch->hatefield, HATE_GOOD)) {
+		if(ch->hates.good < GET_ALIGNMENT(v)) {
+			return(TRUE);
+		}
+	}
+	if(IS_SET(ch->hatefield, HATE_EVIL)) {
+		if(ch->hates.evil > GET_ALIGNMENT(v)) {
+			return(TRUE);
+		}
+	}
+	if(IS_SET(ch->hatefield, HATE_CLASS)) {
+		if(HasClass(v, ch->hates.iClass)) {
+			return(TRUE);
+		}
+	}
+	if(IS_SET(ch->hatefield, HATE_VNUM)) {
+		if(ch->hates.vnum == mob_index[v->nr].iVNum) {
+			return(TRUE);
+		}
 	}
 	return(FALSE);
 }
 
-int Fears( struct char_data* ch, struct char_data* v) {
+int Fears(struct char_data* ch, struct char_data* v) {
 	struct char_list* i;
 
-	if( IS_AFFECTED( ch, AFF_PARALYSIS ) )
-	{ return( FALSE ); }
+	if(IS_AFFECTED(ch, AFF_PARALYSIS)) {
+		return(FALSE);
+	}
 
-	if( !IS_SET( ch->specials.act, ACT_AFRAID ) )
-	{ return( FALSE ); }
+	if(!IS_SET(ch->specials.act, ACT_AFRAID)) {
+		return(FALSE);
+	}
 
-	if( IS_SET( ch->fearfield, FEAR_CHAR ) ) {
-		if( ch->fears.clist ) {
-			for( i = ch->fears.clist; i; i = i->next ) {
-				if( i ) {
-					if( i->op_ch ) {
-						if( i->name[0] != '\0' ) {
-							if( i->op_ch == v && strcmp( i->name, GET_NAME( v ) ) == 0 )
-							{ return TRUE; }
+	if(IS_SET(ch->fearfield, FEAR_CHAR)) {
+		if(ch->fears.clist) {
+			for(i = ch->fears.clist; i; i = i->next) {
+				if(i) {
+					if(i->op_ch) {
+						if(i->name[0] != '\0') {
+							if(i->op_ch == v && strcmp(i->name, GET_NAME(v)) == 0) {
+								return TRUE;
+							}
 						}
 						else {
 							/* lets see if this clears the problem */
-							mudlog( LOG_ERROR, "NULL name in ch->fears.clist" );
+							mudlog(LOG_ERROR, "NULL name in ch->fears.clist");
 							RemFeared(ch, i->op_ch);
 						}
 					}
 					else {
-						if (i->name[0] != '\0') {
-							if (!strcmp(i->name, GET_NAME(v)))
-							{ return(TRUE); }
+						if(i->name[0] != '\0') {
+							if(!strcmp(i->name, GET_NAME(v))) {
+								return(TRUE);
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	if (IS_SET(ch->fearfield, FEAR_RACE)) {
-		if (ch->fears.race != -1) {
-			if (ch->fears.race == GET_RACE(v))
-			{ return(TRUE); }
+	if(IS_SET(ch->fearfield, FEAR_RACE)) {
+		if(ch->fears.race != -1) {
+			if(ch->fears.race == GET_RACE(v)) {
+				return(TRUE);
+			}
 		}
 	}
-	if (IS_SET(ch->fearfield, FEAR_SEX)) {
-		if (ch->fears.sex == GET_SEX(v))
-		{ return(TRUE); }
-	}
-	if (IS_SET(ch->fearfield, FEAR_GOOD)) {
-		if (ch->fears.good < GET_ALIGNMENT(v))
-		{ return(TRUE); }
-	}
-	if (IS_SET(ch->fearfield, FEAR_EVIL)) {
-		if (ch->fears.evil > GET_ALIGNMENT(v))
-		{ return(TRUE); }
-	}
-	if (IS_SET(ch->fearfield, FEAR_CLASS)) {
-		if (HasClass(v, ch->hates.iClass)) {
+	if(IS_SET(ch->fearfield, FEAR_SEX)) {
+		if(ch->fears.sex == GET_SEX(v)) {
 			return(TRUE);
 		}
 	}
-	if (IS_SET(ch->fearfield, FEAR_VNUM)) {
-		if (ch->fears.vnum == mob_index[v->nr].iVNum)
-		{ return(TRUE); }
+	if(IS_SET(ch->fearfield, FEAR_GOOD)) {
+		if(ch->fears.good < GET_ALIGNMENT(v)) {
+			return(TRUE);
+		}
+	}
+	if(IS_SET(ch->fearfield, FEAR_EVIL)) {
+		if(ch->fears.evil > GET_ALIGNMENT(v)) {
+			return(TRUE);
+		}
+	}
+	if(IS_SET(ch->fearfield, FEAR_CLASS)) {
+		if(HasClass(v, ch->hates.iClass)) {
+			return(TRUE);
+		}
+	}
+	if(IS_SET(ch->fearfield, FEAR_VNUM)) {
+		if(ch->fears.vnum == mob_index[v->nr].iVNum) {
+			return(TRUE);
+		}
 	}
 	return(FALSE);
 }
 
-int RemFeared( struct char_data* ch, struct char_data* pud) {
+int RemFeared(struct char_data* ch, struct char_data* pud) {
 
 	struct char_list* t, **ppOp;
 
-	if( IS_PC( ch ) ) {
+	if(IS_PC(ch)) {
 		return FALSE;
 	}
 
-	if (!IS_SET(ch->specials.act, ACT_AFRAID))
-	{ return(FALSE); }
+	if(!IS_SET(ch->specials.act, ACT_AFRAID)) {
+		return(FALSE);
+	}
 
-	if( pud ) {
-		for( ppOp = &ch->fears.clist; *ppOp; ) {
-			if( (*ppOp)->op_ch ) {
-				if( (*ppOp)->op_ch == pud ) {
-					if (IS_IMMORTAL(pud)) {
+	if(pud) {
+		for(ppOp = &ch->fears.clist; *ppOp;) {
+			if((*ppOp)->op_ch) {
+				if((*ppOp)->op_ch == pud) {
+					if(IS_IMMORTAL(pud)) {
 						send_to_char("$c0004Qualcuno smette di temerti.\n\r",pud);
 					}
 					t = *ppOp;
@@ -345,8 +372,8 @@ int RemFeared( struct char_data* ch, struct char_data* pud) {
 				}
 			}
 			else {
-				if( !strcmp( (*ppOp)->name, GET_NAME( pud ) ) ) {
-					if (IS_IMMORTAL(pud)) {
+				if(!strcmp((*ppOp)->name, GET_NAME(pud))) {
+					if(IS_IMMORTAL(pud)) {
 						send_to_char("$c0004Qualcuno smette di temerti.\n\r",pud);
 					}
 					t = *ppOp;
@@ -358,27 +385,30 @@ int RemFeared( struct char_data* ch, struct char_data* pud) {
 			ppOp = &(*ppOp)->next;
 		}
 	}
-	if (!ch->fears.clist)
-	{ REMOVE_BIT(ch->fearfield, FEAR_CHAR); }
-	if (!ch->fearfield)
-	{ REMOVE_BIT(ch->specials.act, ACT_AFRAID); }
-	return( (pud) ? TRUE : FALSE);
+	if(!ch->fears.clist) {
+		REMOVE_BIT(ch->fearfield, FEAR_CHAR);
+	}
+	if(!ch->fearfield) {
+		REMOVE_BIT(ch->specials.act, ACT_AFRAID);
+	}
+	return((pud) ? TRUE : FALSE);
 }
 
 
 
-int AddFeared( struct char_data* ch, struct char_data* pud) {
+int AddFeared(struct char_data* ch, struct char_data* pud) {
 
 	struct char_list* newpud;
 
-	if( IS_PC( ch ) ) {
+	if(IS_PC(ch)) {
 		return FALSE;
 	}
 
-	if (pud) {
+	if(pud) {
 
-		if (!CAN_SEE(ch, pud))
-		{ return(FALSE); }
+		if(!CAN_SEE(ch, pud)) {
+			return(FALSE);
+		}
 
 		CREATE(newpud, struct char_list, 1);
 		newpud->op_ch = pud;
@@ -386,22 +416,23 @@ int AddFeared( struct char_data* ch, struct char_data* pud) {
 		newpud->next = ch->fears.clist;
 		ch->fears.clist = newpud;
 
-		if (!IS_SET(ch->specials.act, ACT_AFRAID)) {
+		if(!IS_SET(ch->specials.act, ACT_AFRAID)) {
 			SET_BIT(ch->specials.act, ACT_AFRAID);
 		}
-		if (!IS_SET(ch->fearfield, FEAR_CHAR)) {
+		if(!IS_SET(ch->fearfield, FEAR_CHAR)) {
 			SET_BIT(ch->fearfield, FEAR_CHAR);
 		}
-		if (IS_IMMORTAL(pud))
-		{ send_to_char("$c0004Qualcuno ti teme (giustamente).\n\r",pud); }
+		if(IS_IMMORTAL(pud)) {
+			send_to_char("$c0004Qualcuno ti teme (giustamente).\n\r",pud);
+		}
 	}
 
-	return( (pud) ? TRUE : FALSE);
+	return((pud) ? TRUE : FALSE);
 }
 
 
-int AddFears( struct char_data* ch, int parm_type, int parm) {
-	if( IS_PC( ch ) ) {
+int AddFears(struct char_data* ch, int parm_type, int parm) {
+	if(IS_PC(ch)) {
 		return FALSE;
 	}
 
@@ -431,7 +462,7 @@ int AddFears( struct char_data* ch, int parm_type, int parm) {
 		ch->fears.vnum = parm;
 		break;
 	default:
-		mudlog( LOG_ERROR, "Invaild parm type in AddFears (Opinion.c)" );
+		mudlog(LOG_ERROR, "Invaild parm type in AddFears (Opinion.c)");
 		return FALSE;
 		break;
 	}
@@ -440,17 +471,18 @@ int AddFears( struct char_data* ch, int parm_type, int parm) {
 }
 
 
-struct char_data* FindAHatee( struct char_data* ch) {
+struct char_data* FindAHatee(struct char_data* ch) {
 	struct char_data* tmp_ch;
 
-	if (ch->in_room < 0)
-	{ return(0); }
+	if(ch->in_room < 0) {
+		return(0);
+	}
 
-	for( tmp_ch=real_roomp(ch->in_room)->people; tmp_ch;
+	for(tmp_ch=real_roomp(ch->in_room)->people; tmp_ch;
 			tmp_ch = tmp_ch->next_in_room) {
-		if (Hates(ch, tmp_ch) && (CAN_SEE(ch, tmp_ch))) {
-			if (ch->in_room == tmp_ch->in_room) {
-				if (ch != tmp_ch) {
+		if(Hates(ch, tmp_ch) && (CAN_SEE(ch, tmp_ch))) {
+			if(ch->in_room == tmp_ch->in_room) {
+				if(ch != tmp_ch) {
 					return(tmp_ch);
 				}
 				else {
@@ -463,16 +495,17 @@ struct char_data* FindAHatee( struct char_data* ch) {
 	return(0);
 }
 
-struct char_data* FindAFearee( struct char_data* ch) {
+struct char_data* FindAFearee(struct char_data* ch) {
 	struct char_data* tmp_ch;
 
-	if (ch->in_room < 0)
-	{ return(0); }
+	if(ch->in_room < 0) {
+		return(0);
+	}
 
-	for( tmp_ch=real_roomp(ch->in_room)->people; tmp_ch;
+	for(tmp_ch=real_roomp(ch->in_room)->people; tmp_ch;
 			tmp_ch = tmp_ch->next_in_room) {
-		if (Fears(ch, tmp_ch) && (CAN_SEE(ch, tmp_ch))) {
-			if( (ch->in_room == tmp_ch->in_room) && (ch != tmp_ch)) {
+		if(Fears(ch, tmp_ch) && (CAN_SEE(ch, tmp_ch))) {
+			if((ch->in_room == tmp_ch->in_room) && (ch != tmp_ch)) {
 				return(tmp_ch);
 			}
 		}
@@ -491,10 +524,10 @@ struct char_data* FindAFearee( struct char_data* ch) {
 void ZeroHatred(struct char_data* ch, struct char_data* v) {
 	struct char_list* oldpud;
 
-	for (oldpud = ch->hates.clist; oldpud; oldpud = oldpud->next) {
-		if (oldpud) {
-			if (oldpud->op_ch) {
-				if (oldpud->op_ch == v) {
+	for(oldpud = ch->hates.clist; oldpud; oldpud = oldpud->next) {
+		if(oldpud) {
+			if(oldpud->op_ch) {
+				if(oldpud->op_ch == v) {
 					oldpud->op_ch = 0;
 				}
 			}
@@ -506,10 +539,10 @@ void ZeroHatred(struct char_data* ch, struct char_data* v) {
 void ZeroFeared(struct char_data* ch, struct char_data* v) {
 	struct char_list* oldpud;
 
-	for (oldpud = ch->fears.clist; oldpud; oldpud = oldpud->next) {
-		if (oldpud) {
-			if (oldpud->op_ch) {
-				if (oldpud->op_ch == v) {
+	for(oldpud = ch->fears.clist; oldpud; oldpud = oldpud->next) {
+		if(oldpud) {
+			if(oldpud->op_ch) {
+				if(oldpud->op_ch == v) {
 					oldpud->op_ch = 0;
 				}
 			}
@@ -524,9 +557,10 @@ void ZeroFeared(struct char_data* ch, struct char_data* v) {
 void DeleteHatreds(struct char_data* ch) {
 	struct char_data* i;
 
-	for (i = character_list; i; i = i->next) {
-		if (Hates(i, ch))
-		{ RemHated(i, ch); }
+	for(i = character_list; i; i = i->next) {
+		if(Hates(i, ch)) {
+			RemHated(i, ch);
+		}
 	}
 }
 
@@ -534,9 +568,10 @@ void DeleteHatreds(struct char_data* ch) {
 void DeleteFears(struct char_data* ch) {
 	struct char_data* i;
 
-	for (i = character_list; i; i = i->next) {
-		if (Fears(i, ch))
-		{ RemFeared(i, ch); }
+	for(i = character_list; i; i = i->next) {
+		if(Fears(i, ch)) {
+			RemFeared(i, ch);
+		}
 	}
 }
 } // namespace Alarmud

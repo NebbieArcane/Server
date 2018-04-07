@@ -13,10 +13,10 @@
 namespace Alarmud {
 class sqlTrace : public odb::tracer {
 public:
-	virtual void execute (odb::connection& c, const odb::statement& s) {
+	virtual void execute(odb::connection &c, const odb::statement &s) {
 		execute(c,s.text());
 	}
-	virtual void execute (odb::connection& c, const char* statement);
+	virtual void execute(odb::connection &c, const char* statement);
 };
 extern sqlTrace logTracer;
 class Sql {
@@ -74,14 +74,14 @@ public:
 			t.commit();
 			return true;
 		}
-		catch (odb::exception &e) {
-			if (upsert) {
+		catch(odb::exception &e) {
+			if(upsert) {
 				try {
 					db->update<T>(data);
 					t.commit();
 					return true;
 				}
-				catch (odb::exception &e) {
+				catch(odb::exception &e) {
 					mudlog(LOG_SYSERR,"Db exception: %s",e.what());
 				}
 			}
@@ -99,7 +99,7 @@ public:
 			t.commit();
 			return true;
 		}
-		catch (odb::exception &e) {
+		catch(odb::exception &e) {
 			mudlog(LOG_SYSERR,"Db exception: %s",e.what());
 		}
 		return false;
@@ -115,7 +115,7 @@ public:
 			t.commit();
 			return true;
 		}
-		catch (odb::exception &e) {
+		catch(odb::exception &e) {
 			mudlog(LOG_SYSERR,"Db exception: %s",e.what());
 		}
 		return false;

@@ -115,287 +115,324 @@ struct PolyType DruidList[MAX_DRUID_POLY] = {
 
 #define LAST_DRUID_MOB 17           /* last level you get a new poly type */
 
-void cast_resurrection( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_resurrection(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (!tar_obj) { return; }
+		if(!tar_obj) {
+			return;
+		}
 		spell_resurrection(level, ch, 0, tar_obj);
 		break;
 	case SPELL_TYPE_STAFF:
-		if (!tar_obj) { return; }
+		if(!tar_obj) {
+			return;
+		}
 		spell_resurrection(level, ch, 0, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious problem in 'resurrection'");
+		mudlog(LOG_SYSERR, "Serious problem in 'resurrection'");
 		break;
 	}
 
 }
 
 
-void cast_major_track( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_major_track(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_track(level, ch, tar_ch, NULL);
 		break;
 	case SPELL_TYPE_POTION:
 		spell_track(level, ch, ch, NULL);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_track(level, ch, tar_ch, NULL);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_track(level, ch, tar_ch, NULL);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room) {
-			if (tar_ch != ch)
-			{ spell_track(level, ch, tar_ch, NULL); }
+			if(tar_ch != ch) {
+				spell_track(level, ch, tar_ch, NULL);
+			}
 		}
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious problem in 'track'");
+		mudlog(LOG_SYSERR, "Serious problem in 'track'");
 		break;
 	}
 }
 
-void cast_minor_track( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_minor_track(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_track(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_POTION:
 		spell_track(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_track(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_track(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room) {
-			if (tar_ch != ch)
-			{ spell_track(level, ch, tar_ch, 0); }
+			if(tar_ch != ch) {
+				spell_track(level, ch, tar_ch, 0);
+			}
 		}
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious problem in 'track'");
+		mudlog(LOG_SYSERR, "Serious problem in 'track'");
 		break;
 	}
 
 }
 
-void cast_mana( byte level, struct char_data* ch, const char* arg, int type,
-				struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_mana(byte level, struct char_data* ch, const char* arg, int type,
+			   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_POTION:
 		spell_mana(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_mana(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_mana(level, ch, tar_ch, 0); }
+			if(tar_ch != ch) {
+				spell_mana(level, ch, tar_ch, 0);
+			}
 		break;
 	case SPELL_TYPE_SPELL:
 		spell_mana(-1,ch,tar_ch,0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious problem in 'mana'");
+		mudlog(LOG_SYSERR, "Serious problem in 'mana'");
 		break;
 	}
 
 }
-void cast_armor( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_armor(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( affected_by_spell(tar_ch, SPELL_ARMOR) ) {
+		if(affected_by_spell(tar_ch, SPELL_ARMOR)) {
 			send_to_char("Non succede nulla.\n\r", ch);
 			return;
 		}
-		if (ch != tar_ch)
-		{ act("$N viene protett$b da un'armatura magica.", FALSE, ch, 0, tar_ch, TO_CHAR); }
+		if(ch != tar_ch) {
+			act("$N viene protett$b da un'armatura magica.", FALSE, ch, 0, tar_ch, TO_CHAR);
+		}
 
 		spell_armor(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( affected_by_spell(ch, SPELL_ARMOR) )
-		{ return; }
+		if(affected_by_spell(ch, SPELL_ARMOR)) {
+			return;
+		}
 		spell_armor(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
-		if ( affected_by_spell(tar_ch, SPELL_ARMOR) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		if(affected_by_spell(tar_ch, SPELL_ARMOR)) {
+			return;
+		}
 		spell_armor(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if ( affected_by_spell(tar_ch, SPELL_ARMOR) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(affected_by_spell(tar_ch, SPELL_ARMOR)) {
+			return;
+		}
 		spell_armor(level,ch,ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in armor!");
+		mudlog(LOG_SYSERR, "Serious screw-up in armor!");
 		break;
 	}
 }
 
-void cast_mirror_images( byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_mirror_images(byte level, struct char_data* ch, const char* arg, int type,
+						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( affected_by_spell(ch, SPELL_MIRROR_IMAGES) ) {
+		if(affected_by_spell(ch, SPELL_MIRROR_IMAGES)) {
 			send_to_char("Non succede nulla.\n\r", ch);
 			return;
 		}
 		spell_mirror_images(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( affected_by_spell(ch, SPELL_MIRROR_IMAGES) )
-		{ return; }
+		if(affected_by_spell(ch, SPELL_MIRROR_IMAGES)) {
+			return;
+		}
 		spell_mirror_images(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if ( affected_by_spell(ch, SPELL_MIRROR_IMAGES) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(affected_by_spell(ch, SPELL_MIRROR_IMAGES)) {
+			return;
+		}
 		spell_mirror_images(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if ( affected_by_spell(ch, SPELL_MIRROR_IMAGES) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(affected_by_spell(ch, SPELL_MIRROR_IMAGES)) {
+			return;
+		}
 		spell_mirror_images(level,ch,ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in mirror_images!");
+		mudlog(LOG_SYSERR, "Serious screw-up in mirror_images!");
 		break;
 	}
 }
-void cast_stone_skin( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_stone_skin(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( affected_by_spell(ch, SPELL_STONE_SKIN) ) {
+		if(affected_by_spell(ch, SPELL_STONE_SKIN)) {
 			send_to_char("Non succede nulla.\n\r", ch);
 			return;
 		}
 		spell_stone_skin(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( affected_by_spell(ch, SPELL_STONE_SKIN) )
-		{ return; }
+		if(affected_by_spell(ch, SPELL_STONE_SKIN)) {
+			return;
+		}
 		spell_stone_skin(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if ( affected_by_spell(ch, SPELL_STONE_SKIN) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(affected_by_spell(ch, SPELL_STONE_SKIN)) {
+			return;
+		}
 		spell_stone_skin(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if ( affected_by_spell(ch, SPELL_STONE_SKIN) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(affected_by_spell(ch, SPELL_STONE_SKIN)) {
+			return;
+		}
 		spell_stone_skin(level,ch,ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in stone_skin!");
+		mudlog(LOG_SYSERR, "Serious screw-up in stone_skin!");
 		break;
 	}
 }
 
-void cast_astral_walk( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_astral_walk(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_POTION:
 	case SPELL_TYPE_SPELL:
 
-		spell_astral_walk( level, ch, NULL, NULL );
+		spell_astral_walk(level, ch, NULL, NULL);
 		break;
 
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in astral walk!");
+		mudlog(LOG_SYSERR, "Serious screw-up in astral walk!");
 		break;
 	}
 }
 
 
-void cast_teleport( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_teleport(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_POTION:
 	case SPELL_TYPE_SPELL:
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_teleport(level, ch, tar_ch, 0);
 		break;
 
 	case SPELL_TYPE_WAND:
-		if(!tar_ch)
-		{ tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_teleport(level, ch, tar_ch, 0);
 		break;
 
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_teleport(level, ch, tar_ch, 0); }
+			if(tar_ch != ch) {
+				spell_teleport(level, ch, tar_ch, 0);
+			}
 		break;
 
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in teleport!");
+		mudlog(LOG_SYSERR, "Serious screw-up in teleport!");
 		break;
 	}
 }
 
 
-void cast_bless( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_bless(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (tar_obj) {
+		if(tar_obj) {
 			/* It's an object */
-			if ( IS_SET(tar_obj->obj_flags.extra_flags, ITEM_BLESS) ) {
+			if(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_BLESS)) {
 				send_to_char("Non succede nulla.\n\r", ch);
 				return;
 			}
@@ -405,7 +442,7 @@ void cast_bless( byte level, struct char_data* ch, const char* arg, int type,
 		else {
 			/* Then it is a PC | NPC */
 
-			if ( affected_by_spell(tar_ch, SPELL_BLESS) ||
+			if(affected_by_spell(tar_ch, SPELL_BLESS) ||
 					(GET_POS(tar_ch) == POSITION_FIGHTING)) {
 				send_to_char("Non succede nulla.\n\r", ch);
 				return;
@@ -414,363 +451,415 @@ void cast_bless( byte level, struct char_data* ch, const char* arg, int type,
 		}
 		break;
 	case SPELL_TYPE_POTION:
-		if ( affected_by_spell(ch, SPELL_BLESS) ||
-				(GET_POS(ch) == POSITION_FIGHTING))
-		{ return; }
+		if(affected_by_spell(ch, SPELL_BLESS) ||
+				(GET_POS(ch) == POSITION_FIGHTING)) {
+			return;
+		}
 		spell_bless(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) {
+		if(tar_obj) {
 			/* It's an object */
-			if ( IS_SET(tar_obj->obj_flags.extra_flags, ITEM_BLESS) )
-			{ return; }
+			if(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_BLESS)) {
+				return;
+			}
 			spell_bless(level,ch,0,tar_obj);
 
 		}
 		else {
 			/* Then it is a PC | NPC */
 
-			if (!tar_ch) { tar_ch = ch; }
+			if(!tar_ch) {
+				tar_ch = ch;
+			}
 
-			if ( affected_by_spell(tar_ch, SPELL_BLESS) ||
-					(GET_POS(tar_ch) == POSITION_FIGHTING))
-			{ return; }
+			if(affected_by_spell(tar_ch, SPELL_BLESS) ||
+					(GET_POS(tar_ch) == POSITION_FIGHTING)) {
+				return;
+			}
 			spell_bless(level,ch,tar_ch,0);
 		}
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) {
+		if(tar_obj) {
 			/* It's an object */
-			if ( IS_SET(tar_obj->obj_flags.extra_flags, ITEM_BLESS) )
-			{ return; }
+			if(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_BLESS)) {
+				return;
+			}
 			spell_bless(level,ch,0,tar_obj);
 
 		}
 		else {
 			/* Then it is a PC | NPC */
 
-			if ( affected_by_spell(tar_ch, SPELL_BLESS) ||
-					(GET_POS(tar_ch) == POSITION_FIGHTING))
-			{ return; }
+			if(affected_by_spell(tar_ch, SPELL_BLESS) ||
+					(GET_POS(tar_ch) == POSITION_FIGHTING)) {
+				return;
+			}
 			spell_bless(level,ch,tar_ch,0);
 		}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in bless!");
+		mudlog(LOG_SYSERR, "Serious screw-up in bless!");
 		break;
 	}
 }
 
-void cast_infravision( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_infravision(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( IS_AFFECTED(tar_ch, AFF_INFRAVISION) ) {
+		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
 			send_to_char("Non succede nulla\n\r", ch);
 			return;
 		}
 		spell_infravision(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( IS_AFFECTED(ch, AFF_INFRAVISION) )
-		{ return; }
+		if(IS_AFFECTED(ch, AFF_INFRAVISION)) {
+			return;
+		}
 		spell_infravision(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
-		if ( IS_AFFECTED(tar_ch, AFF_INFRAVISION) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
+			return;
+		}
 		spell_infravision(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if ( IS_AFFECTED(tar_ch, AFF_INFRAVISION) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
+			return;
+		}
 		spell_infravision(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-				if (!(IS_AFFECTED(tar_ch, AFF_INFRAVISION)))
-				{ spell_infravision(level,ch,tar_ch,0); }
+			if(tar_ch != ch)
+				if(!(IS_AFFECTED(tar_ch, AFF_INFRAVISION))) {
+					spell_infravision(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in infravision!");
+		mudlog(LOG_SYSERR, "Serious screw-up in infravision!");
 		break;
 	}
 }
 
-void cast_true_seeing( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_true_seeing(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT) ) {
+		if(IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT)) {
 			send_to_char("Non succede nulla.\n\r", ch);
 			return;
 		}
 		spell_true_seeing(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( IS_AFFECTED(ch, AFF_TRUE_SIGHT) )
-		{ return; }
+		if(IS_AFFECTED(ch, AFF_TRUE_SIGHT)) {
+			return;
+		}
 		spell_true_seeing(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
-		if ( IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		if(IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT)) {
+			return;
+		}
 		spell_true_seeing(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if ( IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT)) {
+			return;
+		}
 		spell_true_seeing(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-				if (!(IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT)))
-				{ spell_true_seeing(level,ch,tar_ch,0); }
+			if(tar_ch != ch)
+				if(!(IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT))) {
+					spell_true_seeing(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in true_seeing!");
+		mudlog(LOG_SYSERR, "Serious screw-up in true_seeing!");
 		break;
 	}
 }
 
-void cast_blindness( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_blindness(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( IS_AFFECTED(tar_ch, AFF_BLIND) ) {
+		if(IS_AFFECTED(tar_ch, AFF_BLIND)) {
 			send_to_char("Non succede nulla.\n\r", ch);
 			return;
 		}
 		spell_blindness(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( IS_AFFECTED(ch, AFF_BLIND) )
-		{ return; }
+		if(IS_AFFECTED(ch, AFF_BLIND)) {
+			return;
+		}
 		spell_blindness(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
-		if ( IS_AFFECTED(tar_ch, AFF_BLIND) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		if(IS_AFFECTED(tar_ch, AFF_BLIND)) {
+			return;
+		}
 		spell_blindness(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
-		if ( IS_AFFECTED(tar_ch, AFF_BLIND) )
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		if(IS_AFFECTED(tar_ch, AFF_BLIND)) {
+			return;
+		}
 		spell_blindness(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(ch, tar_ch))
-				if (!(IS_AFFECTED(tar_ch, AFF_BLIND)))
-				{ spell_blindness(level,ch,tar_ch,0); }
+			if(!in_group(ch, tar_ch))
+				if(!(IS_AFFECTED(tar_ch, AFF_BLIND))) {
+					spell_blindness(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in blindness!");
+		mudlog(LOG_SYSERR, "Serious screw-up in blindness!");
 		break;
 	}
 }
 
-void cast_light( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_light(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_light(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_light(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_light(level,ch,ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in light!");
+		mudlog(LOG_SYSERR, "Serious screw-up in light!");
 		break;
 	}
 }
 
-void cast_cont_light( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_cont_light(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_cont_light(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_cont_light(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_cont_light(level,ch,ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in continual light!");
+		mudlog(LOG_SYSERR, "Serious screw-up in continual light!");
 		break;
 	}
 }
 
-void cast_calm( byte level, struct char_data* ch, const char* arg, int type,
-				struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_calm(byte level, struct char_data* ch, const char* arg, int type,
+			   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_calm(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_calm(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_calm(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people;
-				tar_ch; tar_ch = tar_ch->next_in_room)
-		{ spell_calm(level,ch,tar_ch,0); }
+		for(tar_ch = real_roomp(ch->in_room)->people;
+				tar_ch; tar_ch = tar_ch->next_in_room) {
+			spell_calm(level,ch,tar_ch,0);
+		}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in continual light!");
+		mudlog(LOG_SYSERR, "Serious screw-up in continual light!");
 		break;
 	}
 }
 
-void cast_web( byte level, struct char_data* ch, const char* arg, int type,
-			   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_web(byte level, struct char_data* ch, const char* arg, int type,
+			  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_web(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_web(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_web(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people;
+		for(tar_ch = real_roomp(ch->in_room)->people;
 				tar_ch; tar_ch = tar_ch->next_in_room)
-			if (!in_group(ch, tar_ch))
-			{ spell_web(level,ch,tar_ch,0); }
+			if(!in_group(ch, tar_ch)) {
+				spell_web(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in web!");
+		mudlog(LOG_SYSERR, "Serious screw-up in web!");
 		break;
 	}
 }
 
-void cast_clone( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_clone(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
 	send_to_char("Not *YET* implemented.", ch);
 	return;
 }
 
 
-void cast_control_weather( byte level,struct char_data* ch, const char* arg, int type,
-						   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_control_weather(byte level,struct char_data* ch, const char* arg, int type,
+						  struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buffer[MAX_STRING_LENGTH];
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 
 		one_argument(arg,buffer);
 
-		if( str_cmp( "migliore", buffer ) && str_cmp( "peggiore",buffer ) ) {
+		if(str_cmp("migliore", buffer) && str_cmp("peggiore",buffer)) {
 			send_to_char("Vuoi che diventi migliore o peggiore?\n\r",ch);
 			return;
 		}
-		if (!OUTSIDE(ch)) {
+		if(!OUTSIDE(ch)) {
 			send_to_char("Devi essere all'aperto.\n\r",ch);
 		}
 
 		if(!str_cmp("migliore",buffer)) {
-			if (weather_info.sky == SKY_CLOUDLESS)
-			{ return; }
-			if (weather_info.sky == SKY_CLOUDY) {
+			if(weather_info.sky == SKY_CLOUDLESS) {
+				return;
+			}
+			if(weather_info.sky == SKY_CLOUDY) {
 				send_to_outdoor("Le nuvole scompaiono.\n\r");
 				weather_info.sky = SKY_CLOUDLESS;
 			}
-			if (weather_info.sky == SKY_RAINING) {
-				if ((time_info.month>3)&&(time_info.month < 14))
-				{ send_to_outdoor("Smette di piovere.\n\r"); }
-				else
-				{ send_to_outdoor("Smette di nevicare. \n\r"); }
+			if(weather_info.sky == SKY_RAINING) {
+				if((time_info.month>3)&&(time_info.month < 14)) {
+					send_to_outdoor("Smette di piovere.\n\r");
+				}
+				else {
+					send_to_outdoor("Smette di nevicare. \n\r");
+				}
 				weather_info.sky=SKY_CLOUDY;
 			}
-			if (weather_info.sky == SKY_LIGHTNING) {
-				if ((time_info.month>3)&&(time_info.month<14))
-				{ send_to_outdoor("Non si vedono piu' fulmini, ma continua a piovere.\n\r"); }
-				else
-				{ send_to_outdoor("La tormenta e' finita, ma nevica ancora.\n\r"); }
+			if(weather_info.sky == SKY_LIGHTNING) {
+				if((time_info.month>3)&&(time_info.month<14)) {
+					send_to_outdoor("Non si vedono piu' fulmini, ma continua a piovere.\n\r");
+				}
+				else {
+					send_to_outdoor("La tormenta e' finita, ma nevica ancora.\n\r");
+				}
 				weather_info.sky=SKY_RAINING;
 			}
 			return;
 		}
 		else {
-			if (weather_info.sky == SKY_CLOUDLESS) {
+			if(weather_info.sky == SKY_CLOUDLESS) {
 				send_to_outdoor("Il cielo si sta annuvolando.\n\r");
 				weather_info.sky=SKY_CLOUDY;
 				return;
 			}
-			if (weather_info.sky == SKY_CLOUDY) {
-				if ((time_info.month > 3) && (time_info.month < 14))
-				{ send_to_outdoor("Inizia a piovere.\n\r"); }
-				else
-				{ send_to_outdoor("Inizia a nevicare. \n\r"); }
+			if(weather_info.sky == SKY_CLOUDY) {
+				if((time_info.month > 3) && (time_info.month < 14)) {
+					send_to_outdoor("Inizia a piovere.\n\r");
+				}
+				else {
+					send_to_outdoor("Inizia a nevicare. \n\r");
+				}
 				weather_info.sky=SKY_RAINING;
 			}
-			if (weather_info.sky == SKY_RAINING) {
-				if ((time_info.month>3)&&(time_info.month < 14))
-				{ send_to_outdoor("Sei nel mezzo di un temporale tremendo.\n\r"); }
-				else
-				{ send_to_outdoor("Sei nel mezzo di una tormenta. \n\r"); }
+			if(weather_info.sky == SKY_RAINING) {
+				if((time_info.month>3)&&(time_info.month < 14)) {
+					send_to_outdoor("Sei nel mezzo di un temporale tremendo.\n\r");
+				}
+				else {
+					send_to_outdoor("Sei nel mezzo di una tormenta. \n\r");
+				}
 				weather_info.sky=SKY_LIGHTNING;
 			}
-			if (weather_info.sky == SKY_LIGHTNING) {
+			if(weather_info.sky == SKY_LIGHTNING) {
 				return;
 			}
 
@@ -779,46 +868,48 @@ void cast_control_weather( byte level,struct char_data* ch, const char* arg, int
 		break;
 
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in control weather!");
+		mudlog(LOG_SYSERR, "Serious screw-up in control weather!");
 		break;
 	}
 }
 
 
 
-void cast_create_food( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_create_food(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		act("$n crea magicamente un fungo.",FALSE, ch, 0, 0, TO_ROOM);
 		spell_create_food(level,ch,0,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj)
-		{ return; }
-		if(tar_ch)
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
+		if(tar_ch) {
+			return;
+		}
 		spell_create_food(level,ch,0,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in create food!");
+		mudlog(LOG_SYSERR, "Serious screw-up in create food!");
 		break;
 	}
 }
 
-void cast_create_water( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_create_water(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (tar_obj->obj_flags.type_flag != ITEM_DRINKCON) {
+		if(tar_obj->obj_flags.type_flag != ITEM_DRINKCON) {
 			send_to_char("Non puo' contenere acqua.\n\r", ch);
 			return;
 		}
 		spell_create_water(level,ch,0,tar_obj);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in create water!");
+		mudlog(LOG_SYSERR, "Serious screw-up in create water!");
 		break;
 	}
 }
@@ -826,10 +917,10 @@ void cast_create_water( byte level, struct char_data* ch, const char* arg, int t
 
 
 
-void cast_water_breath( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_water_breath(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_water_breath(level,ch,tar_ch,0);
 		break;
@@ -840,18 +931,18 @@ void cast_water_breath( byte level, struct char_data* ch, const char* arg, int t
 		spell_water_breath(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in water breath");
+		mudlog(LOG_SYSERR, "Serious screw-up in water breath");
 		break;
 	}
 }
 
 
 
-void cast_flying( byte level, struct char_data* ch, const char* arg, int type,
-				  struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_flying(byte level, struct char_data* ch, const char* arg, int type,
+				 struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_fly(level,ch,tar_ch,0);
 		break;
@@ -863,16 +954,16 @@ void cast_flying( byte level, struct char_data* ch, const char* arg, int type,
 		break;
 
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in fly");
+		mudlog(LOG_SYSERR, "Serious screw-up in fly");
 		break;
 	}
 }
 
 
-void cast_fly_group( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_fly_group(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_STAFF:
@@ -882,31 +973,31 @@ void cast_fly_group( byte level, struct char_data* ch, const char* arg, int type
 		spell_fly(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in fly");
+		mudlog(LOG_SYSERR, "Serious screw-up in fly");
 		break;
 	}
 }
 
-void cast_heroes_feast( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_heroes_feast(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_STAFF:
 		spell_heroes_feast(level,ch,0,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in heroes feast");
+		mudlog(LOG_SYSERR, "Serious screw-up in heroes feast");
 		break;
 	}
 }
 
 
 
-void cast_cure_blind( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_cure_blind(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_cure_blind(level,ch,tar_ch,0);
 		break;
@@ -914,22 +1005,23 @@ void cast_cure_blind( byte level, struct char_data* ch, const char* arg, int typ
 		spell_cure_blind(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_cure_blind(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_cure_blind(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cure blind!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cure blind!");
 		break;
 	}
 }
 
 
 
-void cast_cure_critic( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_cure_critic(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_cure_critic(level,ch,tar_ch,0);
 		break;
@@ -940,17 +1032,20 @@ void cast_cure_critic( byte level, struct char_data* ch, const char* arg, int ty
 		spell_cure_critic(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_cure_critic(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_cure_critic(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_cure_critic(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cure critic!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cure critic!");
 		break;
 
 	}
@@ -958,9 +1053,9 @@ void cast_cure_critic( byte level, struct char_data* ch, const char* arg, int ty
 
 
 
-void cast_cure_light( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_cure_light(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_cure_light(level,ch,tar_ch,0);
 		break;
@@ -968,24 +1063,27 @@ void cast_cure_light( byte level, struct char_data* ch, const char* arg, int typ
 		spell_cure_light(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_cure_light(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_cure_light(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_cure_light(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cure light!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cure light!");
 		break;
 	}
 }
 
-void cast_cure_serious( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_cure_serious(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_cure_serious(level,ch,tar_ch,0);
 		break;
@@ -993,24 +1091,27 @@ void cast_cure_serious( byte level, struct char_data* ch, const char* arg, int t
 		spell_cure_serious(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_cure_serious(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_cure_serious(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_cure_serious(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cure serious!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cure serious!");
 		break;
 	}
 }
 
-void cast_refresh( byte level, struct char_data* ch, const char* arg, int type,
-				   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_refresh(byte level, struct char_data* ch, const char* arg, int type,
+				  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_refresh(level,ch,tar_ch,0);
 		break;
@@ -1018,24 +1119,27 @@ void cast_refresh( byte level, struct char_data* ch, const char* arg, int type,
 		spell_refresh(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_refresh(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_refresh(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_refresh(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in refresh!");
+		mudlog(LOG_SYSERR, "Serious screw-up in refresh!");
 		break;
 	}
 }
 
-void cast_second_wind( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_second_wind(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_second_wind(level,ch,tar_ch,0);
 		break;
@@ -1045,20 +1149,21 @@ void cast_second_wind( byte level, struct char_data* ch, const char* arg, int ty
 	case SPELL_TYPE_WAND:
 
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_second_wind(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_second_wind(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in second_wind!");
+		mudlog(LOG_SYSERR, "Serious screw-up in second_wind!");
 		break;
 	}
 }
 
-void cast_shield( byte level, struct char_data* ch, const char* arg, int type,
-				  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_shield(byte level, struct char_data* ch, const char* arg, int type,
+				 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_shield(level,ch,tar_ch,0);
 		break;
@@ -1066,29 +1171,33 @@ void cast_shield( byte level, struct char_data* ch, const char* arg, int type,
 		spell_shield(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_shield(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_shield(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_shield(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in shield!");
+		mudlog(LOG_SYSERR, "Serious screw-up in shield!");
 		break;
 	}
 
 }
 
 
-void cast_curse( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_curse(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (tar_obj)   /* It is an object */
-		{ spell_curse(level,ch,0,tar_obj); }
+		if(tar_obj) {  /* It is an object */
+			spell_curse(level,ch,0,tar_obj);
+		}
 		else {              /* Then it is a PC | NPC */
 			spell_curse(level,ch,tar_ch,0);
 		}
@@ -1097,127 +1206,140 @@ void cast_curse( byte level, struct char_data* ch, const char* arg, int type,
 		spell_curse(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj)   /* It is an object */
-		{ spell_curse(level,ch,0,tar_obj); }
+		if(tar_obj) {  /* It is an object */
+			spell_curse(level,ch,0,tar_obj);
+		}
 		else {              /* Then it is a PC | NPC */
-			if (!tar_ch) { tar_ch = ch; }
+			if(!tar_ch) {
+				tar_ch = ch;
+			}
 			spell_curse(level,ch,tar_ch,0);
 		}
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj)   /* It is an object */
-		{ spell_curse(level,ch,0,tar_obj); }
+		if(tar_obj) {  /* It is an object */
+			spell_curse(level,ch,0,tar_obj);
+		}
 		else {              /* Then it is a PC | NPC */
-			if (!tar_ch) { tar_ch = ch; }
+			if(!tar_ch) {
+				tar_ch = ch;
+			}
 			spell_curse(level,ch,tar_ch,0);
 		}
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_curse(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_curse(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR,"Serious screw up in curse! Char = %s.",
-				ch->player.name);
+		mudlog(LOG_SYSERR,"Serious screw up in curse! Char = %s.",
+			   ch->player.name);
 		break;
 	}
 }
 
 
-void cast_detect_evil( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_detect_evil(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( affected_by_spell(tar_ch, SPELL_DETECT_EVIL) ) {
+		if(affected_by_spell(tar_ch, SPELL_DETECT_EVIL)) {
 			send_to_char("Non succede nulla.\n\r", tar_ch);
 			return;
 		}
 		spell_detect_evil(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( affected_by_spell(ch, SPELL_DETECT_EVIL) )
-		{ return; }
+		if(affected_by_spell(ch, SPELL_DETECT_EVIL)) {
+			return;
+		}
 		spell_detect_evil(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-				if(!(IS_AFFECTED(tar_ch, AFF_DETECT_EVIL)))
-				{ spell_detect_evil(level,ch,tar_ch,0); }
+			if(tar_ch != ch)
+				if(!(IS_AFFECTED(tar_ch, AFF_DETECT_EVIL))) {
+					spell_detect_evil(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in detect evil!");
+		mudlog(LOG_SYSERR, "Serious screw-up in detect evil!");
 		break;
 	}
 }
 
 
 
-void cast_detect_invisibility( byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_detect_invisibility(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (IS_AFFECTED(tar_ch, AFF_DETECT_INVISIBLE)) {
+		if(IS_AFFECTED(tar_ch, AFF_DETECT_INVISIBLE)) {
 			send_to_char("Non succede nulla.\n\r", tar_ch);
 			return;
 		}
 		spell_detect_invisibility(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( IS_AFFECTED(ch, AFF_DETECT_INVISIBLE) )
-		{ return; }
+		if(IS_AFFECTED(ch, AFF_DETECT_INVISIBLE)) {
+			return;
+		}
 		spell_detect_invisibility(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (in_group(ch,tar_ch))
-				if (!(IS_AFFECTED(tar_ch, AFF_DETECT_INVISIBLE)))
-				{ spell_detect_invisibility(level,ch,tar_ch,0); }
+			if(in_group(ch,tar_ch))
+				if(!(IS_AFFECTED(tar_ch, AFF_DETECT_INVISIBLE))) {
+					spell_detect_invisibility(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in detect invisibility!");
+		mudlog(LOG_SYSERR, "Serious screw-up in detect invisibility!");
 		break;
 	}
 }
 
 
 
-void cast_detect_magic( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_detect_magic(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if ( affected_by_spell(tar_ch, SPELL_DETECT_MAGIC) ) {
+		if(affected_by_spell(tar_ch, SPELL_DETECT_MAGIC)) {
 			send_to_char("Non succede nulla.\n\r", tar_ch);
 			return;
 		}
 		spell_detect_magic(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if ( affected_by_spell(ch, SPELL_DETECT_MAGIC) )
-		{ return; }
+		if(affected_by_spell(ch, SPELL_DETECT_MAGIC)) {
+			return;
+		}
 		spell_detect_magic(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-				if (!(IS_AFFECTED(tar_ch, SPELL_DETECT_MAGIC)))
-				{ spell_detect_magic(level,ch,tar_ch,0); }
+			if(tar_ch != ch)
+				if(!(IS_AFFECTED(tar_ch, SPELL_DETECT_MAGIC))) {
+					spell_detect_magic(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in detect magic!");
+		mudlog(LOG_SYSERR, "Serious screw-up in detect magic!");
 		break;
 	}
 }
 
 
 
-void cast_detect_poison( byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_detect_poison(byte level, struct char_data* ch, const char* arg, int type,
+						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_detect_poison(level, ch, tar_ch,tar_obj);
 		break;
@@ -1225,24 +1347,26 @@ void cast_detect_poison( byte level, struct char_data* ch, const char* arg, int 
 		spell_detect_poison(level, ch, ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) {
+		if(tar_obj) {
 			spell_detect_poison(level, ch, 0, tar_obj);
 			return;
 		}
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_detect_poison(level, ch, tar_ch, 0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in detect poison!");
+		mudlog(LOG_SYSERR, "Serious screw-up in detect poison!");
 		break;
 	}
 }
 
 
 
-void cast_dispel_evil( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_dispel_evil(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_dispel_evil(level, ch, tar_ch,0);
 		break;
@@ -1250,29 +1374,36 @@ void cast_dispel_evil( byte level, struct char_data* ch, const char* arg, int ty
 		spell_dispel_evil(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_dispel_evil(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_dispel_evil(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_dispel_evil(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_dispel_evil(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in dispel evil!");
+		mudlog(LOG_SYSERR, "Serious screw-up in dispel evil!");
 		break;
 	}
 }
 
-void cast_dispel_good( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_dispel_good(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_dispel_good(level, ch, tar_ch, 0);
 		break;
@@ -1280,29 +1411,36 @@ void cast_dispel_good( byte level, struct char_data* ch, const char* arg, int ty
 		spell_dispel_good(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_dispel_good(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_dispel_good(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_dispel_good(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_dispel_good(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in dispel good!");
+		mudlog(LOG_SYSERR, "Serious screw-up in dispel good!");
 		break;
 	}
 }
 
-void cast_faerie_fire( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_faerie_fire(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_faerie_fire(level, ch, tar_ch, 0);
 		break;
@@ -1310,50 +1448,59 @@ void cast_faerie_fire( byte level, struct char_data* ch, const char* arg, int ty
 		spell_faerie_fire(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_faerie_fire(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_faerie_fire(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_faerie_fire(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_faerie_fire(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in dispel good!");
+		mudlog(LOG_SYSERR, "Serious screw-up in dispel good!");
 		break;
 	}
 }
 
 
 
-void cast_enchant_weapon( byte level, struct char_data* ch, const char* arg, int type,
-						  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_enchant_weapon(byte level, struct char_data* ch, const char* arg, int type,
+						 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_enchant_weapon(level, ch, 0,tar_obj);
 		break;
 
 	case SPELL_TYPE_SCROLL:
-		if(!tar_obj) { return; }
+		if(!tar_obj) {
+			return;
+		}
 		spell_enchant_weapon(level, ch, 0,tar_obj);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in enchant weapon!");
+		mudlog(LOG_SYSERR, "Serious screw-up in enchant weapon!");
 		break;
 	}
 }
 
 
 
-void cast_heal( byte level, struct char_data* ch, const char* arg, int type,
-				struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_heal(byte level, struct char_data* ch, const char* arg, int type,
+			   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		act("$n guarisce $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
 		act("Guarisci $N.", FALSE, ch, 0, tar_ch, TO_CHAR);
@@ -1363,70 +1510,83 @@ void cast_heal( byte level, struct char_data* ch, const char* arg, int type,
 		spell_heal(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_heal(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_heal(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in heal!");
+		mudlog(LOG_SYSERR, "Serious screw-up in heal!");
 		break;
 	}
 }
 
 
-void cast_invisibility( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_invisibility(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (tar_obj) {
-			if ( IS_SET(tar_obj->obj_flags.extra_flags, ITEM_INVISIBLE) )
-			{ send_to_char("Non succede nulla.\n\r", ch); }
-			else
-			{ spell_invisibility(level, ch, 0, tar_obj); }
+		if(tar_obj) {
+			if(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_INVISIBLE)) {
+				send_to_char("Non succede nulla.\n\r", ch);
+			}
+			else {
+				spell_invisibility(level, ch, 0, tar_obj);
+			}
 		}
 		else {   /* tar_ch */
-			if ( IS_AFFECTED(tar_ch, AFF_INVISIBLE) )
-			{ send_to_char("Non succede nulla.\n\r", ch); }
-			else
-			{ spell_invisibility(level, ch, tar_ch, 0); }
+			if(IS_AFFECTED(tar_ch, AFF_INVISIBLE)) {
+				send_to_char("Non succede nulla.\n\r", ch);
+			}
+			else {
+				spell_invisibility(level, ch, tar_ch, 0);
+			}
 		}
 		break;
 	case SPELL_TYPE_POTION:
-		if (!IS_AFFECTED(ch, AFF_INVISIBLE) )
-		{ spell_invisibility(level, ch, ch, 0); }
+		if(!IS_AFFECTED(ch, AFF_INVISIBLE)) {
+			spell_invisibility(level, ch, ch, 0);
+		}
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) {
-			if (!(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_INVISIBLE)) )
-			{ spell_invisibility(level, ch, 0, tar_obj); }
+		if(tar_obj) {
+			if(!(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_INVISIBLE))) {
+				spell_invisibility(level, ch, 0, tar_obj);
+			}
 		}
 		else {   /* tar_ch */
-			if (!tar_ch) { tar_ch = ch; }
+			if(!tar_ch) {
+				tar_ch = ch;
+			}
 
-			if (!( IS_AFFECTED(tar_ch, AFF_INVISIBLE)) )
-			{ spell_invisibility(level, ch, tar_ch, 0); }
+			if(!(IS_AFFECTED(tar_ch, AFF_INVISIBLE))) {
+				spell_invisibility(level, ch, tar_ch, 0);
+			}
 		}
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) {
-			if (!(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_INVISIBLE)) )
-			{ spell_invisibility(level, ch, 0, tar_obj); }
+		if(tar_obj) {
+			if(!(IS_SET(tar_obj->obj_flags.extra_flags, ITEM_INVISIBLE))) {
+				spell_invisibility(level, ch, 0, tar_obj);
+			}
 		}
 		else {   /* tar_ch */
-			if (!( IS_AFFECTED(tar_ch, AFF_INVISIBLE)) )
-			{ spell_invisibility(level, ch, tar_ch, 0); }
+			if(!(IS_AFFECTED(tar_ch, AFF_INVISIBLE))) {
+				spell_invisibility(level, ch, tar_ch, 0);
+			}
 		}
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-				if (!( IS_AFFECTED(tar_ch, AFF_INVISIBLE)) )
-				{ spell_invisibility(level,ch,tar_ch,0); }
+			if(tar_ch != ch)
+				if(!(IS_AFFECTED(tar_ch, AFF_INVISIBLE))) {
+					spell_invisibility(level,ch,tar_ch,0);
+				}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in invisibility!");
+		mudlog(LOG_SYSERR, "Serious screw-up in invisibility!");
 		break;
 	}
 }
@@ -1434,21 +1594,21 @@ void cast_invisibility( byte level, struct char_data* ch, const char* arg, int t
 
 
 
-void cast_locate_object( byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_locate_object(byte level, struct char_data* ch, const char* arg, int type,
+						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_locate_object(level, ch, NULL, tar_obj);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in locate object!");
+		mudlog(LOG_SYSERR, "Serious screw-up in locate object!");
 		break;
 	}
 }
 
 
-void cast_poison( byte level, struct char_data* ch, const char* arg, int type,struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_poison(byte level, struct char_data* ch, const char* arg, int type,struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_WAND:
 		spell_poison(level, ch, tar_ch, tar_obj);
@@ -1457,22 +1617,23 @@ void cast_poison( byte level, struct char_data* ch, const char* arg, int type,st
 		spell_poison(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room) {
-			if (tar_ch != ch)
-			{ spell_poison(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_poison(level,ch,tar_ch,0);
+			}
 		}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in poison!");
+		mudlog(LOG_SYSERR, "Serious screw-up in poison!");
 		break;
 	}
 }
 
 
-void cast_protection_from_evil( byte level, struct char_data* ch, const char* arg, int type,
-								struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_protection_from_evil(byte level, struct char_data* ch, const char* arg, int type,
+							   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_protection_from_evil(level, ch, tar_ch, 0);
 		break;
@@ -1480,25 +1641,30 @@ void cast_protection_from_evil( byte level, struct char_data* ch, const char* ar
 		spell_protection_from_evil(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if(!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_protection_from_evil(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_protection_from_evil(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_protection_from_evil(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in protection from evil!");
+		mudlog(LOG_SYSERR, "Serious screw-up in protection from evil!");
 		break;
 	}
 }
 
-void cast_protection_from_evil_group( byte level, struct char_data* ch, const char* arg, int type,
-									  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_protection_from_evil_group(byte level, struct char_data* ch, const char* arg, int type,
+									 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_protection_from_evil_group(level, ch, tar_ch, 0);
 		break;
@@ -1506,26 +1672,31 @@ void cast_protection_from_evil_group( byte level, struct char_data* ch, const ch
 		spell_protection_from_evil_group(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if(!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_protection_from_evil_group(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_protection_from_evil_group(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_protection_from_evil_group(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in protection from evil!");
+		mudlog(LOG_SYSERR, "Serious screw-up in protection from evil!");
 		break;
 	}
 }
 
 
-void cast_remove_curse( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_remove_curse(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_remove_curse(level, ch, tar_ch, tar_obj);
 		break;
@@ -1537,26 +1708,29 @@ void cast_remove_curse( byte level, struct char_data* ch, const char* arg, int t
 			spell_remove_curse(level, ch, 0, tar_obj);
 			return;
 		}
-		if(!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_remove_curse(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_remove_curse(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_remove_curse(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in remove curse!");
+		mudlog(LOG_SYSERR, "Serious screw-up in remove curse!");
 		break;
 	}
 }
 
 
 
-void cast_remove_poison( byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_remove_poison(byte level, struct char_data* ch, const char* arg, int type,
+						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_remove_poison(level, ch, tar_ch, tar_obj);
 		break;
@@ -1564,20 +1738,21 @@ void cast_remove_poison( byte level, struct char_data* ch, const char* arg, int 
 		spell_remove_poison(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_remove_poison(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_remove_poison(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in remove poison!");
+		mudlog(LOG_SYSERR, "Serious screw-up in remove poison!");
 		break;
 	}
 }
 
 
-void cast_remove_paralysis( byte level, struct char_data* ch, const char* arg, int type,  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_remove_paralysis(byte level, struct char_data* ch, const char* arg, int type,  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_remove_paralysis(level, ch, tar_ch, tar_obj);
 		break;
@@ -1585,17 +1760,20 @@ void cast_remove_paralysis( byte level, struct char_data* ch, const char* arg, i
 		spell_remove_paralysis(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_remove_paralysis(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_remove_paralysis(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_remove_paralysis(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in remove paralysis!");
+		mudlog(LOG_SYSERR, "Serious screw-up in remove paralysis!");
 		break;
 	}
 }
@@ -1603,9 +1781,9 @@ void cast_remove_paralysis( byte level, struct char_data* ch, const char* arg, i
 
 
 
-void cast_sanctuary( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_sanctuary(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_sanctuary(level, ch, tar_ch, 0);
 		break;
@@ -1615,26 +1793,30 @@ void cast_sanctuary( byte level, struct char_data* ch, const char* arg, int type
 		spell_sanctuary(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj)
-		{ return; }
-		if(!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_sanctuary(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_sanctuary(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_sanctuary(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in sanctuary!");
+		mudlog(LOG_SYSERR, "Serious screw-up in sanctuary!");
 		break;
 	}
 }
 
-void cast_fireshield( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_fireshield(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_fireshield(level, ch, tar_ch, 0);
 		break;
@@ -1644,27 +1826,31 @@ void cast_fireshield( byte level, struct char_data* ch, const char* arg, int typ
 		spell_fireshield(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj)
-		{ return; }
-		if(!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_fireshield(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_fireshield(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_fireshield(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in fireshield!");
+		mudlog(LOG_SYSERR, "Serious screw-up in fireshield!");
 		break;
 	}
 }
 
 
-void cast_sleep( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_sleep(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_sleep(level, ch, tar_ch, 0);
 		break;
@@ -1672,35 +1858,39 @@ void cast_sleep( byte level, struct char_data* ch, const char* arg, int type,
 		spell_sleep(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj)
-		{ return; }
-		if (!tar_ch)
-		{ tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_sleep(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if(tar_obj)
-		{ return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_sleep(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for( tar_ch = real_roomp(ch->in_room)->people;
-				tar_ch; tar_ch = tar_ch->next_in_room ) {
-			if( tar_ch != ch )
-			{ spell_sleep( level, ch, tar_ch, 0 ); }
+		for(tar_ch = real_roomp(ch->in_room)->people;
+				tar_ch; tar_ch = tar_ch->next_in_room) {
+			if(tar_ch != ch) {
+				spell_sleep(level, ch, tar_ch, 0);
+			}
 		}
 
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in sleep!");
+		mudlog(LOG_SYSERR, "Serious screw-up in sleep!");
 		break;
 	}
 }
 
 
-void cast_strength( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_strength(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_SPELL:
 		spell_strength(level, ch, tar_ch, 0);
@@ -1709,76 +1899,85 @@ void cast_strength( byte level, struct char_data* ch, const char* arg, int type,
 		spell_strength(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_strength(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_strength(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_strength(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in strength!");
+		mudlog(LOG_SYSERR, "Serious screw-up in strength!");
 		break;
 	}
 }
 
 
-void cast_ventriloquate( byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch,
-						 struct obj_data* tar_obj ) {
+void cast_ventriloquate(byte level, struct char_data* ch, const char* arg,
+						int type, struct char_data* tar_ch,
+						struct obj_data* tar_obj) {
 	struct char_data* tmp_ch;
 	char buf1[MAX_STRING_LENGTH];
 	char buf2[MAX_STRING_LENGTH];
 	char buf3[MAX_STRING_LENGTH];
 	char buf4[MAX_STRING_LENGTH];
 
-	if( type != SPELL_TYPE_SPELL ) {
-		mudlog( LOG_SYSERR, "Attempt to ventriloquate by non-cast-spell." );
+	if(type != SPELL_TYPE_SPELL) {
+		mudlog(LOG_SYSERR, "Attempt to ventriloquate by non-cast-spell.");
 		return;
 	}
 
 	for(; *arg && (*arg == ' '); arg++);
 
-	if( tar_obj ) {
-		sprintf( buf1, "$c0015[$c0005$p$c0015] dice '%s'", arg );
-		sprintf( buf2, "Qualcuno cerca di imitare $p che dice '%s'", arg );
-		sprintf( buf4, "Provi a far dire '%s' a $p.", arg );
+	if(tar_obj) {
+		sprintf(buf1, "$c0015[$c0005$p$c0015] dice '%s'", arg);
+		sprintf(buf2, "Qualcuno cerca di imitare $p che dice '%s'", arg);
+		sprintf(buf4, "Provi a far dire '%s' a $p.", arg);
 	}
 	else {
-		sprintf( buf1, "$c0015[$c0005$N$c0015] dice '%s'", arg );
-		sprintf( buf2, "Qualcuno cerca di imitare $N che dice '%s'", arg );
-		sprintf( buf4, "Provi a far dire '%s' a $N.", arg );
+		sprintf(buf1, "$c0015[$c0005$N$c0015] dice '%s'", arg);
+		sprintf(buf2, "Qualcuno cerca di imitare $N che dice '%s'", arg);
+		sprintf(buf4, "Provi a far dire '%s' a $N.", arg);
 	}
 
-	sprintf( buf3, "$c0015[$c0005qualcuno$c0015] dice '%s'", arg );
+	sprintf(buf3, "$c0015[$c0005qualcuno$c0015] dice '%s'", arg);
 
-	act( buf4, FALSE, ch, tar_obj, tar_ch, TO_CHAR );
+	act(buf4, FALSE, ch, tar_obj, tar_ch, TO_CHAR);
 
-	for( tmp_ch = real_roomp(ch->in_room)->people; tmp_ch;
+	for(tmp_ch = real_roomp(ch->in_room)->people; tmp_ch;
 			tmp_ch = tmp_ch->next_in_room) {
 
-		if( tmp_ch != ch && tmp_ch != tar_ch ) {
-			if (IS_IMMORTAL(ch)) // SALVO agli immortali entra sempre
-			{ act( buf1, FALSE, tmp_ch, tar_obj, tar_ch, TO_CHAR ); }
-			else if( saves_spell( tmp_ch, SAVING_SPELL ) )
-			{ act( buf2, FALSE, tmp_ch, tar_obj, tar_ch, TO_CHAR ); }
-			else
-			{ act( buf1, FALSE, tmp_ch, tar_obj, tar_ch, TO_CHAR ); }
+		if(tmp_ch != ch && tmp_ch != tar_ch) {
+			if(IS_IMMORTAL(ch)) { // SALVO agli immortali entra sempre
+				act(buf1, FALSE, tmp_ch, tar_obj, tar_ch, TO_CHAR);
+			}
+			else if(saves_spell(tmp_ch, SAVING_SPELL)) {
+				act(buf2, FALSE, tmp_ch, tar_obj, tar_ch, TO_CHAR);
+			}
+			else {
+				act(buf1, FALSE, tmp_ch, tar_obj, tar_ch, TO_CHAR);
+			}
 		}
 		else {
-			if( tmp_ch == tar_ch )
-			{ act( buf3, FALSE, tar_ch, NULL, NULL, TO_CHAR ); }
+			if(tmp_ch == tar_ch) {
+				act(buf3, FALSE, tar_ch, NULL, NULL, TO_CHAR);
+			}
 		}
 	}
 }
 
-void cast_word_of_recall( byte level, struct char_data* ch, const char* arg,int type,
-						  struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_word_of_recall(byte level, struct char_data* ch, const char* arg,int type,
+						 struct char_data* tar_ch, struct obj_data* tar_obj) {
 	struct char_data* tmp_ch;
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_word_of_recall(level, ch, ch, 0);
 		break;
@@ -1786,93 +1985,104 @@ void cast_word_of_recall( byte level, struct char_data* ch, const char* arg,int 
 		spell_word_of_recall(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		tar_ch = ch;
 		spell_word_of_recall(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if(tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_word_of_recall(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ; tar_ch ; tar_ch = tmp_ch) {
+		for(tar_ch = real_roomp(ch->in_room)->people ; tar_ch ; tar_ch = tmp_ch) {
 			tmp_ch = tar_ch->next_in_room;
-			if (tar_ch != ch)
-			{ spell_word_of_recall(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_word_of_recall(level,ch,tar_ch,0);
+			}
 		}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in word of recall!");
+		mudlog(LOG_SYSERR, "Serious screw-up in word of recall!");
 		break;
 	}
 }
 
 
 
-void cast_summon( byte level, struct char_data* ch, const char* arg, int type,
-				  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_summon(byte level, struct char_data* ch, const char* arg, int type,
+				 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 
 	case SPELL_TYPE_SPELL:
 		spell_summon(level, ch, tar_ch, 0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in summon!");
+		mudlog(LOG_SYSERR, "Serious screw-up in summon!");
 		break;
 	}
 }
 
 
 
-void cast_charm_person( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_charm_person(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_charm_person(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(!tar_ch) { return; }
+		if(!tar_ch) {
+			return;
+		}
 		spell_charm_person(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_charm_person(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_charm_person(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in charm person!");
+		mudlog(LOG_SYSERR, "Serious screw-up in charm person!");
 		break;
 	}
 }
 
-void cast_charm_monster( byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_charm_monster(byte level, struct char_data* ch, const char* arg, int type,
+						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_charm_monster(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(!tar_ch) { return; }
+		if(!tar_ch) {
+			return;
+		}
 		spell_charm_monster(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_charm_monster(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_charm_monster(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in charm monster!");
+		mudlog(LOG_SYSERR, "Serious screw-up in charm monster!");
 		break;
 	}
 }
 
 
 
-void cast_sense_life( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_sense_life(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_sense_life(level, ch, ch, 0);
 		break;
@@ -1880,21 +2090,22 @@ void cast_sense_life( byte level, struct char_data* ch, const char* arg, int typ
 		spell_sense_life(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_sense_life(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_sense_life(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in sense life!");
+		mudlog(LOG_SYSERR, "Serious screw-up in sense life!");
 		break;
 	}
 }
 
 
-void cast_identify( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_identify(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_identify(level, ch, tar_ch, tar_obj);
 		/*if (!IS_IMMORTAL(ch)) {
@@ -1908,7 +2119,7 @@ void cast_identify( byte level, struct char_data* ch, const char* arg, int type,
 		spell_identify(level, ch, tar_ch, tar_obj);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in identify!");
+		mudlog(LOG_SYSERR, "Serious screw-up in identify!");
 		break;
 	}
 }
@@ -1923,40 +2134,42 @@ struct pbreath breath_potions[] = {
 	{ 3972, {SPELL_FROST_BREATH, 0} },
 	{ 3973, {SPELL_ACID_BREATH, 0} },
 	{ 3974, {SPELL_LIGHTNING_BREATH, 0} },
-	{ 0 ,{0,0}},
+	{ 0,{0,0}},
 };
 
 void cast_dragon_breath(byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* potion ) {
+						struct char_data* tar_ch, struct obj_data* potion) {
 	struct pbreath*        scan;
 	int        i;
 	struct affected_type af;
 
-	if (!potion) { return; }
-
-	for( scan = breath_potions;
-			scan->vnum && ( potion->item_number < 0 ||
-							scan->vnum != obj_index[potion->item_number].iVNum );
-			scan++ )
-		;
-	if (scan->vnum==0) {
-		send_to_char("Hey, this potion isn't in my list!\n\r", ch);
-		mudlog( LOG_SYSERR, "unlisted breath potion %s %d",potion->short_description,
-				(potion->item_number >= 0 ?obj_index[potion->item_number].iVNum : 0) );
+	if(!potion) {
 		return;
 	}
 
-	for (i=0; i<MAX_BREATHS && scan->spell[i]; i++) {
-		if (!affected_by_spell(ch, scan->spell[i])) {
+	for(scan = breath_potions;
+			scan->vnum && (potion->item_number < 0 ||
+						   scan->vnum != obj_index[potion->item_number].iVNum);
+			scan++)
+		;
+	if(scan->vnum==0) {
+		send_to_char("Hey, this potion isn't in my list!\n\r", ch);
+		mudlog(LOG_SYSERR, "unlisted breath potion %s %d",potion->short_description,
+			   (potion->item_number >= 0 ?obj_index[potion->item_number].iVNum : 0));
+		return;
+	}
+
+	for(i=0; i<MAX_BREATHS && scan->spell[i]; i++) {
+		if(!affected_by_spell(ch, scan->spell[i])) {
 			af.type = scan->spell[i];
 			af.duration = 1+dice(1,2);
-			if (GET_CON(ch) < 4) {
+			if(GET_CON(ch) < 4) {
 				send_to_char("Hai lo stomaco troppo debole per sopportare questa pozione.\n\r", ch);
 				act("$n sputacchia la pozione per terra.",
 					FALSE, ch, 0,ch, TO_NOTVICT);
 				break;
 			}
-			if (level > MIN(GET_CON(ch)-1, GetMaxLevel(ch)) ) {
+			if(level > MIN(GET_CON(ch)-1, GetMaxLevel(ch))) {
 				send_to_char("!GACK! Sei troppo debole per sopportare tutta la potenza della pozione.\n\r", ch);
 				act("$n emette uno strano verso e cade per un attimo a terra.",
 					FALSE, ch, 0,ch, TO_NOTVICT);
@@ -1971,71 +2184,71 @@ void cast_dragon_breath(byte level, struct char_data* ch, const char* arg, int t
 	}
 }
 
-void cast_fire_breath( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_fire_breath(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_fire_breath(level, ch, tar_ch, 0);
 		break;   /* It's a spell.. But people can'c cast it! */
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in firebreath!");
+		mudlog(LOG_SYSERR, "Serious screw-up in firebreath!");
 		break;
 	}
 }
 
-void cast_frost_breath( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_frost_breath(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_frost_breath(level, ch, tar_ch, 0);
 		break;   /* It's a spell.. But people can'c cast it! */
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in frostbreath!");
+		mudlog(LOG_SYSERR, "Serious screw-up in frostbreath!");
 		break;
 	}
 }
 
-void cast_acid_breath( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_acid_breath(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_acid_breath(level, ch, tar_ch, 0);
 		break;   /* It's a spell.. But people can'c cast it! */
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in acidbreath!");
+		mudlog(LOG_SYSERR, "Serious screw-up in acidbreath!");
 		break;
 	}
 }
 
-void cast_gas_breath( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_gas_breath(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_gas_breath(level,ch,tar_ch,0);
 		break;
 	/* THIS ONE HURTS!! */
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in gasbreath!");
+		mudlog(LOG_SYSERR, "Serious screw-up in gasbreath!");
 		break;
 	}
 }
 
-void cast_lightning_breath( byte level, struct char_data* ch, const char* arg, int type,
-							struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_lightning_breath(byte level, struct char_data* ch, const char* arg, int type,
+						   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_lightning_breath(level, ch, tar_ch, 0);
 		break;   /* It's a spell.. But people can'c cast it! */
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in lightningbreath!");
+		mudlog(LOG_SYSERR, "Serious screw-up in lightningbreath!");
 		break;
 	}
 }
 
 
 
-void cast_knock( byte level, struct char_data* ch, const char* arg, int type,
-				 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_knock(byte level, struct char_data* ch, const char* arg, int type,
+				struct char_data* tar_ch, struct obj_data* tar_obj) {
 	int door;
 	char dir[MAX_INPUT_LENGTH];
 	char otype[MAX_INPUT_LENGTH];
@@ -2049,33 +2262,39 @@ void cast_knock( byte level, struct char_data* ch, const char* arg, int type,
 
 		argument_interpreter(arg, otype, dir);
 
-		if (!otype[0]) {
+		if(!otype[0]) {
 			send_to_char("Cosa vuoi aprire?\n\r",ch);
 			return;
 		}
 
-		if (generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim, &obj)) {
+		if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim, &obj)) {
 			send_to_char("Mi spiace.. questo incantesimo funziona solo sulle porte\n", ch);
 			return;
 		}
-		else if ((door = find_door(ch, otype, dir)) >= 0) {
-			if (!IS_SET(EXIT(ch, door)->exit_info, EX_ISDOOR))
-			{ send_to_char("E' assurdo!.\n\r", ch); }
-			else if (!IS_SET(EXIT(ch, door)->exit_info, EX_CLOSED))
-			{ send_to_char("Ti accorgi che era gia' aperta.\n\r", ch); }
-			else if (EXIT(ch, door)->key < 0)
-			{ send_to_char("Non trovi nessuna serratura da forzare.\n\r", ch); }
-			else if (!IS_SET(EXIT(ch, door)->exit_info, EX_LOCKED))
-			{ send_to_char("Oh.. non era chiusa a chiave dopotutto.\n\r", ch); }
-			else if (IS_SET(EXIT(ch, door)->exit_info, EX_PICKPROOF))
-			{ send_to_char("Non riuscirai ad aprirla...\n\r", ch); }
+		else if((door = find_door(ch, otype, dir)) >= 0) {
+			if(!IS_SET(EXIT(ch, door)->exit_info, EX_ISDOOR)) {
+				send_to_char("E' assurdo!.\n\r", ch);
+			}
+			else if(!IS_SET(EXIT(ch, door)->exit_info, EX_CLOSED)) {
+				send_to_char("Ti accorgi che era gia' aperta.\n\r", ch);
+			}
+			else if(EXIT(ch, door)->key < 0) {
+				send_to_char("Non trovi nessuna serratura da forzare.\n\r", ch);
+			}
+			else if(!IS_SET(EXIT(ch, door)->exit_info, EX_LOCKED)) {
+				send_to_char("Oh.. non era chiusa a chiave dopotutto.\n\r", ch);
+			}
+			else if(IS_SET(EXIT(ch, door)->exit_info, EX_PICKPROOF)) {
+				send_to_char("Non riuscirai ad aprirla...\n\r", ch);
+			}
 			else {
-				if ((EXIT(ch, door)->keyword) &&
+				if((EXIT(ch, door)->keyword) &&
 						strcmp("secret", fname(EXIT(ch, door)->keyword)))
 					act("$n apre magicamente la serratura di $F.", 0, ch, 0,
 						EXIT(ch, door)->keyword, TO_ROOM);
-				else
-				{ act("$n apre magicamente la serratura.", TRUE, ch, 0, 0, TO_ROOM); }
+				else {
+					act("$n apre magicamente la serratura.", TRUE, ch, 0, 0, TO_ROOM);
+				}
 				send_to_char("La serratura cede rapidamente al tuo incantesimo.\n\r", ch);
 				raw_unlock_door(ch, EXIT(ch, door), door);
 
@@ -2084,15 +2303,15 @@ void cast_knock( byte level, struct char_data* ch, const char* arg, int type,
 	}
 	break;
 	default:
-		mudlog( LOG_SYSERR, "serious error in Knock.");
+		mudlog(LOG_SYSERR, "serious error in Knock.");
 		break;
 	}
 }
 
 
 void cast_know_alignment(byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+						 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_know_alignment(level, ch, tar_ch,tar_obj);
 		break;
@@ -2100,18 +2319,20 @@ void cast_know_alignment(byte level, struct char_data* ch, const char* arg,
 		spell_know_alignment(level, ch, ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_know_alignment(level, ch, tar_ch, 0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in know alignment!");
+		mudlog(LOG_SYSERR, "Serious screw-up in know alignment!");
 		break;
 	}
 }
 
-void cast_weakness( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_weakness(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_SPELL:
 		spell_weakness(level, ch, tar_ch, 0);
@@ -2120,25 +2341,30 @@ void cast_weakness( byte level, struct char_data* ch, const char* arg, int type,
 		spell_weakness(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_weakness(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if( !in_group( tar_ch, ch ) )
-			{ spell_weakness(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch, ch)) {
+				spell_weakness(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in weakness!");
+		mudlog(LOG_SYSERR, "Serious screw-up in weakness!");
 		break;
 	}
 }
 
-void cast_dispel_magic( byte level, struct char_data* ch, const char* arg,
-						int type,struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_dispel_magic(byte level, struct char_data* ch, const char* arg,
+					   int type,struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_SPELL:
 		spell_dispel_magic(level, ch, tar_ch, tar_obj);
@@ -2147,41 +2373,46 @@ void cast_dispel_magic( byte level, struct char_data* ch, const char* arg,
 		spell_dispel_magic(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) {
+		if(tar_obj) {
 			spell_dispel_magic(level, ch, 0, tar_obj);
 			return;
 		}
-		if(!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_dispel_magic(level, ch, tar_ch, 0);
 		break;
 
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_dispel_magic(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_dispel_magic(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in dispel magic");
+		mudlog(LOG_SYSERR, "Serious screw-up in dispel magic");
 		break;
 	}
 }
 
 
-void cast_animate_dead( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animate_dead(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	struct obj_data* i;
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
 	switch(type) {
 
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (tar_obj) {
-			if (IS_CORPSE(tar_obj)) {
+		if(tar_obj) {
+			if(IS_CORPSE(tar_obj)) {
 				spell_animate_dead(level, ch, 0, tar_obj);
 			}
 			else {
@@ -2200,21 +2431,21 @@ void cast_animate_dead( byte level, struct char_data* ch, const char* arg, int t
 		alter_hit(ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (i = real_roomp(ch->in_room)->contents; i; i = i->next_content) {
-			if (GET_ITEM_TYPE(i)==ITEM_CONTAINER && i->obj_flags.value[3]) {
+		for(i = real_roomp(ch->in_room)->contents; i; i = i->next_content) {
+			if(GET_ITEM_TYPE(i)==ITEM_CONTAINER && i->obj_flags.value[3]) {
 				spell_animate_dead(level,ch,0,i);
 			}
 		}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in animate_dead!");
+		mudlog(LOG_SYSERR, "Serious screw-up in animate_dead!");
 		break;
 	}
 }
 
 
-void cast_succor( byte level, struct char_data* ch, const char* arg, int type,
-				  struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_succor(byte level, struct char_data* ch, const char* arg, int type,
+				 struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2224,10 +2455,10 @@ void cast_succor( byte level, struct char_data* ch, const char* arg, int type,
 	}
 }
 
-void cast_paralyze( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_paralyze(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_paralyze(level, ch, tar_ch, 0);
 		break;
@@ -2235,30 +2466,37 @@ void cast_paralyze( byte level, struct char_data* ch, const char* arg, int type,
 		spell_paralyze(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_paralyze(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if(tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_paralyze(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (tar_ch != ch)
-			{ spell_paralyze(level,ch,tar_ch,0); }
+			if(tar_ch != ch) {
+				spell_paralyze(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in paralyze");
+		mudlog(LOG_SYSERR, "Serious screw-up in paralyze");
 		break;
 	}
 }
 
-void cast_fear( byte level, struct char_data* ch, const char* arg, int type,
-				struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_fear(byte level, struct char_data* ch, const char* arg, int type,
+			   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_fear(level, ch, tar_ch, 0);
 		break;
@@ -2266,80 +2504,98 @@ void cast_fear( byte level, struct char_data* ch, const char* arg, int type,
 		spell_fear(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_fear(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_fear(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) )
-			{ spell_fear(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_fear(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in fear");
+		mudlog(LOG_SYSERR, "Serious screw-up in fear");
 		break;
 	}
 }
 
-void cast_turn( byte level, struct char_data* ch, const char* arg, int type,
-				struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_turn(byte level, struct char_data* ch, const char* arg, int type,
+			   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_turn(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_turn(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_turn(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) )
-			{ spell_turn(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_turn(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in turn");
+		mudlog(LOG_SYSERR, "Serious screw-up in turn");
 		break;
 	}
 }
 
-void cast_faerie_fog( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* victim, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_faerie_fog(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* victim, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_STAFF:
 	case SPELL_TYPE_SCROLL:
 		spell_faerie_fog(level, ch, 0, 0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in faerie fog!");
+		mudlog(LOG_SYSERR, "Serious screw-up in faerie fog!");
 		break;
 	}
 }
 
 
-void cast_poly_self( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_poly_self(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buffer[40];
 	int mobn = -1, X=LAST_POLY_MOB, found=FALSE;
 	struct char_data* mob;
 
 	one_argument(arg,buffer);
 
-	if (IS_NPC(ch)) {
+	if(IS_NPC(ch)) {
 		send_to_char("Naaaaaa... non lo vuoi realmente.\n\r",ch);
 		return;
 	}
@@ -2347,29 +2603,30 @@ void cast_poly_self( byte level, struct char_data* ch, const char* arg, int type
 	switch(type) {
 	case SPELL_TYPE_SPELL: {
 		while(!found) {
-			if (PolyList[X].level > level) {
+			if(PolyList[X].level > level) {
 				X--;
 			}
 			else {
-				if (!str_cmp(PolyList[X].name, buffer)) {
+				if(!str_cmp(PolyList[X].name, buffer)) {
 					mobn = PolyList[X].number;
 					found = TRUE;
 				}
 				else {
 					X--;
 				}
-				if (X < 0)
-				{ break; }
+				if(X < 0) {
+					break;
+				}
 			}
 		}
 
-		if( !found || mobn < 0 ) {
+		if(!found || mobn < 0) {
 			send_to_char("Non trovo nulla di simile\n\r", ch);
 			return;
 		}
 		else {
 			mob = read_mobile(mobn, VIRTUAL);
-			if (mob) {
+			if(mob) {
 				spell_poly_self(level, ch, mob, 0);
 			}
 			else {
@@ -2382,7 +2639,7 @@ void cast_poly_self( byte level, struct char_data* ch, const char* arg, int type
 	break;
 
 	default: {
-		mudlog( LOG_SYSERR, "Problem in poly_self");
+		mudlog(LOG_SYSERR, "Problem in poly_self");
 	}
 	break;
 	}
@@ -2398,29 +2655,29 @@ void cast_poly_self( byte level, struct char_data* ch, const char* arg, int type
 #define BREAD        3010
 
 void cast_minor_creation(byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+						 struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buffer[40];
 	int obj;
 	struct obj_data* o;
 
 	one_argument(arg,buffer);
 
-	if (!str_cmp(buffer, "spada")) {
+	if(!str_cmp(buffer, "spada")) {
 		obj = LONG_SWORD;
 	}
-	else if (!str_cmp(buffer, "scudo")) {
+	else if(!str_cmp(buffer, "scudo")) {
 		obj=SHIELD;
 	}
-	else if (!str_cmp(buffer, "zattera")) {
+	else if(!str_cmp(buffer, "zattera")) {
 		obj=RAFT;
 	}
-	else if (!str_cmp(buffer, "borsa")) {
+	else if(!str_cmp(buffer, "borsa")) {
 		obj=BAG;
 	}
-	else if (!str_cmp(buffer, "barile")) {
+	else if(!str_cmp(buffer, "barile")) {
 		obj=WATER_BARREL;
 	}
-	else if (!str_cmp(buffer, "pagnotta")) {
+	else if(!str_cmp(buffer, "pagnotta")) {
 		obj=BREAD;
 	}
 	else {
@@ -2429,7 +2686,7 @@ void cast_minor_creation(byte level, struct char_data* ch, const char* arg, int 
 	}
 
 	o = read_object(obj, VIRTUAL);
-	if (!o) {
+	if(!o) {
 		send_to_char("Non c'e' nulla di simile\n\r", ch);
 		return;
 	}
@@ -2440,7 +2697,7 @@ void cast_minor_creation(byte level, struct char_data* ch, const char* arg, int 
 		spell_minor_create(level, ch, 0, o);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in minor_create.");
+		mudlog(LOG_SYSERR, "serious screw-up in minor_create.");
 		break;
 	}
 
@@ -2456,8 +2713,8 @@ void cast_minor_creation(byte level, struct char_data* ch, const char* arg, int 
 #define GREY_STONE      5239
 #define CLEAR_STONE     5243
 
-void cast_conjure_elemental( byte level, struct char_data* ch, const char* arg, int type,
-							 struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_conjure_elemental(byte level, struct char_data* ch, const char* arg, int type,
+							struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buffer[40];
 	int mob, obj;
 	struct obj_data* sac;
@@ -2466,21 +2723,23 @@ void cast_conjure_elemental( byte level, struct char_data* ch, const char* arg, 
 
 	one_argument(arg,buffer);
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	if (!str_cmp(buffer, "fire")) {
+	if(!str_cmp(buffer, "fire")) {
 		mob = FIRE_ELEMENTAL;
 		obj = RED_STONE;
 	}
-	else if (!str_cmp(buffer, "water")) {
+	else if(!str_cmp(buffer, "water")) {
 		mob = WATER_ELEMENTAL;
 		obj = PALE_BLUE_STONE;
 	}
-	else if (!str_cmp(buffer, "air")) {
+	else if(!str_cmp(buffer, "air")) {
 		mob = AIR_ELEMENTAL;
 		obj = CLEAR_STONE;
 	}
-	else if (!str_cmp(buffer, "earth")) {
+	else if(!str_cmp(buffer, "earth")) {
 		mob = EARTH_ELEMENTAL;
 		obj = GREY_STONE;
 	}
@@ -2488,20 +2747,20 @@ void cast_conjure_elemental( byte level, struct char_data* ch, const char* arg, 
 		send_to_char("Non ci sono elementali di quel tipo disponibili\n\r", ch);
 		return;
 	}
-	if (!ch->equipment[HOLD]) {
+	if(!ch->equipment[HOLD]) {
 		send_to_char(" Devi avere in mano la pietra giusta\n\r", ch);
 		return;
 	}
 
 	sac = unequip_char(ch, HOLD);
-	if (sac) {
+	if(sac) {
 		obj_to_char(sac, ch);
-		if (ObjVnum(sac) != obj) {
+		if(ObjVnum(sac) != obj) {
 			send_to_char("Devi avere l'oggetto corretto per il sacrificio.\n\r", ch);
 			return;
 		}
 		el = read_mobile(mob, VIRTUAL);
-		if (!el) {
+		if(!el) {
 			send_to_char("Non ci sono elementali di quel tipo disponibili\n\r", ch);
 			return;
 		}
@@ -2517,7 +2776,7 @@ void cast_conjure_elemental( byte level, struct char_data* ch, const char* arg, 
 		spell_conjure_elemental(level, ch, el, sac);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in conjure_elemental.");
+		mudlog(LOG_SYSERR, "serious screw-up in conjure_elemental.");
 		break;
 	}
 
@@ -2537,8 +2796,8 @@ void cast_conjure_elemental( byte level, struct char_data* ch, const char* arg, 
 #define TYPE_II_ITEM     21014
 #define TYPE_I_ITEM      5105
 
-void cast_cacaodemon( byte level, struct char_data* ch, const char* arg, int type,
-					  struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_cacaodemon(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buffer[40];
 	int mob, obj;
 	struct obj_data* sac;
@@ -2548,29 +2807,31 @@ void cast_cacaodemon( byte level, struct char_data* ch, const char* arg, int typ
 	return;
 	one_argument(arg,buffer);
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	if (!str_cmp(buffer, "one")) {
+	if(!str_cmp(buffer, "one")) {
 		mob = DEMON_TYPE_I;
 		obj = TYPE_I_ITEM;
 	}
-	else if (!str_cmp(buffer, "two")) {
+	else if(!str_cmp(buffer, "two")) {
 		mob = DEMON_TYPE_II;
 		obj = TYPE_II_ITEM;
 	}
-	else if (!str_cmp(buffer, "three")) {
+	else if(!str_cmp(buffer, "three")) {
 		mob = DEMON_TYPE_III;
 		obj = TYPE_III_ITEM;
 	}
-	else if (!str_cmp(buffer, "four")) {
+	else if(!str_cmp(buffer, "four")) {
 		mob = DEMON_TYPE_IV;
 		obj = TYPE_IV_ITEM;
 	}
-	else if (!str_cmp(buffer, "five")) {
+	else if(!str_cmp(buffer, "five")) {
 		mob = DEMON_TYPE_V;
 		obj = TYPE_V_ITEM;
 	}
-	else if (!str_cmp(buffer, "six")) {
+	else if(!str_cmp(buffer, "six")) {
 		mob = DEMON_TYPE_VI;
 		obj = TYPE_VI_ITEM;
 	}
@@ -2579,23 +2840,25 @@ void cast_cacaodemon( byte level, struct char_data* ch, const char* arg, int typ
 		return;
 	}
 
-	if (!ch->equipment[WIELD] && !ch->equipment[HOLD]) {
+	if(!ch->equipment[WIELD] && !ch->equipment[HOLD]) {
 		send_to_char("You must wield or hold an item to offer the demon for its services.\n\r",ch);
 		return;
 	}
 
-	if (ch->equipment[WIELD]) {
-		if( ch->equipment[WIELD]->item_number >= 0 &&
-				obj_index[ch->equipment[WIELD]->item_number].iVNum == obj )
-		{ wielded = TRUE; }
+	if(ch->equipment[WIELD]) {
+		if(ch->equipment[WIELD]->item_number >= 0 &&
+				obj_index[ch->equipment[WIELD]->item_number].iVNum == obj) {
+			wielded = TRUE;
+		}
 	}
-	if (ch->equipment[HOLD]) {
-		if( ch->equipment[WIELD]->item_number >= 0 &&
-				obj_index[ch->equipment[HOLD]->item_number].iVNum == obj )
-		{ held = TRUE; }
+	if(ch->equipment[HOLD]) {
+		if(ch->equipment[WIELD]->item_number >= 0 &&
+				obj_index[ch->equipment[HOLD]->item_number].iVNum == obj) {
+			held = TRUE;
+		}
 	}
 
-	if (!wielded && !held) {
+	if(!wielded && !held) {
 		send_to_char("You do the spell perfectly, but no demon comes.\n\r", ch);
 		send_to_char("You realize that the demon was dissatisfied with your offering and\n\r",ch);
 		send_to_char("wants you to offer it something else.\n\r",ch);
@@ -2603,21 +2866,25 @@ void cast_cacaodemon( byte level, struct char_data* ch, const char* arg, int typ
 	}
 
 	sac = unequip_char(ch,(held ? HOLD : WIELD));
-	if ( (sac) && (GET_LEVEL(ch,CLERIC_LEVEL_IND) > 40) && IS_EVIL(ch)) {
-		if (sac->obj_flags.cost >= 200)
-		{ equip_char(ch,sac,(held ? HOLD : WIELD)); }
-		else
-		{ obj_to_char(sac, ch); }
+	if((sac) && (GET_LEVEL(ch,CLERIC_LEVEL_IND) > 40) && IS_EVIL(ch)) {
+		if(sac->obj_flags.cost >= 200) {
+			equip_char(ch,sac,(held ? HOLD : WIELD));
+		}
+		else {
+			obj_to_char(sac, ch);
+		}
 	}
-	else { obj_to_char(sac, ch); }
+	else {
+		obj_to_char(sac, ch);
+	}
 
-	if (sac) {
-		if (ObjVnum(sac) != obj) {
+	if(sac) {
+		if(ObjVnum(sac) != obj) {
 			send_to_char("Your offering must be an item that the demon values.\n\r", ch);
 			return;
 		}
 		el = read_mobile(mob, VIRTUAL);
-		if (!el) {
+		if(!el) {
 			send_to_char("You sense that all demons of that kind are in others' services...\n\r", ch);
 			return;
 		}
@@ -2633,18 +2900,20 @@ void cast_cacaodemon( byte level, struct char_data* ch, const char* arg, int typ
 		spell_cacaodemon(level, ch, el, sac);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in cacaodemon.");
+		mudlog(LOG_SYSERR, "serious screw-up in cacaodemon.");
 		break;
 	}
 
 }
 
 
-void cast_mon_sum1( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (NoSummon(ch)) { return; }
+void cast_mon_sum1(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2652,16 +2921,18 @@ void cast_mon_sum1( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(5, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
-void cast_mon_sum2( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (NoSummon(ch)) { return; }
+void cast_mon_sum2(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2669,16 +2940,18 @@ void cast_mon_sum2( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(7, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
-void cast_mon_sum3( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (NoSummon(ch)) { return; }
+void cast_mon_sum3(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2686,16 +2959,18 @@ void cast_mon_sum3( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(9, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
-void cast_mon_sum4( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (NoSummon(ch)) { return; }
+void cast_mon_sum4(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2703,16 +2978,18 @@ void cast_mon_sum4( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(11, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
-void cast_mon_sum5( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (NoSummon(ch)) { return; }
+void cast_mon_sum5(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2720,16 +2997,18 @@ void cast_mon_sum5( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(13, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
-void cast_mon_sum6( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (NoSummon(ch)) { return; }
+void cast_mon_sum6(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2737,17 +3016,19 @@ void cast_mon_sum6( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(15, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
-void cast_mon_sum7( byte level, struct char_data* ch, const char* arg, int type,
-					struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_mon_sum7(byte level, struct char_data* ch, const char* arg, int type,
+				   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -2755,14 +3036,14 @@ void cast_mon_sum7( byte level, struct char_data* ch, const char* arg, int type,
 		spell_Create_Monster(17, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in monster_summoning_1");
+		mudlog(LOG_SYSERR, "Serious screw-up in monster_summoning_1");
 		break;
 	}
 }
 
 
-void cast_tree_travel( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_tree_travel(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2772,16 +3053,17 @@ void cast_tree_travel( byte level, struct char_data* ch, const char* arg, int ty
 		spell_tree_travel(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in tree travel");
+		mudlog(LOG_SYSERR, "Serious screw-up in tree travel");
 		break;
 	}
 }
 
-void cast_speak_with_plants( byte level, struct char_data* ch, const char* arg,
-							 int type,  struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_speak_with_plants(byte level, struct char_data* ch, const char* arg,
+							int type,  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (!tar_obj)
-	{ return; }
+	if(!tar_obj) {
+		return;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2790,15 +3072,16 @@ void cast_speak_with_plants( byte level, struct char_data* ch, const char* arg,
 		spell_speak_with_plants(level, ch, 0, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in speak_with_plants");
+		mudlog(LOG_SYSERR, "Serious screw-up in speak_with_plants");
 		break;
 	}
 }
 
-void cast_transport_via_plant( byte level, struct char_data* ch, const char* arg,
-							   int type,  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (!tar_obj)
-	{ return; }
+void cast_transport_via_plant(byte level, struct char_data* ch, const char* arg,
+							  int type,  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(!tar_obj) {
+		return;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2806,104 +3089,128 @@ void cast_transport_via_plant( byte level, struct char_data* ch, const char* arg
 		spell_transport_via_plant(level, ch, 0, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in transport_via_plant");
+		mudlog(LOG_SYSERR, "Serious screw-up in transport_via_plant");
 		break;
 	}
 }
 
-void cast_haste( byte level, struct char_data* ch, const char* arg,
-				 int type,  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-
-	switch (type) {
-	case SPELL_TYPE_SPELL:
-		spell_haste(level, ch, tar_ch, 0);
-		break;
-	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
-		spell_haste(level, ch, tar_ch, 0);
-		break;
-	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
-		spell_haste(level, ch, tar_ch, 0);
-		break;
-	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) )
-			{ spell_haste(level,ch,tar_ch,0); }
-		break;
-	case SPELL_TYPE_POTION:
-		spell_haste(level, ch, tar_ch, 0);
-		break;
-	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in haste");
-		break;
-	}
-}
-
-
-void cast_slow( byte level, struct char_data* ch, const char* arg,
-				int type,  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
-	case SPELL_TYPE_SPELL:
-		spell_slow(level, ch, tar_ch, 0);
-		break;
-	case SPELL_TYPE_SCROLL:
-		if(tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
-		spell_slow(level, ch, tar_ch, 0);
-		break;
-	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
-		if (!tar_ch) { tar_ch = ch; }
-		spell_slow(level, ch, tar_ch, 0);
-		break;
-	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) )
-			{ spell_slow(level,ch,tar_ch,0); }
-		break;
-	case SPELL_TYPE_POTION:
-		spell_slow(level, ch, tar_ch, 0);
-		break;
-	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in slow");
-		break;
-	}
-}
-
-void cast_reincarnate( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_haste(byte level, struct char_data* ch, const char* arg,
+				int type,  struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if (!tar_obj) { return; }
+		spell_haste(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_SCROLL:
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_haste(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_WAND:
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_haste(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_STAFF:
+		for(tar_ch = real_roomp(ch->in_room)->people ;
+				tar_ch ; tar_ch = tar_ch->next_in_room)
+			if(!in_group(tar_ch,ch)) {
+				spell_haste(level,ch,tar_ch,0);
+			}
+		break;
+	case SPELL_TYPE_POTION:
+		spell_haste(level, ch, tar_ch, 0);
+		break;
+	default :
+		mudlog(LOG_SYSERR, "Serious screw-up in haste");
+		break;
+	}
+}
+
+
+void cast_slow(byte level, struct char_data* ch, const char* arg,
+			   int type,  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		spell_slow(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_SCROLL:
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_slow(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_WAND:
+		if(tar_obj) {
+			return;
+		}
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_slow(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_STAFF:
+		for(tar_ch = real_roomp(ch->in_room)->people ;
+				tar_ch ; tar_ch = tar_ch->next_in_room)
+			if(!in_group(tar_ch,ch)) {
+				spell_slow(level,ch,tar_ch,0);
+			}
+		break;
+	case SPELL_TYPE_POTION:
+		spell_slow(level, ch, tar_ch, 0);
+		break;
+	default :
+		mudlog(LOG_SYSERR, "Serious screw-up in slow");
+		break;
+	}
+}
+
+void cast_reincarnate(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		if(!tar_obj) {
+			return;
+		}
 		spell_reincarnate(level, ch, 0, tar_obj);
 		break;
 	case SPELL_TYPE_STAFF:
-		if (!tar_obj) { return; }
+		if(!tar_obj) {
+			return;
+		}
 		spell_reincarnate(level, ch, 0, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious problem in 'reincarnate'");
+		mudlog(LOG_SYSERR, "Serious problem in 'reincarnate'");
 		break;
 	}
 
 }
 
 
-void cast_changestaff( byte level, struct char_data* ch, const char* arg,
-					   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_changestaff(byte level, struct char_data* ch, const char* arg,
+					  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buffer[40];
 
 	one_argument(arg,buffer);
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	if (!ch->equipment[HOLD]) {
+	if(!ch->equipment[HOLD]) {
 		send_to_char(" Devi tenere in mano un bastone!\n\r", ch);
 		return;
 	}
@@ -2915,7 +3222,7 @@ void cast_changestaff( byte level, struct char_data* ch, const char* arg,
 		spell_changestaff(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in changestaff.");
+		mudlog(LOG_SYSERR, "serious screw-up in changestaff.");
 		break;
 	}
 
@@ -2923,26 +3230,30 @@ void cast_changestaff( byte level, struct char_data* ch, const char* arg,
 
 
 
-void cast_pword_kill( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_pword_kill(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (!tar_ch) { tar_ch = ch; }
+	if(!tar_ch) {
+		tar_ch = ch;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 		spell_pword_kill(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in pword_kill.");
+		mudlog(LOG_SYSERR, "serious screw-up in pword_kill.");
 		break;
 	}
 
 }
 
-void cast_pword_blind( byte level, struct char_data* ch, const char* arg,
-					   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_pword_blind(byte level, struct char_data* ch, const char* arg,
+					  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (!tar_ch) { tar_ch = ch; }
+	if(!tar_ch) {
+		tar_ch = ch;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2950,16 +3261,18 @@ void cast_pword_blind( byte level, struct char_data* ch, const char* arg,
 		spell_pword_blind(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in pword_blind.");
+		mudlog(LOG_SYSERR, "serious screw-up in pword_blind.");
 		break;
 	}
 }
 
 
-void cast_chain_lightn( byte level, struct char_data* ch, const char* arg,
-						int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_chain_lightn(byte level, struct char_data* ch, const char* arg,
+					   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (!tar_ch) { tar_ch = ch; }
+	if(!tar_ch) {
+		tar_ch = ch;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2969,15 +3282,17 @@ void cast_chain_lightn( byte level, struct char_data* ch, const char* arg,
 		spell_chain_lightn(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in chain lightn.");
+		mudlog(LOG_SYSERR, "serious screw-up in chain lightn.");
 		break;
 	}
 }
 
-void cast_scare( byte level, struct char_data* ch, const char* arg,
-				 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_scare(byte level, struct char_data* ch, const char* arg,
+				int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (!tar_ch) { tar_ch = ch; }
+	if(!tar_ch) {
+		tar_ch = ch;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -2987,22 +3302,24 @@ void cast_scare( byte level, struct char_data* ch, const char* arg,
 		spell_scare(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in scare.");
+		mudlog(LOG_SYSERR, "serious screw-up in scare.");
 		break;
 	}
 }
 
-void cast_familiar( byte level, struct char_data* ch, const char* arg,
-					int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_familiar(byte level, struct char_data* ch, const char* arg,
+				   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	char buf[128];
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_familiar(level, ch, &tar_ch, 0);
 
-		if (tar_ch) {
+		if(tar_ch) {
 			sprintf(buf, "%s %s", GET_NAME(tar_ch), fname(arg));
 			free(GET_NAME(tar_ch));
 			GET_NAME(tar_ch) = (char*)malloc(strlen(buf)+1);
@@ -3010,14 +3327,16 @@ void cast_familiar( byte level, struct char_data* ch, const char* arg,
 		}
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in familiar.");
+		mudlog(LOG_SYSERR, "serious screw-up in familiar.");
 		break;
 	}
 }
 
-void cast_aid( byte level, struct char_data* ch, const char* arg,
-			   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	if (!tar_ch) { tar_ch = ch; }
+void cast_aid(byte level, struct char_data* ch, const char* arg,
+			  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(!tar_ch) {
+		tar_ch = ch;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3027,14 +3346,14 @@ void cast_aid( byte level, struct char_data* ch, const char* arg,
 		spell_aid(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in scare.");
+		mudlog(LOG_SYSERR, "serious screw-up in scare.");
 		break;
 	}
 }
 
 
-void cast_holyword( byte level, struct char_data* ch, const char* arg,
-					int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_holyword(byte level, struct char_data* ch, const char* arg,
+				   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3042,12 +3361,12 @@ void cast_holyword( byte level, struct char_data* ch, const char* arg,
 		spell_holyword(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in holy word.");
+		mudlog(LOG_SYSERR, "serious screw-up in holy word.");
 		break;
 	}
 }
-void cast_unholyword( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_unholyword(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3055,16 +3374,18 @@ void cast_unholyword( byte level, struct char_data* ch, const char* arg,
 		spell_holyword(-level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in unholy word.");
+		mudlog(LOG_SYSERR, "serious screw-up in unholy word.");
 		break;
 	}
 }
 
 
-void cast_golem( byte level, struct char_data* ch, const char* arg,
-				 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_golem(byte level, struct char_data* ch, const char* arg,
+				int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3072,14 +3393,14 @@ void cast_golem( byte level, struct char_data* ch, const char* arg,
 		spell_golem(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in golem.");
+		mudlog(LOG_SYSERR, "serious screw-up in golem.");
 		break;
 	}
 }
 
 
-void cast_command( byte level, struct char_data* ch, const char* arg,
-				   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_command(byte level, struct char_data* ch, const char* arg,
+				  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	const char* p;
 	char buf[128];
 	/* have to parse the argument to get the command */
@@ -3090,19 +3411,19 @@ void cast_command( byte level, struct char_data* ch, const char* arg,
 	case SPELL_TYPE_SCROLL:
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in command.");
+		mudlog(LOG_SYSERR, "serious screw-up in command.");
 		return;
 		break;
 	}
 
 	for(; *arg==' '; arg++);
 
-	if (arg && *arg) {
+	if(arg && *arg) {
 		p = fname(arg);
 
-		if( ( GetMaxLevel( tar_ch ) < 6 && GET_INT(tar_ch) < 13 ) ||
-				!saves_spell( tar_ch, SAVING_PARA ) ) {
-			if (strcmp(p, "quit")) {
+		if((GetMaxLevel(tar_ch) < 6 && GET_INT(tar_ch) < 13) ||
+				!saves_spell(tar_ch, SAVING_PARA)) {
+			if(strcmp(p, "quit")) {
 				sprintf(buf, "$n ti ordina '%s'.", p);
 				act(buf, FALSE, ch, 0, tar_ch, TO_VICT);
 				send_to_char("Ok.\n\r", ch);
@@ -3114,18 +3435,20 @@ void cast_command( byte level, struct char_data* ch, const char* arg,
 		sprintf(buf, "$n ha cercato di ordinarti '%s'.", p);
 		act(buf, FALSE, ch, 0, tar_ch, TO_VICT);
 
-		if (!IS_PC(tar_ch))
-		{ hit(tar_ch, ch, TYPE_UNDEFINED); }
+		if(!IS_PC(tar_ch)) {
+			hit(tar_ch, ch, TYPE_UNDEFINED);
+		}
 
 	}
-	else
-	{ return; }
+	else {
+		return;
+	}
 
 }
 
-void cast_change_form( byte level, struct char_data* ch, const char* arg,
-					   int type, struct char_data* tar_ch,
-					   struct obj_data* tar_obj ) {
+void cast_change_form(byte level, struct char_data* ch, const char* arg,
+					  int type, struct char_data* tar_ch,
+					  struct obj_data* tar_obj) {
 	char buffer[40];
 	int mobn = -1, X=LAST_DRUID_MOB, found=FALSE;
 	struct char_data* mob;
@@ -3135,12 +3458,12 @@ void cast_change_form( byte level, struct char_data* ch, const char* arg,
 
 	one_argument(arg,buffer);
 
-	if (IS_NPC(ch)) {
+	if(IS_NPC(ch)) {
 		send_to_char("Non lo vuoi fare realmente.\n\r",ch);
 		return;
 	}
 
-	if (affected_by_spell(ch, SPELL_CHANGE_FORM)) {
+	if(affected_by_spell(ch, SPELL_CHANGE_FORM)) {
 		send_to_char("Puoi cambiare forma solo una volta ogni 12 ore\n\r", ch);
 		return;
 	}
@@ -3148,24 +3471,25 @@ void cast_change_form( byte level, struct char_data* ch, const char* arg,
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 
-		while (!found) {
-			if (DruidList[X].level > level) {
+		while(!found) {
+			if(DruidList[X].level > level) {
 				X--;
 			}
 			else {
-				if (!str_cmp(DruidList[X].name, buffer)) {
+				if(!str_cmp(DruidList[X].name, buffer)) {
 					mobn = DruidList[X].number;
 					found = TRUE;
 				}
 				else {
 					X--;
 				}
-				if (X < 0)
-				{ break; }
+				if(X < 0) {
+					break;
+				}
 			}
 		}
 
-		if( !found || mobn < 0 ) {
+		if(!found || mobn < 0) {
 			send_to_char("Non c'e' nulla di simile\n\r", ch);
 			return;
 		}
@@ -3179,32 +3503,33 @@ void cast_change_form( byte level, struct char_data* ch, const char* arg,
 
 
 			/* ACIDUS test shock da change_form di liv 50-51 */
-			if (DruidList[X].level >= 50) {
-				if (check_peaceful(ch, "")) {
+			if(DruidList[X].level >= 50) {
+				if(check_peaceful(ch, "")) {
 					send_to_char("Qui non sei sufficientemente in contatto con la forma animale che cerchi di raggiungere.\n\r", ch);
 					return;
 				}
 
-				if ( number(1,10) == 1 ) {
-					act( "Alteri completamente la tua forma, la personalita' della forma animale prende il sopravvento, la tua anima abbandona il corpo!", TRUE, ch, NULL, ch,
-						 TO_CHAR );
-					act( "$n altera completamente la sua forma, la personalita' della forma animale prende il sopravvento, la sua anima abbandona il corpo!", TRUE, ch, NULL, ch,
-						 TO_NOTVICT );
+				if(number(1,10) == 1) {
+					act("Alteri completamente la tua forma, la personalita' della forma animale prende il sopravvento, la tua anima abbandona il corpo!", TRUE, ch, NULL, ch,
+						TO_CHAR);
+					act("$n altera completamente la sua forma, la personalita' della forma animale prende il sopravvento, la sua anima abbandona il corpo!", TRUE, ch, NULL, ch,
+						TO_NOTVICT);
 					affect_to_char(ch, &af);
 
 					pRoom = (ch->in_room);
 
 					damage(ch, ch, GET_MAX_HIT(ch)*12, SPELL_CHANGE_FORM, 5);
 
-					if ( (mob = read_mobile( real_mobile(mobn), REAL )) )
-					{ char_to_room( mob, pRoom ); }
+					if((mob = read_mobile(real_mobile(mobn), REAL))) {
+						char_to_room(mob, pRoom);
+					}
 					return;
 				}
 			}
 			/* fine shock */
 
 			mob = read_mobile(mobn, VIRTUAL);
-			if (mob) {
+			if(mob) {
 				affect_to_char(ch, &af);
 
 				spell_poly_self(level, ch, mob, 0);
@@ -3218,14 +3543,14 @@ void cast_change_form( byte level, struct char_data* ch, const char* arg,
 		break;
 
 	default:
-		mudlog( LOG_SYSERR, "Problem in change form");
+		mudlog(LOG_SYSERR, "Problem in change form");
 		break;
 	}
 
 }
 
-void cast_shillelagh( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_shillelagh(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3233,14 +3558,14 @@ void cast_shillelagh( byte level, struct char_data* ch, const char* arg,
 		spell_shillelagh(level, ch, ch, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in shillelagh.");
+		mudlog(LOG_SYSERR, "serious screw-up in shillelagh.");
 		break;
 	}
 }
 
-void cast_goodberry( byte level, struct char_data* ch, const char* arg,
-					 int type, struct char_data* tar_ch,
-					 struct obj_data* tar_obj ) {
+void cast_goodberry(byte level, struct char_data* ch, const char* arg,
+					int type, struct char_data* tar_ch,
+					struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3248,15 +3573,15 @@ void cast_goodberry( byte level, struct char_data* ch, const char* arg,
 		spell_goodberry(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in goodberry.");
+		mudlog(LOG_SYSERR, "serious screw-up in goodberry.");
 		break;
 	}
 }
 
 
-void cast_elemental_blade( byte level, struct char_data* ch, const char* arg,
-						   int type, struct char_data* tar_ch,
-						   struct obj_data* tar_obj ) {
+void cast_elemental_blade(byte level, struct char_data* ch, const char* arg,
+						  int type, struct char_data* tar_ch,
+						  struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3264,13 +3589,13 @@ void cast_elemental_blade( byte level, struct char_data* ch, const char* arg,
 		spell_elemental_blade(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in flame blade.");
+		mudlog(LOG_SYSERR, "serious screw-up in flame blade.");
 		break;
 	}
 }
 
-void cast_animal_growth( byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animal_growth(byte level, struct char_data* ch, const char* arg,
+						int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3279,13 +3604,13 @@ void cast_animal_growth( byte level, struct char_data* ch, const char* arg,
 		spell_animal_growth(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in animal_growth.");
+		mudlog(LOG_SYSERR, "serious screw-up in animal_growth.");
 		break;
 	}
 }
 
-void cast_insect_growth( byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_insect_growth(byte level, struct char_data* ch, const char* arg,
+						int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_POTION:
@@ -3295,15 +3620,15 @@ void cast_insect_growth( byte level, struct char_data* ch, const char* arg,
 		spell_insect_growth(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in insect_growth.");
+		mudlog(LOG_SYSERR, "serious screw-up in insect_growth.");
 		break;
 	}
 }
 
 
 
-void cast_creeping_death( byte level, struct char_data* ch, const char* arg,
-						  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_creeping_death(byte level, struct char_data* ch, const char* arg,
+						 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	const char* p;
 	int i;
 
@@ -3313,18 +3638,18 @@ void cast_creeping_death( byte level, struct char_data* ch, const char* arg,
 	case SPELL_TYPE_SCROLL:
 
 		/* get the argument, parse it into a direction */
-		for (; *arg==' '; arg++);
-		if (!*arg) {
+		for(; *arg==' '; arg++);
+		if(!*arg) {
 			send_to_char("devi indicare una direzione!\n\r", ch);
 			return;
 		}
 		p = fname(arg);
-		for (i=0; i<6; i++) {
-			if (strncmp(p,dirs[i],strlen(p))==0) {
+		for(i=0; i<6; i++) {
+			if(strncmp(p,dirs[i],strlen(p))==0) {
 				i++;
 				break;
 			}
-			if (i == 6) {
+			if(i == 6) {
 				send_to_char("devi indicare una direzione!\n\r", ch);
 				return;
 			}
@@ -3333,45 +3658,47 @@ void cast_creeping_death( byte level, struct char_data* ch, const char* arg,
 		spell_creeping_death(level, ch, 0, i);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in creeping_death.");
+		mudlog(LOG_SYSERR, "serious screw-up in creeping_death.");
 		break;
 	}
 }
 
-void cast_commune( byte level, struct char_data* ch, const char* arg,
-				   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_commune(byte level, struct char_data* ch, const char* arg,
+				  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		   /* no break */
+	/* no break */
 	case SPELL_TYPE_SCROLL:
 		spell_commune(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in commune.");
+		mudlog(LOG_SYSERR, "serious screw-up in commune.");
 		break;
 	}
 }
 
-void cast_feeblemind( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_feeblemind(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_POTION:
 		spell_feeblemind(level, ch, ch, 0);
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_feeblemind(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in feeblemind.");
+		mudlog(LOG_SYSERR, "serious screw-up in feeblemind.");
 		break;
 	}
 }
 
 
-void cast_animal_summon_1( byte level, struct char_data* ch, const char* arg,
-						   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animal_summon_1(byte level, struct char_data* ch, const char* arg,
+						  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_POTION:
 	case SPELL_TYPE_SPELL:
@@ -3381,13 +3708,13 @@ void cast_animal_summon_1( byte level, struct char_data* ch, const char* arg,
 		spell_animal_summon(1, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in animal summon.");
+		mudlog(LOG_SYSERR, "serious screw-up in animal summon.");
 		break;
 	}
 }
 
-void cast_animal_summon_2( byte level, struct char_data* ch, const char* arg,
-						   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animal_summon_2(byte level, struct char_data* ch, const char* arg,
+						  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_POTION:
 	case SPELL_TYPE_SPELL:
@@ -3397,13 +3724,13 @@ void cast_animal_summon_2( byte level, struct char_data* ch, const char* arg,
 		spell_animal_summon(2, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in animal summon.");
+		mudlog(LOG_SYSERR, "serious screw-up in animal summon.");
 		break;
 	}
 }
 
-void cast_animal_summon_3( byte level, struct char_data* ch, const char* arg,
-						   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animal_summon_3(byte level, struct char_data* ch, const char* arg,
+						  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_POTION:
 	case SPELL_TYPE_SPELL:
@@ -3413,13 +3740,13 @@ void cast_animal_summon_3( byte level, struct char_data* ch, const char* arg,
 		spell_animal_summon(3, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in animal summon.");
+		mudlog(LOG_SYSERR, "serious screw-up in animal summon.");
 		break;
 	}
 }
 
-void cast_fire_servant( byte level, struct char_data* ch, const char* arg,
-						int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_fire_servant(byte level, struct char_data* ch, const char* arg,
+					   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3427,14 +3754,14 @@ void cast_fire_servant( byte level, struct char_data* ch, const char* arg,
 		spell_elemental_summoning(level, ch, 0, SPELL_FIRE_SERVANT);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in fire servant.");
+		mudlog(LOG_SYSERR, "serious screw-up in fire servant.");
 		break;
 	}
 }
 
 
-void cast_earth_servant( byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_earth_servant(byte level, struct char_data* ch, const char* arg,
+						int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3442,14 +3769,14 @@ void cast_earth_servant( byte level, struct char_data* ch, const char* arg,
 		spell_elemental_summoning(level, ch, 0, SPELL_EARTH_SERVANT);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in earth servant.");
+		mudlog(LOG_SYSERR, "serious screw-up in earth servant.");
 		break;
 	}
 }
 
 
-void cast_water_servant( byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_water_servant(byte level, struct char_data* ch, const char* arg,
+						int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3457,14 +3784,14 @@ void cast_water_servant( byte level, struct char_data* ch, const char* arg,
 		spell_elemental_summoning(level, ch, 0, SPELL_WATER_SERVANT);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in water servant.");
+		mudlog(LOG_SYSERR, "serious screw-up in water servant.");
 		break;
 	}
 }
 
 
-void cast_wind_servant( byte level, struct char_data* ch, const char* arg,
-						int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_wind_servant(byte level, struct char_data* ch, const char* arg,
+					   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3472,15 +3799,15 @@ void cast_wind_servant( byte level, struct char_data* ch, const char* arg,
 		spell_elemental_summoning(level, ch, 0, SPELL_WIND_SERVANT);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in wind servant.");
+		mudlog(LOG_SYSERR, "serious screw-up in wind servant.");
 		break;
 	}
 }
 
 
 
-void cast_veggie_growth( byte level, struct char_data* ch, const char* arg,
-						 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_veggie_growth(byte level, struct char_data* ch, const char* arg,
+						int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3489,42 +3816,49 @@ void cast_veggie_growth( byte level, struct char_data* ch, const char* arg,
 		spell_veggie_growth(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in veggie_growth.");
+		mudlog(LOG_SYSERR, "serious screw-up in veggie_growth.");
 		break;
 	}
 }
 
 
-void cast_charm_veggie( byte level, struct char_data* ch, const char* arg, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_charm_veggie(byte level, struct char_data* ch, const char* arg, int type,
+					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_charm_veggie(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(!tar_ch) { return; }
+		if(!tar_ch) {
+			return;
+		}
 		spell_charm_veggie(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_charm_veggie(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_charm_veggie(level,ch,tar_ch,0);
+			}
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in charm veggie!");
+		mudlog(LOG_SYSERR, "Serious screw-up in charm veggie!");
 		break;
 	}
 }
 
-void cast_tree( byte level, struct char_data* ch, const char* arg, int type,
-				struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_tree(byte level, struct char_data* ch, const char* arg, int type,
+			   struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
-	if (IS_NPC(ch)) { return; }
+	if(IS_NPC(ch)) {
+		return;
+	}
 
-	switch (type) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_POTION:
@@ -3532,17 +3866,19 @@ void cast_tree( byte level, struct char_data* ch, const char* arg, int type,
 		spell_tree(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Serious screw-up in tree");
+		mudlog(LOG_SYSERR, "Serious screw-up in tree");
 		break;
 	}
 }
 
 
 
-void cast_animate_rock( byte level, struct char_data* ch, const char* arg,
-						int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animate_rock(byte level, struct char_data* ch, const char* arg,
+					   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	if (NoSummon(ch)) { return; }
+	if(NoSummon(ch)) {
+		return;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3551,13 +3887,13 @@ void cast_animate_rock( byte level, struct char_data* ch, const char* arg,
 		spell_animate_rock(level, ch, 0, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in animate_rock.");
+		mudlog(LOG_SYSERR, "serious screw-up in animate_rock.");
 		break;
 	}
 }
 
-void cast_travelling( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_travelling(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3568,13 +3904,13 @@ void cast_travelling( byte level, struct char_data* ch, const char* arg,
 		spell_travelling(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in travelling.");
+		mudlog(LOG_SYSERR, "serious screw-up in travelling.");
 		break;
 	}
 }
 
-void cast_animal_friendship( byte level, struct char_data* ch, const char* arg,
-							 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_animal_friendship(byte level, struct char_data* ch, const char* arg,
+							int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3583,13 +3919,13 @@ void cast_animal_friendship( byte level, struct char_data* ch, const char* arg,
 		spell_animal_friendship(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in animal friendship.");
+		mudlog(LOG_SYSERR, "serious screw-up in animal friendship.");
 		break;
 	}
 }
 
-void cast_invis_to_animals( byte level, struct char_data* ch, const char* arg,
-							int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_invis_to_animals(byte level, struct char_data* ch, const char* arg,
+						   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3598,74 +3934,82 @@ void cast_invis_to_animals( byte level, struct char_data* ch, const char* arg,
 		spell_invis_to_animals(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in invis to animals.");
+		mudlog(LOG_SYSERR, "serious screw-up in invis to animals.");
 		break;
 	}
 }
 
-void cast_slow_poison( byte level, struct char_data* ch, const char* arg,
-					   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_slow_poison(byte level, struct char_data* ch, const char* arg,
+					  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_POTION:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_slow_poison(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in slow_poison.");
+		mudlog(LOG_SYSERR, "serious screw-up in slow_poison.");
 		break;
 	}
 }
 
-void cast_entangle( byte level, struct char_data* ch, const char* arg,
-					int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_entangle(byte level, struct char_data* ch, const char* arg,
+				   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_entangle(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch))
-			{ spell_entangle(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
+				spell_entangle(level,ch,tar_ch,0);
+			}
 
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in entangle.");
+		mudlog(LOG_SYSERR, "serious screw-up in entangle.");
 		break;
 	}
 }
 
-void cast_snare( byte level, struct char_data* ch, const char* arg,
-				 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_snare(byte level, struct char_data* ch, const char* arg,
+				int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_snare(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch))
-			{ spell_snare(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
+				spell_snare(level,ch,tar_ch,0);
+			}
 
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in snare.");
+		mudlog(LOG_SYSERR, "serious screw-up in snare.");
 		break;
 	}
 }
 
-void cast_gust_of_wind( byte level, struct char_data* ch, const char* arg,
-						int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_gust_of_wind(byte level, struct char_data* ch, const char* arg,
+					   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_POTION:
@@ -3676,86 +4020,95 @@ void cast_gust_of_wind( byte level, struct char_data* ch, const char* arg,
 		spell_gust_of_wind(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in snare.");
+		mudlog(LOG_SYSERR, "serious screw-up in snare.");
 		break;
 	}
 }
 
 
-void cast_barkskin( byte level, struct char_data* ch, const char* arg,
-					int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_barkskin(byte level, struct char_data* ch, const char* arg,
+				   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_barkskin(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch))
-			{ spell_barkskin(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch)) {
+				spell_barkskin(level,ch,tar_ch,0);
+			}
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in barkskin.");
+		mudlog(LOG_SYSERR, "serious screw-up in barkskin.");
 		break;
 	}
 }
 
 
-void cast_warp_weapon( byte level, struct char_data* ch, const char* arg,
-					   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_warp_weapon(byte level, struct char_data* ch, const char* arg,
+					  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_warp_weapon(level, ch, tar_ch, tar_obj);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in warp_weapon.");
+		mudlog(LOG_SYSERR, "serious screw-up in warp_weapon.");
 		break;
 	}
 }
 
 
 
-void cast_heat_stuff( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_heat_stuff(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_heat_stuff(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in heat_stuff.");
+		mudlog(LOG_SYSERR, "serious screw-up in heat_stuff.");
 		break;
 	}
 }
 
-void cast_sunray( byte level, struct char_data* ch, const char* arg,
-				  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_sunray(byte level, struct char_data* ch, const char* arg,
+				 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_sunray(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in sunray.");
+		mudlog(LOG_SYSERR, "serious screw-up in sunray.");
 		break;
 	}
 }
 
-void cast_find_traps( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_find_traps(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3768,13 +4121,13 @@ void cast_find_traps( byte level, struct char_data* ch, const char* arg,
 		spell_find_traps(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in find_traps.");
+		mudlog(LOG_SYSERR, "serious screw-up in find_traps.");
 		break;
 	}
 }
 
-void cast_firestorm( byte level, struct char_data* ch, const char* arg,
-					 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_firestorm(byte level, struct char_data* ch, const char* arg,
+					int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3783,14 +4136,14 @@ void cast_firestorm( byte level, struct char_data* ch, const char* arg,
 		spell_firestorm(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in firestorm.");
+		mudlog(LOG_SYSERR, "serious screw-up in firestorm.");
 		break;
 	}
 }
 
 
-void cast_dust_devil( byte level, struct char_data* ch, const char* arg,
-					  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_dust_devil(byte level, struct char_data* ch, const char* arg,
+					 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3799,30 +4152,32 @@ void cast_dust_devil( byte level, struct char_data* ch, const char* arg,
 		spell_dust_devil(level, ch, 0, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in dust_devil.");
+		mudlog(LOG_SYSERR, "serious screw-up in dust_devil.");
 		break;
 	}
 }
 
-void cast_know_monster( byte level, struct char_data* ch, const char* arg,
-						int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_know_monster(byte level, struct char_data* ch, const char* arg,
+					   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { return; }
+		if(!tar_ch) {
+			return;
+		}
 		spell_know_monster(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in know_monster.");
+		mudlog(LOG_SYSERR, "serious screw-up in know_monster.");
 		break;
 	}
 }
 
 
-void cast_silence( byte level, struct char_data* ch, const char* arg,
-				   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_silence(byte level, struct char_data* ch, const char* arg,
+				  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_POTION:
@@ -3830,22 +4185,25 @@ void cast_silence( byte level, struct char_data* ch, const char* arg,
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_silence(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for (tar_ch = real_roomp(ch->in_room)->people ;
+		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if (!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch))
-			{ spell_silence(level,ch,tar_ch,0); }
+			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
+				spell_silence(level,ch,tar_ch,0);
+			}
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in silence.");
+		mudlog(LOG_SYSERR, "serious screw-up in silence.");
 		break;
 	}
 }
 
-void cast_dragon_ride( byte level, struct char_data* ch, const char* arg,
-					   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_dragon_ride(byte level, struct char_data* ch, const char* arg,
+					  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_POTION:
@@ -3856,14 +4214,14 @@ void cast_dragon_ride( byte level, struct char_data* ch, const char* arg,
 		spell_dragon_ride(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in dragon_ride.");
+		mudlog(LOG_SYSERR, "serious screw-up in dragon_ride.");
 		break;
 	}
 }
 
 
-void cast_mount( byte level, struct char_data* ch, const char* arg,
-				 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_mount(byte level, struct char_data* ch, const char* arg,
+				int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
@@ -3872,37 +4230,39 @@ void cast_mount( byte level, struct char_data* ch, const char* arg,
 		spell_mount(level, ch, ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in mount.");
+		mudlog(LOG_SYSERR, "serious screw-up in mount.");
 		break;
 	}
 }
 
-void cast_sending( byte level, struct char_data* ch, const char* arg,
-				   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_sending(byte level, struct char_data* ch, const char* arg,
+				  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
 }
 
 
 
-void cast_portal( byte level, struct char_data* ch, const char* arg,
-				  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_portal(byte level, struct char_data* ch, const char* arg,
+				 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_STAFF:
-		if (!tar_ch) { tar_ch = ch; }
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
 		spell_portal(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in portal");
+		mudlog(LOG_SYSERR, "serious screw-up in portal");
 		break;
 
 	}
 }
 
-void cast_teleport_wo_error( byte level, struct char_data* ch, const char* arg,
-							 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_teleport_wo_error(byte level, struct char_data* ch, const char* arg,
+							int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_POTION:
@@ -3911,7 +4271,7 @@ void cast_teleport_wo_error( byte level, struct char_data* ch, const char* arg,
 		spell_astral_walk(level, ch, NULL, NULL);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in teleport without error!");
+		mudlog(LOG_SYSERR, "Serious screw-up in teleport without error!");
 		break;
 	}
 }
@@ -3919,8 +4279,8 @@ void cast_teleport_wo_error( byte level, struct char_data* ch, const char* arg,
 
 /* NEW STUFF */
 
-void cast_globe_darkness( byte level, struct char_data* ch, const char* arg,
-						  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_globe_darkness(byte level, struct char_data* ch, const char* arg,
+						 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3929,12 +4289,12 @@ void cast_globe_darkness( byte level, struct char_data* ch, const char* arg,
 		spell_globe_darkness(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in globe of darkness.");
+		mudlog(LOG_SYSERR, "serious screw-up in globe of darkness.");
 		break;
 	}
 }
-void cast_globe_minor_inv( byte level, struct char_data* ch, const char* arg,
-						   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_globe_minor_inv(byte level, struct char_data* ch, const char* arg,
+						  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3943,13 +4303,13 @@ void cast_globe_minor_inv( byte level, struct char_data* ch, const char* arg,
 		spell_globe_minor_inv(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in minor globe.");
+		mudlog(LOG_SYSERR, "serious screw-up in minor globe.");
 		break;
 	}
 
 }
-void cast_globe_major_inv( byte level, struct char_data* ch, const char* arg,
-						   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_globe_major_inv(byte level, struct char_data* ch, const char* arg,
+						  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3958,13 +4318,13 @@ void cast_globe_major_inv( byte level, struct char_data* ch, const char* arg,
 		spell_globe_major_inv(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in major globe.");
+		mudlog(LOG_SYSERR, "serious screw-up in major globe.");
 		break;
 	}
 
 }
-void cast_prot_energy_drain( byte level, struct char_data* ch, const char* arg,
-							 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_energy_drain(byte level, struct char_data* ch, const char* arg,
+							int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3973,13 +4333,13 @@ void cast_prot_energy_drain( byte level, struct char_data* ch, const char* arg,
 		spell_prot_energy_drain(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-energy drain.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-energy drain.");
 		break;
 	}
 
 }
-void cast_prot_dragon_breath( byte level, struct char_data* ch, const char* arg,
-							  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_dragon_breath(byte level, struct char_data* ch, const char* arg,
+							 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -3988,37 +4348,41 @@ void cast_prot_dragon_breath( byte level, struct char_data* ch, const char* arg,
 		spell_prot_dragon_breath(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-dragon breath.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-dragon breath.");
 		break;
 	}
 
 }
 
 
-void cast_anti_magic_shell( byte level, struct char_data* ch, const char* arg,
-							int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_anti_magic_shell(byte level, struct char_data* ch, const char* arg,
+						   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_POTION:
 		spell_anti_magic_shell(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_anti_magic_shell(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_anti_magic_shell(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cast_anti_magic_shell!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cast_anti_magic_shell!");
 		break;
 	}
 }
 
-void cast_comp_languages( byte level, struct char_data* ch, const char* arg, int type,
-						  struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_comp_languages(byte level, struct char_data* ch, const char* arg, int type,
+						 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_comp_languages(level,ch,tar_ch,0);
 		break;
@@ -4026,126 +4390,148 @@ void cast_comp_languages( byte level, struct char_data* ch, const char* arg, int
 		spell_comp_languages(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_comp_languages(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_comp_languages(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in comprehend languages!");
+		mudlog(LOG_SYSERR, "Serious screw-up in comprehend languages!");
 		break;
 	}
 }
 
 
 
-void cast_prot_fire( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_prot_fire(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_POTION:
 		spell_prot_fire(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_fire(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_fire(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cast_prot_fire!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cast_prot_fire!");
 		break;
 	}
 }
-void cast_prot_cold( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_prot_cold(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_POTION:
 		spell_prot_cold(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_cold(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_cold(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cast_prot_cold!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cast_prot_cold!");
 		break;
 	}
 }
-void cast_prot_energy( byte level, struct char_data* ch, const char* arg, int type,
-					   struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_prot_energy(byte level, struct char_data* ch, const char* arg, int type,
+					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_POTION:
 		spell_prot_energy(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_energy(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_energy(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cast_prot_energy!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cast_prot_energy!");
 		break;
 	}
 }
-void cast_prot_elec( byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_prot_elec(byte level, struct char_data* ch, const char* arg, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_POTION:
 		spell_prot_elec(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_elec(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
-		if (tar_obj) { return; }
+		if(tar_obj) {
+			return;
+		}
 		spell_prot_elec(level,ch,tar_ch,0);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in cast_prot_elec!");
+		mudlog(LOG_SYSERR, "Serious screw-up in cast_prot_elec!");
 		break;
 	}
 }
 
 
-void cast_enchant_armor( byte level, struct char_data* ch, const char* arg, int type,
-						 struct char_data* tar_ch, struct obj_data* tar_obj ) {
-	switch (type) {
+void cast_enchant_armor(byte level, struct char_data* ch, const char* arg, int type,
+						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_enchant_armor(level, ch, 0,tar_obj);
 		break;
 	case SPELL_TYPE_SCROLL:
-		if(!tar_obj) { return; }
+		if(!tar_obj) {
+			return;
+		}
 		spell_enchant_armor(level, ch, 0,tar_obj);
 		break;
 	default :
-		mudlog( LOG_SYSERR, "Serious screw-up in enchant armor!");
+		mudlog(LOG_SYSERR, "Serious screw-up in enchant armor!");
 		break;
 	}
 }
 
-void cast_messenger( byte level, struct char_data* ch, const char* arg,
-					 int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_messenger(byte level, struct char_data* ch, const char* arg,
+					int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 }
 
 
-void cast_prot_dragon_breath_fire( byte level, struct char_data* ch, const char* arg,
-								   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_dragon_breath_fire(byte level, struct char_data* ch, const char* arg,
+								  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -4154,14 +4540,14 @@ void cast_prot_dragon_breath_fire( byte level, struct char_data* ch, const char*
 		spell_prot_dragon_breath_fire(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-dragon breath_fire.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-dragon breath_fire.");
 		break;
 	}
 
 }
 
-void cast_prot_dragon_breath_frost( byte level, struct char_data* ch, const char* arg,
-									int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_dragon_breath_frost(byte level, struct char_data* ch, const char* arg,
+								   int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -4170,15 +4556,15 @@ void cast_prot_dragon_breath_frost( byte level, struct char_data* ch, const char
 		spell_prot_dragon_breath_frost(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-dragon breath_frost.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-dragon breath_frost.");
 		break;
 	}
 
 }
 
 
-void cast_prot_dragon_breath_elec( byte level, struct char_data* ch, const char* arg,
-								   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_dragon_breath_elec(byte level, struct char_data* ch, const char* arg,
+								  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -4187,15 +4573,15 @@ void cast_prot_dragon_breath_elec( byte level, struct char_data* ch, const char*
 		spell_prot_dragon_breath_elec(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-dragon breath_elec.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-dragon breath_elec.");
 		break;
 	}
 
 }
 
 
-void cast_prot_dragon_breath_acid( byte level, struct char_data* ch, const char* arg,
-								   int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_dragon_breath_acid(byte level, struct char_data* ch, const char* arg,
+								  int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -4204,15 +4590,15 @@ void cast_prot_dragon_breath_acid( byte level, struct char_data* ch, const char*
 		spell_prot_dragon_breath_acid(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-dragon breath_acid.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-dragon breath_acid.");
 		break;
 	}
 
 }
 
 
-void cast_prot_dragon_breath_gas( byte level, struct char_data* ch, const char* arg,
-								  int type, struct char_data* tar_ch, struct obj_data* tar_obj ) {
+void cast_prot_dragon_breath_gas(byte level, struct char_data* ch, const char* arg,
+								 int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -4221,7 +4607,7 @@ void cast_prot_dragon_breath_gas( byte level, struct char_data* ch, const char* 
 		spell_prot_dragon_breath_gas(level, ch, tar_ch, 0);
 		break;
 	default:
-		mudlog( LOG_SYSERR, "serious screw-up in prot-dragon breath_gas.");
+		mudlog(LOG_SYSERR, "serious screw-up in prot-dragon breath_gas.");
 		break;
 	}
 
