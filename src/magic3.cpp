@@ -829,19 +829,22 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		return;
 	}
 
-	blade_element = number(0,2);
-
+	blade_element = number(0,( IS_PC( ch ) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel( ch ) ) / 17);
+    
 	CREATE(tmp_obj, struct obj_data, 1);
 	clear_object(tmp_obj);
 
 	switch(blade_element) { /* REQUIEM 2018 new elements for druid blade */
-	case 0:
+	
+    /* fino al liv 16 crei solo fire blades */
+    case 0:
 		tmp_obj->name = strdup("blade flame");
 		tmp_obj->short_description = strdup("una $c0009flame $c0007blade");
 		tmp_obj->description = strdup("Una lama fiammeggiante splende qui in terra.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
 		tmp_obj->affected[0].modifier = 57;
 		break;
+    /* dal liv 17 al 33 aggiungi frost alle possibilità */
 	case 1:
 		tmp_obj->name = strdup("blade frost");
 		tmp_obj->short_description = strdup("una $c0014Frost $c0007blade");
@@ -849,12 +852,21 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
 		tmp_obj->affected[0].modifier = 8;
 		break;
+    /* dal liv 34 al 50 aggiungi frost alle possibilità */
 	case 2:
 		tmp_obj->name = strdup("blade thunder");
 		tmp_obj->short_description = strdup("una $c0012Thunder $c0007blade");
 		tmp_obj->description = strdup("Un fascio si fulmini e saette e' qui ai tuoi piedi.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
 		tmp_obj->affected[0].modifier = 30;
+		break;
+    /* al liv 51 aggiungi earth alle possibilità */
+	case 3:
+		tmp_obj->name = strdup("earth thunder");
+		tmp_obj->short_description = strdup("una $c0010Earth $c0007blade");
+		tmp_obj->description = strdup("Una lunga roccia a forma di foglia attira la tua attenzione.");
+		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
+		tmp_obj->affected[0].modifier = 67;
 		break;
 	}
 
