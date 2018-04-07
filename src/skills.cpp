@@ -1528,7 +1528,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 							 j->short_description );
 					send_to_char(buf,ch);
 
-					sprintf( buf, "%s tries to skins %s for it's hide, but destroys it.",
+					sprintf( buf, "%s tries to skins %s for its hide, but destroys it.",
 							 GET_NAME(ch),j->short_description );
 					act( buf,TRUE, ch, 0, 0, TO_ROOM );
 					LearnFromMistake( ch, SKILL_TAN, 0, 95 );
@@ -3345,7 +3345,7 @@ void do_tan( struct char_data* ch, char* arg, int cmd) {
 						 j->short_description,itemtype);
 				send_to_char(buf,ch);
 
-				sprintf( buf,"%s skins %s for it's hide.",GET_NAME(ch),
+				sprintf( buf,"%s skins %s for its hide.",GET_NAME(ch),
 						 j->short_description);
 				act(buf,TRUE, ch, 0, 0, TO_ROOM);
 				WAIT_STATE(ch, PULSE_VIOLENCE*((int)lev/2));
