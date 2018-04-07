@@ -2214,7 +2214,15 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 			return(FALSE);
 		}
 		else {
-			die( victim, killedbytype, ch );
+            die( victim, killedbytype, ch );
+            sprintf( buf, "%s e` mort%s vigliaccamente combattendo con %s a %s\n\r",
+							 GET_NAME(victim), SSLF( victim ),
+							 GET_NAME(ch),victim->in_room > -1 ?
+							 (real_roomp(victim->in_room))->name : "Nowhere" );
+				
+            send_to_all(buf);
+			
+			mudlog( LOG_PLAYERS, buf );
 			return(TRUE);
 		}
 	}
