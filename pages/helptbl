@@ -739,7 +739,7 @@ Costo di lancio: 15 mana
 Con questo spell vengono rimossi tutti gli effetti magici (da spell)
 da una vittima. Se la vittima e' di livello inferiore a quello del
 caster lo spell funziona sempre, altrimenti c'e' un tiro salvezza
-contro spell. Lo spell rende aggressivi i mostri nei vostri confrnti.
+contro spell. Lo spell rende aggressivi i mostri nei vostri confronti.
 
 Vedi anche:
 #
@@ -1556,12 +1556,18 @@ Livello     : Level 23 mage.
 Save        : Nessuno
 Costo di lancio: 20 mana
 
-Questo spell fa guadagnare velocita' alla vittima, il che si traduce
-in un maggiore numero di attacchi.
-Questo pero' invecchia la vittima a causa dell'enorme spreco di
-enercia fisica richiesto. I mostri di solito non gradiscono essere
+Questo spell fa guadagnare velocita` alla vittima, il che si traduce
+in un maggiore numero di attacchi che varia ogni round.
+Questo pero` fiacca velocemente la vittima a causa dell'enorme spreco 
+di energia fisica richiesto. I mostri di solito non gradiscono essere
 colpiti da questo spell.
 
+nota: l'eq che da` haste si comportera` diversamente dalla spell, 
+aumentando i tuoi attacchi in relazione al valore riportato. 
+
+Ex. Haste by 1 ti dara` un attacco in piu' ogni round.
+
+ps. spell ed haste da eq non sono cumulabili.
 Vedi anche: SLOWNESS
 #
 "SLOWNESS"
@@ -1694,10 +1700,16 @@ Livello     : Level 7 druid.
 Save        : Nessuno
 Costo di lancio: 20 mana
 
-Questo spell crea in maniera casuale una lama di fuoco, ghiaccio o fulmini 
-il cui danno varia in base al livello del druido;
+Questo spell crea una lama di fuoco, ghiaccio, fulmini o pietra il cui danno 
+varia in base al livello del druido; ad alti livelli e` veramente molto potente.
 
-ad alti livelli e' veramente molto potente.
+Il tipo di lama che otterreai sara` casuale, ed otterrai un nuovo elemento
+ogni 17 livelli fino al 51:
+
+Da liv 7(ottenimento spell) al liv 16 otterrai solo fire blades  
+dal liv 17 al 33 aggiungi frost alle possibilita`
+dal liv 34 al 50 aggiungi thunder alle possibilita`  
+al liv 51 aggiungi earth alle possibilita`
 
 Questo spell e' MOLTO importante se vuoi avanzare oltre il livello 10.
 
@@ -3479,7 +3491,7 @@ vittima.
 
 Vedi anche: WEATHER and CONTROL WEATHER
 #
-HARM
+"HARM"
 Sintassi    : cast 'harm' nome
 Accumulazione: -
 Durata      : Istantanea
@@ -4686,12 +4698,12 @@ PRINCIPE, ASSOCIA, RIPUDIA
 MINER
 Skill per DWARF: da sempre i nani sono grandi scavatori;
 ora avendo una pala o un piccone possono recarsi nelle miniere di Boffgorrak
-e cercare metalli di vario genere e tantissime varietà di pietre preziose.
-Scavare è faticoso, da' affaticamento e, raramente, si possono disturbare
+e cercare metalli di vario genere e tantissime varieta` di pietre preziose.
+Scavare e` faticoso, da' affaticamento e, raramente, si possono disturbare
 creature sotterranee aggressive che non gradiranno la picconata in
 testa...Le singole vene delle miniere non possono essere sfruttate
 all'infinito. Mettete da parte i materiali trovati perche' vi serviranno.
-Nelle miniere ci sarà Dendur Lungapicca pronto ad insegnare come si scava.
+Nelle miniere ci sara` Dendur Lungapicca pronto ad insegnare come si scava.
 
 Sintassi: DIG
 VEDI ANCHE:
