@@ -2214,7 +2214,6 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
 			return(FALSE);
 		}
 		else {
-            die( victim, killedbytype, ch );
             sprintf( buf, "%s e` mort%s $c0001vigliaccamente$c0007 combattendo contro %s!\n\r",
 							 GET_NAME(victim), SSLF( victim ),
 							 GET_NAME(ch));
@@ -2223,6 +2222,8 @@ int DamageEpilog( struct char_data* ch, struct char_data* victim,
             send_to_all(buf);
 			
 			mudlog( LOG_PLAYERS, buf );
+            
+            die( victim, killedbytype, ch );
 			return(TRUE);
 		}
 	}
