@@ -1,0 +1,1065 @@
+* Procedure xpmaster e  statmaster
+M 25000 XpMaster
+M 13719 XpMaster
+M 5306 XpMaster
+M 5719 StatMaster
+M 1 puff
+M 2 Ringwraith
+M 6 Ringwraith
+M 7 Ringwraith
+M 8 Ringwraith
+M 9 Ringwraith
+M 14 Ringwraith
+M 15 Ringwraith
+M 16 Ringwraith
+M 17 Ringwraith
+M 3 tormentor
+M 4 Esattore
+M 30 MageGuildMaster
+M 31 ClericGuildMaster
+M 32 ThiefGuildMaster
+M 33 WarriorGuildMaster
+M 34 MageGuildMaster
+M 35 ClericGuildMaster
+M 36 ThiefGuildMaster
+M 37 WarriorGuildMaster
+M 39 creeping_death
+M 199 AGGRESSIVE
+M 250 snake
+M 251 CarrionCrawler
+M 262 regenerator
+M 267 Devil
+M 269 Demon
+M 271 regenerator
+M 321 BiosKaiThanatos
+M 322 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 323 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 324 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 325 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 326 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 327 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 328 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 329 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 330 MobBlockWay 1 51 60 $n ti dice 'Dovrai uccidermi per passare'
+M 600 DruidChallenger
+M 601 DruidChallenger
+M 602 DruidChallenger
+M 603 DruidChallenger
+M 604 DruidChallenger
+M 605 DruidChallenger
+M 606 DruidChallenger
+M 607 DruidChallenger
+M 608 DruidChallenger
+M 609 DruidChallenger
+M 610 DruidChallenger
+M 611 DruidChallenger
+M 612 DruidChallenger
+M 613 DruidChallenger
+M 614 DruidChallenger
+M 615 DruidChallenger
+M 616 DruidChallenger
+M 617 DruidChallenger
+M 618 DruidChallenger
+M 619 DruidChallenger
+M 620 DruidChallenger
+M 621 DruidChallenger
+M 622 DruidChallenger
+M 623 DruidChallenger
+M 624 DruidChallenger
+M 625 DruidChallenger
+M 626 DruidChallenger
+M 627 DruidChallenger
+M 628 DruidChallenger
+M 629 DruidChallenger
+M 630 DruidChallenger
+M 631 DruidChallenger
+M 632 DruidChallenger
+M 633 DruidChallenger
+M 634 DruidChallenger
+M 635 DruidChallenger
+M 636 DruidChallenger
+M 637 DruidChallenger
+M 638 DruidChallenger
+M 639 DruidChallenger
+M 640 DruidChallenger
+M 641 DruidGuildMaster
+M 642 DruidGuildMaster
+M 651 MonkChallenger
+M 652 MonkChallenger
+M 653 MonkChallenger
+M 654 MonkChallenger
+M 655 MonkChallenger
+M 656 MonkChallenger
+M 657 MonkChallenger
+M 658 MonkChallenger
+M 659 MonkChallenger
+M 660 MonkChallenger
+M 661 MonkChallenger
+M 662 MonkChallenger
+M 663 MonkChallenger
+M 664 MonkChallenger
+M 665 MonkChallenger
+M 666 MonkChallenger
+M 667 MonkChallenger
+M 668 MonkChallenger
+M 669 MonkChallenger
+M 670 MonkChallenger
+M 671 MonkChallenger
+M 672 MonkChallenger
+M 673 MonkChallenger
+M 674 MonkChallenger
+M 675 MonkChallenger
+M 676 MonkChallenger
+M 677 MonkChallenger
+M 678 MonkChallenger
+M 679 MonkChallenger
+M 680 MonkChallenger
+M 681 MonkChallenger
+M 682 MonkChallenger
+M 683 MonkChallenger
+M 684 MonkChallenger
+M 685 MonkChallenger
+M 686 MonkChallenger
+M 687 MonkChallenger
+M 688 MonkChallenger
+M 689 MonkChallenger
+M 690 MonkChallenger
+M 691 monk_master
+M 1131 receptionist
+*M 1400 chess_game
+*M 1401 chess_game
+*M 1402 chess_game
+*M 1403 chess_game
+*M 1404 chess_game
+*M 1405 chess_game
+*M 1406 chess_game
+*M 1407 chess_game
+*M 1408 chess_game
+*M 1409 chess_game
+*M 1410 chess_game
+*M 1411 chess_game
+*M 1412 chess_game
+*M 1413 chess_game
+*M 1414 chess_game
+*M 1415 chess_game
+M 1428 jugglernaut
+M 1437 banana
+*M 1448 chess_game
+*M 1449 chess_game
+*M 1450 chess_game
+*M 1451 chess_game
+*M 1452 chess_game
+*M 1453 chess_game
+*M 1454 chess_game
+*M 1455 chess_game
+*M 1456 chess_game
+*M 1457 chess_game
+*M 1458 chess_game
+*M 1459 chess_game
+*M 1460 chess_game
+*M 1461 chess_game
+*M 1462 chess_game
+*M 1463 chess_game
+M 1470 jabberwocky
+M 1471 paramedics
+M 1472 flame
+M 1493 delivery_beast
+M 1495 delivery_elf
+M 1499 sisyphus
+M 1500 shadow
+M 1900 avatar_celestian
+M 1906 village_woman
+M 1908 village_woman
+M 1920 snake
+M 1921 Lizardman
+M 1922 lizardman_shaman
+M 1923 snake
+M 1924 green_slime
+M 1925 snake
+M 1926 snake
+M 1943 mage_specialist_guildmaster
+M 1947 snake_avt
+M 1948 snake_guardian
+M 1949 snake
+M 1950 virgin_sac
+M 1951 snake
+M 1953 snake_avt2
+M 2113 ghoul
+M 2115 ghost
+M 2116 ghost
+M 2117 druid_protector
+M 2500 PrisonGuard
+M 2531 DragonHunterLeader
+M 2715 astral_portal 104
+M 2716 astral_portal 21114
+M 2717 astral_portal 1474
+M 2718 astral_portal 1633
+M 2719 astral_portal 4109
+M 2720 astral_portal 5000
+M 2721 astral_portal 5126
+M 2722 astral_portal 5221
+M 2723 astral_portal 6513
+M 2724 astral_portal 7069
+M 2725 astral_portal 6601
+M 2726 astral_portal 9359
+M 2727 astral_portal 13809
+M 2728 astral_portal 16925
+M 2729 astral_portal 20031
+M 2730 astral_portal 27431
+M 2731 astral_portal 21210
+M 2732 astral_portal 25041
+M 3005 receptionist
+M 3008 PostMaster
+M 3009 PostMaster
+M 3020 MageGuildMaster
+M 3021 ClericGuildMaster
+M 3022 ThiefGuildMaster
+M 3023 WarriorGuildMaster
+M 3047 DogCatcher
+M 3060 MidgaardCityguard
+M 3061 janitor
+M 3062 fido
+M 3063 HuntingMercenary
+M 3066 fido
+M 3067 MidgaardCityguard
+M 3068 ninja_master
+M 3069 MidgaardCityguard
+M 3070 RepairGuy
+M 3071 RepairGuy
+M 3073 loremaster
+M 3074 hunter
+M 3076 archer_instructor
+M 3077 barbarian_guildmaster
+M 3143 mayor
+M 3402 ghoul
+M 3404 wraith
+M 3408 ghost
+M 3409 ghoul
+M 3410 FireBreather
+* Procedura disattivata perche' causa crash
+*M 3411 lich_church
+M 3412 medusa
+M 3415 FireBreather
+M 3416 vampire
+M 3417 regenerator
+M 3424 Slavalis
+M 3600 MageGuildMaster
+M 3601 ClericGuildMaster
+M 3602 WarriorGuildMaster
+M 3603 ThiefGuildMaster
+M 3604 receptionist
+M 3644 fido
+M 3656 NewThalosGuildGuard
+M 3657 NewThalosGuildGuard
+M 3658 NewThalosGuildGuard
+M 3659 NewThalosGuildGuard
+M 3661 SultanGuard
+M 3662 SultanGuard
+M 3682 SultanGuard
+*M 3900 eric_johnson
+*M 3901 andy_wilcox
+M 3950 zombie_master
+M 3952 BreathWeapon 20 8
+M 4000 snake
+M 4001 snake
+M 4053 snake
+M 4101 regenerator
+M 4102 snake
+M 5002 snake
+M 5003 Pungiglione
+M 5004 acid_monster
+M 5005 BreathWeapon 45 4
+M 5101 Drow
+M 5102 Drow
+M 5105 Drow
+M 5106 Drow
+M 5200 Beholder
+M 5209 raven_iron_golem
+M 5303 vampire
+M 5308 RustMonster
+M 5621 EditMaster
+* area del deserto dipinto
+M 5710 FireBreather
+M 5711 ForceMobToAction 15 1 5712 kill 0 shout Non osare levare il tuo sguardo su Fatima!
+M 5714 baby_bear
+M 6001 real_rabbit
+M 6005 real_fox
+M 6112 BreathWeapon 55 4
+M 6113 snake
+M 6114 snake
+M 6241 TreeThrowerMob
+M 6601 PrydainGuard
+M 6602 PrydainGuard
+M 6605 PrydainGuard
+M 6606 PrydainGuard
+M 6609 BreathWeapon 30 0
+M 6614 PrydainGuard
+M 6619 PrydainGuard
+M 6620 PrydainGuard
+M 6625 Demon
+M 6635 BreathWeapon 55 0
+M 6638 StatTeller
+M 6640 jugglernaut
+M 6642 BreathWeapon 45 2
+M 6801 BreathWeapon 55 2
+M 6802 BreathWeapon 55 2
+M 6821 snake
+M 6824 BreathWeapon 
+M 7002 attack_rats
+M 7006 snake
+M 7008 snake
+M 7902 MidgaardCityguard
+M 7040 BreathWeapon 55 6
+M 9213 CarrionCrawler
+M 9217 BreathWeapon 45 4
+M 9416 fido
+M 9418 BreathWeapon 45 2
+M 9419 BreathWeapon 45 2
+M 9424 StormGiant
+M 9426 MonkChallenger
+M 9430 regenerator
+M 9431 snake
+M 9435 SputoVelenoso
+M 9436 fido
+M 9611 snake
+M 9617 receptionist
+M 9619 WarriorGuildMaster
+M 9620 MageGuildMaster
+M 9621 ThiefGuildMaster
+M 9622 ClericGuildMaster
+M 9623 barbarian_guildmaster
+M 10900 temple_labrynth_liar
+M 10901 temple_labrynth_liar
+M 10902 temple_labrynth_sentry
+M 11016 receptionist
+M 11017 NudgeNudge
+M 12010 FireBreather
+M 12011 FireBreather
+M 12014 LegionariV
+M 12015 LegionariV
+M 12016 LegionariV
+M 12017 LegionariV
+M 12020 LegionariV
+M 12021 LegionariV
+M 12038 LegionariV
+M 12045 LegionariV
+M 13702 sailor
+M 13726 LightningBreather
+M 13732 snake
+M 13765 acid_monster
+M 13901 ThrowerMob
+M 15821 vampire
+M 15858 BreathWeapon 45 0
+M 15864 sisyphus
+M 15868 snake
+M 15879 BreathWeapon 30 0
+M 16020 snake
+M 16037 DwarvenMiners
+M 16039 Tyrannosaurus_swallower
+M 16105 StatTeller
+M 16106 fido
+M 16107 CaravanGuildGuard
+M 16108 CaravanGuildGuard
+M 16109 CaravanGuildGuard
+M 16110 CaravanGuildGuard
+M 16111 WarriorGuildMaster
+M 16112 MageGuildMaster
+M 16113 ThiefGuildMaster
+M 16114 ClericGuildMaster
+M 16122 receptionist
+M 16213 acid_monster
+M 16219 death_knight
+M 16610 Demon
+M 16620 BreathWeapon 45 0
+M 16700 BreathWeapon 45 4
+M 16702 shadow
+M 16709 vampire
+M 16710 Devil
+M 16711 Devil
+M 16712 Devil
+M 16713 ghoul
+M 16714 ghoul
+M 16715 wraith
+M 16720 Devil
+M 16721 Devil
+M 16724 Devil
+M 16727 Devil
+M 16728 Devil
+M 16730 Devil
+M 16731 Devil
+M 16732 Demon
+M 16733 Demon
+M 16734 Demon
+M 16735 Demon
+M 16738 BreathWeapon 75 6
+M 16738 FireBreather
+M 17002 wraith
+M 17005 shadow
+M 17009 geyser
+M 17010 green_slime
+M 17011 vampire
+M 17014 ghoul
+M 18205 receptionist
+M 18206 MageGuildMaster
+M 18207 ClericGuildMaster
+M 18208 ThiefGuildMaster
+M 18209 WarriorGuildMaster
+M 18210 MordGuildGuard
+M 18211 MordGuildGuard
+M 18212 MordGuildGuard
+M 18213 MordGuildGuard
+M 18215 MordGuard
+M 18216 janitor
+M 18217 fido
+M 18222 MordGuard
+M 18223 MordGuard
+M 18227 MordGuard
+M 18604 MobBlockWay 1 0 10 $n ti dice 'Dovrai uccidermi per passare'
+M 20001 snake
+M 20002 BreathWeapon 55 6
+M 20003 snake
+M 20005 Pungiglione
+M 20006 snake
+M 20010 snake
+M 20016 BreathWeapon 55 6
+M 20017 BreathWeapon 55 6
+M 21107 RustMonster
+M 21108 wraith
+M 21111 web_slinger
+M 21112 trapper
+M 21114 troguard
+M 21118 troguard
+M 21119 troguard
+M 21121 trogcook
+M 21122 shaman
+M 21123 troguard
+M 21124 golgar
+M 21130 Valik
+M 21135 regenerator
+M 21136 snake
+M 21138 ghostsoldier
+M 21139 ghostsoldier
+M 21140 keystone
+M 21141 lattimore
+M 21142 guardian
+M 21144 troguard
+M 21145 troguard
+M 21146 coldcaster
+M 21147 RustMonster
+M 21363 PaladinGuildmaster
+M 21366 PsiGuildmaster
+M 21367 RangerGuildmaster
+M 21803 Tyrannosaurus_swallower
+M 21810 Tyrannosaurus_swallower
+M 22604 baby_bear
+M 22605 timnus
+M 22624 baby_bear
+M 25001 Keftab
+M 25002 vampire
+M 25003 StormGiant
+M 25006 StormGiant
+M 25009 BreathWeapon 30 6
+M 25009 BreathWeapon 30 6
+M 25012 fighter_mage
+M 25014 StormGiant
+M 25017 AbyssGateKeeper
+M 25026 acid_monster
+M 25504 BreathWeapon 30 4
+M 27006 Tytan
+*M 27007 replicant
+M 27016 AbbarachDragon
+M 27025 Samah
+M 27429 AGGRESSIVE
+M 27430 AGGRESSIVE
+M 30000 strahd_zombie
+M 30004 banshee
+M 30102 vampire
+M 30103 wraith
+M 30105 mad_gertruda
+M 30106 wraith
+M 30107 raven_iron_golem
+M 30108 mad_cyrus
+M 30112 Demon
+M 30113 strahd_vampire
+M 30114 wraith
+M 30115 ghoul
+M 30116 vampire
+M 30117 ghost
+M 30118 shadow
+M 50062 PrimoAlbero
+M 50102 receptionist
+M 60010 receptionist
+M 60011 receptionist
+M 60012 receptionist
+M 60013 receptionist
+M 60014 receptionist
+M 60015 receptionist
+O 15 SlotMachine
+O 23 jive_box
+O 30 scraps
+O 31 portal
+O 3097 board
+O 3098 board
+O 3099 board
+O 5700 ModHit -15
+O 20023 board
+O 20203 board
+O 20403 board
+O 21122 nodrop
+O 21130 soap
+*O 25102 board
+R 99 Donation
+R 322 BlockWay 1 21 30 Cerca un'altra via per raggiungere il Dio delle morti
+* Thanatos area scala verde
+R 331 BlockWay 1 31 40 Cerca un'altra via per raggiungere il Dio delle morti
+* Thanatos area scala rossa
+R 340 BlockWay 1 41 51 Cerca un'altra via per raggiungere il Dio delle morti
+* Thanatos area scala nera
+R 500 druid_challenge_prep_room
+R 501 druid_challenge_room
+R 550 monk_challenge_prep_room
+R 551 monk_challenge_room
+R 1911 CapannaVillaggio
+R 1950 Rampicante
+R 1951 Rampicante
+R 1961 ColloSerpente
+*R 2188 Magic_Fountain
+*R 2189 Magic_Fountain
+R 3001 Fountain
+R 3030 dump
+R 3422 ChurchBell
+R 5234 Fountain
+R 8001 bank
+R 9999 House Alar 
+R 11014 Fountain
+R 11111 House DarkStar
+R 13406 Fountain
+R 13464 bank
+R 22642 Fountain
+R 22644 Fountain
+R 22646 Fountain
+R 22648 Fountain
+*R 26010 Fountain
+R 34001 House Montero 
+M 17304 BreathWeapon 20 2
+M 17305 BreathWeapon 20 2
+R 18283 BlockWay 1 1 40 Vai da un'altra parte a fare il bullo!
+
+M 251 CarrionCrawler
+M 223 Ghoul
+M 227 snake
+M 230 BreathWeapon 55 0
+M 232 blink
+M 233 BreathWeapon 55 4
+M 236 Ghoul
+M 239 shadow
+M 240 SputoVelenoso
+M 243 BreathWeapon 55 2
+M 248 snake
+M 249 snake
+M 4000 snake
+M 904 receptionist
+R 1210 Magic_Fountain
+* procedure Changeform druidici
+M 1300 regenerator
+M 1303 coldcaster
+M 1304 SputoVelenoso
+M 1305 hit_sucker
+M 1306 cockatrice
+M 1307 Pungiglione_maggiore
+M 1309 ragno_intermittente
+M 1310 behir
+M 1313 ankheg
+M 1311 orso_bianco
+ 
+
+*M 1400 chess_game
+
+
+*M 1401 chess_game
+
+
+*M 1402 chess_game
+
+
+*M 1403 chess_game
+
+
+*M 1404 chess_game
+
+
+*M 1405 chess_game
+
+
+*M 1406 chess_game
+
+
+*M 1407 chess_game
+
+
+*M 1408 chess_game
+
+
+*M 1409 chess_game
+
+
+*M 1410 chess_game
+
+
+*M 1411 chess_game
+
+
+*M 1412 chess_game
+
+
+*M 1413 chess_game
+
+
+*M 1414 chess_game
+
+
+*M 1415 chess_game
+
+
+*M 1448 chess_game
+
+
+*M 1449 chess_game
+
+
+*M 1450 chess_game
+
+
+*M 1451 chess_game
+
+
+*M 1452 chess_game
+
+
+*M 1453 chess_game
+
+
+*M 1454 chess_game
+
+
+*M 1455 chess_game
+
+
+*M 1456 chess_game
+
+
+*M 1457 chess_game
+
+
+*M 1458 chess_game
+
+
+*M 1459 chess_game
+
+
+*M 1460 chess_game
+
+
+*M 1461 chess_game
+
+
+*M 1462 chess_game
+
+
+*M 1463 chess_game
+
+
+M 1470 jabberwocky
+
+
+M 1472 flame
+M 1428 jugglernaut
+M 1437 banana
+
+M 1471 paramedics
+
+M 1493 delivery_beast
+
+M 1495 delivery_elf
+M 1499 sisyphus
+M 2802 BreathWeapon 30 0
+M 2804 BreathWeapon 30 8
+M 2807 MobBlockWay 3 52 60 $n ti dice '...ma per dar prova del tuo valore, devi prima sconfiggermi.'
+M 2844 MobBlockWay 1 52 60 $n ti dice 'Sei disposto a giostrare contro di me?'
+M 2881 SputoVelenoso
+* M 3000 ShopperNoAct 
+* M 3007 ShopperNoAct
+* procedure speciali
+O 3314 enter_obj tombino 3344
+O 3321 enter_obj tombino 3331
+M 3311 raven_iron_golem
+M 3325 trapper
+M 3402 Ghoul
+M 3404 wraith
+M 3408 Ghost
+M 3409 Ghoul
+M 3410 FireBreather
+M 3411 shadow
+M 3412 medusa
+M 3415 FireBreather
+M 3416 Vampire
+M 3417 regenerator
+M 3424 slavalis
+* procedure speciali per i nani
+R 4263 Fountain
+R 4351 bank
+M 4244 receptionist
+M 4279 Capo_fucina
+M 4280 miner_teacher
+M 4281 forge_teacher
+M 4282 determine_teacher
+M 4283 equilibrium_teacher
+M 4727 ghostsoldier
+M 5207 SputoVelenoso
+
+M 6502 acid_monster
+M 6506 SputoVelenoso
+M 6509 SputoVelenoso
+M 6721 snake
+M 6821 snake
+R 7810 Fountain
+R 7829 BlockWay 5 0 5 Sei troppo esperto per l'arena, e' ora che tu lasci questa scuola (torna allo stagno sulla rupe)
+R 7833 Donation
+R 7840 BlockWay 0 0 0 
+O 7801 enter_obj stagno 3004
+M 7802 DruidGuildMaster
+M 7803 RangerGuildmaster
+M 7804 ClericGuildMaster
+M 7805 WarriorGuildMaster
+M 7806 monk_master
+M 7807 PaladinGuildmaster
+M 7808 PsiGuildmaster
+M 7809 MageGuildMaster
+M 7810 barbarian_guildmaster
+M 7811 ThiefGuildMaster
+M 7817 MobBlockWay 3   Dove credi di scappare vigliacco??
+M 7830 paramedics
+M 8004 DemonTeacher
+M 8201 BreathWeapon 15 4
+M 08401 snake_plus
+M 08412 trapper
+M 08413 Ghoul
+M 08418 Ghost
+M 08419 MobBlockWay 4 52 60 Il mastodontico corpo del Formicaleone blocca il passaggio. Se vuoi scappare devi ucciderlo.
+M 08421 snake_plus
+M 08423 Tyrannosaurus_swallower
+M 08424 snake_plus
+M 08432 BreathWeapon 50 0
+M 08438 Lizardman
+M 08439 Ghost
+R 08448 BlockWay 1 25 60 Ti senti troppo inesperto per andare oltre.
+R 08438 BlockWay 3 25 60 Ti senti troppo inesperto per andare oltre.
+R 08463 BlockWay 6 35 60 Ti senti troppo inesperto per andare oltre.R 8701 BlockWay 1 15 19 La vegetazione ti impedisce di passare! Una voce riecheggia nella tua testa: "Non sei del livello idoneo. Vai altrove!'
+O 8730 enter_obj specchio 8749
+M 8704 NudgeNudge
+* Procedure New Thalos
+M 13501 barbarian_guildmaster
+M 13502 PsiGuildmaster
+M 13765 acid_monster
+M 13821 Ghoul
+M 13840 Ghoul
+R 15252 Fountain
+R 15408 Fountain
+R 15466 Fountain
+O 15221 nodrop
+M 15200 receptionist
+M 15206 BreathWeapon 50 6
+M 15333 MobBlockWay 3 21 50 Mostro del caos, vattene o ti uccido!
+M 15523 BreathWeapon 20 6   *! Mob 23 (Luciferus) ha breathweapon fuoco
+M 15524 BreathWeapon 20 8   *! Mob 24 (Drago del Caos) ha breathweapon random
+M 15519 ghost               *! Mob 19 (Campione Non-morto) e' un ghost
+M 15523 MobBlockWay 6 1 45 Sono il Custode di una bestia degenerata! Andatevene finche' siete in tempo!
+R 15521 Magic_Fountain
+R 15539 Fountain
+
+M 16020 snake
+M 16038 hit_sucker
+M 16039 Tyrannosaurus_swallower
+* Procedure Gypsy_village
+M 16126 barbarian_guildmaster
+M 16125 PsiGuildmaster
+R 16343 Magic_Fountain
+M 16310 BreathWeapon 50 2
+M 16311 BreathWeapon 50 6
+M 16312 BreathWeapon 50 4
+M 16313 BreathWeapon 50 0
+M 16314 BreathWeapon 50 8
+M 16300 snake
+M 16301 snake
+* procedue speciali area Fenice
+M 17201 FireBreather
+M 17203 snake
+M 17204 snake
+M 17205 snake
+M 17206 wraith
+M 17207 MobBlockWay 4 52 60 La statua allarga le ali per bloccarti e ti attacca!
+M 17210 MobBlockWay 2 52 60 La bibliotecaria si alza e ti dice severa "Gwee-Gwee, Twirl"!
+M 17215 snake_plus
+O 17230 enter_obj monolito 17267
+O 17231 nodrop
+O 17234 nodrop
+O 17235 nodrop
+* Procedure Immryr
+* le spe draghi sono in base
+R 17379 Donation
+M 17304 BreathWeapon 50 2
+M 17305 BreathWeapon 50 4
+M 17325 receptionist
+* Procedure Mordilnia
+R 18224 bank
+M 18205 receptionist
+M 18206 MageGuildMaster
+M 18207 ClericGuildMaster
+M 18208 ThiefGuildMaster
+M 18209 WarriorGuildMaster
+M 18225 barbarian_guildmaster
+M 18226 PsiGuildmaster
+* procedure speciali
+M 18401 RustMonster
+M 18402 Pungiglione
+M 18403 camino 18442
+M 18404 ghost
+M 18405 vampire
+M 18406 ghoul
+M 18407 Tytan
+M 18408 wraith
+M 18409 wraith
+M 18410 banshee_lorelai
+M 18411 ghost
+M 18412 trapper
+M 18413 shadow
+M 18414 jugglernaut
+M 18415 shadow
+M 18417 Demon
+M 18418 shadow
+M 18420 shadow
+M 18421 raven_iron_golem
+M 18422 shadow
+M 18426 shadow
+O 18454 SlotMachine
+* procedure speciali per fogriver
+* M 18505 FireBreather
+O 18530 trap_obj 7 8 5 Vieni colpito da una decina di dardi appuntiti!
+O 18500 enter_obj portale 3001
+M 18500 Ghost
+M 18501 Ghost
+M 18502 Vampire
+M 18521 LightningBreather
+M 18522 FireBreather
+M 18524 wraith
+* procedure speciali Vulcano
+O 19612 trap_obj 1 20 5 $c0009Le fiamme improvvisamente si alzano, avvolgendoti nella loro morsa!$c0007
+
+
+
+
+
+
+R 19661 Fountain
+M 19605 FireBreather
+M 19606 MobBlockWay 2 1 51 Un'ondata di $c0001lava$c0007 si crea dalle mani del guardiano, bloccandoti il passaggio
+* procedure speciali Xarah
+O 19769 msg_obj 1 1
+O 19713 msg_obj 2 1
+O 19770 msg_obj 3 1
+O 19772 msg_obj 4 1
+O 19771 msg_obj 5 1
+O 19753 thion_loader
+
+
+O 19750 zone_obj 19673 19799
+O 19751 zone_obj 19673 19799
+M 19701 Lizardman
+M 19702 Lizardman
+M 19709 Lizardman
+M 19710 Lizardman
+M 19712 Ghoul
+M 19721 Lizardman
+M 19815 hit_sucker
+M 19924 Moribondo
+M 19930 raven_iron_golem
+M 19920 tsuchigumo
+M 19917 MobBlockWay 2 52 60 Un pensiero ti tuona dentro 'Di qui non si passa'
+M 19931 MobBlockWay 4 52 60 Un pensiero ti tuona dentro 'Di qui non si passa'
+M 19903 Pungiglione
+M 19904 Pungiglione
+M 19906 Pungiglione
+M 19908 Pungiglione
+M 19910 Pungiglione
+M 19912 Pungiglione
+M 19935 snake
+O 19933 Rakda
+M 19932 trapper
+M 20014 snake
+
+M 21024 ChangeDam 314
+R 21061 BlockWay 1 31 60 La paura di questo luogo e' troppo grande e non riesci a procedere oltre!
+O 21017 enter_obj corteccia 21062
+O 21035 enter_obj crepa 21008
+M 21008 snake
+M 21013 acid_monster
+M 21014 Nightmare
+M 21015 Ghost
+M 21016 Ghost
+M 21017 Vampire_Summoner 21018
+M 21018 golgar
+M 21019 BreathWeapon 55 0
+M 21020 hit_sucker
+M 21021 Ghost
+M 21023 Ghost
+M 21027 receptionist
+M 21112 trapper
+M 21803 Tyrannosaurus_swallower
+M 21810 Tyrannosaurus_swallower
+M 27006 Tytan
+M 27016 AbbarachDragon 0 0
+M 27025 Samah
+!* special proc per area 273 (Grotta del Solitario)
+
+
+
+
+!* MOBS
+!* Araucaria Guardiana
+
+
+
+M 27301 MobBlockWay 4 46 60 $n piega verso di te i suoi rami e ti sussurra 'Torna a casa, hai le ossa fragili per queste terre!'
+
+!* Drago Porpora : soffia acido spesso e volentieri; pero' dorme!
+M 27311 BreathWeapon 25 0
+
+
+!* Anima Persa: chilla
+M 27312 shadow
+
+
+!* EOF grotta.spe
+!* special proc per area 27350 (La Rupe Rossa)
+
+
+
+
+
+!* MOBS
+
+
+
+!* serpente tricolore, velenoso
+
+
+M 27353 snake
+
+
+!* canguro nonmorto, paralizza
+
+
+M 27360 Ghoul
+
+
+!* zombie aborigeno, chilla
+
+
+M 27361 shadow
+
+
+!* ragno guardiano, velenoso (mob hide + sneak)
+
+M 27365 snake
+M 27501 Ghost
+M 27503 Ghoul
+M 27506 wraith
+M 27507 Vampire
+M 27508 Vampire
+M 27509 wraith
+M 27521 jugglernaut
+M 27522 Vampire
+M 27523 wraith
+M 27524 Ghoul
+M 27525 Vampire
+M 27526 shadow
+M 27528 acid_monster
+M 27529 snake_plus
+R 27738 BlockWay 4 50 51 non sei pronto per affrontare questa prova, solo morte ti può portare.
+M 27716 BreathWeapon 0 2
+M 27717 SputoVelenoso
+M 30000 strahd_zombie
+M 30004 banshee
+M 30102 Vampire
+M 30103 wraith
+M 30104 snake_plus
+M 30106 wraith
+M 30107 raven_iron_golem
+M 30112 Demon
+M 30113 strahd_vampire
+M 30114 wraith
+M 30115 Ghoul
+M 30116 Vampire
+M 30117 Ghost
+M 30118 shadow
+M 32000 MobBlockWay 6 52 60 
+M 32005 snake_plus
+M 32801 snake
+M 32817 trapper
+M 32819 snake
+M 32823 snake
+!* special proc per Templi
+
+!* OBJS
+!* Libro
+O 32901 LibroEroi
+
+!* ROOMS (dei Guardiani)
+!* 1. neutral
+R 32905 BlockAlign 1 0 Il Guardiano ti schernisce: 'Tu non puoi passare!'
+R 32914 BlockAlign 1 0 Il Guardiano ti schernisce: 'Tu non puoi passare!'
+R 32987 BlockAlign 1 0 Il Guardiano ti schernisce: 'Tu non puoi passare!'
+!* 2. good
+R 32924 BlockAlign 2 1000 Una luce abbagliante ostruisce il passaggio, non puoi proseguire!
+R 32934 BlockAlign 2 1000 Una luce abbagliante ostruisce il passaggio, non puoi proseguire!
+R 32974 BlockAlign 2 1000 Una luce abbagliante ostruisce il passaggio, non puoi proseguire!
+!* 3. evil
+R 32944 BlockAlign 4 -1000 Il Guardiano ti gela: 'Fermo li', mammoletta!'
+R 32954 BlockAlign 4 -1000 Il Guardiano ti gela: 'Fermo li', mammoletta!'
+R 32964 BlockAlign 4 -1000 Il Guardiano ti gela: 'Fermo li', mammoletta!'
+
+!* EOF spec templi
+* procedure speciali per i castelli
+R 34024 bank
+R 34034 bank
+R 34043 bank
+R 34052 bank
+R 34061 bank
+R 34072 bank
+R 34081 bank
+R 34090 bank
+R 34099 bank
+R 34113 bank
+R 34122 bank
+R 34131 bank
+R 34139 bank
+R 34147 bank
+R 34156 bank
+M 34300 creceptionist
+M 34308 creceptionist
+M 34309 creceptionist
+M 34310 creceptionist
+M 34311 creceptionist
+M 34312 creceptionist
+M 34313 creceptionist
+M 34314 creceptionist
+M 34315 creceptionist
+M 34316 creceptionist
+M 34317 creceptionist
+M 34318 creceptionist
+M 34319 creceptionist
+M 34320 creceptionist
+M 34321 creceptionist
+M 37114 regenerator
+M 37314 regenerator
+$

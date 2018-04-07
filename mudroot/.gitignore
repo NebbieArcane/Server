@@ -1,4 +1,4 @@
-/myst.pid
-*.log
-*.txt
-/alarmud.pid
+*
+!.gitignore
+!README.md
+!lib
