@@ -852,7 +852,7 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
 		tmp_obj->affected[0].modifier = 8;
 		break;
-    /* dal liv 34 al 50 aggiungi frost alle possibilità */
+    /* dal liv 34 al 50 aggiungi thunder alle possibilità */
 	case 2:
 		tmp_obj->name = strdup("blade thunder");
 		tmp_obj->short_description = strdup("una $c0012Thunder $c0007blade");
