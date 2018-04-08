@@ -2205,7 +2205,7 @@ void spell_dust_devil( byte level, struct char_data* ch,
 	act("Esegui il rituale dell'evocazione.", FALSE, ch, 0, 0, TO_CHAR);
 
 	char_to_room(mob, ch->in_room);
-	act( "$n arriva attraverso uno squarcio nel tessuto sapzio-tempo!",
+	act( "$n arriva attraverso uno squarcio nel tessuto spazio-tempo!",
 		 FALSE, mob, 0, 0, TO_ROOM);
 
 	/* charm them for a while */
