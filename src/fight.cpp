@@ -4563,20 +4563,37 @@ struct char_data* FindMetaVictim( struct char_data* ch) {
 */
 void NailThisSucker( struct char_data* ch) {
 
-	struct char_data* pers;
+	/*struct char_data* pers;*/
 	long room_num;
 	struct room_data* rp;
-	struct obj_data* obj, *next_o;
+	/*struct obj_data* obj, *next_o;*/
 
 	rp = real_roomp(ch->in_room);
 	room_num=ch->in_room;
-
+    
+        char_from_room(ch);
+        if(IS_PC( ch )) {
+            char_to_room(ch,1);
+            GET_POS(ch) = POSITION_STUNNED;
+            mudlog( LOG_PLAYERS, "%s hit a DeathTrap in room %s[%ld]\r\n",
+               GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
+        } else {
+            if(ch->lStartRoom != 0) {
+            char_to_room( ch, ch->lStartRoom );
+            } else {
+                /* transfer rimuove la stanza d'appartenenza al mob, mettiamo un check che
+                   elimini direttamente il mob nel caso. */
+                extract_char(ch);
+            }
+        }
+    
+/*
 	death_cry(ch);
 
 	if( IS_NPC( ch ) && IS_SET( ch->specials.act, ACT_POLYSELF ) ) {
-		/*
-		 *   take char from storage, to room
-		 */
+
+        comment: take char from storage, to room
+ 
 		pers = ch->desc->original;
 		char_from_room(pers);
 		char_to_room(pers, ch->in_room);
@@ -4593,13 +4610,14 @@ void NailThisSucker( struct char_data* ch) {
 	zero_rent(ch);
 	extract_char(ch);
 
-	/* delete EQ dropped by them if room was a DT */
+    comment: delete EQ dropped by them if room was a DT
 	if (IS_SET(rp->room_flags,DEATH)) {
 		for (obj = real_roomp(room_num)->contents; obj; obj = next_o) {
 			next_o = obj->next_content;
 			extract_obj(obj);
-		}  /* end DT for */
+		}
 	}
+    */
 }
 
 

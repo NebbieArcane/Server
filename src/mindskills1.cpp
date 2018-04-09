@@ -115,6 +115,7 @@ void mind_teleport(byte level, struct char_data* ch,
 		room = real_roomp(to_room);
 		if (room) {
 			if ((IS_SET(room->room_flags, PRIVATE)) ||
+                    (IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
 					(IS_SET(room->room_flags, NO_SUM)) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
@@ -140,12 +141,13 @@ void mind_teleport(byte level, struct char_data* ch,
 	act("Una massa di particelle luminose si compone nella figura di $n!", FALSE, ch,0,0,TO_ROOM);
 
 	do_look(ch, "", 15);
-
+    
+    /* questo non deve accadere
 	if (IS_SET(real_roomp(to_room)->room_flags, DEATH) &&
 			GetMaxLevel(ch) < IMMORTALE) {
 		NailThisSucker(ch);
 		return;
-	}
+	}*/
 
 	check_falling(ch);
 
