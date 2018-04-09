@@ -303,10 +303,10 @@ void spell_haste(byte level, struct char_data* ch,
 
 	send_to_char("Ti senti veloce....\n\r", victim);
     
-    dice = number(3, 19)
+    dice = number(3, 19);
     
     if(GET_INT(victim) < dice) {
-        send_to_char("La tua mente non riesce a cordinare l'accellerazione degli impulsi del tuo corpo... Perdi conoscenza!\n\r",victim);
+        send_to_char("La tua mente non riesce a coordinare l'accellerazione degli impulsi del tuo corpo... Perdi conoscenza!\n\r",victim);
         GET_POS(victim) = POSITION_STUNNED;
     }
 
