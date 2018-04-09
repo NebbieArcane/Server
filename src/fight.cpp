@@ -3194,7 +3194,6 @@ void PCAttacks( char_data* pChar ) {
 	struct obj_data* pTmp = NULL;
 	struct obj_data* pWeapon = NULL; // SALVO la setto NULL mi serve per dopo
 	int perc, dice;
-    float extra_attacks;
 
 	/* Controlla se il tipo e' in parrying, in questo caso
 	   diminuisce gli attacchi di uno per ogni attacco
@@ -3240,37 +3239,11 @@ void PCAttacks( char_data* pChar ) {
 	/* work through all of their attacks, until there is not
 	 * a full attack left */
 
-    /* REQUIEM 2018 random haste */
+    /* REQUIEM 2018 mov consumation by haste */
     
-    if (affected_by_spell(pChar, SPELL_HASTE)) {
-     
-        extra_attacks = number(0.0,fAttacks);
-        
-        /* diamo una mano ai ladri */
-        dice = number(0,2);
-        if(HasClass(pChar, CLASS_THIEF) && dice > 0) {
-            switch(dice) {
-                case 1:
-                    extra_attacks += 0.5;
-                    mudlog(LOG_CHECK,"Adding random 0.5 bonus attack for thieves affected by haste.");
-                    break;
-                case 2:
-                    extra_attacks += 1.0;
-                    mudlog(LOG_CHECK,"Adding random 1 bonus attack for thieves affected by haste.");
-                    break;
-                default:
-                    break;
-            }
-        }
-        
-        if (extra_attacks > 0.0) {
-            GET_MOVE(pChar) -= number(1,3)*((int)(extra_attacks));
+    if (affected_by_spell(pChar, SPELL_HASTE) ) {
+            GET_MOVE(pChar) -= number(1,5)*((int)(fAttacks));
             alter_move(pChar, 0);
-        }
-        
-        fAttacks += extra_attacks;
-        mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
-        
     }
 
 
