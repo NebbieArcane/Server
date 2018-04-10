@@ -4548,7 +4548,7 @@ void NailThisSucker( struct char_data* ch) {
         if(IS_PC( ch )) {
             char_to_room(ch,1);
             GET_POS(ch) = POSITION_STUNNED;
-            act("\n$c0008Il nulla ti avvolge...$c0007\n", FALSE, ch, 0, v, TO_VICT);
+            boost::format fmt("\n$c0008Il nulla ti avvolge...$c0007\n");
         } else {
             if(ch->lStartRoom != 0) {
             char_to_room( ch, ch->lStartRoom );
