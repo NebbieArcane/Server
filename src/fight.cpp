@@ -3194,7 +3194,6 @@ void PCAttacks( char_data* pChar ) {
 	struct obj_data* pTmp = NULL;
 	struct obj_data* pWeapon = NULL; // SALVO la setto NULL mi serve per dopo
 	int perc, dice;
-    float extra_attacks;
 
 	/* Controlla se il tipo e' in parrying, in questo caso
 	   diminuisce gli attacchi di uno per ogni attacco
@@ -3240,37 +3239,11 @@ void PCAttacks( char_data* pChar ) {
 	/* work through all of their attacks, until there is not
 	 * a full attack left */
 
-    /* REQUIEM 2018 random haste */
+    /* REQUIEM 2018 mov consumation by haste */
     
-    if (affected_by_spell(pChar, SPELL_HASTE)) {
-     
-        extra_attacks = number(0.0,fAttacks);
-        
-        /* diamo una mano ai ladri */
-        dice = number(0,2);
-        if(HasClass(pChar, CLASS_THIEF) && dice > 0) {
-            switch(dice) {
-                case 1:
-                    extra_attacks += 0.5;
-                    mudlog(LOG_CHECK,"Adding random 0.5 bonus attack for thieves affected by haste.");
-                    break;
-                case 2:
-                    extra_attacks += 1.0;
-                    mudlog(LOG_CHECK,"Adding random 1 bonus attack for thieves affected by haste.");
-                    break;
-                default:
-                    break;
-            }
-        }
-        
-        if (extra_attacks > 0.0) {
-            GET_MOVE(pChar) -= number(1,3)*((int)(extra_attacks));
+    if (affected_by_spell(pChar, SPELL_HASTE) ) {
+            GET_MOVE(pChar) -= number(1,5)*((int)(fAttacks));
             alter_move(pChar, 0);
-        }
-        
-        fAttacks += extra_attacks;
-        mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
-        
     }
 
 
@@ -4563,20 +4536,40 @@ struct char_data* FindMetaVictim( struct char_data* ch) {
 */
 void NailThisSucker( struct char_data* ch) {
 
-	struct char_data* pers;
+	/*struct char_data* pers;*/
 	long room_num;
 	struct room_data* rp;
-	struct obj_data* obj, *next_o;
+	/*struct obj_data* obj, *next_o;*/
 
 	rp = real_roomp(ch->in_room);
 	room_num=ch->in_room;
-
+    
+        char_from_room(ch);
+        if(IS_PC( ch )) {
+            mudlog( LOG_PLAYERS, "%s hit a DeathTrap in room %s[%ld]\r\n",
+                   GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
+            char_to_room(ch,1);
+            GET_POS(ch) = POSITION_STUNNED;
+            send_to_char("\n$c0008Il nulla ti avvolge...$c0007\n", ch);
+        } else {
+            mudlog( LOG_MOBILES, "%s hit a DeathTrap in room %s[%ld]\r\n",
+                   GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
+            if(ch->lStartRoom != 0) {
+            char_to_room( ch, ch->lStartRoom );
+            } else {
+                /* transfer rimuove la stanza d'appartenenza al mob, mettiamo un check che
+                   elimini direttamente il mob nel caso. */
+                extract_char(ch);
+            }
+        }
+    
+/*
 	death_cry(ch);
 
 	if( IS_NPC( ch ) && IS_SET( ch->specials.act, ACT_POLYSELF ) ) {
-		/*
-		 *   take char from storage, to room
-		 */
+
+        comment: take char from storage, to room
+ 
 		pers = ch->desc->original;
 		char_from_room(pers);
 		char_to_room(pers, ch->in_room);
@@ -4593,13 +4586,14 @@ void NailThisSucker( struct char_data* ch) {
 	zero_rent(ch);
 	extract_char(ch);
 
-	/* delete EQ dropped by them if room was a DT */
+    comment: delete EQ dropped by them if room was a DT
 	if (IS_SET(rp->room_flags,DEATH)) {
 		for (obj = real_roomp(room_num)->contents; obj; obj = next_o) {
 			next_o = obj->next_content;
 			extract_obj(obj);
-		}  /* end DT for */
+		}
 	}
+    */
 }
 
 

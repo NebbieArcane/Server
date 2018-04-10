@@ -715,7 +715,7 @@ const char* spell_wear_off_soon_msg[] = {
 	"!fear!",
 	"!acid blast!",
 	"Per un attimo fatichi a respirare, stai perdendo la capacita' di respirare sott'acqua.",
-	"Ti snti un po' piu' pesante, stai perdendo la capacita' di volare.",
+	"Ti senti un po' piu' pesante, stai perdendo la capacita' di volare.",
 	"spell1, please report.",   /* 70 */
 	"spell2, please report.",
 	"spell3, please report.",

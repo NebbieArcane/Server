@@ -710,20 +710,11 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_HASTE:
-        /* REQUIEM 2018 - applico un incremento del num. di attacchi fisso, se haste deriva da eq */
-		
-        if (mod > 0) {
-            mudlog(LOG_PLAYERS,"%s: num attacks altered by equip = %d",GET_NAME(ch),mod);
-            ch->mult_att += float(mod);
-        }
-            
-        if(affected_by_spell(ch, SPELL_HASTE) || mod < 0) {
-            /* ricalcolo il numero di attacchi originali */
-            reset_original_numattacks(ch);
-        }
-            
-        
-        break;
+		if (mod > 0)
+		{ ch->mult_att *= 2.0; }
+		else if (mod < 0)
+		{ ch->mult_att /= 2.0; }
+		break;
 
 	case APPLY_SLOW:
 		if (mod > 0)

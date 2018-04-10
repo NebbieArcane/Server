@@ -270,6 +270,7 @@ void spell_scare(byte level, struct char_data* ch,
 void spell_haste(byte level, struct char_data* ch,
 				 struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
+    int dice;
 
 	if (affected_by_spell(victim, SPELL_HASTE)) {
 		act("$N si muove gia piu' velocemente!",FALSE,ch,0,victim,TO_CHAR);
@@ -294,31 +295,20 @@ void spell_haste(byte level, struct char_data* ch,
 
 
 	af.type      = SPELL_HASTE;
-    
-    switch (HowManyClasses(ch)) {
-            
-        case 1:
-            af.duration  = 4;
-            break;
-        case 2:
-            af.duration  = 1;
-            break;
-        case 3:
-            af.duration  = 1;
-            break;
-        default:
-            break;
-            
-    }
-    
-	af.modifier  = 0;
+    af.duration  = level/HowManyClasses(ch);
+	af.modifier  = 1;
 	af.location  = APPLY_HASTE;
 	af.bitvector = 0;
 	affect_to_char(victim, &af);
 
-	send_to_char("Ti senti veloce.... e nulla piu'!\n\r", victim);
-	send_to_char("Perdi conoscenza\n\r",victim);
-	GET_POS(victim) = POSITION_STUNNED;
+	send_to_char("Ti senti veloce....\n\r", victim);
+    
+    dice = number(3, 19);
+    
+    if(GET_INT(victim) < dice) {
+        send_to_char("La tua mente non riesce a coordinare l'accellerazione degli impulsi del tuo corpo... Perdi conoscenza!\n\r",victim);
+        GET_POS(victim) = POSITION_STUNNED;
+    }
 
 	if (!in_group(ch, victim)) {
 		if (!IS_PC(ch))

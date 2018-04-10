@@ -597,6 +597,7 @@ void spell_teleport(byte level, struct char_data* ch,
 		room = real_roomp(to_room);
 		if (room) {
 			if ((IS_SET(room->room_flags, PRIVATE)) ||
+                    (IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
 					(IS_SET(room->room_flags, NO_SUM)) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
@@ -623,12 +624,13 @@ void spell_teleport(byte level, struct char_data* ch,
 	act("$n torna visibile un po' per volta.", FALSE, ch,0,0,TO_ROOM);
 
 	do_look(ch, "", 15);
-
+    
+    /* Questo non deve accadere
 	if (IS_SET(real_roomp(to_room)->room_flags, DEATH) &&
 			GetMaxLevel(ch) < LOW_IMMORTAL) {
 		NailThisSucker(ch);
 		return;
-	}
+	}*/
 
 	check_falling(ch);
 
