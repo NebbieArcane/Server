@@ -4548,8 +4548,7 @@ void NailThisSucker( struct char_data* ch) {
         if(IS_PC( ch )) {
             char_to_room(ch,1);
             GET_POS(ch) = POSITION_STUNNED;
-            mudlog( LOG_PLAYERS, "%s hit a DeathTrap in room %s[%ld]\r\n",
-               GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
+            act("\n$c0008Il nulla ti avvolge...$c0007\n", FALSE, ch, 0, v, TO_VICT);
         } else {
             if(ch->lStartRoom != 0) {
             char_to_room( ch, ch->lStartRoom );
@@ -4559,6 +4558,8 @@ void NailThisSucker( struct char_data* ch) {
                 extract_char(ch);
             }
         }
+    mudlog( LOG_PLAYERS, "%s hit a DeathTrap in room %s[%ld]\r\n",
+           GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
     
 /*
 	death_cry(ch);
