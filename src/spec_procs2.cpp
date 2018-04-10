@@ -1192,7 +1192,10 @@ int magic_user(struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 
 int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 		   int type) {
-	struct char_data* vict;
+    struct char_data* vict;
+    struct char_data* injuried;
+    struct room_data* rp;
+    struct char_data* tmp, *tmp2;
 	byte lspell, healperc=0;
 
 	SetStatus( "Cleric spec procs started", GET_NAME_DESC( ch ) );
@@ -1229,39 +1232,60 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 	{ return(FALSE); }
 
 	if( !ch->specials.fighting ) {
-		if (GET_HIT(ch) < GET_MAX_HIT(ch)-10) {
+  
+        
+        /* added by Requiem 2018, i chierici se charmati
+         curano chi sta messo peggio in gruppo,  se non 
+         stanno combattendo in prima persona */
+        
+        if (!IS_AFFECTED(ch, AFF_CHARM)) {
+            injuried = ch;
+        } else {
+            rp = real_roomp(ch->in_room);
+            injuried = ch->master;
+            for(tmp = rp->people; tmp; tmp = tmp2) {
+                tmp2 = tmp->next_in_room;
+                if ((GetMaxLevel(tmp) < IMMORTALE) && GET_HIT(tmp) < GET_HIT(injuried) && (IS_AFFECTED(tmp, AFF_GROUP) && tmp->master == ch->master)) {
+                    injuried = tmp;
+                }
+            }
+        }
+        
+		if (GET_HIT(injuried) < GET_MAX_HIT(injuried)-10) {
 			lspell = GetMaxLevel( ch );
 			if ( lspell >= 20 ) {
-				act( "$n pronuncia le parole 'Woah! Adesso si` che sto bene!'.",
+				act( "$n pronuncia le parole 'Woah! Adesso si` che va bene!'.",
 					 1, ch,0,0,TO_ROOM);
-				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-				if( ch->desc ) {
-					GET_MANA(ch) -= 50;
+				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
+				if( injuried != ch ) {
+					mudlog( LOG_CHECK, "heal su player - prima: %d",GET_MANA(ch));
+                    GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
+                    mudlog( LOG_CHECK, "heal su player - dopo: %d",GET_MANA(ch));
 				}
 			}
-			else if (lspell > 12 && !ch->desc ) {
-				act( "$n pronuncia le parole 'Hey! Mi sento decisamente meglio!'.", 1,
+			else if (lspell > 12) {
+				act( "$n pronuncia le parole 'Hey! Va decisamente meglio!'.", 1,
 					 ch, 0, 0, TO_ROOM);
-				cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-				if( ch->desc ) {
+				cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
+				if( injuried != ch ) {
 					GET_MANA(ch) -= 25;
 					alter_mana(ch,0);
 				}
 			}
-			else if (lspell > 8 && !ch->desc ) {
-				act("$n pronuncia le parole 'Mi sento molto meglio, ora!'.", 1, ch,0,0,
+			else if (lspell > 8) {
+				act("$n pronuncia le parole 'Va molto meglio, ora!'.", 1, ch,0,0,
 					TO_ROOM);
-				cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-				if( ch->desc ) {
+				cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
+				if( injuried != ch ) {
 					GET_MANA(ch) -= 20;
 					alter_mana(ch,0);
 				}
 			}
 			else {
-				act("$n pronuncia le parole 'Mi sento meglio!'.", 1, ch,0,0,TO_ROOM);
-				cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
-				if( ch->desc ) {
+				act("$n pronuncia le parole 'Va meglio!'.", 1, ch,0,0,TO_ROOM);
+				cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
+				if( injuried != ch ) {
 					GET_MANA(ch) -= 15;
 					alter_mana(ch,0);
 				}
