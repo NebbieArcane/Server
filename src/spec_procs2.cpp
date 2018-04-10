@@ -1253,7 +1253,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
         
 		if (GET_HIT(injuried) < GET_MAX_HIT(injuried)-10) {
 			lspell = GetMaxLevel( ch );
-			if ( lspell >= 20 ) {
+			if ( lspell >= 20  && GET_MANA(ch) >= 50) {
 				act( "$n pronuncia le parole 'Woah! Adesso si` che va bene!'.",
 					 1, ch,0,0,TO_ROOM);
 				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
@@ -1264,7 +1264,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
                     mudlog( LOG_CHECK, "heal su player - dopo: %d",GET_MANA(ch));
 				}
 			}
-			else if (lspell > 12) {
+			else if (lspell > 12 && GET_MANA(ch) >= 25) {
 				act( "$n pronuncia le parole 'Hey! Va decisamente meglio!'.", 1,
 					 ch, 0, 0, TO_ROOM);
 				cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
@@ -1273,7 +1273,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 					alter_mana(ch,0);
 				}
 			}
-			else if (lspell > 8) {
+			else if (lspell > 8 && GET_MANA(ch) >= 20) {
 				act("$n pronuncia le parole 'Va molto meglio, ora!'.", 1, ch,0,0,
 					TO_ROOM);
 				cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
@@ -1282,7 +1282,7 @@ int cleric(struct char_data* ch, int cmd, char* arg, struct char_data* mob,
 					alter_mana(ch,0);
 				}
 			}
-			else {
+			else if (GET_MANA(ch) >= 15) {
 				act("$n pronuncia le parole 'Va meglio!'.", 1, ch,0,0,TO_ROOM);
 				cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if( injuried != ch ) {
