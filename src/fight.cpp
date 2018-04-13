@@ -4549,6 +4549,12 @@ void NailThisSucker( struct char_data* ch) {
             mudlog( LOG_PLAYERS, "%s hit a DeathTrap in room %s[%ld]\r\n",
                    GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
             char_to_room(ch,1);
+            GET_MANA(ch) = 1;
+            alter_mana(ch,0);
+            GET_MOVE(ch) = 1;
+            alter_move(ch,0);
+            GET_HIT(ch) = 1;
+            alter_hit(ch,0);
             GET_POS(ch) = POSITION_STUNNED;
             send_to_char("\n$c0008Il nulla ti avvolge...$c0007\n", ch);
         } else {
