@@ -4540,6 +4540,7 @@ void NailThisSucker( struct char_data* ch) {
 	long room_num;
 	struct room_data* rp;
 	/*struct obj_data* obj, *next_o;*/
+    int i;
 
 	rp = real_roomp(ch->in_room);
 	room_num=ch->in_room;
@@ -4555,8 +4556,21 @@ void NailThisSucker( struct char_data* ch) {
             alter_move(ch,0);
             GET_HIT(ch) = 1;
             alter_hit(ch,0);
+            
+            /* danneggio l'eq come accade da Thanatos, gli oggetti artifact
+            si salveranno. */
+            
+            for(i=TYPE_GENERIC_FIRST; i<=TYPE_GENERIC_LAST; i++) {
+#if NOSCRAP
+                DamageStuff(ch,i,200,5);
+                DamageStuff(ch,i,200,5);
+                DamageStuff(ch,i,200,5);
+#endif
+                DamageStuff(ch,i,200,5);
+            }
+            
             GET_POS(ch) = POSITION_STUNNED;
-            send_to_char("\n$c0008Il nulla ti avvolge...$c0007\n", ch);
+            send_to_char("\n$c0008Il nulla ti avvolge mentre la tua forma corporea viene dilaniata...$c0007\n", ch);
         } else {
             mudlog( LOG_MOBILES, "%s hit a DeathTrap in room %s[%ld]\r\n",
                    GET_NAME_DESC(ch), real_roomp(room_num)->name,room_num );
