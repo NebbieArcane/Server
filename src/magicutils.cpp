@@ -50,11 +50,9 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
                 i = 1;
             } else {
                 i = (int)mob->mult_att;
-                mob->specials.damsizedice += GetMaxLevel(ch)/divider[i];
-                mob->specials.damnodice += GetMaxLevel(ch)/divider[i];
             }
             mob->points.hitroll += GetMaxLevel(ch)/3;
-            mob->points.damroll += GetMaxLevel(ch)/divider[i];
+            mob->points.damroll += (GetMaxLevel(ch)/divider[i])*3;
         }
 
         if( HasClass( mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
