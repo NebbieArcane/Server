@@ -37,6 +37,7 @@ namespace Alarmud {
 
 void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
     
+    int i;
     int divider[] = { 10, 17, 25, 50, 0 };
     
         /* Requiem 2018 - adjust mob power in relation to caster's level */
@@ -45,10 +46,16 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
                       CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
             mob->points.max_hit = GET_MAX_HIT(mob) + (GetMaxLevel(ch)*number(3,5));
             GET_HIT(mob) = GET_MAX_HIT(mob);
-            mob->specials.damsizedice += GetMaxLevel(ch)/divider[(int)mob->mult_att];
-            mob->specials.damnodice += GetMaxLevel(ch)/divider[(int)mob->mult_att];
-            mob->points.hitroll += GetMaxLevel(ch)/5;
-            mob->points.damroll += GetMaxLevel(ch)/divider[(int)mob->mult_att];
+            if (mob->specials.mobtype=='S') {
+                i = 1;
+            } else {
+                i = (int)mob->mult_att;
+            }
+            
+            mob->specials.damsizedice += GetMaxLevel(ch)/divider[i];
+            mob->specials.damnodice += GetMaxLevel(ch)/divider[i];
+            mob->points.hitroll += GetMaxLevel(ch)/3;
+            mob->points.damroll += GetMaxLevel(ch)/divider[i];
         }
 
         if( HasClass( mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
