@@ -47,6 +47,7 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
             GET_HIT(mob) = GET_MAX_HIT(mob);
             mob->specials.damsizedice += GetMaxLevel(ch)/divider[(int)mob->mult_att];
             mob->specials.damnodice += GetMaxLevel(ch)/divider[(int)mob->mult_att];
+            mob->points.hitroll += GetMaxLevel(ch)/divider[(int)mob->mult_att];
             mob->points.damroll += GetMaxLevel(ch)/divider[(int)mob->mult_att];
         }
 
