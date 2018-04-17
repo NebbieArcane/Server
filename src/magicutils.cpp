@@ -35,6 +35,29 @@
 #include "spell_parser.hpp"
 namespace Alarmud {
 
+void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
+    
+    int divider[] = { 10, 17, 25, 50, 0 };
+    
+        /* Requiem 2018 - adjust mob power in relation to caster's level */
+        
+        if( HasClass( mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
+                      CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
+            mob->points.max_hit = GET_MAX_HIT(mob) + (GetMaxLevel(ch)*number(3,5));
+            GET_HIT(mob) = GET_MAX_HIT(mob);
+            mob->specials.damsizedice += GetMaxLevel(ch)/divider[(int)mob->mult_att];
+            mob->specials.damnodice += GetMaxLevel(ch)/divider[(int)mob->mult_att];
+            mob->points.damroll += GetMaxLevel(ch)/divider[(int)mob->mult_att];
+        }
+
+        if( HasClass( mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
+                      CLASS_SORCERER | CLASS_PSI)) {
+            mob->points.max_mana = GET_MAX_MANA(mob) + (GetMaxLevel(ch)*number(3,5));
+            GET_MANA(mob) = GET_MAX_MANA(mob);
+            mob->points.mana_gain += (GetMaxLevel(ch)*number(3,5));
+        }
+}
+    
 void SwitchStuff( struct char_data* giver, struct char_data* taker) {
 	struct obj_data* obj, *next;
 	float ratio;
