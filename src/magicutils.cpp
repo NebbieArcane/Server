@@ -38,7 +38,7 @@ namespace Alarmud {
 void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
     
     int i;
-    int divider[] = { 10, 17, 25, 50, 0 };
+    int divider[5] = { 10, 17, 25, 50, 0 };
     
         /* Requiem 2018 - adjust mob power in relation to caster's level */
         
@@ -49,7 +49,8 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
             if (mob->specials.mobtype=='S') {
                 i = 1;
             } else {
-                i = (int)mob->mult_att;
+                /*i = (int)mob->mult_att;*/
+                i = 2;
             }
             /*
             mob->specials.damsizedice += GetMaxLevel(ch)/divider[i];
