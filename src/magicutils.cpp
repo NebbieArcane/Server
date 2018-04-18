@@ -46,11 +46,10 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
                       CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
             mob->points.max_hit = GET_MAX_HIT(mob) + (GetMaxLevel(ch)*number(3,5));
             GET_HIT(mob) = GET_MAX_HIT(mob);
-            if (mob->specials.mobtype=='S') {
-                i = 1;
+            if (mob->specials.mobtype=='A' || mob->specials.mobtype=='L' || mob->specials.mobtype=='B') {
+                i = (int)mob->mult_att;
             } else {
-                /*i = (int)mob->mult_att;*/
-                i = 2;
+                i = 1;
             }
             /*
             mob->specials.damsizedice += GetMaxLevel(ch)/divider[i];
