@@ -19,7 +19,7 @@
 #define MYSQL_DB "nebbie"
 #endif
 #define env_$ENV{ENVIRONMENT}
-//cmakedefine SQLITE_VERSION 
+//cmakedefine SQLITE_VERSION
 #cmakedefine SQLITE_VERSION "@SQLITE_VERSION@"
 #define HAS_SQLITE defined(SQLITE_VERSION)
 //cmakedefine MYSQL_VERSION
@@ -34,7 +34,7 @@
 #endif
 #define STAFF_EMAIL "staff@nebbie.it"
 #define HAS_LOG true
-#define VV_1(a,...) % a
+#define VV_1(a) % a
 #define VV_2(a,...) % a VV_1(__VA_ARGS__)
 #define VV_3(a,...) % a VV_2(__VA_ARGS__)
 #define VV_4(a,...) % a VV_3(__VA_ARGS__)
