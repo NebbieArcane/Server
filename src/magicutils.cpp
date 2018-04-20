@@ -68,7 +68,7 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
     
     if(char_bonus > 0)
         
-        final_bonus = (GetMaxLevel(ch)+char_bonus)/2
+        final_bonus = (GetMaxLevel(ch)+char_bonus)/2;
         
         if( HasClass( mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
                       CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
