@@ -59,14 +59,14 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
         if (GET_RACE(ch) == RACE_TROLL) { char_bonus = 0; }
 				else if (GET_RACE(ch) == RACE_GOLD_ELF) { char_bonus += 4; }
                 else if (GET_RACE(ch) == RACE_DARK_ELF) { char_bonus ++; }
-                else if (GET_RACE(ch) == RACE_WILD_ELF) { char_bonus +=2; }
-                else if (GET_RACE(ch) == RACE_SEA_ELF) { char_bonus +=3; }
+                else if (GET_RACE(ch) == RACE_WILD_ELF) { char_bonus += 2; }
+                else if (GET_RACE(ch) == RACE_SEA_ELF) { char_bonus += 3; }
                 else if (GET_RACE(ch) == RACE_DEMON) { char_bonus += 3; }
                 else if (GET_RACE(ch) == RACE_MFLAYER) { char_bonus += 4; }
     
         /* Requiem 2018 - adjust mob power in relation to caster's level */
     
-    if(char_bonus > 0)
+    if(char_bonus > 0) {
         
         final_bonus = (GetMaxLevel(ch)+char_bonus)/2;
         
@@ -83,7 +83,7 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
             /*mob->specials.damsizedice += final_bonus/i;
             mob->specials.damnodice += final_bonus/i;*/
             mob->points.hitroll += final_bonus/2;
-            mob->points.damroll += final_bonus/i)*2;
+            mob->points.damroll += (final_bonus/i)*2;
         }
 
         if( HasClass( mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |

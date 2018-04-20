@@ -384,7 +384,6 @@ void spell_familiar(byte level, struct char_data* ch,
 	{ f = read_mobile(WOLF, VIRTUAL); }
 
 	char_to_room(f, ch->in_room);
-    RelateMobToCaster(ch, mob);
 
 	af.type      = SPELL_FAMILIAR;
 	af.duration  = 24;
