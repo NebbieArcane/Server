@@ -2293,6 +2293,7 @@ ACTION_FUNC(do_set) {
 	char field[100], name[100], parmstr[100];
 	struct char_data* mob;
 	int parm = 0;
+	unsigned int uparm=0;
 	int parm2 = 0;
 	char buf[256];
 	unsigned long lparm = 0;
@@ -2334,7 +2335,8 @@ ACTION_FUNC(do_set) {
 
 	}
 	else if(!strcmp(field, "class")) {
-		sscanf(parmstr, "%X", &parm);
+		sscanf(parmstr, "%X", &uparm);
+		parm=abs(uparm);
 		/*
 		 ** this will do almost nothing. (hopefully);
 		 */
@@ -2386,7 +2388,7 @@ ACTION_FUNC(do_set) {
 		send_to_char(buf, ch);
 	}
 	else if(!strcmp(field, "aff1")) {
-		if(sscanf(parmstr, "%ld", &lparm) < 1) {
+		if(sscanf(parmstr, "%lu", &lparm) < 1) {
 			sprintf(buf, "Affected_by: %ld\n\r", mob->specials.affected_by);
 			send_to_char(buf, ch);
 		}
@@ -2397,7 +2399,7 @@ ACTION_FUNC(do_set) {
 		}
 	}
 	else if(!strcmp(field, "aff2")) {
-		if(sscanf(parmstr, "%ld", &lparm) < 1) {
+		if(sscanf(parmstr, "%lu", &lparm) < 1) {
 			sprintf(buf, "Affected_by2: %ld\n\r", mob->specials.affected_by2);
 			send_to_char(buf, ch);
 		}
@@ -4350,7 +4352,6 @@ ACTION_FUNC(do_immort) {
 ACTION_FUNC(do_restore) {
 	struct char_data* victim;
 	char buf[100];
-	int i;
 
 	if(cmd == 0) {
 		return;
@@ -4387,7 +4388,7 @@ ACTION_FUNC(do_restore) {
 		}
 
 		if(IS_DIO(victim)) {
-			for(i = 0; i < MAX_SKILLS; i++) {
+			for(auto i = 0; i < MAX_SKILLS; i++) {
 				victim->skills[i].learned = 100;
 				victim->skills[i].special = 1; /* specialized */
 				SET_BIT(victim->skills[i].flags, SKILL_KNOWN);
@@ -4410,12 +4411,12 @@ ACTION_FUNC(do_restore) {
 		/* all levels to the max level they are (i.e. 51 level warrior ) */
 
 		if(GetMaxLevel(victim) > IMMORTALE) {
-			for(i = 0; i < MAX_CLASS; i++) {
+			for(auto i = 0; i < MAX_CLASS; i++) {
 				if(GET_LEVEL(victim,i) < GetMaxLevel(victim)) {
 					GET_LEVEL(victim,i) = GetMaxLevel(victim);
 				}/* for */
 			}
-			for(i = 1; i <= CLASS_PSI; i *= 2) {
+			for(unsigned long i = 1; i <= CLASS_PSI; i *= 2) {
 				if(!HasClass(victim, i)) {
 					victim->player.iClass += i;
 				}

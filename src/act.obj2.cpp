@@ -589,11 +589,8 @@ void perform_wear(struct char_data* ch, struct obj_data* obj_object,
 
 
 int IsRestricted(struct obj_data* obj, int Class) {
-	int Mask;
-	long i;
-
-	Mask = GetItemClassRestrictions(obj);
-	for(i = CLASS_MAGIC_USER; i<= CLASS_PSI; i*=2) {
+	int Mask = GetItemClassRestrictions(obj);
+	for(unsigned long i = CLASS_MAGIC_USER; i<= CLASS_PSI; i*=2) {
 		if(IS_SET(i, Mask) && (!IS_SET(i, Class))) {
 			Mask -= i;
 		} /* if */
