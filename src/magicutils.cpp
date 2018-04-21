@@ -36,26 +36,23 @@
 namespace Alarmud {
 
 void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
-    
-    int i;
-    int char_bonus, final_bonus;
-    
-    
+    int i,char_bonus;
+
         char_bonus = GetMaxLevel(ch)/10  ;
 
-        if (HasClass(ch,CLASS_PSI)) { char_bonus ++ ; }
-        if (HasClass(ch,CLASS_CLERIC)) { char_bonus +=2 ; }
-        if (HasClass(ch,CLASS_MAGIC_USER)) { char_bonus +=3; }
-        if (HasClass(ch,CLASS_DRUID)) { char_bonus +=5; }
+        if (HasClass(ch,CLASS_PSI)) { char_bonus += 4; }
+        if (HasClass(ch,CLASS_CLERIC)) { char_bonus += 6; }
+        if (HasClass(ch,CLASS_MAGIC_USER)) { char_bonus += 8; }
+        if (HasClass(ch,CLASS_DRUID)) { char_bonus += 10; }
 
-        if (HasClass(ch,CLASS_THIEF)) { char_bonus -- ; }
-        if (HasClass(ch,CLASS_PALADIN)) { char_bonus =- 2 ; }
+        if (HasClass(ch,CLASS_THIEF)) { char_bonus =-2; }
+        if (HasClass(ch,CLASS_PALADIN)) { char_bonus =- 4; }
         if (HasClass( mob, CLASS_WARRIOR | CLASS_RANGER |
-                         CLASS_BARBARIAN | CLASS_MONK)) { char_bonus -=3 ; }
-    
+                         CLASS_BARBARIAN | CLASS_MONK)) { char_bonus -= 6; }
+
         if (GET_DEX(ch) > 17) { char_bonus ++; }
         if (GET_DEX(ch) > 18) { char_bonus ++; }
-    
+
         if (GET_RACE(ch) == RACE_TROLL) { char_bonus = 0; }
 				else if (GET_RACE(ch) == RACE_GOLD_ELF) { char_bonus += 4; }
                 else if (GET_RACE(ch) == RACE_DARK_ELF) { char_bonus ++; }
@@ -63,38 +60,33 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
                 else if (GET_RACE(ch) == RACE_SEA_ELF) { char_bonus += 3; }
                 else if (GET_RACE(ch) == RACE_DEMON) { char_bonus += 3; }
                 else if (GET_RACE(ch) == RACE_MFLAYER) { char_bonus += 4; }
-    
-        /* Requiem 2018 - adjust mob power in relation to caster's level */
-    
+
+    /* Requiem 2018 - adjust mob power in relation to caster's level */
+
     if(char_bonus > 0) {
-        
-        final_bonus = (GetMaxLevel(ch)+char_bonus)/2;
-        
         if( HasClass( mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
                       CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
-            mob->points.max_hit = GET_MAX_HIT(mob) + (final_bonus*number(1,5));
+            mob->points.max_hit = GET_MAX_HIT(mob) + (char_bonus*number(1,5));
             GET_HIT(mob) = GET_MAX_HIT(mob);
             if (mob->specials.mobtype=='A' || mob->specials.mobtype=='L' || mob->specials.mobtype=='B') {
                 i = (int)mob->mult_att;
             } else {
                 i = 1;
             }
-            
+
             /*mob->specials.damsizedice += final_bonus/i;
             mob->specials.damnodice += final_bonus/i;*/
-            mob->points.hitroll += final_bonus/2;
-            mob->points.damroll += (final_bonus/i)*2;
+            mob->points.hitroll += char_bonus/2;
+            mob->points.damroll += (char_bonus/i)*2;
         }
 
         if( HasClass( mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
                       CLASS_SORCERER | CLASS_PSI)) {
-            mob->points.max_mana = GET_MAX_MANA(mob) + (GetMaxLevel(ch)*number(2,3));
+            mob->points.max_mana = GET_MAX_MANA(mob) + (char_bonus*number(2,3));
             GET_MANA(mob) = GET_MAX_MANA(mob);
-            mob->points.mana_gain += (GetMaxLevel(ch)*number(3,5));
+            mob->points.mana_gain += (char_bonus*number(3,5));
         }
-    
     }
-    
 }
 
 void SwitchStuff( struct char_data* giver, struct char_data* taker) {
