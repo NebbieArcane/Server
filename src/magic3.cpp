@@ -385,7 +385,6 @@ void spell_familiar(byte level, struct char_data* ch,
 
 	char_to_room(f, ch->in_room);
 
-
 	af.type      = SPELL_FAMILIAR;
 	af.duration  = 24;
 	af.modifier  = -1;
@@ -1207,7 +1206,9 @@ void spell_animal_summon(byte level, struct char_data* ch,
 		{ continue; }
 
 		char_to_room(mob, ch->in_room);
+        RelateMobToCaster(ch, mob);
 		act( "$n arriva improvvisamente.", FALSE, mob, 0, 0, TO_ROOM);
+        
 		if( too_many_followers( ch ) ) {
 			act( "$N guarda alla dimensione del tuo gruppo e si rifiuta di "
 				 "seguirti!", TRUE, ch, 0, victim, TO_CHAR);
@@ -1223,7 +1224,7 @@ void spell_animal_summon(byte level, struct char_data* ch,
 
 			af.type      = SPELL_CHARM_PERSON;
 			if (IS_PC(ch) || ch->master) {
-				af.duration  = GET_CHR(ch);
+				af.duration  = GET_CHR(ch)*2;
 				af.modifier  = 0;
 				af.location  = 0;
 				af.bitvector = AFF_CHARM;
@@ -1283,6 +1284,7 @@ void spell_elemental_summoning(byte level, struct char_data* ch,
 	act("Esegui il rituale dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
 
 	char_to_room(mob, ch->in_room);
+    RelateMobToCaster(ch, mob);
 	act( "$n appare attraverso una momentanea smagliatura del tessuto "
 		 "spazio-tempo.", FALSE, mob, 0, 0, TO_ROOM);
 	if (too_many_followers(ch)) {
@@ -2195,6 +2197,7 @@ void spell_dust_devil( byte level, struct char_data* ch,
 	act("Esegui il rituale dell'evocazione.", FALSE, ch, 0, 0, TO_CHAR);
 
 	char_to_room(mob, ch->in_room);
+    RelateMobToCaster(ch, mob);
 	act( "$n arriva attraverso uno squarcio nel tessuto sapzio-tempo!",
 		 FALSE, mob, 0, 0, TO_ROOM);
 
