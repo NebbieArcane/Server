@@ -3823,7 +3823,7 @@ void FallOffMount(struct char_data* ch, struct char_data* h) {
 
 #define ITEM_CLASS ( ITEM_ANTI_CLERIC | ITEM_ANTI_MAGE |                      ITEM_ANTI_THIEF | ITEM_ANTI_FIGHTER |                      ITEM_ANTI_BARBARIAN | ITEM_ANTI_RANGER |                      ITEM_ANTI_PALADIN | ITEM_ANTI_PSI |                      ITEM_ANTI_MONK | ITEM_ANTI_DRUID )
 
-int EqWBits(struct char_data* ch, int bits) {
+int EqWBits(struct char_data* ch, const unsigned int bits) {
 	int i;
 
 	for(i = 0; i < MAX_WEAR; i++) {
