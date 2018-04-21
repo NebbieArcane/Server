@@ -48,7 +48,7 @@ int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
 int EgoBladeSave(struct char_data* ch);
 int EgoSave(struct char_data* ch);
-int EqWBits(struct char_data* ch, int bits);
+int EqWBits(struct char_data* ch, const unsigned int bits);
 int exist(char* s);
 int exit_ok(struct room_direction_data* exit, struct room_data** rpp);
 int fighting_in_room(int room_n);
