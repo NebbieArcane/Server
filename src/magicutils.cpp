@@ -45,8 +45,8 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
         if (HasClass(ch,CLASS_MAGIC_USER)) { char_bonus += 8; }
         if (HasClass(ch,CLASS_DRUID)) { char_bonus += 10; }
 
-        if (HasClass(ch,CLASS_THIEF)) { char_bonus =-2; }
-        if (HasClass(ch,CLASS_PALADIN)) { char_bonus =- 4; }
+        if (HasClass(ch,CLASS_THIEF)) { char_bonus -= 2; }
+        if (HasClass(ch,CLASS_PALADIN)) { char_bonus -= 4; }
         if (HasClass( mob, CLASS_WARRIOR | CLASS_RANGER |
                          CLASS_BARBARIAN | CLASS_MONK)) { char_bonus -= 6; }
 
@@ -77,7 +77,7 @@ void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) {
             /*mob->specials.damsizedice += final_bonus/i;
             mob->specials.damnodice += final_bonus/i;*/
             mob->points.hitroll += char_bonus/2;
-            mob->points.damroll += (char_bonus/i)*2;
+            mob->points.damroll += char_bonus/(i*2);
         }
 
         if( HasClass( mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
