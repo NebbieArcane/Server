@@ -9,214 +9,6 @@
 #include "autoenums.hpp"
 namespace Alarmud {
 namespace G {
-e_affected_by encode_e_affected_by(std::string s,e_affected_by fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "AFF_NONE") return AFF_NONE;
-	if (s == "AFF_BLIND") return AFF_BLIND;
-	if (s == "AFF_INVISIBLE") return AFF_INVISIBLE;
-	if (s == "AFF_DETECT_EVIL") return AFF_DETECT_EVIL;
-	if (s == "AFF_DETECT_INVISIBLE") return AFF_DETECT_INVISIBLE;
-	if (s == "AFF_DETECT_MAGIC") return AFF_DETECT_MAGIC;
-	if (s == "AFF_SENSE_LIFE") return AFF_SENSE_LIFE;
-	if (s == "AFF_LIFE_PROT") return AFF_LIFE_PROT;
-	if (s == "AFF_SANCTUARY") return AFF_SANCTUARY;
-	if (s == "AFF_DRAGON_RIDE") return AFF_DRAGON_RIDE;
-	if (s == "AFF_GROWTH") return AFF_GROWTH;
-	if (s == "AFF_CURSE") return AFF_CURSE;
-	if (s == "AFF_FLYING") return AFF_FLYING;
-	if (s == "AFF_POISON") return AFF_POISON;
-	if (s == "AFF_TREE_TRAVEL") return AFF_TREE_TRAVEL;
-	if (s == "AFF_PARALYSIS") return AFF_PARALYSIS;
-	if (s == "AFF_INFRAVISION") return AFF_INFRAVISION;
-	if (s == "AFF_WATERBREATH") return AFF_WATERBREATH;
-	if (s == "AFF_SLEEP") return AFF_SLEEP;
-	if (s == "AFF_TRAVELLING") return AFF_TRAVELLING;
-	if (s == "AFF_SNEAK") return AFF_SNEAK;
-	if (s == "AFF_HIDE") return AFF_HIDE;
-	if (s == "AFF_SILENCE") return AFF_SILENCE;
-	if (s == "AFF_CHARM") return AFF_CHARM;
-	if (s == "AFF_FOLLOW") return AFF_FOLLOW;
-	if (s == "AFF_PROTECT_FROM_EVIL") return AFF_PROTECT_FROM_EVIL;
-	if (s == "AFF_TRUE_SIGHT") return AFF_TRUE_SIGHT;
-	if (s == "AFF_SCRYING") return AFF_SCRYING;
-	if (s == "AFF_FIRESHIELD") return AFF_FIRESHIELD;
-	if (s == "AFF_GROUP") return AFF_GROUP;
-	if (s == "AFF_TELEPATHY") return AFF_TELEPATHY;
-	if (s == "AFF_GLOBE_DARKNESS") return AFF_GLOBE_DARKNESS;
-	if (s == "AFF_UNDEF_AFF_1") return AFF_UNDEF_AFF_1;
-	return fallback;
-}
-
-std::string translate(const e_affected_by e) {
-	switch(e) {
-	case AFF_NONE:
-		return "AFF_NONE";
-	case AFF_BLIND:
-		return "AFF_BLIND";
-	case AFF_INVISIBLE:
-		return "AFF_INVISIBLE";
-	case AFF_DETECT_EVIL:
-		return "AFF_DETECT_EVIL";
-	case AFF_DETECT_INVISIBLE:
-		return "AFF_DETECT_INVISIBLE";
-	case AFF_DETECT_MAGIC:
-		return "AFF_DETECT_MAGIC";
-	case AFF_SENSE_LIFE:
-		return "AFF_SENSE_LIFE";
-	case AFF_LIFE_PROT:
-		return "AFF_LIFE_PROT";
-	case AFF_SANCTUARY:
-		return "AFF_SANCTUARY";
-	case AFF_DRAGON_RIDE:
-		return "AFF_DRAGON_RIDE";
-	case AFF_GROWTH:
-		return "AFF_GROWTH";
-	case AFF_CURSE:
-		return "AFF_CURSE";
-	case AFF_FLYING:
-		return "AFF_FLYING";
-	case AFF_POISON:
-		return "AFF_POISON";
-	case AFF_TREE_TRAVEL:
-		return "AFF_TREE_TRAVEL";
-	case AFF_PARALYSIS:
-		return "AFF_PARALYSIS";
-	case AFF_INFRAVISION:
-		return "AFF_INFRAVISION";
-	case AFF_WATERBREATH:
-		return "AFF_WATERBREATH";
-	case AFF_SLEEP:
-		return "AFF_SLEEP";
-	case AFF_TRAVELLING:
-		return "AFF_TRAVELLING";
-	case AFF_SNEAK:
-		return "AFF_SNEAK";
-	case AFF_HIDE:
-		return "AFF_HIDE";
-	case AFF_SILENCE:
-		return "AFF_SILENCE";
-	case AFF_CHARM:
-		return "AFF_CHARM";
-	case AFF_FOLLOW:
-		return "AFF_FOLLOW";
-	case AFF_PROTECT_FROM_EVIL:
-		return "AFF_PROTECT_FROM_EVIL";
-	case AFF_TRUE_SIGHT:
-		return "AFF_TRUE_SIGHT";
-	case AFF_SCRYING:
-		return "AFF_SCRYING";
-	case AFF_FIRESHIELD:
-		return "AFF_FIRESHIELD";
-	case AFF_GROUP:
-		return "AFF_GROUP";
-	case AFF_TELEPATHY:
-		return "AFF_TELEPATHY";
-	case AFF_GLOBE_DARKNESS:
-		return "AFF_GLOBE_DARKNESS";
-	case AFF_UNDEF_AFF_1:
-		return "AFF_UNDEF_AFF_1";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_affected_by value) {
-	switch(value) {
-		case AFF_NONE:
-		case AFF_BLIND:
-		case AFF_INVISIBLE:
-		case AFF_DETECT_EVIL:
-		case AFF_DETECT_INVISIBLE:
-		case AFF_DETECT_MAGIC:
-		case AFF_SENSE_LIFE:
-		case AFF_LIFE_PROT:
-		case AFF_SANCTUARY:
-		case AFF_DRAGON_RIDE:
-		case AFF_GROWTH:
-		case AFF_CURSE:
-		case AFF_FLYING:
-		case AFF_POISON:
-		case AFF_TREE_TRAVEL:
-		case AFF_PARALYSIS:
-		case AFF_INFRAVISION:
-		case AFF_WATERBREATH:
-		case AFF_SLEEP:
-		case AFF_TRAVELLING:
-		case AFF_SNEAK:
-		case AFF_HIDE:
-		case AFF_SILENCE:
-		case AFF_CHARM:
-		case AFF_FOLLOW:
-		case AFF_PROTECT_FROM_EVIL:
-		case AFF_TRUE_SIGHT:
-		case AFF_SCRYING:
-		case AFF_FIRESHIELD:
-		case AFF_GROUP:
-		case AFF_TELEPATHY:
-		case AFF_GLOBE_DARKNESS:
-		case AFF_UNDEF_AFF_1:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_affected_by value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_affected_by2 encode_e_affected_by2(std::string s,e_affected_by2 fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "AFF2_ANIMAL_INVIS") return AFF2_ANIMAL_INVIS;
-	if (s == "AFF2_HEAT_STUFF") return AFF2_HEAT_STUFF;
-	if (s == "AFF2_LOG_ME") return AFF2_LOG_ME;
-	if (s == "AFF2_BERSERK") return AFF2_BERSERK;
-	if (s == "AFF2_PARRY") return AFF2_PARRY;
-	if (s == "AFF2_CON_ORDER") return AFF2_CON_ORDER;
-	if (s == "AFF2_AFK") return AFF2_AFK;
-	if (s == "AFF2_PKILLER") return AFF2_PKILLER;
-	return fallback;
-}
-
-std::string translate(const e_affected_by2 e) {
-	switch(e) {
-	case AFF2_ANIMAL_INVIS:
-		return "AFF2_ANIMAL_INVIS";
-	case AFF2_HEAT_STUFF:
-		return "AFF2_HEAT_STUFF";
-	case AFF2_LOG_ME:
-		return "AFF2_LOG_ME";
-	case AFF2_BERSERK:
-		return "AFF2_BERSERK";
-	case AFF2_PARRY:
-		return "AFF2_PARRY";
-	case AFF2_CON_ORDER:
-		return "AFF2_CON_ORDER";
-	case AFF2_AFK:
-		return "AFF2_AFK";
-	case AFF2_PKILLER:
-		return "AFF2_PKILLER";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_affected_by2 value) {
-	switch(value) {
-		case AFF2_ANIMAL_INVIS:
-		case AFF2_HEAT_STUFF:
-		case AFF2_LOG_ME:
-		case AFF2_BERSERK:
-		case AFF2_PARRY:
-		case AFF2_CON_ORDER:
-		case AFF2_AFK:
-		case AFF2_PKILLER:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_affected_by2 value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_apply encode_e_apply(std::string s,e_apply fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "APPLY_NONE") return APPLY_NONE;
@@ -569,72 +361,6 @@ std::ostream & operator<<(std::ostream &out,const e_class_index value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_classes encode_e_classes(std::string s,e_classes fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "CLASS_MAGIC_USER") return CLASS_MAGIC_USER;
-	if (s == "CLASS_CLERIC") return CLASS_CLERIC;
-	if (s == "CLASS_WARRIOR") return CLASS_WARRIOR;
-	if (s == "CLASS_THIEF") return CLASS_THIEF;
-	if (s == "CLASS_DRUID") return CLASS_DRUID;
-	if (s == "CLASS_MONK") return CLASS_MONK;
-	if (s == "CLASS_BARBARIAN") return CLASS_BARBARIAN;
-	if (s == "CLASS_SORCERER") return CLASS_SORCERER;
-	if (s == "CLASS_PALADIN") return CLASS_PALADIN;
-	if (s == "CLASS_RANGER") return CLASS_RANGER;
-	if (s == "CLASS_PSI") return CLASS_PSI;
-	return fallback;
-}
-
-std::string translate(const e_classes e) {
-	switch(e) {
-	case CLASS_MAGIC_USER:
-		return "CLASS_MAGIC_USER";
-	case CLASS_CLERIC:
-		return "CLASS_CLERIC";
-	case CLASS_WARRIOR:
-		return "CLASS_WARRIOR";
-	case CLASS_THIEF:
-		return "CLASS_THIEF";
-	case CLASS_DRUID:
-		return "CLASS_DRUID";
-	case CLASS_MONK:
-		return "CLASS_MONK";
-	case CLASS_BARBARIAN:
-		return "CLASS_BARBARIAN";
-	case CLASS_SORCERER:
-		return "CLASS_SORCERER";
-	case CLASS_PALADIN:
-		return "CLASS_PALADIN";
-	case CLASS_RANGER:
-		return "CLASS_RANGER";
-	case CLASS_PSI:
-		return "CLASS_PSI";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_classes value) {
-	switch(value) {
-		case CLASS_MAGIC_USER:
-		case CLASS_CLERIC:
-		case CLASS_WARRIOR:
-		case CLASS_THIEF:
-		case CLASS_DRUID:
-		case CLASS_MONK:
-		case CLASS_BARBARIAN:
-		case CLASS_SORCERER:
-		case CLASS_PALADIN:
-		case CLASS_RANGER:
-		case CLASS_PSI:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_classes value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_conditions encode_e_conditions(std::string s,e_conditions fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "DRUNK") return DRUNK;
@@ -869,6 +595,7 @@ std::ostream & operator<<(std::ostream &out,const e_connection_types value) {
 }
 e_damage_type encode_e_damage_type(std::string s,e_damage_type fallback) {
 	boost::algorithm::to_upper(s);
+	if (s == "NO_DAMAGE") return NO_DAMAGE;
 	if (s == "FIRE_DAMAGE") return FIRE_DAMAGE;
 	if (s == "COLD_DAMAGE") return COLD_DAMAGE;
 	if (s == "ELEC_DAMAGE") return ELEC_DAMAGE;
@@ -879,6 +606,8 @@ e_damage_type encode_e_damage_type(std::string s,e_damage_type fallback) {
 
 std::string translate(const e_damage_type e) {
 	switch(e) {
+	case NO_DAMAGE:
+		return "NO_DAMAGE";
 	case FIRE_DAMAGE:
 		return "FIRE_DAMAGE";
 	case COLD_DAMAGE:
@@ -895,6 +624,7 @@ std::string translate(const e_damage_type e) {
 }
 bool enum_validate(const e_damage_type value) {
 	switch(value) {
+		case NO_DAMAGE:
 		case FIRE_DAMAGE:
 		case COLD_DAMAGE:
 		case ELEC_DAMAGE:
@@ -1054,114 +784,6 @@ bool enum_validate(const e_exit_dir value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_exit_dir value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_exit_types encode_e_exit_types(std::string s,e_exit_types fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "EX_ISDOOR") return EX_ISDOOR;
-	if (s == "EX_CLOSED") return EX_CLOSED;
-	if (s == "EX_LOCKED") return EX_LOCKED;
-	if (s == "EX_SECRET") return EX_SECRET;
-	if (s == "EX_NOTBASH") return EX_NOTBASH;
-	if (s == "EX_PICKPROOF") return EX_PICKPROOF;
-	if (s == "EX_CLIMB") return EX_CLIMB;
-	if (s == "EX_MALE") return EX_MALE;
-	if (s == "EX_NOLOOKT") return EX_NOLOOKT;
-	return fallback;
-}
-
-std::string translate(const e_exit_types e) {
-	switch(e) {
-	case EX_ISDOOR:
-		return "EX_ISDOOR";
-	case EX_CLOSED:
-		return "EX_CLOSED";
-	case EX_LOCKED:
-		return "EX_LOCKED";
-	case EX_SECRET:
-		return "EX_SECRET";
-	case EX_NOTBASH:
-		return "EX_NOTBASH";
-	case EX_PICKPROOF:
-		return "EX_PICKPROOF";
-	case EX_CLIMB:
-		return "EX_CLIMB";
-	case EX_MALE:
-		return "EX_MALE";
-	case EX_NOLOOKT:
-		return "EX_NOLOOKT";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_exit_types value) {
-	switch(value) {
-		case EX_ISDOOR:
-		case EX_CLOSED:
-		case EX_LOCKED:
-		case EX_SECRET:
-		case EX_NOTBASH:
-		case EX_PICKPROOF:
-		case EX_CLIMB:
-		case EX_MALE:
-		case EX_NOLOOKT:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_exit_types value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_fear_type encode_e_fear_type(std::string s,e_fear_type fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "FEAR_SEX") return FEAR_SEX;
-	if (s == "FEAR_RACE") return FEAR_RACE;
-	if (s == "FEAR_CHAR") return FEAR_CHAR;
-	if (s == "FEAR_CLASS") return FEAR_CLASS;
-	if (s == "FEAR_EVIL") return FEAR_EVIL;
-	if (s == "FEAR_GOOD") return FEAR_GOOD;
-	if (s == "FEAR_VNUM") return FEAR_VNUM;
-	return fallback;
-}
-
-std::string translate(const e_fear_type e) {
-	switch(e) {
-	case FEAR_SEX:
-		return "FEAR_SEX";
-	case FEAR_RACE:
-		return "FEAR_RACE";
-	case FEAR_CHAR:
-		return "FEAR_CHAR";
-	case FEAR_CLASS:
-		return "FEAR_CLASS";
-	case FEAR_EVIL:
-		return "FEAR_EVIL";
-	case FEAR_GOOD:
-		return "FEAR_GOOD";
-	case FEAR_VNUM:
-		return "FEAR_VNUM";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_fear_type value) {
-	switch(value) {
-		case FEAR_SEX:
-		case FEAR_RACE:
-		case FEAR_CHAR:
-		case FEAR_CLASS:
-		case FEAR_EVIL:
-		case FEAR_GOOD:
-		case FEAR_VNUM:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_fear_type value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
@@ -1475,302 +1097,9 @@ std::ostream & operator<<(std::ostream &out,const e_find_result value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_hate_type encode_e_hate_type(std::string s,e_hate_type fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "HATE_SEX") return HATE_SEX;
-	if (s == "HATE_RACE") return HATE_RACE;
-	if (s == "HATE_CHAR") return HATE_CHAR;
-	if (s == "HATE_CLASS") return HATE_CLASS;
-	if (s == "HATE_EVIL") return HATE_EVIL;
-	if (s == "HATE_GOOD") return HATE_GOOD;
-	if (s == "HATE_VNUM") return HATE_VNUM;
-	return fallback;
-}
-
-std::string translate(const e_hate_type e) {
-	switch(e) {
-	case HATE_SEX:
-		return "HATE_SEX";
-	case HATE_RACE:
-		return "HATE_RACE";
-	case HATE_CHAR:
-		return "HATE_CHAR";
-	case HATE_CLASS:
-		return "HATE_CLASS";
-	case HATE_EVIL:
-		return "HATE_EVIL";
-	case HATE_GOOD:
-		return "HATE_GOOD";
-	case HATE_VNUM:
-		return "HATE_VNUM";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_hate_type value) {
-	switch(value) {
-		case HATE_SEX:
-		case HATE_RACE:
-		case HATE_CHAR:
-		case HATE_CLASS:
-		case HATE_EVIL:
-		case HATE_GOOD:
-		case HATE_VNUM:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_hate_type value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_immunity_type encode_e_immunity_type(std::string s,e_immunity_type fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "IMM_FIRE") return IMM_FIRE;
-	if (s == "IMM_COLD") return IMM_COLD;
-	if (s == "IMM_ELEC") return IMM_ELEC;
-	if (s == "IMM_ENERGY") return IMM_ENERGY;
-	if (s == "IMM_BLUNT") return IMM_BLUNT;
-	if (s == "IMM_PIERCE") return IMM_PIERCE;
-	if (s == "IMM_SLASH") return IMM_SLASH;
-	if (s == "IMM_ACID") return IMM_ACID;
-	if (s == "IMM_POISON") return IMM_POISON;
-	if (s == "IMM_DRAIN") return IMM_DRAIN;
-	if (s == "IMM_SLEEP") return IMM_SLEEP;
-	if (s == "IMM_CHARM") return IMM_CHARM;
-	if (s == "IMM_HOLD") return IMM_HOLD;
-	if (s == "IMM_NONMAG") return IMM_NONMAG;
-	if (s == "IMM_PLUS1") return IMM_PLUS1;
-	if (s == "IMM_PLUS2") return IMM_PLUS2;
-	if (s == "IMM_PLUS3") return IMM_PLUS3;
-	if (s == "IMM_PLUS4") return IMM_PLUS4;
-	return fallback;
-}
-
-std::string translate(const e_immunity_type e) {
-	switch(e) {
-	case IMM_FIRE:
-		return "IMM_FIRE";
-	case IMM_COLD:
-		return "IMM_COLD";
-	case IMM_ELEC:
-		return "IMM_ELEC";
-	case IMM_ENERGY:
-		return "IMM_ENERGY";
-	case IMM_BLUNT:
-		return "IMM_BLUNT";
-	case IMM_PIERCE:
-		return "IMM_PIERCE";
-	case IMM_SLASH:
-		return "IMM_SLASH";
-	case IMM_ACID:
-		return "IMM_ACID";
-	case IMM_POISON:
-		return "IMM_POISON";
-	case IMM_DRAIN:
-		return "IMM_DRAIN";
-	case IMM_SLEEP:
-		return "IMM_SLEEP";
-	case IMM_CHARM:
-		return "IMM_CHARM";
-	case IMM_HOLD:
-		return "IMM_HOLD";
-	case IMM_NONMAG:
-		return "IMM_NONMAG";
-	case IMM_PLUS1:
-		return "IMM_PLUS1";
-	case IMM_PLUS2:
-		return "IMM_PLUS2";
-	case IMM_PLUS3:
-		return "IMM_PLUS3";
-	case IMM_PLUS4:
-		return "IMM_PLUS4";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_immunity_type value) {
-	switch(value) {
-		case IMM_FIRE:
-		case IMM_COLD:
-		case IMM_ELEC:
-		case IMM_ENERGY:
-		case IMM_BLUNT:
-		case IMM_PIERCE:
-		case IMM_SLASH:
-		case IMM_ACID:
-		case IMM_POISON:
-		case IMM_DRAIN:
-		case IMM_SLEEP:
-		case IMM_CHARM:
-		case IMM_HOLD:
-		case IMM_NONMAG:
-		case IMM_PLUS1:
-		case IMM_PLUS2:
-		case IMM_PLUS3:
-		case IMM_PLUS4:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_immunity_type value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_item_flag encode_e_item_flag(std::string s,e_item_flag fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "ITEM_GLOW") return ITEM_GLOW;
-	if (s == "ITEM_HUM") return ITEM_HUM;
-	if (s == "ITEM_METAL") return ITEM_METAL;
-	if (s == "ITEM_MINERAL") return ITEM_MINERAL;
-	if (s == "ITEM_ORGANIC") return ITEM_ORGANIC;
-	if (s == "ITEM_INVISIBLE") return ITEM_INVISIBLE;
-	if (s == "ITEM_MAGIC") return ITEM_MAGIC;
-	if (s == "ITEM_NODROP") return ITEM_NODROP;
-	if (s == "ITEM_BLESS") return ITEM_BLESS;
-	if (s == "ITEM_ANTI_GOOD") return ITEM_ANTI_GOOD;
-	if (s == "ITEM_ANTI_EVIL") return ITEM_ANTI_EVIL;
-	if (s == "ITEM_ANTI_NEUTRAL") return ITEM_ANTI_NEUTRAL;
-	if (s == "ITEM_ANTI_CLERIC") return ITEM_ANTI_CLERIC;
-	if (s == "ITEM_ANTI_MAGE") return ITEM_ANTI_MAGE;
-	if (s == "ITEM_ANTI_THIEF") return ITEM_ANTI_THIEF;
-	if (s == "ITEM_ANTI_FIGHTER") return ITEM_ANTI_FIGHTER;
-	if (s == "ITEM_BRITTLE") return ITEM_BRITTLE;
-	if (s == "ITEM_RESISTANT") return ITEM_RESISTANT;
-	if (s == "ITEM_IMMUNE") return ITEM_IMMUNE;
-	if (s == "ITEM_ANTI_MEN") return ITEM_ANTI_MEN;
-	if (s == "ITEM_ANTI_WOMEN") return ITEM_ANTI_WOMEN;
-	if (s == "ITEM_ANTI_SUN") return ITEM_ANTI_SUN;
-	if (s == "ITEM_ANTI_BARBARIAN") return ITEM_ANTI_BARBARIAN;
-	if (s == "ITEM_ANTI_RANGER") return ITEM_ANTI_RANGER;
-	if (s == "ITEM_ANTI_PALADIN") return ITEM_ANTI_PALADIN;
-	if (s == "ITEM_ANTI_PSI") return ITEM_ANTI_PSI;
-	if (s == "ITEM_ANTI_MONK") return ITEM_ANTI_MONK;
-	if (s == "ITEM_ANTI_DRUID") return ITEM_ANTI_DRUID;
-	if (s == "ITEM_ONLY_CLASS") return ITEM_ONLY_CLASS;
-	if (s == "ITEM_DIG") return ITEM_DIG;
-	if (s == "ITEM_SCYTHE") return ITEM_SCYTHE;
-	if (s == "ITEM_ANTI_SORCERER") return ITEM_ANTI_SORCERER;
-	return fallback;
-}
-
-std::string translate(const e_item_flag e) {
-	switch(e) {
-	case ITEM_GLOW:
-		return "ITEM_GLOW";
-	case ITEM_HUM:
-		return "ITEM_HUM";
-	case ITEM_METAL:
-		return "ITEM_METAL";
-	case ITEM_MINERAL:
-		return "ITEM_MINERAL";
-	case ITEM_ORGANIC:
-		return "ITEM_ORGANIC";
-	case ITEM_INVISIBLE:
-		return "ITEM_INVISIBLE";
-	case ITEM_MAGIC:
-		return "ITEM_MAGIC";
-	case ITEM_NODROP:
-		return "ITEM_NODROP";
-	case ITEM_BLESS:
-		return "ITEM_BLESS";
-	case ITEM_ANTI_GOOD:
-		return "ITEM_ANTI_GOOD";
-	case ITEM_ANTI_EVIL:
-		return "ITEM_ANTI_EVIL";
-	case ITEM_ANTI_NEUTRAL:
-		return "ITEM_ANTI_NEUTRAL";
-	case ITEM_ANTI_CLERIC:
-		return "ITEM_ANTI_CLERIC";
-	case ITEM_ANTI_MAGE:
-		return "ITEM_ANTI_MAGE";
-	case ITEM_ANTI_THIEF:
-		return "ITEM_ANTI_THIEF";
-	case ITEM_ANTI_FIGHTER:
-		return "ITEM_ANTI_FIGHTER";
-	case ITEM_BRITTLE:
-		return "ITEM_BRITTLE";
-	case ITEM_RESISTANT:
-		return "ITEM_RESISTANT";
-	case ITEM_IMMUNE:
-		return "ITEM_IMMUNE";
-	case ITEM_ANTI_MEN:
-		return "ITEM_ANTI_MEN";
-	case ITEM_ANTI_WOMEN:
-		return "ITEM_ANTI_WOMEN";
-	case ITEM_ANTI_SUN:
-		return "ITEM_ANTI_SUN";
-	case ITEM_ANTI_BARBARIAN:
-		return "ITEM_ANTI_BARBARIAN";
-	case ITEM_ANTI_RANGER:
-		return "ITEM_ANTI_RANGER";
-	case ITEM_ANTI_PALADIN:
-		return "ITEM_ANTI_PALADIN";
-	case ITEM_ANTI_PSI:
-		return "ITEM_ANTI_PSI";
-	case ITEM_ANTI_MONK:
-		return "ITEM_ANTI_MONK";
-	case ITEM_ANTI_DRUID:
-		return "ITEM_ANTI_DRUID";
-	case ITEM_ONLY_CLASS:
-		return "ITEM_ONLY_CLASS";
-	case ITEM_DIG:
-		return "ITEM_DIG";
-	case ITEM_SCYTHE:
-		return "ITEM_SCYTHE";
-	case ITEM_ANTI_SORCERER:
-		return "ITEM_ANTI_SORCERER";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_item_flag value) {
-	switch(value) {
-		case ITEM_GLOW:
-		case ITEM_HUM:
-		case ITEM_METAL:
-		case ITEM_MINERAL:
-		case ITEM_ORGANIC:
-		case ITEM_INVISIBLE:
-		case ITEM_MAGIC:
-		case ITEM_NODROP:
-		case ITEM_BLESS:
-		case ITEM_ANTI_GOOD:
-		case ITEM_ANTI_EVIL:
-		case ITEM_ANTI_NEUTRAL:
-		case ITEM_ANTI_CLERIC:
-		case ITEM_ANTI_MAGE:
-		case ITEM_ANTI_THIEF:
-		case ITEM_ANTI_FIGHTER:
-		case ITEM_BRITTLE:
-		case ITEM_RESISTANT:
-		case ITEM_IMMUNE:
-		case ITEM_ANTI_MEN:
-		case ITEM_ANTI_WOMEN:
-		case ITEM_ANTI_SUN:
-		case ITEM_ANTI_BARBARIAN:
-		case ITEM_ANTI_RANGER:
-		case ITEM_ANTI_PALADIN:
-		case ITEM_ANTI_PSI:
-		case ITEM_ANTI_MONK:
-		case ITEM_ANTI_DRUID:
-		case ITEM_ONLY_CLASS:
-		case ITEM_DIG:
-		case ITEM_SCYTHE:
-		case ITEM_ANTI_SORCERER:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_item_flag value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_item_type encode_e_item_type(std::string s,e_item_type fallback) {
 	boost::algorithm::to_upper(s);
+	if (s == "ITEM_NONE") return ITEM_NONE;
 	if (s == "ITEM_LIGHT") return ITEM_LIGHT;
 	if (s == "ITEM_SCROLL") return ITEM_SCROLL;
 	if (s == "ITEM_WAND") return ITEM_WAND;
@@ -1802,6 +1131,8 @@ e_item_type encode_e_item_type(std::string s,e_item_type fallback) {
 
 std::string translate(const e_item_type e) {
 	switch(e) {
+	case ITEM_NONE:
+		return "ITEM_NONE";
 	case ITEM_LIGHT:
 		return "ITEM_LIGHT";
 	case ITEM_SCROLL:
@@ -1860,6 +1191,7 @@ std::string translate(const e_item_type e) {
 }
 bool enum_validate(const e_item_type value) {
 	switch(value) {
+		case ITEM_NONE:
 		case ITEM_LIGHT:
 		case ITEM_SCROLL:
 		case ITEM_WAND:
@@ -1892,146 +1224,6 @@ bool enum_validate(const e_item_type value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_item_type value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_item_wear encode_e_item_wear(std::string s,e_item_wear fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "ITEM_TAKE") return ITEM_TAKE;
-	if (s == "ITEM_WEAR_FINGER") return ITEM_WEAR_FINGER;
-	if (s == "ITEM_WEAR_NECK") return ITEM_WEAR_NECK;
-	if (s == "ITEM_WEAR_BODY") return ITEM_WEAR_BODY;
-	if (s == "ITEM_WEAR_HEAD") return ITEM_WEAR_HEAD;
-	if (s == "ITEM_WEAR_LEGS") return ITEM_WEAR_LEGS;
-	if (s == "ITEM_WEAR_FEET") return ITEM_WEAR_FEET;
-	if (s == "ITEM_WEAR_HANDS") return ITEM_WEAR_HANDS;
-	if (s == "ITEM_WEAR_ARMS") return ITEM_WEAR_ARMS;
-	if (s == "ITEM_WEAR_SHIELD") return ITEM_WEAR_SHIELD;
-	if (s == "ITEM_WEAR_ABOUT") return ITEM_WEAR_ABOUT;
-	if (s == "ITEM_WEAR_WAISTE") return ITEM_WEAR_WAISTE;
-	if (s == "ITEM_WEAR_WRIST") return ITEM_WEAR_WRIST;
-	if (s == "ITEM_WIELD") return ITEM_WIELD;
-	if (s == "ITEM_HOLD") return ITEM_HOLD;
-	if (s == "ITEM_THROW") return ITEM_THROW;
-	if (s == "ITEM_LIGHT_SOURCE") return ITEM_LIGHT_SOURCE;
-	if (s == "ITEM_WEAR_BACK") return ITEM_WEAR_BACK;
-	if (s == "ITEM_WEAR_EAR") return ITEM_WEAR_EAR;
-	if (s == "ITEM_WEAR_EYE") return ITEM_WEAR_EYE;
-	return fallback;
-}
-
-std::string translate(const e_item_wear e) {
-	switch(e) {
-	case ITEM_TAKE:
-		return "ITEM_TAKE";
-	case ITEM_WEAR_FINGER:
-		return "ITEM_WEAR_FINGER";
-	case ITEM_WEAR_NECK:
-		return "ITEM_WEAR_NECK";
-	case ITEM_WEAR_BODY:
-		return "ITEM_WEAR_BODY";
-	case ITEM_WEAR_HEAD:
-		return "ITEM_WEAR_HEAD";
-	case ITEM_WEAR_LEGS:
-		return "ITEM_WEAR_LEGS";
-	case ITEM_WEAR_FEET:
-		return "ITEM_WEAR_FEET";
-	case ITEM_WEAR_HANDS:
-		return "ITEM_WEAR_HANDS";
-	case ITEM_WEAR_ARMS:
-		return "ITEM_WEAR_ARMS";
-	case ITEM_WEAR_SHIELD:
-		return "ITEM_WEAR_SHIELD";
-	case ITEM_WEAR_ABOUT:
-		return "ITEM_WEAR_ABOUT";
-	case ITEM_WEAR_WAISTE:
-		return "ITEM_WEAR_WAISTE";
-	case ITEM_WEAR_WRIST:
-		return "ITEM_WEAR_WRIST";
-	case ITEM_WIELD:
-		return "ITEM_WIELD";
-	case ITEM_HOLD:
-		return "ITEM_HOLD";
-	case ITEM_THROW:
-		return "ITEM_THROW";
-	case ITEM_LIGHT_SOURCE:
-		return "ITEM_LIGHT_SOURCE";
-	case ITEM_WEAR_BACK:
-		return "ITEM_WEAR_BACK";
-	case ITEM_WEAR_EAR:
-		return "ITEM_WEAR_EAR";
-	case ITEM_WEAR_EYE:
-		return "ITEM_WEAR_EYE";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_item_wear value) {
-	switch(value) {
-		case ITEM_TAKE:
-		case ITEM_WEAR_FINGER:
-		case ITEM_WEAR_NECK:
-		case ITEM_WEAR_BODY:
-		case ITEM_WEAR_HEAD:
-		case ITEM_WEAR_LEGS:
-		case ITEM_WEAR_FEET:
-		case ITEM_WEAR_HANDS:
-		case ITEM_WEAR_ARMS:
-		case ITEM_WEAR_SHIELD:
-		case ITEM_WEAR_ABOUT:
-		case ITEM_WEAR_WAISTE:
-		case ITEM_WEAR_WRIST:
-		case ITEM_WIELD:
-		case ITEM_HOLD:
-		case ITEM_THROW:
-		case ITEM_LIGHT_SOURCE:
-		case ITEM_WEAR_BACK:
-		case ITEM_WEAR_EAR:
-		case ITEM_WEAR_EYE:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_item_wear value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_large_flags encode_e_large_flags(std::string s,e_large_flags fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "LARGE_NONE") return LARGE_NONE;
-	if (s == "LARGE_WATER") return LARGE_WATER;
-	if (s == "LARGE_AIR") return LARGE_AIR;
-	if (s == "LARGE_IMPASS") return LARGE_IMPASS;
-	return fallback;
-}
-
-std::string translate(const e_large_flags e) {
-	switch(e) {
-	case LARGE_NONE:
-		return "LARGE_NONE";
-	case LARGE_WATER:
-		return "LARGE_WATER";
-	case LARGE_AIR:
-		return "LARGE_AIR";
-	case LARGE_IMPASS:
-		return "LARGE_IMPASS";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_large_flags value) {
-	switch(value) {
-		case LARGE_NONE:
-		case LARGE_WATER:
-		case LARGE_AIR:
-		case LARGE_IMPASS:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_large_flags value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
@@ -2195,158 +1387,9 @@ std::ostream & operator<<(std::ostream &out,const e_log_levels value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_mob_flags encode_e_mob_flags(std::string s,e_mob_flags fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "ACT_SPEC") return ACT_SPEC;
-	if (s == "ACT_SENTINEL") return ACT_SENTINEL;
-	if (s == "ACT_SCAVENGER") return ACT_SCAVENGER;
-	if (s == "ACT_ISNPC") return ACT_ISNPC;
-	if (s == "ACT_NICE_THIEF") return ACT_NICE_THIEF;
-	if (s == "ACT_AGGRESSIVE") return ACT_AGGRESSIVE;
-	if (s == "ACT_STAY_ZONE") return ACT_STAY_ZONE;
-	if (s == "ACT_WIMPY") return ACT_WIMPY;
-	if (s == "ACT_ANNOYING") return ACT_ANNOYING;
-	if (s == "ACT_HATEFUL") return ACT_HATEFUL;
-	if (s == "ACT_AFRAID") return ACT_AFRAID;
-	if (s == "ACT_IMMORTAL") return ACT_IMMORTAL;
-	if (s == "ACT_HUNTING") return ACT_HUNTING;
-	if (s == "ACT_DEADLY") return ACT_DEADLY;
-	if (s == "ACT_POLYSELF") return ACT_POLYSELF;
-	if (s == "ACT_META_AGG") return ACT_META_AGG;
-	if (s == "ACT_GUARDIAN") return ACT_GUARDIAN;
-	if (s == "ACT_ILLUSION") return ACT_ILLUSION;
-	if (s == "ACT_HUGE") return ACT_HUGE;
-	if (s == "ACT_SCRIPT") return ACT_SCRIPT;
-	if (s == "ACT_GREET") return ACT_GREET;
-	if (s == "ACT_MAGIC_USER") return ACT_MAGIC_USER;
-	if (s == "ACT_WARRIOR") return ACT_WARRIOR;
-	if (s == "ACT_CLERIC") return ACT_CLERIC;
-	if (s == "ACT_THIEF") return ACT_THIEF;
-	if (s == "ACT_DRUID") return ACT_DRUID;
-	if (s == "ACT_MONK") return ACT_MONK;
-	if (s == "ACT_BARBARIAN") return ACT_BARBARIAN;
-	if (s == "ACT_PALADIN") return ACT_PALADIN;
-	if (s == "ACT_RANGER") return ACT_RANGER;
-	if (s == "ACT_PSI") return ACT_PSI;
-	if (s == "ACT_ARCHER") return ACT_ARCHER;
-	return fallback;
-}
-
-std::string translate(const e_mob_flags e) {
-	switch(e) {
-	case ACT_SPEC:
-		return "ACT_SPEC";
-	case ACT_SENTINEL:
-		return "ACT_SENTINEL";
-	case ACT_SCAVENGER:
-		return "ACT_SCAVENGER";
-	case ACT_ISNPC:
-		return "ACT_ISNPC";
-	case ACT_NICE_THIEF:
-		return "ACT_NICE_THIEF";
-	case ACT_AGGRESSIVE:
-		return "ACT_AGGRESSIVE";
-	case ACT_STAY_ZONE:
-		return "ACT_STAY_ZONE";
-	case ACT_WIMPY:
-		return "ACT_WIMPY";
-	case ACT_ANNOYING:
-		return "ACT_ANNOYING";
-	case ACT_HATEFUL:
-		return "ACT_HATEFUL";
-	case ACT_AFRAID:
-		return "ACT_AFRAID";
-	case ACT_IMMORTAL:
-		return "ACT_IMMORTAL";
-	case ACT_HUNTING:
-		return "ACT_HUNTING";
-	case ACT_DEADLY:
-		return "ACT_DEADLY";
-	case ACT_POLYSELF:
-		return "ACT_POLYSELF";
-	case ACT_META_AGG:
-		return "ACT_META_AGG";
-	case ACT_GUARDIAN:
-		return "ACT_GUARDIAN";
-	case ACT_ILLUSION:
-		return "ACT_ILLUSION";
-	case ACT_HUGE:
-		return "ACT_HUGE";
-	case ACT_SCRIPT:
-		return "ACT_SCRIPT";
-	case ACT_GREET:
-		return "ACT_GREET";
-	case ACT_MAGIC_USER:
-		return "ACT_MAGIC_USER";
-	case ACT_WARRIOR:
-		return "ACT_WARRIOR";
-	case ACT_CLERIC:
-		return "ACT_CLERIC";
-	case ACT_THIEF:
-		return "ACT_THIEF";
-	case ACT_DRUID:
-		return "ACT_DRUID";
-	case ACT_MONK:
-		return "ACT_MONK";
-	case ACT_BARBARIAN:
-		return "ACT_BARBARIAN";
-	case ACT_PALADIN:
-		return "ACT_PALADIN";
-	case ACT_RANGER:
-		return "ACT_RANGER";
-	case ACT_PSI:
-		return "ACT_PSI";
-	case ACT_ARCHER:
-		return "ACT_ARCHER";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_mob_flags value) {
-	switch(value) {
-		case ACT_SPEC:
-		case ACT_SENTINEL:
-		case ACT_SCAVENGER:
-		case ACT_ISNPC:
-		case ACT_NICE_THIEF:
-		case ACT_AGGRESSIVE:
-		case ACT_STAY_ZONE:
-		case ACT_WIMPY:
-		case ACT_ANNOYING:
-		case ACT_HATEFUL:
-		case ACT_AFRAID:
-		case ACT_IMMORTAL:
-		case ACT_HUNTING:
-		case ACT_DEADLY:
-		case ACT_POLYSELF:
-		case ACT_META_AGG:
-		case ACT_GUARDIAN:
-		case ACT_ILLUSION:
-		case ACT_HUGE:
-		case ACT_SCRIPT:
-		case ACT_GREET:
-		case ACT_MAGIC_USER:
-		case ACT_WARRIOR:
-		case ACT_CLERIC:
-		case ACT_THIEF:
-		case ACT_DRUID:
-		case ACT_MONK:
-		case ACT_BARBARIAN:
-		case ACT_PALADIN:
-		case ACT_RANGER:
-		case ACT_PSI:
-		case ACT_ARCHER:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_mob_flags value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_opinion_op encode_e_opinion_op(std::string s,e_opinion_op fallback) {
 	boost::algorithm::to_upper(s);
+	if (s == "OP_NONE") return OP_NONE;
 	if (s == "OP_SEX") return OP_SEX;
 	if (s == "OP_RACE") return OP_RACE;
 	if (s == "OP_CHAR") return OP_CHAR;
@@ -2359,6 +1402,8 @@ e_opinion_op encode_e_opinion_op(std::string s,e_opinion_op fallback) {
 
 std::string translate(const e_opinion_op e) {
 	switch(e) {
+	case OP_NONE:
+		return "OP_NONE";
 	case OP_SEX:
 		return "OP_SEX";
 	case OP_RACE:
@@ -2379,6 +1424,7 @@ std::string translate(const e_opinion_op e) {
 }
 bool enum_validate(const e_opinion_op value) {
 	switch(value) {
+		case OP_NONE:
 		case OP_SEX:
 		case OP_RACE:
 		case OP_CHAR:
@@ -2392,112 +1438,6 @@ bool enum_validate(const e_opinion_op value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_opinion_op value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_player_flags encode_e_player_flags(std::string s,e_player_flags fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "PLR_BRIEF") return PLR_BRIEF;
-	if (s == "PLR_UNUSED") return PLR_UNUSED;
-	if (s == "PLR_COMPACT") return PLR_COMPACT;
-	if (s == "PLR_DONTSET") return PLR_DONTSET;
-	if (s == "PLR_WIMPY") return PLR_WIMPY;
-	if (s == "PLR_NOHASSLE") return PLR_NOHASSLE;
-	if (s == "PLR_STEALTH") return PLR_STEALTH;
-	if (s == "PLR_HUNTING") return PLR_HUNTING;
-	if (s == "PLR_DEAF") return PLR_DEAF;
-	if (s == "PLR_ECHO") return PLR_ECHO;
-	if (s == "PLR_NOGOSSIP") return PLR_NOGOSSIP;
-	if (s == "PLR_NOAUCTION") return PLR_NOAUCTION;
-	if (s == "PLR_NOTHING") return PLR_NOTHING;
-	if (s == "PLR_NOTHING2") return PLR_NOTHING2;
-	if (s == "PLR_NOSHOUT") return PLR_NOSHOUT;
-	if (s == "PLR_FREEZE") return PLR_FREEZE;
-	if (s == "PLR_NOTELL") return PLR_NOTELL;
-	if (s == "PLR_MAILING") return PLR_MAILING;
-	if (s == "PLR_EMPTY4") return PLR_EMPTY4;
-	if (s == "PLR_EMPTY5") return PLR_EMPTY5;
-	if (s == "PLR_NOBEEP") return PLR_NOBEEP;
-	return fallback;
-}
-
-std::string translate(const e_player_flags e) {
-	switch(e) {
-	case PLR_BRIEF:
-		return "PLR_BRIEF";
-	case PLR_UNUSED:
-		return "PLR_UNUSED";
-	case PLR_COMPACT:
-		return "PLR_COMPACT";
-	case PLR_DONTSET:
-		return "PLR_DONTSET";
-	case PLR_WIMPY:
-		return "PLR_WIMPY";
-	case PLR_NOHASSLE:
-		return "PLR_NOHASSLE";
-	case PLR_STEALTH:
-		return "PLR_STEALTH";
-	case PLR_HUNTING:
-		return "PLR_HUNTING";
-	case PLR_DEAF:
-		return "PLR_DEAF";
-	case PLR_ECHO:
-		return "PLR_ECHO";
-	case PLR_NOGOSSIP:
-		return "PLR_NOGOSSIP";
-	case PLR_NOAUCTION:
-		return "PLR_NOAUCTION";
-	case PLR_NOTHING:
-		return "PLR_NOTHING";
-	case PLR_NOTHING2:
-		return "PLR_NOTHING2";
-	case PLR_NOSHOUT:
-		return "PLR_NOSHOUT";
-	case PLR_FREEZE:
-		return "PLR_FREEZE";
-	case PLR_NOTELL:
-		return "PLR_NOTELL";
-	case PLR_MAILING:
-		return "PLR_MAILING";
-	case PLR_EMPTY4:
-		return "PLR_EMPTY4";
-	case PLR_EMPTY5:
-		return "PLR_EMPTY5";
-	case PLR_NOBEEP:
-		return "PLR_NOBEEP";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_player_flags value) {
-	switch(value) {
-		case PLR_BRIEF:
-		case PLR_UNUSED:
-		case PLR_COMPACT:
-		case PLR_DONTSET:
-		case PLR_WIMPY:
-		case PLR_NOHASSLE:
-		case PLR_STEALTH:
-		case PLR_HUNTING:
-		case PLR_DEAF:
-		case PLR_ECHO:
-		case PLR_NOGOSSIP:
-		case PLR_NOAUCTION:
-		case PLR_NOTHING:
-		case PLR_NOTHING2:
-		case PLR_NOSHOUT:
-		case PLR_FREEZE:
-		case PLR_NOTELL:
-		case PLR_MAILING:
-		case PLR_EMPTY4:
-		case PLR_EMPTY5:
-		case PLR_NOBEEP:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_player_flags value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
@@ -2925,152 +1865,6 @@ std::ostream & operator<<(std::ostream &out,const e_races value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_room_flags encode_e_room_flags(std::string s,e_room_flags fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "DARK") return DARK;
-	if (s == "DEATH") return DEATH;
-	if (s == "NO_MOB") return NO_MOB;
-	if (s == "INDOORS") return INDOORS;
-	if (s == "PEACEFUL") return PEACEFUL;
-	if (s == "NOSTEAL") return NOSTEAL;
-	if (s == "NO_SUM") return NO_SUM;
-	if (s == "NO_MAGIC") return NO_MAGIC;
-	if (s == "TUNNEL") return TUNNEL;
-	if (s == "PRIVATE") return PRIVATE;
-	if (s == "SILENCE") return SILENCE;
-	if (s == "LARGE") return LARGE;
-	if (s == "NO_DEATH") return NO_DEATH;
-	if (s == "SAVE_ROOM") return SAVE_ROOM;
-	if (s == "NO_TRACK") return NO_TRACK;
-	if (s == "NO_MIND") return NO_MIND;
-	if (s == "DESERTIC") return DESERTIC;
-	if (s == "ARTIC") return ARTIC;
-	if (s == "UNDERGROUND") return UNDERGROUND;
-	if (s == "HOT") return HOT;
-	if (s == "WET") return WET;
-	if (s == "COLD") return COLD;
-	if (s == "DRY") return DRY;
-	if (s == "BRIGHT") return BRIGHT;
-	if (s == "NO_ASTRAL") return NO_ASTRAL;
-	if (s == "NO_REGAIN") return NO_REGAIN;
-	if (s == "RM_1") return RM_1;
-	if (s == "RM_2") return RM_2;
-	if (s == "RM_3") return RM_3;
-	if (s == "RM_4") return RM_4;
-	if (s == "RM_5") return RM_5;
-	return fallback;
-}
-
-std::string translate(const e_room_flags e) {
-	switch(e) {
-	case DARK:
-		return "DARK";
-	case DEATH:
-		return "DEATH";
-	case NO_MOB:
-		return "NO_MOB";
-	case INDOORS:
-		return "INDOORS";
-	case PEACEFUL:
-		return "PEACEFUL";
-	case NOSTEAL:
-		return "NOSTEAL";
-	case NO_SUM:
-		return "NO_SUM";
-	case NO_MAGIC:
-		return "NO_MAGIC";
-	case TUNNEL:
-		return "TUNNEL";
-	case PRIVATE:
-		return "PRIVATE";
-	case SILENCE:
-		return "SILENCE";
-	case LARGE:
-		return "LARGE";
-	case NO_DEATH:
-		return "NO_DEATH";
-	case SAVE_ROOM:
-		return "SAVE_ROOM";
-	case NO_TRACK:
-		return "NO_TRACK";
-	case NO_MIND:
-		return "NO_MIND";
-	case DESERTIC:
-		return "DESERTIC";
-	case ARTIC:
-		return "ARTIC";
-	case UNDERGROUND:
-		return "UNDERGROUND";
-	case HOT:
-		return "HOT";
-	case WET:
-		return "WET";
-	case COLD:
-		return "COLD";
-	case DRY:
-		return "DRY";
-	case BRIGHT:
-		return "BRIGHT";
-	case NO_ASTRAL:
-		return "NO_ASTRAL";
-	case NO_REGAIN:
-		return "NO_REGAIN";
-	case RM_1:
-		return "RM_1";
-	case RM_2:
-		return "RM_2";
-	case RM_3:
-		return "RM_3";
-	case RM_4:
-		return "RM_4";
-	case RM_5:
-		return "RM_5";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_room_flags value) {
-	switch(value) {
-		case DARK:
-		case DEATH:
-		case NO_MOB:
-		case INDOORS:
-		case PEACEFUL:
-		case NOSTEAL:
-		case NO_SUM:
-		case NO_MAGIC:
-		case TUNNEL:
-		case PRIVATE:
-		case SILENCE:
-		case LARGE:
-		case NO_DEATH:
-		case SAVE_ROOM:
-		case NO_TRACK:
-		case NO_MIND:
-		case DESERTIC:
-		case ARTIC:
-		case UNDERGROUND:
-		case HOT:
-		case WET:
-		case COLD:
-		case DRY:
-		case BRIGHT:
-		case NO_ASTRAL:
-		case NO_REGAIN:
-		case RM_1:
-		case RM_2:
-		case RM_3:
-		case RM_4:
-		case RM_5:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_room_flags value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_seasons encode_e_seasons(std::string s,e_seasons fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "SEASON_WINTER") return SEASON_WINTER;
@@ -3217,76 +2011,6 @@ std::ostream & operator<<(std::ostream &out,const e_sex value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_skill_known encode_e_skill_known(std::string s,e_skill_known fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "SKILL_KNOWN") return SKILL_KNOWN;
-	if (s == "SKILL_KNOWN_CLERIC") return SKILL_KNOWN_CLERIC;
-	if (s == "SKILL_KNOWN_MAGE") return SKILL_KNOWN_MAGE;
-	if (s == "SKILL_KNOWN_SORCERER") return SKILL_KNOWN_SORCERER;
-	if (s == "SKILL_KNOWN_THIEF") return SKILL_KNOWN_THIEF;
-	if (s == "SKILL_KNOWN_MONK") return SKILL_KNOWN_MONK;
-	if (s == "SKILL_KNOWN_DRUID") return SKILL_KNOWN_DRUID;
-	if (s == "SKILL_KNOWN_WARRIOR") return SKILL_KNOWN_WARRIOR;
-	if (s == "SKILL_KNOWN_BARBARIAN") return SKILL_KNOWN_BARBARIAN;
-	if (s == "SKILL_KNOWN_PALADIN") return SKILL_KNOWN_PALADIN;
-	if (s == "SKILL_KNOWN_RANGER") return SKILL_KNOWN_RANGER;
-	if (s == "SKILL_KNOWN_PSI") return SKILL_KNOWN_PSI;
-	return fallback;
-}
-
-std::string translate(const e_skill_known e) {
-	switch(e) {
-	case SKILL_KNOWN:
-		return "SKILL_KNOWN";
-	case SKILL_KNOWN_CLERIC:
-		return "SKILL_KNOWN_CLERIC";
-	case SKILL_KNOWN_MAGE:
-		return "SKILL_KNOWN_MAGE";
-	case SKILL_KNOWN_SORCERER:
-		return "SKILL_KNOWN_SORCERER";
-	case SKILL_KNOWN_THIEF:
-		return "SKILL_KNOWN_THIEF";
-	case SKILL_KNOWN_MONK:
-		return "SKILL_KNOWN_MONK";
-	case SKILL_KNOWN_DRUID:
-		return "SKILL_KNOWN_DRUID";
-	case SKILL_KNOWN_WARRIOR:
-		return "SKILL_KNOWN_WARRIOR";
-	case SKILL_KNOWN_BARBARIAN:
-		return "SKILL_KNOWN_BARBARIAN";
-	case SKILL_KNOWN_PALADIN:
-		return "SKILL_KNOWN_PALADIN";
-	case SKILL_KNOWN_RANGER:
-		return "SKILL_KNOWN_RANGER";
-	case SKILL_KNOWN_PSI:
-		return "SKILL_KNOWN_PSI";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_skill_known value) {
-	switch(value) {
-		case SKILL_KNOWN:
-		case SKILL_KNOWN_CLERIC:
-		case SKILL_KNOWN_MAGE:
-		case SKILL_KNOWN_SORCERER:
-		case SKILL_KNOWN_THIEF:
-		case SKILL_KNOWN_MONK:
-		case SKILL_KNOWN_DRUID:
-		case SKILL_KNOWN_WARRIOR:
-		case SKILL_KNOWN_BARBARIAN:
-		case SKILL_KNOWN_PALADIN:
-		case SKILL_KNOWN_RANGER:
-		case SKILL_KNOWN_PSI:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_skill_known value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_sky encode_e_sky(std::string s,e_sky fallback) {
 	boost::algorithm::to_upper(s);
 	if (s == "SKY_CLOUDLESS") return SKY_CLOUDLESS;
@@ -3327,6 +2051,7 @@ std::ostream & operator<<(std::ostream &out,const e_sky value) {
 }
 e_speaks encode_e_speaks(std::string s,e_speaks fallback) {
 	boost::algorithm::to_upper(s);
+	if (s == "SPEAK_NONE") return SPEAK_NONE;
 	if (s == "SPEAK_COMMON") return SPEAK_COMMON;
 	if (s == "SPEAK_ELVISH") return SPEAK_ELVISH;
 	if (s == "SPEAK_HALFLING") return SPEAK_HALFLING;
@@ -3340,6 +2065,8 @@ e_speaks encode_e_speaks(std::string s,e_speaks fallback) {
 
 std::string translate(const e_speaks e) {
 	switch(e) {
+	case SPEAK_NONE:
+		return "SPEAK_NONE";
 	case SPEAK_COMMON:
 		return "SPEAK_COMMON";
 	case SPEAK_ELVISH:
@@ -3362,6 +2089,7 @@ std::string translate(const e_speaks e) {
 }
 bool enum_validate(const e_speaks value) {
 	switch(value) {
+		case SPEAK_NONE:
 		case SPEAK_COMMON:
 		case SPEAK_ELVISH:
 		case SPEAK_HALFLING:
@@ -3455,70 +2183,9 @@ std::ostream & operator<<(std::ostream &out,const e_sunlight value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
-e_sys_flags encode_e_sys_flags(std::string s,e_sys_flags fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "SYS_NOPORTAL") return SYS_NOPORTAL;
-	if (s == "SYS_NOASTRAL") return SYS_NOASTRAL;
-	if (s == "SYS_NOSUMMON") return SYS_NOSUMMON;
-	if (s == "SYS_NOKILL") return SYS_NOKILL;
-	if (s == "SYS_LOGALL") return SYS_LOGALL;
-	if (s == "SYS_ECLIPS") return SYS_ECLIPS;
-	if (s == "SYS_SKIPDNS") return SYS_SKIPDNS;
-	if (s == "SYS_REQAPPROVE") return SYS_REQAPPROVE;
-	if (s == "SYS_NOANSI") return SYS_NOANSI;
-	if (s == "SYS_LOGMOB") return SYS_LOGMOB;
-	return fallback;
-}
-
-std::string translate(const e_sys_flags e) {
-	switch(e) {
-	case SYS_NOPORTAL:
-		return "SYS_NOPORTAL";
-	case SYS_NOASTRAL:
-		return "SYS_NOASTRAL";
-	case SYS_NOSUMMON:
-		return "SYS_NOSUMMON";
-	case SYS_NOKILL:
-		return "SYS_NOKILL";
-	case SYS_LOGALL:
-		return "SYS_LOGALL";
-	case SYS_ECLIPS:
-		return "SYS_ECLIPS";
-	case SYS_SKIPDNS:
-		return "SYS_SKIPDNS";
-	case SYS_REQAPPROVE:
-		return "SYS_REQAPPROVE";
-	case SYS_NOANSI:
-		return "SYS_NOANSI";
-	case SYS_LOGMOB:
-		return "SYS_LOGMOB";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_sys_flags value) {
-	switch(value) {
-		case SYS_NOPORTAL:
-		case SYS_NOASTRAL:
-		case SYS_NOSUMMON:
-		case SYS_NOKILL:
-		case SYS_LOGALL:
-		case SYS_ECLIPS:
-		case SYS_SKIPDNS:
-		case SYS_REQAPPROVE:
-		case SYS_NOANSI:
-		case SYS_LOGMOB:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_sys_flags value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
 e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback) {
 	boost::algorithm::to_upper(s);
+	if (s == "TAN_BAG") return TAN_BAG;
 	if (s == "TAN_SHIELD") return TAN_SHIELD;
 	if (s == "TAN_JACKET") return TAN_JACKET;
 	if (s == "TAN_BOOTS") return TAN_BOOTS;
@@ -3526,13 +2193,14 @@ e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback) {
 	if (s == "TAN_LEGGINGS") return TAN_LEGGINGS;
 	if (s == "TAN_SLEEVES") return TAN_SLEEVES;
 	if (s == "TAN_HELMET") return TAN_HELMET;
-	if (s == "TAN_BAG") return TAN_BAG;
 	if (s == "TAN_ARMOR") return TAN_ARMOR;
 	return fallback;
 }
 
 std::string translate(const e_tan_result e) {
 	switch(e) {
+	case TAN_BAG:
+		return "TAN_BAG";
 	case TAN_SHIELD:
 		return "TAN_SHIELD";
 	case TAN_JACKET:
@@ -3547,8 +2215,6 @@ std::string translate(const e_tan_result e) {
 		return "TAN_SLEEVES";
 	case TAN_HELMET:
 		return "TAN_HELMET";
-	case TAN_BAG:
-		return "TAN_BAG";
 	case TAN_ARMOR:
 		return "TAN_ARMOR";
 	default:
@@ -3557,6 +2223,7 @@ std::string translate(const e_tan_result e) {
 }
 bool enum_validate(const e_tan_result value) {
 	switch(value) {
+		case TAN_BAG:
 		case TAN_SHIELD:
 		case TAN_JACKET:
 		case TAN_BOOTS:
@@ -3564,7 +2231,6 @@ bool enum_validate(const e_tan_result value) {
 		case TAN_LEGGINGS:
 		case TAN_SLEEVES:
 		case TAN_HELMET:
-		case TAN_BAG:
 		case TAN_ARMOR:
 		return true;
 		default:
@@ -3572,122 +2238,6 @@ bool enum_validate(const e_tan_result value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_tan_result value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_teleports encode_e_teleports(std::string s,e_teleports fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "TELE_LOOK") return TELE_LOOK;
-	if (s == "TELE_COUNT") return TELE_COUNT;
-	if (s == "TELE_RANDOM") return TELE_RANDOM;
-	if (s == "TELE_SPIN") return TELE_SPIN;
-	return fallback;
-}
-
-std::string translate(const e_teleports e) {
-	switch(e) {
-	case TELE_LOOK:
-		return "TELE_LOOK";
-	case TELE_COUNT:
-		return "TELE_COUNT";
-	case TELE_RANDOM:
-		return "TELE_RANDOM";
-	case TELE_SPIN:
-		return "TELE_SPIN";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_teleports value) {
-	switch(value) {
-		case TELE_LOOK:
-		case TELE_COUNT:
-		case TELE_RANDOM:
-		case TELE_SPIN:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_teleports value) {
-	out << value << "(" << G::translate(value) << ")";
-	return out;
-}
-e_user_flags encode_e_user_flags(std::string s,e_user_flags fallback) {
-	boost::algorithm::to_upper(s);
-	if (s == "NO_DELETE") return NO_DELETE;
-	if (s == "USE_ANSI") return USE_ANSI;
-	if (s == "RACE_WAR") return RACE_WAR;
-	if (s == "SHOW_CLASSES") return SHOW_CLASSES;
-	if (s == "SHOW_EXITS") return SHOW_EXITS;
-	if (s == "MURDER_1") return MURDER_1;
-	if (s == "STOLE_1") return STOLE_1;
-	if (s == "MURDER_2") return MURDER_2;
-	if (s == "STOLE_2") return STOLE_2;
-	if (s == "STOLE_X") return STOLE_X;
-	if (s == "MURDER_X") return MURDER_X;
-	if (s == "USE_PAGING") return USE_PAGING;
-	if (s == "CAN_OBJ_EDIT") return CAN_OBJ_EDIT;
-	if (s == "CAN_MOB_EDIT") return CAN_MOB_EDIT;
-	return fallback;
-}
-
-std::string translate(const e_user_flags e) {
-	switch(e) {
-	case NO_DELETE:
-		return "NO_DELETE";
-	case USE_ANSI:
-		return "USE_ANSI";
-	case RACE_WAR:
-		return "RACE_WAR";
-	case SHOW_CLASSES:
-		return "SHOW_CLASSES";
-	case SHOW_EXITS:
-		return "SHOW_EXITS";
-	case MURDER_1:
-		return "MURDER_1";
-	case STOLE_1:
-		return "STOLE_1";
-	case MURDER_2:
-		return "MURDER_2";
-	case STOLE_2:
-		return "STOLE_2";
-	case STOLE_X:
-		return "STOLE_X";
-	case MURDER_X:
-		return "MURDER_X";
-	case USE_PAGING:
-		return "USE_PAGING";
-	case CAN_OBJ_EDIT:
-		return "CAN_OBJ_EDIT";
-	case CAN_MOB_EDIT:
-		return "CAN_MOB_EDIT";
-	default:
-		return "UNKNOWN";
-	}
-}
-bool enum_validate(const e_user_flags value) {
-	switch(value) {
-		case NO_DELETE:
-		case USE_ANSI:
-		case RACE_WAR:
-		case SHOW_CLASSES:
-		case SHOW_EXITS:
-		case MURDER_1:
-		case STOLE_1:
-		case MURDER_2:
-		case STOLE_2:
-		case STOLE_X:
-		case MURDER_X:
-		case USE_PAGING:
-		case CAN_OBJ_EDIT:
-		case CAN_MOB_EDIT:
-		return true;
-		default:
-		return false;
-	}
-}
-std::ostream & operator<<(std::ostream &out,const e_user_flags value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
