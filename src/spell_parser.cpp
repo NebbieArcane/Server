@@ -519,9 +519,9 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 	return;
 }
 
-void spello(int nr, byte beat, byte pos,
-			byte mlev, byte clev, byte dlev,
-			byte slev, byte plev, byte rlev, byte ilev,
+void spello(int nr, ubyte beat, ubyte pos,
+			ubyte mlev, ubyte clev, ubyte dlev,
+			ubyte slev, ubyte plev, ubyte rlev, ubyte ilev,
 			ubyte mana, sh_int tar, spell_func func,
 			sh_int sf,
 			sh_int align,

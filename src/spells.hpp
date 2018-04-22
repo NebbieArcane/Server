@@ -475,15 +475,15 @@ struct spell_info_type {
 	spell_func spell_pointer;
 	byte minimum_position;  /* Position for caster                         */
 	ubyte min_usesmana;     /* Amount of mana used by a spell         */
-	byte beats;             /* Heartbeats until ready for next */
+	ubyte beats;             /* Heartbeats until ready for next */
 
-	byte min_level_cleric;  /* Level required for cleric       */
-	byte min_level_magic;   /* Level required for magic user   */
-	byte min_level_druid;   /* Level required for druids       */
-	byte min_level_sorcerer;
-	byte min_level_paladin;
-	byte min_level_ranger;
-	byte min_level_psi;
+	ubyte min_level_cleric;  /* Level required for cleric       */
+	ubyte min_level_magic;   /* Level required for magic user   */
+	ubyte min_level_druid;   /* Level required for druids       */
+	ubyte min_level_sorcerer;
+	ubyte min_level_paladin;
+	ubyte min_level_ranger;
+	ubyte min_level_psi;
 	sh_int targets;         /* See below for use with TAR_XXX  */
 	sh_int spellfail;       /* modifier for spell failure      */
 	sh_int align_modifier;
