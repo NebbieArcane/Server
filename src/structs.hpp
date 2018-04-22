@@ -67,10 +67,10 @@ struct QuestItem {
 **  Limited item Stuff
 */
 
-#define LIM_ITEM_COST_MIN 20000     /* mininum cost of a lim. item 
+#define LIM_ITEM_COST_MIN 20000     /* mininum cost of a lim. item
                                      *  makes it a limited item... */
 
-#define MAX_LIM_ITEMS 18            /* max number of limited items you can 
+#define MAX_LIM_ITEMS 18            /* max number of limited items you can
                                      * rent with */
 
 #define MIN_COST_ITEM_EGO 10000     /* minimo costo sotto il quale non viene
@@ -837,6 +837,7 @@ struct snoop_data {
 };
 struct descriptor_data {
 	user AccountData;
+	e_connection_types last_state;
 	string currentInput;
 	int descriptor;                    /* file descriptor for socket */
 
