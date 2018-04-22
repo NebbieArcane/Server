@@ -6311,7 +6311,7 @@ int in_miniera(struct char_data* ch) {
 	}
 
 	return(found);
-};
+}
 
 void do_miner(struct char_data* ch) {
 	int r_num,percent=0,blocco;
