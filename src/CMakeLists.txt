@@ -10,12 +10,12 @@ MACRO(AUTOENUMS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/shutils/
         COMMENT "Generating  autoenums"
 	)
-    ADD_CUSTOM_TARGET(autoenums 
+    ADD_CUSTOM_TARGET(autoenums
     	DEPENDS ${files}
         COMMENT "Checking if re-generation is required for autoenums")
-        
+
     ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} autoenums)
-    
+
     target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${files})
 ENDMACRO()
 MACRO(RELEASE)
@@ -42,17 +42,17 @@ MACRO(ODB_GENERATE dbtype header)
 
     ADD_CUSTOM_COMMAND(
         OUTPUT ${ODB_GENERATED_FILES}
-        COMMAND odb 
-        		--profile boost/smart-ptr 
+        COMMAND odb
+        		--profile boost/smart-ptr
         		--profile boost/date-time
-        		--std c++11 
+        		--std c++11
         		-m dynamic
         		-d common
-        		-d ${dbtype} 
-        		--generate-query 
+        		-d ${dbtype}
+        		--generate-query
         		--generate-prepared
                 --show-sloc
-         		--generate-session       
+         		--generate-session
                 --schema-format separate
                 --at-once
                 --schema-name ${dbschema}-schema
@@ -82,18 +82,18 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 
     ADD_CUSTOM_COMMAND(
         OUTPUT ${ODB_GENERATED_FILES}
-        COMMAND odb  
+        COMMAND odb
         		--profile boost/smart-ptr
         		--profile boost/date-time
         		--std c++11
         		-m dynamic
         		-d common
-        		-d ${dbtype} 
-        		--generate-query 
+        		-d ${dbtype}
+        		--generate-query
         		--generate-prepared
                 --show-sloc
-         		--generate-session     
-         		--generate-schema  
+         		--generate-session
+         		--generate-schema
                 --schema-format separate
                 --at-once
                 --schema-name ${dbschema}
@@ -103,7 +103,7 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/odb/
         COMMENT "Generating  ${ODB_GENERATED_FILES}"
 	)
-    ADD_CUSTOM_TARGET(${dbschema} 
+    ADD_CUSTOM_TARGET(${dbschema}
     	DEPENDS ${ODB_GENERATED_FILES}
         COMMENT "Checking if ODB Files need to be regenerated from ${dbschema}.hpp"
 	)
@@ -199,47 +199,51 @@ configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UN
 
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
-	-Wfatal-errors
-	-Wno-enum-compare
-#	-Wno-unknown-pragmas
-	-Wno-variadic-macros 
-	-Wno-unused-parameter
-	-Wno-format-nonliteral
-	-Wno-switch
-	-Wno-unused
 	-Werror
-	-Wall 
-	-Wextra 
-	-Wformat=2 
-#	-Wpedantic 
-	-Wcast-align 
-	-Wcast-qual 
-	-Wctor-dtor-privacy 
-#	-Wdisabled-optimization 
-	-Winit-self 
-	-Wlogical-op 
-	-Wmissing-include-dirs 
-	-Wnoexcept 
-#	-Wold-style-cast 
-	-Woverloaded-virtual 
-	-Wredundant-decls 
-	-Wsign-promo 
-	-Wstrict-null-sentinel 
-	-Wstrict-overflow=5 
-	-Wundef 
-	-Wparentheses 
+	-Wfatal-errors
+	-Wall
+	-Wextra
+	-Wcast-align
+	-Wcast-qual
 	-Wchkp
-	-Wchar-subscripts
-	-Wuninitialized
-	-fdiagnostics-show-option
+	-Wctor-dtor-privacy
+	-Wdisabled-optimization
+	-Wno-enum-compare
+	-Wno-format-nonliteral
+	-Wformat=2
+	-Winit-self
+	-Wlogical-op
+	-Wmissing-include-dirs
+	-Wnoexcept
+	-Wno-old-style-cast
+	-Woverloaded-virtual
+	-Wparentheses
+	-Wpedantic
+	-Wredundant-decls
+	-Wreturn-local-addr
+	-Wreturn-type
+	-Wsign-promo
+#	-Wstack-protector
+	-Wstrict-null-sentinel
+	-Wstrict-overflow=5
+#	-Wno-switch
+	-Wundef
+	-Wno-unknown-pragmas
+#	-Wno-unused
+	-Wno-unused-parameter
+	-Wno-variadic-macros
 	-fdelete-null-pointer-checks
+	-fdiagnostics-show-option
+	-fdiagnostics-color=always
+	-fstack-protector
+
 
 )
 #get_cmake_property(_variableNames VARIABLES)
 #foreach (_variableName ${_variableNames})
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
-add_custom_target(style 
+add_custom_target(style
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
 	COMMAND ../astyle -r -Q --options=../astylerc "./*.cpp,*.hpp"
 )
