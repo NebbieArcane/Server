@@ -23,26 +23,26 @@ namespace Alarmud {
 using std::string;
 extern boost::format  my_fmt(const std::string &f_string);
 //#define mudlog(level,...) { LOG_INFO(#level << " " << my_fmt FORMAT(__VA_ARGS__)); }
-#define mudlog_LOG_ALWAYS(level,...) LOG4CXX_FATAL(logger,"LSERVICE  " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_SYSERR(level,...) {LOG4CXX_FATAL(errlogger,"LSYSERR  " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_FATAL(logger,"LSYSERR  " << my_fmt FORMAT(__VA_ARGS__))}
+#define mudlog_LOG_ALWAYS(...) LOG4CXX_FATAL(logger,"LSERVICE  " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_SYSERR(...) {LOG4CXX_FATAL(errlogger,"LSYSERR  " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_FATAL(logger,"LSYSERR  " << my_fmt FORMAT(__VA_ARGS__))}
 
-#define mudlog_LOG_ERROR(level,...) {LOG4CXX_ERROR(errlogger,"LERROR " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_ERROR(logger,"LERROR  " << my_fmt FORMAT(__VA_ARGS__))}
-#define mudlog_LOG_CONNECT(level,...) LOG4CXX_ERROR(logger,"LCONNECT " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_ERROR(...) {LOG4CXX_ERROR(errlogger,"LERROR " << my_fmt FORMAT(__VA_ARGS__)); LOG4CXX_ERROR(logger,"LERROR  " << my_fmt FORMAT(__VA_ARGS__))}
+#define mudlog_LOG_CONNECT(...) LOG4CXX_ERROR(logger,"LCONNECT " << my_fmt FORMAT(__VA_ARGS__))
 
-#define mudlog_LOG_CHECK(level,...) LOG4CXX_WARN(logger,"LCHECK " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_CHECK(...) LOG4CXX_WARN(logger,"LCHECK " << my_fmt FORMAT(__VA_ARGS__))
 
-#define mudlog_LOG_PLAYERS(level,...) LOG4CXX_INFO(logger,"LPLAYERS " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_MOBILES(level,...) LOG4CXX_INFO(logger,"LMOBILES " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_PLAYERS(...) LOG4CXX_INFO(logger,"LPLAYERS " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_MOBILES(...) LOG4CXX_INFO(logger,"LMOBILES " << my_fmt FORMAT(__VA_ARGS__))
 
-#define mudlog_LOG_SAVE(level,...) LOG4CXX_DEBUG(logger,"LSAVE " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_MAIL(level,...) LOG4CXX_DEBUG(logger,"LMAIL " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_RANK(level,...) LOG4CXX_DEBUG(logger,"LRANK " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_QUERY(level,...) LOG4CXX_DEBUG(querylogger,"LQUERY " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_SAVE(...) LOG4CXX_DEBUG(logger,"LSAVE " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_MAIL(...) LOG4CXX_DEBUG(logger,"LMAIL " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_RANK(...) LOG4CXX_DEBUG(logger,"LRANK " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_QUERY(...) LOG4CXX_DEBUG(querylogger,"LQUERY " << my_fmt FORMAT(__VA_ARGS__))
 
-#define mudlog_LOG_WHO(level,...) LOG4CXX_TRACE(logger,"LWHO " << my_fmt FORMAT(__VA_ARGS__))
-#define mudlog_LOG_WORLD(level,...) LOG4CXX_TRACE(logger,"LWORLD " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_WHO(...) LOG4CXX_TRACE(logger,"LWHO " << my_fmt FORMAT(__VA_ARGS__))
+#define mudlog_LOG_WORLD(...) LOG4CXX_TRACE(logger,"LWORLD " << my_fmt FORMAT(__VA_ARGS__))
 
-#define mudlog(level,...) {mudlog_##level(level,__VA_ARGS__);godTrace(level,__VA_ARGS__);}
+#define mudlog(level,...) {mudlog_##level(__VA_ARGS__);godTrace(level,__VA_ARGS__);}
 #define buglog(level,...) {LOG4CXX_INFO(buglogger, #level << " " << my_fmt FORMAT(__VA_ARGS__));godTrace(level,__VA_ARGS__);}
 
 // Note that TRACE level is compiled out in release (non-debug) mode.
