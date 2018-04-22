@@ -1852,7 +1852,8 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 }
 
 
-void toonList(const user &ac,string &message) {
+void toonList(const user &ac,const string &optional_message="") {
+	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
 	{
 		short n=0;
@@ -1913,6 +1914,7 @@ NANNY_FUNC(con_account_name) {
 	d->AccountData.email=email;
 	email.insert(0,"Benvenuto ").append(". ").append("Digita la tua password per favore (o b per ricominciare): ");
 	SEND_TO_Q(email.c_str(),d);
+	write(d->descriptor, echo_off, 4);
 	STATE(d)=CON_ACCOUNT_PWD;
 	return false;
 }
@@ -1972,7 +1974,7 @@ NANNY_FUNC(con_account_toon) {
 			mudlog(LOG_CONNECT,"Choosen %s",p->name.c_str());
 			ac.choosen=p->name;
 			d->currentInput=p->name;
-			STATE(d)=CON_NME;
+			STATE(d)=CON_PWDOK;
 			return true;
 		}
 	}
@@ -2521,6 +2523,10 @@ NANNY_FUNC(con_slct) {
 		write(d->descriptor, echo_off, 4);
 		STATE(d) = CON_PWDNEW;
 		break;
+	case '5':
+		toonList(d->AccountData,"Cambia personaggio:\n\r");
+		STATE(d) = CON_ACCOUNT_TOON;
+		break;
 	default:
 		SEND_TO_Q("Opzione errata.\n\r", d);
 		SEND_TO_Q(MENU, d);
@@ -2532,7 +2538,6 @@ NANNY_FUNC(con_nme) {
 	oldarg(true);
 	d->AlreadyInGame=false;
 	char tmp_name[20];
-	struct char_file_u tmp_store;
 	int rc=parse_name(arg, tmp_name);
 	mudlog(LOG_CONNECT,"Parsename result %d",rc);
 
@@ -2571,11 +2576,18 @@ NANNY_FUNC(con_nme) {
 			return false;
 		}
 		if(!WizLock) {
+			if (!d->character) {
+				CREATE(d->character, struct char_data, 1);
+				clear_char(d->character);
+				d->character->desc = d;
+				SET_BIT( d->character->player.user_flags, USE_PAGING );
+			}
 			CREATE(GET_NAME(d->character), char, strlen(tmp_name) + 1);
 			CAP(tmp_name);
 			strcpy(GET_NAME(d->character), tmp_name);
 			string buf("E` realmente '");
 			buf.append(tmp_name).append("' il nome che vuoi ? (si/no): ");
+			d->AccountData.choosen.assign(tmp_name);
 			SEND_TO_Q(buf.c_str(), d);
 			STATE(d) = CON_NMECNF;
 			return false;
@@ -2612,7 +2624,7 @@ NANNY_FUNC(con_nmecnf) {
 		write(d->descriptor, echo_on, 4);
 		SEND_TO_Q("Nuovo personaggio.\n\r", d);
 
-		string buf("Inserisci una password per");
+		string buf("Inserisci una password per ");
 		buf.append(GET_NAME(d->character));
 
 		SEND_TO_Q(buf.c_str(), d);
@@ -3011,6 +3023,7 @@ NANNY_FUNC(con_endhelpclass) {
 	return false;
 }
 NANNY_FUNC(con_rnewd) {
+	mudlog(LOG_CONNECT,"Nome: %s Password: %s",d->character->player.name,d->pwd);
 	SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
 									 USE_ANSI),
 							  motd), d);
@@ -3370,10 +3383,6 @@ void assign_nannies_pointers() {
 
 /* deal with newcomers and other non-playing sockets */
 void nanny(struct descriptor_data* d, char* arg) {
-	char buf[ 254 ];
-	struct char_data* tmp_ch;
-	struct room_data* rp; // Gaia 2001
-	struct descriptor_data* k;
 	d->currentInput.assign(arg);
 	boost::algorithm::trim_all(d->currentInput);
 	mudlog(LOG_CONNECT,"Outer nanny %s (%s)",d->currentInput.c_str(),G::translate(STATE(d)));
