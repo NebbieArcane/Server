@@ -290,7 +290,6 @@ void run_the_game(int port) {
 void game_loop(int s) {
 	fd_set input_set, output_set, exc_set;
 
-	static struct timeval opt_time;
 	char comm[MAX_INPUT_LENGTH];
 	char promptbuf[255];
 	struct descriptor_data* point, *next_point;
@@ -1002,9 +1001,9 @@ int new_descriptor(int s) {
 	SEND_TO_Q(login, newd);
 	SEND_TO_Q(
 		ParseAnsiColors(TRUE,"$c0007"
-						"$c0011Inserisci l'$c0012email del tuo account$c0011 o il $c0004nome$c0011 di un personaggio.\r\n"
-						"Se non hai un account, potrai crearlo in gioco col comando `register`.\r\n"
-						"$c0007Come vuoi essere conosciuto su Nebbie Arcane? "),
+						"$c0011Inserisci l'$c0012email del tuo account su http://www.nebbiearcane.it$c0011 o il $c0004nome$c0011 di un personaggio.\r\n"
+						"Se non hai o non ricordi il codice di accesso (diverso dalla password del sito) vai su http://www.nebbiearcane.it/mudcode e crealo.\r\n"
+						"$c0007Come vuoi essere conosciuto/a su Nebbie Arcane? "),
 		newd);
 
 	return(0);
