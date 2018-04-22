@@ -134,7 +134,7 @@ int modifica = FALSE;
 int pagamento = 0; // 0=pq  1=xp
 char modifica_obj[40] = "";
 
-static struct char_data* find_editman(struct char_data* ch) {
+struct char_data* find_editman(struct char_data* ch) {
 	struct char_data* editman;
 
 	editman = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(EditMaster));
