@@ -222,6 +222,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wredundant-decls
 	-Wreturn-local-addr
 	-Wreturn-type
+	-Wno-sign-compare
 	-Wsign-promo
 #	-Wstack-protector
 	-Wstrict-null-sentinel
