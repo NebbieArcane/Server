@@ -573,7 +573,6 @@ bool getFromDb(const char* name,const char* pwd) {
 /* generate index table for the player file */
 void build_player_index() {
 	using namespace boost::filesystem;
-	DIR* dir;
 	struct wizlistgen list_wiz;
 	int j, i;
 	char buf[512];
