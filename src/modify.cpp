@@ -508,7 +508,7 @@ ACTION_FUNC(do_edit) {
 		ch->desc->str = &rp->description;
 		break;
 	case 3:
-		sscanf(buffer,"%u %d ",&r_flags,&s_type);
+		sscanf(buffer,"%d %d ",&r_flags,&s_type);
 		if((r_flags < 0)  || (s_type < 0) || (s_type > 11)) {
 			send_to_char("didn't quite get those, please try again.\n\r",ch);
 			send_to_char("flags must be 0 or positive, and sectors must be from 0 to 11\n\r",ch);
