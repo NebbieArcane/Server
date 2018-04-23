@@ -1,0 +1,6824 @@
+#1
+Puff~
+Puff~
+Puff the Magic Dragon is here, attempting to sell Magic Mushrooms.
+~
+You see nothing special
+~
+1|2097152 0 1000 S
+26 1 -10 5d10+550 4d6+3
+0 5000 
+8 8 5 0 1 0
+#2
+morgul nazgul spettro dwimmerlaik~
+Dwimmerlaik, il Signore di Morgul~
+Dwimmerlaik, il Signore di Morgul, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di pura malvagita'.
+~
+1|2097152|4194304 2|2048|65536|524288|33554432 -1000 A 3
+50 -8 -10 300 3d6+15
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 0
+#3
+tormentor~
+The tormentor~
+The tormentor stands here.
+~
+He sneers at you.
+~
+1|128 8|32768|524288 -1000 A 2
+20 0 -2 200 2d6+8
+-1 0 8 1
+8 8 4 0 256|512|16384 0
+#4
+esattore~
+L'esattore degli dei~
+Un vecchio elfo dall'aria dimessa si aggira qui intorno.
+~
+Ti sorride
+~
+1|128 8|32768|524288 -1000 A 2
+20 0 -2 200 52d12+8
+-1 0 8 1
+8 8 4 0 256|512|16384 0
+#5
+inquisitor~
+The Inquisitor~
+The Inquisitor stands here.
+~
+He sneers at you.
+~
+1|128 8|32768|524288 -1000 A 3
+50 0 -5 200 3d5+6
+-1 0 8 1
+8 8 4 0 256|512|16384 0
+#6
+khamul nazgul spettro ombra~
+Khamul, l'Ombra dell'Est~
+Khamul, l'Ombra dell'Est, il luogotenente, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|2097152|16777216 2|2048|65536|524288|33554432 -1000 A 3
+42 -6 -10 300 3d4+10
+-1 0 10 29
+8 8 4 64 256|512|2048|8192 1
+#7
+adunaphel nazgul spettro silente~
+Adunaphel la silente~
+Adunaphel la silente, una dei terribili spettri dell'anello e' qui!
+~
+Vestita di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|2097152|4194304 2|2048|65536|524288|33554432 -1000 A 3
+42 -3 -10 200 3d4+10
+-1 0 8 29
+8 8 5 64 256|512|2048|8192 1
+#8
+akhorahil sconosciuto nazgul spettro~
+Akhorahil lo sconosciuto~
+Akhorahil lo sconosciuto, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|4194304|8388608 2|2048|65536|524288|33554432 -1000 A 3
+42 -3 -10 250 3d4+10
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 1
+#9
+ren impuro nazgul spettro~
+Ren l'Impuro~
+Ren l'Impuro, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|2097152|4194304 2|2048|65536|524288|33554432 -1000 A 3
+42 -3 -10 250 3d4+10
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 1
+#10
+fuoco elementale~
+Un elementale del fuoco~
+Una fiamma arde alta.
+~
+Ricorda vagamente una figura umana.
+~
+2 8 0 L 1
+8 14 2 0 3d8+3
+-1 0 2 26
+8 8 3 0 1 2
+L'elementale del fuoco scoppietta allegro.
+~
+Senti uno scoppiettio in tutto simile a quello di un fuoco acceso.
+~
+#11
+acqua elementale~
+Un elementale dell'acqua~
+Un robusto elementale dell'acqua e' qui.
+~
+Ricorda vagamente una figura umana.
+~
+2 8 0 L 1
+8 14 2 0 5d6+3
+-1 0 2 26
+8 8 3 32 0 2
+L'elementale dell'acqua ondeggia lentamente.
+~
+Senti il rumore di acqua corrente qui vicino.
+~
+#12
+terra elementale~
+Un elementale della terra~
+Un massiccio elementale della terra e' qui.
+~
+Ricorda vagamente una forma umana.
+~
+2 8 0 A 1
+8 14 2 0 4d8+3
+-1 0 2 26
+8 8 3 32 0 8
+#13
+aria elementale~
+Un elementale dell'aria~
+Un forte mulinello di vento ti scompiglia i capelli.
+~
+ricorda vagamente una figura umana.
+~
+2 8 0 L 1
+8 14 2 0 2d10+3
+-1 0 2 26
+8 8 3 32|64 0 1
+L'elementale dell'aria si muove vorticosamente attorno a te.
+~
+Senti il rumore di una raffica di vento.
+~
+#14
+dwaw waw nazgul spettro~
+Dwaw di Waw~
+Dwaw di Waw, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|4194304 2|2048|65536|524288|33554432 -1000 A 5
+42 -3 -10 300 3d4+10
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 1
+#15
+indur alba nazgul spettro~
+Indur AlbadiMorte~
+Indur AlbadiMorte, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|2097152|4194304 2|2048|65536|524288|33554432 -1000 A 3
+42 -3 -10 250 3d4+10
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 1
+#16
+Hoarmurath Dir nazgul spettro~
+Hoarmurath di Dir~
+Hoarmurath di Dir, uno dei terribili spettri dell'anello.
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|67108864 2|2048|65536|524288|33554432 -1000 A 3
+42 -3 -10 300 3d4+10
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 1
+#17
+uvatha nazgul spettro~
+Uvatha, Signore dei Cavalli~
+Uvatha, Signore dei Cavalli, uno dei terribili spettri dell'anello e' qui!
+~
+Vestito di nero, quasi invisibile nell'ombra, sprigiona un'aura di malvagita' totale.
+~
+1|2147483648 2|2048|65536|524288|33554432 -1000 A 4
+42 -3 -10 300 4d4+10
+-1 0 8 29
+8 8 4 64 256|512|2048|8192 1
+#18
+kek~
+Kek~
+Kek fluttua leggiadra nel vuoto.
+~
+You see nothing special
+~
+1|2|16|64|2048|1048576|8388608 8|128|2048|33554432|134217728 1000 L 1
+26 20 -10 550 4d6+300
+-1 0 100 62
+5 5 5 0 1 0
+$c0013[$c0015Kek$c0013] ti manda il messaggio 'Che fortuna che abbiano disattivato le DT! Ma non ti ci abituare...'$c0007
+~
+~
+#20
+demon vrock~
+A vrock~
+A Vrock stands here.
+~
+It is a vulture/human creature. Extremely ugly, and nasty.
+~
+2|4|32 8|32 -666 A 5
+16 4 0 0 1d6+0
+-1 0 2 21
+8 8 3 0 1|8 0
+#21
+demon hezrou~
+A hezrou~
+A demon Hezrou stands here.
+~
+Not unlike A large toad/man.
+~
+2|4|32 8|32 -666 A 3
+17 3 -2 0 1d6+0
+-1 0 2 21
+8 8 3 0 1|8 0
+#22
+demon glabrezu~
+A glabrezu~
+A demon Glabrezu stands here.
+~
+I forget what this one looks like.
+~
+2|4|32 8|32 -666 A 5
+18 2 -4 0 1d8+0
+-1 0 2 21
+8 8 3 0 1|8 0
+#23
+demon nalfeshnee~
+Nalfeshnee~
+Nalfeshnee stands here.
+~
+This one is big and mean looking.
+~
+2|4|32 8|32 -666 A 4
+19 1 -1 0 1d4+0
+-1 0 4 21
+8 8 3 2|4 1|8|8192|16384 0
+#24
+demon marilith~
+Marilith~
+Marilith slithers here.
+~
+A woman with 6 arms and a snake's tail.
+~
+2|4|32 8|32 -666 A 7
+15 3 -5 13 2d4+0
+-1 0 4 21
+8 8 5 2|4 1|8|8192 0
+#25
+demon balor~
+Balor~
+Balor stands here, surrounded by electrical fire.
+~
+He is very large, and looks rather deadly.
+~
+2|4|32|2097152 8|32 -666 N
+20 0 -2 14 2d12+2
+-1 0 6 21
+8 8 3 2|4 1|8|8192 0
+#30
+grenetta guildmaster master~
+The Mage Guildmaster~
+Grenetta the Mage Guildmaster is standing here.
+~
+Even though your guildmaster looks old and tired, you can clearly see the
+vast amount of knowledge she possesses. She is wearing fine magic clothing,
+and you notice that she is surrounded by a blue shimmering aura.
+~
+1|2|2097152 0 1000 A 1
+60 -10 -10 96 5d5+3
+-1 8004 0 1
+8 8 5 1|2|4|8 16|32|64|2048 0
+#31
+paul guildmaster master~
+The Cleric Guildmaster~
+Paul the Cleric Guildmaster is standing here.
+~
+You are in no doubt that this guildmaster is truly close to your god; he has
+a peaceful, loving look. You notice that he is surrounded by a white aura.
+~
+1|2|8388608 128 1000 A 2
+60 -10 -10 96 5d5+4
+-1 8794 0 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#32
+delfin guildmaster master~
+The Thief Guildmaster~
+Delfin the Rogue Guildmaster is standing here.
+~
+You realize that whenever your guildmaster moves, you fail to notice it -
+the way of the true thief. She is dressed in poor clothing, having
+the appearance of a beggar.
+~
+1|2 0 1000 A 3
+60 -10 -10 96 5d5+4
+-1 8794 0 1
+8 8 5 1|2|4|8 16|32|64|2048 0
+#33
+tor guildmaster master~
+The Warrior Guildmaster~
+Tor the Warrior Guildmaster is standing here.
+~
+This is your master. Big and strong with bulging muscles. Several scars
+across his body proves that he was using arms before you were born. He
+has a calm look on his face.
+~
+1|2 0 1000 A 3
+60 -10 -10 100 5d5+2
+-1 8794 0 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#34
+ronia guildmaster master~
+The Mages Guildmaster~
+Ronia the Mage Guildmaster is standing here.
+~
+Even though your guildmaster looks old and tired, you can clearly see the
+vast amount of knowledge she possesses. She is wearing fine magic clothing,
+and you notice that she is surrounded by a blue shimmering aura.
+~
+1|2|2097152 0 1000 A 1
+35 -10 -10 96 5d5+3
+-1 8004 0 1
+8 8 5 1|2|4|8 16|32|64|2048 0
+#35
+maestro oratius~
+Il maestro Oratius~
+Il guildmaster Oratius e' qui
+~
+Nessun dubbio: deve essere il figlio diretto del tuo dio.
+E' calmo e rilassato ed emana pace e serenita'.
+~
+1|2 128 1000 A 2
+35 -10 -10 96 5d5+4
+-1 8794 0 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#36
+jiff guildmaster master~
+The Thief Guildmaster~
+Jiff the Rogue Guildmaster is standing here.
+~
+You realize that whenever your guildmaster moves, you fail to notice it -
+the way of the true thief. She is dressed in poor clothing, having
+the appearance of a beggar.
+~
+1|2 0 1000 A 3
+35 -10 -10 96 5d5+4
+-1 8794 0 1
+8 8 5 1|2|4|8 16|32|64|2048 0
+#37
+bruiser guildmaster master~
+The Warrior Guildmaster~
+Bruiser the Warrior Guildmaster is standing here.
+~
+This is your master. Big and strong with bulging muscles. Several scars
+across his body proves that he was using arms before you were born. He
+has a calm look on his face.
+~
+1|2 0 1000 A 3
+35 -10 -10 100 5d5+2
+-1 8794 0 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#38
+armatura golem~
+Il golem armatura~
+Una armatura vuota e' in piedi immobile da un lato della caverna.
+~
+Sembra composto di pezzi di armature diverse uniti dal nulla.
+~
+2|4194304 0 0 N
+10 10 10 0 1d4+0
+-1 0 2 37
+8 8 3 0 32|256|512|8192 128
+#39
+death creeping orda insetti~
+Un'immensa orda di insetti~
+Un'immensa orda di insetti si muove uccidendo tutto quello che incontra.
+~
+Una enorme nuvola di scorpioni, vespe, ragni, scarafaggi, bacarozzi,
+formiche ed altre creature si muove lentamente. Puoi vedere i resti di
+parecchie, sfortunate, creature che si sono trovate lungo il cammino.
+E` una vista orribile e non hai mai voluto, come ora, trovarti in un altro
+posto.
+~
+1|2 8|32 0 B 1
+25 0 10 0 1d1+0
+-1 0 4 12
+8 8 3 0 16|32|64|256|512|1024|2048|4096 1|2|4|8|128
+#40
+elementale fuoco fire servant~
+$c0009Un Elementale del Fuoco$c0007~
+$c0001Un enorme fiamma arde dinnanzi a te.$c0007
+~
+Fiamme inestinguibili alterano repentinamente la sua sagoma, ma ha un aspetto vagamente umano.
+~
+2 8|8192|32768 0 L 1
+24 4 0 48 3d8+6
+-1 0 2 26
+8 8 3 0 1|8192|16384 2
+$c0001L'Elementale del Fuoco si avviluppa e ravviva la sua fiamma.$c0007
+~
+Senti lo scoppiettare di un fuoco qui vicino...
+~
+#41
+elementale terra earth servant~
+$c0010Un Elementale della Terra$c0007~
+$c0002Un agglomerato di rocce emette strani gorgoglii.$c0007
+~
+Sembra che un enorme montagna abbia preso vita. Il suo volto e' terribilmente umano ed espressivo.
+~
+2 8|8192 0 B 1
+24 4 0 48 4d8+6
+-1 0 2 26
+8 8 3 16|32 4|64|128|8192|16384 8
+#42
+elementale acqua water servant~
+$c0014Un Elementale dell'Acqua$c0007~
+$c0006Una massa d'acqua fluttua qui intorno.$c0007
+~
+E' strana massa d'acqua che si trasforma continuamente, per poi tornare a imitare una forma vagamente umana.
+~
+2 8|2048|8192 0 L 1
+24 4 0 48 5d6+6
+-1 0 2 26
+8 8 3 32 2|1024|4096|8192|16384 4
+$c0006L'Elementale dell'Acqua ondeggia allegramente.$c0007
+~
+Senti un rumore di schizzi d'acqua qui intorno...
+~
+#43
+elementale aria air servant~
+$c0012Un Elementale dell'Aria$c0007~
+$c0004Un piccolo tornado vortica incessantemente.$c0007
+~
+Incessante trascina tutto cio' che ha attorno. Due occhi gialli
+si intravedono nella fitta polvere tirata su dal suo vorticare.
+~
+2 8|2048|8192 0 L 1
+24 4 0 48 2d10+6
+-1 0 2 26
+8 8 3 32|64 4|8192|16384 1
+$c0004L'Elementale dell'Aria vortica fino a produrre un fischio.$c0007
+~
+Senti il fischio di una potente corrente d'aria provenire dai dintorni... 
+~
+#45
+bonsai~
+Un bonsai~
+Un albero in miniatura attira la tua attenzione.
+~
+Sembra piccolo e inoffensivo, ma noti subito i suoi rametti pieni di aghi.
+~
+2 8|524288 0 A 6
+6 13 4 18 2d2+1
+-1 0 2 24
+8 8 0
+#46
+giovane alberello~
+Un giovane alberello~
+Un giovane alberello e' qui, cercando coi rami la luce del sole.
+~
+Piccolissime radici, ma sane. Quest'albero crescera' forte.
+~
+2 8|524288 0 A 6
+12 10 2 36 2d3+1
+-1 0 2 24
+8 8 0
+#47
+giovane albero~
+Un albero maturo~
+Un albero di medie dimensioni costeggia la via.
+~
+Piu' lo guardi, piu' ti senti osservato.
+~
+2 8|524288 0 A 6
+18 8 0 75 2d4+1
+-1 0 2 24
+8 8 0
+#48
+albero antico secolare~
+Un albero antico~
+Un grosso albero antico oscura il sentiero.
+~
+Un albero secolare si sposta su enormi radici.
+~
+2 8|524288 0 B 6
+24 5 -2 150 2d5+1
+-1 0 2 24
+8 8 3 32 0 1|2
+#49
+albero millenario ent~
+Un $c0011Ent$c0007~
+Una quercia millenaria, torreggia su di te.
+~
+Le sue radici sono enormi, chissa' quanto in profondita' abbracciano la
+terra. Un grigio tronco fa da torre ad una splendida corona di rami.
+Non appena alzi la testa l'albero si curva per osservarti.
+~
+2|1048576|8388608|33554432 8|524288|33554432 0 B 6
+30 3 -7 300 2d6+1
+-1 0 2 24
+8 8 4 32|64|32768 0 1
+#50
+little rock man rockman~
+A little rockman~
+A little rockman stands here, unmoving
+~
+He looks like a small (10 pound) rock, that was turned into a creature
+~
+2 0 0 A 1
+6 19 0 10 1d3+1
+-1 0 0 37
+8 8 3 32|64 0 0
+#51
+small rock man rockman~
+A small rockman~
+A small rockman stands here, unmoving
+~
+He looks like a small (20 pound) rock, that was turned into a creature
+~
+2 0 0 A 1
+8 17 0 20 1d3+4
+-1 0 0 37
+8 8 3 32|64 0 0
+#52
+rock man rockman~
+A  rockman~
+A rockman stands here, unmoving
+~
+He looks like a 40 pound rock, that was turned into a creature
+~
+2 0 0 A 1
+12 14 0 40 1d3+5
+-1 0 0 37
+8 8 3 32|64 0 0
+#53
+large rock man rockman~
+A large rockman~
+A large rockman stands here, unmoving
+~
+He looks like a 80 pound rock, that was turned into a creature
+~
+2 0 0 A 1
+16 12 0 60 1d3+7
+-1 0 0 37
+8 8 3 32|64 0 0
+#54
+big rock man rockman~
+A big rockman~
+A big rockman stands here, unmoving
+~
+He looks like a 160 pound rock, that was turned into a creature
+~
+2 0 0 A 1
+20 10 0 80 1d3+10
+-1 0 0 37
+8 8 3 32|64 0 0
+#55
+huge rock man rockman~
+A huge rockman~
+A huge rockman stands here, unmoving
+~
+He looks like a 320 pound rock, that was turned into a creature
+~
+2 0 0 A 1
+30 4 0 160 1d3+30
+-1 0 0 37
+8 8 3 32|64 0 0
+#60
+dust devil~
+A dust devil~
+A dust devil whirls about
+~
+It looks vaguely sentient
+~
+2 0 0 A 1
+2 19 9 2 1d3+0
+-1 0 0 26
+8 8 0
+#65
+pony~
+A pony~
+A brave little pony stands here
+~
+he nickers in friendship as you look at him
+~
+2 0 0 A 1
+5 16 5 5 1d6+1
+-1 0 6 46
+8 8 0
+#66
+horse~
+A small horse~
+A small horse looks at you nervously
+~
+he seems frightened by your presence
+~
+2 0 0 A 1
+8 12 4 16 1d8+3
+-1 0 4 46
+8 8 0
+#67
+horse~
+A large horse~
+A large horse looks at you
+~
+he seems to be ignoring you
+~
+2 0 0 A 2
+12 10 4 24 1d4+3
+-1 0 0 46
+8 8 0
+#68
+war horse~
+A war horse~
+A large war horse looks at you
+~
+he seems ready to attack
+~
+2 0 0 A 2
+16 6 2 48 1d8+3
+-1 0 2 46
+8 8 0
+#69
+pegasus flying~
+A flying horse~
+A Pegasus is standing here, flapping her long wings
+~
+she seems ready to fly off at a moments notice
+~
+2 2048 1000 A 2
+20 4 2 48 1d8+3
+-1 0 0 46
+8 8 0
+#70
+night mare nightmare~
+A nightmare~
+A nightmare is standing here, snorting flames
+~
+she seems evil and malicious
+~
+2 2048 -1000 A 2
+20 4 2 48 1d8+3
+-1 0 0 46
+8 8 0
+#71
+horse fire~
+A firehorse~
+A horse with fiery hooves stands here
+~
+he looks like he could run on air!
+~
+2 2048 0 A 2
+20 4 2 48 1d8+3
+-1 0 0 46
+8 8 0
+#72
+cane winnie boxerina~
+$c0001Una boxerina fulva$c0007~
+$c0001Una boxerina fulva$c0007 corre qui intorno.
+~
+$c0001La boxerina fulva $c0007e' un cane muscoloso ed agile.
+~
+16 2048|8192 0 A 2
+15 9 0 75 2d3+0
+-1 0 0 18
+8 8 2
+#73
+gatto shelly~
+$c0002Un gatto sornione$c0007~
+$c0002Un gatto sornione$c0007 si struscia contro le tue gambe.
+~
+E' un gatto dal morbido e lucente pelo nero.
+
+$c0014Soft kitty,
+warm kitty,
+little ball of fur!
+Happy kitty,
+sleepy kitty,
+pur pur puuurr.$c0007
+~
+16|4194304 8192 0 A 2
+15 9 3 40 2d3+0
+-1 0 0 18
+8 8 1
+#74
+pappagallo lara~
+$c0010Una pappagallina$c0007~
+$c0010Una pappagallina$c0007 vola qui intorno.
+~
+$c0010La pappagallina$c0007 ha il piumaggio molto colorato.
+$c0010La pappagallina$c0007 e' un Ara $c0011giallo$c0007 e $c0012blu.$c0007
+~
+16 2048|8192 0 A 2
+15 7 4 30 2d3+0
+-1 0 0 16
+8 8 2
+#75
+pesce carpa baffo~
+$c0014Il pesce carpa$c0007~
+$c0014Il pesce carpa$c0007 vola magicamente qui intorno.
+~
+$c0014Il pesce carpa$c0007 e' di dimensioni molto grandi.
+$c0014Il pesce carpa$c0007 sembra essere sorretto da una qualche magia che gli permette di muoversi tranquillamente anche fuori dall'acqua.
+$c0014Il pesce carpa $c0007e' di robusta costituzione.
+$c0014Il pesce carpa$c0007 e' avvolto da una bolla d'acqua magica.
+~
+16 2048|8192|65536 0 A 1
+15 10 -3 150 2d8+0
+-1 0 0 15
+8 8 3 1 0 4
+#76
+cucciolo elefante pachi~
+$c0008Un cucciolo d'elefante$c0007~
+$c0008Un cucciolo d'elefante$c0007 ti annusa con la sua lunga proboscide.
+~
+E' un cucciolo di elefante africano.
+$c0008Un cucciolo d'elefante$c0007 e' decisamente robusto per la sua eta'.
+$c0008Un cucciolo d'elefante$c0007 e' molto forte.
+~
+16|1048576 8192|262144 0 A 1
+18 8 -7 150 1d9+0
+-1 0 0 23
+8 8 4 16|32|64|16384 0 1|4|8
+#77
+cinghiale taz~
+$c0003Un cinghiale$c0007~
+$c0003Un cinghiale $c0007sta grufolando in cerca di cibo.
+~
+E' un cinghiale con delle lunghe zanne.
+$c0003Il cinghiale$c0007 e' molto robusto ed agile.
+$c0003Il cinghiale$c0007, nonostante sia sempre a caccia di cibo, e' sempre pronto per la battaglia.
+~
+16|1048576 8192|262144 0 A 1
+18 8 -7 110 1d9+0
+-1 0 0 23
+8 8 4 16|32|64|16384 0 1|4|8
+#78
+pantera zampa lesta~
+$c0012Una pantera$c0007~
+$c0012Una pantera$c0007 ti fissa con i suoi enormi occhi gialli.
+~
+E' una pantera muscolosa ed agile.
+Ha un manto nero come l'inchiostro, che le permette di passare inosservata.
+~
+16 8192|524288 0 A 3
+22 2 0 75 3d4+0
+-1 0 0 18
+8 8 2
+#79
+speedy tartaruga~
+$c0002Una tartaruga$c0007~
+$c0002Una tartaruga$c0007 si muove lentamente in cerca d'erba.
+~
+E' una tartaruga veramente grande.
+$c0002La tartaruga$c0007 e' molto ben corazzata.
+~
+16|1048576|4194304 8192|262144 0 A 1
+24 5 -12 150 2d9+0
+-1 0 0 23
+8 8 5 16|32|64|16384 0 1|4|8
+#80
+korrector cavallo~
+$c0001Un cavallo$c0007~
+$c0001Il cavallo$c0007 ti guarda con i suoi profondi occhi neri.
+~
+E' un cavallo di razza Sella Italiano con il classico manto sauro.
+$c0001Il cavallo$c0007 e' decisamente robusto per la sua eta'.
+$c0001Il cavallo$c0007 pare provenire dall'allevamento della fotomonella Flyp.
+$c0001Il cavallo$c0007 e' molto forte.
+~
+16|1048576 8192|262144 0 A 3
+23 9 -12 100 2d9+0
+-1 0 0 23
+8 8 4 2|16384 0 1
+#81
+popizza panda~
+$c0008Un Panda$c0007~
+$c0008Il Panda$c0007 sta mangiando una foglia di eucalipto.
+~
+E' un panda dal pelo morbido e lucente.
+$c0008Il panda$c0007 e' decisamente robusto per la sua eta'.
+$c0008Il panda$c0007 e' molto forte.
+~
+16|1048576 8192|262144 0 A 1
+23 6 -10 150 3d9+0
+-1 0 0 23
+8 8 4 2|16384 0 1
+#82
+falco lungo artiglio~
+$c0010Un falco pellegrino$c0007~
+$c0010Un falco pellegrino$c0007 vola qui intorno.
+~
+E' un falco pellegrino con una lunghezza di circa 50cm ed un'apertura alare di 110 cm.
+$c0010Il falco pellegrino$c0007 ha le penne di un colore che varia dal nero bluastro al grigio ardesia ed ha alcune striature caratteristiche. La punta delle ali e' nera.
+~
+16 2048|8192 0 A 3
+22 0 3 30 3d4+0
+-1 0 0 16
+8 8 1
+#83
+drago komodo varano boulder~
+$c0006Il Drago di Komodo$c0007~
+$c0006Il varano$c0007 fa saettare la lingua biforcuta dalla bocca.
+~
+E' un Drago di Komodo lungo circa 2 metri e pesa sugli 80kg.
+$c0006Il Drago di Komodo$c0007 e' decisamente robusto per la sua eta'.
+$c0006Il Varano$c0007 e' molto agile ed ha dei denti aguzzi.
+~
+16|1048576 8192|262144 0 A 2
+23 -2 3 50 3d7+0
+-1 0 0 18
+8 8 4 2|16384 0 1
+#84
+orso polare iorek~
+$c0015L'Orso Corazzato$c0007~
+$c0015L'Orso Corazzato$c0007 e' pronto alla battaglia nella sua splendente armatura.
+~
+E' un orso corazzato, da quando e' stato esiliato dal suo popolo, vaga per il mondo.
+$c0015L'Orso Corazzato$c0007 e' decisamente robusto per la sua eta'.
+$c0015L'Orso Corazzato$c0007 e' molto forte ed indossa una splendida armatura.
+~
+16|1048576|4194304 8192|262144 0 A 1
+30 5 -20 200 4d12+0
+-1 0 0 18
+8 8 4 1|2|16|32|64|16384 0 4|8|128|256
+#85
+rinoceronte durer~
+$c0008Un rinoceronte$c0007~
+$c0008Il rinoceronte$c0007 sta per caricare.
+~
+E' un rinoceronte, la sua pelle e' un'armatura naturale.
+$c0008Il rinoceronte$c0007 e' decisamente robusto per la sua eta'.
+$c0008Il rinoceronte$c0007 e' molto forte.
+~
+16|1048576|4194304 8192|262144 0 A 1
+30 5 -20 200 4d12+0
+-1 0 0 23
+8 8 4 16|32|64|128|256|16384|32768 0 1|2|4|8
+#86
+meraxes cucciolo drago~
+$c0009Un cucciolo di Drago$c0007~
+$c0009Il cucciolo di Drago$c0007 spiega le sue ali pigramente.
+~
+E' un cucciolo di drago, la sua pelle e' un'armatura naturale.
+$c0009Il cucciolo di Drago$c0007 e' decisamente robusta per la sua eta'.
+$c0009Il cucciolo di Drago$c0007 e' molto forte.
+~
+16|1048576|4194304 2048|8192|262144 0 A 1
+30 5 -20 200 4d12+0
+-1 0 0 9
+8 8 5 16|32|64|128|256|16384|32768 0 1|2|4|8
+#87
+coniglietto rosa tap~
+$c0013Un coniglietto rosa$c0007~
+$c0013Il coniglietto rosa $c0007saltella felice in giro.
+~
+$c0013Il coniglietto rosa $c0007e' la progenie del famoso coniglio rosa Fouler.
+$c0013Il coniglietto rosa $c0007e' un batuffolo di peli.
+$c0013Il coniglietto rosa $c0007e' veramente delicato.
+~
+16|8388608 0 1000 A 4
+30 -13 2 0 1d1+0
+-1 0 0 23
+8 8 1
+#88
+biss cobra reale serpente~
+$c0010Un cobra reale$c0007~
+$c0010Il cobra reale$c0007 sta facendo sibilare la lingua.
+~
+E'' un cobra reale ed e' lungo 5 metri. 
+$c0010Il cobra reale $c0007e' in grado di rizzarsi in piedi fino a guardare un uomo negli occhi.
+$c0010Il cobra reale $c0007e' molto agile e pericoloso.
+~
+16 8192|524288 0 A 2
+30 -4 1 30 3d7+0
+-1 0 0 22
+8 8 4 0 256|2048|16384 1|2
+#89
+kris giaguaro~
+$c0011Un giaguaro$c0007~
+$c0011Il giaguaro$c0007 e' intento a pulire il suo lucidissimo pelo.
+~
+E' un giaguaro muscoloso ed agile.
+$c0011Il giaguaro $c0007e' molto forte
+~
+16 8192|524288 0 A 4
+30 -6 -1 75 3d4+0
+-1 0 0 18
+8 8 1
+#100
+zombie~
+a zombie~
+A rotting zombie stands here vacantly.
+~
+Its eyes show no sign of intelligence, or free will. It is but the animated
+flesh of a luckless being.
+~
+2|16 0 0 N
+2 19 10 0 1d1+2
+-1 0 0 1
+5 8 0
+#101
+giant troll~
+A giant troll~
+A giant troll stands here
+~
+It looks really pissed to be in its current predicament.
+~
+2|32 8 -500 A 2
+12 8 3 24 1d3+8
+-1 100 4 17
+8 8 0
+#196
+medic gray paramedic~
+A Gray Team Medic~
+A Gray Team Medic is here, looking for someone to help.
+~
+The Gray team medic is a large magical looking man.
+~
+2 0 1000 N
+7 16 7 14 1d3+5
+-1 0 1 1
+8 8 0
+#197
+medic amber paramedic~
+An Amber Team Medic~
+An Amber Team Medic is here, looking for someone to help.
+~
+The Amber team medic is a large magical looking man.
+~
+2 0 1000 N
+7 17 4 14 1d3+5
+-1 0 2 1
+8 8 0
+#198
+game guard~
+The Game Field Guard~
+A huge figure clad in armor stands here guarding the entrance to the
+playing field.
+~
+He looks massive, you don't want to mess with him.
+~
+2 128 -1000 A 3
+43 0 -9 450 1d3+25
+-1 500 5 1
+8 8 1
+#199
+squalo~
+Uno squalo~
+Un piccolo squalo affamato nuota verso di te!
+~
+Piccolo, ma che denti, gasp!!
+~
+32 2048|65536 0 A 1
+6 13 2 3 3d6+0
+-1 100 55 16
+8 8 0
+#250
+spider giant~
+A giant spider~
+A giant spider scurries about.
+~
+It is about 8 legs across, new measurement... not feet.
+~
+4|32|128 0 0 N
+4 18 4 4 2d4+0
+-1 100 2 13
+8 8 0
+#251
+carrion crawler~
+A carrion crawler~
+A carrion crawler searches for food here.
+~
+It is a grotesque beast, with numerous legs, and strange tentacles
+~
+4|32|128 0 0 A 8
+3 19 5 1 1d1+1
+-1 100 1 12
+8 8 0
+#252
+erinyes~
+An erinyes~
+An erinyes is here, folding her bat wings.
+~
+She looks like a human female...with bat wings...a tail...and horns...
+~
+4|32|128 0 -700 N
+6 16 2 6 1d3+4
+-1 100 2 28
+8 8 0
+#253
+hydra~
+The hydra~
+An eight-headed hydra snaps at you.. Eight times!
+~
+It is a large, eight headed dragon-like creature.
+~
+4|32|128 0 -200 B 8
+8 15 5 0 1d8+3
+-1 800 0 9
+8 8 0
+#254
+jackalwere~
+The jackalwere~
+A jackalwere looks at you.. You feel sleepy
+~
+It is a jackal-like creature, that has partially taken the shape of a man.
+~
+4|32|128 0 -400 N
+4 18 9 0 1d3+2
+-1 0 0 8
+8 8 3 0 8192|16384 0
+#255
+weretiger~
+A weretiger~
+A weretiger snarls at you.
+~
+A very large tiger/man combination...
+~
+4|32|128 0 -500 A 3
+6 17 8 0 1d3+3
+-1 0 2 8
+8 8 3 0 8192|16384 0
+#256
+manticore~
+a manticore~
+A manticore stands here, tail thrashing.
+~
+It is like a lion, but with a spiked tail.
+~
+4|32|128 0 -500 A 3
+6 16 4 3 1d5+1
+-1 200 1 18
+8 8 0
+#257
+ogre magi~
+An ogre magi~
+An ogre magi stands here, feasting on human flesh.
+~
+He is large, and vaguely oriental.
+~
+4|32|128|2097152 0 -500 N
+5 17 8 2 1d3+4
+-1 300 8 17
+8 8 1
+#258
+otyugh~
+An otyugh~
+An otyugh squats here, tentacles flailing.
+~
+It looks like the word sounds... UGLY.
+~
+4|32|128 0 -100 A 3
+6 16 3 0 1d7+2
+-1 500 0 19
+8 8 0
+#500
+goblin~
+a goblin~
+A goblin stands here.
+~
+Actually, now that you think about it, he's pretty tough!
+~
+2 32768 -100 S
+1 2 7 1000d1+0 1d6+0
+-1 5 
+8 8 1
+#503
+guard bodyguard~
+the bodyguard~
+A bodyguard stands here.
+~
+A big, strong, helpful, trustworthy guard.
+~
+0 0 1000 N
+10 10 9 60 1d8+0
+-1 50 2 1
+8 8 1
+#641
+silverleaf guildmaster master~
+the Druid Guildmaster~
+Silverleaf the druid guildmaster is standing here.
+~
+She is young and vibrant, and, it is rumored, quite an exceptional lover.
+She emanates an aura of raw natural power quite unlike anything you have
+ever seen before.  Her eyes glitter as she appraises you, and your
+worth to the druidical cause
+~
+1|2 0 0 A 1
+61 -10 -10 96 5d5+3
+-1 8004 0 1
+8 8 5 1|2|4|8 16|32|64|2048 0
+#642
+arromon guildmaster master~
+the Druid Guildmaster~
+Arromon the druid guildmaster is standing here.
+~
+  He is old, and worldly.  He has chosen the simple life now, taking care of
+the young aspirant druids, teaching them the basics of the druidic way.
+He smiles gently at you.
+~
+1|2 0 0 A 1
+20 2 -3 96 5d5+3
+-1 1004 0 1
+8 8 5 0 2048 0
+#1101
+guardiano~
+Il guardiano~
+Il possente guardiano del Cancello dorato e' qui.
+~
+E' un essere gigantesco, un vero titano.
+~
+2|262144|134217728 128|2048|8192|16777216|33554432|134217728 0 A 5
+52 -20 -10 800 8d8+25
+-1 20000 20 43
+8 8 4 1|2|4|8|16|32|64 1024|2048|4096|8192|131072 0
+#3009
+scriba~
+Lo Scrivano degli Dei~
+Lo Scrivano degli Dei. Un tipo silenzioso ed efficiente.
+~
+E' un uomo molto impegnato, e svolge il suo lavoro in silenzio!
+~
+1|2|4|2097152 32|2048|33554432|134217728 1000 A 4
+60 -15 -10 550 5d4+25
+-1 80000 6 2
+8 8 4 1024 1|512|2048|4096|65536 0
+#50102
+helena~
+Helena~
+Helena, la hostess degli Dei!
+~
+L'avvenenza di Helena e' pari solo alla sua discrezione...
+~
+2|268435456 16777216|33554432 1000 A 3
+60 -15 -10 1000 10d10+50
+-1 150000 20 1
+6 6 5 1|2|4|8|1024|4096 2048|8192|131072 0
+#1300
+tigre smilodonte~
+$c0003uno Smilodonte$c0007~
+$c0003uno Smilodonte$c0007
+~
+E' un felino con ampia cassa toracica e muscolatura robusta, con pelo fulvo a strisce
+verticali. E' facilmente riconoscibile per le sue fauci possenti e i denti aguzzi.
+~
+0 32768 0 A 3
+24 -1 -4 7 2d10+2
+-1 0 0 18
+8 8 3 16 0 0
+#1301
+granchio gigante~
+$c0009un Granchio Gigante$c0007~
+$c0009un Granchio Gigante$c0007
+~
+A parte le dimensioni, e' come un granchio normale. Ha occhi peduncolati, che possono
+vedere in ogni direzione, e corpo rivestito da un robusto carapace. E' caratterizzato 
+dalla tipica andatura sghemba dei suoi parenti piu' piccoli.
+~
+262144 32768|65536 0 A 3
+20 3 -10 0 2d8+1
+-1 0 0 15
+8 8 3 0 32 0
+#1302
+topo osquip~
+$c0011un Osquip$c0007~
+$c0011un Osquip$c0007
+~
+Questo roditore dalle molte zampe e' grande quanto un cane ed e' privo
+di pelo, la pelle e' dura e giallognola. Ha corpo grasso ma affusolato, testa
+grossa, naso a punta e grandi orecchie. I suoi denti sono talmente robusti
+da forare anche la pietra.
+~
+128 32768|524288 0 A 2
+16 4 2 3 3d8+1
+-1 0 0 18
+8 8 0
+#1303
+lupo ghiacci~
+$c0012un Lupo dei Ghiacci$c0007~
+$c0012un Lupo dei Ghiacci$c0007
+~
+Ammantato di sospetti e mistero, viene visto come un maligno cacciatore di uomini 
+ed animali, ha una folta pelliccia argentea ed occhi celesti dotati di una certa empatia, 
+mascelle forti con zanne grosse e robuste, coda folta, orecchie ritte, pupille rotonde.
+~
+0 32768 0 A 3
+39 -1 -4 145 3d8+6
+-1 0 0 18
+8 8 3 0 2 0
+#1304
+rana assassina~
+una $c0010Rana $c0013Assassina$c0007~
+una $c0010Rana $c0013Assassina$c0007
+~
+Sulla schiena ha una robusta corazza bombata, i suoi occhi protuberanti
+fuori dalla testa, sono multicolori e sfaccettati come quelli di una mosca
+ed emanano un bagliore quasi ipnotico.
+~
+0 2|32768|65536 0 A 2
+11 2 4 0 2d8+1
+-1 0 0 15
+8 8 3 0 256 0
+#1305
+cacciatore notturno pipistrello~
+$c0008un Cacciatore Notturno$c0007~
+$c0008un Cacciatore Notturno$c0007
+~
+Il corpo del Cacciatore Notturno somiglia a quello di un topo, mentre le ali sono formate 
+da una membrana che unisce le dita degli arti superiori, ha un aspetto vellutato, persino 
+negli artigli e occhi arancioni.
+~
+0 2048|33554432 0 A 4
+48 -3 2 0 4d6+1
+-1 0 0 16
+8 8 3 0 512 0
+#1306
+cockatrice gallo~
+$c0009una Cockatrice$c0007~
+$c0009una Cockatrice$c0007
+~
+E' uno strano e repellente ibrido tra una lucertola, un gallo ed un pipistrello. E' grande 
+quanto una grossa oca o un tacchino, con testa e corpo da gallo, ali da pipistrello e lunga 
+coda da lucertola, con qualche piuma in fondo. Ha le penne marrone dorato, il becco 
+giallo, la coda verde, le ali grigie. Bargigli, cresta e occhi sono rosso vivo.
+~
+0 2048|32768 0 A 5
+49 -5 2 10 2d6+1
+-1 0 0 16
+8 8 3 0 4096 0
+#1307
+scorpione gigante~
+$c0003uno Scorpione Gigante$c0007~
+$c0003Uno scorpione gigante divora chiunque gli si avvicini.$c0007
+~
+Lo scorpione emana un odore amarognolo, probabilmente connesso al suo veleno e 
+produce un caratteristico rumore snervante. Ha carapace verde, le zampe e le chele 
+sono giallo-verdi. La coda segmentata e' nera e in fondo ha un micidiale pungiglione.
+~
+2|32|8192 8|32768 0 A 4
+50 -7 -4 25 3d6+5
+-1 0 0 12
+8 8 3 32 256|2048 0
+#1308
+gufo parlante~
+$c0015un Gufo Parlante$c0007~
+$c0015un Gufo Parlante$c0007
+~
+E' un uccello rapace notturno di media grandezza, con ciuffi neri ai lati del 
+capo, ali lunghe, piume morbide, becco ricurvo ed uno spiccato senso della 
+conversazione.
+~
+0 2048|16777216|33554432 0 A 3
+6 2 -4 3 1d7+1
+-1 0 0 16
+8 8 3 0 1024|4096 0
+#1309
+ragno intermittente~
+$c5008un Ragno Intermittente$c0007~
+$c5008un Ragno Intermittente$c0007
+~
+E' un ragno tessitore con otto zampe ed altrettanti occhi, ha torace rialzato, addome bulboso, 
+zampe sottili e testa umanoide.
+~
+262144 1048576|33554432 0 A 3
+36 -1 4 118 3d8+2
+-1 0 0 13
+8 8 0
+#1310
+behir serpente~
+$c0006un Behir$c0007~
+$c0006un Behir$c0007
+~
+E' simile ad un serpente ma dotato di decine di gambe che gli consentono  di muoversi 
+rapidamente e di arrampicarsi. La testa assomiglia piu' a quella di un coccodrillo che a 
+quella di un serpente. E' provvisto di scaglie molto resistenti disposte a strisce il cui 
+colore va dal blu oltremare al blu scuro, intervallate da bande di tinta grigio-marrone. 
+Il ventre del behir, invece, e' di un color azzurro chiaro. Le due poderose corna che 
+spuntano dalla testa curvandosi all'indietro hanno un aspetto minaccioso, ma la loro unica 
+funzione e' quella di lisciare le scaglie dorsali.
+~
+0 32768 0 A 3
+42 -1 -2 161 3d8+8
+-1 0 0 6
+8 8 3 32 4 0
+#1311
+orso bianco~
+$c0015un Orso Bianco$c0007~
+$c0015un Orso Bianco$c0007
+~
+E' un animale grande e possente ed un ottimo nuotatore, la folta pelliccia gli 
+garantisce una protezione dalle intemperie, le larghe zampe gli permettono
+di correre nella neve senza sprofondare e i robusti artigli di difendersi dai
+nemici.
+~
+262144 0 0 A 3
+33 -1 -4 32 3d8+5
+-1 0 0 18
+8 8 3 16|64 2 1
+#1312
+cane guerra~
+$c0001un Cane da Guerra$c0007~
+$c0001un Cane da Guerra$c0007
+~
+E' un grosso mastino dal pelo dorato, con ottimo olfatto ed udito,  piu' robusto 
+e muscoloso degli altri cani, e' intelligente e addestrato a combattere.
+~
+0 32768 0 A 1
+6 0 -7 3 3d8+1
+-1 0 0 18
+8 8 0
+#1313
+ankheg verme~
+$c0011un Ankheg$c0007~
+$c0011Un ankheg affamato e' alla ricerca di carne fresca.$c0007
+~
+Somiglia ad un enorme verme con molte zampe. Le sei zampe terminano con affilati uncini che 
+servono per scavare o infilzare. Il corpo e' ricoperto da un rivestimento chitinoso, tranne il 
+ventre, che e' roseo e molle. Ha luccicanti occhi neri, una piccola bocca con una fila di denti 
+e due antenne sensibili.
+~
+2|32|262144 8|32768 0 A 3
+51 -9 -7 100 10d3+10
+-1 0 0 12
+8 8 3 32 2048 0
+#1314
+rospo fuoco~
+$c0001un Rospo del Fuoco$c0007~
+$c0001un Rospo del Fuoco$c0007
+~
+E' un anfibio senza coda, dal corpo tozzo, con occhi sporgenti, pelle 
+rossastra ricoperta di verruche violacee, lunghe zampe posteriori atte 
+al salto e ampia bocca armata di denti ricurvi.
+~
+0 32768|134217728 0 A 3
+27 4 2 18 2d8+3
+-1 0 0 15
+8 8 3 0 1 2
+#1315
+lucertola minotauro~
+$c0002una Lucertola Minotauro$c0007~
+$c0002una Lucertola Minotauro$c0007
+~
+E' un rettile enorme con capo appiattito, corna simili a quelle di un minotauro,
+corpo terminante in una lunga coda, zampe corte e lingua bifida.
+~
+262144 32768 0 A 4
+30 0 -7 25 2d10+5
+-1 0 0 6
+8 8 0
+#1316
+remorhaz verme~
+$c0014un Remorhaz$c0007~
+$c0014un Remorhaz$c0007
+~
+Ha un corpo segmentato con testa e collo alati e varie dozzine di zampe chitinose. Il colore e' 
+blu ghiaccio ovunque, tranne sul dorso, dove una striscia bianca evidenzia le molte sporgenze 
+presenti in quella parte del corpo.
+~
+262144 32768|134217728 0 A 2
+45 -7 -4 298 10d6+10
+-1 0 0 12
+8 8 3 0 8192 0
+#1400
+torre nera pedina~
+una Torre Nera~
+Una nera macchina da guerra preparata per l'assalto.
+~
+Assomiglia a un golem di pietra,  ma e' piu' piccola.
+
+~
+2|4 8 -700 A 2
+6 15 5 10 2d4+0
+-1 50 55 7
+8 8 3 0 0 1
+#1401
+cavallo nero pedina~
+un Cavaliere Nero~
+Un minaccioso cavaliere in armatura nera.
+~
+Non e' certamente il LEGGENDARIO Cavaliere Nero!
+~
+2|4194304 33554432 -600 N
+7 13 4 9 1d7+0
+-1 50 30 1
+8 8 1
+#1402
+alfiere nero pedina~
+un Dignitario Nero~
+Un dignitario in paramenti sacerdotali reca le insegne del Re.
+Insegne e paramenti sono neri, ovviamente.
+~
+Uhm... forse e' un arcivescovo... o un arciarcivescovo...
+~
+2|4|1048576|8388608 16777216|33554432 -500 A 1
+10 16 5 0 1d3+0
+-1 20 45 1
+8 8 1
+#1403
+regina nera pedina~
+una Regina Nera~
+Una Regina, sicuramente, tutta vestita di nero.
+~
+Appare un tantino minacciosa...
+~
+2|4|2097152 0 -1000 N
+15 10 1 10 1d3+0
+-1 500 50 1
+8 8 5 0 0 16|32|64
+#1404
+re nero pedina~
+un Re Nero~
+Qui sta il Re, l'Usurpatore della Fiamma.
+~
+E' solo vagamente somigliante al vecchio saggio canuto che ti saresti aspettato.
+Ma pare in grado di affrontare validamente un corpo a corpo.
+~
+2|4|4194304 16777216|33554432 -1000 A 2
+15 8 2 40 1d3+4
+-1 1000 41 1
+8 8 1
+#1405
+alfiere nero pedina~
+un Dignitario Nero~
+Un dignitario in paramenti sacerdotali reca le insegne del Re.
+Insegne e paramenti sono neri, ovviamente.
+~
+Uhm... forse e' un arcivescovo... o un arciarcivescovo...
+~
+2|4|1048576|8388608 16777216|33554432 -500 N
+10 16 5 1 1d3+0
+-1 50 44 1
+8 8 1
+#1406
+cavallo nero pedina~
+un Cavaliere Nero~
+Un minaccioso cavaliere in armatura nera.
+~
+Non e' certamente il LEGGENDARIO Cavaliere Nero!
+~
+2|1048576|4194304 0 -600 N
+7 13 4 9 1d7+0
+-1 50 30 1
+8 8 1
+#1407
+torre nera pedina~
+una Torre Nera~
+Una nera macchina da guerra preparata per l'assalto.
+~
+Assomiglia a un golem di pietra,  ma e' piu' piccola.
+Quasi si confonde con il  marmo nero...
+~
+2|4 0 -700 A 2
+6 15 5 10 2d4+0
+-1 50 55 37
+8 8 3 0 0 2
+#1408
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1409
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1410
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1411
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1412
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1413
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1414
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1415
+pedone pedina nero~
+un Fante Nero~
+Un giovane milite in armatura nera, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Beh, non fa proprio una GRANDE impressione... ma di certo e' fedele
+ed obbediente al suo comandante
+~
+2 0 -300 N
+2 20 9 2 1d4+1
+-1 15 3 1
+8 8 1
+#1417
+mini flayer mindflayer minimindflayer~
+il piccolo Mindflayer~
+Un mindflayer molto piccolo, che ti guarda... in un qualche modo ti guarda, certo!
+
+~
+Un umanoide alto meno di un metro, ma dall'aspetto minaccioso per la sua dimensione.
+Nel mezzo della testa spuntano quattro tentacoli dalla punta acuminata.
+~
+4|64|128|1073741824 8|32768 -250 N
+6 17 6 4 1d1+0
+-1 50 60 33
+8 8 3 0 0 16|32|64
+#1418
+imprecatore~
+l'Imprecatore~
+L'Imprecatore proferisce di continuo incomprensibili oscenita'. Ma in fondo parla al vento...
+~
+Un basso e robusto ragazzotto vestito con abiti di colori assolutamente discordanti,
+che emette di continuo suoni gutturali e strane interiezioni.
+~
+4|64 0 -600 N
+4 16 5 5 1d3+3
+-1 18 51 1
+8 8 3 0 0 2|8
+#1419
+mucca~
+La Mucca~
+Un animale dai grandi occhi liquidi e' intento alle sue ricerche.
+~
+Passeggia qui intorno con fare indaffarato, come cercasse qualcosa;
+talvolta abbassa la testa per annusare il suolo e l'aria: dopodiche'
+assaggia le magre erbe che crescono qui.  Quando ti  nota ti scruta
+intensamente, con uno sguardo un po' ebete, direi bovino, sinche' tu
+non ti stanchi e distogli i tuoi occhi.
+~
+4 0 400 A 1
+7 14 6 0 1d3+1
+-1 40 14 23
+8 8 2
+#1420
+net lag~
+Net Lag~
+Net Lag interrompe le tue linee, strabuzza gli occhi e sghignazza come un pazzo!
+~
+Se cerchi di fissarlo nei suoi piccoli., tondi, lucenti occhi, senti il tuo senso del tempo rallentare,
+rallentare, rallentare....
+~
+0 0 0 N
+1 20 5 0 1d3+0
+-1 3 8 1
+8 8 0
+#1421
+albero alberello~
+L'alberello che si sposta su fragili radici~
+Un giovane albero e' esattamente davanti a te.
+~
+Ha radici sottili e delicate, in parte fuori terra.
+~
+0 0 0 A 4
+8 15 4 14 1d3+1
+-1 63 56 24
+8 8 0
+#1428
+juggler jugglernaut giocoliere~
+Un Jugglernaut~
+Un Jugglernaut esegue pazzeschi giochi di abilita'.
+~
+Un qualcosa di grosso, alcuni sfiorano i 3 metri di lunghezza, che si sposta su centinaia
+di piccole zampe. Ha un aspetto metallico, con evidenti segni di corrosione ai margini
+della  pelle spigolosa.
+Sui lati reca grandi scritte, in un alfabeto a te totalmente incomprensibile.
+Sulla sommita', un grappolo di occhi ruota continuamente avanti e indietro.
+Una quantita' di tentacoli fan caracollare in volo ogni sorta di oggetti.
+~
+4|16|64 8 0 N
+10 11 3 17 2d5+1
+-1 500 20 7
+8 8 0
+#1433
+farfulla farfalla~
+una Farfulla~
+Vedi un'orrida creatura vagamente simile a una farfalla,
+che brontola continuamente producendo un rumore odioso.
+~
+     orribile e assolutamente non socievole
+~
+16|64 2048 -1000 L 1
+1 20 9 6 1d3+0
+-1 10 8 16
+8 8 0
+La farfulla bisbiglia e farfuglia - che tremendo rumore di fondo!
+~
+Strani e rabbiosi farfugliamenti giungono al tuo orecchio...
+~
+#1437
+banana buccia~
+una buccia di banana~
+C'e' una buccia di banana.
+~
+Appare inoffensiva; ma si dice porti iella.
+~
+32|128 8|524288 -400 N
+2 19 7 0 1d4+0
+-1 0 18 7
+8 8 0
+#1448
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1449
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1450
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1451
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1452
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1453
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1454
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1455
+pedone pedina bianco~
+un Fante Bianco~
+Un giovane milite in armatura bianca, immobile sull'attenti.
+Ha un aspetto davvero statuario.
+~
+Un fiero armigero, non fa particolare impressione; ma obbedisce
+bene al suo comandante.
+~
+2 0 300 N
+2 20 9 2 1d4+1
+-1 20 2 1
+8 8 1
+#1456
+torre bianca pedina~
+una Torre Bianca~
+Una bianca macchina da guerra, preparata per l'assalto.
+~
+Assomiglia a un golem di pietra,  ma e' piu' piccola.
+
+~
+2 8|32768 700 A 2
+6 15 5 2 2d4+0
+-1 30 60 37
+8 8 3 0 256|512|1024|2048|4096 0
+#1457
+cavallo bianco pedina~
+Un Cavaliere Bianco~
+Un minaccioso cavaliere in armatura bianca.
+~
+Hum... non saresti cosi' contento di vedere COSTUI correre in tuo aiuto...
+~
+2|4194304 33554432 600 N
+5 17 7 9 1d7+0
+-1 45 8 1
+8 8 1
+#1458
+alfiere bianco pedina~
+un Dignitario Bianco~
+Un dignitario in paramenti sacerdotali reca le insegne del Re.
+Insegne e paramenti sono bianchi, ovviamente.
+~
+Uhm... forse e' un arcivescovo... o un arciarcivescovo...
+~
+2|8388608 0 500 N
+8 16 7 4 1d3+0
+-1 70 59 1
+8 8 1
+#1459
+regina bianca pedina~
+una Regina Bianca~
+Una Regina, sicuramente, dalle vesti candide.
+~
+Ad uno sguardo piu' approfondito non pare poi cosi' mite...
+~
+2|2097152 0 1000 N
+15 12 4 0 1d3+5
+-1 500 45 1
+8 8 5 0 0 16|32|64
+#1460
+re bianco pedina~
+un Re Bianco~
+Qui sta il Re, protettore della Fiamma.
+~
+E' solo vagamente somigliante al vecchio saggio canuto che ti saresti aspettato.
+Ma pare in grado di affrontare validamente un corpo a corpo.
+~
+2|4194304 0 1000 A 2
+15 8 2 35 1d3+4
+-1 1000 49 1
+8 8 1
+#1461
+alfiere bianco pedina~
+un Dignitario Bianco~
+Un dignitario in paramenti sacerdotali reca le insegne del Re.
+Insegne e paramenti sono bianchi, ovviamente.
+~
+Uhm... forse e' un arcivescovo... o un arciarcivescovo...
+~
+2|8388608 0 500 N
+8 16 7 4 1d3+0
+-1 70 59 1
+8 8 1
+#1462
+cavallo bianco pedina~
+un Cavaliere Bianco~
+Un minaccioso cavaliere in armatura bianca.
+~
+Hum... non saresti cosi' contento di vedere COSTUI correre in tuo aiuto...
+~
+2|4194304 0 600 N
+5 17 7 9 1d7+0
+-1 45 8 1
+8 8 1
+#1463
+torre bianca pedina~
+una Torre Bianca~
+Una bianca macchina da guerra, preparata per l'assalto.
+~
+Assomiglia a un golem di pietra,  ma e' piu' piccola.
+Quasi si confonde con il  marmo bianco...
+~
+2 8|32768 700 A 2
+6 15 5 0 2d4+0
+-1 30 55 37
+8 8 3 0 256|512|1024|2048|4096 0
+#1470
+jabberwocky giabervocco~
+Il Giabervocco~
+Il Giabervocco e' qui, pronto a malmenarti.
+~
+Grosso e d'aspetto alieno. Probabilmente non intende offrirti un te'...
+~
+2|4|32 8 -900 L 2
+15 8 4 50 1d8+2
+-1 875 58 39
+8 8 0
+Il Giabervocco gorgoglia.
+~
+$c0004Odi un curioso gorgoglio.$c0015
+$c0007~
+#1471
+medici coppia paio~
+una coppia di medici~
+Una coppia di medici che fa quanto di meglio puo' per curare e guarire.
+~
+Lavorano sempre in coppia!
+~
+4|128 16777216 1000 N
+7 14 4 14 1d3+5
+-1 50 24 1
+8 8 0
+#1472
+fiamma~
+La Fiamma~
+$c0001La Fiamma ti riscalda benevolmente.$c0015
+$c0007~
+La Fiamma tremola quasi impercettibilmente verso di te.
+Puoi appena sentirne il tepore, da quanto e' gentile.
+~
+2|268435456 2048 900 A 2
+15 8 5 10 3d3+2
+-1 666 56 26
+8 8 3 0 1 2
+#1473
+sacerdote guerriero~
+Il Sacerdote guerriero~
+Un guerriero vestito con paramenti sacerdotali si aggira per l'arena
+~
+Sembra pacifico e curioso
+~
+2|4 32768 0 N
+5 15 2 0 1d3+2
+-1 60 43 3
+8 8 1
+#1480
+lea gatto~
+$c0001L$c0008e$c0013a$c0015, la $c0013gatta $c0008di $c0001tre $c0008colori$c0007~
+$c0001L$c0008e$c0013a$c0015, la $c0013gatta $c0008di $c0001tre $c0008colori$c0007
+~
+$c0001L$c0008e$c0013a$c0015, la $c0013gatta $c0008di $c0001tre $c0008colori$c0015
+$c0007~
+2048 8|32768|524288|16777216|33554432 350 L 5
+20 20 10 0 1d3+2
+-1 0 28 7
+8 8 5 0 1|2|4|8|16|32|64|128|256|512|1024|2048|8192|16384|32768|65536|131072 0
+$c0011Purrrr..... Purrrr.....$c0015
+$c0007~
+$c0008Alle tue orecchie giunge un rumore silenzioso$c0015
+$c0007~
+#1493
+oleofante bestia~
+L'Addetto alla distribuzione~
+Un Oleofante dorme sul lavoro..
+~
+Beh, e' proprio una bestia. Untuosa all'aspetto, nera e lucente,
+lascia scie di bava luccicante dietro a se'... meglio di cosi' non si puo'
+descrivere.
+~
+2 0 800 L 1
+12 12 4 30 2d6+3
+-1 33 33 20
+4 4 0
+Un Oleofante russa rumorosamente.
+~
+Odi qualcuno che russa profondamente
+~
+#1494
+oleofante bestia~
+Un Oleofante~
+Un Oleofante lavora quasi con lena.
+~
+Beh, e' proprio una bestia. Untuosa all'aspetto, nera e lucente,
+lascia scie di bava luccicante dietro a se'... meglio di cosi' non si puo'
+descrivere.
+~
+2|4 0 800 N
+12 14 4 30 1d3+2
+-1 77 16 20
+8 8 0
+#1495
+elfo~
+L'Elfo Commesso~
+Qui c'e' un Elfo che provvede alle consegne per conto della Panetteria della Piazza.
+~
+~
+2 8|32768 800 A 1
+12 15 4 0 1d3+8
+-1 49 31 2
+8 8 3 0 2048 0
+#1496
+elfo~
+Un Elfo~
+Un Elfo lavora con cura e attenzione.
+~
+~
+2|536870912 32768 800 N
+12 12 4 30 1d3+2
+-1 40 19 2
+8 8 3 0 2048 0
+#1497
+gatto cheshire stregatto~
+Lo Stregatto~
+Lo Stregatto ti regala un sorriso e scompare.
+~
+Il classico, obbligatorio mostro invisibile di quest'area. Ha quel sorriso
+sornione che pare voglia significare che di te sa piu' di quanto tu non pensi...
+~
+4 2|8 600 N
+6 16 7 0 1d3+0
+-1 0 6 18
+8 8 1
+#1498
+piccione~
+un Piccione~
+Un piccione grassottello razzola nella piazza, indifferente alla tua presenza.
+~
+Cibo! basta acchiapparlo, spennarlo e cuocerlo...
+~
+128 2048 0 N
+2 19 9 3 1d3+1
+-1 10 0 16
+8 8 0
+#1499
+Sinuhe egiziano custode~
+Sinuhe~
+$c0001Sinuhe l'egiziano$c0015 protegge questa porta per mandato divino.
+$c0007~
+Non sfidarlo, e' la $c0011Mano degli Dei.$c0015
+$c0007~
+2|268435456 0 1000 A 4
+51 -20 -10 351 4d4+20
+-1 0 0 1
+8 8 4 0 256|512|4096 0
+#254
+jackalwere~
+The jackalwere~
+A jackalwere looks at you.. You feel sleepy
+~
+It is a jackal-like creature, that has partially taken the shape of a man.
+~
+4|32|128 0 -400 N
+4 18 4 0 2d4+0
+-1 400 4 8
+8 8 3 0 16384 0
+#257
+ogre magi~
+An ogre magi~
+An ogre magi stands here, feasting on human flesh.
+~
+He is large, and vaguely oriental.
+~
+4|32|128|2097152 0 -500 N
+5 18 4 2 1d12+0
+-1 300 2 17
+8 8 1
+#691
+cain guildmaster monk~
+the Monk Guildmaster~
+Cain the monk guildmaster is standing here.
+~
+  He is positively the fastest, and fiercest fighter you have ever seen
+in your entire life.   Every movement of his body is a demonstration of just
+how fluid and beautiful movement can be.
+~
+1|2 0 0 A 5
+61 -10 -10 96 8d6+6
+-1 8004 0 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#1022
+halfling youth~
+a halfling youth~
+A halfling youth stands here, waiting for nothing in particular.
+~
+The halfling youth is not yet quite in the prime of his youth.  He's knee
+high and you get the sudden urge to step on him.
+~
+4|64|128 0 0 N
+3 18 7 3 1d6+0
+-1 20 0 4
+8 8 1
+#1032
+shiriff~
+a shiriff~
+A shiriff of the Shire looks for the lost halfling youth.
+~
+The shiriff is over waist high, quite tall for a halfling.
+He looks at you, smiles and asks you if you have seen a halfling youth
+somewhere outside the shire.
+~
+2|64|4194304 0 150 N
+8 13 5 16 1d4+0
+-1 50 4 4
+8 8 1
+#1701
+monk human mentor resting~
+the human monk~
+A human monk is quietly resting here.
+~
+A closer look reveals that this monk is obviously somewhat skilled though
+not quite a master in unarmed combat.
+~
+2|64|67108864 32 200 N
+10 15 6 0 2d4+1
+-1 250 1 1
+5 5 1
+#1702
+monk human mentor librarian~
+the human monk~
+A human monk is sitting here, copying some manuscripts.
+~
+This chap spends almost all of the time that he is not improving his
+skills in unarmed combat by copying fading manuscripts and books.
+~
+2|64|67108864 32 200 N
+10 15 6 0 2d4+1
+-1 250 1 1
+6 6 1
+#1703
+monk dwarf dwarven mentor~
+the dwarven monk~
+A dwarven monk is quietly resting here.
+~
+A closer look reveals that this monk is obviously somewhat skilled though
+not quite a master in unarmed combat.
+~
+2|64|67108864 32|32768 100 N
+10 15 7 10 2d5+0
+-1 250 1 3
+5 5 1
+#1704
+monk human female superior master~
+the female monk~
+A human female monk is sitting here praying and humming.
+~
+A quite attractive female, however, from the calluses on her hands and
+feet, it would be advisable for you not to try anything on her that might
+get her upset.
+~
+2|64|67108864 32 300 A 2
+17 7 2 0 2d4+0
+-1 1000 1 1
+6 6 3 0 4096 0
+#1705
+monk human layman~
+the human monk~
+A human monk is here going about his daily duties.
+~
+From the way that this monk walks and carries himself you can tell that
+he is fairly new to being a monk as he seems too much like a normal person
+(except for the monk robes he is wearing).
+~
+64|128|67108864 0 0 N
+4 18 9 0 1d6+0
+-1 75 1 1
+8 8 1
+#1706
+monk human layman praying~
+the human monk~
+A human monk is sitting here praying and humming.
+~
+You think that this young man is probably fairly new to being a monk as
+occasionally he slightly stumbles over a difficult phrase in his prayers.
+~
+64|128|67108864 0 0 N
+4 18 9 0 1d6+0
+-1 75 1 1
+6 6 1
+#1707
+monk human layman resting~
+the human monk~
+A human monk is resting here.
+~
+This poor fellow has spent the day training, cleaning, praying, and
+eating few small meals. All he really wants to do is just stay here and
+rest for a week.
+~
+64|128|67108864 0 0 N
+4 18 9 0 1d6+0
+-1 75 1 1
+5 5 1
+#1708
+monk human layman librarian~
+the human monk~
+A human monk is here maintaining the library.
+~
+This lucky chap has the easy job for this week as he gets to give his
+tired body a rest while he goes through the books - sorting and dusting as
+he goes around.
+~
+64|128|67108864 0 0 N
+4 18 9 0 1d6+0
+-1 75 1 1
+8 8 1
+#1709
+monk human layman janitor~
+the human monk~
+A human monk is here cleaning up the monastery.
+~
+This poor guy gets the unenvied job of cleaning the monastery. Not only
+does he have to clean the floors and walls, but he has to pick all of the
+loose trash and stuff that the occasional adventurer leaves lying around.
+~
+64|128|67108864 0 0 N
+4 18 9 0 1d6+0
+-1 75 0 1
+8 8 1
+#1710
+monk human female layman~
+the female monk~
+A human female monk is resting here.
+~
+A few human females just get fed up with the troubles that men cause them
+so they come to the monastery to find out how to defend themselves. This
+one is probably no exception to the majority.
+~
+2|64|67108864 0 0 N
+4 18 9 0 1d6+0
+-1 75 1 1
+5 5 2
+#1711
+monk dwarf dwarven immaculate~
+the dwarven monk~
+A dwarven monk is here going about his daily duties.
+~
+From the way that this monk walks and acts, you can tell that he is
+still fairly new as he grumbles as much as most dwarves when looked at.
+~
+64|67108864 32768 0 N
+5 17 9 5 1d6+1
+-1 85 1 3
+8 8 1
+#1712
+monk dwarf dwarven immaculate sleeping~
+the dwarven monk~
+A dwarven monk is here snoring loudly.
+~
+This tough little guy is all tuckered out from a full day of being a
+monk. Though none could probably sleep through his snores, it would not
+be a good idea to wake him and tell him about it.
+~
+2|64|67108864 32768 0 N
+5 17 9 5 1d6+1
+-1 85 1 3
+4 4 1
+#1713
+monk human master~
+the human monk~
+A human monk is here going about his daily duties.
+~
+From the way that this monk walks and acts, you get the impression that
+this guy is quite confident in his abilities to handle any problems that
+might come his way.
+~
+64|67108864 32 100 A 2
+13 10 5 15 1d4+1
+-1 500 1 1
+8 8 1
+#1714
+monk human master librarian~
+the human monk~
+A human monk is sitting here going over new acquisitions and making notes.
+~
+Though very skilled in the arts of unarmed combat, this quiet fellow
+likes to spend a lot of his time taking care of the library and trying to
+increase the contents of the library.
+~
+2|64|67108864 32 100 A 2
+13 10 5 15 1d4+1
+-1 500 1 1
+6 6 1
+#1715
+monk human master praying~
+the human monk~
+A human monk is sitting here praying and humming.
+~
+This monk has some noticeable calluses built up on his hands and feet
+and you get the impression that a lot of time went into getting them that
+way.
+~
+2|64|67108864 32 100 A 2
+13 10 5 15 1d4+1
+-1 500 1 1
+6 6 1
+#1716
+monk human dorek~
+Dorek the monk~
+Dorek the human monk is walking around looking big and strong.
+~
+This monk is quite strong looking and if he wasn't a monk, you would
+probably find this guy working as a bouncer at a bar.
+~
+64|67108864 32 0 A 2
+12 7 6 50 2d3+6
+-1 750 2 1
+8 8 1
+#1717
+monk human ron~
+Ron the monk~
+Ron the monk is sitting here drinking some beer and telling army stories.
+~
+This particular fellow has close cropped hair that came from when he was
+serving in Shadowdale's Cityguards. He also seems to be able put down a good
+amount of beer as he is often draining his mug.
+~
+2|64|67108864 0 0 L 2
+20 7 4 40 3d3+3
+-1 500 1 1
+6 6 4 0 4096 0
+Ron the monk chuckles over some joke, raises his mug, declares "Compai!",
+   drains his mug, and then refills it from a small beer barrel.
+~
+You here some muffled laughter nearby (kind of like a party).
+~
+#1718
+gran maestro monaco~
+$c0011Il Gran Maestro dei Monaci~
+Un uomo vestito di un umile saio, ma che mostra una grande forza interiore.
+~
+Ti guarda tranquillo, ma e' pronto a tutto.
+~
+64|67108864 8|32|524288|16777216|33554432 0 A 4
+50 -3 -10 300 8d6+6
+-1 5000 -100000 1
+8 8 4 0 256|2048|4096 0
+#3062
+gatto nero~
+Un gatto nero~
+Un gatto nero si muove agile qui attorno
+~
+Decisamente un bel micetto, agile e dai lunghi denti...
+~
+1|32|128 0 -200 N
+2 18 7 0 1d6+0
+-1 10 0 18
+8 8 1
+#3066
+pipistrello~
+Il pipistrello~
+Un pipistrello vampiro svolazza attorno
+~
+Un pipistrello si muove veloce, occhio gira verso di te...
+
+ATTENTO!!
+
+DANNAZIONE I CAPELLI!!!
+~
+1|32|128 0 -200 N
+2 18 10 0 1d6+0
+-1 10 0 16
+8 8 2
+#9005
+baby llama~
+The baby llama~
+The baby llama is here, looking cute and playful.
+~
+She just looks so darn CUTE!
+~
+16|128 0 100 N
+3 19 7 0 1d5+0
+-1 60 0 23
+8 8 2
+#9006
+mutt scruffy~
+The scruffy mutt~
+The scruffy mutt is here, digging for bones.
+~
+He looks small and weak.
+~
+2|128 0 0 N
+3 20 10 0 1d5+1
+-1 0 0 18
+8 8 1
+#2700
+berbalang astral_mob~
+Un berbalang con ali simili ad un pipistrello~
+Un Berbalang scivola tra i piani astrali cercando qualcosa da mangiare.
+~
+ Questa creatura ha una pelle che sembra essere simile a cuoio 
+molto spesso, e' un bipede e le sue "braccia" terminano con terribili
+artigli affilati. Appena ti vede scorgi il suo bianco occhio illuminarsi.
+Il pasto e' arrivato!
+~
+4|32|64|128 8|32768 -1000 A 3
+10 13 5 10 1d3+2
+-1 236 18 47
+8 8 0
+#2701
+githyanki soldato~
+Un soldato githyanki~
+Una presenza avvolta in bende puzzolenti ti addita come intruso!
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+4|32|64|32768|4194304 33554432 -1000 A 2
+18 12 3 15 1d3+2
+-1 350 12 47
+8 8 1
+#2702
+githyanki mago~
+Un mago githyanki~
+Una sottile figura luminescente ti scruta incuriosita.
+~
+  Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' cosi' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+4|32|64|32768|2097152 33554432 -1000 A 1
+15 20 10 10 1d3
+-1 412 22 47
+8 8 4 0 0 1|2|4|8|16384|32768|65536|131072
+#2703
+cavaliere githyanki~
+Un cavaliere githyanki~
+Sembrerebbe un cavaliere vestito di tutto punto, appena ti vede
+parte alla carica in nome di qualche Dio sconosciuto.
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+4|32|64|32768|4194304 33554432 -1000 A 2
+20 11 2 10 1d3+4
+-1 441 20 47
+8 8 1
+#2704
+githyanki essere~
+Un essere informe~
+Un essere  totalmente avvolto in bende puzzolenti si sta pazientemente
+togliendo alcuni grossi vermi che sembrano fuoriuscire dal tessuto.
+~
+Quest'essere e' totalmente avvolto in bende puzzolenti che lo fanno
+assomigliare ad una mummia, anche se non lo e'.
+~
+4|32|64|32768 33554432 -1000 A 2
+27 9 -1 20 1d3+17
+-1 7500 20 47
+8 8 1
+#2705
+githyanki sergente~
+Un sergente githyanki~
+Un essere avvolto in bende puzzolenti ti addita come intruso!
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+4|32|64|32768|4194304 33554432 -1000 A 2
+29 6 -3 40 1d3+10
+-1 1023 21 47
+8 8 1
+#2706
+githyanki guerriero~
+Un guerriero githyanki~
+Un feroce githyanki e' qui pronto a combatterti!
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+2|4|32|64|32768|2097152 33554432 -1000 A 2
+30 3 -2 20 1d3+7
+-1 1675 21 47
+8 8 1
+#2707
+githyanki cavaliere~
+Un cavaliere githyanki~
+Un feroce essere avvolto in sudicie bende ti attacca!
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+2|4|32|64|32768 33554432 -1000 A 4
+30 0 -4 30 1d3+6
+-1 1934 13 47
+8 8 1
+#2708
+githyanki capitano~
+Un capitano githyanki~
+Un capitano githyanki sta controllando che tutto sia in ordine.
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+2|4|32|64|32768 33554432 -1000 A 4
+30 0 -5 60 1d3+9
+-1 2674 27 47
+8 8 1
+#2709
+githyanki arcimago~
+Un arcimago githyanki~
+Quest'essere sembra emanare luce attraverso le vesti.
+~
+Questa schifezza che assomiglia vagamente ad un uomo e' ricoperta di bende
+dalla testa ai piedi tanto da farlo assomigliare ad una mummia, ma questa creatura
+non e' completa, mancano infatti alcuni pezzi qua e la.
+I suoi occhi brillano di di un aura rossa e malefica, forse e' meglio allontanarsi
+al piu' presto.
+~
+2|4|32|64|32768|2097152 33554432 -1000 A 2
+35 2 -5 30 1d3+24
+-1 5000 17 47
+8 8 2
+#2710
+githyanki Yzrgomab capo~
+Yzrgomab il capo supremo dei githyanki~
+Impressionato dal fatto che tu possa essere giunto sino a lui,
+Yzrgomab, il capo supremo dei Githyanki si prepara a finirti.
+~
+  Yzrgomab emana energia pura.
+~
+2|4|32|64|32768|2097152 8|128|33554432|134217728 -1000 A 4
+51 -10 -8 500 1d3+28
+-1 100000 19 47
+8 8 5 1|4|16|32|64 2048|131072 2
+#2711
+slaadi astral_mob~
+Uno slaadi $c0009rosso$c0007~
+Vedi una creatura bizzarra con delle fattezze che ti ricordano
+una grossa rana...forse e' quella che tutti chiamano Slaadi.
+~
+Questo bipede dalla pelle rossa, ha artigli maledettamente
+grossi ed affilati
+~
+4|32|64 8 -870 A 3
+15 14 5 5 1d3+2
+-1 0 17 47
+8 8 1
+#2712
+mezzodemone hyrblanok astral_mob~
+Un mezzodemone hyrblanok~
+Un mezzodemone hyrblanok dalle forme vagamente insettoidi,
+sta vagando alla ricerca di chissa' cosa per conto di chissa' quale
+padrone.
+~
+  Ha un esoscheletro tipico degli insetti. Ogni tanto fa saettare la
+nera lingua biforcuta, annusando l'aria. Ha almeno una dozzina di occhi
+puntati verso di te. Sfortunatamente, questa creatura pare molto interessata
+a te!
+~
+4|64|128 8|32768 -750 A 2
+20 5 -3 40 1d3+7
+-1 1265 12 47
+8 8 1
+#2713
+predatore~
+Un predatore invisibile~
+Una figura evanescente e' qui davanti a te.
+~
+Secondo te una creatura che si chiama predatore invisibile
+come potresti descriverla? Su, non ti pare sciocco?
+~
+64 2|8|2048 0 A 4
+12 13 3 20 1d3
+-1 0 16 47
+8 8 0
+#2714
+veterano mindflayer~
+La proiezione astrale di un veterano mindflayer.~
+Questa inquietante figura vaga per i piani astrali in cerca di qualcosa.
+~
+Questa e' una terrificante creatura vestita di nero e viola alta piu' di 2 metri.
+~
+4 8|32768 -600 N
+18 13 2 32 1d3+8
+-1 200 14 47
+8 8 1
+#2715
+color pool~
+Un portale Pool~
+Un portale Pool di colore $c0015bianco$c0007 latte e' qui.
+~
+Volando tra le nebbie
+Sei sospeso nel nulla, fluttui attraverso un vortice nebbioso!!!!
+~
+2|2048 2048 0 N
+1 20 10 0 1d1
+-1 0 -1 1
+8 8 3 0 1|2|4|8|16|32|64|128|256|1024|2048|131072 0
+#2716
+color pool~
+Un portale Pool~
+Un portale Pool color $c0014turchese $c0007e' qui.
+~
+Long ago, this road must have been a thoroughfare, as it is easily forty
+feet across. The stones that form it are still visible through the grass that
+seems to have grown up through the cracks everywhere. Even so, it is an
+impressive monument to the civilization that built it.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2717
+color pool~
+Un portale Pool~
+Un portale Pool vagamente somigliante ad una $c0008s$c0015c$c0008a$c0015c$c0008c$c0015h$c0008i$c0015e$c0008r$c0015a$c0007.
+~
+Qui solo posti in piedi. L'arena appare piccola e lontana.
+Il colpo d'occhio pero' e' magnifico. Anche guardando verso la citta' si
+possono scorgere gli edifici piu' lontani.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2718
+color pool~
+Un portale Pool~
+Un portale Pool che sembra fatto di $c0011oro fuso$c0007 e' qui.
+~
+You are at an intersection in the corridor. The obsidian walled halls
+lead off in every direction from here, pulsing with the power of their
+ancient runes.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2719
+color pool~
+Un portale Pool~
+Un portale Pool $c0008grigio scuro$c0007 e' qui.
+~
+You are in a giant cave, all the walls are shining with a soft golden
+light. The cave continues to the south, east and north.
+
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1
+-1 0 -1 1
+8 8 2
+#2720
+color pool~
+Un portale Pool~
+Un portale Pool $c0004blu$c0007 come la notte fonda, e' qui.
+~
+To the west, you can see a blue shimmering light.   To the east, you
+can see a dark tunnel.  The north and south are blocked by tall
+mountains.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2721
+color pool~
+Un portale Pool~
+Un portale Pool color $c0008grigio$c0007 fumo e' qui.
+~
+You stand in the entrance way to the temple which opens up to the
+north into a large hallway going east and west. Small statues of spiders line
+the entrance way's walls.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2722
+color pool~
+Un portale Pool~
+Un portale Pool $c0009rosso$c0007 come il magma e' qui.
+~
+In here you find tools and anvils used to make various weapons
+and items. The walls have been stripped clean and only a few incomplete
+pieces of armor and weaponry are left.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2723
+color pool~
+Un portale Pool~
+Un portale Pool che sembra essere fatto di granito e' qui.
+~
+Senti un improvviso rumore di ali, al quale quasi istantaneamente se
+ne aggiungono altri: il baccano aumenta sempre di piu', fino a quando
+l'intero passaggio non e' percosso da un tuono mentre migliaia di
+pipistrelli roteano e stridono nelle volte del soffitto soprastante.
+Solo qualche solitario scende a tratti verso di te, mentre il grosso
+delle nere falangi compie un'ampia curva verso l'alto per scomparire
+alla vista. Il tunnel e' fiancheggiato da ampi tratti di pietrisco e
+grossi sassi. 
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2724
+color pool~
+Un portale Pool~
+Un portale Pool nero come l' inchiostro e' qui.
+~
+You can't see much here but the echo tells you that there's quite a drop
+down. You can just make out a huge dark pool out there in the darkness,
+mostly because of the trickling of water. The water from the sewer
+actually
+washes over this ledge and makes it quite slippery. From here it drops,
+like a waterfall, into the pool far down.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2725
+color pool~
+Un portale Pool~
+Un portale Pool  il cui colore ti ricorda il $c0010verde$c0007 dei campi primaverili.
+~
+You stand in a grassy meadow with annoyingly cute dandelions
+growing here and there.  You hear the merry bubbling of a brook
+somewhere ahead, and to the north you see a narrow wooden bridge.  The
+scents of perpetual spring either delight or disgust you, depending on
+whether you go for the trite stuff like this.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2726
+color pool~
+Un portale Pool~
+Un portale Pool $c0010verde $c0007e $c0011giallo$c0007.
+~
+Over the years, litter and debris has built up in here from the prey of
+the crawlers. All sorts of bones, human and otherwise, are heaped and piled
+here and there. A large sinkhole in the middle of the cave has acquired some
+water from somewhere and you see a strange glow coming from the bottom of the
+hole.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2727
+color pool~
+Un portale Pool~
+Un portale Pool color $c0006verde $c0007marino.
+~
+You are sailing on a huge ocean that extends in many directions.  Due to
+the changing winds you cannot always go the direction you choose.  You
+can see several islands along the coast in all directions.  You hope
+that your compass is working properly.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2728
+color pool~
+Un portale Pool~
+Un portale Pool color $c0001marrone $c0007e' qui.
+~
+     You are at the main room of the Wild Wereboar Tavern, the place is
+a total mess.  You can tell this place is accustomed to many brawls, the many
+pieces of furniture spread around the room gave you the hint.  There is a old,
+creaky, sagging staircase leading upstairs.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1
+-1 0 -1 1
+8 8 2
+#2729
+color pool~
+Un portale Pool~
+Un portale Pool color grigio.
+~
+     Large strands connect at this point.  The node shimmers and
+flickers within the ether.  You see many flying creatures--
+insects, pegasi, and dragon wormkins--navigate the dangerous
+passages of the web.  Exits go in many directions.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2730
+color pool~
+Un portale Pool~
+Un portale Pool color $c0003verde polvere$c0007 e' qui.
+~
+    From this height, you can see the Eucalyptus Forest around you as
+well as the Aborigine Stronghold to the distant South-West, the Roo Fortress
+to the South, and the Eucalyptus River flowing between them towards a Lake.
+    It looks like you can make it down the steep Western and Northern
+side from the top but not back up from the bottom.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2731
+color pool~
+Un portale Pool~
+Un portale Pool color grigio e' qui davanti a te.
+~
+    This is a twisty underground tunnel with many exits and entrances.
+The ground is more or less even, but the passage walls are so similar in
+kind that it is impossible to differentiate one passage from another by them.
+There are exits leading in all four compass directions. The tunnel floor
+has been worn smooth by the passage of many feet.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#2732
+color pool~
+Un portale Pool~
+Un portale Pool color grigio spento e' qui.
+~
+   You are now standing on the drawbridge of an ancient castle. Two huge
+statues of some strange creature float in mid-air directly above the pit
+beneath the drawbridge on which you now stand. You can't see any farther
+than the inside of the entrance, for the castle appears to be totally
+without light.
+~
+2|64|2048 2048 0 N
+1 0 10 8 1d1+1
+-1 0 -1 1
+8 8 2
+#3000
+Gwynyar~
+Gwynyar~
+Un vecchio elfo con la barba bianca
+~
+Un vecchio elfo con la barba bianca
+~
+2|64|1048576|2097152 8|128|2048|32768|65536|16777216|33554432|134217728 350 A 3
+51 0 -10 300 1d3+17
+-1 150000 4 2
+8 8 4 0 2048 0
+#3001
+flippy~
+Flippy il fornaio~
+Flyppy il fornaio
+~
+Flyppy il fornaio
+~
+2|64|1048576 8|128|2048|32768|16777216|33554432 -1000 N
+51 -10 -10 300 1d3+52
+-1 60000 0 4
+8 8 0
+#3002
+tricky~
+Tricky il mercante~
+Tricky il mercante
+~
+Tricky il mercante
+~
+2|64|1048576 8|128|2048|32768|16777216|33554432 -1000 N
+51 -15 -10 300 1d3+52
+-1 60000 0 4
+8 8 0
+#3003
+bogordian~
+Bogordian l'armiere~
+Bogordian l'armiere
+~
+Bogordian l'armiere
+~
+2|64|1048576 33554432 -1000 N
+1 20 10 0 1d3+3
+-1 0 18 1
+8 8 0
+#3004
+bracco~
+Bracco il fabbro di Myst~
+Bracco il fabbro di Myst
+~
+Bracco il fabbro di Myst
+~
+2|64|1048576 8|128|2048|32768|65536|16777216|33554432 -1000 N
+51 0 -10 400 1d3+102
+-1 250000 2 3
+8 8 0
+#3005
+niobe~
+Niobe la receptionist~
+Niobe la receptionist
+~
+Niobe la receptionist
+~
+2|1048576 8|128|32768|65536|16777216|33554432 -1000 N
+51 -10 -10 200 1d3+102
+-1 10000 6 2
+8 8 5 0 2048 0
+#3006
+nemo~
+Nemo il barcaiolo~
+Nemo il barcaiolo
+~
+Nemo il barcaiolo
+~
+2|1048576 33554432 1000 N
+35 -6 -10 0 1d3+30
+-1 0 12 1
+8 8 4 0 1024|2048 0
+#3007
+drunky~
+Drunky il barman~
+$c0006Drunky$c0007 il barman sta intrattenendo i clienti con le sue storie.
+~
+Drunky il barman e' vestito molto elegantemente.
+Indossa diversi monili d'oro, tra cui spicca una grande catena intorno al collo.
+Drunky ti sorride e noti anche i suoi denti nuovi, anche loro dorati.
+
+~
+2|64|1048576 32768|33554432 1000 L 2
+30 4 -10 0 1d3+7
+-1 5000 10 77
+8 8 1
+$c0011[$c0015Drunky$c0011] vi dice '... e cosi' dopo anni di sacrifici, finalmente posso godermi un bel gruzzoletto e vivere serenamente!'$c0007
+
+$c0011[$c0015Drunky$c0011] vi dice 'Vi ho mai raccontato di quella volta che Tethys in persona venne ad ubriacarsi al "$c0009Soffio del Drago$c0011"?'$c0007
+~
+~
+#3008
+Lo scriba di Myst~
+Lo scriba di Myst~
+Lo scriba di Myst
+~
+Lo scriba di Myst
+~
+2|2048|1048576 8|128|2048|32768|65536|16777216|33554432|134217728 -1000 A 3
+51 0 10 500 1d3+102
+-1 0 -1 2
+8 8 3 0 2048 0
+#3010
+drina lungabarba~
+Drina Lungabarba~
+Una nana dalla lunga barba nera ti accoglie con un ampio sorriso.
+~
+Non e' troppo bassa per essere una nana, ha una lunga barba
+nera, gli occhi azzurri e la dentatura a posto.
+E' vestita con una tunica di seta gialla.
+~
+2|128|1048576 32768 0 L 2
+19 10 10 200 1d3+15
+-1 0 14 3
+8 8 2
+Dimmi tesoro, che tipo di massaggio preferisci ?
+~
+Mmm...  mmm....
+~
+#3011
+elsinella foltachioma~
+Elsinella Foltachioma~
+Una ragazza dai lunghi capelli biondi ti sorride.
+~
+E' alta circa un metro e sessanta, ha dei lunghi capelli biondi
+e gli occhi verdi. Ha circa venti anni ed ha un corpo decisamente
+tonico. E' vestita con una tunica di seta azzurra.
+~
+2|128|1048576 0 0 L 2
+19 10 10 200 1d3+15
+-1 0 13 1
+8 8 2
+Dimmi tesoro, che tipo di massaggio preferisci ?
+~
+Dove lo vuoi il massaggio? Va bene cosi?
+~
+#3012
+marsilla~
+Marsilla schienalarga~
+Una giovane mezzo gigante ti sorride ed allunga una manona
+verso di te.
+~
+E' alta circa tre metri, ha dei corti capelli neri e gli occhi dello
+stesso colore. Ha circa venti anni ed ha delle forme veramente
+imponenti. E' vestita con una tunica di seta rossa.
+~
+2|128|1048576 32768 0 L 2
+19 10 10 200 1d3+15
+-1 0 14 77
+8 8 2
+Dimmi tesoro, che tipo di massaggio preferisci ?
+~
+Non ti preoccupare, vedrai che non ti faro' male.
+~
+#3013
+custode~
+La Custode del tempio di Eros~
+Una signora un po' attempata accoglie i...fedeli del tempio.
+~
+Ha circa una cinquantina d'anni, ma conserva ancora una fascino
+che colpisce.
+~
+2|1048576|4194304 0 0 L 3
+41 -5 -2 600 1d3+21
+-1 15000 12 1
+8 8 5 1024 2048|4096 0
+Dimmi tesoro, che tipo di massaggio preferisci ?
+Se sei nuovo leggi pure il cartello.
+~
+~
+#3014
+turkut~
+Turkut tronco di quercia~
+Turkut e' pronto a punire coloro che non versano l'offerta a Eros.
+~
+E' un guerriero dai muscoli d'acciaio.
+~
+134217728 0 0 A 4
+51 -8 -10 600 1d3+36
+-1 0 3 1
+8 8 4 0 1024|2048|4096 0
+#3020
+mork~
+Mork il maestro dei maghi~
+Mork il maestro dei maghi
+~
+Mork il maestro dei maghi
+~
+2|64|1048576|2097152 8|128|2048|32768|65536|16777216|33554432|134217728 349 N
+50 0 -10 200 1d3+22
+-1 0 2 2
+8 8 4 0 2048 0
+#3021
+opus~
+Opus il maestro dei chierici~
+Opus il maestro dei chierici
+~
+Opus il maestro dei chierici
+~
+2|64|1048576|8388608 8|128|2048|32768|65536|16777216|33554432|134217728 -350 N
+50 -20 -10 200 1d3+30
+-1 0 2 2
+8 8 4 0 2048 0
+#3022
+spanky~
+Spanky il maestro dei ladri~
+Spanky il maestro dei ladri
+~
+Spanky il maestro dei ladri
+~
+2|64|1048576|16777216 8|128|2048|32768|65536|16777216|33554432|134217728 -350 A 3
+50 -10 -10 200 1d3+50
+-1 0 11 4
+8 8 1
+#3023
+Magnus~
+Magnus il maestro dei guerrieri~
+Magnus il maestro dei guerrieri
+~
+Magnus il maestro dei guerrieri
+~
+2|64|1048576|4194304 8|128|2048|32768|65536|16777216|33554432|134217728 1000 A 4
+50 -10 -10 200 1d3+50
+-1 0 11 4
+8 8 1
+#3040
+oste~
+L'oste~
+Un oste sta preparando alcuni vassoi dietro il bancone.
+~
+Sembra stanco, e poco propenso a sopportare fastidi nel suo bar.
+~
+2 0 900 N
+29 2 2 120 1d3+16
+-1 2000 14 1
+8 8 4 0 2048 0
+#3041
+attendente~
+L'Attendente~
+Un attendente si muove qui in giro
+~
+Sembra stanco ed impegnato.
+~
+2 0 900 A 3
+29 2 2 120 1d3+9
+-1 2000 15 1
+8 8 4 0 2048 0
+#3042
+attendente mago~
+L'Attendente~
+Un attendente presta servizio qui.
+~
+Un tempo era un mago avventuroso, forse.
+~
+2 0 600 N
+24 1 2 120 1d3+7
+-1 2000 18 1
+8 8 4 0 2048 0
+#3043
+attendente~
+L'Attendente~
+Un attendente e' qui in meditazione
+~
+~
+2 0 600 N
+24 1 2 120 1d3+7
+-1 2000 18 1
+8 8 4 0 2048 0
+#3044
+attendente~
+L'Attendente~
+Un attendente che conosce dove i suoi clienti tengono i soldi, e' qui
+~
+~
+2 0 600 N
+25 1 2 120 1d3+7
+-1 2000 13 1
+8 8 4 0 2048 0
+#3045
+attendente~
+L'Attendente~
+Un attendente che sembra un orso e' qui.
+~
+~
+2 0 600 N
+24 1 2 120 1d3+7
+-1 2000 18 1
+8 8 4 0 2048 0
+#3046
+filthy~
+Filthy~
+Filthy e' qui pronto a servirti esotici drink.
+~
+Un tipo gioviale, e non troppo pulito.
+~
+2 0 600 N
+29 1 2 120 1d3+16
+-1 2000 15 1
+8 8 4 0 2048 0
+#3047
+Deynor anziano~
+Deynor~
+Un anziano uomo borbotta tra se e se, meglio lasciarlo stare
+~
+Forse e' un vecchio pazzo che agita una bacchetta di legno... ma forse no...
+~
+4|64|2097152 33554432|134217728 1000 A 4
+50 -10 -10 200 1d3+40
+-1 10000 0 1
+8 8 4 0 1|2|4|8|512|1024|2048|4096 128
+#3060
+guardia~
+Una guardia di Myst~
+Una guardia di Myst
+~
+Una guardia di Myst
+~
+64|1048576|268435456 0 1000 A 3
+30 10 -10 0 1d3+12
+-1 500 12 1
+8 8 1
+#3061
+spazzino~
+uno Spazzino~
+uno spazzino
+~
+uno spazzino
+~
+4|64 0 -1000 N
+1 20 10 0 1d3+3
+-1 0 18 1
+8 8 0
+#3062
+gatto~
+un Gatto delle nebbie~
+un Gatto delle nebbie
+~
+un Gatto delle nebbie
+~
+64 0 -349 N
+2 20 10 0 1d3+3
+-1 0 16 18
+8 8 0
+#3063
+cittadino~
+un Cittadino~
+un Cittadino
+~
+un Cittadino
+~
+64 0 -349 N
+1 20 10 0 1d3+3
+-1 0 18 1
+8 8 0
+#3064
+ubriacone~
+un Ubriacone~
+un Ubriacone
+~
+un Ubriacone
+~
+4|64 0 -1000 N
+1 20 10 0 1d3+3
+-1 0 18 1
+8 8 0
+#3067
+sentinella~
+una sentinella~
+una sentinella
+~
+una sentinella
+~
+64|1048576|268435456 0 1000 N
+20 5 10 0 1d3+10
+-1 0 12 1
+8 8 1
+#3068
+monaco~
+Un monaco rinnegato~
+Un monaco rinnegato
+~
+Un monaco rinnegato
+~
+67108864 0 0 N
+30 0 -10 0 1d3+7
+-1 0 11 1
+8 8 0
+#3069
+guardia~
+una guardia scelta~
+una guardia scelta
+~
+una guardia scelta
+~
+2|64|1048576|268435456 0 1000 N
+22 0 10 0 1d3+12
+-1 0 12 1
+8 8 1
+#3070
+cittadino~
+un apprendista fabbro~
+un apprendista fabbro
+~
+un apprendista fabbro
+~
+64 0 -349 N
+1 20 10 0 1d3+3
+-1 0 18 1
+8 8 0
+#3073
+saggio~
+Il saggio~
+Il grande saggio
+~
+Il grande saggio
+~
+0 0 0 N
+26 0 -10 0 1d3+7
+-1 0 17 1
+8 8 0
+#3074
+cacciatore~
+Il cacciatore~
+Il cacciatore
+~
+Il cacciatore
+~
+0 0 0 N
+26 0 -10 0 1d3+7
+-1 0 17 1
+8 8 0
+#3077
+kronan maestro barbaro~
+il Maestro Barbaro~
+Kronan il maestro barbaro e' qui
+~
+Enorme e tutto muscoli. Ha il portamento orgoglioso di chi sa di essere un
+vero capo.
+~
+2|134217728 128|134217728 1000 A 5
+60 -15 -10 100 1d3+50
+-1 8794 11 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#3090
+micio~
+il micio~
+Un piccolo micino e' qui
+~
+Un piccolo micino gioca contento qui...gasp che unghie!
+~
+2|4 0 400 N
+1 20 9 4 1d3+0
+-1 0 18 18
+8 8 0
+#3091
+cucciolo~
+un cucciolo~
+un cucciolo di razza gioca qui per terra
+~
+Beh, dai denti non sembrerebbe tanto piccolo!
+~
+2|4 0 400 N
+1 20 9 6 1d3+0
+-1 0 23 18
+8 8 0
+#3092
+piccione~
+un piccione~
+Un piccione zompetta attorno cercando cibo
+~
+Wow che becco!
+~
+2|4 0 400 N
+3 19 8 4 1d3+1
+-1 0 14 18
+8 8 0
+#3093
+mastino~
+un Mastino~
+Un grosso mastino da guerra si aggira qui
+~
+Sembra affamato
+~
+2|4 0 400 N
+6 18 7 4 1d3+2
+-1 0 14 18
+8 8 0
+#3094
+lupo~
+un lupo~
+Un lupo addestrato e' qui
+~
+Benche' addestrato..meglio girare al largo
+~
+2|4 0 0 A 2
+8 17 6 4 1d3+1
+-1 0 12 18
+8 8 0
+#3100
+cameriera~
+la cameriera~
+Una cameriera e' qui, aspettando i tuoi ordini
+~
+Molto graziosa, capelli neri, occhi azzurri! WOW!
+~
+2 0 1000 N
+29 2 2 120 1d3+16
+-1 2000 14 1
+8 8 5 0 2048 0
+#3120
+uomo boschi~
+un uomo dei boschi~
+Un uomo dei boschi venuto in citta'
+~
+Vende pelli a buon prezzo...
+~
+0 0 800 N
+3 18 7 3 1d3+1
+-1 13 12 1
+8 8 1
+#3121
+papera~
+una papera~
+Un papera si aggira per lo stagno
+~
+Molto carina
+~
+2 2048 1000 N
+1 20 9 0 1d3+1
+-1 0 14 16
+8 8 0
+#3122
+anatra~
+l'anatra~
+Un'anatra starnazza verso di te
+~
+Che casino! Sarebbe meglio strozzarla!
+~
+2 2048 1000 N
+1 20 10 0 1d1+4
+-1 0 24 16
+8 8 0
+#3123
+corvo~
+il Corvo~
+Un nero corvaccio svolazza in giro
+~
+Sembra contento di vederti
+~
+64|128 2048 1000 N
+1 20 10 0 1d3+5
+-1 0 12 16
+8 8 0
+#3124
+cigno~
+un cigno~
+Un bel cigno si muove con eleganza
+~
+Un cigno grassottello si aggira felice per lo stagno
+~
+64 2048 1000 N
+2 20 10 0 1d4+0
+-1 0 4 16
+8 8 0
+#3140
+capo guardie~
+il Capo delle guardie~
+Il Capo delle guardie sembra incazzato nero!
+~
+Un Capo molto arrabbiato!
+~
+2|4|32 8 1000 A 2
+24 0 6 84 1d3+6
+-1 100 18 1
+8 8 1
+#3141
+guardia~
+la guardia pazza~
+Un guardia incazzata nera, si scaglia su di te!
+~
+~
+2|4|32 0 1000 A 2
+18 10 7 50 1d3+5
+-1 50 18 1
+8 8 1
+#3142
+segretaria~
+la Segretaria~
+Una segretaria sta' ordinando della carte dietro un tavolo.
+~
+Sembra molto impegnata... e ti dice 'Mi scusi ma oggi non e' giornata,
+torni domani prego'
+~
+2 0 900 N
+17 9 2 40 1d3+3
+-1 100 17 1
+8 8 2
+#3143
+primo cittadino~
+il Primo Cittadino~
+Il Primo Cittadino lavora qui.
+~
+Sembra antico, sovraffaticato e sottopagato!
+~
+2 0 900 A 2
+25 2 0 135 1d3+7
+-1 1000 11 1
+4 4 1
+#3144
+ronda~
+La Ronda~
+La ronda passa gridando 'Sono le 7 sette e tutto va bene!'
+~
+Nonstante abbia una clessidra portatile, dice sempre la stessa ora.
+~
+64|128 0 900 L 1
+10 15 -2 0 1d3+5
+-1 100 13 1
+8 8 1
+La ronda controlla la sua clessidra portatile
+~
+Senti qualcuno gridare
+~
+#21363
+paladin gm guildmaster~
+the paladin guildmaster~
+the paladin guildmaster is standing here
+~
+     A strong, powerful man, yet kindly looking.
+~
+2 128 1000 A 5
+60 -10 -10 96 1d3+40
+-1 8000 6 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#21366
+psionist gm guildmaster~
+the psionist guildmaster~
+the psionist guildmaster is standing here.
+~
+Bald and beautiful! You sense a powerful mind behind those dark blue
+eyes of his.
+~
+2 0 1000 A 5
+60 -15 -10 96 1d3+40
+-1 8000 1 1
+8 8 5 1|2|4|8 16|32|64|2048 0
+#21367
+ranger gm guildmaster~
+the ranger guildmaster~
+the ranger guildmaster is standing here.
+~
+     Catlike in movement and silent as a mouse, you would never hear this
+man move up behind you!
+~
+2 0 1000 A 5
+60 -10 -10 0 1d3+55
+-1 0 1 1
+8 8 4 1|2|4|8 16|32|64|2048 0
+#4200
+fulmine guerra~
+Fulmine di Guerra~
+Uno dei veterani della fortezza, un Fulmine di Guerra, si sta addestrando al combattimento.
+~
+Il suo volto e' segnato dalle cicatrici di molte battaglie, ma nei suoi occhi leggi ancora la voglia di lottare del guerriero nato.
+~
+2|4194304 2048|32768|524288 1000 A 3
+40 -10 -10 168 1d3+20
+-1 1000 12 3
+8 8 4 256 0 0
+#4201
+gran maestro rune~
+Gran Maestro delle Rune~
+Il Gran Maestro solleva gli occhi dal Grimorio, guardandoti e sogghignando maleficamente.
+~
+I suoi lineamenti sembrano essere stati mutati da un malvagio potere e sono ora demoniaci, mentre un bagliore sinistro brilla nei suoi occhi.
+~
+2|1048576|2097152|8388608 128|32768|16777216|33554432 -1000 A 4
+50 -5 -5 25 1d3+35
+-1 1500 4 3
+8 8 3 1|2|4|8|32|128|256|1024|2048 0 0
+#4202
+buduluggulun sciamano~
+Buduluggulun il Grande Sciamano~
+Un goblin verdastro agghindato come un albero di Natale siede davanti al fuoco.
+~
+Si fosse visto allo specchio ci penserebbe prima di parlare...
+~
+2|128|1048576|2097152|8388608 32768|134217728 350 L 2
+30 3 -5 20 1d3+7
+-1 2000 11 30
+6 6 1
+Nel tuo futuro vedo..vedo...no, non vedo una mazza con tutto sto fumo!!
+Buduluggulun sventaglia un po' uno scudo piumato...
+Ooohh...adesso ci vedo...fatti guardare..ma lo sai che sei proprio brutto??
+Dunque..nel tuo futuro...oh oh..prevedo che mi darai un sacco di botte...
+~
+~
+#4203
+drago rosso~
+Drago Rosso~
+Un massiccio drago alato dorme profondamente al centro della stanza.
+~
+Pur addormentato quest'essere millenario ti mette in soggezione, rendendoti timoroso persino di sfiorarlo.
+~
+2|32|262144 2048|33554432|134217728 -1000 A 3
+45 -3 -7 448 4d8+8
+-1 0 10 56
+4 4 3 256|1024|2048|32768 1|16384 2
+#4204
+protoplasma nero~
+Protoplasma Nero~
+Una grossa macchia scura occupa gran parte del soffitto.
+~
+Lento ma inesorabile, questo putrido ammasso nero viene verso di te, corrodendo cio' che trova sulla sua strada.
+~
+2|4|32 2|32768|524288|1048576 -350 A 1
+30 9 -2 0 2d4+3
+-1 500 22 20
+8 8 3 1|4|16 2|32|256|1024|2048|4096 128
+#4205
+aurumvorax~
+AurumVorax~
+Un curioso animale utilizzato per scoprire filoni d'oro sgranocchia una pepita.
+~
+Assomiglia molto ad un puma, ma il manto e' dorato e luccicante e l'animale e' sorretto da otto robuste zampe provviste di affilati artigli.
+~
+2 32768|524288 350 A 1
+21 10 0 96 6d2+3
+-1 5000 11 18
+5 5 3 1|2|16 256|4096 0
+#4206
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia i territori circostanti dalla torre.
+~
+Vigile ed attento, questo nano osserva instancabile i dintorni, pronto a dare l'allarme.
+~
+2|4194304|2147483648 32768 1000 A 2
+22 10 2 0 1d3+8
+-1 500 13 3
+8 8 1
+#4207
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia l'ingresso della citta'.
+~
+La guardia perquisisce carri e visitatori, accertandosi che nulla di pericoloso entri in citta'.
+~
+2|4194304|2147483648 32768 1000 A 2
+22 10 2 0 1d3+8
+-1 500 13 3
+8 8 1
+#4208
+soldato~
+Soldato~
+Un soldato nanesco sta raccontando panzane ai compagni.
+~
+Benche' lo sguardo sia annebbiato e parli biascicando per la birra, e' senza dubbio un temibile avversario.
+~
+2|4194304|2147483648 32768 1000 A 2
+23 10 2 0 1d3+10
+-1 500 11 3
+6 6 1
+#4209
+soldato~
+Soldato~
+Un soldato russa sonoramente sulla sua branda, in attesa di entrare in servizio.
+~
+Il nano e' immerso nel sonno piu' profondo e brontola appena quando gli punzecchi la schiena con la spada.
+~
+2|4194304|2147483648 32768 1000 A 2
+22 7 0 23 1d3+8
+-1 500 11 3
+4 4 1
+#4210
+sentinella~
+Sentinella~
+Una sentinella nanesca pattuglia le vie della citta'.
+~
+Attento ad ogni movimento che lo circonda squadra severo gli stranieri di passaggio.
+~
+4|64|4194304|2147483648 32768 1000 A 2
+21 10 2 20 1d3+8
+-1 800 13 3
+8 8 1
+#4211
+tesoriere~
+Tesoriere~
+Il tesoriere del regno sovrintende alla coniazione delle monete.
+~
+Un nano anziano dalla lunga barba bianca, impegnato ad annotare le monete coniate durante la giornata e l'oro impiegato.
+~
+2|1048576|268435456 32768 1000 L 2
+34 -5 -5 166 1d3+10
+-1 2500 12 3
+8 8 1
+Ah! Quante belle monete! Il re ne sara' compiaciuto, gia' gia' gia'.
+~
+~
+#4212
+durin barbafumante sovrano~
+Durin Barbafumante, Sovrano dei Nani~
+Il Re dei Nani siede pensieroso sul trono, pensando al bene del regno.
+~
+Saggio, potente, fiero, in lui ti sembra di vedere le caratteristiche leggendarie del popolo di Nani, resistenti come la roccia che lavorano.
+~
+2|4|4194304|8388608 128|32768|16777216|33554432|134217728 1000 L 5
+50 -15 -10 575 1d3+55
+-1 1500 11 3
+8 6 4 2048 2048 0
+Salve, straniero. Cosa ti conduce alla nostra presenza?
+~
+~
+#4213
+sergente~
+Sergente~
+Un nano con un bracciale dorato al polso ascolta divertito i suoi commilitoni.
+~
+Severo ed efficiente, il comandante della guarnigione della torre sta mangiando avidamente la sua ciotola di zuppa.
+~
+2|268435456 32768 1000 A 2
+26 6 -2 0 1d3+9
+-1 850 15 3
+6 6 1
+#4214
+mercante umano~
+Mercante Umano~
+Un mercante in abiti sontuosi sta curando i suoi affari.
+~
+Le sue vesti ricche ed eleganti lo fanno risaltare tra la folla, ottimo bersaglio per un ladro...
+~
+16|64|128|1048576 0 -350 L 1
+15 8 3 35 1d3+11
+-1 750 13 1
+8 8 1
+Il mercante esclama adirato: "5000 monete d'oro per due casse di metallo grezzo??? 3500 sono fin troppe!"
+~
+~
+#4215
+fattorino~
+Fattorino~
+Un nano minuto corre affannato tra la folla per consegnare la sua merce.
+~
+Rosso paonazzo e col fiatone corre senza sosta per la citta', consegnando merci e messaggi.
+~
+64|128 32768 1000 L 1
+7 16 7 26 1d3+7
+-1 50 17 3
+8 8 0
+~
+Puff Puff...Permesso...Pista..Fate Largo!!
+~
+#4216
+nano anziano~
+Nano Anziano~
+Un anziano nano dalla barba bianca denigra gli apprendisti della sua gilda con gli amici.
+~
+La candida e lunga barba gli arriva fino alle cosce, dandogli un aspetto sereno e tranquillo.
+~
+2|64 32768 1000 L 1
+10 17 -2 71 1d3+1
+-1 200 13 3
+8 8 0
+Quescti sciovani....non sci impegnano piu'..ai miei tempi sci che sci sgobbava...ihihihih.
+~
+~
+#4217
+mulo~
+Mulo~
+Un mulo raglia e scalcia nervosamente gli stallieri.
+~
+Tra un calcio e l'altro questo robusto mulo rosicchia carote e fieno.
+~
+2 0 -350 A 3
+15 16 0 0 3d2+1
+-1 0 21 23
+8 8 0
+#4218
+comandante~
+Comandante della Guarnigione~
+Il comandante sta pulendo il suo raro e prezioso archibugio.
+~
+Portamento marziale, sguardo severo, gli anni non hanno certo tolto combattivita' e fierezza a questo veterano.
+~
+2|8388608|536870912 128|32768 1000 A 6
+46 1 -10 193 1d3+22
+-1 750 10 3
+8 8 1
+#4219
+xagelon~
+$c0010Xagelon il terrore divino$c0007~
+L'Halfling vestito di bianco sembra molto occupato, non disturbarlo! 
+~
+Sulla sua candida veste, oltre alla gigantesca X , vedi numerose scritte in una lingua sconosciuta, quasi egli stesso fosse l'artefice della storia e del destino di queste terre.
+~
+2|262144|2097152|4194304 8|128|2048|16777216|33554432|134217728 -1000 A 8
+60 -15 -10 1100 1d3+64
+-1 20000 153 49
+8 8 3 65536 1|2|4|8|128|256|512|1024|4096|32768 0
+#4220
+umber hulk~
+Umber Hulk~
+Una strana e sproporzionata creatura emerge dalla parete rocciosa cercando di avvinghiarti.
+~
+Per un attimo, osservandolo, ti senti ammaliato dai piccoli occhi al centro del volto, ma tornando in te vedi quanto disgustoso e sproporzionato sia questa specie di grigio scimmione.
+~
+2|32|16777216 2|32768|524288|1048576 -1000 L 3
+36 4 -10 42 3d5+3
+-1 607 25 18
+8 8 0
+~
+Senti il rumore di pietre smosse ed il raspare di unghie contro la roccia.
+~
+#4221
+carro~
+Carro~
+Un carro carico di merci procede lentamente lungo la strada.
+~
+Sovraccarico di merci, avanza a fatica trascinato da un paio di buoi sfiancati.
+~
+64 0 350 A 1
+5 20 -10 0 1d4+0
+-1 0 20 46
+8 8 0
+#4222
+gigante rocce~
+Gigante delle Rocce~
+Un gigante dalla pelle grigiastra avvolto in unte e puzzolenti pelli d'animale.
+~
+Beh, per essere sinceri e' il classico mostro brutto, sporco e cattivo!
+~
+4|32|64|262144|134217728 32768 -1000 A 1
+29 10 -5 42 1d3+9
+-1 430 22 55
+8 8 3 0 32 0
+#4223
+borin~
+Borin~
+Lo scheletro del re Borin riposa in un sarcofago.
+~
+I miseri resti del re, tenuti insieme da un misterioso potere, si ergono di fronte, sfidando il tuo coraggio e la tua forza.
+~
+2|32|4194304 32768 -1000 A 3
+38 0 -10 36 1d3+15
+-1 5000 12 72
+8 8 3 2|32 256|512|1024|2048|4096|8192 16
+#4224
+balin~
+Balin~
+Lo scheletro del re Balin riposa in un sarcofago.
+~
+Lentamente lo scheletro avanza verso di te, facendo stridere le ossa ingiallite e consunte.
+~
+2|32|4194304 32768 -1000 A 3
+38 0 -10 36 1d3+15
+-1 5000 12 72
+8 8 3 2|32 256|512|1024|2048|4096|8192 16
+#4225
+Dwalur~
+Dwalur~
+Lo scheletro del re Dwalur riposa in un sarcofago.
+~
+Lo scheletro di Dwalur, circondato da un bagliore rossastro, esce dal suo sarcofago di pietra per affrontarti.
+~
+2|32|4194304 32768 -1000 A 3
+38 0 -10 36 1d3+15
+-1 5000 12 72
+8 8 3 2|32 256|512|1024|2048|4096|8192 16
+#4226
+boflum~
+Boflum~
+La salma del grande re Boflum riposa nella maestosa cripta nelle viscere della montagna.
+~
+Il suo corpo biancastro risalta nel nero sudario in cui e' avvolto, facendolo quasi sembrare una statua, anche perche' il cadavere e' insolitamente ben conservato.
+~
+2|32|2097152|8388608 128|32768|33554432 -1000 A 7
+50 -5 -10 200 1d3+20
+-1 0 21 66
+8 8 3 2|16384 256|512|1024|2048|4096|8192 128
+#4227
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia i territori circostanti dalla torre.
+~
+Ti chiedi quale strana arma stia maneggiando..sembra un tubo fissato ad un affusto per balestre.
+~
+2|536870912|2147483648 32768 1000 A 2
+28 -4 2 5 1d3+12
+-1 1500 14 3
+8 8 1
+#4228
+istruttore~
+Istruttore~
+Un esperto combattente addestra le reclute.
+~
+Veterano di mille battaglie, questo solido guerriero cerca di insegnare alle reclute a sopravvivere.
+~
+4|8388608|536870912 128|32768 1000 L 2
+37 -7 -10 50 1d3+11
+-1 1560 11 3
+8 8 0
+"Piu' cattiveria, per la barba di mia madre! Mi sembrate dei flaccidi gnomi!"
+"Ti sembra una divisa quella, soldato? A me sembra la tovaglia del banchetto di un lordo di hobbit sbronzi, una settimana di consegna!"
+"Sottospecie di babbuino con l'orchite, non ti ha mai insegnato nessuno a correre senza calciarti il sedere con i tacchi degli stivali??"
+"Quando ti ci vuole per abbattere quel bersaglio, caccola di zitella goblin che non sei altro? Io la butto giu' con un rutto!"
+~
+"Piu' in alto l'affondo, non vorrai tagliare i lacci dei sandali agli orchetti per caso??"
+SBRANG!! "Pezzo d'idiota, togli l'asta dalla canna prima di sparare!" COFF! COFF!
+"Voi due, volete darvi da fare? State lottando, non ballando la polka, babbei!"
+~
+#4229
+recluta~
+Recluta~
+Una recluta giovane ed inesperta cerca di diventare un soldato d'eccezione.
+~
+Giovane e inesperto, ma volenteroso, il giovane nano impara le piu' efficaci tecniche di combattimento.
+~
+4|128 32768 1000 L 1
+9 15 2 41 1d3+3
+-1 20 12 3
+8 8 0
+"Signore, meglio di cosi' non riesco proprio a fare, signore!" 
+"Come sarebbe a dire che e' meglio se mi servono nei piatti al posto del rancio??"
+"Nossignore! Non sono un elfo oscuro, signore! Sono solo sporco!"
+~
+"Sissignore! Faccio schifo e pieta', signore!"
+"Non sono io che puzzo, signore! E' che lei e' davanti alla latrina e sottovento, signore!"
+~
+#4230
+capo giganti rocce~
+Capo dei Giganti delle Rocce~
+Un grosso gigante sta mangiando i resti di un nano.
+~
+Il volto atteggiato in una malefica smorfia e' imbrattato di sangue, mentre divora con sadica soddisfazione i resti di un prigioniero.
+~
+2|4|32|262144|134217728 32768 -1000 A 3
+35 3 -10 79 1d3+12
+-1 1000 11 55
+5 5 3 0 32 0
+#4231
+soldato ubriaco~
+Soldato Ubriaco~
+Un soldato ubriaco ti provoca e fa lo spaccone.
+~
+Probabilmente in se' non e' cattivo, ma di certo la birra non migliora i suoi comportamenti sociali...
+~
+2|32 32768 1000 A 1
+20 15 4 90 1d3+8
+-1 250 12 3
+8 8 0
+#4232
+nana~
+Nana~
+Una massaia nanesca sta facendo compere per la famiglia.
+~
+Come tutti i nani e' di aspetto solido e piuttosto paffuto, ma ha comunque un suo fascino.
+~
+4|64|128 32768 1000 A 1
+4 17 7 50 1d3+4
+-1 150 17 3
+8 8 2
+#4233
+nani di fosso~
+Nano di Fosso~
+Un nano sporco rovista tra i rifiuti in cerca di cibo.
+~
+Ultimo gradino della societa' dei nani, i reietti come lui vivono alla giornata tra i rifiuti, sperando di trovarvi cibo e riparo.
+~
+2|4|128|16777216 32768|524288 -1000 A 1
+13 14 4 53 1d3+6
+-1 5 10 79
+8 8 0
+#4234
+drolem~
+Drolem~
+Un drago di pietra sellato e con finimenti dorati attende il Re.
+~
+E' molto simile ad un drago, ma ti chiedi come possa fare questo gigantesco essere di pietra a volare.
+~
+2|262144 128|2048|65536|33554432 0 A 3
+37 2 -10 106 1d3+17
+-1 0 13 37
+4 4 0
+#4235
+custode fiamma eterna~
+Custode della Fiamma Eterna~
+Un nano di pietra alimenta e cura la fiamma eterna nella forgia del Regno.
+~
+Con movimenti lenti e precisi, imperturbabile ed inarrestabile, controlla che la fiamma della magica forgia del regno non si spenga mai.
+~
+2 128|32768|33554432|134217728 1000 A 5
+51 -5 -10 770 1d3+20
+-1 0 70 37
+8 8 3 16|64|65536 1|2|4|32|128|256|512|1024|2048|4096|32768 0
+#4236
+golmin cavaocchi~
+Golmin Cavaocchi~
+Il gestore corre qua e la' portando vassoi di birre.
+~
+Se non avesse gli occhi la sua faccia sembrerebbe una suola...
+~
+2|1048576|67108864 32768 1000 A 5
+23 9 -2 0 1d3+3
+-1 820 27 3
+8 8 1
+#4237
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia gli edifici della zona militare.
+~
+Ti segue con lo sguardo sospettoso mentre ti aggiri per le vie.
+~
+2|4194304|2147483648 32768 1000 A 2
+25 9 2 50 1d3+8
+-1 500 11 3
+8 8 1
+#4238
+stalliere~
+Stalliere~
+Uno stalliere sta svogliatamente cambiando la paglia e rinnovando il foraggio.
+~
+Ad ogni movimento brontola e sbuffa, evidentemente il lavoro non e' di suo gradimento.
+~
+2|128 32768 1000 A 1
+9 12 2 82 1d3+1
+-1 0 16 3
+8 8 0
+#4239
+facchino~
+Facchino~
+Un giovane robusto e ben piantato si offre di trasportare i bagagli piu' pesanti.
+~
+Rosso paonazzo e boccheggiante, si fa strada tra la folla per consegnare plichi e merci.
+~
+2|4|1048576|4194304 32768 1000 A 1
+18 11 0 0 1d3+9
+-1 75 23 3
+8 8 0
+#4240
+cavallo~
+Cavallo~
+Un cavallo nitrisce inquieto.
+~
+E' un cavallo veramente splendido, chissa' da quali esotiche terre proviene.
+~
+2|128|262144 0 350 A 3
+12 10 4 46 1d6+0
+-1 0 23 46
+8 8 0
+#4241
+secondino~
+Secondino~
+Un nano piuttosto anziano sorveglia i detenuti.
+~
+Compila svogliatamente moduli e redige verbali, probabilmente si sentirebbe piu' a suo agio con un'ascia davanti a quattro orchetti di pessimo umore.
+~
+2|1048576|4194304 32768 1000 A 2
+27 0 -2 156 1d3+3
+-1 500 13 1
+8 8 0
+#4242
+criminale~
+Criminale~
+Un ladruncolo di mezza tacca sconta la pena.
+~
+Attendo! potrebbe toglierti anche il naso senza che tu te ne accorga!
+~
+64|128|16777216 32768|524288 -1000 A 1
+12 9 3 64 1d3+3
+-1 0 25 3
+6 6 0
+#4243
+gigante rocce~
+Gigante delle Rocce~
+Un gigante prigioniero dorme tra i rifiuti.
+~
+~
+2|4|32|262144|134217728 32768 -1000 A 2
+22 12 -2 0 1d3+9
+-1 0 24 55
+4 4 3 0 32 0
+#4244
+gorran alitodifuoco~
+Gorran Alitodifuoco~
+Il locandiere ti viene incontro sorridente.
+~
+~
+2|1048576|4194304 128|32768|33554432 1000 A 2
+51 -15 -10 871 1d3+40
+-1 10000 10 3
+8 8 0
+#4245
+thronserr~
+Thonserr~
+Un mezzogigante attende impaziente la tua ordinazione.
+~
+~
+2|1073741824 32768 -1000 A 3
+37 12 -10 61 1d3+14
+-1 40 10 77
+8 8 3 256 0 0
+#4246
+minatore~
+Minatore~
+Un esperto minatore sta estraendo mithril ed altri metalli preziosi.
+~
+Brandisce il piccone con vigore, pur essendo madido di sudore, quasi fosse una macchina instancabile.
+~
+4|64|4194304 32768 1000 A 1
+15 9 4 40 1d3+3
+-1 200 15 3
+8 8 0
+#4247
+coniatore~
+Coniatore~
+Un coniatore esperto e fidato prepara le monete del regno.
+~
+~
+2|2097152|8388608 32768 -1000 A 1
+30 4 0 38 1d3+8
+-1 500 26 3
+8 8 0
+#4248
+spettro principe~
+Spettro del Principe~
+Una figura pallida e semitrasparente emette acuti e terrificanti lamenti, aggirandosi inquieta per la stanza.
+~
+L'eterea figura appare angosciata e furiosa, incapace di poter ottenere vendetta per la sua ingiusta fine.
+~
+2 32768|524288|33554432|134217728 1000 A 3
+30 0 -10 20 1d3+8
+-1 1100 25 70
+8 8 3 0 256|512|1024|2048|4096 0
+#4249
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia la zecca.
+~
+Garantisce la sicurezza della zecca, ma controlla anche che nessuno integri il proprio stipendio.
+~
+2|4194304|2147483648 32768 1000 A 2
+24 9 2 20 1d3+8
+-1 500 11 3
+8 8 1
+#4250
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia i laboratori degli orafi.
+~
+Anche la sentinella, pur avvezza a tale spettacolo, osserva estasiata la creazione dei gioielli naneschi.
+~
+2|4194304|2147483648 32768 1000 A 2
+24 9 2 20 1d3+8
+-1 500 11 3
+8 8 1
+#4251
+sentinella~
+Sentinella~
+Una sentinella nanesca sorveglia la reggia.
+~
+Scelto tra gli individui piu' prestanti, questo nano e' addetto alla sicurezza del re e della corte.
+~
+2|4194304|2147483648 32768 1000 A 2
+24 9 2 20 1d3+8
+-1 500 11 3
+8 8 1
+#4252
+orafo~
+Orafo~
+Un abile orafo prepara raffinati gioielli.
+~
+~
+2|4194304|33554432 32768 0 A 1
+23 11 0 0 1d3+6
+-1 2500 21 3
+6 6 0
+#4253
+tagliatore~
+Tagliatore~
+Un tagliatore di gemme sta sgrezzando alcune gemme appena portate dalle miniere.
+~
+Con millimetrica precisione sgrezza e taglia le pietre per i gioielli.
+~
+2|8388608|16777216 32768 -1000 A 1
+16 11 10 0 1d3+9
+-1 400 13 3
+6 6 0
+#4254
+sentinella~
+Sentinella~
+Una sentinella nanesca scorta un carro carico d'oro grezzo.
+~
+Si guarda attorno inquieta, come se dall'oscurita' potesse sbucare qualche pericolo per il carro d'oro.
+~
+2|4194304|2147483648 32768 1000 A 2
+24 9 2 20 1d3+8
+-1 500 11 3
+8 8 1
+#4255
+carro~
+Carro~
+Un carro procede lentamente verso i laboratori degli orafi.
+~
+Il carro procede lentamente, carico di quintali d'oro, verso i laboratori e le forge della citta'.
+~
+2 0 1000 A 1
+28 5 -10 60 1d3+12
+-1 70 22 7
+8 8 0
+#4256
+servitore~
+Servitore~
+Un servitore si affretta a preparare il banchetto.
+~
+Corre rapido tra le tavolate, nella sua elegante veste di velluto con la livrea del re.
+~
+2|128|2147483648 32768 1000 A 1
+6 15 6 80 1d3+2
+-1 0 32 3
+8 8 0
+#4257
+groin cortigiano nano~
+Groin~
+Un nano sta discutendo col re.
+~
+Vestito in modo semplice ma elegante, il cortigiano sta confabulando con il re.
+~
+2|1048576|4194304 128|32768 -1000 A 2
+25 5 0 5 1d3+5
+-1 1500 16 3
+8 8 0
+#4258
+balur cortigiano nano~
+Balur~
+Un nano sta discutendo col re.
+~
+Ti squadra da capo a piedi con aria altezzosa, pronto a cogliere ogni minimo passo falso.
+~
+2|1048576|4194304 128|32768 -1000 A 2
+25 5 0 5 1d3+5
+-1 1500 16 3
+8 8 0
+#4259
+dorak cortigiano nano~
+Dorak~
+Un nano sta discutendo col re.
+~
+~
+2|1048576|4194304 128|32768 -1000 A 2
+26 5 0 5 1d3+5
+-1 1500 12 3
+8 8 0
+#4260
+poldo gamgee~
+Poldo Gamgee~
+Un simpatico Hobbit sta mangiucchiando in attesa di clienti.
+~
+~
+2|1048576|4194304 128|32768 1000 A 5
+40 -6 -10 163 1d3+10
+-1 400 14 4
+8 8 0
+#4261
+glasaff mago~
+Glasaff il Mago~
+Il negoziante medita levitando a mezz'aria.
+~
+~
+2|1048576|2097152 33554432|134217728 1000 A 4
+41 -5 -10 199 1d3+10
+-1 1500 11 1
+8 8 3 32 0 0
+#4262
+brokfir armaiolo~
+Brokfir l'Armaiolo~
+Un nano basso e tarchiato affila assorto un'ascia.
+~
+~
+2|1048576|4194304 128|32768 1000 A 5
+40 -5 -10 243 1d3+13
+-1 1500 24 3
+8 8 0
+#4263
+magazziniere~
+Magazziniere~
+Un nano magazziniere rinnova l'inventario e dispone le riserve di merce.
+~
+~
+64 32768 -1000 A 1
+17 9 4 0 1d3+5
+-1 300 11 3
+8 8 0
+#4264
+tharg~
+Tharg il Panettiere~
+Il panettiere impasta le pagnotte da infornare.
+~
+~
+2|1048576|268435456 128|32768|134217728 1000 A 5
+43 0 -10 184 1d3+19
+-1 1500 15 3
+8 8 0
+#4265
+norbuf~
+Norbuf il Banchiere~
+Il banchiere siede con aria truce dietro il bancone, contando monete.
+~
+~
+2|1048576|536870912 128|32768 1000 A 5
+40 -5 -10 184 1d3+18
+-1 3680 28 5
+8 8 0
+#4266
+ganir lanciaspezzata~
+Ganir Lanciaspezzata~
+Il venditore di armatura e' tutto intento a lucidare uno scudo.
+~
+~
+2|1048576|4194304|33554432 128|32768 1000 A 5
+42 0 -10 184 1d3+13
+-1 1500 18 3
+8 8 0
+#4267
+zanar~
+Zanar il Fabbro~
+Un nano molto muscoloso ripara e sistema armature senza sosta.
+~
+~
+2|1048576|134217728 128|32768 1000 A 5
+42 0 -10 234 1d3+21
+-1 1500 25 3
+8 8 0
+#4268
+dainn~
+Dainn Manodipietra~
+Il mercante sogghigna appena entri nel negozio.
+~
+~
+2|1048576|67108864 128|32768 1000 A 5
+45 -10 -10 224 1d3+30
+-1 1600 20 3
+8 8 0
+#4269
+sornak~
+Sornak Ditofatato~
+Il sarto della citta' prepara un morbido mantello per la vendita.
+~
+~
+2|1048576|8388608 128|32768 1000 A 4
+45 -10 -10 300 1d3+20
+-1 1500 16 3
+8 8 0
+#4270
+nano~
+Nano~
+Un nano cammina assorto nei suoi pensieri.
+~
+~
+64|128 32768 1000 A 2
+10 12 5 48 1d3+3
+-1 80 27 3
+8 8 1
+#4271
+mastro birraio~
+Mastro Birraio~
+Il Mastro Birraio assaggia la birra...assaggia..piu' che altro ci annega!
+~
+GASP! Il suo naso probabilmente farebbe luce nel buio!
+~
+64|1048576|4194304|8388608 128|32768 -1000 L 1
+40 -1 -10 116 1d3+20
+-1 400 14 3
+8 8 1
+BUUURP! Scusciate HIC! BURP!
+~
+HIC! HIC! Troppo buona sta birra! HIC! 
+~
+#4272
+birraio~
+Birraio~
+Un birraio controlla la fermentazione ed il dosaggio delle erbe.
+~
+Un altro giovane nano gonfio di sogni e birra...
+~
+64|128|33554432 32768 0 A 1
+14 11 3 0 1d3+8
+-1 1600 16 3
+8 8 1
+#4273
+ricercatore~
+Ricercatore~
+Un ricercatore sta sperimentando nuove rune.
+~
+~
+2|2097152 8|128|2048|32768|33554432 0 A 2
+34 5 -7 0 1d3+6
+-1 120 20 3
+8 8 0
+#4274
+studente~
+Studente di Magia Runica~
+Uno studente intento a studiare antichi volumi, in attesa dell'arrivo del Maestro.
+~
+~
+2|2097152 32768 1000 A 1
+16 20 9 0 1d2+1
+-1 150 26 3
+8 8 0
+#4275
+fuoco fatuo~
+Fuoco Fatuo~
+Una pallida fiamma guizza nel buio.
+~
+~
+64|2097152 8|2048|32768|134217728 -1000 A 2
+27 20 2 0 1d3+7
+-1 300 18 29
+8 8 3 0 256|512|1024|2048|4096 0
+#4276
+elementale acqua~
+Elementale dell'Acqua~
+Una massa informe d'acqua e fango.
+~
+Non riesci nemmeno a distinguerlo nell'acqua.
+~
+32|64 2|524288 -1000 A 12
+36 -10 -10 29 1d3+2
+-1 500 22 26
+8 8 3 16|32 256|512|1024|2048|4096|8192 1
+#4277
+psicotalpa~
+Psicotalpa~
+Una talpa dall'aria assonnata emerge all'improvviso da un fosso.
+~
+~
+2|32|1073741824 524288 -350 N
+27 10 3 0 1d3+3
+-1 300 20 7
+5 5 0
+#4278
+custode gabbie~
+Custode delle Gabbie~
+Il custode siede assonnato in un angolo.
+~
+La lunga barba quasi gli tocca le ginocchia, tanto e' curvo per il sonno...
+~
+2 32768 -1000 N
+27 4 -5 47 1d3+11
+-1 400 17 3
+6 6 0
+#4279
+tarmak bif~
+Tarmak Bif~
+Un nano recupera dagli stampi il metallo fuso nella fornace.
+~
+Il mastro della fucina degli orafi offre i propri servigi anche
+per i fabbri e gli armaioli della citta', il suo lavoro e' necessario
+per separare il ferro dal supporto di roccia o per produrre
+leghe come il bronzo o l'acciaio.
+~
+2|64|1048576|4194304 128|32768|16777216|33554432 1000 A 4
+50 -10 -10 400 1d3+35
+-1 8000 11 3
+8 8 4 1024|32768 2048 0
+#4280
+dendur lungapicca~
+Dendur Lungapicca~
+Il direttore dei lavori supervisiona le estrazioni.
+~
+Distribuisce l'equipaggiamento necessario ai lavoratori,
+stabilisce i turni e controlla l'operativita', in modo che la miniera
+funzioni con la massima efficienza, senza cali di produzione.
+~
+2|4194304 128|32768|16777216|33554432 1000 A 3
+44 -2 -7 302 1d3+31
+-1 2500 22 3
+8 8 4 1024|4096|8192 2048 0
+#4281
+kroten fuocolento~
+Kroten Fuocolento~
+Un vecchio nano sta posizionando delicatamente i suoi manufatti.
+~
+I nani sanno costruire armi ed armature meglio di qualsiasi altra
+razza, i loro fabbricanti sono i migliori del mondo, sanno lavorare
+prodotti di alta qualita' molto in fretta e conservano gelosamente
+i segreti del mestiere; per quale motivo colui che ha forgiato lo
+scettro di Durin dovrebbe prenderti come apprendista?
+~
+2|4194304|8388608 128|32768|33554432 1000 A 4
+47 -5 -10 300 1d3+28
+-1 5000 20 3
+8 8 4 1024|4096|65536 2048 0
+#4282
+hrum hrokar~
+Hrum Hrokar~
+Un ingegnere controlla la stabilita' delle gallerie.
+~
+Disegna rune su una pergamena indicando i punti cedevoli,
+dove la miniera deve essere nuovamente puntellata con sostegni
+di legno e di pietra, per evitare eventuali crolli.
+~
+2097152 128|32768|33554432 1000 A 3
+46 -5 -10 400 1d3+23
+-1 10000 30 3
+8 8 3 1024|131072 2048|4096 0
+#4283
+Trarrok ufficiale~
+Trarrok~
+Un ufficiale, con le mostrine di Capo Istruttore, sta
+aggiornando il manuale nanico di combattimento corpo a corpo.
+~
+Il suo volto e' segnato dalle cicatrici di molte battaglie,
+ma nei suoi occhi leggi ancora la voglia di lottare del guerriero.
+~
+2|4194304 128|32768|16777216|33554432 1000 A 4
+50 -10 -10 375 1d3+30
+-1 3500 10 3
+8 8 4 1|1024|4096|65536 256|2048 0
+#7800
+laith~
+Laith~
+Laith sta volando qui intorno, aspettandoti.
+~
+E' una creaturina alta appena una spanna,  con splendide ali
+da farfalla  piu' grandi di lei,  tratti minuti e delicati e
+corti capelli rossi. A dispetto delle piccole dimensioni, e' 
+meglio non sottovalutare mai la magia di una fata.
+~
+2|2048|4194304 8|128|2048|32768|524288 0 L 2
+11 14 0 1 1d3+2
+-1 0 57 74
+8 8 0
+~
+~
+#7801
+manichino~
+un manichino~
+un vecchio manichino con diverse bruciacchiature
+~
+~
+2 16384 0 N
+1 18 10 36 3d3+2
+-1 0 15 37
+8 8 0
+#7802
+tairin~
+Tairin, la maestra dei druidi~
+Tairin, maestra dei Druidi, ti accoglie nel suo giardino con
+un sorriso.
+~
+E' una  bella e giovane elfa dai capelli dorati e  gli occhi
+verdi. Sulla testa ha una coroncina di fiori ed edera.
+~
+2|33554432 32768 0 L 1
+16 13 5 0 1d2+2
+-1 1000 43 74
+8 8 2
+~
+~
+#7803
+silraen~
+Silraen, la maestra dei ranger~
+Silraen, maestra dei Ranger, sta intagliando un pezzo di legno mentre aspetta i nuovi allievi.
+~
+E' una  graziosa  mezz'elfa  con  i  lunghi  capelli castani
+raccolti  in  una  treccia.  Ora,  sentendoti  arrivare,  ha
+interrotto il lavoro d'intaglio e ti accoglie con un sorriso.
+~
+2|536870912 32768 500 L 1
+16 10 2 33 2d3+5
+-1 0 46 74
+8 8 2
+~
+~
+#7804
+neelha~
+Neelha, la maestra dei chierici~
+Neelha, maestra dei Chierici, e' qui intenta a pregare.
+~
+Anche se  non piu' giovane e' ancora una donna  molto bella,
+con corti capelli corvini e occhi  color del cielo. Sopra la
+lunga veste bianca indossa una lucida cotta di maglia.
+~
+2|16|8388608 32768 0 L 1
+16 11 2 23 2d3+2
+-1 0 48 1
+8 8 2
+~
+~
+#7805
+garwin~
+Garwin, il maestro dei guerrieri~
+Garwin, maestro dei Guerrieri, sta lucidando la sua spada.
+~
+Quest'uomo muscoloso dai lunghi capelli brizzolati e un folto
+paio di  baffi ben curati e' un veterano di  molte battaglie
+che ha deciso di ritirarsi e usare  la sua grande esperienza
+per addestrare le nuove reclute.
+~
+2|4194304 32768 0 L 1
+16 10 2 27 2d3+5
+-1 0 45 1
+8 8 1
+~
+~
+#7806
+mei chan meichan~
+Mei-Chan, il maestro dei monaci~
+Mei-Chan, il maestro dei Monaci, sta meditando qui, seduto sui talloni.
+~
+E' un uomo di corporatura minuta, con i capelli rasati e gli
+occhi scuri. Indossa un semplice kimono. Ogni suo gesto, per
+quanto piccolo, e' fluido, rapido e preciso.
+~
+2|67108864 32768 0 L 1
+16 10 2 8 1d3+4
+-1 500 55 1
+6 6 1
+~
+~
+#7807
+lorinne~
+Lorinne, la maestra dei paladini~
+Lorinne, maestra dei Paladini, sta pregando davanti all'altare.
+~
+E' una  giovane ed  affascinante paladina.  I luminosi occhi
+verdi, una spruzzata  di lentiggini  sul volto  e i  capelli
+castani che le ricadono sulle spalle in un morbido caschetto
+la  fanno sembrare poco piu' che una ragazzina, ma  qualcosa
+nel modo in cui  ti guarda ti dice che  forse non e' tipo da
+prendere alla leggera.
+~
+2|268435456 32768 400 L 1
+16 10 2 28 1d3+6
+-1 0 55 1
+8 8 2
+~
+~
+#7808
+alrani~
+Alrani, il maestro degli psionici~
+Alrani, maestro degli Psionici, e' seduto qui, assorto in meditazione... a mezz'aria
+~
+E' talmente grande e grosso da  sembrare quasi un gigante  e
+potrebbe  anche essere un  ottimo lottatore, ma la  perfetta
+posizione yoga in cui resta immobile ti suggerisce che forse
+non sono i muscoli la sua vera forza.
+~
+2|16 2048|32768 0 L 2
+16 10 2 32 2d3+5
+-1 0 47 77
+5 5 1
+~
+~
+#7809
+tanteris~
+Tanteris, il maestro dei maghi~
+Tanteris, maestro dei Maghi e degli Stregoni, sta sfogliando un grosso tomo di magia arcana.
+~
+Questo vecchio mago dall'aria distratta ha una fluente barba
+brizzolata e indossa un enorme cappello e una lunga ed ampia
+tunica blu con ricami argento.
+~
+2|16|2097152 32768 0 L 1
+16 12 4 10 1d3+1
+-1 1000 43 1
+8 8 1
+~
+~
+#7810
+ayle~
+Ayle, il maestro dei barbari~
+Ayle, maestro Barbaro, si sta allenando con una grande spada a due mani.
+~
+E' un uomo muscoloso e possente,  con una corta barba bionda
+che gli incornicia  il viso e  i capelli  chiari raccolti in
+due spesse trecce. Sembra molto forte.
+~
+2|134217728 8|32768|33554432 0 L 1
+16 10 2 16 1d3+6
+-1 1000 51 1
+8 8 1
+~
+~
+#7811
+flasite~
+Flasite, il maestro dei ladri~
+Flasite, maestro dei Ladri, continua a lanciare e riprendere un pugnale affilato.
+~
+E' piccolino,  paffuto, con un visetto da monello, tanto che
+in un primo momento pensi che sia un bambino di nove o dieci
+anni...  finche' non ti accorgi dei grossi  piedi pelosi che contraddistinguono gli Halfling.
+~
+2|16777216 32768 0 L 1
+16 10 2 22 1d3+7
+-1 500 41 4
+8 8 1
+~
+~
+#7812
+guardiano~
+il guardiano~
+Il guardiano del magazzino sonnecchia qui su una sedia.
+~
+Il  guardiano  sembra  un rozzo guerriero troppo vecchio per
+combattere nell'arena.
+~
+2|4194304 0 0 N
+1 20 10 10 1d3+1
+-1 0 14 1
+4 5 1
+#7813
+manichino~
+un manichino~
+un manichino e' qui al centro di un cerchio rosso.
+~
+un manichino di paglia.
+~
+2|4194304 16384 0 N
+2 10 10 60 1d9+0
+-1 0 25 37
+8 8 1
+#7814
+apprendista guerriero~
+un apprendista guerriero~
+un giovane apprendista si allena con i fantocci.
+~
+un giovane e robusto guerriero, ancora molto inesperto.
+~
+2|4194304 0 0 N
+1 20 10 9 1d3+0
+-1 2 10 1
+8 8 1
+#7815
+apprendista arciere~
+un apprendista arciere~
+un arciere e' qui a far pratica di tiro a segno.
+~
+un  arciere  che  punta il suo arco, concentrato e teso come
+una corda.
+~
+2|4194304|2147483648 0 0 N
+1 20 10 8 1d3+0
+-1 0 11 1
+8 8 1
+#7816
+bersaglio~
+un bersaglio~
+un bersaglio colorato di $c0009rosso$c0007
+~
+un bersaglio, a cerchi concentrici di colore rosso.
+~
+2|4194304 16384 0 N
+1 9 10 10 1d3+1
+-1 0 10 7
+8 8 1
+#7817
+campione~
+il $c0011Campione$c0007~
+Il Campione dell'arena ti fissa imperterrito.
+~
+Un guerriero formidabile, dagli occhi di ghiaccio. cicatrici
+percorrono tutto il suo corpo.
+~
+2|4|4194304 0 0 N
+1 20 10 21 1d3+0
+-1 3 23 1
+8 8 1
+#7818
+mago pazzo~
+un mago strampalato~
+Un mago da quattro soldi, si esibisce in giochetti di magia.
+~
+il mago sembra adorare la sua bacchetta che evoca i venti...
+del  resto e' l'unico trucco del suo repertorio che valga la
+pena mostrare.
+~
+2|2097152 2048 0 L 1
+1 20 10 0 1d2+0
+-1 100 36 1
+8 8 1
+~
+~
+#7819
+darth~
+$c0015Darth$c0007, il Cavaliere Guardiano~
+Un fiero guerriero elfico attende la tua mossa.
+~
+Darth  da  l'impressione di essere saggio e colto, oltre che
+letale  con  la  spada. Suscita rispetto e obbedienza solo a
+guardarlo.
+~
+2|4194304 32768 1000 L 1
+1 20 10 23 1d3+1
+-1 0 20 74
+8 8 4 0 2048 4|32|65536|131072
+un soffio di vento muove i capelli sul volto di Darth...
+~
+senti vicina una forte presenza.
+~
+#7820
+pipistrello~
+un pipistrello~
+un pipistrello si stacca dal soffitto e vola verso di te!
+~
+Un brutto ratto con le ali!
+~
+32|64 2048|32768 0 N
+1 20 10 0 1d1+0
+-1 0 2 18
+8 8 4 0 256|512|1024|2048|4096 8|32|128|32768
+#7821
+goblin~
+un goblin ladruncolo~
+un goblin dall'aria decrepita si muove furtivamente verso di te!
+~
+un piccolo di razza goblin, si affila i denti con una pietra
+in mano...
+~
+2|16777216 0 0 N
+1 20 10 5 1d2+1
+-1 5 14 1
+8 8 1
+#7822
+custode rabbia salma~
+il $c0009Custode della Rabbia$c0007~
+Una salma dal volto colmo d'astio, riposa sull'altare.
+~
+Un tempo doveva essere un forte guerriero, ora e' solo un
+vecchio ricordo.
+~
+2|4|4194304 32768 0 N
+1 20 10 20 1d3+1
+-1 5 34 66
+4 5 4 0 256|512|1024|2048|4096 0
+#7823
+custode fatica salma~
+il $c0008Custode della Fatica$c0007~
+Una salma dal volto esausto, riposa sull'altare.
+~
+Sembra aver lavorato ogni minuto della sua vita, fino alla
+morte.
+~
+2|4|4194304 32768 0 N
+1 20 10 20 1d3+1
+-1 5 34 66
+4 5 4 0 256|512|1024|2048|4096 0
+#7824
+custode dolore salma~
+il $c0013Custode del Dolore$c0007~
+Una salma dal volto bagnato da lacrime, riposa sull'altare.
+~
+Le lacrime continuano inspiegabilmente a sgorgare dagli occhi socchiusi.
+~
+2|4|4194304 32768 0 N
+1 20 10 20 1d3+1
+-1 5 34 66
+4 5 4 0 256|512|1024|2048|4096 0
+#7825
+gladiatore~
+un Gladiatore~
+un Gladiatore ti studia attentamente.
+~
+Il suo fisico robusto ti fa dedurre quanta dedizione ha 
+avuto nel fare di se stesso una macchina da guerra.
+~
+2|64|4194304 0 0 N
+1 20 10 5 1d2+1
+-1 2 13 1
+8 8 1
+#7826
+gladiatore~
+un Gladiatore~
+un Gladiatore ti studia attentamente.
+~
+Il suo fisico robusto ti fa dedurre quanta dedizione ha 
+avuto nel fare di se stesso una macchina da guerra.
+~
+2|64|4194304 0 0 N
+1 20 10 5 1d2+1
+-1 2 13 1
+8 8 1
+#7827
+gladiatore~
+un Gladiatore~
+un Gladiatore ti studia attentamente.
+~
+Il suo fisico robusto ti fa dedurre quanta dedizione ha 
+avuto nel fare di se stesso una macchina da guerra.
+~
+2|64|4194304 0 0 N
+1 20 10 5 1d2+1
+-1 2 13 1
+8 8 1
+#7828
+gladiatore~
+un Gladiatore~
+un Gladiatore ti studia attentamente.
+~
+Il suo fisico robusto ti fa dedurre quanta dedizione ha 
+avuto nel fare di se stesso una macchina da guerra.
+~
+2|64|4194304 0 0 N
+1 20 10 5 1d2+1
+-1 2 13 1
+8 8 1
+#7829
+gladiatore~
+un Gladiatore~
+un Gladiatore ti studia attentamente.
+~
+Il suo fisico robusto ti fa dedurre quanta dedizione ha 
+avuto nel fare di se stesso una macchina da guerra.
+~
+2|64|4194304 0 0 N
+1 20 10 5 1d2+1
+-1 2 13 1
+8 8 1
+#7830
+curatore~
+un giovane curatore~
+Un giovane con una divisa bianca e una cassetta del pronto soccorso e' pronto a medicare i feriti.
+~
+~
+2 33554432 0 N
+2 19 10 20 1d3+0
+-1 0 9 1
+8 8 0
+#8000
+bancario~
+Il bancario tuttofare~
+Il bancario tuttofare
+~
+Il bancario tuttofare
+~
+2|4|64|8192|1048576 8|128|2048|65536|16777216|33554432|134217728 -350 N
+55 0 -10 500 1d8+200
+-1 1000 0 55
+8 8 4 0 1|2|4|8|16|32|64|128|131072 0
+#8001
+fidex gator sorvegliante~
+Fidex Gator il sorvegliante~
+Il sorvegliante si gira di scatto e ti attacca!
+~
+E' un gigante vestito semplicemente, ma ha dei muscoli possenti.
+~
+2|4|32768|262144|268435456 8|128|16777216|33554432|134217728 1000 A 4
+51 -20 -10 700 4d8+40
+-1 75000 10 55
+8 8 4 1|4|64 2048|131072 128
+#8002
+pitbull cane~
+Un grosso pitbull~
+Un grosso pitbull attacca ogni intruso.
+~
+Piu' che un vero pitbull, sembra un incrocio tra un cane
+ed un demone degli abissi.
+~
+2|32 8|128|33554432 0 A 5
+48 -20 -10 350 30d1+15
+-1 0 0 18
+8 8 4 4096 1024|2048 0
+#8003
+necros~
+Necros~
+Necros, il flagello di Melkor, portatore di morte e distruzione.
+~
+l'abominio fattosi carne.
+~
+4|32|32768|2097152 8|128|2048|33554432|134217728 -1000 L 5
+59 -20 -10 1000 4d8+40
+-1 175000 16 42
+8 8 4 1|4|8 2048|131072 2
+Con voce cavernosa, Necros mormora:
+                                Morte e distruzione per Melkor!
+~
+Percepisci una potentissima aura di malvagita'.
+~
+#8004
+jessica demon guildmaster~
+Jessica Ann~
+Jessica Ann e' seduta sul sarcofago ed ha un sorriso malizioso.
+~
+Jessica  Ann  e'  alta  circa 1 metro e 90, ha dei lunghi capelli
+rossi  e  lisci.  Indossa  uno  stretto  tubino  rosso che lascia
+veramente  poco  lavoro  all'immaginazione.  La sua carnagione e'
+bianca  come il latte, ed i suoi occhi verdi ti guardano con fare
+ammiccante.  Dalle  sue  rosse  labbra  carnose vedi spuntare due
+canini aguzzi. ~
+2|64|2048|2097152 8|2048|32768|33554432 -500 L 4
+51 0 -8 0 3d8+0
+-1 0 0 66
+8 8 5 0 1|256|512|1024|2048|4096 0
+Jessica Ann improvvisamente si alza e ti esamina, per poi tornare a sedere sul sarcofago.
+~
+Senti una risatina maliziosa.
+~
+#24904
+bartender sly~
+Sly the bartender~
+A bartender stands here wiping down the bar.
+~
+Here stands a rough looking fellow who is rather large. He looks
+at you and decides your not worth his trouble. As a fight breaks
+out in the bar he grabs his club to go break it up. He wields the
+club as if it were a stick. It must weigh 30 pounds.
+~
+1|2|16|64 33554432 250 A 2
+20 2 -5 9 1d8+5
+-1 1000 2 1
+8 8 4 32 0 0
+#24905
+drunk~
+A drunk~
+A man is snoring here.
+~
+This man has had way too much Red Eye. He sits at this table with
+his head down and drool coming out of his mouth in a pile.
+~
+2|4|32|64|128 0 -350 S
+10 12 7 10d8+0 1d7+0
+-1 50 
+4 4 1
+#24907
+streetsweeper~
+A streetsweeper~
+A man stands here sweeping the street.
+~
+Here is a man with a broom and pail. He seems to be oblivious to his
+surroundings. His only reason is everything goes in the pail.
+~
+4|64|128 8 500 S
+5 16 8 5d8+0 1d5+0
+-1 25 
+8 8 1
+#24908
+bum man~
+A old bum~
+A old man wanders here.
+~
+This man needs some serious help. He stands stooped over muttering
+to himself. He snarls at you and he has bad breath!!
+~
+4|64|128 1 0 S
+7 14 7 7d8+3 1d6+2
+-1 100 
+8 8 1
+#24909
+cat~
+A alley cat~
+A nasty old cat is here.
+~
+This cat has more gray in its coat than any other color. It's whiskers
+are pure silver. It seems almost dead, but it has many blank patches
+where fights have scarred it.
+~
+2|4|64 32768|524288 350 S
+10 11 6 5d8+8 1d12+2
+-1 10 
+8 8 2
+#24910
+miner 49er~
+A miner 49er~
+A miner with bulging pockets is here.
+~
+GOLD
+GOLD
+WHERE'S MY GOLD!!!!
+~
+4|64|128 32768|67108864 0 L 1
+6 14 7 9 1d8+2
+-1 450 0 3
+8 8 4 1024 0 0
+Where's that nugget?
+~
+You hear money rustle nearby
+~
+#24911
+vecchio avatar~
+Il vecchio avatar~
+Un vecchio uomo incollerito si scaglia contro di te!!
+~
+Pentitevi! Traditori e saccheggiatori, il Primo Dio vi punisce cosi'!
+~
+1|2|4|32|64|2097152 4|8|2048 350 L 2
+15 8 0 100 1d6+4
+-1 1212 2 5
+8 8 4 8 0 0
+Io sono l'avatar vendicatore del primo Dio! *cough*
+~
+L'avatar lancia una palla di fuoco su di se!
+~
+#24912
+buffalo large~
+A large buffalo~
+A large buffalo roams here.
+~
+Here is a mad buffalo. He is leader of the herd and very mean.
+His two horns look very sharp.
+~
+2|32|64|128 0 0 S
+7 15 8 7d8+0 2d4+2
+-1 0 
+8 8 1
+#24913
+buffalo small~
+A small buffalo~
+A buffalo roams here.
+~
+Here is a rather young buffalo who just likes to follow the herd.
+~
+2|64|128 0 200 S
+6 16 9 6d8+0 1d4+0
+-1 20 
+8 8 1
+#24914
+deputy~
+A Tombstone deputy~
+A deputy stands here.
+~
+Here is the reason that there is any order in Tombstone at all. This
+is the type of fellow who takes his job very seriously. It would be
+best not to provoke him.
+~
+1|64 0 500 N
+10 11 4 5 1d8+3
+-1 50 1 1
+8 8 1
+#24915
+Fear statue~
+The statue of Fear~
+A statue stands in the fountain.
+~
+Here is the statue of the Lowly Saint. After spending millennia with
+greater spirits, this small figment of Fear's mind was formed. Fear
+extends his deepest thanks to the defender of green kobolds and this
+statue emanates great undreamed of power.
+~
+1|2|16|64 8|32|128|33554432 1000 A 3
+35 0 -10 100 2d5+4
+-1 7500 3 36
+8 8 4 1|1024 2048|4096 0
+#24916
+pale rider~
+The pale rider~
+A man rides a white horse here.
+~
+Here stands the pale rider. He truly reminds you of the messenger
+of death. He looks very tough.
+~
+1|16|64 32 -1000 A 2
+26 0 -7 15 2d7+1
+-1 1000 2 1
+8 8 4 2|32 0 0
+#24917
+guardian~
+The guardian of time~
+A guardian stands watch here.
+~
+Here is a figure as old as time itself. It stands 10 feet and
+must weigh over a thousand pounds. Its cape shimmers and the mace
+it has is held clutched to its breast. Its face shows no signs of
+life, but it seems very aware of who passes in front of it.
+~
+1|2|64|8192|2097152 128|33554432|134217728 0 A 3
+50 -4 -10 400 7d5+10
+-1 7000 5 39
+8 8 3 1|2 256|1024|2048|4096 0
+#24921
+giant zombie~
+A giant zombie~
+A large zombie is here.
+~
+A animate corpse of a giant shambles through the graveyard looking
+for some living soul to put it out of its misery. It clutches a
+rusty sword in its hand and its other arm appears missing.
+~
+2|4|32|64 0 0 S
+50 7 7 50d12+0 1d4+0
+-1 25 
+8 8 2
+#24922
+wraith~
+A wraith~
+A floating spirit reaches for you.
+~
+Here seems to be nothing but blackness, but you quickly notice
+a silver pentagram hanging suspended in the air. Suddenly two
+red eyes begin to converge on you.
+~
+1|2|32|64 32|32768 -1000 N
+15 5 2 8 2d5+2
+-1 1000 4 29
+8 8 4 0 512|1024|2048 0
+#24923
+leader~
+The townleader~
+A townleader is here.
+~
+This man is very upset about the graveyard problems, and wants the
+situation taken care of immediately. He looks disappointed that you
+have over heard the problem that no one knows about.
+~
+1|2|64 4|8192 1000 S
+18 2 -4 18d8+19 2d6+5
+-1 250 
+8 8 1
+#24924
+woman~
+A woman~
+A woman stands here arguing with the town leader.
+~
+This is one of the leaders of the woman's guild in Tombstone. She
+believes that there are no problems with the graveyard and that the
+town leader looks really funny in his armor.
+~
+2|16|64 0 500 S
+15 7 -1 15d8+12 1d8+0
+-1 250 
+8 8 2
+#24925
+undertaker~
+The undertaker~
+A undertaker is here.
+~
+This is a man here who is working on a coffin that looks like
+it might be just the right size for you. He seems rather old and
+feeble, but he sure seems to have an inner strength about him.
+~
+2|64 32|8192|32768 0 A 2
+20 4 0 0 2d5+0
+-1 1000 0 1
+6 6 4 128|512 0 0
+#24926
+Ed Morse~
+Ed Morse~
+A very confused man is here.
+~
+xxxx --- xxxx "Damn whats that mean again?" This man sits here
+tangled in wires listening to a tiny box that is making strange
+tapping sounds.
+~
+2|64|128 0 500 S
+14 6 -1 20d8+25 2d4+4
+-1 2000 
+6 6 1
+#24927
+bully~
+A mean bully~
+A tough looking kid stands here.
+~
+This kid is one word. Mean. He is about 4 feet tall and its all
+attitude. He believes Miss Grim should leave him alone more. By
+the look of it he's really quite scared of her.
+~
+2|64|128|256 0 -750 N
+7 13 7 9 1d6+0
+-1 5 0 1
+8 8 1
+#24928
+young girl~
+A young girl~
+A girl stands here jumping rope.
+~
+This girl is standing here jumping rope, and singing to herself. As
+she jumps, her pigtails bounce up and down.
+~
+2|16|64 0 750 N
+7 14 6 9 1d5+0
+-1 5 0 1
+8 8 2
+#24929
+banker~
+A banker~
+A merry man stands here counting money.
+~
+Here is a man who really knows the color green. He wears a small
+hat on his head and stands behind iron bars. As you approach, he
+stops whistling and nudges the guards to wake up.
+~
+1|2|64 33554432 1000 A 2
+25 0 -3 28 1d9+5
+-1 3500 2 1
+6 6 4 1024|2048|4096 0 0
+#24930
+bank guard~
+A bank guard~
+A tough looking stands here bleary eyed.
+~
+This is one of the bank guards. He sits in his chair and is barely
+awake. His partner seems no better off.
+~
+1|2|16 8|32 1000 A 2
+22 2 0 0 1d8+2
+-1 1000 1 1
+5 5 4 8|2048 0 0
+#24931
+Miss Grim~
+Miss Grim~
+A teacher conducts class here.
+~
+Here is Tombstone's education center of development. This old
+lady has extremely wrinkled skin and she seems to have very angled
+features to her face. Rumor has it her name came from her pessimistic
+outlook on life.
+~
+1|2|64 33554432|67108864 1000 A 3
+25 0 0 25 1d7+3
+-1 800 0 2
+8 8 5 1024 0 0
+#24932
+dunce~
+The class dunce~
+A stupid boy sits here in the corner.
+~
+This boy is very tired of people picking on him. The pointed hat
+on his head reads "DUNCE" and he is not happy about it.
+~
+1|2|64|128 0 0 S
+7 14 8 6d8+0 1d6+0
+-1 12 
+6 6 1
+#24933
+student~
+A young student~
+A student sits here reclining in his chair.
+is open and you see a ; on his paper with x's and o's on it.
+~
+This student is carefully listening to Miss Grim. His notebook lies
+open in front of him and you recognize a ; sign on it with x's and
+o's written in it.
+~
+2|64 0 0 N
+7 14 7 4 1d6+0
+-1 21 0 1
+6 6 1
+#24934
+blacksmith~
+The Tombstone Blacksmith~
+A man is pounding on the forge here.
+~
+This fellow is rather large. He wears an apron around his neck
+that seems to protect him from the many sparks that come off of the
+anvil. He wields his hammer as if it was a feather.
+~
+1|2|64 32768 500 A 3
+30 0 -4 25 2d4+3
+-1 1000 2 3
+8 8 4 1 0 0
+#24935
+son~
+A blacksmith's son~
+A young boy huddles in the corner smoking with his friend.
+~
+This young boy is suddenly very embarrassed that you have caught
+him smoking with his brother. His father warned him about smoking
+and he figures there's one sure way to shut you up.
+~
+32|64 32768 -350 S
+16 6 -1 16d8+0 2d5+2
+-1 300 
+6 6 1
+#24936
+apprentice~
+The apprentice~
+A blacksmith's apprentice is working here.
+~
+This young dwarf sits here working on a war horse that has a bent
+shoe. He doesn't seem to notice you until the horse begins to fight
+him.
+~
+2|16|64|128 32768 0 N
+10 12 3 0 1d8+1
+-1 200 0 3
+6 6 1
+#24937
+war horse~
+A large war horse~
+A brown horse stands here proudly.
+~
+This horse has seen many battles. It's barding is pure plate and
+it looks like it could send you through the roof with those hooves.
+A large saddle sits on its back.
+~
+1|2|16|64 8192 500 A 2
+15 6 0 13 2d5+2
+-1 500 0 46
+8 8 1
+#24938
+stallion~
+A large stallion~
+A large horse stands here.
+~
+Here is a horse large enough to support any man. It stands seven
+feet tall and looks you over very carefully.
+~
+64 0 0 N
+10 11 6 5 1d8+1
+-1 0 0 46
+8 8 1
+#24939
+strange speaker~
+A strange speaker~
+A stranger is here speaking to a crowd of Tombstone citizens.
+~
+This man wears a robe of many colors. He seems to have captivated
+his audience, and you feel that he has senses strange powers.
+~
+1|2|16|64 4|8|16|2048 1000 A 2
+23 0 -7 7 1d8+2
+-1 350 0 1
+8 8 4 1|2|2048 0 0
+#24940
+citizen gambler~
+A gambler~
+A citizen sits here gambling.
+~
+This man seems to be very unlucky. He has virtually no money in front
+of him and he has lost the shirt on his back.
+~
+2|64|128 0 0 N
+9 11 5 0 1d8+0
+-1 300 0 1
+6 6 1
+#24941
+citizen~
+A Tombstone citizen~
+A captivated citizens stands here and listens.
+~
+This woman is very interested in what the speaker is saying.
+She looks directly and her mouth hangs open in awe.
+~
+2|64 0 300 N
+9 12 5 0 1d8+0
+-1 200 0 1
+8 8 2
+#24942
+secretary clerk~
+The clerk~
+A secretary is here typing.
+~
+This is the Tombstone clerk. She is in charge of writing the important
+facts down. Her obituary section just seems to go on forever.
+~
+1|2|16|64 33554432 1000 A 2
+25 0 -6 38 2d6+4
+-1 1111 4 1
+6 6 5 2048|4096 0 0
+#24943
+manager shopkeeper~
+The general store manager~
+A shopkeeper stands here looking upset.
+~
+This man is rather tall and a large knife sits on his hip. He
+is carefully watching a couple of young boys in the back of his
+store.
+~
+1|2|16|64 8 1000 A 2
+25 0 -6 38 2d7+4
+-1 1600 4 0
+8 8 1
+#24944
+thief ladro giovane~
+Il Giovane Ladro~
+Un giovane e guizzante ladro si muove attorno a te
+~
+Occhio ai soldi!
+~
+2|4 32768|524288 -500 N
+12 10 2 0 1d8+1
+-1 300 2 4
+6 6 1
+#24945
+partier~
+A partier~
+A merry man is here.
+~
+This man is very happy, and he has had quite a lot to drink.
+~
+4|64|128 0 0 N
+8 15 8 0 1d5+1
+-1 20 0 1
+8 8 1
+#24946
+bouncer~
+A bouncer~
+A man stands here passing out beer.
+~
+This man hands a bottle to everyone that enters the room. The only
+requirement is that you finish it before you leave. Wow!! What
+a concept!!!
+~
+1|2|16|64 32 0 N
+11 8 4 9 1d8+2
+-1 500 1 1
+6 6 1
+#24947
+mean drunk~
+A mean drunk~
+A angry drunk is here.
+~
+A man who is just like your best friend when he is drunk is here.
+He doesn't realize he is being an ass.
+~
+1|2|32|64 33554432 -500 N
+12 5 3 0 1d4+1
+-1 100 1 1
+8 8 1
+#24948
+gang member~
+A gang member~
+A member of Smily's gang is here.
+~
+A big bully of a man sits here playing cards, and you have
+interrupted his game. He's going to show you just how sorry you
+are!!
+~
+1|32|64 0 -1000 S
+12 9 0 12d8+6 1d8+1
+-1 200 
+6 6 1
+#24949
+door guard~
+A door guard~
+A very confident looking fellow is standing here.
+~
+This guy has been assigned a task just simple enough for him.
+"Guard the door"
+~
+1|2|64 8|32 1000 N
+14 7 0 0 2d5+0
+-1 500 2 1
+8 8 1
+#25000
+demi lich~
+$c0008The Demi-Lich~
+$c0008The Demi-Lich leaps from his throne as you enter the room, his evil
+eyes fixed dead upon you!
+~
+$c0008The Demi-Lich is, perhaps, the single most powerful undead creature known
+to exist. Greatly resembling a wight or mummy, and being gaunt and skeletal
+in form. It is, nevertheless a being of foreboding might. Its eye sockets
+are black and empty, save for the fierce pinpoints of light which serve as
+eyes. An aura of cold and darkness radiates from it, which makes it an
+ominous and fearsome sight. Despite the wasted, rotten flesh it is garbed
+in the rich clothes of nobility.
+~
+2|4|32|2097152 128|2048|32768|33554432 -1000 B 3
+50 -3 -10 800 5d10+15
+-1 10000 5 10
+8 8 3 0 16|32|64|512|1024|2048 0
+#25001
+keftab~
+Keftab, the Ancient One,~
+Keftab, the Ancient One stands here, calmly searching ceaselessly.
+~
+A writhing, quivering mass of horrific, unspeakable flesh-like material,
+this ancient one stares coldly about through its many multifaceted eyes.
+Viscous, vile smelling liquid seeps through its flesh in many places,
+originating from the ghastly, crater like pores which pepper his body.
+You can feel an horrible force of will emanating from this alien mind.
+Now you understand the true source of Drow's power.
+~
+2|4|32768|1073741824 2|8|32|128|2048|32768|1048576|33554432|134217728 -1000 A 6
+59 -5 -10 1000 8d12+10
+-1 10000 15 7
+8 8 3 0 4|8|32|256|1024|2048|4096 0
+#25002
+death crimson~
+$c0013A Crimson Death~
+$c0013A Crimson Death materializes from a dense patch of red mist.
+~
+$c0013Its skeletal form is garbed in a robe of crimson, the blood of its many
+victims stain the robe. Its skeletal figure resembles that of the angel of
+death. Its eyes glow with a furious fire to kill.
+~
+1|2|4|32 8|128|524288|1048576 -1000 N
+40 -1 -10 113 3d10+12
+-1 1000 4 10
+8 8 3 0 16 0
+#25003
+mist daemon~
+A Mist Daemon~
+A mist daemon stands here, in a cloud of gray mist.
+~
+A large demon like creature hovers above you, in a cloud of gray mist.
+Its winged form stares down at you in utter hatred.
+~
+1|2|4|32 1048576 -1000 A 4
+34 2 -10 112 3d6+8
+-1 1000 0 21
+8 8 0
+#25004
+black slayer~
+a Black Slayer~
+A huge, shadowy figure materializes from the shadows around you.
+~
+The black slayer is a shadowy figure, about 7 feet in height. Garbed in
+a heavy, black cloak, in his right hand, he wields a wicked dagger.
+~
+2|4|32 8|32768 -1000 A 2
+25 5 -2 130 3d6+7
+-1 500 2 21
+8 8 4 32 256|512 0
+#25005
+lost soul~
+a Lost Soul~
+A ghostly apparition floats here, staring at you in utter hatred.
+~
+The lost soul is a ghostly apparition, seeking revenge on the living.
+~
+4|32 8|32768 -1000 N
+20 1 -2 50 2d8+4
+-1 200 1 29
+8 8 3 0 8192|16384 0
+#25006
+storm giant~
+a Storm Giant~
+A storm giant stands here, angered by your presence.
+~
+This huge creature is approximately 18 feet tall, He grasps a huge bolt
+of lightning it his right hand.... He doesn't look happy to see you.
+~
+1|2|4|32 8|32768 -1000 N
+45 -8 -5 207 7d9+8
+-1 1000 -99999 54
+8 8 1
+#25007
+white gold manticore~
+a White Gold Manticore~
+A statuesque manticore stands here, crafted entirely of white gold.
+~
+The statue is beautifully crafted, the whole statue is formed entirely
+of white gold. Its eyes seem to watch your every move.. they almost
+appear is if they were alive.
+~
+2|4 8|128 0 A 2
+22 3 -4 100 3d7+7
+-1 1000 2 18
+8 8 0
+#25008
+flaming efreet~
+an Efreet~
+A huge flaming figure stands here, with a glint of evil in his eyes.
+~
+The creature is formed entirely of flames. The creature gives off an
+intense heat.
+~
+2|32|2097152 134217728 -1000 N
+35 2 -8 250 3d8+8
+-1 1500 0 26
+8 8 3 8192 1 0
+#25009
+hydra~
+$c0014the Hydra~
+$c0014A huge eight headed hydra is sleeping here
+~
+$c0014The huge, scaled creature has eight heads... each capable of breathing
+a dangerous stream of fire.
+~
+1|2|4|32 0 -1000 B 8
+40 2 -10 300 2d6+6
+-1 17000 1 9
+4 4 3 0 1 0
+#25010
+kraken~
+$c0014the kraken~
+$c0014A large squid-like creature erupts from the waters beneath you!
+~
+This large creature is a close relative of the squid but a much larger
+size. its huge tentacles grasp something... though you can not make out
+what the object is.
+~
+2|4|32 8 -1000 B 12
+50 -1 -10 360 6d4+6
+-1 2000 1 18
+8 8 0
+#25011
+treant tree~
+$c0003the Treant~
+A large tree-like creature reaches out for you with its many limbs.
+~
+It is a rather large creature resembling a tree. At the base of the trunk
+is a large opening that looks very much like a mouth.
+~
+2|4|32 128 -1000 B 6
+44 -2 -4 224 3d6+4
+-1 1000 1 24
+8 8 0
+#25012
+githyanki~
+a Githyanki~
+A disgusting creature of ethereal nature stands here, its body completely
+wrapped in bandages..
+~
+This man sized creature has bandages wrapped all about its body. Its eyes
+glow with a brilliant red fire, in its right hand he grasps a an extremely
+sharp blade of magical nature.
+~
+1|4|64|128 8|32768 -1000 A 2
+26 4 0 82 2d8+3
+-1 300 2 27
+8 8 0
+#25013
+kalas~
+$c0001Kalas il guardiano degli abissi~
+Kalas, the guardian and knight of the castle stands here preparing himself for
+battle.
+~
+He is a large, muscular man of undead nature. He is clad in rather magical
+looking suit of armor, his sword burning fiercely.
+~
+32|4194304 128|32768 -1000 A 3
+50 -5 -10 350 5d8+10
+-1 500 3 10
+8 8 4 1|2|4|8|128 256|512|1024|2048 0
+#25014
+death knight~
+the Death knight~
+The death knight stands here, preparing to do you in.
+~
+This creature is the result of a powerful mage animating the dead remains
+of a once mighty warrior. Its eyes are fixed coldly upon you, unsheathing
+its sword, he charges for battle.
+~
+1|2|4|32 128 -1000 A 3
+45 -3 -6 135 4d6+7
+-1 2000 0 10
+8 8 0
+#25015
+Neo Otyugh~
+$c0014the Neo-Otyugh~
+A large, disgusting, vile creature stands here, smelling putrid.
+~
+This creature is covered with slime like substance, many tentacles protrude
+from its disgusting body.
+~
+2|4|32 128 -1000 A 8
+46 1 -10 500 2d6+5
+-1 1000 1 18
+8 8 0
+#25016
+shadow daemon~
+a Shadow Daemon~
+A shadowy figure stands here, looking you over with greed.
+~
+This creature has almost no form, it looks like some sort of shadow with
+wings.
+~
+4|32 8 -1000 N
+28 3 -2 118 4d4+8
+-1 500 2 10
+8 8 0
+#25017
+gatekeeper gate keeper~
+the Gatekeeper~
+A huge warrior stands here guarding the portal beyond.
+~
+He is a huge man, his strong, muscular body stands about 8 feet tall.
+He guards the portal beyond him angrily.
+~
+1|2 32|128 -1000 A 2
+35 2 -2 225 2d9+7
+-1 1000 1 1
+8 8 0
+#25018
+elemental water prince~
+The water prince~
+The prince of water elementals flows here
+~
+ He looks like a giant wave about to swoop down upon you.
+~
+2 32|128 0 A 2
+32 -1 -6 128 5d6+10
+-1 1000 1 1
+8 8 3 128 32 2
+#25019
+earth elemental king~
+The Earth King~
+The King of earth elementals stands here.. cower fool!
+~
+ It looks vaguely man-shaped.
+~
+2|32768 32|128 0 A 5
+50 -5 -10 250 4d8+10
+-1 1000 2 26
+8 8 3 32 4 1
+#25020
+air elemental lord~
+The lord of Air~
+A huge tornado is squeezed into this impossibly small space
+~
+ It looks sentient
+~
+2|32768 8 0 A 5
+50 -2 -10 200 3d10+5
+-1 1000 2 26
+8 8 3 0 4|32|64 0
+#25021
+fire elemental sultan~
+The Sultan of Fire~
+The Sultan of fire Elementals stands before you, you feel crisp.
+~
+It looks vaguely man-shaped
+~
+2|32768 8|524288 0 A 5
+50 -5 -10 200 5d8+10
+-1 1000 2 26
+8 8 3 0 1|4|8|32 2
+#25022
+king goblin~
+The goblin king~
+The goblin king is here.
+~
+He looks like david bowie
+~
+1 8 -351 N
+18 3 -2 18 2d4+3
+-1 500 2 30
+8 8 4 0 16|32|64 0
+#25023
+goblin cannon~
+A goblin cannon~
+A goblin cannon is here, warming up
+~
+He looks like a tank
+~
+2 0 -351 A 1
+30 10 -10 500 79d1+1
+-1 500 0 30
+8 8 0
+#25024
+goblin gatling~
+A gatling goblin~
+A gatling goblin is here! Duck!
+~
+ He looks like a walking gatling gun
+~
+2 0 -351 A 8
+30 10 0 100 1d1+1
+-1 0 4 30
+0 0 0
+#25026
+acid blob giant~
+A giant acid blob~
+A giant acid blob is here
+~
+ he looks like a huge blob of acid
+~
+2 0 0 A 1
+50 -1 -5 500 35d1+1
+-1 20000 4 20
+8 8 3 1|4|8 128 2
+#25030
+demon vrock~
+A vrock~
+A Vrock stands here
+~
+It is a vulture/human creature. Extremely ugly, and nasty
+~
+4|32 8|32 -666 A 5
+16 4 0 0 1d6+0
+-1 0 2 21
+8 8 3 0 1|8 0
+#25031
+demon hezrou~
+A hezrou~
+A demon Hezrou stands here.
+~
+Not unlike A large toad/man
+~
+4|32 8|32 -666 A 3
+17 3 -2 0 1d6+0
+-1 0 2 21
+8 8 3 0 1|8 0
+#25032
+demon glabrezu~
+A glabrezu~
+A demon Glabrezu stands here
+~
+I forget what this one looks like.
+~
+4|32 8|32 -666 A 5
+18 2 -4 0 1d8+0
+-1 0 2 21
+8 8 3 0 1|8 0
+#25033
+demon nalfeshnee~
+Nalfeshnee~
+Nalfeshnee stands here
+~
+This one is big and mean looking.
+~
+4|32 8|32 -666 A 4
+19 1 -1 0 1d4+0
+-1 0 4 21
+8 8 3 2|4 1|8|8192|16384 0
+#25034
+demon marilith~
+Marilith~
+Marilith slithers here
+~
+A woman with 6 arms and a snake's tail
+~
+4|32|4194304 8|32 -666 A 7
+15 3 -5 13 2d4+0
+-1 0 4 21
+8 8 5 2|4 1|8|8192 0
+#25035
+demon balor~
+Balor~
+Balor stands here, surrounded by electrical fire
+~
+He is very large, and looks rather deadly
+~
+4|32|2097152 8|32 -666 N
+20 0 -2 14 2d12+2
+-1 0 6 21
+8 8 3 2|4 1|8|8192 0
+#50000
+guardia elite imperiale~
+La guardia Imperiale~
+Una nobile guardia imperiale scruta la zona~
+E' molto possente, l'elite delle guardia imperiali, e non permettera'
+infrazioni alla Lex imperiale in nessun modo.
+~
+2 0 1000 A 2
+15 1 0 50 1d8+6
+-1 500 4 1
+8 8 4 0 2048 0
+#50001
+leone tigrato~
+un leone tigrato~
+Il leone tigrato si muove agile verso di te~
+Una folta pelliccia tigrata copre muscoli possenti e vibranti.
+~
+2 0 0 A 1
+4 16 6 20 1d8+1
+-1 0 4 18
+8 8 1
+#50003
+elfa spadaccina~
+l'elfa spadaccina~
+Un'elfa spadaccina si muove con grazia~
+Sembra pericolosa da provocare...
+~
+2|4 0 0 N
+5 16 3 5 1d8+2
+-1 50 1 2
+8 8 2
+#50004
+guerriero umano~
+un Guerriero Umano~
+Un guerriero di razza umana e' qui.~
+Sembra tosto e ben addestrato.
+~
+4|128 0 -100 N
+2 18 4 4 1d8+1
+-1 30 1 1
+8 8 1
+#50005
+leonessa lion~
+una Leonessa~
+Inferocita per essere stata separata dai cuccioli, la leonessa ruggisce verso
+di te.~
+Denti molto lunghi....per una leonessa
+~
+2 32768 0 N
+8 12 6 15 1d8+2
+-1 75 1 18
+5 5 5 512|1024|4096 512|1024|4096 0
+#50006
+cucciolo leoncino lion~
+Un cucciolo di leone~
+Alcuni cuccioli di leone giocano qui, confusi dal frastuono~
+Sono molto carini e affettuosi
+~
+2 32768 10 N
+2 15 6 1 1d4+0
+-1 10 1 18
+8 8 4 512 4096 1024|2048
+#50007
+ratto gigante topo~
+il ratto gigante~
+Un gigantesco topo di fogna sta dormendo qui~
+Un topo nero delle dimensioni di un cane!
+~
+2|4 32768 -100 N
+8 13 7 5 1d10+2
+-1 100 1 18
+4 4 0
+#50008
+barbarian barbaro~
+il Barbaro~
+Un barbaro seminudo muove i suoi pugni con aria minacciosa~
+Arrogante, sporco e puzzolente, questa montagna di muscoli incute un certo
+timore....
+~
+2 8 -1000 A 2
+9 12 5 25 1d8+0
+-1 35 3 1
+8 8 1
+#50009
+paladino~
+il Paladino~
+Un nobile paladino ti osserva~
+Un nobile paladino e' anche lui in cerca di fama e gloria in questa arena
+insanguinata
+~
+2 8 800 L 2
+9 8 0 30 1d8+0
+-1 500 2 1
+8 8 4 0 2048 0
+Il Paladino ti dice "Non mi sfidare o saro' costretto ad ucciderti"
+~
+~
+#50010
+ranger~
+il Ranger~
+Un tosto Ranger ti squadra dalla testa ai piedi~
+Grosso e agile, esperto dei boschi si muove con nervosismo in questo ambiente
+poco familiare.
+~
+2 524288 500 A 2
+8 8 6 20 1d6+2
+-1 300 2 1
+8 8 1
+#50011
+pince principe~
+Il principe~
+Un principe di chiara fama siede qui~
+Sembra ben pasciuto e non molto pericoloso
+~
+2 0 -200 A 2
+5 16 5 15 2d4+0
+-1 500 2 1
+8 8 0
+#50012
+cavaliere knight~
+Il cavaliere nero~
+Un robusto cavaliere osserva con attenzione l'arena~
+Non sembra ben messo, forse e' solo l'amico del principe...
+~
+2 0 -500 N
+3 17 7 9 1d7+0
+-1 50 2 1
+8 8 1
+#50013
+vassallo~
+Il vassallo~
+Un vassallo affianca il principe per esaudire ogni suo desiderio~
+I suoi occhi attenti guizzano tutto intorno....
+~
+2 0 -200 N
+3 18 5 9 1d7+0
+-1 30 2 1
+8 8 1
+#50014
+assistente assistant~
+L'assistente~
+Un assistente, vende bevande e pastarelle~
+Sembra un residuato dei gladiatori, con muscoli ancora possenti
+~
+2 0 100 N
+10 10 2 40 2d6+3
+-1 100 0 20
+8 8 0
+#50015
+spazzino elfo~
+Lo spazzino elfo~
+Un elfo diligente sta pulendo le gradinate~
+~
+2 8 500 N
+10 10 2 20 1d8+1
+-1 49 2 2
+8 8 0
+#50016
+spettatore spectator~
+Lo spettatore~
+Degli spettatore assistono agli scontri~
+Nugoli di persone assistono attente agli scontri nella arena
+~
+2|128 0 0 N
+2 20 9 2 1d5+0
+-1 0 2 1
+8 8 1
+#50017
+spettatore spectator poverello~
+Il poverello~
+Spettatori meno abbienti sono rassegnati a scrutare da lontano l'arena~
+Nugoli di persone assistono attente agli scontri nella arena
+~
+2|128 0 300 N
+1 20 9 1 1d2+0
+-1 0 2 1
+8 8 1
+#50018
+fiaccola gladiatori~
+La Fiaccola dei gladiatori~
+La grande fiaccola magica dei gladiatori risplende da quassu'~
+Emette un lieve calore per quanto e' grossa!
+~
+2 0 500 A 3
+14 3 0 56 3d3+2
+-1 0 5 7
+8 8 3 0 1 2
+#50019
+thief ladro giovane~
+Il Giovane Ladro~
+Un giovane e guizzante ladro si muove attorno a te~
+Occhio ai soldi!
+~
+2|4 32768|524288 -500 N
+12 10 2 0 1d8+1
+-1 300 2 4
+6 6 1
+#50020
+acqua elementale~
+L'elementale dell'acqua~
+Una incredibile pozzanghera di acqua si solleva a formare una specie di coscia
+di pollo
+~
+E' indubbiamente qualcosa di grosso, vivo e forse pericoloso!
+~
+2 8 0 N
+10 10 0 5 4d5+5
+-1 150 3 26
+8 8 3 0 4 1
+#50021
+fuoco elementale~
+L'elementale del fuoco~
+Un grande falo' brucia e scoppietta in un angolo senza combustibile apparente
+~
+Scorgi due occhi rossastri che danzano tra le fiamme e sembrano sorriderti
+~
+2 8 -100 S
+10 10 0 10d10+2 5d5+4
+-1 160
+8 8 3 0 1 4
+#50022
+leone maschio gigante~
+Il Leone gigante~
+Il padre di tutti i leoni, un maschio gigantesco
+~
+Dalla nobile criniera, e' veramente il re degli animali
+~
+2|32|64 0 -500 A 3
+8 11 5 12 2d4+2
+-1 350 0 18
+8 8 4 512|1024|4096 2048 0
+#50023
+sanguisuga gigante~
+una sanguisuga gigante~
+Una sanguisuga gigante ti salta addosso in cerca di sangue fresco
+~
+E' un pugno di carne scura e tremolante che ti fa' rivoltare lo stomaco
+~
+4|32|64 32|32768|65536|8388608 -350 N
+3 10 8 0 1d4+0
+-1 0 2 19
+8 8 3 2 1 4
+#50024
+serpente padre~
+Il serpente padre~
+Il padre dei serpenti ti scruta dall'ombra
+~
+  Coperto da una corazza naturale, sembra un tubo di acciaio munito di denti.
+~
+2|4 8|524288|1048576 -500 A 2
+15 6 -8 40 1d8+2
+-1 0 0 22
+8 8 3 2|128 256 0
+#50025
+pesce argento~
+un pesce d'argento~
+Dei pesci argentei si muovono nella pozza
+~
+Sono lunghi e intravedi dei denti aguzzi.
+~
+2 32768|65536 0 A 2
+4 16 3 0 1d6+2
+-1 0 0 18
+8 8 3 2|16 0 4
+#50026
+guardiano familiare~
+Il Guardiano volante~
+Un familiare guardiano vola per la caverna...OUCH!
+~
+Non hai tempo capire come e' fatto...ti e' addosso!
+~
+32|64 0 -400 A 2
+9 11 0 20 2d4+5
+-1 0 2 22
+8 8 0
+#50027
+ospite~
+Un ospite~
+Un ricco ospite passa per la stanza
+~
+Seminudo, si aggira rincorrendo gli amici
+~
+4|1048576 0 -200 N
+5 15 5 20 1d6+0
+-1 550 1 1
+8 8 1
+#50028
+ospite donna~
+Una donna~
+Una donna, ospite del locale, corre in giro seminuda
+~
+Sembra farti segno di seguirla...
+~
+4|1048576 0 200 N
+5 15 5 20 1d6+0
+-1 250 1 1
+8 8 2
+#50029
+vergine nuda~
+Una vergine nuda!~
+Un vergine si stava vestendo quando ti vede e grida "AIUTO!"
+~
+~
+2|4|128 0 500 L 3
+10 10 8 30 1d4+0
+-1 50 2 1
+8 8 2
+Prova a toccarmi e te ne pentirai zozzone!!! Grida una vergine.
+~
+Senti risate di giovani donne vicino.
+~
+#50031
+nobile~
+Un nobile~
+Un nobile si e' recato qui a rilassarsi~
+Nonostante sia seminudo, le sua armi sono sempre con se.
+~
+2|128 0 300 A 2
+12 8 4 40 2d4+0
+-1 1200 3 1
+8 8 1
+#50032
+nobildonna~
+una nobildonna~
+una nobildonna e' qui a conversare piacevolmente~
+Mica male la signora!
+~
+2|128 0 300 L 1
+10 8 4 50 1d4+0
+-1 1200 4 1
+6 6 2
+La nobildonna ti dice: prego accomodati qui vicino a me :)
+~
+Senti lo sciacquio della piscina
+~
+#50033
+schiavo rango~
+Uno schiavo di alto rango~
+Uno schiavo di rango e' qui ad assistere i nobili~
+E' armato di tutto punto e pronto a battersi per i suoi padroni,
+sembra inoltre tenere gli oggetti di valore dei nobili.
+~
+2|67108864 0 100 A 2
+12 8 10 50 1d6+0
+-1 5000 4 1
+6 6 1
+#50034
+custode~
+Il custode delle terme~
+Il custode delle terme si sta rilassando qui.~
+~
+2|16|4194304 32768 0 A 3
+20 5 4 150 2d6+0
+-1 1000 6 1
+6 6 1
+#50035
+cameriere gigante~
+il cameriere gigante~
+Un gigantesco cameriere sta' sistemando la tavola~
+Non si riesce proprio a capire perche' questo incredibile esempio di
+forza bruta sia qui a fare il cameriere invece di essere in giro a
+strangolare draghi!!
+~
+2|128 0 -900 A 1
+23 0 6 100 2d5+20
+-1 20000 6 47
+8 8 4 0 2048 0
+#50036
+ladro cuori~
+Il ladro di cuori~
+Intravedi un guizzo...forse ti sei sbagliato~
+~
+2|16777216 8|524288|1048576 0 A 2
+20 5 0 70 2d4+0
+-1 2000 6 1
+8 8 1
+#50037
+sacerdos~
+un Alma Sacerdos~
+Un sacerdote e' qui, nudo, a propiziarsi il dio.~
+~
+2|8388608 8|16 500 N
+10 10 0 50 2d4+0
+-1 100 2 1
+8 8 1
+#50038
+bardo termale~
+il bardo termale~
+Un bardo di razza ignota e' qui a sollazzare gli ospiti
+~
+Vi nota appena, e' troppo preso dalla musica
+~
+2 8 0 L 2
+12 8 2 60 2d8+2
+-1 1400 5 38
+8 8 4 1|2|4 2048 0
+Il bardo canto una canzone melodiosa...
+~
+Senti il leggero suono di un arpa
+~
+#50039
+massaggiatore~
+un massaggiatore~
+Un corpulento massaggiatore e' qui sorridente~
+~
+2|67108864 32 200 L 2
+18 7 0 70 2d4+2
+-1 500 6 1
+8 8 1
+<Prego si accomodi> ti dice il massaggiatore indicando il lettino
+~
+Senti come dei leggeri schiaffetti
+~
+#50040
+pesista nano~
+Il pesista nanesco~
+Un tozzo e muscoloso sollevatori di pesi nano si allena in un angolo~
+~
+2|67108864 32 -500 A 2
+15 5 4 70 2d6+0
+-1 500 5 3
+8 8 1
+#50041
+guerriero~
+il guerriero~
+Un guerriero e qui combattendo a mani nude!~
+~
+2|4194304 32768 150 A 2
+16 4 5 50 2d6+0
+-1 400 4 1
+8 8 1
+#50042
+ginnasta~
+un ginnasta~
+Un atletico ginnasta si lancia in superbe acrobazie~
+~
+2|16777216 32 -300 A 2
+20 0 8 50 2d4+0
+-1 1000 4 1
+8 8 1
+#50043
+mastino guerra~
+Un mastino da guerra~
+Un enorme mastino da guerra si scagli su di te!
+~
+Alto circa un metro e mezzo...cerca di addentarti alla gola!
+~
+2|8|32|64 8|32768 -1000 A 2
+10 10 4 50 1d8+1
+-1 0 2 18
+6 6 0
+#50044
+statua afrodite~
+La statua di Afrodite~
+La statua di Afrodite sembra osservarti sensuale!
+~
+GASP! Che corpo ragazzi!
+La statua sembra sorriderti ironica...: si', l'amore e' tutto.
+~
+2 8|16 0 B 1
+27 9 -1 250 3d8+6
+-1 5000 5 37
+8 8 5 2|8|16 1|256 0
+#50045
+calamaro baby gigante~
+Il calamaro baby gigante~
+Un gigantesco calamaro emerge dalle acque travolgendoti!
+~
+Incredibile e' un mostro formato da tentacoli!
+~
+2|32 0 0 B 10
+10 10 4 20 1d6+0
+-1 400 2 15
+8 8 0
+#50046
+tifoso tifosi~
+Un tifoso~
+Un gruppo di sfegatati tifosi romanisti grida a squarciagola!
+~
+Vestiti con scoppola rossa e sciarpa gialla shocking
+~
+2|128|256 0 0 N
+8 20 9 20 1d8+0
+-1 0 2 1
+8 8 1
+#50047
+capo vascello~
+Il capo vascello~
+Il capo vascello e' qui in giro per la citta'.
+~
+Ben vestito e sobrio al contempo, emette un forte carisma e senso di potere
+~
+64 16777216 -200 A 2
+25 0 4 70 2d8+3
+-1 5500 2 1
+6 6 1
+#50048
+schiava~
+Una schiava~
+Una schiava picchiata e ferita passa di qui
+~
+Sembra essere una schiava del tempio, e' noto che la setta dei sacerdoti
+del Polipo non ha rispetto per gli schiavi.
+~
+4|128 65536 200 S
+8 13 10 8d8+0 1d4+0
+-1 10
+8 8 2
+#50049
+prete polipo~
+Un prete della setta del polipo~
+Un ricco prete passa orgoglioso per la strada
+~
+  Orgoglioso e sprezzante non ti degna nemmeno di un'occhiata
+~
+4|16 8 -1000 L 2
+15 0 2 25 2d4+5
+-1 200 4 1
+8 8 4 128 256 0
+Il prete esclama: Fatemi passare pezzenti!
+~
+Senti qualcuno schiamazzare qui vicino
+~
+#50050
+monello~
+Un monello~
+Alcuni piccoli monelli scorrazzano qui attorno
+~
+Questi bambini sono delle vere pesti, sembra che stiano cercando altri bambini
+da pestare!
+~
+128 0 1000 L 1
+2 19 7 4 1d6+0
+-1 6 0 1
+8 8 1
+Un monello esclama: "Andiamo a caccia di nani!"
+~
+Senti schiamazzare dei bambini qui vicino
+~
+#50051
+felice uomo~
+Felice~
+C'e' qualcosa di strano in quest'uomo, non sembra normale
+~
+A guardarlo meglio non sembra propriamente vivo...
+~
+2|4|1048576 8 -1000 A 2
+11 10 2 90 1d10+3
+-1 10000 3 10
+8 8 4 0 1|2|4|8|128|256|512|1024|2048 0
+#50052
+macchinista~
+Macchinista~
+Un macchinista e' qui ad introdurre gli attori~
+~
+2 0 300 A 1
+8 12 7 10 2d4+0
+-1 200 1 1
+8 8 1
+#50053
+centurione giulio~
+Il Centurione Giulio~
+Un centurione e' qui intento a discutere di strategia~
+~
+2|4194304 32768 500 A 2
+20 5 -8 150 2d6+2
+-1 1000 4 1
+8 8 1
+#50054
+centurione andreas~
+Il Centurione Andreas~
+Il centurione Andreas osserva gli allenamenti~
+~
+2|4194304 32768 500 A 2
+22 4 -8 200 2d6+2
+-1 1000 4 1
+8 8 1
+#50055
+lucrezio~
+Il vecchio Lucrezio~
+Il vecchio e possente Lucrezio e' qui~
+~
+2|4194304 32768 0 A 3
+40 3 -10 400 2d8+2
+-1 20000 3 1
+8 8 1
+#50056
+legionario III~
+un legionario della III legio~
+Un legionario della III legio scruta con attenzione il tuo volto...
+~
+E' grosso e sembra pericoloso...
+~
+2|64 32768 100 A 1
+15 3 10 40 1d10+5
+-1 1000 3 1
+8 8 1
+#50057
+statua mercurio~
+La statua di Mercurio~
+L'incredibile statua di Mercurio e' alta 10 metri!
+~
+Sembra brillare come di cosa viva, si dice che ogni tanto vada in giro per
+la citta'!!
+~
+2 0 1000 A 3
+50 1 -10 800 6d10+10
+-1 0 5 37
+8 8 5 0 2048 0
+#50058
+pescatore~
+Un pescatore~
+Un pescatore getta la sua lenza nel mare
+~
+Sembra molto esperte, ha gia' preso una dozzina di grossi pesci
+~
+2|128 0 0 N
+5 15 5 20 1d6+0
+-1 550 0 1
+8 8 1
+#50059
+guardiano faro~
+Il Guardiano del faro~
+Il Guardiano del faro e' qui
+~
+Sembra un uomo antichissimo, quasi una statua che e' qui da millenni.
+Ti guarda appena con la coda dell'occhio.
+~
+2 524288|33554432|134217728 0 A 2
+25 0 -4 300 3d5+0
+-1 2500 8 48
+8 8 4 0 1024|2048 0
+#50060
+armaiolo~
+L'armaiolo~
+L'armaiolo e' pronto a servirti
+~
+Giovane ma gia' esperto
+~
+2 0 900 A 3
+23 0 -6 59 900d5+7
+-1 50000 0 1
+8 8 4 0 2048 0
+#50061
+panettiere~
+il Panettiere~
+Il rubizzo panettiere e' intento a sfornare quantita' di pane indicibili
+~
+... non capisci come faccia, ma riesce a spostare una dozzina di sacchi di
+farina con una mano sola.
+~
+2 0 900 A 2
+23 0 -10 59 9000d5+6
+-1 2000 0 1
+8 8 4 0 2048 0
+#50062
+primo albero~
+Il Primo Albero~
+Il gigantesco primo albero torreggia sulla radura
+~
+Incredibilmente alto e antico, ti sembra di essere piu' al
+cospetto di un dio che di una pianta. Senti che emana un
+fortissimo potere magico. Sembra parlare con una dea invisibile
+con riflessi argentati "Non capisci ancora mia cara...io sono una
+faccia della medaglia"
+~
+1|2|262144|33554432 4|8|16|32|128|512|32768|16777216|33554432|134217728 1000 B 6
+50 0 -9 1000 10d10+10
+-1 100000 20 24
+8 8 3 2|4|8|512 16|131072 1
+#50063
+legionario~
+Un legionario~
+Un legionario di pattuglia passa di qui
+~
+E' vecchiotto ma robusto.
+~
+4194304 0 500 N
+15 9 7 50 1d8+4
+-1 400 1 1
+8 8 1
+#50064
+predicatore~
+Un predicatore~
+Un predicatore sta qui predicando la conversione
+~
+E' molto convinto di quello che annuncia e tu lo ascolti con interesse
+finche' non ti sputa in faccia all'improvviso!
+~
+16777216 1024 -100 L 1
+11 10 4 10 1d6+1
+-1 295 0 1
+8 8 1
+Convertiti fratello, pensa a tua mamma! Grida il predicatore
+~
+Senti qualcuno gridare qui vicino
+~
+#50065
+ombrato~
+Un Ombrato~
+Una strana creatura avvolta nell'ombra ti assale ferocemente!
+~
+E' un piccolo demone maligno!
+~
+32|256 8|524288 -1000 N
+4 16 5 20 1d4+0
+-1 50 4 10
+8 8 4 0 1 0
+#50066
+statua anxur~
+La statua di Anxur~
+Simbolo dell' immortalita' la statua di Anxur si erge verso il cielo!
+~
+Vedi i resti degli animali sacrificati al dio insozzare la base della statua.
+Noti tracce di sangue anche sul pugno chiuso del dio.
+~
+2 0 1000 A 3
+50 1 -10 800 6d10+10
+-1 0 7 37
+8 8 4 0 65536 0
+#50067
+albero pietra~
+Un albero di pietra~
+Un albero di pietra e' qui immoto.
+~
+Grande e massiccio sembra che possa resistere anche ad un terremoto.
+Il suoi lunghi rami di pietra sembra mazze micidiali pronte a sfondarti il
+cranio.
+~
+2|262144 4|8 1000 B 2
+25 3 0 100 3d10+4
+-1 1000 6 24
+8 8 3 1|2|16|8192 0 0
+#50068
+uomo sabbia~
+L'uomo sabbia~
+D'improvviso dalla sabbia si forma una figura umanoide che ti assale!
+~
+~
+2|4|32 1048576 -800 N
+10 10 0 50 2d8+2
+-1 250 2 26
+8 8 0
+#50100
+aquilotto nero~
+Un aquilotto nero~
+Un gigantesco aquilotto nero ti osserva maligno
+~
+Osservandolo bene, vedi i segni di un grande potere su di lui, deve essere il
+figlio o l'avatar di un potere soprannaturale!
+~
+8192|262144|2097152 128|2048|524288|33554432 -1000 B 3
+50 0 -5 500 3d6+8
+-1 10000 10 49
+8 8 3 32 2|16384 1
+#50101
+cucciolo di lupo~
+Un cucciolo di lupo~
+Un gigantesco cucciolo di lupo passa di qui
+~
+Osservandolo bene, vedi i segni di un grande potere su di lui, deve essere il
+figlio o l'avatar di un potere soprannaturale!
+~
+262144|8388608 128|2048|16777216|33554432 1000 B 3
+50 0 -5 500 3d6+8
+-1 10000 10 49
+8 8 3 16 1|16384 2
+#50102
+helena~
+Helena~
+Helena, la hostess degli Dei!
+~
+L'avvenenza di Helena e' pari solo alla sua discrezione...
+~
+2|2048 33554432 1000 A 1
+60 -10 -10 1000 100d10+10
+-1 0 20 1
+6 6 0
+#51000
+guardiano ingannatori~
+Il Guardiano della Gilda~
+Il massiccio guardiano degli Ingannatori controlla la zona
+~
+E' un potente guerriero. Le sue mani sono spade forgiate dalla magia, la
+sua pelle sembra forte come l'acciaio e la sua aura sembra neutralizzare
+ogni magia!
+~
+2|262144|1048576|4194304 8|32|32768|33554432 0 A 3
+50 1 -10 2000 6d10+10
+-1 0 10 1
+8 8 4 1|2|4|256|512|1024|2048|4096|8192 0 0
+#51001
+banchiere~
+Il Banchiere della Gilda~
+Un competente banchiere e' qui a contare i soldi.
+~
+E' un tipo serio, ma che tradisce un ombra di soddisfazione nel gestire le
+ricchezze della gilda degli Ingannatori.
+~
+2 0 0 A 2
+23 0 -10 59 10d5+6
+-1 100 0 1
+8 8 1
+#51002
+diacono~
+Il Diacono della Gilda~
+Un pio diacono conserva le ricchezze spirituali della Gilda
+~
+Sembra in contatto con gli dei mentre controlla la sfera delle anime ove sono
+raccolte le forze spirituali della gilda degli Ingannatori.
+~
+2 0 0 A 2
+23 0 -10 59 10d5+6
+-1 100 0 1
+8 8 1
+#60001
+wizard gwiz~
+Wizard!~
+Wizard e' qui!~
+~
+2|2097152 8|2048 0 N
+20 5 0 100 2d4+1
+-1 5000 6 1
+8 8 1
+#60002
+warrior gwar~
+Warrior!~
+Warrior e' qui!~
+~
+2|4194304 32768 0 N
+20 3 -10 300 2d6+2
+-1 5000 6 1
+8 8 1
+#60003
+cleric gcle~
+Cleric!~
+Cleric e' qui!~
+~
+2|8388608 8|16 0 N
+20 4 0 150 2d6+0
+-1 5000 6 1
+8 8 1
+#60004
+ladro glad~
+Ladro!~
+Ladro e' qui!~
+~
+2|16777216 32|524288 0 N
+20 5 0 100 2d4+0
+-1 5000 6 1
+8 8 1
+#60005
+druido gdru~
+Druido!~
+Druido e' qui!~
+~
+2|33554432 8|2048|8192 0 N
+20 5 10 150 2d4+0
+-1 5000 6 1
+8 8 1
+#60006
+monaco gmon~
+Monaco!~
+Monaco e' qui!~
+~
+2|67108864 32 0 N
+20 0 -10 200 2d6+4
+-1 5000 6 1
+8 8 1
+#60010
+caterina~
+Caterina~
+Caterina ti accoglie con un caldo sorriso
+~
+Seria e compassata, non commette errori...
+~
+2 0 900 L 2
+23 0 -10 180 20d5+10
+-1 2000 0 1
+8 8 5 0 2048 0
+Caterina ti fissa con amore!
+~
+Senti lo strusciare di pelle contro pelle
+~
+#60011
+margherita~
+Margherita~
+Margherita e' qui a controllare le fatture senza troppo entusiasmo
+~
+Seria e compassata, non commette errori... toccami e scoprirai il vero senso
+della vita... sembra dirti :>
+~
+2 0 900 L 2
+23 0 -10 180 20d5+10
+-1 2000 0 1
+8 8 5 0 2048 0
+Margherita sbatte un pugno sul tavolo incazzata!
+~
+Senti dei leggeri colpi qui vicino
+~
+#60012
+manew~
+Manew~
+Manew e' qui, muovendosi con efficienza e serieta'
+~
+Seria e compassata, non commette errori...
+~
+2 0 900 L 2
+23 0 -10 180 50d5+10
+-1 2000 0 1
+8 8 5 0 2048 0
+Manew ti degna appena di un'occhiata
+~
+Forse stai irritando la receptionist
+~
+#60013
+messalina~
+Messalina~
+Messalina, seminuda, accoglie i viaggiatori con un caldo abbraccio!
+~
+Ti mette il fuoco nelle vene!
+~
+2 0 900 L 2
+23 0 -10 180 20d5+10
+-1 2000 0 1
+8 8 5 0 2048 0
+Messalina ti strizza un occhio con fare cospiratore
+~
+Senti strani sbaciucchiamenti vicino
+~
+#60014
+elena~
+Elena~
+La meravigliosa Elena e' qui sorridendoti
+~
+Che corpo ragazzi!!
+~
+2 0 900 L 2
+23 0 -10 180 20d5+10
+-1 2000 0 1
+8 8 5 0 2048 0
+Elena si erge come una statua: wow!
+~
+Senti strani mormorii ammirati
+~
+#60015
+harrison ford~
+Harrison Ford~
+Il mitico Harrison Ford ti accoglie nella sua magione
+~
+Mentre lo guardi ti racconta la sua ultima avventura
+~
+2 0 900 L 2
+23 0 -10 180 50d5+10
+-1 2000 0 1
+8 8 5 0 2048 0
+Harrison si gira e grida: Ciube vieni a darmi una mano!
+~
+Senti strani ronzii qui attorno
+~
+#99999
+%%~
+ 
