@@ -1,0 +1,2345 @@
+#0
+Scratch zone for static game~
+0 0 0
+*! Inizializzazione della zona 0
+
+
+*! Fine dell'inizializzazione della zona 0
+S
+#0
+Limbo~
+49 30 1
+*! Inizializzazione della zona 0
+
+M 0 2 1 8  *! Mob 2 (Dwimmerlaik, il Signore di Morgul) nella stanza 8 (La tetra dimora dei Nazgul)
+E 1 27 1 6  *! Sulla testa: 000027 (Una $c0013corona$c0007)
+
+M 0 3 1 2 0 *! Mob 3 (The tormentor) nella stanza 2 (Hell)
+* * * * * * * * * * * * * * * * * * * * * * * * * * *M:The tormentor R:Hell MW:1 MR:0
+
+M 0 6 1 8  *! Mob 6 (Khamul, l'Ombra dell'Est) nella stanza 8 (La tetra dimora dei Nazgul)
+G 1 37 1  *! In inventario: 000037 (Un pugnale Morgul)
+
+M 0 7 1 8  *! Mob 7 (Adunaphel la silente) nella stanza 8 (La tetra dimora dei Nazgul)
+
+M 0 8 1 8  *! Mob 8 (Akhorahil lo sconosciuto) nella stanza 8 (La tetra dimora dei Nazgul)
+
+M 0 9 1 8  *! Mob 9 (Ren l'Impuro) nella stanza 8 (La tetra dimora dei Nazgul)
+
+M 0 14 1 8  *! Mob 14 (Dwaw di Waw) nella stanza 8 (La tetra dimora dei Nazgul)
+
+M 0 15 1 8  *! Mob 15 (Indur AlbadiMorte) nella stanza 8 (La tetra dimora dei Nazgul)
+G 1 28 1  *! In inventario: 000028 (La $c0009Luce$c0007 di AlbadiMorte)
+
+M 0 16 1 8  *! Mob 16 (Hoarmurath di Dir) nella stanza 8 (La tetra dimora dei Nazgul)
+
+M 0 17 1 8  *! Mob 17 (Uvatha, Signore dei Cavalli) nella stanza 8 (La tetra dimora dei Nazgul)
+E 1 25 1 16  *! Impugnato: 000025 (una nera balestra)
+G 1 26 6  *! In inventario: 000026 (una freccia nera)
+G 1 26 6  *! In inventario: 000026 (una freccia nera)
+G 1 26 6  *! In inventario: 000026 (una freccia nera)
+G 1 26 6  *! In inventario: 000026 (una freccia nera)
+G 1 26 6  *! In inventario: 000026 (una freccia nera)
+G 1 26 6  *! In inventario: 000026 (una freccia nera)
+
+M 0 18 1 1  *! Mob 18 (Kek) nella stanza 1 (Limbo)
+
+
+*! Fine dell'inizializzazione della zona 0
+S
+#0
+Le strade di Myst~
+190 20 2
+*! Items initializations
+O 0 1 99 99 10 *! 000001 [Un elmo di cuoio] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 2 99 99 10 *! 000002 [Un cappuccio di cuoio] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 3 99 99 10 *! 000003 [Un pugnale da addestramento] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 4 99 99 10 *! 000004 [Un gladio da addestramento] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 5 99 99 10 *! 000005 [Una lunga spada da addestramento] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 6 99 99 10 *! 000006 [una piccola clava] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 7 99 99 10 *! 000007 [un martello da guerra] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 8 99 99 10 *! 000008 [uno scudo da addestramento] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 9 99 99 10 *! 000009 [Un giubbotto di pelle] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 10 99 99 10 *! 000010 [un giubbotto di pelle imbottito] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 11 99 99 10 *! 000011 [una maglia di ferro] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 12 99 99 10 *! 000012 [un panino] caricato nella stanza 000099 [Il tempio della generosita']
+O 0 13 99 99 10 *! 000013 [un bicchiere] caricato nella stanza 000099 [Il tempio della generosita']
+*! Mobiles initializations
+*! Exits initializations
+S
+#5
+The colossal tree~
+599 60 2
+*! Inizializzazione della zona 5
+
+*O:La vecchia, grossa quercia R:A small clearing MW:1 MR:0
+*O:L'enorme sequoia R:The Great Eastern Desert MW:1 MR:0
+*O:Il grosso cactus R:The Forest of Rhowyn MW:1 MR:0
+*O:L'acero gigante R:On an Ancient Path MW:1 MR:0
+*O:Il pesco R:Western end of grassy field MW:1 MR:0
+*O:L'abete R:In Mirkwood MW:1 MR:0
+*O:Il pino R:A mountain path MW:1 MR:0
+*O:L'olmo R:Outside the North Gate of Mordilnia MW:1 MR:0
+*O:Il magnifico eucalipto R:In the Eucalyptus Forest MW:1 MR:0
+
+M 0 641 1 504 0 *! Mob 641 (the Druid Guildmaster) nella stanza 504 (The western limb)
+* *!M:the Druid Guildmaster R:The western limb MW:1 MR:0
+
+M 0 642 1 517 0 *! Mob 642 (the Druid Guildmaster) nella stanza 517 (A circular clearing)
+* *!M:the Druid Guildmaster R:A circular clearing MW:1 MR:0
+
+O 0 500 1 519 0  *! Carica oggetto 500 (La vecchia, grossa quercia) nella stanza 519 (A small clearing)
+
+O 0 501 1 5030 0  *! Carica oggetto 501 (L'enorme sequoia) nella stanza 5030 (stanza sconosciuta)
+
+O 0 502 1 13903 0  *! Carica oggetto 502 (Il grosso cactus) nella stanza 13903 (stanza sconosciuta)
+
+O 0 503 1 15802 0  *! Carica oggetto 503 (L'acero gigante) nella stanza 15802 (stanza sconosciuta)
+
+O 0 504 1 1130 0  *! Carica oggetto 504 (Il pesco) nella stanza 1130 (stanza sconosciuta)
+
+O 0 505 1 15100 0  *! Carica oggetto 505 (L'abete) nella stanza 15100 (stanza sconosciuta)
+
+O 0 506 1 16024 0  *! Carica oggetto 506 (Il pino) nella stanza 16024 (stanza sconosciuta)
+
+O 0 507 1 18237 0  *! Carica oggetto 507 (L'olmo) nella stanza 18237 (stanza sconosciuta)
+
+O 0 508 1 27408 0  *! Carica oggetto 508 (Il magnifico eucalipto) nella stanza 27408 (stanza sconosciuta)
+
+D 0 518 2 0  *! Uscita south della stanza 518 (A small cottage): aperta
+D 0 520 0 0  *! Uscita north della stanza 520 (a sparse bedroom): aperta
+
+*! Fine dell'inizializzazione della zona 5
+S
+#10
+Asgaard~
+1099 60 0
+*! Inizializzazione della zona 10
+
+*!O:una bacheca per gli avvisi R:Asgaard MW:1 MR:0
+
+M 0 1101 1 1000  *! Mob 1101 (Il guardiano) nella stanza 1000 (Asgaard)
+
+M 0 3009 1 1099 0 *! Mob 3009 (Lo Scrivano degli Dei) nella stanza 1099 (Ufficio postale Superiore)
+* * * * * * * * * * * * *!M:Lo Scrivano degli Dei R:Ufficio postale superiore MW:1 MR:0
+
+M 0 50102 1 1001 0 *! Mob 50102 (Helena) nella stanza 1001 (Valhalla)
+* * * * * * * * * * * * *!M:Helena R:Valhalla MW:1 MR:0
+
+O 0 1001 1 1003 1  *! Carica oggetto 1001 (L'altare di madreperla) nella stanza 1003 (Il Concilio dei Demiurghi)
+P 1 1002 1 1001  *! Dentro 001001 (L'altare di madreperla): 001002 (La sacra lista degli oggetti quest)
+P 1 1003 1 1001  *! Dentro 001001 (L'altare di madreperla): 001003 (La Sacca degli artefatti)
+P 1 1007 1 1003  *! Dentro 001003 (La Sacca degli artefatti): 001007 (La rete delle anime)
+P 1 1026 1 1003  *! Dentro 001003 (La Sacca degli artefatti): 001026 ($c0014Una gemma dell'anima$c0007)
+P 1 1010 1 1003  *! Dentro 001003 (La Sacca degli artefatti): 001010 ($c0008Un calderone magico$c0007)
+P 1 1016 1 1003  *! Dentro 001003 (La Sacca degli artefatti): 001016 (Una etichetta magica)
+P 1 1039 1 1003  *! Dentro 001003 (La Sacca degli artefatti): 001039 (Una sfera di cristallo)
+P 1 1004 1 1001  *! Dentro 001001 (L'altare di madreperla): 001004 (La Sacca dei sigilli)
+P 1 1030 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001030 (Il Sigillo della Terra)
+P 1 1031 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001031 (Il Sigillo dell'Aria)
+P 1 1032 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001032 (Il Sigillo dell'Acqua)
+P 1 1033 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001033 (Il Sigillo del Fuoco)
+P 1 1034 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001034 (Il Sigillo dell'Etere)
+P 1 1035 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001035 (Il Sigillo della Luce)
+P 1 1036 1 1004  *! Dentro 001004 (La Sacca dei sigilli): 001036 (Il Sigillo della Tenebra)
+P 1 1006 1 1001  *! Dentro 001001 (L'altare di madreperla): 001006 (La Sacca degli accessori)
+P 1 1012 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001012 ($c0011Il sigillo uffi$c0009cial$c0011e$c0007)
+P 1 1015 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001015 ($c0008Un pugnale $c0001sacrificale$c0007)
+P 1 1014 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001014 ($c0002Una boccetta $c0008arabescata$c0007)
+P 1 1025 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001025 (Una parrucca)
+P 1 1027 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001027 ($c0015Una fibbia d'argento$c0007)
+P 1 1028 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001028 (Un pettine)
+P 1 1029 1 1006  *! Dentro 001006 (La Sacca degli accessori): 001029 (Un fermaglio per capelli)
+
+O 0 1041 1 1003 1  *! Carica oggetto 1041 (L'altare nero) nella stanza 1003 (Il Concilio dei Demiurghi)
+P 1 1005 1 1041  *! Dentro 001041 (L'altare nero): 001005 (La Sacca dei componenti)
+P 1 1008 1 1005  *! Dentro 001005 (La Sacca dei componenti): 001008 (Della polvere di stella)
+P 1 1009 1 1005  *! Dentro 001005 (La Sacca dei componenti): 001009 ($c0003Della $c0011polvere $c0015di $c0014fata$c0007)
+P 1 1011 1 1005  *! Dentro 001005 (La Sacca dei componenti): 001011 ($c0001Una ciocca di capelli$c0007)
+P 1 1013 1 1005  *! Dentro 001005 (La Sacca dei componenti): 001013 ($c0002Alcune foglie di Athelas$c0007)
+P 1 1037 1 1005  *! Dentro 001005 (La Sacca dei componenti): 001037 ($c0015Dei frammenti di roccia lunare$c0007)
+P 1 1038 1 1005  *! Dentro 001005 (La Sacca dei componenti): 001038 ($c0001Un cuore$c0007)
+P 1 1040 1 1041  *! Dentro 001041 (L'altare nero): 001040 (La Sacca degli Scritti)
+P 1 1017 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001017 (Un invito personale)
+P 1 1018 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001018 (Un frammento di diario)
+P 1 1019 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001019 (Una missiva segreta)
+P 1 1020 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001020 (Un documento riservato)
+P 1 1021 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001021 (Un tomo arcano)
+P 1 1023 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001023 (Una mappa)
+P 1 1024 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001024 (Un diario)
+P 1 1022 1 1040  *! Dentro 001040 (La Sacca degli Scritti): 001022 (Un libro antico)
+
+O 0 3098 1 1000 0  *! Carica oggetto 3098 (una bacheca per gli avvisi) nella stanza 1000 (Asgaard)
+
+D 0 1000 1 1  *! Uscita east della stanza 1000 (Asgaard): chiusa
+D 0 1001 3 1  *! Uscita west della stanza 1001 (Valhalla): chiusa
+
+*! Fine dell'inizializzazione della zona 10
+S
+#13
+Polymorph & Change Form~
+1399 20 2
+*! Inizializzazione della zona 13
+
+
+*! Fine dell'inizializzazione della zona 13
+S
+#14
+Scacchiera [Jethro]~
+1499 20 2
+*! Items initializations
+O 0 4103 12 1407 12 *! 004103 [un grumo di poltiglia verde] caricato nella stanza 001407 [Un Riquadro Nero]
+*! Mobiles initializations
+M 0 1400 1 1400 *!001400 [una Torre Nera] caricato nella stanza 001400 [Un Riquadro Bianco]
+M 0 1401 1 1401 *!001401 [un Cavaliere Nero] caricato nella stanza 001401 [Un Riquadro Nero]
+M 0 1402 1 1402 *!001402 [un Dignitario Nero] caricato nella stanza 001402 [Un Riquadro Bianco]
+M 0 1403 1 1403 *!001403 [una Regina Nera] caricato nella stanza 001403 [Un Riquadro Nero]
+M 0 1404 1 1404 *!001404 [un Re Nero] caricato nella stanza 001404 [Un Riquadro Bianco]
+G 1 1404 0 *! 001404 [una daga] dato al MOB 001404 [un Re Nero]
+G 1 1412 0 *! 001412 [una pozione oleosa] dato al MOB 001404 [un Re Nero]
+M 0 1405 1 1405 *!001405 [un Dignitario Nero] caricato nella stanza 001405 [Un Riquadro Nero]
+M 0 1406 1 1406 *!001406 [un Cavaliere Nero] caricato nella stanza 001406 [Un Riquadro Bianco]
+E 1 1401 0 8 *! 001401 [un paio di stivali dismessi] indossato dal MOB 001406 [un Cavaliere Nero] Feet
+M 0 1407 1 1407 *!001407 [una Torre Nera] caricato nella stanza 001407 [Un Riquadro Nero]
+M 0 1408 1 1408 *!001408 [un Fante Nero] caricato nella stanza 001408 [Un Riquadro Nero]
+M 0 1409 1 1409 *!001409 [un Fante Nero] caricato nella stanza 001409 [Un Riquadro Bianco]
+M 0 1410 1 1410 *!001410 [un Fante Nero] caricato nella stanza 001410 [Un Riquadro Nero]
+M 0 1411 1 1411 *!001411 [un Fante Nero] caricato nella stanza 001411 [Un Riquadro Bianco]
+M 0 1412 1 1412 *!001412 [un Fante Nero] caricato nella stanza 001412 [Un Riquadro Nero]
+G 1 1403 1 *! 001403 [una lanterna ammaccata] dato al MOB 001412 [un Fante Nero]
+M 0 1413 1 1413 *!001413 [un Fante Nero] caricato nella stanza 001413 [Un Riquadro Bianco]
+M 0 1414 1 1414 *!001414 [un Fante Nero] caricato nella stanza 001414 [Un Riquadro Nero]
+M 0 1415 1 1415 *!001415 [un Fante Nero] caricato nella stanza 001415 [Un Riquadro Bianco]
+M 0 1417 4 1446 *!001417 [il piccolo Mindflayer] caricato nella stanza 001446 [Un Riquadro Nero]
+M 0 1417 4 1417 *!001417 [il piccolo Mindflayer] caricato nella stanza 001417 [Un Riquadro Nero]
+M 0 1418 2 1418 *!001418 [l'Imprecatore] caricato nella stanza 001418 [Un Riquadro Bianco]
+M 0 1418 2 1443 *!001418 [l'Imprecatore] caricato nella stanza 001443 [Un Riquadro Bianco]
+M 0 1419 6 1419 *!001419 [La Mucca] caricato nella stanza 001419 [Un Riquadro Nero]
+M 0 1419 6 1419 *!001419 [La Mucca] caricato nella stanza 001419 [Un Riquadro Nero]
+M 0 1419 6 1419 *!001419 [La Mucca] caricato nella stanza 001419 [Un Riquadro Nero]
+E 1 1413 4 3 *! 001413 [un campanaccio da mucca] indossato dal MOB 001419 [La Mucca] necklace (1)
+M 0 1420 3 1420 *!001420 [Net Lag] caricato nella stanza 001420 [Un Riquadro Bianco]
+M 0 1420 3 1422 *!001420 [Net Lag] caricato nella stanza 001422 [Un Riquadro Bianco]
+M 0 1421 3 1421 *!001421 [L'alberello che si sposta su fragili radici] caricato nella stanza 001421 [Un Riquadro Nero]
+M 0 1421 3 1440 *!001421 [L'alberello che si sposta su fragili radici] caricato nella stanza 001440 [Un Riquadro Nero]
+E 1 1411 10 17 *! 001411 [una pergamena color avorio] indossato dal MOB 001421 [L'alberello che si sposta su fragili radici] hold
+M 0 1421 3 1441 *!001421 [L'alberello che si sposta su fragili radici] caricato nella stanza 001441 [Un Riquadro Bianco]
+M 0 1428 3 1428 *!001428 [Un Jugglernaut] caricato nella stanza 001428 [Un Riquadro Nero]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3010 1000 *! 003010 [una pagnotta] dato al MOB 001428 [Un Jugglernaut]
+M 0 1428 3 1444 *!001428 [Un Jugglernaut] caricato nella stanza 001444 [Un Riquadro Nero]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3102 1000 *! 003102 [un bicchiere] dato al MOB 001428 [Un Jugglernaut]
+G 1 3060 1000 *! 003060 [una zattera] dato al MOB 001428 [Un Jugglernaut]
+M 0 1433 5 1433 *!001433 [una Farfulla] caricato nella stanza 001433 [Un Riquadro Nero]
+M 0 1433 5 1433 *!001433 [una Farfulla] caricato nella stanza 001433 [Un Riquadro Nero]
+M 0 1433 5 1430 *!001433 [una Farfulla] caricato nella stanza 001430 [Un Riquadro Nero]
+M 0 1433 5 1430 *!001433 [una Farfulla] caricato nella stanza 001430 [Un Riquadro Nero]
+M 0 1437 2 1437 *!001437 [una buccia di banana] caricato nella stanza 001437 [Un Riquadro Nero]
+M 0 1437 2 1425 *!001437 [una buccia di banana] caricato nella stanza 001425 [Un Riquadro Bianco]
+M 0 1448 1 1448 *!001448 [un Fante Bianco] caricato nella stanza 001448 [Un Riquadro Bianco]
+M 0 1449 1 1449 *!001449 [un Fante Bianco] caricato nella stanza 001449 [Un Riquadro Nero]
+M 0 1450 1 1450 *!001450 [un Fante Bianco] caricato nella stanza 001450 [Un Riquadro Bianco]
+M 0 1451 1 1451 *!001451 [un Fante Bianco] caricato nella stanza 001451 [Un Riquadro Nero]
+M 0 1452 1 1452 *!001452 [un Fante Bianco] caricato nella stanza 001452 [Un Riquadro Bianco]
+M 0 1453 1 1453 *!001453 [un Fante Bianco] caricato nella stanza 001453 [Un Riquadro Nero]
+M 0 1454 1 1454 *!001454 [un Fante Bianco] caricato nella stanza 001454 [Un Riquadro Bianco]
+M 0 1455 1 1455 *!001455 [un Fante Bianco] caricato nella stanza 001455 [Un Riquadro Nero]
+M 0 1456 1 1456 *!001456 [una Torre Bianca] caricato nella stanza 001456 [Un Riquadro Nero]
+M 0 1457 1 1457 *!001457 [Un Cavaliere Bianco] caricato nella stanza 001457 [Un Riquadro Bianco]
+E 1 1405 0 5 *! 001405 [un'armatura in pelle] indossato dal MOB 001457 [Un Cavaliere Bianco] body
+M 0 1458 1 1458 *!001458 [un Dignitario Bianco] caricato nella stanza 001458 [Un Riquadro Nero]
+E 1 1402 0 12 *! 001402 [una pianeta $c0013viola$c0007] indossato dal MOB 001458 [un Dignitario Bianco] Above body
+M 0 1459 1 1459 *!001459 [una Regina Bianca] caricato nella stanza 001459 [Un Riquadro Bianco]
+G 1 1410 0 *! 001410 [un sacco di farina] dato al MOB 001459 [una Regina Bianca]
+M 0 1460 1 1460 *!001460 [un Re Bianco] caricato nella stanza 001460 [Un Riquadro Nero]
+M 0 1461 1 1461 *!001461 [un Dignitario Bianco] caricato nella stanza 001461 [Un Riquadro Bianco]
+M 0 1462 1 1462 *!001462 [un Cavaliere Bianco] caricato nella stanza 001462 [Un Riquadro Nero]
+M 0 1463 1 1463 *!001463 [una Torre Bianca] caricato nella stanza 001463 [Un Riquadro Bianco]
+M 0 1470 1 1470 *!001470 [Il Giabervocco] caricato nella stanza 001470 [Tana del Giabervocco]
+G 1 1421 1 *! 001421 [Lo Stocco] dato al MOB 001470 [Il Giabervocco]
+M 0 1471 1 1432 *!001471 [una coppia di medici] caricato nella stanza 001432 [Un Riquadro Bianco]
+M 0 1472 1 1472 *!001472 [La Fiamma] caricato nella stanza 001472 [Tempietto]
+G 1 1420 1 *! 001420 [i Gambali della Fenice] dato al MOB 001472 [La Fiamma]
+M 0 1480 1 1409 *!001480 [$c0001L$c0008e$c0013a$c0015, la $c0013gatta $c0008di $c0001tre $c0008colori$c0007] caricato nella stanza 001409 [Un Riquadro Bianco]
+M 0 1493 1 1414 *!001493 [L'Addetto alla distribuzione] caricato nella stanza 001414 [Un Riquadro Nero]
+G 1 4103 12 *! 004103 [un grumo di poltiglia verde] dato al MOB 001493 [L'Addetto alla distribuzione]
+M 0 1494 4 1406 *!001494 [Un Oleofante] caricato nella stanza 001406 [Un Riquadro Bianco]
+M 0 1494 4 1407 *!001494 [Un Oleofante] caricato nella stanza 001407 [Un Riquadro Nero]
+M 0 1494 4 1414 *!001494 [Un Oleofante] caricato nella stanza 001414 [Un Riquadro Nero]
+M 0 1494 4 1415 *!001494 [Un Oleofante] caricato nella stanza 001415 [Un Riquadro Bianco]
+M 0 1495 1 1414 *!001495 [L'Elfo Commesso] caricato nella stanza 001414 [Un Riquadro Nero]
+M 0 1496 4 1448 *!001496 [Un Elfo] caricato nella stanza 001448 [Un Riquadro Bianco]
+M 0 1496 4 1449 *!001496 [Un Elfo] caricato nella stanza 001449 [Un Riquadro Nero]
+E 1 1414 10 17 *! 001414 [una pozione contenente farina] indossato dal MOB 001496 [Un Elfo] hold
+M 0 1496 4 1456 *!001496 [Un Elfo] caricato nella stanza 001456 [Un Riquadro Nero]
+M 0 1496 4 1457 *!001496 [Un Elfo] caricato nella stanza 001457 [Un Riquadro Bianco]
+M 0 1497 1 1423 *!001497 [Lo Stregatto] caricato nella stanza 001423 [Un Riquadro Nero]
+G 1 3051 50 *! 003051 [una pozione gialla per vedere l'invisibile] dato al MOB 001497 [Lo Stregatto]
+M 0 1498 8 1426 *!001498 [un Piccione] caricato nella stanza 001426 [Un Riquadro Nero]
+M 0 1498 8 1445 *!001498 [un Piccione] caricato nella stanza 001445 [Un Riquadro Bianco]
+M 0 1498 8 1442 *!001498 [un Piccione] caricato nella stanza 001442 [Un Riquadro Nero]
+M 0 1498 8 1429 *!001498 [un Piccione] caricato nella stanza 001429 [Un Riquadro Bianco]
+M 0 1499 1 1499 *!001499 [Sinuhe] caricato nella stanza 001499 [Ingresso alla Torre d'Avorio]
+E 1 1430 1 16 *! 001430 [la Spada della Fenice] indossato dal MOB 001499 [Sinuhe] Wield
+*! Exits initializations
+D 0 1436 4 1 *! Uscita Up della stanza 001436 [Un Riquadro Bianco]: Chiusa
+D 0 1498 1 1 *! Uscita East della stanza 001498 [La Torre d'Avorio]: Chiusa
+D 0 1499 3 1 *! Uscita West della stanza 001499 [Ingresso alla Torre d'Avorio]: Chiusa
+S
+#17
+The monastry~
+1799 23 2
+*! Inizializzazione della zona 17
+
+* Door in room Outside the Library -> N is open
+* Door in room A Small Hallway -> N is open
+* Door in room A Small Hallway -> S is open
+* Door in room A Small Hallway -> N is open
+* Door in room A Small Hallway -> S is open
+* Door in room Turn in the Small Hallway -> N is open
+* Door in room Turn in the Small Hallway -> E is open
+* Door in room End of a Small Hallway -> E is closed
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> S is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> S is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> S is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> S is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> N is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> N is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> W is open
+*O:a small cot R:A Monk's Cell MW:8 MR:0
+* Door in room A Monk's Cell -> W is closed
+*O:a long oak bookshelf R:Northern Bookshelves MW:2 MR:0
+*O:an encyclopedia vol. Q ->Oa long oak bookshelf MW:1
+*O:an encyclopedia vol. R ->Oa long oak bookshelf MW:1
+*O:an encyclopedia vol. S ->Oa long oak bookshelf MW:1
+*O:an encyclopedia vol. T ->Oa long oak bookshelf MW:1
+*O:a tall oak bookshelf R:Northern Bookshelves MW:2 MR:0
+*O:an encyclopedia vol. H ->Oa tall oak bookshelf MW:1
+*O:an encyclopedia vol. G ->Oa tall oak bookshelf MW:1
+*O:an encyclopedia vol. F ->Oa tall oak bookshelf MW:1
+*O:an encyclopedia vol. E ->Oa tall oak bookshelf MW:1
+*O:a wide oak bookshelf R:Northern Bookshelves MW:2 MR:0
+*O:an encyclopedia vol. L ->Oa wide oak bookshelf MW:1
+*O:an encyclopedia vol. K ->Oa wide oak bookshelf MW:1
+*O:an encyclopedia vol. J ->Oa wide oak bookshelf MW:1
+*O:an encyclopedia vol. I ->Oa wide oak bookshelf MW:1
+*O:a narrow oak bookshelf R:Northern Bookshelves MW:2 MR:0
+*O:an encyclopedia vol. P ->Oa narrow oak bookshelf MW:1
+*O:an encyclopedia vol. O ->Oa narrow oak bookshelf MW:1
+*O:an encyclopedia vol. N ->Oa narrow oak bookshelf MW:1
+*O:an encyclopedia vol. M ->Oa narrow oak bookshelf MW:1
+*O:a short oak bookshelf R:Northern Bookshelves MW:2 MR:0
+*O:an encyclopedia vol. D ->Oa short oak bookshelf MW:1
+*O:an encyclopedia vol. C ->Oa short oak bookshelf MW:1
+*O:an encyclopedia vol. B ->Oa short oak bookshelf MW:1
+*O:an encyclopedia vol. A ->Oa short oak bookshelf MW:1
+*O:a short oak bookshelf R:Southern Bookshelves MW:2 MR:0
+*O:a history manual ->Oa short oak bookshelf MW:1
+*O:a small manual ->Oa short oak bookshelf MW:1
+*O:a brown history book ->Oa short oak bookshelf MW:1
+*O:a tan history book ->Oa short oak bookshelf MW:1
+*O:a narrow oak bookshelf R:Southern Bookshelves MW:2 MR:0
+*O:a black history book ->Oa narrow oak bookshelf MW:1
+*O:a small, black leather book ->Oa narrow oak bookshelf MW:1
+*O:a thick textbook ->Oa narrow oak bookshelf MW:1
+*O:a large textbook ->Oa narrow oak bookshelf MW:1
+*O:a wide oak bookshelf R:Southern Bookshelves MW:2 MR:0
+*O:a small, brown leather book ->Oa wide oak bookshelf MW:1
+*O:a small leather book ->Oa wide oak bookshelf MW:1
+*O:a forest green book ->Oa wide oak bookshelf MW:1
+*O:a wood bound book ->Oa wide oak bookshelf MW:1
+*O:a tall oak bookshelf R:Southern Bookshelves MW:2 MR:0
+*O:a map ->Oa tall oak bookshelf MW:1
+*O:a map ->Oa tall oak bookshelf MW:1
+*O:an encyclopedia Index ->Oa tall oak bookshelf MW:1
+*O:an encyclopedia vol. Z ->Oa tall oak bookshelf MW:1
+*O:an encyclopedia vol. Y ->Oa tall oak bookshelf MW:1
+*O:a long oak bookshelf R:Southern Bookshelves MW:2 MR:0
+*O:an encyclopedia vol. X ->Oa long oak bookshelf MW:1
+*O:an encyclopedia vol. W ->Oa long oak bookshelf MW:1
+*O:an encyclopedia vol. V ->Oa long oak bookshelf MW:1
+*O:an encyclopedia vol. U ->Oa long oak bookshelf MW:1
+* Door in room The Kitchen -> D is open
+*O:a small cask of wine R:Cellar Under the Monastary MW:2 MR:0
+*O:a small cask of wine R:Cellar Under the Monastary MW:2 MR:0
+* Door in room Cellar Under the Monastary -> U is open
+*O:a piece of luminous green fungus R:The Glowing Green Chamber MW:10 MR:0
+*O:a piece of luminous green fungus R:The Glowing Green Chamber MW:10 MR:0
+*!O:un panino R:A Strangely Lit Passage MW:23 MR:0
+*!O:un panino R:A Strangely Lit Passage MW:23 MR:0
+*!O:un bicchiere R:A Strangely Lit Passage MW:32 MR:0
+*!O:un bicchiere R:A Strangely Lit Passage MW:32 MR:0
+*!O:un bicchiere R:A Dark Tunnel MW:45 MR:0
+*!O:A pile of scraps R:The Glowing Red Chamber MW:10 MR:0
+*!O:un bicchiere R:The Glowing Red Chamber MW:45 MR:0
+*O:a piece of luminous red fungus R:The Glowing Red Chamber MW:8 MR:0
+*O:a piece of luminous red fungus R:The Glowing Red Chamber MW:8 MR:0
+
+M 0 254 7 1738 0 *! Mob 254 (The jackalwere) nella stanza 1738 (Red Glowing Passage)
+* *!M:The jackalwere R:Red Glowing Passage MW:7 MR:0
+* *!O:una pagnotta MW:17
+* *!O:una pozione argentea MW:41
+G 1 3010 17 0 0 *! In inventario: 003010 (una pagnotta)
+G 1 3057 41 0 0 *! In inventario: 003057 (una pozione argentea)
+
+M 0 257 7 1729 0 *! Mob 257 (An ogre magi) nella stanza 1729 (At the Hole in the Wall)
+* *!M:An ogre magi R:At the Hole in the Wall MW:7 MR:0
+* *!O:a simmering crimson potion MW:2
+* *O:an iron nail MW:1
+G 1 18255 2 0 0 *! In inventario: 018255 (a simmering crimson potion)
+G 1 1758 1 0 0 *! In inventario: 001758 (an iron nail)
+
+M 0 257 7 1738 0 *! Mob 257 (An ogre magi) nella stanza 1738 (Red Glowing Passage)
+* *!M:An ogre magi R:Red Glowing Passage MW:7 MR:0
+* *!O:an azure potion MW:2
+* *!O:a crystal potion MW:2
+G 1 16711 2 0 0 *! In inventario: 016711 (an azure potion)
+G 1 16710 2 0 0 *! In inventario: 016710 (a crystal potion)
+
+M 0 691 1 1725 0 *! Mob 691 (the Monk Guildmaster) nella stanza 1725 (Entrance to the Training Grounds)
+* *!M:the Monk Guildmaster R:Entrance to the Training Grounds MW:1 MR:0
+
+M 0 1022 9 1745 0 *! Mob 1022 (a halfling youth) nella stanza 1745 (Bend in the Red Glowing Tunnel)
+* *!M:a halfling youth R:Bend in the Red Glowing Tunnel MW:9 MR:0
+* *!O:un pugnale impugnato MW:11
+* *!O:un bicchiere MW:45
+* *!O:uno sfilatino di pane sciapo MW:16
+E 1 3020 11 16 0 *! Impugnato: 003020 (un pugnale)
+G 1 3102 45 0 0 *! In inventario: 003102 (un bicchiere)
+G 1 1103 16 0 0 *! In inventario: 001103 (uno sfilatino di pane sciapo)
+
+M 0 1032 2 1749 0 *! Mob 1032 (a shiriff) nella stanza 1749 (A Small Passage)
+* *!M:a shiriff R:A Small Passage MW:2 MR:0
+* *!O:un giubbotto di pelle corpo MW:13
+* *!O:Un elmo di cuoio testa MW:5
+* *!O:un paio di pantaloni di pelle gambe MW:2
+* *!O:a pair of leather boots piedi MW:2
+* *!O:un paio di guanti di pelle mani MW:2
+* *!O:a leather pouch tenuto MW:2
+* *!O:uno sfilatino di pane sciapo ->!Oa leather pouch MW:16
+* *!O:uno sfilatino di pane sciapo ->!Oa leather pouch MW:16
+* *!O:un bicchiere ->!Oa leather pouch MW:45
+* *!O:un bicchiere ->!Oa leather pouch MW:45
+E 1 3043 13 5 0 *! Sul corpo: 003043 (un giubbotto di pelle)
+E 1 1 5 6 0 *! Sulla testa: 000001 (Un elmo di cuoio)
+E 1 3081 2 7 0 *! Sulle gambe: 003081 (un paio di pantaloni di pelle)
+E 1 6002 2 8 0 *! Ai piedi: 006002 (a pair of leather boots)
+E 1 3071 2 9 0 *! Alle mani: 003071 (un paio di guanti di pelle)
+E 1 1564 2 17 0 *! Tenuto: 001564 (a leather pouch)
+P 1 1103 16 1564 0 *! Dentro 001564 (a leather pouch): 001103 (uno sfilatino di pane sciapo)
+P 1 1103 16 1564 0 *! Dentro 001564 (a leather pouch): 001103 (uno sfilatino di pane sciapo)
+P 1 3102 45 1564 0 *! Dentro 001564 (a leather pouch): 003102 (un bicchiere)
+P 1 3102 45 1564 0 *! Dentro 001564 (a leather pouch): 003102 (un bicchiere)
+
+M 0 1701 1 1715 0 *! Mob 1701 (the human monk) nella stanza 1715 (A Monk's Cell)
+* *M:the human monk R:A Monk's Cell MW:1 MR:0
+
+M 0 1702 1 1721 0 *! Mob 1702 (the human monk) nella stanza 1721 (Working Section of Library)
+* *M:the human monk R:Working Section of Library MW:1 MR:0
+* *O:a saffron colored robe corpo MW:9
+* *O:a ream of white paper MW:3
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+G 1 1707 3 0 0 *! In inventario: 001707 (a ream of white paper)
+
+M 0 1703 1 1718 0 *! Mob 1703 (the dwarven monk) nella stanza 1718 (A Monk's Cell)
+* *M:the dwarven monk R:A Monk's Cell MW:1 MR:0
+
+M 0 1704 1 1724 0 *! Mob 1704 (the female monk) nella stanza 1724 (Sanctum of the Monastary)
+* *M:the female monk R:Sanctum of the Monastary MW:1 MR:0
+* *O:a string of prayer beads al collo MW:4
+* *O:a saffron colored robe corpo MW:9
+* *O:a vial of Holy water MW:4
+* *O:a Holy wafer MW:4
+E 1 1702 4 3 0 *! Al collo (1): 001702 (a string of prayer beads)
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+G 1 1704 4 0 0 *! In inventario: 001704 (a vial of Holy water)
+G 1 1705 4 0 0 *! In inventario: 001705 (a Holy wafer)
+
+M 0 1705 4 1705 0 *! Mob 1705 (the human monk) nella stanza 1705 (Western End of Main Hallway)
+* *M:the human monk R:Western End of Main Hallway MW:4 MR:0
+
+M 0 1705 4 1706 0 *! Mob 1705 (the human monk) nella stanza 1706 (Middle of the Main Hallway)
+* *M:the human monk R:Middle of the Main Hallway MW:4 MR:0
+
+M 0 1705 4 1710 0 *! Mob 1705 (the human monk) nella stanza 1710 (A Small Hallway)
+* *M:the human monk R:A Small Hallway MW:4 MR:0
+
+M 0 1705 4 1726 0 *! Mob 1705 (the human monk) nella stanza 1726 (Dining Hall)
+* *M:the human monk R:Dining Hall MW:4 MR:0
+
+M 0 1706 2 1724 0 *! Mob 1706 (the human monk) nella stanza 1724 (Sanctum of the Monastary)
+* *M:the human monk R:Sanctum of the Monastary MW:2 MR:0
+* *O:a string of prayer beads al collo MW:4
+* *O:a vial of Holy water MW:4
+* *O:a Holy wafer MW:4
+E 1 1702 4 3 0 *! Al collo (1): 001702 (a string of prayer beads)
+G 1 1704 4 0 0 *! In inventario: 001704 (a vial of Holy water)
+G 1 1705 4 0 0 *! In inventario: 001705 (a Holy wafer)
+
+M 0 1706 2 1724 0 *! Mob 1706 (the human monk) nella stanza 1724 (Sanctum of the Monastary)
+* *M:the human monk R:Sanctum of the Monastary MW:2 MR:0
+* *O:a string of prayer beads al collo MW:4
+* *O:a vial of Holy water MW:4
+* *O:a Holy wafer MW:4
+E 1 1702 4 3 0 *! Al collo (1): 001702 (a string of prayer beads)
+G 1 1704 4 0 0 *! In inventario: 001704 (a vial of Holy water)
+G 1 1705 4 0 0 *! In inventario: 001705 (a Holy wafer)
+
+M 0 1707 4 1714 0 *! Mob 1707 (the human monk) nella stanza 1714 (A Monk's Cell)
+* *M:the human monk R:A Monk's Cell MW:4 MR:0
+
+M 0 1707 4 1716 0 *! Mob 1707 (the human monk) nella stanza 1716 (A Monk's Cell)
+* *M:the human monk R:A Monk's Cell MW:4 MR:0
+
+M 0 1707 4 1719 0 *! Mob 1707 (the human monk) nella stanza 1719 (A Monk's Cell)
+* *M:the human monk R:A Monk's Cell MW:4 MR:0
+
+M 0 1707 4 1720 0 *! Mob 1707 (the human monk) nella stanza 1720 (A Monk's Cell)
+* *M:the human monk R:A Monk's Cell MW:4 MR:0
+* *O:a xylophone MW:1
+G 1 1760 1 0 0 *! In inventario: 001760 (a xylophone)
+
+M 0 1708 2 1722 0 *! Mob 1708 (the human monk) nella stanza 1722 (Northern Bookshelves)
+* *M:the human monk R:Northern Bookshelves MW:2 MR:0
+
+M 0 1708 2 1723 0 *! Mob 1708 (the human monk) nella stanza 1723 (Southern Bookshelves)
+* *M:the human monk R:Southern Bookshelves MW:2 MR:0
+
+M 0 1709 2 1711 0 *! Mob 1709 (the human monk) nella stanza 1711 (Turn in the Small Hallway)
+* *M:the human monk R:Turn in the Small Hallway MW:2 MR:0
+
+M 0 1709 2 1727 0 *! Mob 1709 (the human monk) nella stanza 1727 (The Kitchen)
+* *M:the human monk R:The Kitchen MW:2 MR:0
+
+M 0 1710 1 1713 0 *! Mob 1710 (the female monk) nella stanza 1713 (A Monk's Cell)
+* *M:the female monk R:A Monk's Cell MW:1 MR:0
+* *O:a saffron colored robe corpo MW:9
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+
+M 0 1711 2 1707 0 *! Mob 1711 (the dwarven monk) nella stanza 1707 (Eastern End of Main Hallway)
+* *M:the dwarven monk R:Eastern End of Main Hallway MW:2 MR:0
+
+M 0 1711 2 1709 0 *! Mob 1711 (the dwarven monk) nella stanza 1709 (A Small Hallway)
+* *M:the dwarven monk R:A Small Hallway MW:2 MR:0
+
+M 0 1712 1 1717 0 *! Mob 1712 (the dwarven monk) nella stanza 1717 (A Monk's Cell)
+* *M:the dwarven monk R:A Monk's Cell MW:1 MR:0
+
+M 0 1713 1 1708 0 *! Mob 1713 (the human monk) nella stanza 1708 (Outside the Library)
+* *M:the human monk R:Outside the Library MW:1 MR:0
+* *O:a saffron colored robe corpo MW:9
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+
+M 0 1714 1 1721 0 *! Mob 1714 (the human monk) nella stanza 1721 (Working Section of Library)
+* *M:the human monk R:Working Section of Library MW:1 MR:0
+* *O:a saffron colored robe corpo MW:9
+* *O:a ream of white paper MW:3
+* *O:a ream of white paper MW:3
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+G 1 1707 3 0 0 *! In inventario: 001707 (a ream of white paper)
+G 1 1707 3 0 0 *! In inventario: 001707 (a ream of white paper)
+
+M 0 1715 1 1724 0 *! Mob 1715 (the human monk) nella stanza 1724 (Sanctum of the Monastary)
+* *M:the human monk R:Sanctum of the Monastary MW:1 MR:0
+* *O:a string of prayer beads al collo MW:4
+* *O:a saffron colored robe corpo MW:9
+* *O:a vial of Holy water MW:4
+* *O:a Holy wafer MW:4
+E 1 1702 4 3 0 *! Al collo (1): 001702 (a string of prayer beads)
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+G 1 1704 4 0 0 *! In inventario: 001704 (a vial of Holy water)
+G 1 1705 4 0 0 *! In inventario: 001705 (a Holy wafer)
+
+M 0 1716 1 1712 0 *! Mob 1716 (Dorek the monk) nella stanza 1712 (End of a Small Hallway)
+* *M:Dorek the monk R:End of a Small Hallway MW:1 MR:0
+* *O:tunica arancione corpo MW:9
+* *!O:a staff impugnato MW:1
+E 1 1759 9 12 0 *! Intorno al corpo: 001759 (tunica arancione)
+E 1 40003 1 16 0 *! Impugnato: 040003 (a staff)
+
+M 0 1717 1 1727 0 *! Mob 1717 (Ron the monk) nella stanza 1727 (The Kitchen)
+* *M:Ron the monk R:The Kitchen MW:1 MR:0
+* *O:a saffron colored robe corpo MW:9
+* *!O:a barrel MW:2
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+G 1 3000 2 0 0 *! In inventario: 003000 (a barrel)
+
+M 0 1718 1 1702 0 *! Mob 1718 ($c0011Il Gran Maestro dei Monaci) nella stanza 1702 (Further Down the Path)
+* *M:Il Gran Maestro dei Monaci R:Further Down the Path MW:1 MR:0
+* *O:a saffron colored robe corpo MW:9
+* *O:the monastary's money pouch MW:1
+E 1 1706 9 12 0 *! Intorno al corpo: 001706 (a saffron colored robe)
+G 1 1762 1 0 0 *! In inventario: 001762 (the monastary's money pouch)
+
+M 0 3062 30 1735 0 *! Mob 3062 (Un gatto nero) nella stanza 1735 (The Glowing Green Chamber)
+* *!M:Un gatto nero R:The Glowing Green Chamber MW:30 MR:0
+
+M 0 3066 10 1740 0 *! Mob 3066 (Il pipistrello) nella stanza 1740 (A Dark Tunnel)
+* *!M:Il pipistrello R:A Dark Tunnel MW:10 MR:0
+
+M 0 3066 10 1748 0 *! Mob 3066 (Il pipistrello) nella stanza 1748 (The Glowing Red Chamber)
+* *!M:Il pipistrello R:The Glowing Red Chamber MW:10 MR:0
+
+M 0 9005 6 1733 0 *! Mob 9005 (The baby llama) nella stanza 1733 (The Glowing Green Chamber)
+* *!M:The baby llama R:The Glowing Green Chamber MW:6 MR:0
+
+M 0 9005 6 1748 0 *! Mob 9005 (The baby llama) nella stanza 1748 (The Glowing Red Chamber)
+* *!M:The baby llama R:The Glowing Red Chamber MW:6 MR:0
+
+M 0 9006 6 1730 0 *! Mob 9006 (The scruffy mutt) nella stanza 1730 (Green Glowing Intersection)
+* *!M:The scruffy mutt R:Green Glowing Intersection MW:6 MR:0
+
+M 0 9006 6 1747 0 *! Mob 9006 (The scruffy mutt) nella stanza 1747 (The Glowing Red Chamber)
+* *!M:The scruffy mutt R:The Glowing Red Chamber MW:6 MR:0
+
+O 0 12 23 1737 0  *! Carica oggetto 12 (un panino) nella stanza 1737 (A Strangely Lit Passage)
+
+O 0 12 23 1737 0  *! Carica oggetto 12 (un panino) nella stanza 1737 (A Strangely Lit Passage)
+
+O 0 13 32 1737 0  *! Carica oggetto 13 (un bicchiere) nella stanza 1737 (A Strangely Lit Passage)
+
+O 0 13 32 1737 0  *! Carica oggetto 13 (un bicchiere) nella stanza 1737 (A Strangely Lit Passage)
+
+O 0 30 10 1748 0  *! Carica oggetto 30 (A pile of scraps) nella stanza 1748 (The Glowing Red Chamber)
+
+O 0 1701 8 1713 0  *! Carica oggetto 1701 (a small cot) nella stanza 1713 (A Monk's Cell)
+
+O 0 1701 8 1714 0  *! Carica oggetto 1701 (a small cot) nella stanza 1714 (A Monk's Cell)
+
+O 0 1701 8 1715 0  *! Carica oggetto 1701 (a small cot) nella stanza 1715 (A Monk's Cell)
+
+O 0 1701 8 1716 0  *! Carica oggetto 1701 (a small cot) nella stanza 1716 (A Monk's Cell)
+
+O 0 1701 8 1717 0  *! Carica oggetto 1701 (a small cot) nella stanza 1717 (A Monk's Cell)
+
+O 0 1701 8 1718 0  *! Carica oggetto 1701 (a small cot) nella stanza 1718 (A Monk's Cell)
+
+O 0 1701 8 1719 0  *! Carica oggetto 1701 (a small cot) nella stanza 1719 (A Monk's Cell)
+
+O 0 1701 8 1720 0  *! Carica oggetto 1701 (a small cot) nella stanza 1720 (A Monk's Cell)
+
+O 0 1708 10 1734 0  *! Carica oggetto 1708 (a piece of luminous green fungus) nella stanza 1734 (The Glowing Green Chamber)
+
+O 0 1708 10 1734 0  *! Carica oggetto 1708 (a piece of luminous green fungus) nella stanza 1734 (The Glowing Green Chamber)
+
+O 0 1709 8 1748 0  *! Carica oggetto 1709 (a piece of luminous red fungus) nella stanza 1748 (The Glowing Red Chamber)
+
+O 0 1709 8 1748 0  *! Carica oggetto 1709 (a piece of luminous red fungus) nella stanza 1748 (The Glowing Red Chamber)
+
+O 0 1710 2 1728 0  *! Carica oggetto 1710 (a small cask of wine) nella stanza 1728 (Cellar Under the Monastary)
+
+O 0 1710 2 1728 0  *! Carica oggetto 1710 (a small cask of wine) nella stanza 1728 (Cellar Under the Monastary)
+
+O 0 1712 2 1722 0  *! Carica oggetto 1712 (a narrow oak bookshelf) nella stanza 1722 (Northern Bookshelves)
+P 1 1746 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001746 (an encyclopedia vol. P)
+P 1 1745 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001745 (an encyclopedia vol. O)
+P 1 1744 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001744 (an encyclopedia vol. N)
+P 1 1743 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001743 (an encyclopedia vol. M)
+
+O 0 1712 2 1723 0  *! Carica oggetto 1712 (a narrow oak bookshelf) nella stanza 1723 (Southern Bookshelves)
+P 1 1719 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001719 (a black history book)
+P 1 1720 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001720 (a small, black leather book)
+P 1 1721 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001721 (a thick textbook)
+P 1 1722 1 1712 0 *! Dentro 001712 (a narrow oak bookshelf): 001722 (a large textbook)
+
+O 0 1713 2 1722 0  *! Carica oggetto 1713 (a wide oak bookshelf) nella stanza 1722 (Northern Bookshelves)
+P 1 1742 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001742 (an encyclopedia vol. L)
+P 1 1741 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001741 (an encyclopedia vol. K)
+P 1 1740 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001740 (an encyclopedia vol. J)
+P 1 1739 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001739 (an encyclopedia vol. I)
+
+O 0 1713 2 1723 0  *! Carica oggetto 1713 (a wide oak bookshelf) nella stanza 1723 (Southern Bookshelves)
+P 1 1723 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001723 (a small, brown leather book)
+P 1 1725 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001725 (a small leather book)
+P 1 1726 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001726 (a forest green book)
+P 1 1730 1 1713 0 *! Dentro 001713 (a wide oak bookshelf): 001730 (a wood bound book)
+
+O 0 1714 2 1722 0  *! Carica oggetto 1714 (a tall oak bookshelf) nella stanza 1722 (Northern Bookshelves)
+P 1 1738 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001738 (an encyclopedia vol. H)
+P 1 1737 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001737 (an encyclopedia vol. G)
+P 1 1736 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001736 (an encyclopedia vol. F)
+P 1 1735 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001735 (an encyclopedia vol. E)
+
+O 0 1714 2 1723 0  *! Carica oggetto 1714 (a tall oak bookshelf) nella stanza 1723 (Southern Bookshelves)
+P 1 1728 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001728 (a map)
+P 1 1729 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001729 (a map)
+P 1 1757 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001757 (an encyclopedia Index)
+P 1 1756 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001756 (an encyclopedia vol. Z)
+P 1 1755 1 1714 0 *! Dentro 001714 (a tall oak bookshelf): 001755 (an encyclopedia vol. Y)
+
+O 0 1715 2 1722 0  *! Carica oggetto 1715 (a short oak bookshelf) nella stanza 1722 (Northern Bookshelves)
+P 1 1734 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001734 (an encyclopedia vol. D)
+P 1 1733 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001733 (an encyclopedia vol. C)
+P 1 1732 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001732 (an encyclopedia vol. B)
+P 1 1731 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001731 (an encyclopedia vol. A)
+
+O 0 1715 2 1723 0  *! Carica oggetto 1715 (a short oak bookshelf) nella stanza 1723 (Southern Bookshelves)
+P 1 1727 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001727 (a history manual)
+P 1 1724 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001724 (a small manual)
+P 1 1717 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001717 (a brown history book)
+P 1 1718 1 1715 0 *! Dentro 001715 (a short oak bookshelf): 001718 (a tan history book)
+
+O 0 1716 2 1722 0  *! Carica oggetto 1716 (a long oak bookshelf) nella stanza 1722 (Northern Bookshelves)
+P 1 1747 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001747 (an encyclopedia vol. Q)
+P 1 1748 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001748 (an encyclopedia vol. R)
+P 1 1749 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001749 (an encyclopedia vol. S)
+P 1 1750 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001750 (an encyclopedia vol. T)
+
+O 0 1716 2 1723 0  *! Carica oggetto 1716 (a long oak bookshelf) nella stanza 1723 (Southern Bookshelves)
+P 1 1754 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001754 (an encyclopedia vol. X)
+P 1 1753 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001753 (an encyclopedia vol. W)
+P 1 1752 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001752 (an encyclopedia vol. V)
+P 1 1751 1 1716 0 *! Dentro 001716 (a long oak bookshelf): 001751 (an encyclopedia vol. U)
+
+O 0 3102 45 1740 0  *! Carica oggetto 3102 (un bicchiere) nella stanza 1740 (A Dark Tunnel)
+
+O 0 3102 45 1748 0  *! Carica oggetto 3102 (un bicchiere) nella stanza 1748 (The Glowing Red Chamber)
+
+D 0 1708 0 0 0 *! Uscita north della stanza 1708 (Outside the Library): aperta
+D 0 1709 0 0 0 *! Uscita north della stanza 1709 (A Small Hallway): aperta
+D 0 1709 2 0 0 *! Uscita south della stanza 1709 (A Small Hallway): aperta
+D 0 1710 0 0 0 *! Uscita north della stanza 1710 (A Small Hallway): aperta
+D 0 1710 2 0 0 *! Uscita south della stanza 1710 (A Small Hallway): aperta
+D 0 1711 0 0 0 *! Uscita north della stanza 1711 (Turn in the Small Hallway): aperta
+D 0 1711 1 0 0 *! Uscita east della stanza 1711 (Turn in the Small Hallway): aperta
+D 0 1712 1 1 0 *! Uscita east della stanza 1712 (End of a Small Hallway): chiusa
+D 0 1713 2 0 0 *! Uscita south della stanza 1713 (A Monk's Cell): aperta
+D 0 1714 2 0 0 *! Uscita south della stanza 1714 (A Monk's Cell): aperta
+D 0 1715 2 0 0 *! Uscita south della stanza 1715 (A Monk's Cell): aperta
+D 0 1716 2 0 0 *! Uscita south della stanza 1716 (A Monk's Cell): aperta
+D 0 1717 0 0 0 *! Uscita north della stanza 1717 (A Monk's Cell): aperta
+D 0 1718 0 0 0 *! Uscita north della stanza 1718 (A Monk's Cell): aperta
+D 0 1719 3 0 0 *! Uscita west della stanza 1719 (A Monk's Cell): aperta
+D 0 1720 3 1 0 *! Uscita west della stanza 1720 (A Monk's Cell): chiusa
+D 0 1727 5 0 0 *! Uscita down della stanza 1727 (The Kitchen): aperta
+D 0 1728 4 0 0 *! Uscita up della stanza 1728 (Cellar Under the Monastary): aperta
+
+*! Fine dell'inizializzazione della zona 17
+S
+#27
+Astral Zone (by Celestian)~
+2799 37 2
+*! Inizializzazione della zona 27
+
+M 0 2700 1 2721 0 *! Mob 2700 (Un berbalang con ali simili ad un pipistrello) nella stanza 2721 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A berbalang with bat-like wings R:Astral Plane MW:1 MR:0
+* * * * * * * * * * * * * * * * * *!O:una pozione dorata MW:7
+G 1 3056 7 0 0 *! In inventario: 003056 (una pozione dorata)
+
+M 0 2701 2 2716 0 *! Mob 2701 (Un soldato githyanki) nella stanza 2716 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A githyanki soldier R:Astral Plane MW:2 MR:0
+* * * * * * * * * * * * * * * * * *O:a suit of banded mail corpo MW:3
+* * * * * * * * * * * * * * * * * *O:a silvery sword impugnato MW:4
+E 1 2701 3 5 0 *! Sul corpo: 002701 (Un vestito di maglie di metallo)
+E 1 2700 4 16 0 *! Impugnato: 002700 (Una spada Argentata)
+
+M 0 2701 2 2726 0 *! Mob 2701 (Un soldato githyanki) nella stanza 2726 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A githyanki soldier R:Astral Plane MW:2 MR:0
+* * * * * * * * * * * * * * * * * *O:a suit of banded mail corpo MW:3
+* * * * * * * * * * * * * * * * * *O:a silvery sword MW:4
+E 1 2701 3 5 0 *! Sul corpo: 002701 (Un vestito di maglie di metallo)
+G 1 2700 4 0 0 *! In inventario: 002700 (Una spada Argentata)
+
+M 0 2702 1 2709 0 *! Mob 2702 (Un mago githyanki) nella stanza 2709 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A githyanki mage R:Astral Plane MW:1 MR:0
+* * * * * * * * * * * * * * * * * *O:a vile robe corpo MW:2
+* * * * * * * * * * * * * * * * * *O:an old scroll tenuto MW:1
+* * * * * * * * * * * * * * * * * *O:a dirty potion MW:2
+E 1 2703 2 12 0 *! Intorno al corpo: 002703 (Un abito logoro)
+E 1 2704 1 17 0 *! Tenuto: 002704 (Un antico rotolo di pergamena)
+G 1 2705 2 0 0 *! In inventario: 002705 (Una vecchia e sudicia ampolla)
+
+M 0 2703 1 2703 0 *! Mob 2703 (Un cavaliere githyanki ) nella stanza 2703 (L'area della luce $c0009rossa$c0007 pulsante!)
+* * * * * * * * * * * * * * * * * *M:A githyanki knight R:Pulsing Red Area MW:1 MR:0
+* * * * * * * * * * * * * * * * * *O:a suit of banded mail corpo MW:3
+* * * * * * * * * * * * * * * * * *O:a silvery sword impugnato MW:4
+E 1 2701 3 5 0 *! Sul corpo: 002701 (Un vestito di maglie di metallo)
+E 1 2700 4 16 0 *! Impugnato: 002700 (Una spada Argentata)
+
+M 0 2704 1 2729  *! Mob 2704 (Un essere informe) nella stanza 2729 (Un piano astrale sconosciuto)
+
+M 0 2705 2 2730  *! Mob 2705 (Un sergente githyanki) nella stanza 2730 (Nella nebbia cangiante)
+E 1 2701 0 5  *! Sul corpo: 002701 (Un vestito di maglie di metallo)
+E 1 3090 0 16  *! Impugnato: 003090 (uno spadone a due mani)
+
+M 0 2706 1 2731  *! Mob 2706 (Un guerriero githyanki) nella stanza 2731 (Un turbinio di colori)
+E 1 6111 0 11  *! Come scudo: 006111 (un largo scudo)
+E 1 2703 0 12  *! Intorno al corpo: 002703 (Un abito logoro)
+E 1 3090 0 16  *! Impugnato: 003090 (uno spadone a due mani)
+
+M 0 2707 1 2733  *! Mob 2707 (Un cavaliere githyanki) nella stanza 2733 (La polla madre)
+E 1 2701 0 5  *! Sul corpo: 002701 (Un vestito di maglie di metallo)
+
+M 0 2708 1 2736  *! Mob 2708 (Un capitano githyanki) nella stanza 2736 (La polla madre)
+E 1 2701 0 5  *! Sul corpo: 002701 (Un vestito di maglie di metallo)
+E 1 6111 0 11  *! Come scudo: 006111 (un largo scudo)
+E 1 7201 0 16  *! Impugnato: 007201 (Una Grossa Mazza)
+
+M 0 2709 1 2737  *! Mob 2709 (Un arcimago githyanki) nella stanza 2737 (La polla madre)
+E 1 2703 0 12  *! Intorno al corpo: 002703 (Un abito logoro)
+E 1 2708 0 17  *! Tenuto: 002708 (Un tomo Arcano)
+
+M 0 2710 1 2738  *! Mob 2710 (Yzrgomab il capo supremo dei githyanki) nella stanza 2738 (La polla madre)
+E 1 2709 2 2  *! Come anello sinistro: 002709 (Un anello con una sferetta nera incastonata.)
+E 1 2703 0 12  *! Intorno al corpo: 002703 (Un abito logoro)
+E 1 2704 0 17  *! Tenuto: 002704 (Un antico rotolo di pergamena)
+
+M 0 2711 2 2707 0 *! Mob 2711 (Uno slaadi $c0009rosso$c0007) nella stanza 2707 (Confine del piano Astrale)
+* * * * * * * * * * * * * * * * * *M:A red slaadi R:Edge of the Astral Plane MW:2 MR:0
+* * * * * * * * * * * * * * * * * *O:a loincloth vita MW:2
+E 1 2706 2 13 0 *! Alla vita: 002706 (Una fascia slaadi rinforzata)
+
+M 0 2711 2 2718 0 *! Mob 2711 (Uno slaadi $c0009rosso$c0007) nella stanza 2718 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A red slaadi R:Astral Plane MW:2 MR:0
+* * * * * * * * * * * * * * * * * *O:a loincloth vita MW:2
+* * * * * * * * * * * * * * * * * *O:a red potion MW:1
+E 1 2706 2 13 0 *! Alla vita: 002706 (Una fascia slaadi rinforzata)
+G 1 2707 1 0 0 *! In inventario: 002707 (Una pozione $c0009Rossa$c0007 slaadi)
+
+M 0 2712 1 2713 0 *! Mob 2712 (Un mezzodemone hyrblanok) nella stanza 2713 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:An insectoid-like mezzodaemon R:Astral Plane MW:1 MR:0
+* * * * * * * * * * * * * * * * * *!O:un largo scudo scudo MW:22
+* * * * * * * * * * * * * * * * * *!O:uno spadone a 2-mani impugnato MW:15
+* * * * * * * * * * * * * * * * * *!O:una pozione dorata MW:7
+E 1 6111 22 11 0 *! Come scudo: 006111 (un largo scudo)
+E 1 3090 15 16 0 *! Impugnato: 003090 (uno spadone a due mani)
+G 1 3056 7 0 0 *! In inventario: 003056 (una pozione dorata)
+
+M 0 2713 2 2702 0 *! Mob 2713 (Un predatore invisibile) nella stanza 2702 (Uno strappo tra le cinque dimensioni)
+* * * * * * * * * * * * * * * * * *M:An invisible stalker R:Formless Void of the Astral Plane MW:2 MR:0
+* * * * * * * * * * * * * * * * * *!O:una bacchetta di invisibilita' tenuto MW:2
+E 1 3053 2 17 0 *! Tenuto: 003053 (una bacchetta di invisibilita')
+
+M 0 2713 2 2712 0 *! Mob 2713 (Un predatore invisibile) nella stanza 2712 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:An invisible stalker R:Astral Plane MW:2 MR:0
+
+M 0 2714 1 2715 0 *! Mob 2714 (La proiezione astrale di un veterano mindflayer.) nella stanza 2715 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:An astrally projecting senior mindflayer R:Astral Plane MW:1 MR:0
+* * * * * * * * * * * * * * * * * *!O:the large mace impugnato MW:2
+E 1 7201 2 16 0 *! Impugnato: 007201 (Una Grossa Mazza)
+
+M 0 2715 1 2702 0 *! Mob 2715 (Un portale Pool ) nella stanza 2702 (Uno strappo tra le cinque dimensioni)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Formless Void of the Astral Plane MW:1 MR:0
+
+M 0 2716 1 2707 0 *! Mob 2716 (Un portale Pool) nella stanza 2707 (Confine del piano Astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Edge of the Astral Plane MW:1 MR:0
+
+M 0 2717 1 2708 0 *! Mob 2717 (Un portale Pool) nella stanza 2708 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2718 1 2709 0 *! Mob 2718 (Un portale Pool) nella stanza 2709 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2719 1 2711 0 *! Mob 2719 (Un portale Pool) nella stanza 2711 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2720 1 2710 0 *! Mob 2720 (Un portale Pool) nella stanza 2710 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2721 1 2712 0 *! Mob 2721 (Un portale Pool) nella stanza 2712 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2722 1 2713 0 *! Mob 2722 (Un portale Pool) nella stanza 2713 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2723 1 2714 0 *! Mob 2723 (Un portale Pool) nella stanza 2714 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2724 1 2715 0 *! Mob 2724 (Un portale Pool) nella stanza 2715 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2725 1 2716 0 *! Mob 2725 (Un portale Pool) nella stanza 2716 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2726 1 2718 0 *! Mob 2726 (Un portale Pool) nella stanza 2718 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2727 1 2720 0 *! Mob 2727 (Un portale Pool) nella stanza 2720 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2728 1 2722 0 *! Mob 2728 (Un portale Pool) nella stanza 2722 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2729 1 2723 0 *! Mob 2729 (Un portale Pool) nella stanza 2723 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2730 1 2725 0 *! Mob 2730 (Un portale Pool) nella stanza 2725 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2731 1 2724 0 *! Mob 2731 (Un portale Pool) nella stanza 2724 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+M 0 2732 1 2726 0 *! Mob 2732 (Un portale Pool) nella stanza 2726 (Il piano astrale)
+* * * * * * * * * * * * * * * * * *M:A color pool R:Astral Plane MW:1 MR:0
+
+D 0 2703 1 1  *! Uscita east della stanza 2703 (L'area della luce $c0009rossa$c0007 pulsante!): chiusa
+D 0 2721 1 0  *! Uscita east della stanza 2721 (Il piano astrale): aperta
+D 0 2729 0 1  *! Uscita north della stanza 2729 (Un piano astrale sconosciuto): chiusa
+D 0 2731 0 1  *! Uscita north della stanza 2731 (Un turbinio di colori): chiusa
+
+*! Fine dell'inizializzazione della zona 27
+S
+#30
+Myst~
+3099 20 2
+*! Items initializations
+O 0 1500 0 3001 1 *! 001500 [Fontana della vita] caricato nella stanza 003001 [La piazza delle Nebbie]
+O 0 3095 1 3012 1 *! 003095 [Il Libro degli Eroi] caricato nella stanza 003012 [La piazza del grande arco]
+O 0 3097 1 3067 1 *! 003097 [una bacheca per gli avvisi] caricato nella stanza 003067 [La Bacheca]
+*! Mobiles initializations
+M 0 3000 1 3033 *!003000 [Gwynyar] caricato nella stanza 003033 [Il laboratorio dell'alchimista.]
+G 1 3050 0 *! 003050 [una pergamena di identificazione] dato al MOB 003000 [Gwynyar]
+G 1 3051 0 *! 003051 [una pozione gialla per vedere l'invisibile] dato al MOB 003000 [Gwynyar]
+G 1 3052 0 *! 003052 [una pergamena di ritorno] dato al MOB 003000 [Gwynyar]
+G 1 3053 0 *! 003053 [una bacchetta di invisibilita'] dato al MOB 003000 [Gwynyar]
+G 1 3054 0 *! 003054 [una verga del sonno] dato al MOB 003000 [Gwynyar]
+G 1 3055 0 *! 003055 [una pozione bianca] dato al MOB 003000 [Gwynyar]
+G 1 3056 0 *! 003056 [una pozione dorata] dato al MOB 003000 [Gwynyar]
+G 1 3057 0 *! 003057 [una pozione argentea] dato al MOB 003000 [Gwynyar]
+M 0 3001 1 3009 *!003001 [Flippy il fornaio] caricato nella stanza 003009 [La Panetteria]
+G 1 3010 0 *! 003010 [una pagnotta] dato al MOB 003001 [Flippy il fornaio]
+G 1 3011 0 *! 003011 [una pastarella] dato al MOB 003001 [Flippy il fornaio]
+G 1 3012 0 *! 003012 [uno sfilatino] dato al MOB 003001 [Flippy il fornaio]
+G 1 3013 0 *! 003013 [un biscotto] dato al MOB 003001 [Flippy il fornaio]
+M 0 3002 1 3010 *!003002 [Tricky il mercante] caricato nella stanza 003010 [L'antro del mercante]
+G 1 3005 0 *! 003005 [un falcetto] dato al MOB 003002 [Tricky il mercante]
+G 1 3006 0 *! 003006 [una piccola pala] dato al MOB 003002 [Tricky il mercante]
+G 1 3030 0 *! 003030 [una torcia] dato al MOB 003002 [Tricky il mercante]
+G 1 3031 0 *! 003031 [una lanterna] dato al MOB 003002 [Tricky il mercante]
+G 1 3032 0 *! 003032 [una borsa] dato al MOB 003002 [Tricky il mercante]
+G 1 3035 0 *! 003035 [un pezzo di papiro] dato al MOB 003002 [Tricky il mercante]
+G 1 3036 0 *! 003036 [una penna inchiostrata] dato al MOB 003002 [Tricky il mercante]
+M 0 3003 1 3011 *!003003 [Bogordian l'armiere] caricato nella stanza 003011 [Il negozio dell'Armaiolo]
+G 1 3090 0 *! 003090 [uno spadone a 2-mani] dato al MOB 003003 [Bogordian l'armiere]
+G 1 3092 0 *! 003092 [un'ascia a 2-mani] dato al MOB 003003 [Bogordian l'armiere]
+M 0 3004 1 3020 *!003004 [Bracco il fabbro di Myst] caricato nella stanza 003020 [Il Fabbro]
+G 1 3040 0 *! 003040 [un pettorale di piastre] dato al MOB 003004 [Bracco il fabbro di Myst]
+G 1 3047 0 *! 003047 [una maglia elfica] dato al MOB 003004 [Bracco il fabbro di Myst]
+G 1 3073 0 *! 003073 [un paio di guanti a piastre] dato al MOB 003004 [Bracco il fabbro di Myst]
+G 1 3080 0 *! 003080 [un paio di gambali di bronzo] dato al MOB 003004 [Bracco il fabbro di Myst]
+M 0 3005 1 3008 *!003005 [Niobe la receptionist] caricato nella stanza 003008 [La zona notte]
+M 0 3006 1 3049 *!003006 [Nemo il barcaiolo] caricato nella stanza 003049 [Il porto fluviale]
+G 1 3060 0 *! 003060 [una zattera] dato al MOB 003006 [Nemo il barcaiolo]
+G 1 3061 0 *! 003061 [una canoa] dato al MOB 003006 [Nemo il barcaiolo]
+M 0 3007 1 8663 *!003007 [Drunky il barman] caricato nella stanza 008663 [Stanza sconosciuta]
+E 1 3009 0 3 *! 003009 [Una grande e massiccia $c0011collana d'oro$c0007] indossato dal MOB 003007 [Drunky il barman] necklace (1)
+E 1 3009 0 4 *! 003009 [Una grande e massiccia $c0011collana d'oro$c0007] indossato dal MOB 003007 [Drunky il barman] necklace (2)
+E 1 3016 0 5 *! 003016 [La $c0011giacca$c0007 con bavero in pelliccia maculata.] indossato dal MOB 003007 [Drunky il barman] body
+E 1 3007 0 6 *! 003007 [Un$c0011 fedora fluorescente$c0007] indossato dal MOB 003007 [Drunky il barman] Head
+E 1 3019 0 7 *! 003019 [Dei $c0011pantaloni$c0007 con una $c0009riga$c0007 sul fianco] indossato dal MOB 003007 [Drunky il barman] Legs
+E 1 3026 0 8 *! 003026 [Le ultimissime $c0010scarpe$c0007 della Dike] indossato dal MOB 003007 [Drunky il barman] Feet
+E 1 3018 0 13 *! 003018 [Una $c0009cintura elasticizzata $c0007con una $c0014D$c0004 $c0007sulla fibia.] indossato dal MOB 003007 [Drunky il barman] Waist
+E 1 3017 0 14 *! 003017 [Enormi$c0011 bracciali $c0007in oro con borchie di $c0015diamanti$c0007] indossato dal MOB 003007 [Drunky il barman] Right wrist
+E 1 3017 0 15 *! 003017 [Enormi$c0011 bracciali $c0007in oro con borchie di $c0015diamanti$c0007] indossato dal MOB 003007 [Drunky il barman] Left wrist
+E 1 3015 0 16 *! 003015 [Un enorme boccale di $c0011birra$c0007] indossato dal MOB 003007 [Drunky il barman] Wield
+E 1 3014 0 17 *! 003014 [Il $c0014bastone$c0007 di Drunky] indossato dal MOB 003007 [Drunky il barman] hold
+E 1 3008 0 21 *! 003008 [Un paio di $c0013occhiali di Herpes$c0007] indossato dal MOB 003007 [Drunky il barman] eyes
+G 1 3000 0 *! 003000 [un barile di birra] dato al MOB 003007 [Drunky il barman]
+G 1 3001 0 *! 003001 [una bottiglia di torcibudella] dato al MOB 003007 [Drunky il barman]
+G 1 3002 0 *! 003002 [una fiasca di birra chiara] dato al MOB 003007 [Drunky il barman]
+G 1 3003 0 *! 003003 [una bottiglia di cristallo soffiato] dato al MOB 003007 [Drunky il barman]
+G 1 3004 0 *! 003004 [una bottiglietta di brandivino] dato al MOB 003007 [Drunky il barman]
+M 0 3008 1 3065 *!003008 [Lo scriba di Myst] caricato nella stanza 003065 [L'Ufficio Postale]
+M 0 3010 1 3007 *!003010 [Drina Lungabarba] caricato nella stanza 003007 [La camera di Drina Lungabarba.]
+F 1 2 31 *! Paura verso razza Vegetable man
+M 0 3011 1 3098 *!003011 [Elsinella Foltachioma] caricato nella stanza 003098 [La camera di Elsinella Foltachioma]
+F 1 2 31 *! Paura verso razza Vegetable man
+M 0 3012 1 3096 *!003012 [Marsilla schienalarga] caricato nella stanza 003096 [La camera di Marsilla Schienalarga]
+F 1 2 11 *! Paura verso razza Insect
+M 0 3013 1 3005 *!003013 [La Custode del tempio di Eros] caricato nella stanza 003005 [Il Tempio di Eros]
+M 0 3020 1 3050 *!003020 [Mork il maestro dei maghi] caricato nella stanza 003050 [La Cima della Torre]
+M 0 3021 1 3044 *!003021 [Opus il maestro dei chierici] caricato nella stanza 003044 [L'altare]
+M 0 3022 1 3076 *!003022 [Spanky il maestro dei ladri] caricato nella stanza 003076 [La stanza del maestro dei Ladri]
+M 0 3023 1 3092 *!003023 [Magnus il maestro dei guerrieri] caricato nella stanza 003092 [L'alloggio del comandante delle guardie]
+M 0 3041 1 3061 *!003041 [L'Attendente] caricato nella stanza 003061 [La strada delle Gilde]
+M 0 3047 1 3047 *!003047 [Deynor] caricato nella stanza 003047 [La torre della magia]
+E 1 3058 0 17 *! 003058 [un piccolo contenitore di vetro] indossato dal MOB 003047 [Deynor] hold
+M 0 3060 5 3012 *!003060 [Una guardia di Myst] caricato nella stanza 003012 [La piazza del grande arco]
+M 0 3060 5 3043 *!003060 [Una guardia di Myst] caricato nella stanza 003043 [Piazzetta del municipio (l'antro del newbie)]
+M 0 3061 4 3001 *!003061 [uno Spazzino] caricato nella stanza 003001 [La piazza delle Nebbie]
+M 0 3062 5 3083 *!003062 [un Gatto delle nebbie] caricato nella stanza 003083 [Viale del Grifone]
+M 0 3063 5 3012 *!003063 [un Cittadino] caricato nella stanza 003012 [La piazza del grande arco]
+M 0 3064 5 3019 *!003064 [un Ubriacone] caricato nella stanza 003019 [la Strada Commerciale]
+M 0 3067 5 3077 *!003067 [una sentinella] caricato nella stanza 003077 [La piazza delle statue]
+M 0 3068 1 3052 *!003068 [Un monaco rinnegato] caricato nella stanza 003052 [Crocicchio dell'ovest]
+M 0 3069 6 3084 *!003069 [una guardia scelta] caricato nella stanza 003084 [Le porte della citta']
+M 0 3070 1 3053 *!003070 [un apprendista fabbro] caricato nella stanza 003053 [Crocicchio dell'est]
+M 0 3073 1 3003 *!003073 [Il saggio] caricato nella stanza 003003 [Ingresso alla Cappella]
+M 0 3074 1 3064 *!003074 [Il cacciatore] caricato nella stanza 003064 [Crocicchio del sud]
+M 0 3077 1 3070 *!003077 [il Maestro Barbaro] caricato nella stanza 003070 [La tenda del signore dei Barbari]
+M 0 3144 1 3004 *!003144 [La Ronda] caricato nella stanza 003004 [La zona occidentale della Piazza delle Nebbie]
+M 0 21363 1 3089 *!021363 [the paladin guildmaster] caricato nella stanza 003089 [La stanza del maestro dell'ordine dei Paladini]
+M 0 21366 1 3090 *!021366 [the psionist guildmaster] caricato nella stanza 003090 [Il signore del pensiero]
+M 0 21367 1 3088 *!021367 [the ranger guildmaster] caricato nella stanza 003088 [Il campo dei Ranger]
+*! Exits initializations
+D 0 3001 0 1 *! Uscita North della stanza 003001 [La piazza delle Nebbie]: Chiusa
+D 0 3005 0 1 *! Uscita North della stanza 003005 [Il Tempio di Eros]: Chiusa
+D 0 3005 1 1 *! Uscita East della stanza 003005 [Il Tempio di Eros]: Chiusa
+D 0 3005 2 1 *! Uscita South della stanza 003005 [Il Tempio di Eros]: Chiusa
+D 0 3005 3 1 *! Uscita West della stanza 003005 [Il Tempio di Eros]: Chiusa
+D 0 3073 5 1 *! Uscita Down della stanza 003073 [La catapecchia]: Chiusa
+D 0 3078 0 2 *! Uscita North della stanza 003078 [La strada del porto]: Chiusa a chiave
+D 0 3078 2 1 *! Uscita South della stanza 003078 [La strada del porto]: Chiusa
+D 0 3096 1 1 *! Uscita East della stanza 003096 [La camera di Marsilla Schienalarga]: Chiusa
+D 0 3098 3 1 *! Uscita West della stanza 003098 [La camera di Elsinella Foltachioma]: Chiusa
+S
+#42
+BofGorRak~
+4499 20 2
+*! Inizializzazione della zona 42
+
+M 0 4200 4 4305  *! Mob 4200 (Fulmine di Guerra) nella stanza 4305 (Campo d'Addestramento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+
+M 0 4200 4 4305  *! Mob 4200 (Fulmine di Guerra) nella stanza 4305 (Campo d'Addestramento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+
+M 0 4200 4 4305  *! Mob 4200 (Fulmine di Guerra) nella stanza 4305 (Campo d'Addestramento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+H 1 2 17  *! Odio verso la razza Giant (generico)
+
+M 0 4200 4 4289  *! Mob 4200 (Fulmine di Guerra) nella stanza 4289 (Campo dei Giganti)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+H 1 2 17  *! Odio verso la razza Giant (generico)
+
+M 0 4201 1 4326  *! Mob 4201 (Gran Maestro delle Rune) nella stanza 4326 (Stanza del Sommo Maestro delle Rune)
+E 1 4200 0 17  *! Tenuto: 004200 (Grimorio Nero)
+
+M 0 4202 1 4486  *! Mob 4202 (Buduluggulun il Grande Sciamano) nella stanza 4486 (Caverna dell'Oracolo)
+E 1 4212 0 21  *! Agli occhi: 004212 (Monocolo del Segugio)
+
+M 0 4203 1 4488  *! Mob 4203 (Drago Rosso) nella stanza 4488 (Gabbia)
+
+M 0 4204 1 4489  *! Mob 4204 (Protoplasma Nero) nella stanza 4489 (Gabbia)
+
+M 0 4205 1 4425  *! Mob 4205 (AurumVorax) nella stanza 4425 (Alloggio del Comandante)
+G 1 4227 1  *! In inventario: 004227 (Pelle Dorata)
+
+M 0 4206 12 4236  *! Mob 4206 (Sentinella) nella stanza 4236 (Torre)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4203 15 16  *! Impugnato: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+
+M 0 4206 12 4238  *! Mob 4206 (Sentinella) nella stanza 4238 (Torre)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4203 15 16  *! Impugnato: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+
+M 0 4206 12 4239  *! Mob 4206 (Sentinella) nella stanza 4239 (Torre)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4203 15 16  *! Impugnato: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+
+M 0 4206 12 4241  *! Mob 4206 (Sentinella) nella stanza 4241 (Torre)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4203 15 16  *! Impugnato: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+
+M 0 4206 12 4276  *! Mob 4206 (Sentinella) nella stanza 4276 (Torre)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4203 15 16  *! Impugnato: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+
+M 0 4206 12 4277  *! Mob 4206 (Sentinella) nella stanza 4277 (Torre)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4203 15 16  *! Impugnato: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+
+M 0 4207 4 4240  *! Mob 4207 (Sentinella) nella stanza 4240 (Porta Meridionale della Fortezza)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4207 4 4240  *! Mob 4207 (Sentinella) nella stanza 4240 (Porta Meridionale della Fortezza)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4207 4 4275  *! Mob 4207 (Sentinella) nella stanza 4275 (Porta Settentrionale della Fortezza)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4207 4 4275  *! Mob 4207 (Sentinella) nella stanza 4275 (Porta Settentrionale della Fortezza)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4208 10 4216  *! Mob 4208 (Soldato) nella stanza 4216 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4216  *! Mob 4208 (Soldato) nella stanza 4216 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4220  *! Mob 4208 (Soldato) nella stanza 4220 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4220  *! Mob 4208 (Soldato) nella stanza 4220 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4226  *! Mob 4208 (Soldato) nella stanza 4226 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4226  *! Mob 4208 (Soldato) nella stanza 4226 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4228  *! Mob 4208 (Soldato) nella stanza 4228 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4228  *! Mob 4208 (Soldato) nella stanza 4228 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4232  *! Mob 4208 (Soldato) nella stanza 4232 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4208 10 4232  *! Mob 4208 (Soldato) nella stanza 4232 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+
+M 0 4209 15 4219  *! Mob 4209 (Soldato) nella stanza 4219 (Torre d'Avvistamento)
+
+M 0 4209 15 4219  *! Mob 4209 (Soldato) nella stanza 4219 (Torre d'Avvistamento)
+
+M 0 4209 15 4219  *! Mob 4209 (Soldato) nella stanza 4219 (Torre d'Avvistamento)
+
+M 0 4209 15 4223  *! Mob 4209 (Soldato) nella stanza 4223 (Torre d'Avvistamento)
+
+M 0 4209 15 4223  *! Mob 4209 (Soldato) nella stanza 4223 (Torre d'Avvistamento)
+
+M 0 4209 15 4223  *! Mob 4209 (Soldato) nella stanza 4223 (Torre d'Avvistamento)
+
+M 0 4209 15 4225  *! Mob 4209 (Soldato) nella stanza 4225 (Torre d'Avvistamento)
+
+M 0 4209 15 4225  *! Mob 4209 (Soldato) nella stanza 4225 (Torre d'Avvistamento)
+
+M 0 4209 15 4225  *! Mob 4209 (Soldato) nella stanza 4225 (Torre d'Avvistamento)
+
+M 0 4209 15 4231  *! Mob 4209 (Soldato) nella stanza 4231 (Torre d'Avvistamento)
+
+M 0 4209 15 4231  *! Mob 4209 (Soldato) nella stanza 4231 (Torre d'Avvistamento)
+
+M 0 4209 15 4231  *! Mob 4209 (Soldato) nella stanza 4231 (Torre d'Avvistamento)
+
+M 0 4209 15 4235  *! Mob 4209 (Soldato) nella stanza 4235 (Torre d'Avvistamento)
+
+M 0 4209 15 4235  *! Mob 4209 (Soldato) nella stanza 4235 (Torre d'Avvistamento)
+
+M 0 4209 15 4235  *! Mob 4209 (Soldato) nella stanza 4235 (Torre d'Avvistamento)
+
+M 0 4210 10 4207  *! Mob 4210 (Sentinella) nella stanza 4207 (Bastioni Meridionali)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4210 10 4253  *! Mob 4210 (Sentinella) nella stanza 4253 (SarDar)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4210 10 4272  *! Mob 4210 (Sentinella) nella stanza 4272 (KuldDar)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4210 10 4261  *! Mob 4210 (Sentinella) nella stanza 4261 (RadasPrak)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4210 10 4293  *! Mob 4210 (Sentinella) nella stanza 4293 (SannDar)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4210 10 4317  *! Mob 4210 (Sentinella) nella stanza 4317 (OrDar)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4210 10 4329  *! Mob 4210 (Sentinella) nella stanza 4329 (SarkreyGilDar)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4211 1 4414  *! Mob 4211 (Tesoriere) nella stanza 4414 (Zecca del Regno)
+E 1 4231 0 13  *! Alla vita: 004231 (Cintura del Tesoriere)
+E 1 4213 0 17  *! Tenuto: 004213 (Chiave della Tesoreria)
+
+M 0 4212 1 4474  *! Mob 4212 (Durin Barbafumante, Sovrano dei Nani) nella stanza 4474 (Sala del Trono)
+E 1 4226 0 5  *! Sul corpo: 004226 (Corazza di Mithril)
+E 1 4232 0 8  *! Ai piedi: 004232 (Stivali del Lungo Cammino)
+E 1 4233 0 10  *! Sulle braccia: 004233 (Bracciali di Thorin)
+E 1 4221 0 12  *! Intorno al corpo: 004221 (Pelliccia d'Ermellino)
+E 1 4222 0 16  *! Impugnato: 004222 (Scettro Reale)
+
+M 0 4213 5 4216  *! Mob 4213 (Sergente) nella stanza 4216 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4213 5 4220  *! Mob 4213 (Sergente) nella stanza 4220 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4213 5 4226  *! Mob 4213 (Sergente) nella stanza 4226 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4213 5 4228  *! Mob 4213 (Sergente) nella stanza 4228 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4213 5 4232  *! Mob 4213 (Sergente) nella stanza 4232 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4216 0 14  *! Al polso destro: 004216 (Bracciale Dorato)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4214 6 4263  *! Mob 4214 (Mercante Umano) nella stanza 4263 (RadasPrak)
+
+M 0 4214 6 4344  *! Mob 4214 (Mercante Umano) nella stanza 4344 (TorenDar)
+
+M 0 4214 6 4333  *! Mob 4214 (Mercante Umano) nella stanza 4333 (FulDar)
+
+M 0 4214 6 4330  *! Mob 4214 (Mercante Umano) nella stanza 4330 (SarkreyGil)
+
+M 0 4214 6 4293  *! Mob 4214 (Mercante Umano) nella stanza 4293 (SannDar)
+
+M 0 4214 6 4309  *! Mob 4214 (Mercante Umano) nella stanza 4309 (Magazzini)
+
+M 0 4215 8 4340  *! Mob 4215 (Fattorino) nella stanza 4340 (TorenDar)
+
+M 0 4215 8 4333  *! Mob 4215 (Fattorino) nella stanza 4333 (FulDar)
+
+M 0 4215 8 4336  *! Mob 4215 (Fattorino) nella stanza 4336 (FulDar)
+
+M 0 4215 8 4250  *! Mob 4215 (Fattorino) nella stanza 4250 (SarDar)
+
+M 0 4215 8 4312  *! Mob 4215 (Fattorino) nella stanza 4312 (Verso i Magazzini)
+
+M 0 4215 8 4359  *! Mob 4215 (Fattorino) nella stanza 4359 (FarDar)
+
+M 0 4215 8 4269  *! Mob 4215 (Fattorino) nella stanza 4269 (KuldDar)
+
+M 0 4216 5 4259  *! Mob 4216 (Nano Anziano) nella stanza 4259 (RadasPrak)
+
+M 0 4216 5 4291  *! Mob 4216 (Nano Anziano) nella stanza 4291 (SannDar)
+
+M 0 4216 5 4338  *! Mob 4216 (Nano Anziano) nella stanza 4338 (FulDar)
+
+M 0 4216 5 4390  *! Mob 4216 (Nano Anziano) nella stanza 4390 (EvedotarDar)
+
+M 0 4216 5 4313  *! Mob 4216 (Nano Anziano) nella stanza 4313 (KuldDar)
+
+M 0 4217 3 4365  *! Mob 4217 (Mulo) nella stanza 4365 (Stalle)
+
+M 0 4217 3 4366  *! Mob 4217 (Mulo) nella stanza 4366 (Stalle)
+
+M 0 4217 3 4366  *! Mob 4217 (Mulo) nella stanza 4366 (Stalle)
+
+M 0 4218 1 4425  *! Mob 4218 (Comandante della Guarnigione) nella stanza 4425 (Alloggio del Comandante)
+E 1 4205 0 1  *! Come anello destro: 004205 (Anello Dorato Nanesco)
+E 1 4211 0 5  *! Sul corpo: 004211 (Armatura Eterea)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4232 0 8  *! Ai piedi: 004232 (Stivali del Lungo Cammino)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+
+M 0 4219 1 4417  *! Mob 4219 ($c0010Xagelon il terrore divino$c0007) nella stanza 4417 (Torre Panoramica)
+
+M 0 4220 1 4446  *! Mob 4220 (Umber Hulk) nella stanza 4446 (Miniere)
+G 1 4234 1  *! In inventario: 004234 (Grosso Diamante)
+
+M 0 4221 4 4248  *! Mob 4221 (Carro) nella stanza 4248 (Sentiero tra i Monti)
+G 1 4215 6  *! In inventario: 004215 (Barile di Spezie)
+G 1 4215 6  *! In inventario: 004215 (Barile di Spezie)
+G 1 4215 6  *! In inventario: 004215 (Barile di Spezie)
+
+M 0 4221 4 4250  *! Mob 4221 (Carro) nella stanza 4250 (SarDar)
+G 1 4215 6  *! In inventario: 004215 (Barile di Spezie)
+G 1 4215 6  *! In inventario: 004215 (Barile di Spezie)
+G 1 4215 6  *! In inventario: 004215 (Barile di Spezie)
+
+M 0 4221 4 4269  *! Mob 4221 (Carro) nella stanza 4269 (KuldDar)
+G 1 4237 6  *! In inventario: 004237 (Tessuti Orientali)
+G 1 4237 6  *! In inventario: 004237 (Tessuti Orientali)
+G 1 4237 6  *! In inventario: 004237 (Tessuti Orientali)
+
+M 0 4222 8 4283  *! Mob 4222 (Gigante delle Rocce) nella stanza 4283 (Gola Rocciosa)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4222 8 4289  *! Mob 4222 (Gigante delle Rocce) nella stanza 4289 (Campo dei Giganti)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4222 8 4305  *! Mob 4222 (Gigante delle Rocce) nella stanza 4305 (Campo d'Addestramento)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+G 1 4224 2  *! In inventario: 004224 (Macigno)
+G 1 4224 2  *! In inventario: 004224 (Macigno)
+H 1 2 3  *! Odio verso la razza Dwarf
+
+M 0 4222 8 4285  *! Mob 4222 (Gigante delle Rocce) nella stanza 4285 (Gola Rocciosa)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4222 8 4287  *! Mob 4222 (Gigante delle Rocce) nella stanza 4287 (Campo dei Giganti)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4222 8 4286  *! Mob 4222 (Gigante delle Rocce) nella stanza 4286 (Gola Rocciosa)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4222 8 4278  *! Mob 4222 (Gigante delle Rocce) nella stanza 4278 (Ai Piedi delle Mura)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4222 8 4283  *! Mob 4222 (Gigante delle Rocce) nella stanza 4283 (Gola Rocciosa)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4223 1 4407  *! Mob 4223 (Borin) nella stanza 4407 (Tomba di Borin)
+
+M 0 4224 1 4408  *! Mob 4224 (Balin) nella stanza 4408 (Tomba di Balin)
+
+M 0 4225 1 4409  *! Mob 4225 (Dwalur) nella stanza 4409 (Tomba di Dwalur)
+
+M 0 4226 1 4410  *! Mob 4226 (Boflum) nella stanza 4410 (Cripta)
+E 1 4265 0 16  *! Impugnato: 004265 (Falce della Morte)
+
+M 0 4227 5 4217  *! Mob 4227 (Sentinella) nella stanza 4217 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4217 0 16  *! Impugnato: 004217 (Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+
+M 0 4227 5 4221  *! Mob 4227 (Sentinella) nella stanza 4221 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4217 0 16  *! Impugnato: 004217 (Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+
+M 0 4227 5 4227  *! Mob 4227 (Sentinella) nella stanza 4227 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4217 0 16  *! Impugnato: 004217 (Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+
+M 0 4227 5 4230  *! Mob 4227 (Sentinella) nella stanza 4230 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4217 0 16  *! Impugnato: 004217 (Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+
+M 0 4227 5 4233  *! Mob 4227 (Sentinella) nella stanza 4233 (Torre d'Avvistamento)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4217 0 16  *! Impugnato: 004217 (Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+G 1 4218 15  *! In inventario: 004218 (Proiettile per Archibugio)
+
+M 0 4228 3 4302  *! Mob 4228 (Istruttore) nella stanza 4302 (Campo d'Addestramento)
+E 1 4228 15 5  *! Sul corpo: 004228 (Corazza a Scaglie)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+H 1 2 17  *! Odio verso la razza Giant (generico)
+
+M 0 4228 3 4303  *! Mob 4228 (Istruttore) nella stanza 4303 (Campo d'Addestramento)
+E 1 4228 15 5  *! Sul corpo: 004228 (Corazza a Scaglie)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+H 1 2 17  *! Odio verso la razza Giant (generico)
+
+M 0 4228 3 4301  *! Mob 4228 (Istruttore) nella stanza 4301 (Campo d'Addestramento)
+E 1 4228 15 5  *! Sul corpo: 004228 (Corazza a Scaglie)
+E 1 4216 0 14  *! Al polso destro: 004216 (Bracciale Dorato)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+H 1 2 17  *! Odio verso la razza Giant (generico)
+
+M 0 4229 14 4303  *! Mob 4229 (Recluta) nella stanza 4303 (Campo d'Addestramento)
+
+M 0 4229 14 4301  *! Mob 4229 (Recluta) nella stanza 4301 (Campo d'Addestramento)
+
+M 0 4229 14 4301  *! Mob 4229 (Recluta) nella stanza 4301 (Campo d'Addestramento)
+
+M 0 4229 14 4303  *! Mob 4229 (Recluta) nella stanza 4303 (Campo d'Addestramento)
+
+M 0 4229 14 4300  *! Mob 4229 (Recluta) nella stanza 4300 (Campo d'Addestramento)
+
+M 0 4229 14 4302  *! Mob 4229 (Recluta) nella stanza 4302 (Campo d'Addestramento)
+
+M 0 4229 14 4304  *! Mob 4229 (Recluta) nella stanza 4304 (Campo d'Addestramento)
+
+M 0 4229 14 4302  *! Mob 4229 (Recluta) nella stanza 4302 (Campo d'Addestramento)
+
+M 0 4229 14 4301  *! Mob 4229 (Recluta) nella stanza 4301 (Campo d'Addestramento)
+
+M 0 4230 1 4289  *! Mob 4230 (Capo dei Giganti delle Rocce) nella stanza 4289 (Campo dei Giganti)
+E 1 4235 0 12  *! Intorno al corpo: 004235 (Pelle di Cinghiale)
+E 1 4223 0 16  *! Impugnato: 004223 (Clava dei Giganti)
+
+M 0 4231 4 4322  *! Mob 4231 (Soldato Ubriaco) nella stanza 4322 (Taverna dell'Orco Orbo)
+E 1 4205 0 2  *! Come anello sinistro: 004205 (Anello Dorato Nanesco)
+
+M 0 4231 4 4322  *! Mob 4231 (Soldato Ubriaco) nella stanza 4322 (Taverna dell'Orco Orbo)
+E 1 4205 0 2  *! Come anello sinistro: 004205 (Anello Dorato Nanesco)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4231 4 4322  *! Mob 4231 (Soldato Ubriaco) nella stanza 4322 (Taverna dell'Orco Orbo)
+E 1 4205 0 2  *! Come anello sinistro: 004205 (Anello Dorato Nanesco)
+
+M 0 4231 4 4322  *! Mob 4231 (Soldato Ubriaco) nella stanza 4322 (Taverna dell'Orco Orbo)
+E 1 4205 0 2  *! Come anello sinistro: 004205 (Anello Dorato Nanesco)
+
+M 0 4232 7 4349  *! Mob 4232 (Nana) nella stanza 4349 (TorenDar)
+
+M 0 4232 7 4263  *! Mob 4232 (Nana) nella stanza 4263 (RadasPrak)
+
+M 0 4232 7 4292  *! Mob 4232 (Nana) nella stanza 4292 (SannDar)
+
+M 0 4232 7 4337  *! Mob 4232 (Nana) nella stanza 4337 (FulDar)
+
+M 0 4233 3 4318  *! Mob 4233 (Nano di Fosso) nella stanza 4318 (Discarica)
+
+M 0 4233 3 4318  *! Mob 4233 (Nano di Fosso) nella stanza 4318 (Discarica)
+
+M 0 4233 3 4318  *! Mob 4233 (Nano di Fosso) nella stanza 4318 (Discarica)
+
+M 0 4234 1 4481  *! Mob 4234 (Drolem) nella stanza 4481 (Terrazza)
+
+M 0 4235 1 4432  *! Mob 4235 (Custode della Fiamma Eterna) nella stanza 4432 (Stanza della Forgia)
+E 1 4225 0 1  *! Come anello destro: 004225 (Anello della Forgia)
+
+M 0 4236 1 4322  *! Mob 4236 (Golmin Cavaocchi) nella stanza 4322 (Taverna dell'Orco Orbo)
+E 1 4238 0 3  *! Al collo (1): 004238 (Occhio dell'Orco)
+
+M 0 4237 5 4296  *! Mob 4237 (Sentinella) nella stanza 4296 (Ingresso dell'Armeria)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4237 5 4296  *! Mob 4237 (Sentinella) nella stanza 4296 (Ingresso dell'Armeria)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4237 5 4420  *! Mob 4237 (Sentinella) nella stanza 4420 (Alloggi della Guarnigione)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4237 5 4420  *! Mob 4237 (Sentinella) nella stanza 4420 (Alloggi della Guarnigione)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+
+M 0 4237 5 4422  *! Mob 4237 (Sentinella) nella stanza 4422 (Alloggi della Guarnigione)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4238 4 4365  *! Mob 4238 (Stalliere) nella stanza 4365 (Stalle)
+
+M 0 4238 4 4365  *! Mob 4238 (Stalliere) nella stanza 4365 (Stalle)
+
+M 0 4238 4 4366  *! Mob 4238 (Stalliere) nella stanza 4366 (Stalle)
+
+M 0 4238 4 4366  *! Mob 4238 (Stalliere) nella stanza 4366 (Stalle)
+
+M 0 4239 1 4365  *! Mob 4239 (Facchino) nella stanza 4365 (Stalle)
+
+M 0 4240 1 4366  *! Mob 4240 (Cavallo) nella stanza 4366 (Stalle)
+
+M 0 4241 1 4361  *! Mob 4241 (Secondino) nella stanza 4361 (Prigioni)
+E 1 4228 15 5  *! Sul corpo: 004228 (Corazza a Scaglie)
+E 1 4239 0 16  *! Impugnato: 004239 (Spada)
+H 1 2 17  *! Odio verso la razza Giant (generico)
+
+M 0 4242 3 4364  *! Mob 4242 (Criminale) nella stanza 4364 (Prigioni)
+
+M 0 4242 3 4364  *! Mob 4242 (Criminale) nella stanza 4364 (Prigioni)
+
+M 0 4242 3 4364  *! Mob 4242 (Criminale) nella stanza 4364 (Prigioni)
+
+M 0 4243 1 4363  *! Mob 4243 (Gigante delle Rocce) nella stanza 4363 (Prigioni)
+E 1 4235 0 12  *! Intorno al corpo: 004235 (Pelle di Cinghiale)
+
+M 0 4244 1 4331  *! Mob 4244 (Gorran Alitodifuoco) nella stanza 4331 (SarkreyGil)
+
+M 0 4245 1 4482  *! Mob 4245 (Thonserr) nella stanza 4482 (Taverna del Gufo)
+
+M 0 4246 16 4437  *! Mob 4246 (Minatore) nella stanza 4437 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4439  *! Mob 4246 (Minatore) nella stanza 4439 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4441  *! Mob 4246 (Minatore) nella stanza 4441 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4443  *! Mob 4246 (Minatore) nella stanza 4443 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4445  *! Mob 4246 (Minatore) nella stanza 4445 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4448  *! Mob 4246 (Minatore) nella stanza 4448 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4450  *! Mob 4246 (Minatore) nella stanza 4450 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4452  *! Mob 4246 (Minatore) nella stanza 4452 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4454  *! Mob 4246 (Minatore) nella stanza 4454 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4456  *! Mob 4246 (Minatore) nella stanza 4456 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4460  *! Mob 4246 (Minatore) nella stanza 4460 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4246 16 4457  *! Mob 4246 (Minatore) nella stanza 4457 (Miniere)
+E 1 4241 10 6  *! Sulla testa: 004241 (Elmetto da Minatore)
+E 1 4240 20 16  *! Impugnato: 004240 (Piccone)
+
+M 0 4247 2 4414  *! Mob 4247 (Coniatore) nella stanza 4414 (Zecca del Regno)
+
+M 0 4247 2 4414  *! Mob 4247 (Coniatore) nella stanza 4414 (Zecca del Regno)
+
+M 0 4248 1 4478  *! Mob 4248 (Spettro del Principe) nella stanza 4478 (Camera dell'Anima Persa)
+
+M 0 4249 1 4414  *! Mob 4249 (Sentinella) nella stanza 4414 (Zecca del Regno)
+E 1 4205 0 1  *! Come anello destro: 004205 (Anello Dorato Nanesco)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4250 2 4412  *! Mob 4250 (Sentinella) nella stanza 4412 (BurhadSkyr)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4206 15 16  *! Impugnato: 004206 (Ascia Nanesca)
+
+M 0 4250 2 4413  *! Mob 4250 (Sentinella) nella stanza 4413 (BurhadSkyr)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+
+M 0 4251 4 4396  *! Mob 4251 (Sentinella) nella stanza 4396 (EvedotarRak)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+
+M 0 4251 4 4396  *! Mob 4251 (Sentinella) nella stanza 4396 (EvedotarRak)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4209 0 16  *! Impugnato: 004209 (Ascia Nanesca a Due Mani)
+
+M 0 4251 4 4474  *! Mob 4251 (Sentinella) nella stanza 4474 (Sala del Trono)
+E 1 4205 0 1  *! Come anello destro: 004205 (Anello Dorato Nanesco)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4251 4 4474  *! Mob 4251 (Sentinella) nella stanza 4474 (Sala del Trono)
+E 1 4205 0 1  *! Come anello destro: 004205 (Anello Dorato Nanesco)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4207 0 9  *! Alle mani: 004207 (Guanti Naneschi)
+E 1 4229 15 11  *! Come scudo: 004229 (Scudo dei Nani)
+E 1 4216 0 15  *! Al polso sinistro: 004216 (Bracciale Dorato)
+E 1 4210 0 16  *! Impugnato: 004210 (Lancia)
+
+M 0 4252 3 4412  *! Mob 4252 (Orafo) nella stanza 4412 (BurhadSkyr)
+
+M 0 4252 3 4412  *! Mob 4252 (Orafo) nella stanza 4412 (BurhadSkyr)
+
+M 0 4252 3 4413  *! Mob 4252 (Orafo) nella stanza 4413 (BurhadSkyr)
+
+M 0 4253 2 4413  *! Mob 4253 (Tagliatore) nella stanza 4413 (BurhadSkyr)
+
+M 0 4253 2 4413  *! Mob 4253 (Tagliatore) nella stanza 4413 (BurhadSkyr)
+
+M 0 4254 2 4400  *! Mob 4254 (Sentinella) nella stanza 4400 (Galleria d'Accesso alle Miniere)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+
+M 0 4254 2 4400  *! Mob 4254 (Sentinella) nella stanza 4400 (Galleria d'Accesso alle Miniere)
+E 1 4202 0 5  *! Sul corpo: 004202 (Armatura Nanesca)
+E 1 4208 15 6  *! Sulla testa: 004208 (Elmo Nanesco)
+E 1 4230 15 16  *! Impugnato: 004230 (Martello da Guerra)
+
+M 0 4255 1 4400  *! Mob 4255 (Carro) nella stanza 4400 (Galleria d'Accesso alle Miniere)
+
+M 0 4256 4 4475  *! Mob 4256 (Servitore) nella stanza 4475 (Salone dei Banchetti)
+
+M 0 4256 4 4475  *! Mob 4256 (Servitore) nella stanza 4475 (Salone dei Banchetti)
+
+M 0 4256 4 4475  *! Mob 4256 (Servitore) nella stanza 4475 (Salone dei Banchetti)
+
+M 0 4256 4 4475  *! Mob 4256 (Servitore) nella stanza 4475 (Salone dei Banchetti)
+
+M 0 4257 1 4474  *! Mob 4257 (Groin) nella stanza 4474 (Sala del Trono)
+
+M 0 4258 1 4474  *! Mob 4258 (Balur) nella stanza 4474 (Sala del Trono)
+
+M 0 4259 1 4474  *! Mob 4259 (Dorak) nella stanza 4474 (Sala del Trono)
+
+M 0 4260 1 4355  *! Mob 4260 (Poldo Gamgee) nella stanza 4355 (WyrSok)
+G 1 4253 15  *! In inventario: 004253 (Filetti di Carne Essiccata)
+G 1 4252 15  *! In inventario: 004252 (Bottiglia di Vino della Contea)
+G 1 4251 15  *! In inventario: 004251 (Salame)
+G 1 4249 15  *! In inventario: 004249 (Pezzo di Formaggio)
+
+M 0 4261 1 4356  *! Mob 4261 (Glasaff il Mago) nella stanza 4356 (MehikSok)
+G 1 4250 15  *! In inventario: 004250 (Pergamena d'Identificazione)
+G 1 4219 15  *! In inventario: 004219 (Pergamena di Ritorno)
+
+M 0 4262 1 4353  *! Mob 4262 (Brokfir l'Armaiolo) nella stanza 4353 (AtsSok)
+G 1 4203 15  *! In inventario: 004203 (Balestra)
+G 1 4204 15  *! In inventario: 004204 (Dardo)
+G 1 4206 15  *! In inventario: 004206 (Ascia Nanesca)
+G 1 4230 15  *! In inventario: 004230 (Martello da Guerra)
+
+M 0 4263 6 4308  *! Mob 4263 (Magazziniere) nella stanza 4308 (Ingresso ai Magazzini)
+
+M 0 4263 6 4309  *! Mob 4263 (Magazziniere) nella stanza 4309 (Magazzini)
+
+M 0 4263 6 4310  *! Mob 4263 (Magazziniere) nella stanza 4310 (Ingresso ai Magazzini)
+
+M 0 4263 6 4311  *! Mob 4263 (Magazziniere) nella stanza 4311 (Magazzini)
+
+M 0 4264 1 4350  *! Mob 4264 (Tharg il Panettiere) nella stanza 4350 (BrattSok)
+G 1 4260 15  *! In inventario: 004260 (Pagnotta)
+G 1 4261 15  *! In inventario: 004261 (Pastarella)
+G 1 4262 15  *! In inventario: 004262 (Biscotto)
+G 1 4263 15  *! In inventario: 004263 (Sfilatino)
+
+M 0 4265 1 4351  *! Mob 4265 (Norbuf il Banchiere) nella stanza 4351 (BuhradSok)
+
+M 0 4266 1 4354  *! Mob 4266 (Ganir Lanciaspezzata) nella stanza 4354 (ShyldSok)
+G 1 4206 15  *! In inventario: 004206 (Ascia Nanesca)
+G 1 4208 15  *! In inventario: 004208 (Elmo Nanesco)
+G 1 4228 15  *! In inventario: 004228 (Corazza a Scaglie)
+G 1 4229 15  *! In inventario: 004229 (Scudo dei Nani)
+
+M 0 4267 1 4352  *! Mob 4267 (Zanar il Fabbro) nella stanza 4352 (SkyrSmagSok)
+
+M 0 4268 1 4357  *! Mob 4268 (Dainn Manodipietra) nella stanza 4357 (SprahSok)
+G 1 4259 10  *! In inventario: 004259 (Torcia)
+G 1 4258 10  *! In inventario: 004258 (Falcetto)
+G 1 4240 20  *! In inventario: 004240 (Piccone)
+G 1 4241 10  *! In inventario: 004241 (Elmetto da Minatore)
+
+M 0 4269 1 4411  *! Mob 4269 (Sornak Ditofatato) nella stanza 4411 (KahnrSok)
+G 1 4256 10  *! In inventario: 004256 (Pantaloni di Pelle)
+G 1 4257 10  *! In inventario: 004257 (Soffice Mantello di Lana)
+G 1 4254 10  *! In inventario: 004254 (Stivali di Pelle)
+G 1 4255 10  *! In inventario: 004255 (Maniche di Pelle)
+
+M 0 4270 7 4397  *! Mob 4270 (Nano) nella stanza 4397 (Scala Marmorea)
+
+M 0 4270 7 4271  *! Mob 4270 (Nano) nella stanza 4271 (KuldDar)
+
+M 0 4270 7 4485  *! Mob 4270 (Nano) nella stanza 4485 (Caverna dell'Oracolo)
+
+M 0 4270 7 4266  *! Mob 4270 (Nano) nella stanza 4266 (RadasPrak)
+
+M 0 4270 7 4395  *! Mob 4270 (Nano) nella stanza 4395 (Giardini d'Oro)
+
+M 0 4270 7 4337  *! Mob 4270 (Nano) nella stanza 4337 (FulDar)
+
+M 0 4270 7 4394  *! Mob 4270 (Nano) nella stanza 4394 (Giardini d'Oro)
+
+M 0 4271 1 4320  *! Mob 4271 (Mastro Birraio) nella stanza 4320 (Gilda dei Birrai)
+
+M 0 4272 4 4321  *! Mob 4272 (Birraio) nella stanza 4321 (Gilda dei Birrai)
+
+M 0 4272 4 4320  *! Mob 4272 (Birraio) nella stanza 4320 (Gilda dei Birrai)
+
+M 0 4272 4 4320  *! Mob 4272 (Birraio) nella stanza 4320 (Gilda dei Birrai)
+
+M 0 4272 4 4321  *! Mob 4272 (Birraio) nella stanza 4321 (Gilda dei Birrai)
+
+M 0 4273 1 4325  *! Mob 4273 (Ricercatore) nella stanza 4325 (Laboratorio)
+E 1 4248 0 12  *! Intorno al corpo: 004248 (Manto della Magia)
+E 1 4201 0 17  *! Tenuto: 004201 (Runa Sacra di Kagyar)
+
+M 0 4274 5 4327  *! Mob 4274 (Studente di Magia Runica) nella stanza 4327 (Scuola di Magia Runica)
+E 1 4247 0 6  *! Sulla testa: 004247 (Cappello a Punta)
+
+M 0 4274 5 4327  *! Mob 4274 (Studente di Magia Runica) nella stanza 4327 (Scuola di Magia Runica)
+E 1 4247 0 6  *! Sulla testa: 004247 (Cappello a Punta)
+
+M 0 4274 5 4327  *! Mob 4274 (Studente di Magia Runica) nella stanza 4327 (Scuola di Magia Runica)
+E 1 4247 0 6  *! Sulla testa: 004247 (Cappello a Punta)
+
+M 0 4274 5 4327  *! Mob 4274 (Studente di Magia Runica) nella stanza 4327 (Scuola di Magia Runica)
+E 1 4247 0 6  *! Sulla testa: 004247 (Cappello a Punta)
+
+M 0 4274 5 4327  *! Mob 4274 (Studente di Magia Runica) nella stanza 4327 (Scuola di Magia Runica)
+E 1 4247 0 6  *! Sulla testa: 004247 (Cappello a Punta)
+
+M 0 4275 3 4404  *! Mob 4275 (Fuoco Fatuo) nella stanza 4404 (Lungo il Corridoio Nero)
+
+M 0 4275 3 4409  *! Mob 4275 (Fuoco Fatuo) nella stanza 4409 (Tomba di Dwalur)
+
+M 0 4275 3 4406  *! Mob 4275 (Fuoco Fatuo) nella stanza 4406 (Sale dei Morti)
+
+M 0 4276 1 4466  *! Mob 4276 (Elementale dell'Acqua) nella stanza 4466 (Miniera Allagata)
+
+M 0 4277 2 4374  *! Mob 4277 (Psicotalpa) nella stanza 4374 (Verso il Portale Dimenticato)
+
+M 0 4278 1 4487  *! Mob 4278 (Custode delle Gabbie) nella stanza 4487 (Gabbie delle Belve)
+E 1 4236 0 16  *! Impugnato: 004236 (Frusta)
+
+M 0 4279 1 4412  *! Mob 4279 (Tarmak Bif) nella stanza 4412 (BurhadSkyr)
+E 1 4266 2 9  *! Alle mani: 004266 (Un paio di guanti in metallo)
+
+M 0 4280 1 4402  *! Mob 4280 (Dendur Lungapicca) nella stanza 4402 (Galleria d'Accesso alle Miniere)
+
+M 0 4281 1 4298  *! Mob 4281 (Kroten Fuocolento) nella stanza 4298 (Armeria)
+
+M 0 4282 1 4448  *! Mob 4282 (Hrum Hrokar) nella stanza 4448 (Miniere)
+
+M 0 4283 1 4423  *! Mob 4283 (Trarrok) nella stanza 4423 (Alloggi degli Ufficiali)
+H 1 2 31  *! Odio verso la razza Troll
+
+O 0 4214 2 4432 2  *! Carica oggetto 4214 (WharPuhn, il Maglio della Vendetta) nella stanza 4432 (Stanza della Forgia)
+
+O 0 4220 0 4479 0  *! Carica oggetto 4220 (Guanti del Sicario) nella stanza 4479 (Stanza Segreta)
+
+O 0 4242 1 4263 1  *! Carica oggetto 4242 (Fontana dei Nani) nella stanza 4263 (RadasPrak)
+
+O 0 4244 4 4431 4  *! Carica oggetto 4244 (Sacco d'Oro e Gemme) nella stanza 4431 (Seconda Stanza del Tesoro)
+
+O 0 4244 4 4431 4  *! Carica oggetto 4244 (Sacco d'Oro e Gemme) nella stanza 4431 (Seconda Stanza del Tesoro)
+
+O 0 4244 4 4431 4  *! Carica oggetto 4244 (Sacco d'Oro e Gemme) nella stanza 4431 (Seconda Stanza del Tesoro)
+
+O 0 4244 4 4431 4  *! Carica oggetto 4244 (Sacco d'Oro e Gemme) nella stanza 4431 (Seconda Stanza del Tesoro)
+
+O 0 4245 4 4430 4  *! Carica oggetto 4245 (Forziere) nella stanza 4430 (Prima Stanza del Tesoro)
+P 1 4243 1 4245  *! Dentro 004245 (Forziere): 004243 (Un Cumulo di Monete d'Oro)
+
+O 0 4246 4 4320 4  *! Carica oggetto 4246 (Barile di Birra) nella stanza 4320 (Gilda dei Birrai)
+
+O 0 4246 4 4321 4  *! Carica oggetto 4246 (Barile di Birra) nella stanza 4321 (Gilda dei Birrai)
+
+O 0 4246 4 4320 4  *! Carica oggetto 4246 (Barile di Birra) nella stanza 4320 (Gilda dei Birrai)
+
+O 0 4246 4 4321 4  *! Carica oggetto 4246 (Barile di Birra) nella stanza 4321 (Gilda dei Birrai)
+
+O 0 4264 1 4328 1  *! Carica oggetto 4264 (Asdrubale il Cespuglio di Ginepro) nella stanza 4328 (SarkreyGilDar)
+
+D 0 4214 3 0  *! Uscita west della stanza 4214 (Bastioni Settentrionali): aperta
+D 0 4215 3 0  *! Uscita west della stanza 4215 (Passaggio Segreto): aperta
+D 0 4339 0 0  *! Uscita north della stanza 4339 (FulDar): aperta
+D 0 4361 2 2  *! Uscita south della stanza 4361 (Prigioni): chiusa a chiave
+D 0 4362 2 2  *! Uscita south della stanza 4362 (Prigioni): chiusa a chiave
+D 0 4363 0 2  *! Uscita north della stanza 4363 (Prigioni): chiusa a chiave
+D 0 4363 3 2  *! Uscita west della stanza 4363 (Prigioni): chiusa a chiave
+D 0 4364 0 2  *! Uscita north della stanza 4364 (Prigioni): chiusa a chiave
+D 0 4364 1 2  *! Uscita east della stanza 4364 (Prigioni): chiusa a chiave
+D 0 4367 2 0  *! Uscita south della stanza 4367 (Cunicolo Segreto): aperta
+D 0 4371 3 0  *! Uscita west della stanza 4371 (Cunicolo Segreto): aperta
+D 0 4373 1 0  *! Uscita east della stanza 4373 (Verso il Portale Dimenticato): aperta
+D 0 4398 1 0  *! Uscita east della stanza 4398 (Galleria d'Accesso alle Miniere): aperta
+D 0 4400 0 0  *! Uscita north della stanza 4400 (Galleria d'Accesso alle Miniere): aperta
+D 0 4403 2 0  *! Uscita south della stanza 4403 (Lungo il Corridoio Nero): aperta
+D 0 4429 0 2  *! Uscita north della stanza 4429 (Ingresso alla Tesoreria): chiusa a chiave
+D 0 4430 0 2  *! Uscita north della stanza 4430 (Prima Stanza del Tesoro): chiusa a chiave
+D 0 4430 2 2  *! Uscita south della stanza 4430 (Prima Stanza del Tesoro): chiusa a chiave
+D 0 4431 1 1  *! Uscita east della stanza 4431 (Seconda Stanza del Tesoro): chiusa
+D 0 4431 2 2  *! Uscita south della stanza 4431 (Seconda Stanza del Tesoro): chiusa a chiave
+D 0 4431 3 1  *! Uscita west della stanza 4431 (Seconda Stanza del Tesoro): chiusa
+D 0 4432 1 1  *! Uscita east della stanza 4432 (Stanza della Forgia): chiusa
+D 0 4433 3 1  *! Uscita west della stanza 4433 (Ascensore): chiusa
+D 0 4474 1 1  *! Uscita east della stanza 4474 (Sala del Trono): chiusa
+D 0 4476 3 1  *! Uscita west della stanza 4476 (Ascensore): chiusa
+D 0 4478 0 1  *! Uscita north della stanza 4478 (Camera dell'Anima Persa): chiusa
+D 0 4479 2 1  *! Uscita south della stanza 4479 (Stanza Segreta): chiusa
+
+*! Fine dell'inizializzazione della zona 42
+S
+#78
+Accademia~
+7899 15 2
+*! Items initializations
+O 0 7801 1 7801 1 *! 007801 [uno stagno astrale] caricato nella stanza 007801 [Sulla rupe]
+O 0 7804 0 7805 1 *! 007804 [una chiave d'ottone] caricato nella stanza 007805 [Il magazzino]
+O 0 7814 0 7808 3 *! 007814 [una bottiglia di latte] caricato nella stanza 007808 [Il giardino interno]
+O 0 7815 0 7808 1 *! 007815 [un bicchiere] caricato nella stanza 007808 [Il giardino interno]
+O 0 7816 0 7808 7 *! 007816 [un panino imbottito] caricato nella stanza 007808 [Il giardino interno]
+O 0 7816 0 7808 7 *! 007816 [un panino imbottito] caricato nella stanza 007808 [Il giardino interno]
+O 0 7817 0 7810 1 *! 007817 [la fontana] caricato nella stanza 007810 [$c0010Nel giardino$c0007]
+O 0 7811 0 7829 1 *! 007811 [una pozione di ristoro] caricato nella stanza 007829 [Un breve corridoio]
+O 0 7828 0 7806 1 *! 007828 [un ciondolo di madreperla] caricato nella stanza 007806 [$c0014Una stanza segreta!$c0007]
+O 0 7800 0 7829 1 *! 007800 [Un  libro di storia] caricato nella stanza 007829 [Un breve corridoio]
+O 0 7829 100 7833 10 *! 007829 [una torcia] caricato nella stanza 007833 [Il Magazzino]
+O 0 7830 100 7833 3 *! 007830 [una spada da addestramento] caricato nella stanza 007833 [Il Magazzino]
+O 0 7831 100 7833 3 *! 007831 [un pugnale da addestramento] caricato nella stanza 007833 [Il Magazzino]
+O 0 7833 100 7833 3 *! 007833 [una calotta di pelle] caricato nella stanza 007833 [Il Magazzino]
+O 0 7834 100 7833 3 *! 007834 [degli stivali in cuoio] caricato nella stanza 007833 [Il Magazzino]
+O 0 7835 100 7842 1 *! 007835 [la Lama del $c0010Giudizio$c0007] caricato nella stanza 007842 [La Sala Della $c0011Gloria$c0007]
+O 0 7836 10 7842 1 *! 007836 [armatura del $c0009Campione$c0007] caricato nella stanza 007842 [La Sala Della $c0011Gloria$c0007]
+O 0 7837 10 7842 1 *! 007837 [la Chiave del $c0012Destino$c0007] caricato nella stanza 007842 [La Sala Della $c0011Gloria$c0007]
+O 0 7843 100 7833 20 *! 007843 [una borraccia] caricato nella stanza 007833 [Il Magazzino]
+O 0 7842 100 7833 15 *! 007842 [una fettina di carne secca] caricato nella stanza 007833 [Il Magazzino]
+O 0 7841 40 7849 5 *! 007841 [una pozione $c0011giallastra$c0007] caricato nella stanza 007849 [Il Laboratorio Segreto]
+O 0 7840 100 7837 10 *! 007840 [un arco di legno] caricato nella stanza 007837 [Il Poligono di Tiro]
+O 0 7839 100 7837 50 *! 007839 [una freccia grigia] caricato nella stanza 007837 [Il Poligono di Tiro]
+O 0 7821 0 7820 1 *! 007821 [armatura di cuoio grezzo] caricato nella stanza 007820 [Stanza dei Barbari]
+O 0 7819 0 7827 1 *! 007819 [un'ampia tunica] caricato nella stanza 007827 [Stanza dei Maghi e degli Stregoni]
+O 0 7818 0 7812 1 *! 007818 [un'armatura leggera] caricato nella stanza 007812 [Radura dei Ranger]
+O 0 7822 0 7811 1 *! 007822 [una veste verde] caricato nella stanza 007811 [Radura dei Druidi]
+O 0 7823 0 7828 1 *! 007823 [un'armatura leggera] caricato nella stanza 007828 [La vera stanza del maestro]
+O 0 7824 0 7826 1 *! 007824 [un'ampia veste] caricato nella stanza 007826 [Stanza dei Chierici]
+O 0 7820 0 7821 1 *! 007820 [un giustacuore di cuoio] caricato nella stanza 007821 [Stanza dei Guerrieri]
+O 0 7825 0 7822 1 *! 007825 [un giustacuore di cuoio] caricato nella stanza 007822 [Stanza dei Paladini]
+O 0 7826 0 7825 1 *! 007826 [una veste decorata] caricato nella stanza 007825 [Stanza degli Psionici]
+O 0 7827 0 7824 1 *! 007827 [un kimono] caricato nella stanza 007824 [Stanza dei Monaci]
+O 0 7838 100 7837 9 *! 007838 [una lancia] caricato nella stanza 007837 [Il Poligono di Tiro]
+O 0 7807 0 7805 3 *! 007807 [un piccolo zaino] caricato nella stanza 007805 [Il magazzino]
+O 0 7838 100 7837 9 *! 007838 [una lancia] caricato nella stanza 007837 [Il Poligono di Tiro]
+O 0 7838 100 7837 9 *! 007838 [una lancia] caricato nella stanza 007837 [Il Poligono di Tiro]
+O 0 7839 100 7838 2 *! 007839 [una freccia grigia] caricato nella stanza 007838 [Tra i bersagli!]
+O 0 7851 100 7836 2 *! 007851 [una gladio] caricato nella stanza 007836 [La Sala d'Addestramento]
+O 0 7802 0 7804 1 *! 007802 [baule] caricato nella stanza 007804 [Sala della Materia]
+P 1 7805 0 7802 *! 007805 [la divisa dell' Accademia] caricato all'interno del contenitore 007802 [baule]
+P 1 7806 0 7802 *! 007806 [una torcia] caricato all'interno del contenitore 007802 [baule]
+P 1 7806 0 7802 *! 007806 [una torcia] caricato all'interno del contenitore 007802 [baule]
+O 0 7803 0 7805 1 *! 007803 [della sabbia] caricato nella stanza 007805 [Il magazzino]
+P 1 7808 0 7803 *! 007808 [un anellino di rame] caricato all'interno del contenitore 007803 [della sabbia]
+O 0 7813 0 7807 1 *! 007813 [una cassa di legno] caricato nella stanza 007807 [La stanza degli Oggetti Magici]
+P 1 7809 0 7813 *! 007809 [una sottile bacchetta] caricato all'interno del contenitore 007813 [una cassa di legno]
+P 1 7810 0 7813 *! 007810 [una pergamena ingiallita] caricato all'interno del contenitore 007813 [una cassa di legno]
+P 1 7812 0 7813 *! 007812 [un infuso ambrato] caricato all'interno del contenitore 007813 [una cassa di legno]
+O 0 7852 0 7852 1 *! 007852 [un pezzo di pergamena accortocciato] caricato nella stanza 007852 [La Sala Centrale]
+O 0 7805 0 7804 1 *! 007805 [la divisa dell' Accademia] caricato nella stanza 007804 [Sala della Materia]
+*! Mobiles initializations
+M 0 7801 1 7807 *!007801 [un manichino] caricato nella stanza 007807 [La stanza degli Oggetti Magici]
+M 0 7800 1 7804 *!007800 [Laith] caricato nella stanza 007804 [Sala della Materia]
+M 0 7809 1 7827 *!007809 [Tanteris, il maestro dei maghi] caricato nella stanza 007827 [Stanza dei Maghi e degli Stregoni]
+M 0 7804 1 7826 *!007804 [Neelha, la maestra dei chierici] caricato nella stanza 007826 [Stanza dei Chierici]
+M 0 7803 1 7812 *!007803 [Silraen, la maestra dei ranger] caricato nella stanza 007812 [Radura dei Ranger]
+M 0 7805 1 7821 *!007805 [Garwin, il maestro dei guerrieri] caricato nella stanza 007821 [Stanza dei Guerrieri]
+M 0 7802 1 7811 *!007802 [Tairin, la maestra dei druidi] caricato nella stanza 007811 [Radura dei Druidi]
+M 0 7808 1 7825 *!007808 [Alrani, il maestro degli psionici] caricato nella stanza 007825 [Stanza degli Psionici]
+M 0 7806 1 7824 *!007806 [Mei-Chan, il maestro dei monaci] caricato nella stanza 007824 [Stanza dei Monaci]
+M 0 7810 1 7820 *!007810 [Ayle, il maestro dei barbari] caricato nella stanza 007820 [Stanza dei Barbari]
+M 0 7811 1 7828 *!007811 [Flasite, il maestro dei ladri] caricato nella stanza 007828 [La vera stanza del maestro]
+M 0 7807 1 7822 *!007807 [Lorinne, la maestra dei paladini] caricato nella stanza 007822 [Stanza dei Paladini]
+M 0 7814 1 7836 *!007814 [un apprendista guerriero] caricato nella stanza 007836 [La Sala d'Addestramento]
+E 1 7832 100 5 *! 007832 [una maglia di ferro] indossato dal MOB 007814 [un apprendista guerriero] body
+G 1 7851 100 *! 007851 [una gladio] dato al MOB 007814 [un apprendista guerriero]
+M 0 7815 1 7837 *!007815 [un apprendista arciere] caricato nella stanza 007837 [Il Poligono di Tiro]
+E 1 7832 100 5 *! 007832 [una maglia di ferro] indossato dal MOB 007815 [un apprendista arciere] body
+E 1 7833 100 6 *! 007833 [una calotta di pelle] indossato dal MOB 007815 [un apprendista arciere] Head
+E 1 7840 100 16 *! 007840 [un arco di legno] indossato dal MOB 007815 [un apprendista arciere] Wield
+E 1 7839 100 17 *! 007839 [una freccia grigia] indossato dal MOB 007815 [un apprendista arciere] hold
+G 1 7839 100 *! 007839 [una freccia grigia] dato al MOB 007815 [un apprendista arciere]
+G 1 7829 100 *! 007829 [una torcia] caricato all'interno del contenitore 007839 [una freccia grigia]
+M 0 7817 1 7840 *!007817 [il $c0011Campione$c0007] caricato nella stanza 007840 [Il Centro dell'Arena]
+E 1 7832 100 5 *! 007832 [una maglia di ferro] indossato dal MOB 007817 [il $c0011Campione$c0007] body
+E 1 7833 100 6 *! 007833 [una calotta di pelle] indossato dal MOB 007817 [il $c0011Campione$c0007] Head
+E 1 7834 100 8 *! 007834 [degli stivali in cuoio] indossato dal MOB 007817 [il $c0011Campione$c0007] Feet
+E 1 7851 100 16 *! 007851 [una gladio] indossato dal MOB 007817 [il $c0011Campione$c0007] Wield
+M 0 7818 1 7849 *!007818 [un mago strampalato] caricato nella stanza 007849 [Il Laboratorio Segreto]
+E 1 7844 40 17 *! 007844 [bacchetta dei $c0012venti$c0007] indossato dal MOB 007818 [un mago strampalato] hold
+M 0 7819 1 7847 *!007819 [$c0015Darth$c0007, il Cavaliere Guardiano] caricato nella stanza 007847 [Il Tetto Del $c0011Colosseo$c0007]
+E 1 7846 10 5 *! 007846 [$c0015armatura d'argento puro$c0007] indossato dal MOB 007819 [$c0015Darth$c0007, il Cavaliere Guardiano] body
+E 1 7845 100 16 *! 007845 [lo Stocco del Baluardo $c0015Bianco$c0007] indossato dal MOB 007819 [$c0015Darth$c0007, il Cavaliere Guardiano] Wield
+M 0 7813 5 7836 *!007813 [un manichino] caricato nella stanza 007836 [La Sala d'Addestramento]
+M 0 7816 3 7838 *!007816 [un bersaglio] caricato nella stanza 007838 [Tra i bersagli!]
+M 0 7812 1 7833 *!007812 [il guardiano] caricato nella stanza 007833 [Il Magazzino]
+M 0 7822 1 7859 *!007822 [il $c0009Custode della Rabbia$c0007] caricato nella stanza 007859 [Cripta della $c0009Rabbia$c0007]
+E 1 7848 10 3 *! 007848 [una chiave $c0009rossa$c0007] indossato dal MOB 007822 [il $c0009Custode della Rabbia$c0007] necklace (1)
+M 0 7823 1 7864 *!007823 [il $c0008Custode della Fatica$c0007] caricato nella stanza 007864 [Cripta della $c0008Fatica$c0007]
+E 1 7849 10 3 *! 007849 [una chiave $c0008nera$c0007] indossato dal MOB 007823 [il $c0008Custode della Fatica$c0007] necklace (1)
+M 0 7824 1 7871 *!007824 [il $c0013Custode del Dolore$c0007] caricato nella stanza 007871 [Cripta del $c0013Dolore$c0007]
+E 1 7850 10 3 *! 007850 [una chiave $c0013viola$c0007] indossato dal MOB 007824 [il $c0013Custode del Dolore$c0007] necklace (1)
+M 0 7820 3 7868 *!007820 [un pipistrello] caricato nella stanza 007868 [Tra le Tombe]
+M 0 7821 3 7863 *!007821 [un goblin ladruncolo] caricato nella stanza 007863 [L'Anticamera]
+G 1 7842 100 *! 007842 [una fettina di carne secca] dato al MOB 007821 [un goblin ladruncolo]
+G 1 7843 100 *! 007843 [una borraccia] dato al MOB 007821 [un goblin ladruncolo]
+M 0 7820 3 7857 *!007820 [un pipistrello] caricato nella stanza 007857 [Tra le Tombe]
+M 0 7820 3 7862 *!007820 [un pipistrello] caricato nella stanza 007862 [Tra le Tombe]
+M 0 7825 1 7880 *!007825 [un Gladiatore] caricato nella stanza 007880 [L'Arena]
+M 0 7826 1 7881 *!007826 [un Gladiatore] caricato nella stanza 007881 [L'Arena]
+M 0 7827 1 7882 *!007827 [un Gladiatore] caricato nella stanza 007882 [L'Arena]
+M 0 7829 1 7884 *!007829 [un Gladiatore] caricato nella stanza 007884 [L'Arena]
+M 0 7828 1 7883 *!007828 [un Gladiatore] caricato nella stanza 007883 [L'Arena]
+M 0 7821 3 7870 *!007821 [un goblin ladruncolo] caricato nella stanza 007870 [L'Anticamera]
+G 1 7847 0 *! 007847 [un pugnale di pietra] dato al MOB 007821 [un goblin ladruncolo]
+G 1 7842 100 *! 007842 [una fettina di carne secca] dato al MOB 007821 [un goblin ladruncolo]
+G 1 7843 100 *! 007843 [una borraccia] dato al MOB 007821 [un goblin ladruncolo]
+M 0 7821 3 7877 *!007821 [un goblin ladruncolo] caricato nella stanza 007877 [L'Anticamera]
+G 1 7842 100 *! 007842 [una fettina di carne secca] dato al MOB 007821 [un goblin ladruncolo]
+G 1 7847 0 *! 007847 [un pugnale di pietra] dato al MOB 007821 [un goblin ladruncolo]
+M 0 7830 3 7885 *!007830 [un giovane curatore] caricato nella stanza 007885 [L'infermeria]
+M 0 7830 3 7851 *!007830 [un giovane curatore] caricato nella stanza 007851 [Il viale del Palazzo]
+*! Exits initializations
+D 0 7804 1 1 *! Uscita East della stanza 007804 [Sala della Materia]: Chiusa
+D 0 7804 3 2 *! Uscita West della stanza 007804 [Sala della Materia]: Chiusa a chiave
+D 0 7805 2 1 *! Uscita South della stanza 007805 [Il magazzino]: Chiusa
+D 0 7805 3 1 *! Uscita West della stanza 007805 [Il magazzino]: Chiusa
+D 0 7806 0 1 *! Uscita North della stanza 007806 [$c0014Una stanza segreta!$c0007]: Chiusa
+D 0 7807 1 1 *! Uscita East della stanza 007807 [La stanza degli Oggetti Magici]: Chiusa
+D 0 7823 5 1 *! Uscita Down della stanza 007823 [Stanza dei Ladri]: Chiusa
+D 0 7830 1 2 *! Uscita East della stanza 007830 [Una Sala di Roccia Viva]: Chiusa a chiave
+D 0 7830 3 1 *! Uscita West della stanza 007830 [Una Sala di Roccia Viva]: Chiusa
+D 0 7831 1 1 *! Uscita East della stanza 007831 [Il Corridoio Discendente]: Chiusa
+D 0 7832 3 1 *! Uscita West della stanza 007832 [Il Corridoio Discendente]: Chiusa
+D 0 7833 1 1 *! Uscita East della stanza 007833 [Il Magazzino]: Chiusa
+D 0 7834 1 1 *! Uscita East della stanza 007834 [Il Corridoio Discendente]: Chiusa
+D 0 7835 3 1 *! Uscita West della stanza 007835 [Una Sala di Roccia Viva]: Chiusa
+D 0 7839 2 2 *! Uscita South della stanza 007839 [La Gabbia Settentrionale]: Chiusa a chiave
+D 0 7842 3 1 *! Uscita West della stanza 007842 [La Sala Della $c0011Gloria$c0007]: Chiusa
+D 0 7843 3 2 *! Uscita West della stanza 007843 [Il Corridoio Ascendente]: Chiusa a chiave
+D 0 7844 0 1 *! Uscita North della stanza 007844 [Il Corridoio Ascendente]: Chiusa
+D 0 7849 2 1 *! Uscita South della stanza 007849 [Il Laboratorio Segreto]: Chiusa
+D 0 7858 2 1 *! Uscita South della stanza 007858 [L'Anticamera]: Chiusa
+D 0 7859 0 1 *! Uscita North della stanza 007859 [Cripta della $c0009Rabbia$c0007]: Chiusa
+D 0 7863 2 2 *! Uscita South della stanza 007863 [L'Anticamera]: Chiusa a chiave
+D 0 7864 0 2 *! Uscita North della stanza 007864 [Cripta della $c0008Fatica$c0007]: Chiusa a chiave
+D 0 7870 2 2 *! Uscita South della stanza 007870 [L'Anticamera]: Chiusa a chiave
+D 0 7871 0 2 *! Uscita North della stanza 007871 [Cripta del $c0013Dolore$c0007]: Chiusa a chiave
+D 0 7877 2 2 *! Uscita South della stanza 007877 [L'Anticamera]: Chiusa a chiave
+D 0 7878 0 2 *! Uscita North della stanza 007878 [Cripta del $c0015Responsabilita'$c0007]: Chiusa a chiave
+D 0 7878 3 1 *! Uscita West della stanza 007878 [Cripta del $c0015Responsabilita'$c0007]: Chiusa
+D 0 7879 0 1 *! Uscita North della stanza 007879 [L'Entrata all'Arena]: Chiusa
+S
+#80
+Banca~
+8099 20 0
+*! Items initializations
+O 0 8001 1 8003 1 *! 008001 [Una cassaforte] caricato nella stanza 008003 [Il Caveau]
+P 1 8003 1 8001 *! 008003 [$c0011Giustizia$c0014 la Splendente spada degli Arcangeli$c0007] caricato all'interno del contenitore 008001 [Una cassaforte]
+P 1 8000 1 8001 *! 008000 [Una piccola montagna d'oro.] caricato all'interno del contenitore 008001 [Una cassaforte]
+O 0 8006 1 8006 1 *! 008006 [I resti rinsecchiti di un armigero] caricato nella stanza 008006 [Il tunnel segreto]
+O 0 8011 1 8013 1 *! 008011 [un cofanetto di legno] caricato nella stanza 008013 [un'apertura nel muro]
+P 1 8012 1 8011 *! 008012 [una stella di cristallo azzurro] caricato all'interno del contenitore 008011 [un cofanetto di legno]
+O 0 8013 1 8013 1 *! 008013 [una catenella] caricato nella stanza 008013 [un'apertura nel muro]
+*! Mobiles initializations
+M 0 8000 1 8001 *!008000 [Il bancario tuttofare] caricato nella stanza 008001 [La banca di Myst]
+M 0 8001 1 8003 *!008001 [Fidex Gator il sorvegliante] caricato nella stanza 008003 [Il Caveau]
+E 1 8004 1 3 *! 008004 [Un sacchettino in pelle] indossato dal MOB 008001 [Fidex Gator il sorvegliante] necklace (1)
+P 1 8002 1 8004 *! 008002 [Una chiave dorata] caricato all'interno del contenitore 008004 [Un sacchettino in pelle]
+M 0 8002 1 8003 *!008002 [Un grosso pitbull] caricato nella stanza 008003 [Il Caveau]
+E 1 8005 3 3 *! 008005 [un collare con punte d'acciaio] indossato dal MOB 008002 [Un grosso pitbull] necklace (1)
+M 0 8003 1 8011 *!008003 [Necros] caricato nella stanza 008011 [Di fronte a Necros]
+E 1 8008 1 1 *! 008008 [il sigillo di Necros] indossato dal MOB 008003 [Necros] Right ring
+E 1 8007 1 2 *! 008007 [l'anello di Necros] indossato dal MOB 008003 [Necros] Left ring
+E 1 8015 1 3 *! 008015 [La Progenie di Melkor] indossato dal MOB 008003 [Necros] necklace (1)
+E 1 8014 1 5 *! 008014 [l'armatura di Necros] indossato dal MOB 008003 [Necros] body
+E 1 8009 1 12 *! 008009 [Il mantello di Necros] indossato dal MOB 008003 [Necros] Above body
+E 1 8010 1 17 *! 008010 [Il bastone di Necros] indossato dal MOB 008003 [Necros] hold
+H 1 6 0 *! Odio verso allineamento superiore o uguale 0
+M 0 8004 0 8019 *!008004 [Jessica Ann] caricato nella stanza 008019 [Il Sarcofago]
+*! Exits initializations
+D 0 8002 5 2 *! Uscita Down della stanza 008002 [L'interno della banca]: Chiusa a chiave
+D 0 8003 1 1 *! Uscita East della stanza 008003 [Il Caveau]: Chiusa
+D 0 8003 4 2 *! Uscita Up della stanza 008003 [Il Caveau]: Chiusa a chiave
+D 0 8003 5 1 *! Uscita Down della stanza 008003 [Il Caveau]: Chiusa
+D 0 8004 3 2 *! Uscita West della stanza 008004 [Il tunnel segreto]: Chiusa a chiave
+D 0 8006 2 1 *! Uscita South della stanza 008006 [Il tunnel segreto]: Chiusa
+D 0 8007 1 1 *! Uscita East della stanza 008007 [Oltre il crollo]: Chiusa
+D 0 8008 5 2 *! Uscita Down della stanza 008008 [La fine del tunnel]: Chiusa a chiave
+D 0 8009 4 1 *! Uscita Up della stanza 008009 [Il Portale Sigillato]: Chiusa
+D 0 8012 0 1 *! Uscita North della stanza 008012 [una camera nascosta]: Chiusa
+D 0 8012 3 1 *! Uscita West della stanza 008012 [una camera nascosta]: Chiusa
+D 0 8013 2 1 *! Uscita South della stanza 008013 [un'apertura nel muro]: Chiusa
+S
+#248
+The Abyss~
+25099 40 2
+*! Inizializzazione della zona 24800
+
+* Door in room Western End of the Misty Cavern -> W is open
+* Door in room The Flaming Gates -> N is locked
+* Door in room Inside the Flaming Gates -> S is locked
+* Door in room Western End of the Courtyard -> W is open
+* Door in room Inside a Small Stone Building -> E is closed
+* Door in room A Large Room -> D is open
+* Door in room Southern End of Coridoor -> S is locked
+* Door in room Castle Throne Room -> S is closed
+* Door in room The Vault -> N is closed
+* Door in room End of the Grand Hallway -> E is closed
+* Door in room A Large Room -> W is closed
+* Door in room The Castle Store Room -> S is closed
+* Door in room Castle Barracks -> N is closed
+* Door in room Castle Barracks -> S is closed
+* Door in room Guest Room -> E is closed
+* Door in room Beneath the Sacraficial Pit -> W is closed
+* Door in room Entrance to the Sanctuary -> E is closed
+* Door in room The Sanctuary -> N is open
+* Door in room The Sanctuary -> W is open
+* Door in room The Sanctuary -> E is open
+* Door in room The Sanctuary -> W is open
+* Door in room Crimson's Death Room -> E is open
+* Door in room The Sanctuary -> S is open
+* Door in room The Sanctuary -> W is open
+* Door in room The Sanctuary -> E is open
+* Door in room Sanctuary Guard Post -> S is closed
+* Door in room Chamber of Kalas -> N is closed
+* Door in room End of a Narrow Passage -> W is closed
+* Door in room The Mist -> E is closed
+
+M 0 24917 1 25098  *! Mob 24917 (The guardian of time) nella stanza 25098 (A Small Portal)
+
+M 0 25000 1 25050 0 *! Mob 25000 ($c0008The Demi-Lich) nella stanza 25050 (Castle Throne Room)
+* * *M:The Demi-Lich R:Castle Throne Room MW:1 MR:0
+* * *O:A Black Onyx Ring dito sinistro MW:3
+* * *O:A Pitch-Black Cloak corpo MW:3
+* * *O:A Flaming Bracelet sinistro MW:3
+* * *!O:a black onyx key MW:1
+E 1 25013 3 2 0 *! Come anello sinistro: 025013 (A Black Onyx Ring)
+E 1 25011 3 12 0 *! Intorno al corpo: 025011 (A Pitch-Black Cloak)
+E 1 25012 3 15 0 *! Al polso sinistro: 025012 (A Flaming Bracelet)
+G 1 5197 1 0 0 *! In inventario: 005197 (a black onyx key)
+
+M 0 25001 1 25093  *! Mob 25001 (Keftab, the Ancient One,) nella stanza 25093 (Hall of Ancients)
+E 1 24983 3 3  *! Al collo (1): 024983 (a glowing crucifix)
+E 1 25027 3 6  *! Sulla testa: 025027 (The silver circlet of Concentration)
+
+M 0 25002 1 25081 0 *! Mob 25002 ($c0013A Crimson Death) nella stanza 25081 (Crimson's Death Room)
+* * *M:A Crimson Death R:Crimson's Death Room MW:1 MR:0
+* * *O:A pair of silver sleeves braccia MW:3
+* * *O:A Black and Silver Cloak corpo MW:3
+* * *O:A Flaming Bracelet sinistro MW:3
+E 1 25002 3 10 0 *! Sulle braccia: 025002 (A pair of silver sleeves)
+E 1 25008 3 12 0 *! Intorno al corpo: 025008 (A Black and Silver Cloak)
+E 1 25012 3 15 0 *! Al polso sinistro: 025012 (A Flaming Bracelet)
+
+M 0 25003 1 25089 0 *! Mob 25003 (A Mist Daemon) nella stanza 25089 (The Mist)
+* * *M:A Mist Daemon R:The Mist MW:1 MR:0
+* * *O:A Rune Covered Belt vita MW:3
+E 1 25003 3 13 0 *! Alla vita: 025003 (A Rune Covered Belt)
+
+M 0 25004 5 25004 0 *! Mob 25004 (a Black Slayer) nella stanza 25004 (Gateway to the Abyss)
+* * *M:a Black Slayer R:Gateway to the Abyss MW:5 MR:0
+
+M 0 25004 5 25004 0 *! Mob 25004 (a Black Slayer) nella stanza 25004 (Gateway to the Abyss)
+* * *M:a Black Slayer R:Gateway to the Abyss MW:5 MR:0
+
+M 0 25004 5 25082 0 *! Mob 25004 (a Black Slayer) nella stanza 25082 (The Sanctuary)
+* * *M:a Black Slayer R:The Sanctuary MW:5 MR:0
+* * *O:A Black and Silver Cloak corpo MW:3
+E 1 25008 3 12 0 *! Intorno al corpo: 025008 (A Black and Silver Cloak)
+
+M 0 25004 5 25082 0 *! Mob 25004 (a Black Slayer) nella stanza 25082 (The Sanctuary)
+* * *M:a Black Slayer R:The Sanctuary MW:5 MR:0
+* * *O:the Shadowshiv impugnato MW:3
+E 1 25014 3 16 0 *! Impugnato: 025014 (the Shadowshiv)
+
+M 0 25004 5 25082 0 *! Mob 25004 (a Black Slayer) nella stanza 25082 (The Sanctuary)
+* * *M:a Black Slayer R:The Sanctuary MW:5 MR:0
+* * *O:The fire blade impugnato MW:3
+E 1 25024 3 16 0 *! Impugnato: 025024 (The fire blade)
+
+M 0 25005 10 25006 0 *! Mob 25005 (a Lost Soul) nella stanza 25006 (Cavern of Lost Souls)
+* * *M:a Lost Soul R:Cavern of Lost Souls MW:10 MR:0
+
+M 0 25005 10 25006 0 *! Mob 25005 (a Lost Soul) nella stanza 25006 (Cavern of Lost Souls)
+* * *M:a Lost Soul R:Cavern of Lost Souls MW:10 MR:0
+
+M 0 25006 6 25054 0 *! Mob 25006 (a Storm Giant) nella stanza 25054 (End of the Grand Hallway)
+* * *M:a Storm Giant R:End of the Grand Hallway MW:6 MR:0
+* * *O:A Jeweled Dagger impugnato MW:3
+E 1 25019 3 16 0 *! Impugnato: 025019 (A Jeweled Dagger)
+
+M 0 25006 6 25054 0 *! Mob 25006 (a Storm Giant) nella stanza 25054 (End of the Grand Hallway)
+* * *M:a Storm Giant R:End of the Grand Hallway MW:6 MR:0
+* * *O:A Jewel Encrusted Helmet testa MW:3
+E 1 25020 3 6 0 *! Sulla testa: 025020 (A Jewel Encrusted Helmet)
+
+M 0 25006 6 25058 0 *! Mob 25006 (a Storm Giant) nella stanza 25058 (Castle Barracks)
+* * *M:a Storm Giant R:Castle Barracks MW:6 MR:0
+* * *O:A pile of blue silk MW:3
+G 1 25001 3 0 0 *! In inventario: 025001 (A pile of blue silk)
+
+M 0 25006 6 25058 0 *! Mob 25006 (a Storm Giant) nella stanza 25058 (Castle Barracks)
+* * *M:a Storm Giant R:Castle Barracks MW:6 MR:0
+* * *O:A Pair of Silver Boots piedi MW:3
+E 1 25006 3 8 0 *! Ai piedi: 025006 (A Pair of Silver Boots)
+
+M 0 25006 6 25084 0 *! Mob 25006 (a Storm Giant) nella stanza 25084 (Sanctuary Guard Post)
+* * *M:a Storm Giant R:Sanctuary Guard Post MW:6 MR:0
+* * *O:A Pair of Metallic Leg Plates gambe MW:4
+E 1 25009 4 7 0 *! Sulle gambe: 025009 (A Pair of Metallic Leg Plates)
+
+M 0 25006 6 25084 0 *! Mob 25006 (a Storm Giant) nella stanza 25084 (Sanctuary Guard Post)
+* * *M:a Storm Giant R:Sanctuary Guard Post MW:6 MR:0
+
+M 0 25007 2 25041 0 *! Mob 25007 (a White Gold Manticore) nella stanza 25041 (The Castle Drawbridge)
+* * *M:a White Gold Manticore R:The Castle Drawbridge MW:2 MR:0
+* * *O:un anello di cristallo MW:3
+G 1 25018 3 0 0 *! In inventario: 025018 (un anello di cristallo)
+
+M 0 25007 2 25041 0 *! Mob 25007 (a White Gold Manticore) nella stanza 25041 (The Castle Drawbridge)
+* * *M:a White Gold Manticore R:The Castle Drawbridge MW:2 MR:0
+* * *O:un anello di cristallo MW:3
+G 1 25018 3 0 0 *! In inventario: 025018 (un anello di cristallo)
+
+M 0 25008 5 25030 0 *! Mob 25008 (an Efreet) nella stanza 25030 (The Flaming Gates)
+* * *M:an Efreet R:The Flaming Gates MW:5 MR:0
+
+M 0 25008 5 25031 0 *! Mob 25008 (an Efreet) nella stanza 25031 (Inside the Flaming Gates)
+* * *M:an Efreet R:Inside the Flaming Gates MW:5 MR:0
+* * *O:A Bright Green Cape al collo MW:3
+E 1 25023 3 3 0 *! Al collo (1): 025023 (A Bright Green Cape)
+
+M 0 25008 5 25063 0 *! Mob 25008 (an Efreet) nella stanza 25063 (Top of the Tower)
+* * *M:an Efreet R:Top of the Tower MW:5 MR:0
+* * *O:A Black and Silver Cloak corpo MW:3
+E 1 25008 3 12 0 *! Intorno al corpo: 025008 (A Black and Silver Cloak)
+
+M 0 25008 5 25076 0 *! Mob 25008 (an Efreet) nella stanza 25076 (The Pit of Sacrifice)
+* * *M:an Efreet R:The Pit of Sacrifice MW:5 MR:0
+* * *O:An Ivory Bracelet sinistro MW:3
+E 1 25022 3 15 0 *! Al polso sinistro: 025022 (An Ivory Bracelet)
+
+M 0 25009 1 25045 0 *! Mob 25009 ($c0014the Hydra) nella stanza 25045 (On the Spiral Staircase)
+* * *M:the Hydra R:On the Spiral Staircase MW:1 MR:0
+* * *O:the Soul Amulet MW:5
+G 1 25026 5 0 0 *! In inventario: 025026 (the Soul Amulet)
+
+M 0 25010 1 25015 0 *! Mob 25010 ($c0014the kraken) nella stanza 25015 (On the Ocean of Despair)
+* * *M:the kraken R:On the Ocean of Despair MW:1 MR:0
+
+M 0 25011 1 25020 0 *! Mob 25011 ($c0003the Treant) nella stanza 25020 (A Small Path in the Twisted Forest)
+* * *M:the Treant R:A Small Path in the Twisted Forest MW:1 MR:0
+* * *O:Il medaglione della magia al collo MW:3
+E 1 25021 3 3 0 *! Al collo (1): 025021 (Il medaglione della magia)
+
+M 0 25012 10 25036 0 *! Mob 25012 (a Githyanki) nella stanza 25036 (Entrance to a Small Building)
+* * *M:a Githyanki R:Entrance to a Small Building MW:10 MR:0
+
+M 0 25013 1 25085 0 *! Mob 25013 ($c0001Kalas il guardiano degli abissi) nella stanza 25085 (Chamber of Kalas)
+* * *M:Kalas R:Chamber of Kalas MW:1 MR:0
+* * *O:A Runed Key MW:1
+* * *O:A Black Onyx Ring dito sinistro MW:3
+* * *O:A Rune Covered Breast Plate corpo MW:3
+* * *O:The Helm of the Dragons testa MW:3
+* * *O:A Pair of Silver Boots piedi MW:3
+* * *O:A Pair of Jeweled Gauntlets mani MW:3
+* * *O:A Flaming Two-Handed Sword impugnato MW:3
+E 1 25013 3 2 0 *! Come anello sinistro: 025013 (A Black Onyx Ring)
+E 1 25005 3 5 0 *! Sul corpo: 025005 (A Rune Covered Breast Plate)
+E 1 25004 3 6 0 *! Sulla testa: 025004 (The Helm of the Dragons)
+E 1 25006 3 8 0 *! Ai piedi: 025006 (A Pair of Silver Boots)
+E 1 25010 3 9 0 *! Alle mani: 025010 (A Pair of Jeweled Gauntlets)
+E 1 25015 3 16 0 *! Impugnato: 025015 (A Flaming Two-Handed Sword)
+G 1 25051 1 0 0 *! In inventario: 025051 (A Runed Key)
+
+M 0 25014 3 25012 0 *! Mob 25014 (the Death knight) nella stanza 25012 (Realm of the Dead)
+* * *M:the Death knight R:Realm of the Dead MW:3 MR:0
+* * *O:A pile of blue silk al collo MW:3
+* * *O:un lungo tridente d'argento impugnato MW:3
+* * *O:un anello di cristallo tenuto MW:3
+E 1 25001 3 3 0 *! Al collo (1): 025001 (A pile of blue silk)
+E 1 25016 3 16 0 *! Impugnato: 025016 (un lungo tridente d'argento)
+E 1 25018 3 17 0 *! Tenuto: 025018 (un anello di cristallo)
+
+M 0 25014 2 25050 0 *! Mob 25014 (the Death knight) nella stanza 25050 (Castle Throne Room)
+* * *M:the Death knight R:Castle Throne Room MW:2 MR:0
+* * *O:A Rune Covered Breast Plate corpo MW:3
+* * *O:The Helm of the Dragons testa MW:3
+* * *O:la spada degli antichi impugnato MW:3
+E 1 25005 3 5 0 *! Sul corpo: 025005 (A Rune Covered Breast Plate)
+E 1 25004 3 6 0 *! Sulla testa: 025004 (The Helm of the Dragons)
+E 1 25000 3 16 0 *! Impugnato: 025000 (la spada degli antichi)
+
+M 0 25015 2 25039 0 *! Mob 25015 ($c0014the Neo-Otyugh) nella stanza 25039 (A Large Room)
+* * *M:the Neo-Otyugh R:A Large Room MW:2 MR:0
+* * *!O:an opal potion MW:8
+* * *O:Glaive MW:3
+G 1 21012 8 0 0 *! In inventario: 021012 (an opal potion)
+G 1 25025 3 0 0 *! In inventario: 025025 (Glaive)
+
+M 0 25017 4 25003 0 *! Mob 25017 (the Gatekeeper) nella stanza 25003 (The End of the Trail)
+* * *M:the Gatekeeper R:The End of the Trail MW:4 MR:0
+* * *O:Sword of Sharpness impugnato MW:8
+E 1 25017 8 16 0 *! Impugnato: 025017 (Sword of Sharpness)
+
+M 0 25017 4 25003 0 *! Mob 25017 (the Gatekeeper) nella stanza 25003 (The End of the Trail)
+* * *M:the Gatekeeper R:The End of the Trail MW:4 MR:0
+* * *O:Sword of Sharpness impugnato MW:8
+E 1 25017 8 16 0 *! Impugnato: 025017 (Sword of Sharpness)
+
+M 0 25017 4 25011 0 *! Mob 25017 (the Gatekeeper) nella stanza 25011 (The Gate)
+* * *M:the Gatekeeper R:The Gate MW:4 MR:0
+* * *O:Sword of Sharpness MW:8
+G 1 25017 8 0 0 *! In inventario: 025017 (Sword of Sharpness)
+
+M 0 25017 4 25011 0 *! Mob 25017 (the Gatekeeper) nella stanza 25011 (The Gate)
+* * *M:the Gatekeeper R:The Gate MW:4 MR:0
+* * *O:Sword of Sharpness MW:8
+G 1 25017 8 0 0 *! In inventario: 025017 (Sword of Sharpness)
+
+M 0 25019 1 25090  *! Mob 25019 (The Earth King) nella stanza 25090 (The Castle Dungeon)
+
+M 0 25020 1 25091  *! Mob 25020 (The lord of Air) nella stanza 25091 (The Castle Dungeon)
+
+M 0 25021 1 25092  *! Mob 25021 (The Sultan of Fire) nella stanza 25092 (Secret Passage)
+
+M 0 25030 5 25028 0 *! Mob 25030 (A vrock) nella stanza 25028 (The Smouldering Trail)
+* * *M:A vrock R:The Smouldering Trail MW:5 MR:0
+
+M 0 25031 5 25032 0 *! Mob 25031 (A hezrou) nella stanza 25032 (The Castle Courtyard)
+* * *M:A hezrou R:The Castle Courtyard MW:5 MR:0
+
+M 0 25032 5 25034 0 *! Mob 25032 (A glabrezu) nella stanza 25034 (Inside a Small Stone Building)
+* * *M:A glabrezu R:Inside a Small Stone Building MW:5 MR:0
+
+M 0 25033 5 25056 0 *! Mob 25033 (Nalfeshnee) nella stanza 25056 (The Castle Pantry)
+* * *M:Nalfeshnee R:The Castle Pantry MW:5 MR:0
+
+M 0 25034 3 25063 0 *! Mob 25034 (Marilith) nella stanza 25063 (Top of the Tower)
+* * *M:Marilith R:Top of the Tower MW:3 MR:0
+
+M 0 25034 3 25063 0 *! Mob 25034 (Marilith) nella stanza 25063 (Top of the Tower)
+* * *M:Marilith R:Top of the Tower MW:3 MR:0
+
+M 0 25034 3 25063 0 *! Mob 25034 (Marilith) nella stanza 25063 (Top of the Tower)
+* * *M:Marilith R:Top of the Tower MW:3 MR:0
+
+M 0 25035 1 25063 0 *! Mob 25035 (Balor) nella stanza 25063 (Top of the Tower)
+* * *M:Balor R:Top of the Tower MW:1 MR:0
+
+D 0 25010 3 0 0 *! Uscita west della stanza 25010 (Western End of the Misty Cavern): aperta
+D 0 25030 0 2 0 *! Uscita north della stanza 25030 (The Flaming Gates): chiusa a chiave
+D 0 25031 2 2 0 *! Uscita south della stanza 25031 (Inside the Flaming Gates): chiusa a chiave
+D 0 25033 3 0 0 *! Uscita west della stanza 25033 (Western End of the Courtyard): aperta
+D 0 25034 1 1 0 *! Uscita east della stanza 25034 (Inside a Small Stone Building): chiusa
+D 0 25039 5 0 0 *! Uscita down della stanza 25039 (A Large Room): aperta
+D 0 25049 2 2 0 *! Uscita south della stanza 25049 (Southern End of Coridoor): chiusa a chiave
+D 0 25050 2 1 0 *! Uscita south della stanza 25050 (Castle Throne Room): chiusa
+D 0 25051 0 1 0 *! Uscita north della stanza 25051 (The Vault): chiusa
+D 0 25051 3 2  *! Uscita west della stanza 25051 (The Vault): chiusa a chiave
+D 0 25054 1 1 0 *! Uscita east della stanza 25054 (End of the Grand Hallway): chiusa
+D 0 25055 3 1 0 *! Uscita west della stanza 25055 (A Large Room): chiusa
+D 0 25057 2 1 0 *! Uscita south della stanza 25057 (The Castle Store Room): chiusa
+D 0 25058 0 1 0 *! Uscita north della stanza 25058 (Castle Barracks): chiusa
+D 0 25058 2 1 0 *! Uscita south della stanza 25058 (Castle Barracks): chiusa
+D 0 25059 1 1 0 *! Uscita east della stanza 25059 (Guest Room): chiusa
+D 0 25077 3 1 0 *! Uscita west della stanza 25077 (Beneath the Sacraficial Pit): chiusa
+D 0 25078 1 1 0 *! Uscita east della stanza 25078 (Entrance to the Sanctuary): chiusa
+D 0 25079 0 0 0 *! Uscita north della stanza 25079 (The Sanctuary): aperta
+D 0 25079 3 0 0 *! Uscita west della stanza 25079 (The Sanctuary): aperta
+D 0 25080 1 0 0 *! Uscita east della stanza 25080 (The Sanctuary): aperta
+D 0 25080 3 0 0 *! Uscita west della stanza 25080 (The Sanctuary): aperta
+D 0 25081 1 0 0 *! Uscita east della stanza 25081 (Crimson's Death Room): aperta
+D 0 25082 2 0 0 *! Uscita south della stanza 25082 (The Sanctuary): aperta
+D 0 25082 3 0 0 *! Uscita west della stanza 25082 (The Sanctuary): aperta
+D 0 25083 1 0 0 *! Uscita east della stanza 25083 (The Sanctuary): aperta
+D 0 25084 2 1 0 *! Uscita south della stanza 25084 (Sanctuary Guard Post): chiusa
+D 0 25085 0 1 0 *! Uscita north della stanza 25085 (Chamber of Kalas): chiusa
+D 0 25088 3 1 0 *! Uscita west della stanza 25088 (End of a Narrow Passage): chiusa
+D 0 25089 1 1 0 *! Uscita east della stanza 25089 (The Mist): chiusa
+D 0 25090 1 2  *! Uscita east della stanza 25090 (The Castle Dungeon): chiusa a chiave
+D 0 25091 3 2  *! Uscita west della stanza 25091 (The Castle Dungeon): chiusa a chiave
+D 0 25092 1 0  *! Uscita east della stanza 25092 (Secret Passage): aperta
+D 0 25092 2 2  *! Uscita south della stanza 25092 (Secret Passage): chiusa a chiave
+D 0 25093 0 0  *! Uscita north della stanza 25093 (Hall of Ancients): aperta
+D 0 25094 1 0  *! Uscita east della stanza 25094 (A Small Alcove): aperta
+D 0 25095 1 0  *! Uscita east della stanza 25095 (A Narrow Tunnel): aperta
+
+*! Fine dell'inizializzazione della zona 24800
+S
+#374
+last_area~
+99999 60 0
+*! Items initializations
+*! Mobiles initializations
+*! Exits initializations
+S
+#999999
+$~
