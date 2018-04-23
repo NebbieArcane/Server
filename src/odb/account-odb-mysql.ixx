@@ -48,28 +48,6 @@ namespace odb
     ODB_POTENTIALLY_UNUSED (obj);
   }
 
-  // toonBank
-  //
-
-  inline
-  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
-  erase (database& db, const object_type& obj)
-  {
-    callback (db, obj, callback_event::pre_erase);
-    erase (db, id (obj));
-    callback (db, obj, callback_event::post_erase);
-  }
-
-  inline
-  void access::object_traits_impl< ::Alarmud::toonBank, id_mysql >::
-  load_ (statements_type& sts,
-         object_type& obj,
-         bool)
-  {
-    ODB_POTENTIALLY_UNUSED (sts);
-    ODB_POTENTIALLY_UNUSED (obj);
-  }
-
   // toon
   //
 
@@ -82,6 +60,16 @@ namespace odb
     callback (db, obj, callback_event::post_erase);
   }
 
+  inline
+  void access::object_traits_impl< ::Alarmud::toon, id_mysql >::
+  load_ (statements_type& sts,
+         object_type& obj,
+         bool)
+  {
+    ODB_POTENTIALLY_UNUSED (sts);
+    ODB_POTENTIALLY_UNUSED (obj);
+  }
+
   // user
   //
 
@@ -92,6 +80,16 @@ namespace odb
     callback (db, obj, callback_event::pre_erase);
     erase (db, id (obj));
     callback (db, obj, callback_event::post_erase);
+  }
+
+  inline
+  void access::object_traits_impl< ::Alarmud::user, id_mysql >::
+  load_ (statements_type& sts,
+         object_type& obj,
+         bool)
+  {
+    ODB_POTENTIALLY_UNUSED (sts);
+    ODB_POTENTIALLY_UNUSED (obj);
   }
 
   // legacy

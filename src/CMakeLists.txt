@@ -208,7 +208,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wchkp
 	-Wctor-dtor-privacy
 	-Wdisabled-optimization
-	-Wno-enum-compare
+	-Wenum-compare
 	-Wno-format-nonliteral
 	-Wformat=2
 	-Winit-self
@@ -227,7 +227,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #	-Wstack-protector
 	-Wstrict-null-sentinel
 	-Wstrict-overflow=5
-#	-Wno-switch
+#	-Wswitch
 	-Wundef
 	-Wno-unknown-pragmas
 #	-Wno-unused

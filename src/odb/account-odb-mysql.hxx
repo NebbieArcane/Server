@@ -47,7 +47,19 @@ namespace odb
   template <typename A>
   struct query_columns< ::Alarmud::toonExtra, id_mysql, A >
   {
-    // name
+    // id
+    //
+    typedef
+    mysql::query_column<
+      mysql::value_traits<
+        long unsigned int,
+        mysql::id_ulonglong >::query_type,
+      mysql::id_ulonglong >
+    id_type_;
+
+    static const id_type_ id;
+
+    // field
     //
     typedef
     mysql::query_column<
@@ -55,11 +67,11 @@ namespace odb
         ::std::string,
         mysql::id_string >::query_type,
       mysql::id_string >
-    name_type_;
+    field_type_;
 
-    static const name_type_ name;
+    static const field_type_ field;
 
-    // classes
+    // value
     //
     typedef
     mysql::query_column<
@@ -67,24 +79,30 @@ namespace odb
         ::std::string,
         mysql::id_string >::query_type,
       mysql::id_string >
-    classes_type_;
+    value_type_;
 
-    static const classes_type_ classes;
+    static const value_type_ value;
   };
 
 #ifdef ODB_MYSQL_QUERY_COLUMNS_DEF
 
   template <typename A>
-  const typename query_columns< ::Alarmud::toonExtra, id_mysql, A >::name_type_
+  const typename query_columns< ::Alarmud::toonExtra, id_mysql, A >::id_type_
   query_columns< ::Alarmud::toonExtra, id_mysql, A >::
-  name (query_columns< ::Alarmud::toonExtra, id_common, typename A::common_traits >::name,
-        A::table_name, "`name`", 0);
+  id (query_columns< ::Alarmud::toonExtra, id_common, typename A::common_traits >::id,
+      A::table_name, "`id`", 0);
 
   template <typename A>
-  const typename query_columns< ::Alarmud::toonExtra, id_mysql, A >::classes_type_
+  const typename query_columns< ::Alarmud::toonExtra, id_mysql, A >::field_type_
   query_columns< ::Alarmud::toonExtra, id_mysql, A >::
-  classes (query_columns< ::Alarmud::toonExtra, id_common, typename A::common_traits >::classes,
-           A::table_name, "`classes`", 0);
+  field (query_columns< ::Alarmud::toonExtra, id_common, typename A::common_traits >::field,
+         A::table_name, "`field`", 0);
+
+  template <typename A>
+  const typename query_columns< ::Alarmud::toonExtra, id_mysql, A >::value_type_
+  query_columns< ::Alarmud::toonExtra, id_mysql, A >::
+  value (query_columns< ::Alarmud::toonExtra, id_common, typename A::common_traits >::value,
+         A::table_name, "`value`", 0);
 
 #endif // ODB_MYSQL_QUERY_COLUMNS_DEF
 
@@ -103,8 +121,7 @@ namespace odb
 
     struct id_image_type
     {
-      details::buffer id_value;
-      unsigned long id_size;
+      unsigned long long id_value;
       my_bool id_null;
 
       std::size_t version;
@@ -112,17 +129,22 @@ namespace odb
 
     struct image_type
     {
-      // name
+      // id
       //
-      details::buffer name_value;
-      unsigned long name_size;
-      my_bool name_null;
+      unsigned long long id_value;
+      my_bool id_null;
 
-      // classes
+      // field
       //
-      details::buffer classes_value;
-      unsigned long classes_size;
-      my_bool classes_null;
+      details::buffer field_value;
+      unsigned long field_size;
+      my_bool field_null;
+
+      // value
+      //
+      details::buffer value_value;
+      unsigned long value_size;
+      my_bool value_null;
 
       std::size_t version;
     };
@@ -130,6 +152,9 @@ namespace odb
     struct extra_statement_cache_type;
 
     using object_traits<object_type>::id;
+
+    static id_type
+    id (const id_image_type&);
 
     static id_type
     id (const image_type&);
@@ -163,7 +188,7 @@ namespace odb
 
     typedef mysql::query_base query_base_type;
 
-    static const std::size_t column_count = 2UL;
+    static const std::size_t column_count = 3UL;
     static const std::size_t id_column_count = 1UL;
     static const std::size_t inverse_column_count = 0UL;
     static const std::size_t readonly_column_count = 0UL;
@@ -184,7 +209,7 @@ namespace odb
     static const char table_name[];
 
     static void
-    persist (database&, const object_type&);
+    persist (database&, object_type&);
 
     static pointer_type
     find (database&, const id_type&);
@@ -241,17 +266,17 @@ namespace odb
   template <typename A>
   struct query_columns< ::Alarmud::toonRent, id_mysql, A >
   {
-    // name
+    // id
     //
     typedef
     mysql::query_column<
       mysql::value_traits<
-        ::std::string,
-        mysql::id_string >::query_type,
-      mysql::id_string >
-    name_type_;
+        long unsigned int,
+        mysql::id_ulonglong >::query_type,
+      mysql::id_ulonglong >
+    id_type_;
 
-    static const name_type_ name;
+    static const id_type_ id;
 
     // vnum
     //
@@ -264,21 +289,57 @@ namespace odb
     vnum_type_;
 
     static const vnum_type_ vnum;
+
+    // effects
+    //
+    typedef
+    mysql::query_column<
+      mysql::value_traits<
+        ::std::string,
+        mysql::id_string >::query_type,
+      mysql::id_string >
+    effects_type_;
+
+    static const effects_type_ effects;
+
+    // bank
+    //
+    typedef
+    mysql::query_column<
+      mysql::value_traits<
+        bool,
+        mysql::id_tiny >::query_type,
+      mysql::id_tiny >
+    bank_type_;
+
+    static const bank_type_ bank;
   };
 
 #ifdef ODB_MYSQL_QUERY_COLUMNS_DEF
 
   template <typename A>
-  const typename query_columns< ::Alarmud::toonRent, id_mysql, A >::name_type_
+  const typename query_columns< ::Alarmud::toonRent, id_mysql, A >::id_type_
   query_columns< ::Alarmud::toonRent, id_mysql, A >::
-  name (query_columns< ::Alarmud::toonRent, id_common, typename A::common_traits >::name,
-        A::table_name, "`name`", 0);
+  id (query_columns< ::Alarmud::toonRent, id_common, typename A::common_traits >::id,
+      A::table_name, "`id`", 0);
 
   template <typename A>
   const typename query_columns< ::Alarmud::toonRent, id_mysql, A >::vnum_type_
   query_columns< ::Alarmud::toonRent, id_mysql, A >::
   vnum (query_columns< ::Alarmud::toonRent, id_common, typename A::common_traits >::vnum,
         A::table_name, "`vnum`", 0);
+
+  template <typename A>
+  const typename query_columns< ::Alarmud::toonRent, id_mysql, A >::effects_type_
+  query_columns< ::Alarmud::toonRent, id_mysql, A >::
+  effects (query_columns< ::Alarmud::toonRent, id_common, typename A::common_traits >::effects,
+           A::table_name, "`effects`", 0);
+
+  template <typename A>
+  const typename query_columns< ::Alarmud::toonRent, id_mysql, A >::bank_type_
+  query_columns< ::Alarmud::toonRent, id_mysql, A >::
+  bank (query_columns< ::Alarmud::toonRent, id_common, typename A::common_traits >::bank,
+        A::table_name, "`bank`", 0);
 
 #endif // ODB_MYSQL_QUERY_COLUMNS_DEF
 
@@ -297,8 +358,7 @@ namespace odb
 
     struct id_image_type
     {
-      details::buffer id_value;
-      unsigned long id_size;
+      unsigned long long id_value;
       my_bool id_null;
 
       std::size_t version;
@@ -306,16 +366,26 @@ namespace odb
 
     struct image_type
     {
-      // name
+      // id
       //
-      details::buffer name_value;
-      unsigned long name_size;
-      my_bool name_null;
+      unsigned long long id_value;
+      my_bool id_null;
 
       // vnum
       //
       unsigned long long vnum_value;
       my_bool vnum_null;
+
+      // effects
+      //
+      details::buffer effects_value;
+      unsigned long effects_size;
+      my_bool effects_null;
+
+      // bank
+      //
+      signed char bank_value;
+      my_bool bank_null;
 
       std::size_t version;
     };
@@ -323,6 +393,9 @@ namespace odb
     struct extra_statement_cache_type;
 
     using object_traits<object_type>::id;
+
+    static id_type
+    id (const id_image_type&);
 
     static id_type
     id (const image_type&);
@@ -356,7 +429,7 @@ namespace odb
 
     typedef mysql::query_base query_base_type;
 
-    static const std::size_t column_count = 2UL;
+    static const std::size_t column_count = 4UL;
     static const std::size_t id_column_count = 1UL;
     static const std::size_t inverse_column_count = 0UL;
     static const std::size_t readonly_column_count = 0UL;
@@ -377,200 +450,7 @@ namespace odb
     static const char table_name[];
 
     static void
-    persist (database&, const object_type&);
-
-    static pointer_type
-    find (database&, const id_type&);
-
-    static bool
-    find (database&, const id_type&, object_type&);
-
-    static bool
-    reload (database&, object_type&);
-
-    static void
-    update (database&, const object_type&);
-
-    static void
-    erase (database&, const id_type&);
-
-    static void
-    erase (database&, const object_type&);
-
-    static result<object_type>
-    query (database&, const query_base_type&);
-
-    static result<object_type>
-    query (database&, const odb::query_base&);
-
-    static unsigned long long
-    erase_query (database&, const query_base_type&);
-
-    static unsigned long long
-    erase_query (database&, const odb::query_base&);
-
-    static odb::details::shared_ptr<prepared_query_impl>
-    prepare_query (connection&, const char*, const query_base_type&);
-
-    static odb::details::shared_ptr<prepared_query_impl>
-    prepare_query (connection&, const char*, const odb::query_base&);
-
-    static odb::details::shared_ptr<result_impl>
-    execute_query (prepared_query_impl&);
-
-    public:
-    static bool
-    find_ (statements_type&,
-           const id_type*);
-
-    static void
-    load_ (statements_type&,
-           object_type&,
-           bool reload);
-  };
-
-  // toonBank
-  //
-  template <typename A>
-  struct query_columns< ::Alarmud::toonBank, id_mysql, A >
-  {
-    // name
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        ::std::string,
-        mysql::id_string >::query_type,
-      mysql::id_string >
-    name_type_;
-
-    static const name_type_ name;
-
-    // vnum
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        long unsigned int,
-        mysql::id_ulonglong >::query_type,
-      mysql::id_ulonglong >
-    vnum_type_;
-
-    static const vnum_type_ vnum;
-  };
-
-#ifdef ODB_MYSQL_QUERY_COLUMNS_DEF
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toonBank, id_mysql, A >::name_type_
-  query_columns< ::Alarmud::toonBank, id_mysql, A >::
-  name (query_columns< ::Alarmud::toonBank, id_common, typename A::common_traits >::name,
-        A::table_name, "`name`", 0);
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toonBank, id_mysql, A >::vnum_type_
-  query_columns< ::Alarmud::toonBank, id_mysql, A >::
-  vnum (query_columns< ::Alarmud::toonBank, id_common, typename A::common_traits >::vnum,
-        A::table_name, "`vnum`", 0);
-
-#endif // ODB_MYSQL_QUERY_COLUMNS_DEF
-
-  template <typename A>
-  struct pointer_query_columns< ::Alarmud::toonBank, id_mysql, A >:
-    query_columns< ::Alarmud::toonBank, id_mysql, A >
-  {
-  };
-
-  template <>
-  class access::object_traits_impl< ::Alarmud::toonBank, id_mysql >:
-    public access::object_traits< ::Alarmud::toonBank >
-  {
-    public:
-    typedef access::object_traits_impl< ::Alarmud::toonBank, id_common > common_traits;
-
-    struct id_image_type
-    {
-      details::buffer id_value;
-      unsigned long id_size;
-      my_bool id_null;
-
-      std::size_t version;
-    };
-
-    struct image_type
-    {
-      // name
-      //
-      details::buffer name_value;
-      unsigned long name_size;
-      my_bool name_null;
-
-      // vnum
-      //
-      unsigned long long vnum_value;
-      my_bool vnum_null;
-
-      std::size_t version;
-    };
-
-    struct extra_statement_cache_type;
-
-    using object_traits<object_type>::id;
-
-    static id_type
-    id (const image_type&);
-
-    static bool
-    grow (image_type&,
-          my_bool*);
-
-    static void
-    bind (MYSQL_BIND*,
-          image_type&,
-          mysql::statement_kind);
-
-    static void
-    bind (MYSQL_BIND*, id_image_type&);
-
-    static bool
-    init (image_type&,
-          const object_type&,
-          mysql::statement_kind);
-
-    static void
-    init (object_type&,
-          const image_type&,
-          database*);
-
-    static void
-    init (id_image_type&, const id_type&);
-
-    typedef mysql::object_statements<object_type> statements_type;
-
-    typedef mysql::query_base query_base_type;
-
-    static const std::size_t column_count = 2UL;
-    static const std::size_t id_column_count = 1UL;
-    static const std::size_t inverse_column_count = 0UL;
-    static const std::size_t readonly_column_count = 0UL;
-    static const std::size_t managed_optimistic_column_count = 0UL;
-
-    static const std::size_t separate_load_column_count = 0UL;
-    static const std::size_t separate_update_column_count = 0UL;
-
-    static const bool versioned = false;
-
-    static const char persist_statement[];
-    static const char find_statement[];
-    static const char update_statement[];
-    static const char erase_statement[];
-    static const char query_statement[];
-    static const char erase_query_statement[];
-
-    static const char table_name[];
-
-    static void
-    persist (database&, const object_type&);
+    persist (database&, object_type&);
 
     static pointer_type
     find (database&, const id_type&);
@@ -625,8 +505,20 @@ namespace odb
   // toon
   //
   template <typename A>
-  struct pointer_query_columns< ::Alarmud::toon, id_mysql, A >
+  struct query_columns< ::Alarmud::toon, id_mysql, A >
   {
+    // id
+    //
+    typedef
+    mysql::query_column<
+      mysql::value_traits<
+        long unsigned int,
+        mysql::id_ulonglong >::query_type,
+      mysql::id_ulonglong >
+    id_type_;
+
+    static const id_type_ id;
+
     // name
     //
     typedef
@@ -691,36 +583,48 @@ namespace odb
 #ifdef ODB_MYSQL_QUERY_COLUMNS_DEF
 
   template <typename A>
-  const typename pointer_query_columns< ::Alarmud::toon, id_mysql, A >::name_type_
-  pointer_query_columns< ::Alarmud::toon, id_mysql, A >::
-  name (pointer_query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::name,
+  const typename query_columns< ::Alarmud::toon, id_mysql, A >::id_type_
+  query_columns< ::Alarmud::toon, id_mysql, A >::
+  id (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::id,
+      A::table_name, "`id`", 0);
+
+  template <typename A>
+  const typename query_columns< ::Alarmud::toon, id_mysql, A >::name_type_
+  query_columns< ::Alarmud::toon, id_mysql, A >::
+  name (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::name,
         A::table_name, "`name`", 0);
 
   template <typename A>
-  const typename pointer_query_columns< ::Alarmud::toon, id_mysql, A >::password_type_
-  pointer_query_columns< ::Alarmud::toon, id_mysql, A >::
-  password (pointer_query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::password,
+  const typename query_columns< ::Alarmud::toon, id_mysql, A >::password_type_
+  query_columns< ::Alarmud::toon, id_mysql, A >::
+  password (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::password,
             A::table_name, "`password`", 0);
 
   template <typename A>
-  const typename pointer_query_columns< ::Alarmud::toon, id_mysql, A >::title_type_
-  pointer_query_columns< ::Alarmud::toon, id_mysql, A >::
-  title (pointer_query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::title,
+  const typename query_columns< ::Alarmud::toon, id_mysql, A >::title_type_
+  query_columns< ::Alarmud::toon, id_mysql, A >::
+  title (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::title,
          A::table_name, "`title`", 0);
 
   template <typename A>
-  const typename pointer_query_columns< ::Alarmud::toon, id_mysql, A >::lastlogin_type_
-  pointer_query_columns< ::Alarmud::toon, id_mysql, A >::
-  lastlogin (pointer_query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::lastlogin,
+  const typename query_columns< ::Alarmud::toon, id_mysql, A >::lastlogin_type_
+  query_columns< ::Alarmud::toon, id_mysql, A >::
+  lastlogin (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::lastlogin,
              A::table_name, "`lastlogin`", 0);
 
   template <typename A>
-  const typename pointer_query_columns< ::Alarmud::toon, id_mysql, A >::owner_id_type_
-  pointer_query_columns< ::Alarmud::toon, id_mysql, A >::
-  owner_id (pointer_query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::owner_id,
+  const typename query_columns< ::Alarmud::toon, id_mysql, A >::owner_id_type_
+  query_columns< ::Alarmud::toon, id_mysql, A >::
+  owner_id (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::owner_id,
             A::table_name, "`owner_id`", 0);
 
 #endif // ODB_MYSQL_QUERY_COLUMNS_DEF
+
+  template <typename A>
+  struct pointer_query_columns< ::Alarmud::toon, id_mysql, A >:
+    query_columns< ::Alarmud::toon, id_mysql, A >
+  {
+  };
 
   template <>
   class access::object_traits_impl< ::Alarmud::toon, id_mysql >:
@@ -731,8 +635,7 @@ namespace odb
 
     struct id_image_type
     {
-      details::buffer id_value;
-      unsigned long id_size;
+      unsigned long long id_value;
       my_bool id_null;
 
       std::size_t version;
@@ -740,6 +643,11 @@ namespace odb
 
     struct image_type
     {
+      // id
+      //
+      unsigned long long id_value;
+      my_bool id_null;
+
       // name
       //
       details::buffer name_value;
@@ -768,144 +676,15 @@ namespace odb
       unsigned long long owner_id_value;
       my_bool owner_id_null;
 
-      // data
-      //
-      details::buffer data_value;
-      unsigned long data_size;
-      my_bool data_null;
-
       std::size_t version;
     };
 
     struct extra_statement_cache_type;
 
-    // rentItems
-    //
-    struct rentItems_traits
-    {
-      static const std::size_t id_column_count = 1UL;
-      static const std::size_t data_column_count = 2UL;
-
-      static const bool versioned = false;
-
-      static const char insert_statement[];
-      static const char select_statement[];
-      static const char delete_statement[];
-
-      typedef ::Alarmud::toon::rentVector container_type;
-      typedef
-      odb::access::container_traits<container_type>
-      container_traits_type;
-      typedef container_traits_type::index_type index_type;
-      typedef container_traits_type::value_type value_type;
-
-      typedef ordered_functions<index_type, value_type> functions_type;
-      typedef mysql::container_statements< rentItems_traits > statements_type;
-
-      struct data_image_type
-      {
-        // value
-        //
-        details::buffer value_value;
-        unsigned long value_size;
-        my_bool value_null;
-
-        std::size_t version;
-      };
-
-      static void
-      bind (MYSQL_BIND*,
-            const MYSQL_BIND* id,
-            std::size_t id_size,
-            data_image_type&);
-
-      static void
-      grow (data_image_type&,
-            my_bool*);
-
-      static void
-      init (value_type&,
-            const data_image_type&,
-            database*);
-
-      static void
-      insert (index_type, const value_type&, void*);
-
-      static bool
-      select (index_type&, value_type&, void*);
-
-      static void
-      delete_ (void*);
-
-      static void
-      load (container_type&,
-            statements_type&);
-    };
-
-    // bankItems
-    //
-    struct bankItems_traits
-    {
-      static const std::size_t id_column_count = 1UL;
-      static const std::size_t data_column_count = 2UL;
-
-      static const bool versioned = false;
-
-      static const char insert_statement[];
-      static const char select_statement[];
-      static const char delete_statement[];
-
-      typedef ::Alarmud::toon::bankVector container_type;
-      typedef
-      odb::access::container_traits<container_type>
-      container_traits_type;
-      typedef container_traits_type::index_type index_type;
-      typedef container_traits_type::value_type value_type;
-
-      typedef ordered_functions<index_type, value_type> functions_type;
-      typedef mysql::container_statements< bankItems_traits > statements_type;
-
-      struct data_image_type
-      {
-        // value
-        //
-        details::buffer value_value;
-        unsigned long value_size;
-        my_bool value_null;
-
-        std::size_t version;
-      };
-
-      static void
-      bind (MYSQL_BIND*,
-            const MYSQL_BIND* id,
-            std::size_t id_size,
-            data_image_type&);
-
-      static void
-      grow (data_image_type&,
-            my_bool*);
-
-      static void
-      init (value_type&,
-            const data_image_type&,
-            database*);
-
-      static void
-      insert (index_type, const value_type&, void*);
-
-      static bool
-      select (index_type&, value_type&, void*);
-
-      static void
-      delete_ (void*);
-
-      static void
-      load (container_type&,
-            statements_type&);
-    };
-
     using object_traits<object_type>::id;
+
+    static id_type
+    id (const id_image_type&);
 
     static id_type
     id (const image_type&);
@@ -941,7 +720,7 @@ namespace odb
 
     static const std::size_t column_count = 6UL;
     static const std::size_t id_column_count = 1UL;
-    static const std::size_t inverse_column_count = 1UL;
+    static const std::size_t inverse_column_count = 0UL;
     static const std::size_t readonly_column_count = 0UL;
     static const std::size_t managed_optimistic_column_count = 0UL;
 
@@ -960,7 +739,7 @@ namespace odb
     static const char table_name[];
 
     static void
-    persist (database&, const object_type&);
+    persist (database&, object_type&);
 
     static pointer_type
     find (database&, const id_type&);
@@ -1028,18 +807,6 @@ namespace odb
     id_type_;
 
     static const id_type_ id;
-
-    // login
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        ::std::string,
-        mysql::id_string >::query_type,
-      mysql::id_string >
-    login_type_;
-
-    static const login_type_ login;
 
     // nickname
     //
@@ -1123,12 +890,6 @@ namespace odb
       A::table_name, "`id`", 0);
 
   template <typename A>
-  const typename query_columns< ::Alarmud::user, id_mysql, A >::login_type_
-  query_columns< ::Alarmud::user, id_mysql, A >::
-  login (query_columns< ::Alarmud::user, id_common, typename A::common_traits >::login,
-         A::table_name, "`login`", 0);
-
-  template <typename A>
   const typename query_columns< ::Alarmud::user, id_mysql, A >::nickname_type_
   query_columns< ::Alarmud::user, id_mysql, A >::
   nickname (query_columns< ::Alarmud::user, id_common, typename A::common_traits >::nickname,
@@ -1194,12 +955,6 @@ namespace odb
       unsigned long long id_value;
       my_bool id_null;
 
-      // login
-      //
-      details::buffer login_value;
-      unsigned long login_size;
-      my_bool login_null;
-
       // nickname
       //
       details::buffer nickname_value;
@@ -1239,69 +994,6 @@ namespace odb
 
     struct extra_statement_cache_type;
 
-    // toons
-    //
-    struct toons_traits
-    {
-      static const std::size_t id_column_count = 1UL;
-      static const std::size_t data_column_count = 2UL;
-
-      static const bool versioned = false;
-
-      static const char insert_statement[];
-      static const char select_statement[];
-      static const char delete_statement[];
-
-      typedef ::Alarmud::user::toonVector container_type;
-      typedef
-      odb::access::container_traits<container_type>
-      container_traits_type;
-      typedef container_traits_type::index_type index_type;
-      typedef container_traits_type::value_type value_type;
-
-      typedef ordered_functions<index_type, value_type> functions_type;
-      typedef mysql::container_statements< toons_traits > statements_type;
-
-      struct data_image_type
-      {
-        // value
-        //
-        details::buffer value_value;
-        unsigned long value_size;
-        my_bool value_null;
-
-        std::size_t version;
-      };
-
-      static void
-      bind (MYSQL_BIND*,
-            const MYSQL_BIND* id,
-            std::size_t id_size,
-            data_image_type&);
-
-      static void
-      grow (data_image_type&,
-            my_bool*);
-
-      static void
-      init (value_type&,
-            const data_image_type&,
-            database*);
-
-      static void
-      insert (index_type, const value_type&, void*);
-
-      static bool
-      select (index_type&, value_type&, void*);
-
-      static void
-      delete_ (void*);
-
-      static void
-      load (container_type&,
-            statements_type&);
-    };
-
     using object_traits<object_type>::id;
 
     static id_type
@@ -1339,7 +1031,7 @@ namespace odb
 
     typedef mysql::query_base query_base_type;
 
-    static const std::size_t column_count = 8UL;
+    static const std::size_t column_count = 7UL;
     static const std::size_t id_column_count = 1UL;
     static const std::size_t inverse_column_count = 0UL;
     static const std::size_t readonly_column_count = 0UL;
@@ -1658,147 +1350,8 @@ namespace odb
   //
   // toonRent
   //
-  // toonBank
-  //
   // toon
   //
-  template <>
-  struct alias_traits<
-    ::Alarmud::toonExtra,
-    id_mysql,
-    access::object_traits_impl< ::Alarmud::toon, id_mysql >::data_tag>
-  {
-    typedef alias_traits<
-      ::Alarmud::toonExtra,
-      id_common,
-      access::object_traits_impl< ::Alarmud::toon, id_mysql >::data_tag>
-    common_traits;
-
-    static const char table_name[];
-  };
-
-  template <>
-  struct query_columns_base< ::Alarmud::toon, id_mysql >
-  {
-    // data
-    //
-    typedef
-    odb::alias_traits<
-      ::Alarmud::toonExtra,
-      id_mysql,
-      access::object_traits_impl< ::Alarmud::toon, id_mysql >::data_tag>
-    data_alias_;
-
-    typedef
-    odb::query_pointer<
-      odb::pointer_query_columns<
-        ::Alarmud::toonExtra,
-        id_mysql,
-        data_alias_ > >
-    data_type_ ;
-
-    static const data_type_ data;
-  };
-
-  template <typename A>
-  struct query_columns< ::Alarmud::toon, id_mysql, A >:
-    query_columns_base< ::Alarmud::toon, id_mysql >
-  {
-    // name
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        ::std::string,
-        mysql::id_string >::query_type,
-      mysql::id_string >
-    name_type_;
-
-    static const name_type_ name;
-
-    // password
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        ::std::string,
-        mysql::id_string >::query_type,
-      mysql::id_string >
-    password_type_;
-
-    static const password_type_ password;
-
-    // title
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        ::std::string,
-        mysql::id_string >::query_type,
-      mysql::id_string >
-    title_type_;
-
-    static const title_type_ title;
-
-    // lastlogin
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        ::boost::posix_time::ptime,
-        mysql::id_datetime >::query_type,
-      mysql::id_datetime >
-    lastlogin_type_;
-
-    static const lastlogin_type_ lastlogin;
-
-    // owner_id
-    //
-    typedef
-    mysql::query_column<
-      mysql::value_traits<
-        long long unsigned int,
-        mysql::id_ulonglong >::query_type,
-      mysql::id_ulonglong >
-    owner_id_type_;
-
-    static const owner_id_type_ owner_id;
-  };
-
-#ifdef ODB_MYSQL_QUERY_COLUMNS_DEF
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toon, id_mysql, A >::name_type_
-  query_columns< ::Alarmud::toon, id_mysql, A >::
-  name (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::name,
-        A::table_name, "`name`", 0);
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toon, id_mysql, A >::password_type_
-  query_columns< ::Alarmud::toon, id_mysql, A >::
-  password (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::password,
-            A::table_name, "`password`", 0);
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toon, id_mysql, A >::title_type_
-  query_columns< ::Alarmud::toon, id_mysql, A >::
-  title (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::title,
-         A::table_name, "`title`", 0);
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toon, id_mysql, A >::lastlogin_type_
-  query_columns< ::Alarmud::toon, id_mysql, A >::
-  lastlogin (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::lastlogin,
-             A::table_name, "`lastlogin`", 0);
-
-  template <typename A>
-  const typename query_columns< ::Alarmud::toon, id_mysql, A >::owner_id_type_
-  query_columns< ::Alarmud::toon, id_mysql, A >::
-  owner_id (query_columns< ::Alarmud::toon, id_common, typename A::common_traits >::owner_id,
-            A::table_name, "`owner_id`", 0);
-
-#endif // ODB_MYSQL_QUERY_COLUMNS_DEF
-
   // user
   //
   // legacy

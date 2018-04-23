@@ -10,6 +10,7 @@
 #include <string>
 #include "typedefs.hpp"
 #include "odb/account.hpp"
+#include "odb/odb.hpp"
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
 namespace Alarmud {
@@ -836,7 +837,9 @@ struct snoop_data {
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
 struct descriptor_data {
+	bool justCreated;
 	user AccountData;
+	std::vector<string> toons;
 	e_connection_types last_state;
 	string currentInput;
 	int descriptor;                    /* file descriptor for socket */

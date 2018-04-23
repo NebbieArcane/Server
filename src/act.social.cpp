@@ -71,7 +71,7 @@ void boot_social_messages() {
 	int tmp, hide, min_pos;
 
 	if(!(fl = fopen(SOCMESS_FILE, "r"))) {
-		perror("boot_social_messages");
+		mudlog(LOG_ERROR,"%s:%s","boot_social_messages",strerror(errno));
 		assert(0);
 	}
 
@@ -298,7 +298,7 @@ void boot_pose_messages() {
 	int iClass;
 
 	if(!(fl = fopen(POSEMESS_FILE, "r")))  {
-		perror("boot_pose_messages");
+		mudlog(LOG_ERROR,"%s:%s","boot_pose_messages",strerror(errno));
 		exit(0);
 	}
 

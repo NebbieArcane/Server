@@ -305,7 +305,7 @@ void load_messages() {
 	char chk[100];
 
 	if (!(f1 = fopen(MESS_FILE, "r"))) {
-		perror("read messages");
+		mudlog(LOG_ERROR,"%s:%s","read messages",strerror(errno));
 		assert(0);
 	}
 
@@ -3351,9 +3351,9 @@ void PCAttacks( char_data* pChar ) {
 	 * a full attack left */
 
 	/* REQUIEM 2018 random haste */
-    
+
     if (affected_by_spell(pChar, SPELL_HASTE)) {
-     
+
 		fAttacks += number(0.0,fAttacks);
 		mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
 
@@ -3362,7 +3362,7 @@ void PCAttacks( char_data* pChar ) {
 			GET_MOVE(pChar) -= 10*((int)(fAttacks-sAttacks));
             alter_move(pChar, 0);
 		}
-        
+
     }
 
 
@@ -4709,9 +4709,6 @@ struct char_data* FindMetaVictim( struct char_data* ch) {
 void NailThisSucker( struct char_data* ch) {
 
 	long room_num;
-	struct room_data* rp;
-
-	rp = real_roomp(ch->in_room);
 	room_num=ch->in_room;
 
         char_from_room(ch);
@@ -4725,11 +4722,11 @@ void NailThisSucker( struct char_data* ch) {
             alter_move(ch,0);
             GET_HIT(ch) = 1;
             alter_hit(ch,0);
-            
+
             /* danneggio l'eq come accade da Thanatos, gli oggetti artifact
             si salveranno. */
-            
-            for(i=TYPE_GENERIC_FIRST; i<=TYPE_GENERIC_LAST; i++) {
+
+            for(auto i=TYPE_GENERIC_FIRST; i<=TYPE_GENERIC_LAST; i++) {
 #if NOSCRAP
                 DamageStuff(ch,i,200,5);
                 DamageStuff(ch,i,200,5);
@@ -4737,7 +4734,7 @@ void NailThisSucker( struct char_data* ch) {
 #endif
                 DamageStuff(ch,i,200,5);
             }
-            
+
             GET_POS(ch) = POSITION_STUNNED;
             send_to_char("\n$c0008Il nulla ti avvolge mentre la tua forma corporea viene dilaniata...$c0007\n", ch);
         } else {

@@ -14,7 +14,7 @@ namespace odb
   access::object_traits< ::Alarmud::toonExtra >::
   id (const object_type& o)
   {
-    return o.name;
+    return o.id;
   }
 
   inline
@@ -37,7 +37,7 @@ namespace odb
 
   inline
   void access::object_traits_impl< ::Alarmud::toonExtra, id_common >::
-  persist (database& db, const object_type& o)
+  persist (database& db, object_type& o)
   {
     function_table[db.id ()]->persist (db, o);
   }
@@ -124,7 +124,7 @@ namespace odb
   access::object_traits< ::Alarmud::toonRent >::
   id (const object_type& o)
   {
-    return o.name;
+    return o.id;
   }
 
   inline
@@ -147,7 +147,7 @@ namespace odb
 
   inline
   void access::object_traits_impl< ::Alarmud::toonRent, id_common >::
-  persist (database& db, const object_type& o)
+  persist (database& db, object_type& o)
   {
     function_table[db.id ()]->persist (db, o);
   }
@@ -226,116 +226,6 @@ namespace odb
     return function_table[pq.conn.database ().id ()]->execute_query (pq);
   }
 
-  // toonBank
-  //
-
-  inline
-  access::object_traits< ::Alarmud::toonBank >::id_type
-  access::object_traits< ::Alarmud::toonBank >::
-  id (const object_type& o)
-  {
-    return o.name;
-  }
-
-  inline
-  void access::object_traits< ::Alarmud::toonBank >::
-  callback (database& db, object_type& x, callback_event e)
-  {
-    ODB_POTENTIALLY_UNUSED (db);
-    ODB_POTENTIALLY_UNUSED (x);
-    ODB_POTENTIALLY_UNUSED (e);
-  }
-
-  inline
-  void access::object_traits< ::Alarmud::toonBank >::
-  callback (database& db, const object_type& x, callback_event e)
-  {
-    ODB_POTENTIALLY_UNUSED (db);
-    ODB_POTENTIALLY_UNUSED (x);
-    ODB_POTENTIALLY_UNUSED (e);
-  }
-
-  inline
-  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  persist (database& db, const object_type& o)
-  {
-    function_table[db.id ()]->persist (db, o);
-  }
-
-  inline
-  access::object_traits_impl< ::Alarmud::toonBank, id_common >::pointer_type
-  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  find (database& db, const id_type& id)
-  {
-    return function_table[db.id ()]->find1 (db, id);
-  }
-
-  inline
-  bool access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  find (database& db, const id_type& id, object_type& o)
-  {
-    return function_table[db.id ()]->find2 (db, id, o);
-  }
-
-  inline
-  bool access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  reload (database& db, object_type& o)
-  {
-    return function_table[db.id ()]->reload (db, o);
-  }
-
-  inline
-  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  update (database& db, const object_type& o)
-  {
-    function_table[db.id ()]->update (db, o);
-  }
-
-  inline
-  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  erase (database& db, const id_type& id)
-  {
-    function_table[db.id ()]->erase1 (db, id);
-  }
-
-  inline
-  void access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  erase (database& db, const object_type& o)
-  {
-    function_table[db.id ()]->erase2 (db, o);
-  }
-
-  inline
-  result< access::object_traits_impl< ::Alarmud::toonBank, id_common >::object_type >
-  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  query (database& db, const query_base_type& q)
-  {
-    return function_table[db.id ()]->query (db, q);
-  }
-
-  inline
-  unsigned long long access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  erase_query (database& db, const query_base_type& q)
-  {
-    return function_table[db.id ()]->erase_query (db, q);
-  }
-
-  inline
-  odb::details::shared_ptr<prepared_query_impl>
-  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  prepare_query (connection& c, const char* n, const query_base_type& q)
-  {
-    return function_table[c.database ().id ()]->prepare_query (c, n, q);
-  }
-
-  inline
-  odb::details::shared_ptr<result_impl>
-  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  execute_query (prepared_query_impl& pq)
-  {
-    return function_table[pq.conn.database ().id ()]->execute_query (pq);
-  }
-
   // toon
   //
 
@@ -344,7 +234,7 @@ namespace odb
   access::object_traits< ::Alarmud::toon >::
   id (const object_type& o)
   {
-    return o.name;
+    return o.id;
   }
 
   inline
@@ -367,7 +257,7 @@ namespace odb
 
   inline
   void access::object_traits_impl< ::Alarmud::toon, id_common >::
-  persist (database& db, const object_type& o)
+  persist (database& db, object_type& o)
   {
     function_table[db.id ()]->persist (db, o);
   }

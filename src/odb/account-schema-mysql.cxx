@@ -31,7 +31,6 @@ namespace odb
           db.execute ("DROP TABLE IF EXISTS `legacy`");
           db.execute ("DROP TABLE IF EXISTS `user`");
           db.execute ("DROP TABLE IF EXISTS `toon`");
-          db.execute ("DROP TABLE IF EXISTS `toonBank`");
           db.execute ("DROP TABLE IF EXISTS `toonRent`");
           db.execute ("DROP TABLE IF EXISTS `toonExtra`");
           db.execute ("CREATE TABLE IF NOT EXISTS `schema_version` (\n"
@@ -52,29 +51,34 @@ namespace odb
         case 1:
         {
           db.execute ("CREATE TABLE `toonExtra` (\n"
-                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
-                      "  `classes` TEXT NOT NULL)\n"
+                      "  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+                      "  `field` varchar(32) NOT NULL,\n"
+                      "  `value` varchar(1024) NOT NULL)\n"
                       " ENGINE=InnoDB");
+          db.execute ("CREATE INDEX `idfield`\n"
+                      "  ON `toonExtra` (\n"
+                      "    `id`,\n"
+                      "    `field`)");
           db.execute ("CREATE TABLE `toonRent` (\n"
-                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
-                      "  `vnum` BIGINT UNSIGNED NOT NULL)\n"
-                      " ENGINE=InnoDB");
-          db.execute ("CREATE TABLE `toonBank` (\n"
-                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
-                      "  `vnum` BIGINT UNSIGNED NOT NULL)\n"
+                      "  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+                      "  `vnum` BIGINT UNSIGNED NOT NULL,\n"
+                      "  `effects` varchar(10240) NOT NULL,\n"
+                      "  `bank` TINYINT(1) NOT NULL)\n"
                       " ENGINE=InnoDB");
           db.execute ("CREATE TABLE `toon` (\n"
-                      "  `name` varchar(32) NOT NULL PRIMARY KEY,\n"
-                      "  `password` varchar(128) NOT NULL,\n"
+                      "  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+                      "  `name` varchar(32) NOT NULL,\n"
+                      "  `password` varchar(16) NOT NULL,\n"
                       "  `title` varchar(128) NOT NULL,\n"
                       "  `lastlogin` DATETIME NULL,\n"
                       "  `owner_id` BIGINT UNSIGNED NOT NULL)\n"
                       " ENGINE=InnoDB");
+          db.execute ("CREATE UNIQUE INDEX `name_i`\n"
+                      "  ON `toon` (`name`)");
           db.execute ("CREATE INDEX `owner_id_i`\n"
                       "  ON `toon` (`owner_id`)");
           db.execute ("CREATE TABLE `user` (\n"
                       "  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
-                      "  `login` VARCHAR(255) NOT NULL,\n"
                       "  `nickname` VARCHAR(255) NOT NULL,\n"
                       "  `email` VARCHAR(255) NOT NULL,\n"
                       "  `registered` DATETIME NULL,\n"

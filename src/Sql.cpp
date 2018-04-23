@@ -8,10 +8,13 @@
 #include <iostream>
 #include "autoenums.hpp"
 #include "logging.hpp"
+#include <mutex>
+#include <memory>
 using std::string;
 using std::endl;
 using std::cout;
 namespace Alarmud {
+bool forceDbInit=false;
 odb::session odbSession;
 #if USE_MYSQL
 odb::database* Sql::getMysql() {
@@ -33,11 +36,10 @@ void Sql::dbUpdate() {
 	{
 		try {
 			DB* db=Sql::getMysql();
-
 			odb::schema_version v = db->schema_version("account");
 			odb::schema_version bv(odb::schema_catalog::base_version(*db,"account"));
 			odb::schema_version cv(odb::schema_catalog::current_version(*db,"account"));
-			mudlog(LOG_SYSERR,"Schema version: %d/%d/%d",v,bv,cv);
+			mudlog(LOG_ALWAYS,"Schema version: %d/%d/%d",v,bv,cv);
 			if(v==0) {
 				try {
 					odb::transaction t(db->begin());
@@ -57,6 +59,9 @@ void Sql::dbUpdate() {
 				catch(std::exception &e) {
 					mudlog(LOG_SYSERR,"DB error: %s",e.what());
 				}
+
+				forceDbInit=true; // Initial di loading
+
 			}
 			else if(v>=bv and v < cv) {
 				try {
@@ -87,6 +92,6 @@ sqlTrace logTracer;
 Sql::~Sql() {
 }
 
-Sql::Sql() {
+Sql::Sql(){
 }
 } /* namespace Alarmud */

@@ -74,6 +74,7 @@ long obj_count = 0;
 long total_mbc = 0;
 long total_obc = 0;
 
+
 /*
  **  distributed monster stuff
  */
@@ -186,12 +187,12 @@ void boot_db() {
 	InitScripts();
 	mudlog(LOG_CHECK, "Opening mobile, object and help files.");
 	if(!(mob_f = fopen(MOB_FILE, "r"))) {
-		perror("Opening mob file");
+		mudlog(LOG_ERROR,"%s:%s","Opening mob file",strerror(errno));
 		abort();
 	}
 
 	if(!(obj_f = fopen(OBJ_FILE, "r"))) {
-		perror("Opening obj file");
+		mudlog(LOG_ERROR,"%s:%s","Opening obj file",strerror(errno));
 		abort();
 	}
 	if(!(help_fl = fopen(HELP_KWRD_FILE, "r"))) {
@@ -534,41 +535,71 @@ char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
 /**
  * Search a toon name in the
  */
-bool _getFromDb(const char* name,const char* pwd) {
+bool getFromDb(const char* cname,const char* pwd, const char* title) {
+	string name(cname);
 	DB* db = Sql::getMysql();
-	odb::session s;
+	//odb::session s;
 	odb::transaction t(db->begin());
 	t.tracer(logTracer);
-	bool rc=false;
-	try {
-		auto pg(db->load<toon>(name));
-		rc=true;
-	}
-	catch(odb::object_not_persistent &e) {
-		toon pg(name,crypt("prova",name));
+	toon pg("","");
+	if (!db->query_one<toon>(toonQuery::name==name,pg)) {
+		pg.name=name;
+		pg.password.assign(pwd);
+		pg.title.assign(title);
 		mudlog(LOG_CONNECT, "Creating record for %s", pg.name.c_str());
 		try {
 			db->persist<toon>(pg);
+			t.commit();
+			return true;
 		}
 		catch(odb::exception &e) {
 			mudlog(LOG_ERROR, "Error creating record for %s %s", pg.name.c_str(),e.what());
 		}
 	}
 	t.commit();
-	return rc;
-}
-bool getFromDb(const char* name,const char* pwd) {
-	try {
-		auto pg(Sql::getOne<toon>(name));
-		return true;
-	}
-	catch(odb::object_not_persistent &e) {
-		toon pg(name,pwd);
-		return Sql::save(pg);
-	}
 	return false;
 }
 
+toonPtr getToon(const char* cname) {
+	return getToon(string(cname));
+}
+toonPtr getToon(const string& name) {
+	DB* db = Sql::getMysql();
+	//odb::session s;
+	odb::transaction t(db->begin());
+	t.tracer(logTracer);
+	return db->query_one<toon>(toonQuery::name==name);
+
+}
+userPtr getUser(const char* cemail) {
+	return getUser(string(cemail));
+}
+
+userPtr getUser(const string& email) {
+	DB* db = Sql::getMysql();
+	//odb::session s;
+	odb::transaction t(db->begin());
+	t.tracer(logTracer);
+	return db->query_one<user>(userQuery::email==email);
+}
+
+toonRows getToons(const unsigned long int id) {
+	toonRows data;
+	DB* db = Sql::getMysql();
+	//odb::session s;
+	odb::transaction t(db->begin());
+	t.tracer(logTracer);
+	toonResult r(db->query<toon> (toonQuery::owner_id == id));
+	if (r.size()>0) {
+		data.reserve(r.size());
+		for(toonResult::iterator iter(r.begin()) ; iter!= r.end(); ++iter) {
+			data.push_back(*iter);
+		}
+	}
+	t.commit();
+	return data;
+
+}
 
 /* generate index table for the player file */
 void build_player_index() {
@@ -604,7 +635,7 @@ void build_player_index() {
 						fclose(pFile);
 						continue;
 					}
-					if(not getFromDb(Player.name,Player.pwd)) {
+					if(forceDbInit and not getFromDb(Player.name,Player.pwd,Player.title)) {
 						mudlog(LOG_ERROR,"Updated: %s for %s",file.filename().c_str(),Player.name);
 
 					}
@@ -709,7 +740,7 @@ struct index_data* InsertInIndex(struct index_data* pIndex, char* szName,
 	if(*top >= *alloc_top) {
 		if(!(pIndex = (struct index_data*) realloc(pIndex,
 					  (*top + 50) * sizeof(struct index_data)))) {
-			perror("load indices");
+			mudlog(LOG_ERROR,"%s:%s","load indices",strerror(errno));
 			assert(0);
 		}
 		*alloc_top += 50;
@@ -788,7 +819,7 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 				else if(i >= bc) {
 					if(!(index = (struct index_data*) realloc(index,
 								 (i + 50) * sizeof(struct index_data)))) {
-						perror("load indices");
+						mudlog(LOG_ERROR,"%s:%s","load indices",strerror(errno));
 						assert(0);
 					}
 					bc += 50;
@@ -871,7 +902,7 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 		else if(i >= bc) {
 			if(!(index = (struct index_data*) realloc(index,
 						 (i + 50) * sizeof(struct index_data)))) {
-				perror("load indices");
+				mudlog(LOG_ERROR,"%s:%s","load indices",strerror(errno));
 				assert(0);
 			}
 			bc += 50;
@@ -977,8 +1008,8 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 				zone++)
 			;
 		if(zone > top_of_zone_table) {
-			mudlog(LOG_SYSERR, "Room %ld (%s) is outside of any zone.\n",
-				   rp->number, rp->name);
+			mudlog(LOG_SYSERR, "Room %ld (%s) is outside of any zone (%d/%d).\n",
+				   rp->number, rp->name,zone,top_of_zone_table);
 			exit(1);
 		}
 		rp->zone = zone;
@@ -1145,7 +1176,7 @@ void boot_world() {
 	object_list = 0;
 
 	if(!(fl = fopen(WORLD_FILE, "r"))) {
-		perror("fopen");
+		mudlog(LOG_ERROR,"%s:%s","fopen",strerror(errno));
 		mudlog(LOG_ERROR, "boot_world: could not open world file.");
 		assert(0);
 	}
@@ -1438,7 +1469,7 @@ void boot_zones() {
 	char* check, buf[256];
 
 	if(!(fl = fopen(ZONE_FILE, "r"))) {
-		perror("boot_zones");
+		mudlog(LOG_ERROR,"%s:%s","boot_zones",strerror(errno));
 		assert(0);
 	}
 
@@ -1448,6 +1479,7 @@ void boot_zones() {
 		/*read riga2 Nome della zona~ */
 		check = fread_string(fl);
 		if(*check == '$') {
+			mudlog(LOG_WORLD,"Letto $");
 			break;
 		} /* end of file */
 		SetStatus(check, NULL);
@@ -1459,7 +1491,7 @@ void boot_zones() {
 		else if(zon >= bc) {
 			if(!(zone_table = (struct zone_data*) realloc(zone_table,
 							  (zon + 10) * sizeof(struct zone_data)))) {
-				perror("boot_zones realloc");
+				mudlog(LOG_ERROR,"%s:%s","boot_zones realloc",strerror(errno));
 				assert(0);
 			}
 			bc += 10;
@@ -1503,7 +1535,7 @@ void boot_zones() {
 					if(!(zone_table[zon].cmd = (struct reset_com*) realloc(
 												   zone_table[zon].cmd,
 												   (cc * sizeof(struct reset_com))))) {
-						perror("reset command load");
+						mudlog(LOG_ERROR,"%s:%s","reset command load",strerror(errno));
 						assert(0);
 					}
 				}
@@ -3849,6 +3881,9 @@ void reset_char(struct char_data* ch) {
 	if(!strcmp(GET_NAME(ch), "Nihil")) {  //Marco
 		GET_LEVEL(ch, 0) = 58;
 	}
+	if(!strcmp(GET_NAME(ch), "Ladyofpain")) {  //Giuseppe
+		GET_LEVEL(ch, 0) = 58;
+	}
 
 	/* this is to clear up bogus levels on people that where here before */
 	/* these classes where made... */
@@ -4828,3 +4863,5 @@ ACTION_FUNC(do_WorldSave) {
 }
 
 }
+
+

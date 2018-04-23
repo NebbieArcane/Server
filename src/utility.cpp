@@ -521,7 +521,7 @@ int LoadZoneFile(FILE* fl, int zon) {
 				if(!(zone_table[zon].cmd =
 							(struct reset_com*) realloc(zone_table[zon].cmd,
 														(cc * sizeof(struct reset_com)))))  {
-					perror("reset command load");
+					mudlog(LOG_ERROR,"%s:%s","reset command load",strerror(errno));
 					assert(0);
 				}
 			}
