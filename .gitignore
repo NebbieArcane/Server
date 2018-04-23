@@ -2,7 +2,7 @@
 .*
 # apart gitignore
 !.gitignore
-# and reavis
+# and travis
 !.travis.yml
 ########################################################################
 #Eclipse
@@ -217,7 +217,7 @@ autom4te.cache
 ########################################################################
 # Locally added
 *.log
-*.log.?
+*.log.*
 *.sql
 myst
 /config.h
@@ -230,5 +230,4 @@ utilities/convert
 /release.h
 mudroot/log.txt
 src/info
-src/config.hpp.in
 /contrib/
