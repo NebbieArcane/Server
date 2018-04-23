@@ -67,8 +67,6 @@ using std::string;
 #define SEND_TO_Q2(msg,d) write_to_descriptor(d->descriptor,msg);
 #define STATE(d) ((d)->connected)
 
-unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
-unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};
 int WizLock;
 int Silence = 0;
 long SystemFlags=0;         /* used for making teleport/astral/stuff not work */
@@ -1852,23 +1850,32 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 }
 
 
-void toonList(const user &ac,const string &optional_message="") {
+void toonList(struct descriptor_data* d,const string &optional_message="") {
+	const user &ac=d->AccountData;
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
 	{
 		short n=0;
 		constexpr int nlen=5;
 		char order[nlen]="";
-		for(auto iter=ac.toons.begin() ; iter!= ac.toons.end(); ++iter) {
-			user::toonPtr p(*iter);
+		/*
+		DB* db = Sql::getMysql();
+		//odb::session s;
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		toonRows r (db->query<toon> (toonQuery::owner_id == ac.id));
+		*/
+		toonRows r=getToons(ac.id);
+		d->toons.clear();
+		for (const toon& pg : r) {
 			++n;
-			if(!p.loaded()) {
-				p.load();
-			}
 			snprintf(order,nlen-1,"%2d",n);
-			message.append(order).append(". ").append(p->name).append("\r\n");
+			message.append(order).append(". ").append(pg.name).append("\r\n");
+			d->toons.push_back(pg.name);
 		}
+		//t.commit();
 	}
+	SEND_TO_Q(message.c_str(),d);
 }
 bool check_impl_security(struct descriptor_data* d) {
 	if(top_of_p_table > 0) {
@@ -1899,6 +1906,18 @@ char firstChar(const string &riga,bool tolower=false) {
 	arg[0]=::tolower(arg[0]);
 	return arg[0];
 }
+unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
+unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};
+
+void echoOn(struct descriptor_data* d) {
+	mudlog(LOG_ALWAYS,"ECHO ON");
+	write(d->descriptor, echo_on, 6);
+}
+void echoOff(struct descriptor_data* d) {
+	mudlog(LOG_ALWAYS,"ECHO OFF");
+	write(d->descriptor, echo_off, 4);
+}
+
 #define oldarg(noempty) 	\
 	char arg[MAX_INPUT_LENGTH]; \
 	std::strcpy(arg,d->currentInput.substr(0,MAX_INPUT_LENGTH-1).c_str()); \
@@ -1907,6 +1926,7 @@ char firstChar(const string &riga,bool tolower=false) {
  * Attempts to login to a global account
  *
  */
+
 NANNY_FUNC(con_account_name) {
 	oldarg(false);
 	string email(arg);
@@ -1914,11 +1934,12 @@ NANNY_FUNC(con_account_name) {
 	d->AccountData.email=email;
 	email.insert(0,"Benvenuto ").append(". ").append("Digita la tua password per favore (o b per ricominciare): ");
 	SEND_TO_Q(email.c_str(),d);
-	write(d->descriptor, echo_off, 4);
+	echoOff(d);
 	STATE(d)=CON_ACCOUNT_PWD;
 	return false;
 }
 NANNY_FUNC(con_account_pwd) {
+	echoOn(d);
 	oldarg(false);
 	if(!strcmp(arg,"b")) {
 		STATE(d)=CON_NME;
@@ -1933,6 +1954,7 @@ NANNY_FUNC(con_account_pwd) {
 		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str())
 		ac.authorized=false;
 		bool found=db->query_one<user>(userQuery::email==d->AccountData.email,ac);
+		t.commit();
 		const char* check=d->AccountData.password.c_str();
 		if(found) {
 			mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
@@ -1943,22 +1965,21 @@ NANNY_FUNC(con_account_pwd) {
 			message.append(ac.nickname).append("\r\n");
 			STATE(d)=CON_ACCOUNT_TOON;
 			mudlog(LOG_CONNECT,"Succesfull connection for %s",ac.email.c_str());
-			toonList(ac,message);
-			SEND_TO_Q(message.c_str(),d);
+			toonList(d,message);
 		}
 		else {
 			SEND_TO_Q("Riprova (digita <b> per rinunciare).",d);
+			echoOff(d);
 		}
-		t.commit();
 	}
 	catch(odb::exception &e) {
 		mudlog(LOG_SYSERR,"Error accessing database for user %s: %s",d->AccountData.email.c_str(),e.what());
+		echoOff(d);
 		SEND_TO_Q("Riprova (digita <b> per rinunciare).",d);
 	}
 	return false;
 }
 NANNY_FUNC(con_account_toon) {
-	user &ac=d->AccountData;
 	try {
 		short toonIndex=tonumber(d->currentInput,-1);
 		if(toonIndex <0) {
@@ -1970,19 +1991,18 @@ NANNY_FUNC(con_account_toon) {
 			return false;
 		}
 		else {
-			const user::toonPtr &p=ac.toons.at(toonIndex-1).load();
-			mudlog(LOG_CONNECT,"Choosen %s",p->name.c_str());
-			ac.choosen=p->name;
-			d->currentInput=p->name;
+			string name(d->toons.at(toonIndex-1));
+			mudlog(LOG_CONNECT,"Choosen %s",name.c_str());
+			d->AccountData.choosen=name;
+			d->currentInput=name;
 			STATE(d)=CON_PWDOK;
 			return true;
 		}
 	}
 	catch(std::range_error &e) {
 		string message(d->currentInput);
-		message.append("non e` un numero valido\r\n");
-		toonList(ac,message);
-		SEND_TO_Q(message.c_str(),d);
+		message.append(" non e` un numero valido\r\n");
+		toonList(d,message);
 		return false;
 	}
 }
@@ -2520,12 +2540,17 @@ NANNY_FUNC(con_slct) {
 
 	case '4':
 		SEND_TO_Q("Inserisci la nuova password: ", d);
-		write(d->descriptor, echo_off, 4);
+		echoOff(d);
 		STATE(d) = CON_PWDNEW;
 		break;
 	case '5':
-		toonList(d->AccountData,"Cambia personaggio:\n\r");
-		STATE(d) = CON_ACCOUNT_TOON;
+		if (d->AccountData.authorized) {
+			toonList(d,"Cambia personaggio:\n\r");
+			STATE(d) = CON_ACCOUNT_TOON;
+		}
+		else {
+			STATE(d)=CON_NME;
+		}
 		break;
 	default:
 		SEND_TO_Q("Opzione errata.\n\r", d);
@@ -2537,10 +2562,10 @@ NANNY_FUNC(con_slct) {
 NANNY_FUNC(con_nme) {
 	oldarg(true);
 	d->AlreadyInGame=false;
-	char tmp_name[20];
+	d->justCreated=false;
+	char tmp_name[100];
 	int rc=parse_name(arg, tmp_name);
 	mudlog(LOG_CONNECT,"Parsename result %d",rc);
-
 	if(rc==2) {  // Il nome digitato contiene una @
 		STATE(d)=CON_ACCOUNT_NAME;
 		mudlog(LOG_CONNECT,"Calling account login (%s)",G::translate(STATE(d)));
@@ -2552,25 +2577,32 @@ NANNY_FUNC(con_nme) {
 		return false;
 	}
 	bool found=false;
-	DB* db = Sql::getMysql();
-	odb::transaction t(db->begin());
-	t.tracer(logTracer);
-	try {
-		auto pg(db->load<toon>(tmp_name));
+	toonPtr pg=getToon(tmp_name);
+	if (pg) {
+		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->id);
 		found=true;
 		strcpy(d->pwd,pg->password.substr(0,11).c_str());
 		d->AccountData.choosen=pg->name;
-		if(pg->owner_id and pg->owner_id==d->AccountData.id) {
-			STATE(d)=CON_PWDOK;
-			return true;
+		if(pg->owner_id) {
+			if (pg->owner_id==d->AccountData.id) {
+				STATE(d)=CON_PWDOK;
+				return true;
+			}
+			else {
+				SEND_TO_Q("Questo personaggio e` registrato, fai login con il tuo account per favore.\r\n",d);
+				SEND_TO_Q("Nome: ", d);
+				return false;
+			}
 		}
 	}
-	catch(odb::object_not_persistent &e) {
-	}
-	t.commit();
 	if(not found) {
 		/* player unknown gotta make a new */
 		if(_check_ass_name(tmp_name)) {
+			if (d->AccountData.authorized and !strncmp(arg,"b",1)) {
+				toonList(d,"Scegli un personaggio:\n\r");
+				STATE(d)=CON_ACCOUNT_TOON;
+				return false;
+			}
 			SEND_TO_Q("Nome non valido. Scegline un'altro, per favore.\n\r", d);
 			SEND_TO_Q("Nome: ", d);
 			return false;
@@ -2601,13 +2633,14 @@ NANNY_FUNC(con_nme) {
 	d->AccountData.choosen.assign(tmp_name);
 	/* Tutto ok, chiediamogli la password */
 	if(d->AccountData.level > MAESTRO_DEGLI_DEI) {
+		SEND_TO_Q("Non oserei mai chiederti la password, oh superno, ma ricorda che il pg non e` tuo\r\n",d);
 		//Un immortale superiore puo' entrare con qualsiasi PG
 		STATE(d)=CON_PWDOK;
 		return true;
 	}
 
 	SEND_TO_Q("Password: ", d);
-	write(d->descriptor, echo_off, 4);
+	echoOff(d);
 	STATE(d) = CON_PWDNRM;
 	return false;
 }
@@ -2617,18 +2650,17 @@ NANNY_FUNC(con_nmecnf) {
 	oldarg(false);
 	if(*arg == 's' || *arg == 'S') {
 		if(d->AccountData.authorized) {  // Authorized at account level no need to ask password again when creating a new toon
-			//TODO: Inserire aggiornamento con id dell'account
-			STATE(d)=CON_REGISTER;
+			STATE(d)=CON_PWDOK;
 			return true;
 		}
-		write(d->descriptor, echo_on, 4);
+		echoOn(d);
 		SEND_TO_Q("Nuovo personaggio.\n\r", d);
 
 		string buf("Inserisci una password per ");
 		buf.append(GET_NAME(d->character));
 
 		SEND_TO_Q(buf.c_str(), d);
-		write(d->descriptor, echo_off, 4);
+		echoOff(d);
 		STATE(d) = CON_PWDGET;
 	}
 	else if(*arg == 'n' || *arg == 'N') {
@@ -2648,28 +2680,29 @@ NANNY_FUNC(con_nmecnf) {
  */
 NANNY_FUNC(con_pwdnrm) {
 	oldarg(true);
-	if(strncmp((char*)crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
+	if(strncmp(crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
 		write_to_descriptor(d->descriptor,"Password errata.\n\r");
 		mudlog(LOG_PLAYERS,"%s [HOST:%s] ha inserito una password errata'",d->AccountData.choosen.c_str(),d->host);
 		close_socket(d);
 		return false;
 	}
-	//TODO: Aggiornamento del pg con l'id dell'account
 	STATE(d)=CON_REGISTER;
 	return true;
 }
 NANNY_FUNC(con_register) {
-	boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
-	fmt % d->AccountData.id % d->AccountData.choosen;
-	try {
-		DB* db=Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		db->execute(fmt.str());
-		t.commit();
-	}
-	catch(odb::exception &e) {
-		mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
+	if (d->AccountData.authorized) {
+		boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
+		fmt % d->AccountData.id % d->AccountData.choosen;
+		try {
+			DB* db=Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			db->execute(fmt.str());
+			t.commit();
+		}
+		catch(odb::exception &e) {
+			mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
+		}
 	}
 	STATE(d)=CON_PWDOK;
 	return true;
@@ -2682,16 +2715,19 @@ NANNY_FUNC(con_pwdok) {
 		d->character->desc = d;
 		SET_BIT(d->character->player.user_flags, USE_PAGING);
 	}
-
-	char_file_u tmp_store;
-	if(load_char(d->AccountData.choosen.c_str(), &tmp_store)) {
-		store_to_char(&tmp_store, d->character);
-	}	//TODO: Inserire qui load del pg
-	else {
-		//Something went terribly wrong
-		mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+	/* Newly created toons are fully loaded
+	 */
+	if (!d->justCreated) {
+		char_file_u tmp_store;
+		if(load_char(d->AccountData.choosen.c_str(), &tmp_store)) {
+			store_to_char(&tmp_store, d->character);
+		}	//TODO: Inserire qui load del pg
+		else {
+			//Something went terribly wrong
+			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+		}
 	}
-	if(d->AccountData.level < GetMaxLevel(d->character)) {
+	if(d->AccountData.authorized and d->AccountData.level < GetMaxLevel(d->character)) {
 		d->AccountData.level = GetMaxLevel(d->character);
 		Sql::save(d->AccountData,true);
 	}
@@ -2725,7 +2761,7 @@ NANNY_FUNC(con_pwdok) {
 			/* Se riconnessione, abbandono il nuovo Char creato
 			* e aggancio al descrittore corrente il char ld */
 
-			write(d->descriptor, echo_on, 6);
+			echoOn(d);
 			SEND_TO_Q("Riconnessione...\n\r", d);
 
 			free_char(d->character);
@@ -2763,7 +2799,7 @@ NANNY_FUNC(con_pwdok) {
 				mudlog(LOG_PLAYERS,"WARNING %s respinto per violazione MP.",GET_NAME(d->character));
 				if(d->AccountData.authorized) {
 					string message("");
-					toonList(d->AccountData,message);
+					toonList(d,message);
 					STATE(d)=CON_ACCOUNT_TOON;
 				}
 				else {
@@ -2805,33 +2841,32 @@ NANNY_FUNC(con_pwdget) {
 	oldarg(false);
 	if(!*arg || strlen(arg) > 10 ||
 			!strcasecmp(arg,d->character->player.name)) {
-		write(d->descriptor, echo_on, 6);
+		echoOn(d);
 		SEND_TO_Q("Password non valida.(MAx 10 caratteri - diversa dal nome)\n\r", d);
 		SEND_TO_Q("Password: ", d);
-
-		write(d->descriptor, echo_off, 4);
+		echoOff(d);
 		return false;
 	}
 	strncpy(d->pwd,crypt(arg, d->character->player.name), 10);
 	*(d->pwd + 10) = '\0';
-	write(d->descriptor, echo_on, 6);
+	echoOn(d);
 	SEND_TO_Q("Per favore, reinserisci la password: ", d);
-	write(d->descriptor, echo_off, 4);
+	echoOff(d);
 	STATE(d) = CON_PWDCNF;
 	return false;
 }
 NANNY_FUNC(con_pwdcnf) {
 	oldarg(false);
 	if(strncmp((char*)crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
-		write(d->descriptor, echo_on, 6);
+		echoOn(d);
 
 		SEND_TO_Q("Le password non coincidono.\n\r", d);
 		SEND_TO_Q("Reinserisci la password: ", d);
 		STATE(d) = CON_PWDGET;
-		write(d->descriptor, echo_off, 4);
+		echoOff(d);
 	}
 	else {
-		write(d->descriptor, echo_on, 6);
+		echoOn(d);
 		show_race_choice(d);
 		STATE(d) = CON_QRACE;
 	}
@@ -3027,9 +3062,9 @@ NANNY_FUNC(con_rnewd) {
 	SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
 									 USE_ANSI),
 							  motd), d);
-	SEND_TO_Q("\r\n[Batti INVIO] ", d);
-	STATE(d) = CON_RMOTD;
-	return false;
+	d->justCreated=true;
+	STATE(d) = CON_REGISTER;
+	return true;
 }
 NANNY_FUNC(con_check_mage_type) {
 	oldarg(false);
@@ -3295,33 +3330,33 @@ NANNY_FUNC(con_delete_me) {
 NANNY_FUNC(con_pwdnew) {
 	oldarg(false);
 	if(!*arg || strlen(arg) > 10) {
-		write(d->descriptor, echo_on, 6);
+		echoOn(d);
 		SEND_TO_Q("Password non valida.\n\r", d);
 		SEND_TO_Q("Password: ", d);
-		write(d->descriptor, echo_off, 4);
+		echoOff(d);
 		return false;
 	}
 
 	strncpy(d->pwd,(char*) crypt(arg, d->character->player.name), 10);
 	*(d->pwd + 10) = '\0';
-	write(d->descriptor, echo_on, 6);
+	echoOn(d);
 	SEND_TO_Q("Reinserisci la password: ", d);
 	STATE(d) = CON_PWDNCNF;
-	write(d->descriptor, echo_off, 4);
+	echoOff(d);
 	return true;;
 }
 NANNY_FUNC(con_pwdncnf) {
 	oldarg(false);
 	if(strncmp(crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
-		write(d->descriptor, echo_on, 6);
+		echoOn(d);
 		SEND_TO_Q("Password errata.\n\r", d);
 		SEND_TO_Q("Reinserisci la password: ", d);
-		write(d->descriptor, echo_off, 4);
+		echoOff(d);
 
 		STATE(d) = CON_PWDNEW;
 		return false;
 	}
-	write(d->descriptor, echo_on, 6);
+	echoOn(d);
 
 	SEND_TO_Q(
 		"\n\rFatto. Devi entrare nel gioco per rendere attivo il cambio.\n\r",
@@ -3386,7 +3421,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 	d->currentInput.assign(arg);
 	boost::algorithm::trim_all(d->currentInput);
 	mudlog(LOG_CONNECT,"Outer nanny %s (%s)",d->currentInput.c_str(),G::translate(STATE(d)));
-	write(d->descriptor, echo_on, 6);
+	echoOn(d);
 	bool moresteps=false;
 	do {
 		uint16_t index=static_cast<uint16_t>(STATE(d));
@@ -3403,6 +3438,20 @@ void nanny(struct descriptor_data* d, char* arg) {
 		// Gestione account: stati messi tutti all'inizio perché poi fanno fallback sulla procedura standard
 	}
 	while(moresteps);
+	if (d and STATE(d) == CON_SLCT) {
+		boost::format fmt(R"(UPDATE toon SET lastlogin=now() WHERE name="%s")");
+		fmt % d->AccountData.choosen;
+		try {
+			DB* db=Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			db->execute(fmt.str());
+			t.commit();
+		}
+		catch(odb::exception &e) {
+			mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
+		}
+	}
 
 }
 
@@ -3622,7 +3671,7 @@ void check_affected(char* msg) {
 	int i,j;
 
 	if(!f && !(f=fopen(A_LOG_NAME,"wr"))) {
-		perror(A_LOG_NAME);
+		mudlog(LOG_ERROR,"%s:%s",A_LOG_NAME,strerror(errno));
 		return;
 	}
 
@@ -3636,7 +3685,7 @@ void check_affected(char* msg) {
 		}
 		fclose(f);
 		if(!(f=fopen(A_LOG_NAME,"wr"))) {
-			perror(A_LOG_NAME);
+			mudlog(LOG_ERROR,"%s:%s",A_LOG_NAME,strerror(errno));
 			return;
 		}
 		for(j=0; j<i; j++) {

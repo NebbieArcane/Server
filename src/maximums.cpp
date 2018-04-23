@@ -1478,7 +1478,6 @@ void ObjFromCorpse( struct obj_data* c) {
 
 
 void ClassSpecificStuff( struct char_data* ch) {
-	int addlev ; // Gaia 2001
 	/* Elimino slowness e haste*/
 	if (affected_by_spell(ch,SPELL_SLOW) || affected_by_spell(ch,SPELL_HASTE)) {
 		affect_from_char(ch,SPELL_SLOW);

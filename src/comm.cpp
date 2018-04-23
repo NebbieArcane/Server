@@ -254,17 +254,12 @@ int run(int port, const char* dir) {
 /* Init sockets, run game, and cleanup sockets */
 void run_the_game(int port) {
 	int s;
-
 	descriptor_list = NULL;
-
 	mudlog(LOG_CHECK, "Opening mother connection.");
 	s = init_socket(port);
-
 	mudlog(LOG_CHECK, "Signal trapping.");
 	signal_setup();
-
 	event_init();
-
 	boot_db();
 	LOG_FATAL("Verbosity 1: LSYSERR LSERVICE error level enabled");
 	LOG_ALERT("Verbosity 2: LERROR LCONNECT error level also enabled");
@@ -272,17 +267,12 @@ void run_the_game(int port) {
 	LOG_INFO("Verbosity 4: LPLAYERS LMOBILES error level also enabled");
 	LOG_TRACE("Verbosity 5: LSAVE,LMAIL,LRANK error level also enabled");
 	LOG_DBG("Verbosity 6: LWHO error level also enabled");
-
 	mudlog(LOG_ALWAYS, "Entering game loop.");
 	game_loop(s);
-
 	close_sockets(s);
-
-
 	if(rebootgame) {
 		mudlog(LOG_ALWAYS, "Rebooting.");
 	}
-
 	mudlog(LOG_ALWAYS, "Normal termination of game.");
 }
 
@@ -355,7 +345,7 @@ void game_loop(int s) {
 		if(FD_ISSET(s, &input_set)) {
 			mudlog(LOG_CONNECT, "New connection started");
 			if(new_descriptor(s) < 0) {
-				perror("New connection");
+				mudlog(LOG_CONNECT,"Error on select:%s",strerror(errno));
 			}
 			mudlog(LOG_CONNECT, "Connection stabilited");
 		}
@@ -802,7 +792,7 @@ int init_socket(int port) {
 
 	hp = gethostbyname(hostname);
 	if(hp == NULL) {
-		perror("gethostbyname");
+		mudlog(LOG_ERROR,"%s:%s","gethostbyname",strerror(errno));
 		exit(1);
 	}
 #endif
@@ -812,11 +802,11 @@ int init_socket(int port) {
 	sa.sin_port        = htons(port);
 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if(s < 0) {
-		perror("Init-socket");
+		mudlog(LOG_ERROR,"%s:%s","Init-socket",strerror(errno));
 		exit(1);
 	}
 	if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &bReuse, sizeof(bReuse)) < 0) {
-		perror("setsockopt REUSEADDR");
+		mudlog(LOG_ERROR,"%s:%s","setsockopt REUSEADDR",strerror(errno));
 		exit(1);
 	}
 
@@ -827,7 +817,7 @@ int init_socket(int port) {
 	if(bind(s, &sa, sizeof(sa), 0) < 0)
 #endif
 	{
-		perror("bind");
+		mudlog(LOG_ERROR,"%s:%s","bind",strerror(errno));
 		close(s);
 		exit(1);
 	}
@@ -859,7 +849,7 @@ int new_connection(int s) {
 	nonblock(s);
 
 	if((t = accept(s, (struct sockaddr*)&isa, &i)) < 0) {
-		perror("Accept");
+		mudlog(LOG_ERROR,"%s:%s","Accept",strerror(errno));
 		return(-1);
 	}
 	nonblock(t);
@@ -939,7 +929,7 @@ int new_descriptor(int s) {
 	size = sizeof(sock);
 
 	if(getpeername(desc, (struct sockaddr*) & sock, &size) < 0) {
-		perror("getpeername");
+		mudlog(LOG_ERROR,"%s:%s","getpeername",strerror(errno));
 		*newd->host = '\0';
 	}
 	else if(IS_SET(SystemFlags,SYS_SKIPDNS) ||
@@ -1002,7 +992,7 @@ int new_descriptor(int s) {
 	SEND_TO_Q(
 		ParseAnsiColors(TRUE,"$c0007"
 						"$c0011Inserisci l'$c0012email del tuo account su http://www.nebbiearcane.it$c0011 o il $c0004nome$c0011 di un personaggio.\r\n"
-						"Se non hai o non ricordi il codice di accesso (diverso dalla password del sito) vai su http://www.nebbiearcane.it/mudcode e crealo.\r\n"
+						"Se non hai o non ricordi il codice di accesso (diverso dalla password del sito) vai su \r\nhttp://www.nebbiearcane.it/mudcode\r\n e crealo.\r\n"
 						"$c0007Come vuoi essere conosciuto/a su Nebbie Arcane? "),
 		newd);
 
@@ -1107,7 +1097,7 @@ int write_to_descriptor(int desc, const char* txt) {
 			if(errno == EWOULDBLOCK) {
 				break;
 			}
-			perror("Write to socket");
+			mudlog(LOG_ERROR,"%s:%s","Write to socket",strerror(errno));
 			/*
 			 * lets see if this stops it from crashing close_socket_fd(desc);
 			 * arioch
@@ -1140,7 +1130,7 @@ int write_to_descriptor(int desc, char* txt) {
 			}
 			mudlog(LOG_ERROR, "<#=%d> had a error (%d) in write to descriptor "
 				   "(Broken Pipe?)", desc, errno);
-			perror("Write_to_descriptor");
+			mudlog(LOG_ERROR,"%s:%s","Write_to_descriptor",strerror(errno));
 			/* close_socket_fd(desc); */
 			return(-1);
 		}
@@ -1172,7 +1162,7 @@ int process_input(struct descriptor_data* t) {
 		else {
 			if(thisround < 0) {
 				if(errno != EWOULDBLOCK) {
-					perror("Read1 - ERROR");
+					mudlog(LOG_ERROR,"%s:%s","Read1 - ERROR",strerror(errno));
 					return(-1);
 				}
 				else {
@@ -1380,6 +1370,7 @@ void close_socket(struct descriptor_data* d) {
 		}
 		free(d);
 	}
+	d=nullptr;
 
 }
 
@@ -1394,7 +1385,7 @@ void nonblock(int s) {
 	nFlags = fcntl(s, F_GETFL);
 	nFlags |= O_NONBLOCK;
 	if(fcntl(s, F_SETFL, nFlags) < 0) {
-		perror("Fatal error executing nonblock (comm.c)");
+		mudlog(LOG_ERROR,"%s:%s","Fatal error executing nonblock (comm.c,strerror(errno))");
 	}
 	return;
 }
@@ -1403,7 +1394,7 @@ void nonblock(int s) {
 
 void nonblock(int s) {
 	if(fcntl(s, F_SETFL, FNDELAY) == -1) {
-		perror("Noblock");
+		mudlog(LOG_ERROR,"%s:%s","Noblock",strerror(errno));
 		assert(0);
 	}
 }

@@ -71,9 +71,9 @@ namespace odb
 
     static const bool polymorphic = false;
 
-    typedef ::std::string id_type;
+    typedef long unsigned int id_type;
 
-    static const bool auto_id = false;
+    static const bool auto_id = true;
 
     static const bool abstract = false;
 
@@ -102,28 +102,38 @@ namespace odb
   template <typename A>
   struct query_columns< ::Alarmud::toonExtra, id_common, A >
   {
-    // name
+    // id
     //
-    typedef odb::query_column< ::std::string > name_type_;
+    typedef odb::query_column< long unsigned int > id_type_;
 
-    static name_type_ name;
+    static id_type_ id;
 
-    // classes
+    // field
     //
-    typedef odb::query_column< ::std::string > classes_type_;
+    typedef odb::query_column< ::std::string > field_type_;
 
-    static classes_type_ classes;
+    static field_type_ field;
+
+    // value
+    //
+    typedef odb::query_column< ::std::string > value_type_;
+
+    static value_type_ value;
   };
 
 #ifdef ODB_COMMON_QUERY_COLUMNS_DEF
 
   template <typename A>
-  typename query_columns< ::Alarmud::toonExtra, id_common, A >::name_type_
-  query_columns< ::Alarmud::toonExtra, id_common, A >::name;
+  typename query_columns< ::Alarmud::toonExtra, id_common, A >::id_type_
+  query_columns< ::Alarmud::toonExtra, id_common, A >::id;
 
   template <typename A>
-  typename query_columns< ::Alarmud::toonExtra, id_common, A >::classes_type_
-  query_columns< ::Alarmud::toonExtra, id_common, A >::classes;
+  typename query_columns< ::Alarmud::toonExtra, id_common, A >::field_type_
+  query_columns< ::Alarmud::toonExtra, id_common, A >::field;
+
+  template <typename A>
+  typename query_columns< ::Alarmud::toonExtra, id_common, A >::value_type_
+  query_columns< ::Alarmud::toonExtra, id_common, A >::value;
 
 #endif // ODB_COMMON_QUERY_COLUMNS_DEF
 
@@ -142,7 +152,7 @@ namespace odb
 
     struct function_table_type
     {
-      void (*persist) (database&, const object_type&);
+      void (*persist) (database&, object_type&);
       pointer_type (*find1) (database&, const id_type&);
       bool (*find2) (database&, const id_type&, object_type&);
       bool (*reload) (database&, object_type&);
@@ -158,7 +168,7 @@ namespace odb
     static const function_table_type* function_table[database_count];
 
     static void
-    persist (database&, const object_type&);
+    persist (database&, object_type&);
 
     static pointer_type
     find (database&, const id_type&);
@@ -209,9 +219,9 @@ namespace odb
 
     static const bool polymorphic = false;
 
-    typedef ::std::string id_type;
+    typedef long unsigned int id_type;
 
-    static const bool auto_id = false;
+    static const bool auto_id = true;
 
     static const bool abstract = false;
 
@@ -240,28 +250,48 @@ namespace odb
   template <typename A>
   struct query_columns< ::Alarmud::toonRent, id_common, A >
   {
-    // name
+    // id
     //
-    typedef odb::query_column< ::std::string > name_type_;
+    typedef odb::query_column< long unsigned int > id_type_;
 
-    static name_type_ name;
+    static id_type_ id;
 
     // vnum
     //
     typedef odb::query_column< long unsigned int > vnum_type_;
 
     static vnum_type_ vnum;
+
+    // effects
+    //
+    typedef odb::query_column< ::std::string > effects_type_;
+
+    static effects_type_ effects;
+
+    // bank
+    //
+    typedef odb::query_column< bool > bank_type_;
+
+    static bank_type_ bank;
   };
 
 #ifdef ODB_COMMON_QUERY_COLUMNS_DEF
 
   template <typename A>
-  typename query_columns< ::Alarmud::toonRent, id_common, A >::name_type_
-  query_columns< ::Alarmud::toonRent, id_common, A >::name;
+  typename query_columns< ::Alarmud::toonRent, id_common, A >::id_type_
+  query_columns< ::Alarmud::toonRent, id_common, A >::id;
 
   template <typename A>
   typename query_columns< ::Alarmud::toonRent, id_common, A >::vnum_type_
   query_columns< ::Alarmud::toonRent, id_common, A >::vnum;
+
+  template <typename A>
+  typename query_columns< ::Alarmud::toonRent, id_common, A >::effects_type_
+  query_columns< ::Alarmud::toonRent, id_common, A >::effects;
+
+  template <typename A>
+  typename query_columns< ::Alarmud::toonRent, id_common, A >::bank_type_
+  query_columns< ::Alarmud::toonRent, id_common, A >::bank;
 
 #endif // ODB_COMMON_QUERY_COLUMNS_DEF
 
@@ -280,7 +310,7 @@ namespace odb
 
     struct function_table_type
     {
-      void (*persist) (database&, const object_type&);
+      void (*persist) (database&, object_type&);
       pointer_type (*find1) (database&, const id_type&);
       bool (*find2) (database&, const id_type&, object_type&);
       bool (*reload) (database&, object_type&);
@@ -296,145 +326,7 @@ namespace odb
     static const function_table_type* function_table[database_count];
 
     static void
-    persist (database&, const object_type&);
-
-    static pointer_type
-    find (database&, const id_type&);
-
-    static bool
-    find (database&, const id_type&, object_type&);
-
-    static bool
-    reload (database&, object_type&);
-
-    static void
-    update (database&, const object_type&);
-
-    static void
-    erase (database&, const id_type&);
-
-    static void
-    erase (database&, const object_type&);
-
-    static result<object_type>
-    query (database&, const query_base_type&);
-
-    static unsigned long long
-    erase_query (database&, const query_base_type&);
-
-    static odb::details::shared_ptr<prepared_query_impl>
-    prepare_query (connection&, const char*, const query_base_type&);
-
-    static odb::details::shared_ptr<result_impl>
-    execute_query (prepared_query_impl&);
-  };
-
-  // toonBank
-  //
-  template <>
-  struct class_traits< ::Alarmud::toonBank >
-  {
-    static const class_kind kind = class_object;
-  };
-
-  template <>
-  class access::object_traits< ::Alarmud::toonBank >
-  {
-    public:
-    typedef ::Alarmud::toonBank object_type;
-    typedef ::boost::shared_ptr< ::Alarmud::toonBank > pointer_type;
-    typedef odb::pointer_traits<pointer_type> pointer_traits;
-
-    static const bool polymorphic = false;
-
-    typedef ::std::string id_type;
-
-    static const bool auto_id = false;
-
-    static const bool abstract = false;
-
-    static id_type
-    id (const object_type&);
-
-    typedef
-    odb::pointer_cache_traits<
-      pointer_type,
-      odb::session >
-    pointer_cache_traits;
-
-    typedef
-    odb::reference_cache_traits<
-      object_type,
-      odb::session >
-    reference_cache_traits;
-
-    static void
-    callback (database&, object_type&, callback_event);
-
-    static void
-    callback (database&, const object_type&, callback_event);
-  };
-
-  template <typename A>
-  struct query_columns< ::Alarmud::toonBank, id_common, A >
-  {
-    // name
-    //
-    typedef odb::query_column< ::std::string > name_type_;
-
-    static name_type_ name;
-
-    // vnum
-    //
-    typedef odb::query_column< long unsigned int > vnum_type_;
-
-    static vnum_type_ vnum;
-  };
-
-#ifdef ODB_COMMON_QUERY_COLUMNS_DEF
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toonBank, id_common, A >::name_type_
-  query_columns< ::Alarmud::toonBank, id_common, A >::name;
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toonBank, id_common, A >::vnum_type_
-  query_columns< ::Alarmud::toonBank, id_common, A >::vnum;
-
-#endif // ODB_COMMON_QUERY_COLUMNS_DEF
-
-  template <typename A>
-  struct pointer_query_columns< ::Alarmud::toonBank, id_common, A >:
-    query_columns< ::Alarmud::toonBank, id_common, A >
-  {
-  };
-
-  template <>
-  class access::object_traits_impl< ::Alarmud::toonBank, id_common >:
-    public access::object_traits< ::Alarmud::toonBank >
-  {
-    public:
-    typedef odb::query_base query_base_type;
-
-    struct function_table_type
-    {
-      void (*persist) (database&, const object_type&);
-      pointer_type (*find1) (database&, const id_type&);
-      bool (*find2) (database&, const id_type&, object_type&);
-      bool (*reload) (database&, object_type&);
-      void (*update) (database&, const object_type&);
-      void (*erase1) (database&, const id_type&);
-      void (*erase2) (database&, const object_type&);
-      result<object_type> (*query) (database&, const query_base_type&);
-      unsigned long long (*erase_query) (database&, const query_base_type&);
-      odb::details::shared_ptr<prepared_query_impl> (*prepare_query) (connection&, const char*, const query_base_type&);
-      odb::details::shared_ptr<result_impl> (*execute_query) (prepared_query_impl&);
-    };
-
-    static const function_table_type* function_table[database_count];
-
-    static void
-    persist (database&, const object_type&);
+    persist (database&, object_type&);
 
     static pointer_type
     find (database&, const id_type&);
@@ -485,16 +377,14 @@ namespace odb
 
     static const bool polymorphic = false;
 
-    typedef ::std::string id_type;
+    typedef long unsigned int id_type;
 
-    static const bool auto_id = false;
+    static const bool auto_id = true;
 
     static const bool abstract = false;
 
     static id_type
     id (const object_type&);
-
-    struct data_tag;
 
     typedef
     odb::pointer_cache_traits<
@@ -516,8 +406,14 @@ namespace odb
   };
 
   template <typename A>
-  struct pointer_query_columns< ::Alarmud::toon, id_common, A >
+  struct query_columns< ::Alarmud::toon, id_common, A >
   {
+    // id
+    //
+    typedef odb::query_column< long unsigned int > id_type_;
+
+    static id_type_ id;
+
     // name
     //
     typedef odb::query_column< ::std::string > name_type_;
@@ -552,26 +448,36 @@ namespace odb
 #ifdef ODB_COMMON_QUERY_COLUMNS_DEF
 
   template <typename A>
-  typename pointer_query_columns< ::Alarmud::toon, id_common, A >::name_type_
-  pointer_query_columns< ::Alarmud::toon, id_common, A >::name;
+  typename query_columns< ::Alarmud::toon, id_common, A >::id_type_
+  query_columns< ::Alarmud::toon, id_common, A >::id;
 
   template <typename A>
-  typename pointer_query_columns< ::Alarmud::toon, id_common, A >::password_type_
-  pointer_query_columns< ::Alarmud::toon, id_common, A >::password;
+  typename query_columns< ::Alarmud::toon, id_common, A >::name_type_
+  query_columns< ::Alarmud::toon, id_common, A >::name;
 
   template <typename A>
-  typename pointer_query_columns< ::Alarmud::toon, id_common, A >::title_type_
-  pointer_query_columns< ::Alarmud::toon, id_common, A >::title;
+  typename query_columns< ::Alarmud::toon, id_common, A >::password_type_
+  query_columns< ::Alarmud::toon, id_common, A >::password;
 
   template <typename A>
-  typename pointer_query_columns< ::Alarmud::toon, id_common, A >::lastlogin_type_
-  pointer_query_columns< ::Alarmud::toon, id_common, A >::lastlogin;
+  typename query_columns< ::Alarmud::toon, id_common, A >::title_type_
+  query_columns< ::Alarmud::toon, id_common, A >::title;
 
   template <typename A>
-  typename pointer_query_columns< ::Alarmud::toon, id_common, A >::owner_id_type_
-  pointer_query_columns< ::Alarmud::toon, id_common, A >::owner_id;
+  typename query_columns< ::Alarmud::toon, id_common, A >::lastlogin_type_
+  query_columns< ::Alarmud::toon, id_common, A >::lastlogin;
+
+  template <typename A>
+  typename query_columns< ::Alarmud::toon, id_common, A >::owner_id_type_
+  query_columns< ::Alarmud::toon, id_common, A >::owner_id;
 
 #endif // ODB_COMMON_QUERY_COLUMNS_DEF
+
+  template <typename A>
+  struct pointer_query_columns< ::Alarmud::toon, id_common, A >:
+    query_columns< ::Alarmud::toon, id_common, A >
+  {
+  };
 
   template <>
   class access::object_traits_impl< ::Alarmud::toon, id_common >:
@@ -582,7 +488,7 @@ namespace odb
 
     struct function_table_type
     {
-      void (*persist) (database&, const object_type&);
+      void (*persist) (database&, object_type&);
       pointer_type (*find1) (database&, const id_type&);
       bool (*find2) (database&, const id_type&, object_type&);
       bool (*reload) (database&, object_type&);
@@ -598,7 +504,7 @@ namespace odb
     static const function_table_type* function_table[database_count];
 
     static void
-    persist (database&, const object_type&);
+    persist (database&, object_type&);
 
     static pointer_type
     find (database&, const id_type&);
@@ -686,12 +592,6 @@ namespace odb
 
     static id_type_ id;
 
-    // login
-    //
-    typedef odb::query_column< ::std::string > login_type_;
-
-    static login_type_ login;
-
     // nickname
     //
     typedef odb::query_column< ::std::string > nickname_type_;
@@ -734,10 +634,6 @@ namespace odb
   template <typename A>
   typename query_columns< ::Alarmud::user, id_common, A >::id_type_
   query_columns< ::Alarmud::user, id_common, A >::id;
-
-  template <typename A>
-  typename query_columns< ::Alarmud::user, id_common, A >::login_type_
-  query_columns< ::Alarmud::user, id_common, A >::login;
 
   template <typename A>
   typename query_columns< ::Alarmud::user, id_common, A >::nickname_type_
@@ -991,100 +887,8 @@ namespace odb
   //
   // toonRent
   //
-  // toonBank
-  //
   // toon
   //
-  template <>
-  struct alias_traits<
-    ::Alarmud::toonExtra,
-    id_common,
-    access::object_traits_impl< ::Alarmud::toon, id_common >::data_tag>
-  {
-  };
-
-  template <>
-  struct query_columns_base< ::Alarmud::toon, id_common >
-  {
-    // data
-    //
-    typedef
-    odb::alias_traits<
-      ::Alarmud::toonExtra,
-      id_common,
-      access::object_traits_impl< ::Alarmud::toon, id_common >::data_tag>
-    data_alias_;
-
-    typedef
-    odb::query_pointer<
-      odb::pointer_query_columns<
-        ::Alarmud::toonExtra,
-        id_common,
-        data_alias_ > >
-    data_type_ ;
-
-    static data_type_ data;
-  };
-
-  template <typename A>
-  struct query_columns< ::Alarmud::toon, id_common, A >:
-    query_columns_base< ::Alarmud::toon, id_common >
-  {
-    // name
-    //
-    typedef odb::query_column< ::std::string > name_type_;
-
-    static name_type_ name;
-
-    // password
-    //
-    typedef odb::query_column< ::std::string > password_type_;
-
-    static password_type_ password;
-
-    // title
-    //
-    typedef odb::query_column< ::std::string > title_type_;
-
-    static title_type_ title;
-
-    // lastlogin
-    //
-    typedef odb::query_column< ::boost::posix_time::ptime > lastlogin_type_;
-
-    static lastlogin_type_ lastlogin;
-
-    // owner_id
-    //
-    typedef odb::query_column< long long unsigned int > owner_id_type_;
-
-    static owner_id_type_ owner_id;
-  };
-
-#ifdef ODB_COMMON_QUERY_COLUMNS_DEF
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toon, id_common, A >::name_type_
-  query_columns< ::Alarmud::toon, id_common, A >::name;
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toon, id_common, A >::password_type_
-  query_columns< ::Alarmud::toon, id_common, A >::password;
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toon, id_common, A >::title_type_
-  query_columns< ::Alarmud::toon, id_common, A >::title;
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toon, id_common, A >::lastlogin_type_
-  query_columns< ::Alarmud::toon, id_common, A >::lastlogin;
-
-  template <typename A>
-  typename query_columns< ::Alarmud::toon, id_common, A >::owner_id_type_
-  query_columns< ::Alarmud::toon, id_common, A >::owner_id;
-
-#endif // ODB_COMMON_QUERY_COLUMNS_DEF
-
   // user
   //
   // legacy

@@ -124,6 +124,13 @@ ACTION_FUNC(do_auth) {
 	return;
 }
 void plrRegister(struct char_data* ch, std::vector<string> &parts) {
+	toonRows r=getToons(ch->desc->AccountData.id);
+	string message("I tuoi personaggi:\n\r");
+	for (const toon& pg : r) {
+		message.append(pg.name).append("\r\n");
+	}
+	send_to_char(message.c_str(),ch);
+
 }
 void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 	thread_local static string entropy(
@@ -133,6 +140,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 	char n[] = "0";
 	for(auto s : parts) {
 		send_to_char(n, ch);
+		send_to_char(" ", ch);
 		n[0]++;
 		send_to_char(s.c_str(), ch);
 		send_to_char("\r\n", ch);
@@ -140,100 +148,71 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 	if(parts.size() == 0) {
 		send_to_char(
 			"$c0011"
-			"Con questo comando puoi registrare un giocatore e eventualmente assegnargli dei personaggi\r\n"
+			"Con questo comando puoi esaminare le registrazioni\r\n"
 			"Sintassi:\r\n"
-			"register account <email> <nickname> <nome cognome> -> crea l'account (viene inviato un token alla mail)\r\n"
-			"register reset <email> <password> -> resetta la password\r\n"
+			"register add -> assegna il personaggio corrente al tuo account\r\n"
 			"register add <personaggio> <email> -> assegna un personaggio a un account\r\n"
+			"register list -> elenca i tuoi pg"
 			"register list <email> -> elenca tutti i personaggi di un account\r\n"
 			"register list <personaggio> -> come sopra ma cerca l'account a partire da un personaggio\r\n"
 			"$c0007", ch);
 		return;
 	}
 	try {
-		if(parts[0] == "account") {
-			if(parts.size() < 4) {
-				throw invalid_argument(
-					"Usa 'register account <email> <nickname> <nome cognome>'");
-			}
-			string email(parts[1]);
-			string nickname(parts[2]);
-			string realname;
-			for(auto s : boost::make_iterator_range(parts.begin() + 2,
-													parts.end())) {
-				realname += s + " ";
-			}
-			random_shuffle(entropy.begin(), entropy.end());
-			user account(nickname, realname, email,
-						 crypt(entropy.substr(0, 10).c_str(),
-							   entropy.substr(11, 2).c_str()));
-			boost::format fmt("$c00%s Registrazione %s per %s$c0007");
-			if(Sql::save(account)) {
-				fmt % "10" % "riuscita" % email;
-			}
-			else {
-				fmt % "09" % "fallita" % email;
-			}
-			send_to_char(fmt.str().c_str(), ch);
-		}
-		else if(parts[0] == "reset") {
-			if(parts.size() < 3) {
-				throw invalid_argument(
-					"Usa 'register reset <email> <password> -> resetta la password (max 10 caratteri)'");
-			}
-			string email(parts[1]);
-			string password(parts[2].substr(0.10));
-			userQuery q(userQuery::email == email);
-			auto account(Sql::getOne<user>(q));
-			if(account) {
-				random_shuffle(entropy.begin(), entropy.end());
-				account->password = crypt(password.c_str(),
-										  entropy.substr(0, 2).c_str());
-				boost::format fmt("$c00%s Password reset %s per %s$c0007 (%s)");
-				if(Sql::save(*account, true)) {
-					fmt % "10" % "riuscito" % email % password;
+		boost::format fmt("Parts: %d\r\n");
+		fmt % parts.size();
+		send_to_char(fmt.str().c_str(),ch);
+		if(parts[0] == "add") {
+			if(parts.size() < 2) {
+				boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
+				fmt % ch->desc->AccountData.id % ch->desc->AccountData.choosen;
+				try {
+					DB* db=Sql::getMysql();
+					odb::transaction t(db->begin());
+					t.tracer(logTracer);
+					db->execute(fmt.str());
+					t.commit();
 				}
-				else {
-					fmt % "09" % "fallito" % email % password;
+				catch(odb::exception &e) {
+					mudlog(LOG_SYSERR,"Db error while registering %s: %s",ch->desc->AccountData.choosen.c_str(),e.what());
 				}
-				send_to_char(fmt.str().c_str(), ch);
-			}
-			else {
-				boost::format fmt("$c0009 Not found $c0007[$c0004%s$c0007]");
-				fmt % email;
-				send_to_char(fmt.str().c_str(), ch);
+				plrRegister(ch, parts);
 			}
 		}
-		else if(parts[0] == "level") {
-			if(parts.size() < 3) {
-				throw invalid_argument(
-					"Usa 'register reset <email> <password> -> resetta la password (max 10 caratteri)'");
-			}
-			string email(parts[1]);
-			unsigned short level = tonumber(parts[2], 0);
-			userQuery q(userQuery::email == email);
-			auto account(Sql::getOne<user>(q));
-			if(account) {
-				account->level;
-				boost::format fmt("$c00%s Password reset %s per %s$c0007 (%d)");
-				if(Sql::save(*account, true)) {
-					fmt % "10" % "riuscito" % email % level;
-				}
-				else {
-					fmt % "09" % "fallito" % email % level;
-				}
-				send_to_char(fmt.str().c_str(), ch);
+		else if (parts[0]=="list") {
+			if (parts.size()<2) {
+				plrRegister(ch, parts);
 			}
 			else {
-				boost::format fmt("$c0009 Not found $c0007[$c0004%s$c0007]");
-				fmt % email;
-				send_to_char(fmt.str().c_str(), ch);
+				if (parts[1]) {
+					char tmp_name[100];
+					int rc=parse_name(parts[1].substr(9),tmp_name);
+					unsigned long int id=0;
+					if (rc==2) {
+						userPtr user=getUser(parts[1]);
+						if (user) {
+							id=user->id;
+						}
+					}
+					else {
+						toonPtr pg=geToon(parts[1]);
+						if (pg) {
+							id=pg->owner_id;
+						}
+					}
+					if (id) {
+						toonRows r=getToons(id);
+						string message("I tuoi personaggi:\n\r");
+						for (const toon& pg : r) {
+							message.append(pg.name).append("\r\n");
+						}
+						send_to_char(message.c_str(),ch);
+					}
+					else {
+						send_to_char("Non ho trovato nessunop\n\r",ch);
+					}
+				}
 			}
-		}
-		else {
-			boost::format fmt("Unrecognized command: %s");
-			fmt % parts[0];
-			send_to_char(fmt.str().c_str(), ch);
 		}
 	}
 	catch(invalid_argument &e) {

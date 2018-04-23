@@ -1987,7 +1987,7 @@ void obj_from_obj(struct obj_data* obj) {
 		}
 	}
 	else {
-		perror("Trying to object from object when in no object.");
+		mudlog(LOG_ERROR,"%s:%s","Trying to object from object when in no object.",strerror(errno));
 		assert(0);
 	}
 

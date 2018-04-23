@@ -21,6 +21,9 @@ namespace Alarmud {
 #define MOB_FILE          "myst.mob"     /* monster prototypes         */
 #define OBJ_FILE          "myst.obj"     /* object prototypes          */
 #define ZONE_FILE         "myst.zon"   /* zone defs & command tables */
+#define SHOP_FILE 		  "myst.shp"
+
+
 #define POSEMESS_FILE     "myst.pos"   /* for 'pose'-command         */
 #define MESS_FILE         "myst.dam"   /* damage message             */
 #define SOCMESS_FILE      "myst.act"   /* messgs for social acts     */
@@ -254,7 +257,7 @@ char* fread_string(FILE* fl);
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
 int file_to_string(const char* name, char* buf);
-bool getFromDb(const char* name,const char* pwd);
+bool getFromDb(const char* name,const char* pwd, const char* title);
 void ClearDeadBit(struct char_data* ch);
 void reset_char(struct char_data* ch);
 void clear_char(struct char_data* ch);
@@ -276,6 +279,11 @@ void InsertObject(struct obj_data* pObj, int nVNum);
 void InsertMobile(struct char_data* pMob, int nVNum);
 void Start_Auction();
 ACTION_FUNC(do_WorldSave);
+toonPtr getToon(const char* cname);
+toonPtr getToon(const string& name);
+userPtr getUser(const char* cemail);
+userPtr getUser(const string& email);
+toonRows getToons(const unsigned long int id);
 
 } // namespace Alarmud
 #endif

@@ -32,36 +32,10 @@ namespace odb
   access::object_traits_impl< ::Alarmud::toonRent, id_common >::
   function_table[database_count];
 
-  // toonBank
-  //
-
-  template struct query_columns<
-    ::Alarmud::toonBank,
-    id_common,
-    access::object_traits_impl< ::Alarmud::toonBank, id_common > >;
-
-  const access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  function_table_type*
-  access::object_traits_impl< ::Alarmud::toonBank, id_common >::
-  function_table[database_count];
-
   // toon
   //
 
   template struct query_columns<
-    ::Alarmud::toonExtra,
-    id_common,
-    query_columns_base< ::Alarmud::toon, id_common >::data_alias_ >;
-
-  query_columns_base< ::Alarmud::toon, id_common >::data_type_
-  query_columns_base< ::Alarmud::toon, id_common >::data;
-
-  template struct query_columns<
-    ::Alarmud::toon,
-    id_common,
-    access::object_traits_impl< ::Alarmud::toon, id_common > >;
-
-  template struct pointer_query_columns<
     ::Alarmud::toon,
     id_common,
     access::object_traits_impl< ::Alarmud::toon, id_common > >;

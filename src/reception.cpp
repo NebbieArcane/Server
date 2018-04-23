@@ -377,7 +377,7 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 	PushStatus("update_file2");
 
 	if(!(fl = fopen(buf, "w"))) {
-		perror("saving PC's objects");
+		mudlog(LOG_ERROR,"%s:%s","saving PC's objects",strerror(errno));
 		assert(0);
 	}
 
@@ -1446,7 +1446,7 @@ void ZeroRent(char* n) {
 	sprintf(buf, "%s/%s", RENT_DIR, lower(n));
 
 	if(!(fl = fopen(buf, "w"))) {
-		perror("saving PC's objects");
+		mudlog(LOG_ERROR,"%s:%s","saving PC's objects",strerror(errno));
 		assert(0);
 	}
 

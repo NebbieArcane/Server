@@ -1306,7 +1306,7 @@ ACTION_FUNC(do_idea) {
 		return;
 	}
 	if(!(fl = fopen(IDEA_FILE, "a")))        {
-		perror("do_idea");
+		mudlog(LOG_ERROR,"%s:%s","do_idea",strerror(errno));
 		send_to_char("Could not open the idea-file.\n\r", ch);
 		return;
 	}
@@ -1341,7 +1341,7 @@ ACTION_FUNC(do_typo) {
 		return;
 	}
 	if(!(fl = fopen(TYPO_FILE, "a")))        {
-		perror("do_typo");
+		mudlog(LOG_ERROR,"%s:%s","do_typo",strerror(errno));
 		send_to_char("Could not open the typo-file.\n\r", ch);
 		return;
 	}
@@ -1375,7 +1375,7 @@ ACTION_FUNC(do_bug) {
 		return;
 	}
 	if(!(fl = fopen(BUG_FILE, "a")))        {
-		perror("do_bug");
+		mudlog(LOG_ERROR,"%s:%s","do_bug",strerror(errno));
 		send_to_char("Could not open the bug-file.\n\r", ch);
 		return;
 	}

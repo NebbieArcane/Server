@@ -141,7 +141,7 @@ void string_add(struct descriptor_data* d, char* str) {
 		else         {
 			if(!(*d->str = (char*) realloc(*d->str, strlen(*d->str) +
 										   strlen(str) + 3)))             {
-				perror("string_add");
+				mudlog(LOG_ERROR,"%s:%s","string_add",strerror(errno));
 				assert(0);
 			}
 			strcat(*d->str, str);

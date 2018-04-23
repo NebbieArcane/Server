@@ -161,10 +161,10 @@ void signal_setup() {
 	itime.it_interval = interval;
 	itime.it_value = interval;
 	if(setitimer(ITIMER_VIRTUAL, &itime, 0) < 0) {
-		perror("Setting Virtual timer in signal_setup");
+		mudlog(LOG_ERROR,"%s:%s","Setting Virtual timer in signal_setup",strerror(errno));
 	}
 	else if(signal(SIGVTALRM, checkpointing) == SIG_ERR) {
-		perror("Calling 'signal' in signal_setup");
+		mudlog(LOG_ERROR,"%s:%s","Calling 'signal' in signal_setup",strerror(errno));
 	}
 }
 
@@ -181,7 +181,7 @@ void checkpointing(int dummy) {
 		tics = 0;
 	}
 	if(signal(SIGVTALRM, checkpointing) == SIG_ERR) {
-		perror("Calling 'signal' in checkpointing");
+		mudlog(LOG_ERROR,"%s:%s","Calling 'signal' in checkpointing",strerror(errno));
 		abort();
 	}
 

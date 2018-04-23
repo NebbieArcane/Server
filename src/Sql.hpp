@@ -11,6 +11,8 @@
 #include "autoenums.hpp"
 #include "logging.hpp"
 namespace Alarmud {
+extern bool forceDbInit;
+
 class sqlTrace : public odb::tracer {
 public:
 	virtual void execute(odb::connection &c, const odb::statement &s) {
@@ -36,6 +38,20 @@ public:
 		auto datum(db->load<T>(key));
 		t.commit();
 		return datum;
+	}
+	template <typename T>
+	static bool load(T &obj) {
+		try {
+			DB* db = Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			obj.load();
+			t.commit();
+		}
+		catch (odb::exception &e) {
+			return false;
+		}
+		return true;
 	}
 	template <typename T>
 	static boost::shared_ptr<T> getOne(odb::query<T> key) {
@@ -74,7 +90,7 @@ public:
 			t.commit();
 			return true;
 		}
-		catch(odb::exception &e) {
+		catch(odb::object_already_persistent &e) {
 			if(upsert) {
 				try {
 					db->update<T>(data);
@@ -99,8 +115,17 @@ public:
 			t.commit();
 			return true;
 		}
-		catch(odb::exception &e) {
-			mudlog(LOG_SYSERR,"Db exception: %s",e.what());
+		catch(odb::object_not_persistent &e) {
+			if(upsert) {
+				try {
+					db->persist<T>(data);
+					t.commit();
+					return true;
+				}
+				catch(odb::exception &e) {
+					mudlog(LOG_SYSERR,"Db exception: %s",e.what());
+				}
+			}
 		}
 		return false;
 

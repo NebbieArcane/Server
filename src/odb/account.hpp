@@ -23,61 +23,47 @@ namespace Alarmud {
 using std::string;
 class toonExtra;
 class toonRent;
-class toonBank;
 class user;
 class legacy;
 class toon;
 class toonExtra {
 public:
-	string name;
-	string classes;
+	unsigned long id;
+	string field;
+	string value;
 };
 class toonRent {
 public:
-	string name;
+	unsigned long id;
 	unsigned long vnum;
-};
-class toonBank {
-public:
-	string name;
-	unsigned long vnum;
+	string effects;
+	bool bank;
 };
 class toon {
 public:
-	typedef odb::boost::lazy_shared_ptr<toonExtra> extraPtr;
-	typedef odb::boost::lazy_shared_ptr<toonRent> rentPtr;
-	typedef odb::vector<rentPtr> rentVector;
-	typedef odb::boost::lazy_shared_ptr<toonBank> bankPtr;
-	typedef odb::vector<bankPtr> bankVector;
-	toon() {};
-	toon(const char* name,const char* password) :name(name),password(password),title(""),lastlogin(boost::posix_time::not_a_date_time),owner_id(0) {}
+	toon() :id(0),name(""),password(""),title(""),lastlogin(boost::posix_time::not_a_date_time),owner_id(0) {};
+	toon(const char* name,const char* password="invalid", const char* title="") :id(0),name(name),password(password),title(title),lastlogin(boost::posix_time::not_a_date_time),owner_id(0) {}
+	unsigned long id;
 	string name;
 	string password;
 	string title;
 	boost::posix_time::ptime lastlogin;
 	unsigned long long owner_id;
-	extraPtr data;
-	rentVector rentItems;
-	bankVector bankItems;
 };
 class user {
 public:
-	typedef odb::boost::lazy_shared_ptr<toon> toonPtr;
-	typedef odb::vector<toonPtr> toonVector;
 	unsigned long long id;
-	string login;
 	string nickname;
 	string email;
 	boost::posix_time::ptime registered;
 	string password;
 	unsigned short level;
 	odb::nullable<string> backup_email;
-	toonVector toons;
 	string choosen;
 	bool authorized;
 	user() {};
-	user(const string &login,const string &nickname,const string &email,const string &password=""):
-		login(login),
+	user(const string &nickname,const string &email,const string &password=""):
+		id(0),
 		nickname(nickname),
 		email(email),
 		registered(boost::posix_time::from_time_t(time(nullptr))),
@@ -99,36 +85,35 @@ public:
 #pragma db model version(1,1,open)
 
 #pragma db object(toon)
-#pragma db member(toon::name) id type("varchar(32)")
-#pragma db member(toon::password) type("varchar(128)")
+#pragma db member(toon::id) id auto
+#pragma db member(toon::name) type("varchar(32)")
+#pragma db member(toon::name) unique
+#pragma db member(toon::password) type("varchar(16)")
 #pragma db member(toon::title) type("varchar(128)")
 #pragma db member(toon::lastlogin) type("DATETIME") null
 #pragma db member(toon::owner_id) index
-#pragma db member(toon::data) value_not_null inverse(name)
-#pragma db member(toon::rentItems) value_not_null inverse(name)
-#pragma db member(toon::bankItems) value_not_null inverse(name)
 
 #pragma db object(toonExtra)
-#pragma db member(toonExtra::name) id type("varchar(32)")
+#pragma db member(toonExtra::id) id auto
+#pragma db member(toonExtra::field) type("varchar(32)")
+#pragma db member(toonExtra::value) type("varchar(1024)")
+#pragma db  index(toonExtra::"idfield") members(id,field)
 
-#pragma db object(toonBank)
-#pragma db member(toonBank::name) id type("varchar(32)")
 
 #pragma db object(toonRent)
-#pragma db member(toonRent::name) id type("varchar(32)")
+#pragma db member(toonRent::id) id auto
+#pragma db member(toonRent::effects) type("varchar(10240)")
 
 //login,nickname,email,registered,password,level
 
 #pragma db object(user)
 #pragma db member(user::id) id auto
-#pragma db member(user::login) type("VARCHAR(255)") not_null
 #pragma db member(user::nickname) type("VARCHAR(255)") not_null
 #pragma db member(user::email) type("VARCHAR(255)") not_null unique
 #pragma db member(user::registered) type("DATETIME") null
 #pragma db member(user::password) type("VARCHAR(128)") not_null
 #pragma db member(user::level) not_null default(0)
 #pragma db member(user::backup_email) type("VARCHAR(255)") null
-#pragma db member(user::toons) value_not_null inverse(owner_id)
 #pragma db member(user::choosen) transient
 #pragma db member(user::authorized) transient
 

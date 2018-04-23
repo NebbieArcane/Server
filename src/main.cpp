@@ -7,6 +7,7 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <mutex>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -22,6 +23,7 @@
 #include "interpreter.hpp"
 #include "snew.hpp"
 #include "Sql.hpp"
+
 namespace Alarmud {
 
 using std::string;
@@ -153,7 +155,8 @@ int main(int argc, char** argv) {
 		fclose(fd);
 	}
 	LOG4CXX_TRACE(logger,"Boost version " << BOOST_VERSION);
-	Sql::dbUpdate();
+	std::once_flag dbupdateflag;
+	std::call_once(dbupdateflag,Sql::dbUpdate);
 	run(port,dir.c_str());
 	return 0;
 }

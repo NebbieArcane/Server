@@ -33,7 +33,6 @@
 
 namespace Alarmud {
 
-#define SHOP_FILE "myst.shp"
 #define MAX_TRADE 5
 #define MAX_PROD 5
 
@@ -635,7 +634,7 @@ void boot_the_shops() {
 	FILE* shop_f;
 	mudlog(LOG_CHECK,"Booting shops");
 	if(!(shop_f = fopen(SHOP_FILE, "r"))) {
-		perror("Error in boot shop\n");
+		mudlog(LOG_ERROR,"%s:%s","Error in boot shop\n",strerror(errno));
 		exit(0);
 	}
 
@@ -653,7 +652,7 @@ void boot_the_shops() {
 						  (struct shop_data*) realloc(
 							  shop_index,(number_of_shops + 1)*
 							  sizeof(struct shop_data)))) {
-				perror("Error in boot shop\n");
+				mudlog(LOG_ERROR,"%s:%s","Error in boot shop\n",strerror(errno));
 				exit(0);
 			}
 
