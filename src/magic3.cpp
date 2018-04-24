@@ -302,9 +302,9 @@ void spell_haste(byte level, struct char_data* ch,
 	affect_to_char(victim, &af);
 
 	send_to_char("Ti senti veloce....\n\r", victim);
-    
+
     dice = number(3, 19);
-    
+
     if(GET_INT(victim) < dice) {
         send_to_char("La tua mente non riesce a coordinare l'accellerazione degli impulsi del tuo corpo... Perdi conoscenza!\n\r",victim);
 	GET_POS(victim) = POSITION_STUNNED;
@@ -1383,6 +1383,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			send_to_char( "Problemi con il file del giocatore da resuscitare.\n\r",
 						  ch );
 			send_to_char( "Contattare un Dio.\n\r", ch );
+			fclose(fl);
 			return;
 		}
 #endif
@@ -1472,6 +1473,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 						  "reincarnarsi.\n\r", ch);
 		}
 		fclose(fl);
+		fclose(fdeath);
 	}
 }
 

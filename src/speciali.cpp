@@ -642,7 +642,7 @@ MOBSPECIAL_FUNC(LibroEroi) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> assegno %d coins a %s",gold,GET_NAME(ch));
 			GET_GOLD(ch)+=gold;
 			GET_RUNEDEI( ch ) -= num2;
-			sprintf(buf,"echo \"PC: %s RUNE SPESE: %d\"| mail -s \"ESECUZIONE RUNE --> Conv Coins\" %s", GET_NAME(ch),max,mail);
+			sprintf(buf,"echo \"PC: %s RUNE SPESE: %d\"| mail -s \"ESECUZIONE RUNE --> Conv Coins\" %s", GET_NAME(ch),num2,mail);
 			system(buf);
 			return true;
 		}

@@ -173,14 +173,15 @@ mail_index_type* find_char_in_index(char* searchee) {
 
 
 void        write_to_file(void* buf, int size, int filepos) {
-	FILE* mail_file;
-
-	mail_file = fopen(MAIL_FILE, "r+b");
-
 	if(filepos % BLOCK_SIZE) {
 		mudlog(LOG_SYSERR, "Mail system -- fatal error #2!!!");
 		no_mail = 1;
 		return;
+	}
+	FILE* mail_file;
+	mail_file = fopen(MAIL_FILE, "r+b");
+	if (not mail_file) {
+		mudlog(LOG_SYSERR, "Mail system -- missing mail file");
 	}
 
 	fseek(mail_file, filepos, SEEK_SET);
@@ -193,26 +194,22 @@ void        write_to_file(void* buf, int size, int filepos) {
 	return;
 }
 
-
 void        read_from_file(void* buf, int size, int filepos) {
-	FILE* mail_file;
-
-	mail_file = fopen(MAIL_FILE, "r+b");
-
 	if(filepos % BLOCK_SIZE) {
 		mudlog(LOG_SYSERR, "Mail system -- fatal error #3!!!");
 		no_mail = 1;
 		return;
 	}
-
+	FILE* mail_file;
+	mail_file = fopen(MAIL_FILE, "r+b");
+	if (not mail_file) {
+		mudlog(LOG_SYSERR, "Mail system -- missing mail file");
+	}
 	fseek(mail_file, filepos, SEEK_SET);
 	fread(buf, size, 1, mail_file);
 	fclose(mail_file);
 	return;
 }
-
-
-
 
 void        index_mail(char* raw_name_to_index, int pos) {
 	mail_index_type*      new_index;

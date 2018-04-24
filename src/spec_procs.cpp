@@ -7413,6 +7413,7 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
 		mudlog(LOG_CHECK, "%s: to late on sacrifice", GET_NAME(ch));
+		fclose(fdeath);
 		return(TRUE);
 	}
 	if((GET_RCON(ch)<=3) && (number(1,100)<90)) {
@@ -7422,6 +7423,7 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
 		mudlog(LOG_CHECK, "%s: no CON on sacrifice", GET_NAME(ch));
+		fclose(fdeath);
 		return(TRUE);
 	}
 	GET_RCON(ch)=MAX(GET_RCON(ch)-1,3);
@@ -7465,6 +7467,7 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_ROOM);
 	GET_POS(ch)=POSITION_STUNNED;
 	mudlog(LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
+	fclose(fdeath);
 	return TRUE;
 }
 } // namespace Alarmud
