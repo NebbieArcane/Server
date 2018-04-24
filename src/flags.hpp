@@ -56,7 +56,7 @@ logDefineStatus(BLOCK_WRITE)
 #endif
 
 #ifndef CHECK_RENT_INACTIVE
-#define CHECK_RENT_INACTIVEtrue
+#define CHECK_RENT_INACTIVE true
 #else
 logDefineStatus(CHECK_RENT_INACTIVE)
 #endif
