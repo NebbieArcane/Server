@@ -2697,7 +2697,7 @@ ACTION_FUNC(do_who) {
 					if(cmd == CMD_WHOZONE) {
 						/* it's a whozone command */
 						if((!IS_AFFECTED(person, AFF_HIDE)) || (IS_IMMORTAL(ch))) {
-							snprintf(tbuf,(MAX_STRING_LENGTH*2)-1,
+							snprintf(tbuf,511,
 									 "$c0012%-25s - %s", GET_NAME_DESC(person),
 									 IS_AFFECTED(person,AFF_SNEAK)?
 									 "sneaking around":

@@ -314,7 +314,7 @@ ACTION_FUNC(do_commune) {
 	}
 	else {
 		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			snprintf(buf1,MAX_INPUT_LENGTH+1,"$c0014Tu pensi %s '%s'", sep,arg);
+			snprintf(buf1,MAX_INPUT_LENGTH-1,"$c0014Tu pensi %s '%s'", sep,arg);
 			act(buf1,FALSE, ch,0,0,TO_CHAR);
 		}
 		snprintf(buf1, MAX_INPUT_LENGTH, "$c0014%s$c0015$n$c0014%s '%s'", sep,sep,arg);
