@@ -28,3 +28,14 @@ include(UsePkgConfig)
 #find_library(MYSQL mysqld)
 #find_library(BOOST boost)
 #set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations
+add_custom_target(checkcpp
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	COMMAND cppcheck --enable=all --xml src 2>check.xml
+	COMMAND cppcheck-htmlreport --report-dir=check  --source-dir=./ --file=check.xml
+	COMMAND echo use your browser to view check/index.html
+	COMMENT "Executing checkcpp"
+)
+add_custom_target(style
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+	COMMAND ../astyle -r -Q --options=../astylerc "./*.cpp,*.hpp"
+)
