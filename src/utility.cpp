@@ -4937,7 +4937,7 @@ bool RecurseRoomChar(long lInRoom, int iLevel, int iMaxLevel,
 }
 
 bool IsCharInRange(char_data* pChar, char_data* pTarget, int iRange) {
-	unsigned char* achVisitedRooms[WORLD_SIZE];
+	unsigned char achVisitedRooms[WORLD_SIZE];
 	memset(achVisitedRooms, 0, WORLD_SIZE * sizeof(unsigned char));
 	bool bRetValue = RecurseRoomChar(pChar->in_room, 0, iRange,
 									 achVisitedRooms, pTarget);
