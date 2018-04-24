@@ -157,6 +157,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 				send_to_char("Problemi con il file del giocatore da resuscitare.\n\r",
 							 ch);
 				send_to_char("Contattare un Dio.\n\r", ch);
+				fclose(fl);
 				return;
 			}
 #endif
@@ -215,6 +216,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 							 "riportato in vita.\n\r", ch);
 			}
 			fclose(fl);
+			fclose(fdeath);
 		}
 	}
 }

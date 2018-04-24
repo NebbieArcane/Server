@@ -184,9 +184,9 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 				plrRegister(ch, parts);
 			}
 			else {
-				if (parts[1]) {
+				if (parts.size()>=2 ) {
 					char tmp_name[100];
-					int rc=parse_name(parts[1].substr(9),tmp_name);
+					int rc=parse_name(parts[1].substr(9).c_str(),tmp_name);
 					unsigned long int id=0;
 					if (rc==2) {
 						userPtr user=getUser(parts[1]);
@@ -195,7 +195,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 						}
 					}
 					else {
-						toonPtr pg=geToon(parts[1]);
+						toonPtr pg=getToon(parts[1]);
 						if (pg) {
 							id=pg->owner_id;
 						}

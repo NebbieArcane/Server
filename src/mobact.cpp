@@ -1106,7 +1106,7 @@ SCRIPT_FUNC(end2) {
 
 SCRIPT_FUNC(sgoto) {
 	struct char_data* mob;
-	int dir, room;
+	int room=0;
 
 	if(arg) {
 		if(*arg == '$') {
@@ -1137,7 +1137,7 @@ SCRIPT_FUNC(sgoto) {
 		return;
 	}
 	if(ch->in_room != room) {
-		dir = choose_exit_global(ch->in_room, room, MAX_ROOMS);
+		int dir = choose_exit_global(ch->in_room, room, MAX_ROOMS);
 		if(dir < 0) {
 			do_say(ch, "Woah! Come sono finito qui??", 0);
 			do_emote(ch, "scompare di un esplosione di fumo", 0);

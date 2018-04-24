@@ -4937,19 +4937,11 @@ bool RecurseRoomChar(long lInRoom, int iLevel, int iMaxLevel,
 }
 
 bool IsCharInRange(char_data* pChar, char_data* pTarget, int iRange) {
-	unsigned char* achVisitedRooms = new unsigned char[ WORLD_SIZE ];
-	if(achVisitedRooms) {
-		memset(achVisitedRooms, 0, WORLD_SIZE * sizeof(unsigned char));
-		bool bRetValue = RecurseRoomChar(pChar->in_room, 0, iRange,
-										 achVisitedRooms, pTarget);
-		delete achVisitedRooms;
-		return bRetValue;
-	}
-	else {
-		mudlog(LOG_ERROR, "Cannot alloc memory in IsCharInRange (%s)",
-			   __FILE__);
-		return FALSE;
-	}
+	unsigned char* achVisitedRooms[WORLD_SIZE];
+	memset(achVisitedRooms, 0, WORLD_SIZE * sizeof(unsigned char));
+	bool bRetValue = RecurseRoomChar(pChar->in_room, 0, iRange,
+									 achVisitedRooms, pTarget);
+	return bRetValue;
 }
 
 bool ThereIsPCInRoom(long lRoom) {

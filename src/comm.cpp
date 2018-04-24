@@ -283,8 +283,7 @@ void game_loop(int s) {
 	char comm[MAX_INPUT_LENGTH];
 	char promptbuf[255];
 	struct descriptor_data* point, *next_point;
-
-	for(uint i = 0; i < sizeof(aTimeCheck); i++) {
+	for(uint i = 0; i < sizeof(aTimeCheck)/sizeof(aTimeCheck[0]); i++) {
 		aTimeCheck[ i ] = OPT_USEC;
 	}
 

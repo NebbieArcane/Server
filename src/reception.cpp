@@ -616,53 +616,48 @@ void load_char_objs(struct char_data* ch) {
 		GET_GOLD(ch) -= timegold;
 		found = TRUE;
 		/* inizia modifica Robin hood Gaia 2001*/
-		if(GET_GOLD(ch) <= 3000000)  {
-			if(number(1,100)<2)  {
-				/*		 GET_GOLD(ch)=0;
-				sprintf( buf, "Mentre stavi riposando qualcuno si e' introtto e ha rubato tutti i tuoi soldi!!!\n\r");
-				send_to_char(buf, ch);*/
-				/*per ora chi renta con meno di 1m lo lasciamo stare */
-			}
+		constexpr int mega=1000000;
+		bool robin=false;
+		if(GET_GOLD(ch) <= 3*mega)  {
+			robin=(number(1,100)<2);
 		}
-		else  if(GET_GOLD(ch) <=  4000000) {
-			if(number(1,100)<2)  {
-				mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
-				GET_GOLD(ch)=0;
-				sprintf(buf, "Mentre stavi riposando qualcuno si e' introtto e ha rubato tutti i tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r");
-				send_to_char(buf, ch);
-			}
+		else  if(GET_GOLD(ch) <=  4 * mega) {
+			robin=(number(1,100)<2);
 		}
-		else if(GET_GOLD(ch) <= 8000000) {
-			if(number(1,100)<5) {
-				mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
-				GET_GOLD(ch)=0;
-				sprintf(buf, "Mentre stavi riposando qualcuno si e' introtto e ha rubato tutti i tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r");
-				send_to_char(buf, ch);
-			}
+		else if(GET_GOLD(ch) <= 8 * mega) {
+			robin=(number(1,100)<5);
 		}
-		else if(GET_GOLD(ch) <= 10000000) {
-			if(number(1,100)<31) {
-				mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
-				GET_GOLD(ch)=0;
-				sprintf(buf, "Mentre stavi riposando qualcuno si e' introtto e ha rubato tutti i tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r");
-				send_to_char(buf, ch);
-			}
+		else if(GET_GOLD(ch) <= 10 * mega) {
+			robin=(number(1,100)<31);
 		}
-		else if(GET_GOLD(ch) <= 50000000) {
-			if(number(1,100)<41) {
-				mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
-				GET_GOLD(ch)=0;
-				sprintf(buf, "Mentre stavi riposando qualcuno si e' introtto e ha rubato tutti i tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r");
-				send_to_char(buf, ch);
-			}
+		else if(GET_GOLD(ch) <= 50 * mega) {
+			robin=(number(1,100)<41);
 		}
-		else if(GET_GOLD(ch) >  50000000) {
-			if(number(1,100)<51) {
-				mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
-				GET_GOLD(ch)=0;
-				sprintf(buf, "Mentre stavi riposando qualcuno si e' introtto e ha rubato tutti i tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r");
-				send_to_char(buf, ch);
-			}
+		else if(GET_GOLD(ch) <=  100 * mega) {
+			robin=(number(1,100)<51);
+		}
+		else if(GET_GOLD(ch) <=  100 * mega) {
+			robin=(number(1,100)<51);
+		}
+		else if(GET_GOLD(ch) <=  110 * mega) {
+			robin=(number(1,100)<61);
+		}
+		else if(GET_GOLD(ch) <=  120 * mega) {
+			robin=(number(1,100)<71);
+		}
+		else if(GET_GOLD(ch) <=  150 * mega) {
+			robin=(number(1,100)<81);
+		}
+		else if(GET_GOLD(ch) <=  999 * mega) {
+			robin=(number(1,100)<91);
+		}
+		else  {
+			robin=(number(1,100)<100);
+		}
+		if (robin) {
+			mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
+			GET_GOLD(ch)/=2;
+			send_to_char("Mentre stavi riposando qualcuno si e' introdotto nella tua stanza  e ha rubato meta` dei tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r",ch);
 		}
 		/* termine modifica Robin hood */
 		if(GET_GOLD(ch) < -5000) {
