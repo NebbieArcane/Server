@@ -120,7 +120,7 @@ public:
 
 //login,nickname,email,registered,password,level
 
-#pragma db object(user)
+#pragma db object(user) session(false)
 #pragma db member(user::id) id auto
 #pragma db member(user::nickname) type("VARCHAR(255)") not_null
 #pragma db member(user::email) type("VARCHAR(255)") not_null unique

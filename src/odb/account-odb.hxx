@@ -567,15 +567,11 @@ namespace odb
     id (const object_type&);
 
     typedef
-    odb::pointer_cache_traits<
-      pointer_type,
-      odb::session >
+    no_op_pointer_cache_traits<pointer_type>
     pointer_cache_traits;
 
     typedef
-    odb::reference_cache_traits<
-      object_type,
-      odb::session >
+    no_op_reference_cache_traits<object_type>
     reference_cache_traits;
 
     static void
