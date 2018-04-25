@@ -70,7 +70,7 @@ log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &loggerInstance,string logna
 	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
 	r->setMaxBackupIndex(numLogs);
 	log4cxx::LogString size("200MB");
-	r->setMaxFileSize("200MB");
+	r->setMaxFileSize(size);
 	r->setBufferedIO(false); // We depend on the final log line being always written.
 	r->setBufferSize(1024);
 	r->activateOptions(p);
