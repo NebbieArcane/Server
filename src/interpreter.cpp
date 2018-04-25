@@ -2578,7 +2578,7 @@ NANNY_FUNC(con_nme) {
 		SEND_TO_Q("Nome: ", d);
 		return false;
 	}
-	if(PORT!=RELEASE_PORT) {
+	if(PORT!=RELEASE_PORT and not d->AccountData.authorized) {
 		FLUSH_TO_Q("Per accedere al server di prova devi entrare con l'email\n\r",d);
 		close_socket(d);
 		return false;
