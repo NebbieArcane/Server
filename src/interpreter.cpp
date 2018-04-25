@@ -1854,8 +1854,7 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 	const user &ac=d->AccountData;
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
-	{
-		short n=0;
+	if (ac.id) { short n=0;
 		constexpr int nlen=5;
 		char order[nlen]="";
 		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==ac.id);
@@ -1940,19 +1939,23 @@ NANNY_FUNC(con_account_pwd) {
 		return false;
 	}
 	try {
-		DB* db=Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
 		user &ac=d->AccountData;
+		ac.id=0;
 		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str())
 		ac.authorized=false;
-		bool found=db->query_one<user>(userQuery::email==d->AccountData.email,ac);
-		t.commit();
-		const char* check=d->AccountData.password.c_str();
-		if(found) {
+		userPtr u=Sql::getOne<user>(userQuery::email==d->AccountData.email);
+		if (u) {
+			ac.password=u->password;
+			ac.level=u->level;
+			ac.registered=u->registered;
+			ac.ptr=u->ptr;
+			ac.id=u->id;
+		}
+		const char* check=ac.password.c_str();
+		if(u) {
 			mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
 		}
-		if(found and !strcmp(crypt(arg,check),check)) {
+		if(u and !strcmp(crypt(arg,check),check)) {
 			if(PORT==DEVEL_PORT and ac.level<52) {
 				FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
 				close_socket(d);

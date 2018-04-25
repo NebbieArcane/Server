@@ -85,7 +85,7 @@ namespace odb
                       "  `password` VARCHAR(128) NOT NULL,\n"
                       "  `level` SMALLINT UNSIGNED NOT NULL DEFAULT 0,\n"
                       "  `backup_email` VARCHAR(255) NULL,\n"
-                      "  `ptr` TINYINT(1) NOT NULL)\n"
+                      "  `ptr` TINYINT(1) NOT NULL DEFAULT 0)\n"
                       " ENGINE=InnoDB");
           db.execute ("CREATE UNIQUE INDEX `email_i`\n"
                       "  ON `user` (`email`)");

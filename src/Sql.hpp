@@ -101,7 +101,7 @@ public:
 			t.commit();
 			return true;
 		}
-		catch(odb::object_already_persistent &e) {
+		catch(odb::exception &e) {
 			if(upsert) {
 				try {
 					db->update<T>(data);
@@ -126,7 +126,7 @@ public:
 			t.commit();
 			return true;
 		}
-		catch(odb::object_not_persistent &e) {
+		catch(odb::exception &e) {
 			if(upsert) {
 				try {
 					db->persist<T>(data);

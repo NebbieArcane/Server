@@ -128,6 +128,7 @@ public:
 #pragma db member(user::password) type("VARCHAR(128)") not_null
 #pragma db member(user::level) not_null default(0)
 #pragma db member(user::backup_email) type("VARCHAR(255)") null
+#pragma db member(user::ptr) not_null default(0)
 #pragma db member(user::choosen) transient
 #pragma db member(user::authorized) transient
 
