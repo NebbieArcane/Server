@@ -92,6 +92,6 @@ sqlTrace logTracer;
 Sql::~Sql() {
 }
 
-Sql::Sql(){
+Sql::Sql() {
 }
 } /* namespace Alarmud */

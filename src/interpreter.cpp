@@ -1860,7 +1860,7 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 		char order[nlen]="";
 		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==ac.id);
 		d->toons.clear();
-		for (toonPtr pg : r) {
+		for(toonPtr pg : r) {
 			++n;
 			snprintf(order,nlen-1,"%2d",n);
 			message.append(order).append(". ").append(pg->name).append(" ");
@@ -1953,12 +1953,12 @@ NANNY_FUNC(con_account_pwd) {
 			mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
 		}
 		if(found and !strcmp(crypt(arg,check),check)) {
-			if (PORT==DEVEL_PORT and ac.level<52) {
+			if(PORT==DEVEL_PORT and ac.level<52) {
 				FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
 				close_socket(d);
 				return false;
 			}
-			if (PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
+			if(PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
 				FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
 				close_socket(d);
 				return false;
@@ -2547,7 +2547,7 @@ NANNY_FUNC(con_slct) {
 		STATE(d) = CON_PWDNEW;
 		break;
 	case '5':
-		if (d->AccountData.authorized) {
+		if(d->AccountData.authorized) {
 			toonList(d,"Cambia personaggio:\n\r");
 			STATE(d) = CON_ACCOUNT_TOON;
 		}
@@ -2579,20 +2579,20 @@ NANNY_FUNC(con_nme) {
 		SEND_TO_Q("Nome: ", d);
 		return false;
 	}
-	if (PORT!=RELEASE_PORT) {
+	if(PORT!=RELEASE_PORT) {
 		FLUSH_TO_Q("Per accedere al server di prova devi entrare con l'email\n\r",d);
 		close_socket(d);
 		return false;
 	}
 	bool found=false;
 	toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
-	if (pg) {
+	if(pg) {
 		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->id);
 		found=true;
 		strcpy(d->pwd,pg->password.substr(0,11).c_str());
 		d->AccountData.choosen=pg->name;
 		if(pg->owner_id) {
-			if (pg->owner_id==d->AccountData.id) {
+			if(pg->owner_id==d->AccountData.id) {
 				STATE(d)=CON_PWDOK;
 				return true;
 			}
@@ -2606,7 +2606,7 @@ NANNY_FUNC(con_nme) {
 	if(not found) {
 		/* player unknown gotta make a new */
 		if(_check_ass_name(tmp_name)) {
-			if (d->AccountData.authorized and !strncmp(arg,"b",1)) {
+			if(d->AccountData.authorized and !strncmp(arg,"b",1)) {
 				toonList(d,"Scegli un personaggio:\n\r");
 				STATE(d)=CON_ACCOUNT_TOON;
 				return false;
@@ -2616,11 +2616,11 @@ NANNY_FUNC(con_nme) {
 			return false;
 		}
 		if(!WizLock) {
-			if (!d->character) {
+			if(!d->character) {
 				CREATE(d->character, struct char_data, 1);
 				clear_char(d->character);
 				d->character->desc = d;
-				SET_BIT( d->character->player.user_flags, USE_PAGING );
+				SET_BIT(d->character->player.user_flags, USE_PAGING);
 			}
 			CREATE(GET_NAME(d->character), char, strlen(tmp_name) + 1);
 			CAP(tmp_name);
@@ -2698,7 +2698,7 @@ NANNY_FUNC(con_pwdnrm) {
 	return true;
 }
 NANNY_FUNC(con_register) {
-	if (d->AccountData.authorized) {
+	if(d->AccountData.authorized) {
 		boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
 		fmt % d->AccountData.id % d->AccountData.choosen;
 		try {
@@ -2725,7 +2725,7 @@ NANNY_FUNC(con_pwdok) {
 	}
 	/* Newly created toons are fully loaded
 	 */
-	if (!d->justCreated) {
+	if(!d->justCreated) {
 		char_file_u tmp_store;
 		if(load_char(d->AccountData.choosen.c_str(), &tmp_store)) {
 			store_to_char(&tmp_store, d->character);
@@ -3446,7 +3446,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 		// Gestione account: stati messi tutti all'inizio perché poi fanno fallback sulla procedura standard
 	}
 	while(moresteps);
-	if (d and STATE(d) == CON_SLCT) {
+	if(d and STATE(d) == CON_SLCT) {
 		boost::format fmt(R"(UPDATE toon SET lastlogin=now() WHERE name="%s")");
 		fmt % d->AccountData.choosen;
 		try {

@@ -94,38 +94,40 @@ int split_string(char* str, const char* sep, char** argv)
 	SetLine(__FILE__,__LINE__);
 	return argc;
 }
-    
+
 void reset_original_numattacks(struct char_data* ch) {
 
-int mklev;
-    
-ch->mult_att = 1.0;
+	int mklev;
 
-	if ( HasClass(ch, CLASS_WARRIOR)  || HasClass(ch, CLASS_MONK) ||
+	ch->mult_att = 1.0;
+
+	if(HasClass(ch, CLASS_WARRIOR)  || HasClass(ch, CLASS_MONK) ||
 			HasClass(ch,CLASS_BARBARIAN) || HasClass(ch, CLASS_PALADIN) ||
 			HasClass(ch,CLASS_RANGER)) {
 
-		if (HasClass(ch, CLASS_BARBARIAN)) {
+		if(HasClass(ch, CLASS_BARBARIAN)) {
 			ch->mult_att+=(GET_LEVEL(ch, BARBARIAN_LEVEL_IND)*.05);
 		}
-		else if (HasClass(ch, CLASS_RANGER)) {
+		else if(HasClass(ch, CLASS_RANGER)) {
 			ch->mult_att+=(GET_LEVEL(ch, RANGER_LEVEL_IND)*.05);
 		}
-		else if (HasClass(ch, CLASS_PALADIN)) {
+		else if(HasClass(ch, CLASS_PALADIN)) {
 			ch->mult_att+=(GET_LEVEL(ch, PALADIN_LEVEL_IND)*.05);
-			if (GET_ALIGNMENT(ch) >= 350) {
+			if(GET_ALIGNMENT(ch) >= 350) {
 				SET_BIT(ch->specials.affected_by,AFF_DETECT_EVIL);
 				SET_BIT(ch->specials.affected_by,AFF_PROTECT_FROM_EVIL);
 			}
 		}
-		else if (HasClass(ch, CLASS_WARRIOR)) {
+		else if(HasClass(ch, CLASS_WARRIOR)) {
 			ch->mult_att+=(GET_LEVEL(ch, WARRIOR_LEVEL_IND)*.05);
 		}
 		else {
 			ch->mult_att+= (GET_LEVEL(ch, MONK_LEVEL_IND)/16.0);
 			/* fix up damage stuff */
 			mklev = GET_LEVEL(ch, MONK_LEVEL_IND) ; // Gaia 2001
-			if(IS_SINGLE(ch)) { mklev++ ; }
+			if(IS_SINGLE(ch)) {
+				mklev++ ;
+			}
 			switch(mklev) {
 			case 1:
 			case 2:
@@ -236,10 +238,12 @@ ch->mult_att = 1.0;
 	}
 	else {
 		ch->mult_att+=(GetMaxLevel(ch)*0.01);
-		if (HasClass(ch,CLASS_CLERIC))
-		{ ch->mult_att+=0.5; }
-		if (HasClass(ch,CLASS_DRUID))
-		{ ch->mult_att+=0.6; }
+		if(HasClass(ch,CLASS_CLERIC)) {
+			ch->mult_att+=0.5;
+		}
+		if(HasClass(ch,CLASS_DRUID)) {
+			ch->mult_att+=0.6;
+		}
 	}
 	mudlog(LOG_PLAYERS,"%s: numatcks resetted to = %f",GET_NAME(ch),ch->mult_att);
 }
@@ -763,10 +767,12 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_HASTE:
-		if (mod > 0)
-		{ ch->mult_att *= 2.0; }
-		else if (mod < 0)
-		{ ch->mult_att /= 2.0; }
+		if(mod > 0) {
+			ch->mult_att *= 2.0;
+		}
+		else if(mod < 0) {
+			ch->mult_att /= 2.0;
+		}
 		break;
 
 	case APPLY_SLOW:

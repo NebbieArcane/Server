@@ -27,7 +27,8 @@ bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod);
 bool circle_follow(struct char_data* ch, struct char_data* victim);
 bool saves_spell(struct char_data* ch, sh_int save_type);
 void spellid(int nr, struct char_data* ch, int cl, int sl);
-void spello(int nr, ubyte beat, ubyte pos, ubyte mlev, ubyte clev, ubyte dlev, ubyte slev, ubyte plev, ubyte rlev, ubyte ilev, ubyte mana, sh_int tar, spell_func, sh_int sf, sh_int align, sh_int ostile);
+void spello(int nr, ubyte beat, ubyte pos, ubyte mlev, ubyte clev, ubyte dlev, ubyte slev, ubyte plev, ubyte rlev, ubyte ilev, ubyte mana, sh_int tar, spell_func, sh_int sf, sh_int align,
+			sh_int ostile);
 int SPELL_LEVEL(struct char_data* ch, int sn);
 void SpellWearOffSoon(int s, struct char_data* ch);
 int check_falling(struct char_data* ch);

@@ -47,9 +47,9 @@ char* ClassTitles(struct char_data* ch) {
 	unsigned int i, count=0;
 	static char buf[256];
 
-	for( i = MAGE_LEVEL_IND; i < MAX_CLASS; i++ ) {
-		int nLev = GET_LEVEL( ch, i );
-		if( nLev ) {
+	for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
+		int nLev = GET_LEVEL(ch, i);
+		if(nLev) {
 			count++;
 			if(count > 1) {
 				sprintf(buf + strlen(buf), "/%s", GET_CLASS_TITLE(ch, i, nLev));
@@ -102,53 +102,53 @@ int mana_limit(struct char_data* ch) {
 	if(!IS_PC(ch)) {
 		return(100);
 	}
-	if (HasClass(ch, CLASS_MAGIC_USER)) {
+	if(HasClass(ch, CLASS_MAGIC_USER)) {
 		max += 100;
 		max += GET_LEVEL(ch, MAGE_LEVEL_IND) * 5;
 	}
 
 	/* actually this is worthless as Sorcerer's do not */
 	/* use mana at all.... */
-	if (HasClass(ch, CLASS_SORCERER)) {
+	if(HasClass(ch, CLASS_SORCERER)) {
 		max += 100;
 		max += GET_LEVEL(ch, SORCERER_LEVEL_IND) * 5;
 	}
 
-	if (HasClass(ch, CLASS_PSI)) {
+	if(HasClass(ch, CLASS_PSI)) {
 		max += 100;
 		max += GET_LEVEL(ch, PSI_LEVEL_IND) * 5;
 	}
 
 
-	if (HasClass(ch, CLASS_PALADIN)) {
+	if(HasClass(ch, CLASS_PALADIN)) {
 		max += 100;
 		max += (GET_LEVEL(ch, PALADIN_LEVEL_IND)/4) * 5;
 	}
 
-	if (HasClass(ch, CLASS_RANGER)) {
+	if(HasClass(ch, CLASS_RANGER)) {
 		max += 100;
 		max += (GET_LEVEL(ch, RANGER_LEVEL_IND)/4) * 5;
 	}
 
-	if (HasClass(ch, CLASS_CLERIC)) {
+	if(HasClass(ch, CLASS_CLERIC)) {
 		max += 100;
 		max += (GET_LEVEL(ch, CLERIC_LEVEL_IND)/3) * 5;
 	}
 
-	if (HasClass(ch, CLASS_DRUID)) {
+	if(HasClass(ch, CLASS_DRUID)) {
 		max += 100;
 		max += (GET_LEVEL(ch, DRUID_LEVEL_IND)/3) * 5;
 	}
 
-	if (HasClass(ch, CLASS_THIEF)) {
+	if(HasClass(ch, CLASS_THIEF)) {
 		max += 100;
 	}
 
-	if (HasClass(ch, CLASS_WARRIOR)) {
+	if(HasClass(ch, CLASS_WARRIOR)) {
 		max += 100;
 	}
 
-	if (HasClass(ch, CLASS_MONK)) {
+	if(HasClass(ch, CLASS_MONK)) {
 		max += 100;
 	}
 
@@ -185,7 +185,7 @@ int mana_limit(struct char_data* ch) {
 	 * Add class mana maximums here...
 	 */
 
-	if (OnlyClass(ch,CLASS_BARBARIAN)) { /* 100 mana max for barbs */
+	if(OnlyClass(ch,CLASS_BARBARIAN)) {  /* 100 mana max for barbs */
 		max=100;  /* barbarians only get 100 mana... */
 	}
 
@@ -196,7 +196,7 @@ int mana_limit(struct char_data* ch) {
 int hit_limit(struct char_data* ch) {
 	int max;
 
-	if (IS_PC(ch)) {
+	if(IS_PC(ch)) {
 		struct time_info_data ma;
 		age2(ch, &ma);
 		max = (ch->points.max_hit) + (graf(ma.year, 2,4,17,14,8,-5,-15));
@@ -217,7 +217,7 @@ int hit_limit(struct char_data* ch) {
 int move_limit(struct char_data* ch) {
 	int max;
 
-	if (IS_PC(ch)) {
+	if(IS_PC(ch)) {
 		max = 100 ;
 	}
 	else {
@@ -236,9 +236,9 @@ int move_limit(struct char_data* ch) {
 	if(GET_RACE(ch) == RACE_DWARF || GET_RACE(ch) == RACE_GNOME) {
 		max -= 35;
 	}
-	else if (GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_DARK_ELF  ||
-			 GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
-			 GET_RACE(ch) == RACE_SEA_ELF ||
+	else if(GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_DARK_ELF  ||
+			GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
+			GET_RACE(ch) == RACE_SEA_ELF ||
 			GET_RACE(ch)== RACE_HALF_ELVEN) {
 		max += 20;
 	}
@@ -265,7 +265,7 @@ int move_limit(struct char_data* ch) {
 int mana_gain(struct char_data* ch) {
 	int gain;
 
-	if( !IS_PC(ch) ) {
+	if(!IS_PC(ch)) {
 		/* Neat and fast */
 		gain = 8;
 	}
@@ -281,7 +281,7 @@ int mana_gain(struct char_data* ch) {
 
 	/* Position calculations    */
 	/*switch (GET_POS_PREV(ch))*/
-	switch (GET_POS(ch)) {
+	switch(GET_POS(ch)) {
 	case POSITION_SLEEPING:
 		gain += gain;
 		break;
@@ -295,7 +295,7 @@ int mana_gain(struct char_data* ch) {
 
 	gain += gain;
 
-	gain += wis_app[ (int)GET_WIS(ch) ].bonus*2;
+	gain += wis_app[(int)GET_WIS(ch) ].bonus*2;
 
 	gain += ch->points.mana_gain;
 
@@ -307,7 +307,7 @@ int mana_gain(struct char_data* ch) {
 		gain >>= 2;
 	}
 
-	if( GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_GNOME ||
+	if(GET_RACE(ch) == RACE_ELVEN || GET_RACE(ch) == RACE_GNOME ||
 			GET_RACE(ch) == RACE_GOLD_ELF || GET_RACE(ch) == RACE_WILD_ELF ||
 			GET_RACE(ch) == RACE_SEA_ELF ||
 			GET_RACE(ch) == RACE_DEMON ||
@@ -325,8 +325,8 @@ int mana_gain(struct char_data* ch) {
 	/* Class calculations */
 
 	/* magic type people get quicker mana re-gen, fighter/paladin/rangers get it slower */
-	if( !HasClass( ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_CLERIC |
-				   CLASS_DRUID | CLASS_PSI ) ) {
+	if(!HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_CLERIC |
+				 CLASS_DRUID | CLASS_PSI)) {
 		gain -= 2;
 	}
 	/* these guys get mana even slower */
@@ -340,7 +340,7 @@ int mana_gain(struct char_data* ch) {
 		gain += 3*GET_LEVEL(ch, PSI_LEVEL_IND)/10 ;
 	}
 
-	return( gain );
+	return(gain);
 }
 
 int hit_gain(struct char_data* ch) // Gaia 2001
@@ -363,7 +363,7 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 		gain = graf(ma.year, 2,4,6,8,6,3,1);
 #endif
 		/*if (GET_POS_PREV(ch) == POSITION_FIGHTING)*/
-		if (GET_POS(ch) == POSITION_FIGHTING) {
+		if(GET_POS(ch) == POSITION_FIGHTING) {
 #if defined( ALAR )
 			gain = ((GET_RACE(ch) == RACE_TROLL)?gain:0);
 #else
@@ -376,7 +376,7 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 	/* Position calculations    */
 
 	/*switch (GET_POS_PREV(ch))*/
-	switch (GET_POS(ch)) {
+	switch(GET_POS(ch)) {
 	case POSITION_SLEEPING:
 		gain += gain>>2;
 		break;
@@ -415,7 +415,7 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 		gain += 4;    /* barbs gain hits faster... */
 	}
 
-	gain += con_app[ (int)GET_CON(ch) ].hitp/2;
+	gain += con_app[(int)GET_CON(ch) ].hitp/2;
 
 	gain += ch->points.hit_gain;
 
@@ -432,14 +432,14 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 
 	/* Class/Level calculations */
 	/* non-warrior types get slower hps re-gen */
-	if( IS_PC( ch ) &&
-			!HasClass( ch, CLASS_WARRIOR | CLASS_PALADIN |
-					   CLASS_RANGER | CLASS_BARBARIAN ) &&
+	if(IS_PC(ch) &&
+			!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN |
+					  CLASS_RANGER | CLASS_BARBARIAN) &&
 			gain>2) {
 		gain -=2;
 	}
 
-	if( IS_AFFECTED( ch, AFF_POISON ) ) {
+	if(IS_AFFECTED(ch, AFF_POISON)) {
 		gain = 0;
 		dam = number(10,32);
 		if(GET_RACE(ch) == RACE_HALFLING) {
@@ -459,13 +459,13 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 		gain -= dam*5 ;
 	}
 
-	if( IS_AFFECTED2( ch, AFF2_HEAT_STUFF ) ) {
+	if(IS_AFFECTED2(ch, AFF2_HEAT_STUFF)) {
 		dam = 0;
 		/*
 		count items in eq
 		*/
-		for (i=0; i<=HOLD; i++) {
-			if (ch->equipment[i]) {
+		for(i=0; i<=HOLD; i++) {
+			if(ch->equipment[i]) {
 				dam += 15;   /* Potenziato, utile per un pkill.. Gaia 2001 */
 			}
 		}
@@ -486,7 +486,7 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 		gain += 3*GET_LEVEL(ch, PSI_LEVEL_IND)/10 ;
 	}
 
-	return( gain );
+	return(gain);
 }
 
 
@@ -507,7 +507,7 @@ int move_gain(struct char_data* ch)
 	else {
 		struct time_info_data ma;
 		age2(ch, &ma);
-		if (GET_POS(ch) != POSITION_FIGHTING)
+		if(GET_POS(ch) != POSITION_FIGHTING)
 #ifdef NEW_GAIN
 			gain = graf(ma.year, 15,21,25,28,20,7,1);
 #else
@@ -521,7 +521,7 @@ int move_gain(struct char_data* ch)
 
 	/* Position calculations    */
 	/*switch (GET_POS_PREV(ch))*/
-	switch (GET_POS(ch)) {
+	switch(GET_POS(ch)) {
 	case POSITION_SLEEPING:
 		gain += (gain>>2); /* Divide by 4 */
 		break;
@@ -571,8 +571,8 @@ int move_gain(struct char_data* ch)
 int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check) {
 	int add_hp;
 
-	if (livello>=CHUMP) {
-		if (iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
+	if(livello>=CHUMP) {
+		if(iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
 				iClass == PALADIN_LEVEL_IND || iClass == RANGER_LEVEL_IND) {
 			add_hp = con_app[(int)(compat?18:GET_RCON(ch)) ].hitp;
 		}
@@ -581,7 +581,7 @@ int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check)
 		}
 	}
 	else {
-		if (iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
+		if(iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
 				iClass == PALADIN_LEVEL_IND || iClass == RANGER_LEVEL_IND) {
 			add_hp = con_app[(int)(compat?18:GET_RCON(ch)) ].hitp;
 		}
@@ -699,7 +699,7 @@ int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check)
 	}
 
 	add_hp /= HowManyClasses(ch);
-	if (compat) {
+	if(compat) {
 		add_hp += number(0,HowManyClasses(ch));
 	}
 
@@ -710,11 +710,11 @@ int GetExtimatedHp(struct char_data* ch) {
 	int i=0;
 	int j=0;
 	int ext_hp=0;
-	if (GetMaxLevel(ch) < IMMORTALE) {
+	if(GetMaxLevel(ch) < IMMORTALE) {
 
-		for (i=0; i<MAX_CLASS; i++) {
+		for(i=0; i<MAX_CLASS; i++) {
 
-			if (GET_LEVEL(ch,i) > 0) {
+			if(GET_LEVEL(ch,i) > 0) {
 				for(j=1; j<=GET_LEVEL(ch,i); j++) {
 					ext_hp+=GetHpGain(ch,i,j,1,1);
 				}
@@ -737,15 +737,15 @@ void advance_level(struct char_data* ch, int iClass)
 	int i, check_hp;
 
 
-	if (iClass > MAX_CLASS) {
-		mudlog( LOG_SYSERR, "Bad advance class.. no such class");
+	if(iClass > MAX_CLASS) {
+		mudlog(LOG_SYSERR, "Bad advance class.. no such class");
 		return;
 	}
 
-	if (GET_LEVEL(ch, iClass) > 0 &&
+	if(GET_LEVEL(ch, iClass) > 0 &&
 			GET_EXP(ch) < titles[iClass][GET_LEVEL(ch, iClass)+1].exp) {
 		/*  they can't advance here */
-		mudlog( LOG_ERROR, "Bad advance_level, can't advance in this class.");
+		mudlog(LOG_ERROR, "Bad advance_level, can't advance in this class.");
 		return;
 	}
 
@@ -754,21 +754,21 @@ void advance_level(struct char_data* ch, int iClass)
 
 	check_hp=GetHpGain(ch,iClass,GET_LEVEL(ch,iClass),0);
 
-	if (check_hp != -1) {
+	if(check_hp != -1) {
 
-		ch->points.max_hit += MAX( 1, check_hp );
+		ch->points.max_hit += MAX(1, check_hp);
 	}
 
-	if( ch->specials.spells_to_learn < 100 )
+	if(ch->specials.spells_to_learn < 100)
 		ch->specials.spells_to_learn +=
-			MAX( 2, wis_app[ (int)GET_RWIS( ch ) ].bonus );
+			MAX(2, wis_app[(int)GET_RWIS(ch) ].bonus);
 	else {
 		send_to_char("Stai perdendo le sessioni di allenamento!", ch);
 	}
 
 	ClassSpecificStuff(ch);
 
-	if( GetMaxLevel(ch) >= IMMORTALE )
+	if(GetMaxLevel(ch) >= IMMORTALE)
 		for(i = 0; i < 3; i++) {
 			ch->specials.conditions[ i ] = -1;
 		}
@@ -792,7 +792,7 @@ void advance_level(struct char_data* ch, int iClass)
 void drop_level(struct char_data* ch, int iClass, int goddrain) {
 	int add_hp, lin_class;
 
-	if (!goddrain) {
+	if(!goddrain) {
 		if(GetMaxLevel(ch) >= IMMORTALE) {
 			return;
 		}
@@ -802,7 +802,7 @@ void drop_level(struct char_data* ch, int iClass, int goddrain) {
 		return;
 	}
 
-	add_hp = con_app[ (int)GET_RCON(ch) ].hitp;
+	add_hp = con_app[(int)GET_RCON(ch) ].hitp;
 
 	switch(iClass) {
 
@@ -917,8 +917,8 @@ void drop_level(struct char_data* ch, int iClass, int goddrain) {
 		}
 		break;
 	default:
-		mudlog( LOG_SYSERR, "Classe %d non valida in drop_level (limits.c).",
-				iClass );
+		mudlog(LOG_SYSERR, "Classe %d non valida in drop_level (limits.c).",
+			   iClass);
 		lin_class = 0; /* Per evitare l'avertimento del compilatore. */
 		return;
 
@@ -927,7 +927,7 @@ void drop_level(struct char_data* ch, int iClass, int goddrain) {
 
 	GET_LEVEL(ch, lin_class) -= 1;
 
-	if (GET_LEVEL(ch, lin_class) < 1) {
+	if(GET_LEVEL(ch, lin_class) < 1) {
 		GET_LEVEL(ch, lin_class) = 1;
 		if(ch->points.max_hit > 20) {
 			ch->points.max_hit = 20;
@@ -983,15 +983,15 @@ void drop_level(struct char_data* ch, int iClass, int goddrain) {
 	}
 
 	ch->specials.spells_to_learn -=
-		MAX( 1, MAX( 2, wis_app[ (int)GET_RWIS(ch) ].bonus ) );
+		MAX(1, MAX(2, wis_app[(int)GET_RWIS(ch) ].bonus));
 	if(ch->specials.spells_to_learn < 0) {
 		ch->specials.spells_to_learn = 0;
 	}
 
-	if( ch->points.exp >
-			MIN(titles[lin_class][ (int)GET_LEVEL(ch, lin_class) ].exp, GET_EXP(ch)))
+	if(ch->points.exp >
+			MIN(titles[lin_class][(int)GET_LEVEL(ch, lin_class) ].exp, GET_EXP(ch)))
 		ch->points.exp =
-			MIN(titles[lin_class][ (int)GET_LEVEL(ch, lin_class) ].exp, GET_EXP(ch));
+			MIN(titles[lin_class][(int)GET_LEVEL(ch, lin_class) ].exp, GET_EXP(ch));
 
 	if(ch->points.exp < 0) {
 		ch->points.exp = 0;
@@ -1012,10 +1012,10 @@ void set_title(struct char_data* ch) {
 				"the %s %s", RaceName[ch->race], ClassTitles(ch));
 	}
 	else {
-		sprintf(buf, "the %s", RaceName[ch->race] );
+		sprintf(buf, "the %s", RaceName[ch->race]);
 	}
 
-	if (GET_TITLE(ch)) {
+	if(GET_TITLE(ch)) {
 		free(GET_TITLE(ch));
 		CREATE(GET_TITLE(ch),char,strlen(buf)+1);
 	}
@@ -1053,9 +1053,9 @@ int gain_corretto(struct char_data* ch,int gain) {
 	buglog(LOG_CHECK,"Eq: %s I: %f R:%f gain da %d %d",
 		   GET_NAME(ch),eqindex,eqratio,gain,newgain);
 
-	sprintf( buf, "Il tuo equipaggiamento modifica il guadagno di esperienza in  %d",
-			 newgain);
-	act( buf, 0, ch, 0, ch, TO_CHAR );
+	sprintf(buf, "Il tuo equipaggiamento modifica il guadagno di esperienza in  %d",
+			newgain);
+	act(buf, 0, ch, 0, ch, TO_CHAR);
 	gain = newgain ;
 	/*#else
 	   sprintf( buf, "La qualita' del tuo equipaggiamento modificherebbe il tuo guadagno di esperienza in  %d",
@@ -1066,7 +1066,7 @@ int gain_corretto(struct char_data* ch,int gain) {
 	return (gain);
 }
 
-void gain_exp_rev( struct char_data* ch, int gain ) {
+void gain_exp_rev(struct char_data* ch, int gain) {
 	/* gain completo se positivo, diviso per le classi se negativo */
 	int i;
 	char buf[256];
@@ -1074,50 +1074,50 @@ void gain_exp_rev( struct char_data* ch, int gain ) {
 	int nClassiNonMaxxate=0;
 	save_char(ch,AUTO_RENT, 0);
 	gain=gain_corretto(ch,gain);
-	if( !IS_PC( ch ) && ch->master && IS_AFFECTED( ch, AFF_CHARM ) ) {
-		if( ch->master->in_room == ch->in_room ) {
-			if( gain > 1 ) {
+	if(!IS_PC(ch) && ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
+		if(ch->master->in_room == ch->in_room) {
+			if(gain > 1) {
 				gain /= 2;
-				sprintf( buf, "Guadagni i %d punti di esperienza di $N", gain );
-				act( buf, 0, ch->master, 0, ch, TO_CHAR );
-				gain_exp( ch->master, gain );
+				sprintf(buf, "Guadagni i %d punti di esperienza di $N", gain);
+				act(buf, 0, ch->master, 0, ch, TO_CHAR);
+				gain_exp(ch->master, gain);
 			}
 		}
 		return;
 	}
 
-	if( !IS_IMMORTAL( ch ) ) {
-		if( gain > 0 ) {
+	if(!IS_IMMORTAL(ch)) {
+		if(gain > 0) {
 
-			if( GetMaxLevel( ch ) == 1 ) {
+			if(GetMaxLevel(ch) == 1) {
 				gain *= 2;
 			}
 
-			if( IS_PC( ch ) ) {
+			if(IS_PC(ch)) {
 				if(ch->desc && ch->desc->original) {
 					chrace = ch->desc->original->race;
 				}
 				else {
 					chrace = GET_RACE(ch);
 				}
-				for( i = MAGE_LEVEL_IND; i < MAX_CLASS; i++ ) {
+				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
 					/*ALAR:check sui limiti razziali per i  livelli */
-					if( GET_LEVEL( ch, i ) &&
-							GET_LEVEL( ch, i ) < RacialMax[ chrace ][ i ] ) {
+					if(GET_LEVEL(ch, i) &&
+							GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
 						nClassiNonMaxxate++;
-						if( GET_EXP( ch ) >=
-								titles[ i ][ GET_LEVEL( ch, i ) + 1 ].exp ) {
+						if(GET_EXP(ch) >=
+								titles[ i ][ GET_LEVEL(ch, i) + 1 ].exp) {
 							/* do nothing..this is cool */
 						}
-						else if( ( GET_EXP( ch ) + gain ) >=
-								 titles[ i ][ GET_LEVEL( ch, i ) + 1].exp ) {
-							sprintf( buf, "Sei abbastanza esperto per essere un %s\n\r",
-									 GET_CLASS_TITLE( ch, i, GET_LEVEL( ch, i ) + 1 ) );
-							send_to_char( buf, ch );
-							send_to_char( "Devi passare dalla tua gilda per crescere di "
-										  "livello.\n\r", ch );
-							if( ( GET_EXP( ch ) + gain ) >=
-									titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp) {
+						else if((GET_EXP(ch) + gain) >=
+								titles[ i ][ GET_LEVEL(ch, i) + 1].exp) {
+							sprintf(buf, "Sei abbastanza esperto per essere un %s\n\r",
+									GET_CLASS_TITLE(ch, i, GET_LEVEL(ch, i) + 1));
+							send_to_char(buf, ch);
+							send_to_char("Devi passare dalla tua gilda per crescere di "
+										 "livello.\n\r", ch);
+							if((GET_EXP(ch) + gain) >=
+									titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp) {
 
 								/*BUG BUG overflow*/
 								if((titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1)>0) {
@@ -1139,28 +1139,28 @@ void gain_exp_rev( struct char_data* ch, int gain ) {
 					send_to_char("Non prendi exp perche` oltrepassi la soglia massima!!!",ch);
 				}
 
-				for( i = MAGE_LEVEL_IND; i < MAX_CLASS; i++ ) {
-					if( GET_LEVEL( ch, i ) &&
-							GET_LEVEL( ch, i ) < RacialMax[ chrace ][ i ] ) {
-						if( GET_EXP( ch ) > titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp ) {
-							GET_EXP( ch ) = titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1;
+				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
+					if(GET_LEVEL(ch, i) &&
+							GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
+						if(GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp) {
+							GET_EXP(ch) = titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1;
 						}
 					}
 				}
 			}
 			else { /*IS_NPC*/
-				GET_EXP( ch ) += gain;
+				GET_EXP(ch) += gain;
 			}
 		}
-		else if( gain < 0 ) {
+		else if(gain < 0) {
 			/*	 gain/=MAX(1,nClassiNonMaxxate); */
 			gain/=MAX(1,HowManyClasses(ch));
-			if( IS_PC( ch ) ) {
-				mudlog( LOG_PLAYERS, "%s ha perso %d punti di esperienza.",
-						GET_NAME( ch ), -gain );
-				mudlog( LOG_SYSERR, "PKill loss 1");
+			if(IS_PC(ch)) {
+				mudlog(LOG_PLAYERS, "%s ha perso %d punti di esperienza.",
+					   GET_NAME(ch), -gain);
+				mudlog(LOG_SYSERR, "PKill loss 1");
 			}
-			GET_EXP( ch ) += gain;
+			GET_EXP(ch) += gain;
 			if(GET_EXP(ch) < 0) {
 				GET_EXP(ch) = 0;
 			}
@@ -1169,7 +1169,7 @@ void gain_exp_rev( struct char_data* ch, int gain ) {
 }
 
 
-void gain_exp( struct char_data* ch, int gain ) {
+void gain_exp(struct char_data* ch, int gain) {
 	/* gain completo se negativo, diviso per le classi se positivo
 	 * Per le classi che hanno una razza maxxata, consente il gain completo
 	 * */
@@ -1178,39 +1178,39 @@ void gain_exp( struct char_data* ch, int gain ) {
 	char buf[256];
 	short chrace;
 	short nClassiNonMaxxate=0;
-	save_char(ch,AUTO_RENT, 0 );
+	save_char(ch,AUTO_RENT, 0);
 	gain=gain_corretto(ch,gain);
-	if( !IS_PC( ch ) && ch->master && IS_AFFECTED( ch, AFF_CHARM ) ) {
-		if( ch->master->in_room == ch->in_room ) {
-			if( gain > 1 ) {
+	if(!IS_PC(ch) && ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
+		if(ch->master->in_room == ch->in_room) {
+			if(gain > 1) {
 				gain /= 2;
-				sprintf( buf, "Guadagni i %d punti di esperienza di $N", gain );
-				act( buf, 0, ch->master, 0, ch, TO_CHAR );
-				gain_exp( ch->master, gain );
+				sprintf(buf, "Guadagni i %d punti di esperienza di $N", gain);
+				act(buf, 0, ch->master, 0, ch, TO_CHAR);
+				gain_exp(ch->master, gain);
 			}
 		}
 		return;
 	}
 
-	if( !IS_IMMORTAL( ch ) ) {
-		if( gain > 0 ) {
+	if(!IS_IMMORTAL(ch)) {
+		if(gain > 0) {
 
-			if( GetMaxLevel( ch ) == 1 ) {
+			if(GetMaxLevel(ch) == 1) {
 				gain *= 2;
 			}
 
-			if( IS_PC( ch ) ) {
+			if(IS_PC(ch)) {
 				if(ch->desc && ch->desc->original) {
 					chrace = ch->desc->original->race;
 				}
 				else {
 					chrace = GET_RACE(ch);
 				}
-				for( i = MAGE_LEVEL_IND; i < MAX_CLASS; i++ ) {
+				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
 					/*ALAR:check sui limiti razziali per i  livelli
 					* Conta le classi attive
 					*/
-					if( GET_LEVEL( ch, i ) && GET_LEVEL( ch, i ) < RacialMax[ chrace ][ i ] ) {
+					if(GET_LEVEL(ch, i) && GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
 						nClassiNonMaxxate++;
 					}
 				}
@@ -1219,35 +1219,35 @@ void gain_exp( struct char_data* ch, int gain ) {
 				gain/=MAX(1,HowManyClasses(ch));
 
 				/* Qui sistemiamo l'overflow dei mono... Flyp*/
-				q=GET_EXP( ch );
+				q=GET_EXP(ch);
 				q+=gain;
-				if (q < 0) {
-					mudlog (LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch) );
+				if(q < 0) {
+					mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch));
 				}
 				else {
-					GET_EXP( ch ) += gain;
+					GET_EXP(ch) += gain;
 				}
 				/* Ma i multiclasse mi overflowano ancora... Flyp */
 
 				/* Primo loop, maxa le classi maxate */
-				for( i = MAGE_LEVEL_IND; i < MAX_CLASS; i++ ) {
-					if( GET_LEVEL( ch, i ) && GET_LEVEL( ch, i ) < RacialMax[ chrace ][ i ] ) {
-						if( GET_EXP( ch ) > titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp ) {
-							send_to_char( "Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch );
-							GET_EXP( ch ) = titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1;
+				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
+					if(GET_LEVEL(ch, i) && GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
+						if(GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp) {
+							send_to_char("Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch);
+							GET_EXP(ch) = titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1;
 							mudlog(LOG_SYSERR,"(LIMITS)Maxxa la classe %d a %d",i,
-								   (titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1));
+								   (titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1));
 						}
 					}
 				}
 
 				/* Secondo loop, avvisa per il possibile passaggio */
-				for( i = MAGE_LEVEL_IND; i < MAX_CLASS; i++ ) {
-					if((GET_LEVEL(ch,i) < BARONE && GET_LEVEL(ch,i) > 0 && ( GET_EXP( ch ) > titles[ i ][ GET_LEVEL(ch,i)+1].exp )) && GET_LEVEL(ch,i)<RacialMax[chrace][i]) {
-						sprintf( buf, "Sei sufficientemente esperto per essere un %s\n\r",
-								 GET_CLASS_TITLE( ch, i, GET_LEVEL( ch, i ) + 1 ) );
-						send_to_char( buf, ch );
-						send_to_char( "Devi passare dalla tua gilda per crescere di livello.\n\r", ch );
+				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
+					if((GET_LEVEL(ch,i) < BARONE && GET_LEVEL(ch,i) > 0 && (GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch,i)+1].exp)) && GET_LEVEL(ch,i)<RacialMax[chrace][i]) {
+						sprintf(buf, "Sei sufficientemente esperto per essere un %s\n\r",
+								GET_CLASS_TITLE(ch, i, GET_LEVEL(ch, i) + 1));
+						send_to_char(buf, ch);
+						send_to_char("Devi passare dalla tua gilda per crescere di livello.\n\r", ch);
 					}
 
 					/* Aggointa la promozione automatica a Principe se la classe
@@ -1260,15 +1260,15 @@ void gain_exp( struct char_data* ch, int gain ) {
 			}
 
 			else { /*IS_NPC*/
-				GET_EXP( ch ) += gain;
+				GET_EXP(ch) += gain;
 			}
 		}
-		else if( gain < 0 ) {
-			if( IS_PC( ch ) ) {
-				mudlog( LOG_PLAYERS, "%s ha perso %d punti di esperienza.", GET_NAME( ch ), -gain );
-				mudlog( LOG_SYSERR, "PKill loss 2");
+		else if(gain < 0) {
+			if(IS_PC(ch)) {
+				mudlog(LOG_PLAYERS, "%s ha perso %d punti di esperienza.", GET_NAME(ch), -gain);
+				mudlog(LOG_SYSERR, "PKill loss 2");
 			}
-			GET_EXP( ch ) += gain;
+			GET_EXP(ch) += gain;
 			if(GET_EXP(ch) < 0) {
 				GET_EXP(ch) = 0;
 			}
@@ -1277,38 +1277,38 @@ void gain_exp( struct char_data* ch, int gain ) {
 }
 
 
-void gain_exp_regardless( struct char_data* ch, int gain, int iClass,
-						  int iMaxLevel ) {
+void gain_exp_regardless(struct char_data* ch, int gain, int iClass,
+						 int iMaxLevel) {
 	int i,q;
 	bool is_altered = FALSE;
 
-	save_char( ch, AUTO_RENT, 0 );
-	if( !IS_NPC( ch ) ) {
-		if( gain >= 0 ) {
+	save_char(ch, AUTO_RENT, 0);
+	if(!IS_NPC(ch)) {
+		if(gain >= 0) {
 			/* Qui vediamo l'overflow per i multi... Flyp */
-			q=GET_EXP( ch );
+			q=GET_EXP(ch);
 			q+=gain;
-			if (q < 0) {
-				mudlog (LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch) );
+			if(q < 0) {
+				mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch));
 			}
 			/* ...e se non parte il warning, possiamo assegnare gli xp.. Flyp */
 
 			else {
-				GET_EXP( ch ) += gain;
-				for( i = 0; i < ABS_MAX_LVL && titles[ iClass ][ i ].exp <= GET_EXP( ch ); i++ ) {
-					if( i > GET_LEVEL( ch, iClass ) && GET_LEVEL( ch, iClass ) < iMaxLevel ) {
-						send_to_char( "Cresci di un livello!\n\r", ch );
-						advance_level( ch, iClass );
+				GET_EXP(ch) += gain;
+				for(i = 0; i < ABS_MAX_LVL && titles[ iClass ][ i ].exp <= GET_EXP(ch); i++) {
+					if(i > GET_LEVEL(ch, iClass) && GET_LEVEL(ch, iClass) < iMaxLevel) {
+						send_to_char("Cresci di un livello!\n\r", ch);
+						advance_level(ch, iClass);
 						is_altered = TRUE;
 						mudlog(LOG_SYSERR,"(LIMITS2)Maxxa la classe %d a %d",i,
-							   (titles[ i ][ GET_LEVEL( ch, i ) + 2 ].exp - 1));
+							   (titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1));
 					}
 				}
 			}
 		}
 		else if(gain < 0) {
 			GET_EXP(ch) += gain;
-	}
+		}
 		if(GET_EXP(ch) < 0)	{
 			GET_EXP(ch) = 0;
 		}
@@ -1332,7 +1332,7 @@ void gain_condition(struct char_data* ch,int condition,int value) {
 	intoxicated=(GET_COND(ch, DRUNK) > 0);
 
 	GET_COND(ch, condition)  += value;
-	if (GetMaxLevel(ch) <=5 and (condition == FULL or condition==THIRST)) {
+	if(GetMaxLevel(ch) <=5 and (condition == FULL or condition==THIRST)) {
 		GET_COND(ch,condition) = MAX(1,GET_COND(ch,condition));
 	}
 	else {
@@ -1345,14 +1345,14 @@ void gain_condition(struct char_data* ch,int condition,int value) {
 
 	switch(condition) {
 	case FULL : {
-		if (!affected_by_spell(ch, SKILL_MIND_OVER_BODY) ) {
+		if(!affected_by_spell(ch, SKILL_MIND_OVER_BODY)) {
 			send_to_char("Hai Fame.\n\r",ch);
 		}
 
 		return;
 	}
 	case THIRST : {
-		if (!affected_by_spell(ch, SKILL_MIND_OVER_BODY) ) {
+		if(!affected_by_spell(ch, SKILL_MIND_OVER_BODY)) {
 			send_to_char("Hai sete.\n\r",ch);
 		}
 		return;
@@ -1376,20 +1376,20 @@ void check_idling(struct char_data* ch) {
 	if(IS_LINKDEAD(ch) && ch->specials.timer < 30) {
 		ch->specials.timer=30;
 	}
-	if( ++(ch->specials.timer) == 8 ) {
+	if(++(ch->specials.timer) == 8) {
 		do_save(ch, "", 0);
 
 	}
-	else if( ch->specials.timer == VOID_PULL_TIME ) {
-		if( ch->in_room != NOWHERE && ch->in_room != 0 ) {
+	else if(ch->specials.timer == VOID_PULL_TIME) {
+		if(ch->in_room != NOWHERE && ch->in_room != 0) {
 			ch->specials.was_in_room = ch->in_room;
-			if( ch->specials.fighting ) {
-				stop_fighting( ch->specials.fighting );
-				stop_fighting( ch );
+			if(ch->specials.fighting) {
+				stop_fighting(ch->specials.fighting);
+				stop_fighting(ch);
 			}
-			act( "$n sparisce nel nulla.", TRUE, ch, 0, 0, TO_ROOM );
-			act( "Sei ferm$b da troppo tempo e finisci nel nulla.", FALSE, ch, 0, 0,
-				 TO_CHAR );
+			act("$n sparisce nel nulla.", TRUE, ch, 0, 0, TO_ROOM);
+			act("Sei ferm$b da troppo tempo e finisci nel nulla.", FALSE, ch, 0, 0,
+				TO_CHAR);
 			char_from_room(ch);
 			char_to_room(ch, 1);  /* Into room number 1 */
 			ch->specials.timer=0;
@@ -1399,16 +1399,16 @@ void check_idling(struct char_data* ch) {
 
 		}
 	}
-	else if( ch->specials.timer == FORCE_RENT_TIME ) {
+	else if(ch->specials.timer == FORCE_RENT_TIME) {
 		struct obj_cost cost;
 		if(ch->in_room != NOWHERE) {
 			char_from_room(ch);
 		}
-		char_to_room( ch, 4 );
+		char_to_room(ch, 4);
 
-		mudlog( LOG_CHECK,
-				"It is now time to force rent %s ",
-				GET_NAME( ch ) );
+		mudlog(LOG_CHECK,
+			   "It is now time to force rent %s ",
+			   GET_NAME(ch));
 
 		if(IS_POLY(ch)) {
 			return;
@@ -1418,42 +1418,42 @@ void check_idling(struct char_data* ch) {
 			close_socket(ch->desc);
 		}
 
-		mudlog( LOG_PLAYERS,
-				"%s socket has been closed", GET_NAME( ch ) );
+		mudlog(LOG_PLAYERS,
+			   "%s socket has been closed", GET_NAME(ch));
 		ch->desc = 0;
 
-		if( recep_offer( ch, NULL, &cost,1 ) ) {
+		if(recep_offer(ch, NULL, &cost,1)) {
 			/* if above fails they lose their EQ!                       */
 			/* cost.total_cost = 100;                                   */
 			/* but the Players use the feature to avoid to pay their rent
 			   so let's leave them to lose the EQ! Gaia 2001             */
 
-			save_obj( ch, &cost, 1 );
+			save_obj(ch, &cost, 1);
 		}
 		else {
-			mudlog( LOG_PLAYERS,
-					"%s had a failed recep_offer, they are losing EQ!", // Gaia 2001
-					GET_NAME( ch ) );
+			mudlog(LOG_PLAYERS,
+				   "%s had a failed recep_offer, they are losing EQ!", // Gaia 2001
+				   GET_NAME(ch));
 		}
 		extract_char(ch);
 	}
 }
 
-void ObjFromCorpse( struct obj_data* c) {
+void ObjFromCorpse(struct obj_data* c) {
 	struct obj_data* jj, *next_thing;
 
-	for( jj = c->contains; jj; jj = next_thing ) {
+	for(jj = c->contains; jj; jj = next_thing) {
 		next_thing = jj->next_content; /* Next in inventory */
-		if (jj->in_obj) {
+		if(jj->in_obj) {
 			obj_from_obj(jj);
 			if(c->in_obj) {
 				obj_to_obj(jj,c->in_obj);
 			}
-			else if (c->carried_by) {
+			else if(c->carried_by) {
 				obj_to_room(jj,c->carried_by->in_room);
 				check_falling_obj(jj, c->carried_by->in_room);
 			}
-			else if( c->in_room != NOWHERE ) {
+			else if(c->in_room != NOWHERE) {
 				obj_to_room(jj,c->in_room);
 				check_falling_obj(jj, c->in_room);
 			}
@@ -1467,7 +1467,7 @@ void ObjFromCorpse( struct obj_data* c) {
 			 **  don't extract it.
 			 */
 			c->contains = 0;
-			mudlog( LOG_SYSERR, "Memory lost in ObjFromCorpse.");
+			mudlog(LOG_SYSERR, "Memory lost in ObjFromCorpse.");
 			return;
 		}
 	}
@@ -1477,19 +1477,19 @@ void ObjFromCorpse( struct obj_data* c) {
 
 
 
-void ClassSpecificStuff( struct char_data* ch) {
+void ClassSpecificStuff(struct char_data* ch) {
 	/* Elimino slowness e haste*/
-	if (affected_by_spell(ch,SPELL_SLOW) || affected_by_spell(ch,SPELL_HASTE)) {
+	if(affected_by_spell(ch,SPELL_SLOW) || affected_by_spell(ch,SPELL_HASTE)) {
 		affect_from_char(ch,SPELL_SLOW);
 		affect_from_char(ch,SPELL_HASTE);
 		send_to_char("Xanathon ti rimette in equilibrio.",ch);
 	}
 
-    reset_original_numattacks(ch);
+	reset_original_numattacks(ch);
 
 	/* other stuff.. immunities, etc, are set here */
 
-	if (HasClass(ch, CLASS_MONK)) {
+	if(HasClass(ch, CLASS_MONK)) {
 		/*
 		 */
 		if(GET_LEVEL(ch, MONK_LEVEL_IND) > 10) {
@@ -1508,16 +1508,16 @@ void ClassSpecificStuff( struct char_data* ch) {
 
 	}
 	else {
-		if (HasClass(ch, CLASS_DRUID)) {
-			if (GET_LEVEL(ch, DRUID_LEVEL_IND) >= 14) {
+		if(HasClass(ch, CLASS_DRUID)) {
+			if(GET_LEVEL(ch, DRUID_LEVEL_IND) >= 14) {
 				SET_BIT(ch->immune, IMM_CHARM);
 			}
-			if (GET_LEVEL(ch, DRUID_LEVEL_IND) >= 32) {
+			if(GET_LEVEL(ch, DRUID_LEVEL_IND) >= 32) {
 				SET_BIT(ch->M_immune, IMM_POISON);
 			}
 		}
 
-		if (HasClass(ch, CLASS_THIEF)) {
+		if(HasClass(ch, CLASS_THIEF)) {
 
 			if(OnlyClass(ch, CLASS_THIEF)) {
 				GET_CHR(ch)+=1;

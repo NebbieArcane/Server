@@ -59,11 +59,11 @@ namespace Alarmud {
 
 
 const char* obj_edit_menu = "    1) Name                    2) Short description\n\r"
-					  "    3) Description             4) Type\n\r"
-					  "    5) Wear positions          6) Extra flags\n\r"
-					  "    7) Weight                  8) Value\n\r"
-					  "    9) Rent cost              10) Extra affects\n\r"
-					  "   11) Object values\n\r\n\r";
+							"    3) Description             4) Type\n\r"
+							"    5) Wear positions          6) Extra flags\n\r"
+							"    7) Weight                  8) Value\n\r"
+							"    9) Rent cost              10) Extra affects\n\r"
+							"   11) Object values\n\r\n\r";
 
 void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
@@ -113,16 +113,16 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 			for(a=1; a<=i; a++) {
 				check*=2;
 			}
-		sprintf( buf, "%-2d [%s] %s", i + 1,
-				 ((ch->specials.objedit->obj_flags.extra_flags & (check)) ?
-				  "X" : " "), extra_bits[i]);
+		sprintf(buf, "%-2d [%s] %s", i + 1,
+				((ch->specials.objedit->obj_flags.extra_flags & (check)) ?
+				 "X" : " "), extra_bits[i]);
 		send_to_char(buf, ch);
 	}
 
 	sprintf(buf, VT_CURSPOS, 20, 1);
 	send_to_char(buf, ch);
-	send_to_char( "Select the number to toggle, <C/R> to return to main "
-				  "menu.\n\r--> ", ch);
+	send_to_char("Select the number to toggle, <C/R> to return to main "
+				 "menu.\n\r--> ", ch);
 }
 
 
@@ -202,21 +202,21 @@ ACTION_FUNC(do_oedit) {
 		return;    /* the ch->desc->str field will cause problems... */
 	}
 
-	if (GetMaxLevel(ch) < DIO &&
+	if(GetMaxLevel(ch) < DIO &&
 			!IS_SET(ch->player.user_flags,CAN_OBJ_EDIT)) {
 		send_to_char("You do not have access to object editing.\n\r",ch);
 		return;
 	}
 
-	for (i = 0; *(arg + i) == ' '; i++);
-	if (!*(arg + i)) {
+	for(i = 0; *(arg + i) == ' '; i++);
+	if(!*(arg + i)) {
 		send_to_char("Oedit what?\n\r", ch);
 		return;
 	}
 
 	arg = one_argument(arg, name);
 
-	if (!(obj = (struct obj_data*)get_obj_vis_accessible(ch, name)))         {
+	if(!(obj = (struct obj_data*)get_obj_vis_accessible(ch, name)))         {
 		send_to_char("I don't see that object here.\n\r",ch);
 		return;
 	}
@@ -384,7 +384,7 @@ void ObjEdit(struct char_data* ch, const char* arg) {
 		ObjHitReturn(ch, arg, 0);
 		return;
 	default:
-		mudlog( LOG_ERROR, "Got to bad spot in ObjEdit");
+		mudlog(LOG_ERROR, "Got to bad spot in ObjEdit");
 		return;
 	}
 }
@@ -518,8 +518,8 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 
 	sprintf(buf, VT_HOMECLR);
 	send_to_char(buf, ch);
-	sprintf( buf, "Object Type: %s",
-			 item_types[ (int)(ch->specials.objedit->obj_flags.type_flag) ] );
+	sprintf(buf, "Object Type: %s",
+			item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
 	send_to_char(buf, ch);
 
 	row = 0;
@@ -744,7 +744,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 
 		update = atoi(arg)-1;
 
-		if( update < 0 || update > 55 ) {
+		if(update < 0 || update > 55) {
 			ch->specials.oedit = OBJ_MAIN_MENU;
 			UpdateObjMenu(ch);
 			return;
@@ -819,7 +819,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 						 "of points.\n\r",ch);
 			send_to_char("      Positive modifier will make field go up, negative "
 						 "modifier will make\n\r      field go down.\n\r",ch);
-			send_to_char("      $c0015Negative values are BETTER.$c0007", ch );
+			send_to_char("      $c0015Negative values are BETTER.$c0007", ch);
 			break;
 
 		case APPLY_IMMUNE:
@@ -846,8 +846,8 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			send_to_char(buf, ch);
 			break;
 		case APPLY_SPELL:
-			send_to_char( "\n\rNote: Modifier should be ADDED together from this "
-						  "list of affection flags.\n\r",ch);
+			send_to_char("\n\rNote: Modifier should be ADDED together from this "
+						 "list of affection flags.\n\r",ch);
 			row = 0;
 			for(i = 0; *affected_bits[i] != '\n'; i++) {
 				sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
@@ -863,7 +863,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 				sprintf(buf, "%-10u : %s", check, affected_bits[i]);
 				send_to_char(buf, ch);
 			}
-			send_to_char( "\n\r\n\r", ch);
+			send_to_char("\n\r\n\r", ch);
 			break;
 		case APPLY_WEAPON_SPELL:
 		case APPLY_EAT_SPELL:
@@ -888,32 +888,32 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			break;
 		case APPLY_HASTE:
 			send_to_char("\n\rNote: Valori positivi = num. attacchi guadagnati,"
-						 "i negativi saranno ignorati.\n\r", ch );
+						 "i negativi saranno ignorati.\n\r", ch);
 			break;
 		case APPLY_SLOW:
 			send_to_char("\n\rNote: Positive modifier will halve attacks number,"
-						 "negative will double.\n\r", ch );
+						 "negative will double.\n\r", ch);
 			break;
 		case APPLY_RACE_SLAYER:
 			send_to_char("\n\rNote: Modifier is the race number "
-						 "(see help races)\n\r", ch );
+						 "(see help races)\n\r", ch);
 			break;
 		case APPLY_ALIGN_SLAYER:
-			send_to_char( "\n\rNote: Modifier should be ADDED together from this "
-						  "list of align flags.\n\r",ch);
-			send_to_char( "\n\r 1 = GOOD  2 = NEUTRAL  4 = EVIL\n\r.", ch );
+			send_to_char("\n\rNote: Modifier should be ADDED together from this "
+						 "list of align flags.\n\r",ch);
+			send_to_char("\n\r 1 = GOOD  2 = NEUTRAL  4 = EVIL\n\r.", ch);
 			break;
 		case APPLY_MANA_REGEN:
 		case APPLY_HIT_REGEN:
 		case APPLY_MOVE_REGEN:
-			send_to_char( "\n\rNote: Modifier will add the point regained from "
-						  "char affected by object.\n\r", ch );
+			send_to_char("\n\rNote: Modifier will add the point regained from "
+						 "char affected by object.\n\r", ch);
 			break;
 		case APPLY_MOD_THIRST:
 		case APPLY_MOD_HUNGER:
 		case APPLY_MOD_DRUNK:
-			send_to_char( "\n\rNote: Set thirst/hunger/drunk of char to "
-						  "modifier.\n\r", ch );
+			send_to_char("\n\rNote: Set thirst/hunger/drunk of char to "
+						 "modifier.\n\r", ch);
 			break;
 		}
 
@@ -986,7 +986,7 @@ void ChangeAffectMod(struct char_data* ch, const char* arg, int type) {
 	}
 
 	if(ch->specials.objedit->affected[affect-1].location== APPLY_WEAPON_SPELL ||
-			ch->specials.objedit->affected[affect-1].location== APPLY_EAT_SPELL ) {
+			ch->specials.objedit->affected[affect-1].location== APPLY_EAT_SPELL) {
 		if(update>=45 && update<=52) {
 			skill=TRUE;
 		}
@@ -1096,7 +1096,7 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 	}
 
 	if(type != ENTER_CHECK) {
-		if( !*arg || *arg == '\n' ) {
+		if(!*arg || *arg == '\n') {
 			ch->specials.oedit = OBJ_MAIN_MENU;
 			UpdateObjMenu(ch);
 			return;
@@ -1110,12 +1110,12 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			return;
 		}
 
-		if( ch->specials.objedit->obj_flags.type_flag == ITEM_SCROLL ||
-				( ch->specials.objedit->obj_flags.type_flag == ITEM_WAND &&
-				  value == 0 ) ||
-				( ch->specials.objedit->obj_flags.type_flag == ITEM_STAFF &&
-				  value == 0 ) ||
-				ch->specials.objedit->obj_flags.type_flag == ITEM_POTION ) {
+		if(ch->specials.objedit->obj_flags.type_flag == ITEM_SCROLL ||
+				(ch->specials.objedit->obj_flags.type_flag == ITEM_WAND &&
+				 value == 0) ||
+				(ch->specials.objedit->obj_flags.type_flag == ITEM_STAFF &&
+				 value == 0) ||
+				ch->specials.objedit->obj_flags.type_flag == ITEM_POTION) {
 			if(update >= 45 && update <= 52) {
 				skill=TRUE;
 			}
@@ -1237,8 +1237,8 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue3 is the bonus range [in rooms].",ch);
 		}
 		else
-			send_to_char( "\n\rValue4 is the type of missile "
-						  "(must mach the value4 of missile).", ch );
+			send_to_char("\n\rValue4 is the type of missile "
+						 "(must mach the value4 of missile).", ch);
 		break;
 	case ITEM_MISSILE:
 		if(value==0) {
@@ -1251,8 +1251,8 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue3 is the number of times the damage die is rolled.",ch);
 		}
 		else
-			send_to_char( "\n\rValue4 is the type of weapon in which you can load the missile.\n\r"
-						  "(must match the Value4 of weapon).",ch);
+			send_to_char("\n\rValue4 is the type of weapon in which you can load the missile.\n\r"
+						 "(must match the Value4 of weapon).",ch);
 		break;
 	case ITEM_ARMOR:
 		if(value==0) {
@@ -1363,9 +1363,9 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 
 	sprintf(buf, VT_CURSPOS, 21, 1);
 	send_to_char(buf, ch);
-	sprintf( buf, "Enter the new value (last value was %d).\n\r--> ",
-			 ch->specials.objedit->obj_flags.value[ value ] );
-	send_to_char( buf, ch);
+	sprintf(buf, "Enter the new value (last value was %d).\n\r--> ",
+			ch->specials.objedit->obj_flags.value[ value ]);
+	send_to_char(buf, ch);
 }
 
 

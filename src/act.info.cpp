@@ -3873,9 +3873,9 @@ ACTION_FUNC(do_world) {
 			 top_of_p_table);
 	act(buf,FALSE, ch,0,0,TO_CHAR);
 
-    // Result of an aggregate query contains only one element so let's
-    // use the query_value() shortcut.
-    //
+	// Result of an aggregate query contains only one element so let's
+	// use the query_value() shortcut.
+	//
 	auto c =Sql::getOne<userCount>();
 	snprintf(buf,999,"$c0005Numero di giocatori registrati      : $c0015%ld",
 			 c->count);

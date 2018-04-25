@@ -124,10 +124,10 @@ ACTION_FUNC(do_auth) {
 	return;
 }
 void plrRegister(struct char_data* ch, unsigned long int id=0) {
-	if (!id) {
+	if(!id) {
 		id=ch->desc->AccountData.id;
 	}
-	if (!id) {
+	if(!id) {
 		send_to_char("Nessun personaggio registrato",ch);
 	}
 	string message("Elenco dei personaggi per ");
@@ -135,7 +135,7 @@ void plrRegister(struct char_data* ch, unsigned long int id=0) {
 	message.append(ac->email);
 	message.append("\r\n");
 	toonRows r=Sql::getAll<toon>(toonQuery::owner_id ==id);
-	for (toonPtr pg : r) {
+	for(toonPtr pg : r) {
 		std::cout << pg->name << std::endl;
 		message.append(pg->name);
 		message.append(" ");
@@ -209,28 +209,28 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 				plrRegister(ch, ch->desc->AccountData.id);
 			}
 		}
-		else if (parts[0]=="list") {
-			if (parts.size()<2) {
+		else if(parts[0]=="list") {
+			if(parts.size()<2) {
 				plrRegister(ch);
 			}
 			else {
-				if (parts.size()>=2 ) {
+				if(parts.size()>=2) {
 					char tmp_name[100];
 					int rc=parse_name(parts[1].substr(9).c_str(),tmp_name);
 					unsigned long int id=0;
-					if (rc==2) {
+					if(rc==2) {
 						userPtr ac=Sql::getOne<user>(userQuery::email==parts[1]);
-						if (ac) {
+						if(ac) {
 							id=ac->id;
 						}
 					}
 					else {
 						toonPtr pg=Sql::getOne<toon>(toonQuery::name==parts[1]);
-						if (pg) {
+						if(pg) {
 							id=pg->owner_id;
 						}
 					}
-					if (id) {
+					if(id) {
 						toonRows r=Sql::getAll<toon>(toonQuery::owner_id==id);
 						plrRegister(ch,id);
 					}

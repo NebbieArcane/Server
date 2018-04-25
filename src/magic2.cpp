@@ -1062,7 +1062,7 @@ void spell_Create_Monster(byte level, struct char_data* ch,
 	}
 
 	char_to_room(mob, ch->in_room);
-    RelateMobToCaster(ch, mob);
+	RelateMobToCaster(ch, mob);
 	act("$n esegue un gesto con la mano ed evoca $N !", TRUE, ch, 0, mob, TO_ROOM);
 	act("Esegui un gesto con la mano ed evochi $N !", TRUE, ch, 0, mob, TO_CHAR);
 

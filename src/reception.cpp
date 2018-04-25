@@ -654,10 +654,11 @@ void load_char_objs(struct char_data* ch) {
 		else  {
 			robin=(number(1,100)<100);
 		}
-		if (robin) {
+		if(robin) {
 			mudlog(LOG_PLAYERS, "Robin ruba a %s %d ", GET_NAME(ch),GET_GOLD(ch));
 			GET_GOLD(ch)/=2;
-			send_to_char("Mentre stavi riposando qualcuno si e' introdotto nella tua stanza  e ha rubato meta` dei tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r",ch);
+			send_to_char("Mentre stavi riposando qualcuno si e' introdotto nella tua stanza  e ha rubato meta` dei tuoi soldi!!!\n\rForse farti vedere con tutto quel denaro addosso non e' stata una buona idea...\n\r",
+						 ch);
 		}
 		/* termine modifica Robin hood */
 		if(GET_GOLD(ch) < -5000) {

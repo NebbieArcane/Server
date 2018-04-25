@@ -542,7 +542,7 @@ bool getFromDb(const char* cname,const char* pwd, const char* title) {
 	odb::transaction t(db->begin());
 	t.tracer(logTracer);
 	toon pg("","");
-	if (!db->query_one<toon>(toonQuery::name==name,pg)) {
+	if(!db->query_one<toon>(toonQuery::name==name,pg)) {
 		pg.name=name;
 		pg.password.assign(pwd);
 		pg.title.assign(title);

@@ -78,7 +78,7 @@ public:
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		auto r(db->query<T> (key));
-		if (!r.empty()) {
+		if(!r.empty()) {
 			v.reserve(r.size());
 			for(auto iter: r) {
 				v.push_back(boost::make_shared<T>(iter));
