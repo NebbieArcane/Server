@@ -1943,7 +1943,7 @@ NANNY_FUNC(con_account_pwd) {
 		ac.id=0;
 		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str())
 		ac.authorized=false;
-		userPtr u=Sql::getOne<user>(userQuery::email==d->AccountData.email);
+		userPtr u=Sql::getOne<user>(userQuery::email==ac.email);
 		if (u) {
 			ac.password=u->password;
 			ac.level=u->level;
@@ -1957,11 +1957,13 @@ NANNY_FUNC(con_account_pwd) {
 		}
 		if(u and !strcmp(crypt(arg,check),check)) {
 			if(PORT==DEVEL_PORT and ac.level<52) {
+				mudlog(LOG_CONNECT,"%s level %d attempted to access devel",ac.email,ac.level);
 				FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
 				close_socket(d);
 				return false;
 			}
 			if(PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
+				mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",ac.email,ac.level,(ac.ptr?"ON":"OFF");
 				FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
 				close_socket(d);
 				return false;
