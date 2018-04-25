@@ -791,7 +791,7 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 		}
 		else {
 			number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
-			send_to_char ("Il Maestro dei Ladri dice ",ch);
+			send_to_char("Il Maestro dei Ladri dice ",ch);
 
 			if(number == -1) {
 				send_to_char("'Non conosco questa abilita'.'\n\r", ch);

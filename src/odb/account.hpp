@@ -78,16 +78,15 @@ public:
 #ifdef ODB_COMPILER
 #pragma db view object(user)
 #endif
-class userCount
-{
+class userCount {
 public:
 #ifdef ODB_COMPILER
 #pragma db column("count(" + user::id + ")")
 #endif
-  std::size_t count;
-  virtual ~userCount() {
-	 std::cout << "Destroyed usercount" << std::endl;
-  }
+	std::size_t count;
+	virtual ~userCount() {
+		std::cout << "Destroyed usercount" << std::endl;
+	}
 };
 class legacy {
 public:

@@ -180,7 +180,7 @@ void        write_to_file(void* buf, int size, int filepos) {
 	}
 	FILE* mail_file;
 	mail_file = fopen(MAIL_FILE, "r+b");
-	if (not mail_file) {
+	if(not mail_file) {
 		mudlog(LOG_SYSERR, "Mail system -- missing mail file");
 	}
 
@@ -202,7 +202,7 @@ void        read_from_file(void* buf, int size, int filepos) {
 	}
 	FILE* mail_file;
 	mail_file = fopen(MAIL_FILE, "r+b");
-	if (not mail_file) {
+	if(not mail_file) {
 		mudlog(LOG_SYSERR, "Mail system -- missing mail file");
 	}
 	fseek(mail_file, filepos, SEEK_SET);

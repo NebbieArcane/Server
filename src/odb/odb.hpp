@@ -26,7 +26,7 @@
 #define odbTypes(nome) \
 	typedef odb::result<nome> nome##Result; \
 	typedef odb::query<nome> nome##Query; \
-    typedef boost::shared_ptr<nome> nome##Ptr; \
+	typedef boost::shared_ptr<nome> nome##Ptr; \
 	typedef std::vector<nome##Ptr> nome##Rows
 
 namespace Alarmud {
