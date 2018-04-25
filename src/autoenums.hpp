@@ -736,20 +736,20 @@ enum e_log_levels {
 	LOG_ALWAYS                                   =0, /*Shown at verbosity 0 and above*/
 	LOG_SYSERR                                   =1, /*Shown at verbosity 1 and above*/
 	LOG_CHECK                                    =2, /*Shown at verbosity 3 and above*/
-	LOG_PLAYERS                                  =3, /*Shown at verbosity 4 and above*/
-	LOG_MOBILES                                  =4, /*Shown at verbosity 4 and above*/
-	LOG_CONNECT                                  =5, /*Shown at verbosity 2 and above*/
-	LOG_ERROR                                    =6, /*Shown at verbosity 2 and above*/
-	LOG_WHO                                      =7, /*Shown at verbosity 6 and above*/
-	LOG_SAVE                                     =8, /*Shown at verbosity 5 and above*/
-	LOG_MAIL                                     =9, /*Shown at verbosity 5 and above*/
-	LOG_RANK                                     =10, /*Shown at verbosity 5 and above*/
-	LOG_WORLD                                    =11, /*Shown at verbosity 6 and above*/
-	LOG_QUERY                                    =12 /*Shown at verbosity 5 and above*/
+	LOG_PLAYERS                                  =4, /*Shown at verbosity 4 and above*/
+	LOG_MOBILES                                  =8, /*Shown at verbosity 4 and above*/
+	LOG_CONNECT                                  =16, /*Shown at verbosity 2 and above*/
+	LOG_ERROR                                    =32, /*Shown at verbosity 2 and above*/
+	LOG_WHO                                      =64, /*Shown at verbosity 6 and above*/
+	LOG_SAVE                                     =128, /*Shown at verbosity 5 and above*/
+	LOG_MAIL                                     =256, /*Shown at verbosity 5 and above*/
+	LOG_RANK                                     =512, /*Shown at verbosity 5 and above*/
+	LOG_WORLD                                    =1024, /*Shown at verbosity 6 and above*/
+	LOG_QUERY                                    =2048 /*Shown at verbosity 5 and above*/
 };
 #define E_LOG_LEVELS_COUNT 13
 #define E_LOG_LEVELS_MIN 0
-#define E_LOG_LEVELS_MAX 12
+#define E_LOG_LEVELS_MAX 2048
 #define E_LOG_LEVELS_KEY "e_log_levels"
 
 #define E_LOG_LEVELS_ACCEPT_ZERO true

@@ -123,11 +123,24 @@ ACTION_FUNC(do_auth) {
 	}
 	return;
 }
-void plrRegister(struct char_data* ch, std::vector<string> &parts) {
-	toonRows r=getToons(ch->desc->AccountData.id);
-	string message("I tuoi personaggi:\n\r");
-	for (const toon& pg : r) {
-		message.append(pg.name).append("\r\n");
+void plrRegister(struct char_data* ch, unsigned long int id=0) {
+	if (!id) {
+		id=ch->desc->AccountData.id;
+	}
+	if (!id) {
+		send_to_char("Nessun personaggio registrato",ch);
+	}
+	string message("Elenco dei personaggi per ");
+	userPtr ac=Sql::getOne<user>(id);
+	message.append(ac->email);
+	message.append("\r\n");
+	toonRows r=Sql::getAll<toon>(toonQuery::owner_id ==id);
+	for (toonPtr pg : r) {
+		std::cout << pg->name << std::endl;
+		message.append(pg->name);
+		message.append(" ");
+		message.append(pg->title.c_str());
+		message.append("\r\n");
 	}
 	send_to_char(message.c_str(),ch);
 
@@ -137,14 +150,6 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 		"abcdefghijkmnopqrstuwxyz23456789ABCDEFGHJKLMNPQRSTUVZ.,");
 	using std::invalid_argument;
 	send_to_char("\r\nReceived\r\n", ch);
-	char n[] = "0";
-	for(auto s : parts) {
-		send_to_char(n, ch);
-		send_to_char(" ", ch);
-		n[0]++;
-		send_to_char(s.c_str(), ch);
-		send_to_char("\r\n", ch);
-	}
 	if(parts.size() == 0) {
 		send_to_char(
 			"$c0011"
@@ -152,9 +157,10 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 			"Sintassi:\r\n"
 			"register add -> assegna il personaggio corrente al tuo account\r\n"
 			"register add <personaggio> <email> -> assegna un personaggio a un account\r\n"
-			"register list -> elenca i tuoi pg"
+			"register list -> elenca i tuoi pg\r\n"
 			"register list <email> -> elenca tutti i personaggi di un account\r\n"
 			"register list <personaggio> -> come sopra ma cerca l'account a partire da un personaggio\r\n"
+//			"register account <email> <nome cognome> -> crea l'account (da usare solo per prove) \r\n"
 			"$c0007", ch);
 		return;
 	}
@@ -162,7 +168,31 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 		boost::format fmt("Parts: %d\r\n");
 		fmt % parts.size();
 		send_to_char(fmt.str().c_str(),ch);
-		if(parts[0] == "add") {
+		if(parts[0] == "account") {
+			if(parts.size() < 4) {
+				throw invalid_argument(
+					"Usa 'register account <email> <nome cognome>'");
+			}
+			string email(parts[1]);
+			string realname;
+			for(auto s : boost::make_iterator_range(parts.begin() + 2,
+													parts.end())) {
+				realname += s + " ";
+			}
+			random_shuffle(entropy.begin(), entropy.end());
+			user account(realname, email,
+						 crypt(entropy.substr(0, 6).c_str(),
+							   entropy.substr(11, 2).c_str()));
+			boost::format fmt("$c00%s Registrazione %s per %s$c0007. Password=%s");
+			if(Sql::save(account)) {
+				fmt % "10" % "riuscita" % email % entropy.substr(0,6);
+			}
+			else {
+				fmt % "09" % "fallita" % email % "";
+			}
+			send_to_char(fmt.str().c_str(), ch);
+		}
+		else if(parts[0] == "add") {
 			if(parts.size() < 2) {
 				boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
 				fmt % ch->desc->AccountData.id % ch->desc->AccountData.choosen;
@@ -176,12 +206,12 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 				catch(odb::exception &e) {
 					mudlog(LOG_SYSERR,"Db error while registering %s: %s",ch->desc->AccountData.choosen.c_str(),e.what());
 				}
-				plrRegister(ch, parts);
+				plrRegister(ch, ch->desc->AccountData.id);
 			}
 		}
 		else if (parts[0]=="list") {
 			if (parts.size()<2) {
-				plrRegister(ch, parts);
+				plrRegister(ch);
 			}
 			else {
 				if (parts.size()>=2 ) {
@@ -189,27 +219,23 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 					int rc=parse_name(parts[1].substr(9).c_str(),tmp_name);
 					unsigned long int id=0;
 					if (rc==2) {
-						userPtr user=getUser(parts[1]);
-						if (user) {
-							id=user->id;
+						userPtr ac=Sql::getOne<user>(userQuery::email==parts[1]);
+						if (ac) {
+							id=ac->id;
 						}
 					}
 					else {
-						toonPtr pg=getToon(parts[1]);
+						toonPtr pg=Sql::getOne<toon>(toonQuery::name==parts[1]);
 						if (pg) {
 							id=pg->owner_id;
 						}
 					}
 					if (id) {
-						toonRows r=getToons(id);
-						string message("I tuoi personaggi:\n\r");
-						for (const toon& pg : r) {
-							message.append(pg.name).append("\r\n");
-						}
-						send_to_char(message.c_str(),ch);
+						toonRows r=Sql::getAll<toon>(toonQuery::owner_id==id);
+						plrRegister(ch,id);
 					}
 					else {
-						send_to_char("Non ho trovato nessunop\n\r",ch);
+						send_to_char("Non ho trovato nessuno\n\r",ch);
 					}
 				}
 			}
@@ -231,7 +257,7 @@ ACTION_FUNC(do_register) {
 		wizRegister(ch, parts);
 	}
 	else {
-		plrRegister(ch, parts);
+		plrRegister(ch);
 	}
 }
 

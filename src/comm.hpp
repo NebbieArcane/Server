@@ -19,6 +19,7 @@ namespace Alarmud {
 #else
 #define SEND_TO_Q(messg, desc)  write_to_output((messg), desc)
 #endif
+#define FLUSH_TO_Q(messg,desc) write_to_descriptor(desc->descriptor,messg)
 
 
 #define PLAYER_AUTH 0
@@ -36,6 +37,7 @@ extern int rebootgame;         /* reboot the game after a shutdown */
 extern bool no_specials;    /* Suppress ass. of special routines */
 extern long Uptime;            /* time that the game has been up */
 extern int tics;
+extern int PORT;
 
 void InitScreen(struct char_data* ch) ;
 void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void* vict_obj, struct obj_data* obj, char* buf);

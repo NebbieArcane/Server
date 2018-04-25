@@ -560,47 +560,6 @@ bool getFromDb(const char* cname,const char* pwd, const char* title) {
 	return false;
 }
 
-toonPtr getToon(const char* cname) {
-	return getToon(string(cname));
-}
-toonPtr getToon(const string& name) {
-	DB* db = Sql::getMysql();
-	//odb::session s;
-	odb::transaction t(db->begin());
-	t.tracer(logTracer);
-	return db->query_one<toon>(toonQuery::name==name);
-
-}
-userPtr getUser(const char* cemail) {
-	return getUser(string(cemail));
-}
-
-userPtr getUser(const string& email) {
-	DB* db = Sql::getMysql();
-	//odb::session s;
-	odb::transaction t(db->begin());
-	t.tracer(logTracer);
-	return db->query_one<user>(userQuery::email==email);
-}
-
-toonRows getToons(const unsigned long int id) {
-	toonRows data;
-	DB* db = Sql::getMysql();
-	//odb::session s;
-	odb::transaction t(db->begin());
-	t.tracer(logTracer);
-	toonResult r(db->query<toon> (toonQuery::owner_id == id));
-	if (r.size()>0) {
-		data.reserve(r.size());
-		for(toonResult::iterator iter(r.begin()) ; iter!= r.end(); ++iter) {
-			data.push_back(*iter);
-		}
-	}
-	t.commit();
-	return data;
-
-}
-
 /* generate index table for the player file */
 void build_player_index() {
 	using namespace boost::filesystem;

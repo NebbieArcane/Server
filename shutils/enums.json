@@ -1912,43 +1912,43 @@
 				"comment": "Shown at verbosity 3 and above"
 			},
 			"LOG_PLAYERS": {
-				"value": 3,
-				"comment": "Shown at verbosity 4 and above"
-			},
-			"LOG_MOBILES": {
 				"value": 4,
 				"comment": "Shown at verbosity 4 and above"
 			},
+			"LOG_MOBILES": {
+				"value": 8,
+				"comment": "Shown at verbosity 4 and above"
+			},
 			"LOG_CONNECT": {
-				"value": 5,
+				"value": 16,
 				"comment": "Shown at verbosity 2 and above"
 			},
 			"LOG_ERROR": {
-				"value": 6,
+				"value": 32,
 				"comment": "Shown at verbosity 2 and above"
 			},
 			"LOG_WHO": {
-				"value": 7,
+				"value": 64,
 				"comment": "Shown at verbosity 6 and above"
 			},
 			"LOG_SAVE": {
-				"value": 8,
+				"value": 128,
 				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_MAIL": {
-				"value": 9,
+				"value": 256,
 				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_RANK": {
-				"value": 10,
+				"value": 512,
 				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_WORLD": {
-				"value": 11,
+				"value": 1024,
 				"comment": "Shown at verbosity 6 and above"
 			},
 			"LOG_QUERY": {
-				"value": 12,
+				"value": 2048,
 				"comment": "Shown at verbosity 5 and above"
 			}
 		},

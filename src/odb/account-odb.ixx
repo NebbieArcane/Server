@@ -446,6 +446,42 @@ namespace odb
     return function_table[pq.conn.database ().id ()]->execute_query (pq);
   }
 
+  // userCount
+  //
+
+  inline
+  void access::view_traits< ::Alarmud::userCount >::
+  callback (database& db, view_type& x, callback_event e)
+  {
+    ODB_POTENTIALLY_UNUSED (db);
+    ODB_POTENTIALLY_UNUSED (x);
+    ODB_POTENTIALLY_UNUSED (e);
+  }
+
+  inline
+  result< access::view_traits_impl< ::Alarmud::userCount, id_common >::view_type >
+  access::view_traits_impl< ::Alarmud::userCount, id_common >::
+  query (database& db, const query_base_type& q)
+  {
+    return function_table[db.id ()]->query (db, q);
+  }
+
+  inline
+  odb::details::shared_ptr<prepared_query_impl>
+  access::view_traits_impl< ::Alarmud::userCount, id_common >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    return function_table[c.database ().id ()]->prepare_query (c, n, q);
+  }
+
+  inline
+  odb::details::shared_ptr<result_impl>
+  access::view_traits_impl< ::Alarmud::userCount, id_common >::
+  execute_query (prepared_query_impl& pq)
+  {
+    return function_table[pq.conn.database ().id ()]->execute_query (pq);
+  }
+
   // legacy
   //
 

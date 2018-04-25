@@ -98,7 +98,7 @@ long Uptime;            /* time that the game has been up */
 
 int maxdesc, avail_descs;
 int tics = 0;        /* for extern checkpointing */
-
+int PORT=0;
 
 uint64_t aTimeCheck[ PULSE_MOBILE ];
 uint16_t NumTimeCheck = sizeof(aTimeCheck); /* dovrebbe essere il piu` grande dei PULSE */
@@ -267,7 +267,8 @@ void run_the_game(int port) {
 	LOG_INFO("Verbosity 4: LPLAYERS LMOBILES error level also enabled");
 	LOG_TRACE("Verbosity 5: LSAVE,LMAIL,LRANK error level also enabled");
 	LOG_DBG("Verbosity 6: LWHO error level also enabled");
-	mudlog(LOG_ALWAYS, "Entering game loop.");
+	PORT=port;
+	mudlog(LOG_ALWAYS, "Entering game loop on port %d",PORT);
 	game_loop(s);
 	close_sockets(s);
 	if(rebootgame) {
@@ -992,7 +993,7 @@ int new_descriptor(int s) {
 		ParseAnsiColors(TRUE,"$c0007"
 						"$c0011Inserisci l'$c0012email del tuo account su http://www.nebbiearcane.it$c0011 o il $c0004nome$c0011 di un personaggio.\r\n"
 						"Se non hai o non ricordi il codice di accesso (diverso dalla password del sito) vai su \r\nhttp://www.nebbiearcane.it/mudcode\r\n e crealo.\r\n"
-						"$c0007Come vuoi essere conosciuto/a su Nebbie Arcane? "),
+						"$c0007Email o nome del personaggio su Nebbie Arcane? "),
 		newd);
 
 	return(0);

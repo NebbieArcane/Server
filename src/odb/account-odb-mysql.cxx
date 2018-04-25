@@ -20,10 +20,12 @@
 #include <odb/mysql/statement.hxx>
 #include <odb/mysql/statement-cache.hxx>
 #include <odb/mysql/simple-object-statements.hxx>
+#include <odb/mysql/view-statements.hxx>
 #include <odb/mysql/container-statements.hxx>
 #include <odb/mysql/exceptions.hxx>
 #include <odb/mysql/prepared-query.hxx>
 #include <odb/mysql/simple-object-result.hxx>
+#include <odb/mysql/view-result.hxx>
 #include <odb/mysql/enum.hxx>
 
 namespace odb
@@ -2860,6 +2862,10 @@ namespace odb
       grew = true;
     }
 
+    // ptr
+    //
+    t[7UL] = 0;
+
     return grew;
   }
 
@@ -2938,6 +2944,14 @@ namespace odb
       i.backup_email_value.capacity ());
     b[n].length = &i.backup_email_size;
     b[n].is_null = &i.backup_email_null;
+    n++;
+
+    // ptr
+    //
+    b[n].buffer_type = MYSQL_TYPE_TINY;
+    b[n].is_unsigned = 0;
+    b[n].buffer = &i.ptr_value;
+    b[n].is_null = &i.ptr_null;
     n++;
   }
 
@@ -3091,6 +3105,20 @@ namespace odb
       grew = grew || (cap != i.backup_email_value.capacity ());
     }
 
+    // ptr
+    //
+    {
+      bool const& v =
+        o.ptr;
+
+      bool is_null (false);
+      mysql::value_traits<
+          bool,
+          mysql::id_tiny >::set_image (
+        i.ptr_value, is_null, v);
+      i.ptr_null = is_null;
+    }
+
     return grew;
   }
 
@@ -3204,6 +3232,20 @@ namespace odb
         i.backup_email_size,
         i.backup_email_null);
     }
+
+    // ptr
+    //
+    {
+      bool& v =
+        o.ptr;
+
+      mysql::value_traits<
+          bool,
+          mysql::id_tiny >::set_value (
+        v,
+        i.ptr_value,
+        i.ptr_null);
+    }
   }
 
   void access::object_traits_impl< ::Alarmud::user, id_mysql >::
@@ -3227,9 +3269,10 @@ namespace odb
   "`registered`, "
   "`password`, "
   "`level`, "
-  "`backup_email`) "
+  "`backup_email`, "
+  "`ptr`) "
   "VALUES "
-  "(?, ?, ?, ?, ?, ?, ?)";
+  "(?, ?, ?, ?, ?, ?, ?, ?)";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::find_statement[] =
   "SELECT "
@@ -3239,7 +3282,8 @@ namespace odb
   "`user`.`registered`, "
   "`user`.`password`, "
   "`user`.`level`, "
-  "`user`.`backup_email` "
+  "`user`.`backup_email`, "
+  "`user`.`ptr` "
   "FROM `user` "
   "WHERE `user`.`id`=?";
 
@@ -3251,7 +3295,8 @@ namespace odb
   "`registered`=?, "
   "`password`=?, "
   "`level`=?, "
-  "`backup_email`=? "
+  "`backup_email`=?, "
+  "`ptr`=? "
   "WHERE `id`=?";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::erase_statement[] =
@@ -3266,7 +3311,8 @@ namespace odb
   "`user`.`registered`, "
   "`user`.`password`, "
   "`user`.`level`, "
-  "`user`.`backup_email` "
+  "`user`.`backup_email`, "
+  "`user`.`ptr` "
   "FROM `user`";
 
   const char access::object_traits_impl< ::Alarmud::user, id_mysql >::erase_query_statement[] =
@@ -3797,6 +3843,242 @@ namespace odb
   static const object_function_table_entry< ::Alarmud::user, id_mysql >
   function_table_entry_Alarmud_user_ (
     &function_table_Alarmud_user_);
+
+  // userCount
+  //
+
+  bool access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  grow (image_type& i,
+        my_bool* t)
+  {
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (t);
+
+    bool grew (false);
+
+    // count
+    //
+    t[0UL] = 0;
+
+    return grew;
+  }
+
+  void access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  bind (MYSQL_BIND* b,
+        image_type& i)
+  {
+    using namespace mysql;
+
+    mysql::statement_kind sk (statement_select);
+    ODB_POTENTIALLY_UNUSED (sk);
+
+    std::size_t n (0);
+
+    // count
+    //
+    b[n].buffer_type = MYSQL_TYPE_LONGLONG;
+    b[n].is_unsigned = 1;
+    b[n].buffer = &i.count_value;
+    b[n].is_null = &i.count_null;
+    n++;
+  }
+
+  void access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  init (view_type& o,
+        const image_type& i,
+        database* db)
+  {
+    ODB_POTENTIALLY_UNUSED (o);
+    ODB_POTENTIALLY_UNUSED (i);
+    ODB_POTENTIALLY_UNUSED (db);
+
+    // count
+    //
+    {
+      ::std::size_t& v =
+        o.count;
+
+      mysql::value_traits<
+          ::std::size_t,
+          mysql::id_ulonglong >::set_value (
+        v,
+        i.count_value,
+        i.count_null);
+    }
+  }
+
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::query_base_type
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  query_statement (const query_base_type& q)
+  {
+    query_base_type r (
+      "SELECT "
+      "count(`user`.`id`) ");
+
+    r += "FROM `user`";
+
+    if (!q.empty ())
+    {
+      r += " ";
+      r += q.clause_prefix ();
+      r += q;
+    }
+
+    return r;
+  }
+
+  result< access::view_traits_impl< ::Alarmud::userCount, id_mysql >::view_type >
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  query (database&, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+    statements_type& sts (
+      conn.statement_cache ().find_view<view_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.image_binding ());
+
+    if (im.version != sts.image_version () || imb.version == 0)
+    {
+      bind (imb.bind, im);
+      sts.image_version (im.version);
+      imb.version++;
+    }
+
+    const query_base_type& qs (query_statement (q));
+    qs.init_parameters ();
+    shared_ptr<select_statement> st (
+      new (shared) select_statement (
+        conn,
+        qs.clause (),
+        false,
+        true,
+        qs.parameters_binding (),
+        imb));
+
+    st->execute ();
+
+    shared_ptr< odb::view_result_impl<view_type> > r (
+      new (shared) mysql::view_result_impl<view_type> (
+        qs, st, sts, 0));
+
+    return result<view_type> (r);
+  }
+
+  result< access::view_traits_impl< ::Alarmud::userCount, id_mysql >::view_type >
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  query (database& db, const odb::query_base& q)
+  {
+    return query (db, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  prepare_query (connection& c, const char* n, const query_base_type& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::connection& conn (
+      static_cast<mysql::connection&> (c));
+    statements_type& sts (
+      conn.statement_cache ().find_view<view_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.image_binding ());
+
+    if (im.version != sts.image_version () || imb.version == 0)
+    {
+      bind (imb.bind, im);
+      sts.image_version (im.version);
+      imb.version++;
+    }
+
+    shared_ptr<mysql::prepared_query_impl> r (
+      new (shared) mysql::prepared_query_impl (conn));
+    r->name = n;
+    r->execute = &execute_query;
+    r->query = query_statement (q);
+    r->stmt.reset (
+      new (shared) select_statement (
+        conn,
+        r->query.clause (),
+        false,
+        true,
+        r->query.parameters_binding (),
+        imb));
+
+    return r;
+  }
+
+  odb::details::shared_ptr<prepared_query_impl>
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  prepare_query (connection& c, const char* n, const odb::query_base& q)
+  {
+    return prepare_query (c, n, query_base_type (q));
+  }
+
+  odb::details::shared_ptr<result_impl>
+  access::view_traits_impl< ::Alarmud::userCount, id_mysql >::
+  execute_query (prepared_query_impl& q)
+  {
+    using namespace mysql;
+    using odb::details::shared;
+    using odb::details::shared_ptr;
+
+    mysql::prepared_query_impl& pq (
+      static_cast<mysql::prepared_query_impl&> (q));
+    shared_ptr<select_statement> st (
+      odb::details::inc_ref (
+        static_cast<select_statement*> (pq.stmt.get ())));
+
+    mysql::connection& conn (
+      mysql::transaction::current ().connection ());
+
+    // The connection used by the current transaction and the
+    // one used to prepare this statement must be the same.
+    //
+    assert (&conn == &st->connection ());
+
+    statements_type& sts (
+      conn.statement_cache ().find_view<view_type> ());
+
+    image_type& im (sts.image ());
+    binding& imb (sts.image_binding ());
+
+    if (im.version != sts.image_version () || imb.version == 0)
+    {
+      bind (imb.bind, im);
+      sts.image_version (im.version);
+      imb.version++;
+    }
+
+    pq.query.init_parameters ();
+    st->execute ();
+
+    return shared_ptr<result_impl> (
+      new (shared) mysql::view_result_impl<view_type> (
+        pq.query, st, sts, 0));
+  }
+
+  static const
+  access::view_traits_impl< ::Alarmud::userCount, id_common >::
+  function_table_type function_table_Alarmud_userCount_ =
+  {
+    &access::view_traits_impl< ::Alarmud::userCount, id_mysql >::query,
+    &access::view_traits_impl< ::Alarmud::userCount, id_mysql >::prepare_query,
+    &access::view_traits_impl< ::Alarmud::userCount, id_mysql >::execute_query
+  };
+
+  static const view_function_table_entry< ::Alarmud::userCount, id_mysql >
+  function_table_entry_Alarmud_userCount_ (
+    &function_table_Alarmud_userCount_);
 
   // legacy
   //

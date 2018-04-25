@@ -47,6 +47,8 @@
 #include <odb/prepared-query.hxx>
 #include <odb/result.hxx>
 #include <odb/simple-object-result.hxx>
+#include <odb/view-image.hxx>
+#include <odb/view-result.hxx>
 
 #include <odb/details/unused.hxx>
 #include <odb/details/shared-ptr.hxx>
@@ -627,6 +629,12 @@ namespace odb
     typedef odb::query_column< ::std::basic_string< char > > backup_email_type_;
 
     static backup_email_type_ backup_email;
+
+    // ptr
+    //
+    typedef odb::query_column< bool > ptr_type_;
+
+    static ptr_type_ ptr;
   };
 
 #ifdef ODB_COMMON_QUERY_COLUMNS_DEF
@@ -658,6 +666,10 @@ namespace odb
   template <typename A>
   typename query_columns< ::Alarmud::user, id_common, A >::backup_email_type_
   query_columns< ::Alarmud::user, id_common, A >::backup_email;
+
+  template <typename A>
+  typename query_columns< ::Alarmud::user, id_common, A >::ptr_type_
+  query_columns< ::Alarmud::user, id_common, A >::ptr;
 
 #endif // ODB_COMMON_QUERY_COLUMNS_DEF
 
@@ -717,6 +729,54 @@ namespace odb
 
     static unsigned long long
     erase_query (database&, const query_base_type&);
+
+    static odb::details::shared_ptr<prepared_query_impl>
+    prepare_query (connection&, const char*, const query_base_type&);
+
+    static odb::details::shared_ptr<result_impl>
+    execute_query (prepared_query_impl&);
+  };
+
+  // userCount
+  //
+  template <>
+  struct class_traits< ::Alarmud::userCount >
+  {
+    static const class_kind kind = class_view;
+  };
+
+  template <>
+  class access::view_traits< ::Alarmud::userCount >
+  {
+    public:
+    typedef ::Alarmud::userCount view_type;
+    typedef ::boost::shared_ptr< ::Alarmud::userCount > pointer_type;
+
+    static void
+    callback (database&, view_type&, callback_event);
+  };
+
+  template <>
+  class access::view_traits_impl< ::Alarmud::userCount, id_common >:
+    public access::view_traits< ::Alarmud::userCount >
+  {
+    public:
+    typedef odb::query_base query_base_type;
+    struct query_columns;
+
+    struct function_table_type
+    {
+      result<view_type> (*query) (database&, const query_base_type&);
+
+      odb::details::shared_ptr<prepared_query_impl> (*prepare_query) (connection&, const char*, const query_base_type&);
+
+      odb::details::shared_ptr<result_impl> (*execute_query) (prepared_query_impl&);
+    };
+
+    static const function_table_type* function_table[database_count];
+
+    static result<view_type>
+    query (database&, const query_base_type&);
 
     static odb::details::shared_ptr<prepared_query_impl>
     prepare_query (connection&, const char*, const query_base_type&);
@@ -891,6 +951,16 @@ namespace odb
   //
   // user
   //
+  // userCount
+  //
+  struct access::view_traits_impl< ::Alarmud::userCount, id_common >::query_columns:
+    odb::pointer_query_columns<
+      ::Alarmud::user,
+      id_common,
+      odb::access::object_traits_impl< ::Alarmud::user, id_common > >
+  {
+  };
+
   // legacy
   //
 }

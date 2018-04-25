@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
 	log_configure(logger,"alarmud",".log",get_level(debug_level),vm.count("demonize")==0); // If not demonized also logs to console
 	log_configure(errlogger,"errors",".log",log4cxx::Level::getError(),false);
 	log_configure(buglogger,"bugs","",log4cxx::Level::getAll(),false);
-	log_configure(querylogger,"query",".log",log4cxx::Level::getAll(),true);
+	log_configure(querylogger,"query",".log",log4cxx::Level::getAll(),vm.count("demonize")==0);
 	if(vm.count("demonize")) {
 		int pid = fork();
 

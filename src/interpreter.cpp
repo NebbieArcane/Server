@@ -1858,22 +1858,15 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 		short n=0;
 		constexpr int nlen=5;
 		char order[nlen]="";
-		/*
-		DB* db = Sql::getMysql();
-		//odb::session s;
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		toonRows r (db->query<toon> (toonQuery::owner_id == ac.id));
-		*/
-		toonRows r=getToons(ac.id);
+		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==ac.id);
 		d->toons.clear();
-		for (const toon& pg : r) {
+		for (toonPtr pg : r) {
 			++n;
 			snprintf(order,nlen-1,"%2d",n);
-			message.append(order).append(". ").append(pg.name).append("\r\n");
-			d->toons.push_back(pg.name);
+			message.append(order).append(". ").append(pg->name).append(" ");
+			message.append(ParseAnsiColors(true,pg->title.c_str())).append("\r\n");
+			d->toons.emplace_back(pg->name);
 		}
-		//t.commit();
 	}
 	SEND_TO_Q(message.c_str(),d);
 }
@@ -1960,6 +1953,16 @@ NANNY_FUNC(con_account_pwd) {
 			mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
 		}
 		if(found and !strcmp(crypt(arg,check),check)) {
+			if (PORT==DEVEL_PORT and ac.level<52) {
+				FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
+				close_socket(d);
+				return false;
+			}
+			if (PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
+				FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
+				close_socket(d);
+				return false;
+			}
 			ac.authorized=true;
 			string message("Benvenuto ");
 			message.append(ac.nickname).append("\r\n");
@@ -2576,8 +2579,13 @@ NANNY_FUNC(con_nme) {
 		SEND_TO_Q("Nome: ", d);
 		return false;
 	}
+	if (PORT!=RELEASE_PORT) {
+		FLUSH_TO_Q("Per accedere al server di prova devi entrare con l'email\n\r",d);
+		close_socket(d);
+		return false;
+	}
 	bool found=false;
-	toonPtr pg=getToon(tmp_name);
+	toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
 	if (pg) {
 		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->id);
 		found=true;

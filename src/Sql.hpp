@@ -7,6 +7,8 @@
 
 #ifndef SRC_SQL_HPP_
 #define SRC_SQL_HPP_
+#include <vector>
+#include <boost/make_shared.hpp>
 #include "odb/odb.hpp"
 #include "autoenums.hpp"
 #include "logging.hpp"
@@ -39,46 +41,55 @@ public:
 		t.commit();
 		return datum;
 	}
+	/* To be used with views only (other objects are not meaningful without a key */
 	template <typename T>
-	static bool load(T &obj) {
-		try {
-			DB* db = Sql::getMysql();
-			odb::transaction t(db->begin());
-			t.tracer(logTracer);
-			obj.load();
-			t.commit();
-		}
-		catch (odb::exception &e) {
-			return false;
-		}
-		return true;
+	static boost::shared_ptr<T> getOne() {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		/*returned datum wiill be destroyed on exit, so we make a copy of it and return in
+		 * a shared pointer. This is also done for consistency with the other getOne which all
+		 * return a shared pointer
+		 */
+
+		auto  datum=boost::make_shared<T>(db->query_value<T>());
+
+		t.commit();
+		return datum;
 	}
 	template <typename T>
 	static boost::shared_ptr<T> getOne(odb::query<T> key) {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
-		auto datum(db->query_one<T>(key));
+		boost::shared_ptr<T> datum=db->query_one<T>(key);
 		t.commit();
 		return datum;
 	}
 	template <typename T>
-	static boost::shared_ptr<odb::result<T>> getAll() {
-		DB* db = Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		auto datum(db->load<T>());
-		t.commit();
-		return datum;
+	static boost::shared_ptr<T> getOne(odb::query_base key) {
+		return getOne(odb::query<T>(key));
 	}
 	template <typename T>
-	static boost::shared_ptr<odb::result<T>> getAll(odb::query<T> key) {
+	static std::vector<boost::shared_ptr<T>> getAll(odb::query<T> key) {
+		std::vector<boost::shared_ptr<T>> v({});
 		DB* db = Sql::getMysql();
+		//odb::session s;
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
-		auto datum(db->query<T>(key));
+		auto r(db->query<T> (key));
+		if (!r.empty()) {
+			v.reserve(r.size());
+			for(auto iter: r) {
+				v.push_back(boost::make_shared<T>(iter));
+			}
+		}
 		t.commit();
-		return datum;
+		return v;
+	}
+	template <typename T>
+	static std::vector<boost::shared_ptr<T>> getAll() {
+		return getAll(odb::query<T>());
 	}
 	template <typename T>
 	static bool save(T &data,bool upsert=false) {

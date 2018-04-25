@@ -329,16 +329,16 @@ l'array connected_types in constants.cpp
 ** LOG_ALWAYS                                   =0Shown at verbosity 0 and above
 ** LOG_SYSERR                                   =1Shown at verbosity 1 and above
 ** LOG_CHECK                                    =2Shown at verbosity 3 and above
-** LOG_PLAYERS                                  =3Shown at verbosity 4 and above
-** LOG_MOBILES                                  =4Shown at verbosity 4 and above
-** LOG_CONNECT                                  =5Shown at verbosity 2 and above
-** LOG_ERROR                                    =6Shown at verbosity 2 and above
-** LOG_WHO                                      =7Shown at verbosity 6 and above
-** LOG_SAVE                                     =8Shown at verbosity 5 and above
-** LOG_MAIL                                     =9Shown at verbosity 5 and above
-** LOG_RANK                                     =10Shown at verbosity 5 and above
-** LOG_WORLD                                    =11Shown at verbosity 6 and above
-** LOG_QUERY                                    =12Shown at verbosity 5 and above
+** LOG_PLAYERS                                  =4Shown at verbosity 4 and above
+** LOG_MOBILES                                  =8Shown at verbosity 4 and above
+** LOG_CONNECT                                  =16Shown at verbosity 2 and above
+** LOG_ERROR                                    =32Shown at verbosity 2 and above
+** LOG_WHO                                      =64Shown at verbosity 6 and above
+** LOG_SAVE                                     =128Shown at verbosity 5 and above
+** LOG_MAIL                                     =256Shown at verbosity 5 and above
+** LOG_RANK                                     =512Shown at verbosity 5 and above
+** LOG_WORLD                                    =1024Shown at verbosity 6 and above
+** LOG_QUERY                                    =2048Shown at verbosity 5 and above
 == Enumerations ==
 
 === enum e_opinion_op ===

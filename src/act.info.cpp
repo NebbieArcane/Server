@@ -38,7 +38,6 @@
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "parser.hpp"
-#include "Registered.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
 #include "snew.hpp"
@@ -47,6 +46,7 @@
 #include "specialproc_other.hpp"
 #include "spell_parser.hpp"
 #include "spells.hpp"        // for spell_info_type, SKILL_EVALUATE, SPELL_G...
+#include "Sql.hpp"
 #include "trap.hpp"
 #include "utility.hpp"
 #include "version.hpp"
@@ -3872,8 +3872,13 @@ ACTION_FUNC(do_world) {
 	snprintf(buf,999,"$c0005Numero di personaggi attivi         : $c0015%d",
 			 top_of_p_table);
 	act(buf,FALSE, ch,0,0,TO_CHAR);
+
+    // Result of an aggregate query contains only one element so let's
+    // use the query_value() shortcut.
+    //
+	auto c =Sql::getOne<userCount>();
 	snprintf(buf,999,"$c0005Numero di giocatori registrati      : $c0015%ld",
-			 Registered::total());
+			 c->count);
 	act(buf,FALSE, ch,0,0,TO_CHAR);
 
 	snprintf(buf,999,"$c0005Numero di tipi di creature nel mondo: $c0015%d",
