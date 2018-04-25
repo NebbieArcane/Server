@@ -1853,7 +1853,7 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 void toonList(struct descriptor_data* d,const string &optional_message="") {
 	const user &ac=d->AccountData;
 	string message(optional_message);
-	message.append("Scegli un personagggio\r\n").append(" 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
+	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
 	if (ac.id) { short n=0;
 		constexpr int nlen=5;
 		char order[nlen]="";
@@ -1867,6 +1867,7 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 			d->toons.emplace_back(pg->name);
 		}
 	}
+	message.append(">");
 	SEND_TO_Q(message.c_str(),d);
 }
 bool check_impl_security(struct descriptor_data* d) {
@@ -1938,57 +1939,56 @@ NANNY_FUNC(con_account_pwd) {
 		SEND_TO_Q("Ricomiciamo. Come ti chiami?\r\n",d);
 		return false;
 	}
-	try {
-		user &ac=d->AccountData;
-		ac.id=0;
-		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str())
-		ac.authorized=false;
-		userPtr u=Sql::getOne<user>(userQuery::email==ac.email);
-		if (u) {
-			ac.password=u->password;
-			ac.level=u->level;
-			ac.registered=u->registered;
-			ac.ptr=u->ptr;
-			ac.id=u->id;
-		}
-		const char* check=ac.password.c_str();
-		if(u) {
-			mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
-		}
-		if(u and !strcmp(crypt(arg,check),check)) {
-			if(PORT==DEVEL_PORT and ac.level<52) {
-				mudlog(LOG_CONNECT,"%s level %d attempted to access devel",ac.email,ac.level);
-				FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
-				close_socket(d);
-				return false;
-			}
-			if(PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
-				mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",ac.email,ac.level,(ac.ptr?"ON":"OFF");
-				FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
-				close_socket(d);
-				return false;
-			}
-			ac.authorized=true;
-			string message("Benvenuto ");
-			message.append(ac.nickname).append("\r\n");
-			STATE(d)=CON_ACCOUNT_TOON;
-			mudlog(LOG_CONNECT,"Succesfull connection for %s",ac.email.c_str());
-			toonList(d,message);
-		}
-		else {
-			SEND_TO_Q("Riprova (digita <b> per rinunciare).",d);
-			echoOff(d);
-		}
+	user &ac=d->AccountData;
+	ac.id=0;
+	mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
+	ac.authorized=false;
+	userPtr u=Sql::getOne<user>(userQuery::email==ac.email);
+	if (u) {
+		ac.password=u->password;
+		ac.level=u->level;
+		ac.registered=u->registered;
+		ac.ptr=u->ptr;
+		ac.id=u->id;
 	}
-	catch(odb::exception &e) {
-		mudlog(LOG_SYSERR,"Error accessing database for user %s: %s",d->AccountData.email.c_str(),e.what());
-		echoOff(d);
+	const char* check=ac.password.c_str();
+	if(u) {
+		mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
+	}
+	if(u and !strcmp(crypt(arg,check),check)) {
+
+		if (PORT==DEVEL_PORT and ac.level<52) {
+			mudlog(LOG_CONNECT,"%s level %d attempted to access devel",ac.email,ac.level);
+			FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
+			close_socket(d);
+			return false;
+		}
+		if(PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
+			mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",ac.email,ac.level,(ac.ptr?"ON":"OFF"));
+			FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
+			close_socket(d);
+			return false;
+		}
+		ac.authorized=true;
+		string message("Benvenuto ");
+		message.append(ac.nickname).append("\r\n");
+		STATE(d)=CON_ACCOUNT_TOON;
+		mudlog(LOG_CONNECT,"Succesfull connection for %s",ac.email.c_str());
+		toonList(d,message);
+	}
+	else {
 		SEND_TO_Q("Riprova (digita <b> per rinunciare).",d);
+		echoOff(d);
 	}
 	return false;
 }
 NANNY_FUNC(con_account_toon) {
 	try {
+		if (d->currentInput=="q") {
+			FLUSH_TO_Q("Bye bye",d);
+			close_socket(d);
+			return false;
+		}
 		short toonIndex=tonumber(d->currentInput,-1);
 		if(toonIndex <0) {
 			throw std::range_error("Invalid number");
@@ -2402,16 +2402,10 @@ NANNY_FUNC(con_slct) {
 	/* no break */
 	case '1':
 		reset_char(d->character);
-		mudlog(LOG_PLAYERS, "M1.Loading %s's equipment",
-			   d->character->player.name);
+		mudlog(LOG_PLAYERS, "M1.Loading %s's equipment",d->character->player.name);
 		load_char_objs(d->character);
-		mudlog(LOG_CHECK, "Sending Welcome message to %s",
-			   d->character->player.name);
+		mudlog(LOG_CHECK, "Sending Welcome message to %s",d->character->player.name);
 		send_to_char(WELC_MESSG, d->character);
-#if NOREGISTER
-		send_to_char("$c0001 NON E' NECESSARIO REGISTRARSI\r\n",
-					 d->character);
-#endif
 		mudlog(LOG_CHECK, "Putting %s in list",
 			   d->character->player.name);
 		d->character->next = character_list;
