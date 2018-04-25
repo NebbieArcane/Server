@@ -839,7 +839,7 @@ struct snoop_data {
 struct descriptor_data {
 	bool justCreated;
 	user AccountData;
-	std::vector<string> toons;
+	std::vector<std::string> toons;
 	e_connection_types last_state;
 	string currentInput;
 	int descriptor;                    /* file descriptor for socket */

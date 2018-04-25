@@ -8,12 +8,11 @@
 #ifndef SRC_ODB_ACCOUNT_HXX_
 #define SRC_ODB_ACCOUNT_HXX_
 //#include <boost/smart_ptr.hpp>
+#include <iostream>
 #include <boost/date_time.hpp>
 //#include <odb/boost/date-time/exceptions.hxx>
 //#include <odb/boost/date-time/mysql/posix-time-mapping.hxx>
 #include <odb/core.hxx>
-#include <odb/vector.hxx>
-#include <odb/lazy-ptr.hxx>
 #include <odb/boost/lazy-ptr.hxx>
 #include <odb/nullable.hxx>
 #include <string>
@@ -59,6 +58,7 @@ public:
 	string password;
 	unsigned short level;
 	odb::nullable<string> backup_email;
+	bool ptr;
 	string choosen;
 	bool authorized;
 	user() {};
@@ -70,9 +70,24 @@ public:
 		password(password),
 		level(0),
 		backup_email(),
+		ptr(false),
 		choosen(""),
 		authorized(false)
 	{}
+};
+#ifdef ODB_COMPILER
+#pragma db view object(user)
+#endif
+class userCount
+{
+public:
+#ifdef ODB_COMPILER
+#pragma db column("count(" + user::id + ")")
+#endif
+  std::size_t count;
+  virtual ~userCount() {
+	 std::cout << "Destroyed usercount" << std::endl;
+  }
 };
 class legacy {
 public:
@@ -116,6 +131,9 @@ public:
 #pragma db member(user::backup_email) type("VARCHAR(255)") null
 #pragma db member(user::choosen) transient
 #pragma db member(user::authorized) transient
+
+
+
 
 #pragma db object(legacy)
 #pragma db member(legacy::name) id type("varchar(32)")

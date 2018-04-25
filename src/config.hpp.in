@@ -60,4 +60,7 @@
 #define SHOW (macro) #macro
 #define FALSE false
 #define TRUE true
+#define RELEASE_PORT 4000
+#define MASTER_PORT  RELEASE_PORT + 1
+#define DEVEL_PORT   RELEASE_PORT + 2
 #endif

@@ -58,6 +58,14 @@ namespace odb
   access::object_traits_impl< ::Alarmud::user, id_common >::
   function_table[database_count];
 
+  // userCount
+  //
+
+  const access::view_traits_impl< ::Alarmud::userCount, id_common >::
+  function_table_type*
+  access::view_traits_impl< ::Alarmud::userCount, id_common >::
+  function_table[database_count];
+
   // legacy
   //
 

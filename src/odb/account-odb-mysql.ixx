@@ -92,6 +92,9 @@ namespace odb
     ODB_POTENTIALLY_UNUSED (obj);
   }
 
+  // userCount
+  //
+
   // legacy
   //
 

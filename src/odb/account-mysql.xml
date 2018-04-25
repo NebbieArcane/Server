@@ -46,6 +46,7 @@
       <column name="password" type="VARCHAR(128)" null="false"/>
       <column name="level" type="SMALLINT UNSIGNED" null="false" default="0"/>
       <column name="backup_email" type="VARCHAR(255)" null="true"/>
+      <column name="ptr" type="TINYINT(1)" null="false"/>
       <primary-key auto="true">
         <column name="id"/>
       </primary-key>

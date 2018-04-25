@@ -879,6 +879,18 @@ namespace odb
     backup_email_type_;
 
     static const backup_email_type_ backup_email;
+
+    // ptr
+    //
+    typedef
+    mysql::query_column<
+      mysql::value_traits<
+        bool,
+        mysql::id_tiny >::query_type,
+      mysql::id_tiny >
+    ptr_type_;
+
+    static const ptr_type_ ptr;
   };
 
 #ifdef ODB_MYSQL_QUERY_COLUMNS_DEF
@@ -924,6 +936,12 @@ namespace odb
   query_columns< ::Alarmud::user, id_mysql, A >::
   backup_email (query_columns< ::Alarmud::user, id_common, typename A::common_traits >::backup_email,
                 A::table_name, "`backup_email`", 0);
+
+  template <typename A>
+  const typename query_columns< ::Alarmud::user, id_mysql, A >::ptr_type_
+  query_columns< ::Alarmud::user, id_mysql, A >::
+  ptr (query_columns< ::Alarmud::user, id_common, typename A::common_traits >::ptr,
+       A::table_name, "`ptr`", 0);
 
 #endif // ODB_MYSQL_QUERY_COLUMNS_DEF
 
@@ -989,6 +1007,11 @@ namespace odb
       unsigned long backup_email_size;
       my_bool backup_email_null;
 
+      // ptr
+      //
+      signed char ptr_value;
+      my_bool ptr_null;
+
       std::size_t version;
     };
 
@@ -1031,7 +1054,7 @@ namespace odb
 
     typedef mysql::query_base query_base_type;
 
-    static const std::size_t column_count = 7UL;
+    static const std::size_t column_count = 8UL;
     static const std::size_t id_column_count = 1UL;
     static const std::size_t inverse_column_count = 0UL;
     static const std::size_t readonly_column_count = 0UL;
@@ -1102,6 +1125,66 @@ namespace odb
     load_ (statements_type&,
            object_type&,
            bool reload);
+  };
+
+  // userCount
+  //
+  template <>
+  class access::view_traits_impl< ::Alarmud::userCount, id_mysql >:
+    public access::view_traits< ::Alarmud::userCount >
+  {
+    public:
+    typedef access::view_traits_impl< ::Alarmud::userCount, id_common > common_traits;
+
+    struct image_type
+    {
+      // count
+      //
+      unsigned long long count_value;
+      my_bool count_null;
+
+      std::size_t version;
+    };
+
+    typedef mysql::view_statements<view_type> statements_type;
+
+    typedef mysql::query_base query_base_type;
+    struct query_columns;
+
+    static const bool versioned = false;
+
+    static bool
+    grow (image_type&,
+          my_bool*);
+
+    static void
+    bind (MYSQL_BIND*,
+          image_type&);
+
+    static void
+    init (view_type&,
+          const image_type&,
+          database*);
+
+    static const std::size_t column_count = 1UL;
+
+    static query_base_type
+    query_statement (const query_base_type&);
+
+    static result<view_type>
+    query (database&, const query_base_type&);
+
+    static result<view_type>
+    query (database&, const odb::query_base&);
+
+    static odb::details::shared_ptr<prepared_query_impl>
+    prepare_query (connection&, const char*, const query_base_type&);
+
+    static odb::details::shared_ptr<prepared_query_impl>
+    prepare_query (connection&, const char*, const odb::query_base&);
+
+    static odb::details::shared_ptr<result_impl>
+    execute_query (prepared_query_impl&);
   };
 
   // legacy
@@ -1354,6 +1437,16 @@ namespace odb
   //
   // user
   //
+  // userCount
+  //
+  struct access::view_traits_impl< ::Alarmud::userCount, id_mysql >::query_columns:
+    odb::pointer_query_columns<
+      ::Alarmud::user,
+      id_mysql,
+      odb::access::object_traits_impl< ::Alarmud::user, id_mysql > >
+  {
+  };
+
   // legacy
   //
 }

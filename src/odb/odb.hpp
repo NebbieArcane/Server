@@ -27,10 +27,11 @@
 	typedef odb::result<nome> nome##Result; \
 	typedef odb::query<nome> nome##Query; \
     typedef boost::shared_ptr<nome> nome##Ptr; \
-	typedef std::vector<nome> nome##Rows
+	typedef std::vector<nome##Ptr> nome##Rows
 
 namespace Alarmud {
 odbTypes(user);
+odbTypes(userCount);
 odbTypes(legacy);
 odbTypes(toon);
 odbTypes(toonExtra);

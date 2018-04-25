@@ -231,3 +231,6 @@ utilities/convert
 mudroot/log.txt
 src/info
 /contrib/
+/check/
+/check.xml
+/lastcommit

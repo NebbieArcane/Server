@@ -279,11 +279,6 @@ void InsertObject(struct obj_data* pObj, int nVNum);
 void InsertMobile(struct char_data* pMob, int nVNum);
 void Start_Auction();
 ACTION_FUNC(do_WorldSave);
-toonPtr getToon(const char* cname);
-toonPtr getToon(const string& name);
-userPtr getUser(const char* cemail);
-userPtr getUser(const string& email);
-toonRows getToons(const unsigned long int id);
 
 } // namespace Alarmud
 #endif
