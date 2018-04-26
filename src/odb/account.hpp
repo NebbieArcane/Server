@@ -61,7 +61,18 @@ public:
 	bool ptr;
 	string choosen;
 	bool authorized;
-	user() {};
+	user() :
+		id(0),
+		nickname(""),
+		email(""),
+		registered(boost::posix_time::from_time_t(time(nullptr))),
+		password(""),
+		level(0),
+		backup_email(""),
+		ptr(false),
+		choosen(""),
+		authorized(false)
+	{};
 	user(const string &nickname,const string &email,const string &password=""):
 		id(0),
 		nickname(nickname),
