@@ -837,7 +837,8 @@ struct snoop_data {
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
 struct descriptor_data {
-	bool justCreated;
+	bool justCreated=false;
+	bool impersonating=false;
 	user AccountData;
 	std::vector<std::string> toons;
 	e_connection_types last_state;
