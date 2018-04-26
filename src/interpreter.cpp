@@ -1945,11 +1945,17 @@ NANNY_FUNC(con_account_pwd) {
 	ac.authorized=false;
 	userPtr u=Sql::getOne<user>(userQuery::email==ac.email);
 	if (u) {
-		ac.password=u->password;
+		ac.password.assign(u->password);
 		ac.level=u->level;
 		ac.registered=u->registered;
 		ac.ptr=u->ptr;
 		ac.id=u->id;
+		if (u->nickname.empty()) {
+			ac.nickname=u->email;
+		}
+		else {
+			ac.nickname=u->email;
+		}
 	}
 	const char* check=ac.password.c_str();
 	if(u) {
@@ -2595,7 +2601,7 @@ NANNY_FUNC(con_nme) {
 				STATE(d)=CON_PWDOK;
 				return true;
 			}
-			else {
+			else if (d->AccountData.level < MAESTRO_DEL_CREATO)  {
 				SEND_TO_Q("Questo personaggio e` registrato, fai login con il tuo account per favore.\r\n",d);
 				SEND_TO_Q("Nome: ", d);
 				return false;
@@ -2639,8 +2645,12 @@ NANNY_FUNC(con_nme) {
 	}
 	d->AccountData.choosen.assign(tmp_name);
 	/* Tutto ok, chiediamogli la password */
-	if(d->AccountData.level > MAESTRO_DEGLI_DEI) {
-		SEND_TO_Q("Non oserei mai chiederti la password, oh superno, ma ricorda che il pg non e` tuo\r\n",d);
+	if(d->AccountData.level >= MAESTRO_DEL_CREATO) {
+		SEND_TO_Q(ParseAnsiColors(TRUE,
+				"Non oserei mai chiederti la password, oh superno, ma $c0009ricorda che il pg non e` tuo$c0007\r\n")
+				,d);
+		mudlog(LOG_ALWAYS,"%s e` entrato come %s",d->AccountData.email,d->AccountData.choosen);
+		d->impersonating=true;
 		//Un immortale superiore puo' entrare con qualsiasi PG
 		STATE(d)=CON_PWDOK;
 		return true;
@@ -2734,7 +2744,15 @@ NANNY_FUNC(con_pwdok) {
 			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
 		}
 	}
-	if(d->AccountData.authorized and d->AccountData.level < GetMaxLevel(d->character)) {
+	if (d->impersonating) {
+		// Check relative level
+		if (GetMaxLevel(d->character)>=d->AccountData.level) {
+			FLUSH_TO_Q("Mi spiace, non puo impersonare personaggi di livello superiore o uguale al tuo\r\n",d);
+			close_socket(d);
+			return false;
+		}
+	}
+	if(d->AccountData.authorized and !d->impersonating and d->AccountData.level < GetMaxLevel(d->character)) {
 		d->AccountData.level = GetMaxLevel(d->character);
 		Sql::save(d->AccountData,true);
 	}
