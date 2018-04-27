@@ -2544,6 +2544,11 @@ NANNY_FUNC(con_slct) {
 		break;
 
 	case '4':
+		if (d->AccountData.authorized) {
+			string message("$c0001ATTENZIONE$c0007 Stai cambiando la password del tuo $c0001account$c0007 (");
+			message.append(d->AccountData.email).append(")\r\n");
+			send_to_char(message.c_str(),d->character);
+		}
 		SEND_TO_Q("Inserisci la nuova password: ", d);
 		echoOff(d);
 		STATE(d) = CON_PWDNEW;
@@ -3350,21 +3355,23 @@ NANNY_FUNC(con_delete_me) {
 
 NANNY_FUNC(con_pwdnew) {
 	oldarg(false);
-	if(!*arg || strlen(arg) > 10) {
+	if(!*arg || strlen(arg) > 10 || strlen(arg) <6) {
 		echoOn(d);
-		SEND_TO_Q("Password non valida.\n\r", d);
+		SEND_TO_Q("Password non valida (deve essere di lunghezza compresa fra 6 e 10 caratteri).\n\r", d);
 		SEND_TO_Q("Password: ", d);
 		echoOff(d);
 		return false;
 	}
-
-	strncpy(d->pwd,(char*) crypt(arg, d->character->player.name), 10);
+	string salt(RandomWord());
+	salt.append(RandomWord());
+	random_shuffle(salt.begin(),salt.end());
+	strncpy(d->pwd,crypt(arg, salt.c_str()), 10);
 	*(d->pwd + 10) = '\0';
 	echoOn(d);
 	SEND_TO_Q("Reinserisci la password: ", d);
 	STATE(d) = CON_PWDNCNF;
 	echoOff(d);
-	return true;;
+	return false;
 }
 NANNY_FUNC(con_pwdncnf) {
 	oldarg(false);
@@ -3376,6 +3383,10 @@ NANNY_FUNC(con_pwdncnf) {
 
 		STATE(d) = CON_PWDNEW;
 		return false;
+	}
+	if (d->AccountData.authorized) {
+		d->AccountData.password.assign(d->pwd);
+		Sql::update(d->AccountData);
 	}
 	echoOn(d);
 
