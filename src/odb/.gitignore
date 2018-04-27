@@ -1,1 +1,8 @@
 /-.s
+/account-odb-mysql.cxx
+/account-odb-mysql.hxx
+/account-odb-mysql.ixx
+/account-odb.cxx
+/account-odb.hxx
+/account-odb.ixx
+/account-schema-mysql.cxx
