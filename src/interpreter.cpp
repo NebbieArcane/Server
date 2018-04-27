@@ -1958,9 +1958,6 @@ NANNY_FUNC(con_account_pwd) {
 		}
 	}
 	const char* check=ac.password.c_str();
-	if(u) {
-		mudlog(LOG_CONNECT,"Db: %s Typed: %s",check,crypt(arg,check));
-	}
 	if(u and !strcmp(crypt(arg,check),check)) {
 
 		if (PORT==DEVEL_PORT and ac.level<52) {
@@ -2021,7 +2018,7 @@ NANNY_FUNC(con_account_toon) {
 	}
 }
 NANNY_FUNC(con_nop) {
-	mudlog(LOG_SYSERR,"Called nop in nanny for : %s ",G::translate(STATE(d)));
+	mudlog(LOG_SYSERR,"Called nop in nanny for : %d ",STATE(d));
 	return false;
 }
 
@@ -2576,7 +2573,6 @@ NANNY_FUNC(con_nme) {
 	mudlog(LOG_CONNECT,"Parsename result %d",rc);
 	if(rc==2) {  // Il nome digitato contiene una @
 		STATE(d)=CON_ACCOUNT_NAME;
-		mudlog(LOG_CONNECT,"Calling account login (%s)",G::translate(STATE(d)));
 		return true;
 	}
 	if(rc==1) {
@@ -3445,21 +3441,19 @@ void assign_nannies_pointers() {
 void nanny(struct descriptor_data* d, char* arg) {
 	d->currentInput.assign(arg);
 	boost::algorithm::trim_all(d->currentInput);
-	mudlog(LOG_CONNECT,"Outer nanny %s (%s)",d->currentInput.c_str(),G::translate(STATE(d)));
 	echoOn(d);
 	bool moresteps=false;
 	do {
 		uint16_t index=static_cast<uint16_t>(STATE(d));
-		mudlog(LOG_CONNECT,"Inner nanny %s (%s) index: %d",d->currentInput.c_str(),G::translate(STATE(d)),index);
-//		try {
+		try {
 		nanny_func f=nannyFuncs.at(index);
 		moresteps=f(d);
-//		}
-//		catch (std::out_of_range &e) {
-//			mudlog(LOG_SYSERR,"Invalid connection state, closing descriptor: %d (%s) %s",STATE(d),G::translate(STATE(d)),e.what());
-//			close_socket(d);
-//			moresteps=false;
-//		}
+		}
+		catch (std::out_of_range &e) {
+			mudlog(LOG_SYSERR,"Invalid connection state, closing descriptor: %d %s",STATE(d),e.what());
+			close_socket(d);
+			moresteps=false;
+		}
 		// Gestione account: stati messi tutti all'inizio perché poi fanno fallback sulla procedura standard
 	}
 	while(moresteps);
