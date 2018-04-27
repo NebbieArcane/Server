@@ -1533,7 +1533,6 @@ int find_name(char* name) {
 
 int parse_name(const char* arg, char* name) {
 	int i;
-
 	/* skip whitespaces */
 	for(; isspace(*arg); arg++);
 	for(i = 0; (*name = *arg) != 0; arg++, i++, name++) {
@@ -1922,11 +1921,7 @@ void echoOff(struct descriptor_data* d) {
 
 NANNY_FUNC(con_account_name) {
 	oldarg(false);
-	string email(arg);
-	boost::replace_all(email," ","");
-	d->AccountData.email=email;
-	email.insert(0,"Benvenuto ").append(". ").append("Digita la tua password per favore (o b per ricominciare): ");
-	SEND_TO_Q(email.c_str(),d);
+	SEND_TO_Q("Benvenuto, digita la tua password per favore (o b per ricominciare): ",d);
 	echoOff(d);
 	STATE(d)=CON_ACCOUNT_PWD;
 	return false;
@@ -1940,10 +1935,9 @@ NANNY_FUNC(con_account_pwd) {
 		return false;
 	}
 	user &ac=d->AccountData;
-	ac.id=0;
 	mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
 	ac.authorized=false;
-	userPtr u=Sql::getOne<user>(userQuery::email==ac.email);
+	userPtr u=Sql::getOne<user>(userQuery::email==ac.email or userQuery::id == ac.id);
 	if (u) {
 		ac.password.assign(u->password);
 		ac.level=u->level;
@@ -1956,6 +1950,7 @@ NANNY_FUNC(con_account_pwd) {
 		else {
 			ac.nickname=u->email;
 		}
+		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
 	}
 	const char* check=ac.password.c_str();
 	if(u and !strcmp(crypt(arg,check),check)) {
@@ -2573,10 +2568,22 @@ NANNY_FUNC(con_nme) {
 	oldarg(true);
 	d->AlreadyInGame=false;
 	d->justCreated=false;
+	d->AccountData.email.clear();
+	d->AccountData.id=0;
 	char tmp_name[100];
+	try {
+		d->AccountData.id=boost::lexical_cast<unsigned long long>(arg);
+		STATE(d)=CON_ACCOUNT_NAME;
+		return true;
+	}
+	catch (...) {
+	}
 	int rc=parse_name(arg, tmp_name);
 	mudlog(LOG_CONNECT,"Parsename result %d",rc);
 	if(rc==2) {  // Il nome digitato contiene una @
+		string email(arg);
+		boost::replace_all(email," ","");
+		d->AccountData.email=email;
 		STATE(d)=CON_ACCOUNT_NAME;
 		return true;
 	}
