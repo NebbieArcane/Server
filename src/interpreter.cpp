@@ -3385,7 +3385,7 @@ NANNY_FUNC(con_pwdncnf) {
 		return false;
 	}
 	if (d->AccountData.authorized) {
-		d->AccountData.password.assign(d->pwd);
+		d->AccountData.password.assign(crypt(arg, d->pwd));
 		Sql::update(d->AccountData);
 	}
 	echoOn(d);
