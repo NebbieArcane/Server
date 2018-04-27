@@ -253,7 +253,7 @@ ACTION_FUNC(do_register) {
 	if(input.length() > 0)
 		boost::algorithm::split(parts, input, boost::algorithm::is_space(),
 								boost::algorithm::token_compress_on);
-	if(d->AccountData.level >= MAESTRO_DEL_CREATO) {
+	if(ch->desc->AccountData.level >= MAESTRO_DEL_CREATO) {
 		wizRegister(ch, parts);
 	}
 	else {
