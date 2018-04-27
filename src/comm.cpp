@@ -876,11 +876,9 @@ int new_descriptor(int s) {
 #else
 	unsigned int size,i;
 #endif
-	struct descriptor_data* newd = NULL;
 	struct hostent* from;
 	struct sockaddr_in sock;
 	char buf[200];
-	struct descriptor_data* d;
 
 	if((desc = new_connection(s)) < 0) {
 		return (-1);
@@ -893,7 +891,7 @@ int new_descriptor(int s) {
 		write_to_descriptor(desc,buf);
 		close(desc);
 
-		for(d = descriptor_list; d; d = d->next) {
+		for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
 			if(!d->character) {
 				close_socket(d);
 			}
@@ -907,15 +905,15 @@ int new_descriptor(int s) {
 		}
 	}
 
-
-	CREATE(newd, struct descriptor_data, 1);
+	struct descriptor_data* newd = new descriptor_data();
+	//CREATE(newd, struct descriptor_data, 1);
 
 	if(!newd) {
 		sprintf(buf,"Mi dispiace... Non posso lasciarti entrare adesso. "
 				"Riprova piu` tardi.\n\r");
 		write_to_descriptor(desc,buf);
 		close(desc);
-		for(d = descriptor_list; d; d = d->next) {
+		for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
 			if(!d->character) {
 				close_socket(d);
 			}
@@ -1368,7 +1366,7 @@ void close_socket(struct descriptor_data* d) {
 				d->showstr_head=0;
 			}
 		}
-		free(d);
+		delete(d);
 	}
 	d=nullptr;
 

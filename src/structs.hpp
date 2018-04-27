@@ -836,7 +836,8 @@ struct snoop_data {
 	struct char_data* snooping; /* Who is this char snooping */
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
-struct descriptor_data {
+class descriptor_data {
+public:
 	bool justCreated=false;
 	bool impersonating=false;
 	user AccountData;
