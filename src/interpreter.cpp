@@ -2645,7 +2645,7 @@ NANNY_FUNC(con_nme) {
 	}
 	d->AccountData.choosen.assign(tmp_name);
 	/* Tutto ok, chiediamogli la password */
-	if(d->AccountData.level >= MAESTRO_DEL_CREATO) {
+	if(d->AccountData.level >= MAESTRO_DEL_CREATO and PORT != RELEASE_PORT) {
 		SEND_TO_Q(ParseAnsiColors(TRUE,
 				"Non oserei mai chiederti la password, oh superno, ma $c0009ricorda che il pg non e` tuo$c0007\r\n")
 				,d);
