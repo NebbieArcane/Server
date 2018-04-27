@@ -113,7 +113,7 @@ public:
 #pragma db member(toon::id) id auto
 #pragma db member(toon::name) type("varchar(32)")
 #pragma db member(toon::name) unique
-#pragma db member(toon::password) type("varchar(16)")
+#pragma db member(toon::password) type("varchar(128)")
 #pragma db member(toon::title) type("varchar(128)")
 #pragma db member(toon::lastlogin) type("DATETIME") null
 #pragma db member(toon::owner_id) index
