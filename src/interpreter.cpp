@@ -1944,6 +1944,7 @@ NANNY_FUNC(con_account_pwd) {
 		ac.registered=u->registered;
 		ac.ptr=u->ptr;
 		ac.id=u->id;
+		ac.email=u->email;
 		if (u->nickname.empty()) {
 			ac.nickname=u->email;
 		}
