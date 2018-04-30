@@ -59,12 +59,17 @@ public:
 	}
 	template <typename T>
 	static boost::shared_ptr<T> getOne(odb::query<T> key) {
-		DB* db = Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		boost::shared_ptr<T> datum=db->query_one<T>(key);
-		t.commit();
-		return datum;
+		try {
+			DB* db = Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			boost::shared_ptr<T> datum=db->query_one<T>(key);
+			t.commit();
+			return datum;
+		}
+		catch (odb::exception &e) {
+			return boost::make_shared<T>();
+		}
 	}
 	template <typename T>
 	static boost::shared_ptr<T> getOne(odb::query_base key) {
