@@ -1937,20 +1937,22 @@ NANNY_FUNC(con_account_pwd) {
 	user &ac=d->AccountData;
 	mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
 	ac.authorized=false;
-	userPtr u=Sql::getOne<user>(userQuery::email==ac.email or userQuery::id == ac.id);
+	userQuery query=ac.id>0?(userQuery::id == ac.id):(userQuery::email==ac.email);
+	userPtr u=Sql::getOne<user>(query);
 	if (u) {
-		ac.password.assign(u->password);
-		ac.level=u->level;
-		ac.registered=u->registered;
-		ac.ptr=u->ptr;
 		ac.id=u->id;
-		ac.email=u->email;
 		if (u->nickname.empty()) {
 			ac.nickname=u->email;
 		}
 		else {
 			ac.nickname=u->email;
 		}
+		ac.registered=u->registered;
+		ac.password.assign(u->password);
+		ac.level=u->level;
+		ac.backup_email=u->backup_email;
+		ac.ptr=u->ptr;
+		ac.email=u->email;
 		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
 	}
 	const char* check=ac.password.c_str();
@@ -2763,7 +2765,8 @@ NANNY_FUNC(con_pwdok) {
 	}
 	if(d->AccountData.authorized and !d->impersonating and d->AccountData.level < GetMaxLevel(d->character)) {
 		d->AccountData.level = GetMaxLevel(d->character);
-		Sql::save(d->AccountData,true);
+		d->AccountData.nickname.assign(GET_NAME(d->character));
+		Sql::update(d->AccountData,true);
 	}
 #if IMPL_SECURITY
 	if(not check_impl_security(d)) {
