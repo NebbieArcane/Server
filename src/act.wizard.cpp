@@ -165,6 +165,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 			"register list -> elenca i tuoi pg\r\n"
 			"register list <email> -> elenca tutti i personaggi di un account\r\n"
 			"register list <personaggio> -> come sopra ma cerca l'account a partire da un personaggio\r\n"
+			"register list <id> -> come sopra ma cerca l'account a partire dall'id\r\n"
 //			"register account <email> <nome cognome> -> crea l'account (da usare solo per prove) \r\n"
 			"$c0007", ch);
 		return;
@@ -220,10 +221,12 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 			}
 			else {
 				if(parts.size()>=2) {
-					char tmp_name[100];
-					int rc=parse_name(parts[1].substr(9).c_str(),tmp_name);
-					unsigned long int id=0;
-					if(rc==2) {
+					char tmp_name[100+1];
+					unsigned long long id=parse_name(parts[1].substr(0,100).c_str(),tmp_name);
+					if(id >2) {
+						id-=2; // for numeric id parse_name returns the number plus 2
+					}
+					else if (id==2) {
 						userPtr ac=Sql::getOne<user>(userQuery::email==parts[1]);
 						if(ac) {
 							id=ac->id;
