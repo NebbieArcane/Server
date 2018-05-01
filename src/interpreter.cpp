@@ -1530,8 +1530,20 @@ int find_name(char* name) {
 	}
 }
 
+/**
+ * @return unsigned long long
+ * 0 = standard login with pg name (name contains the standardized version)
+ * 1 = invalid data
+ * 2 = email
+ * 3 = numeric id +2 (to cope with id lesser than 2)
+ */
+unsigned long long parse_name(const char* arg, char* name) {
+	try {
+		return 2+boost::lexical_cast<unsigned long long>(arg);
+	}
+	catch (...) {
+	}
 
-int parse_name(const char* arg, char* name) {
 	int i;
 	/* skip whitespaces */
 	for(; isspace(*arg); arg++);
@@ -2568,23 +2580,22 @@ NANNY_FUNC(con_slct) {
 NANNY_FUNC(con_nme) {
 	oldarg(true);
 	char tmp_name[100];
-	try {
-		d->AccountData.id=boost::lexical_cast<unsigned long long>(arg);
-		STATE(d)=CON_ACCOUNT_NAME;
-		return true;
-	}
-	catch (...) {
-	}
-	int rc=parse_name(arg, tmp_name);
+	unsigned long long rc=parse_name(arg, tmp_name);
 	mudlog(LOG_CONNECT,"Parsename result for %s: %d",arg,rc);
-	if(rc==2) {  // Il nome digitato contiene una @
-		string email(arg);
-		boost::replace_all(email," ","");
-		d->AccountData.email=email;
+	if (rc>2) {
+		d->AccountData.id=rc-2;
+		d->AccountData.email.clear();
 		STATE(d)=CON_ACCOUNT_NAME;
 		return true;
 	}
-	if(rc==1) {
+	else if(rc==2) {  // Il nome digitato contiene una @
+		d->AccountData.id=0;
+		d->AccountData.email.assign(arg);
+		boost::replace_all(d->AccountData.email," ","");
+		STATE(d)=CON_ACCOUNT_NAME;
+		return true;
+	}
+	else if(rc==1) {
 		SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
 		SEND_TO_Q("Nome: ", d);
 		return false;
