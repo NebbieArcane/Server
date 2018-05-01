@@ -32,7 +32,7 @@ void ShowRollInstruction(struct descriptor_data* d) ;
 void ShowStatInstruction(struct descriptor_data* d) ;
 void ThreeArgumentInterpreter(char* pchArgument, char* pchFirstArg, char* pchSecondArg, char* pchThirdArg);
 int _check_ass_name(char* name) ;
-int parse_name(const char* arg, char* name) ;
+unsigned long long parse_name(const char* arg, char* name) ;
 void argument_interpreter(const char* argument,char* first_arg,char* second_arg) ;
 void assign_command_pointers() ;
 void assign_nannies_pointers();
