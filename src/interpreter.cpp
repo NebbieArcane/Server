@@ -1850,13 +1850,12 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 
 
 void toonList(struct descriptor_data* d,const string &optional_message="") {
-	const user &ac=d->AccountData;
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
-	if (ac.id) { short n=0;
+	if (d->AccountData.id) { short n=0;
 		constexpr int nlen=5;
 		char order[nlen]="";
-		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==ac.id);
+		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==d->AccountData.id);
 		d->toons.clear();
 		for(toonPtr pg : r) {
 			++n;
@@ -1934,47 +1933,46 @@ NANNY_FUNC(con_account_pwd) {
 		SEND_TO_Q("Ricomiciamo. Come ti chiami?\r\n",d);
 		return false;
 	}
-	user &ac=d->AccountData;
-	mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
-	ac.authorized=false;
-	userQuery query=ac.id>0?(userQuery::id == ac.id):(userQuery::email==ac.email);
+	mudlog(LOG_CONNECT,"Id: %d ,email: %s toon: %s",d->AccountData.id,d->AccountData.email.c_str(),d->AccountData.choosen.c_str());
+	d->AccountData.authorized=false;
+	userQuery query=d->AccountData.id>0?(userQuery::id == d->AccountData.id):(userQuery::email==d->AccountData.email);
 	userPtr u=Sql::getOne<user>(query);
 	if (u) {
-		ac.id=u->id;
+		d->AccountData.id=u->id;
 		if (u->nickname.empty()) {
-			ac.nickname=u->email;
+			d->AccountData.nickname=u->email;
 		}
 		else {
-			ac.nickname=u->email;
+			d->AccountData.nickname=u->email;
 		}
-		ac.registered=u->registered;
-		ac.password.assign(u->password);
-		ac.level=u->level;
-		ac.backup_email=u->backup_email;
-		ac.ptr=u->ptr;
-		ac.email=u->email;
-		mudlog(LOG_CONNECT,"Current mail: %s Choosen: %s",ac.email.c_str(),ac.choosen.c_str());
+		d->AccountData.registered=u->registered;
+		d->AccountData.password.assign(u->password);
+		d->AccountData.level=u->level;
+		d->AccountData.backup_email=u->backup_email;
+		d->AccountData.ptr=u->ptr;
+		d->AccountData.email=u->email;
+		mudlog(LOG_CONNECT,"Id: %d ,email: %s toon: %s",d->AccountData.id,d->AccountData.email.c_str(),d->AccountData.choosen.c_str());
 	}
-	const char* check=ac.password.c_str();
+	const char* check=d->AccountData.password.c_str();
 	if(u and !strcmp(crypt(arg,check),check)) {
 
-		if (PORT==DEVEL_PORT and ac.level<52) {
-			mudlog(LOG_CONNECT,"%s level %d attempted to access devel",ac.email,ac.level);
+		if (PORT==DEVEL_PORT and d->AccountData.level<52) {
+			mudlog(LOG_CONNECT,"%s level %d attempted to access devel",d->AccountData.email,d->AccountData.level);
 			FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
 			close_socket(d);
 			return false;
 		}
-		if(PORT==MASTER_PORT and ac.level<52 and !ac.ptr) {
-			mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",ac.email,ac.level,(ac.ptr?"ON":"OFF"));
+		if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
+			mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",d->AccountData.email,d->AccountData.level,(d->AccountData.ptr?"ON":"OFF"));
 			FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
 			close_socket(d);
 			return false;
 		}
-		ac.authorized=true;
+		d->AccountData.authorized=true;
 		string message("Benvenuto ");
-		message.append(ac.nickname).append("\r\n");
+		message.append(d->AccountData.nickname).append("\r\n");
 		STATE(d)=CON_ACCOUNT_TOON;
-		mudlog(LOG_CONNECT,"Succesfull connection for %s",ac.email.c_str());
+		mudlog(LOG_CONNECT,"Succesfull connection for %s",d->AccountData.email.c_str());
 		toonList(d,message);
 	}
 	else {
@@ -2569,10 +2567,6 @@ NANNY_FUNC(con_slct) {
 }
 NANNY_FUNC(con_nme) {
 	oldarg(true);
-	d->AlreadyInGame=false;
-	d->justCreated=false;
-	d->AccountData.email.clear();
-	d->AccountData.id=0;
 	char tmp_name[100];
 	try {
 		d->AccountData.id=boost::lexical_cast<unsigned long long>(arg);
@@ -2582,7 +2576,7 @@ NANNY_FUNC(con_nme) {
 	catch (...) {
 	}
 	int rc=parse_name(arg, tmp_name);
-	mudlog(LOG_CONNECT,"Parsename result %d",rc);
+	mudlog(LOG_CONNECT,"Parsename result for %s: %d",arg,rc);
 	if(rc==2) {  // Il nome digitato contiene una @
 		string email(arg);
 		boost::replace_all(email," ","");
@@ -2603,7 +2597,7 @@ NANNY_FUNC(con_nme) {
 	bool found=false;
 	toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
 	if(pg) {
-		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->id);
+		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->owner_id);
 		found=true;
 		strcpy(d->pwd,pg->password.substr(0,11).c_str());
 		d->AccountData.choosen=pg->name;
