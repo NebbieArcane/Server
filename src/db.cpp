@@ -574,7 +574,7 @@ void build_player_index() {
 
 	top_of_p_table = 0;
 	path p(current_path());
-	p/=PLAYERS_DIR;
+	p/=PLAYERS_DIR; // Overloaded operator: concats adding path separator
 	vector<path> todelete;
 	if(exists(p) and is_directory(p)) {
 		for(auto &entry : boost::make_iterator_range(directory_iterator(p), directory_iterator())) {
