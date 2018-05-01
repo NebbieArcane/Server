@@ -2683,7 +2683,7 @@ NANNY_FUNC(con_nmecnf) {
 	oldarg(false);
 	if(*arg == 's' || *arg == 'S') {
 		if(d->AccountData.authorized) {  // Authorized at account level no need to ask password again when creating a new toon
-			STATE(d)=CON_PWDOK;
+			STATE(d)=CON_QRACE;
 			return true;
 		}
 		echoOn(d);
