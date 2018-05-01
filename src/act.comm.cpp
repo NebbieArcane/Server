@@ -1101,6 +1101,9 @@ ACTION_FUNC(do_pray) {
 			snprintf(buf1,(MAX_INPUT_LENGTH*2)-1,"Tu preghi '%s'\n\r", arg);
 			send_to_char(buf1, ch);
 		}
+		if (ch->desc->AccountData.authorized) {
+			ii+=60;
+		}
 		buf1[160]=0;
 		if(ii > number(1, 101)) {
 
