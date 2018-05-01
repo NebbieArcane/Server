@@ -265,6 +265,8 @@ ACTION_FUNC(do_register) {
 		wizRegister(ch, parts);
 	}
 	else {
+		send_to_char("Per registrare un personaggio nuovo devi aver fatto login sull'account\n\r"
+					 "Vai su https://www.nebbiearcane.it/mudcode per vedere come\n\r",ch);
 		plrRegister(ch);
 	}
 }
