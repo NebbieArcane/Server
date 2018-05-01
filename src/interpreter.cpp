@@ -2683,8 +2683,10 @@ NANNY_FUNC(con_nmecnf) {
 	oldarg(false);
 	if(*arg == 's' || *arg == 'S') {
 		if(d->AccountData.authorized) {  // Authorized at account level no need to ask password again when creating a new toon
+			echoOn(d);
+			show_race_choice(d);
 			STATE(d)=CON_QRACE;
-			return true;
+			return false;
 		}
 		echoOn(d);
 		SEND_TO_Q("Nuovo personaggio.\n\r", d);
@@ -2935,10 +2937,10 @@ NANNY_FUNC(con_qrace) {
 				/* set the chars race to this */
 				GET_RACE(d->character) = race_choice[tmpi];
 				string buf("Quale'e` il sesso di ");
-				buf.assign(GET_NAME(d->character)).assign("maschio/Femmina) (b per tornare indietro): ");
+				buf.append(GET_NAME(d->character)).assign("maschio/Femmina) (b per tornare indietro): ");
 				SEND_TO_Q(buf.c_str(), d);
-				STATE(d) = CON_QSEX;
 				mudlog(LOG_CONNECT,"Razza scelta procedo con qsex");
+				STATE(d) = CON_QSEX;
 			}
 			else {
 				SEND_TO_Q("\n\rScelta non valida.\n\r\n\r", d);
