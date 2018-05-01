@@ -836,10 +836,12 @@ struct snoop_data {
 	struct char_data* snooping; /* Who is this char snooping */
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
+
 class descriptor_data {
 public:
 	bool justCreated=false;
 	bool impersonating=false;
+	bool AlreadyInGame = false;                  /* flag di presenza */
 	user AccountData;
 	std::vector<std::string> toons;
 	e_connection_types last_state;
@@ -882,7 +884,6 @@ public:
 	 * in eventuale ld non riconosciuto, fra l'accettazione del nome e quella
 	 * della password
 	 */
-	bool AlreadyInGame;                  /* flag di presenza */
 	struct descriptor_data* ToBeKilled;  /* descrittore gia' in gioco,
 					 * da killare */
 	/*campo per decifrare il tipo di rollata
