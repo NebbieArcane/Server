@@ -129,9 +129,14 @@ void plrRegister(struct char_data* ch, unsigned long int id=0) {
 	}
 	if(!id) {
 		send_to_char("Nessun personaggio registrato",ch);
+		return;
 	}
 	string message("Elenco dei personaggi per ");
 	userPtr ac=Sql::getOne<user>(id);
+	if (!ac) {
+		send_to_char("Invalid account",ch);
+		return;
+	}
 	message.append(ac->email);
 	message.append("\r\n");
 	toonRows r=Sql::getAll<toon>(toonQuery::owner_id ==id);
@@ -155,7 +160,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 			"$c0011"
 			"Con questo comando puoi esaminare le registrazioni\r\n"
 			"Sintassi:\r\n"
-			"register add -> assegna il personaggio corrente al tuo account\r\n"
+			"register add -> assegna il personaggio corrente al tuo account (solo se il pg non appartiene a nessuno)\r\n"
 			"register add <personaggio> <email> -> assegna un personaggio a un account\r\n"
 			"register list -> elenca i tuoi pg\r\n"
 			"register list <email> -> elenca tutti i personaggi di un account\r\n"
@@ -168,7 +173,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 		boost::format fmt("Parts: %d\r\n");
 		fmt % parts.size();
 		send_to_char(fmt.str().c_str(),ch);
-		if(parts[0] == "account") {
+		if(false and parts[0] == "account") { //disabled
 			if(parts.size() < 4) {
 				throw invalid_argument(
 					"Usa 'register account <email> <nome cognome>'");
@@ -194,7 +199,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 		}
 		else if(parts[0] == "add") {
 			if(parts.size() < 2) {
-				boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
+				boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE owner_id =0 and name="%s")");
 				fmt % ch->desc->AccountData.id % ch->desc->AccountData.choosen;
 				try {
 					DB* db=Sql::getMysql();
