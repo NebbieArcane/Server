@@ -34,12 +34,17 @@ public:
 	static void dbUpdate();
 	template <typename T,typename C>
 	static boost::shared_ptr<T> getOne(C key) {
-		DB* db = Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		auto datum(db->load<T>(key));
-		t.commit();
-		return datum;
+		try {
+			DB* db = Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			auto datum(db->load<T>(key));
+			t.commit();
+			return datum;
+		}
+		catch (odb::exception &e) {
+			return boost::make_shared<T>();
+		}
 	}
 	/* To be used with views only (other objects are not meaningful without a key */
 	template <typename T>
