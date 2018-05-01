@@ -16,6 +16,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1775,8 +1776,7 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 #define AGAIN    2
 #define GOON     0
 {
-	char buf[ 254 ];
-	char temp[254];
+	char buf[ 512 ];
 	short doafter=GOON;
 	int FO,IN,SA,AG,CO,CA,t;
 	char c7[2]="\0";
@@ -1824,17 +1824,19 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 		AG=MIN(MaxDexForRace(d->character)-STAT_MIN_VAL,AG);
 		CO=MIN(MaxConForRace(d->character)-STAT_MIN_VAL,CO);
 		CA=MIN(MaxChrForRace(d->character)-STAT_MIN_VAL,CA);
-		sprintf(buf,"Ecco le stats risultanti dalla tua scelta:\n\r");
-		sprintf(temp,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
+		SEND_TO_Q("Ecco le stats risultanti dalla tua scelta:\n\r",d);
+		sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
 				IN+STAT_MIN_VAL,
 				SA+STAT_MIN_VAL,
 				AG+STAT_MIN_VAL,
 				CO+STAT_MIN_VAL,
 				CA+STAT_MIN_VAL,(!*c7?"\0":"piu' la randomizzazione (-1/+1)"));
-		if(t<STAT_MAX_SUM)
-			sprintf(buf,"%sATTENZIONE. Hai usato solo %2d dei %2d disponibili\n\r",
-					temp,t,STAT_MAX_SUM);
 		SEND_TO_Q(buf,d);
+
+		if(t<STAT_MAX_SUM) {
+			sprintf(buf,"ATTENZIONE. Hai usato solo %2d dei %2d disponibili\n\r",t,STAT_MAX_SUM);
+			SEND_TO_Q(buf,d);
+		}
 	}
 	d->stat[0]=(char)FO;
 	d->stat[1]=(char)IN;
@@ -1860,7 +1862,6 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 	return;
 }
 
-
 void toonList(struct descriptor_data* d,const string &optional_message="") {
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
@@ -1879,6 +1880,32 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 	}
 	message.append(">");
 	SEND_TO_Q(message.c_str(),d);
+}
+bool toonFromFileSystem(const char* nome) {
+	using namespace boost::filesystem;
+	const path file(lower(nome));
+	file.append(".dat");
+	if(is_regular_file(file) and file.extension()==".dat") {
+		FILE* pFile;
+		struct char_file_u Player;
+		if(!(pFile = fopen(file.c_str(), "r"))) {
+			return false;
+		}
+		if(fread(&Player, 1, sizeof(Player), pFile)
+				== sizeof(Player)) {
+			fclose(pFile);
+			if(strcasecmp(file.stem().c_str(),Player.name)) {
+				mudlog(LOG_SYSERR,"Strangeness: %s contains wrong name %s",file.filename().c_str(),Player.name);
+			}
+			else {
+				getFromDb(Player.name,Player.pwd,Player.title);
+			}
+			return true; //Returnung true with no pg in the db causes an abort later
+		}
+		fclose(pFile);
+	}
+	return false;
+
 }
 bool check_impl_security(struct descriptor_data* d) {
 	if(top_of_p_table > 0) {
@@ -2607,6 +2634,16 @@ NANNY_FUNC(con_nme) {
 	}
 	bool found=false;
 	toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
+	if (!pg) {
+		found=toonFromFileSystem(tmp_name);
+		pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
+		if (!pg) {
+			// SOmething badly wrong, let's force this guy to restart
+			FLUSH_TO_Q("Mi spiace, questo nome non va bene\n\r",d);
+			close_socket(d);
+			return false;
+		}
+	}
 	if(pg) {
 		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->owner_id);
 		found=true;
@@ -2937,7 +2974,7 @@ NANNY_FUNC(con_qrace) {
 				/* set the chars race to this */
 				GET_RACE(d->character) = race_choice[tmpi];
 				string buf("Quale'e` il sesso di ");
-				buf.append(GET_NAME(d->character)).assign("maschio/Femmina) (b per tornare indietro): ");
+				buf.append(GET_NAME(d->character)).append("? (Maschio/Femmina) (b per tornare indietro): ");
 				SEND_TO_Q(buf.c_str(), d);
 				mudlog(LOG_CONNECT,"Razza scelta procedo con qsex");
 				STATE(d) = CON_QSEX;
