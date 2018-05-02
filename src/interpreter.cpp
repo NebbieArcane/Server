@@ -1542,9 +1542,9 @@ unsigned long long parse_name(const char* arg, char* name) {
 	try {
 		return 2+boost::lexical_cast<unsigned long long>(arg);
 	}
-	catch (...) {
+	catch (exception &e) {
+		mudlog(LOG_CONNECT,"Exception %s",e.what());
 	}
-
 	int i;
 	/* skip whitespaces */
 	for(; isspace(*arg); arg++);
@@ -1556,7 +1556,7 @@ unsigned long long parse_name(const char* arg, char* name) {
 				return 2;
 			}
 #endif
-			return 1 ;
+			return 1ULL ;
 		}
 	}
 
@@ -1883,13 +1883,17 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 }
 bool toonFromFileSystem(const char* nome) {
 	using namespace boost::filesystem;
-	string filename(lower(nome));
-	filename.append(".dat");
-	const path file(filename);
+	path file(current_path());
+	file/=PLAYERS_DIR; // Overloaded operator: concats adding path separator
+	file/=lower(nome);
+	file+=".dat";
+	mudlog(LOG_CONNECT,"Checking %s",file.string());
 	if(is_regular_file(file) and file.extension()==".dat") {
+		mudlog(LOG_CONNECT,"Opening %s",file.string());
 		FILE* pFile;
 		struct char_file_u Player;
 		if(!(pFile = fopen(file.c_str(), "r"))) {
+			mudlog(LOG_CONNECT,"Could not open %s, return false",file.string());
 			return false;
 		}
 		if(fread(&Player, 1, sizeof(Player), pFile)
@@ -1901,10 +1905,12 @@ bool toonFromFileSystem(const char* nome) {
 			else {
 				getFromDb(Player.name,Player.pwd,Player.title);
 			}
-			return true; //Returnung true with no pg in the db causes an abort later
+			mudlog(LOG_CONNECT,"Return true");
+			return true; //Returning true with no pg in the db causes an abort later
 		}
 		fclose(pFile);
 	}
+	mudlog(LOG_CONNECT,"Return false");
 	return false;
 
 }
@@ -2609,21 +2615,22 @@ NANNY_FUNC(con_nme) {
 	oldarg(true);
 	char tmp_name[100];
 	unsigned long long rc=parse_name(arg, tmp_name);
+	std::cout << rc << std::endl;
 	mudlog(LOG_CONNECT,"Parsename result for %s: %d",arg,rc);
-	if (rc>2) {
+	if (rc>2ULL) {
 		d->AccountData.id=rc-2;
 		d->AccountData.email.clear();
 		STATE(d)=CON_ACCOUNT_NAME;
 		return true;
 	}
-	else if(rc==2) {  // Il nome digitato contiene una @
+	else if(rc==2ULL) {  // Il nome digitato contiene una @
 		d->AccountData.id=0;
 		d->AccountData.email.assign(arg);
 		boost::replace_all(d->AccountData.email," ","");
 		STATE(d)=CON_ACCOUNT_NAME;
 		return true;
 	}
-	else if(rc==1) {
+	else if(rc==1ULL) {
 		SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
 		SEND_TO_Q("Nome: ", d);
 		return false;
@@ -2637,12 +2644,14 @@ NANNY_FUNC(con_nme) {
 	toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
 	if (!pg) {
 		found=toonFromFileSystem(tmp_name);
-		pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
-		if (!pg) {
-			// SOmething badly wrong, let's force this guy to restart
-			FLUSH_TO_Q("Mi spiace, questo nome non va bene\n\r",d);
-			close_socket(d);
-			return false;
+		if (found) {
+			pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
+			if (!pg) {
+				// SOmething badly wrong, let's force this guy to restart
+				FLUSH_TO_Q("Mi spiace, questo nome non va bene\n\r",d);
+				close_socket(d);
+				return false;
+			}
 		}
 	}
 	if(pg) {
