@@ -1883,8 +1883,9 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 }
 bool toonFromFileSystem(const char* nome) {
 	using namespace boost::filesystem;
-	const path file(lower(nome));
-	file.append(".dat");
+	string filename(lower(nome));
+	filename.append(".dat");
+	const path file(filename);
 	if(is_regular_file(file) and file.extension()==".dat") {
 		FILE* pFile;
 		struct char_file_u Player;
