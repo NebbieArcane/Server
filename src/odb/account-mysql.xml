@@ -26,7 +26,9 @@
       <column name="name" type="varchar(32)" null="false"/>
       <column name="password" type="varchar(128)" null="false"/>
       <column name="title" type="varchar(128)" null="false"/>
+      <column name="level" type="SMALLINT UNSIGNED" null="false" default="0"/>
       <column name="lastlogin" type="DATETIME" null="true"/>
+      <column name="lasthost" type="varchar(255)" null="false" default="''"/>
       <column name="owner_id" type="BIGINT UNSIGNED" null="false"/>
       <primary-key auto="true">
         <column name="id"/>
