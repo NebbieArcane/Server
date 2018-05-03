@@ -25,10 +25,17 @@ extern void printFlags();
 #define logDefineStatus(macroname) LOG4CXX_TRACE(::logger,::boost::format("LCONF %-30s: %s") % #macroname % (macroname?"ON":"off"))
 #endif
 #ifndef ACCESSI
-#define ACCESSI			true
+#define ACCESSI				true
 #else
 logDefineStatus(ACCESSI)
 #endif
+
+#ifndef ACCOUNT_MODE
+#define ACCOUNT_MODE		true
+#else
+logDefineStatus(ACCOUNT_MODE)
+#endif
+
 
 #ifndef ALAR
 #define ALAR				true
@@ -49,7 +56,7 @@ logDefineStatus(BLOCK_WRITE)
 #endif
 
 #ifndef CHECK_RENT_INACTIVE
-#define CHECK_RENT_INACTIVEtrue
+#define CHECK_RENT_INACTIVE true
 #else
 logDefineStatus(CHECK_RENT_INACTIVE)
 #endif
@@ -73,16 +80,19 @@ logDefineStatus(DOFLEEFIGHTINGLD)
 #endif
 /* auto flee se in combat va ld */
 #ifndef EGO
-#define EGO				false
+#define EGO				true
 #else
 logDefineStatus(EGO)
 #endif
+
+
 
 #ifndef EGO_BLADE
 #define EGO_BLADE			true
 #else
 logDefineStatus(EGO_BLADE)
 #endif
+
 
 #ifndef ENABLE_AUCTION
 #define ENABLE_AUCTION		true
@@ -100,6 +110,12 @@ logDefineStatus(EQPESANTE)
 #define FAST_TRACK			true
 #else
 logDefineStatus(FAST_TRACK)
+#endif
+
+#ifndef GROUP_DEATH
+#define GROUP_DEATH			false
+#else
+logDefineStatus(GROUP_DEATH)
 #endif
 
 #ifndef HASH
@@ -252,10 +268,10 @@ logDefineStatus(NICE_MULTICLASS)
 logDefineStatus(NICE_PKILL)
 #endif
 
-#ifndef NO_REGISTER
-#define NO_REGISTER		true
+#ifndef NOREGISTER
+#define NOREGISTER		true
 #else
-logDefineStatus(NO_REGISTER)
+logDefineStatus(NOREGISTER)
 #endif
 
 #ifndef NODUPLICATES
@@ -298,12 +314,6 @@ logDefineStatus(QUEST_GAIN)
 #define SAVEWORLD			false
 #else
 logDefineStatus(SAVEWORLD)
-#endif
-
-#ifndef SITELOCK
-#define SITELOCK			true
-#else
-logDefineStatus(SITELOCK)
 #endif
 
 #ifndef SUSPENDREGISTER

@@ -16,16 +16,6 @@ if [ -f $conf ] ; then
 else
 	echo "No Conf file for $environment present, using builtin defaults"
 fi
-php=$(which php)
-if [ -z "$php" ] ; then
-	echo "Missing php, skipping autoenum regen"
-else
-	(
-	cd shutils
-	$php ./code_generator.php
-	cp *.?pp ../src/
-	)
-fi
 rm -f CMakeCache.txt
 rm -f src/CMakeCache.txt
 rm -f src/release.h
@@ -38,9 +28,9 @@ mkdir -p build
 cd build 
 cmake .. 
 jobs=$(cat makejobs)
-folder=$(pwd)
-sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
-sed -e "s|FOLDER|$folder|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile
+sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../mudroot/Makefile
+sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
+sed -e "s|FOLDER|./build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile
 make -j$jobs
 )  
 if [ -x mudroot/myst ] ; then

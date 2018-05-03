@@ -1,56 +1,5 @@
 == Enumerations ==
 
-=== enum e_affected_by ===
-
-*Bitvector for 'affected_by'
-** AFF_NONE                                     =0
-** AFF_BLIND                                    =1
-** AFF_INVISIBLE                                =2
-** AFF_DETECT_EVIL                              =4
-** AFF_DETECT_INVISIBLE                         =8
-** AFF_DETECT_MAGIC                             =16
-** AFF_SENSE_LIFE                               =32
-** AFF_LIFE_PROT                                =64
-** AFF_SANCTUARY                                =128
-** AFF_DRAGON_RIDE                              =256
-** AFF_GROWTH                                   =512this was the one that was missing
-** AFF_CURSE                                    =1024
-** AFF_FLYING                                   =2048
-** AFF_POISON                                   =4096
-** AFF_TREE_TRAVEL                              =8192
-** AFF_PARALYSIS                                =16384
-** AFF_INFRAVISION                              =32768
-** AFF_WATERBREATH                              =65536
-** AFF_SLEEP                                    =131072
-** AFF_TRAVELLING                               =262144i.e. can't be stoned
-** AFF_SNEAK                                    =524288
-** AFF_HIDE                                     =1048576
-** AFF_SILENCE                                  =2097152
-** AFF_CHARM                                    =4194304
-** AFF_FOLLOW                                   =8388608
-** AFF_PROTECT_FROM_EVIL                        =16777216
-** AFF_TRUE_SIGHT                               =33554432
-** AFF_SCRYING                                  =67108864seeing other rooms
-** AFF_FIRESHIELD                               =134217728
-** AFF_GROUP                                    =268435456
-** AFF_TELEPATHY                                =536870912
-** AFF_GLOBE_DARKNESS                           =1073741824Added by REQUIEM 2018
-** AFF_UNDEF_AFF_1                              =2147483648
-== Enumerations ==
-
-=== enum e_affected_by2 ===
-
-
-** AFF2_ANIMAL_INVIS                            =1
-** AFF2_HEAT_STUFF                              =2
-** AFF2_LOG_ME                                  =4
-** AFF2_BERSERK                                 =8
-** AFF2_PARRY                                   =16Added by GAIA 2001
-** AFF2_CON_ORDER                               =32
-** AFF2_AFK                                     =64
-** AFF2_PKILLER                                 =128
-== Enumerations ==
-
 === enum e_apply ===
 
 *modifiers to char's abilities
@@ -138,22 +87,6 @@
 ** PSI_LEVEL_IND                                =10
 == Enumerations ==
 
-=== enum e_classes ===
-
-
-** CLASS_MAGIC_USER                             =1
-** CLASS_CLERIC                                 =2
-** CLASS_WARRIOR                                =4
-** CLASS_THIEF                                  =8
-** CLASS_DRUID                                  =16
-** CLASS_MONK                                   =32
-** CLASS_BARBARIAN                              =64
-** CLASS_SORCERER                               =128
-** CLASS_PALADIN                                =256
-** CLASS_RANGER                                 =512
-** CLASS_PSI                                    =1024
-== Enumerations ==
-
 === enum e_conditions ===
 
 
@@ -166,7 +99,7 @@
 
 *modes of connectedness
 ATTENZIONE se si aggiungono altri stati di connessione, modificare anche
-l'array connected_types in constants.c
+l'array connected_types in constants.cpp
 ** CON_PLYNG                                    =0
 ** CON_NME                                      =1
 ** CON_NMECNF                                   =2
@@ -206,11 +139,17 @@ l'array connected_types in constants.c
 ** CON_CONF_ROLL                                =36
 ** CON_EXTRA2                                   =37
 ** CON_OBJ_FORGING                              =38
+** CON_ACCOUNT_NAME                             =39Richiesto login sull'account'
+** CON_ACCOUNT_PWD                              =40Email riconosciuta, chiediamo la password
+** CON_ACCOUNT_TOON                             =41Account password ok, propongo lista personaggi
+** CON_REGISTER                                 =42Registro il pg sull'account
+** CON_PWDOK                                    =43Tutto pronto, lo riconnetto o mando al menu
 == Enumerations ==
 
 === enum e_damage_type ===
 
 
+** NO_DAMAGE                                    =0
 ** FIRE_DAMAGE                                  =1
 ** COLD_DAMAGE                                  =2
 ** ELEC_DAMAGE                                  =3
@@ -252,32 +191,6 @@ l'array connected_types in constants.c
 ** WEST                                         =3
 ** UP                                           =4
 ** DOWN                                         =5
-== Enumerations ==
-
-=== enum e_exit_types ===
-
-
-** EX_ISDOOR                                    =1
-** EX_CLOSED                                    =2
-** EX_LOCKED                                    =4
-** EX_SECRET                                    =8
-** EX_NOTBASH                                   =16
-** EX_PICKPROOF                                 =32
-** EX_CLIMB                                     =64
-** EX_MALE                                      =128
-** EX_NOLOOKT                                   =256
-== Enumerations ==
-
-=== enum e_fear_type ===
-
-
-** FEAR_SEX                                     =1
-** FEAR_RACE                                    =2
-** FEAR_CHAR                                    =4
-** FEAR_CLASS                                   =8
-** FEAR_EVIL                                    =16
-** FEAR_GOOD                                    =32
-** FEAR_VNUM                                    =64
 == Enumerations ==
 
 === enum e_find_result ===
@@ -357,81 +270,10 @@ l'array connected_types in constants.c
 ** FOUND_FOOD69                                 =1369
 == Enumerations ==
 
-=== enum e_hate_type ===
-
-
-** HATE_SEX                                     =1
-** HATE_RACE                                    =2
-** HATE_CHAR                                    =4
-** HATE_CLASS                                   =8
-** HATE_EVIL                                    =16
-** HATE_GOOD                                    =32
-** HATE_VNUM                                    =64
-== Enumerations ==
-
-=== enum e_immunity_type ===
-
-
-** IMM_FIRE                                     =1
-** IMM_COLD                                     =2
-** IMM_ELEC                                     =4
-** IMM_ENERGY                                   =8
-** IMM_BLUNT                                    =16
-** IMM_PIERCE                                   =32
-** IMM_SLASH                                    =64
-** IMM_ACID                                     =128
-** IMM_POISON                                   =256
-** IMM_DRAIN                                    =512
-** IMM_SLEEP                                    =1024
-** IMM_CHARM                                    =2048
-** IMM_HOLD                                     =4096
-** IMM_NONMAG                                   =8192
-** IMM_PLUS1                                    =16384
-** IMM_PLUS2                                    =32768
-** IMM_PLUS3                                    =65536
-** IMM_PLUS4                                    =131072
-== Enumerations ==
-
-=== enum e_item_flag ===
-
-*Bitvector for 'extra_flags'
-** ITEM_GLOW                                    =1
-** ITEM_HUM                                     =2
-** ITEM_METAL                                   =4undefined...
-** ITEM_MINERAL                                 =8undefined?
-** ITEM_ORGANIC                                 =16undefined?
-** ITEM_INVISIBLE                               =32
-** ITEM_MAGIC                                   =64
-** ITEM_NODROP                                  =128
-** ITEM_BLESS                                   =256
-** ITEM_ANTI_GOOD                               =512not usable by good people
-** ITEM_ANTI_EVIL                               =1024not usable by evil people
-** ITEM_ANTI_NEUTRAL                            =2048not usable by neutral people
-** ITEM_ANTI_CLERIC                             =4096
-** ITEM_ANTI_MAGE                               =8192
-** ITEM_ANTI_THIEF                              =16384
-** ITEM_ANTI_FIGHTER                            =32768
-** ITEM_BRITTLE                                 =65536weapons that break after 1 hit  armor that breaks when hit?
-** ITEM_RESISTANT                               =131072resistant to damage
-** ITEM_IMMUNE                                  =262144Item is immune to scrapping
-** ITEM_ANTI_MEN                                =524288men can't wield
-** ITEM_ANTI_WOMEN                              =1048576women can't wield
-** ITEM_ANTI_SUN                                =2097152item is sensitive to being in the sun
-** ITEM_ANTI_BARBARIAN                          =4194304
-** ITEM_ANTI_RANGER                             =8388608
-** ITEM_ANTI_PALADIN                            =16777216
-** ITEM_ANTI_PSI                                =33554432
-** ITEM_ANTI_MONK                               =67108864
-** ITEM_ANTI_DRUID                              =134217728
-** ITEM_ONLY_CLASS                              =268435456
-** ITEM_DIG                                     =536870912
-** ITEM_SCYTHE                                  =1073741824
-** ITEM_ANTI_SORCERER                           =2147483648
-== Enumerations ==
-
 === enum e_item_type ===
 
 
+** ITEM_NONE                                    =0
 ** ITEM_LIGHT                                   =1
 ** ITEM_SCROLL                                  =2
 ** ITEM_WAND                                    =3
@@ -460,40 +302,6 @@ l'array connected_types in constants.c
 ** ITEM_ROCK                                    =26
 == Enumerations ==
 
-=== enum e_item_wear ===
-
-*Bitvector For 'wear_flags'
-** ITEM_TAKE                                    =1
-** ITEM_WEAR_FINGER                             =2
-** ITEM_WEAR_NECK                               =4
-** ITEM_WEAR_BODY                               =8
-** ITEM_WEAR_HEAD                               =16
-** ITEM_WEAR_LEGS                               =32
-** ITEM_WEAR_FEET                               =64
-** ITEM_WEAR_HANDS                              =128
-** ITEM_WEAR_ARMS                               =256
-** ITEM_WEAR_SHIELD                             =512
-** ITEM_WEAR_ABOUT                              =1024
-** ITEM_WEAR_WAISTE                             =2048
-** ITEM_WEAR_WRIST                              =4096
-** ITEM_WIELD                                   =8192
-** ITEM_HOLD                                    =16384
-** ITEM_THROW                                   =32768
-** ITEM_LIGHT_SOURCE                            =65536UNUSED  CHECKS ONLY FOR ITEM_LIGHT
-** ITEM_WEAR_BACK                               =131072
-** ITEM_WEAR_EAR                                =262144
-** ITEM_WEAR_EYE                                =524288
-== Enumerations ==
-
-=== enum e_large_flags ===
-
-
-** LARGE_NONE                                   =0
-** LARGE_WATER                                  =1
-** LARGE_AIR                                    =2
-** LARGE_IMPASS                                 =4
-== Enumerations ==
-
 === enum e_liquids ===
 
 *Some different kind of liquids
@@ -518,60 +326,25 @@ l'array connected_types in constants.c
 === enum e_log_levels ===
 
 
-** LOG_SYSERR                                   =1
-** LOG_CHECK                                    =2
-** LOG_PLAYERS                                  =4
-** LOG_MOBILES                                  =8
-** LOG_CONNECT                                  =16
-** LOG_ERROR                                    =32
-** LOG_WHO                                      =64
-** LOG_SAVE                                     =128
-** LOG_MAIL                                     =256
-** LOG_RANK                                     =512
-** LOG_ALWAYS                                   =1024
-** LOG_SILENT                                   =32768
-== Enumerations ==
-
-=== enum e_mob_flags ===
-
-*for mobile actions: specials.act
-** ACT_SPEC                                     =1special routine to be called if exist
-** ACT_SENTINEL                                 =2this mobile not to be moved
-** ACT_SCAVENGER                                =4pick up stuff lying around
-** ACT_ISNPC                                    =8This bit is set for use with IS_NPC()
-** ACT_NICE_THIEF                               =16Set if a thief should NOT be killed
-** ACT_AGGRESSIVE                               =32Set if automatic attack on NPC's
-** ACT_STAY_ZONE                                =64MOB Must stay inside its own zone
-** ACT_WIMPY                                    =128MOB Will flee when injured  and if aggressive only attack sleeping players
-** ACT_ANNOYING                                 =256MOB is so utterly irritating that other monsters will attack it...
-** ACT_HATEFUL                                  =512MOB will attack a PC or NPC matching a  specified name
-** ACT_AFRAID                                   =1024MOB is afraid of a certain PC or NPC   and will always run away ....
-** ACT_IMMORTAL                                 =2048MOB is a natural event  can't be kiled
-** ACT_HUNTING                                  =4096MOB is hunting someone
-** ACT_DEADLY                                   =8192MOB has deadly poison
-** ACT_POLYSELF                                 =16384MOB is a polymorphed person
-** ACT_META_AGG                                 =32768MOB is _very_ aggressive
-** ACT_GUARDIAN                                 =65536MOB will guard master
-** ACT_ILLUSION                                 =131072MOB is illusionary
-** ACT_HUGE                                     =262144MOB is too large to go indoors
-** ACT_SCRIPT                                   =524288MOB has a script assigned to it DO NOT SET
-** ACT_GREET                                    =1048576MOB greets people
-** ACT_MAGIC_USER                               =2097152
-** ACT_WARRIOR                                  =4194304
-** ACT_CLERIC                                   =8388608
-** ACT_THIEF                                    =16777216
-** ACT_DRUID                                    =33554432
-** ACT_MONK                                     =67108864
-** ACT_BARBARIAN                                =134217728
-** ACT_PALADIN                                  =268435456
-** ACT_RANGER                                   =536870912
-** ACT_PSI                                      =1073741824
-** ACT_ARCHER                                   =2147483648
+** LOG_ALWAYS                                   =0Shown at verbosity 0 and above
+** LOG_SYSERR                                   =1Shown at verbosity 1 and above
+** LOG_CHECK                                    =2Shown at verbosity 3 and above
+** LOG_PLAYERS                                  =4Shown at verbosity 4 and above
+** LOG_MOBILES                                  =8Shown at verbosity 4 and above
+** LOG_CONNECT                                  =16Shown at verbosity 2 and above
+** LOG_ERROR                                    =32Shown at verbosity 2 and above
+** LOG_WHO                                      =64Shown at verbosity 6 and above
+** LOG_SAVE                                     =128Shown at verbosity 5 and above
+** LOG_MAIL                                     =256Shown at verbosity 5 and above
+** LOG_RANK                                     =512Shown at verbosity 5 and above
+** LOG_WORLD                                    =1024Shown at verbosity 6 and above
+** LOG_QUERY                                    =2048Shown at verbosity 5 and above
 == Enumerations ==
 
 === enum e_opinion_op ===
 
 
+** OP_NONE                                      =0
 ** OP_SEX                                       =1
 ** OP_RACE                                      =2
 ** OP_CHAR                                      =3
@@ -579,32 +352,6 @@ l'array connected_types in constants.c
 ** OP_EVIL                                      =5
 ** OP_GOOD                                      =6
 ** OP_VNUM                                      =7
-== Enumerations ==
-
-=== enum e_player_flags ===
-
-*For players : specials.act
-** PLR_BRIEF                                    =1
-** PLR_UNUSED                                   =2
-** PLR_COMPACT                                  =4
-** PLR_DONTSET                                  =8Dont EVER set
-** PLR_WIMPY                                    =16character will flee when seriously injured
-** PLR_NOHASSLE                                 =32char won't be attacked by aggressives.
-** PLR_STEALTH                                  =64char won't be announced in a variety of situations
-** PLR_HUNTING                                  =128the player is hunting someone  do a track each look
-** PLR_DEAF                                     =256The player does not hear shouts
-** PLR_ECHO                                     =512Messages (tells  shout etc) echo back
-** PLR_NOGOSSIP                                 =1024New  gossip channel
-** PLR_NOAUCTION                                =2048New AUTCION channel
-** PLR_NOTHING                                  =4096empty
-** PLR_NOTHING2                                 =8192empty
-** PLR_NOSHOUT                                  =16384the player is not allowed to shout
-** PLR_FREEZE                                   =32768The player is frozen  must have pissed an immo off
-** PLR_NOTELL                                   =65536The player does not hear tells
-** PLR_MAILING                                  =131072
-** PLR_EMPTY4                                   =262144
-** PLR_EMPTY5                                   =524288
-** PLR_NOBEEP                                   =1048576ignore all beeps
 == Enumerations ==
 
 === enum e_positions ===
@@ -712,42 +459,6 @@ l'array connected_types in constants.c
 ** RACE_SEA_ELF                                 =84playable
 == Enumerations ==
 
-=== enum e_room_flags ===
-
-*Bitvector For 'room_flags'
-** DARK                                         =1
-** DEATH                                        =2
-** NO_MOB                                       =4
-** INDOORS                                      =8
-** PEACEFUL                                     =16No fighting
-** NOSTEAL                                      =32No Thieving
-** NO_SUM                                       =64no summoning
-** NO_MAGIC                                     =128
-** TUNNEL                                       =256Limited #s of people in room
-** PRIVATE                                      =512
-** SILENCE                                      =1024
-** LARGE                                        =2048
-** NO_DEATH                                     =4096
-** SAVE_ROOM                                    =8192room will save eq and load at reboot
-** NO_TRACK                                     =16384
-** NO_MIND                                      =32768
-** DESERTIC                                     =65536
-** ARTIC                                        =131072
-** UNDERGROUND                                  =262144
-** HOT                                          =524288
-** WET                                          =1048576
-** COLD                                         =2097152
-** DRY                                          =4194304
-** BRIGHT                                       =8388608
-** NO_ASTRAL                                    =16777216
-** NO_REGAIN                                    =33554432
-** RM_1                                         =67108864
-** RM_2                                         =134217728
-** RM_3                                         =268435456
-** RM_4                                         =536870912
-** RM_5                                         =1073741824
-== Enumerations ==
-
 === enum e_seasons ===
 
 
@@ -783,23 +494,6 @@ l'array connected_types in constants.c
 ** SEX_FEMALE                                   =2
 == Enumerations ==
 
-=== enum e_skill_known ===
-
-*skill_data flags
-** SKILL_KNOWN                                  =1
-** SKILL_KNOWN_CLERIC                           =2
-** SKILL_KNOWN_MAGE                             =4
-** SKILL_KNOWN_SORCERER                         =8
-** SKILL_KNOWN_THIEF                            =16
-** SKILL_KNOWN_MONK                             =32
-** SKILL_KNOWN_DRUID                            =64
-** SKILL_KNOWN_WARRIOR                          =128
-** SKILL_KNOWN_BARBARIAN                        =256need to make byte flags, to long or int flags in char_skill_data
-** SKILL_KNOWN_PALADIN                          =512need to make byte flags, to long or int flags in char_skill_data
-** SKILL_KNOWN_RANGER                           =1024need to make byte flags, to long or int flags in char_skill_data
-** SKILL_KNOWN_PSI                              =2048need to make byte flags, to long or int flags in char_skill_data
-== Enumerations ==
-
 === enum e_sky ===
 
 *And how is the sky ?
@@ -812,6 +506,7 @@ l'array connected_types in constants.c
 === enum e_speaks ===
 
 
+** SPEAK_NONE                                   =0
 ** SPEAK_COMMON                                 =1
 ** SPEAK_ELVISH                                 =2
 ** SPEAK_HALFLING                               =3
@@ -840,24 +535,10 @@ l'array connected_types in constants.c
 ** MOON_RISE                                    =5moon changes -DM 7/16/92
 == Enumerations ==
 
-=== enum e_sys_flags ===
-
-*system flags defined on the fly and by wizards for this boot
-** SYS_NOPORTAL                                 =1no one can portal
-** SYS_NOASTRAL                                 =2no one can astral
-** SYS_NOSUMMON                                 =4no one can summon
-** SYS_NOKILL                                   =8NO PC (good side or bad side) can fight
-** SYS_LOGALL                                   =16log ALL users to the system log
-** SYS_ECLIPS                                   =32the world is in constant darkness!
-** SYS_SKIPDNS                                  =64skips DNS name searches on connects
-** SYS_REQAPPROVE                               =128force god approval for new char
-** SYS_NOANSI                                   =256disable ansi colors world wide
-** SYS_LOGMOB                                   =512log ALL mob ti system log
-== Enumerations ==
-
 === enum e_tan_result ===
 
 
+** TAN_BAG                                      =14
 ** TAN_SHIELD                                   =67
 ** TAN_JACKET                                   =68
 ** TAN_BOOTS                                    =69
@@ -865,36 +546,7 @@ l'array connected_types in constants.c
 ** TAN_LEGGINGS                                 =71
 ** TAN_SLEEVES                                  =72
 ** TAN_HELMET                                   =73
-** TAN_BAG                                      =14
 ** TAN_ARMOR                                    =9602
-== Enumerations ==
-
-=== enum e_teleports ===
-
-
-** TELE_LOOK                                    =1
-** TELE_COUNT                                   =2
-** TELE_RANDOM                                  =4
-** TELE_SPIN                                    =8
-== Enumerations ==
-
-=== enum e_user_flags ===
-
-*user flags
-** NO_DELETE                                    =1do not delete me  well until 6 months pass!
-** USE_ANSI                                     =2we use ANSI color  yeah!
-** RACE_WAR                                     =4if enabled they can be hit by opposing race
-** SHOW_CLASSES                                 =8If enabled the PG classes are shown in the WHO
-** SHOW_EXITS                                   =16for auto display exits
-** MURDER_1                                     =32actually killed someone!
-** STOLE_1                                      =64caught stealing form someone!
-** MURDER_2                                     =128rumored killed someone
-** STOLE_2                                      =256rumored stole from someone
-** STOLE_X                                      =512saved for later
-** MURDER_X                                     =1024saved for later
-** USE_PAGING                                   =2048pause screens?
-** CAN_OBJ_EDIT                                 =4096this user can use oedit to edit objects
-** CAN_MOB_EDIT                                 =8192this user can use medit to edit mobs
 == Enumerations ==
 
 === enum e_wear ===

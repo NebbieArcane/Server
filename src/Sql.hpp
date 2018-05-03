@@ -1,72 +1,178 @@
-/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
- *ALARMUD* AlarMUD 2.0
- *ALARMUD* See COPYING for licence information
- *ALARMUD*/
-#ifndef __SQL_HPP_
-#define __SQL_HPP_
-/***************************  System  include ************************************/
+/*
+ * Sql.hpp
+ *
+ *  Created on: 24 mar 2018
+ *      Author: giovanni
+ */
+
+#ifndef SRC_SQL_HPP_
+#define SRC_SQL_HPP_
 #include <vector>
-#include <sstream>
-#include <boost/type_traits.hpp>
-/***************************  Local    include ************************************/
-#include "general.hpp"
-#include "config.hpp"
-#include "flags.hpp"
-#if USE_MYSQL
-#if USE_SQLITE
-#error You need to choose between Mysql and Sqlite
-#endif
-#endif
-#if USE_MYSQL
-#if HAS_MYSQL
-#include "SqlMysql.hpp"
-#else
-#error Mysql requested but not available
-#endif
-#endif
-#if USE_SQLITE
-#if HAS_SQLITE
-#include "SqlSqlite.hpp"
-#else
-#error Sqlite3 requested but not available
-#endif
-#endif
+#include <boost/make_shared.hpp>
+#include "odb/odb.hpp"
+#include "autoenums.hpp"
+#include "logging.hpp"
 namespace Alarmud {
-//	MYSQL or sqlite3
+extern bool forceDbInit;
 
-class Sql
+class sqlTrace : public odb::tracer {
+public:
+	virtual void execute(odb::connection &c, const odb::statement &s) {
+		execute(c,s.text());
+	}
+	virtual void execute(odb::connection &c, const char* statement);
+};
+extern sqlTrace logTracer;
+class Sql {
+public:
 #if USE_MYSQL
-	: public SqlMysql
+	static odb::database* getMysql();
 #endif
 #if USE_SQLITE
-	  : public SqlSqlite
+	static odb::database* getSqlite();
 #endif
+	static void dbUpdate();
+	template <typename T,typename C>
+	static boost::shared_ptr<T> getOne(C key) {
+		try {
+			DB* db = Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			auto datum(db->load<T>(key));
+			t.commit();
+			return datum;
+		}
+		catch (odb::exception &e) {
+			return boost::make_shared<T>();
+		}
+	}
+	/* To be used with views only (other objects are not meaningful without a key */
+	template <typename T>
+	static boost::shared_ptr<T> getOne() {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		/*returned datum wiill be destroyed on exit, so we make a copy of it and return in
+		 * a shared pointer. This is also done for consistency with the other getOne which all
+		 * return a shared pointer
+		 */
 
-{
+		auto  datum=boost::make_shared<T>(db->query_value<T>());
 
-public:
-	const static Sql &getInstance() {
-		static Sql instance;
-		return instance;
+		t.commit();
+		return datum;
+	}
+	template <typename T>
+	static boost::shared_ptr<T> getOne(odb::query<T> key) {
+		try {
+			DB* db = Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			boost::shared_ptr<T> datum=db->query_one<T>(key);
+			t.commit();
+			return datum;
+		}
+		catch (odb::exception &e) {
+			return boost::make_shared<T>();
+		}
+	}
+	template <typename T>
+	static boost::shared_ptr<T> getOne(odb::query_base key) {
+		return getOne(odb::query<T>(key));
+	}
+	template <typename T>
+	static std::vector<boost::shared_ptr<T>> getAll(odb::query<T> key) {
+		std::vector<boost::shared_ptr<T>> v({});
+		DB* db = Sql::getMysql();
+		//odb::session s;
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		auto r(db->query<T> (key));
+		if(!r.empty()) {
+			v.reserve(r.size());
+			for(auto iter: r) {
+				v.push_back(boost::make_shared<T>(iter));
+			}
+		}
+		t.commit();
+		return v;
+	}
+	template <typename T>
+	static std::vector<boost::shared_ptr<T>> getAll() {
+		return getAll(odb::query<T>());
+	}
+	template <typename T>
+	static bool save(T &data,bool upsert=false) {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		try {
+			db->persist<T>(data);
+			t.commit();
+			return true;
+		}
+		catch(odb::exception &e) {
+			if(upsert) {
+				try {
+					db->update<T>(data);
+					t.commit();
+					return true;
+				}
+				catch(odb::exception &e) {
+					mudlog(LOG_SYSERR,"Db exception: %s",e.what());
+				}
+			}
+		}
+		return false;
+
+	}
+	template <typename T>
+	static bool update(T &data,bool upsert=false) {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		try {
+			db->update<T>(data);
+			t.commit();
+			return true;
+		}
+		catch(odb::exception &e) {
+			if(upsert) {
+				try {
+					db->persist<T>(data);
+					t.commit();
+					return true;
+				}
+				catch(odb::exception &e) {
+					mudlog(LOG_SYSERR,"Db exception: %s",e.what());
+				}
+			}
+		}
+		return false;
+
+	}
+	template <typename T>
+	static bool erase(T &data,bool upsert=false) {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		try {
+			db->erase<T>(data);
+			t.commit();
+			return true;
+		}
+		catch(odb::exception &e) {
+			mudlog(LOG_SYSERR,"Db exception: %s",e.what());
+		}
+		return false;
+
 	}
 	virtual ~Sql();
 protected:
-	stringstream _query;
-	string _where;
-	string _select;
-	string _from;
-	string _fields;
-	string _limit;
-public:
 	Sql();
-	Sql* where(const string field,const string op,const string value);
-	Sql* where(const string glue,const string field,const string op,const string value);
-	Sql* from(const string table);
-	Sql* select(const string field);
-	Sql* select(const std::vector<string> fields);
-	Sql* limit(const unsigned long limit);
+
 };
 
-} // namespace Alarmud
-#endif /* __SQL_HPP_ */
+} /* namespace Alarmud */
 
+#endif /* SRC_SQL_HPP_ */

@@ -6,6 +6,7 @@
 #define __SNEW 1
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "act.off.hpp"
 #include "specass2.hpp"
 #include "version.hpp"
 #include "signals.hpp"
@@ -35,9 +36,9 @@ namespace Alarmud {
 #define Ansi_len(s) (strlen(ParseAnsiColors(FALSE,s)))
 int GetTargetType(struct char_data* ch,struct char_data* target,int ostility);
 void AlignMod(struct char_data* ch,struct char_data* victim,int cmd);
-void do_setalign(struct char_data* ch,char* argument,int cmd);
+ACTION_FUNC(do_setalign);
 void ActionAlignMod(struct char_data* ch,struct char_data* victimi,int ostility);
-char* GetTargetTypeString(int target);
+const char* GetTargetTypeString(int target);
 int GetAverageLevel(struct char_data* ch);
 char* HostName();
 bool IsTest();
@@ -45,13 +46,6 @@ bool SetTest(bool test=true);
 char* GetKey(char* db, char* chiave);
 int PutKey(char* db,char* chiave, char* value);
 void DelKey(char* db,char* chiave);
-void do_associa(struct char_data* ch, char* argument, int cmd);
-void do_ripudia(struct char_data* ch, char* argument, int cmd);
-void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc);
-void clone_container_obj( struct obj_data* to, struct obj_data* obj );
-struct obj_data* clone_obj(struct obj_data* obj);
-
-void do_vomita(struct char_data* ch, char* argument, int cmd);
 int GetStat(struct char_data* ch, int stat);
 long StatCost(struct char_data* ch, int stat); // SALVO meglio se long
 int MaxStat(struct char_data* ch,int stat);

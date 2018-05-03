@@ -31,36 +31,36 @@ namespace Alarmud {
 log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("MainLogger"));
 log4cxx::LoggerPtr buglogger(log4cxx::Logger::getLogger("BugLogger"));
 log4cxx::LoggerPtr errlogger(log4cxx::Logger::getLogger("ErrLogger"));
+log4cxx::LoggerPtr querylogger(log4cxx::Logger::getLogger("QueryLogger"));
 boost::format  my_fmt(const std::string &f_string) {
 	using namespace boost::io;
 	boost::format fmter(f_string);
-	fmter.exceptions( all_error_bits ^ ( too_many_args_bit | too_few_args_bit )  );
+	fmter.exceptions(all_error_bits ^ (too_many_args_bit | too_few_args_bit));
 	return fmter;
 }
 
-void godTrace(unsigned uType, const char* const szString, ... ) {
+void godTrace(unsigned uType, const char* const szString, ...) {
 
 	va_list argptr;
 	char szBuffer[ LARGE_BUFSIZE ];
-	char* pchTimeStr;
 	struct descriptor_data* pDesc;
 
-	va_start( argptr, szString );
-	vsprintf( szBuffer, szString, argptr );
-	va_end( argptr );
-	for ( pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
-		if( pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
-				GetMaxLevel( pDesc->character ) >= MAESTRO_DEGLI_DEI &&
-				( pDesc->character->specials.sev & uType or uType & LOG_CONNECT) ) {
-			send_to_char( "$c0014Sysmess: $c0007", pDesc->character );
-			send_to_char( szBuffer, pDesc->character );
-			send_to_char( "\n\r", pDesc->character );
+	va_start(argptr, szString);
+	vsprintf(szBuffer, szString, argptr);
+	va_end(argptr);
+	for(pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
+		if(pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
+				GetMaxLevel(pDesc->character) >= MAESTRO_DEGLI_DEI &&
+				(pDesc->character->specials.sev & uType or uType & LOG_CONNECT)) {
+			send_to_char("$c0014Sysmess: $c0007", pDesc->character);
+			send_to_char(szBuffer, pDesc->character);
+			send_to_char("\n\r", pDesc->character);
 		}
 	}
 }
 constexpr auto LAYOUT_1="%d{yy-MM-dd HH:mm:ss.SSS} %5p [...%.20F at %5L] - %m%n";
 constexpr auto LAYOUT_2="%d{yy-MM-dd HH:mm:ss.SSS} [...%.16F at %5L] - %m%n";
-log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
+log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &loggerInstance,string logname,string suffix,log4cxx::LevelPtr debugLevel,bool inConsole) {
 	bool append = (logname=="bugs");
 	int numLogs= (logname=="bugs")?5:10;
 	string logfile(boost::filesystem::current_path().string());
@@ -69,18 +69,19 @@ log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &logger,string logname,strin
 	log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
 	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
 	r->setMaxBackupIndex(numLogs);
-	r->setMaximumFileSize("200M");
+	log4cxx::LogString size("200MB");
+	r->setMaxFileSize(size);
 	r->setBufferedIO(false); // We depend on the final log line being always written.
 	r->setBufferSize(1024);
 	r->activateOptions(p);
-	logger->addAppender(r);
-	if (inConsole) {
+	loggerInstance->addAppender(r);
+	if(inConsole) {
 		cout << "Logger " << logname << "." << suffix << " on console " << std::endl;
 		log4cxx::ConsoleAppenderPtr r2(new log4cxx::ConsoleAppender(l));
-		logger->addAppender(r2);
+		loggerInstance->addAppender(r2);
 	}
-	logger->setLevel(debugLevel);
-	return logger;
+	loggerInstance->setLevel(debugLevel);
+	return loggerInstance;
 }
 
 log4cxx::LevelPtr get_level(unsigned short debug_level) {

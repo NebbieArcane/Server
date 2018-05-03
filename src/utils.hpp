@@ -393,13 +393,13 @@ namespace Alarmud {
 #define isdigit(ch) (ch >= '0' && ch <= '9')
 #endif
 
-inline struct room_data* real_roomp( long lVNum ) {
+inline struct room_data* real_roomp(long lVNum) {
 #if HASH
 	extern struct hash_header      room_db;
-	return hash_find( &room_db, lVNum );
+	return hash_find(&room_db, lVNum);
 #else
 	extern struct room_data*        room_db[WORLD_SIZE];
-	return( ( lVNum < WORLD_SIZE && lVNum > -1 ) ? room_db[ lVNum ] : 0 );
+	return((lVNum < WORLD_SIZE && lVNum > -1) ? room_db[ lVNum ] : 0);
 #endif
 }
 

@@ -788,176 +788,6 @@
 				"comment": ""
 			}
 		},
-		"e_affected_by": {
-			"comment": "Bitvector for 'affected_by'\n",
-			"AFF_NONE": {
-				"value": 0,
-				"comment": ""
-			},
-			"AFF_BLIND": {
-				"value": 1,
-				"comment": ""
-			},
-			"AFF_INVISIBLE": {
-				"value": 2,
-				"comment": ""
-			},
-			"AFF_DETECT_EVIL": {
-				"value": 4,
-				"comment": ""
-			},
-			"AFF_DETECT_INVISIBLE": {
-				"value": 8,
-				"comment": ""
-			},
-			"AFF_DETECT_MAGIC": {
-				"value": 16,
-				"comment": ""
-			},
-			"AFF_SENSE_LIFE": {
-				"value": 32,
-				"comment": ""
-			},
-			"AFF_LIFE_PROT": {
-				"value": 64,
-				"comment": ""
-			},
-			"AFF_SANCTUARY": {
-				"value": 128,
-				"comment": ""
-			},
-			"AFF_DRAGON_RIDE": {
-				"value": 256,
-				"comment": ""
-			},
-			"AFF_GROWTH": {
-				"value": 512,
-				"comment": "this was the one that was missing"
-			},
-			"AFF_CURSE": {
-				"value": 1024,
-				"comment": ""
-			},
-			"AFF_FLYING": {
-				"value": 2048,
-				"comment": ""
-			},
-			"AFF_POISON": {
-				"value": 4096,
-				"comment": ""
-			},
-			"AFF_TREE_TRAVEL": {
-				"value": 8192,
-				"comment": ""
-			},
-			"AFF_PARALYSIS": {
-				"value": 16384,
-				"comment": ""
-			},
-			"AFF_INFRAVISION": {
-				"value": 32768,
-				"comment": ""
-			},
-			"AFF_WATERBREATH": {
-				"value": 65536,
-				"comment": ""
-			},
-			"AFF_SLEEP": {
-				"value": 131072,
-				"comment": ""
-			},
-			"AFF_TRAVELLING": {
-				"value": 262144,
-				"comment": "i.e. can't be stoned"
-			},
-			"AFF_SNEAK": {
-				"value": 524288,
-				"comment": ""
-			},
-			"AFF_HIDE": {
-				"value": 1048576,
-				"comment": ""
-			},
-			"AFF_SILENCE": {
-				"value": 2097152,
-				"comment": ""
-			},
-			"AFF_CHARM": {
-				"value": 4194304,
-				"comment": ""
-			},
-			"AFF_FOLLOW": {
-				"value": 8388608,
-				"comment": ""
-			},
-			"AFF_PROTECT_FROM_EVIL": {
-				"value": 16777216,
-				"comment": ""
-			},
-			"AFF_TRUE_SIGHT": {
-				"value": 33554432,
-				"comment": ""
-			},
-			"AFF_SCRYING": {
-				"value": 67108864,
-				"comment": "seeing other rooms"
-			},
-			"AFF_FIRESHIELD": {
-				"value": 134217728,
-				"comment": ""
-			},
-			"AFF_GROUP": {
-				"value": 268435456,
-				"comment": ""
-			},
-			"AFF_TELEPATHY": {
-				"value": 536870912,
-				"comment": ""
-			},
-			"AFF_GLOBE_DARKNESS": {
-				"value": 1073741824,
-				"comment": "Added by REQUIEM 2018"
-			},
-			"AFF_UNDEF_AFF_1": {
-				"value": 2147483648,
-				"comment": ""
-			}
-		},
-		"e_affected_by2": {
-			"comment": "",
-			"AFF2_ANIMAL_INVIS": {
-				"value": 1,
-				"comment": ""
-			},
-			"AFF2_HEAT_STUFF": {
-				"value": 2,
-				"comment": ""
-			},
-			"AFF2_LOG_ME": {
-				"value": 4,
-				"comment": ""
-			},
-			"AFF2_BERSERK": {
-				"value": 8,
-				"comment": ""
-			},
-			"AFF2_PARRY": {
-				"value": 16,
-				"comment": "Added by GAIA 2001"
-			},
-			"AFF2_CON_ORDER": {
-				"value": 32,
-				"comment": ""
-			},
-			"AFF2_AFK": {
-				"value": 64,
-				"comment": ""
-			},
-			"AFF2_PKILLER": {
-				"value": 128,
-				"comment": ""
-			}
-		},
 		"e_apply": {
 			"comment": "modifiers to char's abilities\n",
 			"APPLY_NONE": {
@@ -1225,53 +1055,6 @@
 				"comment": "Non viene toccato il bitvector"
 			}
 		},
-		"e_classes": {
-			"comment": "",
-			"CLASS_MAGIC_USER": {
-				"value": 1,
-				"comment": ""
-			},
-			"CLASS_CLERIC": {
-				"value": 2,
-				"comment": ""
-			},
-			"CLASS_WARRIOR": {
-				"value": 4,
-				"comment": ""
-			},
-			"CLASS_THIEF": {
-				"value": 8,
-				"comment": ""
-			},
-			"CLASS_DRUID": {
-				"value": 16,
-				"comment": ""
-			},
-			"CLASS_MONK": {
-				"value": 32,
-				"comment": ""
-			},
-			"CLASS_BARBARIAN": {
-				"value": 64,
-				"comment": ""
-			},
-			"CLASS_SORCERER": {
-				"value": 128,
-				"comment": ""
-			},
-			"CLASS_PALADIN": {
-				"value": 256,
-				"comment": ""
-			},
-			"CLASS_RANGER": {
-				"value": 512,
-				"comment": ""
-			},
-			"CLASS_PSI": {
-				"value": 1024,
-				"comment": ""
-			}
-		},
 		"e_sex": {
 			"comment": "sex\n",
 			"SEX_NEUTRAL": {
@@ -1330,351 +1113,6 @@
 				"comment": ""
 			}
 		},
-		"e_mob_flags": {
-			"comment": "for mobile actions: specials.act\n",
-			"ACT_SPEC": {
-				"value": 1,
-				"comment": "special routine to be called if exist"
-			},
-			"ACT_SENTINEL": {
-				"value": 2,
-				"comment": "this mobile not to be moved"
-			},
-			"ACT_SCAVENGER": {
-				"value": 4,
-				"comment": "pick up stuff lying around"
-			},
-			"ACT_ISNPC": {
-				"value": 8,
-				"comment": "This bit is set for use with IS_NPC()"
-			},
-			"ACT_NICE_THIEF": {
-				"value": 16,
-				"comment": "Set if a thief should NOT be killed"
-			},
-			"ACT_AGGRESSIVE": {
-				"value": 32,
-				"comment": "Set if automatic attack on NPC's"
-			},
-			"ACT_STAY_ZONE": {
-				"value": 64,
-				"comment": "MOB Must stay inside its own zone"
-			},
-			"ACT_WIMPY": {
-				"value": 128,
-				"comment": "MOB Will flee when injured  and if aggressive only attack sleeping players"
-			},
-			"ACT_ANNOYING": {
-				"value": 256,
-				"comment": "MOB is so utterly irritating that other monsters will attack it..."
-			},
-			"ACT_HATEFUL": {
-				"value": 512,
-				"comment": "MOB will attack a PC or NPC matching a  specified name"
-			},
-			"ACT_AFRAID": {
-				"value": 1024,
-				"comment": "MOB is afraid of a certain PC or NPC   and will always run away ...."
-			},
-			"ACT_IMMORTAL": {
-				"value": 2048,
-				"comment": "MOB is a natural event  can't be kiled"
-			},
-			"ACT_HUNTING": {
-				"value": 4096,
-				"comment": "MOB is hunting someone"
-			},
-			"ACT_DEADLY": {
-				"value": 8192,
-				"comment": "MOB has deadly poison"
-			},
-			"ACT_POLYSELF": {
-				"value": 16384,
-				"comment": "MOB is a polymorphed person"
-			},
-			"ACT_META_AGG": {
-				"value": 32768,
-				"comment": "MOB is _very_ aggressive"
-			},
-			"ACT_GUARDIAN": {
-				"value": 65536,
-				"comment": "MOB will guard master"
-			},
-			"ACT_ILLUSION": {
-				"value": 131072,
-				"comment": "MOB is illusionary"
-			},
-			"ACT_HUGE": {
-				"value": 262144,
-				"comment": "MOB is too large to go indoors"
-			},
-			"ACT_SCRIPT": {
-				"value": 524288,
-				"comment": "MOB has a script assigned to it DO NOT SET"
-			},
-			"ACT_GREET": {
-				"value": 1048576,
-				"comment": "MOB greets people"
-			},
-			"ACT_MAGIC_USER": {
-				"value": 2097152,
-				"comment": ""
-			},
-			"ACT_WARRIOR": {
-				"value": 4194304,
-				"comment": ""
-			},
-			"ACT_CLERIC": {
-				"value": 8388608,
-				"comment": ""
-			},
-			"ACT_THIEF": {
-				"value": 16777216,
-				"comment": ""
-			},
-			"ACT_DRUID": {
-				"value": 33554432,
-				"comment": ""
-			},
-			"ACT_MONK": {
-				"value": 67108864,
-				"comment": ""
-			},
-			"ACT_BARBARIAN": {
-				"value": 134217728,
-				"comment": ""
-			},
-			"ACT_PALADIN": {
-				"value": 268435456,
-				"comment": ""
-			},
-			"ACT_RANGER": {
-				"value": 536870912,
-				"comment": ""
-			},
-			"ACT_PSI": {
-				"value": 1073741824,
-				"comment": ""
-			},
-			"ACT_ARCHER": {
-				"value": 2147483648,
-				"comment": ""
-			}
-		},
-		"e_player_flags": {
-			"comment": "For players : specials.act\n",
-			"PLR_BRIEF": {
-				"value": 1,
-				"comment": ""
-			},
-			"PLR_UNUSED": {
-				"value": 2,
-				"comment": ""
-			},
-			"PLR_COMPACT": {
-				"value": 4,
-				"comment": ""
-			},
-			"PLR_DONTSET": {
-				"value": 8,
-				"comment": "Dont EVER set"
-			},
-			"PLR_WIMPY": {
-				"value": 16,
-				"comment": "character will flee when seriously injured"
-			},
-			"PLR_NOHASSLE": {
-				"value": 32,
-				"comment": "char won't be attacked by aggressives."
-			},
-			"PLR_STEALTH": {
-				"value": 64,
-				"comment": "char won't be announced in a variety of situations"
-			},
-			"PLR_HUNTING": {
-				"value": 128,
-				"comment": "the player is hunting someone  do a track each look"
-			},
-			"PLR_DEAF": {
-				"value": 256,
-				"comment": "The player does not hear shouts"
-			},
-			"PLR_ECHO": {
-				"value": 512,
-				"comment": "Messages (tells  shout etc) echo back"
-			},
-			"PLR_NOGOSSIP": {
-				"value": 1024,
-				"comment": "New  gossip channel"
-			},
-			"PLR_NOAUCTION": {
-				"value": 2048,
-				"comment": "New AUTCION channel"
-			},
-			"PLR_NOTHING": {
-				"value": 4096,
-				"comment": "empty"
-			},
-			"PLR_NOTHING2": {
-				"value": 8192,
-				"comment": "empty"
-			},
-			"PLR_NOSHOUT": {
-				"value": 16384,
-				"comment": "the player is not allowed to shout"
-			},
-			"PLR_FREEZE": {
-				"value": 32768,
-				"comment": "The player is frozen  must have pissed an immo off"
-			},
-			"PLR_NOTELL": {
-				"value": 65536,
-				"comment": "The player does not hear tells"
-			},
-			"PLR_MAILING": {
-				"value": 131072,
-				"comment": ""
-			},
-			"PLR_EMPTY4": {
-				"value": 262144,
-				"comment": ""
-			},
-			"PLR_EMPTY5": {
-				"value": 524288,
-				"comment": ""
-			},
-			"PLR_NOBEEP": {
-				"value": 1048576,
-				"comment": "ignore all beeps"
-			}
-		},
-		"e_room_flags": {
-			"comment": "Bitvector For 'room_flags'\n",
-			"DARK": {
-				"value": 1,
-				"comment": ""
-			},
-			"DEATH": {
-				"value": 2,
-				"comment": ""
-			},
-			"NO_MOB": {
-				"value": 4,
-				"comment": ""
-			},
-			"INDOORS": {
-				"value": 8,
-				"comment": ""
-			},
-			"PEACEFUL": {
-				"value": 16,
-				"comment": "No fighting"
-			},
-			"NOSTEAL": {
-				"value": 32,
-				"comment": "No Thieving"
-			},
-			"NO_SUM": {
-				"value": 64,
-				"comment": "no summoning"
-			},
-			"NO_MAGIC": {
-				"value": 128,
-				"comment": ""
-			},
-			"TUNNEL": {
-				"value": 256,
-				"comment": "Limited #s of people in room"
-			},
-			"PRIVATE": {
-				"value": 512,
-				"comment": ""
-			},
-			"SILENCE": {
-				"value": 1024,
-				"comment": ""
-			},
-			"LARGE": {
-				"value": 2048,
-				"comment": ""
-			},
-			"NO_DEATH": {
-				"value": 4096,
-				"comment": ""
-			},
-			"SAVE_ROOM": {
-				"value": 8192,
-				"comment": "room will save eq and load at reboot"
-			},
-			"NO_TRACK": {
-				"value": 16384,
-				"comment": ""
-			},
-			"NO_MIND": {
-				"value": 32768,
-				"comment": ""
-			},
-			"DESERTIC": {
-				"value": 65536,
-				"comment": ""
-			},
-			"ARTIC": {
-				"value": 131072,
-				"comment": ""
-			},
-			"UNDERGROUND": {
-				"value": 262144,
-				"comment": ""
-			},
-			"HOT": {
-				"value": 524288,
-				"comment": ""
-			},
-			"WET": {
-				"value": 1048576,
-				"comment": ""
-			},
-			"COLD": {
-				"value": 2097152,
-				"comment": ""
-			},
-			"DRY": {
-				"value": 4194304,
-				"comment": ""
-			},
-			"BRIGHT": {
-				"value": 8388608,
-				"comment": ""
-			},
-			"NO_ASTRAL": {
-				"value": 16777216,
-				"comment": ""
-			},
-			"NO_REGAIN": {
-				"value": 33554432,
-				"comment": ""
-			},
-			"RM_1": {
-				"value": 67108864,
-				"comment": ""
-			},
-			"RM_2": {
-				"value": 134217728,
-				"comment": ""
-			},
-			"RM_3": {
-				"value": 268435456,
-				"comment": ""
-			},
-			"RM_4": {
-				"value": 536870912,
-				"comment": ""
-			},
-			"RM_5": {
-				"value": 1073741824,
-				"comment": ""
-			}
-		},
 		"e_exit_dir": {
 			"comment": "For 'dir_option'\n",
 			"NORTH": {
@@ -1699,45 +1137,6 @@
 			},
 			"DOWN": {
 				"value": 5,
-				"comment": ""
-			}
-		},
-		"e_exit_types": {
-			"comment": "",
-			"EX_ISDOOR": {
-				"value": 1,
-				"comment": ""
-			},
-			"EX_CLOSED": {
-				"value": 2,
-				"comment": ""
-			},
-			"EX_LOCKED": {
-				"value": 4,
-				"comment": ""
-			},
-			"EX_SECRET": {
-				"value": 8,
-				"comment": ""
-			},
-			"EX_NOTBASH": {
-				"value": 16,
-				"comment": ""
-			},
-			"EX_PICKPROOF": {
-				"value": 32,
-				"comment": ""
-			},
-			"EX_CLIMB": {
-				"value": 64,
-				"comment": ""
-			},
-			"EX_MALE": {
-				"value": 128,
-				"comment": ""
-			},
-			"EX_NOLOOKT": {
-				"value": 256,
 				"comment": ""
 			}
 		},
@@ -1796,95 +1195,6 @@
 				"comment": ""
 			}
 		},
-		"e_teleports": {
-			"comment": "",
-			"TELE_LOOK": {
-				"value": 1,
-				"comment": ""
-			},
-			"TELE_COUNT": {
-				"value": 2,
-				"comment": ""
-			},
-			"TELE_RANDOM": {
-				"value": 4,
-				"comment": ""
-			},
-			"TELE_SPIN": {
-				"value": 8,
-				"comment": ""
-			}
-		},
-		"e_large_flags": {
-			"comment": "",
-			"LARGE_NONE": {
-				"value": 0,
-				"comment": ""
-			},
-			"LARGE_WATER": {
-				"value": 1,
-				"comment": ""
-			},
-			"LARGE_AIR": {
-				"value": 2,
-				"comment": ""
-			},
-			"LARGE_IMPASS": {
-				"value": 4,
-				"comment": ""
-			}
-		},
-		"e_skill_known": {
-			"comment": "skill_data flags\n",
-			"SKILL_KNOWN": {
-				"value": 1,
-				"comment": ""
-			},
-			"SKILL_KNOWN_CLERIC": {
-				"value": 2,
-				"comment": ""
-			},
-			"SKILL_KNOWN_MAGE": {
-				"value": 4,
-				"comment": ""
-			},
-			"SKILL_KNOWN_SORCERER": {
-				"value": 8,
-				"comment": ""
-			},
-			"SKILL_KNOWN_THIEF": {
-				"value": 16,
-				"comment": ""
-			},
-			"SKILL_KNOWN_MONK": {
-				"value": 32,
-				"comment": ""
-			},
-			"SKILL_KNOWN_DRUID": {
-				"value": 64,
-				"comment": ""
-			},
-			"SKILL_KNOWN_WARRIOR": {
-				"value": 128,
-				"comment": ""
-			},
-			"SKILL_KNOWN_BARBARIAN": {
-				"value": 256,
-				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
-			},
-			"SKILL_KNOWN_PALADIN": {
-				"value": 512,
-				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
-			},
-			"SKILL_KNOWN_RANGER": {
-				"value": 1024,
-				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
-			},
-			"SKILL_KNOWN_PSI": {
-				"value": 2048,
-				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
-			}
-		},
 		"e_sunlight": {
 			"comment": "How much light is in the land ?\n",
 			"SUN_DARK": {
@@ -1932,7 +1242,7 @@
 			}
 		},
 		"e_connection_types": {
-			"comment": "modes of connectedness\nATTENZIONE se si aggiungono altri stati di connessione, modificare anche\nl'array connected_types in constants.c\n",
+			"comment": "modes of connectedness\nATTENZIONE se si aggiungono altri stati di connessione, modificare anche\nl'array connected_types in constants.cpp\n",
 			"CON_PLYNG": {
 				"value": 0,
 				"comment": ""
@@ -2088,6 +1398,26 @@
 			"CON_OBJ_FORGING": {
 				"value": 38,
 				"comment": ""
+			},
+			"CON_ACCOUNT_NAME": {
+				"value": 39,
+				"comment": "Richiesto login sull'account'"
+			},
+			"CON_ACCOUNT_PWD": {
+				"value": 40,
+				"comment": "Email riconosciuta, chiediamo la password"
+			},
+			"CON_ACCOUNT_TOON": {
+				"value": 41,
+				"comment": "Account password ok, propongo lista personaggi"
+			},
+			"CON_REGISTER": {
+				"value": 42,
+				"comment": "Registro il pg sull'account"
+			},
+			"CON_PWDOK": {
+				"value": 43,
+				"comment": "Tutto pronto, lo riconnetto o mando al menu"
 			}
 		},
 		"e_class_index": {
@@ -2137,110 +1467,12 @@
 				"comment": ""
 			}
 		},
-		"e_user_flags": {
-			"comment": "user flags\n",
-			"NO_DELETE": {
-				"value": 1,
-				"comment": "do not delete me  well until 6 months pass!"
-			},
-			"USE_ANSI": {
-				"value": 2,
-				"comment": "we use ANSI color  yeah!"
-			},
-			"RACE_WAR": {
-				"value": 4,
-				"comment": "if enabled they can be hit by opposing race"
-			},
-			"SHOW_CLASSES": {
-				"value": 8,
-				"comment": "If enabled the PG classes are shown in the WHO"
-			},
-			"SHOW_EXITS": {
-				"value": 16,
-				"comment": "for auto display exits"
-			},
-			"MURDER_1": {
-				"value": 32,
-				"comment": "actually killed someone!"
-			},
-			"STOLE_1": {
-				"value": 64,
-				"comment": "caught stealing form someone!"
-			},
-			"MURDER_2": {
-				"value": 128,
-				"comment": "rumored killed someone"
-			},
-			"STOLE_2": {
-				"value": 256,
-				"comment": "rumored stole from someone"
-			},
-			"STOLE_X": {
-				"value": 512,
-				"comment": "saved for later"
-			},
-			"MURDER_X": {
-				"value": 1024,
-				"comment": "saved for later"
-			},
-			"USE_PAGING": {
-				"value": 2048,
-				"comment": "pause screens?"
-			},
-			"CAN_OBJ_EDIT": {
-				"value": 4096,
-				"comment": "this user can use oedit to edit objects"
-			},
-			"CAN_MOB_EDIT": {
-				"value": 8192,
-				"comment": "this user can use medit to edit mobs"
-			}
-		},
-		"e_sys_flags": {
-			"comment": "system flags defined on the fly and by wizards for this boot\n",
-			"SYS_NOPORTAL": {
-				"value": 1,
-				"comment": "no one can portal"
-			},
-			"SYS_NOASTRAL": {
-				"value": 2,
-				"comment": "no one can astral"
-			},
-			"SYS_NOSUMMON": {
-				"value": 4,
-				"comment": "no one can summon"
-			},
-			"SYS_NOKILL": {
-				"value": 8,
-				"comment": "NO PC (good side or bad side) can fight"
-			},
-			"SYS_LOGALL": {
-				"value": 16,
-				"comment": "log ALL users to the system log"
-			},
-			"SYS_ECLIPS": {
-				"value": 32,
-				"comment": "the world is in constant darkness!"
-			},
-			"SYS_SKIPDNS": {
-				"value": 64,
-				"comment": "skips DNS name searches on connects"
-			},
-			"SYS_REQAPPROVE": {
-				"value": 128,
-				"comment": "force god approval for new char"
-			},
-			"SYS_NOANSI": {
-				"value": 256,
-				"comment": "disable ansi colors world wide"
-			},
-			"SYS_LOGMOB": {
-				"value": 512,
-				"comment": "log ALL mob ti system log"
-			}
-		},
 		"e_speaks": {
 			"comment": "",
+			"SPEAK_NONE": {
+				"value": 0,
+				"comment": ""
+			},
 			"SPEAK_COMMON": {
 				"value": 1,
 				"comment": ""
@@ -2276,6 +1508,10 @@
 		},
 		"e_damage_type": {
 			"comment": "",
+			"NO_DAMAGE": {
+				"value": 0,
+				"comment": ""
+			},
 			"FIRE_DAMAGE": {
 				"value": 1,
 				"comment": ""
@@ -2297,145 +1533,11 @@
 				"comment": ""
 			}
 		},
-		"e_immunity_type": {
-			"comment": "",
-			"IMM_FIRE": {
-				"value": 1,
-				"comment": ""
-			},
-			"IMM_COLD": {
-				"value": 2,
-				"comment": ""
-			},
-			"IMM_ELEC": {
-				"value": 4,
-				"comment": ""
-			},
-			"IMM_ENERGY": {
-				"value": 8,
-				"comment": ""
-			},
-			"IMM_BLUNT": {
-				"value": 16,
-				"comment": ""
-			},
-			"IMM_PIERCE": {
-				"value": 32,
-				"comment": ""
-			},
-			"IMM_SLASH": {
-				"value": 64,
-				"comment": ""
-			},
-			"IMM_ACID": {
-				"value": 128,
-				"comment": ""
-			},
-			"IMM_POISON": {
-				"value": 256,
-				"comment": ""
-			},
-			"IMM_DRAIN": {
-				"value": 512,
-				"comment": ""
-			},
-			"IMM_SLEEP": {
-				"value": 1024,
-				"comment": ""
-			},
-			"IMM_CHARM": {
-				"value": 2048,
-				"comment": ""
-			},
-			"IMM_HOLD": {
-				"value": 4096,
-				"comment": ""
-			},
-			"IMM_NONMAG": {
-				"value": 8192,
-				"comment": ""
-			},
-			"IMM_PLUS1": {
-				"value": 16384,
-				"comment": ""
-			},
-			"IMM_PLUS2": {
-				"value": 32768,
-				"comment": ""
-			},
-			"IMM_PLUS3": {
-				"value": 65536,
-				"comment": ""
-			},
-			"IMM_PLUS4": {
-				"value": 131072,
-				"comment": ""
-			}
-		},
-		"e_hate_type": {
-			"comment": "",
-			"HATE_SEX": {
-				"value": 1,
-				"comment": ""
-			},
-			"HATE_RACE": {
-				"value": 2,
-				"comment": ""
-			},
-			"HATE_CHAR": {
-				"value": 4,
-				"comment": ""
-			},
-			"HATE_CLASS": {
-				"value": 8,
-				"comment": ""
-			},
-			"HATE_EVIL": {
-				"value": 16,
-				"comment": ""
-			},
-			"HATE_GOOD": {
-				"value": 32,
-				"comment": ""
-			},
-			"HATE_VNUM": {
-				"value": 64,
-				"comment": ""
-			}
-		},
-		"e_fear_type": {
-			"comment": "",
-			"FEAR_SEX": {
-				"value": 1,
-				"comment": ""
-			},
-			"FEAR_RACE": {
-				"value": 2,
-				"comment": ""
-			},
-			"FEAR_CHAR": {
-				"value": 4,
-				"comment": ""
-			},
-			"FEAR_CLASS": {
-				"value": 8,
-				"comment": ""
-			},
-			"FEAR_EVIL": {
-				"value": 16,
-				"comment": ""
-			},
-			"FEAR_GOOD": {
-				"value": 32,
-				"comment": ""
-			},
-			"FEAR_VNUM": {
-				"value": 64,
-				"comment": ""
-			}
-		},
 		"e_opinion_op": {
 			"comment": "",
+			"OP_NONE": {
+				"value":0
+			},
 			"OP_SEX": {
 				"value": 1,
 				"comment": ""
@@ -2797,57 +1899,65 @@
 		},
 		"e_log_levels": {
 			"comment": "",
+			"LOG_ALWAYS": {
+				"value": 0,
+				"comment": "Shown at verbosity 0 and above"
+			},
 			"LOG_SYSERR": {
 				"value": 1,
-				"comment": ""
+				"comment": "Shown at verbosity 1 and above"
 			},
 			"LOG_CHECK": {
 				"value": 2,
-				"comment": ""
+				"comment": "Shown at verbosity 3 and above"
 			},
 			"LOG_PLAYERS": {
 				"value": 4,
-				"comment": ""
+				"comment": "Shown at verbosity 4 and above"
 			},
 			"LOG_MOBILES": {
 				"value": 8,
-				"comment": ""
+				"comment": "Shown at verbosity 4 and above"
 			},
 			"LOG_CONNECT": {
 				"value": 16,
-				"comment": ""
+				"comment": "Shown at verbosity 2 and above"
 			},
 			"LOG_ERROR": {
 				"value": 32,
-				"comment": ""
+				"comment": "Shown at verbosity 2 and above"
 			},
 			"LOG_WHO": {
 				"value": 64,
-				"comment": ""
+				"comment": "Shown at verbosity 6 and above"
 			},
 			"LOG_SAVE": {
 				"value": 128,
-				"comment": ""
+				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_MAIL": {
 				"value": 256,
-				"comment": ""
+				"comment": "Shown at verbosity 5 and above"
 			},
 			"LOG_RANK": {
 				"value": 512,
-				"comment": ""
+				"comment": "Shown at verbosity 5 and above"
 			},
-			"LOG_ALWAYS": {
+			"LOG_WORLD": {
 				"value": 1024,
-				"comment": ""
+				"comment": "Shown at verbosity 6 and above"
 			},
-			"LOG_SILENT": {
-				"value": 32768,
-				"comment": ""
+			"LOG_QUERY": {
+				"value": 2048,
+				"comment": "Shown at verbosity 5 and above"
 			}
 		},
 		"e_item_type": {
 			"comment": "",
+			"ITEM_NONE": {
+				"value": 0,
+				"comment": ""
+			},
 			"ITEM_LIGHT": {
 				"value": 1,
 				"comment": ""
@@ -2950,6 +2060,1004 @@
 			},
 			"ITEM_ROCK": {
 				"value": 26,
+				"comment": ""
+			}
+		},
+		"e_liquids": {
+			"comment": "Some different kind of liquids\n",
+			"LIQ_WATER": {
+				"value": 0,
+				"comment": ""
+			},
+			"LIQ_BEER": {
+				"value": 1,
+				"comment": ""
+			},
+			"LIQ_WINE": {
+				"value": 2,
+				"comment": ""
+			},
+			"LIQ_ALE": {
+				"value": 3,
+				"comment": ""
+			},
+			"LIQ_DARKALE": {
+				"value": 4,
+				"comment": ""
+			},
+			"LIQ_WHISKY": {
+				"value": 5,
+				"comment": ""
+			},
+			"LIQ_LEMONADE": {
+				"value": 6,
+				"comment": ""
+			},
+			"LIQ_FIREBRT": {
+				"value": 7,
+				"comment": ""
+			},
+			"LIQ_LOCALSPC": {
+				"value": 8,
+				"comment": ""
+			},
+			"LIQ_SLIME": {
+				"value": 9,
+				"comment": ""
+			},
+			"LIQ_MILK": {
+				"value": 10,
+				"comment": ""
+			},
+			"LIQ_TEA": {
+				"value": 11,
+				"comment": ""
+			},
+			"LIQ_COFFE": {
+				"value": 12,
+				"comment": ""
+			},
+			"LIQ_BLOOD": {
+				"value": 13,
+				"comment": ""
+			},
+			"LIQ_SALTWATER": {
+				"value": 14,
+				"comment": ""
+			},
+			"LIQ_COKE": {
+				"value": 15,
+				"comment": ""
+			}
+		}
+	},
+	"flags": {
+		"e_affected_by": {
+			"comment": "Bitvector for 'affected_by'\n",
+			"AFF_NONE": {
+				"value": 0,
+				"comment": ""
+			},
+			"AFF_BLIND": {
+				"value": 1,
+				"comment": ""
+			},
+			"AFF_INVISIBLE": {
+				"value": 2,
+				"comment": ""
+			},
+			"AFF_DETECT_EVIL": {
+				"value": 4,
+				"comment": ""
+			},
+			"AFF_DETECT_INVISIBLE": {
+				"value": 8,
+				"comment": ""
+			},
+			"AFF_DETECT_MAGIC": {
+				"value": 16,
+				"comment": ""
+			},
+			"AFF_SENSE_LIFE": {
+				"value": 32,
+				"comment": ""
+			},
+			"AFF_LIFE_PROT": {
+				"value": 64,
+				"comment": ""
+			},
+			"AFF_SANCTUARY": {
+				"value": 128,
+				"comment": ""
+			},
+			"AFF_DRAGON_RIDE": {
+				"value": 256,
+				"comment": ""
+			},
+			"AFF_GROWTH": {
+				"value": 512,
+				"comment": "this was the one that was missing"
+			},
+			"AFF_CURSE": {
+				"value": 1024,
+				"comment": ""
+			},
+			"AFF_FLYING": {
+				"value": 2048,
+				"comment": ""
+			},
+			"AFF_POISON": {
+				"value": 4096,
+				"comment": ""
+			},
+			"AFF_TREE_TRAVEL": {
+				"value": 8192,
+				"comment": ""
+			},
+			"AFF_PARALYSIS": {
+				"value": 16384,
+				"comment": ""
+			},
+			"AFF_INFRAVISION": {
+				"value": 32768,
+				"comment": ""
+			},
+			"AFF_WATERBREATH": {
+				"value": 65536,
+				"comment": ""
+			},
+			"AFF_SLEEP": {
+				"value": 131072,
+				"comment": ""
+			},
+			"AFF_TRAVELLING": {
+				"value": 262144,
+				"comment": "i.e. can't be stoned"
+			},
+			"AFF_SNEAK": {
+				"value": 524288,
+				"comment": ""
+			},
+			"AFF_HIDE": {
+				"value": 1048576,
+				"comment": ""
+			},
+			"AFF_SILENCE": {
+				"value": 2097152,
+				"comment": ""
+			},
+			"AFF_CHARM": {
+				"value": 4194304,
+				"comment": ""
+			},
+			"AFF_FOLLOW": {
+				"value": 8388608,
+				"comment": ""
+			},
+			"AFF_PROTECT_FROM_EVIL": {
+				"value": 16777216,
+				"comment": ""
+			},
+			"AFF_TRUE_SIGHT": {
+				"value": 33554432,
+				"comment": ""
+			},
+			"AFF_SCRYING": {
+				"value": 67108864,
+				"comment": "seeing other rooms"
+			},
+			"AFF_FIRESHIELD": {
+				"value": 134217728,
+				"comment": ""
+			},
+			"AFF_GROUP": {
+				"value": 268435456,
+				"comment": ""
+			},
+			"AFF_TELEPATHY": {
+				"value": 536870912,
+				"comment": ""
+			},
+			"AFF_GLOBE_DARKNESS": {
+				"value": 1073741824,
+				"comment": "Added by REQUIEM 2018"
+			},
+			"AFF_UNDEF_AFF_1": {
+				"value": 2147483648,
+				"comment": ""
+			}
+		},
+		"e_affected_by2": {
+			"comment": "",
+			"AFF2_ANIMAL_INVIS": {
+				"value": 1,
+				"comment": ""
+			},
+			"AFF2_HEAT_STUFF": {
+				"value": 2,
+				"comment": ""
+			},
+			"AFF2_LOG_ME": {
+				"value": 4,
+				"comment": ""
+			},
+			"AFF2_BERSERK": {
+				"value": 8,
+				"comment": ""
+			},
+			"AFF2_PARRY": {
+				"value": 16,
+				"comment": "Added by GAIA 2001"
+			},
+			"AFF2_CON_ORDER": {
+				"value": 32,
+				"comment": ""
+			},
+			"AFF2_AFK": {
+				"value": 64,
+				"comment": ""
+			},
+			"AFF2_PKILLER": {
+				"value": 128,
+				"comment": ""
+			}
+		},
+		"e_classes": {
+			"comment": "",
+			"CLASS_MAGIC_USER": {
+				"value": 1,
+				"comment": ""
+			},
+			"CLASS_CLERIC": {
+				"value": 2,
+				"comment": ""
+			},
+			"CLASS_WARRIOR": {
+				"value": 4,
+				"comment": ""
+			},
+			"CLASS_THIEF": {
+				"value": 8,
+				"comment": ""
+			},
+			"CLASS_DRUID": {
+				"value": 16,
+				"comment": ""
+			},
+			"CLASS_MONK": {
+				"value": 32,
+				"comment": ""
+			},
+			"CLASS_BARBARIAN": {
+				"value": 64,
+				"comment": ""
+			},
+			"CLASS_SORCERER": {
+				"value": 128,
+				"comment": ""
+			},
+			"CLASS_PALADIN": {
+				"value": 256,
+				"comment": ""
+			},
+			"CLASS_RANGER": {
+				"value": 512,
+				"comment": ""
+			},
+			"CLASS_PSI": {
+				"value": 1024,
+				"comment": ""
+			}
+		},
+		"e_mob_flags": {
+			"comment": "for mobile actions: specials.act\n",
+			"ACT_SPEC": {
+				"value": 1,
+				"comment": "special routine to be called if exist"
+			},
+			"ACT_SENTINEL": {
+				"value": 2,
+				"comment": "this mobile not to be moved"
+			},
+			"ACT_SCAVENGER": {
+				"value": 4,
+				"comment": "pick up stuff lying around"
+			},
+			"ACT_ISNPC": {
+				"value": 8,
+				"comment": "This bit is set for use with IS_NPC()"
+			},
+			"ACT_NICE_THIEF": {
+				"value": 16,
+				"comment": "Set if a thief should NOT be killed"
+			},
+			"ACT_AGGRESSIVE": {
+				"value": 32,
+				"comment": "Set if automatic attack on NPC's"
+			},
+			"ACT_STAY_ZONE": {
+				"value": 64,
+				"comment": "MOB Must stay inside its own zone"
+			},
+			"ACT_WIMPY": {
+				"value": 128,
+				"comment": "MOB Will flee when injured  and if aggressive only attack sleeping players"
+			},
+			"ACT_ANNOYING": {
+				"value": 256,
+				"comment": "MOB is so utterly irritating that other monsters will attack it..."
+			},
+			"ACT_HATEFUL": {
+				"value": 512,
+				"comment": "MOB will attack a PC or NPC matching a  specified name"
+			},
+			"ACT_AFRAID": {
+				"value": 1024,
+				"comment": "MOB is afraid of a certain PC or NPC   and will always run away ...."
+			},
+			"ACT_IMMORTAL": {
+				"value": 2048,
+				"comment": "MOB is a natural event  can't be kiled"
+			},
+			"ACT_HUNTING": {
+				"value": 4096,
+				"comment": "MOB is hunting someone"
+			},
+			"ACT_DEADLY": {
+				"value": 8192,
+				"comment": "MOB has deadly poison"
+			},
+			"ACT_POLYSELF": {
+				"value": 16384,
+				"comment": "MOB is a polymorphed person"
+			},
+			"ACT_META_AGG": {
+				"value": 32768,
+				"comment": "MOB is _very_ aggressive"
+			},
+			"ACT_GUARDIAN": {
+				"value": 65536,
+				"comment": "MOB will guard master"
+			},
+			"ACT_ILLUSION": {
+				"value": 131072,
+				"comment": "MOB is illusionary"
+			},
+			"ACT_HUGE": {
+				"value": 262144,
+				"comment": "MOB is too large to go indoors"
+			},
+			"ACT_SCRIPT": {
+				"value": 524288,
+				"comment": "MOB has a script assigned to it DO NOT SET"
+			},
+			"ACT_GREET": {
+				"value": 1048576,
+				"comment": "MOB greets people"
+			},
+			"ACT_MAGIC_USER": {
+				"value": 2097152,
+				"comment": ""
+			},
+			"ACT_WARRIOR": {
+				"value": 4194304,
+				"comment": ""
+			},
+			"ACT_CLERIC": {
+				"value": 8388608,
+				"comment": ""
+			},
+			"ACT_THIEF": {
+				"value": 16777216,
+				"comment": ""
+			},
+			"ACT_DRUID": {
+				"value": 33554432,
+				"comment": ""
+			},
+			"ACT_MONK": {
+				"value": 67108864,
+				"comment": ""
+			},
+			"ACT_BARBARIAN": {
+				"value": 134217728,
+				"comment": ""
+			},
+			"ACT_PALADIN": {
+				"value": 268435456,
+				"comment": ""
+			},
+			"ACT_RANGER": {
+				"value": 536870912,
+				"comment": ""
+			},
+			"ACT_PSI": {
+				"value": 1073741824,
+				"comment": ""
+			},
+			"ACT_ARCHER": {
+				"value": 2147483648,
+				"comment": ""
+			}
+		},
+		"e_player_flags": {
+			"comment": "For players : specials.act\n",
+			"PLR_BRIEF": {
+				"value": 1,
+				"comment": ""
+			},
+			"PLR_UNUSED": {
+				"value": 2,
+				"comment": ""
+			},
+			"PLR_COMPACT": {
+				"value": 4,
+				"comment": ""
+			},
+			"PLR_DONTSET": {
+				"value": 8,
+				"comment": "Dont EVER set"
+			},
+			"PLR_WIMPY": {
+				"value": 16,
+				"comment": "character will flee when seriously injured"
+			},
+			"PLR_NOHASSLE": {
+				"value": 32,
+				"comment": "char won't be attacked by aggressives."
+			},
+			"PLR_STEALTH": {
+				"value": 64,
+				"comment": "char won't be announced in a variety of situations"
+			},
+			"PLR_HUNTING": {
+				"value": 128,
+				"comment": "the player is hunting someone  do a track each look"
+			},
+			"PLR_DEAF": {
+				"value": 256,
+				"comment": "The player does not hear shouts"
+			},
+			"PLR_ECHO": {
+				"value": 512,
+				"comment": "Messages (tells  shout etc) echo back"
+			},
+			"PLR_NOGOSSIP": {
+				"value": 1024,
+				"comment": "New  gossip channel"
+			},
+			"PLR_NOAUCTION": {
+				"value": 2048,
+				"comment": "New AUTCION channel"
+			},
+			"PLR_NOTHING": {
+				"value": 4096,
+				"comment": "empty"
+			},
+			"PLR_NOTHING2": {
+				"value": 8192,
+				"comment": "empty"
+			},
+			"PLR_NOSHOUT": {
+				"value": 16384,
+				"comment": "the player is not allowed to shout"
+			},
+			"PLR_FREEZE": {
+				"value": 32768,
+				"comment": "The player is frozen  must have pissed an immo off"
+			},
+			"PLR_NOTELL": {
+				"value": 65536,
+				"comment": "The player does not hear tells"
+			},
+			"PLR_MAILING": {
+				"value": 131072,
+				"comment": ""
+			},
+			"PLR_EMPTY4": {
+				"value": 262144,
+				"comment": ""
+			},
+			"PLR_EMPTY5": {
+				"value": 524288,
+				"comment": ""
+			},
+			"PLR_NOBEEP": {
+				"value": 1048576,
+				"comment": "ignore all beeps"
+			}
+		},
+		"e_room_flags": {
+			"comment": "Bitvector For 'room_flags'\n",
+			"DARK": {
+				"value": 1,
+				"comment": ""
+			},
+			"DEATH": {
+				"value": 2,
+				"comment": ""
+			},
+			"NO_MOB": {
+				"value": 4,
+				"comment": ""
+			},
+			"INDOORS": {
+				"value": 8,
+				"comment": ""
+			},
+			"PEACEFUL": {
+				"value": 16,
+				"comment": "No fighting"
+			},
+			"NOSTEAL": {
+				"value": 32,
+				"comment": "No Thieving"
+			},
+			"NO_SUM": {
+				"value": 64,
+				"comment": "no summoning"
+			},
+			"NO_MAGIC": {
+				"value": 128,
+				"comment": ""
+			},
+			"TUNNEL": {
+				"value": 256,
+				"comment": "Limited #s of people in room"
+			},
+			"PRIVATE": {
+				"value": 512,
+				"comment": ""
+			},
+			"SILENCE": {
+				"value": 1024,
+				"comment": ""
+			},
+			"LARGE": {
+				"value": 2048,
+				"comment": ""
+			},
+			"NO_DEATH": {
+				"value": 4096,
+				"comment": ""
+			},
+			"SAVE_ROOM": {
+				"value": 8192,
+				"comment": "room will save eq and load at reboot"
+			},
+			"NO_TRACK": {
+				"value": 16384,
+				"comment": ""
+			},
+			"NO_MIND": {
+				"value": 32768,
+				"comment": ""
+			},
+			"DESERTIC": {
+				"value": 65536,
+				"comment": ""
+			},
+			"ARTIC": {
+				"value": 131072,
+				"comment": ""
+			},
+			"UNDERGROUND": {
+				"value": 262144,
+				"comment": ""
+			},
+			"HOT": {
+				"value": 524288,
+				"comment": ""
+			},
+			"WET": {
+				"value": 1048576,
+				"comment": ""
+			},
+			"COLD": {
+				"value": 2097152,
+				"comment": ""
+			},
+			"DRY": {
+				"value": 4194304,
+				"comment": ""
+			},
+			"BRIGHT": {
+				"value": 8388608,
+				"comment": ""
+			},
+			"NO_ASTRAL": {
+				"value": 16777216,
+				"comment": ""
+			},
+			"NO_REGAIN": {
+				"value": 33554432,
+				"comment": ""
+			},
+			"RM_1": {
+				"value": 67108864,
+				"comment": ""
+			},
+			"RM_2": {
+				"value": 134217728,
+				"comment": ""
+			},
+			"RM_3": {
+				"value": 268435456,
+				"comment": ""
+			},
+			"RM_4": {
+				"value": 536870912,
+				"comment": ""
+			},
+			"RM_5": {
+				"value": 1073741824,
+				"comment": ""
+			}
+		},
+		"e_exit_types": {
+			"comment": "",
+			"EX_ISDOOR": {
+				"value": 1,
+				"comment": ""
+			},
+			"EX_CLOSED": {
+				"value": 2,
+				"comment": ""
+			},
+			"EX_LOCKED": {
+				"value": 4,
+				"comment": ""
+			},
+			"EX_SECRET": {
+				"value": 8,
+				"comment": ""
+			},
+			"EX_NOTBASH": {
+				"value": 16,
+				"comment": ""
+			},
+			"EX_PICKPROOF": {
+				"value": 32,
+				"comment": ""
+			},
+			"EX_CLIMB": {
+				"value": 64,
+				"comment": ""
+			},
+			"EX_MALE": {
+				"value": 128,
+				"comment": ""
+			},
+			"EX_NOLOOKT": {
+				"value": 256,
+				"comment": ""
+			}
+		},
+		"e_teleports": {
+			"comment": "",
+			"TELE_LOOK": {
+				"value": 1,
+				"comment": ""
+			},
+			"TELE_COUNT": {
+				"value": 2,
+				"comment": ""
+			},
+			"TELE_RANDOM": {
+				"value": 4,
+				"comment": ""
+			},
+			"TELE_SPIN": {
+				"value": 8,
+				"comment": ""
+			}
+		},
+		"e_large_flags": {
+			"comment": "",
+			"LARGE_NONE": {
+				"value": 0,
+				"comment": ""
+			},
+			"LARGE_WATER": {
+				"value": 1,
+				"comment": ""
+			},
+			"LARGE_AIR": {
+				"value": 2,
+				"comment": ""
+			},
+			"LARGE_IMPASS": {
+				"value": 4,
+				"comment": ""
+			}
+		},
+		"e_skill_known": {
+			"comment": "skill_data flags\n",
+			"SKILL_KNOWN": {
+				"value": 1,
+				"comment": ""
+			},
+			"SKILL_KNOWN_CLERIC": {
+				"value": 2,
+				"comment": ""
+			},
+			"SKILL_KNOWN_MAGE": {
+				"value": 4,
+				"comment": ""
+			},
+			"SKILL_KNOWN_SORCERER": {
+				"value": 8,
+				"comment": ""
+			},
+			"SKILL_KNOWN_THIEF": {
+				"value": 16,
+				"comment": ""
+			},
+			"SKILL_KNOWN_MONK": {
+				"value": 32,
+				"comment": ""
+			},
+			"SKILL_KNOWN_DRUID": {
+				"value": 64,
+				"comment": ""
+			},
+			"SKILL_KNOWN_WARRIOR": {
+				"value": 128,
+				"comment": ""
+			},
+			"SKILL_KNOWN_BARBARIAN": {
+				"value": 256,
+				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
+			},
+			"SKILL_KNOWN_PALADIN": {
+				"value": 512,
+				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
+			},
+			"SKILL_KNOWN_RANGER": {
+				"value": 1024,
+				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
+			},
+			"SKILL_KNOWN_PSI": {
+				"value": 2048,
+				"comment": "need to make byte flags, to long or int flags in char_skill_data\n"
+			}
+		},
+		"e_user_flags": {
+			"comment": "user flags\n",
+			"NO_DELETE": {
+				"value": 1,
+				"comment": "do not delete me  well until 6 months pass!"
+			},
+			"USE_ANSI": {
+				"value": 2,
+				"comment": "we use ANSI color  yeah!"
+			},
+			"RACE_WAR": {
+				"value": 4,
+				"comment": "if enabled they can be hit by opposing race"
+			},
+			"SHOW_CLASSES": {
+				"value": 8,
+				"comment": "If enabled the PG classes are shown in the WHO"
+			},
+			"SHOW_EXITS": {
+				"value": 16,
+				"comment": "for auto display exits"
+			},
+			"MURDER_1": {
+				"value": 32,
+				"comment": "actually killed someone!"
+			},
+			"STOLE_1": {
+				"value": 64,
+				"comment": "caught stealing form someone!"
+			},
+			"MURDER_2": {
+				"value": 128,
+				"comment": "rumored killed someone"
+			},
+			"STOLE_2": {
+				"value": 256,
+				"comment": "rumored stole from someone"
+			},
+			"STOLE_X": {
+				"value": 512,
+				"comment": "saved for later"
+			},
+			"MURDER_X": {
+				"value": 1024,
+				"comment": "saved for later"
+			},
+			"USE_PAGING": {
+				"value": 2048,
+				"comment": "pause screens?"
+			},
+			"CAN_OBJ_EDIT": {
+				"value": 4096,
+				"comment": "this user can use oedit to edit objects"
+			},
+			"CAN_MOB_EDIT": {
+				"value": 8192,
+				"comment": "this user can use medit to edit mobs"
+			}
+		},
+		"e_sys_flags": {
+			"comment": "system flags defined on the fly and by wizards for this boot\n",
+			"SYS_NOPORTAL": {
+				"value": 1,
+				"comment": "no one can portal"
+			},
+			"SYS_NOASTRAL": {
+				"value": 2,
+				"comment": "no one can astral"
+			},
+			"SYS_NOSUMMON": {
+				"value": 4,
+				"comment": "no one can summon"
+			},
+			"SYS_NOKILL": {
+				"value": 8,
+				"comment": "NO PC (good side or bad side) can fight"
+			},
+			"SYS_LOGALL": {
+				"value": 16,
+				"comment": "log ALL users to the system log"
+			},
+			"SYS_ECLIPS": {
+				"value": 32,
+				"comment": "the world is in constant darkness!"
+			},
+			"SYS_SKIPDNS": {
+				"value": 64,
+				"comment": "skips DNS name searches on connects"
+			},
+			"SYS_REQAPPROVE": {
+				"value": 128,
+				"comment": "force god approval for new char"
+			},
+			"SYS_NOANSI": {
+				"value": 256,
+				"comment": "disable ansi colors world wide"
+			},
+			"SYS_LOGMOB": {
+				"value": 512,
+				"comment": "log ALL mob ti system log"
+			}
+		},
+		"e_immunity_type": {
+			"comment": "",
+			"IMM_FIRE": {
+				"value": 1,
+				"comment": ""
+			},
+			"IMM_COLD": {
+				"value": 2,
+				"comment": ""
+			},
+			"IMM_ELEC": {
+				"value": 4,
+				"comment": ""
+			},
+			"IMM_ENERGY": {
+				"value": 8,
+				"comment": ""
+			},
+			"IMM_BLUNT": {
+				"value": 16,
+				"comment": ""
+			},
+			"IMM_PIERCE": {
+				"value": 32,
+				"comment": ""
+			},
+			"IMM_SLASH": {
+				"value": 64,
+				"comment": ""
+			},
+			"IMM_ACID": {
+				"value": 128,
+				"comment": ""
+			},
+			"IMM_POISON": {
+				"value": 256,
+				"comment": ""
+			},
+			"IMM_DRAIN": {
+				"value": 512,
+				"comment": ""
+			},
+			"IMM_SLEEP": {
+				"value": 1024,
+				"comment": ""
+			},
+			"IMM_CHARM": {
+				"value": 2048,
+				"comment": ""
+			},
+			"IMM_HOLD": {
+				"value": 4096,
+				"comment": ""
+			},
+			"IMM_NONMAG": {
+				"value": 8192,
+				"comment": ""
+			},
+			"IMM_PLUS1": {
+				"value": 16384,
+				"comment": ""
+			},
+			"IMM_PLUS2": {
+				"value": 32768,
+				"comment": ""
+			},
+			"IMM_PLUS3": {
+				"value": 65536,
+				"comment": ""
+			},
+			"IMM_PLUS4": {
+				"value": 131072,
+				"comment": ""
+			}
+		},
+		"e_hate_type": {
+			"comment": "",
+			"HATE_SEX": {
+				"value": 1,
+				"comment": ""
+			},
+			"HATE_RACE": {
+				"value": 2,
+				"comment": ""
+			},
+			"HATE_CHAR": {
+				"value": 4,
+				"comment": ""
+			},
+			"HATE_CLASS": {
+				"value": 8,
+				"comment": ""
+			},
+			"HATE_EVIL": {
+				"value": 16,
+				"comment": ""
+			},
+			"HATE_GOOD": {
+				"value": 32,
+				"comment": ""
+			},
+			"HATE_VNUM": {
+				"value": 64,
+				"comment": ""
+			}
+		},
+		"e_fear_type": {
+			"comment": "",
+			"FEAR_SEX": {
+				"value": 1,
+				"comment": ""
+			},
+			"FEAR_RACE": {
+				"value": 2,
+				"comment": ""
+			},
+			"FEAR_CHAR": {
+				"value": 4,
+				"comment": ""
+			},
+			"FEAR_CLASS": {
+				"value": 8,
+				"comment": ""
+			},
+			"FEAR_EVIL": {
+				"value": 16,
+				"comment": ""
+			},
+			"FEAR_GOOD": {
+				"value": 32,
+				"comment": ""
+			},
+			"FEAR_VNUM": {
+				"value": 64,
 				"comment": ""
 			}
 		},
@@ -3164,73 +3272,6 @@
 			},
 			"ITEM_ANTI_SORCERER": {
 				"value": 2147483648,
-				"comment": ""
-			}
-		},
-		"e_liquids": {
-			"comment": "Some different kind of liquids\n",
-			"LIQ_WATER": {
-				"value": 0,
-				"comment": ""
-			},
-			"LIQ_BEER": {
-				"value": 1,
-				"comment": ""
-			},
-			"LIQ_WINE": {
-				"value": 2,
-				"comment": ""
-			},
-			"LIQ_ALE": {
-				"value": 3,
-				"comment": ""
-			},
-			"LIQ_DARKALE": {
-				"value": 4,
-				"comment": ""
-			},
-			"LIQ_WHISKY": {
-				"value": 5,
-				"comment": ""
-			},
-			"LIQ_LEMONADE": {
-				"value": 6,
-				"comment": ""
-			},
-			"LIQ_FIREBRT": {
-				"value": 7,
-				"comment": ""
-			},
-			"LIQ_LOCALSPC": {
-				"value": 8,
-				"comment": ""
-			},
-			"LIQ_SLIME": {
-				"value": 9,
-				"comment": ""
-			},
-			"LIQ_MILK": {
-				"value": 10,
-				"comment": ""
-			},
-			"LIQ_TEA": {
-				"value": 11,
-				"comment": ""
-			},
-			"LIQ_COFFE": {
-				"value": 12,
-				"comment": ""
-			},
-			"LIQ_BLOOD": {
-				"value": 13,
-				"comment": ""
-			},
-			"LIQ_SALTWATER": {
-				"value": 14,
-				"comment": ""
-			},
-			"LIQ_COKE": {
-				"value": 15,
 				"comment": ""
 			}
 		}

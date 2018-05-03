@@ -4,16 +4,15 @@
  *ALARMUD*/
 #ifndef __SPECIALPROC_HPP
 #define __SPECIALPROC_HPP
-#define SPECIALPROC_OTHER(name) int (name)( struct char_data*, int, char*, void*, int )
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "typedefs.hpp"
 namespace Alarmud {
-typedef SPECIALPROC_OTHER(*special_proc);
-struct special_proc_entry {
-	char* nome;
-	special_proc proc;
+struct OtherSpecialProcEntry {
+	const char* nome;
+	genericspecial_func proc;
 };
-extern struct special_proc_entry otherproc[];
+extern struct OtherSpecialProcEntry otherproc[];
 } // namespace Alarmud
-#endif __SPECIALPROC_HPP
+#endif /* __SPECIALPROC_HPP */
 

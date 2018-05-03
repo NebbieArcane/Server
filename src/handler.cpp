@@ -12,6 +12,7 @@
 #include <cctype>
 #include <cassert>
 #include <cstdlib>
+#include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -43,27 +44,28 @@ namespace Alarmud {
 
 
 
-char* fname(char* namelist) {
+const char* fname(const char* namelist) {
 #define ML 30
 	static char holder[ML];
 	int i=ML;
 	register char* point;
 
-	if( namelist ) {
-		for (point = holder; isalpha(*namelist) && i ; i--,namelist++, point++) {
+	if(namelist) {
+		for(point = holder; isalpha(*namelist) && i ; i--,namelist++, point++) {
 			*point = *namelist;
 		}
 
 		*point = '\0';
 	}
-	else
-	{ holder[ 0 ] = 0; }
+	else {
+		holder[ 0 ] = 0;
+	}
 
 	return(holder);
 }
 
 
-int split_string(char* str, char* sep, char** argv)
+int split_string(char* str, const char* sep, char** argv)
 /* str must be writable */
 {
 	char*        s;
@@ -72,7 +74,7 @@ int split_string(char* str, char* sep, char** argv)
 
 	s = strtok(str, sep);
 	SetLine(__FILE__,__LINE__);
-	if ((int)s) {
+	if(s) {
 		SetLine(__FILE__,__LINE__);
 		argv[argc++] = s;
 		SetLine(__FILE__,__LINE__);
@@ -85,45 +87,47 @@ int split_string(char* str, char* sep, char** argv)
 	}
 	SetLine(__FILE__,__LINE__);
 
-	while( ( s = strtok( NULL, sep ) ) ) {
+	while((s = strtok(NULL, sep))) {
 		SetLine(__FILE__,__LINE__);
 		argv[argc++] = s;
 	}
 	SetLine(__FILE__,__LINE__);
 	return argc;
 }
-    
+
 void reset_original_numattacks(struct char_data* ch) {
 
-int mklev;
-    
-ch->mult_att = 1.0;
+	int mklev;
 
-	if ( HasClass(ch, CLASS_WARRIOR)  || HasClass(ch, CLASS_MONK) ||
+	ch->mult_att = 1.0;
+
+	if(HasClass(ch, CLASS_WARRIOR)  || HasClass(ch, CLASS_MONK) ||
 			HasClass(ch,CLASS_BARBARIAN) || HasClass(ch, CLASS_PALADIN) ||
 			HasClass(ch,CLASS_RANGER)) {
 
-		if (HasClass(ch, CLASS_BARBARIAN)) {
+		if(HasClass(ch, CLASS_BARBARIAN)) {
 			ch->mult_att+=(GET_LEVEL(ch, BARBARIAN_LEVEL_IND)*.05);
 		}
-		else if (HasClass(ch, CLASS_RANGER)) {
+		else if(HasClass(ch, CLASS_RANGER)) {
 			ch->mult_att+=(GET_LEVEL(ch, RANGER_LEVEL_IND)*.05);
 		}
-		else if (HasClass(ch, CLASS_PALADIN)) {
+		else if(HasClass(ch, CLASS_PALADIN)) {
 			ch->mult_att+=(GET_LEVEL(ch, PALADIN_LEVEL_IND)*.05);
-			if (GET_ALIGNMENT(ch) >= 350) {
+			if(GET_ALIGNMENT(ch) >= 350) {
 				SET_BIT(ch->specials.affected_by,AFF_DETECT_EVIL);
 				SET_BIT(ch->specials.affected_by,AFF_PROTECT_FROM_EVIL);
 			}
 		}
-		else if (HasClass(ch, CLASS_WARRIOR)) {
+		else if(HasClass(ch, CLASS_WARRIOR)) {
 			ch->mult_att+=(GET_LEVEL(ch, WARRIOR_LEVEL_IND)*.05);
 		}
 		else {
 			ch->mult_att+= (GET_LEVEL(ch, MONK_LEVEL_IND)/16.0);
 			/* fix up damage stuff */
 			mklev = GET_LEVEL(ch, MONK_LEVEL_IND) ; // Gaia 2001
-			if(IS_SINGLE(ch)) { mklev++ ; }
+			if(IS_SINGLE(ch)) {
+				mklev++ ;
+			}
 			switch(mklev) {
 			case 1:
 			case 2:
@@ -234,10 +238,12 @@ ch->mult_att = 1.0;
 	}
 	else {
 		ch->mult_att+=(GetMaxLevel(ch)*0.01);
-		if (HasClass(ch,CLASS_CLERIC))
-		{ ch->mult_att+=0.5; }
-		if (HasClass(ch,CLASS_DRUID))
-		{ ch->mult_att+=0.6; }
+		if(HasClass(ch,CLASS_CLERIC)) {
+			ch->mult_att+=0.5;
+		}
+		if(HasClass(ch,CLASS_DRUID)) {
+			ch->mult_att+=0.6;
+		}
 	}
 	mudlog(LOG_PLAYERS,"%s: numatcks resetted to = %f",GET_NAME(ch),ch->mult_att);
 }
@@ -257,31 +263,35 @@ int isname(const char* str, const char* namelist) {
 	char logbuf[255];
 	SetStatus("isname");
 	SetLine(__FILE__,__LINE__);
-	if (!str || !namelist) { return(0); } /* Parm nulli. Torna falso*/
+	if(!str || !namelist) {
+		return(0);    /* Parm nulli. Torna falso*/
+	}
 	SetLine(__FILE__,__LINE__);
-	if (strlen(str) > MAX_INPUT_LENGTH) {
-		mudlog( LOG_SYSERR,"In isname: namelist too long: %s",namelist );
+	if(strlen(str) > MAX_INPUT_LENGTH) {
+		mudlog(LOG_SYSERR,"In isname: namelist too long: %s",namelist);
 	}
 	strncpy(buf, str,MAX_INPUT_LENGTH);
 	buf[MAX_INPUT_LENGTH -1] = 0;
 	SetLine(__FILE__,__LINE__);
 	argc = split_string(buf, "- \t\n\r,", argv);
 	SetLine(__FILE__,__LINE__);
-	if (strlen(namelist) > MAX_INPUT_LENGTH) {
-		mudlog( LOG_SYSERR,"In isname: namelist too long: %s",namelist );
+	if(strlen(namelist) > MAX_INPUT_LENGTH) {
+		mudlog(LOG_SYSERR,"In isname: namelist too long: %s",namelist);
 	}
 	strncpy(names, namelist,MAX_INPUT_LENGTH);
 	names[MAX_INPUT_LENGTH -1] = 0;
 	SetLine(__FILE__,__LINE__);
 	xargc = split_string(names, "- \t\n\r,", xargv);
 	SetLine(__FILE__,__LINE__);
-	if (!argc || !argv) { return(0); }
+	if(!argc) {
+		return(0);
+	}
 	SetLine(__FILE__,__LINE__);
 	s = argv[argc-1];
 	SetLine(__FILE__,__LINE__);
 	s += strlen(s);
 	SetLine(__FILE__,__LINE__);
-	if (*(--s) == '.') {
+	if(*(--s) == '.') {
 		SetLine(__FILE__,__LINE__);
 		exact = 1;
 		SetLine(__FILE__,__LINE__);
@@ -296,13 +306,14 @@ int isname(const char* str, const char* namelist) {
 	 replaced by string terminators.  pointers to the beginning of
 	 each word are in argv */
 
-	if( exact && argc != xargc )
-	{ return 0; }
+	if(exact && argc != xargc) {
+		return 0;
+	}
 
-	for (i=0; i<argc; i++) {
-		for (j=0; j<xargc; j++) {
+	for(i=0; i<argc; i++) {
+		for(j=0; j<xargc; j++) {
 			SetLine(__FILE__,__LINE__);
-			if (0==str_cmp(argv[i],xargv[j])) {
+			if(0==str_cmp(argv[i],xargv[j])) {
 				SetLine(__FILE__,__LINE__);
 				SetStatus(logbuf,"In");
 
@@ -311,8 +322,9 @@ int isname(const char* str, const char* namelist) {
 			}
 			SetLine(__FILE__,__LINE__);
 		}
-		if (j>=xargc)
-		{ return 0; }
+		if(j>=xargc) {
+			return 0;
+		}
 	}
 	SetLine(__FILE__,__LINE__);
 	return 1;
@@ -329,7 +341,9 @@ int isname2(const char* str, const char* namelist) {
 	static char   buf[8000], names[8000], *s;
 	SetLine(__FILE__,__LINE__);
 
-	if (!str || !namelist) { return(0); } /* Parm nulli. Torna falso*/
+	if(!str || !namelist) {
+		return(0);    /* Parm nulli. Torna falso*/
+	}
 	SetLine(__FILE__,__LINE__);
 	strcpy(buf, str);
 	SetLine(__FILE__,__LINE__);
@@ -345,7 +359,7 @@ int isname2(const char* str, const char* namelist) {
 	SetLine(__FILE__,__LINE__);
 	s += strlen(s);
 	SetLine(__FILE__,__LINE__);
-	if( *(--s) == '.' ) {
+	if(*(--s) == '.') {
 		SetLine(__FILE__,__LINE__);
 		exact = 1;
 		SetLine(__FILE__,__LINE__);
@@ -363,15 +377,16 @@ int isname2(const char* str, const char* namelist) {
 	 */
 	SetLine(__FILE__,__LINE__);
 
-	if (exact && argc != xargc)
-	{ return FALSE; }
+	if(exact && argc != xargc) {
+		return FALSE;
+	}
 	SetLine(__FILE__,__LINE__);
 
-	for (i=0; i < argc; i++) {
+	for(i=0; i < argc; i++) {
 		SetLine(__FILE__,__LINE__);
-		for( j = 0; j < xargc; j++ ) {
+		for(j = 0; j < xargc; j++) {
 			SetLine(__FILE__,__LINE__);
-			if( str_cmp2( argv[i], xargv[j] ) == 0 ) {
+			if(str_cmp2(argv[i], xargv[j]) == 0) {
 				SetLine(__FILE__,__LINE__);
 				xargv[j] = NULL;
 				SetLine(__FILE__,__LINE__);
@@ -380,8 +395,9 @@ int isname2(const char* str, const char* namelist) {
 			SetLine(__FILE__,__LINE__);
 		}
 		SetLine(__FILE__,__LINE__);
-		if (j>=xargc)
-		{ return FALSE; }
+		if(j>=xargc) {
+			return FALSE;
+		}
 		SetLine(__FILE__,__LINE__);
 	}
 	SetLine(__FILE__,__LINE__);
@@ -397,9 +413,10 @@ void init_string_block(struct string_block* sb) {
 void append_to_string_block(struct string_block* sb, const char* str) {
 	int        len;
 	len = strlen(sb->data) + strlen(str) + 1;
-	if (len > sb->size) {
-		if ( len > (sb->size*=2))
-		{ sb->size = len; }
+	if(len > sb->size) {
+		if(len > (sb->size*=2)) {
+			sb->size = len;
+		}
 		sb->data = (char*)realloc(sb->data, sb->size);
 	}
 	strcat(sb->data, str);
@@ -419,21 +436,23 @@ void destroy_string_block(struct string_block* sb) {
 void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) {
 	int i;
 
-	if (!ch)
-	{ return; }
-	if (loc == APPLY_SKIP)
-	{ return; }
+	if(!ch) {
+		return;
+	}
+	if(loc == APPLY_SKIP) {
+		return;
+	}
 
-	if (loc == APPLY_IMMUNE) {
-		if (add) {
+	if(loc == APPLY_IMMUNE) {
+		if(add) {
 			SET_BIT(ch->immune, mod);
 		}
 		else {
 			REMOVE_BIT(ch->immune, mod);
 		}
 	}
-	else if (loc == APPLY_SUSC) {
-		if (add) {
+	else if(loc == APPLY_SUSC) {
+		if(add) {
 			SET_BIT(ch->susc, mod);
 		}
 		else {
@@ -441,27 +460,27 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		}
 
 	}
-	else if (loc == APPLY_M_IMMUNE) {
-		if (add) {
+	else if(loc == APPLY_M_IMMUNE) {
+		if(add) {
 			SET_BIT(ch->M_immune, mod);
 		}
 		else {
 			REMOVE_BIT(ch->M_immune, mod);
 		}
 	}
-	else if (loc == APPLY_SPELL) {
-		if (add) {
+	else if(loc == APPLY_SPELL) {
+		if(add) {
 			SET_BIT(ch->specials.affected_by, mod);
 		}
 		else {
 			REMOVE_BIT(ch->specials.affected_by, mod);
 		}
 	}
-	else if (loc == APPLY_WEAPON_SPELL) {
+	else if(loc == APPLY_WEAPON_SPELL) {
 		return;
 	}
-	else if (loc == APPLY_AFF2) {
-		if (add) {
+	else if(loc == APPLY_AFF2) {
+		if(add) {
 			SET_BIT(ch->specials.affected_by2, bitv);
 		}
 		else {
@@ -470,7 +489,7 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		return;
 	}
 	else {
-		if (add) {
+		if(add) {
 			SET_BIT(ch->specials.affected_by, bitv);
 		}
 		else {
@@ -486,57 +505,68 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_STR: {
-		int nTmpAdd = GET_ADD( ch );
-		if( -mod > GET_STR( ch ) )
-		{ mod = -GET_STR( ch ); }
-		GET_STR( ch ) += mod;
-		if( GET_STR( ch ) > 18 && GET_STR(ch) > MaxStrForRace( ch ) ) {
-			nTmpAdd += ( GET_STR( ch ) - 18 ) * 10;
+		int nTmpAdd = GET_ADD(ch);
+		if(-mod > GET_STR(ch)) {
+			mod = -GET_STR(ch);
 		}
-		while( nTmpAdd > 100 && GET_STR( ch ) + 1 <= MaxStrForRace( ch ) ) {
-			GET_STR( ch ) +=1;
+		GET_STR(ch) += mod;
+		if(GET_STR(ch) > 18 && GET_STR(ch) > MaxStrForRace(ch)) {
+			nTmpAdd += (GET_STR(ch) - 18) * 10;
+		}
+		while(nTmpAdd > 100 && GET_STR(ch) + 1 <= MaxStrForRace(ch)) {
+			GET_STR(ch) +=1;
 			nTmpAdd -= 100;
 		}
-		if( nTmpAdd > 100)
-		{ nTmpAdd = 100; }
-		if( GET_STR( ch ) > MaxStrForRace( ch ) )
-		{ GET_STR( ch ) = MaxStrForRace( ch ); }
-		GET_ADD( ch ) = (sbyte)nTmpAdd; /* nTmpAdd dovrebbe essere fra 0 e 100 */
+		if(nTmpAdd > 100) {
+			nTmpAdd = 100;
+		}
+		if(GET_STR(ch) > MaxStrForRace(ch)) {
+			GET_STR(ch) = MaxStrForRace(ch);
+		}
+		GET_ADD(ch) = (sbyte)nTmpAdd;   /* nTmpAdd dovrebbe essere fra 0 e 100 */
 		break;
 	}
 
 	case APPLY_DEX:
-		if( (-mod) > GET_DEX(ch) )
-		{ mod = -GET_DEX(ch); }
+		if((-mod) > GET_DEX(ch)) {
+			mod = -GET_DEX(ch);
+		}
 		GET_DEX(ch) += mod;
-		if(GET_DEX(ch) > MaxDexForRace(ch))
-		{ GET_DEX(ch)=MaxDexForRace(ch); }
+		if(GET_DEX(ch) > MaxDexForRace(ch)) {
+			GET_DEX(ch)=MaxDexForRace(ch);
+		}
 		break;
 
 	case APPLY_INT:
-		if( (-mod) > GET_INT(ch) )
-		{ mod = -GET_INT(ch); }
+		if((-mod) > GET_INT(ch)) {
+			mod = -GET_INT(ch);
+		}
 		GET_INT(ch) += mod;
-		if (GET_INT(ch) > MaxIntForRace(ch))
-		{ GET_INT(ch) = MaxIntForRace(ch); }
+		if(GET_INT(ch) > MaxIntForRace(ch)) {
+			GET_INT(ch) = MaxIntForRace(ch);
+		}
 
 		break;
 
 	case APPLY_WIS:
-		if( (-mod) > GET_WIS(ch) )
-		{ mod = -GET_WIS(ch); }
+		if((-mod) > GET_WIS(ch)) {
+			mod = -GET_WIS(ch);
+		}
 		GET_WIS(ch) += mod;
-		if (GET_WIS(ch) > MaxWisForRace(ch))
-		{ GET_WIS(ch) = MaxWisForRace(ch); }
+		if(GET_WIS(ch) > MaxWisForRace(ch)) {
+			GET_WIS(ch) = MaxWisForRace(ch);
+		}
 
 		break;
 
 	case APPLY_CON:
-		if( (-mod) > GET_CON(ch) )
-		{ mod = -GET_CON(ch); }
+		if((-mod) > GET_CON(ch)) {
+			mod = -GET_CON(ch);
+		}
 		GET_CON(ch) += mod;
-		if (GET_CON(ch) > MaxConForRace(ch))
-		{ GET_CON(ch) =MaxConForRace(ch); }
+		if(GET_CON(ch) > MaxConForRace(ch)) {
+			GET_CON(ch) =MaxConForRace(ch);
+		}
 		break;
 
 	case APPLY_SEX:
@@ -544,11 +574,13 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_CHR:
-		if( (-mod) > GET_CHR(ch) )
-		{ mod = -GET_CHR(ch); }
+		if((-mod) > GET_CHR(ch)) {
+			mod = -GET_CHR(ch);
+		}
 		GET_CHR(ch) += mod;
-		if (GET_CHR(ch) > MaxChrForRace(ch))
-		{ GET_CHR(ch) = MaxChrForRace(ch); }
+		if(GET_CHR(ch) > MaxChrForRace(ch)) {
+			GET_CHR(ch) = MaxChrForRace(ch);
+		}
 
 		break;
 
@@ -621,8 +653,9 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_SAVE_ALL: {
-		for (i=0; i<=4; i++)
-		{ ch->specials.apply_saving_throw[i] += mod; }
+		for(i=0; i<=4; i++) {
+			ch->specials.apply_saving_throw[i] += mod;
+		}
 	}
 	break;
 	case APPLY_IMMUNE:
@@ -641,68 +674,92 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	case APPLY_EAT_SPELL:
 		break;
 	case APPLY_BACKSTAB:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_BACKSTAB].learned+ mod) >=100)
-		{ ch->skills[SKILL_BACKSTAB].learned=100; }
-		else
-		{ ch->skills[SKILL_BACKSTAB].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_BACKSTAB].learned+ mod) >=100) {
+			ch->skills[SKILL_BACKSTAB].learned=100;
+		}
+		else {
+			ch->skills[SKILL_BACKSTAB].learned += mod;
+		}
 		break;
 	case APPLY_KICK:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_KICK].learned+ mod) >=100)
-		{ ch->skills[SKILL_KICK].learned=100; }
-		else
-		{ ch->skills[SKILL_KICK].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_KICK].learned+ mod) >=100) {
+			ch->skills[SKILL_KICK].learned=100;
+		}
+		else {
+			ch->skills[SKILL_KICK].learned += mod;
+		}
 		break;
 	case APPLY_SNEAK:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_SNEAK].learned+ mod) >=100)
-		{ ch->skills[SKILL_SNEAK].learned=100; }
-		else
-		{ ch->skills[SKILL_SNEAK].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_SNEAK].learned+ mod) >=100) {
+			ch->skills[SKILL_SNEAK].learned=100;
+		}
+		else {
+			ch->skills[SKILL_SNEAK].learned += mod;
+		}
 		break;
 	case APPLY_HIDE:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_HIDE].learned+ mod) >=100)
-		{ ch->skills[SKILL_HIDE].learned=100; }
-		else
-		{ ch->skills[SKILL_HIDE].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_HIDE].learned+ mod) >=100) {
+			ch->skills[SKILL_HIDE].learned=100;
+		}
+		else {
+			ch->skills[SKILL_HIDE].learned += mod;
+		}
 		break;
 	case APPLY_BASH:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_BASH].learned+ mod) >=100)
-		{ ch->skills[SKILL_BASH].learned=100; }
-		else
-		{ ch->skills[SKILL_BASH].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_BASH].learned+ mod) >=100) {
+			ch->skills[SKILL_BASH].learned=100;
+		}
+		else {
+			ch->skills[SKILL_BASH].learned += mod;
+		}
 		break;
 	case APPLY_PICK:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_PICK_LOCK].learned+ mod) >=100)
-		{ ch->skills[SKILL_PICK_LOCK].learned=100; }
-		else
-		{ ch->skills[SKILL_PICK_LOCK].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_PICK_LOCK].learned+ mod) >=100) {
+			ch->skills[SKILL_PICK_LOCK].learned=100;
+		}
+		else {
+			ch->skills[SKILL_PICK_LOCK].learned += mod;
+		}
 		break;
 	case APPLY_STEAL:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_STEAL].learned+ mod) >=100)
-		{ ch->skills[SKILL_STEAL].learned=100; }
-		else
-		{ ch->skills[SKILL_STEAL].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_STEAL].learned+ mod) >=100) {
+			ch->skills[SKILL_STEAL].learned=100;
+		}
+		else {
+			ch->skills[SKILL_STEAL].learned += mod;
+		}
 		break;
 	case APPLY_TRACK:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_HUNT].learned+ mod) >=100)
-		{ ch->skills[SKILL_HUNT].learned=100; }
-		else
-		{ ch->skills[SKILL_HUNT].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_HUNT].learned+ mod) >=100) {
+			ch->skills[SKILL_HUNT].learned=100;
+		}
+		else {
+			ch->skills[SKILL_HUNT].learned += mod;
+		}
 		break;
 
 	case APPLY_SPELLFAIL:
@@ -710,38 +767,48 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_HASTE:
-		if (mod > 0)
-		{ ch->mult_att *= 2.0; }
-		else if (mod < 0)
-		{ ch->mult_att /= 2.0; }
+		if(mod > 0) {
+			ch->mult_att *= 2.0;
+		}
+		else if(mod < 0) {
+			ch->mult_att /= 2.0;
+		}
 		break;
 
 	case APPLY_SLOW:
-		if (mod > 0)
-		{ ch->mult_att /= 2.0; }
-		else if (mod < 0)
-		{ ch->mult_att *= 2.0; }
+		if(mod > 0) {
+			ch->mult_att /= 2.0;
+		}
+		else if(mod < 0) {
+			ch->mult_att *= 2.0;
+		}
 		break;
 
 	case APPLY_ATTACKS:
 		break;
 
 	case APPLY_FIND_TRAPS:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_FIND_TRAP].learned+ mod) >=100)
-		{ ch->skills[SKILL_FIND_TRAP].learned=100; }
-		else
-		{ ch->skills[SKILL_FIND_TRAP].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_FIND_TRAP].learned+ mod) >=100) {
+			ch->skills[SKILL_FIND_TRAP].learned=100;
+		}
+		else {
+			ch->skills[SKILL_FIND_TRAP].learned += mod;
+		}
 		break;
 
 	case APPLY_RIDE:
-		if (!ch->skills)
-		{ return; }
-		if ((int)(ch->skills[SKILL_RIDE].learned+ mod) >=100)
-		{ ch->skills[SKILL_RIDE].learned=100; }
-		else
-		{ ch->skills[SKILL_RIDE].learned += mod; }
+		if(!ch->skills) {
+			return;
+		}
+		if((int)(ch->skills[SKILL_RIDE].learned+ mod) >=100) {
+			ch->skills[SKILL_RIDE].learned=100;
+		}
+		else {
+			ch->skills[SKILL_RIDE].learned += mod;
+		}
 		break;
 
 	case APPLY_RACE_SLAYER:
@@ -789,9 +856,9 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 
 	default:
 
-		mudlog( LOG_SYSERR,
-				"Unknown apply adjust attempt for %s (handler.c, affect_modify).",
-				GET_NAME( ch ) );
+		mudlog(LOG_SYSERR,
+			   "Unknown apply adjust attempt for %s (handler.c, affect_modify).",
+			   GET_NAME(ch));
 		break;
 
 	} /* switch */
@@ -804,23 +871,24 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 void affect_total(struct char_data* ch) {
 	struct affected_type* af;
 	int i,j;
-	if (!GET_NAME(ch)) {
+	if(!GET_NAME(ch)) {
 		return;
 	}
 
 
-	if( !HasClass( ch, CLASS_MONK ) ) {
-		GET_AC(ch) -= dex_app[ (int)GET_DEX(ch) ].defensive;
+	if(!HasClass(ch, CLASS_MONK)) {
+		GET_AC(ch) -= dex_app[(int)GET_DEX(ch) ].defensive;
 	}
 
 	for(i=0; i<MAX_WEAR; i++) {
-		if (ch->equipment[i]) {
+		if(ch->equipment[i]) {
 			for(j=0; j<MAX_OBJ_AFFECT; j++)
 				affect_modify(ch, ch->equipment[i]->affected[j].location,
 							  ch->equipment[i]->affected[j].modifier,
 							  ch->equipment[i]->obj_flags.bitvector, FALSE);
-			if( GET_ITEM_TYPE( ch->equipment[ i ] ) == ITEM_ARMOR )
-			{ GET_AC(ch) += apply_ac( ch, i ); }
+			if(GET_ITEM_TYPE(ch->equipment[ i ]) == ITEM_ARMOR) {
+				GET_AC(ch) += apply_ac(ch, i);
+			}
 		}
 	}
 
@@ -829,21 +897,22 @@ void affect_total(struct char_data* ch) {
 					  FALSE);
 
 	ch->tmpabilities = ch->abilities;
-	if( IS_PC( ch ) ) {
-		GET_AC( ch ) = 100;
-		if (HasClass(ch, CLASS_MONK)) {
+	if(IS_PC(ch)) {
+		GET_AC(ch) = 100;
+		if(HasClass(ch, CLASS_MONK)) {
 			GET_AC(ch) -= MIN(150, (GET_LEVEL(ch, MONK_LEVEL_IND)*5));
 		}
 	}
 
 	for(i=0; i<MAX_WEAR; i++) {
-		if (ch->equipment[i]) {
+		if(ch->equipment[i]) {
 			for(j=0; j<MAX_OBJ_AFFECT; j++)
 				affect_modify(ch, ch->equipment[i]->affected[j].location,
 							  ch->equipment[i]->affected[j].modifier,
 							  ch->equipment[i]->obj_flags.bitvector, TRUE);
-			if( GET_ITEM_TYPE( ch->equipment[ i ] ) == ITEM_ARMOR )
-			{ GET_AC(ch) -= apply_ac( ch, i ); }
+			if(GET_ITEM_TYPE(ch->equipment[ i ]) == ITEM_ARMOR) {
+				GET_AC(ch) -= apply_ac(ch, i);
+			}
 		}
 	}
 
@@ -851,8 +920,8 @@ void affect_total(struct char_data* ch) {
 		affect_modify(ch, af->location, af->modifier,
 					  af->bitvector, TRUE);
 
-	if( !HasClass( ch, CLASS_MONK ) ) {
-		GET_AC(ch) += dex_app[ (int)GET_DEX(ch) ].defensive;
+	if(!HasClass(ch, CLASS_MONK)) {
+		GET_AC(ch) += dex_app[(int)GET_DEX(ch) ].defensive;
 	}
 #if 1
 	/* this I think worked, wanna test it without and see what happens */
@@ -863,17 +932,19 @@ void affect_total(struct char_data* ch) {
 	 * Questo viene fatto in affect_total(). Benem
 	 */
 
-	if( GET_AC(ch) < -100 )
-	{ GET_AC(ch) = -100; }
-	if( GET_AC(ch) > 100 )
-	{ GET_AC(ch) = 100; }
+	if(GET_AC(ch) < -100) {
+		GET_AC(ch) = -100;
+	}
+	if(GET_AC(ch) > 100) {
+		GET_AC(ch) = 100;
+	}
 #endif
 
 	/* Make certain values are between 0..25, not < 0 and not > 25! */
 
 	i = (IS_NPC(ch) || GetMaxLevel(ch) >= MAESTRO_DEI_CREATORI ? 25 :18);
 
-	if (IS_NPC(ch) || IS_IMMORTAL(ch)) {
+	if(IS_NPC(ch) || IS_IMMORTAL(ch)) {
 		GET_DEX(ch) = MAX(3,MIN(GET_DEX(ch), 25));
 		GET_INT(ch) = MAX(3,MIN(GET_INT(ch), 25));
 		GET_WIS(ch) = MAX(3,MIN(GET_WIS(ch), 25));
@@ -893,11 +964,12 @@ void affect_total(struct char_data* ch) {
 		GET_STR(ch) = MIN(GET_STR(ch), i);
 	}
 	else {
-		if (GET_STR(ch) > 18) {
+		if(GET_STR(ch) > 18) {
 			i = GET_ADD(ch) + ((GET_STR(ch)-18)*10);
 			GET_ADD(ch) = MIN(i, 100);
-			if (GET_STR(ch) > MaxStrForRace(ch))
-			{ GET_STR(ch) = MaxStrForRace(ch); }
+			if(GET_STR(ch) > MaxStrForRace(ch)) {
+				GET_STR(ch) = MaxStrForRace(ch);
+			}
 		}
 	}
 	/* update regen rates (for age) */
@@ -908,7 +980,7 @@ void affect_total(struct char_data* ch) {
 
 /* Insert an affect_type in a char_data structure
  * Automatically sets apropriate bits and apply's */
-void affect_to_char( struct char_data* ch, struct affected_type* af ) {
+void affect_to_char(struct char_data* ch, struct affected_type* af) {
 	struct affected_type* affected_alloc;
 
 
@@ -928,67 +1000,68 @@ void affect_to_char( struct char_data* ch, struct affected_type* af ) {
 						  * reaches zero). Pointer *af must never be NIL! Frees mem and calls
  * affect_location_apply                                                */
 
-void affect_remove( struct char_data* ch, struct affected_type* af ) {
+void affect_remove(struct char_data* ch, struct affected_type* af) {
 	struct affected_type* hjp;
 
 
-	if( !ch->affected ) {
-		mudlog( LOG_SYSERR, "affect removed from char %s without affect",
-				GET_NAME( ch ) );
+	if(!ch->affected) {
+		mudlog(LOG_SYSERR, "affect removed from char %s without affect",
+			   GET_NAME(ch));
 		return;
 	}
 
 	/* Curious to see if af is really non NULL */
-	if( !af ) {
-		mudlog( LOG_SYSERR, "af is NULL! in affect_remove()");
+	if(!af) {
+		mudlog(LOG_SYSERR, "af is NULL! in affect_remove()");
 		return;
 	}
 
-	affect_modify( ch, af->location, af->modifier, af->bitvector, FALSE );
+	affect_modify(ch, af->location, af->modifier, af->bitvector, FALSE);
 
 
 	/* remove structure *af from linked list */
 
-	if (ch->affected == af) {
+	if(ch->affected == af) {
 		/* remove head of list */
 		ch->affected = af->next;
 	}
 	else {
-		for( hjp = ch->affected; (hjp) && (hjp->next) && (hjp->next != af);
+		for(hjp = ch->affected; (hjp) && (hjp->next) && (hjp->next != af);
 				hjp = hjp->next);
 
-		if (hjp->next != af) {
-			mudlog( LOG_SYSERR, "Could not locate affected_type in ch->affected. "
-					"(handler.c, affect_remove)" );
+		if(hjp->next != af) {
+			mudlog(LOG_SYSERR, "Could not locate affected_type in ch->affected. "
+				   "(handler.c, affect_remove)");
 			return;
 		}
 		hjp->next = af->next; /* skip the af element */
 	}
 
-	free ( af );
+	free(af);
 	PushStatus("affect_total");
 	affect_total(ch);
 	PopStatus();
 }
 
 /* Call affect_remove with every spell of spelltype "skill" */
-void affect_from_char( struct char_data* ch, short skill) {
+void affect_from_char(struct char_data* ch, short skill) {
 	struct affected_type* hjp, *pNext;
 
-	for( hjp = ch->affected; hjp; hjp = pNext ) {
+	for(hjp = ch->affected; hjp; hjp = pNext) {
 		pNext = hjp->next;
-		if( hjp->type == skill )
-		{ affect_remove( ch, hjp ); }
+		if(hjp->type == skill) {
+			affect_remove(ch, hjp);
+		}
 	}
 }
 /* Rimuove UNA spell di tipo skill */
-void one_affect_from_char( struct char_data* ch, short skill) {
+void one_affect_from_char(struct char_data* ch, short skill) {
 	struct affected_type* hjp, *pNext;
 
-	for( hjp = ch->affected; hjp; hjp = pNext ) {
+	for(hjp = ch->affected; hjp; hjp = pNext) {
 		pNext = hjp->next;
-		if( hjp->type == skill ) {
-			affect_remove( ch, hjp );
+		if(hjp->type == skill) {
+			affect_remove(ch, hjp);
 			return;
 		}
 	}
@@ -1003,53 +1076,58 @@ void one_affect_from_char( struct char_data* ch, short skill) {
 int how_many_spell(struct char_data* ch, short skill) {
 	struct affected_type* hjp;
 	int howmany=0;
-	for (hjp = ch->affected; hjp; hjp = hjp->next)
-		if ( hjp->type == skill )
-		{ howmany++; }
+	for(hjp = ch->affected; hjp; hjp = hjp->next)
+		if(hjp->type == skill) {
+			howmany++;
+		}
 
-	return( howmany );
+	return(howmany);
 }
 
 
-bool affected_by_spell( struct char_data* ch, short skill ) {
+bool affected_by_spell(struct char_data* ch, short skill) {
 	struct affected_type* hjp;
 
-	for (hjp = ch->affected; hjp; hjp = hjp->next) {
-		if ((int) hjp < 1000) {
+	for(hjp = ch->affected; hjp; hjp = hjp->next) {
+		if(reinterpret_cast<uintptr_t>(hjp) < 1000) {
 			mudlog(LOG_SYSERR,"Invalid affected address for %s",GET_NAME(ch));
 			continue;
 		}
-		if ( hjp->type == skill )
-		{ return( TRUE ); }
+		if(hjp->type == skill) {
+			return(TRUE);
+		}
 	}
-	return( FALSE );
+	return(FALSE);
 }
 
 
 
-void affect_join( struct char_data* ch, struct affected_type* af,
-				  bool avg_dur, bool avg_mod ) {
+void affect_join(struct char_data* ch, struct affected_type* af,
+				 bool avg_dur, bool avg_mod) {
 	struct affected_type* hjp, *pNext = NULL;
 	bool found = FALSE;
 
-	for( hjp = ch->affected; !found && hjp; hjp = pNext ) {
+	for(hjp = ch->affected; !found && hjp; hjp = pNext) {
 		pNext = hjp->next;
-		if( hjp->type == af->type ) {
+		if(hjp->type == af->type) {
 			af->duration += hjp->duration;
-			if(avg_dur)
-			{ af->duration /= 2; }
+			if(avg_dur) {
+				af->duration /= 2;
+			}
 
 			af->modifier += hjp->modifier;
-			if(avg_mod)
-			{ af->modifier /= 2; }
+			if(avg_mod) {
+				af->modifier /= 2;
+			}
 
 			affect_remove(ch, hjp);
 			affect_to_char(ch, af);
 			found = TRUE;
 		}
 	}
-	if (!found)
-	{ affect_to_char(ch, af); }
+	if(!found) {
+		affect_to_char(ch, af);
+	}
 }
 
 
@@ -1058,35 +1136,38 @@ void char_from_room(struct char_data* ch) {
 	struct char_data* i;
 	struct room_data* rp;
 
-	if( ch->in_room == NOWHERE ) {
-		mudlog( LOG_SYSERR, "%s is in room NOWHERE (handler.c, char_from_room)",
-				GET_NAME_DESC( ch ) );
+	if(ch->in_room == NOWHERE) {
+		mudlog(LOG_SYSERR, "%s is in room NOWHERE (handler.c, char_from_room)",
+			   GET_NAME_DESC(ch));
 		return;
 	}
 	/* Alar: anticipato il check sulla validit� della stanza */
-	rp = real_roomp( ch->in_room );
-	if( rp == NULL ) {
-		mudlog( LOG_SYSERR, "%s is not in a valid room %ld (char_from_room)",
-				GET_NAME_DESC( ch ), ch->in_room );
+	rp = real_roomp(ch->in_room);
+	if(rp == NULL) {
+		mudlog(LOG_SYSERR, "%s is not in a valid room %ld (char_from_room)",
+			   GET_NAME_DESC(ch), ch->in_room);
 		return;
 	}
-	if( ch->equipment[ WEAR_LIGHT ] )
-		if( ch->equipment[ WEAR_LIGHT ]->obj_flags.type_flag == ITEM_LIGHT )
-			if( ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ] ) /* Light is ON */
-			{ rp->light--; }
+	if(ch->equipment[ WEAR_LIGHT ])
+		if(ch->equipment[ WEAR_LIGHT ]->obj_flags.type_flag == ITEM_LIGHT)
+			if(ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ]) { /* Light is ON */
+				rp->light--;
+			}
 
 
-	if (ch == rp->people)  /* head of list */
-	{ rp->people = ch->next_in_room; }
+	if(ch == rp->people) { /* head of list */
+		rp->people = ch->next_in_room;
+	}
 	else {
 		/* locate the previous element */
-		for( i = rp->people; i && i->next_in_room != ch; i = i->next_in_room ) ;
-		if( i )
-		{ i->next_in_room = ch->next_in_room; }
+		for(i = rp->people; i && i->next_in_room != ch; i = i->next_in_room) ;
+		if(i) {
+			i->next_in_room = ch->next_in_room;
+		}
 		else
-			mudlog( LOG_SYSERR, "%s was not in people list of his room %ld "
-					"(char_from_room)", GET_NAME_DESC( ch ),
-					ch->in_room );
+			mudlog(LOG_SYSERR, "%s was not in people list of his room %ld "
+				   "(char_from_room)", GET_NAME_DESC(ch),
+				   ch->in_room);
 	}
 
 	ch->in_room = NOWHERE;
@@ -1098,48 +1179,52 @@ void char_from_room(struct char_data* ch) {
 void char_to_room(struct char_data* ch, long room) {
 	struct room_data* rp;
 
-	rp = real_roomp( room );
-	if( !rp ) {
+	rp = real_roomp(room);
+	if(!rp) {
 		room = 0;
 		rp = real_roomp(room);
-		if( !rp )
-		{ assert( ("Stanza zero inesistente",0) ); }
+		if(!rp) {
+			mudlog(LOG_SYSERR,"Stanza zero inesistente");
+			assert(false);
+		}
 	}
 	ch->next_in_room = rp->people;
 	rp->people = ch;
 	ch->in_room = room;
 
-	if( ch->equipment[ WEAR_LIGHT ] ) {
-		if( ch->equipment[ WEAR_LIGHT ]->obj_flags.type_flag == ITEM_LIGHT ) {
-			if( rp->sector_type != SECT_UNDERWATER ) {
-				if( ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ] ) {
+	if(ch->equipment[ WEAR_LIGHT ]) {
+		if(ch->equipment[ WEAR_LIGHT ]->obj_flags.type_flag == ITEM_LIGHT) {
+			if(rp->sector_type != SECT_UNDERWATER) {
+				if(ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ]) {
 					rp->light++; /* Light is ON */
-					if( rp->light < 1 )
-					{ rp->light = 1; }
+					if(rp->light < 1) {
+						rp->light = 1;
+					}
 				}
 			}
 			else {
-				if( ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ] > 0 ) {
+				if(ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ] > 0) {
 					send_to_char("Your light source is extinguished instantyl!\n\r", ch);
 					ch->equipment[ WEAR_LIGHT ]->obj_flags.value[ 2 ] = 0;
 				}
 				else {
 					rp->light++;
-					if( rp->light < 1 )
-					{ rp->light = 1; }
+					if(rp->light < 1) {
+						rp->light = 1;
+					}
 				}
 			}
 		}
 	}
 
-	if( IS_SET( TELE_COUNT, rp->tele_mask ) && rp->tele_cnt > 0 ) {
+	if(IS_SET(TELE_COUNT, rp->tele_mask) && rp->tele_cnt > 0) {
 		/* this is a teleport countdown room */
 		ch->nTeleCount = rp->tele_cnt;
 	}
 
-	if( IS_PC( ch ) ) {
-		if( zone_table[ rp->zone ].start == 0 ) {
-			mudlog( LOG_CHECK, "Zone inizializzata da %s.", GET_NAME_DESC( ch ) );
+	if(IS_PC(ch)) {
+		if(zone_table[ rp->zone ].start == 0) {
+			mudlog(LOG_CHECK, "Zone inizializzata da %s.", GET_NAME_DESC(ch));
 			/* start up the zone.  */
 			reset_zone(rp->zone);
 		}
@@ -1148,38 +1233,40 @@ void char_to_room(struct char_data* ch, long room) {
 
 
 /* give an object to a char   */
-void obj_to_char( struct obj_data* object, struct char_data* ch ) {
+void obj_to_char(struct obj_data* object, struct char_data* ch) {
 #if 1
-	if (!object) {
-		mudlog( LOG_SYSERR, "!object in obj_to_char!");
+	if(!object) {
+		mudlog(LOG_SYSERR, "!object in obj_to_char!");
 		return;
 	}
-	if (!ch) {
-		mudlog( LOG_SYSERR, "!ch in obj_to_char for object <%s>, could be bogus "
-				"maximum for the obj in the zone file", object->name );
+	if(!ch) {
+		mudlog(LOG_SYSERR, "!ch in obj_to_char for object <%s>, could be bogus "
+			   "maximum for the obj in the zone file", object->name);
 		return;
 	}
 #endif
 
-	if (!(!object->in_obj && !object->carried_by && !object->equipped_by &&
+	if(!(!object->in_obj && !object->carried_by && !object->equipped_by &&
 			object->in_room == NOWHERE)) {
 		/*  Probabilmente non e stata chiamata obj_from_char */
 		/*  oppure e' stata chiamata da Oload, in questo caso obj_from_char
 		    fa crashare il mud! Gaia 2001 */
 
-		mudlog( LOG_SYSERR,
-				"Oggetto %s: per darlo a %s lo tolgo al proprietario.",
-				object->name,
-				GET_NAME(ch));
+		mudlog(LOG_SYSERR,
+			   "Oggetto %s: per darlo a %s lo tolgo al proprietario.",
+			   object->name,
+			   GET_NAME(ch));
 		obj_from_char(object);
 
 	}
 
 
-	if (ch->carrying)
-	{ object->next_content = ch->carrying; }
-	else
-	{ object->next_content = 0; }
+	if(ch->carrying) {
+		object->next_content = ch->carrying;
+	}
+	else {
+		object->next_content = 0;
+	}
 
 	ch->carrying = object;
 	object->carried_by = ch;
@@ -1196,41 +1283,42 @@ void obj_to_char( struct obj_data* object, struct char_data* ch ) {
 void obj_from_char(struct obj_data* object) {
 	struct obj_data* tmp;
 
-	if( !object ) {
-		mudlog( LOG_SYSERR, "object == NULL in obj_from_char (handler.c).");
+	if(!object) {
+		mudlog(LOG_SYSERR, "object == NULL in obj_from_char (handler.c).");
 		return;
 	}
 
 
-	if( !object->carried_by ) {
-		mudlog( LOG_SYSERR, "Object '%s' is not carried by anyone",
-				object->short_description );
+	if(!object->carried_by) {
+		mudlog(LOG_SYSERR, "Object '%s' is not carried by anyone",
+			   object->short_description);
 		return;
 	}
 
-	if( !object->carried_by->carrying ) {
-		mudlog( LOG_SYSERR,
-				"The object->carried_by (of object %s) character is carrying "
-				"anything.", object->short_description );
+	if(!object->carried_by->carrying) {
+		mudlog(LOG_SYSERR,
+			   "The object->carried_by (of object %s) character is carrying "
+			   "anything.", object->short_description);
 		return;
 	}
 
-	if( object->in_obj || object->equipped_by ) {
-		mudlog( LOG_SYSERR, "Object %s in more than one place.",
-				object->short_description );
+	if(object->in_obj || object->equipped_by) {
+		mudlog(LOG_SYSERR, "Object %s in more than one place.",
+			   object->short_description);
 		return;
 	}
 
-	if (object->carried_by->carrying == object)   /* head of list */
-	{ object->carried_by->carrying = object->next_content; }
+	if(object->carried_by->carrying == object) {  /* head of list */
+		object->carried_by->carrying = object->next_content;
+	}
 	else {
-		for( tmp = object->carried_by->carrying;
+		for(tmp = object->carried_by->carrying;
 				tmp && (tmp->next_content != object);
 				tmp = tmp->next_content); /* locate previous */
 
-		if (!tmp) {
-			mudlog( LOG_SYSERR, "Couldn't find object %s on character %s",
-					object->short_description, GET_NAME_DESC( object->carried_by ) );
+		if(!tmp) {
+			mudlog(LOG_SYSERR, "Couldn't find object %s on character %s",
+				   object->short_description, GET_NAME_DESC(object->carried_by));
 			return;
 		}
 
@@ -1251,10 +1339,11 @@ void obj_from_char(struct obj_data* object) {
 int apply_ac(struct char_data* ch, int eq_pos) {
 	assert(ch->equipment[eq_pos]);
 
-	if (!(GET_ITEM_TYPE(ch->equipment[eq_pos]) == ITEM_ARMOR))
-	{ return 0; }
+	if(!(GET_ITEM_TYPE(ch->equipment[eq_pos]) == ITEM_ARMOR)) {
+		return 0;
+	}
 
-	switch (eq_pos) {
+	switch(eq_pos) {
 	case WEAR_BODY:
 		return (3*ch->equipment[eq_pos]->obj_flags.value[0]);  /* 30% */
 	case WEAR_HEAD:
@@ -1281,63 +1370,63 @@ int apply_ac(struct char_data* ch, int eq_pos) {
 
 void equip_char(struct char_data* ch, struct obj_data* obj, int pos) {
 #if 0
-	int GoodBlade( struct char_data *ch, int cmd, char* arg,
-				   struct obj_data *tobj, int type);
-	int NeutralBlade( struct char_data *ch, int cmd, char* arg,
-					  struct obj_data *tobj, int type);
+	int GoodBlade(struct char_data *ch, int cmd, char* arg,
+				  struct obj_data *tobj, int type);
+	int NeutralBlade(struct char_data *ch, int cmd, char* arg,
+					 struct obj_data *tobj, int type);
 #endif
 
 	int j;
 
-	if( pos < 0 || pos > MAX_WEAR ) {
-		mudlog( LOG_SYSERR, "pos < 0 || pos > MAX_WEAR (equip_char)" );
+	if(pos < 0 || pos > MAX_WEAR) {
+		mudlog(LOG_SYSERR, "pos < 0 || pos > MAX_WEAR (equip_char)");
 		return;
 	}
-	if( ch->equipment[ pos ] ) {
-		mudlog( LOG_SYSERR, "ch->equipment[ %d ] of %s not empty (equip_char)", pos,
-				GET_NAME( ch ) );
+	if(ch->equipment[ pos ]) {
+		mudlog(LOG_SYSERR, "ch->equipment[ %d ] of %s not empty (equip_char)", pos,
+			   GET_NAME(ch));
 		return;
 	}
-	if( obj == NULL ) {
-		mudlog( LOG_SYSERR, "obj == NULL in (equip_char)" );
+	if(obj == NULL) {
+		mudlog(LOG_SYSERR, "obj == NULL in (equip_char)");
 		return;
 	}
 	assert(!obj->carried_by);
 	assert(obj->in_room==NOWHERE) ;
 
-	if( ch->in_room != NOWHERE ) {
+	if(ch->in_room != NOWHERE) {
 
 		/* no checks on super ego items, they do it already */
-		if( obj->item_number >= 0 &&
-				( obj_index[obj->item_number].func == EvilBlade ||
-				  obj_index[obj->item_number].func == NeutralBlade ||
-				  obj_index[obj->item_number].func == GoodBlade ) ) {
+		if(obj->item_number >= 0 &&
+				(obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(EvilBlade) ||
+				 obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(NeutralBlade) ||
+				 obj_index[obj->item_number].func == reinterpret_cast<genericspecial_func>(GoodBlade))) {
 			/* do nothing */
 		}
 		else {
-			if( !CheckEgoEquip( ch, obj ) ) {
+			if(!CheckEgoEquip(ch, obj)) {
 				return;
 			}
 		}                         /* end item ego checks */
 
 
-		if( !CheckGetBarbarianOK(ch,obj)) {
-			if (ch->in_room != NOWHERE) {
+		if(!CheckGetBarbarianOK(ch,obj)) {
+			if(ch->in_room != NOWHERE) {
 				obj_to_room(obj, ch->in_room);
 				do_save(ch,"",0);
 			}
 			else
-				mudlog( LOG_SYSERR,
-						"Ch->in_room = NOWHERE on anti-barb item! (equip_char)");
+				mudlog(LOG_SYSERR,
+					   "Ch->in_room = NOWHERE on anti-barb item! (equip_char)");
 			return;
 		}
 
-		if( !IS_NPC(ch) && ItemAlignClash(ch, obj) && (GetMaxLevel(ch) < MAESTRO_DEI_CREATORI)) {
-			if (ch->in_room != NOWHERE) {
-				act( "You are zapped by $p and instantly drop it.", FALSE, ch, obj, 0,
-					 TO_CHAR);
-				act( "$n is zapped by $p and instantly drop it.",
-					 FALSE, ch, obj, 0, TO_ROOM);
+		if(!IS_NPC(ch) && ItemAlignClash(ch, obj) && (GetMaxLevel(ch) < MAESTRO_DEI_CREATORI)) {
+			if(ch->in_room != NOWHERE) {
+				act("You are zapped by $p and instantly drop it.", FALSE, ch, obj, 0,
+					TO_CHAR);
+				act("$n is zapped by $p and instantly drop it.",
+					FALSE, ch, obj, 0, TO_ROOM);
 				obj_to_room(obj, ch->in_room);
 #if 0
 				/*equip_char puo essere chiamata da do_save... meglio evitare
@@ -1348,35 +1437,40 @@ void equip_char(struct char_data* ch, struct obj_data* obj, int pos) {
 				return;
 			}
 			else {
-				mudlog( LOG_SYSERR,
-						"ch->in_room = NOWHERE when zapping eq char (equip_char)");
+				mudlog(LOG_SYSERR,
+					   "ch->in_room = NOWHERE when zapping eq char (equip_char)");
 				assert(0);
 			}
 		}
 	}
-	if (IS_AFFECTED(ch, AFF_SNEAK) &&
-			IsRestricted(obj, CLASS_THIEF))
-	{ affect_from_char(ch, SKILL_SNEAK); }
+	if(IS_AFFECTED(ch, AFF_SNEAK) &&
+			IsRestricted(obj, CLASS_THIEF)) {
+		affect_from_char(ch, SKILL_SNEAK);
+	}
 
 	ch->equipment[pos] = obj;
 	obj->equipped_by = ch;
 	obj->eq_pos = pos;
 #if EQPESANTE
 	IS_CARRYING_W(obj->equipped_by) += GET_OBJ_WEIGHT(obj);
-	if (pos == WEAR_BACK) { IS_CARRYING_W(obj->equipped_by) -= GET_OBJ_WEIGHT(obj); } // SALVO controllo se borsa per il peso
+	if(pos == WEAR_BACK) {
+		IS_CARRYING_W(obj->equipped_by) -= GET_OBJ_WEIGHT(obj);    // SALVO controllo se borsa per il peso
+	}
 #endif
-	if (GET_ITEM_TYPE(obj) == ITEM_ARMOR)
-	{ GET_AC(ch) -= apply_ac(ch, pos); }
+	if(GET_ITEM_TYPE(obj) == ITEM_ARMOR) {
+		GET_AC(ch) -= apply_ac(ch, pos);
+	}
 
 	for(j=0; j<MAX_OBJ_AFFECT; j++)
 		affect_modify(ch, obj->affected[j].location,
 					  obj->affected[j].modifier,
 					  obj->obj_flags.bitvector, TRUE);
 
-	if (GET_ITEM_TYPE(obj) == ITEM_WEAPON) {
+	if(GET_ITEM_TYPE(obj) == ITEM_WEAPON) {
 		/* some nifty manuevering for strength */
-		if (IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF))
-		{ GiveMinStrToWield(obj, ch); }
+		if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+			GiveMinStrToWield(obj, ch);
+		}
 	}
 
 	affect_total(ch);
@@ -1390,10 +1484,11 @@ int GiveMinStrToWield(struct obj_data* obj, struct char_data* ch) {
 	 * will have a problem with except. str, that i do not care to solve
 	 */
 
-	while( GET_OBJ_WEIGHT( obj ) > str_app[STRENGTH_APPLY_INDEX(ch)].wield_w)
-	{ GET_STR(ch)++; }
+	while(GET_OBJ_WEIGHT(obj) > str_app[STRENGTH_APPLY_INDEX(ch)].wield_w) {
+		GET_STR(ch)++;
+	}
 
-	GET_RSTR( ch ) = GET_STR( ch );
+	GET_RSTR(ch) = GET_STR(ch);
 
 	return(str);
 
@@ -1403,8 +1498,8 @@ struct obj_data* unequip_char(struct char_data* ch, int pos) {
 	int j;
 	struct obj_data* obj;
 
-	if (pos > MAX_WEAR || pos < 0) {
-		mudlog( LOG_SYSERR, "pos > MAX_WEAR || pos < 0 in handler.c unequip");
+	if(pos > MAX_WEAR || pos < 0) {
+		mudlog(LOG_SYSERR, "pos > MAX_WEAR || pos < 0 in handler.c unequip");
 		return NULL;
 	}
 
@@ -1414,12 +1509,15 @@ struct obj_data* unequip_char(struct char_data* ch, int pos) {
 
 	assert(!obj->in_obj && obj->in_room == NOWHERE && !obj->carried_by);
 
-	if (GET_ITEM_TYPE(obj) == ITEM_ARMOR)
-	{ GET_AC(ch) += apply_ac(ch, pos); }
+	if(GET_ITEM_TYPE(obj) == ITEM_ARMOR) {
+		GET_AC(ch) += apply_ac(ch, pos);
+	}
 
 #if EQPESANTE
 	IS_CARRYING_W(obj->equipped_by) -= GET_OBJ_WEIGHT(obj);
-	if (pos == WEAR_BACK) { IS_CARRYING_W(obj->equipped_by) += GET_OBJ_WEIGHT(obj); } // SALVO controllo se borsa per il peso
+	if(pos == WEAR_BACK) {
+		IS_CARRYING_W(obj->equipped_by) += GET_OBJ_WEIGHT(obj);    // SALVO controllo se borsa per il peso
+	}
 #else
 	IS_CARRYING_W(obj->equipped_by) += GET_OBJ_WEIGHT(obj);
 #endif
@@ -1446,14 +1544,15 @@ int get_number(char** name) {
 
 	number[0] = 0;
 
-	if( ( ppos = (char*)index(*name, '.') ) && ppos[1] ) {
+	if((ppos = (char*)index(*name, '.')) && ppos[1]) {
 		*ppos++ = '\0';
 		strcpy(number,*name);
 		strcpy(*name, ppos);
 
 		for(i=0; *(number+i); i++)
-			if (!isdigit(*(number+i)))
-			{ return(0); }
+			if(!isdigit(*(number+i))) {
+				return(0);
+			}
 
 		return(atoi(number));
 	}
@@ -1462,7 +1561,7 @@ int get_number(char** name) {
 }
 
 /* Search a given list for an object, and return a pointer to that object */
-struct obj_data* get_obj_in_list(char* name, struct obj_data* list) {
+struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1472,20 +1571,23 @@ struct obj_data* get_obj_in_list(char* name, struct obj_data* list) {
 	tmp = tmpname;
 
 
-	if (!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
-	for (i = list, j = 1; i && (j <= number); i = i->next_content)
-		if (isname(tmp, i->name)) {
-			if (j == number)
-			{ return(i); }
+	for(i = list, j = 1; i && (j <= number); i = i->next_content)
+		if(isname(tmp, i->name)) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 
-	for (i = list, j = 1; i && (j <= number); i = i->next_content)
-		if (isname2(tmp, i->name)) {
-			if (j == number)
-			{ return(i); }
+	for(i = list, j = 1; i && (j <= number); i = i->next_content)
+		if(isname2(tmp, i->name)) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 
@@ -1497,9 +1599,10 @@ struct obj_data* get_obj_in_list(char* name, struct obj_data* list) {
 struct obj_data* get_obj_in_list_num(int num, struct obj_data* list) {
 	struct obj_data* i;
 
-	for (i = list; i; i = i->next_content)
-		if (i->item_number == num)
-		{ return(i); }
+	for(i = list; i; i = i->next_content)
+		if(i->item_number == num) {
+			return(i);
+		}
 
 	return(0);
 }
@@ -1508,7 +1611,7 @@ struct obj_data* get_obj_in_list_num(int num, struct obj_data* list) {
 
 
 /*search the entire world for an object, and return a pointer  */
-struct obj_data* get_obj(char* name) {
+struct obj_data* get_obj(const char* name) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1516,20 +1619,23 @@ struct obj_data* get_obj(char* name) {
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
-	for (i = object_list, j = 1; i && (j <= number); i = i->next)
-		if (isname(tmp, i->name)) {
-			if( j == number )
-			{ return(i); }
+	for(i = object_list, j = 1; i && (j <= number); i = i->next)
+		if(isname(tmp, i->name)) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 
-	for (i = object_list, j = 1; i && (j <= number); i = i->next)
-		if (isname2(tmp, i->name)) {
-			if (j == number)
-			{ return(i); }
+	for(i = object_list, j = 1; i && (j <= number); i = i->next)
+		if(isname2(tmp, i->name)) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 
@@ -1540,9 +1646,10 @@ struct obj_data* get_obj(char* name) {
 struct obj_data* get_obj_num(int nr) {
 	struct obj_data* i;
 
-	for (i = object_list; i; i = i->next)
-		if (i->item_number == nr)
-		{ return(i); }
+	for(i = object_list; i; i = i->next)
+		if(i->item_number == nr) {
+			return(i);
+		}
 
 	return(0);
 }
@@ -1551,7 +1658,7 @@ struct obj_data* get_obj_num(int nr) {
 
 
 /* search a room for a char, and return a pointer if found..  */
-struct char_data* get_char_room(char* name, int room) {
+struct char_data* get_char_room(const char* name, int room) {
 	struct char_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1559,30 +1666,33 @@ struct char_data* get_char_room(char* name, int room) {
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
-	for( i = real_roomp(room)->people, j = 1; i && (j <= number);
-			i = i->next_in_room ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR, "Invalid char %s in room %d (ADDR: %p, magic: %d).",
-					GET_NAME_DESC( i ), room, i, i->nMagicNumber );
+	for(i = real_roomp(room)->people, j = 1; i && (j <= number);
+			i = i->next_in_room) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR, "Invalid char %s in room %d (ADDR: %p, magic: %d).",
+				   GET_NAME_DESC(i), room, i, i->nMagicNumber);
 		}
-		if (isname(tmp, GET_NAME(i))) {
-			if( j == number )
-			{ return(i); }
+		if(isname(tmp, GET_NAME(i))) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 	}
-	for( i = real_roomp(room)->people, j = 1;
-			i && (j <= number); i = i->next_in_room ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR, "Invalid char %s in room %d (ADDR: %p, magic: %d).",
-					GET_NAME_DESC( i ), room, i, i->nMagicNumber );
+	for(i = real_roomp(room)->people, j = 1;
+			i && (j <= number); i = i->next_in_room) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR, "Invalid char %s in room %d (ADDR: %p, magic: %d).",
+				   GET_NAME_DESC(i), room, i, i->nMagicNumber);
 		}
-		if( isname2( tmp, GET_NAME(i) ) ) {
-			if( j == number )
-			{ return(i); }
+		if(isname2(tmp, GET_NAME(i))) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 	}
@@ -1593,7 +1703,7 @@ struct char_data* get_char_room(char* name, int room) {
 
 
 /* search all over the world for a char, and return a pointer if found */
-struct char_data* get_char(char* name) {
+struct char_data* get_char(const char* name) {
 	struct char_data* i;
 	int j, number, nPosInList;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -1601,34 +1711,37 @@ struct char_data* get_char(char* name) {
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
-	for( i = character_list, j = 1, nPosInList = 0; i && j <= number;
-			i = i->next, nPosInList++ ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR,
-					"Invalid char %s in character_list (ADDR:%p, magic:%d, "
-					"pos:%d on %ld).", GET_NAME_DESC( i ), i, i->nMagicNumber,
-					nPosInList, mob_count );
-			raw_force_all( "save" );
-			assert( 0 );
+	for(i = character_list, j = 1, nPosInList = 0; i && j <= number;
+			i = i->next, nPosInList++) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "Invalid char %s in character_list (ADDR:%p, magic:%d, "
+				   "pos:%d on %ld).", GET_NAME_DESC(i), i, i->nMagicNumber,
+				   nPosInList, mob_count);
+			raw_force_all("save");
+			assert(0);
 		}
-		if( isname( tmp, GET_NAME(i) ) || isname2( tmp, GET_NAME(i) ) ) {
-			if( j == number )
-			{ return(i); }
+		if(isname(tmp, GET_NAME(i)) || isname2(tmp, GET_NAME(i))) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 	}
-	for( i = character_list, j = 1; i && j <= number; i = i->next ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR,
-					"Invalid char %s in character_list (ADDR: %p, magic: %d).",
-					GET_NAME_DESC( i ), i, i->nMagicNumber );
+	for(i = character_list, j = 1; i && j <= number; i = i->next) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "Invalid char %s in character_list (ADDR: %p, magic: %d).",
+				   GET_NAME_DESC(i), i, i->nMagicNumber);
 		}
-		if( isname2( tmp, GET_NAME(i) ) ) {
-			if( j == number )
-			{ return(i); }
+		if(isname2(tmp, GET_NAME(i))) {
+			if(j == number) {
+				return(i);
+			}
 			j++;
 		}
 	}
@@ -1642,17 +1755,18 @@ struct char_data* get_char_num(int nr) {
 	struct char_data* i;
 	int nPosInList;
 
-	for( i = character_list, nPosInList = 0; i; i = i->next, nPosInList++ ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR,
-					"Invalid char %s in character_list (ADDR:%p, magic:%d, "
-					"pos:%d on %ld).", GET_NAME_DESC( i ), i, i->nMagicNumber,
-					nPosInList, mob_count );
-			raw_force_all( "save" );
-			assert( 0 );
+	for(i = character_list, nPosInList = 0; i; i = i->next, nPosInList++) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "Invalid char %s in character_list (ADDR:%p, magic:%d, "
+				   "pos:%d on %ld).", GET_NAME_DESC(i), i, i->nMagicNumber,
+				   nPosInList, mob_count);
+			raw_force_all("save");
+			assert(0);
 		}
-		if (i->nr == nr)
-		{ return(i); }
+		if(i->nr == nr) {
+			return(i);
+		}
 	}
 
 	return(0);
@@ -1664,17 +1778,18 @@ struct char_data* get_char_num(int nr) {
 /* put an object in a room */
 void obj_to_room(struct obj_data* object, long room) {
 
-	if (room == -1)
-	{ room = 4; }
+	if(room == -1) {
+		room = 4;
+	}
 
-	if( object == NULL ) {
-		mudlog( LOG_SYSERR, "object == NULL in obj_to_room (handler.c)." );
+	if(object == NULL) {
+		mudlog(LOG_SYSERR, "object == NULL in obj_to_room (handler.c).");
 		return;
 	}
 
 	assert(!object->equipped_by && object->eq_pos == -1);
 
-	if (object->in_room > NOWHERE) {
+	if(object->in_room > NOWHERE) {
 		obj_from_room(object);
 	}
 
@@ -1683,19 +1798,21 @@ void obj_to_room(struct obj_data* object, long room) {
 	object->in_room = room;
 	object->carried_by = 0;
 	object->equipped_by = 0; /* should be unnecessary */
-	if( !IS_SET( real_roomp( room )->room_flags, DEATH ) &&
-			IS_SET( real_roomp( room )->room_flags, SAVE_ROOM ) )
-	{ save_room(room); }
+	if(!IS_SET(real_roomp(room)->room_flags, DEATH) &&
+			IS_SET(real_roomp(room)->room_flags, SAVE_ROOM)) {
+		save_room(room);
+	}
 }
 
 void obj_to_room2(struct obj_data* object, long room) {
 
-	if (room == -1)
-	{ room = 4; }
+	if(room == -1) {
+		room = 4;
+	}
 
 	assert(!object->equipped_by && object->eq_pos == -1);
 
-	if (object->in_room > NOWHERE) {
+	if(object->in_room > NOWHERE) {
 		obj_from_room(object);
 	}
 
@@ -1713,10 +1830,12 @@ void obj_from_room(struct obj_data* object) {
 	struct char_data* ch;
 
 	/* remove object from room */
-	if (!object) { return; }
-	if( object->in_room <= NOWHERE ) {
-		if( object->carried_by || object->equipped_by ) {
-			if (object->carried_by) {
+	if(!object) {
+		return;
+	}
+	if(object->in_room <= NOWHERE) {
+		if(object->carried_by || object->equipped_by) {
+			if(object->carried_by) {
 				ch=object->carried_by;
 				obj_from_char(object);
 			}
@@ -1725,28 +1844,30 @@ void obj_from_room(struct obj_data* object) {
 				do_remove(ch,object->name,0);
 			}
 
-			mudlog( LOG_SYSERR,
-					"Object %s was taken from a char, instead of a room. Sorry for %s",
-					object->name,GET_NAME(ch));
+			mudlog(LOG_SYSERR,
+				   "Object %s was taken from a char, instead of a room. Sorry for %s",
+				   object->name,GET_NAME(ch));
 		}
 		return;
 	}
 
-	if( object == real_roomp( object->in_room )->contents ) /* head of list */
-	{ real_roomp( object->in_room )->contents = object->next_content; }
+	if(object == real_roomp(object->in_room)->contents) {   /* head of list */
+		real_roomp(object->in_room)->contents = object->next_content;
+	}
 
 	else {   /* locate previous element in list */
-		for( i = real_roomp(object->in_room)->contents; i &&
-				i->next_content != object; i = i->next_content );
+		for(i = real_roomp(object->in_room)->contents; i &&
+				i->next_content != object; i = i->next_content);
 
-		if( i ) {
+		if(i) {
 			i->next_content = object->next_content;
 		}
 	}
 
-	if( !IS_SET( real_roomp( object->in_room )->room_flags, DEATH ) &&
-			IS_SET( real_roomp( object->in_room )->room_flags, SAVE_ROOM ) )
-	{ save_room(object->in_room); }
+	if(!IS_SET(real_roomp(object->in_room)->room_flags, DEATH) &&
+			IS_SET(real_roomp(object->in_room)->room_flags, SAVE_ROOM)) {
+		save_room(object->in_room);
+	}
 	object->in_room = NOWHERE;
 	object->next_content = 0;
 }
@@ -1756,19 +1877,19 @@ void obj_from_room(struct obj_data* object) {
 void obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) {
 	struct obj_data* tmp_obj;
 
-	if( obj == NULL || obj_to == NULL ) {
-		mudlog( LOG_SYSERR,
-				"obj == NULL || obj_to == NULL in obj_to_obj (handler.c)." );
+	if(obj == NULL || obj_to == NULL) {
+		mudlog(LOG_SYSERR,
+			   "obj == NULL || obj_to == NULL in obj_to_obj (handler.c).");
 		return;
 	}
 
 	obj->next_content = obj_to->contains;
 	obj_to->contains = obj;
 	obj->in_obj = obj_to;
-	if( obj->carried_by != NULL || obj->equipped_by != NULL )
-		mudlog( LOG_SYSERR,
-				"obj->carried_by != NULL || obj->equipped_by != NULL in "
-				"obj_to_obj" );
+	if(obj->carried_by != NULL || obj->equipped_by != NULL)
+		mudlog(LOG_SYSERR,
+			   "obj->carried_by != NULL || obj->equipped_by != NULL in "
+			   "obj_to_obj");
 	/*
 	 * (jdb)  hopefully this will fix the object problem
 	 */
@@ -1776,26 +1897,30 @@ void obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) {
 	obj->equipped_by = 0;
 
 #if 0
-	for( tmp_obj = obj->in_obj; tmp_obj; tmp_obj = tmp_obj->in_obj )
-	{ GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj); }
+	for(tmp_obj = obj->in_obj; tmp_obj; tmp_obj = tmp_obj->in_obj) {
+		GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
+	}
 #else
 
 	/* Subtract weight from containers container */
-	for( tmp_obj = obj->in_obj; tmp_obj->in_obj; tmp_obj = tmp_obj->in_obj )
-	{ GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj); }
+	for(tmp_obj = obj->in_obj; tmp_obj->in_obj; tmp_obj = tmp_obj->in_obj) {
+		GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
+	}
 
 	GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
 
 	/* Subtract weight from char that carries the object */
-	if( tmp_obj->carried_by )
-	{ IS_CARRYING_W( tmp_obj->carried_by ) += GET_OBJ_WEIGHT(obj); }
+	if(tmp_obj->carried_by) {
+		IS_CARRYING_W(tmp_obj->carried_by) += GET_OBJ_WEIGHT(obj);
+	}
 #endif
 
 
-	if( obj_to->in_room != NOWHERE &&
-			!IS_SET( real_roomp( obj_to->in_room )->room_flags, DEATH ) &&
-			IS_SET( real_roomp( obj_to->in_room )->room_flags, SAVE_ROOM ) )
-	{ save_room( obj_to->in_room ); }
+	if(obj_to->in_room != NOWHERE &&
+			!IS_SET(real_roomp(obj_to->in_room)->room_flags, DEATH) &&
+			IS_SET(real_roomp(obj_to->in_room)->room_flags, SAVE_ROOM)) {
+		save_room(obj_to->in_room);
+	}
 }
 
 
@@ -1803,32 +1928,33 @@ void obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) {
 void obj_from_obj(struct obj_data* obj) {
 	struct obj_data* tmp, *obj_from;
 
-	if( obj->carried_by ) {
-		mudlog( LOG_SYSERR, "%s carried by %s in obj_from_obj\n", obj->name,
-				obj->carried_by->player.name);
+	if(obj->carried_by) {
+		mudlog(LOG_SYSERR, "%s carried by %s in obj_from_obj\n", obj->name,
+			   obj->carried_by->player.name);
 	}
-	if (obj->equipped_by) {
-		mudlog( LOG_SYSERR, "%s equipped by %s in obj_from_obj\n", obj->name,
-				obj->equipped_by->player.name);
+	if(obj->equipped_by) {
+		mudlog(LOG_SYSERR, "%s equipped by %s in obj_from_obj\n", obj->name,
+			   obj->equipped_by->player.name);
 	}
-	if (obj->in_room != NOWHERE) {
-		mudlog( LOG_SYSERR, "%s in room %d in obj_from_obj\n", obj->name,
-				obj->in_room);
+	if(obj->in_room != NOWHERE) {
+		mudlog(LOG_SYSERR, "%s in room %d in obj_from_obj\n", obj->name,
+			   obj->in_room);
 	}
 
 	assert(!obj->carried_by && !obj->equipped_by && obj->in_room == NOWHERE);
 
-	if (obj->in_obj) {
+	if(obj->in_obj) {
 		obj_from = obj->in_obj;
-		if (obj == obj_from->contains)   /* head of list */
-		{ obj_from->contains = obj->next_content; }
+		if(obj == obj_from->contains) {  /* head of list */
+			obj_from->contains = obj->next_content;
+		}
 		else {
-			for( tmp = obj_from->contains;
-					tmp && ( tmp->next_content != obj );
-					tmp = tmp->next_content ); /* locate previous */
+			for(tmp = obj_from->contains;
+					tmp && (tmp->next_content != obj);
+					tmp = tmp->next_content);  /* locate previous */
 
-			if (!tmp) {
-				mudlog( LOG_SYSERR, "Fatal error in object structures." );
+			if(!tmp) {
+				mudlog(LOG_SYSERR, "Fatal error in object structures.");
 				assert(0);
 			}
 
@@ -1836,34 +1962,38 @@ void obj_from_obj(struct obj_data* obj) {
 		}
 
 		/* Subtract weight from containers container */
-		for( tmp = obj->in_obj; tmp->in_obj; tmp = tmp->in_obj ) {
+		for(tmp = obj->in_obj; tmp->in_obj; tmp = tmp->in_obj) {
 			GET_OBJ_WEIGHT(tmp) -= GET_OBJ_WEIGHT(obj);
-			if( GET_OBJ_WEIGHT(tmp) < 0 )
-			{ GET_OBJ_WEIGHT(tmp) = 0; }
+			if(GET_OBJ_WEIGHT(tmp) < 0) {
+				GET_OBJ_WEIGHT(tmp) = 0;
+			}
 		}
 
 		GET_OBJ_WEIGHT(tmp) -= GET_OBJ_WEIGHT(obj);
-		if( GET_OBJ_WEIGHT(tmp) < 0 )
-		{ GET_OBJ_WEIGHT(tmp) = 0; }
+		if(GET_OBJ_WEIGHT(tmp) < 0) {
+			GET_OBJ_WEIGHT(tmp) = 0;
+		}
 
 		/* Subtract weight from char that carries the object */
-		if( tmp->carried_by ) {
-			IS_CARRYING_W( tmp->carried_by ) -= GET_OBJ_WEIGHT(obj);
-			if( IS_CARRYING_W( tmp->carried_by ) < 0 )
-			{ IS_CARRYING_W( tmp->carried_by ) = 0; }
+		if(tmp->carried_by) {
+			IS_CARRYING_W(tmp->carried_by) -= GET_OBJ_WEIGHT(obj);
+			if(IS_CARRYING_W(tmp->carried_by) < 0) {
+				IS_CARRYING_W(tmp->carried_by) = 0;
+			}
 		}
 
 
 		obj->in_obj = 0;
 		obj->next_content = 0;
 
-		if( obj_from->in_room != NOWHERE &&
-				!IS_SET( real_roomp( obj_from->in_room )->room_flags, DEATH ) &&
-				IS_SET( real_roomp( obj_from->in_room )->room_flags, SAVE_ROOM ) )
-		{ save_room( obj_from->in_room ); }
+		if(obj_from->in_room != NOWHERE &&
+				!IS_SET(real_roomp(obj_from->in_room)->room_flags, DEATH) &&
+				IS_SET(real_roomp(obj_from->in_room)->room_flags, SAVE_ROOM)) {
+			save_room(obj_from->in_room);
+		}
 	}
 	else {
-		perror("Trying to object from object when in no object.");
+		mudlog(LOG_ERROR,"%s:%s","Trying to object from object when in no object.",strerror(errno));
 		assert(0);
 	}
 
@@ -1872,7 +2002,7 @@ void obj_from_obj(struct obj_data* obj) {
 
 /* Set all carried_by to point to new owner */
 void object_list_new_owner(struct obj_data* list, struct char_data* ch) {
-	if (list) {
+	if(list) {
 		object_list_new_owner(list->contains, ch);
 		object_list_new_owner(list->next_content, ch);
 		list->carried_by = ch;
@@ -1885,39 +2015,43 @@ void extract_obj(struct obj_data* obj) {
 	struct obj_data* temp1, *temp2;
 	int i;
 
-	if( obj == NULL ) {
-		mudlog( LOG_SYSERR, "obj == NULL in extract_obj (handler.c)" );
+	if(obj == NULL) {
+		mudlog(LOG_SYSERR, "obj == NULL in extract_obj (handler.c)");
 		return;
 	}
-	if(obj->in_room != NOWHERE)
-	{ obj_from_room(obj); }
-	else if(obj->carried_by)
-	{ obj_from_char(obj); }
-	else if (obj->equipped_by) {
-		if (obj->eq_pos > -1) {
+	if(obj->in_room != NOWHERE) {
+		obj_from_room(obj);
+	}
+	else if(obj->carried_by) {
+		obj_from_char(obj);
+	}
+	else if(obj->equipped_by) {
+		if(obj->eq_pos > -1) {
 			/*
 			 **  set players equipment slot to 0; that will avoid the garbage items.
 			 */
-			obj->equipped_by->equipment[ (int)obj->eq_pos ] = 0;
+			obj->equipped_by->equipment[(int)obj->eq_pos ] = 0;
 
 		}
 		else {
-			mudlog( LOG_SYSERR, "Extract on equipped item %s in slot -1 of %s "
-					"in extract_obj (handler.c).",
-					obj->name, obj->equipped_by->player.name );
+			mudlog(LOG_SYSERR, "Extract on equipped item %s in slot -1 of %s "
+				   "in extract_obj (handler.c).",
+				   obj->name, obj->equipped_by->player.name);
 
-			for( i = 0; i < MAX_WEAR; i++ )
-				if( obj->equipped_by->equipment[ i ] == obj )
-				{ obj->equipped_by->equipment[ i ] = 0; }
+			for(i = 0; i < MAX_WEAR; i++)
+				if(obj->equipped_by->equipment[ i ] == obj) {
+					obj->equipped_by->equipment[ i ] = 0;
+				}
 		}
 	}
 	else if(obj->in_obj) {
 		temp1 = obj->in_obj;
-		if(temp1->contains == obj)   /* head of list */
-		{ temp1->contains = obj->next_content; }
+		if(temp1->contains == obj) { /* head of list */
+			temp1->contains = obj->next_content;
+		}
 		else {
-			for( temp2 = temp1->contains ; temp2 && (temp2->next_content != obj);
-					temp2 = temp2->next_content );
+			for(temp2 = temp1->contains ; temp2 && (temp2->next_content != obj);
+					temp2 = temp2->next_content);
 
 			if(temp2) {
 				temp2->next_content = obj->next_content;
@@ -1925,28 +2059,30 @@ void extract_obj(struct obj_data* obj) {
 		}
 	}
 
-	for( ; obj->contains; extract_obj( obj->contains ) );
+	for(; obj->contains; extract_obj(obj->contains));
 	/* leaves nothing ! */
 
-	if( object_list == obj )       /* head of list */
-	{ object_list = obj->next; }
+	if(object_list == obj) {       /* head of list */
+		object_list = obj->next;
+	}
 	else {
-		for( temp1 = object_list;
+		for(temp1 = object_list;
 				temp1 && (temp1->next != obj);
 				temp1 = temp1->next);
 
-		if( temp1 ) {
+		if(temp1) {
 			temp1->next = obj->next;
 		}
 		else {
-			mudlog( LOG_SYSERR,
-					"Couldn't find object %s in object list in extract_obj "
-					"(handler.c).", obj->name );
+			mudlog(LOG_SYSERR,
+				   "Couldn't find object %s in object list in extract_obj "
+				   "(handler.c).", obj->name);
 			obj_count = 0;
-			for( i = 0; i < top_of_objt; i++ )
-			{ obj_index[ i ].number = 0; }
-			for( temp1 = object_list; temp1; temp1 = temp1->next ) {
-				if( temp1->item_number >= 0 && temp1->item_number < top_of_objt ) {
+			for(i = 0; i < top_of_objt; i++) {
+				obj_index[ i ].number = 0;
+			}
+			for(temp1 = object_list; temp1; temp1 = temp1->next) {
+				if(temp1->item_number >= 0 && temp1->item_number < top_of_objt) {
 					(obj_index[ temp1->item_number ].number)++;
 					obj_count++;
 				}
@@ -1956,7 +2092,7 @@ void extract_obj(struct obj_data* obj) {
 		}
 	}
 
-	if( obj->item_number >= 0 && obj->item_number < top_of_objt ) {
+	if(obj->item_number >= 0 && obj->item_number < top_of_objt) {
 		(obj_index[obj->item_number].number)--;
 		obj_count--;
 	}
@@ -1964,30 +2100,38 @@ void extract_obj(struct obj_data* obj) {
 
 }
 
-void update_object( struct obj_data* obj, int use) {
+void update_object(struct obj_data* obj, int use) {
 
-	if (obj->obj_flags.timer > 0)        { obj->obj_flags.timer -= use; }
-	if (obj->contains) { update_object(obj->contains, use); }
-	if (obj->next_content)
-		if (obj->next_content != obj)
-		{ update_object(obj->next_content, use); }
+	if(obj->obj_flags.timer > 0)        {
+		obj->obj_flags.timer -= use;
+	}
+	if(obj->contains) {
+		update_object(obj->contains, use);
+	}
+	if(obj->next_content)
+		if(obj->next_content != obj) {
+			update_object(obj->next_content, use);
+		}
 }
 
-void update_char_objects( struct char_data* ch ) {
+void update_char_objects(struct char_data* ch) {
 
 	int i;
 
-	if (ch->equipment[WEAR_LIGHT])
-		if (ch->equipment[WEAR_LIGHT]->obj_flags.type_flag == ITEM_LIGHT)
-			if (ch->equipment[WEAR_LIGHT]->obj_flags.value[2] > 0)
-			{ (ch->equipment[WEAR_LIGHT]->obj_flags.value[2])--; }
+	if(ch->equipment[WEAR_LIGHT])
+		if(ch->equipment[WEAR_LIGHT]->obj_flags.type_flag == ITEM_LIGHT)
+			if(ch->equipment[WEAR_LIGHT]->obj_flags.value[2] > 0) {
+				(ch->equipment[WEAR_LIGHT]->obj_flags.value[2])--;
+			}
 
 	for(i = 0; i < MAX_WEAR; i++)
-		if (ch->equipment[i])
-		{ update_object(ch->equipment[i],2); }
+		if(ch->equipment[i]) {
+			update_object(ch->equipment[i],2);
+		}
 
-	if (ch->carrying)
-	{ update_object(ch->carrying,1); }
+	if(ch->carrying) {
+		update_object(ch->carrying,1);
+	}
 }
 
 
@@ -1999,12 +2143,12 @@ void CheckCharList() {
 	int nPosInList;
 	struct char_data* k;
 
-	for( k = character_list, nPosInList = 0; k; k = k->next, nPosInList++ ) {
-		if( k->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR,
-					"Invalid char %s in character_list. ADDR:%p, magic:%d, pos:%d "
-					"on %ld (ChakCHarList - handler.c).", GET_NAME_DESC( k ), k,
-					k->nMagicNumber, nPosInList, mob_count );
+	for(k = character_list, nPosInList = 0; k; k = k->next, nPosInList++) {
+		if(k->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "Invalid char %s in character_list. ADDR:%p, magic:%d, pos:%d "
+				   "on %ld (ChakCHarList - handler.c).", GET_NAME_DESC(k), k,
+				   k->nMagicNumber, nPosInList, mob_count);
 		}
 	}
 }
@@ -2019,203 +2163,226 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 
 #ifndef NOEVENTS
 	/* cancel point updates */
-	for (w = 0; w < 3; w++)
-		if (GET_POINTS_EVENT(ch, w)) {
+	for(w = 0; w < 3; w++)
+		if(GET_POINTS_EVENT(ch, w)) {
 			event_cancel(GET_POINTS_EVENT(ch, w));
 			GET_POINTS_EVENT(ch, w) = NULL;
 		}
 #endif
-	if( ch == NULL ) {
-		mudlog( LOG_SYSERR, "ch == NULL in extract_char_smarter (handler.c)" );
+	if(ch == NULL) {
+		mudlog(LOG_SYSERR, "ch == NULL in extract_char_smarter (handler.c)");
 		return;
 	}
-	else if( ch->nMagicNumber != CHAR_VALID_MAGIC ) {
-		mudlog( LOG_SYSERR, "Invalid ch pointer in extract_char_smarter "
-				"(handler.c)" );
+	else if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+		mudlog(LOG_SYSERR, "Invalid ch pointer in extract_char_smarter "
+			   "(handler.c)");
 		return;
 	}
 
 
-	mudlog( LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d)",
-			GET_NAME_DESC( ch ), ch, ch->nMagicNumber );
+	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d)",
+		   GET_NAME_DESC(ch), ch, ch->nMagicNumber);
 
-	if( !IS_NPC( ch ) && !ch->desc ) {
-		for( t_desc = descriptor_list; t_desc; t_desc = t_desc->next )
-			if( t_desc->original == ch )
-			{ force_return( t_desc->character, "", 0 ); }
+	if(!IS_NPC(ch) && !ch->desc) {
+		for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)
+			if(t_desc->original == ch) {
+				force_return(t_desc->character, "", 0);
+			}
 	}
 
-	if( ch->in_room == NOWHERE ) {
+	if(ch->in_room == NOWHERE) {
 		/* problem from linkdeath */
-		mudlog( LOG_SYSERR, "%s is in NOWHERE (extract_char)",
-				GET_NAME_DESC( ch ) );
+		mudlog(LOG_SYSERR, "%s is in NOWHERE (extract_char)",
+			   GET_NAME_DESC(ch));
 		char_to_room(ch, 4);  /* 4 == all purpose store */
 	}
 
-	if( ch->followers || ch->master )
-	{ die_follower( ch ); }
+	if(ch->followers || ch->master) {
+		die_follower(ch);
+	}
 
-	if( ch->desc ) {
+	if(ch->desc) {
 		/* Forget snooping */
-		if( ch->desc->snoop.snooping && ch->desc->snoop.snooping->desc )
-		{ ch->desc->snoop.snooping->desc->snoop.snoop_by = 0; }
+		if(ch->desc->snoop.snooping && ch->desc->snoop.snooping->desc) {
+			ch->desc->snoop.snooping->desc->snoop.snoop_by = 0;
+		}
 
-		if( ch->desc->snoop.snoop_by ) {
-			send_to_char( "La tua vittima non e` piu` fra noi.\n\r",
-						  ch->desc->snoop.snoop_by );
-			if( ch->desc->snoop.snoop_by->desc )
-			{ ch->desc->snoop.snoop_by->desc->snoop.snooping = 0; }
+		if(ch->desc->snoop.snoop_by) {
+			send_to_char("La tua vittima non e` piu` fra noi.\n\r",
+						 ch->desc->snoop.snoop_by);
+			if(ch->desc->snoop.snoop_by->desc) {
+				ch->desc->snoop.snoop_by->desc->snoop.snooping = 0;
+			}
 		}
 
 		ch->desc->snoop.snooping = ch->desc->snoop.snoop_by = 0;
 	}
 
-	if( ch->carrying ) {
+	if(ch->carrying) {
 		/* transfer ch's objects to room */
-		if( !IS_IMMORTAL( ch ) ) {
-			while( ch->carrying ) {
+		if(!IS_IMMORTAL(ch)) {
+			while(ch->carrying) {
 				i = ch->carrying;
-				obj_from_char( i );
-				obj_to_room( i, ch->in_room );
-				check_falling_obj( i, ch->in_room );
+				obj_from_char(i);
+				obj_to_room(i, ch->in_room);
+				check_falling_obj(i, ch->in_room);
 			}
 		}
 		else {
-			send_to_char( "Hai lasciato della roba, qui. Ci penso io a "
-						  "sbarazzarmene.\n\r", ch );
+			send_to_char("Hai lasciato della roba, qui. Ci penso io a "
+						 "sbarazzarmene.\n\r", ch);
 			/* equipment too */
-			for (j=0; j<MAX_WEAR; j++) {
-				if( ch->equipment[ j ] )
-				{ obj_to_char( unequip_char( ch, j ), ch ); }
+			for(j=0; j<MAX_WEAR; j++) {
+				if(ch->equipment[ j ]) {
+					obj_to_char(unequip_char(ch, j), ch);
+				}
 			}
-			while( ch->carrying ) {
+			while(ch->carrying) {
 				i = ch->carrying;
-				obj_from_char( i );
-				extract_obj( i );
+				obj_from_char(i);
+				extract_obj(i);
 			}
 		}
 	}
 
-	if( ch->specials.fighting )
-	{ stop_fighting( ch ); }
-
-	for( k = combat_list; k ; k = next_char ) {
-		next_char = k->next_fighting;
-		if( k->specials.fighting == ch )
-		{ stop_fighting( k ); }
+	if(ch->specials.fighting) {
+		stop_fighting(ch);
 	}
 
-	if( MOUNTED( ch ) )
-	{ Dismount( ch, MOUNTED( ch ), POSITION_STANDING ); }
+	for(k = combat_list; k ; k = next_char) {
+		next_char = k->next_fighting;
+		if(k->specials.fighting == ch) {
+			stop_fighting(k);
+		}
+	}
 
-	if( RIDDEN( ch ) )
-	{ Dismount( RIDDEN( ch ), ch, POSITION_STANDING ); }
+	if(MOUNTED(ch)) {
+		Dismount(ch, MOUNTED(ch), POSITION_STANDING);
+	}
+
+	if(RIDDEN(ch)) {
+		Dismount(RIDDEN(ch), ch, POSITION_STANDING);
+	}
 	/* Must remove from room before removing the equipment! )++;
 	*/
 	was_in = ch->in_room;
 
-	char_from_room( ch );
+	char_from_room(ch);
 
 	/* clear equipment_list */
-	for( l = 0; l < MAX_WEAR; l++ )
-		if( ch->equipment[ l ] )
-		{ obj_to_room( unequip_char( ch, l ), was_in ); }
+	for(l = 0; l < MAX_WEAR; l++)
+		if(ch->equipment[ l ]) {
+			obj_to_room(unequip_char(ch, l), was_in);
+		}
 
 
-	if (IS_NPC(ch)) {
-		for( k = character_list; k; k = k->next ) {
-			if( k->specials.hunting )
-				if( k->specials.hunting == ch )
-				{ k->specials.hunting = 0; }
+	if(IS_NPC(ch)) {
+		for(k = character_list; k; k = k->next) {
+			if(k->specials.hunting)
+				if(k->specials.hunting == ch) {
+					k->specials.hunting = 0;
+				}
 
-			if( Hates( k, ch ) )
-			{ RemHated( k, ch ); }
+			if(Hates(k, ch)) {
+				RemHated(k, ch);
+			}
 
-			if( Fears( k, ch ) )
-			{ RemFeared( k, ch ); }
+			if(Fears(k, ch)) {
+				RemFeared(k, ch);
+			}
 
-			if( k->orig == ch )
-			{ k->orig = 0; }
+			if(k->orig == ch) {
+				k->orig = 0;
+			}
 		}
 	}
 	else {
-		for( k = character_list; k; k = k->next ) {
-			if( k->specials.hunting )
-				if( k->specials.hunting == ch )
-				{ k->specials.hunting = 0; }
+		for(k = character_list; k; k = k->next) {
+			if(k->specials.hunting)
+				if(k->specials.hunting == ch) {
+					k->specials.hunting = 0;
+				}
 
-			if( Hates( k, ch ) )
-			{ ZeroHatred( k, ch ); }
+			if(Hates(k, ch)) {
+				ZeroHatred(k, ch);
+			}
 
-			if( Fears( k, ch ) )
-			{ ZeroFeared( k, ch ); }
+			if(Fears(k, ch)) {
+				ZeroFeared(k, ch);
+			}
 
-			if( k->orig == ch )
-			{ k->orig = 0; }
+			if(k->orig == ch) {
+				k->orig = 0;
+			}
 		}
 	}
 
 	CheckCharList();
 
 	/* pull the char from the list */
-	if( ch == character_list )
-	{ character_list = ch->next; }
+	if(ch == character_list) {
+		character_list = ch->next;
+	}
 	else {
 		int nPosInList;
-		for( k = character_list, nPosInList = 0; k && k->next != ch;
-				k = k->next, nPosInList++ ) {
-			if( k->nMagicNumber != CHAR_VALID_MAGIC ) {
-				mudlog( LOG_SYSERR,
-						"Invalid char %s in character_list. ADDR:%p, magic:%d, pos:%d "
-						"on %ld (extract_char - handler.c).", GET_NAME_DESC( k ), k,
-						k->nMagicNumber, nPosInList, mob_count );
-				raw_force_all( "save" );
-				assert( k->nMagicNumber == CHAR_VALID_MAGIC );
+		for(k = character_list, nPosInList = 0; k && k->next != ch;
+				k = k->next, nPosInList++) {
+			if(k->nMagicNumber != CHAR_VALID_MAGIC) {
+				mudlog(LOG_SYSERR,
+					   "Invalid char %s in character_list. ADDR:%p, magic:%d, pos:%d "
+					   "on %ld (extract_char - handler.c).", GET_NAME_DESC(k), k,
+					   k->nMagicNumber, nPosInList, mob_count);
+				raw_force_all("save");
+				assert(k->nMagicNumber == CHAR_VALID_MAGIC);
 			}
 		}
-		if( k )
-		{ k->next = ch->next; }
+		if(k) {
+			k->next = ch->next;
+		}
 		else {
-			mudlog( LOG_SYSERR, "Character %s not found in character_list in "
-					"extract_char (handler.c).", GET_NAME_DESC( ch ) );
-			raw_force_all( "save" );
-			assert( 0 );
+			mudlog(LOG_SYSERR, "Character %s not found in character_list in "
+				   "extract_char (handler.c).", GET_NAME_DESC(ch));
+			raw_force_all("save");
+			assert(0);
 		}
 	}
 
-	if( ch->specials.group_name )
-	{ free( ch->specials.group_name ); }
+	if(ch->specials.group_name) {
+		free(ch->specials.group_name);
+	}
 	ch->specials.group_name = NULL;
 
-	GET_AC( ch ) = 100;
+	GET_AC(ch) = 100;
 
-	if( ch->desc ) {
-		if( ch->desc->original )
-		{ do_return( ch, "", 0 ); }
+	if(ch->desc) {
+		if(ch->desc->original) {
+			do_return(ch, "", 0);
+		}
 
-		save_char( ch, save_room, 0 );
+		save_char(ch, save_room, 0);
 	}
 
 
 	t_desc = ch->desc;
 
-	if( ch->term ) {
-		ScreenOff( ch );
+	if(ch->term) {
+		ScreenOff(ch);
 		ch->term = 0;
 	}
 
-	if( IS_NPC( ch ) ) {
-		if( ch->nr > -1 ) /* if mobile */
-		{ mob_index[ ch->nr ].number--; }
-		FreeHates( ch );
-		FreeFears( ch );
+	if(IS_NPC(ch)) {
+		if(ch->nr > -1) { /* if mobile */
+			mob_index[ ch->nr ].number--;
+		}
+		FreeHates(ch);
+		FreeFears(ch);
 		mob_count--;
-		free_char( ch );
+		free_char(ch);
 	}
 
-	if( t_desc ) {
+	if(t_desc) {
 		t_desc->connected = CON_SLCT;
-		SEND_TO_Q( MENU, t_desc );
+		SEND_TO_Q(MENU, t_desc);
 	}
 }
 
@@ -2225,7 +2392,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 * which incorporate the actual player-data.
 *********************************************************************** */
 
-struct char_data* get_char_near_room_vis(struct char_data* ch, char* name, long next_room) {
+struct char_data* get_char_near_room_vis(struct char_data* ch, const char* name, long next_room) {
 	long store_room;
 	struct char_data* i;
 
@@ -2237,7 +2404,7 @@ struct char_data* get_char_near_room_vis(struct char_data* ch, char* name, long 
 	return(i);
 }
 
-struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
+struct char_data* get_char_room_vis(struct char_data* ch, const char* name) {
 	struct char_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2245,33 +2412,36 @@ struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
-	for( i = real_roomp(ch->in_room)->people, j = 1;
-			i && j <= number; i = i->next_in_room ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR, "Invalid char %s in room %ld (ADDR: %p, magic: %d).",
-					GET_NAME_DESC( ch ), ch->in_room, ch, ch->nMagicNumber );
+	for(i = real_roomp(ch->in_room)->people, j = 1;
+			i && j <= number; i = i->next_in_room) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR, "Invalid char %s in room %ld (ADDR: %p, magic: %d).",
+				   GET_NAME_DESC(ch), ch->in_room, ch, ch->nMagicNumber);
 		}
-		if( isname( tmp, GET_NAME(i) ) ) {
-			if (CAN_SEE(ch, i)) {
-				if( j == number )
-				{ return(i); }
+		if(isname(tmp, GET_NAME(i))) {
+			if(CAN_SEE(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 		}
 	}
-	for( i = real_roomp(ch->in_room)->people, j = 1;
-			i && j <= number; i = i->next_in_room ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR, "Invalid char %s in room %ld (ADDR: %p, magic: %d).",
-					GET_NAME_DESC( ch ), ch->in_room, ch, ch->nMagicNumber );
+	for(i = real_roomp(ch->in_room)->people, j = 1;
+			i && j <= number; i = i->next_in_room) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR, "Invalid char %s in room %ld (ADDR: %p, magic: %d).",
+				   GET_NAME_DESC(ch), ch->in_room, ch, ch->nMagicNumber);
 		}
-		if (isname2(tmp, GET_NAME(i))) {
-			if (CAN_SEE(ch, i)) {
-				if (j == number)
-				{ return(i); }
+		if(isname2(tmp, GET_NAME(i))) {
+			if(CAN_SEE(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 		}
@@ -2283,7 +2453,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, char* name) {
 
 /* get a character from anywhere in the world, doesn't care much about
    being in the same room... */
-struct char_data* get_char_vis_world(struct char_data* ch, char* name,int* count) {
+struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int* count) {
 	struct char_data* i;
 	int j, number, nPosInList;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2291,62 +2461,67 @@ struct char_data* get_char_vis_world(struct char_data* ch, char* name,int* count
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if( !( number = get_number( &tmp ) ) )
-	{ return NULL; }
+	if(!(number = get_number(&tmp))) {
+		return NULL;
+	}
 
 	j = count ? *count : 1;
-	for( i = character_list, nPosInList = 0; i && j <= number;
-			i = i->next, nPosInList++ ) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR,
-					"Invalid char %s in character_list (ADDR:%p, magic:%d, "
-					"pos:%d on %ld).", GET_NAME_DESC( i ), i, i->nMagicNumber,
-					nPosInList, mob_count );
-			raw_force_all( "save" );
-			assert( 0 );
+	for(i = character_list, nPosInList = 0; i && j <= number;
+			i = i->next, nPosInList++) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "Invalid char %s in character_list (ADDR:%p, magic:%d, "
+				   "pos:%d on %ld).", GET_NAME_DESC(i), i, i->nMagicNumber,
+				   nPosInList, mob_count);
+			raw_force_all("save");
+			assert(0);
 		}
-		if (isname(tmp, GET_NAME(i))) {
-			if (CAN_SEE(ch, i)) {
-				if (j == number)
-				{ return(i); }
+		if(isname(tmp, GET_NAME(i))) {
+			if(CAN_SEE(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 		}
 	}
 	j = count ? *count : 1;
-	for (i = character_list; i && j <= number; i = i->next) {
-		if( i->nMagicNumber != CHAR_VALID_MAGIC ) {
-			mudlog( LOG_SYSERR,
-					"Invalid char %s in character_list (ADDR: %p, magic: %d).",
-					GET_NAME_DESC( i ), i, i->nMagicNumber );
+	for(i = character_list; i && j <= number; i = i->next) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "Invalid char %s in character_list (ADDR: %p, magic: %d).",
+				   GET_NAME_DESC(i), i, i->nMagicNumber);
 		}
-		if (isname2(tmp, GET_NAME(i))) {
-			if (CAN_SEE(ch, i)) {
-				if (j == number)
-				{ return(i); }
+		if(isname2(tmp, GET_NAME(i))) {
+			if(CAN_SEE(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 		}
 	}
-	if( count )
-	{ *count = j; }
+	if(count) {
+		*count = j;
+	}
 	return NULL;
 }
 
 
-struct char_data* get_char_vis( struct char_data* ch, char* name ) {
+struct char_data* get_char_vis(struct char_data* ch, const char* name) {
 	struct char_data* i;
 
 	/* check location */
-	if( ( i = get_char_room_vis( ch, name ) ) )
-	{ return(i); }
+	if((i = get_char_room_vis(ch, name))) {
+		return(i);
+	}
 
-	return get_char_vis_world( ch,name, NULL );
+	return get_char_vis_world(ch,name, NULL);
 }
 
 
 
-struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,struct obj_data* list) {
+struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,struct obj_data* list) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2354,29 +2529,32 @@ struct obj_data* get_obj_in_list_vis(struct char_data* ch, char* name,struct obj
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
-	for (i = list, j = 1; i && (j <= number); i = i->next_content)
-		if (isname(tmp, i->name))
-			if (CAN_SEE_OBJ(ch, i)) {
-				if (j == number)
-				{ return(i); }
+	for(i = list, j = 1; i && (j <= number); i = i->next_content)
+		if(isname(tmp, i->name))
+			if(CAN_SEE_OBJ(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 
-	for (i = list, j = 1; i && (j <= number); i = i->next_content)
-		if (isname2(tmp, i->name))
-			if (CAN_SEE_OBJ(ch, i)) {
-				if (j == number)
-				{ return(i); }
+	for(i = list, j = 1; i && (j <= number); i = i->next_content)
+		if(isname2(tmp, i->name))
+			if(CAN_SEE_OBJ(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 
 	return(0);
 }
 
-struct obj_data* get_obj_vis_world(struct char_data* ch, char* name,
+struct obj_data* get_obj_vis_world(struct char_data* ch, const char* name,
 								   int* count) {
 	struct obj_data* i;
 	int j, number;
@@ -2385,54 +2563,60 @@ struct obj_data* get_obj_vis_world(struct char_data* ch, char* name,
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
 	j = count ? *count : 1;
 
 	/* ok.. no luck yet. scan the entire obj list   */
-	for (i = object_list; i && (j <= number); i = i->next)
-		if (isname(tmp, i->name))
-			if (CAN_SEE_OBJ(ch, i)) {
-				if (j == number)
-				{ return(i); }
+	for(i = object_list; i && (j <= number); i = i->next)
+		if(isname(tmp, i->name))
+			if(CAN_SEE_OBJ(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 
 	j = count ? *count : 1;
 
 	/* ok.. no luck yet. scan the entire obj list   */
-	for (i = object_list; i && (j <= number); i = i->next)
-		if (isname2(tmp, i->name))
-			if( CAN_SEE_OBJ( ch, i ) ) {
-				if (j == number)
-				{ return(i); }
+	for(i = object_list; i && (j <= number); i = i->next)
+		if(isname2(tmp, i->name))
+			if(CAN_SEE_OBJ(ch, i)) {
+				if(j == number) {
+					return(i);
+				}
 				j++;
 			}
 
-	if (count)
-	{ *count = j; }
+	if(count) {
+		*count = j;
+	}
 
 	return(0);
 }
 
 /*search the entire world for an object, and return a pointer  */
-struct obj_data* get_obj_vis( struct char_data* ch, char* name ) {
+struct obj_data* get_obj_vis(struct char_data* ch, const char* name) {
 	struct obj_data* i;
 
 	/* scan items carried */
-	if( ( i = get_obj_in_list_vis( ch, name, ch->carrying ) ) )
-	{ return(i); }
+	if((i = get_obj_in_list_vis(ch, name, ch->carrying))) {
+		return(i);
+	}
 
 	/* scan room */
-	if( ( i = get_obj_in_list_vis( ch, name,
-								   real_roomp( ch->in_room)->contents ) ) )
-	{ return(i); }
+	if((i = get_obj_in_list_vis(ch, name,
+								real_roomp(ch->in_room)->contents))) {
+		return(i);
+	}
 
 	return get_obj_vis_world(ch, name, NULL);
 }
 
-struct obj_data* get_obj_vis_accessible(struct char_data* ch, char* name) {
+struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) {
 	struct obj_data* i;
 	int j, number;
 	char tmpname[MAX_INPUT_LENGTH];
@@ -2440,99 +2624,111 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, char* name) {
 
 	strcpy(tmpname,name);
 	tmp = tmpname;
-	if(!(number = get_number(&tmp)))
-	{ return(0); }
+	if(!(number = get_number(&tmp))) {
+		return(0);
+	}
 
 	/* scan items carried */
-	for (i = ch->carrying, j=1; i && j<=number; i = i->next_content)
-		if (isname(tmp, i->name) && CAN_SEE_OBJ(ch, i))
-			if (j == number)
-			{ return(i); }
-			else
-			{ j++; }
-
-	for( i = real_roomp(ch->in_room)->contents; i && j<=number;
-			i = i->next_content )
-		if (isname(tmp, i->name) && CAN_SEE_OBJ(ch, i))
-			if (j==number)
-			{ return(i); }
-			else
-			{ j++; }
-
+	for(i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
+		if(isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+			if(j == number) {
+				return(i);
+			}
+			else {
+				j++;
+			}
+		}
+	}
+	for(i = real_roomp(ch->in_room)->contents; i && j<=number; i = i->next_content) {
+		if(isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+			if(j==number) {
+				return(i);
+			}
+			else {
+				j++;
+			}
+		}
+	}
 	/* scan items carried */
-	for (i = ch->carrying, j=1; i && j<=number; i = i->next_content)
-		if (isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i))
-			if (j == number)
-			{ return(i); }
-			else
-			{ j++; }
-
-	for( i = real_roomp(ch->in_room)->contents; i && j<=number;
-			i = i->next_content )
-		if (isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i))
-			if (j==number)
-			{ return(i); }
-			else
-			{ j++; }
-
+	for(i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
+		if(isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+			if(j == number) {
+				return(i);
+			}
+			else {
+				j++;
+			}
+		}
+	}
+	for(i = real_roomp(ch->in_room)->contents; i && j<=number; i = i->next_content) {
+		if(isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+			if(j==number) {
+				return(i);
+			}
+			else {
+				j++;
+			}
+		}
+	}
 	return 0;
 }
 
 
 
 
-struct obj_data* create_money( int amount ) {
+struct obj_data* create_money(int amount) {
 	struct obj_data* obj;
 	struct extra_descr_data* new_descr;
 	char buf[80];
 
 	/*  char *strdup(char *str); */
 
-	if( amount < 0 ) {
+	if(amount < 0) {
 		LPUSH;
-		mudlog( LOG_SYSERR, "Try to create negative money. Changed to 1");
+		mudlog(LOG_SYSERR, "Try to create negative money. Changed to 1");
 		amount=1;
 	}
 
-	CREATE( obj, struct obj_data, 1 );
-	clear_object( obj );
+	CREATE(obj, struct obj_data, 1);
+	clear_object(obj);
 
-	CREATE( new_descr, struct extra_descr_data, 1 );
+	CREATE(new_descr, struct extra_descr_data, 1);
 	new_descr->nMagicNumber = EXDESC_VALID_MAGIC;
 
-	if( amount == 1 ) {
-		obj->name = strdup( "coin gold" );
-		obj->short_description = strdup( "a gold coin" );
-		obj->description = strdup( "One miserable gold coin." );
+	if(amount == 1) {
+		obj->name = strdup("coin gold");
+		obj->short_description = strdup("a gold coin");
+		obj->description = strdup("One miserable gold coin.");
 
-		new_descr->keyword = strdup( "coin gold" );
-		new_descr->description = strdup( "One miserable gold coin." );
+		new_descr->keyword = strdup("coin gold");
+		new_descr->description = strdup("One miserable gold coin.");
 	}
 	else {
-		obj->name = strdup( "coins gold" );
-		obj->short_description = strdup( "gold coins" );
-		obj->description = strdup( "A pile of gold coins." );
+		obj->name = strdup("coins gold");
+		obj->short_description = strdup("gold coins");
+		obj->description = strdup("A pile of gold coins.");
 
-		new_descr->keyword = strdup( "coins gold" );
-		if( amount < 10 ) {
-			sprintf( buf, "There is %d coins.", amount );
+		new_descr->keyword = strdup("coins gold");
+		if(amount < 10) {
+			sprintf(buf, "There is %d coins.", amount);
 			new_descr->description = strdup(buf);
 		}
-		else if( amount < 100 ) {
-			sprintf( buf,"There is about %d coins", 10 * ( amount / 10 ) );
+		else if(amount < 100) {
+			sprintf(buf,"There is about %d coins", 10 * (amount / 10));
 			new_descr->description = strdup(buf);
 		}
-		else if( amount < 1000 ) {
-			sprintf( buf,"It looks like something round %d coins",100*(amount/100));
+		else if(amount < 1000) {
+			sprintf(buf,"It looks like something round %d coins",100*(amount/100));
 			new_descr->description = strdup(buf);
 		}
-		else if( amount < 100000 ) {
-			sprintf( buf, "You guess there is %d coins",
-					 1000*((amount/1000)+ number(0,(amount/1000))));
+		else if(amount < 100000) {
+			sprintf(buf, "You guess there is %d coins",
+					1000*((amount/1000)+ number(0,(amount/1000))));
 			new_descr->description = strdup(buf);
 		}
-		else
-		{ new_descr->description = strdup( "There is A LOT of coins" ); }
+		else {
+			new_descr->description = strdup("There is A LOT of coins");
+		}
 	}
 
 	new_descr->next = 0;
@@ -2547,7 +2743,7 @@ struct obj_data* create_money( int amount ) {
 	obj->next = object_list;
 	object_list = obj;
 
-	return( obj );
+	return(obj);
 }
 
 
@@ -2567,14 +2763,6 @@ struct obj_data* create_money( int amount ) {
 /* one_argument routine).                                                 */
 
 int generic_find(const char* arg, int bitvector, struct char_data* ch,struct char_data** tar_ch, struct obj_data** tar_obj) {
-	static char* ignore[] = {
-		"the",
-		"in",
-		"on",
-		"at",
-		"\n"
-	};
-
 	int i;
 	char name[256];
 	bool found;
@@ -2582,74 +2770,83 @@ int generic_find(const char* arg, int bitvector, struct char_data* ch,struct cha
 	found = FALSE;
 
 	/* Eliminate spaces and "ignore" words */
-	while( *arg && !found ) {
+	while(*arg && !found) {
 		for(; *arg == ' '; arg++)   ;
 
 		for(i=0; (name[i] = *(arg+i)) && (name[i]!=' '); i++)   ;
 		name[i] = 0;
 		arg+=i;
-		if( search_block( name, ignore, TRUE ) > -1 )
-		{ found = TRUE; }
+		if(search_block(name, ignoreKeywords, TRUE) > -1) {
+			found = TRUE;
+		}
 	}
 
-	if( !name[ 0 ] )
-	{ return( 0 ); }
+	if(!name[ 0 ]) {
+		return(0);
+	}
 
 	*tar_ch  = 0;
 	*tar_obj = 0;
 
-	if( IS_SET( bitvector, FIND_CHAR_ROOM ) ) {
+	if(IS_SET(bitvector, FIND_CHAR_ROOM)) {
 		/* Find person in room */
-		if( ( *tar_ch = get_char_room_vis(ch, name) ) )
-		{ return(FIND_CHAR_ROOM); }
+		if((*tar_ch = get_char_room_vis(ch, name))) {
+			return(FIND_CHAR_ROOM);
+		}
 	}
 
-	if( IS_SET( bitvector, FIND_CHAR_WORLD ) ) {
-		if( ( *tar_ch = get_char_vis( ch, name ) ) )
-		{ return( FIND_CHAR_WORLD ); }
+	if(IS_SET(bitvector, FIND_CHAR_WORLD)) {
+		if((*tar_ch = get_char_vis(ch, name))) {
+			return(FIND_CHAR_WORLD);
+		}
 	}
 
-	if( IS_SET( bitvector, FIND_OBJ_EQUIP ) ) {
-		for( found = FALSE, i = 0; i < MAX_WEAR && !found; i++ ) {
-			if( ch->equipment[i] && str_cmp( name, ch->equipment[i]->name ) == 0 ) {
+	if(IS_SET(bitvector, FIND_OBJ_EQUIP)) {
+		for(found = FALSE, i = 0; i < MAX_WEAR && !found; i++) {
+			if(ch->equipment[i] && str_cmp(name, ch->equipment[i]->name) == 0) {
 				*tar_obj = ch->equipment[i];
 				found = TRUE;
 			}
 		}
-		if (found)
-		{ return(FIND_OBJ_EQUIP); }
+		if(found) {
+			return(FIND_OBJ_EQUIP);
+		}
 	}
 
-	if (IS_SET(bitvector, FIND_OBJ_INV)) {
-		if (IS_SET(bitvector, FIND_OBJ_ROOM)) {
-			if( ( *tar_obj = get_obj_vis_accessible( ch, name ) ) )
-			{ return(FIND_OBJ_INV); }
+	if(IS_SET(bitvector, FIND_OBJ_INV)) {
+		if(IS_SET(bitvector, FIND_OBJ_ROOM)) {
+			if((*tar_obj = get_obj_vis_accessible(ch, name))) {
+				return(FIND_OBJ_INV);
+			}
 		}
 		else {
-			if( ( *tar_obj = get_obj_in_list_vis( ch, name, ch->carrying ) ) )
-			{ return(FIND_OBJ_INV); }
+			if((*tar_obj = get_obj_in_list_vis(ch, name, ch->carrying))) {
+				return(FIND_OBJ_INV);
+			}
 		}
 	}
 
-	if (IS_SET(bitvector, FIND_OBJ_ROOM)) {
-		if( ( *tar_obj = get_obj_in_list_vis( ch, name,
-											  real_roomp(ch->in_room)->contents ) ) )
-		{ return(FIND_OBJ_ROOM); }
+	if(IS_SET(bitvector, FIND_OBJ_ROOM)) {
+		if((*tar_obj = get_obj_in_list_vis(ch, name,
+										   real_roomp(ch->in_room)->contents))) {
+			return(FIND_OBJ_ROOM);
+		}
 	}
 
-	if (IS_SET(bitvector, FIND_OBJ_WORLD)) {
-		if( ( *tar_obj = get_obj_vis( ch, name ) ) )
-		{ return(FIND_OBJ_WORLD); }
+	if(IS_SET(bitvector, FIND_OBJ_WORLD)) {
+		if((*tar_obj = get_obj_vis(ch, name))) {
+			return(FIND_OBJ_WORLD);
+		}
 	}
 
 	return(0);
 }
 
-void AddAffects( struct char_data* ch, struct obj_data* o) {
+void AddAffects(struct char_data* ch, struct obj_data* o) {
 	int i;
 
-	for (i=0; i<MAX_OBJ_AFFECT; i++) {
-		if (o->affected[i].location != APPLY_NONE) {
+	for(i=0; i<MAX_OBJ_AFFECT; i++) {
+		if(o->affected[i].location != APPLY_NONE) {
 			affect_modify(ch, o->affected[i].location,
 						  o->affected[i].modifier,
 						  o->obj_flags.bitvector, TRUE);

@@ -12,6 +12,316 @@
 //#include "LuaBridge.hpp"
 namespace Alarmud {
 
+
+// Flag type: E_AFFECTED_BY -- start
+/*
+Bitvector for 'affected_by'*/
+	constexpr unsigned long AFF_NONE                                     =0;
+	constexpr unsigned long AFF_BLIND                                    =1;
+	constexpr unsigned long AFF_INVISIBLE                                =2;
+	constexpr unsigned long AFF_DETECT_EVIL                              =4;
+	constexpr unsigned long AFF_DETECT_INVISIBLE                         =8;
+	constexpr unsigned long AFF_DETECT_MAGIC                             =16;
+	constexpr unsigned long AFF_SENSE_LIFE                               =32;
+	constexpr unsigned long AFF_LIFE_PROT                                =64;
+	constexpr unsigned long AFF_SANCTUARY                                =128;
+	constexpr unsigned long AFF_DRAGON_RIDE                              =256;
+	constexpr unsigned long AFF_GROWTH                                   =512; /*this was the one that was missing*/
+	constexpr unsigned long AFF_CURSE                                    =1024;
+	constexpr unsigned long AFF_FLYING                                   =2048;
+	constexpr unsigned long AFF_POISON                                   =4096;
+	constexpr unsigned long AFF_TREE_TRAVEL                              =8192;
+	constexpr unsigned long AFF_PARALYSIS                                =16384;
+	constexpr unsigned long AFF_INFRAVISION                              =32768;
+	constexpr unsigned long AFF_WATERBREATH                              =65536;
+	constexpr unsigned long AFF_SLEEP                                    =131072;
+	constexpr unsigned long AFF_TRAVELLING                               =262144; /*i.e. can't be stoned*/
+	constexpr unsigned long AFF_SNEAK                                    =524288;
+	constexpr unsigned long AFF_HIDE                                     =1048576;
+	constexpr unsigned long AFF_SILENCE                                  =2097152;
+	constexpr unsigned long AFF_CHARM                                    =4194304;
+	constexpr unsigned long AFF_FOLLOW                                   =8388608;
+	constexpr unsigned long AFF_PROTECT_FROM_EVIL                        =16777216;
+	constexpr unsigned long AFF_TRUE_SIGHT                               =33554432;
+	constexpr unsigned long AFF_SCRYING                                  =67108864; /*seeing other rooms*/
+	constexpr unsigned long AFF_FIRESHIELD                               =134217728;
+	constexpr unsigned long AFF_GROUP                                    =268435456;
+	constexpr unsigned long AFF_TELEPATHY                                =536870912;
+	constexpr unsigned long AFF_GLOBE_DARKNESS                           =1073741824; /*Added by REQUIEM 2018*/
+	constexpr unsigned long AFF_UNDEF_AFF_1                              =2147483648;
+// Flag type: E_AFFECTED_BY2 -- start
+	constexpr unsigned long AFF2_ANIMAL_INVIS                            =1;
+	constexpr unsigned long AFF2_HEAT_STUFF                              =2;
+	constexpr unsigned long AFF2_LOG_ME                                  =4;
+	constexpr unsigned long AFF2_BERSERK                                 =8;
+	constexpr unsigned long AFF2_PARRY                                   =16; /*Added by GAIA 2001*/
+	constexpr unsigned long AFF2_CON_ORDER                               =32;
+	constexpr unsigned long AFF2_AFK                                     =64;
+	constexpr unsigned long AFF2_PKILLER                                 =128;
+// Flag type: E_CLASSES -- start
+	constexpr unsigned long CLASS_MAGIC_USER                             =1;
+	constexpr unsigned long CLASS_CLERIC                                 =2;
+	constexpr unsigned long CLASS_WARRIOR                                =4;
+	constexpr unsigned long CLASS_THIEF                                  =8;
+	constexpr unsigned long CLASS_DRUID                                  =16;
+	constexpr unsigned long CLASS_MONK                                   =32;
+	constexpr unsigned long CLASS_BARBARIAN                              =64;
+	constexpr unsigned long CLASS_SORCERER                               =128;
+	constexpr unsigned long CLASS_PALADIN                                =256;
+	constexpr unsigned long CLASS_RANGER                                 =512;
+	constexpr unsigned long CLASS_PSI                                    =1024;
+// Flag type: E_EXIT_TYPES -- start
+	constexpr unsigned long EX_ISDOOR                                    =1;
+	constexpr unsigned long EX_CLOSED                                    =2;
+	constexpr unsigned long EX_LOCKED                                    =4;
+	constexpr unsigned long EX_SECRET                                    =8;
+	constexpr unsigned long EX_NOTBASH                                   =16;
+	constexpr unsigned long EX_PICKPROOF                                 =32;
+	constexpr unsigned long EX_CLIMB                                     =64;
+	constexpr unsigned long EX_MALE                                      =128;
+	constexpr unsigned long EX_NOLOOKT                                   =256;
+// Flag type: E_FEAR_TYPE -- start
+	constexpr unsigned long FEAR_SEX                                     =1;
+	constexpr unsigned long FEAR_RACE                                    =2;
+	constexpr unsigned long FEAR_CHAR                                    =4;
+	constexpr unsigned long FEAR_CLASS                                   =8;
+	constexpr unsigned long FEAR_EVIL                                    =16;
+	constexpr unsigned long FEAR_GOOD                                    =32;
+	constexpr unsigned long FEAR_VNUM                                    =64;
+// Flag type: E_HATE_TYPE -- start
+	constexpr unsigned long HATE_SEX                                     =1;
+	constexpr unsigned long HATE_RACE                                    =2;
+	constexpr unsigned long HATE_CHAR                                    =4;
+	constexpr unsigned long HATE_CLASS                                   =8;
+	constexpr unsigned long HATE_EVIL                                    =16;
+	constexpr unsigned long HATE_GOOD                                    =32;
+	constexpr unsigned long HATE_VNUM                                    =64;
+// Flag type: E_IMMUNITY_TYPE -- start
+	constexpr unsigned long IMM_FIRE                                     =1;
+	constexpr unsigned long IMM_COLD                                     =2;
+	constexpr unsigned long IMM_ELEC                                     =4;
+	constexpr unsigned long IMM_ENERGY                                   =8;
+	constexpr unsigned long IMM_BLUNT                                    =16;
+	constexpr unsigned long IMM_PIERCE                                   =32;
+	constexpr unsigned long IMM_SLASH                                    =64;
+	constexpr unsigned long IMM_ACID                                     =128;
+	constexpr unsigned long IMM_POISON                                   =256;
+	constexpr unsigned long IMM_DRAIN                                    =512;
+	constexpr unsigned long IMM_SLEEP                                    =1024;
+	constexpr unsigned long IMM_CHARM                                    =2048;
+	constexpr unsigned long IMM_HOLD                                     =4096;
+	constexpr unsigned long IMM_NONMAG                                   =8192;
+	constexpr unsigned long IMM_PLUS1                                    =16384;
+	constexpr unsigned long IMM_PLUS2                                    =32768;
+	constexpr unsigned long IMM_PLUS3                                    =65536;
+	constexpr unsigned long IMM_PLUS4                                    =131072;
+// Flag type: E_ITEM_FLAG -- start
+/*
+Bitvector for 'extra_flags'*/
+	constexpr unsigned long ITEM_GLOW                                    =1;
+	constexpr unsigned long ITEM_HUM                                     =2;
+	constexpr unsigned long ITEM_METAL                                   =4; /*undefined...*/
+	constexpr unsigned long ITEM_MINERAL                                 =8; /*undefined?*/
+	constexpr unsigned long ITEM_ORGANIC                                 =16; /*undefined?*/
+	constexpr unsigned long ITEM_INVISIBLE                               =32;
+	constexpr unsigned long ITEM_MAGIC                                   =64;
+	constexpr unsigned long ITEM_NODROP                                  =128;
+	constexpr unsigned long ITEM_BLESS                                   =256;
+	constexpr unsigned long ITEM_ANTI_GOOD                               =512; /*not usable by good people*/
+	constexpr unsigned long ITEM_ANTI_EVIL                               =1024; /*not usable by evil people*/
+	constexpr unsigned long ITEM_ANTI_NEUTRAL                            =2048; /*not usable by neutral people*/
+	constexpr unsigned long ITEM_ANTI_CLERIC                             =4096;
+	constexpr unsigned long ITEM_ANTI_MAGE                               =8192;
+	constexpr unsigned long ITEM_ANTI_THIEF                              =16384;
+	constexpr unsigned long ITEM_ANTI_FIGHTER                            =32768;
+	constexpr unsigned long ITEM_BRITTLE                                 =65536; /*weapons that break after 1 hit  armor that breaks when hit?*/
+	constexpr unsigned long ITEM_RESISTANT                               =131072; /*resistant to damage*/
+	constexpr unsigned long ITEM_IMMUNE                                  =262144; /*Item is immune to scrapping*/
+	constexpr unsigned long ITEM_ANTI_MEN                                =524288; /*men can't wield*/
+	constexpr unsigned long ITEM_ANTI_WOMEN                              =1048576; /*women can't wield*/
+	constexpr unsigned long ITEM_ANTI_SUN                                =2097152; /*item is sensitive to being in the sun*/
+	constexpr unsigned long ITEM_ANTI_BARBARIAN                          =4194304;
+	constexpr unsigned long ITEM_ANTI_RANGER                             =8388608;
+	constexpr unsigned long ITEM_ANTI_PALADIN                            =16777216;
+	constexpr unsigned long ITEM_ANTI_PSI                                =33554432;
+	constexpr unsigned long ITEM_ANTI_MONK                               =67108864;
+	constexpr unsigned long ITEM_ANTI_DRUID                              =134217728;
+	constexpr unsigned long ITEM_ONLY_CLASS                              =268435456;
+	constexpr unsigned long ITEM_DIG                                     =536870912;
+	constexpr unsigned long ITEM_SCYTHE                                  =1073741824;
+	constexpr unsigned long ITEM_ANTI_SORCERER                           =2147483648;
+// Flag type: E_ITEM_WEAR -- start
+/*
+Bitvector For 'wear_flags'*/
+	constexpr unsigned long ITEM_TAKE                                    =1;
+	constexpr unsigned long ITEM_WEAR_FINGER                             =2;
+	constexpr unsigned long ITEM_WEAR_NECK                               =4;
+	constexpr unsigned long ITEM_WEAR_BODY                               =8;
+	constexpr unsigned long ITEM_WEAR_HEAD                               =16;
+	constexpr unsigned long ITEM_WEAR_LEGS                               =32;
+	constexpr unsigned long ITEM_WEAR_FEET                               =64;
+	constexpr unsigned long ITEM_WEAR_HANDS                              =128;
+	constexpr unsigned long ITEM_WEAR_ARMS                               =256;
+	constexpr unsigned long ITEM_WEAR_SHIELD                             =512;
+	constexpr unsigned long ITEM_WEAR_ABOUT                              =1024;
+	constexpr unsigned long ITEM_WEAR_WAISTE                             =2048;
+	constexpr unsigned long ITEM_WEAR_WRIST                              =4096;
+	constexpr unsigned long ITEM_WIELD                                   =8192;
+	constexpr unsigned long ITEM_HOLD                                    =16384;
+	constexpr unsigned long ITEM_THROW                                   =32768;
+	constexpr unsigned long ITEM_LIGHT_SOURCE                            =65536; /*UNUSED  CHECKS ONLY FOR ITEM_LIGHT*/
+	constexpr unsigned long ITEM_WEAR_BACK                               =131072;
+	constexpr unsigned long ITEM_WEAR_EAR                                =262144;
+	constexpr unsigned long ITEM_WEAR_EYE                                =524288;
+// Flag type: E_LARGE_FLAGS -- start
+	constexpr unsigned long LARGE_NONE                                   =0;
+	constexpr unsigned long LARGE_WATER                                  =1;
+	constexpr unsigned long LARGE_AIR                                    =2;
+	constexpr unsigned long LARGE_IMPASS                                 =4;
+// Flag type: E_MOB_FLAGS -- start
+/*
+for mobile actions: specials.act*/
+	constexpr unsigned long ACT_SPEC                                     =1; /*special routine to be called if exist*/
+	constexpr unsigned long ACT_SENTINEL                                 =2; /*this mobile not to be moved*/
+	constexpr unsigned long ACT_SCAVENGER                                =4; /*pick up stuff lying around*/
+	constexpr unsigned long ACT_ISNPC                                    =8; /*This bit is set for use with IS_NPC()*/
+	constexpr unsigned long ACT_NICE_THIEF                               =16; /*Set if a thief should NOT be killed*/
+	constexpr unsigned long ACT_AGGRESSIVE                               =32; /*Set if automatic attack on NPC's*/
+	constexpr unsigned long ACT_STAY_ZONE                                =64; /*MOB Must stay inside its own zone*/
+	constexpr unsigned long ACT_WIMPY                                    =128; /*MOB Will flee when injured  and if aggressive only attack sleeping players*/
+	constexpr unsigned long ACT_ANNOYING                                 =256; /*MOB is so utterly irritating that other monsters will attack it...*/
+	constexpr unsigned long ACT_HATEFUL                                  =512; /*MOB will attack a PC or NPC matching a  specified name*/
+	constexpr unsigned long ACT_AFRAID                                   =1024; /*MOB is afraid of a certain PC or NPC   and will always run away ....*/
+	constexpr unsigned long ACT_IMMORTAL                                 =2048; /*MOB is a natural event  can't be kiled*/
+	constexpr unsigned long ACT_HUNTING                                  =4096; /*MOB is hunting someone*/
+	constexpr unsigned long ACT_DEADLY                                   =8192; /*MOB has deadly poison*/
+	constexpr unsigned long ACT_POLYSELF                                 =16384; /*MOB is a polymorphed person*/
+	constexpr unsigned long ACT_META_AGG                                 =32768; /*MOB is _very_ aggressive*/
+	constexpr unsigned long ACT_GUARDIAN                                 =65536; /*MOB will guard master*/
+	constexpr unsigned long ACT_ILLUSION                                 =131072; /*MOB is illusionary*/
+	constexpr unsigned long ACT_HUGE                                     =262144; /*MOB is too large to go indoors*/
+	constexpr unsigned long ACT_SCRIPT                                   =524288; /*MOB has a script assigned to it DO NOT SET*/
+	constexpr unsigned long ACT_GREET                                    =1048576; /*MOB greets people*/
+	constexpr unsigned long ACT_MAGIC_USER                               =2097152;
+	constexpr unsigned long ACT_WARRIOR                                  =4194304;
+	constexpr unsigned long ACT_CLERIC                                   =8388608;
+	constexpr unsigned long ACT_THIEF                                    =16777216;
+	constexpr unsigned long ACT_DRUID                                    =33554432;
+	constexpr unsigned long ACT_MONK                                     =67108864;
+	constexpr unsigned long ACT_BARBARIAN                                =134217728;
+	constexpr unsigned long ACT_PALADIN                                  =268435456;
+	constexpr unsigned long ACT_RANGER                                   =536870912;
+	constexpr unsigned long ACT_PSI                                      =1073741824;
+	constexpr unsigned long ACT_ARCHER                                   =2147483648;
+// Flag type: E_PLAYER_FLAGS -- start
+/*
+For players : specials.act*/
+	constexpr unsigned long PLR_BRIEF                                    =1;
+	constexpr unsigned long PLR_UNUSED                                   =2;
+	constexpr unsigned long PLR_COMPACT                                  =4;
+	constexpr unsigned long PLR_DONTSET                                  =8; /*Dont EVER set*/
+	constexpr unsigned long PLR_WIMPY                                    =16; /*character will flee when seriously injured*/
+	constexpr unsigned long PLR_NOHASSLE                                 =32; /*char won't be attacked by aggressives.*/
+	constexpr unsigned long PLR_STEALTH                                  =64; /*char won't be announced in a variety of situations*/
+	constexpr unsigned long PLR_HUNTING                                  =128; /*the player is hunting someone  do a track each look*/
+	constexpr unsigned long PLR_DEAF                                     =256; /*The player does not hear shouts*/
+	constexpr unsigned long PLR_ECHO                                     =512; /*Messages (tells  shout etc) echo back*/
+	constexpr unsigned long PLR_NOGOSSIP                                 =1024; /*New  gossip channel*/
+	constexpr unsigned long PLR_NOAUCTION                                =2048; /*New AUTCION channel*/
+	constexpr unsigned long PLR_NOTHING                                  =4096; /*empty*/
+	constexpr unsigned long PLR_NOTHING2                                 =8192; /*empty*/
+	constexpr unsigned long PLR_NOSHOUT                                  =16384; /*the player is not allowed to shout*/
+	constexpr unsigned long PLR_FREEZE                                   =32768; /*The player is frozen  must have pissed an immo off*/
+	constexpr unsigned long PLR_NOTELL                                   =65536; /*The player does not hear tells*/
+	constexpr unsigned long PLR_MAILING                                  =131072;
+	constexpr unsigned long PLR_EMPTY4                                   =262144;
+	constexpr unsigned long PLR_EMPTY5                                   =524288;
+	constexpr unsigned long PLR_NOBEEP                                   =1048576; /*ignore all beeps*/
+// Flag type: E_ROOM_FLAGS -- start
+/*
+Bitvector For 'room_flags'*/
+	constexpr unsigned long DARK                                         =1;
+	constexpr unsigned long DEATH                                        =2;
+	constexpr unsigned long NO_MOB                                       =4;
+	constexpr unsigned long INDOORS                                      =8;
+	constexpr unsigned long PEACEFUL                                     =16; /*No fighting*/
+	constexpr unsigned long NOSTEAL                                      =32; /*No Thieving*/
+	constexpr unsigned long NO_SUM                                       =64; /*no summoning*/
+	constexpr unsigned long NO_MAGIC                                     =128;
+	constexpr unsigned long TUNNEL                                       =256; /*Limited #s of people in room*/
+	constexpr unsigned long PRIVATE                                      =512;
+	constexpr unsigned long SILENCE                                      =1024;
+	constexpr unsigned long LARGE                                        =2048;
+	constexpr unsigned long NO_DEATH                                     =4096;
+	constexpr unsigned long SAVE_ROOM                                    =8192; /*room will save eq and load at reboot*/
+	constexpr unsigned long NO_TRACK                                     =16384;
+	constexpr unsigned long NO_MIND                                      =32768;
+	constexpr unsigned long DESERTIC                                     =65536;
+	constexpr unsigned long ARTIC                                        =131072;
+	constexpr unsigned long UNDERGROUND                                  =262144;
+	constexpr unsigned long HOT                                          =524288;
+	constexpr unsigned long WET                                          =1048576;
+	constexpr unsigned long COLD                                         =2097152;
+	constexpr unsigned long DRY                                          =4194304;
+	constexpr unsigned long BRIGHT                                       =8388608;
+	constexpr unsigned long NO_ASTRAL                                    =16777216;
+	constexpr unsigned long NO_REGAIN                                    =33554432;
+	constexpr unsigned long RM_1                                         =67108864;
+	constexpr unsigned long RM_2                                         =134217728;
+	constexpr unsigned long RM_3                                         =268435456;
+	constexpr unsigned long RM_4                                         =536870912;
+	constexpr unsigned long RM_5                                         =1073741824;
+// Flag type: E_SKILL_KNOWN -- start
+/*
+skill_data flags*/
+	constexpr unsigned long SKILL_KNOWN                                  =1;
+	constexpr unsigned long SKILL_KNOWN_CLERIC                           =2;
+	constexpr unsigned long SKILL_KNOWN_MAGE                             =4;
+	constexpr unsigned long SKILL_KNOWN_SORCERER                         =8;
+	constexpr unsigned long SKILL_KNOWN_THIEF                            =16;
+	constexpr unsigned long SKILL_KNOWN_MONK                             =32;
+	constexpr unsigned long SKILL_KNOWN_DRUID                            =64;
+	constexpr unsigned long SKILL_KNOWN_WARRIOR                          =128;
+	constexpr unsigned long SKILL_KNOWN_BARBARIAN                        =256; /*need to make byte flags, to long or int flags in char_skill_data*/
+	constexpr unsigned long SKILL_KNOWN_PALADIN                          =512; /*need to make byte flags, to long or int flags in char_skill_data*/
+	constexpr unsigned long SKILL_KNOWN_RANGER                           =1024; /*need to make byte flags, to long or int flags in char_skill_data*/
+	constexpr unsigned long SKILL_KNOWN_PSI                              =2048; /*need to make byte flags, to long or int flags in char_skill_data*/
+// Flag type: E_SYS_FLAGS -- start
+/*
+system flags defined on the fly and by wizards for this boot*/
+	constexpr unsigned long SYS_NOPORTAL                                 =1; /*no one can portal*/
+	constexpr unsigned long SYS_NOASTRAL                                 =2; /*no one can astral*/
+	constexpr unsigned long SYS_NOSUMMON                                 =4; /*no one can summon*/
+	constexpr unsigned long SYS_NOKILL                                   =8; /*NO PC (good side or bad side) can fight*/
+	constexpr unsigned long SYS_LOGALL                                   =16; /*log ALL users to the system log*/
+	constexpr unsigned long SYS_ECLIPS                                   =32; /*the world is in constant darkness!*/
+	constexpr unsigned long SYS_SKIPDNS                                  =64; /*skips DNS name searches on connects*/
+	constexpr unsigned long SYS_REQAPPROVE                               =128; /*force god approval for new char*/
+	constexpr unsigned long SYS_NOANSI                                   =256; /*disable ansi colors world wide*/
+	constexpr unsigned long SYS_LOGMOB                                   =512; /*log ALL mob ti system log*/
+// Flag type: E_TELEPORTS -- start
+	constexpr unsigned long TELE_LOOK                                    =1;
+	constexpr unsigned long TELE_COUNT                                   =2;
+	constexpr unsigned long TELE_RANDOM                                  =4;
+	constexpr unsigned long TELE_SPIN                                    =8;
+// Flag type: E_USER_FLAGS -- start
+/*
+user flags*/
+	constexpr unsigned long NO_DELETE                                    =1; /*do not delete me  well until 6 months pass!*/
+	constexpr unsigned long USE_ANSI                                     =2; /*we use ANSI color  yeah!*/
+	constexpr unsigned long RACE_WAR                                     =4; /*if enabled they can be hit by opposing race*/
+	constexpr unsigned long SHOW_CLASSES                                 =8; /*If enabled the PG classes are shown in the WHO*/
+	constexpr unsigned long SHOW_EXITS                                   =16; /*for auto display exits*/
+	constexpr unsigned long MURDER_1                                     =32; /*actually killed someone!*/
+	constexpr unsigned long STOLE_1                                      =64; /*caught stealing form someone!*/
+	constexpr unsigned long MURDER_2                                     =128; /*rumored killed someone*/
+	constexpr unsigned long STOLE_2                                      =256; /*rumored stole from someone*/
+	constexpr unsigned long STOLE_X                                      =512; /*saved for later*/
+	constexpr unsigned long MURDER_X                                     =1024; /*saved for later*/
+	constexpr unsigned long USE_PAGING                                   =2048; /*pause screens?*/
+	constexpr unsigned long CAN_OBJ_EDIT                                 =4096; /*this user can use oedit to edit objects*/
+	constexpr unsigned long CAN_MOB_EDIT                                 =8192; /*this user can use medit to edit mobs*/
+
 //Template for enum to unsigned byte
 
 
@@ -27,71 +337,6 @@ template <typename T>
 inline int enum_to_int(T value) {
     return static_cast<int>(value);
 }
-
-// Enum type: E_AFFECTED_BY -- start
-enum e_affected_by {
-/*
-Bitvector for 'affected_by'*/
-	AFF_NONE                                     =0,
-	AFF_BLIND                                    =1,
-	AFF_INVISIBLE                                =2,
-	AFF_DETECT_EVIL                              =4,
-	AFF_DETECT_INVISIBLE                         =8,
-	AFF_DETECT_MAGIC                             =16,
-	AFF_SENSE_LIFE                               =32,
-	AFF_LIFE_PROT                                =64,
-	AFF_SANCTUARY                                =128,
-	AFF_DRAGON_RIDE                              =256,
-	AFF_GROWTH                                   =512, /*this was the one that was missing*/
-	AFF_CURSE                                    =1024,
-	AFF_FLYING                                   =2048,
-	AFF_POISON                                   =4096,
-	AFF_TREE_TRAVEL                              =8192,
-	AFF_PARALYSIS                                =16384,
-	AFF_INFRAVISION                              =32768,
-	AFF_WATERBREATH                              =65536,
-	AFF_SLEEP                                    =131072,
-	AFF_TRAVELLING                               =262144, /*i.e. can't be stoned*/
-	AFF_SNEAK                                    =524288,
-	AFF_HIDE                                     =1048576,
-	AFF_SILENCE                                  =2097152,
-	AFF_CHARM                                    =4194304,
-	AFF_FOLLOW                                   =8388608,
-	AFF_PROTECT_FROM_EVIL                        =16777216,
-	AFF_TRUE_SIGHT                               =33554432,
-	AFF_SCRYING                                  =67108864, /*seeing other rooms*/
-	AFF_FIRESHIELD                               =134217728,
-	AFF_GROUP                                    =268435456,
-	AFF_TELEPATHY                                =536870912,
-	AFF_GLOBE_DARKNESS                           =1073741824, /*Added by REQUIEM 2018*/
-	AFF_UNDEF_AFF_1                              =2147483648
-};
-#define E_AFFECTED_BY_COUNT 33
-#define E_AFFECTED_BY_MIN 0
-#define E_AFFECTED_BY_MAX 2147483648
-#define E_AFFECTED_BY_KEY "e_affected_by"
-
-#define E_AFFECTED_BY_ACCEPT_ZERO true
-// Enum type: E_AFFECTED_BY -- end
-
-// Enum type: E_AFFECTED_BY2 -- start
-enum e_affected_by2 {
-	AFF2_ANIMAL_INVIS                            =1,
-	AFF2_HEAT_STUFF                              =2,
-	AFF2_LOG_ME                                  =4,
-	AFF2_BERSERK                                 =8,
-	AFF2_PARRY                                   =16, /*Added by GAIA 2001*/
-	AFF2_CON_ORDER                               =32,
-	AFF2_AFK                                     =64,
-	AFF2_PKILLER                                 =128
-};
-#define E_AFFECTED_BY2_COUNT 8
-#define E_AFFECTED_BY2_MIN 1
-#define E_AFFECTED_BY2_MAX 128
-#define E_AFFECTED_BY2_KEY "e_affected_by2"
-
-#define E_AFFECTED_BY2_ACCEPT_ZERO true
-// Enum type: E_AFFECTED_BY2 -- end
 
 // Enum type: E_APPLY -- start
 enum e_apply {
@@ -196,28 +441,6 @@ multiclassing stuff*/
 #define E_CLASS_INDEX_ACCEPT_ZERO true
 // Enum type: E_CLASS_INDEX -- end
 
-// Enum type: E_CLASSES -- start
-enum e_classes {
-	CLASS_MAGIC_USER                             =1,
-	CLASS_CLERIC                                 =2,
-	CLASS_WARRIOR                                =4,
-	CLASS_THIEF                                  =8,
-	CLASS_DRUID                                  =16,
-	CLASS_MONK                                   =32,
-	CLASS_BARBARIAN                              =64,
-	CLASS_SORCERER                               =128,
-	CLASS_PALADIN                                =256,
-	CLASS_RANGER                                 =512,
-	CLASS_PSI                                    =1024
-};
-#define E_CLASSES_COUNT 11
-#define E_CLASSES_MIN 1
-#define E_CLASSES_MAX 1024
-#define E_CLASSES_KEY "e_classes"
-
-#define E_CLASSES_ACCEPT_ZERO true
-// Enum type: E_CLASSES -- end
-
 // Enum type: E_CONDITIONS -- start
 enum e_conditions {
 	DRUNK                                        =0,
@@ -237,7 +460,7 @@ enum e_connection_types {
 /*
 modes of connectedness
 ATTENZIONE se si aggiungono altri stati di connessione, modificare anche
-l'array connected_types in constants.c*/
+l'array connected_types in constants.cpp*/
 	CON_PLYNG                                    =0,
 	CON_NME                                      =1,
 	CON_NMECNF                                   =2,
@@ -276,11 +499,16 @@ l'array connected_types in constants.c*/
 	CON_QROLL                                    =35,
 	CON_CONF_ROLL                                =36,
 	CON_EXTRA2                                   =37,
-	CON_OBJ_FORGING                              =38
+	CON_OBJ_FORGING                              =38,
+	CON_ACCOUNT_NAME                             =39, /*Richiesto login sull'account'*/
+	CON_ACCOUNT_PWD                              =40, /*Email riconosciuta, chiediamo la password*/
+	CON_ACCOUNT_TOON                             =41, /*Account password ok, propongo lista personaggi*/
+	CON_REGISTER                                 =42, /*Registro il pg sull'account*/
+	CON_PWDOK                                    =43 /*Tutto pronto, lo riconnetto o mando al menu*/
 };
-#define E_CONNECTION_TYPES_COUNT 39
+#define E_CONNECTION_TYPES_COUNT 44
 #define E_CONNECTION_TYPES_MIN 0
-#define E_CONNECTION_TYPES_MAX 38
+#define E_CONNECTION_TYPES_MAX 43
 #define E_CONNECTION_TYPES_KEY "e_connection_types"
 
 #define E_CONNECTION_TYPES_ACCEPT_ZERO true
@@ -288,14 +516,15 @@ l'array connected_types in constants.c*/
 
 // Enum type: E_DAMAGE_TYPE -- start
 enum e_damage_type {
+	NO_DAMAGE                                    =0,
 	FIRE_DAMAGE                                  =1,
 	COLD_DAMAGE                                  =2,
 	ELEC_DAMAGE                                  =3,
 	BLOW_DAMAGE                                  =4,
 	ACID_DAMAGE                                  =5
 };
-#define E_DAMAGE_TYPE_COUNT 5
-#define E_DAMAGE_TYPE_MIN 1
+#define E_DAMAGE_TYPE_COUNT 6
+#define E_DAMAGE_TYPE_MIN 0
 #define E_DAMAGE_TYPE_MAX 5
 #define E_DAMAGE_TYPE_KEY "e_damage_type"
 
@@ -351,44 +580,6 @@ For 'dir_option'*/
 
 #define E_EXIT_DIR_ACCEPT_ZERO true
 // Enum type: E_EXIT_DIR -- end
-
-// Enum type: E_EXIT_TYPES -- start
-enum e_exit_types {
-	EX_ISDOOR                                    =1,
-	EX_CLOSED                                    =2,
-	EX_LOCKED                                    =4,
-	EX_SECRET                                    =8,
-	EX_NOTBASH                                   =16,
-	EX_PICKPROOF                                 =32,
-	EX_CLIMB                                     =64,
-	EX_MALE                                      =128,
-	EX_NOLOOKT                                   =256
-};
-#define E_EXIT_TYPES_COUNT 9
-#define E_EXIT_TYPES_MIN 1
-#define E_EXIT_TYPES_MAX 256
-#define E_EXIT_TYPES_KEY "e_exit_types"
-
-#define E_EXIT_TYPES_ACCEPT_ZERO true
-// Enum type: E_EXIT_TYPES -- end
-
-// Enum type: E_FEAR_TYPE -- start
-enum e_fear_type {
-	FEAR_SEX                                     =1,
-	FEAR_RACE                                    =2,
-	FEAR_CHAR                                    =4,
-	FEAR_CLASS                                   =8,
-	FEAR_EVIL                                    =16,
-	FEAR_GOOD                                    =32,
-	FEAR_VNUM                                    =64
-};
-#define E_FEAR_TYPE_COUNT 7
-#define E_FEAR_TYPE_MIN 1
-#define E_FEAR_TYPE_MAX 64
-#define E_FEAR_TYPE_KEY "e_fear_type"
-
-#define E_FEAR_TYPE_ACCEPT_ZERO true
-// Enum type: E_FEAR_TYPE -- end
 
 // Enum type: E_FIND_RESULT -- start
 enum e_find_result {
@@ -470,103 +661,12 @@ enum e_find_result {
 #define E_FIND_RESULT_MAX 1369
 #define E_FIND_RESULT_KEY "e_find_result"
 
-#define E_FIND_RESULT_ACCEPT_ZERO true
+#define E_FIND_RESULT_ACCEPT_ZERO false
 // Enum type: E_FIND_RESULT -- end
-
-// Enum type: E_HATE_TYPE -- start
-enum e_hate_type {
-	HATE_SEX                                     =1,
-	HATE_RACE                                    =2,
-	HATE_CHAR                                    =4,
-	HATE_CLASS                                   =8,
-	HATE_EVIL                                    =16,
-	HATE_GOOD                                    =32,
-	HATE_VNUM                                    =64
-};
-#define E_HATE_TYPE_COUNT 7
-#define E_HATE_TYPE_MIN 1
-#define E_HATE_TYPE_MAX 64
-#define E_HATE_TYPE_KEY "e_hate_type"
-
-#define E_HATE_TYPE_ACCEPT_ZERO true
-// Enum type: E_HATE_TYPE -- end
-
-// Enum type: E_IMMUNITY_TYPE -- start
-enum e_immunity_type {
-	IMM_FIRE                                     =1,
-	IMM_COLD                                     =2,
-	IMM_ELEC                                     =4,
-	IMM_ENERGY                                   =8,
-	IMM_BLUNT                                    =16,
-	IMM_PIERCE                                   =32,
-	IMM_SLASH                                    =64,
-	IMM_ACID                                     =128,
-	IMM_POISON                                   =256,
-	IMM_DRAIN                                    =512,
-	IMM_SLEEP                                    =1024,
-	IMM_CHARM                                    =2048,
-	IMM_HOLD                                     =4096,
-	IMM_NONMAG                                   =8192,
-	IMM_PLUS1                                    =16384,
-	IMM_PLUS2                                    =32768,
-	IMM_PLUS3                                    =65536,
-	IMM_PLUS4                                    =131072
-};
-#define E_IMMUNITY_TYPE_COUNT 18
-#define E_IMMUNITY_TYPE_MIN 1
-#define E_IMMUNITY_TYPE_MAX 131072
-#define E_IMMUNITY_TYPE_KEY "e_immunity_type"
-
-#define E_IMMUNITY_TYPE_ACCEPT_ZERO true
-// Enum type: E_IMMUNITY_TYPE -- end
-
-// Enum type: E_ITEM_FLAG -- start
-enum e_item_flag {
-/*
-Bitvector for 'extra_flags'*/
-	ITEM_GLOW                                    =1,
-	ITEM_HUM                                     =2,
-	ITEM_METAL                                   =4, /*undefined...*/
-	ITEM_MINERAL                                 =8, /*undefined?*/
-	ITEM_ORGANIC                                 =16, /*undefined?*/
-	ITEM_INVISIBLE                               =32,
-	ITEM_MAGIC                                   =64,
-	ITEM_NODROP                                  =128,
-	ITEM_BLESS                                   =256,
-	ITEM_ANTI_GOOD                               =512, /*not usable by good people*/
-	ITEM_ANTI_EVIL                               =1024, /*not usable by evil people*/
-	ITEM_ANTI_NEUTRAL                            =2048, /*not usable by neutral people*/
-	ITEM_ANTI_CLERIC                             =4096,
-	ITEM_ANTI_MAGE                               =8192,
-	ITEM_ANTI_THIEF                              =16384,
-	ITEM_ANTI_FIGHTER                            =32768,
-	ITEM_BRITTLE                                 =65536, /*weapons that break after 1 hit  armor that breaks when hit?*/
-	ITEM_RESISTANT                               =131072, /*resistant to damage*/
-	ITEM_IMMUNE                                  =262144, /*Item is immune to scrapping*/
-	ITEM_ANTI_MEN                                =524288, /*men can't wield*/
-	ITEM_ANTI_WOMEN                              =1048576, /*women can't wield*/
-	ITEM_ANTI_SUN                                =2097152, /*item is sensitive to being in the sun*/
-	ITEM_ANTI_BARBARIAN                          =4194304,
-	ITEM_ANTI_RANGER                             =8388608,
-	ITEM_ANTI_PALADIN                            =16777216,
-	ITEM_ANTI_PSI                                =33554432,
-	ITEM_ANTI_MONK                               =67108864,
-	ITEM_ANTI_DRUID                              =134217728,
-	ITEM_ONLY_CLASS                              =268435456,
-	ITEM_DIG                                     =536870912,
-	ITEM_SCYTHE                                  =1073741824,
-	ITEM_ANTI_SORCERER                           =2147483648
-};
-#define E_ITEM_FLAG_COUNT 32
-#define E_ITEM_FLAG_MIN 1
-#define E_ITEM_FLAG_MAX 2147483648
-#define E_ITEM_FLAG_KEY "e_item_flag"
-
-#define E_ITEM_FLAG_ACCEPT_ZERO true
-// Enum type: E_ITEM_FLAG -- end
 
 // Enum type: E_ITEM_TYPE -- start
 enum e_item_type {
+	ITEM_NONE                                    =0,
 	ITEM_LIGHT                                   =1,
 	ITEM_SCROLL                                  =2,
 	ITEM_WAND                                    =3,
@@ -594,61 +694,13 @@ enum e_item_type {
 	ITEM_TREE                                    =25,
 	ITEM_ROCK                                    =26
 };
-#define E_ITEM_TYPE_COUNT 26
-#define E_ITEM_TYPE_MIN 1
+#define E_ITEM_TYPE_COUNT 27
+#define E_ITEM_TYPE_MIN 0
 #define E_ITEM_TYPE_MAX 26
 #define E_ITEM_TYPE_KEY "e_item_type"
 
 #define E_ITEM_TYPE_ACCEPT_ZERO true
 // Enum type: E_ITEM_TYPE -- end
-
-// Enum type: E_ITEM_WEAR -- start
-enum e_item_wear {
-/*
-Bitvector For 'wear_flags'*/
-	ITEM_TAKE                                    =1,
-	ITEM_WEAR_FINGER                             =2,
-	ITEM_WEAR_NECK                               =4,
-	ITEM_WEAR_BODY                               =8,
-	ITEM_WEAR_HEAD                               =16,
-	ITEM_WEAR_LEGS                               =32,
-	ITEM_WEAR_FEET                               =64,
-	ITEM_WEAR_HANDS                              =128,
-	ITEM_WEAR_ARMS                               =256,
-	ITEM_WEAR_SHIELD                             =512,
-	ITEM_WEAR_ABOUT                              =1024,
-	ITEM_WEAR_WAISTE                             =2048,
-	ITEM_WEAR_WRIST                              =4096,
-	ITEM_WIELD                                   =8192,
-	ITEM_HOLD                                    =16384,
-	ITEM_THROW                                   =32768,
-	ITEM_LIGHT_SOURCE                            =65536, /*UNUSED  CHECKS ONLY FOR ITEM_LIGHT*/
-	ITEM_WEAR_BACK                               =131072,
-	ITEM_WEAR_EAR                                =262144,
-	ITEM_WEAR_EYE                                =524288
-};
-#define E_ITEM_WEAR_COUNT 20
-#define E_ITEM_WEAR_MIN 1
-#define E_ITEM_WEAR_MAX 524288
-#define E_ITEM_WEAR_KEY "e_item_wear"
-
-#define E_ITEM_WEAR_ACCEPT_ZERO true
-// Enum type: E_ITEM_WEAR -- end
-
-// Enum type: E_LARGE_FLAGS -- start
-enum e_large_flags {
-	LARGE_NONE                                   =0,
-	LARGE_WATER                                  =1,
-	LARGE_AIR                                    =2,
-	LARGE_IMPASS                                 =4
-};
-#define E_LARGE_FLAGS_COUNT 4
-#define E_LARGE_FLAGS_MIN 0
-#define E_LARGE_FLAGS_MAX 4
-#define E_LARGE_FLAGS_KEY "e_large_flags"
-
-#define E_LARGE_FLAGS_ACCEPT_ZERO true
-// Enum type: E_LARGE_FLAGS -- end
 
 // Enum type: E_LIQUIDS -- start
 enum e_liquids {
@@ -681,74 +733,31 @@ Some different kind of liquids*/
 
 // Enum type: E_LOG_LEVELS -- start
 enum e_log_levels {
-	LOG_SYSERR                                   =1,
-	LOG_CHECK                                    =2,
-	LOG_PLAYERS                                  =4,
-	LOG_MOBILES                                  =8,
-	LOG_CONNECT                                  =16,
-	LOG_ERROR                                    =32,
-	LOG_WHO                                      =64,
-	LOG_SAVE                                     =128,
-	LOG_MAIL                                     =256,
-	LOG_RANK                                     =512,
-	LOG_ALWAYS                                   =1024,
-	LOG_SILENT                                   =32768
+	LOG_ALWAYS                                   =0, /*Shown at verbosity 0 and above*/
+	LOG_SYSERR                                   =1, /*Shown at verbosity 1 and above*/
+	LOG_CHECK                                    =2, /*Shown at verbosity 3 and above*/
+	LOG_PLAYERS                                  =4, /*Shown at verbosity 4 and above*/
+	LOG_MOBILES                                  =8, /*Shown at verbosity 4 and above*/
+	LOG_CONNECT                                  =16, /*Shown at verbosity 2 and above*/
+	LOG_ERROR                                    =32, /*Shown at verbosity 2 and above*/
+	LOG_WHO                                      =64, /*Shown at verbosity 6 and above*/
+	LOG_SAVE                                     =128, /*Shown at verbosity 5 and above*/
+	LOG_MAIL                                     =256, /*Shown at verbosity 5 and above*/
+	LOG_RANK                                     =512, /*Shown at verbosity 5 and above*/
+	LOG_WORLD                                    =1024, /*Shown at verbosity 6 and above*/
+	LOG_QUERY                                    =2048 /*Shown at verbosity 5 and above*/
 };
-#define E_LOG_LEVELS_COUNT 12
-#define E_LOG_LEVELS_MIN 1
-#define E_LOG_LEVELS_MAX 32768
+#define E_LOG_LEVELS_COUNT 13
+#define E_LOG_LEVELS_MIN 0
+#define E_LOG_LEVELS_MAX 2048
 #define E_LOG_LEVELS_KEY "e_log_levels"
 
 #define E_LOG_LEVELS_ACCEPT_ZERO true
 // Enum type: E_LOG_LEVELS -- end
 
-// Enum type: E_MOB_FLAGS -- start
-enum e_mob_flags {
-/*
-for mobile actions: specials.act*/
-	ACT_SPEC                                     =1, /*special routine to be called if exist*/
-	ACT_SENTINEL                                 =2, /*this mobile not to be moved*/
-	ACT_SCAVENGER                                =4, /*pick up stuff lying around*/
-	ACT_ISNPC                                    =8, /*This bit is set for use with IS_NPC()*/
-	ACT_NICE_THIEF                               =16, /*Set if a thief should NOT be killed*/
-	ACT_AGGRESSIVE                               =32, /*Set if automatic attack on NPC's*/
-	ACT_STAY_ZONE                                =64, /*MOB Must stay inside its own zone*/
-	ACT_WIMPY                                    =128, /*MOB Will flee when injured  and if aggressive only attack sleeping players*/
-	ACT_ANNOYING                                 =256, /*MOB is so utterly irritating that other monsters will attack it...*/
-	ACT_HATEFUL                                  =512, /*MOB will attack a PC or NPC matching a  specified name*/
-	ACT_AFRAID                                   =1024, /*MOB is afraid of a certain PC or NPC   and will always run away ....*/
-	ACT_IMMORTAL                                 =2048, /*MOB is a natural event  can't be kiled*/
-	ACT_HUNTING                                  =4096, /*MOB is hunting someone*/
-	ACT_DEADLY                                   =8192, /*MOB has deadly poison*/
-	ACT_POLYSELF                                 =16384, /*MOB is a polymorphed person*/
-	ACT_META_AGG                                 =32768, /*MOB is _very_ aggressive*/
-	ACT_GUARDIAN                                 =65536, /*MOB will guard master*/
-	ACT_ILLUSION                                 =131072, /*MOB is illusionary*/
-	ACT_HUGE                                     =262144, /*MOB is too large to go indoors*/
-	ACT_SCRIPT                                   =524288, /*MOB has a script assigned to it DO NOT SET*/
-	ACT_GREET                                    =1048576, /*MOB greets people*/
-	ACT_MAGIC_USER                               =2097152,
-	ACT_WARRIOR                                  =4194304,
-	ACT_CLERIC                                   =8388608,
-	ACT_THIEF                                    =16777216,
-	ACT_DRUID                                    =33554432,
-	ACT_MONK                                     =67108864,
-	ACT_BARBARIAN                                =134217728,
-	ACT_PALADIN                                  =268435456,
-	ACT_RANGER                                   =536870912,
-	ACT_PSI                                      =1073741824,
-	ACT_ARCHER                                   =2147483648
-};
-#define E_MOB_FLAGS_COUNT 32
-#define E_MOB_FLAGS_MIN 1
-#define E_MOB_FLAGS_MAX 2147483648
-#define E_MOB_FLAGS_KEY "e_mob_flags"
-
-#define E_MOB_FLAGS_ACCEPT_ZERO true
-// Enum type: E_MOB_FLAGS -- end
-
 // Enum type: E_OPINION_OP -- start
 enum e_opinion_op {
+	OP_NONE                                      =0,
 	OP_SEX                                       =1,
 	OP_RACE                                      =2,
 	OP_CHAR                                      =3,
@@ -757,47 +766,13 @@ enum e_opinion_op {
 	OP_GOOD                                      =6,
 	OP_VNUM                                      =7
 };
-#define E_OPINION_OP_COUNT 7
-#define E_OPINION_OP_MIN 1
+#define E_OPINION_OP_COUNT 8
+#define E_OPINION_OP_MIN 0
 #define E_OPINION_OP_MAX 7
 #define E_OPINION_OP_KEY "e_opinion_op"
 
 #define E_OPINION_OP_ACCEPT_ZERO true
 // Enum type: E_OPINION_OP -- end
-
-// Enum type: E_PLAYER_FLAGS -- start
-enum e_player_flags {
-/*
-For players : specials.act*/
-	PLR_BRIEF                                    =1,
-	PLR_UNUSED                                   =2,
-	PLR_COMPACT                                  =4,
-	PLR_DONTSET                                  =8, /*Dont EVER set*/
-	PLR_WIMPY                                    =16, /*character will flee when seriously injured*/
-	PLR_NOHASSLE                                 =32, /*char won't be attacked by aggressives.*/
-	PLR_STEALTH                                  =64, /*char won't be announced in a variety of situations*/
-	PLR_HUNTING                                  =128, /*the player is hunting someone  do a track each look*/
-	PLR_DEAF                                     =256, /*The player does not hear shouts*/
-	PLR_ECHO                                     =512, /*Messages (tells  shout etc) echo back*/
-	PLR_NOGOSSIP                                 =1024, /*New  gossip channel*/
-	PLR_NOAUCTION                                =2048, /*New AUTCION channel*/
-	PLR_NOTHING                                  =4096, /*empty*/
-	PLR_NOTHING2                                 =8192, /*empty*/
-	PLR_NOSHOUT                                  =16384, /*the player is not allowed to shout*/
-	PLR_FREEZE                                   =32768, /*The player is frozen  must have pissed an immo off*/
-	PLR_NOTELL                                   =65536, /*The player does not hear tells*/
-	PLR_MAILING                                  =131072,
-	PLR_EMPTY4                                   =262144,
-	PLR_EMPTY5                                   =524288,
-	PLR_NOBEEP                                   =1048576 /*ignore all beeps*/
-};
-#define E_PLAYER_FLAGS_COUNT 21
-#define E_PLAYER_FLAGS_MIN 1
-#define E_PLAYER_FLAGS_MAX 1048576
-#define E_PLAYER_FLAGS_KEY "e_player_flags"
-
-#define E_PLAYER_FLAGS_ACCEPT_ZERO true
-// Enum type: E_PLAYER_FLAGS -- end
 
 // Enum type: E_POSITIONS -- start
 enum e_positions {
@@ -920,50 +895,6 @@ list of races*/
 #define E_RACES_ACCEPT_ZERO true
 // Enum type: E_RACES -- end
 
-// Enum type: E_ROOM_FLAGS -- start
-enum e_room_flags {
-/*
-Bitvector For 'room_flags'*/
-	DARK                                         =1,
-	DEATH                                        =2,
-	NO_MOB                                       =4,
-	INDOORS                                      =8,
-	PEACEFUL                                     =16, /*No fighting*/
-	NOSTEAL                                      =32, /*No Thieving*/
-	NO_SUM                                       =64, /*no summoning*/
-	NO_MAGIC                                     =128,
-	TUNNEL                                       =256, /*Limited #s of people in room*/
-	PRIVATE                                      =512,
-	SILENCE                                      =1024,
-	LARGE                                        =2048,
-	NO_DEATH                                     =4096,
-	SAVE_ROOM                                    =8192, /*room will save eq and load at reboot*/
-	NO_TRACK                                     =16384,
-	NO_MIND                                      =32768,
-	DESERTIC                                     =65536,
-	ARTIC                                        =131072,
-	UNDERGROUND                                  =262144,
-	HOT                                          =524288,
-	WET                                          =1048576,
-	COLD                                         =2097152,
-	DRY                                          =4194304,
-	BRIGHT                                       =8388608,
-	NO_ASTRAL                                    =16777216,
-	NO_REGAIN                                    =33554432,
-	RM_1                                         =67108864,
-	RM_2                                         =134217728,
-	RM_3                                         =268435456,
-	RM_4                                         =536870912,
-	RM_5                                         =1073741824
-};
-#define E_ROOM_FLAGS_COUNT 31
-#define E_ROOM_FLAGS_MIN 1
-#define E_ROOM_FLAGS_MAX 1073741824
-#define E_ROOM_FLAGS_KEY "e_room_flags"
-
-#define E_ROOM_FLAGS_ACCEPT_ZERO true
-// Enum type: E_ROOM_FLAGS -- end
-
 // Enum type: E_SEASONS -- start
 enum e_seasons {
 	SEASON_WINTER                                =1,
@@ -976,7 +907,7 @@ enum e_seasons {
 #define E_SEASONS_MAX 8
 #define E_SEASONS_KEY "e_seasons"
 
-#define E_SEASONS_ACCEPT_ZERO true
+#define E_SEASONS_ACCEPT_ZERO false
 // Enum type: E_SEASONS -- end
 
 // Enum type: E_SECTOR_TYPES -- start
@@ -1021,31 +952,6 @@ sex*/
 #define E_SEX_ACCEPT_ZERO true
 // Enum type: E_SEX -- end
 
-// Enum type: E_SKILL_KNOWN -- start
-enum e_skill_known {
-/*
-skill_data flags*/
-	SKILL_KNOWN                                  =1,
-	SKILL_KNOWN_CLERIC                           =2,
-	SKILL_KNOWN_MAGE                             =4,
-	SKILL_KNOWN_SORCERER                         =8,
-	SKILL_KNOWN_THIEF                            =16,
-	SKILL_KNOWN_MONK                             =32,
-	SKILL_KNOWN_DRUID                            =64,
-	SKILL_KNOWN_WARRIOR                          =128,
-	SKILL_KNOWN_BARBARIAN                        =256, /*need to make byte flags, to long or int flags in char_skill_data*/
-	SKILL_KNOWN_PALADIN                          =512, /*need to make byte flags, to long or int flags in char_skill_data*/
-	SKILL_KNOWN_RANGER                           =1024, /*need to make byte flags, to long or int flags in char_skill_data*/
-	SKILL_KNOWN_PSI                              =2048 /*need to make byte flags, to long or int flags in char_skill_data*/
-};
-#define E_SKILL_KNOWN_COUNT 12
-#define E_SKILL_KNOWN_MIN 1
-#define E_SKILL_KNOWN_MAX 2048
-#define E_SKILL_KNOWN_KEY "e_skill_known"
-
-#define E_SKILL_KNOWN_ACCEPT_ZERO true
-// Enum type: E_SKILL_KNOWN -- end
-
 // Enum type: E_SKY -- start
 enum e_sky {
 /*
@@ -1065,6 +971,7 @@ And how is the sky ?*/
 
 // Enum type: E_SPEAKS -- start
 enum e_speaks {
+	SPEAK_NONE                                   =0,
 	SPEAK_COMMON                                 =1,
 	SPEAK_ELVISH                                 =2,
 	SPEAK_HALFLING                               =3,
@@ -1074,8 +981,8 @@ enum e_speaks {
 	SPEAK_OGRE                                   =7,
 	SPEAK_GNOMISH                                =8
 };
-#define E_SPEAKS_COUNT 8
-#define E_SPEAKS_MIN 1
+#define E_SPEAKS_COUNT 9
+#define E_SPEAKS_MIN 0
 #define E_SPEAKS_MAX 8
 #define E_SPEAKS_KEY "e_speaks"
 
@@ -1092,7 +999,7 @@ enum e_special_events {
 #define E_SPECIAL_EVENTS_MAX 2
 #define E_SPECIAL_EVENTS_KEY "e_special_events"
 
-#define E_SPECIAL_EVENTS_ACCEPT_ZERO true
+#define E_SPECIAL_EVENTS_ACCEPT_ZERO false
 // Enum type: E_SPECIAL_EVENTS -- end
 
 // Enum type: E_SUNLIGHT -- start
@@ -1114,31 +1021,9 @@ How much light is in the land ?*/
 #define E_SUNLIGHT_ACCEPT_ZERO true
 // Enum type: E_SUNLIGHT -- end
 
-// Enum type: E_SYS_FLAGS -- start
-enum e_sys_flags {
-/*
-system flags defined on the fly and by wizards for this boot*/
-	SYS_NOPORTAL                                 =1, /*no one can portal*/
-	SYS_NOASTRAL                                 =2, /*no one can astral*/
-	SYS_NOSUMMON                                 =4, /*no one can summon*/
-	SYS_NOKILL                                   =8, /*NO PC (good side or bad side) can fight*/
-	SYS_LOGALL                                   =16, /*log ALL users to the system log*/
-	SYS_ECLIPS                                   =32, /*the world is in constant darkness!*/
-	SYS_SKIPDNS                                  =64, /*skips DNS name searches on connects*/
-	SYS_REQAPPROVE                               =128, /*force god approval for new char*/
-	SYS_NOANSI                                   =256, /*disable ansi colors world wide*/
-	SYS_LOGMOB                                   =512 /*log ALL mob ti system log*/
-};
-#define E_SYS_FLAGS_COUNT 10
-#define E_SYS_FLAGS_MIN 1
-#define E_SYS_FLAGS_MAX 512
-#define E_SYS_FLAGS_KEY "e_sys_flags"
-
-#define E_SYS_FLAGS_ACCEPT_ZERO true
-// Enum type: E_SYS_FLAGS -- end
-
 // Enum type: E_TAN_RESULT -- start
 enum e_tan_result {
+	TAN_BAG                                      =14,
 	TAN_SHIELD                                   =67,
 	TAN_JACKET                                   =68,
 	TAN_BOOTS                                    =69,
@@ -1146,7 +1031,6 @@ enum e_tan_result {
 	TAN_LEGGINGS                                 =71,
 	TAN_SLEEVES                                  =72,
 	TAN_HELMET                                   =73,
-	TAN_BAG                                      =14,
 	TAN_ARMOR                                    =9602
 };
 #define E_TAN_RESULT_COUNT 9
@@ -1154,50 +1038,8 @@ enum e_tan_result {
 #define E_TAN_RESULT_MAX 9602
 #define E_TAN_RESULT_KEY "e_tan_result"
 
-#define E_TAN_RESULT_ACCEPT_ZERO true
+#define E_TAN_RESULT_ACCEPT_ZERO false
 // Enum type: E_TAN_RESULT -- end
-
-// Enum type: E_TELEPORTS -- start
-enum e_teleports {
-	TELE_LOOK                                    =1,
-	TELE_COUNT                                   =2,
-	TELE_RANDOM                                  =4,
-	TELE_SPIN                                    =8
-};
-#define E_TELEPORTS_COUNT 4
-#define E_TELEPORTS_MIN 1
-#define E_TELEPORTS_MAX 8
-#define E_TELEPORTS_KEY "e_teleports"
-
-#define E_TELEPORTS_ACCEPT_ZERO true
-// Enum type: E_TELEPORTS -- end
-
-// Enum type: E_USER_FLAGS -- start
-enum e_user_flags {
-/*
-user flags*/
-	NO_DELETE                                    =1, /*do not delete me  well until 6 months pass!*/
-	USE_ANSI                                     =2, /*we use ANSI color  yeah!*/
-	RACE_WAR                                     =4, /*if enabled they can be hit by opposing race*/
-	SHOW_CLASSES                                 =8, /*If enabled the PG classes are shown in the WHO*/
-	SHOW_EXITS                                   =16, /*for auto display exits*/
-	MURDER_1                                     =32, /*actually killed someone!*/
-	STOLE_1                                      =64, /*caught stealing form someone!*/
-	MURDER_2                                     =128, /*rumored killed someone*/
-	STOLE_2                                      =256, /*rumored stole from someone*/
-	STOLE_X                                      =512, /*saved for later*/
-	MURDER_X                                     =1024, /*saved for later*/
-	USE_PAGING                                   =2048, /*pause screens?*/
-	CAN_OBJ_EDIT                                 =4096, /*this user can use oedit to edit objects*/
-	CAN_MOB_EDIT                                 =8192 /*this user can use medit to edit mobs*/
-};
-#define E_USER_FLAGS_COUNT 14
-#define E_USER_FLAGS_MIN 1
-#define E_USER_FLAGS_MAX 8192
-#define E_USER_FLAGS_KEY "e_user_flags"
-
-#define E_USER_FLAGS_ACCEPT_ZERO true
-// Enum type: E_USER_FLAGS -- end
 
 // Enum type: E_WEAR -- start
 enum e_wear {
@@ -1291,14 +1133,6 @@ enum e_wear {
 #define	STATUS_MAX                                   25 
 
 namespace G {
-extern e_affected_by encode_e_affected_by(std::string s,e_affected_by fallback = AFF_NONE);
-extern std::string translate(const e_affected_by e);
-extern bool enum_validate(const e_affected_by value);
-extern std::ostream & operator<<(std::ostream &out,const e_affected_by value);
-extern e_affected_by2 encode_e_affected_by2(std::string s,e_affected_by2 fallback = AFF2_ANIMAL_INVIS);
-extern std::string translate(const e_affected_by2 e);
-extern bool enum_validate(const e_affected_by2 value);
-extern std::ostream & operator<<(std::ostream &out,const e_affected_by2 value);
 extern e_apply encode_e_apply(std::string s,e_apply fallback = APPLY_NONE);
 extern std::string translate(const e_apply e);
 extern bool enum_validate(const e_apply value);
@@ -1307,10 +1141,6 @@ extern e_class_index encode_e_class_index(std::string s,e_class_index fallback =
 extern std::string translate(const e_class_index e);
 extern bool enum_validate(const e_class_index value);
 extern std::ostream & operator<<(std::ostream &out,const e_class_index value);
-extern e_classes encode_e_classes(std::string s,e_classes fallback = CLASS_MAGIC_USER);
-extern std::string translate(const e_classes e);
-extern bool enum_validate(const e_classes value);
-extern std::ostream & operator<<(std::ostream &out,const e_classes value);
 extern e_conditions encode_e_conditions(std::string s,e_conditions fallback = DRUNK);
 extern std::string translate(const e_conditions e);
 extern bool enum_validate(const e_conditions value);
@@ -1319,7 +1149,7 @@ extern e_connection_types encode_e_connection_types(std::string s,e_connection_t
 extern std::string translate(const e_connection_types e);
 extern bool enum_validate(const e_connection_types value);
 extern std::ostream & operator<<(std::ostream &out,const e_connection_types value);
-extern e_damage_type encode_e_damage_type(std::string s,e_damage_type fallback = FIRE_DAMAGE);
+extern e_damage_type encode_e_damage_type(std::string s,e_damage_type fallback = NO_DAMAGE);
 extern std::string translate(const e_damage_type e);
 extern bool enum_validate(const e_damage_type value);
 extern std::ostream & operator<<(std::ostream &out,const e_damage_type value);
@@ -1331,62 +1161,26 @@ extern e_exit_dir encode_e_exit_dir(std::string s,e_exit_dir fallback = NORTH);
 extern std::string translate(const e_exit_dir e);
 extern bool enum_validate(const e_exit_dir value);
 extern std::ostream & operator<<(std::ostream &out,const e_exit_dir value);
-extern e_exit_types encode_e_exit_types(std::string s,e_exit_types fallback = EX_ISDOOR);
-extern std::string translate(const e_exit_types e);
-extern bool enum_validate(const e_exit_types value);
-extern std::ostream & operator<<(std::ostream &out,const e_exit_types value);
-extern e_fear_type encode_e_fear_type(std::string s,e_fear_type fallback = FEAR_SEX);
-extern std::string translate(const e_fear_type e);
-extern bool enum_validate(const e_fear_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_fear_type value);
 extern e_find_result encode_e_find_result(std::string s,e_find_result fallback = FOUND_WATER);
 extern std::string translate(const e_find_result e);
 extern bool enum_validate(const e_find_result value);
 extern std::ostream & operator<<(std::ostream &out,const e_find_result value);
-extern e_hate_type encode_e_hate_type(std::string s,e_hate_type fallback = HATE_SEX);
-extern std::string translate(const e_hate_type e);
-extern bool enum_validate(const e_hate_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_hate_type value);
-extern e_immunity_type encode_e_immunity_type(std::string s,e_immunity_type fallback = IMM_FIRE);
-extern std::string translate(const e_immunity_type e);
-extern bool enum_validate(const e_immunity_type value);
-extern std::ostream & operator<<(std::ostream &out,const e_immunity_type value);
-extern e_item_flag encode_e_item_flag(std::string s,e_item_flag fallback = ITEM_GLOW);
-extern std::string translate(const e_item_flag e);
-extern bool enum_validate(const e_item_flag value);
-extern std::ostream & operator<<(std::ostream &out,const e_item_flag value);
-extern e_item_type encode_e_item_type(std::string s,e_item_type fallback = ITEM_LIGHT);
+extern e_item_type encode_e_item_type(std::string s,e_item_type fallback = ITEM_NONE);
 extern std::string translate(const e_item_type e);
 extern bool enum_validate(const e_item_type value);
 extern std::ostream & operator<<(std::ostream &out,const e_item_type value);
-extern e_item_wear encode_e_item_wear(std::string s,e_item_wear fallback = ITEM_TAKE);
-extern std::string translate(const e_item_wear e);
-extern bool enum_validate(const e_item_wear value);
-extern std::ostream & operator<<(std::ostream &out,const e_item_wear value);
-extern e_large_flags encode_e_large_flags(std::string s,e_large_flags fallback = LARGE_NONE);
-extern std::string translate(const e_large_flags e);
-extern bool enum_validate(const e_large_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_large_flags value);
 extern e_liquids encode_e_liquids(std::string s,e_liquids fallback = LIQ_WATER);
 extern std::string translate(const e_liquids e);
 extern bool enum_validate(const e_liquids value);
 extern std::ostream & operator<<(std::ostream &out,const e_liquids value);
-extern e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback = LOG_SYSERR);
+extern e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback = LOG_ALWAYS);
 extern std::string translate(const e_log_levels e);
 extern bool enum_validate(const e_log_levels value);
 extern std::ostream & operator<<(std::ostream &out,const e_log_levels value);
-extern e_mob_flags encode_e_mob_flags(std::string s,e_mob_flags fallback = ACT_SPEC);
-extern std::string translate(const e_mob_flags e);
-extern bool enum_validate(const e_mob_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_mob_flags value);
-extern e_opinion_op encode_e_opinion_op(std::string s,e_opinion_op fallback = OP_SEX);
+extern e_opinion_op encode_e_opinion_op(std::string s,e_opinion_op fallback = OP_NONE);
 extern std::string translate(const e_opinion_op e);
 extern bool enum_validate(const e_opinion_op value);
 extern std::ostream & operator<<(std::ostream &out,const e_opinion_op value);
-extern e_player_flags encode_e_player_flags(std::string s,e_player_flags fallback = PLR_BRIEF);
-extern std::string translate(const e_player_flags e);
-extern bool enum_validate(const e_player_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_player_flags value);
 extern e_positions encode_e_positions(std::string s,e_positions fallback = POSITION_DEAD);
 extern std::string translate(const e_positions e);
 extern bool enum_validate(const e_positions value);
@@ -1395,10 +1189,6 @@ extern e_races encode_e_races(std::string s,e_races fallback = RACE_HALFBREED);
 extern std::string translate(const e_races e);
 extern bool enum_validate(const e_races value);
 extern std::ostream & operator<<(std::ostream &out,const e_races value);
-extern e_room_flags encode_e_room_flags(std::string s,e_room_flags fallback = DARK);
-extern std::string translate(const e_room_flags e);
-extern bool enum_validate(const e_room_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_room_flags value);
 extern e_seasons encode_e_seasons(std::string s,e_seasons fallback = SEASON_WINTER);
 extern std::string translate(const e_seasons e);
 extern bool enum_validate(const e_seasons value);
@@ -1411,15 +1201,11 @@ extern e_sex encode_e_sex(std::string s,e_sex fallback = SEX_NEUTRAL);
 extern std::string translate(const e_sex e);
 extern bool enum_validate(const e_sex value);
 extern std::ostream & operator<<(std::ostream &out,const e_sex value);
-extern e_skill_known encode_e_skill_known(std::string s,e_skill_known fallback = SKILL_KNOWN);
-extern std::string translate(const e_skill_known e);
-extern bool enum_validate(const e_skill_known value);
-extern std::ostream & operator<<(std::ostream &out,const e_skill_known value);
 extern e_sky encode_e_sky(std::string s,e_sky fallback = SKY_CLOUDLESS);
 extern std::string translate(const e_sky e);
 extern bool enum_validate(const e_sky value);
 extern std::ostream & operator<<(std::ostream &out,const e_sky value);
-extern e_speaks encode_e_speaks(std::string s,e_speaks fallback = SPEAK_COMMON);
+extern e_speaks encode_e_speaks(std::string s,e_speaks fallback = SPEAK_NONE);
 extern std::string translate(const e_speaks e);
 extern bool enum_validate(const e_speaks value);
 extern std::ostream & operator<<(std::ostream &out,const e_speaks value);
@@ -1431,22 +1217,10 @@ extern e_sunlight encode_e_sunlight(std::string s,e_sunlight fallback = SUN_DARK
 extern std::string translate(const e_sunlight e);
 extern bool enum_validate(const e_sunlight value);
 extern std::ostream & operator<<(std::ostream &out,const e_sunlight value);
-extern e_sys_flags encode_e_sys_flags(std::string s,e_sys_flags fallback = SYS_NOPORTAL);
-extern std::string translate(const e_sys_flags e);
-extern bool enum_validate(const e_sys_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_sys_flags value);
-extern e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback = TAN_SHIELD);
+extern e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback = TAN_BAG);
 extern std::string translate(const e_tan_result e);
 extern bool enum_validate(const e_tan_result value);
 extern std::ostream & operator<<(std::ostream &out,const e_tan_result value);
-extern e_teleports encode_e_teleports(std::string s,e_teleports fallback = TELE_LOOK);
-extern std::string translate(const e_teleports e);
-extern bool enum_validate(const e_teleports value);
-extern std::ostream & operator<<(std::ostream &out,const e_teleports value);
-extern e_user_flags encode_e_user_flags(std::string s,e_user_flags fallback = NO_DELETE);
-extern std::string translate(const e_user_flags e);
-extern bool enum_validate(const e_user_flags value);
-extern std::ostream & operator<<(std::ostream &out,const e_user_flags value);
 extern e_wear encode_e_wear(std::string s,e_wear fallback = WEAR_LIGHT);
 extern std::string translate(const e_wear e);
 extern bool enum_validate(const e_wear value);
@@ -1461,30 +1235,8 @@ std::string t(T e) {
 /* Ready for Lua
 namespace luabridge {
 template <>
-struct Stack <gates::e_affected_by> {
-    static void push (lua_State* L, gates::e_affected_by s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_affected_by get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_affected_by>(E_AFFECTED_BY_KEY,stringa,static_cast<gates::e_affected_by>(E_AFFECTED_BY_MIN));
-    }
-};
-
-template <>
-struct Stack <gates::e_affected_by2> {
-    static void push (lua_State* L, gates::e_affected_by2 s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_affected_by2 get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_affected_by2>(E_AFFECTED_BY2_KEY,stringa,static_cast<gates::e_affected_by2>(E_AFFECTED_BY2_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_apply> {
-    static void push (lua_State* L, gates::e_apply s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_apply get (lua_State* L, int index) {
@@ -1495,7 +1247,7 @@ struct Stack <gates::e_apply> {
 
 template <>
 struct Stack <gates::e_class_index> {
-    static void push (lua_State* L, gates::e_class_index s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_class_index get (lua_State* L, int index) {
@@ -1505,19 +1257,8 @@ struct Stack <gates::e_class_index> {
 };
 
 template <>
-struct Stack <gates::e_classes> {
-    static void push (lua_State* L, gates::e_classes s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_classes get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_classes>(E_CLASSES_KEY,stringa,static_cast<gates::e_classes>(E_CLASSES_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_conditions> {
-    static void push (lua_State* L, gates::e_conditions s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_conditions get (lua_State* L, int index) {
@@ -1528,7 +1269,7 @@ struct Stack <gates::e_conditions> {
 
 template <>
 struct Stack <gates::e_connection_types> {
-    static void push (lua_State* L, gates::e_connection_types s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_connection_types get (lua_State* L, int index) {
@@ -1539,7 +1280,7 @@ struct Stack <gates::e_connection_types> {
 
 template <>
 struct Stack <gates::e_damage_type> {
-    static void push (lua_State* L, gates::e_damage_type s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_damage_type get (lua_State* L, int index) {
@@ -1550,7 +1291,7 @@ struct Stack <gates::e_damage_type> {
 
 template <>
 struct Stack <gates::e_events> {
-    static void push (lua_State* L, gates::e_events s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_events get (lua_State* L, int index) {
@@ -1561,7 +1302,7 @@ struct Stack <gates::e_events> {
 
 template <>
 struct Stack <gates::e_exit_dir> {
-    static void push (lua_State* L, gates::e_exit_dir s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_exit_dir get (lua_State* L, int index) {
@@ -1571,30 +1312,8 @@ struct Stack <gates::e_exit_dir> {
 };
 
 template <>
-struct Stack <gates::e_exit_types> {
-    static void push (lua_State* L, gates::e_exit_types s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_exit_types get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_exit_types>(E_EXIT_TYPES_KEY,stringa,static_cast<gates::e_exit_types>(E_EXIT_TYPES_MIN));
-    }
-};
-
-template <>
-struct Stack <gates::e_fear_type> {
-    static void push (lua_State* L, gates::e_fear_type s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_fear_type get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_fear_type>(E_FEAR_TYPE_KEY,stringa,static_cast<gates::e_fear_type>(E_FEAR_TYPE_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_find_result> {
-    static void push (lua_State* L, gates::e_find_result s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_find_result get (lua_State* L, int index) {
@@ -1604,41 +1323,8 @@ struct Stack <gates::e_find_result> {
 };
 
 template <>
-struct Stack <gates::e_hate_type> {
-    static void push (lua_State* L, gates::e_hate_type s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_hate_type get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_hate_type>(E_HATE_TYPE_KEY,stringa,static_cast<gates::e_hate_type>(E_HATE_TYPE_MIN));
-    }
-};
-
-template <>
-struct Stack <gates::e_immunity_type> {
-    static void push (lua_State* L, gates::e_immunity_type s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_immunity_type get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_immunity_type>(E_IMMUNITY_TYPE_KEY,stringa,static_cast<gates::e_immunity_type>(E_IMMUNITY_TYPE_MIN));
-    }
-};
-
-template <>
-struct Stack <gates::e_item_flag> {
-    static void push (lua_State* L, gates::e_item_flag s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_item_flag get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_item_flag>(E_ITEM_FLAG_KEY,stringa,static_cast<gates::e_item_flag>(E_ITEM_FLAG_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_item_type> {
-    static void push (lua_State* L, gates::e_item_type s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_item_type get (lua_State* L, int index) {
@@ -1648,30 +1334,8 @@ struct Stack <gates::e_item_type> {
 };
 
 template <>
-struct Stack <gates::e_item_wear> {
-    static void push (lua_State* L, gates::e_item_wear s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_item_wear get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_item_wear>(E_ITEM_WEAR_KEY,stringa,static_cast<gates::e_item_wear>(E_ITEM_WEAR_MIN));
-    }
-};
-
-template <>
-struct Stack <gates::e_large_flags> {
-    static void push (lua_State* L, gates::e_large_flags s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_large_flags get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_large_flags>(E_LARGE_FLAGS_KEY,stringa,static_cast<gates::e_large_flags>(E_LARGE_FLAGS_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_liquids> {
-    static void push (lua_State* L, gates::e_liquids s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_liquids get (lua_State* L, int index) {
@@ -1682,7 +1346,7 @@ struct Stack <gates::e_liquids> {
 
 template <>
 struct Stack <gates::e_log_levels> {
-    static void push (lua_State* L, gates::e_log_levels s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_log_levels get (lua_State* L, int index) {
@@ -1692,19 +1356,8 @@ struct Stack <gates::e_log_levels> {
 };
 
 template <>
-struct Stack <gates::e_mob_flags> {
-    static void push (lua_State* L, gates::e_mob_flags s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_mob_flags get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_mob_flags>(E_MOB_FLAGS_KEY,stringa,static_cast<gates::e_mob_flags>(E_MOB_FLAGS_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_opinion_op> {
-    static void push (lua_State* L, gates::e_opinion_op s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_opinion_op get (lua_State* L, int index) {
@@ -1714,19 +1367,8 @@ struct Stack <gates::e_opinion_op> {
 };
 
 template <>
-struct Stack <gates::e_player_flags> {
-    static void push (lua_State* L, gates::e_player_flags s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_player_flags get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_player_flags>(E_PLAYER_FLAGS_KEY,stringa,static_cast<gates::e_player_flags>(E_PLAYER_FLAGS_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_positions> {
-    static void push (lua_State* L, gates::e_positions s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_positions get (lua_State* L, int index) {
@@ -1737,7 +1379,7 @@ struct Stack <gates::e_positions> {
 
 template <>
 struct Stack <gates::e_races> {
-    static void push (lua_State* L, gates::e_races s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_races get (lua_State* L, int index) {
@@ -1747,19 +1389,8 @@ struct Stack <gates::e_races> {
 };
 
 template <>
-struct Stack <gates::e_room_flags> {
-    static void push (lua_State* L, gates::e_room_flags s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_room_flags get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_room_flags>(E_ROOM_FLAGS_KEY,stringa,static_cast<gates::e_room_flags>(E_ROOM_FLAGS_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_seasons> {
-    static void push (lua_State* L, gates::e_seasons s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_seasons get (lua_State* L, int index) {
@@ -1770,7 +1401,7 @@ struct Stack <gates::e_seasons> {
 
 template <>
 struct Stack <gates::e_sector_types> {
-    static void push (lua_State* L, gates::e_sector_types s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_sector_types get (lua_State* L, int index) {
@@ -1781,7 +1412,7 @@ struct Stack <gates::e_sector_types> {
 
 template <>
 struct Stack <gates::e_sex> {
-    static void push (lua_State* L, gates::e_sex s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_sex get (lua_State* L, int index) {
@@ -1791,19 +1422,8 @@ struct Stack <gates::e_sex> {
 };
 
 template <>
-struct Stack <gates::e_skill_known> {
-    static void push (lua_State* L, gates::e_skill_known s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_skill_known get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_skill_known>(E_SKILL_KNOWN_KEY,stringa,static_cast<gates::e_skill_known>(E_SKILL_KNOWN_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_sky> {
-    static void push (lua_State* L, gates::e_sky s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_sky get (lua_State* L, int index) {
@@ -1814,7 +1434,7 @@ struct Stack <gates::e_sky> {
 
 template <>
 struct Stack <gates::e_speaks> {
-    static void push (lua_State* L, gates::e_speaks s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_speaks get (lua_State* L, int index) {
@@ -1825,7 +1445,7 @@ struct Stack <gates::e_speaks> {
 
 template <>
 struct Stack <gates::e_special_events> {
-    static void push (lua_State* L, gates::e_special_events s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_special_events get (lua_State* L, int index) {
@@ -1836,7 +1456,7 @@ struct Stack <gates::e_special_events> {
 
 template <>
 struct Stack <gates::e_sunlight> {
-    static void push (lua_State* L, gates::e_sunlight s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_sunlight get (lua_State* L, int index) {
@@ -1846,19 +1466,8 @@ struct Stack <gates::e_sunlight> {
 };
 
 template <>
-struct Stack <gates::e_sys_flags> {
-    static void push (lua_State* L, gates::e_sys_flags s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_sys_flags get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_sys_flags>(E_SYS_FLAGS_KEY,stringa,static_cast<gates::e_sys_flags>(E_SYS_FLAGS_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_tan_result> {
-    static void push (lua_State* L, gates::e_tan_result s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_tan_result get (lua_State* L, int index) {
@@ -1868,30 +1477,8 @@ struct Stack <gates::e_tan_result> {
 };
 
 template <>
-struct Stack <gates::e_teleports> {
-    static void push (lua_State* L, gates::e_teleports s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_teleports get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_teleports>(E_TELEPORTS_KEY,stringa,static_cast<gates::e_teleports>(E_TELEPORTS_MIN));
-    }
-};
-
-template <>
-struct Stack <gates::e_user_flags> {
-    static void push (lua_State* L, gates::e_user_flags s) {
-        lua_pushstring (L, t(s).c_str());
-    }
-    static gates::e_user_flags get (lua_State* L, int index) {
-        string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::e_user_flags>(E_USER_FLAGS_KEY,stringa,static_cast<gates::e_user_flags>(E_USER_FLAGS_MIN));
-    }
-};
-
-template <>
 struct Stack <gates::e_wear> {
-    static void push (lua_State* L, gates::e_wear s) {
+    static void push (lua_State* L, gates:: s) {
         lua_pushstring (L, t(s).c_str());
     }
     static gates::e_wear get (lua_State* L, int index) {

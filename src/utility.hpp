@@ -6,26 +6,27 @@
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
-bool isNullChar (struct char_data* ch);
+bool isNullChar(struct char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
-FILE* MakeZoneFile( struct char_data* c, int zone);
-bool CheckPrac (int classe, int id, int liv);
+FILE* MakeZoneFile(struct char_data* c, int zone);
+bool CheckPrac(int classe, int id, int liv);
 struct time_info_data real_time_passed(time_t t2, time_t t1);
-bool ThereIsPCInRoom( long lRoom );
-bool CanSeePCInRoom( struct char_data* pMob );
-int HowManyCanSeePCInRoom( struct char_data* pMob );
+bool ThereIsPCInRoom(long lRoom);
+bool CanSeePCInRoom(struct char_data* pMob);
+int HowManyCanSeePCInRoom(struct char_data* pMob);
 void fake_setup_dir(FILE* fl, long room, int dir);
 char getall(char* name, char* newname);
 char in_clan(struct char_data* ch1, struct char_data* ch2);
 char in_group_internal(struct char_data* ch1, struct char_data* ch2, int strict);
 char in_group_strict(struct char_data* ch1, struct char_data* ch2);
 char in_group(struct char_data* ch1, struct char_data* ch2);
-char* lower(char* s);
+char* lower(const char* s);
 char* replace(char* s, char vecchio, char nuovo);
 int anti_barbarian_stuff(struct obj_data* obj_object);
 int apply_soundproof(struct char_data* ch);
@@ -36,7 +37,7 @@ int CanSeeTrap(int num, struct char_data* ch);
 int CheckEgoEquip(struct char_data* ch, struct obj_data* obj);
 int CheckEgoGet(struct char_data* ch, struct obj_data* obj);
 int CheckEgoGive(struct char_data* ch, struct char_data* vict, struct obj_data* obj);
-int CheckForBlockedMove(struct char_data* ch, int cmd, char* arg, int room, int dir, int iClass);
+int CheckForBlockedMove(struct char_data* ch, int cmd, const char* arg, int room, int dir, int iClass);
 int CheckGetBarbarianOK(struct char_data* ch, struct obj_data* obj_object);
 int CheckGiveBarbarianOK(struct char_data* ch, struct char_data* vict, struct obj_data* obj);
 int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm);
@@ -47,7 +48,7 @@ int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
 int EgoBladeSave(struct char_data* ch);
 int EgoSave(struct char_data* ch);
-int EqWBits(struct char_data* ch, int bits);
+int EqWBits(struct char_data* ch, const unsigned int bits);
 int exist(char* s);
 int exit_ok(struct room_direction_data* exit, struct room_data** rpp);
 int fighting_in_room(int room_n);
@@ -117,7 +118,6 @@ int RecCompObjNum(struct obj_data* o, int obj_num);
 int RideCheck(struct char_data* ch, int mod);
 int room_of_object(struct obj_data* obj);
 int scan_number(const char* text, int* rval);
-int SiteLock(const char* site);
 int StandUp(struct char_data* ch);
 int str_cmp2(const char* arg1, const char* arg2);
 int str_cmp(const char* arg1, const char* arg2);
@@ -139,7 +139,6 @@ void CleanZone(int zone);
 void DevelopHatred(struct char_data* ch, struct char_data* v);
 void DoNothing(void* pDummy);
 void down_river(unsigned long pulse);
-void do_WorldSave(struct char_data* ch, char* argument, int cmd);
 void FallOffMount(struct char_data* ch, struct char_data* h);
 void FighterMove(struct char_data* ch);
 void FORGET(struct char_data* ch, int spl);
@@ -163,6 +162,19 @@ void sprinttype(int type, const char* names[], char* result);
 void TeleportPulseStuff(unsigned long pulse);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
+char RandomChar() ;
+const char* RandomWord() ;
+template <typename T>
+T tonumber(std::string source,T fallback) {
+	try {
+		return boost::lexical_cast<T>(source);
+	}
+	catch(...) {
+
+	}
+	return fallback;
+}
+
 } // namespace Alarmud
 #endif
 

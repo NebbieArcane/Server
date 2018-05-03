@@ -18,8 +18,8 @@ extern int gMoonRise;
 extern int gLightLevel;  /* defaults to sunlight */
 
 void ChangeSeason(int month) ;
-void ChangeWeather( int change) ;
-void GetMonth( int month) ;
+void ChangeWeather(int change) ;
+void GetMonth(int month) ;
 void another_hour(int mode) ;
 void switch_light(byte why) ;
 void weather_and_time(int mode) ;

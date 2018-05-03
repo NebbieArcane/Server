@@ -48,9 +48,6 @@ namespace Alarmud {
 *                                                 Gaia 2001              *
 ************************************************************************ */
 
-void alter_mana(struct char_data* ch, int amount);
-void alter_move(struct char_data* ch, int amount);
-
 /* Planer point types for events */
 #define REGEN_HIT      0
 #define REGEN_MANA     1
@@ -82,8 +79,8 @@ EVENTFUNC(points_event) {
 
 	time = REGEN_EVENTS_DELAY;
 	ch = regen->ch;
-	if (ch->nMagicNumber != CHAR_VALID_MAGIC)  {
-		if (event_obj) {
+	if(ch->nMagicNumber != CHAR_VALID_MAGIC)  {
+		if(event_obj) {
 			free(event_obj);
 		}
 		return 0;
@@ -104,8 +101,8 @@ EVENTFUNC(points_event) {
 
 	/* aggiungo controllo per PG rentati o link dead */
 
-	if (!IS_NPC(ch) && !ch->desc ) {
-		if (event_obj) {
+	if(!IS_NPC(ch) && !ch->desc) {
+		if(event_obj) {
 			free(event_obj);
 		}
 		return 0;
@@ -115,14 +112,16 @@ EVENTFUNC(points_event) {
 	/* Chiamata per il controllo dell'EGO dell'eq raro
 	 Gaia 2001 */
 
-	if( IS_SET( ch->specials.act, ACT_POLYSELF) || IS_PC( ch )
-			&& !EgoSave( ch ) ) { do_ego_eq_action( ch ); }
+	if(IS_SET(ch->specials.act, ACT_POLYSELF) || IS_PC(ch)
+			&& !EgoSave(ch)) {
+		do_ego_eq_action(ch);
+	}
 
 #endif
-	if (ch->desc) {
-		if (!ch->desc->character) {
+	if(ch->desc) {
+		if(!ch->desc->character) {
 			mudlog(LOG_ERROR,"Player in state %s with no character in descriptor",G::translate(static_cast<e_connection_types>(ch->desc->connected)));
-			if (event_obj) {
+			if(event_obj) {
 				free(event_obj);
 			}
 			return 0;
@@ -131,127 +130,143 @@ EVENTFUNC(points_event) {
 
 	rp = real_roomp(ch->in_room);
 
-	if (!IS_NPC( ch ) && rp && rp->room_flags&NO_REGAIN)
-	{ regainroom=0; }
+	if(!IS_NPC(ch) && rp && rp->room_flags&NO_REGAIN) {
+		regainroom=0;
+	}
 
 	/*   In the old version we increment type of points by one.
 	     If not at max, reenqueue the event. Now we increase at fixed
 	     times by a larger amount of points.
 	*/
 
-	switch (type) {
+	switch(type) {
 	case REGEN_HIT:
 
 
 		hgain = hit_gain(ch);
-		if( hgain > 0 && regainroom == 0 ) { gain = 0 ; }
+		if(hgain > 0 && regainroom == 0) {
+			gain = 0 ;
+		}
 
-		if ( hgain > 0 ) {
+		if(hgain > 0) {
 
-			fGain = modf(((double)(hgain)/(double)(NUMBER_REGEN_EVENTS)), &dum );
+			fGain = modf(((double)(hgain)/(double)(NUMBER_REGEN_EVENTS)), &dum);
 			fGain = fGain*(double)(r_mult) ;
-			gain = (int)( dum );
-			rnd =  ( rand()% r_mult) ;
+			gain = (int)(dum);
+			rnd = (rand()% r_mult) ;
 			/* Here we add a line that on average helps to take
 			   into account fractional gains */
 
-			if ( rnd < fGain ) { gain++ ; }
+			if(rnd < fGain) {
+				gain++ ;
+			}
 
 			/*     mudlog(LOG_CHECK, "Total hit_gain: %d \n\r", gain); */
 
-			GET_HIT(ch) = MIN( (GET_HIT(ch) +  gain), GET_MAX_HIT(ch));
-			if (GET_HIT(ch) < GET_MAX_HIT(ch)) {
+			GET_HIT(ch) = MIN((GET_HIT(ch) +  gain), GET_MAX_HIT(ch));
+			if(GET_HIT(ch) < GET_MAX_HIT(ch)) {
 				/* reenqueue the event. NOW AT A FIXED TIME */
 				GET_POINTS_EVENT(ch, REGEN_HIT) =
 					event_create(points_event, regen, time);
 			}
-			else if (GET_HIT(ch) > GET_MAX_HIT(ch)) {
+			else if(GET_HIT(ch) > GET_MAX_HIT(ch)) {
 				GET_HIT(ch) = GET_MAX_HIT(ch) ;
 			}
 		}
 
-		else if (hgain < 0) {
+		else if(hgain < 0) {
 
 			gain = hgain/NUMBER_REGEN_EVENTS ;
 
-			if( IS_AFFECTED(ch,AFF_POISON)) {
-				if( damage( ch, ch, -1*gain, SPELL_POISON, 5 ) == VictimDead )
-				{ return 0; }
+			if(IS_AFFECTED(ch,AFF_POISON)) {
+				if(damage(ch, ch, -1*gain, SPELL_POISON, 5) == VictimDead) {
+					return 0;
+				}
 			}
 			else if(IS_AFFECTED2(ch,AFF2_HEAT_STUFF)) {
-				if( damage( ch, ch, -1*gain, SPELL_HEAT_STUFF, 5 ) == VictimDead )
-				{ return 0; }
+				if(damage(ch, ch, -1*gain, SPELL_HEAT_STUFF, 5) == VictimDead) {
+					return 0;
+				}
 			}
 			else {
-				if( damage( ch, ch, -1*gain, TYPE_SUFFERING, 5 ) == VictimDead )
-				{ return 0; }
+				if(damage(ch, ch, -1*gain, TYPE_SUFFERING, 5) == VictimDead) {
+					return 0;
+				}
 			}
 		}
 
-		else if ( hgain == 0 ) {
+		else if(hgain == 0) {
 
-			GET_HIT(ch) = MIN( GET_HIT(ch), GET_MAX_HIT(ch) );
-			if (GET_HIT(ch) < GET_MAX_HIT(ch) )
+			GET_HIT(ch) = MIN(GET_HIT(ch), GET_MAX_HIT(ch));
+			if(GET_HIT(ch) < GET_MAX_HIT(ch))
 				GET_POINTS_EVENT(ch, REGEN_HIT) =
 					event_create(points_event, regen, time);
 		}
-		else if (event_obj) {
+		else if(event_obj) {
 			free(event_obj);
 		}
 
-		if (GET_POS(ch) <= POSITION_STUNNED)
-		{ update_pos(ch); }
+		if(GET_POS(ch) <= POSITION_STUNNED) {
+			update_pos(ch);
+		}
 		break;
 
 	case REGEN_MANA:
 
-		fGain = modf(((double)(mana_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
+		fGain = modf(((double)(mana_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum);
 		fGain = fGain*(double)(r_mult) ;
-		gain = (int)( dum );
-		rnd =  ( rand()% r_mult) ;
+		gain = (int)(dum);
+		rnd = (rand()% r_mult) ;
 		/* Here we add a line that on average helps to take
 		   into account fractional gains */
 
-		if ( rnd < fGain ) { gain++ ; }
-		if(gain > 0 && regainroom == 0) { gain = 0 ; }
+		if(rnd < fGain) {
+			gain++ ;
+		}
+		if(gain > 0 && regainroom == 0) {
+			gain = 0 ;
+		}
 
 		GET_MANA(ch) = MIN((GET_MANA(ch) + gain), GET_MAX_MANA(ch));
 
-		if (GET_MANA(ch) < GET_MAX_MANA(ch)) {
+		if(GET_MANA(ch) < GET_MAX_MANA(ch)) {
 			/* reenqueue the event */
 			GET_POINTS_EVENT(ch, REGEN_MANA) =
 				event_create(points_event, regen, time);
 		}
-		else if (GET_MANA(ch) > GET_MAX_MANA(ch)) {
+		else if(GET_MANA(ch) > GET_MAX_MANA(ch)) {
 			GET_MANA(ch) = GET_MAX_MANA(ch) ;
 		}
-		else if (event_obj) {
+		else if(event_obj) {
 			free(event_obj);
 		}
 		break;
 
 	case REGEN_MOVE:
-		fGain = modf(((double)(move_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum );
+		fGain = modf(((double)(move_gain(ch))/(double)(NUMBER_REGEN_EVENTS)), &dum);
 		fGain = fGain*(double)(r_mult) ;
-		gain = (int)( dum );
-
-		rnd =  ( rand()% r_mult) ;
+		gain = (int)(dum);
+		rnd = (rand()% r_mult) ;
 		/* Here we add a line that on average helps to take
 		   into account fractional gains */
 
-		if ( rnd < fGain ) { gain++ ; }
-		if(gain > 0 && regainroom == 0) { gain = 0 ; }
+		if(rnd < fGain) {
+			gain++ ;
+		}
+		if(gain > 0 && regainroom == 0) {
+			gain = 0 ;
+		}
 
 		GET_MOVE(ch) = MIN((GET_MOVE(ch) + gain), GET_MAX_MOVE(ch));
-		if (GET_MOVE(ch) < GET_MAX_MOVE(ch)) {
+		if(GET_MOVE(ch) < GET_MAX_MOVE(ch)) {
 			/* reenqueue the event */
 			GET_POINTS_EVENT(ch, REGEN_MOVE) =
 				event_create(points_event, regen, time);
 		}
-		else if (GET_MOVE(ch) > GET_MAX_MOVE(ch)) {
+		else if(GET_MOVE(ch) > GET_MAX_MOVE(ch)) {
 			GET_MOVE(ch) = GET_MAX_MOVE(ch) ;
 		}
-		else if (event_obj) {
+		else if(event_obj) {
 			free(event_obj);
 		}
 		break;
@@ -274,10 +289,9 @@ EVENTFUNC(points_event) {
 void alter_hit(struct char_data* ch, int amount) {
 	struct regen_event_obj* regen;
 	long time;
-	int gain;
 	time = REGEN_EVENTS_DELAY;
 
-	if ( amount > 0) {
+	if(amount > 0) {
 		GET_HIT(ch) = GET_HIT(ch) - amount;
 	}
 	else {
@@ -290,8 +304,8 @@ void alter_hit(struct char_data* ch, int amount) {
 	     return;
 	  if (GET_HIT(ch) <= HIT_INCAP)
 	     return; */
-	if (GET_HIT(ch) < GET_MAX_HIT(ch) && !GET_POINTS_EVENT(ch, REGEN_HIT) /* &&
-      !IS_AFFECTED(ch,AFF_POISON) && !IS_AFFECTED2( ch, AFF2_HEAT_STUFF) */ ) {
+	if(GET_HIT(ch) < GET_MAX_HIT(ch) && !GET_POINTS_EVENT(ch, REGEN_HIT) /* &&
+      !IS_AFFECTED(ch,AFF_POISON) && !IS_AFFECTED2( ch, AFF2_HEAT_STUFF) */) {
 		CREATE(regen, struct regen_event_obj, 1);
 		regen->ch = ch;
 		regen->type = REGEN_HIT;
@@ -306,17 +320,16 @@ void alter_hit(struct char_data* ch, int amount) {
 void alter_mana(struct char_data* ch, int amount) {
 	struct regen_event_obj* regen;
 	long time;
-	int gain;
 	time = REGEN_EVENTS_DELAY;
 
 	GET_MANA(ch) = MIN(GET_MANA(ch) - amount, GET_MAX_MANA(ch));
 #ifdef NOEVENTS
 	return;
 #endif
-	if (!GET_POINTS_EVENT(ch, REGEN_MANA) && (GET_MANA(ch) < GET_MAX_MANA(ch))) {
+	if(!GET_POINTS_EVENT(ch, REGEN_MANA) && (GET_MANA(ch) < GET_MAX_MANA(ch))) {
 
 		/* make sure the character isn't dying */
-		if (GET_POS(ch) >= POSITION_STUNNED) {
+		if(GET_POS(ch) >= POSITION_STUNNED) {
 			CREATE(regen, struct regen_event_obj, 1);
 			regen->ch = ch;
 			regen->type = REGEN_MANA;
@@ -332,7 +345,6 @@ void alter_mana(struct char_data* ch, int amount) {
 void alter_move(struct char_data* ch, int amount) {
 	struct regen_event_obj* regen;
 	long time;
-	int gain;
 	time = REGEN_EVENTS_DELAY;
 
 	GET_MOVE(ch) = MIN(GET_MOVE(ch) - amount, GET_MAX_MOVE(ch));
@@ -340,10 +352,10 @@ void alter_move(struct char_data* ch, int amount) {
 	return;
 #endif
 
-	if (!GET_POINTS_EVENT(ch, REGEN_MOVE) && (GET_MOVE(ch) < GET_MAX_MOVE(ch))) {
+	if(!GET_POINTS_EVENT(ch, REGEN_MOVE) && (GET_MOVE(ch) < GET_MAX_MOVE(ch))) {
 
 		/* make sure the character isn't dying */
-		if (GET_POS(ch) >= POSITION_STUNNED) {
+		if(GET_POS(ch) >= POSITION_STUNNED) {
 			CREATE(regen, struct regen_event_obj, 1);
 			regen->ch = ch;
 			regen->type = REGEN_MOVE;

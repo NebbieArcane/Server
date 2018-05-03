@@ -2,22 +2,30 @@
 #ifndef __CONFIG_HPP
 #define __CONFIG_HPP
 #include <boost/preprocessor.hpp>
-#define MYSQL_USER "$ENV{MYSQL_USER}"
-#define MYSQL_PASSWORD "$ENV{MYSQL_PASSWORD}"
-#define MYSQL_HOST "$ENV{MYSQL_HOST}"
-#define MYSQL_DB "$ENV{MYSQL_DB}"
-#define SERVER_PORT $ENV{SERVER_PORT}
-#define env_$ENV{ENVIRONMENT}
-//cmakedefine SQLITE_VERSION 
+#cmakedefine MYSQL_USER "@MYSQL_USER@"
+#ifndef MYSQL_USER
+#define MYSQL_USER "root"
+#endif
+#cmakedefine MYSQL_PASSWORD "@MYSQL_PASSWORD@"
+#ifndef MYSQL_PASSWORD
+#define MYSQL_PASSWORD "secret"
+#endif
+#cmakedefine MYSQL_HOST "@MYSQL_HOST@"
+#ifndef MYSQL_HOST
+#define MYSQL_HOST "localhost"
+#endif
+#cmakedefine MYSQL_DB "@MYSQL_DB@"
+#ifndef MYSQL_DB
+#define MYSQL_DB "nebbie"
+#endif
+#define env_@ENVIRONMENT@
+//cmakedefine SQLITE_VERSION
 #cmakedefine SQLITE_VERSION "@SQLITE_VERSION@"
 #define HAS_SQLITE defined(SQLITE_VERSION)
 //cmakedefine MYSQL_VERSION
 #cmakedefine MYSQL_VERSION "@MYSQL_VERSION@"
 #define HAS_MYSQL defined(MYSQL_VERSION)
-#cmakedefine Boost_VERSION "@Boost_VERSION@"
-#ifdef Boost_VERSION
-#define BOOST_VERSION "@Boost_VERSION@"
-#endif
+// Boost is mandatory
 #define HAS_BOOST defined(BOOST_VERSION)
 #cmakedefine CURL_VERSION_STRING "@CURL_VERSION_STRING@"
 #define HAS_CURL defined(CURL_VERSION)
@@ -26,7 +34,7 @@
 #endif
 #define STAFF_EMAIL "staff@nebbie.it"
 #define HAS_LOG true
-#define VV_1(a,...) % a
+#define VV_1(a) % a
 #define VV_2(a,...) % a VV_1(__VA_ARGS__)
 #define VV_3(a,...) % a VV_2(__VA_ARGS__)
 #define VV_4(a,...) % a VV_3(__VA_ARGS__)
@@ -52,4 +60,7 @@
 #define SHOW (macro) #macro
 #define FALSE false
 #define TRUE true
+#define RELEASE_PORT 4000
+#define MASTER_PORT  RELEASE_PORT + 1
+#define DEVEL_PORT   RELEASE_PORT + 2
 #endif

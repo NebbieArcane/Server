@@ -14,8 +14,8 @@ void FailPara(struct char_data* victim, struct char_data* ch) ;
 void FailPoison(struct char_data* victim, struct char_data* ch) ;
 void FailSleep(struct char_data* victim, struct char_data* ch) ;
 void FailSnare(struct char_data* victim, struct char_data* ch) ;
-void SwitchStuff( struct char_data* giver, struct char_data* taker) ;
-void RelateMobToCaster( struct char_data* ch, struct char_data* mob ) ;
+void SwitchStuff(struct char_data* giver, struct char_data* taker) ;
+void RelateMobToCaster(struct char_data* ch, struct char_data* mob) ;
 } // namespace Alarmud
 #endif // __MAGICUTILS_HPP
 

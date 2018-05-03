@@ -20,36 +20,40 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
-#include "snew.hpp"
+#include "act.wizard.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "snew.hpp"
 namespace Alarmud {
 #define KEYLIB "keydir"
 #define BUFLEN 128
 bool TestMode=false;
 char hname[128];
-int  test=0;
 char* ggdup(const char* s) {
 	char* p=NULL;
-	if (s) {
+	if(s) {
 		p=(char*)calloc(strlen(s)+1,sizeof(char));
-		if (p) { strcpy(p,s); }
+		if(p) {
+			strcpy(p,s);
+		}
 	}
 	return(p);
 
 }
 
 char* HostName() {
-	if (!*hname) { gethostname(hname,127); }
+	if(!*hname) {
+		gethostname(hname,127);
+	}
 	return hname;
 }
 bool IsTest() {
 	return TestMode ;
 }
-bool SetTest(bool test) {
-	TestMode=test;
+bool SetTest(bool value) {
+	TestMode=value;
 	return TestMode;
 }
 
@@ -58,7 +62,7 @@ char* GetKey(char* db,char* chiave) {
 	char buf[BUFLEN];
 	FILE* ft;
 	sprintf(buf,"%s/%s%s",KEYLIB,lower(db),lower(chiave));
-	if ((ft=fopen(buf,"r")) ) {
+	if((ft=fopen(buf,"r"))) {
 		fclose(ft);
 		return(ggdup(lower(buf)));
 	}
@@ -71,7 +75,7 @@ int PutKey(char* db,char* chiave, char* value) {
 	int rc=1;
 	FILE* ft;
 	sprintf(buf,"%s/%s%s",KEYLIB,lower(db),lower(chiave));
-	if ((ft=fopen(buf,"w")) ) {
+	if((ft=fopen(buf,"w"))) {
 		rc=fputs(lower(value),ft);
 	}
 	fclose(ft);
@@ -81,55 +85,6 @@ void DelKey(char* db,char* chiave) {
 	char buf[BUFLEN];
 	sprintf(buf,"%s/%s%s",KEYLIB,lower(db),lower(chiave));
 	unlink(buf);
-	return;
-}
-int IsInString(char* nuova,char* vecchia) {
-	return (int) strstr(vecchia,lower(nuova));
-}
-void Squeeze(char* riga) {
-	char* p,*s;
-	int skip=0;
-	printf("p%d.%s\n",strlen(riga),riga);
-	for (p=riga,s=riga; *p; p++) {
-		*s=*p;
-		if (*p!=' ')
-		{ skip=0; }
-		if (!skip)
-		{ s++; }
-		if (*p==' ')
-		{ skip=1; }
-	}
-	*s='\0';
-	printf("d%d.%s\n",strlen(riga),riga);
-	realloc(riga,strlen(riga)+1);
-}
-
-void RemoveFromString(char* nuova, char* vecchia) {
-	char* p;
-	int l,i;
-	p=strstr(vecchia,lower(nuova));
-	if (p) {
-		for (i=0,l=strlen(nuova); i<l; p++,i++) {
-			*p=' ';
-		}
-		printf("RM:Ecco cosa passo a squeeze: %s\n",vecchia);
-		Squeeze(vecchia);
-	}
-}
-
-void AddToString(char* nuova,char* old) {
-	int l=0;
-	printf("%d %d\n",strlen(nuova),strlen(old));
-	printf("AD1%s\n",old);
-	RemoveFromString(nuova,old);
-	printf("AD2%s\n",old);
-	l=strlen(old)+strlen(nuova)+2;
-	realloc(old,l);
-	printf("AD3%s\n",old);
-	strcat(old," ");
-	strcat(old,nuova);
-	printf("AD:Ecco cosa passo a squeeze: %s\n",old);
-	Squeeze(old);
 	return;
 }
 int GetStat(struct char_data* ch, int stat) {
@@ -266,7 +221,7 @@ int SetStat(struct char_data* ch,int stat,int value)
 	int nuova=0;
 	int xpcost=1;
 	nuova=value;
-	if (nuova>MaxStat(ch,stat) ) {
+	if(nuova>MaxStat(ch,stat)) {
 		return(0);
 	}
 
@@ -300,36 +255,50 @@ int GetTargetType(struct char_data* ch,struct char_data* target,int ostility) {
 	struct char_data* t = target;
 	char* name=nullptr;
 	int tt=gtt_IS_NONE;
-	if (!ch || !t) { return(tt); }
-	if (ch == t) { return(gtt_IS_SELF); }
-	if (in_group(ch,t)) { tt=gtt_IS_FRIEND; }
-	else if (IS_POLY(t)) { tt=gtt_IS_POLY; }
-	else if (IS_PC(t)) { tt=gtt_IS_PLAYER; }
-	if (IS_NPC(t)) {
+	if(!ch || !t) {
+		return(tt);
+	}
+	if(ch == t) {
+		return(gtt_IS_SELF);
+	}
+	if(in_group(ch,t)) {
+		tt=gtt_IS_FRIEND;
+	}
+	else if(IS_POLY(t)) {
+		tt=gtt_IS_POLY;
+	}
+	else if(IS_PC(t)) {
+		tt=gtt_IS_PLAYER;
+	}
+	if(IS_NPC(t)) {
 		name=t->player.short_descr;
 	}
 	else {
 		name=t->player.name;
 	}
-	if (name) {
-		if (ch->specials.supporting && *ch->specials.supporting) {
-			if (!(strcasecmp(ch->specials.supporting,name))) {
+	if(name) {
+		if(ch->specials.supporting && *ch->specials.supporting) {
+			if(!(strcasecmp(ch->specials.supporting,name))) {
 				tt=gtt_IS_SUPPORTED;
 			}
 		}
 
-		if (ch->specials.bodyguarding && *ch->specials.bodyguarding) {
-			if (!(strcasecmp(ch->specials.bodyguarding,name))) {
+		if(ch->specials.bodyguarding && *ch->specials.bodyguarding) {
+			if(!(strcasecmp(ch->specials.bodyguarding,name))) {
 				tt=gtt_IS_BODYGUARDED;
 			}
 		}
 	}
-	if (in_clan(ch,t)) { tt=gtt_IS_CLAN; }
-	if (ch->specials.fighting && ch->specials.fighting==t) {
-		if(tt < gtt_IS_FRIEND)
-		{ tt=gtt_IS_ENEMY; }
-		else
-		{ tt=gtt_IS_PLAYER; }
+	if(in_clan(ch,t)) {
+		tt=gtt_IS_CLAN;
+	}
+	if(ch->specials.fighting && ch->specials.fighting==t) {
+		if(tt < gtt_IS_FRIEND) {
+			tt=gtt_IS_ENEMY;
+		}
+		else {
+			tt=gtt_IS_PLAYER;
+		}
 	}
 	return(tt);
 }
@@ -345,7 +314,7 @@ int modifier[]= {
 	30,
 	30
 };
-char* targets[]= {
+const char* targets[]= {
 	"none",
 	"self",
 	"enemy",
@@ -362,15 +331,22 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 	long targettype;
 	long ftargettype=0;
 	struct char_data* fighted;
-	char minibuf[50];
-	if (!ch ) { return; }
-	if (!IS_PC(ch)) { return; }
-	if (!victim) { victim=ch; }
+	if(!ch) {
+		return;
+	}
+	if(!IS_PC(ch)) {
+		return;
+	}
+	if(!victim) {
+		victim=ch;
+	}
 	fighted=victim->specials.fighting;
 
-	if (ch == victim) { return; } /* ACIDUS 2003 le skill su se stessi non cambiano align */
+	if(ch == victim) {
+		return;    /* ACIDUS 2003 le skill su se stessi non cambiano align */
+	}
 
-	if (ch != victim) {
+	if(ch != victim) {
 		targettype=GetTargetType(ch,victim,ostility);
 		ftargettype=GetTargetType(ch,fighted,ostility);
 	}
@@ -378,16 +354,24 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		targettype=gtt_IS_SELF;
 		ftargettype=gtt_IS_SELF;
 	}
-	if (victim and victim->nMagicNumber!= CHAR_VALID_MAGIC) return;
-	if (fighted and fighted->nMagicNumber!= CHAR_VALID_MAGIC) return;
-	if (ch and ch->nMagicNumber!= CHAR_VALID_MAGIC) return;
+	if(victim and victim->nMagicNumber!= CHAR_VALID_MAGIC) {
+		return;
+	}
+	if(fighted and fighted->nMagicNumber!= CHAR_VALID_MAGIC) {
+		return;
+	}
+	if(ch and ch->nMagicNumber!= CHAR_VALID_MAGIC) {
+		return;
+	}
 
 	/* Verifica eventuale necessita' di inversione
 	 * L'inversione viene valutata solo se ostility < 0
 	 * In caso di azioni aggressive conta sempre il target reale
 	 * */
-	if (ostility >0) { ftargettype=targettype; }
-	if (ftargettype>targettype) {
+	if(ostility >0) {
+		ftargettype=targettype;
+	}
+	if(ftargettype>targettype) {
 
 		/* Sto facendo qualcosa a qualcuno che combatte contro un personaggio
 		 * cui sono legato da vincoli superiori.
@@ -396,7 +380,7 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		ostility=-ostility;
 		targettype=ftargettype;
 	}
-	else if (targettype>ftargettype) {
+	else if(targettype>ftargettype) {
 		/* Sto facendo qualcosa a qualcuno che combatte contro un personaggio
 		 * cui sono legato da vincoli di amicizia inferiori
 		 * Aggiusto targettype - se due personaggi nel mio gruppo combattono
@@ -411,18 +395,24 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 		 * */
 	}
 
-	if (ostility < 0 )
-	{ alignmod=ostility; }
-	else
-	{ alignmod=modifier[targettype]*((ostility>0)?+1:-1); }
+	if(ostility < 0) {
+		alignmod=ostility;
+	}
+	else {
+		alignmod=modifier[targettype]*((ostility>0)?+1:-1);
+	}
 	/*   alignmod+=ostility;*/
-	if (!alignmod) { return; }
-	if (targettype > gtt_IS_NONE) {
-		if (number(1,3)==2) {
-			if (alignmod<0)
-			{ send_to_char("Ti senti meritevole\n",ch); }
-			else
-			{ send_to_char("Ti senti una Jena\n",ch); }
+	if(!alignmod) {
+		return;
+	}
+	if(targettype > gtt_IS_NONE) {
+		if(number(1,3)==2) {
+			if(alignmod<0) {
+				send_to_char("Ti senti meritevole\n",ch);
+			}
+			else {
+				send_to_char("Ti senti una Jena\n",ch);
+			}
 		}
 	}
 
@@ -433,7 +423,7 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 }
 void ActionAlignMod(struct char_data* ch,struct char_data* victim,int cmd) {
 	int ostility=0;
-	switch( cmd) {
+	switch(cmd) {
 
 	case CMD_BACKSTAB:
 		ostility=5;
@@ -468,24 +458,24 @@ void ActionAlignMod(struct char_data* ch,struct char_data* victim,int cmd) {
 
 }
 
-char* GetTargetTypeString(int target) {
-	if (target > gtt_LAST) { target=0; }
+const char* GetTargetTypeString(int target) {
+	if(target > gtt_LAST) {
+		target=0;
+	}
 	return(targets[target]);
 }
 
 int GetNum(struct char_data* pMob,int pos) {
-	char* p;
+	const char* p;
 	char appo[256];
-	int rval;
 	for(p=mob_index[pMob->nr].specparms; pos>0; pos--) {
 		p=one_argument(p,appo);
 	}
 	return(atoi(appo));
 }
 int GetNumR(struct room_data* pRoom,int pos) {
-	char* p;
+	const char* p;
 	char appo[256];
-	int rval;
 	for(p=real_roomp(pRoom->number)->specparms; pos>0; pos--) {
 		p=one_argument(p,appo);
 	}
@@ -496,17 +486,15 @@ int GetNumR(struct room_data* pRoom,int pos) {
 struct char_data* CloneChar(struct char_data* ch, long nroom) {
 
 	int i,j;
-	long tmp, tmp2, tmp3, bc=0;
 	struct char_data* mob;
 	struct obj_data* ocopy;
-	char letter;
 	char buf[512];
 
 	CREATE(mob, struct char_data, 1);
 
-	if (!mob) {
-		mudlog( LOG_SYSERR, "Cannot create mob?! clonechar");
-		return(FALSE);
+	if(!mob) {
+		mudlog(LOG_SYSERR, "Cannot create mob?! clonechar");
+		return nullptr;
 	}
 
 	clear_char(mob);
@@ -534,8 +522,9 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	mob->specials.alignment = ch->specials.alignment*-1;
 
 	mob->player.iClass =ch->player.iClass;
-	for (i=0; i<ABS_MAX_CLASS; i++)
-	{ (mob)->player.level[(i)]=(ch)->player.level[i]; }
+	for(i=0; i<ABS_MAX_CLASS; i++) {
+		(mob)->player.level[(i)]=(ch)->player.level[i];
+	}
 
 	mob->abilities   =  ch->abilities;
 
@@ -552,10 +541,11 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	mob->susc = ch->susc;
 	mob->player.time = ch->player.time;
 
-	for (i = 0; i < 3; i++)
-	{ GET_COND(mob, i) = -1; }
+	for(i = 0; i < 3; i++) {
+		GET_COND(mob, i) = -1;
+	}
 
-	for (i = 0; i < 5; i++)
+	for(i = 0; i < 5; i++)
 		mob->specials.apply_saving_throw[i] =
 			MAX(20-50, 2);
 	mob->points.gold = 0;
@@ -572,14 +562,15 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 
 	mob->tmpabilities = mob->abilities;
 
-	for (i = 0; i < MAX_WEAR; i++) /* Initialisering Ok */
-	{ mob->equipment[i] = 0; }
+	for(i = 0; i < MAX_WEAR; i++) { /* Initialisering Ok */
+		mob->equipment[i] = 0;
+	}
 	/* clone EQ equiped */
-	if (ch->equipment) {
-		for (j=0; j<MAX_WEAR; j++) {
-			if (ch->equipment[j]) {
+	if(ch->equipment) {
+		for(j=0; j<MAX_WEAR; j++) {
+			if(ch->equipment[j]) {
 				/* clone mob->equipment[j] */
-				if( ( ocopy = (struct obj_data*)clone_obj(ch->equipment[j] ) ) != NULL ) {
+				if((ocopy = (struct obj_data*)clone_obj(ch->equipment[j])) != NULL) {
 					if(ch->equipment[j]->contains) {
 						clone_container_obj(ocopy,ch->equipment[j]);
 					}
@@ -609,13 +600,14 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 
 	mob->specials.tick = mob_tick_count++;
 
-	if( mob_tick_count == TICK_WRAP_COUNT )
-	{ mob_tick_count=0; }
+	if(mob_tick_count == TICK_WRAP_COUNT) {
+		mob_tick_count=0;
+	}
 	mob_count++;
 	char_to_room(mob,nroom);
-	mudlog( LOG_CHECK,
-			"CLoned %s (ADDR: %p, magic %d, next %p, #mobs %ld).",
-			GET_NAME( mob ), mob, mob->nMagicNumber, mob->next, mob_count );
+	mudlog(LOG_CHECK,
+		   "CLoned %s (ADDR: %p, magic %d, next %p, #mobs %ld).",
+		   GET_NAME(mob), mob, mob->nMagicNumber, mob->next, mob_count);
 	return(mob);
 }
 #define iif(p1,p2,p3)   (p1?p2:p3)
@@ -632,7 +624,7 @@ float GetCharBonusIndex(struct char_data* ch) {
 	for(i=0; i<MAX_WEAR; i++) {
 		thismod=0;
 		item=ch->equipment[i];
-		if (item) {
+		if(item) {
 			for(j=0; j<MAX_OBJ_AFFECT; j++) {
 
 				mod=item->affected[j].modifier;
@@ -808,26 +800,31 @@ float GetCharBonusIndex(struct char_data* ch) {
 	}
 	return indice;
 }
-void do_setalign(struct char_data* ch,char* argument,int cmd) {
+ACTION_FUNC(do_setalign) {
 	long oldalign;
 	long gold;
 	gold=MAX(0,(GetMaxLevel(ch)-1) * 20000 * HowManyClasses(ch));
-	if (GET_EXP(ch)< gold) {
+	if(GET_EXP(ch)< gold) {
 		send_to_char("Non hai abbastanza esperienza per cambiare align\n\r",ch);
 		send_to_char("Gli allineamenti possibili sono solo Evil, Neutral e Good\n\r",ch);
 	}
 	else {
 		oldalign=GET_ALIGNMENT(ch);
-		if (!strcasecmp(argument,"evil"))
-		{ GET_ALIGNMENT(ch)=-1000; }
-		else if (!strcasecmp(argument,"neutral"))
-		{ GET_ALIGNMENT(ch)=0; }
-		else if (!strcasecmp(argument,"good"))
-		{ GET_ALIGNMENT(ch)=1000; }
-		else
-		{ send_to_char("Gli allineamenti possibili sono solo Evil, Neutral e Good\n\r",ch); }
-		if (oldalign != GET_ALIGNMENT(ch))
-		{ GET_EXP(ch)-=gold; }
+		if(!strcasecmp(arg,"evil")) {
+			GET_ALIGNMENT(ch)=-1000;
+		}
+		else if(!strcasecmp(arg,"neutral")) {
+			GET_ALIGNMENT(ch)=0;
+		}
+		else if(!strcasecmp(arg,"good")) {
+			GET_ALIGNMENT(ch)=1000;
+		}
+		else {
+			send_to_char("Gli allineamenti possibili sono solo Evil, Neutral e Good\n\r",ch);
+		}
+		if(oldalign != GET_ALIGNMENT(ch)) {
+			GET_EXP(ch)-=gold;
+		}
 	}
 	return;
 }

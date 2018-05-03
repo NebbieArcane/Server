@@ -15,33 +15,16 @@ namespace Alarmud {
  * lucertole di Benem
  * **********************************************************************/
 
-int Lizardman( struct char_data* ch, int cmd, char* arg,
-			   struct char_data* mob, int type );
-int lizardman_shaman( struct char_data* ch, int cmd, char* arg,
-					  struct char_data* mob, int type );
-int village_woman( struct char_data* ch, int cmd, char* arg,
-				   struct char_data* mob, int type );
-
-int snake_avt( struct char_data* ch, int cmd, char* arg,
-			   struct char_data* mob, int type );
-
-int snake_avt2( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-
-int virgin_sac( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-
-int snake_guardian( struct char_data* ch, int cmd, char* arg,
-					struct char_data* mob, int type );
-
-int CapannaVillaggio( struct char_data* pChar, int iCmd, char* szArgument,
-					  struct room_data* pRoom, int iType );
-
-int ColloSerpente( struct char_data* pChar, int iCmd, char* szArgument,
-				   struct room_data* pRoom, int iType );
-
-int Rampicante( struct char_data* pChar, int iCmd, char* szArgument,
-				struct room_data* pRoom, int iType );
+MOBSPECIAL_FUNC(Lizardman);
+MOBSPECIAL_FUNC(lizardman_shaman);
+MOBSPECIAL_FUNC(village_woman);
+MOBSPECIAL_FUNC(snake_avt);
+MOBSPECIAL_FUNC(snake_avt2);
+MOBSPECIAL_FUNC(virgin_sac);
+MOBSPECIAL_FUNC(snake_guardian);
+ROOMSPECIAL_FUNC(CapannaVillaggio);
+ROOMSPECIAL_FUNC(ColloSerpente);
+ROOMSPECIAL_FUNC(Rampicante);
 
 
 #endif

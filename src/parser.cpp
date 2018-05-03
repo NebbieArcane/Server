@@ -41,7 +41,7 @@ byte HashTable[256];
 
 
 /* Adds a command to the Command List radix. */
-void AddCommand(char* name, pCommandFunc func, int number, int min_pos, int min_lev) {
+void AddCommand(const char* name, command_func func, int number, int min_pos, int min_lev) {
 	NODE* n;
 	int len, radix;
 
@@ -56,8 +56,8 @@ void AddCommand(char* name, pCommandFunc func, int number, int min_pos, int min_
 	n->previous = NULL;
 	n->log = 0;
 
-	radix = HashTable[ (int)(*name) ];
-	len = strlen( name );
+	radix = HashTable[(int)(*name) ];
+	len = strlen(name);
 
 	AddNodeTail(n, len, radix);
 }
@@ -70,12 +70,15 @@ void GenerateHash() {
 	register int i;
 
 	for(i = 0; i <= 255; i++)
-		if((i >= 'a') && (i <= 'z'))
-		{ HashTable[i] = i - MAGIC; }
-		else if((i >= 'A') && (i <= 'Z'))
-		{ HashTable[i] = i - (MAGIC - 32); }
-		else
-		{ HashTable[i] = 0; }
+		if((i >= 'a') && (i <= 'z')) {
+			HashTable[i] = i - MAGIC;
+		}
+		else if((i >= 'A') && (i <= 'Z')) {
+			HashTable[i] = i - (MAGIC - 32);
+		}
+		else {
+			HashTable[i] = 0;
+		}
 }
 
 
@@ -101,8 +104,9 @@ void AddNodeTail(NODE* n, int length, int radix) {
 		n->previous = i;
 		radix_head[radix].number++;
 		n->next = NULL;
-		if(radix_head[radix].max_len < length)
-		{ radix_head[radix].max_len = length; }
+		if(radix_head[radix].max_len < length) {
+			radix_head[radix].max_len = length;
+		}
 	}
 }
 
@@ -113,13 +117,14 @@ void AddNodeTail(NODE* n, int length, int radix) {
 ** NOTE: This uses partial matching, change strncmp to strcmp for full matching
 ** Return value is the node if it exists, or NULL if it does not.
 */
-NODE* SearchForNodeByName(NODE* head, char* name, int len) {
+NODE* SearchForNodeByName(NODE* head, const char* name, int len) {
 	register NODE* i;
 
 	i = head;
 	while(i) {
-		if(!(strncmp(i->name, name, len)))
-		{ return(i); }
+		if(!(strncmp(i->name, name, len))) {
+			return(i);
+		}
 		i = i->next;
 	}
 
@@ -147,28 +152,31 @@ void InitRadix() {
 /* This will do all of the validation and search for a NODE by name.
 ** Will return a pointer to the NODE if it exists, NULL if it doesn't.
 */
-NODE* FindValidCommand(char* name) {
+NODE* FindValidCommand(const char* name) {
 	register int len;
 	register int radix;
 
-	radix = HashTable[ (int)(*name) ];
+	radix = HashTable[(int)(*name) ];
 	len = strlen(name);
 
-	if(radix_head[radix].number && len <= radix_head[radix].max_len)
-	{ return(SearchForNodeByName(radix_head[radix].next, name, len)); }
+	if(radix_head[radix].number && len <= radix_head[radix].max_len) {
+		return(SearchForNodeByName(radix_head[radix].next, name, len));
+	}
 
 	return(NULL);
 }
 
 /* some useful&stupid functions */
 
-int FindCommandNumber(char* cmd) {
+int FindCommandNumber(const char* cmd) {
 	int     i;
 	NODE*    n;
 	for(i=0; i<27; i++)
 		if(radix_head[i].number)
 			for(n=radix_head[i].next; n; n=n->next)
-				if(strcmp(cmd,n->name)==0) { return n->number; }
+				if(strcmp(cmd,n->name)==0) {
+					return n->number;
+				}
 	return -1;
 }
 
@@ -178,7 +186,9 @@ char* FindCommandName(int num) {
 	for(i=0; i<27; i++)
 		if(radix_head[i].number)
 			for(n=radix_head[i].next; n; n=n->next)
-				if(n->number==num) { return n->name; }
+				if(n->number==num) {
+					return n->name;
+				}
 	return NULL;
 }
 

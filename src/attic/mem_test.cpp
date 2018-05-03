@@ -15,11 +15,11 @@
 #include "signals.hpp"
 #include "structs.hpp"
 #include "utility.hpp"
-void* ggcalloc (unsigned int nelem, unsigned int size, char* file_name, int line_number);
-void* ggmalloc (unsigned int size, char* file_name, int line_number) {
+void* ggcalloc(unsigned int nelem, unsigned int size, char* file_name, int line_number);
+void* ggmalloc(unsigned int size, char* file_name, int line_number) {
 	void* ptr=NULL;
 	SetLine(file_name,line_number);
-	ptr = ggcalloc (1,size,file_name,line_number);
+	ptr = ggcalloc(1,size,file_name,line_number);
 	/*
 	 *  SetLine(file_name,-line_number);
 	 *  if (! ptr)
@@ -30,14 +30,14 @@ void* ggmalloc (unsigned int size, char* file_name, int line_number) {
 
 }
 
-void* ggcalloc (unsigned int nelem, unsigned int size, char* file_name, int line_number) {
+void* ggcalloc(unsigned int nelem, unsigned int size, char* file_name, int line_number) {
 	void* ptr=NULL;
 	SetLine(file_name,line_number);
-	ptr = calloc (nelem, size);
+	ptr = calloc(nelem, size);
 
 	SetLine(file_name,-line_number);
 
-	if (! ptr) {
+	if(! ptr) {
 		mudlog(LOG_ERROR,"Calloc failed in %s at %d",file_name,line_number);
 	}
 	fflush(NULL);
@@ -45,118 +45,131 @@ void* ggcalloc (unsigned int nelem, unsigned int size, char* file_name, int line
 
 }
 
-void* ggrealloc (void* in_ptr, unsigned int size, char* file_name, int line_number) {
+void* ggrealloc(void* in_ptr, unsigned int size, char* file_name, int line_number) {
 	void* out_ptr=NULL;
 	SetLine(file_name,line_number);
-	out_ptr = realloc (in_ptr, size);
+	out_ptr = realloc(in_ptr, size);
 	SetLine(file_name,-line_number);
 
-	if (! out_ptr) {
+	if(! out_ptr) {
 		mudlog(LOG_ERROR,"realloc failed in %s at %d",file_name,line_number);
 	}
 	return (out_ptr);
 
 }
 
-void ggfree (void* ptr, const char* file_name, int line_number) {
+void ggfree(void* ptr, const char* file_name, int line_number) {
 	SetLine(file_name,line_number);
-	free (ptr);
+	free(ptr);
 	SetLine(file_name,-line_number);
 
 }
 
-void ggcfree (void* ptr, const char* file_name, int line_number) {
+void ggcfree(void* ptr, const char* file_name, int line_number) {
 	SetLine(file_name,line_number);
 #ifdef CYGWIN
-	free (ptr);
+	free(ptr);
 #else
-	cfree (ptr);
+	cfree(ptr);
 #endif
 	SetLine(file_name,-line_number);
 
 }
 
-char* ggstrdup (char* s1, char* file_name, int line_number) {
+char* ggstrdup(char* s1, char* file_name, int line_number) {
 	char* ptr=NULL;
 	SetLine(file_name,line_number);
 
-	ptr = (char*) strdup (s1);
+	ptr = (char*) strdup(s1);
 	SetLine(file_name,-line_number);
 
-	if (! ptr) {
+	if(! ptr) {
 		mudlog(LOG_ERROR,"strdup failed in %s at %d",file_name,line_number);
 	}
 	return (ptr);
 
 }
-char* ggstrtok (char* s,const char* delim, char* file_name, int line_number) {
+char* ggstrtok(char* s,const char* delim, char* file_name, int line_number) {
 	char* ptr=NULL;
 	SetLine(file_name,line_number);
 	ptr= (char*) strtok(s,delim);
 	SetLine(file_name,-line_number);
 	return (ptr);
 }
-int ggstrcmp (const char* s1,const char* s2,char* file_name, int line_number) {
+int ggstrcmp(const char* s1,const char* s2,char* file_name, int line_number) {
 	int res=0;
 	SetLine(file_name,line_number);
-	if (s1 && s2 )
-	{ res=(strcmp(s1,s2)); }
-	else if (s1)
-	{ res=-1; }
-	else
-	{ res=1; }
+	if(s1 && s2) {
+		res=(strcmp(s1,s2));
+	}
+	else if(s1) {
+		res=-1;
+	}
+	else {
+		res=1;
+	}
 	SetLine(file_name,-line_number);
 	return(res);
 
 }
-int ggstrncmp (const char* s1,const char* s2,size_t n,char* file_name, int line_number) {
+int ggstrncmp(const char* s1,const char* s2,size_t n,char* file_name, int line_number) {
 	int res=0;
 	SetLine(file_name,line_number);
-	if (s1 && s2 )
-	{ res=(strncmp(s1,s2,n)); }
-	else if (s1)
-	{ res=-1; }
-	else
-	{ res=1; }
+	if(s1 && s2) {
+		res=(strncmp(s1,s2,n));
+	}
+	else if(s1) {
+		res=-1;
+	}
+	else {
+		res=1;
+	}
 	SetLine(file_name,-line_number);
 	return(res);
 }
-int ggstrcasecmp (const char* s1,const char* s2, char* file_name, int line_number) {
+int ggstrcasecmp(const char* s1,const char* s2, char* file_name, int line_number) {
 	int res=0;
 	SetLine(file_name,line_number);
-	if (s1 && s2 )
-	{ res=(strcasecmp(s1,s2)); }
-	else if (s1)
-	{ res=-1; }
-	else
-	{ res=1; }
+	if(s1 && s2) {
+		res=(strcasecmp(s1,s2));
+	}
+	else if(s1) {
+		res=-1;
+	}
+	else {
+		res=1;
+	}
 	SetLine(file_name,-line_number);
 	return(res);
 
 }
-int ggstrncasecmp (const char* s1,const char* s2, size_t n,char* file_name, int line_number) {
+int ggstrncasecmp(const char* s1,const char* s2, size_t n,char* file_name, int line_number) {
 	int res=0;
 	SetLine(file_name,line_number);
-	if (s1 && s2 )
-	{ res=(strncasecmp(s1,s2,n)); }
-	else if (s1)
-	{ res=-1; }
-	else
-	{ res=1; }
+	if(s1 && s2) {
+		res=(strncasecmp(s1,s2,n));
+	}
+	else if(s1) {
+		res=-1;
+	}
+	else {
+		res=1;
+	}
 	SetLine(file_name,-line_number);
 	return(res);
 }
 char* ggstrcpy(char* dest,  const char* src,char* file_name, int line_number) {
 	SetLine(file_name,line_number);
 	char* ptr=NULL;
-	if (dest) {
+	if(dest) {
 
-		if (src) {
+		if(src) {
 			ptr=(char*)strcpy(dest,src);
 		}
 	}
-	else
-	{ mudlog(LOG_ERROR,"Dest NULLL in strcpy in %s at %d",file_name,line_number); }
+	else {
+		mudlog(LOG_ERROR,"Dest NULLL in strcpy in %s at %d",file_name,line_number);
+	}
 
 	SetLine(file_name,-line_number);
 	return (ptr);
@@ -164,9 +177,10 @@ char* ggstrcpy(char* dest,  const char* src,char* file_name, int line_number) {
 char* ggstrncpy(char* dest,  const char* src, size_t n,char* file_name,int line_number) {
 	SetLine(file_name,line_number);
 	char* ptr=NULL;
-	if (dest) {
-		if (src)
-		{ ptr=(char*) strncpy(dest,src,n); }
+	if(dest) {
+		if(src) {
+			ptr=(char*) strncpy(dest,src,n);
+		}
 	}
 	else {
 		mudlog(LOG_ERROR,"Dest NULL in strncpy in %s at %d",file_name,line_number);
@@ -174,13 +188,13 @@ char* ggstrncpy(char* dest,  const char* src, size_t n,char* file_name,int line_
 	SetLine(file_name,-line_number);
 	return (char*) ptr;
 }
-char* ggstrcat (char* dest, const char* src,char* file_name,int line_number) {
+char* ggstrcat(char* dest, const char* src,char* file_name,int line_number) {
 	SetLine(file_name,line_number);
 	char* ptr=NULL;
 	ptr=(char*)strcat(dest,src);
 	return(ptr);
 }
-char* ggstrncat (char* dest, const char* src,size_t n,char* file_name,int line_number) {
+char* ggstrncat(char* dest, const char* src,size_t n,char* file_name,int line_number) {
 	SetLine(file_name,line_number);
 	char* ptr=NULL;
 	ptr=(char*)strncat(dest,src,n);

@@ -11,7 +11,7 @@
 namespace Alarmud {
 namespace G {
 <TMPL_LOOP LOOP_ENUMS>
-<TMPL_VAR ENUM ESCAPE="LOWERCASE"> encode_<TMPL_VAR ENUM ESCAPE="LOWERCASE">(std::string s,<TMPL_VAR ENUM ESCAPE="LOWERCASE"> fallback) {
+<TMPL_VAR KEY ESCAPE="LOWERCASE"> encode_<TMPL_VAR KEY ESCAPE="LOWERCASE">(std::string s,<TMPL_VAR KEY ESCAPE="LOWERCASE"> fallback) {
 	boost::algorithm::to_upper(s);
 	<TMPL_LOOP VALUES>
 	if (s == "<TMPL_VAR NAME ESCAPE="UPPERCASE">") return <TMPL_VAR NAME ESCAPE="UPPERCASE">;
@@ -19,7 +19,7 @@ namespace G {
 	return fallback;
 }
 
-std::string translate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> e) {
+std::string translate(const <TMPL_VAR KEY ESCAPE="LOWERCASE"> e) {
 	switch(e) {
 	<TMPL_LOOP VALUES>
 	case <TMPL_VAR NAME ESCAPE="UPPERCASE">:
@@ -29,7 +29,7 @@ std::string translate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> e) {
 		return "UNKNOWN";
 	}
 }
-bool enum_validate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value) {
+bool enum_validate(const <TMPL_VAR KEY ESCAPE="LOWERCASE"> value) {
 	switch(value) {
 		<TMPL_LOOP VALUES>
 		<TMPL_IF VALUE>
@@ -45,7 +45,7 @@ bool enum_validate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value) {
 		return false;
 	}
 }
-std::ostream & operator<<(std::ostream &out,const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value) {
+std::ostream & operator<<(std::ostream &out,const <TMPL_VAR KEY ESCAPE="LOWERCASE"> value) {
 	out << value << "(" << G::translate(value) << ")";
 	return out;
 }
