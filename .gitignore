@@ -230,7 +230,6 @@ utilities/convert
 /release.h
 mudroot/log.txt
 src/info
-/contrib/
 /check/
 /check.xml
 /lastcommit
