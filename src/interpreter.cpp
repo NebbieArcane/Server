@@ -566,24 +566,19 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 					} /* switch */
 				}
 				else if(!IS_AFFECTED(ch, AFF_PARALYSIS)) {
-
 					/* They can't move, must have pissed off an immo!         */
 					/* make sure polies can move, some mobs have this bit set */
-
 					if(IS_SET(ch->specials.act, PLR_FREEZE) &&
 							(IS_SET(ch->specials.act, ACT_POLYSELF) || IS_PC(ch))) {
-						send_to_char("Sei stato immobilizzato e non puoi fare "
-									 "nulla!\n\r", ch);
+						send_to_char("Sei stato immobilizzato e non puoi fare nulla!\n\r", ch);
 					}
 					else {
-
 						if((IS_SET(SystemFlags, SYS_LOGALL) &&
 								(IS_PC(ch) ||
 								 IS_SET(ch->specials.act, ACT_POLYSELF))) ||
 								(IS_SET(SystemFlags, SYS_LOGMOB) &&
 								 (IS_NPC(ch) &&
 								  !IS_SET(ch->specials.act, ACT_POLYSELF))))
-
 						{
 							mudlog(LOG_CHECK,
 								   "[%5ld]ACMD %s:%s", ch->in_room, ch->player.name,
@@ -632,7 +627,6 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 			send_to_char("Pardon?\n\r", ch);
 		}
 	}
-
 }
 
 void argument_interpreter(const char* argument,char* first_arg,char* second_arg) {
@@ -3145,7 +3139,6 @@ NANNY_FUNC(con_stat_list) {
 		STATE(d) = CON_QCLASS;
 		return false;
 	}
-
 }
 NANNY_FUNC(con_helpclass) {
 	SEND_TO_Q("\n\r[Batti INVIO] ", d);
@@ -3261,27 +3254,21 @@ NANNY_FUNC(con_city_choice) {
 			do_look(d->character, "", 15);
 			SetStatus("int B",NULL,NULL);
 			d->prompt_mode = 1;
-
 			break;
-
 		case '2':
 			reset_char(d->character);
-			mudlog(LOG_CONNECT, "2.Loading %s's equipment",
-				   d->character->player.name);
+			mudlog(LOG_CONNECT, "2.Loading %s's equipment",d->character->player.name);
 			load_char_objs(d->character);
 			save_char(d->character, AUTO_RENT, 0);
 			send_to_char(WELC_MESSG, d->character);
 			d->character->next = character_list;
 			character_list = d->character;
-
 			char_to_room(d->character, 1103);
 			d->character->player.hometown = 1103;
-
 			d->character->specials.tick = plr_tick_count++;
 			if(plr_tick_count == PLR_TICK_WRAP) {
 				plr_tick_count=0;
 			}
-
 			act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
 			STATE(d) = CON_PLYNG;
 			if(!GetMaxLevel(d->character)) {
@@ -3289,9 +3276,7 @@ NANNY_FUNC(con_city_choice) {
 			}
 			do_look(d->character, "",15);
 			d->prompt_mode = 1;
-
 			break;
-
 		case '3':
 			if(GetMaxLevel(d->character) > 5) {
 				reset_char(d->character);
@@ -3302,10 +3287,8 @@ NANNY_FUNC(con_city_choice) {
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;
-
 				char_to_room(d->character, 18221);
 				d->character->player.hometown = 18221;
-
 				d->character->specials.tick = plr_tick_count++;
 				if(plr_tick_count == PLR_TICK_WRAP) {
 					plr_tick_count=0;
@@ -3325,7 +3308,6 @@ NANNY_FUNC(con_city_choice) {
 				STATE(d) = CON_SLCT;
 			}
 			break;
-
 		case '4':
 			if(GetMaxLevel(d->character) > 5) {
 				reset_char(d->character);
@@ -3359,7 +3341,6 @@ NANNY_FUNC(con_city_choice) {
 				STATE(d) = CON_SLCT;
 			}
 			break;
-
 		case '5':
 			if(GetMaxLevel(d->character) > 5) {
 				reset_char(d->character);
@@ -3393,7 +3374,6 @@ NANNY_FUNC(con_city_choice) {
 				STATE(d) = CON_SLCT;
 			}
 			break;
-
 		default:
 			SEND_TO_Q("That was an illegal choice.\n\r", d);
 			STATE(d) = CON_SLCT;
