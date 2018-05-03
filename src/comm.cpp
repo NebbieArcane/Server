@@ -217,8 +217,18 @@ void close_socket_fd(int desc) {
 }
 
 int run(int port, const char* dir) {
-
-	boost::format fmt("Starting game ver %s rel %s ");
+#ifdef env_release
+	boost::format fmt("Release: Starting %s rel %s ");
+#endif
+#ifdef env_master
+	boost::format fmt("Master: Starting %s rel %s ");
+#endif
+#ifdef env_devel
+	boost::format fmt("Devel: Starting %s rel %s ");
+#endif
+#ifdef env_vagrant
+	boost::format fmt("Vagrant: Starting %s rel %s ");
+#endif
 	fmt % version() % release() ;
 	mudlog(LOG_ALWAYS, fmt.str().c_str());
 #ifndef env_vagrant
