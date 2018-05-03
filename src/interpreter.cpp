@@ -1820,7 +1820,8 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 		CO=MIN(MaxConForRace(d->character)-STAT_MIN_VAL,CO);
 		CA=MIN(MaxChrForRace(d->character)-STAT_MIN_VAL,CA);
 		SEND_TO_Q("Ecco le stats risultanti dalla tua scelta:\n\r",d);
-		sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
+		sprintf(buf,"%2d %2d %2d %2d %2d %2d %s\n\r",
+				FO+STAT_MIN_VAL,
 				IN+STAT_MIN_VAL,
 				SA+STAT_MIN_VAL,
 				AG+STAT_MIN_VAL,
