@@ -218,8 +218,13 @@ void close_socket_fd(int desc) {
 
 int run(int port, const char* dir) {
 
+	boost::format fmt("Starting game ver %s rel %s ");
+	fmt % version() % release() ;
+	mudlog(LOG_ALWAYS, fmt.str().c_str());
+#ifndef env_vagrant
+	slackNotify(fmt.str().c_str()  ,":european_castle:");
+#endif
 
-	mudlog(LOG_ALWAYS, "Starting game ver %s rel %s ", version(), release());
 	mudlog(LOG_ALWAYS, "Compiled on %s",compilazione());
 
 	mudlog(LOG_ALWAYS,"Pulse:%-10s%-10s%-10s%-10s%-10s%-10s","zone","river","teleport","violence","mobile","tick");
