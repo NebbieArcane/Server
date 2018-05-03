@@ -1906,12 +1906,10 @@ bool toonFromFileSystem(const char* nome) {
 			else {
 				getFromDb(Player.name,Player.pwd,Player.title);
 			}
-			mudlog(LOG_CONNECT,"Return true");
 			return true; //Returning true with no pg in the db causes an abort later
 		}
 		fclose(pFile);
 	}
-	mudlog(LOG_CONNECT,"Return false");
 	return false;
 
 }
@@ -1948,11 +1946,9 @@ unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
 unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};
 
 void echoOn(struct descriptor_data* d) {
-	mudlog(LOG_ALWAYS,"ECHO ON");
 	write(d->descriptor, echo_on, 6);
 }
 void echoOff(struct descriptor_data* d) {
-	mudlog(LOG_ALWAYS,"ECHO OFF");
 	write(d->descriptor, echo_off, 4);
 }
 
