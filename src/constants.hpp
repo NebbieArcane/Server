@@ -15,7 +15,10 @@ namespace Alarmud {
 #define MAX_ALIAS 10
 #define BEG_OF_TIME 827100000
 #define PRINCEEXP 400000000
-
+extern const char* ignoreKeywords[];
+extern const char* eqKeywords[];
+extern const char* exitKeywords[];
+extern const char* lookKeywords[];
 extern const char* stats[];
 /*Messaggi per quando una spell scade*/
 extern const char* spell_wear_off_msg[];
@@ -50,7 +53,7 @@ extern const char* month_name[17];
 
 extern const int sharp[];
 
-extern const char* where[];
+extern const char* eqWhere[];
 
 extern const char* drinks[];
 

@@ -21,7 +21,56 @@
 #include "trap.hpp"
 namespace Alarmud {
 /* modificato da Jethro, agosto 2011 */
+const char* ignoreKeywords[] = {
+	"the",
+	"in",
+	"on",
+	"at",
+	"\n"
+};
+const char* eqKeywords[] = {
+	"finger",
+	"neck",
+	"body",
+	"head",
+	"legs",
+	"feet",
+	"hands",
+	"arms",
+	"about",
+	"waist",
+	"wrist",
+	"wield",
+	"hold",
+	"shield",
+	"back",
+	"ears",
+	"eye",
+	"\n"
+};
 
+const char* exitKeywords[] = {
+	"north",
+	"east",
+	"south",
+	"west",
+	"up",
+	"down",
+	"\n"
+};
+const char* lookKeywords[]= {
+	"north",
+	"east",
+	"south",
+	"west",
+	"up",
+	"down",
+	"in",
+	"at",
+	"",  /* Look at '' case */
+	"room",
+	"\n"
+};
 const char* stats[]= {
 	"STR",
 	"INT",
@@ -1412,7 +1461,7 @@ const int sharp[] = {
 	0     /* Pierce   */
 };
 
-const char* where[] = {
+const char* eqWhere[] = {
 	"<come luce>             ",
 	"<sul dito destro>       ",
 	"<sul dito sinistro>     ",
@@ -2927,6 +2976,10 @@ const char* aszLogMessagesType[] = {
 	"ERROR",
 	"WHO",
 	"SAVE",
+	"MAIL",
+	"RANK",
+	"WORLD",
+	"QUERY",
 	"\n"
 };
 

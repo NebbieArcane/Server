@@ -46,14 +46,14 @@ namespace Alarmud {
 /****************************************************************************
 *  Blocca il passaggio in una certa direzione. Room Procedure
 ****************************************************************************/
-int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data* pRoom, int nType ) {
-	char* p;
+ROOMSPECIAL_FUNC(sBlockWay) {
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=pRoom->specparms;
+	p=room->specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -61,19 +61,18 @@ int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data*
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) ||
-				( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))
-				&& !IS_PRINCE( pChar )) { // Gaia 2001
+	if(type == EVENT_COMMAND) {
+		if((cmd != ndir) ||
+				((GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2) && !IS_PRINCE(ch))) {    // Gaia 2001
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
 			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,pChar);
+			send_to_char(lev2,ch);
 			return TRUE;
 		}
 	}
@@ -82,15 +81,14 @@ int sBlockWay( struct char_data* pChar, int nCmd, char* szArg, struct room_data*
 /****************************************************************************
 *  Blocca il passaggio in una certa direzione. Mob/Obj Procedure
 ****************************************************************************/
-int sMobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
-				  struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(sMobBlockWay) {
+	const char* p;
 	char dir[256];
 	char lev1[256];
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -98,32 +96,32 @@ int sMobBlockWay( struct char_data* pChar, int nCmd, char* szArg,
 	ndir=atoi(dir);
 	nlev1=atoi(lev1);
 	nlev2=atoi(lev2);
-	if( nType == EVENT_COMMAND ) {
-		if( (nCmd != ndir) ||
-				( (GetMaxLevel(pChar)>=nlev1) && (GetMaxLevel(pChar)<=nlev2))) {
+	if(type == EVENT_COMMAND) {
+		if((cmd != ndir) ||
+				((GetMaxLevel(ch)>=nlev1) && (GetMaxLevel(ch)<=nlev2))) {
 			return(FALSE);
 		}
 		else {
-			if (!msg || !msg[0]) {
+			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(lev2,"%s\r\n",msg);
-			act(msg, FALSE, pMob, 0, pChar, TO_VICT);
-			act("$n dice qualcosa a $N.", FALSE, pMob, 0, pChar, TO_NOTVICT);
+			act(msg, FALSE, mob, 0, ch, TO_VICT);
+			act("$n dice qualcosa a $N.", FALSE, mob, 0, ch, TO_NOTVICT);
 			return TRUE;
 		}
 	}
 	return FALSE;
 }
-int sEgoWeapon( struct char_data* pChar, int nCmd, char* szArg,
-				struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(sEgoWeapon) {
+	const char* p;
 	char pcname[256];
-	p=mob_index[pMob->nr].specparms;
-	if (strlen(p)>255)
-	{ return FALSE; }
+	p=mob_index[mob->nr].specparms;
+	if(strlen(p)>255) {
+		return FALSE;
+	}
 	p=one_argument(p,pcname);
-	if( nType == EVENT_COMMAND ) {
+	if(type == EVENT_COMMAND) {
 		return TRUE;
 	}
 	return FALSE;
@@ -137,16 +135,16 @@ int sEgoWeapon( struct char_data* pChar, int nCmd, char* szArg,
 *  Il Mobbo cambia il tipo di danno - va passato alla speciale il codice del danno
 *  *Flyp*
 ***********************************************************************************/
-int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data* pMob, int nType ) {
-	char* p;
+MOBSPECIAL_FUNC(ChangeDam) {
+	const char* p;
 	char dam[256];
 	int damType;
 
-	p=mob_index[pMob->nr].specparms;
+	p=mob_index[mob->nr].specparms;
 	p=one_argument(p,dam);
 	damType=atoi(dam);
 
-	pMob->specials.attack_type=damType;
+	mob->specials.attack_type=damType;
 
 	return FALSE;
 
@@ -160,11 +158,10 @@ int ChangeDam( struct char_data* pChar, int nCmd, char* szArg, struct char_data*
 *  Libro degli eroi - Casta lo spell e scala le rune
 *  *Flyp*
 ****************************************************************************/
-int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
-	char* p;
-	char num [8], par2[256], runa[256], buf[128], mail[]=STAFF_EMAIL;
+MOBSPECIAL_FUNC(LibroEroi) {
+	char par2[256], runa[256], buf[128], mail[]=STAFF_EMAIL;
 	struct obj_data* obj;
-	int i,number,num2,xp,gold, nalign, tmpalign,max,xp2,xpcum,k,trueGain;
+	int i,number,num2,xp,gold, max,xpcum,k,trueGain;
 	short chrace;
 
 	/*if( GetMaxLevel(ch)>51)
@@ -172,14 +169,16 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 	*/
 	num2=0;
 
-	if( type == EVENT_COMMAND && cmd == CMD_SAY) {
-		half_chop(arg,runa,par2,sizeof runa -1,sizeof par2 -1 );
-		if(isdigit(*par2)) { num2=atoi(par2); }
+	if(type == EVENT_COMMAND && cmd == CMD_SAY) {
+		half_chop(arg,runa,par2,sizeof runa -1,sizeof par2 -1);
+		if(isdigit(*par2)) {
+			num2=atoi(par2);
+		}
 
 
 		STRSWITCH
-		CHECK ("ael",runa)
-		if (GET_RUNEDEI(ch)>=4) {
+		CHECK("ael",runa)
+		if(GET_RUNEDEI(ch)>=4) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> SANCTUARY");
 			act("Reciti solennemente la parole del Potere \"AEL\".\r\nLe rune che la compongono si illuminano mentre cominciano a bruciare\r\nsulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -189,7 +188,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N viene avvolt$b da una colonna di luce accecante. Mentre la luce sbiadisce\r\n e riesci a rimettere a fuoco la stanza, vedi che $N e' circondat$b da una intensa aura bianca.\r\n",FALSE,ch,0,ch,
 				TO_ROOM);
 			spell_sanctuary(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 4;
+			GET_RUNEDEI(ch) -= 4;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 4\"| mail -s \"ESECUZIONE RUNE --> Sanctuary\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -200,13 +199,13 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,mob,0,ch,TO_NOTVICT);
 			return true;
 		}
-		CHECK ("inen",runa)
-		if (GET_RUNEDEI(ch)>=4) {
+		CHECK("inen",runa)
+		if(GET_RUNEDEI(ch)>=4) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> IDENTIFY");
 			act("Reciti solennemente la parole del Potere \"INEN\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono\r\nfino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N declama con voce imponente la parola \"INEN\". La sua carne sembra bruciare,\r\nmentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
-			for (i=0; i<3; i++) {
+			for(i=0; i<3; i++) {
 				number = real_object(32992);
 				obj = read_object(number, REAL);
 				obj_to_room(obj,ch->in_room);
@@ -215,7 +214,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Una esplosione di luce invade la stanza, quando si disperde\r\n vedi che per terra sono comparsi tre strani oggetti simili all'occhio di un drago...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Il Sacerdote parla: \"Usa l'Occhio del Drago per conoscere le virtu' di un oggetto!\"\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("Il Sacerdote parla: \"Usa l'Occhio del Drago per conoscere le virtu' di un oggetto!\"\r\n",FALSE,ch,0,ch,TO_ROOM);
-			GET_RUNEDEI( ch ) -= 4;
+			GET_RUNEDEI(ch) -= 4;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 4\"| mail -s \"ESECUZIONE RUNE --> Identify\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -226,13 +225,13 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("ghia",runa)
-		if (GET_RUNEDEI(ch)>=1) {
+		CHECK("ghia",runa)
+		if(GET_RUNEDEI(ch)>=1) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> CREATE FOOD");
 			act("Reciti solennemente la parole del Potere \"GHIA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N declama con voce imponente la parola \"GHIA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
-			for (i=0; i<5; i++) {
+			for(i=0; i<5; i++) {
 				number = real_object(32991);
 				obj = read_object(number, REAL);
 				obj_to_room(obj,ch->in_room);
@@ -241,7 +240,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Una esplosione di luce invade la stanza, quando si disperde vedi che per terra\r\nsono comparse cinque coppe colme di un liquido denso e profumato...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Il Sacerdote parla: \"Quando sarai affamato, potrei nutrirti col nettare degli dei\r\ncontenuto nelle coppe!\"\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("Il Sacerdote parla: \"Quando sarai affamato, potrei nutrirti col nettare degli dei\r\ncontenuto nelle coppe!\"\r\n",FALSE,ch,0,ch,TO_ROOM);
-			GET_RUNEDEI( ch ) -= 1;
+			GET_RUNEDEI(ch) -= 1;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 1\"| mail -s \"ESECUZIONE RUNE --> Create Food\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -252,8 +251,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("zir",runa)
-		if (GET_RUNEDEI(ch)>=20) {
+		CHECK("zir",runa)
+		if(GET_RUNEDEI(ch)>=20) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> FIRESHIELD");
 			act("Reciti solennemente la parole del Potere \"ZIR\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -261,7 +260,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Cominci a bruciare come una torcia, ma i lembi di fuoco che ti circondano non ti provocano\r\nalcun dolore, anzi, ti danno un gran senso di protezione!\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N viene avvolt$b da possenti fiamme, ma sembra essere in grado di controllarle!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_fireshield(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 20;
+			GET_RUNEDEI(ch) -= 20;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 20\"| mail -s \"ESECUZIONE RUNE --> FireShield\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -272,15 +271,15 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("sidamishida",runa)
-		if (GET_RUNEDEI(ch)>=8) {
+		CHECK("sidamishida",runa)
+		if(GET_RUNEDEI(ch)>=8) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> TREETRAVEL");
 			act("Reciti solennemente la parole del Potere \"SIDAMISHIDA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N declama con voce imponente la parola \"SIDAMISHIDA\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			act("Ti senti in completa comunione con la natura: ora sai di poter viaggiare utilizzando\r\nle sacre vie dei druidi!\r\n",FALSE,mob,0,ch,TO_VICT);
 			spell_tree_travel(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 8;
+			GET_RUNEDEI(ch) -= 8;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 8\"| mail -s \"ESECUZIONE RUNE --> TreeTravel\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -291,8 +290,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("elu",runa)
-		if (GET_RUNEDEI(ch)>=4) {
+		CHECK("elu",runa)
+		if(GET_RUNEDEI(ch)>=4) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> WATER BREATH");
 			act("Reciti solennemente la parole del Potere \"ELU\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -300,7 +299,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Per un attimo ti senti strozzare...\n\r...ti manca il fiato...\r\n...pensi di morire...\r\n ma ad un tratto tutto passa e senti di poter respirare ovunque!\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N Strabuzza gli occhi e si tienen la gola: SEMBRA SOFFOCARE!! Ad un tratto inspira profondamente e tutto sembra passato..\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_water_breath(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 4;
+			GET_RUNEDEI(ch) -= 4;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 4\"| mail -s \"ESECUZIONE RUNE --> Water Breath\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -311,8 +310,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("tide",runa)
-		if (GET_RUNEDEI(ch)>=4) {
+		CHECK("tide",runa)
+		if(GET_RUNEDEI(ch)>=4) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> STRENGTH");
 			act("Reciti solennemente la parole del Potere \"TIDE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -320,7 +319,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Ti senti pieno di vigore. I tuoi muscoli si gonfiano e tutto quello che porti ti sembra piu' leggero!\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N si erge in tutta la sua potenza ed i suoi muscoli si gonfiano!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_strength(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 4;
+			GET_RUNEDEI(ch) -= 4;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 4\"| mail -s \"ESECUZIONE RUNE --> Strength\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -331,8 +330,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("fuel",runa)
-		if (GET_RUNEDEI(ch)>=4) {
+		CHECK("fuel",runa)
+		if(GET_RUNEDEI(ch)>=4) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> MINOR TRACK");
 			act("Reciti solennemente la parole del Potere \"FUEL\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -340,7 +339,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Senti una voce: \"Concentrati sulla tua preda e questa non ti potra' sfuggire!\"\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("Gli occhi di $N sono attraversati da un lampo di luce!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_track(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 4;
+			GET_RUNEDEI(ch) -= 4;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 4\"| mail -s \"ESECUZIONE RUNE --> Minor Track\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -351,8 +350,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("beio",runa)
-		if (GET_RUNEDEI(ch)>=6) {
+		CHECK("beio",runa)
+		if(GET_RUNEDEI(ch)>=6) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> MAJOR TRACK");
 			act("Reciti solennemente la parole del Potere \"BEIO\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -360,7 +359,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Senti una voce: \"Concentrati sulla tua preda e questa non ti potra' sfuggire!\"\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("Gli occhi di $N sono attraversati da un lampo di luce!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_track(52,ch,ch,NULL);
-			GET_RUNEDEI( ch ) -= 6;
+			GET_RUNEDEI(ch) -= 6;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 6\"| mail -s \"ESECUZIONE RUNE --> Major Track\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -371,8 +370,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("aelgud",runa)
-		if (GET_RUNEDEI(ch)>=3) {
+		CHECK("aelgud",runa)
+		if(GET_RUNEDEI(ch)>=3) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT DRAG BREATH");
 			act("Reciti solennemente la parole del Potere \"AELGUD\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -381,7 +380,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_prot_dragon_breath(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 3;
+			GET_RUNEDEI(ch) -= 3;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 3\"| mail -s \"ESECUZIONE RUNE --> Prot Dragon Breath\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -392,8 +391,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("gudorizir",runa)
-		if (GET_RUNEDEI(ch)>=2) {
+		CHECK("gudorizir",runa)
+		if(GET_RUNEDEI(ch)>=2) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT FIRE");
 			act("Reciti solennemente la parole del Potere \"GUDORIZIR\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -402,7 +401,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_prot_fire(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 2;
+			GET_RUNEDEI(ch) -= 2;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 2\"| mail -s \"ESECUZIONE RUNE --> Prot Fire\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -413,8 +412,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("gudorishaff",runa)
-		if (GET_RUNEDEI(ch)>=2) {
+		CHECK("gudorishaff",runa)
+		if(GET_RUNEDEI(ch)>=2) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT ELECTRICITY");
 			act("Reciti solennemente la parole del Potere \"GUDORISHAFF\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -423,7 +422,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_prot_elec(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 2;
+			GET_RUNEDEI(ch) -= 2;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 2\"| mail -s \"ESECUZIONE RUNE --> pROT eLECTRICITY\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -434,8 +433,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("gudorilakra",runa)
-		if (GET_RUNEDEI(ch)>=2) {
+		CHECK("gudorilakra",runa)
+		if(GET_RUNEDEI(ch)>=2) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT COLD");
 			act("Reciti solennemente la parole del Potere \"GUDORILAKRA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -444,7 +443,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_prot_cold(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 2;
+			GET_RUNEDEI(ch) -= 2;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 2\"| mail -s \"ESECUZIONE RUNE --> Prot Cold\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -455,8 +454,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("gudorielei",runa)
-		if (GET_RUNEDEI(ch)>=2) {
+		CHECK("gudorielei",runa)
+		if(GET_RUNEDEI(ch)>=2) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> PROT ENERGY");
 			act("Reciti solennemente la parole del Potere \"GUDORIELEI\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -465,7 +464,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N ha uno sguardo vacuo, perso nel vuoto. Ma subito si scuote e sembra tornre in se...\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_prot_energy(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 2;
+			GET_RUNEDEI(ch) -= 2;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 2\"| mail -s \"ESECUZIONE RUNE --> Prot Energy\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -476,8 +475,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("iaeelia",runa)
-		if (GET_RUNEDEI(ch)>=10) {
+		CHECK("iaeelia",runa)
+		if(GET_RUNEDEI(ch)>=10) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> TS");
 			act("Reciti solennemente la parole del Potere \"IAEELIA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -486,7 +485,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... ad un tratto tutto passa ed i suoi occhi brillano di una strana luce azzurrina!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_true_seeing(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 10;
+			GET_RUNEDEI(ch) -= 10;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 10\"| mail -s \"ESECUZIONE RUNE --> TS\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -497,8 +496,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("elia",runa)
-		if (GET_RUNEDEI(ch)>=8) {
+		CHECK("elia",runa)
+		if(GET_RUNEDEI(ch)>=8) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> DETECT INVI");
 			act("Reciti solennemente la parole del Potere \"ELIA\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -507,7 +506,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... ad un tratto tutto passa ed i suoi occhi brillano di una strana luce porpora!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_detect_invisibility(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 8;
+			GET_RUNEDEI(ch) -= 8;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 8\"| mail -s \"ESECUZIONE RUNE --> TreeTravel\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -518,30 +517,32 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("ene",runa)
-		if (GET_RUNEDEI(ch)>=num2) {
+		CHECK("ene",runa)
+		if(GET_RUNEDEI(ch)>=num2) {
 
-			if (num2<=0||!num2)
-			{ return true; }
+			if(num2<=0||!num2) {
+				return true;
+			}
 
 			xp=num2*(GetMaxLevel(ch))*10000;
-			xp2=0;
 			xpcum=0;
 			k=0;
 			max=0;
 
-			if( ch->desc && ch->desc->original )
-			{ chrace = ch->desc->original->race; }
-			else
-			{ chrace = GET_RACE( ch ); }
+			if(ch->desc && ch->desc->original) {
+				chrace = ch->desc->original->race;
+			}
+			else {
+				chrace = GET_RACE(ch);
+			}
 
 			/* Calcolo il maxxaggio */
-			for (i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
-				if( GET_LEVEL( ch, i ) && GET_LEVEL( ch, i ) < RacialMax[ chrace ][ i ] ) {
+			for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
+				if(GET_LEVEL(ch, i) && GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
 					mudlog(LOG_SYSERR,"Non sono al massimo razziale");
-					if (GET_LEVEL( ch, i )!=0) {
-						k=(titles[i][ GET_LEVEL( ch, i ) + 2 ].exp)-1;
-						if (xpcum == 0 || k < xpcum) {
+					if(GET_LEVEL(ch, i)!=0) {
+						k=(titles[i][ GET_LEVEL(ch, i) + 2 ].exp)-1;
+						if(xpcum == 0 || k < xpcum) {
 							xpcum=k;
 							mudlog(LOG_SYSERR,"maxxaggio a %d",k);
 						}
@@ -551,11 +552,11 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			k=HowManyClasses(ch);
 			trueGain=GET_EXP(ch)+(xp/k);
 			/* Se si tratta di un principe accediamo comunque al gain completo, ignorando il maxxaggio */
-			if (trueGain <= xpcum || GET_EXP(ch)>=PRINCEEXP) {
+			if(trueGain <= xpcum || GET_EXP(ch)>=PRINCEEXP) {
 				/* Check sull'owerflow per calcolar ele rune da spendere */
-				if ((GET_EXP(ch)+(xp/k))<0) {
+				if((GET_EXP(ch)+(xp/k))<0) {
 					max=(MAX_XP-GET_EXP(ch))/(GetMaxLevel(ch)*10000);
-					if (max>0) {
+					if(max>0) {
 						act("Reciti solennemente la parole del Potere \"ENE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 							FALSE,mob,0,ch,TO_VICT);
 						act("Il sacerdote ti dice \"Capisco il tuo desiderio di sapere, ma per volere degli ho considerato solo una parte delle Rune che volevi consacrare agli Dei!\"\r\n",FALSE,mob,0,ch,TO_VICT);
@@ -564,7 +565,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 							FALSE,mob,0,ch,TO_VICT);
 						act("$N trema scosso da brividi, in preda ad una strana trance mistica, ma in un lungo istante tutto cio' passa...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
 						xp=max*(GetMaxLevel(ch))*10000;
-						GET_RUNEDEI( ch ) -= max;
+						GET_RUNEDEI(ch) -= max;
 						gain_exp(ch, xp);
 						mudlog(LOG_PLAYERS, "GAIN PARZIALE PRINCIPI Rune spese (num2)=%d, spendibili=%d, guadagna %d xp",num2,max,xp);
 						mudlog(LOG_PLAYERS, "esecuzione rune --> assegno %d PX a %s",xp,GET_NAME(ch));
@@ -580,7 +581,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 					}
 					return true;
 				}
-				GET_RUNEDEI( ch ) -= num2;
+				GET_RUNEDEI(ch) -= num2;
 				act("Reciti solennemente la parole del Potere \"ENE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 					FALSE,mob,0,ch,TO_VICT);
 				act("$N declama con voce imponente la parola \"ENE\". La sua carne sembra bruciare, mentre le rune che aveva tatuate si infiammano e sbiadiscono...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
@@ -596,7 +597,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			}
 			else {
 				max=(xpcum-GET_EXP(ch))*k/(GetMaxLevel(ch)*10000);
-				if (max>0) {
+				if(max>0) {
 					mudlog(LOG_PLAYERS, "GAIN PARZIALE Rune spese (num2)=%d Spendibili %d",num2,max);
 					xp=max*(GetMaxLevel(ch))*10000;
 					act("Reciti solennemente la parole del Potere \"ENE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
@@ -606,7 +607,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 					act("Strane immagini vorticano davanti ai tuoi occhi... Stai rivivendo le epiche gesta di Eroi di antico passato!\r\nQuando la tua visione termina, � come se TU abbia vissuto in prima persona quelle avventure!\r\n",
 						FALSE,mob,0,ch,TO_VICT);
 					act("$N trema scosso da brividi, in preda ad una strana trance mistica, ma in un lungo istante tutto cio' passa...\r\n",FALSE,mob,0,ch,TO_NOTVICT);
-					GET_RUNEDEI( ch ) -= max;
+					GET_RUNEDEI(ch) -= max;
 					gain_exp(ch, xp);
 					mudlog(LOG_PLAYERS, "GAIN PARZIALE Rune spese (num2)=%d, spendibili=%d, guadagna %d xp",num2,max,xp);
 					mudlog(LOG_PLAYERS, "esecuzione rune --> assegno %d PX a %s",xp,GET_NAME(ch));
@@ -628,8 +629,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			mudlog(LOG_PLAYERS, "esecuzione rune --> %s vuole convertire %d rune ma ne ha solo %d",GET_NAME(ch),num2,GET_RUNEDEI(ch));
 			return true;
 		}
-		CHECK ("ane",runa)
-		if (GET_RUNEDEI(ch)>=num2 && num2>0) {
+		CHECK("ane",runa)
+		if(GET_RUNEDEI(ch)>=num2 && num2>0) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> COINS");
 			act("Reciti solennemente la parole del Potere \"ANE\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -640,8 +641,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			gold=num2*10000;
 			mudlog(LOG_PLAYERS, "esecuzione rune --> assegno %d coins a %s",gold,GET_NAME(ch));
 			GET_GOLD(ch)+=gold;
-			GET_RUNEDEI( ch ) -= num2;
-			sprintf(buf,"echo \"PC: %s RUNE SPESE: %d\"| mail -s \"ESECUZIONE RUNE --> Conv Coins\" %s", GET_NAME(ch),max,mail);
+			GET_RUNEDEI(ch) -= num2;
+			sprintf(buf,"echo \"PC: %s RUNE SPESE: %d\"| mail -s \"ESECUZIONE RUNE --> Conv Coins\" %s", GET_NAME(ch),num2,mail);
 			system(buf);
 			return true;
 		}
@@ -650,8 +651,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("elei",runa)
-		if (GET_RUNEDEI(ch)>=1) {
+		CHECK("elei",runa)
+		if(GET_RUNEDEI(ch)>=1) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> CURE BLINDNESS");
 			act("Reciti solennemente la parole del Potere \"ELEI\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -660,7 +661,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 				FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... Un bagliore attraversa i suoi occhi e poi si spegne\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_cure_blind(52, ch, ch,0);
-			GET_RUNEDEI( ch ) -= 1;
+			GET_RUNEDEI(ch) -= 1;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 1\"| mail -s \"ESECUZIONE RUNE --> Cure Blind\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -671,8 +672,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("$N declama le rune, ma non accade nulla!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			return true;
 		}
-		CHECK ("itel",runa)
-		if (GET_RUNEDEI(ch)>=4) {
+		CHECK("itel",runa)
+		if(GET_RUNEDEI(ch)>=4) {
 			mudlog(LOG_PLAYERS, "esecuzione rune --> REMOVE PARALYSIS");
 			act("Reciti solennemente la parole del Potere \"ITEL\".\r\n Le rune che la compongono si illuminano mentre cominciano a bruciare sulla tua pelle e lentamente sbiadiscono fino a scomparire. Il dolore passa alla svelta...\r\n",
 				FALSE,mob,0,ch,TO_VICT);
@@ -680,7 +681,7 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 			act("Il tuo corpo brucia pervaso da un immenso calore... Quando questa sensazione passa, ti accorgi di essere di nuovo padrone dei tuoi movimenti.\r\n",FALSE,mob,0,ch,TO_VICT);
 			act("$N trema scosso da brividi... ad un tratto tutto passa ed il suo corpo si muove di nuovo!\r\n",FALSE,ch,0,ch,TO_ROOM);
 			spell_remove_paralysis(52,ch,ch,0);
-			GET_RUNEDEI( ch ) -= 4;
+			GET_RUNEDEI(ch) -= 4;
 			sprintf(buf,"echo \"PC: %s RUNE SPESE: 1\"| mail -s \"ESECUZIONE RUNE --> Remove Paral\" %s", GET_NAME(ch),mail);
 			mudlog(LOG_PLAYERS,buf);
 			system(buf);
@@ -704,8 +705,8 @@ int LibroEroi(struct char_data* ch, int cmd, char* arg, struct char_data* mob, i
 *	 Alla speciale si passa -1000 per far passare evil, 0 neutral, 1000 good
 *  *Flyp*
 ****************************************************************************/
-int MobBlockAlign( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
-	char* p;
+MOBSPECIAL_FUNC(MobBlockAlign) {
+	const char* p;
 	char dir[256];
 	char align[256];
 	char msg[256];
@@ -714,7 +715,7 @@ int MobBlockAlign( struct char_data* ch, int cmd, char* arg, struct char_data* m
 
 
 
-	if( type == EVENT_COMMAND ) {
+	if(type == EVENT_COMMAND) {
 		p=mob_index[mob->nr].specparms;
 
 		p=one_argument(p,dir);
@@ -728,16 +729,20 @@ int MobBlockAlign( struct char_data* ch, int cmd, char* arg, struct char_data* m
 		tmpalign=GET_ALIGNMENT(ch);
 
 		//definiamo gli allineamenti
-		if (tmpalign<=-350)
-		{ tmpalign=-1000; }
-		else if (tmpalign>=350)
-		{ tmpalign=1000; }
-		else
-		{ tmpalign=0; }
-		if( (cmd != ndir) || (tmpalign==nalign))
-		{ return(FALSE); }
+		if(tmpalign<=-350) {
+			tmpalign=-1000;
+		}
+		else if(tmpalign>=350) {
+			tmpalign=1000;
+		}
 		else {
-			if (!msg || !msg[0]) {
+			tmpalign=0;
+		}
+		if((cmd != ndir) || (tmpalign==nalign)) {
+			return(FALSE);
+		}
+		else {
+			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			//sprintf(lev2,"%s\r\n",msg);
@@ -754,16 +759,16 @@ int MobBlockAlign( struct char_data* ch, int cmd, char* arg, struct char_data* m
 *	 Alla speciale si passa -1000 per far passare evil, 0 neutral, 1000 good
 *  *Flyp*
 ****************************************************************************/
-int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoom, int type ) {
-	char* p;
+ROOMSPECIAL_FUNC(BlockAlign) {
+	const char* p;
 	char dir[256];
 	char align[256];
 	char msg[256];
 
 	int ndir, nalign, tmpalign;
 
-	if( type == EVENT_COMMAND ) {
-		p=pRoom->specparms;
+	if(type == EVENT_COMMAND) {
+		p=room->specparms;
 		p=one_argument(p,dir);
 
 		p=one_argument(p,align);
@@ -776,17 +781,21 @@ int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoo
 		tmpalign=GET_ALIGNMENT(ch);
 
 		//definiamo gli allineamenti
-		if (tmpalign<=-350)
-		{ tmpalign=-1000; }
-		else if (tmpalign>=350)
-		{ tmpalign=1000; }
-		else
-		{ tmpalign=0; }
-
-		if( (cmd != ndir) || (tmpalign==nalign))
-		{ return(FALSE); }
+		if(tmpalign<=-350) {
+			tmpalign=-1000;
+		}
+		else if(tmpalign>=350) {
+			tmpalign=1000;
+		}
 		else {
-			if (!msg || !msg[0]) {
+			tmpalign=0;
+		}
+
+		if((cmd != ndir) || (tmpalign==nalign)) {
+			return(FALSE);
+		}
+		else {
+			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 			sprintf(dir,"%s\r\n",msg);
@@ -797,16 +806,15 @@ int BlockAlign( struct char_data* ch, int cmd, char* arg, struct room_data* pRoo
 	return FALSE;
 }
 
-int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(LadroOfferte) {
 	char buf[256], buf2[256];
 
 	one_argument(arg,buf);
 	only_argument(arg,buf2);
 
-	sprintf(arg,buf2);
-	if( type == EVENT_COMMAND ) {
-		if( cmd == CMD_GET ) {
-			if ((strstr(buf,"monete"))||(strstr(buf2,"monete"))) {
+	if(type == EVENT_COMMAND) {
+		if(cmd == CMD_GET) {
+			if((strstr(buf,"monete"))||(strstr(buf2,"monete"))) {
 				do_kill(mob,GET_NAME(ch),0);
 				return FALSE;
 			}
@@ -819,14 +827,13 @@ int LadroOfferte( struct char_data* ch, int cmd, char* arg, struct char_data* mo
 
 /***** NEO ORSHINGAL START *****/
 
-int Vampire_Summoner( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
-	char* p;
+MOBSPECIAL_FUNC(Vampire_Summoner) {
+	const char* p;
 	char nmob[256];
-	int check, nummob;
+	int nummob;
 	struct char_data* mobtmp;
-	static struct char_data* tmp;
 
-	if ((GET_POS(mob)==POSITION_FIGHTING) && (number(0,9)<6)) {
+	if((GET_POS(mob)==POSITION_FIGHTING) && (number(0,9)<6)) {
 		// Summon control added by EleiMiShill
 
 		// Allora, mi serve il VNUM
@@ -868,7 +875,7 @@ int Vampire_Summoner( struct char_data* ch, int cmd, char* arg, struct char_data
 			//IS_IMMUNE(mob,IMM_DRAIN) ARGH!!! IS_IMMUNE qui non � nemmeno definita!
 		{
 			do_say(mob, "Voglio la tua energia vitale!!!", 0);
-			cast_energy_drain( 50, mob, "", SPELL_TYPE_SPELL, mob->specials.fighting, 0);
+			cast_energy_drain(50, mob, "", SPELL_TYPE_SPELL, mob->specials.fighting, 0);
 		}
 		return true;
 	}
@@ -876,9 +883,8 @@ int Vampire_Summoner( struct char_data* ch, int cmd, char* arg, struct char_data
 	return false;
 }
 
-int Nightmare( struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type ) {
+MOBSPECIAL_FUNC(Nightmare) {
 	struct affected_type af;
-	int num;
 
 	if(!IS_AFFECTED(mob, AFF_FIRESHIELD)) {
 		af.type      = SPELL_FIRESHIELD;
@@ -895,12 +901,6 @@ int Nightmare( struct char_data* ch, int cmd, char* arg, struct char_data* mob, 
 		af.location  = APPLY_HIDE;
 		af.bitvector = AFF_GLOBE_DARKNESS;
 		affect_to_char(mob, &af);
-	}
-
-	if(RIDDEN(mob)) {
-		if(RIDDEN(mob)==ch) {
-			GET_HIT(ch)-10;
-		}
 	}
 	return false;
 }

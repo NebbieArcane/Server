@@ -23,6 +23,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "signals.hpp"
+#include "act.info.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 namespace Alarmud {
@@ -32,7 +33,6 @@ namespace Alarmud {
 #define LOG_CRASH 0 // Alar, abbiamo gdb, meglio non modificare i crash
 #define MAX_FNAME_LEN 32
 #define STACK_SIZE 15
-int HowManyConnection(int ToAdd);
 int gnPtr =-1;
 
 char currentfile[MAX_FNAME_LEN+1]="";
@@ -54,21 +54,21 @@ void PrintStatus() {
 }
 void PrintStatus(int level) {
 	int i=0;
-	mudlog( LOG_SYSERR, "Connections from start: %d",
-			HowManyConnection(0));
-	if (level==1) {
+	mudlog(LOG_SYSERR, "Connections from start: %d",
+		   HowManyConnection(0));
+	if(level==1) {
 		mudlog(LOG_SYSERR,"CurrentTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR, "Mud status: '%s'",gszMudStatus );
+		mudlog(LOG_SYSERR, "Mud status: '%s'",gszMudStatus);
 	}
 	else {
 
 		mudlog(LOG_SYSERR,"LastTrack %s at %d",currentfile,currentline);
-		mudlog( LOG_SYSERR, "Mud status when crashed: '%s'",gszMudStatus );
+		mudlog(LOG_SYSERR, "Mud status when crashed: '%s'",gszMudStatus);
 	}
-	mudlog( LOG_SYSERR, "  Last Name '%s'", gszName );
-	if (gnPtr>=0) {
+	mudlog(LOG_SYSERR, "  Last Name '%s'", gszName);
+	if(gnPtr>=0) {
 		mudlog(LOG_SYSERR,    " Calling Stack");
-		for (i=0; i<=gnPtr; i++) {
+		for(i=0; i<=gnPtr; i++) {
 			mudlog(LOG_SYSERR, "       %2d.%s",i,gszStack[i]);
 		}
 	}
@@ -81,39 +81,39 @@ void SetLine(const char* srcfile,int srcline) {
 	currentline=srcline;
 }
 
-void SetStatus( const char* szStatus, const char* szString, void* pGeneric ) {
+void SetStatus(const char* szStatus, const char* szString, void* pGeneric) {
 	int i;
-	if( szStatus ) {
+	if(szStatus) {
 		i=MIN(strlen(szStatus)+1,sizeof(gszMudStatus));
-		memcpy( gszMudStatus, szStatus, i);
+		memcpy(gszMudStatus, szStatus, i);
 		gszMudStatus[ i - 1 ] = 0;
 	}
 
-	if( szString ) {
+	if(szString) {
 		i=MIN(strlen(szString)+1,sizeof(gszName));
-		memcpy( gszName, szString, i );
+		memcpy(gszName, szString, i);
 		gszName[ i - 1 ] = 0;
 	}
 
-	if( pGeneric ) {
+	if(pGeneric) {
 		gpGeneric = pGeneric;
 	}
 }
-void SetStatus( const char* szStatus) {
+void SetStatus(const char* szStatus) {
 	SetStatus(szStatus,NULL,NULL);
 }
-void SetStatus( const char* szStatus, const char* szString) {
+void SetStatus(const char* szStatus, const char* szString) {
 	SetStatus(szStatus,szString,NULL);
 }
 
-void PushStatus( const char* szStatus, const char* szNome ) {
-	int i;
-
+void PushStatus(const char* szStatus, const char* szNome) {
 	gnPtr++;
-	if (gnPtr>=STACK_SIZE)
-	{ return; }
-	if (gnPtr<0)
-	{ return; }
+	if(gnPtr>=STACK_SIZE) {
+		return;
+	}
+	if(gnPtr<0) {
+		return;
+	}
 	snprintf(gszStack[gnPtr],149,"%s %s",
 			 szStatus?szStatus:"",
 			 szNome?szNome:"");
@@ -122,14 +122,15 @@ void PushStatus( const char* szStatus, const char* szNome ) {
 	return;
 }
 
-void PushStatus( const char* szStatus ) {
+void PushStatus(const char* szStatus) {
 	PushStatus(szStatus, (char*) NULL);
 	return;
 }
 
-void PopStatus( ) {
-	if (gnPtr>=0)
-	{ gnPtr--; }
+void PopStatus() {
+	if(gnPtr>=0) {
+		gnPtr--;
+	}
 
 	return;
 }
@@ -144,12 +145,12 @@ void signal_setup() {
 
 	signal(SIGHUP, hupsig);
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGINT, hupsig);
+	signal(SIGINT, diesig);
 	signal(SIGALRM, logsig);
-	signal(SIGTERM, hupsig);
+	signal(SIGTERM, diesig);
 #if LOG_CRASH
-	signal( SIGSEGV, badcrash );
-	signal( SIGBUS, buscrash );
+	signal(SIGSEGV, badcrash);
+	signal(SIGBUS, buscrash);
 
 #endif
 
@@ -159,95 +160,101 @@ void signal_setup() {
 	interval.tv_usec = 0;
 	itime.it_interval = interval;
 	itime.it_value = interval;
-	if( setitimer( ITIMER_VIRTUAL, &itime, 0 ) < 0 )
-	{ perror( "Setting Virtual timer in signal_setup" ); }
-	else if( signal( SIGVTALRM, checkpointing ) == SIG_ERR )
-	{ perror( "Calling 'signal' in signal_setup" ); }
+	if(setitimer(ITIMER_VIRTUAL, &itime, 0) < 0) {
+		mudlog(LOG_ERROR,"%s:%s","Setting Virtual timer in signal_setup",strerror(errno));
+	}
+	else if(signal(SIGVTALRM, checkpointing) == SIG_ERR) {
+		mudlog(LOG_ERROR,"%s:%s","Calling 'signal' in signal_setup",strerror(errno));
+	}
 }
 
-void checkpointing( int dummy ) {
+void checkpointing(int dummy) {
 
-	if (!tics) {
-		mudlog( LOG_SYSERR, "CHECKPOINT shutdown: tics not updated" );
+	if(!tics) {
+		mudlog(LOG_SYSERR, "CHECKPOINT shutdown: tics not updated");
 		PrintStatus();
 
 		abort();
 	}
 	else {
-		mudlog( LOG_SAVE, "CHECKPOINT: tics updated" );
+		mudlog(LOG_SAVE, "CHECKPOINT: tics updated");
 		tics = 0;
 	}
-	if( signal( SIGVTALRM, checkpointing ) == SIG_ERR ) {
-		perror( "Calling 'signal' in checkpointing" );
+	if(signal(SIGVTALRM, checkpointing) == SIG_ERR) {
+		mudlog(LOG_ERROR,"%s:%s","Calling 'signal' in checkpointing",strerror(errno));
 		abort();
 	}
 
 }
+void hupsig(int dummy) {
+	mudlog(LOG_ALWAYS, "Received SIGHUP %d",dummy);
+	reload_files_and_scripts();
+}
+void shutdown_request(int dummy) {
 
-void shutdown_request( int dummy ) {
-
-	mudlog( LOG_CHECK, "Received USR2 - shutdown request");
+	mudlog(LOG_ALWAYS, "Received USR2 - shutdown request %d",dummy);
 	mudshutdown = 1;
 }
 
 
 /* kick out players etc */
-void hupsig( int dummy ) {
-	int i;
+void diesig(int dummy) {
 
-	mudlog( LOG_CHECK, "Received SIGHUP, SIGINT, or SIGTERM. Shutting down");
+	mudlog(LOG_ALWAYS, "Received SIGINT, or SIGTERM. Shutting down %d",dummy);
 
 	raw_force_all("return");
 	raw_force_all("save");
-	for (i=0; i<30; i++) {
+	for(int i=0; i<30; i++) {
 		SaveTheWorld();
 	}
 	mudshutdown = rebootgame = 1;
 }
 
-void logsig( int dummy ) {
-	mudlog( LOG_CHECK, "Signal logsig received. Ignoring." );
-	signal( SIGALRM, logsig );
+void logsig(int dummy) {
+	mudlog(LOG_ALWAYS, "Signal SIGALARM received. Ignoring. %d",dummy);
+	signal(SIGALRM, logsig);
 }
 
 #if LOG_CRASH
-void badcrash( int dummy ) {
+void badcrash(int dummy) {
 	static int graceful_tried = 0;
 	struct descriptor_data* desc;
 
-	mudlog( LOG_CHECK,
-			"SIGSEGV received. Trying to shut down gracefully.");
+	mudlog(LOG_CHECK,
+		   "SIGSEGV received. Trying to shut down gracefully.");
 
 	PrintStatus();
 
-	if( !graceful_tried ) {
+	if(!graceful_tried) {
 #if 0
 		close(mother_desc);
 #endif
-		mudlog( LOG_CHECK, "Trying to close all sockets.");
+		mudlog(LOG_CHECK, "Trying to close all sockets.");
 		graceful_tried = 1;
-		for( desc = descriptor_list; desc; desc = desc->next )
-		{ close( desc->descriptor ); }
+		for(desc = descriptor_list; desc; desc = desc->next) {
+			close(desc->descriptor);
+		}
 	}
 	abort();
 }
-void buscrash( int dummy ) {
+void buscrash(int dummy) {
 	static int graceful_tried = 0;
 	struct descriptor_data* desc;
 
-	mudlog( LOG_CHECK,
-			"SIGBUS received. Trying to shut down gracefully.");
+	mudlog(LOG_CHECK,
+		   "SIGBUS received. Trying to shut down gracefully.");
 
 	PrintStatus();
 
-	if( !graceful_tried ) {
+	if(!graceful_tried) {
 #if 0
 		close(mother_desc);
 #endif
-		mudlog( LOG_CHECK, "Trying to close all sockets.");
+		mudlog(LOG_CHECK, "Trying to close all sockets.");
 		graceful_tried = 1;
-		for( desc = descriptor_list; desc; desc = desc->next )
-		{ close( desc->descriptor ); }
+		for(desc = descriptor_list; desc; desc = desc->next) {
+			close(desc->descriptor);
+		}
 	}
 	abort();
 }
@@ -256,7 +263,9 @@ float AverageEqIndex(float toadd) {
 	static float curmedia=0.0;
 	static float numerocasi=0.0;
 	float modifier;
-	if (toadd<100) { return(curmedia); }
+	if(toadd<100) {
+		return(curmedia);
+	}
 	modifier=numerocasi;
 	numerocasi++;
 	modifier=modifier /numerocasi;

@@ -47,8 +47,8 @@ namespace Alarmud {
 
 #define SPECFILE "myst.spe"
 FILE* fd;
-FILE* fp;
-long ifp=0;
+//FILE* fp;
+//long ifp=0;
 
 
 /* ********************************************************************
@@ -80,92 +80,57 @@ int is_murdervict(struct char_data* ch) {
 
 	};
 
-	if( ch->nr >= 0 ) {
-		for( i = 0; mutype[i] >= 0; i++ ) {
-			if (mob_index[ch->nr].iVNum == mutype[i])
-			{ return TRUE; }
+	if(ch->nr >= 0) {
+		for(i = 0; mutype[i] >= 0; i++) {
+			if(mob_index[ch->nr].iVNum == mutype[i]) {
+				return TRUE;
+			}
 		}
 	}
 
 	return FALSE;
 }
-int FileToArray(char* fname,char* p[]) {
-	FILE* fp;
-	char buf[1024];
-	int ifp=0;
-	int csize=0;
-	fp=fopen(fname,"r");
-	if (!fp) {
-		return(ifp);
-	}
-
-	while (!feof(fp)) {
-		if (fgets(buf,1023,fp)) {
-			if (buf[0]) {
-				if (csize==ifp) {
-					csize+=10;
-					realloc(p,(csize)* sizeof(char*));
-					p[ifp++]=strdup(buf);
-				}
-
-			}
-		}
-	}
-	realloc(p,ifp * (sizeof(char*)));
-	fclose(fp);
-	return(ifp);
-}
 
 int xcompare(const void* p1, const void* p2) {
-	struct special_proc_entry* s1,*s2;
-	s1 = (struct special_proc_entry*)p1;
-	s2 = (struct special_proc_entry*)p2;
+	const struct OtherSpecialProcEntry* s1=reinterpret_cast<const struct OtherSpecialProcEntry*>(p1);
+	const struct OtherSpecialProcEntry* s2=reinterpret_cast<const struct OtherSpecialProcEntry*>(p2);
 	return strcasecmp(s1->nome,s2->nome);
 }
-int nomecompare(const void* p1, const void* p2) {
-	char* s1;
-	struct special_proc_entry* s2;
-	s1 = (char*)p1;
-	s2 = (struct special_proc_entry*)p2;
+int nomecompare(const void* p1,const void* p2) {
+	const char* s1 = reinterpret_cast<const char*>(p1);
+	const struct OtherSpecialProcEntry* s2=reinterpret_cast<const struct OtherSpecialProcEntry*>(p2);
 	return strcasecmp(s1,s2->nome);
 }
 
 /* assign special procedures to mobiles */
-
-char* Aggiungi(char* vecchia,char* nuova) {
-	int l;
-	l=vecchia?0:strlen(vecchia);
-	realloc(vecchia,l+strlen(nuova));
-	strcat(vecchia,nuova);
-	return(vecchia);
-
-}
 void assign_speciales() {
 	int lastroomproc=0;
 	int lastotherproc=0;
-	struct special_proc_entry* op;
+	struct OtherSpecialProcEntry* op;
 	struct RoomSpecialProcEntry* _or;
 	struct room_data* rp;
 	int i, rnum;
 	char buf[256];
-	char* p;
+	const char* p;
 	char procedura[256];
 	char parms[256];
 	char svnum[256];
 	int vnum;
 	char cmd[256];
 
-	for (i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++) {
+	for(i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++) {
 		lastotherproc++;
-		if (IsTest())
-		{ mudlog(LOG_CHECK,"Generic special: [%3d] %s",lastotherproc,otherproc[i].nome); }
+		if(IsTest()) {
+			mudlog(LOG_WORLD,"Generic special: [%3d] %s",lastotherproc,otherproc[i].nome);
+		}
 	}
 	mudlog(LOG_CHECK,"Generic procedure: %d (%d)",lastotherproc,i);
 
-	for (i=0; strcmp(roomproc[i].nome,"zFineprocedure"); i++) {
+	for(i=0; strcmp(roomproc[i].nome,"zFineprocedure"); i++) {
 		lastroomproc++;
-		if (IsTest())
-		{ mudlog(LOG_CHECK,"Room special: [%3d] %s",lastroomproc,roomproc[i].nome); }
+		if(IsTest()) {
+			mudlog(LOG_WORLD,"Room special: [%3d] %s",lastroomproc,roomproc[i].nome);
+		}
 	}
 	mudlog(LOG_CHECK,"Room procedure: %d (%d)",lastroomproc,i);
 
@@ -177,18 +142,19 @@ void assign_speciales() {
 
 	mudlog(LOG_CHECK,"Generic sort...[%3d]",lastotherproc);
 	qsort(otherproc,lastotherproc,
-		  sizeof(struct special_proc_entry),xcompare);
+		  sizeof(struct OtherSpecialProcEntry),xcompare);
 
 	mudlog(LOG_CHECK,"Done!");
 	fd=fopen(SPECFILE,"r");
-	if (!fd) {
+	if(!fd) {
 		mudlog(LOG_ERROR,"Error opening %s: %s",SPECFILE,strerror(errno));
 		return;
 	}
-	while (!feof(fd)) {
+	while(!feof(fd)) {
 		fgets(buf,255,fd);
-		if (*buf&& buf[strlen(buf)-1]=='\n')
-		{ buf[strlen(buf)-1]='\0'; }
+		if(*buf&& buf[strlen(buf)-1]=='\n') {
+			buf[strlen(buf)-1]='\0';
+		}
 		vnum=-1;
 		procedura[0]='\0';
 		cmd[0]='\0';
@@ -199,21 +165,21 @@ void assign_speciales() {
 		p=one_argument(p,procedura);
 		only_argument(p,parms);
 		vnum=atoi(svnum);
-		switch (cmd[0]) {
+		switch(cmd[0]) {
 		case '*':
 			break;
 		case 'm':
 			rnum = real_mobile(vnum);
-			if ((rnum<0) ||
-					!(op=(struct special_proc_entry*)
+			if((rnum<0) ||
+					!(op=(struct OtherSpecialProcEntry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
-								 sizeof(struct special_proc_entry),
+								 sizeof(struct OtherSpecialProcEntry),
 								 nomecompare))
-			   ) {
-				mudlog( LOG_ERROR,
-						"mobile_assign: Mobile %d not found in database.",vnum);
+			  ) {
+				mudlog(LOG_ERROR,
+					   "mobile_assign: Mobile %d not found in database.",vnum);
 			}
 			else {
 				mob_index[rnum].func = op->proc;
@@ -223,16 +189,16 @@ void assign_speciales() {
 			break;
 		case 'o':
 			rnum = real_object(vnum);
-			if ((rnum<0) ||
-					!(op=(struct special_proc_entry*)
+			if((rnum<0) ||
+					!(op=(struct OtherSpecialProcEntry*)
 						 bsearch(&procedura,
 								 otherproc,
 								 lastotherproc,
-								 sizeof(struct special_proc_entry),
+								 sizeof(struct OtherSpecialProcEntry),
 								 nomecompare))
-			   ) {
-				mudlog( LOG_ERROR,
-						"obj_assign: Object %d not found in database.",vnum);
+			  ) {
+				mudlog(LOG_ERROR,
+					   "obj_assign: Object %d not found in database.",vnum);
 			}
 			else {
 				obj_index[rnum].func = op->proc;
@@ -242,16 +208,16 @@ void assign_speciales() {
 			break;
 		case 'r':
 			rp = real_roomp(vnum);
-			if ((!rp) ||
+			if((!rp) ||
 					!(_or=(struct RoomSpecialProcEntry*)
 						  bsearch(&procedura,
 								  roomproc,
 								  lastroomproc,
 								  sizeof(struct RoomSpecialProcEntry),
 								  nomecompare))
-			   ) {
-				mudlog( LOG_ERROR, "assign_rooms: Room %d not found in database.",
-						vnum);
+			  ) {
+				mudlog(LOG_ERROR, "assign_rooms: Room %d not found in database.",
+					   vnum);
 			}
 			else {
 				rp->funct=_or->proc;

@@ -1,6 +1,6 @@
 # Root cmake
 cmake_minimum_required (VERSION 3.5)
-project (alarmud)
+project (myst)
 enable_language(CXX)
 include(ProcessorCount)
 ProcessorCount(N)
@@ -19,10 +19,6 @@ endif()
 
 set (CMAKE_USE_RELATIVE_PATHS true)
 add_subdirectory(src)
-message(STATUS "root")
-foreach (_variableName PROJECT_SOURCE_DIR PROJECT_NAME CMAKE_SOURCE_DIR CMAKE_CXX_KNOWN_FEATURES CMAKE_CURRENT_SOURCE_DIR)
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
 include(UsePkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 
@@ -32,3 +28,14 @@ include(UsePkgConfig)
 #find_library(MYSQL mysqld)
 #find_library(BOOST boost)
 #set(CMAKE_VERBOSE_MAKEFILE ON) #Uncomment to see actual c++ invocations
+add_custom_target(checkcpp
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	COMMAND cppcheck --enable=all --xml src 2>check.xml
+	COMMAND cppcheck-htmlreport --report-dir=check  --source-dir=./ --file=check.xml
+	COMMAND echo use your browser to view check/index.html
+	COMMENT "Executing checkcpp"
+)
+add_custom_target(style
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+	COMMAND ../astyle -r -Q --options=../astylerc "./*.cpp,*.hpp"
+)

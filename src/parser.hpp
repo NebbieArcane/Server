@@ -6,6 +6,7 @@
 #define __PARSER_HPP
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "typedefs.hpp"
 namespace Alarmud {
 
 #define MAGIC    96  /* Magic number for the hash table */
@@ -14,7 +15,7 @@ typedef struct command_node NODE;
 
 struct command_node {
 	char* name;
-	void (*func)(struct char_data* ch, char* arg, int cmd);
+	command_func func;
 	int number;
 	byte min_pos;
 	byte min_level;
@@ -31,15 +32,14 @@ struct radix_list {
 extern struct radix_list radix_head[27];
 extern byte HashTable[256];
 
-typedef void (*pCommandFunc) ( struct char_data*, char*, int );
-void AddCommand(char* name, pCommandFunc,int number, int min_pos, int min_lev);
+void AddCommand(const char* name, command_func,int number, int min_pos, int min_lev);
 void AddNodeTail(NODE* n, int length, int radix) ;
 char* FindCommandName(int num) ;
-int FindCommandNumber(char* cmd) ;
-NODE* FindValidCommand(char* name) ;
+int FindCommandNumber(const char* cmd) ;
+NODE* FindValidCommand(const char* name) ;
 void GenerateHash() ;
 void InitRadix() ;
-NODE* SearchForNodeByName(NODE* head, char* name, int len) ;
+NODE* SearchForNodeByName(NODE* head, const char* name, int len) ;
 } // namespace Alarmud
 #endif // __PARSER_HPP
 

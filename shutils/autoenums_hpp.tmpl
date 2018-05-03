@@ -13,6 +13,19 @@
 //#include "LuaBridge.hpp"
 namespace Alarmud {
 
+
+<TMPL_LOOP LOOP_FLAGS>
+// Flag type: <TMPL_VAR KEY ESCAPE="UPPERCASE"> -- start
+<TMPL_IF COMMENT>/*
+<TMPL_VAR COMMENT>
+*/
+</TMPL_IF>
+<TMPL_LOOP VALUES>
+	constexpr unsigned long <TMPL_VAR NAME ESCAPE="UPPERCASE"><TMPL_VAR FILLER>=<TMPL_VAR VALUE>;<TMPL_IF COMMENT> /*<TMPL_VAR COMMENT>*/</TMPL_IF>
+
+</TMPL_LOOP>
+</TMPL_LOOP>
+
 //Template for enum to unsigned byte
 
 
@@ -30,8 +43,8 @@ inline int enum_to_int(T value) {
 }
 
 <TMPL_LOOP LOOP_ENUMS>
-// Enum type: <TMPL_VAR ENUM ESCAPE="UPPERCASE"> -- start
-enum <TMPL_VAR ENUM ESCAPE="LOWERCASE"> {
+// Enum type: <TMPL_VAR KEY ESCAPE="UPPERCASE"> -- start
+enum <TMPL_VAR KEY ESCAPE="LOWERCASE"> {
 <TMPL_IF COMMENT>/*
 <TMPL_VAR COMMENT>
 */
@@ -41,17 +54,17 @@ enum <TMPL_VAR ENUM ESCAPE="LOWERCASE"> {
 
 </TMPL_LOOP>
 };
-#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_COUNT <TMPL_VAR COUNT>
+#define <TMPL_VAR KEY ESCAPE="UPPERCASE">_COUNT <TMPL_VAR COUNT>
 
-#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_MIN <TMPL_VAR MIN>
+#define <TMPL_VAR KEY ESCAPE="UPPERCASE">_MIN <TMPL_VAR MIN>
 
-#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_MAX <TMPL_VAR MAX>
+#define <TMPL_VAR KEY ESCAPE="UPPERCASE">_MAX <TMPL_VAR MAX>
 
-#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_KEY "<TMPL_VAR ENUM ESCAPE="LOWERCASE">"
+#define <TMPL_VAR KEY ESCAPE="UPPERCASE">_KEY "<TMPL_VAR KEY ESCAPE="LOWERCASE">"
 
-#define <TMPL_VAR ENUM ESCAPE="UPPERCASE">_ACCEPT_ZERO <TMPL_IF ZERO_IS_VALID>true<TMPL_ELSE>false</TMPL_IF>
+#define <TMPL_VAR KEY ESCAPE="UPPERCASE">_ACCEPT_ZERO <TMPL_IF ZERO_IS_VALID>true<TMPL_ELSE>false</TMPL_IF>
 
-// Enum type: <TMPL_VAR ENUM ESCAPE="UPPERCASE"> -- end
+// Enum type: <TMPL_VAR KEY ESCAPE="UPPERCASE"> -- end
 
 </TMPL_LOOP>
 //#defines
@@ -66,10 +79,10 @@ enum <TMPL_VAR ENUM ESCAPE="LOWERCASE"> {
 
 namespace G {
 <TMPL_LOOP LOOP_ENUMS>
-extern <TMPL_VAR ENUM ESCAPE="LOWERCASE"> encode_<TMPL_VAR ENUM ESCAPE="LOWERCASE">(std::string s,<TMPL_VAR ENUM ESCAPE="LOWERCASE"> fallback = <TMPL_LOOP VALUES><TMPL_IF __first__><TMPL_VAR NAME ESCAPE="UPPERCASE"></TMPL_IF></TMPL_LOOP>);
-extern std::string translate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> e);
-extern bool enum_validate(const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value);
-extern std::ostream & operator<<(std::ostream &out,const <TMPL_VAR ENUM ESCAPE="LOWERCASE"> value);
+extern <TMPL_VAR KEY ESCAPE="LOWERCASE"> encode_<TMPL_VAR KEY ESCAPE="LOWERCASE">(std::string s,<TMPL_VAR KEY ESCAPE="LOWERCASE"> fallback = <TMPL_LOOP VALUES><TMPL_IF __first__><TMPL_VAR NAME ESCAPE="UPPERCASE"></TMPL_IF></TMPL_LOOP>);
+extern std::string translate(const <TMPL_VAR KEY ESCAPE="LOWERCASE"> e);
+extern bool enum_validate(const <TMPL_VAR KEY ESCAPE="LOWERCASE"> value);
+extern std::ostream & operator<<(std::ostream &out,const <TMPL_VAR KEY ESCAPE="LOWERCASE"> value);
 </TMPL_LOOP>
 } // namespace G
 template<typename T>
@@ -82,13 +95,13 @@ std::string t(T e) {
 namespace luabridge {
 <TMPL_LOOP LOOP_ENUMS>
 template <>
-struct Stack <gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE">> {
+struct Stack <gates::<TMPL_VAR KEY ESCAPE="LOWERCASE">> {
     static void push (lua_State* L, gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE"> s) {
         lua_pushstring (L, t(s).c_str());
     }
-    static gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE"> get (lua_State* L, int index) {
+    static gates::<TMPL_VAR KEY ESCAPE="LOWERCASE"> get (lua_State* L, int index) {
         string stringa(luaL_checkstring(L,index));
-        return gates::globals()->get<gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE">>(<TMPL_VAR ENUM ESCAPE="UPPERCASE">_KEY,stringa,static_cast<gates::<TMPL_VAR ENUM ESCAPE="LOWERCASE">>(<TMPL_VAR ENUM ESCAPE="UPPERCASE">_MIN));
+        return gates::globals()->get<gates::<TMPL_VAR KEY ESCAPE="LOWERCASE">>(<TMPL_VAR KEY ESCAPE="UPPERCASE">_KEY,stringa,static_cast<gates::<TMPL_VAR KEY ESCAPE="LOWERCASE">>(<TMPL_VAR KEY ESCAPE="UPPERCASE">_MIN));
     }
 };
 

@@ -7,42 +7,27 @@ require('./phplib/getopt.php');
 require('./phplib/alarphptemplate-1.0/alarphptemplate.inc.php');
 $fname=realpath("./enums.json");
 $data=json_decode(@file_get_contents($fname),true);
-$globals=$data['enums'];
+$allenums=$data['enums'];
+$defines=$data['defines'];
+$allflags=$data['flags'];
 $program=basename(__FILE__);
-// Loading protocol loop
+// ENUMS LOOP
 $loop=array();
-ksort($globals);
-foreach ($globals as $enum=>$enums) {
-	$item=array();
-	$item['enum']=$enum;
-	$max=0;
-	$min=256*256;
-	$accept0=true;
-	$howmany=0;
-	foreach ($enums as $desc=>$value) {
-	    if (is_string($value)) {
-	        $item['comment']=trim($value);
-	    }
-	    else {
-	        ++$howmany;
-    	    $comment=$value['comment'];
-    	    $value=$value['value'];
-    		$item['values'][]=array('name'=>$desc,'value'=>$value,'filler'=>str_repeat(' ',45-strlen($desc)),'comment'=>trim($comment));
-    		$max=max($max,$value);
-    		$min=min($min,$value);
-    		if ($desc=='none' and !$value) {
-    			$accept0=false;
-    		}
-	    }
-	}
-	$item['zero_is_valid']=$accept0;
-	$item['max']=$max;
-	$item['min']=$min;
-	$item['count']=$howmany;
-	$loop[]=$item;
+ksort($allenums);
+foreach ($allenums as $enum=>$enums) {
+    $loop[]=genFlagEnum($enum, $enums);
+
 }
 $enums_loop=$loop;
-$defines=$data['defines'];
+// FLAGS LOOP
+$loop=array();
+ksort($allflags);
+foreach ($allflags as $flag=>$flags) {
+    $loop[]=genFlagEnum($flag, $flags);
+}
+$flags_loop=$loop;
+
+//DEFINES LOOP
 $loop=[];
 foreach ($defines as $desc => $val) {
     $loop[]=['name'=>$desc,'value'=>$val['value'],'comment'=>trim($value['comment']),'filler'=>str_repeat(' ',45-strlen($desc))];
@@ -56,6 +41,7 @@ $tmpl=new alarTemplate(
 );
 $tmpl->addParam('generator',"$source by $program");
 $tmpl->addParam('loop_enums',$enums_loop);
+$tmpl->addParam('loop_flags',$flags_loop);
 $tmpl->addParam('loop_defines',$defines_loop);
 printFile('autoenums.cpp');
 printFile('autoenums.hpp');
@@ -74,5 +60,41 @@ function printFile($name,$dump=false) {
 	}
 	$tmpl->showFinalDebug();
 }
-
-
+function genFlagEnum($enum,$enums) {
+    asort($enums,SORT_ASC);
+    $item=array();
+    $item['key']=$enum;
+    $max=0;
+    $min=256*256;
+    $accept0=null;
+    $howmany=0;
+    foreach ($enums as $desc=>$value) {
+        if (is_string($value)) {
+            $item['comment']=trim($value);
+        }
+        else {
+            ++$howmany;
+            $comment=$value['comment'];
+            $value=$value['value'];
+            if (is_null($accept0)) {
+                if ($value !==0) {
+                    list($name,$dummy)=explode('_',$desc,2);
+                    $name.="_NONE";
+                    //$item['values'][]=array('name'=>$name,'value'=>0,'filler'=>str_repeat(' ',45-strlen($name)),'comment'=>trim($comment));
+                    $accept0=false;
+                }
+                else {
+                    $accept0=true;
+                }
+            }
+            $item['values'][]=array('name'=>$desc,'value'=>$value,'filler'=>str_repeat(' ',45-strlen($desc)),'comment'=>trim($comment));
+            $max=max($max,$value);
+            $min=min($min,$value);
+        }
+    }
+    $item['zero_is_valid']=$accept0;
+    $item['max']=$max;
+    $item['min']=$min;
+    $item['count']=$howmany;
+    return $item;
+}

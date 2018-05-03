@@ -44,7 +44,7 @@ namespace Alarmud {
 struct room_data* world;              /* dyn alloc'ed array of rooms     */
 
 
-char* string_fields[] = {
+const char* string_fields[] = {
 	"name",
 	"short",
 	"long",
@@ -56,7 +56,7 @@ char* string_fields[] = {
 	"\n"
 };
 
-char* room_fields[] = {
+const char* room_fields[] = {
 	"name",   /* 1 */
 	"desc",
 	"fs",
@@ -91,7 +91,7 @@ unsigned int room_length[] = {
 	50
 };
 
-char* skill_fields[] = {
+const char* skill_fields[] = {
 	"learned",
 	"affected",
 	"duration",
@@ -116,14 +116,14 @@ void string_add(struct descriptor_data* d, char* str) {
 	int terminator = 0;
 
 	/* determine if this is the terminal string, and truncate if so */
-	for( scan = str; *scan; scan++ )
-		if( ( terminator = ( *scan == '@' ) ) ) {
+	for(scan = str; *scan; scan++)
+		if((terminator = (*scan == '@'))) {
 			*scan = '\0';
 			break;
 		}
 
-	if (!(*d->str))        {
-		if (strlen(str) > d->max_str)          {
+	if(!(*d->str))        {
+		if(strlen(str) > d->max_str)          {
 			send_to_char("String too long - Truncated.\n\r",
 						 d->character);
 			*(str + d->max_str) = '\0';
@@ -133,56 +133,60 @@ void string_add(struct descriptor_data* d, char* str) {
 		strcpy(*d->str, str);
 	}
 	else        {
-		if (strlen(str) + strlen(*d->str) > d->max_str)        {
+		if(strlen(str) + strlen(*d->str) > d->max_str)        {
 			send_to_char("String too long. Last line skipped.\n\r",
 						 d->character);
 			terminator = 1;
 		}
 		else         {
-			if (!(*d->str = (char*) realloc(*d->str, strlen(*d->str) +
-											strlen(str) + 3)))             {
-				perror("string_add");
+			if(!(*d->str = (char*) realloc(*d->str, strlen(*d->str) +
+										   strlen(str) + 3)))             {
+				mudlog(LOG_ERROR,"%s:%s","string_add",strerror(errno));
 				assert(0);
 			}
 			strcat(*d->str, str);
 		}
 	}
 
-	if (terminator)        {
-		if (!d->connected && (IS_SET(d->character->specials.act, PLR_MAILING))) {
+	if(terminator)        {
+		if(!d->connected && (IS_SET(d->character->specials.act, PLR_MAILING))) {
 			store_mail(d->name, d->character->player.name, *d->str);
 			free(*d->str);
 			free(d->str);
 			free(d->name);
 			d->name = 0;
 			SEND_TO_Q("Message sent!\n\r", d);
-			if (!IS_NPC(d->character))
-			{ REMOVE_BIT(d->character->specials.act, PLR_MAILING); }
+			if(!IS_NPC(d->character)) {
+				REMOVE_BIT(d->character->specials.act, PLR_MAILING);
+			}
 		}
 		d->str = 0;
-		if (d->connected == CON_EXDSCR)        {
+		if(d->connected == CON_EXDSCR)        {
 			SEND_TO_Q(MENU, d);
 			d->connected = CON_SLCT;
 		}
 	}
-	else
-	{ strcat(*d->str, "\n\r"); }
+	else {
+		strcat(*d->str, "\n\r");
+	}
 }
 
 
 #undef MAX_STR
 
 /* interpret an argument for do_string */
-void quad_arg(char* arg, int* type, char* name, int* field, char* string) {
+void quad_arg(const char* arg, int* type, char* name, int* field, char* buffer) {
 	char buf[MAX_STRING_LENGTH];
 
 
 	/* determine type */
 	arg = one_argument(arg, buf);
-	if (is_abbrev(buf, "char"))
-	{ *type = TP_MOB; }
-	else if (is_abbrev(buf, "obj"))
-	{ *type = TP_OBJ; }
+	if(is_abbrev(buf, "char")) {
+		*type = TP_MOB;
+	}
+	else if(is_abbrev(buf, "obj")) {
+		*type = TP_OBJ;
+	}
 	else {
 		*type = TP_ERROR;
 		return;
@@ -193,12 +197,13 @@ void quad_arg(char* arg, int* type, char* name, int* field, char* string) {
 
 	/* field name and number */
 	arg = one_argument(arg, buf);
-	if (!(*field = old_search_block(buf, 0, strlen(buf), string_fields, 0)))
-	{ return; }
+	if(!(*field = old_search_block(buf, 0, strlen(buf), string_fields, 0))) {
+		return;
+	}
 
 	/* string */
-	for( ; isspace(*arg); arg++ );
-	for( ; ( *string = *arg ); arg++, string++ );
+	for(; isspace(*arg); arg++);
+	for(; (*buffer = *arg); arg++, buffer++);
 
 	return;
 }
@@ -207,64 +212,65 @@ void quad_arg(char* arg, int* type, char* name, int* field, char* string) {
 
 
 /* modification of malloc'ed strings in chars/objects */
-void do_string(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_string) {
 
-	char name[MAX_STRING_LENGTH], string[MAX_STRING_LENGTH];
+	char name[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
 	struct extra_descr_data* ed, *tmp;
 	int field, type;
 	struct char_data* mob;
 	struct obj_data* obj;
-	if (IS_NPC(ch))
-	{ return; }
-
-	quad_arg(arg, &type, name, &field, string);
-
-	if (type == TP_ERROR) {
-		send_to_char( "Syntax:\n\rstring ('obj'|'char') <name> <field> "
-					  "[<string>].", ch);
+	if(IS_NPC(ch)) {
 		return;
 	}
 
-	if (!field) {
-		send_to_char( "No field by that name. Try 'help string'.\n\r", ch);
+	quad_arg(arg, &type, name, &field, buffer);
+
+	if(type == TP_ERROR) {
+		send_to_char("Syntax:\n\rstring ('obj'|'char') <name> <field> "
+					 "[<string>].", ch);
 		return;
 	}
 
-	if (type == TP_MOB) {
+	if(!field) {
+		send_to_char("No field by that name. Try 'help string'.\n\r", ch);
+		return;
+	}
+
+	if(type == TP_MOB) {
 		/* locate the beast */
-		if (!(mob = get_char_vis(ch, name))) {
+		if(!(mob = get_char_vis(ch, name))) {
 			send_to_char("I don't know anyone by that name...\n\r", ch);
 			return;
 		}
 
 		switch(field) {
 		case 1:
-			if (!IS_NPC(mob) && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
+			if(!IS_NPC(mob) && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
 				send_to_char("You can't change that field for players.", ch);
 				return;
 			}
-			if (!*string) {
+			if(!*buffer) {
 				send_to_char("You have to supply a name!\n\r", ch);
 				return;
 			}
 			ch->desc->str = &mob->player.name;
-			if (!IS_NPC(mob))
-				send_to_char( "WARNING: You have changed the name of a player.\n\r",
-							  ch);
+			if(!IS_NPC(mob))
+				send_to_char("WARNING: You have changed the name of a player.\n\r",
+							 ch);
 			break;
 		case 2:
-			if (!IS_NPC(mob)) {
+			if(!IS_NPC(mob)) {
 				send_to_char("That field is for monsters only.\n\r", ch);
 				return;
 			}
-			if (!*string) {
+			if(!*buffer) {
 				send_to_char("You have to supply a description!\n\r", ch);
 				return;
 			}
 			ch->desc->str = &mob->player.short_descr;
 			break;
 		case 3:
-			if (!IS_NPC(mob)) {
+			if(!IS_NPC(mob)) {
 				send_to_char("That field is for monsters only.\n\r", ch);
 				return;
 			}
@@ -274,12 +280,13 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			ch->desc->str = &mob->player.description;
 			break;
 		case 5:
-			if (IS_NPC(mob)) {
+			if(IS_NPC(mob)) {
 				send_to_char("Monsters have no titles.\n\r",ch);
 				return;
 			}
-			if ((GetMaxLevel(ch) >= GetMaxLevel(mob)) && (ch != mob))
-			{ ch->desc->str = &mob->player.title; }
+			if((GetMaxLevel(ch) >= GetMaxLevel(mob)) && (ch != mob)) {
+				ch->desc->str = &mob->player.title;
+			}
 			else {
 				send_to_char("Sorry, can't set the title of someone of higher "
 							 "level.\n\r", ch);
@@ -287,14 +294,14 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			}
 			break;
 		case 7:
-			if (mob->player.sounds) {
+			if(mob->player.sounds) {
 				free(mob->player.sounds);
 				mob->player.sounds = 0;
 			}
 			return;
 			break;
 		case 8:
-			if (mob->player.distant_snds) {
+			if(mob->player.distant_snds) {
 				free(mob->player.distant_snds);
 				mob->player.distant_snds = 0;
 			}
@@ -308,14 +315,14 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 	}
 	else { /* type == TP_OBJ */
 		/* locate the object */
-		if (!(obj = get_obj_vis(ch, name))) {
+		if(!(obj = get_obj_vis(ch, name))) {
 			send_to_char("Can't find such a thing here..\n\r", ch);
 			return;
 		}
 
 		switch(field) {
 		case 1:
-			if (!*string) {
+			if(!*buffer) {
 				send_to_char("You have to supply a keyword.\n\r", ch);
 				return;
 			}
@@ -324,7 +331,7 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			}
 			break;
 		case 2:
-			if (!*string) {
+			if(!*buffer) {
 				send_to_char("You have to supply a keyword.\n\r", ch);
 				return;
 			}
@@ -336,28 +343,28 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			ch->desc->str = &obj->description;
 			break;
 		case 4:
-			if (!*string) {
+			if(!*buffer) {
 				send_to_char("You have to supply a keyword.\n\r", ch);
 				return;
 			}
 			/* try to locate extra description */
-			for( ed = obj->ex_description; ; ed = ed->next) {
-				if (!ed) {
-					CREATE( ed, struct extra_descr_data, 1);
+			for(ed = obj->ex_description; ; ed = ed->next) {
+				if(!ed) {
+					CREATE(ed, struct extra_descr_data, 1);
 					ed->nMagicNumber = EXDESC_VALID_MAGIC;
 					ed->next = obj->ex_description;
 					obj->ex_description = ed;
-					ed->keyword =  strdup( string );
+					ed->keyword =  strdup(buffer);
 					ed->description = NULL;
 					ch->desc->str = &ed->description;
 					send_to_char("New field.\n\r", ch);
 					break;
 				}
-				else if (!str_cmp(ed->keyword, string)) { /* the field exists */
+				else if(!str_cmp(ed->keyword, buffer)) {  /* the field exists */
 					free(ed->description);
 					ed->description = NULL;
 					ch->desc->str = &ed->description;
-					send_to_char( "Modifying description.\n\r", ch);
+					send_to_char("Modifying description.\n\r", ch);
 					break;
 				}
 			}
@@ -365,30 +372,31 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 			return; /* the stndrd (see below) procedure does not apply here */
 			break;
 		case 6: /* deletion */
-			if (!*string) {
+			if(!*buffer) {
 				send_to_char("You must supply a field name.\n\r", ch);
 				return;
 			}
 			/* try to locate field */
-			for (ed = obj->ex_description; ; ed = ed->next) {
-				if( ed && ed->nMagicNumber != EXDESC_VALID_MAGIC ) {
-					mudlog( LOG_SYSERR,
-							"Invalid exdesc freeing exdesc in do_string (modify.c)." );
-					send_to_char("Problemi con le descrizioni dell'oggetto.\n\r", ch );
+			for(ed = obj->ex_description; ; ed = ed->next) {
+				if(ed && ed->nMagicNumber != EXDESC_VALID_MAGIC) {
+					mudlog(LOG_SYSERR,
+						   "Invalid exdesc freeing exdesc in do_string (modify.c).");
+					send_to_char("Problemi con le descrizioni dell'oggetto.\n\r", ch);
 					return;
 				}
 
-				if (!ed) {
+				if(!ed) {
 					send_to_char("No field with that keyword.\n\r", ch);
 					return;
 				}
-				else if (!str_cmp(ed->keyword, string)) {
+				else if(!str_cmp(ed->keyword, buffer)) {
 					free(ed->keyword);
 					free(ed->description);
 
 					/* delete the entry in the desr list */
-					if (ed == obj->ex_description)
-					{ obj->ex_description = ed->next; }
+					if(ed == obj->ex_description) {
+						obj->ex_description = ed->next;
+					}
 					else {
 						for(tmp = obj->ex_description; tmp->next != ed;
 								tmp = tmp->next);
@@ -404,24 +412,24 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 
 			break;
 		default:
-			send_to_char( "That field is undefined for objects.\n\r", ch);
+			send_to_char("That field is undefined for objects.\n\r", ch);
 			return;
 			break;
 		}
 	}
 
-	if (*ch->desc->str) {
+	if(*ch->desc->str) {
 		free(*ch->desc->str);
 	}
 
-	if (*string) {
+	if(*buffer) {
 		/* there was a string in the argument array */
-		if (strlen(string) > length[field - 1]) {
+		if(strlen(buffer) > length[field - 1]) {
 			send_to_char("String too long - truncated.\n\r", ch);
-			*(string + length[field - 1]) = '\0';
+			*(buffer + length[field - 1]) = '\0';
 		}
-		CREATE(*ch->desc->str, char, strlen(string) + 1);
-		strcpy(*ch->desc->str, string);
+		CREATE(*ch->desc->str, char, strlen(buffer) + 1);
+		strcpy(*ch->desc->str, buffer);
 		ch->desc->str = 0;
 		send_to_char("Ok.\n\r", ch);
 	}
@@ -436,51 +444,54 @@ void do_string(struct char_data* ch, const char* arg, int cmd) {
 
 
 
-void bisect_arg(const char* arg, int* field, char* string) {
+void bisect_arg(const char* arg, int* field, char* buffer) {
 	char buf[MAX_INPUT_LENGTH];
 
 
 	/* field name and number */
 	arg = one_argument(arg, buf);
-	if (!(*field = old_search_block(buf, 0, strlen(buf), room_fields, 0)))
-	{ return; }
+	if(!(*field = old_search_block(buf, 0, strlen(buf), room_fields, 0))) {
+		return;
+	}
 
 	/* string */
-	for( ; isspace(*arg); arg++ );
-	for( ; ( *string = *arg ); arg++, string++ );
+	for(; isspace(*arg); arg++);
+	for(; (*buffer = *arg); arg++, buffer++);
 
 	return;
 }
 
 
-void do_edit(struct char_data* ch, const char* arg, int cmd) {
+ACTION_FUNC(do_edit) {
 	int field, dflags, dir, exroom, dkey, rspeed, rdir, open_cmd,
 		tele_room, tele_time, tele_mask, moblim, tele_cnt;
 	int r_flags;
 	int s_type;
 	unsigned int i;
-	char string[512], sdflags[30];
+	char buffer[512], sdflags[30];
 	struct extra_descr_data* ed, *tmp;
 	struct room_data*        rp;
 
 	rp = real_roomp(ch->in_room);
 
-	if ((IS_NPC(ch)) || (GetMaxLevel(ch)<IMMORTALE))
-	{ return; }
+	if((IS_NPC(ch)) || (GetMaxLevel(ch)<IMMORTALE)) {
+		return;
+	}
 
-	if (!ch->desc) /* someone is forced to do something. can be bad! */
-	{ return; }      /* the ch->desc->str field will cause problems... */
+	if(!ch->desc) { /* someone is forced to do something. can be bad! */
+		return;    /* the ch->desc->str field will cause problems... */
+	}
 
 
-	if( (GetMaxLevel(ch) < MAESTRO_DEGLI_DEI) && rp->zone != GET_ZONE(ch) )  {
+	if((GetMaxLevel(ch) < MAESTRO_DEGLI_DEI) && rp->zone != GET_ZONE(ch))  {
 		/*  (!IS_SET(ch->specials.permissions,PREV_AREA_MAKER)) )*/
 		send_to_char("Spiacente, non sei autorizzato ad editare questa zona\n\r", ch);
 		return;
 	}
 
-	bisect_arg(arg, &field, string);
+	bisect_arg(arg, &field, buffer);
 
-	if (!field)        {
+	if(!field)        {
 		send_to_char("No field by that name. Try 'help edit'.\n\r", ch);
 		return;
 	}
@@ -497,8 +508,8 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		ch->desc->str = &rp->description;
 		break;
 	case 3:
-		sscanf(string,"%u %d ",&r_flags,&s_type);
-		if ((r_flags < 0)  || (s_type < 0) || (s_type > 11)) {
+		sscanf(buffer,"%d %d ",&r_flags,&s_type);
+		if((r_flags < 0)  || (s_type < 0) || (s_type > 11)) {
 			send_to_char("didn't quite get those, please try again.\n\r",ch);
 			send_to_char("flags must be 0 or positive, and sectors must be from 0 to 11\n\r",ch);
 			send_to_char("edit fs <flags> <sector_type>\n\r",ch);
@@ -507,7 +518,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		rp->room_flags = r_flags;
 		rp->sector_type = s_type;
 
-		if (rp->sector_type == SECT_WATER_NOSWIM) {
+		if(rp->sector_type == SECT_WATER_NOSWIM) {
 			send_to_char("P.S. you need to do speed and flow\n\r",ch);
 			send_to_char("For this river. (set to 0 as default)\n\r",ch);
 			rp->river_speed = 0;
@@ -520,12 +531,12 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 	case 4:
 
 		open_cmd=-1; /* no cmd by default */
-		sscanf(string,"%d %s %d %d %d", &dir, sdflags, &dkey, &exroom, &open_cmd);
+		sscanf(buffer,"%d %s %d %d %d", &dir, sdflags, &dkey, &exroom, &open_cmd);
 
 		/*
 		 * check if the exit exists
 		  */
-		if ((dir < 0) || (dir > 5)) {
+		if((dir < 0) || (dir > 5)) {
 			send_to_char("You need to use numbers for that (0 - 5)",ch);
 			return;
 		}
@@ -574,14 +585,14 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 			}
 		}
 
-		if (rp->dir_option[dir]) {
+		if(rp->dir_option[dir]) {
 			send_to_char("modifying exit\n\r",ch);
 
 			rp->dir_option[dir]->exit_info=dflags;
 			rp->dir_option[dir]->key = dkey;
 			rp->dir_option[dir]->open_cmd = open_cmd;
 
-			if (real_roomp(exroom) != NULL) {
+			if(real_roomp(exroom) != NULL) {
 				rp->dir_option[dir]->to_room = exroom;
 			}
 			else {
@@ -591,7 +602,7 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 				return;
 			}
 		}
-		else if (real_roomp(exroom)==NULL) {
+		else if(real_roomp(exroom)==NULL) {
 			send_to_char("Hey, John Yaya, that's not a valid room.\n\r", ch);
 			return;
 		}
@@ -606,8 +617,8 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 			rp->dir_option[dir]->open_cmd = open_cmd;
 		}
 
-		if (rp->dir_option[dir]->exit_info>0) {
-			string[0] = 0;
+		if(rp->dir_option[dir]->exit_info>0) {
+			buffer[0] = 0;
 			send_to_char("enter keywords, 1 line only. \n\r",ch);
 			send_to_char("terminate with an @ on the same line.\n\r",ch);
 			ch->desc->str = &rp->dir_option[dir]->keyword;
@@ -619,11 +630,11 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 
 	case 5:
 		dir = -1;
-		sscanf(string,"%d", &dir);
-		if ((dir >=0) && (dir <= 5)) {
+		sscanf(buffer,"%d", &dir);
+		if((dir >=0) && (dir <= 5)) {
 			send_to_char("Enter text, term. with '@' on a blank line",ch);
-			string[0] = 0;
-			if (rp->dir_option[dir]) {
+			buffer[0] = 0;
+			if(rp->dir_option[dir]) {
 				ch->desc->str = &rp->dir_option[dir]->general_description;
 			}
 			else {
@@ -642,29 +653,29 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		/*
 		  extra descriptions
 		  */
-		if (!*string)          {
+		if(!*buffer)          {
 			send_to_char("You have to supply a keyword.\n\r", ch);
 			return;
 		}
 		/* try to locate extra description */
-		for (ed = rp->ex_description; ; ed = ed->next)
-			if (!ed) {
+		for(ed = rp->ex_description; ; ed = ed->next)
+			if(!ed) {
 				CREATE(ed, struct extra_descr_data, 1);
 				ed->next = rp->ex_description;
 				rp->ex_description = ed;
-				CREATE(ed->keyword, char, strlen(string) + 1);
-				strcpy(ed->keyword, string);
+				CREATE(ed->keyword, char, strlen(buffer) + 1);
+				strcpy(ed->keyword, buffer);
 				ed->description = 0;
 				ch->desc->str = &ed->description;
 				send_to_char("New field.\n\r", ch);
 				break;
 			}
-			else if (!str_cmp(ed->keyword, string)) {
+			else if(!str_cmp(ed->keyword, buffer)) {
 				/* the field exists */
 				free(ed->description);
 				ed->description = 0;
 				ch->desc->str = &ed->description;
-				send_to_char( "Modifying description.\n\r", ch);
+				send_to_char("Modifying description.\n\r", ch);
 				break;
 			}
 		ch->desc->max_str = MAX_STRING_LENGTH;
@@ -675,8 +686,8 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		/*  this is where the river stuff will go */
 		rspeed = 0;
 		rdir = 0;
-		sscanf(string,"%d %d ",&rspeed,&rdir);
-		if ((rdir>= 0) && (rdir <= 5)) {
+		sscanf(buffer,"%d %d ",&rspeed,&rdir);
+		if((rdir>= 0) && (rdir <= 5)) {
 			rp->river_speed = rspeed;
 			rp->river_dir = rdir;
 		}
@@ -690,17 +701,17 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		tele_room = -1;
 		tele_time = -1;
 		tele_mask = -1;
-		sscanf(string,"%d %d %d",&tele_time,&tele_room,&tele_mask);
-		if (tele_room < 0 || tele_time < 0 || tele_mask < 0) {
+		sscanf(buffer,"%d %d %d",&tele_time,&tele_room,&tele_mask);
+		if(tele_room < 0 || tele_time < 0 || tele_mask < 0) {
 			send_to_char(" edit tele <time> <room_nr> <tele-flags>\n\r", ch);
 			return;
 			break;
 		}
 		else {
-			if (IS_SET(TELE_COUNT, tele_mask)) {
-				sscanf(string,"%d %d %d %d",
+			if(IS_SET(TELE_COUNT, tele_mask)) {
+				sscanf(buffer,"%d %d %d %d",
 					   &tele_time, &tele_room, &tele_mask, &tele_cnt);
-				if (tele_cnt < 0) {
+				if(tele_cnt < 0) {
 					send_to_char
 					(" edit tele <time> <room_nr> <tele-flags> [tele-count]\n\r", ch);
 					return;
@@ -723,15 +734,16 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 
 		return;
 	case 9:
-		if (sscanf(string, "%d", &moblim) < 1) {
+		if(sscanf(buffer, "%d", &moblim) < 1) {
 			send_to_char("edit tunn <mob_limit>\n\r", ch);
 			return;
 			break;
 		}
 		else {
 			real_roomp(ch->in_room)->moblim = moblim;
-			if (!IS_SET(real_roomp(ch->in_room)->room_flags, TUNNEL))
-			{ SET_BIT(real_roomp(ch->in_room)->room_flags, TUNNEL); }
+			if(!IS_SET(real_roomp(ch->in_room)->room_flags, TUNNEL)) {
+				SET_BIT(real_roomp(ch->in_room)->room_flags, TUNNEL);
+			}
 			return;
 			break;
 		}
@@ -739,24 +751,26 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		/*
 		  deletion
 		  */
-		if (!*string)          {
+		if(!*buffer)          {
 			send_to_char("You must supply a field name.\n\r", ch);
 			return;
 		}
 		/* try to locate field */
-		for (ed = rp->ex_description; ; ed = ed->next)
-			if (!ed) {
+		for(ed = rp->ex_description; ; ed = ed->next)
+			if(!ed) {
 				send_to_char("No field with that keyword.\n\r", ch);
 				return;
 			}
-			else if (!str_cmp(ed->keyword, string)) {
+			else if(!str_cmp(ed->keyword, buffer)) {
 				free(ed->keyword);
-				if (ed->description)
-				{ free(ed->description); }
+				if(ed->description) {
+					free(ed->description);
+				}
 
 				/* delete the entry in the desr list */
-				if (ed == rp->ex_description)
-				{ rp->ex_description = ed->next; }
+				if(ed == rp->ex_description) {
+					rp->ex_description = ed->next;
+				}
 				else {
 					for(tmp = rp->ex_description; tmp->next != ed;
 							tmp = tmp->next);
@@ -775,17 +789,17 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 		break;
 	}
 
-	if (*ch->desc->str)        {
+	if(*ch->desc->str)        {
 		free(*ch->desc->str);
 	}
 
-	if (*string) {   /* there was a string in the argument array */
-		if (strlen(string) > room_length[field - 1])        {
+	if(*buffer) {    /* there was a string in the argument array */
+		if(strlen(buffer) > room_length[field - 1])        {
 			send_to_char("String too long - truncated.\n\r", ch);
-			*(string + length[field - 1]) = '\0';
+			*(buffer + length[field - 1]) = '\0';
 		}
-		CREATE(*ch->desc->str, char, strlen(string) + 1);
-		strcpy(*ch->desc->str, string);
+		CREATE(*ch->desc->str, char, strlen(buffer) + 1);
+		strcpy(*ch->desc->str, buffer);
 		ch->desc->str = 0;
 		send_to_char("Ok.\n\r", ch);
 	}
@@ -803,13 +817,13 @@ void do_edit(struct char_data* ch, const char* arg, int cmd) {
 ********************************************************************** */
 
 #ifndef ALAR
-void do_setskill(struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(do_setskill) {
 	send_to_char("This routine is disabled untill it fitts\n\r", ch);
 	send_to_char("The new structures (sorry Quinn) ....Bombman\n\r", ch);
 	return;
 }
 #else
-void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
+ACTION_FUNC(do_setskill) {
 	char buf[ 256 ];
 	struct char_data* mob;
 	char sskill[256];
@@ -820,30 +834,38 @@ void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
 	int ivalue;
 	int ispecial;
 	int iflags;
-	argument = one_argument( argument, buf );
-	argument = one_argument( argument, sskill );
-	argument = one_argument( argument, svalue );
-	argument = one_argument( argument, sspecial);
-	argument = one_argument( argument, sflags);
+	arg = one_argument(arg, buf);
+	arg = one_argument(arg, sskill);
+	arg = one_argument(arg, svalue);
+	arg = one_argument(arg, sspecial);
+	arg = one_argument(arg, sflags);
 	iskill=atoi(sskill);
 	ivalue=atoi(svalue);
 	ispecial=atoi(sspecial);
 	iflags=atoi(sflags);
-	if (!(iskill+ivalue)) {
+	if(!(iskill+ivalue)) {
 		send_to_char("setsk numeroskill valore specializzato flags",ch); // SALVO aggiungo la possibilita' di modificare flags
 		return;
 	}
 
-	if( ( mob = get_char_vis( ch, buf ) ) == NULL )
-	{ send_to_char( "Non c'e` nessuno con quel nome qui.\n\r", ch ); }
-	else if( mob->skills == NULL )
-	{ send_to_char( "Il giocatore non ha skills.\n\r", ch ); }
+	if((mob = get_char_vis(ch, buf)) == NULL) {
+		send_to_char("Non c'e` nessuno con quel nome qui.\n\r", ch);
+	}
+	else if(mob->skills == NULL) {
+		send_to_char("Il giocatore non ha skills.\n\r", ch);
+	}
 	else {
-		if (ivalue)    { mob->skills[ iskill ].learned = ivalue; }
-		if (iflags)    { mob->skills[ iskill ].flags   = iflags; }
-		if (ispecial)  { mob->skills[ iskill ].special = ispecial; }
+		if(ivalue)    {
+			mob->skills[ iskill ].learned = ivalue;
+		}
+		if(iflags)    {
+			mob->skills[ iskill ].flags   = iflags;
+		}
+		if(ispecial)  {
+			mob->skills[ iskill ].special = ispecial;
+		}
 		mob->skills[ iskill ].nummem  = 0;
-		send_to_char( "Fatto.\n\r", ch );
+		send_to_char("Fatto.\n\r", ch);
 	}
 }
 #endif
@@ -854,40 +876,43 @@ void do_setskill( struct char_data* ch, const char* argument, int cmd ) {
 /* One_Word is like one_argument, execpt that words in quotes "" are */
 /* regarded as ONE word                                              */
 
-char* one_word(const char* argument, char* first_arg ) {
+char* one_word(char* arg, char* first_arg) {
 	int begin, look_at;
 
 	begin = 0;
 
 	do {
-		for ( ; isspace(*(argument + begin)); begin++);
+		for(; isspace(*(arg + begin)); begin++);
 
-		if (*(argument+begin) == '\"') {
+		if(*(arg+begin) == '\"') {
 			/* is it a quote */
 
 			begin++;
 
-			for( look_at=0; (*(argument+begin+look_at) >= ' ') &&
-					(*(argument+begin+look_at) != '\"') ; look_at++)
-			{ *(first_arg + look_at) = LOWER(*(argument + begin + look_at)); }
+			for(look_at=0; (*(arg+begin+look_at) >= ' ') &&
+					(*(arg+begin+look_at) != '\"') ; look_at++) {
+				*(first_arg + look_at) = LOWER(*(arg + begin + look_at));
+			}
 
-			if (*(argument+begin+look_at) == '\"')
-			{ begin++; }
+			if(*(arg+begin+look_at) == '\"') {
+				begin++;
+			}
 
 		}
 		else {
 
-			for (look_at=0; *(argument+begin+look_at) > ' ' ; look_at++)
-			{ *(first_arg + look_at) = LOWER(*(argument + begin + look_at)); }
+			for(look_at=0; *(arg+begin+look_at) > ' ' ; look_at++) {
+				*(first_arg + look_at) = LOWER(*(arg + begin + look_at));
+			}
 
 		}
 
 		*(first_arg + look_at) = '\0';
 		begin += look_at;
 	}
-	while (fill_word(first_arg));
+	while(fill_word(first_arg));
 
-	return(argument+begin);
+	return(arg+begin);
 }
 
 
@@ -897,19 +922,20 @@ struct help_index_element* build_help_index(FILE* fl, int* num) {
 	char buf[81], tmp[81], *scan;
 	long pos;
 
-	for (;;) {
+	for(;;) {
 		pos = ftell(fl);
 		fgets(buf, 81, fl);
 		*(buf + strlen(buf) - 1) = '\0';
 		scan = buf;
-		for (;;) {
+		for(;;) {
 			/* extract the keywords */
 			scan = one_word(scan, tmp);
 
-			if (!*tmp)
-			{ break; }
+			if(!*tmp) {
+				break;
+			}
 
-			if (!list) {
+			if(!list) {
 				CREATE(list, struct help_index_element, 1);
 				nr = 0;
 			}
@@ -922,17 +948,19 @@ struct help_index_element* build_help_index(FILE* fl, int* num) {
 			strcpy(list[nr].keyword, tmp);
 		}
 		/* skip the text */
-		do
-		{ fgets(buf, 81, fl); }
-		while (*buf != '#');
-		if (*(buf + 1) == '~')
-		{ break; }
+		do {
+			fgets(buf, 81, fl);
+		}
+		while(*buf != '#');
+		if(*(buf + 1) == '~') {
+			break;
+		}
 	}
 	/* we might as well sort the stuff */
 	do {
 		issorted = 1;
-		for (i = 0; i < nr; i++) {
-			if (str_cmp(list[i].keyword, list[i + 1].keyword) > 0) {
+		for(i = 0; i < nr; i++) {
+			if(str_cmp(list[i].keyword, list[i + 1].keyword) > 0) {
 				mem = list[i];
 				list[i] = list[i + 1];
 				list[i + 1] = mem;
@@ -940,7 +968,7 @@ struct help_index_element* build_help_index(FILE* fl, int* num) {
 			}
 		}
 	}
-	while (!issorted);
+	while(!issorted);
 
 	*num = nr;
 	return(list);
@@ -949,72 +977,77 @@ struct help_index_element* build_help_index(FILE* fl, int* num) {
 
 
 void page_string(struct descriptor_data* d, const char* str, int keep_internal) {
-	if (!d)
-	{ return; }
+	if(!d) {
+		return;
+	}
 
-	if (keep_internal)        {
+	if(keep_internal)        {
 		CREATE(d->showstr_head, char, strlen(str) + 1);
-		strcpy(d->showstr_head, str);
+		// Let's hope the caller is right: I assume that the passed string is a temporary one and need to be stored in showstr_head
+		strcpy(d->showstr_head, const_cast<char*>(str));
 		d->showstr_point = d->showstr_head;
 	}
-	else
-	{ d->showstr_point = str; }
+	else {
+		free(d->showstr_head);
+		d->showstr_head=nullptr;
+		d->showstr_point = str;
+	}
 
 	show_string(d, "");
 }
 
-void show_string( struct descriptor_data* d, const char* input ) {
+void show_string(struct descriptor_data* d, const char* input) {
 	char buffer[ MAX_STRING_LENGTH ], buf[ MAX_INPUT_LENGTH ];
-	register char* scan, *chk;
 	int lines = 0, toggle = 1;
 	int i;
-	one_argument( input, buf );
+	one_argument(input, buf);
 
-	if( *buf ) {
-		if( d->showstr_head ) {
-			free( d->showstr_head );
-			d->showstr_head = 0;
+	if(*buf) {
+		if(d->showstr_head) {
+			free(d->showstr_head);
+			d->showstr_head = nullptr;
 		}
-		d->showstr_point = 0;
+		d->showstr_point = nullptr;
 		return;
 	}
 
-	if( !d->character ) {
+	if(!d->character) {
 		i = 20;
 	}
-	else if( IS_SET( d->character->player.user_flags, USE_PAGING ) ) {
-		if( d->character->term == 0 )
-		{ i = d->character->size - 4; }
-		else
-		{ i = d->character->size - 8; }
+	else if(IS_SET(d->character->player.user_flags, USE_PAGING)) {
+		if(d->character->term == 0) {
+			i = d->character->size - 4;
+		}
+		else {
+			i = d->character->size - 8;
+		}
 	}
 	else {
 		i = 1000;
 	}
 
 	/* show a chunk */
-	for( scan = buffer;; scan++, d->showstr_point++ ) {
-		if( ( ( ( *scan = *d->showstr_point ) == '\n' ) || ( *scan == '\r' ) ) &&
-				( ( toggle = -toggle ) < 0 ) ) {
+	for(char* scan = buffer;; scan++, d->showstr_point++) {
+		if((((*scan = *d->showstr_point) == '\n') || (*scan == '\r')) && ((toggle = -toggle) < 0)) {
 			lines++;
-			if( strlen( buffer ) > MAX_STRING_LENGTH - 265 )
-			{ i = lines; }
+			if(strlen(buffer) > MAX_STRING_LENGTH - 265) {
+				i = lines;
+			}
 		}
-		else if( !*scan || ( lines >= i ) ) {
+		else if(!*scan || (lines >= i)) {
 			*scan = '\0';
 
-			PushStatus("SEND_TO_Q inn page string");
-			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
-												USE_ANSI ), buffer ), d );
-			PopStatus();
+			SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
+											 USE_ANSI), buffer), d);
 			/* see if this is the end (or near the end) of the string */
-			for( chk = d->showstr_point; *chk && isspace( *chk ); chk++ );
-			if( !*chk ) {
-				if( d->showstr_head ) {
-					free( d->showstr_head );
-					d->showstr_head = 0;
+			const char* chk;
+			for(chk = d->showstr_point; *chk && isspace(*chk); chk++);
+			if(!*chk) {
+				if(d->showstr_head) {
+					free(d->showstr_head);
+					d->showstr_head = nullptr;
 				}
-				d->showstr_point = 0;
+				d->showstr_point = nullptr;
 			}
 			return;
 		}
@@ -1023,7 +1056,6 @@ void show_string( struct descriptor_data* d, const char* input ) {
 
 void check_reboot() {
 	static time_t lastCheck=time(0);
-	static time_t shutdownStart=time(0);
 	time_t tc;
 	struct tm* t_info;
 	FILE* boot;
@@ -1032,31 +1064,35 @@ void check_reboot() {
 	static int shutdownlevel=0;
 	static int forceshutdown=0;
 	char REBOOTFILE[15];
-	if (GetMediumLag(0)> 400000) {
-		if (TooMuchLag<20) { TooMuchLag++; }
+	if(GetLagIndex()> 400000) {
+		if(TooMuchLag<20) {
+			TooMuchLag++;
+		}
 	}
-	if (GetMediumLag(0)<250000) {
-		if (TooMuchLag>-20)  { TooMuchLag--; }
+	if(GetLagIndex()<250000) {
+		if(TooMuchLag>-20)  {
+			TooMuchLag--;
+		}
 	}
 
 	tc = time(0);
 	t_info = localtime(&tc);
-	if (forceshutdown) {
+	if(forceshutdown) {
 		shutdownlevel=25;
 	}
 	// If we already on a reboot sequence, checking is pointless
-	if( !bBootSequenceStarted && (tc-lastCheck) >=60) { //Once every minute
+	if(!bBootSequenceStarted && (tc-lastCheck) >=60) {  //Once every minute
 		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
 		lastCheck=tc;
 		sprintf(REBOOTFILE,"REBOOT%02d%1d0",t_info->tm_hour,(t_info->tm_min / 10));
-		if(  (boot = fopen( REBOOTFILE, "r+" )) ) {
+		if((boot = fopen(REBOOTFILE, "r+"))) {
 			fclose(boot);
 			bBootSequenceStarted=TRUE;
 			shutdownlevel=0;
 		}
 		else {
 			sprintf(REBOOTFILE,"REBOOT.NOW");
-			if ((boot = fopen(REBOOTFILE, "r+"))) {
+			if((boot = fopen(REBOOTFILE, "r+"))) {
 				fclose(boot);
 				unlink(REBOOTFILE);
 				bBootSequenceStarted=TRUE;
@@ -1064,53 +1100,63 @@ void check_reboot() {
 			}
 		}
 	}
-	else if  (bBootSequenceStarted) {
+	else if(bBootSequenceStarted) {
 		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
 		shutdownlevel+=((tc-lastCheck)/60);
 		lastCheck=tc;
-		if( shutdownlevel > 30 ) {
+		if(shutdownlevel > 30) {
 			struct descriptor_data* pDesc;
-			for( pDesc = descriptor_list; pDesc; pDesc = pDesc->next ) {
+			for(pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
 				/* send_to_all qui non funziona a causa della bufferizzazione. */
-				if( pDesc->connected == CON_PLYNG )
+				if(pDesc->connected == CON_PLYNG)
 					write_to_descriptor(pDesc->descriptor,
 										ParseAnsiColors(IS_SET(pDesc->character->player.user_flags,
-														USE_ANSI ),
+														USE_ANSI),
 														"Reboot automatico. "
-														"Ci rivediamo tra poco.\n\r" ) );
+														"Ci rivediamo tra poco.\n\r"));
 			}
 			raw_force_all("return");
 			raw_force_all("save");
 			mudshutdown = rebootgame = 1;
 		}
-		else if( shutdownlevel <= 30 ) {
-			if( shutdownlevel > 29 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro un minuto!\n\r"); }
-			else if( shutdownlevel >= 28 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 2 minuti.\n\r"); }
-			else if( shutdownlevel >= 27 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 3 minuti.\n\r"); }
-			else if( shutdownlevel >= 26 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 4 minuti.\n\r"); }
-			else if( shutdownlevel >= 25 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 5 minuti.\n\r"); }
-			else if( shutdownlevel == 20 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 10 minuti.\n\r"); }
-			else if( shutdownlevel == 15 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 15 minuti.\n\r"); }
-			else if( shutdownlevel == 10 )
-			{ send_to_all( "$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 20 minuti.\n\r"); }
+		else if(shutdownlevel <= 30) {
+			if(shutdownlevel > 29) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro un minuto!\n\r");
+			}
+			else if(shutdownlevel >= 28) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 2 minuti.\n\r");
+			}
+			else if(shutdownlevel >= 27) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 3 minuti.\n\r");
+			}
+			else if(shutdownlevel >= 26) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 4 minuti.\n\r");
+			}
+			else if(shutdownlevel >= 25) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 5 minuti.\n\r");
+			}
+			else if(shutdownlevel == 20) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 10 minuti.\n\r");
+			}
+			else if(shutdownlevel == 15) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 15 minuti.\n\r");
+			}
+			else if(shutdownlevel == 10) {
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 20 minuti.\n\r");
+			}
 		}
 	}
-	if (TooMuchLag>10 && !forceshutdown) {
-		send_to_all( "$c0015ATTENZIONE! $c0014Lag eccessivo. Iniziata sequenza di shutdown!\n\r");
+	if(TooMuchLag>10 && !forceshutdown) {
+		send_to_all("$c0015ATTENZIONE! $c0014Lag eccessivo. Iniziata sequenza di shutdown!\n\r");
 		bBootSequenceStarted=TRUE;
 		forceshutdown=t_info->tm_min;
-		if (!forceshutdown) { forceshutdown=1; }
+		if(!forceshutdown) {
+			forceshutdown=1;
+		}
 	}
-	if (TooMuchLag<5 && forceshutdown) {
+	if(TooMuchLag<5 && forceshutdown) {
 
-		send_to_all( "$c0015ATTENZIONE! $c0014Lag risolto. Shutdown cancellato!\n\r");
+		send_to_all("$c0015ATTENZIONE! $c0014Lag risolto. Shutdown cancellato!\n\r");
 		bBootSequenceStarted=FALSE;
 		forceshutdown=0;
 	}

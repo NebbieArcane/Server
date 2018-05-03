@@ -18,6 +18,7 @@
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
+#include "speciali.hpp"
 #include "lucertole.hpp"
 namespace Alarmud {
 struct RoomSpecialProcEntry roomproc[] = {

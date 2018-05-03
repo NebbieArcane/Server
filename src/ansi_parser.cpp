@@ -36,20 +36,22 @@ namespace Alarmud {
  *   $C1411 would be bold, blue back, light yellow fore
  */
 
-char* ansi_parse(char* code ) {
+char* ansi_parse(const char* code) {
 	char m[ 10 ], b[ 10 ],f[ 10 ];
 	static char szResult[ 256 ];
 
-	if (!code)
-	{ return(NULL); }
+	if(!code) {
+		return(NULL);
+	}
 
-	if (IS_SET(SystemFlags,SYS_NOANSI))
-	{ return(NULL); }
+	if(IS_SET(SystemFlags,SYS_NOANSI)) {
+		return(NULL);
+	}
 
 	/* do modifier */
-	switch( code[0] ) {
+	switch(code[0]) {
 	case '0':
-		sprintf( m,"%s",ANSI_MOD_NORMAL);
+		sprintf(m,"%s",ANSI_MOD_NORMAL);
 		break;
 	case '1':
 		sprintf(m,"%s",ANSI_MOD_BOLD);
@@ -181,7 +183,7 @@ char* ansi_parse(char* code ) {
 	}
 
 
-	sprintf( szResult, "\033[%s;%s;%sm", m, b, f );
+	sprintf(szResult, "\033[%s;%s;%sm", m, b, f);
 	return szResult;
 }
 } // namespace Alarmud

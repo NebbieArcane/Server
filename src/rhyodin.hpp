@@ -12,42 +12,24 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 
-int keystone( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type );
-int ghostsoldier( struct char_data* ch, int cmd, char* arg,
-				  struct char_data* mob, int type );
-int Valik( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-		   int type );
-int guardian( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type );
-int lattimore( struct char_data* pChar, int mCmd, char* szArg,
-			   struct char_data* pMob, int nType );
-int coldcaster( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-int behir( struct char_data* ch, int cmd, char* arg,
-		   struct char_data* mob, int type );
-int trapper( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			 int type );
-int trogcook( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type );
-int shaman( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			int type );
-int golgar( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			int type );
-int troguard( struct char_data* ch, int cmd, char* arg, struct char_data* mob,
-			  int type );
-int web_slinger( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type );
-int ragno_intermittente( struct char_data* ch, int cmd, char* arg,
-						 struct char_data* mob, int type );
-int hit_sucker( struct char_data* ch, int cmd, char* arg,
-				struct char_data* mob, int type );
-int Ankheg( struct char_data* ch, int cmd, char* arg,
-			struct char_data* mob, int type );
-int Orso_Bianco( struct char_data* ch, int cmd, char* arg,
-				 struct char_data* mob, int type );
-int Moribondo( struct char_data* pChar, int nCmd, char* szArg,
-			   struct char_data* pMob, int nType );
+MOBSPECIAL_FUNC(keystone);
+MOBSPECIAL_FUNC(ghostsoldier);
+MOBSPECIAL_FUNC(Valik);
+MOBSPECIAL_FUNC(guardian);
+MOBSPECIAL_FUNC(lattimore);
+MOBSPECIAL_FUNC(coldcaster);
+MOBSPECIAL_FUNC(behir);
+MOBSPECIAL_FUNC(trapper);
+MOBSPECIAL_FUNC(trogcook);
+MOBSPECIAL_FUNC(shaman);
+MOBSPECIAL_FUNC(golgar);
+MOBSPECIAL_FUNC(troguard);
+MOBSPECIAL_FUNC(web_slinger);
+MOBSPECIAL_FUNC(ragno_intermittente);
+MOBSPECIAL_FUNC(hit_sucker);
+MOBSPECIAL_FUNC(Ankheg);
+MOBSPECIAL_FUNC(Orso_Bianco);
+MOBSPECIAL_FUNC(Moribondo);
 
 } // namespace Alarmud
 #endif

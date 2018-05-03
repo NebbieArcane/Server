@@ -35,7 +35,7 @@ namespace Alarmud {
 /* struct room_data *real_roomp(int); */
 
 
-void do_settrap( struct char_data* ch, char* arg, int cmd) {
+ACTION_FUNC(do_settrap) {
 
 	/* parse for directions */
 
@@ -49,11 +49,12 @@ void do_settrap( struct char_data* ch, char* arg, int cmd) {
 int CheckForMoveTrap(struct char_data* ch, int dir) {
 	struct obj_data* i;
 
-	for (i = real_roomp(ch->in_room)->contents; i; i = i->next_content) {
-		if ((ITEM_TYPE(i) == ITEM_TRAP) && (GET_TRAP_CHARGES(i) > 0))
-			if ( IS_SET(GET_TRAP_EFF(i), TrapDir[dir]) &&
-					IS_SET(GET_TRAP_EFF(i), TRAP_EFF_MOVE) )
-			{ return(TriggerTrap(ch, i)); }
+	for(i = real_roomp(ch->in_room)->contents; i; i = i->next_content) {
+		if((ITEM_TYPE(i) == ITEM_TRAP) && (GET_TRAP_CHARGES(i) > 0))
+			if(IS_SET(GET_TRAP_EFF(i), TrapDir[dir]) &&
+					IS_SET(GET_TRAP_EFF(i), TRAP_EFF_MOVE)) {
+				return(TriggerTrap(ch, i));
+			}
 	}
 	return(FALSE);
 }
@@ -61,8 +62,8 @@ int CheckForMoveTrap(struct char_data* ch, int dir) {
 int CheckForInsideTrap(struct char_data* ch, struct obj_data* i) {
 	struct obj_data* t;
 
-	for (t = i->contains; t; t = t->next_content) {
-		if ((ITEM_TYPE(t) == ITEM_TRAP) &&
+	for(t = i->contains; t; t = t->next_content) {
+		if((ITEM_TYPE(t) == ITEM_TRAP) &&
 				(IS_SET(GET_TRAP_EFF(t),TRAP_EFF_OBJECT)) &&
 				(GET_TRAP_CHARGES(t) > 0)) {
 			return(TriggerTrap(ch, t));
@@ -72,9 +73,10 @@ int CheckForInsideTrap(struct char_data* ch, struct obj_data* i) {
 }
 
 int CheckForAnyTrap(struct char_data* ch, struct obj_data* i) {
-	if ((ITEM_TYPE(i) == ITEM_TRAP) &&
-			(GET_TRAP_CHARGES(i) > 0))
-	{ return(TriggerTrap(ch, i)); }
+	if((ITEM_TYPE(i) == ITEM_TRAP) &&
+			(GET_TRAP_CHARGES(i) > 0)) {
+		return(TriggerTrap(ch, i));
+	}
 
 	return(FALSE);
 }
@@ -82,7 +84,7 @@ int CheckForAnyTrap(struct char_data* ch, struct obj_data* i) {
 
 
 int CheckForGetTrap(struct char_data* ch, struct obj_data* i) {
-	if ((ITEM_TYPE(i) == ITEM_TRAP) &&
+	if((ITEM_TYPE(i) == ITEM_TRAP) &&
 			(IS_SET(GET_TRAP_EFF(i),TRAP_EFF_OBJECT)) &&
 			(GET_TRAP_CHARGES(i) > 0)) {
 		return(TriggerTrap(ch, i));
@@ -92,17 +94,17 @@ int CheckForGetTrap(struct char_data* ch, struct obj_data* i) {
 
 
 
-int TriggerTrap( struct char_data* ch, struct obj_data* i) {
+int TriggerTrap(struct char_data* ch, struct obj_data* i) {
 	struct char_data* v;
 
-	if( ITEM_TYPE( i ) == ITEM_TRAP ) {
-		if( i->obj_flags.value[ TRAP_CHARGES ] ) {
-			act( "Senti uno strano rumore...", TRUE, ch, 0, 0, TO_ROOM );
-			act( "Senti uno strano rumore...", TRUE, ch, 0, 0, TO_CHAR );
+	if(ITEM_TYPE(i) == ITEM_TRAP) {
+		if(i->obj_flags.value[ TRAP_CHARGES ]) {
+			act("Senti uno strano rumore...", TRUE, ch, 0, 0, TO_ROOM);
+			act("Senti uno strano rumore...", TRUE, ch, 0, 0, TO_CHAR);
 			GET_TRAP_CHARGES(i) -= 1;
 			/* make sure room fire off works! */
-			if( IS_SET( GET_TRAP_EFF( i ),TRAP_EFF_ROOM ) ) {
-				for( v = real_roomp(ch->in_room)->people; v; v = v->next_in_room ) {
+			if(IS_SET(GET_TRAP_EFF(i),TRAP_EFF_ROOM)) {
+				for(v = real_roomp(ch->in_room)->people; v; v = v->next_in_room) {
 					FindTrapDamage(v,i);
 				}  /* end for */
 			} /* end is_set */
@@ -116,26 +118,31 @@ int TriggerTrap( struct char_data* ch, struct obj_data* i) {
 	return(FALSE);
 }
 
-void FindTrapDamage( struct char_data* v, struct obj_data* i) {
+void FindTrapDamage(struct char_data* v, struct obj_data* i) {
 	/* trap types < 0 are special */
-	if( GET_TRAP_DAM_TYPE( i ) >= 0 )
-	{ TrapDamage(v,GET_TRAP_DAM_TYPE(i),3*GET_TRAP_LEV(i),i); }
-	else
-	{ TrapDamage(v, GET_TRAP_DAM_TYPE(i), 0,i); }
+	if(GET_TRAP_DAM_TYPE(i) >= 0) {
+		TrapDamage(v,GET_TRAP_DAM_TYPE(i),3*GET_TRAP_LEV(i),i);
+	}
+	else {
+		TrapDamage(v, GET_TRAP_DAM_TYPE(i), 0,i);
+	}
 }
 
 void TrapDamage(struct char_data* v, int damtype, int amnt, struct obj_data* t) {
 	amnt = SkipImmortals(v, amnt,damtype);
-	if (amnt == -1)
-	{ return; }
+	if(amnt == -1) {
+		return;
+	}
 
-	if (IS_AFFECTED(v, AFF_SANCTUARY))
-	{ amnt = MAX((int)(amnt/2), 0); }  /* Max 1/2 damage when sanct'd */
+	if(IS_AFFECTED(v, AFF_SANCTUARY)) {
+		amnt = MAX((int)(amnt/2), 0);    /* Max 1/2 damage when sanct'd */
+	}
 
 	amnt = PreProcDam(v, damtype, amnt, -1);
 
-	if (saves_spell(v, SAVING_PETRI))
-	{ amnt = MAX((int)(amnt/2),0); }
+	if(saves_spell(v, SAVING_PETRI)) {
+		amnt = MAX((int)(amnt/2),0);
+	}
 
 	DamageStuff(v, damtype, amnt, 5);
 
@@ -149,21 +156,21 @@ void TrapDamage(struct char_data* v, int damtype, int amnt, struct obj_data* t) 
 	TrapDam(v, damtype, amnt, t);
 
 	InformMess(v);
-	if (GET_POS(v) == POSITION_DEAD) {
-		if (!IS_NPC(v)) {
-			if( real_roomp( v->in_room )->name ) {
+	if(GET_POS(v) == POSITION_DEAD) {
+		if(!IS_NPC(v)) {
+			if(real_roomp(v->in_room)->name) {
 
-				mudlog( LOG_PLAYERS, "%s killed by a trap at %s",
-						GET_NAME(v), real_roomp( v->in_room )->name );
+				mudlog(LOG_PLAYERS, "%s killed by a trap at %s",
+					   GET_NAME(v), real_roomp(v->in_room)->name);
 				/*ALAR: DEATH */
 			}
 
 		}
 		else {
-			mudlog( LOG_CHECK, "%s killed by a trap.", GET_NAME_DESC(v) );
+			mudlog(LOG_CHECK, "%s killed by a trap.", GET_NAME_DESC(v));
 		}
 
-		die( v, 0, NULL);
+		die(v, 0, NULL);
 	}
 }
 
@@ -215,10 +222,10 @@ void TrapDam(struct char_data* v, int damtype, int amnt, struct obj_data* t) {
 		break;
 	}
 
-	if ((damtype != TRAP_DAM_TELEPORT)   &&
+	if((damtype != TRAP_DAM_TELEPORT)   &&
 			(damtype != TRAP_DAM_SLEEP)      &&
 			(damtype != TRAP_DAM_POISON)) {           /* check for poison trap here */
-		if (amnt > 0) {
+		if(amnt > 0) {
 			snprintf(buf, 131,"$n is %s by $p!", desc);
 			act(buf,TRUE,v,t,0,TO_ROOM);
 			snprintf(buf, 131, "You are %s by $p!", desc);
@@ -232,13 +239,13 @@ void TrapDam(struct char_data* v, int damtype, int amnt, struct obj_data* t) {
 		}
 	}
 
-	if (damtype == TRAP_DAM_TELEPORT) {
+	if(damtype == TRAP_DAM_TELEPORT) {
 		TrapTeleport(v);
 	}
-	else if (damtype == TRAP_DAM_SLEEP) {
+	else if(damtype == TRAP_DAM_SLEEP) {
 		TrapSleep(v);
 	}
-	else if (damtype == TRAP_DAM_POISON) {
+	else if(damtype == TRAP_DAM_POISON) {
 		TrapPoison(v,t);
 	}
 
@@ -249,7 +256,7 @@ void TrapTeleport(struct char_data* v) {
 	int to_room,iTry = 0;
 	struct room_data* room;
 
-	if (saves_spell(v,SAVING_SPELL)) {
+	if(saves_spell(v,SAVING_SPELL)) {
 		send_to_char("You feel strange, but the effect fades.\n\r",v);
 		return;
 	}
@@ -257,8 +264,8 @@ void TrapTeleport(struct char_data* v) {
 	do {                                        /* do .. while bug fixed, msw */
 		to_room = number(0, top_of_world);
 		room = real_roomp(to_room);
-		if (room) {
-			if ((IS_SET(room->room_flags, PRIVATE)) ||
+		if(room) {
+			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
 					(IS_SET(room->room_flags, NO_SUM)) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
@@ -269,9 +276,9 @@ void TrapTeleport(struct char_data* v) {
 		}
 
 	}
-	while (!room && iTry < 10);
+	while(!room && iTry < 10);
 
-	if (iTry >= 10) {
+	if(iTry >= 10) {
 		send_to_char("The magic fails, you got lucky!\n\r", v);
 		return;
 	}
@@ -283,7 +290,7 @@ void TrapTeleport(struct char_data* v) {
 
 	do_look(v, "", 15);
 
-	if (IS_SET(real_roomp(to_room)->room_flags, DEATH) &&
+	if(IS_SET(real_roomp(to_room)->room_flags, DEATH) &&
 			GetMaxLevel(v) < IMMORTALE) {
 		NailThisSucker(v);
 	}
@@ -293,7 +300,7 @@ void TrapSleep(struct char_data* v) {
 
 	struct affected_type af;
 
-	if ( !saves_spell(v, SAVING_SPELL) )  {
+	if(!saves_spell(v, SAVING_SPELL))  {
 		af.type      = SPELL_SLEEP;
 		af.duration  = 12;
 		af.modifier  = 0;
@@ -301,7 +308,7 @@ void TrapSleep(struct char_data* v) {
 		af.bitvector = AFF_SLEEP;
 		affect_join(v, &af, FALSE, FALSE);
 
-		if (GET_POS(v)>POSITION_SLEEPING)    {
+		if(GET_POS(v)>POSITION_SLEEPING)    {
 			act("You feel very sleepy ..... zzzzzz",FALSE,v,0,0,TO_CHAR);
 			act("$n goes to sleep.",TRUE,v,0,0,TO_ROOM);
 			GET_POS(v)=POSITION_SLEEPING;
@@ -313,9 +320,9 @@ void TrapSleep(struct char_data* v) {
 
 }
 
-void InformMess( struct char_data* v) {
+void InformMess(struct char_data* v) {
 
-	switch (GET_POS(v)) {
+	switch(GET_POS(v)) {
 	case POSITION_MORTALLYW:
 		act("$n is mortally wounded, and will die soon, if not aided.",
 			TRUE, v, 0, 0, TO_ROOM);

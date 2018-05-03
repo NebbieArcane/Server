@@ -1,3 +1,6 @@
 #!/bin/bash
+(
 echo You need a ssh access to the server for this to work
-scp nebbie@nebbie.hexkeep.com:Run/master/lib/myst.* mudroot/lib
+echo If you dont have it use getworldlocal
+scp nebbie@nebbie.hexkeep.com:Run/master/lib/myst.??? mudroot/lib
+)

@@ -8,11 +8,17 @@
 #include <cstring>
 #include <cctype>
 #include <cstdio>
+#include <string>
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <array>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
+#include <curl/curl.h>
+#include "../contrib/slacking/slacking.hpp"
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -50,8 +56,11 @@
 #include "skills.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#include "Sql.hpp"
 
 namespace Alarmud {
+using std::string;
+
 
 /* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
@@ -61,15 +70,13 @@ namespace Alarmud {
 #define SEND_TO_Q2(msg,d) write_to_descriptor(d->descriptor,msg);
 #define STATE(d) ((d)->connected)
 
-unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
-unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};
 int WizLock;
 int Silence = 0;
 long SystemFlags=0;         /* used for making teleport/astral/stuff not work */
 int plr_tick_count=0;
+typedef std::array<nanny_func,E_CONNECTION_TYPES_COUNT> t_nannies;
+t_nannies nannyFuncs;//[E_CONNECTION_TYPES_COUNT];
 
-
-void show_race_choice(struct descriptor_data* d);
 
 /* this is how we tell which race gets which class ! */
 /* to add a new class seletion add the CLASS_NAME above the */
@@ -335,7 +342,7 @@ const int dark_elf_class_choice[]= {
 	0
 };
 
-char* fill[]= {
+const char* fill[]= {
 	"in",
 	"from",
 	"with",
@@ -346,26 +353,50 @@ char* fill[]= {
 	"to",
 	"\n"
 };
-
-
+int search_block(const char* arg, const char** list, bool exact) {
+	size_t l=std::max(strlen(arg),1UL);
+	for(int i=0;** (list+i) != '\n'; i++) {
+		if(exact) {
+			if(!strcasecmp(arg, *(list+i))) {
+				return(i);
+			}
+		}
+		else {
+			if(!strncasecmp(arg, *(list+i),l)) {
+				return(i);
+			}
+		}
+	}
+	return -1;
+}
+int old_search_block(const char* argument,int begin,int length,const char** list,int mode) {
+	std::string key(argument);
+	int rc=search_block(key.substr(begin,length).c_str(),list,mode);
+	return rc>=0?rc+1:rc;
+}
+#if 0
 int search_block(char* arg, const char** list, bool exact) {
 	register int i,l;
 
 	/* Make into lower case, and get length of string */
-	for(l=0; *(arg+l); l++)
-	{ *(arg+l)=LOWER(*(arg+l)); }
+	for(l=0; *(arg+l); l++) {
+		*(arg+l)=LOWER(*(arg+l));
+	}
 
-	if (exact) {
+	if(exact) {
 		for(i=0;** (list+i) != '\n'; i++)
-			if (!strcmp(arg, *(list+i)))
-			{ return(i); }
+			if(!strcmp(arg, *(list+i))) {
+				return(i);
+			}
 	}
 	else {
-		if (!l)
-		{ l=1; } /* Avoid "" to match the first available string */
+		if(!l) {
+			l=1;    /* Avoid "" to match the first available string */
+		}
 		for(i=0;** (list+i) != '\n'; i++)
-			if (!strncmp(arg, *(list+i), l))
-			{ return(i); }
+			if(!strncmp(arg, *(list+i), l)) {
+				return(i);
+			}
 	}
 
 	return(-1);
@@ -384,25 +415,27 @@ int old_search_block(const char* argument,int begin,int length,const char** list
 	/* Search for a match */
 
 	if(mode)
-		while ( NOT found AND *(list[guess]) != '\n' ) {
+		while(NOT found AND *(list[guess]) != '\n') {
 			found=(length==(int)strlen(list[guess]));
-			for(search=0; ( search < length AND found ); search++)
-			{ found=(*(argument+begin+search)== *(list[guess]+search)); }
+			for(search=0; (search < length AND found); search++) {
+				found=(*(argument+begin+search)== *(list[guess]+search));
+			}
 			guess++;
 		}
 	else {
-		while ( NOT found AND *(list[guess]) != '\n' ) {
+		while(NOT found AND *(list[guess]) != '\n') {
 			found=1;
-			for(search=0; ( search < length AND found ); search++)
-			{ found=(*(argument+begin+search)== *(list[guess]+search)); }
+			for(search=0; (search < length AND found); search++) {
+				found=(*(argument+begin+search)== *(list[guess]+search));
+			}
 			guess++;
 		}
 	}
 
-	return ( found ? guess : -1 );
+	return (found ? guess : -1);
 }
-
-void command_interpreter( struct char_data* ch, const char* argument ) {
+#endif
+void command_interpreter(struct char_data* ch, const char* argument) {
 	char buf[254];
 	NODE* n;
 	char buf1[255], buf2[255];
@@ -413,48 +446,49 @@ void command_interpreter( struct char_data* ch, const char* argument ) {
 	/* PARRY is removed as HIDE GAIA 2001 */
 
 	if(IS_AFFECTED2(ch,AFF2_PARRY) && !ch->specials.fighting) {
-		act( "$c0006$n smette di ripararsi con lo scudo.", TRUE, ch, 0, 0, TO_ROOM);
-		act( "$c0006Smetti di proteggerti con lo scudo.", TRUE, ch, 0, 0, TO_CHAR);
-		REMOVE_BIT( ch->specials.affected_by2, AFF2_PARRY );
+		act("$c0006$n smette di ripararsi con lo scudo.", TRUE, ch, 0, 0, TO_ROOM);
+		act("$c0006Smetti di proteggerti con lo scudo.", TRUE, ch, 0, 0, TO_CHAR);
+		REMOVE_BIT(ch->specials.affected_by2, AFF2_PARRY);
 	}
 
-	if (ch->listening_to) {
+	if(ch->listening_to) {
 		REMOVE_FROM_LIST(ch, real_roomp(ch->listening_to)->listeners, next_listener);
 		ch->listening_to = 0;
-		act( "Smetti di origliare la stanza.", TRUE, ch, 0, 0, TO_CHAR);
+		act("Smetti di origliare la stanza.", TRUE, ch, 0, 0, TO_CHAR);
 	}
 
 	if(IS_AFFECTED2(ch,AFF2_AFK)) {
-		act( "$c0006$n ritorna alla sua tastiera", TRUE, ch, 0, 0, TO_ROOM);
-		act( "$c0006Ritorni alla tua tastiera.", TRUE, ch, 0, 0, TO_CHAR);
-		REMOVE_BIT( ch->specials.affected_by2, AFF2_AFK );
+		act("$c0006$n ritorna alla sua tastiera", TRUE, ch, 0, 0, TO_ROOM);
+		act("$c0006Ritorni alla tua tastiera.", TRUE, ch, 0, 0, TO_CHAR);
+		REMOVE_BIT(ch->specials.affected_by2, AFF2_AFK);
 	}
 
-	if( MOUNTED( ch ) ) {
-		if( ch->in_room != MOUNTED(ch)->in_room )
-		{ Dismount(ch, MOUNTED(ch), POSITION_STANDING); }
+	if(MOUNTED(ch)) {
+		if(ch->in_room != MOUNTED(ch)->in_room) {
+			Dismount(ch, MOUNTED(ch), POSITION_STANDING);
+		}
 	}
 
 	/*
 	 *  a bug check.
 	 */
-	if( !IS_NPC(ch) ) {
+	if(!IS_NPC(ch)) {
 		int i, found=FALSE;
-		if ((!ch->player.name[0]) || (ch->player.name[0]<' ')) {
-			mudlog( LOG_SYSERR, "Error in character name.  Changed to 'Error'");
+		if((!ch->player.name[0]) || (ch->player.name[0]<' ')) {
+			mudlog(LOG_SYSERR, "Error in character name.  Changed to 'Error'");
 			free(ch->player.name);
 			ch->player.name = (char*)malloc(10);
 			strncpy(ch->player.name, "Error\0",6);
 			/*    return; Vediamo se stracrasha o no.... */
 		}
 		strcpy(buf, ch->player.name);
-		for (i = 0; i< (int)strlen(buf) && !found; i++) {
-			if (buf[i]<65) {
+		for(i = 0; i< (int)strlen(buf) && !found; i++) {
+			if(buf[i]<65) {
 				found = TRUE;
 			}
 		}
-		if (found) {
-			mudlog( LOG_SYSERR, "Error in character name.  Changed to 'Error'");
+		if(found) {
+			mudlog(LOG_SYSERR, "Error in character name.  Changed to 'Error'");
 			free(ch->player.name);
 			ch->player.name = (char*)malloc(6);
 			strncpy(ch->player.name, "Error\0",6);
@@ -465,14 +499,16 @@ void command_interpreter( struct char_data* ch, const char* argument ) {
 	/* Toglie gli spazi prima del comando. */
 	for(; isspace(*argument); argument++) ;
 
-	if( *argument && *argument != '\n' ) {
-		if( !isalpha( *argument ) ) {
+	if(*argument && *argument != '\n') {
+		if(!isalpha(*argument)) {
 			buf1[0] = *argument;
 			buf1[1] = '\0';
-			if(*( argument + 1) )
-			{ strcpy( buf2, argument + 1 ); }
-			else
-			{ buf2[0] = '\0'; }
+			if(*(argument + 1)) {
+				strcpy(buf2, argument + 1);
+			}
+			else {
+				buf2[0] = '\0';
+			}
 		}
 		else {
 			int i=0;
@@ -484,221 +520,230 @@ void command_interpreter( struct char_data* ch, const char* argument ) {
 		}
 
 		/* New parser by DM */
-		if( *buf1 )
-		{ n = FindValidCommand( buf1 ); }
-		else
-		{ n = NULL; }
+		if(*buf1) {
+			n = FindValidCommand(buf1);
+		}
+		else {
+			n = NULL;
+		}
 
 		/* GGNOTA test sui livelli dei comandi*/
 
-		if( n != NULL && GetMaxLevel( ch ) >= n->min_level ) {
-			if( n->func != 0 ) {
-				if( GET_POS( ch ) < n->min_pos ) {
+		if(n != NULL && GetMaxLevel(ch) >= n->min_level) {
+			if(n->func != 0) {
+				if(GET_POS(ch) < n->min_pos) {
 					switch(GET_POS(ch)) {
 					case POSITION_DEAD:
-						send_to_char( "Non puoi essere ancora qui. Sei MORTO!!!\n\r",
-									  ch );
+						send_to_char("Non puoi essere ancora qui. Sei MORTO!!!\n\r",
+									 ch);
 						break;
 					case POSITION_INCAP:
 					case POSITION_MORTALLYW:
-						send_to_char( "Sei in una brutta posizione per poter fare "
-									  "qualunque cosa!\n\r", ch);
+						send_to_char("Sei in una brutta posizione per poter fare "
+									 "qualunque cosa!\n\r", ch);
 						break;
 
 					case POSITION_STUNNED:
-						send_to_char( "Tutto quello che puoi fare ora, e` respirare "
-									  "e sperare che passi!\n\r", ch);
+						send_to_char("Tutto quello che puoi fare ora, e` respirare "
+									 "e sperare che passi!\n\r", ch);
 						break;
 					case POSITION_SLEEPING:
 						send_to_char("Nei tuoi sogni o cosa?\n\r", ch);
 						break;
 					case POSITION_RESTING:
-						send_to_char( "Nah... Sei troppo rilassato...\n\r", ch);
+						send_to_char("Nah... Sei troppo rilassato...\n\r", ch);
 						break;
 					case POSITION_SITTING:
-						send_to_char( "Prima forse dovresti alzarti, non credi?\n\r",ch);
+						send_to_char("Prima forse dovresti alzarti, non credi?\n\r",ch);
 						break;
 					case POSITION_FIGHTING:
-						send_to_char( "Non puoi! Stai combattendo per la tua vita!\n\r",
-									  ch);
+						send_to_char("Non puoi! Stai combattendo per la tua vita!\n\r",
+									 ch);
 						break;
 					case POSITION_STANDING:
-						send_to_char( "Ho paura che tu non lo possa fare.\n\r", ch);
+						send_to_char("Ho paura che tu non lo possa fare.\n\r", ch);
 						break;
 					} /* switch */
 				}
-				else if( !IS_AFFECTED( ch, AFF_PARALYSIS ) ) {
-
+				else if(!IS_AFFECTED(ch, AFF_PARALYSIS)) {
 					/* They can't move, must have pissed off an immo!         */
 					/* make sure polies can move, some mobs have this bit set */
-
-					if( IS_SET( ch->specials.act, PLR_FREEZE ) &&
-							( IS_SET( ch->specials.act, ACT_POLYSELF) || IS_PC( ch ) ) ) {
-						send_to_char( "Sei stato immobilizzato e non puoi fare "
-									  "nulla!\n\r", ch );
+					if(IS_SET(ch->specials.act, PLR_FREEZE) &&
+							(IS_SET(ch->specials.act, ACT_POLYSELF) || IS_PC(ch))) {
+						send_to_char("Sei stato immobilizzato e non puoi fare nulla!\n\r", ch);
 					}
 					else {
-
-						if( ( IS_SET( SystemFlags, SYS_LOGALL ) &&
-								( IS_PC( ch ) ||
-								  IS_SET( ch->specials.act, ACT_POLYSELF ) ) ) ||
-								( IS_SET( SystemFlags, SYS_LOGMOB ) &&
-								  ( IS_NPC( ch ) &&
-									!IS_SET( ch->specials.act, ACT_POLYSELF ) ) ) )
-
+						if((IS_SET(SystemFlags, SYS_LOGALL) &&
+								(IS_PC(ch) ||
+								 IS_SET(ch->specials.act, ACT_POLYSELF))) ||
+								(IS_SET(SystemFlags, SYS_LOGMOB) &&
+								 (IS_NPC(ch) &&
+								  !IS_SET(ch->specials.act, ACT_POLYSELF))))
 						{
-							mudlog( LOG_CHECK,
-									"[%5ld]ACMD %s:%s", ch->in_room, ch->player.name,
-									argument);
+							mudlog(LOG_CHECK,
+								   "[%5ld]ACMD %s:%s", ch->in_room, ch->player.name,
+								   argument);
 						}
-						else if( n->log ) {
-							mudlog( LOG_CHECK,
-									"[%5ld]CCMD %s:%s", ch->in_room, ch->player.name,
-									argument);
+						else if(n->log) {
+							mudlog(LOG_CHECK,
+								   "[%5ld]CCMD %s:%s", ch->in_room, ch->player.name,
+								   argument);
 						}
-						else if( IS_AFFECTED2( ch, AFF2_LOG_ME ) ) {
-							mudlog( LOG_CHECK,
-									"[%5ld]PCMD %s:%s", ch->in_room, ch->player.name,
-									argument);
+						else if(IS_AFFECTED2(ch, AFF2_LOG_ME)) {
+							mudlog(LOG_CHECK,
+								   "[%5ld]PCMD %s:%s", ch->in_room, ch->player.name,
+								   argument);
 						}
-						else if( GetMaxLevel( ch ) >= IMMORTALE &&
-								 GetMaxLevel( ch ) < 60 ) {
-							mudlog( LOG_CHECK,
-									"[%5ld]ICMD %s:%s", ch->in_room, ch->player.name,
-									argument );
+						else if(GetMaxLevel(ch) >= IMMORTALE &&
+								GetMaxLevel(ch) < 60) {
+							mudlog(LOG_CHECK,
+								   "[%5ld]ICMD %s:%s", ch->in_room, ch->player.name,
+								   argument);
 						}
-						else if (GET_GOLD(ch) > 2000000) {
-							mudlog( LOG_CHECK,
-									"[%5ld]GCMD %s:%s", ch->in_room, ch->player.name,
-									argument );
+						else if(GET_GOLD(ch) > 2000000) {
+							mudlog(LOG_CHECK,
+								   "[%5ld]GCMD %s:%s", ch->in_room, ch->player.name,
+								   argument);
 						}
 
 						/* special() restituisce TRUE se il comando e` stato
 						 * interpretato da una procedura speciale.
 						 */
-						if( no_specials || !special( ch, n->number, buf2 ) ) {
+						if(no_specials || !special(ch, n->number, buf2)) {
 							/* Finalmente viene esequito il comando */
-							( ( *n->func )( ch, buf2, n->number ) );
+							((*n->func)(ch, buf2, n->number));
 						}
 					}
 				}
-				else
-				{ send_to_char( "Sei paralizzato, non puoi fare molto!\n\r",ch); }
+				else {
+					send_to_char("Sei paralizzato, non puoi fare molto!\n\r",ch);
+				}
 			}
 			else /* n->func == 0 */
-				send_to_char( "Mi spiace, ma il comando non e` stato ancora "
-							  "implementato.\n\r",ch);
+				send_to_char("Mi spiace, ma il comando non e` stato ancora "
+							 "implementato.\n\r",ch);
 		}
-		else /* n == NULL || GetMaxLevel( ch ) < n->min_level */
-		{ send_to_char("Pardon?\n\r", ch); }
+		else { /* n == NULL || GetMaxLevel( ch ) < n->min_level */
+			send_to_char("Pardon?\n\r", ch);
+		}
 	}
-
 }
 
-void argument_interpreter(const char* argument,char* first_arg,char* second_arg ) {
+void argument_interpreter(const char* argument,char* first_arg,char* second_arg) {
 	int look_at, begin;
 
 	begin = 0;
 
 	do {
 		/* Find first non blank */
-		for( ; *( argument + begin ) == ' ' ; begin++ ) ;
+		for(; *(argument + begin) == ' ' ; begin++) ;
 
 		/* Find length of first word */
-		for( look_at = 0; *( argument + begin + look_at ) > ' ' ; look_at++ )
+		for(look_at = 0; *(argument + begin + look_at) > ' ' ; look_at++)
 			/* Make all letters lower case, AND copy them to first_arg */
-		{ *( first_arg + look_at ) = LOWER( *( argument + begin + look_at ) ); }
+		{
+			*(first_arg + look_at) = LOWER(*(argument + begin + look_at));
+		}
 
-		*( first_arg + look_at ) = '\0';
+		*(first_arg + look_at) = '\0';
 		begin += look_at;
 	}
-	while( fill_word( first_arg ) );
+	while(fill_word(first_arg));
 
 	do {
 		/* Find first non blank */
-		for( ; *( argument + begin ) == ' ' ; begin++ ) ;
+		for(; *(argument + begin) == ' ' ; begin++) ;
 
 		/* Find length of first word */
-		for( look_at = 0; *( argument + begin + look_at ) > ' ' ; look_at++ )
+		for(look_at = 0; *(argument + begin + look_at) > ' ' ; look_at++)
 			/* Make all letters lower case, AND copy them to second_arg */
-		{ *( second_arg + look_at ) = LOWER( *( argument + begin + look_at ) ); }
+		{
+			*(second_arg + look_at) = LOWER(*(argument + begin + look_at));
+		}
 
-		*( second_arg + look_at ) = '\0';
+		*(second_arg + look_at) = '\0';
 		begin += look_at;
 
 	}
-	while( fill_word(second_arg));
+	while(fill_word(second_arg));
 }
 
-void ThreeArgumentInterpreter( char* pchArgument, char* pchFirstArg,
-							   char* pchSecondArg, char* pchThirdArg ) {
+void ThreeArgumentInterpreter(char* pchArgument, char* pchFirstArg,
+							  char* pchSecondArg, char* pchThirdArg) {
 	int nLookAt, nBegin;
 
 	nBegin = 0;
 
 	do {
 		/* Find first non blank */
-		for( ; *( pchArgument + nBegin ) == ' ' ; nBegin++ ) ;
+		for(; *(pchArgument + nBegin) == ' ' ; nBegin++) ;
 
 		/* Find length of first word */
-		for( nLookAt = 0; *( pchArgument + nBegin + nLookAt ) > ' ' ; nLookAt++ )
+		for(nLookAt = 0; *(pchArgument + nBegin + nLookAt) > ' ' ; nLookAt++)
 			/* Make all letters lower case, AND copy them to first_arg */
-		{ *( pchFirstArg + nLookAt ) = LOWER( *( pchArgument + nBegin + nLookAt ) ); }
+		{
+			*(pchFirstArg + nLookAt) = LOWER(*(pchArgument + nBegin + nLookAt));
+		}
 
-		*( pchFirstArg + nLookAt ) = '\0';
+		*(pchFirstArg + nLookAt) = '\0';
 		nBegin += nLookAt;
 	}
-	while( fill_word( pchFirstArg ) );
+	while(fill_word(pchFirstArg));
 
 	do {
 		/* Find first non blank */
-		for( ; *( pchArgument + nBegin ) == ' ' ; nBegin++ ) ;
+		for(; *(pchArgument + nBegin) == ' ' ; nBegin++) ;
 
 		/* Find length of first word */
-		for( nLookAt = 0; *( pchArgument + nBegin + nLookAt ) > ' ' ; nLookAt++ )
+		for(nLookAt = 0; *(pchArgument + nBegin + nLookAt) > ' ' ; nLookAt++)
 			/* Make all letters lower case, AND copy them to second_arg */
-			*( pchSecondArg + nLookAt ) =
-				LOWER( *( pchArgument + nBegin + nLookAt ) );
+			*(pchSecondArg + nLookAt) =
+				LOWER(*(pchArgument + nBegin + nLookAt));
 
-		*( pchSecondArg + nLookAt ) = '\0';
+		*(pchSecondArg + nLookAt) = '\0';
 		nBegin += nLookAt;
 
 	}
-	while( fill_word( pchSecondArg ) );
+	while(fill_word(pchSecondArg));
 
 	do {
 		/* Find first non blank */
-		for( ; *( pchArgument + nBegin ) == ' ' ; nBegin++ ) ;
+		for(; *(pchArgument + nBegin) == ' ' ; nBegin++) ;
 
 		/* Find length of first word */
-		for( nLookAt = 0; *( pchArgument + nBegin + nLookAt ) > ' ' ; nLookAt++ )
+		for(nLookAt = 0; *(pchArgument + nBegin + nLookAt) > ' ' ; nLookAt++)
 			/* Make all letters lower case, AND copy them to second_arg */
-		{ *( pchThirdArg + nLookAt ) = LOWER( *( pchArgument + nBegin + nLookAt ) ); }
+		{
+			*(pchThirdArg + nLookAt) = LOWER(*(pchArgument + nBegin + nLookAt));
+		}
 
-		*( pchThirdArg + nLookAt ) = '\0';
+		*(pchThirdArg + nLookAt) = '\0';
 		nBegin += nLookAt;
 
 	}
-	while( fill_word( pchThirdArg ) );
+	while(fill_word(pchThirdArg));
 }
 
-int is_number( char* str ) {
+int is_number(char* str) {
 	int look_at;
 
-	if (*str =='-' || *str =='+')
-	{ look_at =1; }
-	else
-	{ look_at =0; }
-	for( ; str[ look_at ] != '\0'; look_at++ )
-		if( str[ look_at ] < '0' || str[ look_at ] > '9' )
-		{ return FALSE; }
+	if(*str =='-' || *str =='+') {
+		look_at =1;
+	}
+	else {
+		look_at =0;
+	}
+	for(; str[ look_at ] != '\0'; look_at++)
+		if(str[ look_at ] < '0' || str[ look_at ] > '9') {
+			return FALSE;
+		}
 	return TRUE;
 }
 
 /* find the first sub-argument of a string, return pointer to first char in
  *  primary argument, following the sub-arg
  */
-char* one_argument(const char* argument, char* first_arg ) {
+const char* one_argument(const char* argument, char* first_arg) {
 	/* Ritorna un argomento, ignorando le parole definite in filler */
 	int begin,look_at;
 
@@ -706,37 +751,41 @@ char* one_argument(const char* argument, char* first_arg ) {
 
 	do {
 		/* Find first non blank */
-		for ( ; isspace(*(argument + begin)); begin++);
+		for(; isspace(*(argument + begin)); begin++);
 
 		/* Find length of first word */
-		for (look_at=0; *(argument+begin+look_at) > ' ' ; look_at++)
+		for(look_at=0; *(argument+begin+look_at) > ' ' ; look_at++)
 
 			/* Make all letters lower case,
 			* AND copy them to first_arg */
-		{ *(first_arg + look_at) = LOWER(*(argument + begin + look_at)); }
+		{
+			*(first_arg + look_at) = LOWER(*(argument + begin + look_at));
+		}
 
 		*(first_arg + look_at)='\0';
 		begin += look_at;
 	}
-	while (fill_word(first_arg));
+	while(fill_word(first_arg));
 
 	return(argument+begin);
 }
 
-char* OneArgumentNoFill( const char* argument, char* first_arg ) {
+const char* OneArgumentNoFill(const char* argument, char* first_arg) {
 	int begin,look_at;
 
 	begin = 0;
 
 	/* Find first non blank */
-	for ( ; isspace(*(argument + begin)); begin++);
+	for(; isspace(*(argument + begin)); begin++);
 
 	/* Find length of first word */
-	for (look_at=0; *(argument+begin+look_at) > ' ' ; look_at++)
+	for(look_at=0; *(argument+begin+look_at) > ' ' ; look_at++)
 
 		/* Make all letters lower case,
 		 * AND copy them to first_arg */
-	{ *(first_arg + look_at) = LOWER(*(argument + begin + look_at)); }
+	{
+		*(first_arg + look_at) = LOWER(*(argument + begin + look_at));
+	}
 
 	*(first_arg + look_at)='\0';
 	begin += look_at;
@@ -748,16 +797,17 @@ char* OneArgumentNoFill( const char* argument, char* first_arg ) {
 void only_argument(const char* argument, char* dest)
 /* Trimma i blanks iniziali e copia argument in dest */
 {
-	while (*argument && isspace(*argument))
-	{ argument++; }
+	while(*argument && isspace(*argument)) {
+		argument++;
+	}
 	strcpy(dest, argument);
 }
 
 
 
 
-int fill_word(char* argument) {
-	return ( search_block(argument,fill,TRUE) >= 0);
+int fill_word(const char* argument) {
+	return (search_block(argument,fill,TRUE) >= 0);
 }
 
 
@@ -765,15 +815,8 @@ int fill_word(char* argument) {
 
 
 /* determine if a given string is an abbreviation of another */
-int is_abbrev(char* arg1, char* arg2) {
-	if (!*arg1)
-	{ return(0); }
-
-	for (; *arg1; arg1++, arg2++)
-		if (LOWER(*arg1) != LOWER(*arg2))
-		{ return(0); }
-
-	return(1);
+int is_abbrev(const char* arg1, const char* arg2) {
+	return (!strncasecmp(arg1,arg2,strlen(arg1)));
 }
 
 
@@ -789,11 +832,11 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 	try {
 		boost::algorithm::trim_left(work);
 	}
-	catch (exception &e) {
+	catch(exception &e) {
 		LOG_ALERT("Chopping " << work << " " << e.what());
 	}
 	size_t space=work.find_first_of(" ");
-	if (space==std::string::npos) { // No space found, only one argument
+	if(space==std::string::npos) {  // No space found, only one argument
 		arg2[0]='\0';
 		std::strcpy(arg1,work.substr(0,len1).c_str());
 	}
@@ -804,71 +847,72 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 		std::strcpy(arg2,work.substr(0,len2).c_str());
 	}
 	return;
-/*
+	/*
 
 
 
-	mudlog(LOG_ALWAYS,"Passed %s(%d), Sizeof arg1=%d arg2=%d, Len arg1=%d arg2=%d",argument,strlen(argument),sizeof *arg1,sizeof *arg2,sizeof arg1,sizeof arg2);
-	char* tmp1;
-	char* tmp2;
-	char* p1;
-	char* p2;
-	int i;
-	i=0;
-	tmp1=(char*)calloc(1,strlen(argument)+1);
-	tmp2=(char*)calloc(1,strlen(argument)+1);
-	p1=tmp1;
-	p2=tmp2;
-	for (; isspace(*argument); argument++);
+		mudlog(LOG_ALWAYS,"Passed %s(%d), Sizeof arg1=%d arg2=%d, Len arg1=%d arg2=%d",argument,strlen(argument),sizeof *arg1,sizeof *arg2,sizeof arg1,sizeof arg2);
+		char* tmp1;
+		char* tmp2;
+		char* p1;
+		char* p2;
+		int i;
+		i=0;
+		tmp1=(char*)calloc(1,strlen(argument)+1);
+		tmp2=(char*)calloc(1,strlen(argument)+1);
+		p1=tmp1;
+		p2=tmp2;
+		for (; isspace(*argument); argument++);
 
-	for (; !isspace(*p1 = *argument) && *argument && i <49; i++,argument++, p1++);
-	*p1='\0';
-	for (; isspace(*p1) && *p1; p1++);
+		for (; !isspace(*p1 = *argument) && *argument && i <49; i++,argument++, p1++);
+		*p1='\0';
+		for (; isspace(*p1) && *p1; p1++);
 
-	for (; isspace(*argument); argument++);
+		for (; isspace(*argument); argument++);
 
-	for (; ( *p2 = *argument ) != 0; argument++, p2++);
-	strncpy(arg1,tmp1,50);
-	strcpy(arg2,tmp2);
-	free(tmp1);
-	free(tmp2);
-	*/
+		for (; ( *p2 = *argument ) != 0; argument++, p2++);
+		strncpy(arg1,tmp1,50);
+		strcpy(arg2,tmp2);
+		free(tmp1);
+		free(tmp2);
+		*/
 }
 
 
 
-int special(struct char_data* ch, int cmd, char* arg) {
+int special(struct char_data* ch, int cmd, const char* arg) {
 	register struct obj_data* i;
 	register struct char_data* k;
 	int j;
-	if( ch->in_room == NOWHERE ) {
-		char_to_room( ch, 3001 );
+	if(ch->in_room == NOWHERE) {
+		char_to_room(ch, 3001);
 		return FALSE;
 	}
 
 	/* special in room? */
-	if( real_roomp( ch->in_room )->funct ) {
-		if( ( *real_roomp( ch->in_room )->funct )( ch, cmd, arg,
-				real_roomp( ch->in_room ),
-				EVENT_COMMAND ) ) {
-			return( TRUE );
+	if(real_roomp(ch->in_room)->funct) {
+		if((*real_roomp(ch->in_room)->funct)(ch, cmd, arg,
+											 real_roomp(ch->in_room),
+											 EVENT_COMMAND)) {
+			return(TRUE);
 		}
 	}
 
 	/* special in equipment list? */
 #define CUR_OBJ ch->equipment[j]
 
-	for( j = 0; j <= ( MAX_WEAR - 1 ); j++ ) {
-		if( CUR_OBJ && CUR_OBJ->item_number >= 0 ) {
-			if( IS_SET( CUR_OBJ->obj_flags.extra_flags, ITEM_ANTI_SUN ) )
-			{ AntiSunItem( ch, cmd, arg, CUR_OBJ, EVENT_COMMAND ); }
-			if( CUR_OBJ) {
-				if( obj_index[ CUR_OBJ->item_number ].func ) {
+	for(j = 0; j <= (MAX_WEAR - 1); j++) {
+		if(CUR_OBJ && CUR_OBJ->item_number >= 0) {
+			if(IS_SET(CUR_OBJ->obj_flags.extra_flags, ITEM_ANTI_SUN)) {
+				AntiSunItem(ch, cmd, arg, CUR_OBJ, EVENT_COMMAND);
+			}
+			if(CUR_OBJ) {
+				if(obj_index[ CUR_OBJ->item_number ].func) {
 					PushStatus(obj_index[CUR_OBJ->item_number].specname);
-					if( ( *obj_index[ CUR_OBJ->item_number ].func )
-							( ch, cmd, arg, CUR_OBJ, EVENT_COMMAND ) ) {
+					if((*obj_index[ CUR_OBJ->item_number ].func)
+							(ch, cmd, arg, CUR_OBJ, EVENT_COMMAND)) {
 						PopStatus();
-						return( TRUE );
+						return(TRUE);
 					}
 					PopStatus();
 				}
@@ -877,56 +921,55 @@ int special(struct char_data* ch, int cmd, char* arg) {
 	}
 
 	/* special in inventory? */
-	for( i = ch->carrying; i; i = i->next_content )
-		if( i->item_number >= 0 )
-			if( obj_index[ i->item_number ].func ) {
+	for(i = ch->carrying; i; i = i->next_content)
+		if(i->item_number >= 0)
+			if(obj_index[ i->item_number ].func) {
 				PushStatus(obj_index[i->item_number].specname);
-				if( ( *obj_index[ i->item_number ].func )( ch, cmd, arg, i,
-						EVENT_COMMAND ) ) {
+				if((*obj_index[ i->item_number ].func)(ch, cmd, arg, i,
+													   EVENT_COMMAND)) {
 					PopStatus();
-					return( TRUE );
+					return(TRUE);
 				}
 				PopStatus();
 			}
 
 	/* special in mobile present? */
-	for( k = real_roomp( ch->in_room )->people; k; k = k->next_in_room )
-		if( IS_MOB( k ) )
-			if( mob_index[ k->nr ].func ) {
+	for(k = real_roomp(ch->in_room)->people; k; k = k->next_in_room)
+		if(IS_MOB(k))
+			if(mob_index[ k->nr ].func) {
 				PushStatus(mob_index[k->nr].specname);
 
-				if( ( *mob_index[ k->nr ].func )( ch, cmd, arg, k, EVENT_COMMAND ) ) {
+				if((*mob_index[ k->nr ].func)(ch, cmd, arg, k, EVENT_COMMAND)) {
 					PopStatus();
-					return( TRUE );
+					return(TRUE);
 				}
 				PopStatus();
 			}
 
 	/* special in object present? */
-	for( i = real_roomp( ch->in_room )->contents; i; i = i->next_content )
-		if( i->item_number >=0 )
-			if( obj_index[ i->item_number ].func ) {
+	for(i = real_roomp(ch->in_room)->contents; i; i = i->next_content)
+		if(i->item_number >=0)
+			if(obj_index[ i->item_number ].func) {
 				PushStatus(obj_index[i->item_number].specname);
-				if( ( *obj_index[ i->item_number ].func)( ch, cmd, arg, i,
-						EVENT_COMMAND ) ) {
+				if((*obj_index[ i->item_number ].func)(ch, cmd, arg, i,
+													   EVENT_COMMAND)) {
 					PopStatus();
-					return( TRUE );
+					return(TRUE);
 				}
 				PopStatus();
 			}
 
-	return( FALSE );
+	return(FALSE);
 }
-
-void assign_command_pointers () {
+void assign_command_pointers() {
 	InitRadix();
-	AddCommand("north", do_move, CMD_NORTH, POSITION_STANDING, TUTTI );
-	AddCommand("east",  do_move, CMD_EAST,  POSITION_STANDING, TUTTI );
-	AddCommand("south", do_move, CMD_SOUTH, POSITION_STANDING, TUTTI );
-	AddCommand("west",  do_move, CMD_WEST,  POSITION_STANDING, TUTTI );
-	AddCommand("up",    do_move, CMD_UP,    POSITION_STANDING, TUTTI );
-	AddCommand("down",  do_move, CMD_DOWN,  POSITION_STANDING, TUTTI );
-	AddCommand("enter", do_enter, CMD_ENTER, POSITION_STANDING, TUTTI );
+	AddCommand("north", do_move, CMD_NORTH, POSITION_STANDING, TUTTI);
+	AddCommand("east",  do_move, CMD_EAST,  POSITION_STANDING, TUTTI);
+	AddCommand("south", do_move, CMD_SOUTH, POSITION_STANDING, TUTTI);
+	AddCommand("west",  do_move, CMD_WEST,  POSITION_STANDING, TUTTI);
+	AddCommand("up",    do_move, CMD_UP,    POSITION_STANDING, TUTTI);
+	AddCommand("down",  do_move, CMD_DOWN,  POSITION_STANDING, TUTTI);
+	AddCommand("enter", do_enter, CMD_ENTER, POSITION_STANDING, TUTTI);
 	AddCommand("exits",do_exits,8,POSITION_RESTING,TUTTI);
 	AddCommand("kiss",do_action,9,POSITION_RESTING,TUTTI);
 	AddCommand("get", do_get, CMD_GET,POSITION_RESTING,1);
@@ -934,11 +977,11 @@ void assign_command_pointers () {
 	AddCommand("eat",do_eat,12,POSITION_RESTING,1);
 	AddCommand("wear",do_wear,13,POSITION_RESTING,TUTTI);
 	AddCommand("wield",do_wield,14,POSITION_RESTING,1);
-	AddCommand("look", do_look, CMD_LOOK, POSITION_RESTING, TUTTI );
+	AddCommand("look", do_look, CMD_LOOK, POSITION_RESTING, TUTTI);
 	AddCommand("score",do_score,16,POSITION_DEAD,TUTTI);
-	AddCommand("say", do_new_say, CMD_SAY, POSITION_RESTING, TUTTI );
+	AddCommand("say", do_new_say, CMD_SAY, POSITION_RESTING, TUTTI);
 	AddCommand("shout", do_shout, CMD_SHOUT,POSITION_RESTING,2);
-	AddCommand("tell", do_tell, CMD_TELL, POSITION_RESTING, TUTTI );
+	AddCommand("tell", do_tell, CMD_TELL, POSITION_RESTING, TUTTI);
 	AddCommand("inventory",do_inventory,20,POSITION_DEAD,TUTTI);
 	AddCommand("qui",do_qui,21,POSITION_DEAD,TUTTI);
 	AddCommand("bounce",do_action,22,POSITION_STANDING,TUTTI);
@@ -948,7 +991,7 @@ void assign_command_pointers () {
 	AddCommand("cackle",do_action,26,POSITION_RESTING,TUTTI);
 	AddCommand("laugh",do_action,27,POSITION_RESTING,TUTTI);
 	AddCommand("giggle",do_action,28,POSITION_RESTING,TUTTI);
-	AddCommand("shake", do_action, CMD_SHAKE, POSITION_RESTING, TUTTI );
+	AddCommand("shake", do_action, CMD_SHAKE, POSITION_RESTING, TUTTI);
 	AddCommand("puke",do_vomita,30,POSITION_RESTING,TUTTI);
 	AddCommand("growl",do_action,31,POSITION_RESTING,TUTTI);
 	AddCommand("scream",do_action,32,POSITION_RESTING,TUTTI);
@@ -958,7 +1001,7 @@ void assign_command_pointers () {
 	AddCommand("sigh",do_action,36,POSITION_RESTING,TUTTI);
 	AddCommand("sulk",do_action,37,POSITION_RESTING,TUTTI);
 	AddCommand("help",do_help,38,POSITION_DEAD,TUTTI);
-	AddCommand("who", do_who, CMD_WHO, POSITION_DEAD, TUTTI );
+	AddCommand("who", do_who, CMD_WHO, POSITION_DEAD, TUTTI);
 	AddCommand("emote",do_emote,40,POSITION_SLEEPING,TUTTI);
 	AddCommand(":",do_emote,40,POSITION_SLEEPING,TUTTI);
 	AddCommand(",",do_emote,177,POSITION_SLEEPING,TUTTI);
@@ -977,23 +1020,23 @@ void assign_command_pointers () {
 	AddCommand("cry",do_action,53,POSITION_RESTING,TUTTI);
 	AddCommand("news",do_news,54,POSITION_SLEEPING,TUTTI);
 	AddCommand("equipment",do_equipment,55,POSITION_SLEEPING,TUTTI);
-	AddCommand("buy", do_not_here, CMD_BUY, POSITION_STANDING, TUTTI );
-	AddCommand("sell", do_not_here, CMD_SELL, POSITION_STANDING, TUTTI );
-	AddCommand("value", do_value, CMD_VALUE, POSITION_RESTING, TUTTI );
-	AddCommand("list", do_not_here, CMD_LIST, POSITION_STANDING, TUTTI );
-	AddCommand("drop", do_drop, CMD_DROP, POSITION_RESTING, 1 );
+	AddCommand("buy", do_not_here, CMD_BUY, POSITION_STANDING, TUTTI);
+	AddCommand("sell", do_not_here, CMD_SELL, POSITION_STANDING, TUTTI);
+	AddCommand("value", do_value, CMD_VALUE, POSITION_RESTING, TUTTI);
+	AddCommand("list", do_not_here, CMD_LIST, POSITION_STANDING, TUTTI);
+	AddCommand("drop", do_drop, CMD_DROP, POSITION_RESTING, 1);
 	AddCommand("goto",do_goto,61,POSITION_SLEEPING,IMMORTALE);
 	AddCommand("weather",do_weather,62,POSITION_RESTING,TUTTI);
-	AddCommand("read", do_read, CMD_READ, POSITION_RESTING, TUTTI );
+	AddCommand("read", do_read, CMD_READ, POSITION_RESTING, TUTTI);
 	AddCommand("pour",do_pour,64,POSITION_STANDING,TUTTI);
 	AddCommand("grab",do_grab,65,POSITION_RESTING,TUTTI);
-	AddCommand("remove", do_remove, CMD_REMOVE, POSITION_RESTING, TUTTI );
+	AddCommand("remove", do_remove, CMD_REMOVE, POSITION_RESTING, TUTTI);
 	AddCommand("put",do_put,67,POSITION_RESTING,TUTTI);
 	AddCommand("shutdow",do_shutdow,68,POSITION_DEAD,MAESTRO_DEI_CREATORI);
 	AddCommand("save",do_save,69,POSITION_SLEEPING,TUTTI);
 	AddCommand("hit",do_hit,70,POSITION_FIGHTING,1);
 	AddCommand("string",do_string,71,POSITION_SLEEPING,DIO);
-	AddCommand("give", do_give, CMD_GIVE, POSITION_RESTING, 1 );
+	AddCommand("give", do_give, CMD_GIVE, POSITION_RESTING, 1);
 	AddCommand("quit",do_quit,73,POSITION_DEAD,TUTTI);
 	AddCommand("wiznews",do_wiznews,74,POSITION_DEAD,IMMORTALE);
 	AddCommand("guard",do_guard,75,POSITION_STANDING,1);
@@ -1005,8 +1048,8 @@ void assign_command_pointers () {
 	AddCommand("typo",do_action,81,POSITION_DEAD,TUTTI);
 	AddCommand("bug",do_action,82,POSITION_DEAD,TUTTI);
 	AddCommand("whisper", do_whisper, CMD_WHISPER, POSITION_RESTING,TUTTI);
-	AddCommand("cast", do_cast, CMD_CAST, POSITION_SITTING, 1 );
-	AddCommand("know", do_cast, CMD_SPELLID, POSITION_SITTING, 1 );
+	AddCommand("cast", do_cast, CMD_CAST, POSITION_SITTING, 1);
+	AddCommand("know", do_cast, CMD_SPELLID, POSITION_SITTING, 1);
 	AddCommand("at",do_at,85,POSITION_DEAD,DIO);
 	AddCommand("ask", do_ask, CMD_ASK, POSITION_RESTING,TUTTI);
 	AddCommand("order",do_order,87,POSITION_RESTING,1);
@@ -1023,10 +1066,10 @@ void assign_command_pointers () {
 	AddCommand("grin",do_action,97,POSITION_RESTING,TUTTI);
 	AddCommand("bow",do_action,98,POSITION_STANDING,TUTTI);
 
-	AddCommand( "open",   do_open,   CMD_OPEN,   POSITION_SITTING, TUTTI );
-	AddCommand( "close",  do_close,  CMD_CLOSE,  POSITION_SITTING, TUTTI );
-	AddCommand( "lock",   do_lock,   CMD_LOCK,   POSITION_SITTING, TUTTI );
-	AddCommand( "unlock", do_unlock, CMD_UNLOCK, POSITION_SITTING, TUTTI );
+	AddCommand("open",   do_open,   CMD_OPEN,   POSITION_SITTING, TUTTI);
+	AddCommand("close",  do_close,  CMD_CLOSE,  POSITION_SITTING, TUTTI);
+	AddCommand("lock",   do_lock,   CMD_LOCK,   POSITION_SITTING, TUTTI);
+	AddCommand("unlock", do_unlock, CMD_UNLOCK, POSITION_SITTING, TUTTI);
 
 	AddCommand("leave",do_leave,103,POSITION_STANDING,TUTTI);
 	AddCommand("applaud",do_action,104,POSITION_RESTING,TUTTI);
@@ -1041,7 +1084,7 @@ void assign_command_pointers () {
 	AddCommand("fondle",do_action,113,POSITION_RESTING,TUTTI);
 	AddCommand("frown",do_action,114,POSITION_RESTING,TUTTI);
 	AddCommand("gasp",do_action,115,POSITION_RESTING,TUTTI);
-	AddCommand("glare", do_action, CMD_GLARE, POSITION_RESTING, TUTTI );
+	AddCommand("glare", do_action, CMD_GLARE, POSITION_RESTING, TUTTI);
 	AddCommand("groan",do_action,117,POSITION_RESTING,TUTTI);
 	AddCommand("grope",do_action,118,POSITION_RESTING,TUTTI);
 	AddCommand("hiccup",do_action,119,POSITION_RESTING,TUTTI);
@@ -1075,34 +1118,34 @@ void assign_command_pointers () {
 	AddCommand("wink",do_action,146,POSITION_RESTING,TUTTI);
 	AddCommand("yawn",do_action,147,POSITION_RESTING,TUTTI);
 	AddCommand("snowball",do_action,148,POSITION_STANDING,IMMORTALE);
-	AddCommand("write", do_write, CMD_WRITE, POSITION_STANDING, 1 );
+	AddCommand("write", do_write, CMD_WRITE, POSITION_STANDING, 1);
 	AddCommand("hold",do_grab,150,POSITION_RESTING,1);
-	AddCommand("flee", do_flee, CMD_FLEE, POSITION_SITTING, 1 );
+	AddCommand("flee", do_flee, CMD_FLEE, POSITION_SITTING, 1);
 	AddCommand("sneak",do_sneak,152,POSITION_STANDING,1);
 	AddCommand("hide",do_hide,153,POSITION_RESTING,1);
 	AddCommand("camouflage",do_hide,153,POSITION_STANDING,1);
 	AddCommand("backstab",do_backstab,154,POSITION_STANDING,1);
 	AddCommand("pick",do_pick,155,POSITION_STANDING,1);
 	AddCommand("steal",do_steal,156,POSITION_STANDING,1);
-	AddCommand("bash", do_bash, CMD_BASH, POSITION_FIGHTING, 1 );
+	AddCommand("bash", do_bash, CMD_BASH, POSITION_FIGHTING, 1);
 	AddCommand("rescue",do_rescue,158,POSITION_FIGHTING,1);
 	AddCommand("kick",do_kick,159,POSITION_FIGHTING,1);
 	AddCommand("french",do_action,160,POSITION_RESTING,ALLIEVO);
 	AddCommand("comb",do_action,161,POSITION_RESTING,TUTTI);
 	AddCommand("massage",do_action,162,POSITION_RESTING,TUTTI);
 	AddCommand("tickle",do_action,163,POSITION_RESTING,TUTTI);
-	AddCommand("practice", do_practice, CMD_PRACTICE, POSITION_RESTING, 1 );
-	AddCommand("practise", do_practice, CMD_PRACTICE, POSITION_RESTING, 1 );
-	AddCommand("pat", do_action, CMD_PAT, POSITION_RESTING, TUTTI );
-	AddCommand("examine", do_examine, 166, POSITION_RESTING, TUTTI );
-	AddCommand("take", do_get, CMD_TAKE, POSITION_RESTING, 1 ); /* TAKE */
+	AddCommand("practice", do_practice, CMD_PRACTICE, POSITION_RESTING, 1);
+	AddCommand("practise", do_practice, CMD_PRACTICE, POSITION_RESTING, 1);
+	AddCommand("pat", do_action, CMD_PAT, POSITION_RESTING, TUTTI);
+	AddCommand("examine", do_examine, 166, POSITION_RESTING, TUTTI);
+	AddCommand("take", do_get, CMD_TAKE, POSITION_RESTING, 1);  /* TAKE */
 	AddCommand("info",do_info,168,POSITION_SLEEPING,TUTTI);
-	AddCommand("'", do_new_say, CMD_SAY_APICE, POSITION_RESTING, TUTTI );
+	AddCommand("'", do_new_say, CMD_SAY_APICE, POSITION_RESTING, TUTTI);
 	AddCommand("curse",do_action,171,POSITION_RESTING,5);
-	AddCommand("use", do_use, CMD_USE, POSITION_SITTING, 1 );
+	AddCommand("use", do_use, CMD_USE, POSITION_SITTING, 1);
 	AddCommand("where",do_where,173,POSITION_DEAD,1);
 	AddCommand("levels",do_levels,174,POSITION_DEAD,TUTTI);
-	AddCommand("register",do_register,175,POSITION_DEAD,IMMENSO);
+	AddCommand("register",do_register,175,POSITION_DEAD,TUTTI);
 
 	AddCommand("pray",do_pray,176,POSITION_SITTING,1);
 
@@ -1149,9 +1192,9 @@ void assign_command_pointers () {
 	AddCommand("slay",do_slay,216,POSITION_FIGHTING,DIO_MINORE);
 	AddCommand("wimpy",do_wimp,217,POSITION_DEAD,TUTTI);
 	AddCommand("junk",do_junk,218,POSITION_RESTING,1);
-	AddCommand("deposit", do_not_here, CMD_DEPOSIT, POSITION_RESTING, 1 );
-	AddCommand("withdraw", do_not_here, CMD_WITHDRAW, POSITION_RESTING, 1 );
-	AddCommand("balance", do_not_here, CMD_BALANCE, POSITION_RESTING, 1 );
+	AddCommand("deposit", do_not_here, CMD_DEPOSIT, POSITION_RESTING, 1);
+	AddCommand("withdraw", do_not_here, CMD_WITHDRAW, POSITION_RESTING, 1);
+	AddCommand("balance", do_not_here, CMD_BALANCE, POSITION_RESTING, 1);
 	AddCommand("nohassle",do_nohassle,222,POSITION_DEAD,DIO);
 	AddCommand("system",do_system,223,POSITION_DEAD,QUESTMASTER);
 	AddCommand("pull", do_open_exit, CMD_PULL, POSITION_STANDING,1);
@@ -1164,7 +1207,7 @@ void assign_command_pointers () {
 	AddCommand("wizlock",do_wizlock,231,POSITION_DEAD,MAESTRO_DEI_CREATORI);
 	AddCommand("highfive",do_highfive,232,POSITION_DEAD,TUTTI);
 	AddCommand("title",do_title,233,POSITION_DEAD,INIZIATO-1);
-	AddCommand("whozone", do_who, CMD_WHOZONE, POSITION_DEAD, TUTTI );
+	AddCommand("whozone", do_who, CMD_WHOZONE, POSITION_DEAD, TUTTI);
 	AddCommand("assist",do_assist,235,POSITION_FIGHTING,1);
 	AddCommand("attribute",do_attribute,236,POSITION_DEAD,5);
 	AddCommand("world",do_world,237,POSITION_DEAD,TUTTI);
@@ -1173,7 +1216,7 @@ void assign_command_pointers () {
 	AddCommand("show",do_show,240,POSITION_DEAD,DIO_MINORE);
 	AddCommand("debug",do_debug,241,POSITION_DEAD,MAESTRO_DEI_CREATORI);
 	AddCommand("invisible",do_invis,242,POSITION_DEAD,IMMORTALE);
-	AddCommand("gain", do_gain, CMD_GAIN, POSITION_DEAD, 1 );
+	AddCommand("gain", do_gain, CMD_GAIN, POSITION_DEAD, 1);
 
 	AddCommand("mload",do_mload,244,POSITION_DEAD,DIO);
 
@@ -1187,14 +1230,14 @@ void assign_command_pointers () {
 	AddCommand("fire",do_fire,250, POSITION_DEAD,TUTTI);
 	AddCommand("silence",do_silence,251,POSITION_STANDING, DIO);
 
-	AddCommand("teams", do_not_here, CMD_TEAMS, POSITION_STANDING, MAESTRO_DEL_CREATO );
-	AddCommand("player", do_not_here, CMD_PLAYER, POSITION_STANDING,MAESTRO_DEL_CREATO );
+	AddCommand("teams", do_not_here, CMD_TEAMS, POSITION_STANDING, MAESTRO_DEL_CREATO);
+	AddCommand("player", do_not_here, CMD_PLAYER, POSITION_STANDING,MAESTRO_DEL_CREATO);
 
 	AddCommand("create",do_create,254,POSITION_STANDING, QUESTMASTER);
 	AddCommand("bamfin",do_bamfin,255,POSITION_STANDING,IMMORTALE);
 	AddCommand("bamfout",do_bamfout,256,POSITION_STANDING, IMMORTALE);
 	AddCommand("vis",do_invis,257,POSITION_RESTING,  TUTTI);
-	AddCommand("doorbash", do_doorbash, CMD_DOORBASH, POSITION_STANDING, 1 );
+	AddCommand("doorbash", do_doorbash, CMD_DOORBASH, POSITION_STANDING, 1);
 	AddCommand("mosh",do_action,259,POSITION_FIGHTING, 1);
 
 	/* alias commands */
@@ -1225,7 +1268,7 @@ void assign_command_pointers () {
 
 	AddCommand("first aid",do_first_aid,281, POSITION_RESTING, 1);
 	AddCommand("log",do_set_log,282, POSITION_DEAD, MAESTRO_DEL_CREATO);
-	AddCommand("recall", do_cast, CMD_RECALL, POSITION_SITTING, 1 );
+	AddCommand("recall", do_cast, CMD_RECALL, POSITION_SITTING, 1);
 	AddCommand("reload",reboot_text,284, POSITION_DEAD, MAESTRO_DEI_CREATORI);
 	AddCommand("event",do_event,285, POSITION_DEAD, MAESTRO_DEI_CREATORI);
 	AddCommand("disguise",do_disguise,286, POSITION_STANDING, 1);
@@ -1253,13 +1296,13 @@ void assign_command_pointers () {
 	AddCommand("oedit",do_oedit,308,POSITION_DEAD,QUESTMASTER);
 	AddCommand("report",do_report,309,POSITION_RESTING,1);
 	AddCommand("interven",do_god_interven,310,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("gtell", do_gtell, CMD_GTELL, POSITION_SLEEPING, 1 );
+	AddCommand("gtell", do_gtell, CMD_GTELL, POSITION_SLEEPING, 1);
 	AddCommand("raise",do_action,312,POSITION_RESTING,1);
 	AddCommand("tap",do_action,313,POSITION_STANDING,1);
 	AddCommand("liege",do_action,314,POSITION_RESTING,1);
 	AddCommand("sneer",do_action,315,POSITION_RESTING,1);
 	AddCommand("howl",do_action,316,POSITION_RESTING,1);
-	AddCommand("kneel", do_action, CMD_KNEEL, POSITION_STANDING, 1 );
+	AddCommand("kneel", do_action, CMD_KNEEL, POSITION_STANDING, 1);
 	AddCommand("finger",do_finger,318,POSITION_RESTING,1);
 	AddCommand("pace",do_action,319,POSITION_STANDING,1);
 	AddCommand("tongue",do_action,320,POSITION_RESTING,1);
@@ -1270,7 +1313,7 @@ void assign_command_pointers () {
 	AddCommand("cheer",do_action,325,POSITION_RESTING,1);
 	AddCommand("jump",do_action,326,POSITION_STANDING,1);
 
-	AddCommand("join", do_action, CMD_JOIN, POSITION_RESTING, 1 );
+	AddCommand("join", do_action, CMD_JOIN, POSITION_RESTING, 1);
 
 	AddCommand("split",do_split,328,POSITION_RESTING,1);
 	AddCommand("berserk",do_berserk,329,POSITION_FIGHTING,1);
@@ -1333,9 +1376,9 @@ void assign_command_pointers () {
 	AddCommand("wreset",do_wreset, CMD_WRESET, POSITION_STANDING,CREATORE);  // SALVO aggiunto comando wreset
 	AddCommand("gwho",list_groups,379, POSITION_DEAD,TUTTI);
 
-	AddCommand("mforce",do_mforce,380, POSITION_DEAD,DIO_MINORE );   /* CREATOR */
-	AddCommand("clone",do_clone,381, POSITION_DEAD,MAESTRO_DEGLI_DEI+2 );
-	AddCommand("bodyguard",do_bodyguard,CMD_BODYGUARD, POSITION_STANDING,MEDIUM );
+	AddCommand("mforce",do_mforce,380, POSITION_DEAD,DIO_MINORE);    /* CREATOR */
+	AddCommand("clone",do_clone,381, POSITION_DEAD,MAESTRO_DEGLI_DEI+2);
+	AddCommand("bodyguard",do_bodyguard,CMD_BODYGUARD, POSITION_STANDING,MEDIUM);
 	AddCommand("throw",do_throw,383, POSITION_SITTING,TUTTI);
 	AddCommand("run", do_run, CMD_RUN, POSITION_STANDING,TUTTI);
 	AddCommand("notch",do_weapon_load,385, POSITION_RESTING,TUTTI);
@@ -1345,10 +1388,10 @@ void assign_command_pointers () {
 	AddCommand("view",do_viewfile,388, POSITION_DEAD,DIO);
 	AddCommand("afk",do_set_afk,389, POSITION_DEAD,1);
 
-	AddCommand( "stopfight", do_stopfight, CMD_STOPFIGHT, POSITION_FIGHTING,1);
+	AddCommand("stopfight", do_stopfight, CMD_STOPFIGHT, POSITION_FIGHTING,1);
 	AddCommand("principi",do_prince,CMD_PRINCE,POSITION_RESTING,TUTTI);
 	AddCommand("tspy",do_tspy,CMD_TSPY,POSITION_STANDING,1);
-	AddCommand("bid", do_auction, CMD_BID, POSITION_RESTING, ALLIEVO );
+	AddCommand("bid", do_auction, CMD_BID, POSITION_RESTING, ALLIEVO);
 	AddCommand("eavesdrop", do_eavesdrop, CMD_EAVESDROP, POSITION_STANDING,INIZIATO);
 	AddCommand("pquest", do_pquest, CMD_PQUEST, POSITION_STANDING,QUESTMASTER);
 	AddCommand("parry", do_parry, CMD_PARRY, POSITION_RESTING, TUTTI);
@@ -1447,15 +1490,15 @@ void assign_command_pointers () {
 	AddCommand("ooedit",do_ooedit,492,POSITION_DEAD,MAESTRO_DEGLI_DEI);
 	AddCommand("whois",do_whois,493,POSITION_DEAD,ALLIEVO-1);
 	AddCommand("osave",do_osave,494,POSITION_DEAD,QUESTMASTER);
-	AddCommand("dig", do_open_exit, CMD_DIG, POSITION_STANDING, TUTTI );
-	AddCommand("cut", do_open_exit, CMD_SCYTHE, POSITION_STANDING, TUTTI );
-	AddCommand("status", do_status, CMD_STATUS, POSITION_DEAD, TUTTI );
+	AddCommand("dig", do_open_exit, CMD_DIG, POSITION_STANDING, TUTTI);
+	AddCommand("cut", do_open_exit, CMD_SCYTHE, POSITION_STANDING, TUTTI);
+	AddCommand("status", do_status, CMD_STATUS, POSITION_DEAD, TUTTI);
 	AddCommand("showsk", do_showskills, CMD_SHOWSKILLS, POSITION_DEAD,
-			   DIO );
-	AddCommand( "resetsk", do_resetskills, CMD_RESETSKILLS, POSITION_DEAD,
-				MAESTRO_DEL_CREATO );
-	AddCommand( "setsk", do_setskill, CMD_SETSKILLS, POSITION_DEAD,
-				MAESTRO_DEI_CREATORI );
+			   DIO);
+	AddCommand("resetsk", do_resetskills, CMD_RESETSKILLS, POSITION_DEAD,
+			   MAESTRO_DEL_CREATO);
+	AddCommand("setsk", do_setskill, CMD_SETSKILLS, POSITION_DEAD,
+			   MAESTRO_DEI_CREATORI);
 //AddCommand("perdono", do_perdono, CMD_PERDONO, POSITION_STANDING, TUTTI ); //FLYP 2003 Perdono
 	AddCommand("immolate", do_immolation, CMD_IMMOLATION, POSITION_FIGHTING, TUTTI); // Flyp 20180129: demon can sacrifice life for mana
 	AddCommand("SetTest",do_imptest,CMD_IMPTEST,POSITION_DEAD,MAESTRO_DEL_CREATO);
@@ -1474,30 +1517,50 @@ int find_name(char* name) {
 	FILE* fl;
 	char szFileName[ 41 ];
 
-	sprintf( szFileName, "%s/%s.dat", PLAYERS_DIR, lower( name ) );
-	if( ( fl = fopen( szFileName, "r" ) ) != NULL ) {
-		fclose( fl );
+	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(name));
+	if((fl = fopen(szFileName, "r")) != NULL) {
+		fclose(fl);
 		return TRUE;
 	}
-	else
-	{ return FALSE; }
+	else {
+		return FALSE;
+	}
 }
 
-
-int _parse_name(char* arg, char* name) {
+/**
+ * @return unsigned long long
+ * 0 = standard login with pg name (name contains the standardized version)
+ * 1 = invalid data
+ * 2 = email
+ * 3 = numeric id +2 (to cope with id lesser than 2)
+ */
+unsigned long long parse_name(const char* arg, char* name) {
+	try {
+		return 2+boost::lexical_cast<unsigned long long>(arg);
+	}
+	catch (exception &e) {
+		mudlog(LOG_CONNECT,"Exception %s",e.what());
+	}
 	int i;
-
 	/* skip whitespaces */
-	for (; isspace(*arg); arg++);
-	for (i = 0; ( *name = *arg ) != 0; arg++, i++, name++) {
-		if ((*arg <0) || !isalpha(*arg) || i > 15 )
-		{ return(1); }
+	for(; isspace(*arg); arg++);
+	for(i = 0; (*name = *arg) != 0; arg++, i++, name++) {
+		if((*arg <0) || !isalpha(*arg)) {
+			// If the current char is a '@' we are in account mode
+#if ACCOUNT_MODE
+			if(*arg=='@') {
+				return 2;
+			}
+#endif
+			return 1ULL ;
+		}
 	}
 
-	if (!i)
-	{ return(1); }
+	if(!i or i >15) {
+		return 1;
+	}
 
-	return(0);
+	return 0;
 }
 
 #define ASSHOLE_FNAME "asshole.list"
@@ -1515,11 +1578,13 @@ int _check_ass_name(char* name) {
 	FILE* f;
 	char buf[512];
 	int i,j,k;
-	if (strlen(name)<4) { return(1); }
+	if(strlen(name)<4) {
+		return(1);
+	}
 
 	if(!shitlist) {
 		if((f=fopen(ASSHOLE_FNAME,"rt"))==NULL) {
-			mudlog( LOG_ERROR, "can't open asshole names list");
+			mudlog(LOG_ERROR, "can't open asshole names list");
 			shitlist=(struct shitlist*)calloc(1,sizeof(struct shitlist));
 			*shitlist[0].name=0;
 			return 0;
@@ -1528,10 +1593,12 @@ int _check_ass_name(char* name) {
 		shitlist=(struct shitlist*)calloc((i+3), sizeof(struct shitlist));
 		rewind(f);
 		for(i=0; fgets(buf,180,f)!=NULL; i++) {
-			if(buf[strlen(buf)-1]=='\n' || buf[strlen(buf)-1]=='\r')
-			{ buf[strlen(buf)-1]=0; }
-			if(buf[strlen(buf)-1]=='\n' || buf[strlen(buf)-1]=='\r')
-			{ buf[strlen(buf)-1]=0; }
+			if(buf[strlen(buf)-1]=='\n' || buf[strlen(buf)-1]=='\r') {
+				buf[strlen(buf)-1]=0;
+			}
+			if(buf[strlen(buf)-1]=='\n' || buf[strlen(buf)-1]=='\r') {
+				buf[strlen(buf)-1]=0;
+			}
 			if(*buf=='*') {
 				if(buf[strlen(buf)-1]=='*') {
 					shitlist[i].how=3;
@@ -1557,7 +1624,7 @@ int _check_ass_name(char* name) {
 		}
 		*shitlist[i].name = 0;
 		for(i=0; *shitlist[i].name; i++) {
-			sprintf( buf, "mode: %d, name: %s", shitlist[i].how, shitlist[i].name );
+			sprintf(buf, "mode: %d, name: %s", shitlist[i].how, shitlist[i].name);
 			/*      log(buf);*/
 		}
 	}
@@ -1565,45 +1632,51 @@ int _check_ass_name(char* name) {
 	for(j=0; *NAME; j++)
 		switch(shitlist[j].how) {
 		case 0:
-			if(!str_cmp(name,NAME))
-			{ return 1; }
+			if(!str_cmp(name,NAME)) {
+				return 1;
+			}
 			break;
 		case 1:
-			if(!strn_cmp(name,NAME,strlen(NAME)))
-			{ return 1; }
+			if(!strn_cmp(name,NAME,strlen(NAME))) {
+				return 1;
+			}
 			break;
 		case 2:
-			if(strlen(name)<strlen(NAME))
-			{ break; }
-			if(!str_cmp(name+(strlen(name)-strlen(NAME)), NAME))
-			{ return 1; }
+			if(strlen(name)<strlen(NAME)) {
+				break;
+			}
+			if(!str_cmp(name+(strlen(name)-strlen(NAME)), NAME)) {
+				return 1;
+			}
 			break;
 		case 3:
-			if(strlen(name)<strlen(NAME))
-			{ break; }
+			if(strlen(name)<strlen(NAME)) {
+				break;
+			}
 			for(k=0; k<=(int)strlen(name)-(int)strlen(NAME); k++)
-				if(!strn_cmp(name+k, NAME, strlen(NAME)))
-				{ return 1; }
+				if(!strn_cmp(name+k, NAME, strlen(NAME))) {
+					return 1;
+				}
 			break;
 		default:
-			mudlog( LOG_SYSERR,
-					"Invalid value in shitlist, interpereter.c _parse_name" );
+			mudlog(LOG_SYSERR,
+				   "Invalid value in shitlist, interpereter.c _parse_name");
 			return 1;
 		}
 #undef NAME
 	return(0);
 }
 
-void ShowStatInstruction( struct descriptor_data* d ) {
+void ShowStatInstruction(struct descriptor_data* d) {
 	char buf[ 100 ];
 
-	sprintf( buf, "Seleziona le priorita` per le caratteristiche di %s, elencandole\n\r",
-			 GET_NAME( d->character ) );
-	SEND_TO_Q( buf, d );
-	SEND_TO_Q( "dalla piu` alta a quella piu` bassa, separate da spazi senza duplicarle.\n\r", d );
-	SEND_TO_Q( "Per esempio: 'F I S A CO CA' dara` il punteggio piu` alto alla Forza,\n\r"
-			   "seguite, nell'ordine, da Intelligenza, Saggezza, Agilita`, COstituzione e, per\n\r"
-			   "ultimo, CArisma\n\r\n\r", d);
+	sprintf(buf, "Seleziona le priorita` per le caratteristiche di %s, elencandole\n\r",
+			GET_NAME(d->character));
+	SEND_TO_Q(buf, d);
+	SEND_TO_Q("dalla piu` alta a quella piu` bassa, separate da spazi senza duplicarle.\n\r", d);
+	SEND_TO_Q("Per esempio: 'F I S A CO CA' dara` il punteggio piu` alto alla Forza,\n\r"
+			  "seguite, nell'ordine, da Intelligenza, Saggezza, Agilita`, COstituzione e, per\n\r"
+			  "ultimo, CArisma\n\r\n\r", d);
 	SEND_TO_Q("   Considera che le abilita' influenzano (anche) questo: \n\r",d);
 	SEND_TO_Q("F = capacita' di usare oggetti pesanti, bonus nel combattere\n\r",d);
 	SEND_TO_Q("I = velocita' nell'apprendere e capacita' di usare spells\n\r",d);
@@ -1611,25 +1684,23 @@ void ShowStatInstruction( struct descriptor_data* d ) {
 	SEND_TO_Q("A = capacita' di schivare attacchi e (guerrieri) di caricare(bash)\n\r",d);
 	SEND_TO_Q("CO= quantita' di punti ferita e velocita' nel recuperarli\n\r",d);
 	SEND_TO_Q("CA= quantita' di seguaci, reazioni dei mostri e dei mercanti\n\r",d);
-#if defined(NEW_ROLL)
 	SEND_TO_Q("Se non sai che pesci pigliare, puoi semplicemente premere [INVIO]\n\r",d);
 	SEND_TO_Q("   Provvedera' il sistema ad assegnarti delle caratteristiche\n\r",d);
 	SEND_TO_Q("   compatibili con la classe che sceglierai\n\r",d);
 	SEND_TO_Q("Se invece ti senti un esperto, digita <nuovo>\n\r",d);
 	SEND_TO_Q("   Potrai indicare dettagliatamente le tue caratteristiche\n\r",d);
-#endif
 
-	SEND_TO_Q( "\n\rLa tua scelta ? (premi <b> per tornare indietro):\n\r",d);
+	SEND_TO_Q("\n\rLa tua scelta ? (premi <b> per tornare indietro):\n\r",d);
 }
-void ShowRollInstruction( struct descriptor_data* d ) {
+void ShowRollInstruction(struct descriptor_data* d) {
 	char buf[ 200 ];
 	char temp[200];
 
-	sprintf( buf, "Hai scelto la creazione del personaggio per esperti.\n\r");
-	SEND_TO_Q( buf, d );
+	sprintf(buf, "Hai scelto la creazione del personaggio per esperti.\n\r");
+	SEND_TO_Q(buf, d);
 	sprintf(buf, "Ad ogni caratteristica viene assegnato il valore minimo  %d .\n\r",
 			STAT_MIN_VAL);
-	SEND_TO_Q( buf, d );
+	SEND_TO_Q(buf, d);
 	sprintf(buf, "Hai a disposizione ulteriori  %d  punti da distribuire a piacere.\n\r",
 			STAT_MAX_SUM);
 	SEND_TO_Q(buf,d);
@@ -1675,13 +1746,10 @@ void ShowRollInstruction( struct descriptor_data* d ) {
 
 
 	SEND_TO_Q("Bene, premi invio per rollare. Auguri!.\n\r",d);
-#if !defined (NEW_ROLL)
-	SEND_TO_Q("Sorry, not yet implemented \r\n",d);
-#endif
-	SEND_TO_Q( "\r\n[Batti INVIO] ", d );
+	SEND_TO_Q("\r\n[Batti INVIO] ", d);
 }
 
-void RollPrompt( struct descriptor_data* d ) {
+void RollPrompt(struct descriptor_data* d) {
 	char buf[254];
 	SEND_TO_Q("FO IN SA AG CO CA RN (puoi usare <b> per rinunciare)\n\r",d);
 	/* STAT LIMITS */
@@ -1695,36 +1763,51 @@ void RollPrompt( struct descriptor_data* d ) {
 	SEND_TO_Q(buf,d);
 }
 
-void AskRollConfirm( struct descriptor_data* d ) {
+void AskRollConfirm(struct descriptor_data* d) {
 	SEND_TO_Q("Sei soddisfatto(S/N)? (puoi usare <b> per rinunciare)\n\r",d);
 }
-#if defined(NEW_ROLL)
 
-void InterpretaRoll( struct descriptor_data* d, char* riga )
+void InterpretaRoll(struct descriptor_data* d, char* riga)
 #define BACKWARD 1
 #define AGAIN    2
 #define GOON     0
 {
-	char buf[ 254 ];
-	char temp[254];
+	char buf[ 512 ];
 	short doafter=GOON;
 	int FO,IN,SA,AG,CO,CA,t;
 	char c7[2]="\0";
-	if (strlen(riga)==1 && (*riga == 'B' || *riga == 'b'))
-	{ doafter=BACKWARD; }
-	if (strlen(riga)>18-17)
-	{ sscanf(riga,"%2d %2d %2d %2d %2d %2d %s",&FO,&IN,&SA,&AG,&CO,&CA,c7); }
-	else
-	{ FO=IN=SA=AG=CO=CA=0; }
-	if (FO < 0) { FO=0; }
-	if (IN < 0) { IN=0; }
-	if (SA < 0) { SA=0; }
-	if (AG < 0) { AG=0; }
-	if (CO < 0) { CO=0; }
-	if (CA < 0) { CA=0; }
+	if(strlen(riga)==1 && (*riga == 'B' || *riga == 'b')) {
+		doafter=BACKWARD;
+	}
+	if(strlen(riga)>18-17) {
+		sscanf(riga,"%2d %2d %2d %2d %2d %2d %s",&FO,&IN,&SA,&AG,&CO,&CA,c7);
+	}
+	else {
+		FO=IN=SA=AG=CO=CA=0;
+	}
+	if(FO < 0) {
+		FO=0;
+	}
+	if(IN < 0) {
+		IN=0;
+	}
+	if(SA < 0) {
+		SA=0;
+	}
+	if(AG < 0) {
+		AG=0;
+	}
+	if(CO < 0) {
+		CO=0;
+	}
+	if(CA < 0) {
+		CA=0;
+	}
 	t=FO+IN+SA+AG+CO+CA;
-	if (t < 0) { t=STAT_MAX_SUM+1; }
-	if (t>STAT_MAX_SUM) {
+	if(t < 0) {
+		t=STAT_MAX_SUM+1;
+	}
+	if(t>STAT_MAX_SUM) {
 		sprintf(buf,"Hai usato piu' dei %2d punti disponibili (%2d)\n\r",
 				STAT_MAX_SUM,t);
 		SEND_TO_Q(buf,d);
@@ -1737,17 +1820,19 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 		AG=MIN(MaxDexForRace(d->character)-STAT_MIN_VAL,AG);
 		CO=MIN(MaxConForRace(d->character)-STAT_MIN_VAL,CO);
 		CA=MIN(MaxChrForRace(d->character)-STAT_MIN_VAL,CA);
-		sprintf(buf,"Ecco le stats risultanti dalla tua scelta:\n\r");
-		sprintf(temp,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
+		SEND_TO_Q("Ecco le stats risultanti dalla tua scelta:\n\r",d);
+		sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %s\n\r",buf,FO+STAT_MIN_VAL,
 				IN+STAT_MIN_VAL,
 				SA+STAT_MIN_VAL,
 				AG+STAT_MIN_VAL,
 				CO+STAT_MIN_VAL,
 				CA+STAT_MIN_VAL,(!*c7?"\0":"piu' la randomizzazione (-1/+1)"));
-		if (t<STAT_MAX_SUM)
-			sprintf(buf,"%sATTENZIONE. Hai usato solo %2d dei %2d disponibili\n\r",
-					temp,t,STAT_MAX_SUM);
 		SEND_TO_Q(buf,d);
+
+		if(t<STAT_MAX_SUM) {
+			sprintf(buf,"ATTENZIONE. Hai usato solo %2d dei %2d disponibili\n\r",t,STAT_MAX_SUM);
+			SEND_TO_Q(buf,d);
+		}
 	}
 	d->stat[0]=(char)FO;
 	d->stat[1]=(char)IN;
@@ -1772,1436 +1857,1702 @@ void InterpretaRoll( struct descriptor_data* d, char* riga )
 	}
 	return;
 }
-#endif
-
-/* deal with newcomers and other non-playing sockets */
-
-void nanny(struct descriptor_data* d, char* arg) {
-	char buf[ 254 ];
-	int count=0, oops=FALSE, index=0;
-	char tmp_name[20];
-	struct char_file_u tmp_store;
-	struct char_data* tmp_ch;
-	struct room_data* rp; // Gaia 2001
-	struct descriptor_data* k;
-
-	/*struct RegInfoData *ri;*/
-
-	write(d->descriptor, echo_on, 6);
-	/*GGPATCH Inserita possibilita' di tornare indietro con "B"  */
-	switch (STATE(d)) {
-	case CON_NME:                /* wait for input of name        */
-		for (; isspace(*arg); arg++)  ;
-		if (!*arg) {
-			PushStatus("CON_NME");
-			close_socket(d);
-			PopStatus();
-			return;
+void slackNotify(const char* message, const char* emoj) {
+	    slack::Slacking slack("xxx-xxx"); // where "xxx-xxx" is your Slack API token
+		//slack.set_proxy("http://10.0.22.1:8080");
+		slack.hook.Id = "/T9EQH2QB0/B9E96TMPV/rJPnMU8yqgv8NzbKWh8Twfgd";
+	    slack.hook.channel_username_iconemoji("", "", emoj);
+	    slack.hook.postMessage(message);
+}
+void toonList(struct descriptor_data* d,const string &optional_message="") {
+	string message(optional_message);
+	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
+	if (d->AccountData.id) { short n=0;
+		constexpr int nlen=5;
+		char order[nlen]="";
+		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==d->AccountData.id);
+		d->toons.clear();
+		for(toonPtr pg : r) {
+			++n;
+			snprintf(order,nlen-1,"%2d",n);
+			message.append(order).append(". ").append(pg->name).append(" ");
+			message.append(ParseAnsiColors(true,pg->title.c_str())).append("\r\n");
+			d->toons.emplace_back(pg->name);
 		}
-		else {
-#if defined (NEW_CONNECT)
-			d->AlreadyInGame=FALSE;
-#endif
-			if(_parse_name(arg, tmp_name)) {
-				SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
-				SEND_TO_Q("Nome: ", d);
-				return;
+	}
+	message.append(">");
+	SEND_TO_Q(message.c_str(),d);
+}
+bool toonFromFileSystem(const char* nome) {
+	using namespace boost::filesystem;
+	path file(current_path());
+	file/=PLAYERS_DIR; // Overloaded operator: concats adding path separator
+	file/=lower(nome);
+	file+=".dat";
+	mudlog(LOG_CONNECT,"Checking %s",file.string());
+	if(is_regular_file(file) and file.extension()==".dat") {
+		mudlog(LOG_CONNECT,"Opening %s",file.string());
+		FILE* pFile;
+		struct char_file_u Player;
+		if(!(pFile = fopen(file.c_str(), "r"))) {
+			mudlog(LOG_CONNECT,"Could not open %s, return false",file.string());
+			return false;
+		}
+		if(fread(&Player, 1, sizeof(Player), pFile)
+				== sizeof(Player)) {
+			fclose(pFile);
+			if(strcasecmp(file.stem().c_str(),Player.name)) {
+				mudlog(LOG_SYSERR,"Strangeness: %s contains wrong name %s",file.filename().c_str(),Player.name);
 			}
-			if( SiteLock( d->host ) ) {
-				SEND_TO_Q("Sorry, this site is temporarily banned.\n\r",d);
-				STATE(d)=CON_WIZLOCK;
-				PushStatus("Banned site");
+			else {
+				getFromDb(Player.name,Player.pwd,Player.title);
+			}
+			mudlog(LOG_CONNECT,"Return true");
+			return true; //Returning true with no pg in the db causes an abort later
+		}
+		fclose(pFile);
+	}
+	mudlog(LOG_CONNECT,"Return false");
+	return false;
+
+}
+bool check_impl_security(struct descriptor_data* d) {
+	if(top_of_p_table > 0) {
+		if(GetMaxLevel(d->character) >= 59) {
+			switch(SecCheck(GET_NAME(d->character), d->host)) {
+			case -1:
+				SEND_TO_Q2("Security file not found\n\r", d);
+				return true;
+				break;
+			case 0:
+				SEND_TO_Q2("Security check reveals invalid site\n\r", d);
+				SEND_TO_Q2("Speak to an implementor to fix problem\n\r", d);
+				SEND_TO_Q2("If you are an implementor, add yourself to the\n\r",d);
+				SEND_TO_Q2("Security directory (lib/security)\n\r",d);
 				close_socket(d);
-				PopStatus();
-				return;
-			}
-			if (!d->character) {
-				CREATE(d->character, struct char_data, 1);
-				clear_char(d->character);
-				d->character->desc = d;
-				SET_BIT( d->character->player.user_flags, USE_PAGING );
-			}
-			/* Carico il personaggio adesso perche' mi serve il codice di autorizzazione */
-			if( load_char( tmp_name, &tmp_store ) ) {
-				store_to_char(&tmp_store, d->character);
-				strcpy(d->pwd, tmp_store.pwd);
-			}
-			else {
-				/* player unknown gotta make a new */
-				if(_check_ass_name(tmp_name)) {
-					SEND_TO_Q("Nome non valido. Scegline un'altro, per favore.\n\r", d);
-					SEND_TO_Q("Nome: ", d);
-					return;
-				}
-				if( !WizLock ) {
-					CREATE( GET_NAME( d->character ), char, strlen( tmp_name ) + 1 );
-					CAP( tmp_name );
-					strcpy( GET_NAME( d->character ), tmp_name );
-					sprintf( buf, "E` realmente '%s' il nome che vuoi ? (si/no): ",
-							 tmp_name );
-					SEND_TO_Q(buf, d);
-					STATE(d) = CON_NMECNF;
-					return;
-				}
-				else {
-					sprintf( buf,
-							 "Mi dispiace. Non sono ammessi nuovi personaggi, "
-							 "per il momento.\n\r" );
-					SEND_TO_Q(buf,d);
-					STATE(d) = CON_WIZLOCK;
-					return;
-				}
-			}
-			/* Check if already playing with some or other name*/
-
-
-			for( k=descriptor_list; k; k = k->next ) {
-				if ((k->character != d->character) && k->character) {
-					struct char_data* test = (k->original?k->original:k->character);
-					if ( (test and GET_NAME(test) and !str_cmp(GET_NAME(test),GET_NAME(d->character)))) {
-#if !defined ( NEW_CONNECT )
-						sprintf( buf, "%s e` gia` nel gioco, non puoi riconnetterti."
-								 "\n\r",test );
-						SEND_TO_Q( buf, d);
-						SEND_TO_Q("Nome: ", d);
-#else
-						d->AlreadyInGame=TRUE;
-						d->ToBeKilled=k;
-						mudlog(LOG_CONNECT,"%s : gia' in gioco.",GET_NAME(test));
-
-#endif
-					}
-				}
-
-			}
-			/* Tutto ok, chiediamogli la password */
-			SEND_TO_Q("Password: ", d);
-			write(d->descriptor, echo_off, 4);
-			STATE(d) = CON_PWDNRM;
-			return;
-		}
-
-	case CON_NMECNF:        /* wait for conf. of new name        */
-		/* skip whitespaces */
-		for( ; isspace(*arg); arg++ );
-
-		if( *arg == 's' || *arg == 'S' ) {
-			write( d->descriptor, echo_on, 4);
-			SEND_TO_Q("Nuovo personaggio.\n\r", d);
-
-			sprintf( buf, "Inserisci una password per %s: ",
-					 GET_NAME( d->character ) );
-
-			SEND_TO_Q(buf, d);
-			write( d->descriptor, echo_off, 4 );
-			STATE(d) = CON_PWDGET;
-		}
-		else if( *arg == 'n' || *arg == 'N') {
-			SEND_TO_Q("Va bene. Allora, quale sarebbe il nome ? ", d);
-			free(GET_NAME(d->character));
-			GET_NAME(d->character) = NULL;
-			STATE(d) = CON_NME;
-		}
-		else {
-			/* Please do Y or N */
-			SEND_TO_Q("Per favore, si o no ? ", d);
-		}
-		break;
-
-	case CON_PWDNRM:        /* get pwd for known player        */
-		/* skip whitespaces */
-		for( ; isspace(*arg); arg++);
-		if (!*arg) {
-			PushStatus("Password check");
-			close_socket(d);
-			PopStatus();
-		}
-
-		else {
-			if (!IsTest() or IS_IMMORTAL(d->character)) {
-				if( strncmp( (char*)crypt( arg, d->pwd ), d->pwd, strlen(d->pwd) ) ) {
-					write_to_descriptor(d->descriptor,"Password errata.\n\r");
-					mudlog( LOG_PLAYERS,
-							"%s [HOST:%s] ha inserito una password errata'",
-							GET_NAME( d->character ),
-							d->host,
-							strlen(d->host)
-						  );
-					PushStatus("Password errata");
-					close_socket( d );
-					PopStatus();
-					return;
-				}
-			}
-#if IMPL_SECURITY
-			if( top_of_p_table > 0 ) {
-				if( GetMaxLevel( d->character ) >= 59 ) {
-					switch(SecCheck(GET_NAME(d->character), d->host)) {
-					case -1:
-						SEND_TO_Q2("Security file not found\n\r", d);
-						break;
-					case 0:
-						SEND_TO_Q2("Security check reveals invalid site\n\r", d);
-						SEND_TO_Q2("Speak to an implementor to fix problem\n\r", d);
-						SEND_TO_Q2("If you are an implementor, add yourself to the\n\r",d);
-						SEND_TO_Q2("Security directory (lib/security)\n\r",d);
-						PushStatus("Security check");
-						close_socket(d);
-						PopStatus();
-						return;
-					}
-				}
-				else {
-				}
-			}
-#endif
-			/* Ok, il ragazzo ha azzeccato la password */
-			d->wait=0;
-#if defined ( NEW_CONNECT )
-			/* Se era gia` in gioco assumo ld non riconosciuto e disconnetto il
-			  * vecchio char*/
-
-			if (d->AlreadyInGame)
-
-			{
-				mudlog( LOG_PLAYERS, "%s[HOST:%s] riconnesso su se stesso.", GET_NAME(d->character),
-						d->host );
-				PushStatus("Riconnessione");
-				close_socket(d->ToBeKilled);
-				PopStatus();
-			}
-#endif
-#ifdef ACCESSI
-#ifndef NOREGISTER
-			mudlog(LOG_PLAYERS,"%s: verifica codice",GET_NAME(d->character));
-			if (GET_AUTHCODE(d->character)) { free(GET_AUTHCODE(d->character)); }
-			if (GET_AUTHBY(d->character)) { free(GET_AUTHBY(d->character)); }
-			Registered toon(GET_NAME(d->character));
-			if (toon.get()) {
-				GET_AUTHCODE(d->character)=strdup(toon.getCode().c_str());
-				GET_AUTHBY(d->character)=strdup(toon.getGod().c_str());
-			}
-#endif
-#endif
-			for( tmp_ch = character_list; tmp_ch; tmp_ch = tmp_ch->next ) {
-				if( ( !str_cmp( GET_NAME( d->character ), GET_NAME( tmp_ch ) ) &&
-						!tmp_ch->desc && !IS_NPC( tmp_ch ) ) ||
-						( IS_NPC( tmp_ch ) && tmp_ch->orig &&
-						  !str_cmp( GET_NAME( d->character ),
-									GET_NAME( tmp_ch->orig ) ) ) ) {
-					/* Se riconnessione, abbandono il nuovo Char creato
-					* e aggancio al descrittore corrente il char ld */
-
-					write(d->descriptor, echo_on, 6);
-					SEND_TO_Q("Riconnessione...\n\r", d);
-
-					free_char(d->character);
-					tmp_ch->desc = d;
-					d->character = tmp_ch;
-					tmp_ch->specials.timer = 0;
-					if (!IS_IMMORTAL(tmp_ch))
-					{ tmp_ch->invis_level = 0; }
-					if (tmp_ch->orig) {
-						tmp_ch->desc->original = tmp_ch->orig;
-						tmp_ch->orig = 0;
-					}
-					d->character->persist = 0;
-					STATE(d) = CON_PLYNG;
-
-					act("$n si e` riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
-					mudlog( LOG_CONNECT, "%s[HOST:%s] has reconnected.",
-							GET_NAME(d->character), d->host);
-
-					/* inserisco qui la ripartenza dei regen interrotti per i link dead */
-					alter_hit( tmp_ch, 0 ) ;
-					alter_mana( tmp_ch, 0 ) ;
-					alter_move( tmp_ch, 0 ) ;
-
-					return;
-				}
-#ifdef ACCESSI
-				if((!d->AlreadyInGame) &&
-						(GET_AUTHCODE(tmp_ch)) &&
-						(GET_AUTHCODE(d->character))) {
-					if ( !str_cmp( GET_AUTHCODE(tmp_ch),
-								   GET_AUTHCODE(d->character))&& !IS_DIO_MINORE(tmp_ch) && !IS_DIO_MINORE(d->character)) {
-						sprintf(buf,"Hai gia' un personaggio nel gioco.\n\r");
-						SEND_TO_Q( buf, d);
-						SEND_TO_Q("Nome: ", d);
-						mudlog(LOG_PLAYERS,
-							   "WARNING %s respinto per violazione MP.",
-							   GET_NAME(d->character));
-						STATE(d)=CON_NME;
-						return;
-					}
-				}
-#endif
-
-			}
-			/* Ok, non si tratta di riconnessione...
-			  * gli immortali entrano invisibili */
-			if (IS_IMMORTAL(d->character))
-			{ d->character->invis_level=ADEPT; }
-			if (IS_DIO(d->character))
-			{ d->character->invis_level = GetMaxLevel(d->character); }
-			HowManyConnection(1);
-			/* Le ombre vengono loggate ma non viene dato l'avviso on line*/
-			if (GetMaxLevel(d->character) >= MAESTRO_DEL_CREATO) {
-				mudlog( LOG_CONNECT, "%s [HOST:%s] has connected.",
-						GET_NAME(d->character),
-						d->host );
-			}
-			else {
-				mudlog( LOG_CONNECT, "%s [HOST:%s] has connected.",
-						GET_NAME(d->character),
-						d->host );
-			}
-			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
-												USE_ANSI ),
-										motd ), d);
-			SEND_TO_Q("\n\r[Batti INVIO] ", d);
-			STATE(d) = CON_RMOTD;
-		}
-		break;
-
-	case CON_PWDGET:        /* get pwd for new player        */
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++);
-		if (!*arg || strlen(arg) > 10 ||
-				!strcasecmp(arg,d->character->player.name)) {
-			write(d->descriptor, echo_on, 6);
-			SEND_TO_Q("Password non valida.(MAx 10 caratteri - diversa dal nome)\n\r", d);
-			SEND_TO_Q("Password: ", d);
-
-			write(d->descriptor, echo_off, 4);
-			return;
-		}
-		strncpy(d->pwd,(char*)crypt(arg, d->character->player.name), 10);
-		*(d->pwd + 10) = '\0';
-		write(d->descriptor, echo_on, 6);
-		SEND_TO_Q("Per favore, reinserisci la password: ", d);
-		write(d->descriptor, echo_off, 4);
-		STATE(d) = CON_PWDCNF;
-		break;
-
-	case CON_PWDCNF:        /* get confirmation of new pwd        */
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++);
-
-		if (strncmp((char*)crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
-			write(d->descriptor, echo_on, 6);
-
-			SEND_TO_Q("Le password non coincidono.\n\r", d);
-			SEND_TO_Q("Reinserisci la password: ", d);
-			STATE(d) = CON_PWDGET;
-			write(d->descriptor, echo_off, 4);
-			return;
-		}
-		else {
-			write(d->descriptor, echo_on, 6);
-			show_race_choice(d);
-			STATE(d) = CON_QRACE;
-		}
-		break;
-
-	case CON_QRACE:
-		for (; isspace(*arg); arg++)  ;
-		if (!*arg) {
-			show_race_choice(d);
-			STATE(d) = CON_QRACE;
-		}
-		else {
-			if (*arg == '?') {
-				page_string( d, RACEHELP, 1 );
-				STATE( d ) = CON_ENDHELPRACE;
-			}
-			else {
-				int i=0,tmpi=0;
-
-				while (race_choice[i]!=-1)
-				{ i++; }
-				tmpi=atoi(arg);
-				if (tmpi>=0 && tmpi <=i-1) {
-					/* set the chars race to this */
-					GET_RACE(d->character) = race_choice[tmpi];
-					sprintf( buf, "Quale'e` il sesso di %s ? (maschio/femmina) (b per tornare indietro): ",
-							 GET_NAME( d->character ) );
-					SEND_TO_Q( buf, d);
-					STATE(d) = CON_QSEX;
-				}
-				else {
-					SEND_TO_Q("\n\rScelta non valida.\n\r\n\r", d);
-					show_race_choice(d);
-					STATE(d) = CON_QRACE;
-					/* bogus race selection! */
-				}
-			}
-		}
-		break;
-
-	case CON_HELPRACE:
-		SEND_TO_Q( "\r\n[Batti INVIO] ", d );
-		STATE( d ) = CON_ENDHELPRACE;
-		break;
-
-	case CON_HELPROLL:
-#if defined(NEW_ROLL)
-		mudlog(LOG_CHECK,"%s sta rollando con metodo new",GET_NAME(d->character));
-		RollPrompt(d);
-		STATE( d ) = CON_QROLL;
-#else
-		ShowStatInstruction(d);
-		STATE( d ) = CON_STAT_LIST;
-#endif
-		break;
-	case CON_QROLL:
-#if defined(NEW_ROLL)
-		mudlog(LOG_CHECK,"%s ha rollato con metodo new",GET_NAME(d->character));
-		InterpretaRoll(d,arg);
-		/* Lo stato viene impostatto da InterpretaRoll */
-#endif
-		break;
-		return;
-	case CON_CONF_ROLL : /*Conferma la rollata*/
-		mudlog(LOG_CHECK,"%s sta confermando la rollata",GET_NAME(d->character));
-		switch(*arg) {
-			for (; isspace(*arg); arg++) ;
-			mudlog(LOG_CHECK,"%s ha digitato: %s",GET_NAME(d->character),arg);
-		case 's':
-		case 'S':
-			show_class_selection(d,GET_RACE(d->character));
-			STATE( d ) = CON_QCLASS;
-			return;
-		case 'n':
-		case 'N':
-			ShowRollInstruction(d);
-			STATE(d) = CON_HELPROLL;
-			return;
-		case 'b':
-		case 'B':
-			ShowStatInstruction(d);
-			STATE(d)=CON_STAT_LIST;
-			return;
-		}
-	/* no break */
-	case CON_ENDHELPRACE:
-		show_race_choice(d);
-		STATE(d) = CON_QRACE;
-		break;
-	case CON_QSEX:                /* query sex of new user        */
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++) ;
-		switch (*arg) {
-		case 'm':
-		case 'M':
-			/* sex MALE */
-			d->character->player.sex = SEX_MALE;
-			break;
-
-		case 'f':
-		case 'F':
-			/* sex FEMALE */
-			d->character->player.sex = SEX_FEMALE;
-			break;
-
-		case 'b':
-		case 'B':
-			/* backward */
-			show_race_choice(d);
-			STATE(d)=CON_QRACE;
-			return;
-
-		default:
-			SEND_TO_Q("Qui su Nebbie Arcane amiamo le cose semplici.... accontentati di due sessi.\n\r", d);
-			SEND_TO_Q("Quel'e` il tuo sesso ? (maschio/femmina): (b per tornare indietro)", d);
-			return;
-		}
-
-		ShowStatInstruction( d );
-		STATE(d) = CON_STAT_LIST;
-		break;
-
-	case CON_STAT_LIST:
-		/* skip whitespaces */
-		if (strlen(arg)==1 && (*arg == 'B' || *arg == 'b')) { /* Backward */
-			sprintf( buf, "Quale'e` il sesso di %s ? (maschio/Femmina) (b per tornare indietro): ",
-					 GET_NAME( d->character ) );
-			SEND_TO_Q(buf,d);
-			STATE( d ) = CON_QSEX;
-			return;
-		}
-		if (!strncasecmp(arg,"nuovo",5) || !strncasecmp(arg,"new",3)) { /* New roll */
-			ShowRollInstruction(d);
-			STATE( d ) = CON_HELPROLL;
-			return;
-		}
-
-		for (; isspace(*arg); arg++);/* Skip blanks*/
-
-#if defined (NEW_ROLL)
-		if (!*arg) {
-			d->TipoRoll='S';
-			show_class_selection(d,GET_RACE(d->character));
-			if (IS_SET(SystemFlags,SYS_REQAPPROVE)) {
-				/* set the AUTH flags */
-				/* (3 chances) */
-				d->character->generic = NEWBIE_REQUEST+NEWBIE_CHANCES;
-			}
-			STATE(d) = CON_QCLASS;
-			break;
-		}
-#endif
-		index = 0;
-		while (*arg && index < MAX_STAT) {
-			if (*arg == 'F' || *arg == 'f')
-			{ d->stat[index++] = 's'; }
-			if (*arg == 'I' || *arg == 'i')
-			{ d->stat[index++] = 'i'; }
-			if (*arg == 'S' || *arg == 's')
-			{ d->stat[index++] = 'w'; }
-			if (*arg == 'A' || *arg == 'a')
-			{ d->stat[index++] = 'd'; }
-			if (*arg == 'C' || *arg == 'c') {
-				arg++;
-				if (*arg == 'O' || *arg == 'o') {
-					d->stat[index++] = 'o';
-				}
-				else if (*arg == 'A' || *arg == 'a') {
-					d->stat[index++] = 'h';
-				}
-			}
-			arg++;
-		}
-
-		if (index < MAX_STAT) {
-			SEND_TO_Q( "Non hai inserito tutte le statistiche richieste o qualche scelta e` sbagliata.\n\r\n\r", d);
-			ShowStatInstruction( d );
-			STATE(d) = CON_STAT_LIST;
-			break;
-		}
-		else {
-#if defined (NEW_ROLL)
-			d->TipoRoll='V';
-#endif
-
-			show_class_selection(d,GET_RACE(d->character));
-
-			if (IS_SET(SystemFlags,SYS_REQAPPROVE)) {
-				/* set the AUTH flags */
-				/* (3 chances) */
-				d->character->generic = NEWBIE_REQUEST+NEWBIE_CHANCES;
-			}
-			STATE(d) = CON_QCLASS;
-			break;
-		}
-
-	case CON_QCLASS : {
-		int ii=0;
-		/* skip whitespaces */
-
-		for (; isspace(*arg); arg++);
-
-		d->character->player.iClass = 0;
-		count=0;
-		oops=FALSE;
-
-		switch (*arg) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': {
-			switch(GET_RACE(d->character)) {
-			case RACE_ELVEN:
-			case RACE_GOLD_ELF:
-			case RACE_SEA_ELF:
-			case RACE_HALF_ELVEN: {
-				ii=0;
-				while (d->character->player.iClass==0 && elf_class_choice[ii] !=0) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass=elf_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_WILD_ELF: {
-				ii=0;
-				while( d->character->player.iClass==0 &&
-						wild_elf_class_choice[ii] !=0) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass = wild_elf_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if( d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_HUMAN: {
-				ii=0;
-				while (d->character->player.iClass==0 && human_class_choice[ii] !=0) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass=human_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_HALFLING: {
-				ii=0;
-				while (d->character->player.iClass==0 && halfling_class_choice[ii] !=0) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass=halfling_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_DEEP_GNOME:
-				ii=0;
-				while( d->character->player.iClass == 0 &&
-						deep_gnome_class_choice[ii] != 0 ) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass = deep_gnome_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection( d, GET_RACE( d->character ) ); }
-				break;
-
-			case RACE_GNOME: {
-				ii=0;
-				while (d->character->player.iClass==0 && gnome_class_choice[ii] !=0) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass=gnome_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_DWARF: {
-				ii=0;
-				while (d->character->player.iClass==0 && dwarf_class_choice[ii] !=0) {
-					if( atoi( arg ) == ii )
-					{ d->character->player.iClass=dwarf_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if( d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_HALF_OGRE: {
-				ii=0;
-				while (d->character->player.iClass==0 && half_ogre_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=half_ogre_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_HALF_GIANT: {
-				ii=0;
-				while (d->character->player.iClass==0 && half_giant_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=half_giant_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_HALF_ORC: {
-				ii=0;
-				while (d->character->player.iClass==0 && half_orc_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=half_orc_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_ORC: {
-				ii=0;
-				while (d->character->player.iClass==0 && orc_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=orc_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_GOBLIN: {
-				ii=0;
-				while (d->character->player.iClass==0 && goblin_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=goblin_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_DARK_ELF: {
-				ii=0;
-				while (d->character->player.iClass==0 && dark_elf_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=dark_elf_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_DARK_DWARF: {
-				ii=0;
-				while (d->character->player.iClass==0 && dark_dwarf_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=dark_dwarf_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_DEMON: {
-				ii=0;
-				while (d->character->player.iClass==0 && demon_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=demon_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			case RACE_TROLL: {
-				ii=0;
-				while (d->character->player.iClass==0 && troll_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=troll_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-
-			default: {
-				ii=0;
-				while (d->character->player.iClass==0 && default_class_choice[ii] !=0) {
-					if (atoi(arg) == ii)
-					{ d->character->player.iClass=default_class_choice[ii]; }
-					ii++;
-				} /* end while */
-				if (d->character->player.iClass != 0)
-				{ STATE(d) = CON_RNEWD; }
-				else
-				{ show_class_selection(d,GET_RACE(d->character)); }
-				break;
-			}
-			} /* end race switch */
-			break;
-		}
-
-		case '?' : {
-			page_string( d, CLASS_HELP, 1 );
-			STATE( d ) = CON_ENDHELPCLASS;
-			return;
-		}
-		case 'b' :
-		case 'B' : {
-			ShowStatInstruction(d);
-			STATE( d ) = CON_STAT_LIST;
-			return;
-		}
-		default : {
-			SEND_TO_Q("\n\rSelezione non valida!\n\r\n\r",d);
-			show_class_selection(d,GET_RACE(d->character));
-			break;
-		}
-		} /* end arg switch */
-
-		if( STATE( d ) != CON_QCLASS && IS_SET( SystemFlags, SYS_REQAPPROVE ) ) {
-			STATE(d) = CON_AUTH;
-			SEND_TO_Q("\r\n[Batti INVIO] ", d);
-		}
-		else {
-			if( STATE( d ) != CON_QCLASS ) {
-				mudlog( LOG_CONNECT, "%s [HOST:%s] nuovo giocatore.",
-						GET_NAME(d->character), d->host);
-				/*
-				  ** now that classes are set, initialize
-				  */
-				init_char(d->character);
-
-				/* crea i files relativi a char */
-
-				save_char(d->character, AUTO_RENT, 0);
-
-				if (HasClass(d->character,CLASS_MAGIC_USER)) {
-					SEND_TO_Q( RU_SORCERER, d );
-					STATE( d ) = CON_CHECK_MAGE_TYPE;
-					break;
-				}
-				else {
-					/* show newbies a instructional note from interpreter.h */
-					/*page_string(d,NEWBIE_NOTE,1);*/
-					SEND_TO_Q( NEWBIE_NOTE, d );
-					SEND_TO_Q( "\n\r[Batti INVIO] ", d );
-					STATE( d ) = CON_RNEWD;
-				}
-			}
-		}
-		break;
-	}
-	case CON_HELPCLASS:
-		SEND_TO_Q( "\n\r[Batti INVIO] ", d );
-		STATE( d ) = CON_ENDHELPCLASS;
-		break;
-
-	case CON_ENDHELPCLASS:
-		show_class_selection(d,GET_RACE(d->character));
-		STATE( d ) = CON_QCLASS;
-		break;
-
-	case CON_RNEWD: {
-		SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
-											USE_ANSI ),
-									motd ), d);
-		SEND_TO_Q("\r\n[Batti INVIO] ", d);
-		STATE(d) = CON_RMOTD;
-		break;
-	}
-#if 0
-	case CON_AUTH: {
-		/* notify gods */
-		if (d->character->generic >= NEWBIE_START) {
-			/*
-			 ** now that classes are set, initialize
-			 */
-			init_char(d->character);
-			/* create an entry in the file */
-			d->pos = create_entry(GET_NAME(d->character));
-			save_char(d->character, AUTO_RENT, 0);
-			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
-												USE_ANSI ),
-										motd ), d);
-			SEND_TO_Q("\r\n[Batti INVIO] ", d);
-			STATE(d) = CON_RMOTD;
-		}
-		else if (d->character->generic >= NEWBIE_REQUEST) {
-			mudlog( LOG_PLAYERS, "%s [HOST:%s] nuovo giocatore.", GET_NAME(d->character),
-					d->host);
-			if (!strncmp(d->host,"128.197.152",11))
-			{ d->character->generic=1; }
-			/* I decided to give them another chance.  -Steppenwolf  */
-			/* They blew it. -DM */
-			if( !strncmp(d->host,"oak.grove", 9)
-					|| !strncmp(d->host,"143.195.1.20",12)) {
-				d->character->generic=1;
-			}
-			else {
-				if (top_of_p_table > 0) {
-					mudlog( LOG_CONNECT, "Type Authorize %s to allow into game.",
-							GET_NAME( d->character ) );
-					mudlog( LOG_CONNECT,
-							"type 'Wizhelp Authorize' for other commands" );
-				}
-				else {
-					mudlog( LOG_CHECK, "Initial character.  Authorized Automatically" );
-					d->character->generic = NEWBIE_START+5;
-				}
-			}
-			/*
-			 **  enough for gods.  now player is told to shut up.
-			 */
-			d->character->generic--;   /* NEWBIE_START == 3 == 3 chances */
-			sprintf( buf, "Please wait. You have %d requests remaining.\n\r",
-					 d->character->generic);
-			SEND_TO_Q(buf, d);
-			if (d->character->generic == 0) {
-				SEND_TO_Q("Arrivederci.", d);
-				STATE(d) = CON_WIZLOCK;   /* axe them */
-				break;
-			}
-			else {
-				SEND_TO_Q("Un momento, per favore.\n\r", d);
-				STATE(d) = CON_AUTH;
-			}
-		}
-		else {
-			/* Axe them */
-			STATE(d) = CON_WIZLOCK;
-		}
-		break;
-	}
-#endif
-	case CON_CHECK_MAGE_TYPE: {
-		for (; isspace(*arg); arg++);
-		if (!strcmp(arg,"si")) {
-			d->character->player.iClass -=CLASS_MAGIC_USER;
-			d->character->player.iClass +=CLASS_SORCERER;
-		} /* end we wanted Sorcerer class! */
-		SEND_TO_Q( NEWBIE_NOTE, d );
-		SEND_TO_Q( "\n\r[Batti INVIO] ", d );
-		STATE( d ) = CON_RNEWD;
-		break;
-	}
-
-	case CON_RMOTD: /* read CR after printing motd  */
-		if(GetMaxLevel(d->character) > IMMORTALE) {
-			SEND_TO_Q( ParseAnsiColors( IS_SET( d->character->player.user_flags,
-												USE_ANSI ),
-										wmotd ), d);
-			SEND_TO_Q("\r\n[Batti INVIO] ", d);
-			STATE(d) = CON_WMOTD;
-			break;
-		}
-		if(d->character->term != 0)
-		{ ScreenOff(d->character); }
-		SEND_TO_Q(MENU, d);
-		STATE(d) = CON_SLCT;
-		if (WizLock || SiteLock(d->host)) {
-			if (GetMaxLevel(d->character) < DIO) {
-				sprintf(buf, "Sorry, the game is locked up for repair or your site is bannedr\n\r");
-				SEND_TO_Q(buf,d);
-				STATE(d) = CON_WIZLOCK;
-			}
-		}
-		break;
-
-	case CON_WMOTD: /* read CR after printing motd */
-
-		SEND_TO_Q(MENU, d);
-		STATE(d) = CON_SLCT;
-		if (WizLock || SiteLock(d->host)) {
-			if (GetMaxLevel(d->character) < DIO) {
-				sprintf(buf, "Sorry, the game is locked up for repair or your site is banned.\n\r");
-				SEND_TO_Q(buf,d);
-				STATE(d) = CON_WIZLOCK;
-			}
-		}
-		break;
-
-	case CON_WIZLOCK:
-		PushStatus("WIZLOCK");
-		close_socket(d);
-		PopStatus();
-		break;
-
-	case CON_CITY_CHOICE:
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++);
-		if (d->character->in_room != NOWHERE) {
-			SEND_TO_Q("This choice is only valid when you have been auto-saved\n\r",d);
-			STATE(d) = CON_SLCT;
-		}
-		else {
-			switch (*arg) {
-			case '1':
-				reset_char(d->character);
-				mudlog( LOG_CONNECT, "1.Loading %s's equipment",
-						d->character->player.name);
-				load_char_objs(d->character);
-				SetStatus("int 1",NULL,NULL);
-				save_char(d->character, AUTO_RENT, 0);
-				SetStatus("int 2",NULL,NULL);
-				send_to_char(WELC_MESSG, d->character);
-				SetStatus("int 3",NULL,NULL);
-				d->character->next = character_list;
-				SetStatus("int 4",NULL,NULL);
-				character_list = d->character;
-				SetStatus("int 5",NULL,NULL);
-				char_to_room(d->character, 3001);
-				SetStatus("int 6",NULL,NULL);
-				d->character->player.hometown = 3001;
-				SetStatus("int 7",NULL,NULL);
-				d->character->specials.tick = plr_tick_count++;
-				if (plr_tick_count == PLR_TICK_WRAP)
-				{ plr_tick_count=0; }
-				SetStatus("int 8",NULL,NULL);
-
-				act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-				STATE(d) = CON_PLYNG;
-				SetStatus("int 9",NULL,NULL);
-				if( !GetMaxLevel( d->character ) )
-				{ do_start( d->character ); }
-				SetStatus("int A",NULL,NULL);
-				do_look( d->character, "", 15 );
-				SetStatus("int B",NULL,NULL);
-				d->prompt_mode = 1;
-
-				break;
-
-			case '2':
-				reset_char( d->character );
-				mudlog( LOG_CONNECT, "2.Loading %s's equipment",
-						d->character->player.name);
-				load_char_objs(d->character);
-				save_char(d->character, AUTO_RENT, 0);
-				send_to_char(WELC_MESSG, d->character);
-				d->character->next = character_list;
-				character_list = d->character;
-
-				char_to_room(d->character, 1103);
-				d->character->player.hometown = 1103;
-
-				d->character->specials.tick = plr_tick_count++;
-				if (plr_tick_count == PLR_TICK_WRAP)
-				{ plr_tick_count=0; }
-
-				act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-				STATE(d) = CON_PLYNG;
-				if (!GetMaxLevel(d->character))
-				{ do_start(d->character); }
-				do_look(d->character, "",15);
-				d->prompt_mode = 1;
-
-				break;
-
-			case '3':
-				if (GetMaxLevel(d->character) > 5) {
-					reset_char(d->character);
-					mudlog( LOG_CONNECT, "3.Loading %s's equipment",
-							d->character->player.name);
-					load_char_objs(d->character);
-					save_char(d->character, AUTO_RENT, 0);
-					send_to_char(WELC_MESSG, d->character);
-					d->character->next = character_list;
-					character_list = d->character;
-
-					char_to_room(d->character, 18221);
-					d->character->player.hometown = 18221;
-
-					d->character->specials.tick = plr_tick_count++;
-					if (plr_tick_count == PLR_TICK_WRAP)
-					{ plr_tick_count=0; }
-
-					act( "$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0,
-						 TO_ROOM );
-					STATE(d) = CON_PLYNG;
-					if (!GetMaxLevel(d->character))
-					{ do_start(d->character); }
-					do_look(d->character, "",15);
-					d->prompt_mode = 1;
-				}
-				else {
-					SEND_TO_Q("Questa scelta non e` valida.\n\r", d);
-					STATE(d) = CON_SLCT;
-				}
-				break;
-
-			case '4':
-				if (GetMaxLevel(d->character) > 5) {
-					reset_char(d->character);
-					mudlog( LOG_CONNECT, "4.Loading %s's equipment",
-							d->character->player.name);
-					load_char_objs(d->character);
-					save_char(d->character, AUTO_RENT, 0);
-					send_to_char(WELC_MESSG, d->character);
-					d->character->next = character_list;
-					character_list = d->character;
-
-					char_to_room(d->character, 3606);
-					d->character->player.hometown = 3606;
-
-					d->character->specials.tick = plr_tick_count++;
-					if (plr_tick_count == PLR_TICK_WRAP)
-					{ plr_tick_count=0; }
-
-					act( "$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0,
-						 TO_ROOM);
-					STATE(d) = CON_PLYNG;
-					if (!GetMaxLevel(d->character))
-					{ do_start(d->character); }
-					do_look(d->character, "",15);
-					d->prompt_mode = 1;
-				}
-				else {
-					SEND_TO_Q("That was an illegal choice.\n\r", d);
-					STATE(d) = CON_SLCT;
-				}
-				break;
-
-			case '5':
-				if (GetMaxLevel(d->character) > 5) {
-					reset_char(d->character);
-					mudlog( LOG_CONNECT, "5.Loading %s's equipment",
-							d->character->player.name);
-					load_char_objs(d->character);
-					save_char(d->character, AUTO_RENT, 0);
-					send_to_char(WELC_MESSG, d->character);
-					d->character->next = character_list;
-					character_list = d->character;
-
-					char_to_room(d->character, 16107);
-					d->character->player.hometown = 16107;
-
-					d->character->specials.tick = plr_tick_count++;
-					if (plr_tick_count == PLR_TICK_WRAP)
-					{ plr_tick_count=0; }
-
-					act("$n has entered the game.",
-						TRUE, d->character, 0, 0, TO_ROOM);
-					STATE(d) = CON_PLYNG;
-					if (!GetMaxLevel(d->character))
-					{ do_start(d->character); }
-					do_look(d->character, "",15);
-					d->prompt_mode = 1;
-				}
-				else {
-					SEND_TO_Q("That was an illegal choice.\n\r", d);
-					STATE(d) = CON_SLCT;
-				}
-				break;
-
+				return false;
 			default:
-				SEND_TO_Q("That was an illegal choice.\n\r", d);
-				STATE(d) = CON_SLCT;
-				break;
+				return true;
 			}
 		}
-		break;
 
-	case CON_DELETE_ME: {
+	}
+	return true;
+}
+char firstChar(const string &riga,bool tolower=false) {
+	char arg[2];
+	strcpy(arg,riga.substr(0,1).c_str());
+	arg[0]=::tolower(arg[0]);
+	return arg[0];
+}
+unsigned char echo_on[]  = {IAC, WONT, TELOPT_ECHO, '\r', '\n', '\0'};
+unsigned char echo_off[] = {IAC, WILL, TELOPT_ECHO, '\0'};
 
-		for (; isspace(*arg); arg++);
+void echoOn(struct descriptor_data* d) {
+	mudlog(LOG_ALWAYS,"ECHO ON");
+	write(d->descriptor, echo_on, 6);
+}
+void echoOff(struct descriptor_data* d) {
+	mudlog(LOG_ALWAYS,"ECHO OFF");
+	write(d->descriptor, echo_off, 4);
+}
 
-		if (!strcmp(arg,"si") && strcmp("Guest",GET_NAME(d->character)) ) {
-			char buf[256];
+#define oldarg(noempty) 	\
+	char arg[MAX_INPUT_LENGTH]; \
+	std::strcpy(arg,d->currentInput.substr(0,MAX_INPUT_LENGTH-1).c_str()); \
+	if (noempty and !*arg) {close_socket(d); return false;}
+/**
+ * Attempts to login to a global account
+ *
+ */
 
-			mudlog( LOG_PLAYERS, "%s just killed self!",
-					GET_NAME( d->character ) );
-			sprintf( buf, "rm %s/%s.dat", PLAYERS_DIR,
-					 lower( GET_NAME( d->character ) ) );
-			system( buf );
-			sprintf( buf, "rm %s/%s", RENT_DIR, lower( GET_NAME( d->character ) ) );
-			system( buf );
-			sprintf( buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
-			system( buf );
-			PushStatus("killedself");
-			Registered toon(GET_NAME(d->character));
-			toon.del();
-			close_socket(d);
-			PopStatus();
+NANNY_FUNC(con_account_name) {
+	oldarg(false);
+	SEND_TO_Q("Benvenuto, digita la tua password per favore (o b per ricominciare): ",d);
+	echoOff(d);
+	STATE(d)=CON_ACCOUNT_PWD;
+	return false;
+}
+NANNY_FUNC(con_account_pwd) {
+	echoOn(d);
+	oldarg(false);
+	if(!strcmp(arg,"b")) {
+		STATE(d)=CON_NME;
+		SEND_TO_Q("Ricomiciamo. Come ti chiami?\r\n",d);
+		return false;
+	}
+	mudlog(LOG_CONNECT,"Id: %d ,email: %s toon: %s",d->AccountData.id,d->AccountData.email.c_str(),d->AccountData.choosen.c_str());
+	d->AccountData.authorized=false;
+	userQuery query=d->AccountData.id>0?(userQuery::id == d->AccountData.id):(userQuery::email==d->AccountData.email);
+	userPtr u=Sql::getOne<user>(query);
+	if (u) {
+		d->AccountData.id=u->id;
+		if (u->nickname.empty()) {
+			d->AccountData.nickname=u->email;
 		}
 		else {
-			SEND_TO_Q(MENU,d);
-			STATE(d)= CON_SLCT;
+			d->AccountData.nickname=u->email;
 		}
+		d->AccountData.registered=u->registered;
+		d->AccountData.password.assign(u->password);
+		d->AccountData.level=u->level;
+		d->AccountData.backup_email=u->backup_email;
+		d->AccountData.ptr=u->ptr;
+		d->AccountData.email=u->email;
+		mudlog(LOG_CONNECT,"Id: %d ,email: %s toon: %s",d->AccountData.id,d->AccountData.email.c_str(),d->AccountData.choosen.c_str());
+	}
+	const char* check=d->AccountData.password.c_str();
+	if(u and !strcmp(crypt(arg,check),check)) {
+
+		if (PORT==DEVEL_PORT and d->AccountData.level<52) {
+			mudlog(LOG_CONNECT,"%s level %d attempted to access devel",d->AccountData.email,d->AccountData.level);
+			FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",d);
+			close_socket(d);
+			return false;
+		}
+		if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
+			mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",d->AccountData.email,d->AccountData.level,(d->AccountData.ptr?"ON":"OFF"));
+			FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
+			close_socket(d);
+			return false;
+		}
+		d->AccountData.authorized=true;
+		string message("Benvenuto ");
+		message.append(d->AccountData.nickname).append("\r\n");
+		STATE(d)=CON_ACCOUNT_TOON;
+		mudlog(LOG_CONNECT,"Succesfull connection for %s",d->AccountData.email.c_str());
+		toonList(d,message);
+	}
+	else {
+		SEND_TO_Q("Riprova (digita <b> per rinunciare).",d);
+		echoOff(d);
+	}
+	return false;
+}
+NANNY_FUNC(con_account_toon) {
+	try {
+		if (d->currentInput=="q") {
+			FLUSH_TO_Q("Bye bye",d);
+			close_socket(d);
+			return false;
+		}
+		short toonIndex=tonumber(d->currentInput,-1);
+		if(toonIndex <0) {
+			throw std::range_error("Invalid number");
+		}
+		else if(toonIndex==0) {
+			SEND_TO_Q("Quale personaggio vuoi usare? (Verra` automaticamente associato alla tua email) ",d);
+			STATE(d)=CON_NME;
+			return false;
+		}
+		else {
+			string name(d->toons.at(toonIndex-1));
+			mudlog(LOG_CONNECT,"Choosen %s",name.c_str());
+			d->AccountData.choosen=name;
+			d->currentInput=name;
+			STATE(d)=CON_PWDOK;
+			return true;
+		}
+	}
+	catch(std::range_error &e) {
+		string message(d->currentInput);
+		message.append(" non e` un numero valido\r\n");
+		toonList(d,message);
+		return false;
+	}
+}
+NANNY_FUNC(con_nop) {
+	mudlog(LOG_SYSERR,"Called nop in nanny for : %d ",STATE(d));
+	return false;
+}
+
+NANNY_FUNC(con_qclass) {
+	oldarg(true);
+	int ii=0;
+	/* skip whitespaces */
+
+	d->character->player.iClass = 0;
+
+	switch(firstChar(d->currentInput)) {
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9': {
+		switch(GET_RACE(d->character)) {
+		case RACE_ELVEN:
+		case RACE_GOLD_ELF:
+		case RACE_SEA_ELF:
+		case RACE_HALF_ELVEN: {
+			ii=0;
+			while(d->character->player.iClass==0 && elf_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=elf_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_WILD_ELF: {
+			ii=0;
+			while(d->character->player.iClass==0 &&
+					wild_elf_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass = wild_elf_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_HUMAN: {
+			ii=0;
+			while(d->character->player.iClass==0 && human_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=human_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_HALFLING: {
+			ii=0;
+			while(d->character->player.iClass==0 && halfling_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=halfling_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_DEEP_GNOME:
+			ii=0;
+			while(d->character->player.iClass == 0 &&
+					deep_gnome_class_choice[ii] != 0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass = deep_gnome_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d, GET_RACE(d->character));
+			}
+			break;
+
+		case RACE_GNOME: {
+			ii=0;
+			while(d->character->player.iClass==0 && gnome_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=gnome_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_DWARF: {
+			ii=0;
+			while(d->character->player.iClass==0 && dwarf_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=dwarf_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_HALF_OGRE: {
+			ii=0;
+			while(d->character->player.iClass==0 && half_ogre_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=half_ogre_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_HALF_GIANT: {
+			ii=0;
+			while(d->character->player.iClass==0 && half_giant_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=half_giant_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_HALF_ORC: {
+			ii=0;
+			while(d->character->player.iClass==0 && half_orc_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=half_orc_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_ORC: {
+			ii=0;
+			while(d->character->player.iClass==0 && orc_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=orc_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_GOBLIN: {
+			ii=0;
+			while(d->character->player.iClass==0 && goblin_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=goblin_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_DARK_ELF: {
+			ii=0;
+			while(d->character->player.iClass==0 && dark_elf_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=dark_elf_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_DARK_DWARF: {
+			ii=0;
+			while(d->character->player.iClass==0 && dark_dwarf_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=dark_dwarf_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_DEMON: {
+			ii=0;
+			while(d->character->player.iClass==0 && demon_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=demon_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		case RACE_TROLL: {
+			ii=0;
+			while(d->character->player.iClass==0 && troll_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=troll_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+
+		default: {
+			ii=0;
+			while(d->character->player.iClass==0 && default_class_choice[ii] !=0) {
+				if(atoi(arg) == ii) {
+					d->character->player.iClass=default_class_choice[ii];
+				}
+				ii++;
+			} /* end while */
+			if(d->character->player.iClass != 0) {
+				STATE(d) = CON_RNEWD;
+			}
+			else {
+				show_class_selection(d,GET_RACE(d->character));
+			}
+			break;
+		}
+		} /* end race switch */
 		break;
 	}
 
-	case CON_SLCT:                /* get selection from main menu        */
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++);
-		switch (*arg) {
-		case '0':
-			PushStatus("CON_SLCT");
-			close_socket(d);
-			PopStatus();
-			break;
+	case '?' : {
+		page_string(d, CLASS_HELP, 1);
+		STATE(d) = CON_ENDHELPCLASS;
+		return false;
+	}
+	case 'b' :
+	case 'B' : {
+		ShowStatInstruction(d);
+		STATE(d) = CON_STAT_LIST;
+		return false;
+	}
+	default : {
+		SEND_TO_Q("\n\rSelezione non valida!\n\r\n\r",d);
+		show_class_selection(d,GET_RACE(d->character));
+		break;
+	}
+	} /* end arg switch */
 
-		case 'C':
-		case 'c': {
-			if (GetMaxLevel(d->character)>=CHUMP) {
-				SEND_TO_Q("Sei sicuro di volerti cancellare ? (si/no): ",d);
-				STATE(d)=CON_DELETE_ME;
-				break;
-			}
-		}
-		/* no break */
-		case '1':
-			reset_char(d->character);
-			mudlog( LOG_PLAYERS, "M1.Loading %s's equipment",
-					d->character->player.name );
-			load_char_objs(d->character);
-			mudlog( LOG_CHECK, "Sending Welcome message to %s",
-					d->character->player.name );
-			send_to_char(WELC_MESSG, d->character);
-#ifdef NOREGISTER
-			send_to_char("$c0001 NON E' NECESSARIO REGISTRARSI\r\n",
-						 d->character);
-#endif
-			mudlog( LOG_CHECK, "Putting %s in list",
-					d->character->player.name );
-			d->character->next = character_list;
-			character_list = d->character;
-			mudlog( LOG_CHECK, "Putting %s in game",
-					d->character->player.name );
-			if( d->character->in_room == NOWHERE ||
-					d->character->in_room == AUTO_RENT) {
-				/* returning from autorent */
-				if( GetMaxLevel( d->character ) < DIO_MINORE ) {
-					/* Per gli IMMORTALI che rentavano ad Asgaard, gli tolgo
-					la start room cosi' gli viene calcolata di nuovo */
-					if( d->character->specials.start_room == 1000 && IS_IMMORTALE(d->character))
-					{ d->character->specials.start_room = -1; }
+	if(STATE(d) != CON_QCLASS && IS_SET(SystemFlags, SYS_REQAPPROVE)) {
+		STATE(d) = CON_AUTH;
+		SEND_TO_Q("\r\n[Batti INVIO] ", d);
+	}
+	else {
+		if(STATE(d) != CON_QCLASS) {
+			mudlog(LOG_CONNECT, "%s [HOST:%s] nuovo giocatore.",
+				   GET_NAME(d->character), d->host);
+			/*
+			  ** now that classes are set, initialize
+			  */
+			init_char(d->character);
 
-					if( d->character->specials.start_room <= 0 )
-						/*GGPATCH Ogni razza ha la sua HomeTown definita in constants.c*/
+			/* crea i files relativi a char */
 
-					{
-						mudlog(LOG_PLAYERS,"%s = Razza: %d Stanza0: %d Stanza2: %d",
-							   GET_NAME(d->character),
-							   GET_RACE(d->character),
-							   RacialHome[GET_RACE( d->character)][0],
-							   RacialHome[GET_RACE( d->character)][1]);
-						char_to_room(d->character,
-									 RacialHome[GET_RACE( d->character)][0]);
-						d->character->player.hometown =
-							RacialHome[GET_RACE( d->character)][0];
-						mudlog(LOG_PLAYERS,"%s in room %5d by normal",
-							   GET_NAME(d->character),d->character->player.hometown);
-					}
-					else {
-						char_to_room(d->character, d->character->specials.start_room);
-						d->character->player.hometown =
-							d->character->specials.start_room;
-						mudlog(LOG_PLAYERS,"%s in room %5d by special",
-							   GET_NAME(d->character),d->character->player.hometown);
-					}
-				}
-				else {
-					/* Gli immortali tornano sempre ad Asgaard :-) */
-					char_to_room(d->character, 1000);
-					d->character->player.hometown = 1000;
-				}
+			save_char(d->character, AUTO_RENT, 0);
+
+			if(HasClass(d->character,CLASS_MAGIC_USER)) {
+				SEND_TO_Q(RU_SORCERER, d);
+				STATE(d) = CON_CHECK_MAGE_TYPE;
+				return false;
 			}
 			else {
-				if( IS_DIO( d->character ) )
-				{ d->character->in_room = 1000; }
+				/* show newbies a instructional note from interpreter.h */
+				/*page_string(d,NEWBIE_NOTE,1);*/
+				SEND_TO_Q(NEWBIE_NOTE, d);
+				SEND_TO_Q("\n\r[Batti INVIO] ", d);
+				STATE(d) = CON_RNEWD;
+			}
+		}
+	}
+	return false;
+}
 
-				if (real_roomp(d->character->in_room)) {
-					char_to_room( d->character, d->character->in_room);
-					d->character->player.hometown = d->character->in_room;
+NANNY_FUNC(con_slct) {
+	switch(firstChar(d->currentInput)) {
+	case '0':
+		close_socket(d);
+		break;
+
+	case 'c': {
+		if(GetMaxLevel(d->character)>=CHUMP) {
+			SEND_TO_Q("Sei sicuro di volerti cancellare ? (si/no): ",d);
+			STATE(d)=CON_DELETE_ME;
+			break;
+		}
+	}
+	/* no break */
+	case '1':
+
+		slackNotify(string(d->character->player.name).append(" si e` connesso").c_str(),"smile");
+		reset_char(d->character);
+		mudlog(LOG_PLAYERS, "M1.Loading %s's equipment",d->character->player.name);
+		load_char_objs(d->character);
+		mudlog(LOG_CHECK, "Sending Welcome message to %s",d->character->player.name);
+		send_to_char(WELC_MESSG, d->character);
+		mudlog(LOG_CHECK, "Putting %s in list",
+			   d->character->player.name);
+		d->character->next = character_list;
+		character_list = d->character;
+		mudlog(LOG_CHECK, "Putting %s in game",
+			   d->character->player.name);
+		if(d->character->in_room == NOWHERE ||
+				d->character->in_room == AUTO_RENT) {
+			/* returning from autorent */
+			if(GetMaxLevel(d->character) < DIO_MINORE) {
+				/* Per gli IMMORTALI che rentavano ad Asgaard, gli tolgo
+				la start room cosi' gli viene calcolata di nuovo */
+				if(d->character->specials.start_room == 1000 && IS_IMMORTALE(d->character)) {
+					d->character->specials.start_room = -1;
+				}
+
+				if(d->character->specials.start_room <= 0)
+					/*GGPATCH Ogni razza ha la sua HomeTown definita in constants.c*/
+
+				{
+					mudlog(LOG_PLAYERS,"%s = Razza: %d Stanza0: %d Stanza2: %d",
+						   GET_NAME(d->character),
+						   GET_RACE(d->character),
+						   RacialHome[GET_RACE(d->character)][0],
+						   RacialHome[GET_RACE(d->character)][1]);
+					char_to_room(d->character,
+								 RacialHome[GET_RACE(d->character)][0]);
+					d->character->player.hometown =
+						RacialHome[GET_RACE(d->character)][0];
+					mudlog(LOG_PLAYERS,"%s in room %5d by normal",
+						   GET_NAME(d->character),d->character->player.hometown);
 				}
 				else {
-					/* Qualcosa e' andato storto o nuovo PC stanza di default */
-					char_to_room(d->character,
-								 RacialHome[GET_RACE( d->character)][1]);
+					char_to_room(d->character, d->character->specials.start_room);
 					d->character->player.hometown =
-						RacialHome[GET_RACE( d->character)][1];
-					mudlog(LOG_PLAYERS,"%s in room %5d by default",
+						d->character->specials.start_room;
+					mudlog(LOG_PLAYERS,"%s in room %5d by special",
 						   GET_NAME(d->character),d->character->player.hometown);
 				}
 			}
+			else {
+				/* Gli immortali tornano sempre ad Asgaard :-) */
+				char_to_room(d->character, 1000);
+				d->character->player.hometown = 1000;
+			}
+		}
+		else {
+			if(IS_DIO(d->character)) {
+				d->character->in_room = 1000;
+			}
 
-			d->character->specials.tick = plr_tick_count++;
-			if (plr_tick_count == PLR_TICK_WRAP)
-			{ plr_tick_count=0; }
+			if(real_roomp(d->character->in_room)) {
+				char_to_room(d->character, d->character->in_room);
+				d->character->player.hometown = d->character->in_room;
+			}
+			else {
+				/* Qualcosa e' andato storto o nuovo PC stanza di default */
+				char_to_room(d->character,
+							 RacialHome[GET_RACE(d->character)][1]);
+				d->character->player.hometown =
+					RacialHome[GET_RACE(d->character)][1];
+				mudlog(LOG_PLAYERS,"%s in room %5d by default",
+					   GET_NAME(d->character),d->character->player.hometown);
+			}
+		}
 
-			act( "$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-			STATE(d) = CON_PLYNG;
-			if( !GetMaxLevel(d->character))
-			{ do_start(d->character); }
-			if( has_mail( d->character->player.name ) )
-				send_to_char( "$c0014C'e` posta per te dallo scriba.$c0007\n\r\n\r",
-							  d->character );
-			sprintf(buf,"%s",version());
-			do_look(d->character, "",15);
-			if( !d->character->specials.lastversion ||
-					strcmp(d->character->specials.lastversion,buf ) )
-				send_to_char(
-					"$c0115           C'E` UNA NUOVA VERSIONE DI MYST IN LINEA                   $c0007.\n\r",
-					d->character );
-			if (IsTest())
-				send_to_char(
-					"                 $c0115SEI SU MYST2!!!!!!!!!!!!!!!!!!!!!                    $c0007\n\r",
-					d->character );
-			d->prompt_mode = 1;
-			if (IS_SET(d->character->player.user_flags,RACE_WAR))
-				send_to_char(
-					"$c0115            RICORDATI CHE  SEI PKILL!!.\n\r",
-					d->character );
-			mudlog( LOG_CHECK, "%s is in game.", d->character->player.name );
+		d->character->specials.tick = plr_tick_count++;
+		if(plr_tick_count == PLR_TICK_WRAP) {
+			plr_tick_count=0;
+		}
 
-			rp = real_roomp(d->character->in_room);
+		act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
+		STATE(d) = CON_PLYNG;
+		if(!GetMaxLevel(d->character)) {
+			do_start(d->character);
+		}
+		if(has_mail(d->character->player.name))
+			send_to_char("$c0014C'e` posta per te dallo scriba.$c0007\n\r\n\r",
+						 d->character);
+		do_look(d->character, "",15);
+		if(!d->character->specials.lastversion ||
+				strcmp(d->character->specials.lastversion,version()))
+			send_to_char(
+				"$c0115           C'E` UNA NUOVA VERSIONE DI MYST IN LINEA                   $c0007.\n\r",
+				d->character);
+		if(IsTest())
+			send_to_char(
+				"                 $c0115SEI SU MYST2!!!!!!!!!!!!!!!!!!!!!                    $c0007\n\r",
+				d->character);
+		d->prompt_mode = 1;
+		if(IS_SET(d->character->player.user_flags,RACE_WAR))
+			send_to_char(
+				"$c0115            RICORDATI CHE  SEI PKILL!!.\n\r",
+				d->character);
+		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
+
+		{
+			struct room_data* rp = real_roomp(d->character->in_room);
 
 			/* qui metto un controllo. Se un PG e' pkiller e il mud ha crashato
 			   allora rischia di restare bloccato, lo sparo via da qualche parte :-)
 			   Gaia 2001 */
 
-			if ( IS_AFFECTED2(d->character,AFF2_PKILLER) && rp->room_flags&PEACEFUL ) {
-				mudlog( LOG_CHECK, "A Pkill character has entered in game in a peaceful room" );
+			if(IS_AFFECTED2(d->character,AFF2_PKILLER) && rp->room_flags&PEACEFUL) {
+				mudlog(LOG_CHECK, "A Pkill character has entered in game in a peaceful room");
 				send_to_char("La magia che avvolge questo luogo di pace ti rigetta!\n\r",d->character);
 				send_to_room("Un brezza sottile si alza improvvisamente \n\r", d->character->in_room);
 				char_from_room(d->character);
 				char_to_room(d->character, 3001); //mando il PG in piazza
 			}
-
-			break;
-
-		case '2':
-			SEND_TO_Q( "Inserisci il testo che vuoi che venga visualizzato "
-					   "quando gli altri\n\r", d);
-			SEND_TO_Q( "ti guardano. Concludilo con un '@'.\n\r", d);
-			if (d->character->player.description) {
-				SEND_TO_Q("Vecchia descrizione :\n\r", d);
-				SEND_TO_Q(d->character->player.description, d);
-				free(d->character->player.description);
-				d->character->player.description = 0;
-			}
-			d->str = &d->character->player.description;
-			d->max_str = 240;
-			STATE(d) = CON_EXDSCR;
-			break;
-
-		case '3':
-			SEND_TO_Q(STORY, d);
-			STATE(d) = CON_WMOTD;
-			break;
-
-		case '4':
-			SEND_TO_Q("Inserisci la nuova password: ", d);
-			write(d->descriptor, echo_off, 4);
-			STATE(d) = CON_PWDNEW;
-			break;
-#if 0
-		case '5':
-			SEND_TO_Q("Where would you like to enter?\n\r", d);
-			SEND_TO_Q("1.    ShadowSprings\n\r", d);
-			SEND_TO_Q("2.    Shire\n\r",    d);
-			if (GetMaxLevel(d->character) > 5)
-			{ SEND_TO_Q("3.    Mordilnia\n\r", d); }
-			if (GetMaxLevel(d->character) > 10)
-			{ SEND_TO_Q("4.    New  Thalos\n\r", d); }
-			if (GetMaxLevel(d->character) > 20)
-			{ SEND_TO_Q("5.    The Gypsy Village\n\r", d); }
-			SEND_TO_Q("Your choice? ",d);
-			STATE(d) = CON_CITY_CHOICE;
-			break;
-#endif
-		default:
-			SEND_TO_Q("Opzione errata.\n\r", d);
-			SEND_TO_Q(MENU, d);
-			break;
 		}
+
 		break;
 
-	case CON_PWDNEW:
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++);
-
-		if (!*arg || strlen(arg) > 10) {
-			write(d->descriptor, echo_on, 6);
-			SEND_TO_Q("Password non valida.\n\r", d);
-			SEND_TO_Q("Password: ", d);
-			write(d->descriptor, echo_off, 4);
-			return;
+	case '2':
+		SEND_TO_Q("Inserisci il testo che vuoi che venga visualizzato "
+				  "quando gli altri\n\r", d);
+		SEND_TO_Q("ti guardano. Concludilo con un '@'.\n\r", d);
+		if(d->character->player.description) {
+			SEND_TO_Q("Vecchia descrizione :\n\r", d);
+			SEND_TO_Q(d->character->player.description, d);
+			free(d->character->player.description);
+			d->character->player.description = 0;
 		}
-
-		strncpy(d->pwd,(char*) crypt(arg, d->character->player.name), 10);
-		*(d->pwd + 10) = '\0';
-		write(d->descriptor, echo_on, 6);
-		SEND_TO_Q("Reinserisci la password: ", d);
-		STATE(d) = CON_PWDNCNF;
-		write(d->descriptor, echo_off, 4);
+		d->str = &d->character->player.description;
+		d->max_str = 240;
+		STATE(d) = CON_EXDSCR;
 		break;
 
-	case CON_PWDNCNF:
-		/* skip whitespaces */
-		for (; isspace(*arg); arg++);
+	case '3':
+		SEND_TO_Q(STORY, d);
+		STATE(d) = CON_WMOTD;
+		break;
 
-		if (strncmp((char*)crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
-			write(d->descriptor, echo_on, 6);
-			SEND_TO_Q("Password errata.\n\r", d);
-			SEND_TO_Q("Reinserisci la password: ", d);
-			write(d->descriptor, echo_off, 4);
-
-			STATE(d) = CON_PWDNEW;
-			return;
+	case '4':
+		if (d->AccountData.authorized) {
+			string message("$c0001ATTENZIONE$c0007 Stai cambiando la password del tuo $c0001account$c0007 (");
+			message.append(d->AccountData.email).append(")\r\n");
+			send_to_char(message.c_str(),d->character);
 		}
-		write(d->descriptor, echo_on, 6);
-
-		SEND_TO_Q(
-			"\n\rFatto. Devi entrare nel gioco per rendere attivo il cambio.\n\r",
-			d);
+		SEND_TO_Q("Inserisci la nuova password: ", d);
+		echoOff(d);
+		STATE(d) = CON_PWDNEW;
+		break;
+	case '5':
+		if(d->AccountData.authorized) {
+			toonList(d,"Cambia personaggio:\n\r");
+			STATE(d) = CON_ACCOUNT_TOON;
+		}
+		else {
+			STATE(d)=CON_NME;
+		}
+		break;
+	default:
+		SEND_TO_Q("Opzione errata.\n\r", d);
 		SEND_TO_Q(MENU, d);
-		STATE(d) = CON_SLCT;
 		break;
+	}
+	return false;
+}
+NANNY_FUNC(con_nme) {
+	oldarg(true);
+	char tmp_name[100];
+	unsigned long long rc=parse_name(arg, tmp_name);
+	mudlog(LOG_CONNECT,"Parsename result for %s: %d",arg,rc);
+	if (rc>2ULL) {
+		d->AccountData.id=rc-2;
+		d->AccountData.email.clear();
+		STATE(d)=CON_ACCOUNT_NAME;
+		return true;
+	}
+	else if(rc==2ULL) {  // Il nome digitato contiene una @
+		d->AccountData.id=0;
+		d->AccountData.email.assign(arg);
+		boost::replace_all(d->AccountData.email," ","");
+		STATE(d)=CON_ACCOUNT_NAME;
+		return true;
+	}
+	else if(rc==1ULL) {
+		SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
+		SEND_TO_Q("Nome: ", d);
+		return false;
+	}
+	if(PORT!=RELEASE_PORT and not d->AccountData.authorized) {
+		FLUSH_TO_Q("Per accedere al server di prova devi entrare con l'email\n\r",d);
+		close_socket(d);
+		return false;
+	}
+	bool found=false;
+	toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
+	if (!pg) {
+		found=toonFromFileSystem(tmp_name);
+		if (found) {
+			pg=Sql::getOne<toon>(toonQuery::name==string(tmp_name));
+			if (!pg) {
+				// SOmething badly wrong, let's force this guy to restart
+				FLUSH_TO_Q("Mi spiace, questo nome non va bene\n\r",d);
+				close_socket(d);
+				return false;
+			}
+		}
+	}
+	if(pg) {
+		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->owner_id);
+		found=true;
+		strcpy(d->pwd,pg->password.substr(0,11).c_str());
+		d->AccountData.choosen=pg->name;
+		if(pg->owner_id) {
+			if(pg->owner_id==d->AccountData.id) {
+				STATE(d)=CON_PWDOK;
+				return true;
+			}
+			else if (d->AccountData.level < MAESTRO_DEL_CREATO)  {
+				SEND_TO_Q("Questo personaggio e` registrato, fai login con il tuo account per favore.\r\n",d);
+				SEND_TO_Q("Nome: ", d);
+				return false;
+			}
+		}
+	}
+	if(not found) {
+		/* player unknown gotta make a new */
+		if(_check_ass_name(tmp_name)) {
+			if(d->AccountData.authorized and !strncmp(arg,"b",1)) {
+				toonList(d,"Scegli un personaggio:\n\r");
+				STATE(d)=CON_ACCOUNT_TOON;
+				return false;
+			}
+			SEND_TO_Q("Nome non valido. Scegline un'altro, per favore.\n\r", d);
+			SEND_TO_Q("Nome: ", d);
+			return false;
+		}
+		if(!WizLock) {
+			if(!d->character) {
+				CREATE(d->character, struct char_data, 1);
+				clear_char(d->character);
+				d->character->desc = d;
+				SET_BIT(d->character->player.user_flags, USE_PAGING);
+			}
+			CREATE(GET_NAME(d->character), char, strlen(tmp_name) + 1);
+			CAP(tmp_name);
+			strcpy(GET_NAME(d->character), tmp_name);
+			string buf("E` realmente '");
+			buf.append(tmp_name).append("' il nome che vuoi ? (si/no): ");
+			d->AccountData.choosen.assign(tmp_name);
+			SEND_TO_Q(buf.c_str(), d);
+			STATE(d) = CON_NMECNF;
+			return false;
+		}
+		else {
+			SEND_TO_Q("Mi dispiace. Non sono ammessi nuovi personaggi, per il momento.\n\r",d);
+			STATE(d) = CON_WIZLOCK;
+			return false;
+		}
+	}
+	d->AccountData.choosen.assign(tmp_name);
+	/* Tutto ok, chiediamogli la password */
+	if(d->AccountData.level >= MAESTRO_DEL_CREATO and PORT != RELEASE_PORT) {
+		SEND_TO_Q(ParseAnsiColors(TRUE,
+				"Non oserei mai chiederti la password, oh superno, ma $c0009ricorda che il pg non e` tuo$c0007\r\n")
+				,d);
+		mudlog(LOG_ALWAYS,"%s e` entrato come %s",d->AccountData.email,d->AccountData.choosen);
+		d->impersonating=true;
+		//Un immortale superiore puo' entrare con qualsiasi PG
+		STATE(d)=CON_PWDOK;
+		return true;
+	}
 
-	default: {
-		mudlog( LOG_SYSERR, "Nanny: illegal state of con'ness (%d)",STATE(d));
-		abort();
+	SEND_TO_Q("Password: ", d);
+	echoOff(d);
+	STATE(d) = CON_PWDNRM;
+	return false;
+}
+
+NANNY_FUNC(con_nmecnf) {
+	/* skip whitespaces */
+	oldarg(false);
+	if(*arg == 's' || *arg == 'S') {
+		if(d->AccountData.authorized) {  // Authorized at account level no need to ask password again when creating a new toon
+			echoOn(d);
+			show_race_choice(d);
+			STATE(d)=CON_QRACE;
+			return false;
+		}
+		echoOn(d);
+		SEND_TO_Q("Nuovo personaggio.\n\r", d);
+
+		string buf("Inserisci una password per ");
+		buf.append(GET_NAME(d->character));
+
+		SEND_TO_Q(buf.c_str(), d);
+		echoOff(d);
+		STATE(d) = CON_PWDGET;
 	}
-	break;
+	else if(*arg == 'n' || *arg == 'N') {
+		SEND_TO_Q("Va bene. Allora, quale sarebbe il nome ? ", d);
+		free(GET_NAME(d->character));
+		GET_NAME(d->character) = NULL;
+		STATE(d) = CON_NME;
 	}
+	else {
+		/* Please do Y or N */
+		SEND_TO_Q("Per favore, si o no ? ", d);
+	}
+	return false;
+}
+/**
+ * Existent player password
+ */
+NANNY_FUNC(con_pwdnrm) {
+	oldarg(true);
+	if(strncmp(crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
+		write_to_descriptor(d->descriptor,"Password errata.\n\r");
+		mudlog(LOG_PLAYERS,"%s [HOST:%s] ha inserito una password errata'",d->AccountData.choosen.c_str(),d->host);
+		close_socket(d);
+		return false;
+	}
+	STATE(d)=CON_REGISTER;
+	return true;
+}
+NANNY_FUNC(con_register) {
+	if(d->AccountData.authorized) {
+		boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
+		fmt % d->AccountData.id % d->AccountData.choosen;
+		try {
+			DB* db=Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			db->execute(fmt.str());
+			t.commit();
+		}
+		catch(odb::exception &e) {
+			mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
+		}
+	}
+	STATE(d)=CON_PWDOK;
+	return true;
+}
+NANNY_FUNC(con_pwdok) {
+	/* Ok, il ragazzo ha azzeccato la password */
+	if(!d->character) {
+		CREATE(d->character, struct char_data, 1);
+		clear_char(d->character);
+		d->character->desc = d;
+		SET_BIT(d->character->player.user_flags, USE_PAGING);
+	}
+	/* Newly created toons are fully loaded
+	 */
+	if(!d->justCreated) {
+		char_file_u tmp_store;
+		if(load_char(d->AccountData.choosen.c_str(), &tmp_store)) {
+			store_to_char(&tmp_store, d->character);
+		}	//TODO: Inserire qui load del pg
+		else {
+			//Something went terribly wrong
+			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+		}
+	}
+	if (d->impersonating) {
+		// Check relative level
+		if (GetMaxLevel(d->character)>=d->AccountData.level) {
+			FLUSH_TO_Q("Mi spiace, non puo impersonare personaggi di livello superiore o uguale al tuo\r\n",d);
+			close_socket(d);
+			return false;
+		}
+	}
+	if(d->AccountData.authorized and !d->impersonating and d->AccountData.level < GetMaxLevel(d->character)) {
+		d->AccountData.level = GetMaxLevel(d->character);
+		d->AccountData.nickname.assign(GET_NAME(d->character));
+		Sql::update(d->AccountData,true);
+	}
+#if IMPL_SECURITY
+	if(not check_impl_security(d)) {
+		return false;
+	}
+#endif
+	d->wait=0;
+	d->AlreadyInGame=false;
+	/* Check if already playing with some or other name*/
+	for(struct descriptor_data* k=descriptor_list; k; k = k->next) {
+		if((k->character != d->character) && k->character) {
+			struct char_data* test = (k->original?k->original:k->character);
+			if((test and GET_NAME(test) and !str_cmp(GET_NAME(test),GET_NAME(d->character)))) {
+				d->AlreadyInGame=true;
+				d->ToBeKilled=k;
+				mudlog(LOG_CONNECT,"%s : gia' in gioco.",GET_NAME(test));
+			}
+		}
+	}
+	/* Se era gia` in gioco assumo ld non riconosciuto e disconnetto il
+	  * vecchio char*/
+	if(d->AlreadyInGame) {
+		mudlog(LOG_PLAYERS, "%s[HOST:%s] riconnesso su se stesso.", GET_NAME(d->character),d->host);
+		close_socket(d->ToBeKilled);
+	}
+	for(struct char_data* tmp_ch = character_list; tmp_ch; tmp_ch = tmp_ch->next) {
+		if((!str_cmp(GET_NAME(d->character), GET_NAME(tmp_ch)) && !tmp_ch->desc && !IS_NPC(tmp_ch)) ||
+				(IS_NPC(tmp_ch) && tmp_ch->orig &&!str_cmp(GET_NAME(d->character),GET_NAME(tmp_ch->orig)))) {
+			/* Se riconnessione, abbandono il nuovo Char creato
+			* e aggancio al descrittore corrente il char ld */
+
+			echoOn(d);
+			SEND_TO_Q("Riconnessione...\n\r", d);
+
+			free_char(d->character);
+			tmp_ch->desc = d;
+			d->character = tmp_ch;
+			tmp_ch->specials.timer = 0;
+			if(!IS_IMMORTAL(tmp_ch)) {
+				tmp_ch->invis_level = 0;
+			}
+			if(tmp_ch->orig) {
+				tmp_ch->desc->original = tmp_ch->orig;
+				tmp_ch->orig = 0;
+			}
+			d->character->persist = 0;
+			STATE(d) = CON_PLYNG;
+
+			act("$n si e` riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
+			mudlog(LOG_CONNECT, "%s[HOST:%s] has reconnected.",
+				   GET_NAME(d->character), d->host);
+
+			/* inserisco qui la ripartenza dei regen interrotti per i link dead */
+			alter_hit(tmp_ch, 0) ;
+			alter_mana(tmp_ch, 0) ;
+			alter_move(tmp_ch, 0) ;
+
+			return false;
+		}
+#if ACCESSI
+		if(d->AccountData.level <= MAESTRO_DEGLI_DEI) {
+			if(!d->AlreadyInGame &&
+					tmp_ch->desc &&
+					tmp_ch->desc->AccountData.id &&
+					tmp_ch->desc->AccountData.id  == d->AccountData.id) {
+				SEND_TO_Q("Hai gia' un personaggio nel gioco.\n\r", d);
+				mudlog(LOG_PLAYERS,"WARNING %s respinto per violazione MP.",GET_NAME(d->character));
+				if(d->AccountData.authorized) {
+					string message("");
+					toonList(d,message);
+					STATE(d)=CON_ACCOUNT_TOON;
+				}
+				else {
+					SEND_TO_Q("Scegli un nuovo personaggio: ", d);
+					STATE(d)=CON_NME;
+				}
+				return false;
+			}
+		}
+#endif
+	}
+	/* Ok, non si tratta di riconnessione...
+	  * gli immortali entrano invisibili */
+	if(IS_IMMORTAL(d->character)) {
+		d->character->invis_level=ADEPT;
+	}
+	if(IS_DIO(d->character)) {
+		d->character->invis_level = GetMaxLevel(d->character);
+	}
+	HowManyConnection(1);
+	/* Le ombre vengono loggate ma non viene dato l'avviso on line*/
+	if(GetMaxLevel(d->character) >= MAESTRO_DEL_CREATO) {
+		mudlog(LOG_CONNECT, "%s [HOST:%s] has connected.",GET_NAME(d->character),d->host);
+	}
+	else {
+		mudlog(LOG_CONNECT, "%s [HOST:%s] has connected.",GET_NAME(d->character),d->host);
+	}
+	SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
+									 USE_ANSI),
+							  motd), d);
+	SEND_TO_Q("\n\r[Batti INVIO] ", d);
+	STATE(d) = CON_RMOTD;
+	return false;
+}
+/**
+ * New player password
+ */
+NANNY_FUNC(con_pwdget) {
+	oldarg(false);
+	if(!*arg || strlen(arg) > 10 ||
+			!strcasecmp(arg,d->character->player.name)) {
+		echoOn(d);
+		SEND_TO_Q("Password non valida.(MAx 10 caratteri - diversa dal nome)\n\r", d);
+		SEND_TO_Q("Password: ", d);
+		echoOff(d);
+		return false;
+	}
+	strncpy(d->pwd,crypt(arg, d->character->player.name), 10);
+	*(d->pwd + 10) = '\0';
+	echoOn(d);
+	SEND_TO_Q("Per favore, reinserisci la password: ", d);
+	echoOff(d);
+	STATE(d) = CON_PWDCNF;
+	return false;
+}
+NANNY_FUNC(con_pwdcnf) {
+	oldarg(false);
+	if(strncmp((char*)crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
+		echoOn(d);
+
+		SEND_TO_Q("Le password non coincidono.\n\r", d);
+		SEND_TO_Q("Reinserisci la password: ", d);
+		STATE(d) = CON_PWDGET;
+		echoOff(d);
+	}
+	else {
+		echoOn(d);
+		show_race_choice(d);
+		STATE(d) = CON_QRACE;
+	}
+	return false;
+}
+NANNY_FUNC(con_qrace) {
+	oldarg(false);
+	if(!*arg) {
+		show_race_choice(d);
+		STATE(d) = CON_QRACE;
+	}
+	else {
+		if(*arg == '?') {
+			page_string(d, RACEHELP, 1);
+			STATE(d) = CON_ENDHELPRACE;
+		}
+		else {
+			int i=0,tmpi=0;
+			while(race_choice[i]!=-1) {
+				i++;
+			}
+			tmpi=atoi(arg);
+			if(tmpi>=0 && tmpi <=i-1) {
+				/* set the chars race to this */
+				GET_RACE(d->character) = race_choice[tmpi];
+				string buf("Quale'e` il sesso di ");
+				buf.append(GET_NAME(d->character)).append("? (Maschio/Femmina) (b per tornare indietro): ");
+				SEND_TO_Q(buf.c_str(), d);
+				mudlog(LOG_CONNECT,"Razza scelta procedo con qsex");
+				STATE(d) = CON_QSEX;
+			}
+			else {
+				SEND_TO_Q("\n\rScelta non valida.\n\r\n\r", d);
+				show_race_choice(d);
+				STATE(d) = CON_QRACE;
+				mudlog(LOG_CONNECT,"Razza non valida");
+				/* bogus race selection! */
+			}
+		}
+	}
+	return false;
+}
+NANNY_FUNC(con_helprace) {
+	SEND_TO_Q("\r\n[Batti INVIO] ", d);
+	STATE(d) = CON_ENDHELPRACE;
+	return false;
+}
+NANNY_FUNC(con_helproll) {
+	RollPrompt(d);
+	STATE(d) = CON_QROLL;
+	return false;
+}
+NANNY_FUNC(con_qroll) {
+	oldarg(false);
+	InterpretaRoll(d,arg);
+	/* Lo stato viene impostatto da InterpretaRoll */
+	return false;
+}
+NANNY_FUNC(con_conf_roll) {
+	switch(firstChar(d->currentInput,true)) {
+	case 's':
+		show_class_selection(d,GET_RACE(d->character));
+		STATE(d) = CON_QCLASS;
+		break;
+	case 'n':
+		ShowRollInstruction(d);
+		STATE(d) = CON_HELPROLL;
+		break;
+	case 'b':
+		ShowStatInstruction(d);
+		STATE(d)=CON_STAT_LIST;
+		break;
+	}
+	return false;
+}
+NANNY_FUNC(con_endhelprace) {
+	show_race_choice(d);
+	STATE(d) = CON_QRACE;
+	return false;
+}
+NANNY_FUNC(con_qsex) {                /* query sex of new user        */
+	/* skip whitespaces */
+	switch(firstChar(d->currentInput,true)) {
+	case 'm':
+		d->character->player.sex = SEX_MALE;
+		break;
+	case 'f':
+		d->character->player.sex = SEX_FEMALE;
+		break;
+	case 'b':
+		/* backward */
+		show_race_choice(d);
+		STATE(d)=CON_QRACE;
+		return false;
+		break;
+	default:
+		SEND_TO_Q("Qui su Nebbie Arcane amiamo le cose semplici.... accontentati di due sessi.\n\r", d);
+		SEND_TO_Q("Quel'e` il tuo sesso ? (maschio/femmina): (b per tornare indietro)", d);
+		return false;
+	}
+	ShowStatInstruction(d);
+	STATE(d) = CON_STAT_LIST;
+	return false;
+}
+
+NANNY_FUNC(con_stat_list) {
+	/* skip whitespaces */
+	oldarg(false);
+	if(strlen(arg)==1 && (*arg == 'B' || *arg == 'b')) {  /* Backward */
+		string buf("Quale'e` il sesso di ");
+		buf.assign(GET_NAME(d->character)).assign("maschio/Femmina) (b per tornare indietro): ");
+		SEND_TO_Q(buf.c_str(),d);
+		STATE(d) = CON_QSEX;
+		return false;
+	}
+	if(!strncasecmp(arg,"nuovo",5) || !strncasecmp(arg,"new",3)) {  /* New roll */
+		ShowRollInstruction(d);
+		STATE(d) = CON_HELPROLL;
+		return false;
+	}
+
+	if(!*arg) {
+		d->TipoRoll='S';
+		show_class_selection(d,GET_RACE(d->character));
+		if(IS_SET(SystemFlags,SYS_REQAPPROVE)) {
+			/* set the AUTH flags */
+			/* (3 chances) */
+			d->character->generic = NEWBIE_REQUEST+NEWBIE_CHANCES;
+		}
+		STATE(d) = CON_QCLASS;
+		return false;
+	}
+	int index=0;
+	char* p=&arg[0];
+	while(*p && index < MAX_STAT) {
+		if(*p == 'F' || *p == 'f') {
+			d->stat[index++] = 's';
+		}
+		if(*p == 'I' || *p == 'i') {
+			d->stat[index++] = 'i';
+		}
+		if(*p == 'S' || *p == 's') {
+			d->stat[index++] = 'w';
+		}
+		if(*p == 'A' || *p == 'a') {
+			d->stat[index++] = 'd';
+		}
+		if(*p == 'C' || *p == 'c') {
+			p++;
+			if(*p == 'O' || *p == 'o') {
+				d->stat[index++] = 'o';
+			}
+			else if(*p == 'A' || *p == 'a') {
+				d->stat[index++] = 'h';
+			}
+		}
+		p++;
+	}
+
+	if(index < MAX_STAT) {
+		SEND_TO_Q("Non hai inserito tutte le statistiche richieste o qualche scelta e` sbagliata.\n\r\n\r", d);
+		ShowStatInstruction(d);
+		STATE(d) = CON_STAT_LIST;
+		return false;
+	}
+	else {
+		d->TipoRoll='V';
+
+		show_class_selection(d,GET_RACE(d->character));
+
+		if(IS_SET(SystemFlags,SYS_REQAPPROVE)) {
+			/* set the AUTH flags */
+			/* (3 chances) */
+			d->character->generic = NEWBIE_REQUEST+NEWBIE_CHANCES;
+		}
+		STATE(d) = CON_QCLASS;
+		return false;
+	}
+}
+NANNY_FUNC(con_helpclass) {
+	SEND_TO_Q("\n\r[Batti INVIO] ", d);
+	STATE(d) = CON_ENDHELPCLASS;
+	return false;
+}
+NANNY_FUNC(con_endhelpclass) {
+	show_class_selection(d,GET_RACE(d->character));
+	STATE(d) = CON_QCLASS;
+	return false;
+}
+NANNY_FUNC(con_rnewd) {
+	mudlog(LOG_CONNECT,"Nome: %s Password: %s",d->character->player.name,d->pwd);
+	SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
+									 USE_ANSI),
+							  motd), d);
+	d->justCreated=true;
+	STATE(d) = CON_REGISTER;
+	return true;
+}
+NANNY_FUNC(con_check_mage_type) {
+	oldarg(false);
+	if(!strcasecmp(arg,"si")) {
+		d->character->player.iClass -=CLASS_MAGIC_USER;
+		d->character->player.iClass +=CLASS_SORCERER;
+	} /* end we wanted Sorcerer class! */
+	SEND_TO_Q(NEWBIE_NOTE, d);
+	SEND_TO_Q("\n\r[Batti INVIO] ", d);
+	STATE(d) = CON_RNEWD;
+	return false;
+}
+NANNY_FUNC(con_rmotd) {
+	if(GetMaxLevel(d->character) > IMMORTALE) {
+		SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
+										 USE_ANSI),
+								  wmotd), d);
+		SEND_TO_Q("\r\n[Batti INVIO] ", d);
+		STATE(d) = CON_WMOTD;
+		return false;
+	}
+	if(d->character->term != 0) {
+		ScreenOff(d->character);
+	}
+	SEND_TO_Q(MENU, d);
+	STATE(d) = CON_SLCT;
+	if(WizLock) {
+		if(GetMaxLevel(d->character) < DIO) {
+			SEND_TO_Q("Sorry, the game is locked up for repair.\n\r",d);
+			STATE(d) = CON_WIZLOCK;
+			close_socket(d);
+		}
+	}
+	return false;
+}
+
+NANNY_FUNC(con_wmotd) {
+	SEND_TO_Q(MENU, d);
+	STATE(d) = CON_SLCT;
+	if(WizLock) {
+		if(GetMaxLevel(d->character) < DIO) {
+			SEND_TO_Q("Sorry, the game is locked up for repair.\n\r",d);
+			STATE(d) = CON_WIZLOCK;
+			close_socket(d);
+			return false;
+		}
+	}
+	return false;
+}
+NANNY_FUNC(con_wizlock) {
+	close_socket(d);
+	return false;
+}
+NANNY_FUNC(con_city_choice) {
+	oldarg(false);
+
+	if(d->character->in_room != NOWHERE) {
+		SEND_TO_Q("This choice is only valid when you have been auto-saved\n\r",d);
+		STATE(d) = CON_SLCT;
+	}
+	else {
+		switch(*arg) {
+		case '1':
+			reset_char(d->character);
+			mudlog(LOG_CONNECT, "1.Loading %s's equipment",
+				   d->character->player.name);
+			load_char_objs(d->character);
+			SetStatus("int 1",NULL,NULL);
+			save_char(d->character, AUTO_RENT, 0);
+			SetStatus("int 2",NULL,NULL);
+			send_to_char(WELC_MESSG, d->character);
+			SetStatus("int 3",NULL,NULL);
+			d->character->next = character_list;
+			SetStatus("int 4",NULL,NULL);
+			character_list = d->character;
+			SetStatus("int 5",NULL,NULL);
+			char_to_room(d->character, 3001);
+			SetStatus("int 6",NULL,NULL);
+			d->character->player.hometown = 3001;
+			SetStatus("int 7",NULL,NULL);
+			d->character->specials.tick = plr_tick_count++;
+			if(plr_tick_count == PLR_TICK_WRAP) {
+				plr_tick_count=0;
+			}
+			SetStatus("int 8",NULL,NULL);
+
+			act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
+			STATE(d) = CON_PLYNG;
+			SetStatus("int 9",NULL,NULL);
+			if(!GetMaxLevel(d->character)) {
+				do_start(d->character);
+			}
+			SetStatus("int A",NULL,NULL);
+			do_look(d->character, "", 15);
+			SetStatus("int B",NULL,NULL);
+			d->prompt_mode = 1;
+			break;
+		case '2':
+			reset_char(d->character);
+			mudlog(LOG_CONNECT, "2.Loading %s's equipment",d->character->player.name);
+			load_char_objs(d->character);
+			save_char(d->character, AUTO_RENT, 0);
+			send_to_char(WELC_MESSG, d->character);
+			d->character->next = character_list;
+			character_list = d->character;
+			char_to_room(d->character, 1103);
+			d->character->player.hometown = 1103;
+			d->character->specials.tick = plr_tick_count++;
+			if(plr_tick_count == PLR_TICK_WRAP) {
+				plr_tick_count=0;
+			}
+			act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
+			STATE(d) = CON_PLYNG;
+			if(!GetMaxLevel(d->character)) {
+				do_start(d->character);
+			}
+			do_look(d->character, "",15);
+			d->prompt_mode = 1;
+			break;
+		case '3':
+			if(GetMaxLevel(d->character) > 5) {
+				reset_char(d->character);
+				mudlog(LOG_CONNECT, "3.Loading %s's equipment",
+					   d->character->player.name);
+				load_char_objs(d->character);
+				save_char(d->character, AUTO_RENT, 0);
+				send_to_char(WELC_MESSG, d->character);
+				d->character->next = character_list;
+				character_list = d->character;
+				char_to_room(d->character, 18221);
+				d->character->player.hometown = 18221;
+				d->character->specials.tick = plr_tick_count++;
+				if(plr_tick_count == PLR_TICK_WRAP) {
+					plr_tick_count=0;
+				}
+
+				act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0,
+					TO_ROOM);
+				STATE(d) = CON_PLYNG;
+				if(!GetMaxLevel(d->character)) {
+					do_start(d->character);
+				}
+				do_look(d->character, "",15);
+				d->prompt_mode = 1;
+			}
+			else {
+				SEND_TO_Q("Questa scelta non e` valida.\n\r", d);
+				STATE(d) = CON_SLCT;
+			}
+			break;
+		case '4':
+			if(GetMaxLevel(d->character) > 5) {
+				reset_char(d->character);
+				mudlog(LOG_CONNECT, "4.Loading %s's equipment",
+					   d->character->player.name);
+				load_char_objs(d->character);
+				save_char(d->character, AUTO_RENT, 0);
+				send_to_char(WELC_MESSG, d->character);
+				d->character->next = character_list;
+				character_list = d->character;
+
+				char_to_room(d->character, 3606);
+				d->character->player.hometown = 3606;
+
+				d->character->specials.tick = plr_tick_count++;
+				if(plr_tick_count == PLR_TICK_WRAP) {
+					plr_tick_count=0;
+				}
+
+				act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0,
+					TO_ROOM);
+				STATE(d) = CON_PLYNG;
+				if(!GetMaxLevel(d->character)) {
+					do_start(d->character);
+				}
+				do_look(d->character, "",15);
+				d->prompt_mode = 1;
+			}
+			else {
+				SEND_TO_Q("That was an illegal choice.\n\r", d);
+				STATE(d) = CON_SLCT;
+			}
+			break;
+		case '5':
+			if(GetMaxLevel(d->character) > 5) {
+				reset_char(d->character);
+				mudlog(LOG_CONNECT, "5.Loading %s's equipment",
+					   d->character->player.name);
+				load_char_objs(d->character);
+				save_char(d->character, AUTO_RENT, 0);
+				send_to_char(WELC_MESSG, d->character);
+				d->character->next = character_list;
+				character_list = d->character;
+
+				char_to_room(d->character, 16107);
+				d->character->player.hometown = 16107;
+
+				d->character->specials.tick = plr_tick_count++;
+				if(plr_tick_count == PLR_TICK_WRAP) {
+					plr_tick_count=0;
+				}
+
+				act("$n has entered the game.",
+					TRUE, d->character, 0, 0, TO_ROOM);
+				STATE(d) = CON_PLYNG;
+				if(!GetMaxLevel(d->character)) {
+					do_start(d->character);
+				}
+				do_look(d->character, "",15);
+				d->prompt_mode = 1;
+			}
+			else {
+				SEND_TO_Q("That was an illegal choice.\n\r", d);
+				STATE(d) = CON_SLCT;
+			}
+			break;
+		default:
+			SEND_TO_Q("That was an illegal choice.\n\r", d);
+			STATE(d) = CON_SLCT;
+			break;
+		}
+	}
+	return false;
+}
+NANNY_FUNC(con_delete_me) {
+	oldarg(false);
+	if(!strcmp(arg,"si") && strcmp("Guest",GET_NAME(d->character))) {
+		char buf[MAX_INPUT_LENGTH * 2];
+
+		mudlog(LOG_PLAYERS, "%s just killed self!",
+			   GET_NAME(d->character));
+		sprintf(buf, "rm %s/%s.dat", PLAYERS_DIR,
+				lower(GET_NAME(d->character)));
+		system(buf);
+		sprintf(buf, "rm %s/%s", RENT_DIR, lower(GET_NAME(d->character)));
+		system(buf);
+		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
+		system(buf);
+		Registered toon(GET_NAME(d->character));
+		toon.del();
+		close_socket(d);
+	}
+	else {
+		SEND_TO_Q(MENU,d);
+		STATE(d)= CON_SLCT;
+	}
+	return false;
+}
+
+NANNY_FUNC(con_pwdnew) {
+	oldarg(false);
+	if(!*arg || strlen(arg) > 10 || strlen(arg) <6) {
+		echoOn(d);
+		SEND_TO_Q("Password non valida (deve essere di lunghezza compresa fra 6 e 10 caratteri).\n\r", d);
+		SEND_TO_Q("Password: ", d);
+		echoOff(d);
+		return false;
+	}
+	string salt(RandomWord());
+	salt.append(RandomWord());
+	random_shuffle(salt.begin(),salt.end());
+	strncpy(d->pwd,crypt(arg, salt.c_str()), 10);
+	*(d->pwd + 10) = '\0';
+	echoOn(d);
+	SEND_TO_Q("Reinserisci la password: ", d);
+	STATE(d) = CON_PWDNCNF;
+	echoOff(d);
+	return false;
+}
+NANNY_FUNC(con_pwdncnf) {
+	oldarg(false);
+	if(strncmp(crypt(arg, d->pwd), d->pwd, strlen(d->pwd))) {
+		echoOn(d);
+		SEND_TO_Q("Password errata.\n\r", d);
+		SEND_TO_Q("Reinserisci la password: ", d);
+		echoOff(d);
+
+		STATE(d) = CON_PWDNEW;
+		return false;
+	}
+	if (d->AccountData.authorized) {
+		d->AccountData.password.assign(crypt(arg, d->pwd));
+		Sql::update(d->AccountData);
+	}
+	echoOn(d);
+
+	SEND_TO_Q(
+		"\n\rFatto. Devi entrare nel gioco per rendere attivo il cambio.\n\r",
+		d);
+	SEND_TO_Q(MENU, d);
+	STATE(d) = CON_SLCT;
+	return false;
+}
+void assign_nannies_pointers() {
+	// Initializes with a stubg
+	for(unsigned int i=0; i< E_CONNECTION_TYPES_COUNT; ++i) {
+		nannyFuncs[i]=con_nop;
+	}
+	nannyFuncs[CON_ACCOUNT_NAME]=con_account_name;
+	nannyFuncs[CON_ACCOUNT_PWD]=con_account_pwd;
+	nannyFuncs[CON_ACCOUNT_TOON]=con_account_toon;
+	nannyFuncs[CON_AUTH]=con_nop;
+	nannyFuncs[CON_CHECK_MAGE_TYPE]=con_check_mage_type;
+	nannyFuncs[CON_CITY_CHOICE]=con_city_choice;
+	nannyFuncs[CON_CONF_ROLL]=con_conf_roll;
+	nannyFuncs[CON_DELETE_ME]=con_delete_me;
+	nannyFuncs[CON_EDITING]=con_nop;
+	nannyFuncs[CON_ENDHELPCLASS]=con_endhelpclass;
+	nannyFuncs[CON_ENDHELPRACE]=con_endhelprace;
+	nannyFuncs[CON_EXDSCR]=con_nop;
+	nannyFuncs[CON_EXTRA2]=con_nop;
+	nannyFuncs[CON_HELPCLASS]=con_helpclass;
+	nannyFuncs[CON_HELPRACE]=con_helprace;
+	nannyFuncs[CON_HELPROLL]=con_helproll;
+	nannyFuncs[CON_LDEAD]=con_nop;
+	nannyFuncs[CON_MOB_EDITING]=con_nop;
+	nannyFuncs[CON_NME]=con_nme;
+	nannyFuncs[CON_NMECNF]=con_nmecnf;
+	nannyFuncs[CON_OBJ_EDITING]=con_nop;
+	nannyFuncs[CON_OBJ_FORGING]=con_nop;
+	nannyFuncs[CON_PLYNG]=con_nop;
+	nannyFuncs[CON_PWDCNF]=con_pwdcnf;
+	nannyFuncs[CON_PWDGET]=con_pwdget;
+	nannyFuncs[CON_PWDNCNF]=con_pwdncnf;
+	nannyFuncs[CON_PWDNEW]=con_pwdnew;
+	nannyFuncs[CON_PWDNRM]=con_pwdnrm;
+	nannyFuncs[CON_PWDOK]=con_pwdok;
+	nannyFuncs[CON_QCLASS]=con_qclass;
+	nannyFuncs[CON_QDELETE]=con_nop;
+	nannyFuncs[CON_QDELETE2]=con_nop;
+	nannyFuncs[CON_QRACE]=con_qrace;
+	nannyFuncs[CON_QROLL]=con_qroll;
+	nannyFuncs[CON_QSEX]=con_qsex;
+	nannyFuncs[CON_RACPAR]=con_nop;
+	nannyFuncs[CON_REGISTER]=con_register;
+	nannyFuncs[CON_RMOTD]=con_rmotd;
+	nannyFuncs[CON_RNEWD]=con_rnewd;
+	nannyFuncs[CON_SLCT]=con_slct;
+	nannyFuncs[CON_STAT_LIST]=con_stat_list;
+	nannyFuncs[CON_STAT_LISTV]=con_nop;
+	nannyFuncs[CON_WIZLOCK]=con_wizlock;
+	nannyFuncs[CON_WMOTD]=con_wmotd;
+}
+
+/* deal with newcomers and other non-playing sockets */
+void nanny(struct descriptor_data* d, char* arg) {
+	d->currentInput.assign(arg);
+	boost::algorithm::trim_all(d->currentInput);
+	echoOn(d);
+	bool moresteps=false;
+	do {
+		uint16_t index=static_cast<uint16_t>(STATE(d));
+		try {
+		nanny_func f=nannyFuncs.at(index);
+		moresteps=f(d);
+		}
+		catch (std::out_of_range &e) {
+			mudlog(LOG_SYSERR,"Invalid connection state, closing descriptor: %d %s",STATE(d),e.what());
+			close_socket(d);
+			moresteps=false;
+		}
+		// Gestione account: stati messi tutti all'inizio perché poi fanno fallback sulla procedura standard
+	}
+	while(moresteps);
+	if(d and STATE(d) == CON_SLCT) {
+		boost::format fmt(R"(UPDATE toon SET lastlogin=now() WHERE name="%s")");
+		fmt % d->AccountData.choosen;
+		try {
+			DB* db=Sql::getMysql();
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			db->execute(fmt.str());
+			t.commit();
+		}
+		catch(odb::exception &e) {
+			mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
+		}
+	}
+
 }
 
 void show_class_selection(struct descriptor_data* d, int r) {
 	int i=0;
 	char buf[254],buf2[254];
 
-	sprintf( buf, "\n\rSeleziona la classe di %s.\n\r\n\r",
-			 GET_NAME( d->character ) );
-	SEND_TO_Q( buf, d );
+	sprintf(buf, "\n\rSeleziona la classe di %s.\n\r\n\r",
+			GET_NAME(d->character));
+	SEND_TO_Q(buf, d);
 
 	switch(r) {
 	case RACE_ELVEN:
 	case RACE_GOLD_ELF:
 	case RACE_SEA_ELF:
 	case RACE_HALF_ELVEN:
-		for (i=0; elf_class_choice[i]!=0; i++) {
+		for(i=0; elf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)elf_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3210,7 +3561,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_WILD_ELF:
-		for (i=0; wild_elf_class_choice[i]!=0; i++) {
+		for(i=0; wild_elf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)wild_elf_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3219,7 +3570,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_DEEP_GNOME:
-		for( i = 0; deep_gnome_class_choice[ i ] != 0; i++ ) {
+		for(i = 0; deep_gnome_class_choice[ i ] != 0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)deep_gnome_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3228,7 +3579,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_GNOME:
-		for (i=0; gnome_class_choice[i]!=0; i++) {
+		for(i=0; gnome_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)gnome_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3237,7 +3588,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_DWARF:
-		for (i=0; dwarf_class_choice[i]!=0; i++) {
+		for(i=0; dwarf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)dwarf_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3246,7 +3597,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_HALFLING:
-		for (i=0; halfling_class_choice[i]!=0; i++) {
+		for(i=0; halfling_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)halfling_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3255,7 +3606,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_HUMAN:
-		for (i=0; human_class_choice[i]!=0; i++) {
+		for(i=0; human_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)human_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3264,7 +3615,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_HALF_ORC:
-		for (i=0; half_orc_class_choice[i]!=0; i++) {
+		for(i=0; half_orc_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)half_orc_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3273,7 +3624,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_HALF_OGRE:
-		for (i=0; half_ogre_class_choice[i]!=0; i++) {
+		for(i=0; half_ogre_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)half_ogre_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3282,7 +3633,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_HALF_GIANT:
-		for (i=0; half_giant_class_choice[i]!=0; i++) {
+		for(i=0; half_giant_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)half_giant_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3291,7 +3642,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_ORC:
-		for (i=0; orc_class_choice[i]!=0; i++) {
+		for(i=0; orc_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)orc_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3300,7 +3651,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_GOBLIN:
-		for (i=0; goblin_class_choice[i]!=0; i++) {
+		for(i=0; goblin_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)goblin_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3309,7 +3660,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_DARK_ELF:
-		for (i=0; dark_elf_class_choice[i]!=0; i++) {
+		for(i=0; dark_elf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)dark_elf_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3318,7 +3669,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_DARK_DWARF:
-		for (i=0; dark_dwarf_class_choice[i]!=0; i++) {
+		for(i=0; dark_dwarf_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)dark_dwarf_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3327,7 +3678,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		} /* end for */
 		break;
 	case RACE_TROLL:
-		for (i=0; troll_class_choice[i]!=0; i++) {
+		for(i=0; troll_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)troll_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3337,7 +3688,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		break;
 
 	case RACE_DEMON:
-		for (i=0; demon_class_choice[i]!=0; i++) {
+		for(i=0; demon_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)demon_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3347,7 +3698,7 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		break;
 
 	default:
-		for (i=0; default_class_choice[i]!=0; i++) {
+		for(i=0; default_class_choice[i]!=0; i++) {
 			sprintf(buf,"%d) ",i);
 			sprintbit((unsigned)default_class_choice[i],pc_class_types, buf2);
 			strcat(buf,buf2);
@@ -3357,23 +3708,23 @@ void show_class_selection(struct descriptor_data* d, int r) {
 		break;
 	} /* end switch */
 
-	SEND_TO_Q( "\n\r\n\rClasse (batti <?> per un aiuto, <b> per tornare indietro): ", d );
+	SEND_TO_Q("\n\r\n\rClasse (batti <?> per un aiuto, <b> per tornare indietro): ", d);
 }
 
 void show_race_choice(struct descriptor_data* d) {
 	int ii,i=0;
 	char buf[255],buf2[254];
 
-	SEND_TO_Q( "                               Limiti di livello\n\r",d);
-	sprintf( buf,"%-4s %-15s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s\n\r",
-			 "#","Razza","ma","cl","wa","th","dr","mk","ba","so","pa","ra","ps");
+	SEND_TO_Q("                               Limiti di livello\n\r",d);
+	sprintf(buf,"%-4s %-15s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s %-3s\n\r",
+			"#","Razza","ma","cl","wa","th","dr","mk","ba","so","pa","ra","ps");
 	SEND_TO_Q(buf,d);
 
-	while (race_choice[i]!=-1) {
+	while(race_choice[i]!=-1) {
 		sprintf(buf,"%-3d) %-15s",i,RaceName[race_choice[i]]);
 
 		/* show level limits */
-		for (ii=0; ii<MAX_CLASS; ii++) {
+		for(ii=0; ii<MAX_CLASS; ii++) {
 			sprintf(buf2," %-3d",RacialMax[race_choice[i]][ii]);
 			strcat(buf,buf2);
 		} /* end for */
@@ -3383,11 +3734,11 @@ void show_race_choice(struct descriptor_data* d) {
 		i++;
 	}
 
-	SEND_TO_Q( "  ma=magic user, cl=cleric, wa=warrior, th=thief, dr=druid, "
-			   "mk=monk\n\r",d);
-	SEND_TO_Q( "  ba=barbarian, so=sorcerer, pa=paladin, ra=ranger,"
-			   " ps=psionist\n\r\n\r",d);
-	SEND_TO_Q( "Razza (batti <?> per un aiuto): ", d );
+	SEND_TO_Q("  ma=magic user, cl=cleric, wa=warrior, th=thief, dr=druid, "
+			  "mk=monk\n\r",d);
+	SEND_TO_Q("  ba=barbarian, so=sorcerer, pa=paladin, ra=ranger,"
+			  " ps=psionist\n\r\n\r",d);
+	SEND_TO_Q("Razza (batti <?> per un aiuto): ", d);
 }
 
 
@@ -3404,7 +3755,7 @@ void check_affected(char* msg) {
 	int i,j;
 
 	if(!f && !(f=fopen(A_LOG_NAME,"wr"))) {
-		perror(A_LOG_NAME);
+		mudlog(LOG_ERROR,"%s:%s",A_LOG_NAME,strerror(errno));
 		return;
 	}
 
@@ -3412,11 +3763,13 @@ void check_affected(char* msg) {
 		rewind(f);
 		for(i=0; i<5; i++) {
 			b[i]=(char*)malloc(MAX_STRING_LENGTH);
-			if(fgets(b[i], MAX_STRING_LENGTH, f)==NULL) { break; }
+			if(fgets(b[i], MAX_STRING_LENGTH, f)==NULL) {
+				break;
+			}
 		}
 		fclose(f);
 		if(!(f=fopen(A_LOG_NAME,"wr"))) {
-			perror(A_LOG_NAME);
+			mudlog(LOG_ERROR,"%s:%s",A_LOG_NAME,strerror(errno));
 			return;
 		}
 		for(j=0; j<i; j++) {
@@ -3426,17 +3779,19 @@ void check_affected(char* msg) {
 		lines=0;
 	}
 
-	if(msg)
-	{ fprintf(f,"%s : ", msg); }
-	else
-	{ fprintf(f,"check_affected: "); }
+	if(msg) {
+		fprintf(f,"%s : ", msg);
+	}
+	else {
+		fprintf(f,"check_affected: ");
+	}
 
 	for(c=character_list; c; c=c->next)
 		if(c && c->affected)
 			for(hjp=c->affected; hjp; hjp=hjp->next)
 				if(hjp->type > MAX_EXIST_SPELL || hjp->type < 0) {
 					sprintf(buf,"bogus hjp->type for (%s).", GET_NAME(c));
-					fprintf(f,buf);
+					fprintf(f,"%s",buf);
 					/*          abort();    in test site this will be ok.. */
 				}
 

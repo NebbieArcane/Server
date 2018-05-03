@@ -56,8 +56,9 @@ const char* str;
 	char* copy;
 
 	len = strlen(str) + 1;
-	if (!(copy = (char*)malloc((u_int)len)))
-	{ return((char*)NULL); }
+	if(!(copy = (char*)malloc((u_int)len))) {
+		return((char*)NULL);
+	}
 	bcopy(str, copy, len);
 	return(copy);
 }
@@ -75,16 +76,17 @@ register const char* s, *find;
 	register char c, sc;
 	register size_t len;
 
-	if ((c = *find++) != 0) {
+	if((c = *find++) != 0) {
 		len = strlen(find);
 		do {
 			do {
-				if ((sc = *s++) == 0)
-				{ return (NULL); }
+				if((sc = *s++) == 0) {
+					return (NULL);
+				}
 			}
-			while (sc != c);
+			while(sc != c);
 		}
-		while (strncmp(s, find, len) != 0);
+		while(strncmp(s, find, len) != 0);
 		s--;
 	}
 	return ((char*)s);
@@ -188,19 +190,21 @@ size_t nbytes;
 	 * First time malloc is called, setup page size and
 	 * align break pointer so all data will be page aligned.
 	 */
-	if (pagesz == 0) {
+	if(pagesz == 0) {
 		pagesz = n = getpagesize();
 		op = (union overhead*)sbrk(0);
-		n = n - sizeof (*op) - ((int)op & (n - 1));
-		if (n < 0)
-		{ n += pagesz; }
-		if (n) {
-			if (sbrk(n) == (char*)-1)
-			{ return (NULL); }
+		n = n - sizeof(*op) - ((int)op & (n - 1));
+		if(n < 0) {
+			n += pagesz;
+		}
+		if(n) {
+			if(sbrk(n) == (char*)-1) {
+				return (NULL);
+			}
 		}
 		bucket = 0;
 		amt = 8;
-		while (pagesz > amt) {
+		while(pagesz > amt) {
 			amt <<= 1;
 			bucket++;
 		}
@@ -211,7 +215,7 @@ size_t nbytes;
 	 * stored in hash buckets which satisfies request.
 	 * Account for space used per block for accounting.
 	 */
-	if (nbytes <= (n = pagesz - sizeof (*op) - RSLOP)) {
+	if(nbytes <= (n = pagesz - sizeof(*op) - RSLOP)) {
 #ifndef RCHECK
 		amt = 8;        /* size of first bucket */
 		bucket = 0;
@@ -219,26 +223,28 @@ size_t nbytes;
 		amt = 16;        /* size of first bucket */
 		bucket = 1;
 #endif
-		n = -(sizeof (*op) + RSLOP);
+		n = -(sizeof(*op) + RSLOP);
 	}
 	else {
 		amt = pagesz;
 		bucket = pagebucket;
 	}
-	while (nbytes > amt + n) {
+	while(nbytes > amt + n) {
 		amt <<= 1;
-		if (amt == 0)
-		{ return (NULL); }
+		if(amt == 0) {
+			return (NULL);
+		}
 		bucket++;
 	}
 	/*
 	 * If nothing in hash bucket right now,
 	 * request more memory from the system.
 	 */
-	if ((op = nextf[bucket]) == NULL) {
+	if((op = nextf[bucket]) == NULL) {
 		morecore(bucket);
-		if ((op = nextf[bucket]) == NULL)
-		{ return (NULL); }
+		if((op = nextf[bucket]) == NULL) {
+			return (NULL);
+		}
 	}
 	/* remove from linked list */
 	nextf[bucket] = op->ov_next;
@@ -278,10 +284,11 @@ int bucket;
 #ifdef DEBUG
 	ASSERT(sz > 0);
 #else
-	if (sz <= 0)
-	{ return; }
+	if(sz <= 0) {
+		return;
+	}
 #endif
-	if (sz < pagesz) {
+	if(sz < pagesz) {
 		amt = pagesz;
 		nblks = amt / sz;
 	}
@@ -291,14 +298,15 @@ int bucket;
 	}
 	op = (union overhead*)sbrk(amt);
 	/* no more room! */
-	if ((int)op == -1)
-	{ return; }
+	if((int)op == -1) {
+		return;
+	}
 	/*
 	 * Add new memory allocated to that on
 	 * free list for this hash bucket.
 	 */
 	nextf[bucket] = op;
-	while (--nblks > 0) {
+	while(--nblks > 0) {
 		op->ov_next = (union overhead*)((caddr_t)op + sz);
 		op = (union overhead*)((caddr_t)op + sz);
 	}
@@ -310,14 +318,16 @@ void* cp;
 	register int size;
 	register union overhead* op;
 
-	if (cp == NULL)
-	{ return; }
-	op = (union overhead*)((caddr_t)cp - sizeof (union overhead));
+	if(cp == NULL) {
+		return;
+	}
+	op = (union overhead*)((caddr_t)cp - sizeof(union overhead));
 #ifdef DEBUG
 	ASSERT(op->ov_magic == MAGIC);                /* make sure it was in use */
 #else
-	if (op->ov_magic != MAGIC)
-	{ return; }                                /* sanity */
+	if(op->ov_magic != MAGIC) {
+		return;    /* sanity */
+	}
 #endif
 #ifdef RCHECK
 	ASSERT(op->ov_rmagic == RMAGIC);
@@ -355,10 +365,11 @@ size_t nbytes;
 	char* res;
 	int was_alloced = 0;
 
-	if (cp == NULL)
-	{ return (malloc(nbytes)); }
-	op = (union overhead*)((caddr_t)cp - sizeof (union overhead));
-	if (op->ov_magic == MAGIC) {
+	if(cp == NULL) {
+		return (malloc(nbytes));
+	}
+	op = (union overhead*)((caddr_t)cp - sizeof(union overhead));
+	if(op->ov_magic == MAGIC) {
 		was_alloced++;
 		i = op->ov_index;
 	}
@@ -377,38 +388,46 @@ size_t nbytes;
 		 * a memory fault if the old area was tiny, and the moon
 		 * is gibbous.  However, that is very unlikely.
 		 */
-		if ((i = findbucket(op, 1)) < 0 &&
-				(i = findbucket(op, realloc_srchlen)) < 0)
-		{ i = NBUCKETS; }
+		if((i = findbucket(op, 1)) < 0 &&
+				(i = findbucket(op, realloc_srchlen)) < 0) {
+			i = NBUCKETS;
+		}
 	}
 	onb = 1 << (i + 3);
-	if (onb < pagesz)
-	{ onb -= sizeof (*op) + RSLOP; }
-	else
-	{ onb += pagesz - sizeof (*op) - RSLOP; }
+	if(onb < pagesz) {
+		onb -= sizeof(*op) + RSLOP;
+	}
+	else {
+		onb += pagesz - sizeof(*op) - RSLOP;
+	}
 	/* avoid the copy if same size block */
-	if (was_alloced) {
-		if (i) {
+	if(was_alloced) {
+		if(i) {
 			i = 1 << (i + 2);
-			if (i < pagesz)
-			{ i -= sizeof (*op) + RSLOP; }
-			else
-			{ i += pagesz - sizeof (*op) - RSLOP; }
+			if(i < pagesz) {
+				i -= sizeof(*op) + RSLOP;
+			}
+			else {
+				i += pagesz - sizeof(*op) - RSLOP;
+			}
 		}
-		if (nbytes <= onb && nbytes > i) {
+		if(nbytes <= onb && nbytes > i) {
 #ifdef RCHECK
 			op->ov_size = (nbytes + RSLOP - 1) & ~(RSLOP - 1);
 			*(u_short*)((caddr_t)(op + 1) + op->ov_size) = RMAGIC;
 #endif
 			return(cp);
 		}
-		else
-		{ free(cp); }
+		else {
+			free(cp);
+		}
 	}
-	if ((res = malloc(nbytes)) == NULL)
-	{ return (NULL); }
-	if (cp != res)                /* common optimization if "compacting" */
-	{ bcopy(cp, res, (nbytes < onb) ? nbytes : onb); }
+	if((res = malloc(nbytes)) == NULL) {
+		return (NULL);
+	}
+	if(cp != res) {               /* common optimization if "compacting" */
+		bcopy(cp, res, (nbytes < onb) ? nbytes : onb);
+	}
 	return (res);
 }
 
@@ -424,11 +443,12 @@ int srchlen;
 	register union overhead* p;
 	register int i, j;
 
-	for (i = 0; i < NBUCKETS; i++) {
+	for(i = 0; i < NBUCKETS; i++) {
 		j = 0;
-		for (p = nextf[i]; p && j != srchlen; p = p->ov_next) {
-			if (p == freep)
-			{ return (i); }
+		for(p = nextf[i]; p && j != srchlen; p = p->ov_next) {
+			if(p == freep) {
+				return (i);
+			}
 			j++;
 		}
 	}
@@ -452,14 +472,14 @@ char* s;
 		totused = 0;
 
 	fprintf(stderr, "Memory allocation statistics %s\nfree:\t", s);
-	for (i = 0; i < NBUCKETS; i++) {
-		for (j = 0, p = nextf[i]; p; p = p->ov_next, j++)
+	for(i = 0; i < NBUCKETS; i++) {
+		for(j = 0, p = nextf[i]; p; p = p->ov_next, j++)
 			;
 		fprintf(stderr, " %d", j);
 		totfree += j * (1 << (i + 3));
 	}
 	fprintf(stderr, "\nused:\t");
-	for (i = 0; i < NBUCKETS; i++) {
+	for(i = 0; i < NBUCKETS; i++) {
 		fprintf(stderr, " %d", nmalloc[i]);
 		totused += nmalloc[i] * (1 << (i + 3));
 	}
@@ -476,8 +496,9 @@ register size_t size;
 	register void* p;
 
 	size *= num;
-	if (p = (void*)malloc(size))
-	{ bzero(p, size); }
+	if(p = (void*)malloc(size)) {
+		bzero(p, size);
+	}
 	return(p);
 }
 

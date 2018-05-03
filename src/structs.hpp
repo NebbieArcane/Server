@@ -6,8 +6,14 @@
 #define __STRUCTS
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
-namespace Alarmud {
+
+#include <string>
 #include "typedefs.hpp"
+#include "odb/account.hpp"
+#include "odb/odb.hpp"
+#include "specialproc_other.hpp"
+#include "specialproc_room.hpp"
+namespace Alarmud {
 
 /*
 Flyp new define
@@ -62,10 +68,10 @@ struct QuestItem {
 **  Limited item Stuff
 */
 
-#define LIM_ITEM_COST_MIN 20000     /* mininum cost of a lim. item 
+#define LIM_ITEM_COST_MIN 20000     /* mininum cost of a lim. item
                                      *  makes it a limited item... */
 
-#define MAX_LIM_ITEMS 18            /* max number of limited items you can 
+#define MAX_LIM_ITEMS 18            /* max number of limited items you can
                                      * rent with */
 
 #define MIN_COST_ITEM_EGO 10000     /* minimo costo sotto il quale non viene
@@ -186,6 +192,8 @@ typedef struct {
 /*
  *  old stuff.
  */
+#define OPT_USEC 250000       /* time delay corresponding to 4 passes/sec */
+
 #define PULSE_PER_SEC  4
 #define PULSE_PER_MIN  (60 * PULSE_PER_SEC)
 #define PULSE_MAXUSAGE		 10
@@ -385,9 +393,9 @@ struct room_data {
 	long room_flags;             /* DEATH,DARK ... etc                 */
 	byte light;                  /* Number of lightsources in room     */
 	ubyte dark;
-	int (*funct)( struct char_data*, int, char*, struct room_data*, int);
+	roomspecial_func funct;
 	/* special procedure                  */
-	char* specname;
+	const char* specname;
 	char* specparms;
 	struct obj_data* contents;   /* List of items in room              */
 	struct char_data* people;    /* List of NPC / PC in room           */
@@ -829,7 +837,15 @@ struct snoop_data {
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
 
-struct descriptor_data {
+class descriptor_data {
+public:
+	bool justCreated=false;
+	bool impersonating=false;
+	bool AlreadyInGame = false;                  /* flag di presenza */
+	user AccountData;
+	std::vector<std::string> toons;
+	e_connection_types last_state;
+	string currentInput;
 	int descriptor;                    /* file descriptor for socket */
 
 	char* name;                /* ptr to name for mail system */
@@ -837,10 +853,10 @@ struct descriptor_data {
 	char host[50];                /* hostname                   */
 	char pwd[12];                 /* password                   */
 	int pos;                      /* position in player-file    */
-	int connected;                /* mode of 'connectedness'    */
+	e_connection_types connected;                /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
 	char* showstr_head;              /* for paging through texts   */
-	char* showstr_point;              /*       -                    */
+	const char* showstr_point;              /*       -                    */
 	char** str;                   /* for the modify-str system  */
 	unsigned int max_str;                  /* -                          */
 	int prompt_mode;              /* control of prompt-printing */
@@ -864,15 +880,12 @@ struct descriptor_data {
 	struct char_data* original;   /* original char              */
 	struct snoop_data snoop;      /* to snoop people.           */
 	struct descriptor_data* next; /* link to next descriptor    */
-#if defined ( ALAR )
 	/* Questi campi mi servono per tenere traccia della presenza del player
 	 * in eventuale ld non riconosciuto, fra l'accettazione del nome e quella
 	 * della password
 	 */
-	bool AlreadyInGame;                  /* flag di presenza */
 	struct descriptor_data* ToBeKilled;  /* descrittore gia' in gioco,
 					 * da killare */
-#endif
 	/*campo per decifrare il tipo di rollata
 	 */
 #if defined (NEW_ROLL)

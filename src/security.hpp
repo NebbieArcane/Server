@@ -7,7 +7,7 @@
 #ifndef __SECURITY_HPP
 #define __SECURITY_HPP
 namespace Alarmud {
-int SecCheck(char* arg, char* site) ;
+int SecCheck(const char* arg, const char* site) ;
 } // namespace Alarmud
 #endif // __SECURITY_HPP
 
