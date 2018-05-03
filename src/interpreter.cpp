@@ -2432,6 +2432,7 @@ NANNY_FUNC(con_qclass) {
 NANNY_FUNC(con_slct) {
 	switch(firstChar(d->currentInput)) {
 	case '0':
+		toonUpdate(d);
 		close_socket(d);
 		break;
 
