@@ -17,6 +17,8 @@
 #include <boost/algorithm/string/trim_all.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <curl/curl.h>
+#include "../contrib/slacking/slacking.hpp"
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1861,7 +1863,13 @@ void InterpretaRoll(struct descriptor_data* d, char* riga)
 	}
 	return;
 }
-
+void slackNotify(const char* message, const char* emoj) {
+	    slack::Slacking slack("xxx-xxx"); // where "xxx-xxx" is your Slack API token
+		//slack.set_proxy("http://10.0.22.1:8080");
+		slack.hook.Id = "/T9EQH2QB0/B9E96TMPV/rJPnMU8yqgv8NzbKWh8Twfgd";
+	    slack.hook.channel_username_iconemoji("", "", emoj);
+	    slack.hook.postMessage(message);
+}
 void toonList(struct descriptor_data* d,const string &optional_message="") {
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
@@ -2446,6 +2454,8 @@ NANNY_FUNC(con_slct) {
 	}
 	/* no break */
 	case '1':
+
+		slackNotify(string(d->character->player.name).append(" si e` connesso").c_str(),"smile");
 		reset_char(d->character);
 		mudlog(LOG_PLAYERS, "M1.Loading %s's equipment",d->character->player.name);
 		load_char_objs(d->character);
@@ -2615,7 +2625,6 @@ NANNY_FUNC(con_nme) {
 	oldarg(true);
 	char tmp_name[100];
 	unsigned long long rc=parse_name(arg, tmp_name);
-	std::cout << rc << std::endl;
 	mudlog(LOG_CONNECT,"Parsename result for %s: %d",arg,rc);
 	if (rc>2ULL) {
 		d->AccountData.id=rc-2;
