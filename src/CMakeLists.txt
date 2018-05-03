@@ -116,6 +116,7 @@ set (MYSQL_USER $ENV{MYSQL_USER})
 set (MYSQL_PASSWORD $ENV{MYSQL_PASSWORD})
 set (MYSQL_HOST $ENV{MYSQL_HOST})
 set (MYSQL_DB $ENV{MYSQL_DB})
+set (ENVIRONMENT $ENV{ENVIRONMENT})
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -206,7 +207,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wcast-align
 	-Wcast-qual
 	-Wchkp
-	-Wctor-dtor-privacy
+	-Wno-ctor-dtor-privacy
 	-Wdisabled-optimization
 	-Wenum-compare
 	-Wno-format-nonliteral
