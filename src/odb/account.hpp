@@ -40,13 +40,15 @@ public:
 };
 class toon {
 public:
-	toon() :id(0),name(""),password(""),title(""),lastlogin(boost::posix_time::not_a_date_time),owner_id(0) {};
-	toon(const char* name,const char* password="invalid", const char* title="") :id(0),name(name),password(password),title(title),lastlogin(boost::posix_time::not_a_date_time),owner_id(0) {}
+	toon() :id(0),name(""),password(""),title(""),level(0),lastlogin(boost::posix_time::not_a_date_time),lasthost(""),owner_id(0) {};
+	toon(const char* name,const char* password="invalid", const char* title="") :id(0),name(name),password(password),title(title),level(0),lastlogin(boost::posix_time::not_a_date_time),lasthost(""),owner_id(0) {}
 	unsigned long id;
 	string name;
 	string password;
 	string title;
+	unsigned short level;
 	boost::posix_time::ptime lastlogin;
+	string lasthost;
 	unsigned long long owner_id;
 };
 class user {
@@ -115,7 +117,9 @@ public:
 #pragma db member(toon::name) unique
 #pragma db member(toon::password) type("varchar(128)")
 #pragma db member(toon::title) type("varchar(128)")
+#pragma db member(toon::level) not_null default(0)
 #pragma db member(toon::lastlogin) type("DATETIME") null
+#pragma db member(toon::lasthost) type("varchar8255)") not_null default ""
 #pragma db member(toon::owner_id) index
 
 #pragma db object(toonExtra)
