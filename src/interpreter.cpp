@@ -2445,6 +2445,7 @@ NANNY_FUNC(con_slct) {
 	}
 	/* no break */
 	case '1':
+	{
 		reset_char(d->character);
 		int Level=GetMaxLevel(d->character);
 		if (PORT==RELEASE_PORT) {
@@ -2570,7 +2571,7 @@ NANNY_FUNC(con_slct) {
 		}
 
 		break;
-
+	}
 	case '2':
 		SEND_TO_Q("Inserisci il testo che vuoi che venga visualizzato "
 				  "quando gli altri\n\r", d);
@@ -3527,7 +3528,7 @@ void nanny(struct descriptor_data* d, char* arg) {
 }
 void toonUpdate(const descriptor_data* d) {
 	boost::format fmt(R"(UPDATE toon SET level=%d,lastlogin=now(),lasthost="%s" WHERE name="%s")");
-	fmt % GetMaxLevel(d->character) % d->host,d->AccountData.choosen;
+	fmt % GetMaxLevel(d->character) % d->host % d->AccountData.choosen;
 	try {
 		DB* db=Sql::getMysql();
 		odb::transaction t(db->begin());
