@@ -119,7 +119,7 @@ public:
 #pragma db member(toon::title) type("varchar(128)")
 #pragma db member(toon::level) not_null default(0)
 #pragma db member(toon::lastlogin) type("DATETIME") null
-#pragma db member(toon::lasthost) type("varchar8255)") not_null default ""
+#pragma db member(toon::lasthost) type("varchar(255)") not_null default ("")
 #pragma db member(toon::owner_id) index
 
 #pragma db object(toonExtra)
