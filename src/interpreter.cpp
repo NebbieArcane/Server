@@ -2444,9 +2444,14 @@ NANNY_FUNC(con_slct) {
 	}
 	/* no break */
 	case '1':
-
-		slackNotify(string(d->character->player.name).append(" si e` connesso").c_str(),"smile");
 		reset_char(d->character);
+		int Level=GetMaxLevel(d->character);
+		if (PORT==RELEASE_PORT) {
+			if (Level > PRINCIPE and Level < MAESTRO_DEL_CREATO) {
+				slackNotify(string(d->character->player.name).append(" si e` connesso").c_str(),":dagger_knife:");
+			}
+		}
+		toonUpdate(d);
 		mudlog(LOG_PLAYERS, "M1.Loading %s's equipment",d->character->player.name);
 		load_char_objs(d->character);
 		mudlog(LOG_CHECK, "Sending Welcome message to %s",d->character->player.name);
@@ -2460,7 +2465,7 @@ NANNY_FUNC(con_slct) {
 		if(d->character->in_room == NOWHERE ||
 				d->character->in_room == AUTO_RENT) {
 			/* returning from autorent */
-			if(GetMaxLevel(d->character) < DIO_MINORE) {
+			if (Level < DIO_MINORE) {
 				/* Per gli IMMORTALI che rentavano ad Asgaard, gli tolgo
 				la start room cosi' gli viene calcolata di nuovo */
 				if(d->character->specials.start_room == 1000 && IS_IMMORTALE(d->character)) {
@@ -3518,23 +3523,21 @@ void nanny(struct descriptor_data* d, char* arg) {
 		// Gestione account: stati messi tutti all'inizio perché poi fanno fallback sulla procedura standard
 	}
 	while(moresteps);
-	if(d and STATE(d) == CON_SLCT) {
-		boost::format fmt(R"(UPDATE toon SET lastlogin=now() WHERE name="%s")");
-		fmt % d->AccountData.choosen;
-		try {
-			DB* db=Sql::getMysql();
-			odb::transaction t(db->begin());
-			t.tracer(logTracer);
-			db->execute(fmt.str());
-			t.commit();
-		}
-		catch(odb::exception &e) {
-			mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
-		}
-	}
-
 }
-
+void toonUpdate(const descriptor_data* d) {
+	boost::format fmt(R"(UPDATE toon SET level=%d,lastlogin=now(),lasthost="%s" WHERE name="%s")");
+	fmt % GetMaxLevel(d->character) % d->host,d->AccountData.choosen;
+	try {
+		DB* db=Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		db->execute(fmt.str());
+		t.commit();
+	}
+	catch(odb::exception &e) {
+		mudlog(LOG_SYSERR,"Db error while registering %s: %s",d->AccountData.choosen.c_str(),e.what());
+	}
+}
 void show_class_selection(struct descriptor_data* d, int r) {
 	int i=0;
 	char buf[254],buf2[254];
