@@ -1082,6 +1082,7 @@ void check_reboot() {
 	}
 	// If we already on a reboot sequence, checking is pointless
 	if(!bBootSequenceStarted && (tc-lastCheck) >=60) {  //Once every minute
+		update_max_usage();
 		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
 		lastCheck=tc;
 		sprintf(REBOOTFILE,"REBOOT%02d%1d0",t_info->tm_hour,(t_info->tm_min / 10));
