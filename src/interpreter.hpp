@@ -50,6 +50,7 @@ void only_argument(const char* argument, char* dest);
 int search_block(const char* arg, const char** list, bool exact) ;
 void show_class_selection(struct descriptor_data* d, int r) ;
 void show_race_choice(struct descriptor_data* d) ;
+void slackNotify(const char* message, const char* emoj);
 int special(struct char_data* ch, int cmd, const char* arg) ;
 #endif // _INTERPRETER_HPP
 } // namespace Alarmud
