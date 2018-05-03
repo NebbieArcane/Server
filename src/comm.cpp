@@ -2423,8 +2423,10 @@ int update_max_usage(void) {
 
 	if(sockets_playing > max_usage) {
 		max_usage = sockets_playing;
-		sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
-		slackNotify(buf,":dance:");
+		if (PORT==RELEASE_PORT) {
+			sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
+			slackNotify(buf,max_usage >=10?":champagne:":"information_desk_person");
+		}
 		mudlog(LOG_PLAYERS, buf);
 	}
 
