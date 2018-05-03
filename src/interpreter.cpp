@@ -1538,8 +1538,7 @@ unsigned long long parse_name(const char* arg, char* name) {
 	try {
 		return 2+boost::lexical_cast<unsigned long long>(arg);
 	}
-	catch (exception &e) {
-		mudlog(LOG_CONNECT,"Exception %s",e.what());
+	catch (...) {
 	}
 	int i;
 	/* skip whitespaces */
