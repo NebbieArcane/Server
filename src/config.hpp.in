@@ -18,7 +18,7 @@
 #ifndef MYSQL_DB
 #define MYSQL_DB "nebbie"
 #endif
-#define env_$ENV{ENVIRONMENT}
+#define env_@ENVIRONMENT@
 //cmakedefine SQLITE_VERSION
 #cmakedefine SQLITE_VERSION "@SQLITE_VERSION@"
 #define HAS_SQLITE defined(SQLITE_VERSION)
