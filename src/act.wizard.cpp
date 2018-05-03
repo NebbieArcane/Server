@@ -161,7 +161,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 			"Con questo comando puoi esaminare le registrazioni\r\n"
 			"Sintassi:\r\n"
 			"register add -> assegna il personaggio corrente al tuo account (solo se il pg non appartiene a nessuno)\r\n"
-			"register add <personaggio> <email> -> assegna un personaggio a un account\r\n"
+//			"register add <personaggio> <email> -> assegna un personaggio a un account\r\n"
 			"register list -> elenca i tuoi pg\r\n"
 			"register list <email> -> elenca tutti i personaggi di un account\r\n"
 			"register list <personaggio> -> come sopra ma cerca l'account a partire da un personaggio\r\n"
