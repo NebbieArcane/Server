@@ -2424,6 +2424,7 @@ int update_max_usage(void) {
 	if(sockets_playing > max_usage) {
 		max_usage = sockets_playing;
 		sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
+		slackNotify(buf,":dance:");
 		mudlog(LOG_PLAYERS, buf);
 	}
 
