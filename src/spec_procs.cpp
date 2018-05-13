@@ -172,8 +172,15 @@ struct char_data* FindMobInRoomWithFunction(int room, genericspecial_func func) 
 				temp_char = temp_char->next_in_room) {
 
 			if(IS_MOB(temp_char)) {
+				std::cout << "Testing" << (mob_index[temp_char->nr].func == func) << std::endl;
+				std::cout << std::hex << (intptr_t) mob_index[temp_char->nr].func << " vs " << std::hex << (intptr_t) func << std::endl;
 				if(mob_index[temp_char->nr].func == func) {
 					targ = temp_char;
+					std::cout << "FOUND" << std::endl;
+					break;
+				}
+				else {
+					std::cout << "NOTFOUND" << std::endl;
 				}
 			}
 		}
@@ -679,7 +686,7 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 		return FALSE;
 	}
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(ThiefGuildMaster));
 
 	for(; *arg==' '; arg++); /* ditch spaces */
 	if(cmd == CMD_PRACTICE || cmd == CMD_GAIN) {
@@ -906,7 +913,7 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 		return(FALSE);
 	}
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(WarriorGuildMaster));
 
 	for(; *arg==' '; arg++); /* ditch spaces */
 	if(cmd==CMD_PRACTICE || cmd==CMD_GAIN) {
@@ -1304,7 +1311,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 	for(temp_char = real_roomp(ch->in_room)->people; (!andy) && (temp_char) ;
 			temp_char = temp_char->next_in_room)
 		if(IS_MOB(temp_char))
-			if(mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+			if(mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(andy_wilcox)) {
 				andy = temp_char;
 			}
 	if(open==0 && time_info.hours == 11) {
@@ -7186,7 +7193,7 @@ OBJSPECIAL_FUNC(nodrop) {
 			if(i->item_number>=0) {
 				if(do_all || isname(name, i->name)) {
 					if(do_all || j == num) {
-						if(obj_index[i->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+						if(obj_index[i->item_number].func == reinterpret_cast<genericspecial_func>(nodrop)) {
 							xobj = i;
 							break;
 						}
@@ -7209,7 +7216,7 @@ OBJSPECIAL_FUNC(nodrop) {
 		if(i->item_number >= 0) {
 			if(do_all || isname(name, i->name)) {
 				if(do_all || j == num) {
-					if(obj_index[i->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+					if(obj_index[i->item_number].func == reinterpret_cast<genericspecial_func>(nodrop)) {
 						xobj = i;
 						break;
 					}
@@ -7349,7 +7356,7 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		return FALSE;
 	}
 
-	god = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	god = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(BiosKaiThanatos));
 
 	if(!god) {
 		return(FALSE);

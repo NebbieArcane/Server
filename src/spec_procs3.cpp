@@ -1083,7 +1083,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 
 	for(xobj = real_roomp(ch->in_room)->contents; xobj ; xobj = xobj->next_content) {
 		if(xobj->item_number >= 0 &&
-				obj_index[xobj->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+				obj_index[xobj->item_number].func == reinterpret_cast<genericspecial_func>(EvilBlade)) {
 			/* I am on the floor */
 			for(joe = real_roomp(ch->in_room)->people; joe ; joe = joe->next_in_room) {
 				if((GET_ALIGNMENT(joe) <= -400) && (!IS_IMMORTAL(joe))) {
@@ -1360,7 +1360,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 	for(xobj = real_roomp(ch->in_room)->contents;
 			xobj ; xobj = xobj->next_content) {
 		if(xobj->item_number >= 0 &&
-				obj_index[xobj->item_number].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+				obj_index[xobj->item_number].func == reinterpret_cast<genericspecial_func>(GoodBlade)) {
 			/* I am on the floor */
 			for(joe = real_roomp(ch->in_room)->people; joe ;
 					joe = joe->next_in_room) {
@@ -4317,7 +4317,7 @@ MOBSPECIAL_FUNC(Interact) {
 		return TRUE;
 	}
 
-	interattivo = FindMobInRoomWithFunction(mob->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	interattivo = FindMobInRoomWithFunction(mob->in_room, reinterpret_cast<genericspecial_func>(Interact));
 
 	if(!interattivo) {
 		return TRUE;
