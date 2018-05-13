@@ -1933,7 +1933,7 @@ MOBSPECIAL_FUNC(RepairGuy) {
 			if(!IS_NPC(vict)) {
 				return(FALSE);
 			}
-			if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+			if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(RepairGuy)) {
 				send_to_char("Nah, you really wouldn't want to do that.",ch);
 				return(TRUE);
 			}
@@ -1975,7 +1975,7 @@ MOBSPECIAL_FUNC(RepairGuy) {
 			return(FALSE);
 		}
 
-		if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(__FUNCTION__)) {
+		if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(RepairGuy)) {
 			/* we have the repair guy, and we can give him the stuff */
 			act("You give $p to $N.",TRUE,ch,obj,vict,TO_CHAR);
 			act("$n gives $p to $N.",TRUE,ch,obj,vict,TO_ROOM);
@@ -7235,7 +7235,7 @@ MOBSPECIAL_FUNC(StatMaster) {
 		return(FALSE);
 	}
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(StatMaster));
 
 	if(!guildmaster) {
 		return(FALSE);
@@ -7352,7 +7352,7 @@ MOBSPECIAL_FUNC(XpMaster) {
 		return(FALSE);
 	}
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(XpMaster));
 	level_bonus=GetMaxLevel(guildmaster)-GetMaxLevel(ch);
 	if(!guildmaster) {
 		return(FALSE);
@@ -7449,7 +7449,7 @@ MOBSPECIAL_FUNC(PsiGuildmaster) {
 		return(FALSE);
 	}
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(PsiGuildmaster));
 
 	if(!guildmaster) {
 		return(FALSE);
@@ -7622,7 +7622,7 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 		return(FALSE);
 	}
 
-	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+	guildmaster = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(PaladinGuildmaster));
 
 	if(!guildmaster) {
 		return(FALSE);
@@ -7801,7 +7801,7 @@ MOBSPECIAL_FUNC(mage_specialist_guildmaster) {
 	}
 
 	guildmaster =
-		FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(__FUNCTION__));
+		FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(mage_specialist_guildmaster));
 
 	if(!guildmaster) {
 		return(FALSE);
