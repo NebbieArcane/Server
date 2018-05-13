@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
  	if Vagrant.has_plugin?("vagrant-timezone")
     	config.timezone.value =":host"
     end
-
+  config.vbguest.auto_update = false
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
@@ -67,7 +67,7 @@ Vagrant.configure("2") do |config|
      vb.memory = 2048
   	  vb.cpus = 6
   	  vb.name = "nebbieserver"
-	  vb.linked_clone = true if Gem::Version.new(Vagrant::VERSION) >= Gem::Version.new('1.8.0')  	  
+	  vb.linked_clone = true if Gem::Version.new(Vagrant::VERSION) >= Gem::Version.new('1.8.0')
   end
   #
   # View the documentation for the provider you are using for more
@@ -82,14 +82,14 @@ Vagrant.configure("2") do |config|
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
   	echo "Updating apt cache"
-    sudo apt-get -qq  update	
+    sudo apt-get -qq  update
     echo "Installing dev tools"
 	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb libcurl4-openssl-dev
 	apt-get -qq install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev liblog4cxx-dev
 	apt-get -qq install libboost-date-time-dev odb libodb-dev libodb-mysql-dev libodb-sqlite-dev libodb-boost-dev
 	echo "Installing mysql related packages"
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
-	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections	
+	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections
 	apt-get install -qq mysql-server mysql-client libmysqld-dev libmysqlcppconn-dev
 	echo "Configuring git"
 	git config --global user.email "nebbie@hexkeep.com"
