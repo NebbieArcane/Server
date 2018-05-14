@@ -214,7 +214,7 @@ ACTION_FUNC(do_set_prompt) {
 		{8, "H%h V%v C%C %S>> "},
 		{9, "%N H%h M%m V%v X%x [%S] %c/%C>> "},
 		{40,"R%R>> "},
-		{41,"R%R [%iS/%iN/%iI+>> "},
+		{41,"R%R [%iS/%iN/%iI]>> "},
 		{0,NULL}
 	};
 	char buf[512];
