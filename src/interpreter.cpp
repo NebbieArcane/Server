@@ -2603,6 +2603,8 @@ NANNY_FUNC(con_slct) {
 		STATE(d) = CON_PWDNEW;
 		break;
 	case '5':
+		free_char(d->character);
+		d->character=nullptr;
 		if(d->AccountData.authorized) {
 			toonList(d,"Cambia personaggio:\n\r");
 			STATE(d) = CON_ACCOUNT_TOON;
