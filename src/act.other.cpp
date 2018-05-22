@@ -275,14 +275,22 @@ ACTION_FUNC(do_title) {
 	}
 	string argument(arg);
 	boost::trim_left(argument);
-
 	if(argument.length()>80) {
 		send_to_char("Line too long, truncated\n", ch);
 		free(ch->player.title);
-		ch->player.title = strdup(argument.substr(0,80).c_str());
-		sprintf(buf, "Il tuo titolo adesso e' : <%s>\n\r", ch->player.title);
-		send_to_char(buf, ch);
 	}
+	if (argument.length()<5) {
+		send_to_char("Line too short, title not changed\n", ch);
+	}
+	else {
+		ch->player.title = strdup(argument.substr(0,80).c_str());
+		toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(GET_NAME(ch)));
+		pg->title=argument.substr(0,80);
+		Sql::update(*pg);
+	}
+	sprintf(buf, "Il tuo titolo adesso e' : <%s>\n\r", ch->player.title);
+	send_to_char(buf, ch);
+
 
 }
 
