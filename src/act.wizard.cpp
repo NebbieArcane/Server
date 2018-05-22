@@ -141,7 +141,6 @@ void plrRegister(struct char_data* ch, unsigned long int id=0) {
 	message.append("\r\n");
 	toonRows r=Sql::getAll<toon>(toonQuery::owner_id ==id);
 	for(toonPtr pg : r) {
-		std::cout << pg->name << std::endl;
 		message.append(pg->name);
 		message.append(" ");
 		message.append(pg->title.c_str());
