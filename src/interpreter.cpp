@@ -3405,8 +3405,11 @@ NANNY_FUNC(con_delete_me) {
 		system(buf);
 		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
 		system(buf);
-		toon Toon(GET_NAME(d->character));
-		Sql::erase(Toon,true);
+		toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(GET_NAME(d->character)));
+		Sql::erase(*pg,true);
+		SEND_TO_Q("Done\n\t",d);
+		SEND_TO_Q(MENU,d);
+		STATE(d)= CON_SLCT;
 	}
 	else {
 		SEND_TO_Q(MENU,d);
