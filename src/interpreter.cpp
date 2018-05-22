@@ -2555,7 +2555,7 @@ NANNY_FUNC(con_slct) {
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
 
 		{
-			struct room_data* rp = real_roomp(d->->in_room);
+			struct room_data* rp = real_roomp(d->character->in_room);
 
 			/* qui metto un controllo. Se un PG e' pkiller e il mud ha crashato
 			   allora rischia di restare bloccato, lo sparo via da qualche parte :-)
@@ -3405,9 +3405,8 @@ NANNY_FUNC(con_delete_me) {
 		system(buf);
 		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
 		system(buf);
-		Registered toon(GET_NAME(d->character));
-		toon.del();
-		close_socket(d);
+		toon Toon(GET_NAME(d->character));
+		Sql::erase(Toon,true);
 	}
 	else {
 		SEND_TO_Q(MENU,d);
