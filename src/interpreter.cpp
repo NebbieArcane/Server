@@ -2555,7 +2555,7 @@ NANNY_FUNC(con_slct) {
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
 
 		{
-			struct room_data* rp = real_roomp(d->character->in_room);
+			struct room_data* rp = real_roomp(d->->in_room);
 
 			/* qui metto un controllo. Se un PG e' pkiller e il mud ha crashato
 			   allora rischia di restare bloccato, lo sparo via da qualche parte :-)
@@ -2815,6 +2815,10 @@ NANNY_FUNC(con_pwdok) {
 		else {
 			//Something went terribly wrong
 			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+			FLUSH_TO_Q("Unable to load ",d);
+			FLUSH_TO_Q(d->AccountData.choosen.c_str(),d);
+			close_socket(d);
+			return false;
 		}
 	}
 	if (d->impersonating) {
