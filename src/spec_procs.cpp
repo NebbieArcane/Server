@@ -172,15 +172,9 @@ struct char_data* FindMobInRoomWithFunction(int room, genericspecial_func func) 
 				temp_char = temp_char->next_in_room) {
 
 			if(IS_MOB(temp_char)) {
-				std::cout << "Testing" << (mob_index[temp_char->nr].func == func) << std::endl;
-				std::cout << std::hex << (intptr_t) mob_index[temp_char->nr].func << " vs " << std::hex << (intptr_t) func << std::endl;
 				if(mob_index[temp_char->nr].func == func) {
 					targ = temp_char;
-					std::cout << "FOUND" << std::endl;
 					break;
-				}
-				else {
-					std::cout << "NOTFOUND" << std::endl;
 				}
 			}
 		}
