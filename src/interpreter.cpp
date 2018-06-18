@@ -1540,25 +1540,21 @@ unsigned long long parse_name(const char* arg, char* name) {
 	}
 	catch (...) {
 	}
-	int i;
-	/* skip whitespaces */
-	for(; isspace(*arg); arg++);
-	for(i = 0; (*name = *arg) != 0; arg++, i++, name++) {
-		if((*arg <0) || !isalpha(*arg)) {
-			// If the current char is a '@' we are in account mode
-#if ACCOUNT_MODE
-			if(*arg=='@') {
-				return 2;
-			}
-#endif
-			return 1ULL ;
-		}
-	}
+	string s(arg);
+	string space(" ");
+	boost::algorithm::erase_all(s,space);
+	boost::algorithm::to_lower(s);
 
-	if(!i or i >15) {
+	strncpy(name,s.c_str(),99);
+	if (s.find('@')!= string::npos) {
+		return 2;
+	}
+	if (s.empty() or s.length() > 15 ) {
 		return 1;
 	}
-
+	if (std::count_if(s.begin(), s.end(), [](char c){ return !std::isalpha(c); }) >0) {
+		return 1;
+	}
 	return 0;
 }
 
