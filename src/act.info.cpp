@@ -1792,11 +1792,13 @@ ACTION_FUNC(do_look) {
 
 			//ACIDUS 2003 skill know structure
 			roomp = real_roomp(ch->in_room);
-			if(
-				roomp && (roomp->tele_targ > 0) && (GET_RACE(ch)==RACE_DWARF)
-				&& (number(1,100) < ch->skills[SKILL_DETERMINE].learned)
-			) {
-				act("$c0006Noti qualcosa di instabile nella struttura di questo luogo.", FALSE, ch, 0, 0, TO_CHAR);
+			if (ch->skills) {
+				if(
+					roomp && (roomp->tele_targ > 0) && (GET_RACE(ch)==RACE_DWARF)
+					&& (number(1,100) < ch->skills[SKILL_DETERMINE].learned)
+				) {
+					act("$c0006Noti qualcosa di instabile nella struttura di questo luogo.", FALSE, ch, 0, 0, TO_CHAR);
+				}
 			}
 
 
