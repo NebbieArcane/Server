@@ -1540,25 +1540,21 @@ unsigned long long parse_name(const char* arg, char* name) {
 	}
 	catch (...) {
 	}
-	int i;
-	/* skip whitespaces */
-	for(; isspace(*arg); arg++);
-	for(i = 0; (*name = *arg) != 0; arg++, i++, name++) {
-		if((*arg <0) || !isalpha(*arg)) {
-			// If the current char is a '@' we are in account mode
-#if ACCOUNT_MODE
-			if(*arg=='@') {
-				return 2;
-			}
-#endif
-			return 1ULL ;
-		}
-	}
+	string s(arg);
+	string space(" ");
+	boost::algorithm::erase_all(s,space);
+	boost::algorithm::to_lower(s);
 
-	if(!i or i >15) {
+	strncpy(name,s.c_str(),99);
+	if (s.find('@')!= string::npos) {
+		return 2;
+	}
+	if (s.empty() or s.length() > 15 ) {
 		return 1;
 	}
-
+	if (std::count_if(s.begin(), s.end(), [](char c){ return !std::isalpha(c); }) >0) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -2603,6 +2599,8 @@ NANNY_FUNC(con_slct) {
 		STATE(d) = CON_PWDNEW;
 		break;
 	case '5':
+		free_char(d->character);
+		d->character=nullptr;
 		if(d->AccountData.authorized) {
 			toonList(d,"Cambia personaggio:\n\r");
 			STATE(d) = CON_ACCOUNT_TOON;
@@ -2813,6 +2811,10 @@ NANNY_FUNC(con_pwdok) {
 		else {
 			//Something went terribly wrong
 			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+			FLUSH_TO_Q("Unable to load ",d);
+			FLUSH_TO_Q(d->AccountData.choosen.c_str(),d);
+			close_socket(d);
+			return false;
 		}
 	}
 	if (d->impersonating) {
@@ -3399,9 +3401,11 @@ NANNY_FUNC(con_delete_me) {
 		system(buf);
 		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
 		system(buf);
-		Registered toon(GET_NAME(d->character));
-		toon.del();
-		close_socket(d);
+		toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(GET_NAME(d->character)));
+		Sql::erase(*pg,true);
+		SEND_TO_Q("Done\n\t",d);
+		SEND_TO_Q(MENU,d);
+		STATE(d)= CON_SLCT;
 	}
 	else {
 		SEND_TO_Q(MENU,d);
