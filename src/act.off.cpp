@@ -49,14 +49,14 @@ ACTION_FUNC(do_ripudia) {
 		victim = get_char_room_vis(ch, tmp);
 	}
 	if(!victim) {
-		if(strcasecmp(tmp,GET_PRINCE(ch))) {
+		if (!IS_VASSALLOOF(ch,tmp)) {
 			act("Capisco la concitazione.... ma non ne sei vassall$b!!",
 				TRUE,ch,NULL,NULL,TO_CHAR);
 		}
 		else {
 			free(GET_PRINCE(ch));
 			GET_PRINCE(ch)= (char*) NULL;
-			act("Beh... a quanto sempre il coraggio non e' il tuo forte....\n\r"
+			act("Beh... a quanto sembra il coraggio non e' il tuo forte....\n\r"
 				"in ogni modo.... adesso sei liber$b",
 				TRUE,ch,NULL,NULL,TO_CHAR);
 			GET_EXP(ch)-=((int)GET_EXP(ch)/100*5);
