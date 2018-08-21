@@ -307,21 +307,6 @@ void spell_energy_drain(byte level, struct char_data* ch,
 					send_to_char("Il tuo incantesimo ti si ritorce contro!\n\r",ch);
 					dam = 1;
 					damage(ch, victim, dam, SPELL_ENERGY_DRAIN, 5);
-					if(!IS_NPC(ch)) {
-						drop_level(ch, BestClassBIT(ch),FALSE);
-						set_title(ch);
-					}
-					else {
-						/* ATTENZIONE Se victim e` morta ci potrebbero essere dei problemi
-						*/
-						tmp = GET_MAX_HIT(victim)/GetMaxLevel(victim);
-						victim->points.max_hit -=tmp;
-						victim->points.hit -=tmp;
-						victim->points.hitroll+=1;
-						tmp = GET_EXP(victim)/GetMaxLevel(victim);
-						GET_EXP(ch)+=tmp;
-						GET_EXP(victim)-=tmp;
-					}
 				}
 				else {
 					send_to_char("Il tuo incantesimo fallisce miseramente.\n\r",ch);

@@ -3300,11 +3300,10 @@ DamageResult hit(struct char_data* ch, struct char_data* victim,
 }
 
 void PCAttacks(char_data* pChar) {
-	float sAttacks = pChar->mult_att;
 	float fAttacks = pChar->mult_att;
 	struct obj_data* pTmp = NULL;
 	struct obj_data* pWeapon = NULL; // SALVO la setto NULL mi serve per dopo
-	int perc;
+    int perc;
 
 	/* Controlla se il tipo e' in parrying, in questo caso
 	   diminuisce gli attacchi di uno per ogni attacco
@@ -3353,17 +3352,9 @@ void PCAttacks(char_data* pChar) {
 	/* REQUIEM 2018 random haste */
 
 	if(affected_by_spell(pChar, SPELL_HASTE)) {
-
-		fAttacks += number(0.0,fAttacks);
-		mudlog(LOG_CHECK,"nuovo fAttacks = %f",fAttacks);
-
-		if(fAttacks > sAttacks) {
-			mudlog(LOG_CHECK,"riduce il mov di = %d*10",((int)(fAttacks-sAttacks)));
-			GET_MOVE(pChar) -= 10*((int)(fAttacks-sAttacks));
-			alter_move(pChar, 0);
-		}
-
-	}
+            GET_MOVE(pChar) -= number(1,5)*((int)(fAttacks));
+            alter_move(pChar, 0);
+    }
 
 
 	if(DUAL_WIELD(pChar)) {
