@@ -3202,7 +3202,8 @@ OBJSPECIAL_FUNC(AntiSunItem) {
 
 	if(OUTSIDE(ch) && weather_info.sunlight == SUN_LIGHT &&
 			weather_info.sky<= SKY_CLOUDY &&
-			!affected_by_spell(ch, SPELL_GLOBE_DARKNESS)) {
+       !affected_by_spell(ch, SPELL_GLOBE_DARKNESS) &&
+       !IS_AFFECTED(i, AFF_GLOBE_DARKNESS)) {
 		/* frag the item! */
 		act("The sun strikes $p, causing it to fall appart!", FALSE, ch, obj,
 			NULL, TO_CHAR);
