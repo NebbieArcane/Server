@@ -4840,7 +4840,6 @@ void Start_Auction() {
 	}
 
 	auction->item = NULL; /* nothing is being sold */
-
 }
 #endif
 
