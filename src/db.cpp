@@ -624,7 +624,7 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[7]));
 						mudlog(LOG_CHECK, "ERR: %s", file.c_str());
 					}
-					else if(max >= MAESTRO_DEL_CREATO) {
+                    else if(max >= PRINCIPE) { // Montero 10-Sep-2018 db.cpp: cambiato MAESTRO_DEL_CREATO in PRINCIPE per generare le liste principi e immortali
 						/*		       (max==PRINCIPE && Player.points.exp>=PRINCEEXP) */
 						/**Modifica Urhar sull' esperienza dei principi: con il nuovo livello
 						 il check sui px non e' piu' necessario */
@@ -644,11 +644,11 @@ void build_player_index() {
 							(char*) strdup(Player.name);
 						list_wiz.lookup[max].stuff[list_wiz.number[max]].title =
 							(char*) strdup(Player.title);
-						list_wiz.number[max]++;
-					}
+                        list_wiz.number[max]++;
+                    }
 				}
 				fclose(pFile);
-			}
+                }
 		}
 	}
 	for(auto &file : todelete) {
@@ -3825,6 +3825,7 @@ void reset_char(struct char_data* ch) {
 	//{
 	//GET_LEVEL(ch,0) = 60;
 	//}
+
 	if(!strcmp(GET_NAME(ch), "Alar")) {  //Giovanni
 		GET_LEVEL(ch, 0) = 60;
 	}
@@ -3840,10 +3841,41 @@ void reset_char(struct char_data* ch) {
 	if(!strcmp(GET_NAME(ch), "Nihil")) {  //Marco
 		GET_LEVEL(ch, 0) = 58;
 	}
-	if(!strcmp(GET_NAME(ch), "Ladyofpain")) {  //Giuseppe
+	if(!strcmp(GET_NAME(ch), "LadyOfPain")) {  //Giuseppe
 		GET_LEVEL(ch, 0) = 58;
 	}
 
+    /* Montero 10-Sep-2018 db.cpp: controllo se il livello del toon è >= 58 */
+    if ( GET_LEVEL(ch, 0) >= 58 )
+    {
+        /* assegno i livelli se >= 58 */
+        for(i = 0; i < MAX_CLASS; i++)
+        {
+            if(GET_LEVEL(ch, i) < GetMaxLevel(ch)) {
+                GET_LEVEL(ch, i) = GetMaxLevel(ch);
+            }
+        }
+    
+        /* le classi */
+        for(i = 1; i <= CLASS_PSI; i *= 2)
+        {
+            if(!HasClass(ch, i)) {
+                ch->player.iClass += i;
+            }
+        }
+        
+        /* le skill */
+        for(i = 0; i <= MAX_SKILLS - 1; i++)
+        {
+            ch->skills[i].learned = 100;
+            ch->skills[i].flags = 1;        // con 0 non vengono mostrate con prac classe, con 1 si
+            ch->skills[i].special = 1;
+            ch->skills[i].nummem = 0;
+        }
+
+        
+    } /* fine Montero 10-Sep-2018 db.cpp */
+    
 	/* this is to clear up bogus levels on people that where here before */
 	/* these classes where made... */
 
