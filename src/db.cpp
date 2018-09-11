@@ -628,8 +628,10 @@ void build_player_index() {
 						/*		       (max==PRINCIPE && Player.points.exp>=PRINCEEXP) */
 						/**Modifica Urhar sull' esperienza dei principi: con il nuovo livello
 						 il check sui px non e' piu' necessario */
-						mudlog(LOG_CHECK,
-							   "GOD: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d]",
+                        /* Montero 11-Sep-18 db.ccp: se il livello è IMM o GOD scrivo i livelli sul LOG_CHECK */
+                        if ( max > PRINCIPE)
+                        {
+                            sprintf(buf, "%s: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d][%d][%d][%d]", max > IMMORTALE ? "GOD" : "IMM",
 							   Player.name,
 							   static_cast<unsigned int>(Player.level[0]),
 							   static_cast<unsigned int>(Player.level[1]),
@@ -638,7 +640,13 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[4]),
 							   static_cast<unsigned int>(Player.level[5]),
 							   static_cast<unsigned int>(Player.level[6]),
-							   static_cast<unsigned int>(Player.level[7]));
+                               static_cast<unsigned int>(Player.level[7]),
+                               /* Aggiunte tutte le classi */
+                               static_cast<unsigned int>(Player.level[8]),
+                               static_cast<unsigned int>(Player.level[9]),
+                               static_cast<unsigned int>(Player.level[10]));
+                            mudlog(LOG_CHECK, buf);
+                        } /* fine Montero 11-Sep-18 db.ccp */
 
 						list_wiz.lookup[max].stuff[list_wiz.number[max]].name =
 							(char*) strdup(Player.name);
@@ -4840,7 +4848,6 @@ void Start_Auction() {
 	}
 
 	auction->item = NULL; /* nothing is being sold */
-
 }
 #endif
 
