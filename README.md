@@ -1,4 +1,4 @@
-[![Build Status](https://api.travis-ci.org/NebbieArcane/Server.svg)](https://travis-ci.org/slimphp/NebbieArcane/Server)
+[![Build Status](https://api.travis-ci.org/NebbieArcane/Server.svg)](https://travis-ci.org/NebbieArcane/Server)
 # Nebbie Arcane
 ## Server code
 * Getting started
