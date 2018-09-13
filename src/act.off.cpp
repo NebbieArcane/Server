@@ -2393,7 +2393,8 @@ ACTION_FUNC(do_weapon_load) {
 		send_to_char("Devi impugnare un arma per lanciare proiettili.\n\r", ch);
 		return;
 	}
-	if((GET_STR(ch) + GET_ADD(ch) / 3) < fw->obj_flags.value[ 0 ]) {
+    if((GET_STR(ch) + GET_ADD(ch) / 3) < fw->obj_flags.value[ 0 ] && !IS_NPC(ch) ) // Montero 10-Sep-2018 act.off.cpp: se è un mob non considero la forza per il load missile
+    {
 		mudlog(LOG_CHECK, "(%s) can't load (%s) because it requires (%d) strength "
 			   "to wield",
 			   GET_NAME(ch), fw->name, fw->obj_flags.value[ 0 ]);
