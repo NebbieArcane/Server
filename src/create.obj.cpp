@@ -776,8 +776,26 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		case APPLY_NONE:
 		case APPLY_SKIP:
 		case APPLY_ATTACKS:
-		case APPLY_AFF2:
-			send_to_char("\n\rNote: Not implemented!.\n\r",ch);
+		case APPLY_AFF2: // Montero 16-Sep-18
+            send_to_char("\n\rNote: Modifier should be ADDED together from this "
+                            "list of affection flags 2.\n\r",ch);
+            row = 0;
+            for(i = 0; *affected_bits2[i] != '\n'; i++) {
+                sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+                if(i & 1) {
+                    row++;
+                }
+                send_to_char(buf, ch);
+                check=1;
+                if(i>0)
+                    for(a=1; a<=i; a++) {
+                        check*=2;
+                    }
+                sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
+                send_to_char(buf, ch);
+            }
+            send_to_char("\n\r\n\r", ch);
+        //			send_to_char("\n\rNote: Not implemented!.\n\r",ch);
 			break;
 		case APPLY_STR:
 		case APPLY_DEX:

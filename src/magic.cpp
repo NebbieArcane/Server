@@ -2588,7 +2588,7 @@ void spell_identify(byte level, struct char_data* ch,
 		for(i=0; i<MAX_OBJ_AFFECT; i++) {
 			if((obj->affected[i].location != APPLY_NONE) &&
 					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location !=APPLY_AFF2) &&
+					//(obj->affected[i].location !=APPLY_AFF2) &&
 					(obj->affected[i].location !=APPLY_SKIP)) {
 				if(!found) {
 					send_to_char("Ti puo' dare: \n\r", ch);
@@ -2616,6 +2616,10 @@ void spell_identify(byte level, struct char_data* ch,
 					sprintbit(obj->affected[i].modifier,affected_bits, buf2);
 					strcat(buf2,"\n\r");
 					break;
+                case APPLY_AFF2:    // Montero 16-Sep-18
+                    sprintbit(obj->affected[i].modifier,affected_bits2, buf2);
+                    strcat(buf2,"\n\r");
+                    break;
 				case APPLY_RACE_SLAYER:
 					sprintf(buf2, "%s\n\r", RaceName[ obj->affected[i].modifier ]);
 					break;
