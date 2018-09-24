@@ -573,6 +573,12 @@ void postmaster_send_mail(struct char_data* ch, int cmd, const char* arg) {
 
 	parse_name(arg, recipient);
 
+    if(strlen(recipient) > 40){
+        act("$n ti dice, 'Non posso scrivere un nome cosi' lungo in una lettera!'",
+            FALSE, mailman, 0, ch, TO_VICT);
+        return;
+    }
+    
 	if(!find_name(recipient)) {
 		act("$n tells you, 'Never heard of that person!'",
 			FALSE, mailman, 0, ch, TO_VICT);
