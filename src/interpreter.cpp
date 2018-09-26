@@ -3402,10 +3402,19 @@ NANNY_FUNC(con_delete_me) {
 		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
 		system(buf);
 		toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(GET_NAME(d->character)));
-		Sql::erase(*pg,true);
+		if (pg) Sql::erase(*pg,true);
 		SEND_TO_Q("Done\n\t",d);
+        if (d->AccountData.id) {    // controllo se ha un id
 		SEND_TO_Q(MENU,d);
 		STATE(d)= CON_SLCT;
+        }
+        else
+        {
+            Sql::update(d->AccountData);
+            toonUpdate(d);
+            close_socket(d);
+            return false;
+        }
 	}
 	else {
 		SEND_TO_Q(MENU,d);
