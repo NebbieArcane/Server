@@ -1806,7 +1806,7 @@ ACTION_FUNC(do_look) {
 			list_obj_in_room(pRoomWithChar->contents, ch);
 			list_char_in_room(pRoomWithChar->people, ch);
 
-			if(affected_by_spell(ch, SKILL_DANGER_SENSE)) {
+			if(affected_by_spell(ch, SKILL_DANGER_SENSE) || IS_AFFECTED2(ch, AFF2_DANGER_SENSE)) { // Montero 16-Sep-18
 				struct room_data* pRoom;
 				int i;
 				struct room_direction_data* pExit;

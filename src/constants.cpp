@@ -2820,6 +2820,7 @@ const char* affected_bits2[] = {
 	"Group-Order",
 	"AWAY-FROM-KEYBOARD",
 	"Pkilled someone",
+    "DANGER-SENSE",     // Montero 16-Sep-2018 - danger sense
 	"\n"
 };
 
@@ -2909,7 +2910,8 @@ const char* apply_types[] = {
 	"ATTACKS",
 	"HASTE",
 	"SLOW",
-	"OTHER",
+    "SPELL AFFECT 2",   // Montero 16-Sep-18
+//	"OTHER",
 	"FIND-TRAPS",
 	"RIDE",
 	"RACE-SLAYER",
