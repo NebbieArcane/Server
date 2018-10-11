@@ -1255,8 +1255,6 @@ MOBSPECIAL_FUNC(cleric) {
 		injuried = ch;
 		
 		if(IS_AFFECTED(ch, AFF_CHARM)) {
-            	injuried = ch->master;
-            	rp = real_roomp(ch->in_room);
 			for(tmp = rp->people; tmp; tmp = tmp2) {
 				tmp2 = tmp->next_in_room;
 				if((GetMaxLevel(tmp) < IMMORTALE) && (GET_MAX_HIT(tmp)-GET_HIT(tmp)) > (GET_MAX_HIT(injuried)-GET_HIT(injuried)) && ((in_group(ch, tmp) && tmp->master == ch->master) || (tmp == ch->master && ch->master->in_room == ch->in_room))) {
