@@ -4340,7 +4340,7 @@ MOBSPECIAL_FUNC(stanislav_spirit) {
 		return(FALSE);
 	}
 
-	return(fighter(mob, cmd, arg, mob, type));
+	return(FALSE);
 
 }
 
