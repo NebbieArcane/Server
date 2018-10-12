@@ -4316,8 +4316,19 @@ MOBSPECIAL_FUNC(stanislav_spirit) {
 	if(type == EVENT_DEATH && ch->in_room == NILMYS_ROOM) {
 		if((pNilmys = read_mobile(real_mobile(NILMYS_MOB), REAL))) {
 			char_to_room(pNilmys, NILMYS_ROOM);
-			act("\n\rAlla morte di $n una tetra ed eterea figura si leva dal suo cadavere, "
+			
+			obj_to_char(8922, pNilmys);
+			obj_from_char(8922);
+			equip_char(pNilmys, 8922, WEAR_BODY);
+			obj_to_char(8933, pNilmys);
+			obj_from_char(8933);
+			equip_char(pNilmys, 8933, WEAR_ARMS);
+			obj_to_char(8917, pNilmys);
+			
+			act("\n\rAlla morte di $n una tetra ed eterea figura si leva dal suo cadavere,\n "
 			    "la sua anima ormai corrotta appartiene ad Arkhat, e brama $c0011sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
+			act("$c0015[$c0013$n$c0015] dice 'Non raggiungerete mai Boris e i suoi compagni, \n\r"
+				"oggi perirete per mano mia!'",FALSE, pNilmys, NULL, NULL, TO_ROOM);
 			
 			vict = FindVictim(pNilmys);
 			if(!vict) {
