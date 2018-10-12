@@ -4304,6 +4304,45 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 	return(banshee(ch,cmd,arg,mob,type));
 
 }
+    
+/* Procedure per Nilmys */
+    
+#define NILMYS_MOB 8916
+#define NILMYS_ROOM 8957
+MOBSPECIAL_FUNC(stanislav_spirit) {
+	struct char_data* pNilmys;
+	struct char_data* vict;
+
+	if(type == EVENT_DEATH && ch->in_room == NILMYS_ROOM) {
+		if((pNilmys = read_mobile(real_mobile(NILMYS_MOB), REAL))) {
+			char_to_room(pNilmys, NILMYS_ROOM);
+			act("Alla morte di $n una tetra ed eterea figura si leva dal suo cadavere.", FALSE, mob, NULL, pNilmys, TO_ROOM);
+			act("$c0015[$c0013$n$c0015] dice 'Dovrei dire qualcosa di cattivo, ma ho scordato il copione!'",
+				FALSE, pNilmys, NULL, NULL, TO_ROOM);
+
+			vict = FindVictim(pNilmys);
+			if(!vict) {
+				return(FALSE);
+			}
+
+			/*WAIT_STATE(pNilmys, PULSE_VIOLENCE*2); non lagga il mob */
+			do_hit(pNilmys, GET_NAME(vict), 0);
+
+		}
+		return(TRUE);
+	}
+
+	if(type != EVENT_TICK) {
+		return(FALSE);
+	}
+
+	if(!AWAKE(ch)) {
+		return(FALSE);
+	}
+
+	return(fighter(mob, cmd, arg, mob, type));
+
+}
 
 /*
 	Diamo un po' di vita ad alcuni mob! Con questa procedura un mob marchiato come "Interact" reagisce a

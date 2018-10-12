@@ -32,6 +32,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "AbyssGateKeeper",(genericspecial_func) AbyssGateKeeper },
 	{ "Ankheg",(genericspecial_func) Ankheg },
 	{ "banshee_lorelai",(genericspecial_func) banshee_lorelai },
+	{ "stanislav_spirit",(genericspecial_func) stanislav_spirit },
 	{ "Beholder",(genericspecial_func) Beholder },
 	{ "BerserkerItem",(genericspecial_func) BerserkerItem },
 	{ "BiosKaiThanatos",(genericspecial_func) BiosKaiThanatos },
