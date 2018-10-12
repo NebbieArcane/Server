@@ -4316,7 +4316,7 @@ MOBSPECIAL_FUNC(stanislav_spirit) {
 	if(type == EVENT_DEATH && ch->in_room == NILMYS_ROOM) {
 		if((pNilmys = read_mobile(real_mobile(NILMYS_MOB), REAL))) {
 			char_to_room(pNilmys, NILMYS_ROOM);
-			act("Alla morte di $n una tetra ed eterea figura si leva dal suo cadavere.\n\r"
+			act("Alla morte di $n una tetra ed eterea figura si leva dal suo cadavere, "
 			    "La sua anima ormai corrotta appartiene ad Arkhat, e brama $c0011sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
 			
 			vict = FindVictim(pNilmys);
