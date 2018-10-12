@@ -4316,10 +4316,9 @@ MOBSPECIAL_FUNC(stanislav_spirit) {
 	if(type == EVENT_DEATH && ch->in_room == NILMYS_ROOM) {
 		if((pNilmys = read_mobile(real_mobile(NILMYS_MOB), REAL))) {
 			char_to_room(pNilmys, NILMYS_ROOM);
-			act("Alla morte di $n una tetra ed eterea figura si leva dal suo cadavere.", FALSE, mob, NULL, pNilmys, TO_ROOM);
-			act("$c0015[$c0013$n$c0015] dice 'Dovrei dire qualcosa di cattivo, ma ho scordato il copione!'",
-				FALSE, pNilmys, NULL, NULL, TO_ROOM);
-
+			act("Alla morte di $n una tetra ed eterea figura si leva dal suo cadavere.\n\r"
+			    "La sua anima ormai corrotta appartiene ad Arkhat, e brama $c0011sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
+			
 			vict = FindVictim(pNilmys);
 			if(!vict) {
 				return(FALSE);
