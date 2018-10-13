@@ -2300,7 +2300,11 @@
 			"AFF2_PKILLER": {
 				"value": 128,
 				"comment": ""
-			}
+			},
+            "AFF2_DANGER_SENSE": {
+                "value": 256,
+                "comment": "Montero 16-Sep-18"
+            }
 		},
 		"e_classes": {
 			"comment": "",

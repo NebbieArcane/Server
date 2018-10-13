@@ -4304,6 +4304,56 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 	return(banshee(ch,cmd,arg,mob,type));
 
 }
+    
+/* Procedure per Nilmys */
+    
+#define NILMYS_MOB 8916
+#define NILMYS_ROOM 8957
+MOBSPECIAL_FUNC(stanislav_spirit) {
+	struct char_data* pNilmys;
+	struct obj_data* object;
+	int r_num;
+
+	if(type == EVENT_DEATH && ch->in_room == NILMYS_ROOM) {
+		if((pNilmys = read_mobile(real_mobile(NILMYS_MOB), REAL))) {
+			char_to_room(pNilmys, NILMYS_ROOM);
+			
+			r_num = real_object(8922);
+			object = read_object(r_num, REAL);
+			obj_to_char(object, pNilmys);
+			obj_from_char(object);
+			equip_char(pNilmys, object, WEAR_BODY);
+			
+			r_num = real_object(8933);
+			object = read_object(r_num, REAL);
+			obj_to_char(object, pNilmys);
+			obj_from_char(object);
+			equip_char(pNilmys, object, WEAR_ARMS);
+			
+			r_num = real_object(8917);
+			object = read_object(r_num, REAL);
+			obj_to_char(object, pNilmys);
+			
+			act("\n\rAlla morte di $n una tetra ed eterea figura si leva dal suo cadavere,\n"
+			    "la sua anima ormai corrotta appartiene ad Arkhat, e brama $c0009sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
+			act("$c0015[$c0013$n$c0015] dice 'Non raggiungerete mai Boris\n\r"
+				"e i suoi compagni... oggi perirete per mano mia!'",FALSE, pNilmys, NULL, NULL, TO_ROOM);
+
+		}
+		return(TRUE);
+	}
+
+	if(type != EVENT_TICK) {
+		return(FALSE);
+	}
+
+	if(!AWAKE(ch)) {
+		return(FALSE);
+	}
+
+	return(fighter(mob,cmd,arg,mob,type));
+
+}
 
 /*
 	Diamo un po' di vita ad alcuni mob! Con questa procedura un mob marchiato come "Interact" reagisce a

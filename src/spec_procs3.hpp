@@ -53,6 +53,7 @@ struct room_data* back_right_square(struct room_data* room) ;
 struct room_data* back_square(struct room_data* room) ;
 MOBSPECIAL_FUNC(banshee);
 MOBSPECIAL_FUNC(banshee_lorelai);
+MOBSPECIAL_FUNC(stanislav_spirit);
 MOBSPECIAL_FUNC(chess_game);
 MOBSPECIAL_FUNC(cleric_imp);
 MOBSPECIAL_FUNC(cleric_mage);
