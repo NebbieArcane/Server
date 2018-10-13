@@ -4311,7 +4311,6 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 #define NILMYS_ROOM 8957
 MOBSPECIAL_FUNC(stanislav_spirit) {
 	struct char_data* pNilmys;
-	struct char_data* vict;
 	struct obj_data* object;
 	int r_num;
 
@@ -4335,18 +4334,10 @@ MOBSPECIAL_FUNC(stanislav_spirit) {
 			object = read_object(r_num, REAL);
 			obj_to_char(object, pNilmys);
 			
-			act("\n\rAlla morte di $n una tetra ed eterea figura si leva dal suo cadavere,\n "
-			    "la sua anima ormai corrotta appartiene ad Arkhat, e brama $c0011sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
-			act("$c0015[$c0013$n$c0015] dice 'Non raggiungerete mai Boris e i suoi compagni, \n\r"
-				"oggi perirete per mano mia!'",FALSE, pNilmys, NULL, NULL, TO_ROOM);
-			
-			vict = FindVictim(pNilmys);
-			if(!vict) {
-				return(FALSE);
-			}
-
-			/*WAIT_STATE(pNilmys, PULSE_VIOLENCE*2); non lagga il mob */
-			do_hit(pNilmys, GET_NAME(vict), 0);
+			act("\n\rAlla morte di $n una tetra ed eterea figura si leva dal suo cadavere,\n"
+			    "la sua anima ormai corrotta appartiene ad Arkhat, e brama $c0009sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
+			act("$c0015[$c0013$n$c0015] dice 'Non raggiungerete mai Boris\n\r"
+				"e i suoi compagni... oggi perirete per mano mia!'",FALSE, pNilmys, NULL, NULL, TO_ROOM);
 
 		}
 		return(TRUE);
