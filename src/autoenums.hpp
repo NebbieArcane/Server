@@ -48,7 +48,7 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long AFF_GROUP                                    =268435456;
 	constexpr unsigned long AFF_TELEPATHY                                =536870912;
 	constexpr unsigned long AFF_GLOBE_DARKNESS                           =1073741824; /*Added by REQUIEM 2018*/
-    constexpr unsigned long AFF_UNDEF_AFF_1                              =2147483648;
+	constexpr unsigned long AFF_UNDEF_AFF_1                              =2147483648;
 // Flag type: E_AFFECTED_BY2 -- start
 	constexpr unsigned long AFF2_ANIMAL_INVIS                            =1;
 	constexpr unsigned long AFF2_HEAT_STUFF                              =2;
@@ -58,7 +58,7 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long AFF2_CON_ORDER                               =32;
 	constexpr unsigned long AFF2_AFK                                     =64;
 	constexpr unsigned long AFF2_PKILLER                                 =128;
-    constexpr unsigned long AFF2_DANGER_SENSE                            =256; /* Montero 16-Sep-18 */
+	constexpr unsigned long AFF2_DANGER_SENSE                            =256; /*Montero 16-Sep-18*/
 // Flag type: E_CLASSES -- start
 	constexpr unsigned long CLASS_MAGIC_USER                             =1;
 	constexpr unsigned long CLASS_CLERIC                                 =2;

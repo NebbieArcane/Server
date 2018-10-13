@@ -1252,15 +1252,13 @@ MOBSPECIAL_FUNC(cleric) {
 		 curano chi sta messo peggio in gruppo,  se non
 		 stanno combattendo in prima persona */
 
-		if(!IS_AFFECTED(ch, AFF_CHARM)) {
-			injuried = ch;
-		}
-		else {
+		injuried = ch;
+		
+		if(IS_AFFECTED(ch, AFF_CHARM)) {
 			rp = real_roomp(ch->in_room);
-			injuried = ch->master;
 			for(tmp = rp->people; tmp; tmp = tmp2) {
 				tmp2 = tmp->next_in_room;
-				if((GetMaxLevel(tmp) < IMMORTALE) && GET_HIT(tmp) < GET_HIT(injuried) && (IS_AFFECTED(tmp, AFF_GROUP) && tmp->master == ch->master)) {
+				if((GetMaxLevel(tmp) < IMMORTALE) && (GET_MAX_HIT(tmp)-GET_HIT(tmp)) > (GET_MAX_HIT(injuried)-GET_HIT(injuried)) && ((in_group(ch, tmp) && tmp->master == ch->master) || tmp == ch->master)) {
 					injuried = tmp;
 				}
 			}
