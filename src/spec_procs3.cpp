@@ -4312,18 +4312,28 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 MOBSPECIAL_FUNC(stanislav_spirit) {
 	struct char_data* pNilmys;
 	struct char_data* vict;
+	struct obj_data* object;
+	int r_num;
 
 	if(type == EVENT_DEATH && ch->in_room == NILMYS_ROOM) {
 		if((pNilmys = read_mobile(real_mobile(NILMYS_MOB), REAL))) {
 			char_to_room(pNilmys, NILMYS_ROOM);
 			
-			obj_to_char(8922, pNilmys);
-			obj_from_char(8922);
-			equip_char(pNilmys, 8922, WEAR_BODY);
-			obj_to_char(8933, pNilmys);
-			obj_from_char(8933);
-			equip_char(pNilmys, 8933, WEAR_ARMS);
-			obj_to_char(8917, pNilmys);
+			r_num = real_object(8922);
+			object = read_object(r_num, REAL);
+			obj_to_char(object, pNilmys);
+			obj_from_char(object);
+			equip_char(pNilmys, object, WEAR_BODY);
+			
+			r_num = real_object(8933);
+			object = read_object(r_num, REAL);
+			obj_to_char(object, pNilmys);
+			obj_from_char(object);
+			equip_char(pNilmys, object, WEAR_ARMS);
+			
+			r_num = real_object(8917);
+			object = read_object(r_num, REAL);
+			obj_to_char(object, pNilmys);
 			
 			act("\n\rAlla morte di $n una tetra ed eterea figura si leva dal suo cadavere,\n "
 			    "la sua anima ormai corrotta appartiene ad Arkhat, e brama $c0011sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
