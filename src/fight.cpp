@@ -1750,9 +1750,15 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 		},
 
 		{
-			"$n $c0011devastates$c0007 $N with $s #w #l.",    /* > 45 */
+			"$n $c0011devastates$c0007 $N with $s #w #l.",    /* 46..55 */
 			"You $c0010devastate$c0007 $N with your #w #l.",
 			"$n $c0009devastates$c0007 you with $s #w on your #L."
+		},
+
+		{
+			"$n $c0011exterminates$c0007 $N with $s #w #l.",    /* > 55 */
+			"You $c0010exterminate$c0007 $N with your #w #l.",
+			"$n $c0009exterminates$c0007 you with $s #w on your #L."
 		}
 
 	};
@@ -1787,8 +1793,11 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	else if(dam <= 45) {
 		snum = 7;
 	}
-	else {
+	else if(dam <= 55) {
 		snum = 8;
+	}
+	else {
+		snum = 9;
 	}
 	buf = replace_string(dam_weapons[snum].to_room, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
