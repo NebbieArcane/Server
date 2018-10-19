@@ -398,7 +398,13 @@ void game_loop(int s) {
 					// Was not doing anything useful, probably waiting at initial prompt
 					mudlog(LOG_CHECK,"Fried dummy connection from [HOST:%s]",point->host);
 					write_to_descriptor(point->descriptor,"Timeout!\n\r");
-					close_socket(point);
+                    if(point->connected == CON_EDITING || point->connected == CON_OBJ_EDITING || point->connected == CON_MOB_EDITING) {
+                        write_to_descriptor(point->descriptor,"Smetti di plasmare la materia.\n\r");
+                        act("$n smette di plasmare la materia.", FALSE, point->character, 0, 0, TO_ROOM);
+                        point->connected = CON_PLYNG;
+                        GET_POS(point->character)=POSITION_STANDING;
+                    }
+                    else close_socket(point);
 				}
 			}
 			if((--(point->wait) <= 0) && get_from_q(&point->input, comm)) {
@@ -1304,6 +1310,10 @@ void close_socket(struct descriptor_data* d) {
 	}
 
 	if(d->character) {
+        if(d->connected == CON_EDITING || d->connected == CON_OBJ_EDITING || d->connected == CON_MOB_EDITING) {
+            d->connected = CON_PLYNG;
+            GET_POS(d->character)=POSITION_STANDING;
+        }
 		if(d->connected == CON_PLYNG) {
 			do_save(d->character, "", 0);
 			act("$n ha perso il senso della realta`.", TRUE, d->character, 0, 0,
