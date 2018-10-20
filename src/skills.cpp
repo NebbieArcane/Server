@@ -2025,7 +2025,27 @@ ACTION_FUNC(do_tan) {
 							app_val = IMM_ELEC ;
 						}
 						break ;
-					case RACE_DRAGON_RED   :
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						break ;
+                    case RACE_DRAGON_RED   :
 						if(total_bonus > 23) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
@@ -2102,9 +2122,6 @@ ACTION_FUNC(do_tan) {
 							app_val = IMM_BLUNT ;
 						}
 						break ;
-
-					/* added by REQUIEM 2018 */
-
 					case RACE_TROLL :
 						if(total_bonus > 25) {
 							special = 1 ;
@@ -2256,6 +2273,26 @@ ACTION_FUNC(do_tan) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
 							app_val = IMM_ELEC ;
+						}
+						break ;
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
 						}
 						break ;
 					case RACE_DRAGON_RED   :
@@ -2498,6 +2535,26 @@ ACTION_FUNC(do_tan) {
 							app_val = IMM_ELEC ;
 						}
 						break ;
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						break ;
 					case RACE_DRAGON_RED   :
 						if(total_bonus > 23) {
 							special = 1 ;
@@ -2603,8 +2660,6 @@ ACTION_FUNC(do_tan) {
 							app_val = 15 ;
 						}
 						break ;
-					/* added by REQUIEM 2018 */
-
 					case RACE_VEGGIE      :
 					case RACE_VEGMAN     :
 						if(total_bonus > 22) {
@@ -2728,8 +2783,6 @@ ACTION_FUNC(do_tan) {
 							app_val = 10 ;
 						}
 						break ;
-					/* added by REQUIEM 2018 */
-
 					case RACE_VEGGIE      :
 					case RACE_VEGMAN     :
 						if(total_bonus > 22) {
@@ -2757,6 +2810,26 @@ ACTION_FUNC(do_tan) {
 							special = 1 ;
 							apply = APPLY_CHAR_HEIGHT ;
 							app_val = 50 ;
+						}
+						break ;
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
 						}
 						break ;
 					case RACE_TYTAN     :
@@ -2891,9 +2964,6 @@ ACTION_FUNC(do_tan) {
 							app_val = 20 ;
 						}
 						break ;
-
-					/* added by REQUIEM 2018 */
-
 					case RACE_ENFAN     :
 						if(total_bonus > 23) {
 							special = 1 ;
@@ -3370,7 +3440,7 @@ ACTION_FUNC(do_tan) {
 						if(total_bonus > 24) {
 							special = 1 ;
 							apply = APPLY_HITNDAM ;
-							app_val = 2 ;
+							app_val = 1 ;
 						}
 						break ;
 					default:
