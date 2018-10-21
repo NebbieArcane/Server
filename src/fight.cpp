@@ -62,7 +62,7 @@ char DestroyedItems;  /* set in MakeScraps */
 /* Weapon attack texts */
 struct attack_hit_type attack_hit_text[] = {
 	{"colpisci",    "colpisce"},            /* TYPE_HIT      */
-	{"martelli",  "martella"},          /* TYPE_BLUDGEON */
+	{"randelli",  "randella"},          /* TYPE_BLUDGEON */
 	{"perfori", "perfora"},         /* TYPE_PIERCE   */
 	{"tagli",  "taglia"},         /* TYPE_SLASH    */
 	{"frusti",   "frusta"},           /* TYPE_WHIP     */
@@ -1756,9 +1756,9 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 		},
         
 		{
-			"$n #W $N #l $c0011devastandol$B$c0007.",    /* 56..65 */
-			"#w $N #l $c0010devastandol$B$c0007.",
-			"$n ti #W #L $c0009devastandoti$c0007."
+			"$n #W $N #l $c0011sbaragliandol$B$c0007.",    /* 56..65 */
+			"#w $N #l $c0010sbaragliandol$B$c0007.",
+			"$n ti #W #L $c0009sbaragliandoti$c0007."
 		},
         
 		{
@@ -4895,9 +4895,9 @@ int MonkDodge(struct char_data* ch, struct char_data* v, int* dam) {
 	if(number(1, 20000) < v->skills[SKILL_DODGE].learned*
 			GET_LEVEL(v, MONK_LEVEL_IND)) {
 		*dam = 0;
-		act("You dodge the attack", FALSE, ch, 0, v, TO_VICT);
-		act("$N dodges the attack", FALSE, ch, 0, v, TO_CHAR);
-		act("$N dodges $n's attack", FALSE, ch, 0, v, TO_NOTVICT);
+		act("Schivi l'attacco", FALSE, ch, 0, v, TO_VICT);
+		act("$N schiva l'attacco", FALSE, ch, 0, v, TO_CHAR);
+		act("$N schiva l'attacco di $n", FALSE, ch, 0, v, TO_NOTVICT);
 	}
 	else {
 		*dam -= GET_LEVEL(ch, MONK_LEVEL_IND)/10;
