@@ -1748,7 +1748,7 @@ ACTION_FUNC(do_tan) {
 					acapply=3;
 					break;
 				case RACE_HERBIV   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"green leather");
 					acapply=1;
 					break;
 				case RACE_TREE     :
@@ -1760,11 +1760,11 @@ ACTION_FUNC(do_tan) {
 					acapply=2;
 					break;
 				case RACE_ELEMENT  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"colored leather");
 					acapply=1;
 					break;
 				case RACE_PLANAR   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"planar leather");
 					acapply=1;
 					break;
 				case RACE_DEVIL    :
@@ -1797,7 +1797,7 @@ ACTION_FUNC(do_tan) {
 					acapply=1;
 					break;
 				case RACE_PRIMATE  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"monkey leather");
 					acapply=0;
 					break;
 				case RACE_ENFAN    :
@@ -1826,7 +1826,7 @@ ACTION_FUNC(do_tan) {
 				case RACE_PATRYN   :
 				case RACE_LABRAT   :
 				case RACE_SARTAN   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"black leather");
 					acapply=1;
 					break;
 				case RACE_TYTAN   :
@@ -1834,7 +1834,7 @@ ACTION_FUNC(do_tan) {
 					acapply=3;
 					break;
 				case RACE_SMURF    :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"smurf hide");
 					acapply=0;
 					break;
 				case RACE_ROO      :
@@ -1851,7 +1851,7 @@ ACTION_FUNC(do_tan) {
 					acapply=2;
 					break;
 				case RACE_GOD      :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype,"god hide");
 					acapply=3;
 					break;
 				case RACE_GIANT_HILL   :

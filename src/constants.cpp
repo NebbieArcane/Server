@@ -2839,6 +2839,7 @@ const char* special_user_flags[] = {
 	"PAGE-PAUSE",
 	"OBJECT-EDITOR-OK",
 	"MOBILE-EDITOR-OK",
+    "PWP_MODE",
 	"\n"
 };
 

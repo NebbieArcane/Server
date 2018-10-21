@@ -2883,6 +2883,10 @@
 			"CAN_MOB_EDIT": {
 				"value": 8192,
 				"comment": "this user can use medit to edit mobs"
+			},
+			"PWP_MODE": {
+				"value": 16384,
+				"comment": "show the exact amount of damage for each attack"
 			}
 		},
 		"e_sys_flags": {

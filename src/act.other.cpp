@@ -2561,13 +2561,43 @@ ACTION_FUNC(do_set_flags) {
 					 "Realname \n\r"
 					 "Pkill \n\r"
 					 "Who \n\r"
+					 "Pwp \n\r"
 					 ,ch);
 		return;
 	}
 
 	arg = OneArgumentNoFill(arg,field);
 
-	if(!strcmp("who",type) && (!*field)) {
+	if(!strcmp("pwp",type) && (!*field)) {
+		send_to_char("Usa 'set pwp on/off'\n\r"
+					 "Questo comando ti permette di vedere "
+					 "l'esatto ammontare dei danni arrecati "
+                     "e ricevuti. Vale solo per i colpi "
+                     "inferti personalmente, e gli altri non "
+                     "ne visualizzeranno il valore esatto.\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(type,"pwp")) {
+		if(!strcmp("on",field) || !strcmp("enable",field)) {
+			SET_BIT(ch->player.user_flags,PWP_MODE);
+			send_to_char("Adesso i danni verranno affiancati dal valore esatto.\n\r",ch);
+			return;
+		}
+		else if(!strcmp("off",field) || !strcmp("disable",field)) {
+			if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+				REMOVE_BIT(ch->player.user_flags,PWP_MODE);
+			}
+			send_to_char("Adesso il valore esatto di ciascun attacco non verra' mostrato.\n\r",ch);
+			return;
+		}
+		else {
+			send_to_char("Uso: set pwp on(enable)/off(disable) \n\r",ch);
+			return;
+		}
+	}
+    
+    if(!strcmp("who",type) && (!*field)) {
 		send_to_char("Usa 'set who showclasses/hideclasses'\n\r"
 					 "Questo comando ti permette di mostrare o nascondere "
 					 "le tue classi agli altri giocatori \n\r", ch);

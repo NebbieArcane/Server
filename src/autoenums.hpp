@@ -322,6 +322,7 @@ user flags*/
 	constexpr unsigned long USE_PAGING                                   =2048; /*pause screens?*/
 	constexpr unsigned long CAN_OBJ_EDIT                                 =4096; /*this user can use oedit to edit objects*/
 	constexpr unsigned long CAN_MOB_EDIT                                 =8192; /*this user can use medit to edit mobs*/
+	constexpr unsigned long PWP_MODE                                     =16384; /*show the exact amount of damage for each attack*/
 
 //Template for enum to unsigned byte
 
