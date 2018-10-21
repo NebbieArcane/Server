@@ -2253,12 +2253,12 @@ ACTION_FUNC(do_showskills) {
 	}
 	else {
 		int i;
+        boost::format fmt("[%3d] %-30s %3ld %-14s %s %s\n\r");
 		sb.append(
 			"NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r\n\r");
 		sb.append(
-			"SkNum  Nome                           Val Conoscenza    flags");
+			"SkNum  Nome                           Val Conoscenza    flags\n\r");
 		for(i = 0; i < MAX_EXIST_SPELL; i++) {
-			boost::format fmt("[%3d] %-30s %3d %-14s %s %s\n\r");
 			if(spells[i] && *spells[i] != '\n' && mob->skills[i + 1].learned) {
 				string sflags; // SALVO faccio vedere le classi di skills
 				sflags.append(" ").append(
@@ -2294,7 +2294,7 @@ ACTION_FUNC(do_showskills) {
 				% how_good(mob->skills[i + 1].learned)
 				% (IsSpecialized(mob->skills[i + 1].special) ?
 				   "(special)" : "") % sflags.c_str();
-				sb.append(sflags);
+                sb.append(fmt.str().c_str());
 				fmt.clear();
 			}
 		}
