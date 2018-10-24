@@ -1641,7 +1641,7 @@ ACTION_FUNC(do_tan) {
 				   oggetto */
 
 				case RACE_HALFBREED :
-					sprintf(hidetype," di pelle d'halfbreed");
+					sprintf(hidetype," in pelle d'halfbreed");
                     sprintf(hidekeys," pelle halfbreed");
 					acapply=-1;
 					break;
@@ -1664,7 +1664,7 @@ ACTION_FUNC(do_tan) {
 					lev=(int)lev/2;
 					break;
 				case RACE_HALFLING  :
-					sprintf(hidetype," di pelle d'halfling");
+					sprintf(hidetype," in pelle d'halfling");
                     sprintf(hidekeys," pelle halfling");
 					acapply=-1;
 					lev=(int)lev/2;
@@ -1676,7 +1676,7 @@ ACTION_FUNC(do_tan) {
 					lev=(int)lev/2;
 					break;
 				case RACE_REPTILE  :
-					sprintf(hidetype," di pelle di rettile");
+					sprintf(hidetype," in pelle di rettile");
                     sprintf(hidekeys," pelle rettile");
 					acapply=3;
 					break;
@@ -1687,7 +1687,7 @@ ACTION_FUNC(do_tan) {
 					acapply=2;
 					break;
 				case RACE_DRAGON   :
-					sprintf(hidetype," di scaglie di drago");
+					sprintf(hidetype," a scaglie di drago");
                     sprintf(hidekeys," scaglie drago");
 					acapply=6;
 					break;
@@ -1723,7 +1723,7 @@ ACTION_FUNC(do_tan) {
 					lev=(int)lev/2;
 					break;
 				case RACE_DINOSAUR :
-					sprintf(hidetype," di pelle di sauro");
+					sprintf(hidetype," in pelle di sauro");
                     sprintf(hidekeys," pelle sauro");
 					acapply=3;
 					break;
@@ -1739,7 +1739,7 @@ ACTION_FUNC(do_tan) {
 					lev=(int)lev/2;
 					break;
 				case RACE_GIANT    :
-					sprintf(hidetype," di pelle di gigante");
+					sprintf(hidetype," di pelle spessa");
                     sprintf(hidekeys," pelle gigante");
 					acapply=3;
 					break;
@@ -1760,12 +1760,12 @@ ACTION_FUNC(do_tan) {
 					lev=(int)lev/2;
 					break;
 				case RACE_DEMON    :
-					sprintf(hidetype," di pelle di demone");
+					sprintf(hidetype," in pelle di demone");
                     sprintf(hidekeys," pelle demone");
 					acapply=4;
 					break;
 				case RACE_SNAKE    :
-					sprintf(hidetype," di pelle di serpente");
+					sprintf(hidetype," in pelle di serpente");
                     sprintf(hidekeys," pelle serpente");
 					acapply=3;
 					break;
@@ -1790,7 +1790,7 @@ ACTION_FUNC(do_tan) {
 					acapply=1;
 					break;
 				case RACE_PLANAR   :
-					sprintf(hidetype," di pelle di planare");
+					sprintf(hidetype," in pelle di planare");
                     sprintf(hidekeys," pelle planare");
 					acapply=1;
 					break;
@@ -1805,18 +1805,18 @@ ACTION_FUNC(do_tan) {
 					acapply=1;
 					break;
 				case RACE_GOBLIN   :
-					sprintf(hidetype," di pelle di goblin");
+					sprintf(hidetype," in pelle di goblin");
                     sprintf(hidekeys," pelle goblin");
 					acapply=0;
 					lev=(int)lev/2;
 					break;
 				case RACE_TROLL    :
-					sprintf(hidetype," di pelle di troll");
+					sprintf(hidetype," in pelle di troll");
                     sprintf(hidekeys," pelle troll");
 					acapply=2;
 					break;
 				case RACE_GNOLL    :
-					sprintf(hidetype," di pelle di gnoll");
+					sprintf(hidetype," in pelle di gnoll");
                     sprintf(hidekeys," pelle gnoll");
 					acapply=2;
 					break;
@@ -1826,39 +1826,39 @@ ACTION_FUNC(do_tan) {
 					acapply=2;
 					break;
 				case RACE_MFLAYER  :
-					sprintf(hidetype," di pelle di mindflayer");
+					sprintf(hidetype," in pelle di mindflayer");
                     sprintf(hidekeys," pelle mindflayer");
 					acapply=1;
 					break;
 				case RACE_PRIMATE  :
-					sprintf(hidetype," di pelliccia di scimmia");
+					sprintf(hidetype," in pelliccia di scimmia");
                     sprintf(hidekeys," pelliccia scimmia");
 					acapply=0;
 					break;
 				case RACE_ENFAN    :
-					sprintf(hidetype," di pelle di enfan");
+					sprintf(hidetype," in pelle di enfan");
                     sprintf(hidekeys," pelle enfan");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_DARK_ELF     :
-					sprintf(hidetype," di pelle di drow");
+					sprintf(hidetype," in pelle di drow");
                     sprintf(hidekeys," pelle drow");
 					acapply=-2;
 					lev=(int)lev/2;
 					break;
 				case RACE_GOLEM    :
-					sprintf(hidetype," di materia di golem");
-                    sprintf(hidekeys," pelle golem");
+					sprintf(hidetype," di materia animata");
+                    sprintf(hidekeys," materia golem");
 					acapply=1;
 					break;
 				case RACE_SKEXIE   :
-					sprintf(hidetype," di pelle di skexie");
+					sprintf(hidetype," in pelle di skexie");
                     sprintf(hidekeys," pelle skexie");
 					acapply=1;
 					break;
 				case RACE_LIZARDMAN:
-					sprintf(hidetype," di pelle di lucertola");
+					sprintf(hidetype," in pelle di lucertola");
                     sprintf(hidekeys," pelle lucertola");
 					acapply=1;
 					break;
@@ -1871,17 +1871,17 @@ ACTION_FUNC(do_tan) {
 					acapply=1;
 					break;
 				case RACE_TYTAN   :
-					sprintf(hidetype," di pelle di titano");
+					sprintf(hidetype," in pelle di titano");
                     sprintf(hidekeys," pelle titano");
 					acapply=3;
 					break;
 				case RACE_SMURF    :
-					sprintf(hidetype," di pelle di smurf");
+					sprintf(hidetype," in pelle di smurf");
                     sprintf(hidekeys," pelle smurf");
 					acapply=0;
 					break;
 				case RACE_ROO      :
-					sprintf(hidetype," di pelle di canguro");
+					sprintf(hidetype," in pelle di canguro");
                     sprintf(hidekeys," pelle canguro");
 					acapply=1;
 					break;
@@ -1932,52 +1932,52 @@ ACTION_FUNC(do_tan) {
 					acapply=3;
 					break;
 				case RACE_DRAGON_RED   :
-					sprintf(hidetype," di scaglie di drago rosso");
+					sprintf(hidetype," a scaglie rosse");
                     sprintf(hidekeys," scaglie drago rosso");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_BLACK :
-					sprintf(hidetype," di scaglie di drago nero");
+					sprintf(hidetype," a scaglie nere");
                     sprintf(hidekeys," scaglie drago nero");
 					acapply = 5;
 					break;
 				case RACE_DRAGON_GREEN :
-					sprintf(hidetype," di scaglie di drago verde");
+					sprintf(hidetype," a scaglie verdi");
                     sprintf(hidekeys," scaglie drago verde");
 					acapply = 5;
 					break;
 				case RACE_DRAGON_WHITE :
-					sprintf(hidetype," di scaglie di drago bianco");
+					sprintf(hidetype," a scaglie bianche");
                     sprintf(hidekeys," scaglie drago bianco");
 					acapply = 5;
 					break;
 				case RACE_DRAGON_BLUE  :
-					sprintf(hidetype," di scaglie di drago blu");
+					sprintf(hidetype," a scaglie blu");
                     sprintf(hidekeys," scaglie drago blu");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_SILVER:
-					sprintf(hidetype," di scaglie di drago d'argento");
+					sprintf(hidetype," di scaglie d'argento");
                     sprintf(hidekeys," scaglie drago argento");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_GOLD  :
-					sprintf(hidetype," di scaglie di drago d'oro");
+					sprintf(hidetype," di scaglie d'oro");
                     sprintf(hidekeys," scaglie drago oro");
 					acapply = 7;
 					break;
 				case RACE_DRAGON_BRONZE:
-					sprintf(hidetype," di scaglie di drago di bronzo");
+					sprintf(hidetype," di scaglie di bronzo");
                     sprintf(hidekeys," scaglie drago bronzo");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_COPPER:
-					sprintf(hidetype," di scaglie di drago ramato");
+					sprintf(hidetype," di scaglie ramate");
                     sprintf(hidekeys," scaglie drago ramato");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_BRASS :
-					sprintf(hidetype," di scaglie di drago d'ottone");
+					sprintf(hidetype," di scaglie d'ottone");
                     sprintf(hidekeys," scaglie drago ottone");
 					acapply = 7;
 					break;
@@ -2803,7 +2803,7 @@ ACTION_FUNC(do_tan) {
 					if(acbonus <0) {
 						acbonus=0;
 					}
-					sprintf(article, "degli ");
+					sprintf(article, "un paio di ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -3060,7 +3060,7 @@ ACTION_FUNC(do_tan) {
 					}
 					acapply++;
 					acbonus++;
-					sprintf(article, "dei ");
+					sprintf(article, "un set di ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -3194,7 +3194,7 @@ ACTION_FUNC(do_tan) {
 					}
 					acapply++;
 					acbonus++;
-					sprintf(article, "delle ");
+					sprintf(article, "un set di ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
