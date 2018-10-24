@@ -3857,6 +3857,10 @@ const char* spell_desc[] = {
 	"\n"
 };
 
+    
+/* Requiem: queste fan parte del diku, le terrei in cantiere per un eventuale implementazione
+ rispetto i gain, e renderli un po' piu' complicati richiedendo il completamento
+ della quest oltre agli xp */
 struct QuestItem QuestList[4][IMMORTAL] = {
 	{
 		/* magic user */

@@ -1744,45 +1744,45 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 		},
 
 		{
-			"$n #W $N #l $c0011massacrandol$B$c0007.",     /* 36..45    */
-			"#w $N #l $c0010massacrandol$B$c0007.",
-			"$n ti #W #L $c0009massacrandoti$c0007."
+			"$n #W $N #l $c0011massacrandol$B$c0007!",     /* 36..45    */
+			"#w $N #l $c0010massacrandol$B$c0007!",
+			"$n ti #W #L $c0009massacrandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011devastandol$B$c0007.",    /* 46..55 */
-			"#w $N #l $c0010devastandol$B$c0007.",
-			"$n ti #W #L $c0009devastandoti$c0007."
+			"$n #W $N #l $c0011devastandol$B$c0007!",    /* 46..55 */
+			"#w $N #l $c0010devastandol$B$c0007!",
+			"$n ti #W #L $c0009devastandoti$c0007!"
 		},
         
 		{
-			"$n #W $N #l $c0011sbaragliandol$B$c0007.",    /* 56..65 */
-			"#w $N #l $c0010sbaragliandol$B$c0007.",
-			"$n ti #W #L $c0009sbaragliandoti$c0007."
+			"$n #W $N #l $c0011sbaragliandol$B$c0007!",    /* 56..65 */
+			"#w $N #l $c0010sbaragliandol$B$c0007!",
+			"$n ti #W #L $c0009sbaragliandoti$c0007!"
 		},
         
 		{
-			"$n #W $N #l $c0011polverizzandol$B$c0007.",    /* 66..75 */
-			"#w $N #l $c0010polverizzandol$B$c0007.",
-			"$n ti #W #L $c0009polverizzandoti$c0007."
+			"$n #W $N #l $c0011polverizzandol$B$c0007!",    /* 66..75 */
+			"#w $N #l $c0010polverizzandol$B$c0007!",
+			"$n ti #W #L $c0009polverizzandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011sbriciolandol$B$c0007.",    /* 76..85 */
-			"#w $N #l $c0010sbriciolandol$B$c0007.",
-			"$n ti #W #L $c0009sbriciolandoti$c0007."
+			"$n #W $N #l $c0011sbriciolandol$B$c0007!",    /* 76..85 */
+			"#w $N #l $c0010sbriciolandol$B$c0007!",
+			"$n ti #W #L $c0009sbriciolandoti$c0007!"
 		},
         
 		{
-			"$n #W $N #l $c0011annientandol$B$c0007.",    /* 86..95 */
-			"#w $N #l $c0010annientandol$B$c0007.",
-			"$n ti #W #L $c0009annientandoti$c0007."
+			"$n #W $N #l $c0011annientandol$B$c0007!",    /* 86..95 */
+			"#w $N #l $c0010annientandol$B$c0007!",
+			"$n ti #W #L $c0009annientandoti$c0007!"
 		},
         
 		{
-			"$n #W $N #l $c0011sterminandol$B$c0007.",    /* > 95 */
-			"#w $N #l $c0010sterminandol$B$c0007.",
-			"$n ti #W #L $c0009sterminandoti$c0007."
+			"$n #W $N #l $c0011sterminandol$B$c0007!",    /* > 95 */
+			"#w $N #l $c0010sterminandol$B$c0007!",
+			"$n ti #W #L $c0009sterminandoti$c0007!"
 		}
 
 	};
