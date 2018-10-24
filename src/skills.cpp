@@ -3529,7 +3529,7 @@ ACTION_FUNC(do_tan) {
 				sprintf(buf,"%s ldesc %s%s%s e' qui a terra.",itemtype,article,itemtype,hidetype);
 				do_ooedit(ch,buf,0);
 
-				sprintf(buf,"%s sdesc %s%s%s made by %s",itemtype, article, itemtype, hidetype, GET_NAME(ch));
+				sprintf(buf,"%s sdesc %s%s%s opera di %s",itemtype, article, itemtype, hidetype, GET_NAME(ch));
 				do_ooedit(ch,buf,0);
 
 				/* we do not mess with vX if the thing is a bag */

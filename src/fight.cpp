@@ -1708,7 +1708,7 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 		},
 
 		{
-			"$n #w $N #l graffiandol$B.",                       /*  1.. 2  */
+			"$n #W $N #l graffiandol$B.",                       /*  1.. 2  */
 			"#w $N #l graffiandol$B.",
 			"$n ti #W #L graffiandoti."
 		},
@@ -4862,7 +4862,16 @@ int GetFormType(struct char_data* ch) {
 		return(TYPE_CLAW);
 		break;
 	case RACE_TREE:
-		return(TYPE_SMITE);
+        if(num <= 60) {
+			return(TYPE_WHIP);
+		}
+		else if(num < 80) {
+			return(TYPE_SMITE);
+		}
+		else {
+			return(TYPE_STING);
+		}
+
 		break;
 	case RACE_MFLAYER:
 		if(num <= 60) {
