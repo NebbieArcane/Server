@@ -2304,6 +2304,10 @@
             "AFF2_DANGER_SENSE": {
                 "value": 256,
                 "comment": "Montero 16-Sep-18"
+            },
+            "AFF2_QUEST": {
+                "value": 512,
+                "comment": "Quest Flag"
             }
 		},
 		"e_classes": {
