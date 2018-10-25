@@ -290,6 +290,7 @@ struct obj_flag_data {
 	ubyte type_flag;     /* Type of item                     */
 	unsigned int wear_flags;     /* Where you can wear it            */
 	unsigned int extra_flags;    /* If it hums,glows etc             */
+    unsigned int extra_flags2;  /* nuovi flags quest, edit, etc     */
 	int weight;         /* Weigt what else                  */
 	int cost;           /* Value when sold (gp.)            */
 	int cost_per_day;   /* Cost to keep pr. real day        */
@@ -794,6 +795,7 @@ struct obj_file_elem {
 
 	int value[4];
 	int extra_flags;
+    int extra_flags2;
 	int weight;
 	int timer;
 	unsigned int bitvector;

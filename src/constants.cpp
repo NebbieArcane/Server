@@ -315,7 +315,7 @@ const char* spell_wear_off_msg[] = {
 	"",
 	"Senti di aver meditato abbastanza.", /* 231 */
 	"",
-	"",
+	"La furia scompare lasciando il posto ad un senso di calma.",
 	"",
 	"",
 	"",
@@ -618,7 +618,7 @@ const char* spell_wear_off_room_msg[] = {
 	"",
 	"$n smette di meditare e sembra piu' rilassato ora.", /* 231 */
 	"",
-	"",
+	"La furia che possedeva $n scompare, addesso e' molto piu' calm$b.",
 	"",
 	"",
 	"",
@@ -928,7 +928,7 @@ const char* spell_wear_off_soon_msg[] = {
 	"",
 	"",
 	"",
-	"",
+	"Lentamente ti sembra di prendere il controllo.",
 	"",
 	"", /* 235 */
 	"",
@@ -2680,10 +2680,17 @@ const char* extra_bits[] = {
 	"DIG",
 	"SCYTHE",
 	"ANTI-SORCERER",
-	"ANTI-SORCERER",
+//	"ANTI-SORCERER",
 	"\n"
 };
 
+const char* extra_bits2[] = {
+    "QUEST-ITEM",
+    "EDIT",
+    "NO-LOCATE",
+    "\n"
+};
+    
 const char* room_bits[] = {
 	"DARK",
 	"DEATH",

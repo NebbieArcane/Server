@@ -770,7 +770,48 @@ void sprintbit(unsigned long vektor, const char* names[], char* result) {
 	}
 }
 
+    /* sprintbit2: show extra_flags and extra_flags2 bits on objects */
+void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result)
+{
+    long nr;
+    *result = '\0';
 
+    for(nr=0; vektor; vektor>>=1) {
+        if(IS_SET(1, vektor)) {
+            if(*names[nr] != '\n') {
+                strcat(result,names[nr]);
+                strcat(result," ");
+            }
+            else {
+                strcat(result,"UNDEFINED");
+                strcat(result," ");
+            }
+        }
+        if(*names[nr] != '\n') {
+            nr++;
+        }
+    }
+    
+    for(nr=0; vektor2; vektor2>>=1) {
+        if(IS_SET(1, vektor2)) {
+            if(*names2[nr] != '\n') {
+                strcat(result,names2[nr]);
+                strcat(result," ");
+            }
+            else {
+                strcat(result,"UNDEFINED");
+                strcat(result," ");
+            }
+        }
+        if(*names2[nr] != '\n') {
+            nr++;
+        }
+    }
+
+    if(!*result) {
+        strcat(result, "NOBITS");
+    }
+}
 
 void sprinttype(int type, const char* names[], char* result) {
 	int nr;

@@ -275,6 +275,7 @@ namespace Alarmud {
 	 CAN_SEE_OBJ((ch),(obj)))
 
 #define IS_OBJ_STAT(obj,stat) (IS_SET((obj)->obj_flags.extra_flags,stat))
+#define IS_OBJ_STAT2(obj,stat) (IS_SET((obj)->obj_flags.extra_flags2,stat))
 
 
 

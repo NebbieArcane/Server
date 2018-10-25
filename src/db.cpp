@@ -2071,6 +2071,7 @@ void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc) {
 
 	obj->obj_flags.type_flag = osrc->obj_flags.type_flag;
 	obj->obj_flags.extra_flags = osrc->obj_flags.extra_flags;
+    obj->obj_flags.extra_flags2 = osrc->obj_flags.extra_flags2;
 	obj->obj_flags.wear_flags = osrc->obj_flags.wear_flags;
 	obj->obj_flags.value[0] = osrc->obj_flags.value[0];
 	obj->obj_flags.value[1] = osrc->obj_flags.value[1];
@@ -2181,12 +2182,17 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 			break;
 		}
 	}
-
+    
 	for(; (i < MAX_OBJ_AFFECT); i++) {
 		obj->affected[i].location = APPLY_NONE;
 		obj->affected[i].modifier = 0;
 	}
 
+    if(*chk == 'F')
+    {
+        obj->obj_flags.extra_flags2 = fread_number(f);
+    }
+    
 	SetStatus("Reading forbidden string in read_obj_from_file", NULL);
 
 	if(*chk == 'P') {
@@ -2236,7 +2242,13 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 			fprintf(f, "A\n%d %d\n", obj->affected[i].location,
 					obj->affected[i].modifier);
 	}
-
+    
+    if(obj->obj_flags.extra_flags2)
+    {
+        fprintf(f, "F\n");
+        fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
+    }
+        
 	if(obj->szForbiddenWearToChar) {
 		fprintf(f, "P\n");
 		fwrite_string(f, obj->szForbiddenWearToChar);

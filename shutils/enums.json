@@ -2304,10 +2304,6 @@
             "AFF2_DANGER_SENSE": {
                 "value": 256,
                 "comment": "Montero 16-Sep-18"
-			},
-            "AFF2_QUEST": {
-                "value": 512,
-                "comment": "Quest Flag"
             }
 		},
 		"e_classes": {
@@ -3286,6 +3282,21 @@
 				"value": 2147483648,
 				"comment": ""
 			}
-		}
+		},
+        "e_item2_flag": {
+            "comment": "Bitvector for 'extra_flags2'\n",
+            "ITEM2_QUEST": {
+                "value": 1,
+                "comment": "item part of a quest"
+            },
+            "ITEM2_EDIT": {
+                "value": 2,
+                "comment": "edited item"
+            },
+            "ITEM2_NO_LOCATE": {
+                "value": 4,
+                "comment": "no-locate item"
+            }
+        }
 	}
 }

@@ -59,7 +59,6 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long AFF2_AFK                                     =64;
 	constexpr unsigned long AFF2_PKILLER                                 =128;
 	constexpr unsigned long AFF2_DANGER_SENSE                            =256; /*Montero 16-Sep-18*/
-	constexpr unsigned long AFF2_QUEST                                   =512; /*Quest Flag*/
 // Flag type: E_CLASSES -- start
 	constexpr unsigned long CLASS_MAGIC_USER                             =1;
 	constexpr unsigned long CLASS_CLERIC                                 =2;
@@ -117,6 +116,12 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long IMM_PLUS2                                    =32768;
 	constexpr unsigned long IMM_PLUS3                                    =65536;
 	constexpr unsigned long IMM_PLUS4                                    =131072;
+// Flag type: E_ITEM2_FLAG -- start
+/*
+Bitvector for 'extra_flags2'*/
+	constexpr unsigned long ITEM2_QUEST                                  =1; /*item part of a quest*/
+	constexpr unsigned long ITEM2_EDIT                                   =2; /*edited item*/
+	constexpr unsigned long ITEM2_NO_LOCATE                              =4; /*no-locate item*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/

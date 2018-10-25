@@ -5633,34 +5633,34 @@ ACTION_FUNC(do_adrenalize) {
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
 		if(!HasClass(ch,CLASS_PSI)) {
-			send_to_char("You're no psionicist!\n\r",ch);
+			send_to_char("Non sei in grado di adrenalizzare nessuno!\n\r",ch);
 			return;
 		}
 
 	if(affected_by_spell(ch,SPELL_FEEBLEMIND)) {
-		send_to_char("Der, what is that ?\n\r",ch);
+		send_to_char("Prego? Cosa?\n\r",ch);
 		return;
 	}
 
 	if(!(ch->skills[SKILL_ADRENALIZE].learned)) {
-		send_to_char("You don't know how to energize people.\n\r",ch);
+		send_to_char("Non hai idea di come infondere adrenalina.\n\r",ch);
 		return;
 	}
 
 	only_argument(arg,target_name);
 	if(!(target=get_char_room_vis(ch,target_name))) {
-		send_to_char("You can't seem to find that person anywhere.\n\r",ch);
+		send_to_char("Non ti sembra di vedere nessuno con quel nome qui.\n\r",ch);
 		return;
 	}
 
 	if(GET_MANA(ch) < 15 && GetMaxLevel(ch) < IMMORTALE) {
-		send_to_char("You don't have the mental power to do this.\n\r",ch);
+		send_to_char("Non hai abbastanza potere metale per farlo.\n\r",ch);
 		return;
 	}
 
 	if(ch->skills[SKILL_ADRENALIZE].learned < dice(1,101)) {
-		send_to_char("You've falied your attempt.\n\r",ch);
-		act("$n touches $N's head lightly, then sighs.",FALSE,ch,0,target,TO_ROOM);
+		send_to_char("Non riesci a dare la scarica di adrenalina.\n\r",ch);
+		act("$n sfiora la testa di $N, poi sospira.",FALSE,ch,0,target,TO_ROOM);
 		GET_MANA(ch) -= 7;
 		alter_mana(ch,0);
 		LearnFromMistake(ch, SKILL_ADRENALIZE, 0, 95);
@@ -5669,7 +5669,7 @@ ACTION_FUNC(do_adrenalize) {
 	}
 
 	if(affected_by_spell(target,SKILL_ADRENALIZE)) {
-		send_to_char("This person was already adrenalized!\n\r",ch);
+		send_to_char("E' gia' sotto l'effetto dell'adrenalina!\n\r",ch);
 		GET_MANA(ch) -= 15;
 		alter_mana(ch,0);
 		return;
@@ -5697,10 +5697,19 @@ ACTION_FUNC(do_adrenalize) {
 
 	GET_MANA(ch) -= 15;
 	alter_mana(ch,0);
-	act("You excite the chemicals in $N's body!",TRUE,ch,0,target,TO_CHAR);
-	act("$n touches $N lightly on the forehead.",TRUE,ch,0,target,TO_NOTVICT);
-	act("$N suddenly gets a wild look in $m eyes!",TRUE,ch,0,target,TO_NOTVICT);
-	act("$n touches you on the forehead lightly, you feel energy ulimited!",TRUE,ch,0,target,TO_VICT);
+    if(ch == target)
+    {
+        act("Ti sfiori appena sulla testa, l'$c0009adrenalina$c0007 ti pervade!",TRUE,ch,0,target,TO_CHAR);
+        act("$N si sfiora la testa e cambia espressione all'improvviso: noti uno sguardo $c0001folle$c0007 nei suoi occhi!",TRUE,ch,0,target,TO_NOTVICT);
+    }
+    else
+    {
+        act("Sfiori appena la testa di $N, l'$c0009adrenalina$c0007 l$B pervade!",TRUE,ch,0,target,TO_CHAR);
+        act("$n ti sfiora appena la testa, senti l'$c0011energia$c0007 crescere a dismisura!",TRUE,ch,0,target,TO_VICT);
+        act("$n sfiora la testa di $N.",TRUE,ch,0,target,TO_NOTVICT);
+        act("$N cambia espressione all'improvviso: noti uno sguardo $c0001folle$c0007 nei suoi occhi!",TRUE,ch,0,target,TO_NOTVICT);
+    }
+	
 }
 
 ACTION_FUNC(do_meditate) {

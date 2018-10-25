@@ -2515,7 +2515,7 @@ void spell_identify(byte level, struct char_data* ch,
 		}
 
 		send_to_char("L'oggetto e': ", ch);
-		sprintbit(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,buf);
+		sprintbit2(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,static_cast<unsigned>(obj->obj_flags.extra_flags2),extra_bits2,buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 

@@ -436,10 +436,11 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.value[1] = st->objects[i].value[1];
 				obj->obj_flags.value[2] = st->objects[i].value[2];
 				obj->obj_flags.value[3] = st->objects[i].value[3];
-				obj->obj_flags.extra_flags = st->objects[i].extra_flags;
-				obj->obj_flags.weight      = st->objects[i].weight;
-				obj->obj_flags.timer       = st->objects[i].timer;
-				obj->obj_flags.bitvector   = st->objects[i].bitvector;
+				obj->obj_flags.extra_flags  = st->objects[i].extra_flags;
+                obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+				obj->obj_flags.weight       = st->objects[i].weight;
+				obj->obj_flags.timer        = st->objects[i].timer;
+				obj->obj_flags.bitvector    = st->objects[i].bitvector;
 
 				SetStatus(STATUS_OTCFREESTRING, NULL);
 
@@ -738,6 +739,7 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st) {
 	oe->value[3] = obj->obj_flags.value[3];
 
 	oe->extra_flags = obj->obj_flags.extra_flags;
+    oe->extra_flags2 = obj->obj_flags.extra_flags2;
 	oe->weight  = obj->obj_flags.weight;
 	oe->timer  = obj->obj_flags.timer;
 	oe->bitvector  = obj->obj_flags.bitvector;
@@ -1689,9 +1691,10 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 			obj->obj_flags.value[ 2 ] = st->objects[ i ].value[ 2 ];
 			obj->obj_flags.value[ 3 ] = st->objects[ i ].value[ 3 ];
 			obj->obj_flags.extra_flags = st->objects[ i ].extra_flags;
-			obj->obj_flags.weight      = st->objects[ i ].weight;
-			obj->obj_flags.timer       = st->objects[ i ].timer;
-			obj->obj_flags.bitvector   = st->objects[ i ].bitvector;
+            obj->obj_flags.extra_flags2 = st->objects[ i ].extra_flags2;
+			obj->obj_flags.weight       = st->objects[ i ].weight;
+			obj->obj_flags.timer        = st->objects[ i ].timer;
+			obj->obj_flags.bitvector    = st->objects[ i ].bitvector;
 
 			if(obj->name) {
 				free(obj->name);

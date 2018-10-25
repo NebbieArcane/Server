@@ -4125,7 +4125,7 @@ ACTION_FUNC(do_value) {
 
 	if(number(1,101) < ch->skills[SKILL_EVALUATE].learned/2) {
 		send_to_char("L'oggetto e`: ", ch);
-		sprintbit((unsigned long)obj->obj_flags.extra_flags, extra_bits, buf);
+		sprintbit2((unsigned long)obj->obj_flags.extra_flags, extra_bits, (unsigned long)obj->obj_flags.extra_flags2, extra_bits2, buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 	}

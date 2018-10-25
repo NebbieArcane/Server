@@ -83,6 +83,8 @@ extern const char* wear_bits[];
 
 extern const char* extra_bits[];
 
+extern const char* extra_bits2[];
+
 extern const char* room_bits[];
 
 extern const char* exit_bits[];

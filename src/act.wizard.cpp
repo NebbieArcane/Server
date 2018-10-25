@@ -1782,6 +1782,11 @@ ACTION_FUNC(do_stat) {
 			sprintbit((unsigned) j->obj_flags.extra_flags, extra_bits, buf);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
+            
+            send_to_char("Extra flags2: ", ch);
+            sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf);
+            strcat(buf, "\n\r");
+            send_to_char(buf, ch);
 
 			sprintf(buf, "Weight: %d, Value: %d, Cost/day: %d, Timer: %d\n\r",
 					j->obj_flags.weight, j->obj_flags.cost,
@@ -1989,18 +1994,18 @@ ACTION_FUNC(do_ooedit) {
 			"Help for Ooedit.\n\r"
 			"Command line Parameters OEDIT <NAME> <FIELD> <VALUE>\n\r"
 			"List of Fields :\n\r"
-			"ldesc  = Long Item description | sdesc  = Short description\n\r"
-			"extra  = Extra descriptions*NI*| name   = Item name\n\r"
-			"wflags = wear flags            | afflags= affect flags\n\r"
-			"exflags= extra flags           | weight = item weight\n\r"
+			"ldesc  = Long Item description | sdesc    = Short description\n\r"
+			"extra  = Extra descriptions*NI*| name     = Item name\n\r"
+			"wflags = wear flags            | afflags  = affect flags\n\r"
+			"exflags= extra flags           | exflags2 = extra flags2\n\r"
 			"cost   = item cost to rent per day\n\r"
-			"value  = Item value if sold    | timer  = item timer\n\r"
-			"type   = item type\n\r"
-			"v0     = value[0] of item      | v1     = value[1] of item\n\r"
-			"v2     = value[2] of item      | v3     = value[3] of item\n\r"
+			"value  = Item value if sold    | timer    = item timer\n\r"
+			"type   = item type             | weight   = item weight\n\r"
+			"v0     = value[0] of item      | v1       = value[1] of item\n\r"
+			"v2     = value[2] of item      | v3       = value[3] of item\n\r"
 			"aff1   = special affect 1 (syntax is: oedit aff1 <modifer> <type>)\n\r"
-			"aff2   = special affect 2      | aff3   = special affect 3\n\r"
-			"aff4   = special affect 4      | aff5   = special affect 5\n\r"
+			"aff2   = special affect 2      | aff3     = special affect 3\n\r"
+			"aff4   = special affect 4      | aff5     = special affect 5\n\r"
 			"\n\rNote: NI = Not implemented.\n\r", ch);
 		return;
 	} /* End Help! */
@@ -2075,6 +2080,12 @@ ACTION_FUNC(do_ooedit) {
 			j->obj_flags.extra_flags = atol(parmstr);
 			return;
 		} /* end exflags */
+        
+        if(!strcmp(field, "exflags2")) {
+            arg = one_argument(arg, parmstr);
+            j->obj_flags.extra_flags2 = atol(parmstr);
+            return;
+        } /* end exflags2 */
 
 		if(!strcmp(field, "weight")) {
 			arg = one_argument(arg, parmstr);
@@ -2255,7 +2266,7 @@ ACTION_FUNC(do_showskills) {
 		int i;
         boost::format fmt("[%3d] %-30s %3ld %-14s %s %s\n\r");
 		sb.append(
-			"NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r\n\r");
+			"NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r                      256=B 512=P 1024=R 2048=I\n\r\n\r");
 		sb.append(
 			"SkNum  Nome                           Val Conoscenza    flags\n\r");
 		for(i = 0; i < MAX_EXIST_SPELL; i++) {
@@ -2289,6 +2300,18 @@ ACTION_FUNC(do_showskills) {
 				if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_WARRIOR)) {
 					sflags.append("W ");
 				}
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_BARBARIAN)) {
+                    sflags.append("B ");
+                }
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_PALADIN)) {
+                    sflags.append("P ");
+                }
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_RANGER)) {
+                    sflags.append("R ");
+                }
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_PSI)) {
+                    sflags.append("I");
+                }
 				sflags.append("]");
 				fmt % (i + 1) % (spells[i]) % mob->skills[i + 1].learned
 				% how_good(mob->skills[i + 1].learned)
