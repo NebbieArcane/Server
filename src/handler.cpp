@@ -2761,6 +2761,10 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
     {
         mudlog(LOG_PLAYERS,"CMD_GIVE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
     }
+    else if(cmd == 1000)
+    {
+        mudlog(LOG_CHECK,"MUD_PERS: %s is personalized on %s.", obj->short_description, GET_NAME(plr));
+    }
     else
     {
         mudlog(LOG_ERROR,"pers_obj: wrong command");

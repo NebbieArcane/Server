@@ -396,7 +396,9 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 /**************************************************************************
  * Routines used to load a characters equipment from disk
  **************************************************************************/
-
+#define LOW_EDITED_ITEMS    34030
+#define HIGH_EDITED_ITEMS   34999
+    
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
@@ -441,7 +443,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
 				obj->obj_flags.bitvector    = st->objects[i].bitvector;
-
+                
 				SetStatus(STATUS_OTCFREESTRING, NULL);
 
 				if(obj->name) {
@@ -465,6 +467,19 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				strcpy(obj->name, st->objects[i].name);
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
+                mudlog(LOG_PLAYERS,"%s --> %d",GET_NAME(ch),st->objects[i].item_number);
+                if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj))
+                {
+                    pers_obj(ch, ch, obj, 1000);
+                    if(!IS_OBJ_STAT2(obj, ITEM2_EDIT))
+                    {
+                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+                    }
+                    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+                    {
+                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+                    }
+                }
 
 				SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
