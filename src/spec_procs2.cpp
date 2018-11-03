@@ -6438,7 +6438,7 @@ MOBSPECIAL_FUNC(astral_portal) {
 	/*#endif*/
 
 
-	if(cmd != 7) {
+	if(cmd != CMD_ENTER) {
 		return(FALSE);    /* enter */
 	}
 	one_argument(arg,buf);
@@ -6488,7 +6488,7 @@ MOBSPECIAL_FUNC(camino) {
 	p=one_argument(p,buf);
 	j=abs(atol(buf));
 
-	if(cmd != 7) {
+	if(cmd != CMD_ENTER) {
 		return(FALSE);    /* enter */
 	}
 	one_argument(arg,buf);

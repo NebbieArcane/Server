@@ -38,6 +38,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "mail.hpp"
 #include "maximums.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
@@ -129,7 +130,14 @@ ACTION_FUNC(do_junk) {
 	count = 0;
 	while(num != 0) {
 		tmp_object = get_obj_in_list_vis(ch, tmp, ch->carrying);
-		if(tmp_object) {
+		if(tmp_object)
+        {
+            if((IS_OBJ_STAT2(tmp_object,ITEM2_EDIT) || IS_OBJ_STAT2(tmp_object,ITEM2_PERSONAL)) && !IS_DIO(ch))
+            {
+                act("Non puoi gettare via $p, c'e' inciso il nome di qualcuno!",FALSE, ch, tmp_object, 0, TO_CHAR);
+                return ;
+            }
+            
 			if(IS_OBJ_STAT(tmp_object,ITEM_NODROP)  && !IS_IMMORTAL(ch)) {
 				send_to_char
 				("You can't let go of it, it must be CURSED!\n\r", ch);
@@ -139,7 +147,7 @@ ACTION_FUNC(do_junk) {
 			/* if it is a limited items check if the PC EGO is strong enough
 			   Gaia 2001 */
 			if(IS_RARE(tmp_object) && !EgoSave(ch)) {
-				act("Gettare via $p ?? Non ci pensare nemmeno!",FALSE, ch, tmp_object, 0, TO_CHAR);
+				act("Gettare via $p??? Non ci pensare nemmeno!",FALSE, ch, tmp_object, 0, TO_CHAR);
 				return ;
 			}
 #endif
@@ -187,11 +195,133 @@ ACTION_FUNC(do_junk) {
 		}
 	}
 	if(value2) {
-		act("Rinunciare ai beni terreni ti fa progredire nel tuo cammino",
+		act("Rinunciare ai beni terreni ti fa progredire nel tuo cammino.",
 			FALSE, ch, 0, 0, TO_CHAR);
 		gain_exp(ch, (value2*number(10,30))/10);
 	}
 	return;
+}
+
+ACTION_FUNC(do_destroy)
+{
+    char tmp[100], buf[200];
+    struct obj_data* tmp_object;
+    int value=0,value2=0;
+
+    if(!IS_PC(ch))
+    {
+        send_to_char("Non puoi farlo, sei solo un mob!\n\r",ch);
+        return;
+    }
+
+    one_argument(arg, tmp);
+    
+    if(*tmp)
+    {
+        tmp_object = get_obj_in_list_vis(ch, tmp, ch->carrying);
+
+        if(tmp_object)
+        {
+            char name[25];
+            int val = 0;
+            bool check = TRUE;
+
+            if(ch->lastpkill)
+            {
+                strcpy(name, "ED");
+                strcat(name,ch->lastpkill);
+                val = 1;
+                if(isname(name, tmp_object->name))
+                {
+                    val = 2;
+                }
+            }
+            strcpy(name, "ED");
+            strcat(name, GET_NAME(ch));
+            if(isname(name, tmp_object->name))
+            {
+                val = 3;
+            }
+
+            if((!IS_OBJ_STAT2(tmp_object,ITEM2_EDIT) && !IS_OBJ_STAT2(tmp_object, ITEM2_PERSONAL)) && !IS_DIO(ch))
+            {
+                act("Non puoi distruggere $p! Prova a buttarlo via!",FALSE, ch, tmp_object, 0, TO_CHAR);
+                return;
+            }
+
+            if(val == 0)
+            {
+                sprintf(buf, "Non puoi distruggere $p! Non e' di tua proprieta'!");
+                check = FALSE;
+            }
+            if(val == 1)
+            {
+                sprintf(buf, "Non puoi distruggere $p! Non hai ucciso il suo proprietario!");
+                check = FALSE;
+            }
+            if(val == 2 && !IS_AFFECTED2(ch,AFF2_PKILLER))
+            {
+                sprintf(buf, "Non puoi distruggere $p! E' passato troppo tempo da quando hai ucciso %s!",ch->lastpkill);
+                check = FALSE;
+            }
+
+            if(!IS_DIO(ch) && !check)
+            {
+                act(buf,FALSE, ch, tmp_object, 0, TO_CHAR);
+                return;
+            }
+                
+            if(IS_OBJ_STAT(tmp_object,ITEM_NODROP) && !IS_IMMORTAL(ch))
+            {
+                send_to_char("Non puoi farlo, una %c0009maledizione$c0007 te lo impedisce!\n\r", ch);
+                return;
+            }
+#if EGO
+            if(IS_RARE(tmp_object) && !EgoSave(ch))
+            {
+                act("Vuoi distruggere $p??? Non ci pensare nemmeno!",FALSE, ch, tmp_object, 0, TO_CHAR);
+                return;
+            }
+#endif
+            value+=(MIN(100000,MAX(tmp_object->obj_flags.cost/4,1)));
+            value2+=(tmp_object->obj_flags.cost>=LIM_ITEM_COST_MIN ? tmp_object->obj_flags.cost : 0);
+            mudlog(LOG_PLAYERS,"%s destroy %s [owner was %s]",GET_NAME(ch), tmp_object->short_description, (ch->lastpkill ? ch->lastpkill : "no one"));
+            obj_from_char(tmp_object);
+            extract_obj(tmp_object);
+        }
+
+        sprintf(buf, "Distruggi %s.\n\r", arg);
+        act(buf, 1, ch, 0, 0, TO_CHAR);
+        sprintf(buf, "$n distrugge %s.\n\r", arg);
+        act(buf, 1, ch, 0, 0, TO_ROOM);
+    }
+    else
+    {
+        send_to_char("Cosa vuoi distruggere?\n\r",ch);
+        return;
+    }
+    
+    value /= 2;
+    
+    if(value)
+    {
+        act("Sei stat$b ricompensat$b.", FALSE, ch, 0, 0, TO_CHAR);
+        
+        if(GetMaxLevel(ch) < 3)
+        {
+            gain_exp(ch, MIN(100,value));
+        }
+        else
+        {
+            GET_GOLD(ch) += value;
+        }
+    }
+    if(value2)
+    {
+        act("Distruggere l'equipaggiamento del tuoi avversari ti fa progredire nel tuo cammino!", FALSE, ch, 0, 0, TO_CHAR);
+        gain_exp(ch, (value2*number(10,30))/10);
+    }
+    return;
 }
 
 ACTION_FUNC(do_qui) {
@@ -1327,30 +1457,43 @@ ACTION_FUNC(do_idea) {
 }
 
 
+ACTION_FUNC(do_idea_new)
+{
+    if (IS_NPC(ch))
+        send_to_char("Sei un MOSTRO! Ma se vuoi, scrivi il tuo suggerimento su www.nebbiearcane.it/forum/forum/first-forum :-)\n\r", ch);
+    else
+        send_to_char("Scrivi la tua idea su www.nebbiearcane.it/forum/forum/first-forum \n\rGrazie!\n\r", ch);
+}
 
 
 
-
-
-ACTION_FUNC(do_typo) {
+/* rirpristinato il comando typo, con 'checktypos' è ora possibile vedere il file */
+ACTION_FUNC(do_typo)
+{
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
+    char buf[MAX_BUF_LENGTH];
+    struct char_data* temp_char = ch;
 
-	if(IS_NPC(ch))        {
-		send_to_char("Monsters can't spell - leave me alone.\n\r", ch);
+	if(IS_NPC(ch))
+    {
+		send_to_char("I mostri non possono farlo!!!\n\r", ch);
 		return;
 	}
 
 	/* skip whites */
 	for(; isspace(*arg); arg++);
 
-	if(!*arg)        {
-		send_to_char("I beg your pardon?\n\r",         ch);
+	if(!*arg)
+    {
+		send_to_char("Prego? Cosa volevi dire?\n\r",         ch);
 		return;
 	}
-	if(!(fl = fopen(TYPO_FILE, "a")))        {
+
+	if(!(fl = fopen(TYPO_FILE, "a")))
+    {
 		mudlog(LOG_ERROR,"%s:%s","do_typo",strerror(errno));
-		send_to_char("Could not open the typo-file.\n\r", ch);
+		send_to_char("Qualcosa e' andato storto, contatta gli Dei.\n\r", ch);
 		return;
 	}
 
@@ -1358,13 +1501,15 @@ ACTION_FUNC(do_typo) {
 			GET_NAME(ch), ch->in_room, arg);
 	fputs(str, fl);
 	fclose(fl);
-	send_to_char("Ok. thanks.\n\r", ch);
 
+	send_to_char("Ok. Grazie.\n\r", ch);
+
+    parse_name("LadyOfPain", buf);
+    temp_char->desc->name = (char*)strdup(buf);
+    temp_char->desc->showstr_head = (char*)strdup("Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+    store_mail( temp_char->desc->name, GET_NAME(ch), temp_char->desc->showstr_head);
+    mudlog(LOG_PLAYERS,"%s ha segnalato un typo a LadyOfPain.",GET_NAME(ch));
 }
-
-
-
-
 
 ACTION_FUNC(do_bug) {
 	FILE* fl;
@@ -1395,7 +1540,13 @@ ACTION_FUNC(do_bug) {
 	send_to_char("Non sempre riesco a leggere i bug.\n\rPer cose urgenti scrivetemi a alar@aspide.it. Grazie!", ch);
 }
 
-
+ACTION_FUNC(do_bug_new)
+{
+    if (IS_NPC(ch))
+        send_to_char("Sei un MOSTRO! Ma se vuoi, segnala il problema su www.nebbiearcane.it/forum/forum/bugs :-)\n\r", ch);
+    else
+        send_to_char("Segnalaci il problema su www.nebbiearcane.it/forum/forum/bugs \n\rGrazie!\n\r", ch);
+}
 
 ACTION_FUNC(do_brief) {
 	if(IS_NPC(ch)) {
@@ -2053,7 +2204,7 @@ ACTION_FUNC(do_alias) {
 	char* p, *p2;
 	int i, num;
 
-	if(cmd == 260) {
+	if(cmd == CMD_ALIAS) {
 		for(; *arg==' '; arg++);
 		if(!*arg) {   /* print list of current aliases */
 			if(ch->specials.A_list) {
@@ -2164,7 +2315,7 @@ ACTION_FUNC(do_mount) {
 	struct char_data* horse;
 
 
-	if(cmd == 276 || cmd == 278) {
+	if(cmd == CMD_MOUNT || cmd == CMD_RIDE) {
 		only_argument(arg, name);
 
 		if(!(horse = get_char_room_vis(ch, name))) {
@@ -2239,7 +2390,7 @@ ACTION_FUNC(do_mount) {
 			return;
 		}
 	}
-	else if(cmd == 277) {
+	else if(cmd == CMD_DISMOUNT) {
 		horse = MOUNTED(ch);
 
 		act("You dismount from $N", FALSE, ch, 0, horse, TO_CHAR);

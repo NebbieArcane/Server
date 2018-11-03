@@ -927,7 +927,7 @@ ACTION_FUNC(do_system) {
 		;
 
 	if(!*(arg + i)) {
-		send_to_char("That must be a mistake...\n\r", ch);
+		send_to_char("Cosa vuoi comunicare a tutto il mondo?\n\r", ch);
 	}
 	else {
 		sprintf(buf, "\n\r%s\n\r", arg + i);
@@ -1621,6 +1621,10 @@ ACTION_FUNC(do_stat) {
 							   GET_NAME(k));
 					}
 				}
+                
+                sprintf(buf, "$c0005Last PKill: $c0014%s", k->lastpkill == NULL ? "-" : k->lastpkill);    // destroy
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                
 				/* immunities */
 				if(k->M_immune) {
 					send_to_char("$c0005Immune to:$c0014", ch);
@@ -4465,7 +4469,7 @@ ACTION_FUNC(do_restore) {
 		if(IS_PC(ch) && CAN_SEE(victim, ch)) {
 			if(GetMaxLevel(victim) < IMMORTALE)
 				act(
-					"La mano di $N ti sfiora appena.... le tue ferite si rimarginano,\n\r"
+					"La mano di $N ti sfiora appena.... le tue ferite si rimarginano.\n\r"
 					"Una nuova forza scorre in te!", FALSE,
 					victim, 0, ch, TO_CHAR);
 			else {
@@ -4883,11 +4887,11 @@ ACTION_FUNC(do_invis) {
 		return;
 	}
 
-	if(cmd == 242 && !IS_DIO_MINORE(ch)) {
+	if(cmd == CMD_INVISIBLE && !IS_DIO_MINORE(ch)) {
 		return;
 	}
 
-	if(cmd != 242) {
+	if(cmd != CMD_INVISIBLE) {
 		if(affected_by_spell(ch, SPELL_INVISIBLE)) {
 			affect_from_char(ch, SPELL_INVISIBLE);
 		}
@@ -6218,6 +6222,111 @@ ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
 	else {
 		mudlog(LOG_CHECK, buf);
 	}
+}
+
+ACTION_FUNC(do_personalize)
+{
+    char arg1[MAX_INPUT_LENGTH];
+    char arg2[MAX_INPUT_LENGTH];
+    struct obj_data* obj;
+    struct char_data* plr;
+    
+    argument_interpreter(arg, arg1, arg2);
+    
+    if(!*arg1 || !*arg2)
+    {
+        send_to_char("\n\rSintassi:\n\r   Personalize nomeoggetto nomepg\n\r", ch);
+        return;
+    }
+    
+    if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying)))
+    {
+        send_to_char("Non hai niente del genere con te...\n\r", ch);
+        return;
+    }
+    
+    if(!(plr = get_char_room_vis(ch, arg2)))
+    {
+        send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+        return;
+    }
+    
+    if(IS_MOB(plr))
+    {
+        send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r",ch);
+        return;
+    }
+    
+    if(pers_on(plr, obj))
+    {
+        act("Il nome di $N e' gia' inciso su $p!", FALSE, ch, obj, plr, TO_CHAR);
+        return;
+    }
+    
+    if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+    {
+        send_to_char("Di nuovo?!?\n\r",ch);
+        return;
+    }
+
+    pers_obj(ch, plr, obj, CMD_PERSONALIZE);
+    
+    act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
+    act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
+}
+
+
+ACTION_FUNC(do_checktypos)
+{
+    if(!*arg)
+    {
+        send_to_char("Digita 'checktypos list' oppure 'checktypos clear now'\n\r",         ch);
+        return;
+    }
+
+    if( !str_cmp( arg, "clear now" ) && IS_MAESTRO_DEL_CREATO(ch))
+    {
+        FILE *fp;
+        
+        if( !( fp = fopen( TYPO_FILE, "w" ) ) )
+        {
+            mudlog(LOG_ERROR,"%s:%s","do_checktypos",strerror(errno));
+            return;
+        }
+        fclose( fp );
+        send_to_char( "Il file dei typos e' stato cancellato.\r\n", ch );
+        mudlog(LOG_PLAYERS, "%s ha cancellato il file dei typos.", GET_NAME(ch));
+        return;
+    }
+    
+    if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
+    {
+        int num = 0;
+        char buf[MAX_STRING_LENGTH];
+        FILE *fp;
+        
+        if( ( fp = fopen( TYPO_FILE, "r" ) ) != nullptr )
+        {
+            page_string(ch->desc, "\r\n", 1);
+            while( !feof( fp ) )
+            {
+                while( num < ( MAX_STRING_LENGTH - 4 ) && ( buf[num] = fgetc( fp ) ) != EOF && buf[num] != '\n' && buf[num] != '\r' )
+                    ++num;
+                
+                int c = fgetc( fp );
+                if( ( c != '\n' && c != '\r' ) || c == buf[num] )
+                    ungetc( c, fp );
+                
+                buf[num++] = '\r';
+                buf[num++] = '\n';
+                buf[num] = '\0';
+                page_string(ch->desc, buf, 1);
+                num = 0;
+            }
+            fclose( fp );
+        }
+        return;
+    }
 }
 
 //FLYP 2004 Perdono

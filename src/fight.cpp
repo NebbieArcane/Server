@@ -1123,7 +1123,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 					gain_exp_rev(ch,-5000000);
 				}
 			}
-
+            
 			if(IS_PC(ch) && !(killedbytype == SPELL_CHANGE_FORM)) {
 				if(!IS_PRINCE(ch)) {
 					gain_exp_rev(killer,-GET_EXP(killer)/100);
@@ -1139,9 +1139,13 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 				if(killer!=ch) {  // SALVO non si puo' mettere il pkill per un suicidio
 					if(IS_POLY(killer)) { // SALVO il flag pkiller va' all'originale, corretto
 						affect_to_char(killer->desc->original,&af);
+                        killer->desc->original->lastpkill = strdup(GET_NAME(ch));
+                        mudlog(LOG_PLAYERS,"Set Lastkill of %s on %s",GET_NAME(ch),GET_NAME(killer));
 					}
 					else {
 						affect_to_char(killer,&af);
+                        killer->lastpkill = strdup(GET_NAME(ch));
+                        mudlog(LOG_PLAYERS,"Set Lastkill of %s on %s",GET_NAME(ch),GET_NAME(killer));
 					}
 				}
 			}

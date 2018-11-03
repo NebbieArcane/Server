@@ -1191,7 +1191,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 					send_to_char(buf,holder);
 					sprintf(buf,"You can hear $n's %s almost sing with joy!",xobj->short_description);
 					act(buf,FALSE, holder, 0, 0, TO_ROOM);
-					if((holder == ch) && (cmd == 151)) {
+					if((holder == ch) && (cmd == CMD_FLEE)) {
 						if(EgoBladeSave(ch) && EgoBladeSave(ch)) {
 							sprintf(buf,"You can feel %s attempt to stay in the fight!\n\r",
 									xobj->short_description);
@@ -1222,7 +1222,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 						}
 					}
 				}
-				if((cmd == 66) && (holder == ch)) {
+				if((cmd == CMD_REMOVE) && (holder == ch)) {
 					one_argument(arg, arg1);
 					if(strcmp(arg1,"all") == 0) {
 						if(!EgoBladeSave(ch)) {
@@ -1322,7 +1322,7 @@ OBJSPECIAL_FUNC(EvilBlade) {
 						return(FALSE);
 					}
 				}
-				if((cmd == 70) && (holder == ch)) {
+				if((cmd == CMD_HIT) && (holder == ch)) {
 					sprintf(buf,"%s almost sings in your hands!!\n\r",
 							xobj->short_description);
 					send_to_char(buf,ch);
@@ -1514,7 +1514,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 					send_to_char(buf,holder);
 					sprintf(buf,"You can hear %s almost sing with joy in $n's hands!",xobj->short_description);
 					act(buf,FALSE, holder, 0, 0, TO_ROOM);
-					if((holder == ch) && (cmd == 151)) {
+					if((holder == ch) && (cmd == CMD_FLEE)) {
 						if(EgoBladeSave(ch) && EgoBladeSave(ch)) {
 							sprintf(buf,"You can feel %s attempt to stay in the fight!\n\r",
 									xobj->short_description);
@@ -1545,7 +1545,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 						}
 					}
 				}
-				if((cmd == 66) && (holder == ch)) {
+				if((cmd == CMD_REMOVE) && (holder == ch)) {
 					one_argument(arg, arg1);
 					if(strcmp(arg1,"all") == 0) {
 						if(!EgoBladeSave(ch)) {
@@ -1645,7 +1645,7 @@ OBJSPECIAL_FUNC(GoodBlade) {
 						return(FALSE);
 					}
 				}
-				if((cmd == 70) && (holder == ch)) {
+				if((cmd == CMD_HIT) && (holder == ch)) {
 					sprintf(buf,"%s almost sings in your hands!!\n\r",
 							xobj->short_description);
 					send_to_char(buf,ch);
@@ -2472,7 +2472,7 @@ MOBSPECIAL_FUNC(goblin_sentry) {
 	else {
 		sentrymob = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(goblin_sentry));
 		if(cmd >= 1 && cmd <= 6) {
-			if(cmd == 3) {
+			if(cmd == CMD_SOUTH) {
 				return(FALSE);    /* can always go south */
 			}
 			/* everything else gets ya attacked */
@@ -2553,7 +2553,7 @@ MOBSPECIAL_FUNC(TreeThrowerMob) {
 	else {
 		switch(ch->in_room) {
 		case 13912:  /*Forest of Rhowyn, Bridge Troll*/
-			if(cmd == 1) {
+			if(cmd == CMD_NORTH) {
 				/* north+1 */
 				act("$n blocca la tua strada!", FALSE, mob, 0, ch, TO_VICT);
 				act("$n blocca la strada di $N.", FALSE, mob, 0, ch, TO_NOTVICT);
@@ -2563,7 +2563,7 @@ MOBSPECIAL_FUNC(TreeThrowerMob) {
 			}
 			break;
 		case 6224:   /*Rhyiana, Sentinel Tree*/
-			if((cmd == 1) && (IS_EVIL(ch))) {
+			if((cmd == CMD_NORTH) && (IS_EVIL(ch))) {
 				act("Il vento scuote le foglie degli alberi che ti circondano.",FALSE,mob,0,ch,TO_VICT);
 				act("Improvvisamente i rami ti raggiungono e ti sbarrano la strada!",
 					FALSE,mob,0,ch,TO_VICT);

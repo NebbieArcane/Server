@@ -79,7 +79,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 35) {
+		if(update < 0 || update > 36) {
 			return;
 		}
 		i=1;
@@ -90,8 +90,6 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         else
             for(a=1; a<=update-32; a++) {
                 i*=2;
-                sprintf(buf,"il valore di I e' %d",i);
-                mudlog(LOG_ERROR, buf);
             }
         if(update<32)
         {
@@ -121,7 +119,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 
 	row = 0;
-	for(i = 0; i < 35; i++) {
+	for(i = 0; i < 36; i++) {
 		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
 		if(i & 1) {
 			row++;
@@ -267,6 +265,11 @@ ACTION_FUNC(do_oedit) {
 	ch->specials.oedit = OBJ_MAIN_MENU;
 	ch->desc->connected = CON_OBJ_EDITING;
 
+    if(!IS_SET(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT))
+    {
+        SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT);
+    }
+    
 	act("$n has begun editing an object.", FALSE, ch, 0, 0, TO_ROOM);
 	GET_POS(ch)=POSITION_SLEEPING;
 

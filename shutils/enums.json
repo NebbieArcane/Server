@@ -3300,6 +3300,10 @@
             "ITEM2_NO_LOCATE": {
                 "value": 4,
                 "comment": "no-locate item"
+            },
+            "ITEM2_PERSONAL": {
+                "value": 8,
+                "comment": "personalized item"
             }
         }
 	}

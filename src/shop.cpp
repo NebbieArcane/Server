@@ -611,7 +611,7 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 			return(TRUE);
 		}
 	}
-	else if((cmd==84) || (cmd==207) || (cmd==172) || (cmd==283) || (cmd==370)) {
+	else if((cmd==CMD_CAST) || (cmd==CMD_RECITE) || (cmd==CMD_USE) || (cmd==CMD_RECALL) || (cmd==CMD_MIND)) {
 		/* Cast, recite, use */
 		if(GetMaxLevel(ch)<IMMORTALE) {
 			act("$N tells you 'No magic or mistical powers here - kid!'.", FALSE, ch, 0, keeper, TO_CHAR);

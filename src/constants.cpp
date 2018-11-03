@@ -2688,6 +2688,7 @@ const char* extra_bits2[] = {
     "QUEST-ITEM",
     "EDIT",
     "NO-LOCATE",
+    "PERSONAL",
     "\n"
 };
     
