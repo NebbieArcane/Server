@@ -204,8 +204,8 @@ void mind_danger_sense(byte level, struct char_data* ch,
 		af.type      = SKILL_DANGER_SENSE;
 		af.duration  = (int)level/10;
 		af.modifier  = 0;
-		af.location  = APPLY_NONE;
-		af.bitvector = 0;
+		af.location  = APPLY_AFF2;
+		af.bitvector = AFF2_DANGER_SENSE;
 		affect_to_char(victim, &af);
 	}
 	else {

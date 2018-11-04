@@ -1835,7 +1835,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 
-	if(level == MAESTRO_DEI_CREATORI)  {
+	if(level >= IMMORTALE)  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
@@ -1864,6 +1864,11 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 				affect_from_char(victim,SPELL_POISON);
 			}
 		}
+        
+        if(affected_by_spell(victim,STATUS_QUEST)) {
+                affect_from_char(victim,STATUS_QUEST);
+                send_to_char("Non sei piu' in missione.\n\r",victim);
+        }
 	}
 }
 

@@ -4038,8 +4038,8 @@ ACTION_FUNC(do_attribute) {
 					}
 					if(*spells[aff->type-1] || *spells[aff->type-1]=='!') {
 
-						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "$c0005Spell : '$c0014%s$c0005'",spells[aff->type-1]);
+                        snprintf(buf, MAX_STRING_LENGTH-1,
+                                 "$c0005Spell : '$c0014%s$c0005' - $c0014%d$c0005",spells[aff->type-1],aff->duration);
 						act(buf,FALSE, ch,0,0,TO_CHAR);
 					}
 

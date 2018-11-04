@@ -4060,7 +4060,7 @@ MOBSPECIAL_FUNC(miner_teacher) {
 
 		if(!IS_IMMORTAL(ch)) {
 
-			if((sk_num == SKILL_MINER)  && !(GET_RACE(ch) == RACE_DWARF)) {
+			if(sk_num == SKILL_MINER) {
 				act("$N ti dice: 'Non sei il tipo di persona che possa imparare certe "
 					"cose'.", TRUE, ch, 0, mob, TO_CHAR);
 				return(TRUE);

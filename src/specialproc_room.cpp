@@ -40,7 +40,7 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "pet_shops", pet_shops },
 	{ "pray_for_items", pray_for_items },
 	{ "BlockAlign", BlockAlign },
-	{ "MOBKilled", MOBKilled },   // SALVO 2006 Quest fisse
+	{ "MobKillInRoom", MobKillInRoom },   // SALVO 2006 Quest fisse
 	{ "zFineprocedure", NULL },
 };
 } // namespace Alarmud

@@ -372,7 +372,7 @@ const char* spell_wear_off_msg[] = {
 	"Le tue capacita' tornano normali mentre diminuisci i tuoi poteri di intensificazione'.",
 	"", /* spot 288*/
 	"",
-	"!290!",
+	"La tua missione termina qui.",
 	"!291!",
 	"!292!",
 	"!293!",
@@ -985,7 +985,7 @@ const char* spell_wear_off_soon_msg[] = {
 	"",
 	"", /* 288 */
 	"",
-	"",
+	"Il Tempo per la tua missione e' agli sgoccioli!",
 	"",
 	"",
 	"",
@@ -1602,7 +1602,7 @@ int RacialMax[MAX_RACE+1][MAX_CLASS] = {
 	/* drag bronze */ { 51, 20, 51, 30, 20, 51, 10, 51,  0,  0,  0 },
 	/* drag cooper */ { 51, 20, 51, 30, 20, 51, 10, 51,  0,  0,  0 },
 	/* drag brass  */ { 51, 20, 51, 30, 20, 51, 10, 51,  0,  0,  0 },
-	/* unded vamp  */ { 35, 35, 35, 35, 35, 35, 10, 35,  0,  0,  0 },
+	/* unded vamp  */ { 51, 35, 51, 35, 35, 35, 10, 51,  0,  0,  0 },
 	/* unded lich  */ { 35, 35, 35, 35, 35, 35, 10, 35,  0,  0,  0 },
 	/* unded wight */ { 35, 35, 35, 35, 35, 35, 10, 35,  0,  0,  0 },
 	/* unded ghast */ { 35, 35, 35, 35, 35, 35, 10, 35,  0,  0,  0 },
@@ -1697,7 +1697,7 @@ int RacialHome[MAX_RACE+1][2] = {
 	/* drag bronze3*/ { 51, 20},
 	/* drag cooper4*/ { 51, 20},
 	/* drag brass 5*/ { 51, 20},
-	/* unded vamp 6*/ { 1, 1 },
+	/* unded vamp 6*/ { 7800, 3008},
 	/* unded lich 7*/ { 35, 35},
 	/* unded wight8*/ { 35, 35},
 	/* unded ghast9*/ { 35, 35},
@@ -2828,7 +2828,8 @@ const char* affected_bits2[] = {
 	"AWAY-FROM-KEYBOARD",
 	"Pkilled someone",
     "DANGER-SENSE",     // Montero 16-Sep-2018 - danger sense
-	"\n"
+	"QUEST",
+    "\n"
 };
 
 const char* special_user_flags[] = {
@@ -4100,6 +4101,29 @@ struct QuestItem QuestList[4][IMMORTAL] = {
 	}
 };
 
+const char* QuestKind [] = {
+
+    "Caccia",
+    "Consegna",
+    "Salvataggio",
+    "\0"
+
+};
+    
+const char* NameGenAsset [] = {
+
+    "Do",
+    "Ma",
+    "Bra",
+    "Ellen",
+    "Kha",
+    "Rin",
+    "Dah",
+    "Teh",
+    "\0"
+
+};
+    
 const char* att_kick_kill_ch[] = {
 	"Il tuo calcio sfonda il torace di $N causandone la morte immediata.",
 	"Il tuo calcio distrugge un braccio a $N e gli sfonda la cassa toracica.",

@@ -1949,6 +1949,11 @@ int _affected_by_s(struct char_data* ch, int skill) {
 			fa=1;
 		}
 		break;
+    case SKILL_DANGER_SENSE:
+		if(IS_AFFECTED2(ch, AFF2_DANGER_SENSE)) {
+			fa=1;
+		}
+		break;
 	}
 	if(ch->affected)
 		for(hjp = ch->affected; hjp; hjp = hjp->next)
@@ -2201,6 +2206,12 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					}
 					if((i = _affected_by_s(ch, SPELL_ANTI_MAGIC_SHELL)) != -1) {
 						strcat(tbuf, (i > 1) ? "A" : "a");
+					}
+					else if(s_flag) {
+						strcat(tbuf, "-");
+					}
+					if((i = _affected_by_s(ch, STATUS_QUEST)) != -1) {
+						strcat(tbuf, (i > 1) ? "Q" : "q");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");

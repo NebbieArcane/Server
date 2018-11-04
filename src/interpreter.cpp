@@ -2466,7 +2466,7 @@ NANNY_FUNC(con_slct) {
 			if (Level < DIO_MINORE) {
 				/* Per gli IMMORTALI che rentavano ad Asgaard, gli tolgo
 				la start room cosi' gli viene calcolata di nuovo */
-				if(d->character->specials.start_room == 1000 && IS_IMMORTALE(d->character)) {
+				if(d->character->specials.start_room == 1001 && IS_IMMORTALE(d->character)) {
 					d->character->specials.start_room = -1;
 				}
 

@@ -161,6 +161,10 @@ extern const char* spell_desc[];
 
 extern struct QuestItem QuestList[4][IMMORTAL];
 
+extern const char* QuestKind[];
+    
+extern const char* NameGenAsset[];
+    
 extern const char* att_kick_kill_ch[];
 
 extern const char* att_kick_kill_victim[];

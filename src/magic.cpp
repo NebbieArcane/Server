@@ -2770,6 +2770,23 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 	}
 }
 
+void spell_quest(byte level, struct char_data* ch,
+					 struct char_data* victim, struct obj_data* obj, unsigned long int tgt) {
+	struct affected_type af;
+
+	if((!affected_by_spell(victim, STATUS_QUEST))) {
+
+		act("$n viene colt$b dal senso del dovere.",TRUE,victim,0,0,TO_ROOM);
+		act("Senti di avere un compito su questa terra.",TRUE,victim,0,0,TO_CHAR);
+
+		af.type      = STATUS_QUEST;
+		af.duration  = (level<LOW_IMMORTAL) ? 3 : level;
+		af.modifier  = tgt;
+		af.location  = APPLY_SKIP;
+		af.bitvector = 0;
+		affect_to_char(victim, &af);
+	}
+}
 
 /* ***************************************************************************
  *                     NPC spells..                                          *

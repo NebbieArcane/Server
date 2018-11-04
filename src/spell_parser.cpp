@@ -27,6 +27,7 @@
 #include "act.info.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
+#include "act.wizard.hpp"
 #include "breath.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -345,6 +346,8 @@ const char* spells[]= {
 	"ultra blast",
 	"intensify",
 	"spot",
+    "",
+    "quest",
 	"\n"
 };
 
@@ -587,7 +590,11 @@ void SpellWearOffSoon(int s, struct char_data* ch) {
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
-
+    
+    if(s == STATUS_QUEST && IS_NPC(ch)) {
+        return;
+    }
+    
 	if(spell_wear_off_soon_msg[s] && *spell_wear_off_soon_msg[s]) {
 		act(spell_wear_off_soon_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
@@ -822,6 +829,31 @@ void SpellWearOff(int s, struct char_data* ch) {
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
+    
+    if(s == STATUS_QUEST && IS_NPC(ch)) {
+        
+        /* fine dei giochi, si torna a casa */
+        switch(GET_POS(ch)) {
+                
+            case POSITION_FIGHTING  :
+            do_emote(ch,"coglie l'occasione buona e se la da' a gambe!",0);
+            stop_fighting(ch);
+            char_from_room(ch);
+            WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
+            char_from_room(ch);
+                break;
+            
+            case POSITION_DEAD  :
+                break;
+                
+            default:
+                do_emote(ch,"si confonde tra la folla e scompare per sempre...",0);
+                char_from_room(ch);
+                break;
+        }
+        
+        return;
+    }
 
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
 		act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);

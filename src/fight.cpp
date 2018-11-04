@@ -996,7 +996,6 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	/*
 	 *   return them from polymorph
 	 */
-
 	make_corpse(ch,killedbytype);
 	zero_rent(ch);
 	extract_char(ch);

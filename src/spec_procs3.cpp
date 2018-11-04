@@ -32,8 +32,10 @@
 #include "act.wizard.hpp"
 #include "board.hpp"
 #include "comm.hpp"
+#include "constants.hpp"
 #include "db.hpp"
 #include "fight.hpp"
+#include "gilde.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic.hpp"
@@ -50,6 +52,7 @@
 #include "spells1.hpp"
 #include "spells2.hpp"
 #include "trap.hpp"
+#include "utility.hpp"
 namespace Alarmud {
 
 
@@ -4832,11 +4835,152 @@ OBJSPECIAL_FUNC(thion_loader) {
 	return(FALSE);
 }
 
+/****************************/
+/* REQUIEM 2018 Quest fisse */
+/****************************/
+/* Tenendo conto delle procedure create da salvo per l'assegnazione
+ dei premi, creiamo ora delle procedure per la creazione e l'assegnazione
+ delle quest dai mob. */
+
+#define QUEST_ZONE 9700
+MOBSPECIAL_FUNC(AssignQuest) {
+	char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
+	struct char_data* questor;
+    struct char_data* quest_tgt;
+    int x, y, z, t;
+    int quest_type;     /* 0.Caccia 1.Consegna 2.salvataggio */
+    
+	questor = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(AssignQuest));
+
+	if(!questor) {
+		return(FALSE);
+	}
+
+    if(type == EVENT_COMMAND && cmd == CMD_ASK && IS_PC(ch)) {
+        
+        arg = one_argument(arg, buf);
+        if(!*buf || get_char_room_vis(ch, buf) != questor) {
+            return(FALSE);
+        }
+        
+        if(IS_AFFECTED(ch, AFF_INVISIBLE) || ch->invis_level >= IMMORTALE) {
+            do_say(questor, "eh? chi ha parlato??", CMD_SAY);
+            return(FALSE);
+        }
+        
+        if(IS_NPC(ch) || IS_POLY(ch)) {
+            do_say(questor, "Ai mob non e' permesso partecipare alle missioni.", CMD_SAY);
+            return(FALSE);
+        }
+        
+        if(!strcmp(arg," quest")) {
+            
+            if((!affected_by_spell(ch, STATUS_QUEST))) {
+            
+            switch(GET_RACE(questor)) {
+
+                case RACE_HUMAN     :
+                    quest_type = number(0,2);
+                    break;
+                case RACE_ELVEN     :
+                    quest_type = number(1,2);
+                    break;
+                case RACE_DWARF     :
+                    quest_type = number(0,1);
+                    break;
+                case RACE_HALFLING  :
+                    quest_type = number(1,2);
+                    break;
+                case RACE_LIZARDMAN :
+                    quest_type = 0;
+                    break;
+                case RACE_ORC       :
+                    quest_type = 0;
+                    break;
+                case RACE_GOBLIN    :
+                    quest_type = 0;
+                    break;
+                default:
+                    quest_type = number(0,2);
+                    break;
+            }
+                
+                /* forzo il tipo di quest a caccia */
+                sprintf(buf2, "pensa di affidarti una missione di %s ma poi ci pensa meglio e decide per qualcosa di piu' indicato...", QuestKind[quest_type]);
+                do_emote(mob,buf2,0);
+                quest_type = 0;
+                
+            switch(quest_type) {
+                    
+                case 0      :
+                    x = number(QUEST_ZONE,QUEST_ZONE+3);
+                    
+                    AssignMob(x, MobKilled);
+                    
+                    if((quest_tgt = read_mobile(real_mobile(x), REAL))) {
+                        char_to_room(quest_tgt, 3004);
+                    }
+                    
+                    for (y = 0; NameGenAsset[y] != NULL; y++);
+                    
+                    t = number(0,y-2);
+                    sprintf(buf2, "%s", NameGenAsset[t]);
+                    
+                    x = number(1,2); /* vario la lunghezza del nome in modo casuale */
+                    for(z = 0; z < x; z++) {
+                        t = number(0,y-2);
+                        sprintf(buf2, "%s%s",buf2, NameGenAsset[t]);
+                    }
+                    
+                    quest_tgt->player.name = (char*)strdup(buf2);
+                    
+                    sprintf(buf2, "%s, %s",buf2, quest_tgt->player.short_descr);
+                    
+                    quest_tgt->player.short_descr = (char*)strdup(buf2);
+                    
+                    spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0,ch->desc->AccountData.id);
+                    
+                    t = GET_MOB_VNUM(quest_tgt);
+                    
+                    break;
+                case 1      :
+                    break;
+                case 2      :
+                    break;
+                case 3      :
+                    break;
+                default:
+                    break;
+            }
+            
+            spell_quest(GetMaxLevel(ch),ch,ch,0,t);
+                
+            sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato visto a %s.",GET_NAME(ch), quest_tgt->player.name, real_roomp(quest_tgt->in_room)->name);
+                
+            } else {
+                
+                sprintf(buf, "%s Hai gia' il tuo compito!",GET_NAME(ch));
+            }
+            
+        } else {
+            sprintf(buf, "%s Se vuoi ho un lavoretto per te. Chiedimi una quest...",GET_NAME(ch));
+            }
+        
+        do_tell(questor, buf, CMD_TELL);
+        
+    } else {
+        return(FALSE);
+    }
+    
+    return(TRUE);
+    
+	}
+    
 /**************************/
 /* SALVO 2006 Quest fisse */
 /**************************/
 /*
-R xxxx MOBKilled VNum Tipo Premio SideProcedure
+R xxxx MobKillInRoom VNum Tipo Premio SideProcedure
 M xxxx ItemGiven VNum Tipo Premio SideProcedure
 O xxxx ItemPut VNum Tipo Premio SideProcedure
 O xxxx TransformObj LIST_BEG LIST_END RESULT
@@ -4855,7 +4999,7 @@ stanza.
 
 Allora, a livello di parametri le procedure funzionano circa allo stesso
 modo, cambia solo il loro metodo di attivazione:
-R MOBKilled si attiva quando il mostro VNum muore nella stanza specificata
+R MobKillInRoom si attiva quando il mostro VNum muore nella stanza specificata
 M ItemGiven si attiva quando il MOB riceve l'oggetto VNum (l'oggetto viene
 junkato)
 O ItemPut si attiva quando nel contenitore viene posto l'oggetto VNum
@@ -4907,8 +5051,39 @@ Poi se hai tempo procedi a creare i tipi 1, 0 e 3 che verranno usate molto
 meno. Per la 4 credo che ti basti copiare un po' di codice dalla special che
 genera Thion.
 */
+    
+/* Requiem:
+ aggiungiamo un tipo di assegnazione piu' semplice
+ M xxxx MobKilled VNum Tipo Premio -> il mob crepa e se il vnum combacia col quest target
+ vengono assegnati i premi.
+ */
 
-ROOMSPECIAL_FUNC(MOBKilled) {
+MOBSPECIAL_FUNC(MobKilled) {
+    struct affected_type* af;
+    struct char_data* t;
+    struct room_data* rp;
+    char buf[MAX_INPUT_LENGTH];
+    
+    if(type == EVENT_DEATH) {
+        
+        rp = real_roomp(ch->in_room);
+
+        for(t = rp->people; t; t=t->next_in_room) {
+            
+                if((t != ch) && affected_by_spell(t,STATUS_QUEST)) {
+                    for(af = t->affected; af; af = af->next) {
+                        if(af->type == STATUS_QUEST && af->modifier == GET_MOB_VNUM(ch)) {
+                            sprintf(buf,"\n\r$c0013%s ha reso un servigio agli dei, che lo premiano con stocazzo.$c0007\n\r", t->player.name);
+                            act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                        }
+                    }
+                }
+        }
+    }
+    return FALSE;
+}
+    
+ROOMSPECIAL_FUNC(MobKillInRoom) {
 	if(type == EVENT_DEATH && ch->in_room == room->number) {
 		const char* p;
 		char killed[8];
@@ -4924,6 +5099,8 @@ ROOMSPECIAL_FUNC(MOBKilled) {
 		p=one_argument(p,premio);
 		only_argument(p,sideprocedure);
 		if(GET_MOB_VNUM(ch) == iKilled) {
+            
+            
 			if(iTipo == 2) {
 				char buf[80];
 				sprintf(buf,"Complimenti hai vinto %s rune degli eroi.",premio);
@@ -4932,9 +5109,6 @@ ROOMSPECIAL_FUNC(MOBKilled) {
 			else {
 				act("ATTENZIONE il tipo di premio implementato e' solo il 2 ovvero in rune.", FALSE, ch, 0, ch, TO_ROOM);
 			}
-		}
-		else {
-			act("ATTENZIONE il mob morto non e' quello della quest.", FALSE, ch, 0, ch, TO_ROOM);
 		}
 	}
 	return FALSE;
