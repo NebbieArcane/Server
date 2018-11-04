@@ -481,20 +481,12 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	}
 	else if(loc == APPLY_AFF2) {
 		if(add) {
-			SET_BIT(ch->specials.affected_by2, bitv); // Montero 16-Sep-18
-<<<<<<< HEAD
-            SET_BIT(ch->specials.affected_by2, mod); // Montero 16-Sep-18
-		}
-		else {
-			REMOVE_BIT(ch->specials.affected_by2, bitv); // Montero 16-Sep-18
-            REMOVE_BIT(ch->specials.affected_by2, mod); // Montero 16-Sep-18
-=======
+			SET_BIT(ch->specials.affected_by2, bitv);
             SET_BIT(ch->specials.affected_by2, mod);
 		}
 		else {
-			REMOVE_BIT(ch->specials.affected_by2, bitv); // Montero 16-Sep-18
+			REMOVE_BIT(ch->specials.affected_by2, bitv);
             REMOVE_BIT(ch->specials.affected_by2, mod);
->>>>>>> 3ca15213299d76b99f2457f79b1447823882fc22
 		}
 		return;
 	}
