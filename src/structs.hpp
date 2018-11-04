@@ -712,6 +712,7 @@ struct char_data {
 	long AgeModifier;
 	struct event* points_event[3];   /* events for regening H/M/V */
 	//char *has_killed; /* FLYP 2003 Salva il nome dell'ultima persona che ho ucciso*/
+    char* lastpkill; // destroy
 
 };
 

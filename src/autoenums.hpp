@@ -122,6 +122,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_QUEST                                  =1; /*item part of a quest*/
 	constexpr unsigned long ITEM2_EDIT                                   =2; /*edited item*/
 	constexpr unsigned long ITEM2_NO_LOCATE                              =4; /*no-locate item*/
+	constexpr unsigned long ITEM2_PERSONAL                               =8; /*personalized item*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/

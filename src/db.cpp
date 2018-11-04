@@ -3543,6 +3543,12 @@ void free_char(struct char_data* ch) {
 		affect_remove(ch, af);
 	}
 
+    if(ch->lastpkill)       // destroy
+    {
+        free(ch->lastpkill);
+        ch->lastpkill = NULL;
+    }
+    
 	if(ch->skills) {
 		free(ch->skills);
 		ch->skills = NULL;
@@ -3846,24 +3852,38 @@ void reset_char(struct char_data* ch) {
 	//GET_LEVEL(ch,0) = 60;
 	//}
 
-	if(!strcmp(GET_NAME(ch), "Alar")) {  //Giovanni
+	if(!strcmp(GET_NAME(ch), "Alar")) {         //Giovanni
 		GET_LEVEL(ch, 0) = 60;
 	}
-	if(!strcmp(GET_NAME(ch), "Isildur")) {  //Nicola
+	if(!strcmp(GET_NAME(ch), "Isildur")) {      //Nicola
 		GET_LEVEL(ch, 0) = 59;
 	}
-	if(!strcmp(GET_NAME(ch), "Requiem")) {  //Francesco
+	if(!strcmp(GET_NAME(ch), "Requiem")) {      //Francesco
 		GET_LEVEL(ch, 0) = 59;
 	}
-	if(!strcmp(GET_NAME(ch), "Flyp")) {  //Enrico
+	if(!strcmp(GET_NAME(ch), "Flyp")) {         //Enrico
 		GET_LEVEL(ch, 0) = 59;
 	}
-	if(!strcmp(GET_NAME(ch), "Nihil")) {  //Marco
+	if(!strcmp(GET_NAME(ch), "Nihil")) {        //Marco
 		GET_LEVEL(ch, 0) = 58;
+        
+        if(PORT == DEVEL_PORT)                  //Marco su DEVEL_PORT
+        {
+            GET_LEVEL(ch, 0) = 59;
+        }
 	}
-	if(!strcmp(GET_NAME(ch), "LadyOfPain")) {  //Giuseppe
+	if(!strcmp(GET_NAME(ch), "LadyOfPain")) {   //Giuseppe
 		GET_LEVEL(ch, 0) = 58;
+
+        if(PORT == DEVEL_PORT)                  //Giuseppe su DEVEL_PORT
+        {
+            GET_LEVEL(ch, 0) = 59;
+        }
 	}
+    if(!strcmp(GET_NAME(ch), "Montero")
+                && PORT == DEVEL_PORT)  {       //Corrado su DEVEL_PORT
+        GET_LEVEL(ch, 0) = 59;
+    }
 
     /* Montero 10-Sep-2018 db.cpp: controllo se il livello del toon è >= 58 */
     if ( GET_LEVEL(ch, 0) >= 58 )

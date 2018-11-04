@@ -4285,7 +4285,7 @@ ROOMSPECIAL_FUNC(pet_shops) {
 
 	pet_room = ch->in_room+1;
 
-	if(cmd==59) {  /* List */
+	if(cmd==CMD_LIST) {  /* List */
 		send_to_char("Available pets are:\n\r", ch);
 		for(pet = real_roomp(pet_room)->people; pet; pet = pet->next_in_room) {
 			sprintf(buf, "%8d - %s\n\r", 24*GET_EXP(pet), pet->player.short_descr);
@@ -4293,7 +4293,7 @@ ROOMSPECIAL_FUNC(pet_shops) {
 		}
 		return(TRUE);
 	}
-	else if(cmd==56) {    /* Buy */
+	else if(cmd==CMD_BUY) {    /* Buy */
 
 		arg = one_argument(arg, buf);
 		only_argument(arg, pet_name);
@@ -4358,7 +4358,7 @@ ROOMSPECIAL_FUNC(Fountain) {
 		return FALSE;
 	}
 
-	if(cmd==248) {
+	if(cmd==CMD_FILL) {
 		/* fill */
 
 		arg = one_argument(arg, buf); /* buf = object */
@@ -4397,7 +4397,7 @@ ROOMSPECIAL_FUNC(Fountain) {
 		return(TRUE);
 
 	}
-	else if(cmd==11) {
+	else if(cmd==CMD_DRINK) {
 		/* drink */
 		switch(ch->in_room) {
 		case 13518:
@@ -4470,7 +4470,7 @@ ROOMSPECIAL_FUNC(bank) {
 
 
 	/*deposit*/
-	if(cmd==219) {
+	if(cmd==CMD_DEPOSIT) {
 		if(HasClass(ch, CLASS_MONK) && (GetMaxLevel(ch) < 40)) {
 			send_to_char("Your vows forbid you to retain personal wealth\n\r", ch);
 			return(TRUE);
@@ -4506,7 +4506,7 @@ ROOMSPECIAL_FUNC(bank) {
 		}
 		/*withdraw*/
 	}
-	else if(cmd==220) {
+	else if(cmd==CMD_WITHDRAW) {
 
 		if(HasClass(ch, CLASS_MONK) && (GetMaxLevel(ch) < 40)) {
 			send_to_char("Your vows forbid you to retain personal wealth\n\r", ch);
@@ -4538,7 +4538,7 @@ ROOMSPECIAL_FUNC(bank) {
 		}
 		/* Balance */
 	}
-	else if(cmd == 221) {
+	else if(cmd == CMD_BALANCE) {
 		sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
 		send_to_char(buf, ch);
 		return(TRUE);
@@ -4567,7 +4567,7 @@ ROOMSPECIAL_FUNC(pray_for_items) {
 		return FALSE;
 	}
 
-	if(cmd != 176) { /* You must pray to get the stuff */
+	if(cmd != CMD_PRAY) { /* You must pray to get the stuff */
 		return FALSE;
 	}
 
@@ -4694,11 +4694,11 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 
 
 int kings_hall(struct char_data* ch, int cmd, char* arg) {
-	if(cmd != 176) {
+	if(cmd != CMD_PRAY) {
 		return(0);
 	}
 
-	do_action(ch, arg, 176);
+	do_action(ch, arg, CMD_PRAY);
 
 	send_to_char("You feel as if some mighty force has been offended.\n\r", ch);
 	send_to_char(CHAL_ACT, ch);
@@ -4718,7 +4718,7 @@ int kings_hall(struct char_data* ch, int cmd, char* arg) {
 ROOMSPECIAL_FUNC(Donation) {
 	char check[40];
 
-	if(type != EVENT_COMMAND || (cmd != 10 && cmd != 167)) {
+	if(type != EVENT_COMMAND || (cmd != CMD_GET && cmd != CMD_TAKE)) {
 		return(FALSE);
 	}
 
@@ -5908,7 +5908,7 @@ MOBSPECIAL_FUNC(StatTeller) {
 	char buf[200];
 
 	if(cmd) {
-		if(cmd == 56) {  /* buy */
+		if(cmd == CMD_BUY) {  /* buy */
 
 			/*
 			** randomly tells a player 3 of his/her stats.. for a price
@@ -6018,7 +6018,7 @@ MOBSPECIAL_FUNC(ThrowerMob) {
 	else {
 		switch(ch->in_room) {
 		case 13912: {
-			if(cmd == 1) {    /* north+1 */
+			if(cmd == CMD_NORTH) {    /* north+1 */
 				send_to_char("The Troll blocks your way.\n",ch);
 				return(TRUE);
 			}
@@ -6060,11 +6060,11 @@ MOBSPECIAL_FUNC(Tyrannosaurus_swallower) {
 	struct room_data* rp;
 	int i;
 
-	if(cmd && cmd != 156) {
+	if(cmd && cmd != CMD_STEAL) {
 		return(FALSE);
 	}
 
-	if(cmd == 156) {
+	if(cmd == CMD_STEAL) {
 		send_to_char("You're much too afraid to steal anything!\n\r", ch);
 		return(TRUE);
 	}
@@ -6159,7 +6159,7 @@ OBJSPECIAL_FUNC(enter_obj) {
 		return(FALSE);
 	}
 
-	if(cmd != 7) {
+	if(cmd != CMD_ENTER) {
 		return(FALSE);
 	}
 
@@ -6232,7 +6232,7 @@ OBJSPECIAL_FUNC(soap) {
 		return(FALSE);
 	}
 
-	if(cmd != 172) {
+	if(cmd != CMD_USE) {
 		return(FALSE);
 	}
 
@@ -7202,7 +7202,7 @@ OBJSPECIAL_FUNC(nodrop) {
 	/* Check the character's inventory for give, drop, steal. */
 	if(!xobj) {
 		/* Don't bother with get anymore */
-		if(cmd == 10) {
+		if(cmd == CMD_GET) {
 			return(FALSE);
 		}
 	}
@@ -7231,7 +7231,7 @@ OBJSPECIAL_FUNC(nodrop) {
 		return(FALSE);
 	}
 
-	if(cmd == 72 || cmd == 156) {
+	if(cmd == CMD_GIVE || cmd == CMD_STEAL) {
 		only_argument(arg, vict_name);
 		if(!*vict_name) {
 			return FALSE;
