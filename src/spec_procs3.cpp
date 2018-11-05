@@ -5084,7 +5084,7 @@ MOBSPECIAL_FUNC(MobKilled) {
     struct affected_type* af;
     struct char_data* t;
     struct room_data* rp;
-    int premio[3] = 0; /* 0.coin, 1.xp, 2.rune */
+    int premio[3]; /* 0.coin, 1.xp, 2.rune */
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
