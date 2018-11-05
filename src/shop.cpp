@@ -19,6 +19,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "shop.hpp"
 #include "act.comm.hpp"
@@ -30,6 +31,7 @@
 #include "interpreter.hpp"
 #include "regen.hpp"
 #include "spec_procs.hpp"
+#include "spell_parser.hpp"
 
 namespace Alarmud {
 
@@ -506,6 +508,56 @@ void shopping_list(char* arg, struct char_data* ch,
 	send_to_char(buf,ch);
 	return;
 }
+    
+void indizio_quest(char* arg, struct char_data* ch,
+					struct char_data* keeper, int shop_nr) {
+	char argm[100], buf[MAX_STRING_LENGTH];
+    struct affected_type* af;
+
+	if(!(is_ok(keeper,ch,shop_nr))) {
+		return;
+	}
+
+	only_argument(arg, argm);
+
+	if(!(*argm))    {
+		sprintf(buf,"%s Qui si compra, non si chiacchiera!",
+				GET_NAME(ch));
+		do_tell(keeper,buf,19);
+		return;
+	}
+
+        if(!strcmp(arg,"indizio")) {
+            
+            if(!(ch->specials.quest_ref = get_char_vis_world(ch, buf, NULL))) {
+                sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",
+                        GET_NAME(ch));
+                do_tell(keeper,buf,19);
+            }
+            else {
+                sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
+                do_tell(keeper,buf,19);
+                
+                if(number(0,1) == 1) {
+                    for(af = ch->affected; af; af = af->next) {
+                        if(af->type == STATUS_QUEST) {
+                            af->modifier = af->modifier/2;
+                            affect_modify(ch, af->location,af->modifier,af->bitvector, TRUE);
+                        }
+                    }
+                sprintf(buf,"\n\r$c0014Voci arrivano a %s e sentendosi braccato riduce la sua permanenza.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
+                            act(buf, FALSE, ch, 0, ch, TO_CHAR);
+                }
+            }
+            
+        } else {
+            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ci sono orecchie ovunque, e se qualcuno spiffera ti costera'!",
+                    GET_NAME(ch));
+            do_tell(keeper,buf,19);
+        }
+
+	return;
+}
 
 int shopping_kill(char* arg, struct char_data* ch,
 				  struct char_data* keeper, int shop_nr) {
@@ -582,7 +634,7 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 		return(TRUE);
 	}
 
-	if((cmd ==CMD_SELL) && (ch->in_room == shop_index[shop_nr].in_room))
+	if((cmd == CMD_SELL) && (ch->in_room == shop_index[shop_nr].in_room))
 		/* Sell */
 	{
 		shopping_sell(arg,ch,keeper,shop_nr);
@@ -602,6 +654,13 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 		shopping_list(arg,ch,keeper,shop_nr);
 		return(TRUE);
 	}
+    
+    if((cmd == CMD_ASK) && (ch->in_room == shop_index[shop_nr].in_room))
+    /* Quest info */
+    {
+        indizio_quest(arg,ch,keeper,shop_nr);
+        return(TRUE);
+    }
 
 	if((cmd == CMD_KILL) || (cmd==CMD_HIT)) {  /* Kill or Hit */
 		only_argument(arg, argm);
