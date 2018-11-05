@@ -3691,6 +3691,7 @@ void reset_char(struct char_data* ch) {
 	ch->next_fighting = 0;
 	ch->next_in_room = 0;
 	ch->specials.fighting = 0;
+    ch->specials.quest_ref = 0;
 	ch->specials.PosPrev = POSITION_STANDING;
 	for(i = 0; i < MAX_POSITION; i++) {
 		ch->specials.TempoPassatoIn[i] = 0;

@@ -467,7 +467,6 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				strcpy(obj->name, st->objects[i].name);
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
-                mudlog(LOG_PLAYERS,"%s --> %d",GET_NAME(ch),st->objects[i].item_number);
                 if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj))
                 {
                     pers_obj(ch, ch, obj, 1000);

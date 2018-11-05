@@ -5084,7 +5084,7 @@ MOBSPECIAL_FUNC(MobKilled) {
     struct affected_type* af;
     struct char_data* t;
     struct room_data* rp;
-    int premio[3]; /* 0.coin, 1.xp, 2.rune */
+    int premio[3] = 0; /* 0.coin, 1.xp, 2.rune */
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
@@ -5103,7 +5103,7 @@ MOBSPECIAL_FUNC(MobKilled) {
                                 if(IS_PKILLER(t)) {
                                     premio[1] = (x*50000)-((x-af->duration)*50000);
                                 }
-                                if(IS_PRINCE(t) && af->duration == x-2) {
+                                if(IS_PRINCE(t) && af->duration >= x-2) {
                                     premio[2] = 1;
                                 }
                             }

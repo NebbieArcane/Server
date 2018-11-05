@@ -864,7 +864,10 @@ void SpellWearOff(int s, struct char_data* ch) {
 			(IS_NPC(ch) || !IS_SET(ch->specials.act, PLR_STEALTH))) {
 		act(spell_wear_off_room_msg[s], TRUE, ch, 0, 0, TO_ROOM);
 	}
-
+    
+    if(s == STATUS_QUEST) {
+        ch->specials.quest_ref = 0;
+    }
 
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {
 		check_decharm(ch);
