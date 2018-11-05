@@ -1821,6 +1821,11 @@ void spell_summon(byte level, struct char_data* ch,
 	if((rp = real_roomp(ch->in_room)) == NULL) {
 		return;
 	}
+    
+    if(IS_NPC(victim),affected_by_spell(victim,STATUS_QUEST)) {
+        act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
 
 	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("Un'oscura magia ti blocca.\n\r", ch);
@@ -2771,7 +2776,7 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 }
 
 void spell_quest(byte level, struct char_data* ch,
-					 struct char_data* victim, struct obj_data* obj, unsigned long int tgt) {
+					 struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
 
 	if((!affected_by_spell(victim, STATUS_QUEST))) {
@@ -2780,9 +2785,9 @@ void spell_quest(byte level, struct char_data* ch,
 		act("Senti di avere un compito su questa terra.",TRUE,victim,0,0,TO_CHAR);
 
 		af.type      = STATUS_QUEST;
-		af.duration  = (level<LOW_IMMORTAL) ? 3 : level;
-		af.modifier  = tgt;
-		af.location  = APPLY_SKIP;
+        af.duration  = level/2;
+		af.modifier  = 0;
+		af.location  = APPLY_NONE;
 		af.bitvector = 0;
 		affect_to_char(victim, &af);
 	}

@@ -138,6 +138,7 @@ void CallForMobs(struct char_data* pChar, struct char_data* pVict, int iLevel, i
 void CleanZone(int zone);
 void DevelopHatred(struct char_data* ch, struct char_data* v);
 void DoNothing(void* pDummy);
+bool inRange(int low, int high, int x);
 void down_river(unsigned long pulse);
 void FallOffMount(struct char_data* ch, struct char_data* h);
 void FighterMove(struct char_data* ch);

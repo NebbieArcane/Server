@@ -4842,13 +4842,12 @@ OBJSPECIAL_FUNC(thion_loader) {
  dei premi, creiamo ora delle procedure per la creazione e l'assegnazione
  delle quest dai mob. */
 
-#define QUEST_ZONE 9700
 MOBSPECIAL_FUNC(AssignQuest) {
 	char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
 	struct char_data* questor;
     struct char_data* quest_tgt;
     int x, y, z, t;
-    int quest_type;     /* 0.Caccia 1.Consegna 2.salvataggio */
+    int quest_type;     /* 0.Caccia 1.ricerca 2.Consegna 3.salvataggio */
     
 	questor = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(AssignQuest));
 
@@ -4869,7 +4868,14 @@ MOBSPECIAL_FUNC(AssignQuest) {
         }
         
         if(IS_NPC(ch) || IS_POLY(ch)) {
-            do_say(questor, "Ai mob non e' permesso partecipare alle missioni.", CMD_SAY);
+            sprintf(buf,"%s Ai mob non e' permesso partecipare alle missioni.",GET_NAME(ch));
+            do_tell(questor, buf, CMD_TELL);
+            return(FALSE);
+        }
+        
+        if(GetMaxLevel(ch) < ALLIEVO) {
+            sprintf(buf,"%s Torna quando cresci.",GET_NAME(ch));
+            do_tell(questor, buf, CMD_TELL);
             return(FALSE);
         }
         
@@ -4880,10 +4886,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
             switch(GET_RACE(questor)) {
 
                 case RACE_HUMAN     :
-                    quest_type = number(0,2);
+                    quest_type = number(0,3);
                     break;
                 case RACE_ELVEN     :
-                    quest_type = number(1,2);
+                    quest_type = number(1,3);
                     break;
                 case RACE_DWARF     :
                     quest_type = number(0,1);
@@ -4906,8 +4912,8 @@ MOBSPECIAL_FUNC(AssignQuest) {
             }
                 
                 /* forzo il tipo di quest a caccia */
-                sprintf(buf2, "pensa di affidarti una missione di %s ma poi ci pensa meglio e decide per qualcosa di piu' indicato...", QuestKind[quest_type]);
-                do_emote(mob,buf2,0);
+                sprintf(buf2, "pensa di affidarti una missione di %s ma poi ci riflette meglio e decide per qualcosa di piu' indicato...", QuestKind[quest_type]);
+                act(buf2, FALSE, ch, 0, ch, TO_CHAR);
                 quest_type = 0;
                 
             switch(quest_type) {
@@ -4929,7 +4935,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     x = number(1,2); /* vario la lunghezza del nome in modo casuale */
                     for(z = 0; z < x; z++) {
                         t = number(0,y-2);
-                        sprintf(buf2, "%s%s",buf2, NameGenAsset[t]);
+                        strcat(buf2, NameGenAsset[t]);
                     }
                     
                     quest_tgt->player.name = (char*)strdup(buf2);
@@ -4938,9 +4944,25 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     
                     quest_tgt->player.short_descr = (char*)strdup(buf2);
                     
-                    spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0,ch->desc->AccountData.id);
+                    quest_tgt->specials.quest_ref = ch;
+                    ch->specials.quest_ref = quest_tgt;
                     
-                    t = GET_MOB_VNUM(quest_tgt);
+                    spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0);
+                    
+                    /* adattiamo il mob al questante, questa e' da perfezionare */
+                    
+                    if(HasClass(mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
+                                CLASS_BARBARIAN | CLASS_MONK)) {
+                        quest_tgt->specials.damsizedice = GetMaxLevel(ch)/17;
+                        quest_tgt->specials.damnodice = GetMaxLevel(ch)/5;
+                    }
+                    
+                    quest_tgt->points.max_hit = GET_MAX_HIT(ch);
+                    GET_HIT(quest_tgt) = GET_MAX_HIT(quest_tgt);
+                    quest_tgt->points.max_move = GET_MAX_MOVE(quest_tgt);
+                    GET_MOVE(quest_tgt) = GET_MAX_MOVE(quest_tgt);
+                    quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+quest_tgt->points.hitroll;
+                    quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+quest_tgt->points.damroll;
                     
                     break;
                 case 1      :
@@ -4953,13 +4975,13 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     break;
             }
             
-            spell_quest(GetMaxLevel(ch),ch,ch,0,t);
+            spell_quest(GetMaxLevel(ch),ch,ch,0);
                 
-            sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato visto a %s.",GET_NAME(ch), quest_tgt->player.name, real_roomp(quest_tgt->in_room)->name);
+            sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), real_roomp(quest_tgt->in_room)->name);
                 
             } else {
                 
-                sprintf(buf, "%s Hai gia' il tuo compito!",GET_NAME(ch));
+                sprintf(buf, "%s Non puoi sobbarcarti di tutto il lavoro del regno, torna piu' tardi!",GET_NAME(ch));
             }
             
         } else {
@@ -5062,6 +5084,8 @@ MOBSPECIAL_FUNC(MobKilled) {
     struct affected_type* af;
     struct char_data* t;
     struct room_data* rp;
+    int premio[3]; /* 0.coin, 1.xp, 2.rune */
+    int n,x;
     char buf[MAX_INPUT_LENGTH];
     
     if(type == EVENT_DEATH) {
@@ -5071,11 +5095,46 @@ MOBSPECIAL_FUNC(MobKilled) {
         for(t = rp->people; t; t=t->next_in_room) {
             
                 if((t != ch) && affected_by_spell(t,STATUS_QUEST)) {
-                    for(af = t->affected; af; af = af->next) {
-                        if(af->type == STATUS_QUEST && af->modifier == GET_MOB_VNUM(ch)) {
-                            sprintf(buf,"\n\r$c0013%s ha reso un servigio agli dei, che lo premiano con stocazzo.$c0007\n\r", t->player.name);
-                            act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                    if(ch->specials.quest_ref == t) {
+                        for(af = t->affected; af; af = af->next) {
+                            if(af->type == STATUS_QUEST) {
+                                x = GetMaxLevel(t);
+                                premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
+                                if(IS_PKILLER(t)) {
+                                    premio[1] = (x*50000)-((x-af->duration)*50000);
+                                }
+                                if(IS_PRINCE(t) && af->duration == x-2) {
+                                    premio[2] = 1;
+                                }
+                            }
                         }
+                        
+                            sprintf(buf,"\n\r$c0014Rendi un servigio agli dei, che ti premiano...$c0007\n");
+                            act(buf, FALSE, t, 0, t, TO_CHAR);
+                            
+                            for(n = 0;n < 3;n++) {
+                                if(premio[n] > 0) {
+                                    
+                                    switch(n) {
+                                        case 0  :
+                                            sprintf(buf,"\r$c0014con %d monete d'oro!$c0007\n", premio[0]);
+                                            break;
+                                        case 1  :
+                                            sprintf(buf,"$c0014con %d punti esperienza!$c0007\n", premio[1]);
+                                            break;
+                                        case 2  :
+                                            sprintf(buf,"$c0014con %d rune degli Dei!$c0007\n", premio[2]);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    act(buf, FALSE, t, 0, t, TO_CHAR);
+                                }
+                            }
+                            sprintf(buf,"\r");
+                            act(buf, FALSE, t, 0, t, TO_CHAR);
+                            sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",ch->specials.quest_ref->player.name);
+                            act(buf, FALSE, t, 0, t, TO_ROOM);
                     }
                 }
         }

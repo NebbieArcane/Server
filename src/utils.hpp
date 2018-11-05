@@ -13,6 +13,8 @@
 #include "multiclass.hpp"
 namespace Alarmud {
 
+#define QUEST_ZONE 9700
+    
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
 //#define TRUE  1

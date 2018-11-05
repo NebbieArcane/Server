@@ -3250,6 +3250,11 @@ void do_where_person(struct char_data* ch, struct char_data* person,
 	if(!CAN_SEE(ch, person)) {
 		return;
 	}
+    
+    if(IS_NPC(person),affected_by_spell(person,STATUS_QUEST) && IS_PC(ch) && GetMaxLevel(ch) < IMMORTALE) {
+        act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
 
 	snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- %s ", PERS(person, ch),
 			 (person->in_room > -1 ? real_roomp(person->in_room)->name :

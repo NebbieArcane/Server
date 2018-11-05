@@ -27,7 +27,6 @@
 #include "act.info.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
-#include "act.wizard.hpp"
 #include "breath.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -825,7 +824,8 @@ void check_decharm(struct char_data* ch) {
 
 
 void SpellWearOff(int s, struct char_data* ch) {
-
+    char buf[128];
+    
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
@@ -836,19 +836,20 @@ void SpellWearOff(int s, struct char_data* ch) {
         switch(GET_POS(ch)) {
                 
             case POSITION_FIGHTING  :
-            do_emote(ch,"coglie l'occasione buona e se la da' a gambe!",0);
-            stop_fighting(ch);
-            char_from_room(ch);
             WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
-            char_from_room(ch);
+            sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe!$c0007\n\r",ch->player.name);
+            act(buf, FALSE, ch, 0, ch, TO_ROOM);
+            stop_fighting(ch);
+            extract_char(ch);
                 break;
             
             case POSITION_DEAD  :
                 break;
                 
             default:
-                do_emote(ch,"si confonde tra la folla e scompare per sempre...",0);
-                char_from_room(ch);
+                sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",ch->player.name);
+                act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                extract_char(ch);
                 break;
         }
         

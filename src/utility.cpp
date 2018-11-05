@@ -4846,6 +4846,11 @@ int fighting_in_room(int room_n) {
 void DoNothing(void* pDummy) {
 	return;
 }
+    
+bool inRange(int low, int high, int x)
+{ 
+    return ((x-high)*(x-low) <= 0); 
+}
 
 // caricare troppo lo stack (WORLD_SIZE e`
 // uguale a 50000)

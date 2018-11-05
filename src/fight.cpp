@@ -20,6 +20,7 @@
 #include "structs.hpp"
 #include "logging.hpp"
 #include "constants.hpp"
+#include "utility.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "fight.hpp"
@@ -551,6 +552,9 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 		 spec_desc[255]; /* used in describing the corpse */
 	int r_num,i, ADeadBody=FALSE;
 
+    if(IS_NPC(ch) && (GET_MOB_VNUM(ch) >= QUEST_ZONE && GET_MOB_VNUM(ch) <= QUEST_ZONE+99)) {
+        return;
+    }
 	/*   char *strdup(char *source); */
 
 	CREATE(corpse, struct obj_data, 1);
@@ -1736,7 +1740,7 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 
 		{
 			"$n #W $N molto duramente #l.",                                /* 16..25  */
-			"You #w $N molto duramente #l.",
+			"#w $N molto duramente #l.",
 			"$n ti #W molto duramente #L."
 		},
 

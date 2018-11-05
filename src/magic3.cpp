@@ -2565,7 +2565,12 @@ void spell_portal(byte level, struct char_data* ch,
 		send_to_char("L'incantesimo non riesce\n\r", ch);
 		return;
 	}
-
+    
+    if(IS_NPC(tmp_ch),affected_by_spell(tmp_ch,STATUS_QUEST)) {
+        act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
+    
 	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("Un'oscura magia blocca il tuo incantesimo.\n\r", ch);
 		return;

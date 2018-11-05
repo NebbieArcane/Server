@@ -4104,9 +4104,10 @@ struct QuestItem QuestList[4][IMMORTAL] = {
 
 const char* QuestKind [] = {
 
-    "Caccia",
-    "Consegna",
-    "Salvataggio",
+    "caccia",
+    "ricerca",
+    "consegna",
+    "salvataggio",
     "\0"
 
 };
@@ -4131,7 +4132,7 @@ const char* att_kick_kill_ch[] = {
 	"Il tuo piede colpisce $N all'inguine. La morte e' immediata.",
 	"Il tuo calcio fracassa il cranio di $N.",
 	"Calci $N in pieno viso; la sua mascella si frantuma e la sua vita si spegne.",
-	"Colpisci $N nel deretano con un calcio violentissimo. $N stramazza e muore all'istante.",
+	"Colpisci $N alle spalle con un calcio violentissimo. $N stramazza e muore all'istante.",
 	"Calci $N nella pancia, frantumando diverse costole. $N muore all'istante.",
 	"Le ruvide scaglie di $N si sfondano sotto il tuo piede, $N muore all'istante.",
 	"Il tuo calcio manda brandelli di corteccia e foglie in ogni dove, uccidendo $N.",
@@ -4223,7 +4224,7 @@ const char* att_kick_miss_victim[] = {
 	"Scansi agilmente il debole calcio di $n.",
 	"Ti abbassi e il calcio di $n vola alto sulla tua testa.",
 	"Fai un saltino indietro e ridi del goffo tentativo di $n di colpirti al volto.",
-	"Il piede di $n tenta goffamente di colpire il tuo deretano, non hai problemi ad evitarlo.",
+	"Il piede di $n tenta goffamente di colpire la tua spalla, non hai problemi ad evitarlo.",
 	"Ridi del goffo tentativo di $n di affondare il suo piede nel tuo stomaco.",
 	"$n ti calcia, ma le tue scaglie son troppo robuste perche' tu ne risenta.",
 	"Ridi quando $n s'ammacca il piede sul tuo tronco.",
@@ -4269,7 +4270,7 @@ const char* att_kick_hit_ch[] = {
 	"Colpisci all'inguine $N con una sonora pedata.",
 	"$N perde l'orientamento quando il tuo calcio lo prende in pieno volto.",
 	"Il tuo piede centra la mandibola di $N spostandola.",
-	"Punzoni il deretano di $N, che esegue una ridicola piroetta.",
+	"Fracassi con un calcio la spalla di $N, che indietreggia agonizzante.",
 	"Centri $N allo stomaco, $N si piega e impreca.",
 	"Il tuo piede trova un punto morbido tra le scaglie di $N e vi lascia un bel segno!",
 	"Il tuo calcio colpisce $N facendo svolazzare foglie e rametti.",
@@ -4292,7 +4293,7 @@ const char* att_kick_hit_victim[] = {
 	"Con un calcio $n ti sposta di fianco, per un attimo perdi l'equilibrio.",
 	"Vedi il piede di $n, e subito dopo un arcobaleno di colori...",
 	"$n ti calcia in pieno volto.",
-	"Il piede di $n centra il tuo deretano, AHIA!",
+	"Il piede di $n centra la tua spalla, AHIA!",
 	"Con un calcio nello stomaco $n ti toglie il respiro.",
 	"$n trova uno spazio tenero tra le tue squame e ti rifila una sonora pedata.",
 	"$n ti calcia cosi' forte da levarti qualche etto di foglie e rametti!",
@@ -4314,7 +4315,7 @@ const char* att_kick_hit_room[] = {
 	"$n sposta di peso $N con un potente calcio.",
 	"Gli occhi di $N ruotano per il calcio in pieno volto di $n.",
 	"$n sposta la mandibola di $N con un poderoso calcio.",
-	"$n centra il deretano di $N con un calcio ben assestato.",
+	"$n centra la spalla di $N con un calcio ben assestato.",
 	"$N perde il respiro per il calcio allo stomaco di $n.",
 	"$n trova un punto morbido tra le scaglie di $N e vi dirige il piede con maestria.",
 	"$n centra $N con un gran calcio che stacca foglie e rametti.",

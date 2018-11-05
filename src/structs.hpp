@@ -461,7 +461,7 @@ struct char_player_data {
 	char* title;        /* PC / NPC s title                     */
 	char* sounds;       /* Sound that the monster makes (in room) */
 	char* distant_snds; /* Sound that the monster makes (other) */
-
+    
 	int iClass;         /* PC s class or NPC alignment          */
 	int hometown;       /* PC s Hometown (zone)                 */
 
@@ -586,6 +586,7 @@ struct char_special_data {
 	Alias*   A_list;
 	struct char_data* misc;
 	struct char_data* fighting; /* Opponent                          */
+    struct char_data* quest_ref; /*  For NPCs it stores the quest owner, For PCs it can be used to store his questor */
 
 	struct char_data* hunting;  /* Hunting person..                  */
 
