@@ -4924,7 +4924,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     AssignMob(x, MobKilled);
                     
                     if((quest_tgt = read_mobile(real_mobile(x), REAL))) {
-                        char_to_room(quest_tgt, 3004);
+                        char_to_room(quest_tgt, number(3004,3008);
                     }
                     
                     for (y = 0; NameGenAsset[y] != NULL; y++);
@@ -5117,12 +5117,15 @@ MOBSPECIAL_FUNC(MobKilled) {
                                     
                                     switch(n) {
                                         case 0  :
+                                            GET_GOLD(t) += premio[0];
                                             sprintf(buf,"\r$c0014con %d monete d'oro!$c0007\n", premio[0]);
                                             break;
                                         case 1  :
+                                            GET_EXP(t) += premio[1]/HowManyClasses(t);
                                             sprintf(buf,"$c0014con %d punti esperienza!$c0007\n", premio[1]);
                                             break;
                                         case 2  :
+                                            GET_RUNEDEI(t) += premio[2];
                                             sprintf(buf,"$c0014con %d rune degli Dei!$c0007\n", premio[2]);
                                             break;
                                         default:
