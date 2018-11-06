@@ -17,13 +17,13 @@
         * ./myst
     * In emergency (or when you add a new header or code file to src):
         * ./build.sh # to rebuild the makefiles
-            
+
 ## IMPORTANT
 * ALL FILES inside src will be taken and compiled in myst. Do not put under src unrelated files.
- use utilities for this        
+ use utilities for this
 * The /vagrant folder in the vagrant machine is mounted from the folder where the vagrantfile resides and is synced 2-way
 
-
+## Stupid changes to trigger commits and testing autodeploy
 
 
 
