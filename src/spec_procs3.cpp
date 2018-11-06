@@ -4924,7 +4924,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     AssignMob(x, MobKilled);
                     
                     if((quest_tgt = read_mobile(real_mobile(x), REAL))) {
-                        char_to_room(quest_tgt, number(3004,3008);
+                        char_to_room(quest_tgt, 3004);
                     }
                     
                     for (y = 0; NameGenAsset[y] != NULL; y++);
