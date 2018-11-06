@@ -467,7 +467,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				strcpy(obj->name, st->objects[i].name);
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
-                if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj))
+                if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
                 {
                     pers_obj(ch, ch, obj, 1000);
                     if(!IS_OBJ_STAT2(obj, ITEM2_EDIT))
