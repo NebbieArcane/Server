@@ -4879,7 +4879,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
             return(FALSE);
         }
         
-        if(!strcmp(arg," quest")) {
+        if(strstr(arg, "quest") != NULL) {
             
             if((!affected_by_spell(ch, STATUS_QUEST))) {
             
@@ -5093,8 +5093,8 @@ MOBSPECIAL_FUNC(MobKilled) {
         rp = real_roomp(ch->in_room);
 
         for(t = rp->people; t; t=t->next_in_room) {
-            
-                if((t != ch) && affected_by_spell(t,STATUS_QUEST)) {
+
+                if((t != ch) && affected_by_spell(t,STATUS_QUEST) && GetMaxLevel(t) < IMMORTALE) {
                     if(ch->specials.quest_ref == t) {
                         for(af = t->affected; af; af = af->next) {
                             if(af->type == STATUS_QUEST) {

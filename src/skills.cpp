@@ -6748,24 +6748,24 @@ void do_miner(struct char_data* ch) {
 			break;
 		case RACE_DWARF:
 		case RACE_DARK_DWARF:
-			WAIT_STATE(ch, PULSE_VIOLENCE*2);
+			WAIT_STATE(ch, PULSE_VIOLENCE*1);
 			break;
 		case RACE_GOBLIN:
 		case RACE_ORC:
 		case RACE_HALF_OGRE:
-			WAIT_STATE(ch, PULSE_VIOLENCE*5);
+			WAIT_STATE(ch, PULSE_VIOLENCE*4);
 			break;
 		case RACE_GNOME:
 		case RACE_DEEP_GNOME:
-			WAIT_STATE(ch, PULSE_VIOLENCE*6);
+			WAIT_STATE(ch, PULSE_VIOLENCE*4);
 			break;
 		case RACE_HUMAN:
 		case RACE_GNOLL:
 		case RACE_HALFLING:
-			WAIT_STATE(ch, PULSE_VIOLENCE*7);
+			WAIT_STATE(ch, PULSE_VIOLENCE*5);
 			break;
 		default:
-			WAIT_STATE(ch, PULSE_VIOLENCE*8);
+			WAIT_STATE(ch, PULSE_VIOLENCE*6);
 			break;
 		}
 	}

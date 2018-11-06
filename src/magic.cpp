@@ -2785,7 +2785,7 @@ void spell_quest(byte level, struct char_data* ch,
 		act("Senti di avere un compito su questa terra.",TRUE,victim,0,0,TO_CHAR);
 
 		af.type      = STATUS_QUEST;
-        af.duration  = level/2;
+        af.duration  = level;
 		af.modifier  = 0;
 		af.location  = APPLY_NONE;
 		af.bitvector = 0;

@@ -4058,13 +4058,9 @@ MOBSPECIAL_FUNC(miner_teacher) {
 			}
 		}
 
-		if(!IS_IMMORTAL(ch)) {
-
-			if(sk_num == SKILL_MINER) {
-				act("$N ti dice: 'Non sei il tipo di persona che possa imparare certe "
-					"cose'.", TRUE, ch, 0, mob, TO_CHAR);
+		if(IS_IMMORTAL(ch)) {
+            act("$N ti dice: 'Non sei il tipo di persona che possa imparare certe cose'.", TRUE, ch, 0, mob, TO_CHAR);
 				return(TRUE);
-			}
 		}
 
 		if(GET_GOLD(ch) < charge) {

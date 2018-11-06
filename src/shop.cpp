@@ -526,10 +526,17 @@ void indizio_quest(char* arg, struct char_data* ch,
 		do_tell(keeper,buf,19);
 		return;
 	}
+    
+	if(!affected_by_spell(ch,STATUS_QUEST) && ch->specials.quest_ref != NULL)    {
+		sprintf(buf,"%s Sembra che tu non sia in missione per conto di nessuno. Niente informazioni per i nullafacenti...",
+				GET_NAME(ch));
+		do_tell(keeper,buf,19);
+		return;
+	}
 
-        if(!strcmp(arg,"indizio")) {
+        if(strstr(argm, "indizio") != NULL) {
             
-            if(!(ch->specials.quest_ref = get_char_vis_world(ch, buf, NULL))) {
+            if(!(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
                 sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",
                         GET_NAME(ch));
                 do_tell(keeper,buf,19);
@@ -541,8 +548,7 @@ void indizio_quest(char* arg, struct char_data* ch,
                 if(number(0,1) == 1) {
                     for(af = ch->affected; af; af = af->next) {
                         if(af->type == STATUS_QUEST) {
-                            af->modifier = af->modifier/2;
-                            affect_modify(ch, af->location,af->modifier,af->bitvector, TRUE);
+                            af->duration = af->duration/2;
                         }
                     }
                 sprintf(buf,"\n\r$c0014Voci arrivano a %s e sentendosi braccato riduce la sua permanenza.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
