@@ -23,7 +23,6 @@
  use utilities for this
 * The /vagrant folder in the vagrant machine is mounted from the folder where the vagrantfile resides and is synced 2-way
 
-## Stupid changes to trigger commits and testing autodeploy
 
 
 
