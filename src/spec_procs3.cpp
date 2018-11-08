@@ -4987,7 +4987,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     GET_MOVE(quest_tgt) = GET_MAX_MOVE(quest_tgt);
                     quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+ch->points.hitroll;
                     quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+ch->points.damroll;
-                    */
+                    
                     break;
                 case 1      :
                     break;
