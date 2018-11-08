@@ -866,7 +866,7 @@ void SpellWearOff(int s, struct char_data* ch) {
 	}
     
     if(s == STATUS_QUEST) {
-        ch->specials.quest_ref = 0;
+        free(ch->specials.quest_ref);
     }
 
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {

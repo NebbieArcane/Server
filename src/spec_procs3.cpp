@@ -4944,6 +4944,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     quest_tgt->player.short_descr = (char*)strdup(buf2);
                     
                     /* creo il link tra preda e cacciatore */
+                    free(ch->specials.quest_ref);
                     ch->specials.quest_ref = quest_tgt;
                     
                     spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0);
@@ -5121,6 +5122,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                             return FALSE;
                         }
                         
+                        /*
                         sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
                         if(af->duration >= x-2) {
                         strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n");
@@ -5129,6 +5131,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         } else {
                         strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n");
                         }
+                         */
+                        sprintf(buf,"\n\r$c0014Completi la tua missione e la Gilda dei Mercenari ti premia");
                         act(buf, FALSE, t, 0, t, TO_CHAR);
                         
                         if((x = t->points.damroll - ch->points.damroll) > 5) {
