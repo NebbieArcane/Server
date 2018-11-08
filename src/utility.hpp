@@ -46,6 +46,7 @@ int check_soundproof(struct char_data* ch);
 int CountLims(struct obj_data* obj);
 int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
+int RandomRoomByLevel(int level);
 int EgoBladeSave(struct char_data* ch);
 int EgoSave(struct char_data* ch);
 int EqWBits(struct char_data* ch, const unsigned int bits);

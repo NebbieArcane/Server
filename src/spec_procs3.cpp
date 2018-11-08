@@ -4842,30 +4842,12 @@ OBJSPECIAL_FUNC(thion_loader) {
  dei premi, creiamo ora delle procedure per la creazione e l'assegnazione
  delle quest dai mob. */
 
-#define NUM_ZONEQUEST 9
 MOBSPECIAL_FUNC(AssignQuest) {
 	char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
 	struct char_data* questor;
     struct char_data* quest_tgt;
     int x, y, t;
     int quest_type;     /* 0.Caccia 1.salvataggio 2.ricerca 3.Consegna */
-    
-    struct range_vnum_type {
-        int da_vnum;
-        int a_vnum;
-    };
-    
-    struct range_vnum_type zone_list[NUM_ZONEQUEST]= {
-        {3004,3049},    /* Myst */
-        {18010,18249},  /* Mordilnia */
-        {1810,1849},    /* Circo */
-        {1410,1449},    /* Scacchiera */
-        {3910,4149},    /* Moria */
-        {4220,4449},    /* BofGorRak */
-        {13714,13727},  /* Fatiche di Ercole */
-        {13755,13779},  /* Ade */
-        {13755,13779}   /* Olimpo */
-    };
     
 	questor = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(AssignQuest));
 
@@ -4931,18 +4913,16 @@ MOBSPECIAL_FUNC(AssignQuest) {
             switch(quest_type) {
                     
                 case 0      :
-                    x = number(QUEST_ZONE,QUEST_ZONE+3);
                     
-                    AssignMob(x, MobCaccia);
-                    
-                    y = number(0,(NUM_ZONEQUEST-1)); /* da relazionare al livello in fase finale */
                     do {
-                        t = number(zone_list[y].da_vnum,zone_list[y].a_vnum);
-                        } while (real_roomp(t) == NULL || IS_SET(real_roomp(t)->room_flags, NO_MOB|DEATH|PRIVATE));
-
-                    if((quest_tgt = read_mobile(real_mobile(x), REAL))) {
-                        char_to_room(quest_tgt, t);
-                    }
+                        x = number(QUEST_ZONE,QUEST_ZONE+99);
+                    } while (real_mobile(x) < 0);
+                    
+                    AssignMob(x, MobCaccia, "MobCaccia","none");
+                    
+                    quest_tgt = read_mobile(real_mobile(x), REAL);
+                    
+                    char_to_room(quest_tgt, RandomRoomByLevel(GetMaxLevel(ch)));
                     
                     for (y = 0; NameGenStart[y] != NULL; y++);
                     t = number(0,y-2);
@@ -5112,9 +5092,11 @@ MOBSPECIAL_FUNC(MobCaccia) {
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
-    if(type == EVENT_DEATH) {
-
-        rp = real_roomp(ch->in_room);
+    rp = real_roomp(ch->in_room);
+    
+    switch(type) {
+    
+    case EVENT_DEATH:
 
         for(t = rp->people; t; t=t->next_in_room) {
 
@@ -5133,24 +5115,46 @@ MOBSPECIAL_FUNC(MobCaccia) {
                             }
                         }
                         
-                            sprintf(buf,"\n\r$c0014Rendi un servigio agli dei, che ti premiano...$c0007\n");
-                            act(buf, FALSE, t, 0, t, TO_CHAR);
+                        if(t->followers || ch->master) {
+                            act("\n\r$c0014La gilda dei mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n", FALSE, t, 0, t, TO_CHAR);
+                            free(t->specials.quest_ref);
+                            return FALSE;
+                        }
+                        
+                        sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera",af->duration);
+                        if(af->duration >= x-2) {
+                        strcat(buf,"%s eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n");
+                        } else if(af->duration >= x/2) {
+                        strcat(buf,"%s sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n");
+                        } else {
+                        strcat(buf,"%s scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n");
+                        }
+                        act(buf, FALSE, t, 0, t, TO_CHAR);
+                        
+                        if((x = t->points.damroll - ch->points.damroll) > 5) {
+                            act("$c0011tenendo conto che il tuo potere superava quello del tuo avversario: $c0007\n", FALSE, t, 0, t, TO_CHAR);
                             
+                            premio[0] -= x*10000;
+                            premio[1] -= x*100000;
+                            premio[2] = 0;
+                            
+                        }
+                        
                             for(n = 0;n < 3;n++) {
                                 if(premio[n] > 0) {
                                     
                                     switch(n) {
                                         case 0  :
                                             GET_GOLD(t) += premio[0];
-                                            sprintf(buf,"\r$c0014con %d monete d'oro!$c0007\n", premio[0]);
+                                            sprintf(buf,"\r$c0014Vinci %d monete d'oro!$c0007\n", premio[0]);
                                             break;
                                         case 1  :
                                             GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                            sprintf(buf,"$c0014con %d punti esperienza!$c0007\n", premio[1]);
+                                            sprintf(buf,"$c0014Ottieni %d punti esperienza!$c0007\n", premio[1]);
                                             break;
                                         case 2  :
                                             GET_RUNEDEI(t) += premio[2];
-                                            sprintf(buf,"$c0014con %d rune degli Dei!$c0007\n", premio[2]);
+                                            sprintf(buf,"$c0014Vieni marchiato con %d rune degli Dei!$c0007\n", premio[2]);
                                             break;
                                         default:
                                             break;
@@ -5162,11 +5166,58 @@ MOBSPECIAL_FUNC(MobCaccia) {
                             act(buf, FALSE, t, 0, t, TO_CHAR);
                             sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
                             act(buf, FALSE, t, 0, t, TO_ROOM);
-                            t->specials.quest_ref = NULL;
+                            free(t->specials.quest_ref);
                     }
                 }
         }
+    break;
+    
+    case EVENT_TICK:
+    
+            if(GET_POS(mob) == POSITION_FIGHTING) {
+                    for(t = rp->people; t; t=t->next_in_room) {
+                        if((t != mob) && IS_PC(t) && t->specials.quest_ref != mob && t->specials.fighting == mob && GetMaxLevel(t) < IMMORTALE) {
+                            WAIT_STATE(t, PULSE_VIOLENCE*3);
+                            
+                            sprintf(buf,"\n\r$c0014%s Si vede alle strette e se la da' a gambe!$c0007\n\r",GET_NAME(mob));
+                            act(buf, FALSE, t, 0, t, TO_CHAR);
+                            
+                            stop_fighting(mob);
+                            char_from_room(mob);
+                            char_to_room(mob, RandomRoomByLevel(GetMaxLevel(ch)));
+                            
+                            do_shout(mob,"Inutile che mandi i tuoi scagnozzi, non mi troverai mai!",CMD_SHOUT);
+                            return FALSE;
+
+                        }
+                    }
+                    
+            } else {
+                
+                if(GET_POS(mob) == POSITION_SLEEPING) {
+                    do_wake(mob, "", -1);
+                }
+                
+                if(GET_POS(mob) == POSITION_SLEEPING || GET_POS(mob) == POSITION_SITTING) {
+                    do_stand(mob, "", -1);
+                }
+                
+                    for(t = rp->people; t; t=t->next_in_room) {
+                        if((t != mob) && t->specials.quest_ref == mob) {
+                            sprintf(buf,"%s Dannazione, come mi hai trovato? Non mi avrai così facilmente!",GET_NAME(t));
+                            do_tell(mob,buf,CMD_TELL);
+                            if(CAN_SEE(mob, t)) {
+                                hit(mob, t, 0);
+                                return FALSE;
+                            }
+                        }
+                    }
+            }
+
+    break;
+            
     }
+    
     return FALSE;
 }
     

@@ -1103,7 +1103,7 @@ OBJSPECIAL_FUNC(GuildMemberBook) {
  * stanza ed un oggetto.
  * *************************************************************************/
 
-void AssignMob(int vnum, mobspecial_func proc) {
+void AssignMob(int vnum, mobspecial_func proc, const char* specname, const char* specparams) {
 
 	if(vnum > 0) {
 		int rnum;
@@ -1112,6 +1112,8 @@ void AssignMob(int vnum, mobspecial_func proc) {
 		}
 		else {
 			mob_index[ rnum ].func = reinterpret_cast<genericspecial_func>(proc);
+            mob_index[ rnum ].specname = (char*)strdup(specname);
+            mob_index[ rnum ].specparms = (char*)strdup(specparams);
 		}
 	}
 }
@@ -1177,9 +1179,9 @@ void BootGuilds() {
 					   &pDatiGilde[ i ].nBanchiereXP,   &pDatiGilde[ i ].nBancaXP,
 					   &pDatiGilde[ i ].nLibroSoci);
 
-				AssignMob(pDatiGilde[ i ].nGuardia, PlayersGuildGuard);
-				AssignMob(pDatiGilde[ i ].nBanchiere, GuildBanker);
-				AssignMob(pDatiGilde[ i ].nBanchiereXP, GuildXPBanker);
+				AssignMob(pDatiGilde[ i ].nGuardia, PlayersGuildGuard,"PlayersGuildGuard","none");
+				AssignMob(pDatiGilde[ i ].nBanchiere, GuildBanker,"GuildBanker","none");
+				AssignMob(pDatiGilde[ i ].nBanchiereXP, GuildXPBanker,"GuildXPBanker","none");
 				AssignObj(pDatiGilde[ i ].nLibroSoci, GuildMemberBook);
 				InitializeMemberList(i);
 			}

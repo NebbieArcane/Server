@@ -4353,7 +4353,7 @@ ACTION_FUNC(do_doorway) {
 	}
     
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
-        act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
+        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }
     
@@ -4477,6 +4477,12 @@ ACTION_FUNC(do_psi_portal) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;
 	}
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        send_to_char("Non si bara! ;)\n\r", ch);
+        return;
+    }
+    
 	/* Added for Pkillers Gaia 2001 */
 	if(IS_AFFECTED2((IS_POLY(ch)) ? ch->desc->original : ch, AFF2_PKILLER) &&  // SALVO controllo pkiller
 			IS_SET(rp->room_flags, PEACEFUL))  {
@@ -4602,7 +4608,7 @@ ACTION_FUNC(do_mindsummon) {
 	}
     
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
-        act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
+        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }
     

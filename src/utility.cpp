@@ -45,6 +45,47 @@
 #include "weather.hpp"
 
 namespace Alarmud {
+    
+#define NUM_ZONERANGES 9
+int RandomRoomByLevel(int level) {
+    
+    int y, t;
+    
+    struct range_vnum_type {
+        int da_vnum;
+        int a_vnum;
+    };
+    
+    struct range_vnum_type zone_list[NUM_ZONERANGES]= {
+        {3004,3049},    /* Myst */
+        {18010,18249},  /* Mordilnia */
+        {1810,1849},    /* Circo */
+        {1410,1449},    /* Scacchiera */
+        {3910,4149},    /* Moria */
+        {4220,4449},    /* BofGorRak */
+        {13714,13727},  /* Fatiche di Ercole */
+        {13755,13779},  /* Ade */
+        {13755,13779}   /* Olimpo */
+    };
+    
+    if(level >= PRINCIPE) {
+        t = NUM_ZONERANGES-1;
+    } else {
+        if(level > INIZIATO) {
+            t = 6;
+        } else {
+            t = 3;
+        }
+    }
+    
+    y = number(0,t);
+    do {
+        t = number(zone_list[y].da_vnum,zone_list[y].a_vnum);
+    } while (!real_roomp(t) || IS_SET(real_roomp(t)->room_flags, NO_MOB|DEATH|PRIVATE));
+    
+    return(t);
+    
+}
 
 
 int EgoBladeSave(struct char_data* ch) {

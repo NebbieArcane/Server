@@ -10,7 +10,7 @@ namespace Alarmud {
 #ifndef __GILDE_HPP
 #define __GILDE_HPP
 void AppendToGuildList(int nIndex, const char* szNomeMembro) ;
-void AssignMob(int vnum, mobspecial_func) ;
+void AssignMob(int vnum, mobspecial_func, const char* specname, const char* specparams) ;
 void AssignObj(int vnum, objspecial_func);
 void AssignRoom(int vnum, roomspecial_func);
 void BootGuilds() ;
