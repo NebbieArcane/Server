@@ -5121,13 +5121,13 @@ MOBSPECIAL_FUNC(MobCaccia) {
                             return FALSE;
                         }
                         
-                        sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera",af->duration);
+                        sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
                         if(af->duration >= x-2) {
-                        strcat(buf,"%s eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n");
+                        strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n");
                         } else if(af->duration >= x/2) {
-                        strcat(buf,"%s sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n");
+                        strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n");
                         } else {
-                        strcat(buf,"%s scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n");
+                        strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n");
                         }
                         act(buf, FALSE, t, 0, t, TO_CHAR);
                         
@@ -5204,7 +5204,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                 
                     for(t = rp->people; t; t=t->next_in_room) {
                         if((t != mob) && t->specials.quest_ref == mob) {
-                            sprintf(buf,"%s Dannazione, come mi hai trovato? Non mi avrai così facilmente!",GET_NAME(t));
+                            sprintf(buf,"%s Dannazione come mi hai trovato? Non mi avrai cosi' facilmente!",GET_NAME(t));
                             do_tell(mob,buf,CMD_TELL);
                             if(CAN_SEE(mob, t)) {
                                 hit(mob, t, 0);
