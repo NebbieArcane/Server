@@ -5174,7 +5174,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
     
     case EVENT_TICK:
     
-            if(GET_POS(mob) == POSITION_FIGHTING) {
+            if(mob->specials.fighting) {
                     for(t = rp->people; t; t=t->next_in_room) {
                         if((t != mob) && IS_PC(t) && t->specials.quest_ref != mob && t->specials.fighting == mob && GetMaxLevel(t) < IMMORTALE) {
                             WAIT_STATE(t, PULSE_VIOLENCE*3);
@@ -5202,6 +5202,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     do_stand(mob, "", -1);
                 }
                 
+                if(GET_POS(mob) == POSITION_STANDING) {
                     for(t = rp->people; t; t=t->next_in_room) {
                         if((t != mob) && t->specials.quest_ref == mob) {
                             sprintf(buf,"%s Dannazione come mi hai trovato? Non mi avrai cosi' facilmente!",GET_NAME(t));
@@ -5212,6 +5213,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                             }
                         }
                     }
+                }
             }
 
     break;
