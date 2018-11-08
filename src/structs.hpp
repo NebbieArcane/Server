@@ -586,7 +586,7 @@ struct char_special_data {
 	Alias*   A_list;
 	struct char_data* misc;
 	struct char_data* fighting; /* Opponent                          */
-    struct char_data* quest_ref; /*  For NPCs it stores the quest owner, For PCs it can be used to store his questor */
+    struct char_data* quest_ref; /*  For NPCs it stores the quest owner, For PCs it can be used to store his questor/target */
 
 	struct char_data* hunting;  /* Hunting person..                  */
 

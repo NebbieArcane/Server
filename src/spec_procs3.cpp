@@ -4842,12 +4842,30 @@ OBJSPECIAL_FUNC(thion_loader) {
  dei premi, creiamo ora delle procedure per la creazione e l'assegnazione
  delle quest dai mob. */
 
+#define NUM_ZONEQUEST 9
 MOBSPECIAL_FUNC(AssignQuest) {
 	char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
 	struct char_data* questor;
     struct char_data* quest_tgt;
-    int x, y, z, t;
-    int quest_type;     /* 0.Caccia 1.ricerca 2.Consegna 3.salvataggio */
+    int x, y, t;
+    int quest_type;     /* 0.Caccia 1.salvataggio 2.ricerca 3.Consegna */
+    
+    struct range_vnum_type {
+        int da_vnum;
+        int a_vnum;
+    };
+    
+    struct range_vnum_type zone_list[NUM_ZONEQUEST]= {
+        {3004,3049},    /* Myst */
+        {18010,18249},  /* Mordilnia */
+        {1810,1849},    /* Circo */
+        {1410,1449},    /* Scacchiera */
+        {3910,4149},    /* Moria */
+        {4220,4449},    /* BofGorRak */
+        {13714,13727},  /* Fatiche di Ercole */
+        {13755,13779},  /* Ade */
+        {13755,13779}   /* Olimpo */
+    };
     
 	questor = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(AssignQuest));
 
@@ -4864,12 +4882,6 @@ MOBSPECIAL_FUNC(AssignQuest) {
         
         if(IS_AFFECTED(ch, AFF_INVISIBLE) || ch->invis_level >= IMMORTALE) {
             do_say(questor, "eh? chi ha parlato??", CMD_SAY);
-            return(FALSE);
-        }
-        
-        if(IS_NPC(ch) || IS_POLY(ch)) {
-            sprintf(buf,"%s Ai mob non e' permesso partecipare alle missioni.",GET_NAME(ch));
-            do_tell(questor, buf, CMD_TELL);
             return(FALSE);
         }
         
@@ -4921,22 +4933,29 @@ MOBSPECIAL_FUNC(AssignQuest) {
                 case 0      :
                     x = number(QUEST_ZONE,QUEST_ZONE+3);
                     
-                    AssignMob(x, MobKilled);
+                    AssignMob(x, MobCaccia);
                     
+                    y = number(0,(NUM_ZONEQUEST-1)); /* da relazionare al livello in fase finale */
+                    do {
+                        t = number(zone_list[y].da_vnum,zone_list[y].a_vnum);
+                        } while (real_roomp(t) == NULL || IS_SET(real_roomp(t)->room_flags, NO_MOB|DEATH|PRIVATE));
+
                     if((quest_tgt = read_mobile(real_mobile(x), REAL))) {
-                        char_to_room(quest_tgt, 3004);
+                        char_to_room(quest_tgt, t);
                     }
                     
-                    for (y = 0; NameGenAsset[y] != NULL; y++);
-                    
+                    for (y = 0; NameGenStart[y] != NULL; y++);
                     t = number(0,y-2);
-                    sprintf(buf2, "%s", NameGenAsset[t]);
+                    sprintf(buf2, "%s", NameGenStart[t]);
                     
-                    x = number(1,2); /* vario la lunghezza del nome in modo casuale */
-                    for(z = 0; z < x; z++) {
-                        t = number(0,y-2);
-                        strcat(buf2, NameGenAsset[t]);
-                    }
+                    for (y = 0; NameGenMid[y] != NULL; y++);
+                    t = number(0,y-2);
+                    strcat(buf2, NameGenMid[t]);
+                    
+                    for (y = 0; NameGenEnd[y] != NULL; y++);
+                    t = number(0,y-2);
+                    strcat(buf2, NameGenEnd[t]);
+                    
                     
                     quest_tgt->player.name = (char*)strdup(buf2);
                     
@@ -4944,25 +4963,30 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     
                     quest_tgt->player.short_descr = (char*)strdup(buf2);
                     
-                    quest_tgt->specials.quest_ref = ch;
+                    /* creo il link tra preda e cacciatore */
                     ch->specials.quest_ref = quest_tgt;
                     
                     spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0);
                     
                     /* adattiamo il mob al questante, questa e' da perfezionare */
                     
-                    if(HasClass(mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
+                    if(HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
                                 CLASS_BARBARIAN | CLASS_MONK)) {
                         quest_tgt->specials.damsizedice = GetMaxLevel(ch)/17;
                         quest_tgt->specials.damnodice = GetMaxLevel(ch)/5;
                     }
                     
-                    quest_tgt->points.max_hit = GET_MAX_HIT(ch);
+                    if(HasClass(ch, CLASS_MONK)) {
+                        quest_tgt->points.max_hit = GET_MAX_HIT(ch)*2;
+                    } else {
+                        quest_tgt->points.max_hit = GET_MAX_HIT(ch);
+                    }
+
                     GET_HIT(quest_tgt) = GET_MAX_HIT(quest_tgt);
-                    quest_tgt->points.max_move = GET_MAX_MOVE(quest_tgt);
+                    quest_tgt->points.max_move = GET_MAX_MOVE(ch);
                     GET_MOVE(quest_tgt) = GET_MAX_MOVE(quest_tgt);
-                    quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+quest_tgt->points.hitroll;
-                    quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+quest_tgt->points.damroll;
+                    quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+ch->points.hitroll;
+                    quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+ch->points.damroll;
                     
                     break;
                 case 1      :
@@ -5063,7 +5087,7 @@ capogruppo del gruppo che contiene il PG che compie l'azione; se la
 procedura e' legata ad un oggetto, il premio verra' caricato al suo interno.
 
 So che le procedure sono complesse, ma possiamo procedere per passi a
-realizzarle. Innanzitutto ti direi di cominciare con la MOBKilled ed
+realizzarle. Innanzitutto ti direi di cominciare con la MobCaccia ed
 implementare solo il tipo di premio 2 (rune degli eroi), senza pero'
 implementare l'utilizzo del parametro SideProcedure che puo' aspettare; in
 questo modo possiamo subito iniziare ad implementare delle quest fisse anche
@@ -5076,11 +5100,11 @@ genera Thion.
     
 /* Requiem:
  aggiungiamo un tipo di assegnazione piu' semplice
- M xxxx MobKilled VNum Tipo Premio -> il mob crepa e se il vnum combacia col quest target
+ M xxxx MobCaccia VNum Tipo Premio -> il mob crepa e se il vnum combacia col quest target
  vengono assegnati i premi.
  */
 
-MOBSPECIAL_FUNC(MobKilled) {
+MOBSPECIAL_FUNC(MobCaccia) {
     struct affected_type* af;
     struct char_data* t;
     struct room_data* rp;
@@ -5089,13 +5113,13 @@ MOBSPECIAL_FUNC(MobKilled) {
     char buf[MAX_INPUT_LENGTH];
     
     if(type == EVENT_DEATH) {
-        
+
         rp = real_roomp(ch->in_room);
 
         for(t = rp->people; t; t=t->next_in_room) {
 
                 if((t != ch) && affected_by_spell(t,STATUS_QUEST) && GetMaxLevel(t) < IMMORTALE) {
-                    if(ch->specials.quest_ref == t) {
+                    if(t->specials.quest_ref == ch) {
                         for(af = t->affected; af; af = af->next) {
                             if(af->type == STATUS_QUEST) {
                                 x = GetMaxLevel(t);
@@ -5136,8 +5160,9 @@ MOBSPECIAL_FUNC(MobKilled) {
                             }
                             sprintf(buf,"\r");
                             act(buf, FALSE, t, 0, t, TO_CHAR);
-                            sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",ch->specials.quest_ref->player.name);
+                            sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
                             act(buf, FALSE, t, 0, t, TO_ROOM);
+                            t->specials.quest_ref = NULL;
                     }
                 }
         }

@@ -4352,7 +4352,7 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
     
-    if(IS_NPC(target),affected_by_spell(target,STATUS_QUEST)) {
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
         act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }
@@ -4601,7 +4601,7 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
     
-    if(IS_NPC(target),affected_by_spell(target,STATUS_QUEST)) {
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
         act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }

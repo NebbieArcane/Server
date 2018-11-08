@@ -216,6 +216,11 @@ ACTION_FUNC(do_hit) {
 				GET_EXP(ch)-=5;
 			}
 			else {
+				if(!IS_PC(ch) && !IS_PC(victim) && affected_by_spell(victim,STATUS_QUEST)) {
+					act("Hai l'impressione che $n voglia aggredire $N... ma qualcosa lo frena.",
+						FALSE, ch,0,victim,TO_ROOM);
+					return;
+				}
 				if(IS_AFFECTED(ch, AFF_CHARM) && (ch->master == victim)) {
 					act("$N is just such a good friend, you simply can't hit $M.",
 						FALSE, ch,0,victim,TO_CHAR);

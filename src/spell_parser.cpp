@@ -590,7 +590,7 @@ void SpellWearOffSoon(int s, struct char_data* ch) {
 		return;
 	}
     
-    if(s == STATUS_QUEST && IS_NPC(ch)) {
+    if(s == STATUS_QUEST && !IS_PC(ch)) {
         return;
     }
     
@@ -830,7 +830,7 @@ void SpellWearOff(int s, struct char_data* ch) {
 		return;
 	}
     
-    if(s == STATUS_QUEST && IS_NPC(ch)) {
+    if(s == STATUS_QUEST && !IS_PC(ch)) {
         
         /* fine dei giochi, si torna a casa */
         switch(GET_POS(ch)) {

@@ -163,7 +163,11 @@ extern struct QuestItem QuestList[4][IMMORTAL];
 
 extern const char* QuestKind[];
     
-extern const char* NameGenAsset[];
+extern const char* NameGenStart[];
+    
+extern const char* NameGenMid[];
+    
+extern const char* NameGenEnd[];
     
 extern const char* att_kick_kill_ch[];
 

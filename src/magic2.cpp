@@ -638,7 +638,7 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	ch->desc->character = mob;
 	ch->desc->original = ch;
-
+    
 	mob->desc = ch->desc;
 	ch->desc = 0;
 
@@ -659,8 +659,9 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	/* do some fiddling with the strings */
 	buf = (char*)malloc(strlen(GET_NAME(mob)) + strlen(GET_NAME(ch)) + 2);
-	sprintf(buf, "%s %s", GET_NAME(ch), GET_NAME(mob));
-
+	/*sprintf(buf, "%s %s", GET_NAME(ch), GET_NAME(mob));*/
+    sprintf(buf, "%s", GET_NAME(ch));
+    
 	if HAS_PRINCE(ch) {
 		GET_PRINCE(mob)=strdup(GET_PRINCE(ch));
 	}

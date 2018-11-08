@@ -2566,7 +2566,7 @@ void spell_portal(byte level, struct char_data* ch,
 		return;
 	}
     
-    if(IS_NPC(tmp_ch),affected_by_spell(tmp_ch,STATUS_QUEST)) {
+    if(!IS_PC(tmp_ch) && affected_by_spell(tmp_ch,STATUS_QUEST)) {
         act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }

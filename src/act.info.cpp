@@ -3251,7 +3251,7 @@ void do_where_person(struct char_data* ch, struct char_data* person,
 		return;
 	}
     
-    if(IS_NPC(person),affected_by_spell(person,STATUS_QUEST) && IS_PC(ch) && GetMaxLevel(ch) < IMMORTALE) {
+    if(!IS_PC(person) && affected_by_spell(person,STATUS_QUEST) && IS_PC(ch) && GetMaxLevel(ch) < IMMORTALE) {
         act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }

@@ -207,7 +207,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 		sprintf(buf,
 				"%s what do you want to buy??"
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	};
 
@@ -223,7 +223,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 		sprintf(buf,
 				shop_index[shop_nr].no_such_item1
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -231,14 +231,14 @@ void shopping_buy(char* arg, struct char_data* ch,
 		sprintf(buf,
 				shop_index[shop_nr].no_such_item1
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		extract_obj(temp1);
 		return;
 	}
 	actualcost=(long)(object_cost(temp1,ch,shop_nr,0)* mult);
 	if(GET_GOLD(ch) < actualcost) {
 		sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 
 		switch(shop_index[shop_nr].temper1) {
 		case 0:
@@ -278,7 +278,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 	sprintf(buf, shop_index[shop_nr].message_buy,
 			GET_NAME(ch), (int) actualcost);
 
-	do_tell(keeper,buf,19);
+	do_tell(keeper,buf,CMD_TELL);
 
 	sprintf(buf,"You now have %s (*%d).\n\r",
 			temp1->short_description,num);
@@ -289,7 +289,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 
 		if(GET_GOLD(ch) < actualcost) {
 			sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
-			do_tell(keeper,buf,19);
+			do_tell(keeper,buf,CMD_TELL);
 
 			switch(shop_index[shop_nr].temper1) {
 			case 0:
@@ -343,13 +343,13 @@ void shopping_sell(char* arg, struct char_data* ch,
 	if(!(*argm))        {
 		sprintf(buf, "%s What do you want to sell??"
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
 	if(!(temp1 = get_obj_in_list_vis(ch,argm,ch->carrying))) {
 		sprintf(buf, shop_index[shop_nr].no_such_item2,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -361,14 +361,14 @@ void shopping_sell(char* arg, struct char_data* ch,
 	if(!(trade_with(temp1,shop_nr))||(temp1->obj_flags.cost<1)) {
 		sprintf(buf,shop_index[shop_nr].do_not_buy,
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 	actualcost = object_cost(temp1,ch,shop_nr,1);
 
 	if(GET_GOLD(keeper) < actualcost) {
 		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -376,7 +376,7 @@ void shopping_sell(char* arg, struct char_data* ch,
 
 	sprintf(buf,shop_index[shop_nr].message_sell,GET_NAME(ch),actualcost);
 
-	do_tell(keeper,buf,19);
+	do_tell(keeper,buf,CMD_TELL);
 
 	sprintf(buf,"The shopkeeper now has %s.\n\r",
 			temp1->short_description);
@@ -384,7 +384,7 @@ void shopping_sell(char* arg, struct char_data* ch,
 
 	if(GET_GOLD(keeper)< actualcost) {
 		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -419,14 +419,14 @@ void shopping_value(char* arg, struct char_data* ch,
 	if(!(*argm))    {
 		sprintf(buf,"%s What do you want me to evaluate??",
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
 	if(!(temp1 = get_obj_in_list_vis(ch,argm,ch->carrying)))    {
 		sprintf(buf,shop_index[shop_nr].no_such_item2,
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -434,13 +434,13 @@ void shopping_value(char* arg, struct char_data* ch,
 		sprintf(buf,
 				shop_index[shop_nr].do_not_buy,
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
 	sprintf(buf,"%s I'll give you %d gold coins for that!",
 			GET_NAME(ch),(int)(object_cost(temp1,ch,shop_nr,1)));
-	do_tell(keeper,buf,19);
+	do_tell(keeper,buf,CMD_TELL);
 
 	return;
 }
@@ -508,62 +508,7 @@ void shopping_list(char* arg, struct char_data* ch,
 	send_to_char(buf,ch);
 	return;
 }
-    
-void indizio_quest(char* arg, struct char_data* ch,
-					struct char_data* keeper, int shop_nr) {
-	char argm[100], buf[MAX_STRING_LENGTH];
-    struct affected_type* af;
 
-	if(!(is_ok(keeper,ch,shop_nr))) {
-		return;
-	}
-
-	only_argument(arg, argm);
-
-	if(!(*argm))    {
-		sprintf(buf,"%s Qui si compra, non si chiacchiera!",
-				GET_NAME(ch));
-		do_tell(keeper,buf,19);
-		return;
-	}
-    
-	if(!affected_by_spell(ch,STATUS_QUEST) && ch->specials.quest_ref != NULL)    {
-		sprintf(buf,"%s Sembra che tu non sia in missione per conto di nessuno. Niente informazioni per i nullafacenti...",
-				GET_NAME(ch));
-		do_tell(keeper,buf,19);
-		return;
-	}
-
-        if(strstr(argm, "indizio") != NULL) {
-            
-            if(!(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
-                sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",
-                        GET_NAME(ch));
-                do_tell(keeper,buf,19);
-            }
-            else {
-                sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
-                do_tell(keeper,buf,19);
-                
-                if(number(0,1) == 1) {
-                    for(af = ch->affected; af; af = af->next) {
-                        if(af->type == STATUS_QUEST) {
-                            af->duration = af->duration/2;
-                        }
-                    }
-                sprintf(buf,"\n\r$c0014Voci arrivano a %s e sentendosi braccato riduce la sua permanenza.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
-                            act(buf, FALSE, ch, 0, ch, TO_CHAR);
-                }
-            }
-            
-        } else {
-            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ci sono orecchie ovunque, e se qualcuno spiffera ti costera'!",
-                    GET_NAME(ch));
-            do_tell(keeper,buf,19);
-        }
-
-	return;
-}
 
 int shopping_kill(char* arg, struct char_data* ch,
 				  struct char_data* keeper, int shop_nr) {
@@ -573,13 +518,13 @@ int shopping_kill(char* arg, struct char_data* ch,
 	case 0:
 		sprintf(buf,"%s Non pensarci nemmeno!",
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return(TRUE);
 
 	case 1:
 		sprintf(buf,"%s Fottiti, verme!",
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		GET_HIT(keeper)=MAX(GET_HIT(keeper),10000);
 		return(FALSE);
 
@@ -660,13 +605,6 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 		shopping_list(arg,ch,keeper,shop_nr);
 		return(TRUE);
 	}
-    
-    if((cmd == CMD_ASK) && (ch->in_room == shop_index[shop_nr].in_room))
-    /* Quest info */
-    {
-        indizio_quest(arg,ch,keeper,shop_nr);
-        return(TRUE);
-    }
 
 	if((cmd == CMD_KILL) || (cmd==CMD_HIT)) {  /* Kill or Hit */
 		only_argument(arg, argm);

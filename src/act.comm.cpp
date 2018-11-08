@@ -28,6 +28,7 @@
 #include "auction.hpp"
 #include "cmdid.hpp"      // for CMD_GTELL, CMD_THINK_SUPERNI, CMD_WHISPER
 #include "comm.hpp"
+#include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "maximums.hpp"
@@ -493,6 +494,59 @@ ACTION_FUNC(do_ask) {
 			act(buf,FALSE, ch,0,0,TO_CHAR);
 		}
 		act("$c0006$n fa una domanda a $N.",FALSE,ch,0,vict,TO_NOTVICT);
+        
+    /* indizi per le quest */
+    if(!IS_PC(vict) && affected_by_spell(ch,STATUS_QUEST) && (isname2("ladro",GET_NAME(vict)) || isname2("cacciatore",GET_NAME(vict)) || isname2("spia",GET_NAME(vict)) || isname2("shop_keeper",mob_index[vict->nr].specname)))    {
+        
+        if(ch->specials.quest_ref == NULL)    {
+            sprintf(buf,"%s Cio' che cerchi appartiene al passato.",
+                    GET_NAME(ch));
+            do_tell(vict,buf,CMD_TELL);
+            return;
+        }
+        
+        if(strstr(message, "indizio") != NULL) {
+            
+            if(!(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
+                sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",
+                        GET_NAME(ch));
+                do_tell(vict,buf,CMD_TELL);
+                return;
+            }
+            else {
+                sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
+                do_tell(vict,buf,CMD_TELL);
+                
+                if(number(0,1) == 1) {
+                    struct affected_type* af;
+                    
+                    for(af = ch->affected; af; af = af->next) {
+                        if(af->type == STATUS_QUEST) {
+                            af->duration = af->duration/2;
+                        }
+                    }
+                    
+                    for(af = ch->specials.quest_ref->affected; af; af = af->next) {
+                        if(af->type == STATUS_QUEST) {
+                            af->duration = af->duration/2;
+                        }
+                    }
+                    
+                    sprintf(buf,"\n\r$c0014Voci arrivano a %s e sentendosi braccato riduce la sua permanenza.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
+                    act(buf, FALSE, ch, 0, ch, TO_CHAR);
+                }
+                return;
+            }
+            
+        } else {
+            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ci sono orecchie ovunque, e se qualcuno spiffera ti costera'!",
+                    GET_NAME(ch));
+            do_tell(vict,buf,CMD_TELL);
+            return;
+        }
+     }
+    /* end indizi quest*/
+        
 	}
 }
 

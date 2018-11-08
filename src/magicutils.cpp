@@ -122,6 +122,9 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 	struct obj_data* obj, *next;
 	float ratio;
 	int j;
+    struct affected_type* af;
+    struct affected_type af2;
+    
 
 	/*
 	 * experience
@@ -134,6 +137,29 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 
 		GET_EXP(taker) = MIN(GET_EXP(taker), ABS_MAX_EXP);
 	}
+    
+    /*
+     *  switch affects
+     */
+    
+    for(af = giver->affected; af; af = af->next) {
+        if(!affected_by_spell(taker,af->type)) {
+            
+            af2.type      = af->type;
+            af2.duration  = af->duration;
+            af2.modifier  = af->modifier;
+            af2.location  = af->location;
+            af2.bitvector = af->bitvector;
+            
+            affect_to_char(taker, &af2);
+        }
+        
+        if(af->type == STATUS_QUEST) {
+            free(taker->specials.quest_ref)
+            taker->specials.quest_ref = giver->specials.quest_ref;
+        }
+        
+    }
 
 	/*
 	 *  humanoid monsters can cast spells

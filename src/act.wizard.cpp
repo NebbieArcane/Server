@@ -41,6 +41,7 @@
 #include "snew.hpp"
 #include "spell_parser.hpp"
 #include "comm.hpp"
+#include "magic.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "reception.hpp"
@@ -1605,8 +1606,14 @@ ACTION_FUNC(do_stat) {
 
 				sprintf(buf, "$c0005Master is '$c0014%s$c0005'    ",
 						((k->master) ? GET_NAME(k->master) : "NOBODY"));
-
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                
+                if(affected_by_spell(k,STATUS_QUEST) && IS_PC(k)) {
+                    sprintf(buf, "$c0005Quest Target: $c0014%s",
+                            (k->specials.quest_ref->player.name ?
+                             k->specials.quest_ref->player.name : "-"));
+                    act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                }
 
 				sprintf(buf, "$c0005Followers are:");
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
@@ -3288,6 +3295,7 @@ ACTION_FUNC(do_return) {
 
 		if(IS_SET(ch->specials.act, ACT_POLYSELF) && cmd) {
 			mudlog(LOG_CHECK, "%s was a POLY.", ch->player.name);
+            
 			mob = ch;
 			per = ch->desc->original;
 
@@ -3297,8 +3305,9 @@ ACTION_FUNC(do_return) {
 			char_from_room(per);
 			char_to_room(per, mob->in_room);
 
-			mudlog(LOG_CHECK, "Switching the eq of %s .", ch->player.name);
+			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
+            
 		}
 
 		ch->desc->character = ch->desc->original;

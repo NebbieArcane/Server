@@ -1822,7 +1822,7 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
     
-    if(IS_NPC(victim),affected_by_spell(victim,STATUS_QUEST)) {
+    if(!IS_PC(victim) && affected_by_spell(victim,STATUS_QUEST)) {
         act("Non si bara! ;)", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }
