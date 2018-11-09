@@ -60,6 +60,13 @@ void spell_resurrection(byte level, struct char_data* ch,
 	if(IS_CORPSE(obj)) {
 
 		if(obj->char_vnum) {
+            
+            
+            if(obj->char_vnum >= QUEST_ZONE && obj->char_vnum <= QUEST_ZONE+99)) {
+                send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
+                return;
+            }
+            
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch)) {

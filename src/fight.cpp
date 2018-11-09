@@ -552,9 +552,6 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 		 spec_desc[255]; /* used in describing the corpse */
 	int r_num,i, ADeadBody=FALSE;
 
-    if(IS_NPC(ch) && (GET_MOB_VNUM(ch) >= QUEST_ZONE && GET_MOB_VNUM(ch) <= QUEST_ZONE+99)) {
-        return;
-    }
 	/*   char *strdup(char *source); */
 
 	CREATE(corpse, struct obj_data, 1);
