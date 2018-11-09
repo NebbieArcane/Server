@@ -3250,11 +3250,6 @@ void do_where_person(struct char_data* ch, struct char_data* person,
 	if(!CAN_SEE(ch, person)) {
 		return;
 	}
-    
-    if(!IS_PC(person) && affected_by_spell(person,STATUS_QUEST) && IS_PC(ch) && GetMaxLevel(ch) < IMMORTALE) {
-        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
-        return;
-    }
 
 	snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- %s ", PERS(person, ch),
 			 (person->in_room > -1 ? real_roomp(person->in_room)->name :
@@ -3385,6 +3380,12 @@ ACTION_FUNC(do_where) {
 
 	for(i = character_list; i; i = i->next) {
 		if(isname(name, i->player.name) && CAN_SEE(ch, i)) {
+            
+            if(!IS_PC(i) && affected_by_spell(i,STATUS_QUEST) && GetMaxLevel(ch) < IMMORTALE) {
+                act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+                break;
+            }
+            
 			if((i->in_room != NOWHERE) &&
 					((GetMaxLevel(ch)>=IMMORTALE) || (real_roomp(i->in_room)->zone ==
 							real_roomp(ch->in_room)->zone))) {

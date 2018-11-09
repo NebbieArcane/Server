@@ -4918,7 +4918,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                         x = number(QUEST_ZONE,QUEST_ZONE+99);
                     } while (real_mobile(x) < 0);
                     
-                    AssignMob(x, MobCaccia, "MobCaccia","none");
+                    AssignMob(x, MobCaccia, "MobCaccia","");
                     
                     quest_tgt = read_mobile(real_mobile(x), REAL);
                     
@@ -5093,11 +5093,12 @@ MOBSPECIAL_FUNC(MobCaccia) {
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
+    t = mob->specials.quest_ref;
+    mudlog(LOG_CHECK, "arg: %s", arg);
+    
     switch(type) {
             
     case EVENT_DEATH    :
-            
-        t = ch->specials.quest_ref;
 
         if(ch->in_room == t->in_room) {
 
@@ -5178,8 +5179,6 @@ MOBSPECIAL_FUNC(MobCaccia) {
     break;
     
     case EVENT_TICK    :
-            
-            t = mob->specials.quest_ref;
             
             if(!affected_by_spell(t,STATUS_QUEST) || !(t=get_char_vis_world(t,t->player.name,NULL))) {
                 sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
