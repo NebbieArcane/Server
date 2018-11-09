@@ -1873,9 +1873,10 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 			}
 		}
         
-        if(affected_by_spell(victim,STATUS_QUEST)) {
-                affect_from_char(victim,STATUS_QUEST);
-                send_to_char("Non sei piu' in missione.\n\r",victim);
+        if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
+            affect_from_char(victim,STATUS_QUEST);
+            victim->specials.quest_ref = NULL;
+            send_to_char("Non sei piu' in missione.\n\r",victim);
         }
 	}
 }

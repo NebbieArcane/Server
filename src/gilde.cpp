@@ -1113,7 +1113,9 @@ void AssignMob(int vnum, mobspecial_func proc, const char* specname, const char*
 		else {
 			mob_index[ rnum ].func = reinterpret_cast<genericspecial_func>(proc);
             mob_index[ rnum ].specname = (char*)strdup(specname);
+            if(specparams) {
             mob_index[ rnum ].specparms = (char*)strdup(specparams);
+            }
 		}
 	}
 }

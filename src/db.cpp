@@ -3047,6 +3047,8 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	ch->specials.charging = 0; /* null it out to be sure. */
 	ch->specials.charge_dir = -1; /* null it out */
+    
+    ch->specials.quest_ref = 0;
 
 	st->abilities = ch->abilities;
 

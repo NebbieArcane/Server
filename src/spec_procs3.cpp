@@ -4944,8 +4944,8 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     quest_tgt->player.short_descr = (char*)strdup(buf2);
                     
                     /* creo il link tra preda e cacciatore */
-                    free(ch->specials.quest_ref);
                     ch->specials.quest_ref = quest_tgt;
+                    quest_tgt->specials.quest_ref = ch;
                     
                     spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0);
                     
@@ -5093,50 +5093,44 @@ MOBSPECIAL_FUNC(MobCaccia) {
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
-    rp = real_roomp(ch->in_room);
-    
     switch(type) {
-    
-    case EVENT_DEATH:
+            
+    case EVENT_DEATH    :
+            
+        t = ch->specials.quest_ref;
 
-        for(t = rp->people; t; t=t->next_in_room) {
+        if(ch->in_room == t->in_room) {
 
-                if((t != ch) && affected_by_spell(t,STATUS_QUEST) && GetMaxLevel(t) < IMMORTALE) {
-                    if(t->specials.quest_ref == ch) {
-                        for(af = t->affected; af; af = af->next) {
-                            if(af->type == STATUS_QUEST) {
-                                x = GetMaxLevel(t);
-                                premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
-                                if(IS_PKILLER(t)) {
-                                    premio[1] = (x*50000)-((x-af->duration)*50000);
-                                }
-                                if(IS_PRINCE(t) && af->duration >= x-2) {
-                                    premio[2] = 1;
-                                }
-                            }
+            if(affected_by_spell(t,STATUS_QUEST) && GetMaxLevel(t) < IMMORTALE) {
+
+                for(af = t->affected; af; af = af->next) {
+                    if(af->type == STATUS_QUEST) {
+                        x = GetMaxLevel(t);
+                        premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
+                        if(IS_PKILLER(t)) {
+                            premio[1] = (x*50000)-((x-af->duration)*50000);
                         }
-                        
-                        if(t->followers || ch->master) {
-                            act("\n\r$c0014La gilda dei mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n", FALSE, t, 0, t, TO_CHAR);
-                            free(t->specials.quest_ref);
+                        if(IS_PRINCE(t) && af->duration >= x-2) {
+                            premio[2] = 1;
+                        }
+                    
+                        if(t->followers || t->master) {
+                            act("\n\r$c0014La gilda dei mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", FALSE, t, 0, t, TO_CHAR);
                             return FALSE;
                         }
                         
-                        /*
                         sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
                         if(af->duration >= x-2) {
-                        strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n");
+                        strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
                         } else if(af->duration >= x/2) {
-                        strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n");
+                        strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n\r");
                         } else {
-                        strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n");
+                        strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n\r");
                         }
-                         */
-                        sprintf(buf,"\n\r$c0014Completi la tua missione e la Gilda dei Mercenari ti premia");
                         act(buf, FALSE, t, 0, t, TO_CHAR);
                         
                         if((x = t->points.damroll - ch->points.damroll) > 5) {
-                            act("$c0011tenendo conto che il tuo potere superava quello del tuo avversario: $c0007\n", FALSE, t, 0, t, TO_CHAR);
+                            act("$c0011tenendo conto che il tuo potere superava quello del tuo avversario: $c0007\n\r", FALSE, t, 0, t, TO_CHAR);
                             
                             premio[0] -= x*10000;
                             premio[1] -= x*100000;
@@ -5150,15 +5144,15 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                     switch(n) {
                                         case 0  :
                                             GET_GOLD(t) += premio[0];
-                                            sprintf(buf,"\r$c0014Vinci %d monete d'oro!$c0007\n", premio[0]);
+                                            sprintf(buf,"\r$c0014Vinci %d monete d'oro!$c0007\n\r", premio[0]);
                                             break;
                                         case 1  :
                                             GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                            sprintf(buf,"$c0014Ottieni %d punti esperienza!$c0007\n", premio[1]);
+                                            sprintf(buf,"$c0014Ottieni %d punti esperienza!$c0007\n\r", premio[1]);
                                             break;
                                         case 2  :
                                             GET_RUNEDEI(t) += premio[2];
-                                            sprintf(buf,"$c0014Vieni marchiato con %d rune degli Dei!$c0007\n", premio[2]);
+                                            sprintf(buf,"$c0014Vieni marchiato con %d rune degli Dei!$c0007\n\r", premio[2]);
                                             break;
                                         default:
                                             break;
@@ -5166,18 +5160,36 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                     act(buf, FALSE, t, 0, t, TO_CHAR);
                                 }
                             }
-                            sprintf(buf,"\r");
-                            act(buf, FALSE, t, 0, t, TO_CHAR);
-                            sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
-                            act(buf, FALSE, t, 0, t, TO_ROOM);
-                            free(t->specials.quest_ref);
-                    }
+                    sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
+                    act(buf, FALSE, t, 0, t, TO_ROOM);
+                    t->specials.quest_ref = NULL;
+                    return FALSE;
                 }
+            }
         }
+            
+    return FALSE;
+            
+    } else {
+        t->specials.quest_ref = NULL;
+        return FALSE;
+    }
+
     break;
     
-    case EVENT_TICK:
-    
+    case EVENT_TICK    :
+            
+            t = mob->specials.quest_ref;
+            
+            if(!affected_by_spell(t,STATUS_QUEST) || !(t=get_char_vis_world(t,t->player.name,NULL))) {
+                sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
+                act(buf, FALSE, mob, 0, mob, TO_ROOM);
+                extract_char(mob);
+                return FALSE;
+            }
+
+            rp = real_roomp(mob->in_room);
+            
             if(mob->specials.fighting) {
                     for(t = rp->people; t; t=t->next_in_room) {
                         if((t != mob) && IS_PC(t) && t->specials.quest_ref != mob && t->specials.fighting == mob && GetMaxLevel(t) < IMMORTALE) {
@@ -5219,9 +5231,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     }
                 }
             }
-
     break;
-            
     }
     
     return FALSE;

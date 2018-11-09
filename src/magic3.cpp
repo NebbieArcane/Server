@@ -2566,11 +2566,6 @@ void spell_portal(byte level, struct char_data* ch,
 		return;
 	}
     
-    if(!IS_PC(tmp_ch) && affected_by_spell(tmp_ch,STATUS_QUEST)) {
-        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
-        return;
-    }
-    
 	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("Un'oscura magia blocca il tuo incantesimo.\n\r", ch);
 		return;
@@ -2583,9 +2578,14 @@ void spell_portal(byte level, struct char_data* ch,
 
 	if(!(nrp = real_roomp(tmp_ch->in_room))) {
 		mudlog(LOG_SYSERR, "%s not in any room", GET_NAME(tmp_ch));
-		send_to_char("Non c'e' nulla du simile in giro.\n", ch);
+		send_to_char("Non c'e' nulla di simile in giro.\n", ch);
 		return;
 	}
+    
+    if(!IS_PC(tmp_ch) && affected_by_spell(tmp_ch,STATUS_QUEST)) {
+        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
 
 	if(IS_SET(real_roomp(tmp_ch->in_room)->room_flags, NO_SUM)) {
 		send_to_char("Un'antica magia ti blocca.\n\r", ch);

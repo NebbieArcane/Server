@@ -155,7 +155,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         }
         
         if(af->type == STATUS_QUEST) {
-            free(taker->specials.quest_ref);
+            taker->specials.quest_ref->specials.quest_ref = NULL;
             taker->specials.quest_ref = giver->specials.quest_ref;
         }
         

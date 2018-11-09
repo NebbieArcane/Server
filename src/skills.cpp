@@ -4352,11 +4352,6 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
     
-    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
-        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
-        return;
-    }
-    
 	location = target->in_room;
 	rp = real_roomp(location);
 
@@ -4380,6 +4375,11 @@ ACTION_FUNC(do_doorway) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;
 	}
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
 
 	if(GetMaxLevel(target)>=IMMORTALE) {
 		send_to_char("You mind does not have the power to doorway to this person\n\r",ch);

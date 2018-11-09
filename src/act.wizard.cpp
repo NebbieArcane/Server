@@ -1608,7 +1608,7 @@ ACTION_FUNC(do_stat) {
 						((k->master) ? GET_NAME(k->master) : "NOBODY"));
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
                 
-                if(affected_by_spell(k,STATUS_QUEST) && IS_PC(k)) {
+                if(k->specials.quest_ref && IS_PC(k)) {
                     sprintf(buf, "$c0005Quest Target: $c0014%s",
                             (k->specials.quest_ref->player.name ?
                              k->specials.quest_ref->player.name : "-"));
