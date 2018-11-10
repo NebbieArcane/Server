@@ -58,7 +58,7 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 	if(HasClass(ch,CLASS_PALADIN)) {
 		char_bonus -= 4;
 	}
-	if(HasClass(mob, CLASS_WARRIOR | CLASS_RANGER |
+	if(HasClass(ch, CLASS_WARRIOR | CLASS_RANGER |
 				CLASS_BARBARIAN | CLASS_MONK)) {
 		char_bonus -= 6;
 	}

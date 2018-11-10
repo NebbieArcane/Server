@@ -4954,6 +4954,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     
                     /* adattiamo il mob al questante, questa e' da perfezionare */
                     
+                    if(GetMaxLevel(ch) < IMMORTALE) {
+                        GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = GetMaxLevel(ch);
+                    }
+                
                     if(HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
                                 CLASS_BARBARIAN | CLASS_MONK)) {
                         quest_tgt->specials.damsizedice = GetMaxLevel(ch)/17;
@@ -4972,7 +4976,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
 
                     GET_HIT(quest_tgt) = GET_MAX_HIT(quest_tgt);
                      
-                    quest_tgt->points.max_move = GET_MAX_MOVE(ch);
+                    quest_tgt->points.max_move = NewMobMov(quest_tgt);
                     GET_MOVE(quest_tgt) = GET_MAX_MOVE(quest_tgt);
                     quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+ch->points.hitroll;
                     quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+ch->points.damroll;
@@ -5099,12 +5103,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
     struct room_data* rp;
     int premio[3]; /* 0.coin, 1.xp, 2.rune */
     int n,x;
-    char buf[MAX_INPUT_LENGTH];
-    
-    
-    if(*arg || cmd) {
-        return FALSE;
-    }
+    char buf[MAX_INPUT_LENGTH],buf2[MAX_INPUT_LENGTH];
     
     t = mob->specials.quest_ref;
     
@@ -5196,12 +5195,41 @@ MOBSPECIAL_FUNC(MobCaccia) {
     }
 
     break;
+            
+    case EVENT_COMMAND  :
     
-    case EVENT_TICK    :
+        if(!*arg) {
+            return FALSE;
+        }
+        
+        if(cmd == CMD_GIVE && HasClass(mob, CLASS_MONK)) {
+            arg = one_argument(arg,buf);
+            arg = one_argument(arg,buf2);
+            
+                if(*buf2 && get_char_room_vis(mob, buf2) == mob) {
+                do_drop(mob, " all", CMD_DROP);
+                    if(number(0,1)) {
+                        sprintf(buf,"%s Pensavi di fregarmi riempendomi le mani della tua spazzatura eh?!",GET_NAME(ch));
+                    } else {
+                        sprintf(buf,"Un trucchetto davvero patetico %s, sono un monaco esperto io!",GET_NAME(ch));
+                    }
+                
+                do_gossip(mob,buf,CMD_GOSSIP);
+            
+            }
+        }
+    
+    return FALSE;
+            
+    break;
+    
+    case EVENT_TICK     :
             
             if(!affected_by_spell(t,STATUS_QUEST) || !(t=get_char_vis_world(t,t->player.name,NULL))) {
-                sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
-                act(buf, FALSE, mob, 0, 0, TO_ROOM);
+                if(real_roomp(mob->in_room)->people) {
+                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
+                    act(buf, FALSE, mob, 0, 0, TO_ROOM);
+                }
                 extract_char(mob);
                 return FALSE;
             }

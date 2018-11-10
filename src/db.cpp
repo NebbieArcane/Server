@@ -1988,27 +1988,8 @@ struct char_data* read_mobile(int nr, int type) {
     
     mob->lastpkill = NULL;
     
-    /* Nuova assegnazione punti movimento mob */
-    if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) > ALLIEVO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < INIZIATO )
-    {
-        mob->points.move        += GET_LEVEL(mob, WARRIOR_LEVEL_IND);
-        mob->points.max_move    += GET_LEVEL(mob, WARRIOR_LEVEL_IND);
-    }
-    else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= INIZIATO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < MAESTRO)
-    {
-        mob->points.move        += (50 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
-        mob->points.max_move    += (50 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
-    }
-    else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= MAESTRO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < PRINCIPE)
-    {
-        mob->points.move        += (100 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
-        mob->points.max_move    += (100 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
-    }
-    else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= PRINCIPE)
-    {
-        mob->points.move        += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
-        mob->points.max_move    += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
-    }
+    mob->points.max_move = NewMobMov(mob);
+    mob->points.move = mob->points.max_move;
 
 	/* Check to see if associated with a script, if so, set it up */
 	if(IS_SET(mob->specials.act, ACT_SCRIPT)) {
@@ -4918,6 +4899,33 @@ ACTION_FUNC(do_WorldSave) {
 	send_to_char("Comando disabilitato\r\n", ch);
 	return;
 }
+    
+/* Mob related handy functions */
+    
+    int NewMobMov (struct char_data* mob) {
+        int extra_mov = 0;
+    
+    /* Nuova assegnazione punti movimento mob */
+        if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) > ALLIEVO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < INIZIATO )
+        {
+            extra_mov += GET_LEVEL(mob, WARRIOR_LEVEL_IND);
+        }
+        else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= INIZIATO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < MAESTRO)
+        {
+            extra_mov += (50 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        }
+        else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= MAESTRO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < PRINCIPE)
+        {
+            extra_mov += (100 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        }
+        else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= PRINCIPE)
+        {
+            extra_mov += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        }
+        
+    return(mob->points.max_move+extra_mov);
+    
+    }
 
 }
 
