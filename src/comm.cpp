@@ -1692,7 +1692,18 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 					mudlog(LOG_SYSERR, "$D e vict_obj == NULL in act(comm.c)");
 					i = "";
 				}
-				break;
+            case 'l':
+                i = LUILEI(ch);
+                break;
+            case 'L':
+                if(vict_obj != NULL) {
+                    i = LUILEI((struct char_data*) vict_obj);
+                }
+                else {
+                    mudlog(LOG_SYSERR, "$L e vict_obj == NULL in act(comm.c)");
+                    i = "";
+                }
+                break;
 			case 'm':
 				i = HMHR(ch);
 				break;

@@ -7767,7 +7767,180 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 	return FALSE;
 }
 
+/*MOBSPECIAL_FUNC(Identifier)
+{
+    char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
+    char tmp[80];
+    int cost, ave, iVNum;
+    struct char_data* vict;
+    struct obj_data* obj;
 
+
+  //  int choice; va tolto
+ 
+
+    if(!AWAKE(ch))
+    {
+        return(FALSE);
+    }
+
+    if(IS_NPC(ch))
+    {
+        if(cmd == CMD_GIVE)
+        {
+            arg=one_argument(arg,obj_name);
+            if(is_number(obj_name))
+            {
+                if(newstrlen(obj_name) >= 10)
+                {
+                    obj_name[ 10 ] = '\0';
+                }
+                amount = atoi(obj_name);
+                arg = one_argument(arg, tmp);
+                if(str_cmp2("coin", tmp) && str_cmp2("monet", tmp))
+                {
+                    send_to_char("Cosa?\n\r",ch);
+                    return;
+                }
+                if(amount <= 0)
+                {
+                    send_to_char("Non hai ben chiaro il valore delle cose.\n\r", ch);
+                    return;
+                }
+                
+                arg = one_argument(arg, vict_name);
+                
+                if(!*vict_name) {
+                    send_to_char("A chi vuoi dare delle monete?\n\r", ch);
+                }
+                else if(!(vict = get_char_room_vis(ch, vict_name)))
+                {
+                    send_to_char("Non vedi nessuno con quel nome.\n\r", ch);
+                }
+                else
+                {
+                    if(GET_GOLD(ch) < amount && (IS_NPC(ch) || GetMaxLevel(ch) < DIO))
+                    {
+                        send_to_char("Non hai tutti quei soldi.\n\r", ch);
+                        return;
+                    }
+                    if(amount == 1)
+                    {
+                        act("$n ti da` una moneta d'oro.", FALSE, ch, NULL, vict, TO_VICT);
+                        act("Dai una moneta $N.", FALSE, ch, NULL, vict, TO_CHAR);
+                    }
+                    else {
+                        sprintf(buf, "$n ti da` %d monete d'oro.", amount);
+                        act(buf, FALSE, ch, NULL, vict, TO_VICT);
+                        sprintf(buf, "Dai %d monete d'oro a $N.", amount);
+                        act(buf, FALSE, ch, NULL, vict, TO_CHAR);
+                    }
+                    
+                    act("$n da` alcune monete a $N.", TRUE, ch, 0, vict, TO_NOTVICT);
+                    if(IS_NPC(ch) || GetMaxLevel(ch) < DIO) {
+                        GET_GOLD(ch) -= amount;
+                    }
+                    GET_GOLD(vict) += amount;
+                    save_char(ch, AUTO_RENT, 0);
+                    if(GET_GOLD(vict) > 500000 && amount > 100000) {
+                        mudlog(LOG_PLAYERS, "%s gave %d coins to %s", GET_NAME(ch),amount, GET_NAME(vict));
+                    }
+                }
+                
+                return;
+            }
+            else
+            {
+                if(!*obj_name)
+                {
+                    return(FALSE);
+                }
+                if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
+                {
+                    return(FALSE);
+                }
+                arg=one_argument(arg, vict_name);
+                if(!*vict_name)
+                {
+                    return(FALSE);
+                }
+                if(!(vict = get_char_room_vis(ch, vict_name)))
+                {
+                    return(FALSE);
+                }
+                if(!IS_NPC(vict))
+                {
+                    return(FALSE);
+                }
+                if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(Identifier))
+                {
+                    send_to_char("Non vuoi sul serio fare cio'.",ch);
+                    return(TRUE);
+                }
+            }
+            else
+            {
+                return(FALSE);
+            }
+        }
+
+    
+    
+    
+
+if(cmd) {
+            if(cmd == CMD_GIVE) {
+
+
+            if(GET_GOLD(ch)< 1000) {
+                send_to_char("You do not have the money to pay me.\n\r", ch);
+                return(TRUE);
+            }
+            else {
+                GET_GOLD(ch)-=1000;
+            }
+
+            choice = number(0,2);
+            switch(choice) {
+                case 0:
+                    sprintf(buf, "STR: %d, WIS: %d, DEX: %d\n\r", GET_STR(ch), GET_WIS(ch), GET_DEX(ch));
+                    send_to_char(buf, ch);
+                    break;
+                case 1:
+                    sprintf(buf, "INT: %d, DEX:  %d, CON: %d \n\r", GET_INT(ch), GET_DEX(ch), GET_CON(ch));
+                    send_to_char(buf, ch);
+                    break;
+                case 2:
+                    sprintf(buf, "CON: %d, INT: %d , WIS: %d \n\r", GET_CON(ch), GET_INT(ch), GET_WIS(ch));
+                    send_to_char(buf, ch);
+                    break;
+                default:
+                    send_to_char("We are experiencing Technical difficulties\n\r", ch);
+                    return(TRUE);
+            }
+
+        }
+        else {
+            return(FALSE);
+        }
+    }
+    else {
+        
+
+
+        if(ch->specials.fighting) {
+            act("$n gives you the evil eye!  You feel your hitpoints ebbing away",
+                FALSE, ch, 0, ch->specials.fighting, TO_VICT);
+            act("$n gives $N the evil eye!  $N seems weaker!",
+                FALSE, ch, 0, ch->specials.fighting, TO_NOTVICT);
+            ch->specials.fighting->points.max_hit -= 10;
+            ch->specials.fighting->points.hit -= 10;
+            return(FALSE);
+        }
+        
+    }
+    return(FALSE);
+} */
 
 #define SPELL_SPECIAL_COST 1000000   /* 1000k to specialize per spell */
 MOBSPECIAL_FUNC(mage_specialist_guildmaster) {

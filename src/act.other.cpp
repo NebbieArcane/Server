@@ -289,18 +289,21 @@ ACTION_FUNC(do_destroy)
             obj_from_char(tmp_object);
             extract_obj(tmp_object);
         }
+        
+        if(value > 0)
+        {
+            sprintf(buf, "Distruggi %s.\n\r", arg);
+            act(buf, 1, ch, 0, 0, TO_CHAR);
+            sprintf(buf, "$n distrugge %s.\n\r", arg);
+            act(buf, 1, ch, 0, 0, TO_ROOM);
+        }
+        else
+        {
+            send_to_char("Cosa vuoi distruggere?\n\r",ch);
+            return;
+        }
+    }
 
-        sprintf(buf, "Distruggi %s.\n\r", arg);
-        act(buf, 1, ch, 0, 0, TO_CHAR);
-        sprintf(buf, "$n distrugge %s.\n\r", arg);
-        act(buf, 1, ch, 0, 0, TO_ROOM);
-    }
-    else
-    {
-        send_to_char("Cosa vuoi distruggere?\n\r",ch);
-        return;
-    }
-    
     value /= 2;
     
     if(value)

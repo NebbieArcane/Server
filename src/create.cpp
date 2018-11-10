@@ -525,7 +525,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 	send_to_char(buf, ch);
 
 	row = 0;
-	for(i = 0; i < 8; i++) {
+	for(i = 0; i < 9; i++) {
 		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
 		if(i & 1) {
 			row++;

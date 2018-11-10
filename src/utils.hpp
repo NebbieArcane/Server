@@ -107,6 +107,9 @@ namespace Alarmud {
 #define LEGLI(ch) ((ch)->player.sex ?                                   \
 				   (((ch)->player.sex == 1) ? "gli" : "le") : "gli")
 
+#define LUILEI(ch) ((ch)->player.sex ?                                   \
+                   (((ch)->player.sex == 1) ? "lui" : "lei") : "lui")
+
 #define SSLF(ch) ((ch)->player.sex ?                                    \
 				  (((ch)->player.sex == 1) ? "o" : "a") : "o")
 

@@ -1985,6 +1985,30 @@ struct char_data* read_mobile(int nr, int type) {
 	mob->commandp = 0;
 	mob->commandp2 = 0;
 	mob->waitp = 0;
+    
+    mob->lastpkill = NULL;
+    
+    /* Nuova assegnazione punti movimento mob */
+    if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) > ALLIEVO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < INIZIATO )
+    {
+        mob->points.move        += GET_LEVEL(mob, WARRIOR_LEVEL_IND);
+        mob->points.max_move    += GET_LEVEL(mob, WARRIOR_LEVEL_IND);
+    }
+    else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= INIZIATO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < MAESTRO)
+    {
+        mob->points.move        += (50 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        mob->points.max_move    += (50 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+    }
+    else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= MAESTRO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < PRINCIPE)
+    {
+        mob->points.move        += (100 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        mob->points.max_move    += (100 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+    }
+    else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= PRINCIPE)
+    {
+        mob->points.move        += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        mob->points.max_move    += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+    }
 
 	/* Check to see if associated with a script, if so, set it up */
 	if(IS_SET(mob->specials.act, ACT_SCRIPT)) {
