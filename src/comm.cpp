@@ -2019,7 +2019,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 			mask="%N R%R [%iI/%iN/%iS]>> ";
 		}
 		else {
-			mask="%N H%h M%m V%v X%x [%S] %c/%C>> ";
+			mask="%N H%h M%m V%v X%x %S %c/%C>> ";
 		}
 	}
 	if(!ch->specials.fighting
@@ -2165,7 +2165,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					break;
 				case 'T':   /* mob name */
 					if(ch->specials.fighting) {
-						strcpy(tbuf, GET_NAME(ch->specials.fighting));
+						one_argument(tbuf, GET_NAME(ch->specials.fighting));
 					}
 					else {
 						strcpy(tbuf, "*");
@@ -2185,26 +2185,42 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 				/* no break */
 				case 'S':   /* affected spells */
 					*tbuf=0;
+                        
+                    // Parentesi affette da darkness
+                    if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
+                        strcat(tbuf, (i > 1) ? "$c0008[$c0007" : "$c0000[$c0007");
+                    }
+                    else {
+                        strcat(tbuf,"[");
+                    }
+                        
+                        
 					if((i = _affected_by_s(ch, SPELL_FIRESHIELD)) != -1) {
-						strcat(tbuf, (i > 1) ? "F" : "f");
+						strcat(tbuf, (i > 1) ? "$c0009F$c0007" : "$c0001f$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf,"-");
 					}
 					if((i = _affected_by_s(ch, SPELL_SANCTUARY)) != -1) {
-						strcat(tbuf, (i > 1) ? "S" : "s");
+						strcat(tbuf, (i > 1) ? "$c0015S$c0007" : "s");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
 					}
 					if((i = _affected_by_s(ch, SPELL_INVISIBLE)) != -1) {
-						strcat(tbuf, (i > 1) ? "I" : "i");
+						strcat(tbuf, (i > 1) ? "$c0011I$c0007" : "$c0003i$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf,"-");
 					}
 					if((i = _affected_by_s(ch, SPELL_TRUE_SIGHT)) != -1) {
-						strcat(tbuf, (i > 1) ? "T" : "t");
+						strcat(tbuf, (i > 1) ? "$c0014T$c0007" : "$c0006t$c0007");
+					}
+					else if(s_flag) {
+						strcat(tbuf, "-");
+					}
+					if((i = _affected_by_s(ch, SPELL_MIRROR_IMAGES)) != -1) {
+						strcat(tbuf, (i > 1) ? "$c0013M$c0007" : "$c0005m$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
@@ -2216,18 +2232,28 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 						strcat(tbuf, "-");
 					}
 					if((i = _affected_by_s(ch, SPELL_ANTI_MAGIC_SHELL)) != -1) {
-						strcat(tbuf, (i > 1) ? "A" : "a");
+						strcat(tbuf, (i > 1) ? "$c0012A$c0007" : "$c0004a$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
 					}
 					if((i = _affected_by_s(ch, STATUS_QUEST)) != -1) {
-						strcat(tbuf, (i > 1) ? "Q" : "q");
+						strcat(tbuf, (i > 1) ? "$c0010Q$c0007" : "$c0002q$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
 					}
-					break;
+					
+                    // Parentesi affette da darkness
+                    if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
+                        strcat(tbuf, (i > 1) ? "$c0008]$c0007" : "$c0000]$c0007");
+                    }
+                    else {
+                        strcat(tbuf,"]");
+                    }
+                        
+                    break;
+                        
 				case 'R': /* room number for immortals */
 					if(IS_DIO(ch)) {
 						rm = real_roomp(ch->in_room);

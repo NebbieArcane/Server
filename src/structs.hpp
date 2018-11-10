@@ -713,8 +713,9 @@ struct char_data {
 	long lStartRoom;
 	long AgeModifier;
 	struct event* points_event[3];   /* events for regening H/M/V */
-	//char *has_killed; /* FLYP 2003 Salva il nome dell'ultima persona che ho ucciso*/
-    char* lastpkill; // destroy
+	
+    char* lastpkill; // last player killed, used also for destroy checks
+    char* lastmkill; // last mob killed, used also for quest checks
 
 };
 

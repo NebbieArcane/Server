@@ -1641,6 +1641,9 @@ ACTION_FUNC(do_stat) {
                 sprintf(buf, "$c0005Last PKill: $c0014%s", k->lastpkill == NULL ? "-" : k->lastpkill);    // destroy
                 act(buf, FALSE, ch, 0, 0, TO_CHAR);
                 
+                sprintf(buf, "$c0005Last MKill: $c0014%s", k->lastmkill == NULL ? "-" : k->lastmkill);    // quests
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                
 				/* immunities */
 				if(k->M_immune) {
 					send_to_char("$c0005Immune to:$c0014", ch);

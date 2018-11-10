@@ -95,8 +95,7 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 	/* Requiem 2018 - adjust mob power in relation to caster's level */
 
 	if(char_bonus > 0) {
-		if(HasClass(mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
-					CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
+		if(IS_SET(mob->specials.act, ACT_MONK) || IS_SET(mob->specials.act, ACT_WARRIOR) || IS_SET(mob->specials.act, ACT_THIEF) || IS_SET(mob->specials.act, ACT_BARBARIAN) || IS_SET(mob->specials.act, ACT_PALADIN || IS_SET(mob->specials.act, ACT_RANGER))) {
 			mob->points.max_hit = GET_MAX_HIT(mob) + (char_bonus*number(1,5));
 			GET_HIT(mob) = GET_MAX_HIT(mob);
 			int multiplier=2;
@@ -110,8 +109,7 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 			mob->points.damroll += char_bonus/multiplier;
 		}
 
-		if(HasClass(mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
-					CLASS_SORCERER | CLASS_PSI)) {
+		if(IS_SET(mob->specials.act, ACT_MAGIC_USER) || IS_SET(mob->specials.act, ACT_DRUID) || IS_SET(mob->specials.act, ACT_CLERIC) || IS_SET(mob->specials.act, ACT_PSI)) {
 			mob->points.max_mana = GET_MAX_MANA(mob) + (char_bonus*number(2,3));
 			GET_MANA(mob) = GET_MAX_MANA(mob);
 			mob->points.mana_gain += (char_bonus*number(3,5));
@@ -155,11 +153,15 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         }
         
         if(af->type == STATUS_QUEST) {
-            taker->specials.quest_ref->specials.quest_ref = NULL;
+            free((taker->specials.quest_ref)->specials.quest_ref);
             taker->specials.quest_ref = giver->specials.quest_ref;
+            taker->specials.eq_val_idx = giver->specials.eq_val_idx;
         }
         
     }
+    
+    free(taker->lastmkill);
+    taker->lastmkill = giver->lastmkill;
 
 	/*
 	 *  humanoid monsters can cast spells

@@ -1987,6 +1987,7 @@ struct char_data* read_mobile(int nr, int type) {
 	mob->waitp = 0;
     
     mob->lastpkill = NULL;
+    mob->lastmkill = NULL;
     
     mob->points.max_move = NewMobMov(mob);
     mob->points.move = mob->points.max_move;
@@ -3054,6 +3055,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	ch->specials.charge_dir = -1; /* null it out */
     
     ch->specials.quest_ref = 0;
+    ch->specials.eq_val_idx = 0;
 
 	st->abilities = ch->abilities;
 
@@ -3556,6 +3558,12 @@ void free_char(struct char_data* ch) {
         ch->lastpkill = NULL;
     }
     
+    if(ch->lastmkill)       // quests
+    {
+        free(ch->lastmkill);
+        ch->lastmkill = NULL;
+    }
+    
 	if(ch->skills) {
 		free(ch->skills);
 		ch->skills = NULL;
@@ -3699,6 +3707,7 @@ void reset_char(struct char_data* ch) {
 	ch->next_in_room = 0;
 	ch->specials.fighting = 0;
     ch->specials.quest_ref = 0;
+    ch->specials.eq_val_idx = 0;
 	ch->specials.PosPrev = POSITION_STANDING;
 	for(i = 0; i < MAX_POSITION; i++) {
 		ch->specials.TempoPassatoIn[i] = 0;

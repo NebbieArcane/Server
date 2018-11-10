@@ -2425,7 +2425,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, const char* name) {
 				   GET_NAME_DESC(ch), ch->in_room, ch, ch->nMagicNumber);
 		}
 		if(isname(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i)  || (!IS_PC(i) && affected_by_spell(i,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2440,7 +2440,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, const char* name) {
 				   GET_NAME_DESC(ch), ch->in_room, ch, ch->nMagicNumber);
 		}
 		if(isname2(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i) || (!IS_PC(i) && affected_by_spell(i,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2479,7 +2479,7 @@ struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int*
 			assert(0);
 		}
 		if(isname(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i) || !IS_PC(ch)) {
+			if(CAN_SEE(ch, i) || (!IS_PC(i) && affected_by_spell(i,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2495,7 +2495,7 @@ struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int*
 				   GET_NAME_DESC(i), i, i->nMagicNumber);
 		}
 		if(isname2(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i) || (!IS_PC(ch) && affected_by_spell(ch,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}

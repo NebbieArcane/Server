@@ -5110,87 +5110,89 @@ MOBSPECIAL_FUNC(MobCaccia) {
     switch(type) {
             
     case EVENT_DEATH    :
+            
+        t->specials.quest_ref = NULL;
 
-        if(ch->in_room == t->in_room) {
+        if(t->in_room == ch->in_room) {
 
-            if(affected_by_spell(t,STATUS_QUEST)) {
-
-                for(af = t->affected; af; af = af->next) {
-                    if(af->type == STATUS_QUEST) {
-                        x = GetMaxLevel(t);
-                        premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
-                        if(IS_PKILLER(t)) {
-                            premio[1] = (x*50000)-((x-af->duration)*50000);
-                        }
-                        if(IS_PRINCE(t) && af->duration >= x-2) {
-                            premio[2] = 1;
-                        }
-
-                        if(GetMaxLevel(t) >= IMMORTALE) {
-                            t->specials.quest_ref = NULL;
-                            return FALSE;
-                        }
+            for(af = t->affected; af; af = af->next) {
+                if(af->type == STATUS_QUEST) {
+                    
+                    x = GetMaxLevel(t);
+                    
+                    if(x >= IMMORTALE) {
+                        send_to_char("\n\r$c0014La Gilda dei Mercenari non ammette immortali!$c0007\n\r", t);
+                        return FALSE;
+                    }
+                    
+                    premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
+                    if(IS_PKILLER(t)) {
+                        premio[1] = (x*50000)-((x-af->duration)*50000);
+                    }
+                    if(IS_PRINCE(t) && af->duration >= x-2) {
+                        premio[2] = 1;
+                    }
+                    
+                    if(t->followers || t->master) {
+                        send_to_char("\n\r$c0014La Gilda dei Mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", t);
+                        return FALSE;
+                    }
+                    
+                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
+                    if(af->duration >= x-2) {
+                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
+                    } else if(af->duration >= x/2) {
+                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n\r");
+                    } else {
+                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.\n\r");
+                    }
+                    send_to_char(buf, t);
+                    
+                    if((x = GetCharBonusIndex(t) - t->specials.eq_val_idx) > 10) {
+                        mudlog(LOG_CHECK, "Eq Value variation of %s = %d",GET_NAME(t), x);
+                        send_to_char("$c0011tenendo conto che il tuo potere e' cresciuto molto rispetto a quando ti abbiamo ingaggiato... $c0007\n\r", t);
                         
-                        if(t->followers || t->master) {
-                            send_to_char("\n\r$c0014La gilda dei mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", t);
-                            t->specials.quest_ref = NULL;
-                            return FALSE;
-                        }
+                        premio[0] -= x*50;
+                        premio[1] -= x*200;
+                        premio[2] = 0;
                         
-                        sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
-                        if(af->duration >= x-2) {
-                        strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
-                        } else if(af->duration >= x/2) {
-                        strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n\r");
-                        } else {
-                        strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n\r");
-                        }
-                        send_to_char(buf, t);
+                    }
+                    
+                    if(premio[0]+premio[1]+premio[2] == 0) {
+                        send_to_char("\n\r$c0014...non vinci un piffero. Cerca di essere piu' veloce e piu' coerente!$c0007\n\r", t);
                         
-                        if((x = GetCharBonusIndex(t) - t->specials.eq_val_idx) > 10) {
-                            mudlog(LOG_CHECK, "Eq Value variation of %s = %d",GET_NAME(t), x);
-                            send_to_char("$c0011tenendo conto che il tuo potere e' cresciuto molto rispetto a quando ti abbiamo ingaggiato... $c0007\n\r", t);
-                            
-                            premio[0] -= x*500;
-                            premio[1] -= x*2000;
-                            premio[2] = 0;
-                            
-                        }
-                        
-                            for(n = 0;n < 3;n++) {
-                                if(premio[n] > 0) {
-                                    
-                                    switch(n) {
-                                        case 0  :
-                                            GET_GOLD(t) += premio[0];
-                                            sprintf(buf,"\r$c0014Ricevi %d monete d'oro!$c0007\n\r", premio[0]);
-                                            break;
-                                        case 1  :
-                                            GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                            sprintf(buf,"$c0014Ottieni %d punti esperienza!$c0007\n\r", premio[1]);
-                                            break;
-                                        case 2  :
-                                            GET_RUNEDEI(t) += premio[2];
-                                            sprintf(buf,"$c0014Vieni marchiato con %d rune degli Dei!$c0007\n\r", premio[2]);
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    send_to_char(buf, t);
+                    } else {
+                    
+                        for(n = 0;n < 3;n++) {
+                            if(premio[n] > 0) {
+                                
+                                switch(n) {
+                                    case 0  :
+                                        GET_GOLD(t) += premio[0];
+                                        sprintf(buf,"\r$c0014Ricevi %d monete d'oro!$c0007\n\r", premio[0]);
+                                        break;
+                                    case 1  :
+                                        GET_EXP(t) += premio[1]/HowManyClasses(t);
+                                        sprintf(buf,"$c0014Ottieni %d punti esperienza!$c0007\n\r", premio[1]);
+                                        break;
+                                    case 2  :
+                                        GET_RUNEDEI(t) += premio[2];
+                                        sprintf(buf,"$c0014Vieni marchiato con %d rune degli Dei!$c0007\n\r", premio[2]);
+                                        break;
+                                    default:
+                                        break;
                                 }
+                                send_to_char(buf, t);
                             }
-                    sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
-                    act(buf, FALSE, t, 0, 0, TO_ROOM);
-                    t->specials.quest_ref = NULL;
-                    return FALSE;
-                }
+                        }
+                    }
+                sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
+                act(buf, FALSE, t, 0, 0, TO_ROOM);
+                return FALSE;
             }
         }
-            
-    return FALSE;
-            
     } else {
-        t->specials.quest_ref = NULL;
+        send_to_char("\n\r$c001Qualcun'altro compie il tuo dovere e finisci senza paga.$c0007\n\r", t);
         return FALSE;
     }
 
@@ -5202,16 +5204,19 @@ MOBSPECIAL_FUNC(MobCaccia) {
             return FALSE;
         }
         
-        if(cmd == CMD_GIVE && HasClass(mob, CLASS_MONK)) {
+        if(cmd == CMD_GIVE && IS_SET(mob->specials.act, ACT_MONK)) {
             arg = one_argument(arg,buf);
             arg = one_argument(arg,buf2);
             
                 if(*buf2 && get_char_room_vis(mob, buf2) == mob) {
-                do_drop(mob, " all", CMD_DROP);
-                    if(number(0,1)) {
-                        sprintf(buf,"%s Pensavi di fregarmi riempendomi le mani della tua spazzatura eh?!",GET_NAME(ch));
+                    
+                sprintf(buf,"all.%s",buf);
+                do_junk(mob, buf, CMD_JUNK);
+                    
+                    if(CAN_SEE(mob,ch)) {
+                        sprintf(buf,"%s, pensavi di fregarmi riempendomi le mani della tua spazzatura eh?!",GET_NAME(ch));
                     } else {
-                        sprintf(buf,"Un trucchetto davvero patetico %s, sono un monaco esperto io!",GET_NAME(ch));
+                        sprintf(buf,"Un scherzetto davvero patetico, sono un monaco esperto io!");
                     }
                 
                 do_gossip(mob,buf,CMD_GOSSIP);
@@ -5224,15 +5229,6 @@ MOBSPECIAL_FUNC(MobCaccia) {
     break;
     
     case EVENT_TICK     :
-            
-            if(!affected_by_spell(t,STATUS_QUEST) || !(t=get_char_vis_world(t,t->player.name,NULL))) {
-                if(real_roomp(mob->in_room)->people) {
-                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
-                    act(buf, FALSE, mob, 0, 0, TO_ROOM);
-                }
-                extract_char(mob);
-                return FALSE;
-            }
 
             rp = real_roomp(mob->in_room);
             
@@ -5256,12 +5252,21 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     
             } else {
                 
+                if(!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) {
+                    if(real_roomp(mob->in_room)->people) {
+                        sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
+                        act(buf, FALSE, mob, 0, 0, TO_ROOM);
+                    }
+                    extract_char(mob);
+                    return FALSE;
+                }
+                
                 if(GET_POS(mob) == POSITION_SLEEPING) {
                     do_wake(mob, "", -1);
                 }
                 
                 if(GET_POS(mob) == POSITION_SLEEPING || GET_POS(mob) == POSITION_SITTING) {
-                    do_stand(mob, "", -1);
+                    StandUp(mob);
                 }
                 
                 if(GET_POS(mob) == POSITION_STANDING) {
