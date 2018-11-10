@@ -4947,6 +4947,9 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     ch->specials.quest_ref = quest_tgt;
                     quest_tgt->specials.quest_ref = ch;
                     
+                    /* copio nel mob l'EqValueIndex del pg al momento della richiesta */
+                    quest_tgt->specials.eq_val_idx = GetCharBonusIndex(ch);
+                    
                     spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0);
                     
                     /* adattiamo il mob al questante, questa e' da perfezionare */
@@ -4957,13 +4960,18 @@ MOBSPECIAL_FUNC(AssignQuest) {
                         quest_tgt->specials.damnodice = GetMaxLevel(ch)/5;
                     }
                     
+                    
                     if(HasClass(ch, CLASS_MONK)) {
                         quest_tgt->points.max_hit = GET_MAX_HIT(ch)*2;
+                    } else if(HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
+                                       CLASS_BARBARIAN | CLASS_THIEF)) {
+                        quest_tgt->points.max_hit = floor(GET_MAX_HIT(ch)*1.5);
                     } else {
-                        quest_tgt->points.max_hit = GET_MAX_HIT(ch);
+                        GET_MAX_HIT(ch);
                     }
 
                     GET_HIT(quest_tgt) = GET_MAX_HIT(quest_tgt);
+                     
                     quest_tgt->points.max_move = GET_MAX_MOVE(ch);
                     GET_MOVE(quest_tgt) = GET_MAX_MOVE(quest_tgt);
                     quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+ch->points.hitroll;
@@ -5093,8 +5101,12 @@ MOBSPECIAL_FUNC(MobCaccia) {
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
+    
+    if(*arg || cmd) {
+        return FALSE;
+    }
+    
     t = mob->specials.quest_ref;
-    mudlog(LOG_CHECK, "arg: %s", arg);
     
     switch(type) {
             
@@ -5102,7 +5114,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
 
         if(ch->in_room == t->in_room) {
 
-            if(affected_by_spell(t,STATUS_QUEST) && GetMaxLevel(t) < IMMORTALE) {
+            if(affected_by_spell(t,STATUS_QUEST)) {
 
                 for(af = t->affected; af; af = af->next) {
                     if(af->type == STATUS_QUEST) {
@@ -5114,9 +5126,15 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         if(IS_PRINCE(t) && af->duration >= x-2) {
                             premio[2] = 1;
                         }
-                    
+
+                        if(GetMaxLevel(t) >= IMMORTALE) {
+                            t->specials.quest_ref = NULL;
+                            return FALSE;
+                        }
+                        
                         if(t->followers || t->master) {
-                            act("\n\r$c0014La gilda dei mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", FALSE, t, 0, t, TO_CHAR);
+                            send_to_char("\n\r$c0014La gilda dei mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", t);
+                            t->specials.quest_ref = NULL;
                             return FALSE;
                         }
                         
@@ -5128,13 +5146,14 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         } else {
                         strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro'.\n\r");
                         }
-                        act(buf, FALSE, t, 0, t, TO_CHAR);
+                        send_to_char(buf, t);
                         
-                        if((x = t->points.damroll - ch->points.damroll) > 5) {
-                            act("$c0011tenendo conto che il tuo potere superava quello del tuo avversario: $c0007\n\r", FALSE, t, 0, t, TO_CHAR);
+                        if((x = GetCharBonusIndex(t) - t->specials.eq_val_idx) > 10) {
+                            mudlog(LOG_CHECK, "Eq Value variation of %s = %d",GET_NAME(t), x);
+                            send_to_char("$c0011tenendo conto che il tuo potere e' cresciuto molto rispetto a quando ti abbiamo ingaggiato... $c0007\n\r", t);
                             
-                            premio[0] -= x*10000;
-                            premio[1] -= x*100000;
+                            premio[0] -= x*500;
+                            premio[1] -= x*2000;
                             premio[2] = 0;
                             
                         }
@@ -5145,7 +5164,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                     switch(n) {
                                         case 0  :
                                             GET_GOLD(t) += premio[0];
-                                            sprintf(buf,"\r$c0014Vinci %d monete d'oro!$c0007\n\r", premio[0]);
+                                            sprintf(buf,"\r$c0014Ricevi %d monete d'oro!$c0007\n\r", premio[0]);
                                             break;
                                         case 1  :
                                             GET_EXP(t) += premio[1]/HowManyClasses(t);
@@ -5158,7 +5177,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                         default:
                                             break;
                                     }
-                                    act(buf, FALSE, t, 0, t, TO_CHAR);
+                                    send_to_char(buf, t);
                                 }
                             }
                     sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
@@ -5195,7 +5214,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                             WAIT_STATE(t, PULSE_VIOLENCE*3);
                             
                             sprintf(buf,"\n\r$c0014%s Si vede alle strette e se la da' a gambe!$c0007\n\r",GET_NAME(mob));
-                            act(buf, FALSE, t, 0, t, TO_CHAR);
+                            send_to_char(buf, t);
                             
                             stop_fighting(mob);
                             char_from_room(mob);
@@ -5219,20 +5238,18 @@ MOBSPECIAL_FUNC(MobCaccia) {
                 
                 if(GET_POS(mob) == POSITION_STANDING) {
                     for(t = rp->people; t; t=t->next_in_room) {
-                        if((t != mob) && t->specials.quest_ref == mob) {
+                        if((t != mob) && t->specials.quest_ref == mob && CAN_SEE(mob, t)) {
                             sprintf(buf,"%s Dannazione come mi hai trovato? Non mi avrai cosi' facilmente!",GET_NAME(t));
                             do_tell(mob,buf,CMD_TELL);
-                            if(CAN_SEE(mob, t)) {
-                                hit(mob, t, 0);
-                                return FALSE;
-                            }
+                            hit(mob, t, 0);
+                            return FALSE;
                         }
                     }
                 }
             }
     break;
     }
-    
+
     return FALSE;
 }
     

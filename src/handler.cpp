@@ -2479,7 +2479,7 @@ struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int*
 			assert(0);
 		}
 		if(isname(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i) || !IS_PC(ch)) {
 				if(j == number) {
 					return(i);
 				}

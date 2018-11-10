@@ -4377,7 +4377,7 @@ ACTION_FUNC(do_doorway) {
 	}
     
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
-        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+        send_to_char("Non si bara ;)\n\r", ch);
         return;
     }
 
@@ -5559,6 +5559,17 @@ ACTION_FUNC(do_scry) {
 		send_to_char("Your mind is not yet strong enough.\n\r", ch);
 		return;
 	}
+    
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        
+        if(IS_SINGLE(ch)) {
+            send_to_char("Forte della tua disciplina mentale tenti l'impossibile...\n\r", ch);
+        } else {
+            send_to_char("Solo uno psionico puro potrebbe tanto.\n\r", ch);
+            return;
+        }
+    }
 
 	if((GET_MANA(ch) < 20) && GetMaxLevel(ch) < IMMORTALE) {
 		send_to_char("You have a headache. Better rest before you try this again.\n\r",ch);

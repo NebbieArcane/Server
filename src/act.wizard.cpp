@@ -1608,11 +1608,20 @@ ACTION_FUNC(do_stat) {
 						((k->master) ? GET_NAME(k->master) : "NOBODY"));
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
                 
-                if(k->specials.quest_ref && IS_PC(k)) {
-                    sprintf(buf, "$c0005Quest Target: $c0014%s",
-                            (k->specials.quest_ref->player.name ?
-                             k->specials.quest_ref->player.name : "-"));
-                    act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                if(k->specials.quest_ref) {
+                    
+                    if(IS_PC(k)) {
+                        sprintf(buf, "$c0005Quest Target: $c0014%s",
+                                (k->specials.quest_ref->player.name ?
+                                 k->specials.quest_ref->player.name : "-"));
+                        act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                    } else {
+                        sprintf(buf, "$c0005Quest Owner: $c0014%s",
+                                (k->specials.quest_ref->player.name ?
+                                 k->specials.quest_ref->player.name : "-"));
+                        act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                    }
+                    
                 }
 
 				sprintf(buf, "$c0005Followers are:");
@@ -3248,7 +3257,7 @@ void force_return(struct char_data* ch, const char* arg, int cmd) {
 			char_from_room(per);
 			char_to_room(per, mob->in_room);
 
-			mudlog(LOG_CHECK, "Switching the eq of %s .", ch->player.name);
+			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
 		}
 
