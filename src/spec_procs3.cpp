@@ -5181,7 +5181,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                 }
                             }
                     sprintf(buf,"\n\r$c0014%s ha reso un servigio agli dei!$c0007\n\r",GET_NAME(t));
-                    act(buf, FALSE, t, 0, t, TO_ROOM);
+                    act(buf, FALSE, t, 0, 0, TO_ROOM);
                     t->specials.quest_ref = NULL;
                     return FALSE;
                 }
@@ -5201,7 +5201,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
             
             if(!affected_by_spell(t,STATUS_QUEST) || !(t=get_char_vis_world(t,t->player.name,NULL))) {
                 sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
-                act(buf, FALSE, mob, 0, mob, TO_ROOM);
+                act(buf, FALSE, mob, 0, 0, TO_ROOM);
                 extract_char(mob);
                 return FALSE;
             }

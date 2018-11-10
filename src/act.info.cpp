@@ -4100,7 +4100,7 @@ ACTION_FUNC(do_value) {
 			act("$n studia $N", FALSE, ch, 0, vict, TO_ROOM);
 		}
 		else if(obj) {
-			act("$n sudia $p intensamente", FALSE, ch, obj, 0, TO_ROOM);
+			act("$n studia $p intensamente", FALSE, ch, obj, 0, TO_ROOM);
 		}
 		else {
 			return;
