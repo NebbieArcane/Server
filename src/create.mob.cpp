@@ -85,7 +85,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 15) {
+		if(update < 0 || update > 31) {
 			return;
 		}
 		i = 1<<update;
@@ -106,7 +106,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 
 	row = 0;
-	for(i = 0; i < 16; i++) {
+	for(i = 0; i < 32; i++) {
 		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
 		if(i & 1) {
 			row++;

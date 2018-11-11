@@ -1945,124 +1945,141 @@ MOBSPECIAL_FUNC(RepairGuy) {
 	if(cmd == CMD_GIVE) {  /* give */
 		/* determine the correct obj */
 		arg=one_argument(arg,obj_name);
-		if(!*obj_name) {
-			send_to_char("Give what?\n\r",ch);
+		if(!*obj_name)
+        {
+		//	send_to_char("Give what?\n\r",ch);
 			return(FALSE);
 		}
-		if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying))) {
-			send_to_char("Give what?\n\r",ch);
+		if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
+        {
+            send_to_char("Cosa vuoi dare a chi?\n\r", ch);
 			return(TRUE);
 		}
 		arg=one_argument(arg, vict_name);
-		if(!*vict_name)        {
-			send_to_char("To who?\n\r",ch);
+		if(!*vict_name)
+        {
+		//	send_to_char("To who?\n\r",ch);
 			return(FALSE);
 		}
-		if(!(vict = get_char_room_vis(ch, vict_name)))        {
-			send_to_char("To who?\n\r",ch);
+		if(!(vict = get_char_room_vis(ch, vict_name)))
+        {
+		//	send_to_char("To who?\n\r",ch);
 			return(FALSE);
 		}
 
-		if(vict->specials.fighting) {
-			send_to_char("Not while they are fighting!\n\r",ch);
+		if(vict->specials.fighting)
+        {
+			send_to_char("Non mentre sta combattendo!\n\r",ch);
 			return(TRUE);
 		}
 
 		/* the target is the repairman, or an NPC */
-		if(!IS_NPC(vict)) {
+		if(!IS_NPC(vict))
+        {
 			return(FALSE);
 		}
 
-		if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(RepairGuy)) {
+		if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(RepairGuy))
+        {
 			/* we have the repair guy, and we can give him the stuff */
-			act("You give $p to $N.",TRUE,ch,obj,vict,TO_CHAR);
-			act("$n gives $p to $N.",TRUE,ch,obj,vict,TO_ROOM);
+			act("Dai $p a $N.",TRUE,ch,obj,vict,TO_CHAR);
+			act("$n da $p a $N.",TRUE,ch,obj,vict,TO_ROOM);
 		}
-		else {
+		else
+        {
 			return(FALSE);
 		}
 
-		act("$N looks at $p.", TRUE, ch, obj, vict, TO_CHAR);
-		act("$N looks at $p.", TRUE, ch, obj, vict, TO_ROOM);
+		act("$N studia $p.", TRUE, ch, obj, vict, TO_CHAR);
+		act("$N studia $p.", TRUE, ch, obj, vict, TO_ROOM);
 
 		/* First of all I control if the object exists in the database! Gaia 2001 */
 
 		iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
 
-		if(iVNum < 1)  {
-			act("$N says 'Fix it yourself!'", TRUE, ch, 0, vict, TO_CHAR);
-			act("$N says 'Fix it yourself!'", TRUE, ch, 0, vict, TO_ROOM);
+		if(iVNum < 1)
+        {
+			act("$N dice 'Riparalo tu!'", TRUE, ch, 0, vict, TO_CHAR);
+			act("$N dice 'Riparalo tu!'", TRUE, ch, 0, vict, TO_ROOM);
 			return(TRUE);
 		}
 
 		/* make all the correct tests to make sure that everything is kosher */
 
-		if(ITEM_TYPE(obj) == ITEM_ARMOR && obj->obj_flags.value[1] > 0) {
-			if(obj->obj_flags.value[1] > obj->obj_flags.value[0]) {
+		if(ITEM_TYPE(obj) == ITEM_ARMOR && obj->obj_flags.value[1] > 0)
+        {
+			if(obj->obj_flags.value[1] > obj->obj_flags.value[0])
+            {
 				/* get the value of the object */
 				cost = obj->obj_flags.cost;
 				/* divide by value[1]   */
 				cost /= obj->obj_flags.value[1];
 				/* then cost = difference between value[0] and [1] */
 				cost *= (obj->obj_flags.value[1] - obj->obj_flags.value[0]);
-				if(GetMaxLevel(vict) > 25) { /* super repair guy */
+				if(GetMaxLevel(vict) > 25)
+                { /* super repair guy */
 					cost *= 2;
 				}
-				if(cost > GET_GOLD(ch)) {
-					if(check_soundproof(ch)) {
-						act("$N shakes $S head.\n\r",
+				if(cost > GET_GOLD(ch))
+                {
+					if(check_soundproof(ch))
+                    {
+						act("$N squote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_ROOM);
-						act("$N shakes $S head.\n\r",
+						act("$N squote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_CHAR);
 					}
-					else {
-						act("$N says 'I'm sorry, you don't have enough money.'",
+					else
+                    {
+						act("$N dice 'Mi dispiace ma non hai abbastanza soldi.'",
 							TRUE, ch, 0, vict, TO_ROOM);
-						act("$N says 'I'm sorry, you don't have enough money.'",
+						act("$N dice 'Mi dispiace ma non hai abbastanza soldi.'",
 							TRUE, ch, 0, vict, TO_CHAR);
 					}
 				}
-				else {
+				else
+                {
 					GET_GOLD(ch) -= cost;
 
-					sprintf(buf, "You give $N %d coins.",cost);
+					sprintf(buf, "Dai a $N %d monete d'oro.",cost);
 					act(buf,TRUE,ch,0,vict,TO_CHAR);
-					act("$n gives some money to $N.",TRUE,ch,obj,vict,TO_ROOM);
+					act("$n da' alcune monete a $N.",TRUE,ch,obj,vict,TO_ROOM);
 
 					/* fix the armor */
-					act("$N fiddles with $p.",TRUE,ch,obj,vict,TO_ROOM);
-					act("$N fiddles with $p.",TRUE,ch,obj,vict,TO_CHAR);
-					if(GetMaxLevel(vict) > 25) {
+					act("$N armeggia con $p.",TRUE,ch,obj,vict,TO_ROOM);
+					act("$N armeggia con $p.",TRUE,ch,obj,vict,TO_CHAR);
+					if(GetMaxLevel(vict) > 25)
+                    {
 						obj->obj_flags.value[0] = obj->obj_flags.value[1];
 					}
-					else {
-						ave = MAX(obj->obj_flags.value[0],
-								  (obj->obj_flags.value[0] +
-								   obj->obj_flags.value[1]) /2);
+					else
+                    {
+						ave = MAX(obj->obj_flags.value[0], (obj->obj_flags.value[0] + obj->obj_flags.value[1]) /2);
 						obj->obj_flags.value[0] = ave;
 						obj->obj_flags.value[1] = ave;
 					}
-					if(check_soundproof(ch)) {
-						act("$N smiles broadly.",TRUE,ch,0,vict,TO_ROOM);
-						act("$N smiles broadly.",TRUE,ch,0,vict,TO_CHAR);
+					if(check_soundproof(ch))
+                    {
+						act("$N fa un grande sorriso.",TRUE,ch,0,vict,TO_ROOM);
+						act("$N fa un grande sorriso.",TRUE,ch,0,vict,TO_CHAR);
 					}
 					else {
-						act("$N says 'All fixed.'",TRUE,ch,0,vict,TO_ROOM);
-						act("$N says 'All fixed.'",TRUE,ch,0,vict,TO_CHAR);
+						act("$N dice 'Tutto apposto!'",TRUE,ch,0,vict,TO_ROOM);
+						act("$N dice 'Tutto apposto!'",TRUE,ch,0,vict,TO_CHAR);
 					}
 				}
 			}
 			else {
 				if(check_soundproof(ch)) {
-					act("$N shrugs.",
+					act("$N alza le spalle.",
 						TRUE,ch,0,vict,TO_ROOM);
-					act("$N shrugs.",
+					act("$N alza le spalle.",
 						TRUE,ch,0,vict,TO_CHAR);
 				}
 				else {
-					act("$N says 'Your armor looks fine to me.'",
+					act("$N dice 'La tua armatura sembra apposto per me.'",
 						TRUE,ch,0,vict,TO_ROOM);
-					act("$N says 'Your armor looks fine to me.'",
+					act("$N dice 'La tua armatura sembra apposto per me.'",
 						TRUE,ch,0,vict,TO_CHAR);
 				}
 			}
@@ -2070,19 +2087,19 @@ MOBSPECIAL_FUNC(RepairGuy) {
 		else {
 			if(GetMaxLevel(vict) < 25 || (ITEM_TYPE(obj)!=ITEM_WEAPON)) {
 				if(check_soundproof(ch)) {
-					act("$N shakes $S head.\n\r",
+					act("$N squote la testa.\n\r",
 						TRUE, ch, 0, vict, TO_ROOM);
-					act("$N shakes $S head.\n\r",
+					act("$N squote la testa.\n\r",
 						TRUE, ch, 0, vict, TO_CHAR);
 				}
 				else {
 					if(ITEM_TYPE(obj) != ITEM_ARMOR) {
-						act("$N says 'That isn't armor.'",TRUE,ch,0,vict,TO_ROOM);
-						act("$N says 'That isn't armor.'",TRUE,ch,0,vict,TO_CHAR);
+						act("$N dice 'Non e' un'armatura.'",TRUE,ch,0,vict,TO_ROOM);
+						act("$N dice 'Non e' un'armatura.'",TRUE,ch,0,vict,TO_CHAR);
 					}
 					else {
-						act("$N says 'I can't fix that...'", TRUE, ch, 0, vict, TO_CHAR);
-						act("$N says 'I can't fix that...'", TRUE, ch, 0, vict, TO_ROOM);
+						act("$N dice 'Non riesco a riparare $p!'", TRUE, ch, obj, vict, TO_CHAR);
+						act("$N dice 'Non riesco a riparare $p!'", TRUE, ch, obj, vict, TO_ROOM);
 					}
 				}
 			}
@@ -2104,15 +2121,15 @@ MOBSPECIAL_FUNC(RepairGuy) {
 
 				if(cost > GET_GOLD(ch)) {
 					if(check_soundproof(ch)) {
-						act("$N shakes $S head.\n\r",
+						act("$N squote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_ROOM);
-						act("$N shakes $S head.\n\r",
+						act("$N squote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_CHAR);
 					}
 					else {
-						act("$N says 'I'm sorry, you don't have enough money.'",
+						act("$N dice 'Mi dispiace ma non hai abbastanza soldi.'",
 							TRUE, ch, 0, vict, TO_ROOM);
-						act("$N says 'I'm sorry, you don't have enough money.'",
+						act("$N dice 'Mi dispiace ma non hai abbastanza soldi.'",
 							TRUE, ch, 0, vict, TO_CHAR);
 						extract_obj(pNew);
 					}
@@ -2120,30 +2137,30 @@ MOBSPECIAL_FUNC(RepairGuy) {
 				else {
 					GET_GOLD(ch) -= cost;
 
-					sprintf(buf, "You give $N %d coins.",cost);
+					sprintf(buf, "Dai a $N %d monete d'oro.",cost);
 					act(buf,TRUE,ch,0,vict,TO_CHAR);
-					act("$n gives some money to $N.",TRUE,ch,obj,vict,TO_ROOM);
+					act("$n da' alcune monete a $N.",TRUE,ch,obj,vict,TO_ROOM);
 
 					/* fix the weapon */
-					act("$N fiddles with $p.",TRUE,ch,obj,vict,TO_ROOM);
-					act("$N fiddles with $p.",TRUE,ch,obj,vict,TO_CHAR);
+					act("$N armeggia con $p.",TRUE,ch,obj,vict,TO_ROOM);
+					act("$N armeggia con $p.",TRUE,ch,obj,vict,TO_CHAR);
 
 					if(obj->obj_flags.value[2] <= pNew->obj_flags.value[2]) {
 						obj->obj_flags.value[2] = pNew->obj_flags.value[2];
 					}
 					else {
-						act("$N looks confused...\n\r", TRUE, ch, 0, vict, TO_CHAR);
+						act("$N sembra confus$B...\n\r", TRUE, ch, 0, vict, TO_CHAR);
 					}
 
 					extract_obj(pNew);
 
 					if(check_soundproof(ch)) {
-						act("$N smiles broadly.",TRUE,ch,0,vict,TO_ROOM);
-						act("$N smiles broadly.",TRUE,ch,0,vict,TO_CHAR);
+						act("$N fa un grande sorriso.",TRUE,ch,0,vict,TO_ROOM);
+						act("$N fa un grande sorriso.",TRUE,ch,0,vict,TO_CHAR);
 					}
 					else {
-						act("$N says 'All fixed.'",TRUE,ch,0,vict,TO_ROOM);
-						act("$N says 'All fixed.'",TRUE,ch,0,vict,TO_CHAR);
+						act("$N dice 'Fatto!'",TRUE,ch,0,vict,TO_ROOM);
+						act("$N dice 'Fatto!'",TRUE,ch,0,vict,TO_CHAR);
 					}
 				}
 
@@ -2152,8 +2169,8 @@ MOBSPECIAL_FUNC(RepairGuy) {
 			}
 		}
 
-		act("$N gives you $p.",TRUE,ch,obj,vict,TO_CHAR);
-		act("$N gives $p to $n.",TRUE,ch,obj,vict,TO_ROOM);
+		act("$N ti da' $p.",TRUE,ch,obj,vict,TO_CHAR);
+		act("$N da' $p a $n.",TRUE,ch,obj,vict,TO_ROOM);
 		return(TRUE);
 	}
 	else {
@@ -6373,7 +6390,7 @@ OBJSPECIAL_FUNC(SlotMachine) {
 			break;
 		case 5:
 			ind = jackpot; /* Wow! We've won big! */
-			act("$c0014Un sirena inizia a suonare e le luci sopra la slot machine "
+			act("$c0013Un sirena inizia a suonare e le luci sopra la slot machine "
 				"si accendono!", FALSE, ch, 0, 0, TO_ROOM);
 			break;
 		}
@@ -7767,180 +7784,131 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 	return FALSE;
 }
 
-/*MOBSPECIAL_FUNC(Identifier)
+
+
+MOBSPECIAL_FUNC(MobIdent)
 {
     char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
-    char tmp[80];
-    int cost, ave, iVNum;
-    struct char_data* vict;
     struct obj_data* obj;
-
-
-  //  int choice; va tolto
- 
-
+    struct char_data* mobident;
+    struct char_data* vict;
+    
     if(!AWAKE(ch))
     {
         return(FALSE);
     }
-
-    if(IS_NPC(ch))
+    
+    if(check_soundproof(ch))
     {
-        if(cmd == CMD_GIVE)
+        return(FALSE);
+    }
+    
+    mobident = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent));
+
+    if(!mobident)
+    {
+        return(FALSE);
+    }
+    
+  //  int choice; va tolto
+    if(!IS_NPC(ch) && cmd == CMD_BUY)
+    {
+        act("$n da' alcune monete d'oro a $N.", TRUE, ch, NULL, mobident, TO_NOTVICT);
+        act("Dai $c001510.000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, NULL, mobident, TO_CHAR);
+        if(GetMaxLevel(ch) < DIO)
         {
-            arg=one_argument(arg,obj_name);
-            if(is_number(obj_name))
-            {
-                if(newstrlen(obj_name) >= 10)
-                {
-                    obj_name[ 10 ] = '\0';
-                }
-                amount = atoi(obj_name);
-                arg = one_argument(arg, tmp);
-                if(str_cmp2("coin", tmp) && str_cmp2("monet", tmp))
-                {
-                    send_to_char("Cosa?\n\r",ch);
-                    return;
-                }
-                if(amount <= 0)
-                {
-                    send_to_char("Non hai ben chiaro il valore delle cose.\n\r", ch);
-                    return;
-                }
-                
-                arg = one_argument(arg, vict_name);
-                
-                if(!*vict_name) {
-                    send_to_char("A chi vuoi dare delle monete?\n\r", ch);
-                }
-                else if(!(vict = get_char_room_vis(ch, vict_name)))
-                {
-                    send_to_char("Non vedi nessuno con quel nome.\n\r", ch);
-                }
-                else
-                {
-                    if(GET_GOLD(ch) < amount && (IS_NPC(ch) || GetMaxLevel(ch) < DIO))
-                    {
-                        send_to_char("Non hai tutti quei soldi.\n\r", ch);
-                        return;
-                    }
-                    if(amount == 1)
-                    {
-                        act("$n ti da` una moneta d'oro.", FALSE, ch, NULL, vict, TO_VICT);
-                        act("Dai una moneta $N.", FALSE, ch, NULL, vict, TO_CHAR);
-                    }
-                    else {
-                        sprintf(buf, "$n ti da` %d monete d'oro.", amount);
-                        act(buf, FALSE, ch, NULL, vict, TO_VICT);
-                        sprintf(buf, "Dai %d monete d'oro a $N.", amount);
-                        act(buf, FALSE, ch, NULL, vict, TO_CHAR);
-                    }
-                    
-                    act("$n da` alcune monete a $N.", TRUE, ch, 0, vict, TO_NOTVICT);
-                    if(IS_NPC(ch) || GetMaxLevel(ch) < DIO) {
-                        GET_GOLD(ch) -= amount;
-                    }
-                    GET_GOLD(vict) += amount;
-                    save_char(ch, AUTO_RENT, 0);
-                    if(GET_GOLD(vict) > 500000 && amount > 100000) {
-                        mudlog(LOG_PLAYERS, "%s gave %d coins to %s", GET_NAME(ch),amount, GET_NAME(vict));
-                    }
-                }
-                
-                return;
-            }
-            else
-            {
-                if(!*obj_name)
-                {
-                    return(FALSE);
-                }
-                if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
-                {
-                    return(FALSE);
-                }
-                arg=one_argument(arg, vict_name);
-                if(!*vict_name)
-                {
-                    return(FALSE);
-                }
-                if(!(vict = get_char_room_vis(ch, vict_name)))
-                {
-                    return(FALSE);
-                }
-                if(!IS_NPC(vict))
-                {
-                    return(FALSE);
-                }
-                if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(Identifier))
-                {
-                    send_to_char("Non vuoi sul serio fare cio'.",ch);
-                    return(TRUE);
-                }
-            }
-            else
-            {
-                return(FALSE);
-            }
+            GET_GOLD(ch) -= 10000;
+            GET_GOLD(mobident) += 10000;
         }
+        save_char(ch, AUTO_RENT, 0);
 
-    
-    
-    
-
-if(cmd) {
-            if(cmd == CMD_GIVE) {
-
-
-            if(GET_GOLD(ch)< 1000) {
-                send_to_char("You do not have the money to pay me.\n\r", ch);
-                return(TRUE);
-            }
-            else {
-                GET_GOLD(ch)-=1000;
-            }
-
-            choice = number(0,2);
-            switch(choice) {
-                case 0:
-                    sprintf(buf, "STR: %d, WIS: %d, DEX: %d\n\r", GET_STR(ch), GET_WIS(ch), GET_DEX(ch));
-                    send_to_char(buf, ch);
-                    break;
-                case 1:
-                    sprintf(buf, "INT: %d, DEX:  %d, CON: %d \n\r", GET_INT(ch), GET_DEX(ch), GET_CON(ch));
-                    send_to_char(buf, ch);
-                    break;
-                case 2:
-                    sprintf(buf, "CON: %d, INT: %d , WIS: %d \n\r", GET_CON(ch), GET_INT(ch), GET_WIS(ch));
-                    send_to_char(buf, ch);
-                    break;
-                default:
-                    send_to_char("We are experiencing Technical difficulties\n\r", ch);
-                    return(TRUE);
-            }
-
+        act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:\n\r", FALSE, ch, NULL, mobident, TO_CHAR);
+        act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", TRUE, ch, NULL, mobident, TO_NOTVICT);
+        sprintf(buf,"$c0013Ogni ora rigeneri $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
+        send_to_char(buf,ch);
+        sprintf(buf,"$c0013La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
+        send_to_char(buf,ch);
+        sprintf(buf,"$c0013Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) > 0 ? "+" : ""), GET_HITROLL(ch), (GET_DAMROLL(ch) > 0 ? "+" : ""), GET_DAMROLL(ch));
+        send_to_char(buf,ch);
+        sprintf(buf,"$c0013La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
+        send_to_char(buf,ch);
+        sprintf(buf,"$c0013I tuoi Tiri Salvezza sono: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] Petri[$c0015%d$c0013] Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r",ch->specials.apply_saving_throw[0], ch->specials.apply_saving_throw[1], ch->specials.apply_saving_throw[2], ch->specials.apply_saving_throw[3], ch->specials.apply_saving_throw[4]);
+        send_to_char(buf,ch);
+        if(ch->M_immune)
+        {
+            send_to_char("$c0013Sei Immune       a: $c0015", ch);
+            sprintbit(ch->M_immune, immunity_names, buf);
+            strcat(buf, "\n\r");
+            send_to_char(buf, ch);
         }
-        else {
+        if(ch->immune)
+        {
+            send_to_char("$c0013Sei Resistente   a: $c0015", ch);
+            sprintbit(ch->immune, immunity_names, buf);
+            strcat(buf, "\n\r");
+            send_to_char(buf, ch);
+        }
+        if(ch->susc)
+        {
+            send_to_char("$c0013Sei Suscettibile a: $c0015", ch);
+            sprintbit(ch->susc, immunity_names, buf);
+            strcat(buf, "\n\r");
+            send_to_char(buf, ch);
+        }
+        return(TRUE);
+    }
+    
+    if(cmd == CMD_GIVE)
+    {
+        arg=one_argument(arg,obj_name);
+        if(!*obj_name)
+        {
             return(FALSE);
         }
-    }
-    else {
-        
-
-
-        if(ch->specials.fighting) {
-            act("$n gives you the evil eye!  You feel your hitpoints ebbing away",
-                FALSE, ch, 0, ch->specials.fighting, TO_VICT);
-            act("$n gives $N the evil eye!  $N seems weaker!",
-                FALSE, ch, 0, ch->specials.fighting, TO_NOTVICT);
-            ch->specials.fighting->points.max_hit -= 10;
-            ch->specials.fighting->points.hit -= 10;
+        if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
+        {
+            send_to_char("Cosa vuoi dare a chi?\n\r", ch);
+            return(TRUE);
+        }
+        arg=one_argument(arg, vict_name);
+        if(!*vict_name)
+        {
             return(FALSE);
         }
-        
+        if(!(vict = get_char_room_vis(ch, vict_name)))
+        {
+            return(FALSE);
+        }
+
+        if(!IS_NPC(vict))
+        {
+            return(FALSE);
+        }
+
+        act("Dai $p a $N.",FALSE, ch, obj, mobident, TO_CHAR);
+        act("$n da' $p a $N.",TRUE, ch, obj, mobident, TO_ROOM);
+        act("$n da' alcune monete d'oro a $N.", TRUE, ch, NULL, mobident, TO_NOTVICT);
+        sprintf(buf,"Dai $c0015%d$c0007 monete d'$c0011oro$c0007 a $N.", (GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) ? 7000 : 3500);
+        act(buf, FALSE, ch, NULL, mobident, TO_CHAR);
+        if(GetMaxLevel(ch) < DIO)
+        {
+            GET_GOLD(ch) -= (GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) ? 7000 : 3500;
+            GET_GOLD(mobident) += (GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) ? 7000 : 3500;
+        }
+        save_char(ch, AUTO_RENT, 0);
+        act("$N studia per un attimo $p.",FALSE, ch, obj, mobident, TO_CHAR);
+        act("$N studia per un attimo $p.",TRUE, ch, obj, mobident, TO_ROOM);
+        act("$c0013[$c0015$N$c0013] ti dice '$p ha le seguenti caratteristiche:", FALSE, ch, obj, mobident, TO_CHAR);
+        act("$c0013$N dice qualcosa a $n.", FALSE, ch, 0, mobident, TO_NOTVICT);
+        spell_identify(GET_LEVEL(mobident, WARRIOR_LEVEL_IND), ch, mobident,obj);
+        act("$N ti restituisce $p.",FALSE, ch, obj, mobident, TO_CHAR);
+        act("$N restituisce $p a $n.",TRUE, ch, obj, mobident, TO_ROOM);
+            
+        return(TRUE);
     }
+    
     return(FALSE);
-} */
+}
 
 #define SPELL_SPECIAL_COST 1000000   /* 1000k to specialize per spell */
 MOBSPECIAL_FUNC(mage_specialist_guildmaster) {

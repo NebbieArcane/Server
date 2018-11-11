@@ -35,6 +35,8 @@
 #include "opinion.hpp"
 #include "regen.hpp"
 #include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
 namespace Alarmud {
@@ -2498,8 +2500,12 @@ void spell_identify(byte level, struct char_data* ch,
 
 	assert(ch && (obj || victim));
 
-	if(obj) {
-		send_to_char("La conoscenza ti pervade:\n\r", ch);
+	if(obj)
+    {
+        if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
+        {
+            send_to_char("La conoscenza ti pervade:\n\r", ch);
+        }
 
 		sprintf(buf, "Oggetto: '%s', Tipo di Oggetto ", obj->name);
 		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
@@ -2676,7 +2682,8 @@ void spell_identify(byte level, struct char_data* ch,
 		}
 	}
 
-	if(GetMaxLevel(ch)<LOW_IMMORTAL) {
+	if(GetMaxLevel(ch)<LOW_IMMORTAL && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
+    {
 		act("Vieni sopraffatt$b da un'ondata di stanchezza.",FALSE,ch,0,0,TO_CHAR);
 		act("$n cade a terra privo di sensi.",FALSE,ch,0,0,TO_ROOM);
 		WAIT_STATE(ch,PULSE_VIOLENCE*2); // identify

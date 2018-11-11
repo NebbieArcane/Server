@@ -109,6 +109,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "SultanGuard",(genericspecial_func) SultanGuard },
 	{ "ThiefGuildMaster",(genericspecial_func) ThiefGuildMaster },
 	{ "thion_loader",(genericspecial_func) thion_loader },
+    { "MobIdent",(genericspecial_func) MobIdent },
     { "AssignQuest",(genericspecial_func) AssignQuest },
     { "MobCaccia",(genericspecial_func) MobCaccia },
 	{ "ThrowerMob",(genericspecial_func) ThrowerMob },

@@ -503,7 +503,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 
 		update = atoi(arg) - 1;
 
-		if(update >= 0 && update <= 7) {
+		if(update >= 0 && update <= 8) {
 			i = 1 << update;
 
 			if(IS_SET(rp->dir_option[dir]->exit_info, i)) {
