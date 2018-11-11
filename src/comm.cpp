@@ -2188,7 +2188,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
                         
                     // Parentesi affette da darkness
                     if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
-                        strcat(tbuf, (i > 1) ? "$c0008[$c0007" : "$c0000[$c0007");
+                        strcat(tbuf, (i > 1) ? "$c0008[$c0007" : "$c5008[$c0007");
                     }
                     else {
                         strcat(tbuf,"[");
@@ -2246,7 +2246,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					
                     // Parentesi affette da darkness
                     if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
-                        strcat(tbuf, (i > 1) ? "$c0008]$c0007" : "$c0000]$c0007");
+                        strcat(tbuf, (i > 1) ? "$c0008]$c0007" : "$c5008]$c0007");
                     }
                     else {
                         strcat(tbuf,"]");

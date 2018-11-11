@@ -5105,7 +5105,16 @@ MOBSPECIAL_FUNC(MobCaccia) {
     int n,x;
     char buf[MAX_INPUT_LENGTH],buf2[MAX_INPUT_LENGTH];
     
-    t = mob->specials.quest_ref;
+    if(!mob->specials.quest_ref) {
+        if(real_roomp(mob->in_room)->people) {
+            sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
+            act(buf, FALSE, mob, 0, 0, TO_ROOM);
+        }
+        extract_char(mob);
+        return FALSE;
+    }
+    
+    IS_POLY(mob->specials.quest_ref) ? t = (mob->specials.quest_ref)->desc->original : t = mob->specials.quest_ref;
     
     switch(type) {
             
@@ -5113,7 +5122,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
             
         t->specials.quest_ref = NULL;
 
-        if(t->in_room == ch->in_room) {
+        if(t->in_room == ch->in_room && GET_NAME(ch) == t->lastmkill) {
 
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
@@ -5138,7 +5147,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         return FALSE;
                     }
                     
-                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ticks, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
+                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
                     if(af->duration >= x-2) {
                     strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
                     } else if(af->duration >= x/2) {
@@ -5192,7 +5201,9 @@ MOBSPECIAL_FUNC(MobCaccia) {
             }
         }
     } else {
-        send_to_char("\n\r$c001Qualcun'altro compie il tuo dovere e finisci senza paga.$c0007\n\r", t);
+        send_to_char("\n\r$c0014Qualcun'altro compie il tuo dovere e finisci senza paga.$c0007\n\r", t);
+        affect_from_char(t, STATUS_QUEST);
+        SpellWearOff(STATUS_QUEST, t);
         return FALSE;
     }
 
@@ -5253,7 +5264,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
             } else {
                 
                 if(!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) {
-                    if(real_roomp(mob->in_room)->people) {
+                    if(rp->people) {
                         sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
                         act(buf, FALSE, mob, 0, 0, TO_ROOM);
                     }

@@ -4726,7 +4726,7 @@ ROOMSPECIAL_FUNC(Donation) {
 
 	if(*check) {
 		if(strncmp(check, "all", 3)==0) {
-			send_to_char("Su su, non essere avaro!\n\r", ch);
+			send_to_char("Su su, non siamo avidi!\n\r", ch);
 			return(TRUE);
 		}
 	}

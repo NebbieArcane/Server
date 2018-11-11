@@ -2494,9 +2494,10 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 		}
 		else { /* victim is not pc */
 			if(IS_PC(ch)) {
-                if(IS_PC(ch)) {
-                    ch->lastmkill = GET_NAME(victim);
-                }
+                
+                free(ch->lastmkill);
+                ch->lastmkill = strdup(GET_NAME(victim));
+                
 				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch),
 					   GET_NAME_DESC(victim));
 			}
