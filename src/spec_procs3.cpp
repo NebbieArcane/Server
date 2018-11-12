@@ -5103,7 +5103,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
     struct room_data* rp;
     int premio[3]; /* 0.coin, 1.xp, 2.rune */
     int n,x;
-    char buf[MAX_INPUT_LENGTH],buf2[MAX_INPUT_LENGTH];
+    char buf[MAX_INPUT_LENGTH];
     
     if(!mob->specials.quest_ref) {
         if(real_roomp(mob->in_room)->people) {
@@ -5114,15 +5114,18 @@ MOBSPECIAL_FUNC(MobCaccia) {
         return FALSE;
     }
     
-    IS_POLY(mob->specials.quest_ref) ? t = (mob->specials.quest_ref)->desc->original : t = mob->specials.quest_ref;
+    IS_POLY(mob->specials.quest_ref) ? t = (mob->specials.quest_ref)->desc->character : t = mob->specials.quest_ref;
     
     switch(type) {
             
     case EVENT_DEATH    :
             
         t->specials.quest_ref = NULL;
+            
+            sprintf(buf,"%d : %d - %s : %s", t->in_room,ch->in_room,t->lastmkill,GET_NAME(ch));
+            send_to_all(buf);
 
-        if(t->in_room == ch->in_room && GET_NAME(ch) == t->lastmkill) {
+        if(t->in_room == ch->in_room && t->lastmkill == GET_NAME(ch)) {
 
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
@@ -5215,22 +5218,16 @@ MOBSPECIAL_FUNC(MobCaccia) {
             return FALSE;
         }
         
-        if(cmd == CMD_GIVE && IS_SET(mob->specials.act, ACT_MONK)) {
+        if(cmd == CMD_KILL) {
             arg = one_argument(arg,buf);
-            arg = one_argument(arg,buf2);
             
-                if(*buf2 && get_char_room_vis(mob, buf2) == mob) {
-                    
-                sprintf(buf,"all.%s",buf);
-                do_junk(mob, buf, CMD_JUNK);
+                if(*buf && get_char_room_vis(mob, buf) == mob) {
                     
                     if(CAN_SEE(mob,ch)) {
-                        sprintf(buf,"%s, pensavi di fregarmi riempendomi le mani della tua spazzatura eh?!",GET_NAME(ch));
-                    } else {
-                        sprintf(buf,"Un scherzetto davvero patetico, sono un monaco esperto io!");
+                        sprintf(buf,"%s, Non mi arrendero' mai!",GET_NAME(ch));
                     }
                 
-                do_gossip(mob,buf,CMD_GOSSIP);
+                do_tell(mob,buf,CMD_TELL);
             
             }
         }

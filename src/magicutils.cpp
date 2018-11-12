@@ -140,6 +140,12 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
      *  switch affects
      */
     
+    for(af = taker->affected; af; af = af->next) {
+        if(!affected_by_spell(giver,af->type)) {
+            affect_from_char(taker, af->type);
+        }
+    }
+    
     for(af = giver->affected; af; af = af->next) {
         if(!affected_by_spell(taker,af->type)) {
             
@@ -155,12 +161,21 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         if(af->type == STATUS_QUEST) {
             taker->specials.quest_ref = giver->specials.quest_ref;
             taker->specials.eq_val_idx = giver->specials.eq_val_idx;
+            if(giver->specials.quest_ref) {
+                (giver->specials.quest_ref)->specials.quest_ref = taker;
+            }
         }
         
     }
     
-    free(taker->lastmkill);
-    taker->lastmkill = giver->lastmkill;
+    if(giver->lastmkill != NULL) {
+        free(taker->lastmkill);
+        if(IS_PC(taker)) {
+            taker->lastmkill = strdup(giver->lastmkill);
+        } else {
+            taker->lastmkill = giver->lastmkill;
+        }
+    }
 
 	/*
 	 *  humanoid monsters can cast spells
