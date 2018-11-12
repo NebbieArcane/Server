@@ -439,7 +439,14 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.value[2] = st->objects[i].value[2];
 				obj->obj_flags.value[3] = st->objects[i].value[3];
 				obj->obj_flags.extra_flags  = st->objects[i].extra_flags;
-                obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+                if(st->objects[i].extra_flags2)
+                {
+                    obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+                }
+                else
+                {
+                    obj->obj_flags.extra_flags2 = 0;
+                }
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
 				obj->obj_flags.bitvector    = st->objects[i].bitvector;
