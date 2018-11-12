@@ -5114,7 +5114,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
         return FALSE;
     }
     
-    IS_POLY(mob->specials.quest_ref) ? t = (mob->specials.quest_ref)->desc->character : t = mob->specials.quest_ref;
+    t = mob->specials.quest_ref;
     
     switch(type) {
             
@@ -5122,8 +5122,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
             
         t->specials.quest_ref = NULL;
             
-            sprintf(buf,"%d : %d - %s : %s", t->in_room,ch->in_room,t->lastmkill,GET_NAME(ch));
-            send_to_all(buf);
+        sprintf(buf,"%d : %d - %s : %s", t->in_room,ch->in_room,t->lastmkill,GET_NAME(ch));
+        send_to_all(buf);
 
         if(t->in_room == ch->in_room && t->lastmkill == GET_NAME(ch)) {
 

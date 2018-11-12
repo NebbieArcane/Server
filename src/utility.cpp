@@ -81,7 +81,7 @@ int RandomRoomByLevel(int level) {
     y = number(0,t);
     do {
         t = number(zone_list[y].da_vnum,zone_list[y].a_vnum);
-    } while (!real_roomp(t) || IS_SET(real_roomp(t)->room_flags, NO_MOB|DEATH|PRIVATE));
+    } while (!real_roomp(t) || IS_SET(real_roomp(t)->room_flags, NO_MOB|DEATH|PRIVATE|PEACEFUL));
     
     return(t);
     
