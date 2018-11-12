@@ -372,7 +372,7 @@ const char* spell_wear_off_msg[] = {
 	"Le tue capacita' tornano normali mentre diminuisci i tuoi poteri di intensificazione'.",
 	"", /* spot 288*/
 	"",
-	"La tua missione termina qui.",
+	"Senti d'esser pronto a una nuova missione.",
 	"!291!",
 	"!292!",
 	"!293!",

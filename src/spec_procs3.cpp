@@ -5121,11 +5121,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
     case EVENT_DEATH    :
             
         t->specials.quest_ref = NULL;
-            
-        sprintf(buf,"%d : %d - %s : %s", t->in_room,ch->in_room,t->lastmkill,GET_NAME(ch));
-        send_to_all(buf);
 
-        if(t->in_room == ch->in_room && t->lastmkill == GET_NAME(ch)) {
+        if(t->in_room == ch->in_room && strstr(t->lastmkill, GET_NAME(ch))) {
 
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
