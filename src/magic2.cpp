@@ -1878,6 +1878,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
         
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
+            victim->specials.quest_ref = NULL;
             send_to_char("Non sei piu' in missione.\n\r",victim);
         }
         
@@ -2164,6 +2165,8 @@ void spell_conjure_elemental(byte level, struct char_data* ch,
 		act("$N rifiuta di unirsi a tutta la gente che ti segue, ma ti ringrazia del giretto.", TRUE, ch, 0, victim, TO_CHAR);
 	}
 	else {
+        
+        RelateMobToCaster(ch,victim);
 
 
 		if(victim->master) {

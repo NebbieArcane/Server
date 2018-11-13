@@ -5120,10 +5120,10 @@ MOBSPECIAL_FUNC(MobCaccia) {
     switch(type) {
             
     case EVENT_DEATH    :
-            
-        t->specials.quest_ref = NULL;
         
         if(t->lastmkill != NULL && t->in_room == ch->in_room && strstr(t->lastmkill, GET_NAME(ch))) {
+            
+            t->specials.quest_ref = NULL;
 
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
@@ -5148,7 +5148,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         return FALSE;
                     }
                     
-                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, e la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
+                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
                     if(af->duration >= x-2) {
                     strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
                     } else if(af->duration >= x/2) {
@@ -5156,6 +5156,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     } else {
                     strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.\n\r");
                     }
+                    strcat(buf,"\n\r");
                     send_to_char(buf, t);
                     
                     if((x = GetCharBonusIndex(t) - ch->specials.eq_val_idx) > 0) {
@@ -5166,7 +5167,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         premio[1] -= x*1000;
                         premio[2] = 0;
                         
-                    } else {
+                    } else if(x < 0) {
                         mudlog(LOG_CHECK, "Eq value of %s decreased of %d",GET_NAME(t), x);
                         send_to_char("$c0011Tenendo conto che la tua sfida era superiore alle tue capacita'... $c0007\n\r", t);
                         

@@ -63,10 +63,10 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 		char_bonus -= 6;
 	}
 
-	if(GET_DEX(ch) > 17) {
+	if(GET_INT(ch) > 17) {
 		char_bonus ++;
 	}
-	if(GET_DEX(ch) > 18) {
+	if(GET_INT(ch) > 18) {
 		char_bonus ++;
 	}
 
@@ -96,16 +96,18 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 
 	if(char_bonus > 0) {
 		if(IS_SET(mob->specials.act, ACT_MONK) || IS_SET(mob->specials.act, ACT_WARRIOR) || IS_SET(mob->specials.act, ACT_THIEF) || IS_SET(mob->specials.act, ACT_BARBARIAN) || IS_SET(mob->specials.act, ACT_PALADIN || IS_SET(mob->specials.act, ACT_RANGER))) {
-			mob->points.max_hit = GET_MAX_HIT(mob) + (char_bonus*number(1,5));
+			mob->points.max_hit += (char_bonus*number(1,5));
 			GET_HIT(mob) = GET_MAX_HIT(mob);
-			int multiplier=2;
+			
+            int multiplier=2;
+            
 			if(mob->specials.mobtype=='A' || mob->specials.mobtype=='L' || mob->specials.mobtype=='B') {
 				multiplier = int(mob->mult_att) * 2;
 			}
 
 			/*mob->specials.damsizedice += final_bonus/i;
 			mob->specials.damnodice += final_bonus/i;*/
-			mob->points.hitroll += char_bonus/2;
+			mob->points.hitroll += char_bonus;
 			mob->points.damroll += char_bonus/multiplier;
 		}
 

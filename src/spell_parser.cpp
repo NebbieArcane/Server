@@ -866,9 +866,7 @@ void SpellWearOff(int s, struct char_data* ch) {
 	}
     
     if(s == STATUS_QUEST) {
-        if(IS_PC(ch) && GetMaxLevel(ch) >= QUESTMASTER) {
-            ch->specials.quest_ref = NULL;
-        }
+        ch->specials.quest_ref = NULL;
     }
 
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {
