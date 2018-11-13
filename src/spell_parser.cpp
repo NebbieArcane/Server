@@ -837,7 +837,7 @@ void SpellWearOff(int s, struct char_data* ch) {
                 
             case POSITION_FIGHTING  :
             WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
-            sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe!$c0007\n\r",ch->player.name);
+            sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!$c0007\n\r",ch->player.name);
             act(buf, FALSE, ch, 0, ch, TO_ROOM);
             stop_fighting(ch);
             extract_char(ch);
@@ -866,8 +866,9 @@ void SpellWearOff(int s, struct char_data* ch) {
 	}
     
     if(s == STATUS_QUEST) {
-        ch->specials.quest_ref = NULL;
-        ch->specials.eq_val_idx = 0;
+        if(IS_PC(ch) && GetMaxLevel(ch) >= QUESTMASTER) {
+            ch->specials.quest_ref = NULL;
+        }
     }
 
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {

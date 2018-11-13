@@ -587,7 +587,7 @@ struct char_special_data {
 	struct char_data* misc;
 	struct char_data* fighting; /* Opponent                          */
     struct char_data* quest_ref; /*  For NPCs it stores the quest owner, For PCs it can be used to store his questor/target */
-    int eq_val_idx; /* Eq Value Index: can be used to store the eq value in a moment and compare it later */
+    float eq_val_idx; /* Eq Value Index: can be used to store the eq value in a moment and compare it later */
 
 	struct char_data* hunting;  /* Hunting person..                  */
 

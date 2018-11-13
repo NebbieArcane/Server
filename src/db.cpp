@@ -3055,7 +3055,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	ch->specials.charge_dir = -1; /* null it out */
     
     ch->specials.quest_ref = 0;
-    ch->specials.eq_val_idx = 0;
+    ch->specials.eq_val_idx = 0.0;
 
 	st->abilities = ch->abilities;
 
@@ -3707,7 +3707,7 @@ void reset_char(struct char_data* ch) {
 	ch->next_in_room = 0;
 	ch->specials.fighting = 0;
     ch->specials.quest_ref = 0;
-    ch->specials.eq_val_idx = 0;
+    ch->specials.eq_val_idx = 0.0;
 	ch->specials.PosPrev = POSITION_STANDING;
 	for(i = 0; i < MAX_POSITION; i++) {
 		ch->specials.TempoPassatoIn[i] = 0;

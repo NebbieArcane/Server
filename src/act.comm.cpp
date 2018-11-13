@@ -507,7 +507,7 @@ ACTION_FUNC(do_ask) {
         
         if(strstr(message, "indizio") != NULL) {
             
-            if(!(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
+            if(ch->specials.quest_ref && !(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
                 sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",
                         GET_NAME(ch));
                 do_tell(vict,buf,CMD_TELL);

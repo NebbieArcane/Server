@@ -2287,7 +2287,7 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_ANTI_MAGIC_SHELL)) {
 		send_to_char("Crei uno scudo anti-magia attorno a te.\n\r", ch);
-		spell_dispel_magic(MAESTRO_DEI_CREATORI,ch,ch,0);
+		spell_dispel_magic(CREATORE,ch,ch,0);
 
 		af.type      = SPELL_ANTI_MAGIC_SHELL;
 		af.duration  = (level<IMMORTALE) ? 1 : level;                                  /* one tic only! */

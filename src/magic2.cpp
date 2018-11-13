@@ -1843,7 +1843,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 
-	if(level >= IMMORTALE)  {
+	if(level >= IMMORTALE && level < QUESTMASTER)  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
@@ -1872,14 +1872,16 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 				affect_from_char(victim,SPELL_POISON);
 			}
 		}
+	}
+    
+    if(level >= QUESTMASTER) {
         
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
-            victim->specials.quest_ref = NULL;
-            victim->specials.eq_val_idx = 0;
             send_to_char("Non sei piu' in missione.\n\r",victim);
         }
-	}
+        
+    }
 }
 
 
