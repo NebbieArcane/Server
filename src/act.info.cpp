@@ -761,8 +761,15 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-        strcpy(buffer2, i->player.short_descr);
-        CAP(buffer2);
+        if(IS_PC(i))
+        {
+            strcpy(buffer2, i->player.name);
+        }
+        else
+        {
+            strcpy(buffer2, i->player.short_descr);
+            CAP(buffer2);
+        }
         
 		if(IS_AFFECTED(i, AFF_SANCTUARY))
         {
@@ -1165,8 +1172,15 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-        strcpy(buffer2, i->player.short_descr);
-        CAP(buffer2);
+        if(IS_PC(i))
+        {
+            strcpy(buffer2, i->player.name);
+        }
+        else
+        {
+            strcpy(buffer2, i->player.short_descr);
+            CAP(buffer2);
+        }
         
         if(IS_AFFECTED(i, AFF_SANCTUARY))
         {

@@ -398,7 +398,7 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
  **************************************************************************/
 #define LOW_EDITED_ITEMS    34030
 #define HIGH_EDITED_ITEMS   34999
-    
+
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
@@ -446,7 +446,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
 				obj->obj_flags.bitvector    = st->objects[i].bitvector;
-                
+
 				SetStatus(STATUS_OTCFREESTRING, NULL);
 
 				if(obj->name) {
@@ -470,19 +470,6 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				strcpy(obj->name, st->objects[i].name);
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
-
-                if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-                {
-                    pers_obj(ch, ch, obj, 1000);
-                    if(!IS_OBJ_STAT2(obj, ITEM2_EDIT))
-                    {
-                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
-                    }
-                    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-                    {
-                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-                    }
-                }
 
 				SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
@@ -539,6 +526,24 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 		SetStatus(STATUS_OTCENDLOOP, NULL);
 	}
 	SetStatus(STATUS_OTCAFTERLOOP, NULL);
+}
+
+ void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
+{
+    char personal[128];
+    
+ //   if(obj_index[obj->item_number].iVNum >= LOW_EDITED_ITEMS && obj_index[obj->item_number].iVNum <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+ //   {
+        strcpy(personal, " ED");
+        strcat(personal, GET_NAME(ch));
+        strcat(obj->name, personal);
+        
+        if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+        {
+            SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+        }
+        mudlog(LOG_PLAYERS,"MUD: Personalized %s[%d] on %s.", obj->name, obj_index[obj->item_number].iVNum,GET_NAME(ch));
+ //   }
 }
 
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
@@ -610,19 +615,6 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                 strcpy(obj->name, st->objects[i].name);
                 strcpy(obj->short_description, st->objects[i].sd);
                 strcpy(obj->description, st->objects[i].desc);
-
-                if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-                {
-                    pers_obj(ch, ch, obj, 1000);
-                    if(!IS_OBJ_STAT2(obj, ITEM2_EDIT))
-                    {
-                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
-                    }
-                    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-                    {
-                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-                    }
-                }
 
                 SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
@@ -715,6 +707,7 @@ void load_char_objs(struct char_data* ch) {
 
     if(IS_SET(ch->specials.act,PLR_NEW_EQ))
     {
+        
         if(!ReadObjs(fl, &st))
         {
             mudlog(LOG_PLAYERS, "No objects found");
@@ -732,10 +725,10 @@ void load_char_objs(struct char_data* ch) {
             SetStatus(tbuf);
             return;
         }
-        
+
         old_st_to_st(&old_st, &st);
     }
-
+    mudlog(LOG_SAVE,"%s e' il pg owner",st.owner);
 	if(str_cmp(st.owner, GET_NAME(ch)) != 0) {
 		mudlog(LOG_ERROR,
 			   "Bad item-file write. %s is losing his/her objects",GET_NAME(ch));
@@ -904,7 +897,7 @@ void load_char_objs(struct char_data* ch) {
  ************************************************************************* */
 
 /* Puts object in store, at first item which has no -1 */
-void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st) {
+void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch) {
 	int j;
 	struct obj_file_elem* oe;
 
@@ -923,6 +916,11 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st) {
 	oe->value[2] = obj->obj_flags.value[2];
 	oe->value[3] = obj->obj_flags.value[3];
 
+    if(obj_index[obj->item_number].iVNum >= LOW_EDITED_ITEMS && obj_index[obj->item_number].iVNum <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+    {
+        SetPersonOnSave(ch, obj);
+    }
+    
 	oe->extra_flags = obj->obj_flags.extra_flags;
     oe->extra_flags2 = obj->obj_flags.extra_flags2;
 	oe->weight  = obj->obj_flags.weight;
@@ -1004,7 +1002,7 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 		int weight = contained_weight(obj);
 
 		GET_OBJ_WEIGHT(obj) -= weight;
-		put_obj_in_store(obj, st);
+		put_obj_in_store(obj, st, ch);
 		GET_OBJ_WEIGHT(obj) += weight;
 	}
 
@@ -1080,7 +1078,7 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 	else {
 		int weight = contained_weight(obj);
 		GET_OBJ_WEIGHT(obj) -= weight;
-		put_obj_in_store(obj, st);
+		put_obj_in_store(obj, st, ch);
 		GET_OBJ_WEIGHT(obj) += weight;
 		if(bDelete) {
 			if(obj->in_obj) {
@@ -1152,7 +1150,7 @@ void update_obj_file() {
     struct old_obj_file_u old_st;
     struct char_file_u ch_st;
     long days_passed;
-    bool ok = FALSE;
+    bool no_ok = TRUE;
 
     FILE* pObjFile;
     DIR* dir;
@@ -1189,9 +1187,9 @@ void update_obj_file() {
                             mudlog(LOG_CHECK,"Provo a leggere il vecchio EQ per %s",ch_st.name);
                             if(ReadObjsOld(pObjFile, &old_st))
                             {
-                                ok = TRUE;
+                                no_ok = FALSE;
                                 old_st_to_st(&old_st, &st);
-                                SET_BIT(ch_st.act,PLR_NEW_EQ);
+                            //    SET_BIT(ch_st.act,PLR_NEW_EQ);
                             }
                         }
                         else
@@ -1199,11 +1197,11 @@ void update_obj_file() {
                             mudlog(LOG_CHECK,"Provo a leggere il nuovo EQ per %s",ch_st.name);
                             if(ReadObjs(pObjFile, &st))
                             {
-                                ok = TRUE;
+                                no_ok = FALSE;
                             }
                         }
-                        
-                        if(ok)
+
+                        if(!no_ok)
                         {
                             if(str_cmp(st.owner, ch_st.name) == 0)
                             {
@@ -1225,7 +1223,14 @@ void update_obj_file() {
                                     fwrite(&ch_st, sizeof(ch_st), 1, pCharFile);
 
                                     rewind(pObjFile);
-                                    WriteObjs(pObjFile, &st);
+                                    if(!IS_SET(ch_st.act,PLR_NEW_EQ))
+                                    {
+                                        WriteObjsOld(pObjFile, &old_st);
+                                    }
+                                    else
+                                    {
+                                        WriteObjs(pObjFile, &st);
+                                    }
 
                                     fclose(pObjFile);
                                 }
@@ -1259,7 +1264,14 @@ void update_obj_file() {
                                             st.last_update = time(0) - secs_lost;
 #endif
                                             rewind(pObjFile);
-                                            WriteObjs(pObjFile, &st);
+                                            if(!IS_SET(ch_st.act,PLR_NEW_EQ))
+                                            {
+                                                WriteObjsOld(pObjFile, &old_st);
+                                            }
+                                            else
+                                            {
+                                                WriteObjs(pObjFile, &st);
+                                            }
                                             fclose(pObjFile);
 #if LIMITED_ITEMS
                                             CountLimitedItems(&st);
@@ -1275,7 +1287,14 @@ void update_obj_file() {
                                         mudlog(LOG_CHECK, "   same day update on %s", st.owner);
 
                                         rewind(pObjFile);
-                                        WriteObjs(pObjFile, &st);
+                                        if(!IS_SET(ch_st.act,PLR_NEW_EQ))
+                                        {
+                                            WriteObjsOld(pObjFile, &old_st);
+                                        }
+                                        else
+                                        {
+                                            WriteObjs(pObjFile, &st);
+                                        }
                                         fclose(pObjFile);
                                     }
                                 } /* if( ch_st.load_room == AUTO_RENT ) else */
@@ -1333,7 +1352,7 @@ void old_st_to_st(struct old_obj_file_u* old_st, struct obj_file_u* st)
             st->objects[i].weight        = old_st->objects[i].weight;
             st->objects[i].timer         = old_st->objects[i].timer;
             st->objects[i].bitvector     = old_st->objects[i].bitvector;
-            
+
             strcpy(st->objects[i].name, old_st->objects[ i ].name);
             strcpy(st->objects[i].sd, old_st->objects[ i ].sd);
             strcpy(st->objects[i].desc, old_st->objects[ i ].desc);
@@ -1755,8 +1774,8 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
 	for(i=0; i<st->number; i++) {
-        mudlog(LOG_SAVE,"Leggo_new %s: %d, %s",st->owner, i, st->objects[i].name);
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
+        mudlog(LOG_SAVE,"Leggo_new %s: %d, %s",st->owner, i, st->objects[i].name);
 	}
 	return TRUE;
 }
@@ -1828,6 +1847,25 @@ void WriteObjs(FILE* fl, struct obj_file_u* st) {
 	PopStatus();
 }
 
+void WriteObjsOld(FILE* fl, struct old_obj_file_u* st) {
+    int i;
+    PushStatus("WriteObjsOld");
+    fwrite(st->owner, sizeof(st->owner), 1, fl);
+    fwrite(&st->gold_left, sizeof(st->gold_left), 1, fl);
+#if NEW_RENT
+    /* RENTAL COST ADJUSTMENT */
+    st->total_cost = 0;
+#endif
+    fwrite(&st->total_cost, sizeof(st->total_cost), 1, fl);
+    fwrite(&st->last_update, sizeof(st->last_update), 1, fl);
+    fwrite(&st->minimum_stay, sizeof(st->minimum_stay), 1, fl);
+    fwrite(&st->number, sizeof(st->number), 1, fl);
+    for(i=0; i<st->number; i++) {
+        fwrite(&st->objects[i], sizeof(struct old_obj_file_elem), 1, fl);
+        mudlog(LOG_SAVE,"ScrivoOld %s: %d, %s",st->owner, i, st->objects[i].name);
+    }
+    PopStatus();
+}
 
 void load_char_extra(struct char_data* ch) {
 	FILE* fp;
@@ -2114,4 +2152,3 @@ void save_room(int room) {
 }
 
 } // namespace Alarmud
-
