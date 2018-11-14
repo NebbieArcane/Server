@@ -713,9 +713,8 @@ void load_char_objs(struct char_data* ch) {
 
 	rewind(fl);
 
-    if(!IS_SET(ch->specials.act,PLR_NEW_EQ))
+    if(IS_SET(ch->specials.act,PLR_NEW_EQ))
     {
-        SET_BIT(ch->specials.act,PLR_NEW_EQ);
         if(!ReadObjs(fl, &st))
         {
             mudlog(LOG_PLAYERS, "No objects found");
@@ -724,7 +723,7 @@ void load_char_objs(struct char_data* ch) {
             return;
         }
     }
- /*   else
+    else
     {
         if(!ReadObjsOld(fl, &old_st))
         {
@@ -735,7 +734,7 @@ void load_char_objs(struct char_data* ch) {
         }
         
         old_st_to_st(&old_st, &st);
-    } */
+    }
 
 	if(str_cmp(st.owner, GET_NAME(ch)) != 0) {
 		mudlog(LOG_ERROR,
