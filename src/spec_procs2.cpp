@@ -7813,7 +7813,7 @@ MOBSPECIAL_FUNC(MobIdent)
   //  int choice; va tolto
     if(!IS_NPC(ch) && cmd == CMD_BUY)
     {
-        act("$n da' alcune monete d'oro a $N.", TRUE, ch, NULL, mobident, TO_NOTVICT);
+        act("$n da' alcune monete d'oro a $N.", FALSE, ch, NULL, mobident, TO_NOTVICT);
         act("Dai $c001510.000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, NULL, mobident, TO_CHAR);
         if(GetMaxLevel(ch) < DIO)
         {
@@ -7822,9 +7822,9 @@ MOBSPECIAL_FUNC(MobIdent)
         }
         save_char(ch, AUTO_RENT, 0);
 
-        act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:\n\r", FALSE, ch, NULL, mobident, TO_CHAR);
-        act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", TRUE, ch, NULL, mobident, TO_NOTVICT);
-        sprintf(buf,"$c0013Ogni ora rigeneri $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
+        act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:", FALSE, ch, NULL, mobident, TO_CHAR);
+        act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", FALSE, ch, NULL, mobident, TO_NOTVICT);
+        sprintf(buf,"'$c0013Ogni ora rigeneri $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
         send_to_char(buf,ch);
         sprintf(buf,"$c0013La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
         send_to_char(buf,ch);
@@ -7855,6 +7855,7 @@ MOBSPECIAL_FUNC(MobIdent)
             strcat(buf, "\n\r");
             send_to_char(buf, ch);
         }
+        send_to_char("$c0013'",ch);
         return(TRUE);
     }
     

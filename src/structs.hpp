@@ -811,6 +811,24 @@ struct obj_file_elem {
 	struct obj_affected_type affected[MAX_OBJ_AFFECT];
 };
 
+struct old_obj_file_elem {
+    /* Bug, rendeva impossibile rentare oggetti oltre il 32565 */
+    /*sh_int item_number;*/
+    ush_int item_number;
+
+    int value[4];
+    int extra_flags;
+    int weight;
+    int timer;
+    unsigned int bitvector;
+    char name[128];  /* big, but not horrendously so */
+    char sd[128];
+    char desc[256];
+    ubyte wearpos;
+    ubyte depth;
+    struct obj_affected_type affected[MAX_OBJ_AFFECT];
+};
+
 struct obj_file_u {
 	char owner[20];    /* Name of player                     */
 	int gold_left;     /* Number of goldcoins left at owner  */
@@ -819,6 +837,16 @@ struct obj_file_u {
 	int minimum_stay; /* For stasis */
 	int  number;       /* number of objects */
 	struct obj_file_elem objects[MAX_OBJ_SAVE];
+};
+
+struct old_obj_file_u {
+    char owner[20];    /* Name of player                     */
+    int gold_left;     /* Number of goldcoins left at owner  */
+    int total_cost;    /* The cost for all items, per day    */
+    int last_update;  /* Time in seconds, when last updated */
+    int minimum_stay; /* For stasis */
+    int  number;       /* number of objects */
+    struct old_obj_file_elem objects[MAX_OBJ_SAVE];
 };
 
 /* ***********************************************************

@@ -566,7 +566,7 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 }
 
 void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
-	char buffer[MAX_STRING_LENGTH];
+	char buffer[MAX_STRING_LENGTH],buffer2[MAX_STRING_LENGTH];
 	int j, found, percent, otype;
 	struct obj_data* tmp_obj;
 	struct affected_type* aff;
@@ -761,24 +761,45 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-		if(IS_AFFECTED(i, AFF_SANCTUARY)) {
-			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS)) {
-				act("$c0015$n brilla di luce propria!", FALSE, i, 0, ch, TO_VICT);
+        strcpy(buffer2, i->player.short_descr);
+        CAP(buffer2);
+        
+		if(IS_AFFECTED(i, AFF_SANCTUARY))
+        {
+			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+            {
+                sprintf(buffer,"$c0015");
+                strcat(buffer,buffer2);
+                strcat(buffer, " brilla di luce propria!");
+				act(buffer, FALSE, i, 0, ch, TO_VICT);
 			}
 		}
 
-		if(IS_AFFECTED(i, AFF_GROWTH)) {
-			act("$c0003$n e` enorme!", FALSE, i, 0, ch, TO_VICT);
+		if(IS_AFFECTED(i, AFF_GROWTH))
+        {
+            sprintf(buffer,"$c0003");
+            strcat(buffer,buffer2);
+			strcat(buffer, " e` enorme!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-		if(IS_AFFECTED(i, AFF_FIRESHIELD)) {
+		if(IS_AFFECTED(i, AFF_FIRESHIELD))
+        {
 			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
-				act("$c0001$n e` avvolt$b in una luce fiammeggiante!", FALSE, i, 0, ch,
-					TO_VICT);
+            {
+                sprintf(buffer,"$c0001");
+                strcat(buffer,buffer2);
+                strcat(buffer, " e` avvolt$b in una luce fiammeggiante!");
+                act(buffer, FALSE, i, 0, ch, TO_VICT);
+            }
 		}
 
-		if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS)) {
-			act("$c0008$n e` avvolt$b nell'oscurita`!", FALSE, i, 0, ch, TO_VICT);
+		if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+        {
+            sprintf(buffer,"$c0008");
+            strcat(buffer,buffer2);
+            strcat(buffer, " e` avvolt$b nell'oscurita`!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
 	}
@@ -847,6 +868,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		if(IS_NPC(i)) {
 			strcpy(buffer, i->player.short_descr);
+            CAP(buffer);
 		}
 		else {
 			strcpy(buffer, GET_NAME(i));
@@ -949,7 +971,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 							int mode, int num) {
-	char buffer[MAX_STRING_LENGTH];
+	char buffer[MAX_STRING_LENGTH], buffer2[MAX_STRING_LENGTH];
 	char tmp[10];
 	int j, found, percent;
 	struct obj_data* tmp_obj;
@@ -1143,26 +1165,47 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-		if(IS_AFFECTED(i, AFF_SANCTUARY)) {
-			if(!affected_by_spell(i, SPELL_GLOBE_DARKNESS)) {
-				act("$c0015$n brilla di luce propria!", FALSE, i, 0, ch, TO_VICT);
-			}
-		}
-
-		if(IS_AFFECTED(i, AFF_GROWTH)) {
-			act("$c0003$n e` enorme!", FALSE, i, 0, ch, TO_VICT);
-		}
-
-		if(IS_AFFECTED(i, AFF_FIRESHIELD)) {
-			if(!affected_by_spell(i,SPELL_GLOBE_DARKNESS))
-				act("$c0001$n e` avvolt$b in una luce fiammeggiante!", FALSE, i, 0, ch,
-					TO_VICT);
-		}
-
-		if(affected_by_spell(i, SPELL_GLOBE_DARKNESS)) {
-			act("$c0008$n e` avvolt$b nell'oscurita`!", FALSE, i, 0, ch, TO_VICT);
-		}
-
+        strcpy(buffer2, i->player.short_descr);
+        CAP(buffer2);
+        
+        if(IS_AFFECTED(i, AFF_SANCTUARY))
+        {
+            if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+            {
+                sprintf(buffer,"$c0015");
+                strcat(buffer,buffer2);
+                strcat(buffer, " brilla di luce propria!");
+                act(buffer, FALSE, i, 0, ch, TO_VICT);
+            }
+        }
+        
+        if(IS_AFFECTED(i, AFF_GROWTH))
+        {
+            sprintf(buffer,"$c0003");
+            strcat(buffer,buffer2);
+            strcat(buffer, " e` enorme!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
+        }
+        
+        if(IS_AFFECTED(i, AFF_FIRESHIELD))
+        {
+            if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+            {
+                sprintf(buffer,"$c0001");
+                strcat(buffer,buffer2);
+                strcat(buffer, " e` avvolt$b in una luce fiammeggiante!");
+                act(buffer, FALSE, i, 0, ch, TO_VICT);
+            }
+        }
+        
+        if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+        {
+            sprintf(buffer,"$c0008");
+            strcat(buffer,buffer2);
+            strcat(buffer, " e` avvolt$b nell'oscurita`!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
+        }
+        
 	}
 	else if(mode == 1) {
 		if(i->player.description) {
