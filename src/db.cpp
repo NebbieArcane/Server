@@ -3063,10 +3063,6 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	st->alignment = ch->specials.alignment;
 	st->spells_to_learn = ch->specials.spells_to_learn;
-    if(!IS_SET(ch->specials.act, PLR_NEW_EQ))
-    {
-        SET_BIT(ch->specials.act, PLR_NEW_EQ);
-    }
 	st->act = ch->specials.act;
 	st->affected_by = ch->specials.affected_by;
 	st->affected_by2 = ch->specials.affected_by2;

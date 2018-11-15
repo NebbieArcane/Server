@@ -439,9 +439,13 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.value[2] = st->objects[i].value[2];
 				obj->obj_flags.value[3] = st->objects[i].value[3];
 				obj->obj_flags.extra_flags  = st->objects[i].extra_flags;
-                if(IS_SET(ch->specials.act,PLR_NEW_EQ))
+                if(st->objects[i].extra_flags2)
                 {
                     obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+                }
+                else
+                {
+                    obj->obj_flags.extra_flags2 = 0;
                 }
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
@@ -470,7 +474,6 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				strcpy(obj->name, st->objects[i].name);
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
-
                 if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
                 {
                     pers_obj(ch, ch, obj, 1000);
@@ -540,147 +543,6 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 	}
 	SetStatus(STATUS_OTCAFTERLOOP, NULL);
 }
-
-void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
-{
-    struct obj_data* obj;
-    struct obj_data* in_obj[64],*last_obj = NULL;
-    int tmp_cur_depth=0;
-    int i, j, iRealObjNumber;
-
-    void obj_to_char(struct obj_data *object, struct char_data *ch);
-
-    for(i = 0; i < 64; i++) {
-        in_obj[ i ] = NULL;
-    }
-
-    SetStatus(STATUS_OTCBEFORELOOP, NULL);
-
-    for(i=0; i<st->number; i++) {
-        SetStatus(STATUS_OTCREALOBJECT, NULL);
-
-        if(st->objects[i].item_number > 0 &&
-            (iRealObjNumber = real_object(st->objects[i].item_number)) > -1) {
-            SetStatus(STATUS_OTCREADOBJECT, NULL);
-            if((obj = read_object(st->objects[i].item_number, VIRTUAL)) !=
-                NULL) {
-#if LIMITED_ITEMS
-                /* Se l` oggetto costa al rent, e` considerato raro, e percio` viene
-                 * gia` contato nella procedura CountLimitedItems. Questo dovrebbe
-                 * risolvere il problema degli oggetti rari che non ripoppano come
-                 * dovrebbero.
-                 */
-                if(obj->item_number >= 0 &&
-                    obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
-                    obj_index[ obj->item_number ].number--;
-                }
-#endif
-                SetStatus(STATUS_OTCCOPYVALUE, NULL);
-
-                obj->obj_flags.value[0] = st->objects[i].value[0];
-                obj->obj_flags.value[1] = st->objects[i].value[1];
-                obj->obj_flags.value[2] = st->objects[i].value[2];
-                obj->obj_flags.value[3] = st->objects[i].value[3];
-                obj->obj_flags.extra_flags  = st->objects[i].extra_flags;
-                obj->obj_flags.extra_flags2 = 0;
-                obj->obj_flags.weight       = st->objects[i].weight;
-                obj->obj_flags.timer        = st->objects[i].timer;
-                obj->obj_flags.bitvector    = st->objects[i].bitvector;
-
-                SetStatus(STATUS_OTCFREESTRING, NULL);
-
-                if(obj->name) {
-                    free(obj->name);
-                }
-                if(obj->short_description) {
-                    free(obj->short_description);
-                }
-                if(obj->description) {
-                    free(obj->description);
-                }
-
-                SetStatus(STATUS_OTCALLOCSTRING, NULL);
-
-                obj->name = (char*)malloc(strlen(st->objects[i].name)+1);
-                obj->short_description = (char*)malloc(strlen(st->objects[i].sd)+1);
-                obj->description = (char*)malloc(strlen(st->objects[i].desc)+1);
-
-                SetStatus(STATUS_OTCCOPYSTRING, NULL);
-
-                strcpy(obj->name, st->objects[i].name);
-                strcpy(obj->short_description, st->objects[i].sd);
-                strcpy(obj->description, st->objects[i].desc);
-
-                if(st->objects[i].item_number >= LOW_EDITED_ITEMS && st->objects[i].item_number <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-                {
-                    pers_obj(ch, ch, obj, 1000);
-                    if(!IS_OBJ_STAT2(obj, ITEM2_EDIT))
-                    {
-                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
-                    }
-                    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-                    {
-                        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-                    }
-                }
-
-                SetStatus(STATUS_OTCCOPYAFFECT, NULL);
-
-                for(j=0; j<MAX_OBJ_AFFECT; j++) {
-                    obj->affected[j] = st->objects[i].affected[j];
-                }
-
-                SetStatus(STATUS_OTCBAGTREE, NULL);
-
-                /* item restoring */
-                if(st->objects[i].depth > 60) {
-                    mudlog(LOG_SYSERR, "weird! object have depth >60.");
-                    st->objects[i].depth = 0;
-                }
-                if(st->objects[i].depth && st->objects[i].wearpos) {
-                    mudlog(LOG_SYSERR,
-                            "weird! object (%s) weared and in cointainer.",obj->name);
-                    st->objects[i].depth = st->objects[i].wearpos=0;
-                }
-                if(st->objects[i].depth > tmp_cur_depth) {
-                    if(st->objects[i].depth != tmp_cur_depth + 1) {
-                        mudlog(LOG_SYSERR, "weird! object depth changed from %d to %d",
-                                tmp_cur_depth, st->objects[i].depth);
-                    }
-                    if(last_obj == NULL) {
-                        mudlog(LOG_SYSERR,
-                                "weird! object depth > current depth but not last_obj in "
-                                "old_obj_store_to_char (reception.c).");
-                    }
-
-                    in_obj[ tmp_cur_depth++ ] = last_obj;
-                }
-                else if(st->objects[i].depth<tmp_cur_depth) {
-                    tmp_cur_depth--;
-                }
-                if(st->objects[ i ].wearpos) {
-                    equip_char(ch, obj, st->objects[ i ].wearpos - 1);
-                }
-                else if(tmp_cur_depth) {
-                    if(in_obj[ tmp_cur_depth - 1 ]) {
-                        obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
-                    }
-                    else
-                        mudlog(LOG_SYSERR,
-                                "weird! in_obj[ tmp_cur_depth - 1 ] == NULL in "
-                                "old_obj_store_to_char (reception.c).");
-                }
-                else {
-                    obj_to_char(obj, ch);
-                }
-                last_obj = obj;
-            }
-        }
-        SetStatus(STATUS_OTCENDLOOP, NULL);
-    }
-    SetStatus(STATUS_OTCAFTERLOOP, NULL);
-}
-
 // date  +%s --date='TZ="Europe/Rome" 00:00 today'
 #define MUD_REBOOT_TIME 1516316400
 void load_char_objs(struct char_data* ch) {
@@ -688,7 +550,6 @@ void load_char_objs(struct char_data* ch) {
 	bool found = FALSE;
 	long timegold;
 	struct obj_file_u st;
-    struct old_obj_file_u old_st;
 	char tbuf[200];
 	/*
 	 * load in aliases and poofs first
@@ -713,28 +574,12 @@ void load_char_objs(struct char_data* ch) {
 
 	rewind(fl);
 
-    if(IS_SET(ch->specials.act,PLR_NEW_EQ))
-    {
-        if(!ReadObjs(fl, &st))
-        {
-            mudlog(LOG_PLAYERS, "No objects found");
-            snprintf(tbuf,199,"File %s.aux chiuso",GET_NAME(ch));
-            SetStatus(tbuf);
-            return;
-        }
-    }
-    else
-    {
-        if(!ReadObjsOld(fl, &old_st))
-        {
-            mudlog(LOG_PLAYERS, "No objects found");
-            snprintf(tbuf,199,"File %s.aux chiuso",GET_NAME(ch));
-            SetStatus(tbuf);
-            return;
-        }
-        
-        old_st_to_st(&old_st, &st);
-    }
+	if(!ReadObjs(fl, &st)) {
+		mudlog(LOG_PLAYERS, "No objects found");
+		snprintf(tbuf,199,"File %s.aux chiuso",GET_NAME(ch));
+		SetStatus(tbuf);
+		return;
+	}
 
 	if(str_cmp(st.owner, GET_NAME(ch)) != 0) {
 		mudlog(LOG_ERROR,
@@ -860,16 +705,7 @@ void load_char_objs(struct char_data* ch) {
 
 	if(found) {
 		mudlog(LOG_CHECK, "Reading objects...");
-        if(IS_SET(ch->specials.act,PLR_NEW_EQ))
-        {
-            mudlog(LOG_CHECK,"New Obj on %s",GET_NAME(ch));
-            obj_store_to_char(ch, &st);
-        }
-        else
-        {
-            mudlog(LOG_CHECK,"Old Obj on %s",GET_NAME(ch));
-            old_obj_store_to_char(ch, &old_st);
-        }
+		obj_store_to_char(ch, &st);
 #if LIMITEEQALRIENTRO
 		limited_items_carrying =CountLims(ch->carrying);
 		if(limited_items_carrying && !IS_IMMORTALE(ch)) {
@@ -1148,206 +984,130 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 ************************************************************************* */
 
 void update_obj_file() {
-    struct obj_file_u st;
-    struct old_obj_file_u old_st;
-    struct char_file_u ch_st;
-    long days_passed;
-    bool ok = FALSE;
+	struct obj_file_u st;
+	struct char_file_u ch_st;
+	long days_passed;
 
-    FILE* pObjFile;
-    DIR* dir;
 
-    if((dir = opendir(PLAYERS_DIR)) != NULL)
-    {
-        struct dirent* ent;
-        while((ent = readdir(dir)) != NULL)
-        {
-            FILE* pCharFile;
-            char szFileName[ 40 ];
+	FILE* pObjFile;
+	DIR* dir;
 
-            if(*ent->d_name == '.')
-            {
-                continue;
-            }
-            if(!strstr(ent->d_name,".dat"))
-            {
-                continue;
-            }
+	if((dir = opendir(PLAYERS_DIR)) != NULL) {
+		struct dirent* ent;
+		while((ent = readdir(dir)) != NULL) {
+			FILE* pCharFile;
+			char szFileName[ 40 ];
 
-            sprintf(szFileName, "%s/%s", PLAYERS_DIR, ent->d_name);
+			if(*ent->d_name == '.') {
+				continue;
+			}
+			if(!strstr(ent->d_name,".dat")) {
+				continue;
+			}
 
-            if((pCharFile = fopen(szFileName, "r+")) != NULL)
-            {
-                if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
-                {
-                    sprintf(szFileName, "%s/%s", RENT_DIR, lower(ch_st.name));
-                    /* r+b is for Binary Reading/Writing */
-                    if((pObjFile = fopen(szFileName, "r+b")) != NULL)
-                    {
-                        if(!IS_SET(ch_st.act,PLR_NEW_EQ))
-                        {
-                            mudlog(LOG_CHECK,"Provo a leggere il vecchio EQ per %s",ch_st.name);
-                            if(ReadObjsOld(pObjFile, &old_st))
-                            {
-                                ok = TRUE;
-                                old_st_to_st(&old_st, &st);
-                                SET_BIT(ch_st.act,PLR_NEW_EQ);
-                            }
-                        }
-                        else
-                        {
-                            mudlog(LOG_CHECK,"Provo a leggere il nuovo EQ per %s",ch_st.name);
-                            if(ReadObjs(pObjFile, &st))
-                            {
-                                ok = TRUE;
-                            }
-                        }
-                        
-                        if(ok)
-                        {
-                            if(str_cmp(st.owner, ch_st.name) == 0)
-                            {
-                                mudlog(LOG_SAVE, " Processing %s.", st.owner);
-                                days_passed = ((time(0) - st.last_update) / SECS_PER_REAL_DAY);
+			sprintf(szFileName, "%s/%s", PLAYERS_DIR, ent->d_name);
 
-                                if(ch_st.load_room == AUTO_RENT)
-                                {
-                                    /* this person was autorented */
-                                    ch_st.load_room = NOWHERE;
-                                    st.last_update = time(0)+3600;  /* one hour grace period */
+			if((pCharFile = fopen(szFileName, "r+")) != NULL) {
+				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st)) {
+					sprintf(szFileName, "%s/%s", RENT_DIR, lower(ch_st.name));
+					/* r+b is for Binary Reading/Writing */
+					if((pObjFile = fopen(szFileName, "r+b")) != NULL) {
+						if(ReadObjs(pObjFile, &st)) {
+							if(str_cmp(st.owner, ch_st.name) == 0) {
+								mudlog(LOG_SAVE, " Processing %s.", st.owner);
+								days_passed = ((time(0) - st.last_update) / SECS_PER_REAL_DAY);
 
-                                    mudlog(LOG_SAVE, "   Deautorenting %s", st.owner);
+								if(ch_st.load_room == AUTO_RENT) {
+									/* this person was autorented */
+									ch_st.load_room = NOWHERE;
+									st.last_update = time(0)+3600;  /* one hour grace period */
+
+									mudlog(LOG_SAVE, "   Deautorenting %s", st.owner);
 
 #if LIMITED_ITEMS
-                                    CountLimitedItems(&st);
+									CountLimitedItems(&st);
 #endif
-                                    rewind(pCharFile);
-                                    fwrite(&ch_st, sizeof(ch_st), 1, pCharFile);
+									rewind(pCharFile);
+									fwrite(&ch_st, sizeof(ch_st), 1, pCharFile);
 
-                                    rewind(pObjFile);
-                                    WriteObjs(pObjFile, &st);
+									rewind(pObjFile);
+									WriteObjs(pObjFile, &st);
 
-                                    fclose(pObjFile);
-                                }
-                                else
-                                { /* if( ch_st.load_room == AUTO_RENT ) */
-                                    if(days_passed > 0)
-                                    {
+									fclose(pObjFile);
+								}
+								else { /* if( ch_st.load_room == AUTO_RENT ) */
+									if(days_passed > 0) {
 #if NEW_RENT
-                                        /* RENTAL COST ADJUSTMENT */
-                                        st.total_cost = 0;
+										/* RENTAL COST ADJUSTMENT */
+										st.total_cost = 0;
 #endif
-                                        if((st.total_cost * days_passed) > st.gold_left)
-                                        {
-                                            mudlog(LOG_PLAYERS, "Dumping %s from object file.", ch_st.name);
-                                            mudlog(LOG_PLAYERS,"  Total cost: %d Days %ld Gold left %d", st.total_cost, days_passed, st.gold_left);
-                                            ch_st.points.gold = 0;
-                                            ch_st.load_room = NOWHERE;
+										if((st.total_cost * days_passed) > st.gold_left) {
+											mudlog(LOG_PLAYERS, "Dumping %s from object file.",
+												   ch_st.name);
+											mudlog(LOG_PLAYERS,
+												   "  Total cost: %d Days %ld Gold left %d",
+												   st.total_cost, days_passed, st.gold_left);
+											ch_st.points.gold = 0;
+											ch_st.load_room = NOWHERE;
 
-                                            rewind(pCharFile);
-                                            fwrite(&ch_st, sizeof(ch_st), 1, pCharFile);
+											rewind(pCharFile);
+											fwrite(&ch_st, sizeof(ch_st), 1, pCharFile);
 
-                                            fclose(pObjFile);
-                                            ZeroRent(ch_st.name);
+											fclose(pObjFile);
+											ZeroRent(ch_st.name);
 
-                                        }
-                                        else
-                                        {
-                                            mudlog(LOG_SAVE, "   Updating %s", st.owner);
+										}
+										else {
+											mudlog(LOG_SAVE, "   Updating %s", st.owner);
 #if 0
-                                            st.gold_left -= st.total_cost * days_passed;
-                                            st.last_update = time(0) - secs_lost;
+											st.gold_left -= st.total_cost * days_passed;
+											st.last_update = time(0) - secs_lost;
 #endif
-                                            rewind(pObjFile);
-                                            WriteObjs(pObjFile, &st);
-                                            fclose(pObjFile);
+											rewind(pObjFile);
+											WriteObjs(pObjFile, &st);
+											fclose(pObjFile);
 #if LIMITED_ITEMS
-                                            CountLimitedItems(&st);
+											CountLimitedItems(&st);
 #endif
-                                        }
-                                    }
-                                    else
-                                    {
+										}
+									}
+									else {
 
 #if LIMITED_ITEMS
-                                        CountLimitedItems(&st);
+										CountLimitedItems(&st);
 #endif
-                                        mudlog(LOG_CHECK, "   same day update on %s", st.owner);
+										mudlog(LOG_CHECK, "   same day update on %s", st.owner);
 
-                                        rewind(pObjFile);
-                                        WriteObjs(pObjFile, &st);
-                                        fclose(pObjFile);
-                                    }
-                                } /* if( ch_st.load_room == AUTO_RENT ) else */
-                            }
-                            else
-                            {
-                                mudlog(LOG_SYSERR, "Wrong person written into object file! (%s/%s)", st.owner, ch_st.name);
-                                assert(0);
-                            }
-                        } /* Il personaggio non ha oggetti. */
-                    } /* Non esiste il file degli oggetti. */
-                }
-                else
-                {
-                    mudlog(LOG_ERROR, "Error reading file %s. %d", szFileName, sizeof(ch_st));
-                }
-                fclose(pCharFile);
-            }
-            else
-            {
-                mudlog(LOG_ERROR, "Errore opening file %s.", szFileName);
-            }
-        } /* Fine dei giocatori */
-    }
-    else
-    {
-        mudlog(LOG_ERROR, "Cannot open dir %s.", PLAYERS_DIR);
-    }
+										rewind(pObjFile);
+										WriteObjs(pObjFile, &st);
+										fclose(pObjFile);
+									}
+								} /* if( ch_st.load_room == AUTO_RENT ) else */
+							}
+							else {
+								mudlog(LOG_SYSERR,
+									   "Wrong person written into object file! (%s/%s)",
+									   st.owner, ch_st.name);
+								assert(0);
+							}
+						} /* Il personaggio non ha oggetti. */
+					} /* Non esiste il file degli oggetti. */
+				}
+				else {
+					mudlog(LOG_ERROR, "Error reading file %s. %d", szFileName, sizeof(ch_st));
+				}
+				fclose(pCharFile);
+			}
+			else {
+				mudlog(LOG_ERROR, "Errore opening file %s.", szFileName);
+			}
+		} /* Fine dei giocatori */
+	}
+	else {
+		mudlog(LOG_ERROR, "Cannot open dir %s.", PLAYERS_DIR);
+	}
 }
 
-void old_st_to_st(struct old_obj_file_u* old_st, struct obj_file_u* st)
-{
-    int i, j, iRealObjNumber;
-
-    strcpy(st->owner, old_st->owner);
-    st->gold_left       = old_st->gold_left;
-    st->total_cost      = old_st->total_cost;
-    st->last_update     = old_st->last_update;
-    st->minimum_stay    = old_st->minimum_stay;
-    st->number          = old_st->number;
-
-    for(i = 0; i < old_st->number; i++)
-    {
-        if(old_st->objects[i].item_number > 0 &&
-           (iRealObjNumber = real_object(old_st->objects[i].item_number)) > -1)
-        {
-            st->objects[i].item_number   = old_st->objects[i].item_number;
-            st->objects[i].value[0]      = old_st->objects[i].value[0];
-            st->objects[i].value[1]      = old_st->objects[i].value[1];
-            st->objects[i].value[2]      = old_st->objects[i].value[2];
-            st->objects[i].value[3]      = old_st->objects[i].value[3];
-            st->objects[i].value[4]      = old_st->objects[i].value[4];
-            st->objects[i].extra_flags   = old_st->objects[i].extra_flags;
-            st->objects[i].extra_flags2  = 0;
-            st->objects[i].weight        = old_st->objects[i].weight;
-            st->objects[i].timer         = old_st->objects[i].timer;
-            st->objects[i].bitvector     = old_st->objects[i].bitvector;
-            
-            strcpy(st->objects[i].name, old_st->objects[ i ].name);
-            strcpy(st->objects[i].sd, old_st->objects[ i ].sd);
-            strcpy(st->objects[i].desc, old_st->objects[ i ].desc);
-
-            st->objects[i].wearpos       = old_st->objects[i].wearpos;
-            st->objects[i].depth         = old_st->objects[i].depth;
-
-            for(j=0; j<MAX_OBJ_AFFECT; j++)
-            {
-                st->objects[i].affected[j] = old_st->objects[i].affected[j];
-            }
-        }
-    }
-}
 
 void CountLimitedItems(struct obj_file_u* st) {
 	int i;
@@ -1755,57 +1515,9 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
 	for(i=0; i<st->number; i++) {
-        mudlog(LOG_SAVE,"Leggo_new %s: %d, %s",st->owner, i, st->objects[i].name);
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
 	}
 	return TRUE;
-}
-
-int ReadObjsOld(FILE* fl, struct old_obj_file_u* st) {
-    int i;
-
-    if(feof(fl))
-    {
-        fclose(fl);
-        return(FALSE);
-    }
-
-    fread(st->owner, sizeof(st->owner), 1, fl);
-    if(feof(fl)) {
-        fclose(fl);
-        return(FALSE);
-    }
-    fread(&st->gold_left, sizeof(st->gold_left), 1, fl);
-    if(feof(fl)) {
-        fclose(fl);
-        return(FALSE);
-    }
-    fread(&st->total_cost, sizeof(st->total_cost), 1, fl);
-    if(feof(fl)) {
-        fclose(fl);
-        return(FALSE);
-    }
-    fread(&st->last_update, sizeof(st->last_update), 1, fl);
-    if(feof(fl)) {
-        fclose(fl);
-        return(FALSE);
-    }
-    fread(&st->minimum_stay, sizeof(st->minimum_stay), 1, fl);
-    if(feof(fl)) {
-        fclose(fl);
-        return(FALSE);
-    }
-    fread(&st->number, sizeof(st->number), 1, fl);
-    if(feof(fl)) {
-        fclose(fl);
-        return(FALSE);
-    }
-    mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner, st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
-    for(i=0; i<st->number; i++) {
-            fread(&st->objects[i], sizeof(struct old_obj_file_elem), 1, fl);
-            mudlog(LOG_SAVE,"Leggo_old %s: %d, %s",st->owner, i, st->objects[i].name);
-    }
-    return TRUE;
 }
 
 void WriteObjs(FILE* fl, struct obj_file_u* st) {
@@ -1822,8 +1534,7 @@ void WriteObjs(FILE* fl, struct obj_file_u* st) {
 	fwrite(&st->minimum_stay, sizeof(st->minimum_stay), 1, fl);
 	fwrite(&st->number, sizeof(st->number), 1, fl);
 	for(i=0; i<st->number; i++) {
-        fwrite(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
-        mudlog(LOG_SAVE,"Scrivo %s: %d, %s",st->owner, i, st->objects[i].name);
+		fwrite(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
 	}
 	PopStatus();
 }

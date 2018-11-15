@@ -3051,7 +3051,7 @@ const char* player_bits[] = {
 	"FREEZE",
 	"NOTELL",
 	"MAILING",
-	"HAS_NEW_EQ",
+	"EMPTY4",
 	"EMPTY5",
 	"NOBEEP",
 	"\n"

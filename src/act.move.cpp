@@ -1034,22 +1034,21 @@ ACTION_FUNC(do_open_exit) {
 				if(cmd != CMD_DIG && cmd != CMD_SCYTHE) {
 					SET_BIT(exitp->exit_info, EX_CLOSED);
 					if(IS_SET(exitp->exit_info, EX_SECRET)) {
-						sprintf(buf, "$n chiude un passaggio segreto %s.",
+						sprintf(buf, "$n chiude un passaggio segreto %s",
 								dirsTo[door]);
 						act(buf, 0, ch, 0, 0, TO_ROOM);
 					}
 					else {
-						sprintf(buf, "$n %s %s $F e chiude il passaggio %s.",
+						sprintf(buf, "$n %s %s $F e chiude il passaggio %s",
 								cmdnameT,
 								IS_SET(exitp->exit_info, EX_MALE) ?
 								"il" : "la", dirsTo[door]);
 						act(buf, 0, ch, 0, exitp->keyword, TO_ROOM);
 					}
-					sprintf(buf, "%s %s %s e chiudi il passaggio %s.\r\n",
+					sprintf(buf, "Tu %s %s %s e chiudi il passaggio %s\r\n",
 							cmdnameP,
 							IS_SET(exitp->exit_info, EX_MALE) ? "il" : "la",
 							fname(exitp->keyword), dirsTo[door]);
-                    CAP(buf);
 					send_to_char(buf, ch);
 					/* handle backdoor */
 					if(exit_ok(exitp, &rp) && (back =
@@ -1081,21 +1080,20 @@ ACTION_FUNC(do_open_exit) {
 						|| (cmd != CMD_DIG && cmd != CMD_SCYTHE)) {
 					raw_open_door(ch, door);
 					if(IS_SET(exitp->exit_info, EX_SECRET)) {
-						sprintf(buf, "$n apre un passaggio %s.", dirsTo[door]);
+						sprintf(buf, "$n apre un passaggio %s", dirsTo[door]);
 						act(buf, 0, ch, 0, 0, TO_ROOM);
 					}
 					else {
-						sprintf(buf, "$n %s %s $F ed apre un passaggio %s.",
+						sprintf(buf, "$n %s %s $F ed apre un passaggio %s",
 								cmdnameT,
 								IS_SET(exitp->exit_info, EX_MALE) ?
 								"il" : "la", dirsTo[door]);
 						act(buf, 0, ch, 0, exitp->keyword, TO_ROOM);
 					}
-					sprintf(buf, "%s %s %s ed apri un passaggio %s.\r\n",
+					sprintf(buf, "Tu %s %s %s ed apri un passaggio %s\r\n",
 							cmdnameP,
 							IS_SET(exitp->exit_info, EX_MALE) ? "il" : "la",
 							fname(exitp->keyword), dirsTo[door]);
-                    CAP(buf);
 					send_to_char(buf, ch);
 				}
 				else {

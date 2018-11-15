@@ -59,7 +59,6 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long AFF2_AFK                                     =64;
 	constexpr unsigned long AFF2_PKILLER                                 =128;
 	constexpr unsigned long AFF2_DANGER_SENSE                            =256; /*Montero 16-Sep-18*/
-	constexpr unsigned long AFF2_QUEST                                   =512; /*Quest Flag*/
 // Flag type: E_CLASSES -- start
 	constexpr unsigned long CLASS_MAGIC_USER                             =1;
 	constexpr unsigned long CLASS_CLERIC                                 =2;
@@ -243,7 +242,7 @@ For players : specials.act*/
 	constexpr unsigned long PLR_FREEZE                                   =32768; /*The player is frozen  must have pissed an immo off*/
 	constexpr unsigned long PLR_NOTELL                                   =65536; /*The player does not hear tells*/
 	constexpr unsigned long PLR_MAILING                                  =131072;
-	constexpr unsigned long PLR_NEW_EQ                                   =262144;
+	constexpr unsigned long PLR_EMPTY4                                   =262144;
 	constexpr unsigned long PLR_EMPTY5                                   =524288;
 	constexpr unsigned long PLR_NOBEEP                                   =1048576; /*ignore all beeps*/
 // Flag type: E_ROOM_FLAGS -- start
