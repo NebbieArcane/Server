@@ -59,6 +59,7 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long AFF2_AFK                                     =64;
 	constexpr unsigned long AFF2_PKILLER                                 =128;
 	constexpr unsigned long AFF2_DANGER_SENSE                            =256; /*Montero 16-Sep-18*/
+	constexpr unsigned long AFF2_QUEST                                   =512; /*Quest Flag*/
 // Flag type: E_CLASSES -- start
 	constexpr unsigned long CLASS_MAGIC_USER                             =1;
 	constexpr unsigned long CLASS_CLERIC                                 =2;

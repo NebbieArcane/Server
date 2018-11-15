@@ -799,6 +799,7 @@ struct obj_file_elem {
 
 	int value[4];
 	int extra_flags;
+    int extra_flags2;
 	int weight;
 	int timer;
 	unsigned int bitvector;
@@ -808,7 +809,6 @@ struct obj_file_elem {
 	ubyte wearpos;
 	ubyte depth;
 	struct obj_affected_type affected[MAX_OBJ_AFFECT];
-    int extra_flags2;
 };
 
 struct old_obj_file_elem {
