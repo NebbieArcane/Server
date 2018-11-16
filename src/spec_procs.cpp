@@ -6840,8 +6840,8 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 
 		af.type      = SPELL_CREEPING_DEATH;
 		af.duration  = 1;
-		af.modifier  = 10500;
-		af.location  = APPLY_SPELLFAIL;
+		af.modifier  = 0;
+		af.location  = APPLY_NONE;
 		af.bitvector = 0;
 		affect_to_char(vict, &af);
 		break;

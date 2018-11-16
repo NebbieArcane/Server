@@ -869,6 +869,10 @@ void SpellWearOff(int s, struct char_data* ch) {
         ch->specials.quest_ref = NULL;
     }
 
+    if(s == SPELL_CREEPING_DEATH) {
+        REMOVE_BIT(ch->specials.affected_by, AFF_SILENCE);
+    }
+    
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {
 		check_decharm(ch);
 	}

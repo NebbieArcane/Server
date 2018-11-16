@@ -1108,18 +1108,11 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		WAIT_STATE(ch, 3*PULSE_VIOLENCE);   // creeping
 	}
     
-    af.type      = SPELL_SILENCE;
-    af.duration  = 3;
-    af.modifier  = 0;
-    af.location  = 0;
-    af.bitvector = AFF_SILENCE;
-    affect_to_char(ch, &af);
-    
 	af.type      = SPELL_CREEPING_DEATH;
-	af.duration  = 3;
+	af.duration  = 2;
 	af.modifier  = 0;
-	af.location  = APPLY_NONE;
-	af.bitvector = 0;
+	af.location  = 0;
+	af.bitvector = AFF_SILENCE;
 	affect_to_char(ch, &af);
 
 }

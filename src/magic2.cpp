@@ -1710,13 +1710,8 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim, SPELL_SILENCE)) {
-        if(!affected_by_spell(victim, SPELL_CREEPING_DEATH)) {
-            affect_from_char(victim,SPELL_SILENCE);
-            send_to_char("Torni a parlare di nuovo.\n\r",victim);
-        } else {
-            send_to_char("Solo il tempo curera' il tuo silenzio.\n\r",victim);
-        }
-		
+        affect_from_char(victim,SPELL_SILENCE);
+        send_to_char("Torni a parlare di nuovo.\n\r",victim);
 	}
 	if(affected_by_spell(victim, SPELL_TREE_TRAVEL)) {
 		affect_from_char(victim,SPELL_TREE_TRAVEL);
