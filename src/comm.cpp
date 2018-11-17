@@ -2483,7 +2483,7 @@ int update_max_usage(void) {
 		max_usage = sockets_playing;
 		if (PORT==RELEASE_PORT) {
 			sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
-			slackNotify(buf,max_usage >=10?":champagne:":"information_desk_person");
+//			slackNotify(buf,max_usage >=10?":champagne:":"information_desk_person");
 		}
 		mudlog(LOG_PLAYERS, buf);
 	}
