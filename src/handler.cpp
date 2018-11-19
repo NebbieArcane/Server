@@ -2750,32 +2750,29 @@ struct obj_data* create_money(int amount) {
 
 void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd)
 {
-    char personal[128];
+    char personal[MAX_INPUT_LENGTH];
     
     if(cmd == CMD_PERSONALIZE)
     {
-    mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->name, obj_index[obj->item_number].iVNum, GET_NAME(plr));
+        mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
     }
     else if(cmd == CMD_GIVE)
     {
-        mudlog(LOG_PLAYERS,"CMD_GIVE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->name, obj_index[obj->item_number].iVNum, GET_NAME(plr));
+        mudlog(LOG_PLAYERS,"CMD_GIVE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
     }
     else
     {
-        mudlog(LOG_ERROR,"pers_obj: wrong command %d", cmd);
+        mudlog(LOG_ERROR,"pers_obj: wrong command");
         return;
     }
-
-    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-    {
-        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-    }
     
-    strcpy(personal, " ED");
-    strcat(personal, GET_NAME(plr));
-    strcat(obj->name, personal);
+    SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
     
-    mudlog(LOG_PLAYERS, "%s add key%s on %s[%d].", GET_NAME(god), personal, obj->name, obj_index[obj->item_number].iVNum);
+    sprintf(personal,"%s ED%s",obj->name,GET_NAME(plr));
+    free(obj->name);
+    obj->name = (char*)strdup(personal);
+    
+    mudlog(LOG_PLAYERS, "%s Add key%s on %s[%d].", GET_NAME(god), personal, obj->short_description, obj->item_number);
 }
 
 bool pers_on(struct char_data* ch, struct obj_data* obj)

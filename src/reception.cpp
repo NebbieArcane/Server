@@ -534,20 +534,17 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 {
-    char personal[128];
-    
- //   if(obj_index[obj->item_number].iVNum >= LOW_EDITED_ITEMS && obj_index[obj->item_number].iVNum <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
- //   {
-        strcpy(personal, " ED");
-        strcat(personal, GET_NAME(ch));
-        strcat(obj->name, personal);
+    char personal[MAX_INPUT_LENGTH];
+
+    sprintf(personal,"%s ED%s",obj->name,GET_NAME(ch));
+    free(obj->name);
+    obj->name = (char*)strdup(personal);
         
-        if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-        {
-            SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-        }
-        mudlog(LOG_PLAYERS,"MUD: Personalized %s[%d] on %s.", obj->name, obj_index[obj->item_number].iVNum,GET_NAME(ch));
- //   }
+    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+    {
+        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+    }
+    mudlog(LOG_PLAYERS,"MUD: Personalized %s[%d] on %s.", obj->name, obj_index[obj->item_number].iVNum,GET_NAME(ch));
 }
 
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
