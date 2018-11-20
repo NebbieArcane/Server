@@ -2165,7 +2165,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					break;
 				case 'T':   /* mob name */
 					if(ch->specials.fighting) {
-						one_argument(tbuf, GET_NAME(ch->specials.fighting));
+						one_argument(GET_NAME(ch->specials.fighting),tbuf);
 					}
 					else {
 						strcpy(tbuf, "*");

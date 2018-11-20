@@ -95,7 +95,7 @@ struct attack_hit_type location_hit_text[] = {
 	{"alla testa",      "alla testa"},           /* 6 */
 	{"alla gamba",  "alla gamba"},                 /* 7 */
 	{"sul piede","sul piede"},                 /* 8 */
-	{"sulla mano sisnistra", "sulla mano sinistra"},      /* 9 */
+	{"sulla mano sinistra", "sulla mano sinistra"},      /* 9 */
 	{"sul braccio destro", "sul braccio destra"},      /* 10 */
 	{"sul braccio sinistro",  "sul braccio sinistro"},       /* 11 */
 	{"dietro la schiena",      "dietro la schiena"},           /* 12 */
