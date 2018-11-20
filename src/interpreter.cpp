@@ -1969,12 +1969,14 @@ NANNY_FUNC(con_account_pwd) {
 			close_socket(d);
 			return false;
 		}
-		if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
+		/*
+        if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
 			mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",d->AccountData.email,d->AccountData.level,(d->AccountData.ptr?"ON":"OFF"));
 			FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
 			close_socket(d);
 			return false;
 		}
+         */
 		d->AccountData.authorized=true;
 		string message("Benvenuto ");
 		message.append(d->AccountData.nickname).append("\r\n");
