@@ -856,12 +856,12 @@ void load_char_objs(struct char_data* ch) {
 		mudlog(LOG_CHECK, "Reading objects...");
         if(IS_SET(ch->specials.act,PLR_NEW_EQ))
         {
-            mudlog(LOG_CHECK,"New Obj on %s",GET_NAME(ch));
+            mudlog(LOG_CHECK,"New Format Objects %s",GET_NAME(ch));
             obj_store_to_char(ch, &st);
         }
         else
         {
-            mudlog(LOG_CHECK,"Old Obj on %s",GET_NAME(ch));
+            mudlog(LOG_CHECK,"Old Format Objects %s",GET_NAME(ch));
             old_obj_store_to_char(ch, &old_st);
             old_st_to_st(&old_st, &st);
         }
@@ -1184,10 +1184,8 @@ void update_obj_file() {
                     /* r+b is for Binary Reading/Writing */
                     if((pObjFile = fopen(szFileName, "r+b")) != NULL)
                     {
-                        mudlog(LOG_CHECK,"Ho aperto il file %s",szFileName);
                         if(!IS_SET(ch_st.act,PLR_NEW_EQ))
                         {
-                            mudlog(LOG_CHECK,"Provo a leggere il vecchio EQ per %s",ch_st.name);
                             if(!ReadObjsOld(pObjFile, &old_st))
                             {
                                 ok = FALSE;
@@ -1200,7 +1198,6 @@ void update_obj_file() {
                         }
                         else
                         {
-                            mudlog(LOG_CHECK,"Provo a leggere il nuovo EQ per %s",ch_st.name);
                             if(!ReadObjs(pObjFile, &st))
                             {
                                 ok = FALSE;
@@ -1781,7 +1778,6 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
 	for(i=0; i<st->number; i++) {
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
-        mudlog(LOG_SAVE,"Leggo_new %s: %d, %s",st->owner, i, st->objects[i].name);
 	}
 	return TRUE;
 }
@@ -1825,10 +1821,9 @@ int ReadObjsOld(FILE* fl, struct old_obj_file_u* st) {
         fclose(fl);
         return(FALSE);
     }
-    mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner, st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
+    mudlog(LOG_SAVE,"Letto_old %s %d %d %d %d %d",st->owner, st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
     for(i=0; i<st->number; i++) {
             fread(&st->objects[i], sizeof(struct old_obj_file_elem), 1, fl);
-            mudlog(LOG_SAVE,"Leggo_old %s: %d, %s",st->owner, i, st->objects[i].name);
     }
     return TRUE;
 }
@@ -1848,7 +1843,6 @@ void WriteObjs(FILE* fl, struct obj_file_u* st) {
 	fwrite(&st->number, sizeof(st->number), 1, fl);
 	for(i=0; i<st->number; i++) {
         fwrite(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
-        mudlog(LOG_SAVE,"Scrivo %s: %d, %s",st->owner, i, st->objects[i].name);
 	}
 	PopStatus();
 }
@@ -1868,7 +1862,6 @@ void WriteObjsOld(FILE* fl, struct old_obj_file_u* st) {
     fwrite(&st->number, sizeof(st->number), 1, fl);
     for(i=0; i<st->number; i++) {
         fwrite(&st->objects[i], sizeof(struct old_obj_file_elem), 1, fl);
-        mudlog(LOG_SAVE,"ScrivoOld %s: %d, %s",st->owner, i, st->objects[i].name);
     }
     PopStatus();
 }

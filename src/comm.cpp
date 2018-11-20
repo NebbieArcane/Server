@@ -2165,7 +2165,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					break;
 				case 'T':   /* mob name */
 					if(ch->specials.fighting) {
-						one_argument(GET_NAME(ch->specials.fighting),tbuf);
+						one_argument(GET_NAME(ch->specials.fighting), tbuf);
 					}
 					else {
 						strcpy(tbuf, "*");
@@ -2483,7 +2483,7 @@ int update_max_usage(void) {
 		max_usage = sockets_playing;
 		if (PORT==RELEASE_PORT) {
 			sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
-//			slackNotify(buf,max_usage >=10?":champagne:":"information_desk_person");
+			slackNotify(buf,max_usage >=10?":champagne:":"information_desk_person");
 		}
 		mudlog(LOG_PLAYERS, buf);
 	}

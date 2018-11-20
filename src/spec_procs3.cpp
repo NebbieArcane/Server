@@ -4906,7 +4906,9 @@ MOBSPECIAL_FUNC(AssignQuest) {
             }
                 
                 /* forzo il tipo di quest a caccia */
-                sprintf(buf2, "pensa di affidarti una missione di %s ma poi ci riflette meglio e decide per qualcosa di piu' indicato...", QuestKind[quest_type]);
+                sprintf(buf2, "%s pensa di affidarti una missione di %s ma poi ci riflette meglio e decide per qualcosa di piu' indicato...", questor->player.short_descr, QuestKind[quest_type]);
+                act(buf2, FALSE, ch, 0, ch, TO_CHAR);
+                sprintf(buf2, "%s indica un cartello con su scritto '$c0009Al momento possiamo affidarti solo missioni di caccia!$c0007'", questor->player.short_descr);
                 act(buf2, FALSE, ch, 0, ch, TO_CHAR);
                 quest_type = 0;
                 

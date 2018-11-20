@@ -1010,7 +1010,7 @@ int clan_gain(struct char_data* ch,int gain) {
 	if(IS_PC(ch) && HAS_PRINCE(ch)) {
 
 		k=get_char_room(GET_PRINCE(ch),ch->in_room);
-		if(k) {
+		if(k && IS_PC(k)) {
 			quota=(int)(gain/100*6);
 			gain-=quota;
 			sprintf(buf,"Paghi il giusto tributo di esperienza (%d punti) a $N!",

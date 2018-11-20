@@ -29,6 +29,7 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) ;
 void ChangeMobShort(struct char_data* ch, const char* arg, int type) ;
 void ChangeMobSound(struct char_data* ch, const char* arg, int type) ;
 void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) ;
+void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) ;
 void MobEdit(struct char_data* ch, const char* arg) ;
 void MobHitReturn(struct char_data* ch, const char* arg, int type) ;
 void UpdateMobMenu(struct char_data* ch) ;

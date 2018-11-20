@@ -7814,7 +7814,7 @@ MOBSPECIAL_FUNC(MobIdent)
     if(!IS_NPC(ch) && cmd == CMD_BUY)
     {
         act("$n da' alcune monete d'oro a $N.", FALSE, ch, NULL, mobident, TO_NOTVICT);
-        act("Dai $c001510.000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, NULL, mobident, TO_CHAR);
+        act("Dai $c001510000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, NULL, mobident, TO_CHAR);
         if(GetMaxLevel(ch) < DIO)
         {
             GET_GOLD(ch) -= 10000;
@@ -7824,35 +7824,40 @@ MOBSPECIAL_FUNC(MobIdent)
 
         act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:", FALSE, ch, NULL, mobident, TO_CHAR);
         act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", FALSE, ch, NULL, mobident, TO_NOTVICT);
-        sprintf(buf,"'$c0013Ogni ora rigeneri $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
+        sprintf(buf,"$c0013'Ogni ora rigeneri $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
         send_to_char(buf,ch);
-        sprintf(buf,"$c0013La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
+        sprintf(buf,"$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
         send_to_char(buf,ch);
-        sprintf(buf,"$c0013Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) > 0 ? "+" : ""), GET_HITROLL(ch), (GET_DAMROLL(ch) > 0 ? "+" : ""), GET_DAMROLL(ch));
+        sprintf(buf,"$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) > 0 ? "+" : ""), GET_HITROLL(ch), (GET_DAMROLL(ch) > 0 ? "+" : ""), GET_DAMROLL(ch));
         send_to_char(buf,ch);
-        sprintf(buf,"$c0013La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
+        sprintf(buf,"$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
         send_to_char(buf,ch);
-        sprintf(buf,"$c0013I tuoi Tiri Salvezza sono: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] Petri[$c0015%d$c0013] Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r",ch->specials.apply_saving_throw[0], ch->specials.apply_saving_throw[1], ch->specials.apply_saving_throw[2], ch->specials.apply_saving_throw[3], ch->specials.apply_saving_throw[4]);
+        sprintf(buf,"$c0013 I tuoi Tiri Salvezza sono: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] Petri[$c0015%d$c0013] Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r",ch->specials.apply_saving_throw[0], ch->specials.apply_saving_throw[1], ch->specials.apply_saving_throw[2], ch->specials.apply_saving_throw[3], ch->specials.apply_saving_throw[4]);
         send_to_char(buf,ch);
         if(ch->M_immune)
         {
-            send_to_char("$c0013Sei Immune       a: $c0015", ch);
+            send_to_char("$c0013 Sei Immune       a: $c0015", ch);
             sprintbit(ch->M_immune, immunity_names, buf);
-            strcat(buf, "\n\r");
+            if(ch->immune || ch->susc)
+            {
+                strcat(buf, "\n\r");
+            }
             send_to_char(buf, ch);
         }
         if(ch->immune)
         {
-            send_to_char("$c0013Sei Resistente   a: $c0015", ch);
+            send_to_char("$c0013 Sei Resistente   a: $c0015", ch);
             sprintbit(ch->immune, immunity_names, buf);
-            strcat(buf, "\n\r");
+            if(ch->susc)
+            {
+                strcat(buf, "\n\r");
+            }
             send_to_char(buf, ch);
         }
         if(ch->susc)
         {
-            send_to_char("$c0013Sei Suscettibile a: $c0015", ch);
+            send_to_char("$c0013 Sei Suscettibile a: $c0015", ch);
             sprintbit(ch->susc, immunity_names, buf);
-            strcat(buf, "\n\r");
             send_to_char(buf, ch);
         }
         send_to_char("$c0013'",ch);
