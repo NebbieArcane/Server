@@ -79,21 +79,38 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 31) {
+		if(update < 0 || update > 36) {
 			return;
 		}
 		i=1;
-		if(update>0)
+		if(update > 0 && update < 32)
 			for(a=1; a<=update; a++) {
 				i*=2;
 			}
-
-		if(IS_SET(ch->specials.objedit->obj_flags.extra_flags, i)) {
-			REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags, i);
-		}
-		else {
-			SET_BIT(ch->specials.objedit->obj_flags.extra_flags, i);
-		}
+        else
+            for(a=1; a<=update-32; a++) {
+                i*=2;
+            }
+        if(update<32)
+        {
+            if(IS_SET(ch->specials.objedit->obj_flags.extra_flags, i)) {
+                REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags, i);
+            }
+            else
+            {
+                SET_BIT(ch->specials.objedit->obj_flags.extra_flags, i);
+            }
+        }
+        else
+        {
+                if(IS_SET(ch->specials.objedit->obj_flags.extra_flags2, i)) {
+                    REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags2, i);
+                }
+                else
+            {
+                SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, i);
+            }
+        }
 	}
 
 	sprintf(buf, VT_HOMECLR);
@@ -102,24 +119,38 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 
 	row = 0;
-	for(i = 0; i < 32; i++) {
+	for(i = 0; i < 36; i++) {
 		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
 		if(i & 1) {
 			row++;
 		}
 		send_to_char(buf, ch);
 		check=1;
-		if(i>0)
+		if(i > 0 && i < 32)
 			for(a=1; a<=i; a++) {
 				check*=2;
 			}
-		sprintf(buf, "%-2d [%s] %s", i + 1,
-				((ch->specials.objedit->obj_flags.extra_flags & (check)) ?
-				 "X" : " "), extra_bits[i]);
+        else
+            for(a=1; a<=(i-32); a++) {
+                check*=2;
+            }
+		if (i < 32)
+        {
+            sprintf(buf, "%-2d [%s] %s", i + 1,
+                    ((ch->specials.objedit->obj_flags.extra_flags & (check)) ?
+                      "X" : " "), extra_bits[i]);
+        }
+        else
+        {
+            sprintf(buf, "%-2d [%s] %s", i + 1,
+                    ((ch->specials.objedit->obj_flags.extra_flags2 & (check)) ?
+                        "X" : " "), extra_bits2[i-32]);
+        }
+
 		send_to_char(buf, ch);
 	}
 
-	sprintf(buf, VT_CURSPOS, 20, 1);
+	sprintf(buf, VT_CURSPOS, row + 8, 1);
 	send_to_char(buf, ch);
 	send_to_char("Select the number to toggle, <C/R> to return to main "
 				 "menu.\n\r--> ", ch);
@@ -234,6 +265,11 @@ ACTION_FUNC(do_oedit) {
 	ch->specials.oedit = OBJ_MAIN_MENU;
 	ch->desc->connected = CON_OBJ_EDITING;
 
+    if(!IS_SET(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT))
+    {
+        SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT);
+    }
+    
 	act("$n has begun editing an object.", FALSE, ch, 0, 0, TO_ROOM);
 	GET_POS(ch)=POSITION_SLEEPING;
 
@@ -775,8 +811,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		switch(update) {
 		case APPLY_NONE:
 		case APPLY_SKIP:
-		case APPLY_ATTACKS:
-		case APPLY_AFF2: // Montero 16-Sep-18
+		case APPLY_AFF2:
             send_to_char("\n\rNote: Modifier should be ADDED together from this "
                             "list of affection flags 2.\n\r",ch);
             row = 0;
@@ -803,7 +838,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		case APPLY_WIS:
 		case APPLY_CON:
 		case APPLY_CHR:
-
+        case APPLY_ATTACKS:
 		case APPLY_LEVEL:
 		case APPLY_AGE:
 		case APPLY_CHAR_WEIGHT:

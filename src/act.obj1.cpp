@@ -1036,6 +1036,10 @@ ACTION_FUNC(do_give) {
 							TO_CHAR);
 						return;
 					}
+                    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && IS_OBJ_STAT2(obj, ITEM2_EDIT) && IS_MAESTRO_DEGLI_DEI(ch))
+                    {
+                        pers_obj(ch, vict, obj, CMD_GIVE);
+                    }
 					act("$n da` $p a $N.", 1, ch, obj, vict, TO_NOTVICT);
 					act("$n ti da` $p.", 0, ch, obj, vict, TO_VICT);
 					act("Dai $p a $N", 0, ch, obj, vict, TO_CHAR);

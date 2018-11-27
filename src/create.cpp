@@ -503,7 +503,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 
 		update = atoi(arg) - 1;
 
-		if(update >= 0 && update <= 7) {
+		if(update >= 0 && update <= 8) {
 			i = 1 << update;
 
 			if(IS_SET(rp->dir_option[dir]->exit_info, i)) {
@@ -525,7 +525,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 	send_to_char(buf, ch);
 
 	row = 0;
-	for(i = 0; i < 8; i++) {
+	for(i = 0; i < 9; i++) {
 		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
 		if(i & 1) {
 			row++;

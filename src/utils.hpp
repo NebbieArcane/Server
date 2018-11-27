@@ -13,6 +13,8 @@
 #include "multiclass.hpp"
 namespace Alarmud {
 
+#define QUEST_ZONE 9700
+    
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
 //#define TRUE  1
@@ -104,6 +106,9 @@ namespace Alarmud {
 
 #define LEGLI(ch) ((ch)->player.sex ?                                   \
 				   (((ch)->player.sex == 1) ? "gli" : "le") : "gli")
+
+#define LUILEI(ch) ((ch)->player.sex ?                                   \
+                   (((ch)->player.sex == 1) ? "lui" : "lei") : "lui")
 
 #define SSLF(ch) ((ch)->player.sex ?                                    \
 				  (((ch)->player.sex == 1) ? "o" : "a") : "o")
@@ -275,6 +280,7 @@ namespace Alarmud {
 	 CAN_SEE_OBJ((ch),(obj)))
 
 #define IS_OBJ_STAT(obj,stat) (IS_SET((obj)->obj_flags.extra_flags,stat))
+#define IS_OBJ_STAT2(obj,stat) (IS_SET((obj)->obj_flags.extra_flags2,stat))
 
 
 

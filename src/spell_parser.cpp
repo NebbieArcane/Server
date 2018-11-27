@@ -345,6 +345,8 @@ const char* spells[]= {
 	"ultra blast",
 	"intensify",
 	"spot",
+    "",
+    "quest",
 	"\n"
 };
 
@@ -587,7 +589,11 @@ void SpellWearOffSoon(int s, struct char_data* ch) {
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
-
+    
+    if(s == STATUS_QUEST && !IS_PC(ch)) {
+        return;
+    }
+    
 	if(spell_wear_off_soon_msg[s] && *spell_wear_off_soon_msg[s]) {
 		act(spell_wear_off_soon_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
@@ -818,10 +824,37 @@ void check_decharm(struct char_data* ch) {
 
 
 void SpellWearOff(int s, struct char_data* ch) {
-
+    char buf[128];
+    
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
+    
+    if(s == STATUS_QUEST && !IS_PC(ch)) {
+        
+        /* fine dei giochi, si torna a casa */
+        switch(GET_POS(ch)) {
+                
+            case POSITION_FIGHTING  :
+            WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
+            sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!$c0007\n\r",ch->player.name);
+            act(buf, FALSE, ch, 0, ch, TO_ROOM);
+            stop_fighting(ch);
+            extract_char(ch);
+                break;
+            
+            case POSITION_DEAD  :
+                break;
+                
+            default:
+                sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",ch->player.name);
+                act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                extract_char(ch);
+                break;
+        }
+        
+        return;
+    }
 
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
 		act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
@@ -831,8 +864,15 @@ void SpellWearOff(int s, struct char_data* ch) {
 			(IS_NPC(ch) || !IS_SET(ch->specials.act, PLR_STEALTH))) {
 		act(spell_wear_off_room_msg[s], TRUE, ch, 0, 0, TO_ROOM);
 	}
+    
+    if(s == STATUS_QUEST) {
+        ch->specials.quest_ref = NULL;
+    }
 
-
+    if(s == SPELL_CREEPING_DEATH) {
+        REMOVE_BIT(ch->specials.affected_by, AFF_SILENCE);
+    }
+    
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {
 		check_decharm(ch);
 	}

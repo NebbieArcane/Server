@@ -20,6 +20,7 @@ MOBSPECIAL_FUNC(DwarvenMiners) ;
 MOBSPECIAL_FUNC(GenericCityguard) ;
 MOBSPECIAL_FUNC(GenericCityguardHateUndead) ;
 MOBSPECIAL_FUNC(HuntingMercenary) ;
+MOBSPECIAL_FUNC(MobIdent) ;
 ROOMSPECIAL_FUNC(Magic_Fountain) ;
 MOBSPECIAL_FUNC(MonkChallenger) ;
 MOBSPECIAL_FUNC(PaladinGuildmaster) ;

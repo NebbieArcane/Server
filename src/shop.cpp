@@ -19,6 +19,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "shop.hpp"
 #include "act.comm.hpp"
@@ -30,6 +31,7 @@
 #include "interpreter.hpp"
 #include "regen.hpp"
 #include "spec_procs.hpp"
+#include "spell_parser.hpp"
 
 namespace Alarmud {
 
@@ -205,7 +207,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 		sprintf(buf,
 				"%s what do you want to buy??"
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	};
 
@@ -221,7 +223,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 		sprintf(buf,
 				shop_index[shop_nr].no_such_item1
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -229,14 +231,14 @@ void shopping_buy(char* arg, struct char_data* ch,
 		sprintf(buf,
 				shop_index[shop_nr].no_such_item1
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		extract_obj(temp1);
 		return;
 	}
 	actualcost=(long)(object_cost(temp1,ch,shop_nr,0)* mult);
 	if(GET_GOLD(ch) < actualcost) {
 		sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 
 		switch(shop_index[shop_nr].temper1) {
 		case 0:
@@ -276,7 +278,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 	sprintf(buf, shop_index[shop_nr].message_buy,
 			GET_NAME(ch), (int) actualcost);
 
-	do_tell(keeper,buf,19);
+	do_tell(keeper,buf,CMD_TELL);
 
 	sprintf(buf,"You now have %s (*%d).\n\r",
 			temp1->short_description,num);
@@ -287,7 +289,7 @@ void shopping_buy(char* arg, struct char_data* ch,
 
 		if(GET_GOLD(ch) < actualcost) {
 			sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
-			do_tell(keeper,buf,19);
+			do_tell(keeper,buf,CMD_TELL);
 
 			switch(shop_index[shop_nr].temper1) {
 			case 0:
@@ -341,13 +343,13 @@ void shopping_sell(char* arg, struct char_data* ch,
 	if(!(*argm))        {
 		sprintf(buf, "%s What do you want to sell??"
 				,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
 	if(!(temp1 = get_obj_in_list_vis(ch,argm,ch->carrying))) {
 		sprintf(buf, shop_index[shop_nr].no_such_item2,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -359,14 +361,14 @@ void shopping_sell(char* arg, struct char_data* ch,
 	if(!(trade_with(temp1,shop_nr))||(temp1->obj_flags.cost<1)) {
 		sprintf(buf,shop_index[shop_nr].do_not_buy,
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 	actualcost = object_cost(temp1,ch,shop_nr,1);
 
 	if(GET_GOLD(keeper) < actualcost) {
 		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -374,7 +376,7 @@ void shopping_sell(char* arg, struct char_data* ch,
 
 	sprintf(buf,shop_index[shop_nr].message_sell,GET_NAME(ch),actualcost);
 
-	do_tell(keeper,buf,19);
+	do_tell(keeper,buf,CMD_TELL);
 
 	sprintf(buf,"The shopkeeper now has %s.\n\r",
 			temp1->short_description);
@@ -382,7 +384,7 @@ void shopping_sell(char* arg, struct char_data* ch,
 
 	if(GET_GOLD(keeper)< actualcost) {
 		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -417,14 +419,14 @@ void shopping_value(char* arg, struct char_data* ch,
 	if(!(*argm))    {
 		sprintf(buf,"%s What do you want me to evaluate??",
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
 	if(!(temp1 = get_obj_in_list_vis(ch,argm,ch->carrying)))    {
 		sprintf(buf,shop_index[shop_nr].no_such_item2,
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
@@ -432,13 +434,13 @@ void shopping_value(char* arg, struct char_data* ch,
 		sprintf(buf,
 				shop_index[shop_nr].do_not_buy,
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return;
 	}
 
 	sprintf(buf,"%s I'll give you %d gold coins for that!",
 			GET_NAME(ch),(int)(object_cost(temp1,ch,shop_nr,1)));
-	do_tell(keeper,buf,19);
+	do_tell(keeper,buf,CMD_TELL);
 
 	return;
 }
@@ -507,6 +509,7 @@ void shopping_list(char* arg, struct char_data* ch,
 	return;
 }
 
+
 int shopping_kill(char* arg, struct char_data* ch,
 				  struct char_data* keeper, int shop_nr) {
 	char buf[100];
@@ -515,13 +518,13 @@ int shopping_kill(char* arg, struct char_data* ch,
 	case 0:
 		sprintf(buf,"%s Non pensarci nemmeno!",
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		return(TRUE);
 
 	case 1:
 		sprintf(buf,"%s Fottiti, verme!",
 				GET_NAME(ch));
-		do_tell(keeper,buf,19);
+		do_tell(keeper,buf,CMD_TELL);
 		GET_HIT(keeper)=MAX(GET_HIT(keeper),10000);
 		return(FALSE);
 
@@ -582,7 +585,7 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 		return(TRUE);
 	}
 
-	if((cmd ==CMD_SELL) && (ch->in_room == shop_index[shop_nr].in_room))
+	if((cmd == CMD_SELL) && (ch->in_room == shop_index[shop_nr].in_room))
 		/* Sell */
 	{
 		shopping_sell(arg,ch,keeper,shop_nr);
@@ -611,7 +614,7 @@ int shop_keeper(struct char_data* ch, int cmd, char* arg, char* mob, int type) {
 			return(TRUE);
 		}
 	}
-	else if((cmd==84) || (cmd==207) || (cmd==172) || (cmd==283) || (cmd==370)) {
+	else if((cmd==CMD_CAST) || (cmd==CMD_RECITE) || (cmd==CMD_USE) || (cmd==CMD_RECALL) || (cmd==CMD_MIND)) {
 		/* Cast, recite, use */
 		if(GetMaxLevel(ch)<IMMORTALE) {
 			act("$N tells you 'No magic or mistical powers here - kid!'.", FALSE, ch, 0, keeper, TO_CHAR);

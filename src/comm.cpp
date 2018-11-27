@@ -398,7 +398,13 @@ void game_loop(int s) {
 					// Was not doing anything useful, probably waiting at initial prompt
 					mudlog(LOG_CHECK,"Fried dummy connection from [HOST:%s]",point->host);
 					write_to_descriptor(point->descriptor,"Timeout!\n\r");
-					close_socket(point);
+                    if(point->connected == CON_EDITING || point->connected == CON_OBJ_EDITING || point->connected == CON_MOB_EDITING) {
+                        write_to_descriptor(point->descriptor,"Smetti di plasmare la materia.\n\r");
+                        act("$n smette di plasmare la materia.", FALSE, point->character, 0, 0, TO_ROOM);
+                        point->connected = CON_PLYNG;
+                        GET_POS(point->character)=POSITION_STANDING;
+                    }
+                    else close_socket(point);
 				}
 			}
 			if((--(point->wait) <= 0) && get_from_q(&point->input, comm)) {
@@ -1304,6 +1310,10 @@ void close_socket(struct descriptor_data* d) {
 	}
 
 	if(d->character) {
+        if(d->connected == CON_EDITING || d->connected == CON_OBJ_EDITING || d->connected == CON_MOB_EDITING) {
+            d->connected = CON_PLYNG;
+            GET_POS(d->character)=POSITION_STANDING;
+        }
 		if(d->connected == CON_PLYNG) {
 			do_save(d->character, "", 0);
 			act("$n ha perso il senso della realta`.", TRUE, d->character, 0, 0,
@@ -1682,7 +1692,18 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 					mudlog(LOG_SYSERR, "$D e vict_obj == NULL in act(comm.c)");
 					i = "";
 				}
-				break;
+            case 'l':
+                i = LUILEI(ch);
+                break;
+            case 'L':
+                if(vict_obj != NULL) {
+                    i = LUILEI((struct char_data*) vict_obj);
+                }
+                else {
+                    mudlog(LOG_SYSERR, "$L e vict_obj == NULL in act(comm.c)");
+                    i = "";
+                }
+                break;
 			case 'm':
 				i = HMHR(ch);
 				break;
@@ -1939,6 +1960,11 @@ int _affected_by_s(struct char_data* ch, int skill) {
 			fa=1;
 		}
 		break;
+    case SKILL_DANGER_SENSE:
+		if(IS_AFFECTED2(ch, AFF2_DANGER_SENSE)) {
+			fa=1;
+		}
+		break;
 	}
 	if(ch->affected)
 		for(hjp = ch->affected; hjp; hjp = hjp->next)
@@ -1993,7 +2019,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 			mask="%N R%R [%iI/%iN/%iS]>> ";
 		}
 		else {
-			mask="%N H%h M%m V%v X%x [%S] %c/%C>> ";
+			mask="%N H%h M%m V%v X%x %S %c/%C>> ";
 		}
 	}
 	if(!ch->specials.fighting
@@ -2139,7 +2165,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					break;
 				case 'T':   /* mob name */
 					if(ch->specials.fighting) {
-						strcpy(tbuf, GET_NAME(ch->specials.fighting));
+						one_argument(GET_NAME(ch->specials.fighting), tbuf);
 					}
 					else {
 						strcpy(tbuf, "*");
@@ -2159,26 +2185,42 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 				/* no break */
 				case 'S':   /* affected spells */
 					*tbuf=0;
+                        
+                    // Parentesi affette da darkness
+                    if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
+                        strcat(tbuf, (i > 1) ? "$c0008[$c0007" : "$c5008[$c0007");
+                    }
+                    else {
+                        strcat(tbuf,"[");
+                    }
+                        
+                        
 					if((i = _affected_by_s(ch, SPELL_FIRESHIELD)) != -1) {
-						strcat(tbuf, (i > 1) ? "F" : "f");
+						strcat(tbuf, (i > 1) ? "$c0009F$c0007" : "$c0001f$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf,"-");
 					}
 					if((i = _affected_by_s(ch, SPELL_SANCTUARY)) != -1) {
-						strcat(tbuf, (i > 1) ? "S" : "s");
+						strcat(tbuf, (i > 1) ? "$c0015S$c0007" : "s");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
 					}
 					if((i = _affected_by_s(ch, SPELL_INVISIBLE)) != -1) {
-						strcat(tbuf, (i > 1) ? "I" : "i");
+						strcat(tbuf, (i > 1) ? "$c0011I$c0007" : "$c0003i$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf,"-");
 					}
 					if((i = _affected_by_s(ch, SPELL_TRUE_SIGHT)) != -1) {
-						strcat(tbuf, (i > 1) ? "T" : "t");
+						strcat(tbuf, (i > 1) ? "$c0014T$c0007" : "$c0006t$c0007");
+					}
+					else if(s_flag) {
+						strcat(tbuf, "-");
+					}
+					if((i = _affected_by_s(ch, SPELL_MIRROR_IMAGES)) != -1) {
+						strcat(tbuf, (i > 1) ? "$c0013M$c0007" : "$c0005m$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
@@ -2190,12 +2232,28 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 						strcat(tbuf, "-");
 					}
 					if((i = _affected_by_s(ch, SPELL_ANTI_MAGIC_SHELL)) != -1) {
-						strcat(tbuf, (i > 1) ? "A" : "a");
+						strcat(tbuf, (i > 1) ? "$c0012A$c0007" : "$c0004a$c0007");
 					}
 					else if(s_flag) {
 						strcat(tbuf, "-");
 					}
-					break;
+					if((i = _affected_by_s(ch, STATUS_QUEST)) != -1) {
+						strcat(tbuf, (i > 1) ? "$c0010Q$c0007" : "$c0002q$c0007");
+					}
+					else if(s_flag) {
+						strcat(tbuf, "-");
+					}
+					
+                    // Parentesi affette da darkness
+                    if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
+                        strcat(tbuf, (i > 1) ? "$c0008]$c0007" : "$c5008]$c0007");
+                    }
+                    else {
+                        strcat(tbuf,"]");
+                    }
+                        
+                    break;
+                        
 				case 'R': /* room number for immortals */
 					if(IS_DIO(ch)) {
 						rm = real_roomp(ch->in_room);

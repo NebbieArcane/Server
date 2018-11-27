@@ -60,6 +60,13 @@ void spell_resurrection(byte level, struct char_data* ch,
 	if(IS_CORPSE(obj)) {
 
 		if(obj->char_vnum) {
+            
+            
+            if(obj->char_vnum >= QUEST_ZONE && obj->char_vnum <= QUEST_ZONE+99) {
+                send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
+                return;
+            }
+            
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch)) {
@@ -638,7 +645,7 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	ch->desc->character = mob;
 	ch->desc->original = ch;
-
+    
 	mob->desc = ch->desc;
 	ch->desc = 0;
 
@@ -659,8 +666,9 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	/* do some fiddling with the strings */
 	buf = (char*)malloc(strlen(GET_NAME(mob)) + strlen(GET_NAME(ch)) + 2);
-	sprintf(buf, "%s %s", GET_NAME(ch), GET_NAME(mob));
-
+	/*sprintf(buf, "%s %s", GET_NAME(ch), GET_NAME(mob));*/
+    sprintf(buf, "%s", GET_NAME(ch));
+    
 	if HAS_PRINCE(ch) {
 		GET_PRINCE(mob)=strdup(GET_PRINCE(ch));
 	}
@@ -1702,8 +1710,8 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim, SPELL_SILENCE)) {
-		affect_from_char(victim,SPELL_SILENCE);
-		send_to_char("Torni a parlare di nuovo.\n\r",victim);
+        affect_from_char(victim,SPELL_SILENCE);
+        send_to_char("Torni a parlare di nuovo.\n\r",victim);
 	}
 	if(affected_by_spell(victim, SPELL_TREE_TRAVEL)) {
 		affect_from_char(victim,SPELL_TREE_TRAVEL);
@@ -1835,7 +1843,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 
-	if(level == MAESTRO_DEI_CREATORI)  {
+	if(level >= IMMORTALE && level < QUESTMASTER)  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
@@ -1865,6 +1873,16 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 			}
 		}
 	}
+    
+    if(level >= QUESTMASTER) {
+        
+        if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
+            affect_from_char(victim,STATUS_QUEST);
+            victim->specials.quest_ref = NULL;
+            send_to_char("Non sei piu' in missione.\n\r",victim);
+        }
+        
+    }
 }
 
 
@@ -2147,6 +2165,8 @@ void spell_conjure_elemental(byte level, struct char_data* ch,
 		act("$N rifiuta di unirsi a tutta la gente che ti segue, ma ti ringrazia del giretto.", TRUE, ch, 0, victim, TO_CHAR);
 	}
 	else {
+        
+        RelateMobToCaster(ch,victim);
 
 
 		if(victim->master) {

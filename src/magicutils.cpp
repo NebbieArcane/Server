@@ -58,15 +58,15 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 	if(HasClass(ch,CLASS_PALADIN)) {
 		char_bonus -= 4;
 	}
-	if(HasClass(mob, CLASS_WARRIOR | CLASS_RANGER |
+	if(HasClass(ch, CLASS_WARRIOR | CLASS_RANGER |
 				CLASS_BARBARIAN | CLASS_MONK)) {
 		char_bonus -= 6;
 	}
 
-	if(GET_DEX(ch) > 17) {
+	if(GET_INT(ch) > 17) {
 		char_bonus ++;
 	}
-	if(GET_DEX(ch) > 18) {
+	if(GET_INT(ch) > 18) {
 		char_bonus ++;
 	}
 
@@ -95,23 +95,23 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 	/* Requiem 2018 - adjust mob power in relation to caster's level */
 
 	if(char_bonus > 0) {
-		if(HasClass(mob, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
-					CLASS_BARBARIAN | CLASS_MONK | CLASS_THIEF)) {
-			mob->points.max_hit = GET_MAX_HIT(mob) + (char_bonus*number(1,5));
+		if(IS_SET(mob->specials.act, ACT_MONK) || IS_SET(mob->specials.act, ACT_WARRIOR) || IS_SET(mob->specials.act, ACT_THIEF) || IS_SET(mob->specials.act, ACT_BARBARIAN) || IS_SET(mob->specials.act, ACT_PALADIN || IS_SET(mob->specials.act, ACT_RANGER))) {
+			mob->points.max_hit += (char_bonus*number(1,5));
 			GET_HIT(mob) = GET_MAX_HIT(mob);
-			int multiplier=2;
+			
+            int multiplier=2;
+            
 			if(mob->specials.mobtype=='A' || mob->specials.mobtype=='L' || mob->specials.mobtype=='B') {
 				multiplier = int(mob->mult_att) * 2;
 			}
 
 			/*mob->specials.damsizedice += final_bonus/i;
 			mob->specials.damnodice += final_bonus/i;*/
-			mob->points.hitroll += char_bonus/2;
+			mob->points.hitroll += char_bonus;
 			mob->points.damroll += char_bonus/multiplier;
 		}
 
-		if(HasClass(mob, CLASS_CLERIC | CLASS_MAGIC_USER | CLASS_DRUID |
-					CLASS_SORCERER | CLASS_PSI)) {
+		if(IS_SET(mob->specials.act, ACT_MAGIC_USER) || IS_SET(mob->specials.act, ACT_DRUID) || IS_SET(mob->specials.act, ACT_CLERIC) || IS_SET(mob->specials.act, ACT_PSI)) {
 			mob->points.max_mana = GET_MAX_MANA(mob) + (char_bonus*number(2,3));
 			GET_MANA(mob) = GET_MAX_MANA(mob);
 			mob->points.mana_gain += (char_bonus*number(3,5));
@@ -122,6 +122,9 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 	struct obj_data* obj, *next;
 	float ratio;
 	int j;
+    struct affected_type* af;
+    struct affected_type af2;
+    
 
 	/*
 	 * experience
@@ -134,6 +137,46 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 
 		GET_EXP(taker) = MIN(GET_EXP(taker), ABS_MAX_EXP);
 	}
+    
+    /*
+     *  switch affects
+     */
+    
+    for(af = taker->affected; af; af = af->next) {
+        if(!affected_by_spell(giver,af->type)) {
+            affect_from_char(taker, af->type);
+        }
+    }
+    
+    for(af = giver->affected; af; af = af->next) {
+        if(!affected_by_spell(taker,af->type)) {
+            
+            af2.type      = af->type;
+            af2.duration  = af->duration;
+            af2.modifier  = af->modifier;
+            af2.location  = af->location;
+            af2.bitvector = af->bitvector;
+            
+            affect_to_char(taker, &af2);
+        }
+        
+        if(af->type == STATUS_QUEST) {
+            taker->specials.quest_ref = giver->specials.quest_ref;
+            if(giver->specials.quest_ref) {
+                (giver->specials.quest_ref)->specials.quest_ref = taker;
+            }
+        }
+        
+    }
+    
+    if(giver->lastmkill != NULL) {
+        free(taker->lastmkill);
+        if(IS_PC(taker)) {
+            taker->lastmkill = strdup(giver->lastmkill);
+        } else {
+            taker->lastmkill = giver->lastmkill;
+        }
+    }
 
 	/*
 	 *  humanoid monsters can cast spells

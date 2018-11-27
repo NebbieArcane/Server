@@ -290,6 +290,7 @@ struct obj_flag_data {
 	ubyte type_flag;     /* Type of item                     */
 	unsigned int wear_flags;     /* Where you can wear it            */
 	unsigned int extra_flags;    /* If it hums,glows etc             */
+    unsigned int extra_flags2;  /* nuovi flags quest, edit, etc     */
 	int weight;         /* Weigt what else                  */
 	int cost;           /* Value when sold (gp.)            */
 	int cost_per_day;   /* Cost to keep pr. real day        */
@@ -460,7 +461,7 @@ struct char_player_data {
 	char* title;        /* PC / NPC s title                     */
 	char* sounds;       /* Sound that the monster makes (in room) */
 	char* distant_snds; /* Sound that the monster makes (other) */
-
+    
 	int iClass;         /* PC s class or NPC alignment          */
 	int hometown;       /* PC s Hometown (zone)                 */
 
@@ -585,6 +586,8 @@ struct char_special_data {
 	Alias*   A_list;
 	struct char_data* misc;
 	struct char_data* fighting; /* Opponent                          */
+    struct char_data* quest_ref; /*  For NPCs it stores the quest owner, For PCs it can be used to store his questor/target */
+    float eq_val_idx; /* Eq Value Index: can be used to store the eq value in a moment and compare it later */
 
 	struct char_data* hunting;  /* Hunting person..                  */
 
@@ -710,7 +713,9 @@ struct char_data {
 	long lStartRoom;
 	long AgeModifier;
 	struct event* points_event[3];   /* events for regening H/M/V */
-	//char *has_killed; /* FLYP 2003 Salva il nome dell'ultima persona che ho ucciso*/
+	
+    char* lastpkill; // last player killed, used also for destroy checks
+    char* lastmkill; // last mob killed, used also for quest checks
 
 };
 
@@ -803,6 +808,25 @@ struct obj_file_elem {
 	ubyte wearpos;
 	ubyte depth;
 	struct obj_affected_type affected[MAX_OBJ_AFFECT];
+    int extra_flags2;
+};
+
+struct old_obj_file_elem {
+    /* Bug, rendeva impossibile rentare oggetti oltre il 32565 */
+    /*sh_int item_number;*/
+    ush_int item_number;
+
+    int value[4];
+    int extra_flags;
+    int weight;
+    int timer;
+    unsigned int bitvector;
+    char name[128];  /* big, but not horrendously so */
+    char sd[128];
+    char desc[256];
+    ubyte wearpos;
+    ubyte depth;
+    struct obj_affected_type affected[MAX_OBJ_AFFECT];
 };
 
 struct obj_file_u {
@@ -813,6 +837,16 @@ struct obj_file_u {
 	int minimum_stay; /* For stasis */
 	int  number;       /* number of objects */
 	struct obj_file_elem objects[MAX_OBJ_SAVE];
+};
+
+struct old_obj_file_u {
+    char owner[20];    /* Name of player                     */
+    int gold_left;     /* Number of goldcoins left at owner  */
+    int total_cost;    /* The cost for all items, per day    */
+    int last_update;  /* Time in seconds, when last updated */
+    int minimum_stay; /* For stasis */
+    int  number;       /* number of objects */
+    struct old_obj_file_elem objects[MAX_OBJ_SAVE];
 };
 
 /* ***********************************************************

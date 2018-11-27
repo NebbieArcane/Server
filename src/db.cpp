@@ -1985,6 +1985,12 @@ struct char_data* read_mobile(int nr, int type) {
 	mob->commandp = 0;
 	mob->commandp2 = 0;
 	mob->waitp = 0;
+    
+    mob->lastpkill = NULL;
+    mob->lastmkill = NULL;
+    
+    mob->points.max_move = NewMobMov(mob);
+    mob->points.move = mob->points.max_move;
 
 	/* Check to see if associated with a script, if so, set it up */
 	if(IS_SET(mob->specials.act, ACT_SCRIPT)) {
@@ -2071,6 +2077,7 @@ void clone_obj_to_obj(struct obj_data* obj, struct obj_data* osrc) {
 
 	obj->obj_flags.type_flag = osrc->obj_flags.type_flag;
 	obj->obj_flags.extra_flags = osrc->obj_flags.extra_flags;
+    obj->obj_flags.extra_flags2 = osrc->obj_flags.extra_flags2;
 	obj->obj_flags.wear_flags = osrc->obj_flags.wear_flags;
 	obj->obj_flags.value[0] = osrc->obj_flags.value[0];
 	obj->obj_flags.value[1] = osrc->obj_flags.value[1];
@@ -2181,12 +2188,17 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 			break;
 		}
 	}
-
+    
 	for(; (i < MAX_OBJ_AFFECT); i++) {
 		obj->affected[i].location = APPLY_NONE;
 		obj->affected[i].modifier = 0;
 	}
 
+    if(*chk == 'F')
+    {
+        obj->obj_flags.extra_flags2 = fread_number(f);
+    }
+    
 	SetStatus("Reading forbidden string in read_obj_from_file", NULL);
 
 	if(*chk == 'P') {
@@ -2236,7 +2248,13 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 			fprintf(f, "A\n%d %d\n", obj->affected[i].location,
 					obj->affected[i].modifier);
 	}
-
+    
+    if(obj->obj_flags.extra_flags2)
+    {
+        fprintf(f, "F\n");
+        fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
+    }
+        
 	if(obj->szForbiddenWearToChar) {
 		fprintf(f, "P\n");
 		fwrite_string(f, obj->szForbiddenWearToChar);
@@ -3035,6 +3053,9 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	ch->specials.charging = 0; /* null it out to be sure. */
 	ch->specials.charge_dir = -1; /* null it out */
+    
+    ch->specials.quest_ref = 0;
+    ch->specials.eq_val_idx = 0.0;
 
 	st->abilities = ch->abilities;
 
@@ -3042,6 +3063,10 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	st->alignment = ch->specials.alignment;
 	st->spells_to_learn = ch->specials.spells_to_learn;
+    if(!IS_SET(ch->specials.act, PLR_NEW_EQ))
+    {
+        SET_BIT(ch->specials.act, PLR_NEW_EQ);
+    }
 	st->act = ch->specials.act;
 	st->affected_by = ch->specials.affected_by;
 	st->affected_by2 = ch->specials.affected_by2;
@@ -3531,6 +3556,18 @@ void free_char(struct char_data* ch) {
 		affect_remove(ch, af);
 	}
 
+    if(ch->lastpkill)       // destroy
+    {
+        free(ch->lastpkill);
+        ch->lastpkill = NULL;
+    }
+    
+    if(ch->lastmkill)       // quests
+    {
+        free(ch->lastmkill);
+        ch->lastmkill = NULL;
+    }
+    
 	if(ch->skills) {
 		free(ch->skills);
 		ch->skills = NULL;
@@ -3673,6 +3710,8 @@ void reset_char(struct char_data* ch) {
 	ch->next_fighting = 0;
 	ch->next_in_room = 0;
 	ch->specials.fighting = 0;
+    ch->specials.quest_ref = 0;
+    ch->specials.eq_val_idx = 0.0;
 	ch->specials.PosPrev = POSITION_STANDING;
 	for(i = 0; i < MAX_POSITION; i++) {
 		ch->specials.TempoPassatoIn[i] = 0;
@@ -3834,24 +3873,38 @@ void reset_char(struct char_data* ch) {
 	//GET_LEVEL(ch,0) = 60;
 	//}
 
-	if(!strcmp(GET_NAME(ch), "Alar")) {  //Giovanni
+	if(!strcmp(GET_NAME(ch), "Alar")) {         //Giovanni
 		GET_LEVEL(ch, 0) = 60;
 	}
-	if(!strcmp(GET_NAME(ch), "Isildur")) {  //Nicola
+	if(!strcmp(GET_NAME(ch), "Isildur")) {      //Nicola
 		GET_LEVEL(ch, 0) = 59;
 	}
-	if(!strcmp(GET_NAME(ch), "Requiem")) {  //Francesco
+	if(!strcmp(GET_NAME(ch), "Requiem")) {      //Francesco
 		GET_LEVEL(ch, 0) = 59;
 	}
-	if(!strcmp(GET_NAME(ch), "Flyp")) {  //Enrico
+	if(!strcmp(GET_NAME(ch), "Flyp")) {         //Enrico
 		GET_LEVEL(ch, 0) = 59;
 	}
-	if(!strcmp(GET_NAME(ch), "Nihil")) {  //Marco
+	if(!strcmp(GET_NAME(ch), "Nihil")) {        //Marco
 		GET_LEVEL(ch, 0) = 58;
+        
+        if(PORT == DEVEL_PORT)                  //Marco su DEVEL_PORT
+        {
+            GET_LEVEL(ch, 0) = 59;
+        }
 	}
-	if(!strcmp(GET_NAME(ch), "LadyOfPain")) {  //Giuseppe
+	if(!strcmp(GET_NAME(ch), "LadyOfPain")) {   //Giuseppe
 		GET_LEVEL(ch, 0) = 58;
+
+        if(PORT == DEVEL_PORT)                  //Giuseppe su DEVEL_PORT
+        {
+            GET_LEVEL(ch, 0) = 59;
+        }
 	}
+    if(!strcmp(GET_NAME(ch), "Montero")
+                && PORT == DEVEL_PORT)  {       //Corrado su DEVEL_PORT
+        GET_LEVEL(ch, 0) = 59;
+    }
 
     /* Montero 10-Sep-2018 db.cpp: controllo se il livello del toon è >= 58 */
     if ( GET_LEVEL(ch, 0) >= 58 )
@@ -4859,6 +4912,33 @@ ACTION_FUNC(do_WorldSave) {
 	send_to_char("Comando disabilitato\r\n", ch);
 	return;
 }
+    
+/* Mob related handy functions */
+    
+    int NewMobMov (struct char_data* mob) {
+        int extra_mov = 0;
+    
+    /* Nuova assegnazione punti movimento mob */
+        if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) > ALLIEVO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < INIZIATO )
+        {
+            extra_mov += GET_LEVEL(mob, WARRIOR_LEVEL_IND);
+        }
+        else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= INIZIATO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < MAESTRO)
+        {
+            extra_mov += (50 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        }
+        else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= MAESTRO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < PRINCIPE)
+        {
+            extra_mov += (100 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        }
+        else if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) >= PRINCIPE)
+        {
+            extra_mov += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
+        }
+        
+    return(mob->points.max_move+extra_mov);
+    
+    }
 
 }
 

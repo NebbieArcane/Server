@@ -67,6 +67,7 @@ void spell_incendiary_cloud(byte level, struct char_data* ch, struct char_data* 
 void spell_comp_languages(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_identify(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_enchant_armor(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+void spell_quest(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_fire_breath(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_frost_breath(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_acid_breath(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);

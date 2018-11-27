@@ -83,6 +83,8 @@ extern const char* wear_bits[];
 
 extern const char* extra_bits[];
 
+extern const char* extra_bits2[];
+
 extern const char* room_bits[];
 
 extern const char* exit_bits[];
@@ -159,6 +161,14 @@ extern const char* spell_desc[];
 
 extern struct QuestItem QuestList[4][IMMORTAL];
 
+extern const char* QuestKind[];
+    
+extern const char* NameGenStart[];
+    
+extern const char* NameGenMid[];
+    
+extern const char* NameGenEnd[];
+    
 extern const char* att_kick_kill_ch[];
 
 extern const char* att_kick_kill_victim[];

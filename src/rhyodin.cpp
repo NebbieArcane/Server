@@ -1594,8 +1594,8 @@ MOBSPECIAL_FUNC(ragno_intermittente) {
 			af.type      = SKILL_DANGER_SENSE;
 			af.duration  = (int) GetMaxLevel(ch);
 			af.modifier  = 0;
-			af.location  = APPLY_NONE;
-			af.bitvector = 0;
+			af.location  = APPLY_AFF2;
+			af.bitvector = AFF2_DANGER_SENSE;
 			affect_to_char(ch, &af);
 		}
 

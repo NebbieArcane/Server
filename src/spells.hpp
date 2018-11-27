@@ -357,7 +357,10 @@ namespace Alarmud {
 
 #define SKILL_IMMOLATION	289
 
-#define MAX_EXIST_SPELL         289   /* max number of skills/spells */
+/* status */
+#define STATUS_QUEST      290
+    
+#define MAX_EXIST_SPELL         290   /* max number of skills/spells/status */
 
 
 

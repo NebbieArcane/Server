@@ -21,6 +21,7 @@
 /***************************  Local    include ************************************/
 #include "create.mob.hpp"
 #include "comm.hpp"
+#include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "snew.hpp"
@@ -52,6 +53,7 @@ namespace Alarmud {
 #define CHANGE_MOB_SUSCEP    19
 #define CHANGE_MOB_SOUND     20
 #define CHANGE_MOB_DSOUND    21
+#define CHANGE_MOB_SPECIAL   22
 #define MOB_HIT_RETURN       99
 
 #define ENTER_CHECK        1
@@ -68,7 +70,7 @@ const char* mob_edit_menu = "    1) Name                    2) Short description
 							"   15) Exp flags/amount       16) Default position\n\r"
 							"   17) Resistances            18) Immunities\n\r"
 							"   19) Susceptibilities       20) Sounds\n\r"
-							"   21) Distant sounds\n\r\n\r";
+							"   21) Distant sounds         22) Special\n\r\n\r";
 
 
 void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
@@ -85,7 +87,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 15) {
+		if(update < 0 || update > 31) {
 			return;
 		}
 		i = 1<<update;
@@ -106,7 +108,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 
 	row = 0;
-	for(i = 0; i < 16; i++) {
+	for(i = 0; i < 32; i++) {
 		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
 		if(i & 1) {
 			row++;
@@ -351,6 +353,10 @@ void MobEdit(struct char_data* ch, const char* arg) {
 			ch->specials.medit = CHANGE_MOB_DSOUND;
 			ChangeMobDsound(ch, "", ENTER_CHECK);
 			return;
+        case 22:
+            ch->specials.medit = CHANGE_MOB_SPECIAL;
+            ChangeMobSpecial(ch, "", ENTER_CHECK);
+            return;
 		default:
 			UpdateMobMenu(ch);
 			return;
@@ -424,10 +430,68 @@ void MobEdit(struct char_data* ch, const char* arg) {
 	case MOB_HIT_RETURN:
 		MobHitReturn(ch, arg, 0);
 		return;
+    case CHANGE_MOB_SPECIAL:
+        ChangeMobSpecial(ch, arg, 0);
+        return;
 	default:
 		mudlog(LOG_ERROR, "Got to bad spot in MobEdit");
 		return;
 	}
+}
+
+
+void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) {
+    char buf[256], proc[256], parms[256];
+    struct char_data* mob;
+    struct OtherSpecialProcEntry* op;
+    int i;
+    int lastotherproc = 0;
+
+    if(type != ENTER_CHECK)
+        if(!*arg || (*arg == '\n')) {
+            ch->specials.medit = MOB_MAIN_MENU;
+            UpdateMobMenu(ch);
+            return;
+        }
+
+    mob=ch->specials.mobedit;
+    if(type != ENTER_CHECK) {
+        arg = one_argument(arg, proc);
+        only_argument(arg,parms);
+        for(i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++)
+        {
+            lastotherproc++;
+        }
+        
+        if(!(op=(struct OtherSpecialProcEntry*)
+        bsearch(&proc,
+                otherproc,
+                lastotherproc,
+                sizeof(struct OtherSpecialProcEntry),
+                nomecompare)))
+        {
+            mudlog(LOG_ERROR,
+                   "mobile_assign: Mobile %d not found in database.",mob_index[mob->nr].iVNum);
+        }
+        else
+        {
+            mob_index[mob->nr].func         = op->proc;
+            mob_index[mob->nr].specname     = op->nome;
+            mob_index[mob->nr].specparms    = strdup(parms);
+        }
+        ch->specials.medit = MOB_MAIN_MENU;
+        UpdateMobMenu(ch);
+        return;
+    }
+
+    sprintf(buf, VT_HOMECLR);
+    send_to_char(buf, ch);
+
+    sprintf(buf, "Current Mobile Special: %s %s",mob_index[mob->nr].specname, mob_index[mob->nr].specparms);
+    send_to_char(buf, ch);
+    send_to_char("\n\r\n\rNew Mobile Special (nome parametri): ", ch);
+
+    return;
 }
 
 

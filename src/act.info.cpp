@@ -566,7 +566,7 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 }
 
 void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
-	char buffer[MAX_STRING_LENGTH];
+	char buffer[MAX_STRING_LENGTH],buffer2[MAX_STRING_LENGTH];
 	int j, found, percent, otype;
 	struct obj_data* tmp_obj;
 	struct affected_type* aff;
@@ -761,24 +761,52 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-		if(IS_AFFECTED(i, AFF_SANCTUARY)) {
-			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS)) {
-				act("$c0015$n brilla di luce propria!", FALSE, i, 0, ch, TO_VICT);
+        if(IS_PC(i))
+        {
+            strcpy(buffer2, i->player.name);
+        }
+        else
+        {
+            strcpy(buffer2, i->player.short_descr);
+            CAP(buffer2);
+        }
+        
+		if(IS_AFFECTED(i, AFF_SANCTUARY))
+        {
+			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+            {
+                sprintf(buffer,"$c0015");
+                strcat(buffer,buffer2);
+                strcat(buffer, " brilla di luce propria!");
+				act(buffer, FALSE, i, 0, ch, TO_VICT);
 			}
 		}
 
-		if(IS_AFFECTED(i, AFF_GROWTH)) {
-			act("$c0003$n e` enorme!", FALSE, i, 0, ch, TO_VICT);
+		if(IS_AFFECTED(i, AFF_GROWTH))
+        {
+            sprintf(buffer,"$c0003");
+            strcat(buffer,buffer2);
+			strcat(buffer, " e` enorme!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-		if(IS_AFFECTED(i, AFF_FIRESHIELD)) {
+		if(IS_AFFECTED(i, AFF_FIRESHIELD))
+        {
 			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
-				act("$c0001$n e` avvolt$b in una luce fiammeggiante!", FALSE, i, 0, ch,
-					TO_VICT);
+            {
+                sprintf(buffer,"$c0001");
+                strcat(buffer,buffer2);
+                strcat(buffer, " e` avvolt$b in una luce fiammeggiante!");
+                act(buffer, FALSE, i, 0, ch, TO_VICT);
+            }
 		}
 
-		if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS)) {
-			act("$c0008$n e` avvolt$b nell'oscurita`!", FALSE, i, 0, ch, TO_VICT);
+		if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+        {
+            sprintf(buffer,"$c0008");
+            strcat(buffer,buffer2);
+            strcat(buffer, " e` avvolt$b nell'oscurita`!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
 	}
@@ -847,6 +875,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		if(IS_NPC(i)) {
 			strcpy(buffer, i->player.short_descr);
+            CAP(buffer);
 		}
 		else {
 			strcpy(buffer, GET_NAME(i));
@@ -949,7 +978,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 							int mode, int num) {
-	char buffer[MAX_STRING_LENGTH];
+	char buffer[MAX_STRING_LENGTH], buffer2[MAX_STRING_LENGTH];
 	char tmp[10];
 	int j, found, percent;
 	struct obj_data* tmp_obj;
@@ -1143,26 +1172,54 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
-		if(IS_AFFECTED(i, AFF_SANCTUARY)) {
-			if(!affected_by_spell(i, SPELL_GLOBE_DARKNESS)) {
-				act("$c0015$n brilla di luce propria!", FALSE, i, 0, ch, TO_VICT);
-			}
-		}
-
-		if(IS_AFFECTED(i, AFF_GROWTH)) {
-			act("$c0003$n e` enorme!", FALSE, i, 0, ch, TO_VICT);
-		}
-
-		if(IS_AFFECTED(i, AFF_FIRESHIELD)) {
-			if(!affected_by_spell(i,SPELL_GLOBE_DARKNESS))
-				act("$c0001$n e` avvolt$b in una luce fiammeggiante!", FALSE, i, 0, ch,
-					TO_VICT);
-		}
-
-		if(affected_by_spell(i, SPELL_GLOBE_DARKNESS)) {
-			act("$c0008$n e` avvolt$b nell'oscurita`!", FALSE, i, 0, ch, TO_VICT);
-		}
-
+        if(IS_PC(i))
+        {
+            strcpy(buffer2, i->player.name);
+        }
+        else
+        {
+            strcpy(buffer2, i->player.short_descr);
+            CAP(buffer2);
+        }
+        
+        if(IS_AFFECTED(i, AFF_SANCTUARY))
+        {
+            if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+            {
+                sprintf(buffer,"$c0015");
+                strcat(buffer,buffer2);
+                strcat(buffer, " brilla di luce propria!");
+                act(buffer, FALSE, i, 0, ch, TO_VICT);
+            }
+        }
+        
+        if(IS_AFFECTED(i, AFF_GROWTH))
+        {
+            sprintf(buffer,"$c0003");
+            strcat(buffer,buffer2);
+            strcat(buffer, " e` enorme!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
+        }
+        
+        if(IS_AFFECTED(i, AFF_FIRESHIELD))
+        {
+            if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+            {
+                sprintf(buffer,"$c0001");
+                strcat(buffer,buffer2);
+                strcat(buffer, " e` avvolt$b in una luce fiammeggiante!");
+                act(buffer, FALSE, i, 0, ch, TO_VICT);
+            }
+        }
+        
+        if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
+        {
+            sprintf(buffer,"$c0008");
+            strcat(buffer,buffer2);
+            strcat(buffer, " e` avvolt$b nell'oscurita`!");
+            act(buffer, FALSE, i, 0, ch, TO_VICT);
+        }
+        
 	}
 	else if(mode == 1) {
 		if(i->player.description) {
@@ -3380,6 +3437,12 @@ ACTION_FUNC(do_where) {
 
 	for(i = character_list; i; i = i->next) {
 		if(isname(name, i->player.name) && CAN_SEE(ch, i)) {
+            
+            if(!IS_PC(i) && affected_by_spell(i,STATUS_QUEST) && GetMaxLevel(ch) < IMMORTALE) {
+                act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+                break;
+            }
+            
 			if((i->in_room != NOWHERE) &&
 					((GetMaxLevel(ch)>=IMMORTALE) || (real_roomp(i->in_room)->zone ==
 							real_roomp(ch->in_room)->zone))) {
@@ -4038,8 +4101,8 @@ ACTION_FUNC(do_attribute) {
 					}
 					if(*spells[aff->type-1] || *spells[aff->type-1]=='!') {
 
-						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "$c0005Spell : '$c0014%s$c0005'",spells[aff->type-1]);
+                        snprintf(buf, MAX_STRING_LENGTH-1,
+                                 "$c0005Spell : '$c0014%s$c0005' - $c0014%d$c0005",spells[aff->type-1],aff->duration);
 						act(buf,FALSE, ch,0,0,TO_CHAR);
 					}
 
@@ -4094,7 +4157,7 @@ ACTION_FUNC(do_value) {
 			act("$n studia $N", FALSE, ch, 0, vict, TO_ROOM);
 		}
 		else if(obj) {
-			act("$n sudia $p intensamente", FALSE, ch, obj, 0, TO_ROOM);
+			act("$n studia $p intensamente", FALSE, ch, obj, 0, TO_ROOM);
 		}
 		else {
 			return;
@@ -4125,7 +4188,7 @@ ACTION_FUNC(do_value) {
 
 	if(number(1,101) < ch->skills[SKILL_EVALUATE].learned/2) {
 		send_to_char("L'oggetto e`: ", ch);
-		sprintbit((unsigned long)obj->obj_flags.extra_flags, extra_bits, buf);
+		sprintbit2((unsigned long)obj->obj_flags.extra_flags, extra_bits, (unsigned long)obj->obj_flags.extra_flags2, extra_bits2, buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 	}

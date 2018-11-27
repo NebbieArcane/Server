@@ -41,6 +41,7 @@
 #include "snew.hpp"
 #include "spell_parser.hpp"
 #include "comm.hpp"
+#include "magic.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "reception.hpp"
@@ -927,7 +928,7 @@ ACTION_FUNC(do_system) {
 		;
 
 	if(!*(arg + i)) {
-		send_to_char("That must be a mistake...\n\r", ch);
+		send_to_char("Cosa vuoi comunicare a tutto il mondo?\n\r", ch);
 	}
 	else {
 		sprintf(buf, "\n\r%s\n\r", arg + i);
@@ -1605,8 +1606,23 @@ ACTION_FUNC(do_stat) {
 
 				sprintf(buf, "$c0005Master is '$c0014%s$c0005'    ",
 						((k->master) ? GET_NAME(k->master) : "NOBODY"));
-
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                
+                if(k->specials.quest_ref) {
+                    
+                    if(IS_PC(k)) {
+                        sprintf(buf, "$c0005Quest Target: $c0014%s",
+                                (k->specials.quest_ref->player.name ?
+                                 k->specials.quest_ref->player.name : "-"));
+                        act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                    } else {
+                        sprintf(buf, "$c0005Quest Owner: $c0014%s",
+                                (k->specials.quest_ref->player.name ?
+                                 k->specials.quest_ref->player.name : "-"));
+                        act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                    }
+                    
+                }
 
 				sprintf(buf, "$c0005Followers are:");
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
@@ -1621,6 +1637,13 @@ ACTION_FUNC(do_stat) {
 							   GET_NAME(k));
 					}
 				}
+                
+                sprintf(buf, "$c0005Last PKill: $c0014%s", k->lastpkill == NULL ? "-" : k->lastpkill);    // destroy
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                
+                sprintf(buf, "$c0005Last MKill: $c0014%s", k->lastmkill == NULL ? "-" : k->lastmkill);    // quests
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                
 				/* immunities */
 				if(k->M_immune) {
 					send_to_char("$c0005Immune to:$c0014", ch);
@@ -1782,6 +1805,11 @@ ACTION_FUNC(do_stat) {
 			sprintbit((unsigned) j->obj_flags.extra_flags, extra_bits, buf);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
+            
+            send_to_char("Extra flags2: ", ch);
+            sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf);
+            strcat(buf, "\n\r");
+            send_to_char(buf, ch);
 
 			sprintf(buf, "Weight: %d, Value: %d, Cost/day: %d, Timer: %d\n\r",
 					j->obj_flags.weight, j->obj_flags.cost,
@@ -1989,18 +2017,18 @@ ACTION_FUNC(do_ooedit) {
 			"Help for Ooedit.\n\r"
 			"Command line Parameters OEDIT <NAME> <FIELD> <VALUE>\n\r"
 			"List of Fields :\n\r"
-			"ldesc  = Long Item description | sdesc  = Short description\n\r"
-			"extra  = Extra descriptions*NI*| name   = Item name\n\r"
-			"wflags = wear flags            | afflags= affect flags\n\r"
-			"exflags= extra flags           | weight = item weight\n\r"
+			"ldesc  = Long Item description | sdesc    = Short description\n\r"
+			"extra  = Extra descriptions*NI*| name     = Item name\n\r"
+			"wflags = wear flags            | afflags  = affect flags\n\r"
+			"exflags= extra flags           | exflags2 = extra flags2\n\r"
 			"cost   = item cost to rent per day\n\r"
-			"value  = Item value if sold    | timer  = item timer\n\r"
-			"type   = item type\n\r"
-			"v0     = value[0] of item      | v1     = value[1] of item\n\r"
-			"v2     = value[2] of item      | v3     = value[3] of item\n\r"
+			"value  = Item value if sold    | timer    = item timer\n\r"
+			"type   = item type             | weight   = item weight\n\r"
+			"v0     = value[0] of item      | v1       = value[1] of item\n\r"
+			"v2     = value[2] of item      | v3       = value[3] of item\n\r"
 			"aff1   = special affect 1 (syntax is: oedit aff1 <modifer> <type>)\n\r"
-			"aff2   = special affect 2      | aff3   = special affect 3\n\r"
-			"aff4   = special affect 4      | aff5   = special affect 5\n\r"
+			"aff2   = special affect 2      | aff3     = special affect 3\n\r"
+			"aff4   = special affect 4      | aff5     = special affect 5\n\r"
 			"\n\rNote: NI = Not implemented.\n\r", ch);
 		return;
 	} /* End Help! */
@@ -2075,6 +2103,12 @@ ACTION_FUNC(do_ooedit) {
 			j->obj_flags.extra_flags = atol(parmstr);
 			return;
 		} /* end exflags */
+        
+        if(!strcmp(field, "exflags2")) {
+            arg = one_argument(arg, parmstr);
+            j->obj_flags.extra_flags2 = atol(parmstr);
+            return;
+        } /* end exflags2 */
 
 		if(!strcmp(field, "weight")) {
 			arg = one_argument(arg, parmstr);
@@ -2253,12 +2287,12 @@ ACTION_FUNC(do_showskills) {
 	}
 	else {
 		int i;
+        boost::format fmt("[%3d] %-30s %3ld %-14s %s %s\n\r");
 		sb.append(
-			"NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r\n\r");
+			"NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r                      256=B 512=P 1024=R 2048=I\n\r\n\r");
 		sb.append(
-			"SkNum  Nome                           Val Conoscenza    flags");
+			"SkNum  Nome                           Val Conoscenza    flags\n\r");
 		for(i = 0; i < MAX_EXIST_SPELL; i++) {
-			boost::format fmt("[%3d] %-30s %3d %-14s %s %s\n\r");
 			if(spells[i] && *spells[i] != '\n' && mob->skills[i + 1].learned) {
 				string sflags; // SALVO faccio vedere le classi di skills
 				sflags.append(" ").append(
@@ -2289,12 +2323,24 @@ ACTION_FUNC(do_showskills) {
 				if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_WARRIOR)) {
 					sflags.append("W ");
 				}
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_BARBARIAN)) {
+                    sflags.append("B ");
+                }
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_PALADIN)) {
+                    sflags.append("P ");
+                }
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_RANGER)) {
+                    sflags.append("R ");
+                }
+                if(IS_SET(mob->skills[i + 1].flags, SKILL_KNOWN_PSI)) {
+                    sflags.append("I");
+                }
 				sflags.append("]");
 				fmt % (i + 1) % (spells[i]) % mob->skills[i + 1].learned
 				% how_good(mob->skills[i + 1].learned)
 				% (IsSpecialized(mob->skills[i + 1].special) ?
 				   "(special)" : "") % sflags.c_str();
-				sb.append(sflags);
+                sb.append(fmt.str().c_str());
 				fmt.clear();
 			}
 		}
@@ -3214,7 +3260,7 @@ void force_return(struct char_data* ch, const char* arg, int cmd) {
 			char_from_room(per);
 			char_to_room(per, mob->in_room);
 
-			mudlog(LOG_CHECK, "Switching the eq of %s .", ch->player.name);
+			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
 		}
 
@@ -3261,6 +3307,7 @@ ACTION_FUNC(do_return) {
 
 		if(IS_SET(ch->specials.act, ACT_POLYSELF) && cmd) {
 			mudlog(LOG_CHECK, "%s was a POLY.", ch->player.name);
+            
 			mob = ch;
 			per = ch->desc->original;
 
@@ -3270,8 +3317,9 @@ ACTION_FUNC(do_return) {
 			char_from_room(per);
 			char_to_room(per, mob->in_room);
 
-			mudlog(LOG_CHECK, "Switching the eq of %s .", ch->player.name);
+			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
+            
 		}
 
 		ch->desc->character = ch->desc->original;
@@ -4442,7 +4490,7 @@ ACTION_FUNC(do_restore) {
 		if(IS_PC(ch) && CAN_SEE(victim, ch)) {
 			if(GetMaxLevel(victim) < IMMORTALE)
 				act(
-					"La mano di $N ti sfiora appena.... le tue ferite si rimarginano,\n\r"
+					"La mano di $N ti sfiora appena.... le tue ferite si rimarginano.\n\r"
 					"Una nuova forza scorre in te!", FALSE,
 					victim, 0, ch, TO_CHAR);
 			else {
@@ -4860,11 +4908,11 @@ ACTION_FUNC(do_invis) {
 		return;
 	}
 
-	if(cmd == 242 && !IS_DIO_MINORE(ch)) {
+	if(cmd == CMD_INVISIBLE && !IS_DIO_MINORE(ch)) {
 		return;
 	}
 
-	if(cmd != 242) {
+	if(cmd != CMD_INVISIBLE) {
 		if(affected_by_spell(ch, SPELL_INVISIBLE)) {
 			affect_from_char(ch, SPELL_INVISIBLE);
 		}
@@ -6195,6 +6243,111 @@ ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
 	else {
 		mudlog(LOG_CHECK, buf);
 	}
+}
+
+ACTION_FUNC(do_personalize)
+{
+    char arg1[MAX_INPUT_LENGTH];
+    char arg2[MAX_INPUT_LENGTH];
+    struct obj_data* obj;
+    struct char_data* plr;
+    
+    argument_interpreter(arg, arg1, arg2);
+    
+    if(!*arg1 || !*arg2)
+    {
+        send_to_char("\n\rSintassi:\n\r   Personalize nomeoggetto nomepg\n\r", ch);
+        return;
+    }
+    
+    if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying)))
+    {
+        send_to_char("Non hai niente del genere con te...\n\r", ch);
+        return;
+    }
+    
+    if(!(plr = get_char_room_vis(ch, arg2)))
+    {
+        send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+        return;
+    }
+    
+    if(IS_MOB(plr))
+    {
+        send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r",ch);
+        return;
+    }
+    
+    if(pers_on(plr, obj))
+    {
+        act("Il nome di $N e' gia' inciso su $p!", FALSE, ch, obj, plr, TO_CHAR);
+        return;
+    }
+    
+    if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+    {
+        send_to_char("Di nuovo?!?\n\r",ch);
+        return;
+    }
+
+    pers_obj(ch, plr, obj, CMD_PERSONALIZE);
+    
+    act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
+    act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
+}
+
+
+ACTION_FUNC(do_checktypos)
+{
+    if(!*arg)
+    {
+        send_to_char("Digita 'checktypos list' oppure 'checktypos clear now'\n\r",         ch);
+        return;
+    }
+
+    if( !str_cmp( arg, "clear now" ) && IS_MAESTRO_DEL_CREATO(ch))
+    {
+        FILE *fp;
+        
+        if( !( fp = fopen( TYPO_FILE, "w" ) ) )
+        {
+            mudlog(LOG_ERROR,"%s:%s","do_checktypos",strerror(errno));
+            return;
+        }
+        fclose( fp );
+        send_to_char( "Il file dei typos e' stato cancellato.\r\n", ch );
+        mudlog(LOG_PLAYERS, "%s ha cancellato il file dei typos.", GET_NAME(ch));
+        return;
+    }
+    
+    if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
+    {
+        int num = 0;
+        char buf[MAX_STRING_LENGTH];
+        FILE *fp;
+        
+        if( ( fp = fopen( TYPO_FILE, "r" ) ) != nullptr )
+        {
+            page_string(ch->desc, "\r\n", 1);
+            while( !feof( fp ) )
+            {
+                while( num < ( MAX_STRING_LENGTH - 4 ) && ( buf[num] = fgetc( fp ) ) != EOF && buf[num] != '\n' && buf[num] != '\r' )
+                    ++num;
+                
+                int c = fgetc( fp );
+                if( ( c != '\n' && c != '\r' ) || c == buf[num] )
+                    ungetc( c, fp );
+                
+                buf[num++] = '\r';
+                buf[num++] = '\n';
+                buf[num] = '\0';
+                page_string(ch->desc, buf, 1);
+                num = 0;
+            }
+            fclose( fp );
+        }
+        return;
+    }
 }
 
 //FLYP 2004 Perdono

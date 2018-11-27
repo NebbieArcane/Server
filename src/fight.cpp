@@ -20,6 +20,7 @@
 #include "structs.hpp"
 #include "logging.hpp"
 #include "constants.hpp"
+#include "utility.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "fight.hpp"
@@ -61,21 +62,21 @@ char DestroyedItems;  /* set in MakeScraps */
 
 /* Weapon attack texts */
 struct attack_hit_type attack_hit_text[] = {
-	{"hit",    "hits"},            /* TYPE_HIT      */
-	{"pound",  "pounds"},          /* TYPE_BLUDGEON */
-	{"pierce", "pierces"},         /* TYPE_PIERCE   */
-	{"slash",  "slashes"},         /* TYPE_SLASH    */
-	{"whip",   "whips"},           /* TYPE_WHIP     */
-	{"claw",   "claws"},           /* TYPE_CLAW     */
-	{"bite",   "bites"},           /* TYPE_BITE     */
-	{"sting",  "stings"},          /* TYPE_STING    */
-	{"crush",  "crushes"},         /* TYPE_CRUSH    */
-	{"cleave", "cleaves"},
-	{"stab",   "stabs"},
-	{"smash",  "smashes"},
-	{"smite",  "smites"},
-	{"blast",  "blasts"},
-	{"strike","strikes"}                /* type RANGE_WEAPON */
+	{"colpisci",    "colpisce"},            /* TYPE_HIT      */
+	{"randelli",  "randella"},          /* TYPE_BLUDGEON */
+	{"perfori", "perfora"},         /* TYPE_PIERCE   */
+	{"tagli",  "taglia"},         /* TYPE_SLASH    */
+	{"frusti",   "frusta"},           /* TYPE_WHIP     */
+	{"artigli",   "artiglia"},           /* TYPE_CLAW     */
+	{"mordi",   "morde"},           /* TYPE_BITE     */
+	{"pungi",  "punge"},          /* TYPE_STING    */
+	{"frantumi",  "frantuma"},         /* TYPE_CRUSH    */
+	{"fendi", "fende"},
+	{"pugnali",   "pugnala"},
+	{"distruggi",  "distrugge"},
+	{"impatti",  "impatta"},
+	{"fracassi",  "fracassa"},
+	{"centri","centra"}                /* type RANGE_WEAPON */
 };
 
 /* Location of attack texts */
@@ -85,24 +86,24 @@ struct attack_hit_type attack_hit_text[] = {
    Gaia 7/2000 */
 
 struct attack_hit_type location_hit_text[] = {
-	{"in $S body","body",},                /* 0 */
-	{"in $S shoulder","shoulder",},        /* 1 */
-	{"in $S chest","chest",},              /* 2 */
-	{"in $S neck",      "neck"},           /* 3 */
-	{"in $S neck",      "neck"},           /* 4 */
-	{"in $S body",     "body"},            /* 5 */
-	{"in $S head",      "head"},           /* 6 */
-	{"in $S leg",  "leg"},                 /* 7 */
-	{"in $S foot","foot"},                 /* 8 */
-	{"in $S left hand", "left hand"},      /* 9 */
-	{"in $S right arm", "right arm"},      /* 10 */
-	{"in $S left arm",  "left arm"},       /* 11 */
-	{"in $S back",      "back"},           /* 12 */
-	{"in $S stomach",   "stomach"},        /* 13 */
-	{"in $S left wrist",  "left wrist"},   /* 14 */
-	{"in $S right wrist", "right wrist"},  /* 15 */
-	{"in $S right hand", "right hand"},    /* 16 */
-	{"in $S left hand","left hand"}        /* 17 */
+	{"sul corpo"," sul corpo",},                /* 0 */
+	{"sulle spalle","sulle spalle",},        /* 1 */
+	{"in petto","in petto",},              /* 2 */
+	{"sul collo",      "sul collo"},           /* 3 */
+	{"sul collo",      "sul collo"},           /* 4 */
+	{"sul corpo",     "sul corpo"},            /* 5 */
+	{"alla testa",      "alla testa"},           /* 6 */
+	{"alla gamba",  "alla gamba"},                 /* 7 */
+	{"sul piede","sul piede"},                 /* 8 */
+	{"sulla mano sinistra", "sulla mano sinistra"},      /* 9 */
+	{"sul braccio destro", "sul braccio destra"},      /* 10 */
+	{"sul braccio sinistro",  "sul braccio sinistro"},       /* 11 */
+	{"dietro la schiena",      "dietro la schiena"},           /* 12 */
+	{"nello stomaco",   "nello stomaco"},        /* 13 */
+	{"sul polso sinistro",  "sul polso sinistro"},   /* 14 */
+	{"sul polso destro", "sul polso destro"},  /* 15 */
+	{"sulla mano destra", "sulla mano destra"},    /* 16 */
+	{"sulla mano sinistra","sulla mano sinistra"}        /* 17 */
 };
 
 /* Questa routine viene tolta dal damage message
@@ -996,7 +997,6 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	/*
 	 *   return them from polymorph
 	 */
-
 	make_corpse(ch,killedbytype);
 	zero_rent(ch);
 	extract_char(ch);
@@ -1010,7 +1010,7 @@ int clan_gain(struct char_data* ch,int gain) {
 	if(IS_PC(ch) && HAS_PRINCE(ch)) {
 
 		k=get_char_room(GET_PRINCE(ch),ch->in_room);
-		if(k) {
+		if(k && IS_PC(k)) {
 			quota=(int)(gain/100*6);
 			gain-=quota;
 			sprintf(buf,"Paghi il giusto tributo di esperienza (%d punti) a $N!",
@@ -1123,7 +1123,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 					gain_exp_rev(ch,-5000000);
 				}
 			}
-
+            
 			if(IS_PC(ch) && !(killedbytype == SPELL_CHANGE_FORM)) {
 				if(!IS_PRINCE(ch)) {
 					gain_exp_rev(killer,-GET_EXP(killer)/100);
@@ -1139,9 +1139,13 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 				if(killer!=ch) {  // SALVO non si puo' mettere il pkill per un suicidio
 					if(IS_POLY(killer)) { // SALVO il flag pkiller va' all'originale, corretto
 						affect_to_char(killer->desc->original,&af);
+                        killer->desc->original->lastpkill = strdup(GET_NAME(ch));
+                        mudlog(LOG_PLAYERS,"Set Lastkill of %s on %s",GET_NAME(ch),GET_NAME(killer));
 					}
 					else {
 						affect_to_char(killer,&af);
+                        killer->lastpkill = strdup(GET_NAME(ch));
+                        mudlog(LOG_PLAYERS,"Set Lastkill of %s on %s",GET_NAME(ch),GET_NAME(killer));
 					}
 				}
 			}
@@ -1702,57 +1706,87 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	} dam_weapons[] = {
 
 		{
-			"$n misses $N.",                           /*    0    */
-			"You miss $N.",
-			"$n misses you."
+			"$n manca $N.",                           /*    0    */
+			"manchi $N.",
+			"$n ti manca."
 		},
 
 		{
-			"$n bruises $N with $s #w #l.",                       /*  1.. 2  */
-			"You bruise $N as you #w $M #l.",
-			"$n bruises you as $e #W your #L."
+			"$n #W $N #l graffiandol$B.",                       /*  1.. 2  */
+			"#w $N #l graffiandol$B.",
+			"$n ti #W #L graffiandoti."
 		},
 
 		{
-			"$n barely #W $N #l.",                                   /*  3.. 4  */
-			"You barely #w $N #l.",
-			"$n barely #W your #L."
+			"$n #W appena $N #l.",                                   /*  3.. 4  */
+			"#w appena $N #l.",
+			"$n ti #W appena #L."
 		},
 
 		{
 			"$n #W $N #l.",                                          /*  5.. 10   */
-			"You #w $N #l.",
-			"$n #W your #L."
+			"#w $N #l.",
+			"$n ti #W #L."
 		},
 
 		{
-			"$n #W $N hard #l.",                                     /*  11..15 */
-			"You #w $N hard #l.",
-			"$n #W you hard on your #L."
+			"$n #W $N duramente #l.",                                     /*  11..15 */
+			"#w $N duramente #l.",
+			"$n ti #W duramente #L."
 		},
 
 		{
-			"$n #W $N very hard #l.",                                /* 16..25  */
-			"You #w $N very hard #l.",
-			"$n #W you very hard on you #L."
+			"$n #W $N molto duramente #l.",                                /* 16..25  */
+			"#w $N molto duramente #l.",
+			"$n ti #W molto duramente #L."
 		},
 
 		{
-			"$n #W $N extremely well #l.",                          /* 26..35  */
-			"You #w $N extremely well #l.",
-			"$n #W you extremely well on your #L."
+			"$n #W $N con estrema forza #l.",                          /* 26..35  */
+			"#w $N con estrema forza #l.",
+			"$n ti #W con estrema forza #L."
 		},
 
 		{
-			"$n $c0011massacres$c0007 $N with $s #w #l.",     /* 36..45    */
-			"You $c0010massacre$c0007 $N with your #w #l.",
-			"$n $c0009massacres$c0007 you with $s #w on your #L."
+			"$n #W $N #l $c0011massacrandol$B$c0007!",     /* 36..45    */
+			"#w $N #l $c0010massacrandol$B$c0007!",
+			"$n ti #W #L $c0009massacrandoti$c0007!"
 		},
 
 		{
-			"$n $c0011devastates$c0007 $N with $s #w #l.",    /* > 45 */
-			"You $c0010devastate$c0007 $N with your #w #l.",
-			"$n $c0009devastates$c0007 you with $s #w on your #L."
+			"$n #W $N #l $c0011devastandol$B$c0007!",    /* 46..55 */
+			"#w $N #l $c0010devastandol$B$c0007!",
+			"$n ti #W #L $c0009devastandoti$c0007!"
+		},
+        
+		{
+			"$n #W $N #l $c0011sbaragliandol$B$c0007!",    /* 56..65 */
+			"#w $N #l $c0010sbaragliandol$B$c0007!",
+			"$n ti #W #L $c0009sbaragliandoti$c0007!"
+		},
+        
+		{
+			"$n #W $N #l $c0011polverizzandol$B$c0007!",    /* 66..75 */
+			"#w $N #l $c0010polverizzandol$B$c0007!",
+			"$n ti #W #L $c0009polverizzandoti$c0007!"
+		},
+
+		{
+			"$n #W $N #l $c0011sbriciolandol$B$c0007!",    /* 76..85 */
+			"#w $N #l $c0010sbriciolandol$B$c0007!",
+			"$n ti #W #L $c0009sbriciolandoti$c0007!"
+		},
+        
+		{
+			"$n #W $N #l $c0011annientandol$B$c0007!",    /* 86..95 */
+			"#w $N #l $c0010annientandol$B$c0007!",
+			"$n ti #W #L $c0009annientandoti$c0007!"
+		},
+        
+		{
+			"$n #W $N #l $c0011sterminandol$B$c0007!",    /* > 95 */
+			"#w $N #l $c0010sterminandol$B$c0007!",
+			"$n ti #W #L $c0009sterminandoti$c0007!"
 		}
 
 	};
@@ -1787,19 +1821,37 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	else if(dam <= 45) {
 		snum = 7;
 	}
-	else {
+	else if(dam <= 55) {
 		snum = 8;
 	}
+	else if(dam <= 65) {
+		snum = 9;
+	}
+	else if(dam <= 75) {
+		snum = 10;
+	}
+	else if(dam <= 85) {
+		snum = 11;
+	}
+	else if(dam <= 95) {
+		snum = 12;
+	}
+	else {
+		snum = 13;
+	}
+    
 	buf = replace_string(dam_weapons[snum].to_room, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
 	act(buf, FALSE, ch, wield, victim, TO_NOTVICT);
 
 	buf = replace_string(dam_weapons[snum].to_char, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
+    if(IS_SET(ch->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0003[%d]$c0007",buf, dam); }
 	act(buf, FALSE, ch, wield, victim, TO_CHAR);
 
 	buf = replace_string(dam_weapons[snum].to_victim, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
+    if(IS_SET(victim->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0001[%d]$c0007",buf, dam); }
 	act(buf, FALSE, ch, wield, victim, TO_VICT);
 
 }
@@ -2442,6 +2494,10 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 		}
 		else { /* victim is not pc */
 			if(IS_PC(ch)) {
+                
+                free(ch->lastmkill);
+                ch->lastmkill = strdup(GET_NAME(victim));
+                
 				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch),
 					   GET_NAME_DESC(victim));
 			}
@@ -4814,7 +4870,16 @@ int GetFormType(struct char_data* ch) {
 		return(TYPE_CLAW);
 		break;
 	case RACE_TREE:
-		return(TYPE_SMITE);
+        if(num <= 60) {
+			return(TYPE_WHIP);
+		}
+		else if(num < 80) {
+			return(TYPE_SMITE);
+		}
+		else {
+			return(TYPE_STING);
+		}
+
 		break;
 	case RACE_MFLAYER:
 		if(num <= 60) {
@@ -4847,9 +4912,9 @@ int MonkDodge(struct char_data* ch, struct char_data* v, int* dam) {
 	if(number(1, 20000) < v->skills[SKILL_DODGE].learned*
 			GET_LEVEL(v, MONK_LEVEL_IND)) {
 		*dam = 0;
-		act("You dodge the attack", FALSE, ch, 0, v, TO_VICT);
-		act("$N dodges the attack", FALSE, ch, 0, v, TO_CHAR);
-		act("$N dodges $n's attack", FALSE, ch, 0, v, TO_NOTVICT);
+		act("Schivi l'attacco", FALSE, ch, 0, v, TO_VICT);
+		act("$N schiva l'attacco", FALSE, ch, 0, v, TO_CHAR);
+		act("$N schiva l'attacco di $n", FALSE, ch, 0, v, TO_NOTVICT);
 	}
 	else {
 		*dam -= GET_LEVEL(ch, MONK_LEVEL_IND)/10;

@@ -2558,7 +2558,7 @@
 				"value": 131072,
 				"comment": ""
 			},
-			"PLR_EMPTY4": {
+			"PLR_NEW_EQ": {
 				"value": 262144,
 				"comment": ""
 			},
@@ -2883,6 +2883,10 @@
 			"CAN_MOB_EDIT": {
 				"value": 8192,
 				"comment": "this user can use medit to edit mobs"
+			},
+			"PWP_MODE": {
+				"value": 16384,
+				"comment": "show the exact amount of damage for each attack"
 			}
 		},
 		"e_sys_flags": {
@@ -3278,6 +3282,25 @@
 				"value": 2147483648,
 				"comment": ""
 			}
-		}
+		},
+        "e_item2_flag": {
+            "comment": "Bitvector for 'extra_flags2'\n",
+            "ITEM2_QUEST": {
+                "value": 1,
+                "comment": "item part of a quest"
+            },
+            "ITEM2_EDIT": {
+                "value": 2,
+                "comment": "edited item"
+            },
+            "ITEM2_NO_LOCATE": {
+                "value": 4,
+                "comment": "no-locate item"
+            },
+            "ITEM2_PERSONAL": {
+                "value": 8,
+                "comment": "personalized item"
+            }
+        }
 	}
 }

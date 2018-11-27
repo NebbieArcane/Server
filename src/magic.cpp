@@ -35,6 +35,8 @@
 #include "opinion.hpp"
 #include "regen.hpp"
 #include "skills.hpp"
+#include "spec_procs.hpp"
+#include "spec_procs2.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
 namespace Alarmud {
@@ -1821,6 +1823,11 @@ void spell_summon(byte level, struct char_data* ch,
 	if((rp = real_roomp(ch->in_room)) == NULL) {
 		return;
 	}
+    
+    if(!IS_PC(victim) && affected_by_spell(victim,STATUS_QUEST)) {
+        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
 
 	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("Un'oscura magia ti blocca.\n\r", ch);
@@ -2280,7 +2287,7 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_ANTI_MAGIC_SHELL)) {
 		send_to_char("Crei uno scudo anti-magia attorno a te.\n\r", ch);
-		spell_dispel_magic(MAESTRO_DEI_CREATORI,ch,ch,0);
+		spell_dispel_magic(CREATORE,ch,ch,0);
 
 		af.type      = SPELL_ANTI_MAGIC_SHELL;
 		af.duration  = (level<IMMORTALE) ? 1 : level;                                  /* one tic only! */
@@ -2493,8 +2500,12 @@ void spell_identify(byte level, struct char_data* ch,
 
 	assert(ch && (obj || victim));
 
-	if(obj) {
-		send_to_char("La conoscenza ti pervade:\n\r", ch);
+	if(obj)
+    {
+        if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
+        {
+            send_to_char("La conoscenza ti pervade:\n\r", ch);
+        }
 
 		sprintf(buf, "Oggetto: '%s', Tipo di Oggetto ", obj->name);
 		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
@@ -2515,7 +2526,7 @@ void spell_identify(byte level, struct char_data* ch,
 		}
 
 		send_to_char("L'oggetto e': ", ch);
-		sprintbit(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,buf);
+		sprintbit2(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,static_cast<unsigned>(obj->obj_flags.extra_flags2),extra_bits2,buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 
@@ -2671,7 +2682,8 @@ void spell_identify(byte level, struct char_data* ch,
 		}
 	}
 
-	if(GetMaxLevel(ch)<LOW_IMMORTAL) {
+	if(GetMaxLevel(ch)<LOW_IMMORTAL && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
+    {
 		act("Vieni sopraffatt$b da un'ondata di stanchezza.",FALSE,ch,0,0,TO_CHAR);
 		act("$n cade a terra privo di sensi.",FALSE,ch,0,0,TO_ROOM);
 		WAIT_STATE(ch,PULSE_VIOLENCE*2); // identify
@@ -2770,6 +2782,23 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 	}
 }
 
+void spell_quest(byte level, struct char_data* ch,
+					 struct char_data* victim, struct obj_data* obj) {
+	struct affected_type af;
+
+	if((!affected_by_spell(victim, STATUS_QUEST))) {
+
+		act("$n viene colt$b dal senso del dovere.",TRUE,victim,0,0,TO_ROOM);
+		act("Senti di avere un compito su questa terra.",TRUE,victim,0,0,TO_CHAR);
+
+		af.type      = STATUS_QUEST;
+        af.duration  = level;
+		af.modifier  = 0;
+		af.location  = APPLY_NONE;
+		af.bitvector = 0;
+		affect_to_char(victim, &af);
+	}
+}
 
 /* ***************************************************************************
  *                     NPC spells..                                          *

@@ -481,10 +481,12 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	}
 	else if(loc == APPLY_AFF2) {
 		if(add) {
-			SET_BIT(ch->specials.affected_by2, mod); // Montero 16-Sep-18
+			SET_BIT(ch->specials.affected_by2, bitv);
+            SET_BIT(ch->specials.affected_by2, mod);
 		}
 		else {
-			REMOVE_BIT(ch->specials.affected_by2, mod); // Montero 16-Sep-18
+			REMOVE_BIT(ch->specials.affected_by2, bitv);
+            REMOVE_BIT(ch->specials.affected_by2, mod);
 		}
 		return;
 	}
@@ -2423,7 +2425,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, const char* name) {
 				   GET_NAME_DESC(ch), ch->in_room, ch, ch->nMagicNumber);
 		}
 		if(isname(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i)  || (!IS_PC(i) && affected_by_spell(i,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2438,7 +2440,7 @@ struct char_data* get_char_room_vis(struct char_data* ch, const char* name) {
 				   GET_NAME_DESC(ch), ch->in_room, ch, ch->nMagicNumber);
 		}
 		if(isname2(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i) || (!IS_PC(i) && affected_by_spell(i,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2477,7 +2479,7 @@ struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int*
 			assert(0);
 		}
 		if(isname(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i) || (!IS_PC(i) && affected_by_spell(i,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2493,7 +2495,7 @@ struct char_data* get_char_vis_world(struct char_data* ch, const char* name,int*
 				   GET_NAME_DESC(i), i, i->nMagicNumber);
 		}
 		if(isname2(tmp, GET_NAME(i))) {
-			if(CAN_SEE(ch, i)) {
+			if(CAN_SEE(ch, i) || (!IS_PC(ch) && affected_by_spell(ch,STATUS_QUEST))) {
 				if(j == number) {
 					return(i);
 				}
@@ -2746,6 +2748,49 @@ struct obj_data* create_money(int amount) {
 	return(obj);
 }
 
+void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd)
+{
+    char personal[MAX_INPUT_LENGTH];
+    
+    if(cmd == CMD_PERSONALIZE)
+    {
+        mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
+    }
+    else if(cmd == CMD_GIVE)
+    {
+        mudlog(LOG_PLAYERS,"CMD_GIVE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
+    }
+    else
+    {
+        mudlog(LOG_ERROR,"pers_obj: wrong command");
+        return;
+    }
+    
+    SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+    
+    sprintf(personal,"%s ED%s",obj->name,GET_NAME(plr));
+    free(obj->name);
+    obj->name = (char*)strdup(personal);
+    
+    mudlog(LOG_PLAYERS, "%s Add key%s on %s[%d].", GET_NAME(god), personal, obj->short_description, obj->item_number);
+}
+
+bool pers_on(struct char_data* ch, struct obj_data* obj)
+{
+    char name[25];
+    
+    strcpy(name, "ED");
+    strcat(name, GET_NAME(ch));
+
+    if(isname(name, obj->name))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
 
 
 /* Generic Find, designed to find any object/character                    */

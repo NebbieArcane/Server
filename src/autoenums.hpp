@@ -116,6 +116,13 @@ Bitvector for 'affected_by'*/
 	constexpr unsigned long IMM_PLUS2                                    =32768;
 	constexpr unsigned long IMM_PLUS3                                    =65536;
 	constexpr unsigned long IMM_PLUS4                                    =131072;
+// Flag type: E_ITEM2_FLAG -- start
+/*
+Bitvector for 'extra_flags2'*/
+	constexpr unsigned long ITEM2_QUEST                                  =1; /*item part of a quest*/
+	constexpr unsigned long ITEM2_EDIT                                   =2; /*edited item*/
+	constexpr unsigned long ITEM2_NO_LOCATE                              =4; /*no-locate item*/
+	constexpr unsigned long ITEM2_PERSONAL                               =8; /*personalized item*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
@@ -235,7 +242,7 @@ For players : specials.act*/
 	constexpr unsigned long PLR_FREEZE                                   =32768; /*The player is frozen  must have pissed an immo off*/
 	constexpr unsigned long PLR_NOTELL                                   =65536; /*The player does not hear tells*/
 	constexpr unsigned long PLR_MAILING                                  =131072;
-	constexpr unsigned long PLR_EMPTY4                                   =262144;
+	constexpr unsigned long PLR_NEW_EQ                                   =262144;
 	constexpr unsigned long PLR_EMPTY5                                   =524288;
 	constexpr unsigned long PLR_NOBEEP                                   =1048576; /*ignore all beeps*/
 // Flag type: E_ROOM_FLAGS -- start
@@ -322,6 +329,7 @@ user flags*/
 	constexpr unsigned long USE_PAGING                                   =2048; /*pause screens?*/
 	constexpr unsigned long CAN_OBJ_EDIT                                 =4096; /*this user can use oedit to edit objects*/
 	constexpr unsigned long CAN_MOB_EDIT                                 =8192; /*this user can use medit to edit mobs*/
+	constexpr unsigned long PWP_MODE                                     =16384; /*show the exact amount of damage for each attack*/
 
 //Template for enum to unsigned byte
 

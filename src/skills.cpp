@@ -1505,7 +1505,7 @@ void slip_in_climb(struct char_data* ch, int dir, int room) {
 ACTION_FUNC(do_tan) {
 	struct obj_data* j=0;
 	struct obj_data* hide;
-	char itemname[80],itemtype[80],hidetype[80],buf[MAX_STRING_LENGTH];
+	char itemname[80],itemtype[80],article[80],hidetype[80],hidekeys[80],buf[MAX_STRING_LENGTH];
 	int percent=0;
 	int i =0 ;
 
@@ -1527,13 +1527,13 @@ ACTION_FUNC(do_tan) {
 		return;
 	}
 	if(MOUNTED(ch)) {
-		send_to_char("Not from this mount you cannot!\n\r",ch);
+		send_to_char("Non puoi conciare da cavallo!\n\r",ch);
 		return;
 	}
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
 		if(!HasClass(ch,CLASS_BARBARIAN|CLASS_WARRIOR|CLASS_RANGER|CLASS_DRUID)) {
-			send_to_char("What do you think you are, A tanner?\n\r",ch);
+			send_to_char("Pensi di essere un conciatore?\n\r",ch);
 			return;
 		}
 	}
@@ -1542,18 +1542,18 @@ ACTION_FUNC(do_tan) {
 	arg = one_argument(arg,itemtype);
 
 	if(!*itemname) {
-		send_to_char("Tan what?\n\r",ch);
+		send_to_char("Scuoiare cosa??\n\r",ch);
 		return;
 	}
 
 	if(!*itemtype) {
-		send_to_char("I see that, but what do you wanna make?\n\r",ch);
+		send_to_char("Si certo, ma cosa vuoi creare di preciso?\n\r",ch);
 		return;
 	}
 
 	if(!(j = get_obj_in_list_vis(ch, itemname,
 								 real_roomp(ch->in_room)->contents))) {
-		send_to_char("Where did that carcuss go?\n\r",ch);
+		send_to_char("Dov'e' andata la carcassa\n\r",ch);
 		return;
 	}
 	else {
@@ -1568,11 +1568,11 @@ ACTION_FUNC(do_tan) {
 					j->affected[1].modifier=0; /* make corpse unusable for another tan */
 
 					sprintf(buf,
-							"You hack at %s but manage to only destroy the hide.\n\r",
+							"Tenti di scuoiare %s ma non fai altro che distruggerne la pelle.\n\r",
 							j->short_description);
 					send_to_char(buf,ch);
 
-					sprintf(buf, "%s tries to skins %s for it's hide, but destroys it.",
+					sprintf(buf, "%s tenta di scuoiare %s ma non fa altro che distruggerne la pelle.",
 							GET_NAME(ch),j->short_description);
 					act(buf,TRUE, ch, 0, 0, TO_ROOM);
 					LearnFromMistake(ch, SKILL_TAN, 0, 95);
@@ -1583,7 +1583,7 @@ ACTION_FUNC(do_tan) {
 
 				/* item not a corpse if v3 = 0 */
 				if(!j->obj_flags.value[ 3 ]) {
-					send_to_char("Sorry, this is not a carcuss.\n\r",ch);
+					send_to_char("Non e' esattamente un corpo.\n\r",ch);
 					return;
 				}
 
@@ -1600,7 +1600,7 @@ ACTION_FUNC(do_tan) {
 					char_bonus +=2 ;
 				}
 				if(HasClass(ch,CLASS_RANGER)) {
-					char_bonus +=3;
+					char_bonus +=5;
 				}
 				if(HasClass(ch,CLASS_DRUID)) {
 					char_bonus +=4;
@@ -1641,45 +1641,54 @@ ACTION_FUNC(do_tan) {
 				   oggetto */
 
 				case RACE_HALFBREED :
-					sprintf(hidetype,"halfbreed leather");
+					sprintf(hidetype," in pelle d'halfbreed");
+                    sprintf(hidekeys," pelle halfbreed");
 					acapply=-1;
 					break;
 				case RACE_HUMAN     :
-					sprintf(hidetype,"human leather");
+					sprintf(hidetype," di pelle umana");
+                    sprintf(hidekeys," pelle umana");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_ELVEN     :
-					sprintf(hidetype,"elf hide");
+					sprintf(hidetype," di pelle elfica");
+                    sprintf(hidekeys," pelle elfica elfo");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_DWARF     :
-					sprintf(hidetype,"dwarf hide");
+					sprintf(hidetype," di pelle nanica");
+                    sprintf(hidekeys," pelle nanica nano");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_HALFLING  :
-					sprintf(hidetype,"halfing hide");
+					sprintf(hidetype," in pelle d'halfling");
+                    sprintf(hidekeys," pelle halfling");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_GNOME     :
-					sprintf(hidetype,"gnome hide");
+					sprintf(hidetype," di pelle gnomica");
+                    sprintf(hidekeys," pelle halfbreed");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_REPTILE  :
-					sprintf(hidetype,"reptile hide");
+					sprintf(hidetype," in pelle di rettile");
+                    sprintf(hidekeys," pelle rettile");
 					acapply=3;
 					break;
 				case RACE_SPECIAL  :
 				case RACE_LYCANTH  :
-					sprintf(hidetype,"hairy leather");
+					sprintf(hidetype," di pelliccia");
+                    sprintf(hidekeys," pelliccia");
 					acapply=2;
 					break;
 				case RACE_DRAGON   :
-					sprintf(hidetype,"dragon hide");
+					sprintf(hidetype," a scaglie di drago");
+                    sprintf(hidekeys," scaglie drago");
 					acapply=6;
 					break;
 				case RACE_UNDEAD   :
@@ -1691,235 +1700,290 @@ ACTION_FUNC(do_tan) {
 				case RACE_UNDEAD_ZOMBIE  :
 				case RACE_UNDEAD_SKELETON :
 				case RACE_UNDEAD_GHOUL    :
-					sprintf(hidetype,"rotting hide");
+					sprintf(hidetype," d'ossa");
+                    sprintf(hidekeys," ossa");
 					acapply=-2;
 					lev=(int)lev/2;
 					break;
 				case RACE_ORC      :
-					sprintf(hidetype,"orc hide");
+					sprintf(hidetype," di pelle orchesca");
+                    sprintf(hidekeys," pelle orchesca orco");
 					acapply=0;
 					lev=(int)lev/2;
 					break;
 				case RACE_INSECT   :
-					sprintf(hidetype,"insectiod hide");
+					sprintf(hidetype," di carapace d'insetto");
+                    sprintf(hidekeys," carapace insetto");
 					acapply=2;
 					break;
 				case RACE_ARACHNID :
-					sprintf(hidetype,"hairy leather");
+					sprintf(hidetype," di ragnatele");
+                    sprintf(hidekeys," ragnatele ragno");
 					acapply=1;
 					lev=(int)lev/2;
 					break;
 				case RACE_DINOSAUR :
-					sprintf(hidetype,"thick leather");
+					sprintf(hidetype," in pelle di sauro");
+                    sprintf(hidekeys," pelle sauro");
 					acapply=3;
 					break;
 				case RACE_FISH     :
-					sprintf(hidetype,"fishy hide");
+					sprintf(hidetype," di lische");
+                    sprintf(hidekeys," lische pesce");
 					acapply=3;
 					break;
 				case RACE_BIRD     :
-					sprintf(hidetype,"feathery hide");
+					sprintf(hidetype," di piume");
+                    sprintf(hidekeys," piume uccello");
 					acapply=0;
 					lev=(int)lev/2;
 					break;
 				case RACE_GIANT    :
-					sprintf(hidetype,"giantish hide");
+					sprintf(hidetype," di pelle spessa");
+                    sprintf(hidekeys," pelle gigante");
 					acapply=3;
 					break;
 				case RACE_PREDATOR :
-					sprintf(hidetype,"elastic leather");
+					sprintf(hidetype," di pelle elastica");
+                    sprintf(hidekeys," pelle elastica");
 					acapply=1;
 					break;
 				case RACE_PARASITE :
-					sprintf(hidetype,"purulent leather");
+					sprintf(hidetype," di pelle purulenta");
+                    sprintf(hidekeys," pelle purulenta");
 					acapply=1;
 					break;
 				case RACE_SLIME    :
-					sprintf(hidetype,"transparent leather");
+					sprintf(hidetype," di materia gelatinosa");
+                    sprintf(hidekeys," materia gelatinosa slime");
 					acapply=0;
 					lev=(int)lev/2;
 					break;
 				case RACE_DEMON    :
-					sprintf(hidetype,"demon hide");
+					sprintf(hidetype," in pelle di demone");
+                    sprintf(hidekeys," pelle demone");
 					acapply=4;
 					break;
 				case RACE_SNAKE    :
-					sprintf(hidetype,"snake hide");
+					sprintf(hidetype," in pelle di serpente");
+                    sprintf(hidekeys," pelle serpente");
 					acapply=3;
 					break;
 				case RACE_HERBIV   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," di pelle gialla");
+                    sprintf(hidekeys," pelle gialla");
 					acapply=1;
 					break;
 				case RACE_TREE     :
-					sprintf(hidetype,"bark hide");
+					sprintf(hidetype," di corteccia");
+                    sprintf(hidekeys," corteccia albero");
 					acapply=5;
 					break;
 				case RACE_VEGGIE   :
-					sprintf(hidetype,"green hide");
+					sprintf(hidetype," di foglie");
+                    sprintf(hidekeys," foglie pianta");
 					acapply=2;
 					break;
 				case RACE_ELEMENT  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," di pelle colorata");
+                    sprintf(hidekeys," pelle colorata elementale");
 					acapply=1;
 					break;
 				case RACE_PLANAR   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," in pelle di planare");
+                    sprintf(hidekeys," pelle planare");
 					acapply=1;
 					break;
 				case RACE_DEVIL    :
-					sprintf(hidetype,"devil hide");
+					sprintf(hidetype," di pelle rosso sangue");
+                    sprintf(hidekeys," pelle diavolo");
 					acapply=4;
 					break;
 				case RACE_GHOST    :
-					sprintf(hidetype,"ghostly hide");
+					sprintf(hidetype," di tessuti trasparenti");
+                    sprintf(hidekeys," tessuti trasparenti fantasma");
 					acapply=1;
 					break;
 				case RACE_GOBLIN   :
-					sprintf(hidetype,"goblin hide");
+					sprintf(hidetype," in pelle di goblin");
+                    sprintf(hidekeys," pelle goblin");
 					acapply=0;
 					lev=(int)lev/2;
 					break;
 				case RACE_TROLL    :
-					sprintf(hidetype,"troll leather");
+					sprintf(hidetype," in pelle di troll");
+                    sprintf(hidekeys," pelle troll");
 					acapply=2;
 					break;
 				case RACE_GNOLL    :
-					sprintf(hidetype,"gnoll leather");
+					sprintf(hidetype," in pelle di gnoll");
+                    sprintf(hidekeys," pelle gnoll");
 					acapply=2;
 					break;
 				case RACE_VEGMAN   :
-					sprintf(hidetype,"green hide");
+					sprintf(hidetype," di fibre vegetali");
+                    sprintf(hidekeys," pelle fibre vegetale");
 					acapply=2;
 					break;
 				case RACE_MFLAYER  :
-					sprintf(hidetype,"mindflayer hide");
+					sprintf(hidetype," in pelle di mindflayer");
+                    sprintf(hidekeys," pelle mindflayer");
 					acapply=1;
 					break;
 				case RACE_PRIMATE  :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," in pelliccia di scimmia");
+                    sprintf(hidekeys," pelliccia scimmia");
 					acapply=0;
 					break;
 				case RACE_ENFAN    :
-					sprintf(hidetype,"enfan hide");
+					sprintf(hidetype," in pelle di enfan");
+                    sprintf(hidekeys," pelle enfan");
 					acapply=-1;
 					lev=(int)lev/2;
 					break;
 				case RACE_DARK_ELF     :
-					sprintf(hidetype,"drow hide");
+					sprintf(hidetype," in pelle di drow");
+                    sprintf(hidekeys," pelle drow");
 					acapply=-2;
 					lev=(int)lev/2;
 					break;
 				case RACE_GOLEM    :
-					sprintf(hidetype,"golem hide");
+					sprintf(hidetype," di materia animata");
+                    sprintf(hidekeys," materia golem");
 					acapply=1;
 					break;
 				case RACE_SKEXIE   :
-					sprintf(hidetype,"skexie");
+					sprintf(hidetype," in pelle di skexie");
+                    sprintf(hidekeys," pelle skexie");
 					acapply=1;
 					break;
 				case RACE_LIZARDMAN:
-					sprintf(hidetype,"lizard hide");
+					sprintf(hidetype," in pelle di lucertola");
+                    sprintf(hidekeys," pelle lucertola");
 					acapply=1;
 					break;
 				case RACE_TROGMAN  :
 				case RACE_PATRYN   :
 				case RACE_LABRAT   :
 				case RACE_SARTAN   :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," di pelle sporca");
+                    sprintf(hidekeys," pelle sporca");
 					acapply=1;
 					break;
 				case RACE_TYTAN   :
-					sprintf(hidetype,"tytan hide");
+					sprintf(hidetype," in pelle di titano");
+                    sprintf(hidekeys," pelle titano");
 					acapply=3;
 					break;
 				case RACE_SMURF    :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," in pelle di smurf");
+                    sprintf(hidekeys," pelle smurf");
 					acapply=0;
 					break;
 				case RACE_ROO      :
-					sprintf(hidetype,"roo hide");
+					sprintf(hidetype," in pelle di canguro");
+                    sprintf(hidekeys," pelle canguro");
 					acapply=1;
 					break;
 				case RACE_HORSE    :
 				case RACE_DRAAGDIM :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," di pellame");
+                    sprintf(hidekeys," pellame");
 					acapply=2;
 					break;
 				case RACE_ASTRAL   :
-					sprintf(hidetype,"strange hide");
+					sprintf(hidetype," di pelle sconosciuta");
+                    sprintf(hidekeys," pelle sconosciuta");
 					acapply=2;
 					break;
 				case RACE_GOD      :
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," di materia divina");
+                    sprintf(hidekeys," materia divina");
 					acapply=3;
 					break;
 				case RACE_GIANT_HILL   :
-					sprintf(hidetype,"hill giant hide");
+					sprintf(hidetype," verde collina");
+                    sprintf(hidekeys," pelle gigante colline");
 					acapply=2;
 					break;
 				case RACE_GIANT_FROST  :
-					sprintf(hidetype,"frost giant hide");
+					sprintf(hidetype," azzurro ghiaccio");
+                    sprintf(hidekeys," pelle gigante ghiacci");
 					acapply=2;
 					break;
 				case RACE_GIANT_FIRE   :
-					sprintf(hidetype,"fire giant hide");
+					sprintf(hidetype," rosso fuoco");
+                    sprintf(hidekeys," pelle gigante fuoco");
 					acapply=2;
 					break;
 				case RACE_GIANT_CLOUD  :
-					sprintf(hidetype,"cloud giant hide");
+					sprintf(hidetype," bianco nuvola");
+                    sprintf(hidekeys," pelle gigante nuvole");
 					acapply=1;
 					break;
 				case RACE_GIANT_STORM  :
-					sprintf(hidetype,"storm giant hide");
+					sprintf(hidetype," blu tempesta");
+                    sprintf(hidekeys," pelle gigante tempeste");
 					acapply=2;
 					break;
 				case RACE_GIANT_STONE  :
-					sprintf(hidetype,"stone giant hide");
+					sprintf(hidetype," grigio pietra");
+                    sprintf(hidekeys," pezzi gigante pietra");
 					acapply=3;
 					break;
 				case RACE_DRAGON_RED   :
-					sprintf(hidetype,"red dragon hide");
+					sprintf(hidetype," a scaglie rosse");
+                    sprintf(hidekeys," scaglie drago rosso");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_BLACK :
-					sprintf(hidetype,"black dragon hide");
+					sprintf(hidetype," a scaglie nere");
+                    sprintf(hidekeys," scaglie drago nero");
 					acapply = 5;
 					break;
 				case RACE_DRAGON_GREEN :
-					sprintf(hidetype,"green dragon hide");
+					sprintf(hidetype," a scaglie verdi");
+                    sprintf(hidekeys," scaglie drago verde");
 					acapply = 5;
 					break;
 				case RACE_DRAGON_WHITE :
-					sprintf(hidetype,"white dragon hide");
+					sprintf(hidetype," a scaglie bianche");
+                    sprintf(hidekeys," scaglie drago bianco");
 					acapply = 5;
 					break;
 				case RACE_DRAGON_BLUE  :
-					sprintf(hidetype,"blue dragon hide");
+					sprintf(hidetype," a scaglie blu");
+                    sprintf(hidekeys," scaglie drago blu");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_SILVER:
-					sprintf(hidetype,"silver dragon hide");
+					sprintf(hidetype," di scaglie d'argento");
+                    sprintf(hidekeys," scaglie drago argento");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_GOLD  :
-					sprintf(hidetype,"gold dragon hide");
+					sprintf(hidetype," di scaglie d'oro");
+                    sprintf(hidekeys," scaglie drago oro");
 					acapply = 7;
 					break;
 				case RACE_DRAGON_BRONZE:
-					sprintf(hidetype,"bronze dragon hide");
+					sprintf(hidetype," di scaglie di bronzo");
+                    sprintf(hidekeys," scaglie drago bronzo");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_COPPER:
-					sprintf(hidetype,"copper dragon hide");
+					sprintf(hidetype," di scaglie ramate");
+                    sprintf(hidekeys," scaglie drago ramato");
 					acapply = 6;
 					break;
 				case RACE_DRAGON_BRASS :
-					sprintf(hidetype,"brass dragon hide");
+					sprintf(hidetype," di scaglie d'ottone");
+                    sprintf(hidekeys," scaglie drago ottone");
 					acapply = 7;
 					break;
 				default:
-					sprintf(hidetype,"leather");
+					sprintf(hidetype," di comune pelle");
+                    sprintf(hidekeys," pelle comune");
 					acapply = 1;
 					break;
 
@@ -1935,14 +1999,14 @@ ACTION_FUNC(do_tan) {
 					acapply=0;
 				}
 
-				if(!strcmp(itemtype,"shield")) {
+				if(!strcmp(itemtype,"scudo")) {
 					if((r_num = real_object(TAN_SHIELD)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
 					}
 					acapply++;
 					acbonus+=3;
-					strcat(hidetype," shield");
+                    sprintf(article, "uno ");
 
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 26 */
 
@@ -2025,7 +2089,27 @@ ACTION_FUNC(do_tan) {
 							app_val = IMM_ELEC ;
 						}
 						break ;
-					case RACE_DRAGON_RED   :
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						break ;
+                    case RACE_DRAGON_RED   :
 						if(total_bonus > 23) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
@@ -2102,9 +2186,6 @@ ACTION_FUNC(do_tan) {
 							app_val = IMM_BLUNT ;
 						}
 						break ;
-
-					/* added by REQUIEM 2018 */
-
 					case RACE_TROLL :
 						if(total_bonus > 25) {
 							special = 1 ;
@@ -2170,14 +2251,14 @@ ACTION_FUNC(do_tan) {
 
 
 				}
-				else if(!strcmp(itemtype,"armor")) {
+				else if(!strcmp(itemtype,"armatura")) {
 					if((r_num = real_object(TAN_ARMOR)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
 					}
 					acapply++;
 					acbonus+=(int)((lev+char_bonus)/2);
-					strcat(hidetype," armor ");
+					sprintf(article, "un'");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 26 */
 					switch(j->affected[0].modifier) {
 					case RACE_ARACHNID :
@@ -2256,6 +2337,26 @@ ACTION_FUNC(do_tan) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
 							app_val = IMM_ELEC ;
+						}
+						break ;
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
 						}
 						break ;
 					case RACE_DRAGON_RED   :
@@ -2410,14 +2511,14 @@ ACTION_FUNC(do_tan) {
 						break;
 					}
 				}
-				else if(!strcmp(itemtype,"jacket")) {
+				else if(!strcmp(itemtype,"giacca")) {
 					if((r_num = real_object(TAN_JACKET)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
 					}
 					acapply++;
 					acbonus+=(lev+char_bonus);
-					strcat(hidetype," jacket");
+					sprintf(article, "una ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 26 */
 					switch(j->affected[0].modifier) {
 					case RACE_ARACHNID :
@@ -2496,6 +2597,26 @@ ACTION_FUNC(do_tan) {
 							special = 1 ;
 							apply = APPLY_IMMUNE ;
 							app_val = IMM_ELEC ;
+						}
+						break ;
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
 						}
 						break ;
 					case RACE_DRAGON_RED   :
@@ -2603,8 +2724,6 @@ ACTION_FUNC(do_tan) {
 							app_val = 15 ;
 						}
 						break ;
-					/* added by REQUIEM 2018 */
-
 					case RACE_VEGGIE      :
 					case RACE_VEGMAN     :
 						if(total_bonus > 22) {
@@ -2671,7 +2790,7 @@ ACTION_FUNC(do_tan) {
 						break;
 					}
 				}
-				else if(!strcmp(itemtype,"boots")) {
+				else if(!strcmp(itemtype,"stivali")) {
 					if((r_num = real_object(TAN_BOOTS)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
@@ -2684,7 +2803,7 @@ ACTION_FUNC(do_tan) {
 					if(acbonus <0) {
 						acbonus=0;
 					}
-					strcat(hidetype," pair of boots");
+					sprintf(article, "un paio di ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -2728,8 +2847,6 @@ ACTION_FUNC(do_tan) {
 							app_val = 10 ;
 						}
 						break ;
-					/* added by REQUIEM 2018 */
-
 					case RACE_VEGGIE      :
 					case RACE_VEGMAN     :
 						if(total_bonus > 22) {
@@ -2759,6 +2876,26 @@ ACTION_FUNC(do_tan) {
 							app_val = 50 ;
 						}
 						break ;
+                    case RACE_UNDEAD   :
+                    case RACE_UNDEAD_VAMPIRE :
+                    case RACE_UNDEAD_LICH    :
+                    case RACE_UNDEAD_WIGHT   :
+                    case RACE_UNDEAD_GHAST   :
+                    case RACE_UNDEAD_SPECTRE :
+                    case RACE_UNDEAD_ZOMBIE  :
+                    case RACE_UNDEAD_SKELETON :
+                    case RACE_UNDEAD_GHOUL    :
+						if(total_bonus > 24) {
+							special = 1 ;
+							apply = APPLY_M_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						else if(total_bonus > 22) {
+							special = 1 ;
+							apply = APPLY_IMMUNE ;
+							app_val = IMM_DRAIN ;
+						}
+						break ;
 					case RACE_TYTAN     :
 						if(total_bonus > 23) {
 							special = 1 ;
@@ -2777,7 +2914,7 @@ ACTION_FUNC(do_tan) {
 						break;
 					}
 				}
-				else if(!strcmp(itemtype,"gloves")) {
+				else if(!strcmp(itemtype,"guanti")) {
 					if((r_num = real_object(TAN_GLOVES)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
@@ -2791,7 +2928,7 @@ ACTION_FUNC(do_tan) {
 					if(acbonus<0) {
 						acbonus=0;
 					}
-					strcat(hidetype," pair of gloves");
+					sprintf(article, "dei ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -2891,9 +3028,6 @@ ACTION_FUNC(do_tan) {
 							app_val = 20 ;
 						}
 						break ;
-
-					/* added by REQUIEM 2018 */
-
 					case RACE_ENFAN     :
 						if(total_bonus > 23) {
 							special = 1 ;
@@ -2919,14 +3053,14 @@ ACTION_FUNC(do_tan) {
 						break;
 					}
 				}
-				else if(!strcmp(itemtype,"leggings")) {
+				else if(!strcmp(itemtype,"gambali")) {
 					if((r_num = real_object(TAN_LEGGINGS)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
 					}
 					acapply++;
 					acbonus++;
-					strcat(hidetype," set of leggings");
+					sprintf(article, "un set di ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -3053,14 +3187,14 @@ ACTION_FUNC(do_tan) {
 						break;
 					}
 				}
-				else if(!strcmp(itemtype,"sleeves")) {
+				else if(!strcmp(itemtype,"maniche")) {
 					if((r_num = real_object(TAN_SLEEVES)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
 					}
 					acapply++;
 					acbonus++;
-					strcat(hidetype," set of sleeves");
+					sprintf(article, "un set di ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -3208,7 +3342,7 @@ ACTION_FUNC(do_tan) {
 						break;
 					}
 				}
-				else  if(!strcmp(itemtype,"helmet")) {
+				else  if(!strcmp(itemtype,"elmo")) {
 					if((r_num = real_object(TAN_HELMET)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
@@ -3221,7 +3355,7 @@ ACTION_FUNC(do_tan) {
 					if(acbonus<0) {
 						acbonus=0;
 					}
-					strcat(hidetype," helmet");
+					sprintf(article, "un ");
 					total_bonus=char_bonus+lev+number(1,12); /* A value between 1 and 30 */
 					switch(j->affected[0].modifier) {
 					case RACE_HALFBREED :
@@ -3370,36 +3504,36 @@ ACTION_FUNC(do_tan) {
 						if(total_bonus > 24) {
 							special = 1 ;
 							apply = APPLY_HITNDAM ;
-							app_val = 2 ;
+							app_val = 1 ;
 						}
 						break ;
 					default:
 						break;
 					}
 				}
-				else  if(!strcmp(itemtype,"bag")) {
+				else  if(!strcmp(itemtype,"borsa")) {
 					if((r_num = real_object(TAN_BAG)) >= 0) {
 						hide = read_object(r_num, REAL);
 						obj_to_char(hide,ch);
 					}
-					strcat(hidetype," bag");
+					sprintf(article, "una ");
 				}
 				else {
-					send_to_char("Illegal type of equipment!\n\r",ch);
+					send_to_char("Non sai nemmeno cos'e'!\n\r",ch);
 					return;
 				}
-
-				sprintf(buf,"%s name %s",itemtype,hidetype);
+                
+				sprintf(buf,"%s name %s%s",itemtype,itemtype,hidekeys);
 				do_ooedit(ch,buf,0);
 
-				sprintf(buf,"%s ldesc A %s lies here",itemtype,hidetype);
+				sprintf(buf,"%s ldesc %s%s%s e' qui a terra.",itemtype,article,itemtype,hidetype);
 				do_ooedit(ch,buf,0);
 
-				sprintf(buf,"%s sdesc a %s made by %s",itemtype, hidetype, GET_NAME(ch));
+				sprintf(buf,"%s sdesc %s%s%s opera di %s",itemtype, article, itemtype, hidetype, GET_NAME(ch));
 				do_ooedit(ch,buf,0);
 
 				/* we do not mess with vX if the thing is a bag */
-				if(strcmp(itemtype,"bag")) {
+				if(strcmp(itemtype,"borsa")) {
 					sprintf(buf,"%s v0 %d",itemtype,acapply);
 					do_ooedit(ch,buf,0);
 					/* I think v1 is how many times it can be hit, so lev of
@@ -3418,11 +3552,11 @@ ACTION_FUNC(do_tan) {
 
 				j->affected[1].modifier=0; /* make corpse unusable for another tan */
 
-				sprintf(buf,"You hack at the %s and finally make the %s.\n\r",
-						j->short_description,itemtype);
+				sprintf(buf,"Scuoi %s e ne ricavi %s%s.\n\r",
+						j->short_description,article,itemtype);
 				send_to_char(buf,ch);
 
-				sprintf(buf,"%s skins %s for it's hide.",GET_NAME(ch),
+				sprintf(buf,"%s scuoia %s e ne ricava un pezzo d'equipaggiamento.",GET_NAME(ch),
 						j->short_description);
 				act(buf,TRUE, ch, 0, 0, TO_ROOM);
 				WAIT_STATE(ch, PULSE_VIOLENCE*((int)lev/2));
@@ -3430,7 +3564,7 @@ ACTION_FUNC(do_tan) {
 			}
 		}
 		else {
-			send_to_char("Sorry, nothing left of the carcuss to make a item with.\n\r",ch);
+			send_to_char("Non ci sono abbastanza resti per creare qualcosa.\n\r",ch);
 			return;
 		}
 	}
@@ -4217,7 +4351,7 @@ ACTION_FUNC(do_doorway) {
 		send_to_char("You can't sense that person anywhere.\n\r",ch);
 		return;
 	}
-
+    
 	location = target->in_room;
 	rp = real_roomp(location);
 
@@ -4241,6 +4375,11 @@ ACTION_FUNC(do_doorway) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;
 	}
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        send_to_char("Non si bara ;)\n\r", ch);
+        return;
+    }
 
 	if(GetMaxLevel(target)>=IMMORTALE) {
 		send_to_char("You mind does not have the power to doorway to this person\n\r",ch);
@@ -4338,6 +4477,12 @@ ACTION_FUNC(do_psi_portal) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;
 	}
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        send_to_char("Non si bara! ;)\n\r", ch);
+        return;
+    }
+    
 	/* Added for Pkillers Gaia 2001 */
 	if(IS_AFFECTED2((IS_POLY(ch)) ? ch->desc->original : ch, AFF2_PKILLER) &&  // SALVO controllo pkiller
 			IS_SET(rp->room_flags, PEACEFUL))  {
@@ -4461,6 +4606,12 @@ ACTION_FUNC(do_mindsummon) {
 		send_to_char("You can't sense that person anywhere.\n\r",ch);
 		return;
 	}
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+        return;
+    }
+    
 	if(target==ch)   {
 		send_to_char("You're already in the room with yourself!\n\r",ch);
 		return;
@@ -5408,6 +5559,17 @@ ACTION_FUNC(do_scry) {
 		send_to_char("Your mind is not yet strong enough.\n\r", ch);
 		return;
 	}
+    
+    
+    if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
+        
+        if(IS_SINGLE(ch)) {
+            send_to_char("Forte della tua disciplina mentale tenti l'impossibile...\n\r", ch);
+        } else {
+            send_to_char("Solo uno psionico puro potrebbe tanto.\n\r", ch);
+            return;
+        }
+    }
 
 	if((GET_MANA(ch) < 20) && GetMaxLevel(ch) < IMMORTALE) {
 		send_to_char("You have a headache. Better rest before you try this again.\n\r",ch);
@@ -6336,7 +6498,8 @@ void do_miner(struct char_data* ch) {
 		send_to_char("Qui non puoi scavare.\n\r",ch);
 		return;
 	}
-
+    
+    /* Se forgiare e' un arte di pochi, scavare e' per tutti i fessi.
 	switch(GET_RACE(ch)) {
 	case RACE_DWARF:
 	case RACE_DARK_DWARF:
@@ -6345,7 +6508,7 @@ void do_miner(struct char_data* ch) {
 		send_to_char("Lascia stare: scavare in una miniera non fa per te!\n\r",ch);
 		return;
 		break;
-	}
+	} */
 
 	if(GetMaxLevel(ch)<20) {
 		send_to_char("Sei ancora troppo piccolo per scavare in miniera!\n\r",ch);
@@ -6602,24 +6765,24 @@ void do_miner(struct char_data* ch) {
 			break;
 		case RACE_DWARF:
 		case RACE_DARK_DWARF:
-			WAIT_STATE(ch, PULSE_VIOLENCE*4);
+			WAIT_STATE(ch, PULSE_VIOLENCE*1);
 			break;
 		case RACE_GOBLIN:
 		case RACE_ORC:
 		case RACE_HALF_OGRE:
-			WAIT_STATE(ch, PULSE_VIOLENCE*5);
+			WAIT_STATE(ch, PULSE_VIOLENCE*4);
 			break;
 		case RACE_GNOME:
 		case RACE_DEEP_GNOME:
-			WAIT_STATE(ch, PULSE_VIOLENCE*6);
+			WAIT_STATE(ch, PULSE_VIOLENCE*4);
 			break;
 		case RACE_HUMAN:
 		case RACE_GNOLL:
 		case RACE_HALFLING:
-			WAIT_STATE(ch, PULSE_VIOLENCE*7);
+			WAIT_STATE(ch, PULSE_VIOLENCE*5);
 			break;
 		default:
-			WAIT_STATE(ch, PULSE_VIOLENCE*8);
+			WAIT_STATE(ch, PULSE_VIOLENCE*6);
 			break;
 		}
 	}

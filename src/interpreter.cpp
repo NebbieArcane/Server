@@ -963,545 +963,512 @@ int special(struct char_data* ch, int cmd, const char* arg) {
 }
 void assign_command_pointers() {
 	InitRadix();
-	AddCommand("north", do_move, CMD_NORTH, POSITION_STANDING, TUTTI);
-	AddCommand("east",  do_move, CMD_EAST,  POSITION_STANDING, TUTTI);
-	AddCommand("south", do_move, CMD_SOUTH, POSITION_STANDING, TUTTI);
-	AddCommand("west",  do_move, CMD_WEST,  POSITION_STANDING, TUTTI);
-	AddCommand("up",    do_move, CMD_UP,    POSITION_STANDING, TUTTI);
-	AddCommand("down",  do_move, CMD_DOWN,  POSITION_STANDING, TUTTI);
-	AddCommand("enter", do_enter, CMD_ENTER, POSITION_STANDING, TUTTI);
-	AddCommand("exits",do_exits,8,POSITION_RESTING,TUTTI);
-	AddCommand("kiss",do_action,9,POSITION_RESTING,TUTTI);
-	AddCommand("get", do_get, CMD_GET,POSITION_RESTING,1);
-	AddCommand("drink",do_drink,11,POSITION_RESTING,1);
-	AddCommand("eat",do_eat,12,POSITION_RESTING,1);
-	AddCommand("wear",do_wear,13,POSITION_RESTING,TUTTI);
-	AddCommand("wield",do_wield,14,POSITION_RESTING,1);
-	AddCommand("look", do_look, CMD_LOOK, POSITION_RESTING, TUTTI);
-	AddCommand("score",do_score,16,POSITION_DEAD,TUTTI);
-	AddCommand("say", do_new_say, CMD_SAY, POSITION_RESTING, TUTTI);
-	AddCommand("shout", do_shout, CMD_SHOUT,POSITION_RESTING,2);
-	AddCommand("tell", do_tell, CMD_TELL, POSITION_RESTING, TUTTI);
-	AddCommand("inventory",do_inventory,20,POSITION_DEAD,TUTTI);
-	AddCommand("qui",do_qui,21,POSITION_DEAD,TUTTI);
-	AddCommand("bounce",do_action,22,POSITION_STANDING,TUTTI);
-	AddCommand("smile",do_action,23,POSITION_RESTING,TUTTI);
-	AddCommand("dance",do_action,24,POSITION_STANDING,TUTTI);
-	AddCommand("kill",do_kill,25,POSITION_FIGHTING,1);
-	AddCommand("cackle",do_action,26,POSITION_RESTING,TUTTI);
-	AddCommand("laugh",do_action,27,POSITION_RESTING,TUTTI);
-	AddCommand("giggle",do_action,28,POSITION_RESTING,TUTTI);
-	AddCommand("shake", do_action, CMD_SHAKE, POSITION_RESTING, TUTTI);
-	AddCommand("puke",do_vomita,30,POSITION_RESTING,TUTTI);
-	AddCommand("growl",do_action,31,POSITION_RESTING,TUTTI);
-	AddCommand("scream",do_action,32,POSITION_RESTING,TUTTI);
-	AddCommand("insult",do_insult,33,POSITION_RESTING,TUTTI);
-	AddCommand("comfort",do_action,34,POSITION_RESTING,TUTTI);
-	AddCommand("nod",do_action,35,POSITION_RESTING,TUTTI);
-	AddCommand("sigh",do_action,36,POSITION_RESTING,TUTTI);
-	AddCommand("sulk",do_action,37,POSITION_RESTING,TUTTI);
-	AddCommand("help",do_help,38,POSITION_DEAD,TUTTI);
-	AddCommand("who", do_who, CMD_WHO, POSITION_DEAD, TUTTI);
-	AddCommand("emote",do_emote,40,POSITION_SLEEPING,TUTTI);
-	AddCommand(":",do_emote,40,POSITION_SLEEPING,TUTTI);
-	AddCommand(",",do_emote,177,POSITION_SLEEPING,TUTTI);
-	AddCommand("echo",do_echo,41,POSITION_SLEEPING,1);
-	AddCommand("stand",do_stand,42,POSITION_RESTING,TUTTI);
-	AddCommand("sit",do_sit,43,POSITION_RESTING,TUTTI);
-	AddCommand("rest",do_rest,44,POSITION_RESTING,TUTTI);
-	AddCommand("sleep",do_sleep,45,POSITION_SLEEPING,TUTTI);
-	AddCommand("wake",do_wake,46,POSITION_SLEEPING,TUTTI);
-	AddCommand("force",do_force,47,POSITION_SLEEPING,MAESTRO_DEL_CREATO);
-	AddCommand("transfer",do_trans,48,POSITION_SLEEPING,QUESTMASTER);
-	AddCommand("hug",do_action,49,POSITION_RESTING,TUTTI);
-	AddCommand("snuggle",do_action,50,POSITION_RESTING,TUTTI);
-	AddCommand("cuddle",do_action,51,POSITION_RESTING,TUTTI);
-	AddCommand("nuzzle",do_action,52,POSITION_RESTING,TUTTI);
-	AddCommand("cry",do_action,53,POSITION_RESTING,TUTTI);
-	AddCommand("news",do_news,54,POSITION_SLEEPING,TUTTI);
-	AddCommand("equipment",do_equipment,55,POSITION_SLEEPING,TUTTI);
-	AddCommand("buy", do_not_here, CMD_BUY, POSITION_STANDING, TUTTI);
-	AddCommand("sell", do_not_here, CMD_SELL, POSITION_STANDING, TUTTI);
-	AddCommand("value", do_value, CMD_VALUE, POSITION_RESTING, TUTTI);
-	AddCommand("list", do_not_here, CMD_LIST, POSITION_STANDING, TUTTI);
-	AddCommand("drop", do_drop, CMD_DROP, POSITION_RESTING, 1);
-	AddCommand("goto",do_goto,61,POSITION_SLEEPING,IMMORTALE);
-	AddCommand("weather",do_weather,62,POSITION_RESTING,TUTTI);
-	AddCommand("read", do_read, CMD_READ, POSITION_RESTING, TUTTI);
-	AddCommand("pour",do_pour,64,POSITION_STANDING,TUTTI);
-	AddCommand("grab",do_grab,65,POSITION_RESTING,TUTTI);
-	AddCommand("remove", do_remove, CMD_REMOVE, POSITION_RESTING, TUTTI);
-	AddCommand("put",do_put,67,POSITION_RESTING,TUTTI);
-	AddCommand("shutdow",do_shutdow,68,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("save",do_save,69,POSITION_SLEEPING,TUTTI);
-	AddCommand("hit",do_hit,70,POSITION_FIGHTING,1);
-	AddCommand("string",do_string,71,POSITION_SLEEPING,DIO);
-	AddCommand("give", do_give, CMD_GIVE, POSITION_RESTING, 1);
-	AddCommand("quit",do_quit,73,POSITION_DEAD,TUTTI);
-	AddCommand("wiznews",do_wiznews,74,POSITION_DEAD,IMMORTALE);
-	AddCommand("guard",do_guard,75,POSITION_STANDING,1);
-	AddCommand("time",do_time,76,POSITION_DEAD,TUTTI);
-	AddCommand("oload",do_oload,77,POSITION_DEAD,QUESTMASTER);
-	AddCommand("purge",do_purge,78,POSITION_DEAD,DIO_MINORE);
-	AddCommand("shutdown", do_shutdown, 79, POSITION_DEAD,CREATORE);
-	AddCommand("idea",do_action,80,POSITION_DEAD,TUTTI);
-	AddCommand("typo",do_action,81,POSITION_DEAD,TUTTI);
-	AddCommand("bug",do_action,82,POSITION_DEAD,TUTTI);
-	AddCommand("whisper", do_whisper, CMD_WHISPER, POSITION_RESTING,TUTTI);
-	AddCommand("cast", do_cast, CMD_CAST, POSITION_SITTING, 1);
-	AddCommand("know", do_cast, CMD_SPELLID, POSITION_SITTING, 1);
-	AddCommand("at",do_at,85,POSITION_DEAD,DIO);
-	AddCommand("ask", do_ask, CMD_ASK, POSITION_RESTING,TUTTI);
-	AddCommand("order",do_order,87,POSITION_RESTING,1);
-	AddCommand("sip",do_sip, 88,POSITION_RESTING,TUTTI);
-	AddCommand("taste",do_taste,89,POSITION_RESTING,TUTTI);
-	AddCommand("snoop",do_snoop,90,POSITION_DEAD,QUESTMASTER);
-	AddCommand("follow",do_follow,91,POSITION_RESTING,TUTTI);
-	AddCommand("rent",do_not_here,CMD_RENT,POSITION_STANDING,1);
-	AddCommand("offer",do_not_here,CMD_OFFER,POSITION_STANDING,1);
-	//AddCommand("store",do_not_here,CMD_STORE,POSITION_STANDING,1);
-	AddCommand("poke",do_action,94,POSITION_RESTING,TUTTI);
-	AddCommand("advance",do_advance,95,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("accuse",do_action,96,POSITION_SITTING,TUTTI);
-	AddCommand("grin",do_action,97,POSITION_RESTING,TUTTI);
-	AddCommand("bow",do_action,98,POSITION_STANDING,TUTTI);
-
-	AddCommand("open",   do_open,   CMD_OPEN,   POSITION_SITTING, TUTTI);
-	AddCommand("close",  do_close,  CMD_CLOSE,  POSITION_SITTING, TUTTI);
-	AddCommand("lock",   do_lock,   CMD_LOCK,   POSITION_SITTING, TUTTI);
-	AddCommand("unlock", do_unlock, CMD_UNLOCK, POSITION_SITTING, TUTTI);
-
-	AddCommand("leave",do_leave,103,POSITION_STANDING,TUTTI);
-	AddCommand("applaud",do_action,104,POSITION_RESTING,TUTTI);
-	AddCommand("blush",do_action,105,POSITION_RESTING,TUTTI);
-	AddCommand("burp",do_action,106,POSITION_RESTING,TUTTI);
-	AddCommand("chuckle",do_action,107,POSITION_RESTING,TUTTI);
-	AddCommand("nose",do_action,108,POSITION_RESTING,TUTTI);
-	AddCommand("cough",do_action,109,POSITION_RESTING,TUTTI);
-	AddCommand("curtsey",do_action,110,POSITION_STANDING,TUTTI);
-	AddCommand("rise",do_action,111,POSITION_RESTING,DIO);
-	AddCommand("flip",do_action,112,POSITION_STANDING,TUTTI);
-	AddCommand("fondle",do_action,113,POSITION_RESTING,TUTTI);
-	AddCommand("frown",do_action,114,POSITION_RESTING,TUTTI);
-	AddCommand("gasp",do_action,115,POSITION_RESTING,TUTTI);
-	AddCommand("glare", do_action, CMD_GLARE, POSITION_RESTING, TUTTI);
-	AddCommand("groan",do_action,117,POSITION_RESTING,TUTTI);
-	AddCommand("grope",do_action,118,POSITION_RESTING,TUTTI);
-	AddCommand("hiccup",do_action,119,POSITION_RESTING,TUTTI);
-	AddCommand("lick",do_action,120,POSITION_RESTING,TUTTI);
-	AddCommand("love",do_action,121,POSITION_RESTING,TUTTI);
-	AddCommand("moan",do_action,122,POSITION_RESTING,TUTTI);
-	AddCommand("nibble",do_action,123,POSITION_RESTING,TUTTI);
-	AddCommand("pout",do_action,124,POSITION_RESTING,TUTTI);
-	AddCommand("purr",do_action,125,POSITION_RESTING,TUTTI);
-	AddCommand("ruffle",do_action,126,POSITION_STANDING,TUTTI);
-	AddCommand("shiver",do_action,127,POSITION_RESTING,TUTTI);
-	AddCommand("shrug",do_action,128,POSITION_RESTING,TUTTI);
-	AddCommand("sing",do_action,129,POSITION_RESTING,TUTTI);
-	AddCommand("slap",do_action,130,POSITION_RESTING,TUTTI);
-	AddCommand("smirk",do_action,131,POSITION_RESTING,TUTTI);
-	AddCommand("support",do_support,CMD_SUPPORT,POSITION_STANDING,TUTTI);
-	AddCommand("sneeze",do_action,133,POSITION_RESTING,TUTTI);
-	AddCommand("snicker",do_action,134,POSITION_RESTING,TUTTI);
-	AddCommand("sniff",do_action,135,POSITION_RESTING,TUTTI);
-	AddCommand("snore",do_action,136,POSITION_SLEEPING,TUTTI);
-	AddCommand("spit",do_action,137,POSITION_STANDING,TUTTI);
-	AddCommand("squeeze",do_action,138,POSITION_RESTING,TUTTI);
-	AddCommand("associa",do_associa,CMD_ASSOCIA,POSITION_STANDING,PRINCIPE);
-	AddCommand("stare",do_action,139,POSITION_RESTING,TUTTI);
-	AddCommand("associate",do_associa,CMD_ASSOCIA,POSITION_STANDING,PRINCIPE);
-	AddCommand("thank",do_action,141,POSITION_RESTING,TUTTI);
-	AddCommand("twiddle",do_action,142,POSITION_RESTING,TUTTI);
-	AddCommand("wave",do_action,143,POSITION_RESTING,TUTTI);
-	AddCommand("whistle",do_action,144,POSITION_RESTING,TUTTI);
-	AddCommand("wiggle",do_action,145,POSITION_STANDING,TUTTI);
-	AddCommand("wink",do_action,146,POSITION_RESTING,TUTTI);
-	AddCommand("yawn",do_action,147,POSITION_RESTING,TUTTI);
-	AddCommand("snowball",do_action,148,POSITION_STANDING,IMMORTALE);
-	AddCommand("write", do_write, CMD_WRITE, POSITION_STANDING, 1);
-	AddCommand("hold",do_grab,150,POSITION_RESTING,1);
-	AddCommand("flee", do_flee, CMD_FLEE, POSITION_SITTING, 1);
-	AddCommand("sneak",do_sneak,152,POSITION_STANDING,1);
-	AddCommand("hide",do_hide,153,POSITION_RESTING,1);
-	AddCommand("camouflage",do_hide,153,POSITION_STANDING,1);
-	AddCommand("backstab",do_backstab,154,POSITION_STANDING,1);
-	AddCommand("pick",do_pick,155,POSITION_STANDING,1);
-	AddCommand("steal",do_steal,156,POSITION_STANDING,1);
-	AddCommand("bash", do_bash, CMD_BASH, POSITION_FIGHTING, 1);
-	AddCommand("rescue",do_rescue,158,POSITION_FIGHTING,1);
-	AddCommand("kick",do_kick,159,POSITION_FIGHTING,1);
-	AddCommand("french",do_action,160,POSITION_RESTING,ALLIEVO);
-	AddCommand("comb",do_action,161,POSITION_RESTING,TUTTI);
-	AddCommand("massage",do_action,162,POSITION_RESTING,TUTTI);
-	AddCommand("tickle",do_action,163,POSITION_RESTING,TUTTI);
-	AddCommand("practice", do_practice, CMD_PRACTICE, POSITION_RESTING, 1);
-	AddCommand("practise", do_practice, CMD_PRACTICE, POSITION_RESTING, 1);
-	AddCommand("pat", do_action, CMD_PAT, POSITION_RESTING, TUTTI);
-	AddCommand("examine", do_examine, 166, POSITION_RESTING, TUTTI);
-	AddCommand("take", do_get, CMD_TAKE, POSITION_RESTING, 1);  /* TAKE */
-	AddCommand("info",do_info,168,POSITION_SLEEPING,TUTTI);
-	AddCommand("'", do_new_say, CMD_SAY_APICE, POSITION_RESTING, TUTTI);
-	AddCommand("curse",do_action,171,POSITION_RESTING,5);
-	AddCommand("use", do_use, CMD_USE, POSITION_SITTING, 1);
-	AddCommand("where",do_where,173,POSITION_DEAD,1);
-	AddCommand("levels",do_levels,174,POSITION_DEAD,TUTTI);
-	AddCommand("register",do_register,175,POSITION_DEAD,TUTTI);
-
-	AddCommand("pray",do_pray,176,POSITION_SITTING,1);
-
-	AddCommand("beg",do_action,178,POSITION_RESTING,TUTTI);
-	AddCommand("bleed",do_not_here,179,POSITION_RESTING,TUTTI);
-	AddCommand("cringe",do_action,180,POSITION_RESTING,TUTTI);
-	AddCommand("daydream",do_action,181,POSITION_SLEEPING,TUTTI);
-	AddCommand("fume",do_action,182,POSITION_RESTING,TUTTI);
-	AddCommand("grovel",do_action,183,POSITION_RESTING,TUTTI);
-	AddCommand("hop",do_action,184,POSITION_RESTING,TUTTI);
-	AddCommand("nudge",do_action,185,POSITION_RESTING,TUTTI);
-	AddCommand("peer",do_action,186,POSITION_RESTING,TUTTI);
-	AddCommand("point",do_action,187,POSITION_RESTING,TUTTI);
-	AddCommand("ponder",do_action,188,POSITION_RESTING,TUTTI);
-	AddCommand("punch",do_action,189,POSITION_RESTING,TUTTI);
-	AddCommand("snarl",do_action,190,POSITION_RESTING,TUTTI);
-	AddCommand("spank",do_action,191,POSITION_RESTING,TUTTI);
-	AddCommand("steam",do_action,192,POSITION_RESTING,TUTTI);
-	AddCommand("tackle",do_action,193,POSITION_RESTING,TUTTI);
-	AddCommand("taunt",do_action,194,POSITION_RESTING,TUTTI);
-	AddCommand("think",do_commune,195,POSITION_RESTING,IMMORTALE);
-	AddCommand("\"", do_commune, 195, POSITION_RESTING, IMMORTALE);
-	AddCommand("?",do_commune,CMD_THINK_SUPERNI,POSITION_RESTING,CREATORE);
-	AddCommand("whine",do_action,196,POSITION_RESTING,TUTTI);
-	AddCommand("worship",do_action,197,POSITION_RESTING,TUTTI);
-	AddCommand("yodel",do_action,198,POSITION_RESTING,TUTTI);
-	AddCommand("brief",do_brief,199,POSITION_DEAD,TUTTI);
-	AddCommand("wizlist",do_wizlist,200,POSITION_DEAD,TUTTI);
-	AddCommand("consider",do_consider,201,POSITION_RESTING,TUTTI);
-	AddCommand("group",do_group,202,POSITION_RESTING,1);
-	AddCommand("restore",do_restore,203,POSITION_DEAD,MAESTRO_DEGLI_DEI);
-	AddCommand("return",do_return,204,POSITION_RESTING,TUTTI);
-	AddCommand("switch",do_switch,205,POSITION_DEAD,CREATORE);
-	AddCommand("quaff",do_quaff,206,POSITION_RESTING,TUTTI);
-	AddCommand("recite",do_recite,207,POSITION_STANDING,TUTTI);
-	AddCommand("users",do_users,208,POSITION_DEAD,DIO_MINORE);
-	AddCommand("pose",do_pose,209,POSITION_STANDING,TUTTI);
-	AddCommand("noshout",do_noshout,210,POSITION_SLEEPING,IMMORTALE);
-	AddCommand("wizhelp",do_wizhelp,211,POSITION_SLEEPING,DIO_MINORE);
-	AddCommand("credits",do_credits,212,POSITION_DEAD,TUTTI);
-	AddCommand("compact",do_compact,213,POSITION_DEAD,TUTTI);
-	AddCommand("daimoku",do_daimoku,CMD_DAIMOKU,POSITION_SLEEPING,1);
-	AddCommand("forge",do_forge,CMD_FORGE,POSITION_STANDING,1);
-	AddCommand("slay",do_slay,216,POSITION_FIGHTING,DIO_MINORE);
-	AddCommand("wimpy",do_wimp,217,POSITION_DEAD,TUTTI);
-	AddCommand("junk",do_junk,218,POSITION_RESTING,1);
-	AddCommand("deposit", do_not_here, CMD_DEPOSIT, POSITION_RESTING, 1);
-	AddCommand("withdraw", do_not_here, CMD_WITHDRAW, POSITION_RESTING, 1);
-	AddCommand("balance", do_not_here, CMD_BALANCE, POSITION_RESTING, 1);
-	AddCommand("nohassle",do_nohassle,222,POSITION_DEAD,DIO);
-	AddCommand("system",do_system,223,POSITION_DEAD,QUESTMASTER);
-	AddCommand("pull", do_open_exit, CMD_PULL, POSITION_STANDING,1);
-	AddCommand("stealth",do_stealth,225,POSITION_DEAD,DIO);
-	AddCommand("edit",do_edit,226,POSITION_DEAD,MAESTRO_DEGLI_DEI);
-	AddCommand("@",do_set,227,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("rsave",do_rsave,228,POSITION_DEAD,MAESTRO_DEGLI_DEI);
-	AddCommand("rload",do_rload,229,POSITION_DEAD,MAESTRO_DEGLI_DEI);
-	AddCommand("track",do_track,230,POSITION_DEAD,1);
-	AddCommand("wizlock",do_wizlock,231,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("highfive",do_highfive,232,POSITION_DEAD,TUTTI);
-	AddCommand("title",do_title,233,POSITION_DEAD,INIZIATO-1);
-	AddCommand("whozone", do_who, CMD_WHOZONE, POSITION_DEAD, TUTTI);
-	AddCommand("assist",do_assist,235,POSITION_FIGHTING,1);
-	AddCommand("attribute",do_attribute,236,POSITION_DEAD,5);
-	AddCommand("world",do_world,237,POSITION_DEAD,TUTTI);
-	AddCommand("allspells",do_spells,238,POSITION_DEAD,TUTTI);
-	AddCommand("breath",do_breath,239,POSITION_FIGHTING,1);
-	AddCommand("show",do_show,240,POSITION_DEAD,DIO_MINORE);
-	AddCommand("debug",do_debug,241,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("invisible",do_invis,242,POSITION_DEAD,IMMORTALE);
-	AddCommand("gain", do_gain, CMD_GAIN, POSITION_DEAD, 1);
-
-	AddCommand("mload",do_mload,244,POSITION_DEAD,DIO);
-
-	AddCommand("disarm",do_disarm,245,POSITION_FIGHTING,1);
-	AddCommand("bonk",do_action,246,POSITION_SITTING,3);
-	AddCommand("chpwd",do_passwd,247,POSITION_SITTING,MAESTRO_DEI_CREATORI);
-	AddCommand("passwd",do_passwd,247,POSITION_SITTING,MAESTRO_DEI_CREATORI);
-	AddCommand("fill",do_not_here,248,POSITION_SITTING,TUTTI);
-	AddCommand("mantra",do_mantra,CMD_MANTRA,POSITION_SITTING,TUTTI);
-	AddCommand("shoot",do_fire,250,POSITION_STANDING,  1);
-	AddCommand("fire",do_fire,250, POSITION_DEAD,TUTTI);
-	AddCommand("silence",do_silence,251,POSITION_STANDING, DIO);
-
-	AddCommand("teams", do_not_here, CMD_TEAMS, POSITION_STANDING, MAESTRO_DEL_CREATO);
-	AddCommand("player", do_not_here, CMD_PLAYER, POSITION_STANDING,MAESTRO_DEL_CREATO);
-
-	AddCommand("create",do_create,254,POSITION_STANDING, QUESTMASTER);
-	AddCommand("bamfin",do_bamfin,255,POSITION_STANDING,IMMORTALE);
-	AddCommand("bamfout",do_bamfout,256,POSITION_STANDING, IMMORTALE);
-	AddCommand("vis",do_invis,257,POSITION_RESTING,  TUTTI);
-	AddCommand("doorbash", do_doorbash, CMD_DOORBASH, POSITION_STANDING, 1);
-	AddCommand("mosh",do_action,259,POSITION_FIGHTING, 1);
-
-	/* alias commands */
-	AddCommand("alias",do_alias,260,POSITION_SLEEPING, 1);
-	AddCommand("1", do_alias,261,POSITION_DEAD, 1);
-	AddCommand("2", do_alias,262,POSITION_DEAD, 1);
-	AddCommand("3", do_alias,263,POSITION_DEAD, 1);
-	AddCommand("4", do_alias,264,POSITION_DEAD, 1);
-	AddCommand("5", do_alias,265,POSITION_DEAD, 1);
-	AddCommand("6", do_alias,266,POSITION_DEAD, 1);
-	AddCommand("7", do_alias,267,POSITION_DEAD, 1);
-	AddCommand("8", do_alias,268,POSITION_DEAD, 1);
-	AddCommand("9", do_alias,269,POSITION_DEAD, 1);
-	AddCommand("0", do_alias,270,POSITION_DEAD, 1);
-
-	AddCommand("swim", do_swim,271,POSITION_STANDING, 1);
-	AddCommand("spy", do_spy,272,POSITION_STANDING, 1);
-	AddCommand("springleap",do_springleap,273,POSITION_RESTING, 1);
-	AddCommand("quivering palm",do_quivering_palm,274,POSITION_FIGHTING, INIZIATO-1);
-	AddCommand("feign death",do_feign_death,275,POSITION_FIGHTING, 1);
-	AddCommand("mount",do_mount,276,POSITION_STANDING, 1);
-	AddCommand("dismount",do_mount,277,POSITION_MOUNTED, 1);
-	AddCommand("ride",do_mount,278,POSITION_STANDING, 1);
-	AddCommand("sign",do_sign,279, POSITION_RESTING, 1);
-
-	/* had to put this here BEFORE setsev so it would get this and not setsev */
-	AddCommand("set",do_set_flags,280,POSITION_DEAD,TUTTI);
-
-	AddCommand("first aid",do_first_aid,281, POSITION_RESTING, 1);
-	AddCommand("log",do_set_log,282, POSITION_DEAD, MAESTRO_DEL_CREATO);
-	AddCommand("recall", do_cast, CMD_RECALL, POSITION_SITTING, 1);
-	AddCommand("reload",reboot_text,284, POSITION_DEAD, MAESTRO_DEI_CREATORI);
-	AddCommand("event",do_event,285, POSITION_DEAD, MAESTRO_DEI_CREATORI);
-	AddCommand("disguise",do_disguise,286, POSITION_STANDING, 1);
-	AddCommand("climb",do_climb,287, POSITION_STANDING,1);
-	AddCommand("beep",do_beep,288, POSITION_DEAD, DIO_MINORE);
-	AddCommand("bite",do_action,289, POSITION_RESTING, 1);
-	AddCommand("redit", do_redit, 290, POSITION_SLEEPING, MAESTRO_DEGLI_DEI);
-	AddCommand("display", do_display, 291, POSITION_SLEEPING, 1);
-	AddCommand("resize", do_resize, 292, POSITION_SLEEPING, 1);
-	AddCommand("ripudia",do_ripudia,CMD_RIPUDIA, POSITION_STANDING,VASSALLO);
-	AddCommand("#", do_cset, 294, POSITION_DEAD, QUESTMASTER);
-	AddCommand("spell", do_stat, 295, POSITION_DEAD, DIO_MINORE);
-	AddCommand("name", do_stat, 296, POSITION_DEAD, DIO_MINORE);
-	AddCommand("stat", do_stat, 297, POSITION_DEAD, MAESTRO_DEGLI_DEI);
-	AddCommand("immortali", do_immort, 298, POSITION_DEAD, 1);
-	AddCommand("auth", do_auth, 299, POSITION_SLEEPING, MAESTRO_DEGLI_DEI);
-	AddCommand("sacrifice", do_not_here, 300, POSITION_STANDING, MEDIUM);
-	AddCommand("nogossip",do_plr_nogossip,301,POSITION_RESTING,TUTTI);
-	AddCommand("gossip", do_gossip, CMD_GOSSIP, POSITION_RESTING,TUTTI);
-	AddCommand("noauction",do_plr_noauction,303,POSITION_RESTING,TUTTI);
-	AddCommand("auction", do_auction,CMD_AUCTION,POSITION_RESTING,ALLIEVO);
-	AddCommand("discon",do_disconnect,305,POSITION_RESTING,DIO);
-	AddCommand("freeze",do_freeze,306,POSITION_SLEEPING,QUESTMASTER);
-	AddCommand("drain",do_drainlevel,307,POSITION_SLEEPING,MAESTRO_DEI_CREATORI);
-	AddCommand("oedit",do_oedit,308,POSITION_DEAD,QUESTMASTER);
-	AddCommand("report",do_report,309,POSITION_RESTING,1);
-	AddCommand("interven",do_god_interven,310,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("gtell", do_gtell, CMD_GTELL, POSITION_SLEEPING, 1);
-	AddCommand("raise",do_action,312,POSITION_RESTING,1);
-	AddCommand("tap",do_action,313,POSITION_STANDING,1);
-	AddCommand("liege",do_action,314,POSITION_RESTING,1);
-	AddCommand("sneer",do_action,315,POSITION_RESTING,1);
-	AddCommand("howl",do_action,316,POSITION_RESTING,1);
-	AddCommand("kneel", do_action, CMD_KNEEL, POSITION_STANDING, 1);
-	AddCommand("finger",do_finger,318,POSITION_RESTING,1);
-	AddCommand("pace",do_action,319,POSITION_STANDING,1);
-	AddCommand("tongue",do_action,320,POSITION_RESTING,1);
-	AddCommand("flex",do_action,321,POSITION_STANDING,1);
-	AddCommand("ack",do_action,322,POSITION_RESTING,1);
-	AddCommand("ckeq",do_stat,CMD_CKEQ,POSITION_RESTING,MAESTRO_DEGLI_DEI);
-	AddCommand("caress",do_action,324,POSITION_RESTING,1);
-	AddCommand("cheer",do_action,325,POSITION_RESTING,1);
-	AddCommand("jump",do_action,326,POSITION_STANDING,1);
-
-	AddCommand("join", do_action, CMD_JOIN, POSITION_RESTING, 1);
-
-	AddCommand("split",do_split,328,POSITION_RESTING,1);
-	AddCommand("berserk",do_berserk,329,POSITION_FIGHTING,1);
-	AddCommand("tan",do_tan,330,POSITION_STANDING,1);
-
-	AddCommand("memorize",do_memorize,331,POSITION_RESTING,1);
-
-	AddCommand("find",do_find,332,POSITION_STANDING,1);
-	AddCommand("bellow",do_bellow,333,POSITION_FIGHTING,1);
-	AddCommand("carve",do_carve,335,POSITION_STANDING,1);
-	AddCommand("nuke",do_nuke,336,POSITION_DEAD,MAESTRO_DEI_CREATORI);
-	AddCommand("skills",do_show_skill,337,POSITION_SLEEPING,TUTTI);
-
-	AddCommand("doorway",do_doorway,338,POSITION_STANDING,TUTTI);
-	AddCommand("portal",do_psi_portal,339,POSITION_STANDING,TUTTI);
-	AddCommand("summon",do_mindsummon,340,POSITION_STANDING,TUTTI);
-	AddCommand("canibalize",do_canibalize,341,POSITION_STANDING,TUTTI);
-	AddCommand("cannibalize",do_canibalize,341,POSITION_STANDING,TUTTI);
-	AddCommand("flame",do_flame_shroud,342,POSITION_STANDING,TUTTI);
-	AddCommand("aura",do_aura_sight,343,POSITION_RESTING,TUTTI);
-	AddCommand("great",do_great_sight,344,POSITION_RESTING,TUTTI);
-	AddCommand("psionic invisibility",do_invisibililty,345,POSITION_STANDING,TUTTI);
-	AddCommand("blast",do_blast,346,POSITION_FIGHTING,TUTTI);
-
-	AddCommand("medit",do_medit,347,POSITION_DEAD,QUESTMASTER);
-
-	AddCommand("hypnotize",do_hypnosis,348,POSITION_STANDING,TUTTI);
-	AddCommand("scry",do_scry,349,POSITION_RESTING,TUTTI);
-	AddCommand("adrenalize",do_adrenalize,350,POSITION_STANDING,TUTTI);
-	AddCommand("brew",do_brew,351,POSITION_STANDING,TUTTI);
-	AddCommand("meditate",do_meditate,352,POSITION_RESTING,TUTTI);
-	AddCommand("forcerent",do_force_rent,353,POSITION_DEAD,QUESTMASTER);
-	AddCommand("warcry",do_holy_warcry,354,POSITION_FIGHTING,TUTTI);
-	AddCommand("lay on hands",do_lay_on_hands,355,POSITION_RESTING,TUTTI);
-	AddCommand("blessing",do_blessing,356,POSITION_STANDING,TUTTI);
-	AddCommand("heroic",do_heroic_rescue,357,POSITION_FIGHTING,TUTTI);
-	AddCommand("scan",do_scan,358,POSITION_STANDING,DIO_MINORE);
-	AddCommand("shield",do_psi_shield,359,POSITION_STANDING,TUTTI);
-	AddCommand("notell",do_plr_notell,360,POSITION_DEAD,TUTTI);
-	AddCommand("commands",do_command_list,361,POSITION_DEAD,TUTTI);
-	AddCommand("ghost",do_ghost,362,POSITION_DEAD,MAESTRO_DEL_CREATO);
-	AddCommand("speak",do_speak,363,POSITION_DEAD,TUTTI);
-	AddCommand("setsev",do_setsev,364, POSITION_DEAD, DIO_MINORE);
-	AddCommand("esp",do_esp,365, POSITION_STANDING,TUTTI);
-	AddCommand("mail",do_not_here,366, POSITION_STANDING,ALLIEVO-1);
-	AddCommand("check",do_not_here,367, POSITION_STANDING,TUTTI);
-	AddCommand("receive",do_not_here,368, POSITION_STANDING,TUTTI);
-	AddCommand("telepathy",do_telepathy,369, POSITION_RESTING,TUTTI);
-	AddCommand("mind", do_cast, CMD_MIND, POSITION_SITTING,TUTTI);
-
-	AddCommand("twist", do_open_exit, CMD_TWIST, POSITION_STANDING,TUTTI);
-	AddCommand("turn", do_open_exit, CMD_TURN, POSITION_STANDING,TUTTI);
-	AddCommand("lift", do_open_exit, CMD_LIFT, POSITION_STANDING,TUTTI);
-	AddCommand("push", do_open_exit, CMD_PUSH, POSITION_STANDING,TUTTI);
-
-	/*AddCommand("zload", do_zload,375, POSITION_STANDING,MAESTRO_DEGLI_DEI); */
-	AddCommand("zsave", do_zsave,376, POSITION_STANDING,MAESTRO_DEGLI_DEI);
-	AddCommand("zclean",do_zclean,377, POSITION_STANDING,MAESTRO_DEGLI_DEI);
-	AddCommand("wrebuild",do_WorldSave,378, POSITION_STANDING,IMMENSO);
-	AddCommand("wreset",do_wreset, CMD_WRESET, POSITION_STANDING,CREATORE);  // SALVO aggiunto comando wreset
-	AddCommand("gwho",list_groups,379, POSITION_DEAD,TUTTI);
-
-	AddCommand("mforce",do_mforce,380, POSITION_DEAD,DIO_MINORE);    /* CREATOR */
-	AddCommand("clone",do_clone,381, POSITION_DEAD,MAESTRO_DEGLI_DEI+2);
-	AddCommand("bodyguard",do_bodyguard,CMD_BODYGUARD, POSITION_STANDING,MEDIUM);
-	AddCommand("throw",do_throw,383, POSITION_SITTING,TUTTI);
-	AddCommand("run", do_run, CMD_RUN, POSITION_STANDING,TUTTI);
-	AddCommand("notch",do_weapon_load,385, POSITION_RESTING,TUTTI);
-	AddCommand("load",do_weapon_load,385, POSITION_RESTING,TUTTI);
-
-	AddCommand("spot",do_scan,387, POSITION_STANDING,TUTTI);
-	AddCommand("view",do_viewfile,388, POSITION_DEAD,DIO);
-	AddCommand("afk",do_set_afk,389, POSITION_DEAD,1);
-
-	AddCommand("stopfight", do_stopfight, CMD_STOPFIGHT, POSITION_FIGHTING,1);
-	AddCommand("principi",do_prince,CMD_PRINCE,POSITION_RESTING,TUTTI);
-	AddCommand("tspy",do_tspy,CMD_TSPY,POSITION_STANDING,1);
-	AddCommand("bid", do_auction, CMD_BID, POSITION_RESTING, ALLIEVO);
-	AddCommand("eavesdrop", do_eavesdrop, CMD_EAVESDROP, POSITION_STANDING,INIZIATO);
-	AddCommand("pquest", do_pquest, CMD_PQUEST, POSITION_STANDING,QUESTMASTER);
-	AddCommand("parry", do_parry, CMD_PARRY, POSITION_RESTING, TUTTI);
-	/* Liberi 397-399 */
-
-	/* lots of Socials */
-	AddCommand("adore",do_action,400,POSITION_RESTING,TUTTI);
-	AddCommand("agree",do_action,401,POSITION_RESTING,TUTTI);
-	AddCommand("bleed",do_action,402,POSITION_RESTING,TUTTI);
-	AddCommand("blink",do_action,403,POSITION_RESTING,TUTTI);
-	AddCommand("blow",do_action,404,POSITION_RESTING,TUTTI);
-	AddCommand("blame",do_action,405,POSITION_RESTING,TUTTI);
-	AddCommand("bark",do_action,406,POSITION_RESTING,TUTTI);
-	AddCommand("bhug",do_action,407,POSITION_RESTING,TUTTI);
-	AddCommand("bcheck",do_action,408,POSITION_RESTING,TUTTI);
-	AddCommand("boast",do_action,409,POSITION_RESTING,TUTTI);
-	AddCommand("chide",do_action,410,POSITION_RESTING,TUTTI);
-	AddCommand("compliment",do_action,411,POSITION_RESTING,TUTTI);
-	AddCommand("ceyes",do_action,412,POSITION_RESTING,TUTTI);
-	AddCommand("cears",do_action,413,POSITION_RESTING,TUTTI);
-	AddCommand("cross",do_action,414,POSITION_RESTING,TUTTI);
-	AddCommand("console",do_action,415,POSITION_RESTING,TUTTI);
-	AddCommand("calm",do_action,416,POSITION_RESTING,TUTTI);
-	AddCommand("cower",do_action,417,POSITION_RESTING,TUTTI);
-	AddCommand("confess",do_action,418,POSITION_RESTING,TUTTI);
-	AddCommand("drool",do_action,419,POSITION_RESTING,TUTTI);
-	AddCommand("grit",do_action,420,POSITION_RESTING,TUTTI);
-	AddCommand("greet",do_action,421,POSITION_RESTING,TUTTI);
-	AddCommand("gulp",do_action,422,POSITION_RESTING,TUTTI);
-	AddCommand("gloat",do_action,423,POSITION_RESTING,TUTTI);
-	AddCommand("gaze",do_action,424,POSITION_RESTING,TUTTI);
-	AddCommand("hum",do_action,425,POSITION_RESTING,TUTTI);
-	AddCommand("hkiss",do_action,426,POSITION_RESTING,TUTTI);
-	AddCommand("ignore",do_action,427,POSITION_RESTING,TUTTI);
-	AddCommand("interrupt",do_action,428,POSITION_RESTING,TUTTI);
-	AddCommand("knock",do_action,429,POSITION_RESTING,TUTTI);
-	AddCommand("listen",do_action,430,POSITION_RESTING,TUTTI);
-	AddCommand("muse",do_action,431,POSITION_RESTING,TUTTI);
-	AddCommand("pinch",do_action,432,POSITION_RESTING,TUTTI);
-	AddCommand("praise",do_action,433,POSITION_RESTING,TUTTI);
-	AddCommand("plot",do_action,434,POSITION_RESTING,TUTTI);
-	AddCommand("pie",do_action,435,POSITION_RESTING,TUTTI);
-	AddCommand("setalign",do_setalign,436,POSITION_RESTING,TUTTI);
-	AddCommand("pant",do_action,437,POSITION_RESTING,TUTTI);
-	AddCommand("rub",do_action,438,POSITION_RESTING,TUTTI);
-	AddCommand("roll",do_action,439,POSITION_RESTING,TUTTI);
-	AddCommand("recoil",do_action,440,POSITION_RESTING,TUTTI);
-	AddCommand("roar",do_action,441,POSITION_RESTING,TUTTI);
-	AddCommand("relax",do_action,442,POSITION_RESTING,TUTTI);
-	AddCommand("snap",do_action,443,POSITION_RESTING,TUTTI);
-	AddCommand("strut",do_action,444,POSITION_RESTING,TUTTI);
-	AddCommand("stroke",do_action,445,POSITION_RESTING,TUTTI);
-	AddCommand("stretch",do_action,446,POSITION_RESTING,TUTTI);
-	AddCommand("swave",do_action,447,POSITION_RESTING,TUTTI);
-	AddCommand("sob",do_action,448,POSITION_RESTING,TUTTI);
-	AddCommand("scratch",do_action,449,POSITION_RESTING,TUTTI);
-	AddCommand("squirm",do_action,450,POSITION_RESTING,TUTTI);
-	AddCommand("strangle",do_action,451,POSITION_RESTING,TUTTI);
-	AddCommand("scowl",do_action,452,POSITION_RESTING,TUTTI);
-	AddCommand("shudder",do_action,453,POSITION_RESTING,TUTTI);
-	AddCommand("strip",do_action,454,POSITION_RESTING,TUTTI);
-	AddCommand("scoff",do_action,455,POSITION_RESTING,TUTTI);
-	AddCommand("salute",do_action,456,POSITION_RESTING,TUTTI);
-	AddCommand("scold",do_action,457,POSITION_RESTING,TUTTI);
-	AddCommand("stagger",do_action,458,POSITION_RESTING,TUTTI);
-	AddCommand("toss",do_action,459,POSITION_RESTING,TUTTI);
-	AddCommand("twirl",do_action,460,POSITION_RESTING,TUTTI);
-	AddCommand("toast",do_action,461,POSITION_RESTING,TUTTI);
-	AddCommand("tug",do_action,462,POSITION_RESTING,TUTTI);
-	AddCommand("touch",do_action,463,POSITION_RESTING,TUTTI);
-	AddCommand("tremble",do_action,464,POSITION_RESTING,TUTTI);
-	AddCommand("twitch",do_action,465,POSITION_RESTING,TUTTI);
-	AddCommand("whimper",do_action,466,POSITION_RESTING,TUTTI);
-	AddCommand("whap",do_action,467,POSITION_RESTING,TUTTI);
-	AddCommand("wedge",do_action,468,POSITION_RESTING,TUTTI);
-	AddCommand("apologize",do_action,469,POSITION_RESTING,TUTTI);
-
-	/* Liberi 470-479 (-488)*/
-
-	/* DIMD stuff
-	 AddCommand("dmanage",do_dmanage,480,POSITION_RESTING,MAESTRO_DEL_CREATO);
-	 AddCommand("drestrict",do_drestrict,481,POSITION_RESTING,DIO_MINORE);
-	 AddCommand("dlink",do_dgossip,482,POSITION_RESTING,DIO_MINORE);
-	 AddCommand("dunlink",do_dgossip,483,POSITION_RESTING,DIO_MINORE);
-	 AddCommand("dlist",do_dlist,484,POSITION_RESTING,2);
-	 AddCommand("dwho",do_dwho,485,POSITION_RESTING,2);
-	 AddCommand("dgossip",do_dgossip,486,POSITION_RESTING,MAESTRO_DEL_CREATO);
-	 AddCommand("dtell",do_dtell,487,POSITION_RESTING,MAESTRO_DEL_CREATO);
-	 AddCommand("dthink",do_dthink,488,POSITION_RESTING,MAESTRO_DEL_CREATO);
-	 */
-
-	AddCommand("sending",do_sending,489,POSITION_STANDING,TUTTI);
-	AddCommand("messenger",do_sending,490,POSITION_STANDING,TUTTI);
-	AddCommand("prompt", do_set_prompt,491,POSITION_RESTING,TUTTI);
-
-	AddCommand("ooedit",do_ooedit,492,POSITION_DEAD,MAESTRO_DEGLI_DEI);
-	AddCommand("whois",do_whois,493,POSITION_DEAD,ALLIEVO-1);
-	AddCommand("osave",do_osave,494,POSITION_DEAD,QUESTMASTER);
-	AddCommand("dig", do_open_exit, CMD_DIG, POSITION_STANDING, TUTTI);
-	AddCommand("cut", do_open_exit, CMD_SCYTHE, POSITION_STANDING, TUTTI);
-	AddCommand("status", do_status, CMD_STATUS, POSITION_DEAD, TUTTI);
-	AddCommand("showsk", do_showskills, CMD_SHOWSKILLS, POSITION_DEAD,
-			   DIO);
-	AddCommand("resetsk", do_resetskills, CMD_RESETSKILLS, POSITION_DEAD,
-			   MAESTRO_DEL_CREATO);
-	AddCommand("setsk", do_setskill, CMD_SETSKILLS, POSITION_DEAD,
-			   MAESTRO_DEI_CREATORI);
-//AddCommand("perdono", do_perdono, CMD_PERDONO, POSITION_STANDING, TUTTI ); //FLYP 2003 Perdono
-	AddCommand("immolate", do_immolation, CMD_IMMOLATION, POSITION_FIGHTING, TUTTI); // Flyp 20180129: demon can sacrifice life for mana
-	AddCommand("SetTest",do_imptest,CMD_IMPTEST,POSITION_DEAD,MAESTRO_DEL_CREATO);
+	AddCommand( "north",                do_move,            CMD_NORTH,                  POSITION_STANDING,  TUTTI                   );  /*    1 */
+	AddCommand( "east",                 do_move,            CMD_EAST,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "south",                do_move,            CMD_SOUTH,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "west",                 do_move,            CMD_WEST,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "up",                   do_move,            CMD_UP,                     POSITION_STANDING,  TUTTI                   );  /*    5 */
+	AddCommand( "down",                 do_move,            CMD_DOWN,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "enter",                do_enter,           CMD_ENTER,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "exits",                do_exits,           CMD_EXITS,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "kiss",                 do_action,          CMD_KISS,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "get",                  do_get,             CMD_GET,                    POSITION_RESTING,   TUTTI                   );  /*   10 */
+	AddCommand( "drink",                do_drink,           CMD_DRINK,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "eat",                  do_eat,             CMD_EAT,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "wear",                 do_wear,            CMD_WEAR,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "wield",                do_wield,           CMD_WIELD,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "look",                 do_look,            CMD_LOOK,                   POSITION_RESTING,   TUTTI                   );  /*   15 */
+	AddCommand( "score",                do_score,           CMD_SCORE,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "say",                  do_new_say,         CMD_SAY,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "shout",                do_shout,           CMD_SHOUT,                  POSITION_RESTING,   2                       );
+	AddCommand( "tell",                 do_tell,            CMD_TELL,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "inventory",            do_inventory,       CMD_INVENTORY,              POSITION_DEAD,      TUTTI                   );  /*   20 */
+	AddCommand( "qui",                  do_qui,             CMD_QUI,                    POSITION_DEAD,      TUTTI                   );
+	AddCommand( "bounce",               do_action,          CMD_BOUNCE,                 POSITION_STANDING,  TUTTI                   );
+	AddCommand( "smile",                do_action,          CMD_SMILE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "dance",                do_action,          CMD_DANCE,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "kill",                 do_kill,            CMD_KILL,                   POSITION_FIGHTING,  TUTTI                   );  /*   25 */
+	AddCommand( "cackle",               do_action,          CMD_CACKLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "laugh",                do_action,          CMD_LAUGH,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "giggle",               do_action,          CMD_GIGGLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "shake",                do_action,          CMD_SHAKE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "puke",                 do_vomita,          CMD_PUKE,                   POSITION_RESTING,   TUTTI                   );  /*   30 */
+	AddCommand( "growl",                do_action,          CMD_GROWL,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "scream",               do_action,          CMD_SCREAM,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "insult",               do_insult,          CMD_INSULT,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "comfort",              do_action,          CMD_COMFORT,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "nod",                  do_action,          CMD_NOD,                    POSITION_RESTING,   TUTTI                   );  /*   35 */
+	AddCommand( "sigh",                 do_action,          CMD_SIGH,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sulk",                 do_action,          CMD_SULK,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "help",                 do_help,            CMD_HELP,                   POSITION_DEAD,      TUTTI                   );
+	AddCommand( "who",                  do_who,             CMD_WHO,                    POSITION_DEAD,      TUTTI                   );
+	AddCommand( "emote",                do_emote,           CMD_EMOTE,                  POSITION_SLEEPING,  TUTTI                   );  /*   40 */
+	AddCommand( ":",                    do_emote,           CMD_EMOTE,                  POSITION_SLEEPING,  TUTTI                   );  /*   40 */
+	AddCommand( "echo",                 do_echo,            CMD_ECHO,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "stand",                do_stand,           CMD_STAND,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sit",                  do_sit,             CMD_SIT,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "rest",                 do_rest,            CMD_REST,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sleep",                do_sleep,           CMD_SLEEP,                  POSITION_SLEEPING,  TUTTI                   );  /*   45 */
+	AddCommand( "wake",                 do_wake,            CMD_WAKE,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "force",                do_force,           CMD_FORCE,                  POSITION_SLEEPING,  MAESTRO_DEL_CREATO      );
+	AddCommand( "transfer",             do_trans,           CMD_TRANSFER,               POSITION_SLEEPING,  QUESTMASTER             );
+	AddCommand( "hug",                  do_action,          CMD_HUG,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "snuggle",              do_action,          CMD_SNUGGLE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cuddle",               do_action,          CMD_CUDDLE,                 POSITION_RESTING,   TUTTI                   );  /*   50 */
+	AddCommand( "nuzzle",               do_action,          CMD_NUZZLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cry",                  do_action,          CMD_CRY,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "news",                 do_news,            CMD_NEWS,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "equipment",            do_equipment,       CMD_EQUIPMENT,              POSITION_SLEEPING,  TUTTI                   );  /*   55 */
+	AddCommand( "buy",                  do_not_here,        CMD_BUY,                    POSITION_STANDING,  TUTTI                   );
+	AddCommand( "sell",                 do_not_here,        CMD_SELL,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "value",                do_value,           CMD_VALUE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "list",                 do_not_here,        CMD_LIST,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "drop",                 do_drop,            CMD_DROP,                   POSITION_RESTING,   TUTTI                   );  /*   60 */
+	AddCommand( "goto",                 do_goto,            CMD_GOTO,                   POSITION_SLEEPING,  IMMORTALE               );
+	AddCommand( "weather",              do_weather,         CMD_WEATHER,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "read",                 do_read,            CMD_READ,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "pour",                 do_pour,            CMD_POUR,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "grab",                 do_grab,            CMD_DUMMY,                  POSITION_RESTING,   TUTTI                   );  /*   65 */
+	AddCommand( "remove",               do_remove,          CMD_REMOVE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "put",                  do_put,             CMD_PUT,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "shutdow",              do_shutdow,         CMD_SHUTDOW,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "save",                 do_save,            CMD_SAVE,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "hit",                  do_hit,             CMD_HIT,                    POSITION_FIGHTING,  TUTTI                   );  /*   70 */
+	AddCommand( "string",               do_string,          CMD_STRING,                 POSITION_SLEEPING,  DIO                     );
+	AddCommand( "give",                 do_give,            CMD_GIVE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "quit",                 do_quit,            CMD_QUIT,                   POSITION_DEAD,      TUTTI                   );
+	AddCommand( "wiznews",              do_wiznews,         CMD_WIZNEWS,                POSITION_DEAD,      IMMORTALE               );
+	AddCommand( "guard",                do_guard,           CMD_GUARD,                  POSITION_STANDING,  TUTTI                   );  /*   75 */
+	AddCommand( "time",                 do_time,            CMD_TIME,                   POSITION_DEAD,      TUTTI                   );
+	AddCommand( "oload",                do_oload,           CMD_OLOAD,                  POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "purge",                do_purge,           CMD_PURGE,                  POSITION_DEAD,      DIO_MINORE              );
+	AddCommand( "shutdown",             do_shutdown,        CMD_SHUTDOWN,               POSITION_DEAD,      CREATORE                );
+	AddCommand( "idea",                 do_idea_new,        CMD_IDEA,                   POSITION_DEAD,      TUTTI                   );  /*   80 */
+	AddCommand( "typo",                 do_typo,            CMD_TYPO,                   POSITION_DEAD,      TUTTI                   );
+	AddCommand( "bug",                  do_bug_new,         CMD_BUG,                    POSITION_DEAD,      TUTTI                   );
+	AddCommand( "whisper",              do_whisper,         CMD_WHISPER,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cast",                 do_cast,            CMD_CAST,                   POSITION_SITTING,   TUTTI                   );
+	AddCommand( "at",                   do_at,              CMD_AT,                     POSITION_DEAD,      DIO                     );  /*   85 */
+	AddCommand( "ask",                  do_ask,             CMD_ASK,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "order",                do_order,           CMD_ORDER,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sip",                  do_sip,             CMD_SIP,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "taste",                do_taste,           CMD_TASTE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "snoop",                do_snoop,           CMD_SNOOP,                  POSITION_DEAD,      QUESTMASTER             );  /*   90 */
+	AddCommand( "follow",               do_follow,          CMD_FOLLOW,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "rent",                 do_not_here,        CMD_RENT,                   POSITION_STANDING,  1                       );
+	AddCommand( "offer",                do_not_here,        CMD_OFFER,                  POSITION_STANDING,  1                       );
+	AddCommand( "poke",                 do_action,          CMD_POKE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "advance",              do_advance,         CMD_ADVANCE,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );  /*   95 */
+	AddCommand( "accuse",               do_action,          CMD_ACCUSE,                 POSITION_SITTING,   TUTTI                   );
+	AddCommand( "grin",                 do_action,          CMD_GRIN,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "bow",                  do_action,          CMD_BOW,                    POSITION_STANDING,  TUTTI                   );
+	AddCommand( "open",                 do_open,            CMD_OPEN,                   POSITION_SITTING,   TUTTI                   );
+	AddCommand( "close",                do_close,           CMD_CLOSE,                  POSITION_SITTING,   TUTTI                   );  /*  100 */
+	AddCommand( "lock",                 do_lock,            CMD_LOCK,                   POSITION_SITTING,   TUTTI                   );
+	AddCommand( "unlock",               do_unlock,          CMD_UNLOCK,                 POSITION_SITTING,   TUTTI                   );
+	AddCommand( "leave",                do_leave,           CMD_LEAVE,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "applaud",              do_action,          CMD_APPLAUD,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "blush",                do_action,          CMD_BLUSH,                  POSITION_RESTING,   TUTTI                   );  /*  105 */
+	AddCommand( "burp",                 do_action,          CMD_BURP,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "chuckle",              do_action,          CMD_CHUCKLE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "nose",                 do_action,          CMD_NOSE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cough",                do_action,          CMD_COUGH,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "curtsey",              do_action,          CMD_CURTSEY,                POSITION_STANDING,  TUTTI                   );  /*  110 */
+	AddCommand( "rise",                 do_action,          CMD_RISE,                   POSITION_RESTING,   DIO                     );
+	AddCommand( "flip",                 do_action,          CMD_FLIP,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "fondle",               do_action,          CMD_FONDLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "frown",                do_action,          CMD_FROWN,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "gasp",                 do_action,          CMD_GASP,                   POSITION_RESTING,   TUTTI                   );  /*  115 */
+	AddCommand( "glare",                do_action,          CMD_GLARE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "groan",                do_action,          CMD_GROAN,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "grope",                do_action,          CMD_GROPE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "hiccup",               do_action,          CMD_HICCUP,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "lick",                 do_action,          CMD_LICK,                   POSITION_RESTING,   TUTTI                   );  /*  120 */
+	AddCommand( "love",                 do_action,          CMD_LOVE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "moan",                 do_action,          CMD_MOAN,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "nibble",               do_action,          CMD_NIBBLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "pout",                 do_action,          CMD_POUT,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "purr",                 do_action,          CMD_PURR,                   POSITION_RESTING,   TUTTI                   );  /*  125 */
+	AddCommand( "ruffle",               do_action,          CMD_RUFFLE,                 POSITION_STANDING,  TUTTI                   );
+	AddCommand( "shiver",               do_action,          CMD_SHIVER,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "shrug",                do_action,          CMD_SHRUG,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sing",                 do_action,          CMD_SING,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "slap",                 do_action,          CMD_SLAP,                   POSITION_RESTING,   TUTTI                   );  /*  130 */
+	AddCommand( "smirk",                do_action,          CMD_SMIRK,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "support",              do_support,         CMD_SUPPORT,                POSITION_STANDING,  TUTTI                   );
+	AddCommand( "sneeze",               do_action,          CMD_SNEEZE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "snicker",              do_action,          CMD_SNICKER,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sniff",                do_action,          CMD_SNIFF,                  POSITION_RESTING,   TUTTI                   );  /*  135 */
+	AddCommand( "snore",                do_action,          CMD_SNORE,                  POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "spit",                 do_action,          CMD_SPIT,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "squeeze",              do_action,          CMD_SQUEEZE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "stare",                do_action,          CMD_STARE,                  POSITION_RESTING,   TUTTI                   );
+    AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  140 */
+    AddCommand( "associate",            do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  140 */
+	AddCommand( "thank",                do_action,          CMD_THANK,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "twiddle",              do_action,          CMD_TWIDDLE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "wave",                 do_action,          CMD_WAVE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "whistle",              do_action,          CMD_WHISTLE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "wiggle",               do_action,          CMD_WIGGLE,                 POSITION_STANDING,  TUTTI                   );  /*  145 */
+	AddCommand( "wink",                 do_action,          CMD_WINK,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "yawn",                 do_action,          CMD_YAWN,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "snowball",             do_action,          CMD_SNOWBALL,               POSITION_STANDING,  IMMORTALE               );
+	AddCommand( "write",                do_write,           CMD_WRITE,                  POSITION_STANDING,  1                       );
+	AddCommand( "hold",                 do_grab,            CMD_HOLD,                   POSITION_RESTING,   TUTTI                   );  /*  150 */
+	AddCommand( "flee",                 do_flee,            CMD_FLEE,                   POSITION_SITTING,   1                       );
+	AddCommand( "sneak",                do_sneak,           CMD_SNEAK,                  POSITION_STANDING,  1                       );
+	AddCommand( "hide",                 do_hide,            CMD_HIDE,                   POSITION_RESTING,   1                       );  /*  153 */
+	AddCommand( "camouflage",           do_hide,            CMD_HIDE,                   POSITION_STANDING,  1                       );  /*  153 */
+	AddCommand( "backstab",             do_backstab,        CMD_BACKSTAB,               POSITION_STANDING,  1                       );
+	AddCommand( "pick",                 do_pick,            CMD_PICK,                   POSITION_STANDING,  1                       );  /*  155 */
+	AddCommand( "steal",                do_steal,           CMD_STEAL,                  POSITION_STANDING,  1                       );
+	AddCommand( "bash",                 do_bash,            CMD_BASH,                   POSITION_FIGHTING,  1                       );
+	AddCommand( "rescue",               do_rescue,          CMD_RESCUE,                 POSITION_FIGHTING,  1                       );
+	AddCommand( "kick",                 do_kick,            CMD_KICK,                   POSITION_FIGHTING,  1                       );
+	AddCommand( "french",               do_action,          CMD_FRENCHKISS,             POSITION_RESTING,   ALLIEVO                 );  /*  160 */
+	AddCommand( "comb",                 do_action,          CMD_COMB,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "massage",              do_action,          CMD_MASSAGE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "tickle",               do_action,          CMD_TICKLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "practice",             do_practice,        CMD_PRACTICE,               POSITION_RESTING,   1                       );  /*  164 */
+	AddCommand( "practise",             do_practice,        CMD_PRACTICE,               POSITION_RESTING,   1                       );  /*  164 */
+	AddCommand( "pat",                  do_action,          CMD_PAT,                    POSITION_RESTING,   TUTTI                   );  /*  165 */
+	AddCommand( "examine",              do_examine,         CMD_EXAMINE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "take",                 do_get,             CMD_TAKE,                   POSITION_RESTING,   1                       );
+	AddCommand( "info",                 do_info,            CMD_INFO,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "'",                    do_new_say,         CMD_SAY_APICE,              POSITION_RESTING,   TUTTI                   );
+    AddCommand( "?",                    do_commune,         CMD_THINK_SUPERNI,          POSITION_RESTING,   CREATORE                );  /*  170 */
+    AddCommand( "curse",                do_action,          CMD_CURSE,                  POSITION_RESTING,   5                       );
+	AddCommand( "use",                  do_use,             CMD_USE,                    POSITION_SITTING,   1                       );
+	AddCommand( "where",                do_where,           CMD_WHERE,                  POSITION_DEAD,      1                       );
+	AddCommand( "levels",               do_levels,          CMD_LEVELS,                 POSITION_DEAD,      TUTTI                   );
+	AddCommand( "register",             do_register,        CMD_REGISTER,               POSITION_DEAD,      TUTTI                   );  /*  175 */
+    AddCommand( "pray",                 do_pray,            CMD_PRAY,                   POSITION_SITTING,   1                       );
+    AddCommand( ",",                    do_emote,           CMD_EMOTE_VIRGOLA,          POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "beg",                  do_action,          CMD_BEG,                    POSITION_RESTING,   TUTTI                   );
+    AddCommand( "forge",                do_forge,           CMD_FORGE,                  POSITION_STANDING,  1                       );
+	AddCommand( "cringe",               do_action,          CMD_CRINGE,                 POSITION_RESTING,   TUTTI                   );  /*  180 */
+	AddCommand( "daydream",             do_action,          CMD_DAYDREAM,               POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "fume",                 do_action,          CMD_FUME,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "grovel",               do_action,          CMD_GROVEL,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "hop",                  do_action,          CMD_HOP,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "nudge",                do_action,          CMD_NUDGE,                  POSITION_RESTING,   TUTTI                   );  /*  185 */
+	AddCommand( "peer",                 do_action,          CMD_PEER,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "point",                do_action,          CMD_POINT,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "ponder",               do_action,          CMD_PONDER,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "punch",                do_action,          CMD_PUNCH,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "snarl",                do_action,          CMD_SNARL,                  POSITION_RESTING,   TUTTI                   );  /*  190 */
+	AddCommand( "spank",                do_action,          CMD_SPANK,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "steam",                do_action,          CMD_STEAM,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "tackle",               do_action,          CMD_TACKLE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "taunt",                do_action,          CMD_TAUNT,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "think",                do_commune,         CMD_THINK,                  POSITION_RESTING,   IMMORTALE               );  /*  195 */
+	AddCommand( "\"",                   do_commune,         CMD_THINK,                  POSITION_RESTING,   IMMORTALE               );  /*  195 */
+	AddCommand( "whine",                do_action,          CMD_WHINE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "worship",              do_action,          CMD_WORSHIP,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "yodel",                do_action,          CMD_YODEL,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "brief",                do_brief,           CMD_BRIEF,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "wizlist",              do_wizlist,         CMD_WIZLIST,                POSITION_DEAD,      TUTTI                   );  /*  200 */
+	AddCommand( "consider",             do_consider,        CMD_CONSIDER,               POSITION_RESTING,   TUTTI                   );
+	AddCommand( "group",                do_group,           CMD_GROUP,                  POSITION_RESTING,   1                       );
+	AddCommand( "restore",              do_restore,         CMD_RESTORE,                POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	AddCommand( "return",               do_return,          CMD_RETURN,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "switch",               do_switch,          CMD_SWITCH,                 POSITION_DEAD,      CREATORE                );  /*  205 */
+	AddCommand( "quaff",                do_quaff,           CMD_QUAFF,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "recite",               do_recite,          CMD_RECITE,                 POSITION_STANDING,  TUTTI                   );
+	AddCommand( "users",                do_users,           CMD_USERS,                  POSITION_DEAD,      DIO_MINORE              );
+	AddCommand( "pose",                 do_pose,            CMD_POSE,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "noshout",              do_noshout,         CMD_NOSHOUT,                POSITION_SLEEPING,  IMMORTALE               );  /*  210 */
+	AddCommand( "wizhelp",              do_wizhelp,         CMD_WIZHELP,                POSITION_SLEEPING,  IMMORTALE               );
+	AddCommand( "credits",              do_credits,         CMD_CREDITS,                POSITION_DEAD,      TUTTI                   );
+	AddCommand( "compact",              do_compact,         CMD_COMPACT,                POSITION_DEAD,      TUTTI                   );
+	AddCommand( "daimoku",              do_daimoku,         CMD_DAIMOKU,                POSITION_SLEEPING,  1                       );
+	AddCommand( "deafen",               do_plr_noshout,     CMD_DEAFEN,                 POSITION_SLEEPING,  1                       );  /*  215 */
+	AddCommand( "slay",                 do_slay,            CMD_SLAY,                   POSITION_FIGHTING,  DIO_MINORE              );
+	AddCommand( "wimpy",                do_wimp,            CMD_WIMPY,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "junk",                 do_junk,            CMD_JUNK,                   POSITION_RESTING,   1                       );
+	AddCommand( "deposit",              do_not_here,        CMD_DEPOSIT,                POSITION_RESTING,   1                       );
+	AddCommand( "withdraw",             do_not_here,        CMD_WITHDRAW,               POSITION_RESTING,   1                       );  /*  220 */
+	AddCommand( "balance",              do_not_here,        CMD_BALANCE,                POSITION_RESTING,   1                       );
+	AddCommand( "nohassle",             do_nohassle,        CMD_NOHASSLE,               POSITION_DEAD,      DIO                     );
+	AddCommand( "system",               do_system,          CMD_SYSTEM,                 POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "pull",                 do_open_exit,       CMD_PULL,                   POSITION_STANDING,  1                       );
+	AddCommand( "stealth",              do_stealth,         CMD_STEALTH,                POSITION_DEAD,      DIO                     );  /*  225 */
+	AddCommand( "edit",                 do_edit,            CMD_EDIT,                   POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	AddCommand( "@",                    do_set,             CMD_CHIOCCIOLA,             POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "rsave",                do_rsave,           CMD_RSAVE,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	AddCommand( "rload",                do_rload,           CMD_RLOAD,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	AddCommand( "track",                do_track,           CMD_TRACK,                  POSITION_DEAD,      1                       );  /*  230 */
+	AddCommand( "wizlock",              do_wizlock,         CMD_WIZLOCK,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "highfive",             do_highfive,        CMD_HIGHFIVE,               POSITION_DEAD,      TUTTI                   );
+	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );
+	AddCommand( "whozone",              do_who,             CMD_WHOZONE,                POSITION_DEAD,      TUTTI                   );
+	AddCommand( "assist",               do_assist,          CMD_ASSIST,                 POSITION_FIGHTING,  1                       );  /*  235 */
+	AddCommand( "attribute",            do_attribute,       CMD_ATTRIBUTE,              POSITION_DEAD,      5                       );
+	AddCommand( "world",                do_world,           CMD_WORLD,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "allspells",            do_spells,          CMD_ALLSPELLS,              POSITION_DEAD,      TUTTI                   );
+	AddCommand( "breath",               do_breath,          CMD_BREATH,                 POSITION_FIGHTING,  1                       );
+	AddCommand( "show",                 do_show,            CMD_SHOW,                   POSITION_DEAD,      DIO_MINORE              );  /*  240 */
+	AddCommand( "debug",                do_debug,           CMD_DEBUG,                  POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "invisible",            do_invis,           CMD_INVISIBLE,              POSITION_DEAD,      IMMORTALE               );
+	AddCommand( "gain",                 do_gain,            CMD_GAIN,                   POSITION_DEAD,      1                       );
+	AddCommand( "mload",                do_mload,           CMD_MLOAD,                  POSITION_DEAD,      DIO                     );
+	AddCommand( "disarm",               do_disarm,          CMD_DISARM,                 POSITION_FIGHTING,  1                       );  /*  245 */
+	AddCommand( "bonk",                 do_action,          CMD_BONK,                   POSITION_SITTING,   3                       );
+	AddCommand( "chpwd",                do_passwd,          CMD_CHPWD,                  POSITION_SITTING,   MAESTRO_DEI_CREATORI    );  /*  247 */
+	AddCommand( "passwd",               do_passwd,          CMD_CHPWD,                  POSITION_SITTING,   MAESTRO_DEI_CREATORI    );  /*  247 */
+	AddCommand( "fill",                 do_not_here,        CMD_FILL,                   POSITION_SITTING,   TUTTI                   );
+	AddCommand( "mantra",               do_mantra,          CMD_MANTRA,                 POSITION_SITTING,   TUTTI                   );
+	AddCommand( "shoot",                do_fire,            CMD_SHOOT,                  POSITION_STANDING,  TUTTI                   );  /*  250 */
+	AddCommand( "fire",                 do_fire,            CMD_SHOOT,                  POSITION_DEAD,      TUTTI                   );  /*  250 */
+	AddCommand( "silence",              do_silence,         CMD_SILENCE,                POSITION_STANDING,  DIO                     );
+	AddCommand( "teams",                do_not_here,        CMD_TEAMS,                  POSITION_STANDING,  MAESTRO_DEL_CREATO      );
+	AddCommand( "player",               do_not_here,        CMD_PLAYER,                 POSITION_STANDING,  MAESTRO_DEL_CREATO      );
+	AddCommand( "create",               do_create,          CMD_CREATE,                 POSITION_STANDING,  QUESTMASTER             );
+	AddCommand( "bamfin",               do_bamfin,          CMD_BAMFIN,                 POSITION_STANDING,  IMMORTALE               );  /*  255 */
+	AddCommand( "bamfout",              do_bamfout,         CMD_BAMFOUT,                POSITION_STANDING,  IMMORTALE               );
+	AddCommand( "vis",                  do_invis,           CMD_VIS,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "doorbash",             do_doorbash,        CMD_DOORBASH,               POSITION_STANDING,  1                       );
+	AddCommand( "mosh",                 do_action,          CMD_MOSH,                   POSITION_FIGHTING,  1                       );
+	AddCommand( "alias",                do_alias,           CMD_ALIAS,                  POSITION_SLEEPING,  1                       );  /*  260 */
+	AddCommand( "1",                    do_alias,           CMD_1,                      POSITION_DEAD,      1                       );
+	AddCommand( "2",                    do_alias,           CMD_2,                      POSITION_DEAD,      1                       );
+	AddCommand( "3",                    do_alias,           CMD_3,                      POSITION_DEAD,      1                       );
+	AddCommand( "4",                    do_alias,           CMD_4,                      POSITION_DEAD,      1                       );
+	AddCommand( "5",                    do_alias,           CMD_5,                      POSITION_DEAD,      1                       );  /*  265 */
+	AddCommand( "6",                    do_alias,           CMD_6,                      POSITION_DEAD,      1                       );
+	AddCommand( "7",                    do_alias,           CMD_7,                      POSITION_DEAD,      1                       );
+	AddCommand( "8",                    do_alias,           CMD_8,                      POSITION_DEAD,      1                       );
+	AddCommand( "9",                    do_alias,           CMD_9,                      POSITION_DEAD,      1                       );
+	AddCommand( "0",                    do_alias,           CMD_0,                      POSITION_DEAD,      1                       );  /*  270 */
+	AddCommand( "swim",                 do_swim,            CMD_SWIM,                   POSITION_STANDING,  1                       );
+	AddCommand( "spy",                  do_spy,             CMD_SPY,                    POSITION_STANDING,  1                       );
+	AddCommand( "springleap",           do_springleap,      CMD_SPRINGLEAP,             POSITION_RESTING,   1                       );
+	AddCommand( "quivering palm",       do_quivering_palm,  CMD_QUIVERING,              POSITION_FIGHTING,  INIZIATO-1              );
+	AddCommand( "feign death",          do_feign_death,     CMD_FEIGH_DEATH,            POSITION_FIGHTING,  1                       );  /*  275 */
+	AddCommand( "mount",                do_mount,           CMD_MOUNT,                  POSITION_STANDING,  1                       );
+	AddCommand( "dismount",             do_mount,           CMD_DISMOUNT,               POSITION_MOUNTED,   1                       );
+	AddCommand( "ride",                 do_mount,           CMD_RIDE,                   POSITION_STANDING,  1                       );
+	AddCommand( "sign",                 do_sign,            CMD_SIGN,                   POSITION_RESTING,   1                       );
+	AddCommand( "set",                  do_set_flags,       CMD_SET,                    POSITION_DEAD,      TUTTI                   );  /*  280 */
+	AddCommand( "first aid",            do_first_aid,       CMD_FIRST_AID,              POSITION_RESTING,   1                       );
+	AddCommand( "log",                  do_set_log,         CMD_LOG,                    POSITION_DEAD,      MAESTRO_DEL_CREATO      );
+	AddCommand( "recall",               do_cast,            CMD_RECALL,                 POSITION_SITTING,   1                       );
+	AddCommand( "reload",               reboot_text,        CMD_RELOAD,                 POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "event",                do_event,           CMD_EVENT,                  POSITION_DEAD,      MAESTRO_DEI_CREATORI    );  /*  285 */
+	AddCommand( "disguise",             do_disguise,        CMD_DISGUISE,               POSITION_STANDING,  1                       );
+	AddCommand( "climb",                do_climb,           CMD_CLIMB,                  POSITION_STANDING,  1                       );
+	AddCommand( "beep",                 do_beep,            CMD_BEEP,                   POSITION_DEAD,      DIO_MINORE              );
+	AddCommand( "bite",                 do_action,          CMD_BITE,                   POSITION_RESTING,   1                       );
+	AddCommand( "redit",                do_redit,           CMD_REDIT,                  POSITION_SLEEPING,  MAESTRO_DEGLI_DEI       );  /*  290 */
+	AddCommand( "display",              do_display,         CMD_DISPLAY,                POSITION_SLEEPING,  1                       );
+	AddCommand( "resize",               do_resize,          CMD_RESIZE,                 POSITION_SLEEPING,  1                       );
+	AddCommand( "ripudia",              do_ripudia,         CMD_RIPUDIA,                POSITION_STANDING,  VASSALLO                );
+	AddCommand( "#",                    do_cset,            CMD_DIESIS,                 POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "spell",                do_stat,            CMD_SPELL,                  POSITION_DEAD,      DIO_MINORE              );  /*  295 */
+	AddCommand( "name",                 do_stat,            CMD_NAME,                   POSITION_DEAD,      DIO_MINORE              );
+	AddCommand( "stat",                 do_stat,            CMD_STAT,                   POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	AddCommand( "immortali",            do_immort,          CMD_IMMORT,                 POSITION_DEAD,      TUTTI                   );
+	AddCommand( "auth",                 do_auth,            CMD_AUTH,                   POSITION_SLEEPING,  MAESTRO_DEGLI_DEI       );
+	AddCommand( "sacrifice",            do_not_here,        CMD_SACRIFICE,              POSITION_STANDING,  MEDIUM                  );  /*  300 */
+	AddCommand( "nogossip",             do_plr_nogossip,    CMD_NOGOSSIP,               POSITION_RESTING,   TUTTI                   );
+	AddCommand( "gossip",               do_gossip,          CMD_GOSSIP,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "noauction",            do_plr_noauction,   CMD_NOAUCTION,              POSITION_RESTING,   TUTTI                   );
+	AddCommand( "auction",              do_auction,         CMD_AUCTION,                POSITION_RESTING,   ALLIEVO                 );
+	AddCommand( "discon",               do_disconnect,      CMD_DISCON,                 POSITION_RESTING,   DIO                     );  /*  305 */
+	AddCommand( "freeze",               do_freeze,          CMD_FREEZE,                 POSITION_SLEEPING,  QUESTMASTER             );
+	AddCommand( "drain",                do_drainlevel,      CMD_DRAIN,                  POSITION_SLEEPING,  MAESTRO_DEI_CREATORI    );
+	AddCommand( "oedit",                do_oedit,           CMD_OEDIT,                  POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "report",               do_report,          CMD_REPORT,                 POSITION_RESTING,   1                       );
+	AddCommand( "interven",             do_god_interven,    CMD_INTERVEN,               POSITION_DEAD,      MAESTRO_DEI_CREATORI    );  /*  310 */
+	AddCommand( "gtell",                do_gtell,           CMD_GTELL,                  POSITION_SLEEPING,  1                       );
+	AddCommand( "raise",                do_action,          CMD_RAISE,                  POSITION_RESTING,   1                       );
+	AddCommand( "tap",                  do_action,          CMD_TAP,                    POSITION_STANDING,  1                       );
+	AddCommand( "liege",                do_action,          CMD_LIEGE,                  POSITION_RESTING,   1                       );
+	AddCommand( "sneer",                do_action,          CMD_SNEER,                  POSITION_RESTING,   1                       );  /*  315 */
+	AddCommand( "howl",                 do_action,          CMD_HOWL,                   POSITION_RESTING,   1                       );
+	AddCommand( "kneel",                do_action,          CMD_KNEEL,                  POSITION_STANDING,  1                       );
+	AddCommand( "finger",               do_finger,          CMD_FINGER,                 POSITION_RESTING,   1                       );
+	AddCommand( "pace",                 do_action,          CMD_PACE,                   POSITION_STANDING,  1                       );
+	AddCommand( "tongue",               do_action,          CMD_TONGUE,                 POSITION_RESTING,   1                       );  /*  320 */
+	AddCommand( "flex",                 do_action,          CMD_FLEX,                   POSITION_STANDING,  1                       );
+	AddCommand( "ack",                  do_action,          CMD_ACK,                    POSITION_RESTING,   1                       );
+	AddCommand( "ckeq",                 do_stat,            CMD_CKEQ,                   POSITION_RESTING,   MAESTRO_DEGLI_DEI       );
+	AddCommand( "caress",               do_action,          CMD_CARESS,                 POSITION_RESTING,   1                       );
+	AddCommand( "cheer",                do_action,          CMD_CHEER,                  POSITION_RESTING,   1                       );  /*  325 */
+	AddCommand( "jump",                 do_action,          CMD_JUMP,                   POSITION_STANDING,  1                       );
+	AddCommand( "join",                 do_action,          CMD_JOIN,                   POSITION_RESTING,   1                       );
+	AddCommand( "split",                do_split,           CMD_SPLIT,                  POSITION_RESTING,   1                       );
+	AddCommand( "berserk",              do_berserk,         CMD_BERSERK,                POSITION_FIGHTING,  1                       );
+	AddCommand( "tan",                  do_tan,             CMD_TAN,                    POSITION_STANDING,  1                       );  /*  330 */
+	AddCommand( "memorize",             do_memorize,        CMD_MEMORIZE,               POSITION_RESTING,   1                       );
+	AddCommand( "find",                 do_find,            CMD_FIND,                   POSITION_STANDING,  1                       );
+	AddCommand( "bellow",               do_bellow,          CMD_BELLOW,                 POSITION_FIGHTING,  1                       );
+  //AddCommand( "store",                do_not_here,        CMD_STORE,                  POSITION_STANDING,  1                       );
+	AddCommand( "carve",                do_carve,           CMD_CARVE,                  POSITION_STANDING,  1                       );  /*  335 */
+	AddCommand( "nuke",                 do_nuke,            CMD_NUKE,                   POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "skills",               do_show_skill,      CMD_SKILLS,                 POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "doorway",              do_doorway,         CMD_DOORWAY,                POSITION_STANDING,  TUTTI                   );
+	AddCommand( "portal",               do_psi_portal,      CMD_PORTAL,                 POSITION_STANDING,  TUTTI                   );
+	AddCommand( "summon",               do_mindsummon,      CMD_SUMMON,                 POSITION_STANDING,  TUTTI                   );  /*  340 */
+	AddCommand( "canibalize",           do_canibalize,      CMD_CANIBALIZE,             POSITION_STANDING,  TUTTI                   );  /*  341 */
+	AddCommand( "cannibalize",          do_canibalize,      CMD_CANIBALIZE,             POSITION_STANDING,  TUTTI                   );  /*  341 */
+	AddCommand( "flame",                do_flame_shroud,    CMD_FLAME,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "aura",                 do_aura_sight,      CMD_AURA,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "great",                do_great_sight,     CMD_GREAT,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "psionic invisibility", do_invisibililty,   CMD_PSIONIC_INVISIBILIY,    POSITION_STANDING,  TUTTI                   );  /*  345 */
+	AddCommand( "blast",                do_blast,           CMD_BLAST,                  POSITION_FIGHTING,  TUTTI                   );
+	AddCommand( "medit",                do_medit,           CMD_MEDIT,                  POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "hypnotize",            do_hypnosis,        CMD_HYPNOTIZE,              POSITION_STANDING,  TUTTI                   );
+	AddCommand( "scry",                 do_scry,            CMD_SCRY,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "adrenalize",           do_adrenalize,      CMD_ADRENALIZE,             POSITION_STANDING,  TUTTI                   );  /*  350 */
+	AddCommand( "brew",                 do_brew,            CMD_BREW,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "meditate",             do_meditate,        CMD_MEDITATE,               POSITION_RESTING,   TUTTI                   );
+	AddCommand( "forcerent",            do_force_rent,      CMD_FORCERENT,              POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "warcry",               do_holy_warcry,     CMD_WARCRY,                 POSITION_FIGHTING,  TUTTI                   );
+	AddCommand( "lay on hands",         do_lay_on_hands,    CMD_LAY_ON_HANDS,           POSITION_RESTING,   TUTTI                   );  /*  355 */
+	AddCommand( "blessing",             do_blessing,        CMD_BLESSING,               POSITION_STANDING,  TUTTI                   );
+	AddCommand( "heroic",               do_heroic_rescue,   CMD_HEROIC,                 POSITION_FIGHTING,  TUTTI                   );
+	AddCommand( "scan",                 do_scan,            CMD_SCAN,                   POSITION_STANDING,  DIO_MINORE              );
+	AddCommand( "shield",               do_psi_shield,      CMD_SHIELD,                 POSITION_STANDING,  TUTTI                   );
+	AddCommand( "notell",               do_plr_notell,      CMD_NOTELL,                 POSITION_DEAD,      TUTTI                   );  /*  360 */
+	AddCommand( "commands",             do_command_list,    CMD_COMMANDS,               POSITION_DEAD,      TUTTI                   );
+	AddCommand( "ghost",                do_ghost,           CMD_GHOST,                  POSITION_DEAD,      MAESTRO_DEL_CREATO      );
+	AddCommand( "speak",                do_speak,           CMD_SPEAK,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "setsev",               do_setsev,          CMD_SETSEV,                 POSITION_DEAD,      DIO_MINORE              );
+	AddCommand( "esp",                  do_esp,             CMD_ESP,                    POSITION_STANDING,  TUTTI                   );  /*  365 */
+	AddCommand( "mail",                 do_not_here,        CMD_MAIL,                   POSITION_STANDING,  ALLIEVO-1               );
+	AddCommand( "check",                do_not_here,        CMD_CHECK,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "receive",              do_not_here,        CMD_RECEIVE,                POSITION_STANDING,  TUTTI                   );
+	AddCommand( "telepathy",            do_telepathy,       CMD_TELEPATHY,              POSITION_RESTING,   TUTTI                   );
+	AddCommand( "mind",                 do_cast,            CMD_MIND,                   POSITION_SITTING,   TUTTI                   );  /*  370 */
+	AddCommand( "twist",                do_open_exit,       CMD_TWIST,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "turn",                 do_open_exit,       CMD_TURN,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "lift",                 do_open_exit,       CMD_LIFT,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "push",                 do_open_exit,       CMD_PUSH,                   POSITION_STANDING,  TUTTI                   );
+  //AddCommand("zload",                 do_zload,           CMD_ZLOAD,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );  /*  375 */
+	AddCommand( "zsave",                do_zsave,           CMD_ZSAVE,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
+	AddCommand( "zclean",               do_zclean,          CMD_ZCLEAN,                 POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
+	AddCommand( "wrebuild",             do_WorldSave,       CMD_WREBUILD,               POSITION_STANDING,  IMMENSO                 );
+	AddCommand( "gwho",                 list_groups,        CMD_GWHO,                   POSITION_DEAD,      TUTTI                   );
+	AddCommand( "mforce",               do_mforce,          CMD_MFORCE,                 POSITION_DEAD,      DIO_MINORE              );  /*  380 */
+	AddCommand( "clone",                do_clone,           CMD_CLONE,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI+2     );
+	AddCommand( "bodyguard",            do_bodyguard,       CMD_BODYGUARD,              POSITION_STANDING,  MEDIUM                  );
+	AddCommand( "throw",                do_throw,           CMD_THROW,                  POSITION_SITTING,   TUTTI                   );
+	AddCommand( "run",                  do_run,             CMD_RUN,                    POSITION_STANDING,  TUTTI                   );
+	AddCommand( "notch",                do_weapon_load,     CMD_NOTCH,                  POSITION_RESTING,   TUTTI                   );  /*  385 */
+	AddCommand( "load",                 do_weapon_load,     CMD_NOTCH,                  POSITION_RESTING,   TUTTI                   );  /*  385 */
+    AddCommand( "know",                 do_cast,            CMD_SPELLID,                POSITION_SITTING,   TUTTI                   );
+	AddCommand( "spot",                 do_scan,            CMD_SPOT,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "view",                 do_viewfile,        CMD_VIEW,                   POSITION_DEAD,      DIO                     );
+	AddCommand( "afk",                  do_set_afk,         CMD_AFK,                    POSITION_DEAD,      1                       );
+	AddCommand( "stopfight",            do_stopfight,       CMD_STOPFIGHT,              POSITION_FIGHTING,  1                       );  /*  390 */
+	AddCommand( "principi",             do_prince,          CMD_PRINCE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "tspy",                 do_tspy,            CMD_TSPY,                   POSITION_STANDING,  1                       );
+	AddCommand( "bid",                  do_auction,         CMD_BID,                    POSITION_RESTING,   ALLIEVO                 );
+	AddCommand( "eavesdrop",            do_eavesdrop,       CMD_EAVESDROP,              POSITION_STANDING,  INIZIATO                );
+	AddCommand( "pquest",               do_pquest,          CMD_PQUEST,                 POSITION_STANDING,  QUESTMASTER             );  /*  395 */
+    AddCommand( "setalign",             do_setalign,        CMD_SETALIGN,               POSITION_RESTING,   TUTTI                   );
+    AddCommand( "wreset",               do_wreset,          CMD_WRESET,                 POSITION_STANDING,  CREATORE                );
+	AddCommand( "parry",                do_parry,           CMD_PARRY,                  POSITION_RESTING,   TUTTI                   );
+    AddCommand( "checktypos",           do_checktypos,      CMD_CHECKTYPOS,             POSITION_DEAD,      DIO                     );
+	AddCommand( "adore",                do_action,          CMD_ADORE,                  POSITION_RESTING,   TUTTI                   );  /*  400 */
+	AddCommand( "agree",                do_action,          CMD_AGREE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "bleed",                do_action,          CMD_BLEED,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "blink",                do_action,          CMD_BLINK,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "blow",                 do_action,          CMD_BLOW,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "blame",                do_action,          CMD_BLAME,                  POSITION_RESTING,   TUTTI                   );  /*  405 */
+	AddCommand( "bark",                 do_action,          CMD_BARK,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "bhug",                 do_action,          CMD_BHUG,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "bcheck",               do_action,          CMD_BCHECK,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "boast",                do_action,          CMD_BOAST,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "chide",                do_action,          CMD_CHIDE,                  POSITION_RESTING,   TUTTI                   );  /*  410 */
+	AddCommand( "compliment",           do_action,          CMD_COMPLIMENT,             POSITION_RESTING,   TUTTI                   );
+	AddCommand( "ceyes",                do_action,          CMD_CEYES,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cears",                do_action,          CMD_CEARS,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cross",                do_action,          CMD_CROSS,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "console",              do_action,          CMD_CONSOLE,                POSITION_RESTING,   TUTTI                   );  /*  415 */
+	AddCommand( "calm",                 do_action,          CMD_CALM,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "cower",                do_action,          CMD_COWER,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "confess",              do_action,          CMD_CONFESS,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "drool",                do_action,          CMD_DROOL,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "grit",                 do_action,          CMD_GRIT,                   POSITION_RESTING,   TUTTI                   );  /*  420 */
+	AddCommand( "greet",                do_action,          CMD_GREET,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "gulp",                 do_action,          CMD_GULP,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "gloat",                do_action,          CMD_GLOAT,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "gaze",                 do_action,          CMD_GAZE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "hum",                  do_action,          CMD_HUM,                    POSITION_RESTING,   TUTTI                   );  /*  425 */
+	AddCommand( "hkiss",                do_action,          CMD_HKISS,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "ignore",               do_action,          CMD_IGNORE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "interrupt",            do_action,          CMD_INTERRUPT,              POSITION_RESTING,   TUTTI                   );
+	AddCommand( "knock",                do_action,          CMD_KNOCK,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "listen",               do_action,          CMD_LISTEN,                 POSITION_RESTING,   TUTTI                   );  /*  430 */
+	AddCommand( "muse",                 do_action,          CMD_MUSE,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "pinch",                do_action,          CMD_PINCH,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "praise",               do_action,          CMD_PRAISE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "plot",                 do_action,          CMD_PLOT,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "pie",                  do_action,          CMD_PIE,                    POSITION_RESTING,   TUTTI                   );  /*  435 */
+	AddCommand("pleade",                do_action,          CMD_PLEADE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "pant",                 do_action,          CMD_PANT,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "rub",                  do_action,          CMD_RUB,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "roll",                 do_action,          CMD_ROLL,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "recoil",               do_action,          CMD_RECOIL,                 POSITION_RESTING,   TUTTI                   );  /*  440 */
+	AddCommand( "roar",                 do_action,          CMD_ROAR,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "relax",                do_action,          CMD_RELAX,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "snap",                 do_action,          CMD_SNAP,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "strut",                do_action,          CMD_STRUT,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "stroke",               do_action,          CMD_STROKE,                 POSITION_RESTING,   TUTTI                   );  /*  445 */
+	AddCommand( "stretch",              do_action,          CMD_STRETCH,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "swave",                do_action,          CMD_SWAVE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "sob",                  do_action,          CMD_SOB,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "scratch",              do_action,          CMD_SCRATCH,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "squirm",               do_action,          CMD_SQUIRM,                 POSITION_RESTING,   TUTTI                   );  /*  450 */
+	AddCommand( "strangle",             do_action,          CMD_STRANGLE,               POSITION_RESTING,   TUTTI                   );
+	AddCommand( "scowl",                do_action,          CMD_SCOWL,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "shudder",              do_action,          CMD_SHUDDER,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "strip",                do_action,          CMD_STRIP,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "scoff",                do_action,          CMD_SCOFF,                  POSITION_RESTING,   TUTTI                   );  /*  455 */
+	AddCommand( "salute",               do_action,          CMD_SALUTE,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "scold",                do_action,          CMD_SCOLD,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "stagger",              do_action,          CMD_STAGGER,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "toss",                 do_action,          CMD_TOSS,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "twirl",                do_action,          CMD_TWIRL,                  POSITION_RESTING,   TUTTI                   );  /*  460 */
+	AddCommand( "toast",                do_action,          CMD_TOAST,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "tug",                  do_action,          CMD_TUG,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "touch",                do_action,          CMD_TOUCH,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "tremble",              do_action,          CMD_TREMBLE,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "twitch",               do_action,          CMD_TWITCH,                 POSITION_RESTING,   TUTTI                   );  /*  465 */
+	AddCommand( "whimper",              do_action,          CMD_WHIMPER,                POSITION_RESTING,   TUTTI                   );
+	AddCommand( "whap",                 do_action,          CMD_WHAP,                   POSITION_RESTING,   TUTTI                   );
+	AddCommand( "wedge",                do_action,          CMD_WEDGE,                  POSITION_RESTING,   TUTTI                   );
+	AddCommand( "apologize",            do_action,          CMD_APOLOGIZE,              POSITION_RESTING,   TUTTI                   );
+    AddCommand( "destroy",              do_destroy,         CMD_DESTROY,                POSITION_RESTING,   TUTTI                   );  /*  470 */
+    AddCommand( "personalize",          do_personalize,     CMD_PERSONALIZE,            POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	/*          Liberi 472-479 (-488)*/
+  //            DIMD stuff
+  //AddCommand( "dmanage",              do_dmanage,         CMD_DMANAGE,                POSITION_RESTING,   MAESTRO_DEL_CREATO      );  /*  480 */
+  //AddCommand( "drestrict",            do_drestrict,       CMD_DRESTRICT,              POSITION_RESTING,   DIO_MINORE              );
+  //AddCommand( "dlink",                do_dgossip,         CMD_DLINK,                  POSITION_RESTING,   DIO_MINORE              );
+  //AddCommand( "dunlink",              do_dgossip,         CMD_DUNLINK,                POSITION_RESTING,   DIO_MINORE              );
+  //AddCommand( "dlist",                do_dlist,           CMD_DLIST,                  POSITION_RESTING,   2                       );
+  //AddCommand( "dwho",                 do_dwho,            CMD_DWHO,                   POSITION_RESTING,   2                       );  /*  485 */
+  //AddCommand( "dgossip",              do_dgossip,         CMD_DGOSSIP,                POSITION_RESTING,   MAESTRO_DEL_CREATO      );
+  //AddCommand( "dtell",                do_dtell,           CMD_DTELL,                  POSITION_RESTING,   MAESTRO_DEL_CREATO      );
+  //AddCommand( "dthink",               do_dthink,          CMD_DTHINK,                 POSITION_RESTING,   MAESTRO_DEL_CREATO      );
+	AddCommand( "sending",              do_sending,         CMD_SEND,                   POSITION_STANDING,  TUTTI                   );
+	AddCommand( "messenger",            do_sending,         CMD_MESSENGER,              POSITION_STANDING,  TUTTI                   );  /*  490 */
+	AddCommand( "prompt",               do_set_prompt,      CMD_PROMPT,                 POSITION_RESTING,   TUTTI                   );
+	AddCommand( "ooedit",               do_ooedit,          CMD_OOEDIT,                 POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+	AddCommand( "whois",                do_whois,           CMD_WHOIS,                  POSITION_DEAD,      ALLIEVO-1               );
+	AddCommand( "osave",                do_osave,           CMD_OSAVE,                  POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "dig",                  do_open_exit,       CMD_DIG,                    POSITION_STANDING,  TUTTI                   );  /*  495 */
+	AddCommand( "cut",                  do_open_exit,       CMD_SCYTHE,                 POSITION_STANDING,  TUTTI                   );
+	AddCommand( "status",               do_status,          CMD_STATUS,                 POSITION_DEAD,      TUTTI                   );
+	AddCommand( "showsk",               do_showskills,      CMD_SHOWSKILLS,             POSITION_DEAD,      DIO                     );
+	AddCommand( "resetsk",              do_resetskills,     CMD_RESETSKILLS,            POSITION_DEAD,      MAESTRO_DEL_CREATO      );
+	AddCommand( "setsk",                do_setskill,        CMD_SETSKILLS,              POSITION_DEAD,      MAESTRO_DEI_CREATORI    );  /*  500 */
+  //AddCommand("perdono",               do_perdono,         CMD_PERDONO,                POSITION_STANDING,  TUTTI                   );
+	AddCommand( "immolate",             do_immolation,      CMD_IMMOLATION,             POSITION_FIGHTING,  TUTTI                   );
+	AddCommand( "SetTest",              do_imptest,         CMD_IMPTEST,                POSITION_DEAD,      MAESTRO_DEL_CREATO      );
 }
 
 
@@ -2002,12 +1969,14 @@ NANNY_FUNC(con_account_pwd) {
 			close_socket(d);
 			return false;
 		}
-		if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
+		/*
+        if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
 			mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access master",d->AccountData.email,d->AccountData.level,(d->AccountData.ptr?"ON":"OFF"));
 			FLUSH_TO_Q("Per accedere al server di test devi chiedere l'autorizzazione",d);
 			close_socket(d);
 			return false;
 		}
+         */
 		d->AccountData.authorized=true;
 		string message("Benvenuto ");
 		message.append(d->AccountData.nickname).append("\r\n");
@@ -2466,7 +2435,7 @@ NANNY_FUNC(con_slct) {
 			if (Level < DIO_MINORE) {
 				/* Per gli IMMORTALI che rentavano ad Asgaard, gli tolgo
 				la start room cosi' gli viene calcolata di nuovo */
-				if(d->character->specials.start_room == 1000 && IS_IMMORTALE(d->character)) {
+				if(d->character->specials.start_room == 1001 && IS_IMMORTALE(d->character)) {
 					d->character->specials.start_room = -1;
 				}
 
