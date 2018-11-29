@@ -3057,8 +3057,6 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
     if(!affected_by_spell(ch,STATUS_QUEST)) {
         ch->specials.quest_ref = 0;
     }
-
-    st->specials.eq_val_idx = ch->specials.eq_val_idx;
     
 	st->abilities = ch->abilities;
 
