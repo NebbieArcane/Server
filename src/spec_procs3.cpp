@@ -4846,7 +4846,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
 	char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
 	struct char_data* questor;
     struct char_data* quest_tgt;
-    int x, y, t;
+    int x, y, t, durata;
     int quest_type;     /* 0.Caccia 1.salvataggio 2.ricerca 3.Consegna */
     
 	questor = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(AssignQuest));
@@ -4854,6 +4854,28 @@ MOBSPECIAL_FUNC(AssignQuest) {
 	if(!questor) {
 		return(FALSE);
 	}
+    
+    if(type == EVENT_COMMAND && cmd == CMD_TELL && IS_PC(ch)) {
+        
+        arg = one_argument(arg, buf);
+        if(!*buf || get_char_room_vis(ch, buf) != questor) {
+            return(FALSE);
+        }
+        
+        if(IS_AFFECTED(ch, AFF_INVISIBLE) || ch->invis_level >= IMMORTALE) {
+            do_say(questor, "eh? chi ha parlato??", CMD_SAY);
+            return(FALSE);
+        }
+        
+        if(strstr(arg, "rinuncio") != NULL) {
+            if(affected_by_spell(t,STATUS_QUEST)) {
+                affect_from_char(ch,STATUS_QUEST);
+                ch->specials.quest_ref = NULL;
+                send_to_char("Non sei piu' in missione.\n\r",ch);
+            }
+        }
+        
+    }
 
     if(type == EVENT_COMMAND && cmd == CMD_ASK && IS_PC(ch)) {
         
@@ -4916,6 +4938,8 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     
                 case 0      :
                     
+                    durata = GetMaxLevel(ch)/2;
+                    
                     do {
                         x = number(QUEST_ZONE,QUEST_ZONE+99);
                     } while (real_mobile(x) < 0);
@@ -4952,7 +4976,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     /* copio nel mob l'EqValueIndex del pg al momento della richiesta */
                     quest_tgt->specials.eq_val_idx = GetCharBonusIndex(ch);
                     
-                    spell_quest(GetMaxLevel(ch),quest_tgt,quest_tgt,0);
+                    spell_quest(durata,quest_tgt,quest_tgt,0);
                     
                     /* adattiamo il mob al questante, questa e' da perfezionare */
                     
@@ -4994,7 +5018,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     break;
             }
             
-            spell_quest(GetMaxLevel(ch),ch,ch,0);
+            spell_quest(durata,ch,ch,0);
                 
             sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), real_roomp(quest_tgt->in_room)->name);
                 
@@ -5204,6 +5228,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                 send_to_char(buf, t);
                             }
                         }
+                        save_char(t, AUTO_RENT, 0);
                     }
                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                 act(buf, FALSE, t, 0, 0, TO_ROOM);

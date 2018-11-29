@@ -303,6 +303,11 @@ ACTION_FUNC(do_destroy)
             return;
         }
     }
+    else
+    {
+        send_to_char("Cosa vuoi distruggere?\n\r",ch);
+        return;
+    }
 
     value /= 2;
     

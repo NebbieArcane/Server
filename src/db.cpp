@@ -3054,9 +3054,12 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	ch->specials.charging = 0; /* null it out to be sure. */
 	ch->specials.charge_dir = -1; /* null it out */
     
-    ch->specials.quest_ref = 0;
-    ch->specials.eq_val_idx = 0.0;
+    if(!affected_by_spell(ch,STATUS_QUEST)) {
+        ch->specials.quest_ref = 0;
+    }
 
+    st->->specials.eq_val_idx = ch->specials.eq_val_idx;
+    
 	st->abilities = ch->abilities;
 
 	st->points = ch->points;

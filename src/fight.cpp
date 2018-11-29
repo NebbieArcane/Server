@@ -65,7 +65,7 @@ struct attack_hit_type attack_hit_text[] = {
 	{"colpisci",    "colpisce"},            /* TYPE_HIT      */
 	{"randelli",  "randella"},          /* TYPE_BLUDGEON */
 	{"perfori", "perfora"},         /* TYPE_PIERCE   */
-	{"tagli",  "taglia"},         /* TYPE_SLASH    */
+	{"fendi",  "fende"},         /* TYPE_SLASH    */
 	{"frusti",   "frusta"},           /* TYPE_WHIP     */
 	{"artigli",   "artiglia"},           /* TYPE_CLAW     */
 	{"mordi",   "morde"},           /* TYPE_BITE     */

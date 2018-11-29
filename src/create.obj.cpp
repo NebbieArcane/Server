@@ -811,6 +811,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		switch(update) {
 		case APPLY_NONE:
 		case APPLY_SKIP:
+            break;
 		case APPLY_AFF2:
             send_to_char("\n\rNote: Modifier should be ADDED together from this "
                             "list of affection flags 2.\n\r",ch);

@@ -7419,7 +7419,7 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 	}
 	if((GET_RCON(ch)<=3) && (number(1,100)<90)) {
 
-		act("$N ti dice 'Troppo volte hai danzato!'", FALSE,
+		act("$N ti dice 'Troppe volte hai danzato!'", FALSE,
 			ch, 0, god, TO_CHAR);
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
@@ -7436,7 +7436,7 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_ROOM);
 	GET_EXP(ch)=xp;
 
-	act("%c0001Senti le viscere rivoltarsi, mentre energie sconosciute ti strappano l'anima", FALSE,
+	act("$c0001Senti le viscere rivoltarsi, mentre energie sconosciute ti strappano l'anima", FALSE,
 		ch, 0, god, TO_CHAR);
 	act("$n si solleva da terra e inizia a brillare.", FALSE,
 		ch, 0, god, TO_ROOM);
