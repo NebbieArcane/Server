@@ -5154,16 +5154,16 @@ MOBSPECIAL_FUNC(MobCaccia) {
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
                     
-                    x = GetMaxLevel(t);
+                    x = GetMaxLevel(t)/2;
                     
                     if(x >= IMMORTALE) {
                         send_to_char("\n\r$c0014La Gilda dei Mercenari non ammette immortali!$c0007\n\r", t);
                         return FALSE;
                     }
                     
-                    premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
+                    premio[0] = (x*20000)-(((x-af->duration)+1)*20000);
                     if(IS_PKILLER(t)) {
-                        premio[1] = (x*50000)-((x-af->duration)*50000);
+                        premio[1] = (x*100000)-((x-af->duration)*100000);
                     }
                     if(IS_PRINCE(t) && af->duration >= x-2) {
                         premio[2] = 1;
