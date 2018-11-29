@@ -4862,7 +4862,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
             return(FALSE);
         }
         
-        if(IS_AFFECTED(ch, AFF_INVISIBLE) || ch->invis_level >= IMMORTALE) {
+        if(!CAN_SEE(questor, ch)) {
             do_say(questor, "eh? chi ha parlato??", CMD_SAY);
             return(FALSE);
         }
@@ -4884,7 +4884,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
             return(FALSE);
         }
         
-        if(IS_AFFECTED(ch, AFF_INVISIBLE) || ch->invis_level >= IMMORTALE) {
+        if(!CAN_SEE(questor, ch)) {
             do_say(questor, "eh? chi ha parlato??", CMD_SAY);
             return(FALSE);
         }
@@ -5220,7 +5220,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                         break;
                                     case 2  :
                                         GET_RUNEDEI(t) += premio[2];
-                                        sprintf(buf,"$c0011Vieni marchiato con %d rune degli Dei!$c0007\n\r", premio[2]);
+                                        sprintf(buf,"$c0011Vieni marchiat%s con %d rune degli Dei!$c0007\n\r",SSLF(t), premio[2]);
                                         break;
                                     default:
                                         break;
