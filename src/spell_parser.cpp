@@ -839,28 +839,30 @@ void SpellWearOff(int s, struct char_data* ch) {
 		act(spell_wear_off_room_msg[s], TRUE, ch, 0, 0, TO_ROOM);
 	}
     
-    if(s == STATUS_QUEST && IS_PC(ch)) {
-        ch->specials.quest_ref = NULL;
-    } else {
-        /* fine dei giochi, si torna a casa */
-        switch(GET_POS(ch)) {
-                
-            case POSITION_FIGHTING  :
-                WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
-                sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!$c0007\n\r",ch->player.name);
-                act(buf, FALSE, ch, 0, ch, TO_ROOM);
-                stop_fighting(ch);
-                extract_char(ch);
-                break;
-                
-            case POSITION_DEAD  :
-                break;
-                
-            default:
-                sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",ch->player.name);
-                act(buf, FALSE, ch, 0, ch, TO_ROOM);
-                extract_char(ch);
-                break;
+    if(s == STATUS_QUEST) {
+        if(IS_PC(ch))
+            ch->specials.quest_ref = NULL;
+        } else {
+            /* fine dei giochi, si torna a casa */
+            switch(GET_POS(ch)) {
+                    
+                case POSITION_FIGHTING  :
+                    WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
+                    sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!$c0007\n\r",ch->player.name);
+                    act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                    stop_fighting(ch);
+                    extract_char(ch);
+                    break;
+                    
+                case POSITION_DEAD  :
+                    break;
+                    
+                default:
+                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",ch->player.name);
+                    act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                    extract_char(ch);
+                    break;
+            }
         }
     }
 
