@@ -5727,7 +5727,7 @@ ACTION_FUNC(do_adrenalize) {
 	alter_mana(ch,0);
     if(ch == target)
     {
-        act("Ti sfiori appena sulla testa, l'$c0009adrenalina$c0007 ti pervade!",TRUE,ch,0,target,TO_CHAR);
+        act("Ti sfiori appena la testa, l'$c0009adrenalina$c0007 ti pervade!",TRUE,ch,0,target,TO_CHAR);
         act("$N si sfiora la testa e cambia espressione all'improvviso: noti uno sguardo $c0001folle$c0007 nei suoi occhi!",TRUE,ch,0,target,TO_NOTVICT);
     }
     else
