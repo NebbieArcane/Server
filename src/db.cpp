@@ -3058,7 +3058,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
         ch->specials.quest_ref = 0;
     }
 
-    st->->specials.eq_val_idx = ch->specials.eq_val_idx;
+    st->specials.eq_val_idx = ch->specials.eq_val_idx;
     
 	st->abilities = ch->abilities;
 
