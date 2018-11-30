@@ -505,7 +505,7 @@ ACTION_FUNC(do_ask) {
             return;
         }
         
-        if(strstr(message, "indizio") != NULL) {
+        if(strstr(message, "indizio") != NULL && IsHumanoid(vict)) {
             
             if(ch->specials.quest_ref && !(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
                 sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",

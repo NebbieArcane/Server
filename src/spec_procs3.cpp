@@ -4870,7 +4870,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
         if(strstr(arg, "rinuncio") != NULL) {
             if(affected_by_spell(ch,STATUS_QUEST)) {
                 affect_from_char(ch,STATUS_QUEST);
-                ch->specials.quest_ref = NULL;
+                if(ch->specials.quest_ref) {
+                    ch->specials.quest_ref->specials.quest_ref = NULL;
+                    ch->specials.quest_ref = NULL;
+                }
                 send_to_char("Non sei piu' in missione.\n\r",ch);
             }
         }
