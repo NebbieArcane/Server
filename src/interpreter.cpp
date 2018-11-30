@@ -2518,6 +2518,7 @@ NANNY_FUNC(con_slct) {
 				"$c0115            RICORDATI CHE  SEI PKILL!!.\n\r",
 				d->character);
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
+        do_save(d->character, "", 0);
 
 		{
 			struct room_data* rp = real_roomp(d->character->in_room);
