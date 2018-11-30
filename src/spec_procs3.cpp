@@ -4871,13 +4871,13 @@ MOBSPECIAL_FUNC(AssignQuest) {
             if(affected_by_spell(ch,STATUS_QUEST)) {
                 affect_from_char(ch,STATUS_QUEST);
                 if(ch->specials.quest_ref) {
-                    ch->specials.quest_ref->specials.quest_ref = NULL;
+                    extract_char(ch->specials.quest_ref);
                     ch->specials.quest_ref = NULL;
                 }
                 send_to_char("Non sei piu' in missione.\n\r",ch);
             }
         }
-        
+        return(FALSE);
     }
 
     if(type == EVENT_COMMAND && cmd == CMD_ASK && IS_PC(ch)) {
@@ -5131,7 +5131,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
     struct char_data* t;
     struct char_data* p;
     struct room_data* rp;
-    int premio[3]; /* 0.coin, 1.xp, 2.rune */
+    int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
     int n,x;
     char buf[MAX_INPUT_LENGTH];
     
