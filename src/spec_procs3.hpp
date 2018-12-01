@@ -86,6 +86,7 @@ MOBSPECIAL_FUNC(strahd_zombie);
 OBJSPECIAL_FUNC(thion_loader);
 MOBSPECIAL_FUNC(AssignQuest);
 MOBSPECIAL_FUNC(MobCaccia);
+MOBSPECIAL_FUNC(MobSalvataggio);
 MOBSPECIAL_FUNC(timnus);
 OBJSPECIAL_FUNC(trap_obj);
 void trap_obj_damage(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;

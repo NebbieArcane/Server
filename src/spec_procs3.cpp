@@ -4933,9 +4933,9 @@ MOBSPECIAL_FUNC(AssignQuest) {
                 /* forzo il tipo di quest a caccia */
                 sprintf(buf2, "%s pensa di affidarti una missione di %s ma poi ci riflette meglio e decide per qualcosa di piu' indicato...", questor->player.short_descr, QuestKind[quest_type]);
                 act(buf2, FALSE, ch, 0, ch, TO_CHAR);
-                sprintf(buf2, "%s indica un cartello con su scritto '$c0009Al momento possiamo affidarti solo missioni di caccia!$c0007'", questor->player.short_descr);
+                sprintf(buf2, "%s indica un cartello con su scritto '$c0009Al momento possiamo affidarti solo un certo tipo di missioni!$c0007'", questor->player.short_descr);
                 act(buf2, FALSE, ch, 0, ch, TO_CHAR);
-                quest_type = 0;
+                quest_type = number(0,1);
                 
             switch(quest_type) {
                     
@@ -4964,7 +4964,6 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     for (y = 0; NameGenEnd[y] != NULL; y++);
                     t = number(0,y-2);
                     strcat(buf2, NameGenEnd[t]);
-                    
                     
                     quest_tgt->player.name = (char*)strdup(buf2);
                     
@@ -5010,8 +5009,54 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+ch->points.hitroll;
                     quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+ch->points.damroll;
                     
+                    sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), real_roomp(quest_tgt->in_room)->name);
+                    
                     break;
                 case 1      :
+                    durata = GetMaxLevel(ch)/4;
+                    
+                    do {
+                        x = number(QUEST_ZONE,QUEST_ZONE+99);
+                    } while (real_mobile(x) < 0);
+                    
+                    AssignMob(x, MobSalvataggio, "MobSalvataggio","");
+                    
+                    quest_tgt = read_mobile(real_mobile(x), REAL);
+                    
+                    char_to_room(quest_tgt, RandomRoomByLevel(GetMaxLevel(ch)));
+                    
+                    for (y = 0; NameGenStart[y] != NULL; y++);
+                    t = number(0,y-2);
+                    sprintf(buf2, "%s", NameGenStart[t]);
+                    
+                    for (y = 0; NameGenMid[y] != NULL; y++);
+                    t = number(0,y-2);
+                    strcat(buf2, NameGenMid[t]);
+                    
+                    for (y = 0; NameGenEnd[y] != NULL; y++);
+                    t = number(0,y-2);
+                    strcat(buf2, NameGenEnd[t]);
+                    
+                    quest_tgt->player.name = (char*)strdup(buf2);
+                    
+                    sprintf(buf2, "%s, %s",buf2, quest_tgt->player.short_descr);
+                    
+                    quest_tgt->player.short_descr = (char*)strdup(buf2);
+                    
+                    /* creo il link tra mob e pg */
+                    ch->specials.quest_ref = quest_tgt;
+                    quest_tgt->specials.quest_ref = ch;
+                    
+                    /* adattiamo il mob al questante */
+                    
+                    if(GetMaxLevel(ch) < IMMORTALE) {
+                        GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = GetMaxLevel(ch);
+                    }
+                    
+                    spell_quest(durata,quest_tgt,quest_tgt,0);
+
+                    sprintf(buf, "%s %s si e' smarrit%s, l'ultima volta e' stato vist%s a %s... troval%s!",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt),SSLF(quest_tgt), real_roomp(quest_tgt->in_room)->name,SSLF(quest_tgt));
+                    
                     break;
                 case 2      :
                     break;
@@ -5022,8 +5067,6 @@ MOBSPECIAL_FUNC(AssignQuest) {
             }
             
             spell_quest(durata,ch,ch,0);
-                
-            sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), real_roomp(quest_tgt->in_room)->name);
                 
             } else {
                 
@@ -5119,12 +5162,7 @@ Poi se hai tempo procedi a creare i tipi 1, 0 e 3 che verranno usate molto
 meno. Per la 4 credo che ti basti copiare un po' di codice dalla special che
 genera Thion.
 */
-    
-/* Requiem:
- aggiungiamo un tipo di assegnazione piu' semplice
- M xxxx MobCaccia VNum Tipo Premio -> il mob crepa e se il vnum combacia col quest target
- vengono assegnati i premi.
- */
+
 
 MOBSPECIAL_FUNC(MobCaccia) {
     struct affected_type* af;
@@ -5259,7 +5297,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                 if(*buf && get_char_room_vis(mob, buf) == mob) {
                     
                     if(CAN_SEE(mob,ch)) {
-                        sprintf(buf,"%s, Non mi arrendero' mai!",GET_NAME(ch));
+                        sprintf(buf,"%s Non mi arrendero' mai!",GET_NAME(ch));
                     }
                 
                 do_tell(mob,buf,CMD_TELL);
@@ -5317,6 +5355,186 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     }
                 }
             }
+    break;
+    }
+
+    return FALSE;
+}
+
+MOBSPECIAL_FUNC(MobSalvataggio) {
+    struct affected_type* af;
+    struct char_data* t;
+    struct room_data* rp;
+    int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
+    int x = 0;
+    char buf[MAX_INPUT_LENGTH];
+    
+    if(!mob->specials.quest_ref) {
+        if(real_roomp(mob->in_room)->people) {
+            sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
+            act(buf, FALSE, mob, 0, 0, TO_ROOM);
+        }
+        extract_char(mob);
+        return FALSE;
+    }
+    
+    t = mob->specials.quest_ref;
+    
+    switch(type) {
+            
+    case EVENT_DEATH    :
+            
+            send_to_char("\n\r$c0014Il tuo obiettivo ha fatto una brutta fine e finisci senza paga.$c0007\n\r", t);
+            
+            t->specials.quest_ref = NULL;
+        
+    break;
+            
+    case EVENT_COMMAND  :
+    
+    
+        if(!*arg) {
+            return FALSE;
+        }
+        
+        if(cmd == CMD_KILL) {
+            arg = one_argument(arg,buf);
+            
+                if(*buf && get_char_room_vis(mob, buf) == mob) {
+                    
+                    if(CAN_SEE(mob,ch)) {
+                        sprintf(buf,"%s Traditore!",GET_NAME(ch));
+                    }
+                
+                do_tell(mob,buf,CMD_TELL);
+            
+            }
+        }
+    
+    return FALSE;
+            
+    break;
+    
+    case EVENT_TICK     :
+            
+            if(!AWAKE(mob)) {
+                if(!IS_AFFECTED(mob, AFF_SLEEP)) {
+                    do_wake(mob, "", 0);
+                    return FALSE;
+                }
+            }
+            else if(GET_POS(mob) > POSITION_SLEEPING &&
+                    GET_POS(mob) < POSITION_FIGHTING) {
+                do_stand(mob, "", 0);
+                return FALSE;
+            }
+            
+            rp = real_roomp(mob->in_room);
+                
+            if(GET_POS(mob) == POSITION_STANDING) {
+                if(t->in_room == mob->in_room) {
+                    
+                    if(!CAN_SEE(mob, t)) {
+                        do_say(mob, "eh? chi va la'?... Dev'essere stato il vento... o un entita' invisibile!", CMD_SAY);
+                        return(FALSE);
+                    }
+                    
+                    if(mob->master != t) {
+                        sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla reception dove alloggi e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
+                        do_tell(mob,buf,CMD_TELL);
+                        
+                        send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali!$c0007\n\r", t);
+                        
+                        if(mob->master) {
+                            stop_follower(mob);
+                        }
+                        
+                        add_follower(mob, t);
+                        
+                        return FALSE;
+                    }
+                    
+                    if(mob->in_room == t->character->specials.start_room) {
+                        
+                        t->specials.quest_ref = NULL;
+                        
+                        for(af = t->affected; af; af = af->next) {
+                            if(af->type == STATUS_QUEST) {
+                                
+                                x = GetMaxLevel(t)/4;
+                                
+                                if(x >= IMMORTALE) {
+                                    send_to_char("\n\r$c0014La Gilda dei Mercenari non ammette immortali!$c0007\n\r", t);
+                                    return FALSE;
+                                }
+                                
+                                sprintf(buf,"%s Grazie, senza di te non ce l'avrei fatta!",GET_NAME(t));
+                                do_tell(mob,buf,CMD_TELL);
+                                
+                                sprintf(buf, "%s wave",GET_NAME(mob));
+                                do_force(mob, buf, 0);
+                                
+                                t->specials.quest_ref = NULL;
+                                extract_char(mob);
+                                
+                                premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
+                                if(IS_PKILLER(t)) {
+                                    premio[1] = (x*50000)-((x-af->duration)*50000);
+                                }
+                                if(IS_PRINCE(t) && af->duration >= x-2) {
+                                    premio[2] = 1;
+                                }
+                                
+                                sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
+                                if(af->duration >= x-2) {
+                                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
+                                } else if(af->duration >= x/2) {
+                                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n\r");
+                                } else {
+                                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.\n\r");
+                                }
+                                strcat(buf,"\n\r");
+                                send_to_char(buf, t);
+                                
+                                if(premio[0]+premio[1]+premio[2] == 0) {
+                                    send_to_char("\n\r$c0011...non vinci un piffero. Cerca di essere piu' veloce!$c0007\n\r", t);
+                                    
+                                } else {
+                                    
+                                    for(n = 0;n < 3;n++) {
+                                        if(premio[n] > 0) {
+                                            
+                                            switch(n) {
+                                                case 0  :
+                                                    GET_GOLD(t) += premio[0];
+                                                    sprintf(buf,"$c0011Ricevi %d monete d'oro!$c0007\n\r", premio[0]);
+                                                    break;
+                                                case 1  :
+                                                    GET_EXP(t) += premio[1]/HowManyClasses(t);
+                                                    sprintf(buf,"$c0011Ottieni %d punti esperienza!$c0007\n\r", premio[1]);
+                                                    break;
+                                                case 2  :
+                                                    GET_RUNEDEI(t) += premio[2];
+                                                    sprintf(buf,"$c0011Vieni marchiat%s con %d rune degli Dei!$c0007\n\r",SSLF(t), premio[2]);
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                            send_to_char(buf, t);
+                                        }
+                                    }
+                                    save_char(t, AUTO_RENT, 0);
+                                }
+                                sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
+                                act(buf, FALSE, t, 0, 0, TO_ROOM);
+                                return FALSE;
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            
     break;
     }
 
