@@ -5364,9 +5364,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
 MOBSPECIAL_FUNC(MobSalvataggio) {
     struct affected_type* af;
     struct char_data* t;
-    struct room_data* rp;
     int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
-    int x = 0;
+    int x,n;
     char buf[MAX_INPUT_LENGTH];
     
     if(!mob->specials.quest_ref) {
@@ -5428,8 +5427,6 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                 do_stand(mob, "", 0);
                 return FALSE;
             }
-            
-            rp = real_roomp(mob->in_room);
                 
             if(GET_POS(mob) == POSITION_STANDING) {
                 if(t->in_room == mob->in_room) {
@@ -5454,7 +5451,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                         return FALSE;
                     }
                     
-                    if(mob->in_room == t->character->specials.start_room) {
+                    if(mob->in_room == t->specials.start_room) {
                         
                         t->specials.quest_ref = NULL;
                         
