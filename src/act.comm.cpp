@@ -62,6 +62,12 @@ ACTION_FUNC(do_say) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	for(i = 0; *(arg + i) == ' '; i++);
 
@@ -122,6 +128,12 @@ ACTION_FUNC(do_shout) {
 		send_to_char("Non puoi urlare!!\n\r", ch);
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi urlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	if(IS_NPC(ch) &&
 			(Silence == 1) &&
@@ -200,6 +212,12 @@ ACTION_FUNC(do_gossip) {
 		send_to_char("It may return after a bit.\n\r", ch);
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	if(apply_soundproof(ch)) {
 		return;
@@ -256,7 +274,12 @@ ACTION_FUNC(do_auction) {
 		send_to_char("It may return after a bit.\n\r", ch);
 		return;
 	}
-
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi farlo.\n\r", ch);
+        return;
+    }
 
 	if(apply_soundproof(ch)) {
 		return;
@@ -339,6 +362,12 @@ ACTION_FUNC(do_tell) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	half_chop(arg,name,message,sizeof name -1,sizeof message -1);
 
@@ -415,6 +444,12 @@ ACTION_FUNC(do_whisper) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	half_chop(arg,name,message,sizeof name -1, sizeof message -1);
 
@@ -460,6 +495,12 @@ ACTION_FUNC(do_ask) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	half_chop(arg,name,message,sizeof name -1,sizeof message -1);
 
@@ -490,7 +531,7 @@ ACTION_FUNC(do_ask) {
 
 		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
 			snprintf(buf, MAX_INPUT_LENGTH-1,"$c0006Tu chiedi a %s%s, '%s'",
-					 (IS_NPC(vict) ? vict->player.name : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e` AFK)" : ""), message);
+					 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e` AFK)" : ""), message);
 			act(buf,FALSE, ch,0,0,TO_CHAR);
 		}
 		act("$c0006$n fa una domanda a $N.",FALSE,ch,0,vict,TO_NOTVICT);
@@ -833,6 +874,12 @@ ACTION_FUNC(do_new_say) {
 		if(apply_soundproof(ch)) {
 			return;
 		}
+        
+        if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+        {
+            send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+            return;
+        }
 
 		rp = real_roomp(ch->in_room);
 		if(!rp) {
@@ -978,6 +1025,12 @@ ACTION_FUNC(do_gtell) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	for(i = 0; *(arg + i) == ' '; i++);
 
@@ -1211,9 +1264,15 @@ ACTION_FUNC(do_telepathy) {
 	half_chop(arg, name, message,sizeof name -1,sizeof message -1);
 
 	if(!HasClass(ch, CLASS_PSI) && !IS_AFFECTED(ch, AFF_TELEPATHY)) {
-		send_to_char("Cosa pensi di essere ? Un telepate ?\n\r", ch);
+		send_to_char("Cosa pensi di essere? Un telepate?\n\r", ch);
 		return;
 	}
+    
+    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
+    {
+        send_to_char("Non puoi farlo in queste condizioni.\n\r", ch);
+        return;
+    }
 
 	if(GET_MANA(ch) < 5 && !IS_AFFECTED(ch, AFF_TELEPATHY)) {
 		send_to_char("Non hai la potenza mentale sufficiente.\n\r",ch);

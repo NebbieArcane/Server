@@ -187,9 +187,9 @@ ACTION_FUNC(do_action) {
 		return;
 	}
 
-	if(!(vict = get_char_room_vis(ch, buf))) {
-		send_to_char(action->not_found, ch);
-		send_to_char("\n\r", ch);
+	if(!(vict = get_char_room_vis(ch, buf)))
+    {
+        act(action->not_found, 0, ch, 0, 0, TO_CHAR);
 	}
 	else if(vict == ch) {
 		send_to_char(action->char_auto, ch);

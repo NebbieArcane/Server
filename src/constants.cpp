@@ -3068,6 +3068,7 @@ const char* position_types[] = {
 	"Sitting",
 	"Fighting",
 	"Standing",
+    "Mounting",
 	"\n"
 };
 

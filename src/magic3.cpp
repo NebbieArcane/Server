@@ -2650,6 +2650,12 @@ void spell_mount(byte level, struct char_data* ch,
 	struct char_data* m;
 	int mnr;
 
+    if(GET_POS(ch) == POSITION_MOUNTED)
+    {
+        send_to_char("Stai gia' cavalcando qualcosa!\n\r", ch);
+        return;
+    }
+    
 	/* create a ridable mount, and automatically mount said creature */
 
 	mnr = MOUNT_ONE;
