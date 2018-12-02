@@ -573,8 +573,7 @@ ACTION_FUNC(do_ask) {
                         }
                     }
                     
-                    sprintf(buf,"\n\r$c0014Voci arrivano alla Gilda dei Mercenari.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
-                    act(buf, FALSE, ch, 0, ch, TO_CHAR);
+                    act("\n\r$c0014Voci arrivano alla Gilda dei Mercenari.\nIl tempo per la tua missione viene dimezzato.$c0007\n", FALSE, ch, 0, ch, TO_CHAR);
                 }
                 return;
             }

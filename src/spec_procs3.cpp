@@ -4975,6 +4975,14 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     ch->specials.quest_ref = quest_tgt;
                     quest_tgt->specials.quest_ref = ch;
                     
+                    /* smetto di seguire nel caso sono in gruppo */
+                    if(ch->master) {
+                        stop_follower(ch);
+                    }
+                    if(IS_AFFECTED(ch, AFF_GROUP)) {
+                        REMOVE_BIT(ch->specials.affected_by, AFF_GROUP);
+                    }
+                    
                     /* copio nel mob l'EqValueIndex del pg al momento della richiesta */
                     quest_tgt->specials.eq_val_idx = GetCharBonusIndex(ch);
                     
@@ -5225,6 +5233,15 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     
                     if(t->followers || t->master) {
                         send_to_char("\n\r$c0014La Gilda dei Mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", t);
+                        
+                        if(t->followers) {
+                            send_to_char("\n\r$c0014risulta che hai dei followers.$c0007\n\r", t);
+                        }
+                        
+                        if(t->master) {
+                            send_to_char("\n\r$c0014risulta che hai un master.$c0007\n\r", t);
+                        }
+                        
                         return FALSE;
                     }
                     
@@ -5464,7 +5481,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                         return FALSE;
                     }
                     
-                    if(mob->in_room == t->specials.hometown) {
+                    if(mob->in_room == t->player.hometown) {
                         
                         t->specials.quest_ref = NULL;
                         
