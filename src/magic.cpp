@@ -3063,7 +3063,7 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 						act("$c0010Gli atomi di $p rimangono saldamente uniti.",
 							TRUE, ch, obj, victim, TO_VICT);
 						act("$c0010Gli atomi di $p di $N rimangono saldamente uniti.",
-							TRUE, ch, obj, victim, TO_ROOM);
+							FALSE, ch, obj, victim, TO_ROOM);
 					}
 				} /* end saved obj */
 			}

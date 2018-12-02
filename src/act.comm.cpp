@@ -573,14 +573,14 @@ ACTION_FUNC(do_ask) {
                         }
                     }
                     
-                    sprintf(buf,"\n\r$c0014Voci arrivano a %s e sentendosi braccato riduce la sua permanenza.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
+                    sprintf(buf,"\n\r$c0014Voci arrivano alla Gilda dei Mercenari.\nIl tempo per la tua missione viene dimezzato.$c0007\n",ch->specials.quest_ref->player.name);
                     act(buf, FALSE, ch, 0, ch, TO_CHAR);
                 }
                 return;
             }
             
         } else {
-            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ci sono orecchie ovunque, e se qualcuno spiffera ti costera'!",
+            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ci sono orecchie ovunque, e se la Gilda dei Mercenari sapra' che hai chiesto aiuto ti costera'!",
                     GET_NAME(ch));
             do_tell(vict,buf,CMD_TELL);
             return;

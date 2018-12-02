@@ -5053,6 +5053,19 @@ MOBSPECIAL_FUNC(AssignQuest) {
                         GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = GetMaxLevel(ch);
                     }
                     
+                    SET_BIT(quest_tgt->specials.act, ACT_SENTINEL);
+                    
+                    if(HasClass(ch, CLASS_MONK)) {
+                        quest_tgt->points.max_hit = GET_MAX_HIT(ch);
+                    } else if(HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
+                                       CLASS_BARBARIAN | CLASS_THIEF)) {
+                        quest_tgt->points.max_hit = floor(GET_MAX_HIT(ch)*1.5);
+                    } else {
+                        quest_tgt->points.max_hit = GET_MAX_HIT(ch)*2;
+                    }
+                    
+                    GET_HIT(quest_tgt) = GET_MAX_HIT(quest_tgt);
+                    
                     spell_quest(durata,quest_tgt,quest_tgt,0);
 
                     sprintf(buf, "%s %s si e' smarrit%s, l'ultima volta e' stato vist%s a %s... troval%s!",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt),SSLF(quest_tgt), real_roomp(quest_tgt->in_room)->name,SSLF(quest_tgt));
@@ -5451,7 +5464,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                         return FALSE;
                     }
                     
-                    if(mob->in_room == t->specials.start_room) {
+                    if(mob->in_room == t->specials.hometown) {
                         
                         t->specials.quest_ref = NULL;
                         
