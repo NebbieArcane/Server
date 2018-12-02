@@ -4931,7 +4931,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     break;
             }
                 
-                /* forzo il tipo di quest a caccia */
+                /* forzo il tipo di quest */
                 sprintf(buf2, "%s pensa di affidarti una missione di %s ma poi ci riflette meglio e decide per qualcosa di piu' indicato...", questor->player.short_descr, QuestKind[quest_type]);
                 act(buf2, FALSE, ch, 0, ch, TO_CHAR);
                 sprintf(buf2, "%s indica un cartello con su scritto '$c0009Al momento possiamo affidarti solo un certo tipo di missioni!$c0007'", questor->player.short_descr);
@@ -5502,8 +5502,9 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 if(mob->master) {
                                     stop_follower(mob);
                                 }
-                                
-                                extract_char(mob);
+                                if(IS_AFFECTED(mob, AFF_GROUP)) {
+                                    REMOVE_BIT(mob->specials.affected_by, AFF_GROUP);
+                                }
                                 
                                 premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
                                 if(IS_PKILLER(t)) {
@@ -5555,6 +5556,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 }
                                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                                 act(buf, FALSE, t, 0, 0, TO_ROOM);
+                                extract_char(mob);
                                 return FALSE;
                             }
                         }

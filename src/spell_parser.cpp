@@ -841,7 +841,10 @@ void SpellWearOff(int s, struct char_data* ch) {
     
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
-            ch->specials.quest_ref = NULL;
+            if(ch->specials.quest_ref) {
+                extract_char(ch->specials.quest_ref);
+                ch->specials.quest_ref = NULL;
+            }
         } else {
             /* fine dei giochi, si torna a casa */
             switch(GET_POS(ch)) {
