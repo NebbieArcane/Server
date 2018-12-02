@@ -44,6 +44,7 @@
 #include "mindskills1.hpp"
 #include "mobact.hpp"
 #include "opinion.hpp"
+#include "reception.hpp"
 #include "regen.hpp"
 #include "skills.hpp"
 #include "spec_procs.hpp"
