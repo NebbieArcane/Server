@@ -5481,7 +5481,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                         return FALSE;
                     }
                     
-                    if(mob->in_room == t->player.hometown) {
+                    if(FindMobInRoomWithFunction(mob->in_room, reinterpret_cast<genericspecial_func>(receptionist))) {
                         
                         t->specials.quest_ref = NULL;
                         
