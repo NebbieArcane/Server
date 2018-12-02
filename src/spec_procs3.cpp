@@ -5499,10 +5499,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 sprintf(buf,"%s Grazie, senza di te non ce l'avrei fatta!",GET_NAME(t));
                                 do_tell(mob,buf,CMD_TELL);
                                 
-                                sprintf(buf, "%s wave",GET_NAME(mob));
-                                do_force(mob, buf, 0);
+                                if(mob->master) {
+                                    stop_follower(mob);
+                                }
                                 
-                                t->specials.quest_ref = NULL;
                                 extract_char(mob);
                                 
                                 premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
