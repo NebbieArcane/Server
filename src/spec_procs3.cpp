@@ -5410,6 +5410,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     int x,n;
     char buf[MAX_INPUT_LENGTH];
     
+    if(!*mob) {
+        return FALSE;
+    }
+    
     if(!mob->specials.quest_ref) {
         if(real_roomp(mob->in_room)->people) {
             sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
