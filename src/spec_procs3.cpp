@@ -4870,11 +4870,11 @@ MOBSPECIAL_FUNC(AssignQuest) {
         
         if(strstr(arg, "rinuncio") != NULL) {
             if(affected_by_spell(ch,STATUS_QUEST)) {
-                affect_from_char(ch,STATUS_QUEST);
                 if(ch->specials.quest_ref) {
                     extract_char(ch->specials.quest_ref);
                     ch->specials.quest_ref = NULL;
                 }
+                affect_from_char(ch,STATUS_QUEST);
                 send_to_char("Non sei piu' in missione.\n\r",ch);
             }
         }
@@ -5463,6 +5463,15 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     break;
     
     case EVENT_TICK     :
+            
+            if(!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) {
+                if(real_roomp(mob->in_room)->people) {
+                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
+                    act(buf, FALSE, mob, 0, 0, TO_ROOM);
+                }
+                extract_char(mob);
+                return FALSE;
+            }
             
             if(!AWAKE(mob)) {
                 if(!IS_AFFECTED(mob, AFF_SLEEP)) {
