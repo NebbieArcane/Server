@@ -5484,6 +5484,17 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                     
                     if(FindMobInRoomWithFunction(mob->in_room, reinterpret_cast<genericspecial_func>(receptionist))) {
                         
+                        sprintf(buf,"%s Grazie, senza di te non ce l'avrei fatta!",GET_NAME(t));
+                        do_tell(mob,buf,CMD_TELL);
+                        
+                        if(mob->master) {
+                            stop_follower(mob);
+                        }
+                        if(IS_AFFECTED(mob, AFF_GROUP)) {
+                            REMOVE_BIT(mob->specials.affected_by, AFF_GROUP);
+                        }
+                        
+                        extract_char(mob);
                         t->specials.quest_ref = NULL;
                         
                         for(af = t->affected; af; af = af->next) {
@@ -5494,16 +5505,6 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 if(x >= IMMORTALE) {
                                     send_to_char("\n\r$c0014La Gilda dei Mercenari non ammette immortali!$c0007\n\r", t);
                                     return FALSE;
-                                }
-                                
-                                sprintf(buf,"%s Grazie, senza di te non ce l'avrei fatta!",GET_NAME(t));
-                                do_tell(mob,buf,CMD_TELL);
-                                
-                                if(mob->master) {
-                                    stop_follower(mob);
-                                }
-                                if(IS_AFFECTED(mob, AFF_GROUP)) {
-                                    REMOVE_BIT(mob->specials.affected_by, AFF_GROUP);
                                 }
                                 
                                 premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
@@ -5556,7 +5557,6 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 }
                                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                                 act(buf, FALSE, t, 0, 0, TO_ROOM);
-                                extract_char(mob);
                                 return FALSE;
                             }
                         }
