@@ -4893,7 +4893,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
             return(FALSE);
         }
         
-        if(GetMaxLevel(ch) < ALLIEVO) {
+        if(GetMaxLevel(ch) < INIZIATO) {
             sprintf(buf,"%s Torna quando cresci.",GET_NAME(ch));
             do_tell(questor, buf, CMD_TELL);
             return(FALSE);
@@ -5217,14 +5217,14 @@ MOBSPECIAL_FUNC(MobCaccia) {
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
                     
-                    x = GetMaxLevel(t)/2;
-                    
-                    if(x >= IMMORTALE) {
+                    if(GetMaxLevel(t) >= IMMORTALE) {
                         send_to_char("\n\r$c0014La Gilda dei Mercenari non ammette immortali!$c0007\n\r", t);
                         return FALSE;
                     }
                     
-                    premio[0] = (x*20000)-(((x-af->duration)+1)*20000);
+                    x = GetMaxLevel(t)/2;
+                    
+                    premio[0] = (x*20010)-((x-af->duration)*20000);
                     if(IS_PKILLER(t)) {
                         premio[1] = (x*100000)-((x-af->duration)*100000);
                     }
@@ -5246,13 +5246,13 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         return FALSE;
                     }
                     
-                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
+                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",x-af->duration);
                     if(af->duration >= x-2) {
-                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
+                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.");
                     } else if(af->duration >= x/2) {
-                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n\r");
+                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.");
                     } else {
-                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.\n\r");
+                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.");
                     }
                     strcat(buf,"\n\r");
                     send_to_char(buf, t);
@@ -5417,6 +5417,8 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
             send_to_char("\n\r$c0014Il tuo obiettivo ha fatto una brutta fine e finisci senza paga.$c0007\n\r", t);
             
             t->specials.quest_ref = NULL;
+            
+            return FALSE;
         
     break;
             
@@ -5480,14 +5482,14 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                         for(af = t->affected; af; af = af->next) {
                             if(af->type == STATUS_QUEST) {
                                 
-                                x = GetMaxLevel(t)/4;
-                                
-                                if(x >= IMMORTALE) {
+                                if(GetMaxLevel(t) >= IMMORTALE) {
                                     send_to_char("\n\r$c0014La Gilda dei Mercenari non ammette immortali!$c0007\n\r", t);
                                     return FALSE;
                                 }
                                 
-                                premio[0] = (x*10000)-(((x-af->duration)+1)*10000);
+                                x = GetMaxLevel(t)/4;
+                                
+                                premio[0] = (x*10010)-((x-af->duration)*10000);
                                 if(IS_PKILLER(t)) {
                                     premio[1] = (x*50000)-((x-af->duration)*50000);
                                 }
@@ -5495,13 +5497,13 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                     premio[2] = 1;
                                 }
                                 
-                                sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",af->duration);
+                                sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",x-af->duration);
                                 if(af->duration >= x-2) {
-                                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.\n\r");
-                                } else if(af->duration >= x/2) {
-                                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.\n\r");
+                                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.");
+                                } else if(af->duration >= floor(x/2)) {
+                                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.");
                                 } else {
-                                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.\n\r");
+                                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.");
                                 }
                                 strcat(buf,"\n\r");
                                 send_to_char(buf, t);
