@@ -5462,26 +5462,6 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
             if(GET_POS(mob) == POSITION_STANDING) {
                 if(t->in_room == mob->in_room) {
                     
-                    if(!CAN_SEE(mob, t)) {
-                        do_say(mob, "eh? chi va la'?... Dev'essere stato il vento... o un entita' invisibile!", CMD_SAY);
-                        return(FALSE);
-                    }
-                    
-                    if(mob->master != t) {
-                        sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla reception dove alloggi e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
-                        do_tell(mob,buf,CMD_TELL);
-                        
-                        send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali!$c0007\n\r", t);
-                        
-                        if(mob->master) {
-                            stop_follower(mob);
-                        }
-                        
-                        add_follower(mob, t);
-                        
-                        return FALSE;
-                    }
-                    
                     if(FindMobInRoomWithFunction(mob->in_room, reinterpret_cast<genericspecial_func>(receptionist))) {
                         
                         sprintf(buf,"%s Grazie, senza di te non ce l'avrei fatta!",GET_NAME(t));
@@ -5560,6 +5540,26 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 return FALSE;
                             }
                         }
+                    }
+                    
+                    if(!CAN_SEE(mob, t)) {
+                        do_say(mob, "eh? chi va la'?... Dev'essere stato il vento... o un entita' invisibile!", CMD_SAY);
+                        return(FALSE);
+                    }
+                    
+                    if(mob->master != t) {
+                        sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla reception piu' vicina e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
+                        do_tell(mob,buf,CMD_TELL);
+                        
+                        send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali!$c0007\n\r", t);
+                        
+                        if(mob->master) {
+                            stop_follower(mob);
+                        }
+                        
+                        add_follower(mob, t);
+                        
+                        return FALSE;
                     }
                     
                 }
