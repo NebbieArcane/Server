@@ -5410,7 +5410,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     int x,n;
     char buf[MAX_INPUT_LENGTH];
     
-    if(!*mob) {
+    if(!mob) {
         return FALSE;
     }
     
