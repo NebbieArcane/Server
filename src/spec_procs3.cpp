@@ -5246,7 +5246,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         return FALSE;
                     }
                     
-                    mudlog(LOG_CHECK, "%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
+                    sprintf(buf,"%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
+                    mudlog(LOG_CHECK, buf);
                     
                     sprintf(buf,"\n\r$c0014Completi la tua missione in ");
                     
@@ -5507,8 +5508,8 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                     premio[2] = 1;
                                 }
                                 
-                                
-                                mudlog(LOG_CHECK, "%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
+                                sprintf(buf,"%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
+                                mudlog(LOG_CHECK, buf);
                                 
                                 sprintf(buf,"\n\r$c0014Completi la tua missione in ");
                                 
