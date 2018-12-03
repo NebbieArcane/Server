@@ -5254,7 +5254,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     if(x-af->duration < 2) {
                         strcat(buf, "un ora");
                     } else {
-                        sprintf(buf,"%d ore",x-af->duration);
+                        sprintf(buf,"%s%d ore",buf,x-af->duration);
                     }
                     strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
                     
@@ -5284,7 +5284,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         premio[1] += x*500;
                     }
                     
-                    if(premio[0]+premio[1]+premio[2] == 0) {
+                    if(premio[0]+premio[1]+premio[2] <= 0) {
                         send_to_char("\n\r$c0011...non vinci un piffero. Cerca di essere piu' veloce e piu' coerente!$c0007\n\r", t);
                         
                     } else {
@@ -5516,7 +5516,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 if(x-af->duration < 2) {
                                     strcat(buf, "un ora");
                                 } else {
-                                    sprintf(buf,"%d ore",x-af->duration);
+                                    sprintf(buf,"%s%d ore",buf,x-af->duration);
                                 }
                                 strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
                                 
@@ -5530,7 +5530,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 strcat(buf,"\n\r");
                                 send_to_char(buf, t);
                                 
-                                if(premio[0]+premio[1]+premio[2] == 0) {
+                                if(premio[0]+premio[1]+premio[2] <= 0) {
                                     send_to_char("\n\r$c0011...non vinci un piffero. Cerca di essere piu' veloce!$c0007\n\r", t);
                                     
                                 } else {
