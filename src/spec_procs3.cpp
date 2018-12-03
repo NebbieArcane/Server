@@ -4844,7 +4844,7 @@ OBJSPECIAL_FUNC(thion_loader) {
  delle quest dai mob. */
 
 MOBSPECIAL_FUNC(AssignQuest) {
-	char buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
+	char buf[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
 	struct char_data* questor;
     struct char_data* quest_tgt;
     int x, y, t, durata;
@@ -5193,7 +5193,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
     struct room_data* rp;
     int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
     int n,x;
-    char buf[MAX_INPUT_LENGTH];
+    char buf[MAX_STRING_LENGTH];
     
     if(!mob->specials.quest_ref) {
         if(real_roomp(mob->in_room)->people) {
@@ -5408,7 +5408,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     struct char_data* t;
     int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
     int x,n;
-    char buf[MAX_INPUT_LENGTH];
+    char buf[MAX_STRING_LENGTH];
     
     if(!mob) {
         return FALSE;
