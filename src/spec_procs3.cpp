@@ -5246,10 +5246,20 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         return FALSE;
                     }
                     
-                    sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",x-af->duration);
+                    mudlog(LOG_CHECK, "%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
+                    
+                    sprintf(buf,"\n\r$c0014Completi la tua missione in ");
+                    
+                    if(x-af->duration < 2) {
+                        strcat(buf, "un ora");
+                    } else {
+                        sprintf(buf,"%d ore",x-af->duration);
+                    }
+                    strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
+                    
                     if(af->duration >= x-2) {
                     strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.");
-                    } else if(af->duration >= x/2) {
+                    } else if(af->duration >= floor(x/2)) {
                     strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.");
                     } else {
                     strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.");
@@ -5497,7 +5507,18 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                     premio[2] = 1;
                                 }
                                 
-                                sprintf(buf,"\n\r$c0014Completi la tua missione in %d ore, la Gilda dei Mercenari valuta la tua prestazione in maniera ",x-af->duration);
+                                
+                                mudlog(LOG_CHECK, "%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
+                                
+                                sprintf(buf,"\n\r$c0014Completi la tua missione in ");
+                                
+                                if(x-af->duration < 2) {
+                                    strcat(buf, "un ora");
+                                } else {
+                                    sprintf(buf,"%d ore",x-af->duration);
+                                }
+                                strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
+                                
                                 if(af->duration >= x-2) {
                                     strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.");
                                 } else if(af->duration >= floor(x/2)) {

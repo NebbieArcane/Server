@@ -181,8 +181,7 @@ ACTION_FUNC(do_action) {
 	}
 
 	if(!*buf) {
-		send_to_char(action->char_no_arg, ch);
-		send_to_char("\n\r", ch);
+        act(action->char_no_arg, 0, ch, 0, 0, TO_CHAR);
 		act(action->others_no_arg, action->hide, ch, 0, 0, TO_ROOM);
 		return;
 	}
