@@ -5574,7 +5574,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 }
                                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                                 act(buf, FALSE, t, 0, 0, TO_ROOM);
-                                return FALSE;
+                                return TRUE;
                             }
                         }
                     }

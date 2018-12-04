@@ -910,7 +910,7 @@ void death_cry(struct char_data* ch) {
 		return;
 	}
 
-	act("$c0005Il tuo sangue si gela al grido di morte di $c0015$n's$c0005.",
+	act("$c0005Il tuo sangue si gela al grido di morte di $c0015$n$c0005.",
 		FALSE, ch,0,0,TO_ROOM);
 	was_in = ch->in_room;
 
