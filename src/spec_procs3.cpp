@@ -4901,7 +4901,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
         
         if(strstr(arg, "quest") != NULL) {
             
-            if((!affected_by_spell(ch, STATUS_QUEST))) {
+            if(!affected_by_spell(ch, STATUS_QUEST)) {
             
             switch(GET_RACE(questor)) {
 
@@ -5088,6 +5088,9 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     break;
             }
             
+            sprintf(buf2,"%s quest: tipo %s, target: %s",GET_NAME(ch),QuestKind[quest_type],GET_NAME(quest_tgt));
+            mudlog(LOG_CHECK, buf2);
+                
             spell_quest(durata,ch,ch,0);
                 
             } else {
@@ -5095,9 +5098,15 @@ MOBSPECIAL_FUNC(AssignQuest) {
                 sprintf(buf, "%s Non puoi sobbarcarti di tutto il lavoro del regno, torna piu' tardi!",GET_NAME(ch));
             }
             
+        } else if(strstr(arg, "indizio") != NULL) {
+            if(!affected_by_spell(ch, STATUS_QUEST)) {
+                sprintf(buf, "%s Indizi? Ma di che parli che non hai alcun affare qui...",GET_NAME(ch));
+            } else {
+                sprintf(buf, "%s Io affido ingaggi, per le informazioni e' a orecchie di ladri, cacciatori e mercanti che devi rivolgerti.",GET_NAME(ch));
+            }
         } else {
             sprintf(buf, "%s Se vuoi ho un lavoretto per te. Chiedimi una quest...",GET_NAME(ch));
-            }
+        }
         
         do_tell(questor, buf, CMD_TELL);
         
@@ -5500,6 +5509,11 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                             REMOVE_BIT(mob->specials.affected_by, AFF_GROUP);
                         }
                         
+                        if(t->specials.bodyguarding) {
+                            free(t->specials.bodyguarding);
+                            t->specials.bodyguarding = (char*)NULL;
+                        }
+                        
                         extract_char(mob);
                         t->specials.quest_ref = NULL;
                         
@@ -5585,7 +5599,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                     }
                     
                     if(mob->master != t) {
-                        sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla reception piu' vicina e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
+                        sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla locanda piu' vicina e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
                         do_tell(mob,buf,CMD_TELL);
                         
                         send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali!$c0007\n\r", t);

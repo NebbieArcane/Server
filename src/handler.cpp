@@ -1005,6 +1005,11 @@ void affect_to_char(struct char_data* ch, struct affected_type* af) {
 void affect_remove(struct char_data* ch, struct affected_type* af) {
 	struct affected_type* hjp;
 
+    if(!ch) {
+        mudlog(LOG_SYSERR, "char %s doesn't exist in affect_remove function",
+               GET_NAME(ch));
+        return;
+    }
 
 	if(!ch->affected) {
 		mudlog(LOG_SYSERR, "affect removed from char %s without affect",

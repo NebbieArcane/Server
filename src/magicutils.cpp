@@ -171,11 +171,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
     
     if(giver->lastmkill != NULL) {
         free(taker->lastmkill);
-        if(IS_PC(taker)) {
             taker->lastmkill = strdup(giver->lastmkill);
-        } else {
-            taker->lastmkill = giver->lastmkill;
-        }
     }
 
 	/*
