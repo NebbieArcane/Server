@@ -2837,7 +2837,7 @@ const char* special_user_flags[] = {
 	"NO-DELETE",
 	"USE-ANSI",
 	"RACE-WARRIOR",
-	"Undef-2",
+	"SHOW-CLASSES",
 	"SHOW-EXITS",
 	"MURDER-1",
 	"STOLE-1",

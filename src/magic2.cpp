@@ -72,7 +72,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch)) {
-                if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[obj->nr].specname)) {
+                if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[victim->nr].specname)) {
                     send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
                     return;
 
@@ -2312,7 +2312,6 @@ void spell_cacaodemon(byte level, struct char_data* ch,
 		af.bitvector = AFF_CHARM;
 
 		affect_to_char(victim, &af);
-
 	}
 	if(IS_SET(victim->specials.act, ACT_AGGRESSIVE)) {
 		REMOVE_BIT(victim->specials.act, ACT_AGGRESSIVE);

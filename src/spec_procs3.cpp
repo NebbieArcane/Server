@@ -5637,23 +5637,57 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     
 MOBSPECIAL_FUNC(BossKill) {
 	if(type == EVENT_DEATH) {
-		const char* p;
+		struct char_data* p;
+        struct follow_type* f;
+        struct char_data* k;
         char buf[MAX_STRING_LENGTH];
+        int premio = ((GET_LEVEL(ch, WARRIOR_LEVEL_IND) - 50)/3)+1;
         
-        if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) < 50) {
-            sprintf(buf,"Il liv di %s[%d] e' troppo basso per pagare in rune.",GET_NAME(ch),ch->char_vnum);
+        if(premio <= 0) {
+            sprintf(buf,"Il liv di %s[%d] e' troppo basso per pagare in rune.",GET_NAME(ch),ch->nr);
             mudlog(LOG_SYSERR, buf);
             return FALSE;
         }
         
-        int premio = ((GET_LEVEL(ch, WARRIOR_LEVEL_IND) - 50)/3)+1;
+        if(!real_roomp(ch->in_room)) {
+            return FALSE;
+        }
         
-            for(p = real_roomp(ch->in_room)->people; p; p=p->next_in_room) {
-                if(IS_PC(p) && IS_PRINCE(p)) {
-                    GET_RUNEDEI(p) += premio;
+        for(p = real_roomp(ch->in_room)->people; p; p=p->next_in_room) {
+            if(p->lastmkill != NULL && strstr(p->lastmkill, GET_NAME(ch))) {
+                
+                if(p->master) {
+                    k = ch->master;
                 }
+                else {
+                    k = ch;
+                }
+                
+                if(premio > 2) {
+                    sprintf(buf,"\n\r$c0011Ottieni %d rune degli Dei per la tua impresa!$c0007\n\r", premio);
+                } else {
+                    sprintf(buf,"\n\r$c0011Ottieni una runa degli Dei per la tua impresa!$c0007\n\r");
+                }
+                
+                GET_RUNEDEI(k) += premio;
+                send_to_char(buf, k);
+                
+                if(k->followers) {
+                    for(f=k->followers; f; f=f->next) {
+                        if(IS_AFFECTED(f->follower, AFF_GROUP)) {
+                            if(!f->follower->desc) {
+                                /* link dead */
+                            }
+                            else {
+                                GET_RUNEDEI(f->follower) += premio;
+                                send_to_char(buf, f->follower);
+                            }
+                        }
+                    }
+                }
+                return TRUE;
             }
-        return TRUE;
+        }
     }
 	return FALSE;
 }
