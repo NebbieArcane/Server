@@ -5663,7 +5663,7 @@ MOBSPECIAL_FUNC(BossKill) {
                     k = p;
                 }
                 
-                if(premio > 2) {
+                if(premio > 1) {
                     sprintf(buf,"\n\r$c0011Ottieni %d rune degli Dei per la tua impresa!$c0007\n\r", premio);
                 } else {
                     sprintf(buf,"\n\r$c0011Ottieni una runa degli Dei per la tua impresa!$c0007\n\r");
