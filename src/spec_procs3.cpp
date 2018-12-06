@@ -5113,7 +5113,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
             if(!affected_by_spell(ch, STATUS_QUEST)) {
                 sprintf(buf, "%s Indizi? Ma di che parli che non hai alcun affare qui...",GET_NAME(ch));
             } else {
-                sprintf(buf, "%s Io affido ingaggi, per le informazioni e' a orecchie di ladri, cacciatori e mercanti che devi rivolgerti.",GET_NAME(ch));
+                sprintf(buf, "%s Affido solamente gli ingaggi, per le informazioni e' a orecchie di ladri, cacciatori e mercanti che devi rivolgerti.",GET_NAME(ch));
             }
         } else {
             sprintf(buf, "%s Se vuoi ho un lavoretto per te. Chiedimi una quest...",GET_NAME(ch));
@@ -5649,7 +5649,6 @@ ROOMSPECIAL_FUNC(MobKillInRoom) {
 		p=one_argument(p,premio);
 		only_argument(p,sideprocedure);
 		if(GET_MOB_VNUM(ch) == iKilled) {
-            
             
 			if(iTipo == 2) {
 				char buf[80];
