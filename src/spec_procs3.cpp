@@ -4315,6 +4315,7 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 #define NILMYS_ROOM 8957
 MOBSPECIAL_FUNC(stanislav_spirit) {
 	struct char_data* pNilmys;
+    struct char_data* p;
 	struct obj_data* object;
 	int r_num;
 
@@ -4342,7 +4343,13 @@ MOBSPECIAL_FUNC(stanislav_spirit) {
 			    "la sua anima ormai corrotta appartiene ad Arkhat, e brama $c0009sangue$c0015!", FALSE, mob, NULL, pNilmys, TO_ROOM);
 			act("$c0015[$c0013$n$c0015] dice 'Non raggiungerete mai Boris\n\r"
 				"e i suoi compagni... oggi perirete per mano mia!'",FALSE, pNilmys, NULL, NULL, TO_ROOM);
-
+            
+            for(p = real_roomp(ch->in_room)->people; p; p=p->next_in_room) {
+                if(p->lastmkill != NULL && strstr(p->lastmkill, GET_NAME(ch)) && !pNilmys->specials.fighting) {
+                    hit(pNilmys, p, 0);
+                }
+            }
+            
 		}
 		return(TRUE);
 	}
@@ -4999,8 +5006,12 @@ MOBSPECIAL_FUNC(AssignQuest) {
                                 CLASS_BARBARIAN | CLASS_MONK)) {
                         quest_tgt->specials.damsizedice = GetMaxLevel(ch)/17;
                         quest_tgt->specials.damnodice = GetMaxLevel(ch)/5;
+                        
+                        if(!IS_SET(quest_tgt->specials.act, ACT_MAGIC_USER) && !IS_SET(quest_tgt->specials.act, ACT_DRUID) && !IS_SET(quest_tgt->specials.act, ACT_CLERIC) && !IS_SET(quest_tgt->specials.act, ACT_PSI)) {
+                            quest_tgt->points.max_hit = floor(GET_MAX_HIT(ch)*1.5);
+                        }
+                        
                     }
-                    
                     
                     if(HasClass(ch, CLASS_MONK)) {
                         quest_tgt->points.max_hit = GET_MAX_HIT(ch)*2;
@@ -5281,8 +5292,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         mudlog(LOG_CHECK, "Eq value of %s increased of %d",GET_NAME(t), x);
                         send_to_char("$c0011Tenendo conto che il tuo potere e' cresciuto molto rispetto a quando ti abbiamo ingaggiato... $c0007\n\r", t);
                         
-                        premio[0] -= x*100;
-                        premio[1] -= x*1000;
+                        premio[0] -= x*200;
+                        premio[1] -= x*1600;
                         premio[2] = 0;
                         
                     } else if(x < 0) {
@@ -5324,7 +5335,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     }
                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                 act(buf, FALSE, t, 0, 0, TO_ROOM);
-                return FALSE;
+                return TRUE;
             }
         }
     } else {
