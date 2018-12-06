@@ -5657,10 +5657,10 @@ MOBSPECIAL_FUNC(BossKill) {
             if(p->lastmkill != NULL && strstr(p->lastmkill, GET_NAME(ch))) {
                 
                 if(p->master) {
-                    k = ch->master;
+                    k = p->master;
                 }
                 else {
-                    k = ch;
+                    k = p;
                 }
                 
                 if(premio > 2) {
