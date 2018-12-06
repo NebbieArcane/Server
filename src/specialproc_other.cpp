@@ -113,6 +113,7 @@ struct OtherSpecialProcEntry otherproc[] = {
     { "AssignQuest",(genericspecial_func) AssignQuest },
     { "MobCaccia",(genericspecial_func) MobCaccia },
     { "MobSalvataggio",(genericspecial_func) MobSalvataggio },
+    { "BossKill",(genericspecial_func) BossKill },
 	{ "ThrowerMob",(genericspecial_func) ThrowerMob },
 	{ "trap_obj",(genericspecial_func) trap_obj },
 	{ "TreeThrowerMob",(genericspecial_func) TreeThrowerMob },

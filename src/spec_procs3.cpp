@@ -5113,7 +5113,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
             if(!affected_by_spell(ch, STATUS_QUEST)) {
                 sprintf(buf, "%s Indizi? Ma di che parli che non hai alcun affare qui...",GET_NAME(ch));
             } else {
-                sprintf(buf, "%s Affido solamente gli ingaggi, per le informazioni e' a orecchie di ladri, cacciatori e mercanti che devi rivolgerti.",GET_NAME(ch));
+                sprintf(buf, "%s Affido solamente gli ingaggi. Per le informazioni e' ad orecchie di ladri, cacciatori e mercanti che devi rivolgerti.",GET_NAME(ch));
             }
         } else {
             sprintf(buf, "%s Se vuoi ho un lavoretto per te. Chiedimi una quest...",GET_NAME(ch));
@@ -5631,6 +5631,31 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     }
 
     return FALSE;
+}
+
+/* procedure generiche per le zone quest */
+    
+MOBSPECIAL_FUNC(BossKill) {
+	if(type == EVENT_DEATH) {
+		const char* p;
+        char buf[MAX_STRING_LENGTH];
+        
+        if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) < 50) {
+            sprintf(buf,"Il liv di %s[%d] e' troppo basso per pagare in rune.",GET_NAME(ch),ch->char_vnum);
+            mudlog(LOG_SYSERR, buf);
+            return FALSE;
+        }
+        
+        int premio = ((GET_LEVEL(ch, WARRIOR_LEVEL_IND) - 50)/3)+1;
+        
+            for(p = real_roomp(ch->in_room)->people; p; p=p->next_in_room) {
+                if(IS_PC(p) && IS_PRINCE(p)) {
+                    GET_RUNEDEI(p) += premio;
+                }
+            }
+        return TRUE;
+    }
+	return FALSE;
 }
     
 ROOMSPECIAL_FUNC(MobKillInRoom) {

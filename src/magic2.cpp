@@ -67,13 +67,16 @@ void spell_resurrection(byte level, struct char_data* ch,
                 return;
             }
             
+            victim = read_mobile(obj->char_vnum, VIRTUAL);
+            
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch)) {
-				if(!IS_SINGLE(ch)) {
-					send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
-					return;
-				}
+                if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[obj->nr].specname)) {
+                    send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
+                    return;
+
+                }
 			}
 			/* fine modifica */
 			if(GET_GOLD(ch) < 25000) {
@@ -84,7 +87,6 @@ void spell_resurrection(byte level, struct char_data* ch,
 				GET_GOLD(ch) -= 25000;
 			}
 
-			victim = read_mobile(obj->char_vnum, VIRTUAL);
 			char_to_room(victim, ch->in_room);
 			GET_GOLD(victim)=0;
 			GET_EXP(victim)=0;
