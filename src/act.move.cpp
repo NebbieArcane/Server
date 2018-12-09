@@ -849,7 +849,7 @@ void open_door(struct char_data* ch, int dir) {
 			act(buf, FALSE, ch, 0, 0, TO_ROOM);
 		}
 		else {
-			act("$n rivela un passaggio segreto !", FALSE, ch, 0, 0, TO_ROOM);
+			act("$n rivela un passaggio segreto!", FALSE, ch, 0, 0, TO_ROOM);
 		}
 	}
 	else {

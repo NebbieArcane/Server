@@ -149,10 +149,18 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 	buffer[0] = 0;
 	if((mode == 0) && object->description && *object->description) {
 		strcpy(buffer, object->description);
+        if(buffer[1] == '$')
+            buffer[7] = UPPER(buffer[7]);
+        else
+            CAP(buffer);
 	}
 	else if(object->short_description &&
 			(mode == 1 || mode == 2 || mode == 3 || mode == 4)) {
 		strcpy(buffer,object->short_description);
+        if(buffer[1] == '$')
+            buffer[7] = UPPER(buffer[7]);
+        else
+            CAP(buffer);
 	}
 	else if(mode == 5) {
 		if(object->obj_flags.type_flag == ITEM_NOTE) {
@@ -277,10 +285,18 @@ void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 
 	if((mode == 0) && object->description && *object->description) {
 		strcpy(buffer,object->description);
+        if(buffer[1] == '$')
+            buffer[7] = UPPER(buffer[7]);
+        else
+            CAP(buffer);
 	}
 	else if(object->short_description && ((mode == 1) ||
 										  (mode == 2) || (mode == 3) || (mode == 4))) {
 		strcpy(buffer, object->short_description);
+        if(buffer[1] == '$')
+            buffer[7] = UPPER(buffer[7]);
+        else
+            CAP(buffer);
 	}
 	else if(mode == 5) {
 		if(object->obj_flags.type_flag == ITEM_NOTE) {
@@ -1463,7 +1479,7 @@ ACTION_FUNC(do_look) {
 		"$c0009C'e' sangue ovunque guardi.",
 		"$c0009Che carneficina! Il Dio della Morte fara' festa questa notte!",
 		"$c0009Non riesci a non sporcarti con il sangue che vedi ovunque!",
-		"$c0009Tutto pare rivoltarsi per la morte e distruzione che alegga qui!",
+		"$c0009Tutto pare rivoltarsi per la morte e distruzione che aleggia qui!",
 		"$c0009Gli Dei dovrebbero avere pieta' e ripulire questo orrido posto dal sangue!",
 		"$c0009C'e' cosi' tanto sangue qui che rischi di affogarci dentro!",
 		"\n"

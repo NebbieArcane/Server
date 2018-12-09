@@ -4449,7 +4449,7 @@ int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
 				return(dam);
 			}
 			else {
-				act("$N ignora il stupido attacco.", FALSE, ch, 0, v, TO_CHAR);
+				act("$N ignora il tuo stupido attacco.", FALSE, ch, 0, v, TO_CHAR);
 				return(0);
 			}
 		}
