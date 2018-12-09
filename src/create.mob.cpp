@@ -24,6 +24,7 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "modify.hpp"
 #include "snew.hpp"
 #include "structs.hpp"
 #include "vt100c.hpp"
@@ -102,24 +103,65 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Mobile Action Flags:");
-	send_to_char(buf, ch);
-
-	row = 0;
-	for(i = 0; i < 32; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->specials.act & (1<<i)) ? "X" : " "), action_bits[i]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Mobile Action Flags:");
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 32; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->specials.act & (1<<i)) ? "X" : " "), action_bits[i]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rMobile Action Flags:\n\r\n\r", ch);
+        
+        for(i = 0; i < 32; i++)
+        {
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((ch->specials.mobedit->specials.act & (1<<i)) ? "X" : " ") % action_bits[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((ch->specials.mobedit->specials.act & (1<<i)) ? "X" : " ") % action_bits[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+	
 	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
 }
 
@@ -139,48 +181,146 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 31) {
+		if(update < 0 || update > 36) {
 			return;
 		}
 		i=1;
-		if(update>0)
-			for(a=1; a<=update; a++) {
-				i*=2;
-			}
+        if(update > 0 && update < 32)
+            for(a=1; a<=update; a++) {
+                i*=2;
+            }
+        else
+            for(a=1; a<=update-32; a++) {
+                i*=2;
+            }
 
-		if(IS_SET(ch->specials.mobedit->specials.affected_by, i)) {
-			REMOVE_BIT(ch->specials.mobedit->specials.affected_by, i);
-		}
-		else {
-			SET_BIT(ch->specials.mobedit->specials.affected_by, i);
-		}
+        if(update<32)
+        {
+            if(IS_SET(ch->specials.mobedit->specials.affected_by, i)) {
+                REMOVE_BIT(ch->specials.mobedit->specials.affected_by, i);
+            }
+            else {
+                SET_BIT(ch->specials.mobedit->specials.affected_by, i);
+            }
+        }
+        else
+        {
+            if(IS_SET(ch->specials.mobedit->specials.affected_by2, i)) {
+                REMOVE_BIT(ch->specials.mobedit->specials.affected_by2, i);
+            }
+            else {
+                SET_BIT(ch->specials.mobedit->specials.affected_by2, i);
+            }
+        }
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Mobile Affect Flags:");
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Mobile Affect Flags:");
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 41; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            check=1;
+            if(i > 0 && i < 32)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            else
+                for(a=1; a<=(i-32); a++)
+                {
+                    check*=2;
+                }
+            if (i < 32)
+            {
+                sprintf(buf, "%-2ld [%s] %s", i + 1, ((ch->specials.mobedit->specials.affected_by & (check)) ? "X" : " "), affected_bits[ i ]);
+                send_to_char(buf, ch);
+            }
+            else
+            {
+                sprintf(buf, "%-2ld [%s] %s", i + 1, ((ch->specials.mobedit->specials.affected_by2 & (check)) ? "X" : " "), affected_bits2[ i-32 ]);
+                send_to_char(buf, ch);
+            }
+        }
+        
+        sprintf(buf, VT_CURSPOS, 21, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rMobile Affect Flags:\n\r\n\r", ch);
+        
+        for(i = 0; i < 41; i++)
+        {
+            check=1;
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i > 0 && i < 32)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            else
+                for(a=1; a<=(i-32); a++)
+                {
+                    check*=2;
+                }
+            
+            if(i < 32)
+            {
+                if(i & 1)
+                {
+                    fmt2 % "" % (i + 1) % ((ch->specials.mobedit->specials.affected_by & (check)) ? "X" : " ") % affected_bits[i];
+                    sb.append(fmt2.str().c_str());
+                }
+                else
+                {
+                    fmt % (i + 1) % ((ch->specials.mobedit->specials.affected_by & (check)) ? "X" : " ") % affected_bits[i];
+                    sb.append(fmt.str().c_str());
+                    x = strlen(fmt.str().c_str());
+                }
+            }
+            else
+            {
+                if(i & 1)
+                {
+                    fmt2 % "" % (i + 1) % ((ch->specials.mobedit->specials.affected_by2 & (check)) ? "X" : " ") % affected_bits2[i-32];
+                    sb.append(fmt2.str().c_str());
+                }
+                else
+                {
+                    fmt % (i + 1) % ((ch->specials.mobedit->specials.affected_by2 & (check)) ? "X" : " ") % affected_bits2[i-32];
+                    sb.append(fmt.str().c_str());
+                    x = strlen(fmt.str().c_str());
+                }
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
 
-	row = 0;
-	for(i = 0; i < 32; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		check=1;
-		if(i>0)
-			for(a=1; a<=i; a++) {
-				check*=2;
-			}
-		sprintf(buf, "%-2ld [%s] %s", i + 1,
-				((ch->specials.mobedit->specials.affected_by & (check)) ?
-				 "X" : " "), affected_bits[ i ]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 21, 1);
-	send_to_char(buf, ch);
 	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
 }
 
@@ -206,24 +346,24 @@ ACTION_FUNC(do_medit) {
 
 	for(i = 0; *(arg + i) == ' '; i++);
 	if(!*(arg + i)) {
-		send_to_char("Medit who?\n\r", ch);
+		send_to_char("Quale mob vuoi modificare?\n\r", ch);
 		return;
 	}
 
 	arg = one_argument(arg, name);
 
 	if(!(mob = (struct char_data*)get_char_room_vis(ch, name)))         {
-		send_to_char("I don't see that mobile here.\n\r",ch);
+		send_to_char("Questo mob non e' qui.\n\r",ch);
 		return;
 	}
 
 	if(IS_PC(mob)) {
-		send_to_char("You can not mobedit players.\n\r",ch);
+		send_to_char("Non puoi modificare i giocatori.\n\r",ch);
 		return;
 	}
 
 	if(GetMaxLevel(ch) < CREATORE && !IS_SET(ch->player.user_flags,CAN_MOB_EDIT)) {
-		send_to_char("You do not have access to edit mobiles.\n\r",ch);
+		send_to_char("Mi dispiace, ma non hai l'autorizzazione per modificare i mobs.\n\r",ch);
 		return;
 	}
 
@@ -231,7 +371,7 @@ ACTION_FUNC(do_medit) {
 	ch->specials.medit = MOB_MAIN_MENU;
 	ch->desc->connected = CON_MOB_EDITING;
 
-	act("$n has begun editing a mobile.", FALSE, ch, 0, 0, TO_ROOM);
+	act("$n inizia a $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 	GET_POS(ch)=POSITION_SLEEPING;
 
 	UpdateMobMenu(ch);
@@ -247,8 +387,16 @@ void UpdateMobMenu(struct char_data* ch) {
 	send_to_char(VT_HOMECLR, ch);
 	sprintf(buf, VT_CURSPOS, 1, 1);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        send_to_char("\n\r\n\r", ch);
+    }
 	sprintf(buf, "Mobile Name: %s", GET_NAME(mob));
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        send_to_char("\n\r", ch);
+    }
 	sprintf(buf, VT_CURSPOS, 3, 1);
 	send_to_char(buf, ch);
 	send_to_char("Menu:\n\r", ch);
@@ -261,7 +409,7 @@ void MobEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.medit == MOB_MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
 			ch->desc->connected = CON_PLYNG;
-			act("$n has returned from editing a mobile.", FALSE, ch, 0, 0, TO_ROOM);
+			act("$n smette $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 			GET_POS(ch)=POSITION_STANDING;
 			return;
 		}
@@ -489,7 +637,7 @@ void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) {
 
     sprintf(buf, "Current Mobile Special: %s %s",mob_index[mob->nr].specname, mob_index[mob->nr].specparms);
     send_to_char(buf, ch);
-    send_to_char("\n\r\n\rNew Mobile Special (nome parametri): ", ch);
+    send_to_char("\n\r\n\rNew Mobile Special (name, parameters): ", ch);
 
     return;
 }
@@ -1037,38 +1185,95 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Mobile race: %s", RaceName[GET_RACE(ch->specials.mobedit)]);
-	send_to_char(buf, ch);
-
-	for(i = 0; i < MAX_RACE; i++) {
-		a++;
-		if(a==1) {
-			column=5;
-		}
-		else if(a==2) {
-			column = 30;
-		}
-		else if(a==3) {
-			column = 55;
-		}
-		else {
-			column = 0;
-		}
-		sprintf(buf, VT_CURSPOS, row + 1, column);
-		if(a==3) {
-			row++;
-			a=0;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d %s", i + 1, RaceName[i]);
-		send_to_char(buf, ch);
-	}
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Mobile race: %s", RaceName[GET_RACE(ch->specials.mobedit)]);
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < MAX_RACE; i++)
+        {
+            a++;
+            if(a==1)
+            {
+                column=5;
+            }
+            else if(a==2)
+            {
+                column = 30;
+            }
+            else if(a==3) {
+                column = 55;
+            }
+            else
+            {
+                column = 0;
+            }
+            sprintf(buf, VT_CURSPOS, row + 1, column);
+            if(a==3) {
+                row++;
+                a=0;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d %s", i + 1, RaceName[i]);
+            send_to_char(buf, ch);
+        }
 #if 0
-	sprintf(buf, VT_CURSPOS, 21, 1);
-	send_to_char(buf, ch);
+        sprintf(buf, VT_CURSPOS, 21, 1);
+        send_to_char(buf, ch);
 #endif
+    }
+    else
+    {
+        string sb;
+        char buf2[255];
+        boost::format fmt ("     %-2d %s");
+        int x = 0;
+        
+        sprintf(buf, "\n\rMobile race: %s\n\r\n\r", RaceName[GET_RACE(ch->specials.mobedit)]);
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < MAX_RACE; i++)
+        {
+            a++;
+            if(a == 1)
+            {
+                boost::format fmt ("     %-2d %s");
+                fmt % (i + 1) % RaceName[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            else if(a == 2)
+            {
+                sprintf(buf2, "%s", "%-");
+                sprintf(buf2, "%s%d", buf2, 30-x);
+                strcat(buf2, "s%-2d %s");
+                boost::format fmt2 (buf2);
+                fmt2 % "" % (i + 1) % RaceName[i];
+                sb.append(fmt2.str().c_str());
+                x += strlen(fmt2.str().c_str());
+                fmt2.clear();
+            }
+            else if(a == 3)
+            {
+                sprintf(buf2, "%s", "%-");
+                sprintf(buf2, "%s%d", buf2, 55-x);
+                strcat(buf2, "s%-2d %s\n\r");
+                boost::format fmt (buf2);
+                fmt % "" % (i + 1) % RaceName[i];
+                sb.append(fmt.str().c_str());
+                x = 0;
+                a = 0;
+            }
+            
+            fmt.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+
 	send_to_char("\n\rSelect the race number to set to, <C/R> to return to "
 				 "main menu.\n\r--> ", ch);
 }
@@ -1106,33 +1311,79 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Mobile Resistances Flags:");
-	send_to_char(buf, ch);
-
-	row = 0;
-	for(i = 0; i < 18; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		check=1;
-		if(i>0)
-			for(a=1; a<=i; a++) {
-				check*=2;
-			}
-		sprintf(buf, "%-2d [%s] %s", i + 1,
-				((ch->specials.mobedit->immune & (check)) ? "X" : " "),
-				immunity_names[i]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to "
-				 "main menu.\n\r--> ",ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Mobile Resistances Flags:");
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 18; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            check=1;
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->immune & (check)) ? "X" : " "), immunity_names[i]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rMobile Resistances Flags:\n\r\n\r", ch);
+        
+        for(i = 0; i < 18; i++)
+        {
+            check = 1;
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((ch->specials.mobedit->immune & (check)) ? "X" : " ") % immunity_names[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((ch->specials.mobedit->immune & (check)) ? "X" : " ") % immunity_names[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+	
+	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
 }
 
 
@@ -1169,33 +1420,79 @@ void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Mobile Immunities Flags:");
-	send_to_char(buf, ch);
-
-	row = 0;
-	for(i = 0; i < 18; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		check=1;
-		if(i>0)
-			for(a=1; a<=i; a++) {
-				check*=2;
-			}
-		sprintf(buf, "%-2d [%s] %s", i + 1,
-				((ch->specials.mobedit->M_immune & (check)) ? "X" : " "),
-				immunity_names[i]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to "
-				 "main menu.\n\r--> ",ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Mobile Immunities Flags:");
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 18; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            check=1;
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->M_immune & (check)) ? "X" : " "), immunity_names[i]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rMobile Immunities Flags:\n\r\n\r", ch);
+        
+        for(i = 0; i < 18; i++)
+        {
+            check = 1;
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((ch->specials.mobedit->M_immune & (check)) ? "X" : " ") % immunity_names[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((ch->specials.mobedit->M_immune & (check)) ? "X" : " ") % immunity_names[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+    
+	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
 }
 
 
@@ -1230,30 +1527,79 @@ void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Mobile Susceptibilities Flags:");
-	send_to_char(buf, ch);
-
-	row = 0;
-	for(i = 0; i < 18; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		check=1;
-		if(i>0)
-			for(a=1; a<=i; a++) {
-				check*=2;
-			}
-		sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->susc & (check)) ? "X" : " "), immunity_names[i]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Mobile Susceptibilities Flags:");
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 18; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            check=1;
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->susc & (check)) ? "X" : " "), immunity_names[i]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rMobile Susceptibilities Flags:\n\r\n\r", ch);
+        
+        for(i = 0; i < 18; i++)
+        {
+            check = 1;
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((ch->specials.mobedit->susc & (check)) ? "X" : " ") % immunity_names[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((ch->specials.mobedit->susc & (check)) ? "X" : " ") % immunity_names[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+    
+    send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
 }
 
 

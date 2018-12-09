@@ -285,7 +285,7 @@ ACTION_FUNC(do_slay) {
 	}
 	else {
 		if(!(victim = get_char_room_vis(ch, tmp))) {
-			send_to_char("They aren't here.\n\r", ch);
+			send_to_char("Non e' qui.\n\r", ch);
 		}
 		else {
 
@@ -294,10 +294,10 @@ ACTION_FUNC(do_slay) {
 			}
 			else {
 				if(ch == victim) {
-					send_to_char("Your mother would be so sad.. :(\n\r", ch);
+					send_to_char("Tua madre potrebbe rattristarsi per questo... :(\n\r", ch);
 				}
 				else {
-					act("Distruggi senza alcuna pieta'!", FALSE, ch, 0, victim, TO_CHAR);
+					act("Distruggi senza alcuna pieta' $N!", FALSE, ch, 0, victim, TO_CHAR);
 					raw_kill(victim, 0);
 				}
 			}

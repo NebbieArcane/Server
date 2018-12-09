@@ -1647,6 +1647,7 @@ struct char_data* read_mobile(int nr, int type) {
 	mob->player.iClass = CLASS_WARRIOR;
 
 	fscanf(mob_f, " %c ", &letter);
+    mob->specials.mobtype = letter;
 	if(letter == 'S') {
 		/* SIMPLE MOB */
 		fscanf(mob_f, "\n");

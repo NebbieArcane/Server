@@ -20,6 +20,7 @@
 #include "comm.hpp"
 #include "interpreter.hpp"
 #include "handler.hpp"
+#include "modify.hpp"
 #include "utility.hpp"
 #include "vt100c.hpp"
 
@@ -53,6 +54,7 @@ namespace Alarmud {
 
 #define CHANGE_OBJ_AFFECT5   25
 #define CHANGE_AFFECT5_MOD   26
+#define CHANGE_OBJ_TYPE2     27
 
 #define ENTER_CHECK        1
 
@@ -113,47 +115,115 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         }
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Object Extra Flags:");
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Object Extra Flags:");
+        send_to_char(buf, ch);
 
-	row = 0;
-	for(i = 0; i < 36; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		check=1;
-		if(i > 0 && i < 32)
-			for(a=1; a<=i; a++) {
-				check*=2;
-			}
-        else
-            for(a=1; a<=(i-32); a++) {
-                check*=2;
+        row = 0;
+        for(i = 0; i < 36; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
             }
-		if (i < 32)
-        {
-            sprintf(buf, "%-2d [%s] %s", i + 1,
-                    ((ch->specials.objedit->obj_flags.extra_flags & (check)) ?
-                      "X" : " "), extra_bits[i]);
-        }
-        else
-        {
-            sprintf(buf, "%-2d [%s] %s", i + 1,
-                    ((ch->specials.objedit->obj_flags.extra_flags2 & (check)) ?
-                        "X" : " "), extra_bits2[i-32]);
+            send_to_char(buf, ch);
+            check=1;
+            if(i > 0 && i < 32)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            else
+                for(a=1; a<=(i-32); a++)
+                {
+                    check*=2;
+                }
+            if (i < 32)
+            {
+                sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.objedit->obj_flags.extra_flags & (check)) ? "X" : " "), extra_bits[i]);
+            }
+            else
+            {
+                sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.objedit->obj_flags.extra_flags2 & (check)) ? "X" : " "), extra_bits2[i-32]);
+            }
+
+            send_to_char(buf, ch);
         }
 
-		send_to_char(buf, ch);
-	}
+        sprintf(buf, VT_CURSPOS, row + 8, 1);
+        send_to_char(buf, ch);
+        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        sprintf(buf, "\n\rObject Extra Flags:\n\r\n\r");
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < 36; i++)
+        {
+            check = 1;
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i > 0 && i < 32)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            else
+                for(a=1; a<=(i-32); a++)
+                {
+                    check*=2;
+                }
+            
+            if(i < 32)
+            {
+                if(i & 1)
+                {
+                    fmt2 % "" % (i + 1) % ((ch->specials.objedit->obj_flags.extra_flags & (check)) ? "X" : " ") % extra_bits[i];
+                    sb.append(fmt2.str().c_str());
+                }
+                else
+                {
+                    fmt % (i + 1) % ((ch->specials.objedit->obj_flags.extra_flags & (check)) ? "X" : " ") % extra_bits[i];
+                    sb.append(fmt.str().c_str());
+                    x = strlen(fmt.str().c_str());
+                }
+            }
+            else
+            {
+                if(i & 1)
+                {
+                    fmt2 % "" % (i + 1) % ((ch->specials.objedit->obj_flags.extra_flags2 & (check)) ? "X" : " ") % extra_bits2[i-32];
+                    sb.append(fmt2.str().c_str());
+                }
+                else
+                {
+                    fmt % (i + 1) % ((ch->specials.objedit->obj_flags.extra_flags2 & (check)) ? "X" : " ") % extra_bits2[i-32];
+                    sb.append(fmt.str().c_str());
+                    x = strlen(fmt.str().c_str());
+                }
+            }
 
-	sprintf(buf, VT_CURSPOS, row + 8, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to main "
-				 "menu.\n\r--> ", ch);
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+    }
 }
 
 
@@ -189,30 +259,79 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Object Wear Flags:");
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Object Wear Flags:");
+        send_to_char(buf, ch);
 
-	row = 0;
-	for(i = 0; i < 16; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		check=1;
-		if(i>0)
-			for(a=1; a<=i; a++) {
-				check*=2;
-			}
-		sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " "), wear_bits[i]);
-		send_to_char(buf, ch);
-	}
+        row = 0;
+        for(i = 0; i < 16; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            check=1;
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " "), wear_bits[i]);
+            send_to_char(buf, ch);
+        }
 
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rObject Wear Flags:\n\r\n\r", ch);
+        
+        for(i = 0; i < 16; i++)
+        {
+            check = 1;
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i>0)
+                for(a=1; a<=i; a++)
+                {
+                    check*=2;
+                }
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % extra_bits[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % extra_bits[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+    }
 }
 
 
@@ -235,20 +354,20 @@ ACTION_FUNC(do_oedit) {
 
 	if(GetMaxLevel(ch) < DIO &&
 			!IS_SET(ch->player.user_flags,CAN_OBJ_EDIT)) {
-		send_to_char("You do not have access to object editing.\n\r",ch);
+		send_to_char("Mi dispiace, ma non hai l'autorizzazione per modificare gli oggetti.\n\r",ch);
 		return;
 	}
 
 	for(i = 0; *(arg + i) == ' '; i++);
 	if(!*(arg + i)) {
-		send_to_char("Oedit what?\n\r", ch);
+		send_to_char("Quale oggetto vuoi modificare?\n\r", ch);
 		return;
 	}
 
 	arg = one_argument(arg, name);
 
 	if(!(obj = (struct obj_data*)get_obj_vis_accessible(ch, name)))         {
-		send_to_char("I don't see that object here.\n\r",ch);
+		send_to_char("Questo oggetto non e' qui!\n\r",ch);
 		return;
 	}
 
@@ -270,7 +389,7 @@ ACTION_FUNC(do_oedit) {
         SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT);
     }
     
-	act("$n has begun editing an object.", FALSE, ch, 0, 0, TO_ROOM);
+	act("$n inizia a $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 	GET_POS(ch)=POSITION_SLEEPING;
 
 	/*    if(GetMaxLevel(ch)<ROLORD)
@@ -290,8 +409,16 @@ void UpdateObjMenu(struct char_data* ch) {
 	send_to_char(VT_HOMECLR, ch);
 	sprintf(buf, VT_CURSPOS, 1, 1);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        send_to_char("\n\r\n\r", ch);
+    }
 	sprintf(buf, "Object Name: %s", obj->name);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        send_to_char("\n\r", ch);
+    }
 	sprintf(buf, VT_CURSPOS, 3, 1);
 	send_to_char(buf, ch);
 	send_to_char("Menu:\n\r", ch);
@@ -304,7 +431,7 @@ void ObjEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.oedit == OBJ_MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
 			ch->desc->connected = CON_PLYNG;
-			act("$n has returned from editing an object.", FALSE, ch, 0, 0, TO_ROOM);
+			act("$n smette di $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 			GET_POS(ch)=POSITION_STANDING;
 			return;
 		}
@@ -376,6 +503,7 @@ void ObjEdit(struct char_data* ch, const char* arg) {
 		ChangeObjWear(ch, arg, 0);
 		return;
 	case CHANGE_OBJ_TYPE:
+    case CHANGE_OBJ_TYPE2:
 		ChangeObjType(ch, arg, 0);
 		return;
 	case CHANGE_OBJ_FLAGS:
@@ -526,6 +654,7 @@ void ChangeObjDesc(struct char_data* ch, const char* arg, int type) {
 void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
+    struct obj_data* obj;
 
 	if(type != ENTER_CHECK)
 		if(!*arg || (*arg == '\n')) {
@@ -536,6 +665,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 
 	update = atoi(arg);
 	update--;
+    obj = ch->specials.objedit;
 
 	if(type != ENTER_CHECK) {
 		switch(ch->specials.oedit) {
@@ -545,33 +675,97 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 			}
 			else {
 				ch->specials.objedit->obj_flags.type_flag = update;
-				ch->specials.oedit = OBJ_MAIN_MENU;
-				UpdateObjMenu(ch);
+                if(ch->specials.objedit->obj_flags.type_flag == ITEM_AUDIO)
+                {
+                    send_to_char("\n\rCurrent Sound:\n\r", ch);
+                    send_to_char(ch->specials.objedit->action_description, ch);
+                    send_to_char("\n\r\n\rNew Sound:\n\r", ch);
+                    ch->specials.oedit = CHANGE_OBJ_TYPE2;
+                }
+                else
+                {
+                    ch->specials.oedit = OBJ_MAIN_MENU;
+                    UpdateObjMenu(ch);
+                }
 				return;
 			}
+        case CHANGE_OBJ_TYPE2:
+                if(type != ENTER_CHECK)
+                {
+                    if(obj->action_description)
+                    {
+                        free(obj->action_description);
+                    }
+                }
+                obj->action_description = (char*)strdup(arg);
+                send_to_char("\n\r\n\rDone, sound assigned.\n\rRemember to change Object Value1 to a number greater than 0.\n\r", ch);
+                ch->specials.oedit = OBJ_MAIN_MENU;
+                UpdateObjMenu(ch);
+                return;
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Object Type: %s",
-			item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Object Type: %s", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
+        send_to_char(buf, ch);
 
-	row = 0;
-	for(i = 0; i < 25; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d %s", i + 1, item_types[i]);
-		send_to_char(buf, ch);
-	}
+        row = 0;
+        for(i = 0; i < 25; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d %s", i + 1, item_types[i]);
+            send_to_char(buf, ch);
+        }
 
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+        send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d %s");
+        char buf2[255];
+        int x = 0;
+        
+        sprintf(buf, "\n\rObject Type: %s\n\r\n\r", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < 27; i++)
+        {
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % item_types[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % item_types[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+        send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+    }
 }
 
 void ChangeObjWeight(struct char_data* ch, const char* arg, int type) {
@@ -815,23 +1009,71 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		case APPLY_AFF2:
             send_to_char("\n\rNote: Modifier should be ADDED together from this "
                             "list of affection flags 2.\n\r",ch);
-            row = 0;
-            for(i = 0; *affected_bits2[i] != '\n'; i++) {
-                sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-                if(i & 1) {
-                    row++;
-                }
-                send_to_char(buf, ch);
-                check=1;
-                if(i>0)
-                    for(a=1; a<=i; a++) {
-                        check*=2;
+            if(ch->term == VT100)
+            {
+                row = 0;
+                for(i = 0; *affected_bits2[i] != '\n'; i++)
+                {
+                    sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+                    if(i & 1)
+                    {
+                        row++;
                     }
-                sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
-                send_to_char(buf, ch);
+                    send_to_char(buf, ch);
+                    check=1;
+                    if(i>0)
+                        for(a=1; a<=i; a++)
+                        {
+                            check*=2;
+                        }
+                    sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
+                    send_to_char(buf, ch);
+                }
+                send_to_char("\n\r\n\r", ch);
             }
-            send_to_char("\n\r\n\r", ch);
-        //			send_to_char("\n\rNote: Not implemented!.\n\r",ch);
+            else
+            {
+                string sb;
+                boost::format fmt ("    %-10u : %s");
+                char buf2[255];
+                int x = 0, column = 0;
+                
+                send_to_char("\n\r", ch);
+                
+                for(i = 0; *affected_bits2[i] != '\n'; i++)
+                {
+                    check=1;
+                    sprintf(buf2, "%s", "%-");
+                    sprintf(buf2, "%s%d", buf2, 45-x);
+                    strcat(buf2, "s%-10u : %s\n\r");
+                    boost::format fmt2 (buf2);
+                    
+                    if(i>0)
+                        for(a=1; a<=i; a++)
+                        {
+                            check*=2;
+                        }
+                    
+                    if(column & 1)
+                    {
+                        fmt2 % "" % check % affected_bits2[i];
+                        sb.append(fmt2.str().c_str());
+                        column += 1;
+                    }
+                    else
+                    {
+                        fmt % check % affected_bits2[i];
+                        sb.append(fmt.str().c_str());
+                        x = strlen(fmt.str().c_str());
+                        column += 1;
+                    }
+                    
+                    fmt.clear();
+                    fmt2.clear();
+                }
+                page_string(ch->desc, sb.c_str(), true);
+                send_to_char("\n\r\n\r", ch);
+            }
 			break;
 		case APPLY_STR:
 		case APPLY_DEX:
@@ -881,43 +1123,137 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		case APPLY_M_IMMUNE:
 			send_to_char("\n\rNote: Modifier should be ADDED together from this "
 						 "list of immunity flags.\n\r",ch);
-			row = 0;
-			for(i = 0; i < 18; i++) {
-				sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-				if(i & 1) {
-					row++;
-				}
-				send_to_char(buf, ch);
-				check=1;
-				if(i>0)
-					for(a=1; a<=i; a++) {
-						check*=2;
-					}
-				sprintf(buf, "%-6u :   %s", check, immunity_names[i]);
-				send_to_char(buf, ch);
-			}
-			sprintf(buf, VT_CURSPOS, 20, 1);
-			send_to_char(buf, ch);
+            if(ch->term == VT100)
+            {
+                row = 0;
+                for(i = 0; i < 18; i++)
+                {
+                    sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+                    if(i & 1)
+                    {
+                        row++;
+                    }
+                    send_to_char(buf, ch);
+                    check=1;
+                    if(i>0)
+                        for(a=1; a<=i; a++)
+                        {
+                            check*=2;
+                        }
+                    sprintf(buf, "%-6u :   %s", check, immunity_names[i]);
+                    send_to_char(buf, ch);
+                }
+                sprintf(buf, VT_CURSPOS, 20, 1);
+                send_to_char(buf, ch);
+            }
+            else
+            {
+                string sb;
+                boost::format fmt ("    %-6u : %s");
+                char buf2[255];
+                int x = 0;
+
+                for(i = 0; i < 18; i++)
+                {
+                    check=1;
+                    sprintf(buf2, "%s", "%-");
+                    sprintf(buf2, "%s%d", buf2, 45-x);
+                    strcat(buf2, "s%-6u : %s\n\r");
+                    boost::format fmt2 (buf2);
+                    
+                    if(i>0)
+                        for(a=1; a<=i; a++)
+                        {
+                            check*=2;
+                        }
+                    
+                    if(i & 1)
+                    {
+                        fmt2 % "" % check % immunity_names[i];
+                        sb.append(fmt2.str().c_str());
+                    }
+                    else
+                    {
+                        fmt % check % immunity_names[i];
+                        sb.append(fmt.str().c_str());
+                        x = strlen(fmt.str().c_str());
+                    }
+
+                    fmt.clear();
+                    fmt2.clear();
+                }
+                sb.append("\r\n\n\r");
+                page_string(ch->desc, sb.c_str(), true);
+            }
 			break;
 		case APPLY_SPELL:
 			send_to_char("\n\rNote: Modifier should be ADDED together from this "
 						 "list of affection flags.\n\r",ch);
-			row = 0;
-			for(i = 0; *affected_bits[i] != '\n'; i++) {
-				sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-				if(i & 1) {
-					row++;
-				}
-				send_to_char(buf, ch);
-				check=1;
-				if(i>0)
-					for(a=1; a<=i; a++) {
-						check*=2;
-					}
-				sprintf(buf, "%-10u : %s", check, affected_bits[i]);
-				send_to_char(buf, ch);
-			}
-			send_to_char("\n\r\n\r", ch);
+                if(ch->term == VT100)
+                {
+                    row = 0;
+                    for(i = 0; *affected_bits[i] != '\n'; i++)
+                    {
+                        sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+                        if(i & 1)
+                        {
+                            row++;
+                        }
+                        send_to_char(buf, ch);
+                        check=1;
+                        if(i>0)
+                            for(a=1; a<=i; a++)
+                            {
+                                check*=2;
+                            }
+                        sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
+                        send_to_char(buf, ch);
+                    }
+                    send_to_char("\n\r\n\r", ch);
+                }
+                else
+                {
+                    string sb;
+                    boost::format fmt ("    %-10u : %s");
+                    char buf2[255];
+                    int x = 0, column = 0;
+                    
+                    send_to_char("\n\r", ch);
+                    
+                    for(i = 0; *affected_bits[i] != '\n'; i++)
+                    {
+                        check=1;
+                        sprintf(buf2, "%s", "%-");
+                        sprintf(buf2, "%s%d", buf2, 45-x);
+                        strcat(buf2, "s%-10u : %s\n\r");
+                        boost::format fmt2 (buf2);
+                        
+                        if(i>0)
+                            for(a=1; a<=i; a++)
+                            {
+                                check*=2;
+                            }
+                        
+                        if(column & 1)
+                        {
+                            fmt2 % "" % check % affected_bits[i];
+                            sb.append(fmt2.str().c_str());
+                            column += 1;
+                        }
+                        else
+                        {
+                            fmt % check % affected_bits[i];
+                            sb.append(fmt.str().c_str());
+                            x = strlen(fmt.str().c_str());
+                            column += 1;
+                        }
+                        
+                        fmt.clear();
+                        fmt2.clear();
+                    }
+                    page_string(ch->desc, sb.c_str(), true);
+                    send_to_char("\n\r\n\r", ch);
+                }
 			break;
 		case APPLY_WEAPON_SPELL:
 		case APPLY_EAT_SPELL:
@@ -976,32 +1312,90 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < 56; i++)
+        {
+            a++;
+            if(a==1)
+            {
+                column=5;
+            }
+            else if(a==2)
+            {
+                column = 30;
+            }
+            else if(a==3)
+            {
+                column = 55;
+            }
+            sprintf(buf, VT_CURSPOS, row + 1, column);
+            if(a==3)
+            {
+                row++;
+                a=0;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d %s", i + 1, apply_types[i]);
+            send_to_char(buf, ch);
+        }
 
-	for(i = 0; i < 56; i++) {
-		a++;
-		if(a==1) {
-			column=5;
-		}
-		else if(a==2) {
-			column = 30;
-		}
-		else if(a==3) {
-			column = 55;
-		}
-		sprintf(buf, VT_CURSPOS, row + 1, column);
-		if(a==3) {
-			row++;
-			a=0;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d %s", i + 1, apply_types[i]);
-		send_to_char(buf, ch);
-	}
+        sprintf(buf, VT_CURSPOS, 21, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        char buf2[255];
+        boost::format fmt ("     %-2d %s");
+        int x = 0;
+        
+        send_to_char("\n\r\n\r", ch);
+        
+        for(i = 0; i < 56; i++)
+        {
+            a++;
+            if(a == 1)
+            {
+                boost::format fmt ("     %-2d %s");
+                fmt % (i + 1) % apply_types[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            else if(a == 2)
+            {
+                sprintf(buf2, "%s", "%-");
+                sprintf(buf2, "%s%d", buf2, 30-x);
+                strcat(buf2, "s%-2d %s");
+                boost::format fmt2 (buf2);
+                fmt2 % "" % (i + 1) % apply_types[i];
+                sb.append(fmt2.str().c_str());
+                x += strlen(fmt2.str().c_str());
+                fmt2.clear();
+            }
+            else if(a == 3)
+            {
+                sprintf(buf2, "%s", "%-");
+                sprintf(buf2, "%s%d", buf2, 55-x);
+                strcat(buf2, "s%-2d %s\n\r");
+                boost::format fmt (buf2);
+                fmt % "" % (i + 1) % apply_types[i];
+                sb.append(fmt.str().c_str());
+                x = 0;
+                a = 0;
+            }
 
-	sprintf(buf, VT_CURSPOS, 21, 1);
-	send_to_char(buf, ch);
+            fmt.clear();
+            }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+
+
 	send_to_char("Select the apply number or hit enter for the main menu.\n\r--> ",ch);
 }
 

@@ -400,7 +400,7 @@ void game_loop(int s) {
 					write_to_descriptor(point->descriptor,"Timeout!\n\r");
                     if(point->connected == CON_EDITING || point->connected == CON_OBJ_EDITING || point->connected == CON_MOB_EDITING) {
                         write_to_descriptor(point->descriptor,"Smetti di plasmare la materia.\n\r");
-                        act("$n smette di plasmare la materia.", FALSE, point->character, 0, 0, TO_ROOM);
+                        act("$n smette di $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, point->character, 0, 0, TO_ROOM);
                         point->connected = CON_PLYNG;
                         GET_POS(point->character)=POSITION_STANDING;
                     }

@@ -2620,6 +2620,10 @@ const char* item_types[] = {
 	"MONEY",
 	"PEN",
 	"BOAT",
+    "AUDIO",
+    "BOARD",
+    "TREE",
+    "ROCK",
 	"\n"
 };
 
@@ -2816,6 +2820,7 @@ const char* affected_bits[] = {
 	"GROUP",
 	"TELEPATHY",
 	"DARKNESS",
+    "UNDEFINED",
 	"\n"
 };
 
@@ -2920,8 +2925,7 @@ const char* apply_types[] = {
 	"ATTACKS",
 	"HASTE",
 	"SLOW",
-    "SPELL AFFECT 2",   // Montero 16-Sep-18
-//	"OTHER",
+    "SPELL AFFECT 2",
 	"FIND-TRAPS",
 	"RIDE",
 	"RACE-SLAYER",
@@ -3068,7 +3072,7 @@ const char* position_types[] = {
 	"Sitting",
 	"Fighting",
 	"Standing",
-    "Mounting",
+    "Mounted",
 	"\n"
 };
 

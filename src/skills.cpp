@@ -1982,8 +1982,8 @@ ACTION_FUNC(do_tan) {
 					acapply = 7;
 					break;
 				default:
-					sprintf(hidetype," di comune pelle");
-                    sprintf(hidekeys," pelle comune");
+					sprintf(hidetype," di cuoio");
+                    sprintf(hidekeys," cuoio");
 					acapply = 1;
 					break;
 

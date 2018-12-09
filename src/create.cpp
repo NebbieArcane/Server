@@ -23,6 +23,7 @@
 /***************************  Local    include ************************************/
 #include "create.hpp"
 #include "comm.hpp"
+#include "modify.hpp"
 #include "snew.hpp"
 #include "structs.hpp"
 #include "utility.hpp"
@@ -78,7 +79,7 @@ namespace Alarmud {
 
 const char* edit_menu = "    1) Name                       2) Description\n\r"
 						"    3) Flags                      4) Sector Type\n\r"
-						"    5) Exits\n\r\n\r";
+						"    5) Exits                      6) Delete Exits\n\r\n\r";
 
 const char* exit_menu = "    1) North                      2) East\n\r"
 						"    3) South                      4) West\n\r"
@@ -120,26 +121,66 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Room Flags:");
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Room Flags:");
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 32; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->room_flags & (1<<i)) ? "X" : " "), room_bits[i]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        send_to_char("\n\rRoom Flags:\n\r\n\r", ch);
 
-	row = 0;
-	for(i = 0; i < 32; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->room_flags & (1<<i)) ? "X" : " "), room_bits[i]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to main "
-				 "menu.\n\r--> ", ch);
+        for(i = 0; i < 32; i++)
+        {
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((rp->room_flags & (1<<i)) ? "X" : " ") % room_bits[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((rp->room_flags & (1<<i)) ? "X" : " ") % room_bits[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+	
+	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
 }
 
 
@@ -171,7 +212,7 @@ ACTION_FUNC(do_redit) {
 	ch->specials.edit = MAIN_MENU;
 	ch->desc->connected = CON_EDITING;
 
-	act("$n ha iniziato a modificare la locazione.", FALSE, ch, 0, 0, TO_ROOM);
+	act("$n inizia a $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 
 	UpdateRoomMenu(ch);
 }
@@ -180,22 +221,49 @@ ACTION_FUNC(do_redit) {
 void UpdateRoomMenu(struct char_data* ch) {
 	char buf[255];
 	struct room_data* rp;
+    int x = 0, i = 0;
 
 	rp = real_roomp(ch->in_room);
 
 	send_to_char(VT_HOMECLR, ch);
 	sprintf(buf, VT_CURSPOS, 1, 1);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        send_to_char("\n\r\n\r", ch);
+    }
 	sprintf(buf, "Room Name: %s", rp->name);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        x = strlen(buf);
+    }
 	sprintf(buf, VT_CURSPOS, 1, 40);
 	send_to_char(buf, ch);
-	sprintf(buf, "Number: %ld", rp->number);
+    if(ch->term != VT100)
+    {
+        for (i = 0; i < (40 - (x > 39 ? 39 : x)); i++)
+            send_to_char(" ", ch);
+    }
+    sprintf(buf, "Number: %ld", rp->number);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        x = strlen(buf);
+    }
 	sprintf(buf, VT_CURSPOS, 1, 60);
 	send_to_char(buf, ch);
-	sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
+    if(ch->term != VT100)
+    {
+        for (i = 0; i < (20 - (x > 20 ? 19 : x)); i++)
+            send_to_char(" ", ch);
+    }
+    sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
 	send_to_char(buf, ch);
+    if(ch->term != VT100)
+    {
+        send_to_char("\n\r\n\r", ch);
+    }
 	sprintf(buf, VT_CURSPOS, 3, 1);
 	send_to_char(buf, ch);
 	send_to_char("Menu:\n\r", ch);
@@ -237,6 +305,10 @@ void RoomEdit(struct char_data* ch, const char* arg) {
 			ch->specials.edit = CHANGE_EXIT;
 			ChangeExitDir(real_roomp(ch->in_room), ch, "", ENTER_CHECK);
 			return;
+        case 6:
+            ch->specials.edit = CHANGE_EXIT_DELETE;
+            DeleteExit(real_roomp(ch->in_room), ch, "", ENTER_CHECK);
+            return;
 		default:
 			UpdateRoomMenu(ch);
 			return;
@@ -297,6 +369,8 @@ void RoomEdit(struct char_data* ch, const char* arg) {
 		ch->specials.edit = CHANGE_EXIT;
 		ChangeExitDir(real_roomp(ch->in_room), ch, "", ENTER_CHECK);
 		break;
+    case CHANGE_EXIT_DELETE:
+        DeleteExit(real_roomp(ch->in_room), ch, arg, 0);
 	default:
 		mudlog(LOG_ERROR, "Got to bad spot in RoomEdit");
 		return;
@@ -410,32 +484,73 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 		}
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
-	send_to_char(buf, ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < E_SECTOR_TYPES_COUNT; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d %s", i + 1, sector_types[i]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d %s");
+        char buf2[255];
+        int x = 0;
+        
+        sprintf(buf, "\n\rSector Type: %s\n\r\n\r", sector_types[rp->sector_type]);
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < E_SECTOR_TYPES_COUNT; i++)
+        {
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % sector_types[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % sector_types[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
 
-	row = 0;
-	for(i = 0; i < 12; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d %s", i + 1, sector_types[i]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to set to, <C/R> to return to main "
-				 "menu.\n\r--> ", ch);
+	send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
 }
 
 
 void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
 				   int type) {
-	int update;
+	int update, x = 0, i = 0;
 	char buf[1024];
 
 	if(type != ENTER_CHECK) {
@@ -455,26 +570,40 @@ void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
 			ch->specials.edit = CHANGE_EXIT_NORTH + update;
 			AddExitToRoom(rp, ch, "", ENTER_CHECK);
 		}
-		else if(update == 6) {
-			ch->specials.edit = CHANGE_EXIT_DELETE;
-			DeleteExit(rp, ch, "", ENTER_CHECK);
-		}
 		else {
 			ChangeExitDir(rp, ch, "", ENTER_CHECK);
 		}
 	}
-	else {
-		send_to_char(VT_HOMECLR, ch);
-		sprintf(buf, "Room Name: %s", rp->name);
-		send_to_char(buf, ch);
-		sprintf(buf, VT_CURSPOS, 1, 40);
-		send_to_char(buf, ch);
-		sprintf(buf, "Room Number: %ld", rp->number);
-		send_to_char(buf, ch);
-		sprintf(buf, VT_CURSPOS, 4, 1);
-		send_to_char(buf, ch);
-		send_to_char(exit_menu, ch);
-		send_to_char("--> ", ch);
+	else
+    {
+        send_to_char(VT_HOMECLR, ch);
+        if(ch->term != VT100)
+        {
+            send_to_char("\n\r\n\r", ch);
+        }
+        sprintf(buf, "Room Name: %s", rp->name);
+        send_to_char(buf, ch);
+        if(ch->term != VT100)
+        {
+            x = strlen(buf);
+        }
+        sprintf(buf, VT_CURSPOS, 1, 40);
+        send_to_char(buf, ch);
+        if(ch->term != VT100)
+        {
+            for (i = 0; i < (40 - (x > 39 ? 39 : x)); i++)
+                send_to_char(" ", ch);
+        }
+        sprintf(buf, "Room Number: %ld", rp->number);
+        send_to_char(buf, ch);
+        if(ch->term != VT100)
+        {
+            send_to_char("\n\r\n\r", ch);
+        }
+        sprintf(buf, VT_CURSPOS, 4, 1);
+        send_to_char(buf, ch);
+        send_to_char(exit_menu, ch);
+        send_to_char("--> ", ch);
 	}
 }
 
@@ -519,28 +648,67 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 		rp->dir_option[dir]->exit_info = 0;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	sprintf(buf, "Flags of %s exit:", aszExitName[ dir ]);
-	send_to_char(buf, ch);
-
-	row = 0;
-	for(i = 0; i < 9; i++) {
-		sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-		if(i & 1) {
-			row++;
-		}
-		send_to_char(buf, ch);
-		sprintf(buf, "%-2d [%s] %s", i + 1,
-				((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " "),
-				exit_bits[ i ]);
-		send_to_char(buf, ch);
-	}
-
-	sprintf(buf, VT_CURSPOS, 20, 1);
-	send_to_char(buf, ch);
-	send_to_char("Select the number to toggle, <C/R> to return to "
-				 "continue.\n\r--> ", ch);
+    if(ch->term == VT100)
+    {
+        sprintf(buf, VT_HOMECLR);
+        send_to_char(buf, ch);
+        sprintf(buf, "Flags of %s exit:", aszExitName[ dir ]);
+        send_to_char(buf, ch);
+        
+        row = 0;
+        for(i = 0; i < 9; i++)
+        {
+            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            if(i & 1)
+            {
+                row++;
+            }
+            send_to_char(buf, ch);
+            sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " "), exit_bits[ i ]);
+            send_to_char(buf, ch);
+        }
+        
+        sprintf(buf, VT_CURSPOS, 20, 1);
+        send_to_char(buf, ch);
+    }
+    else
+    {
+        string sb;
+        boost::format fmt ("     %-2d [%s] %s");
+        char buf2[255];
+        int x = 0;
+        
+        sprintf(buf, "\n\rFlags of %s exit:\n\r\n\r", aszExitName[ dir ]);
+        send_to_char(buf, ch);
+        
+        for(i = 0; i < 9; i++)
+        {
+            sprintf(buf2, "%s", "%-");
+            sprintf(buf2, "%s%d", buf2, 45-x);
+            strcat(buf2, "s%-2d [%s] %s\n\r");
+            boost::format fmt2 (buf2);
+            
+            if(i & 1)
+            {
+                fmt2 % "" % (i + 1) % ((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " ") % exit_bits[i];
+                sb.append(fmt2.str().c_str());
+            }
+            else
+            {
+                fmt % (i + 1) % ((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " ") % exit_bits[i];
+                sb.append(fmt.str().c_str());
+                x = strlen(fmt.str().c_str());
+            }
+            
+            fmt.clear();
+            fmt2.clear();
+        }
+        
+        sb.append("\r\n\n\r");
+        page_string(ch->desc, sb.c_str(), true);
+    }
+    
+	send_to_char("Select the number to toggle, <C/R> to return to continue.\n\r--> ", ch);
 }
 
 
@@ -667,10 +835,84 @@ void ChangeExitKeyword(struct room_data* rp, struct char_data* ch, const char* a
 }
 
 
-void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg,
-				int type) {
-	ch->specials.edit = MAIN_MENU;
-	UpdateRoomMenu(ch);
+void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int type)
+{
+    int update, x = 0, i = 0;
+    char buf[1024];
+    
+    if(type != ENTER_CHECK)
+    {
+        if(!*arg || (*arg == '\n'))
+        {
+            ch->specials.edit = MAIN_MENU;
+            UpdateRoomMenu(ch);
+            return;
+        }
+        
+        update = atoi(arg) - 1;
+        if(update == -1)
+        {
+            DeleteExit(rp, ch, "", ENTER_CHECK);
+            return;
+        }
+        
+        if(update >= 0 && update <= 5)
+        {
+            if(rp->dir_option[update])
+            {
+                free(rp->dir_option[update]->general_description);
+                free(rp->dir_option[update]->keyword);
+                free(rp->dir_option[update]);
+                rp->dir_option[update] = NULL;
+            }
+            else
+            {
+                sprintf(buf, "\n\rThere is not any exits to %s.\n\r", aszExitName[ update ] );
+                send_to_char(buf, ch);
+                DeleteExit(rp, ch, "", ENTER_CHECK);
+                return;
+            }
+            sprintf(buf, "\n\rDone. Deleted exit to %s.\n\r", aszExitName[ update ] );
+            send_to_char(buf, ch);
+            DeleteExit(rp, ch, "", ENTER_CHECK);
+            return;
+        }
+        else
+        {
+            DeleteExit(rp, ch, "", ENTER_CHECK);
+        }
+    }
+    else
+    {
+        send_to_char(VT_HOMECLR, ch);
+        if(ch->term != VT100)
+        {
+            send_to_char("\n\r\n\r", ch);
+        }
+        sprintf(buf, "Room Name: %s", rp->name);
+        send_to_char(buf, ch);
+        if(ch->term != VT100)
+        {
+            x = strlen(buf);
+        }
+        sprintf(buf, VT_CURSPOS, 1, 40);
+        send_to_char(buf, ch);
+        if(ch->term != VT100)
+        {
+            for (i = 0; i < (40 - (x > 39 ? 39 : x)); i++)
+                send_to_char(" ", ch);
+        }
+        sprintf(buf, "Room Number: %ld", rp->number);
+        send_to_char(buf, ch);
+        if(ch->term != VT100)
+        {
+            send_to_char("\n\r\n\r", ch);
+        }
+        sprintf(buf, VT_CURSPOS, 4, 1);
+        send_to_char(buf, ch);
+        send_to_char(exit_menu, ch);
+        send_to_char("--> ", ch);
+    }
 }
 } // namespace Alarmud
 
