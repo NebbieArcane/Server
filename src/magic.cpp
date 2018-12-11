@@ -294,7 +294,7 @@ void spell_energy_drain(byte level, struct char_data* ch,
 
 				}
 				else {
-					/* ATTENZIONE Se victim e` morta ci potrebbero essere dei problemi */
+					/* ATTENZIONE Se victim e' morta ci potrebbero essere dei problemi */
 					tmp = GET_MAX_HIT(victim)/GetMaxLevel(victim);
 					victim->points.max_hit -=tmp;
 					victim->points.hit -=tmp;

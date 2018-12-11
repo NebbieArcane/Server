@@ -334,7 +334,7 @@ ACTION_FUNC(do_commune) {
 	for(; *arg == ' '; arg++);
 
 	if(!(*arg)) {
-		send_to_char("Comunicare fra gli Dei e` ottimo, ma COSA ?\n\r",ch);
+		send_to_char("Comunicare fra gli Dei e' ottimo, ma COSA ?\n\r",ch);
 	}
 	else {
 		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
@@ -372,15 +372,15 @@ ACTION_FUNC(do_tell) {
 	half_chop(arg,name,message,sizeof name -1,sizeof message -1);
 
 	if(!*name || !*message) {
-		send_to_char("A chi e` che vuoi parlare ?\n\r", ch);
+		send_to_char("A chi e' che vuoi parlare ?\n\r", ch);
 		return;
 	}
 	else if(!(vict = get_char_vis(ch, name))) {
-		send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
 	}
 	else if(ch == vict) {
-		send_to_char("Parlare a se stessi puo` essere utile, a volte...\n\r", ch);
+		send_to_char("Parlare a se stessi puo' essere utile, a volte...\n\r", ch);
 		return;
 	}
 	else if(GET_POS(vict) == POSITION_SLEEPING && !IS_IMMORTAL(ch)) {
@@ -400,13 +400,13 @@ ACTION_FUNC(do_tell) {
 		return;
 	}
 	else if(IS_LINKDEAD(vict)) {
-		send_to_char("Non puo` sentirti. Ha perso il senso della realta`.\n\r",
+		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r",
 					 ch);
 		return;
 	}
 
 	if(check_soundproof(vict)) {
-		send_to_char("Non riesce a sentire nemmeno la sua voce, li` dentro.\n\r",
+		send_to_char("Non riesce a sentire nemmeno la sua voce, li' dentro.\n\r",
 					 ch);
 		return;
 	}
@@ -415,7 +415,7 @@ ACTION_FUNC(do_tell) {
 	if(real_roomp(ch->in_room)->zone !=
 			real_roomp(vict->in_room)->zone
 			&& GetMaxLevel(ch) < IMMORTALE) {
-		send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
 	}
 #endif
@@ -427,7 +427,7 @@ ACTION_FUNC(do_tell) {
 
 	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
 		snprintf(buf,MAX_INPUT_LENGTH+59,"$c0013Tu dici a %s %s'%s'",
-				 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? "(che e` AFK) " : ""), message);
+				 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? "(che e' AFK) " : ""), message);
 		act(buf,FALSE, ch,0,0,TO_CHAR);
 	}
 	act("$c0013$n dice qualcosa a $N.", FALSE, ch, 0, vict, TO_NOTVICT);
@@ -457,7 +457,7 @@ ACTION_FUNC(do_whisper) {
 		send_to_char("A chi vuoi sussurrare ? e cosa ?\n\r", ch);
 	}
 	else if(!(vict = get_char_room_vis(ch, name))) {
-		send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 	}
 	else if(vict == ch) {
 		act("$n sussurra silenziosamente a se stesso.", FALSE, ch, 0, 0, TO_ROOM);
@@ -465,7 +465,7 @@ ACTION_FUNC(do_whisper) {
 					 "alla bocca...\n\r", ch);
 	}
 	else if(IS_LINKDEAD(vict)) {
-		send_to_char("Non puo` sentirti. Ha perso il senso della realta`.\n\r",
+		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r",
 					 ch);
 		return;
 	}
@@ -478,7 +478,7 @@ ACTION_FUNC(do_whisper) {
 		act(buf, FALSE, ch, 0, vict, TO_VICT);
 		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
 			snprintf(buf,MAX_INPUT_LENGTH-1,"$c0005Tu sussurri a %s%s, '%s'",
-					 (IS_NPC(vict) ? vict->player.name : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e` AFK)" : ""), message);
+					 (IS_NPC(vict) ? vict->player.name : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e' AFK)" : ""), message);
 			act(buf,FALSE, ch,0,0,TO_CHAR);
 		}
 		act("$c0005$n sussurra qualcosa a $N.", FALSE, ch, 0, vict, TO_NOTVICT);
@@ -511,13 +511,13 @@ ACTION_FUNC(do_ask) {
 		send_to_char("Non vedi nessuno con quel nome qui...\n\r", ch);
 	}
 	else if(vict == ch) {
-		act("$c0006[$c0015$n$c0006] si chiede qualcosa... trovera` la soluzione ?",
+		act("$c0006[$c0015$n$c0006] si chiede qualcosa... trovera' la soluzione?",
 			FALSE,ch,0,0,TO_ROOM);
 		act("$c0006Oltre alla domanda, conosci anche la risposta ?", FALSE, ch, 0,
 			0, TO_CHAR);
 	}
 	else if(IS_LINKDEAD(vict)) {
-		send_to_char("Non puo` sentirti. Ha perso il senso della realta`.\n\r",
+		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r",
 					 ch);
 		return;
 	}
@@ -531,7 +531,7 @@ ACTION_FUNC(do_ask) {
 
 		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
 			snprintf(buf, MAX_INPUT_LENGTH-1,"$c0006Tu chiedi a %s%s, '%s'",
-					 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e` AFK)" : ""), message);
+					 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e' AFK)" : ""), message);
 			act(buf,FALSE, ch,0,0,TO_CHAR);
 		}
 		act("$c0006$n fa una domanda a $N.",FALSE,ch,0,vict,TO_NOTVICT);
@@ -633,7 +633,7 @@ ACTION_FUNC(do_write) {
 		act("Non puoi scrivere su $p.", FALSE, ch, paper, 0, TO_CHAR);
 	}
 	else if(paper->action_description && *paper->action_description) {
-		send_to_char("C'e` gia` scritto sopra qualcosa.\n\r", ch);
+		send_to_char("C'e' gia' scritto sopra qualcosa.\n\r", ch);
 		return;
 	}
 	else {
@@ -784,7 +784,7 @@ ACTION_FUNC(do_speak) {
 	}
 
 	if(i == -1) {
-		send_to_char("Non e` un linguaggio molto conosciuto.\n\r",ch);
+		send_to_char("Non e' un linguaggio molto conosciuto.\n\r",ch);
 		return;
 	}
 
@@ -1147,7 +1147,7 @@ ACTION_FUNC(do_split) {
 	extra = amount % members;
 
 	if(share == 0) {
-		send_to_char("C'e` poco da dividere, siete in troppi.\n\r", ch);
+		send_to_char("C'e' poco da dividere, siete in troppi.\n\r", ch);
 		return;
 	}
 
@@ -1155,12 +1155,12 @@ ACTION_FUNC(do_split) {
 	ch->points.gold += share + extra;
 
 	snprintf(buf,MAX_STRING_LENGTH-1,
-			 "Hai diviso %d monete d'oro. La tua parte e` di %d monete.\n\r",
+			 "Hai diviso %d monete d'oro. La tua parte e' di %d monete.\n\r",
 			 amount, share + extra);
 	send_to_char(buf, ch);
 
 	snprintf(buf, MAX_STRING_LENGTH-1,
-			 "$n divide %d monete d'oro. La tua parte e` di %d monete.",
+			 "$n divide %d monete d'oro. La tua parte e' di %d monete.",
 			 amount, share);
 
 	for(gch = real_roomp(ch->in_room)->people;
@@ -1187,7 +1187,7 @@ ACTION_FUNC(do_pray) {
 	}
 
 	if(affected_by_spell(ch, SPELL_PRAYER)) {
-		send_to_char("Hai gia` pregato oggi.\n\r", ch);
+		send_to_char("Hai gia' pregato oggi.\n\r", ch);
 		return;
 	}
 
@@ -1283,7 +1283,7 @@ ACTION_FUNC(do_telepathy) {
 		return;
 	}
 	else if(!(vict = get_char_vis(ch, name))) {
-		send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
 	}
 	else if(ch == vict) {
@@ -1295,7 +1295,7 @@ ACTION_FUNC(do_telepathy) {
 		return;
 	}
 	else if(IS_NPC(vict) && !(vict->desc)) {
-		send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
 	}
 	else if(!(GetMaxLevel(ch) >= IMMORTALE) &&
@@ -1307,12 +1307,12 @@ ACTION_FUNC(do_telepathy) {
 			(GetMaxLevel(ch) >= IMMORTALE) &&
 			(GetMaxLevel(ch) < GetMaxLevel(vict)) &&
 			IS_SET(vict->specials.act, PLR_NOTELL)) {
-		act("La mente di $N e` chiusa in questo momento !", FALSE, ch, 0, vict,
+		act("La mente di $N e' chiusa in questo momento !", FALSE, ch, 0, vict,
 			TO_CHAR);
 		return;
 	}
 	else if(!vict->desc) {
-		send_to_char("Non puo` sentirti. Gli e` caduta la linea (link dead).\n\r",
+		send_to_char("Non puo' sentirti. Gli e' caduta la linea (link dead).\n\r",
 					 ch);
 		return;
 	}

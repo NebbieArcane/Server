@@ -1267,7 +1267,7 @@ MOBSPECIAL_FUNC(cleric) {
 		if(GET_HIT(injuried) < GET_MAX_HIT(injuried)-10) {
 			lspell = GetMaxLevel(ch);
 			if(lspell >= 20  && (GET_MANA(ch) >= 50 || injuried == ch)) {
-				act("$n pronuncia le parole 'Woah! Adesso si` che va bene!'.",
+				act("$n pronuncia le parole 'Woah! Adesso si' che va bene!'.",
 					1, ch,0,0,TO_ROOM);
 				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
@@ -1608,7 +1608,7 @@ MOBSPECIAL_FUNC(cleric) {
 		}
 
 		if(IS_AFFECTED(ch, AFF_POISON) && (lspell >= 5) && (number(0,6)==0)) {
-			act("$n pronuncia le parole 'Grazie Darkstar, non sono piu` avvelenato, "
+			act("$n pronuncia le parole 'Grazie Darkstar, non sono piu' avvelenato, "
 				"ora!'.", 1, ch,0,0,TO_ROOM);
 			cast_remove_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1672,7 +1672,7 @@ MOBSPECIAL_FUNC(cleric) {
 			break;
 		case 17:
 		case 18: /* heal */
-			act("$n pronuncia le parole 'Woah! Adesso si` che sto bene!'.", 1,
+			act("$n pronuncia le parole 'Woah! Adesso si' che sto bene!'.", 1,
 				ch, 0, 0, TO_ROOM);
 			cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1690,7 +1690,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 			}
 			else {
-				act("$n pronuncia le parole 'Woah! Adesso si` che sto bene!'.", 1,
+				act("$n pronuncia le parole 'Woah! Adesso si' che sto bene!'.", 1,
 					ch, 0,0,TO_ROOM);
 				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {
@@ -2064,8 +2064,8 @@ MOBSPECIAL_FUNC(RepairGuy) {
 						act("$N fa un grande sorriso.",TRUE,ch,0,vict,TO_CHAR);
 					}
 					else {
-						act("$N dice 'Tutto apposto!'",TRUE,ch,0,vict,TO_ROOM);
-						act("$N dice 'Tutto apposto!'",TRUE,ch,0,vict,TO_CHAR);
+						act("$N dice 'Tutto a posto!'",TRUE,ch,0,vict,TO_ROOM);
+						act("$N dice 'Tutto a posto!'",TRUE,ch,0,vict,TO_CHAR);
 					}
 				}
 			}
@@ -2077,9 +2077,9 @@ MOBSPECIAL_FUNC(RepairGuy) {
 						TRUE,ch,0,vict,TO_CHAR);
 				}
 				else {
-					act("$N dice 'La tua armatura sembra apposto per me.'",
+					act("$N dice 'La tua armatura sembra a posto per me.'",
 						TRUE,ch,0,vict,TO_ROOM);
-					act("$N dice 'La tua armatura sembra apposto per me.'",
+					act("$N dice 'La tua armatura sembra a posto per me.'",
 						TRUE,ch,0,vict,TO_CHAR);
 				}
 			}
@@ -2474,7 +2474,7 @@ MOBSPECIAL_FUNC(creeping_death) {
 			if(IS_PC(t)) {
 				char szBuffer[ 256 ];
 
-				sprintf(szBuffer, "%s e` stat%s uccis%s da %s a %s\n\r",
+				sprintf(szBuffer, "%s e' stat%s uccis%s da %s a %s\n\r",
 						GET_NAME(t), SSLF(t), SSLF(t),
 						ch->player.short_descr, t->in_room > -1 ?
 						(real_roomp(t->in_room))->name : "Nowhere");
@@ -2537,7 +2537,7 @@ MOBSPECIAL_FUNC(creeping_death) {
 				if(IS_PC(t)) {
 					char szBuffer[ 256 ];
 
-					sprintf(szBuffer, "%s e` stat%s uccis%s da %s a %s\n\r",
+					sprintf(szBuffer, "%s e' stat%s uccis%s da %s a %s\n\r",
 							GET_NAME(t), SSLF(t), SSLF(t),
 							ch->player.short_descr, t->in_room > -1 ?
 							(real_roomp(t->in_room))->name : "Nowhere");
@@ -2669,14 +2669,14 @@ void  SayHello(struct char_data* ch, struct char_data* t) {
 		do_say(ch, "Possano le profezie sorriderti",0);
 		break;
 	case 6:
-		do_say(ch, "E` un piacere rivederla ancora.",0);
+		do_say(ch, "E' un piacere rivederla ancora.",0);
 		break;
 	case 7:
 		if(t->player.sex == SEX_FEMALE) {
-			do_say(ch, "Lei e` sempre la benvenuta.", 0);
+			do_say(ch, "Lei e' sempre la benvenuta.", 0);
 		}
 		else {
-			do_say(ch, "Lei e` sempre il benvenuto.",0);
+			do_say(ch, "Lei e' sempre il benvenuto.",0);
 		}
 		break;
 	case 8:
@@ -2719,7 +2719,7 @@ void  SayHello(struct char_data* ch, struct char_data* t) {
 
 		switch(weather_info.sky) {
 		case SKY_CLOUDLESS:
-			sprintf(buf, "Bel tempo abbiamo quest%s, non e` vero, %s ?",
+			sprintf(buf, "Bel tempo abbiamo quest%s, non e' vero, %s?",
 					buf2, GET_NAME(t));
 		case SKY_CLOUDY:
 			sprintf(buf, "Quest%s si fanno ottime passeggiate, %s.", buf2, GET_NAME(t));
@@ -2732,7 +2732,7 @@ void  SayHello(struct char_data* ch, struct char_data* t) {
 					buf2, GET_NAME(t));
 			break;
 		default:
-			sprintf(buf, "Piacevole quest%s, non credi ?", buf2);
+			sprintf(buf, "Piacevole quest%s, non credi?", buf2);
 			break;
 		}
 		do_say(ch, buf, 0);
@@ -3316,7 +3316,7 @@ MOBSPECIAL_FUNC(DogCatcher) {
 					case 1:
 						if(!check_soundproof(ch))
 							act("$n punta la bacchetta a $N "
-								"'E` meglio che ve ne andiate tu ed il tuo padrone.'",
+								"'E' meglio che ve ne andiate tu ed il tuo padrone.'",
 								FALSE, ch, 0, tch, TO_ROOM);
 						break;
 					case 2:
@@ -3366,7 +3366,7 @@ MOBSPECIAL_FUNC(DogCatcher) {
 			act("$n soffia sulla sua bacchetta e sorride.",
 				FALSE, ch, 0, 0, TO_ROOM);
 			if(!check_soundproof(ch)) {
-				do_say(ch, "Gli insegno io ad invadere la mia citta`.", 0);
+				do_say(ch, "Gli insegno io ad invadere la mia citta'.", 0);
 			}
 
 			return(TRUE); /* done with one mob move */
@@ -3376,15 +3376,15 @@ MOBSPECIAL_FUNC(DogCatcher) {
 	if(!number(0, 10)) {
 		switch(number(1,5)) {
 		case 1:
-			do_say(ch, "Attenzione! Non provate a combattere in citta`.", 0);
+			do_say(ch, "Attenzione! Non provate a combattere in citta'.", 0);
 			break;
 		case 2:
-			do_say(ch, "Chiudero` tutte le bestie nel recinto, cosi` non mi "
-				   "annoieranno piu`.", 0);
+			do_say(ch, "Chiudero' tutte le bestie nel recinto, cosi' non mi "
+				   "annoieranno piu'.", 0);
 			break;
 		case 3:
 			do_say(ch, "Il Sindaco di Myst ha vietato i combattimenti nella sua "
-				   "citta`!",0);
+				   "citta'!",0);
 			break;
 		case 4:
 			do_say(ch, "Mi sono spariti dei soldi!!! Ci deve di nuovo essere "
@@ -3399,11 +3399,11 @@ MOBSPECIAL_FUNC(DogCatcher) {
 	else if(!number(0,70)) {
 		switch(number(1, 4)) {
 		case 1:
-			do_say(ch, "Ricordatevi che chi combattera` in citta` verra` "
+			do_say(ch, "Ricordatevi che chi combattera' in citta' verra' "
 				   "punito!", 0);
 			break;
 		case 2:
-			do_say(ch,"Qualcuno puo` controllare il recinto degli animali?",0);
+			do_say(ch,"Qualcuno puo' controllare il recinto degli animali?",0);
 			break;
 		case 3:
 			do_say(ch,"Qualcuno ha visto la mia borsa??", 0);
@@ -3567,9 +3567,9 @@ MOBSPECIAL_FUNC(loremaster) {
 		if(!arg || (strlen(arg) == 0)) {
 			sprintf(buf,"Amico, io posso insegnarti molte cose.... ma devi comprendere il mio linguaggio.\n\r");
 			send_to_char(buf,ch);
-			sprintf(buf,"Ti daro` un piccolo aiuto..\n\r");
+			sprintf(buf,"Ti daro' un piccolo aiuto..\n\r");
 			send_to_char(buf,ch);
-			sprintf(buf,"Con $c0003``lore''$c0007 intendo la capacita` di $c0005``considerare'' un nemico.\n\r");
+			sprintf(buf,"Con '$c0003lore$c0007' intendo la capacita' di '$c0005considerare$c0007' un nemico.\n\r");
 			send_to_char(buf,ch);
 			sprintf(buf," undead lore     :  %s\n\r",how_good(ch->skills[SKILL_CONS_UNDEAD].learned));
 			send_to_char(buf,ch);
@@ -3579,7 +3579,7 @@ MOBSPECIAL_FUNC(loremaster) {
 			send_to_char(buf,ch);
 			sprintf(buf," animal lore     :  %s\n\r",how_good(ch->skills[SKILL_CONS_ANIMAL].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," reptile lore  :  %s\n\r",how_good(ch->skills[SKILL_CONS_REPTILE].learned));
+			sprintf(buf," reptile lore    :  %s\n\r",how_good(ch->skills[SKILL_CONS_REPTILE].learned));
 			send_to_char(buf,ch);
 			sprintf(buf," people lore     :  %s\n\r",how_good(ch->skills[SKILL_CONS_PEOPLE].learned));
 			send_to_char(buf,ch);
@@ -3592,23 +3592,23 @@ MOBSPECIAL_FUNC(loremaster) {
 			sprintf(buf," sign language   :  %s\n\r",how_good(ch->skills[SKILL_SIGN].learned));
 			send_to_char(buf,ch);
 
-			sprintf(buf," common   :  %s\n\r",how_good(ch->skills[LANG_COMMON].learned));
+			sprintf(buf," common          :  %s\n\r",how_good(ch->skills[LANG_COMMON].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," elvish   :  %s\n\r",how_good(ch->skills[LANG_ELVISH].learned));
+			sprintf(buf," elvish          :  %s\n\r",how_good(ch->skills[LANG_ELVISH].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," halfling :  %s\n\r",how_good(ch->skills[LANG_HALFLING].learned));
+			sprintf(buf," halfling        :  %s\n\r",how_good(ch->skills[LANG_HALFLING].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," dwarvish :  %s\n\r",how_good(ch->skills[LANG_DWARVISH].learned));
+			sprintf(buf," dwarvish        :  %s\n\r",how_good(ch->skills[LANG_DWARVISH].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," orcish   :  %s\n\r",how_good(ch->skills[LANG_ORCISH].learned));
+			sprintf(buf," orcish          :  %s\n\r",how_good(ch->skills[LANG_ORCISH].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," giantish :  %s\n\r",how_good(ch->skills[LANG_GIANTISH].learned));
+			sprintf(buf," giantish        :  %s\n\r",how_good(ch->skills[LANG_GIANTISH].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," ogre     :  %s\n\r",how_good(ch->skills[LANG_OGRE].learned));
+			sprintf(buf," ogre            :  %s\n\r",how_good(ch->skills[LANG_OGRE].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," gnomish  :  %s\n\r",how_good(ch->skills[LANG_GNOMISH].learned));
+			sprintf(buf," gnomish         :  %s\n\r",how_good(ch->skills[LANG_GNOMISH].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," learning :  %d\n\r",ch->specials.spells_to_learn);
+			sprintf(buf," learning        :   %-2d\n\r",ch->specials.spells_to_learn);
 			send_to_char(buf,ch);
 
 			return(TRUE);
@@ -3647,7 +3647,7 @@ MOBSPECIAL_FUNC(loremaster) {
 			case 8:
 				sk_num = SKILL_READ_MAGIC;
 				if(HasClass(ch, CLASS_CLERIC) || HasClass(ch, CLASS_MAGIC_USER)) {
-					send_to_char("'Sei gia` capace di farlo!'\n\r",ch);
+					send_to_char("'Sei gia' capace di farlo!'\n\r",ch);
 					if(ch->skills) {
 						if(!IS_SET(ch->skills[sk_num].flags, SKILL_KNOWN)) {
 							SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
@@ -3704,7 +3704,7 @@ MOBSPECIAL_FUNC(loremaster) {
 				}
 				else if(GET_GOLD(ch) < COSTO_PRAC) {
 					send_to_char
-					("'L'arte d'imparare e` di gran lunga la piu` cara di tutte....'\n\r",ch);
+					("'L'arte d'imparare e' di gran lunga la piu' cara di tutte....'\n\r",ch);
 				}
 				else if(ch->specials.spells_to_learn>2) {
 					send_to_char
@@ -3728,7 +3728,7 @@ MOBSPECIAL_FUNC(loremaster) {
 
 		if(GET_GOLD(ch) < charge) {
 			send_to_char
-			("'Il desiderio di imparare e` una cosa buona... ma non hai abbastanza soldi.'\n\r",ch);
+			("'Il desiderio di imparare e' una cosa buona... ma non hai abbastanza soldi.'\n\r",ch);
 			return(TRUE);
 		}
 
@@ -3739,7 +3739,7 @@ MOBSPECIAL_FUNC(loremaster) {
 			return(TRUE);
 		}
 		if(ch->skills[sk_num].learned >= 95) {
-			send_to_char("'Non hai nient''altro da imparare in quest''arte.'\n\r", ch);
+			send_to_char("'Non hai nient'altro da imparare in quest'arte.'\n\r", ch);
 			return(TRUE);
 		}
 
@@ -3880,7 +3880,7 @@ MOBSPECIAL_FUNC(hunter) {
 
 		if(ch->skills[ sk_num ].learned >= 95) {
 			act("$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
-				"piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR);
+				"piu' nulla'.", TRUE, ch, 0, mob, TO_CHAR);
 			return(TRUE);
 		}
 
@@ -3986,7 +3986,7 @@ MOBSPECIAL_FUNC(determine_teacher) {
 
 		if(ch->skills[ sk_num ].learned >= 90) {
 			act("$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
-				"piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR);
+				"piu' nulla'.", TRUE, ch, 0, mob, TO_CHAR);
 			return(TRUE);
 		}
 
@@ -4088,7 +4088,7 @@ MOBSPECIAL_FUNC(miner_teacher) {
 
 		if(ch->skills[ sk_num ].learned >= 90) {
 			act("$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
-				"piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR);
+				"piu' nulla'.", TRUE, ch, 0, mob, TO_CHAR);
 			return(TRUE);
 		}
 
@@ -4305,7 +4305,7 @@ MOBSPECIAL_FUNC(forge_teacher) {
 
 		if(ch->skills[ sk_num ].learned >= 90) {
 			act("$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
-				"piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR);
+				"piu' nulla'.", TRUE, ch, 0, mob, TO_CHAR);
 			return(TRUE);
 		}
 
@@ -4411,7 +4411,7 @@ MOBSPECIAL_FUNC(equilibrium_teacher) {
 
 		if(ch->skills[ sk_num ].learned >= 97) {
 			act("$N ti dice: 'Sei un maestro in quest'arte. Non posso insegnarti "
-				"piu` nulla'.", TRUE, ch, 0, mob, TO_CHAR);
+				"piu' nulla'.", TRUE, ch, 0, mob, TO_CHAR);
 			return(TRUE);
 		}
 
@@ -4479,7 +4479,7 @@ MOBSPECIAL_FUNC(archer_instructor) {
 			number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
 			send_to_char("L'arciere dice: ",ch);
 			if(number == -1) {
-				send_to_char("'Non conosco questa abilita`.''\n\r", ch);
+				send_to_char("'Non conosco questa abilita'.''\n\r", ch);
 				return TRUE;
 			}
 
@@ -4500,7 +4500,7 @@ MOBSPECIAL_FUNC(archer_instructor) {
 
 			if(!HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_RANGER |
 						 CLASS_PALADIN) &&  sk_num == SKILL_SPOT) {
-				act("$n ti dice 'Non sei il tipo che puo` imparare cose come questa.'",
+				act("$n ti dice 'Non sei il tipo che puo' imparare cose come questa.'",
 					TRUE, mob, 0, ch, TO_VICT);
 				return TRUE;
 			}
@@ -4512,13 +4512,13 @@ MOBSPECIAL_FUNC(archer_instructor) {
 		}
 
 		if(ch->skills[sk_num].learned >= 95) {
-			send_to_char("'Sei gia` un maestro in questa abilita`. "
+			send_to_char("'Sei gia' un maestro in questa abilita'. "
 						 "Non posso insegnarti altro.'\n\r", ch);
 			return TRUE;
 		}
 
 		if(ch->specials.spells_to_learn <= 0) {
-			send_to_char("'Devi prima guadagnarti piu` pratiche.\n\r", ch);
+			send_to_char("'Devi prima guadagnarti piu' pratiche.\n\r", ch);
 			return TRUE;
 		}
 
@@ -4534,7 +4534,7 @@ MOBSPECIAL_FUNC(archer_instructor) {
 
 		if(ch->skills[sk_num].learned >= 95) {
 			send_to_char("L'arciere ti dice: 'Sei diventato un maestro in questa "
-						 "abilita.'\n\r", ch);
+						 "abilita'.'\n\r", ch);
 		}
 		return TRUE;
 	}
@@ -6073,7 +6073,7 @@ MOBSPECIAL_FUNC(DragonHunterLeader) {
 			case 2:
 				do_say(ch, "Mi mancano tanto i vecchi tempi in cui cacciavo draghi "
 					   "tutto il giorno.", 0);
-				do_say(ch, "Dovrei farlo piu` spesso per mantenermi in forma.", 0);
+				do_say(ch, "Dovrei farlo piu' spesso per mantenermi in forma.", 0);
 				break;
 			default:
 				break;
@@ -6096,7 +6096,7 @@ MOBSPECIAL_FUNC(DragonHunterLeader) {
 				if(!found) {
 					ch->generic = 25;
 					mudlog(LOG_CHECK, "Biff non trova il drago mentra sta per partire");
-					do_say(ch, "Maledizione! Il drago e` morto. Meglio tornare alla "
+					do_say(ch, "Maledizione! Il drago e' morto. Meglio tornare alla "
 						   "taverna!", 0);
 				}
 				else {
@@ -6136,9 +6136,9 @@ MOBSPECIAL_FUNC(DragonHunterLeader) {
 				}
 				if(!found) {
 					ch->generic = 25;
-					do_say(ch, "Maledizione! Il drago e` morto! Meglio tornare alla "
+					do_say(ch, "Maledizione! Il drago e' morto! Meglio tornare alla "
 						   "taverna!", 0);
-					mudlog(LOG_CHECK, "Il drago di Biff e` morto.");
+					mudlog(LOG_CHECK, "Il drago di Biff e' morto.");
 				}
 				else {
 					dir = choose_exit_global(ch->in_room, i->in_room, MAX_ROOMS);
@@ -6180,7 +6180,7 @@ MOBSPECIAL_FUNC(DragonHunterLeader) {
 				}
 
 				if(ch->in_room == WHERE_TO_SIT) {
-					do_say(ch, "Ahhh, e` tempo per un bel bicchiere di vino!", 0);
+					do_say(ch, "Ahhh, e' tempo per un bel bicchiere di vino!", 0);
 					for(i = real_roomp(ch->in_room)->people; i; i = i->next_in_room)
 						if(IS_MOB(i) && (mob_index[i->nr].iVNum == WHO_TO_CALL)) {
 							(*mob_index[i->nr].func)(i, 0, "", i, EVENT_FOLLOW);
@@ -7270,7 +7270,7 @@ MOBSPECIAL_FUNC(StatMaster) {
 	for(; *arg == ' '; arg++);
 
 	if(!*arg) {
-		act("$N ti dice 'Puoi ancora progredire in queste abilita`'", FALSE,
+		act("$N ti dice 'Puoi ancora progredire in queste abilita''", FALSE,
 			ch,0,guildmaster,TO_CHAR);
 		for(i=0; *stats[i]; i++) {
 			curstat=GetStat(ch,i);
@@ -7395,7 +7395,7 @@ MOBSPECIAL_FUNC(XpMaster) {
 	if(!*arg) {
 		act("$N ti dice 'Puoi tramutare i tuoi tesori in esperienza'", FALSE,
 			ch, 0, guildmaster, TO_CHAR);
-		act("$N ti dice 'Dimmi a quanti denari vuoi rinunciare (prac <numero coins>`", FALSE,
+		act("$N ti dice 'Dimmi a quanti denari vuoi rinunciare (prac <numero monete>)", FALSE,
 			ch, 0, guildmaster, TO_CHAR);
 		return(TRUE);
 	}
@@ -7824,7 +7824,7 @@ MOBSPECIAL_FUNC(MobIdent)
 
         act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:", FALSE, ch, NULL, mobident, TO_CHAR);
         act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", FALSE, ch, NULL, mobident, TO_NOTVICT);
-        sprintf(buf,"$c0013'Ogni ora rigeneri $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
+        sprintf(buf,"$c0013'Ogni ora recuperi $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
         send_to_char(buf,ch);

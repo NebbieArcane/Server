@@ -907,7 +907,7 @@ int CheckMulti(struct char_data* i) {
 				send_to_char(buf,test);
 				send_to_char("Lo spirito vitale ti abbandona.\n\r"
 							 "Alar ti ha congelato",test);
-				act("$N e` stat$B congelat$B da Alar",FALSE,test,0,
+				act("$N e' stat$B congelat$B da Alar",FALSE,test,0,
 					test,TO_NOTVICT);
 				SET_BIT(test->specials.act,PLR_FREEZE);
 				sprintf(buf,"Che ci fate tu e %s qui contemporaneamente?\n\r",
@@ -915,7 +915,7 @@ int CheckMulti(struct char_data* i) {
 				send_to_char(buf,i);
 				send_to_char("Lo spirito vitale ti abbandona."
 							 "Alar ti ha congelato!\n\r",i);
-				act("$N e` stat$B congelat$B da Alar",FALSE,i,0,
+				act("$N e' stat$B congelat$B da Alar",FALSE,i,0,
 					i,TO_NOTVICT);
 				SET_BIT(i->specials.act,PLR_FREEZE);
 				mudlog(LOG_PLAYERS,"%s e %s congelati per MP",
@@ -982,7 +982,7 @@ void affect_update(unsigned long localPulse) {
 		if(CheckMulti(i)) {
 			continue;
 		}
-		/* Imposta un po` di puntatori e flag */
+		/* Imposta un po' di puntatori e flag */
 		rp = real_roomp(i->in_room);
 		regainroom=(IS_SET(rp->room_flags,NO_REGAIN))?0:1;
 
@@ -1035,7 +1035,7 @@ void affect_update(unsigned long localPulse) {
 						SpellWearOff(af->type, i);
 					}
 
-					/* Se il tipo di affect e' SPELL_CHARM_PERSON, l'affect e` gia` stato
+					/* Se il tipo di affect e' SPELL_CHARM_PERSON, l'affect e' gia' stato
 					* tolto da SpellWearOff */
 					if(iType != SPELL_CHARM_PERSON) {
 						check_memorize(i, af);
@@ -1059,7 +1059,7 @@ void affect_update(unsigned long localPulse) {
 		if(!dead)
 			/* Regen check*/
 		{
-			/* Ho tolto && (i->desc || !IS_PC(i)) cosi` i PC riguadagnano mana
+			/* Ho tolto && (i->desc || !IS_PC(i)) cosi' i PC riguadagnano mana
 			 * anche se sono link dead, ma non se sono nelle "storage room", ossia
 			 * nelle stanze dove finiscono i polimorfati. Inoltre esiste il rischio
 			 * di morire per il veleno anche se si finisce LD.
@@ -1102,7 +1102,7 @@ void affect_update(unsigned long localPulse) {
 					check_idling(i);
 				}
 				/*
-				 * Se e` linkdead
+				 * Se e' linkdead
 				 * non diventa assetato od affamato.
 				 * */
 				if(rp && i->desc) {
@@ -1195,7 +1195,7 @@ void affect_update(unsigned long localPulse) {
 			if(j->obj_flags.timer > 0) {
 				j->obj_flags.timer--;
 			}
-			else if(!j->carried_by) {  /* E` in terra.. */
+			else if(!j->carried_by) {  /* E' in terra.. */
 				j->obj_flags.timer++;
 			}
 			if(!j->obj_flags.timer) {
@@ -1553,7 +1553,7 @@ ACTION_FUNC(do_cast) {
 				return;
 			}
 			else if(BestMagicClass(ch) == MONK_LEVEL_IND) {
-				send_to_char("Ehi.... ma questa e` stregoneria!\n\r", ch);
+				send_to_char("Ehi... ma questa e' stregoneria!\n\r", ch);
 				return;
 			}
 		}
@@ -1594,11 +1594,11 @@ ACTION_FUNC(do_cast) {
 	spl = old_search_block(argument, 1, qend - 1, spells, 0);
 
 	if(!spl) {
-		send_to_char("Fantastico! Non e` successo nulla!\n\r",ch);
+		send_to_char("Fantastico! Non e' successo nulla!\n\r",ch);
 		return;
 	}
 
-	/* mobs do not get  skills so we just check it for PC`s */
+	/* mobs do not get  skills so we just check it for PC's */
 
 	if(!ch->skills)
 		if(IS_PC(ch)) {
@@ -1631,7 +1631,7 @@ ACTION_FUNC(do_cast) {
 	/* this should make sorcerer learned spells be forced to be recalled */
 	if((cmd == CMD_CAST || cmd == CMD_MIND) && HasClass(ch,CLASS_SORCERER) &&
 			!IS_IMMORTAL(ch) && IS_SET(ch->skills[spl].flags,SKILL_KNOWN_SORCERER)) {
-		send_to_char("Questo e` un incantesimo da stregone...\n\r",ch);
+		send_to_char("Questo e' un incantesimo da stregone...\n\r",ch);
 		return;
 	}
 
@@ -1972,7 +1972,7 @@ ACTION_FUNC(do_cast) {
 			}
 
 			if(spl != SPELL_VENTRILOQUATE && cmd != CMD_MIND) {  /* :-) */
-				say_spell(ch, spl);    /* psi`s do not utter! */
+				say_spell(ch, spl);    /* psi's do not utter! */
 			}
 
 			WAIT_STATE(ch, spell_info[spl].beats);
@@ -2081,7 +2081,7 @@ ACTION_FUNC(do_cast) {
 				}
 
 				if(tar_char) {
-					/* psi shit ain`t magic */
+					/* psi shit ain't magic */
 					if(affected_by_spell(tar_char,SPELL_ANTI_MAGIC_SHELL) &&
 							cmd != CMD_MIND && !IS_IMMORTAL(ch)) {
 						act("Your magic fizzles against $N's anti-magic shell!",
@@ -2099,7 +2099,7 @@ ACTION_FUNC(do_cast) {
 					}
 				}
 
-				/* psi shit ain`t magic */
+				/* psi shit ain't magic */
 				if(affected_by_spell(ch,SPELL_ANTI_MAGIC_SHELL)
 						&& cmd != CMD_MIND
 						&& !IS_IMMORTAL(ch)) {
@@ -2198,7 +2198,6 @@ ACTION_FUNC(do_cast) {
 	}
 }
 
-
 void assign_spell_pointers() {
 	int i;
 
@@ -2215,9 +2214,6 @@ void assign_spell_pointers() {
 	}
 
 }
-
-
-
 
 void check_falling_obj(struct obj_data* obj, int room) {
 	struct room_data* rp, *targ;
@@ -2251,9 +2247,9 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			 */
 			if(count > 1) {
 				if(rp->people) {
-					act("$p smashes against the ground at high speed",
+					act("$p si schianta al suolo a gran velocita'",
 						FALSE, rp->people, obj, 0, TO_ROOM);
-					act("$p smashes against the ground at high speed",
+					act("$p si schianta al suolo a gran velocita'",
 						FALSE, rp->people, obj, 0, TO_CHAR);
 				}
 				return;
@@ -2261,9 +2257,9 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			}
 			else {
 				if(rp->people) {
-					act("$p lands with a loud THUMP!",
+					act("$p atterra con un rumoroso THUMP!",
 						FALSE, rp->people, obj, 0, TO_ROOM);
-					act("$p lands with a loud THUMP!",
+					act("$p atterra con un rumoroso THUMP!",
 						FALSE, rp->people, obj, 0, TO_CHAR);
 				}
 				return;
@@ -2273,37 +2269,37 @@ void check_falling_obj(struct obj_data* obj, int room) {
 
 		if(rp->people) {
 			/* have to reference a person */
-			act("$p falls out of sight", FALSE, rp->people, obj, 0, TO_ROOM);
-			act("$p falls out of sight", FALSE, rp->people, obj, 0, TO_CHAR);
+			act("$p cade fino a sparire", FALSE, rp->people, obj, 0, TO_ROOM);
+			act("$p cade fino a sparire", FALSE, rp->people, obj, 0, TO_CHAR);
 		}
 		obj_from_room(obj);
 		obj_to_room(obj, rp->dir_option[DOWN]->to_room);
 		if(targ->people) {
-			act("$p falls from the sky", FALSE, targ->people, obj, 0, TO_ROOM);
-			act("$p falls from the sky", FALSE, targ->people, obj, 0, TO_CHAR);
+			act("$p cade dal celo", FALSE, targ->people, obj, 0, TO_ROOM);
+			act("$p cade dal celo", FALSE, targ->people, obj, 0, TO_CHAR);
 		}
 		count++;
 
 		if(targ->sector_type != SECT_AIR) {
 			if(count == 1) {
 				if(targ->people) {
-					act("$p lands with a loud THUMP!", FALSE, targ->people, obj, 0, TO_ROOM);
-					act("$p lands with a loud THUMP!", FALSE, targ->people, obj, 0, TO_CHAR);
+					act("$p atterra con un rumoroso THUMP!", FALSE, targ->people, obj, 0, TO_ROOM);
+					act("$p atterra con un rumoroso THUMP!", FALSE, targ->people, obj, 0, TO_CHAR);
 				}
 				return;
 			}
 			else {
 				if(targ->people) {
 					if(targ->sector_type >= SECT_WATER_SWIM) {
-						act("$p smashes against the water at high speed",
+						act("$p si schianta sulla superfice dell'acqua ad alta velocita'",
 							FALSE, targ->people, obj, 0, TO_ROOM);
-						act("$p smashes against the water at high speed",
+						act("$p si schianta sulla superfice dell'acqua ad alta velocita'",
 							FALSE, targ->people, obj, 0, TO_CHAR);
 					}
 					else {
-						act("$p smashes against the ground at high speed",
+						act("$p si schianta al suolo a gran velocita'",
 							FALSE, targ->people, obj, 0, TO_ROOM);
-						act("$p smashes against the ground at high speed",
+						act("$p si schianta al suolo a gran velocita'",
 							FALSE, targ->people, obj, 0, TO_CHAR);
 					}
 				}
@@ -2319,7 +2315,13 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			targ = 0;
 		}
 	}
-
+    
+    if(IS_SET(rp->room_flags, DEATH)) {
+        obj_from_room(obj);
+        obj_to_room(obj, 1);
+        return;
+    }
+    
 	if(count >= 100) {
 		mudlog(LOG_ERROR, "Someone screwed up an air room.");
 		obj_from_room(obj);

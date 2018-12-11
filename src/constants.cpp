@@ -1434,7 +1434,7 @@ const char* month_name[17] = {
 	"Mese del Grande Pianto",
 	"Mese della Primavera",
 	"Mese della Natura",
-	"Mese della Fertilita`",
+	"Mese della Fertilita'",
 	"Mese del Drago",
 	"Mese del Sole",
 	"Mese del Caldo",
@@ -1442,7 +1442,7 @@ const char* month_name[17] = {
 	"Mese della Guerra fra gli Dei",
 	"Mese delle Ombre",
 	"Mese delle Ombre Lunghe",
-	"Mese dell'Oscurita` Primordiale",
+	"Mese dell'Oscurita' Primordiale",
 	"Mese del Malvagio"
 };
 
@@ -1791,7 +1791,7 @@ const char* color_liquid[]= {
 };
 
 const char* fullness[] = {
-	"con un po`",
+	"con un po'",
 	"mezzo pieno",
 	"quasi pieno",
 	"pieno"

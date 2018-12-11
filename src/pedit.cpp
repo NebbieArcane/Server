@@ -248,7 +248,7 @@ MOBSPECIAL_FUNC(EditMaster) {
 			}
 
 			act("Dai $p a $N.", TRUE, ch, obj, editman, TO_CHAR);
-			act("$n da` $p a $N.", TRUE, ch, obj, editman, TO_ROOM);
+			act("$n da' $p a $N.", TRUE, ch, obj, editman, TO_ROOM);
 
 			obj_from_char(obj);
 			obj_to_char(obj, editman);
@@ -430,8 +430,8 @@ MOBSPECIAL_FUNC(EditMaster) {
 				ha_modificato = FALSE;
 				strcpy(modifica_obj, "");
 				modifica = FALSE;
-				act("$N da` $p a $n.", TRUE, ch, obj, editman, TO_ROOM);
-				act("$N ti da` $p.", TRUE, ch, obj, editman, TO_CHAR);
+				act("$N da' $p a $n.", TRUE, ch, obj, editman, TO_ROOM);
+				act("$N ti da' $p.", TRUE, ch, obj, editman, TO_CHAR);
 				act("$N ti dice 'Ok. Ecco fatto! Buona fortuna!'", FALSE,
 					ch, 0, editman, TO_CHAR);
 				obj_from_char(obj);

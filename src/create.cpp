@@ -276,8 +276,7 @@ void RoomEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.edit == MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
 			ch->desc->connected = CON_PLYNG;
-			act("$n e` ritornat$b dal modificare la locazione.", FALSE, ch, 0, 0,
-				TO_ROOM);
+			act("$n smette $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 			return;
 		}
 

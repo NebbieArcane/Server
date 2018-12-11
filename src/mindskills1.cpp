@@ -195,7 +195,7 @@ void mind_danger_sense(byte level, struct char_data* ch,
 				TO_CHAR);
 		}
 		else {
-			act("$n sembra essere piu` attento al pericolo.", TRUE, victim, 0, 0,
+			act("$n sembra essere piu' attento al pericolo.", TRUE, victim, 0, 0,
 				TO_ROOM);
 			act("Apri la tua mente ai pericoli nascosti.", TRUE, victim, 0, 0,
 				TO_CHAR);
@@ -210,10 +210,10 @@ void mind_danger_sense(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim)
-			act("$N puo` gia` percepire i pericoli nascosti.", FALSE, ch, 0,
+			act("$N puo' gia' percepire i pericoli nascosti.", FALSE, ch, 0,
 				victim, TO_CHAR);
 		else
-			act("Puoi gia` percepire i pericoli nascosti.", FALSE, ch, 0, victim,
+			act("Puoi gia' percepire i pericoli nascosti.", FALSE, ch, 0, victim,
 				TO_CHAR);
 	}
 }
@@ -431,8 +431,8 @@ void mind_psi_strength(byte level, struct char_data* ch,
 
 
 	if(!affected_by_spell(victim,SKILL_PSI_STRENGTH)) {
-		act("Ti senti piu` forte.", FALSE, victim,0,0,TO_CHAR);
-		act("$n sembra piu` forte.", TRUE, victim, 0, 0, TO_ROOM);
+		act("Ti senti piu' forte.", FALSE, victim,0,0,TO_CHAR);
+		act("$n sembra piu' forte.", TRUE, victim, 0, 0, TO_ROOM);
 		af.type      = SKILL_PSI_STRENGTH;
 		af.duration  = 2*level;
 		if(IS_NPC(victim)) {
@@ -537,10 +537,10 @@ void mind_tower_iron_will(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			act("$N e` gia` protett$B.",FALSE,ch,0,victim,TO_CHAR);
+			act("$N e' gia' protett$B.",FALSE,ch,0,victim,TO_CHAR);
 		}
 		else {
-			act("Sei gia` protett$b.",FALSE,ch,0,victim,TO_CHAR);
+			act("Sei gia' protett$b.",FALSE,ch,0,victim,TO_CHAR);
 		}
 	}
 }
@@ -570,10 +570,10 @@ void mind_mindblank(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			act("$N e` gia` protett$B.", FALSE, ch, NULL, victim, TO_CHAR);
+			act("$N e' gia' protett$B.", FALSE, ch, NULL, victim, TO_CHAR);
 		}
 		else {
-			act("Sei gia` protett$b.", FALSE, ch, NULL, victim, TO_CHAR);
+			act("Sei gia' protett$b.", FALSE, ch, NULL, victim, TO_CHAR);
 		}
 	}
 
@@ -587,7 +587,7 @@ void mind_psychic_impersonation(byte level, struct char_data* ch,
 	struct char_data* k;
 
 	if(affected_by_spell(victim, SKILL_PSYCHIC_IMPERSONATION)) {
-		send_to_char("Gia` stai provando a impersonare qualcun altro.\n\r",
+		send_to_char("Gia' stai provando a impersonare qualcun altro.\n\r",
 					 victim);
 		return;
 	}

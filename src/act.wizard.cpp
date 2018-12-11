@@ -395,7 +395,7 @@ ACTION_FUNC(do_setsev) {
 			"\n\rCon il comando setsev <numero> puoi cambiare il tipo di messaggi di sistema\n\r",
 			ch);
 		send_to_char(
-			"visualizzati. Il numero e` un vettore di bit con il seguente significato:\n\r\n\r",
+			"visualizzati. Il numero e' un vettore di bit con il seguente significato:\n\r\n\r",
 			ch);
 		send_to_char("   # Nome    Descrizione\n\r", ch);
 		send_to_char(
@@ -876,7 +876,7 @@ ACTION_FUNC(do_emote) {
 	else {
 		if((IS_PC(ch) || IS_SET(ch->specials.act, ACT_POLYSELF))
 				&& cmd != CMD_EMOTE_VIRGOLA)
-			/* solo se il comando e' emote o : se e` , non evidenzia. Cosi` e`
+			/* solo se il comando e' emote o : se e' , non evidenzia. Cosi' e'
 			 * possibile fare gli scherzi :) */
 		{
 			sprintf(buf, "$c0015$n %.*s", MAX_INPUT_LENGTH, arg + i);
@@ -2227,7 +2227,7 @@ ACTION_FUNC(do_resetskills) {
 	arg = one_argument(arg, buf);
 
 	if((mob = get_char_vis(ch, buf)) == NULL) {
-		send_to_char("Non c'e` nessuno con quel nome qui.\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
 	}
 	else if(mob->skills == NULL) {
 		send_to_char("Il giocatore non ha skills.\n\r", ch);
@@ -2368,17 +2368,17 @@ ACTION_FUNC(do_set) {
 	if((mob = get_char_vis(ch, name)) == NULL) {
 		send_to_char(
 			"@\n\r"
-			"Usage :@ <field> <user name> <value>\n\r"
-			"$c0009This is a Implementor command and should be used with care as it can"
-			"change any ability/skill/attr of a character.$c0007\n\r"
-			"Here is a list of fields,\n\r"
-			"the value types will differ with each (i.e. number/alpha char)\n\r"
+			"Sintassi :@ <campo> <personaggio> <valore>\n\r"
+			"$c0009Questo comando DEVE essere usato con molta attenzione dato che puo'"
+			"cambiare qualasiasi abilita' o attributo di un personaggio.$c0007\n\r"
+			"Questa e' la lista dei campi,\n\r"
+			"il tipo di valore puo' essere differente a seconda del campo (es. numbero/carattere)\n\r"
 			"\n\r"
 			"align class exp expadd lev sex race hunger thirst one hit mhit ghit tohit todam"
 			"ac bank gold age modage prac str add saves skills stadd int wis dex con chr pkill"
 			"mana mmana gmana start murder stole known specskill zone nodelete specflags kill"
 			"numatks objedit mobedit remaffect gmove height weight position startroom\n\r"
-			"$c0011    Remember, be $c0015careful$c0011 how you use this command!\n\r",
+			"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
 			ch);
 		return;
 	}
@@ -2389,7 +2389,7 @@ ACTION_FUNC(do_set) {
 			GET_ALIGNMENT(mob) = parm;
 		}
 		else {
-			sprintf(buf, "align= %d\n\r", GET_ALIGNMENT(mob));
+            sprintf(buf, "Allineamento: %d\n\r", GET_ALIGNMENT(mob));
 			send_to_char(buf, ch);
 		}
 
@@ -2405,7 +2405,7 @@ ACTION_FUNC(do_set) {
 		}
 		else {
 			sprintf(buf,
-					"ATTENZIONE. USARE VALORI ESADECIMALI\nClass:%04Xh\n\r",
+					"ATTENZIONE. USARE VALORI ESADECIMALI\nClasse:%04Xh\n\r",
 					mob->player.iClass);
 			send_to_char(buf, ch);
 		}
@@ -2421,28 +2421,28 @@ ACTION_FUNC(do_set) {
 	else if(!strcmp(field, "specflags")) {
 		sscanf(parmstr, "%d", &parm);
 		GET_SPECFLAGS(mob) = parm;
-		send_to_char("Changed flags.\n\r", ch);
+		send_to_char("Flag cambiato.\n\r", ch);
 	}
 	else if(!strcmp(field, "zone")) {
 		sscanf(parmstr, "%d", &parm);
 		GET_ZONE(mob) = parm;
-		sprintf(buf, "Setting zone access to %d.\n\r", parm);
+        sprintf(buf, "Zona di accesso cambiata in: %d.\n\r", parm);
 		send_to_char(buf, ch);
 	}
 	else if(!strcmp(field, "pkill")) {
 		if(IS_PC(mob)) {
 			if(IS_SET(mob->player.user_flags, RACE_WAR)) {
 				REMOVE_BIT(mob->player.user_flags, RACE_WAR);
-				sprintf(buf, "Removed PLAYERS KILLING from %s\n\r",
+				sprintf(buf, "Rimosso PKILL da %s.\n\r",
 						GET_NAME(mob));
 			}
 			else {
 				SET_BIT(mob->player.user_flags, RACE_WAR);
-				sprintf(buf, "Set PLAYERS KILLING to %s\n\r", GET_NAME(mob));
+				sprintf(buf, "Assegnato PKILL a %s.\n\r", GET_NAME(mob));
 			}
 		}
 		else {
-			sprintf(buf, "%s non e` un giocatore.", GET_NAME_DESC(mob));
+			sprintf(buf, "%s non e' un giocatore.", GET_NAME_DESC(mob));
 		}
 
 		send_to_char(buf, ch);
@@ -2454,7 +2454,7 @@ ACTION_FUNC(do_set) {
 		}
 		else {
 			mob->specials.affected_by = lparm;
-			sprintf(buf, "Affected_by changed\n\r");
+			sprintf(buf, "Affected_by cambiato.\n\r");
 			send_to_char(buf, ch);
 		}
 	}
@@ -2465,7 +2465,7 @@ ACTION_FUNC(do_set) {
 		}
 		else {
 			mob->specials.affected_by2 = lparm;
-			sprintf(buf, "Affected_by2 changed\n\r");
+			sprintf(buf, "Affected_by2 cambiato.\n\r");
 			send_to_char(buf, ch);
 		}
 	}
@@ -2475,12 +2475,12 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "numatks")) {
 		if(sscanf(parmstr, "%d", &parm) < 1) {
-			sprintf(buf, "numatks: %f\n\r", mob->mult_att);
+			sprintf(buf, "Numero attacchi: %f\n\r", mob->mult_att);
 			send_to_char(buf, ch);
 		}
 		else {
 			mob->mult_att = parm;
-			sprintf(buf, "changed: %f\n\r", mob->mult_att);
+			sprintf(buf, "Numero attacchi cambiato in: %f\n\r", mob->mult_att);
 			send_to_char(buf, ch);
 		}
 	}
@@ -2488,23 +2488,23 @@ ACTION_FUNC(do_set) {
 		mob->affected = NULL;
 		mob->specials.affected_by = 0;
 		mob->specials.affected_by2 = 0;
-		send_to_char("All affects removed from char!\n\r", ch);
+		send_to_char("Tutti gli affect sono stati rimossi dal personaggio!\n\r", ch);
 	}
 	else if(!strcmp(field, "lev")) {
 		if(sscanf(parmstr, "%d %d", &parm, &parm2) != 2|| parm < 0 ||
 				parm2 < 1 || parm2 > MAX_CLASS) {
-			send_to_char("Uso: @ lev <name> <newlev> <class>\n\r", ch);
+			send_to_char("Sintassi: @ lev <nome> <nuovo_livello> <numero_classe>\n\r", ch);
 			return;
 		}
 		if(!IS_NPC(mob)) {
 			if((GetMaxLevel(mob) > GetMaxLevel(ch)) && (ch != mob)) {
 				send_to_char(GET_NAME(ch), mob);
-				send_to_char(" just tried to change your level.\n\r", mob);
+                act("$N ha provato a cambiare il tuo livello.", FALSE, mob, 0, ch, TO_CHAR);
 				return;
 			}
 			else if(GetMaxLevel(mob) < IMMORTALE
 					&& GetMaxLevel(ch) < MAESTRO_DEI_CREATORI && parm > 50) {
-				send_to_char("Thou shalt not create new immortals.\n\r", ch);
+				send_to_char("Non puoi creare nuovi immortali cosi', usa advance.\n\r", ch);
 			}
 		}
 		else {
@@ -2515,7 +2515,7 @@ ACTION_FUNC(do_set) {
 		}
 
 		if(parm < 0) {
-			send_to_char("bug fix. :-)\n\r", ch);
+			send_to_char("Bug fix. :-)\n\r", ch);
 			return;
 		}
 
@@ -2527,7 +2527,7 @@ ACTION_FUNC(do_set) {
 			}
 			else {
 				if(parm > DIO) {
-					send_to_char("Sorry, you can't advance past 54th level\n",
+					send_to_char("Mi dispiace, non puoi avanzare il livello oltre il 54.\n",
 								 ch);
 					return;
 				}
@@ -2559,7 +2559,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "mhit")) {
 		if(sscanf(parmstr, "%d", &parm) < 1) {
-			sprintf(buf, "Hit points bonus: %d\r\n", GET_MAX_HIT(mob));
+			sprintf(buf, "Bonus punti ferita: %d\r\n", GET_MAX_HIT(mob));
 			send_to_char(buf, ch);
 		}
 		else {
@@ -2568,7 +2568,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "ghit")) {
 		if(sscanf(parmstr, "%d", &parm) < 1) {
-			sprintf(buf, "Hit points gain: %d\r\n", mob->points.hit_gain);
+			sprintf(buf, "Recupero punti ferita: %d\r\n", mob->points.hit_gain);
 			send_to_char(buf, ch);
 		}
 		else {
@@ -2589,7 +2589,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "bank")) {
 		if(sscanf(parmstr, "%d", &parm) < 1) {
-			sprintf(buf, "Bank balance: %d\r\n", GET_BANK(mob));
+			sprintf(buf, "Monete in banca: %d\r\n", GET_BANK(mob));
 			send_to_char(buf, ch);
 		}
 		else {
@@ -2602,7 +2602,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "prac")) {
 		if(sscanf(parmstr, "%d", &parm) < 1) {
-			sprintf(buf, "Practices left: %d\r\n",
+			sprintf(buf, "Sessioni di pratica: %d\r\n",
 					mob->specials.spells_to_learn);
 			send_to_char(buf, ch);
 		}
@@ -2615,7 +2615,7 @@ ACTION_FUNC(do_set) {
 			mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
 		}
 		else {
-			sprintf(buf, "Usa stat per vedere l'eta'\r\n");
+			sprintf(buf, "Usa stat per vedere l'eta'.\r\n");
 			send_to_char(buf, ch);
 		}
 
@@ -2625,21 +2625,15 @@ ACTION_FUNC(do_set) {
 			mob->AgeModifier = parm;
 		}
 		else {
-			sprintf(buf, "Agemod: %d", int(mob->AgeModifier));
+			sprintf(buf, "Modificatore dell'eta': %d", int(mob->AgeModifier));
 			send_to_char(buf, ch);
 		}
 
 	}
 	else if(!strcmp(field, "str")) {
-		if(sscanf(parmstr, "%d", &parm) > 0) {
-			mob->abilities.str = parm;
-			mob->tmpabilities.str = parm;
-		}
-		else {
-			sprintf(buf, "Practices left: %d\r\n",
-					mob->specials.spells_to_learn);
-			send_to_char(buf, ch);
-		}
+        sscanf(parmstr, "%d", &parm);
+        mob->abilities.str = parm;
+        mob->tmpabilities.str = parm;
 	}
 	else if(!strcmp(field, "saves")) {
 		parm = 0;
@@ -2653,10 +2647,10 @@ ACTION_FUNC(do_set) {
 		switch(sscanf(parmstr, "%d %d", &parm, &parm2)) {
 		case 1:
 			if(parm < 1 || parm > MAX_SKILLS) {
-				sprintf(buf, "Non esiste uno skill con il numero %d\n\r", parm);
+				sprintf(buf, "Non esiste uno skill con il numero %d.\n\r", parm);
 			}
 			else if(mob->skills)
-				sprintf(buf, "Il valore dello skills %d e` %d\n\r", parm,
+				sprintf(buf, "Il valore dello skills %d e' %d.\n\r", parm,
 						mob->skills[parm].learned);
 			else
 				sprintf(buf, "%s non ha spazio per gli skills.\n\r",
@@ -2664,14 +2658,14 @@ ACTION_FUNC(do_set) {
 			break;
 		case 2:
 			if(parm < 0 || parm > MAX_SKILLS) {
-				sprintf(buf, "Non esiste uno skill con il numero %d\n\r", parm);
+				sprintf(buf, "Non esiste uno skill con il numero %d.\n\r", parm);
 			}
 			else if(parm2 < 0 || parm2 > 100)
-				sprintf(buf, "'%d' non e` un valore valido per lo skill %d",
+				sprintf(buf, "'%d' non e' un valore valido per lo skill %d.",
 						parm2, parm);
 			else if(mob->skills) {
 				mob->skills[parm].learned = parm2;
-				sprintf(buf, "Hai posto il valore dello skill %d a %d\n\r",
+				sprintf(buf, "Hai posto il valore dello skill %d a %d.\n\r",
 						parm, parm2);
 			}
 			else
@@ -2679,7 +2673,7 @@ ACTION_FUNC(do_set) {
 						"Mandalo alla gilda prima.\n\r", GET_NAME(mob));
 			break;
 		default:
-			sprintf(buf, "Uso: @ skills <nome> <skill#> [<valore>]\n\r");
+			sprintf(buf, "Sintassi: @ skills <nome> <skill_id#> [<valore>]\n\r");
 		}
 		send_to_char(buf, ch);
 	}
@@ -2689,10 +2683,10 @@ ACTION_FUNC(do_set) {
 		switch(sscanf(parmstr, "%d %d", &parm, &parm2)) {
 		case 1:
 			if(parm < 0 || parm > MAX_SKILLS) {
-				sprintf(buf, "Non esiste uno skill con il numero %d\n\r", parm);
+				sprintf(buf, "Non esiste uno skill con il numero %d.\n\r", parm);
 			}
 			else if(mob->skills)
-				sprintf(buf, "Il valore dei flags dello skills %d e` %d\n\r",
+				sprintf(buf, "Il valore dei flags dello skills %d e' %d.\n\r",
 						parm, mob->skills[parm].flags);
 			else
 				sprintf(buf, "%s non ha spazio per gli skills.\n\r",
@@ -2700,19 +2694,19 @@ ACTION_FUNC(do_set) {
 			break;
 		case 2:
 			if(parm < 0 || parm > MAX_SKILLS) {
-				sprintf(buf, "Non esiste uno skill con il numero %d\n\r", parm);
+				sprintf(buf, "Non esiste uno skill con il numero %d.\n\r", parm);
 			}
 			else if(mob->skills) {
 				mob->skills[parm].flags = parm2;
 				sprintf(buf, "Hai posto il valore dei flags dello skill %d a "
-						"%d\n\r", parm, parm2);
+						"%d.\n\r", parm, parm2);
 			}
 			else
 				sprintf(buf, "%s non ha spazio per gli skills.\n\r"
 						"Mandalo alla gilda prima.\n\r", GET_NAME(mob));
 			break;
 		default:
-			sprintf(buf, "Uso: @ known <nome> <skill#> [<valore>]\n\r");
+			sprintf(buf, "Sintassi: @ known <nome> <skill_id#> [<valore>]\n\r");
 		}
 		send_to_char(buf, ch);
 	}
@@ -2722,10 +2716,10 @@ ACTION_FUNC(do_set) {
 		switch(sscanf(parmstr, "%d %d", &parm, &parm2)) {
 		case 1:
 			if(parm < 0 || parm > MAX_SKILLS) {
-				sprintf(buf, "Non esiste uno skill con il numero %d\n\r", parm);
+				sprintf(buf, "Non esiste uno skill con il numero %d.\n\r", parm);
 			}
 			else if(mob->skills)
-				sprintf(buf, "Il valore di special dello skills %d e` %d\n\r",
+				sprintf(buf, "Il valore di special dello skills %d e' %d.\n\r",
 						parm, mob->skills[parm].special);
 			else
 				sprintf(buf, "%s non ha spazio per gli skills.\n\r",
@@ -2733,19 +2727,19 @@ ACTION_FUNC(do_set) {
 			break;
 		case 2:
 			if(parm < 0 || parm > MAX_SKILLS) {
-				sprintf(buf, "Non esiste uno skill con il numero %d\n\r", parm);
+				sprintf(buf, "Non esiste uno skill con il numero %d.\n\r", parm);
 			}
 			else if(mob->skills) {
 				mob->skills[parm].special = parm2;
 				sprintf(buf, "Hai posto il valore di special dello skill %d a "
-						"%d\n\r", parm, parm2);
+						"%d.\n\r", parm, parm2);
 			}
 			else
 				sprintf(buf, "%s non ha spazio per gli skills.\n\r"
 						"Mandalo alla gilda prima.\n\r", GET_NAME(mob));
 			break;
 		default:
-			sprintf(buf, "Uso: @ specskill <nome> <skill#> [<valore>]\n\r");
+			sprintf(buf, "Sintassi: @ specskill <nome> <skill_id#> [<valore>]\n\r");
 		}
 		send_to_char(buf, ch);
 	}
@@ -2783,35 +2777,37 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "nodelete")) {
 		if(IS_SET(mob->player.user_flags, NO_DELETE)) {
-			send_to_char("Setting no delete flag OFF.\n\r", ch);
-			send_to_char("Your no delete flag has been removed.\n\r", mob);
+			send_to_char("Flag no-delete disattivato.\n\r", ch);
+			send_to_char("Da ora il tuo personaggio potra' cancellarsi.\n\r", mob);
 			REMOVE_BIT(mob->player.user_flags, NO_DELETE);
 		}
 		else {
-			send_to_char("Setting no delete flag ON.\n\r", ch);
-			send_to_char("You are now flagged as NO DELETE.\n\r", mob);
+			send_to_char("Flag no-delete attivato.\n\r", ch);
+			send_to_char("Il tuo personaggio non verra' cancellato.\n\r", mob);
 			SET_BIT(mob->player.user_flags, NO_DELETE);
 		}
 	}
 	else if(!strcmp(field, "murder")) {
 		if(GetMaxLevel(ch) < GetMaxLevel(mob)) {
-			send_to_char("I don't think so.\n\r", ch);
-			sprintf(buf, "%s tried to set your murder flag!\n\r", GET_NAME(ch));
+			send_to_char("Non credo proprio.\n\r", ch);
+            sprintf(buf, "%s ha provato a darti dell'assassin%s!\n\r", GET_NAME(ch), GET_SEX(mob) == SEX_MALE ? "o" : "a");
 			send_to_char(buf, mob);
 			return;
 		}
 		else if(IS_SET(mob->player.user_flags,MURDER_1) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, MURDER_1);
-			send_to_char("Murder flag removed.\n\r", ch);
+			send_to_char("Flag 'assassino' rimosso.\n\r", ch);
 			if(ch != mob) {
-				send_to_char("You have been pardoned for murder!\n\r", mob);
+				sprintf(buf, "Sei stat%s perdonat%s per i tuoi crimini!\n\r", GET_SEX(mob) == SEX_MALE ? "o" : "a", GET_SEX(mob) == SEX_MALE ? "o" : "a");
+                send_to_char(buf, mob);
 			}
 		}
 		else {
 			SET_BIT(mob->player.user_flags, MURDER_1);
-			send_to_char("Murder flag set!\n\r", ch);
+			send_to_char("Flag 'assassino' assegnato!\n\r", ch);
 			if(mob != ch) {
-				send_to_char("You have been accused of MURDER!\n\r", mob);
+				sprintf(buf, "Sei stat%s accusat%s di OMICIDIO!\n\r", GET_SEX(mob) == SEX_MALE ? "o" : "a", GET_SEX(mob) == SEX_MALE ? "o" : "a");
+                send_to_char(buf, mob);
 			}
 		}
 	}
@@ -2819,53 +2815,55 @@ ACTION_FUNC(do_set) {
 		if(IS_SET(mob->player.user_flags,CAN_OBJ_EDIT) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
 			if(mob != ch) {
-				send_to_char("You can no longer edit objects.\n\r", mob);
+				send_to_char("Non puoi piu' modificare oggetti.\n\r", mob);
 			}
-			send_to_char("Object edit flag removed.\n\r", ch);
+			send_to_char("Flag di edit oggetti rimosso.\n\r", ch);
 		}
 		else {   /* end objedit was set */
 			SET_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
 			if(ch != mob) {
-				send_to_char("You can now edit objects.\n\r", mob);
+				send_to_char("Puoi modificare gli oggetti.\n\r", mob);
 			}
-			send_to_char("Object edit flag set.\n\r", ch);
+			send_to_char("Flag di edit oggetti attivato.\n\r", ch);
 		}
 	} /* end objedit */
 	else if(!strcmp(field, "mobedit")) {
 		if(IS_SET(mob->player.user_flags,CAN_MOB_EDIT) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, CAN_MOB_EDIT);
 			if(mob != ch) {
-				send_to_char("You can no longer edit mobiles.\n\r", mob);
+				send_to_char("Non puoi piu' modificare mob.\n\r", mob);
 			}
-			send_to_char("Mobile edit flag removed.\n\r", ch);
+			send_to_char("Flag di edit mob rimosso.\n\r", ch);
 		}
 		else {   /* end mobedit was set */
 			SET_BIT(mob->player.user_flags, CAN_MOB_EDIT);
 			if(ch != mob) {
-				send_to_char("You can now edit mobiles.\n\r", mob);
+				send_to_char("Puoi modificare i mobs.\n\r", mob);
 			}
-			send_to_char("Mobile edit flag set.\n\r", ch);
+			send_to_char("Flag di edit mob attivato.\n\r", ch);
 		}
 	} /* end Mobedit */
 	else if(!strcmp(field, "stole")) {
 		if(GetMaxLevel(ch) < GetMaxLevel(mob)) {
-			send_to_char("I don't think so.\n\r", ch);
-			sprintf(buf, "%s tried to set your stole flag!\n\r", GET_NAME(ch));
+			send_to_char("Non credo proprio.\n\r", ch);
+            sprintf(buf, "%s ha provato a darti del%s ladr%s!\n\r", GET_NAME(ch), GET_SEX(mob) == SEX_MALE ? "" : "la", GET_SEX(mob) == SEX_MALE ? "o" : "a");
 			send_to_char(buf, mob);
 			return;
 		}
 		else if(IS_SET(mob->player.user_flags,STOLE_1) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, STOLE_1);
-			send_to_char("Thief flag removed.\n\r", ch);
+			send_to_char("Flag 'ladro' rimosso.\n\r", ch);
 			if(ch != mob) {
-				send_to_char("You have been pardoned for robbery!\n\r", mob);
+                sprintf(buf, "Sei stat%s perdonat%s per i tuoi crimini!\n\r", GET_SEX(mob) == SEX_MALE ? "o" : "a", GET_SEX(mob) == SEX_MALE ? "o" : "a");
+                send_to_char(buf, mob);
 			}
 		}
 		else {
 			SET_BIT(mob->player.user_flags, STOLE_1);
-			send_to_char("Thief flag set!\n\r", ch);
+			send_to_char("Flag 'ladro' assegnato!\n\r", ch);
 			if(mob != ch) {
-				send_to_char("You have been accused of robbery!\n\r", mob);
+                sprintf(buf, "Sei stat%s accusat%s di rapina!\n\r", GET_SEX(mob) == SEX_MALE ? "o" : "a", GET_SEX(mob) == SEX_MALE ? "o" : "a");
+                send_to_char(buf, mob);
 			}
 		}
 	}
@@ -2885,7 +2883,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "prince")) {
 		if(sscanf(parmstr, "%s", parmstr) != 1) {
-			sprintf(buf, "Prince=%s\n\rUsa @prince <nome> . per rimuovere\n\r",
+            sprintf(buf, "Prince: %s\n\rUsa @prince <nome> . per rimuovere.\n\r",
 					GET_PRINCE(mob));
 			send_to_char(buf, ch);
 		}
@@ -2901,7 +2899,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "mana")) {
 		if(sscanf(parmstr, "%d", &parm) !=1) {
-			sprintf(buf,"Mana=%d\n\r",GET_MANA(mob));
+            sprintf(buf,"Punti magia: %d\n\r",GET_MANA(mob));
 			send_to_char(buf,ch);
 		}
 		else {
@@ -2911,7 +2909,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "mmana")) {
 		if(sscanf(parmstr, "%d", &parm) !=1) {
-			sprintf(buf,"Mana bonus=%d\r\n",GET_MAX_MANA(mob));
+            sprintf(buf,"Punti magia bonus: %d\r\n",GET_MAX_MANA(mob));
 			send_to_char(buf,ch);
 		}
 		else {
@@ -2920,7 +2918,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "gmana")) {
 		if(sscanf(parmstr, "%d", &parm) !=1) {
-			sprintf(buf,"Mana gain=%d\r\n",mob->points.mana_gain);
+            sprintf(buf,"Recupero punti magia: %d\r\n",mob->points.mana_gain);
 			send_to_char(buf,ch);
 		}
 		else {
@@ -2935,7 +2933,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "move")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "Il move e` uguale a %d\n\r", GET_MOVE(mob));
+            sprintf(buf, "Punti movimento: %d\n\r", GET_MOVE(mob));
 			send_to_char(buf, ch);
 		}
 		else {
@@ -2946,7 +2944,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "mmove")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "Il bnus move e` uguale a %d\n\r", GET_MAX_MOVE(mob));
+            sprintf(buf, "Bonus punti movimento: %d\n\r", GET_MAX_MOVE(mob));
 			send_to_char(buf, ch);
 		}
 		else {
@@ -2956,7 +2954,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "gmove")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "Il bonus move regain e` uguale a %d\n\r",
+            sprintf(buf, "Recuper punti movimento: %d\n\r",
 					mob->points.move_gain);
 			send_to_char(buf, ch);
 		}
@@ -2967,7 +2965,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "height")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "L'altezza e` uguale a %d\n\r",
+			sprintf(buf, "L'altezza e' uguale a %d.\n\r",
 					GET_HEIGHT(mob));
 			send_to_char(buf, ch);
 		}
@@ -2978,7 +2976,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "weight")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "Il peso e` uguale a %d\n\r",
+			sprintf(buf, "Il peso e' uguale a %d.\n\r",
 					GET_WEIGHT(mob));
 			send_to_char(buf, ch);
 		}
@@ -2989,11 +2987,11 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "position")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "La sua posizione e`: %d\n\r", GET_POS(mob));
+			sprintf(buf, "La sua posizione e': %d\n\r", GET_POS(mob));
 			send_to_char(buf, ch);
 		}
 		else if(parm < 0 || parm > 9) {
-			send_to_char("Posizione non valida. Eccone l'elenco:\r"
+			send_to_char("Posizione non valida. Ecco l'elenco:\r"
 						 "0 Dead\r"
 						 "1 Mortally wounded\r"
 						 "2 Incapacitated\r"
@@ -3012,12 +3010,12 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "startroom")) {
 		if(sscanf(parmstr, "%d", &parm) != 1) {
-			sprintf(buf, "Il numero della stanza di partenza e`: %ld\n\r",
+			sprintf(buf, "Il numero della stanza di partenza e': %ld\n\r",
 					mob->lStartRoom);
 			send_to_char(buf, ch);
 		}
 		else if(parm < 0) {
-			send_to_char("Il numero della stanza deve essere > di 0.\r\n", ch);
+			send_to_char("Il numero della stanza deve essere maggiore di 0.\r\n", ch);
 		}
 		else {
 			mob->lStartRoom = parm;
@@ -3025,12 +3023,12 @@ ACTION_FUNC(do_set) {
 		}
 	}
 	else {
-		send_to_char("What the did you wanna set?\n\r",ch);
+		send_to_char("Che cosa vuoi assegnare?\n\r",ch);
 	}
 }
 
 ACTION_FUNC(do_shutdow) {
-	send_to_char("If you want to shut something down - say so!\n\r", ch);
+    send_to_char("Sintassi (senza abbreviazioni): <shutdown> o <shutdown> <reboot/crash>\n\r", ch);
 }
 
 ACTION_FUNC(do_shutdown) {
@@ -3085,7 +3083,7 @@ ACTION_FUNC(do_shutdown) {
 			assert(false);
 		}
 		else {
-			send_to_char("Go shut down someone your own size.\n\r", ch);
+			send_to_char("Butta giu' qualcuno della tua taglia!\n\r", ch);
 		}
 	}
 }
@@ -3349,7 +3347,7 @@ ACTION_FUNC(do_force) {
 	}
 	else if(str_cmp("all", name)) {
 		if(!(vict = get_char_vis(ch, name))) {
-			send_to_char("Non c'e` nessuno con quel nome...\n\r", ch);
+			send_to_char("Non c'e' nessuno con quel nome...\n\r", ch);
 		}
 		else {
 			if((GetMaxLevel(ch) <= GetMaxLevel(vict)) && (!IS_NPC(vict))) {
@@ -3526,7 +3524,7 @@ ACTION_FUNC(do_oload) {
 	if(obj_index[number].iVNum >= 150 && obj_index[number].iVNum < 200
 			&& !isname("Alar", GET_NAME(ch))
 			&& !isname("Salvo", GET_NAME(ch))) { /*GGPATCH*/
-		send_to_char("Mi dispiace, ma e` un oggetto riservato.\n\r", ch); // Gaia 2001
+		send_to_char("Mi dispiace, ma e' un oggetto riservato.\n\r", ch); // Gaia 2001
 		return;
 	}
 
@@ -6268,7 +6266,7 @@ ACTION_FUNC(do_personalize)
     
     if(!(plr = get_char_room_vis(ch, arg2)))
     {
-        send_to_char("Non c'e` nessuno con quel nome qui...\n\r", ch);
+        send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
         return;
     }
     

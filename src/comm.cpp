@@ -101,7 +101,7 @@ int tics = 0;        /* for extern checkpointing */
 int PORT=0;
 
 uint64_t aTimeCheck[ PULSE_MOBILE ];
-uint16_t NumTimeCheck = sizeof(aTimeCheck); /* dovrebbe essere il piu` grande dei PULSE */
+uint16_t NumTimeCheck = sizeof(aTimeCheck); /* dovrebbe essere il piu' grande dei PULSE */
 
 
 struct affected_type*  Check_hjp, *Check_old_af;
@@ -410,7 +410,7 @@ void game_loop(int s) {
 			if((--(point->wait) <= 0) && get_from_q(&point->input, comm)) {
 				if(point->character && point->connected == CON_PLYNG && point->character->specials.was_in_room != NOWHERE) {
 					point->character->specials.was_in_room = NOWHERE;
-					act("$n e` rientrat$b.", TRUE, point->character, 0, 0, TO_ROOM);
+					act("$n e' rientrat$b.", TRUE, point->character, 0, 0, TO_ROOM);
 				}
 				point->wait = 1;
 				if(point->character) {
@@ -696,8 +696,8 @@ void write_to_output(const char* txt, struct descriptor_data* t) {
 	else {
 		/* otherwise, try to switch to a large buffer */
 		if(t->large_outbuf || ((size + strlen(t->output)) > LARGE_BUFSIZE)) {
-			/* we`re already using large buffer, or even the large buffer
-			 * in`t big enough -- switch to overflow state */
+			/* we're already using large buffer, or even the large buffer
+			 * in't big enough -- switch to overflow state */
 			t->bufptr = -1;
 			buf_overflows++;
 			mudlog(LOG_ERROR, "over flow stat in write_to_output, comm.c");
@@ -907,8 +907,8 @@ int new_descriptor(int s) {
 
 
 	if((desc + 1) >= MAX_CONNECTS) {
-		sprintf(buf,"Mi dispiace... Il gioco e` pieno (# giocatori %d). "
-				"Riprova piu` tardi.\n\r", desc);
+		sprintf(buf,"Mi dispiace... Il gioco e' pieno (# giocatori %d). "
+				"Riprova piu' tardi.\n\r", desc);
 		write_to_descriptor(desc,buf);
 		close(desc);
 
@@ -931,7 +931,7 @@ int new_descriptor(int s) {
 
 	if(!newd) {
 		sprintf(buf,"Mi dispiace... Non posso lasciarti entrare adesso. "
-				"Riprova piu` tardi.\n\r");
+				"Riprova piu' tardi.\n\r");
 		write_to_descriptor(desc,buf);
 		close(desc);
 		for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
@@ -1304,7 +1304,7 @@ void close_socket(struct descriptor_data* d) {
 	}
 
 	if(d->snoop.snoop_by) {
-		send_to_char("La tua vittima non e` piu` fra noi.\n\r",
+		send_to_char("La tua vittima non e' piu' fra noi.\n\r",
 					 d->snoop.snoop_by);
 		d->snoop.snoop_by->desc->snoop.snooping = 0;
 	}
@@ -1316,7 +1316,7 @@ void close_socket(struct descriptor_data* d) {
         }
 		if(d->connected == CON_PLYNG) {
 			do_save(d->character, "", 0);
-			act("$n ha perso il senso della realta`.", TRUE, d->character, 0, 0,
+			act("$n ha perso il senso della realta'.", TRUE, d->character, 0, 0,
 				TO_ROOM);
 			mudlog(LOG_CONNECT, "Closing link to: %s.", GET_NAME(d->character));
 			if(IS_NPC(d->character)) {
@@ -2306,7 +2306,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 		strcat(outbuf,tbuf);
 	} /* fine del for */
 	if(IsSupporting) {
-		/* se questo flag e` attivo ch->specials.fighting e` stato impostato
+		/* se questo flag e' attivo ch->specials.fighting e' stato impostato
 		 * in questa routine. Lo riannullo */
 		ch->specials.fighting=NULL;
 	}

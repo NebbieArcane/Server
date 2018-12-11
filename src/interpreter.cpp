@@ -544,7 +544,7 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 						break;
 
 					case POSITION_STUNNED:
-						send_to_char("Tutto quello che puoi fare ora, e` respirare "
+						send_to_char("Tutto quello che puoi fare ora, e' respirare "
 									 "e sperare che passi!\n\r", ch);
 						break;
 					case POSITION_SLEEPING:
@@ -606,7 +606,7 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 								   argument);
 						}
 
-						/* special() restituisce TRUE se il comando e` stato
+						/* special() restituisce TRUE se il comando e' stato
 						 * interpretato da una procedura speciale.
 						 */
 						if(no_specials || !special(ch, n->number, buf2)) {
@@ -620,7 +620,7 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 				}
 			}
 			else /* n->func == 0 */
-				send_to_char("Mi spiace, ma il comando non e` stato ancora "
+				send_to_char("Mi spiace, ma il comando non e' stato ancora "
 							 "implementato.\n\r",ch);
 		}
 		else { /* n == NULL || GetMaxLevel( ch ) < n->min_level */
@@ -1632,12 +1632,12 @@ int _check_ass_name(char* name) {
 void ShowStatInstruction(struct descriptor_data* d) {
 	char buf[ 100 ];
 
-	sprintf(buf, "Seleziona le priorita` per le caratteristiche di %s, elencandole\n\r",
+	sprintf(buf, "Seleziona le priorita' per le caratteristiche di %s, elencandole\n\r",
 			GET_NAME(d->character));
 	SEND_TO_Q(buf, d);
-	SEND_TO_Q("dalla piu` alta a quella piu` bassa, separate da spazi senza duplicarle.\n\r", d);
-	SEND_TO_Q("Per esempio: 'F I S A CO CA' dara` il punteggio piu` alto alla Forza,\n\r"
-			  "seguite, nell'ordine, da Intelligenza, Saggezza, Agilita`, COstituzione e, per\n\r"
+	SEND_TO_Q("dalla piu' alta a quella piu' bassa, separate da spazi senza duplicarle.\n\r", d);
+	SEND_TO_Q("Per esempio: 'F I S A CO CA' dara' il punteggio piu' alto alla Forza,\n\r"
+			  "seguite, nell'ordine, da Intelligenza, Saggezza, Agilita', COstituzione e, per\n\r"
 			  "ultimo, CArisma\n\r\n\r", d);
 	SEND_TO_Q("   Considera che le abilita' influenzano (anche) questo: \n\r",d);
 	SEND_TO_Q("F = capacita' di usare oggetti pesanti, bonus nel combattere\n\r",d);
@@ -2002,7 +2002,7 @@ NANNY_FUNC(con_account_toon) {
 			throw std::range_error("Invalid number");
 		}
 		else if(toonIndex==0) {
-			SEND_TO_Q("Quale personaggio vuoi usare? (Verra` automaticamente associato alla tua email) ",d);
+			SEND_TO_Q("Quale personaggio vuoi usare? (Verra' automaticamente associato alla tua email) ",d);
 			STATE(d)=CON_NME;
 			return false;
 		}
@@ -2017,7 +2017,7 @@ NANNY_FUNC(con_account_toon) {
 	}
 	catch(std::range_error &e) {
 		string message(d->currentInput);
-		message.append(" non e` un numero valido\r\n");
+		message.append(" non e' un numero valido\r\n");
 		toonList(d,message);
 		return false;
 	}
@@ -2494,19 +2494,19 @@ NANNY_FUNC(con_slct) {
 			plr_tick_count=0;
 		}
 
-		act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
+		act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
 		STATE(d) = CON_PLYNG;
 		if(!GetMaxLevel(d->character)) {
 			do_start(d->character);
 		}
 		if(has_mail(d->character->player.name))
-			send_to_char("$c0014C'e` posta per te dallo scriba.$c0007\n\r\n\r",
+			send_to_char("$c0014C'e' posta per te dallo scriba.$c0007\n\r\n\r",
 						 d->character);
 		do_look(d->character, "",15);
 		if(!d->character->specials.lastversion ||
 				strcmp(d->character->specials.lastversion,version()))
 			send_to_char(
-				"$c0115           C'E` UNA NUOVA VERSIONE DI MYST IN LINEA                   $c0007.\n\r",
+				"$c0115           C'E' UNA NUOVA VERSIONE DI MYST IN LINEA                   $c0007.\n\r",
 				d->character);
 		if(IsTest())
 			send_to_char(
@@ -2639,7 +2639,7 @@ NANNY_FUNC(con_nme) {
 				return true;
 			}
 			else if (d->AccountData.level < MAESTRO_DEL_CREATO)  {
-				SEND_TO_Q("Questo personaggio e` registrato, fai login con il tuo account per favore.\r\n",d);
+				SEND_TO_Q("Questo personaggio e' registrato, fai login con il tuo account per favore.\r\n",d);
 				SEND_TO_Q("Nome: ", d);
 				return false;
 			}
@@ -2667,8 +2667,8 @@ NANNY_FUNC(con_nme) {
 			CREATE(GET_NAME(d->character), char, strlen(tmp_name) + 1);
 			CAP(tmp_name);
 			strcpy(GET_NAME(d->character), tmp_name);
-			string buf("E` realmente '");
-			buf.append(tmp_name).append("' il nome che vuoi ? (si/no): ");
+			string buf("E' realmente '");
+			buf.append(tmp_name).append("' il nome che vuoi? (si/no): ");
 			d->AccountData.choosen.assign(tmp_name);
 			SEND_TO_Q(buf.c_str(), d);
 			STATE(d) = CON_NMECNF;
@@ -2684,9 +2684,9 @@ NANNY_FUNC(con_nme) {
 	/* Tutto ok, chiediamogli la password */
 	if(d->AccountData.level >= MAESTRO_DEL_CREATO and PORT != RELEASE_PORT) {
 		SEND_TO_Q(ParseAnsiColors(TRUE,
-				"Non oserei mai chiederti la password, oh superno, ma $c0009ricorda che il pg non e` tuo$c0007\r\n")
+				"Non oserei mai chiederti la password, oh superno, ma $c0009ricorda che il pg non e' tuo$c0007\r\n")
 				,d);
-		mudlog(LOG_ALWAYS,"%s e` entrato come %s",d->AccountData.email,d->AccountData.choosen);
+		mudlog(LOG_ALWAYS,"%s e' entrato come %s",d->AccountData.email,d->AccountData.choosen);
 		d->impersonating=true;
 		//Un immortale superiore puo' entrare con qualsiasi PG
 		STATE(d)=CON_PWDOK;
@@ -2720,7 +2720,7 @@ NANNY_FUNC(con_nmecnf) {
 		STATE(d) = CON_PWDGET;
 	}
 	else if(*arg == 'n' || *arg == 'N') {
-		SEND_TO_Q("Va bene. Allora, quale sarebbe il nome ? ", d);
+		SEND_TO_Q("Va bene. Allora, quale sarebbe il nome? ", d);
 		free(GET_NAME(d->character));
 		GET_NAME(d->character) = NULL;
 		STATE(d) = CON_NME;
@@ -2818,7 +2818,7 @@ NANNY_FUNC(con_pwdok) {
 			}
 		}
 	}
-	/* Se era gia` in gioco assumo ld non riconosciuto e disconnetto il
+	/* Se era gia' in gioco assumo ld non riconosciuto e disconnetto il
 	  * vecchio char*/
 	if(d->AlreadyInGame) {
 		mudlog(LOG_PLAYERS, "%s[HOST:%s] riconnesso su se stesso.", GET_NAME(d->character),d->host);
@@ -2847,7 +2847,7 @@ NANNY_FUNC(con_pwdok) {
 			d->character->persist = 0;
 			STATE(d) = CON_PLYNG;
 
-			act("$n si e` riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
+			act("$n si e' riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
 			mudlog(LOG_CONNECT, "%s[HOST:%s] has reconnected.",
 				   GET_NAME(d->character), d->host);
 
@@ -2961,7 +2961,7 @@ NANNY_FUNC(con_qrace) {
 			if(tmpi>=0 && tmpi <=i-1) {
 				/* set the chars race to this */
 				GET_RACE(d->character) = race_choice[tmpi];
-				string buf("Quale'e` il sesso di ");
+				string buf("Quale'e' il sesso di ");
 				buf.append(GET_NAME(d->character)).append("? (Maschio/Femmina) (b per tornare indietro): ");
 				SEND_TO_Q(buf.c_str(), d);
 				mudlog(LOG_CONNECT,"Razza scelta procedo con qsex");
@@ -3033,7 +3033,7 @@ NANNY_FUNC(con_qsex) {                /* query sex of new user        */
 		break;
 	default:
 		SEND_TO_Q("Qui su Nebbie Arcane amiamo le cose semplici.... accontentati di due sessi.\n\r", d);
-		SEND_TO_Q("Quel'e` il tuo sesso ? (maschio/femmina): (b per tornare indietro)", d);
+		SEND_TO_Q("Quel'e' il tuo sesso? (Maschio/Femmina): (b per tornare indietro)", d);
 		return false;
 	}
 	ShowStatInstruction(d);
@@ -3045,8 +3045,8 @@ NANNY_FUNC(con_stat_list) {
 	/* skip whitespaces */
 	oldarg(false);
 	if(strlen(arg)==1 && (*arg == 'B' || *arg == 'b')) {  /* Backward */
-		string buf("Quale'e` il sesso di ");
-		buf.assign(GET_NAME(d->character)).assign("maschio/Femmina) (b per tornare indietro): ");
+		string buf("Quale'e' il sesso di ");
+		buf.append(GET_NAME(d->character)).append("? (Maschio/Femmina) (b per tornare indietro): ");
 		SEND_TO_Q(buf.c_str(),d);
 		STATE(d) = CON_QSEX;
 		return false;
@@ -3096,7 +3096,7 @@ NANNY_FUNC(con_stat_list) {
 	}
 
 	if(index < MAX_STAT) {
-		SEND_TO_Q("Non hai inserito tutte le statistiche richieste o qualche scelta e` sbagliata.\n\r\n\r", d);
+		SEND_TO_Q("Non hai inserito tutte le statistiche richieste o qualche scelta e' sbagliata.\n\r\n\r", d);
 		ShowStatInstruction(d);
 		STATE(d) = CON_STAT_LIST;
 		return false;
@@ -3219,7 +3219,7 @@ NANNY_FUNC(con_city_choice) {
 			}
 			SetStatus("int 8",NULL,NULL);
 
-			act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
+			act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
 			STATE(d) = CON_PLYNG;
 			SetStatus("int 9",NULL,NULL);
 			if(!GetMaxLevel(d->character)) {
@@ -3244,7 +3244,7 @@ NANNY_FUNC(con_city_choice) {
 			if(plr_tick_count == PLR_TICK_WRAP) {
 				plr_tick_count=0;
 			}
-			act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
+			act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
 			STATE(d) = CON_PLYNG;
 			if(!GetMaxLevel(d->character)) {
 				do_start(d->character);
@@ -3269,7 +3269,7 @@ NANNY_FUNC(con_city_choice) {
 					plr_tick_count=0;
 				}
 
-				act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0,
+				act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0,
 					TO_ROOM);
 				STATE(d) = CON_PLYNG;
 				if(!GetMaxLevel(d->character)) {
@@ -3279,7 +3279,7 @@ NANNY_FUNC(con_city_choice) {
 				d->prompt_mode = 1;
 			}
 			else {
-				SEND_TO_Q("Questa scelta non e` valida.\n\r", d);
+				SEND_TO_Q("Questa scelta non e' valida.\n\r", d);
 				STATE(d) = CON_SLCT;
 			}
 			break;
@@ -3302,7 +3302,7 @@ NANNY_FUNC(con_city_choice) {
 					plr_tick_count=0;
 				}
 
-				act("$n e` entrat$b nel gioco.", TRUE, d->character, 0, 0,
+				act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0,
 					TO_ROOM);
 				STATE(d) = CON_PLYNG;
 				if(!GetMaxLevel(d->character)) {

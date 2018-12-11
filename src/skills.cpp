@@ -64,7 +64,7 @@ ACTION_FUNC(do_disarm) {
 		return;
 	}
 
-	if(check_peaceful(ch,"You feel too peaceful to contemplate violence.\n\r")) {
+	if(check_peaceful(ch,"Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -83,24 +83,24 @@ ACTION_FUNC(do_disarm) {
 		else {
 
 			if(!ch->skills) {
-				send_to_char("You do not have skills!\n\r",ch);
+				send_to_char("Non possiedi tale abilita'!\n\r",ch);
 				return;
 			}
 			if(!ch->skills[SKILL_REMOVE_TRAP].learned) {
-				send_to_char("Disarm who?\n\r", ch);
+				send_to_char("Disarmare chi?\n\r", ch);
 				return;
 			}
 			else {
 
 				if(MOUNTED(ch)) {
-					send_to_char("Yeah... right... while mounted\n\r", ch);
+					send_to_char("Certo... sicuramente... mentre sei a cavallo... -_-\n\r", ch);
 					return;
 				}
 
 				if(!(trap = get_obj_in_list_vis(ch, name,
 												real_roomp(ch->in_room)->contents))) {
 					if(!(trap = get_obj_in_list_vis(ch, name, ch->carrying))) {
-						send_to_char("Disarm what?\n\r", ch);
+						send_to_char("Disarmare cosa?\n\r", ch);
 						return;
 					}
 				}
@@ -115,13 +115,13 @@ ACTION_FUNC(do_disarm) {
 
 
 	if(victim == ch) {
-		send_to_char("Molto spiritoso....\n\r", ch);
+		send_to_char("Molto spiritoso...\n\r", ch);
 		return;
 	}
 	/* Ora si puo' iniziare un combattimento col disarm */
 #ifndef ALAR
 	if(victim != ch->specials.fighting) {
-		send_to_char("but you aren't fighting them!\n\r", ch);
+		send_to_char("Ma non ti stai battendo con loro!\n\r", ch);
 		return;
 	}
 #endif
@@ -135,13 +135,13 @@ ACTION_FUNC(do_disarm) {
 
 	if(!HasClass(ch, CLASS_WARRIOR | CLASS_MONK | CLASS_BARBARIAN |
 				 CLASS_RANGER | CLASS_PALADIN)) {
-		send_to_char("You're no warrior!\n\r", ch);
+		send_to_char("Non sei la persona adatta!\n\r", ch);
 		return;
 	}
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
 		if(!IsHumanoid(ch)) {
-			send_to_char("Non hai la forma adatta!\n\r", ch);
+			send_to_char("Non hai la forma giusta!\n\r", ch);
 			return;
 		}
 	}
@@ -173,11 +173,11 @@ ACTION_FUNC(do_disarm) {
 		/*
 		 *   failure.
 		 */
-		act("$c0009You try to disarm $N, but fail miserably.",
+		act("$c0009Provi a disarmare $N, ma fallisci miseramente.",
 			TRUE, ch, 0, victim, TO_CHAR);
-		act("$c0009$n tries to disarm you, but fail miserably.",
+		act("$c0009$n prova a disarmarti, ma fallisce miseramente.",
 			TRUE, ch, 0, victim, TO_VICT);
-		act("$n does a nifty fighting move, but then falls on $s butt.",
+		act("$n tenta un elegante mossa d'arti marziali, ma finisce rovinosamente a terra.",
 			TRUE, ch, 0, 0, TO_ROOM);
 		GET_POS(ch) = POSITION_SITTING;
 		if((CanFightEachOther(ch,victim)) && (GET_POS(victim) > POSITION_SLEEPING) &&
@@ -197,11 +197,11 @@ ACTION_FUNC(do_disarm) {
 		 */
 		if(victim->equipment[WIELD]) {
 			w = unequip_char(victim, WIELD);
-			act("$n makes an impressive fighting move.",
+			act("$n esegue un impressionante mossa d'arti marziali, disarmando il nemico.",
 				TRUE, ch, 0, 0, TO_ROOM);
-			act("$c0010You send $p flying from $N's grasp.", TRUE, ch, w, victim,
+			act("$c0010Abilmente fai volare $p dalla mano di $N.", TRUE, ch, w, victim,
 				TO_CHAR);
-			act("$p flies from your grasp.", TRUE, ch, w, victim, TO_VICT);
+			act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
 			/*
 			 * send the object to a nearby room, instead
 			 */
@@ -209,9 +209,9 @@ ACTION_FUNC(do_disarm) {
 			ActionAlignMod(ch,victim,cmd);
 		}
 		else {
-			act("You try to disarm $N, but $E doesn't have a weapon.",
+			act("Nonostante $N non abbia un arma, viene rallentato dalla tua mossa.",
 				TRUE, ch, 0, victim, TO_CHAR);
-			act("$n makes an impressive fighting move, but does little more.",
+			act("Con una mossa d'arti marziali $n disorienta l'avversario.",
 				TRUE, ch, 0, 0, TO_ROOM);
 		}
 		if((CanFightEachOther(ch,victim)) && (GET_POS(victim) > POSITION_SLEEPING) &&
@@ -233,7 +233,7 @@ ACTION_FUNC(do_finger) {
 		return;
 	}
 
-	if(check_peaceful(ch,"You feel too peaceful to contemplate violence.\n\r")) {
+	if(check_peaceful(ch,"Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -251,28 +251,28 @@ ACTION_FUNC(do_finger) {
 		}
 		else {
 
-			send_to_char("Finger who?\n\r", ch);
+			send_to_char("Accecare chi?\n\r", ch);
 			return;
 		}
 	}
 
 	if(MOUNTED(ch)) {
-		send_to_char("Yeah... right... while mounted\n\r", ch);
+		send_to_char("Certo... sicuramente... mentre sei a cavallo... -_-\n\r", ch);
 		return;
 	}
 
 	if(victim == ch) {
-		send_to_char("Aren't we funny today...\n\r", ch);
+		send_to_char("Molto spiritoso...\n\r", ch);
 		return;
 	}
 	/* Non si puo' iniziare un combattimento con finger ne fingerare
 	 * qualcuno da diverso da quello contro cui si sta combattendo */
 	if(victim != ch->specials.fighting) {
-		send_to_char("but you aren't fighting them!\n\r", ch);
+		send_to_char("Ma non ti stai battendo con loro!\n\r", ch);
 		return;
 	}
 	if(ch->attackers > 3) {
-		send_to_char("There is no room to finger!\n\r", ch);
+		send_to_char("Non riesci ad avvicinarti abbastanza per accecare!\n\r", ch);
 		return;
 	}
 
@@ -362,7 +362,7 @@ ACTION_FUNC(do_track) {
 	struct char_data* scan;
 
 #if NOTRACK
-	send_to_char("Sorry, tracking is disabled. Try again after reboot.\n\r",ch);
+	send_to_char("Mi dispiace, il 'tracking' e' disabilitato. Prova dopo il reboot.\n\r",ch);
 	return;
 #endif
 
@@ -376,7 +376,7 @@ ACTION_FUNC(do_track) {
 
 
 	if(!found) {
-		send_to_char("You are unable to find traces of one.\n\r", ch);
+		send_to_char("Non sei in grado di trovare le traccie di nessuno.\n\r", ch);
 		return;
 	}
 
@@ -441,21 +441,21 @@ ACTION_FUNC(do_track) {
 	WAIT_STATE(ch, PULSE_VIOLENCE*1);
 
 	if(code == -1) {
-		send_to_char("You are unable to find traces of one.\n\r", ch);
+		send_to_char("Non sei in grado di trovare le traccie di nessuno.\n\r", ch);
 		return;
 	}
 	else {
 		if(IS_LIGHT(ch->in_room)) {
 			SET_BIT(ch->specials.act, (!IS_POLY(ch)) ? PLR_HUNTING : ACT_HUNTING); // SALVO fix track del poly
 			if(code <6) {
-				sprintf(buf, "Vedi una traccia della tua preda che va %s\n\r",
+				sprintf(buf, "Vedi una traccia della tua preda che va %s.\n\r",
 						dirsTo[code]);
 			}
 			send_to_char(buf,ch);
 		}
 		else {
 			ch->specials.hunting = 0;
-			send_to_char("E` troppo scuro qui per seguire delle traccie...\n\r",ch);
+			send_to_char("E' troppo scuro qui per seguire delle traccie...\n\r",ch);
 			return;
 		}
 	}
@@ -561,7 +561,7 @@ void donothing(void* pDummy) {
 	return;
 }
 
-int aRoom[ WORLD_SIZE ]; // E` definita esterna in modo da non sovraccaricare
+int aRoom[ WORLD_SIZE ]; // E' definita esterna in modo da non sovraccaricare
 // lo stack. Inoltre viene usata anche in utility.c
 
 int find_path(int in_room, find_func predicate, const void* c_data,
@@ -989,7 +989,7 @@ ACTION_FUNC(do_mantra) {
 	struct affected_type af;
 	int sulcorpo=0,i=0;
 	struct obj_data* ob;
-	/* Attenzione, questo test e` ripetuto anche in spell_parser */
+	/* Attenzione, questo test e' ripetuto anche in spell_parser */
 	for(i=0; i<=MAX_WEAR_POS; i++) {
 		ob=(struct obj_data*)WEARING(ch,i);
 
@@ -1001,15 +1001,15 @@ ACTION_FUNC(do_mantra) {
 	}
 
 	if(!sulcorpo) {
-		send_to_char("Devi indossare vesti piu` adatte alla meditazione",ch);
+		send_to_char("Devi indossare vesti piu' adatte alla meditazione",ch);
 		return;
 	}
 	if(!affected_by_spell(ch,SKILL_MANTRA)) {
 		if(!HasClass(ch,CLASS_MONK)) {
 
-			act("La tua mente e il tuo corpo vibrano all'unisono.... piu` o meno.",
+			act("La tua mente e il tuo corpo vibrano all'unisono.... piu' o meno.",
 				FALSE,ch,0,0,TO_CHAR);
-			act("$n chiude gli occhi e biascica un mantra accovacciat$b in terra",
+			act("$n chiude gli occhi e biascica un mantra accovacciat$b in terra.",
 				TRUE,ch,0,0,TO_ROOM);
 		}
 		else {
@@ -1033,7 +1033,7 @@ ACTION_FUNC(do_mantra) {
 		af.location = APPLY_AC;
 		af.bitvector = 0;
 		affect_to_char(ch, &af);
-		/* L`effetto della spell inizia solo dopo 2 tick */
+		/* L'effetto della spell inizia solo dopo 2 tick */
 		GET_POS(ch)=POSITION_RESTING;
 	}
 
@@ -1116,7 +1116,7 @@ ACTION_FUNC(do_spy) {
 	}
 
 	if(affected_by_spell(ch, SKILL_SPY)) {
-		send_to_char("Ti stai gia` comportando da cacciatore.\n\r", ch);
+		send_to_char("Ti stai gia' comportando da cacciatore.\n\r", ch);
 		return;
 	}
 
@@ -1261,7 +1261,7 @@ ACTION_FUNC(do_first_aid) {
 		send_to_char("Cerchi di medicare alla meglio le tue ferite.\n\r", ch);
 	}
 	else {
-		send_to_char("Devi aspettare ancora un po` prima di poter medicare "
+		send_to_char("Devi aspettare ancora un po' prima di poter medicare "
 					 "ancora le tue ferite.\n\r", ch);
 		return;
 	}
@@ -4172,7 +4172,7 @@ ACTION_FUNC(do_bellow) {
 		}
 
 	if(check_peaceful(ch,
-					  "You feel too peaceful to contemplate violence.\n\r")) {
+					  "Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -5148,7 +5148,7 @@ ACTION_FUNC(do_blast) {
 		}
 
 	if(affected_by_spell(ch,SPELL_FEEBLEMIND)) {
-		send_to_char("Eh ? Cos'e` ?\n\r",ch);
+		send_to_char("Eh? Cos'e'?\n\r",ch);
 		return;
 	}
 
@@ -5158,7 +5158,7 @@ ACTION_FUNC(do_blast) {
 	else {
 		victim = get_char_room_vis(ch, name);
 		if(!victim) {
-			send_to_char("Chi e` che vuoi far esplodere esattamente?\n\r",ch);
+			send_to_char("Chi e' che vuoi far esplodere esattamente?\n\r",ch);
 			return;
 		}
 	}
@@ -5168,7 +5168,7 @@ ACTION_FUNC(do_blast) {
 		return;
 	}
 
-	if(check_peaceful(ch, "C'e` troppa pace qui per essere violenti.\n\r")) {
+	if(check_peaceful(ch, "C'e' troppa pace qui per essere violenti.\n\r")) {
 		return;
 	}
 
@@ -5373,7 +5373,7 @@ ACTION_FUNC(do_blast) {
 			af.location = APPLY_NONE;
 			af.bitvector = AFF_PARALYSIS;
 			affect_join(victim, &af, FALSE, FALSE);
-			send_to_char("Il tuo cervello e` stato tramutato in gelatina!\n\r",
+			send_to_char("Il tuo cervello e' stato tramutato in gelatina!\n\r",
 						 victim);
 			act("Hai tramutato il cervello di $N in gelatina!", FALSE, ch, 0,
 				victim, TO_CHAR);
@@ -5402,7 +5402,7 @@ ACTION_FUNC(do_hypnosis) {
 
 
 	if(affected_by_spell(ch, SPELL_FEEBLEMIND)) {
-		send_to_char("Ehmm, cos'e` ?\n\r", ch);
+		send_to_char("Ehmm, cos'e'?\n\r", ch);
 		return;
 	}
 
@@ -5411,7 +5411,7 @@ ACTION_FUNC(do_hypnosis) {
 		return;
 	}
 
-	if(check_peaceful(ch, "C'e` troppa pace qui per essere violenti.\n\r")) {
+	if(check_peaceful(ch, "C'e' troppa pace qui per essere violenti.\n\r")) {
 		return;
 	}
 
@@ -5420,7 +5420,7 @@ ACTION_FUNC(do_hypnosis) {
 	victim = get_char_room_vis(ch, target_name);
 
 	if(!victim) {
-		send_to_char("Non c'e` nessuno con quel nome.\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome.\n\r", ch);
 		return;
 	}
 
@@ -5441,19 +5441,19 @@ ACTION_FUNC(do_hypnosis) {
 	}
 
 	if(circle_follow(victim, ch)) {
-		send_to_char("Non puoi farti seguire da chi ti sta gia` seguendo.\n\r",
+		send_to_char("Non puoi farti seguire da chi ti sta gia' seguendo.\n\r",
 					 ch);
 		return;
 	}
 
 	if(victim->tmpabilities.intel < 8) {
-		send_to_char("Non sprecare il tuo tempo con questa creatura cosi` "
+		send_to_char("Non sprecare il tuo tempo con questa creatura cosi' "
 					 "stupida.\n",ch);
 		return;
 	}
 
 	if(ch->skills[SKILL_HYPNOSIS].learned < number(1,101)) {
-		send_to_char("Il tuo tentativo di ipnosi e` ridicolo.\n\r",ch);
+		send_to_char("Il tuo tentativo di ipnosi e' ridicolo.\n\r",ch);
 		act("$n guarda negli occhi di $N, $n sembra addormentarsi!", FALSE, ch, 0,
 			victim,TO_ROOM);
 		GET_MANA(ch) -= 12;
@@ -6411,27 +6411,27 @@ ACTION_FUNC(do_sending) {
 	}
 
 	if(check_soundproof(target)) {
-		send_to_char("Non riesce a sentire nemmeno la sua voce, li` dentro.\n\r",
+		send_to_char("Non riesce a sentire nemmeno la sua voce, li' dentro.\n\r",
 					 ch);
 		return;
 	}
 
 
 	if(IS_SET(target->specials.act,PLR_NOTELL)) {
-		send_to_char("They are ignoring messages at this time.\n\r",ch);
+		send_to_char("Sta ignorando qualsiasi tipo di messaggio.\n\r",ch);
 		return;
 	}
 
 	if(IS_LINKDEAD(target)) {
-		send_to_char("Non puo` ricevere il tuo messaggio. "
-					 "Ha perso il senso della realta`.\n\r", ch);
+		send_to_char("Non puo' ricevere il tuo messaggio. "
+					 "Ha perso il senso della realta'.\n\r", ch);
 		return;
 	}
 
 	sprintf(buf, "$c0013[$c0015$n$c0013] ti manda il messaggio '%s'", message);
 	act(buf, TRUE, ch, 0, target, TO_VICT);
 	sprintf(buf, "$c0013Mandi a $N%s il messaggio '%s'",
-			(IS_AFFECTED2(target,AFF2_AFK)?" (che e` AFK)":""), message);
+			(IS_AFFECTED2(target,AFF2_AFK)?" (che e' AFK)":""), message);
 	act(buf, TRUE, ch, 0, target, TO_CHAR);
 }
 
@@ -8038,7 +8038,7 @@ ACTION_FUNC(do_forge) {
 				}
 
 
-				sprintf(buf,"La tua esperienza e` aumentata di %d punti.", exp);
+				sprintf(buf,"La tua esperienza e' aumentata di %d punti.", exp);
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
 				gain_exp(ch, exp);
 			}

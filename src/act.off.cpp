@@ -73,18 +73,18 @@ ACTION_FUNC(do_ripudia) {
 			send_to_char("Non puoi farlo in qeusta forma\n\r",ch);
 			return;
 		}
-		act("Guardi negli occhi $N e rompi il tuo giuramento di fedelta`!",
+		act("Guardi negli occhi $N e rompi il tuo giuramento di fedelta'!",
 			TRUE,ch,NULL,victim,TO_CHAR);
-		act("$n rompe il suo giuramento di fedelta`!",
+		act("$n rompe il suo giuramento di fedelta'!",
 			TRUE,ch,NULL,victim,TO_VICT);
-		act("$n rompe il suo giuramento di fedelta` a $N!",
+		act("$n rompe il suo giuramento di fedelta' a $N!",
 			TRUE,ch,NULL,victim,TO_NOTVICT);
 		free(GET_PRINCE(ch));
 		GET_PRINCE(ch)=(char*)NULL;
 	}
 	else if(IS_PRINCEOF(GET_NAME(ch),victim)) {
 		if IS_POLY(victim) {
-			send_to_char("Non puoi farlo in qeusta forma\n\r",victim);
+			send_to_char("Non puoi farlo in qeusta forma.\n\r",victim);
 			return;
 		}
 		act("Guardi negli occhi $N e l$B scacci dal tuo casato!",
@@ -177,7 +177,7 @@ ACTION_FUNC(do_vomita) {
 	act("$n si ficca un dito in gola....!",
 		TRUE,ch,NULL,NULL,TO_ROOM);
 	if(number(0,1)) {
-		act("Il risultato..... beh, e` quello che puoi immaginare!",
+		act("Il risultato..... beh, e' quello che puoi immaginare!",
 			TRUE,ch,NULL,NULL,TO_CHAR);
 		act("$n si vomita addosso!",
 			TRUE,ch,NULL,NULL,TO_ROOM);
@@ -201,7 +201,7 @@ ACTION_FUNC(do_hit) {
 	struct char_data* victim;
 
 	if(check_peaceful(ch,
-					  "You feel too peaceful to contemplate violence.\n\r")) {
+					  "Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -345,7 +345,7 @@ ACTION_FUNC(do_backstab) {
 		return;
 	}
 
-	if(check_peaceful(ch, "C'e` troppa pace qui per essere violenti.\n\r")) {
+	if(check_peaceful(ch, "C'e' troppa pace qui per essere violenti.\n\r")) {
 		return;
 	}
 
@@ -367,24 +367,24 @@ ACTION_FUNC(do_backstab) {
 	}
 
 	if(!ch->equipment[WIELD]) {
-		send_to_char("E` necessario impugnare un'arma.\n\r",ch);
+		send_to_char("E' necessario impugnare un'arma.\n\r",ch);
 		return;
 	}
 
 	if(ch->attackers) {
-		send_to_char("Non c'e` modo di raggiungere la schiena mentre stai "
+		send_to_char("Non c'e' modo di raggiungere la schiena mentre stai "
 					 "combattendo!\n\r", ch);
 		return;
 	}
 
 	if(victim->attackers >= 3) {
-		send_to_char("Non c'e` abbastanza spazio!\n\r", ch);
+		send_to_char("Non c'e' abbastanza spazio!\n\r", ch);
 		return;
 	}
 
 	if(IS_NPC(victim) && IS_SET(victim->specials.act, ACT_HUGE)) {
 		if(!IsGiant(ch)) {
-			act("$N e` troppo gross$B per pugnalarl$B alla schiena", FALSE, ch, 0,
+			act("$N e' troppo gross$B per pugnalarl$B alla schiena.", FALSE, ch, 0,
 				victim, TO_CHAR);
 			return;
 		}
@@ -399,7 +399,7 @@ ACTION_FUNC(do_backstab) {
 	}
 
 	if(ch->specials.fighting) {
-		send_to_char("Sei troppo impegnato, ora.\n\r", ch);
+        act("Sei troppo impegnat$b, ora.", FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
 
@@ -806,7 +806,7 @@ ACTION_FUNC(do_flee) {
 			attempt = number(0, 5);  /* Select a random direction */
 			if(CAN_GO(ch, attempt) &&
 					!IS_SET(real_roomp(EXIT(ch, attempt)->to_room)->room_flags, DEATH)) {
-				snprintf(buf,249,"$n cerca di fuggire %s, apparentemente senza motivo",
+				snprintf(buf,249,"$n cerca di fuggire %s, apparentemente senza motivo.",
 						 dirsTo[attempt]);
 				act(buf, TRUE, ch, 0, 0, TO_ROOM);
 
@@ -819,7 +819,7 @@ ACTION_FUNC(do_flee) {
 					}
 					else {
 						if(!die)
-							act("$n cerca di correre via ma e` incapace di muoversi!", TRUE, ch, 0, 0,
+							act("$n cerca di correre via ma e' incapace di muoversi!", TRUE, ch, 0, 0,
 								TO_ROOM);
 						return;
 					}
@@ -834,7 +834,7 @@ ACTION_FUNC(do_flee) {
 					}
 					else {
 						if(!die)
-							act("$n cerca di fuggire ma e` incapace di muoversi!", TRUE, ch, 0, 0,
+							act("$n cerca di fuggire ma e' incapace di muoversi!", TRUE, ch, 0, 0,
 								TO_ROOM);
 						return;
 					}
@@ -930,8 +930,8 @@ ACTION_FUNC(do_flee) {
 								CLASS_PALADIN | CLASS_RANGER))
 						if(loose>0 && cmd!=999) {
 							gain_exp(ch, -(loose/HowManyClasses(ch)));
-							snprintf(buf,249,"La tua vigliaccheria ti e` costata"
-									 " %d experience points.\n\r", loose);
+							snprintf(buf,249,"La tua vigliaccheria ti e' costata"
+									 " %d punti esperienza.\n\r", loose);
 							send_to_char(buf,ch);
 						}
 
@@ -977,7 +977,7 @@ ACTION_FUNC(do_bash) {
 		return;
 	}
 
-	if(check_peaceful(ch,"C'e` troppa pace qui per essere violenti.\n\r")) {
+	if(check_peaceful(ch,"C'e' troppa pace qui per essere violenti.\n\r")) {
 		return;
 	}
 
@@ -985,7 +985,7 @@ ACTION_FUNC(do_bash) {
 
 		if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
 					 CLASS_BARBARIAN)) {
-			send_to_char("Non sei un guerriero!\n\r", ch);
+			send_to_char("Solo i combattenti possono farlo!\n\r", ch);
 			return;
 		}
 
@@ -996,7 +996,7 @@ ACTION_FUNC(do_bash) {
 	}
 
 	if(pRoom->sector_type == SECT_UNDERWATER) {
-		send_to_char("Sotto'acqua ? Meglio di no.\n", ch);
+		send_to_char("Sotto'acqua? Meglio di no.\n", ch);
 		return;
 	}
 
@@ -1021,7 +1021,7 @@ ACTION_FUNC(do_bash) {
 
 	if(IS_NPC(victim) && IS_SET(victim->specials.act, ACT_HUGE)) {
 		if(!IsGiant(ch)) {
-			act("$N e` TROPPO grosso per essere colpito!", FALSE, ch, 0, victim,
+			act("$N e' TROPPO gross$B per essere colpit$B!", FALSE, ch, 0, victim,
 				TO_CHAR);
 			return;
 		}
@@ -1038,7 +1038,7 @@ ACTION_FUNC(do_bash) {
 	}
 
 	if(ch->attackers > 3) {
-		send_to_char("Non c'e` abbastanza spazio!\n\r",ch);
+		send_to_char("Non c'e' abbastanza spazio!\n\r",ch);
 		return;
 	}
 
@@ -1238,17 +1238,24 @@ ACTION_FUNC(do_rescue) {
 ACTION_FUNC(do_support) {
 	struct char_data* victim;
 	char victim_name[240];
-
+    char buf[255];
 
 	only_argument(arg, victim_name);
 
+    if(!*victim_name && ch->specials.supporting && !ch->specials.fighting)
+    {
+        sprintf(buf, "Al momento stai supportando %s, non te lo ricordavi?\n\r", ch->specials.supporting);
+        send_to_char(buf, ch);
+        return;
+    }
+    
 	if(!(victim = get_char_room_vis(ch, victim_name))) {
 		send_to_char("Chi vorresti supportare, esattamente?\n\r", ch);
 		return;
 	}
 
 	if(victim == ch) {
-		send_to_char("Oh beh, chi fa da se` fa per tre!\n\r", ch);
+		send_to_char("Oh beh, chi fa da se' fa per tre!\n\r", ch);
 		if(ch->specials.supporting) { //ACIDUS 2003 - il support deve andare via come con il bodyguard
 			free(ch->specials.supporting);
 			ch->specials.supporting=NULL;
@@ -1269,12 +1276,15 @@ ACTION_FUNC(do_support) {
 		free(ch->specials.supporting);
 	}
 	ActionAlignMod(ch,victim,cmd);
-	ch->specials.supporting=strdup(victim_name);
+	ch->specials.supporting=strdup(victim->player.name);
+    sprintf(buf, "Ok, ora supporti %s.\n\r", ch->specials.supporting);
+    send_to_char(buf, ch);
+    
 }
+       
 ACTION_FUNC(do_bodyguard) {
 	struct char_data* victim,*lg;
 	char victim_name[240];
-
 
 	only_argument(arg, victim_name);
 
@@ -1410,7 +1420,7 @@ ACTION_FUNC(do_kick) {
 	}
 
 	if(check_peaceful(ch,
-					  "You feel too peaceful to contemplate violence.\n\r")) {
+					  "Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -1524,7 +1534,7 @@ ACTION_FUNC(do_parry) {
 	struct char_data* victim;
 
 	if(check_peaceful(ch,
-					  "You feel too peaceful to contemplate violence.\n\r")) {
+					  "Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -1610,7 +1620,7 @@ ACTION_FUNC(do_shoot) {
 	struct obj_data* weapon;
 	int i,dir,room_num=0,room_count, MAX_DISTANCE_SHOOT;
 
-	if(check_peaceful(ch,"You feel too peaceful to contemplate violence.\n\r")) {
+	if(check_peaceful(ch,"Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -1750,7 +1760,7 @@ ACTION_FUNC(do_springleap) {
 		return;
 	}
 
-	if(check_peaceful(ch, "C'e` troppa pace qui per essere violenti.\n\r")) {
+	if(check_peaceful(ch, "C'e' troppa pace qui per essere violenti.\n\r")) {
 		return;
 	}
 
@@ -1783,7 +1793,7 @@ ACTION_FUNC(do_springleap) {
 	}
 
 	if(ch->attackers > 3) {
-		send_to_char("Non c'e` abbastanza spazio!\n\r",ch);
+		send_to_char("Non c'e' abbastanza spazio!\n\r",ch);
 		return;
 	}
 
@@ -1846,7 +1856,7 @@ ACTION_FUNC(do_quivering_palm) {
 		return;
 	}
 
-	if(check_peaceful(ch, "C'e` troppa pace qui per essere violenti.\n\r")) {
+	if(check_peaceful(ch, "C'e' troppa pace qui per essere violenti.\n\r")) {
 		return;
 	}
 
@@ -2075,7 +2085,7 @@ ACTION_FUNC(do_berserk) {
 	}
 
 	if(check_peaceful(ch,
-					  "You feel too peaceful to contemplate violence.\n\r")) {
+					  "Non in questo luogo di pace.\n\r")) {
 		return;
 	}
 
@@ -2403,7 +2413,7 @@ ACTION_FUNC(do_weapon_load) {
 		mudlog(LOG_CHECK, "(%s) can't load (%s) because it requires (%d) strength "
 			   "to wield",
 			   GET_NAME(ch), fw->name, fw->obj_flags.value[ 0 ]);
-		send_to_char("Non sei abbastanza forte per usare un arma cosi` "
+		send_to_char("Non sei abbastanza forte per usare un arma cosi' "
 					 "potente.\n\r", ch);
 		return;
 	}
@@ -2462,7 +2472,7 @@ ACTION_FUNC(do_fire) {
 	only_argument(arg, tmp);
 
 	if(!*tmp) {
-		send_to_char("Il giusto formato per fire (o shoot) e`: "
+		send_to_char("Il giusto formato per fire (o shoot) e': "
 					 "fire [<dir> at] <target>\n\r",ch);
 		return;
 	}
@@ -2473,7 +2483,7 @@ ACTION_FUNC(do_fire) {
 	}
 
 	if(dr == -1 && !targ) {
-		send_to_char("Quella non e` ne` una direzione, ne` la descrizione di una "
+		send_to_char("Quella non e' ne' una direzione, ne' la descrizione di una "
 					 "creatura.\n\r", ch);
 		return;
 	}
@@ -2487,7 +2497,7 @@ ACTION_FUNC(do_fire) {
 	}
 	if(check_peaceful(targ,
 					  "Qualcuno ha cercato di disturbare la tua pace.")) {
-		send_to_char("Mi dispiace ma c'e` troppa pace li` per lanciarci "
+		send_to_char("Mi dispiace ma c'e' troppa pace li' per lanciarci "
 					 "qualcosa.", ch);
 		return;
 	}
@@ -2496,7 +2506,7 @@ ACTION_FUNC(do_fire) {
 		ms = unequip_char(ch, LOADED_WEAPON);
 	}
 	else {
-		act("$p non e` caricata!", TRUE, ch, fw, 0, TO_CHAR);
+		act("$p non e' caricata!", TRUE, ch, fw, 0, TO_CHAR);
 		return;
 	}
 
@@ -2515,7 +2525,7 @@ ACTION_FUNC(do_throw) {
 
 	half_chop(arg, arg1, arg2,sizeof arg1 -1,sizeof arg2 -1);
 	if(!*arg1 || !*arg2) {
-		send_to_char("Il giusto formato per throw e`: "
+		send_to_char("Il giusto formato per throw e': "
 					 "throw <oggetto> [<dir> at] <target>.\n\r", ch);
 		return;
 	}
@@ -2555,7 +2565,7 @@ ACTION_FUNC(do_throw) {
 					if(check_peaceful(targ,
 									  "Qualcuno ha cercato di disturbare la tua "
 									  "pace.")) {
-						send_to_char("Mi dispiace ma c'e` troppa pace li` per lanciarci "
+						send_to_char("Mi dispiace ma c'e' troppa pace li' per lanciarci "
 									 "qualcosa.", ch);
 						return;
 					}
@@ -2570,7 +2580,7 @@ ACTION_FUNC(do_throw) {
 			}
 		}
 		else {
-			send_to_char("Non c'e` nessuno qui intorno con quella descrizione.\n\r",
+			send_to_char("Non c'e' nessuno qui intorno con quella descrizione.\n\r",
 						 ch);
 		}
 	}
@@ -2593,7 +2603,7 @@ ACTION_FUNC(do_stopfight) {
 			act("$n smette di combattere.", TRUE, ch, 0, 0, TO_ROOM);
 		}
 		else
-			send_to_char("Tutto quello a cui pensi adesso, e` alla tua "
+			send_to_char("Tutto quello a cui pensi adesso, e' alla tua "
 						 "battaglia\n\r", ch);
 	}
 	else {

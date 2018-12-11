@@ -812,24 +812,24 @@ void cast_control_weather(byte level,struct char_data* ch, const char* arg, int 
 				return;
 			}
 			if(weather_info.sky == SKY_CLOUDY) {
-				send_to_outdoor("Le nuvole scompaiono.\n\r");
+				send_to_outdoor("Le $c0015nuvole$c0007 scompaiono.\n\r");
 				weather_info.sky = SKY_CLOUDLESS;
 			}
 			if(weather_info.sky == SKY_RAINING) {
 				if((time_info.month>3)&&(time_info.month < 14)) {
-					send_to_outdoor("Smette di piovere.\n\r");
+					send_to_outdoor("$c0012Smette di piovere.$c0007\n\r");
 				}
 				else {
-					send_to_outdoor("Smette di nevicare. \n\r");
+					send_to_outdoor("$c0015Smette di nevicare.$c0007\n\r");
 				}
 				weather_info.sky=SKY_CLOUDY;
 			}
 			if(weather_info.sky == SKY_LIGHTNING) {
 				if((time_info.month>3)&&(time_info.month<14)) {
-					send_to_outdoor("Non si vedono piu' fulmini, ma continua a piovere.\n\r");
+					send_to_outdoor("$c0012Non si vedono piu' $c0011fulmini$c0012, ma continua a piovere.$c0007\n\r");
 				}
 				else {
-					send_to_outdoor("La tormenta e' finita, ma nevica ancora.\n\r");
+					send_to_outdoor("La tormenta e' finita, ma $c0015nevica$c0007 ancora.\n\r");
 				}
 				weather_info.sky=SKY_RAINING;
 			}
@@ -837,25 +837,25 @@ void cast_control_weather(byte level,struct char_data* ch, const char* arg, int 
 		}
 		else {
 			if(weather_info.sky == SKY_CLOUDLESS) {
-				send_to_outdoor("Il cielo si sta annuvolando.\n\r");
+				send_to_outdoor("Il $c0014cielo$c0007 si sta $c0015annuvolando$c0007.\n\r");
 				weather_info.sky=SKY_CLOUDY;
 				return;
 			}
 			if(weather_info.sky == SKY_CLOUDY) {
 				if((time_info.month > 3) && (time_info.month < 14)) {
-					send_to_outdoor("Inizia a piovere.\n\r");
+					send_to_outdoor("$c0012Inizia a piovere.$c0007\n\r");
 				}
 				else {
-					send_to_outdoor("Inizia a nevicare. \n\r");
+					send_to_outdoor("$c0015Inizia a nevicare.$c0007\n\r");
 				}
 				weather_info.sky=SKY_RAINING;
 			}
 			if(weather_info.sky == SKY_RAINING) {
 				if((time_info.month>3)&&(time_info.month < 14)) {
-					send_to_outdoor("Sei nel mezzo di un temporale tremendo.\n\r");
+					send_to_outdoor("$c0012Sei nel mezzo di un temporale tremendo.$c0007\n\r");
 				}
 				else {
-					send_to_outdoor("Sei nel mezzo di una tormenta. \n\r");
+					send_to_outdoor("$c0015Sei nel mezzo di una tormenta.$c0007\n\r");
 				}
 				weather_info.sky=SKY_LIGHTNING;
 			}

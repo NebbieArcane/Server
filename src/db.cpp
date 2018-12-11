@@ -1034,7 +1034,7 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 		/* river
 		 * read direction and rate of flow
 		 * su myst non tutte le stanze subaquee hanno la corrente, per cui
-		 * uso fread_if_number che non da` errore se non trova un numero
+		 * uso fread_if_number che non da' errore se non trova un numero
 		 * */
 		tmp = fread_if_number(fl);
 		rp->river_speed = tmp;
@@ -1120,7 +1120,7 @@ void load_one_room(FILE* fl, struct room_data* rp) {
 			break;
 		default:
 			mudlog(LOG_ERROR,
-				   "unknown auxiliary code `%s' in room load of #%ld", chk,
+				   "unknown auxiliary code '%s' in room load of #%ld", chk,
 				   rp->number)
 			;
 			break;
@@ -4780,7 +4780,7 @@ void clean_playerfile() {
 						int i;
 
 						for(i = max = 0; i < MAX_CLASS; i++) {
-							/*calcola il livello piu` alto in max*/
+							/*calcola il livello piu' alto in max*/
 							if(grunt.dummy.level[i] > max) {
 								max = grunt.dummy.level[i];
 							}

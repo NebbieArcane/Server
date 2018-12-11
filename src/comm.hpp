@@ -27,7 +27,7 @@ namespace Alarmud {
 
 extern struct descriptor_data* descriptor_list;
 extern struct descriptor_data* next_to_process;
-extern uint16_t NumTimeCheck ; /* dovrebbe essere il piu` grande dei PULSE */
+extern uint16_t NumTimeCheck ; /* dovrebbe essere il piu' grande dei PULSE */
 extern uint64_t aTimeCheck[ PULSE_MOBILE ];
 extern unsigned long pulse;
 extern bool no_specials;

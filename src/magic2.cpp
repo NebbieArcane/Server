@@ -215,7 +215,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 
 				rewind(fl);
 				fwrite(&st, sizeof(struct char_file_u), 1, fl);
-				mudlog(LOG_PLAYERS, "%s e` stato resuscitato da %s.",
+				mudlog(LOG_PLAYERS, "%s e' stato resuscitato da %s.",
 					   obj->oldfilename, GET_NAME(ch));
 				ObjFromCorpse(obj);
 
@@ -692,7 +692,7 @@ void spell_poly_self(byte level, struct char_data* ch,
 	mob->player.short_descr = buf;
 
 	buf = (char*)malloc(strlen(mob->player.short_descr) + 12);
-	sprintf(buf, "%s e` qui\n\r", mob->player.short_descr);
+	sprintf(buf, "%s e' qui\n\r", mob->player.short_descr);
 
 	if(mob->player.long_descr) {
 		free(mob->player.long_descr);

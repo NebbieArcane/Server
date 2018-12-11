@@ -53,7 +53,7 @@ namespace Alarmud {
 #define Identifier      "gds"
 
 /****************************************************************************
-  Il capitano dei fantasmi ad una certa ora summona una certa quantita` di
+  Il capitano dei fantasmi ad una certa ora summona una certa quantita' di
   soldati fantasma.  Se combatte un mob charmato, attacca il padrone.
   Chiama altri fantasmi se attaccato.
 ****************************************************************************/
@@ -70,7 +70,7 @@ MOBSPECIAL_FUNC(keystone) {
 		if(!(ghost = get_char_vis_world(ch, Identifier, 0))) {
 			act("$c0015La voce lamentosa di $c0005$n$c0015 si alza nella notte",
 				FALSE, ch, 0, 0, TO_ROOM);
-			act("$c0005$n$c0015 dice 'Sveglia miei soldati! E` la nostra ora.!'",
+			act("$c0005$n$c0015 dice 'Sveglia miei soldati! E' la nostra ora.!'",
 				FALSE, ch, 0, 0, TO_ROOM);
 			act("Un brivido di terrore corre lungo la tua schiena.",
 				FALSE, ch, 0, 0, TO_ROOM);
@@ -115,7 +115,7 @@ MOBSPECIAL_FUNC(keystone) {
 /****************************************************************************
   I soldati fantasma spariscono la mattina. Se attaccati da un mob charmato
   attaccano il padrone.
-  Se non combattono attaccano il giocatore piu` buono nella stanza.
+  Se non combattono attaccano il giocatore piu' buono nella stanza.
   Chiama altri fantasmi se attaccato.
 ****************************************************************************/
 
@@ -182,10 +182,10 @@ MOBSPECIAL_FUNC(ghostsoldier) {
 }
 
 const char* quest_one[] = {
-	"'Il secondo oggetto che devi trovare e` l'anello di Tlanic.",
-	"Tlanic era un guerriero elfo che lascio` Rhyodin cinque anni",
-	"dopo Lorces. Porto` il suo anello con se` come portafortuna.",
-	"Egli parti` per cercare Lorces, i suoi amici e per trovare,",
+	"'Il secondo oggetto che devi trovare e' l'anello di Tlanic.",
+	"Tlanic era un guerriero elfo che lascio' Rhyodin cinque anni",
+	"dopo Lorces. Porto' il suo anello con se' come portafortuna.",
+	"Egli parti' per cercare Lorces, i suoi amici e per trovare,",
 	"se possibile, una via verso il nord. Anche lui ha fallito.",
 	"Riportami l'anello per ulteriori istruzioni.'",
 	"\n"
@@ -193,10 +193,10 @@ const char* quest_one[] = {
 
 const char* quest_two[] = {
 	"'Devi sapere che molte lune dalla partenza di Tlanic, suo fratello",
-	"Evistar ando` in sua ricerca.",
+	"Evistar ando' in sua ricerca.",
 	"Evistar, al contrario del fratello, non era un grande",
-	"guerriero, ma era il segugio piu` bravo di tutta la sua gente.",
-	"Per aiutarlo nella sua imprese gli fu` dato un calice mai",
+	"guerriero, ma era il segugio piu' bravo di tutta la sua gente.",
+	"Per aiutarlo nella sua imprese gli fu' dato un calice mai",
 	"vuoto. Portami quel calice magico se vuoi entrare nel reame ",
 	"di Rhyodin.'",
 	"\n"
@@ -207,42 +207,42 @@ const char* quest_three[] = {
 	"un potente mago decidesse di cercare la via verso il nord.",
 	"Il suo nome era C*zarnak. Si crede che sia morto nelle caverne",
 	"come gli altri. Indossava un cerchio incantato intorno alla testa.",
-	"Riportamelo e ti diro` di piu`.'",
+	"Riportamelo e ti diro' di piu'.'",
 	"\n"
 };
 
 const char* necklace[] = {
 	"'Mi hai riportato tutti gli oggetti degli eroi morti nella",
 	"ricerca della via di uscita dal reame.",
-	"In piu` hai trovato la via attraverso le montagne, provando la",
-	"tua abilita` nell'orientamento e nella cartografia.",
+	"In piu' hai trovato la via attraverso le montagne, provando la",
+	"tua abilita' nell'orientamento e nella cartografia.",
 	"Tu sei degno di essere un ambasciatore nel mio regno.",
 	"Prendi questa collana e non perderla!",
-	"Dalla al guardiano del cancello che ti lasciera` passare e",
-	"ti dara` la giusta ricompensa.'",
+	"Dalla al guardiano del cancello che ti lasciera' passare e",
+	"ti dara' la giusta ricompensa.'",
 	"\n"
 };
 
 const char* nonecklace[] = {
 	"'Mi hai riportato tutti gli oggetti degli eroi morti nella",
 	"ricerca della via di uscita dal reame di Rhyodin.",
-	"In piu` hai trovato la via attraverso le montagne, provando la",
-	"tua abilita` nell'orientamento e nella cartografia.",
+	"In piu' hai trovato la via attraverso le montagne, provando la",
+	"tua abilita' nell'orientamento e nella cartografia.",
 	"Tu sei degno di essere un ambasciatore nel mio regno.",
-	"Il compito finale e` di trovare la collana della saggezza.",
-	"Il guardiano del cancello la riconoscera` e ti lasciera`",
+	"Il compito finale e' di trovare la collana della saggezza.",
+	"Il guardiano del cancello la riconoscera' e ti lasciera'",
 	"passare dandoti la giusta ricompensa.'",
 	"\n"
 };
 
 const char* quest_intro[] = {
 	"'Vuoi conoscere la storia di Rhyodin ? Bene. Devi sapere",
-	"che Rhyodin e` un reame a sudest dell'Alpes Oppidum.",
+	"che Rhyodin e' un reame a sudest dell'Alpes Oppidum.",
 	"Un giorno, l'unica grande strada sotterranea che collegava",
 	"il regno con il resto del mondo, fu interrotta da una frana.",
-	"Lorces, il Paladino, fu il primo che cerco` una strada",
-	"alternativa ma, purtroppo, falli`.",
-	"Il primo passo per poter entrere nel regno di Rhyodin e` di",
+	"Lorces, il Paladino, fu il primo che cerco' una strada",
+	"alternativa ma, purtroppo, falli'.",
+	"Il primo passo per poter entrere nel regno di Rhyodin e' di",
 	"cercare e riportarmi il suo scudo.'",
 	"\n"
 };
@@ -304,7 +304,7 @@ MOBSPECIAL_FUNC(Valik) {
 			if(mob->generic ==  Valik_Meditating) {
 				if(time_info.hours < 22 && time_info.hours > 5) {
 					do_stand(mob, "", -1);
-					do_say(mob, "Forse oggi sara` un giorno diverso.", 0);
+					do_say(mob, "Forse oggi sara' un giorno diverso.", 0);
 					act("$n svanisce lentamente nel mattino.", FALSE, mob, 0, 0,
 						TO_ROOM);
 					char_from_room(mob);
@@ -332,13 +332,13 @@ MOBSPECIAL_FUNC(Valik) {
 			else if(mob->generic == Valik_Wandering) {
 				if(time_info.hours > 21) {
 					if(!check_soundproof(ch)) {
-						do_say(mob, "E` tempo di meditare.", 0);
+						do_say(mob, "E' tempo di meditare.", 0);
 					}
 					act("$c0015$n sparisce in un lampo di luce!", FALSE, mob, 0, 0,
 						TO_ROOM);
 					char_from_room(mob);
 					char_to_room(mob, Med_Chambers);
-					act("La realta` si distorce e gira intorno a te!", FALSE, mob, 0, 0,
+					act("La realta' si distorce e gira intorno a te!", FALSE, mob, 0, 0,
 						TO_ROOM);
 					sprintf(buf, "close mahogany");
 					command_interpreter(mob, buf);
@@ -362,7 +362,7 @@ MOBSPECIAL_FUNC(Valik) {
 					SayQuest(mob, quest_intro);
 				}
 				else if(ch->generic == Valik_Meditating) {
-					act("$n e` troppo impegnat$b a meditare per darti ascolto", TRUE,
+					act("$n e' troppo impegnat$b a meditare per darti ascolto", TRUE,
 						mob, 0, ch, TO_VICT);
 				}
 				else {
@@ -399,11 +399,11 @@ MOBSPECIAL_FUNC(Valik) {
 			}
 
 			act("Dai $p a $N.", TRUE, ch, obj, mob, TO_CHAR);
-			act("$n da` $p a $N.", TRUE, ch, obj, mob, TO_ROOM);
+			act("$n da' $p a $N.", TRUE, ch, obj, mob, TO_ROOM);
 
 			switch(mob->generic) {
 			case Valik_Meditating:
-				act("$n e` troppo impegnat$b a meditare per accettare regali.",
+				act("$n e' troppo impegnat$b a meditare per accettare regali.",
 					TRUE, mob, 0, ch, TO_CHAR);
 				break;
 			case Valik_Wandering:
@@ -433,7 +433,7 @@ MOBSPECIAL_FUNC(Valik) {
 					mob->generic = Valik_Qtwo;
 				}
 				else {
-					do_say(mob, "Non e` quello che cerco.", 0);
+					do_say(mob, "Non e' quello che cerco.", 0);
 					act("$N ti restituisce $p.", TRUE, ch, obj, mob, TO_CHAR);
 					act("$N restituisce $p a $n.", TRUE, ch, obj, mob, TO_ROOM);
 				}
@@ -448,7 +448,7 @@ MOBSPECIAL_FUNC(Valik) {
 					mob->generic = Valik_Qthree;
 				}
 				else {
-					do_say(mob, "Non e` quello che cerco.", 0);
+					do_say(mob, "Non e' quello che cerco.", 0);
 					act("$N ti restituisce $p.", TRUE, ch, obj, mob, TO_CHAR);
 					act("$N restiruisce $p a $n.", TRUE, ch, obj, mob, TO_ROOM);
 				}
@@ -476,7 +476,7 @@ MOBSPECIAL_FUNC(Valik) {
 					mob->generic = Valik_Wandering;
 				}
 				else {
-					do_say(mob, "Non e` quello che cerco.", 0);
+					do_say(mob, "Non e' quello che cerco.", 0);
 					act("$N ti restituisce $p.", TRUE, ch, obj, mob, TO_CHAR);
 					act("$N restituisce $p a $n.", TRUE, ch, obj, mob, TO_ROOM);
 				}
@@ -635,7 +635,7 @@ MOBSPECIAL_FUNC(guardian) {
 			}
 
 			act("Dai $p a $N.", TRUE, ch, obj, mob, TO_CHAR);
-			act("$n da` $p a $N.", TRUE, ch, obj, mob, TO_ROOM);
+			act("$n da' $p a $N.", TRUE, ch, obj, mob, TO_ROOM);
 
 			if(obj->item_number >= 0 &&
 					obj_index[ obj->item_number ].iVNum == Necklace) {
@@ -647,19 +647,19 @@ MOBSPECIAL_FUNC(guardian) {
 						FALSE, mob, 0, 0, TO_ROOM);
 					act("$c0015AH! Quel ringoglionito di Valik!",
 						FALSE, mob, 0, 0, TO_ROOM);
-					act("$c0015Gliel'avro` detto mille volte, ma lui NO, non ci sente.",
+					act("$c0015Gliel'avro' detto mille volte, ma lui NO, non ci sente.",
 						FALSE, mob, 0, 0, TO_ROOM);
-					act("$c0015Mi dispiace, ma il regno di Rhyodin e` scomparso da tempo.",
+					act("$c0015Mi dispiace, ma il regno di Rhyodin e' scomparso da tempo.",
 						FALSE, mob, 0, 0, TO_ROOM);
 					act("$c0015Valik continua a chiedere a voi avventurieri di cercare la",
 						FALSE, mob, 0, 0, TO_ROOM);
 					act("$c0015strada di collegamento fra Rhyodin ed il mondo esterno.",
 						FALSE, mob, 0, 0, TO_ROOM);
-					act("$c0015Ma questa strada non serve piu`.",
+					act("$c0015Ma questa strada non serve piu'.",
 						FALSE, mob, 0, 0, TO_ROOM);
-					act("$c0015Il popolo di Rhyodin, isolato dal resto del mondo, si e` estinto.",
+					act("$c0015Il popolo di Rhyodin, isolato dal resto del mondo, si e' estinto.",
 						FALSE, mob, 0, 0, TO_ROOM);
-					act("$c0015Finche` un giorno, un grande Dio, vedendo il vecchio reame cosi`",
+					act("$c0015Finche' un giorno, un grande Dio, vedendo il vecchio reame cosi'",
 						FALSE, mob, 0, 0, TO_ROOM);
 					act("$c0015malridotto, preso da malinconia ha deciso di distruggerlo.",
 						FALSE, mob, 0, 0, TO_ROOM);
@@ -742,7 +742,7 @@ MOBSPECIAL_FUNC(guardian) {
 			}
 		}
 		else if(cmd == CMD_PLAYER) {
-			send_to_char("Questo e` l'elenco dei giocatori che hanno risolto la "
+			send_to_char("Questo e' l'elenco dei giocatori che hanno risolto la "
 						 "quest:\n\r", ch);
 			ShowGuardianList(pGList, ch);
 		}
@@ -828,7 +828,7 @@ MOBSPECIAL_FUNC(trapper) {
 
 		/* Make the poor sucker save against paralzyation, or suffocate */
 		if(saves_spell(ch->specials.fighting, SAVING_PARA)) {
-			act("Non riesci a respirare, $N ti sta` soffocando!",
+			act("Non riesci a respirare, $N ti sta' soffocando!",
 				FALSE, ch->specials.fighting, 0, ch, TO_CHAR);
 			act("$N sta soffocando $n!",
 				FALSE, ch->specials.fighting, 0, ch, TO_ROOM);
@@ -841,7 +841,7 @@ MOBSPECIAL_FUNC(trapper) {
 				FALSE, ch->specials.fighting, 0, ch, TO_CHAR);
 			act("$n soffoca dentro $N!",
 				FALSE, ch->specials.fighting, 0, ch, TO_ROOM);
-			act("$n e` mort$b!", FALSE, ch->specials.fighting, 0, ch, TO_ROOM);
+			act("$n e' mort$b!", FALSE, ch->specials.fighting, 0, ch, TO_ROOM);
 			mudlog(LOG_PLAYERS, "%s has suffocated to death.",
 				   GET_NAME(ch->specials.fighting));
 			die(ch->specials.fighting, 0, NULL);
@@ -853,7 +853,7 @@ MOBSPECIAL_FUNC(trapper) {
 
 /***************************************************************************
   Le guardie dei trogloditi si chiamano fra loro quando vengono attaccate
-  Inoltre, se non stanno combattendo, attaccano il piu` buono nella stanza.
+  Inoltre, se non stanno combattendo, attaccano il piu' buono nella stanza.
 ***************************************************************************/
 
 MOBSPECIAL_FUNC(troguard) {
@@ -873,7 +873,7 @@ MOBSPECIAL_FUNC(troguard) {
 		}
 
 		if(!check_soundproof(ch)) {
-			act("$c0009[$c0015$n$c0009] urla 'Il nemico e` fra noi! Aiutatemi "
+			act("$c0009[$c0015$n$c0009] urla 'Il nemico e' fra noi! Aiutatemi "
 				"fratelli!'", TRUE, ch, 0, 0, TO_ROOM);
 			if(ch->specials.fighting) {
 				CallForGuard(ch, ch->specials.fighting, 3, TROGCAVES);
@@ -909,7 +909,7 @@ MOBSPECIAL_FUNC(troguard) {
 }
 
 /****************************************************************************
-  Il cuoco dei trogloditi se trova un animale lo attacca. Se c'e` un corpo
+  Il cuoco dei trogloditi se trova un animale lo attacca. Se c'e' un corpo
   lo mette nella pentola.
 *****************************************************************************/
 MOBSPECIAL_FUNC(trogcook) {
@@ -950,7 +950,7 @@ MOBSPECIAL_FUNC(trogcook) {
 }
 
 /**************************************************************************
-  Lo shaman chiama Golgar in aiuto se sta` combattendo.
+  Lo shaman chiama Golgar in aiuto se sta' combattendo.
 **************************************************************************/
 #define DEITY 21124
 #define DEITY_NAME "golgar"
@@ -971,7 +971,7 @@ MOBSPECIAL_FUNC(shaman) {
 						act("$c0009[$c0015$n$c0009] urla 'Golgar, vieni in aiuto del tuo "
 							"umile servo!'", FALSE, ch, 0, 0, TO_ROOM);
 						if(number(0,8) == 0) {
-							act("$c0015C'e` un accecante lampo di luce!",
+							act("$c0015C'e' un accecante lampo di luce!",
 								FALSE, ch, 0, 0, TO_ROOM);
 							god = read_mobile(DEITY, VIRTUAL);
 							char_to_room(god, ch->in_room);
@@ -992,8 +992,8 @@ MOBSPECIAL_FUNC(shaman) {
 
 /*************************************************************************
   Golgar aiuta i trogloditi e lo shaman se stanno combattendo.
-  Se lo shaman non c'e` e nessu troglodita combatte, scompare e torna nel
-  vuoto. Se lo shaman c'e`, ma non combatte, si incazza e lo attacca.
+  Se lo shaman non c'e' e nessu troglodita combatte, scompare e torna nel
+  vuoto. Se lo shaman c'e', ma non combatte, si incazza e lo attacca.
 *************************************************************************/
 
 #define SHAMAN_NAME "shaman"
@@ -1046,8 +1046,8 @@ MOBSPECIAL_FUNC(golgar) {
 }
 
 /****************************************************************************
-  Lattimore e` un personaggio chiave per la quest. E` l'unico che ti da` la
-  chiave per uscire dall'outpost. Per avere la chiave, e` necessario dargli
+  Lattimore e' un personaggio chiave per la quest. E' l'unico che ti da' la
+  chiave per uscire dall'outpost. Per avere la chiave, e' necessario dargli
   alcune cose da mangiare (almeno 5) o 20 oggetti non da mangiare, o il
   rod usato per aprire la plate nella cucina.
   Inoltre Lattimore fa altre cosine carine, tipo mettersi a dormire la
@@ -1060,7 +1060,7 @@ const char* lattimore_descs[] = {
 	"A small orc mangia dello stufato di ratto.\n\r",
 	"A small orc si nasconde sotto un letto.\n\r",
 	"A small orc dorme profondamente su un letto.\n\r",
-	"C'e` a small orc su un barile.\n\r",
+	"C'e' a small orc su un barile.\n\r",
 	"A small orc corre velocemente per il corridoio.\n\r"
 };
 
@@ -1363,7 +1363,7 @@ MOBSPECIAL_FUNC(lattimore) {
 			only_argument(arg, szPlayerName);
 			if(*szPlayerName && get_char_room_vis(ch, szPlayerName) == mob) {
 				act("Dai $p a $N.", TRUE, ch, pObj, mob, TO_CHAR);
-				act("$n da` $p a $N.", TRUE, ch, pObj, mob, TO_ROOM);
+				act("$n da' $p a $N.", TRUE, ch, pObj, mob, TO_ROOM);
 
 				switch(pObj->obj_flags.type_flag) {
 				case ITEM_FOOD:
@@ -1394,7 +1394,7 @@ MOBSPECIAL_FUNC(lattimore) {
 				case ITEM_KEY:
 					/* What he really wants */
 					if(pObj->item_number>= 0&& obj_index[ pObj->item_number ].iVNum == CrowBar) {
-						act("$n prende $p salta su e giu` contento.", TRUE, mob,pObj, 0, TO_ROOM);
+						act("$n prende $p salta su e giu' contento.", TRUE, mob,pObj, 0, TO_ROOM);
 						obj_from_char(pObj);
 						if(!mob->equipment[HOLD]) {
 							equip_char(mob, pObj, HOLD);
@@ -1411,12 +1411,12 @@ MOBSPECIAL_FUNC(lattimore) {
 						break;
 					}
 				/* no break */
-				/* Il break qui non ci va, perche` se la chiave data a Lattimore
-				   non e` il rod (CrowBar) deve fare quello che fa per qualunque
+				/* Il break qui non ci va, perche' se la chiave data a Lattimore
+				   non e' il rod (CrowBar) deve fare quello che fa per qualunque
 				   altro oggetto */
 				default:
 					/* Any other types of items */
-					act("$n guarda a $p con curiosita`.", TRUE, mob, pObj, 0, TO_ROOM);
+					act("$n guarda a $p con curiosita'.", TRUE, mob, pObj, 0, TO_ROOM);
 					if(!IS_MOB(ch) && CAN_SEE(mob, ch)) {
 						AddIntData((CharElem**)&mob->act_ptr, ch, 1);
 					}
@@ -1777,7 +1777,7 @@ MOBSPECIAL_FUNC(Orso_Bianco) {
 }
 
 /*****************************************************************************
-  Il moribondo, normalmente e` incapacitato con 0 HP. Se qualcuno lo
+  Il moribondo, normalmente e' incapacitato con 0 HP. Se qualcuno lo
   aiuta, dice una frase (diversa a second del mob).
 *****************************************************************************/
 

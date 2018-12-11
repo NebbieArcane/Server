@@ -165,12 +165,12 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 	else if(mode == 5) {
 		if(object->obj_flags.type_flag == ITEM_NOTE) {
 			if(object->action_description && *object->action_description) {
-				strcpy(buffer, "C'e` scritto sopra qualcosa:\n\r\n\r");
+				strcpy(buffer, "C'e' scritto sopra qualcosa:\n\r\n\r");
 				strcat(buffer, object->action_description);
 				page_string(ch->desc, buffer, 1);
 			}
 			else {
-				act("Non c'e` scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
+				act("Non c'e' scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
 			}
 			return;  /* mail fix, thanks brett */
 
@@ -301,12 +301,12 @@ void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 	else if(mode == 5) {
 		if(object->obj_flags.type_flag == ITEM_NOTE) {
 			if(object->action_description && *object->action_description) {
-				strcpy(buffer, "C'e` scritto sopra qualcosa:\n\r\n\r");
+				strcpy(buffer, "C'e' scritto sopra qualcosa:\n\r\n\r");
 				strcat(buffer, object->action_description);
 				page_string(ch->desc, buffer, 1);
 			}
 			else {
-				act("Non c'e` scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
+				act("Non c'e' scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
 			}
 			return;
 		}
@@ -523,7 +523,7 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 
 	if(!GET_WEIGHT(pChar) || ! GET_HEIGHT(pChar)) {
 		mudlog(LOG_ERROR,
-			   "L'altezza od il peso di %s e` a zero.", GET_NAME_DESC(pChar));
+			   "L'altezza od il peso di %s e' a zero.", GET_NAME_DESC(pChar));
 		return;
 	}
 
@@ -531,7 +531,7 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 		return;
 	}
 
-	strcpy(szBuf, "$n e` ");
+	strcpy(szBuf, "$n e' ");
 
 	if(pChar->player.height > 250) {
 		strcat(szBuf, DescAltezze[ 0 ]);
@@ -645,11 +645,11 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 				break;
 			case POSITION_MOUNTED:
 				if(MOUNTED(i)) {
-					strcat(buffer, " e` qui, cavalcando ");
+					strcat(buffer, " e' qui, cavalcando ");
 					strcat(buffer, MOUNTED(i)->player.short_descr);
 				}
 				else {
-					strcat(buffer, " e` qui, in piedi.");
+					strcat(buffer, " e' qui, in piedi.");
 				}
 				break;
 			case POSITION_STANDING :
@@ -659,7 +659,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 						strcat(buffer, " sta galleggiando qui.");
 					}
 					else {
-						strcat(buffer," e` qui, in piedi.");
+						strcat(buffer," e' qui, in piedi.");
 					}
 				}
 				else {
@@ -671,7 +671,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 					strcat(buffer, " sta galleggiando qui.");
 				}
 				else {
-					strcat(buffer," e` sedut$b qui.");
+					strcat(buffer," e' sedut$b qui.");
 				}
 				break;
 			case POSITION_RESTING  :
@@ -692,7 +692,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 				break;
 			case POSITION_FIGHTING :
 				if(i->specials.fighting) {
-					strcat(buffer," e` qui, combattendo contro ");
+					strcat(buffer," e' qui, combattendo contro ");
 					if(i->specials.fighting == ch) {
 						strcat(buffer," DI TE!");
 					}
@@ -706,12 +706,12 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 							}
 						}
 						else {
-							strcat(buffer, "qualcuno che se ne e` appena andato.");
+							strcat(buffer, "qualcuno che se ne e' appena andato.");
 						}
 					}
 				}
 				else { /* NIL fighting pointer */
-					strcat(buffer," e` qui dimenandosi contro l'aria.");
+					strcat(buffer," e' qui dimenandosi contro l'aria.");
 				}
 				break;
 			default:
@@ -802,7 +802,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
         {
             sprintf(buffer,"$c0003");
             strcat(buffer,buffer2);
-			strcat(buffer, " e` enorme!");
+			strcat(buffer, " e' enorme!");
             act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
@@ -812,7 +812,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
             {
                 sprintf(buffer,"$c0001");
                 strcat(buffer,buffer2);
-                strcat(buffer, " e` avvolt$b in una luce fiammeggiante!");
+                strcat(buffer, " e' avvolt$b in una luce fiammeggiante!");
                 act(buffer, FALSE, i, 0, ch, TO_VICT);
             }
 		}
@@ -821,7 +821,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
         {
             sprintf(buffer,"$c0008");
             strcat(buffer,buffer2);
-            strcat(buffer, " e` avvolt$b nell'oscurita`!");
+            strcat(buffer, " e' avvolt$b nell'oscurita'!");
             act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
@@ -863,18 +863,18 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		ShowAltezzaCostituzione(i, ch);
 
 		if(IS_PC(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1, "$n e` un$b %s", RaceName[ GET_RACE(i) ]);
+			snprintf(buffer,MAX_STRING_LENGTH-1, "$n e' un$b %s", RaceName[ GET_RACE(i) ]);
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
 
 		if(MOUNTED(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e` sopra a %s", MOUNTED(i)->player.short_descr);
+			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' sopra a %s", MOUNTED(i)->player.short_descr);
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
 		if(RIDDEN(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e` cavalcat$b da %s",
+			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' cavalcat$b da %s",
 					 IS_NPC(RIDDEN(i)) ? RIDDEN(i)->player.short_descr :
 					 GET_NAME(RIDDEN(i)));
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
@@ -898,7 +898,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		}
 
 		if(percent >= 100) {
-			strcat(buffer, " e` in condizioni eccellenti.");
+			strcat(buffer, " e' in condizioni eccellenti.");
 		}
 		else if(percent >= 80) {
 			strcat(buffer, " ha pochi graffi.");
@@ -907,7 +907,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			strcat(buffer, " ha alcuni tagli ed abrasioni.");
 		}
 		else if(percent >= 40) {
-			strcat(buffer, " e` ferit$B.");
+			strcat(buffer, " e' ferit$B.");
 		}
 		else if(percent >= 20) {
 			strcat(buffer, " sanguina abbondatemente.");
@@ -1053,11 +1053,11 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 				break;
 			case POSITION_MOUNTED:
 				if(MOUNTED(i)) {
-					strcat(buffer, " e` qui, montando ");
+					strcat(buffer, " e' qui, montando ");
 					strcat(buffer, MOUNTED(i)->player.short_descr);
 				}
 				else {
-					strcat(buffer, " e` qui, in piedi.");
+					strcat(buffer, " e' qui, in piedi.");
 				}
 				break;
 			case POSITION_STANDING :
@@ -1067,7 +1067,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 						strcat(buffer, " sta galleggiano qui.");
 					}
 					else {
-						strcat(buffer," e` qui, in piedi.");
+						strcat(buffer," e' qui, in piedi.");
 					}
 				}
 				else {
@@ -1079,7 +1079,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 					strcat(buffer, " sta galleggiando qui.");
 				}
 				else {
-					strcat(buffer," e` sedut$b qui.");
+					strcat(buffer," e' sedut$b qui.");
 				}
 				break;
 			case POSITION_RESTING  :
@@ -1100,7 +1100,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 				break;
 			case POSITION_FIGHTING :
 				if(i->specials.fighting) {
-					strcat(buffer," e` qui, combattendo contro ");
+					strcat(buffer," e' qui, combattendo contro ");
 					if(i->specials.fighting == ch) {
 						strcat(buffer," DI TE!");
 					}
@@ -1114,12 +1114,12 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 							}
 						}
 						else {
-							strcat(buffer, "qualcuno che se ne e` appena andato.");
+							strcat(buffer, "qualcuno che se ne e' appena andato.");
 						}
 					}
 				}
 				else { /* NIL fighting pointer */
-					strcat(buffer," e` qui dimenandosi contro l'aria.");
+					strcat(buffer," e' qui dimenandosi contro l'aria.");
 				}
 				break;
 			default:
@@ -1213,7 +1213,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
         {
             sprintf(buffer,"$c0003");
             strcat(buffer,buffer2);
-            strcat(buffer, " e` enorme!");
+            strcat(buffer, " e' enorme!");
             act(buffer, FALSE, i, 0, ch, TO_VICT);
         }
         
@@ -1223,7 +1223,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
             {
                 sprintf(buffer,"$c0001");
                 strcat(buffer,buffer2);
-                strcat(buffer, " e` avvolt$b in una luce fiammeggiante!");
+                strcat(buffer, " e' avvolt$b in una luce fiammeggiante!");
                 act(buffer, FALSE, i, 0, ch, TO_VICT);
             }
         }
@@ -1232,7 +1232,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
         {
             sprintf(buffer,"$c0008");
             strcat(buffer,buffer2);
-            strcat(buffer, " e` avvolt$b nell'oscurita`!");
+            strcat(buffer, " e' avvolt$b nell'oscurita'!");
             act(buffer, FALSE, i, 0, ch, TO_VICT);
         }
         
@@ -1264,7 +1264,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 		}
 
 		if(percent >= 100) {
-			strcat(buffer, " e` in condizioni eccellenti.");
+			strcat(buffer, " e' in condizioni eccellenti.");
 		}
 		else if(percent >= 80) {
 			strcat(buffer, " ha pochi graffi.");
@@ -1273,7 +1273,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			strcat(buffer, " ha alcuni tagli ed abrasioni.");
 		}
 		else if(percent >= 40) {
-			strcat(buffer, " e` ferit$B.");
+			strcat(buffer, " e' ferit$B.");
 		}
 		else if(percent >= 20) {
 			strcat(buffer, " sanguina abbondatemente.");
@@ -1511,7 +1511,7 @@ ACTION_FUNC(do_look) {
 			(!IS_AFFECTED(ch, AFF_TRUE_SIGHT))&&
 			GET_RACE(ch)!=RACE_DARK_ELF && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
 			GET_RACE(ch)!=RACE_DEEP_GNOME) {
-		send_to_char("E` molto buio qui...\n\r", ch);
+		send_to_char("E' molto buio qui...\n\r", ch);
 		if(IS_AFFECTED(ch, AFF_INFRAVISION)) {
 			list_char_in_room(pRoomWithChar->people, ch);
 		}
@@ -1591,14 +1591,14 @@ ACTION_FUNC(do_look) {
 					if(IS_SET(exitp->exit_info, EX_CLOSED)) {
 						if(!IS_SET(exitp->exit_info, EX_SECRET)) {
 							if(exitp->keyword && *(exitp->keyword)) {
-								snprintf(buffer, MAX_STRING_LENGTH-1, "%s %s e` chius%c.\n\r",
+								snprintf(buffer, MAX_STRING_LENGTH-1, "%s %s e' chius%c.\n\r",
 										 IS_SET(exitp->exit_info, EX_MALE) ? "Il" : "La",
 										 fname(exitp->keyword),
 										 IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
 								send_to_char(buffer, ch);
 							}
 							else {
-								snprintf(buffer, MAX_STRING_LENGTH-1,"La porta %s e` chiusa.\n\r",
+								snprintf(buffer, MAX_STRING_LENGTH-1,"La porta %s e' chiusa.\n\r",
 										 dirsTo[ keyword_no ]);
 								send_to_char(buffer, ch);
 							}
@@ -1607,20 +1607,20 @@ ACTION_FUNC(do_look) {
 					else {
 						if(!IS_SET(exitp->exit_info, EX_SECRET)) {
 							if(exitp->keyword && *(exitp->keyword)) {
-								snprintf(buffer, MAX_STRING_LENGTH-1,"%s %s e` apert%c.\n\r",
+								snprintf(buffer, MAX_STRING_LENGTH-1,"%s %s e' apert%c.\n\r",
 										 IS_SET(exitp->exit_info, EX_MALE) ? "Il" : "La",
 										 fname(exitp->keyword),
 										 IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
 								send_to_char(buffer, ch);
 							}
 							else {
-								snprintf(buffer, MAX_STRING_LENGTH-1,"La porta %s e` aperta.\n\r",
+								snprintf(buffer, MAX_STRING_LENGTH-1,"La porta %s e' aperta.\n\r",
 										 dirsTo[ keyword_no ]);
 								send_to_char(buffer, ch);
 							}
 						}
 						else {
-							snprintf(buffer, MAX_STRING_LENGTH-1,"Il  passaggio %s e` aperto.\n\r",
+							snprintf(buffer, MAX_STRING_LENGTH-1,"Il passaggio %s e' aperto.\n\r",
 									 dirsTo[ keyword_no ]);
 							send_to_char(buffer, ch);
 						}
@@ -1658,7 +1658,7 @@ ACTION_FUNC(do_look) {
 						do_at(ch, buffer, 0);
 						bNotShowTitle = FALSE;
 					}
-					else { /* non arrivera` mai qui */
+					else { /* non arrivera' mai qui */
 						send_to_char("Nulla di speciale.\n\r", ch);
 					}
 				}
@@ -1677,11 +1677,11 @@ ACTION_FUNC(do_look) {
 					/* Found something */
 					if(GET_ITEM_TYPE(tmp_object)== ITEM_DRINKCON) {
 						if(tmp_object->obj_flags.value[1] <= 0) {
-							act("E` vuoto.", FALSE, ch, 0, 0, TO_CHAR);
+							act("E' vuoto.", FALSE, ch, 0, 0, TO_CHAR);
 						}
 						else {
 							temp=((tmp_object->obj_flags.value[1]*3)/tmp_object->obj_flags.value[0]);
-							snprintf(buffer,MAX_STRING_LENGTH-1,"E` %s di un liquido %s.\n\r",
+							snprintf(buffer,MAX_STRING_LENGTH-1,"E' %s di un liquido %s.\n\r",
 									 fullness[temp],color_liquid[tmp_object->obj_flags.value[2]]);
 							send_to_char(buffer, ch);
 						}
@@ -1703,11 +1703,11 @@ ACTION_FUNC(do_look) {
 							list_obj_in_heap(tmp_object->contains, ch);
 						}
 						else {
-							send_to_char("E` chiuso.\n\r", ch);
+							send_to_char("E' chiuso.\n\r", ch);
 						}
 					}
 					else {
-						send_to_char("Non e` un contenitore.\n\r", ch);
+						send_to_char("Non e' un contenitore.\n\r", ch);
 					}
 				}
 				else {
@@ -1717,7 +1717,7 @@ ACTION_FUNC(do_look) {
 			}
 			else {
 				/* no argument */
-				send_to_char("Guardare in che cosa ?\n\r", ch);
+				send_to_char("Guardare in che cosa?\n\r", ch);
 			}
 			break;
 		}
@@ -2152,7 +2152,7 @@ ACTION_FUNC(do_score) {
 	}
 
 	if((my_age.month == my_birth.month) && (my_age.day == my_birth.month)) {
-		strcat(buf,"\n$c0015 Oggi e` il tuo compleanno!!");
+		strcat(buf,"\n$c0015 Oggi e' il tuo compleanno!!");
 	}
 
 	act(buf,FALSE, ch,0,0,TO_CHAR);
@@ -2187,7 +2187,7 @@ ACTION_FUNC(do_score) {
 			 GET_MOVE(ch),GET_MAX_MOVE(ch));
 	act(buf,FALSE,ch,0,0,TO_CHAR);
 
-	snprintf(buf, 999, "$c0005Il tuo allineamento e`: $c0015%s",
+	snprintf(buf, 999, "$c0005Il tuo allineamento e': $c0015%s",
 			 AlignDesc(GET_ALIGNMENT(ch)));
 	act(buf,FALSE,ch,0,0,TO_CHAR);
 
@@ -2491,10 +2491,10 @@ ACTION_FUNC(do_weather) {
 
 	if(OUTSIDE(ch)) {
 		snprintf(buf, 255,
-				 "Il cielo e` %s e%s.\n\r",
+				 "Il cielo e' %s e%s.\n\r",
 				 sky_look[weather_info.sky],
 				 (weather_info.change >=0 ? " senti un vento caldo da sud" :
-				  "d i tuoi reumatismi ti dicono che il tempo cambiera`"));
+				  "d i tuoi reumatismi ti dicono che il tempo cambiera'"));
 		send_to_char(buf, ch);
 	}
 	else {
@@ -2519,7 +2519,7 @@ ACTION_FUNC(do_help) {
 
 	if(*arg) {
 		if(!help_index) {
-			send_to_char("L'help non e` disponibile.\n\r", ch);
+			send_to_char("L'help non e' disponibile.\n\r", ch);
 			return;
 		}
 		bot = 0;
@@ -2547,7 +2547,7 @@ ACTION_FUNC(do_help) {
 				return;
 			}
 			else if(bot >= top) {
-				send_to_char("Non c'e` aiuto per quella parola.\n\r", ch);
+				send_to_char("Non c'e' aiuto per quella parola.\n\r", ch);
 				return;
 			}
 			else if(chk > 0) {
@@ -2619,7 +2619,7 @@ ACTION_FUNC(do_actual_wiz_help) {
 
 	if(*arg) {
 		if(!wizhelp_index) {
-			send_to_char("Il wizhelp non e` disponibile.\n\r", ch);
+			send_to_char("Il wizhelp non e' disponibile.\n\r", ch);
 			return;
 		}
 		bot = 0;
@@ -2942,7 +2942,7 @@ ACTION_FUNC(do_who) {
 			}
 		}
 		if(index(flags,'g')) {
-			snprintf(tbuf, 511,"\n\r$c0005Totale Divinita` visibili: $c0015%d\n\r", count);
+			snprintf(tbuf, 511,"\n\r$c0005Totale Divinita' visibili: $c0015%d\n\r", count);
 		}
 		else {
 			snprintf(tbuf, 511,"\n\r$c0005Totale giocatori visibili: $c0015%d\n\r", count);
@@ -3656,10 +3656,10 @@ ACTION_FUNC(do_consider) {
 		send_to_char("Troppo facile per crederci.\n\r", ch);
 	}
 	else if(diff <= -5) {
-		send_to_char("Non sara` un problema.\n\r", ch);
+		send_to_char("Non sara' un problema.\n\r", ch);
 	}
 	else if(diff <= -3) {
-		send_to_char("Piu` che facile.\n\r",ch);
+		send_to_char("Piu' che facile.\n\r",ch);
 	}
 	else if(diff <= -2) {
 		send_to_char("Facile.\n\r", ch);
@@ -3671,7 +3671,7 @@ ACTION_FUNC(do_consider) {
 		send_to_char("L'incontro perfetto!\n\r", ch);
 	}
 	else if(diff <= 1) {
-		send_to_char("Avrai bisogno di un po` di fortuna!\n\r", ch);
+		send_to_char("Avrai bisogno di un po' di fortuna!\n\r", ch);
 	}
 	else if(diff <= 2) {
 		send_to_char("Avrai bisogno di molta fortuna!\n\r", ch);
@@ -3680,7 +3680,7 @@ ACTION_FUNC(do_consider) {
 		send_to_char("Avrai bisogno di molta fortuna ed un buon "
 					 "equipaggiamento!\n\r", ch);
 	else if(diff <= 5) {
-		send_to_char("Non ti sarai un po` montato la testa?\n\r", ch);
+		send_to_char("Non ti sarai un po' montato la testa?\n\r", ch);
 	}
 	else if(diff <= 10) {
 		send_to_char("Sei scemo o cosa?\n\r", ch);
@@ -3689,7 +3689,7 @@ ACTION_FUNC(do_consider) {
 		send_to_char("Tu SEI matto!\n\r", ch);
 	}
 	else
-		send_to_char("Perche` non ti butti semplicemente a mare e ci risparmi la "
+		send_to_char("Perche' non ti butti semplicemente a mare e ci risparmi la "
 					 "fatica?\n\r", ch);
 
 	if(ch->skills) {
@@ -3701,14 +3701,14 @@ ACTION_FUNC(do_consider) {
 		if(IsAnimal(victim) && ch->skills[SKILL_CONS_ANIMAL].learned) {
 			skill = SKILL_CONS_ANIMAL;
 			learn = ch->skills[skill].learned;
-			act("$N sembra un animale", FALSE, ch, 0, victim, TO_CHAR);
+			act("$N sembra un animale.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(IsVeggie(victim) && ch->skills[SKILL_CONS_VEGGIE].learned) {
 			if(!skill) {
 				skill = SKILL_CONS_VEGGIE;
 			}
 			learn = MAX(learn, ch->skills[SKILL_CONS_VEGGIE].learned);
-			act("$N sembra un vegetale ambulante", FALSE, ch, 0, victim, TO_CHAR);
+			act("$N sembra un vegetale ambulante.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(IsDiabolic(victim) && ch->skills[SKILL_CONS_DEMON].learned) {
 			if(!skill) {
@@ -3722,14 +3722,14 @@ ACTION_FUNC(do_consider) {
 				skill = SKILL_CONS_REPTILE;
 			}
 			learn = MAX(learn, ch->skills[SKILL_CONS_REPTILE].learned);
-			act("$N sembra un rettile", FALSE, ch, 0, victim, TO_CHAR);
+			act("$N sembra un rettile.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(IsUndead(victim) && ch->skills[SKILL_CONS_UNDEAD].learned) {
 			if(!skill) {
 				skill = SKILL_CONS_UNDEAD;
 			}
 			learn = MAX(learn, ch->skills[SKILL_CONS_UNDEAD].learned);
-			act("$N sembra un non morto", FALSE, ch, 0, victim, TO_CHAR);
+			act("$N sembra un non morto.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		if(IsGiantish(victim)&& ch->skills[SKILL_CONS_GIANT].learned) {
@@ -3737,21 +3737,21 @@ ACTION_FUNC(do_consider) {
 				skill = SKILL_CONS_GIANT;
 			}
 			learn = MAX(learn, ch->skills[SKILL_CONS_GIANT].learned);
-			act("$N sembra una creatura gigantesca", FALSE, ch, 0, victim, TO_CHAR);
+			act("$N sembra una creatura gigantesca.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(IsPerson(victim) && ch->skills[SKILL_CONS_PEOPLE].learned) {
 			if(!skill) {
 				skill = SKILL_CONS_PEOPLE;
 			}
 			learn = MAX(learn, ch->skills[SKILL_CONS_PEOPLE].learned);
-			act("$N sembra umano o mezzo umano", FALSE, ch, 0, victim, TO_CHAR);
+			act("$N sembra umano o mezzo umano.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(IsOther(victim)&& ch->skills[SKILL_CONS_OTHER].learned) {
 			if(!skill) {
 				skill = SKILL_CONS_OTHER;
 			}
 			learn = MAX(learn, ch->skills[SKILL_CONS_OTHER].learned/2);
-			act("$N sembra essere un mostro che conosci", FALSE, ch, 0, victim,
+			act("$N sembra essere un mostro che conosci.", FALSE, ch, 0, victim,
 				TO_CHAR);
 		}
 
@@ -3773,7 +3773,7 @@ ACTION_FUNC(do_consider) {
 			num2=1;
 		}
 		fnum = ((int)num/(int)num2);
-		snprintf(buf, 255,"Il numero di 'max hit points' e` %s\n\r", DescRatio(fnum));
+		snprintf(buf, 255,"Il numero massimo di punti ferita e' %s.\n\r", DescRatio(fnum));
 		send_to_char(buf, ch);
 
 		num = 105+(int)GetApprox(GET_AC(victim), learn);
@@ -3781,13 +3781,13 @@ ACTION_FUNC(do_consider) {
 //    if (!num2) num2=1;
 		fnum = ((int)num-(int)num2);
 
-		snprintf(buf, 255,"La classe di armatura e` %s\n\r", DescArmorf(fnum));
+		snprintf(buf, 255,"La classe di armatura e' %s.\n\r", DescArmorf(fnum));
 		send_to_char(buf, ch);
 
 
 
 		if(learn > 60) {
-			snprintf(buf, 255,"Ha %s attacchi per turno\n\r",
+			snprintf(buf, 255,"Ha %s attacchi per turno.\n\r",
 					 DescAttacks((int)GetApprox((int)victim->mult_att, learn)));
 			send_to_char(buf, ch);
 		}
@@ -3800,7 +3800,7 @@ ACTION_FUNC(do_consider) {
 				num2=1;
 			}
 			fnum = (int)num*(num2/2.0);
-			snprintf(buf, 255,"Il danno per attacco e` %s\n\r", DescDamage(fnum));
+			snprintf(buf, 255,"Il danno per attacco e' %s.\n\r", DescDamage(fnum));
 
 			send_to_char(buf, ch);
 		}
@@ -3819,7 +3819,7 @@ ACTION_FUNC(do_consider) {
 				fnum = 2.0;
 			}
 
-			snprintf(buf, 255,"La sua probabilita'di colpirti e' %s\n\r", DescRatioF(fnum));
+			snprintf(buf, 255,"La sua probabilita' di colpirti e' %s.\n\r", DescRatioF(fnum));
 
 			send_to_char(buf, ch);
 
@@ -3831,7 +3831,7 @@ ACTION_FUNC(do_consider) {
 			}
 			fnum = ((int)num/(int)num2);
 
-			snprintf(buf, 255,"Il 'damage bonus' e` %s\n\r", DescRatio(fnum));
+			snprintf(buf, 255,"Il bonus al danno e' %s.\n\r", DescRatio(fnum));
 
 			send_to_char(buf, ch);
 
@@ -4076,7 +4076,7 @@ ACTION_FUNC(do_attribute) {
 			 HitRollDesc(GET_HITROLL(ch)), DamRollDesc(GET_DAMROLL(ch)));
 	act(buf,FALSE, ch,0,0,TO_CHAR);
 	snprintf(buf, MAX_STRING_LENGTH-1,
-			 "$c0005Il tuo equipaggiamento e` $c0014%s$c0005",
+			 "$c0005Il tuo equipaggiamento e' $c0014%s$c0005",
 			 EqDesc(GetCharBonusIndex(ch)));
 	act(buf,FALSE, ch,0,0,TO_CHAR);
 	if(GetMaxLevel(ch)>=MAESTRO_DEL_CREATO) {
@@ -4194,7 +4194,7 @@ ACTION_FUNC(do_value) {
 
 	if(number(1,101) < ch->skills[SKILL_EVALUATE].learned/3) {
 		if(obj->obj_flags.bitvector) {
-			snprintf(buf, 999,"%s ti da` le seguenti abilita`: ", fname((obj)->name));
+			snprintf(buf, 999,"%s ti da' le seguenti abilita': ", fname((obj)->name));
 			sprintbit((unsigned long)obj->obj_flags.bitvector,affected_bits,buf2);
 			strcat(buf, buf2);
 			strcat(buf,"\n\r");
@@ -4203,7 +4203,7 @@ ACTION_FUNC(do_value) {
 	}
 
 	if(number(1,101) < ch->skills[SKILL_EVALUATE].learned/2) {
-		send_to_char("L'oggetto e`: ", ch);
+		send_to_char("L'oggetto e': ", ch);
 		sprintbit2((unsigned long)obj->obj_flags.extra_flags, extra_bits, (unsigned long)obj->obj_flags.extra_flags2, extra_bits2, buf);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
@@ -4227,7 +4227,7 @@ ACTION_FUNC(do_value) {
 	}
 	else if(ITEM_TYPE(obj) == ITEM_ARMOR) {
 
-		snprintf(buf, 999,"L'AC e` %d\n\r",
+		snprintf(buf, 999,"L'AC e' %d\n\r",
 				 GetApprox(obj->obj_flags.value[0],
 						   ch->skills[SKILL_EVALUATE].learned-10));
 		send_to_char(buf, ch);
@@ -4405,22 +4405,22 @@ const char* DescRatio(float f) { /* theirs / yours */
 		return("maggiore del tuo");
 	}
 	else if(f > .75) {
-		return("piu` di una volta e mezzo il tuo");
+		return("piu' di una volta e mezzo il tuo");
 	}
 	else if(f > .6) {
-		return("almeno un terzo piu` grande del tuo");
+		return("almeno un terzo piu' grande del tuo");
 	}
 	else if(f > .4) {
-		return("piu` o meno come il tuo");
+		return("piu' o meno come il tuo");
 	}
 	else if(f > .3) {
-		return("un po' piu` basso del tuo");
+		return("un po' piu' basso del tuo");
 	}
 	else if(f > .1) {
-		return("molto piu` basso del tuo");
+		return("molto piu' basso del tuo");
 	}
 	else {
-		return("estremamente piu` basso del tuo");
+		return("estremamente piu' basso del tuo");
 	}
 }
 const char* DescArmorf(float f) { /* theirs / yours */
@@ -4434,7 +4434,7 @@ const char* DescArmorf(float f) { /* theirs / yours */
 		return("peggiore della tua");
 	}
 	else if(f > -20.0) {
-		return("piu` o meno come la tua");
+		return("piu' o meno come la tua");
 	}
 	else if(f > -70.) {
 		return("migliore della tua");
@@ -4453,22 +4453,22 @@ const char* DescRatioF(float f) { /* theirs / yours */
 		return("maggiore della tua");
 	}
 	else if(f > .75) {
-		return("piu` di una volta e mezzo la tua");
+		return("piu' di una volta e mezzo la tua");
 	}
 	else if(f > .6) {
-		return("almeno un terzo piu` grande della tua");
+		return("almeno un terzo piu' grande della tua");
 	}
 	else if(f > .4) {
-		return("piu` o meno come la tua");
+		return("piu' o meno come la tua");
 	}
 	else if(f > .3) {
-		return("un po' piu` bassa della tua");
+		return("un po' piu' bassa della tua");
 	}
 	else if(f > .1) {
-		return("molto piu` bassa della tua");
+		return("molto piu' bassa della tua");
 	}
 	else {
-		return("estremamente piu` bassa della tua");
+		return("estremamente piu' bassa della tua");
 	}
 }
 
@@ -4504,19 +4504,19 @@ const char* DescAttacks(float a) {
 		return("pochi");
 	}
 	else if(a < 2.0) {
-		return("non piu` di due");
+		return("non piu' di due");
 	}
 	else if(a < 3.0) {
-		return("un po` di");
+		return("un po' di");
 	}
 	else if(a < 5.0) {
-		return("un bel po` di");
+		return("un bel po' di");
 	}
 	else if(a < 9.0) {
 		return("molti");
 	}
 	else {
-		return("un'enormita` di");
+		return("un'enormita' di");
 	}
 }
 
@@ -4680,7 +4680,7 @@ ACTION_FUNC(do_show_skill) {
 			send_to_char("Scommetto che pensi di essere un mago.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti spells:\n\r", ch);
+		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -4705,10 +4705,9 @@ ACTION_FUNC(do_show_skill) {
 	case 'c': {
 		if(!HasClass(ch, CLASS_CLERIC)) {
 			send_to_char("Scommetto che pensi di essere un sacerdote.\n\r", ch);
-			send_to_char("I bet you think you're a cleric.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti spells:\n\r", ch);
+		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
 				if(spell_info[i+1].spell_pointer &&
@@ -4732,10 +4731,9 @@ ACTION_FUNC(do_show_skill) {
 	case 'd': {
 		if(!HasClass(ch, CLASS_DRUID)) {
 			send_to_char("Scommetto che pensi di essere un druido.\n\r", ch);
-			send_to_char("I bet you think you're a druid.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti spells:\n\r", ch);
+		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
 				if(spell_info[i+1].spell_pointer &&
@@ -4761,7 +4759,7 @@ ACTION_FUNC(do_show_skill) {
 			send_to_char("Scommetto che pensi di essere un monaco.\n\r", ch);
 			return;
 		}
-		send_to_char("Non implementato per i ladri, per il momento\n\r", ch);
+		send_to_char("Non implementato per i monaci, per il momento\n\r", ch);
 
 		break;
 	}
@@ -4781,7 +4779,7 @@ ACTION_FUNC(do_show_skill) {
 			send_to_char("Scommetto che pensi di essere uno stregone.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti spells:\n\r", ch);
+		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -4810,7 +4808,7 @@ ACTION_FUNC(do_show_skill) {
 			send_to_char("Scommetto che pensi di essere un paladino.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti skills:\n\r", ch);
+		send_to_char("La tua classe puo' imparare le seguenti abilita':\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -4837,7 +4835,7 @@ ACTION_FUNC(do_show_skill) {
 			send_to_char("Scommetto che pensi di essere un ranger.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti skills:\n\r", ch);
+		send_to_char("La tua classe puo' imparare le seguenti abilita':\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -4864,7 +4862,7 @@ ACTION_FUNC(do_show_skill) {
 			send_to_char("Scommetto che pensi di essere uno psionist.\n\r", ch);
 			return;
 		}
-		send_to_char("La tua classe puo` imparare i seguenti skills:\n\r", ch);
+		send_to_char("La tua classe puo' imparare le seguenti abilita':\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=0; max<IMMORTALE; max++) {
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -4908,8 +4906,8 @@ ACTION_FUNC(do_scan) {
 		"nelle vicinanze",
 		"andando",
 		"andando",
-		"laggiu`",
-		"laggiu`",
+		"laggiu'",
+		"laggiu'",
 		"in lontananza",
 		"in lontananza"
 	};
@@ -5060,8 +5058,8 @@ void list_groups(struct char_data* ch,const char* szArg, int iCmd) {
 					}
 					/* if there are no group members, then remove the group title */
 					if(count < 1) {
-						send_to_char("Il nome del tuo gruppo e` stato rimosso "
-									 "poiche` il gruppo e` troppo piccolo.\n\r", person);
+						send_to_char("Il nome del tuo gruppo e' stato rimosso "
+									 "poiche' il gruppo e' troppo piccolo.\n\r", person);
 						free(person->specials.group_name);
 						person->specials.group_name = 0;
 					}
@@ -5100,7 +5098,7 @@ int can_see_linear(struct char_data* ch, struct char_data* targ, int* rng,
 
 /**************************************************************************
  * Questa funzione restituisce il puntatore ad un personaggio se questo
- * esiste e se e` nella direzione indicata. La stringa arg deve essere nel
+ * esiste e se e' nella direzione indicata. La stringa arg deve essere nel
  * seguente formato: <dir> at <target> o semplicemente <target>.
  * Nel primo caso, cerca il personaggio con il nome <target> nella direzione
  * <dir>, nel secondo caso cerca il personaggio <target> nella locazione

@@ -167,7 +167,7 @@ ACTION_FUNC(do_action) {
 
 
 	if((act_nr = find_action(cmd)) < 0) {
-		send_to_char("Esattamente..... COSA vorresti fare???.\n\r", ch);
+		send_to_char("Esattamente... COSA vorresti fare???\n\r", ch);
 		return;
 	}
 
@@ -197,7 +197,7 @@ ACTION_FUNC(do_action) {
 	}
 	else {
 		if(GET_POS(vict) < action->min_victim_position) {
-			act("$N is not in a proper position for that.",FALSE,ch,0,vict,TO_CHAR);
+			act("$N non e' nella posizione giusta per farlo.",FALSE,ch,0,vict,TO_CHAR);
 		}
 		else {
 
@@ -215,7 +215,7 @@ ACTION_FUNC(do_action) {
 						action->hide, ch, 0, vict, TO_CHAR);
 					act("$n cade a terra svenut$b, vittima della sua impudenza",
 						action->hide, ch, 0, vict, TO_NOTVICT);
-					act("$n ha osato mancarti di rispetto.... ma se ne e` pentit$b",
+					act("$n ha osato mancarti di rispetto.... ma se ne e' pentit$b",
 						action->hide, ch, 0, vict, TO_VICT);
 					GET_POS(ch)=POSITION_STUNNED;
 					break;
@@ -238,11 +238,11 @@ ACTION_FUNC(do_insult) {
 
 	if(*tmp) {
 		if(!(victim = get_char_room_vis(ch, tmp))) {
-			send_to_char("Can't hear you!\n\r", ch);
+			send_to_char("Non puo' sentirti!\n\r", ch);
 		}
 		else {
 			if(victim != ch) {
-				snprintf(buf,99, "You insult %s.\n\r",GET_NAME(victim));
+				snprintf(buf,99, "Insulti %s.\n\r",GET_NAME(victim));
 				send_to_char(buf,ch);
 
 				switch(random()%3) {
@@ -250,42 +250,42 @@ ACTION_FUNC(do_insult) {
 					if(GET_SEX(ch) == SEX_MALE) {
 						if(GET_SEX(victim) == SEX_MALE)
 							act(
-								"$n accuses you of fighting like a woman!", FALSE,
+								"$n ti accusa di combattere come una donnicciola!", FALSE,
 								ch, 0, victim, TO_VICT);
 						else
-							act("$n says that women can't fight.",
+							act("$n dice che le donne non possono combattere.",
 								FALSE, ch, 0, victim, TO_VICT);
 					}
 					else {   /* Ch == Woman */
 						if(GET_SEX(victim) == SEX_MALE)
-							act("$n accuses you of having the smallest.... (brain?)",
+							act("$n ti accusa di averlo piccolo piccolo... il cervello eh!)",
 								FALSE, ch, 0, victim, TO_VICT);
 						else
-							act("$n tells you that you'd loose a beautycontest against a troll.",
+							act("$n dice che potresti perdere un concorso di bellezza contro un troll!",
 								FALSE, ch, 0, victim, TO_VICT);
 					}
 				}
 				break;
 				case 1 : {
-					act("$n calls your mother a bitch!",
+					act("$n chiama tua madre 'brutta ballerina'!",
 						FALSE, ch, 0, victim, TO_VICT);
 				}
 				break;
 				default : {
-					act("$n tells you to get lost!",FALSE,ch,0,victim,TO_VICT);
+					act("$n ti dice che sei un perdente!",FALSE,ch,0,victim,TO_VICT);
 				}
 				break;
 				} /* end switch */
 
-				act("$n insults $N.", TRUE, ch, 0, victim, TO_NOTVICT);
+				act("$n insulta $N.", TRUE, ch, 0, victim, TO_NOTVICT);
 			}
 			else {   /* ch == victim */
-				send_to_char("You feel insulted.\n\r", ch);
+				send_to_char("Ti senti insultato.\n\r", ch);
 			}
 		}
 	}
 	else {
-		send_to_char("Sure you don't want to insult everybody.\n\r", ch);
+		send_to_char("Sicuramente non vuoi insultare tutti quanti.\n\r", ch);
 	}
 }
 
@@ -325,12 +325,12 @@ ACTION_FUNC(do_pose) {
 	}
 
 	if((lev < pose_messages[0].level) || !IS_PC(ch)) {
-		send_to_char("Pardon?\n\r", ch);
+		send_to_char("Prego?\n\r", ch);
 		return;
 	}
 
 	if(!IS_SET(ch->player.iClass,CLASS_MAGIC_USER|CLASS_CLERIC|CLASS_WARRIOR|CLASS_THIEF)) {
-		send_to_char("Sorry.. no pose messages for you yet\n", ch);
+		send_to_char("Mi dispiace... non ci sono 'pose' per la tua classe.\n\r", ch);
 		return;
 	}
 

@@ -849,7 +849,7 @@ ACTION_FUNC(do_setskill) {
 	}
 
 	if((mob = get_char_vis(ch, buf)) == NULL) {
-		send_to_char("Non c'e` nessuno con quel nome qui.\n\r", ch);
+		send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
 	}
 	else if(mob->skills == NULL) {
 		send_to_char("Il giocatore non ha skills.\n\r", ch);
@@ -1122,28 +1122,28 @@ void check_reboot() {
 		}
 		else if(shutdownlevel <= 30) {
 			if(shutdownlevel > 29) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro un minuto!\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro un minuto!\n\r");
 			}
 			else if(shutdownlevel >= 28) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 2 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 2 minuti.\n\r");
 			}
 			else if(shutdownlevel >= 27) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 3 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 3 minuti.\n\r");
 			}
 			else if(shutdownlevel >= 26) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 4 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 4 minuti.\n\r");
 			}
 			else if(shutdownlevel >= 25) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 5 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 5 minuti.\n\r");
 			}
 			else if(shutdownlevel == 20) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 10 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 10 minuti.\n\r");
 			}
 			else if(shutdownlevel == 15) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 15 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 15 minuti.\n\r");
 			}
 			else if(shutdownlevel == 10) {
-				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira` entro 20 minuti.\n\r");
+				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 20 minuti.\n\r");
 			}
 		}
 	}

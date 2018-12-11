@@ -197,7 +197,7 @@ ACTION_FUNC(do_drink) {
 			}
 		}
 		else {
-			act("Non c'e` nulla in $p.", FALSE, ch, temp, 0, TO_CHAR);
+			act("Non c'e' nulla in $p.", FALSE, ch, temp, 0, TO_CHAR);
 		}
 	}
 }
@@ -355,9 +355,9 @@ ACTION_FUNC(do_pour) {
 	temp = MIN(from_obj->obj_flags.value[1], to_obj->obj_flags.value[0] -
 			   to_obj->obj_flags.value[1]);
 
-	/* Se lo oggetto from_obj e` di tipo DRINK_PERM, in questo modo puo` essere
-	 * svuotato. Devo decidere se e` una feature od un bug :) Per il momento
-	 * rimane cosi`, perche` ha vantaggi e svantaggi per il giocatore.
+	/* Se l'oggetto from_obj e' di tipo DRINK_PERM, in questo modo puo' essere
+	 * svuotato. Devo decidere se e' una feature od un bug :) Per il momento
+	 * rimane cosi', perche' ha vantaggi e svantaggi per il giocatore.
 	 */
 	from_obj->obj_flags.value[1] -= temp;
 	to_obj->obj_flags.value[1] += temp;
@@ -365,7 +365,7 @@ ACTION_FUNC(do_pour) {
 	weight_change_object(from_obj, -temp);
 
 
-	/* Se il from_obj era avvelenato, ovviemente anche il to_obj sara`
+	/* Se il from_obj era avvelenato, ovviemente anche il to_obj sara'
 	 * avvelenato.
 	 */
 	if(IS_SET(from_obj->obj_flags.value[3], DRINK_POISON)) {
@@ -703,7 +703,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 
 	if(!IsHumanoid(ch)) {
 		if((keyword != 13) || (!HasHands(ch))) {
-			act("Non puoi indossare $p! E` per umanoidi.", FALSE, ch, obj_object,
+			act("Non puoi indossare $p! E' per umanoidi.", FALSE, ch, obj_object,
 				NULL, TO_CHAR);
 			return;
 		}
@@ -712,7 +712,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	switch(keyword) {
 	case 0:  /* LIGHT SOURCE */
 		if(ch->equipment[WEAR_LIGHT]) {
-			send_to_char("Stai gia` usando una sorgente di luce.\n\r", ch);
+			send_to_char("Stai gia' usando una sorgente di luce.\n\r", ch);
 		}
 		else if(ch->equipment[WIELD] && ch->equipment[WIELD]->obj_flags.weight >
 				str_app[STRENGTH_APPLY_INDEX(ch)].wield_w) {
@@ -753,7 +753,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 1:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_FINGER)) {
 			if((ch->equipment[WEAR_FINGER_L]) && (ch->equipment[WEAR_FINGER_R])) {
-				send_to_char("Sta gia` indossando qualcosa sulle tue dita.\n\r", ch);
+				send_to_char("Sta gia' indossando qualcosa sulle tue dita.\n\r", ch);
 			}
 			else {
 				perform_wear(ch,obj_object,keyword);
@@ -804,7 +804,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 3:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_BODY)) {
 			if(ch->equipment[WEAR_BODY]) {
-				send_to_char("Stai gia` indossando qualcosa sul corpo.\n\r", ch);
+				send_to_char("Stai gia' indossando qualcosa sul corpo.\n\r", ch);
 			}
 			else {
 				act("Indossi $p.",
@@ -840,7 +840,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 5:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_LEGS)) {
 			if(ch->equipment[WEAR_LEGS]) {
-				send_to_char("Hai gia` qualcosa suelle tue gambe.\n\r", ch);
+				send_to_char("Hai gia' qualcosa suelle tue gambe.\n\r", ch);
 			}
 			else {
 				act("Indossi $p sulle gambe.",
@@ -858,7 +858,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 6:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_FEET)) {
 			if(ch->equipment[WEAR_FEET]) {
-				send_to_char("Hai gia` un qualche tipo di calzatura.\n\r", ch);
+				send_to_char("Hai gia' un qualche tipo di calzatura.\n\r", ch);
 			}
 			else {
 				act("Ti metti $p ai piedi.",
@@ -876,7 +876,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 7:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_HANDS)) {
 			if(ch->equipment[WEAR_HANDS]) {
-				send_to_char("Indossi gia` qualcosa sulle tue mani.\n\r", ch);
+				send_to_char("Indossi gia' qualcosa sulle tue mani.\n\r", ch);
 			}
 			else {
 				act("Metti $p sulle mani.",
@@ -894,7 +894,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 8:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_ARMS)) {
 			if(ch->equipment[WEAR_ARMS]) {
-				send_to_char("Hai gia` qualcosa sulle braccia.\n\r", ch);
+				send_to_char("Hai gia' qualcosa sulle braccia.\n\r", ch);
 			}
 			else {
 				act("Indossi $p sulle braccia.",
@@ -912,7 +912,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 9:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_ABOUT)) {
 			if(ch->equipment[WEAR_ABOUT]) {
-				send_to_char("Indossi gia` qualcosa intorno al tuo corpo.\n\r", ch);
+				send_to_char("Indossi gia' qualcosa intorno al tuo corpo.\n\r", ch);
 			}
 			else {
 				act("Ti avvolgi con $p.",
@@ -923,7 +923,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 			}
 		}
 		else {
-			send_to_char("Non puo` essere indossato intorno al corpo.\n\r", ch);
+			send_to_char("Non puo' essere indossato intorno al corpo.\n\r", ch);
 		}
 		break;
 
@@ -948,7 +948,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 11:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_WRIST)) {
 			if((ch->equipment[WEAR_WRIST_L]) && (ch->equipment[WEAR_WRIST_R])) {
-				send_to_char("Hai gia` oggetti intorno a tutti e due i polsi.\n\r",
+				send_to_char("Hai gia' oggetti intorno a tutti e due i polsi.\n\r",
 							 ch);
 			}
 			else {
@@ -974,7 +974,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 12:
 		if(CAN_WEAR(obj_object,ITEM_WIELD)) {
 			if(ch->equipment[WIELD]) {
-				send_to_char("Stai gia` impugnando qualcosa.\n\r", ch);
+				send_to_char("Stai gia' impugnando qualcosa.\n\r", ch);
 			}
 			else if(ch->equipment[WEAR_LIGHT] && ch->equipment[HOLD]) {
 				send_to_char("Devi prima togliere qualcosa dalle tue mani.\n\r", ch);
@@ -982,7 +982,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 			else {
 				if(GET_OBJ_WEIGHT(obj_object) >
 						str_app[STRENGTH_APPLY_INDEX(ch)].wield_w) {
-					send_to_char("E` troppo pesante per usarlo con una mano sola..\n\r",
+					send_to_char("E' troppo pesante per usarlo con una mano sola..\n\r",
 								 ch);
 					if(GET_OBJ_WEIGHT(obj_object) <
 							(3*str_app[STRENGTH_APPLY_INDEX(ch)].wield_w)/2) {
@@ -1015,14 +1015,14 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 			}
 		}
 		else {
-			send_to_char("Non e` una cosa che puo` essere impugnata.\n\r", ch);
+			send_to_char("Non e' una cosa che puo' essere impugnata.\n\r", ch);
 		}
 		break;
 
 	case 13:
 		if(CAN_WEAR(obj_object,ITEM_HOLD)) {
 			if(ch->equipment[HOLD]) {
-				send_to_char("Stai gia` usando qualcosa.\n\r", ch);
+				send_to_char("Stai gia' usando qualcosa.\n\r", ch);
 			}
 			else if(ch->equipment[WIELD] &&
 					ch->equipment[WIELD]->obj_flags.weight >
@@ -1043,7 +1043,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 
 					if(GET_OBJ_WEIGHT(obj_object) >
 							str_app[STRENGTH_APPLY_INDEX(ch)].wield_w/2) {
-						send_to_char("Quest'arma e` troppo pesante da tenere.\n\r",
+						send_to_char("Quest'arma e' troppo pesante da tenere.\n\r",
 									 ch);
 						return;
 					}
@@ -1051,7 +1051,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				else if(ch->equipment[WIELD]) {
 					if(GET_OBJ_WEIGHT(obj_object) >
 							str_app[STRENGTH_APPLY_INDEX(ch)].wield_w) {
-						send_to_char("Questo oggetto e` troppo pesante da tenere.\n\r",
+						send_to_char("Questo oggetto e' troppo pesante da tenere.\n\r",
 									 ch);
 						return;
 					}
@@ -1065,14 +1065,14 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 			}
 		}
 		else {
-			send_to_char("Non e` possibile tenerlo.\n\r", ch);
+			send_to_char("Non e' possibile tenerlo.\n\r", ch);
 		}
 		break;
 
 	case 14:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_SHIELD)) {
 			if((ch->equipment[WEAR_SHIELD])) {
-				send_to_char("Stai gia` usando uno scudo.\n\r", ch);
+				send_to_char("Stai gia' usando uno scudo.\n\r", ch);
 			}
 			else if(ch->equipment[WIELD] &&
 					ch->equipment[WIELD]->obj_flags.weight >
@@ -1106,7 +1106,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 #endif
 		{
 			if(ch->equipment[WEAR_BACK]) {
-				send_to_char("Hai gia` qualcosa sulle tue spalle.\n\r", ch);
+				send_to_char("Hai gia' qualcosa sulle tue spalle.\n\r", ch);
 			}
 			else {
 				act("Ti metti $p sulle spalle.",
@@ -1124,7 +1124,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 16:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_EAR)) {
 			if((ch->equipment[WEAR_EAR_L]) && (ch->equipment[WEAR_EAR_R])) {
-				send_to_char("Hai gia` qualcosa su entrambi gli orecchi.\n\r", ch);
+				send_to_char("Hai gia' qualcosa su entrambi gli orecchi.\n\r", ch);
 			}
 			else {
 				perform_wear(ch,obj_object,keyword);
@@ -1153,7 +1153,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 17:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_EYE)) {
 			if(ch->equipment[WEAR_EYES]) {
-				send_to_char("Hai gia` qualcosa sui tuoi occhi.\n\r", ch);
+				send_to_char("Hai gia' qualcosa sui tuoi occhi.\n\r", ch);
 			}
 			else {
 				act("Ti metti $p davanti agli occhi.",

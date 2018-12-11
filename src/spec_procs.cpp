@@ -338,7 +338,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 				if(number == -1
 						|| (HasClass(ch,CLASS_MAGIC_USER) && spell_info[ number ].min_level_magic <1) // SALVO non si praccano quelle sconosciute
 						|| (HasClass(ch,CLASS_SORCERER) && spell_info[ number ].min_level_sorcerer <1)) { // SALVO non si praccano quelle sconosciute neppure i sorcerer
-					send_to_char("Non so` nulla di questa magia.\n\r", ch);
+					send_to_char("Non so' nulla di questa magia.\n\r", ch);
 					return(TRUE);
 				}
 
@@ -368,12 +368,12 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 
 				if(ch->skills[ number ].learned >= 60) {
 					do_say(guildmaster,
-						   "Io non posso piu` insegnarti nulla su questa magia. "
+						   "Io non posso piu' insegnarti nulla su questa magia. "
 						   "Puoi migliorare solo usandola.", 0);
 					return(TRUE);
 				}
 
-				send_to_char("Ti alleni per un po`...\n\r", ch);
+				send_to_char("Ti alleni per un po'...\n\r", ch);
 				ch->specials.spells_to_learn--;
 
 				if(!IS_SET(ch->skills[ number ].flags, SKILL_KNOWN)) {
@@ -1284,7 +1284,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 	/* things you MUST change if you install this on another mud:
 	 * THE_PUB, room number of the Pub where he will sell beer.
 	 * sold_here, object numbers of the containers and the
-	 * corresponding beer that they will contain.  If you don`t
+	 * corresponding beer that they will contain.  If you don't
 	 * have multi-buy code, change the #if 1 to #if 0.
 	 * */
 #define THE_PUB        3940
@@ -1685,7 +1685,7 @@ MOBSPECIAL_FUNC(eric_johnson)
 						}
 						break;
 					default:
-						s = "$n says 'Questo e` impossibile!'";
+						s = "$n says 'Questo e' impossibile!'";
 						break;
 					}
 					act(s, FALSE, eric, 0, 0, TO_ROOM);
@@ -3992,7 +3992,7 @@ MOBSPECIAL_FUNC(Ringwraith) {
 							break;
 						case 1:
 							if(IS_NPC(victim)) {
-								act("$N da` velocemente l'Anello a $n.", FALSE, ch, NULL,
+								act("$N da' velocemente l'Anello a $n.", FALSE, ch, NULL,
 									victim, TO_ROOM);
 								if(ring->carried_by) {
 									obj_from_char(ring);
@@ -4010,14 +4010,14 @@ MOBSPECIAL_FUNC(Ringwraith) {
 									act("$c0015[$c0005$n$c0015] dice '$N, dammi l'Anello "
 										"ADESSO'.", FALSE, ch, NULL, victim, TO_ROOM);
 								else {
-									act("$n ti da` una dolorosa gomitata.",
+									act("$n ti da' una dolorosa gomitata.",
 										FALSE, ch, NULL, victim, TO_ROOM);
 								}
 								wh->chances++;
 							}
 							break;
 						default:
-							if(check_peaceful(ch, "Dannazione, e` in salvo.")) {
+							if(check_peaceful(ch, "Dannazione, e' in salvo.")) {
 								if(!check_soundproof(ch))
 									act("$c0015[$c0005$n$c0015] dice 'Non puoi star qui per "
 										"sempre, $N'.", FALSE, ch, NULL, victim, TO_ROOM);
@@ -4025,7 +4025,7 @@ MOBSPECIAL_FUNC(Ringwraith) {
 							else {
 								if(!check_soundproof(ch))
 									act("$c0015[$c0005$n$c0015] dice 'Va bene, credo che "
-										"dovro` prendermelo da solo'.", FALSE, ch, NULL,
+										"dovro' prendermelo da solo'.", FALSE, ch, NULL,
 										victim, TO_ROOM);
 								hit(ch, victim, TYPE_UNDEFINED);
 							}
@@ -4370,7 +4370,7 @@ ROOMSPECIAL_FUNC(Fountain) {
 		}
 
 		if(ITEM_TYPE(obj) !=ITEM_DRINKCON) {
-			send_to_char("Questo non e` un contenitore per liquidi!\n\r", ch);
+			send_to_char("Questo non e' un contenitore per liquidi!\n\r", ch);
 			return(TRUE);
 		}
 
@@ -4390,7 +4390,7 @@ ROOMSPECIAL_FUNC(Fountain) {
 				weight_change_object(obj, water);
 				name_from_drinkcon(obj);
 				name_to_drinkcon(obj, LIQ_WATER);
-				act("$p e` pieno.", FALSE, ch,obj,0,TO_CHAR);
+				act("$p e' pieno.", FALSE, ch,obj,0,TO_CHAR);
 				act("$n riempie $p con acqua.", FALSE, ch,obj,0,TO_ROOM);
 			}
 		}

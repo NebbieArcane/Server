@@ -201,12 +201,12 @@ FIND_FUNC(IsGuildGuardRoomFP) {
 
 /****************************************************************************
  * PlayersGuildGuard va assegnata ai guardiani delle gilde dei giocatori.
- * Il guardiano blocchera` tutti quelli che tentano di entrare nella gilda,
+ * Il guardiano blocchera' tutti quelli che tentano di entrare nella gilda,
  * ma non sono iscritti nel libro.
- * E` possibile dare una chiave da tenere (HOLD) alla guardia, in modo che
- * in caso di perdita, il capo della gilda la puo` avere.
- * Deve dare il comando 'ask guardia chiave' e la guardia dara` la chiave al
- * capo (e solo al capo). In caso di morte della guardia, questa distruggera`
+ * E' possibile dare una chiave da tenere (HOLD) alla guardia, in modo che
+ * in caso di perdita, il capo della gilda la puo' avere.
+ * Deve dare il comando 'ask guardia chiave' e la guardia dara' la chiave al
+ * capo (e solo al capo). In caso di morte della guardia, questa distruggera'
  * la chiave tenuta.
  ****************************************************************************/
 
@@ -248,10 +248,10 @@ MOBSPECIAL_FUNC(PlayersGuildGuard) {
 						(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI ||
 						 !IS_SET(ch->specials.act, PLR_NOHASSLE))) {
 					do_action(mob, "", CMD_SHAKE);
-					act("$c0015[$c0005$N$c0015] ti dice 'Dove credi di andare tu ? "
-						"L'ingresso e` riservato!'", FALSE, ch, 0, mob, TO_CHAR);
-					act("$c0015[$c0005$N$c0015] dice a $n 'Dove credi di andare tu ? "
-						"L'ingresso e` riservato!'", FALSE, ch, 0, mob, TO_ROOM);
+					act("$c0015[$c0005$N$c0015] ti dice 'Dove credi di andare tu? "
+						"L'ingresso e' riservato!'", FALSE, ch, 0, mob, TO_CHAR);
+					act("$c0015[$c0005$N$c0015] dice a $n 'Dove credi di andare tu? "
+						"L'ingresso e' riservato!'", FALSE, ch, 0, mob, TO_ROOM);
 					return TRUE;
 				}
 			} /* O la stanza o la direzione non sono quelle controllate. */
@@ -277,9 +277,9 @@ MOBSPECIAL_FUNC(PlayersGuildGuard) {
 						sprintf(szBuffer, "%s Certo signor%c, subito signor%c",
 								GET_NAME(ch), chEorA, chEorA);
 						do_tell(mob, szBuffer, CMD_TELL);
-						act("$n da` $p a $N", TRUE, mob, mob->equipment[ HOLD ], ch,
+						act("$n da' $p a $N", TRUE, mob, mob->equipment[ HOLD ], ch,
 							TO_NOTVICT);
-						act("$n ti da` $p", TRUE, mob, mob->equipment[ HOLD ], ch,
+						act("$n ti da' $p", TRUE, mob, mob->equipment[ HOLD ], ch,
 							TO_VICT);
 						obj_to_char(unequip_char(mob, HOLD), ch);
 					}
@@ -396,7 +396,7 @@ void GuildDeposit(struct char_data* ch, struct char_data* mob,const char* arg, i
 				fclose(pfTotal);
 
 				act("$c0013[$c0015$N$c0013] ti dice 'Grazie di aver "
-					"contribuito alla prosperita` della gilda'", FALSE, ch,
+					"contribuito alla prosperita' della gilda'", FALSE, ch,
 					NULL, mob, TO_CHAR);
 				sprintf(szBuffer, "$n deposita %ld monete nelle casse della gilda.",
 						lGold);
@@ -404,7 +404,7 @@ void GuildDeposit(struct char_data* ch, struct char_data* mob,const char* arg, i
 
 			}
 			else {
-				act("$c0013[$c0015$N$c0013] ti dice 'Acc., non trovo il registro.",
+				act("$c0013[$c0015$N$c0013] ti dice 'Accidenti, non trovo il registro.",
 					FALSE, ch, NULL, mob, TO_CHAR);
 				mudlog(LOG_ERROR, "Cannot open file %s in GuildBank",
 					   szFileName);
@@ -418,7 +418,7 @@ void GuildDeposit(struct char_data* ch, struct char_data* mob,const char* arg, i
 	}
 	else {
 		act("$c0013[$c0015$N$c0013] ti dice 'Non ho capito "
-			"quante monete indende versare. Puo` ripetere ?'", FALSE, ch,
+			"quante monete indende versare. Puo' ripetere?'", FALSE, ch,
 			NULL, mob, TO_CHAR);
 	}
 }
@@ -511,13 +511,13 @@ void GuildWithdraw(struct char_data* pCh, struct char_data* pMob,const char* pAr
 		}
 		else {
 			act("$c0013[$c0015$N$c0013] ti dice 'Non ho capito "
-				"quante monete indende versare. Puo` ripetere ?'", FALSE, pCh,
+				"quante monete indende versare. Puo' ripetere?'", FALSE, pCh,
 				NULL, pMob, TO_CHAR);
 		}
 	}
 	else {
-		char pMsg[] = "$c0015[$c0005$N$c0015] dice 'Il prelievo puo` essere "
-					  "fatto solo in presenza del capo della gilda'";
+		char pMsg[] = "$c0015[$c0005$N$c0015] dice 'Il prelievo puo' essere "
+					  "fatto solo in presenza del capo della gilda.'";
 		act(pMsg, FALSE, pCh, NULL, pMob, TO_CHAR);
 		act(pMsg, FALSE, pCh, NULL, pMob, TO_ROOM);
 	}
@@ -530,7 +530,7 @@ void GuildWithdraw(struct char_data* pCh, struct char_data* pMob,const char* pAr
  * Possono depositare nelle banche solo gli appartenenti alla gilda iscritti
  * nel libro della gilda.
  *
- * Il bilancio della banca lo puo` leggere solo il capogilda, mentre
+ * Il bilancio della banca lo puo' leggere solo il capogilda, mentre
  * possono prelevare dalla banca solo gli appartenenti alla gilda che
  * tengono (HOLD) il simbolo della gilda e solo in presenza del capogilda.
  *
@@ -724,7 +724,7 @@ int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data*
 									(int)lXP);
 
 					act("$c0013[$c0015$N$c0013] ti dice 'Grazie di aver "
-						"contribuito alla prosperita` della gilda'", FALSE,
+						"contribuito alla prosperita' della gilda'", FALSE,
 						pChar, NULL, pMob, TO_CHAR);
 					sprintf(szBuffer, "$n deposita %ld XP nelle casse della gilda.",
 							lXP);
@@ -733,7 +733,7 @@ int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data*
 				else {
 					mudlog(LOG_ERROR, "Cannot open file %s in GuildDepositXP (gilde.c)",
 						   szFileName);
-					act("$c0013[$c0015$N$c0013] ti dice 'Acc., non trovo il registro.",
+					act("$c0013[$c0015$N$c0013] ti dice 'Accidenti, non trovo il registro.",
 						FALSE, pChar, NULL, pMob, TO_CHAR);
 					return FALSE;
 				}
@@ -852,13 +852,13 @@ int GuildWithdrawXP(struct char_data* pChar,  const char* szArg,struct char_data
 			}
 		}
 		else {
-			act("$c0013[$c0015$N$c0013] ti dice 'E` possibile prelevare solo in "
+			act("$c0013[$c0015$N$c0013] ti dice 'E' possibile prelevare solo in "
 				"presenza del capogilda.'", FALSE, pChar, NULL, pMob, TO_CHAR);
 		}
 	}
 	else {
 		act("$c0013[$c0015$N$c0013] ti dice 'Non ho capito "
-			"quanti XP indendi prelevare. Puoi ripetere ?'", FALSE, pChar,
+			"quanti XP indendi prelevare. Puoi ripetere?'", FALSE, pChar,
 			NULL, pMob, TO_CHAR);
 	}
 	return TRUE;
@@ -871,17 +871,17 @@ int GuildWithdrawXP(struct char_data* pChar,  const char* szArg,struct char_data
  *
  * I comandi ammessi sono:
  *
- * deposit puo` essere dato da chiunque sia iscritto nel libro della gilda.
- *         E` possibile depositare al massimo 100.000 XP al giorno e solo la
- *         quantita` di XP che supera quella necessaria per il livello a cui
- *         e` il giocatore.
- * withdraw puo` essere dato da chiunque sia iscritto nel libro della gilda
+ * deposit puo' essere dato da chiunque sia iscritto nel libro della gilda.
+ *         E' possibile depositare al massimo 100.000 XP al giorno e solo la
+ *         quantita' di XP che supera quella necessaria per il livello a cui
+ *         e' il giocatore.
+ * withdraw puo' essere dato da chiunque sia iscritto nel libro della gilda
  *          e solo inpresenza del capogilda.
- *          E` possibile prelevare un massimo di 5.000.000 ogni 3 giorni ed
+ *          E' possibile prelevare un massimo di 5.000.000 ogni 3 giorni ed
  *          al massimo il quantitativo di XP necessario a due livelli superiori
  *          all'attuale.
- * balance puo` essere dato solo dal capo della gilda. Permette di vedere la
- *         quantita` di XP presenti nella banca ed una lista
+ * balance puo' essere dato solo dal capo della gilda. Permette di vedere la
+ *         quantita' di XP presenti nella banca ed una lista
  *         dei giocatori che hanno versato XP nelle ultime ventiquattrore o
  *         prelevato negli ultimi 3 giorni.
  ****************************************************************************/
@@ -960,10 +960,10 @@ MOBSPECIAL_FUNC(GuildXPBanker) {
 
 /****************************************************************************
  * Questa funzione viene attaccata al libro dei membri della gilda. Il capo
- * gilda puo` inserire nuovi membri (che devono essere presenti) con
+ * gilda puo' inserire nuovi membri (che devono essere presenti) con
  * write <nomemembro> <nomelibro>, cancellarli con
  * remove <nomemembro> <nomelibro> e visualizzarne la lista con
- * read <nomelibro> (quest'ultimo comando non e` limitato al solo capogilda).
+ * read <nomelibro> (quest'ultimo comando non e' limitato al solo capogilda).
  * *************************************************************************/
 
 OBJSPECIAL_FUNC(GuildMemberBook) {
@@ -986,8 +986,8 @@ OBJSPECIAL_FUNC(GuildMemberBook) {
 					if(get_obj_vis_accessible(ch, szArgument) == obj) {
 						char szBuffer[ 256 ];
 						TSocioGilda* pSocio;
-						act("Questo e` $p", FALSE, ch, obj, NULL, TO_CHAR);
-						sprintf(szBuffer, "Il capo della gilda e` %c%s.",
+						act("Questo e' $p", FALSE, ch, obj, NULL, TO_CHAR);
+						sprintf(szBuffer, "Il capo della gilda e' %c%s.",
 								UPPER(pDatiGilde[ i ].szNomeCapo[ 0 ]),
 								pDatiGilde[ i ].szNomeCapo + 1);
 						act(szBuffer, FALSE, ch, NULL, NULL, TO_CHAR);
@@ -1026,7 +1026,7 @@ OBJSPECIAL_FUNC(GuildMemberBook) {
 												pMembro, TO_CHAR);
 										}
 										else {
-											act("$N e` gia` membro della gilda.", TRUE, ch, NULL,
+											act("$N e' gia' membro della gilda.", TRUE, ch, NULL,
 												pMembro, TO_CHAR);
 										}
 									}
@@ -1036,7 +1036,7 @@ OBJSPECIAL_FUNC(GuildMemberBook) {
 									}
 								}
 								else {
-									act("Ma tu sei gia` il capo.", TRUE, ch, NULL, NULL,
+									act("Ma tu sei gia' il capo.", TRUE, ch, NULL, NULL,
 										TO_CHAR);
 								}
 							}
@@ -1046,7 +1046,7 @@ OBJSPECIAL_FUNC(GuildMemberBook) {
 							}
 						}
 						else {
-							act("Mi dispiace, ma solo il capo della gilda puo` aggiungere "
+							act("Mi dispiace, ma solo il capo della gilda puo' aggiungere "
 								"nuovi membri.", FALSE, ch, NULL, NULL, TO_CHAR);
 						}
 						return TRUE;
@@ -1074,12 +1074,12 @@ OBJSPECIAL_FUNC(GuildMemberBook) {
 								}
 							}
 							else {
-								act("Quel nome non e` presente nella lista.", FALSE, ch,
+								act("Quel nome non e' presente nella lista.", FALSE, ch,
 									NULL, NULL, TO_CHAR);
 							}
 						}
 						else {
-							act("Mi dispiace, ma solo il capo della gilda puo` cancellare "
+							act("Mi dispiace, ma solo il capo della gilda puo' cancellare "
 								"i membri.", FALSE, ch, NULL, NULL, TO_CHAR);
 						}
 						return TRUE;

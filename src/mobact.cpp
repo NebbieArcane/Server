@@ -551,7 +551,7 @@ void mobile_activity(struct char_data* ch) {
 					}
 					else {
 						if(IsHumanoid(ch)) {
-							act("$c0009[$c0015$n$c0009] urla 'Ti uccidero`!'",
+							act("$c0009[$c0015$n$c0009] urla 'Ti uccidero'!'",
 								TRUE, ch, 0, 0, TO_ROOM);
 						}
 						else if(IsAnimal(ch)) {
@@ -590,7 +590,7 @@ void mobile_activity(struct char_data* ch) {
 							}
 							else {
 								if(IsHumanoid(ch)) {
-									act("$c0009[$c0015$n$c0009] urla 'Ti uccidero`!'",
+									act("$c0009[$c0015$n$c0009] urla 'Ti uccidero'!'",
 										TRUE, ch, 0, 0, TO_ROOM);
 								}
 								else if(IsAnimal(ch)) {
@@ -700,8 +700,8 @@ int UseViolentHeldItem(struct char_data* ch) {
 
 				if(isname(GET_NAME(ch), GET_NAME(ch->specials.fighting))) {
 					/* Questa roba qui sotto, secondo me, non funziona. Ma non dovrebbe
-					 *  essere un problema perche` sara` difficile che due con il nome
-					 *  uguale si combattano fra loro. Comunque l` if piu` sotto aveva
+					 *  essere un problema perche' sara' difficile che due con il nome
+					 *  uguale si combattano fra loro. Comunque l' if piu' sotto aveva
 					 *   un = in meno
 					 * */
 					struct char_data* v;

@@ -65,11 +65,11 @@ MOBSPECIAL_FUNC(Lizardman) {
 
 					if(damage(mob, pVictim, iDam, TYPE_BLUDGEON, 7) == AllLiving) {
 						if(iDam >= 30) {
-							act("$c0011Il colpo di coda di $n fa perdere i sensi a $N",
+							act("$c0011Il colpo di coda di $n fa perdere i sensi a $N.",
 								TRUE, mob, NULL, pVictim, TO_NOTVICT);
-							act("$c0011Il colpo di coda di $n ti fa perdere i sensi", TRUE,
+							act("$c0011Il colpo di coda di $n ti fa perdere i sensi.", TRUE,
 								mob, NULL, pVictim, TO_VICT);
-							act("$c0011Il tuo colpo di coda fa perdere i sensi a $N", TRUE,
+							act("$c0011Il tuo colpo di coda fa perdere i sensi a $N.", TRUE,
 								mob, NULL, pVictim, TO_CHAR);
 
 							if(pVictim->specials.fighting) {
@@ -112,7 +112,7 @@ MOBSPECIAL_FUNC(lizardman_shaman) {
 								 0);
 					else
 						do_emote(mob, "sibila arrabbiato: 'Non la farai franca! "
-								 "Il serpente ti punira`!'", 0);
+								 "Il serpente ti punira'!'", 0);
 					break;
 				} /* end switch */
 			}
@@ -149,7 +149,7 @@ MOBSPECIAL_FUNC(village_woman) {
 	const char* aszInvocazioni[ 10 ] = {
 		"Aiuto!",
 		"Fermati! Che fai!",
-		"Ma perche` ? Che ti ho fatto!",
+		"Ma perche'? Che ti ho fatto!",
 		"Ahi! Mi fai male!",
 		"No! Ti prego!",
 		"Non mi uccidere!",
@@ -360,14 +360,14 @@ MOBSPECIAL_FUNC(snake_avt) {
 				"appare un portale magico davanti a te.",
 				FALSE, ch, NULL, NULL, TO_ROOM);
 			act("Svaniti i fumi della battaglia ti accorgi che qualcuno\n\r"
-				"e` legato all'altare. Avvicinandoti vedi $N.",
+				"e' legato all'altare. Avvicinandoti vedi $N.",
 				FALSE, ch, NULL, pVergine, TO_ROOM);
 			act("L$B liberi velocemente e ti affretti ad entrare nel portale\n\r"
 				"ed a lasciare questo orribile posto.",
 				FALSE, ch, NULL, pVergine, TO_ROOM);
 			act("\n$c0015[$c0013$N$c0015] dice 'Si, entra nel portale prima che "
 				"scompaia, ma guarda dentro\n\r"
-				"$c0015l'altare e prendi il bottino che il tuo gruppo si e` "
+				"$c0015l'altare e prendi il bottino che il tuo gruppo si e' "
 				"guadagnato'.", FALSE, ch, NULL, pVergine, TO_ROOM);
 			act("\n", FALSE, ch, NULL, NULL, TO_ROOM);
 		}
@@ -388,7 +388,7 @@ MOBSPECIAL_FUNC(virgin_sac) {
 			act("Come $n muore, senti un'agghiacciante risata e $N appare "
 				"nuovamente nella stanza.", FALSE, mob, NULL, pPaladino, TO_ROOM);
 			act("$c0015[$c0013$n$c0015] dice 'Avete completato il mio sacrificio!\n\r"
-				"La vostra ricompensa sara` la $c0011MORTE$c0015! AH AH AH AH!'",
+				"La vostra ricompensa sara' la $c0011MORTE$c0015! AH AH AH AH!'",
 				FALSE, pPaladino, NULL, NULL, TO_ROOM);
 		}
 		return(TRUE);
@@ -453,8 +453,8 @@ MOBSPECIAL_FUNC(snake_guardian) {
 
 /***************************************************************************
  * Questa procedura gestisce il tiro della catena nella capanna principale
- * del villaggio. Se dallo ultimo reboot la catena non e` gia` stata tirata,
- * viene giu` della fuliggine ed un oggetto a caso fra dieci possibili
+ * del villaggio. Se dallo ultimo reboot la catena non e' gia' stata tirata,
+ * viene giu' della fuliggine ed un oggetto a caso fra dieci possibili
  * (dal numero 1970 al 1979).
  * ************************************************************************/
 
@@ -472,13 +472,13 @@ ROOMSPECIAL_FUNC(CapannaVillaggio) {
 			if(!bGiaFatto) {
 				struct obj_data* pOggetto;
 
-				act("Come tiri la catena, una nuvola di fuliggine viene giu` dalla "
+				act("Come tiri la catena, una nuvola di fuliggine viene giu' dalla "
 					"cappa.", FALSE, ch, NULL, NULL, TO_CHAR);
-				act("$n tira la catena ed una nuvola di fuliggine viene giu` dalla "
+				act("$n tira la catena ed una nuvola di fuliggine viene giu' dalla "
 					"cappa avvolgendol$b.", TRUE, ch, NULL, NULL, TO_ROOM);
 				pOggetto = read_object(PRIMO_OGGETTO + number(0, 9), VIRTUAL);
 				if(pOggetto) {
-					send_to_room("Oltre alla fuliggine ti e` sembrato sia venuto giu` "
+					send_to_room("Oltre alla fuliggine ti e' sembrato sia venuto giu' "
 								 "qualcos'altro.\n\r", ch->in_room);
 
 					obj_to_room(pOggetto, ch->in_room);
@@ -486,7 +486,7 @@ ROOMSPECIAL_FUNC(CapannaVillaggio) {
 				bGiaFatto = TRUE;
 			}
 			else {
-				act("E` gia tirata al massimo.", FALSE, ch, NULL, NULL, TO_CHAR);
+				act("E' gia tirata al massimo.", FALSE, ch, NULL, NULL, TO_CHAR);
 				act("$n cerca di tirare la catena, ma senza effetto.", TRUE, ch,
 					NULL, NULL, TO_ROOM);
 			}
@@ -517,7 +517,7 @@ ROOMSPECIAL_FUNC(ColloSerpente) {
 
 				act("La vista degli occhi del serpente ti incanta!", FALSE, ch,
 					NULL, NULL, TO_CHAR);
-				act("$n si e` incantat$b a guardare gli occhi del serpente.", TRUE,
+				act("$n si e' incantat$b a guardare gli occhi del serpente.", TRUE,
 					ch, NULL, NULL, TO_ROOM);
 				WAIT_STATE(ch, PULSE_VIOLENCE * 10);
 
@@ -549,13 +549,13 @@ ROOMSPECIAL_FUNC(Rampicante) {
 					(IS_NPC(ch) ||
 					 !IS_SET(ch->specials.act, PLR_NOHASSLE))) {
 				if(!IS_AFFECTED(ch, AFF_FLYING)) {
-					send_to_char("Oh no! L'altezza ti da` le vertigini, facendoti "
+					send_to_char("Oh no! L'altezza ti da' le vertigini, facendoti "
 								 "mollare la presa...\n\r", ch);
 					act("$n guarda verso il basso, viene preso dalle vertigini e molla "
 						"la presa.", TRUE, ch, NULL, NULL, TO_ROOM);
 				}
 				else if(affected_by_spell(ch, SPELL_FLY)) {
-					send_to_char("Oh no! L'altezza ti da` le vertigini, facendoti "
+					send_to_char("Oh no! L'altezza ti da' le vertigini, facendoti "
 								 "perdere il controllo sul volo...\n\r", ch);
 					act("$n guarda verso il basso, viene preso dalle vertigini e "
 						"perde il controllo sul volo...", TRUE, ch, NULL, NULL,
@@ -563,7 +563,7 @@ ROOMSPECIAL_FUNC(Rampicante) {
 					affect_from_char(ch, SPELL_FLY);
 				}
 				else if(affected_by_spell(ch, SKILL_LEVITATION)) {
-					send_to_char("Oh no! L'altezza ti da` le vertigini, facendoti "
+					send_to_char("Oh no! L'altezza ti da' le vertigini, facendoti "
 								 "perdere la concentrazione...\n\r", ch);
 					act("$n guarda verso il basso, viene preso dalle vertigini e "
 						"perde la concentrazione...", TRUE, ch, NULL, NULL,
@@ -571,7 +571,7 @@ ROOMSPECIAL_FUNC(Rampicante) {
 					affect_from_char(ch, SKILL_LEVITATION);
 				}
 				else {
-					send_to_char("Oh no! L'altezza ti da` le vertigini, ma, per "
+					send_to_char("Oh no! L'altezza ti da' le vertigini, ma, per "
 								 "fortuna, qualcosa ti impedisce di cadere.\n\r",
 								 ch);
 				}
@@ -580,7 +580,7 @@ ROOMSPECIAL_FUNC(Rampicante) {
 					act("$n cade verso il basso.", TRUE, ch, NULL, NULL, TO_ROOM);
 					char_from_room(ch);
 					char_to_room(ch, 1947);
-					act("$n arriva giu` dall'alto e si schianta sul terreno!", FALSE,
+					act("$n arriva giu' dall'alto e si schianta sul terreno!", FALSE,
 						ch, NULL, NULL, TO_ROOM);
 
 					if(ch->skills &&

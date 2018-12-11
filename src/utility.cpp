@@ -1019,8 +1019,8 @@ void age2(struct char_data* ch, struct time_info_data* g) {
 
 }
 void age3(struct char_data* ch, struct time_info_data* g) {
-	/* Riporta l`eta` incrementata secondo la  razza
-	 * modifica solo estetica. In tutte le routine dove l`eta` viene usata
+	/* Riporta l'eta' incrementata secondo la  razza
+	 * modifica solo estetica. In tutte le routine dove l'eta' viene usata
 	 * si continua ad usare age2
 	 * */
 	age2(ch, g);
@@ -1077,8 +1077,8 @@ char in_group_internal(struct char_data* ch1, struct char_data* ch2, int strict)
 
 	/*
 	 *  possibilities:
-	 *  1.  char is char2`s master
-	 *  2.  char2 is char`s master
+	 *  1.  char is char2's master
+	 *  2.  char2 is char's master
 	 *  3.  char and char2 follow same.
 	 *  4.  char rides char2
 	 *  5.. char2 rides char
@@ -1125,8 +1125,8 @@ char in_clan(struct char_data* ch1, struct char_data* ch2) {
 
 	/*
 	 *  possibilities:
-	 *  1.  char is char2`s prince
-	 *  2.  char2 is char`s prince
+	 *  1.  char is char2's prince
+	 *  2.  char2 is char's prince
 	 *  3.  char and char2 have same prince.
 	 *
 	 *   otherwise not true.
@@ -2862,8 +2862,8 @@ void TeleportPulseStuff(unsigned long localPulse) {
 		}
 	}
 
-	/* Non posso tenere uniti i due loop, perche` dopo mobile_activity ch
-	 * potrebbe non essere piu` valido */
+	/* Non posso tenere uniti i due loop, perche' dopo mobile_activity ch
+	 * potrebbe non essere piu' valido */
 	for(ch = character_list; ch; ch = next) {
 		next = ch->next;
 		rp = real_roomp(ch->in_room);
@@ -2885,8 +2885,8 @@ void TeleportPulseStuff(unsigned long localPulse) {
 				continue;
 			}
 
-			/* Qui c'e` un problema: Se la stanza di destinazione e` un altra
-			 * Teleport e c'e` un personaggio non ancora incontrato nel loop, ma
+			/* Qui c'e' un problema: Se la stanza di destinazione e' un altra
+			 * Teleport e c'e' un personaggio non ancora incontrato nel loop, ma
 			 * che deve essere trasportato, gli oggetti viaggeranno anche con
 			 * l'altro personaggio. */
 			obj_object = rp->contents;
@@ -3980,7 +3980,7 @@ void LearnFromMistake(struct char_data* ch, int sknum, int silent, int max) {
 			ch->skills[ sknum ].learned += 1;
 			if(ch->skills[ sknum ].learned >= max)
 				if(!silent) {
-					send_to_char("Hai imparato tutto su questa abilita`!\n\r", ch);
+					send_to_char("Hai imparato tutto su questa abilita'!\n\r", ch);
 				}
 		}
 	}
@@ -4209,7 +4209,7 @@ int CheckGiveBarbarianOK(struct char_data* ch,struct char_data* vict,
 				vict, obj, ch, TO_VICT);
 		}
 		else {
-			act("Forse e` meglio non dare $p a $N neanche se dorme.", FALSE, ch,
+			act("Forse e' meglio non dare $p a $N neanche se dorme.", FALSE, ch,
 				obj, vict, TO_CHAR);
 		}
 
@@ -4351,9 +4351,9 @@ int CanSeeTrap(int num,struct char_data* ch) {
 }
 
 /* this is where we figure the max limited items the char may rent with
-* for his/her current level, pc`s wanted it this way. MAX_LIM_ITEMS is in
+* for his/her current level, pc's wanted it this way. MAX_LIM_ITEMS is in
 * structs.h .
-* Ho diminuito i limit ancora un po`
+* Ho diminuito i limit ancora un po'
 * */
 
 int MaxLimited(int lev) {
@@ -4893,7 +4893,7 @@ bool inRange(int low, int high, int x)
     return ((x-high)*(x-low) <= 0); 
 }
 
-// caricare troppo lo stack (WORLD_SIZE e`
+// caricare troppo lo stack (WORLD_SIZE e'
 // uguale a 50000)
 
 int IsRoomDistanceInRange(int nFirstRoom, int nSecondRoom, int nRange) {

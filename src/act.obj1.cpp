@@ -192,14 +192,14 @@ ACTION_FUNC(do_get) {
 					}
 				}
 				else {
-					act("Non puoi prendere $p, hai gia` troppa roba in mano.", FALSE,
+					act("Non puoi prendere $p, hai gia' troppa roba in mano.", FALSE,
 						ch, obj_object, NULL, TO_CHAR);
 					fail = TRUE;
 				}
 			}
 		}
 		if(!found && !fail) {
-			send_to_char("Non c'e nulla da prendere.\n\r", ch);
+			send_to_char("Non c'e' nulla da prendere.\n\r", ch);
 		}
 		break;
 	/* get ??? (something) */
@@ -279,7 +279,7 @@ ACTION_FUNC(do_get) {
 		}
 
 		if(!found && !fail) {
-			sprintf(buffer, "Non c'e` nessun %s qui.\n\r", arg1);
+			sprintf(buffer, "Non c'e' nessun %s qui.\n\r", arg1);
 			send_to_char(buffer, ch);
 		}
 	}
@@ -351,7 +351,7 @@ ACTION_FUNC(do_get) {
 				}
 			}
 			else {
-				act("$p non e` un contenitore.", FALSE, ch, sub_object, NULL,
+				act("$p non e' un contenitore.", FALSE, ch, sub_object, NULL,
 					TO_CHAR);
 				fail = TRUE;
 			}
@@ -433,7 +433,7 @@ ACTION_FUNC(do_get) {
 							}
 						}
 						else {
-							act("Non puoi prendere $p, hai gia` roba in mano.", TRUE, ch,
+							act("Non puoi prendere $p, hai gia' roba in mano.", TRUE, ch,
 								obj_object, NULL, TO_CHAR);
 							fail = TRUE;
 							break;
@@ -454,7 +454,7 @@ ACTION_FUNC(do_get) {
 				}
 			}
 			else {
-				act("$p non e` un contenitore.", TRUE, ch, sub_object, 0, TO_CHAR);
+				act("$p non e' un contenitore.", TRUE, ch, sub_object, 0, TO_CHAR);
 				fail = TRUE;
 			}
 		}
@@ -480,7 +480,7 @@ void get_trophy(struct char_data* ch, struct obj_data* ob) {
 	int r_num;
 	if(ob) {
 		if(!ob->affected[0].modifier) {
-			sprintf(buf,"Non e` rimasto abbastanza %s%s per farne un trofeo",
+			sprintf(buf,"Non e' rimasto abbastanza %s%s per farne un trofeo",
 					*(ob->short_description+1)==' '?"dei":"de",
 					ob->short_description+1);
 			send_to_char(buf,ch);
@@ -746,7 +746,7 @@ ACTION_FUNC(do_put) {
 							if(GET_ITEM_TYPE(sub_object) == ITEM_CONTAINER) {
 								if(!IS_SET(sub_object->obj_flags.value[ 1 ], CONT_CLOSED)) {
 									if(obj_object == sub_object) {
-										act("Giocherelli un po` con $p ma senza risultato.",
+										act("Giocherelli un po' con $p ma senza risultato.",
 											FALSE, ch, obj_object, NULL, TO_CHAR);
 
 										return;
@@ -790,7 +790,7 @@ ACTION_FUNC(do_put) {
 								}
 							}
 							else {
-								act("$p non e` un contenitore.", FALSE, ch, sub_object, NULL,
+								act("$p non e' un contenitore.", FALSE, ch, sub_object, NULL,
 									TO_CHAR);
 								num = 0;
 							}
@@ -839,7 +839,7 @@ void truegivexp(struct char_data* ch, struct char_data* victim, int amount) {
 	act(buf, FALSE, ch, NULL, victim, TO_CHAR);
 	amount/=100;
 	amount*=(100-number(3,10));
-	sprintf(buf, "$n ti da` %d xp.", amount);
+	sprintf(buf, "$n ti da' %d xp.", amount);
 	act(buf, FALSE, ch, NULL, victim, TO_VICT);
 	/* gain_exp(victim,amount); ERRORE GRAVE, corretto! */
 	GET_EXP(victim) += amount/HowManyClasses(victim) ;
@@ -874,7 +874,7 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 			truegivexp(ch,victim,amount);
 		}
 		else {
-			send_to_char("Esagerato....... cosi` e` troppo!",ch);
+			send_to_char("Esagerato....... cosi' e' troppo!",ch);
 		}
 	}
 	else {
@@ -885,7 +885,7 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 			truegivexp(ch,victim,amount);
 		}
 		else {
-			send_to_char("Esagerato....... cosi` e` troppo!",ch);
+			send_to_char("Esagerato....... cosi' e' troppo!",ch);
 		}
 
 	}
@@ -939,17 +939,17 @@ ACTION_FUNC(do_give) {
 				return;
 			}
 			if(amount == 1) {
-				act("$n ti da` una moneta d'oro.", FALSE, ch, NULL, vict, TO_VICT);
+				act("$n ti da' una moneta d'oro.", FALSE, ch, NULL, vict, TO_VICT);
 				act("Dai una moneta $N.", FALSE, ch, NULL, vict, TO_CHAR);
 			}
 			else {
-				sprintf(buf, "$n ti da` %d monete d'oro.", amount);
+				sprintf(buf, "$n ti da' %d monete d'oro.", amount);
 				act(buf, FALSE, ch, NULL, vict, TO_VICT);
 				sprintf(buf, "Dai %d monete d'oro a $N.", amount);
 				act(buf, FALSE, ch, NULL, vict, TO_CHAR);
 			}
 
-			act("$n da` alcune monete a $N.", TRUE, ch, 0, vict, TO_NOTVICT);
+			act("$n da' alcune monete a $N.", TRUE, ch, 0, vict, TO_NOTVICT);
 			if(IS_NPC(ch) || GetMaxLevel(ch) < DIO) {
 				GET_GOLD(ch) -= amount;
 			}
@@ -1040,8 +1040,8 @@ ACTION_FUNC(do_give) {
                     {
                         pers_obj(ch, vict, obj, CMD_GIVE);
                     }
-					act("$n da` $p a $N.", 1, ch, obj, vict, TO_NOTVICT);
-					act("$n ti da` $p.", 0, ch, obj, vict, TO_VICT);
+					act("$n da' $p a $N.", 1, ch, obj, vict, TO_NOTVICT);
+					act("$n ti da' $p.", 0, ch, obj, vict, TO_VICT);
 					act("Dai $p a $N", 0, ch, obj, vict, TO_CHAR);
 					obj_from_char(obj);
 					obj_to_char(obj, vict);
@@ -1058,7 +1058,7 @@ ACTION_FUNC(do_give) {
 #endif
 		}
 		else {
-			send_to_char("Non c'e` nessuno con quel nome qui.\n\r", ch);
+			send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
 		}
 	}
 }

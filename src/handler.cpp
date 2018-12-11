@@ -249,9 +249,9 @@ void reset_original_numattacks(struct char_data* ch) {
 }
 
 /*****************************************************************************
- * Restituisce TRUE se str e` un nome della lista dei nomi in namelist.
+ * Restituisce TRUE se str e' un nome della lista dei nomi in namelist.
  * Il nome in str deve essere completo, ossia niente abbreviazioni.
- * str puo` contenere piu` nomi in tal caso in namelist ci devono essere tutti
+ * str puo' contenere piu' nomi in tal caso in namelist ci devono essere tutti
  * i nomi in str. Se str finisce con . in namelist ci devono essere solo i
  * nomi in str.
  * */
@@ -929,7 +929,7 @@ void affect_total(struct char_data* ch) {
 	/* this I think worked, wanna test it without and see what happens */
 	/* I think dex items cause this to wack peoples AC out... msw */
 
-	/* Infatti i "dex items" creavano problemi. Ma la soluzione e` nel
+	/* Infatti i "dex items" creavano problemi. Ma la soluzione e' nel
 	 * rimettere a 0 l'AC quando si tolgono tutti gli affect.
 	 * Questo viene fatto in affect_total(). Benem
 	 */
@@ -2215,7 +2215,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 		}
 
 		if(ch->desc->snoop.snoop_by) {
-			send_to_char("La tua vittima non e` piu` fra noi.\n\r",
+			send_to_char("La tua vittima non e' piu' fra noi.\n\r",
 						 ch->desc->snoop.snoop_by);
 			if(ch->desc->snoop.snoop_by->desc) {
 				ch->desc->snoop.snoop_by->desc->snoop.snooping = 0;

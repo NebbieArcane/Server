@@ -171,7 +171,7 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 	if(bnum == -1) {
 		mudlog(LOG_ERROR,
 			   "Board special procedure called for non-board object.\r\n");
-		send_to_char("La bacheca e` chiusa in questo momento.\n\r", ch);
+		send_to_char("La bacheca e' chiusa in questo momento.\n\r", ch);
 		return;
 	}
 
@@ -185,7 +185,7 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 	}
 
 	if((curr_board->number) > (MAX_MSGS - 1)) {
-		send_to_char("La bacheca e` piena.\n\r", ch);
+		send_to_char("La bacheca e' piena.\n\r", ch);
 		return;
 	}
 
@@ -200,7 +200,7 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 	for(; isspace(*arg); arg++);
 
 	if(!*arg) {
-		send_to_char("Il contenuto della bacheca e` stato memorizzato.\n\r"
+		send_to_char("Il contenuto della bacheca e' stato memorizzato.\n\r"
 					 "Per scrivere un nuovo messaggio usa WRITE seguito da un "
 					 "titolo.\n\r", ch);
 		return;
@@ -276,7 +276,7 @@ int board_remove_msg(struct char_data* ch, char* arg, int bnum) {
 	if(bnum == -1) {
 		mudlog(LOG_ERROR,
 			   "Board special procedure called for non-board object.\r\n");
-		send_to_char("La bacheca e` chiusa, in questo momento.\n\r", ch);
+		send_to_char("La bacheca e' chiusa, in questo momento.\n\r", ch);
 		return 1;
 	}
 
@@ -293,7 +293,7 @@ int board_remove_msg(struct char_data* ch, char* arg, int bnum) {
 	}
 
 	if(curr_board->number < 1) {
-		send_to_char("La bacheca e` vuota !\n\r", ch);
+		send_to_char("La bacheca e' vuota !\n\r", ch);
 		return(1);
 	}
 
@@ -486,7 +486,7 @@ int board_display_msg(struct char_data* ch, char* arg, int bnum) {
 	}
 
 	if(boards[bnum].number == -1) {
-		send_to_char("La bacheca e` vuota!\n\r", ch);
+		send_to_char("La bacheca e' vuota!\n\r", ch);
 		return(1);
 	}
 
@@ -529,19 +529,19 @@ int board_show_board(struct char_data* ch, char* arg, int bnum) {
 
 	act("$n studia la bacheca.", TRUE, ch, 0, 0, TO_ROOM);
 
-	strcpy(buf, "Questa e` una bacheca. Uso: READ/REMOVE <messg #>, "
-		   "WRITE <header>\n\rDopo aver scritto il messaggio battete WRITE"
+	strcpy(buf, "Questa e' una bacheca. Uso: READ/REMOVE <messaggio id#>, "
+		   "WRITE <messaggio>\n\rDopo aver scritto il messaggio battete WRITE"
 		   " senza argomento per memorizzarlo\n\rpermanentemente. ");
 	if(boards[bnum].number == -1) {
-		strcat(buf, "La bacheca e` vuota.\n\r");
+		strcat(buf, "La bacheca e' vuota.\n\r");
 	}
 	else {
 		if(boards[bnum].number == 0) {
-			strcat(buf, "La bacheca e` vuota.\n\r");
+			strcat(buf, "La bacheca e' vuota.\n\r");
 		}
 		else
 			sprintf(buf + strlen(buf), "%s %d messaggi%s in bacheca.\n\r",
-					curr_board->number == 1 ? "C'e`" : "Ci sono",
+					curr_board->number == 1 ? "C'e'" : "Ci sono",
 					curr_board->number, curr_board->number == 1 ? "o" : "");
 		sprintf(buf + strlen(buf), "\n\rArgomenti:\n\r%s------------\n\r",
 				curr_board->msg[0].text);

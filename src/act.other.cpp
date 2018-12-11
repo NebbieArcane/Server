@@ -124,7 +124,7 @@ ACTION_FUNC(do_junk) {
 		}
 	}
 	else {
-		send_to_char("Junk what?\n\r",ch);
+		send_to_char("Cosa vuoi gettare via?\n\r",ch);
 		return;
 	}
 	count = 0;
@@ -140,7 +140,7 @@ ACTION_FUNC(do_junk) {
             
 			if(IS_OBJ_STAT(tmp_object,ITEM_NODROP)  && !IS_IMMORTAL(ch)) {
 				send_to_char
-				("You can't let go of it, it must be CURSED!\n\r", ch);
+				("Non puoi farlo, una $c0009maledizione$c0007 te lo impedisce!\n\r", ch);
 				return;
 			}
 #if EGO
@@ -166,19 +166,19 @@ ACTION_FUNC(do_junk) {
 		}
 	}
 	if(count > 1) {
-		sprintf(buf, "You junk %s (%d).\n\r", arg, count);
+		sprintf(buf, "Getti via %s (%d).\n\r", arg, count);
 		act(buf, 1, ch, 0, 0, TO_CHAR);
-		sprintf(buf, "$n junks %s.\n\r", arg);
+		sprintf(buf, "$n getta via %s.\n\r", arg);
 		act(buf, 1, ch, 0, 0, TO_ROOM);
 	}
 	else if(count == 1) {
-		sprintf(buf, "You junk %s \n\r", arg);
+		sprintf(buf, "Getti via %s \n\r", arg);
 		act(buf, 1, ch, 0, 0, TO_CHAR);
-		sprintf(buf, "$n junks %s.\n\r", arg);
+		sprintf(buf, "$n getta via %s.\n\r", arg);
 		act(buf, 1, ch, 0, 0, TO_ROOM);
 	}
 	else {
-		send_to_char("You don't have anything like that\n\r", ch);
+		send_to_char("Non hai niente del genere!\n\r", ch);
 	}
 
 	value /= 2;
@@ -273,7 +273,7 @@ ACTION_FUNC(do_destroy)
                 
             if(IS_OBJ_STAT(tmp_object,ITEM_NODROP) && !IS_IMMORTAL(ch))
             {
-                send_to_char("Non puoi farlo, una %c0009maledizione$c0007 te lo impedisce!\n\r", ch);
+                send_to_char("Non puoi farlo, una $c0009maledizione$c0007 te lo impedisce!\n\r", ch);
                 return;
             }
 #if EGO
@@ -1643,10 +1643,18 @@ ACTION_FUNC(do_group) {
 		"Gli straccioni di Xannie",
 		"I rinnegati di Alar",
 		"I seguaci di Darkstar",
-		"I cacciatori di Draghi"
+		"I cacciatori di Draghi",
+        "I defunti di LadyOfPain",
+        "I buggati di Requiem",
+        "I devoti della Luna di Isildur",
+        "Le fotomonelle di Flyp",
+        "I fumatori di pipa di Jethro",
+        "Gli infortunati di Denethor",
+        "I connessi di Ryltar",
+        "Le $c0008Ombre$c0007"
 	};
 
-	const int nMaxGroupName = 6;
+	const int nMaxGroupName = 14;
 
 	only_argument(arg, name);
 
@@ -2467,17 +2475,17 @@ ACTION_FUNC(do_memorize) {
 			return;
 		}
 		else if(BestMagicClass(ch) == MAGE_LEVEL_IND) {
-			send_to_char("Questo non e` il tuo modo di lanciare incantesimi...\n\r",
+			send_to_char("Questo non e' il tuo modo di lanciare incantesimi...\n\r",
 						 ch);
 			return;
 		}
 		else if(BestMagicClass(ch) ==DRUID_LEVEL_IND) {
-			send_to_char("Questo non e` il tuo modo di lanciare incantesimi...\n\r",
+			send_to_char("Questo non e' il tuo modo di lanciare incantesimi...\n\r",
 						 ch);
 			return;
 		}
 		else if(BestMagicClass(ch) ==CLERIC_LEVEL_IND) {
-			send_to_char("Questo non e` il tuo modo di lanciare incantesimi...\n\r",
+			send_to_char("Questo non e' il tuo modo di lanciare incantesimi...\n\r",
 						 ch);
 			return;
 		}
@@ -2586,15 +2594,14 @@ ACTION_FUNC(do_memorize) {
 		if(!IS_IMMORTAL(ch)) {
 			if(spell_info[ spl ].min_level_sorcerer >
 					GET_LEVEL(ch, SORCERER_LEVEL_IND)) {
-				send_to_char("Non sei cosi` bravo da poter usare questo "
-							 "incantesimo.\n\r", ch);
+                act("Non sei cosi' brav$b da poter usare questo incantesimo", FALSE, ch, 0, 0, TO_CHAR);
 				return;
 			}
 		}
 
 		/* Non-Sorcerer spell, cleric/druid or something else */
 		if(spell_info[ spl ].min_level_sorcerer == 0 || !IS_SET(ch->skills[spl].flags, SKILL_KNOWN_SORCERER)) {    // SALVO altro controllo sulla conoscenza
-			send_to_char("Non hai le giuste abilita` per usare questo "
+			send_to_char("Non hai le giuste abilita' per usare questo "
 						 "incantesimo.\n\r", ch);
 			return;
 		}
@@ -2787,7 +2794,7 @@ ACTION_FUNC(do_set_flags) {
 	if(!strcmp("pkill",type) && (!*field)) {
 		send_to_char("Usa 'set pkill enable'\n\r"
 					 "RICORDA, UNA VOLTA CHE HAI ABILITATO IL PLAYERS KILLING "
-					 "NON PUOI PIU` TORNARE INDIETRO!\n\r", ch);
+					 "NON PUOI PIU' TORNARE INDIETRO!\n\r", ch);
 		send_to_char("Assicurati di aver letto l'help sul PLAYERS KILLING.\n\r",
 					 ch);
 		return;
@@ -2801,7 +2808,7 @@ ACTION_FUNC(do_set_flags) {
 	if(!strcmp(type,"pkill") && GetMaxLevel(ch)>=RACE_WAR_MIN_LEVEL) {
 		if(!strcmp("enable",field) || !strcmp("on",field)) {
 #if 0
-			send_to_char("Il PLAYERS KILLING puo` essere attivato solo dagli Dei "
+			send_to_char("Il PLAYERS KILLING puo' essere attivato solo dagli Dei "
 						 "superiori, per il momento.\n\r", ch);
 #else
 			SET_BIT(ch->player.user_flags,RACE_WAR);

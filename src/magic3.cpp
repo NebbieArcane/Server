@@ -717,7 +717,7 @@ void spell_shillelagh(byte level, struct char_data* ch,
 			!IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
 
 		if(!isname("club", obj->name) && !isname("clava", obj->name)) {
-			send_to_char("Non e` una clava!\n\r", ch);
+			send_to_char("Non e' una clava!\n\r", ch);
 			return;
 		}
 
@@ -787,7 +787,7 @@ void spell_goodberry(byte level, struct char_data* ch,
 
 	tmp_obj->name = strdup("berry mirtillo");
 	tmp_obj->short_description = strdup("un grosso mirtillo");
-	tmp_obj->description = strdup("C'e` un delizioso mirtillo qui in terra.");
+	tmp_obj->description = strdup("C'e' un delizioso mirtillo qui in terra.");
 
 	tmp_obj->obj_flags.type_flag = ITEM_FOOD;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_HOLD;
@@ -932,29 +932,29 @@ void spell_animal_growth(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(IS_SET(real_roomp(ch->in_room)->room_flags, INDOORS)) {
-		send_to_char("Questa magia puo` essere lanciata solo all'aperto.\n\r",ch);
+		send_to_char("Questa magia puo' essere lanciata solo all'aperto.\n\r",ch);
 		return;
 	}
 
 
 	if(!victim || !IsAnimal(victim)) {
-		act("$N non e` un animale.", FALSE, ch, NULL, victim, TO_CHAR);
+		act("$N non e' un animale.", FALSE, ch, NULL, victim, TO_CHAR);
 		return;
 	}
 
 	if(affected_by_spell(victim, SPELL_ANIMAL_GROWTH)) {
-		act("$N e` gia` stato fatto crescere.", FALSE, ch, 0, victim, TO_CHAR);
+		act("$N e' gia' stato fatto crescere.", FALSE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
 	if(GetMaxLevel(victim)*2 > GetMaxLevel(ch)) {
-		act("Non puoi fare diventare $N piu` potente di te.", FALSE, ch,
+		act("Non puoi fare diventare $N piu' potente di te.", FALSE, ch,
 			NULL, victim, TO_CHAR);
 		return;
 	}
 
 	if(IS_PC(victim)) {
-		send_to_char("Non ti sembra di cattivo gusto farlo su un giocatore ?",
+		send_to_char("Non ti sembra di cattivo gusto farlo su un giocatore?",
 					 ch);
 		return;
 	}
@@ -995,23 +995,23 @@ void spell_insect_growth(byte level, struct char_data* ch,
 
 
 	if(!victim ||GET_RACE(victim)!=RACE_INSECT) {
-		send_to_char("Non e` un insetto.\n\r", ch);
+		send_to_char("Non e' un insetto.\n\r", ch);
 		return;
 	}
 
 	if(IS_SET(real_roomp(ch->in_room)->room_flags, INDOORS)) {
-		send_to_char("Questa magia puo` essere lanciata solo all'aperto.\n\r",ch);
+		send_to_char("Questa magia puo' essere lanciata solo all'aperto.\n\r",ch);
 		return;
 	}
 
 
 	if(affected_by_spell(victim, SPELL_INSECT_GROWTH)) {
-		act("$N  e` gia` stato fatto crescere.",FALSE, ch, 0, victim, TO_CHAR);
+		act("$N e' gia' stato fatto crescere.",FALSE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
 	if(GetMaxLevel(victim)*2 > GetMaxLevel(ch)) {
-		act("Non puoi fare diventare $N piu` potente di te.", FALSE, ch,
+		act("Non puoi fare diventare $N piu' potente di te.", FALSE, ch,
 			NULL, victim, TO_CHAR);
 		return;
 	}
@@ -1186,7 +1186,7 @@ void spell_animal_summon(byte level, struct char_data* ch,
 	}
 
 	if(IS_SET(rp->room_flags, TUNNEL)) {
-		send_to_char("Non c'e` abbastanza spazio qui.\n\r", ch);
+		send_to_char("Non c'e' abbastanza spazio qui.\n\r", ch);
 		return;
 	}
 
@@ -1515,7 +1515,7 @@ void spell_charm_veggie(byte level, struct char_data* ch,
 	assert(ch && victim);
 
 	if(victim == ch) {
-		send_to_char("Ami te stesso piu` di prima.\n\r", ch);
+		send_to_char("Ami te stesso piu' di prima.\n\r", ch);
 		return;
 	}
 
@@ -1539,7 +1539,7 @@ void spell_charm_veggie(byte level, struct char_data* ch,
 
 	if(!IS_AFFECTED(victim, AFF_CHARM) && !IS_AFFECTED(ch, AFF_CHARM)) {
 		if(circle_follow(victim, ch)) {
-			send_to_char("Mi spiace ma seguirsi l'un l'altro non e` permesso.\n\r",
+			send_to_char("Mi spiace ma seguirsi l'un l'altro non e' permesso.\n\r",
 						 ch);
 			return;
 		}
@@ -1602,12 +1602,12 @@ void spell_veggie_growth(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim, SPELL_VEGGIE_GROWTH)) {
-		act("$N e` gia` stato fatto crescere.",FALSE, ch, 0, victim, TO_CHAR);
+		act("$N e' gia' stato fatto crescere.",FALSE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
 	if(GetMaxLevel(victim)*2 > GetMaxLevel(ch)) {
-		send_to_char("Non puoi farlo piu` potente di te.\n\r", ch);
+		send_to_char("Non puoi farlo piu' potente di te.\n\r", ch);
 		return;
 	}
 
@@ -1697,7 +1697,7 @@ void spell_animate_rock(byte level, struct char_data* ch,
 	int mobn=LITTLE_ROCK;
 
 	if(ITEM_TYPE(obj) != ITEM_ROCK) {
-		send_to_char("Non e` il giusto tipo di roccia.\n\r", ch);
+		send_to_char("Non e' il giusto tipo di roccia.\n\r", ch);
 		return;
 	}
 
@@ -1817,7 +1817,7 @@ void spell_animal_friendship(byte level, struct char_data* ch,
 	}
 
 	if(GET_MAX_HIT(victim) > GetMaxLevel(ch) * 4) {
-		act("Ancora non hai abbastanza forza di volonta` per incantare $N.",
+		act("Ancora non hai abbastanza forza di volonta' per incantare $N.",
 			FALSE, ch, NULL, victim, TO_CHAR);
 		return;
 	}
@@ -2347,7 +2347,7 @@ void spell_know_monster(byte level, struct char_data* ch,
 	 */
 
 	if(!IS_PC(victim)) {
-		sprintf(buf,"$N e` un$B %s.", RaceName[GET_RACE(victim)]);
+		sprintf(buf,"$N e' un$B %s.", RaceName[GET_RACE(victim)]);
 		act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		if(level > 5) {
 			exp = GetApprox(GET_EXP(victim), 40+level);
@@ -2357,7 +2357,7 @@ void spell_know_monster(byte level, struct char_data* ch,
 		if(level > 10) {
 			lev = GetApprox(GetMaxLevel(victim), 40+level);
 			sprintf(buf,
-					"$N combatte piu` o meno come un guerriero del %d^ livello.",
+					"$N combatte piu' o meno come un guerriero del %d^ livello.",
 					lev);
 			act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		}
@@ -2381,21 +2381,21 @@ void spell_know_monster(byte level, struct char_data* ch,
 		if(level > 25) {
 			if(victim->susc) {
 				sprintbit(victim->susc, immunity_names, buf2);
-				sprintf(buf, "$N e` suscettibile a %s.", buf2);
+				sprintf(buf, "$N e' suscettibile a %s.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 30) {
 			if(victim->immune) {
 				sprintbit(victim->immune, immunity_names, buf2);
-				sprintf(buf, "$N e` resistente a %s.", buf2);
+				sprintf(buf, "$N e' resistente a %s.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 35) {
 			if(victim->M_immune) {
 				sprintbit(victim->M_immune, immunity_names, buf2);
-				sprintf(buf, "$N e` immune a %s.", buf2);
+				sprintf(buf, "$N e' immune a %s.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
@@ -2416,7 +2416,7 @@ void spell_know_monster(byte level, struct char_data* ch,
 		}
 	}
 	else {
-		send_to_char("Non e` realmente un mostro.\n\r", ch);
+		send_to_char("Non e' realmente un mostro.\n\r", ch);
 		return;
 	}
 }
@@ -2473,7 +2473,7 @@ void spell_firestorm(byte level, struct char_data* ch,
 					dam >>= 1;
 				}
 				heat_blind(tmp_victim);
-				if(MissileDamage(ch, tmp_victim, dam, SPELL_BURNING_HANDS, 5) == AllLiving) {
+				if(MissileDamage(ch, tmp_victim, dam, SPELL_FIRESTORM, 5) == AllLiving) {
 					spell_fear(level, ch, tmp_victim, 0);
 				}
 			}
@@ -2704,7 +2704,7 @@ void spell_dragon_ride(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(affected_by_spell(ch, SPELL_DRAGON_RIDE)) {
-		send_to_char("L'incantesimo e' gia' attivo\n\r", ch);
+		send_to_char("L'incantesimo e' gia' attivo.\n\r", ch);
 		return;
 	}
 

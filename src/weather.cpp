@@ -82,7 +82,7 @@ void another_hour(int mode) {
 				strcpy(moon, "nuova");
 			}
 			switch_light(MOON_RISE);
-			snprintf(buf, 99,"La luna %s comincia a sorgere dall'orizzonte.\n\r",moon);
+			snprintf(buf, 99,"La $c0015luna$c0007 %s comincia a sorgere dall'orizzonte.\n\r",moon);
 			send_to_outdoor(buf);
 			if((moontype > 16) && (moontype < 22)) {
 				gLightLevel++;   /* brighter during these moons */
@@ -90,36 +90,36 @@ void another_hour(int mode) {
 		}
 		if(tmp == gSunRise && !IS_SET(SystemFlags,SYS_ECLIPS)) {
 			weather_info.sunlight = SUN_RISE;
-			send_to_outdoor("Il sole comincia a sorgere dall'orizzonte.\n\r");
+			send_to_outdoor("Il $c0011sole$c0007 comincia a sorgere dall'orizzonte.\n\r");
 		}
 		if(tmp == gSunRise+1&& !IS_SET(SystemFlags,SYS_ECLIPS)) {
 			weather_info.sunlight = SUN_LIGHT;
 			switch_light(SUN_LIGHT);
-			send_to_outdoor("Il giorno e` iniziato e la luce del sole comincia a "
+			send_to_outdoor("Il giorno e' iniziato e la luce del $c0011sole$c0007 comincia a "
 							"splendere.\n\r");
 		}
 		if(tmp == gSunSet && !IS_SET(SystemFlags,SYS_ECLIPS)) {
 			weather_info.sunlight = SUN_SET;
-			send_to_outdoor("Il sole cala lentamente nell'orizzonte orientale.\n\r");
+			send_to_outdoor("Il $c0011sole$c0007 cala lentamente nell'orizzonte orientale.\n\r");
 		}
 		if(tmp == gSunSet+1) {
 			weather_info.sunlight = SUN_DARK;
 			switch_light(SUN_DARK);
-			send_to_outdoor("La notte e` iniziata stendendo il suo velo oscuro.\n\r");
+			send_to_outdoor("La $c0012notte$c0007 e' iniziata stendendo il suo velo oscuro.\n\r");
 		}
 		if(tmp == gMoonSet) {
 			if((moontype > 15) && (moontype < 25)) {
 				switch_light(MOON_SET);
-				send_to_outdoor("Un velo di oscurita` cala nuovamente appena la luna "
+				send_to_outdoor("Un velo di oscurita' cala nuovamente appena la $c0015luna$c0007 "
 								"tramonta.\n\r");
 			}
 			else {
-				send_to_outdoor("La luna tramonta lentamente.\n\r");
+				send_to_outdoor("La $c0015luna$c0007 tramonta lentamente.\n\r");
 			}
 
 		}
 		if(tmp == 12) {
-			send_to_outdoor("Il sole e` esattamente sopra di te.\n\r");
+			send_to_outdoor("Il $c0011sole$c0007 e' esattamente sopra di te.\n\r");
 		}
 
 		if(time_info.hours > 23) {  /* Changed by HHS due to bug ???*/
@@ -307,73 +307,73 @@ void ChangeWeather(int change) {
 	case 0 :
 		break;
 	case 1 : {
-		send_to_outdoor("Il cielo si sta annuvolando.\n\r");
+		send_to_outdoor("Il $c0014cielo$c0007 si sta $c0015annuvolando$c0007.\n\r");
 		weather_info.sky=SKY_CLOUDY;
 		break;
 	}
 	case 2 : {
 		if((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert("Un forte vento  comincia a soffiare attraverso "
+			send_to_desert("Un forte vento comincia a soffiare attraverso "
 						   "il paese.\n\r");
-			send_to_arctic("Comincia a nevicare.\n\r");
-			send_to_out_other("Inizia a piovere.\n\r");
+			send_to_arctic("$c0015Comincia a nevicare.$c0007\n\r");
+			send_to_out_other("$c0012Inizia a piovere.$c0007\n\r");
 		}
 		else {
 			send_to_desert("Un forte vento freddo comincia a soffiare "
 						   "attraverso il paese.\n\r");
-			send_to_arctic("Comincia a nevicare forte.\n\r");
-			send_to_out_other("Comincia a nevicare.\n\r");
+			send_to_arctic("$c0015Comincia a nevicare $c0014forte$c0015.$c0007\n\r");
+			send_to_out_other("$c0015Comincia a nevicare.$c0007\n\r");
 		}
 		weather_info.sky=SKY_RAINING;
 		break;
 	}
 	case 3 : {
-		send_to_outdoor("Le nuvole se ne stanno andando.\n\r");
+		send_to_outdoor("Le $c0015nuvole$c0007 se ne stanno andando.\n\r");
 		weather_info.sky=SKY_CLOUDLESS;
 		break;
 	}
 	case 4 : {
 		if((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert("Sei nel mezzo di in una tempesta di sabbia.\n\r");
-			send_to_arctic("Sei nel mezzo di una tempesta di neve.\n\r");
-			send_to_out_other("Sei nel mezzo di un accecante temporale.\n\r");
+			send_to_desert("$c0003Sei nel mezzo di in una tempesta di sabbia.$c0007\n\r");
+			send_to_arctic("$c0015Sei nel mezzo di una tempesta di neve.$c0007\n\r");
+			send_to_out_other("$c0012Sei nel mezzo di un accecante temporale.$c0007\n\r");
 		}
 		else {
-			send_to_desert("Sei nel mezzo di una tempesta di sabbia.\n\r");
-			send_to_arctic("Sei nel mezzo di una tempesta di neve.\n\r");
-			send_to_out_other("Sei nel mezzo di una tormenta. \n\r");
+			send_to_desert("$c0003Sei nel mezzo di una tempesta di sabbia.$c0007\n\r");
+			send_to_arctic("$c0007Sei nel mezzo di una tempesta di neve.$c0007\n\r");
+			send_to_out_other("$c0015Sei nel mezzo di una tormenta.$c0007\n\r");
 		}
 		weather_info.sky=SKY_LIGHTNING;
 		break;
 	}
 	case 5 : {
 		if((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert("La tempesta di sabbia si placa lentamente.\n\r");
-			send_to_arctic("La tempesta di neve si calma lentamente.\n\r");
-			send_to_out_other("La tormenta di pioggia cala piano piano.\n\r");
+			send_to_desert("$c0003La tempesta di sabbia si placa lentamente.$c0007\n\r");
+			send_to_arctic("$c0015La tempesta di neve si calma lentamente.$c0007\n\r");
+			send_to_out_other("$c0012La tormenta di pioggia cala piano piano.$c0007\n\r");
 		}
 		else {
-			send_to_desert("La tempesta di sabbia si placa lentamente.\n\r");
-			send_to_arctic("Ha semmo di nevicare.\n\r");
-			send_to_out_other("Ha smesso di nevicare.\n\r");
+			send_to_desert("$c0003La tempesta di sabbia si placa lentamente.$c0007\n\r");
+			send_to_arctic("$c0015Ha smesso di nevicare.$c0007\n\r");
+			send_to_out_other("$c0015Ha smesso di nevicare.$c0007\n\r");
 		}
 		weather_info.sky=SKY_CLOUDY;
 		break;
 	}
 	case 6 : {
 		if((time_info.month > 3) && (time_info.month < 14)) {
-			send_to_desert("La tempesta si e` placata, ma il vento soffia "
+			send_to_desert("La tempesta si e' placata, ma il vento soffia "
 						   "ancora forte.\n\r");
-			send_to_arctic("La tempesta di neve si e` calmata ma nevica "
+			send_to_arctic("La tempesta di $c0015neve$c0007 si e' calmata ma $c0015nevica$c0007 "
 						   "ancora.\n\r");
-			send_to_out_other("Il temporale e` finito, ma piove ancora.\n\r");
+			send_to_out_other("Il temporale e' finito, ma $c0012piove$c0007 ancora.\n\r");
 		}
 		else {
-			send_to_desert("La tempesta si e` placata, ma il vento soffia "
+			send_to_desert("La tempesta si e' placata, ma il vento soffia "
 						   "ancora forte.\n\r");
-			send_to_arctic("La tempesta di neve si e` calmata ma nevica "
+			send_to_arctic("La tempesta di $c0015neve$c0007 si e' calmata ma $c0015nevica$c0007 "
 						   "ancora.\n\r");
-			send_to_out_other("La tormenta si e` calmata, ma nevica ancora.\n\r");
+			send_to_out_other("La tormenta si e' calmata, ma $c0015nevica$c0007 ancora.\n\r");
 		}
 		weather_info.sky=SKY_RAINING;
 		break;
@@ -389,20 +389,20 @@ void GetMonth(int month) {
 	}
 
 	if(month <= 1) {
-		send_to_outdoor(" Si gela qui fuori.\n\r");
+		send_to_outdoor(" Si $c0014gela$c0007 qui fuori.\n\r");
 	}
 	else if(month <=2) {
-		send_to_outdoor(" Fa molto freddo.\n\r");
+		send_to_outdoor(" Fa molto $c0014freddo$c0007.\n\r");
 	}
 	else if(month <=3) {
-		send_to_outdoor(" Oggi e` un po' meno freddo.\n\r");
+		send_to_outdoor(" Oggi e' un po' meno $c0014freddo$c0007.\n\r");
 	}
 	else if(month == 4) {
-		send_to_outdoor(" Cominciano a sbocciare i fiori.\n\r");
+		send_to_outdoor(" Cominciano a sbocciare i $c0009f$c0010i$c0013o$c0012r$c0011i$c0007.\n\r");
 		PulseMobiles(EVENT_SPRING);
 	}
 	else if(month == 8) {
-		send_to_outdoor(" C'e` un'afa qui fuori.\n\r");
+		send_to_outdoor(" C'e' un'$c0009afa$c0007 qui fuori.\n\r");
 		PulseMobiles(EVENT_SUMMER);
 	}
 	else if(month == 12) {
@@ -410,16 +410,16 @@ void GetMonth(int month) {
 		PulseMobiles(EVENT_FALL);
 	}
 	else if(month == 13) {
-		send_to_outdoor(" Comincia a far freddo.\n\r");
+		send_to_outdoor(" Comincia a far $c0014freddo$c0007.\n\r");
 	}
 	else if(month == 14) {
-		send_to_outdoor(" La foglie cominciano a cambiare colore.\n\r");
+		send_to_outdoor(" La $c0002foglie$c0007 cominciano a cambiare $c0003colore$c0007.\n\r");
 	}
 	else if(month == 15) {
-		send_to_outdoor(" Fa veramente freddo.\n\r");
+		send_to_outdoor(" Fa veramente $c0014freddo$c0007.\n\r");
 	}
 	else if(month == 16) {
-		send_to_outdoor(" Si gela qui fuori.\n\r");
+		send_to_outdoor(" Si $c0014gela$c0007 qui fuori.\n\r");
 		PulseMobiles(EVENT_WINTER);
 	}
 }

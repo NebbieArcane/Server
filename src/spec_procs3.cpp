@@ -3614,7 +3614,7 @@ MOBSPECIAL_FUNC(Barbarian) {
 }
 
 /***************************************************************************
-  ObjIsOnGround restituisce TRUE se l'oggetto in arg e` nella stanza del
+  ObjIsOnGround restituisce TRUE se l'oggetto in arg e' nella stanza del
   carattere.
 ***************************************************************************/
 int ObjIsOnGround(struct char_data* ch, const char* argument) {
@@ -3652,13 +3652,13 @@ int ObjIsOnGround(struct char_data* ch, const char* argument) {
 
 /***************************************************************************
  * ObjectsGuardian implementa un guardiano che non permette di prendere
- * oggetti dalla stanza in cui e` posto.
+ * oggetti dalla stanza in cui e' posto.
  *
  * Prima avverte e la seconda volta che qualcuno prova un get, attacca.
  * Dopo due ore virtuali si dimentica chi erano gli avvertiti ed,
  * eventualmente, li avverte di nuovo.
  *
- * Inoltre, se si posa un oggetto che vale piu` di 1000 monete, si viene
+ * Inoltre, se si posa un oggetto che vale piu' di 1000 monete, si viene
  * curati, liberati dalla magia e dal veleno.
  ***************************************************************************/
 
@@ -3684,7 +3684,7 @@ MOBSPECIAL_FUNC(PrimoAlbero) {
 			CAN_SEE(mob, ch) && ch != mob) {
 		if(ObjIsOnGround(ch, arg)) {
 			for(pCurr = (Avvertiti*) mob->act_ptr; pCurr; pCurr = pCurr->pNext) {
-				/* Se il carattere che ha dato il comando GET e` gia` stato avvertito,
+				/* Se il carattere che ha dato il comando GET e' gia' stato avvertito,
 				 * viene attaccato dal mob */
 				if(pCurr->pAvvertito == ch) {
 					act("$c0015$n$c0009 grida a $N 'Ti avevo avvertito!'", FALSE, mob, 0,
@@ -3696,8 +3696,8 @@ MOBSPECIAL_FUNC(PrimoAlbero) {
 				}
 			}
 			if(pCurr == NULL) {
-				/* Non e` stato avvertito. Lo avverte e lo inserisce nella lista
-				 * degli avvertiti. La testa della lista e` in mob->act_ptr */
+				/* Non e' stato avvertito. Lo avverte e lo inserisce nella lista
+				 * degli avvertiti. La testa della lista e' in mob->act_ptr */
 				CREATE(pCurr, Avvertiti, 1);
 				pCurr->pNext = (Avvertiti*)mob->act_ptr;
 				mob->act_ptr = pCurr;
@@ -3809,7 +3809,7 @@ MOBSPECIAL_FUNC(PrimoAlbero) {
 
 		if(IS_SET(mob->specials.act, ACT_SENTINEL) &&
 				mob->lStartRoom > 0 && mob->lStartRoom != mob->in_room) {
-			// Torna a casa se non lo e` gia`.
+			// Torna a casa se non lo e' gia'.
 			if(SentinelBackHome(mob)) {
 				return TRUE;
 			}
@@ -3869,7 +3869,7 @@ MOBSPECIAL_FUNC(LegionariV) {
 						if(CAN_SEE_OBJ(mob, pObj) && pObj->item_number >= 0 &&
 								obj_index[ pObj->item_number ].iVNum == OBJ_INSEGNA5LEGIO) {
 							act("$c0015$n$c0011 punta il dito verso $N e dice "
-								"'Ma quella e` la nostra insegna'.", FALSE, mob, 0, p,
+								"'Ma quella e' la nostra insegna'.", FALSE, mob, 0, p,
 								TO_ROOM);
 							hit(mob, p, TYPE_UNDEFINED);
 							return TRUE;
@@ -3884,7 +3884,7 @@ MOBSPECIAL_FUNC(LegionariV) {
 
 
 /****************************************************************************
-*  Teleporta i presenti se all`interno di certi livelli. Room Procedure
+*  Teleporta i presenti se all'interno di certi livelli. Room Procedure
 * ****************************************************************************/
 ROOMSPECIAL_FUNC(sTeleport) {
 	const char* p;
@@ -4036,11 +4036,11 @@ MOBSPECIAL_FUNC(ForceMobToAction)
 * ncmd1: comando (numero) trigger
 * trg1: 1=si, 0=no(se si, l'oggetto del comando deve essere il mob che ha la
 *       special )
-* nmob: vnum del mob che deve eseguire l`azione (0 = self)
+* nmob: vnum del mob che deve eseguire l'azione (0 = self)
 * cmd2: comando (testo)
 * trg2: 1 sul pc, 0 senza oggetto
-* msg: testo libero comando da eseguire dopo l`azione principale
-* il comando viene costruito cosi`
+* msg: testo libero comando da eseguire dopo l'azione principale
+* il comando viene costruito cosi'
 * primo comando: nmob esegue cmd2 [pc se trg2]
 * secondo comando: msg
 * */
@@ -4099,7 +4099,7 @@ MOBSPECIAL_FUNC(ForceMobToAction)
 	return FALSE;
 }
 /* Agganciata ad un oggetto questa procedura permette di ingannare identify.
- * Infatti il danno dell'arma NON E` quello caricato nelle stat dell'oggetto,
+ * Infatti il danno dell'arma NON E' quello caricato nelle stat dell'oggetto,
  * ma quello restituito da questa special
  * */
 OBJSPECIAL_FUNC(TrueDam) {
@@ -4282,7 +4282,7 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 				"in preda alle convulsioni, riesce angosciosamente a mettersi "
 				"in posizione eretta.", FALSE, mob, NULL, pWarlock, TO_ROOM);
 			act("$c0015[$c0013$n$c0015] dice 'Maledetti, avete ucciso la mia Principessa!\n\r"
-				"La vostra ricompensa sara` la $c0011MORTE$c0015!'",
+				"La vostra ricompensa sara' la $c0011MORTE$c0015!'",
 				FALSE, pWarlock, NULL, NULL, TO_ROOM);
 
 			vict = FindVictim(pWarlock);

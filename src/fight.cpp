@@ -494,7 +494,7 @@ void stop_fighting(struct char_data* ch) {
 	}
 
 	/* Dovrebbe togliere il flag AFF2_BERSERK solo se il numero di attaccanti
-	 e` uguale a zero. Purtroppo non funziona. */
+	 e' uguale a zero. Purtroppo non funziona. */
 
 	if( /*ch->attackers <= 0 && */
 		IS_SET(ch->specials.affected_by2, AFF2_BERSERK)) {
@@ -939,7 +939,7 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 				i++;
 				if(i > 60) {
 					mudlog(LOG_SYSERR, "Problemi nella locazione %d. "
-						   "Piu` di 60 caratteri.", ch->in_room);
+						   "Piu' di 60 caratteri.", ch->in_room);
 					break;
 				}
 
@@ -1519,7 +1519,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 		total = ExpCaps(k, group_count, total);     /* figure EXP MAXES */
 		total = clan_gain(k, total);
 		gain_exp(k,total);
-		sprintf(buf,"La tua parte di esperienza e` di %d punti.",total);
+		sprintf(buf,"La tua parte di esperienza e' di %d punti.",total);
 		act(buf, FALSE, k, 0, 0, TO_CHAR);
 		change_alignment(k, victim);
 	}
@@ -1544,7 +1544,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 				total = ExpCaps(f->follower, group_count, total);    /* figure EXP MAXES */
 				total = clan_gain(f->follower,  total);
 				gain_exp(f->follower,total);
-				sprintf(buf,"La tua parte di esperienza e` di %d punti.", total);
+				sprintf(buf,"La tua parte di esperienza e' di %d punti.", total);
 				act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
 				change_alignment(f->follower, victim);
 			}
@@ -1565,7 +1565,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 					total = RatioExp(f->follower, victim, total);
 					total = GroupLevelRatioExp(f->follower, group_max_level, total);
 					total= ExpCaps(f->follower, group_count, total);   /* figure EXP MAXES */
-					sprintf(buf,"La tua parte di esperienza e` di %d.", total);
+					sprintf(buf,"La tua parte di esperienza e' di %d.", total);
 					act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
 					gain_exp(f->follower,  total);
 
@@ -1577,7 +1577,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 }
 
 int group_loss(struct char_data* ch,int loss) {
-	/* La morte di chi e` di livello inferiore penalizza i membri del gruppo
+	/* La morte di chi e' di livello inferiore penalizza i membri del gruppo
 	 * di livello superiore
 	 * */
 	const int perdita[10] = {
@@ -1607,7 +1607,7 @@ int group_loss(struct char_data* ch,int loss) {
 			if(diff>0) {
 				diff=MAX(0,(int)(diff/5));
 				lose=(loss*perdita[diff]);
-				sprintf(buf,"La morte di $N ti e` costata %d punti.",
+				sprintf(buf,"La morte di $N ti e' costata %d punti.",
 						lose);
 				act(buf, FALSE, f->follower, 0, ch, TO_CHAR);
 				mudlog(LOG_PLAYERS,"GD dead:%s(%d), perdita=%d, diff=%d, %s(%d) perde:%d",
@@ -1629,7 +1629,7 @@ int group_loss(struct char_data* ch,int loss) {
 			if(diff>0) {
 				diff=MAX(0,(int)(diff/5));
 				lose=(loss*perdita[diff]);
-				sprintf(buf,"La morte di $N ti e` costata %d punti.",
+				sprintf(buf,"La morte di $N ti e' costata %d punti.",
 						lose);
 				act(buf, FALSE, k, 0, ch, TO_CHAR);
 				mudlog(LOG_PLAYERS,"GD dead:%s(%d), perdita=%d, diff=%d, %s(%d) perde:%d",
@@ -1965,7 +1965,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 			&& type >= TYPE_HIT) { /*chec to see if berserked and using a weapon */
 		dam = berserkdambonus(ch, dam);       /* More damage if berserked */
 	}
-	/* Qui testa le immunita`... se ha classe Monk NON la chiamo.
+	/* Qui testa le immunita'... se ha classe Monk NON la chiamo.
 	 * Un monaco a mani nude secondo me deve colpire chiunque.
 	 * Testo anche hold e totale oggetti portati
 	 */
@@ -1998,7 +1998,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 
 	/* shield makes you immune to magic missle! */
 	if(affected_by_spell(v, SPELL_SHIELD) && type == SPELL_MAGIC_MISSILE) {
-		act("Il missile magico di $n e` deviato dallo scudo di $N!", FALSE, ch,
+		act("Il missile magico di $n e' deviato dallo scudo di $N!", FALSE, ch,
 			0, v, TO_NOTVICT);
 		act("Lo scudo di $N devia il tuo missile magico!", FALSE, ch, 0, v,
 			TO_CHAR);
@@ -2048,7 +2048,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		}
 
 		if(right_protection) {
-			act("$N sorride come parte del soffio e` deviato dal suo globo "
+			act("$N sorride come parte del soffio e' deviato dal suo globo "
 				"protettivo!", FALSE, ch, 0, v, TO_NOTVICT);
 			act("Il globo protettivo di $N devia parte del tuo soffio!", FALSE, ch,
 				0, v, TO_CHAR);
@@ -2167,7 +2167,7 @@ DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam, int ty
 		}
 		update_pos(v);
 
-		/* Nel caso qui sotto, il soggetto e` stato ucciso dal fireshield,
+		/* Nel caso qui sotto, il soggetto e' stato ucciso dal fireshield,
 		 * a meno che, ovviamente, ch non sia uguale a victim.
 		 * */
 		if(ch != v && GET_POS(ch) == POSITION_DEAD) {
@@ -2412,7 +2412,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					exp = ExpCaps(ch, 0, exp);    /* bug fix for non_grouped peoples */
 
 					if(!IS_IMMORTAL(ch)) {
-						sprintf(buf,"La tua esperienza e` aumentata di %d punti.",
+						sprintf(buf,"La tua esperienza e' aumentata di %d punti.",
 								exp);
 						act(buf, FALSE, ch, 0, 0, TO_CHAR);
 					}
@@ -2427,25 +2427,25 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 			if(victim == ch) {
 				switch(killedbytype) {
 				case SPELL_POISON:
-					sprintf(buf, "%s e` stat%s uccis%s dal veleno a %s\n\r",
+					sprintf(buf, "%s e' stat%s uccis%s dal veleno a %s\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim),
 							victim->in_room > -1 ?
 							(real_roomp(victim->in_room))->name : "Nowere");
 					break;
 				case TYPE_SUFFERING:
-					sprintf(buf, "%s e` mort%s di sofferenza.\n\r",
+					sprintf(buf, "%s e' mort%s di sofferenza.\n\r",
 							GET_NAME(victim), SSLF(victim));
 					break;
 				case SPELL_HEAT_STUFF:
-					sprintf(buf, "%s e` mort%s bruciat%s dal suo equipaggiamento.\n\r",
+					sprintf(buf, "%s e' mort%s bruciat%s dal suo equipaggiamento.\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim));
 					break;
 				case SPELL_CHANGE_FORM: /* ACIDUS shock da change form */
-					sprintf(buf, "%s e` stat%s uccis%s dal trauma della mutazione.\n\r",
+					sprintf(buf, "%s e' stat%s uccis%s dal trauma della mutazione.\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim));
 					break;
 				default:
-					sprintf(buf, "%s e` mort%s\n\r", GET_NAME(victim),
+					sprintf(buf, "%s e' mort%s\n\r", GET_NAME(victim),
 							SSLF(victim));
 				}
 
@@ -2464,7 +2464,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					if(IS_STEALER(victim)) {
 						REMOVE_BIT(victim->player.user_flags,STOLE_1);
 					}
-					sprintf(buf, "%s e` stat%s uccis%s da %s a %s\n\r",
+					sprintf(buf, "%s e' stat%s uccis%s da %s a %s\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim),
 							ch->player.short_descr,
 							victim->in_room > -1 ?
@@ -2483,7 +2483,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 						}
 					}
 
-					sprintf(buf, "%s e` stat%s uccis%s da %s a %s\n\r",
+					sprintf(buf, "%s e' stat%s uccis%s da %s a %s\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim),
 							GET_NAME(ch),victim->in_room > -1 ?
 							(real_roomp(victim->in_room))->name : "Nowhere");
@@ -3716,7 +3716,7 @@ void perform_violence(unsigned long currentPulse) {
 /****************************************************************************
 * Questa procedura da (e restituisce) un punteggio a pNewChar in base alle
 * preferenze di pChar in tema di attacco. In pratica serve per scegliere
-* quale personaggio attaccare in caso di piu` personaggi in una locazione
+* quale personaggio attaccare in caso di piu' personaggi in una locazione
 * *************************************************************************/
 
 int GetBonusToAttack(struct char_data* pChar, struct char_data* pNewChar) {
@@ -3843,7 +3843,7 @@ int GetBonusToAttack(struct char_data* pChar, struct char_data* pNewChar) {
 
 /***************************************************************************
 * Questa procedura , chiamata dalle varie findvictim, switcha dalla vittima
-* al suo principe se questi e` in vista.
+* al suo principe se questi e' in vista.
 * *************************************************************************/
 struct char_data* SwitchVictimToPrince(struct char_data* pAtt,
 									   struct char_data* pVict) {
@@ -3887,7 +3887,7 @@ struct char_data* SwitchVictimToPrince(struct char_data* pAtt,
 
 /***************************************************************************
 * Le tre procedure che seguono restituiscono il puntatore ad un personaggio
-* da attaccare. La prima e` usata in genere per le creature agressive e
+* da attaccare. La prima e' usata in genere per le creature agressive e
 * restituisce solo PC o creature che non appartengono alla stessa razza o
 * zona di pChar. La seconda cerca qualunque vittima senza preoccuparsi
 * se la creatura appartiene alla propria zona.
@@ -4420,7 +4420,7 @@ int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
 				return(dam);
 			}
 			else {
-				act("Il tuo colpo e` inefficace contro $N.", FALSE, ch, 0, v,
+				act("Il tuo colpo e' inefficace contro $N.", FALSE, ch, 0, v,
 					TO_CHAR);
 				return(0);
 			} /* was not TYPE_HIT or NPC */

@@ -1124,7 +1124,7 @@ void gain_exp_rev(struct char_data* ch, int gain) {
 									GET_EXP(ch) = titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1;
 								}
 								else {
-									send_to_char("Non prendi exp perche` oltrepassi la soglia massima!!!",ch);
+									send_to_char("Non prendi punti esperienza perche' oltrepassi la soglia massima!!!",ch);
 								}
 								return;
 							}
@@ -1136,7 +1136,7 @@ void gain_exp_rev(struct char_data* ch, int gain) {
 					GET_EXP(ch) += gain;
 				}
 				else {
-					send_to_char("Non prendi exp perche` oltrepassi la soglia massima!!!",ch);
+					send_to_char("Non prendi punti esperienza perche' oltrepassi la soglia massima!!!",ch);
 				}
 
 				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
