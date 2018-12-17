@@ -154,6 +154,12 @@ void MobHunt(struct char_data* ch) {
 	return;    /* too much CPU useage for some machines.  */
 #endif
 
+    if(ch->master != NULL && ch->in_room == ch->master->in_room)
+    {
+        /* se ch e il suo master sono nella stessa room il mob non si muove */
+        return;
+    }
+    
 	if(ch->persist <= 0) {
 		res = choose_exit_in_zone(ch->in_room, ch->old_room, 2000);
 		if(res > -1) {

@@ -216,7 +216,7 @@ int RawMove(struct char_data* ch, int dir, int bCheckSpecial) {
 	if(IS_AFFECTED(ch, AFF_CHARM) && ch->master
 			&& ch->in_room == ch->master->in_room) {
 		act("$n scoppia a piangere.", FALSE, ch, 0, 0, TO_ROOM);
-		act("Tu scoppi a piangere al pensiero di lasciare $N",
+		act("Scoppi a piangere al pensiero di lasciare $N.",
 			FALSE, ch, 0, ch->master, TO_CHAR);
 
 		SetStatus("return 3 in RawMove");
@@ -319,7 +319,7 @@ int RawMove(struct char_data* ch, int dir, int bCheckSpecial) {
 						!IS_AFFECTED(MOUNTED(ch), AFF_FLYING)) {
 					send_to_char(
 						"La tua cavalcatura ha bisogno di saper volare o "
-						"nuotare per andare\n\rin quella direzione\n\r",
+						"nuotare per andare\n\rin quella direzione.\n\r",
 						ch);
 					SetStatus("return 8 in RawMove");
 					return (FALSE);
@@ -392,7 +392,7 @@ int RawMove(struct char_data* ch, int dir, int bCheckSpecial) {
 	if((from_here->sector_type == SECT_TREE)
 			|| (to_here->sector_type == SECT_TREE)) {
 		if(!IS_AFFECTED(ch, AFF_TREE_TRAVEL)) {
-			send_to_char("Vuoi camminare attraverso agli alberi ?\n\r", ch);
+			send_to_char("Vuoi camminare attraverso agli alberi?\n\r", ch);
 			SetStatus("return 13 in RawMove");
 			return (FALSE);
 		}
@@ -528,7 +528,7 @@ void MoveGroup(struct char_data* ch, int dir) {
 				 */
 				if(was_in == k->follower->in_room &&
 						GET_POS(k->follower) >= POSITION_STANDING) {
-					act("Tu segui $N.", FALSE, k->follower, 0, ch, TO_CHAR);
+					act("Segui $N.", FALSE, k->follower, 0, ch, TO_CHAR);
 					if(k->follower->followers) {
 						MoveGroup(k->follower, dir);
 					}
@@ -650,7 +650,7 @@ void DisplayMove(struct char_data* ch, int dir, int was_in, int total) {
 						else {
 							if(MOUNTED(ch))
 								snprintf(tmp, DMMAX,
-										 "%s va %s, cavalcando %s\r\n",
+										 "%s va %s, cavalcando %s.\r\n",
 										 GET_NAME(ch), dirsTo[dir],
 										 MOUNTED(ch)->player.short_descr);
 							else if(IS_AFFECTED(ch, AFF_FLYING)) {
@@ -658,7 +658,7 @@ void DisplayMove(struct char_data* ch, int dir, int was_in, int total) {
 										 GET_NAME(ch), dirsTo[dir]);
 							}
 							else {
-								snprintf(tmp, DMMAX, "%s va %s\r\n",
+								snprintf(tmp, DMMAX, "%s va %s.\r\n",
 										 GET_NAME(ch), dirsTo[dir]);
 							}
 						}
@@ -693,11 +693,11 @@ void DisplayMove(struct char_data* ch, int dir, int was_in, int total) {
 					else {
 						if(IS_AFFECTED(ch, AFF_FLYING))
 							snprintf(tmp, DMMAX,
-									 "%s arrivano volando %s [%d].\r\n",
+									 "%s arrivano volando %s. [%d]\r\n",
 									 PERS(ch, tmp_ch), dirsFrom[rev_dir[dir]],
 									 total);
 						else
-							snprintf(tmp, DMMAX, "%s arrivano %s [%d].\r\n",
+							snprintf(tmp, DMMAX, "%s arrivano %s. [%d]\r\n",
 									 PERS(ch, tmp_ch), dirsFrom[rev_dir[dir]],
 									 total);
 					}
@@ -843,7 +843,7 @@ void open_door(struct char_data* ch, int dir) {
 	REMOVE_BIT(exitp->exit_info, EX_CLOSED);
 	if(exitp->keyword) {
 		if(!IS_SET(exitp->exit_info, EX_SECRET)) {
-			sprintf(buf, "$n apre %s %s",
+			sprintf(buf, "$n apre %s %s.",
 					IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una",
 					fname(exitp->keyword));
 			act(buf, FALSE, ch, 0, 0, TO_ROOM);
@@ -1129,7 +1129,7 @@ ACTION_FUNC(do_open) {
 	argument_interpreter(arg, type, dir);
 
 	if(!*type) {
-		send_to_char("Cosa vuoi aprire ?\n\r", ch);
+		send_to_char("Cosa vuoi aprire?\n\r", ch);
 	}
 	else if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 						 &obj)) {
@@ -1139,7 +1139,7 @@ ACTION_FUNC(do_open) {
 			send_to_char("Non e' un contenitore.\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_CLOSED)) {
-			send_to_char("Ma e' gia' aperto !\n\r", ch);
+			send_to_char("Di nuovo?!?\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_CLOSEABLE)) {
 			send_to_char("Non puoi farlo.\n\r", ch);
@@ -1149,7 +1149,7 @@ ACTION_FUNC(do_open) {
 		}
 		else {
 			REMOVE_BIT(obj->obj_flags.value[1], CONT_CLOSED);
-			send_to_char("Ok.\n\r", ch);
+            act("Apri $p", FALSE, ch, obj, 0, TO_CHAR);
 			act("$n apre $p.", FALSE, ch, obj, 0, TO_ROOM);
 		}
 	}
@@ -1161,21 +1161,24 @@ ACTION_FUNC(do_open) {
 			send_to_char("Ho paura che questo sia impossibile.\n\r", ch);
 		}
 		else if(!IS_SET(exitp->exit_info, EX_CLOSED)) {
-			sprintf(buf, "E' gia' apert%c !\n\r",
+			sprintf(buf, "E' gia' apert%c!\n\r",
 					IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
 			send_to_char(buf, ch);
 		}
 		else if(IS_SET(exitp->exit_info, EX_LOCKED)) {
-			sprintf(buf, "Sembra chius%c a chiave !\n\r",
+			sprintf(buf, "Sembra chius%c a chiave!\n\r",
 					IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
 			send_to_char(buf, ch);
 		}
 		else if(exitp->open_cmd == -1 || exitp->open_cmd == cmd) {
 			open_door(ch, door);
-			send_to_char("Ok.\n\r", ch);
+            sprintf(buf, "Apri %s %s.",
+                    IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una",
+                    fname(exitp->keyword));
+            send_to_char(buf, ch);
 		}
 		else {
-			sprintf(buf, "Non puoi APRIRL%c !\n\r",
+			sprintf(buf, "Non puoi APRIRL%c!\n\r",
 					IS_SET(exitp->exit_info, EX_MALE) ? 'O' : 'A');
 			send_to_char(buf, ch);
 		}
@@ -1204,7 +1207,7 @@ ACTION_FUNC(do_close) {
 			send_to_char("Non e' un contenitore.\n\r", ch);
 		}
 		else if(IS_SET(obj->obj_flags.value[1], CONT_CLOSED)) {
-			send_to_char("Ma e' gia' aperto !\n\r", ch);
+			send_to_char("Di nuovo?!?!\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_CLOSEABLE)) {
 			send_to_char("Questo e' impossibile.\n\r", ch);
@@ -1223,12 +1226,12 @@ ACTION_FUNC(do_close) {
 			send_to_char("Questo e' assurdo.\n\r", ch);
 		}
 		else if(IS_SET(exitp->exit_info, EX_CLOSED)) {
-			sprintf(buf, "E' gia' chius%c !\n\r",
+			sprintf(buf, "E' gia' chius%c!\n\r",
 					IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
 			send_to_char(buf, ch);
 		}
 		else if(exitp->open_cmd != -1) {
-			sprintf(buf, "Non puoi CHIUDERL%c !\n\r",
+			sprintf(buf, "Non puoi CHIUDERL%c!\n\r",
 					IS_SET(exitp->exit_info, EX_MALE) ? 'O' : 'A');
 			send_to_char(buf, ch);
 		}
@@ -1236,7 +1239,7 @@ ACTION_FUNC(do_close) {
 			SET_BIT(exitp->exit_info, EX_CLOSED);
 			if(exitp->keyword) {
 				if(!IS_SET(exitp->exit_info, EX_SECRET)) {
-					sprintf(buf, "$n chiude %s %s %s",
+					sprintf(buf, "$n chiude %s %s %s.",
 							IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una",
 							fname(exitp->keyword), dirsTo[door]);
 					act(buf, FALSE, ch, 0, 0, TO_ROOM);
@@ -1250,7 +1253,10 @@ ACTION_FUNC(do_close) {
 				sprintf(buf, "$n chiude la porta %s.", dirsTo[door]);
 				act(buf, FALSE, ch, 0, 0, TO_ROOM);
 			}
-			send_to_char("Ok.\n\r", ch);
+            sprintf(buf, "Chiudi %s %s.",
+                    IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una",
+                    fname(exitp->keyword));
+            send_to_char(buf, ch);
 
 			/* now for closing the other side, too */
 			if(exit_ok(exitp, &rp) && (back = rp->dir_option[rev_dir[door]])
@@ -1331,7 +1337,7 @@ void raw_lock_door(struct char_data* ch, struct room_direction_data* exitp,
 
 ACTION_FUNC(do_lock) {
 	int door;
-	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
+	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct room_direction_data* exitp;
 	struct obj_data* obj;
 	struct char_data* victim;
@@ -1339,7 +1345,7 @@ ACTION_FUNC(do_lock) {
 	argument_interpreter(arg, type, dir);
 
 	if(!*type) {
-		send_to_char("Cosa vuoi chiudere a chiave ?\n\r", ch);
+		send_to_char("Cosa vuoi chiudere a chiave?\n\r", ch);
 	}
 	else if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 						 &obj)) {
@@ -1350,17 +1356,17 @@ ACTION_FUNC(do_lock) {
 			send_to_char("Non e' un contenitore.\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_CLOSED)) {
-			send_to_char("Forse dovresti chiuderlo, prima...\n\r", ch);
+            sprintf(buf, "Devi prima chiudere %s!\n\r", obj->short_description);
+            send_to_char(buf, ch);
 		}
 		else if(obj->obj_flags.value[2] < 0) {
-			send_to_char("Questa cosa non puo' essere chiusa a chiave.\n\r",
-						 ch);
+			send_to_char("Questa cosa non puo' essere chiusa a chiave.\n\r", ch);
 		}
 		else if(!has_key(ch, obj->obj_flags.value[2])) {
 			send_to_char("Sembra che tu non abbia la chiave giusta.\n\r", ch);
 		}
 		else if(IS_SET(obj->obj_flags.value[1], CONT_LOCKED)) {
-			send_to_char("E' gia' chiuso a chiave.\n\r", ch);
+			send_to_char("Ancora? Quante mandate di chiave vuoi dare?!?\n\r", ch);
 		}
 		else {
 			SET_BIT(obj->obj_flags.value[1], CONT_LOCKED);
@@ -1377,7 +1383,8 @@ ACTION_FUNC(do_lock) {
 			send_to_char("Questo e' assurdo.\n\r", ch);
 		}
 		else if(!IS_SET(exitp->exit_info, EX_CLOSED)) {
-			send_to_char("Prima devi chiuderla.\n\r", ch);
+			sprintf(buf, "Prima devi chiudere %s %s.\n\r", (IS_SET(exitp->exit_info, EX_MALE) ? "il" : "la"),exitp->keyword);
+            send_to_char(buf, ch);
 		}
 		else if(exitp->key < 0) {
 			send_to_char("Non sembra esserci nessuna toppa per la chiave.\n\r",
@@ -1387,12 +1394,13 @@ ACTION_FUNC(do_lock) {
 			send_to_char("Non hai la chiave giusta.\n\r", ch);
 		}
 		else if(IS_SET(exitp->exit_info, EX_LOCKED)) {
-			send_to_char("E' gia chiusa a chiave!\n\r", ch);
+            sprintf(buf, "%s e' gia' chius%s a chiave.\n\r", exitp->keyword, (IS_SET(exitp->exit_info, EX_MALE) ? "o" : "a"));
+            send_to_char(buf, ch);
 		}
 		else {
 			if(exitp->keyword && strcmp("secret", fname(exitp->keyword))) {
-				act("$n chiude a chiave il $F.", 0, ch, 0, exitp->keyword,
-					TO_ROOM);
+                sprintf(buf, "$n chiude a chiave %s $F.", (IS_SET(exitp->exit_info, EX_MALE) ? "il" : "la"));
+				act(buf, 0, ch, 0, exitp->keyword, TO_ROOM);
 			}
 			else {
 				act("$n chiude a chiave la porta.", FALSE, ch, 0, 0, TO_ROOM);
@@ -1406,7 +1414,7 @@ ACTION_FUNC(do_lock) {
 
 ACTION_FUNC(do_unlock) {
 	int door;
-	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
+	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct room_direction_data* exitp;
 	struct obj_data* obj;
 	struct char_data* victim;
@@ -1414,7 +1422,7 @@ ACTION_FUNC(do_unlock) {
 	argument_interpreter(arg, type, dir);
 
 	if(!*type) {
-		send_to_char("Che cosa vuaoi aprire ?\n\r", ch);
+		send_to_char("Che cosa vuaoi aprire?\n\r", ch);
 	}
 	else if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 						 &obj)) {
@@ -1432,7 +1440,8 @@ ACTION_FUNC(do_unlock) {
 			send_to_char("Non hai la chiave giusta.\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_LOCKED)) {
-			send_to_char("Non e' chiuso a chiave, dopo tutto.\n\r", ch);
+            sprintf(buf, "Per aprire %s non serve nessuna chiave.\n\r", obj->short_description);
+            send_to_char(buf, ch);
 		}
 		else {
 			REMOVE_BIT(obj->obj_flags.value[1], CONT_LOCKED);
@@ -1452,18 +1461,20 @@ ACTION_FUNC(do_unlock) {
 			send_to_char("Ma se non e' nemmeno chiusa!\n\r", ch);
 		}
 		else if(exitp->key < 0) {
-			send_to_char("Non mi sembra di vedere buchi per la chiave.\n\r",
+			send_to_char("Non ti sembra di vedere buchi per la chiave.\n\r",
 						 ch);
 		}
 		else if(!has_key(ch, exitp->key)) {
 			send_to_char("Non hai la chiave giusta.\n\r", ch);
 		}
 		else if(!IS_SET(exitp->exit_info, EX_LOCKED)) {
-			send_to_char("Non e' chiusa a chiave, mi sembra...\n\r", ch);
+            sprintf(buf, "%s non e' chius%s a chiave, dopo tutto...\n\r", exitp->keyword, (IS_SET(exitp->exit_info, EX_MALE) ? "o" : "a"));
+            send_to_char(buf, ch);
 		}
 		else {
 			if(exitp->keyword && strcmp("secret", fname(exitp->keyword))) {
-				act("$n apre il $F.", 0, ch, 0, exitp->keyword, TO_ROOM);
+                sprintf(buf, "$n apre %s $F.", (IS_SET(exitp->exit_info, EX_MALE) ? "il" : "la"));
+				act(buf, 0, ch, 0, exitp->keyword, TO_ROOM);
 			}
 			else {
 				act("$n sblocca la porta.", FALSE, ch, 0, 0, TO_ROOM);
@@ -1478,7 +1489,7 @@ ACTION_FUNC(do_unlock) {
 ACTION_FUNC(do_pick) {
 	byte percent;
 	int door;
-	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH];
+	char type[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	struct room_direction_data* exitp;
 	struct obj_data* obj;
 	struct char_data* victim;
@@ -1493,7 +1504,7 @@ ACTION_FUNC(do_pick) {
 	}
 
 	if(!HasClass(ch, CLASS_THIEF) && !HasClass(ch, CLASS_MONK)) {
-		send_to_char("Non sei un ladro !\n\r", ch);
+		send_to_char("Non sei un ladro!\n\r", ch);
 		return;
 	}
 
@@ -1505,7 +1516,7 @@ ACTION_FUNC(do_pick) {
 	}
 
 	if(!*type) {
-		send_to_char("Che cosa vuoi forzare ?\n\r", ch);
+		send_to_char("Che cosa vuoi forzare?\n\r", ch);
 	}
 	else if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 						 &obj)) {
@@ -1516,13 +1527,14 @@ ACTION_FUNC(do_pick) {
 			send_to_char("Non e' un contenitore.\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_CLOSED)) {
-			send_to_char("Ma se non e' nemmeno chiuso !\n\r", ch);
+			send_to_char("Questo contenitore non e' chiuso!\n\r", ch);
 		}
 		else if(obj->obj_flags.value[2] < 0) {
 			send_to_char("Non sembra esserci una serratura.\n\r", ch);
 		}
 		else if(!IS_SET(obj->obj_flags.value[1], CONT_LOCKED)) {
-			send_to_char("Ma non e' chiuso a chiave !\n\r", ch);
+            sprintf(buf, "Non serve a niente scassinare %s!\n\r", obj->short_description);
+            send_to_char(buf, ch);
 		}
 		else if(IS_SET(obj->obj_flags.value[1], CONT_PICKPROOF)) {
 			send_to_char(
@@ -1548,7 +1560,7 @@ ACTION_FUNC(do_pick) {
 			send_to_char("Non ci sono serrature da forzare.\n\r", ch);
 		}
 		else if(!IS_SET(exitp->exit_info, EX_LOCKED)) {
-			send_to_char("Oh.. non e' chiusa a chiave.\n\r", ch);
+			send_to_char("Oh... non e' chiusa a chiave.\n\r", ch);
 		}
 		else if(IS_SET(exitp->exit_info, EX_PICKPROOF)) {
 			send_to_char(
@@ -1557,8 +1569,10 @@ ACTION_FUNC(do_pick) {
 		}
 		else {
 			if(exitp->keyword)
-				act("$n forza abilmente la serratura del $F.", 0, ch, 0,
-					exitp->keyword, TO_ROOM);
+            {
+                sprintf(buf, "$n forza abilmente la serratura di %s $F.", (IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una"));
+                act(buf, 0, ch, 0, exitp->keyword, TO_ROOM);
+            }
 			else {
 				act("$n forza la serratura.", TRUE, ch, 0, 0, TO_ROOM);
 			}
@@ -1693,7 +1707,7 @@ ACTION_FUNC(do_sit) {
 			TO_CHAR);
 		break;
 	case POSITION_FIGHTING:
-		act("Sederti mentre combatti ? ma sei matt$b?", FALSE, ch, 0, 0,
+        act("Sederti mentre combatti ? Ma sei matt$b?", FALSE, ch, 0, 0,
 			TO_CHAR);
 		break;
 	case POSITION_MOUNTED:
@@ -1752,14 +1766,14 @@ ACTION_FUNC(do_sleep) {
 	case POSITION_SITTING:
 	case POSITION_RESTING:
 		send_to_char("Ti metti a dormire.\n\r", ch);
-		act("$n si sdraia e si addormenta", TRUE, ch, 0, 0, TO_ROOM);
+		act("$n si sdraia e si addormenta.", TRUE, ch, 0, 0, TO_ROOM);
 		GET_POS(ch) = POSITION_SLEEPING;
 		break;
 	case POSITION_SLEEPING:
 		send_to_char("Stai gia' dormendo.\n\r", ch);
 		break;
 	case POSITION_FIGHTING:
-		send_to_char("Pensi che dormire risolva i tuoi problemi ?\n\r", ch);
+		send_to_char("Pensi che dormire risolva i tuoi problemi?\n\r", ch);
 		break;
 	case POSITION_MOUNTED:
 		send_to_char("Non mentre cavalchi!\n\r", ch);
@@ -1781,7 +1795,7 @@ ACTION_FUNC(do_wake) {
 	one_argument(arg, tmp);
 	if(*tmp) {
 		if(GET_POS(ch) == POSITION_SLEEPING) {
-			act("Non puoi svegliare la gente se tu stess$b stai dormendo !",
+			act("Non puoi svegliare la gente se tu stess$b stai dormendo!",
 				FALSE, ch, 0, 0, TO_CHAR);
 		}
 		else {
@@ -1789,7 +1803,7 @@ ACTION_FUNC(do_wake) {
 			if(tmp_char) {
 				if(tmp_char == ch) {
 					act(
-						"Se vuoi svegliare te stess$b batti semplicemente 'wake'",
+						"Se vuoi svegliare te stess$b scrivi semplicemente 'wake'",
 						FALSE, ch, 0, 0, TO_CHAR);
 				}
 				else {
@@ -1830,7 +1844,7 @@ ACTION_FUNC(do_wake) {
 	}
 	else {
 		if(IS_AFFECTED(ch, AFF_SLEEP)) {
-			send_to_char("Non riesci a svegliarti !\n\r", ch);
+			send_to_char("Non riesci a svegliarti!\n\r", ch);
 		}
 		else {
 			if(GET_POS(ch) > POSITION_SLEEPING) {
@@ -1853,7 +1867,7 @@ ACTION_FUNC(do_follow) {
 
 	if(*name) {
 		if(!(leader = get_char_room_vis(ch, name))) {
-			send_to_char("Non vedo nessuno con quel nome qui !\n\r", ch);
+			send_to_char("Non vedo nessuno con quel nome qui!\n\r", ch);
 			return;
 		}
 	}
@@ -1903,7 +1917,7 @@ ACTION_FUNC(do_run) {
 	only_argument(arg, buff);
 
 	if(!*buff) {
-		send_to_char("In quale direzione vuoi correre ?.\n\r", ch);
+		send_to_char("In quale direzione vuoi correre?\n\r", ch);
 		return;
 	}
 
@@ -1930,7 +1944,7 @@ ACTION_FUNC(do_run) {
 	}
 
 	if(!CAN_GO(ch, keyno)) {
-		send_to_char("Non ti pare il caso di correre in quella direzione", ch);
+		send_to_char("Non ti pare il caso di correre in quella direzione.\n\r", ch);
 		return;
 	}
 	if(!clearpath(ch, ch->in_room, keyno)) {
@@ -1945,7 +1959,7 @@ ACTION_FUNC(do_run) {
 
 	if(IS_AFFECTED2((IS_POLY(ch)) ? ch->desc->original : ch, AFF2_PKILLER) &&   // SALVO controllo pkiller
 			IS_SET(EXIT(ch, keyno)->to_room, PEACEFUL)) {
-		send_to_char("Una forza arcana ti impedisce di correre da quella parte",
+		send_to_char("Una forza arcana ti impedisce di correre verso quella direzione.",
 					 ch);
 		return;
 	}

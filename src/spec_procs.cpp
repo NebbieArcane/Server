@@ -7148,9 +7148,9 @@ OBJSPECIAL_FUNC(nodrop) {
 
 	switch(cmd) {
 	case CMD_GET: /* Get */
-	case 60: /* Drop */
-	case 72: /* Give */
-	case 156: /* Steal */
+	case CMD_DROP: /* Drop */
+	case CMD_GIVE: /* Give */
+	case CMD_STEAL: /* Steal */
 		break;
 	default:
 		return(FALSE);

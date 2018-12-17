@@ -1382,8 +1382,8 @@ const char* dirsTo[] = {
 	"ad est",
 	"a sud",
 	"ad ovest",
-	"in alto",
-	"in basso",
+	"verso l'alto",
+	"verso il basso",
 	"\n"
 };
 

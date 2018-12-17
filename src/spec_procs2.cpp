@@ -6000,21 +6000,34 @@ OBJSPECIAL_FUNC(portal) {
 	return FALSE;
 }
 
-OBJSPECIAL_FUNC(scraps) {
-	if(type == EVENT_TICK) {
-		if(obj->obj_flags.value[0]) {
+OBJSPECIAL_FUNC(scraps)
+{
+	if(type == EVENT_TICK)
+    {
+		if(obj->obj_flags.value[0])
+        {
 			obj->obj_flags.value[0]--;
 		}
-
-		if(obj->obj_flags.value[0] <= 0 && obj->in_room) {
-			if((obj->in_room != NOWHERE) &&(real_roomp(obj->in_room)->people)) {
-				act("$p si sbriciola fra le mani di $n",
-					FALSE, real_roomp(obj->in_room)->people, obj, 0, TO_ROOM);
-				act("$p ti si sbriciola fra le mani!",
-					FALSE, real_roomp(obj->in_room)->people, obj, 0, TO_CHAR);
+        
+		if(obj->obj_flags.value[0] <= 0 && obj->in_room)
+        {
+			if((obj->in_room != NOWHERE) &&(real_roomp(obj->in_room)->people))
+            {
+				act("$p si sbriciolano al vento.", FALSE, real_roomp(obj->in_room)->people, obj, 0, TO_ROOM);
+                act("$p si sbriciolano al vento.", FALSE, real_roomp(obj->in_room)->people, obj, 0, TO_CHAR);
 			}
-			extract_obj(obj);
-		}
+            else if(obj->obj_flags.value[0] <= 0 && obj->carried_by != NULL)
+            {
+                act("$p si sbriciolano fra le mani di $n.", FALSE, obj->carried_by, obj, 0, TO_ROOM);
+                act("$p ti si sbriciolano fra le mani!", FALSE, obj->carried_by, obj, 0, TO_CHAR);
+            }
+            else if(obj->obj_flags.value[0] <= 0 && obj->equipped_by != NULL)
+            {
+                act("$p si sbriciolano fra le mani di $n.", FALSE, obj->equipped_by, obj, 0, TO_ROOM);
+                act("$p ti si sbriciolano fra le mani!", FALSE, obj->equipped_by, obj, 0, TO_CHAR);
+            }
+        extract_obj(obj);
+        }
 		return TRUE;
 	}
 	return FALSE;

@@ -4197,16 +4197,21 @@ void MakeScrap(struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 	char buf[200];
 	struct obj_data* t, *x;
 
-	act("$p falls to the ground in scraps.", TRUE, ch, obj, 0, TO_CHAR);
-	act("$p falls to the ground in scraps.", TRUE, ch, obj, 0, TO_ROOM);
+	act("$p cade a terra in frantumi.", TRUE, ch, obj, 0, TO_CHAR);
+	act("$p cade a terra in frantumi.", TRUE, ch, obj, 0, TO_ROOM);
 
 	t = read_object(30, VIRTUAL);
 
-	sprintf(buf, "Scraps from %s lie in a pile here.",
+	sprintf(buf, "I frammenti di %s sono sparsi qui per terra.",
 			obj->short_description);
 
 	free(t->description);
 	t->description = (char*)strdup(buf);
+    
+    sprintf(buf, "i frammenti di %s", obj->short_description);
+    free(t->short_description);
+    t->short_description = (char*)strdup(buf);
+    
 	if(obj->carried_by) {
 		obj_from_char(obj);
 	}
@@ -5062,7 +5067,12 @@ int range_hit(struct char_data* ch, struct char_data* targ, int rng, struct
 									GET_POS(targ) = POSITION_STANDING;
 									/* Ain't gonna take any more of this missile crap! */
 									AddHated(targ, ch);
-									act("$n appare piuttosto contrariato!", TRUE, targ, 0, 0,
+                                    if(targ->master != NULL && targ->in_room == targ->master->in_room)
+                                    {
+                                        act("$n appare piuttosto contrariat$b ma rimane a proteggere $N!", TRUE, targ, 0, targ->master, TO_ROOM);
+                                        return 0;
+                                    }
+									act("$n appare piuttosto contrariat$b!", TRUE, targ, 0, 0,
 										TO_ROOM);
 									targ->specials.charging = ch;
 									targ->specials.charge_dir = cdr;
@@ -5126,7 +5136,12 @@ int range_hit(struct char_data* ch, struct char_data* targ, int rng, struct
 				else {
 					cdir = can_see_linear(targ, ch, &rang, &cdr);
 					if(cdir != -1) {
-						act("$n appare piuttosto contrariato!",TRUE,targ,0,0,TO_ROOM);
+                        if(targ->master != NULL && targ->in_room == targ->master->in_room)
+                        {
+                            act("$n appare piuttosto contrariat$b ma rimane a proteggere $N!", TRUE, targ, 0, targ->master, TO_ROOM);
+                            return 0;
+                        }
+						act("$n appare piuttosto contrariat$b!",TRUE,targ,0,0,TO_ROOM);
 						targ->specials.charging = ch;
 						targ->specials.charge_dir = cdr;
 					}
