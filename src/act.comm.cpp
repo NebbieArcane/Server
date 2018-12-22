@@ -1365,7 +1365,7 @@ ACTION_FUNC(do_eavesdrop) {
 		return;
 	}
 	exitp = EXIT(ch, dir); // SALVO se la stanza e' -1 crash
-	if(exitp && exitp->to_room > 0) {
+	if(exitp && exitp->to_room > 0 && real_roomp(exitp->to_room)) {
 		if(IS_SET(exitp->exit_info, EX_CLOSED) && exitp->keyword) {
 			snprintf(buf, MAX_STRING_LENGTH-1, "The %s is closed.\r\n", fname(exitp->keyword));
 			send_to_char(buf, ch);

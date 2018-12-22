@@ -31,6 +31,7 @@ ACTION_FUNC(do_guard) ;
 ACTION_FUNC(do_hide) ;
 ACTION_FUNC(do_idea) ;
 ACTION_FUNC(do_idea_new) ;
+ACTION_FUNC(do_insert) ;
 ACTION_FUNC(do_junk) ;
 ACTION_FUNC(do_memorize) ;
 ACTION_FUNC(do_mount) ;

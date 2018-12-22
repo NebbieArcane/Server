@@ -166,6 +166,7 @@ void TeleportPulseStuff(unsigned long pulse);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
 char RandomChar() ;
+char RemColorString(char * buffer) ;
 const char* RandomWord() ;
 template <typename T>
 T tonumber(std::string source,T fallback) {

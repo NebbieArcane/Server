@@ -2693,6 +2693,7 @@ const char* extra_bits2[] = {
     "EDIT",
     "NO-LOCATE",
     "PERSONAL",
+    "HAS-GEMS",
     "\n"
 };
     

@@ -3223,29 +3223,29 @@ DamageResult HitVictim(struct char_data* ch, struct char_data* v, int dam,
 
 		if(leech > 0) {
 
-			if(leech <= 5) {
-				// Message for ch
-				act("Assaggi l'energia vitale di $N.", TRUE, ch, 0, v,
-					TO_CHAR);
-				act("$n assaggia l'energia vitale di $N.", TRUE, ch, 0, v,
-					TO_ROOM);
+			if(leech <= 5)
+            {
+                    act("Assaggi l'energia vitale di $N.", FALSE, ch, 0, v, TO_CHAR);
+                    act("$n assaggia la tua energia vitale.", FALSE, ch, 0, v, TO_VICT);
+                    act("$n assaggia l'energia vitale di $N.", FALSE, ch, 0, v, TO_NOTVICT);
 			}
-			else if(leech > 5 && leech < 11) {
-				// Message for ch
-				act("Assorbi l'energia vitale di $N.", TRUE, ch, 0, v,
-					TO_CHAR);
-				act("$n assorbe l'energia vitale di $N.", TRUE, ch, 0, v,
-					TO_ROOM);
+			else if(leech > 5 && leech < 11)
+            {
+                    act("Assorbi l'energia vitale di $N.", FALSE, ch, 0, v, TO_CHAR);
+                    act("$n assorbe la tua energia vitale.", FALSE, ch, 0, v, TO_VICT);
+                    act("$n assorbe l'energia vitale di $N.", FALSE, ch, 0, v, TO_NOTVICT);
 			}
-			else {
-				act("Banchetti con l'energia vitale di $N.", TRUE, ch, 0,
-					v, TO_CHAR);
-				act("$n banchetta con l'energia vitale di $N.", TRUE, ch, 0,
-					v, TO_ROOM);
+			else
+            {
+                    act("Banchetti con l'energia vitale di $N.", FALSE, ch, 0, v, TO_CHAR);
+                    act("$n banchetta con la tua energia vitale.", FALSE, ch, 0, v, TO_VICT);
+                    act("$n banchetta con l'energia vitale di $N.", FALSE, ch, 0, v, TO_NOTVICT);
 			}
 
 			// Message for room
-			act("$N sembra piu' debole.", TRUE, ch, 0, v, TO_ROOM);
+            act("$N sembra piu' debole.", FALSE, ch, 0, v, TO_CHAR);
+            act("Sembri piu' debole.", FALSE, ch, 0, v, TO_VICT);
+            act("$N sembra piu' debole.", FALSE, ch, 0, v, TO_NOTVICT);
 		}
 	}
 

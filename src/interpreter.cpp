@@ -1443,7 +1443,8 @@ void assign_command_pointers() {
 	AddCommand( "apologize",            do_action,          CMD_APOLOGIZE,              POSITION_RESTING,   TUTTI                   );
     AddCommand( "destroy",              do_destroy,         CMD_DESTROY,                POSITION_RESTING,   TUTTI                   );  /*  470 */
     AddCommand( "personalize",          do_personalize,     CMD_PERSONALIZE,            POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
-	/*          Liberi 472-479 (-488)*/
+    AddCommand( "insert",               do_insert,          CMD_INSERT_GEMS,            POSITION_STANDING,  IMMORTALE               );
+	/*          Liberi 473-479 (-488)*/
   //            DIMD stuff
   //AddCommand( "dmanage",              do_dmanage,         CMD_DMANAGE,                POSITION_RESTING,   MAESTRO_DEL_CREATO      );  /*  480 */
   //AddCommand( "drestrict",            do_drestrict,       CMD_DRESTRICT,              POSITION_RESTING,   DIO_MINORE              );

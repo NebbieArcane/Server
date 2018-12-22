@@ -62,7 +62,7 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,
 						obj->obj_flags.cost_per_day ? "$c0015" : "",
 						obj->obj_flags.cost_per_day,
 						obj->obj_flags.cost_per_day ? "$c0007" : "",
-						obj->obj_flags.cost>LIM_ITEM_COST_MIN?"$c0001[RARO]$c0007":"");
+						obj->obj_flags.cost>=LIM_ITEM_COST_MIN?"$c0001[RARO]$c0007":"");
 				send_to_char(buf, ch);
 			}
 			ItemType=(GET_ITEM_TYPE(obj));

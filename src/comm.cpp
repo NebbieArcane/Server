@@ -1883,7 +1883,10 @@ void act(const char* str, int hide_invisible, struct char_data* ch,
 				  to != ch))) {
 
 			ParseAct(str,ch,to,vict_obj,obj,buf);
-			CAP(buf);
+            if(buf[1] == '$')
+                buf[7] = UPPER(buf[7]);
+            else
+                CAP(buf);
 			send_to_char(buf, to);
 			send_to_char("$c0007", to);
 		}

@@ -81,7 +81,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 36) {
+		if(update < 0 || update > 37) {
 			return;
 		}
 		i=1;
@@ -123,7 +123,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         send_to_char(buf, ch);
 
         row = 0;
-        for(i = 0; i < 36; i++)
+        for(i = 0; i < 37; i++)
         {
             sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
@@ -168,7 +168,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         sprintf(buf, "\n\rObject Extra Flags:\n\r\n\r");
         send_to_char(buf, ch);
         
-        for(i = 0; i < 36; i++)
+        for(i = 0; i < 37; i++)
         {
             check = 1;
             sprintf(buf2, "%s", "%-");
@@ -421,7 +421,7 @@ void UpdateObjMenu(struct char_data* ch) {
     }
 	sprintf(buf, VT_CURSPOS, 3, 1);
 	send_to_char(buf, ch);
-	send_to_char("Menu:\n\r", ch);
+	send_to_char("\n\rMenu:\n\r", ch);
 	send_to_char(obj_edit_menu, ch);
 	send_to_char("--> ", ch);
 }

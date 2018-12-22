@@ -5296,5 +5296,31 @@ char RandomChar() {
 	return(stringa[ number(0, strlen(stringa)-1) ]);
 
 }
+
+char RemColorString(char * buffer)
+{
+    for(char* car = buffer; *car != '\0'; car++)
+    {
+        if(*car == '$' && toupper(*(car + 1)) == 'C')
+        {
+            char* next = car;
+            while (*next != '\0')
+            {
+                *next = *(next + 6);
+                next++;
+            }
+        }
+        else if(*car == '$' && *(car + 1) == '$' && toupper(*(car + 2)) == 'C')
+        {
+            char* next = car;
+            while (*next != '\0')
+            {
+                *next = *(next + 7);
+                next++;
+            }
+        }
+    }
+    return *buffer;
+}
 } // namespace Alarmud
 

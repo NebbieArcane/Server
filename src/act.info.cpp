@@ -620,7 +620,10 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			}
 			else {
 				strcpy(buffer, i->player.short_descr);
-				CAP(buffer);
+                if(buffer[1] == '$')
+                    buffer[7] = UPPER(buffer[7]);
+                else
+                    CAP(buffer);
 			}
 
 			if(IS_AFFECTED(i, AFF_INVISIBLE) || i->invis_level >= IMMORTALE) {
@@ -784,6 +787,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
         else
         {
             strcpy(buffer2, i->player.short_descr);
+            RemColorString(buffer2);
             CAP(buffer2);
         }
         
@@ -828,7 +832,12 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 	}
 	else if(mode == 1) {
 		if(i->player.description) {
-			send_to_char(i->player.description, ch);
+            strcpy(buffer, i->player.description);
+            if(buffer[1] == '$')
+                buffer[7] = UPPER(buffer[7]);
+            else
+                CAP(buffer);
+            send_to_char(buffer, ch);
 		}
 		else {
 			if(IS_MAESTRO_DEL_CREATO(i)) {
@@ -891,7 +900,10 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		if(IS_NPC(i)) {
 			strcpy(buffer, i->player.short_descr);
-            CAP(buffer);
+            if(buffer[1] == '$')
+                buffer[7] = UPPER(buffer[7]);
+            else
+                CAP(buffer);
 		}
 		else {
 			strcpy(buffer, GET_NAME(i));
@@ -1028,7 +1040,10 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			}
 			else {
 				strcpy(buffer, i->player.short_descr);
-				CAP(buffer);
+                if(buffer[1] == '$')
+                    buffer[7] = UPPER(buffer[7]);
+                else
+                    CAP(buffer);
 			}
 
 			if(IS_AFFECTED(i,AFF_INVISIBLE)) {
@@ -1195,6 +1210,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
         else
         {
             strcpy(buffer2, i->player.short_descr);
+            RemColorString(buffer2);
             CAP(buffer2);
         }
         

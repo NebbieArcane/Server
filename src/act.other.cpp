@@ -3172,13 +3172,978 @@ void ck_eq_action(struct char_data* ch, struct obj_data* obj) {
 			}
 		}
 		else {
-			mudlog(LOG_SYSERR, "Object %s carried by %s but not equip or carriedi or in bag "
+			mudlog(LOG_SYSERR, "Object %s carried by %s but not equip or carried or in bag"
 				   , obj->name, GET_NAME(ch));
-			act("where is $p ?? (Report the bug to Gaia plz :-))", FALSE, ch, obj, NULL, TO_CHAR);
+			act("Dove diavolo e' $p? (Segnala la cosa ad un coder per piacere :-))", FALSE, ch, obj, NULL, TO_CHAR);
 		}
 
 	}
 }
 
+ACTION_FUNC(do_insert)
+{
+    int i, l, affect = 0, aff = 0, loc = 0, mod = 0, val = 0, zir = 0, hitroll = 0, damroll = 0, castoni = 0;
+    int gems[5] = { 0, 0, 0, 0, 0 }, val_orig, vnum, wait = 0;
+    bool ok = FALSE;
+    char tmp[100], gemma[100], buf[MAX_STRING_LENGTH];
+    struct obj_data* obj, *gem, *gem_tmp;
+    
+    const char* rand_reaction[] = {
+        "Studi meticolosamente $p, poi sorridi tra te e te.",
+        "Guardi entusiasta $p pensando 'Ma quanto sono brav$b!'",
+        "Esclami: '$c0009SI PUO' FARE!$c0007'",
+        "Sorridi compiaciut$b.",
+        "Pensi: 'Potevo fare di meglio, ma comunque va MOLTO bene :-)'",
+        "Guardi con adorazione $p poi, a voce alta, esclami: '$c0009Il mio tesssssoro!$c0007'",
+        "Ti sfreghi le mani con soddisfazione.",
+        "Osservi sognante $p, hai fatto un ottimo lavoro!",
+        "Molto bene, la gemma e' incastonata perfettamente.",
+        "Pensi tra te e te: 'E anche questa e' fatta!'",
+        "$n studia meticolosamente $p, poi sorride tra se e se.",
+        "$n guarda entusiasta $p pensando 'Ma quanto sono brav$b!'",
+        "$n esclama: '$c0009SI PUO' FARE!$c0007'",
+        "$n sorride compiaciut$b.",
+        "$n pensa a voce alta: 'Potevo fare di meglio, ma comunque va MOLTO bene :-)'",
+        "$n guarda con adorazione $p poi, a voce alta, esclama: '$c0009Il mio tesssssoro!$c0007'",
+        "$n si sfrega le mani con soddisfazione.",
+        "$n osserva sognante $p.",
+        "Un ghigno malefico compare sulle labbra di $n: e' chiaramente soddisfatt$b.",
+        "$n pensa ad alta voce: 'E anche questa e' fatta!'"
+    };
+    
+    const int nRandReac = 9;
+    
+    if(IS_NPC(ch))
+    {
+        send_to_char("Chi ti pensi di essere? Un gioielliere? Sei solo uno stupido mob!\n\r", ch);
+        return;
+    }
+    
+    arg = one_argument(arg, tmp);
+    
+    if(*tmp)
+    {
+        obj = get_obj_in_list_vis(ch, tmp, ch->carrying);
+        for(i = 0; i < MAX_OBJ_AFFECT; i++)
+        {
+            if((obj->affected[i].location != APPLY_NONE) && (obj->affected[i].modifier != 0) && (obj->affected[i].location != APPLY_SKIP))
+                affect++;
+        }
+
+        if(IS_OBJ_STAT2(obj, ITEM2_EDIT))
+        {
+            act("Non puoi farlo, $c0015$p$c0007 e' stato plasmato dagli Dei!", TRUE, ch, obj, 0, TO_CHAR);
+            mudlog(LOG_PLAYERS, "%s can't insert gems in %s, it is an Edited Item", GET_NAME(ch), obj->short_description);
+            return;
+        }
+        else if(IS_OBJ_STAT2(obj, ITEM2_INSERT))
+        {
+            act("Non vedi che alcune gemme gia' adornano $c0015$p$c0007!", TRUE, ch, obj, 0, TO_CHAR);
+            mudlog(LOG_PLAYERS, "%s can't insert gems in %s, it was already mounted", GET_NAME(ch), obj->short_description);
+            return;
+        }
+        else if(obj->obj_flags.cost >= LIM_ITEM_COST_MIN)
+        {
+            send_to_char("Non puoi incastonare oggetti RARI!\n\r", ch);
+            mudlog(LOG_PLAYERS, "%s can't insert gems in %s, it is a Rare Item", GET_NAME(ch), obj->short_description);
+            return;
+        }
+        else if((vnum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0) == TAN_BAG || vnum == TAN_SHIELD || vnum == TAN_JACKET || vnum == TAN_BOOTS || vnum == TAN_GLOVES || vnum == TAN_LEGGINGS || vnum == TAN_SLEEVES || vnum == TAN_HELMET || vnum == TAN_ARMOR)
+        {
+            send_to_char("Non puoi incastonare armature conciate!\n\r", ch);
+            mudlog(LOG_PLAYERS, "%s can't insert gems in %s, it is a Tanned Item", GET_NAME(ch), obj->short_description);
+            return;
+        }
+
+        if(affect == 5)
+        {
+            sprintf(buf, "Non puoi farlo, $c0015%s$c0007 va bene cosi'!\n\r", obj->short_description);
+            send_to_char(buf, ch);
+            mudlog(LOG_PLAYERS, "%s try to insert gems in %s but there are already 5 affects", GET_NAME(ch), obj->short_description);
+            return;
+        }
+        
+        switch(GET_ITEM_TYPE(obj))
+        {
+            case ITEM_LIGHT :
+            case ITEM_WAND :
+            case ITEM_STAFF :
+            case ITEM_WEAPON :
+            case ITEM_FIREWEAPON :
+            case ITEM_OTHER :
+            case ITEM_AUDIO :
+            case ITEM_ARMOR :
+                ok = TRUE;
+                break;
+            case ITEM_SCROLL :
+                sprintf(buf, "Non puoi incastonare pergamene!\n\r");
+                ok = FALSE;
+                break;
+            case ITEM_POTION :
+                sprintf(buf, "Non puoi incastonare pozioni!\n\r");
+                ok = FALSE;
+                break;
+            case ITEM_WORN :
+                sprintf(buf, "Quest'oggetto e' troppo logorato per essere incastonato!\n\r");
+                ok = FALSE;
+                break;
+            case ITEM_TRASH :
+                sprintf(buf, "Spazzatura, e' solo un mucchio di spazzatura non lo vedi?\n\r");
+                ok = FALSE;
+                break;
+            case ITEM_TRAP :
+                sprintf(buf, "Non vedo come tu possa incastonare una trappola!\n\r");
+                ok = FALSE;
+                break;
+            case ITEM_NOTE :
+                sprintf(buf, "Questo tipo di oggetti e' fatto per scriverci sopra!\n\r");
+                ok = FALSE;
+                break;
+            case ITEM_FOOD :
+                sprintf(buf, "Proprio quello che ci voleva, un panino al diamante!\n\r");
+                ok = FALSE;
+                break;
+            default:
+                sprintf(buf, "Non puoi incastonare questo tipo di oggetto!\n\r");
+                ok = FALSE;
+        }
+        
+        if(!ok)
+        {
+            send_to_char(buf, ch);
+            mudlog(LOG_PLAYERS, "%s try to insert gems in %s, it is not a valid type of object", GET_NAME(ch), obj->short_description);
+            return;
+        }
+        else
+        {
+            val_orig = obj->obj_flags.cost;
+            send_to_char("Sistemi gli attrezzi di lavoro sul tuo banco di legno e li controlli con cura: scalpelli, uncini, pinze, lime.\n\r", ch);
+            send_to_char("Valuti con cura quali siano i migliori per iniziare, prendi fiato ed inizi a lavorare.\n\r\n\r", ch);
+            act("Inizi ad armeggiare con $c0015$p$c0007.\n\r",TRUE, ch, obj, 0, TO_CHAR);
+            act("$n tira fuori una serie di utensili da lavoro, controlla sapientemente $c0015$p$c0007 poi,\n\rcon mano ferma, si mette all'opera.\n\r", TRUE, ch, obj, 0, TO_ROOM);
+        }
+        
+        castoni = 5 - affect;
+        
+        for(i = 0; i < castoni; i++)
+        {
+            arg = one_argument(arg, gemma);
+            if(*gemma)
+            {
+                gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+                
+                if(gem)
+                {
+                    gems[i] = (gem->item_number >= 0) ? obj_index[gem->item_number].iVNum : 0;
+                    
+                    // controllo se il vnum è una gemma incastonabile
+                    if(gems[i] < 19509 || gems[i] > 19537)
+                    {
+                        mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, %s it is not a gem", GET_NAME(ch), obj->short_description, gem->short_description);
+                        sprintf(buf, "Mi dispiace ma $c0015%s$c0007 non e' una gemma!\n\r", gem->short_description);
+                        send_to_char(buf, ch);
+                        if(i > 0)
+                        {
+                            sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            if(!IS_DIO_MINORE(ch))
+                            {
+                                wait += PULSE_VIOLENCE*4;
+                            }
+                            for(l = 0; l < i; l++)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                if(gems[l] == 19511 || gems[l] == 19510)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                                else if((gems[l] == 19513 && zir == 3) || gems[l] == 19524)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                            }
+                        }
+                        return;
+                    }
+                    
+                    // controllo se si può incastonare il tipo di pietro nell'arma
+                    if (GET_ITEM_TYPE(obj) == ITEM_WEAPON && (gems[i] == 19511 || gems[i] == 19512 || gems[i] == 19513 || gems[i] == 19514 || gems[i] == 19515 || gems[i] == 19516 || gems[i] == 19517 || gems[i] == 19518 || gems[i] == 19519 || gems[i] == 19520 || gems[i] == 19521 || gems[i] == 19524 || gems[i] == 19526 || gems[i] == 19527 || gems[i] == 19532))
+                    {
+                        mudlog(LOG_PLAYERS, "%s fails to insert %s in %s, it is a weapon", GET_NAME(ch), gem->short_description, obj->short_description);
+                        sprintf(buf, "Mi dispiace, non sei riuscit$b ad inserire $c0015%s$c0007 su $c0015$p$c0007.\n\r", gem->short_description);
+                        act(buf, TRUE, ch, obj, 0, TO_CHAR);
+                        if(i > 0)
+                        {
+                            sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            if(!IS_DIO_MINORE(ch))
+                            {
+                                wait += PULSE_VIOLENCE*4;
+                            }
+                            for(l = 0; l < i; l++)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                if(gems[l] == 19511 || gems[l] == 19510)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                                else if((gems[l] == 19513 && zir == 3) || gems[l] == 19524)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                            }
+                        }
+                        return;
+                    }
+
+                    if(!IS_DIO_MINORE(ch))
+                    {
+                        /* Se il livello è minore del 53 assegno il wait state in proporzione al numero di gemme */
+                        wait += PULSE_VIOLENCE + PULSE_VIOLENCE*i;
+                    }
+                    sprintf(buf, "Incastoni $c0015%s$c0007 su $c0015%s$c0007.\n\r", gem->short_description, obj->short_description);
+                    send_to_char(buf, ch);
+                    act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                    sprintf(buf, "$n incastona $c0015%s$c0007 su $c0015$p$c0007.", gem->short_description);
+                    act(buf, TRUE, ch, obj, 0, TO_ROOM);
+                    act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                    if(gems[i] == 19513)
+                        zir = 1;
+                    obj_from_char(gem);
+                    extract_obj(gem);
+                }
+                else
+                {
+                    mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, a gem is missing", GET_NAME(ch), obj->short_description);
+                    sprintf(buf, "Non hai niente che si chiami '$c0009%s$c0007' con te.\n\r", gemma);
+                    send_to_char(buf, ch);
+                    if(i > 0)
+                    {
+                        sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                        send_to_char(buf, ch);
+                        act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        if(!IS_DIO_MINORE(ch))
+                        {
+                            wait += PULSE_VIOLENCE*4;
+                        }
+                        for(l = 0; l < i; l++)
+                        {
+                            gem_tmp = read_object(real_object(gems[l]), REAL);
+                            obj_to_char(gem_tmp, ch);
+                            if(gems[l] == 19511 || gems[l] == 19510)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                            }
+                            else if((gems[l] == 19513 && zir == 3) || gems[l] == 19524)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                            }
+                        }
+                    }
+                    return;
+                }
+                
+                if(gems[i] == 19511)        // opale
+                {
+                    gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+                    
+                    if(gem)
+                    {
+                        if(!IS_DIO_MINORE(ch))
+                        {
+                            wait += PULSE_VIOLENCE;
+                        }
+                        sprintf(buf, "Incastoni la seconda $c0015pietra d'opale$c0007 su $c0015%s$c0007.\n\r", obj->short_description);
+                        send_to_char(buf, ch);
+                        act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                        act("$n incastona una seconda $c0015pietra d'opale$c0007 su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                        obj_from_char(gem);
+                        extract_obj(gem);
+                    }
+                    else
+                    {
+                        mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, a gem is missing", GET_NAME(ch), obj->short_description);
+                        send_to_char("Ti rendi conto solo ora che non hai abbastanza $c0015pietre d'opale$c0007.\n\r", ch);
+                        if(i > 0)
+                        {
+                            sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            if(!IS_DIO_MINORE(ch))
+                            {
+                                wait += PULSE_VIOLENCE*4;
+                            }
+                            for(l = 0; l < i; l++)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                if(gems[l] == 19510)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                                else if((gems[l] == 19513 && zir == 3) || gems[l] == 19524)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                            }
+                        }
+                        return;
+                    }
+                }
+                else if(gems[i] == 19510)       // ossidiana
+                {
+                    gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+
+                    if(gem)
+                    {
+                        if(!IS_DIO_MINORE(ch))
+                        {
+                            wait += PULSE_VIOLENCE;
+                        }
+                        sprintf(buf, "Incastoni la seconda $c0015pietra d'ossidiana$c0007 su $c0015%s$c0007.\n\r", obj->short_description);
+                        send_to_char(buf, ch);
+                        act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                        act("$n incastona una seconda $c0015pietra d'ossidiana$c0007 su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                        obj_from_char(gem);
+                        extract_obj(gem);
+                    }
+                    else
+                    {
+                        mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, a gem is missing", GET_NAME(ch), obj->short_description);
+                        send_to_char("Ti rendi conto solo ora che non hai abbastanza $c0015pietre d'ossidiana$c0007.\n\r", ch);
+                        if(i > 0)
+                        {
+                            sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            if(!IS_DIO_MINORE(ch))
+                            {
+                                wait += PULSE_VIOLENCE*4;
+                            }
+                            for(l = 0; l < i; l++)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                if(gems[l] == 19511)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                                else if((gems[l] == 19513 && zir == 3) || gems[l] == 19524)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                            }
+                        }
+                        return;
+                    }
+                }
+                else if(gems[i] == 19513)       // zircone
+                {
+                    gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+                    
+                    if(gem)
+                    {
+                        if(!IS_DIO_MINORE(ch))
+                        {
+                            wait += PULSE_VIOLENCE;
+                        }
+                        sprintf(buf, "Incastoni la seconda $c0015pietra di zircone$c0007 su $c0015%s$c0007.\n\r", obj->short_description);
+                        send_to_char(buf, ch);
+                        act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                        act("$n incastona una seconda $c0015pietra di zircone$c0007 su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                        obj_from_char(gem);
+                        extract_obj(gem);
+                        zir = 2;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    
+                    if(zir == 2)
+                    {
+                        gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+                    
+                        if(gem)
+                        {
+                            if(!IS_DIO_MINORE(ch))
+                            {
+                                wait += PULSE_VIOLENCE*2;
+                            }
+                            sprintf(buf, "Incastoni la $c0015terza pietra di zircone$c0007 su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                            act("$n incastona una terza $c0015pietra di zircone$c0007 su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                            obj_from_char(gem);
+                            extract_obj(gem);
+                            zir = 2;
+                        }
+                        else
+                        {
+                            mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, a gem is missing", GET_NAME(ch), obj->short_description);
+                            send_to_char("Ti rendi conto solo ora che non hai abbastanza $c0015pietre di zircone$c0007.\n\r", ch);
+                            if(i > 0)
+                            {
+                                sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                                send_to_char(buf, ch);
+                                act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                                if(!IS_DIO_MINORE(ch))
+                                {
+                                    wait += PULSE_VIOLENCE*4;
+                                }
+                                for(l = 0; l < i; l++)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    if(gems[l] == 19511 || gems[l] == 19510)
+                                    {
+                                        gem_tmp = read_object(real_object(gems[l]), REAL);
+                                        obj_to_char(gem_tmp, ch);
+                                    }
+                                    else if(gems[l] == 19524)
+                                    {
+                                        gem_tmp = read_object(real_object(gems[l]), REAL);
+                                        obj_to_char(gem_tmp, ch);
+                                        gem_tmp = read_object(real_object(gems[l]), REAL);
+                                        obj_to_char(gem_tmp, ch);
+                                    }
+                                }
+                            }
+                            return;
+                        }
+                    }
+                }
+                else if(gems[i] == 19524)       // quarzo rosa
+                {
+                    gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+
+                    if(gem)
+                    {
+                        if(!IS_DIO_MINORE(ch))
+                        {
+                            wait += PULSE_VIOLENCE;
+                        }
+                        sprintf(buf, "Incastoni la seconda $c0015pietra di quarzo rosa$c0007 su $c0015%s$c0007.\n\r", obj->short_description);
+                        send_to_char(buf, ch);
+                        act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                        act("$n incastona una seconda $c0015pietra di quarzo rosa$c0007 su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                        obj_from_char(gem);
+                        extract_obj(gem);
+                    }
+                    else
+                    {
+                        mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, a gem is missing", GET_NAME(ch), obj->short_description);
+                        send_to_char("Ti rendi conto solo ora che che non hai abbastanza $c0015pietre di quarzo rosa$c0007.\n\r", ch);
+                        if(i > 0)
+                        {
+                            sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            for(l = 0; l < i; l++)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                if(gems[l] == 19511 || gems[l] == 19510)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                                else if(gems[l] == 19513 && zir == 3)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                            }
+                        }
+                        return;
+                    }
+                    
+                    gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
+                    
+                    if(gem)
+                    {
+                        if(!IS_DIO_MINORE(ch))
+                        {
+                            wait += PULSE_VIOLENCE*2;
+                        }
+                        sprintf(buf, "Incastoni la terza $c0015pietra di quarzo rosa$c0007 su $c0015%s$c0007.\n\r", obj->short_description);
+                        send_to_char(buf, ch);
+                        act(rand_reaction[ number(0, nRandReac) ],TRUE, ch, obj, 0, TO_CHAR);
+                        act("$n incastona una terza $c0015pietra di quarzo rosa$c0007 su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        act(rand_reaction[ number(10, (nRandReac+10)) ],TRUE, ch, obj, 0, TO_ROOM);
+                        obj_from_char(gem);
+                        extract_obj(gem);
+                    }
+                    else
+                    {
+                        mudlog(LOG_PLAYERS, "%s fails to insert gems in %s, a gem is missing", GET_NAME(ch), obj->short_description);
+                        send_to_char("Ti rendi conto solo ora che non hai abbastanza $c0015pietre di quarzo rosa$c0007.\n\r", ch);
+                        if(i > 0)
+                        {
+                            sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
+                            send_to_char(buf, ch);
+                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            if(!IS_DIO_MINORE(ch))
+                            {
+                                wait += PULSE_VIOLENCE*4;
+                            }
+                            for(l = 0; l < i; l++)
+                            {
+                                gem_tmp = read_object(real_object(gems[l]), REAL);
+                                obj_to_char(gem_tmp, ch);
+                                if(gems[l] == 19511 || gems[l] == 19510 || gems[l] == 19524)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                                else if(gems[l] == 19513 && zir == 3)
+                                {
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                    gem_tmp = read_object(real_object(gems[l]), REAL);
+                                    obj_to_char(gem_tmp, ch);
+                                }
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                castoni = castoni - i;
+                sprintf(buf, "Finalmente hai terminato il tuo lavoro, ti fermi un attimo \n\re ti rendi conto che potevi incastonare ancora %d gemm%s su $c0015%s$c0007.\n\r", castoni, (castoni > 1 ? "e" : "a"), obj->short_description);
+                send_to_char(buf, ch);
+                castoni = 5 - castoni;
+                break;
+            }
+        }
+        
+        for(i = 0; i < MAX_OBJ_AFFECT; i++)
+        {
+            while((obj->affected[i].location != APPLY_NONE) && (obj->affected[i].modifier != 0) && (obj->affected[i].location != APPLY_SKIP))
+            {
+                i++;
+            }
+            
+            if(aff < castoni)
+            {
+                switch(gems[aff])
+                {
+                    case 0:
+                        val = 0;
+                        loc = 0;
+                        mod = 0;
+                        break;
+                    case 19509 :        // quarzo comune
+                    case 19523 :        // quarzo comune clone
+                        val = 1500;
+                        loc = APPLY_SPELL;
+                        mod = AFF_INFRAVISION;
+                        break;
+                    case 19510 :        // ossidiana
+                        val = 3000;
+                        loc = APPLY_STR;
+                        mod = 1;
+                        break;
+                    case 19511 :        // opale
+                        val = 3000;
+                        loc = APPLY_SPELL;
+                        mod = AFF_SCRYING;
+                        break;
+                    case 19512 :        // turchese
+                        val = 1500;
+                        loc = APPLY_SPELL;
+                        mod = AFF_PROTECT_FROM_EVIL;
+                        break;
+                    case 19513 :        // zircone
+                        if(zir == 1)
+                        {
+                            val = 1500;
+                            loc = APPLY_NONE;
+                            mod = 0;
+                            SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
+                        }
+                        else
+                        {
+                            val = 4500;
+                            loc = APPLY_NONE;
+                            mod = 0;
+                            SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
+                        }
+                        break;
+                    case 19514 :        // lapislazzuli
+                        val = 1500;
+                        loc = APPLY_MANA_REGEN;
+                        mod = 5;
+                        break;
+                    case 19515 :        // onice
+                        val = 1500;
+                        loc = APPLY_CHR;
+                        mod = 1;
+                        break;
+                    case 19516 :        // malachite
+                        val = 1500;
+                        loc = APPLY_INT;
+                        mod = 1;
+                        break;
+                    case 19517 :        // ematite
+                        val = 1500;
+                        loc = APPLY_CON;
+                        mod = 1;
+                        break;
+                    case 19518 :        // giada
+                        val = 1500;
+                        loc = APPLY_WIS;
+                        mod = 1;
+                        break;
+                    case 19519 :        // resina fossile
+                        val = 1500;
+                        loc = APPLY_SAVE_ALL;
+                        mod = -1;
+                        break;
+                    case 19520 :        // crisoberillo
+                        val = 1500;
+                        loc = APPLY_MOVE_REGEN;
+                        mod = 5;
+                        break;
+                    case 19521 :        // spinello blu
+                        val = 1500;
+                        loc = APPLY_SPELLFAIL;
+                        mod = -2;
+                        break;
+                    case 19522 :        // tormalina
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 1500;
+                            loc = APPLY_HIT;
+                            mod = 2;
+                        }
+                        else
+                        {
+                            val = 1500;
+                            loc = APPLY_HIT_REGEN;
+                            mod = 5;
+                        }
+                        break;
+                    case 19524 :        // quarzo rosa
+                        val = 6750;
+                        loc = APPLY_SPELL;
+                        mod = AFF_SENSE_LIFE;
+                        break;
+                    case 19525 :        // agata
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 2250;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 33;   // poison
+                        }
+                        else
+                        {
+                            val = 2250;
+                            loc = APPLY_M_IMMUNE;
+                            mod = IMM_POISON;
+                        }
+                        break;
+                    case 19526 :        // acquamarina
+                        val = 2250;
+                        loc = APPLY_SPELL;
+                        mod = AFF_WATERBREATH;
+                        break;
+                    case 19527 :        // berillo
+                        val = 2250;
+                        loc = APPLY_DEX;
+                        mod = 1;
+                        break;
+                    case 19528 :        // topazio
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 2250;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 37;   // shocking grasp
+                        }
+                        else
+                        {
+                            val = 2250;
+                            loc = APPLY_IMMUNE;
+                            mod = IMM_ELEC;
+                        }
+                        break;
+                    case 19529 :        // spinello nero
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 3000;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 38;   // sleep
+                        }
+                        else
+                        {
+                            val = 3000;
+                            loc = APPLY_IMMUNE;
+                            mod = IMM_HOLD;
+                        }
+                        break;
+                    case 19530 :        // fluorite
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 3000;
+                            loc = APPLY_NONE;
+                            mod = 0;
+                            SET_BIT(obj->obj_flags.extra_flags, ITEM_INVISIBLE);
+                        }
+                        else
+                        {
+                            val = 3000;
+                            loc = APPLY_SPELL;
+                            mod = AFF_INVISIBLE;
+                        }
+                        break;
+                    case 19531 :        // ametista
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 3000;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 32;   // magic missile
+                        }
+                        else
+                        {
+                            val = 3000;
+                            loc = APPLY_IMMUNE;
+                            mod = IMM_ENERGY;
+                        }
+                        break;
+                    case 19532 :        // corindone
+                        val = 3000;
+                        loc = APPLY_SPELL;
+                        mod = AFF_TRUE_SIGHT;
+                        break;
+                    case 19533 :        // granato
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 3000;
+                            loc = APPLY_HITNDAM;
+                            mod = 1;
+                        }
+                        else
+                        {
+                            val = 3000;
+                            loc = APPLY_AC;
+                            mod = -10;
+                        }
+                        break;
+                    case 19534 :        // zaffiro
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 7500;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 8;    // chill touch
+                        }
+                        else
+                        {
+                            val = 7500;
+                            loc = APPLY_IMMUNE;
+                            mod = IMM_COLD;
+                        }
+                        break;
+                    case 19535 :        // smeraldo
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 7500;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 67;   // acid blast
+                        }
+                        else
+                        {
+                            val = 7500;
+                            loc = APPLY_IMMUNE;
+                            mod = IMM_ACID;
+                        }
+                        break;
+                    case 19536 :        // rubino
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            val = 7500;
+                            loc = APPLY_WEAPON_SPELL;
+                            mod = 5;    // burning hands
+                        }
+                        else
+                        {
+                            val = 7500;
+                            loc = APPLY_IMMUNE;
+                            mod = IMM_FIRE;
+                        }
+                        break;
+                    case 19537 :        // diamante
+                        val = 7500;
+                        loc = APPLY_NONE;
+                        mod = 0;
+                        SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
+                        break;
+                        
+                    default :
+                        mudlog(LOG_ERROR, "Do_insert: missing gem");
+                        send_to_char("Qualcosa e' andato storto, contatta un immortale...\n\r", ch);
+                        return;
+                }
+            }
+            
+            if(val > 0)
+            {
+                obj->affected[i].location = loc;
+                obj->affected[i].modifier = mod;
+                obj->obj_flags.cost += val;
+                aff += 1;
+                val = 0;
+                loc = 0;
+                mod = 0;
+            }
+            
+        }
+        
+        for(i = 0; i < MAX_OBJ_AFFECT; i++)
+        {
+            if(obj->affected[i].location == APPLY_HITROLL)
+            {
+                hitroll += obj->affected[i].modifier;
+                obj->affected[i].location = APPLY_NONE;
+                obj->affected[i].modifier = 0;
+            }
+            else if(obj->affected[i].location == APPLY_DAMROLL)
+            {
+                damroll += obj->affected[i].modifier;
+                obj->affected[i].location = APPLY_NONE;
+                obj->affected[i].modifier = 0;
+            }
+            else if(obj->affected[i].location == APPLY_HITNDAM)
+            {
+                hitroll += obj->affected[i].modifier;
+                damroll += obj->affected[i].modifier;
+                obj->affected[i].location = APPLY_NONE;
+                obj->affected[i].modifier = 0;
+            }
+        }
+        
+        if((hitroll + damroll) > 0 && GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+        {
+            bool hnd = FALSE, h = FALSE, d = FALSE;
+            
+            for(i = 0; i < MAX_OBJ_AFFECT; i++)
+            {
+                if(hitroll == damroll && obj->affected[i].location == APPLY_NONE && !hnd)
+                {
+                    obj->affected[i].location = APPLY_HITNDAM;
+                    obj->affected[i].modifier = damroll;
+                    hnd = TRUE;
+                }
+                else if(hitroll > damroll && obj->affected[i].location == APPLY_NONE && !h)
+                {
+                    obj->affected[i].location = APPLY_HITROLL;
+                    obj->affected[i].modifier = hitroll;
+                    h = TRUE;
+                }
+                else if(hitroll < damroll && obj->affected[i].location == APPLY_NONE && !d)
+                {
+                    obj->affected[i].location = APPLY_DAMROLL;
+                    obj->affected[i].modifier = damroll;
+                    d = TRUE;
+                }
+            }
+        }
+        
+        mudlog(LOG_PLAYERS, "%s insert with success some gems in %s", GET_NAME(ch), obj->short_description);
+        WAIT_STATE(ch, wait);
+        act("\n\rHai terminato il tuo lavoro su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_CHAR);
+        act("\n\r", TRUE, ch, obj, 0, TO_ROOM);
+        act("$n mette via tutti gli attrezzi, e' soddisfatt$b del suo lavoro su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+        
+        if(((obj->obj_flags.cost - val_orig)/aff) <= 1500)
+        {
+            if(aff == 1)
+                sprintf(buf, "%s con una pietra incastrata brutalmente", obj->short_description);
+            else
+                sprintf(buf, "%s con pietre incastrate brutalmente", obj->short_description);
+        }
+        else if(((obj->obj_flags.cost - val_orig)/aff) <= 3000)
+        {
+            if(aff == 1)
+                sprintf(buf, "%s con incastonata una gemma di poco valore", obj->short_description);
+            else
+                sprintf(buf, "%s con incastonate alcune gemme di poco valore", obj->short_description);
+        }
+        else if(((obj->obj_flags.cost - val_orig)/aff) <= 4500)
+        {
+            if(aff == 1)
+                sprintf(buf, "%s con una pietra preziosa cesellata finemente", obj->short_description);
+            else
+                sprintf(buf, "%s con delle pietre preziose cesellate finemente", obj->short_description);
+        }
+        else if(((obj->obj_flags.cost - val_orig)/aff) <= 6000)
+        {
+            if(aff == 1)
+                sprintf(buf, "%s con una grande gemma incastonata elegantemente", obj->short_description);
+            else
+                sprintf(buf, "%s con delle grandi gemme incastonate elegantemente", obj->short_description);
+        }
+        else if(((obj->obj_flags.cost - val_orig)/aff) < 7500)
+        {
+            if(aff == 1)
+                sprintf(buf, "%s una rarissima pietra preziosa sapientemente incastonata", obj->short_description);
+            else
+                sprintf(buf, "%s rarissime pietre preziose sapientemente incastonate", obj->short_description);
+        }
+        else
+        {
+            if(aff == 1)
+                sprintf(buf, "%s con una gemma unica cesellata ad arte", obj->short_description);
+            else
+                sprintf(buf, "%s con alcune gemme uniche cesellate ad arte", obj->short_description);
+        }
+        
+        free(obj->short_description);
+        obj->short_description = (char*)strdup(buf);
+        free(obj->description);
+        sprintf(buf, "%s e' qui per terra.", buf);
+        obj->description = (char*)strdup(buf);
+        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_INSERT);
+    }
+    else
+    {
+        send_to_char("Cosa vuoi incastonare?\n\r",ch);
+        return;
+    }
+    
+}
+    
 } // namespace Alarmud
 
