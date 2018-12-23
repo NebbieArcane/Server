@@ -3300,6 +3300,10 @@
             "ITEM2_PERSONAL": {
                 "value": 8,
                 "comment": "personalized item"
+            },
+            "ITEM2_INSERT": {
+                "value": 16,
+                "comment": "item with gems mounted"
             }
         }
 	}
