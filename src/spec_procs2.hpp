@@ -52,6 +52,7 @@ MOBSPECIAL_FUNC(forge_teacher) ;
 MOBSPECIAL_FUNC(ghost) ;
 MOBSPECIAL_FUNC(hunter) ;
 OBJSPECIAL_FUNC(jive_box);
+OBJSPECIAL_FUNC(key_one_use) ;
 MOBSPECIAL_FUNC(loremaster) ;
 MOBSPECIAL_FUNC(mage_specialist_guildmaster) ;
 MOBSPECIAL_FUNC(magic_user) ;

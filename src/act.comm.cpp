@@ -555,31 +555,28 @@ ACTION_FUNC(do_ask) {
                 return;
             }
             else {
-                sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
-                do_tell(vict,buf,CMD_TELL);
                 
-                if(number(0,1) == 1) {
-                    struct affected_type* af;
-                    
-                    for(af = ch->affected; af; af = af->next) {
-                        if(af->type == STATUS_QUEST) {
-                            af->duration = af->duration/2;
-                        }
+                int price = number(250000,300000) - (5000*GET_CHR(ch));
+                
+                if(GET_GOLD(ch) >= price) {
+                    if(!IS_DIO(ch)) {
+                        GET_GOLD(ch) -= price;
+                        sprintf(buf,"Paghi %d monete a %s per le sue informazioni. \n\r",
+                                price,GET_NAME(vict));
+                        send_to_char(buf, ch);
                     }
-                    
-                    for(af = ch->specials.quest_ref->affected; af; af = af->next) {
-                        if(af->type == STATUS_QUEST) {
-                            af->duration = af->duration/2;
-                        }
-                    }
-                    
-                    act("\n\r$c0014Voci arrivano alla Gilda dei Mercenari.\nIl tempo per la tua missione viene dimezzato.$c0007\n", FALSE, ch, 0, ch, TO_CHAR);
+                    sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
+                    do_tell(vict,buf,CMD_TELL);
+                } else {
+                    sprintf(buf,"%s ...ma chi credi di comprare con quegli spiccioli!",
+                            GET_NAME(ch));
+                    do_tell(vict,buf,CMD_TELL);
                 }
                 return;
             }
             
         } else {
-            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ci sono orecchie ovunque, e se la Gilda dei Mercenari sapra' che hai chiesto aiuto ti costera'!",
+            sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ti costera'!",
                     GET_NAME(ch));
             do_tell(vict,buf,CMD_TELL);
             return;
@@ -866,7 +863,7 @@ ACTION_FUNC(do_new_say) {
 	for(i = 0; *(arg + i) == ' '; i++);
 
 	if(!arg[i]) {
-		send_to_char("Ok, ma cosa hai da dire ?\n\r", ch);
+		send_to_char("Ok, ma cosa hai da dire?\n\r", ch);
 	}
 	else {
 
@@ -972,7 +969,7 @@ ACTION_FUNC(do_new_say) {
 		  buf2 is now the "corrected" string.
 		  */
 		if(!*buf2) {
-			send_to_char("OK, ma cosa hai da dire ?\n\r", ch);
+			send_to_char("OK, ma cosa hai da dire?\n\r", ch);
 			return;
 		}
 
@@ -1034,7 +1031,7 @@ ACTION_FUNC(do_gtell) {
 	for(i = 0; *(arg + i) == ' '; i++);
 
 	if(!*(arg+i)) {
-		send_to_char("Cosa vuoi dire al gruppo ?\n\r", ch);
+		send_to_char("Cosa vuoi dire al gruppo?\n\r", ch);
 		return;
 	}
 
@@ -1109,7 +1106,7 @@ ACTION_FUNC(do_split) {
 	one_argument(arg, tmp);
 
 	if(tmp[0] == '\0') {
-		send_to_char("Quanto vuoi dividere ?\n\r", ch);
+		send_to_char("Quanto vuoi dividere?\n\r", ch);
 		return;
 	}
 
@@ -1193,7 +1190,7 @@ ACTION_FUNC(do_pray) {
 
 	for(; *arg == ' '; arg++);
 	if(!(*arg))
-		send_to_char("Vuoi pregare. Ottimo, ma chi ? "
+		send_to_char("Vuoi pregare. Ottimo, ma chi? "
 					 "(pray <NomeDio> <preghiera>)\n\r", ch);
 	else {
 		ii = (GetMaxLevel(ch) * 1.5  + 20);
@@ -1279,7 +1276,7 @@ ACTION_FUNC(do_telepathy) {
 	}
 
 	if(!*name || !*message) {
-		send_to_char("A chi vuoi mandare il tuo pensiero ?\n\r", ch);
+		send_to_char("A chi vuoi mandare il tuo pensiero?\n\r", ch);
 		return;
 	}
 	else if(!(vict = get_char_vis(ch, name))) {
@@ -1307,7 +1304,7 @@ ACTION_FUNC(do_telepathy) {
 			(GetMaxLevel(ch) >= IMMORTALE) &&
 			(GetMaxLevel(ch) < GetMaxLevel(vict)) &&
 			IS_SET(vict->specials.act, PLR_NOTELL)) {
-		act("La mente di $N e' chiusa in questo momento !", FALSE, ch, 0, vict,
+		act("La mente di $N e' chiusa in questo momento!", FALSE, ch, 0, vict,
 			TO_CHAR);
 		return;
 	}

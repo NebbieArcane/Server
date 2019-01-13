@@ -268,6 +268,7 @@ void FailCharm(struct char_data* victim, struct char_data* ch) {
 		}
 	}
 	else {
+        act("Il tuo tentativo di incantare $N fallisce.", FALSE, ch, 0, victim, TO_CHAR);
 		send_to_char("Senti che cercano di incantarti, ma l'effetto passa.\n\r",victim);
 	}
 }
@@ -284,6 +285,7 @@ void FailSnare(struct char_data* victim, struct char_data* ch) {
 		}
 	}
 	else {
+        act("Provi a bloccare $N, ma fallisci.", FALSE, ch, 0, victim, TO_CHAR);
 		send_to_char("Ti senti in trappola, ma la sensazione passa.\n\r",victim);
 	}
 }
@@ -294,6 +296,7 @@ void FailSleep(struct char_data* victim, struct char_data* ch) {
 		return;    /* give single classed mages a break. */
 	}
 
+    act("Il tuo tentativo di addormentare $N fallisce.", FALSE, ch, 0, victim, TO_CHAR);
 	send_to_char("Hai molto sonno, ma resisti.\n\r",
 				 victim);
 	if(!IS_PC(victim)) {
@@ -310,6 +313,7 @@ void FailPara(struct char_data* victim, struct char_data* ch) {
 		return;    /* give single classed mages a break. */
 	}
 
+    act("Provi a paralizzare $N, ma resiste.", FALSE, ch, 0, victim, TO_CHAR);
 	send_to_char("Ti senti paralizzare per un attimo, ma resisti.\n\r",victim);
 	if(!IS_PC(victim)) {
 		AddHated(victim, ch);
@@ -324,6 +328,7 @@ void FailCalm(struct char_data* victim, struct char_data* ch) {
 		return;    /* give single classed mages a break. */
 	}
 
+    act("Provi a calmare la rabbia di $N, ma non ci riesci.", FALSE, ch, 0, victim, TO_CHAR);
 	send_to_char("Ti senti felice ed in pace con il mondo, ma passa presto.\n\r",victim);
 	if(!IS_PC(victim))
 		if(!victim->specials.fighting) {

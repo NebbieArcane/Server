@@ -256,7 +256,7 @@ void cast_armor(byte level, struct char_data* ch, const char* arg, int type,
 			return;
 		}
 		if(ch != tar_ch) {
-			act("$N viene protett$b da un'armatura magica.", FALSE, ch, 0, tar_ch, TO_CHAR);
+			act("$N viene protett$b da un'$c0011armatura magica$c0007.", FALSE, ch, 0, tar_ch, TO_CHAR);
 		}
 
 		spell_armor(level,ch,tar_ch,0);
@@ -510,7 +510,7 @@ void cast_infravision(byte level, struct char_data* ch, const char* arg, int typ
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
-			send_to_char("Non succede nulla\n\r", ch);
+			send_to_char("Non succede nulla.\n\r", ch);
 			return;
 		}
 		spell_infravision(level,ch,tar_ch,0);
@@ -800,7 +800,7 @@ void cast_control_weather(byte level,struct char_data* ch, const char* arg, int 
 		one_argument(arg,buffer);
 
 		if(str_cmp("migliore", buffer) && str_cmp("peggiore",buffer)) {
-			send_to_char("Vuoi che diventi migliore o peggiore?\n\r",ch);
+			send_to_char("Vuoi che diventi $c0014migliore$c0007 o $c0008peggiore$c0007?\n\r",ch);
 			return;
 		}
 		if(!OUTSIDE(ch)) {
@@ -903,7 +903,7 @@ void cast_create_water(byte level, struct char_data* ch, const char* arg, int ty
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		if(tar_obj->obj_flags.type_flag != ITEM_DRINKCON) {
-			send_to_char("Non puo' contenere acqua.\n\r", ch);
+			send_to_char("Non puo' contenere $c0012acqua$c0007.\n\r", ch);
 			return;
 		}
 		spell_create_water(level,ch,0,tar_obj);
@@ -1023,6 +1023,16 @@ void cast_cure_critic(byte level, struct char_data* ch, const char* arg, int typ
 					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+        if(ch != tar_ch)
+        {
+            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
+        if(ch == tar_ch)
+        {
+            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
 		spell_cure_critic(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
@@ -1057,6 +1067,16 @@ void cast_cure_light(byte level, struct char_data* ch, const char* arg, int type
 					 struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+        if(ch != tar_ch)
+        {
+            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
+        if(ch == tar_ch)
+        {
+            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
 		spell_cure_light(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
@@ -1085,6 +1105,16 @@ void cast_cure_serious(byte level, struct char_data* ch, const char* arg, int ty
 					   struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+        if(ch != tar_ch)
+        {
+            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
+        if(ch == tar_ch)
+        {
+            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
 		spell_cure_serious(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
@@ -1502,8 +1532,16 @@ void cast_heal(byte level, struct char_data* ch, const char* arg, int type,
 			   struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		act("$n guarisce $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-		act("Guarisci $N.", FALSE, ch, 0, tar_ch, TO_CHAR);
+        if(ch != tar_ch)
+        {
+            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
+        if(ch == tar_ch)
+        {
+            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
+            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
+        }
 		spell_heal(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_POTION:
@@ -2268,21 +2306,21 @@ void cast_knock(byte level, struct char_data* ch, const char* arg, int type,
 		}
 
 		if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim, &obj)) {
-			send_to_char("Mi spiace.. questo incantesimo funziona solo sulle porte\n", ch);
+			send_to_char("Mi spiace... questo incantesimo funziona solo sulle porte.\n", ch);
 			return;
 		}
 		else if((door = find_door(ch, otype, dir)) >= 0) {
 			if(!IS_SET(EXIT(ch, door)->exit_info, EX_ISDOOR)) {
-				send_to_char("E' assurdo!.\n\r", ch);
+				send_to_char("E' assurdo!\n\r", ch);
 			}
 			else if(!IS_SET(EXIT(ch, door)->exit_info, EX_CLOSED)) {
-				send_to_char("Ti accorgi che era gia' aperta.\n\r", ch);
+				send_to_char("Ti accorgi che quella porta e' gia' aperta.\n\r", ch);
 			}
 			else if(EXIT(ch, door)->key < 0) {
 				send_to_char("Non trovi nessuna serratura da forzare.\n\r", ch);
 			}
 			else if(!IS_SET(EXIT(ch, door)->exit_info, EX_LOCKED)) {
-				send_to_char("Oh.. non era chiusa a chiave dopotutto.\n\r", ch);
+				send_to_char("Oh... non era chiusa a chiave dopotutto.\n\r", ch);
 			}
 			else if(IS_SET(EXIT(ch, door)->exit_info, EX_PICKPROOF)) {
 				send_to_char("Non riuscirai ad aprirla...\n\r", ch);
@@ -2426,7 +2464,7 @@ void cast_animate_dead(byte level, struct char_data* ch, const char* arg, int ty
 		}
 		break;
 	case SPELL_TYPE_POTION:
-		send_to_char("Il tuo corpo si rivolta contro il liquido magico.\n\r",ch);
+		send_to_char("Il tuo corpo si rivolta contro il $c0012liquido magico$c0007.\n\r",ch);
 		GET_HIT(ch) = 0;
 		alter_hit(ch,0);
 		break;
@@ -2621,7 +2659,7 @@ void cast_poly_self(byte level, struct char_data* ch, const char* arg, int type,
 		}
 
 		if(!found || mobn < 0) {
-			send_to_char("Non trovo nulla di simile\n\r", ch);
+			send_to_char("Non trovo nulla di simile.\n\r", ch);
 			return;
 		}
 		else {
@@ -2630,7 +2668,7 @@ void cast_poly_self(byte level, struct char_data* ch, const char* arg, int type,
 				spell_poly_self(level, ch, mob, 0);
 			}
 			else {
-				send_to_char("Non riesci ad evocare l'immagine di quella creatura\n\r", ch);
+				send_to_char("Non riesci ad evocare l'immagine di quella creatura.\n\r", ch);
 			}
 			return;
 		}
@@ -2687,7 +2725,7 @@ void cast_minor_creation(byte level, struct char_data* ch, const char* arg, int 
 
 	o = read_object(obj, VIRTUAL);
 	if(!o) {
-		send_to_char("Non c'e' nulla di simile\n\r", ch);
+		send_to_char("Non c'e' nulla di simile.\n\r", ch);
 		return;
 	}
 
@@ -2727,28 +2765,28 @@ void cast_conjure_elemental(byte level, struct char_data* ch, const char* arg, i
 		return;
 	}
 
-	if(!str_cmp(buffer, "fire")) {
+	if(!str_cmp(buffer, "fuoco")) {
 		mob = FIRE_ELEMENTAL;
 		obj = RED_STONE;
 	}
-	else if(!str_cmp(buffer, "water")) {
+	else if(!str_cmp(buffer, "acqua")) {
 		mob = WATER_ELEMENTAL;
 		obj = PALE_BLUE_STONE;
 	}
-	else if(!str_cmp(buffer, "air")) {
+	else if(!str_cmp(buffer, "aria")) {
 		mob = AIR_ELEMENTAL;
 		obj = CLEAR_STONE;
 	}
-	else if(!str_cmp(buffer, "earth")) {
+	else if(!str_cmp(buffer, "terra")) {
 		mob = EARTH_ELEMENTAL;
 		obj = GREY_STONE;
 	}
 	else {
-		send_to_char("Non ci sono elementali di quel tipo disponibili\n\r", ch);
+		send_to_char("Non ci sono elementali di quel tipo disponibili.\n\r", ch);
 		return;
 	}
 	if(!ch->equipment[HOLD]) {
-		send_to_char(" Devi avere in mano la pietra giusta\n\r", ch);
+		send_to_char("Devi avere in mano la pietra giusta!\n\r", ch);
 		return;
 	}
 
@@ -2756,7 +2794,7 @@ void cast_conjure_elemental(byte level, struct char_data* ch, const char* arg, i
 	if(sac) {
 		obj_to_char(sac, ch);
 		if(ObjVnum(sac) != obj) {
-			send_to_char("Devi avere l'oggetto corretto per il sacrificio.\n\r", ch);
+			send_to_char("Fallisci, non hai la pietra giusta!\n\r", ch);
 			return;
 		}
 		el = read_mobile(mob, VIRTUAL);
@@ -2766,7 +2804,7 @@ void cast_conjure_elemental(byte level, struct char_data* ch, const char* arg, i
 		}
 	}
 	else {
-		send_to_char("Devi avere in mano l'oggetto corretto per il sacrificio.\n\r", ch);
+		send_to_char("Devi avere in mano la pietra giusta!\n\r", ch);
 		return;
 	}
 
@@ -2803,7 +2841,7 @@ void cast_cacaodemon(byte level, struct char_data* ch, const char* arg, int type
 	struct obj_data* sac;
 	struct char_data* el;
 	int held = FALSE, wielded = FALSE;
-	send_to_char("Under repair",ch);
+	send_to_char("Provi ad evocare un demone ma fallisci... Probabilmente l'incantesimo e' impossibile da lancire...\n\r",ch);
 	return;
 	one_argument(arg,buffer);
 
@@ -2811,27 +2849,27 @@ void cast_cacaodemon(byte level, struct char_data* ch, const char* arg, int type
 		return;
 	}
 
-	if(!str_cmp(buffer, "one")) {
+	if(!str_cmp(buffer, "uno")) {
 		mob = DEMON_TYPE_I;
 		obj = TYPE_I_ITEM;
 	}
-	else if(!str_cmp(buffer, "two")) {
+	else if(!str_cmp(buffer, "due")) {
 		mob = DEMON_TYPE_II;
 		obj = TYPE_II_ITEM;
 	}
-	else if(!str_cmp(buffer, "three")) {
+	else if(!str_cmp(buffer, "tre")) {
 		mob = DEMON_TYPE_III;
 		obj = TYPE_III_ITEM;
 	}
-	else if(!str_cmp(buffer, "four")) {
+	else if(!str_cmp(buffer, "quattro")) {
 		mob = DEMON_TYPE_IV;
 		obj = TYPE_IV_ITEM;
 	}
-	else if(!str_cmp(buffer, "five")) {
+	else if(!str_cmp(buffer, "cinque")) {
 		mob = DEMON_TYPE_V;
 		obj = TYPE_V_ITEM;
 	}
-	else if(!str_cmp(buffer, "six")) {
+	else if(!str_cmp(buffer, "sei")) {
 		mob = DEMON_TYPE_VI;
 		obj = TYPE_VI_ITEM;
 	}
@@ -3211,7 +3249,7 @@ void cast_changestaff(byte level, struct char_data* ch, const char* arg,
 	}
 
 	if(!ch->equipment[HOLD]) {
-		send_to_char(" Devi tenere in mano un bastone!\n\r", ch);
+		send_to_char("Devi tenere in mano un bastone!\n\r", ch);
 		return;
 	}
 
@@ -3424,15 +3462,18 @@ void cast_command(byte level, struct char_data* ch, const char* arg,
 		if((GetMaxLevel(tar_ch) < 6 && GET_INT(tar_ch) < 13) ||
 				!saves_spell(tar_ch, SAVING_PARA)) {
 			if(strcmp(p, "quit")) {
-				sprintf(buf, "$n ti ordina '%s'.", p);
+                sprintf(buf, "Ordini a $N: '$c0015%s$c0007'.", p);
+                act(buf, FALSE, ch, 0, tar_ch, TO_CHAR);
+                sprintf(buf, "$n ti ordina: '$c0015%s$c0007'.", p);
 				act(buf, FALSE, ch, 0, tar_ch, TO_VICT);
-				send_to_char("Ok.\n\r", ch);
 				command_interpreter(tar_ch, p);
 				return;
 			}
 		}
 
-		sprintf(buf, "$n ha cercato di ordinarti '%s'.", p);
+        sprintf(buf, "Provi ad ordinare a $N: '$c0015%s$c0007'.", p);
+        act(buf, FALSE, ch, 0, tar_ch, TO_VICT);
+        sprintf(buf, "$n ha cercato di ordinarti: '$c0015%s$c0007'.", p);
 		act(buf, FALSE, ch, 0, tar_ch, TO_VICT);
 
 		if(!IS_PC(tar_ch)) {
@@ -3464,7 +3505,7 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 	}
 
 	if(affected_by_spell(ch, SPELL_CHANGE_FORM)) {
-		send_to_char("Puoi cambiare forma solo una volta ogni 12 ore\n\r", ch);
+		send_to_char("Puoi cambiare forma solo una volta ogni 12 ore.\n\r", ch);
 		return;
 	}
 
@@ -3490,7 +3531,7 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 		}
 
 		if(!found || mobn < 0) {
-			send_to_char("Non c'e' nulla di simile\n\r", ch);
+			send_to_char("Non c'e' nulla di simile.\n\r", ch);
 			return;
 		}
 		else {
@@ -3505,14 +3546,14 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 			/* ACIDUS test shock da change_form di liv 50-51 */
 			if(DruidList[X].level >= 50) {
 				if(check_peaceful(ch, "")) {
-					send_to_char("Qui non sei sufficientemente in contatto con la forma animale che cerchi di raggiungere.\n\r", ch);
+					send_to_char("In questo luogo non sei sufficientemente in contatto con la forma $c0003animale$c0007 che cerchi di raggiungere.\n\r", ch);
 					return;
 				}
 
 				if(number(1,10) == 1) {
-					act("Alteri completamente la tua forma, la personalita' della forma animale prende il sopravvento, la tua anima abbandona il corpo!", TRUE, ch, NULL, ch,
+					act("Alteri completamente la tua forma, la personalita' della forma $c0003animale$c0007 prende il sopravvento, la tua anima abbandona il corpo!", TRUE, ch, NULL, ch,
 						TO_CHAR);
-					act("$n altera completamente la sua forma, la personalita' della forma animale prende il sopravvento, la sua anima abbandona il corpo!", TRUE, ch, NULL, ch,
+					act("$n altera completamente la sua forma, la personalita' della forma $c0003animale$c0007 prende il sopravvento, la sua anima abbandona il corpo!", TRUE, ch, NULL, ch,
 						TO_NOTVICT);
 					affect_to_char(ch, &af);
 
@@ -3535,7 +3576,7 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 				spell_poly_self(level, ch, mob, 0);
 			}
 			else {
-				send_to_char("Non riesci ad evocare un'immagine di quella creatura\n\r", ch);
+				send_to_char("Non riesci ad evocare un'immagine di quella creatura.\n\r", ch);
 			}
 			return;
 		}
@@ -3640,7 +3681,7 @@ void cast_creeping_death(byte level, struct char_data* ch, const char* arg,
 		/* get the argument, parse it into a direction */
 		for(; *arg==' '; arg++);
 		if(!*arg) {
-			send_to_char("devi indicare una direzione!\n\r", ch);
+			send_to_char("In quale direzione vuoi lanciare gli insetti?\n\r", ch);
 			return;
 		}
 		p = fname(arg);
@@ -3650,7 +3691,7 @@ void cast_creeping_death(byte level, struct char_data* ch, const char* arg,
 				break;
 			}
 			if(i == 6) {
-				send_to_char("devi indicare una direzione!\n\r", ch);
+				send_to_char("In quale direzione vuoi lanciare gli insetti?\n\r", ch);
 				return;
 			}
 		}

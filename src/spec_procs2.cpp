@@ -7929,6 +7929,147 @@ MOBSPECIAL_FUNC(MobIdent)
     return(FALSE);
 }
 
+OBJSPECIAL_FUNC(key_one_use)
+{
+    int door;
+    char tipo[MAX_INPUT_LENGTH], dir[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
+    struct char_data* victim;
+    struct obj_data* oggetto;
+    struct room_direction_data* exitp;
+    
+    if(type != EVENT_COMMAND)
+    {
+        return FALSE;
+    }
+    
+    if(cmd != CMD_UNLOCK)
+    {
+        return FALSE;
+    }
+    
+    argument_interpreter(arg, tipo, dir);
+    if(!*tipo)
+    {
+        send_to_char("Che cosa vuoi aprire?\n\r", ch);
+        return(FALSE);
+    }
+    else if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim, &oggetto))
+    {
+        if(oggetto->obj_flags.type_flag != ITEM_CONTAINER)
+        {
+            send_to_char("Non e' un contenitore.\n\r", ch);
+        }
+        else if(oggetto->obj_flags.value[2] < 0)
+        {
+            send_to_char("Non ti sembra di trovare un buco per la chiave.\n\r", ch);
+        }
+        else if(!has_key(ch, oggetto->obj_flags.value[2]))
+        {
+            send_to_char("Non hai la chiave giusta.\n\r", ch);
+        }
+        else if(!IS_SET(oggetto->obj_flags.value[1], CONT_LOCKED))
+        {
+            sprintf(buf, "Per aprire %s non serve nessuna chiave.\n\r", oggetto->short_description);
+            send_to_char(buf, ch);
+        }
+        else
+        {
+            REMOVE_BIT(obj->obj_flags.value[1], CONT_LOCKED);
+            send_to_char("*Click*\n\r", ch);
+            act("$n apre $p.", FALSE, ch, oggetto, 0, TO_ROOM);
+            
+            /* distruggo la chiave */
+            if(obj->carried_by)
+            {
+                obj_from_char(obj);
+            }
+            else if(obj->equipped_by)
+            {
+                obj = unequip_char(obj->equipped_by, obj->eq_pos);
+            }
+            else
+            {
+                mudlog(LOG_ERROR, "Can't find %s.", obj->short_description);
+            }
+            
+            if(obj)
+            {
+                act("$p scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_CHAR);
+                act("$p, nelle mani di $n, scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_ROOM);
+                extract_obj(obj);
+            }
+            return(TRUE);
+        }
+    }
+    else if((door = find_door(ch, tipo, dir)) >= 0)
+    {
+        exitp = EXIT(ch, door);
+        
+        if(!IS_SET(exitp->exit_info, EX_ISDOOR))
+        {
+            send_to_char("Questo e' assurdo.\n\r", ch);
+        }
+        else if(!IS_SET(exitp->exit_info, EX_CLOSED))
+        {
+            send_to_char("Ma se non e' nemmeno chiusa!\n\r", ch);
+        }
+        else if(exitp->key < 0)
+        {
+            send_to_char("Non ti sembra di vedere buchi per la chiave.\n\r", ch);
+        }
+        else if(!has_key(ch, exitp->key))
+        {
+            send_to_char("Non hai la chiave giusta.\n\r", ch);
+        }
+        else if(!IS_SET(exitp->exit_info, EX_LOCKED))
+        {
+            sprintf(buf, "%s non e' chius%s a chiave, dopotutto...\n\r", exitp->keyword, (IS_SET(exitp->exit_info, EX_MALE) ? "o" : "a"));
+            send_to_char(buf, ch);
+        }
+        else
+        {
+            if(exitp->keyword && strcmp("secret", fname(exitp->keyword)))
+            {
+                sprintf(buf, "$n apre %s $F.", (IS_SET(exitp->exit_info, EX_MALE) ? "il" : "la"));
+                act(buf, 0, ch, 0, exitp->keyword, TO_ROOM);
+            }
+            else
+            {
+                act("$n sblocca la porta.", FALSE, ch, 0, 0, TO_ROOM);
+            }
+            send_to_char("*Click*\n\r", ch);
+            
+            /* distruggo la chiave */
+            if(obj->carried_by)
+            {
+                obj_from_char(obj);
+            }
+            else if(obj->equipped_by)
+            {
+                obj = unequip_char(obj->equipped_by, obj->eq_pos);
+            }
+            else
+            {
+                mudlog(LOG_ERROR, "Can't find %s.", obj->short_description);
+            }
+            
+            if(obj)
+            {
+                act("$p scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_CHAR);
+                act("$p, nelle mani di $n, scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_ROOM);
+                extract_obj(obj);
+            }
+            
+            raw_unlock_door(ch, exitp, door);
+            
+            return(TRUE);
+        }
+    }
+
+    return(FALSE);
+
+}
+
 #define SPELL_SPECIAL_COST 1000000   /* 1000k to specialize per spell */
 MOBSPECIAL_FUNC(mage_specialist_guildmaster) {
 	char buf[256];

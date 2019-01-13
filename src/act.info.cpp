@@ -186,50 +186,50 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 
 	if(mode != 3) {
 		if(IS_OBJ_STAT(object, ITEM_INVISIBLE)) {
-			strcat(buffer,"$c0014 (invisibile)$c0007");
+			strcat(buffer,"$c0011 (invisibile)$c0007");
 		}
 		if(IS_OBJ_STAT(object, ITEM_ANTI_GOOD) &&
 				IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 			if(singular(object)) {
-				strcat(buffer, "$c0014 (ha un alone di luce rossa)$c0007");
+				strcat(buffer, "$c0009 (ha un alone di luce rossa)$c0007");
 			}
 			else {
-				strcat(buffer,"$c0014 (hanno un alone di luce rossa)$c0007");
+				strcat(buffer,"$c0009 (hanno un alone di luce rossa)$c0007");
 			}
 		}
 		if(IS_OBJ_STAT(object, ITEM_MAGIC) &&
 				IS_AFFECTED(ch, AFF_DETECT_MAGIC)) {
 			if(singular(object)) {
-				strcat(buffer,"$c0014 (ha un alone di luce blu)$c0007");
+				strcat(buffer,"$c0012 (ha un alone di luce blu)$c0007");
 			}
 			else {
-				strcat(buffer,"$c0014 (hanno un alone di luce blu)$c0007");
+				strcat(buffer,"$c0012 (hanno un alone di luce blu)$c0007");
 			}
 		}
 		if(IS_OBJ_STAT(object, ITEM_GLOW)) {
 			if(singular(object)) {
-				strcat(buffer, "$c0014 (ha un alone luminoso)$c0007");
+				strcat(buffer, "$c0015 (ha un alone luminoso)$c0007");
 			}
 			else {
-				strcat(buffer,"$c0014 (hanno un alone luminoso)$c0007");
+				strcat(buffer,"$c0015 (hanno un alone luminoso)$c0007");
 			}
 		}
 		if(IS_OBJ_STAT(object,ITEM_HUM)) {
 			if(singular(object)) {
-				strcat(buffer,"$c0014 (emette un forte ronzio)$c0007");
+				strcat(buffer,"$c0008 (emette un forte ronzio)$c0007");
 			}
 			else {
-				strcat(buffer,"$c0014 (emettono un forte ronzio)$c0007");
+				strcat(buffer,"$c0008 (emettono un forte ronzio)$c0007");
 			}
 		}
 		if(object->obj_flags.type_flag == ITEM_ARMOR) {
 			if(object->obj_flags.value[ 0 ] <
 					(object->obj_flags.value[ 1 ] / 4)) {
 				if(singular(object)) {
-					strcat(buffer, "$c0009 (distrutto$c0007)");
+					strcat(buffer, "$c0009 (distrutto)$c0007");
 				}
 				else {
-					strcat(buffer,"$c0009 (sono distrutti$c0007)");
+					strcat(buffer,"$c0009 (sono distrutti)$c0007");
 				}
 			}
 			else if(object->obj_flags.value[ 0 ] <
@@ -321,21 +321,21 @@ void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 
 	if(mode != 3) {
 		if(IS_OBJ_STAT(object, ITEM_INVISIBLE)) {
-			strcat(buffer,"(invisibile)");
+			strcat(buffer," $c0011(invisibile)$c0007");
 		}
 		if(IS_OBJ_STAT(object, ITEM_ANTI_GOOD) &&
 				IS_AFFECTED(ch,AFF_DETECT_EVIL)) {
-			strcat(buffer,"...Ha un alone di luce rossa!");
+			strcat(buffer," $c0009(ha un alone di luce rossa)$c0007");
 		}
 		if(IS_OBJ_STAT(object,ITEM_MAGIC) &&
 				IS_AFFECTED(ch, AFF_DETECT_MAGIC)) {
-			strcat(buffer,"...Ha un alone di luce blue!");
+			strcat(buffer," $c0012(ha un alone di luce blu)$c0007");
 		}
 		if(IS_OBJ_STAT(object, ITEM_GLOW)) {
-			strcat(buffer,"...Ha un alone luminoso!");
+			strcat(buffer," $c0015(ha un alone luminoso)$c0007");
 		}
 		if(IS_OBJ_STAT(object,ITEM_HUM)) {
-			strcat(buffer,"...Emette un forte ronzio!");
+			strcat(buffer," $c0008(emette un forte ronzio)$c0007");
 		}
 	}
 
@@ -627,10 +627,10 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			}
 
 			if(IS_AFFECTED(i, AFF_INVISIBLE) || i->invis_level >= IMMORTALE) {
-				strcat(buffer," (invisibile)");
+				strcat(buffer," $c0011(invisibile)$c0007");
 			}
 			if(IS_AFFECTED(i, AFF_CHARM)) {
-				strcat(buffer," (schiavo)");
+				strcat(buffer," $c0015(schiavo)$c0007");
 			}
 
 			switch(GET_POS(i)) {
@@ -679,7 +679,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 				break;
 			case POSITION_RESTING  :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta facendo il morto nell'acqua.");
+					strcat(buffer, " sta facendo il morto nell'$c0012acqua$c0007.");
 				}
 				else {
 					strcat(buffer," sta riposando qui.");
@@ -687,7 +687,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 				break;
 			case POSITION_SLEEPING :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta dormendo qui nell'acqua.");
+					strcat(buffer, " sta dormendo qui nell'$c0012acqua$c0007.");
 				}
 				else {
 					strcat(buffer," sta dormendo qui.");
@@ -728,7 +728,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009 (alone rosso)");
+					strcat(buffer, "$c0009 (alone rosso)$c0007");
 				}
 			}
 
@@ -861,7 +861,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		}
 		if(HAS_PRINCE(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n appartiene al clan di %s.",GET_PRINCE(i));
+			snprintf(buffer,MAX_STRING_LENGTH-1,"$n appartiene al clan di %s.", GET_PRINCE(i));
 			act(buffer,FALSE,i,0,ch,TO_VICT);
 		}
 
@@ -872,18 +872,18 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		ShowAltezzaCostituzione(i, ch);
 
 		if(IS_PC(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1, "$n e' un$b %s", RaceName[ GET_RACE(i) ]);
+			snprintf(buffer,MAX_STRING_LENGTH-1, "$n e' un$b %s.", RaceName[ GET_RACE(i) ]);
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
 
 		if(MOUNTED(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' sopra a %s", MOUNTED(i)->player.short_descr);
+			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' sopra a %s.", MOUNTED(i)->player.short_descr);
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
 		if(RIDDEN(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' cavalcat$b da %s",
+			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' cavalcat$b da %s.",
 					 IS_NPC(RIDDEN(i)) ? RIDDEN(i)->player.short_descr :
 					 GET_NAME(RIDDEN(i)));
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
@@ -910,7 +910,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		}
 
 		if(percent >= 100) {
-			strcat(buffer, " e' in condizioni eccellenti.");
+			strcat(buffer, " e' in condizioni $c0010eccellenti$c0007.");
 		}
 		else if(percent >= 80) {
 			strcat(buffer, " ha pochi graffi.");
@@ -922,13 +922,13 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			strcat(buffer, " e' ferit$B.");
 		}
 		else if(percent >= 20) {
-			strcat(buffer, " sanguina abbondatemente.");
+			strcat(buffer, " $c0001sanguina$c0007 abbondatemente.");
 		}
 		else if(percent >= 0) {
-			strcat(buffer, " $c0001ha grossi squarci aperti.");
+			strcat(buffer, " $c0001ha grossi squarci aperti$c0007.");
 		}
 		else {
-			strcat(buffer, " $c0009sta morendo per le ferite ed i colpi ricevuti.");
+			strcat(buffer, " $c0009sta morendo per le ferite ed i colpi ricevuti$c0007.");
 		}
 
 		act(buffer,FALSE, ch,0,i,TO_CHAR);
@@ -938,17 +938,35 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		 * spell_descriptions, etc.
 		 */
 		otype = -1;
-		for(aff = i->affected; aff; aff = aff->next) {
-			if(aff->type < MAX_EXIST_SPELL) {
-				if(spell_desc[ aff->type ] && *spell_desc[ aff->type ]) {
-					if(aff->type != otype) {
-						act(spell_desc[ aff->type ], FALSE, i, 0, ch, TO_VICT);
-						otype = aff->type;
-					}
-				}
-			}
-		}
-
+        if((IS_AFFECTED(i, AFF_GLOBE_DARKNESS) || affected_by_spell(i, SPELL_GLOBE_DARKNESS)) && (!IS_IMMORTALE(ch) && ch != i && saves_spell(i, SAVING_SPELL)))
+        {
+            act(spell_desc[ SPELL_GLOBE_DARKNESS ], FALSE, i, 0, ch, TO_VICT);
+        }
+        else
+        {
+            for(aff = i->affected; aff; aff = aff->next)
+            {
+                if(aff->type < MAX_EXIST_SPELL)
+                {
+                    if(spell_desc[ aff->type ] && *spell_desc[ aff->type ])
+                    {
+                        if(aff->type != otype)
+                        {
+                            act(spell_desc[ aff->type ], FALSE, i, 0, ch, TO_VICT);
+                            otype = aff->type;
+                        }
+                    }
+                }
+            }
+            if(IS_AFFECTED(i, AFF_SANCTUARY) && !affected_by_spell(i, SPELL_SANCTUARY))
+            {
+                act(spell_desc[ SPELL_SANCTUARY ], FALSE, i, 0, ch, TO_VICT);
+            }
+            if(IS_AFFECTED(i, AFF_FIRESHIELD) && !affected_by_spell(i, SPELL_FIRESHIELD))
+            {
+                act(spell_desc[ SPELL_FIRESHIELD ], FALSE, i, 0, ch, TO_VICT);
+            }
+        }
 
 		found = FALSE;
 		for(j=0; j< MAX_WEAR; j++) {
@@ -2072,32 +2090,32 @@ ACTION_FUNC(do_exits) {
 			if(!real_roomp(exitdata->to_room)) {
 				/* don't print unless immortal */
 				if(IS_IMMORTAL(ch)) {
-					sprintf(buf + strlen(buf), "%s - turbinante chaos di #%ld\n\r",
+					sprintf(buf + strlen(buf), "$c0007%s $c0015- $c0007turbinante chaos di $c0015#%ld\n\r",
 							exits[door], exitdata->to_room);
 				}
 			}
 			else if(exitdata->to_room != NOWHERE) {
 				if(IS_DIO(ch)) {
-					sprintf(buf + strlen(buf), "%s - %s", exits[door],
+					sprintf(buf + strlen(buf), "$c0007%s $c0015-$c0007 %s", exits[door],
 							real_roomp(exitdata->to_room)->name);
 					if(IS_SET(exitdata->exit_info, EX_SECRET)) {
-						strcat(buf," (segreta)");
+						strcat(buf," $c0009(segreta)");
 					}
 					if(IS_SET(exitdata->exit_info, EX_CLOSED)) {
-						strcat(buf, " (chiusa)");
+						strcat(buf, " $c0015(chiusa)");
 					}
 					if(IS_DARK(exitdata->to_room)) {
-						strcat(buf, " (buia)");
+						strcat(buf, " $c0008(buia)");
 					}
-					sprintf(buf + strlen(buf), " #%ld\n\r", exitdata->to_room);
+					sprintf(buf + strlen(buf), " $c0015#%ld\n\r", exitdata->to_room);
 				}
 				else if(!IS_SET(exitdata->exit_info, EX_CLOSED) ||
 						!IS_SET(exitdata->exit_info, EX_SECRET)) {
 					if(IS_DARK(exitdata->to_room))
-						sprintf(buf + strlen(buf), "%s - Troppo buio per dirlo\n\r",
+						sprintf(buf + strlen(buf), "$c0007%s $c0015-$c0008 Troppo buio per dirlo\n\r",
 								exits[ door ]);
 					else
-						sprintf(buf + strlen(buf), "%s - %s\n\r", exits[ door ],
+						sprintf(buf + strlen(buf), "$c0007%s $c0015-$c0007 %s\n\r", exits[ door ],
 								real_roomp(exitdata->to_room)->name);
 				}
 			}
@@ -2110,7 +2128,7 @@ ACTION_FUNC(do_exits) {
 		send_to_char(buf, ch);
 	}
 	else {
-		send_to_char("Nessuna !\n\r", ch);
+		send_to_char("$c0009Nessuna!\n\r", ch);
 	}
 }
 
@@ -2152,12 +2170,12 @@ ACTION_FUNC(do_score) {
 	else {
 		my_birth.year=(time_info.year-my_age.ayear);
 	}
-	snprintf(datanasc,sizeof datanasc,"$c0005Sei nat$b nel %s, %d^ del %s, nell'anno %d %s.",
+	snprintf(datanasc,sizeof datanasc,"$c0005Sei nat$b nel %s$c0005, %d^ del %s$c0005, nell'anno %d %s.",
 			 weekdays[weekday]+3,
 			 day,
 			 month_name[(int)my_birth.month ],
 			 my_birth.year,
-			 (my_birth.year>0?" dopo Nebbie":" avanti Nebbie"));
+			 (my_birth.year>0?"dopo Nebbie":"avanti Nebbie"));
 
 	snprintf(buf,999,"%s\n\rHai $c0015%d$c0005 anni.", datanasc,my_age.ayear);
 	//FIXME: check for buffer overrun
@@ -2475,14 +2493,14 @@ ACTION_FUNC(do_time) {
 	char buf[100];
 	int weekday, day;
 
-	snprintf(buf, 99,"Sono le %d del%s, ",
+	snprintf(buf, 99,"Sono le %d del%s, de ",
 			 ((time_info.hours % 12 == 0) ? 12 : ((time_info.hours) % 12)),
 			 ((time_info.hours >= 12) ? " pomeriggio" : "la mattina"));
 
 	weekday = ((35*time_info.month)+time_info.day+1) % 7;/* 35 days in a month */
 
 	strcat(buf,weekdays[weekday]);
-	strcat(buf,"\n\r");
+	strcat(buf,".\n\r");
 	send_to_char(buf,ch);
 
 	day = time_info.day + 1;   /* day in [1..35] */
@@ -2499,17 +2517,17 @@ ACTION_FUNC(do_time) {
 ACTION_FUNC(do_weather) {
 	char buf[ 256 ];
 	const char* sky_look[] = {
-		"sereno",
-		"nuvoloso",
-		"piovoso",
-		"illuminato dai lampi"
+		"$c0014sereno$c0007",
+		"$c0015nuvoloso$c0007",
+		"$c0012piovoso$c0007",
+		"$c0011illuminato dai lampi$c0007"
 	};
 
 	if(OUTSIDE(ch)) {
 		snprintf(buf, 255,
 				 "Il cielo e' %s e%s.\n\r",
 				 sky_look[weather_info.sky],
-				 (weather_info.change >=0 ? " senti un vento caldo da sud" :
+				 (weather_info.change >=0 ? " senti un vento $c0009caldo$c0007 da sud" :
 				  "d i tuoi reumatismi ti dicono che il tempo cambiera'"));
 		send_to_char(buf, ch);
 	}

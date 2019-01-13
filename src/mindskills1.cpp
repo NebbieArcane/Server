@@ -704,6 +704,9 @@ void mind_psychic_crush(byte level, struct char_data* ch,
 
 void mind_intensify(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
+    
+    send_to_char("Work in progress :-)", ch);
+    return;
 }
 
 
@@ -712,6 +715,8 @@ void mind_domination(byte level, struct char_data* ch,
 					 struct char_data* victim, struct obj_data* obj)
 
 {
+    send_to_char("Work in progress :-)", ch);
+    return;
 }
 
 } // namespace Alarmud

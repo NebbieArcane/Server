@@ -935,7 +935,7 @@ ACTION_FUNC(do_swim) {
 	byte percent;
 
 
-	send_to_char("Ok, you'll try to swim for a while.\n\r", ch);
+	send_to_char("Ok, provi a nuotare.\n\r", ch);
 
 	if(IS_AFFECTED(ch, AFF_WATERBREATH)) {
 		/* kinda pointless if they don't need to...*/
@@ -943,7 +943,7 @@ ACTION_FUNC(do_swim) {
 	}
 
 	if(affected_by_spell(ch, SKILL_SWIM)) {
-		send_to_char("You're too exhausted to swim right now\n", ch);
+		send_to_char("Stai gia' nuotando...\n\r", ch);
 		return;
 	}
 
@@ -954,11 +954,11 @@ ACTION_FUNC(do_swim) {
 	}
 
 	if(percent > ch->skills[SKILL_SWIM].learned) {
-		send_to_char("You're too afraid to enter the water\n\r",ch);
+		send_to_char("Hai troppa paura dell'$c0012acqua$c0007!\n\r",ch);
 		if(ch->skills[SKILL_SWIM].learned < 95 &&
 				ch->skills[SKILL_SWIM].learned > 0) {
 			if(number(1,101) > ch->skills[SKILL_SWIM].learned) {
-				send_to_char("You feel a bit braver, though\n\r", ch);
+				send_to_char("Ti senti piu' in sintonia con l'$c0012acqua$c0007!\n\r", ch);
 				ch->skills[SKILL_SWIM].learned++;
 			}
 		}
@@ -1001,22 +1001,22 @@ ACTION_FUNC(do_mantra) {
 	}
 
 	if(!sulcorpo) {
-		send_to_char("Devi indossare vesti piu' adatte alla meditazione",ch);
+		send_to_char("Devi indossare vesti piu' adatte alla meditazione.",ch);
 		return;
 	}
 	if(!affected_by_spell(ch,SKILL_MANTRA)) {
 		if(!HasClass(ch,CLASS_MONK)) {
 
-			act("La tua mente e il tuo corpo vibrano all'unisono.... piu' o meno.",
+			act("La tua mente e il tuo corpo $c0015v$c0007i$c0008b$c0007r$c0015a$c0007n$c0008o$c0007 all'unisono.... piu' o meno.",
 				FALSE,ch,0,0,TO_CHAR);
-			act("$n chiude gli occhi e biascica un mantra accovacciat$b in terra.",
+			act("$n chiude gli occhi e biascica un $c0013mantra$c0007 accovacciat$b in $c0003terra$c0007.",
 				TRUE,ch,0,0,TO_ROOM);
 		}
 		else {
 
-			act("La tua mente e il tuo corpo vibrano all'unisono",
+			act("La tua mente e il tuo corpo $c0015v$c0007i$c0008b$c0007r$c0015a$c0007n$c0008o$c0007 all'unisono",
 				FALSE,ch,0,0,TO_CHAR);
-			act("$n chiude gli occhi e recita un mantra accovacciat$b in terra",
+			act("$n chiude gli occhi e recita un $c0013mantra$c0007 accovacciat$b in $c0003terra$c0007.",
 				TRUE,ch,0,0,TO_ROOM);
 		}
 		sulcorpo=GET_LEVEL(ch,MONK_LEVEL_IND);
@@ -1053,36 +1053,34 @@ ACTION_FUNC(do_daimoku) {
 
 	if(sulcorpo || !HasClass(ch,CLASS_MONK)) {
 		send_to_char("Cerchi di visualizzare la struttura del tuo corpo"
-					 ", ma qualcosa te l'impedisce",ch);
+					 ", ma qualcosa te l'impedisce.",ch);
 		return;
 	}
-	act("$n sembra trasfigurare nello sforzo di concentrarsi.....",
-		TRUE,ch,0,0,TO_ROOM);
-	act("Poi, mentre le sue ferite inziano a "
-		"rimarginarsi, cade a terra stremat$b",
-		TRUE,ch,0,0,TO_ROOM);
-	act("Riesci a visualizzare l'intima struttura del tuo corpo",
-		FALSE,ch,0,0,TO_CHAR);
-	act("Riannodi i nervi e ricongiungi le fibre... "
-		"poi sprofondi nel nirvana",
-		FALSE,ch,0,0,TO_CHAR);
-	dummy =number(0,2);
-	GET_POS(ch)=POSITION_INCAP;
-	GET_HIT(ch)=-1;
-	alter_hit(ch,0);
-	af.type = SPELL_NO_MESSAGE;
-	af.duration = dummy;
-	af.modifier = MAX(100,GET_MAX_HIT(ch));
-	af.location = APPLY_HIT_REGEN;
+	act("$n sembra trasfigurare nello sforzo di concentrarsi...", TRUE, ch, 0, 0, TO_ROOM);
+	act("Poi, mentre le sue ferite inziano a rimarginarsi, cade a terra stremat$b.", TRUE, ch, 0, 0, TO_ROOM);
+	act("Riesci a visualizzare l'intima struttura del tuo corpo.", FALSE, ch, 0, 0, TO_CHAR);
+	act("Riannodi i nervi e ricongiungi le fibre... poi sprofondi nel nirvana.", FALSE, ch, 0, 0, TO_CHAR);
+	dummy = number(0, 2);
+	GET_POS(ch) = POSITION_INCAP;
+	GET_HIT(ch) = -1;
+	alter_hit(ch, 0);
+    
+	af.type      = SPELL_NO_MESSAGE;
+	af.duration  = dummy;
+	af.modifier  = MAX(100, GET_MAX_HIT(ch));
+	af.location  = APPLY_HIT_REGEN;
 	af.bitvector = 0;
 	affect_to_char(ch, &af);
 
-	af.type      = SPELL_PARALYSIS;
-	af.duration  = dummy;
-	af.modifier  = 0;
-	af.location  = APPLY_NONE;
-	af.bitvector = AFF_PARALYSIS;
-	affect_join(ch, &af, FALSE, FALSE);
+    if(!IS_DIO(ch))
+    {
+        af.type      = SKILL_DAIMOKU;
+        af.duration  = dummy;
+        af.modifier  = 0;
+        af.location  = APPLY_NONE;
+        af.bitvector = AFF_PARALYSIS;
+        affect_join(ch, &af, FALSE, FALSE);
+    }
 
 }
 
@@ -1197,18 +1195,18 @@ ACTION_FUNC(do_feign_death) {
 	}
 
 	if(!ch->specials.fighting) {
-		send_to_char("But you are not fighting anything...\n\r", ch);
+		send_to_char("Ma se non stai combattendo...\n\r", ch);
 		return;
 	}
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
 		if(!HasClass(ch, CLASS_MONK) && !IS_PRINCE(ch)) {
-			send_to_char("You're no monk!\n\r", ch);
+			send_to_char("Cosa ti pensi di essere, un monaco?!?\n\r", ch);
 			return;
 		}
 
 	if(MOUNTED(ch)) {
-		send_to_char("Yeah... right... while mounted\n\r", ch);
+		send_to_char("Si... perfetto... ma se sei a cavallo!\n\r", ch);
 		return;
 	}
 
@@ -1217,10 +1215,10 @@ ACTION_FUNC(do_feign_death) {
 		return;
 	}
 
-	send_to_char("You try to fake your own demise\n\r", ch);
+	act("Provi a fingerti mort$b!", FALSE, ch, 0, 0, TO_CHAR);
 
 	death_cry(ch);
-	act("$n is dead! R.I.P.", FALSE, ch, 0, 0, TO_ROOM);
+	act("$n e' mort$b! R.I.P.", FALSE, ch, 0, 0, TO_ROOM);
 
 	if(number(1,101) < ch->skills[SKILL_FEIGN_DEATH].learned) {
 		stop_fighting(ch);
@@ -5193,8 +5191,8 @@ ACTION_FUNC(do_blast) {
 	}
 
 	if(check_nomind(ch, "Non riesci a concentrarti abbastanza in questo "
-					"posto",
-					"$n cerca invano di concentrarsi")) {
+					"posto.",
+					"$n cerca invano di concentrarsi.")) {
 		return;
 	}
 
@@ -5373,9 +5371,9 @@ ACTION_FUNC(do_blast) {
 			af.location = APPLY_NONE;
 			af.bitvector = AFF_PARALYSIS;
 			affect_join(victim, &af, FALSE, FALSE);
-			send_to_char("Il tuo cervello e' stato tramutato in gelatina!\n\r",
+			send_to_char("Il tuo cervello e' stato tramutato in $c0008gelatina$c0007!\n\r",
 						 victim);
-			act("Hai tramutato il cervello di $N in gelatina!", FALSE, ch, 0,
+			act("Hai tramutato il cervello di $N in $c0008gelatina$c0007!", FALSE, ch, 0,
 				victim, TO_CHAR);
 			break;
 		}
@@ -6152,7 +6150,7 @@ ACTION_FUNC(do_holy_warcry) {
 			return;
 		}
 
-	if(GET_ALIGNMENT(ch) < 350)  {
+	if(GET_ALIGNMENT(ch) < 350 && !IS_PRINCE(ch))  {
 		send_to_char("You're too ashamed of your behavior to warcry.\n\r",ch);
 		return;
 	}

@@ -123,6 +123,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_EDIT                                   =2; /*edited item*/
 	constexpr unsigned long ITEM2_NO_LOCATE                              =4; /*no-locate item*/
 	constexpr unsigned long ITEM2_PERSONAL                               =8; /*personalized item*/
+	constexpr unsigned long ITEM2_INSERT                                 =16; /*item with gems mounted*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/

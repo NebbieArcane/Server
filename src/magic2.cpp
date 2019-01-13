@@ -63,7 +63,7 @@ void spell_resurrection(byte level, struct char_data* ch,
             
             
             if(obj->char_vnum >= QUEST_ZONE && obj->char_vnum <= QUEST_ZONE+99) {
-                send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
+                send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
                 return;
             }
             
@@ -94,7 +94,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 			alter_hit(victim,0);
 			GET_POS(victim)=POSITION_STUNNED;
 
-			act("Con un arcano rituale, $n riporta in vita un cadavere.", TRUE, ch,
+			act("$c0015Con un arcano rituale, $n riporta in vita un cadavere.", TRUE, ch,
 				0, 0, TO_ROOM);
 			act("$n si rialza lentamente da terra.", FALSE, victim, 0, victim,
 				TO_ROOM);
@@ -108,7 +108,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 			else if(too_many_followers(ch)) {
 				act("$N si rifiuta di unirsi alla folla che ti segue!",
 					TRUE, ch, 0, victim, TO_CHAR);
-				act("Dai uno sguardo alla folla che segue $n e rifiuti di seguirlo!",
+				act("Dai uno sguardo alla folla che segue $n e rifiuti di unirti!",
 					TRUE, ch, 0, victim, TO_ROOM);
 			}
 			else {
@@ -189,13 +189,13 @@ void spell_resurrection(byte level, struct char_data* ch,
 					st.abilities.con -= 1;
 					st.agemod=MIN(st.agemod,-30);
 				}
-				act("Una musica celestiale risuona nella stanza,",
+				act("Una musica $c0014celestiale$c0007 risuona nella stanza.",
 					TRUE, ch, 0, 0, TO_CHAR);
-				act("Uno spirito appare improvvisamente e si dissolve in un lampo di luce.",
+				act("Uno $c0015spirito$c0007 appare improvvisamente e si dissolve in un $c0011lampo di luce$c0007.",
 					TRUE, ch, 0, 0, TO_CHAR);
-				act("Una musica celestiale risuona nella stanza,",
+				act("Una musica $c0014celestiale$c0007 risuona nella stanza.",
 					TRUE, ch, 0, 0, TO_ROOM);
-				act("Uno spirito appare improvvisamente e si dissolve in un lampo di luce.'",
+				act("Uno $c0015spirito$c0007 appare improvvisamente e si dissolve in un $c0011lampo di luce$c0007.",
 					TRUE, ch, 0, 0, TO_ROOM);
 				act("$p scompare in un battito di ciglia.",
 					TRUE, ch, obj, 0, TO_ROOM);
@@ -221,7 +221,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 
 			}
 			else {
-				send_to_char("Questo corpo e' troppo debole per essere"
+				send_to_char("Questo corpo e' troppo debole per essere "
 							 "riportato in vita.\n\r", ch);
 			}
 			fclose(fl);
@@ -285,7 +285,7 @@ void spell_cure_serious(byte level, struct char_data* ch,
 	int dam;
 
 	if(!ch && victim) {
-		send_to_char("Chi vuoi curare??",ch);
+		send_to_char("Chi vuoi curare?",ch);
 		mudlog(LOG_SYSERR,"Cure serious failed ch && victim");
 		return;
 	}
@@ -343,8 +343,8 @@ void spell_mana(byte level, struct char_data* ch,
 		alter_hit(ch,0);
 		GET_MANA(ch)=0;
 		alter_mana(ch,0);
-		act("$n viene improvvisamente avvolto da un globo pulsante di energia.",TRUE,ch,0,victim,TO_NOTVICT);
-		act("Vieni avvolto da un globo pulsante di energia.", TRUE, ch, 0, victim, TO_CHAR);
+		act("$n viene improvvisamente avvolt$b da un $c0011globo pulsante$c0007 di $c0011energia$c0007.",TRUE,ch,0,victim,TO_NOTVICT);
+		act("Vieni avvolto da un $c0011globo pulsante$c0007 di $c0011energia$c0007.", TRUE, ch, 0, victim, TO_CHAR);
 	}
 }
 
@@ -404,18 +404,18 @@ void spell_dispel_good(byte level, struct char_data* ch,
 
 	if(IsExtraPlanar(victim)) {
 		if(IS_GOOD(ch)) {
-			send_to_char("Non hai lo spirito adatto a scacciare un buono.\n\r", ch);
+			send_to_char("Non hai lo $c0015spirito$c0007 adatto per scacciare una $c0014creatura$c0007 cosi' $c0014buona$c0007.\n\r", ch);
 			return;;
 		}
 		else if(IS_EVIL(victim)) {
-			act("Il Male protegge $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("Il $c0001Male$c0007 protegge $N.", FALSE, ch, 0, victim, TO_CHAR);
 			return;
 		}
 
 		if(!saves_spell(victim, SAVING_SPELL)) {
-			act("$n scaccia $N da questo piano di esistenza.",TRUE,ch,0,victim,TO_NOTVICT);
-			act("Scacci $N da questo piano di esistenza.", TRUE, ch, 0, victim, TO_CHAR);
-			act("$n ti scaccia da questo piano di esistenza.", TRUE, ch, 0, victim,TO_VICT);
+			act("$c0009$n scaccia $N $c0009da questo piano di esistenza.",TRUE,ch,0,victim,TO_NOTVICT);
+			act("$c0009Scacci $N $c0009da questo piano di esistenza.", TRUE, ch, 0, victim, TO_CHAR);
+			act("$c0009$n ti scaccia da questo piano di esistenza.", TRUE, ch, 0, victim,TO_VICT);
 			gain_exp(ch, MIN(GET_EXP(victim)/2, 50000));
 			extract_char(victim);
 		}
@@ -446,18 +446,18 @@ void spell_turn(byte level, struct char_data* ch,
 		}
 		else if(!IsUndead(victim)) {
 
-			act("$n ha appena cercato di scacciarti.. poverino!", TRUE, ch, 0, victim, TO_VICT);
+			act("$n ha appena cercato di scacciarti... poverino!", TRUE, ch, 0, victim, TO_VICT);
 			act("$N pensa che $n sia molto strano.", TRUE, ch, 0, victim, TO_NOTVICT);
-			act("Um... $N non e' un Non-Morto...", TRUE, ch, 0, victim, TO_CHAR);
+			act("Uhm... $N non e' un Non-Morto...", TRUE, ch, 0, victim, TO_CHAR);
 		}
 		else {
 			act("Cerchi di scacciare $N da qui.", TRUE, ch, 0, victim, TO_CHAR);
 			if(diff >= 0 && (!saves_spell(victim, SAVING_SPELL) || diff > 0)) {
 				if(diff > 0) {
 
-					act("$n scaccia $N da questo piano di esistenza.",TRUE,ch,0,victim,TO_NOTVICT);
-					act("Scacci $N da questo piano di esistenza.", TRUE, ch, 0, victim, TO_CHAR);
-					act("$n ti scaccia da questo piano di esistenza.", TRUE, ch, 0, victim,TO_VICT);
+					act("$c0015$n scaccia $N $c0015da questo piano di esistenza.",TRUE,ch,0,victim,TO_NOTVICT);
+					act("$c0015Scacci $N $c0015da questo piano di esistenza.", TRUE, ch, 0, victim, TO_CHAR);
+					act("$c0015$n ti scaccia da questo piano di esistenza.", TRUE, ch, 0, victim,TO_VICT);
 					gain_exp(ch, MIN(GET_EXP(victim)/2, 100000));
 					extract_char(victim);
 				}
@@ -498,15 +498,16 @@ void spell_remove_paralysis(byte level, struct char_data* ch,
 
 	assert(ch && victim);
 
-	if(IS_AFFECTED(victim, AFF_PARALYSIS)) {
-		REMOVE_BIT(victim->specials.affected_by, AFF_PARALYSIS);
-	}
-
 	if(affected_by_spell(victim,SPELL_PARALYSIS)) {
 		affect_from_char(victim,SPELL_PARALYSIS);
-		act("Un dolce sensazione di calore ti pervade.",FALSE,victim,0,0,TO_CHAR);
-		act("$N sembra stare meglio.",FALSE,ch,0,victim,TO_ROOM);
+		act("$c0014Un dolce sensazione di $c0009calore$c0014 ti pervade.", TRUE, victim, 0, 0, TO_CHAR);
+        act("$c0014Ti senti molto meglio.", TRUE, ch, 0, victim, TO_VICT);
+		act("$c0014$N $c0014sembra stare meglio.", TRUE, ch, 0, victim, TO_NOTVICT);
 	}
+    
+    if(IS_AFFECTED(victim, AFF_PARALYSIS)) {
+        REMOVE_BIT(victim->specials.affected_by, AFF_PARALYSIS);
+    }
 
 }
 
@@ -547,12 +548,12 @@ void spell_true_seeing(byte level, struct char_data* ch,
 
 	if(!IS_AFFECTED(victim, AFF_TRUE_SIGHT)) {
 		if(ch != victim) {
-			send_to_char("I tuoi occhi si illuminano d'argento per un attimo.\n\r", victim);
-			act("Gli occhi di $n vengono illuminati da una luce argentea.\n\r", FALSE, victim, 0, 0, TO_ROOM);
+			send_to_char("I tuoi occhi si illuminano d'$c0015argento$c0007 per un attimo.\n\r", victim);
+			act("Gli occhi di $n vengono illuminati da una $c0015luce argentea$c0007.\n\r", FALSE, victim, 0, 0, TO_ROOM);
 		}
 		else {
-			send_to_char("I tuoi occhi si illuminano d'argento.\n\r", ch);
-			act("Gli occhi di $n vengono illuminati da una luce argentea.\n\r", FALSE, ch, 0, 0, TO_ROOM);
+			send_to_char("I tuoi occhi si illuminano d'$c0015argento$c0007.\n\r", ch);
+			act("Gli occhi di $n vengono illuminati da una $c0015luce argentea$c0007.\n\r", FALSE, ch, 0, 0, TO_ROOM);
 		}
 
 		af.type      = SPELL_TRUE_SIGHT;
@@ -579,13 +580,13 @@ void spell_track(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(ch != targ) {
-		send_to_char("I tuoi occhi brillano per un attimo di un color smeraldo!\n\r", targ);
+		send_to_char("I tuoi occhi $c0015brillano$c0007 per un attimo di un color $c0010verde smeraldo$c0007!\n\r", targ);
 	}
 	else {
-		send_to_char("I tuoi occhi brillano per un attimo di un color smeraldo!\n\r", ch);
+		send_to_char("I tuoi occhi $c0015brillano$c0007 per un attimo di un color $c0010verde smeraldo$c0007!\n\r", ch);
 	}
 
-	act("Gli occhi di $N brillano per un attimo di un riflesso color smeraldo.", 0,  ch, 0, targ, TO_ROOM);
+	act("Gli occhi di $N $c0015brillano$c0007 per un attimo di un riflesso color $c0010verde smeraldo$c0007.", 0,  ch, 0, targ, TO_ROOM);
 
 	if(!obj) {
 		af.type      = SPELL_MINOR_TRACK;
@@ -628,10 +629,10 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	/* move char to storage */
 
-	act("Le carni di $n si sciolgono e si riformano nella figura di $N",
+	act("Le carni di $c0015$n$c0007 si sciolgono e si riformano nella figura di $c0015$N$c0007!",
 		TRUE, ch, 0, mob, TO_ROOM);
 
-	act("Le tue carni si sciolgono e si riformano nella figura di $N",
+	act("Le tue carni si sciolgono e si riformano nella figura di $c0015$N$c0007!",
 		TRUE, ch, 0, mob, TO_CHAR);
 
 	char_from_room(ch);
@@ -692,7 +693,7 @@ void spell_poly_self(byte level, struct char_data* ch,
 	mob->player.short_descr = buf;
 
 	buf = (char*)malloc(strlen(mob->player.short_descr) + 12);
-	sprintf(buf, "%s e' qui\n\r", mob->player.short_descr);
+	sprintf(buf, "%s e' qui.\n\r", mob->player.short_descr);
 
 	if(mob->player.long_descr) {
 		free(mob->player.long_descr);
@@ -708,8 +709,8 @@ void spell_minor_create(byte level, struct char_data* ch,
 
 	act("$n batte le mani e si concentra.", TRUE, ch, 0, 0, TO_ROOM);
 	act("Batti le mani e ti concentri.", TRUE, ch, 0, 0, TO_CHAR);
-	act("Con un lampo di luce si materializza $p.", TRUE, ch, obj, 0, TO_ROOM);
-	act("Con un lampo di luce si materializza $p.", TRUE, ch, obj, 0, TO_CHAR);
+	act("Con un $c0011lampo di luce$c0007 si materializza $p.", TRUE, ch, obj, 0, TO_ROOM);
+	act("Con un $c0011lampo di luce$c0007 si materializza $p.", TRUE, ch, obj, 0, TO_CHAR);
 
 	obj_to_room(obj, ch->in_room);
 
@@ -723,8 +724,8 @@ void spell_stone_skin(byte level, struct char_data* ch,
 	assert(ch);
 
 	if(!affected_by_spell(ch, SPELL_STONE_SKIN)) {
-		act("La pelle di $n diventa grigia ed assume la consistenza del granito.", TRUE, ch, 0, 0, TO_ROOM);
-		act("La tua pelle si tramuta in una sostanza simile alla roccia.", TRUE, ch, 0, 0, TO_CHAR);
+		act("La pelle di $n diventa $c0015grigia$c0007 ed assume la consistenza del $c0003granito$c0007.", TRUE, ch, 0, 0, TO_ROOM);
+		act("$c0003La tua pelle si tramuta in una sostanza simile alla roccia.", TRUE, ch, 0, 0, TO_CHAR);
 
 		af.type      = SPELL_STONE_SKIN;
 		af.duration  = level;
@@ -751,8 +752,8 @@ void spell_mirror_images(byte level, struct char_data* ch,
 	assert(ch);
 
 	if(!affected_by_spell(ch, SPELL_MIRROR_IMAGES)) {
-		act("$n moltiplica la sua immagine!.", TRUE, ch, 0, 0, TO_ROOM);
-		act("Evochi delle immagini illusorie per confondere i nemici.", TRUE, ch, 0, 0, TO_CHAR);
+		act("$n moltiplica la sua $c0015i$c0007i$c0015m$c0007m$c0015m$c0007m$c0015a$c0007a$c0015g$c0007gi$c0015n$c0007n$c0015e$c0007e!", TRUE, ch, 0, 0, TO_ROOM);
+		act("Evochi delle $c0012immagini illusorie$c0007 per confondere i nemici.", TRUE, ch, 0, 0, TO_CHAR);
 		for(i=1+(level/10); i; i--) {
 			af.type      = SPELL_MIRROR_IMAGES;
 			af.duration  = number(1,4)+(level/5);
@@ -775,12 +776,12 @@ void spell_infravision(byte level, struct char_data* ch,
 
 	if(!IS_AFFECTED(victim, AFF_INFRAVISION)) {
 		if(ch != victim) {
-			send_to_char("I tuoi occhi brillano di un alone rosso.\n\r", victim);
-			act("Gli occhi di $n brillano di un alone rosso.\n\r", FALSE, victim, 0, 0, TO_ROOM);
+			send_to_char("I tuoi occhi $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", victim);
+			act("Gli occhi di $n $c0015brillano$c0007 di un alone $c0009rosso$c0007.\n\r", FALSE, victim, 0, 0, TO_ROOM);
 		}
 		else {
-			send_to_char("I tuoi occhi brillano di un alone rosso.\n\r", ch);
-			act("Gli occhi di $n brillano di un alone rosso.\n\r", FALSE, ch, 0, 0, TO_ROOM);
+			send_to_char("I tuoi occhi $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", ch);
+			act("Gli occhi di $n $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", FALSE, ch, 0, 0, TO_ROOM);
 		}
 
 		af.type      = SPELL_INFRAVISION;
@@ -800,16 +801,16 @@ void spell_shield(byte level, struct char_data* ch,
 	assert(victim && ch);
 
 	if(!affected_by_spell(victim, SPELL_SHIELD)) {
-		act("$N viene avvolto da un potente scudo magico.",
+		act("$N viene avvolto da un potente $c0011scudo$c0007 magico.",
 			TRUE, ch, 0, victim, TO_NOTVICT);
 		if(ch != victim) {
-			act("$N viene avvolto da un potente scudo magico.",
+			act("$N viene avvolto da un potente $c0011scudo$c0007 magico.",
 				TRUE, ch, 0, victim, TO_CHAR);
-			act("Vieni avvolto da un potente scudo magico.",
+			act("Vieni avvolto da un potente $c0011scudo$c0007 magico.",
 				TRUE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("Vieni avvolto da un potente scudo magico.",
+			act("Vieni avvolto da un potente $c0011scudo$c0007 magico.",
 				TRUE, ch, 0, 0, TO_CHAR);
 		}
 
@@ -832,8 +833,8 @@ void spell_weakness(byte level, struct char_data* ch,
 	if(!affected_by_spell(victim,SPELL_WEAKNESS))
 		if(!saves_spell(victim, SAVING_SPELL)) {
 			modifier = level/200.0;
-			act("Ti senti piu' debole.", FALSE, victim,0,0,TO_VICT);
-			act("$n sembra piu' debole.", FALSE, victim, 0, 0, TO_ROOM);
+			act("$c0014Ti senti piu' debole.", FALSE, victim,0,0,TO_VICT);
+			act("$c0014$n$c0014 sembra piu' debole.", FALSE, victim, 0, 0, TO_ROOM);
 
 			af.type      = SPELL_WEAKNESS;
 			af.duration  = (int) level/2;
@@ -848,6 +849,7 @@ void spell_weakness(byte level, struct char_data* ch,
 		}
 }
 
+/* invis_group non sembra assegnata a nessuna classe */
 void spell_invis_group(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
 	struct char_data* tmp_victim;
@@ -862,8 +864,8 @@ void spell_invis_group(byte level, struct char_data* ch,
 			if(in_group(ch,tmp_victim)) {
 				if(!affected_by_spell(tmp_victim, SPELL_INVISIBLE)) {
 
-					act("$n scompare lentamente dalla vista.", TRUE, tmp_victim,0,0,TO_ROOM);
-					send_to_char("Svanisci.\n\r", tmp_victim);
+					act("$c0011$n $c0011scompare lentamente dalla vista.", TRUE, tmp_victim,0,0,TO_ROOM);
+					send_to_char("$c0011Svanisci.\n\r", tmp_victim);
 
 					af.type      = SPELL_INVISIBLE;
 					af.duration  = 24;
@@ -912,8 +914,8 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 
 	dam = dice(level,5);
 
-	send_to_char("Un cono di aria gelida scaturisce dalle tue mani\n\r", ch);
-	act("Un cono di aria gelida scaturisce dalle mani di $n!\n\r",
+	send_to_char("Un $c0014cono$c0007 di $c0014aria gelida$c0007 scaturisce dalle tue mani.\n\r", ch);
+	act("Un $c0014cono$c0007 di $c0014aria gelida$c0007 scaturisce dalle mani di $n!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
@@ -924,7 +926,7 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 				return;
 			}
 			if(!in_group(ch, tmp_victim)) {
-				act("Vieni congelato fino alle ossa!\n\r",
+				act("Vieni $c0014congelato$c0007 fino alle $c0015ossa$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 				if(saves_spell(tmp_victim, SAVING_SPELL)) {
 					dam >>= 1;
@@ -932,7 +934,7 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 				MissileDamage(ch, tmp_victim, dam, SPELL_CONE_OF_COLD, 5);
 			}
 			else {
-				act("Riesci ad evitare il cono gelido!\n\r",
+				act("Riesci ad evitare il $c0014cono gelido$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 			}
 		}
@@ -949,8 +951,8 @@ void spell_ice_storm(byte level, struct char_data* ch,
 
 	dam = dice(level,4);
 
-	send_to_char("Evoca una tempesta di ghiaccio\n\r", ch);
-	act("$n evoca una tempesta di ghiaccio!\n\r",
+	send_to_char("Evochi una $c0015tempesta di ghiaccio$c0007!\n\r", ch);
+	act("$n evoca una $c0015tempesta di ghiaccio$c0007!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
@@ -961,7 +963,7 @@ void spell_ice_storm(byte level, struct char_data* ch,
 				return;
 			}
 			if(!in_group(ch, tmp_victim)) {
-				act("Vieni colpito dalla tempesta\n\r",
+				act("Vieni colpito dalla $c0015tempesta$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 				if(saves_spell(tmp_victim, SAVING_SPELL)) {
 					dam >>= 1;
@@ -969,7 +971,7 @@ void spell_ice_storm(byte level, struct char_data* ch,
 				MissileDamage(ch, tmp_victim, dam, SPELL_ICE_STORM, 5);
 			}
 			else {
-				act("Riesci ad evitare la tempesta di ghiaccio!\n\r",
+				act("Riesci ad evitare la $c0015tempesta di ghiaccio$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 			}
 		}
@@ -1027,7 +1029,7 @@ void spell_Create_Monster(byte level, struct char_data* ch,
 	}
 
 	if(IS_SET(rp->room_flags, TUNNEL)) {
-		send_to_char("Non c'e' piu' spazio qui....\n\r", ch);
+		send_to_char("Non c'e' piu' spazio qui...\n\r", ch);
 		return;
 	}
 
@@ -1067,14 +1069,14 @@ void spell_Create_Monster(byte level, struct char_data* ch,
 	}
 
 	if(!mob) {
-		send_to_char("L'evocazione fallisce\n\r", ch);
+		send_to_char("L'evocazione fallisce!\n\r", ch);
 		return;
 	}
 
 	char_to_room(mob, ch->in_room);
 	RelateMobToCaster(ch, mob);
-	act("$n esegue un gesto con la mano ed evoca $N !", TRUE, ch, 0, mob, TO_ROOM);
-	act("Esegui un gesto con la mano ed evochi $N !", TRUE, ch, 0, mob, TO_CHAR);
+	act("$n esegue un gesto con la mano ed evoca $N!", TRUE, ch, 0, mob, TO_ROOM);
+	act("Esegui un gesto con la mano ed evochi $N!", TRUE, ch, 0, mob, TO_CHAR);
 
 	if(too_many_followers(ch)) {
 		act("$N dice 'Non ci penso proprio ad unirmi a tutta questa gente!'",
@@ -1159,8 +1161,8 @@ void spell_light(byte level, struct char_data* ch,
 	clear_object(tmp_obj);
 
 	tmp_obj->name = strdup("sfera luce");
-	tmp_obj->short_description = strdup("Una sfera di luce");
-	tmp_obj->description = strdup("C'e' una sfera di luce qui per terra.");
+	tmp_obj->short_description = strdup("una sfera di $c0015luce$c0007");
+	tmp_obj->description = strdup("C'e' una sfera di $c0015luce$c0007 qui per terra.");
 
 	tmp_obj->obj_flags.type_flag = ITEM_LIGHT;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_HOLD;
@@ -1182,15 +1184,15 @@ void spell_light(byte level, struct char_data* ch,
 		obj_to_char(tmp_obj,ch);
 	}
 	else {
-		send_to_char("Mi spiace, non riesco a creare la sfera di luce\n\r", ch);
+		send_to_char("Mi spiace, non riesco a creare la sfera di $c0015luce$c0007.\n\r", ch);
 		return;
 	}
 
 
 #endif
 
-	act("$n apre la mano e delle piccole sfere di energia si uniscono nel suo palmo e formano $p.",TRUE,ch,tmp_obj,0,TO_ROOM);
-	act("Apri la mano e delle piccole sfere di energa si uniscono nel tuo palmo formando $p.",TRUE,ch,tmp_obj,0,TO_CHAR);
+	act("$n apre la mano e delle piccole sfere di $c0015energia$c0007 si uniscono nel suo palmo e formano $p.",TRUE,ch,tmp_obj,0,TO_ROOM);
+	act("Apri la mano e delle piccole sfere di $c0015energia$c0007 si uniscono nel tuo palmo formando $p.",TRUE,ch,tmp_obj,0,TO_CHAR);
 
 }
 
@@ -1205,12 +1207,12 @@ void spell_fly(byte level, struct char_data* ch,
 		return;
 	}
 
-	act("Ti senti piu' leggero dell'aria!", TRUE, ch, 0, victim, TO_VICT);
+	act("Ti senti piu' leggero dell'$c0012aria$c0007!", TRUE, ch, 0, victim, TO_VICT);
 	if(victim != ch) {
 		act("$N si alza in volo.", TRUE, ch, 0, victim, TO_CHAR);
 	}
 	else {
-		send_to_char("Ti alzi in volo!.\n\r", ch);
+		send_to_char("Ti alzi in volo!\n\r", ch);
 	}
 	act("$N si alza in volo.", TRUE, ch, 0, victim, TO_NOTVICT);
 
@@ -1235,7 +1237,7 @@ void spell_fly_group(byte level, struct char_data* ch,
 
 	for(tch=real_roomp(ch->in_room)->people; tch; tch=tch->next_in_room) {
 		if(in_group(ch, tch)) {
-			act("Ti senti piu' leggero dell'aria!", TRUE, ch, 0, tch, TO_VICT);
+			act("Ti senti piu' leggero dell'$c0012aria$c0007!", TRUE, ch, 0, tch, TO_VICT);
 			if(tch != ch) {
 				act("$N si alza in volo.", TRUE, ch, 0, tch, TO_CHAR);
 			}
@@ -1273,7 +1275,7 @@ void spell_refresh(byte level, struct char_data* ch,
 		alter_move(victim,0);
 	}
 
-	send_to_char("Senti svanire la stanchezza\n\r", victim);
+	send_to_char("Senti svanire la stanchezza.\n\r", victim);
 
 }
 
@@ -1285,11 +1287,11 @@ void spell_water_breath(byte level, struct char_data* ch,
 
 	assert(ch && victim);
 
-	act("Senti di poter respirare come un pesce!", TRUE, ch, 0, victim, TO_VICT);
+	act("$c0012Senti di poter respirare come un pesce!", TRUE, ch, 0, victim, TO_VICT);
 	if(victim != ch) {
-		act("$N sembra respirare diversamente.", TRUE, ch, 0, victim, TO_CHAR);
+		act("$c0012$N$c0012 sembra respirare diversamente.", TRUE, ch, 0, victim, TO_CHAR);
 	}
-	act("$N sembra respirare diversamente.", TRUE, ch, 0, victim, TO_NOTVICT);
+	act("$c0012$N$c0012 sembra respirare diversamente.", TRUE, ch, 0, victim, TO_NOTVICT);
 
 	af.type      = SPELL_WATER_BREATH;
 	af.duration  = GET_LEVEL(ch, BestMagicClass(ch))+3;
@@ -1318,8 +1320,8 @@ void spell_cont_light(byte level, struct char_data* ch,
 	clear_object(tmp_obj);
 
 	tmp_obj->name = strdup("sfera luce brillante");
-	tmp_obj->short_description = strdup("Una sfera di luce");
-	tmp_obj->description = strdup("C'e' una brillante sfera di luce per terra.");
+	tmp_obj->short_description = strdup("una sfera di $c0011luce$c0007");
+	tmp_obj->description = strdup("C'e' una $c0015brillante$c0007 sfera di $c0011luce$c0007 per terra.");
 
 	tmp_obj->obj_flags.type_flag = ITEM_LIGHT;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_HOLD;
@@ -1340,13 +1342,13 @@ void spell_cont_light(byte level, struct char_data* ch,
 		obj_to_char(tmp_obj,ch);
 	}
 	else {
-		send_to_char("Non riesci a creare la sfera di luce\n\r", ch);
+		send_to_char("Non riesci a creare la sfera di $c0011luce$c0007.\n\r", ch);
 		return;
 	}
 #endif
 
-	act("$n batte due volte le mani fra loro ed un lampo illumina la stanza. $p appare fra le sue mani.",TRUE,ch,tmp_obj,0,TO_ROOM);
-	act("Batti due volte le mani fra loro ed un lampo di luce illumina la stanza. $p appare fra le tue mani.",TRUE,ch,tmp_obj,0,TO_CHAR);
+	act("$n batte due volte fra di loro le sue mani ed un $c0011lampo$c0007 illumina la stanza. \n\r$p appare nelle sue mani.",TRUE,ch,tmp_obj,0,TO_ROOM);
+	act("Batti due volte fra di loro le tue mani ed un $c0011lampo$c0007 di $c0015luce$c0007 illumina la stanza. \n\r$p appare nelle tue mani.",TRUE,ch,tmp_obj,0,TO_CHAR);
 
 }
 
@@ -1362,16 +1364,16 @@ void spell_animate_dead(byte level, struct char_data* ch,
 	  */
 	if((GET_ITEM_TYPE(corpse)!=ITEM_CONTAINER)||
 			(!corpse->obj_flags.value[3])) {
-		send_to_char("The magic fails abruptly!\n\r",ch);
+		send_to_char("L'evocazione fallisce bruscamente!\n\r",ch);
 		return;
 	}
 
 	mob = read_mobile(r_num, VIRTUAL);
 	char_to_room(mob, ch->in_room);
 
-	act("Con un arcano rituale, $n anima un cadavere.", TRUE, ch,
+	act("Con un $c0015arcano$c0007 rituale, $n anima un cadavere.", TRUE, ch,
 		0, 0, TO_ROOM);
-	act("$N si alza da terra barcollando.", FALSE, ch, 0, mob, TO_ROOM);
+	act("$c0008$N$c0008 si alza da terra barcollando.", FALSE, ch, 0, mob, TO_ROOM);
 
 	/*
 	  zombie should be charmed and follower ch
@@ -1405,7 +1407,7 @@ void spell_animate_dead(byte level, struct char_data* ch,
 	/*
 	  set up descriptions and such
 	  */
-	sprintf(buf,"%s is here, slowly animating\n\r",corpse->short_description);
+	sprintf(buf,"%s si muove lentamente qui.\n\r",corpse->short_description);
 	mob->player.long_descr = (char*)strdup(buf);
 
 	/*
@@ -1442,31 +1444,31 @@ void spell_know_alignment(byte level, struct char_data* ch,
 	ap = GET_ALIGNMENT(victim);
 
 	if(ap > 700) {
-		sprintf(buf,"%s ha un animo candido come la neve.\n\r",name);
+		sprintf(buf,"$c0014%s$c0014 ha un animo candido come la neve.\n\r",name);
 	}
 	else if(ap > 350) {
-		sprintf(buf, "%s ha uno spiccato senso morale.\n\r",name);
+		sprintf(buf, "$c0014%s$c0014 ha uno spiccato senso morale.\n\r",name);
 	}
 	else if(ap > 100) {
-		sprintf(buf, "%s e' spesso gentile e di buoni propositi.\n\r",name);
+		sprintf(buf, "$c0010%s$c0010 e' spesso gentile e di buoni propositi.\n\r",name);
 	}
 	else if(ap > 25) {
-		sprintf(buf, "%s non e' poi cosi' male dopotutto...\n\r",name);
+		sprintf(buf, "$c0010%s$c0010 non e' poi cosi' male dopotutto...\n\r",name);
 	}
 	else if(ap > -25) {
-		sprintf(buf, "%s non sembra avere un comportamento ben definito\n\r",name);
+		sprintf(buf, "$c0010%s$c0010 non sembra avere un comportamento ben definito.\n\r",name);
 	}
 	else if(ap > -100) {
-		sprintf(buf, "Hai conosciuto di peggio rispetto a %s \n\r",name);
+		sprintf(buf, "$c0010Hai conosciuto di peggio rispetto a %s$c0010.\n\r",name);
 	}
 	else if(ap > -350) {
-		sprintf(buf, "%s potrebbe anche essere piu' gentile..\n\r",name);
+		sprintf(buf, "$c0009%s$c0009 potrebbe anche essere piu' gentile...\n\r",name);
 	}
 	else if(ap > -700) {
-		sprintf(buf, "Probabilmente %s ha avuto soltanto un'infanzia difficile...\n\r",name);
+		sprintf(buf, "$c0009Probabilmente %s$c0009 ha avuto soltanto un'infanzia difficile...\n\r",name);
 	}
 	else {
-		sprintf(buf,"Meglio che non dica nulla su %s....\n\r",name);
+		sprintf(buf,"Meglio che non dica nulla su %s...\n\r",name);
 	}
 
 	send_to_char(buf,ch);
@@ -1531,28 +1533,32 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	if(affected_by_spell(victim,SPELL_DETECT_INVISIBLE))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_DETECT_INVISIBLE);
-			send_to_char("Non percepisci piu' l'invisibile.\n\r",victim);
+			send_to_char("Non percepisci piu' l'$c0011invisibile$c0007.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_DETECT_EVIL))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_DETECT_EVIL);
-			send_to_char("Non percepisci piu' il Male.\n\r",victim);
+			send_to_char("Non percepisci piu' il $c0001Male$c0007.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_DETECT_MAGIC))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_DETECT_MAGIC);
-			send_to_char("Non percepisci piu' la magia che ti circonda.\n\r",victim);
+			send_to_char("Non percepisci piu' la $c0012magia$c0007 che ti circonda.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_SENSE_LIFE))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_SENSE_LIFE);
 			send_to_char("Ti senti meno in contatto con le forme di vita.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_SANCTUARY)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_SANCTUARY);
 			send_to_char("Non ti senti piu' cosi' invulnerabile.\n\r",victim);
-			act("L'aura di luce Divina che avvolge $n scompare.",FALSE,victim,0,0,TO_ROOM);
+			act("L'aura di $c0015luce Divina$c0007 che avvolge $n scompare.",FALSE,victim,0,0,TO_ROOM);
 		}
 		/*
 		 *  aggressive Act.
@@ -1562,11 +1568,12 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 			set_fighting(victim, ch);
 		}
 	}
+    
 	if(IS_AFFECTED(victim, AFF_SANCTUARY)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_SANCTUARY);
 			send_to_char("Non ti senti piu' cosi' invulnerabile.\n\r",victim);
-			act("La luce Divina che avvolgeva il corpo di $n scompare.",FALSE,victim,0,0,TO_ROOM);
+			act("La $c0015luce Divina$c0007 che avvolgeva il corpo di $n scompare.",FALSE,victim,0,0,TO_ROOM);
 		}
 		/*
 		 *  aggressive Act.
@@ -1576,52 +1583,65 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 			set_fighting(victim, ch);
 		}
 	}
+    
 	if(affected_by_spell(victim,SPELL_PROTECT_FROM_EVIL))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROTECT_FROM_EVIL);
-			send_to_char("Ti senti meno protetto dalla malvagita'.\n\r",victim);
+			send_to_char("Ti senti meno protetto dalla $c0001malvagita'$c0007.\n\r",victim);
 		}
+    
+    if(affected_by_spell(victim,SPELL_PROT_FROM_EVIL_GROUP))
+        if(yes || !saves_spell(victim, SAVING_SPELL)) {
+            affect_from_char(victim,SPELL_PROT_FROM_EVIL_GROUP);
+            send_to_char("Ti senti meno protetto dalla $c0001malvagita'$c0007.\n\r",victim);
+        }
+
 	if(affected_by_spell(victim,SPELL_INFRAVISION))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_INFRAVISION);
-			send_to_char("La tua visione diventa piu' scura.\n\r",victim);
+			send_to_char("La tua visione diventa piu' $c0008scura$c0007.\n\r",victim);
 		}
+
 	if(affected_by_spell(victim,SPELL_SLEEP))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_SLEEP);
 			send_to_char("Non hai piu' cosi' tanto sonno.\n\r",victim);
 		}
+
 	if(affected_by_spell(victim,SPELL_CHARM_PERSON))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_CHARM_PERSON);
-			send_to_char("Ti senti nuovamente padrone delle tue azioni.\n\r",victim);
+			send_to_char("$c0014Ti senti nuovamente padrone delle tue azioni.\n\r",victim);
 		}
+
 	if(affected_by_spell(victim,SPELL_WEAKNESS))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_WEAKNESS);
-			send_to_char("Non ti senti piu' debole.\n\r",victim);
+			send_to_char("Non ti senti piu' $c0014debole$c0007.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_STRENGTH))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_STRENGTH);
-			send_to_char("Non ti senti piu' cosi' forte.\n\r",victim);
+			send_to_char("Non ti senti piu' cosi' $c0009forte$c0007.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_ARMOR))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_ARMOR);
-			send_to_char("Perdi la tua armatura divina.\n\r",victim);
+			send_to_char("Perdi la tua $c0011armatura Divina$c0007.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_DETECT_POISON))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_DETECT_POISON);
-			send_to_char("Non riesci piu' a percepire i veleni.\n\r",victim);
+			send_to_char("Non riesci piu' a percepire i $c0010veleni$c0007.\n\r",victim);
 		}
-
+    
 	if(affected_by_spell(victim,SPELL_BLESS))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_BLESS);
-			send_to_char("Senti di aver perso la tua benedizione Divina.\n\r",victim);
+			send_to_char("Senti di aver perso la tua $c0015benedizione Divina$c0007.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_FLY))
@@ -1634,34 +1654,38 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	if(affected_by_spell(victim,SPELL_WATER_BREATH))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_WATER_BREATH);
-			send_to_char("Senti di non poter piu' respirare come un pesce.\n\r",victim);
+			send_to_char("Senti di non poter piu' $c0012respirare$c0007 come un $c0012pesce$c0007.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_FIRE_BREATH))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_FIRE_BREATH);
-			send_to_char("Il fuoco che ti avvolgeva si estingue' .\n\r",victim);
+			send_to_char("Il $c0001fuoco$c0007 che ti avvolgeva si estingue.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_LIGHTNING_BREATH))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_LIGHTNING_BREATH);
-			send_to_char("Non ti senti piu' avvolto dall'elettricita'.\n\r",victim);
+			send_to_char("L'$c0012elettricita'$c0007 che ti avvolgeva si placa.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_GAS_BREATH))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_GAS_BREATH);
-			send_to_char("Non hai piu' gas.\n\r",victim);
+			send_to_char("La $c0011nube di gas$c0007 che ti avvolgeva scompare.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_FROST_BREATH))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_FROST_BREATH);
-			send_to_char("Il ghiaccio che ti avvolgeva si scioglie.\n\r",victim);
+			send_to_char("Il $c0015ghiaccio$c0007 che ti avvolgeva si scioglie.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_FIRESHIELD)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_FIRESHIELD);
-			send_to_char("Senti svanire il tuo scudo di fuoco.\n\r",victim);
-			act("Lo scudo di fuoco che proteggeva il corpo di $n svanisce.",FALSE,victim,0,0,TO_ROOM);
+			send_to_char("Senti svanire il tuo $c0001scudo di fuoco$c0007.\n\r",victim);
+			act("Lo $c0001scudo di fuoco$c0007 che proteggeva il corpo di $n svanisce.",FALSE,victim,0,0,TO_ROOM);
 		}
 		/*
 		 *  aggressive Act.
@@ -1671,11 +1695,12 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 			set_fighting(victim, ch);
 		}
 	}
+    
 	if(IS_AFFECTED(victim, AFF_FIRESHIELD)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_FIRESHIELD);
-			send_to_char("Senti svanire il tuo scudo di fuoco.\n\r",victim);
-			act("Lo scudo di fuoco che normalmente avvolge $n svanisce.",FALSE,victim,0,0,TO_ROOM);
+			send_to_char("Senti svanire il tuo $c0001scudo di fuoco$c0007.\n\r",victim);
+			act("Lo $c0001scudo di fuoco$c0007 che normalmente avvolge $n svanisce.",FALSE,victim,0,0,TO_ROOM);
 		}
 		/*
 		 *  aggressive Act.
@@ -1689,182 +1714,205 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	if(affected_by_spell(victim,SPELL_FAERIE_FIRE))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_FAERIE_FIRE);
-			send_to_char("Non ti senti piu' cosi' rosa.\n\r",victim);
-			act("L'alone rosa che circondava $n svanisce.", TRUE, ch, 0, 0, TO_ROOM);
+			send_to_char("Non ti senti piu' cosi' $c0013rosa$c0007.\n\r",victim);
+			act("L'$c0013alone rosa$c0007 che circondava $n svanisce.", TRUE, ch, 0, 0, TO_ROOM);
 		}
 
 	if(affected_by_spell(victim,SPELL_MINOR_TRACK))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_MINOR_TRACK);
-			send_to_char("Perdi le tracce.\n\r",victim);
+			send_to_char("Non riesci piu' a seguire le tracce.\n\r",victim);
 
 		}
 
 	if(affected_by_spell(victim,SPELL_MAJOR_TRACK))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_MAJOR_TRACK);
-			send_to_char("Perdi le tracce.\n\r",victim);
+			send_to_char("Non riesci piu' a seguire le tracce.\n\r",victim);
 		}
 
-	if(affected_by_spell(victim,SPELL_WEB)) {
-		affect_from_char(victim,SPELL_WEB);
-		send_to_char("Le ragnatele che ti avvolgevano si dissolvono.\n\r",victim);
-	}
+	if(affected_by_spell(victim,SPELL_WEB))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_WEB);
+            send_to_char("Le $c0008ragnatele$c0007 che ti avvolgevano si dissolvono.\n\r",victim);
+        }
 
-	if(affected_by_spell(victim, SPELL_SILENCE)) {
-        affect_from_char(victim,SPELL_SILENCE);
-        send_to_char("Torni a parlare di nuovo.\n\r",victim);
-	}
-	if(affected_by_spell(victim, SPELL_TREE_TRAVEL)) {
-		affect_from_char(victim,SPELL_TREE_TRAVEL);
-		send_to_char("Non ti senti piu' cosi' in contatto con gli alberi.\n\r",
-					 victim);
-	}
-	if(affected_by_spell(victim, SPELL_HEAT_STUFF)) {
-		affect_from_char(victim,SPELL_HEAT_STUFF);
-		send_to_char("Non ti senti piu' cosi' incandescente\n\r",
-					 victim);
-	}
-	if(affected_by_spell(victim, SPELL_HASTE)) {
-		affect_from_char(victim,SPELL_HASTE);
-		send_to_char("Non ti senti piu' cosi' veloce\n\r",
-					 victim);
-	}
-	if(affected_by_spell(victim, SPELL_SLOW)) {
-		affect_from_char(victim,SPELL_SLOW);
-		send_to_char("Torni a muoverti normalmente\n\r",
-					 victim);
-	}
-	if(affected_by_spell(victim, SPELL_BARKSKIN)) {
-		affect_from_char(victim,SPELL_BARKSKIN);
-		send_to_char("Senti che la tua pelle perde la consistenza della corteccia\n\r",
-					 victim);
-	}
+	if(affected_by_spell(victim, SPELL_SILENCE))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_SILENCE);
+            send_to_char("Torni a parlare di nuovo.\n\r",victim);
+        }
+    
+	if(affected_by_spell(victim, SPELL_TREE_TRAVEL))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_TREE_TRAVEL);
+            send_to_char("Non ti senti piu' cosi' in contatto con gli $c0003alberi$c0007.\n\r", victim);
+        }
+    
+	if(affected_by_spell(victim, SPELL_HEAT_STUFF))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_HEAT_STUFF);
+            send_to_char("Non ti senti piu' cosi' $c0009incandescente$c0007.\n\r", victim);
+        }
+    
+	if(affected_by_spell(victim, SPELL_HASTE))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_HASTE);
+            send_to_char("$c0008Senti che il mondo va molto piu' piano adesso.\n\r", victim);
+        }
+    
+	if(affected_by_spell(victim, SPELL_SLOW))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_SLOW);
+            send_to_char("$c0015Senti i tuoi movimenti accellerare rapidamente.\n\r", victim);
+        }
+    
+	if(affected_by_spell(victim, SPELL_BARKSKIN))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_BARKSKIN);
+            send_to_char("Senti che la tua $c0003pelle$c0007 perde la consistenza del $c0003granito$c0007.\n\r", victim);
+        }
+    
 	if(affected_by_spell(victim,SPELL_AID))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_AID);
-			send_to_char("Perdi l'aiuto Divino.\n\r",victim);
+			send_to_char("Perdi l'$c0015aiuto Divino$c0007.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_SHIELD))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_SHIELD);
-			send_to_char("Senti che il tuo scudo magico viene dissolto.\n\r",victim);
+			send_to_char("Senti che il tuo $c0011scudo$c0007 magico viene dissolto.\n\r",victim);
 		}
+    
 	if(affected_by_spell(victim,SPELL_TRUE_SIGHT))
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_TRUE_SIGHT);
 			affect_from_char(victim,SPELL_TRUE_SIGHT);
-			send_to_char("L'alone d'argento nei tuoi occhi scompare.\n\r",victim);
+			send_to_char("L'alone d'$c0015argento$c0007 nei tuoi occhi scompare.\n\r",victim);
 		}
 
+	if(affected_by_spell(victim, SPELL_INVIS_TO_ANIMALS))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_INVIS_TO_ANIMALS);
+            send_to_char("Torni visibile... anche agli animali.\n\r",victim);
+        }
 
-	if(affected_by_spell(victim, SPELL_INVIS_TO_ANIMALS)) {
-		affect_from_char(victim,SPELL_INVIS_TO_ANIMALS);
-	}
-
-	if(affected_by_spell(victim, SPELL_DRAGON_RIDE)) {
-		affect_from_char(victim,SPELL_DRAGON_RIDE);
-	}
+	if(affected_by_spell(victim, SPELL_DRAGON_RIDE))
+        if(yes || !saves_spell(victim, SAVING_SPELL))
+        {
+            affect_from_char(victim,SPELL_DRAGON_RIDE);
+            send_to_char("Non ti senti piu' in grado di cavalcare i draghi!\n\r",victim);
+        }
 
 	if(affected_by_spell(victim,SPELL_GLOBE_DARKNESS)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_GLOBE_DARKNESS);
 			affect_from_char(victim,SPELL_GLOBE_DARKNESS);
-			send_to_char("Il globo di oscurita' che ti avvolgeva scompare.\n\r",victim);
-			act("Il globo di oscurita' che avvolge $n si dissolve.",FALSE,victim,0,0,TO_ROOM);
+			send_to_char("Il $c0008globo di oscurita'$c0007 che ti avvolgeva scompare.\n\r",victim);
+			act("Il $c0008globo di oscurita'$c0007 che avvolge $n si dissolve.",FALSE,victim,0,0,TO_ROOM);
 		}
 	}
+    
 	if(affected_by_spell(victim,SPELL_GLOBE_MINOR_INV)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_GLOBE_MINOR_INV);
-			send_to_char("Vedi svanire il tuo globo di protezione.\n\r",victim);
+			send_to_char("Vedi svanire il tuo $c0012globo di protezione$c0014.\n\r",victim);
 		}
 	}
+    
 	if(affected_by_spell(victim,SPELL_GLOBE_MAJOR_INV)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_GLOBE_MAJOR_INV);
-			send_to_char("Vedi svanire il tuo globo di protezione maggiore.\n\r",victim);
+			send_to_char("Vedi svanire il tuo $c0014globo di protezione$c0014.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_ENERGY_DRAIN)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_ENERGY_DRAIN);
-			send_to_char("Senti di dover temere i Non-Morti.\n\r",victim);
+			send_to_char("Senti di dover temere i $c0008Non-Morti$c0007.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_DRAGON_BREATH)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_DRAGON_BREATH);
-			send_to_char("Sai che farai meglio ad evitare i vampiri.\n\r",victim);
+			send_to_char("La tua protezione contro il soffio dei $c0003draghi$c0007 scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_WIZARDEYE)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_WIZARDEYE);
-			send_to_char("Il tuo occhio magico viene dissolto\n\r",victim);
+			send_to_char("Il tuo $c0011occhio magico$c0007 viene dissolto.\n\r",victim);
 		}
 	}
-
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_FIRE)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_FIRE);
-			send_to_char("Senti che sara' meglio evitare i draghi soffianti fuoco\n\r",victim);
+			send_to_char("La tua protezione contro il soffio di $c0009fuoco$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_FROST)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_FROST);
-			send_to_char("Senti che sara' meglio evitare i draghi soffianti ghiaccio\n\r",victim);
+			send_to_char("La tua protezione contro il soffio di $c0014ghiaccio$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_ELEC)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_ELEC);
-			send_to_char("Senti che sara' meglio evitare i draghi soffianti elettricita'\n\r",victim);
+			send_to_char("La tua protezione contro il soffio $c0012elettrico$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_ACID)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_ACID);
-			send_to_char("Senti che sara' meglio evitare i draghi soffianti acido\n\r",victim);
+			send_to_char("La tua protezione contro il soffio $c0010acido$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_GAS)) {
 		if(yes || !saves_spell(victim, SAVING_SPELL)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_GAS);
-			send_to_char("Senti che sara' meglio evitare i draghi soffianti gas\n\r",victim);
+			send_to_char("La tua protezione contro il soffio $c0011gassoso$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
-
-	if(level >= IMMORTALE && level < QUESTMASTER)  {
+	if(level >= MAESTRO_DEGLI_DEI)  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
 				affect_from_char(victim,SPELL_ANTI_MAGIC_SHELL);
-				send_to_char("Il tuo scudo anti-magia si dissolve.\n\r",victim);
+				send_to_char("Il tuo scudo $c0012anti-magia$c0007 si dissolve.\n\r",victim);
 			}
 		}
 
 		if(affected_by_spell(victim,SPELL_BLINDNESS)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
 				affect_from_char(victim,SPELL_BLINDNESS);
-				send_to_char("Torni a vedere.\n\r",victim);
+				send_to_char("Torni a $c0015vedere$c0007.\n\r",victim);
 			}
 		}
 
 		if(affected_by_spell(victim,SPELL_PARALYSIS)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
 				affect_from_char(victim,SPELL_PARALYSIS);
-				send_to_char("Ti senti liber$b di muoverti.\n\r",victim);
+				act("Ti senti liber$b di muoverti.", FALSE, victim, 0, 0, TO_CHAR);
+                act("$n sembra liber$b di muoversi ora.", FALSE, victim, 0, 0, TO_ROOM);
 			}
 		}
 
@@ -1872,6 +1920,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 		if(affected_by_spell(victim,SPELL_POISON)) {
 			if(yes || !saves_spell(victim, SAVING_SPELL)) {
 				affect_from_char(victim,SPELL_POISON);
+                send_to_char("$c0014Ti senti meglio.\n\r", victim);
 			}
 		}
 	}
@@ -1881,7 +1930,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
             victim->specials.quest_ref = NULL;
-            send_to_char("Non sei piu' in missione.\n\r",victim);
+            send_to_char("$c0011Non sei piu' in missione.\n\r",victim);
         }
         
     }
@@ -1925,13 +1974,13 @@ void spell_paralyze(byte level, struct char_data* ch,
 		af.bitvector = AFF_PARALYSIS;
 		affect_join(victim, &af, FALSE, FALSE);
 
-		act("Non riesci piu' a muoverti!",FALSE,victim,0,0,TO_CHAR);
-		act("$n viene paralizzat$b!",TRUE,victim,0,0,TO_ROOM);
+		act("$c0011Non riesci piu' a muoverti!",FALSE,victim,0,0,TO_CHAR);
+		act("$c0011$n viene paralizzat$b!",TRUE,victim,0,0,TO_ROOM);
 		GET_POS(victim)=POSITION_STUNNED;
 
 	}
 	else {
-		send_to_char("Qualcuno cerca di paralizzarti ANCORA!\n\r",victim);
+		send_to_char("Qualcuno cerca di $c0011paralizzarti$c0007 ANCORA!\n\r",victim);
 	}
 }
 
@@ -1946,7 +1995,7 @@ void spell_fear(byte level, struct char_data* ch,
 
 		}
 		else {
-			send_to_char("Hai paura, ma la sensazione passa.\n\r",victim);
+			send_to_char("Hai $c0008paura$c0007, ma la sensazione passa.\n\r",victim);
 			return;
 		}
 	}
@@ -1962,15 +2011,15 @@ void spell_calm(byte level, struct char_data* ch,
 		if(IS_SET(victim->specials.act, ACT_AGGRESSIVE)) {
 			if(HitOrMiss(ch, victim, CalcThaco(ch, victim))) {
 				REMOVE_BIT(victim->specials.act, ACT_AGGRESSIVE);
-				send_to_char("Hai una sensazione di pace.\n\r", ch);
+				send_to_char("Hai una sensazione di $c0014pace$c0007.\n\r", ch);
 			}
 		}
 		else {
-			send_to_char("Ti senti in pace con il mondo\n\r", victim);
+			send_to_char("Ti senti in $c0014pace$c0007 con il mondo.\n\r", victim);
 		}
 	}
 	else {
-		send_to_char("Ti senti in pace con il mondo.\n\r", victim);
+		send_to_char("Ti senti in $c0014pace$c0007 con il mondo.\n\r", victim);
 	}
 }
 
@@ -1987,9 +2036,9 @@ void spell_web(byte level, struct char_data* ch,
 	case RACE_ARACHNID:
 	case RACE_SLIME:
 	case RACE_GHOST:
-		act("$N ride della ragnatela che hai lanciato!",FALSE, ch, 0, victim, TO_CHAR);
-		act("Hah, $n ti ha appena lanciato addosso una ragnatela, che stupidaggine..",FALSE,ch,0,victim,TO_VICT);
-		act("$N ride delle ragnatele lanciate da $n!",FALSE, ch, 0, victim, TO_NOTVICT);
+		act("$N ride della $c0008ragnatela$c0007 che hai lanciato!",FALSE, ch, 0, victim, TO_CHAR);
+		act("Ahah, $n ti ha appena lanciato addosso una $c0008ragnatela$c0007, che stupidaggine...",FALSE,ch,0,victim,TO_VICT);
+		act("$N ride delle $c0008ragnatele$c0007 lanciate da $n!",FALSE, ch, 0, victim, TO_NOTVICT);
 		return;
 		break;
 	}
@@ -2070,33 +2119,33 @@ void spell_web(byte level, struct char_data* ch,
 
 		affect_to_char(victim, &af);
 		if(!pissed) {
-			act("Una ragnatela appiccicosa ti blocca!", FALSE, ch, 0, victim, TO_VICT);
-			act("Una ragnatela appiccicosa avvolge e blocca $N!", FALSE, ch, 0, victim,TO_NOTVICT);
-			act("Avvolgi $N in una ragnatela appicciosa!",FALSE, ch, 0, victim, TO_CHAR);
+			act("Una $c0008ragnatela$c0007 appiccicosa ti blocca!", FALSE, ch, 0, victim, TO_VICT);
+			act("Una $c0008ragnatela$c0007 appiccicosa avvolge e blocca $N!", FALSE, ch, 0, victim,TO_NOTVICT);
+			act("Avvolgi $N in una $c0008ragnatela$c0007 appicciosa!",FALSE, ch, 0, victim, TO_CHAR);
 		}
 		else {
-			act("La ragnatela ti avvolge ma non ti ferma!", FALSE, ch,
+			act("La $c0008ragnatela$c0007 ti avvolge ma non ti ferma!", FALSE, ch,
 				0, victim, TO_VICT);
-			act("$N attacca, prestando poca attenzione alle ragnatele che ha addosso.", FALSE,
+			act("$N attacca, prestando poca attenzione alle $c0008ragnatele$c0007 che ha addosso.", FALSE,
 				ch, 0, victim, TO_NOTVICT);
-			act("Riesci soltanto a disturbare $N con le tue ragnatele, ack!", FALSE, ch,
+			act("Riesci soltanto a disturbare $N con le tue $c0008ragnatele$c0007, ack!", FALSE, ch,
 				0, victim, TO_CHAR);
 		}
 	}
 	else {
 		if(pissed) {
-			act("Sei quasi bloccato da una ragnatela, GRRRR!",
+			act("Sei quasi bloccato da una $c0008ragnatela$c0007, GRRRR!",
 				FALSE, ch, 0, victim, TO_VICT);
-			act("$N ringhia ed evita growls la ragnatela di $n",
+			act("$N ringhia ed evita la $c0008ragnatela$c0007 di $n!",
 				FALSE, ch, 0, victim,TO_NOTVICT);
-			act("Manchi $N con le tue ragnatele!  Uh oh, penso che siano guai ora.",
+			act("Manchi $N con le tue $c0008ragnatele$c0007! Uh oh, penso che siano guai ora.",
 				FALSE, ch, 0, victim, TO_CHAR);
 		}
 		else {
-			act("Osservi con divertimento $n lanciare ragnatele per la stanza.",
+			act("Osservi con divertimento $n lanciare $c0008ragnatele$c0007 per la stanza.",
 				FALSE, ch, 0, victim, TO_VICT);
-			act("$n manca $N con le sue ragnatele!", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Manchi $N con le ragnatele, ma non sembra accorgersene.",
+			act("$n manca $N con le sue $c0008ragnatele$c0007!", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Manchi $N con le $c0008ragnatele$c0007, ma non sembra accorgersene.",
 				FALSE, ch, 0, victim, TO_CHAR);
 		}
 	}
@@ -2116,7 +2165,7 @@ void spell_heroes_feast(byte level, struct char_data* ch,
 
 	for(tch=real_roomp(ch->in_room)->people; tch; tch=tch->next_in_room) {
 		if((in_group_strict(tch, ch)) && (GET_POS(ch) > POSITION_SLEEPING)) {
-			send_to_char("Prendi parte ad un magnifico banchetto!\n\r", tch);
+			send_to_char("$c0014Prendi parte ad un magnifico banchetto!\n\r", tch);
 			gain_condition(tch,FULL,24);
 			gain_condition(tch,THIRST,24);
 			if(GET_HIT(tch) < GET_MAX_HIT(tch)) {
@@ -2151,14 +2200,14 @@ void spell_conjure_elemental(byte level, struct char_data* ch,
 	**     air   : clear stone
 	*/
 
-	act("$n esegue uno strano rituale ed una nuvola di fumo si sprigiona nella stanza", TRUE, ch, 0, 0, TO_ROOM);
-	act("$n esegue uno strano rituale ed una nuvola di fumo si sprigiona nella stanza", TRUE, ch, 0, 0, TO_CHAR);
-	act("$p esplode con un sonoro BANG!", TRUE, ch, obj, 0, TO_ROOM);
-	act("$p esplode con un sonoro BANG!", TRUE, ch, obj, 0, TO_CHAR);
+	act("$n esegue uno strano rituale ed una $c0015nuvola$c0007 di $c0008fumo$c0007 si sprigiona nella stanza.", TRUE, ch, 0, 0, TO_ROOM);
+	act("$n esegue uno strano rituale ed una $c0015nuvola$c0007 di $c0008fumo$c0007 si sprigiona nella stanza.", TRUE, ch, 0, 0, TO_CHAR);
+	act("$p esplode con un sonoro $c0011BANG$c0007!", TRUE, ch, obj, 0, TO_ROOM);
+	act("$p esplode con un sonoro $c0011BANG$c0007!", TRUE, ch, obj, 0, TO_CHAR);
 	obj_from_char(obj);
 	extract_obj(obj);
 	char_to_room(victim, ch->in_room);
-	act("Dal fumo emerge $N", TRUE, ch, 0, victim, TO_NOTVICT);
+	act("Dal $c0008fumo$c0007 emerge $N.", TRUE, ch, 0, victim, TO_NOTVICT);
 
 	/* charm them for a while */
 
@@ -2199,9 +2248,9 @@ void spell_faerie_fire(byte level, struct char_data* ch,
 	}
 
 	act("$n indica $N.", TRUE, ch, 0, victim, TO_ROOM);
-	act("Indichi $N che viene avvolt$b da un alone rosa.", TRUE, ch, 0, victim, TO_CHAR);
-	act("$N viene avvolto da un alone rosa", TRUE, ch, 0, victim, TO_ROOM);
-	act("Evidenzi $N con un alone rosa.", TRUE, ch, 0, victim, TO_CHAR);
+	act("Indichi $N che viene avvolt$b da un $c0013alone rosa$c0007.", TRUE, ch, 0, victim, TO_CHAR);
+	act("$N viene avvolto da un $c0013alone rosa$c0007.", TRUE, ch, 0, victim, TO_ROOM);
+	act("Evidenzi $N con un $c0013alone rosa$c0007.", TRUE, ch, 0, victim, TO_CHAR);
 
 	af.type      = SPELL_FAERIE_FIRE;
 	af.duration  = level;
@@ -2219,9 +2268,9 @@ void spell_faerie_fog(byte level, struct char_data* ch,
 
 	assert(ch);
 
-	act("$n schiocca le dita ed una nuvola di vapore rosa si sprigiona improvvisamente",
+	act("$n schiocca le dita ed una $c0015nuvola$c0007 di vapore $c0005purpureo$c0007 si sprigiona improvvisamente.",
 		TRUE, ch, 0, 0, TO_ROOM);
-	act("Schiocchi le dita ed una nuvola di vapore rosa si sprigiona improvvisamente",
+	act("Schiocchi le dita ed una $c0015nuvola$c0007 di vapore $c0005purpureo$c0007 si sprigiona improvvisamente.",
 		TRUE, ch, 0, 0, TO_CHAR);
 
 
@@ -2232,17 +2281,24 @@ void spell_faerie_fog(byte level, struct char_data* ch,
 				break;
 			}
 			if(!in_group(ch, tmp_victim)) {
-				if(IS_AFFECTED(tmp_victim, AFF_INVISIBLE)) {
-					if(saves_spell(tmp_victim, SAVING_SPELL)) {
-						REMOVE_BIT(tmp_victim->specials.affected_by, AFF_INVISIBLE);
-						act("$n diventa visibile per un attimo, ma scmpare di nuovo.",
-							TRUE, tmp_victim, 0, 0, TO_ROOM);
-						act("Diventi visibile per un attimo, ma scompari di nuovo.",
-							TRUE, tmp_victim, 0, 0, TO_CHAR);
-						SET_BIT(tmp_victim->specials.affected_by, AFF_INVISIBLE);
+				if(IS_AFFECTED(tmp_victim, AFF_HIDE)) {
+					if(saves_spell(tmp_victim, SAVING_SPELL))
+                    {
+                        if(saves_spell(tmp_victim, SAVING_SPELL))
+                        {
+                            act("Per un attimo ti sembra scorgere una sagoma, ma immediatamente dopo la $c0008nube$c0007 si dissolve.", TRUE, tmp_victim, 0, 0, TO_ROOM);
+                            act("Diventi visibile per un attimo, ma $c0008scompari$c0007 di nuovo.", TRUE, tmp_victim, 0, 0, TO_CHAR);
+                        }
+                        else
+                        {
+                            REMOVE_BIT(tmp_victim->specials.affected_by, AFF_HIDE);
+                            act("$n diventa visibile per un attimo, ma improvvisamente $c0008scompare$c0007 di nuovo.", TRUE, tmp_victim, 0, 0, TO_ROOM);
+                            act("Diventi visibile per un attimo, ma $c0008scompari$c0007 di nuovo.", TRUE, tmp_victim, 0, 0, TO_CHAR);
+                            SET_BIT(tmp_victim->specials.affected_by, AFF_HIDE);
+                        }
 					}
 					else {
-						REMOVE_BIT(tmp_victim->specials.affected_by, AFF_INVISIBLE);
+						REMOVE_BIT(tmp_victim->specials.affected_by, AFF_HIDE);
 						act("$n viene scopert$b!",
 							TRUE, tmp_victim, 0, 0, TO_ROOM);
 						act("Vieni scopert$b!",
@@ -2261,25 +2317,25 @@ void spell_cacaodemon(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	assert(ch && victim && obj);
-
-	act("$n gestures, and a black cloud of smoke appears", TRUE, ch, 0, 0, TO_ROOM);
-	act("$n gestures, and a black cloud of smoke appears", TRUE, ch, 0, 0, TO_CHAR);
+    
+    act("$n esegue uno strano rituale ed una $c0015nuvola$c0007 di $c0008fumo nero$c0007 si sprigiona nella stanza.", TRUE, ch, 0, 0, TO_ROOM);
+    act("$n esegue uno strano rituale ed una $c0015nuvola$c0007 di $c0008fumo nero$c0007 si sprigiona nella stanza.", TRUE, ch, 0, 0, TO_CHAR);
 	if(GET_LEVEL(ch, CLERIC_LEVEL_IND) > 40 && IS_EVIL(ch)) {
-		act("$p smokes briefly", TRUE, ch, obj, 0, TO_ROOM);
-		act("$p smokes briefly", TRUE, ch, obj, 0, TO_CHAR);
+		act("$p emette un po' di $c0008fumo$c0007...", TRUE, ch, obj, 0, TO_ROOM);
+		act("$p emette un po' di $c0008fumo$c0007...", TRUE, ch, obj, 0, TO_CHAR);
 		obj->obj_flags.cost /= 2;
 		if(obj->obj_flags.cost < 100) {
-			act("$p bursts into flame and disintegrates!",
+			act("$p improvvisamente prende $c0001fuoco$c0007 e si $c0001disintegra$c0007!",
 				TRUE, ch, obj, 0, TO_ROOM);
-			act("$p bursts into flame and disintegrates!",
+			act("$p improvvisamente prende $c0001fuoco$c0007 e si $c0001disintegra$c0007!",
 				TRUE, ch, obj, 0, TO_CHAR);
 			obj_from_char(obj);
 			extract_obj(obj);
 		}
 	}
 	else {
-		act("$p bursts into flame and disintegrates!", TRUE, ch, obj, 0, TO_ROOM);
-		act("$p bursts into flame and disintegrates!", TRUE, ch, obj, 0, TO_CHAR);
+		act("$p improvvisamente prende $c0001fuoco$c0007 e si $c0001disintegra$c0007!", TRUE, ch, obj, 0, TO_ROOM);
+		act("$p improvvisamente prende $c0001fuoco$c0007 e si $c0001disintegra$c0007!", TRUE, ch, obj, 0, TO_CHAR);
 		obj_from_char(obj);
 		extract_obj(obj);
 		if(!IS_IMMORTAL(ch)) {
@@ -2288,12 +2344,12 @@ void spell_cacaodemon(byte level, struct char_data* ch,
 	}
 	char_to_room(victim, ch->in_room);
 
-	act("With an evil laugh, $N emerges from the smoke", TRUE, ch, 0, victim, TO_NOTVICT);
+	act("Con una risata $c0001malvagia$c0007 $N emerge dal $c0008fumo$c0007!", TRUE, ch, 0, victim, TO_NOTVICT);
 
 	if(too_many_followers(ch)) {
-		act("$N says 'No way I'm hanging with that crowd!!'",
+		act("$N dice 'Non c'e' nessuna possibilita' che mi unisca con tutta questa folla!'",
 			TRUE, ch, 0, victim, TO_ROOM);
-		act("$N refuses to hang out with crowd of your size!!", TRUE, ch, 0,
+		act("$N rifiuta di unirsi a tutta la folla che gia' ti segue!", TRUE, ch, 0,
 			victim, TO_CHAR);
 	}
 	else {
@@ -2343,7 +2399,7 @@ void spell_geyser(byte level, struct char_data* ch,
 	}
 	dam =  dice(level,3);
 
-	act("The Geyser erupts in a huge column of steam!\n\r",
+	act("Il geyser erutta in un'enorme colonna di $c0015vapore$c0007!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
 
@@ -2352,13 +2408,11 @@ void spell_geyser(byte level, struct char_data* ch,
 		temp = tmp_victim->next_in_room;
 		if((ch != tmp_victim) && (ch->in_room == tmp_victim->in_room)) {
 			if((GetMaxLevel(tmp_victim)<LOW_IMMORTAL)||(IS_NPC(tmp_victim))) {
-				act("You are seared by the boiling water!!\n\r",
-					FALSE, ch, 0, tmp_victim, TO_VICT);
+				act("Sei scottat$b dall'$c0012acqua$c0007 $c0009bollente$c0007!\n\r", FALSE, ch, 0, tmp_victim, TO_VICT);
 				MissileDamage(ch, tmp_victim, dam, SPELL_GEYSER, 5);
 			}
 			else {
-				act("You are almost seared by the boiling water!!\n\r",
-					FALSE, ch, 0, tmp_victim, TO_VICT);
+				act("Per tua fortuna riesci ad evitare la colonna di $c0015vapore$c0007!\n\r", FALSE, ch, 0, tmp_victim, TO_VICT);
 			}
 		}
 	}
@@ -2385,7 +2439,7 @@ void spell_green_slime(byte level, struct char_data* ch,
 		dam >>= 1;
 	}
 
-	act("Le esalazioni emanate da $n ti fanno star male!", FALSE, ch,
+	act("$c0010Le esalazioni emanate da $n$c0010 ti fanno star male!", FALSE, ch,
 		NULL, victim, TO_VICT);
 
 	damage(ch, victim, dam, SPELL_GREEN_SLIME, 5);
@@ -2402,13 +2456,13 @@ void spell_prot_dragon_breath(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_DRAGON_BREATH)) {
 		if(ch != victim) {
-			act("$n evoca attorno a se un globo di protezione dai draghi", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi un globo di protezione dai draghi attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca un globo di protezione dai draghi attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca attorno a se un $c0012globo di protezione$c0007 contro i draghi.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi un $c0012globo di protezione$c0007 contro i draghi attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te un $c0012globo di protezione$c0007 contro i draghi.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca un globo di protezione attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi un globo di protezione attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se un $c0012globo di protezione$c0007 contro i draghi.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te un $c0012globo di protezione$c0007 contro i draghi.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_DRAGON_BREATH;
@@ -2420,12 +2474,12 @@ void spell_prot_dragon_breath(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"Un globo di protezione avvolge gia' $N");
+			sprintf(buf,"Il $c0012globo di protezione$c0007 dal soffio dei draghi avvolge gia' $N.");
 		}
 		else {
-			sprintf(buf,"Un globo di protezione ti avvolge gia'");
+			sprintf(buf,"Il $c0012globo di protezione$c0007 dal soffio dei draghi ti avvolge gia'.");
 		}
-		act(buf,FALSE,ch,0,victim,TO_CHAR);
+		act(buf, FALSE, ch, 0, victim, TO_CHAR);
 	}
 }
 
@@ -2439,7 +2493,8 @@ void spell_prot_energy_drain(byte level, struct char_data* ch,
 	assert(victim);
 
 	if(!affected_by_spell(victim, SPELL_PROT_ENERGY_DRAIN)) {
-		send_to_char("Evochi uno scudo protettivo contro i Non-Morti.\n\r", ch);
+		send_to_char("Evochi uno $c0014scudo$c0007 protettivo contro i $c0008Non-Morti$c0007.\n\r", ch);
+        act("$n evoca uno $c0014scudo$c0007 protettivo contro i $c0008Non-Morti$c0007.", TRUE, ch, 0, 0, TO_ROOM);
 		af.type      = SPELL_PROT_ENERGY_DRAIN;
 		af.duration  = level >= LOW_IMMORTAL ? level: 3;
 		af.modifier  = IMM_DRAIN;
@@ -2448,7 +2503,7 @@ void spell_prot_energy_drain(byte level, struct char_data* ch,
 		affect_to_char(ch, &af);
 	}
 	else {
-		send_to_char("Sei gia' protetto contro i Non-morti.\n\r",ch);
+		send_to_char("Sei gia' protetto contro i $c0008Non-Morti$c0007.\n\r",ch);
 	}
 }
 
@@ -2461,13 +2516,13 @@ void spell_globe_darkness(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_GLOBE_DARKNESS)) {
 		if(ch != victim) {
-			act("$n evoca attorno a $N il potere dell'oscurita'", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi il potere dell'oscurita' intorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca intorno a te il potere dell'oscurita'", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca attorno a $N il potere dell'$c0008oscurita'$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi il potere dell'$c0008oscurita'$c0007 intorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te il potere dell'$c0008oscurita'$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca attorno a se il potere dell'oscurita'", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi intorno a te il potere dell'oscurita'", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se il potere dell'$c0008oscurita'$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi intorno a te il potere dell'$c0008oscurita'$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_GLOBE_DARKNESS;
@@ -2479,10 +2534,10 @@ void spell_globe_darkness(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"L'oscurita' avvolge gia' %s\n\r",GET_NAME(victim));
+			sprintf(buf,"L'$c0008oscurita'$c0007 avvolge gia' %s!\n\r",GET_NAME(victim));
 		}
 		else {
-			sprintf(buf,"L'oscurita' ti avvolge gia'\n\r");
+			sprintf(buf,"L'$c0008oscurita'$c0007 ti avvolge gia'!\n\r");
 		}
 		send_to_char(buf,ch);
 	}
@@ -2501,13 +2556,13 @@ void spell_prot_fire(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_FIRE)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo di protezione dal $c0009fuoco$c0007 attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dal fuoco attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca attorno a te uno scudo di protezione dal fuoco", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca attorno a se uno scudo di protezione dal $c0009fuoco$c0007", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi attorno a te uno scudo di protezione dal $c0009fuoco$c0007", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_FIRE;
@@ -2519,10 +2574,10 @@ void spell_prot_fire(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal fuoco attorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007 attorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal fuoco attorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal $c0009fuoco$c0007 attorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2539,13 +2594,13 @@ void spell_prot_cold(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_COLD)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo di protezione dal freddo attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dal freddo attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evochi uno scudo di protezione dal freddo attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evochi attorno a te uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo di protezione dal freddo attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dal freddo attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_COLD;
@@ -2557,10 +2612,10 @@ void spell_prot_cold(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal freddo intorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal freddo attorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal $c0014freddo$c0007 attorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2577,13 +2632,13 @@ void spell_prot_energy(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_ENERGY)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo di protezione dall'energia attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dall'energia attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo di protezione dall'energia attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo di protezione dall'energia attorno a se.", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dall'energia attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_ENERGY;
@@ -2595,10 +2650,10 @@ void spell_prot_energy(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dall'energia intorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dall'energia intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dall'$c0011energia$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2615,13 +2670,13 @@ void spell_prot_elec(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_ELEC)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo di protezione dall'elettricita' attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dall'elettricita' attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo di protezione dall'elettricita' attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo di protezione dall'elettricita' attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo di protezione dall'elettricita' attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_ELEC;
@@ -2633,10 +2688,10 @@ void spell_prot_elec(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dall'elettricita' intorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dall'elettricita' intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dall'$c0012elettricita'$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2653,13 +2708,13 @@ void spell_prot_dragon_breath_fire(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_BREATH_FIRE)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo protettivo contro il soffio di fuoco dei draghi attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio di fuoco dei draghi attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo protettivo contro il soffio di fuoco dei draghi attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 protettivo contro il soffio $c0009infuocato$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 protettivo contro il soffio $c0009infuocato$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0009infuocato$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo protettivo contro il soffio di fuoco dei draghi attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio di fuoco dei draghi attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 protettivo contro il soffio $c0009infuocato$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0009infuocato$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_BREATH_FIRE;
@@ -2671,10 +2726,10 @@ void spell_prot_dragon_breath_fire(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal soffio ardente dei draghi intorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal soffio $c0009infuocato$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal soffio ardente dei draghi intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal soffio $c0009infuocato$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2691,13 +2746,13 @@ void spell_prot_dragon_breath_frost(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_BREATH_FROST)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo protettivo contro il soffio gelido dei draghi attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio gelido dei draghi attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo protettivo contro il soffio gelido dei draghi attorno a te.", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 protettivo contro il soffio $c0014ghiacciato$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 protettivo contro il soffio $c0014ghiacciato$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0014ghiacciato$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo protettivo contro il soffio gelido dei draghi attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio gelido dei draghi attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 protettivo contro il soffio $c0014ghiacciato$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0014ghiacciato$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_BREATH_FROST;
@@ -2709,10 +2764,10 @@ void spell_prot_dragon_breath_frost(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal soffio gelido dei draghi intorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal soffio $c0014ghiacciato$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal soffio gelido dei draghi intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal soffio $c0014ghiacciato$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2730,13 +2785,13 @@ void spell_prot_dragon_breath_elec(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_BREATH_ELEC)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo protettivo contro il soffio elettrificante dei draghi attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio elettrificante dei draghi attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo protettivo contro il soffio elettrificante dei draghi attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 protettivo contro il soffio $c0012elettrico$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 protettivo contro il soffio $c0012elettrico$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0012elettrico$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo protettivo contro il soffio elettrificante dei draghi attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio elettrificante dei draghi attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 protettivo contro il soffio $c0012elettrico$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0012elettrico$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_BREATH_ELEC;
@@ -2748,10 +2803,10 @@ void spell_prot_dragon_breath_elec(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal soffio elettrificante dei draghi intorno a se");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal soffio $c0012elettrico$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal soffio elettrificante dei draghi intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal soffio $c0012elettrico$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2769,13 +2824,13 @@ void spell_prot_dragon_breath_acid(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_BREATH_ELEC)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo protettivo contro il soffio acido dei draghi attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio acido dei draghi attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo protettivo contro il soffio acido dei draghi attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 protettivo contro il soffio $c0010acido$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 protettivo contro il soffio $c0010acido$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0010acido$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo protettivo contro il soffio acido dei draghi attorno a se", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio acido dei draghi attorno a te", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 protettivo contro il soffio $c0010acido$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0010acido$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_BREATH_ACID;
@@ -2787,10 +2842,10 @@ void spell_prot_dragon_breath_acid(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal soffio acido dei draghi intorno a se.");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal soffio $c0010acido$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal soffio acido dei draghi intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal soffio $c0010acido$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}
@@ -2808,13 +2863,13 @@ void spell_prot_dragon_breath_gas(byte level, struct char_data* ch,
 
 	if(!affected_by_spell(victim, SPELL_PROT_BREATH_ELEC)) {
 		if(ch != victim) {
-			act("$n evoca uno scudo protettivo contro il soffio gassoso dei draghi attorno a $N", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio gassoso dei draghi attorno a $N", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n evoca uno scudo protettivo contro il soffio gassoso dei draghi attorno a te", FALSE, ch, 0, victim, TO_VICT);
+			act("$n evoca uno $c0011scudo$c0007 protettivo contro il soffio $c0011gassoso$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi uno $c0011scudo$c0007 protettivo contro il soffio $c0011gassoso$c0007 attorno a $N.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0011gassoso$c0007.", FALSE, ch, 0, victim, TO_VICT);
 		}
 		else {
-			act("$n evoca uno scudo protettivo contro il soffio gassoso dei draghi attorno a se.", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Evochi uno scudo protettivo contro il soffio gassoso dei draghi attorno a te.", FALSE, ch, 0, victim, TO_CHAR);
+			act("$n evoca attorno a se uno $c0011scudo$c0007 protettivo contro il soffio $c0011gassoso$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
+			act("Evochi attorno a te uno $c0011scudo$c0007 protettivo contro il soffio $c0011gassoso$c0007.", FALSE, ch, 0, victim, TO_CHAR);
 		}
 
 		af.type      = SPELL_PROT_BREATH_GAS;
@@ -2826,10 +2881,10 @@ void spell_prot_dragon_breath_gas(byte level, struct char_data* ch,
 	}
 	else {
 		if(ch != victim) {
-			sprintf(buf,"$N ha gia' uno scudo di protezione dal soffio gassoso dei draghi intorno a se.");
+			sprintf(buf,"$N ha gia' uno $c0011scudo$c0007 di protezione dal soffio $c0011gassoso$c0007 intorno a se.");
 		}
 		else {
-			sprintf(buf,"Hai gia' uno scudo di protezione dal soffio gassoso dei draghi intorno a te");
+			sprintf(buf,"Hai gia' uno $c0011scudo$c0007 di protezione dal soffio $c0011gassoso$c0007 intorno a te.");
 		}
 		act(buf,FALSE,ch,0,victim,TO_CHAR);
 	}

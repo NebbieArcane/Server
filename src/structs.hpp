@@ -690,7 +690,7 @@ struct char_data {
 	struct char_point_data points;        /* Points                 */
 	struct char_special_data specials;    /* Special plaing constant */
 	struct char_data* next_listener;       /* Prossimo che fa eavesdrop */
-	sh_int listening_to;		    /* Stanza per eavesdrop		*/
+	int listening_to;		    /* Stanza per eavesdrop, modificato da sh_int a int */
 
 	/* monitor these three */
 	struct char_skill_data* skills;       /* Skills                */

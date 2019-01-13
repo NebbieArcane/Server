@@ -2594,7 +2594,7 @@ ACTION_FUNC(do_memorize) {
 		if(!IS_IMMORTAL(ch)) {
 			if(spell_info[ spl ].min_level_sorcerer >
 					GET_LEVEL(ch, SORCERER_LEVEL_IND)) {
-                act("Non sei cosi' brav$b da poter usare questo incantesimo", FALSE, ch, 0, 0, TO_CHAR);
+                act("Non sei cosi' brav$b da poter usare questo incantesimo!", FALSE, ch, 0, 0, TO_CHAR);
 				return;
 			}
 		}

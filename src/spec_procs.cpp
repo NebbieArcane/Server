@@ -7245,7 +7245,7 @@ OBJSPECIAL_FUNC(nodrop) {
 	}
 
 	switch(cmd) {
-	case 10:
+	case CMD_GET:
 		if(GetMaxLevel(ch)<=MAX_MORT) {
 			act("$p disintegrates when you try to pick it up!",
 				FALSE, ch, xobj, 0, TO_CHAR);
@@ -7263,7 +7263,7 @@ OBJSPECIAL_FUNC(nodrop) {
 			return(FALSE);
 		}
 
-	case 60:
+	case CMD_DROP:
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
 			act("You drop $p to the ground, and it shatters!",
 				FALSE, ch, xobj, 0, TO_CHAR);
@@ -7286,7 +7286,7 @@ OBJSPECIAL_FUNC(nodrop) {
 			return(FALSE);
 		}
 
-	case 72:
+	case CMD_GIVE:
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
 			if(GetMaxLevel(ch)<=MAX_MORT) {
 				act("You try to give $p to $N, but it vanishes!",
@@ -7311,7 +7311,7 @@ OBJSPECIAL_FUNC(nodrop) {
 			return(FALSE);
 		}
 
-	case 156: /* Steal */
+	case CMD_STEAL: /* Steal */
 		if(!IS_SET(xobj->obj_flags.extra_flags,ITEM_NODROP)) {
 			act("You cannot seem to steal $p from $N.",
 				FALSE, ch, xobj, t, TO_CHAR);

@@ -58,7 +58,8 @@ void spell_tree_travel(byte level, struct char_data* ch,
 		af.bitvector = AFF_TREE_TRAVEL;
 		affect_to_char(victim, &af);
 
-		send_to_char("Evochi il potere di viaggiare attraverso gli alberi!\n\r", victim);
+		send_to_char("Evochi il potere di viaggiare attraverso gli $c0003alberi$c0007!\n\r", victim);
+        act("$N sembra in sintonia con la $c0010n$c0003a$c0010t$c0003u$c0010r$c0003a$c0007...", FALSE, ch, 0, victim, TO_NOTVICT);
 	}
 	else {
 		send_to_char("Non succede nulla di nuovo.\n\r", ch);
@@ -91,21 +92,21 @@ void spell_transport_via_plant(byte level, struct char_data* ch,
 	}
 
 	if(obj->in_room < 0) {
-		send_to_char("Non trovi quell'albero da nessuna parte\n\r", ch);
+		send_to_char("Non trovi quell'albero da nessuna parte.\n\r", ch);
 		return;
 	}
 
 	if(!real_roomp(obj->in_room)) {
-		send_to_char("Non trovi quell'albero da nessuna parte\n\r", ch);
+		send_to_char("Non trovi quell'albero da nessuna parte.\n\r", ch);
 		return;
 	}
 
-	act("$c0010$n tocca il suolo per percepire $p, e viene assorbito dalla terra!", FALSE, ch, obj, 0, TO_ROOM);
-	act("$c0010Percepisci $p, e come acqua ti lasci guidare dalla terra alle sue radici.", FALSE, ch, obj, 0, TO_CHAR);
+	act("$c0010$n tocca il suolo per percepire $p$c0010, e viene assorbito dalla $c0003terra$c0010!", FALSE, ch, obj, 0, TO_ROOM);
+	act("$c0010Percepisci $p$c0010, e come $c0012acqua$c0010 ti lasci guidare dalla $c0003terra$c0010 alle sue radici.", FALSE, ch, obj, 0, TO_CHAR);
 	char_from_room(ch);
 	char_to_room(ch, obj->in_room);
-	act("$c0010$p si squote leggermente, e $n appare magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
-	act("$c0010Vieni trasportat$b istantaneamente da $p!", FALSE, ch, obj, 0, TO_CHAR);
+	act("$c0010$p$c0010 si squote leggermente, e $n$c0010 appare magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
+	act("$c0010Vieni trasportat$b istantaneamente da $p$c0010!", FALSE, ch, obj, 0, TO_CHAR);
 	do_look(ch, "\0", 15);
 
 }
@@ -117,11 +118,11 @@ void spell_speak_with_plants(byte level, struct char_data* ch,
 	assert(ch && obj);
 
 	if(ITEM_TYPE(obj) != ITEM_TREE) {
-		send_to_char("Mi spiace ma non puoi parlare con quella cosa..\n\r", ch);
+		send_to_char("Mi spiace ma non puoi parlare con quella cosa...\n\r", ch);
 		return;
 	}
 
-	sprintf(buffer, "$c0013%s ti dice 'Ciao $n, come va' oggi?'",
+	sprintf(buffer, "$c0013%s$c0013 ti dice 'Ciao $n$c0013, come va' oggi?'",
 			fname(obj->name));
 	act(buffer, FALSE, ch, obj, 0, TO_CHAR);
 	act("$p si squote leggermente.", FALSE, ch, obj, 0, TO_ROOM);
@@ -139,7 +140,7 @@ void spell_changestaff(byte level, struct char_data* ch,
 	/* player must be holding staff at the time */
 
 	if(!ch->equipment[HOLD]) {
-		send_to_char("Devi avere in mano un bastone!\n\r", ch);
+		send_to_char("Devi avere in mano un $c0003bastone$c0007!\n\r", ch);
 		return;
 	}
 
@@ -153,28 +154,28 @@ void spell_changestaff(byte level, struct char_data* ch,
 	}
 
 	if(ITEM_TYPE(s) != ITEM_STAFF) {
-		act("$p non e' sufficiente a colmpletare l'incantesimo",
+		act("$p non e' sufficiente a colmpletare l'incantesimo.",
 			FALSE, ch, s, 0, TO_CHAR);
 		extract_obj(s);
 		return;
 	}
 
 	if(!s->obj_flags.value[2]) {
-		act("$p non e' abbastanza potente per completare l'incantesimo",
+		act("$p non e' abbastanza potente per completare l'incantesimo.",
 			FALSE, ch, s, 0, TO_CHAR);
 		extract_obj(s);
 		return;
 	}
 
 
-	act("$p svanisce in una vampata di fuoco!", FALSE, ch, s, 0, TO_ROOM);
-	act("$p svanisce in una vampata di fuoco!", FALSE, ch, s, 0, TO_CHAR);
+	act("$p svanisce in una $c0009vampata di fuoco$c0007!", FALSE, ch, s, 0, TO_ROOM);
+	act("$p svanisce in una $c0009vampata di fuoco$c0007!", FALSE, ch, s, 0, TO_CHAR);
 
 	t = read_mobile(TREE, VIRTUAL);
 	char_to_room(t, ch->in_room);
 	GET_EXP(t)=0;
 
-	act("$n spunta davanti a te!", FALSE, t, 0, 0, TO_ROOM);
+	act("$c0003$n$c0003 spunta davanti a te!", FALSE, t, 0, 0, TO_ROOM);
 
 	if(too_many_followers(ch)) {
 		act("$N da un'occhiata alla quantita' di gente che ti segue e si rifuta di aggregarsi!",
@@ -217,7 +218,7 @@ void spell_pword_kill(byte level, struct char_data* ch,
 		damage(ch, victim, GET_MAX_HIT(victim)*12, SPELL_PWORD_KILL, 5);
 	}
 	else {
-		send_to_char("E' troppo potente per morire con una parola.\n\r", ch);
+		send_to_char("E' troppo potente per morire con una sola parola.\n\r", ch);
 	}
 
 }
@@ -229,7 +230,7 @@ void spell_pword_blind(byte level, struct char_data* ch,
 		SET_BIT(victim->specials.affected_by, AFF_BLIND);
 	}
 	else {
-		send_to_char("E' troppo potente per perdere la vista con una parola.\n\r", ch);
+		send_to_char("E' troppo potente per perdere la vista con una sola parola.\n\r", ch);
 	}
 
 }
@@ -265,6 +266,9 @@ void spell_scare(byte level, struct char_data* ch,
 	if(level - GetMaxLevel(victim) >= 5) {
 		level/=2;
 		for(i=1; i<level; i++) {
+            act("Spaventi $N facendol$B scappare via!", TRUE, ch, 0, victim, TO_CHAR);
+            act("$n ti spaventa facendoti scappare via!", TRUE, ch, 0, victim, TO_VICT);
+            act("$n spaventa $N facendol$B scappare via!", TRUE, ch, 0, victim, TO_NOTVICT);
 			do_flee(victim, "\0", 0);
 		}
 	}
@@ -281,7 +285,7 @@ void spell_haste(byte level, struct char_data* ch,
 	}
 
 	if(IS_NPC(victim)) {
-		send_to_char("Non sembra funzionare\n", ch);
+		send_to_char("Non sembra funzionare.\n", ch);
 		return;
 	}
 
@@ -305,7 +309,8 @@ void spell_haste(byte level, struct char_data* ch,
 	af.bitvector = 0;
 	affect_to_char(victim, &af);
 
-	send_to_char("Ti senti veloce....\n\r", victim);
+	send_to_char("Ti senti $c0015veloce$c0007...\n\r", victim);
+    act("$c0015$n$c0015 inizia a muoversi rapidamente.", FALSE, victim, 0, 0, TO_ROOM);
 
 	dice = number(3, 19);
 
@@ -332,7 +337,7 @@ void spell_slow(byte level, struct char_data* ch,
 	}
 
 	if(IS_IMMUNE(victim, IMM_HOLD)) {
-		act("$N sembra ignorare l'incantesimo", FALSE, ch, 0, victim, TO_CHAR);
+		act("$N sembra ignorare l'incantesimo.", FALSE, ch, 0, victim, TO_CHAR);
 		act("$n ha appena cercato di rallentarti, ma non ci fai caso.", FALSE, ch, 0,
 			victim, TO_VICT);
 		if(!in_group(ch, victim)) {
@@ -350,7 +355,8 @@ void spell_slow(byte level, struct char_data* ch,
 	af.bitvector = 0;
 	affect_to_char(victim, &af);
 
-	send_to_char("Ti muovi piu' lentamente!\n\r", victim);
+	send_to_char("$c0008Ti muovi piu' lentamente!\n\r", victim);
+    act("$c0008$n$c0008 si muove molto lentamente!", FALSE, victim, 0, 0, TO_ROOM);
 
 	if(!IS_PC(victim) && !IS_SET(victim->specials.act,ACT_POLYSELF)) {
 		hit(victim, ch, TYPE_UNDEFINED);
@@ -371,7 +377,7 @@ void spell_familiar(byte level, struct char_data* ch,
 	struct char_data* f;
 
 	if(affected_by_spell(ch, SPELL_FAMILIAR)) {
-		send_to_char("Non puoi avere piu' di un animale domestico al giorno\n\r",ch);
+		send_to_char("Non puoi avere piu' di un animale domestico al giorno.\n\r",ch);
 		return;
 	}
 
@@ -405,7 +411,7 @@ void spell_familiar(byte level, struct char_data* ch,
 	af.bitvector = 0;
 	affect_to_char(ch, &af);
 
-	act("$n appare con un lampo di luce!\n\r", FALSE, f, 0, 0, TO_ROOM);
+	act("$n appare con un $c0011lampo di luce$c0007!\n\r", FALSE, f, 0, 0, TO_ROOM);
 
 	SET_BIT(f->specials.affected_by, AFF_CHARM);
 	GET_EXP(f) = 0;
@@ -425,7 +431,7 @@ void spell_aid(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(affected_by_spell(victim, SPELL_AID)) {
-		send_to_char("Senti che l'aiuto Divino e' gia' presente\n\r", ch);
+		send_to_char("Senti che l'$c0015aiuto Divino$c0007 e' gia' presente.\n\r", ch);
 		return;
 	}
 
@@ -433,8 +439,8 @@ void spell_aid(byte level, struct char_data* ch,
 
 	update_pos(victim);
 
-	act("$n sembra aiutat$b dagli Dei", FALSE, victim, 0, 0, TO_ROOM);
-	send_to_char("Ti senti meglio!\n\r", victim);
+	act("$n sembra essere $c0015aiutat$b dagli Dei$c0007.", FALSE, victim, 0, 0, TO_ROOM);
+	send_to_char("$c0015Ti senti meglio!\n\r", victim);
 
 	af.type      = SPELL_AID;
 	af.duration  = 10;
@@ -621,14 +627,14 @@ void spell_golem(byte level, struct char_data* ch,
 	AddAffects(gol,leggings);
 	AddAffects(gol,helm);
 
-	act("$n esegue un rituale sul mucchio di armature", FALSE, ch, 0, 0,
+	act("$n esegue un $c0008rituale$c0007 sul mucchio di armature.", FALSE, ch, 0, 0,
 		TO_ROOM);
-	act("Muovi le tue mani sulla pila di armature eseguendo un antico rituale.", FALSE, ch, 0, 0, TO_CHAR);
+	act("Muovi le tue mani sulla pila di armature eseguendo un $c0008antico rituale$c0007.", FALSE, ch, 0, 0, TO_CHAR);
 
-	act("I pezzi di armatura volano per la stanza e si uniscono in una figura umanoide!", FALSE, ch, 0, 0,
+	act("$c0012I pezzi di armatura volano per la stanza e si uniscono in una figura umanoide!", FALSE, ch, 0, 0,
 		TO_ROOM);
 
-	act("$N si forma rapidamente con i vari pezzi a disposizione", FALSE, ch, 0, gol, TO_CHAR);
+	act("$N si forma rapidamente con i vari pezzi a disposizione...", FALSE, ch, 0, gol, TO_CHAR);
 
 	add_follower(gol, ch);
 
@@ -657,7 +663,8 @@ void spell_feeblemind(byte level, struct char_data* ch,
 			return;
 		}
 
-		send_to_char("Ti senti molto stupido\n\r", victim);
+		act("Ti senti molto stupid$b!", FALSE, victim, 0, 0, TO_CHAR);
+        act("$c0013$n$c0013 sembra piu' stupid$b.", FALSE, victim, 0, 0, TO_ROOM);
 
 		af.type      = SPELL_FEEBLEMIND;
 		af.duration  = 24;
@@ -717,7 +724,7 @@ void spell_shillelagh(byte level, struct char_data* ch,
 			!IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
 
 		if(!isname("club", obj->name) && !isname("clava", obj->name)) {
-			send_to_char("Non e' una clava!\n\r", ch);
+			send_to_char("Non e' una $c0003clava$c0007!\n\r", ch);
 			return;
 		}
 
@@ -755,9 +762,9 @@ void spell_shillelagh(byte level, struct char_data* ch,
 		obj->obj_flags.value[1] = 3;
 		obj->obj_flags.value[2] = 4;
 
-		act("Un alone giallo si forma per un momento intorno a $p.", FALSE, ch,
+		act("Un $c0011alone giallo$c0007 si forma per un momento intorno a $p.", FALSE, ch,
 			obj, 0, TO_CHAR);
-		act("Un alone giallo si forma per un momento intorno a $p.", TRUE, ch,
+		act("Un $c0011alone giallo$c0007 si forma per un momento intorno a $p.", TRUE, ch,
 			obj, 0, TO_ROOM);
 		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
 
@@ -786,8 +793,8 @@ void spell_goodberry(byte level, struct char_data* ch,
 	clear_object(tmp_obj);
 
 	tmp_obj->name = strdup("berry mirtillo");
-	tmp_obj->short_description = strdup("un grosso mirtillo");
-	tmp_obj->description = strdup("C'e' un delizioso mirtillo qui in terra.");
+	tmp_obj->short_description = strdup("un grosso $c0012mirtillo$c0007");
+	tmp_obj->description = strdup("C'e' un delizioso $c0012mirtillo$c0007 qui in terra.");
 
 	tmp_obj->obj_flags.type_flag = ITEM_FOOD;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_HOLD;
@@ -846,35 +853,35 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 	switch(blade_element) { /* REQUIEM 2018 new elements for druid blade */
 	/* fino al liv 16 crei solo fire blades */
 	case 0:
-		tmp_obj->name = strdup("blade flame");
-		tmp_obj->short_description = strdup("una $c0009flame $c0007blade");
-		tmp_obj->description = strdup("Una lama fiammeggiante splende qui in terra.");
+		tmp_obj->name = strdup("lama fuoco");
+		tmp_obj->short_description = strdup("una lama di $c0009fuoco$c0007");
+		tmp_obj->description = strdup("Una lama $c0009fiammeggiante$c0007 splende qui in terra.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
-		tmp_obj->affected[0].modifier = 57;
+		tmp_obj->affected[0].modifier = SPELL_FLAMESTRIKE;
 		break;
 	/* dal liv 17 al 33 aggiungi frost alle possibilità */
 	case 1:
-		tmp_obj->name = strdup("blade frost");
-		tmp_obj->short_description = strdup("una $c0014Frost $c0007blade");
-		tmp_obj->description = strdup("Noti una lunga lama di ghiaccio.");
+		tmp_obj->name = strdup("lama ghiaccio");
+		tmp_obj->short_description = strdup("una lama di $c0014ghiaccio$c0007");
+		tmp_obj->description = strdup("Noti una spada di $c0014ghiaccio$c0007 conficcata nel terreno.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
-		tmp_obj->affected[0].modifier = 8;
+		tmp_obj->affected[0].modifier = SPELL_CHILL_TOUCH;
 		break;
 	/* dal liv 34 al 50 aggiungi thunder alle possibilità */
 	case 2:
-		tmp_obj->name = strdup("blade thunder");
-		tmp_obj->short_description = strdup("una $c0012Thunder $c0007blade");
-		tmp_obj->description = strdup("Un fascio si fulmini e saette e' qui ai tuoi piedi.");
+		tmp_obj->name = strdup("lama fascio fulmini");
+		tmp_obj->short_description = strdup("un fascio di $c0012fulmini$c0007");
+		tmp_obj->description = strdup("Un fascio si $c0012fulmini$c0007 e $c0012saette$c0007 e' qui ai tuoi piedi.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
-		tmp_obj->affected[0].modifier = 30;
+		tmp_obj->affected[0].modifier = SPELL_LIGHTNING_BOLT;
 		break;
 	/* al liv 51 aggiungi earth alle possibilità */
 	case 3:
-		tmp_obj->name = strdup("blade earth");
-		tmp_obj->short_description = strdup("una $c0010Earth $c0007blade");
-		tmp_obj->description = strdup("Una lunga roccia a forma di foglia attira la tua attenzione.");
+		tmp_obj->name = strdup("lama pietra");
+		tmp_obj->short_description = strdup("una lama di $c0003pietra$c0007");
+		tmp_obj->description = strdup("Una lunga $c0003roccia$c0007 a forma di $c0010foglia$c0007 attira la tua attenzione.");
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
-		tmp_obj->affected[0].modifier = 67;
+		tmp_obj->affected[0].modifier = SPELL_ACID_BLAST;
 		break;
 	}
 
@@ -943,7 +950,7 @@ void spell_animal_growth(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim, SPELL_ANIMAL_GROWTH)) {
-		act("$N e' gia' stato fatto crescere.", FALSE, ch, 0, victim, TO_CHAR);
+		act("$N e' gia' stat$B fatt$B crescere.", FALSE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
@@ -959,8 +966,8 @@ void spell_animal_growth(byte level, struct char_data* ch,
 		return;
 	}
 
-	act("$n raddoppia le sue dumensioni!", FALSE, victim, 0,0, TO_ROOM);
-	act("Raddoppi le tue dimensioni!", FALSE,victim,0,0,TO_CHAR);
+	act("$c0003$n$c0003 raddoppia le sue dumensioni!", FALSE, victim, 0,0, TO_ROOM);
+	act("$c0003Raddoppi le tue dimensioni!", FALSE,victim,0,0,TO_CHAR);
 
 	af.type      = SPELL_ANIMAL_GROWTH;
 	af.duration  = 12;
@@ -1022,8 +1029,8 @@ void spell_insect_growth(byte level, struct char_data* ch,
 		return;
 	}
 
-	act("$n raddoppia le sue dimensioni!", TRUE, victim, 0,0, TO_ROOM);
-	act("Raddoppi le tue dimensioni!", FALSE,victim,0,0,TO_CHAR);
+	act("$c0003$n$c0003 raddoppia le sue dimensioni!", TRUE, victim, 0,0, TO_ROOM);
+	act("$c0003Raddoppi le tue dimensioni!", FALSE,victim,0,0,TO_CHAR);
 
 	af.type      = SPELL_INSECT_GROWTH;
 	af.duration  = 12;
@@ -1064,6 +1071,10 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		return;
 	}
 
+    if(affected_by_spell(ch, SPELL_CREEPING_DEATH) && HowManyClasses(ch) > 1 && !IS_IMMORTALE(ch)) {
+        send_to_char("Puoi farlo solo una volta al giorno.\n\r", ch);
+        return;
+    }
 
 #if 0
 	if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
@@ -1078,7 +1089,7 @@ void spell_creeping_death(byte level, struct char_data* ch,
 
 	cd = read_mobile(CREEPING_DEATH, VIRTUAL);
 	if(!cd) {
-		send_to_char("Non c'e' nulla di simile\n\r", ch);
+		send_to_char("Non c'e' nulla di simile, contatta un immortale al piu' presto!\n\r", ch);
 		return;
 	}
 
@@ -1090,11 +1101,11 @@ void spell_creeping_death(byte level, struct char_data* ch,
 	act("$n emette un terribile suono dalla bocca...", FALSE, ch, 0, 0, TO_ROOM);
 	send_to_char("Hai una sensazione orribile...\n\r", ch);
 
-	act("Una massa enorme di insetti mortali esce dalla bocca di $n!",
+	act("$c0003Una massa enorme di insetti mortali esce dalla bocca di $n$c0003!",
 		FALSE, ch, 0, 0, TO_ROOM);
-	send_to_char("Una massa enorme di insetti esce dalla tua bocca!\n\r",ch);
+	send_to_char("$c0003Una massa enorme di insetti esce dalla tua bocca!\n\r",ch);
 
-	act("Gli insetti si fondono in una mass solida - $n", FALSE, ch, 0, 0, TO_ROOM);
+	act("$c0003Gli insetti si fondono in una massa solida.", FALSE, ch, 0, 0, TO_ROOM);
 
 	cd->generic = dir;
 	cd->act_ptr = ch;
@@ -1114,6 +1125,13 @@ void spell_creeping_death(byte level, struct char_data* ch,
 	af.location  = 0;
 	af.bitvector = AFF_SILENCE;
 	affect_to_char(ch, &af);
+    
+    af.type      = SPELL_CREEPING_DEATH;
+    af.duration  = 24;
+    af.modifier  = 0;
+    af.location  = 0;
+    af.bitvector = 0;
+    affect_to_char(ch, &af);
 
 }
 
@@ -1150,7 +1168,7 @@ void spell_commune(byte level, struct char_data* ch,
 
 		if(rp->zone == dp->zone) {
 			if(!IS_SET(rp->room_flags, INDOORS)) {
-				sprintf(buf, "%s is in %s\n\r",
+                sprintf(buf, "%s si trova: %s\n\r",
 						IS_NPC(c) ? c->player.short_descr : GET_NAME(c), rp->name);
 				if(strlen(buf)+strlen(buffer) > MAX_STRING_LENGTH-2) {
 					break;
@@ -1221,8 +1239,8 @@ void spell_animal_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-	act("$n esegue uno strano rituale.", TRUE, ch, 0, 0, TO_ROOM);
-	act("Esegui il rituale dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+	act("$n esegue uno strano $c0003rituale$c0007.", TRUE, ch, 0, 0, TO_ROOM);
+	act("Esegui il $c0003rituale$c0007 dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
 
 	for(i = 0; i < 4; i++) {
 		mob = read_mobile(num + number(0, 5), VIRTUAL);
@@ -1238,7 +1256,7 @@ void spell_animal_summon(byte level, struct char_data* ch,
 			act("$N guarda alla dimensione del tuo gruppo e si rifiuta di "
 				"seguirti!", TRUE, ch, 0, victim, TO_CHAR);
 			act("$N guarda alla dimensione del gruppo di $n e si rifiuta di "
-				"seguirlo!", TRUE, ch, 0, victim, TO_ROOM);
+				"seguirl$b!", TRUE, ch, 0, victim, TO_ROOM);
 		}
 		else {
 			/* charm them for a while */
@@ -1287,7 +1305,7 @@ void spell_elemental_summoning(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(affected_by_spell(ch, spell)) {
-		send_to_char("Puoi farlo solo ogni 24 ore.\n\r", ch);
+		send_to_char("Puoi farlo solo una volta al giorno.\n\r", ch);
 		return;
 	}
 
@@ -1302,12 +1320,33 @@ void spell_elemental_summoning(byte level, struct char_data* ch,
 	mob = read_mobile(vnum, VIRTUAL);
 
 	if(!mob) {
-		send_to_char("None available\n\r", ch);
+		send_to_char("Qualcosa e' andato storto, contatta un immortale al piu' presto.\n\r", ch);
 		return;
 	}
 
-	act("$n esegue uno strano rituale.", TRUE, ch, 0, 0, TO_ROOM);
-	act("Esegui il rituale dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+    switch(vnum)
+    {
+        case 40 :
+            act("$n esegue uno strano $c0009rituale$c0007.", TRUE, ch, 0, 0, TO_ROOM);
+            act("Esegui il $c0009rituale$c0007 dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+            break;
+        case 41 :
+            act("$n esegue uno strano $c0003rituale$c0007.", TRUE, ch, 0, 0, TO_ROOM);
+            act("Esegui il $c0003rituale$c0007 dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+            break;
+        case 42 :
+            act("$n esegue uno strano $c0012rituale$c0007.", TRUE, ch, 0, 0, TO_ROOM);
+            act("Esegui il $c0012rituale$c0007 dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+            break;
+        case 43 :
+            act("$n esegue uno strano $c0015rituale$c0007.", TRUE, ch, 0, 0, TO_ROOM);
+            act("Esegui il $c0015rituale$c0007 dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+            break;
+        default :
+            act("$n esegue uno strano rituale.", TRUE, ch, 0, 0, TO_ROOM);
+            act("Esegui il rituale dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
+    }
+	
 
 	char_to_room(mob, ch->in_room);
 	RelateMobToCaster(ch, mob);
@@ -1384,7 +1423,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 	}
 
 	if(real_roomp(ch->in_room)->sector_type != SECT_FOREST) {
-		send_to_char("Puoi lanciare questa magia solo in una foresta.\n\r", ch);
+		send_to_char("Puoi lanciare questa $c0012magia$c0007 solo in una $c0010f$c0003o$c0010r$c0003e$c0010s$c0003t$c0010a$c0007.\n\r", ch);
 		return;
 	}
 
@@ -1424,7 +1463,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			fscanf(fdeath,"%ld : %ld",&xp,&ora);
 			st.points.exp=xp;
 			ora=(long)(time(0)-ora);
-			mudlog(LOG_PLAYERS, "%s resuscitato dopo %ld secondi",
+			mudlog(LOG_PLAYERS, "%s resuscitato con reincarnate dopo %ld secondi",
 				   obj->oldfilename,ora);
 
 #else
@@ -1437,9 +1476,9 @@ void spell_reincarnate(byte level, struct char_data* ch,
 
 			st.race = GetNewRace(&st);
 
-			act("La foresta si anima di suoni d'uccelli e d'animali...",
+			act("La $c0010f$c0003o$c0010r$c0003e$c0010s$c0003t$c0010a$c0007 si anima di suoni d'uccelli e d'animali...",
 				TRUE, ch, 0, 0, TO_CHAR);
-			act("La foresta si anima di suoni d'uccelli e d'animali...",
+			act("La $c0010f$c0003o$c0010r$c0003e$c0010s$c0003t$c0010a$c0007 si anima di suoni d'uccelli e d'animali...",
 				TRUE, ch, 0, 0, TO_ROOM);
 			act("... e $p scompare in un batter d'occhio.",
 				TRUE, ch, obj, 0, TO_CHAR);
@@ -1452,8 +1491,8 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			GET_HIT(ch) = 1;
 			alter_hit(ch,0);
 			GET_POS(ch) = POSITION_SITTING;
-			act("$n crolla a terra esausto!",TRUE, ch, 0, 0, TO_ROOM);
-			send_to_char("Crolli a terra esausto!\n\r",ch);
+			act("$n crolla a terra esaust$b!",TRUE, ch, 0, 0, TO_ROOM);
+            act("Crolli a terra esaust$b!",TRUE, ch, 0, 0, TO_CHAR);
 
 			rewind(fl);
 			fwrite(&st, sizeof(struct char_file_u), 1, fl);
@@ -1500,7 +1539,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			}
 		}
 		else {
-			send_to_char("Lo spirito non ha abbastanza forza per "
+			send_to_char("Lo $c0014s$c0015p$c0014i$c0015r$c0014i$c0015t$c0014o$c0007 non ha abbastanza forza per "
 						 "reincarnarsi.\n\r", ch);
 		}
 		fclose(fl);
@@ -1515,14 +1554,20 @@ void spell_charm_veggie(byte level, struct char_data* ch,
 	assert(ch && victim);
 
 	if(victim == ch) {
-		send_to_char("Ami te stesso piu' di prima.\n\r", ch);
+        act("Ami te stess$b piu' di prima.",TRUE, ch, 0, 0, TO_CHAR);
 		return;
 	}
 
 	if(!IsVeggie(victim)) {
-		send_to_char("Puoi farlo solo sulle piante!\n\r", ch);
+		send_to_char("Puoi farlo solo sulle $c0010piante$c0007!\n\r", ch);
 		return;
 	}
+    
+    if(IS_NPC(victim) && (mob_index[victim->nr].iVNum >= QUEST_ZONE && mob_index[victim->nr].iVNum <= QUEST_ZONE+99))
+    {
+        act("$N non vuole seguire nessuno!", TRUE, ch, 0, victim, TO_CHAR);
+        return;
+    }
 
 	if(GetMaxLevel(victim) > GetMaxLevel(ch) + 10) {
 		FailCharm(victim, ch);
@@ -1597,17 +1642,17 @@ void spell_veggie_growth(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(!victim || !IsVeggie(victim)) {
-		send_to_char("Puoi farlo solo sulle piante.\n\r", ch);
+		send_to_char("Puoi farlo solo sulle $c0010piante$c0007.\n\r", ch);
 		return;
 	}
 
 	if(affected_by_spell(victim, SPELL_VEGGIE_GROWTH)) {
-		act("$N e' gia' stato fatto crescere.",FALSE, ch, 0, victim, TO_CHAR);
+		act("$N e' gia' stat$B fatt$B crescere.",FALSE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
 	if(GetMaxLevel(victim)*2 > GetMaxLevel(ch)) {
-		send_to_char("Non puoi farlo piu' potente di te.\n\r", ch);
+		send_to_char("Non puoi rendere nessuno piu' potente di te.\n\r", ch);
 		return;
 	}
 
@@ -1622,8 +1667,8 @@ void spell_veggie_growth(byte level, struct char_data* ch,
 		return;
 	}
 
-	act("$n raddoppia le sue dimensioni!", TRUE, victim, 0,0, TO_ROOM);
-	act("Raddoppi le tue dimensioni!", FALSE,victim,0,0,TO_CHAR);
+	act("$c0003$n$c0003 raddoppia le sue dimensioni!", TRUE, victim, 0,0, TO_ROOM);
+	act("$c0003Raddoppi le tue dimensioni!", FALSE,victim,0,0,TO_CHAR);
 
 	af.type      = SPELL_VEGGIE_GROWTH;
 	af.duration  = 2*level;
@@ -1790,8 +1835,8 @@ void spell_travelling(byte level, struct char_data* ch,
 	af.bitvector = AFF_TRAVELLING;
 
 	affect_to_char(victim, &af);
-	act("$n sembra avere tanti piedi.", TRUE, victim, 0, 0, TO_ROOM);
-	act("Ti senti pien$b di piedi.", FALSE, victim, NULL, NULL, TO_CHAR);
+	act("$c0010$n$c0010 sembra avere tanti piedi.", TRUE, victim, 0, 0, TO_ROOM);
+	act("$c0010Ti senti pien$b di piedi.", FALSE, victim, NULL, NULL, TO_CHAR);
 }
 
 void spell_animal_friendship(byte level, struct char_data* ch,
@@ -1806,10 +1851,15 @@ void spell_animal_friendship(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(IS_GOOD(victim) || IS_EVIL(victim)) {
-		send_to_char("Puoi farlo solo su animali neutrali.\n\r", ch);
+	if(HasClass(ch, CLASS_DRUID) && (IS_GOOD(victim) || IS_EVIL(victim)) && !IS_IMMORTALE(ch)) {
+		send_to_char("Puoi farlo solo su animali di allineamento $c0010neutrale$c0007.\n\r", ch);
 		return;
 	}
+    
+    if(HasClass(ch, CLASS_RANGER) && IS_EVIL(victim) && !IS_IMMORTALE(ch)) {
+        send_to_char("Non puoi farlo su animali di allineamento $c0009malvagio$c0007.\n\r", ch);
+        return;
+    }
 
 	if(!IsAnimal(victim)) {
 		send_to_char("Puoi farlo solo su animali.\n\r", ch);
@@ -1817,7 +1867,7 @@ void spell_animal_friendship(byte level, struct char_data* ch,
 	}
 
 	if(GET_MAX_HIT(victim) > GetMaxLevel(ch) * 4) {
-		act("Ancora non hai abbastanza forza di volonta' per incantare $N.",
+		act("Ancora non hai abbastanza $c0009forza$c0007 di volonta' per incantare $N.",
 			FALSE, ch, NULL, victim, TO_CHAR);
 		return;
 	}
@@ -1914,15 +1964,15 @@ void spell_snare(byte level, struct char_data* ch,
 	}
 
 	if(real_roomp(ch->in_room)->sector_type != SECT_FOREST) {
-		send_to_char("Puoi farlo solo in una foresta.\n\r", ch);
+		send_to_char("Puoi farlo solo in una $c0010f$c0003o$c0010r$c0003e$c0010s$c0003t$c0010a$c0007.\n\r", ch);
 		return;
 	}
 
 	/* if victim fails save, movement = 0 */
 	if(!saves_spell(victim, SAVING_SPELL)) {
-		act("Alcune radici e liane vengono fuori dal terreno e si arrotolano "
+		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e si arrotolano "
 			"intorno ai tuoi piedi!", FALSE, victim, 0,0, TO_CHAR);
-		act("Alcune radici e liane vengono fuori dal terreno e si arrotolano "
+		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e si arrotolano "
 			"intorno ai piedi di $n!", FALSE, victim, 0,0, TO_CHAR);
 		GET_MOVE(victim)=0;
 	}
@@ -1942,16 +1992,15 @@ void spell_entangle(byte level, struct char_data* ch,
 	}
 
 	if(real_roomp(ch->in_room)->sector_type != SECT_FOREST) {
-		act("Quest'incantesimo lo puoi fare solo in una foresta.", FALSE, ch,
-			0, 0, TO_CHAR);
+		act("Quest'incantesimo lo puoi fare solo in una $c0010f$c0003o$c0010r$c0003e$c0010s$c0003t$c0010a$c0007.", FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
 
 	/* if victim fails save, paralyzed for a very short time */
 	if(!saves_spell(victim, SAVING_SPELL)) {
-		act("Alcune radice e liane vengono fuori dal terreno e ti avvolgono.",
+		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e ti avvolgono.",
 			FALSE, victim, 0,0, TO_CHAR);
-		act("Alcune radice e liane vengono fuori dal terreno e avvolgono $n.",
+		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e avvolgono $n.",
 			FALSE, victim, 0,0, TO_CHAR);
 
 		af.type      = SPELL_ENTANGLE;
@@ -1986,13 +2035,6 @@ void spell_barkskin(byte level, struct char_data* ch,
 		af.type      = SPELL_BARKSKIN;
 		af.duration  = 24;
 		af.modifier  = -1 - level/10; /* level dependent Gaia 2001 */
-		af.location  = APPLY_SAVE_ALL;
-		af.bitvector = 0;
-		affect_to_char(victim, &af);
-
-		af.type      = SPELL_BARKSKIN;
-		af.duration  = 24;
-		af.modifier  = 1 + level/10; /* level dependent Gaia 2001 */
 		af.location  = APPLY_SAVING_SPELL;
 		af.bitvector = 0;
 		affect_to_char(victim, &af);
@@ -2040,9 +2082,9 @@ void spell_barkskin(byte level, struct char_data* ch,
 			}
 		}
 
-		send_to_char("La tua pelle assume un aspetto ruvido e legnoso.\n\r",
+		send_to_char("La tua pelle assume un aspetto $c0003ruvido$c0007 e $c0003legnoso$c0007.\n\r",
 					 victim);
-		act("La pelle di $n assume un aspetto ruvido e legnoso.", TRUE, victim, 0, 0,
+		act("La pelle di $n assume un aspetto $c0003ruvido$c0007 e $c0003legnoso$c0007.", TRUE, victim, 0, 0,
 			TO_ROOM);
 
 	}
@@ -2058,9 +2100,9 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	act("Muovi le mani ed alzi una raffica di vento!",
+	act("Muovi le mani ed alzi una raffica di $c0015vento$c0007!",
 		TRUE, ch, 0, 0, TO_CHAR);
-	act("$n muove le mani ed alza una una raffica di vento!",
+	act("$n muove le mani ed alza una una raffica di $c0015vento$c0007!",
 		TRUE, ch, 0, 0, TO_ROOM);
 
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
@@ -2076,32 +2118,32 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 					 number(1,60) < GET_LEVEL(ch,BestMagicClass(ch)))
 					&& !CheckEquilibrium(tmp_victim)         //Acidus 2003 - skill better equilibrium
 			  ) {
-				act("$n perde l'equilibrio per la forte raffica di vento.",
+				act("$n perde l'equilibrio per la forte raffica di $c0015vento$c0007.",
 					TRUE, tmp_victim, 0, 0, TO_ROOM);
-				act("La raffica lanciata da $n ti fa perdere l'equilibrio.",
+				act("La raffica di $c0015vento$c0007 lanciata da $n ti fa perdere l'equilibrio.",
 					TRUE, ch, 0, tmp_victim, TO_VICT);
 				WAIT_STATE(tmp_victim, PULSE_VIOLENCE * 1);   // gust
 				GET_POS(tmp_victim) = POSITION_SITTING;
 			}
 			else {
 				if(IsHumanoid(tmp_victim)) {
-					act("La raffica di vento alzata da $n ti scompiglia i capelli.",
+					act("La raffica di $c0015vento$c0007 alzata da $n ti scompiglia i capelli.",
 						TRUE, ch, 0, tmp_victim, TO_VICT);
 				}
 			}
 #else
 			if(!in_group(ch, tmp_victim) &&
 					!saves_spell(tmp_victim, SAVING_SPELL)) {
-				act("$n perde l'equilibrio per la forte raffica di vento.",
+				act("$n perde l'equilibrio per la forte raffica di $c0015vento$c0007.",
 					TRUE, tmp_victim, 0, 0, TO_ROOM);
-				act("La raffica lanciata da $n ti fa perdere l'equilibrio.",
+				act("La raffica di $c0015vento$c0007 lanciata da $n ti fa perdere l'equilibrio.",
 					TRUE, ch, 0, tmp_victim, TO_VICT);
 				WAIT_STATE(tmp_victim, PULSE_VIOLENCE * 1);   // gust
 				GET_POS(tmp_victim) = POSITION_SITTING;
 			}
 			else {
 				if(IsHumanoid(tmp_victim)) {
-					act("La raffica di vento alzata da $n ti scompiglia i capelli.",
+					act("La raffica di $c0015vento$c0007 alzata da $n ti scompiglia i capelli.",
 						TRUE, ch, 0, tmp_victim, TO_VICT);
 				}
 			}
@@ -2118,8 +2160,8 @@ void spell_silence(byte level, struct char_data* ch,
 	assert(ch && victim);
 
 	if(!saves_spell(victim, SAVING_SPELL)) {
-		act("$n smette di fare rumore!", TRUE, victim,0,0,TO_ROOM);
-		send_to_char("Non riesci a sentire piu nulla!.\n\r", victim);
+		act("$n smette di fare $c0008rumore$c0007!", TRUE, victim,0,0,TO_ROOM);
+		send_to_char("Non riesci a sentire piu $c0008nulla$c0007!.\n\r", victim);
 
 		af.type      = SPELL_SILENCE;
 		af.duration  = level;
@@ -2129,8 +2171,7 @@ void spell_silence(byte level, struct char_data* ch,
 		affect_to_char(victim, &af);
 	}
 	else {
-		send_to_char("Ti senti silenzioso per un momento, ma poi la sensazione "
-					 "passa.", victim);
+		act("Ti senti silenzios$b per un momento, ma poi la sensazione passa.", FALSE, victim, 0, 0, TO_CHAR);
 		if(IS_MOB(victim) && mob_index[victim->nr].func) {
 			if(!(*mob_index[victim->nr].func)(ch, 0, "", victim, EVENT_ATTACK)) {
 				if(!victim->specials.fighting) {
@@ -2155,9 +2196,9 @@ void spell_warp_weapon(byte level, struct char_data* ch,
 		obj = victim->equipment[WIELD];
 	}
 
-	act("$n spunta e deforma $p con la potenza del suo incantesimo.", FALSE,
+	act("$n $c0011spunta$c0007 e $c0009deforma$c0007 $p con la potenza del suo incantesimo.", FALSE,
 		ch, obj, 0, TO_CHAR);
-	act(" $p viene spuntata e deformata dalla potenza dell'incantesimo di $n.",
+	act("$p viene $c0011spuntata$c0007 e $c0009deformata$c0007 dalla potenza dell'incantesimo di $n.",
 		FALSE, ch, obj, 0, TO_ROOM);
 	DamageOneItem(victim, BLOW_DAMAGE, obj);
 
@@ -2221,7 +2262,7 @@ void spell_dust_devil(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	if(affected_by_spell(ch, SPELL_DUST_DEVIL)) {
-		send_to_char("Puoi farlo solo ogni 24 ore.\n\r", ch);
+		send_to_char("Puoi farlo solo una volta al giorno.\n\r", ch);
 		return;
 	}
 
@@ -2236,16 +2277,16 @@ void spell_dust_devil(byte level, struct char_data* ch,
 	mob = read_mobile(vnum, VIRTUAL);
 
 	if(!mob) {
-		send_to_char("None available\n\r", ch);
+		send_to_char("Qualcosa e' andato storto, contatta un immortale al piu' presto.\n\r", ch);
 		return;
 	}
 
-	act("$n esegue uno strano rituale!", TRUE, ch, 0, 0, TO_ROOM);
-	act("Esegui il rituale dell'evocazione.", FALSE, ch, 0, 0, TO_CHAR);
+	act("$n esegue uno strano $c0008rituale$c0007!", TRUE, ch, 0, 0, TO_ROOM);
+	act("Esegui il $c0008rituale$c0007 dell'evocazione.", FALSE, ch, 0, 0, TO_CHAR);
 
 	char_to_room(mob, ch->in_room);
 	RelateMobToCaster(ch, mob);
-	act("$n arriva attraverso uno squarcio nel tessuto sapzio-tempo!",
+	act("$n arriva attraverso uno $c0008squarcio$c0007 nel tessuto spazio-tempo!",
 		FALSE, mob, 0, 0, TO_ROOM);
 
 	/* charm them for a while */
@@ -2347,62 +2388,62 @@ void spell_know_monster(byte level, struct char_data* ch,
 	 */
 
 	if(!IS_PC(victim)) {
-		sprintf(buf,"$N e' un$B %s.", RaceName[GET_RACE(victim)]);
+		sprintf(buf,"$c0015$N$c0007 e' di razza $c0015%s$c0007.", RaceName[GET_RACE(victim)]);
 		act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		if(level > 5) {
 			exp = GetApprox(GET_EXP(victim), 40+level);
-			sprintf(buf, "$N ha circa %d punti di esperienza.", exp);
+			sprintf(buf, "$c0015$N$c0007 ha circa $c0015%d$c0007 punti esperienza.", exp);
 			act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(level > 10) {
 			lev = GetApprox(GetMaxLevel(victim), 40+level);
 			sprintf(buf,
-					"$N combatte piu' o meno come un guerriero del %d^ livello.",
+					"$c0015$N$c0007 combatte piu' o meno come un guerriero del $c0015%d$c0007^ livello.",
 					lev);
 			act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(level > 15) {
 			if(IS_SET(victim->hatefield, HATE_RACE)) {
-				sprintf(buf, "$N sembra odiare la razza dei %s.",
+				sprintf(buf, "$c0015$N$c0007 sembra odiare la razza dei $c0015%s$c0007.",
 						RaceName[victim->hates.race]);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 			if(IS_SET(victim->hatefield, HATE_CLASS)) {
 				sprintbit((unsigned)victim->hates.iClass, pc_class_types, buf2);
-				sprintf(buf, "$N sembra odiare la classe %s.", buf2);
+				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 20) {
 			hits = GetApprox(GET_MAX_HIT(victim), 40+level);
-			sprintf(buf,"Probabilmente $N ha %d punti vita.", hits);
+			sprintf(buf,"Probabilmente $c0015$N$c0007 ha $c0015%d$c0007 punti vita.", hits);
 			act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(level > 25) {
 			if(victim->susc) {
 				sprintbit(victim->susc, immunity_names, buf2);
-				sprintf(buf, "$N e' suscettibile a %s.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 30) {
 			if(victim->immune) {
 				sprintbit(victim->immune, immunity_names, buf2);
-				sprintf(buf, "$N e' resistente a %s.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 35) {
 			if(victim->M_immune) {
 				sprintbit(victim->M_immune, immunity_names, buf2);
-				sprintf(buf, "$N e' immune a %s.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 40) {
 			int att;
 			att = GetApprox((int)victim->mult_att, 30+level);
-			sprintf(buf,"$N ha circa %d.0 attacchi per turno.", att);
+			sprintf(buf,"$c0015$N$c0007 ha circa $c0015%d.0$c0007 attacchi per turno.", att);
 			act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		}
 		if(level > 45) {
@@ -2410,7 +2451,7 @@ void spell_know_monster(byte level, struct char_data* ch,
 			no = GetApprox(victim->specials.damnodice, 30+level);
 			s = GetApprox(victim->specials.damsizedice, 30+level);
 
-			sprintf(buf,"Ognuno dei quali fa circa %dd%d punti di danno.",
+			sprintf(buf,"Ognuno dei quali fa circa $c0015%d$c0007d$c0015%d$c0007 punti di danno.",
 					no, s);
 			act(buf,FALSE, ch, 0, victim, TO_CHAR);
 		}
@@ -2432,6 +2473,8 @@ void spell_find_traps(byte level, struct char_data* ch,
 		return;
 	}
 
+    send_to_char("Inizi a percepire le trappole!\n\r", ch);
+    
 	af.type =      SPELL_FIND_TRAPS;
 	af.duration  = level;
 	af.modifier  = 50+level;
@@ -2455,8 +2498,8 @@ void spell_firestorm(byte level, struct char_data* ch,
 	dam = dice(2,8) + level*2 + 1;  /* Potenziato un pochetto
                                      come alternatica al chain Gaia 2001 */
 
-	send_to_char("Le fiamme ti avvolgono!\n\r", ch);
-	act("$n crea una tempesta di fuoco che si scatena nella stanza!\n\r",
+	send_to_char("Le $c0009fiamme$c0007 ti avvolgono!\n\r", ch);
+	act("$n crea una $c0009tempesta di fuoco$c0007 che si scatena nella stanza!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
@@ -2467,7 +2510,7 @@ void spell_firestorm(byte level, struct char_data* ch,
 				return;
 			}
 			if(!in_group(ch, tmp_victim)) {
-				act("Vieni avvolt$b dalle fiamme!\n\r",
+				act("$c0009Vieni avvolt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 				if(saves_spell(tmp_victim, SAVING_SPELL)) {
 					dam >>= 1;
@@ -2478,7 +2521,7 @@ void spell_firestorm(byte level, struct char_data* ch,
 				}
 			}
 			else {
-				act("Riesci a schivare le fiamme!\n\r",
+				act("Riesci a schivare le $c0009fiamme$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 				heat_blind(tmp_victim);
 			}
@@ -2562,12 +2605,12 @@ void spell_portal(byte level, struct char_data* ch,
 	rp = real_roomp(ch->in_room);
 	/*  tmp_obj = read_object( PORTAL, VIRTUAL );*/
 	if(!rp) {
-		send_to_char("L'incantesimo non riesce\n\r", ch);
+		send_to_char("L'incantesimo non riesce.\n\r", ch);
 		return;
 	}
     
 	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
-		send_to_char("Un'oscura magia blocca il tuo incantesimo.\n\r", ch);
+		send_to_char("Un'$c0008oscura magia$c0007 blocca il tuo incantesimo.\n\r", ch);
 		return;
 	}
 
@@ -2588,33 +2631,33 @@ void spell_portal(byte level, struct char_data* ch,
     }
 
 	if(IS_SET(real_roomp(tmp_ch->in_room)->room_flags, NO_SUM)) {
-		send_to_char("Un'antica magia ti blocca.\n\r", ch);
+		send_to_char("Un'$c0012antica magia$c0007 ti blocca.\n\r", ch);
 		return;
 	}
 
 	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("Sei in un piano extra-dimensionale!\n\r", ch);
+		send_to_char("$c0012Sei in un piano extra-dimensionale!\n\r", ch);
 		return;
 	}
 
 	if(!IsOnPmp(tmp_ch->in_room)) {
-		send_to_char("E' in un piano extra-dimensionale!\n\r", ch);
+		send_to_char("$c0012E' in un piano extra-dimensionale!\n\r", ch);
 		return;
 	}
 
 	if(IS_SET(SystemFlags,SYS_NOPORTAL)) {
-		send_to_char("I piani dimensionali sono in movimento, non riesci ad aprire un portale!\n",ch);
+		send_to_char("$c0012I piani dimensionali sono in movimento, non riesci ad aprire un portale!\n",ch);
 		return;
 	}
 
 	tmp_obj = read_object(PORTAL, VIRTUAL);
 	if(!tmp_obj) {
 		mudlog(LOG_SYSERR, "Cannot load PORTAL in spell_portal (magic3.c).");
-		send_to_char("L'incantesimo fallisce\n\r", ch);
+		send_to_char("L'incantesimo fallisce.\n\r", ch);
 		return;
 	}
 
-	sprintf(buf, "Attraverso la nebbia che avvolge il portale riesci a vedere %s",
+	sprintf(buf, "Attraverso la $c0008nebbia$c0007 che avvolge il $c0015portale$c0007 riesci a vedere %s",
 			nrp->name);
 
 	CREATE(ed, struct extra_descr_data, 1);
@@ -2685,16 +2728,16 @@ void spell_mount(byte level, struct char_data* ch,
 	m = read_mobile(mnr, VIRTUAL);
 	if(m) {
 		char_to_room(m, ch->in_room);
-		act("Con un lampo di luce, $N appare", FALSE, ch, 0, m, TO_CHAR);
-		act("Con un lampo di luce, $N appare, e $n gli salta in groppa", FALSE,
+		act("Con un $c0011lampo di luce$c0007, $N appare.", FALSE, ch, 0, m, TO_CHAR);
+		act("Con un $c0011lampo di luce$c0007, $N appare, e $n gli salta in groppa.", FALSE,
 			ch, 0, m, TO_ROOM);
-		send_to_char("Salti in groppa alla tua cavalcatura\n\r", ch);
+		send_to_char("Salti in groppa alla tua cavalcatura.\n\r", ch);
 		MOUNTED(ch) = m;
 		RIDDEN(m) = ch;
 		GET_POS(ch) = POSITION_MOUNTED;
 	}
 	else {
-		send_to_char("horses aren't in database\n\r", ch);
+		send_to_char("Qualcosa e' andato storto, contatta un immportale.\n\r", ch);
 		return;
 	}
 }
@@ -2708,6 +2751,9 @@ void spell_dragon_ride(byte level, struct char_data* ch,
 		return;
 	}
 
+    act("Un $c0015fascio$c0007 di $c0015luce$c0007 intensa ti investe, i suoi occhi $c0015brillano$c0007 per un istante... ora assomigliano a quelli di un $c0003drago$c0007!", FALSE, ch, 0, 0, TO_CHAR);
+    act("Un $c0015fascio$c0007 di $c0015luce$c0007 intensa investe $n, i suoi occhi $c0015brillano$c0007 per un istante... ora assomigliano a quelli di un $c0003drago$c0007.", FALSE, ch, 0, 0, TO_ROOM);
+    
 	af.type = SPELL_DRAGON_RIDE;
 	af.duration = level;
 	af.modifier  = 0;

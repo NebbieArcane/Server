@@ -4871,7 +4871,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
         }
         
         if(!CAN_SEE(questor, ch)) {
-            do_say(questor, "eh? chi ha parlato??", CMD_SAY);
+            do_say(questor, "Eh? Chi ha parlato??", CMD_SAY);
             return(FALSE);
         }
         
@@ -4896,7 +4896,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
         }
         
         if(!CAN_SEE(questor, ch)) {
-            do_say(questor, "eh? chi ha parlato??", CMD_SAY);
+            do_say(questor, "Eh? Chi ha parlato??", CMD_SAY);
             return(FALSE);
         }
         

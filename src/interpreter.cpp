@@ -458,7 +458,7 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 	}
 
 	if(IS_AFFECTED2(ch,AFF2_AFK)) {
-		act("$c0006$n ritorna alla sua tastiera", TRUE, ch, 0, 0, TO_ROOM);
+		act("$c0006$n ritorna alla sua tastiera.", TRUE, ch, 0, 0, TO_ROOM);
 		act("$c0006Ritorni alla tua tastiera.", TRUE, ch, 0, 0, TO_CHAR);
 		REMOVE_BIT(ch->specials.affected_by2, AFF2_AFK);
 	}

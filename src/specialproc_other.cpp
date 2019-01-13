@@ -169,6 +169,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "jabberwocky",(genericspecial_func) jabberwocky },
 	{ "janitor",(genericspecial_func) janitor },
 	{ "jive_box",(genericspecial_func) jive_box },
+    { "key_one_use",(genericspecial_func) key_one_use },
 	{ "jugglernaut",(genericspecial_func) jugglernaut },
 	{ "keystone",(genericspecial_func) keystone },
 	{ "lattimore",(genericspecial_func) lattimore },

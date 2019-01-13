@@ -53,8 +53,7 @@ void cast_call_lightning(byte level, struct char_data* ch,const char* arg, int t
 			spell_call_lightning(level, ch, victim, 0);
 		}
 		else {
-			send_to_char("Non riesci ad evocare il potere dei fulmini!\n\r",
-						 ch);
+			send_to_char("Non riesci ad evocare il potere dei $c0012fulmini$c0007!\n\r", ch);
 		}
 		break;
 	case SPELL_TYPE_POTION:

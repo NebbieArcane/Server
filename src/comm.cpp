@@ -1885,6 +1885,8 @@ void act(const char* str, int hide_invisible, struct char_data* ch,
 			ParseAct(str,ch,to,vict_obj,obj,buf);
             if(buf[1] == '$')
                 buf[7] = UPPER(buf[7]);
+            else if(buf[0] == '$')
+                buf[6] = UPPER(buf[6]);
             else
                 CAP(buf);
 			send_to_char(buf, to);
@@ -2108,25 +2110,37 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 						i = (100 * GET_HIT(ch->specials.fighting)) /
 							GET_MAX_HIT(ch->specials.fighting);
 						if(i >= 100) {
-							strcpy(tbuf, "eccellente");
+							strcpy(tbuf, "$c0010eccellente$c0007");
 						}
 						else if(i>=80) {
-							strcpy(tbuf, "graffiato");
+                            if(GET_SEX(ch->specials.fighting) == SEX_FEMALE)
+                                strcpy(tbuf, "$c0002graffiata$c0007");
+                            else
+                                strcpy(tbuf, "$c0002graffiato$c0007");
 						}
 						else if(i>=60) {
-							strcpy(tbuf, "tagliato");
+                            if(GET_SEX(ch->specials.fighting) == SEX_FEMALE)
+                                strcpy(tbuf, "$c0011tagliata$c0007");
+                            else
+                                strcpy(tbuf, "$c0011tagliato$c0007");
 						}
 						else if(i >= 40) {
-							strcpy(tbuf, "ferito");
+                            if(GET_SEX(ch->specials.fighting) == SEX_FEMALE)
+                                strcpy(tbuf, "$c0013ferita$c0007");
+                            else
+                                strcpy(tbuf, "$c0013ferito$c0007");
 						}
 						else if(i >= 20) {
-							strcpy(tbuf, "sanguinante");
+							strcpy(tbuf, "$c0009sanguinante$c0007");
 						}
 						else if(i >= 0) {
-							strcpy(tbuf, "squarciato");
+                            if(GET_SEX(ch->specials.fighting) == SEX_FEMALE)
+                                strcpy(tbuf, "$c0001squarciata$c0007");
+                            else
+                                strcpy(tbuf, "$c0001squarciato$c0007");
 						}
 						else {
-							strcpy(tbuf, "morente");
+							strcpy(tbuf, "$c0008morente$c0007");
 						}
 					}
 					else {
@@ -2143,22 +2157,34 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 							strcpy(tbuf, "eccellente");
 						}
 						else if(i>=80) {
-							strcpy(tbuf, "graffiato");
+                            if(GET_SEX(ch->specials.fighting->specials.fighting) == SEX_FEMALE)
+                                strcpy(tbuf, "$c0002graffiata$c0007");
+                            else
+                                strcpy(tbuf, "$c0002graffiato$c0007");
 						}
 						else if(i>=60) {
-							strcpy(tbuf, "tagliato");
+							 if(GET_SEX(ch->specials.fighting->specials.fighting) == SEX_FEMALE)
+                                 strcpy(tbuf, "$c0011tagliata$c0007");
+                             else
+                                 strcpy(tbuf, "$c0011tagliato$c0007");
 						}
 						else if(i >= 40) {
-							strcpy(tbuf, "ferito");
+							 if(GET_SEX(ch->specials.fighting->specials.fighting) == SEX_FEMALE)
+                                 strcpy(tbuf, "$c0013ferita$c0007");
+                             else
+                                 strcpy(tbuf, "$c0013ferito$c0007");
 						}
 						else if(i >= 20) {
-							strcpy(tbuf, "sanguinante");
+							strcpy(tbuf, "$c0009sanguinante$c0007");
 						}
 						else if(i >= 0) {
-							strcpy(tbuf, "squarciato");
+							 if(GET_SEX(ch->specials.fighting->specials.fighting) == SEX_FEMALE)
+                                 strcpy(tbuf, "$c0001squarciata$c0007");
+                             else
+                                 strcpy(tbuf, "$c0001squarciato$c0007");
 						}
 						else {
-							strcpy(tbuf, "morente");
+							strcpy(tbuf, "$c0008morente$c0007");
 						}
 					}
 					else {

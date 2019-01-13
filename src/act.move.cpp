@@ -1422,7 +1422,7 @@ ACTION_FUNC(do_unlock) {
 	argument_interpreter(arg, type, dir);
 
 	if(!*type) {
-		send_to_char("Che cosa vuaoi aprire?\n\r", ch);
+		send_to_char("Che cosa vuoi aprire?\n\r", ch);
 	}
 	else if(generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM, ch, &victim,
 						 &obj)) {
@@ -1468,7 +1468,7 @@ ACTION_FUNC(do_unlock) {
 			send_to_char("Non hai la chiave giusta.\n\r", ch);
 		}
 		else if(!IS_SET(exitp->exit_info, EX_LOCKED)) {
-            sprintf(buf, "%s non e' chius%s a chiave, dopo tutto...\n\r", exitp->keyword, (IS_SET(exitp->exit_info, EX_MALE) ? "o" : "a"));
+            sprintf(buf, "%s non e' chius%s a chiave, dopotutto...\n\r", exitp->keyword, (IS_SET(exitp->exit_info, EX_MALE) ? "o" : "a"));
             send_to_char(buf, ch);
 		}
 		else {
@@ -1479,7 +1479,7 @@ ACTION_FUNC(do_unlock) {
 			else {
 				act("$n sblocca la porta.", FALSE, ch, 0, 0, TO_ROOM);
 			}
-			send_to_char("*click*\n\r", ch);
+			send_to_char("*Click*\n\r", ch);
 
 			raw_unlock_door(ch, exitp, door);
 		}

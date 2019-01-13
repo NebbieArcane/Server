@@ -1261,6 +1261,14 @@ ACTION_FUNC(do_stat) {
 				send_to_char(buf, ch);
 			}
 
+            strcpy(buf, "------- Chars listeners -------\n\r");
+            for(k = rm->listeners; k; k = k->next_listener)
+            {
+                strcat(buf, GET_NAME(k));
+            }
+            strcat(buf, "\n\r");
+            send_to_char(buf, ch);
+            
 			strcpy(buf, "------- Chars present -------\n\r");
 			for(k = rm->people; k; k = k->next_in_room) {
 				if(CAN_SEE(ch, k)) {

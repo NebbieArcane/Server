@@ -1007,7 +1007,7 @@ ACTION_FUNC(do_give) {
 					   strong enough to control all the limited items
 					   Gaia 2001 */
 					if(IS_RARE(obj) && !EgoSave(ch)) {
-						act("Non vuoi separarti da $p .", FALSE, ch, obj, vict, TO_CHAR);
+						act("Non vuoi separarti da $p.", FALSE, ch, obj, vict, TO_CHAR);
 						return ;
 					}
 					if(IS_RARE(obj) && !EgoSave(vict)) {
@@ -1042,7 +1042,7 @@ ACTION_FUNC(do_give) {
                     }
 					act("$n da' $p a $N.", 1, ch, obj, vict, TO_NOTVICT);
 					act("$n ti da' $p.", 0, ch, obj, vict, TO_VICT);
-					act("Dai $p a $N", 0, ch, obj, vict, TO_CHAR);
+					act("Dai $p a $N.", 0, ch, obj, vict, TO_CHAR);
 					obj_from_char(obj);
 					obj_to_char(obj, vict);
 

@@ -1984,6 +1984,9 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	if(HasClass(ch,CLASS_BARBARIAN)) {
 		classe=CLASS_BARBARIAN;
 	}
+    /* controllo se il mob che sferra il colpo ha o meno l'act_class monaco o barbaro, in quel caso colpisce sempre l'altro mob contro cui sta combattendo */
+    if(IS_NPC(ch) && IS_NPC(v) && !IS_SET(ch->specials.act, (ACT_MONK)) && !IS_SET(ch->specials.act, (ACT_BARBARIAN)))
+        classe = -1;
 	dam = PreProcDam(v, type, dam, classe);
 
 
@@ -2222,7 +2225,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					int attacktype, int location) {
 	int nr, max_hit, i, j;
 	struct message_type* messages;
-	char buf[500];
+	char buf[MAX_STRING_LENGTH];
 
 	/* filter out kicks, hard coded in do_kick */
 	if(attacktype == SKILL_KICK) {
@@ -2246,36 +2249,52 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 				}
 
 				if(!IS_NPC(v) && (GetMaxLevel(v) > MAX_MORT)) {
-					act(messages->god_msg.attacker_msg,
-						FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
-					act(messages->god_msg.victim_msg,
-						FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
+                    sprintf(buf, "%s", messages->god_msg.attacker_msg);
+                    if(IS_SET(ch->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                    sprintf(buf, "%s", messages->god_msg.victim_msg);
+                    if(IS_SET(v->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 				}
 				else if(dam > 0) {
 					if(GET_POS(v) == POSITION_DEAD) {
-						act(messages->die_msg.attacker_msg,
-							FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
-						act(messages->die_msg.victim_msg,
-							FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
+                        sprintf(buf, "%s", messages->die_msg.attacker_msg);
+                        if(IS_SET(ch->player.user_flags,PWP_MODE))
+                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                        sprintf(buf, "%s", messages->die_msg.victim_msg);
+                        if(IS_SET(v->player.user_flags,PWP_MODE))
+                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->die_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 					}
 					else {
-						act(messages->hit_msg.attacker_msg,
-							FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
-						act(messages->hit_msg.victim_msg,
-							FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
+                        sprintf(buf, "%s", messages->hit_msg.attacker_msg);
+                        if(IS_SET(ch->player.user_flags,PWP_MODE))
+                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                        sprintf(buf, "%s", messages->hit_msg.victim_msg);
+                        if(IS_SET(v->player.user_flags,PWP_MODE))
+                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->hit_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 					}
 				} /* dam >0 */
 				else if(dam == 0) {
-					act(messages->miss_msg.attacker_msg,
-						FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
-					act(messages->miss_msg.victim_msg,
-						FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
+                    sprintf(buf, "%s", messages->miss_msg.attacker_msg);
+                    if(IS_SET(ch->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                    sprintf(buf, "%s", messages->miss_msg.victim_msg);
+                    if(IS_SET(v->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->miss_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 				} /* dam == 0 */
@@ -3221,32 +3240,37 @@ DamageResult HitVictim(struct char_data* ch, struct char_data* v, int dam,
 		GET_HIT(ch) += leech;
 		alter_hit(ch, 0);
 
-		if(leech > 0) {
+		if(leech > 0 && dead == AllLiving) {
 
 			if(leech <= 5)
             {
-                    act("Assaggi l'energia vitale di $N.", FALSE, ch, 0, v, TO_CHAR);
-                    act("$n assaggia la tua energia vitale.", FALSE, ch, 0, v, TO_VICT);
-                    act("$n assaggia l'energia vitale di $N.", FALSE, ch, 0, v, TO_NOTVICT);
+                    act("Assaggi l'energia vitale di $N.", TRUE, ch, 0, v, TO_CHAR);
+                    act("$n assaggia la tua energia vitale.", TRUE, ch, 0, v, TO_VICT);
+                    act("$n assaggia l'energia vitale di $N.", TRUE, ch, 0, v, TO_NOTVICT);
 			}
 			else if(leech > 5 && leech < 11)
             {
-                    act("Assorbi l'energia vitale di $N.", FALSE, ch, 0, v, TO_CHAR);
-                    act("$n assorbe la tua energia vitale.", FALSE, ch, 0, v, TO_VICT);
-                    act("$n assorbe l'energia vitale di $N.", FALSE, ch, 0, v, TO_NOTVICT);
+                    act("Assorbi l'energia vitale di $N.", TRUE, ch, 0, v, TO_CHAR);
+                    act("$n assorbe la tua energia vitale.", TRUE, ch, 0, v, TO_VICT);
+                    act("$n assorbe l'energia vitale di $N.", TRUE, ch, 0, v, TO_NOTVICT);
 			}
 			else
             {
-                    act("Banchetti con l'energia vitale di $N.", FALSE, ch, 0, v, TO_CHAR);
-                    act("$n banchetta con la tua energia vitale.", FALSE, ch, 0, v, TO_VICT);
-                    act("$n banchetta con l'energia vitale di $N.", FALSE, ch, 0, v, TO_NOTVICT);
+                    act("Banchetti con l'energia vitale di $N.", TRUE, ch, 0, v, TO_CHAR);
+                    act("$n banchetta con la tua energia vitale.", TRUE, ch, 0, v, TO_VICT);
+                    act("$n banchetta con l'energia vitale di $N.", TRUE, ch, 0, v, TO_NOTVICT);
 			}
 
 			// Message for room
-            act("$N sembra piu' debole.", FALSE, ch, 0, v, TO_CHAR);
-            act("Sembri piu' debole.", FALSE, ch, 0, v, TO_VICT);
-            act("$N sembra piu' debole.", FALSE, ch, 0, v, TO_NOTVICT);
+            act("$N sembra piu' debole.", TRUE, ch, 0, v, TO_CHAR);
+            act("Sembri piu' debole.", TRUE, ch, 0, v, TO_VICT);
+            act("$N sembra piu' debole.", TRUE, ch, 0, v, TO_NOTVICT);
 		}
+        else if(leech > 0 && dead == VictimDead)
+        {
+            act("Ti getti sulla tua vittima assorbendone le ultime energie vitali!", TRUE, ch, 0, 0, TO_CHAR);
+            act("$n si getta sulla sua vittima assorbendone le ultime energie vitali!", TRUE, ch, 0, 0, TO_NOTVICT);
+        }
 	}
 
 	/*  if the victim survives, lets hit him with a weapon spell */
@@ -4175,7 +4199,7 @@ int DamageOneItem(struct char_data* ch, int dam_type, struct obj_data* obj) {
 
 	num = DamagedByAttack(obj, dam_type);
 	if(num) {
-		sprintf(buf, "%s is %s.\n\r",obj->short_description,
+		sprintf(buf, "%s si %s.\n\r",obj->short_description,
 				ItemDamType[dam_type-1]);
 		send_to_char(buf,ch);
 		if(num == -1) {   /* destroy object*/
@@ -4481,7 +4505,7 @@ void DamageStuff(struct char_data* v, int type, int dam, int location) {
 					(type == TYPE_SLASH && dam > 30) ||
 					(type == TYPE_SMITE && dam > 10) ||
 					(type == TYPE_HIT && dam > 40) ||
-					(num == 11 && dam > 1)) {
+					(num == WEAR_SHIELD && dam > 1)) {
 				if(DamageOneItem(v, BLOW_DAMAGE, v->equipment[ num ])) {
 					if((obj = unequip_char(v, num)) != NULL) {
 						MakeScrap(v, NULL, obj);

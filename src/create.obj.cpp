@@ -55,6 +55,7 @@ namespace Alarmud {
 #define CHANGE_OBJ_AFFECT5   25
 #define CHANGE_AFFECT5_MOD   26
 #define CHANGE_OBJ_TYPE2     27
+#define CHANGE_OBJ_SPECIAL   28
 
 #define ENTER_CHECK        1
 
@@ -65,7 +66,7 @@ const char* obj_edit_menu = "    1) Name                    2) Short description
 							"    5) Wear positions          6) Extra flags\n\r"
 							"    7) Weight                  8) Value\n\r"
 							"    9) Rent cost              10) Extra affects\n\r"
-							"   11) Object values\n\r\n\r";
+							"   11) Object values          12) Special\n\r\n\r";
 
 void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	int i, a, check=0, row, update;
@@ -483,6 +484,10 @@ void ObjEdit(struct char_data* ch, const char* arg) {
 			ch->specials.oedit = CHANGE_OBJ_VALUES;
 			ChangeObjValues(ch, "", ENTER_CHECK);
 			return;
+        case 12:
+            ch->specials.oedit = CHANGE_OBJ_SPECIAL;
+            ChangeObjSpecial(ch, "", ENTER_CHECK);
+            return;
 		default:
 			UpdateObjMenu(ch);
 			return;
@@ -547,12 +552,69 @@ void ObjEdit(struct char_data* ch, const char* arg) {
 	case OBJ_HIT_RETURN:
 		ObjHitReturn(ch, arg, 0);
 		return;
+    case CHANGE_OBJ_SPECIAL:
+        ChangeObjSpecial(ch, arg, 0);
+        return;
 	default:
 		mudlog(LOG_ERROR, "Got to bad spot in ObjEdit");
 		return;
 	}
 }
 
+void ChangeObjSpecial(struct char_data* ch, const char* arg, int type) {
+    char buf[256], proc[256];
+    struct obj_data* obj;
+    struct OtherSpecialProcEntry* op;
+    int i;
+    int lastotherproc = 0;
+
+    if(type != ENTER_CHECK)
+        if(!*arg || (*arg == '\n'))
+        {
+            ch->specials.medit = OBJ_MAIN_MENU;
+            UpdateObjMenu(ch);
+            return;
+        }
+
+    obj = ch->specials.objedit;
+    if(type != ENTER_CHECK)
+    {
+        only_argument(arg,proc);
+        for(i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++)
+        {
+            lastotherproc++;
+        }
+
+        if(!(op=(struct OtherSpecialProcEntry*)
+                bsearch(&proc,
+                        otherproc,
+                        lastotherproc,
+                        sizeof(struct OtherSpecialProcEntry),
+                        nomecompare)))
+        {
+            mudlog(LOG_ERROR,
+                    "obj_assign: Obj %d not found in database.",obj_index[obj->item_number].iVNum);
+        }
+        else
+        {
+            obj_index[obj->item_number].func         = op->proc;
+            obj_index[obj->item_number].specname     = op->nome;
+            obj_index[obj->item_number].specparms    = strdup("");
+        }
+        ch->specials.oedit = OBJ_MAIN_MENU;
+        UpdateObjMenu(ch);
+        return;
+    }
+
+    sprintf(buf, VT_HOMECLR);
+    send_to_char(buf, ch);
+
+    sprintf(buf, "Current Obj Special: %s",obj_index[obj->item_number].specname);
+    send_to_char(buf, ch);
+    send_to_char("\n\r\n\rNew Obj Special (name): ", ch);
+
+    return;
+}
 
 void ChangeObjName(struct char_data* ch, const char* arg, int type) {
 	char buf[255];

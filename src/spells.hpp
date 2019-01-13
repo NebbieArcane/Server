@@ -359,18 +359,22 @@ namespace Alarmud {
 
 /* status */
 #define STATUS_QUEST      290
-    
-#define MAX_EXIST_SPELL         290   /* max number of skills/spells/status */
+#define SKILL_DAIMOKU     291
+#define SKILL_FORGE      292   /* ACIDUS 2003 skill forge per creazione oggetti */
+#define SKILL_DETERMINE      293   /* ACIDUS 2003 skill determine established per determinazione teleport */
+#define SKILL_EQUILIBRIUM      294   /* ACIDUS 2003 skill better equilibrium per equilibrio nanesco */
+
+#define MAX_EXIST_SPELL         294   /* max number of skills/spells/status */
 
 
 
-#define FIRST_BREATH_WEAPON          306 /*        201 */
-#define SPELL_FIRE_BREATH            306 /*        201 */
-#define SPELL_GAS_BREATH             307 /*        202 */
-#define SPELL_FROST_BREATH           308 /*        203 */
-#define SPELL_ACID_BREATH            309 /*        204 */
-#define SPELL_LIGHTNING_BREATH       310 /*        205 */
-#define LAST_BREATH_WEAPON           310 /*        205 */
+#define FIRST_BREATH_WEAPON          325 /*        201 */
+#define SPELL_FIRE_BREATH            325 /*        201 */
+#define SPELL_GAS_BREATH             326 /*        202 */
+#define SPELL_FROST_BREATH           327 /*        203 */
+#define SPELL_ACID_BREATH            328 /*        204 */
+#define SPELL_LIGHTNING_BREATH       329 /*        205 */
+#define LAST_BREATH_WEAPON           329 /*        205 */
 
 /* NOTE!!!!!!!!!!!!!!!
  * all spells MUST be before these types.   Otherwise, certain aspects of
@@ -378,25 +382,25 @@ namespace Alarmud {
  * */
 
 // Flyp 20180201: this set of types should identify only phisical damage and exclude the spells
-#define TYPE_HIT                     311
-#define TYPE_BLUDGEON                312
-#define TYPE_PIERCE                  313
-#define TYPE_SLASH                   314
-#define TYPE_WHIP                    315  /* EXAMPLE */
-#define TYPE_CLAW                    316  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_BITE                    317  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_STING                   318  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_CRUSH                   319  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_CLEAVE                  320
-#define TYPE_STAB                    321
-#define TYPE_SMASH                   322
-#define TYPE_SMITE                   323
-#define TYPE_BLAST                   324
-#define TYPE_RANGE_WEAPON             325
+#define TYPE_HIT                     330
+#define TYPE_BLUDGEON                331
+#define TYPE_PIERCE                  332
+#define TYPE_SLASH                   333
+#define TYPE_WHIP                    334  /* EXAMPLE */
+#define TYPE_CLAW                    335  /* NO MESSAGES WRITTEN YET! */
+#define TYPE_BITE                    336  /* NO MESSAGES WRITTEN YET! */
+#define TYPE_STING                   337  /* NO MESSAGES WRITTEN YET! */
+#define TYPE_CRUSH                   338  /* NO MESSAGES WRITTEN YET! */
+#define TYPE_CLEAVE                  339
+#define TYPE_STAB                    340
+#define TYPE_SMASH                   341
+#define TYPE_SMITE                   342
+#define TYPE_BLAST                   343
+#define TYPE_RANGE_WEAPON            344
 
 /* This one needs to be after all real damage skills, might wanna */
 /* alter messages if you move it */
-#define TYPE_SUFFERING               326
+#define TYPE_SUFFERING               345
 /* MAX is MAX_SKILLS = 350 */
 
 /*****************************************
@@ -405,21 +409,17 @@ namespace Alarmud {
  * devono essere dati dalla procedura che
  * chiama la funzione damage.
  * */
-#define TYPE_GENERIC_FIRST   327
-#define TYPE_GENERIC_FIRE    327
-#define TYPE_GENERIC_ELEC    328
-#define TYPE_GENERIC_COLD    329
-#define TYPE_GENERIC_ENERGY  330
-#define TYPE_GENERIC_ACID    331
-#define TYPE_GENERIC_LAST    331
+#define TYPE_GENERIC_FIRST   346
+#define TYPE_GENERIC_FIRE    346
+#define TYPE_GENERIC_ELEC    347
+#define TYPE_GENERIC_COLD    348
+#define TYPE_GENERIC_ENERGY  349
+#define TYPE_GENERIC_ACID    350
+#define TYPE_GENERIC_LAST    350
 
 /* More anything but spells and weapontypes can be insterted here! */
 #define MAX_TYPES 70
-#define SKILL_DAIMOKU     332
-#define SKILL_FORGE      333   /* ACIDUS 2003 skill forge per creazione oggetti */
-#define SKILL_DETERMINE      334   /* ACIDUS 2003 skill determine established per determinazione teleport */
-#define SKILL_EQUILIBRIUM      335   /* ACIDUS 2003 skill better equilibrium per equilibrio nanesco */
-#define MAX_SPL_LIST     335
+#define MAX_SPL_LIST     350
 
 #define SAVING_PARA   0
 #define SAVING_ROD    1

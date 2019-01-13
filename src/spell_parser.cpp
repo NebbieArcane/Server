@@ -345,8 +345,12 @@ const char* spells[]= {
 	"ultra blast",
 	"intensify",
 	"spot",
-    "",
+    "immolation",
     "quest",
+    "daimoku",
+    "forge",
+    "determine",
+    "equilibrium",
 	"\n"
 };
 
@@ -459,31 +463,31 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 	alignvalue=spell_info[nr].align_modifier;
 	ostilityvalue=spell_info[nr].ostility_level;
 	if(alignvalue<10) 		{
-		strcpy(aligndesc,"Demoniaco       ");
+		strcpy(aligndesc,"$c0009Demoniaco$c0007       ");
 	}
 	if(alignvalue==0) 		{
-		strcpy(aligndesc,"Neutrale        ");
+		strcpy(aligndesc,"$c0010Neutrale$c0007        ");
 	}
 	if(alignvalue>0) 		{
-		strcpy(aligndesc,"Buono           ");
+		strcpy(aligndesc,"$c0014Buono$c0007           ");
 	}
 	if(alignvalue>0) 		{
-		strcpy(aligndesc,"Angelico        ");
+		strcpy(aligndesc,"$c0014Angelico$c0007        ");
 	}
 	if(ostilityvalue<0) 	{
-		strcpy(ostilitydesc,"Non aggressiva  ");
+		strcpy(ostilitydesc,"$c0015Non aggressiva$c0007  ");
 	}
 	if(ostilityvalue<10) 	{
-		strcpy(ostilitydesc,"Carezzevole     ");
+		strcpy(ostilitydesc,"$c0015Carezzevole$c0007     ");
 	}
 	if(ostilityvalue==0) 	{
-		strcpy(ostilitydesc,"Non applicabile ");
+		strcpy(ostilitydesc,"$c0010Non applicabile$c0007 ");
 	}
 	if(ostilityvalue>0) 	{
-		strcpy(ostilitydesc,"Aggressiva      ");
+		strcpy(ostilitydesc,"$c0001Aggressiva$c0007      ");
 	}
 	if(ostilityvalue>10) 	{
-		strcpy(ostilitydesc,"Molto aggressiva");
+		strcpy(ostilitydesc,"$c0001Molto aggressiva$c0007");
 	}
 	sprintf(buf,
 			"\n\rYou cast as about %d level, with spell at about %d level\n\r"
@@ -634,12 +638,12 @@ int check_falling(struct char_data* ch) {
 
 
 	if(ch->skills && number(1,101) < ch->skills[SKILL_SAFE_FALL].learned) {
-		act("You manage to slow your fall, enough to stay alive..",
+		act("Riesci a contenere la caduta, abbastanza da rimanere in vita...",
 			TRUE, ch, 0, 0, TO_CHAR);
 		saved = TRUE;
 	}
 	else {
-		act("The world spins, and you sky-dive out of control",
+		act("Il mondo gira! Perdi completamente il controllo...",
 			TRUE, ch, 0, 0, TO_CHAR);
 		saved = FALSE;
 	}
@@ -657,10 +661,10 @@ int check_falling(struct char_data* ch) {
 		else {
 			/* pretend that this is the smash room.  */
 			if(count > 1) {
-				send_to_char("You are smashed into tiny pieces.\n\r", ch);
-				act("$n smashes against the ground at high speed",
+				send_to_char("La tua caduta termina non appena ti frantumi al suolo in piccoli pezzi.\n\r", ch);
+				act("$n si frantuma al suolo ad altissima velocita'!",
 					FALSE, ch, 0, 0, TO_ROOM);
-				act("You are drenched with blood and gore",
+				act("Schizzi di $c0001sangue$c0007 e pezzi di $c0013carne$c0007 si spargono ovunque.",
 					FALSE,ch, 0, 0, TO_ROOM);
 
 				/* should damage all their stuff */
@@ -679,11 +683,11 @@ int check_falling(struct char_data* ch) {
 
 			}
 			else {
-				send_to_char("You land with a resounding THUMP!\n\r", ch);
+				send_to_char("Atterri con un risonante $c5009THUMP$c0007! Subito dopo svieni...\n\r", ch);
 				GET_HIT(ch) = 0;
 				alter_hit(ch,0);
 				GET_POS(ch) = POSITION_STUNNED;
-				act("$n lands with a resounding THUMP!", FALSE, ch, 0, 0, TO_ROOM);
+				act("$n atterra con un risonante $c5009THUMP$c0007!", FALSE, ch, 0, 0, TO_ROOM);
 
 				/* should damage all their stuff */
 				DamageAllStuff(ch, BLOW_DAMAGE);
@@ -693,11 +697,11 @@ int check_falling(struct char_data* ch) {
 			}
 		}
 
-		act("$n plunges towards oblivion", FALSE, ch, 0, 0, TO_ROOM);
-		send_to_char("You plunge from the sky\n\r", ch);
+		act("$n si tuffa verso l'oblio!", FALSE, ch, 0, 0, TO_ROOM);
+		send_to_char("Ti tuffi dal $c0014cielo$c0007!\n\r", ch);
 		char_from_room(ch);
 		char_to_room(ch, rp->dir_option[DOWN]->to_room);
-		act("$n falls from the sky", FALSE, ch, 0, 0, TO_ROOM);
+		act("$n cade dal $c0014cielo$c0007!", FALSE, ch, 0, 0, TO_ROOM);
 		count++;
 
 		do_look(ch, "", 15);
@@ -710,11 +714,11 @@ int check_falling(struct char_data* ch) {
 		if(targ->sector_type != SECT_AIR) {
 			/* do damage, or kill */
 			if(count == 1) {
-				send_to_char("You land with a resounding THUMP!\n\r", ch);
+				send_to_char("Atterri con un risonante $c5009THUMP$c0007! Subito dopo svieni...\n\r", ch);
 				GET_HIT(ch) = 0;
 				alter_hit(ch,0);
 				GET_POS(ch) = POSITION_STUNNED;
-				act("$n lands with a resounding THUMP!", FALSE, ch, 0, 0, TO_ROOM);
+				act("$n atterra con un risonante $c5009THUMP$c0007!", FALSE, ch, 0, 0, TO_ROOM);
 				/*
 				 * should damage all their stuff
 				 */
@@ -724,14 +728,14 @@ int check_falling(struct char_data* ch) {
 
 			}
 			else if(!saved) {
-				send_to_char("You are smashed into tiny pieces.\n\r", ch);
+				send_to_char("La tua caduta termina non appena ti frantumi al suolo in piccoli pezzi.\n\r", ch);
 				if(targ->sector_type >= SECT_WATER_SWIM)
-					act("$n is smashed to a pulp by $s impact with the water",
+					act("$n e' ridotto in $c0003poltiglia$c0007 dal suo impatto con l'$c0012acqua$c0007!",
 						FALSE, ch, 0, 0, TO_ROOM);
 				else
-					act("$n is smashed to a bloody pulp by $s impact with the ground",
+					act("$n si frantuma al suolo ad altissima velocita'!",
 						FALSE, ch, 0, 0, TO_ROOM);
-				act("You are drenched with blood and gore", FALSE,ch, 0, 0, TO_ROOM);
+				act("Schizzi di $c0001sangue$c0007 e pezzi di $c0013carne$c0007 si spargono ovunque.", FALSE, ch, 0, 0, TO_ROOM);
 
 				/* should damage all their stuff */
 				DamageAllStuff(ch, BLOW_DAMAGE);
@@ -749,11 +753,11 @@ int check_falling(struct char_data* ch) {
 
 			}
 			else {
-				send_to_char("You land with a resounding THUMP!\n\r", ch);
+				send_to_char("Atterri con un risonante $c5009THUMP$c0007! Subito dopo svieni...\n\r", ch);
 				GET_HIT(ch) = 0;
 				alter_hit(ch,0);
 				GET_POS(ch) = POSITION_STUNNED;
-				act("$n lands with a resounding THUMP!", FALSE, ch, 0, 0, TO_ROOM);
+				act("$n atterra con un risonante $c5009THUMP$c0007!", FALSE, ch, 0, 0, TO_ROOM);
 
 				/* should damage all their stuff */
 				DamageAllStuff(ch, BLOW_DAMAGE);
@@ -791,7 +795,7 @@ void check_drowning(struct char_data* ch) {
 	}
 
 	if(rp->sector_type == SECT_UNDERWATER) {
-		send_to_char("PANIC!  You're drowning!!!!!!", ch);
+		send_to_char("SEI NEL PANICO! Stai $c0012annegando$c0007!!!!!!", ch);
 		GET_HIT(ch)-=number(1,30);
 		alter_hit(ch,0);
 		GET_MOVE(ch) -= number(10,50);
@@ -830,9 +834,20 @@ void SpellWearOff(int s, struct char_data* ch) {
 		return;
 	}
 
+    /* se l'affect che sparisce è paralisi cambio momentaneamente la position */
+    if(s == SPELL_PARALYSIS || s == SPELL_ENTANGLE || s == SKILL_DAIMOKU)
+    {
+        GET_POS(ch) = POSITION_RESTING;
+    }
+    
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
 		act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
+    
+    if(s == SPELL_PARALYSIS || s == SPELL_ENTANGLE || s == SKILL_DAIMOKU)
+    {
+        GET_POS(ch) = POSITION_STUNNED;
+    }
 
 	if(spell_wear_off_room_msg[s] && *spell_wear_off_room_msg[s] &&
 			(IS_NPC(ch) || !IS_SET(ch->specials.act, PLR_STEALTH))) {
@@ -851,7 +866,7 @@ void SpellWearOff(int s, struct char_data* ch) {
                     
                 case POSITION_FIGHTING  :
                     WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
-                    sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!$c0007\n\r",ch->player.name);
+                    sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!\n\r",ch->player.name);
                     act(buf, FALSE, ch, 0, ch, TO_ROOM);
                     stop_fighting(ch);
                     extract_char(ch);
@@ -861,7 +876,7 @@ void SpellWearOff(int s, struct char_data* ch) {
                     break;
                     
                 default:
-                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",ch->player.name);
+                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...\n\r",ch->player.name);
                     act(buf, FALSE, ch, 0, ch, TO_ROOM);
                     extract_char(ch);
                     break;
@@ -950,7 +965,7 @@ void CheckSpecialties(struct char_data* ch, struct affected_type* af)
 			}
 		}
 		if(!sulcorpo) {
-			send_to_char("Devi indossare vesti piu adatte alla meditazione",ch);
+			send_to_char("Devi indossare vesti piu adatte alla meditazione.",ch);
 			af->duration=0;
 		}
 
@@ -1246,19 +1261,19 @@ void stop_follower(struct char_data* ch) {
 	}
 
 	if(IS_AFFECTED(ch, AFF_CHARM)) {
-		act("You realize that $N is a jerk!", FALSE, ch, 0, ch->master, TO_CHAR);
-		act("$n realizes that $N is a jerk!", FALSE, ch, 0, ch->master,
+		act("Realizzi che $N ti ha ingannato!", FALSE, ch, 0, ch->master, TO_CHAR);
+		act("$n realizza che $N l'ha ingannat$b!", FALSE, ch, 0, ch->master,
 			TO_NOTVICT);
-		act("$n hates your guts!", FALSE, ch, 0, ch->master, TO_VICT);
+		act("$n ti odia!", FALSE, ch, 0, ch->master, TO_VICT);
 		if(affected_by_spell(ch, SPELL_CHARM_PERSON)) {
 			affect_from_char(ch, SPELL_CHARM_PERSON);
 		}
 	}
 	else {
-		act("You stop following $N.", FALSE, ch, 0, ch->master, TO_CHAR);
+		act("Smetti di seguire $N.", FALSE, ch, 0, ch->master, TO_CHAR);
 		if(!IS_SET(ch->specials.act,PLR_STEALTH)) {
-			act("$n stops following $N.", FALSE, ch, 0, ch->master, TO_NOTVICT);
-			act("$n stops following you.", FALSE, ch, 0, ch->master, TO_VICT);
+			act("$n smette di seguire $N.", FALSE, ch, 0, ch->master, TO_NOTVICT);
+			act("$n smette di seguirti.", FALSE, ch, 0, ch->master, TO_VICT);
 		}
 	}
 
@@ -1317,8 +1332,8 @@ void add_follower(struct char_data* ch, struct char_data* leader) {
 #else
 	/* instead of crashing the mud we try this */
 	if(ch->master) {
-		act("$n cannot follow you for some reason.",TRUE,ch,0,leader,TO_CHAR);
-		act("You cannot follow $N for some reason.",TRUE,ch,0,leader,TO_CHAR);
+		act("$n non puo' seguirti, ha le sue valide ragioni!",TRUE,ch,0,leader,TO_CHAR);
+		act("Per delle valide ragioni non puoi seguire $N.",TRUE,ch,0,leader,TO_CHAR);
 		mudlog(LOG_SYSERR, "%s cannot follow %s for some reason", GET_NAME(ch),
 			   GET_NAME(leader));
 		return;
@@ -1334,10 +1349,10 @@ void add_follower(struct char_data* ch, struct char_data* leader) {
 	leader->followers = k;
 
 
-	act("You now follow $N.", FALSE, ch, 0, leader, TO_CHAR);
+	act("Inizi a seguire $N.", FALSE, ch, 0, leader, TO_CHAR);
 	if(!IS_SET(ch->specials.act, PLR_STEALTH)) {
-		act("$n starts following you.", TRUE, ch, 0, leader, TO_VICT);
-		act("$n now follows $N.", TRUE, ch, 0, leader, TO_NOTVICT);
+		act("$n inizia a seguirti.", TRUE, ch, 0, leader, TO_VICT);
+		act("$n inizia a seguire $N.", TRUE, ch, 0, leader, TO_NOTVICT);
 	}
 }
 
@@ -1407,8 +1422,8 @@ void say_spell(struct char_data* ch, int si) {
 
 
 
-	sprintf(buf2,"$n utters the words, '%s'", buf);
-	sprintf(buf, "$n utters the words, '%s'", spells[si-1]);
+	sprintf(buf2,"$n pronuncia le parole, '$c0015%s$c0007'", buf);
+	sprintf(buf, "$n pronuncia le parole, '$c0015%s$c0007'", spells[si-1]);
 
 	for(temp_char = real_roomp(ch->in_room)->people;
 			temp_char;
@@ -1519,7 +1534,7 @@ ACTION_FUNC(do_cast) {
 	struct obj_data* tar_obj;
 	struct char_data* tar_char;
 	struct char_data* tmp_char;
-	char name[MAX_INPUT_LENGTH];
+	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	int qend=0;
 	int spl=0;
 	int i=0;
@@ -1578,7 +1593,7 @@ ACTION_FUNC(do_cast) {
 	}
 
 	if(*argument != '\'') {
-		send_to_char("Usa sempre i simboli sacri della magia: '\n\r",ch);
+		send_to_char("Usa sempre i simboli sacri della $c0012magia$c0007: $c0011'\n\r",ch);
 		return;
 	}
 
@@ -1587,7 +1602,7 @@ ACTION_FUNC(do_cast) {
 	for(qend=1; *(argument+qend) && (*(argument+qend) != '\'') ; qend++);
 
 	if(*(argument + qend) != '\'') {
-		send_to_char("Usa sempre i simboli sacri della magia: '\n\r",ch);
+		send_to_char("Usa sempre i simboli sacri della $c0012magia$c0007: $c0011'\n\r",ch);
 		return;
 	}
 
@@ -1754,7 +1769,7 @@ ACTION_FUNC(do_cast) {
 
 			if(!IS_IMMORTAL(ch)) {
 				if(IS_SET(spell_info[spl].targets, TAR_VIOLENT) &&
-						check_peaceful(ch, "Questa zona sembra refrattaria alla magia!\n\r")) {
+						check_peaceful(ch, "Questa zona sembra refrattaria alla $c0012magia$c0007!\n\r")) {
 					return;
 				}
 			}
@@ -1902,35 +1917,35 @@ ACTION_FUNC(do_cast) {
 			if(!target_ok) {
 				if(*name) {
 					if(IS_SET(spell_info[spl].targets, TAR_CHAR_WORLD)) {
-						send_to_char("Nobody playing by that name.\n\r", ch);
+						send_to_char("Non c'e' nessuno con quel nome.\n\r", ch);
 					}
 					else if(IS_SET(spell_info[spl].targets, TAR_CHAR_ROOM)) {
-						send_to_char("Nobody here by that name.\n\r", ch);
+						send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
 					}
 					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_INV)) {
-						send_to_char("You are not carrying anything like that.\n\r", ch);
+						send_to_char("Non hai con te niente del genere.\n\r", ch);
 					}
 					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_ROOM)) {
-						send_to_char("Nothing here by that name.\n\r", ch);
+						send_to_char("Non c'e' niente del genere qui.\n\r", ch);
 					}
 					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD)) {
-						send_to_char("Nothing at all by that name.\n\r", ch);
+						send_to_char("Non c'e' niente del genere.\n\r", ch);
 					}
 					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_EQUIP)) {
-						send_to_char("You are not wearing anything like that.\n\r", ch);
+						send_to_char("Non stai indossando niente del genere.\n\r", ch);
 					}
 					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD)) {
-						send_to_char("Nothing at all by that name.\n\r", ch);
+						send_to_char("Non c'e' niente del genere.\n\r", ch);
 					}
 
 				}
 				else {
 					/* Nothing was given as argument */
 					if(spell_info[spl].targets < TAR_OBJ_INV) {
-						send_to_char("Who should the spell be cast upon?\n\r", ch);
+						send_to_char("Su chi vorresti lanciare l'incantesimo?\n\r", ch);
 					}
 					else {
-						send_to_char("What should the spell be cast upon?\n\r", ch);
+						send_to_char("Su cosa vorresti lanciare l'incantesimo?\n\r", ch);
 					}
 				}
 				return;
@@ -1938,18 +1953,19 @@ ACTION_FUNC(do_cast) {
 			else {
 				/* TARGET IS OK */
 				if((tar_char == ch) && IS_SET(spell_info[spl].targets, TAR_SELF_NONO)) {
-					send_to_char("You can not cast this spell upon yourself.\n\r", ch);
+					act("Non puoi lanciare questo incantesimo su te stess$b!", FALSE, ch, 0, 0, TO_CHAR);
 					return;
 				}
 				else if(tar_char != ch &&
 						IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
-					send_to_char("You can only cast this spell upon yourself.\n\r", ch);
+                    act("Puoi lanciare questo incantesimo solo su te stess$b!", FALSE, ch, 0, 0, TO_CHAR);
 					if((GetMaxLevel(ch)<DIO+1)) { // SALVO chi e' > di DIO puo' castare a tutti
 						return;
 					}
 				}
 				else if(IS_AFFECTED(ch, AFF_CHARM) && (ch->master == tar_char)) {
-					send_to_char("You are afraid that it could harm your master.\n\r", ch);
+                    sprintf(buf, "Hai paura che potrebbe danneggiare %s tu%s padron%s.\n\r", (GET_SEX(ch->master) == SEX_FEMALE ? "la" : "il"), (GET_SEX(ch->master) == SEX_FEMALE ? "a" : "o"), (GET_SEX(ch->master) == SEX_FEMALE ? "a" : "e"));
+                    send_to_char(buf, ch);
 					return;
 				}
 			}
@@ -1957,16 +1973,25 @@ ACTION_FUNC(do_cast) {
 			if(cmd == CMD_RECALL) {
 				/* recall */
 				if(!MEMORIZED(ch, spl)) {
-					send_to_char("You don't have that spell memorized!\n\r", ch);
+					send_to_char("Non hai questo incantesimo memorizzato!\n\r", ch);
 					return;
 				}
 			}
 			else {
 				if(GetMaxLevel(ch) < IMMORTALE) {
 					if(GET_MANA(ch) < (int)USE_MANA(ch, (int)spl) ||
-							GET_MANA(ch) <=0) {
-						send_to_char("You can't summon enough energy!\n\r", ch);
-						return;
+							GET_MANA(ch) <=0)
+                    {
+                        if(cmd != CMD_MIND)
+                        {
+                            send_to_char("Non hai abbastanza $c0011energia$c0007!\n\r", ch);
+                            return;
+                        }
+                        else
+                        {
+                            send_to_char("Non hai abbastanza $c0009energia mentale$c0007!\n\r", ch);
+                            return;
+                        }
 					}
 				}
 			}
@@ -1978,8 +2003,7 @@ ACTION_FUNC(do_cast) {
 			WAIT_STATE(ch, spell_info[spl].beats);
 
 			if((spell_info[spl].spell_pointer == 0) && spl>0)
-				send_to_char("Sorry, this magic has not yet been implemented :(\n\r",
-							 ch);
+				send_to_char("Mi dispiace, questo incantesimo non e' stato ancora inventato :(\n\r", ch);
 			else {
 				max = ch->specials.spellfail;
 				if(IS_MAESTRO_DEGLI_DEI(ch)) {
@@ -2061,7 +2085,7 @@ ACTION_FUNC(do_cast) {
 						!IsSpecialized(ch->skills[ spl ].special)) {
 					send_to_char("Perdi la tua concentrazione!\n\r", ch);
 					if(sf_pejus) {
-						act("Certo.. con tutta quella robaccia addosso.....",
+						act("Certo.. con tutta quella robaccia addosso...",
 							FALSE, ch, NULL, NULL, TO_CHAR);
 					}
 					cost = (int)USE_MANA(ch, (int)spl);
@@ -2084,17 +2108,15 @@ ACTION_FUNC(do_cast) {
 					/* psi shit ain't magic */
 					if(affected_by_spell(tar_char,SPELL_ANTI_MAGIC_SHELL) &&
 							cmd != CMD_MIND && !IS_IMMORTAL(ch)) {
-						act("Your magic fizzles against $N's anti-magic shell!",
-							FALSE,ch,0,tar_char,TO_CHAR);
-						act("$n wastes a spell on $N's anti-magic shell!",
-							FALSE,ch,0,tar_char,TO_ROOM);
-						act("$n casts a spell and growls as it fizzles against "
-							"anti-magic shell!",FALSE,ch,0,tar_char,TO_VICT);
+						act("Il tuo incantesimo svanisce contro lo scudo $c0012anti-magia$c0007 di $N!", FALSE, ch, 0, tar_char, TO_CHAR);
+						act("$n prova inutilmente a lanciare un incantesimo contro lo scudo $c0012anti-magia$c0007 di $N", FALSE, ch, 0, tar_char, TO_ROOM);
+                        if(ch != tar_char)
+                            act("$n lancia un incantesimo ed impreca mentre svanisce contro lo scudo $c0012anti-magia$c0007!", FALSE, ch, 0, tar_char, TO_VICT);
 						return;
 					}
 
 					if(GET_POS(tar_char) == POSITION_DEAD) {
-						send_to_char("The magic fizzles against the dead body.\n", ch);
+						send_to_char("Il tuo incantesimo svanisce sul cadavere...\n\r", ch);
 						return;
 					}
 				}
@@ -2103,32 +2125,32 @@ ACTION_FUNC(do_cast) {
 				if(affected_by_spell(ch,SPELL_ANTI_MAGIC_SHELL)
 						&& cmd != CMD_MIND
 						&& !IS_IMMORTAL(ch)) {
-					act("Your magic fizzles against your anti-magic shell!",
-						FALSE,ch,0,0,TO_CHAR);
-					act("$n tries to cast a spell within a anti-magic shell, muhahaha!",
-						FALSE,ch,0,0,TO_ROOM);
+					act("Il tuo incantesimo svanisce contro il tuo scudo $c0012anti-magia$c0007!", FALSE, ch, 0, 0, TO_CHAR);
+					act("$n prova inutilmente a lanciare un incantesimo oltre il suo scudo $c0012anti-magia$c0007, muhahaha!", FALSE, ch, 0, 0, TO_ROOM);
 					return;
 				}
 				if(!IS_IMMORTAL(ch)) {
 					if(cmd == CMD_CAST &&
 							check_nomagic(ch, "Il mana si rifuta di scorrere in questa zona.",
-										  "La magia di $n muore sulle sue labbra")) {
+										  "La magia di $n muore sulle sue labbra.")) {
 						return;
 					}
 					if(cmd == CMD_RECALL &&
 							check_nomagic(ch, "Le parole ti si confondono davanti agli occhi in questa zona.",
-										  "La magia di $n muore sulle sue labbra")) {
+										  "La magia di $n muore sulle sue labbra.")) {
 						return;
 					}
 
 					if(cmd == CMD_MIND &&
 							check_nomind(ch, "Non riesci a concentrarti abbastanza in questo "
-										 "posto",
-										 "$n cerca invano di concentrarsi")) {
+										 "posto.",
+										 "$n cerca invano di concentrarsi.")) {
 						return;
 					}
 				}
-				send_to_char("Ok.\n\r",ch);
+				//send_to_char("Ok.\n\r",ch);
+                sprintf(buf, "Pronunci le parole, '$c0015%s$c0007'", spells[spl-1]);
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
 				/* Calcolo tutti i costi PRIMA della spell
 				 * Fra l'altro mi sa che aver messo il forget DOPO il
 				 * cast sia il motivo per cui il recall 'poly' non
@@ -2247,9 +2269,9 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			 */
 			if(count > 1) {
 				if(rp->people) {
-					act("$p si schianta al suolo a gran velocita'",
+					act("$p si schianta al suolo a gran velocita'.",
 						FALSE, rp->people, obj, 0, TO_ROOM);
-					act("$p si schianta al suolo a gran velocita'",
+					act("$p si schianta al suolo a gran velocita'.",
 						FALSE, rp->people, obj, 0, TO_CHAR);
 				}
 				return;
@@ -2257,9 +2279,9 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			}
 			else {
 				if(rp->people) {
-					act("$p atterra con un rumoroso THUMP!",
+					act("$p atterra con un rumoroso $c5009THUMP$c0007!",
 						FALSE, rp->people, obj, 0, TO_ROOM);
-					act("$p atterra con un rumoroso THUMP!",
+					act("$p atterra con un rumoroso $c5009THUMP$c0007!",
 						FALSE, rp->people, obj, 0, TO_CHAR);
 				}
 				return;
@@ -2269,37 +2291,37 @@ void check_falling_obj(struct obj_data* obj, int room) {
 
 		if(rp->people) {
 			/* have to reference a person */
-			act("$p cade fino a sparire", FALSE, rp->people, obj, 0, TO_ROOM);
-			act("$p cade fino a sparire", FALSE, rp->people, obj, 0, TO_CHAR);
+			act("$p precipita fino a sparire.", FALSE, rp->people, obj, 0, TO_ROOM);
+			act("$p precipita fino a sparire.", FALSE, rp->people, obj, 0, TO_CHAR);
 		}
 		obj_from_room(obj);
 		obj_to_room(obj, rp->dir_option[DOWN]->to_room);
 		if(targ->people) {
-			act("$p cade dal celo", FALSE, targ->people, obj, 0, TO_ROOM);
-			act("$p cade dal celo", FALSE, targ->people, obj, 0, TO_CHAR);
+			act("$p cade dal $c0014cielo$c0007.", FALSE, targ->people, obj, 0, TO_ROOM);
+			act("$p cade dal $c0014cielo$c0007.", FALSE, targ->people, obj, 0, TO_CHAR);
 		}
 		count++;
 
 		if(targ->sector_type != SECT_AIR) {
 			if(count == 1) {
 				if(targ->people) {
-					act("$p atterra con un rumoroso THUMP!", FALSE, targ->people, obj, 0, TO_ROOM);
-					act("$p atterra con un rumoroso THUMP!", FALSE, targ->people, obj, 0, TO_CHAR);
+					act("$p atterra con un rumoroso $c5009THUMP$c0007!", FALSE, targ->people, obj, 0, TO_ROOM);
+					act("$p atterra con un rumoroso $c5009THUMP$c0007!", FALSE, targ->people, obj, 0, TO_CHAR);
 				}
 				return;
 			}
 			else {
 				if(targ->people) {
 					if(targ->sector_type >= SECT_WATER_SWIM) {
-						act("$p si schianta sulla superfice dell'acqua ad alta velocita'",
+						act("$p si schianta sulla superfice dell'$c0012acqua$c0007 ad alta velocita'.",
 							FALSE, targ->people, obj, 0, TO_ROOM);
-						act("$p si schianta sulla superfice dell'acqua ad alta velocita'",
+						act("$p si schianta sulla superfice dell'$c0012acqua$c0007 ad alta velocita'.",
 							FALSE, targ->people, obj, 0, TO_CHAR);
 					}
 					else {
-						act("$p si schianta al suolo a gran velocita'",
+						act("$p si schianta al suolo a gran velocita'.",
 							FALSE, targ->people, obj, 0, TO_ROOM);
-						act("$p si schianta al suolo a gran velocita'",
+						act("$p si schianta al suolo a gran velocita'.",
 							FALSE, targ->people, obj, 0, TO_CHAR);
 					}
 				}

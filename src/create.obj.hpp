@@ -17,6 +17,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) ;
 void ChangeObjName(struct char_data* ch, const char* arg, int type) ;
 void ChangeObjPrice(struct char_data* ch, const char* arg, int type) ;
 void ChangeObjShort(struct char_data* ch, const char* arg, int type) ;
+void ChangeObjSpecial(struct char_data* ch, const char* arg, int type) ;
 void ChangeObjType(struct char_data* ch, const char* arg, int type) ;
 void ChangeObjValue(struct char_data* ch, const char* arg, int type) ;
 void ChangeObjValues(struct char_data* ch, const char* arg, int type) ;

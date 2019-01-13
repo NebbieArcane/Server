@@ -1428,7 +1428,7 @@ ACTION_FUNC(do_kick) {
 
 		if(!HasClass(ch, CLASS_WARRIOR|CLASS_BARBARIAN|CLASS_RANGER|CLASS_PALADIN)
 				&& !HasClass(ch, CLASS_MONK)) {
-			send_to_char("You're no warrior!\n\r", ch);
+			send_to_char("Non puoi farlo!\n\r", ch);
 			return;
 		}
 
@@ -1445,13 +1445,13 @@ ACTION_FUNC(do_kick) {
 			victim = ch->specials.fighting;
 		}
 		else {
-			send_to_char("Kick who?\n\r", ch);
+			send_to_char("Prendere a calci chi?\n\r", ch);
 			return;
 		}
 	}
 
 	if(victim == ch) {
-		send_to_char("Aren't we funny today...\n\r", ch);
+		send_to_char("Siamo molto spiritosi oggi...\n\r", ch);
 		return;
 	}
 
@@ -1550,12 +1550,12 @@ ACTION_FUNC(do_parry) {
 		}
 	}
 	if(IS_SET(ch->specials.act,ACT_POLYSELF)) {
-		send_to_char("In questa forma non sei in grado di parare i colpi\n\r", ch);
+		send_to_char("In questa forma non sei in grado di parare i colpi.\n\r", ch);
 		return;
 	}
 
 	if(victim == ch) {
-		send_to_char("Impugni la spada e ti dai delle gran mazzate sullo scudo\n\r", ch);
+		send_to_char("Impugni la spada e ti dai delle gran mazzate sullo scudo.\n\r", ch);
 		return;
 	}
 
@@ -1947,6 +1947,7 @@ ACTION_FUNC(do_quivering_palm) {
 
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	int i;
+    char buf[MAX_STRING_LENGTH];
 
 	switch(GET_RACE(victim)) {
 	case RACE_HUMAN:
@@ -2052,22 +2053,39 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 		i=18;
 	};
 	if(!damage) {
-		act(att_kick_miss_ch[i], FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
-		act(att_kick_miss_victim[i],FALSE, ch, ch->equipment[WIELD],victim,
-			TO_VICT);
+        sprintf(buf, "%s", att_kick_miss_ch[i]);
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
+        sprintf(buf, "%s", att_kick_miss_victim[i]);
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_VICT);
 		act(att_kick_miss_room[i],FALSE, ch, ch->equipment[WIELD], victim,
 			TO_NOTVICT);
 	}
 	else if(GET_HIT(victim) - DamageTrivia(ch,victim,damage,SKILL_KICK, 7) < -10) {
-		act(att_kick_kill_ch[i], FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
-		act(att_kick_kill_victim[i],FALSE, ch, ch->equipment[WIELD],victim,
+        sprintf(buf, "%s", att_kick_kill_ch[i]);
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
+        sprintf(buf, "%s", att_kick_kill_victim[i]);
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		act(buf, FALSE, ch, ch->equipment[WIELD],victim,
 			TO_VICT);
 		act(att_kick_kill_room[i],FALSE, ch, ch->equipment[WIELD], victim,
 			TO_NOTVICT);
 	}
 	else {
-		act(att_kick_hit_ch[i], FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
-		act(att_kick_hit_victim[i],FALSE, ch, ch->equipment[WIELD],victim,
+        sprintf(buf, "%s", att_kick_hit_ch[i]);
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
+        sprintf(buf, "%s", att_kick_hit_victim[i]);
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		act(buf, FALSE, ch, ch->equipment[WIELD],victim,
 			TO_VICT);
 		act(att_kick_hit_room[i],FALSE, ch, ch->equipment[WIELD], victim,
 			TO_NOTVICT);

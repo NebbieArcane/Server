@@ -46,7 +46,7 @@
 
 namespace Alarmud {
     
-#define NUM_ZONERANGES 9
+#define NUM_ZONERANGES 29
 int RandomRoomByLevel(int level) {
     
     int y, t;
@@ -58,23 +58,43 @@ int RandomRoomByLevel(int level) {
     
     struct range_vnum_type zone_list[NUM_ZONERANGES]= {
         {3004,3049},    /* Myst */
+        {32501,32549},  /* Municipio */
         {18010,18249},  /* Mordilnia */
         {1810,1849},    /* Circo */
         {1410,1449},    /* Scacchiera */
+        {11001,11059},  /* Castle Python */
         {3910,4149},    /* Moria */
         {4220,4449},    /* BofGorRak */
+        {24001,24016},  /* Scuola di Magia */
         {13714,13727},  /* Fatiche di Ercole */
         {13755,13779},  /* Ade */
-        {13755,13779}   /* Olimpo */
+        {8406,8434},    /* Isgha */
+        {9601,9631},    /* Spider Forest */
+        {13755,13779},  /* Olimpo */
+        {16101,16120},  /* Tzigani */
+        {2601,2620},    /* Oscura Boscaglia */
+        {27401,27480},  /* Terra di sotto */
+        {32800,32880},  /* Foresta Incantata */
+        {16901,16931},  /* Licantropia */
+        {3302,3320},    /* Palazzo dei Principi */
+        {6230,6351},    /* Rhyana */
+        {13423,13481},  /* New Thalos */
+        {17301,17319},  /* Ymrrir */
+        {16615,16630},  /* Hoeur */
+        {27002,27092},  /* Tyr Zone */
+        {1910,1961},    /* Jungla e Piramide del Culto */
+        {2801,2830},    /* Emerald */
+        {19806,19882},  /* Guaracanos spiaggia */
+        {19901,19926}   /* Foresta Delrean */
     };
     
     if(level >= PRINCIPE) {
         t = NUM_ZONERANGES-1;
     } else {
         if(level > INIZIATO) {
-            t = 6;
+            t = 21;
         } else {
-            t = 3;
+            t = 5;
         }
     }
     
