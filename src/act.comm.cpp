@@ -663,7 +663,7 @@ ACTION_FUNC(do_sign) {
 	for(i = 0; *(arg + i) == ' '; i++);
 
 	if(!*(arg + i)) {
-		send_to_char("Daccordo, ma cosa vuoi dire ?\n\r", ch);
+		send_to_char("D'accordo, ma cosa vuoi dire ?\n\r", ch);
 	}
 	else {
 
@@ -1371,7 +1371,7 @@ ACTION_FUNC(do_eavesdrop) {
 			ch->next_listener = real_roomp(exitp->to_room)->listeners;
 			real_roomp(exitp->to_room)->listeners = ch;
 			ch->listening_to = exitp->to_room;
-			send_to_char("Resti immobile contentrandoti sui rumori che provengono da quella parte.", ch);
+			send_to_char("Resti immobile concentrandoti sui rumori che provengono da quella parte.", ch);
 			WAIT_STATE(ch, PULSE_VIOLENCE); // eavesdrop
 		}
 	}

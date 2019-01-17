@@ -14,6 +14,7 @@ MOBSPECIAL_FUNC(LibroEroi);
 MOBSPECIAL_FUNC(MobBlockAlign);
 MOBSPECIAL_FUNC(Nightmare);
 MOBSPECIAL_FUNC(Vampire_Summoner);
+MOBSPECIAL_FUNC(bambola);
 MOBSPECIAL_FUNC(sEgoWeapon) ;
 MOBSPECIAL_FUNC(sMobBlockWay);
 } // namespace Alarmud

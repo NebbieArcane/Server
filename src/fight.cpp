@@ -96,7 +96,7 @@ struct attack_hit_type location_hit_text[] = {
 	{"alla gamba",  "alla gamba"},                 /* 7 */
 	{"sul piede","sul piede"},                 /* 8 */
 	{"sulla mano sinistra", "sulla mano sinistra"},      /* 9 */
-	{"sul braccio destro", "sul braccio destra"},      /* 10 */
+	{"sul braccio destro", "sul braccio destro"},      /* 10 */
 	{"sul braccio sinistro",  "sul braccio sinistro"},       /* 11 */
 	{"dietro la schiena",      "dietro la schiena"},           /* 12 */
 	{"nello stomaco",   "nello stomaco"},        /* 13 */
@@ -595,35 +595,43 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 
 		/* so we can have some description on the corpse */
 		/* msw                                           */
-		switch(killedbytype) {
-		case SPELL_COLOUR_SPRAY:
-			sprintf(spec_desc," resti multicolori di %s",
-					(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
-			break;
-		case SPELL_ACID_BLAST:
-			sprintf(spec_desc," resti corrosi di %s",
-					(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
-			break;
-		case SPELL_FIREBALL:
-			sprintf(spec_desc," resti carbonizzati di %s",
-					(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
-			break;
-		case SPELL_CHAIN_LIGHTNING:
-		case SPELL_LIGHTNING_BOLT:
-			sprintf(spec_desc," resti strinati di %s",
-					(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
-			break;
-		case SKILL_PSIONIC_BLAST:
-			sprintf(spec_desc," resti gelatinosi di %s",
-					(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
-			break;
-		default:
-			sprintf(spec_desc,"l corpo di %s",
-					(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
-			break;
-		} /* end switch */
-
-		sprintf(buf, "corpo %s",GET_NAME(ch));
+        if(GET_NAME(ch))
+        {
+            switch(killedbytype) {
+            case SPELL_COLOUR_SPRAY:
+                sprintf(spec_desc," resti multicolori di %s",
+                        (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+                break;
+            case SPELL_ACID_BLAST:
+                sprintf(spec_desc," resti corrosi di %s",
+                        (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+                break;
+            case SPELL_FIREBALL:
+                sprintf(spec_desc," resti carbonizzati di %s",
+                        (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+                break;
+            case SPELL_CHAIN_LIGHTNING:
+            case SPELL_LIGHTNING_BOLT:
+                sprintf(spec_desc," resti strinati di %s",
+                        (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+                break;
+            case SKILL_PSIONIC_BLAST:
+                sprintf(spec_desc," resti gelatinosi di %s",
+                        (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+                break;
+            default:
+                sprintf(spec_desc,"l corpo di %s",
+                        (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+                break;
+            } /* end switch */
+        }
+        else
+            sprintf(spec_desc, "l corpo sfigurato di qualcuno");
+        
+        if(GET_NAME(ch))
+            sprintf(buf, "corpo %s",GET_NAME(ch));
+        else
+            sprintf(buf, "corpo");
 		corpse->name = strdup(buf);
 		if(IS_AFFECTED(ch,AFF_FLYING)) {
 			sprintf(buf, "I%s, ancora a mezz'aria.", spec_desc);
@@ -634,8 +642,11 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 
 		corpse->description = strdup(buf);
 
-		sprintf(buf, "il corpo di %s",  /* for the dissolve message */
-				(IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+        if(GET_NAME(ch))
+            sprintf(buf, "il corpo di %s",  /* for the dissolve message */
+                    (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)));
+        else
+            sprintf(buf, "il corpo sfigurato di qualcuno");
 		corpse->short_description = strdup(buf);
 
 		ADeadBody = TRUE;
@@ -1846,12 +1857,12 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 
 	buf = replace_string(dam_weapons[snum].to_char, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
-    if(IS_SET(ch->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0003[%d]$c0007",buf, dam); }
+    if(IS_SET(ch->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam)); }
 	act(buf, FALSE, ch, wield, victim, TO_CHAR);
 
 	buf = replace_string(dam_weapons[snum].to_victim, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
-    if(IS_SET(victim->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0001[%d]$c0007",buf, dam); }
+    if(IS_SET(victim->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam)); }
 	act(buf, FALSE, ch, wield, victim, TO_VICT);
 
 }
@@ -2255,7 +2266,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->god_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2268,7 +2279,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->die_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->die_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2280,7 +2291,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->hit_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->hit_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2293,7 +2304,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->miss_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->miss_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);

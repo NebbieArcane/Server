@@ -527,6 +527,11 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 			n = NULL;
 		}
 
+        if(n != NULL && IS_NPC(ch) && n->min_level > 51)
+        {
+            n = NULL;
+        }
+
 		/* GGNOTA test sui livelli dei comandi*/
 
 		if(n != NULL && GetMaxLevel(ch) >= n->min_level) {

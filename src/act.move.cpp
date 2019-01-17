@@ -1499,17 +1499,18 @@ ACTION_FUNC(do_pick) {
 	percent = number(1, 101); /* 101% is a complete failure */
 
 	if(!ch->skills) {
-		send_to_char("Non sei riusito a forzare la serratura.\n\r", ch);
+        act("Non sei riuscit$b a forzare la serratura.", FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
 
 	if(!HasClass(ch, CLASS_THIEF) && !HasClass(ch, CLASS_MONK)) {
-		send_to_char("Non sei un ladro!\n\r", ch);
+        sprintf(buf, "Non sei un%s ladr%s!\n\r", (GET_SEX(ch) == SEX_FEMALE ? "a" : ""), (GET_SEX(ch) == SEX_FEMALE ? "o" : "o"));
+		send_to_char(buf, ch);
 		return;
 	}
 
 	if(percent > MIN(100, ch->skills[SKILL_PICK_LOCK].learned)) {
-		send_to_char("Non sei riuscito a forzare la serratura.\n\r", ch);
+		act("Non sei riuscit$b a forzare la serratura.", FALSE, ch, 0, 0, TO_CHAR);
 		LearnFromMistake(ch, SKILL_PICK_LOCK, 0, 90);
 		WAIT_STATE(ch, PULSE_VIOLENCE*4);
 		return;
@@ -1965,7 +1966,7 @@ ACTION_FUNC(do_run) {
 	}
 
 	send_to_char("Alzi i tacchi e corri piu' forte che puoi!\n\r", ch);
-	act("Improvisamente $n alza i tacchi e corre piu' veloce che puo'!",
+	act("Improvvisamente $n alza i tacchi e corre piu' veloce che puo'!",
 		FALSE, ch, 0, 0, TO_ROOM);
 	was_in = ch->in_room;
 	while(CAN_GO(ch, keyno) && GET_MOVE(ch) > 20 && RawMove(ch, keyno, TRUE)) {

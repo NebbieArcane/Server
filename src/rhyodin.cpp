@@ -1011,7 +1011,7 @@ MOBSPECIAL_FUNC(golgar) {
 					tch = tch->next_in_room) {
 				if(IS_NPC(tch) && GET_RACE(tch) == RACE_TROGMAN) {
 					if(tch->specials.fighting && !IS_NPC(tch->specials.fighting)) {
-						act("$c0015[$c0013$n$c0015 ruggisce 'Morte a chi attacca la mia "
+						act("$c0015[$c0013$n$c0015] ruggisce 'Morte a chi attacca la mia "
 							"gente!'", FALSE, ch, 0, 0, TO_ROOM);
 						hit(ch, tch->specials.fighting, TYPE_UNDEFINED);
 						return FALSE;

@@ -282,7 +282,8 @@ void spell_cause_serious(byte level, struct char_data* ch,
 
 void spell_cure_serious(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	int dam;
+	int healpoints;
+    char buf[MAX_STRING_LENGTH];
 
 	if(!ch && victim) {
 		send_to_char("Chi vuoi curare?",ch);
@@ -292,18 +293,41 @@ void spell_cure_serious(byte level, struct char_data* ch,
 
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(2,8)+2;
+	healpoints = dice(2,8)+2;
 
-	if((dam + GET_HIT(victim)) > hit_limit(victim)) {
+	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
+        healpoints = hit_limit(victim) - GET_HIT(victim);
 		GET_HIT(victim) = hit_limit(victim);
 		alter_hit(victim,0);
 	}
 	else {
-		GET_HIT(victim) += dam;
+		GET_HIT(victim) += healpoints;
 		alter_hit(victim,0);
 	}
 
-	send_to_char("Ti senti meglio!\n\r", victim);
+    if(ch != victim)
+    {
+        sprintf(buf, "$c0015Curi $N$c0015.");
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_CHAR);
+        act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015$n$c0015 ti cura.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    if(ch == victim)
+    {
+        act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015Ti curi.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    
+    if(healpoints > 0)
+        send_to_char("Ti senti meglio!\n\r", victim);
 
 	update_pos(victim);
 #if 0

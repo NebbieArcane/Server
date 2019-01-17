@@ -599,13 +599,12 @@ ACTION_FUNC(do_order) {
 		else {
 			/* This is order "followers" */
 
-			if(GetMaxLevel(ch)<IMMORTALE)													/* Aggiungo il check per non */
-				/*snprintf(buf,255, "$n issues the order '%s'.", message);*/ {	/*	far vedere ai player		  */
-				snprintf(buf,255, "$n ordina '%s'.", message);    /* un ordine IMMORTALE		  */
+			if(!IS_IMMORTALE(ch))
+            {                                                                   /* Aggiungo il check per non    */
+				snprintf(buf,255, "$n ordina '%s'.", message);                  /* far vedere ai player         */
+                act(buf, FALSE, ch, 0, victim, TO_ROOM);                        /* un ordine IMMORTALE          */
 			}
 			/******* FLYP 20020610 *******/
-
-			act(buf, FALSE, ch, 0, victim, TO_ROOM);
 
 			org_room = ch->in_room;
 
@@ -1555,7 +1554,7 @@ ACTION_FUNC(do_parry) {
 	}
 
 	if(victim == ch) {
-		send_to_char("Impugni la spada e ti dai delle gran mazzate sullo scudo.\n\r", ch);
+		send_to_char("Impugni la tua arma e colpisci con forza lo scudo.\n\r", ch);
 		return;
 	}
 
@@ -1946,7 +1945,7 @@ ACTION_FUNC(do_quivering_palm) {
 
 
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
-	int i;
+	int i, dummy, result, classe = CLASS_WARRIOR;
     char buf[MAX_STRING_LENGTH];
 
 	switch(GET_RACE(victim)) {
@@ -2052,6 +2051,48 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	default:
 		i=18;
 	};
+    
+    WEARING_N(ch,dummy,result);
+    if(HasClass(ch, CLASS_MONK) &&
+       !((ch->equipment[WIELD]) &&
+         (ch->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON)
+         ) &&
+       !((ch->equipment[HOLD]) &&
+         (ch->equipment[HOLD]->obj_flags.type_flag == ITEM_WEAPON)
+         ) &&
+       ((IS_CARRYING_N(ch)+result)<(MONK_MAX_RENT +5))
+       )
+    {
+        classe=CLASS_MONK;
+    }
+    else if(HasClass(ch, CLASS_BARBARIAN))
+    {
+        classe=CLASS_BARBARIAN;
+    }
+    
+    if(classe != CLASS_MONK)
+    {
+        if(IS_SET(victim->susc, IMM_BLUNT)) {
+            damage <<= 1;
+        }
+        
+        if(IS_SET(victim->immune, IMM_BLUNT)) {
+            damage >>= 1;
+        }
+        
+        if(classe != CLASS_BARBARIAN) {
+            if(IS_SET(victim->M_immune, IMM_BLUNT)) {
+                damage = 0;
+            }
+        }
+        else {
+            if(IS_SET(victim->M_immune, IMM_BLUNT)) {
+                damage >>= 1;
+            }
+        }
+        
+    }
+    
 	if(!damage) {
         sprintf(buf, "%s", att_kick_miss_ch[i]);
         if(IS_SET(ch->player.user_flags,PWP_MODE))
@@ -2059,7 +2100,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
         sprintf(buf, "%s", att_kick_miss_victim[i]);
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (damage > 0 ? "-" : ""), damage);
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_VICT);
 		act(att_kick_miss_room[i],FALSE, ch, ch->equipment[WIELD], victim,
 			TO_NOTVICT);
@@ -2071,7 +2112,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
         sprintf(buf, "%s", att_kick_kill_victim[i]);
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (damage > 0 ? "-" : ""), damage);
 		act(buf, FALSE, ch, ch->equipment[WIELD],victim,
 			TO_VICT);
 		act(att_kick_kill_room[i],FALSE, ch, ch->equipment[WIELD], victim,
@@ -2084,7 +2125,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
         sprintf(buf, "%s", att_kick_hit_victim[i]);
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (damage > 0 ? "-" : ""), damage);
 		act(buf, FALSE, ch, ch->equipment[WIELD],victim,
 			TO_VICT);
 		act(att_kick_hit_room[i],FALSE, ch, ch->equipment[WIELD], victim,

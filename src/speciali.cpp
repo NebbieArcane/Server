@@ -24,6 +24,7 @@
 #include "act.comm.hpp"
 #include "act.off.hpp"
 #include "comm.hpp"
+#include "fight.hpp"
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
@@ -31,8 +32,11 @@
 #include "magic2.hpp"
 #include "magic3.hpp"
 #include "opinion.hpp"
+#include "regen.hpp"
+#include "spec_procs2.hpp"
 #include "spell_parser.hpp"
 #include "spells1.hpp"
+#include "spells2.hpp"
 
 namespace Alarmud {
 
@@ -829,59 +833,273 @@ MOBSPECIAL_FUNC(LadroOfferte) {
 
 MOBSPECIAL_FUNC(Vampire_Summoner) {
 	const char* p;
-	char nmob[256];
+	char nmob[256], buf[400], target[100];
 	int nummob;
 	struct char_data* mobtmp;
+    
+    p=mob_index[mob->nr].specparms;
+    p=one_argument(p,nmob);
+    nummob=atoi(nmob);
+    
+    if(cmd) {
+        return(FALSE);
+    }
+    if(!AWAKE(mob)) {
+        return(FALSE);
+    }
 
-	if((GET_POS(mob)==POSITION_FIGHTING) && (number(0,9)<6)) {
-		// Summon control added by EleiMiShill
-
-		// Allora, mi serve il VNUM
-		p=mob_index[mob->nr].specparms;
-		p=one_argument(p,nmob);
-		nummob=atoi(nmob);
-
+	if(mob->specials.fighting)
+    {
+        mobtmp = mob->specials.fighting;
 		// Ok, controllo se sta combattendo contro i suoi servitori
-		if(mob->specials.fighting) {
-			mobtmp=mob->specials.fighting;
-			if(IS_NPC(mobtmp)) {
-				if(mobtmp->nr==nummob) {
+        if(IS_NPC(mobtmp))
+        {
+            if(mob_index[mobtmp->nr].iVNum == nummob)
+            {
 					// Ok, � una delle bambole che sta combattendo
 					// Vediamo di eliminarla allora
-					do_say(mob, "Vattene serva infedele!", 0);
-					extract_char(mobtmp);
-					return false;
-				}
-			}
-		}
-		// Se ha troppi mob servitori evita di evocarne altri
-		if(!too_many_followers(mob)) {
+                do_say(mob, "Vattene subito serva infedele!", 0);
+                act("$c0011$N$c0011 scompare subito dopo aver udito l'ordine di $n$c0011!", FALSE, mob, 0, mobtmp, TO_ROOM);
+                extract_char(mobtmp);
+                return FALSE;
+            }
+        }
 
-			mobtmp = read_mobile(real_mobile(nummob),REAL);
-			mudlog(LOG_SYSERR,"mobtmp %s", GET_NAME(mobtmp));
-			char_to_room(mobtmp, ch->in_room);
-			mudlog(LOG_SYSERR,"mob %s", GET_NAME(mob));
+        switch(number(0,9))
+        {
+            case 1:
+                if(!(IS_SET((mob->specials.fighting)->M_immune, IMM_DRAIN)))
+                {
+                    do_say(mob, "Voglio la tua energia vitale!!!", 0);
+                    cast_energy_drain(50, mob, "", SPELL_TYPE_SPELL, mob->specials.fighting, 0);
+                }
+                else
+                    return(magic_user(mob,cmd,arg,mob,type));
+                break;
+            case 2:
+                return(magic_user(mob,cmd,arg,mob,type));
+                break;
+            case 3:
+                return(cleric(ch,cmd,arg,mob,type));
+                break;
+            case 4:
+                if(!(IS_SET((mob->specials.fighting)->M_immune, IMM_DRAIN)))
+                {
+                    do_say(mob, "Voglio la tua energia vitale!!!", 0);
+                    cast_energy_drain(50, mob, "", SPELL_TYPE_SPELL, mob->specials.fighting, 0);
+                }
+                else
+                    return(magic_user(mob,cmd,arg,mob,type));
+                break;
+            default:
+                // Se ha troppi mob servitori evita di evocarne altri
+                if(!too_many_followers(mob))
+                {
+                    act("$c0013$n$c0013 chiama una bambola in sua difesa!", FALSE, mob, 0, 0, TO_ROOM);
+                    act("$c0011Una bambola si anima e corre in soccorso di $n!", FALSE, mob, 0, 0, TO_ROOM);
+                    
+                    mobtmp = read_mobile(real_mobile(nummob),REAL);
+                    mudlog(LOG_MOBILES,"mobtmp %s", GET_NAME(mobtmp));
+                    char_to_room(mobtmp, mob->in_room);
+                    mudlog(LOG_MOBILES,"mob %s", GET_NAME(mob));
 
-			add_follower(mobtmp, mob);
-			SET_BIT(mobtmp->specials.affected_by, AFF_CHARM);
-			//mudlog(LOG_SYSERR,"ch %s", mobGET_NAME(ch));
+                    add_follower(mobtmp, mob);
+                    SET_BIT(mobtmp->specials.affected_by, AFF_CHARM);
 
-			AddHated(mobtmp,mob->specials.fighting);
-			do_order(mob, "followers guard on", 0);
-		}
-		// Se il MOB o il PG � immune a drain non perdo nemmeno il tempo di tentare
-		// il che � bastardo perch� non vedi il messaggio quindi non sa che drena :-)
-		if(!(IS_SET((mob)->M_immune, IMM_DRAIN)))
-			//IS_IMMUNE(mob,IMM_DRAIN) ARGH!!! IS_IMMUNE qui non � nemmeno definita!
-		{
-			do_say(mob, "Voglio la tua energia vitale!!!", 0);
-			cast_energy_drain(50, mob, "", SPELL_TYPE_SPELL, mob->specials.fighting, 0);
-		}
-		return true;
-	}
-
-	return false;
+                    AddHated(mobtmp,mob->specials.fighting);
+                    do_order(mob, "followers guard on", 0);
+                    one_argument(GET_NAME(mob->specials.fighting), target);
+                    sprintf(buf, "followers kill %s", target);
+                    do_order(ch, buf, 0);
+                }
+        }
+        
+        return TRUE;
+    }
+    
+	return FALSE;
 }
+
+MOBSPECIAL_FUNC(bambola)
+{
+    struct char_data* tch;
+    char target[100];
+    
+    if(cmd)
+    {
+        return (FALSE);
+    }
+    
+    if(!ch->specials.fighting)
+    {
+        for(tch = real_roomp(mob->in_room)->people; tch; tch = tch->next_in_room)
+        {
+            if(IS_NPC(tch) && mob_index[tch->nr].iVNum == mob_index[ch->nr].iVNum)
+            {
+                if(tch->specials.fighting)
+                {
+                    act("$c0015[$c0013$n$c0015] ruggisce 'Morte ai nemici delle bambole!'", FALSE, ch, 0, 0, TO_ROOM);
+                    hit(ch, tch->specials.fighting, TYPE_HIT);
+                    return (FALSE);
+                }
+            }
+        }
+        
+        if((ch->master))
+        {
+            if(!ch->skills)
+            {
+                SpaceForSkills(ch);
+            }
+            
+            if(!(IS_AFFECTED(ch->master, AFF_SANCTUARY)) && !affected_by_spell(ch->master, SPELL_SANCTUARY))
+            {
+                if(!ch->skills[SPELL_SANCTUARY].learned)
+                {
+                    ch->skills[SPELL_SANCTUARY].learned = GetMaxLevel(ch)*3+30;
+                }
+                act("$n pronuncia le parole, '$c0015Possa la mia aura proteggerti, mia Signora.$c0007'.", 1, ch, 0, 0, TO_ROOM);
+                cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
+            }
+            else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-100))
+            {
+                if(!ch->skills[SPELL_HEAL].learned)
+                {
+                    ch->skills[SPELL_HEAL].learned = GetMaxLevel(ch)*3+30;
+                }
+                act("$n pronuncia le parole, '$c0015Attenta mia Signora!$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
+                cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
+            }
+            else if((ch->master)->specials.fighting)
+            {
+                if(!ch->skills[SPELL_HARM].learned)
+                {
+                    ch->skills[SPELL_HARM].learned = GetMaxLevel(ch)*3+30;
+                }
+                act("$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
+                cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, (ch->master)->specials.fighting, 0);
+            }
+        }
+        
+        if(number(0,5) == 0)
+        {
+            if(!(ch->master))
+            {
+                act("$c0015$n$c0015 si rimette al suo posto.\n\r", FALSE, ch, 0, 0, TO_ROOM);
+                extract_char(ch);
+                return (FALSE);
+            }
+            else if(!((ch->master)->specials.fighting))
+            {
+                act("$c0013[$c0015$N$c0013] indica $n e $d dice 'Puoi andare, non mi servi piu'!'", FALSE, ch, 0, (ch->master), TO_ROOM);
+                act("$c0015$n$c0015 fa un inchino a $N$c0015 poi si rimette al suo posto.\n\r", FALSE, ch, 0, (ch->master), TO_ROOM);
+                (ch->master)->points.max_hit += dice(2,4)*(ch->master)->points.max_hit/100;
+                extract_char(ch);
+                return (FALSE);
+            }
+            else if((ch->master)->specials.fighting)
+            {
+                act("$c0013[$c0015$N$c0013] dice 'MORTE ai nemici della mia Signora!'", FALSE, ch, 0, (ch->master), TO_ROOM);
+                hit(ch, (ch->master)->specials.fighting, TYPE_HIT);
+            }
+            else
+            {
+                act("$c0015$n$c0015 si rimette al suo posto.\n\r", FALSE, ch, 0, 0, TO_ROOM);
+                extract_char(ch);
+                return (FALSE);
+            }
+        }
+
+    }
+    else
+    {
+        switch(number(0, 3))
+        {
+            case 1:
+                return(cleric(mob, cmd, arg, mob, type));
+                break;
+                
+            case 2:
+                // assegno la skill rescue alla bambola nel caso non l'avesse
+                if(!ch->skills)
+                {
+                    SpaceForSkills(ch);
+                }
+                
+                if(!ch->skills[SKILL_RESCUE].learned)
+                {
+                    ch->skills[SKILL_RESCUE].learned = GetMaxLevel(ch)*3+30;
+                }
+                
+                if((ch->master))
+                {
+                    if((ch->master)->attackers > 2)
+                    {
+                        act("$c0009[$c0015$n$c0009] urla 'Non toccare la mia Signora!'", FALSE, ch, 0, 0, TO_ROOM);
+                        do_rescue(ch, "evangeline", 0);
+                        return(TRUE);
+                    }
+                    else if((ch->master)->specials.fighting)
+                    {
+                        act("$c0009[$c0015$n$c0009] urla 'Come osi!'", FALSE, ch, 0, 0, TO_ROOM);
+                        one_argument(GET_NAME(mob->specials.fighting), target);
+                        do_bash(ch, target, 0);
+                    }
+                }
+                break;
+                
+            case 3:
+                if((ch->master))
+                {
+                    if(!(IS_AFFECTED(ch->master, AFF_SANCTUARY)) && !affected_by_spell(ch->master, SPELL_SANCTUARY))
+                    {
+                        act("$c0009[$c0015$n$c0009] urla 'Arrivo mia Signora!", TRUE, ch, 0, 0, TO_ROOM);
+                        act("$c0013$n$c0013 rapidamente si avvicina a $N e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);
+                        act("$n e' protett$b da una $c0015aura bianca$c0007!", TRUE, ch->master, 0, 0, TO_ROOM);
+                        SET_BIT((ch->master)->specials.affected_by, AFF_SANCTUARY);
+                        (ch->master)->points.max_hit += dice(2, 6)*(ch->master)->points.max_hit/100;
+                        extract_char(ch);
+                        return (FALSE);
+                    }
+                    else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-80))
+                    {
+                        act("$c0013$n$c0013 rapidamente si avvicina a $N e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);
+                        act("$n emette un $c0009ghigno malefico$c0007.", TRUE, ch->master, 0, 0, TO_ROOM);
+                        do_say(ch->master, "Ora si che sto bene!\n\r", 0);
+                        (ch->master)->points.max_hit += dice(2, 6)*(ch->master)->points.max_hit/100;
+                        (ch->master)->points.hit += dice(1, 51) + 99;
+                        if(GET_HIT(ch->master) > GET_MAX_HIT(ch->master))
+                            GET_HIT(ch->master) = GET_MAX_HIT(ch->master);
+                        alter_hit(ch->master,0);
+                        act("$c0011$n$c0011 e' diventat$b piu' potente.", TRUE, ch->master, 0, 0, TO_ROOM);
+                        extract_char(ch);
+                        return (FALSE);
+                    }
+                    else if((ch->master)->specials.fighting)
+                    {
+                        if(!ch->skills)
+                        {
+                            SpaceForSkills(ch);
+                        }
+                        if(!ch->skills[SPELL_HARM].learned)
+                        {
+                            ch->skills[SPELL_HARM].learned = GetMaxLevel(ch)*3+30;
+                        }
+                        act("$n pronuncia le parole, '$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
+                        cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, (ch->master)->specials.fighting, 0);
+                    }
+                }
+                break;
+                
+            default:
+                return(magic_user(mob, cmd, arg, mob, type));
+        }
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+
 
 MOBSPECIAL_FUNC(Nightmare) {
 	struct affected_type af;

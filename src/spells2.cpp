@@ -1023,16 +1023,6 @@ void cast_cure_critic(byte level, struct char_data* ch, const char* arg, int typ
 					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-        if(ch != tar_ch)
-        {
-            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
-        if(ch == tar_ch)
-        {
-            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
 		spell_cure_critic(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_SCROLL:
@@ -1067,16 +1057,6 @@ void cast_cure_light(byte level, struct char_data* ch, const char* arg, int type
 					 struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-        if(ch != tar_ch)
-        {
-            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
-        if(ch == tar_ch)
-        {
-            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
 		spell_cure_light(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
@@ -1105,16 +1085,6 @@ void cast_cure_serious(byte level, struct char_data* ch, const char* arg, int ty
 					   struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-        if(ch != tar_ch)
-        {
-            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
-        if(ch == tar_ch)
-        {
-            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
 		spell_cure_serious(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
@@ -1532,16 +1502,6 @@ void cast_heal(byte level, struct char_data* ch, const char* arg, int type,
 			   struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-        if(ch != tar_ch)
-        {
-            act("$n cura $N.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("$n ti cura.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
-        if(ch == tar_ch)
-        {
-            act("$n si cura.", FALSE, ch, 0, tar_ch, TO_NOTVICT);
-            act("Ti curi.", FALSE, ch, 0, tar_ch, TO_VICT);
-        }
 		spell_heal(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_POTION:
@@ -2841,7 +2801,7 @@ void cast_cacaodemon(byte level, struct char_data* ch, const char* arg, int type
 	struct obj_data* sac;
 	struct char_data* el;
 	int held = FALSE, wielded = FALSE;
-	send_to_char("Provi ad evocare un demone ma fallisci... Probabilmente l'incantesimo e' impossibile da lancire...\n\r",ch);
+	send_to_char("Provi ad evocare un demone ma fallisci... Probabilmente l'incantesimo e' impossibile da lanciare...\n\r",ch);
 	return;
 	one_argument(arg,buffer);
 

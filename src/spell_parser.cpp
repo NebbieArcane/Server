@@ -1422,8 +1422,8 @@ void say_spell(struct char_data* ch, int si) {
 
 
 
-	sprintf(buf2,"$n pronuncia le parole, '$c0015%s$c0007'", buf);
-	sprintf(buf, "$n pronuncia le parole, '$c0015%s$c0007'", spells[si-1]);
+	sprintf(buf2,"$n pronuncia le parole, '$c0015%s$c0007'.", buf);
+	sprintf(buf, "$n pronuncia le parole, '$c0015%s$c0007'.", spells[si-1]);
 
 	for(temp_char = real_roomp(ch->in_room)->people;
 			temp_char;

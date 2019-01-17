@@ -177,7 +177,7 @@ void spell_shocking_grasp(byte level, struct char_data* ch,
 
 	if(GET_HIT(victim) < -4 && IsHumanoid(victim) &&
 			!IsUndead(victim)) {
-		act("$n pronuncia le parole '$c0012clear$c0007', e tocca il torace di $N.",
+		act("$n pronuncia a voce alta '$c0012clear$c0007', e tocca il torace di $N.",
 			FALSE,ch, 0, victim, TO_ROOM);
 		GET_HIT(victim) +=dam;
 		alter_hit(victim,0);
@@ -365,6 +365,7 @@ void spell_fireball(byte level, struct char_data* ch,
 void spell_earthquake(byte level, struct char_data* ch,
 					  struct char_data* victim, struct obj_data* obj) {
 	int dam;
+    char buf[MAX_STRING_LENGTH];
 
 	struct char_data* tmp_victim, *temp;
 
@@ -385,17 +386,28 @@ void spell_earthquake(byte level, struct char_data* ch,
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 
 				if(GetMaxLevel(tmp_victim) > 4) {
-					act("Cadi a terra e ti fai male!!\n\r",
-						FALSE, ch, 0, tmp_victim, TO_VICT);
+                    sprintf(buf, "$N cade a terra e si fa male!");
+                    if(IS_SET(ch->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                    act(buf, FALSE, ch, 0, tmp_victim, TO_CHAR);
+                    sprintf(buf, "Cadi a terra e ti fai male!!");
+                    if(IS_SET(tmp_victim->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0001[%s%d]$c0007\n\r",buf, (dam > 0 ? "-" : ""), dam);
+                    else
+                        sprintf(buf, "%s\n\r",buf);
+					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
 					MissileDamage(ch, tmp_victim, dam, SPELL_EARTHQUAKE, 5);
 				}
 				else {
-					act("Vieni inghiottit$b da una $c0003voragine$c0007 che si apre sotto i tuoi piedi!", FALSE,
-						ch, 0, tmp_victim, TO_VICT);
-					act("La terra si apre ed inghiotte $N!", FALSE,
-						ch, 0, tmp_victim, TO_NOTVICT);
-					MissileDamage(ch, tmp_victim, GET_MAX_HIT(tmp_victim)*12,
-								  SPELL_EARTHQUAKE, 5);
+                    sprintf(buf, "La terra si apre ed inghiotte $N!");
+                    if(IS_SET(ch->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, GET_MAX_HIT(tmp_victim)+30);
+                    act(buf, FALSE, ch, 0, tmp_victim, TO_CHAR);
+                    if(IS_SET(tmp_victim->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0001[-%d]$c0007",buf, GET_MAX_HIT(tmp_victim)+30);
+					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
+					act("La terra si apre ed inghiotte $N!", FALSE, ch, 0, tmp_victim, TO_NOTVICT);
+					MissileDamage(ch, tmp_victim, GET_MAX_HIT(tmp_victim)+30, SPELL_EARTHQUAKE, 5);
 				}
 			}
 			else {
@@ -856,6 +868,7 @@ void spell_cure_blind(byte level, struct char_data* ch,
 void spell_cure_critic(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
 	int healpoints;
+    char buf[MAX_STRING_LENGTH];
 
 	if(!victim) {
 		send_to_char("Chi vuoi curare?",ch);
@@ -870,6 +883,7 @@ void spell_cure_critic(byte level, struct char_data* ch,
 	healpoints = dice(3,8)+3;
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
+        healpoints = hit_limit(victim) - GET_HIT(victim);
 		GET_HIT(victim) = hit_limit(victim);
 		alter_hit(victim,0);
 	}
@@ -878,7 +892,29 @@ void spell_cure_critic(byte level, struct char_data* ch,
 		alter_hit(victim,0);
 	}
 
-	send_to_char("Ti senti decisamente meglio!\n\r", victim);
+    if(ch != victim)
+    {
+        sprintf(buf, "$c0015Curi $N$c0015.");
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_CHAR);
+        act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015$n$c0015 ti cura.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    if(ch == victim)
+    {
+        act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015Ti curi.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    
+    if(healpoints > 0)
+        send_to_char("Ti senti decisamente meglio!\n\r", victim);
 
 	update_pos(victim);
 	/*
@@ -891,6 +927,8 @@ void spell_cure_critic(byte level, struct char_data* ch,
 void spell_cure_light(byte level, struct char_data* ch,
 					  struct char_data* victim, struct obj_data* obj) {
 	int healpoints;
+    char buf[MAX_STRING_LENGTH];
+    
 	if(!victim) {
 		send_to_char("Chi vuoi curare?",ch);
 		mudlog(LOG_SYSERR,"Cure light failed check");
@@ -904,6 +942,7 @@ void spell_cure_light(byte level, struct char_data* ch,
 	healpoints = dice(1,8);
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
+        healpoints = hit_limit(victim) - GET_HIT(victim);
 		GET_HIT(victim) = hit_limit(victim);
 		alter_hit(victim,0);
 	}
@@ -911,8 +950,30 @@ void spell_cure_light(byte level, struct char_data* ch,
 		GET_HIT(victim) += healpoints;
 		alter_hit(victim,0);
 	}
-
-	send_to_char("Ti senti leggermente meglio!\n\r", victim);
+    
+    if(ch != victim)
+    {
+        sprintf(buf, "$c0015Curi $N$c0015.");
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_CHAR);
+        act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015$n$c0015 ti cura.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    if(ch == victim)
+    {
+        act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015Ti curi.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    
+    if(healpoints > 0)
+        send_to_char("Ti senti leggermente meglio!\n\r", victim);
 
 	update_pos(victim);
 	/*
@@ -1202,6 +1263,8 @@ void spell_enchant_weapon(byte level, struct char_data* ch,
 
 void spell_heal(byte level, struct char_data* ch,
 				struct char_data* victim, struct obj_data* obj) {
+    char buf[MAX_STRING_LENGTH];
+    int healpoints;
 
 	if(!victim) {
 		send_to_char("Chi vuoi curare?",ch);
@@ -1212,20 +1275,67 @@ void spell_heal(byte level, struct char_data* ch,
 
 	spell_cure_blind(level, ch, victim, obj);
 
-	GET_HIT(victim) +=100;
-	alter_hit(victim,0);
+    healpoints = 100;
+	GET_HIT(victim) += healpoints;
+//	alter_hit(victim,0);
 
 	if(GET_HIT(victim) >= hit_limit(victim)) {
-		GET_HIT(victim) = hit_limit(victim)-dice(1,4);
-		alter_hit(victim,0);
+        healpoints = 100 - (GET_HIT(victim) - hit_limit(victim));
+        
+        if(GET_HIT(victim) == hit_limit(victim))
+        {
+            GET_HIT(victim) = hit_limit(victim)-dice(1,4);
+            healpoints = GET_HIT(victim) - hit_limit(victim);
+        }
+        else
+        {
+            GET_HIT(victim) = hit_limit(victim)-dice(1,4);
+            healpoints = healpoints + (GET_HIT(victim) - hit_limit(victim));
+        }
+        
+//		alter_hit(victim,0);
 	}
+    alter_hit(victim,0);
 	update_pos(victim);
-
+    
     if(ch != victim)
     {
-        act("$c0015Curi $N.",FALSE,ch,0,victim,TO_CHAR);
+        sprintf(buf, "$c0015Curi $N$c0015.");
+        if(IS_SET(ch->player.user_flags,PWP_MODE))
+        {
+            if(healpoints < 0)
+                sprintf(buf, "%s $c0001[%d]$c0007",buf, healpoints);
+            else
+                sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        }
+        act(buf, FALSE, ch, 0, victim, TO_CHAR);
+        act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015$n$c0015 ti cura.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+        {
+            if(healpoints < 0)
+                sprintf(buf, "%s $c0001[%d]$c0007",buf, healpoints);
+            else
+                sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        }
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
-	send_to_char("$c0015Senti un caldo formicolio pervadere il tuo corpo.\n\r", victim);
+    if(ch == victim)
+    {
+        act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
+        sprintf(buf, "$c0015Ti curi.");
+        if(IS_SET(victim->player.user_flags,PWP_MODE))
+        {
+            if(healpoints < 0)
+                sprintf(buf, "%s $c0001[%d]$c0007",buf, healpoints);
+            else
+                sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+        }
+        act(buf, FALSE, ch, 0, victim, TO_VICT);
+    }
+    
+    if(healpoints > 0)
+        send_to_char("$c0015Senti un caldo formicolio pervadere il tuo corpo.\n\r", victim);
 
 	/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {

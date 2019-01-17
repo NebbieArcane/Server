@@ -878,7 +878,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 
 		if(MOUNTED(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' sopra a %s.", MOUNTED(i)->player.short_descr);
+			snprintf(buffer,MAX_STRING_LENGTH-1,"$n sta cavalcando %s.", MOUNTED(i)->player.short_descr);
 			act(buffer, FALSE, i, 0, ch, TO_VICT);
 		}
 
@@ -922,7 +922,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			strcat(buffer, " e' ferit$B.");
 		}
 		else if(percent >= 20) {
-			strcat(buffer, " $c0001sanguina$c0007 abbondatemente.");
+			strcat(buffer, " $c0001sanguina$c0007 abbondantemente.");
 		}
 		else if(percent >= 0) {
 			strcat(buffer, " $c0001ha grossi squarci aperti$c0007.");

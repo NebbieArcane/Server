@@ -315,12 +315,12 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
             
             if(i & 1)
             {
-                fmt2 % "" % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % extra_bits[i];
+                fmt2 % "" % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % wear_bits[i];
                 sb.append(fmt2.str().c_str());
             }
             else
             {
-                fmt % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % extra_bits[i];
+                fmt % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % wear_bits[i];
                 sb.append(fmt.str().c_str());
                 x = strlen(fmt.str().c_str());
             }

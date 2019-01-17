@@ -101,6 +101,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "MobBlockAlign",(genericspecial_func) MobBlockAlign },
 	{ "LadroOfferte",(genericspecial_func) LadroOfferte },
 	{ "Vampire_Summoner",(genericspecial_func) Vampire_Summoner },
+    { "bambola",(genericspecial_func) bambola },
 	{ "Nightmare",(genericspecial_func) Nightmare },
 	{ "SputoVelenoso",(genericspecial_func) SputoVelenoso },
 	{ "StatTeller",(genericspecial_func) StatTeller },

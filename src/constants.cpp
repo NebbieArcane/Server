@@ -200,7 +200,7 @@ const char* spell_wear_off_msg[] = {
 	/*  115 SPELL_PWORD_BLIND           */  "!pwb!",
 	/*  116 SPELL_CHAIN_LIGHTNING       */  "!chain lightning!",
 	/*  117 SPELL_SCARE                 */  "!scare!",
-	/*  118 SPELL_AID                   */  "Perdi l'$c00015aiuto Divino$c0007.",
+	/*  118 SPELL_AID                   */  "Perdi l'$c0015aiuto Divino$c0007.",
 	/*  119 SPELL_COMMAND               */  "!command!",
 	/*  120 SPELL_CHANGE_FORM           */  "$c0010Torni alla tua forma originale.$c0007",
 	/*  121 SPELL_FEEBLEMIND            */  "Ti senti piu' $c0011intelligente$c0007.",
@@ -372,7 +372,7 @@ const char* spell_wear_off_msg[] = {
 	/*  287 SKILL_INTENSIFY             */  "Le tue capacita' tornano normali mentre la tua mente rallenta.",
 	/*  288 SKILL_SPOT                  */  "!spot!",
 	/*  289 SKILL_IMMOLATION            */  "!immolation!",
-	/*  290 STATUS_QUEST                */  "$c009Senti d'esser pront$b per una nuova missione.",
+	/*  290 STATUS_QUEST                */  "$c0009Senti d'esser pront$b per una nuova missione.",
 	/*  291 SKILL_DAIMOKU               */  "Il tuo stato di ascesi ti fa sentire decisamente meglio!",
 	/*  292 SKILL_FORGE                 */  "!forge!",
 	/*  293 SKILL_DETERMINE             */  "!determine!",
@@ -549,7 +549,7 @@ const char* spell_wear_off_room_msg[] = {
 	/*  165 SPELL_DRAGON_RIDE           */  "",
     /*  166 SPELL_MOUNT                 */  "!mount!",
     /*  167 SPELL_NO_MESSAGE            */  "",
-    /*  168 to_do                       */  "!168!"
+    /*  168 to_do                       */  "!168!",
 	/*  169 SKILL_MANTRA                */  "$n sembra tremare per un attimo e perdere il sincronismo.",
     /*  170 SKILL_FIRST_AID             */  "",
     /*  171 SKILL_SIGN                  */  "!sign!",
@@ -613,7 +613,7 @@ const char* spell_wear_off_room_msg[] = {
     /*  229 SKILL_PSIONIC_BLAST         */  "$n sembra meno stordit$b.",
 	/*  230 SKILL_HYPNOSIS              */  "!hypnosis!",
 	/*  231 SKILL_MEDITATE              */  "$n smette di meditare e sembra piu' rilassat$b ora.",
-	/*  232 SKILL_SCRY                  */  "!scry!"
+	/*  232 SKILL_SCRY                  */  "!scry!",
 	/*  233 SKILL_ADRENALIZE            */  "La $c0009furia$c0007 che possedeva $n scompare, addesso e' molto piu' $c0014calm$b$c0007.",
     /*  234 SKILL_BREW                  */  "!brew!",
     /*  235 SKILL_RATION                */  "!ration!",
@@ -798,7 +798,7 @@ const char* spell_wear_off_soon_msg[] = {
     /*  115 SPELL_PWORD_BLIND           */  "!pwb!",
     /*  116 SPELL_CHAIN_LIGHTNING       */  "!chain lightning!",
     /*  117 SPELL_SCARE                 */  "!scare!",
-    /*  118 SPELL_AID                   */  "Inizi a perdere l'$c00015aiuto divino$c0007.",
+    /*  118 SPELL_AID                   */  "Inizi a perdere l'$c0015aiuto divino$c0007.",
     /*  119 SPELL_COMMAND               */  "!command!",
 	/*  120 SPELL_CHANGE_FORM           */  "$c0010Perdi per un attimo il controllo del tuo aspetto.",
 	/*  121 SPELL_FEEBLEMIND            */  "",
@@ -858,7 +858,7 @@ const char* spell_wear_off_soon_msg[] = {
     /*  175 SKILL_REMOVE_TRAP           */  "!remove trap!",
     /*  176 SKILL_RETREAT               */  "!retreat!",
     /*  177 SKILL_QUIV_PALM             */  "Una leggera $c0015vibrazione$c0007 pervade le tue mani.",
-    /*  178 SKILL_SAFE_FALL             */  "!safe fall!"
+    /*  178 SKILL_SAFE_FALL             */  "!safe fall!",
     /*  179 SKILL_FEIGN_DEATH           */  "!feign death!",
     /*  180 SKILL_HUNT                  */  "!hunt!",
     /*  181 SKILL_FIND_TRAP             */  "!find traps!",
@@ -1147,7 +1147,7 @@ const char* spell_wear_off_soon_room_msg[] = {
     /*  165 SPELL_DRAGON_RIDE           */  "",
     /*  166 SPELL_MOUNT                 */  "!mount!",
     /*  167 SPELL_NO_MESSAGE            */  "",
-    /*  168 to_do                       */  "!168!"
+    /*  168 to_do                       */  "!168!",
 	/*  169 SKILL_MANTRA                */  "",
     /*  170 SKILL_FIRST_AID             */  "",
     /*  171 SKILL_SIGN                  */  "!sign!",
@@ -1211,7 +1211,7 @@ const char* spell_wear_off_soon_room_msg[] = {
     /*  229 SKILL_PSIONIC_BLAST         */  "$n sembra riprendersi.",
     /*  230 SKILL_HYPNOSIS              */  "!hypnosis!",
     /*  231 SKILL_MEDITATE              */  "Per un attimo $n smette di meditare, poi ricomincia.",
-    /*  232 SKILL_SCRY                  */  "!scry!"
+    /*  232 SKILL_SCRY                  */  "!scry!",
     /*  233 SKILL_ADRENALIZE            */  "",
     /*  234 SKILL_BREW                  */  "!brew!",
     /*  235 SKILL_RATION                */  "!ration!",
@@ -1221,7 +1221,7 @@ const char* spell_wear_off_soon_room_msg[] = {
     /*  239 SKILL_HEROIC_RESCUE         */  "!heroic rescue!",
     /*  240 SKILL_DUAL_WIELD            */  "!dual wield!",
 	/*  241 SKILL_PSI_SHIELD            */  "Lo $c0011scudo$c0007 protettivo di $n trema un attimo.",
-	/*  242 SPELL_PROT_FROM_EVIL_GROUP  */  ""
+	/*  242 SPELL_PROT_FROM_EVIL_GROUP  */  "",
     /*  243 SPELL_PRISMATIC_SPRAY       */  "!prismatic spry!",
     /*  244 SPELL_INCENDIARY_CLOUD      */  "!incendiary cloud!",
     /*  245 SPELL_DISINTEGRATE          */  "!disintegrate!",
@@ -3735,7 +3735,7 @@ const char* spell_desc[] = {
     /*  214 SKILL_BELLOW                */  "!bellow!",
 	/*  215 SPELL_GLOBE_DARKNESS        */  "Uno spesso strato di $c0008oscurita'$c0007 circonda $n.",
 	/*  216 SPELL_GLOBE_MINOR_INV       */  "$n e' protett$b da un piccolo $c0012globo$c0007 magico.",
-	/*  217 SPELL_GLOBE_MAJOR_INV       */  "$n e' protett$b da un ampio globo magico.",
+	/*  217 SPELL_GLOBE_MAJOR_INV       */  "$n e' protett$b da un ampio $c0014globo$c0007 magico.",
 	/*  218 SPELL_PROT_ENERGY_DRAIN     */  "$n ha una protezione magica contro i $c0008Non-Morti$c0007.",
 	/*  219 SPELL_PROT_DRAGON_BREATH    */  "$n ha una protezione magica contro il soffio dei $c0003draghi$c0007.",
 	/*  220 SPELL_ANTI_MAGIC_SHELL      */  "Il corpo di $n e' circondato da un pulsante scudo $c0012anti-magia$c0007.",
@@ -3813,7 +3813,7 @@ const char* spell_desc[] = {
     /*  292 SKILL_FORGE                 */  "!forge!",
     /*  293 SKILL_DETERMINE             */  "!determine!",
     /*  294 SKILL_EQUILIBRIUM           */  "!equilibrium!",
-	"\n"
+                                            "\n"
 };
 
     

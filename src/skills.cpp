@@ -6758,39 +6758,39 @@ void do_miner(struct char_data* ch) {
 		}
 
 		/*setto lag per razze*/
-		switch(GET_RACE(ch)) {
-		case RACE_GIANT_STONE:
-			WAIT_STATE(ch, PULSE_VIOLENCE*1);
-			break;
-		case RACE_GIANT_FROST:
-		case RACE_GIANT_FIRE:
-			WAIT_STATE(ch, PULSE_VIOLENCE*2);
-			break;
-		case RACE_GIANT_HILL:
-			WAIT_STATE(ch, PULSE_VIOLENCE*3);
-			break;
-		case RACE_DWARF:
-		case RACE_DARK_DWARF:
-			WAIT_STATE(ch, PULSE_VIOLENCE*1);
-			break;
-		case RACE_GOBLIN:
-		case RACE_ORC:
-		case RACE_HALF_OGRE:
-			WAIT_STATE(ch, PULSE_VIOLENCE*4);
-			break;
-		case RACE_GNOME:
-		case RACE_DEEP_GNOME:
-			WAIT_STATE(ch, PULSE_VIOLENCE*4);
-			break;
-		case RACE_HUMAN:
-		case RACE_GNOLL:
-		case RACE_HALFLING:
-			WAIT_STATE(ch, PULSE_VIOLENCE*5);
-			break;
-		default:
-			WAIT_STATE(ch, PULSE_VIOLENCE*6);
-			break;
-		}
+        switch(GET_RACE(ch)) {
+            case RACE_GIANT_STONE:
+                WAIT_STATE(ch, PULSE_VIOLENCE*1);
+                break;
+            case RACE_GIANT_FROST:
+            case RACE_GIANT_FIRE:
+                WAIT_STATE(ch, PULSE_VIOLENCE*2);
+                break;
+            case RACE_GIANT_HILL:
+                WAIT_STATE(ch, PULSE_VIOLENCE*3);
+                break;
+            case RACE_DWARF:
+            case RACE_DARK_DWARF:
+                WAIT_STATE(ch, PULSE_VIOLENCE*3);
+                break;
+            case RACE_GOBLIN:
+            case RACE_ORC:
+            case RACE_HALF_OGRE:
+                WAIT_STATE(ch, PULSE_VIOLENCE*4);
+                break;
+            case RACE_GNOME:
+            case RACE_DEEP_GNOME:
+                WAIT_STATE(ch, PULSE_VIOLENCE*5);
+                break;
+            case RACE_HUMAN:
+            case RACE_GNOLL:
+            case RACE_HALFLING:
+                WAIT_STATE(ch, PULSE_VIOLENCE*6);
+                break;
+            default:
+                WAIT_STATE(ch, PULSE_VIOLENCE*6);
+                break;
+        }
 	}
 }
 

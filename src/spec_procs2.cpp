@@ -259,7 +259,7 @@ int DruidAttackSpells(struct char_data* ch, struct char_data* vict, int level) {
 	case 5:
 	case 6:
 	case 7:
-		act("$n pronuncia le parole 'yow!'", 1, ch, 0, 0, TO_ROOM);
+		act("$n pronuncia le parole, '$c0015yow!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 		cast_cause_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 		return(FALSE);
 		break;
@@ -270,12 +270,12 @@ int DruidAttackSpells(struct char_data* ch, struct char_data* vict, int level) {
 	case 12:
 	case 13:
 		if(!IS_SET(vict->M_immune, AFF_POISON) && !IS_AFFECTED(vict, AFF_POISON)) {
-			act("$n pronuncia le parole 'yuk'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015yuk$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 		else {
-			act("$n pronuncia le parole 'ouch'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015ouch$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_cause_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
@@ -288,7 +288,7 @@ int DruidAttackSpells(struct char_data* ch, struct char_data* vict, int level) {
 	case 19:
 	case 20:
 	case 21:
-		act("$n pronuncia le parole 'OUCH!'", 1, ch, 0, 0, TO_ROOM);
+		act("$n pronuncia le parole, '$c0015OUCH!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 		cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 		return(FALSE);
 	case 22:
@@ -315,18 +315,18 @@ int DruidAttackSpells(struct char_data* ch, struct char_data* vict, int level) {
 	case 43:
 	case 44:
 		if(!IS_SET(vict->M_immune, IMM_FIRE)) {
-			act("$n pronuncia le parole 'fwoosh'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015fwoosh$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_firestorm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 		else {
-			act("$n pronuncia le parole 'OUCH!'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015OUCH!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 		break;
 	default:
-		act("$n pronuncia le parole 'kazappapapapa'", 1, ch, 0, 0, TO_ROOM);
+		act("$n pronuncia le parole, '$c0015kazappapapapa$c0007'.", 1, ch, 0, 0, TO_ROOM);
 		cast_chain_lightn(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 		return(FALSE);
 		break;
@@ -395,7 +395,7 @@ MOBSPECIAL_FUNC(Summoner) {
 		}
 
 		if(targ) {
-			act("$n pronuncia le parole 'Your ass is mine!'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Your ass is mine!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(EasySummon) {
 				if(!IS_SET(ch->player.iClass, CLASS_PSI)) {
 					spell_summon(GetMaxLevel(ch), ch, targ, 0);
@@ -612,7 +612,7 @@ MOBSPECIAL_FUNC(magic_user) {
 							!too_many_followers(ch) && // SALVO controllo che non puo' superare un limite
 							(IS_SET(ch->hatefield, HATE_CHAR) ||
 							 IS_SET(ch->hatefield, FEAR_CHAR))) {
-						act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+						act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 						cast_mon_sum7(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 						do_order(ch, "followers guard on", 0);
 						return(TRUE);
@@ -627,26 +627,26 @@ MOBSPECIAL_FUNC(magic_user) {
 			/* low level prep spells here */
 
 			if(!affected_by_spell(ch,SPELL_SHIELD)) {
-				act("$n pronuncia le parole 'dragon'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015dragon$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_shield(GetMaxLevel(ch),ch,GET_NAME(ch),SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if(!affected_by_spell(ch,SPELL_STRENGTH)) {
-				act("$n pronuncia le parole 'giant'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015giant$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_strength(GetMaxLevel(ch),ch,GET_NAME(ch),SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if(!IS_EVIL(ch) && !affected_by_spell(ch,SPELL_PROTECT_FROM_EVIL)) {
-				act("$n pronuncia le parole 'anti-evil'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015anti-evil$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_protection_from_evil(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if((IS_AFFECTED(ch,AFF_FIRESHIELD) || IS_AFFECTED(ch,AFF_SANCTUARY)) &&
 					(!affected_by_spell(ch,SPELL_GLOBE_DARKNESS))) {
-				act("$n pronuncia le parole 'darkness'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015darkness$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_globe_darkness(GetMaxLevel(ch),ch,GET_NAME(ch),
 									SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
@@ -655,25 +655,25 @@ MOBSPECIAL_FUNC(magic_user) {
 			/* high level prep spells here */
 			if(GetMaxLevel(ch) >= 25) {
 				if(!affected_by_spell(ch,SPELL_ARMOR)) {
-					act("$n pronuncia le parole 'dragon'.", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015dragon$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_armor(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 
 				if(!affected_by_spell(ch,SPELL_STONE_SKIN)) {
-					act("$n pronuncia le parole 'stone'.", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015stone$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_stone_skin(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 
 				if(!affected_by_spell(ch,SPELL_GLOBE_MINOR_INV)) {
-					act("$n pronuncia le parole 'haven'.", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015haven$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_globe_minor_inv(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 
 				if(!affected_by_spell(ch,SPELL_GLOBE_MAJOR_INV)) {
-					act("$n pronuncia le parole 'super haven'.", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015super haven$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_globe_major_inv(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
@@ -746,7 +746,7 @@ MOBSPECIAL_FUNC(magic_user) {
 	}
 
 	if(IS_AFFECTED(ch, AFF_BLIND) && (lspell > 15)) {
-		act("$n pronuncia le parole 'Let me see the light!'.",
+		act("$n pronuncia le parole, '$c0015Let me see the light!$c0007'.",
 			TRUE, ch, 0, 0, TO_ROOM);
 		if(ch->desc) {
 			GET_MANA(ch) -= 30;
@@ -762,7 +762,7 @@ MOBSPECIAL_FUNC(magic_user) {
 
 	if((IS_AFFECTED(vict, AFF_SANCTUARY)) && (lspell > 10) &&
 			(GetMaxLevel(ch) > (GetMaxLevel(vict)))) {
-		act("$n pronuncia le parole 'Use MagicAway Instant Magic Remover'.",
+		act("$n pronuncia le parole, '$c0015Use MagicAway Instant Magic Remover$c0007'.",
 			1, ch, 0, 0, TO_ROOM);
 		if(ch->desc) {
 			GET_MANA(ch) -= 15;
@@ -775,7 +775,7 @@ MOBSPECIAL_FUNC(magic_user) {
 
 	if((IS_AFFECTED(vict, AFF_FIRESHIELD)) && (lspell > 10) &&
 			(GetMaxLevel(ch) > (GetMaxLevel(vict)))) {
-		act("$n pronuncia le parole 'Use MagicAway Instant Magic Remover'.",
+		act("$n pronuncia le parole, '$c0015Use MagicAway Instant Magic Remover$c0007'.",
 			1, ch, 0, 0, TO_ROOM);
 		if(ch->desc) {
 			GET_MANA(ch) -= 15;
@@ -790,7 +790,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		if((GET_HIT(ch) < (GET_MAX_HIT(ch) / 4)) && (lspell > 28) &&
 				!IS_SET(ch->specials.act, ACT_AGGRESSIVE)) {
 			act("$n checks $s watch.", TRUE, ch, 0, 0, TO_ROOM);
-			act("$n pronuncia le parole 'Oh my, would you just LOOK at the time!'",
+			act("$n pronuncia le parole, '$c0015Oh my, would you just LOOK at the time!$c0007'.",
 				1, ch, 0, 0, TO_ROOM);
 
 			vict = FindMobDiffZoneSameRace(ch);
@@ -814,7 +814,7 @@ MOBSPECIAL_FUNC(magic_user) {
 	if(!IS_PC(ch)) {
 		if((GET_HIT(ch) < (GET_MAX_HIT(ch) / 4)) && (lspell > 15) &&
 				(!IS_SET(ch->specials.act, ACT_AGGRESSIVE))) {
-			act("$n pronuncia le parole 'Woah! I'm outta here!'",
+			act("$n pronuncia le parole, '$c0015Woah! I'm outta here!$c0007'.",
 				1, ch, 0, 0, TO_ROOM);
 			cast_teleport(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -835,7 +835,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		 */
 
 		if(((lspell>8) && (lspell<50)) && (number(0,6)==0)) {
-			act("$n pronuncia le parole 'Icky Sticky!'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Icky Sticky!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_web(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 10;
@@ -845,7 +845,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 
 		if(((lspell>5) && (lspell<10)) && (number(0,6)==0)) {
-			act("$n pronuncia le parole 'You wimp'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015You wimp$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_weakness(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
@@ -855,7 +855,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 
 		if(((lspell>5) && (lspell<10)) && (number(0,7)==0)) {
-			act("$n pronuncia le parole 'Bippety boppity Boom'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Bippety boppity Boom$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_armor(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 10;
@@ -865,7 +865,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 
 		if(((lspell>12) && (lspell<20)) && (number(0,7)==0)) {
-			act("$n pronuncia le parole '&#%^^@%*#'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015&#%^^@%*#$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_curse(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 25;
@@ -875,7 +875,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 
 		if(((lspell>10) && (lspell < 20)) && (number(0,5)==0)) {
-			act("$n pronuncia le parole 'yabba dabba do'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015yabba dabba do$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_blindness(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
@@ -886,7 +886,7 @@ MOBSPECIAL_FUNC(magic_user) {
 
 		if(((lspell>8) && (lspell < 40)) && (number(0,5)==0) &&
 				(vict->specials.fighting != ch)) {
-			act("$n pronuncia le parole 'You are getting sleepy'.",
+			act("$n pronuncia le parole, '$c0015You are getting sleepy$c0007'.",
 				1, ch, 0, 0, TO_ROOM);
 			cast_charm_monster(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
@@ -930,7 +930,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			case 8:
 			case 9:
 			case 10:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum1(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
@@ -938,14 +938,14 @@ MOBSPECIAL_FUNC(magic_user) {
 			case 11:
 			case 12:
 			case 13:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum2(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
 				break;
 			case 14:
 			case 15:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum3(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
@@ -953,7 +953,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			case 16:
 			case 17:
 			case 18:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum4(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
@@ -962,7 +962,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			case 20:
 			case 21:
 			case 22:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum5(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
@@ -970,14 +970,14 @@ MOBSPECIAL_FUNC(magic_user) {
 			case 23:
 			case 24:
 			case 25:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum6(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
 				break;
 			case 26:
 			default:
-				act("$n pronuncia le parole 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Here boy!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_mon_sum7(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				do_order(ch, "followers guard on", 0);
 				return(TRUE);
@@ -990,7 +990,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		switch(lspell) {
 		case 1:
 		case 2:
-			act("$n pronuncia le parole 'bang! bang! pow!'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015bang! bang! pow!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 15;
 				alter_mana(ch,0);
@@ -1000,7 +1000,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 3:
 		case 4:
 		case 5:
-			act("$n pronuncia le parole 'ZZZZzzzzzzTTTT'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015ZZZZzzzzzzTTTT$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
 				alter_mana(ch,0);
@@ -1011,7 +1011,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 7:
 		case 8:
 			if(ch->attackers <= 2) {
-				act("$n pronuncia le parole 'Icky Sticky!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Icky Sticky!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 25;
 					alter_mana(ch,0);
@@ -1020,7 +1020,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 			else {
-				act("$n pronuncia le parole 'Fwoosh!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Fwoosh!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 25;
 					alter_mana(ch,0);
@@ -1030,7 +1030,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			}
 		case 9:
 		case 10:
-			act("$n pronuncia le parole 'SPOOGE!'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015SPOOGE!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
 				alter_mana(ch,0);
@@ -1041,7 +1041,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 12:
 		case 13:
 			if(ch->attackers <= 2) {
-				act("$n pronuncia le parole 'KAZAP!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015KAZAP!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 20;
 					alter_mana(ch,0);
@@ -1051,7 +1051,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 			else {
-				act("$n pronuncia le parole 'Ice Ice Baby!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Ice Ice Baby!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 35;
 					alter_mana(ch,0);
@@ -1061,7 +1061,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			}
 		case 14:
 		case 15:
-			act("$n pronuncia le parole 'Ciao!'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Ciao!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 25;
 				alter_mana(ch,0);
@@ -1072,7 +1072,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 17:
 		case 18:
 		case 19:
-			act("$n pronuncia le parole 'maple syrup'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015maple syrup$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 35;
 				alter_mana(ch,0);
@@ -1083,7 +1083,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 21:
 		case 22:
 			if(IS_EVIL(ch)) {
-				act("$n pronuncia le parole 'slllrrrrrrpppp'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015slllrrrrrrpppp$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 25;
 					alter_mana(ch,0);
@@ -1100,7 +1100,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 28:
 		case 29:
 			if(ch->attackers <= 2) {
-				act("$n pronuncia le parole 'Look! A rainbow!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Look! A rainbow!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 35;
 					alter_mana(ch,0);
@@ -1109,7 +1109,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 			else {
-				act("$n pronuncia le parole 'Get the sensation!'.", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Get the sensation!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 30;
 					alter_mana(ch,0);
@@ -1123,7 +1123,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 33:
 		case 34:
 		case 35:
-			act("$n pronuncia le parole 'Hasta la vista, Baby'.", 1, ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Hasta la vista, Baby$c0007'.", 1, ch,0,0,TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 40;
 				alter_mana(ch,0);
@@ -1132,7 +1132,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			break;
 		case 36:
 		case 37:
-			act("$n pronuncia le parole 'KAZAP KAZAP KAZAP!'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015KAZAP KAZAP KAZAP!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 45;
 				alter_mana(ch,0);
@@ -1140,7 +1140,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			cast_chain_lightn(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			break;
 		case 38:
-			act("$n pronuncia le parole 'duhhh'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015duhhh$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 25;
 				alter_mana(ch,0);
@@ -1148,7 +1148,7 @@ MOBSPECIAL_FUNC(magic_user) {
 			cast_feeblemind(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			break;
 		case 39:
-			act("$n pronuncia le parole 'STOP'.", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015STOP$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			if(ch->desc) {
 				GET_MANA(ch) -= 25;
 				alter_mana(ch,0);
@@ -1158,7 +1158,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		case 40:
 		case 41:
 			if(ch->attackers <= 2) {
-				act("$n pronuncia le parole 'frag'.", 1, ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015frag$c0007'.", 1, ch,0,0,TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 45;
 					alter_mana(ch,0);
@@ -1167,7 +1167,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 			else {
-				act("$n pronuncia le parole 'Whew, whata smell!'.", 1, ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Whew, whata smell!$c0007'.", 1, ch,0,0,TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
@@ -1178,7 +1178,7 @@ MOBSPECIAL_FUNC(magic_user) {
 		/* ...  case 50: */
 		default:
 			if(ch->attackers <= 2) {
-				act("$n pronuncia le parole 'ZZAAPP!'.", 1, ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015ZZAAPP!$c0007'.", 1, ch,0,0,TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
@@ -1187,7 +1187,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 			else {
-				act("$n pronuncia le parole 'Whew, whata smell!'.", 1, ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Whew, whata smell!$c0007'.", 1, ch,0,0,TO_ROOM);
 				if(ch->desc) {
 					GET_MANA(ch) -= 50;
 					alter_mana(ch,0);
@@ -1267,7 +1267,7 @@ MOBSPECIAL_FUNC(cleric) {
 		if(GET_HIT(injuried) < GET_MAX_HIT(injuried)-10) {
 			lspell = GetMaxLevel(ch);
 			if(lspell >= 20  && (GET_MANA(ch) >= 50 || injuried == ch)) {
-				act("$n pronuncia le parole 'Woah! Adesso si' che va bene!'.",
+				act("$n pronuncia le parole, '$c0015Woah! Adesso si' che va bene!$c0007'.",
 					1, ch,0,0,TO_ROOM);
 				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
@@ -1277,7 +1277,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 			}
 			else if(lspell > 12 && (GET_MANA(ch) >= 25 || injuried == ch)) {
-				act("$n pronuncia le parole 'Hey! Va decisamente meglio!'.", 1,
+				act("$n pronuncia le parole, '$c0015Hey! Va decisamente meglio!$c0007'.", 1,
 					ch, 0, 0, TO_ROOM);
 				cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
@@ -1286,7 +1286,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 			}
 			else if(lspell > 8 && (GET_MANA(ch) >= 20 || injuried == ch)) {
-				act("$n pronuncia le parole 'Va molto meglio, ora!'.", 1, ch,0,0,
+				act("$n pronuncia le parole, '$c0015Va molto meglio, ora!$c0007'.", 1, ch,0,0,
 					TO_ROOM);
 				cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
@@ -1295,7 +1295,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 			}
 			else if(GET_MANA(ch) >= 15 || injuried == ch) {
-				act("$n pronuncia le parole 'Va meglio!'.", 1, ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Va meglio!$c0007'.", 1, ch,0,0,TO_ROOM);
 				cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
 					GET_MANA(ch) -= 15;
@@ -1310,31 +1310,31 @@ MOBSPECIAL_FUNC(cleric) {
 			/* make sure it is a mob */
 			/* low level prep */
 			if(!affected_by_spell(ch,SPELL_ARMOR)) {
-				act("$n pronuncia le parole 'protect'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015protect$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_armor(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if(!affected_by_spell(ch,SPELL_BLESS)) {
-				act("$n pronuncia le parole 'bless'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015bless$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_bless(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if(!affected_by_spell(ch,SPELL_AID)) {
-				act("$n pronuncia le parole 'aid'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015aid$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_aid(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if(!affected_by_spell(ch,SPELL_DETECT_MAGIC)) {
-				act("$n pronuncia le parole 'detect magic'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015detect magic$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_detect_magic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 
 			if(!affected_by_spell(ch,SPELL_PROTECT_FROM_EVIL) && !IS_EVIL(ch)) {
-				act("$n pronuncia le parole 'anti evil'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015anti evil$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_protection_from_evil(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
@@ -1343,22 +1343,22 @@ MOBSPECIAL_FUNC(cleric) {
 			if(GetMaxLevel(ch)>24) {
 				/* high level prep */
 				if(!affected_by_spell(ch,SPELL_PROT_FIRE)) {
-					act("$n pronuncia le parole 'resist fire'.",FALSE,ch,0,0,TO_ROOM);
+					act("$n pronuncia le parole, '$c0015resist fire$c0007'.",FALSE,ch,0,0,TO_ROOM);
 					cast_prot_fire(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 				if(!affected_by_spell(ch,SPELL_PROT_COLD)) {
-					act("$n pronuncia le parole 'resist cold'.",FALSE,ch,0,0,TO_ROOM);
+					act("$n pronuncia le parole, '$c0015resist cold$c0007'.",FALSE,ch,0,0,TO_ROOM);
 					cast_prot_cold(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 				if(!affected_by_spell(ch,SPELL_PROT_ENERGY)) {
-					act("$n pronuncia le parole 'resist energy'.",FALSE,ch,0,0,TO_ROOM);
+					act("$n pronuncia le parole, '$c0015resist energy$c0007'.",FALSE,ch,0,0,TO_ROOM);
 					cast_prot_energy(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 				if(!affected_by_spell(ch,SPELL_PROT_ELEC)) {
-					act("$n pronuncia le parole 'resist electricity'.",FALSE,ch,0,0,
+					act("$n pronuncia le parole, '$c0015resist electricity$c0007'.",FALSE,ch,0,0,
 						TO_ROOM);
 					cast_prot_elec(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
@@ -1367,12 +1367,12 @@ MOBSPECIAL_FUNC(cleric) {
 
 			/* low level removes */
 			if(affected_by_spell(ch,SPELL_POISON)) {
-				act("$n pronuncia le parole 'remove poison'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015remove poison$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_remove_poison(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
 			if(affected_by_spell(ch,SPELL_BLINDNESS)) {
-				act("$n pronuncia le parole 'cure blind'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015cure blind$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_cure_blind(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
@@ -1382,13 +1382,13 @@ MOBSPECIAL_FUNC(cleric) {
 			/* hi level removes */
 			if(GetMaxLevel(ch) >24) {
 				if(affected_by_spell(ch,SPELL_CURSE)) {
-					act("$n pronuncia le parole 'remove curse'.",FALSE,ch,0,0,TO_ROOM);
+					act("$n pronuncia le parole, '$c0015remove curse$c0007'.",FALSE,ch,0,0,TO_ROOM);
 					cast_remove_curse(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
 
 				if(affected_by_spell(ch,SPELL_PARALYSIS)) {
-					act("$n pronuncia le parole 'remove paralysis'.",FALSE,ch,0,0,TO_ROOM);
+					act("$n pronuncia le parole, '$c0015remove paralysis$c0007'.",FALSE,ch,0,0,TO_ROOM);
 					cast_remove_paralysis(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 					return(TRUE);
 				}
@@ -1397,7 +1397,7 @@ MOBSPECIAL_FUNC(cleric) {
 
 
 			if(GET_MOVE(ch) < GET_MAX_MOVE(ch)/2) {
-				act("$n pronuncia le parole 'lemon aid'.",FALSE,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015lemon aid$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_refresh(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
 			}
@@ -1437,7 +1437,7 @@ MOBSPECIAL_FUNC(cleric) {
 
 	if(GET_HIT(ch) < GET_MAX_HIT(ch) / 4 && lspell > 31 &&
 			!IS_SET(ch->specials.act, ACT_AGGRESSIVE)) {
-		act("$n pronuncia le parole 'Woah! Via di qui!'",
+		act("$n pronuncia le parole, '$c0015Woah! Via di qui!$c0007'.",
 			1, ch, 0, 0, TO_ROOM);
 		stop_fighting(ch);
 		cast_astral_walk(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
@@ -1473,7 +1473,7 @@ MOBSPECIAL_FUNC(cleric) {
 		if(OUTSIDE(ch) && weather_info.sky >= SKY_RAINING && lspell >= 15 &&
 				number(0,5) == 0) {
 			act("$n fischia.",1,ch,0,0,TO_ROOM);
-			act("$n pronuncia le parole 'Tuoni e fulmini!'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Tuoni e fulmini!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_call_lightning(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 50;
@@ -1486,7 +1486,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 1:
 		case 2:
 		case 3:
-			act("$n pronuncia le parole 'Moo ha ha!'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Moo ha ha!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_cause_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 10;
@@ -1496,7 +1496,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 4:
 		case 5:
 		case 6:
-			act("$n pronuncia le parole 'Hocus Pocus!'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Hocus Pocus!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_blindness(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
@@ -1504,7 +1504,7 @@ MOBSPECIAL_FUNC(cleric) {
 			}
 			break;
 		case 7:
-			act("$n pronuncia le parole 'Va-Voom!'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Va-Voom!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_dispel_magic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 25;
@@ -1512,7 +1512,7 @@ MOBSPECIAL_FUNC(cleric) {
 			}
 			break;
 		case 8:
-			act("$n pronuncia le parole 'Urgle Blurg'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Urgle Blurg$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
@@ -1521,7 +1521,7 @@ MOBSPECIAL_FUNC(cleric) {
 			break;
 		case 9:
 		case 10:
-			act("$n pronuncia le parole 'Prendi questo!'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Prendi questo!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 30;
@@ -1529,7 +1529,7 @@ MOBSPECIAL_FUNC(cleric) {
 			}
 			break;
 		case 11:
-			act("$n pronuncia le parole 'Brucia Baby Brucia'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Brucia Baby Brucia$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_flamestrike(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 35;
@@ -1541,7 +1541,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 15:
 		case 16:
 			if(!IS_SET(vict->M_immune, IMM_FIRE)) {
-				act("$n pronuncia le parole 'Brucia Baby Brucia'.",1,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Brucia Baby Brucia$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_flamestrike(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 				if(ch->desc) {
 					GET_MANA(ch) -= 35;
@@ -1550,7 +1550,7 @@ MOBSPECIAL_FUNC(cleric) {
 			}
 			else if(IS_AFFECTED(vict, AFF_SANCTUARY) &&
 					(GetMaxLevel(ch) > GetMaxLevel(vict))) {
-				act("$n pronuncia le parole 'Va-Voom!'.",1,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Va-Voom!$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_dispel_magic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 				if(ch->desc) {
 					GET_MANA(ch) -= 20;
@@ -1558,7 +1558,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 			}
 			else {
-				act("$n pronuncia le parole 'Prendi questo'.",1,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Prendi questo$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_cause_critic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL, vict, 0);
 				if(ch->desc) {
 					GET_MANA(ch) -= 30;
@@ -1571,7 +1571,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 18:
 		case 19:
 		default:
-			act("$n pronuncia le parole 'Fa male, vero?'.",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 50;
@@ -1587,7 +1587,7 @@ MOBSPECIAL_FUNC(cleric) {
 		/* do heal */
 
 		if(IS_AFFECTED(ch, AFF_BLIND) && (lspell >= 4) & (number(0,3)==0)) {
-			act("$n pronuncia le parole 'Alar, dammi la luce!'.", 1, ch,0,0,
+			act("$n pronuncia le parole, '$c0015Alar, dammi la luce!$c0007'.", 1, ch,0,0,
 				TO_ROOM);
 			cast_cure_blind(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1598,7 +1598,7 @@ MOBSPECIAL_FUNC(cleric) {
 		}
 
 		if(IS_AFFECTED(ch, AFF_CURSE) && lspell >= 6 && number(0, 6) == 0) {
-			act("$n pronuncia le parole 'Per Xanathon, via questa roba!", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Per Xanathon, via questa roba!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_remove_curse(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
@@ -1608,8 +1608,8 @@ MOBSPECIAL_FUNC(cleric) {
 		}
 
 		if(IS_AFFECTED(ch, AFF_POISON) && (lspell >= 5) && (number(0,6)==0)) {
-			act("$n pronuncia le parole 'Grazie Darkstar, non sono piu' avvelenato, "
-				"ora!'.", 1, ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015Grazie Darkstar, non sono piu' avvelenat$b "
+				"ora!$c0007'.", 1, ch,0,0,TO_ROOM);
 			cast_remove_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
 				GET_MANA(ch) -= 20;
@@ -1623,7 +1623,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 1:
 		case 2:
 			if(!affected_by_spell(ch,SPELL_ARMOR)) {
-				act("$n pronuncia le parole 'Abrazak'.",1,ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Abrazak$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_armor(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {
 					GET_MANA(ch) -= 10;
@@ -1635,7 +1635,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 3:
 		case 4:
 		case 5:
-			act("$n pronuncia le parole 'Mi sento meglio, ora!'.", 1, ch,0,0,
+			act("$n pronuncia le parole, '$c0015Mi sento meglio, ora!$c0007'.", 1, ch,0,0,
 				TO_ROOM);
 			cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1648,7 +1648,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 8:
 		case 9:
 		case 10:
-			act("$n pronuncia le parole 'Mi sento molto meglio, ora!'.", 1, ch,
+			act("$n pronuncia le parole, '$c0015Mi sento molto meglio, ora!$c0007'.", 1, ch,
 				0, 0, TO_ROOM);
 			cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1662,7 +1662,7 @@ MOBSPECIAL_FUNC(cleric) {
 		case 14:
 		case 15:
 		case 16:
-			act("$n pronuncia le parole 'Hey! Mi sento veramente meglio!'.", 1,
+			act("$n pronuncia le parole, '$c0015Hey! Mi sento veramente meglio!$c0007'.", 1,
 				ch, 0, 0, TO_ROOM);
 			cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1672,7 +1672,7 @@ MOBSPECIAL_FUNC(cleric) {
 			break;
 		case 17:
 		case 18: /* heal */
-			act("$n pronuncia le parole 'Woah! Adesso si' che sto bene!'.", 1,
+			act("$n pronuncia le parole, '$c0015Woah! Adesso si' che sto bene!$c0007'.", 1,
 				ch, 0, 0, TO_ROOM);
 			cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
@@ -1682,7 +1682,7 @@ MOBSPECIAL_FUNC(cleric) {
 			break;
 		default:
 			if(!affected_by_spell(ch,SPELL_SANCTUARY)) {
-				act("$n pronuncia le parole 'Oooh, bello!'.", 1, ch,0,0,TO_ROOM);
+				act("$n pronuncia le parole, '$c0015Oooh, bello!$c0007'.", 1, ch,0,0,TO_ROOM);
 				cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {
 					GET_MANA(ch) -= 50;
@@ -1690,7 +1690,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 			}
 			else {
-				act("$n pronuncia le parole 'Woah! Adesso si' che sto bene!'.", 1,
+				act("$n pronuncia le parole, '$c0015Woah! Adesso si' che sto bene!$c0007'.", 1,
 					ch, 0,0,TO_ROOM);
 				cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {
@@ -4587,108 +4587,73 @@ MOBSPECIAL_FUNC(monk_master) {
 
 	if(cmd==CMD_PRACTICE) {
 		if(IS_NPC(ch)) {
-			send_to_char("The Monk Master tells you 'What do i look like, an animal trainer?'\n\r",ch);
+			send_to_char("$c0013[$c0015Il Maestro dei Monaci$c0013] ti dice 'Cosa ti sembro, un addestratore di animali?'\n\r",ch);
 			return(FALSE);
 		}
-		/**** SALVO skills prince ****/
-		if(IS_PRINCE(ch) && !HasClass(ch, CLASS_MONK)) {
-			if(!*arg) {
-				sprintf(buf,"Hai ancora %d sessioni di pratica.\n\r",
-						ch->specials.spells_to_learn);
-				send_to_char(buf, ch);
-				send_to_char("Puoi praticare questa skills:\n\r", ch);
-				sprintf(buf,"[%d] %s %s \n\r",
-						PRINCIPE,spells[SKILL_FEIGN_DEATH-1],
-						how_good(ch->skills[SKILL_FEIGN_DEATH].learned));
-				send_to_char(buf, ch);
-				return(TRUE);
-			}
-			for(; isspace(*arg); arg++);
-			number = old_search_block(arg,0,strlen(arg),spells,FALSE);
-			if(number == -1) {
-				send_to_char("Non conosco questa pratica...\n\r", ch);
-				return(TRUE);
-			}
-			if(number !=SKILL_FEIGN_DEATH) {
-				send_to_char("Non posso insegnarti questa pratica...\n\r", ch);
-				return(TRUE);
-			}
-			if(ch->specials.spells_to_learn <= 0) {
-				send_to_char("Non hai pratiche a disposizione.\n\r", ch);
-				return(TRUE);
-			}
-			if(ch->skills[number].learned >= 45) {
-				send_to_char("Non posso aiutarti a migliorati ancora.\n\r", ch);
-				return(TRUE);
-			}
-			send_to_char("Hai fatto pratica...\n\r", ch);
-			ch->specials.spells_to_learn--;
-
-
-			if(!IS_SET(ch->skills[number].flags, SKILL_KNOWN)) {
-				SET_BIT(ch->skills[number].flags, SKILL_KNOWN);
-				SET_BIT(ch->skills[number].flags, SKILL_KNOWN_MONK);
-			}
-
-			ch->skills[ number ].learned += int_app[(int)GET_INT(ch) ].learn;
-
-			if(ch->skills[number].learned >= 95) {
-				send_to_char("Hai imparato tutto.\n\r", ch);
-			}
-			return TRUE;
-		}
-		/**** fine skills prince ****/
 
 		if(!arg || (strlen(arg) == 0)) {
-			sprintf(buf, "You have %d practices remaining\n\r",
+			sprintf(buf, "Hai ancora %d sessioni di pratica.\n\r",
 					ch->specials.spells_to_learn);
 			send_to_char(buf, ch);
-			sprintf(buf," disarm        :  %s\n\r",
+            if(IS_PRINCE(ch) && !HasClass(ch, CLASS_MONK))
+            {
+                send_to_char("Come $c0015Principe$c0007 ti posso insegnare:\n\r", ch);
+                sprintf(buf,"[%d] %s:  %s \n\r",
+                        PRINCIPE,spells[SKILL_FEIGN_DEATH-1],
+                        how_good(ch->skills[SKILL_FEIGN_DEATH].learned));
+                send_to_char(buf, ch);
+                send_to_char("Ed anche:\n\r", ch);
+            }
+            else
+                send_to_char("Ti posso insegnare:\n\r", ch);
+			sprintf(buf," disarm         :  %s\n\r",
 					how_good(ch->skills[SKILL_DISARM].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," quivering palm:  %s [Must be 30th level]\n\r",
+			sprintf(buf," quivering palm :  %s [Devi essere almeno un $c0015monaco$c0007 di livello $c001530$c0007]\n\r",
 					how_good(ch->skills[SKILL_QUIV_PALM].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," finger        :  %s [Must be mo 15 or wa 30 or ba 25]\n\r",
+			sprintf(buf," finger         :  %s [Solo $c0015monaco$c0007 (15mo livello) o $c0009guerriero$c0007 (30mo livello) o $c0003barbaro$c0007 (25mo livello)]\n\r",
 					how_good(ch->skills[SKILL_FINGER].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," safe fall     :  %s\n\r",
+			sprintf(buf," safe fall      :  %s\n\r",
 					how_good(ch->skills[SKILL_SAFE_FALL].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," springleap    :  %s\n\r",
+			sprintf(buf," springleap     :  %s\n\r",
 					how_good(ch->skills[SKILL_SPRING_LEAP].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," retreat       :  %s\n\r",
+			sprintf(buf," retreat        :  %s\n\r",
 					how_good(ch->skills[SKILL_RETREAT].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," pick locks    :  %s\n\r",
+			sprintf(buf," pick locks     :  %s\n\r",
 					how_good(ch->skills[SKILL_PICK_LOCK].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," hide          :  %s\n\r",
+			sprintf(buf," hide           :  %s\n\r",
 					how_good(ch->skills[SKILL_HIDE].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," sneak         :  %s\n\r",
+			sprintf(buf," sneak          :  %s\n\r",
 					how_good(ch->skills[SKILL_SNEAK].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," feign death   :  %s\n\r",
-					how_good(ch->skills[SKILL_FEIGN_DEATH].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," dodge         :  %s\n\r",
+            if(!IS_PRINCE(ch) || HasClass(ch, CLASS_MONK))
+            {
+                sprintf(buf," feign death    :  %s\n\r", how_good(ch->skills[SKILL_FEIGN_DEATH].learned));
+                send_to_char(buf,ch);
+            }
+			sprintf(buf," dodge          :  %s\n\r",
 					how_good(ch->skills[SKILL_DODGE].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," switch        :  %s\n\r",
+			sprintf(buf," switch         :  %s\n\r",
 					how_good(ch->skills[SKILL_SWITCH_OPP].learned));
 			send_to_char(buf,ch);
-			sprintf(buf," kick          :  %s\n\r",
+			sprintf(buf," kick           :  %s\n\r",
 					how_good(ch->skills[SKILL_KICK].learned));
 			send_to_char(buf,ch);
 			return(TRUE);
 		}
 		else {
 			number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
-			send_to_char("The ancient master says ",ch);
+			send_to_char("$c0013[$c0015Il Maestro dei Monaci$c0013] ti dice ",ch);
 			if(number == -1) {
-				send_to_char("'I do not know of this skill.'\n\r", ch);
+				send_to_char("$c0013'Mi dispiace, non conosco questa abilita'.'\n\r", ch);
 				return(TRUE);
 			}
 			charge = GetMaxLevel(ch) * COSTO_LEZIONI;
@@ -4697,11 +4662,11 @@ MOBSPECIAL_FUNC(monk_master) {
 			case 1:
 				sk_num = SKILL_QUIV_PALM;
 				if(!HasClass(ch, CLASS_MONK) && !IS_IMMORTAL(ch)) {
-					send_to_char("'You do not possess the proper skills'\n\r", ch);
+					send_to_char("$c0013'Solo ai monaci e' permesso imparare a scatenare l'energia del palmo vibrante.'\n\r", ch);
 					return(TRUE);
 				}
 				else if(GET_LEVEL(ch, MONK_LEVEL_IND) < 30) {
-					send_to_char("'You are not high enough level'\n\r", ch);
+					send_to_char("$c0013'Il tuo livello e' troppo basso.'\n\r", ch);
 					return(TRUE);
 				}
 				break;
@@ -4713,20 +4678,20 @@ MOBSPECIAL_FUNC(monk_master) {
 						  GET_LEVEL(ch, BARBARIAN_LEVEL_IND) < 25)) ||
 						((HasClass(ch,CLASS_MONK) &&
 						  GET_LEVEL(ch, MONK_LEVEL_IND) < 15))) {
-					send_to_char("'You are not high enough level'\n\r", ch);
+					send_to_char("$c0013'Il tuo livello e' troppo basso.'\n\r", ch);
 					return(TRUE);
 				}
 
 				if(!HasClass(ch, CLASS_MONK) && !IS_IMMORTAL(ch)
 						&& !HasClass(ch,CLASS_BARBARIAN) && !HasClass(ch,CLASS_WARRIOR)) {
-					send_to_char("'You do not possess the proper skills'\n\r", ch);
+					send_to_char("$c0013'Solo monaci, guerrieri e barbari possono imparare ad accecare l'avversario.'\n\r", ch);
 					return(TRUE);
 				}
 				break;
 			case 3:
 				sk_num = SKILL_FEIGN_DEATH;
-				if(!HasClass(ch, CLASS_MONK) && !IS_IMMORTAL(ch)) {
-					send_to_char("'You do not possess the proper skills'\n\r", ch);
+				if(!HasClass(ch, CLASS_MONK) && !IS_IMMORTAL(ch) && !IS_PRINCE(ch)) {
+					send_to_char("$c0013'Non sei abbastanza abile da imparare le arti della finta morte!'\n\r", ch);
 					return(TRUE);
 				}
 				break;
@@ -4735,7 +4700,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!IS_FIGHTER(ch)
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
+					("$c0013'Solo i combattenti possono imparare l'arte della ritirata.'\n\r",ch);
 					return(TRUE);
 				}
 				break;
@@ -4744,7 +4709,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_WARRIOR) && !(HasClass(ch, CLASS_MONK))
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
+					("$c0013'Al momento solo monaci e guerrieri possono prendere a calci i propri nemici!'\n\r",ch);
 					return(TRUE);
 				}
 				break;
@@ -4753,7 +4718,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_THIEF) && !(HasClass(ch, CLASS_MONK))
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary skills'\n\r",ch);
+					("$c0013'Non posso insegnarti a celarti tra le ombre.'\n\r",ch);
 					return(TRUE);
 				}
 				break;
@@ -4762,7 +4727,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_THIEF) && !(HasClass(ch, CLASS_MONK))
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary skills'\n\r",ch);
+					("$c0013'Beh, muoversi silenziosamente e' un'arte che solo in pochi possono imparare...'\n\r",ch);
 					return(TRUE);
 				}
 				break;
@@ -4771,14 +4736,14 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_THIEF) && !(HasClass(ch, CLASS_MONK))
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary skills'\n\r",ch);
+					("$c0013'Solo i ladri e i monaci piu' esperti possono imparare a scassinare le serrature.'\n\r",ch);
 					return(TRUE);
 				}
 				break;
 			case 9:
 				sk_num = SKILL_SAFE_FALL;
 				if(!HasClass(ch, CLASS_MONK) && !IS_IMMORTAL(ch)) {
-					send_to_char("'You do not possess the proper skills'\n\r", ch);
+					send_to_char("$c0013'Non sei abbastanza agile per imparare a cadere senza farti male!'\n\r", ch);
 					return(TRUE);
 				}
 				break;
@@ -4787,7 +4752,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_WARRIOR) && !(HasClass(ch, CLASS_MONK))
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
+					("$c0013'Bene, vuoi imparare a disarmare il tuo avversario? Non posso insegartelo!'\n\r",ch);
 					return(TRUE);
 				}
 				break;
@@ -4796,7 +4761,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_WARRIOR) && !HasClass(ch, CLASS_MONK) &&
 						!HasClass(ch, CLASS_PALADIN) && !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
+					("$c0013'Non ti posso insegnare a schivare gli attacchi dei tuoi nemici.'\n\r",ch);
 					return(TRUE);
 				}
 				break;
@@ -4805,28 +4770,27 @@ MOBSPECIAL_FUNC(monk_master) {
 				if(!HasClass(ch, CLASS_WARRIOR) && !(HasClass(ch, CLASS_MONK))
 						&& !IS_IMMORTAL(ch)) {
 					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
+					("$c0013'Non posso insegnarti come cambiare il tuo avversario in combattimento.'\n\r",ch);
 					return(TRUE);
 				}
 				break;
 			case 13:
 				sk_num = SKILL_SPRING_LEAP;
 				if(!HasClass(ch, CLASS_MONK)  && !IS_IMMORTAL(ch)) {
-					send_to_char("'You do not possess the proper skills'\n\r", ch);
+					send_to_char("$c0013'Soltanto i monaci possono imparare quest'arte!'\n\r", ch);
 					return(TRUE);
 				}
 				break;
 
 			default:
 				mudlog(LOG_SYSERR, "Strangeness in monk master (%d)", number);
-				send_to_char("'Ack!  I feel faint!'\n\r", ch);
+				send_to_char("$c0013'Ack! Mi sento svenire!'\n\r", ch);
 				return(TRUE);
 			}
 		}
 
-		if(!HasClass(ch, CLASS_MONK) && GET_GOLD(ch) < charge) {
-			send_to_char
-			("'Ah, but you do not have enough money to pay.'\n\r",ch);
+		if((!HasClass(ch, CLASS_MONK) && GET_GOLD(ch) < charge) && (IS_PRINCE(ch) && !HasClass(ch, CLASS_MONK) && number != 3 && GET_GOLD(ch) < charge)) {
+			send_to_char("$c0013'Ah, ma non hai abbastanza soldi con te.'\n\r",ch);
 			return(TRUE);
 		}
 
@@ -4835,7 +4799,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				sk_num == SKILL_RETREAT) {
 			if(ch->skills[sk_num].learned >= 95) {
 				send_to_char
-				("'You are a master of this art, I can teach you no more.'\n\r",ch);
+				("$c0013'Sei talmente abile che non posso insegnarti di piu'!'\n\r",ch);
 				SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
 				return(TRUE);
 			}
@@ -4843,21 +4807,21 @@ MOBSPECIAL_FUNC(monk_master) {
 		else {
 			if(ch->skills[sk_num].learned > 45) {
 				SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
-				send_to_char("'You must learn from practice and experience now.'\n\r", ch);
+				send_to_char("$c0013'Non posso aiutarti a migliorati ancora, devi fare pratica.'\n\r", ch);
 				return TRUE;
 			}
 		}
 
 		if(ch->specials.spells_to_learn <= 0) {
 			send_to_char
-			("'You must first use the knowledge you already have.\n\r",ch);
+			("$c0013'Non hai sessioni di pratica a tua disposizione.\n\r",ch);
 			return(TRUE);
 		}
 
-		if(!HasClass(ch, CLASS_MONK)) {
+		if(!HasClass(ch, CLASS_MONK) && (IS_PRINCE(ch) && !HasClass(ch, CLASS_MONK) && number != 3)) {
 			GET_GOLD(ch) -= charge;
 		}
-		send_to_char("'We will now begin.'\n\r",ch);
+		send_to_char("$c0013'Bene, iniziamo.'\n\r",ch);
 		ch->specials.spells_to_learn--;
 
 		ch->skills[ sk_num ].learned += int_app[(int)GET_INT(ch) ].learn;
@@ -4869,7 +4833,7 @@ MOBSPECIAL_FUNC(monk_master) {
 		}
 
 		if(ch->skills[sk_num].learned >= 95) {
-			send_to_char("'You are now a master of this art.'\n\r", ch);
+			send_to_char("$c0013'Sei talmente abile che non posso insegnarti di piu'!'\n\r", ch);
 		}
 		return(TRUE);
 	}
@@ -4879,7 +4843,7 @@ MOBSPECIAL_FUNC(monk_master) {
 				GainLevel(ch, MONK_LEVEL_IND);
 			}
 			else {
-				send_to_char("You must fight another monk for this title\n\r",ch);
+				send_to_char("Devi affrontare un duello per avanzare di livello.\n\r",ch);
 			}
 			return(TRUE);
 		}
@@ -5075,24 +5039,24 @@ MOBSPECIAL_FUNC(Demon) {
 
 void DruidHeal(struct char_data* ch, int level) {
 	if(level > 13) {
-		act("$n pronuncia le parole 'Woah! I feel GOOD! Heh.'.",
+		act("$n pronuncia le parole, '$c0015Woah! I feel GOOD! Heh.$c0007'.",
 			1, ch,0,0,TO_ROOM);
 		cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 	}
 	else if(level > 8) {
-		act("$n pronuncia le parole 'I feel much better now!'.",
+		act("$n pronuncia le parole, '$c0015I feel much better now!$c0007'.",
 			1, ch,0,0,TO_ROOM);
 		cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 	}
 	else {
-		act("$n pronuncia le parole 'I feel good!'.", 1, ch,0,0,TO_ROOM);
+		act("$n pronuncia le parole, '$c0015I feel good!$c0007'.", 1, ch,0,0,TO_ROOM);
 		cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 	}
 }
 
 void DruidTree(struct char_data* ch) {
 
-	act("$n pronuncia le parole 'harumph!'", FALSE, ch, 0, 0, TO_ROOM);
+	act("$n pronuncia le parole, '$c0015harumph!$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge tree!", FALSE, ch, 0, 0, TO_ROOM);
 	GET_RACE(ch)=RACE_TREE;
 	ch->points.max_hit = GetMaxLevel(ch)*10;
@@ -5111,7 +5075,7 @@ void DruidTree(struct char_data* ch) {
 
 void DruidMob(struct char_data* ch) {
 
-	act("$n pronuncia le parole 'lagomorph'", FALSE, ch, 0, 0, TO_ROOM);
+	act("$n pronuncia le parole, '$c0015lagomorph$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge lion", FALSE, ch, 0, 0, TO_ROOM);
 	GET_RACE(ch)=RACE_PREDATOR;
 	ch->points.max_hit *= 2;
@@ -5175,13 +5139,13 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 		}
 		if(!ch->equipment[WIELD] && number(0,100) > 95) {
 			if(GetMaxLevel(ch) > 4) {
-				act("$n pronuncia le parole 'gimme a light'", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015gimme a light$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_elemental_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			}
 			return(TRUE);
 		}
 		if(!affected_by_spell(ch, SPELL_BARKSKIN) && number(0,1)) {
-			act("$n pronuncia le parole 'woof woof'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015woof woof$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_barkskin(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			return(TRUE);
 		}
@@ -5220,14 +5184,14 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 
 		if(GetMaxLevel(ch) >= 20 && (!IS_AFFECTED(vict, AFF_SILENCE)) &&
 				!number(0,4)) {
-			act("$n pronuncia le parole 'ssshhhh'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015ssshhhh$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_silence(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 
 		if(IS_AFFECTED(vict, AFF_FIRESHIELD) || IS_AFFECTED(vict, AFF_SANCTUARY)) {
 			if(GetMaxLevel(ch) >= GetMaxLevel(vict)) {
-				act("$n pronuncia le parole 'use instaway instant magic remover'",
+				act("$n pronuncia le parole, '$c0015use instaway instant magic remover$c0007'.",
 					1, ch, 0, 0, TO_ROOM);
 				cast_dispel_magic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				return(TRUE);
@@ -5235,13 +5199,13 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 		}
 
 		if(IsUndead(vict) && !number(0,2)) {
-			act("$n pronuncia le parole 'see the light!'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015see the light!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_sunray(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 
 		if(vict->equipment[WIELD] && level > 19) {
-			act("$n pronuncia le parole 'frogemoth'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015frogemoth$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_warp_weapon(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
@@ -5249,7 +5213,7 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 		if(level > 23) {
 			for(i=0; i<MAX_WEAR; i++) {
 				if(vict->equipment[i]) {
-					act("$n pronuncia le parole 'barbecue?'", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015barbecue?$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_warp_weapon(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 									 vict, 0);
 					return(FALSE);
@@ -5264,13 +5228,13 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 		else {   /*summon followers, call lightning */
 			if(rp->sector_type == SECT_FOREST) {
 				if(level > 16 && !number(0,5)) {
-					act("$n pronuncia le parole 'briar'", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015briar$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_entangle(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 								  vict, 0);
 					return(FALSE);
 				}
 				if(level >= 8 && !number(0,3)) {
-					act("$n pronuncia le parole 'snap!'", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015snap!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_snare(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 							   vict, 0);
 					return(FALSE);
@@ -5285,7 +5249,7 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 				}
 				/* summoning */
 				if(level > 30 && !number(0,4)) {
-					act("$n pronuncia le parole 'Where is my SERVANT!'", FALSE, ch, 0,
+					act("$n pronuncia le parole, '$c0015Where is my SERVANT!$c0007'.", FALSE, ch, 0,
 						0, TO_ROOM);
 					cast_fire_servant(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 									  0, 0);
@@ -5319,14 +5283,14 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 			else {
 				if(!IS_SET(rp->room_flags, INDOORS)) {
 					if(level > 8 && !number(0,3)) {
-						act("$n pronuncia le parole 'let it rain'", FALSE, ch, 0,
+						act("$n pronuncia le parole, '$c0015let it rain$c0007'.", FALSE, ch, 0,
 							0, TO_ROOM);
-						cast_control_weather(GetMaxLevel(ch), ch, "worse",
+						cast_control_weather(GetMaxLevel(ch), ch, "peggiore",
 											 SPELL_TYPE_SPELL, 0, 0);
 						return(FALSE);
 					}
 					if(level > 15 && !number(0,2)) {
-						act("$n pronuncia le parole 'here lightning'", FALSE, ch, 0,
+						act("$n pronuncia le parole, '$c0015here lightning$c0007'.", FALSE, ch, 0,
 							0, TO_ROOM);
 						cast_call_lightning(GetMaxLevel(ch), ch, "",
 											SPELL_TYPE_SPELL, vict, 0);
@@ -5389,13 +5353,13 @@ MOBSPECIAL_FUNC(druid) {
 			if(GetMaxLevel(ch) > 4 &&
 					(ch->specials.damnodice * ch->specials.damsizedice +
 					 GET_DAMROLL(ch)) < 16) {
-				act("$n pronuncia le parole 'gimme a light'", 1, ch, 0, 0, TO_ROOM);
+				act("$n pronuncia le parole, '$c0015gimme a light$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_elemental_blade(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				return(TRUE);
 			}
 		}
 		if(!affected_by_spell(ch, SPELL_BARKSKIN) && number(0,1)) {
-			act("$n pronuncia le parole 'woof woof'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015woof woof$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_barkskin(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			return(TRUE);
 		}
@@ -5414,7 +5378,7 @@ MOBSPECIAL_FUNC(druid) {
 
 		if((GET_HIT(ch) < GET_MAX_HIT(ch)/7) && GetMaxLevel(ch) >=40
 				&& !IS_SET(rp->room_flags, INDOORS)) {
-			act("$n pronuncia le parole 'ARMAGEDDON!!!'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015ARMAGEDDON!!!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_creeping_death(GetMaxLevel(ch),ch,"up",SPELL_TYPE_SPELL,vict,0);
 			return(TRUE);
 		}
@@ -5426,21 +5390,21 @@ MOBSPECIAL_FUNC(druid) {
 
 		if(GetMaxLevel(ch) >= 30 && (!IS_AFFECTED(vict, AFF_SILENCE)) &&
 				!number(0,8)) {
-			act("$n pronuncia le parole 'ssshhhh'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015ssshhhh$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_silence(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 
 		if(IS_AFFECTED(vict, AFF_FIRESHIELD) || IS_AFFECTED(vict, AFF_SANCTUARY)) {
 			if(GetMaxLevel(ch) >= GetMaxLevel(vict)) {
-				act("$n pronuncia le parole 'use instaway instant magic remover'",
+				act("$n pronuncia le parole, '$c0015use instaway instant magic remover$c0007'.",
 					1, ch, 0, 0, TO_ROOM);
 				cast_dispel_magic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				return(TRUE);
 			}
 		}
 		if(number(0,1)) {
-			act("$n pronuncia le parole 'KAZAP KAZAP KAZAP!'",
+			act("$n pronuncia le parole, '$c0015KAZAP KAZAP KAZAP!$c0007'.",
 				1, ch, 0, 0, TO_ROOM);
 			cast_chain_lightn(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(TRUE);
@@ -5449,7 +5413,7 @@ MOBSPECIAL_FUNC(druid) {
 		if(level > 23) {
 			for(i = 0; i < MAX_WEAR; i++) {
 				if(vict->equipment[i]) {
-					act("$n pronuncia le parole 'barbecue?'", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015barbecue?$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_heat_stuff(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 									vict, 0);
 					return(FALSE);
@@ -5458,13 +5422,13 @@ MOBSPECIAL_FUNC(druid) {
 		}
 
 		if(IsUndead(vict) && !number(0,2)) {
-			act("$n pronuncia le parole 'see the light!'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015see the light!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_sunray(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
 
 		if(vict->equipment[WIELD] && level > 30) {
-			act("$n pronuncia le parole 'frogemoth'", 1, ch, 0, 0, TO_ROOM);
+			act("$n pronuncia le parole, '$c0015frogemoth$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_warp_weapon(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			return(FALSE);
 		}
@@ -5478,13 +5442,13 @@ MOBSPECIAL_FUNC(druid) {
 			/*summon followers, call lightning */
 			if(rp->sector_type == SECT_FOREST) {
 				if(level > 16 && !number(0,5)) {
-					act("$n pronuncia le parole 'briar'", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015briar$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_entangle(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 								  vict, 0);
 					return(FALSE);
 				}
 				if(level >= 8 && !number(0,3)) {
-					act("$n pronuncia le parole 'snap!'", 1, ch, 0, 0, TO_ROOM);
+					act("$n pronuncia le parole, '$c0015snap!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 					cast_snare(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 							   vict, 0);
 					return(FALSE);
@@ -5499,7 +5463,7 @@ MOBSPECIAL_FUNC(druid) {
 				}
 				/* summoning */
 				if(level > 30 && !number(0,4)) {
-					act("$n pronuncia le parole 'Where is my SERVANT!'", FALSE, ch, 0,
+					act("$n pronuncia le parole, '$c0015Where is my SERVANT!$c0007'.", FALSE, ch, 0,
 						0, TO_ROOM);
 					cast_fire_servant(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL,
 									  0, 0);
@@ -5533,14 +5497,14 @@ MOBSPECIAL_FUNC(druid) {
 			else {
 				if(!IS_SET(rp->room_flags, INDOORS)) {
 					if(level > 8 && !number(0,3)) {
-						act("$n pronuncia le parole 'let it rain'", FALSE, ch, 0,
+						act("$n pronuncia le parole, '$c0015let it rain$c0007'.", FALSE, ch, 0,
 							0, TO_ROOM);
-						cast_control_weather(GetMaxLevel(ch), ch, "worse",
+						cast_control_weather(GetMaxLevel(ch), ch, "peggiore",
 											 SPELL_TYPE_SPELL, 0, 0);
 						return(FALSE);
 					}
 					if(level > 15 && !number(0,2)) {
-						act("$n pronuncia le parole 'here lightning'", FALSE, ch, 0,
+						act("$n pronuncia le parole, '$c0015here lightning$c0007'.", FALSE, ch, 0,
 							0, TO_ROOM);
 						cast_call_lightning(GetMaxLevel(ch), ch, "",
 											SPELL_TYPE_SPELL, vict, 0);

@@ -229,7 +229,7 @@ MOBSPECIAL_FUNC(snake_avt2) {
 		}
 
 		if(IS_AFFECTED(ch, AFF_BLIND) && (lspell > 15)) {
-			act("$n pronuncia le parole 'A me la luce!'",
+			act("$n pronuncia le parole, '$c0015A me la luce!$c0007'.",
 				TRUE, ch, 0, 0, TO_ROOM);
 			cast_cure_blind(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 			return TRUE;
@@ -243,20 +243,20 @@ MOBSPECIAL_FUNC(snake_avt2) {
 		}
 
 		if(!(IS_AFFECTED(ch,AFF_FIRESHIELD)) && (lspell > 39)) {
-			act("$n pronuncia la parola 'zimja'",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015zimja$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_fireshield(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 			return TRUE;
 		}
 
 		if(!(IS_AFFECTED(ch,AFF_SANCTUARY)) && (lspell > 25)) {
-			act("$n pronuncia la parola 'zija'",1,ch,0,0,TO_ROOM);
+			act("$n pronuncia le parole, '$c0015zija$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_sanctuary(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 			return TRUE;
 		}
 
 		if(IS_AFFECTED(vict, AFF_SANCTUARY) && lspell > 25 &&
 				GetMaxLevel(ch) >= GetMaxLevel(vict)) {
-			act("$n pronuncia le parole 'paf zija'",
+			act("$n pronuncia le parole, '$c0015paf zija$c0007'.",
 				TRUE, ch, 0, 0, TO_ROOM);
 			cast_dispel_magic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 			return TRUE;
@@ -264,14 +264,14 @@ MOBSPECIAL_FUNC(snake_avt2) {
 
 		if(IS_AFFECTED(vict, AFF_FIRESHIELD) && lspell > 25 &&
 				GetMaxLevel(ch) >= GetMaxLevel(vict)) {
-			act("$n pronuncia le parole 'paf zimja'",
+			act("$n pronuncia le parole, '$c0015paf zimja$c0007'.",
 				TRUE, ch, 0, 0, TO_ROOM);
 			cast_dispel_magic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 			return TRUE;
 		}
 
 		if(lspell > 40) {
-			act("$n pronuncia la parola 'zerumba'",
+			act("$n pronuncia le parole, '$c0015zerumba$c0007'.",
 				TRUE, ch, 0, 0, TO_ROOM);
 			cast_feeblemind(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 			return TRUE;
