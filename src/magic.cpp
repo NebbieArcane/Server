@@ -2797,7 +2797,7 @@ void spell_identify(byte level, struct char_data* ch,
                     strcat(buf,"\n\r");
                     break;
 				case APPLY_RACE_SLAYER:
-					sprintf(buf2, "$c0015%s\n\r", RaceName[ obj->affected[i].modifier ]);
+					sprintf(buf, "$c0015%s\n\r", RaceName[ obj->affected[i].modifier ]);
 					break;
 				case APPLY_ALIGN_SLAYER:
                     sprintf(buf, "$c0015");
