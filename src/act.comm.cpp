@@ -565,7 +565,14 @@ ACTION_FUNC(do_ask) {
                                 price,GET_NAME(vict));
                         send_to_char(buf, ch);
                     }
-                    sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
+                    
+                    if(real_roomp(ch->in_room)->zone == real_roomp(ch->specials.quest_ref->in_room)->zone) {
+                        sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
+                    } else {
+                        struct zone_data* zd;
+                        zd = zone_table + real_roomp(ch->specials.quest_ref->in_room)->zone;
+                        sprintf(buf, "%s %s? Pare fosse dirett%s verso %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), zd->name);
+                    }
                     do_tell(vict,buf,CMD_TELL);
                 } else {
                     sprintf(buf,"%s ...ma chi credi di comprare con quegli spiccioli!",
