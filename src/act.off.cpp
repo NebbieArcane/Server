@@ -547,9 +547,9 @@ ACTION_FUNC(do_order) {
 			snprintf(buf, 255,"$N ti ordina di '%s'", message);
 			act(buf, FALSE, victim, 0, ch, TO_CHAR);
 
-			if(GetMaxLevel(ch)<IMMORTALE)																/* Aggiungo il check per non */
-				/*act("$n gives $N an order.", FALSE, ch, 0, victim, TO_NOTVICT);*/ {		/*	far vedere ai player		  */
-				act("$n da' un ordine a $N . ", FALSE, ch, 0, victim, TO_NOTVICT);    /* un ordine IMMORTALE		  */
+			if(GetMaxLevel(ch)<IMMORTALE)													/* Aggiungo il check per non */
+				/*act("$n gives $N an order.", FALSE, ch, 0, victim, TO_NOTVICT);*/ {		/* far vedere ai player      */
+				act("$n da' un ordine a $N. ", FALSE, ch, 0, victim, TO_NOTVICT);           /* un ordine IMMORTALE		 */
 			}
 			/******* FLYP 20020610 *******/
 			if(victim->master != ch || !IS_AFFECTED(victim, AFF_CHARM)) {

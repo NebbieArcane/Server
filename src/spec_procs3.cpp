@@ -4854,7 +4854,6 @@ MOBSPECIAL_FUNC(AssignQuest) {
 	char buf[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
 	struct char_data* questor;
     struct char_data* quest_tgt;
-    struct zone_data* zd;
     int x, y, t, durata;
     int quest_type;     /* 0.Caccia 1.salvataggio 2.ricerca 3.Consegna */
     
@@ -5030,8 +5029,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     quest_tgt->points.hitroll = (GetMaxLevel(ch)/2)+ch->points.hitroll;
                     quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+ch->points.damroll;
                     
-                    zd = zone_table + real_roomp(quest_tgt->in_room)->zone;
-                    sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), zd->name);
+                    sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), zonename_by_room(quest_tgt->in_room));
                     
                     break;
                 case 1      :
@@ -5090,8 +5088,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     
                     spell_quest(durata,quest_tgt,quest_tgt,0);
 
-                    zd = zone_table + real_roomp(quest_tgt->in_room)->zone;
-                    sprintf(buf, "%s %s si e' smarrit%s, l'ultima volta e' stato vist%s a %s... troval%s!",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt),SSLF(quest_tgt), zd->name,SSLF(quest_tgt));
+                    sprintf(buf, "%s %s si e' smarrit%s, l'ultima volta e' stato vist%s a %s... troval%s!",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt),SSLF(quest_tgt), zonename_by_room(quest_tgt->in_room),SSLF(quest_tgt));
                     
                     break;
                 case 2      :

@@ -1,185 +1,185 @@
 M
  5
-$c0011Riduci $N ad un mucchietto di cenere~
-$c0011Vieni ridotto ad un mucchietto di cenere da $n~
-$c0011$n riduce in cenere $N~
-$c0011Manchi $N con le tue mani ardenti~
-$c0011$n tenta di bruciarti con le sue mani ardenti, ma fortunatamente ti manca~
-$c0011$n tenta di incenerire $N, mancandol$B~
-$c0011Bruci $N~
-$c0011Strilli dal dolore quando $n ti brucia~
-$c0011$N grida dal dolore per le bruciature causate da $n~
-$c0004Il tuo tentativo di ridurre in cenere $N e' RIDICOLO !!!~
-$c0004La misera creatura che hai davanti tenta di incenerirti~
-$c0004Non rendendosi conto dei rischi, $n tenta di incenerire $N~
+$c0011Riduci $N$c0011 ad un mucchietto di cenere.~
+$c0011Vieni ridott$B ad un mucchietto di cenere da $n$c0011.~
+$c0011$n$c0011 riduce in cenere $N$c0011.~
+$c0011Manchi $N$c0011 con le tue mani ardenti.~
+$c0011$n$c0011 tenta di bruciarti con le sue mani ardenti, ma fortunatamente ti manca.~
+$c0011$n$c0011 tenta di incenerire $N$c0011, mancandol$B.~
+$c0011Bruci $N$c0011.~
+$c0011Strilli dal dolore quando $n$c0011 ti brucia.~
+$c0011$N$c0011 grida dal dolore per le bruciature causate da $n$c0011.~
+$c0004Il tuo tentativo di ridurre in cenere $N$c0004 e' RIDICOLO!!!~
+$c0004La misera creatura che hai davanti tenta di incenerirti.~
+$c0004Non rendendosi conto dei rischi, $n$c0004 tenta di incenerire $N$c0004.~
 M
  6
-$c0012Il tuo colpo fulminante uccide $N~
-$c0012Vieni fulminato a morte dal lampo di luce lanciato da $n~
-$c0012Il cadavere di $N sfrigola sotto l'impatto del fulmine lanciato da $n~
-$c0012Il tuo fulmine colpisce il terreno davanti a $N, colpo a vuoto~
-$c0012Un fulmine lanciato da $n colpisce il terreno.~
-$c0012$N fa uno scatto indietro giusto in tempo per schivare il fulmine di $n~
-$c0012Colpisci $N con la tua scarica elettrica, bersaglio centrato~
-$c0012Vieni colpito dalla scarica elettrica di $n, Ouch!~
-$c0012$N urla di dolore quando la scarica elettrica di $n l$B penetra~
-$c0004$N blocca il tuo fulmine con un semplice gesto, ATTENTO !!!~
-$c0004Tu blocchi il fulmine di $n con mano sicura, non e' il momento di giocare~
-$c0004Il fulmine creato da $n viene dissolto da un semplice gesto di $N~
+$c0012Il tuo colpo fulminante uccide $N$c0012.~
+$c0012Vieni fulminat$B a morte dal lampo di luce lanciato da $n$c0012.~
+$c0012Il cadavere di $N$c0012 sfrigola sotto l'impatto del fulmine lanciato da $n$c0012.~
+$c0012Il tuo fulmine colpisce il terreno davanti a $N$c0012, colpo a vuoto.~
+$c0012Un fulmine lanciato da $n$c0012 colpisce il terreno.~
+$c0012$N$c0012 fa uno scatto indietro giusto in tempo per schivare il fulmine di $n$c0012.~
+$c0012Colpisci $N$c0012 con la tua scarica elettrica, bersaglio centrato.~
+$c0012Vieni colpito dalla scarica elettrica di $n$c0012, ouch!~
+$c0012$N$c0012 urla di dolore quando la scarica elettrica di $n$c0012 l$B penetra.~
+$c0004$N$c0004 blocca il tuo fulmine con un semplice gesto!!!~
+$c0004Blocchi il fulmine di $n$c0004 con mano sicura, non e' il momento di giocare.~
+$c0004Il fulmine creato da $n$c0004 viene dissolto da un semplice gesto di $N$c0004.~
 M
  8
-$c0014Congeli $N, ricordati di portare dei fiori sulla sua tomba~
-$c0014Ti senti congelato da $n e poi non senti piu' nulla - RIP~
-$c0014$n tocca $N che crolla a terra ridott$B ad un mucchietto ghiacciato~
-$c0014L'atmosfera si congela quando tu manchi $N~
-$c0014Schivi $n e il suo tocco congelante~
-$c0014$n tenta senza successo di congelare $N~
-$c0014Congeli $N~
-$c0014Senti la tua vita fuggire via appena $n ti sfiora congelandoti~
-$c0014$n congela $N che di colpo sembra meno vitale~
-$c0004Stai tentando di congelare $N ? - ridicolo~
-$c0004$n tenta di congelarti, roba da ridere~
-$c0004$N comincia a ridere mentre $n diventa di ghiaccio~
+$c0014Congeli $N$c0014, ricordati di portare dei fiori sulla sua tomba.~
+$c0014Vieni congelat$B da $n$c0014 e poi non senti piu' nulla, addio.~
+$c0014$n$c0014 tocca $N$c0014 che crolla a terra ridott$B ad un mucchietto ghiacciato.~
+$c0014L'aria si congela quando manchi $N$c0014.~
+$c0014Schivi $n$c0014 ed il suo tocco congelante.~
+$c0014$n$c0014 tenta senza successo di congelare $N$c0014.~
+$c0014Congeli $N$c0014.~
+$c0014Senti la tua vita fuggire via appena $n$c0014 ti sfiora congelandoti.~
+$c0014$n$c0014 congela $N$c0014 che di colpo sembra meno vitale.~
+$c0004Stai tentando di congelare $N$c0004? Tutto questo e' ridicolo!~
+$c0004$n$c0004 tenta di congelarti, roba da ridere.~
+$c0004$N$c0004 comincia a ridere mentre $n$c0004 diventa di ghiaccio.~
 M
  10
-$c0009UCCIDI $N $c0004!$c0005!$c0006!$c0007 - non ti vergogni?~
-La tua testa si riempie di tutti i colori dell'arcobaleno prima di esplodere~
-$n riduce $N in un ammasso multicolore~
-Il tuo vento multicolore manca $N - mondo crudele~
-$n tenta senza successo di dare colore alla tua vita~
-$n schizza colore dappertutto tranne che su $N~
-Il tuo arcobaleno privato colpisce $N in faccia - WOWIE~
-Un'improvvisa esplosione di colori ti fa barcollare~
-$n lancia colori a $N che tenta vanamente di sfuggire~
-Il tuo vento multicolore si trasforma in farfalle~
-Il vento multicolore che $n lancia verso te si trasforma in piccole farfalle~
-L'aria si riempie di farfalle appena $n lancia un vento multicolore verso $N~
+$c0009UCCIDI $N$c0003!$c0005!$c0006!$c0007 Non ti vergogni?~
+La tua testa si riempie di tutti i $c0010c$c0009o$c0011l$c0014o$c0013r$c0012i$c0007 dell'$c0009a$c0010r$c0011c$c0012o$c0013b$c0014a$c0013l$c0012e$c0011n$c0010o$c0007 prima di esplodere.~
+$n riduce $N in un ammasso $c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0007.~
+Il tuo raggio $c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0007 manca $N, che sfortuna!~
+$n tenta senza successo di dare $c0010c$c0009o$c0011l$c0014o$c0013r$c0012e$c0007 alla tua vita.~
+$n lancia $c0010c$c0009o$c0011l$c0014o$c0013r$c0012i$c0007 dappertutto tranne che su $N.~
+Il tuo $c0009a$c0010r$c0011c$c0012o$c0013b$c0014a$c0013l$c0012e$c0011n$c0010o$c0007 privato colpisce $N in faccia - WOWIE!~
+Un'improvvisa esplosione di $c0010c$c0009o$c0011l$c0014o$c0013r$c0012i$c0007 ti fa barcollare.~
+$n lancia $c0010c$c0009o$c0011l$c0014o$c0013r$c0012i$c0007 a $N che tenta vanamente di sfuggire.~
+$c0004Il tuo raggio $c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0004 si trasforma in farfalle.~
+$c0004Il raggio $c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0004 che $n$c0004 lancia verso te si trasforma in piccole farfalle.~
+$c0004L'aria si riempie di farfalle appena $n$c0004 lancia un raggio $c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0004 verso $N$c0004.~
 M
  22
-$N viene annientato dalla forza della tua bonta'.~
-$n ti annienta, rimpiangi di essere stato cosi' malvagio, e muori...~
-$n annienta $N~
-$N e' immune alla forza della tua bonta'!~
-$n si sente auto-benedetto e tenta di disperdere la magia che e' in te~
-$N sorride a $n quando quest$b tenta di disperdere la sua magia!~
-$N rabbrividisce, e subisce la sua stessa malvagita'!~
-$n ferisce la tua anima e ti fa soffrire profondamente!~
-$n fa rabbrividire e soffrire lo spirito malvagio di $N!~
-Davvero ti aspettavi che $N soffrisse?~
-$n tenta infruttuosamente di disperdere la magia che e' in te~
-$n e' proprio stupido...~
+$c0014$N$c0014 viene annientat$B dalla forza della tua bonta'.~
+$c0014$n$c0014 ti annienta, rimpiangi di essere stato cosi' malvagi$B, e muori...~
+$c0014$n$c0014 annienta $N$c0014.~
+$c0014$N$c0014 e' immune alla forza della tua bonta'!~
+$c0014$n$c0014 si sente benedett$b e tenta di disperdere la malvagita' che e' in te.~
+$c0014$N$c0014 emette un ghigno verso $n$c0014 mentre evita la sua magia.~
+$c0014$N$c0014 rabbrividisce, e subisce la sua stessa malvagita'!~
+$c0014$n$c0014 ferisce la tua anima e ti fa soffrire profondamente!~
+$c0014$n$c0014 fa rabbrividire e soffrire lo spirito malvagio di $N$c0014!~
+$c0004Davvero ti aspettavi che $N$c0004 soffrisse?~
+$c0004$n$c0004 tenta infruttuosamente di disperdere la magia che e' in te.~
+$c0004$n$c0004 e' proprio stupid$b...~
 M
  25
-$N si raggrinzisce appena tu l$B uccidi prosciugando la sua energia~
-Appena $n fa defluire le tue ultime forze tu ti rassegni alla vita eterna~
-$n fa defluire l'energia da $N che si accartoccia in un bozzolo senza vita~
-Hai bisogno di altre lezioni per imparare a togliere energia~
-Per tua fortuna, $n dormiva durante le lezioni per imparare a togliere energia~
-$n non riesce a togliere energia a $N - che spreco di forze~
-Togli a $N un po' della sua energia~
-Ti senti meno vitale appena $n prosciuga un po' della tua energia~
-$n prosciuga un po' l'energia di $N - che spreco di forze !~
-Sprechi le tue forze cercando di togliere energia a $N~
-Ridicolo - $n tenta di prosciugare la tua energia~
-Un lampo di divertimento illumina $N quando $n tenta di toglier$D energia~
+$c0005$N$c0005 si raggrinzisce appena tu l$B uccidi prosciugando la sua energia.~
+$c0005Appena $n$c0005 fa defluire le tue ultime forze tu ti rassegni alla vita eterna.~
+$c0005$n$c0005 fa defluire l'energia da $N$c0005 che si accartoccia in un bozzolo senza vita.~
+$c0005Hai bisogno di altre lezioni per imparare a togliere energia.~
+$c0005Per tua fortuna, $n$c0005 dormiva durante le lezioni per imparare a togliere energia.~
+$c0005$n$c0005 non riesce a togliere energia a $N$c0005, che spreco di forze...~
+$c0005Togli a $N$c0005 un po' della sua energia.~
+$c0005Ti senti meno vitale appena $n$c0005 prosciuga un po' della tua energia.~
+$c0005$n$c0005 prosciuga un po' l'energia di $N$c0005, che spreco di forze!~
+$c0004Sprechi le tue forze cercando di togliere energia a $N$c0004.~
+$c0004Ridicolo! $n$c0004 tenta di prosciugare la tua energia.~
+$c0004Un lampo di divertimento illumina $N$c0004 quando $n$c0004 tenta di toglier$D energia.~
 M
  26
-$c0009La tua palla di fuoco colpisce $N in pieno, la morte e` istantanea~
-$c0009Mentre vieni avvolto dalle fiamme della morte $n sogghigna con malignita`~
-$c0009Il calore della palla di fuoco di $n trasforma $N in un pezzo di carbone~
-$c0009La tua palla di fuoco passa vicino a $N senza colpirl$B~
-$c0009Una palla di fuoco lanciata da $n ti sfiora~
-$c0009La palla di fuoco di $n sfiora $N~
-$c0009Colpisci $N con la palla di fuoco avvolgendol$B in fiamme~
-$c0009Vieni avvolto dalle fiamme della palla di fuoco di $n~
-$c0009La palla di fuoco di $n avvolge in fiamme $N~
-$c0004Che vergogna lanciare palle di fuoco ad un DIO !!!~
-$c0004Ignori il tentativo di $n di lanciarti una palla di fuoco~
-$c0004La palla di fuoco di $n e' ignorata da $N~
+$c0009La tua palla di fuoco colpisce $N$c0009 in pieno, la morte e' istantanea.~
+$c0009Mentre muori avvolt$B dalle fiamme $n$c0009 sogghigna con malignita'.~
+$c0009Il calore della palla di fuoco di $n$c0009 trasforma $N$c0009 in un pezzo di carbone.~
+$c0009La tua palla di fuoco passa vicino a $N$c0009 senza colpirl$B.~
+$c0009Una palla di fuoco lanciata da $n$c0009 ti sfiora.~
+$c0009La palla di fuoco di $n$c0009 sfiora $N$c0009.~
+$c0009Colpisci $N$c0009 con la palla di fuoco avvolgendol$B in fiamme.~
+$c0009Vieni avvolto dalle fiamme della palla di fuoco di $n$c0009.~
+$c0009La palla di fuoco di $n$c0009 avvolge $N$c0009 con le sue fiamme.~
+$c0004Che vergogna lanciare palle di fuoco ad un DIO!!!~
+$c0004Ignori il tentativo di $n$c0004 di lanciarti una palla di fuoco.~
+$c0004La palla di fuoco di $n$c0004 e' ignorata da $N$c0004.~
 M
  27
-$N barcolla di fronte al potere puro della tua magia, e viene distrutt$B.~
-Ti gira la testa di fronte alla potenza della magia di $n, e muori.~
-$n sfiora $N, che viene distrutt$B dalla sua potenza.~
-Non riesci a toccare $N, l'incantesimo e' sprecato.~
-$n non riesce a raggiungerti con il suo tocco.~
-$n non riesce a raggiungere $N con il suo tocco.~
-Sfiori $N facendol$B barcollare.~
-$n ti sfiora, vieni invas$B dal dolore.~
-$n sfiora $N, che barcolla.~
-Non riesci neanche a sfiorare un suo capello!~
-$n pensa di farti del male, ma decide che e' meglio lasciar perdere.~
-$n riesce a sfiorare $N, ma cambia le proprie intenzioni.~
+$c0014$N$c0014 barcolla di fronte al potere puro della tua magia, e viene distrutt$B.~
+$c0014Ti gira la testa di fronte alla potenza della magia di $n$c0014, poi muori.~
+$c0014$n$c0014 sfiora $N$c0014, che viene distrutt$B dalla sua potenza.~
+$c0014Non riesci a toccare $N$c0014, l'incantesimo e' sprecato.~
+$c0014$n$c0014 non riesce a raggiungerti con il suo tocco.~
+$c0014$n$c0014 non riesce a raggiungere $N$c0014 con il suo tocco.~
+$c0014Sfiori $N$c0014 facendol$B barcollare.~
+$c0014$n$c0014 ti sfiora, vieni invas$B dal dolore.~
+$c0014$n$c0014 sfiora $N$c0014, che barcolla.~
+$c0004Non riesci neanche a sfiorare neanche un suo capello!~
+$c0004$n$c0004 pensa di farti del male, ma decide che e' meglio lasciar perdere.~
+$c0004$n$c0004 riesce a sfiorare $N$c0004, ma subito dopo cambia idea.~
 M
  30
-$c0012Il tuo fulmine riduce $N in mille pezzi~
-$c0012Ti senti fulminato dal colpo di $n e non senti piu' nulla~
-$c0012$N riceve in pieno l'impatto del fulmine lanciato da $n e muore~
-$c0012La tua mira va di male in peggio e il tuo fulmine liscia $N~
-$c0012$n ha preso male la mira e il suo fulmine non ti colpisce~
-$c0012$n non riesce a colpire $N col suo fulmine~
-$c0012Il fulmine colpisce $N con tutta la sua potenza~
-$c0012SEI STATO COLPITO. Il colpo fulminante di $n ha centrato il bersaglio~
-$c0012$N vacilla sotto l'impatto del fulmine lanciato da $n~
-$c0004Il tuo colpo fulminante viene neutralizzato dal movimento di orecchie di $N~
-$c0004Muovi le tue orecchie per neutralizzare il colpo fulminante di $n~
-$c0004$N muove le sue orecchie ed il colpo fulminante di $n viene neutralizzato~
+$c0012Il tuo fulmine riduce $N$c0012 in mille pezzi.~
+$c0012Ti senti fulminat$B dal colpo di $n$c0012 e non senti piu' nulla.~
+$c0012$N$c0012 riceve in pieno l'impatto del fulmine lanciato da $n$c0012 e muore.~
+$c0012La tua mira va di male in peggio ed il tuo fulmine sfiora $N$c0012.~
+$c0012$n$c0012 ha preso male la mira ed il suo fulmine non ti colpisce.~
+$c0012$n$c0012 non riesce a colpire $N$c0012 col suo fulmine.~
+$c0012Il fulmine colpisce $N$c0012 con tutta la sua potenza.~
+$c5012Sei stat$B colpit$B! $c0012Il colpo fulminante di $n$c0012 ha centrato il bersaglio.~
+$c0012$N$c0012 vacilla sotto l'impatto del fulmine lanciato da $n$c0012.~
+$c0004Il tuo colpo fulminante viene neutralizzato dal movimento di orecchie di $N$c0004.~
+$c0004Muovi le tue orecchie per neutralizzare il colpo fulminante di $n$c0004.~
+$c0004$N$c0004 muove le sue orecchie ed il colpo fulminante di $n$c0004 viene neutralizzato.~
 M
  32
-La saetta magica strappa via gli ultimi sprazzi di vita di $N~
-Hai appena il tempo di udire le parole di $n prima che tutto diventi scuro~
-La saetta magica lanciata da $n colpisce $N che crolla in un ammasso senza vita~
-La saetta magica trapassa l'aria varie miglia sopra $N~
-Non hai neanche bisogno di chinarti per evitare la saetta magica di $n~
-$n tenta invano di cambiare la traiettoria della saetta magica destinata a $N~
-Guardi con autocompiacimento la saetta magica colpire $N~
-Barcolli vistosamente colpito dalla saetta magica di $n~
-$n lancia una saetta magica a $N che vacilla sotto l'impatto del colpo~
-La tua saetta magica fa scoppiare $N in una grassa risata~
-Non puoi fare a meno di ridere quando $n ti scaglia contro la sua saetta magica~
-$N scoppia in un'irrefrenabile risata come $n $D lancia una saetta magica~
+$c0006La saetta magica strappa via gli ultimi sprazzi di vita di $N$c0006.~
+$c0006Hai appena il tempo di udire le parole di $n$c0006 prima che tutto diventi scuro.~
+$c0006La saetta magica lanciata da $n$c0006 colpisce $N$c0006 che crolla in un ammasso senza vita.~
+$c0006La saetta magica trapassa l'aria varie miglia sopra $N$c0006.~
+$c0006Non hai neanche bisogno di chinarti per evitare la saetta magica di $n$c0006.~
+$c0006$n$c0006 tenta invano di cambiare la traiettoria della saetta magica destinata a $N$c0006.~
+$c0006Guardi con autocompiacimento la saetta magica colpire $N$c0006.~
+$c0006Barcolli vistosamente colpit$B dalla saetta magica di $n$c0006.~
+$c0006$n$c0006 lancia una saetta magica a $N$c0006 che vacilla sotto l'impatto del colpo.~
+$c0004La tua saetta magica fa scoppiare $N$c0004 in una grassa risata.~
+$c0004Non puoi fare a meno di ridere quando $n$c0004 ti scaglia contro la sua saetta magica.~
+$c0004$N$c0004 scoppia in un'irrefrenabile risata come $n$c0004 $D lancia una saetta magica.~
 M
  33
-~
+$c0007~
 $c0010Il veleno brucia intensamente nelle tue vene e ti uccide.~
-$N e' preso dai crampi e muore tra atroci sofferenze.~
+$c0002$N$c0002 e' pres$B dai crampi e muore tra atroci sofferenze.~
 ***suffer miss char.~
 ***suffer miss victim.~
 ***suffer miss room.~
-~
+$c0007~
 $c0010Soffri per il bruciore del veleno che scorre nel tuo sangue.~
-$N appare seriamente malato, e rabbrividisce inquieto.~
+$c0002$N$c0002 appare seriamente malat$B, e rabbrividisce inquiet$B.~
 ***Suffer god Char..~
 ***Suffer god victim..~
 ***Suffer god room..~
 M
  37
-$N muore fulminat$B~
-$n ti da' una scossa elettrica. Sfortunatamente il tuo cuore non regge...~
-$n rivela con una scossa elettrica che $N ha lasciato il suo corpo~
-$N riesce clamorosamente a sfuggire alla tua morsa~
-Schivi agilmente una morsa elettrica di $n~
-$N riesce clamorosamente a sfuggire alla presa di $n~
-Ottima presa, dai una scossa elettrica a $N~
-Ti prendi una scossa notevole quando $n ti arriva molto vicino~
-$N sembra elettrificato appena $n l$B acchiappa~
-All'improvviso ti rendi conto che non potrai dare una scossa elettrica a $N~
-Questa stupida creatura sta provando a colpirti con una scossa elettrica~
-L'atmosfera si carica non appena $n tenta di colpire $N~
+$c0014$N$c0014 muore fulminat$B.~
+$c0014$n$c0014 ti da' una scossa elettrica. Sfortunatamente il tuo cuore non regge...~
+$c0014$n$c0014 rivela con una scossa elettrica che $N$c0014 ha lasciato il suo corpo.~
+$c0014$N$c0014 riesce clamorosamente a sfuggire alla tua morsa.~
+$c0014Schivi agilmente la morsa elettrica di $n$c0014.~
+$c0014$N$c0014 riesce clamorosamente a sfuggire alla presa di $n$c0014.~
+$c0014Ottima presa, dai una scossa elettrica a $N$c0014.~
+$c0014Ti prendi una scossa notevole quando $n$c0014 ti arriva molto vicino.~
+$c0014$N$c0014 sembra elettrificat$B appena $n l$B acchiappa.~
+$c0004All'improvviso ti rendi conto che non potrai dare una scossa elettrica a $N$c0004.~
+$c0004Questa stupida creatura sta provando a colpirti con una scossa elettrica.~
+$c0004L'atmosfera si carica non appena $n$c0004 tenta di colpire $N$c0004.~
 M
  48
-$c0005$N viene uccis$B da $p che hai conficcato nella sua schiena~
-$c0005All'improvviso $n affonda $p nella tua schiena, RIP...~
-$c0005$n conficca $p nella schiena di $N, causando molto sangue e un cadavere~
-$c0005$N sfugge agilmente alla tua lama, e nell'impeto quasi ti mozzi un dito!~
-$c0005$n tenta di pugnalarti alle spalle, ma tu riesci a sfuggire al suo agguato~
-$c0005$n tenta di pugnalare $N alle spalle, ma nell'impeto quasi si mozza il dito~
-$c0005$N emette un suono strano, appena tu conficchi $p nella sua schiena~
-$c0005All'improvviso $n ti pugnala alle spalle~
-$c0005$n conficca $p nella schiena di $N, alcuni strani rumori e del sangue~
-$c0004$N ti lancia un'occhiata, che ti fa dimenticare qualsiasi intenzione di pugnalarlo alle spalle~
-$c0004$n tenta di pugnalarti alle spalle, ma poi cambia idea~
-$c0004$n tenta di pugnalare $N alle spalle, ma poi cambia idea~
+$c0005$N$c0005 viene uccis$B da $p$c0005 che hai conficcato nella sua schiena.~
+$c0005All'improvviso $n$c0005 affonda $p$c0005 nella tua schiena, RIP...~
+$c0005$n$c0005 conficca $p$c0005 nella schiena di $N$c0005, causando molto sangue e un cadavere.~
+$c0005$N$c0005 sfugge agilmente alla tua lama, e nell'impeto quasi ti mozzi un dito!~
+$c0005$n$c0005 tenta di pugnalarti alle spalle, ma tu riesci a sfuggire al suo agguato.~
+$c0005$n$c0005 tenta di pugnalare $N alle spalle, ma nell'impeto quasi si mozza il dito~
+$c0005$N$c0005 emette un suono strano, appena tu conficchi $p$c0005 nella sua schiena.~
+$c0005All'improvviso $n$c0005 ti pugnala alle spalle.~
+$c0005$n$c0005 conficca $p$c0005 nella schiena di $N$c0005, alcuni strani rumori e del sangue.~
+$c0004$N$c0004 ti lancia un'occhiata, che ti fa dimenticare qualsiasi intenzione di pugnalarl$B alle spalle.~
+$c0004$n$c0004 tenta di pugnalarti alle spalle, ma poi cambia idea.~
+$c0004$n$c0004 tenta di pugnalare $N$c0004 alle spalle, ma poi cambia idea.~
 M
  50
 $c0003Il tuo calcio in faccia a $N gli apre la testa in due - yummy~
@@ -196,352 +196,464 @@ $c0004Quando $n tenta di darti un calcio, tu lo fai velocemente cadere nel fango
 $c0004$n cade a faccia in giu' nel fango creato apposta da $N~
 M
  51
-$c0001$N non si riprende dalla tua violenta spinta! E' mort$B~
-$c0001Quando $n ti urta con violenza, senti la vita sfuggirti e muori...~
-$c0001$N muore dopo che $n l$B urta con violenza~
-$c0001$N schiva il tuo urto. Inciampi e cadi per terra~
-$c0001Schivi uno scontro con $n che perde l'equilibrio e cade in terra~
-$c0001$N evita di essere travolto da $n che perde l'equilibrio e cade in terra~
-$c0001Dai una forte spinta a $N facendo$D perdere l'equilibrio~
-$c0001$n ti manda a gambe all'aria~
-$c0001La violenta spinta di $n fa perdere l'equilibrio a $N~
-$c0004I tuoi sforzi di buttare per terra $N ti mandano a gambe all'aria~
-$c0004$n tenta invano di buttarti per terra e si ritrova a gambe all'aria~
-$c0004$n subisce il proprio urto e ruzzola per terra!~
+$c0001$N$c0001 non si riprende dalla tua violenta spinta! E' mort$B.~
+$c0001Quando $n$c0001 ti urta con violenza, senti la vita sfuggirti e muori...~
+$c0001$N$c0001 muore dopo che $n$c0001 l$B urta con violenza.~
+$c0001$N$c0001 schiva il tuo urto. Inciampi e cadi per terra.~
+$c0001Schivi uno scontro con $n$c0001 che perde l'equilibrio e cade in terra.~
+$c0001$N$c0001 evita di essere travolto da $n$c0001 che perde l'equilibrio e cade in terra.~
+$c0001Dai una forte spinta a $N$c0001 facendo$D perdere l'equilibrio.~
+$c0001$n$c0001 ti manda a gambe all'aria.~
+$c0001La violenta spinta di $n$c0001 fa perdere l'equilibrio a $N$c0001.~
+$c0004I tuoi sforzi di buttare per terra $N$c0004 ti mandano a gambe all'aria.~
+$c0004$n$c0004 tenta invano di buttarti per terra e si ritrova a gambe all'aria.~
+$c0004$n$c0004 subisce il proprio urto e ruzzola per terra!~
 M
  55
-Le tue ferite lievi sono abbastanza per mandare $N sull'orlo....~
-Per un istante, $n ti tortura con terribili dolori.   Poi, e' tutto finito.~
-Le ferite inflitte da $n sono piu' che sufficienti per troncare la vita di $N~
-Non riesci a toccare $N..~
-L'incantesimo di $n e' sprecato perche' tu eviti il colpo~
-L'incantesimo di $n e' sprecato perche' $N evita il colpo~
-Il contatto della tua mano scuote il corpo di $N con brividi agghiaccianti~
-Vieni colto da spasmi di dolore non appena $n ti sfiora~
-$n sfiora $N, che rabbrividisce di dolore~
-Ti senti umiliato dato che $N disperde il tuo incantesimo con un semplice pensiero~
-Ti sembra come se qualcuno abbia appena tentato di ferirti, ma non te ne eri accorto~
-$N non si e' nemmeno accorto che $n tentava di lanciare degli incantesimi~
+Il tuo tocco provoca ferite lievi che bastano a mandare $N$c0007 al $c0008cimitero$c0007.~
+Per un istante, $n$c0007 ti tortura con $c0009terribili dolori$c0007. Poi, e' tutto finito.~
+Le ferite inflitte da $n$c0007 sono piu' che sufficienti per troncare la $c0015vita$c0007 di $N$c0007.~
+Non riesci a toccare $N$c0007.~
+L'incantesimo di $n$c0007 e' sprecato perche' tu eviti il colpo.~
+L'incantesimo di $n$c0007 e' sprecato perche' $N$c0007 evita il colpo.~
+Il contatto della tua mano scuote il corpo di $N$c0007 con $c0014brividi agghiaccianti$c0007.~
+Vieni colt$B da $c0009spasmi di dolore$c0007 non appena $n$c0007 ti sfiora.~
+$n$c0007 sfiora $N$c0007, che $c0014rabbrividisce$c0007 di dolore.~
+$c0004Ti senti umiliat$n dato che $N$c0004 disperde il tuo incantesimo con un semplice pensiero.~
+$c0004Ti sembra come se qualcuno abbia appena tentato di ferirti, ma non te ne eri accort$B.~
+$c0004$N$c0004 non si e' nemmeno accort$B che $n$c0004 tentava di lanciare degli incantesimi.~
 M
  56
-Uccidi selvaggiamente $N~
-$n ti infligge dei dolori atroci. Poi, piu' nulla.~
-$n assale selvaggiamente $N, che muore dal dolore~
-Non riesci a colpire $N..~
-L'incantesimo di $n e' sprecato perche' tu schivi il colpo~
-L'incantesimo di $n e' sprecato perche' $N schiva il colpo~
-Il tocco della tua mano genera atroci dolori nel corpo di $N~
-Vieni quasi del tutto sopraffatto dal dolore non appena $n ti tocca~
-$N strilla non appena $n l$B ferisce selvaggiamente~
-Ti senti veramente umiliato quando $N trasforma il tuo incantesimo in un cono gelato~
-Trasformi l'incantesimo di $n in un cono gelato, YUM!~
-$N trasforma l'incantesimo di $n in un gustosissimo cono gelato.~
+Uccidi $c0005selvaggiamente$c0007 $N$c0007.~
+$n$c0007 ti infligge dei $c0009dolori atroci$c0007. Poi, il $c0008nulla$c0007.~
+$n$c0007 assale $c0005selvaggiamente$c0007 $N, che muore dal dolore.~
+Non riesci a colpire $N$c0007.~
+L'incantesimo di $n$c0007 e' sprecato perche' tu schivi il colpo.~
+L'incantesimo di $n$c0007 e' sprecato perche' $N$c0007 schiva il colpo.~
+Il tocco della tua mano genera $c0009atroci dolori$c0007 nel corpo di $N$c0007.~
+Vieni quasi del tutto sopraffatt$B dal $c0005dolore$c0007 non appena $n$c0007 ti tocca.~
+$N$c0007 strilla non appena $n$c0007 l$B ferisce $c0005selvaggiamente$c0007.~
+$c0004Ti senti veramente umiliat$b quando $N$c0004 trasforma il tuo incantesimo in un cono gelato.~
+$c0004Trasformi l'incantesimo di $n$c0004 in un cono gelato, YUM!~
+$c0004$N$c0004 trasforma l'incantesimo di $n$c0004 in un gustosissimo cono gelato.~
 M
  57
-$c0001La tua forza di fuoco riduce $N ad un pezzo di carbone!~
-$c0001Vieni avvolto dalla fiamme generate da $n. E' sufficiente per carbonizzarti.~
-$c0001$n lancia una colonna di fuoco a $N, che passa a miglior vita~
-$c0001Il tuo colpo liscia $N, hai forse dimenticato di fare le tue preghiere?~
-$c0001$n ti lancia un colonna di fuoco, ma tu riesci a spostarti dalla traiettoria~
-$c0001$N schiva la colonna di fuoco generata da $n~
-$c0001Sorridi compiaciuto quando $N si prende il tuo colpo in tutta la sua potenza.~
-$c0001Ti prendi il colpo infuocato di $n in tutta la sua potenza~
-$c0001$N si prende il colpo infuocato di $n in tutta la sua potenza~
-Sei terribilmente imbarazzato quando $N trasforma il tuo colpo infuocato in un ghiacciolo~
-Trasformi il colpo infuocato di $n in un ghiacciolo, ora non e' piu' tanto caldo~
-$N ridacchia sotto i baffi e trasforma il colpo infuocato di $n in un ghiacciolo~
+$c0001La tua colonna di fuoco riduce $N$c0001 ad un pezzo di carbone!~
+$c0001Vieni avvolt$B dalla fiamme generate da $n$c0001. E' sufficiente per carbonizzarti.~
+$c0001$n$c0001 lancia una colonna di fuoco a $N$c0001, che passa a miglior vita.~
+$c0001Il tuo colpo sfiora $N$c0001, hai forse dimenticato di dire le tue preghiere?~
+$c0001$n$c0001 ti lancia un colonna di fuoco, ma tu riesci a spostarti dalla traiettoria.~
+$c0001$N$c0001 schiva la colonna di fuoco generata da $n$c0001.~
+$c0001Sorridi compiaciut$b quando $N$c0001 si prende il tuo colpo in tutta la sua potenza.~
+$c0001Ti prendi il colpo infuocato di $n$c0001 in tutta la sua potenza.~
+$c0001$N$c0001 si prende il colpo infuocato di $n$c0001 in tutta la sua potenza.~
+$c0004Sei terribilmente imbarazzat$b quando $N$c0004 trasforma il tuo colpo infuocato in un ghiacciolo.~
+$c0004Trasformi il colpo infuocato di $n$c0004 in un ghiacciolo, ora non e' piu' tanto caldo.~
+$c0004$N$c0004 ridacchia sotto i baffi e trasforma il colpo infuocato di $n$c0004 in un ghiacciolo.~
 M
  58
-$N viene annientato dalla forza tua malvagita'.~
-$n ti annienta, ti rammarichi di essere stato sempre cosi' buono, e spiri...~
-$n annienta $N~
-$N non viene minimamente influenzato dalla forza della tua malvagita'!~
-$n si sente auto-benedetto e disperde la magia che e' in te~
-$N indirizza un sorriso a $n come ne disperde!~
-$N rabbrividisce, e soffre per la forza della sua bonta'!~
-$n ferisce la tua anima e ti fa soffrire nel profondo!~
-$n fa rabbrividire lo spirito buono di $N e l$B fa soffrire profondamente!~
-Davvero credevi che $N avrebbe sofferto?~
-$n tenta senza speranza di disperdere la magia che e' in te~
-$n e' proprio uno stupido...~
+$c0009$N$c0009 viene annientat$B dalla forza tua malvagita'.~
+$c0009$n$c0009 ti annienta, ti rammarichi di essere stat$B sempre cosi' buon$B, e spiri...~
+$c0009$n$c0009 annienta $N$c0009.~
+$c0009$N$c0009 non viene minimamente influenzat$B dalla forza della tua malvagita'!~
+$c0009$n$c0009 si sente malvagi$b e tenta di disperdere la bonta' che e' in te.~
+$c0009$N$c0009 indirizza un sorriso a $n$c0009 mentre evita la sua magia!~
+$c0009$N$c0009 rabbrividisce, e soffre per la forza della tua malvagita'!~
+$c0009$n$c0009 ferisce la tua anima e ti fa soffrire nel profondo!~
+$c0009$n$c0009 fa rabbrividire lo spirito di $N$c0009 e l$B fa soffrire profondamente!~
+$c0004Davvero credevi che $N$c0004 avrebbe sofferto?~
+$c0004$n$c0004 tenta senza speranza di disperdere la bonta' che e' in te.~
+$c0004$n$c0004 e' propri$b uno stupid$b...~
 M
  67
-$c0010$N viene ridotto ad un limo appiccicoso.~
-$c0010Vieni colpito da un getto d'acido lanciato da $n, addio mondo crudele~
-$c0010$n trasforma $N in una ammasso appiccicaticcio.~
-$c0010$N schiva il tuo getto acido.~
-$c0010Eviti abilmente il getto d'acido di $n.~
-$c0010$N si sposta dalla traiettoria del getto d'acido di $n.~
-$c0010$N urla di dolore quando il tuo getto d'acido l$B corrode.~
-$c0010$n ti colpisce con un getto d'acido... OUCH!~
-$c0010$n colpisce $N con un getto d'acido, tu ti rannicchi.~
-$c0004$N trasforma il tuo getto acido in acqua, lo rigira e ti fa la doccia.~
-$c0004Trasformi il getto acido di $n in acqua, e l$b schizzi~
-$c0004$n e' completamente fradicio.~
+$c0010$N$c0010 viene ridott$B ad un limo appiccicoso.~
+$c0010Vieni colpit$B da un getto d'acido lanciato da $n$c0010, addio mondo crudele!~
+$c0010$n$c0010 trasforma $N$c0010 in una ammasso appiccicaticcio.~
+$c0010$N$c0010 schiva il tuo getto acido.~
+$c0010Eviti abilmente il getto d'acido di $n$c0010.~
+$c0010$N$c0010 si sposta dalla traiettoria del getto d'acido di $n$c0010.~
+$c0010$N$c0010 urla di dolore quando il tuo getto d'acido l$B corrode.~
+$c0010$n$c0010 ti colpisce con un getto d'acido... OUCH!~
+$c0010$n$c0010 colpisce $N$c0010 con un getto d'acido, tu ti rannicchi.~
+$c0004$N$c0004 trasforma il tuo getto acido in acqua, lo rigira e ti fa la doccia.~
+$c0004Trasformi il getto acido di $n$c0004 in acqua, e l$b schizzi.~
+$c0004$n$c0004 e' completamente fradici$b, $N$c0004 ha trasformato l'acido in acqua!~
 M
  70
-$c0014$N viene ridotto in un cubetto di ghiaccio dal tuo cono congelante.~
-$c0014Vieni ghiacciato fino alle ossa dal cono congelante di $n.~
-$c0014$n uccide $N con un cono congelante.~
-$c0014$N sorride al tuo cono congelante, e si sposta dalla traiettoria.~
-$c0014Ti sposti dalla traiettoria del cono congelante di $n.~
-$c0014$N schiva abilmente il cono congelante di $n.~
-$c0014Colpisci $N con il tuo cono congelante.~
-$c0014$n ti colpisce con il suo cono congelante.. brrrrrrrrr.~
-$c0014$n colpisce $N con il suo cono congelante.~
-$c0004$N sembra divertito dalla tua sventolata di aria fresca.~
-$c0004$n ti fornisce di aria condizionata.~
-$c0004$n fornisce $N di aria condizionata.~
+$c0014$N$c0014 viene ridott$B in un cubetto di ghiaccio dal tuo cono congelante.~
+$c0014$c0014Vieni congelat$B fino alle ossa dal cono di ghiaccio di $n$c0014.~
+$c0014$n$c0014 uccide $N$c0014 con un cono congelante.~
+$c0014$N$c0014 sorride al tuo cono congelante, e si sposta dalla traiettoria.~
+$c0014Ti sposti dalla traiettoria del cono congelante di $n$c0014.~
+$c0014$N$c0014 schiva abilmente il cono congelante di $n$c0014.~
+$c0014Colpisci $N$c0014 con il tuo cono congelante.~
+$c0014$n$c0014 ti colpisce con il suo cono congelante... brrrrrrrrr.~
+$c0014$n$c0014 colpisce $N$c0014 con il suo cono congelante.~
+$c0004$N$c0004 sembra divertit$N dalla tua sventolata di aria fresca.~
+$c0004$n$c0004 ti rifornisce di aria condizionata.~
+$c0004$n$c0004 regala a $N$c0004 dell'aria condizionata.~
 M
  71
-$c0009$N viene investito dalla tua pioggia di meteore~
-$c0009Vieni investito dalla pioggia di meteore generata da $n~
-$c0009$n annulla $N con una pioggia di meteore~
-$c0009$N sembra essere immune alla tua pioggia di meteore~
-$c0009Eviti la pioggia di meteore generata da $n~
-$c0009$N evita la pioggia di meteore generata da $n~
-$c0009Colpisci $N con la tua pioggia di meteore~
-$c0009$n ti colpisce con la sua pioggia di meteore, e ti stordisce~
-$c0009$n riduce in mille piccoli pezzettini $N con la sua pioggia di meteore~
-$c0004$N ignora la tua sciocca dimostrazione di poteri mortali~
+$c0009$N$c0009 viene distrutt$B dalla tua pioggia di meteore.~
+$c0009Vieni distrutt$B dalla pioggia di meteore generata da $n$c0009.~
+$c0009$n$c0009 annulla $N$c0009 con una pioggia di meteore.~
+$c0009$N$c0009 sembra essere immune alla tua pioggia di meteore.~
+$c0009Eviti la pioggia di meteore generata da $n$c0009.~
+$c0009$N$c0009 evita la pioggia di meteore generata da $n$c0009.~
+$c0009Colpisci $N$c0009 con la tua pioggia di meteore.~
+$c0009$n$c0009 ti colpisce con la sua pioggia di meteore, e ti stordisce.~
+$c0009$n$c0009 riduce in mille piccoli pezzettini $N$c0009 con la sua pioggia di meteore.~
+$c0004$N$c0004 ignora la tua sciocca dimostrazione di potere mortale.~
 $c0004Qualcosa di insignificante e' appena successo.~
-$c0004$N ignora la fitta pioggia di meteore generata da $n!~
+$c0004$N$c0004 ignora la fitta pioggia di meteore generata da $n$c0004!~
 M
  72
-$c0012$N viene frantumato in mille pezzi dalla tua tempesta di ghiaccio.~
-$c0012Vieni frantumato in mille pezzi dalla tempesta di ghiaccio di $n.~
-$c0012$N viene frantumato in mille pezzi dalla tempesta di ghiaccio di $n.~
-$c0012$N riesce a ripararsi dalla tua tempesta di ghiaccio.~
-$c0012Riesci a schivare la tempesta di ghiaccio creata da $n.~
-$c0012$N schiva la tempesta di ghiaccio di $n.~
-$c0012Colpisci duramente $N con la tua tempesta di ghiaccio.~
-$c0012$n ti colpisce violentemente con una tempesta di ghiaccio.~
-$c0012$n colpisce duramente $N con una tempesta di ghiaccio.~
-$c0004$N e' avvolto da un alone bianco, e non viene neanche sfiorato dalla tempesta.~
-$c0004Crei uno scudo per proteggerti dalla tempesta di ghiaccio creata da $n.~
-$c0004$N riesce a difendersi dalla tempesta di ghiaccio creata da $n.~
+$c0012$N$c0012 viene frantumat$B in mille pezzi dalla tua tempesta di ghiaccio.~
+$c0012Vieni frantumat$B in mille pezzi dalla tempesta di ghiaccio di $n$c0012.~
+$c0012$N$c0012 viene frantumat$B in mille pezzi dalla tempesta di ghiaccio di $n$c0012.~
+$c0012$N$c0012 riesce a ripararsi dalla tua tempesta di ghiaccio.~
+$c0012Riesci a schivare la tempesta di ghiaccio creata da $n$c0012.~
+$c0012$N$c0012 schiva la tempesta di ghiaccio di $n$c0012.~
+$c0012Colpisci duramente $N$c0012 con la tua tempesta di ghiaccio.~
+$c0012$n$c0012 ti colpisce violentemente con una tempesta di ghiaccio.~
+$c0012$n$c0012 colpisce duramente $N$c0012 con una tempesta di ghiaccio.~
+$c0004$N$c0004 e' avvolt$B da un alone bianco, e non viene neanche sfiorato dalla tempesta.~
+$c0004Crei uno scudo per proteggerti dalla tempesta di ghiaccio creata da $n$c0004.~
+$c0004$N$c0004 riesce a difendersi dalla tempesta di ghiaccio creata da $n$c0004.~
 M
  84
-Le dolorose ferite che infliggi a $N sono suffcienti ad ucciderl$B~
-Per un istante, $n ti provoca terribili dolori. Poi, e' tutto finito.~
-Le ferite inflitte da $n sono piu' che sufficienti per troncare la vita di $N~
-Non riesci a toccare $N..~
-L'incantesimo di $n e' sprecato perche' riesci ad evitare il colpo~
-L'incantesimo di $n e' sprecato perche' $N evita il colpo~
-Il contatto della tua mano scuote il corpo di $N con brividi agghiaccianti~
-Vieni colto da spasmi di dolore non appena $n ti sfiora~
-$n sfiora $N, che rabbrividisce per il dolore~
-Ti senti umiliato dato che $N disperde il tuo incantesimo con un semplice pensiero~
-Ti sembra come se qualcuno abbia appena tentato di ferirti, ma non te ne eri accorto~
-$N non si e' nemmeno accorto che $n tentava di lanciare degli incantesimi~
+Le $c0009dolorose ferite$c0007 che infliggi a $N$c0007 sono suffcienti ad ucciderl$B.~
+Per un istante, $n$c0007 ti provoca $c0009terribili dolori$c0007. Poi, e' tutto finito.~
+Le ferite inflitte da $n$c0007 sono piu' che sufficienti per troncare la $c0005vita$c0007 di $N$c0007.~
+Non riesci a toccare $N$c0007.~
+L'incantesimo di $n$c0007 e' sprecato perche' riesci ad evitare il colpo.~
+L'incantesimo di $n$c0007 e' sprecato perche' $N$c0007 evita il colpo.~
+Il contatto della tua mano scuote il corpo di $N$c0007 con $c0014brividi agghiaccianti$c0007.~
+Vieni colt$B da $c0009spasmi di dolore$c0007 non appena $n$c0007 ti sfiora.~
+$n$c0007 sfiora $N$c0007, che $c0014rabbrividisce$c0007 per il dolore.~
+$c0004Ti senti umiliat$b dato che $N$c0004 disperde il tuo incantesimo con un semplice pensiero.~
+$c0004Ti sembra come se qualcuno abbia appena tentato di ferirti, ma non te ne eri accort$B.~
+$c0004$N$c0004 non si e' nemmeno accort$B che $n$c0004 tentava di lanciare degli incantesimi.~
 M
  112
-$N muore all'istante per la potenza della tua parola sacra.~
-Senti una parola del potere, e muori sul colpo.~
-$N sente la parola del potere di $n, e poi piu' nulla.~
-$N assorbe l'impatto della tua sacra parola con un sorrisetto furbo.~
-Sorridi furbescamente al tentativo di $n di ucciderti con una parola.~
-$N sorride furbescamente, e ignora la parola sacra di $n.~
-Fai vacillare $N sotto l'impatto della tua parola del potere.~
-Vacilli all'impatto con la parola sacra di $n.~
-$n riesce a far vacillare $N con una parola sacra.~
-$N e' troppo potente perche' i tuoi Dei possano fargli qualcosa.~
-Ignori il mormorio di $n. Una parola qualsiasi.~
-$N ignora il mormorio di $n.~
+$c0015$N$c0015 muore all'istante per la potenza della tua parola sacra.~
+$c0015Senti una parola del potere, e muori sul colpo.~
+$c0015$N$c0015 sente la parola del potere di $n$c0015, e poi piu' nulla.~
+$c0015$N$c0015 assorbe l'impatto della tua sacra parola con un sorrisetto furbo.~
+$c0015Sorridi furbescamente al tentativo di $n$c0015 di ucciderti con una sola parola.~
+$c0015$N$c0015 sorride furbescamente, e ignora la parola sacra di $n$c0015.~
+$c0015Fai vacillare $N$c0015 sotto l'impatto della tua parola del potere.~
+$c0015Vacilli all'impatto con la parola sacra di $n$c0015.~
+$c0015$n$c0015 riesce a far vacillare $N$c0015 con una sola parola.~
+$c0004$N$c0004 e' troppo potente perche' i tuoi Dei possano fargli qualcosa.~
+$c0004Ignori il mormorio di $n$c0004. Una parola qualsiasi.~
+$c0004$N$c0004 ignora il mormorio di $n$c0004.~
 M
  113
-$N muore sul colpo quando sente la tua parola maledetta.~
-Senti una parola del potere, e muori sul colpo.~
-$N sente la voce del potere di $n, e poi piu' nulla.~
-$N assorbe l'impatto della tua parola maledetta con un sorrisetto furbo.~
-Sorridi furbescamente non appena $n tenta di ucciderti con una parola.~
-$N sorride furbescamente, e ignora la parola maledetta di $n.~
-Fai vacillare $N con la tua parola del potere.~
-Vacilli all'impatto con la parola maledetta di $n.~
-$n fa vacillare $N con una parola maledetta.~
-$N e' troppo potente perche' i tuoi Dei possano fargli qualcosa.~
-Ignori il mormorio di $n. Una parola qualsiasi.~
-$N ignora il mormorio di $n.~
+$c0008$N$c0008 muore sul colpo quando sente la tua parola maledetta.~
+$c0008Senti una parola del potere, e muori sul colpo.~
+$c0008$N$c0008 sente la voce del potere di $n$c0008, e poi piu' nulla.~
+$c0008$N$c0008 assorbe l'impatto della tua parola maledetta con un sorrisetto furbo.~
+$c0008Sorridi furbescamente non appena $n$c0008 tenta di ucciderti con una parola.~
+$c0008$N$c0008 sorride furbescamente, ed ignora la parola maledetta di $n$c0008.~
+$c0008Fai vacillare $N$c0008 con la tua parola del potere.~
+$c0008Vacilli all'impatto con la parola maledetta di $n$c0008.~
+$c0008$n$c0008 fa vacillare $N$c0008 con una parola maledetta.~
+$c0004$N$c0004 e' troppo potente perche' i tuoi Dei possano fargli qualcosa.~
+$c0004Ignori il mormorio di $n$c0004. Una parola qualsiasi.~
+$c0004$N$c0004 ignora il mormorio di $n$c0004.~
 M
  114
-$N muore sul colpo quando sente la tua parola del potere.~
-Senti una parola del potere e muori sul colpo.~
-$N ascolta la parola del potere di $n, poi piu' nulla.~
-$N assorbe l'impatto della tua parola del potere con un sorrisetto furbo.~
-Sorridi furbescamente quando $n tenta di ucciderti con una sola parola.~
-$N sorride furbescamente, e ignora la parola del potere di $n.~
-Fai vacillare $N con la tua parola del potere.~
-Vacilli sotto l'impatto della parola del potere di $n.~
-$n fa vacillare $N con una parola del potere.~
-$N e' troppo potente perche' i tuoi Dei possano fargli del male.~
-Ignori il mormorio di $n.  Una parola qualsiasi.~
-$N ignora il mormorio di $n.~
+$c0001$N$c0001 muore sul colpo quando sente la tua parola del potere.~
+$c0001Senti la parola del potere di $n$c0001 e muori sul colpo.~
+$c0001$N$c0001 ascolta la parola del potere di $n$c0001, poi piu' nulla.~
+$c0001$N$c0001 assorbe l'impatto della tua parola del potere con un sorrisetto furbo.~
+$c0001Sorridi furbescamente quando $n$c0001 tenta di ucciderti con una sola parola.~
+$c0001$N$c0001 sorride furbescamente, e ignora la parola del potere di $n$c0001.~
+$c0001Fai vacillare $N$c0001 con la tua parola del potere.~
+$c0001Vacilli sotto l'impatto della parola del potere di $n$c0001.~
+$c0001$n$c0001 fa vacillare $N$c0001 con una parola del potere.~
+$c0004$N$c0004 e' troppo potente perche' i tuoi Dei possano fargli del male.~
+$c0004Ignori il mormorio di $n$c0004. Una parola qualsiasi.~
+$c0004$N$c0004 ignora il mormorio di $n$c0004.~
 M
  150
-$N viene colpit$B dal tuo raggio di luce, e annientato istantaneamente~
-Vedi una luce accecante e poi piu` nulla~
-$N viene uccis$B dalla luce accecante emessa da $n~
-$N sorride divertito quando tu $D fai prendere una bella abbronzatura~
-Ti prendi una bella abbronzatura sotto il raggio di luce emesso da $n~
-$N si prende una bella abbronzatura per il raggio di luce emesso da $n~
-$N alza le braccia sofferente come il tuo raggio di luce l$B colpisce~
-Senti un dolore intenso, appena i raggi di luce di $n ti attraversano~
-$N  alza le braccia, non appena il raggio di luce emesso da $n l$B colpisce~
-$N e' troppo potente perche' la semplice luce del sole possa fargli del male.~
-Ti prendi una bella abbronzatura sotto il raggio di luce emesso da $n.~
-$N ignora l'ignoranza sociale di $n~
+$c0011$N$c0011 viene colpit$B dal tuo raggio di luce, e annientat$B istantaneamente.~
+$c0011Vedi una luce accecante e poi piu' nulla.~
+$c0011$N$c0011 viene uccis$B dalla luce accecante emessa da $n$c0011.~
+$c0011$N$c0011 sorride divertit$B quando tu $D fai prendere una bella abbronzatura.~
+$c0011Ti prendi una bella abbronzatura sotto il raggio di luce emesso da $n$c0011.~
+$c0011$N$c0011 si prende una bella abbronzatura per il raggio di luce emesso da $n$c0011.~
+$c0011$N$c0011 alza le braccia sofferente come il tuo raggio di luce l$B colpisce.~
+$c0011Senti un dolore intenso, appena i raggi di luce di $n$c0011 ti attraversano.~
+$c0011$N$c0011 alza le braccia, non appena il raggio di luce emesso da $n$c0011 l$B colpisce.~
+$c0004$N$c0004 e' troppo potente perche' la semplice luce del sole possa far$D del male.~
+$c0004Ti prendi una bella abbronzatura sotto il raggio di luce emesso da $n$c0004.~
+$c0004$N ignora la luce emessa da $n$c0004.~
 M
  152
-~
-Il tuo equipaggiamento brucia la tua pelle fino ad ucciderti.~
-L'armatura di $N sfrigola contro il suo corpo che urla e muore agonizzando~
+$c0007~
+$c0001Il tuo equipaggiamento arroventato brucia la tua pelle fino ad ucciderti.~
+$c0001L'armatura di $N$c0001 sfrigola contro il suo corpo che urla e muore agonizzando.~
 ***suffer miss char.~
 ***suffer miss victim.~
 ***suffer miss room.~
-~
-Le cose che hai addosso ti bruciano sulla pelle. Il dolore e' intenso.~
-Senti uno sfrigolio, quando l'equipaggiamento di $N brucia sulla sua pelle.~
+$c0007~
+$c0001Le cose che hai addosso ti bruciano sulla pelle. Il dolore e' intenso.~
+$c0001Senti uno sfrigolio, quando l'equipaggiamento di $N$c0001 brucia sulla sua pelle.~
 ***Suffer god Char..~
 ***Suffer god victim..~
 ***Suffer god room..~
 M
-  177
-$N viene ucciso all'istante dal temibile palmo vibrante~
-Non appena $n ti sfiora, senti le tue ossa frantumarsi~
-$N muore appena $n l$B sfiora~
-$N rimane impassibile alle vibrazioni~
-$n ti sfiora, ma ignori le misere vibrazioni~
-$n tocca $N, che lo ignora~
+ 154
+$c0009$N$c0009 viene dilaniat$B dalle fiamme della tua tempesta di fuoco.~
+$c0009Il calore delle fiamme e' troppo forte per te, muori tra atroci sofferenze.~
+$c0009$N$c0009 muore dilaniat$B dalle fiamme della tempesta di fuoco di $n$c0009.~
+$c0009$N$c0009 evita le fiamme che $D hai scagliato contro!~
+$c0009Riesci ad evitare con un balzo le fiamme di $n$c0009, che fortuna!~
+$c0009$N$c0009 si sposta ed evita la tempesta di fuoco di $n$c0009.~
+$c0009$N$c0009 viene investit$B dalla tua tempesta di fuoco.~
+$c0009Vieni investit$B dalle fiamme della tempesta di fuoco di $n$c0009.~
+$c0009$N$c0009 viene investit$B dalle fiamme della tempesta di fuoco di $n$c0009.~
+$c0004$N$c0004 ride mentre tenti di bruciarl$B con la tua sciocca tempesta.~
+$c0004Ridi in faccia a $n$c0004, come poteva solo pensare di bruciarti?~
+$c0004$N ride in faccia a $n$c0004 che prova inutilmente a bruciarl$B.~
+M
+ 177
+$N viene ucciso all'istante dal temibile $c0015palmo vibrante$c0007.~
+Non appena $n ti sfiora, senti le tue $c0015ossa$c0007 frantumarsi.~
+$N $c0009muore$c0007 appena $n l$B sfiora.~
+$N rimane impassibile alle $c0015vibrazioni$c0007.~
+$n ti sfiora, ma ignori le misere $c0015vibrazioni$c0007.~
+$n tocca $N, che l$b ignora.~
 ***quiv damage (bug)~
 ***quiv damage (bug)~
 ***quiv damage (bug)~
-Non riesci a far del male a $N~
-$n non riesce a nuocerti~
-$n non riesce nuocere a $N~
+$c0004Non riesci a far del male a $N$c0004.~
+$c0004$n$c0004 non riesce a nuocerti.~
+$c0004$n$c0004 non riesce nuocere a $N$c0004.~
+M
+ 200
+La colonna di acqua $c0009bollente$c0007 e $c0015vapore$c0007 investe e spazza via $N$c0007.~
+Vieni investit$B da una colonna di acqua e $c0015vapore$c0007 e muori tra mille sofferenze!~
+La colonna di $c0015vapore$c0007 emessa da $n$c0007 spazza via $N$c0007.~
+$N$c0007 riesce ad evitare la colonna di $c0015vapore$c0007 spostandosi alla tua sinistra!~
+Riesci ad evitare la colonna di vapore spostandoti a destra.~
+$N$c0007 si sposta rapidamente ed evita la colonna di $c0015vapore$c0007 poco prima di essere investit$B.~
+$N$c0007 viene investit$B dalla colonna di acqua $c0009bollente$c0007 e $c0015vapore$c0007.~
+Vieni investit$B dalla colonna di acqua $c0009bollente$c0007 e $c0015vapore$c0007 scagliata da $n$c0007.~
+La colonna di acqua $c0009bollente$c0007 e $c0015vapore$c0007 scagliata da $n$c0007 colpisce duramente $N$c0007.~
+$c0004La tua colonna d'acqua investe $N$c0004 che ringrazia, $D ci voleva proprio una bella doccia calda!~
+$c0004$n$c0004 ti lancia contro una colonna d'acqua, ci voleva proprio una bella doccia calda!~
+$c0004$N$c0004 ringrazia $n$c0004 per aver$D dato la possibilita' di fare una bella doccia calda.~
+M
+ 206
+$c0002$N$c0002 muore agonizzando.~
+$c0002Non riesci piu' a sopportare le esalazioni tossiche, addio!~
+$c0002Le esalazioni tossiche di $n$c0002 fanno passare a miglior vita $N$c0002.~
+$c0002$N$c0002 riesce ad evitare la tue esalazioni.~
+$c0002Riesci ad evitare le esalazioni di $n$c0002.~
+$c0002$N$c0002 evita le esalazioni di $n$c0002.~
+$c0002Le tue esalazioni fanno soffrire intensamente $N$c0002.~
+$c0002Le esalazioni tossiche di $n$c0002 ti fanno stare MOLTO male!~
+$c0002Le esalazioni tossiche di $n$c0002 fanno sentire MOLTO male $N$c0002.~
+$c0004Le esalazioni tossiche si dissolvono di fronte a $N$c0004.~
+$c0004$n$c0004 emana delle esalazioni tossiche, che carine le puzzette verdi!~
+$c0004$N$c0004 ride di fronte alle esalazioni tossiche di $n$c0004.~
+M
+ 229
+$c0013Fai esplodere la testa di $N$c0013 che muore sul colpo.~
+$c0013Senti la tua testa esplodere, non riesci piu' a sopportare il dolore inflitto da $n$c0013 e muori.~
+$c0013$n$c0013 fa esplodere la testa di $N$c0013, ammassi di gelatina sono sparsi ovunque!~
+$c0013La mente di $N$c0013 resiste al tuo attacco psichico.~
+$c0013Resisti all'attacco psichico di $n$c0013.~
+$c0013$N$c0013 sembra resistere all'attacco psichico di $n$c0013.~
+$c0013$N$c0013 vacilla appena provi a far$D esplodere la testa!~
+$c0013Senti la tua testa esplodere dopo l'attacco psichico di $n$c0013.~
+$c0013$N$c0013 vacilla mentre viene investit$B dall'attacco mentale di $n$c0013.~
+$c0004$N$c0004 ti guarda e sorride.~
+$c0004$n$c0004 si concentra inutilmente sulla tua testa.~
+$c0004$n$c0004 si concentra inutilmente sulla testa di $N$c0004.~
+M
+ 236
+$c0014$N$c0014 si accascia al suolo e muore appena sente il tuo potente grido di battaglia.~
+$c0014Non riesci a sopportare il dolore inflitto dal grido di battaglia di $n$c0014, ti accasci e muori.~
+$c0014$n$c0014 uccide $N$c0014 con il suo potente grido di battaglia.~
+$c0014$N$c0014 rimane indifferente al tuo grido di battaglia.~
+$c0014$n$c0014 lancia il suo grido di battaglia, resti completamente indifferente.~
+$c0014$N$c0014 rimane indifferente al grido di battaglia di $n$c0014.~
+$c0014Il tuo grido di battaglia fa urlare di dolore $N$c0014.~
+$c0014Il grido di battaglia di $n$c0014 ti causa atroci sofferenze.~
+$c0014Il grido di battaglia di $n$c0014 fa urlare dal dolore $N$c0014.~
+$c0004$N$c0004 e' immortale, come puoi far$D qualcosa?~
+$c0004$n$c0004 lancia il suo grido di battaglia, bene, brav$b, bis.~
+$c0014$n$c0004 lancia il suo grido di battaglia, $N$c000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        4 batte le mani in segno di approvazione.~
+M
+ 243
+La potenza del tuo $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 annienta $N$c0007!~
+Vieni annientat$B dalla potenza del $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 di $n$c0007!~
+La potenza del $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 di $n$c0007 annienta $N$c0007!~
+Il tuo $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 non e' abbastanza potente per infliggere alcun danno a $N$c0007.~
+Il $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 di $n$c0007 ti colpisce ma non riesce a ferirti.~
+Il $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 di $n$c0007 colpisce senza procurare alcun danno a $N$c0007.~
+Il tuo $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 colpisce $N$c0007.~
+Vieni colpit$B dal $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 lanciato da $n$c0007.~
+$N$c0007 viene colpit$B dal $c0009r$c0010a$c0011g$c0012g$c0013i$c0015o$c0007 lanciato da $n$c0007.~
+$c0004Che vergogna tentare di lanciare un raggio colorato contro un Dio!~
+$c0004Ignori completamente il raggio lanciato da $n$c0004.~
+$c0004Il raggio scagliato da $n$c0004 viene ignorato da $N$c0004.~
 M
  244
-$c0010Il tuo muro di gas incendiari riduce $N un mucchietto di carbone~
-$c0010Vieni ridotto ad un mucchietto di carbone dai gas di $n.~
-$c0010La nuvola incendiaria di $n trasforma $N in un ammasso carbonizzato~
-$c0010Il tuo muro di gas non e` abbastanza potente da bruciare $N~
-$c0010La nuvola incendiaria di $n non risce a bruciarti~
+$c0010Il tuo muro di gas incendiari riduce $N$c0010 ad un mucchietto di carbone.~
+$c0010Vieni ridotto ad un mucchietto di carbone dai gas di $n$c0010.~
+$c0010La nuvola incendiaria di $n$c0010 trasforma $N$c0010 in un ammasso carbonizzato.~
+$c0010Il tuo muro di gas non e' abbastanza potente da bruciare $N$c0010.~
+$c0010La nuvola incendiaria di $n$c0010 non riesce a bruciarti.~
 $c0010Una nuvola di gas incendiari di $n manca $N!~
-$c0010La tua nuvola incendiaria avvolge $N bruciandolo~
-$c0010Vieni avvolt$B dalla nuvola di gas incendiari di $n~
-$c0010$N brucia avvolt$B dalla nuvola di gas incendiari di $n~
+$c0010La tua nuvola incendiaria avvolge $N$c0010 bruciandol$B.~
+$c0010Vieni avvolt$B dalla nuvola di gas incendiari di $n$c0010.~
+$c0010$N$c0010 brucia avvolt$B dalla nuvola di gas incendiari di $n$c0010.~
 $c0004Che vergogna tentare di fare una cosa simile ad un Dio!~
-$c0004Ignori completamente i gas che ti vengono lanciati da $n~
-$c0004La nuvola incendiaria di $n viene ignorata da $N~
+$c0004Ignori completamente i gas che ti vengono lanciati da $n$c0004.~
+$c0004La nuvola incendiaria di $n$c0004 viene ignorata da $N$c0004.~
 M
  245
-$c0010Riduci $N in un mucchio di polvere!~
+$c0010Riduci $N$c0010 in un mucchio di polvere!~
 $c0010Vieni ridott$B un un mucchio di polvere!~
-$c0010$n riduce $N in un mucchio di polvere!~
-$c0010Gli atomi di $N rimangono saldamente uniti~
-$c0010I tuoi atomi non si disgregano nonostante gli sforzi di $n~
-$c0010$n cerca, invano, di disintegrare $N~
-$c0010Le cellule di $N sembrano volersi separare le une dalle altre~
-$c0010Senti le tue cellule agitarsi ed allontanarsi fra loro~
-$c0010Le cellule di $N sembrano volersi separare le une dalle altre~
+$c0010$n$c0010 riduce $N$c0010 in un mucchio di polvere!~
+$c0010Gli atomi di $N$c0010 rimangono saldamente uniti.~
+$c0010I tuoi atomi non si disgregano nonostante gli sforzi di $n$c0010.~
+$c0010$n$c0010 cerca, invano, di disintegrare $N$c0010.~
+$c0010Le cellule di $N$c0010 sembrano volersi separare le une dalle altre.~
+$c0010Senti le tue cellule agitarsi ed allontanarsi fra loro.~
+$c0010Le cellule di $N$c0010 sembrano volersi separare le une dalle altre.~
 $c0004Hah, questo si' che e' uno scherzo!~
-$c0004Eviti facilmente di essere disintegrato da $n.~
-$c0004Il raggio disintegrante di $n viene ignorato da $N~
+$c0004Eviti facilmente di essere disintegrato da $n$c0004.~
+$c0004Il raggio disintegrante di $n$c0004 viene ignorato da $N$c0004.~
+M
+ 268
+$c0009$N$c0009 viene dilaniat$B dalle fiamme scaturite dalla tua mente.~
+$c0009Muori tra atroci sofferenze avvolt$B dalle fiamme scaturite dalla mente di $n$c0009.~
+$c0009$N$c0009 muore dilaniat$B dalle fiamme scaturite dalla mente di $n$c0009.~
+$c0009$N$c0009 evita le lingue di fuoco che $D hai scagliato contro!~
+$c0009Riesci ad evitare con un balzo le lingue di fuoco scaturite dalla mente di $n$c0009!~
+$c0009$N$c0009 si sposta ed evita le lingue di fuoco scaturite dalla mente di $n$c0009.~
+$c0009$N$c0009 viene investit$B dalle lingue di fuoco scaturite dalla tua mente.~
+$c0009Vieni investit$B dalle lingue di fuoco scaturite dalla mente di $n$c0009.~
+$c0009$N$c0009 viene investit$B dal le lingue di fuoco scaturite dalla mente di $n$c0009.~
+$c0004$N$c0004 ride mentre tenti di bruciarl$B.~
+$c0004Ridi in faccia a $n$c0004, come poteva solo pensare di fare una cosa del genere?~
+$c0004$N ride in faccia a $n$c0004 mentre prova inutilmente a bruciarl$B.~
 M
  282
-$c0003Annienti $N con la forza della tua mente!~
-$c0003Vieni annientat$B dalla forza della mente di $n!~
-$c0003$n annienta $N con la forza della sua mente!~
-$N resiste al tuo torchio psichico.~
-Resisti al torchio psichico di $n.~
-$N resiste al torchio psichico di $N.~
-$c0003Le ossa di $N scrichiolano quando l$B schiacci con la tua forza psichica!~
-$c0003Le tue ossa scricchiolano sotto la pressione della forza psichica di $N!~
-$c0003Le ossa di $N scricchiolano sotto la forza psichica di $n!~
-Non riesci nemmeno a schiaccia$D i capelli.~
-$n prova invano a schicciarti i capelli.~
-$n appare concentrat$b ma con nessun effetto.~
+$c0003Annienti $N$c0003 con la forza della tua mente!~
+$c0003Vieni annientat$B dalla forza della mente di $n$c0003!~
+$c0003$n$c0003 annienta $N$c0003 con la forza della sua mente!~
+$c0003$N$c0003 resiste al tuo torchio psichico.~
+$c0003Resisti al torchio psichico di $n$c0003.~
+$c0003$N$c0003 resiste al torchio psichico di $n$c0003.~
+$c0003Le ossa di $N$c0003 scricchiolano quando l$B schiacci con la tua forza psichica!~
+$c0003Le tue ossa scricchiolano sotto la pressione della forza psichica di $n$c0003!~
+$c0003Le ossa di $N$c0003 scricchiolano sotto la forza psichica di $n$c0003!~
+$c0004Non riesci nemmeno a schiaccia$D i capelli.~
+$c0004$n$c0004 prova invano a schiacciarti i capelli.~
+$c0004$n$c0004 appare concentrat$b ma con nessun effetto.~
 M
- 306
-$N viene ucciso dal tuo possente alito.~
-Vieni ridotto in cenere, non appena $n alita su di te.~
-$n riduce $N ad un mucchietto di cenere.~
-$N si china rapidamente ed evita il tuo alito di fuoco.~
-$n soffia del fuoco su di te, ma tu riesci a schivarlo.~
-$N evita il soffio infuocato di $n.~
-$N e' seriamente bruciat$B dal tuo soffio di fuoco.~
-$n ti brucia.~
-$N rimane gravemente ferit$B, appena $n soffia fuoco.~
-$N e' immortale, e ignora il tuo soffio di fuoco.~
-$n ti riscalda.~
-$n riscalda $N.~
+ 286
+$c0005L'onda di energia scaturita dalla tua mente annienta $N$c0005!~
+$c0005Vieni annientat$B dall'onda di energia scaturita della mente di $n$c0005!~
+$c0005$n$c0005 annienta $N$c0005 con una potente onda di energia!~
+$c0005$N$c0005 evita fortunosamente l'onda di energia.~
+$c0005Con un balzo felino eviti l'onda di energia scaturita dalla mente di $n$c0005.~
+$c0005$N$c0005 evita l'onda di energia scaturita dalla mente di $n$c0005.~
+$c0005Investi $N$c0005 con una potente onda di energia!~
+$c0005Vieni investit$B dall'onda di energia scaturita dalla mente di $n$c0005!~
+$c0005L'onda di energia scaturita dalla mente di $n$c0005 investe con forza $N$c0005!~
+$c0004L'onda di energia si dissolve al cospetto di $N$c0004.~
+$c0004$n$c0004 ti tira contro un'onda di energia, schiocchi le dita e si dissolve.~
+$c0004$n$c0004 prova a lanciare un'onda di energia contro $N$c0004, che sciocc$b!~
 M
- 307
-$N viene ucciso dal tuo soffio di gas.~
-Muori soffocat$B dal gas che $n ti soffia addosso.~
-$n uccide $N con un soffio di gas.~
-$N evita il tuo soffio di gas.~
-$n ti soffia gas addosso, ma senza alcun effetto.~
-$N evita il gas di $n.~
-$N viene intossicato dal tuo soffio di fuoco.~
-$n ti soffoca col gas.~
-$N viene soffocat$B col gas da $n.~
-$N e' immortale e ignora il tuo soffio di fuoco.~
-$n vuole soffocarti col gas, ma non puo' farlo.~
-$n tenta di soffocare $N col gas, ma non puo' farlo.~
-M
- 308
-$N viene congelat$B a morte dal tuo soffio di ghiaccio~
-Rimani congelat$B, non appena $n soffia su di te~
-$n riduce $N ad un enorme ghiacciolo~
-$N evita la tua grandinata di ghiaccio~
-$n ti soffia del ghiaccio addosso, ma tu riesci ad evitarlo~
-$N evita il soffio di ghiaccio di $n~
-$N viene colpit$B dalla tua grandinata di ghiaccio~
-Il soffio chiacciato di $n ti congela in parte~
-Il soffio di ghiacci di $n congela in parte $N~
-$N e' immortale e ignora il tuo attacco.~
-$n ti fornisce di aria condizionata.~
-$n fornisce $N di aria condizionata.~
-M
- 309
-$N viene fus$B in un mucchio di stecche di carbone davanti ai tuoi occhi.~
-Vieni corros$B fino all'osso, appena $n ti soffia addosso.~
-$n corrode $N fino alle ossa.~
-$N evita saggiamente il tuo acido mortale.~
-$n ti soffia dell'acido addosso, ma tu riesci ad evitarlo.~
-$N evita il soffio di acido di $n.~
-$N viene incenerit$B dall'acido potente che hai emesso.~
-$n riesce a corroderti.~
-$N viene corros$B appena $n emette acido.~
-$N usa il tuo acido per sgrassarsi le mani.~
-$n ti aiuta a sgrassarti le mani con un po' di acido.~
-$n aiuta $N a pulirsi.~
-M
- 310
-$N viene uccis$B dal tuo soffio fulminante.~
-Vieni uccis$B dal soffio fulminante di $n.~
-$n uccide $N con un soffio fulminante.~
-$N evita saggiamente il tuo soffio fulminante.~
-$n emette un soffio fulminante contro di te, ma riesci ad evitarlo.~
-$N evita il soffio fulminante di $n.~
-$N viene elettrificat$B dal tuo soffio fulminante.~
-$n ti colpisce con un soffio fulminante.~
-$N viene colpit$B dal soffio fulminante di $n.~
-$N e' immortale, e ignora il tuo soffio.~
-$n tenta di soffiarti fulmini addosso,~
-$n tenta di emettere fulmini contro $N.~
+ 325
+$c0009$N$c0009 viene uccis$B dal tuo possente alito.~
+$c0009Vieni ridotto in cenere, non appena $n$c0009 alita su di te.~
+$c0009$n$c0009 riduce $N$c0009 ad un mucchietto di cenere fumante.~
+$c0009$N$c0009 si china rapidamente ed evita il tuo alito di fuoco.~
+$c0009$n$c0009 soffia del fuoco su di te, ma tu riesci a schivarlo.~
+$c0009$N$c0009 evita il soffio infuocato di $n$c0009.~
+$c0009$N$c0009 e' seriamente bruciat$B dal tuo soffio di fuoco.~
+$c0009$n$c0009 ti brucia.~
+$c0009$N$c0009 rimane gravemente ferit$B, appena $n$c0009 soffia fuoco.~
+$c0004$N$c0004 e' immortale, ed ignora il tuo soffio di fuoco.~
+$c0004$n$c0004 ti riscalda.~
+$c0004$n$c0004 riscalda $N$c0004.~
 M
  326
-~
-Ti senti ferit$B - troppo ferit$B - e muori~
-$N giace sofferente per terra, e muore dissanguandosi~
-~
-Ignori le necessita` del tuo corpo~
-$N ignora i bisogni del suo corpo!~
-~
+$c0011$N$c0011 viene ucciso dal tuo soffio gassoso.~
+$c0011Muori soffocat$B dal gas che $n$c0011 ti soffia addosso.~
+$c0011$n$c0011 uccide $N$c0011 con un soffio di gas.~
+$c0011$N$c0011 evita il tuo soffio di gas.~
+$c0011$n$c0011 ti soffia gas addosso, ma senza alcun effetto.~
+$c0011$N$c0011 evita il gas di $n$c0011.~
+$c0011$N$c0011 viene intossicato dal tuo soffio gassoso.~
+$c0011$n$c0011 ti soffoca col gas.~
+$c0011$N$c0011 viene soffocat$B col gas da $n$c0011.~
+$c0004$N$c0004 e' immortale ed ignora il tuo gas :-)~
+$c0004$n$c0004 vuole soffocarti col gas, ma non puo' farlo.~
+$c0004$n$c0004 tenta di soffocare $N$c0004 col gas, ma non puo' farlo.~
+M
+ 327
+$c0014$N$c0014 viene congelat$B a morte dal tuo soffio di ghiaccio.~
+$c0014Rimani congelat$B non appena $n$c0014 soffia su di te.~
+$c0014$n$c0014 riduce $N$c0014 ad un enorme ghiacciolo.~
+$c0014$N$c0014 evita la tua grandinata di ghiaccio.~
+$c0014$n$c0014 ti soffia del ghiaccio addosso, ma tu riesci ad evitarlo.~
+$c0014$N$c0014 evita il soffio di ghiaccio di $n$c0014.~
+$c0014$N$c0014 viene colpit$B dalla tua grandinata di ghiaccio.~
+$c0014Il soffio ghiacciato di $n$c0014 ti congela in parte.~
+$c0014Il soffio di ghiacci di $n$c0014 congela in parte $N$c0014.~
+$c0004$N$c0004 ignora il tuo stupido attacco.~
+$c0004$n$c0004 ti fornisce di aria condizionata.~
+$c0004$n$c0004 fornisce $N$c0004 di aria condizionata.~
+M
+ 328
+$c0010$N$c0010 viene fus$B in un mucchio di stecche di carbone davanti ai tuoi occhi.~
+$c0010Vieni corros$B fino all'osso, appena $n$c0010 ti soffia addosso.~
+$c0010$n$c0010 corrode $N$c0010 fino alle ossa.~
+$c0010$N$c0010 evita saggiamente il tuo acido mortale.~
+$c0010$n$c0010 ti soffia dell'acido addosso, ma tu riesci ad evitarlo.~
+$c0010$N$c0010 evita il soffio di acido di $n$c0010.~
+$c0010$N$c0010 viene incenerit$B dall'acido potente che hai emesso.~
+$c0010$n$c0010 ti corrode con il suo acido.~
+$c0010$N$c0010 viene corros$B appena $n$c0010 emette acido.~
+$c0004$N$c0004 usa il tuo acido per sgrassarsi le mani.~
+$c0004$n$c0004 ti aiuta a sgrassarti le mani con un po' di acido.~
+$c0004$n$c0004 aiuta $N$c0004 a pulirsi.~
+M
+ 329
+$c0012$N$c0012 viene uccis$B dal tuo soffio fulminante.~
+$c0012Vieni uccis$B dal soffio fulminante di $n$c0012.~
+$c0012$n$c0012 uccide $N$c0012 con un soffio fulminante.~
+$c0012$N$c0012 evita saggiamente il tuo soffio fulminante.~
+$c0012$n$c0012 emette un soffio fulminante contro di te, ma riesci ad evitarlo.~
+$c0012$N$c0012 evita il soffio fulminante di $n$c0012.~
+$c0012$N$c0012 viene elettrificat$B dal tuo soffio fulminante.~
+$c0012$n$c0012 ti colpisce con un soffio fulminante.~
+$c0012$N$c0012 viene colpit$B dal soffio fulminante di $n$c0012.~
+$c0004$N$c0004 e' immortale, ed ignora il tuo soffio.~
+$c0004$n$c0004 tenta di soffiarti fulmini addosso, tu l$b guardi e ridi!~
+$c0004$n$c0004 tenta di emettere fulmini contro $N$c0004.~
+M
+ 345
+$c0007~
+Ti senti ferit$B, troppo ferit$B, poi muori.~
+$N$c0007 giace sofferente per terra, e muore dissanguandosi.~
+$c0007~
+Ignori le necessita' del tuo corpo.~
+$N$c0007 ignora i bisogni del suo corpo!~
+$c0007~
 Dovresti proprio deciderti a rifocillarti!~
-$N ha bisogno di rifocillarsi!~
-~
+$N$c0007 ha bisogno di rifocillarsi!~
+$c0007~
 ***Suffer god victim..~
 ***Suffer god room..~
 

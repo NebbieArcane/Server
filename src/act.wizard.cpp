@@ -1459,9 +1459,9 @@ ACTION_FUNC(do_stat) {
 			if(cmd == CMD_STAT || cmd == CMD_CKEQ) {  /* stat */
 				sprintf(buf,
 						"$c0015Stats: $c0005Str:[$c0014%d$c0005/$c0015%d$c0005] "
-						"Int:[$c0014%d$c0005] Ws:[$c0014%d$c0005] "
+						"Int:[$c0014%d$c0005] Wis:[$c0014%d$c0005] "
 						"Dex:[$c0014%d$c0005] Con:[$c0014%d$c0005] "
-						"Ch:[$c0014%d$c0005]", GET_STR(k), GET_ADD(k),
+						"Cha:[$c0014%d$c0005]", GET_STR(k), GET_ADD(k),
 						GET_INT(k), GET_WIS(k), GET_DEX(k), GET_CON(k),
 						GET_CHR(k));
 
@@ -1499,7 +1499,7 @@ ACTION_FUNC(do_stat) {
 
 				sprinttype(GET_POS(k), position_types, buf2);
 				sprintf(buf, "$c0005Position: $c0014%s$c0005, ", buf2);
-				strcat(buf, "Default position:$c0014");
+				strcat(buf, "Default position: $c0014");
 				sprinttype((k->specials.default_pos), position_types, buf2);
 				strcat(buf, buf2);
 				strcat(buf, "$c0005, Fighting: $c0014");
@@ -1543,7 +1543,7 @@ ACTION_FUNC(do_stat) {
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
 
 				if(IS_MOB(k)) {
-					strcpy(buf, "$c0005Mobile Special procedure :$c0014 ");
+					strcpy(buf, "$c0005Mobile Special procedure:$c0014 ");
 					if(mob_index[k->nr].func) {
 						strcat(buf, "Exists ");
 						strcat(buf, mob_index[k->nr].specname);
@@ -1654,7 +1654,7 @@ ACTION_FUNC(do_stat) {
                 
 				/* immunities */
 				if(k->M_immune) {
-					send_to_char("$c0005Immune to:$c0014", ch);
+					send_to_char("$c0005Immune to: $c0014", ch);
 					sprintbit(k->M_immune, immunity_names, buf);
 					strcat(buf, "\n\r");
 					send_to_char(buf, ch);
@@ -1662,7 +1662,7 @@ ACTION_FUNC(do_stat) {
 
 				/* resistances */
 				if(k->immune) {
-					send_to_char("$c0005Resistant to:$c0014", ch);
+					send_to_char("$c0005Resistant to: $c0014", ch);
 					sprintbit(k->immune, immunity_names, buf);
 					strcat(buf, "\n\r");
 					send_to_char(buf, ch);
@@ -1670,14 +1670,14 @@ ACTION_FUNC(do_stat) {
 
 				/* Susceptible */
 				if(k->susc) {
-					send_to_char("$c0005Susceptible to:$c0014", ch);
+					send_to_char("$c0005Susceptible to: $c0014", ch);
 					sprintbit(k->susc, immunity_names, buf);
 					strcat(buf, "\n\r");
 					send_to_char(buf, ch);
 				}
 
 				if(k->player.user_flags) {
-					send_to_char("$c0005SPECIAL FLAGS:$c0014", ch);
+					send_to_char("$c0005SPECIAL FLAGS: $c0014", ch);
 					sprintbit(k->player.user_flags, special_user_flags, buf);
 					strcat(buf, "\n\r");
 					send_to_char(buf, ch);
@@ -1773,58 +1773,66 @@ ACTION_FUNC(do_stat) {
 		else if((j = (struct obj_data*) get_obj_vis_world(ch, arg1, &count))) {
 			iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
 			sprintf(buf,
-					"Object name: [%s], R-number: [%d], V-number: [%d] Item type: ",
+					"$c0005Object name: [$c0011%s$c0005], R-number: [$c0014%d$c0005], V-number: [$c0011%d$c0005] Item type: $c0014",
 					j->name, j->item_number, iVNum);
 			sprinttype(GET_ITEM_TYPE(j), item_types, buf2); // Gaia 2001
 			strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
-			sprintf(buf, "Corpse original V-number: [%d]\r\n", j->char_vnum);
+			sprintf(buf, "$c0005Corpse original V-number: [$c0014%d$c0005]\r\n", j->char_vnum);
 			send_to_char(buf, ch);
-			sprintf(buf, "Short description: %s\n\rLong description:\n\r%s\n\r",
+			sprintf(buf, "$c0005Short description: $c0014%s$c0005\n\r$c0005Long description:\n\r$c0014%s\n\r",
 					((j->short_description) ? j->short_description : "None"),
 					((j->description) ? j->description : "None"));
 			send_to_char(buf, ch);
 			if(j->ex_description) {
-				strcpy(buf, "Extra description keyword(s):\n\r----------\n\r");
+				strcpy(buf, "$c0005Extra description keyword(s):\n\r----------\n\r$c0014");
 				for(desc = j->ex_description; desc; desc = desc->next) {
 					strcat(buf, desc->keyword);
 					strcat(buf, "\n\r");
 				}
-				strcat(buf, "----------\n\r");
+				strcat(buf, "$c0005----------\n\r");
 				send_to_char(buf, ch);
 			}
 			else {
-				strcpy(buf, "Extra description keyword(s): None\n\r");
+				strcpy(buf, "$c0005Extra description keyword(s): $c0014None\n\r");
 				send_to_char(buf, ch);
 			}
 
-			send_to_char("Can be worn on :", ch);
-			sprintbit((unsigned) j->obj_flags.wear_flags, wear_bits, buf);
+			send_to_char("$c0005Can be worn on: ", ch);
+			sprintbit((unsigned) j->obj_flags.wear_flags, wear_bits, buf2);
+            sprintf(buf, "$c0014");
+            strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
-			send_to_char("Set char bits  :", ch);
-			sprintbit((unsigned) j->obj_flags.bitvector, affected_bits, buf);
+			send_to_char("$c0005Set char bits: $c0014", ch);
+			sprintbit((unsigned) j->obj_flags.bitvector, affected_bits, buf2);
+            sprintf(buf, "$c0014");
+            strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
-			send_to_char("Extra flags: ", ch);
-			sprintbit((unsigned) j->obj_flags.extra_flags, extra_bits, buf);
+			send_to_char("$c0005Extra flags: $c0014", ch);
+			sprintbit((unsigned) j->obj_flags.extra_flags, extra_bits, buf2);
+            sprintf(buf, "$c0014");
+            strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
             
-            send_to_char("Extra flags2: ", ch);
-            sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf);
+            send_to_char("$c0005Extra flags2: $c0014", ch);
+            sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf2);
+            sprintf(buf, "$c0014");
+            strcat(buf, buf2);
             strcat(buf, "\n\r");
             send_to_char(buf, ch);
 
-			sprintf(buf, "Weight: %d, Value: %d, Cost/day: %d, Timer: %d\n\r",
+			sprintf(buf, "$c0005Weight: $c0014%d$c0005, Value: $c0014%d$c0005, Cost/day: $c0014%d$c0005, Timer: $c0014%d\n\r",
 					j->obj_flags.weight, j->obj_flags.cost,
 					j->obj_flags.cost_per_day, j->obj_flags.timer);
 			send_to_char(buf, ch);
 
-			strcpy(buf, "In room: ");
+			strcpy(buf, "$c0005In room: $c0005");
 			if(j->in_room == NOWHERE) {
 				strcat(buf, "Nowhere");
 			}
@@ -1832,33 +1840,33 @@ ACTION_FUNC(do_stat) {
 				sprintf(buf2, "%d", j->in_room);
 				strcat(buf, buf2);
 			}
-			strcat(buf, " ,In object: ");
+			strcat(buf, "$c0005 ,In object: $c0014");
 			strcat(buf, (!j->in_obj ? "None" : fname(j->in_obj->name)));
 
 			switch(j->obj_flags.type_flag) {
 			case ITEM_LIGHT:
-				sprintf(buf, "Colour : [%d]\n\rType : [%d]\n\rHours : [%d]",
+				sprintf(buf, "$c0005Colour : [$c0014%d$c0005]\n\r$c0005Type : [$c0014%d$c0005]\n\r$c0005Hours : [$c0014%d$c0005]",
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[2]);
 				break;
 			case ITEM_SCROLL:
-				sprintf(buf, "Spells : %d, %d, %d, %d", j->obj_flags.value[0],
+				sprintf(buf, "$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d", j->obj_flags.value[0],
 						j->obj_flags.value[1], j->obj_flags.value[2],
 						j->obj_flags.value[3]);
 				break;
 			case ITEM_WAND:
 			case ITEM_STAFF:
-				sprintf(buf, "Level: %d Spell : %d\n\rCharges : %d",
+				sprintf(buf, "$c0005Level: $c0014%d $c0005Spell : $c0014%d\n\r$c0005Charges : $c0014%d",
 						j->obj_flags.value[0], j->obj_flags.value[3],
 						j->obj_flags.value[2]);
 				break;
 			case ITEM_WEAPON:
-				sprintf(buf, "Reserved: %d\n\r", j->obj_flags.value[0]);
+				sprintf(buf, "$c0005Reserved: $c0014%d\n\r", j->obj_flags.value[0]);
 #if 0
 				sprintbit(j->obj_flags.value[0], aszWeaponSpecialEffect, buf2);
 				strcat(buf, buf2);
 #endif
-				sprintf(buf2, "Todam: %dD%d\n\rDamage type: ",
+				sprintf(buf2, "$c0005Todam: $c0014%d$c0005D$c0014%d\n\r$c0005Damage type: $c0014",
 						j->obj_flags.value[1], j->obj_flags.value[2]);
 				strcat(buf, buf2);
 				sprinttype(j->obj_flags.value[3], aszWeaponType, buf2);
@@ -1866,66 +1874,66 @@ ACTION_FUNC(do_stat) {
 				strcat(buf, "\n\r");
 				break;
 			case ITEM_FIREWEAPON:
-				sprintf(buf, "Min Strength: %d\n\rMax range: %d\n\r"
-						"Bonus range: %d\n\rType: %d", j->obj_flags.value[0],
+				sprintf(buf, "$c0005Min Strength: $c0014%d\n\r$c0005Max range: $c0014%d\n\r"
+						"$c0005Bonus range: $c0014%d\n\r$c0005Type: $c0014%d", j->obj_flags.value[0],
 						j->obj_flags.value[1], j->obj_flags.value[2],
 						j->obj_flags.value[3]);
 				break;
 			case ITEM_MISSILE:
-				sprintf(buf, "%% to break: %d\n\rTodam: %dD%d\n\rType : %d",
+				sprintf(buf, "$c0005%% to break: $c0014%d\n\r$c0005Todam: $c0014%d$c0005D$c0014%d\n\r$c0005Type : $c0014%d",
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[2], j->obj_flags.value[3]);
 				break;
 			case ITEM_ARMOR:
-				sprintf(buf, "AC-apply : [%d]\n\rFull Strength : [%d]",
+				sprintf(buf, "$c0005AC-apply : [$c0014%d$c0005]\n\r$c0005Full Strength : [$c0014%d$c0005]",
 						j->obj_flags.value[0], j->obj_flags.value[1]);
 
 				break;
 			case ITEM_POTION:
-				sprintf(buf, "Spells : %d, %d, %d, %d", j->obj_flags.value[0],
+				sprintf(buf, "$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d", j->obj_flags.value[0],
 						j->obj_flags.value[1], j->obj_flags.value[2],
 						j->obj_flags.value[3]);
 				break;
 			case ITEM_TRAP:
 				sprintf(buf,
-						"Eff type: %d, Dam type: %d, level: %d, charges: %d",
+						"$c0005Eff type: $c0014%d$c0005, Dam type: $c0014%d$c0005, level: $c0014%d$c0005, charges: $c0014%d",
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[2], j->obj_flags.value[3]);
 				break;
 			case ITEM_CONTAINER:
 				sprintf(buf,
-						"Max-contains : %d\n\rLocktype : %d\n\rCorpse : %s",
+						"$c0005Max-contains : $c0014%d\n\r$c0005Locktype : $c0014%d\n\r$c0005Corpse : $c0014%s",
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[3] ? "Yes" : "No");
 				break;
 			case ITEM_DRINKCON:
 				sprinttype(j->obj_flags.value[2], drinks, buf2);
 				sprintf(buf,
-						"Max-contains : %d\n\rContains : %d\n\rPoisoned : %s"
-						"\n\rLiquid : %s", j->obj_flags.value[0],
+						"$c0005Max-contains : $c0014%d\n\r$c0005Contains : $c0014%d\n\r$c0005Poisoned : $c0014%s"
+						"\n\r$c0005Liquid : $c0014%s", j->obj_flags.value[0],
 						j->obj_flags.value[1],
 						j->obj_flags.value[3] ? "Yes" : "No", buf2);
 				break;
 			case ITEM_NOTE:
-				sprintf(buf, "Tounge : %d", j->obj_flags.value[0]);
+				sprintf(buf, "$c0005Tounge : $c0014%d", j->obj_flags.value[0]);
 				break;
 			case ITEM_KEY:
-				sprintf(buf, "Keytype : %d", j->obj_flags.value[0]);
+				sprintf(buf, "$c0005Keytype : $c0014%d", j->obj_flags.value[0]);
 				break;
 			case ITEM_FOOD:
-				sprintf(buf, "Makes full : %d\n\rPoisoned : %s",
+				sprintf(buf, "$c0005Makes full : $c0014%d\n\r$c0005Poisoned : $c0014%s",
 						j->obj_flags.value[0],
 						j->obj_flags.value[3] ? "Yes" : "No");
 				break;
 			default:
-				sprintf(buf, "Values 0-3 : [%d] [%d] [%d] [%d]",
+				sprintf(buf, "$c0005Values 0-3 : [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]",
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[2], j->obj_flags.value[3]);
 				break;
 			}
 			send_to_char(buf, ch);
 
-			strcpy(buf, "\n\rEquipment Status: ");
+			strcpy(buf, "\n\r$c0005Equipment Status: $c0014");
 			if(!j->carried_by) {
 				strcat(buf, "NONE");
 			}
@@ -1939,16 +1947,16 @@ ACTION_FUNC(do_stat) {
 					}
 				}
 				if(!found) {
-					strcat(buf, "Inventory of ");
+					strcat(buf, "$c0005Inventory of $c0011");
 				}
 				else {
-					strcat(buf, " by ");
+					strcat(buf, "$c0005 by $c0011");
 				}
 				strcat(buf, GET_NAME_DESC(j->carried_by));
 			}
 			send_to_char(buf, ch);
 
-			strcpy(buf, "\n\rSpecial procedure : ");
+			strcpy(buf, "\n\r$c0005Special procedure : $c0014");
 			if(j->item_number >= 0) {
 				if(obj_index[j->item_number].func) {
 					strcat(buf, "Exists ");
@@ -1963,11 +1971,11 @@ ACTION_FUNC(do_stat) {
 			strcat(buf, "\r\n");
 			send_to_char(buf, ch);
 
-			sprintf(buf, "Generic int: %d.\n", j->iGeneric);
+			sprintf(buf, "$c0005Generic int: $c0014%d$c0005.\n", j->iGeneric);
 			send_to_char(buf, ch);
 
 			if(j->contains) {
-				strcpy(buf, "Contains :\n\r");
+				strcpy(buf, "$c0005Contains :$c0014\n\r");
 				found = FALSE;
 				for(j2 = j->contains; j2; j2 = j2->next_content) {
 					strcat(buf, fname(j2->name));
@@ -1975,16 +1983,16 @@ ACTION_FUNC(do_stat) {
 					found = TRUE;
 				}
 				if(!found) {
-					strcpy(buf, "Contains : Nothing\n\r");
+					strcpy(buf, "$c0005Contains : $c0014Nothing\n\r");
 				}
 				send_to_char(buf, ch);
 			}
 
-			send_to_char("Can affect char :\n\r", ch);
+			send_to_char("$c0005Can affect char :$c0014\n\r", ch);
 			for(i = 0; i < MAX_OBJ_AFFECT; i++) {
 				if(j->affected[i].location) {
 					sprinttype(j->affected[i].location, apply_types, buf2);
-					sprintf(buf, "    Affects : %s By %d\n\r", buf2,
+					sprintf(buf, "    $c0005Affects : $c0014%s $c0005By $c0014%d\n\r", buf2,
 							j->affected[i].modifier);
 					send_to_char(buf, ch);
 				}

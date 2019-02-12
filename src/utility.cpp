@@ -46,6 +46,194 @@
 
 namespace Alarmud {
     
+const char* zonename_by_room(int room) {
+    
+    struct zone_data* zd;
+    int zone;
+    
+    const char* zonename[]= {
+        "Scratch zone for static game",
+        "il Limbo",
+        "le Strade di Myst",
+        "la Scuola",
+        "l'Isola dell'Oblio",
+        "il Trono di Thanatos",
+        "l'Area di Cueball",
+        "il Luogo dell'Agguato",
+        "ai Piedi dell'Albero Colossale",
+        "free",
+        "i Rifugi Oscuri",
+        "Asgaard",
+        "la Contea",
+        "la Loggia Bianca",
+        "polymorph & change form",
+        "la Scacchiera",
+        "la Torre della Magia",
+        "il Monastero dei Monaci",
+        "il Circo",
+        "la Giungla del Culto",
+        "la Piramide del Serpente",
+        "le sale dei Preti Tatuati",
+        "free",
+        "il Piano Astrale",
+        "le terre di Emerald",
+        "la Capitale delle Nebbie",
+        "free",
+        "il Fiume di Midgaard",
+        "il Palazzo dei Principi",
+        "il Territorio di Ator",
+        "un Incrocio ad Oriente",
+        "la Dimora ed Arena di Felix",
+        "le Miniere di Moria",
+        "le Miniere di Moria",
+        "la Capitale dei Nani",
+        "Kamash Darrul",
+        "la Piana della Battaglia",
+        "la Rocca di Quainor",
+        "il Borgo di Imrryr",
+        "la Foresta di Gwyldan",
+        "il Grande Deserto dell'Est",
+        "la Citta' dei Drow",
+        "il Monolito",
+        "Vecchia Thalos",
+        "la Grande Piramide",
+        "una Pista Battuta",
+        "un Acquitrino",
+        "il Villaggio Pigmeo",
+        "il Deserto Dipinto",
+        "le Colline di Brea",
+        "la Palude di Bloslum",
+        "Lorien",
+        "il Regno dei Sogni",
+        "l'Oscura Boscaglia",
+        "il Regno degli Elfi",
+        "la Fortezza Sotterranea di Kar",
+        "Prydain",
+        "l'Avamposto dei Dannati",
+        "Artica",
+        "il Regno dei Morti",
+        "le Fogne",
+        "la Profondita' delle Fogne",
+        "il Labirinto nelle Fogne",
+        "i Tunnels",
+        "la Scogliera",
+        "il Regno dei Norreno",
+        "Utgard",
+        "dove tutto ha Inizio",
+        "la Tenuta dei Redferne",
+        "la Banca",
+        "l’Ingresso di Bosco Cet",
+        "Bosco Cet",
+        "il Cuore di Bosco Cet",
+        "il Villaggio Isgha",
+        "l'Oscura Birreria",
+        "la Torre Fantasma",
+        "la Citta' Perduta di Nilmys",
+        "free",
+        "la Casa dei Giganti delle Colline",
+        "il Crepaccio di Ghiaccio",
+        "il Regno del Gelo",
+        "la Foresta dei Ragni",
+        "QUestFisse",
+        "free",
+        "il Labirinto del Tempio",
+        "il Maniero di Lord Python",
+        "zona case",
+        "Nuova Thalos",
+        "l'Antica Grecia",
+        "le Fatiche di Ercole",
+        "la Foresta Aguzza",
+        "l'Ade",
+        "il Monte Olimpo",
+        "le Avventure Elleniche",
+        "la Foresta di Rhowyn",
+        "free",
+        "le Terre Meridionali",
+        "gli Avamposti",
+        "le Terre dei Troll",
+        "free",
+        "il Palazzo degli Skexie",
+        "le Montagne Orientali",
+        "il Villaggio degli Tzigani",
+        "una Cava Subacquea",
+        "Draconia",
+        "free",
+        "la Torre dell'Hoeur",
+        "Il Sentiero nella Valle",
+        "Asgard2",
+        "la Citta' dei Licantropi",
+        "la Montagna Piuma Bianca",
+        "free",
+        "le Caverne della Fenice",
+        "Imrryr",
+        "free",
+        "Mordilnia",
+        "Highlander",
+        "il Castello di Warlock",
+        "il Fiume di Nebbia",
+        "la Scala di Seta",
+        "free",
+        "free",
+        "free",
+        "la Sala della Tortura Aliena",
+        "il Castello dei Mistamere",
+        "free",
+        "free",
+        "miner",
+        "la Zona Vulcanica",
+        "Xarah",
+        "Guaracanos",
+        "la Foresta dei Delrean",
+        "il Regno dei Ragni",
+        "free",
+        "la Strada di Ershteep",
+        "una Strada Antica",
+        "le Cave dei Trogloditi",
+        "l'Avamposto abbandonato di Rhyodin",
+        "free",
+        "Sauria",
+        "free",
+        "la Foresta Elfica",
+        "free",
+        "l'Accademia di Magia",
+        "free",
+        "le Catacombe di Myst",
+        "l'Abisso",
+        "il Territorio di Sinistrad",
+        "free",
+        "Darkenwood",
+        "la Grotta del Solitario",
+        "la Rupe Rossa",
+        "la Terra di Sotto",
+        "Droll Gleinas",
+        "il Maniero dei Draghi",
+        "l' Arena del Drago",
+        "free",
+        "Ravenloft",
+        "free",
+        "Atlantide",
+        "le Torri dell'Apocalisse",
+        "free",
+        "il Municipio della Capitale",
+        "free",
+        "la Foresta Incantata",
+        "il Tempio degli Eroi",
+        "i Castelli dei Principi",
+        "free",
+        "Il Regno di Sauron",
+        "last_area",
+        "\0"
+    };
+    
+    for(zone = 0; zone <= top_of_zone_table; zone++) {
+        zd = zone_table + zone;
+        if(room >= zd->bottom && room <= zd->top && zonename[zone] != NULL) {
+            return(zonename[zone]);
+        }
+    }
+    return "un posto che non esiste [Errore]";
+}
+
 #define NUM_ZONERANGES 29
 int RandomRoomByLevel(int level) {
     
@@ -70,16 +258,16 @@ int RandomRoomByLevel(int level) {
         {13755,13779},  /* Ade */
         {8406,8434},    /* Isgha */
         {9601,9631},    /* Spider Forest */
-        {13755,13779},  /* Olimpo */
+        {13780,13797},  /* Olimpo */
         {16101,16120},  /* Tzigani */
-        {2601,2620},    /* Oscura Boscaglia */
+        {6201,6221},    /* Oscura Boscaglia */
         {27401,27480},  /* Terra di sotto */
         {32800,32880},  /* Foresta Incantata */
         {16901,16931},  /* Licantropia */
         {3302,3320},    /* Palazzo dei Principi */
         {6230,6351},    /* Rhyana */
         {13423,13481},  /* New Thalos */
-        {17301,17319},  /* Ymrrir */
+        {17301,17345},  /* Ymrrir */
         {16615,16630},  /* Hoeur */
         {27002,27092},  /* Tyr Zone */
         {1910,1961},    /* Jungla e Piramide del Culto */
@@ -106,7 +294,7 @@ int RandomRoomByLevel(int level) {
     return(t);
     
 }
-
+ 
 
 int EgoBladeSave(struct char_data* ch) {
 	int total;

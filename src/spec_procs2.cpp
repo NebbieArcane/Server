@@ -7765,7 +7765,7 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 
 MOBSPECIAL_FUNC(MobIdent)
 {
-    char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH];
+    char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
     struct obj_data* obj;
     struct char_data* mobident;
     struct char_data* vict;
@@ -7799,7 +7799,7 @@ MOBSPECIAL_FUNC(MobIdent)
         }
         save_char(ch, AUTO_RENT, 0);
 
-        act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:", FALSE, ch, NULL, mobident, TO_CHAR);
+        act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:\n\r", FALSE, ch, NULL, mobident, TO_CHAR);
         act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", FALSE, ch, NULL, mobident, TO_NOTVICT);
         sprintf(buf,"$c0013'Ogni ora recuperi $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
         send_to_char(buf,ch);
@@ -7813,8 +7813,10 @@ MOBSPECIAL_FUNC(MobIdent)
         send_to_char(buf,ch);
         if(ch->M_immune)
         {
-            send_to_char("$c0013 Sei Immune       a: $c0015", ch);
-            sprintbit(ch->M_immune, immunity_names, buf);
+            send_to_char("$c0013 Sei Immune       a: ", ch);
+            sprintbit(ch->M_immune, immunity_names, buf2);
+            sprintf(buf, "$c0015");
+            strcat(buf, buf2);
             if(ch->immune || ch->susc)
             {
                 strcat(buf, "\n\r");
@@ -7824,7 +7826,9 @@ MOBSPECIAL_FUNC(MobIdent)
         if(ch->immune)
         {
             send_to_char("$c0013 Sei Resistente   a: $c0015", ch);
-            sprintbit(ch->immune, immunity_names, buf);
+            sprintbit(ch->immune, immunity_names, buf2);
+            sprintf(buf, "$c0015");
+            strcat(buf, buf2);
             if(ch->susc)
             {
                 strcat(buf, "\n\r");
@@ -7834,10 +7838,12 @@ MOBSPECIAL_FUNC(MobIdent)
         if(ch->susc)
         {
             send_to_char("$c0013 Sei Suscettibile a: $c0015", ch);
-            sprintbit(ch->susc, immunity_names, buf);
+            sprintbit(ch->susc, immunity_names, buf2);
+            sprintf(buf, "$c0015");
+            strcat(buf, buf2);
             send_to_char(buf, ch);
         }
-        send_to_char("$c0013'",ch);
+        send_to_char("$c0013'\n\r",ch);
         return(TRUE);
     }
     
@@ -7881,7 +7887,7 @@ MOBSPECIAL_FUNC(MobIdent)
         save_char(ch, AUTO_RENT, 0);
         act("$N studia per un attimo $p.",FALSE, ch, obj, mobident, TO_CHAR);
         act("$N studia per un attimo $p.",TRUE, ch, obj, mobident, TO_ROOM);
-        act("$c0013[$c0015$N$c0013] ti dice '$p ha le seguenti caratteristiche:", FALSE, ch, obj, mobident, TO_CHAR);
+        act("$c0013[$c0015$N$c0013] ti dice '$p$c0013 ha le seguenti caratteristiche:\n\r", FALSE, ch, obj, mobident, TO_CHAR);
         act("$c0013$N dice qualcosa a $n.", FALSE, ch, 0, mobident, TO_NOTVICT);
         spell_identify(GET_LEVEL(mobident, WARRIOR_LEVEL_IND), ch, mobident,obj);
         act("$N ti restituisce $p.",FALSE, ch, obj, mobident, TO_CHAR);

@@ -1368,8 +1368,8 @@ const char* dirs[] = {
 
 const char* ItemDamType[] = {
 	"$c0009brucia$c0007",
-	"$c0015ghiaccia$c0007",
-	"$c0014elettrifica$c0007",
+	"$c0014congela$c0007",
+	"$c0012elettrifica$c0007",
 	"$c0001danneggia$c0007",
 	"$c0010corrode$c0007"
 };

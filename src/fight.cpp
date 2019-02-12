@@ -1003,7 +1003,10 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	if(IS_SET(ch->specials.affected_by2, AFF2_PARRY)) {
 		REMOVE_BIT(ch->specials.affected_by2, AFF2_PARRY);
 	}
-
+    
+    if(IS_SET(ch->specials.affected_by2,AFF2_BERSERK)) {
+        REMOVE_BIT(ch->specials.affected_by2,AFF2_BERSERK);
+    }
 
 	/*
 	 *   return them from polymorph
@@ -2262,11 +2265,11 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 				if(!IS_NPC(v) && (GetMaxLevel(v) > MAX_MORT)) {
                     sprintf(buf, "%s", messages->god_msg.attacker_msg);
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->god_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
+                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2275,11 +2278,11 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					if(GET_POS(v) == POSITION_DEAD) {
                         sprintf(buf, "%s", messages->die_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                            sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->die_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
+                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->die_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2287,11 +2290,11 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					else {
                         sprintf(buf, "%s", messages->hit_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                            sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->hit_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
+                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->hit_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2300,11 +2303,11 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 				else if(dam == 0) {
                     sprintf(buf, "%s", messages->miss_msg.attacker_msg);
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->miss_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), dam);
+                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->miss_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);

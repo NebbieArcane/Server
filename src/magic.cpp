@@ -2633,8 +2633,8 @@ void sprintbit(unsigned long, char* [], char*);
 
 void spell_identify(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
-	char buf[256], buf2[256];
-	int i;
+	char buf[256], buf2[256], col1[10], col2[10], col3[10];
+	int i, color[2];
 	bool found;
 
 	struct time_info_data age(struct char_data *ch);
@@ -2646,6 +2646,19 @@ void spell_identify(byte level, struct char_data* ch,
 	*/
 
 	assert(ch && (obj || victim));
+    
+    do
+    {
+        color[1] = number(2,8);
+    } while (color[1] == 4);
+    color[2] = number(9,15);
+    
+    sprintf(col1, "$c000%d", color[1]);
+    sprintf(col2, "$c00%s%d", (color[2] > 9 ? "" : "0"), color[2]);
+    if(color[2] == 9)
+        sprintf(col3, "$c0015");
+    else
+        sprintf(col3, "$c0009");
 
 	if(obj)
     {
@@ -2654,11 +2667,11 @@ void spell_identify(byte level, struct char_data* ch,
             send_to_char("$c0011La conoscenza ti pervade:\n\r", ch);
         }
 
-		sprintf(buf, "Oggetto: '$c0015%s$c0007', Tipo di Oggetto ", obj->name);
+		sprintf(buf, "%sOggetto: '%s%s%s', Tipo di Oggetto %s", col1, col2, obj->name, col1, col2);
 		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
 		strcat(buf,buf2);
 		if IS_DIO(ch) {
-            sprintf(buf2," $c0007V-Number Originario: $c0015%d",static_cast<int>(obj->char_vnum));
+            sprintf(buf2," %sV-Number Originario: %s%d", col1, col2, static_cast<int>(obj->char_vnum));
 			strcat(buf,buf2);
 		}
 
@@ -2666,50 +2679,52 @@ void spell_identify(byte level, struct char_data* ch,
 		send_to_char(buf, ch);
 
 		if(obj->obj_flags.bitvector) {
-			send_to_char("L'oggetto dona le seguenti abilita':  ", ch);
+			sprintf(buf, "%sL'oggetto dona le seguenti abilita':  ", col1);
+            send_to_char(buf, ch);
 			sprintbit(static_cast<unsigned>(obj->obj_flags.bitvector),affected_bits,buf2);
-            sprintf(buf, "$c0015");
+            sprintf(buf, "%s", col2);
             strcat(buf, buf2);
 			strcat(buf,"\n\r");
 			send_to_char(buf, ch);
 		}
 
-		send_to_char("L'oggetto e': ", ch);
+		sprintf(buf,"%sL'oggetto e': ", col1);
+        send_to_char(buf, ch);
 		sprintbit2(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,static_cast<unsigned>(obj->obj_flags.extra_flags2),extra_bits2,buf2);
-        sprintf(buf, "$c0015");
+        sprintf(buf, "%s", col2);
         strcat(buf, buf2);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 
-		sprintf(buf,"Peso: $c0015%d$c0007, Valore: $c0015%d$c0007, Costo di rent: $c0015%d$c0007  %s\n\r",
-				obj->obj_flags.weight, obj->obj_flags.cost,
-				obj->obj_flags.cost_per_day,
-				obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "$c0009[RARO]" : " ");
+		sprintf(buf,"%sPeso: %s%d%s, Valore: %s%d%s, Costo di rent: %s%d %s%s\n\r",
+				col1, col2, obj->obj_flags.weight, col1, col2, obj->obj_flags.cost,
+				col1, col2, obj->obj_flags.cost_per_day, col3, 
+				obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ");
 		send_to_char(buf, ch);
 
 
 		switch(GET_ITEM_TYPE(obj)) {
 		case ITEM_SCROLL :
 		case ITEM_POTION :
-			sprintf(buf, "Livello $c0015%d$c0007 dell'incantesimo:\n\r", obj->obj_flags.value[0]);
+			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
 			send_to_char(buf, ch);
 			if(obj->obj_flags.value[1] >= 1) {
 				sprinttype(obj->obj_flags.value[1]-1,spells,buf2);
-                sprintf(buf, "$c0015");
+                sprintf(buf, "%s", col2);
                 strcat(buf, buf2);
 				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
 			}
 			if(obj->obj_flags.value[2] >= 1) {
 				sprinttype(obj->obj_flags.value[2]-1,spells,buf2);
-                sprintf(buf, "$c0015");
+                sprintf(buf, "%s", col2);
                 strcat(buf, buf2);
 				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
 			}
 			if(obj->obj_flags.value[3] >= 1) {
 				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-                sprintf(buf, "$c0015");
+                sprintf(buf, "%s", col2);
                 strcat(buf, buf2);
 				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
@@ -2718,17 +2733,17 @@ void spell_identify(byte level, struct char_data* ch,
 
 		case ITEM_WAND :
 		case ITEM_STAFF :
-			sprintf(buf, "Ha $c0015%d$c0007 cariche totali, con $c0015%d$c0007 cariche rimanenti.\n\r",
-					obj->obj_flags.value[1],
-					obj->obj_flags.value[2]);
+			sprintf(buf, "%sHa %s%d%s cariche totali, con %s%d%s cariche rimanenti.\n\r",
+					col1, col2, obj->obj_flags.value[1],
+					col1, col2, obj->obj_flags.value[2], col1);
 			send_to_char(buf, ch);
 
-			sprintf(buf, "Livello $c0015%d$c0007 dell'incantesimo:\n\r", obj->obj_flags.value[0]);
+			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
 			send_to_char(buf, ch);
 
 			if(obj->obj_flags.value[3] >= 1) {
 				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-                sprintf(buf, "$c0015");
+                sprintf(buf, "%s", col2);
                 strcat(buf, buf2);
                 strcat(buf,"\n\r");
 				send_to_char(buf, ch);
@@ -2736,18 +2751,18 @@ void spell_identify(byte level, struct char_data* ch,
 			break;
 
 		case ITEM_WEAPON :
-			sprintf(buf, "Dado di danno: '$c0015%d$c0007d$c0015%d$c0007'\n\r",
-					obj->obj_flags.value[1],
-					obj->obj_flags.value[2]);
+			sprintf(buf, "%sDado di danno: '%s%d%sd%s%d%s'\n\r",
+					col1, col2, obj->obj_flags.value[1],
+					col1, col2, obj->obj_flags.value[2], col1);
 			send_to_char(buf, ch);
 			sprinttype(obj->obj_flags.value[3],aszWeaponType,buf2);
-			sprintf(buf,"Tipo di danno: '$c0015%s$c0007'\n\r",buf2);
+			sprintf(buf,"%sTipo di danno: '%s%s%s'\n\r", col1, col2, buf2, col1);
 			send_to_char(buf, ch);
 			break;
 
 		case ITEM_ARMOR :
-			sprintf(buf, "AC-apply di $c0015%d.\n\r",
-					obj->obj_flags.value[0]);
+			sprintf(buf, "%sAC-apply di %s%d%s.\n\r",
+					col1, col2, obj->obj_flags.value[0], col1);
 			send_to_char(buf, ch);
 			break;
 
@@ -2761,53 +2776,54 @@ void spell_identify(byte level, struct char_data* ch,
 					//(obj->affected[i].location !=APPLY_AFF2) &&
 					(obj->affected[i].location !=APPLY_SKIP)) {
 				if(!found) {
-					send_to_char("Caratteristiche: \n\r", ch);
+					sprintf(buf, "%sCaratteristiche: \n\r", col1);
+                    send_to_char(buf, ch);
 					found = TRUE;
 				}
 
 				sprinttype(obj->affected[i].location,apply_types,buf2);
-				sprintf(buf,"    Ti puo' dare : $c0015%s$c0007 by ", buf2);
+				sprintf(buf,"    %sTi puo' dare : %s%s%s by ", col1, col2, buf2, col1);
 				send_to_char(buf,ch);
 				switch(obj->affected[i].location) {
 				case APPLY_M_IMMUNE:
 				case APPLY_IMMUNE:
 				case APPLY_SUSC:
-                    sprintf(buf, "$c0015");
+                    sprintf(buf, "%s", col2);
 					sprintbit(obj->affected[i].modifier,immunity_names,buf2);
                     strcat(buf, buf2);
                     strcat(buf,"\n\r");
 					break;
 				case APPLY_ATTACKS:
-					sprintf(buf,"$c0015%f\n\r", static_cast<double>(obj->affected[i].modifier / 10));
+					sprintf(buf,"%s%f\n\r", col2, static_cast<double>(obj->affected[i].modifier / 10));
 					break;
 				case APPLY_WEAPON_SPELL:
 				case APPLY_EAT_SPELL:
-					sprintf(buf,"$c0015%s\n\r", spells[obj->affected[i].modifier-1]);
+					sprintf(buf,"%s%s\n\r", col2, spells[obj->affected[i].modifier-1]);
 					break;
 				case APPLY_SPELL:
-                    sprintf(buf, "$c0015");
+                    sprintf(buf, "%s", col2);
 					sprintbit(obj->affected[i].modifier,affected_bits, buf2);
                     strcat(buf, buf2);
                     strcat(buf,"\n\r");
 					break;
                 case APPLY_AFF2:
-                    sprintf(buf, "$c0015");
+                    sprintf(buf, "%s", col2);
                     sprintbit(obj->affected[i].modifier,affected_bits2, buf2);
                     strcat(buf, buf2);
                     strcat(buf,"\n\r");
                     break;
 				case APPLY_RACE_SLAYER:
-					sprintf(buf, "$c0015%s\n\r", RaceName[ obj->affected[i].modifier ]);
+					sprintf(buf, "%s%s\n\r", col2, RaceName[ obj->affected[i].modifier ]);
 					break;
 				case APPLY_ALIGN_SLAYER:
-                    sprintf(buf, "$c0015");
+                    sprintf(buf, "%s", col2);
 					sprintbit(static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits,
 							  buf2);
                     strcat(buf, buf2);
                     strcat(buf,"\n\r");
 					break;
 				default:
-					sprintf(buf,"$c0015%d\n\r", obj->affected[i].modifier);
+					sprintf(buf,"%s%d\n\r", col2, obj->affected[i].modifier);
 					break;
 				}
 				send_to_char(buf, ch);
@@ -2821,26 +2837,26 @@ void spell_identify(byte level, struct char_data* ch,
 			struct time_info_data ma;
 
 			age3(victim, &ma);
-			sprintf(buf,"$c0015%d$c0007 Anni,  $c0015%d$c0007 Mesi,  $c0015%d$c0007 Giorni,  $c0015%d$c0007 Or%s di vita.\n\r",
-					ma.year, ma.month,
-                    ma.day, ma.hours, (ma.hours > 1 ? "e" : "a") );
+			sprintf(buf,"%s%d%s Anni,  %s%d%s Mesi,  %s%d%s Giorni,  %s%d%s Or%s di vita.\n\r",
+					col2, ma.year, col1, col2, ma.month,
+                    col1, col2, ma.day, col1, col2, ma.hours, col1, (ma.hours > 1 ? "e" : "a"));
 			send_to_char(buf,ch);
 
-			sprintf(buf,"Altezza $c0015%d$c0007 cm  Peso $c0015%d$c0007 kg.\n\r",
-					GET_HEIGHT(victim), (int)(GET_WEIGHT(victim) * 0.4536));
+			sprintf(buf,"%sAltezza %s%d%s cm  Peso %s%d%s kg.\n\r",
+					col1, col2, GET_HEIGHT(victim), col1, col2, (int)(GET_WEIGHT(victim) * 0.4536), col1);
 			send_to_char(buf,ch);
 
-			sprintf(buf,"Classe Armatura $c0015%d$c0007.\n\r",victim->points.armor);
+			sprintf(buf,"%sClasse Armatura %s%d%s.\n\r", col1, col2, victim->points.armor, col1);
 			send_to_char(buf,ch);
 
 			if(level > 30) {
-				sprintf(buf,"Forza $c0015%d$c0007/$c0015%d$c0007, Intelligenza $c0015%d$c0007, Saggezza $c0015%d$c0007, Destrezza $c0015%d$c0007, Costituzione $c0015%d$c0007, Carisma $c0015%d$c0007.\n\r",
-						GET_STR(victim), GET_ADD(victim),
-						GET_INT(victim),
-						GET_WIS(victim),
-						GET_DEX(victim),
-						GET_CON(victim),
-						GET_CHR(victim));
+				sprintf(buf,"%sForza %s%d%s/%s%d%s, Intelligenza %s%d%s, Saggezza %s%d%s, Destrezza %s%d%s, Costituzione %s%d%s, Carisma %s%d%s.\n\r",
+						col1, col2, GET_STR(victim), col1, col2, GET_ADD(victim),
+						col1, col2, GET_INT(victim),
+						col1, col2, GET_WIS(victim),
+						col1, col2, GET_DEX(victim),
+						col1, col2, GET_CON(victim),
+						col1, col2, GET_CHR(victim), col2);
 				send_to_char(buf,ch);
 			}
 		}

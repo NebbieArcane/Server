@@ -1977,14 +1977,14 @@ ACTION_FUNC(do_run) {
 	alter_move(ch, 0);
 
 	if(GET_MOVE(ch) > 25) {
-		act("$n rallenta fino a fermarsi, con il fiatone per la corsa.",
-			FALSE, ch, 0, 0, TO_ROOM);
+        if(ch->nMagicNumber == CHAR_VALID_MAGIC)
+            act("$n rallenta fino a fermarsi, con il fiatone per la corsa.", FALSE, ch, 0, 0, TO_ROOM);
 		send_to_char("Mi spiace, ma non riesci a correre ulteriormente.\n\r",
 					 ch);
 	}
 	else {
-		act("$n rallenta fino a fermarsi, esaust$b per la corsa.",
-			FALSE, ch, 0, 0, TO_ROOM);
+        if(ch->nMagicNumber == CHAR_VALID_MAGIC)
+            act("$n rallenta fino a fermarsi, esaust$b per la corsa.", FALSE, ch, 0, 0, TO_ROOM);
 		act("Sei troppo esaust$b per correre ancora.", FALSE, ch, 0, 0,
 			TO_CHAR);
 	}
