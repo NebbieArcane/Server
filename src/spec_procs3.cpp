@@ -4862,31 +4862,6 @@ MOBSPECIAL_FUNC(AssignQuest) {
 	if(!questor) {
 		return(FALSE);
 	}
-    
-    if(type == EVENT_COMMAND && cmd == CMD_TELL && IS_PC(ch)) {
-        
-        arg = one_argument(arg, buf);
-        if(!*buf || get_char_room_vis(ch, buf) != questor) {
-            return(FALSE);
-        }
-        
-        if(!CAN_SEE(questor, ch)) {
-            do_say(questor, "Eh? Chi ha parlato??", CMD_SAY);
-            return(FALSE);
-        }
-        
-        if(strstr(arg, "rinuncio") != NULL) {
-            if(affected_by_spell(ch,STATUS_QUEST)) {
-                if(ch->specials.quest_ref) {
-                    extract_char(ch->specials.quest_ref);
-                    ch->specials.quest_ref = NULL;
-                }
-                affect_from_char(ch,STATUS_QUEST);
-                send_to_char("Non sei piu' in missione.\n\r",ch);
-            }
-        }
-        return(FALSE);
-    }
 
     if(type == EVENT_COMMAND && cmd == CMD_ASK && IS_PC(ch)) {
         
