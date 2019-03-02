@@ -5159,7 +5159,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     }
                     
                     if(OnlyClass(ch, CLASS_MAGIC_USER | CLASS_DRUID | CLASS_CLERIC |
-                                CLASS_PSI | CLASS_SORCER)) {
+                                CLASS_PSI | CLASS_SORCERER)) {
                         GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = floor(GetMaxLevel(ch)/2);
                         quest_tgt->specials.damsizedice = floor(quest_tgt->specials.damsizedice/2);
                         quest_tgt->specials.damnodice = floor(GetMaxLevel(ch))/2;
