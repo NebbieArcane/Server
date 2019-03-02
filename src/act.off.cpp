@@ -298,6 +298,11 @@ ACTION_FUNC(do_slay) {
 				}
 				else {
 					act("Distruggi senza alcuna pieta' $N!", FALSE, ch, 0, victim, TO_CHAR);
+                    if(victim->specials.quest_ref)
+                    {
+                        free(ch->lastmkill);
+                        ch->lastmkill = strdup(GET_NAME(victim));
+                    }
 					raw_kill(victim, 0);
 				}
 			}
@@ -329,6 +334,11 @@ ACTION_FUNC(do_kill) {
 			act("You chop $M to pieces! Ah! The blood!", FALSE, ch, 0, victim, TO_CHAR);
 			act("$N chops you to pieces!", FALSE, victim, 0, ch, TO_CHAR);
 			act("$n brutally slays $N", FALSE, ch, 0, victim, TO_NOTVICT);
+            if(victim->specials.quest_ref)
+            {
+                free(ch->lastmkill);
+                ch->lastmkill = strdup(GET_NAME(victim));
+            }
 			raw_kill(victim, 0);
 		}
 	}

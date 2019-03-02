@@ -2187,8 +2187,8 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	}
 
 
-	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d)",
-		   GET_NAME_DESC(ch), ch, ch->nMagicNumber);
+	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d) room %d",
+           GET_NAME_DESC(ch), ch, ch->nMagicNumber, (ch->in_room == NOWHERE ? 0 : real_roomp(ch->in_room)->number));
 
 	if(!IS_NPC(ch) && !ch->desc) {
 		for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)

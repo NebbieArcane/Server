@@ -2024,9 +2024,9 @@ MOBSPECIAL_FUNC(RepairGuy) {
                 {
 					if(check_soundproof(ch))
                     {
-						act("$N squote la testa.\n\r",
+						act("$N scuote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_ROOM);
-						act("$N squote la testa.\n\r",
+						act("$N scuote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_CHAR);
 					}
 					else
@@ -2087,9 +2087,9 @@ MOBSPECIAL_FUNC(RepairGuy) {
 		else {
 			if(GetMaxLevel(vict) < 25 || (ITEM_TYPE(obj)!=ITEM_WEAPON)) {
 				if(check_soundproof(ch)) {
-					act("$N squote la testa.\n\r",
+					act("$N scuote la testa.\n\r",
 						TRUE, ch, 0, vict, TO_ROOM);
-					act("$N squote la testa.\n\r",
+					act("$N scuote la testa.\n\r",
 						TRUE, ch, 0, vict, TO_CHAR);
 				}
 				else {
@@ -2121,9 +2121,9 @@ MOBSPECIAL_FUNC(RepairGuy) {
 
 				if(cost > GET_GOLD(ch)) {
 					if(check_soundproof(ch)) {
-						act("$N squote la testa.\n\r",
+						act("$N scuote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_ROOM);
-						act("$N squote la testa.\n\r",
+						act("$N scuote la testa.\n\r",
 							TRUE, ch, 0, vict, TO_CHAR);
 					}
 					else {
@@ -7805,7 +7805,7 @@ MOBSPECIAL_FUNC(MobIdent)
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
         send_to_char(buf,ch);
-        sprintf(buf,"$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) > 0 ? "+" : ""), GET_HITROLL(ch), (GET_DAMROLL(ch) > 0 ? "+" : ""), GET_DAMROLL(ch));
+        sprintf(buf,"$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit > 0 ? "+" : ""), GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit, (GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam > 0 ? "+" : ""), GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam);
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
         send_to_char(buf,ch);

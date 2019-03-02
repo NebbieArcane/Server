@@ -2279,7 +2279,8 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
                         sprintf(buf, "%s", messages->die_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
                             sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
-						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                        if(ch != v)
+                            act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->die_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
                             sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
@@ -2291,7 +2292,8 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
                         sprintf(buf, "%s", messages->hit_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
                             sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
-						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                        if(ch != v)
+                            act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->hit_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
                             sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
@@ -2304,7 +2306,8 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
                     sprintf(buf, "%s", messages->miss_msg.attacker_msg);
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
                         sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
-					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+                    if(ch != v)
+                        act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->miss_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
                         sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
@@ -2380,7 +2383,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 
 int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				 int killedbytype, int dam) {
-	int exp;
+	int exp, regenerate = 0;
 	char buf[256];
 	struct room_data* rp;
 
@@ -2561,11 +2564,19 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 			case SPELL_ACID_BREATH:
 				break;
 			default:
-				GET_HIT(victim)+=MIN((con_app[(int)GET_CON(victim)].hitp+ number(0,GetMaxLevel(ch))), dam/2);
+                regenerate = MIN((con_app[(int)GET_CON(victim)].hitp+ number(0,GetMaxLevel(ch))), dam/2);
+                GET_HIT(victim)+= regenerate;
 				alter_hit(victim,0);
 				if(dam>0) {
-					act("You regenerate!",TRUE,victim,0,ch,TO_CHAR);
-					act("$n regenerates!",TRUE,victim,0,ch,TO_ROOM);
+                    sprintf(buf, "Rigeneri!");
+                    if(IS_SET(victim->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0006[%s%d]$c0007",buf, (regenerate == 0 ? "" : "+"), (regenerate < 0 ? 0 : regenerate));
+					act(buf,TRUE,victim,0,ch,TO_CHAR);
+                    sprintf(buf, "$N rigenera!");
+                    if(IS_SET(ch->player.user_flags,PWP_MODE))
+                        sprintf(buf, "%s $c0006[%s%d]$c0007",buf, (regenerate == 0 ? "" : "+"), (regenerate < 0 ? 0 : regenerate));
+					act(buf,TRUE,ch,0,victim,TO_CHAR);
+                    act("$N rigenera!",TRUE,ch,0,victim,TO_NOTVICT);
 				}
 				break;
 			}

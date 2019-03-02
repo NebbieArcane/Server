@@ -571,7 +571,7 @@ void ChangeObjSpecial(struct char_data* ch, const char* arg, int type) {
     if(type != ENTER_CHECK)
         if(!*arg || (*arg == '\n'))
         {
-            ch->specials.medit = OBJ_MAIN_MENU;
+            ch->specials.oedit = OBJ_MAIN_MENU;
             UpdateObjMenu(ch);
             return;
         }

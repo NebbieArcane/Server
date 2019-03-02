@@ -94,7 +94,7 @@ void name_to_drinkcon(struct obj_data* obj,int type) {
 
 
 ACTION_FUNC(do_drink) {
-	char buf[255];
+	char buf[255], articolo[10];
 	struct obj_data* temp;
 	struct affected_type af;
 	int amount;
@@ -103,32 +103,59 @@ ACTION_FUNC(do_drink) {
 	only_argument(arg,buf);
 
 	if(!(temp = get_obj_in_list_vis(ch,buf,ch->carrying))) {
-		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
+		act("Non hai nulla del genere con te!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(temp->obj_flags.type_flag!=ITEM_DRINKCON) {
-		act("You can't drink from that!",FALSE,ch,0,0,TO_CHAR);
+		act("Non riesci a bere da $p!", FALSE, ch, temp, 0, TO_CHAR);
 		return;
 	}
 
 	if((GET_COND(ch,DRUNK)>15)&&(GET_COND(ch,THIRST)>0)) {
 		/* The pig is drunk */
-		act("You're just sloshed.", FALSE, ch, 0, 0, TO_CHAR);
-		act("$n is looks really drunk.", TRUE, ch, 0, 0, TO_ROOM);
+		act("Hai bevuto troppo! Ti senti schifat$b.", FALSE, ch, 0, 0, TO_CHAR);
+		act("$n e' MOLTO ubriac$b.", TRUE, ch, 0, 0, TO_ROOM);
 		return;
 	}
 
 	if((GET_COND(ch,FULL)>20)&&(GET_COND(ch,THIRST)>0)) { /* Stomach full */
-		act("Your stomach can't contain anymore!",FALSE,ch,0,0,TO_CHAR);
+		act("Sei pien$b, non riesci a bere ulteriormente!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(temp->obj_flags.type_flag == ITEM_DRINKCON) {
 		if(temp->obj_flags.value[1]>0) {  /* Not empty */
-			snprintf(buf,254,"$n drinks %s from $p",drinks[temp->obj_flags.value[2]]);
+            switch(temp->obj_flags.value[2])
+            {
+                case 0:
+                case 7:
+                case 14:
+                    sprintf(articolo, "dell'");
+                    break;
+                case 1:
+                case 3:
+                case 4:
+                case 6:
+                case 8:
+                case 15:
+                    sprintf(articolo, "della ");
+                    break;
+                case 2:
+                case 5:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                    sprintf(articolo, "del ");
+                    break;
+                default:
+                    sprintf(articolo, "del ");
+            }
+			snprintf(buf,254,"$n beve %s%s da $p.",articolo, drinks[temp->obj_flags.value[2]]);
 			act(buf, TRUE, ch, temp, 0, TO_ROOM);
-			snprintf(buf,254,"You drink the %s.\n\r",drinks[temp->obj_flags.value[2]]);
+			snprintf(buf,254,"Bevi %s%s.\n\r",articolo, drinks[temp->obj_flags.value[2]]);
 			send_to_char(buf,ch);
 
 			if(drink_aff[temp->obj_flags.value[2]][DRUNK] > 0)
@@ -150,21 +177,21 @@ ACTION_FUNC(do_drink) {
 										   [temp->obj_flags.value[2]][THIRST]*amount)/4);
 
 			if(GET_COND(ch,DRUNK)>10) {
-				act("You feel drunk.",FALSE,ch,0,0,TO_CHAR);
+				act("Ti senti ubriac$b.",FALSE,ch,0,0,TO_CHAR);
 			}
 
 			if(GET_COND(ch,THIRST)>20) {
-				act("You do not feel thirsty.",FALSE,ch,0,0,TO_CHAR);
+				act("Hai placato la tua sete.",FALSE,ch,0,0,TO_CHAR);
 			}
 
 			if(GET_COND(ch,FULL)>20) {
-				act("You are full.",FALSE,ch,0,0,TO_CHAR);
+				act("Sei pien$b.",FALSE,ch,0,0,TO_CHAR);
 			}
 
 			/* The shit was poisoned ! */
 			if(IS_SET(temp->obj_flags.value[3],DRINK_POISON)) {
-				act("Oops, it tasted rather strange ?!!?",FALSE,ch,0,0,TO_CHAR);
-				act("$n chokes and utters some strange sounds.",
+				act("Oops, ha un sapore piuttosto strano vero?!?",FALSE,ch,0,0,TO_CHAR);
+				act("$n soffoca ed emette strani suoni.",
 					TRUE,ch,0,0,TO_ROOM);
 				af.type = SPELL_POISON;
 				af.duration = amount*3;
@@ -213,28 +240,28 @@ ACTION_FUNC(do_eat) {
 	one_argument(arg,buf);
 
 	if(!(temp = get_obj_in_list_vis(ch,buf,ch->carrying)))  {
-		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
+		act("Cosa vuoi mangiare?",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if((temp->obj_flags.type_flag != ITEM_FOOD) &&
 			(GetMaxLevel(ch) < IMMORTALE)) {
-		act("Your stomach refuses to eat that!?!",FALSE,ch,0,0,TO_CHAR);
+		act("Il tuo stomaco si rifiuta di mangiare quella cosa li'!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(GET_COND(ch,FULL)>20) { /* Stomach full */
-		act("You are to full to eat more!",FALSE,ch,0,0,TO_CHAR);
+		act("Sei troppo pien$b per mangiare altro!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
-	act("$n eats $p",TRUE,ch,temp,0,TO_ROOM);
-	act("You eat the $o.",FALSE,ch,temp,0,TO_CHAR);
+	act("$n mangia $p.",TRUE,ch,temp,0,TO_ROOM);
+	act("Mangi $p.",FALSE,ch,temp,0,TO_CHAR);
 
 	gain_condition(ch,FULL,temp->obj_flags.value[0]);
 
 	if(GET_COND(ch,FULL)>20) {
-		act("You are full.",FALSE,ch,0,0,TO_CHAR);
+		act("Sei pien$b.",FALSE,ch,0,0,TO_CHAR);
 	}
 
 	for(j=0; j<MAX_OBJ_AFFECT; j++)
@@ -248,8 +275,8 @@ ACTION_FUNC(do_eat) {
 		}
 
 	if(temp->obj_flags.value[3] && (GetMaxLevel(ch) < IMMORTALE)) {
-		act("That tasted rather strange !!",FALSE,ch,0,0,TO_CHAR);
-		act("$n coughs and utters some strange sounds.",
+		act("Che strano sapore!",FALSE,ch,0,0,TO_CHAR);
+		act("$n tossisce ed emette strani suoni.",
 			FALSE,ch,0,0,TO_ROOM);
 
 		af.type = SPELL_POISON;
@@ -269,7 +296,7 @@ ACTION_FUNC(do_eat) {
 ACTION_FUNC(do_pour) {
 	char arg1[132];
 	char arg2[132];
-	char buf[256];
+	char buf[256], articolo[10];
 	struct obj_data* from_obj;
 	struct obj_data* to_obj;
 	int temp;
@@ -277,27 +304,27 @@ ACTION_FUNC(do_pour) {
 	argument_interpreter(arg, arg1, arg2);
 
 	if(!*arg1) { /* No arguments */
-		act("What do you want to pour from?",FALSE,ch,0,0,TO_CHAR);
+		act("Cosa vuoi svuotare?",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(!(from_obj = get_obj_in_list_vis(ch,arg1,ch->carrying))) {
-		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
+		act("Non hai niente del genere!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(from_obj->obj_flags.type_flag!=ITEM_DRINKCON) {
-		act("You can't pour from that!",FALSE,ch,0,0,TO_CHAR);
+		act("Non puoi svuotare $p!", FALSE, ch, from_obj, 0, TO_CHAR);
 		return;
 	}
 
 	if(from_obj->obj_flags.value[1]==0) {
-		act("$p is empty.",FALSE, ch,from_obj, 0,TO_CHAR);
+		act("Non puoi svuotare $p ulteriormente!",FALSE, ch,from_obj, 0,TO_CHAR);
 		return;
 	}
 
 	if(!*arg2) {
-		act("Where do you want it? Out or in what?",FALSE,ch,0,0,TO_CHAR);
+		act("Dove vuoi svuotare $p? Dentro cosa o fuori (out)?",FALSE,ch,from_obj,0,TO_CHAR);
 		return;
 	}
 
@@ -317,29 +344,57 @@ ACTION_FUNC(do_pour) {
 	}
 
 	if(!(to_obj = get_obj_in_list_vis(ch,arg2,ch->carrying))) {
-		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
+		act("Non hai niente del genere!",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(to_obj->obj_flags.type_flag!=ITEM_DRINKCON) {
-		act("You can't pour anything into that.",FALSE,ch,0,0,TO_CHAR);
+		act("Non puoi farlo, non e' un contenitore per bevande.",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if((to_obj->obj_flags.value[1]!=0)&&
 			(to_obj->obj_flags.value[2]!=from_obj->obj_flags.value[2])) {
-		act("There is already another liquid in it!",FALSE,ch,0,0,TO_CHAR);
+		act("$p contiene un liquido diverso!", FALSE, ch, to_obj, 0, TO_CHAR);
 		return;
 	}
 
 	if(!(to_obj->obj_flags.value[1]<to_obj->obj_flags.value[0])) {
-		act("There is no room for more.",FALSE,ch,0,0,TO_CHAR);
+		act("Non c'e' abbastanza spazio.",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
+    
+    switch(from_obj->obj_flags.value[2])
+    {
+        case 0:
+        case 7:
+        case 14:
+            sprintf(articolo, "dell'");
+            break;
+        case 1:
+        case 3:
+        case 4:
+        case 6:
+        case 8:
+        case 15:
+            sprintf(articolo, "della ");
+            break;
+        case 2:
+        case 5:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+            sprintf(articolo, "del ");
+            break;
+        default:
+            sprintf(articolo, "del ");
+    }
 
-	snprintf(buf,255,"You pour the %s into the %s.",
-			 drinks[from_obj->obj_flags.value[2]],arg2);
-	send_to_char(buf,ch);
+	snprintf(buf,255,"Riempi $p con %s%s.", articolo, drinks[from_obj->obj_flags.value[2]]);
+    act(buf, FALSE, ch, to_obj, 0, TO_CHAR);
+    act("$n riempie $p.", FALSE, ch, to_obj, 0, TO_ROOM);
 
 	/* New alias */
 	if(to_obj->obj_flags.value[1]==0) {
@@ -390,29 +445,29 @@ ACTION_FUNC(do_sip) {
 	one_argument(arg,tmp);
 
 	if(!(temp = get_obj_in_list_vis(ch,tmp,ch->carrying)))    {
-		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
+		act("Vuoi bere un sorso di cosa?",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
 	if(temp->obj_flags.type_flag!=ITEM_DRINKCON)    {
-		act("You can't sip from that!",FALSE,ch,0,0,TO_CHAR);
+		act("Non puoi bere niente da $p!", FALSE, ch, temp, 0, TO_CHAR);
 		return;
 	}
 
 	if(GET_COND(ch,DRUNK)>10) { /* The pig is drunk ! */
-		act("You simply fail to reach your mouth!",FALSE,ch,0,0,TO_CHAR);
-		act("$n tries to sip, but fails!",TRUE,ch,0,0,TO_ROOM);
+		act("Ma se non riesci neppure a raggiungere la tua bocca!",FALSE,ch,0,0,TO_CHAR);
+		act("$n non riesce a raggiungere la sua bocca con $p!", TRUE, ch, temp, 0, TO_ROOM);
 		return;
 	}
 
 	if(!temp->obj_flags.value[1]) { /* Empty */
-		act("But there is nothing in it?",FALSE,ch,0,0,TO_CHAR);
+		act("Ma se non c'e' niente...",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
 
-	act("$n sips from the $o",TRUE,ch,temp,0,TO_ROOM);
+	act("$n beve un sorso da $p.",TRUE,ch,temp,0,TO_ROOM);
 	snprintf(buf,MAX_STRING_LENGTH-1,
-			 "It tastes like %s.\n\r",drinks[temp->obj_flags.value[2]]);
+			 "Sa di %s.\n\r",drinks[temp->obj_flags.value[2]]);
 	send_to_char(buf,ch);
 
 	gain_condition(ch,DRUNK,(int)(drink_aff[temp->obj_flags.value[2]]
@@ -425,21 +480,21 @@ ACTION_FUNC(do_sip) {
 
 
 	if(GET_COND(ch,DRUNK)>10) {
-		act("You feel drunk.",FALSE,ch,0,0,TO_CHAR);
+		act("Ti senti ubriac$b.",FALSE,ch,0,0,TO_CHAR);
 	}
 
 	if(GET_COND(ch,THIRST)>20) {
-		act("You do not feel thirsty.",FALSE,ch,0,0,TO_CHAR);
+		act("Hai placato la tua sete.",FALSE,ch,0,0,TO_CHAR);
 	}
 
 	if(GET_COND(ch,FULL)>20) {
-		act("You are full.",FALSE,ch,0,0,TO_CHAR);
+		act("Ti senti pien$b.",FALSE,ch,0,0,TO_CHAR);
 	}
 
 	if(IS_SET(temp->obj_flags.value[3],DRINK_POISON)
 			&& !IS_AFFECTED(ch,AFF_POISON)) {
 		/* The shit was poisoned ! */
-		act("But it also had a strange taste!",FALSE,ch,0,0,TO_CHAR);
+		act("Ha comunque uno strano sapore!",FALSE,ch,0,0,TO_CHAR);
 
 		af.type = SPELL_POISON;
 		af.duration = 3;
@@ -473,7 +528,7 @@ ACTION_FUNC(do_taste) {
 	one_argument(arg,tmp);
 
 	if(!(temp = get_obj_in_list_vis(ch,tmp,ch->carrying)))    {
-		act("You can't find it!",FALSE,ch,0,0,TO_CHAR);
+		act("Cosa vorresti assaggiare?", FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
 
@@ -483,21 +538,21 @@ ACTION_FUNC(do_taste) {
 	}
 
 	if(!(temp->obj_flags.type_flag==ITEM_FOOD))    {
-		act("Taste that?!? Your stomach refuses!",FALSE,ch,0,0,TO_CHAR);
+		act("Non puoi mangiare $p!", FALSE, ch, temp, 0, TO_CHAR);
 		return;
 	}
 
-	act("$n tastes the $o", FALSE, ch, temp, 0, TO_ROOM);
-	act("You taste the $o", FALSE, ch, temp, 0, TO_CHAR);
+	act("$n assaggia $p.", FALSE, ch, temp, 0, TO_ROOM);
+	act("Assaggi $p.", FALSE, ch, temp, 0, TO_CHAR);
 
 	gain_condition(ch,FULL,1);
 
 	if(GET_COND(ch,FULL)>20) {
-		act("You are full.",FALSE,ch,0,0,TO_CHAR);
+		act("Sei pien$b.", FALSE, ch, 0, 0, TO_CHAR);
 	}
 
 	if(temp->obj_flags.value[3]&&!IS_AFFECTED(ch,AFF_POISON))     {
-		act("Ooups, it did not taste good at all!",FALSE,ch,0,0,TO_CHAR);
+		act("Ooups, $p non ha proprio un buon sapore!", FALSE, ch, temp, 0, TO_CHAR);
 
 		af.type = SPELL_POISON;
 		af.duration = 2;
@@ -510,7 +565,7 @@ ACTION_FUNC(do_taste) {
 	temp->obj_flags.value[0]--;
 
 	if(!temp->obj_flags.value[0]) {       /* Nothing left */
-		act("There is nothing left now.",FALSE,ch,0,0,TO_CHAR);
+		act("Era l'ultimo pezzetto!",FALSE,ch,0,0,TO_CHAR);
 		extract_obj(temp);
 	}
 
@@ -611,7 +666,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
     
     if(IS_OBJ_STAT2(obj_object, ITEM2_PERSONAL) && !IS_IMMORTAL(ch) && IS_PC(ch) && !pers_on(ch,obj_object))
     {
-        sprintf(buffer, "Non puoi usare %s, non ti appartiere!\n\r", obj_object->short_description);
+        sprintf(buffer, "Non puoi usare %s, non ti appartiene!\n\r", obj_object->short_description);
         send_to_char(buffer, ch);
         return;
     }
@@ -674,7 +729,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	if(anti_barbarian_stuff(obj_object) &&
 			GET_LEVEL(ch, BARBARIAN_LEVEL_IND) != 0 &&
 			!IS_IMMORTAL(ch) && IS_PC(ch)) {
-		act("Eck! Non questo! Perpcepisci la magia su $p e lo "
+		act("Eck! Non questo! Percepisci la magia su $p e lo "
 			"getti via schifato!", FALSE, ch, obj_object, NULL, TO_CHAR);
 		act("$n rabbrividisce e getta $p!", FALSE, ch, obj_object, 0, TO_ROOM);
 		obj_from_char(obj_object);
@@ -822,7 +877,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 4:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_HEAD)) {
 			if(ch->equipment[WEAR_HEAD]) {
-				send_to_char("Hai gia qualcosa in testa.\n\r", ch);
+				send_to_char("Hai gia' qualcosa in testa.\n\r", ch);
 			}
 			else {
 				act("Ti metti $p in testa.",
@@ -840,7 +895,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 5:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_LEGS)) {
 			if(ch->equipment[WEAR_LEGS]) {
-				send_to_char("Hai gia' qualcosa suelle tue gambe.\n\r", ch);
+				send_to_char("Hai gia' qualcosa sulle tue gambe.\n\r", ch);
 			}
 			else {
 				act("Indossi $p sulle gambe.",
@@ -930,7 +985,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 10:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_WAISTE)) {
 			if(ch->equipment[WEAR_WAISTE]) {
-				send_to_char("Hai gia qualcosa intorno alla vita.\n\r", ch);
+				send_to_char("Hai gia' qualcosa intorno alla vita.\n\r", ch);
 			}
 			else {
 				act("Ti metti $p alla vita.",
@@ -1124,7 +1179,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	case 16:
 		if(CAN_WEAR(obj_object,ITEM_WEAR_EAR)) {
 			if((ch->equipment[WEAR_EAR_L]) && (ch->equipment[WEAR_EAR_R])) {
-				send_to_char("Hai gia' qualcosa su entrambi gli orecchi.\n\r", ch);
+				send_to_char("Hai gia' qualcosa su entrambe le orecchie.\n\r", ch);
 			}
 			else {
 				perform_wear(ch,obj_object,keyword);
@@ -1146,7 +1201,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 			}
 		}
 		else {
-			send_to_char("Non puoi appenderlo agli orecchi.\n\r", ch);
+			send_to_char("Non puoi appenderlo alle orecchie.\n\r", ch);
 		}
 		break;
 
@@ -1170,7 +1225,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 
 	case -1:
 		snprintf(buffer,MAX_STRING_LENGTH-1,
-				 "Indossare %s ? E dove !?!?.\n\r",
+				 "Indossare %s? E dove?!?\n\r",
 				 obj_object->short_description);
 		send_to_char(buffer, ch);
 		break;
@@ -1499,7 +1554,7 @@ ACTION_FUNC(do_remove) {
 					}
 				}
 				else {
-					snprintf(buffer,255,"Sembra che tu non abbia un %s\n\r",T);
+					snprintf(buffer,255,"Sembra che tu non abbia un %s.\n\r",T);
 					send_to_char(buffer,ch);
 				}
 				if(T != P) {

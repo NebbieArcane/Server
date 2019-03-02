@@ -857,8 +857,11 @@ void SpellWearOff(int s, struct char_data* ch) {
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
             if(ch->specials.quest_ref) {
-                extract_char(ch->specials.quest_ref);
-                ch->specials.quest_ref = NULL;
+                if(GET_POS(ch->specials.quest_ref) > POSITION_DEAD)
+                {
+                    extract_char(ch->specials.quest_ref);
+                    ch->specials.quest_ref = NULL;
+                }
             }
         } else {
             /* fine dei giochi, si torna a casa */
@@ -2149,7 +2152,7 @@ ACTION_FUNC(do_cast) {
 					}
 				}
 				//send_to_char("Ok.\n\r",ch);
-                sprintf(buf, "Pronunci le parole, '$c0015%s$c0007'", spells[spl-1]);
+                sprintf(buf, "Pronunci le parole, '$c0015%s$c0007'.", spells[spl-1]);
                 act(buf, FALSE, ch, 0, 0, TO_CHAR);
 				/* Calcolo tutti i costi PRIMA della spell
 				 * Fra l'altro mi sa che aver messo il forget DOPO il

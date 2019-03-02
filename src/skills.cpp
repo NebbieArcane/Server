@@ -173,11 +173,11 @@ ACTION_FUNC(do_disarm) {
 		/*
 		 *   failure.
 		 */
-		act("$c0009Provi a disarmare $N, ma fallisci miseramente.",
+		act("$c0009Provi a disarmare $N$c0009, ma fallisci miseramente.",
 			TRUE, ch, 0, victim, TO_CHAR);
 		act("$c0009$n prova a disarmarti, ma fallisce miseramente.",
 			TRUE, ch, 0, victim, TO_VICT);
-		act("$n tenta un elegante mossa d'arti marziali, ma finisce rovinosamente a terra.",
+		act("$n tenta una elegante mossa d'arti marziali, ma finisce rovinosamente a terra.",
 			TRUE, ch, 0, 0, TO_ROOM);
 		GET_POS(ch) = POSITION_SITTING;
 		if((CanFightEachOther(ch,victim)) && (GET_POS(victim) > POSITION_SLEEPING) &&
@@ -197,9 +197,9 @@ ACTION_FUNC(do_disarm) {
 		 */
 		if(victim->equipment[WIELD]) {
 			w = unequip_char(victim, WIELD);
-			act("$n esegue un impressionante mossa d'arti marziali, disarmando il nemico.",
+			act("$n esegue una impressionante mossa d'arti marziali, disarmando il nemico.",
 				TRUE, ch, 0, 0, TO_ROOM);
-			act("$c0010Abilmente fai volare $p dalla mano di $N.", TRUE, ch, w, victim,
+			act("$c0010Abilmente fai volare $p$c0010 dalla mano di $N.", TRUE, ch, w, victim,
 				TO_CHAR);
 			act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
 			/*
@@ -209,7 +209,7 @@ ACTION_FUNC(do_disarm) {
 			ActionAlignMod(ch,victim,cmd);
 		}
 		else {
-			act("Nonostante $N non abbia un arma, viene rallentato dalla tua mossa.",
+			act("Nonostante $N non abbia nessuna arma, viene rallentato dalla tua mossa.",
 				TRUE, ch, 0, victim, TO_CHAR);
 			act("Con una mossa d'arti marziali $n disorienta l'avversario.",
 				TRUE, ch, 0, 0, TO_ROOM);
@@ -376,7 +376,7 @@ ACTION_FUNC(do_track) {
 
 
 	if(!found) {
-		send_to_char("Non sei in grado di trovare le traccie di nessuno.\n\r", ch);
+		send_to_char("Non sei in grado di trovare le tracce di nessuno.\n\r", ch);
 		return;
 	}
 
@@ -441,7 +441,7 @@ ACTION_FUNC(do_track) {
 	WAIT_STATE(ch, PULSE_VIOLENCE*1);
 
 	if(code == -1) {
-		send_to_char("Non sei in grado di trovare le traccie di nessuno.\n\r", ch);
+		send_to_char("Non sei in grado di trovare le tracce di nessuno.\n\r", ch);
 		return;
 	}
 	else {
@@ -455,7 +455,7 @@ ACTION_FUNC(do_track) {
 		}
 		else {
 			ch->specials.hunting = 0;
-			send_to_char("E' troppo scuro qui per seguire delle traccie...\n\r",ch);
+			send_to_char("E' troppo scuro qui per seguire delle tracce...\n\r",ch);
 			return;
 		}
 	}
@@ -527,7 +527,7 @@ int dir_track(struct char_data* ch, struct char_data* vict) {
 			send_to_char("$c0012Hai trovato la tua preda!!!!\n\r",ch);
 		}
 		else {
-			send_to_char("$c0012hai perso le traccie.\n\r",ch);
+			send_to_char("$c0012hai perso le tracce.\n\r",ch);
 		}
 		return(-1);  /* false to continue the hunt */
 	}
@@ -1007,14 +1007,14 @@ ACTION_FUNC(do_mantra) {
 	if(!affected_by_spell(ch,SKILL_MANTRA)) {
 		if(!HasClass(ch,CLASS_MONK)) {
 
-			act("La tua mente e il tuo corpo $c0015v$c0007i$c0008b$c0007r$c0015a$c0007n$c0008o$c0007 all'unisono.... piu' o meno.",
+			act("La tua mente e il tuo corpo $c0015v$c0007i$c0008b$c0007r$c0015a$c0007n$c0008o$c0007 all'unisono... piu' o meno.",
 				FALSE,ch,0,0,TO_CHAR);
 			act("$n chiude gli occhi e biascica un $c0013mantra$c0007 accovacciat$b in $c0003terra$c0007.",
 				TRUE,ch,0,0,TO_ROOM);
 		}
 		else {
 
-			act("La tua mente e il tuo corpo $c0015v$c0007i$c0008b$c0007r$c0015a$c0007n$c0008o$c0007 all'unisono",
+			act("La tua mente e il tuo corpo $c0015v$c0007i$c0008b$c0007r$c0015a$c0007n$c0008o$c0007 all'unisono.",
 				FALSE,ch,0,0,TO_CHAR);
 			act("$n chiude gli occhi e recita un $c0013mantra$c0007 accovacciat$b in $c0003terra$c0007.",
 				TRUE,ch,0,0,TO_ROOM);

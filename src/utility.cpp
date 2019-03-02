@@ -4395,7 +4395,7 @@ int CheckGetBarbarianOK(struct char_data* ch, struct obj_data* obj_object) {
 			anti_barbarian_stuff(obj_object) && !IS_IMMORTAL(ch)) {
 		act("Percepisci la magia su $p e rabbrividisci disgustat$b.", FALSE, ch,
 			obj_object, 0, TO_CHAR);
-		act("$n squote la testa e si rifiuta di prendere $p.", TRUE, ch,
+		act("$n scuote la testa e si rifiuta di prendere $p.", TRUE, ch,
 			obj_object, 0, TO_ROOM);
 		return FALSE;
 	}
@@ -4411,9 +4411,9 @@ int CheckGiveBarbarianOK(struct char_data* ch,struct char_data* vict,
 
 			act("Percepisci la magia su $p e rifiuti l'offerta di $N.", FALSE,
 				vict, obj, ch, TO_CHAR);
-			act("$n squote la testa e si rifiuta di prendere $p da $N.", TRUE,
+			act("$n scuote la testa e si rifiuta di prendere $p da $N.", TRUE,
 				vict, obj, ch, TO_NOTVICT);
-			act("$n squote la testa e si rifiuta di prendere $p.", TRUE,
+			act("$n scuote la testa e si rifiuta di prendere $p.", TRUE,
 				vict, obj, ch, TO_VICT);
 		}
 		else {
@@ -5057,6 +5057,11 @@ int CanFightEachOther(struct char_data* ch,struct char_data* ch2) {
 		return FALSE;
 	}
 
+    if(in_clan(ch, ch2))
+    {
+        return FALSE;
+    }
+    
 	if(IS_SET(ch->player.user_flags,RACE_WAR) &&
 			IS_SET(ch2->player.user_flags,RACE_WAR) /* &&
       real_roomp(ch->in_room)->sector_type!=SECT_INSIDE &&

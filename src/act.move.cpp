@@ -1016,7 +1016,7 @@ ACTION_FUNC(do_open_exit) {
 			return;
 		}
 		else {
-			sprintf(buf, "Che cosa vuoi %s ?\r\n", cmdnameI);
+			sprintf(buf, "Che cosa vuoi %s?\r\n", cmdnameI);
 			*buf = toupper(*buf); /*  ;-) */
 			send_to_char(buf, ch);
 			return;
@@ -1174,7 +1174,7 @@ ACTION_FUNC(do_open) {
 			open_door(ch, door);
             sprintf(buf, "Apri %s %s.",
                     IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una",
-                    fname(exitp->keyword));
+                    (exitp->keyword == NULL ? "porta" : fname(exitp->keyword)));
             send_to_char(buf, ch);
 		}
 		else {
@@ -1255,7 +1255,7 @@ ACTION_FUNC(do_close) {
 			}
             sprintf(buf, "Chiudi %s %s.",
                     IS_SET(exitp->exit_info, EX_MALE) ? "un" : "una",
-                    fname(exitp->keyword));
+                    (exitp->keyword == NULL ? "porta" : fname(exitp->keyword)));
             send_to_char(buf, ch);
 
 			/* now for closing the other side, too */
