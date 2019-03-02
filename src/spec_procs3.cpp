@@ -5268,10 +5268,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     REMOVE_BIT(quest_tgt->specials.act, ACT_HATEFUL);
                 }
                 if(!IS_SET(quest_tgt->specials.affected_by, AFF_FLYING)) {
-                    SET_BIT(quest_tgt->specials.affected_by, AFF_FLYING)
+                    SET_BIT(quest_tgt->specials.affected_by, AFF_FLYING);
                 }
                 if(!IS_SET(quest_tgt->specials.affected_by, AFF_WATERBREATH)) {
-                    SET_BIT(quest_tgt->specials.affected_by, AFF_WATERBREATH)
+                    SET_BIT(quest_tgt->specials.affected_by, AFF_WATERBREATH);
                 }
             }
 
