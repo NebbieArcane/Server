@@ -494,7 +494,7 @@ ACTION_FUNC(do_sip) {
 	if(IS_SET(temp->obj_flags.value[3],DRINK_POISON)
 			&& !IS_AFFECTED(ch,AFF_POISON)) {
 		/* The shit was poisoned ! */
-		act("Ha comunque uno strano sapore!",FALSE,ch,0,0,TO_CHAR);
+		act("Ha anche uno strano sapore!",FALSE,ch,0,0,TO_CHAR);
 
 		af.type = SPELL_POISON;
 		af.duration = 3;
