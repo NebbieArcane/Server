@@ -477,7 +477,7 @@ void bamf(struct char_data* ch, const char* arg, int cmd) {
 			free(ch->specials.poofout);
 			ch->specials.poofout = nullptr;
 		}
-		send_to_char("Ok.\n\r", ch);
+		send_to_char("Ok, resettato.\n\r", ch);
 		return;
 	}
 	boost::replace_all(work, "~N", "$n");
@@ -503,7 +503,7 @@ void bamf(struct char_data* ch, const char* arg, int cmd) {
 			REMOVE_BIT(ch->specials.pmask, BIT_POOF_IN);
 			return;
 		}
-		strncpy(ch->specials.poofin, work.c_str(), len);
+		strncpy(ch->specials.poofin, work.c_str(), len + 1);
 		SET_BIT(ch->specials.pmask, BIT_POOF_IN);
 	}
 	else {
@@ -519,7 +519,7 @@ void bamf(struct char_data* ch, const char* arg, int cmd) {
 			REMOVE_BIT(ch->specials.pmask, BIT_POOF_OUT);
 			return;
 		}
-		strncpy(ch->specials.poofout, work.c_str(), len);
+		strncpy(ch->specials.poofout, work.c_str(), len + 1);
 		SET_BIT(ch->specials.pmask, BIT_POOF_OUT);
 	}
 
@@ -1186,6 +1186,8 @@ ACTION_FUNC(do_stat) {
 	struct char_data* k = 0;
 	struct obj_data* j = 0;
 	struct obj_data* j2 = 0;
+    struct obj_data* tmpW = 0;
+    struct obj_data* tmpV = 0;
 	struct extra_descr_data* desc;
 	struct follow_type* fol;
 	int i, iVNum;
@@ -1652,6 +1654,18 @@ ACTION_FUNC(do_stat) {
                 sprintf(buf, "$c0005Last MKill: $c0014%s", k->lastmkill == NULL ? "-" : k->lastmkill);    // quests
                 act(buf, FALSE, ch, 0, 0, TO_CHAR);
                 
+                if(IS_SET(k->specials.pmask, BIT_POOF_IN) && IS_PC(k) && IS_IMMORTAL(k))
+                {
+                    sprintf(buf, "$c0005Bamfin : $c0014%s", k->specials.poofin == NULL ? "-" : k->specials.poofin);
+                    act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                }
+                
+                if(IS_SET(k->specials.pmask, BIT_POOF_OUT) && IS_PC(k) && IS_IMMORTAL(k))
+                {
+                    sprintf(buf, "$c0005Bamfout: $c0014%s", k->specials.poofout == NULL ? "-" : k->specials.poofout);
+                    act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                }
+                
 				/* immunities */
 				if(k->M_immune) {
 					send_to_char("$c0005Immune to: $c0014", ch);
@@ -1769,8 +1783,13 @@ ACTION_FUNC(do_stat) {
 			}
 			return;
 		}
-		/* stat on object */
-		else if((j = (struct obj_data*) get_obj_vis_world(ch, arg1, &count))) {
+		/* stat on object - prima fa il check in inventario poi nel mondo */
+        else if((tmpV = (struct obj_data*) get_obj_in_list_vis(ch, arg1, ch->carrying)) || (tmpW = (struct obj_data*) get_obj_vis_world(ch, arg1, &count))) {
+            if(!tmpV)
+                j = tmpW;
+            else
+                j = tmpV;
+            
 			iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
 			sprintf(buf,
 					"$c0005Object name: [$c0011%s$c0005], R-number: [$c0014%d$c0005], V-number: [$c0011%d$c0005] Item type: $c0014",
@@ -2303,11 +2322,11 @@ ACTION_FUNC(do_showskills) {
 	}
 	else {
 		int i;
-        boost::format fmt("[%3d] %-30s %3ld %-14s %s %s\n\r");
+        boost::format fmt("[%3d] %-30s %3d %-14s %s %s\n\r");
 		sb.append(
 			"NOTE: valori di flags 1=ok 2=C 4=M 8=S 16=T 32=K 64=D 128=W\n\r                      256=B 512=P 1024=R 2048=I\n\r\n\r");
 		sb.append(
-			"SkNum  Nome                           Val Conoscenza    flags\n\r");
+			"SkNum  Nome                          Val Conoscenza    flags\n\r");
 		for(i = 0; i < MAX_EXIST_SPELL; i++) {
 			if(spells[i] && *spells[i] != '\n' && mob->skills[i + 1].learned) {
 				string sflags; // SALVO faccio vedere le classi di skills
@@ -2352,7 +2371,7 @@ ACTION_FUNC(do_showskills) {
                     sflags.append("I");
                 }
 				sflags.append("]");
-				fmt % (i + 1) % (spells[i]) % mob->skills[i + 1].learned
+				fmt % (i + 1) % (spells[i]) % int(mob->skills[i + 1].learned)
 				% how_good(mob->skills[i + 1].learned)
 				% (IsSpecialized(mob->skills[i + 1].special) ?
 				   "(special)" : "") % sflags.c_str();

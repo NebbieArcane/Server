@@ -1692,6 +1692,7 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 					mudlog(LOG_SYSERR, "$D e vict_obj == NULL in act(comm.c)");
 					i = "";
 				}
+                break;
             case 'l':
                 i = LUILEI(ch);
                 break;

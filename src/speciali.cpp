@@ -930,6 +930,23 @@ MOBSPECIAL_FUNC(bambola)
         return (FALSE);
     }
     
+    if(type == EVENT_DEATH)
+    {
+        if((ch->master) && ch->in_room == (ch->master)->in_room)
+        {
+            do_say(ch, "Mia... Signora... Perdonami...", 0);
+            act("$N si avvicina $n e $d dice $c0013'Mi hai servito bene!'", FALSE, ch, 0, (ch->master), TO_ROOM);
+            act("$c0011$N$c0011 si getta su $n$c0011 ed assorbe le sue ultime energie vitali.\n\r", FALSE, ch, 0, (ch->master), TO_ROOM);
+            if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-30))
+                (ch->master)->points.hit += dice(1, 51) + 99;
+            (ch->master)->points.max_hit += dice(2,5)*(ch->master)->points.max_hit/100;
+            if ((ch->master)->points.max_hit > 25000)
+                (ch->master)->points.max_hit = 25000;
+            alter_hit(ch->master,0);
+        }
+        return (TRUE);
+    }
+    
     if(!ch->specials.fighting)
     {
         for(tch = real_roomp(mob->in_room)->people; tch; tch = tch->next_in_room)
@@ -945,7 +962,7 @@ MOBSPECIAL_FUNC(bambola)
             }
         }
         
-        if((ch->master))
+        if((ch->master) && ch->in_room == (ch->master)->in_room)
         {
             if(!ch->skills)
             {
@@ -961,7 +978,7 @@ MOBSPECIAL_FUNC(bambola)
                 act("$n pronuncia le parole, '$c0015Possa la mia aura proteggerti, mia Signora.$c0007'.", 1, ch, 0, 0, TO_ROOM);
                 cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
             }
-            else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-100))
+            else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-30))
             {
                 if(!ch->skills[SPELL_HEAL].learned)
                 {
@@ -991,9 +1008,12 @@ MOBSPECIAL_FUNC(bambola)
             }
             else if(!((ch->master)->specials.fighting))
             {
-                act("$c0013[$c0015$N$c0013] indica $n e $d dice 'Puoi andare, non mi servi piu'!'", FALSE, ch, 0, (ch->master), TO_ROOM);
+                act("$c0013[$c0015$N$c0013] indica $n$c0013 e $d dice 'Puoi andare, non mi servi piu'!'", FALSE, ch, 0, (ch->master), TO_ROOM);
                 act("$c0015$n$c0015 fa un inchino a $N$c0015 poi si rimette al suo posto.\n\r", FALSE, ch, 0, (ch->master), TO_ROOM);
                 (ch->master)->points.max_hit += dice(2,4)*(ch->master)->points.max_hit/100;
+                if ((ch->master)->points.max_hit > 25000)
+                    (ch->master)->points.max_hit = 25000;
+                alter_hit(ch->master,0);
                 extract_char(ch);
                 return (FALSE);
             }
@@ -1031,7 +1051,7 @@ MOBSPECIAL_FUNC(bambola)
                     ch->skills[SKILL_RESCUE].learned = GetMaxLevel(ch)*3+30;
                 }
                 
-                if((ch->master))
+                if((ch->master) && ch->in_room == (ch->master)->in_room)
                 {
                     if((ch->master)->attackers > 2)
                     {
@@ -1049,29 +1069,34 @@ MOBSPECIAL_FUNC(bambola)
                 break;
                 
             case 3:
-                if((ch->master))
+                if((ch->master) && ch->in_room == (ch->master)->in_room)
                 {
                     if(!(IS_AFFECTED(ch->master, AFF_SANCTUARY)) && !affected_by_spell(ch->master, SPELL_SANCTUARY))
                     {
                         act("$c0009[$c0015$n$c0009] urla 'Arrivo mia Signora!", TRUE, ch, 0, 0, TO_ROOM);
-                        act("$c0013$n$c0013 rapidamente si avvicina a $N e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);
+                        act("$c0013$n$c0013 rapidamente si avvicina a $N$c0013 e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);
                         act("$n e' protett$b da una $c0015aura bianca$c0007!", TRUE, ch->master, 0, 0, TO_ROOM);
                         SET_BIT((ch->master)->specials.affected_by, AFF_SANCTUARY);
                         (ch->master)->points.max_hit += dice(2, 6)*(ch->master)->points.max_hit/100;
+                        if ((ch->master)->points.max_hit > 25000)
+                            (ch->master)->points.max_hit = 25000;
+                        alter_hit(ch->master,0);
                         extract_char(ch);
                         return (FALSE);
                     }
                     else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-80))
                     {
-                        act("$c0013$n$c0013 rapidamente si avvicina a $N e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);
+                        act("$c0013$n$c0013 rapidamente si avvicina a $N$c0013 e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);
                         act("$n emette un $c0009ghigno malefico$c0007.", TRUE, ch->master, 0, 0, TO_ROOM);
-                        do_say(ch->master, "Ora si che sto bene!\n\r", 0);
+                        do_say(ch->master, "Ora si che sto bene!", 0);
                         (ch->master)->points.max_hit += dice(2, 6)*(ch->master)->points.max_hit/100;
                         (ch->master)->points.hit += dice(1, 51) + 99;
+                        if ((ch->master)->points.max_hit > 25000)
+                            (ch->master)->points.max_hit = 25000;
                         if(GET_HIT(ch->master) > GET_MAX_HIT(ch->master))
                             GET_HIT(ch->master) = GET_MAX_HIT(ch->master);
                         alter_hit(ch->master,0);
-                        act("$c0011$n$c0011 e' diventat$b piu' potente.", TRUE, ch->master, 0, 0, TO_ROOM);
+                        act("\n\r$c0011$n$c0011 e' diventat$b piu' potente.", TRUE, ch->master, 0, 0, TO_ROOM);
                         extract_char(ch);
                         return (FALSE);
                     }
@@ -1085,7 +1110,7 @@ MOBSPECIAL_FUNC(bambola)
                         {
                             ch->skills[SPELL_HARM].learned = GetMaxLevel(ch)*3+30;
                         }
-                        act("$n pronuncia le parole, '$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
+                        act("$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
                         cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, (ch->master)->specials.fighting, 0);
                     }
                 }

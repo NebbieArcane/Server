@@ -105,7 +105,7 @@ void spell_transport_via_plant(byte level, struct char_data* ch,
 	act("$c0010Percepisci $p$c0010, e come $c0012acqua$c0010 ti lasci guidare dalla $c0003terra$c0010 alle sue radici.", FALSE, ch, obj, 0, TO_CHAR);
 	char_from_room(ch);
 	char_to_room(ch, obj->in_room);
-	act("$c0010$p$c0010 si squote leggermente, e $n$c0010 appare magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
+	act("$c0010$p$c0010 si scuote leggermente, e $n$c0010 appare magicamente dal suo interno!", FALSE, ch, obj, 0, TO_ROOM);
 	act("$c0010Vieni trasportat$b istantaneamente da $p$c0010!", FALSE, ch, obj, 0, TO_CHAR);
 	do_look(ch, "\0", 15);
 
@@ -125,7 +125,7 @@ void spell_speak_with_plants(byte level, struct char_data* ch,
 	sprintf(buffer, "$c0013%s$c0013 ti dice 'Ciao $n$c0013, come va' oggi?'",
 			fname(obj->name));
 	act(buffer, FALSE, ch, obj, 0, TO_CHAR);
-	act("$p si squote leggermente.", FALSE, ch, obj, 0, TO_ROOM);
+	act("$p si scuote leggermente.", FALSE, ch, obj, 0, TO_ROOM);
 
 }
 

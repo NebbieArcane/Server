@@ -480,7 +480,7 @@ void get_trophy(struct char_data* ch, struct obj_data* ob) {
 	int r_num;
 	if(ob) {
 		if(!ob->affected[0].modifier) {
-			sprintf(buf,"Non e' rimasto abbastanza %s%s per farne un trofeo",
+			sprintf(buf,"Non e' rimasto abbastanza %s%s per farne un trofeo.",
 					*(ob->short_description+1)==' '?"dei":"de",
 					ob->short_description+1);
 			send_to_char(buf,ch);
@@ -600,7 +600,7 @@ ACTION_FUNC(do_drop) {
 				}
 				else {
 					if(CAN_SEE_OBJ(ch, tmp_object)) {
-						act("Non puoi posare $p", FALSE, ch, tmp_object, NULL,
+						act("Non puoi posare $p.", FALSE, ch, tmp_object, NULL,
 							TO_CHAR);
 						test = TRUE;
 					}
@@ -754,7 +754,7 @@ ACTION_FUNC(do_put) {
 									if(((sub_object->obj_flags.weight) +
 											(obj_object->obj_flags.weight)) <
 											(sub_object->obj_flags.value[0])) {
-										act("Metti $p in $P",TRUE, ch, obj_object, sub_object,
+										act("Metti $p in $P.",TRUE, ch, obj_object, sub_object,
 											TO_CHAR);
 										if(bits==FIND_OBJ_INV) {
 											obj_from_char(obj_object);
@@ -765,7 +765,7 @@ ACTION_FUNC(do_put) {
 											obj_to_obj(obj_object, sub_object);
 										}
 
-										act("$n mette $p in $P",TRUE, ch, obj_object, sub_object,
+										act("$n mette $p in $P.",TRUE, ch, obj_object, sub_object,
 											TO_ROOM);
 										num--;
 									}
@@ -874,7 +874,7 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 			truegivexp(ch,victim,amount);
 		}
 		else {
-			send_to_char("Esagerato....... cosi' e' troppo!",ch);
+			send_to_char("Che esagerazione... cosi' e' troppo!",ch);
 		}
 	}
 	else {
@@ -885,7 +885,7 @@ void givexp(struct char_data* ch, struct char_data* victim, int amount)
 			truegivexp(ch,victim,amount);
 		}
 		else {
-			send_to_char("Esagerato....... cosi' e' troppo!",ch);
+			send_to_char("Che esagerazione... cosi' e' troppo!",ch);
 		}
 
 	}
@@ -1080,7 +1080,7 @@ ACTION_FUNC(do_pquest) {
 
 		if(punti_quest ==0) {
 			if(!(vict = get_char_room_vis(ch, vict_name))) {
-				send_to_char("Di chi vuoi conoscere le rune degli Dei? \n\r", ch);
+				send_to_char("Di chi vuoi conoscere le rune degli Dei?\n\r", ch);
 				return;
 			}
 			sprintf(buf,"%s ha %d rune degli Dei.\n\r",GET_NAME(vict),GET_RUNEDEI(vict));
@@ -1090,7 +1090,7 @@ ACTION_FUNC(do_pquest) {
 
 		if(punti_quest >0) {
 			if(!*vict_name) {
-				send_to_char("A chi vuoi assegnare rune degli Dei? \n\r", ch);
+				send_to_char("A chi vuoi assegnare rune degli Dei?\n\r", ch);
 				return;
 			}
 			else if(!(vict = get_char_room_vis(ch, vict_name))) {
@@ -1131,7 +1131,7 @@ ACTION_FUNC(do_pquest) {
 
 		if(punti_quest <0) {
 			if(!*vict_name) {
-				send_to_char("A chi vuoi togliere rune degli Dei? \n\r", ch);
+				send_to_char("A chi vuoi togliere rune degli Dei?\n\r", ch);
 				return;
 			}
 			else if(!(vict = get_char_room_vis(ch, vict_name))) {

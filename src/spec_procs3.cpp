@@ -4791,38 +4791,211 @@ OBJSPECIAL_FUNC(thion_loader) {
 
 				//estrazione casuale del premio
 				percent = number(1,100);
-				if(percent <= 2) {
-					r_num = real_object(19755);
+
+				if(percent <= 4) {
+                    percent = number(1,100);
+                    if(percent <= 68)
+                    {
+                        r_num = real_object(19755);
+                    }
+                    else if(percent > 68 && percent <= 76)
+                    {
+                        r_num = real_object(19780);
+                    }
+                    else if(percent > 76 && percent <= 84)
+                    {
+                        r_num = real_object(19779);
+                    }
+                    else if(percent > 84 && percent <= 92)
+                    {
+                        r_num = real_object(19778);
+                    }
+                    else if(percent > 92 && percent <= 100)
+                    {
+                        r_num = real_object(19777);
+                    }
 				}
-				else if(percent > 2 && percent <= 5) {
-					r_num = real_object(19756);
+				else if(percent > 4 && percent <= 10) {
+                    percent = number(1,100);
+                    if(percent <= 68)
+                    {
+                        r_num = real_object(19756);
+                    }
+                    else if(percent > 68 && percent <= 76)
+                    {
+                        r_num = real_object(19781);
+                    }
+                    else if(percent > 76 && percent <= 84)
+                    {
+                        r_num = real_object(19782);
+                    }
+                    else if(percent > 84 && percent <= 92)
+                    {
+                        r_num = real_object(19783);
+                    }
+                    else if(percent > 92 && percent <= 100)
+                    {
+                        r_num = real_object(19784);
+                    }
 				}
-				else if(percent > 5 && percent <= 15) {
-					r_num = real_object(19757);
+				else if(percent > 10 && percent <= 20) {
+                    percent = number(1,100);
+                    if(percent <= 68)
+                    {
+                        r_num = real_object(19757);
+                    }
+                    else if(percent > 68 && percent <= 76)
+                    {
+                        r_num = real_object(19785);
+                    }
+                    else if(percent > 76 && percent <= 84)
+                    {
+                        r_num = real_object(19786);
+                    }
+                    else if(percent > 84 && percent <= 92)
+                    {
+                        r_num = real_object(19787);
+                    }
+                    else if(percent > 92 && percent <= 100)
+                    {
+                        r_num = real_object(19788);
+                    }
 				}
-				else if(percent > 15 && percent <= 30) {
-					r_num = real_object(19758);
+				else if(percent > 20 && percent <= 30) {
+                    percent = number(1,100);
+                    if(percent <= 70)
+                    {
+                        r_num = real_object(19758);
+                    }
+                    else if(percent > 70 && percent <= 85)
+                    {
+                        r_num = real_object(19789);
+                    }
+                    else if(percent > 85 && percent <= 100)
+                    {
+                        r_num = real_object(19790);
+                    }
 				}
-				else if(percent > 30 && percent <= 45) {
-					r_num = real_object(19759);
+				else if(percent > 30 && percent <= 40) {
+                    percent = number(1,100);
+                    if(percent <= 70)
+                    {
+                        r_num = real_object(19759);
+                    }
+                    else if(percent > 70 && percent <= 85)
+                    {
+                        r_num = real_object(19791);
+                    }
+                    else if(percent > 85 && percent <= 100)
+                    {
+                        r_num = real_object(19792);
+                    }
 				}
-				else if(percent > 45 && percent <= 55) {
-					r_num = real_object(19760);
+				else if(percent > 40 && percent <= 50) {
+                    percent = number(1,100);
+                    if(percent <= 68)
+                    {
+                        r_num = real_object(19760);
+                    }
+                    else if(percent > 68 && percent <= 76)
+                    {
+                        r_num = real_object(19793);
+                    }
+                    else if(percent > 76 && percent <= 84)
+                    {
+                        r_num = real_object(19794);
+                    }
+                    else if(percent > 84 && percent <= 92)
+                    {
+                        r_num = real_object(19795);
+                    }
+                    else if(percent > 92 && percent <= 100)
+                    {
+                        r_num = real_object(19796);
+                    }
 				}
-				else if(percent > 55 && percent <= 60) {
-					r_num = real_object(19761);
+				else if(percent > 50 && percent <= 60) {
+                    percent = number(1,100);
+                    if(percent <= 68)
+                    {
+                        r_num = real_object(19761);
+                    }
+                    else if(percent > 68 && percent <= 76)
+                    {
+                        r_num = real_object(19699);
+                    }
+                    else if(percent > 76 && percent <= 84)
+                    {
+                        r_num = real_object(19698);
+                    }
+                    else if(percent > 84 && percent <= 92)
+                    {
+                        r_num = real_object(19697);
+                    }
+                    else if(percent > 92 && percent <= 100)
+                    {
+                        r_num = real_object(19696);
+                    }
 				}
 				else if(percent > 60 && percent <= 70) {
-					r_num = real_object(19763);
+                    percent = number(1,100);
+                    if(percent <= 70)
+                    {
+                        r_num = real_object(19763);
+                    }
+                    else if(percent > 70 && percent <= 85)
+                    {
+                        r_num = real_object(19797);
+                    }
+                    else if(percent > 85 && percent <= 100)
+                    {
+                        r_num = real_object(19798);
+                    }
 				}
 				else if(percent > 70 && percent <= 80) {
-					r_num = real_object(19766);
+                    percent = number(1,100);
+                    if(percent <= 70)
+                    {
+                        r_num = real_object(19766);
+                    }
+                    else if(percent > 70 && percent <= 85)
+                    {
+                        r_num = real_object(19695);
+                    }
+                    else if(percent > 85 && percent <= 100)
+                    {
+                        r_num = real_object(19694);
+                    }
 				}
 				else if(percent > 80 && percent <= 90) {
-					r_num = real_object(19767);
+                    percent = number(1,100);
+                    if(percent <= 70)
+                    {
+                        r_num = real_object(19767);
+                    }
+                    else if(percent > 70 && percent <= 85)
+                    {
+                        r_num = real_object(19693);
+                    }
+                    else if(percent > 85 && percent <= 100)
+                    {
+                        r_num = real_object(19692);
+                    }
 				}
 				else if(percent > 90 && percent <= 100) {
-					r_num = real_object(19768);
+                    percent = number(1,100);
+                    if(percent <= 70)
+                    {
+                        r_num = real_object(19768);
+                    }
+                    else if(percent > 70 && percent <= 85)
+                    {
+                        r_num = real_object(19692);
+                    }
+                    else if(percent > 85 && percent <= 100)
+                    {
+                        r_num = real_object(19691);
+                    }
 				}
 
 				r_num2 = real_object(19773);
@@ -4972,13 +5145,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     spell_quest(durata,quest_tgt,quest_tgt,0);
                     
                     /* adattiamo il mob al questante, questa e' da perfezionare */
-                    
-                    if(GetMaxLevel(ch) < IMMORTALE) {
-                        GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = GetMaxLevel(ch);
-                    }
                 
                     if(HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
                                 CLASS_BARBARIAN | CLASS_MONK)) {
+                        GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = GetMaxLevel(ch);
                         quest_tgt->specials.damsizedice = GetMaxLevel(ch)/17;
                         quest_tgt->specials.damnodice = GetMaxLevel(ch)/5;
                         
@@ -4986,6 +5156,13 @@ MOBSPECIAL_FUNC(AssignQuest) {
                             quest_tgt->points.max_hit = floor(GET_MAX_HIT(ch)*1.5);
                         }
                         
+                    }
+                    
+                    if(OnlyClass(ch, CLASS_MAGIC_USER | CLASS_DRUID | CLASS_CLERIC |
+                                CLASS_PSI | CLASS_SORCER)) {
+                        GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = floor(GetMaxLevel(ch)/2);
+                        quest_tgt->specials.damsizedice = floor(quest_tgt->specials.damsizedice/2);
+                        quest_tgt->specials.damnodice = floor(GetMaxLevel(ch))/2;
                     }
                     
                     if(HasClass(ch, CLASS_MONK)) {
@@ -5048,8 +5225,6 @@ MOBSPECIAL_FUNC(AssignQuest) {
                         GET_LEVEL(quest_tgt, WARRIOR_LEVEL_IND) = GetMaxLevel(ch);
                     }
                     
-                    SET_BIT(quest_tgt->specials.act, ACT_SENTINEL);
-                    
                     if(HasClass(ch, CLASS_MONK)) {
                         quest_tgt->points.max_hit = GET_MAX_HIT(ch);
                     } else if(HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
@@ -5060,6 +5235,8 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     }
                     
                     GET_HIT(quest_tgt) = GET_MAX_HIT(quest_tgt);
+                    quest_tgt->points.max_move = NewMobMov(quest_tgt);
+                    GET_MOVE(quest_tgt) = GET_MAX_MOVE(quest_tgt);
                     
                     spell_quest(durata,quest_tgt,quest_tgt,0);
 
@@ -5073,7 +5250,25 @@ MOBSPECIAL_FUNC(AssignQuest) {
                 default:
                     break;
             }
-            
+                
+            if(quest_type < 2) {
+                if(!IS_SET(ch->specials.act, ACT_SENTINEL) {
+                    SET_BIT(quest_tgt->specials.act, ACT_SENTINEL);
+                }
+                if(IS_SET(ch->specials.act, ACT_STAY_ZONE) {
+                    REMOVE_BIT(quest_tgt->specials.act, ACT_STAY_ZONE);
+                }
+                if(IS_SET(ch->specials.act, ACT_AGGRESSIVE) {
+                    REMOVE_BIT(quest_tgt->specials.act, ACT_AGGRESSIVE);
+                }
+                if(IS_SET(ch->specials.act, ACT_META_AGG) {
+                    REMOVE_BIT(quest_tgt->specials.act, ACT_META_AGG);
+                }
+                if(IS_SET(ch->specials.act, ACT_HATEFUL) {
+                    REMOVE_BIT(quest_tgt->specials.act, ACT_HATEFUL);
+                }
+            }
+
             sprintf(buf2,"%s quest: tipo %s, target: %s",GET_NAME(ch),QuestKind[quest_type],GET_NAME(quest_tgt));
             mudlog(LOG_CHECK, buf2);
                 
@@ -5247,7 +5442,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     sprintf(buf,"\n\r$c0014Completi la tua missione in ");
                     
                     if(x-af->duration < 2) {
-                        strcat(buf, "un ora");
+                        strcat(buf, "un'ora");
                     } else {
                         sprintf(buf,"%s%d ore",buf,x-af->duration);
                     }
@@ -5298,7 +5493,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                         break;
                                     case 2  :
                                         GET_RUNEDEI(t) += premio[2];
-                                        sprintf(buf,"$c0011Vieni marchiat%s con %d rune degli Dei!$c0007\n\r",SSLF(t), premio[2]);
+                                        sprintf(buf,"$c0011Vieni marchiat%s con %d run%s degli Dei!$c0007\n\r",SSLF(t), premio[2], (premio[2] == 1 ? "a" : "e"));
                                         break;
                                     default:
                                         break;
@@ -5562,7 +5757,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                                     break;
                                                 case 2  :
                                                     GET_RUNEDEI(t) += premio[2];
-                                                    sprintf(buf,"$c0011Vieni marchiat%s con %d rune degli Dei!$c0007\n\r",SSLF(t), premio[2]);
+                                                    sprintf(buf,"$c0011Vieni marchiat%s con %d run%s degli Dei!$c0007\n\r",SSLF(t), premio[2], (premio[2] == 1 ? "a" : "e"));
                                                     break;
                                                 default:
                                                     break;
@@ -5580,7 +5775,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                     }
                     
                     if(!CAN_SEE(mob, t)) {
-                        do_say(mob, "eh? chi va la'?... Dev'essere stato il vento... o un entita' invisibile!", CMD_SAY);
+                        do_say(mob, "Eh? Chi va la'?... Dev'essere stato il vento... o un entita' invisibile!", CMD_SAY);
                         return(FALSE);
                     }
                     
@@ -5588,7 +5783,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                         sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla locanda piu' vicina e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
                         do_tell(mob,buf,CMD_TELL);
                         
-                        send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali!$c0007\n\r", t);
+                        send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali e negli stagni astrali!$c0007\n\r", t);
                         
                         if(mob->master) {
                             stop_follower(mob);

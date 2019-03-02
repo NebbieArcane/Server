@@ -1901,11 +1901,11 @@ void load_char_extra(struct char_data* ch) {
 			if(p) {
 				if(!strcmp(p,"out")) {
 					/*setup bamfout */
-					do_bamfout(ch, s, 0);
+					do_bamfout(ch, s, CMD_BAMFOUT);
 				}
 				else if(!strcmp(p, "in")) {
 					/* setup bamfin */
-					do_bamfin(ch, s, 0);
+					do_bamfin(ch, s, CMD_BAMFIN);
 				}
 				else if(!strcmp(p, "email")) {
 					/* setup email */

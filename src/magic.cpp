@@ -377,7 +377,7 @@ void spell_earthquake(byte level, struct char_data* ch,
 	dam =  dice(1,4) + level + 1;
 
 	send_to_char("$c0003La terra sotto di te inizia a tremare!\n\r", ch);
-	act("$c0003Ad un gesto di $n $c0003la terra trema e si squote.",
+	act("$c0003Ad un gesto di $n $c0003la terra trema e si scuote.",
 		FALSE, ch, 0, 0, TO_ROOM);
 
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
@@ -388,11 +388,11 @@ void spell_earthquake(byte level, struct char_data* ch,
 				if(GetMaxLevel(tmp_victim) > 4) {
                     sprintf(buf, "$N cade a terra e si fa male!");
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, dam);
+                        sprintf(buf, "%s $c0003[%d]$c0007",buf, (IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
                     act(buf, FALSE, ch, 0, tmp_victim, TO_CHAR);
                     sprintf(buf, "Cadi a terra e ti fai male!!");
                     if(IS_SET(tmp_victim->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[%s%d]$c0007\n\r",buf, (dam > 0 ? "-" : ""), dam);
+                        sprintf(buf, "%s $c0001[%s%d]$c0007\n\r",buf, (dam > 0 ? "-" : ""), (IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
                     else
                         sprintf(buf, "%s\n\r",buf);
 					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);

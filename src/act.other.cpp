@@ -166,15 +166,15 @@ ACTION_FUNC(do_junk) {
 		}
 	}
 	if(count > 1) {
-		sprintf(buf, "Getti via %s (%d).\n\r", arg, count);
+		sprintf(buf, "Butti tra i rifiuti %s (%d).\n\r", arg, count);
 		act(buf, 1, ch, 0, 0, TO_CHAR);
-		sprintf(buf, "$n getta via %s.\n\r", arg);
+		sprintf(buf, "$n butta nei rifiuti %s (%d).\n\r", arg, count);
 		act(buf, 1, ch, 0, 0, TO_ROOM);
 	}
 	else if(count == 1) {
-		sprintf(buf, "Getti via %s \n\r", arg);
+		sprintf(buf, "Butti tra i rifiuti %s.\n\r", arg);
 		act(buf, 1, ch, 0, 0, TO_CHAR);
-		sprintf(buf, "$n getta via %s.\n\r", arg);
+		sprintf(buf, "$n butta nei rifiuti %s.\n\r", arg);
 		act(buf, 1, ch, 0, 0, TO_ROOM);
 	}
 	else {
@@ -326,7 +326,7 @@ ACTION_FUNC(do_destroy)
     }
     if(value2)
     {
-        act("Distruggere l'equipaggiamento del tuoi avversari ti fa progredire nel tuo cammino!", FALSE, ch, 0, 0, TO_CHAR);
+        act("Distruggere l'equipaggiamento dei tuoi avversari ti fa progredire nel tuo cammino!", FALSE, ch, 0, 0, TO_CHAR);
         gain_exp(ch, (value2*number(10,30))/10);
     }
     return;
@@ -3183,9 +3183,9 @@ void ck_eq_action(struct char_data* ch, struct obj_data* obj) {
 ACTION_FUNC(do_insert)
 {
     int i, l, affect = 0, aff = 0, loc = 0, mod = 0, val = 0, zir = 0, hitroll = 0, damroll = 0, castoni = 0;
-    int gems[5] = { 0, 0, 0, 0, 0 }, val_orig, vnum, wait = 0;
+    int gems[5] = { 0, 0, 0, 0, 0 }, val_orig, vnum, wait = 0, colore[5] = { 0, 0, 0, 0, 0 };
     bool ok = FALSE;
-    char tmp[100], gemma[100], buf[MAX_STRING_LENGTH];
+    char tmp[100], gemma[100], buf[MAX_STRING_LENGTH], color1[50], color2[50];
     struct obj_data* obj, *gem, *gem_tmp;
     
     const char* rand_reaction[] = {
@@ -3220,10 +3220,10 @@ ACTION_FUNC(do_insert)
     }
     
     arg = one_argument(arg, tmp);
+    obj = get_obj_in_list_vis(ch, tmp, ch->carrying);
     
-    if(*tmp)
+    if(obj)
     {
-        obj = get_obj_in_list_vis(ch, tmp, ch->carrying);
         for(i = 0; i < MAX_OBJ_AFFECT; i++)
         {
             if((obj->affected[i].location != APPLY_NONE) && (obj->affected[i].modifier != 0) && (obj->affected[i].location != APPLY_SKIP))
@@ -3273,6 +3273,7 @@ ACTION_FUNC(do_insert)
             case ITEM_OTHER :
             case ITEM_AUDIO :
             case ITEM_ARMOR :
+            case ITEM_CONTAINER :
                 ok = TRUE;
                 break;
             case ITEM_SCROLL :
@@ -3346,7 +3347,7 @@ ACTION_FUNC(do_insert)
                         {
                             sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                             send_to_char(buf, ch);
-                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                             if(!IS_DIO_MINORE(ch))
                             {
                                 wait += PULSE_VIOLENCE*4;
@@ -3382,7 +3383,7 @@ ACTION_FUNC(do_insert)
                         {
                             sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                             send_to_char(buf, ch);
-                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                             if(!IS_DIO_MINORE(ch))
                             {
                                 wait += PULSE_VIOLENCE*4;
@@ -3433,7 +3434,7 @@ ACTION_FUNC(do_insert)
                     {
                         sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                         send_to_char(buf, ch);
-                        act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                        act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                         if(!IS_DIO_MINORE(ch))
                         {
                             wait += PULSE_VIOLENCE*4;
@@ -3485,7 +3486,7 @@ ACTION_FUNC(do_insert)
                         {
                             sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                             send_to_char(buf, ch);
-                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                             if(!IS_DIO_MINORE(ch))
                             {
                                 wait += PULSE_VIOLENCE*4;
@@ -3537,7 +3538,7 @@ ACTION_FUNC(do_insert)
                         {
                             sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                             send_to_char(buf, ch);
-                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                             if(!IS_DIO_MINORE(ch))
                             {
                                 wait += PULSE_VIOLENCE*4;
@@ -3614,7 +3615,7 @@ ACTION_FUNC(do_insert)
                             {
                                 sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                                 send_to_char(buf, ch);
-                                act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                                act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                                 if(!IS_DIO_MINORE(ch))
                                 {
                                     wait += PULSE_VIOLENCE*4;
@@ -3667,7 +3668,7 @@ ACTION_FUNC(do_insert)
                         {
                             sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                             send_to_char(buf, ch);
-                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                             for(l = 0; l < i; l++)
                             {
                                 gem_tmp = read_object(real_object(gems[l]), REAL);
@@ -3713,7 +3714,7 @@ ACTION_FUNC(do_insert)
                         {
                             sprintf(buf, "Rimuovi tutte le gemme incastonate su $c0015%s$c0007.\n\r", obj->short_description);
                             send_to_char(buf, ch);
-                            act("$n squote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
+                            act("$n scuote la testa contrariat$b e rimuove tutte le gemme incastonate su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
                             if(!IS_DIO_MINORE(ch))
                             {
                                 wait += PULSE_VIOLENCE*4;
@@ -3742,6 +3743,11 @@ ACTION_FUNC(do_insert)
             }
             else
             {
+                if(i == 0)
+                {
+                    act("Quale gemma vuoi inserire dentro $p?", FALSE, ch, obj, 0, TO_CHAR);
+                    return;
+                }
                 castoni = castoni - i;
                 sprintf(buf, "Finalmente hai terminato il tuo lavoro, ti fermi un attimo \n\re ti rendi conto che potevi incastonare ancora %d gemm%s su $c0015%s$c0007.\n\r", castoni, (castoni > 1 ? "e" : "a"), obj->short_description);
                 send_to_char(buf, ch);
@@ -3765,27 +3771,32 @@ ACTION_FUNC(do_insert)
                         val = 0;
                         loc = 0;
                         mod = 0;
+                        colore[aff] = 0;
                         break;
                     case 19509 :        // quarzo comune
                     case 19523 :        // quarzo comune clone
                         val = 1500;
                         loc = APPLY_SPELL;
                         mod = AFF_INFRAVISION;
+                        colore[aff] = 15;
                         break;
                     case 19510 :        // ossidiana
                         val = 3000;
                         loc = APPLY_STR;
                         mod = 1;
+                        colore[aff] = 8;
                         break;
                     case 19511 :        // opale
                         val = 3000;
                         loc = APPLY_SPELL;
                         mod = AFF_SCRYING;
+                        colore[aff] = number(9,15);
                         break;
                     case 19512 :        // turchese
                         val = 1500;
                         loc = APPLY_SPELL;
                         mod = AFF_PROTECT_FROM_EVIL;
+                        colore[aff] = 14;
                         break;
                     case 19513 :        // zircone
                         if(zir == 1)
@@ -3793,6 +3804,7 @@ ACTION_FUNC(do_insert)
                             val = 1500;
                             loc = APPLY_NONE;
                             mod = 0;
+                            colore[aff] = number(9,15);
                             SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
                         }
                         else
@@ -3800,6 +3812,7 @@ ACTION_FUNC(do_insert)
                             val = 4500;
                             loc = APPLY_NONE;
                             mod = 0;
+                            colore[aff] = number(9,15);
                             SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
                         }
                         break;
@@ -3807,41 +3820,57 @@ ACTION_FUNC(do_insert)
                         val = 1500;
                         loc = APPLY_MANA_REGEN;
                         mod = 5;
+                        colore[aff] = 12;
                         break;
                     case 19515 :        // onice
                         val = 1500;
                         loc = APPLY_CHR;
                         mod = 1;
+                        colore[aff] = number(1,8);
+                        if(colore[aff] < 5)
+                            colore[aff] = 1;
+                        else
+                            colore[aff] = 8;
                         break;
                     case 19516 :        // malachite
                         val = 1500;
                         loc = APPLY_INT;
                         mod = 1;
+                        colore[aff] = 2;
                         break;
                     case 19517 :        // ematite
                         val = 1500;
                         loc = APPLY_CON;
                         mod = 1;
+                        colore[aff] = 7;
                         break;
                     case 19518 :        // giada
                         val = 1500;
                         loc = APPLY_WIS;
                         mod = 1;
+                        colore[aff] = 10;
                         break;
                     case 19519 :        // resina fossile
                         val = 1500;
                         loc = APPLY_SAVE_ALL;
                         mod = -1;
+                        colore[aff] = number(3,11);
+                        if(colore[aff] < 7)
+                            colore[aff] = 3;
+                        else
+                            colore[aff] = 11;
                         break;
                     case 19520 :        // crisoberillo
                         val = 1500;
                         loc = APPLY_MOVE_REGEN;
                         mod = 5;
+                        colore[aff] = 11;
                         break;
                     case 19521 :        // spinello blu
                         val = 1500;
                         loc = APPLY_SPELLFAIL;
                         mod = -2;
+                        colore[aff] = 12;
                         break;
                     case 19522 :        // tormalina
                         if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
@@ -3849,18 +3878,25 @@ ACTION_FUNC(do_insert)
                             val = 1500;
                             loc = APPLY_HIT;
                             mod = 2;
+                            colore[aff] = number(1,15);
+                            if(colore[aff] == 4)
+                                colore[aff] = 6;
                         }
                         else
                         {
                             val = 1500;
                             loc = APPLY_HIT_REGEN;
                             mod = 5;
+                            colore[aff] = number(1,15);
+                            if(colore[aff] == 4)
+                                colore[aff] = 6;
                         }
                         break;
                     case 19524 :        // quarzo rosa
                         val = 6750;
                         loc = APPLY_SPELL;
                         mod = AFF_SENSE_LIFE;
+                        colore[aff] = 13;
                         break;
                     case 19525 :        // agata
                         if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
@@ -3868,23 +3904,35 @@ ACTION_FUNC(do_insert)
                             val = 2250;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 33;   // poison
+                            colore[aff] = number(1,15);
+                            if(colore[aff] == 4)
+                                colore[aff] = 2;
                         }
                         else
                         {
                             val = 2250;
                             loc = APPLY_M_IMMUNE;
                             mod = IMM_POISON;
+                            colore[aff] = number(1,15);
+                            if(colore[aff] == 4)
+                                colore[aff] = 2;
                         }
                         break;
                     case 19526 :        // acquamarina
                         val = 2250;
                         loc = APPLY_SPELL;
                         mod = AFF_WATERBREATH;
+                        colore[aff] = number(6,14);
+                        if(colore[aff] < 11)
+                            colore[aff] = 6;
+                        else
+                            colore[aff] = 14;
                         break;
                     case 19527 :        // berillo
                         val = 2250;
                         loc = APPLY_DEX;
                         mod = 1;
+                        colore[aff] = number(11,15);
                         break;
                     case 19528 :        // topazio
                         if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
@@ -3892,12 +3940,14 @@ ACTION_FUNC(do_insert)
                             val = 2250;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 37;   // shocking grasp
+                            colore[aff] = 11;
                         }
                         else
                         {
                             val = 2250;
                             loc = APPLY_IMMUNE;
                             mod = IMM_ELEC;
+                            colore[aff] = 11;
                         }
                         break;
                     case 19529 :        // spinello nero
@@ -3906,12 +3956,14 @@ ACTION_FUNC(do_insert)
                             val = 3000;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 38;   // sleep
+                            colore[aff] = 8;
                         }
                         else
                         {
                             val = 3000;
                             loc = APPLY_IMMUNE;
                             mod = IMM_HOLD;
+                            colore[aff] = 8;
                         }
                         break;
                     case 19530 :        // fluorite
@@ -3920,6 +3972,7 @@ ACTION_FUNC(do_insert)
                             val = 3000;
                             loc = APPLY_NONE;
                             mod = 0;
+                            colore[aff] = 10;
                             SET_BIT(obj->obj_flags.extra_flags, ITEM_INVISIBLE);
                         }
                         else
@@ -3927,6 +3980,7 @@ ACTION_FUNC(do_insert)
                             val = 3000;
                             loc = APPLY_SPELL;
                             mod = AFF_INVISIBLE;
+                            colore[aff] = 10;
                         }
                         break;
                     case 19531 :        // ametista
@@ -3935,18 +3989,33 @@ ACTION_FUNC(do_insert)
                             val = 3000;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 32;   // magic missile
+                            colore[aff] = number(5,13);
+                            if(colore[aff] < 9)
+                                colore[aff] = 5;
+                            else
+                                colore[aff] = 13;
                         }
                         else
                         {
                             val = 3000;
                             loc = APPLY_IMMUNE;
                             mod = IMM_ENERGY;
+                            colore[aff] = number(5,13);
+                            if(colore[aff] < 9)
+                                colore[aff] = 5;
+                            else
+                                colore[aff] = 13;
                         }
                         break;
                     case 19532 :        // corindone
                         val = 3000;
                         loc = APPLY_SPELL;
                         mod = AFF_TRUE_SIGHT;
+                        colore[aff] = number(3,7);
+                        if(colore[aff] < 6)
+                            colore[aff] = 3;
+                        else
+                            colore[aff] = 7;
                         break;
                     case 19533 :        // granato
                         if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
@@ -3954,12 +4023,14 @@ ACTION_FUNC(do_insert)
                             val = 3000;
                             loc = APPLY_HITNDAM;
                             mod = 1;
+                            colore[aff] = 13;
                         }
                         else
                         {
                             val = 3000;
                             loc = APPLY_AC;
                             mod = -10;
+                            colore[aff] = 13;
                         }
                         break;
                     case 19534 :        // zaffiro
@@ -3968,12 +4039,14 @@ ACTION_FUNC(do_insert)
                             val = 7500;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 8;    // chill touch
+                            colore[aff] = 12;
                         }
                         else
                         {
                             val = 7500;
                             loc = APPLY_IMMUNE;
                             mod = IMM_COLD;
+                            colore[aff] = 12;
                         }
                         break;
                     case 19535 :        // smeraldo
@@ -3982,12 +4055,14 @@ ACTION_FUNC(do_insert)
                             val = 7500;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 67;   // acid blast
+                            colore[aff] = 10;
                         }
                         else
                         {
                             val = 7500;
                             loc = APPLY_IMMUNE;
                             mod = IMM_ACID;
+                            colore[aff] = 10;
                         }
                         break;
                     case 19536 :        // rubino
@@ -3996,18 +4071,21 @@ ACTION_FUNC(do_insert)
                             val = 7500;
                             loc = APPLY_WEAPON_SPELL;
                             mod = 5;    // burning hands
+                            colore[aff] = 9;
                         }
                         else
                         {
                             val = 7500;
                             loc = APPLY_IMMUNE;
                             mod = IMM_FIRE;
+                            colore[aff] = 9;
                         }
                         break;
                     case 19537 :        // diamante
                         val = 7500;
                         loc = APPLY_NONE;
                         mod = 0;
+                        colore[aff] = 15;
                         SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
                         break;
                         
@@ -4054,6 +4132,92 @@ ACTION_FUNC(do_insert)
             }
         }
         
+        switch(aff)
+        {
+            case 0:
+                if(((obj->obj_flags.cost - val_orig)/aff) <= 1500)
+                {
+                    sprintf(color1, "pietra");
+                    sprintf(color2, "pietre");
+                }
+                else
+                {
+                    sprintf(color1, "gemma");
+                    sprintf(color2, "gemme");
+                }
+                break;
+                
+            case 1:
+                if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
+                {
+                    sprintf(color1, "$c00%s%dpietra$c0007", (colore[0] > 9 ? "" : "0"), colore[0]);
+                    sprintf(color2, "$c00%s%dpietre$c0007", (colore[0] > 9 ? "" : "0"), colore[0]);
+                }
+                else
+                {
+                    sprintf(color1, "$c00%s%dgemma$c0007", (colore[0] > 9 ? "" : "0"), colore[0]);
+                    sprintf(color2, "$c00%s%dgemme$c0007", (colore[0] > 9 ? "" : "0"), colore[0]);
+                }
+                break;
+                
+            case 2:
+                if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
+                {
+                    sprintf(color1, "$c00%s%dpie$c00%s%dtra$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1]);
+                    sprintf(color2, "$c00%s%dpie$c00%s%dtre$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1]);
+                }
+                else
+                {
+                    sprintf(color1, "$c00%s%dgem$c00%s%dma$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1]);
+                    sprintf(color2, "$c00%s%dgem$c00%s%dme$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1]);
+                }
+                break;
+                
+            case 3:
+                if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
+                {
+                    sprintf(color1, "$c00%s%dpi$c00%s%det$c00%s%dra$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2]);
+                    sprintf(color2, "$c00%s%dpi$c00%s%det$c00%s%dre$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2]);
+                }
+                else
+                {
+                    sprintf(color1, "$c00%s%dge$c00%s%dm$c00%s%dma$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2]);
+                    sprintf(color2, "$c00%s%dge$c00%s%dm$c00%s%dme$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2]);
+                }
+                break;
+                
+            case 4:
+                if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
+                {
+                    sprintf(color1, "$c00%s%dpi$c00%s%de$c00%s%dt$c00%s%dra$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3]);
+                    sprintf(color2, "$c00%s%dpi$c00%s%de$c00%s%dt$c00%s%dre$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3]);
+                }
+                else
+                {
+                    sprintf(color1, "$c00%s%dg$c00%s%dem$c00%s%dm$c00%s%da$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3]);
+                    sprintf(color2, "$c00%s%dg$c00%s%dem$c00%s%dm$c00%s%de$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3]);
+                }
+                break;
+            
+            case 5:
+                if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
+                {
+                    sprintf(color1, "$c00%s%dp$c00%s%di$c00%s%det$c00%s%dr$c00%s%da$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3], (colore[4] > 9 ? "" : "0"), colore[4]);
+                    sprintf(color2, "$c00%s%dp$c00%s%di$c00%s%det$c00%s%dr$c00%s%de$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3], (colore[4] > 9 ? "" : "0"), colore[4]);
+                }
+                else
+                {
+                    sprintf(color1, "$c00%s%dg$c00%s%de$c00%s%dm$c00%s%dm$c00%s%da$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3], (colore[4] > 9 ? "" : "0"), colore[4]);
+                    sprintf(color2, "$c00%s%dg$c00%s%de$c00%s%dm$c00%s%dm$c00%s%de$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3], (colore[4] > 9 ? "" : "0"), colore[4]);
+                }
+                break;
+            
+            default:
+                mudlog(LOG_CHECK, "Do_insert: something going wrong with number of gems[%d]", aff);
+                send_to_char("Qualcosa e' andato storto, contatta un immortale per cortesia", ch);
+                return;
+        }
+        
         if((hitroll + damroll) > 0 && GET_ITEM_TYPE(obj) == ITEM_WEAPON)
         {
             bool hnd = FALSE, h = FALSE, d = FALSE;
@@ -4066,13 +4230,13 @@ ACTION_FUNC(do_insert)
                     obj->affected[i].modifier = damroll;
                     hnd = TRUE;
                 }
-                else if(hitroll > damroll && obj->affected[i].location == APPLY_NONE && !h)
+                else if(hitroll != 0 && obj->affected[i].location == APPLY_NONE && !h && !hnd)
                 {
                     obj->affected[i].location = APPLY_HITROLL;
                     obj->affected[i].modifier = hitroll;
                     h = TRUE;
                 }
-                else if(hitroll < damroll && obj->affected[i].location == APPLY_NONE && !d)
+                else if(damroll != 0 && obj->affected[i].location == APPLY_NONE && !d && !hnd)
                 {
                     obj->affected[i].location = APPLY_DAMROLL;
                     obj->affected[i].modifier = damroll;
@@ -4090,44 +4254,44 @@ ACTION_FUNC(do_insert)
         if(((obj->obj_flags.cost - val_orig)/aff) <= 1500)
         {
             if(aff == 1)
-                sprintf(buf, "%s con una pietra incastrata brutalmente", obj->short_description);
+                sprintf(buf, "%s con una %s incastrata brutalmente", obj->short_description, color1);
             else
-                sprintf(buf, "%s con pietre incastrate brutalmente", obj->short_description);
+                sprintf(buf, "%s con %s incastrate brutalmente", obj->short_description, color2);
         }
         else if(((obj->obj_flags.cost - val_orig)/aff) <= 3000)
         {
             if(aff == 1)
-                sprintf(buf, "%s con incastonata una gemma di poco valore", obj->short_description);
+                sprintf(buf, "%s con incastonata una %s preziosa", obj->short_description, color1);
             else
-                sprintf(buf, "%s con incastonate alcune gemme di poco valore", obj->short_description);
+                sprintf(buf, "%s con incastonate alcune %s preziose", obj->short_description, color2);
         }
         else if(((obj->obj_flags.cost - val_orig)/aff) <= 4500)
         {
             if(aff == 1)
-                sprintf(buf, "%s con una pietra preziosa cesellata finemente", obj->short_description);
+                sprintf(buf, "%s con una %s preziosa cesellata finemente", obj->short_description, color1);
             else
-                sprintf(buf, "%s con delle pietre preziose cesellate finemente", obj->short_description);
+                sprintf(buf, "%s con delle %s preziose cesellate finemente", obj->short_description, color2);
         }
         else if(((obj->obj_flags.cost - val_orig)/aff) <= 6000)
         {
             if(aff == 1)
-                sprintf(buf, "%s con una grande gemma incastonata elegantemente", obj->short_description);
+                sprintf(buf, "%s con una grande %s incastonata elegantemente", obj->short_description, color1);
             else
-                sprintf(buf, "%s con delle grandi gemme incastonate elegantemente", obj->short_description);
+                sprintf(buf, "%s con delle grandi %s incastonate elegantemente", obj->short_description, color2);
         }
         else if(((obj->obj_flags.cost - val_orig)/aff) < 7500)
         {
             if(aff == 1)
-                sprintf(buf, "%s una rarissima pietra preziosa sapientemente incastonata", obj->short_description);
+                sprintf(buf, "%s con una rarissima %s preziosa sapientemente incastonata", obj->short_description, color1);
             else
-                sprintf(buf, "%s rarissime pietre preziose sapientemente incastonate", obj->short_description);
+                sprintf(buf, "%s con rarissime %s preziose sapientemente incastonate", obj->short_description, color2);
         }
         else
         {
             if(aff == 1)
-                sprintf(buf, "%s con una gemma unica cesellata ad arte", obj->short_description);
+                sprintf(buf, "%s con una %s unica cesellata ad arte", obj->short_description, color1);
             else
-                sprintf(buf, "%s con alcune gemme uniche cesellate ad arte", obj->short_description);
+                sprintf(buf, "%s con alcune %s uniche cesellate ad arte", obj->short_description, color2);
         }
         
         free(obj->short_description);

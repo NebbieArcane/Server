@@ -755,18 +755,18 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			}
 
 			if(IS_LINKDEAD(i)) {
-				strcat(buffer, "$c0015 (link dead)$c0007");
+				strcat(buffer, "$c0015(link dead)$c0007 ");
 			}
 
 			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009 (alone rosso)$c0007");
+					strcat(buffer, "$c0009(alone rosso)$c0007 ");
 				}
 			}
 
 
 			if(IS_AFFECTED2(i, AFF2_AFK)) {
-				strcat(buffer,"$c0006 (AFK)$c0007");
+				strcat(buffer,"$c0006(AFK)$c0007 ");
 			}
 
 			strcat(buffer, i->player.long_descr);
@@ -1162,7 +1162,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 
 			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009 (alone rosso)");
+					strcat(buffer, "$c0009 (alone rosso)$c0007");
 				}
 			}
 
@@ -1192,16 +1192,16 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 
 			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009 (alone rosso)");
+					strcat(buffer, "$c0009(alone rosso)$c0007 ");
 				}
 			}
 
 			if(IS_LINKDEAD(i)) {
-				strcat(buffer, "$c0015 (link dead)$c0007");
+				strcat(buffer, "$c0015(link dead)$c0007 ");
 			}
 
 			if(IS_AFFECTED2(i, AFF2_AFK)) {
-				strcat(buffer, "$c0006 (AFK)$c0007");
+				strcat(buffer, "$c0006(AFK)$c0007 ");
 			}
 
 			strcat(buffer, i->player.long_descr);

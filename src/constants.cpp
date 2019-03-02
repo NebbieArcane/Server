@@ -163,7 +163,7 @@ const char* spell_wear_off_msg[] = {
 	/*   78 SPELL_MON_SUM_5             */  "!monsum five!",
 	/*   79 SPELL_MON_SUM_6             */  "!monsum six!",
 	/*   80 SPELL_MON_SUM_7             */  "!monsum seven!",
-	/*   81 SPELL_FIRESHIELD            */  "Le scudo di $c0001fuoco$c0007 che ti proteggeva si dissolve.",
+	/*   81 SPELL_FIRESHIELD            */  "Lo scudo di $c0001fuoco$c0007 che ti proteggeva si dissolve.",
 	/*   82 SPELL_CHARM_MONSTER         */  "L'incantesimo che ti legava a qualcuno si dissolve.",
 	/*   83 SPELL_CURE_SERIOUS          */  "!cure serious!",
 	/*   84 SPELL_CAUSE_SERIOUS         */  "!cause serious!",
@@ -315,7 +315,7 @@ const char* spell_wear_off_msg[] = {
 	/*  230 SKILL_HYPNOSIS              */  "!hypnosis!",
 	/*  231 SKILL_MEDITATE              */  "Senti di aver meditato abbastanza.",
 	/*  232 SKILL_SCRY                  */  "!scry!",
-	/*  233 SKILL_ADRENALIZE            */  "La $c0009furia$c0007 scompare lasciando il posto ad un senso di $c0014calm$b$c0007.",
+	/*  233 SKILL_ADRENALIZE            */  "La $c0009furia$c0007 scompare lasciando il posto ad un senso di $c0014calma$c0007.",
 	/*  234 SKILL_BREW                  */  "!brew!",
 	/*  235 SKILL_RATION                */  "!ration!",
 	/*  236 SKILL_HOLY_WARCRY           */  "!holy warcry!",
@@ -358,7 +358,7 @@ const char* spell_wear_off_msg[] = {
 	/*  273 SKILL_LEVITATION            */  "Fluttui gentilmente a $c0003terra$c0007 mentre il tuo potere di levitazione si esaurisce.",
 	/*  274 SKILL_CELL_ADJUSTMENT       */  "!cell adjustment!",
 	/*  275 SKILL_CHAMELEON             */  "!chameleon!",
-	/*  276 SKILL_PSI_STRENGTH          */  "Senti che la $c009forza$c0007 fisica generata dalla tua mente ti abbandona.",
+	/*  276 SKILL_PSI_STRENGTH          */  "Senti che la $c0009forza$c0007 fisica generata dalla tua mente ti abbandona.",
 	/*  277 SKILL_MIND_OVER_BODY        */  "Inizi ad avere fame e sete!",
 	/*  278 SKILL_PROBABILITY_TRAVEL    */  "!probability travel!",
 	/*  279 SKILL_PSI_TELEPORT          */  "!psi teleport!",
@@ -388,7 +388,7 @@ const char* spell_wear_off_room_msg[] = {
 	/*    4 SPELL_BLINDNESS             */  "$n sbatte velocemente le palpebre.",
 	/*    5 SPELL_BURNING_HANDS         */  "!Burning Hands!",
 	/*    6 SPELL_CALL_LIGHTNING        */  "!Call Lightning!",
-	/*    7 SPELL_CHARM_PERSON          */  "$n si squote e trema.",
+	/*    7 SPELL_CHARM_PERSON          */  "$n si scuote e trema.",
 	/*    8 SPELL_CHILL_TOUCH           */  "$n sembra un po' piu' $c0009forte$c0007.",
 	/*    9 SPELL_CLONE                 */  "!Clone!",
 	/*   10 SPELL_COLOUR_SPRAY          */  "!Color Spray!",
@@ -463,7 +463,7 @@ const char* spell_wear_off_room_msg[] = {
     /*   79 SPELL_MON_SUM_6             */  "!monsum six!",
     /*   80 SPELL_MON_SUM_7             */  "!monsum seven!",
 	/*   81 SPELL_FIRESHIELD            */  "Lo scudo $c0009infuocato$c0007 che avvolgeva $n svanisce.",
-    /*   82 SPELL_CHARM_MONSTER         */  "$n si squote e trema.",
+    /*   82 SPELL_CHARM_MONSTER         */  "$n si scuote e trema.",
 	/*   83 SPELL_CURE_SERIOUS          */  "!cure serious!",
     /*   84 SPELL_CAUSE_SERIOUS         */  "!cause serious!",
     /*   85 SPELL_REFRESH               */  "!refresh!",
@@ -518,7 +518,7 @@ const char* spell_wear_off_room_msg[] = {
 	/*  134 SPELL_WATER_SERVANT         */  "",
 	/*  135 SPELL_WIND_SERVANT          */  "",
 	/*  136 SPELL_REINCARNATE           */  "!reincarnate!",
-	/*  137 SPELL_CHARM_VEGGIE          */  "$n si squote e trema.",
+	/*  137 SPELL_CHARM_VEGGIE          */  "$n si scuote e trema.",
 	/*  138 SPELL_VEGGIE_GROWTH         */  "$n rimpicciolisce a vista d'occhio.",
 	/*  139 SPELL_TREE                  */  "$n riprende la sua vera forma.",
 	/*  140 SPELL_ANIMATE_ROCK          */  "!Animate rock!",
@@ -1375,33 +1375,33 @@ const char* ItemDamType[] = {
 };
 
 const char* weekdays[7] = {
-	"il Giorno delle $c0015Spade$c0007",
-	"il Giorno degli $c0003Archi$c0007",
-	"il Giorno delle $c0015Asce$c0007",
-	"il Giorno dei $c0015Martelli$c0007",
-	"il Giorno della $c0012Battaglia$c0007",
-	"il Giorno della $c0011Grazia$c0007",
-	"il Giorno della $c0014Pace$c0007"
+	"il $c0015Giorno delle Spade$c0007",
+	"il $c0003Giorno degli Archi$c0007",
+	"il $c0015Giorno delle Asce$c0007",
+	"il $c0015Giorno dei Martelli$c0007",
+	"il $c0012Giorno della Battaglia$c0007",
+	"il $c0011Giorno della Grazia$c0007",
+	"il $c0014Giorno della Pace$c0007"
 };
 
 const char* month_name[17] = {
-	"Mese dell'$c0015Inverno$c0007",         /* 0 */
-	"Mese del $c0015Lupo Bianco$c0007",
-	"Mese della $c0014Grande Gelata$c0007",
-	"Mese delle $c0009Antiche Forze$c0007",
-	"Mese del $c0011Grande Pianto$c0007",
-	"Mese della $c0010Primavera$c0007",
-	"Mese della $c0010N$c0003a$c0010t$c0003u$c0010r$c0003a$c0007",
-	"Mese della $c0013Fertilita'$c0007",
-	"Mese del $c0003Drago$c0007",
-	"Mese del $c0011Sole$c0007",
-	"Mese del $c0009Caldo$c0007",
-	"Mese della $c0012Battaglia$c0007",
-	"Mese della $c0009Guerra$c0007 fra gli $c0015Dei$c0007",
-	"Mese delle $c0008Ombre$c0007",
-	"Mese delle $c0008Ombre Lunghe$c0007",
-	"Mese dell'$c0008Oscurita' Primordiale$c0007",
-	"Mese del $c0009Malvagio$c0007"
+	"$c0015Mese dell'Inverno$c0007",         /* 0 */
+	"$c0015Mese del Lupo Bianco$c0007",
+	"$c0014Mese della Grande Gelata$c0007",
+	"$c0009Mese delle Antiche Forze$c0007",
+	"$c0011Mese del Grande Pianto$c0007",
+	"$c0010Mese della Primavera$c0007",
+	"$c0003Mese della $c0010N$c0003a$c0010t$c0003u$c0010r$c0003a$c0007",
+	"$c0013Mese della Fertilita'$c0007",
+	"$c0003Mese del Drago$c0007",
+	"$c0011Mese del Sole$c0007",
+	"$c0009Mese del Caldo$c0007",
+	"$c0012Mese della Battaglia$c0007",
+	"$c0009Mese della Guerra fra gli Dei$c0007",
+	"$c0008Mese delle Ombre$c0007",
+	"$c0008Mese delle Ombre Lunghe$c0007",
+	"$c0008Mese dell'Oscurita' Primordiale$c0007",
+	"$c0009Mese del Malvagio$c0007"
 };
 
 const int sharp[] = {
