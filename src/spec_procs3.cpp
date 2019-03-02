@@ -5252,20 +5252,26 @@ MOBSPECIAL_FUNC(AssignQuest) {
             }
                 
             if(quest_type < 2) {
-                if(!IS_SET(ch->specials.act, ACT_SENTINEL)) {
+                if(!IS_SET(quest_tgt->specials.act, ACT_SENTINEL)) {
                     SET_BIT(quest_tgt->specials.act, ACT_SENTINEL);
                 }
-                if(IS_SET(ch->specials.act, ACT_STAY_ZONE)) {
+                if(IS_SET(quest_tgt->specials.act, ACT_STAY_ZONE)) {
                     REMOVE_BIT(quest_tgt->specials.act, ACT_STAY_ZONE);
                 }
-                if(IS_SET(ch->specials.act, ACT_AGGRESSIVE)) {
+                if(IS_SET(quest_tgt->specials.act, ACT_AGGRESSIVE)) {
                     REMOVE_BIT(quest_tgt->specials.act, ACT_AGGRESSIVE);
                 }
-                if(IS_SET(ch->specials.act, ACT_META_AGG)) {
+                if(IS_SET(quest_tgt->specials.act, ACT_META_AGG)) {
                     REMOVE_BIT(quest_tgt->specials.act, ACT_META_AGG);
                 }
-                if(IS_SET(ch->specials.act, ACT_HATEFUL)) {
+                if(IS_SET(quest_tgt->specials.act, ACT_HATEFUL)) {
                     REMOVE_BIT(quest_tgt->specials.act, ACT_HATEFUL);
+                }
+                if(!IS_SET(quest_tgt->specials.affected_by, AFF_FLYING)) {
+                    SET_BIT(quest_tgt->specials.affected_by, AFF_FLYING)
+                }
+                if(!IS_SET(quest_tgt->specials.affected_by, AFF_WATERBREATH)) {
+                    SET_BIT(quest_tgt->specials.affected_by, AFF_WATERBREATH)
                 }
             }
 
