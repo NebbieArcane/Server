@@ -856,14 +856,14 @@ void SpellWearOff(int s, struct char_data* ch) {
     
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
+            affect_from_char(ch, STATUS_QUEST);
+            
             if(ch->specials.quest_ref) {
                 if(GET_POS(ch->specials.quest_ref) > POSITION_DEAD)
-                {
-                    extract_char(ch->specials.quest_ref);
                     ch->specials.quest_ref = NULL;
                 }
             }
-        } else {
+        else {
             /* fine dei giochi, si torna a casa */
             switch(GET_POS(ch)) {
                     
@@ -1053,9 +1053,9 @@ void affect_update(unsigned long localPulse) {
 						SpellWearOff(af->type, i);
 					}
 
-					/* Se il tipo di affect e' SPELL_CHARM_PERSON, l'affect e' gia' stato
+					/* Se il tipo di affect e' SPELL_CHARM_PERSON o STATUS_QUEST, l'affect e' gia' stato
 					* tolto da SpellWearOff */
-					if(iType != SPELL_CHARM_PERSON) {
+					if(iType != SPELL_CHARM_PERSON && iType != STATUS_QUEST) {
 						check_memorize(i, af);
 						affect_remove(i, af);
 					}
