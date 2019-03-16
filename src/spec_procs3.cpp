@@ -5660,7 +5660,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     
     case EVENT_TICK     :
             
-            if(!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) {
+            if(!t || (!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob)) {
                 if(real_roomp(mob->in_room)->people) {
                     sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
                     act(buf, FALSE, mob, 0, 0, TO_ROOM);
