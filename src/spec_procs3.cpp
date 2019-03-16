@@ -5607,10 +5607,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     char buf[MAX_STRING_LENGTH];
     
     if(!mob) {
-        return FALSE;
+        return TRUE;
     }
     
-    if(!mob->specials.quest_ref) {
+    if(!mob->specials.quest_ref || mob->specials.quest_ref == NULL) {
         if(real_roomp(mob->in_room)->people) {
             sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
             act(buf, FALSE, mob, 0, 0, TO_ROOM);
@@ -5660,7 +5660,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     
     case EVENT_TICK     :
             
-            if(!t || (!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob)) {
+            if((!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) || !mob->specials.quest_ref) {
                 if(real_roomp(mob->in_room)->people) {
                     sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
                     act(buf, FALSE, mob, 0, 0, TO_ROOM);
