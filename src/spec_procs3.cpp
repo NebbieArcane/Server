@@ -5580,6 +5580,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
                         act(buf, FALSE, mob, 0, 0, TO_ROOM);
                     }
+                    mob->specials.quest_ref = NULL;
                     extract_char(mob);
                     return FALSE;
                 }
@@ -5665,6 +5666,7 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                     sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
                     act(buf, FALSE, mob, 0, 0, TO_ROOM);
                 }
+                mob->specials.quest_ref = NULL;
                 extract_char(mob);
                 return FALSE;
             }

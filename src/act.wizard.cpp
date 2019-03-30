@@ -4890,7 +4890,7 @@ ACTION_FUNC(do_show) {
 
 	/*Acidus 2004-show rare*/
 	else if(is_abbrev(buf, "rare")) {
-		if(GetMaxLevel(ch) < 59) {
+		if(GetMaxLevel(ch) < MAESTRO_DEL_CREATO) {
 			send_to_char("Non sei di livello sufficientemente alto.\n\r",
 						 ch);
 			return;
@@ -4908,7 +4908,7 @@ ACTION_FUNC(do_show) {
 		append_to_string_block(&sb, "Usage:\n\r"
 							   "  show zones\n\r"
 							   "  show (objects|mobiles) (zone#|name)\n\r"
-							   "  show rare (only liv>=59)\n\r"
+							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r");
 	}
 	page_string_block(&sb, ch);
