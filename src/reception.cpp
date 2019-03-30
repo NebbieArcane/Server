@@ -1396,7 +1396,7 @@ void CountLimitedItems(struct obj_file_u* st) {
 					obj_index[ obj->item_number ].number++;
 
 					/*Acidus 2004-show rare*/
-					sprintf(buf, "  %5d %s %s\n\r", obj->item_number,obj->name,st->owner);
+					sprintf(buf, "  %5d %s %s\n\r", (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0), obj->name, st->owner);
 					strncat(rarelist, " ",MAX_STRING_LENGTH);
 					strncat(rarelist, buf,MAX_STRING_LENGTH);
 

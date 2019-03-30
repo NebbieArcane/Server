@@ -4908,7 +4908,7 @@ ACTION_FUNC(do_show) {
 		append_to_string_block(&sb, "Usage:\n\r"
 							   "  show zones\n\r"
 							   "  show (objects|mobiles) (zone#|name)\n\r"
-							   "  show rare (only liv>=59)\n\r"
+							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r");
 	}
 	page_string_block(&sb, ch);
