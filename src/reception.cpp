@@ -1414,9 +1414,10 @@ void PrintLimitedItems() {
 	mudlog(LOG_CHECK, "  VNUM  Amount  Name");
 	for(i = 0; i < top_of_objt; i++) {
 		if(obj_index[ i ].number > 0) {
+/* sposto il tutto sul load zone del db.cpp
 #if NICE_LIMITED
 			obj_index[i].number/=2;
-#endif
+#endif */
 
 			mudlog(LOG_SAVE, "  %5d [%5d] %s", obj_index[ i ].iVNum,
 				   obj_index[i].number,

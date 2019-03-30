@@ -2574,6 +2574,10 @@ void reset_zone(int zone) {
 
 			case 'O': /* read an object */
 				SetStatus("Command O", rbuf);
+#if NICE_LIMITED
+                if(ZCMD.arg2 > 0)
+                    ZCMD.arg2 *= 2;
+#endif
 				pObj = NULL;
 				nLastCmd = FALSE;
 				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
@@ -2597,6 +2601,10 @@ void reset_zone(int zone) {
 
 			case 'P': /* object to object */
 				SetStatus("Command P", rbuf);
+#if NICE_LIMITED
+                if(ZCMD.arg2 > 0)
+                    ZCMD.arg2 *= 2;
+#endif
 				if(ZCMD.arg1 >= 0 &&
 						(ZCMD.arg2 == 0 ||
 						 obj_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
@@ -2613,6 +2621,10 @@ void reset_zone(int zone) {
 
 			case 'G': /* obj_to_char */
 				SetStatus("Command G", rbuf);
+#if NICE_LIMITED
+                if(ZCMD.arg2 > 0)
+                    ZCMD.arg2 *= 2;
+#endif
 				if(ZCMD.arg1 >= 0 &&
 						(ZCMD.arg2 == 0 ||
 						 obj_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
@@ -2639,6 +2651,10 @@ void reset_zone(int zone) {
 
 			case 'E': /* object to equipment list */
 				SetStatus("Command E", rbuf);
+#if NICE_LIMITED
+                if(ZCMD.arg2 > 0)
+                    ZCMD.arg2 *= 2;
+#endif
 				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 ||
 									  obj_index[ZCMD.arg1].number < ZCMD.arg2) &&
 						pLastMob && (pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
