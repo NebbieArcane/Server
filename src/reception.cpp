@@ -1202,6 +1202,10 @@ void update_obj_file() {
                             {
                                 ok = FALSE;
                             }
+                            else
+                            {
+                                ok = TRUE;
+                            }
                         }
 
                         if(ok)
