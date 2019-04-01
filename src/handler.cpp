@@ -2282,7 +2282,13 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 			obj_to_room(unequip_char(ch, l), was_in);
 		}
 
-
+    if(IS_PC(ch) && ch->specials.quest_ref != NULL)
+    {
+        send_to_char("$c0011Mi dispiace, hai fallito la tua quest!\n\r", ch);
+        (ch->specials.quest_ref)->specials.quest_ref = NULL;
+        ch->specials.quest_ref = NULL;
+    }
+    
 	if(IS_NPC(ch)) {
 		for(k = character_list; k; k = k->next) {
 			if(k->specials.hunting)
