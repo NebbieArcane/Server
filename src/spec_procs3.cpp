@@ -5396,6 +5396,8 @@ MOBSPECIAL_FUNC(MobCaccia) {
             sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
             act(buf, FALSE, mob, 0, 0, TO_ROOM);
         }
+        if(mob->specials.quest_ref != NULL)
+            mob->specials.quest_ref = NULL;
         extract_char(mob);
         return FALSE;
     }
@@ -5616,6 +5618,8 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
             sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
             act(buf, FALSE, mob, 0, 0, TO_ROOM);
         }
+        if(mob->specials.quest_ref != NULL)
+            mob->specials.quest_ref = NULL;
         extract_char(mob);
         return FALSE;
     }
