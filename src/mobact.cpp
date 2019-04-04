@@ -375,6 +375,12 @@ void mobile_activity(struct char_data* ch) {
 		mudlog(LOG_SYSERR, "ch == NULL in mobile_activity (mobact.c)");
 		return;
 	}
+    
+    if(ch->in_room > 99999 || ch->in_room <= -1)
+    {
+        mudlog(LOG_SYSERR, "ch->in_room = %d", ch->in_room);
+        return;
+    }
 
 	if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
 		mudlog(LOG_SYSERR,

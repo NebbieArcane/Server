@@ -1859,7 +1859,7 @@ void act(const char* str, int hide_invisible, struct char_data* ch,
 		return;
 	}
 
-	if(ch->in_room <= -1) {
+	if(ch->in_room <= -1 || ch->in_room > 99999) {
 		return;    /* can't do it. in room -1 */
 	}
 
