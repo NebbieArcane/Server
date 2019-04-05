@@ -1953,6 +1953,14 @@ void spell_dispel_magic(byte level, struct char_data* ch,
         
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
+            if(victim->specials.quest_ref)
+            {
+                if(real_roomp((victim->specials.quest_ref)->in_room)->people)
+                {
+                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, victim->specials.quest_ref, 0, 0, TO_ROOM);
+                }
+                extract_char(victim->specials.quest_ref);
+            }
             victim->specials.quest_ref = NULL;
             send_to_char("$c0011Non sei piu' in missione.\n\r",victim);
         }
