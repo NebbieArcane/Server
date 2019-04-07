@@ -137,6 +137,23 @@ void spell_resurrection(byte level, struct char_data* ch,
 			/* get rid of corpse */
 			extract_obj(obj);
 
+            if(HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_CLERIC_2, CLASS_ACHIE);
+            }
 
 		}
 		else {
@@ -212,6 +229,24 @@ void spell_resurrection(byte level, struct char_data* ch,
 					act("$n cade a terra privo di sensi!",TRUE, ch, 0, 0, TO_ROOM);
 					send_to_char("Svieni e crolli a terra.\n\r",ch);
 				}
+
+                if(HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_CLERIC_2, CLASS_ACHIE);
+                }
 
 				rewind(fl);
 				fwrite(&st, sizeof(struct char_file_u), 1, fl);

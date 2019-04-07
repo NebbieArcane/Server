@@ -207,6 +207,24 @@ ACTION_FUNC(do_disarm) {
 			 */
 			obj_to_room(w, victim->in_room);
 			ActionAlignMod(ch,victim,cmd);
+
+            if(HasClass(ch, CLASS_MONK) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achie_class[ACHIE_MONK_1] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achie_class[ACHIE_MONK_1] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_MONK_1, CLASS_ACHIE);
+            }
 		}
 		else {
 			act("Nonostante $N non abbia nessuna arma, viene rallentato dalla tua mossa.",
@@ -228,6 +246,7 @@ ACTION_FUNC(do_finger) {
 	char name[ MAX_INPUT_LENGTH ];
 	int percent;
 	struct char_data* victim;
+    struct affected_type af;
 
 	if(!ch->skills) {
 		return;
@@ -326,7 +345,7 @@ ACTION_FUNC(do_finger) {
 		act("Veloci come serpenti le tue dita raggiungono gli occhi"
 			" di $N e l$B accecano.", TRUE, ch, 0, victim,
 			TO_CHAR);
-		act("$c0001AAAAARGH! $c0007$n ti ha accecato$B!!.",
+		act("$c0001AAAAARGH! $c0007$n ti ha accecato$B!!!",
 			TRUE, ch, 0, victim, TO_VICT);
 		ActionAlignMod(ch,victim,cmd);
 		if((GET_POS(victim) > POSITION_SLEEPING) &&
@@ -334,8 +353,32 @@ ACTION_FUNC(do_finger) {
 			set_fighting(victim, ch);
 		}
 		WAIT_STATE(ch, PULSE_VIOLENCE*3); // finger
-		SET_BIT(victim->specials.affected_by,AFF_BLIND);
-		spell_blindness(2,ch,victim,0);
+        //    SET_BIT(victim->specials.affected_by,AFF_BLIND);
+        //    spell_blindness(2,ch,victim,0);         // tu accechi il tuo avversario ma poi viene castato blindness?
+        af.type      = SPELL_BLINDNESS;
+        af.location  = APPLY_HITROLL;
+        af.modifier  = -4;  /* Make hitroll worse */
+        af.duration  = GetMaxLevel(ch) / 15;
+        af.bitvector = AFF_BLIND;
+        affect_to_char(victim, &af);
+
+        if(HasClass(ch, CLASS_MONK) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_MONK_3] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_MONK_3] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_MONK_3, CLASS_ACHIE);
+        }
 	}
 }
 
@@ -1289,6 +1332,24 @@ ACTION_FUNC(do_first_aid) {
 		}
 
 		af.duration = 6;  /* Aumentata la frequenza Gaia 2001 */
+
+        if(HasClass(ch, CLASS_BARBARIAN) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_BARBARIAN_3] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_BARBARIAN_3] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_BARBARIAN_3, CLASS_ACHIE);
+        }
 	}
 	else {
 		af.duration = 3;
@@ -3558,6 +3619,24 @@ ACTION_FUNC(do_tan) {
 						j->short_description);
 				act(buf,TRUE, ch, 0, 0, TO_ROOM);
 				WAIT_STATE(ch, PULSE_VIOLENCE*((int)lev/2));
+
+                if(HasClass(ch, CLASS_RANGER) && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achie_class[ACHIE_RANGER_1] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achie_class[ACHIE_RANGER_1] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_RANGER_1, CLASS_ACHIE);
+                }
 				return;
 			}
 		}
@@ -4302,7 +4381,7 @@ ACTION_FUNC(do_carve) {
 	if((r_num = real_object(FOUND_FOOD)) >= 0) {
 		food = read_object(r_num, REAL);
 		food->name= (char*)strdup("ration slice filet food");
-		sprintf(buffer,"a Ration%s",corpse->short_description+10);
+		sprintf(buffer,"a Ration of %s",corpse->short_description+10);
 		food->short_description= (char*)strdup(buffer);
 		food->action_description= (char*)strdup(buffer);
 		sprintf(arg2,"%s is lying on the ground.",buffer);
@@ -4314,6 +4393,24 @@ ACTION_FUNC(do_carve) {
 		}
 		obj_to_room(food,ch->in_room);
 		WAIT_STATE(ch, PULSE_VIOLENCE*3);
+
+        if(HasClass(ch, CLASS_RANGER) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_RANGER_3] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_RANGER_3] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_RANGER_3, CLASS_ACHIE);
+        }
 	} /* we got the numerb of the item... */
 
 }
@@ -4413,6 +4510,24 @@ ACTION_FUNC(do_doorway) {
 		act("A portal appears before you and $n steps through!",FALSE,ch,0,0,TO_ROOM);
 		do_look(ch, "",15);
 		WAIT_STATE(ch, PULSE_VIOLENCE*3);
+
+        if(HasClass(ch, CLASS_PSI) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_PSI_1] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_PSI_1] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_PSI_1, CLASS_ACHIE);
+        }
 	}
 }
 
@@ -5171,7 +5286,7 @@ ACTION_FUNC(do_blast) {
 	}
 
 	if(GetMaxLevel(victim) >= IMMORTALE || IS_IMMORTAL(victim)) {
-		send_to_char("Egli ignora la tua battuta di spirito!\n\r",ch);
+		act("$N ignora la tua battuta di spirito!", TRUE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
@@ -5362,6 +5477,9 @@ ACTION_FUNC(do_blast) {
 		case 15:
 		case 16:
 		case 17:
+            dam = 200;
+            if(IS_IMMORTAL(ch) && IS_PC(victim))
+                dam = 0;
 			if(GET_POS(victim) > POSITION_STUNNED) {
 				GET_POS(victim) = POSITION_STUNNED;
 			}
@@ -5381,6 +5499,27 @@ ACTION_FUNC(do_blast) {
 	if(damage(ch, victim, dam, SKILL_PSIONIC_BLAST, 5) != SubjectDead) {
 		WAIT_STATE(ch, PULSE_VIOLENCE * 2);    // blast
 	}
+
+    if(IS_IMMORTAL(ch) && IS_PC(victim))
+        stop_fighting(ch);
+    
+    if(HasClass(ch, CLASS_PSI) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_PSI_2] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_PSI_2] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_PSI_2, CLASS_ACHIE);
+    }
 }
 
 ACTION_FUNC(do_hypnosis) {
@@ -5735,6 +5874,24 @@ ACTION_FUNC(do_adrenalize) {
         act("$n sfiora la testa di $N.",TRUE,ch,0,target,TO_NOTVICT);
         act("$N cambia espressione all'improvviso: noti uno sguardo $c0001folle$c0007 nei suoi occhi!",TRUE,ch,0,target,TO_NOTVICT);
     }
+
+    if(HasClass(ch, CLASS_PSI) && ch != target && IS_PC(target) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_PSI_3] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_PSI_3] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_PSI_3, CLASS_ACHIE);
+    }
 }
 
 ACTION_FUNC(do_meditate) {
@@ -6053,6 +6210,24 @@ ACTION_FUNC(do_blessing) {
 	af.duration  = 24*3;    /* once every three days */
 	affect_to_char(ch, &af);
 	WAIT_STATE(ch,PULSE_VIOLENCE*2);
+
+    if(HasClass(ch, CLASS_PALADIN) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_PALADIN_1] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_PALADIN_1] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_PALADIN_1, CLASS_ACHIE);
+    }
 }
 
 
@@ -6130,6 +6305,24 @@ ACTION_FUNC(do_lay_on_hands) {
 	af.duration  = 24;
 	affect_to_char(ch, &af);
 	WAIT_STATE(ch,PULSE_VIOLENCE);
+
+    if(HasClass(ch, CLASS_PALADIN) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_PALADIN_3] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_PALADIN_3] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_PALADIN_3, CLASS_ACHIE);
+    }
 }
 
 
@@ -6229,6 +6422,25 @@ ACTION_FUNC(do_holy_warcry) {
 				set_fighting(ch, dude);
 			}
 		}
+
+        if(HasClass(ch, CLASS_PALADIN) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_PALADIN_2] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_PALADIN_2] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_PALADIN_2, CLASS_ACHIE);
+        }
+
 		WAIT_STATE(ch, PULSE_VIOLENCE * 3);
 	}
 }

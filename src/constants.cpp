@@ -3015,7 +3015,7 @@ const char* player_bits[] = {
 	"NOTELL",
 	"MAILING",
 	"HAS_NEW_EQ",
-	"EMPTY5",
+	"HAS_ACHIEVEMENT",
 	"NOBEEP",
 	"\n"
 };
@@ -4455,6 +4455,281 @@ const char* att_kick_hit_room[] = {
 	"$n calcia $N con tal forza che ne stacca qualche squama!",
 	"$n scatta in piedi e centra $N con un gran calcio.",
 	"."
+};
+
+struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
+    {
+        0,  /* achie_type */                                    "",/* achie_string1 */              "", // achie_string2
+        "", /* lvl1 */                                          0, //   lvl1_val
+        "", /* lvl2 */                                          0, //   lvl2_val
+        "", /* lvl3 */                                          0, //   lvl3_val
+        "", /* lvl4 */                                          0, //   lvl4_val
+        "", /* lvl5 */                                          0  //   lvl5_val
+    },
+    {
+        ACHIE_MAGE_1,                                           "portale fatto",                            "portali fatti",
+        "Non sono sicuro dove porti...",                        1,
+        "Un taxi signore?",                                     100,
+        "Scarpe? A cosa servono?",                              1000,
+        "Un piccolo mondo!",                                    10000,
+        "Signore dei Portali",                                  100000
+    },
+    {
+        ACHIE_MAGE_2,                                           "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
+        "Ops, non volevo",                                      1,
+        "Quasi quasi ci prendo gusto",                          100,
+        "Sei sicuro di volermi provocare?",                     1000,
+        "Nemico? Quale nemico?",                                10000,
+        "Disintegratore",                                       100000
+    },
+    {
+        ACHIE_MAGE_3,                                           "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
+        "Cosa mi e' successo?!?",                               1,
+        "Guardami adesso!",                                     100,
+        "Ti giuro che non ci sono!",                            1000,
+        "Sono dietro di te",                                    10000,
+        "Mr. Nessuno",                                          100000
+    },
+    {
+        ACHIE_CLERIC_1,                                         "incantesimo di guarigione lanciato",       "incantesimi di guarigione lanciati",
+        "Mi sembra di ricordare si faccia cosi'",               1,
+        "Ne ho visti tanti messi peggio",                       100,
+        "Vai sereno tank!",                                     1000,
+        "Chi trova un chierico trova un tesoro",                10000,
+        "Lasciatemi passare, sono IL medico!",                  100000
+    },
+    {
+        ACHIE_CLERIC_2,                                         "resurrezione fatta",                       "resurrezioni fatte",
+        "Ci posso provare",                                     1,
+        "Ci penso io!",                                         100,
+        "Morte non ti temo",                                    1000,
+        "Immortalis",                                           10000,
+        "Nemesi di Thanatos",                                   100000
+    },
+    {
+        ACHIE_CLERIC_3,                                         "incantesimo di santuario lanciato",        "incantesimi di santuario lanciati",
+        "Cosi' dovrebbe andare meglio",                         1,
+        "Se mi lasci non ti accendo",                           100,
+        "Inserisco la spina",                                   1000,
+        "Ti copro io, tranquillo!",                             10000,
+        "Portatore di Luce",                                    100000
+    },
+    {
+        ACHIE_WARRIOR_1,                                        "avversario buttato a terra",               "avversari buttati a terra",
+        "Scusa, sono inciampato",                               1,
+        "Attaccabrighe",                                        100,
+        "Bullo",                                                1000,
+        "Bulldozer",                                            10000,
+        "Demolitore",                                           100000
+    },
+    {
+        ACHIE_WARRIOR_2,                                        "atterramento fallito",                     "atterramenti falliti",
+        "Buccia di banana",                                     1,
+        "Zoppo",                                                100,
+        "Ubriacone",                                            1000,
+        "Maldestro",                                            10000,
+        "Il guerriero non è il mio mestiere",                   100000
+    },
+    {
+        ACHIE_WARRIOR_3,                                        "compagno salvato",                         "compagni salvati",
+        "Dici a me?",                                           1,
+        "Ti guardo le spalle",                                  100,
+        "Impiccione",                                           1000,
+        "Salva donzelle",                                       10000,
+        "Risolvi problemi",                                     100000
+    },
+    {
+        ACHIE_THIEF_1,                                          "avversario pugnalato alle spalle",         "avversari pugnalati alle spalle",
+        "Non sono stato io!",                                   1,
+        "Ci prendo gusto",                                      100,
+        "Toh, un puntaspilli",                                  1000,
+        "Non darmi mai le spalle",                              10000,
+        "Punitore",                                             100000
+    },
+    {
+        ACHIE_THIEF_2,                                          "avversario ucciso con un colpo",           "avversari uccisi con un colpo",
+        "Era gia' morto!",                                      1,
+        "Ora lo zittisco",                                      100,
+        "Ne uccide piu' lo stab della spada",                   1000,
+        "Fratello morte",                                       10000,
+        "Assassino",                                            100000
+    },
+    {
+        ACHIE_THIEF_3,                                          "avversario derubato",                      "avversari derubati",
+        "Ti e' caduto qualcosa?",                               1,
+        "Povero e' chi il povero fa",                           100,
+        "Robin Hood!",                                          1000,
+        "Me lo hai dato tu, giuro!",                            10000,
+        "Lupin III",                                            100000
+    },
+    {
+        ACHIE_DRUID_1,                                          "massa di insetti evocata",                 "masse di insetti evocate",
+        "Mi sto per sentire male",                              1,
+        "Ho mangiato pesante oggi, state attenti!",             100,
+        "Forse non c'e' bisogno di entrare...",                 1000,
+        "Sta a vedere!",                                        10000,
+        "Morte Strisciante",                                    100000
+    },
+    {
+        ACHIE_DRUID_2,                                          "metamorfosi riuscita",                     "metamorfosi riuscite",
+        "Cosa... mi... sta... succedendo...",                   1,
+        "Mi sto imbufalendo",                                   100,
+        "Ci vorrebbe la forza di un orso!",                     1000,
+        "Sei sicuro fossi io?",                                 10000,
+        "Doppleganger",                                         100000
+    },
+    {
+        ACHIE_DRUID_3,                                          "reincarnazione fatta",                     "reincarnazioni fatte",
+        "Cosa ho combinato? Scusa, non volevo!",                1,
+        "Non vorrei essere nei tuoi panni!",                    100,
+        "Conosci la fiaba del principe ranocchio?",             1000,
+        "Vorresti essere qualcun'altro, vero?",                 10000,
+        "Maestro Manipolatore",                                 100000
+    },
+    {
+        ACHIE_MONK_1,                                           "avversario disarmato",                     "avversari disarmati",
+        "Non volevo, scusami :-)",                              1,
+        "Ti e' caduta l'arma?",                                 100,
+        "Vuoi vedere che tela faccio volare?",                  1000,
+        "Arma? Quale arma?",                                    10000,
+        "Io e te, senza armi, ora, qui!",                       100000
+    },
+    {
+        ACHIE_MONK_2,                                           "palmo vibrante",                           "palmo vibrante",
+        "Volevo solo stringerti la mano!",                      1,
+        "Tirami il dito!",                                      100,
+        "One Inch Punch",                                       1000,
+        "Ti spiezzo con un dito",                               10000,
+        "Nirvana",                                              100000
+    },
+    {
+        ACHIE_MONK_3,                                           "nemico accecato",                          "nemici accecati",
+        "Ops, non l'ho fatto apposta...",                       1,
+        "Ops, l'ho fatto di nuovo...",                          100,
+        "Aspetta, hai qualcosa nell'occhio!",                   1000,
+        "Guarda qui e sorridi",                                 10000,
+        "Tu, non puoi, vedermi!",                               100000
+    },
+    {
+        ACHIE_BARBARIAN_1,                                      "volta in berserk",                     "volte in berserk",
+        "Mi sono un po' innervosito",                           1,
+        "Ora mi arrabbio sul serio!",                           100,
+        "Statemi lontano adesso",                               1000,
+        "Prova a ripeterlo, se hai il coraggio!",               10000,
+        "Furia Rossa",                                          100000
+    },
+    {
+        ACHIE_BARBARIAN_2,                                      "pugnalata alle spalle evitata",        "pugnalate alle spalle evitate",
+        "Che cosa e' stato?",                                   1,
+        "Andra' meglio la prossima volta",                      100,
+        "Ne sei proprio sicuro?",                               1000,
+        "Cosa pensavi di fare?",                                10000,
+        "Occhi di Beholder",                                    100000
+    },
+    {
+        ACHIE_BARBARIAN_3,                                      "medicazione effettuata",               "medicazioni effettuate",
+        "Aspetta che ci soffio sopra!",                         1,
+        "Ora si che va meglio!",                                100,
+        "Dammi un pezzo della tua maglia!",                     1000,
+        "E' solo un graffio...",                                10000,
+        "Maestro Sciamano",                                     100000
+    },
+    {
+        ACHIE_SORCERER_1,                                       "portale fatto",                            "portali fatti",
+        "Non sono sicuro dove porti...",                        1,
+        "Un taxi signore?",                                     100,
+        "Scarpe? A cosa servono?",                              1000,
+        "Un piccolo mondo!",                                    10000,
+        "Signore dei Portali",                                  100000
+    },
+    {
+        ACHIE_SORCERER_2,                                       "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
+        "Ops, non volevo",                                      1,
+        "Quasi quasi ci prendo gusto",                          100,
+        "Sei sicuro di volermi provocare?",                     1000,
+        "Nemico? Quale nemico?",                                10000,
+        "Disintegratore",                                       100000
+    },
+    {
+        ACHIE_SORCERER_3,                                       "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
+        "Cosa mi e' successo?!?",                               1,
+        "Guardami adesso!",                                     100,
+        "Ti giuro che non ci sono!",                            1000,
+        "Sono dietro di te",                                    10000,
+        "Mr. Nessuno",                                          100000
+    },
+    {
+        ACHIE_PALADIN_1,                                        "benedizione invocata",                     "benedizioni invocate",
+        "Che cos'e' questa luce?",                              1,
+        "Hai visto la luce!",                                   100,
+        "Gli Dei sono dalla mia parte",                         1000,
+        "Sono il prescelto!",                                   10000,
+        "L'Eletto",                                             100000
+    },
+    {
+        ACHIE_PALADIN_2,                                        "grido di guerra lanciato",                 "grido di guerra lanciati",
+        "Volevo solo chiamarti...",                             1,
+        "Posso sussurrarti una cosa all'orecchio?",             100,
+        "Huj, Huj, Hajra'",                                     1000,
+        "Forse ho esagerato con la birra",                      10000,
+        "Furia di Guerra",                                      100000
+    },
+    {
+        ACHIE_PALADIN_3,                                        "consacrazione",                            "consacrazioni",
+        "Aiuto, le mie mani brillano!",                         1,
+        "Ho le mani d'oro io",                                  100,
+        "Serve un massaggio?",                                  1000,
+        "Non ti muovere e fatti toccare!",                      10000,
+        "Io porto la Luce nel Mondo",                           100000
+    },
+    {
+        ACHIE_RANGER_1,                                         "pelle ottenuta squoiando",                 "pelli ottenute squoiando",
+        "Povera bestia, mi viene da piangere",                  1,
+        "Mi sa che posso farci qualcosa di utile",              100,
+        "Dammi una lama e ti concio per le feste!",             1000,
+        "Faccio solo capolavori",                               10000,
+        "Mastro Conciatore",                                    100000
+    },
+    {
+        ACHIE_RANGER_2,                                         "evocazione di animali",                    "evocazioni di animali",
+        "Cosa vuole da me questa creatura?",                    1,
+        "Ho un amico che puo' aiutarci",                        100,
+        "Il ranger che sussurrava ai cavalli",                  1000,
+        "Lasciate che gli animali vengano da me",               10000,
+        "Animal Man",                                           100000
+    },
+    {
+        ACHIE_RANGER_3,                                         "razione ottenuta",                         "razioni ottenute",
+        "Povera creatura, mi viene da piangere",                1,
+        "Pero', sai che non vengono male cotte?",               100,
+        "Facciamo una o due bistecche, siora?",                 1000,
+        "Ora ti faccio vedere come ricavarne delle bistecche",  10000,
+        "Mastro Macellaio",                                     100000
+    },
+    {
+        ACHIE_PSI_1,                                            "porta dimensionale aperta",                "porte dimensionali aperte",
+        "Ricordavo fosse piu' lontano",                         1,
+        "Taxi? No grazie!",                                     100,
+        "Basta pensarlo e sei li'!",                            1000,
+        "A cosa servono i maghi se hai uno psi?",               10000,
+        "Il Mondo nelle Mie Mani",                              100000
+    },
+    {
+        ACHIE_PSI_2,                                            "cervello spappolato",                      "cervelli spappolati",
+        "Dici che gli ho fatto male?",                          1,
+        "Stasera cervello alla coque!",                         100,
+        "E' un cervello od un uovo?",                           1000,
+        "Master Blaster",                                       10000,
+        "Mind Melter",                                          100000
+    },
+    {
+        ACHIE_PSI_3,                                            "scarica adrenalinica",                     "scariche adrenaliniche",
+        "Provala anche solo una volta...",                      1,
+        "Forse ho qualcosa che puo' piacerti",                  100,
+        "Meglio di una benedizione, vero?",                     1000,
+        "Ho solo roba buona, io!",                              10000,
+        "Signore dei Cartelli Nebbiosi",                        100000
+    }
 };
 } // namespace Alarmud
 

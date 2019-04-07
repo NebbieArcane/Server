@@ -434,6 +434,25 @@ ACTION_FUNC(do_backstab) {
 				FALSE, victim, 0, ch, TO_CHAR);
 			act("$n evita l'attacco alla schiena di $N!", FALSE, victim, 0, ch,
 				TO_ROOM);
+
+            if(HasClass(victim, CLASS_BARBARIAN) && IS_PC(victim))
+            {
+                if(IS_POLY(victim))
+                {
+                    victim->desc->original->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                    if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    victim->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                    if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                        SET_BIT(victim->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(victim, ACHIE_BARBARIAN_2, CLASS_ACHIE);
+            }
+
 			SetVictFighting(ch,victim); /* he avoided, so make him hit! */
 			SetCharFighting(ch,victim);
 			if(IS_NPC(victim)) {
@@ -1107,6 +1126,25 @@ ACTION_FUNC(do_bash) {
 		else {
 			WAIT_STATE(ch, PULSE_VIOLENCE * 3);    // bash
 		}
+
+        if(HasClass(ch, CLASS_WARRIOR) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_WARRIOR_2] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_WARRIOR_2] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_WARRIOR_2, CLASS_ACHIE);
+        }
+
 	}
 	else {
 		if(!CheckMirror(victim)) {
@@ -1127,6 +1165,25 @@ ACTION_FUNC(do_bash) {
 			}
 			WAIT_STATE(ch, PULSE_VIOLENCE * 2);
 		}
+
+        if(HasClass(ch, CLASS_WARRIOR) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achie_class[ACHIE_WARRIOR_1] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achie_class[ACHIE_WARRIOR_1] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_WARRIOR_1, CLASS_ACHIE);
+        }
+        
 	}
 }
 
@@ -1239,6 +1296,24 @@ ACTION_FUNC(do_rescue) {
 	set_fighting(tmp_ch, ch);
 
 	WAIT_STATE(victim, 2*PULSE_VIOLENCE); // rescue
+
+    if(HasClass(ch, CLASS_WARRIOR) && IS_PC(victim) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_WARRIOR_3] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_WARRIOR_3] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_WARRIOR_3, CLASS_ACHIE);
+    }
 
 }
 
@@ -1941,6 +2016,24 @@ ACTION_FUNC(do_quivering_palm) {
 			if(GET_POS(victim) > POSITION_DEAD) {
 				damage(ch, victim, GET_MAX_HIT(victim)*20,SKILL_QUIV_PALM, location);
 			}
+
+            if(HasClass(ch, CLASS_MONK) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achie_class[ACHIE_MONK_2] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achie_class[ACHIE_MONK_2] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_MONK_2, CLASS_ACHIE);
+            }
 		}
 	}
 	WAIT_STATE(ch, PULSE_VIOLENCE * 1);   // quivering
@@ -2219,6 +2312,24 @@ ACTION_FUNC(do_berserk) {
 			SET_BIT(ch->specials.affected_by2,AFF2_BERSERK);
 			act("$c1012$n growls at $mself, and whirls into a killing frenzy!", FALSE, ch, 0, victim, TO_ROOM);
 			act("$c1012The madness overtakes you quickly!",FALSE,ch,0,0,TO_CHAR);
+
+            if(HasClass(ch, CLASS_BARBARIAN) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achie_class[ACHIE_BARBARIAN_1] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achie_class[ACHIE_BARBARIAN_1] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_BARBARIAN_1, CLASS_ACHIE);
+            }
 		}
 		WAIT_STATE(victim, PULSE_VIOLENCE); // berserk
 	}

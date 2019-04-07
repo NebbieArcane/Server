@@ -124,6 +124,8 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_NO_LOCATE                              =4; /*no-locate item*/
 	constexpr unsigned long ITEM2_PERSONAL                               =8; /*personalized item*/
 	constexpr unsigned long ITEM2_INSERT                                 =16; /*item with gems mounted*/
+	constexpr unsigned long ITEM2_NO_PRINCE                              =32; /*prince can't use the item*/
+	constexpr unsigned long ITEM2_ONLY_PRINCE                            =64; /*only prince can use the item*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
@@ -244,7 +246,7 @@ For players : specials.act*/
 	constexpr unsigned long PLR_NOTELL                                   =65536; /*The player does not hear tells*/
 	constexpr unsigned long PLR_MAILING                                  =131072;
 	constexpr unsigned long PLR_NEW_EQ                                   =262144;
-	constexpr unsigned long PLR_EMPTY5                                   =524288;
+	constexpr unsigned long PLR_ACHIE                                    =524288; /*The player has achievements*/
 	constexpr unsigned long PLR_NOBEEP                                   =1048576; /*ignore all beeps*/
 // Flag type: E_ROOM_FLAGS -- start
 /*
@@ -1113,6 +1115,58 @@ enum e_wear {
 #define	SKILL_UNDEFINED                              2 
 #define	SKILL_UNDEFINED2                             4 
 #define	ABS_MAX_LVL                                  70 
+#define	MAX_CLASS_ACHIE                              34 
+#define	MAX_BOSS                                     15 
+#define	MAX_QUEST                                    5 
+#define	MAX_OTHER                                    15 
+#define	CLASS_ACHIE                                  1 
+#define	BOSSKILL_ACHIE                               2 
+#define	QUEST_ACHIE                                  3 
+#define	OTHER_ACHIE                                  4 
+#define	RACESLAYER_ACHIE                             5 
+#define	ACHIE_MAGE_1                                 1 
+#define	ACHIE_MAGE_2                                 2 
+#define	ACHIE_MAGE_3                                 3 
+#define	ACHIE_CLERIC_1                               4 
+#define	ACHIE_CLERIC_2                               5 
+#define	ACHIE_CLERIC_3                               6 
+#define	ACHIE_WARRIOR_1                              7 
+#define	ACHIE_WARRIOR_2                              8 
+#define	ACHIE_WARRIOR_3                              9 
+#define	ACHIE_THIEF_1                                10 
+#define	ACHIE_THIEF_2                                11 
+#define	ACHIE_THIEF_3                                12 
+#define	ACHIE_DRUID_1                                13 
+#define	ACHIE_DRUID_2                                14 
+#define	ACHIE_DRUID_3                                15 
+#define	ACHIE_MONK_1                                 16 
+#define	ACHIE_MONK_2                                 17 
+#define	ACHIE_MONK_3                                 18 
+#define	ACHIE_BARBARIAN_1                            19 
+#define	ACHIE_BARBARIAN_2                            20 
+#define	ACHIE_BARBARIAN_3                            21 
+#define	ACHIE_SORCERER_1                             22 
+#define	ACHIE_SORCERER_2                             23 
+#define	ACHIE_SORCERER_3                             24 
+#define	ACHIE_PALADIN_1                              25 
+#define	ACHIE_PALADIN_2                              26 
+#define	ACHIE_PALADIN_3                              27 
+#define	ACHIE_RANGER_1                               28 
+#define	ACHIE_RANGER_2                               29 
+#define	ACHIE_RANGER_3                               30 
+#define	ACHIE_PSI_1                                  31 
+#define	ACHIE_PSI_2                                  32 
+#define	ACHIE_PSI_3                                  33 
+#define	LEV_BEGINNER                                 1 
+#define	LEV_VERY_EASY                                2 
+#define	LEV_EASY                                     3 
+#define	LEV_NORMAL                                   4 
+#define	LEV_HARD                                     5 
+#define	LEV_EXPERT                                   6 
+#define	LEV_CHAMPION                                 7 
+#define	LEV_IMPERIAL                                 8 
+#define	LEV_TORMENT                                  9 
+#define	LEV_GOD_MODE                                 10 
 #define	MAX_RACE                                     E_RACES_COUNT 
 #define	STATUS_BEFORELOOP                            "BEFORELOOP" 
 #define	STATUS_INITLOOP                              "INITLOOP" 

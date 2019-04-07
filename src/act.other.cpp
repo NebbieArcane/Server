@@ -847,6 +847,24 @@ ACTION_FUNC(do_steal) {
 						GET_ALIGNMENT(ch)-=20;
 					}
 
+                    if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+                    {
+                        if(IS_POLY(ch))
+                        {
+                            ch->desc->original->specials.achie_class[ACHIE_THIEF_3] += 1;
+                            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        }
+                        else
+                        {
+                            ch->specials.achie_class[ACHIE_THIEF_3] += 1;
+                            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                                SET_BIT(ch->specials.act, PLR_ACHIE);
+                        }
+
+                        CheckAchie(ch, ACHIE_THIEF_3, CLASS_ACHIE);
+                    }
+
 				}
 			}
 		}
@@ -854,7 +872,7 @@ ACTION_FUNC(do_steal) {
 			/* obj found in inventory */
 
 			if(IS_OBJ_STAT(obj,ITEM_NODROP) && !IS_IMMORTAL(ch)) {
-				send_to_char("Non riesci a rubarla... probabilmente e' maledetta!\n\r", ch);
+				send_to_char("Non riesci a rubare quella cosa... probabilmente e' maledetta!\n\r", ch);
 			}
 
 			if(!CheckEgoGet(ch, obj)) {
@@ -899,6 +917,24 @@ ACTION_FUNC(do_steal) {
 							GET_ALIGNMENT(ch)-=20;
 						}
 
+                        if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+                        {
+                            if(IS_POLY(ch))
+                            {
+                                ch->desc->original->specials.achie_class[ACHIE_THIEF_3] += 1;
+                                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                            }
+                            else
+                            {
+                                ch->specials.achie_class[ACHIE_THIEF_3] += 1;
+                                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                            }
+
+                            CheckAchie(ch, ACHIE_THIEF_3, CLASS_ACHIE);
+                        }
+
 					}
 					else {
 						send_to_char("You cannot carry that much.\n\r", ch);
@@ -937,6 +973,24 @@ ACTION_FUNC(do_steal) {
 				if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 					GET_ALIGNMENT(ch)-=20;
 				}
+
+                if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achie_class[ACHIE_THIEF_3] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achie_class[ACHIE_THIEF_3] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_THIEF_3, CLASS_ACHIE);
+                }
 			}
 			else {
 				send_to_char("You couldn't get any gold...\n\r", ch);

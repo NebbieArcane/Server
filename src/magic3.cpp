@@ -1133,6 +1133,24 @@ void spell_creeping_death(byte level, struct char_data* ch,
     af.bitvector = 0;
     affect_to_char(ch, &af);
 
+    if(HasClass(ch, CLASS_DRUID) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_DRUID_1] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_DRUID_1] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_DRUID_1, CLASS_ACHIE);
+    }
+
 }
 
 
@@ -1214,7 +1232,7 @@ void spell_animal_summon(byte level, struct char_data* ch,
 	}
 
 
-	if(affected_by_spell(ch, SPELL_ANIMAL_SUM_1)) {
+    if(affected_by_spell(ch, SPELL_ANIMAL_SUM_1) || affected_by_spell(ch, SPELL_ANIMAL_SUM_2) || affected_by_spell(ch, SPELL_ANIMAL_SUM_3)) {
 		send_to_char("Puoi farlo solo ogni 48 ore.\n\r", ch);
 		return;
 	}
@@ -1288,12 +1306,30 @@ void spell_animal_summon(byte level, struct char_data* ch,
 
 	}
 
-	af.type =      SPELL_ANIMAL_SUM_1;
+	af.type      = (level == 1 ? SPELL_ANIMAL_SUM_1 : level == 2 ? SPELL_ANIMAL_SUM_2 : SPELL_ANIMAL_SUM_3);
 	af.duration  = 48;
 	af.modifier  = 0;
 	af.location  = 0;
 	af.bitvector = 0;
 	affect_to_char(ch, &af);
+    
+    if(HasClass(ch, CLASS_RANGER) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achie_class[ACHIE_RANGER_2] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            ch->specials.achie_class[ACHIE_RANGER_2] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        CheckAchie(ch, ACHIE_RANGER_2, CLASS_ACHIE);
+    }
 }
 
 #define FIRE_ELEMENTAL  40
@@ -1446,9 +1482,9 @@ void spell_reincarnate(byte level, struct char_data* ch,
 #if DEATH_FIX
 		sprintf(szFileName, "%s/%s.dead", PLAYERS_DIR, lower(obj->oldfilename));
 		if((fdeath = fopen(szFileName, "r+")) == NULL) {
-			mudlog(LOG_SYSERR, "Cannot find dead file %s in resurrect.",
+			mudlog(LOG_SYSERR, "Cannot find dead file %s in reincarnate.",
 				   szFileName);
-			send_to_char("Problemi con il file del giocatore da resuscitare.\n\r",
+			send_to_char("Problemi con il file del giocatore da reincarnare.\n\r",
 						 ch);
 			send_to_char("Contattare un Dio.\n\r", ch);
 			fclose(fl);
@@ -1493,6 +1529,24 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			GET_POS(ch) = POSITION_SITTING;
 			act("$n crolla a terra esaust$b!",TRUE, ch, 0, 0, TO_ROOM);
             act("Crolli a terra esaust$b!",TRUE, ch, 0, 0, TO_CHAR);
+
+            if(HasClass(ch, CLASS_DRUID) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achie_class[ACHIE_DRUID_3] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achie_class[ACHIE_DRUID_3] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_DRUID_3, CLASS_ACHIE);
+            }
 
 			rewind(fl);
 			fwrite(&st, sizeof(struct char_file_u), 1, fl);
@@ -2681,6 +2735,32 @@ void spell_portal(byte level, struct char_data* ch,
 	act("$p appare improvvisamente dal nulla.",TRUE,ch,tmp_obj,0,TO_ROOM);
 	act("$p appare improvvisamente dal nulla.",TRUE,ch,tmp_obj,0,TO_CHAR);
 
+    if((HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch, CLASS_SORCERER)) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            if(HasClass(ch, CLASS_MAGIC_USER))
+                ch->desc->original->specials.achie_class[ACHIE_MAGE_1] += 1;
+            else if(HasClass(ch, CLASS_SORCERER))
+                ch->desc->original->specials.achie_class[ACHIE_SORCERER_1] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            if(HasClass(ch, CLASS_MAGIC_USER))
+                ch->specials.achie_class[ACHIE_MAGE_1] += 1;
+            else if(HasClass(ch, CLASS_SORCERER))
+                ch->specials.achie_class[ACHIE_SORCERER_1] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        if(HasClass(ch, CLASS_MAGIC_USER))
+            CheckAchie(ch, ACHIE_MAGE_1, CLASS_ACHIE);
+        else if(HasClass(ch, CLASS_SORCERER))
+            CheckAchie(ch, ACHIE_SORCERER_1, CLASS_ACHIE);
+    }
 }
 
 #define MOUNT_ONE 65

@@ -14,6 +14,8 @@ bool isNullChar(struct char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
+char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
+void CheckAchie(struct char_data* ch, int achivement_type, int achivement_class);
 FILE* MakeZoneFile(struct char_data* c, int zone);
 bool CheckPrac(int classe, int id, int liv);
 struct time_info_data real_time_passed(time_t t2, time_t t1);

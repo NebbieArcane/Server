@@ -1274,12 +1274,71 @@ void MobHit(struct char_data* ch, struct char_data* v, int type) {
 					}
 				}
 			}
-			else {
-				AddHated(v, ch);
-				GET_HITROLL(ch) += base;
-				if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead) {
-					GET_HITROLL(ch) -= base;
-				}
+            else
+            {
+                if(IS_PC(v))
+                {
+                    if(v->skills && v->skills[SKILL_AVOID_BACK_ATTACK].learned && GET_POS(v) > POSITION_SITTING)
+                    {
+                        percent = number(1,101); /* 101% is a complete failure */
+                        if(percent < v->skills[SKILL_AVOID_BACK_ATTACK].learned)
+                        {
+                            act("Ti accorgi del tentativo di attacco di $N e lo eviti abilmente!", FALSE, v, 0, ch, TO_CHAR);
+                            act("$n evita l'attacco alla schiena di $N!", FALSE, v, 0, ch, TO_ROOM);
+                            
+                            if(HasClass(v, CLASS_BARBARIAN) && IS_PC(v))
+                            {
+                                if(IS_POLY(v))
+                                {
+                                    v->desc->original->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                                    if(!IS_SET(v->desc->original->specials.act,PLR_ACHIE))
+                                        SET_BIT(v->desc->original->specials.act, PLR_ACHIE);
+                                }
+                                else
+                                {
+                                    v->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                                    if(!IS_SET(v->specials.act,PLR_ACHIE))
+                                        SET_BIT(v->specials.act, PLR_ACHIE);
+                                }
+
+                                CheckAchie(v, ACHIE_BARBARIAN_2, CLASS_ACHIE);
+                            }
+
+                            AddHated(v, ch);
+                            damage(ch, v, 0, SKILL_BACKSTAB, location);
+                        }
+                        else
+                        {
+                            act("Non ti sei accort$b dell'attacco alla schiena di $N!", FALSE, v, 0, ch, TO_CHAR);
+                            act("$n non si accorge dell'attacco alla schiena di $N!", FALSE, v, 0, ch, TO_ROOM);
+                            LearnFromMistake(v, SKILL_AVOID_BACK_ATTACK, 0, 95);
+                            AddHated(v, ch);
+                            GET_HITROLL(ch) += base;
+                            if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead)
+                            {
+                                GET_HITROLL(ch) -= base;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        AddHated(v, ch);
+                        GET_HITROLL(ch) += base;
+                        if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead)
+                        {
+                            GET_HITROLL(ch) -= base;
+                        }
+                    }
+                }
+                else
+                {
+                    AddHated(v, ch);
+                    GET_HITROLL(ch) += base;
+                    if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead)
+                    {
+                        GET_HITROLL(ch) -= base;
+                    }
+                }
 			}
 		}
 	}

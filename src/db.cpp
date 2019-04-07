@@ -174,6 +174,12 @@ void boot_db() {
 	file_to_string(INFO_FILE, info);
 	file_to_string(WIZLIST_FILE, wizlist);
 	file_to_string(LOGIN_FILE, login);
+    /* achievement stuff
+     file_to_string(LVL1_ACHIE_DONE, achie_lvl1_done);
+     file_to_string(LVL2_ACHIE_DONE, achie_lvl2_done);
+     file_to_string(LVL3_ACHIE_DONE, achie_lvl3_done);
+     file_to_string(LVL4_ACHIE_DONE, achie_lvl4_done);
+     file_to_string(LVL5_ACHIE_DONE, achie_lvl5_done); */
 
 	mudlog(LOG_CHECK, "Initializing Script Files.");
 
@@ -3739,6 +3745,28 @@ void reset_char(struct char_data* ch) {
 	ch->specials.carry_weight = 0;
 	ch->specials.carry_items = 0;
 	ch->specials.spellfail = 101;
+
+    /* Achievemets */
+    for( i = 0; i < MAX_RACE; i++)
+    {
+        ch->specials.achie_racekill[i] = 0;
+    }
+    for( i = 0; i < MAX_BOSS; i++)
+    {
+        ch->specials.achie_bosskill[i] = 0;
+    }
+    for( i = 0; i < MAX_CLASS_ACHIE; i++)
+    {
+        ch->specials.achie_class[i] = 0;
+    }
+    for( i = 0; i < MAX_QUEST; i++)
+    {
+        ch->specials.achie_quest[i] = 0;
+    }
+    for( i = 0; i < MAX_OTHER; i++)
+    {
+        ch->specials.achie_other[i] = 0;
+    }
 
 	if(GET_HIT(ch) <= 0) {
 		GET_HIT(ch) = 1;

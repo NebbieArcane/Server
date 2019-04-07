@@ -108,6 +108,174 @@
 			"value": 70,
 			"comment": ""
 		},
+        "MAX_CLASS_ACHIE": {
+            "value": 34,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_BOSS": {
+            "value": 15,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_QUEST": {
+            "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_OTHER": {
+            "value": 15,
+            "comment": "Achievements stuffs"
+        },
+        "CLASS_ACHIE": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "BOSSKILL_ACHIE": {
+            "value": 2,
+            "comment": "Achievements stuffs"
+        },
+        "QUEST_ACHIE": {
+            "value": 3,
+            "comment": "Achievements stuffs"
+        },
+        "OTHER_ACHIE": {
+            "value": 4,
+            "comment": "Achievements stuffs"
+        },
+        "RACESLAYER_ACHIE": {
+            "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MAGE_1": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MAGE_2": {
+            "value": 2,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MAGE_3": {
+            "value": 3,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_CLERIC_1": {
+            "value": 4,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_CLERIC_2": {
+            "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_CLERIC_3": {
+            "value": 6,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_WARRIOR_1": {
+            "value": 7,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_WARRIOR_2": {
+            "value": 8,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_WARRIOR_3": {
+            "value": 9,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_THIEF_1": {
+            "value": 10,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_THIEF_2": {
+            "value": 11,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_THIEF_3": {
+            "value": 12,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DRUID_1": {
+            "value": 13,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DRUID_2": {
+            "value": 14,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DRUID_3": {
+            "value": 15,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MONK_1": {
+            "value": 16,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MONK_2": {
+            "value": 17,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MONK_3": {
+            "value": 18,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_BARBARIAN_1": {
+            "value": 19,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_BARBARIAN_2": {
+            "value": 20,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_BARBARIAN_3": {
+            "value": 21,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SORCERER_1": {
+            "value": 22,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SORCERER_2": {
+            "value": 23,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SORCERER_3": {
+            "value": 24,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PALADIN_1": {
+            "value": 25,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PALADIN_2": {
+            "value": 26,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PALADIN_3": {
+            "value": 27,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_RANGER_1": {
+            "value": 28,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_RANGER_2": {
+            "value": 29,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_RANGER_3": {
+            "value": 30,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PSI_1": {
+            "value": 31,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PSI_2": {
+            "value": 32,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PSI_3": {
+            "value": 33,
+            "comment": "Achievements stuffs"
+        },
 		"MAX_RACE": {
 			"value": "E_RACES_COUNT",
 			"comment": "Max available races"
@@ -2562,9 +2730,9 @@
 				"value": 262144,
 				"comment": ""
 			},
-			"PLR_EMPTY5": {
+			"PLR_ACHIE": {
 				"value": 524288,
-				"comment": ""
+				"comment": "The player has achievements"
 			},
 			"PLR_NOBEEP": {
 				"value": 1048576,

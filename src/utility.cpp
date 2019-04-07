@@ -294,7 +294,177 @@ int RandomRoomByLevel(int level) {
     return(t);
     
 }
- 
+
+char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa, int achivement_type, int achivement_class)
+{
+    int i, lung[3], max = 0, diff = 0;
+    char riga1[100], riga2[100], riga3[100], space[100];
+    static char buffer[MAX_STRING_LENGTH];
+
+    sprintf(riga1, "%s ha completato l'achievement", GET_NAME(ch));
+    sprintf(riga2, "%s", titolo);
+    sprintf(riga3, "%d %s", valore, stringa);
+
+    lung[1] = strlen(riga1);
+    lung[2] = strlen(riga2);
+    lung[3] = strlen(riga3);
+
+    sprintf(riga1, "$c0009%s $c0007ha completato l'achievement$c0011", GET_NAME(ch));
+    sprintf(riga2, "$c0015%s$c0011", titolo);
+    sprintf(riga3, "$c0009%d %s$c0011", valore, stringa);
+
+    for(i = 1 ; i <= 3 ; i++)
+    {
+        if(lung[i] > max)
+            max = lung[i];
+    }
+
+    strcpy(space, " ");
+    for (i = 0; i < (max + 7); i++)
+        strcat(space, " ");
+
+    strcpy(buffer, "$c0011 _\n(@)");
+    strcat(buffer, space);
+    strcat(buffer, " _\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "(@)\n|-|");
+    for (i = 0; i < (max + 8); i++)
+        strcat(buffer, "-");
+    strcat(buffer, "|-|\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[1])
+    {
+        diff = int((max - lung[1]) /2);
+        if((diff * 2) != (max - lung[1]))
+            diff += 1;
+        for(i = 0; i < diff; i++)
+            strcat(buffer, " ");
+    }
+    strcat(buffer, riga1);
+    if(max > lung[1])
+    {
+        diff = int((max - lung[1]) /2);
+        for(i = 0; i < diff; i++)
+            strcat(buffer, " ");
+    }
+    strcat(buffer, "    |-|\n| |");
+    
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[2])
+    {
+        diff = int((max - lung[2]) /2);
+        if((diff * 2) != (max - lung[2]))
+            diff += 1;
+        for(i = 0; i < diff; i++)
+            strcat(buffer, " ");
+    }
+    strcat(buffer, riga2);
+    if(max > lung[2])
+    {
+        diff = int((max - lung[2]) /2);
+        for(i = 0; i < diff; i++)
+            strcat(buffer, " ");
+    }
+    strcat(buffer, "    |-|\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[3])
+    {
+        diff = int((max - lung[3]) /2);
+        if((diff * 2) != (max - lung[3]))
+            diff += 1;
+        for(i = 0; i < diff; i++)
+            strcat(buffer, " ");
+    }
+    strcat(buffer, riga3);
+    if(max > lung[3])
+    {
+        diff = int((max - lung[3]) /2);
+        for(i = 0; i < diff; i++)
+            strcat(buffer, " ");
+    }
+    strcat(buffer, "    |-|\n| |");
+    for (i = 0; i < (max + 8); i++)
+        strcat(buffer, "_");
+    strcat(buffer, "| |\n(@)");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n   ");
+    strcat(buffer, space);
+    strcat(buffer, "(@)\n");
+
+    return buffer;
+}
+    
+void CheckAchie(struct char_data* ch, int achivement_type, int achivement_class)
+{
+    char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
+    int valore = 0;
+    struct char_data* tch;
+
+    // salvo il pg
+    // do_save(ch, "", 0);
+
+    tch = ch;
+
+    if(!IS_PC(ch))
+        return;
+
+    if(IS_POLY(tch))
+        tch = ch->desc->original;
+
+    switch(achivement_class)
+    {
+        case CLASS_ACHIE:
+            if(tch->specials.achie_class[achivement_type] == AchievementsList[achivement_type].lvl1_val)
+            {
+                valore = AchievementsList[achivement_type].lvl1_val;
+                strcpy(titolo, AchievementsList[achivement_type].lvl1);
+                if(valore == 1)
+                    strcpy(stringa, AchievementsList[achivement_type].achie_string1);
+                else
+                    strcpy(stringa, AchievementsList[achivement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achivement_type] == AchievementsList[achivement_type].lvl2_val)
+            {
+                valore = AchievementsList[achivement_type].lvl2_val;
+                strcpy(titolo, AchievementsList[achivement_type].lvl2);
+                strcpy(stringa, AchievementsList[achivement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achivement_type] == AchievementsList[achivement_type].lvl3_val)
+            {
+                valore = AchievementsList[achivement_type].lvl3_val;
+                strcpy(titolo, AchievementsList[achivement_type].lvl3);
+                strcpy(stringa, AchievementsList[achivement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achivement_type] == AchievementsList[achivement_type].lvl4_val)
+            {
+                valore = AchievementsList[achivement_type].lvl4_val;
+                strcpy(titolo, AchievementsList[achivement_type].lvl4);
+                strcpy(stringa, AchievementsList[achivement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achivement_type] == AchievementsList[achivement_type].lvl5_val)
+            {
+                valore = AchievementsList[achivement_type].lvl5_val;
+                strcpy(titolo, AchievementsList[achivement_type].lvl5);
+                strcpy(stringa, AchievementsList[achivement_type].achie_string2);
+            }
+            break;
+            
+            default:
+                break;
+    }
+
+    if(valore > 0)
+    {
+        sprintf(buf, "%s", spamAchie(tch, titolo, valore, stringa, achivement_type, achivement_class));
+        send_to_all(buf);
+    }
+}
 
 int EgoBladeSave(struct char_data* ch) {
 	int total;

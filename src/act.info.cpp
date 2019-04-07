@@ -2149,6 +2149,96 @@ ACTION_FUNC(do_status) {
 	act(buf, FALSE, ch, 0, 0, TO_CHAR);
 }
 
+ACTION_FUNC(do_achievements)
+{
+    //  int i;
+    char arg1[128];
+    //  string sb;
+
+    if(!IS_PC(ch)) {
+        return;
+    }
+
+
+    one_argument(arg, arg1);
+
+    if(*arg1)
+    {
+        if(!strcmp(arg1,"all"))
+        {
+            send_to_char("ti faccio vedere TUTTI gli achievements che hai", ch);
+        }
+        else if(!strcmp(arg1,"spam"))
+        {
+            send_to_char("spammo un achievement per rompere il cazzo a tutti quelli in room", ch);
+        }
+        else if(!strcmp(arg1,"delete"))
+        {
+            send_to_char("solo lvl 57+: cancello un determinato achievement di qualcuno", ch);
+        }
+        else if(!strcmp(arg1,"reset"))
+        {
+            send_to_char("solo lvl 58+: cancello tutti gli achievements di qualcuno", ch);
+        }
+        else
+        {
+            send_to_char("Sintassi:\n\r", ch);
+            send_to_char("Achievements - mostra gli achievements che hai completato\n\r", ch);
+            send_to_char("oppure\n\r", ch);
+            send_to_char("Achievements <comando> <opzione>\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("all <nome_pg> - mostra tutti gli achievements, se scelto il nome_pg mostra quelli del personaggio scelto\n\r", ch);
+            else
+                send_to_char("all - mostra tutti gli achievements\n\r", ch);
+            send_to_char("spam <numero> - mostra in stanza l'achievement scelto\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("delete <nome_pg> <numero> - cancella un determinato achievement dal personaggio scelto\n\r", ch);
+            if(IS_MAESTRO_DEL_CREATO(ch))
+                send_to_char("reset <nome_pg> - resetta tutti gli achievements del personaggio scelto\n\r", ch);
+
+        }
+    }
+    else
+    {
+    if(IS_SET(ch->specials.act,PLR_ACHIE))
+        {
+            send_to_char("achievements bla bla bla", ch);
+            //     boost::format fmt("[%3d] %-30s %3d %-14s %s %s\n\r");
+            /*  for(i = 0; i < MAX_RACE; i++)
+            {
+                if(ch->specials.achie_racekill[i] > 0)
+                fprintf(fp, "achie_racekill:%d#%d\n", i, ch->specials.achie_racekill[i]);
+            }
+
+            for(i = 0; i < MAX_BOSS; i++)
+            {
+                if(ch->specials.achie_bosskill[i] > 0)
+                fprintf(fp, "achie_bosskill:%d#%d\n", i, ch->specials.achie_bosskill[i]);
+            }
+
+            for(i = 0; i < MAX_CLASS_ACHIE; i++)
+            {
+                if(ch->specials.achie_class[i] > 0)
+                fprintf(fp, "achie_class:%d#%d\n", i, ch->specials.achie_class[i]);
+            }
+
+            for(i = 0; i < MAX_QUEST; i++)
+            {
+                if(ch->specials.achie_quest[i] > 0)
+                fprintf(fp, "achie_quest:%d#%d\n", i, ch->specials.achie_quest[i]);
+            }
+
+            for(i = 0; i < MAX_OTHER; i++)
+            {
+                if(ch->specials.achie_other[i] > 0)
+                fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achie_other[i]);
+            }*/
+        }
+        else
+            send_to_char("Non hai completato nessun achievement.\n\r", ch);
+    }
+}
+
 ACTION_FUNC(do_score) {
 	struct time_info_data playing_time;
 	char buf[1000], buf2[1000];

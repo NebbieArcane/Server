@@ -3510,7 +3510,7 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 					return;
 				}
 
-				if(number(1,10) == 1) {
+				if(number(1,10) == 1 && !IS_IMMORTAL(ch)) {
 					act("Alteri completamente la tua forma, la personalita' della forma $c0003animale$c0007 prende il sopravvento, la tua anima abbandona il corpo!", TRUE, ch, NULL, ch,
 						TO_CHAR);
 					act("$n altera completamente la sua forma, la personalita' della forma $c0003animale$c0007 prende il sopravvento, la sua anima abbandona il corpo!", TRUE, ch, NULL, ch,
@@ -3534,6 +3534,24 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 				affect_to_char(ch, &af);
 
 				spell_poly_self(level, ch, mob, 0);
+
+                if(HasClass(ch, CLASS_DRUID) && DruidList[X].level >= 50 && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achie_class[ACHIE_DRUID_2] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achie_class[ACHIE_DRUID_2] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_DRUID_2, CLASS_ACHIE);
+                }
 			}
 			else {
 				send_to_char("Non riesci ad evocare un'immagine di quella creatura.\n\r", ch);

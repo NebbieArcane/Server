@@ -1876,7 +1876,7 @@ void load_char_extra(struct char_data* ch) {
 	char buf[80];
 	char line[260];
 	char  tmp[260];
-	char* p, *s, *chk;
+	char* p, *s, *chk, *achie_n, *achie_v;
 	int n;
 	/* Cerca prima il file col nome in lower case */
 	sprintf(buf, "%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
@@ -1912,6 +1912,46 @@ void load_char_extra(struct char_data* ch) {
 					/* setup bamfin */
 					do_bamfin(ch, s, CMD_BAMFIN);
 				}
+                else if(!strcmp(p, "achie_racekill"))
+                {
+                    /* setup achievement racekill */
+                    achie_n = (char*)strtok(s, "#");
+                    achie_v = (char*)strtok(0, "\0");
+                    n = atoi(achie_n);
+                    ch->specials.achie_racekill[n] = atoi(achie_v);
+                }
+                else if(!strcmp(p, "achie_bosskill"))
+                {
+                    /* setup achievement racekill */
+                    achie_n = (char*)strtok(s, "#");
+                    achie_v = (char*)strtok(0, "\0");
+                    n = atoi(achie_n);
+                    ch->specials.achie_bosskill[n] = atoi(achie_v);
+                }
+                else if(!strcmp(p, "achie_class"))
+                {
+                    /* setup achievement racekill */
+                    achie_n = (char*)strtok(s, "#");
+                    achie_v = (char*)strtok(0, "\0");
+                    n = atoi(achie_n);
+                    ch->specials.achie_class[n] = atoi(achie_v);
+                }
+                else if(!strcmp(p, "achie_quest"))
+                {
+                    /* setup achievement racekill */
+                    achie_n = (char*)strtok(s, "#");
+                    achie_v = (char*)strtok(0, "\0");
+                    n = atoi(achie_n);
+                    ch->specials.achie_quest[n] = atoi(achie_v);
+                }
+                else if(!strcmp(p, "achie_other"))
+                {
+                    /* setup achievement racekill */
+                    achie_n = (char*)strtok(s, "#");
+                    achie_v = (char*)strtok(0, "\0");
+                    n = atoi(achie_n);
+                    ch->specials.achie_other[n] = atoi(achie_v);
+                }
 				else if(!strcmp(p, "email")) {
 					/* setup email */
 					RECREATE(GET_EMAIL(ch),char,strlen(s));
@@ -1996,6 +2036,40 @@ void write_char_extra(struct char_data* ch) {
 		}
 		fprintf(fp, "zone:%d\n", GET_ZONE(ch));
 	}
+
+    if(IS_SET(ch->specials.act,PLR_ACHIE))
+    {
+        for(i = 0; i < MAX_RACE; i++)
+        {
+            if(ch->specials.achie_racekill[i] > 0)
+                fprintf(fp, "achie_racekill:%d#%d\n", i, ch->specials.achie_racekill[i]);
+        }
+
+        for(i = 0; i < MAX_BOSS; i++)
+        {
+            if(ch->specials.achie_bosskill[i] > 0)
+                fprintf(fp, "achie_bosskill:%d#%d\n", i, ch->specials.achie_bosskill[i]);
+        }
+
+        for(i = 0; i < MAX_CLASS_ACHIE; i++)
+        {
+            if(ch->specials.achie_class[i] > 0)
+                fprintf(fp, "achie_class:%d#%d\n", i, ch->specials.achie_class[i]);
+        }
+
+        for(i = 0; i < MAX_QUEST; i++)
+        {
+            if(ch->specials.achie_quest[i] > 0)
+                fprintf(fp, "achie_quest:%d#%d\n", i, ch->specials.achie_quest[i]);
+        }
+
+        for(i = 0; i < MAX_OTHER; i++)
+        {
+            if(ch->specials.achie_other[i] > 0)
+                fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achie_other[i]);
+        }
+    }
+
 	if(ch->specials.prompt) {
 		fprintf(fp, "prompt:%s\n", ch->specials.prompt);
 	}

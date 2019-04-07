@@ -43,6 +43,26 @@ struct QuestItem {
 	const char* where;
 };
 
+/*
+ * Achievements
+ */
+struct ClassAchieTable
+{
+    int achie_type;
+    const char* achie_string1;
+    const char* achie_string2;
+    const char* lvl1;
+    int lvl1_val;
+    const char* lvl2;
+    int lvl2_val;
+    const char* lvl3;
+    int lvl3_val;
+    const char* lvl4;
+    int lvl4_val;
+    const char* lvl5;
+    int lvl5_val;
+};
+    
 #define MIN_GLOB_TRACK_LEV 31   /* mininum level for global track */
 /*
 **  Site locking stuff.. written by Scot Gardner
@@ -563,6 +583,13 @@ struct char_special_data {
 	int was_in_room;         /* storage of location for linkdead people */
 	int attack_type;         /* The Attack Type Bitvector for NPC's */
 	int alignment;           /* +-1000 for alignments               */
+
+    /* ACHIEVEMENTS */
+    int achie_racekill[MAX_RACE];
+    int achie_bosskill[MAX_BOSS];
+    int achie_class[MAX_CLASS_ACHIE];
+    int achie_quest[MAX_QUEST];
+    int achie_other[MAX_OTHER];
 
 	char* poofin;
 	char* poofout;
