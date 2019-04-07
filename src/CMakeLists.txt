@@ -201,7 +201,7 @@ configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UN
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #	-Werror
-	-Wfatal-errors
+#	-Wfatal-errors
 	-Wall
 	-Wextra
 	-Wcast-align
