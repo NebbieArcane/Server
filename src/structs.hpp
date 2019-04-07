@@ -61,6 +61,7 @@ struct ClassAchieTable
     int lvl4_val;
     const char* lvl5;
     int lvl5_val;
+    int classe;
 };
     
 #define MIN_GLOB_TRACK_LEV 31   /* mininum level for global track */

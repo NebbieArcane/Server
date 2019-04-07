@@ -1729,6 +1729,18 @@ void ParseAct(const char* str, struct char_data* ch, struct char_data* to, void*
 					i = "";
 				}
 				break;
+            case 'u':
+                i = UNUNA(ch);
+                break;
+            case 'U':
+                if(vict_obj != NULL) {
+                    i = UNUNA((struct char_data*) vict_obj);
+                }
+                else {
+                    mudlog(LOG_SYSERR, "$U e vict_obj == NULL in act(comm.c)");
+                    i = "";
+                }
+                break;
 			case 'e':
 				i = HSSH(ch);
 				break;

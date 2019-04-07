@@ -26,6 +26,7 @@
 /***************************  Local    include ************************************/
 #include "act.info.hpp"
 #include "act.off.hpp"
+#include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "breath.hpp"
 #include "cmdid.hpp"
@@ -2151,88 +2152,688 @@ ACTION_FUNC(do_status) {
 
 ACTION_FUNC(do_achievements)
 {
-    //  int i;
-    char arg1[128];
-    //  string sb;
+    int i;
+    char arg1[128], arg2[128];
+    std::string sb;
 
     if(!IS_PC(ch)) {
         return;
     }
 
-
-    one_argument(arg, arg1);
+    arg = one_argument(arg, arg1);
 
     if(*arg1)
     {
         if(!strcmp(arg1,"all"))
         {
-            send_to_char("ti faccio vedere TUTTI gli achievements che hai", ch);
+            struct char_data* tch;
+
+            tch = ch;
+
+            if(IS_QUESTMASTER(ch))
+            {
+                arg = one_argument(arg, arg2);
+
+                if(*arg2)
+                {
+                    if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                    {
+                        send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
+                        return;
+                    }
+                }
+            }
+
+            if(!IS_PC(tch))
+            {
+                send_to_char("Vuoi veramente vedere gli achievements di uno stupido mob?\n\r", ch);
+                return;
+            }
+
+            if(IS_POLY(tch))
+                tch = tch->desc->original;
+
+            if(IS_SET(tch->specials.act,PLR_ACHIE))
+            {
+                int num = 0;
+
+                if(ch == tch)
+                    send_to_char("\n\r$c0011Ecco tutti i tuoi achievements:\n\r", ch);
+                else
+                    act("\n\r$c0011Lista completa degli achievements di $c0015$N$c0011:", FALSE, ch, 0, tch, TO_CHAR);
+
+                // Race Achievements
+                if(hasAchievement(tch, RACESLAYER_ACHIE))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Race  Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_RACE; i++)
+                {
+                    if(tch->specials.achie_racekill[i] > 0)
+                        send_to_char("ok ho trovato un achie racekill", ch);
+                }
+
+                // Boss Achievements
+                if(hasAchievement(tch, BOSSKILL_ACHIE))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Boss  Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_BOSS; i++)
+                {
+                    if(tch->specials.achie_bosskill[i] > 0)
+                        send_to_char("ok ho trovato un achie bosskill", ch);
+                }
+
+                // Class Skill Achievements
+                if(hasAchievement(tch, CLASS_ACHIE))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Skill Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                {
+                    if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, TRUE, 0));
+                        num += 4;
+                    }
+                }
+
+                // Quest Achievements
+                if(hasAchievement(tch, QUEST_ACHIE))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Quest Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_QUEST; i++)
+                {
+                    if(tch->specials.achie_quest[i] > 0)
+                        send_to_char("ok ho trovato un achie quest", ch);
+                }
+
+                // Various Achievements
+                if(hasAchievement(tch, OTHER_ACHIE))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Other Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_OTHER; i++)
+                {
+                    if(tch->specials.achie_other[i] > 0)
+                        send_to_char("ok ho trovato un achie other", ch);
+                }
+
+                page_string(ch->desc, sb.c_str(), true);
+            }
+            else if (ch == tch)
+                send_to_char("Non hai completato nessun achievement.\n\r", ch);
+            else
+                act("$N non ha completato nessun achievement.", FALSE, ch, 0, tch, TO_CHAR);
         }
         else if(!strcmp(arg1,"spam"))
         {
-            send_to_char("spammo un achievement per rompere il cazzo a tutti quelli in room", ch);
+            int n_spam;
+            char buf[MAX_STRING_LENGTH];
+
+            const char* rand_spamAchie[] =
+            {
+                "$c0011$n$c0007 e' proprio $u sborone:",
+                "$c0011$n$c0007 si gigioneggia mostrandoti il suo achievement:",
+                "$c0011$n$c0007 ti dice: 'Si ho fatto anche questo!',",
+                "$c0011$n$c0007 mostra a tutti il cartello 'W i criceti' e poi dice:",
+                "$c0011$n$c0007 canticchia allegr$b 'In the name of my new Achievemeeent!':",
+                "$c0011$n$c0007 sogghigna mentre ti mostra che",
+                "Inizi a schiumare di rabbia appena $c0011$n$c0007 ti dice che",
+                "Ma davero davero? Nuovo achievement di $c0011$n$c0007? WTF, ",
+                "$c0011$n$c0007 si muove come $u supercafone mentre esclama che",
+                "Mentre tu stai a rosica' $c0011$n$c0007 urla 'Daje!',",
+                "Fai lo sborone e mostri a tutti che",
+                "Ti gigioneggi mentre fai vedere il tuo achievement:",
+                "Dici: 'E anche questo l'ho fatto,",
+                "Mostri il cartello 'W i criceti', poi dici:",
+                "Canti allegramente 'In the name of my new Achievemeeeent!':",
+                "Sogghigni mentre mostri a tutti che",
+                "Fai schiumare i presenti dalla rabbia appena esclami che",
+                "Fai rimanere tutti a bocca aperta:",
+                "Con il passo da $c5011K$c0007oatto esclami che",
+                "Esclami 'Daje!' e fai rosicare tutti urlando che"
+            };
+
+            const int nMaxSpamAchie = 9;
+
+            arg = one_argument(arg, arg2);
+
+            if(!*arg2)
+            {
+                send_to_char("Quale achievement vuoi mostrare?\n\r", ch);
+                return;
+            }
+
+            n_spam = atoi(arg2);
+
+            if(IS_SET(ch->specials.act,PLR_ACHIE))
+            {
+                int num = 0;
+
+                // Race Achievements
+                for(i = 0; i < MAX_RACE; i++)
+                {
+                    if(ch->specials.achie_racekill[i] > 0)
+                        send_to_char("qui dovrebbe cercare i racekill", ch);
+                }
+
+                // Boss Achievements
+                for(i = 0; i < MAX_BOSS; i++)
+                {
+                    if(ch->specials.achie_bosskill[i] > 0)
+                        send_to_char("qui dovrebbe cercare i bosskill", ch);
+                }
+
+                // Class Skill Achievements
+                for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                {
+                    if(HasClass(ch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
+                    {
+                        if(n_spam > num && n_spam <= (num + 5))
+                        {
+                            num += 1;
+                            sb = bufferAchie(ch, i, CLASS_ACHIE, 5, num, TRUE, n_spam);
+                            num += 4;
+                        }
+                        else
+                            num += 5;
+                    }
+                }
+
+                // Quest Achievements
+                for(i = 0; i < MAX_QUEST; i++)
+                {
+                    if(ch->specials.achie_quest[i] > 0)
+                        send_to_char("qui dovrebbe cercare le quest", ch);
+                }
+
+                // Various Achievements
+                for(i = 0; i < MAX_OTHER; i++)
+                {
+                    if(ch->specials.achie_other[i] > 0)
+                        send_to_char("qui dovrebbe cercare gli other", ch);
+                }
+
+                int Snum = number(0, nMaxSpamAchie);
+
+                sprintf(buf,"%s %s %s.",rand_spamAchie[Snum + 10], (sb.substr(0,3) == "com" ? "hai" : "ti"), sb.c_str());
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                sprintf(buf,"%s %s %s.",rand_spamAchie[Snum], (sb.substr(0,3) == "com" ? "ha" : "$d"), sb.c_str());
+                act(buf, FALSE, ch, 0, 0, TO_ROOM);
+            }
+            else
+                send_to_char("Ma se non hai completato nessun achievement...\n\r", ch);
         }
-        else if(!strcmp(arg1,"delete"))
+        else if(!strcmp(arg1,"delete") && IS_QUESTMASTER(ch))
         {
-            send_to_char("solo lvl 57+: cancello un determinato achievement di qualcuno", ch);
+            struct char_data* tch;
+            char arg3[128], buf1[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
+
+            arg = one_argument(arg, arg2);
+            arg = one_argument(arg, arg3);
+
+            if(*arg2)
+            {
+                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                {
+                    send_to_char("Non c'e' nessuno con quel nome qui, a chi vorresti cancellare gli achievements?\n\r", ch);
+                    return;
+                }
+
+                if(!IS_PC(tch))
+                {
+                    send_to_char("Vuoi veramente cancellare gli achivements ad uno stupido mob?\n\r", ch);
+                    return;
+                }
+
+                if(IS_POLY(tch))
+                    tch = tch->desc->original;
+
+                if(*arg3)
+                {
+                    int achi_d;
+
+                    achi_d = atoi(arg3);
+
+                    if(achi_d <= 0)
+                    {
+                        act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(IS_SET(tch->specials.act,PLR_ACHIE))
+                    {
+                        int num = 0;
+
+                        // Race Achievements
+                        for(i = 0; i < MAX_RACE; i++)
+                        {
+                            if(tch->specials.achie_racekill[i] > 0)
+                                send_to_char("qui dovrebbe cercare i racekill", ch);
+                        }
+
+                        // Boss Achievements
+                        for(i = 0; i < MAX_BOSS; i++)
+                        {
+                            if(tch->specials.achie_bosskill[i] > 0)
+                                send_to_char("qui dovrebbe cercare i bosskill", ch);
+                        }
+
+                        // Class Skill Achievements
+                        for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                        {
+                            if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
+                            {
+                                if(achi_d > num && achi_d <= (num + 5))
+                                {
+                                    if(tch->specials.achie_class[i] == 0)
+                                    {
+                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[i].achie_string2);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achie_class[i] = 0;
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[i].achie_string2, GET_NAME(tch))
+                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[i].achie_string2);
+                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[i].achie_string2);
+                                        do_save(tch, "", 0);
+                                        break;
+                                    }
+                                }
+                                else
+                                    num += 5;
+                            }
+                        }
+
+                        // Quest Achievements
+                        for(i = 0; i < MAX_QUEST; i++)
+                        {
+                            if(tch->specials.achie_quest[i] > 0)
+                                send_to_char("qui dovrebbe cercare le quest", ch);
+                        }
+
+                        // Various Achievements
+                        for(i = 0; i < MAX_OTHER; i++)
+                        {
+                            if(tch->specials.achie_other[i] > 0)
+                                send_to_char("qui dovrebbe cercare gli other", ch);
+                        }
+
+                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                        tch = get_char_vis_world(ch, arg2, NULL);
+                        act(buf2, FALSE, ch, 0, tch, TO_VICT);
+                    }
+                    else
+                    {
+                        act("$N non ha completato nessun achievement!", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+                }
+                else
+                {
+                    act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                    return;
+                }
+            }
+            else
+            {
+                send_to_char("A chi vorresti cancellare l'achievement?\n\r", ch);
+                return;
+            }
         }
-        else if(!strcmp(arg1,"reset"))
+        else if(!strcmp(arg1,"set") && IS_MAESTRO_DEL_CREATO(ch))
         {
-            send_to_char("solo lvl 58+: cancello tutti gli achievements di qualcuno", ch);
+            struct char_data* tch;
+            char arg3[128], arg4[128], buf1[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
+
+            arg = one_argument(arg, arg2);
+            arg = one_argument(arg, arg3);
+            arg = one_argument(arg, arg4);
+
+            if(*arg2)
+            {
+                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                {
+                    send_to_char("Non c'e' nessuno con quel nome qui!\n\r", ch);
+                    return;
+                }
+
+                if(!IS_PC(tch))
+                {
+                    send_to_char("Vuoi veramente assegnare un achivement ad uno stupido mob?\n\r", ch);
+                    return;
+                }
+
+                if(IS_POLY(tch))
+                    tch = tch->desc->original;
+
+                if(*arg3)
+                {
+                    int achi_n;
+
+                    achi_n = atoi(arg3);
+
+                    if(achi_n <= 0)
+                    {
+                        act("A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(achi_n > maxAchievements(tch))
+                    {
+                        sprintf(buf1, "Il numero massimo di achievements per $N e' %d.", maxAchievements(tch));
+                        act(buf1 , FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(*arg4)
+                    {
+                        int achi_v, num = 0;
+
+                        achi_v = atoi(arg4);
+
+                        if(achi_v <= 0)
+                        {
+                            act("Puoi assegnare solo un valore maggiore di zero.", FALSE, ch, 0, tch, TO_CHAR);
+                            return;
+                        }
+
+                        if(!IS_SET(tch->specials.act, PLR_ACHIE))
+                            SET_BIT(tch->specials.act, PLR_ACHIE);
+
+                        // Race Achievements
+                        for(i = 0; i < MAX_RACE; i++)
+                        {
+                            if(tch->specials.achie_racekill[i] > 0)
+                                send_to_char("qui dovrebbe cercare i racekill", ch);
+                        }
+
+                        // Boss Achievements
+                        for(i = 0; i < MAX_BOSS; i++)
+                        {
+                            if(tch->specials.achie_bosskill[i] > 0)
+                                send_to_char("qui dovrebbe cercare i bosskill", ch);
+                        }
+
+                        // Class Skill Achievements
+                        for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                        {
+                            if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
+                            {
+                                if(achi_n > num && achi_n <= (num + 5))
+                                {
+                                    if(achi_v > AchievementsList[i].lvl5_val)
+                                    {
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[i].achie_string2, AchievementsList[i].lvl5_val);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achie_class[i] = achi_v;
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[i].achie_string2, GET_NAME(tch), achi_v)
+                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[i].achie_string2, achi_v);
+                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[i].achie_string2, achi_v);
+                                        do_save(tch, "", 0);
+                                        break;
+                                    }
+                                }
+                                else
+                                    num += 5;
+                            }
+                        }
+
+                        // Quest Achievements
+                        for(i = 0; i < MAX_QUEST; i++)
+                        {
+                            if(tch->specials.achie_quest[i] > 0)
+                                send_to_char("qui dovrebbe cercare le quest", ch);
+                        }
+
+                        // Various Achievements
+                        for(i = 0; i < MAX_OTHER; i++)
+                        {
+                            if(tch->specials.achie_other[i] > 0)
+                                send_to_char("qui dovrebbe cercare gli other", ch);
+                        }
+
+                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                        tch = get_char_vis_world(ch, arg2, NULL);
+                        act(buf2, FALSE, ch, 0, tch, TO_VICT);
+                    }
+                    else
+                    {
+                        act("Quale valore vuoi assegnare all'achievement di $N?", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+                }
+                else
+                {
+                    act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                    return;
+                }
+            }
+            else
+            {
+                send_to_char("A chi vorresti assegnare l'achievement?\n\r", ch);
+                return;
+            }
+        }
+        else if(!strcmp(arg1,"reset") && IS_MAESTRO_DEL_CREATO(ch))
+        {
+            struct char_data* tch;
+
+            arg = one_argument(arg, arg2);
+
+            if(*arg2)
+            {
+                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                {
+                    send_to_char("Non c'e' nessuno con quel nome qui, a chi vorresti resettare gli achievements?\n\r", ch);
+                    return;
+                }
+
+                if(!IS_PC(tch))
+                {
+                    send_to_char("Vuoi veramente resettare gli achievements di uno stupido mob?\n\r", ch);
+                    return;
+                }
+
+                if(IS_POLY(tch))
+                    tch = tch->desc->original;
+
+                mudlog(LOG_PLAYERS, "%s starts to delete all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
+                if(hasAchievement(tch, RACESLAYER_ACHIE))
+                {
+                    for(i = 0; i < MAX_RACE; i++)
+                        tch->specials.achie_racekill[i] = 0;
+                }
+                if(hasAchievement(tch, BOSSKILL_ACHIE))
+                {
+                    for(i = 0; i < MAX_BOSS; i++)
+                        tch->specials.achie_bosskill[i] = 0;
+                }
+                if(hasAchievement(tch, CLASS_ACHIE))
+                {
+                    for(i = 0; i < MAX_RACE; i++)
+                        tch->specials.achie_class[i] = 0;
+                }
+                if(hasAchievement(tch, QUEST_ACHIE))
+                {
+                    for(i = 0; i < MAX_RACE; i++)
+                        tch->specials.achie_quest[i] = 0;
+                }
+                if(hasAchievement(tch, OTHER_ACHIE))
+                {
+                    for(i = 0; i < MAX_RACE; i++)
+                        tch->specials.achie_other[i] = 0;
+                }
+                if(IS_SET(tch->specials.act,PLR_ACHIE))
+                    REMOVE_BIT(tch->specials.act, PLR_ACHIE);
+                mudlog(LOG_PLAYERS, "Done. %s has deleted all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
+                do_save(tch, "", 0);
+
+                act("Tutti gli achievements di $N sono stati resettati.", FALSE, ch, 0, tch, TO_CHAR);
+                tch = get_char_vis_world(ch, arg2, NULL);
+                act("$n ti ha resettato tutti gli achievements.", FALSE, ch, 0, tch, TO_VICT);
+            }
+            else
+            {
+                send_to_char("A chi vorresti resettare gli achievements?\n\r", ch);
+                return;
+            }
         }
         else
         {
-            send_to_char("Sintassi:\n\r", ch);
-            send_to_char("Achievements - mostra gli achievements che hai completato\n\r", ch);
-            send_to_char("oppure\n\r", ch);
-            send_to_char("Achievements <comando> <opzione>\n\r", ch);
+            send_to_char("$c0009Sintassi:\n\r", ch);
             if(IS_QUESTMASTER(ch))
-                send_to_char("all <nome_pg> - mostra tutti gli achievements, se scelto il nome_pg mostra quelli del personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements$c0007                                 - mostra gli achievements che hai completato\n\r", ch);
             else
-                send_to_char("all - mostra tutti gli achievements\n\r", ch);
-            send_to_char("spam <numero> - mostra in stanza l'achievement scelto\n\r", ch);
+                send_to_char("$c0015Achievements$c0007               - mostra gli achievements che hai completato\n\r", ch);
             if(IS_QUESTMASTER(ch))
-                send_to_char("delete <nome_pg> <numero> - cancella un determinato achievement dal personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements all$c0007                             - mostra tutti i tuoi achievements\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007>                   - mostra tutti gli achievements del personaggio scelto\n\r", ch);
+            else
+                send_to_char("$c0015Achievements all$c0007           - mostra tutti i tuoi achievements\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007>                   - mostra in stanza l'achievement scelto\n\r", ch);
+            else
+                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007>       - cancella un determinato achievement dal personaggio scelto\n\r", ch);
             if(IS_MAESTRO_DEL_CREATO(ch))
-                send_to_char("reset <nome_pg> - resetta tutti gli achievements del personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements set $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> <$c0015valore$c0007> - assegna al personaggio scelto un valore ad un determinato achievement\n\r", ch);
+            if(IS_MAESTRO_DEL_CREATO(ch))
+                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007>                 - resetta tutti gli achievements del personaggio scelto\n\r", ch);
 
         }
     }
     else
     {
-    if(IS_SET(ch->specials.act,PLR_ACHIE))
+        struct char_data* tch;
+
+        tch = ch;
+
+        if(IS_POLY(tch))
+            tch = tch->desc->original;
+
+        if(IS_SET(tch->specials.act,PLR_ACHIE))
         {
-            send_to_char("achievements bla bla bla", ch);
-            //     boost::format fmt("[%3d] %-30s %3d %-14s %s %s\n\r");
-            /*  for(i = 0; i < MAX_RACE; i++)
+            int num = 0;
+            send_to_char("$c0011Ecco i tuoi achievements:\n\r", ch);
+
+            // Race Achievements
+            if(hasAchievement(tch, RACESLAYER_ACHIE))
             {
-                if(ch->specials.achie_racekill[i] > 0)
-                fprintf(fp, "achie_racekill:%d#%d\n", i, ch->specials.achie_racekill[i]);
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Race  Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 0; i < MAX_RACE; i++)
+            {
+                if(tch->specials.achie_racekill[i] > 0)
+                    send_to_char("ok ho trovato un achie racekill", ch);
             }
 
+            // Boss Achievements
+            if(hasAchievement(tch, BOSSKILL_ACHIE))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Boss  Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
             for(i = 0; i < MAX_BOSS; i++)
             {
-                if(ch->specials.achie_bosskill[i] > 0)
-                fprintf(fp, "achie_bosskill:%d#%d\n", i, ch->specials.achie_bosskill[i]);
+                if(tch->specials.achie_bosskill[i] > 0)
+                    send_to_char("ok ho trovato un achie bosskill", ch);
             }
 
-            for(i = 0; i < MAX_CLASS_ACHIE; i++)
+            // Class Skill Achievements
+            if(hasAchievement(tch, CLASS_ACHIE))
             {
-                if(ch->specials.achie_class[i] > 0)
-                fprintf(fp, "achie_class:%d#%d\n", i, ch->specials.achie_class[i]);
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Skill Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 1; i < MAX_CLASS_ACHIE; i++)
+            {
+                if(tch->specials.achie_class[i] > 0)
+                {
+                    if (tch->specials.achie_class[i] >= AchievementsList[i].lvl5_val)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, FALSE, 0));
+                        num += 4;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl4_val)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 4, num, FALSE, 0));
+                        num += 3;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl3_val)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 3, num, FALSE, 0));
+                        num += 2;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl2_val)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 2, num, FALSE, 0));
+                        num += 1;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl1_val)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 1, num, FALSE, 0));
+                    }
+                }
             }
 
+            // Quest Achievements
+            if(hasAchievement(tch, QUEST_ACHIE))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Quest Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
             for(i = 0; i < MAX_QUEST; i++)
             {
-                if(ch->specials.achie_quest[i] > 0)
-                fprintf(fp, "achie_quest:%d#%d\n", i, ch->specials.achie_quest[i]);
+                if(tch->specials.achie_quest[i] > 0)
+                    send_to_char("ok ho trovato un achie quest", ch);
             }
 
+            // Various Achievements
+            if(hasAchievement(tch, OTHER_ACHIE))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Other Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
             for(i = 0; i < MAX_OTHER; i++)
             {
-                if(ch->specials.achie_other[i] > 0)
-                fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achie_other[i]);
-            }*/
+                if(tch->specials.achie_other[i] > 0)
+                    send_to_char("ok ho trovato un achie other", ch);
+            }
+
+            page_string(ch->desc, sb.c_str(), true);
         }
         else
             send_to_char("Non hai completato nessun achievement.\n\r", ch);

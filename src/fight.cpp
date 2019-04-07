@@ -2567,7 +2567,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 regenerate = MIN((con_app[(int)GET_CON(victim)].hitp+ number(0,GetMaxLevel(ch))), dam/2);
                 GET_HIT(victim)+= regenerate;
 				alter_hit(victim,0);
-				if(dam>0) {
+				if(dam > 0 && regenerate > 0) {
                     sprintf(buf, "Rigeneri!");
                     if(IS_SET(victim->player.user_flags,PWP_MODE))
                         sprintf(buf, "%s $c0006[%s%d]$c0007",buf, (regenerate == 0 ? "" : "+"), (regenerate < 0 ? 0 : regenerate));
