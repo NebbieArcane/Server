@@ -1447,6 +1447,13 @@ void spell_locate_object(byte level, struct char_data* ch,
 		send_to_char("Cosa stai cercando??\n\r", ch);
 		return;
 	}
+
+    if(IS_OBJ_STAT2(obj, ITEM2_NO_LOCATE) && !IS_IMMORTAL(ch))
+    {
+        send_to_char("Non trovi nulla di simile.\n\r",ch);
+        return;
+    }
+
 	isgod=IS_CREATORE(ch);
 
 	strcpy(name, obj->name);
