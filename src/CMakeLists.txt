@@ -200,7 +200,7 @@ configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UN
 
 #Warning managements
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
-	-Werror
+#	-Werror
 	-Wfatal-errors
 	-Wall
 	-Wextra
@@ -212,6 +212,8 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wenum-compare
 	-Wno-format-nonliteral
 	-Wformat=2
+	-Wformat-overflow
+	-Wimplicit-fallthrough
 	-Winit-self
 	-Wlogical-op
 	-Wmissing-include-dirs
