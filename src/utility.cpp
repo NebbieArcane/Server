@@ -428,7 +428,7 @@ int maxAchievements(struct char_data* ch)
     for(i = 1; i < MAX_CLASS_ACHIE; i++)
     {
         if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
-            conteggio += 5;
+            conteggio += AchievementsList[i].n_livelli;
     }
 
     // Quest Achievements
@@ -442,7 +442,7 @@ int maxAchievements(struct char_data* ch)
     for(i = 0; i < MAX_OTHER; i++)
     {
         if(tch->specials.achie_other[i] > 0)
-            send_to_char("qui dovrebbe contrare gli other", ch);
+            send_to_char("qui dovrebbe contare gli other", ch);
     }
 
     return conteggio;
@@ -629,7 +629,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
                     fmt.clear();
                 }
             }
-            if (lvl == 5)
+            if (lvl >= 5)
             {
                 if(formato)
                 {
@@ -660,6 +660,181 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
                 {
                     boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
                     fmt % ((num + 4)%2 == 0 ? "$c0015" : "$c0007") % (num + 4) % AchievementsList[achievement_type].lvl5 % AchievementsList[achievement_type].lvl5_val % (AchievementsList[achievement_type].lvl5_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+            }
+            if (lvl >= 6)
+            {
+                if(formato)
+                {
+                    boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+                    fmt % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl6_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl6 % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl6_val ? AchievementsList[achievement_type].lvl6_val : ch->specials.achie_class[achievement_type]) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl6_val % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl6_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_type].lvl6_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                    if(check == (num + 3))
+                    {
+                        if(ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl6_val)
+                        {
+                            boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                            fmt % AchievementsList[achievement_type].lvl6 % AchievementsList[achievement_type].lvl6_val % (AchievementsList[achievement_type].lvl6_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        else
+                        {
+                            boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                            fmt % ((AchievementsList[achievement_type].lvl6_val - ch->specials.achie_class[achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_type].lvl6_val - ch->specials.achie_class[achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_type].lvl6_val - ch->specials.achie_class[achievement_type]) % ((AchievementsList[achievement_type].lvl6_val - ch->specials.achie_class[achievement_type]) == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2) % AchievementsList[achievement_type].lvl6;
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        spam = TRUE;
+                    }
+                }
+                else
+                {
+                    boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+                    fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_type].lvl6 % AchievementsList[achievement_type].lvl6_val % (AchievementsList[achievement_type].lvl6_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+            }
+            if (lvl >= 7)
+            {
+                if(formato)
+                {
+                    boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+                    fmt % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl7_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl7 % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl7_val ? AchievementsList[achievement_type].lvl7_val : ch->specials.achie_class[achievement_type]) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl7_val % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl7_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_type].lvl7_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                    if(check == (num + 3))
+                    {
+                        if(ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl7_val)
+                        {
+                            boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                            fmt % AchievementsList[achievement_type].lvl7 % AchievementsList[achievement_type].lvl7_val % (AchievementsList[achievement_type].lvl7_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        else
+                        {
+                            boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                            fmt % ((AchievementsList[achievement_type].lvl7_val - ch->specials.achie_class[achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_type].lvl7_val - ch->specials.achie_class[achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_type].lvl7_val - ch->specials.achie_class[achievement_type]) % ((AchievementsList[achievement_type].lvl7_val - ch->specials.achie_class[achievement_type]) == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2) % AchievementsList[achievement_type].lvl7;
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        spam = TRUE;
+                    }
+                }
+                else
+                {
+                    boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+                    fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_type].lvl7 % AchievementsList[achievement_type].lvl7_val % (AchievementsList[achievement_type].lvl7_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+            }
+            if (lvl >= 8)
+            {
+                if(formato)
+                {
+                    boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+                    fmt % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl8_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl8 % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl8_val ? AchievementsList[achievement_type].lvl8_val : ch->specials.achie_class[achievement_type]) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl8_val % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl8_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_type].lvl8_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                    if(check == (num + 3))
+                    {
+                        if(ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl8_val)
+                        {
+                            boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                            fmt % AchievementsList[achievement_type].lvl8 % AchievementsList[achievement_type].lvl8_val % (AchievementsList[achievement_type].lvl8_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        else
+                        {
+                            boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                            fmt % ((AchievementsList[achievement_type].lvl8_val - ch->specials.achie_class[achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_type].lvl8_val - ch->specials.achie_class[achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_type].lvl8_val - ch->specials.achie_class[achievement_type]) % ((AchievementsList[achievement_type].lvl8_val - ch->specials.achie_class[achievement_type]) == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2) % AchievementsList[achievement_type].lvl8;
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        spam = TRUE;
+                    }
+                }
+                else
+                {
+                    boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+                    fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_type].lvl8 % AchievementsList[achievement_type].lvl8_val % (AchievementsList[achievement_type].lvl8_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+            }
+            if (lvl >= 9)
+            {
+                if(formato)
+                {
+                    boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+                    fmt % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl9_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl9 % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl9_val ? AchievementsList[achievement_type].lvl9_val : ch->specials.achie_class[achievement_type]) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl9_val % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl9_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_type].lvl9_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                    if(check == (num + 3))
+                    {
+                        if(ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl9_val)
+                        {
+                            boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                            fmt % AchievementsList[achievement_type].lvl9 % AchievementsList[achievement_type].lvl9_val % (AchievementsList[achievement_type].lvl9_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        else
+                        {
+                            boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                            fmt % ((AchievementsList[achievement_type].lvl9_val - ch->specials.achie_class[achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_type].lvl9_val - ch->specials.achie_class[achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_type].lvl9_val - ch->specials.achie_class[achievement_type]) % ((AchievementsList[achievement_type].lvl9_val - ch->specials.achie_class[achievement_type]) == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2) % AchievementsList[achievement_type].lvl9;
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        spam = TRUE;
+                    }
+                }
+                else
+                {
+                    boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+                    fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_type].lvl9 % AchievementsList[achievement_type].lvl9_val % (AchievementsList[achievement_type].lvl9_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+            }
+            if (lvl >= 10)
+            {
+                if(formato)
+                {
+                    boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+                    fmt % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl10_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl10 % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl10_val ? AchievementsList[achievement_type].lvl10_val : ch->specials.achie_class[achievement_type]) % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_type].lvl10_val % (ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl10_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_type].lvl10_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                    sb.append(fmt.str().c_str());
+                    fmt.clear();
+                    if(check == (num + 3))
+                    {
+                        if(ch->specials.achie_class[achievement_type] >= AchievementsList[achievement_type].lvl10_val)
+                        {
+                            boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                            fmt % AchievementsList[achievement_type].lvl10 % AchievementsList[achievement_type].lvl10_val % (AchievementsList[achievement_type].lvl10_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        else
+                        {
+                            boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                            fmt % ((AchievementsList[achievement_type].lvl10_val - ch->specials.achie_class[achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_type].lvl10_val - ch->specials.achie_class[achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_type].lvl10_val - ch->specials.achie_class[achievement_type]) % ((AchievementsList[achievement_type].lvl10_val - ch->specials.achie_class[achievement_type]) == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2) % AchievementsList[achievement_type].lvl10;
+                            sb2.append(fmt.str().c_str());
+                            fmt.clear();
+                        }
+                        spam = TRUE;
+                    }
+                }
+                else
+                {
+                    boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+                    fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_type].lvl10 % AchievementsList[achievement_type].lvl10_val % (AchievementsList[achievement_type].lvl10_val == 1 ? AchievementsList[achievement_type].achie_string1 : AchievementsList[achievement_type].achie_string2);
                     sb.append(fmt.str().c_str());
                     fmt.clear();
                 }
@@ -728,6 +903,36 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
             {
                 valore = AchievementsList[achievement_type].lvl5_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl5);
+                strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl6_val)
+            {
+                valore = AchievementsList[achievement_type].lvl6_val;
+                strcpy(titolo, AchievementsList[achievement_type].lvl6);
+                strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl7_val)
+            {
+                valore = AchievementsList[achievement_type].lvl7_val;
+                strcpy(titolo, AchievementsList[achievement_type].lvl7);
+                strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl8_val)
+            {
+                valore = AchievementsList[achievement_type].lvl8_val;
+                strcpy(titolo, AchievementsList[achievement_type].lvl8);
+                strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl9_val)
+            {
+                valore = AchievementsList[achievement_type].lvl9_val;
+                strcpy(titolo, AchievementsList[achievement_type].lvl9);
+                strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+            }
+            else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl10_val)
+            {
+                valore = AchievementsList[achievement_type].lvl10_val;
+                strcpy(titolo, AchievementsList[achievement_type].lvl10);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             break;

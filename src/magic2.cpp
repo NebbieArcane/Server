@@ -1544,6 +1544,13 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	assert(ch && (victim || obj));
 
 	if(obj) {
+        if((IS_SET(obj->obj_flags.extra_flags2, ITEM2_EDIT) || IS_SET(obj->obj_flags.extra_flags2, ITEM2_INSERT) ||IS_SET(obj->obj_flags.extra_flags2, ITEM2_PERSONAL) || IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST)) && level <= IMMORTALE)
+        {
+            act("$p resiste al tuo incantesimo.", FALSE, ch, obj, 0, TO_CHAR);
+            return;
+        }
+        
+        
 		if(IS_SET(obj->obj_flags.extra_flags, ITEM_INVISIBLE)) {
 			REMOVE_BIT(obj->obj_flags.extra_flags, ITEM_INVISIBLE);
 		}

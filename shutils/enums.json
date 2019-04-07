@@ -276,6 +276,46 @@
             "value": 33,
             "comment": "Achievements stuffs"
         },
+        "LEV_BEGINNER": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_VERY_EASY": {
+            "value": 2,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_EASY": {
+            "value": 3,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_NORMAL": {
+            "value": 4,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_HARD": {
+            "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_EXPERT": {
+            "value": 6,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_CHAMPION": {
+            "value": 7,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_IMPERIAL": {
+            "value": 8,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_TORMENT": {
+            "value": 9,
+            "comment": "Achievements stuffs"
+        },
+        "LEV_GOD_MODE": {
+            "value": 10,
+            "comment": "Achievements stuffs"
+        },
 		"MAX_RACE": {
 			"value": "E_RACES_COUNT",
 			"comment": "Max available races"
@@ -3472,6 +3512,14 @@
             "ITEM2_INSERT": {
                 "value": 16,
                 "comment": "item with gems mounted"
+            },
+            "ITEM2_NO_PRINCE": {
+                "value": 32,
+                "comment": "prince can't use the item"
+            },
+            "ITEM2_ONLY_PRINCE": {
+                "value": 64,
+                "comment": "only prince can use the item"
             }
         }
 	}

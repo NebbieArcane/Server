@@ -2240,8 +2240,8 @@ ACTION_FUNC(do_achievements)
                     if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, TRUE, 0));
-                        num += 4;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[i].n_livelli - 1;
                     }
                 }
 
@@ -2342,14 +2342,14 @@ ACTION_FUNC(do_achievements)
                 {
                     if(HasClass(ch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
                     {
-                        if(n_spam > num && n_spam <= (num + 5))
+                        if(n_spam > num && n_spam <= (num + AchievementsList[i].n_livelli))
                         {
                             num += 1;
-                            sb = bufferAchie(ch, i, CLASS_ACHIE, 5, num, TRUE, n_spam);
-                            num += 4;
+                            sb = bufferAchie(ch, i, CLASS_ACHIE, AchievementsList[i].n_livelli, num, TRUE, n_spam);
+                            num += AchievementsList[i].n_livelli - 1;
                         }
                         else
-                            num += 5;
+                            num += AchievementsList[i].n_livelli;
                     }
                 }
 
@@ -2437,7 +2437,7 @@ ACTION_FUNC(do_achievements)
                         {
                             if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
                             {
-                                if(achi_d > num && achi_d <= (num + 5))
+                                if(achi_d > num && achi_d <= (num + AchievementsList[i].n_livelli))
                                 {
                                     if(tch->specials.achie_class[i] == 0)
                                     {
@@ -2456,7 +2456,7 @@ ACTION_FUNC(do_achievements)
                                     }
                                 }
                                 else
-                                    num += 5;
+                                    num += AchievementsList[i].n_livelli;
                             }
                         }
 
@@ -2575,11 +2575,11 @@ ACTION_FUNC(do_achievements)
                         {
                             if(HasClass(tch, AchievementsList[i].classe) || AchievementsList[i].classe == 0)
                             {
-                                if(achi_n > num && achi_n <= (num + 5))
+                                if(achi_n > num && achi_n <= (num + AchievementsList[i].n_livelli))
                                 {
-                                    if(achi_v > AchievementsList[i].lvl5_val)
+                                    if(achi_v > 5000000)
                                     {
-                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[i].achie_string2, AchievementsList[i].lvl5_val);
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' 5000000.", AchievementsList[i].achie_string2);
                                         act(buf1, FALSE, ch, 0, tch, TO_CHAR);
                                         return;
                                     }
@@ -2775,31 +2775,61 @@ ACTION_FUNC(do_achievements)
             {
                 if(tch->specials.achie_class[i] > 0)
                 {
-                    if (tch->specials.achie_class[i] >= AchievementsList[i].lvl5_val)
+                    if (tch->specials.achie_class[i] >= AchievementsList[i].lvl10_val && AchievementsList[i].n_livelli >= 10)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 10, num, FALSE, 0));
+                        num += 9;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl9_val && AchievementsList[i].n_livelli >= 9)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 9, num, FALSE, 0));
+                        num += 8;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl8_val && AchievementsList[i].n_livelli >= 8)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 8, num, FALSE, 0));
+                        num += 7;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl7_val && AchievementsList[i].n_livelli >= 7)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 7, num, FALSE, 0));
+                        num += 6;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl6_val && AchievementsList[i].n_livelli >= 6)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 6, num, FALSE, 0));
+                        num += 5;
+                    }
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl5_val && AchievementsList[i].n_livelli >= 5)
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, FALSE, 0));
                         num += 4;
                     }
-                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl4_val)
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl4_val && AchievementsList[i].n_livelli >= 4)
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, CLASS_ACHIE, 4, num, FALSE, 0));
                         num += 3;
                     }
-                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl3_val)
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl3_val && AchievementsList[i].n_livelli >= 3)
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, CLASS_ACHIE, 3, num, FALSE, 0));
                         num += 2;
                     }
-                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl2_val)
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl2_val && AchievementsList[i].n_livelli >= 2)
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, CLASS_ACHIE, 2, num, FALSE, 0));
                         num += 1;
                     }
-                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl1_val)
+                    else if (tch->specials.achie_class[i] >= AchievementsList[i].lvl1_val && AchievementsList[i].n_livelli >= 1)
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, CLASS_ACHIE, 1, num, FALSE, 0));
