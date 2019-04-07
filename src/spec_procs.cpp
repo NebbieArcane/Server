@@ -354,10 +354,10 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 					return TRUE;
 				}
 
-				if(GetMaxLevel(guildmaster) - 10 <
-						spell_info[ number ].min_level_magic) {
+                if((HasClass(ch, CLASS_MAGIC_USER) && GetMaxLevel(guildmaster) - 10 < spell_info[ number ].min_level_magic) || (HasClass(ch, CLASS_SORCERER) && GetMaxLevel(guildmaster) - 10 < spell_info[ number ].min_level_sorcerer))
+                {
 					do_say(guildmaster,
-						   "Non sono abbastanza potente per insegnarti questa magia",
+						   "Non sono abbastanza potente per insegnarti questa magia.\n\r",
 						   0);
 					return TRUE;
 				}
