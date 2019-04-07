@@ -1270,7 +1270,7 @@ ACTION_FUNC(do_stat) {
             }
             strcat(buf, "\n\r");
             send_to_char(buf, ch);
-            
+
 			strcpy(buf, "------- Chars present -------\n\r");
 			for(k = rm->people; k; k = k->next_in_room) {
 				if(CAN_SEE(ch, k)) {
@@ -1617,9 +1617,9 @@ ACTION_FUNC(do_stat) {
 				sprintf(buf, "$c0005Master is '$c0014%s$c0005'    ",
 						((k->master) ? GET_NAME(k->master) : "NOBODY"));
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
-                
+
                 if(k->specials.quest_ref) {
-                    
+
                     if(IS_PC(k)) {
                         sprintf(buf, "$c0005Quest Target: $c0014%s",
                                 (k->specials.quest_ref->player.name ?
@@ -1631,7 +1631,7 @@ ACTION_FUNC(do_stat) {
                                  k->specials.quest_ref->player.name : "-"));
                         act(buf, FALSE, ch, 0, 0, TO_CHAR);
                     }
-                    
+
                 }
 
 				sprintf(buf, "$c0005Followers are:");
@@ -1647,25 +1647,25 @@ ACTION_FUNC(do_stat) {
 							   GET_NAME(k));
 					}
 				}
-                
+
                 sprintf(buf, "$c0005Last PKill: $c0014%s", k->lastpkill == NULL ? "-" : k->lastpkill);    // destroy
                 act(buf, FALSE, ch, 0, 0, TO_CHAR);
-                
+
                 sprintf(buf, "$c0005Last MKill: $c0014%s", k->lastmkill == NULL ? "-" : k->lastmkill);    // quests
                 act(buf, FALSE, ch, 0, 0, TO_CHAR);
-                
+
                 if(IS_SET(k->specials.pmask, BIT_POOF_IN) && IS_PC(k) && IS_IMMORTAL(k))
                 {
                     sprintf(buf, "$c0005Bamfin : $c0014%s", k->specials.poofin == NULL ? "-" : k->specials.poofin);
                     act(buf, FALSE, ch, 0, 0, TO_CHAR);
                 }
-                
+
                 if(IS_SET(k->specials.pmask, BIT_POOF_OUT) && IS_PC(k) && IS_IMMORTAL(k))
                 {
                     sprintf(buf, "$c0005Bamfout: $c0014%s", k->specials.poofout == NULL ? "-" : k->specials.poofout);
                     act(buf, FALSE, ch, 0, 0, TO_CHAR);
                 }
-                
+
 				/* immunities */
 				if(k->M_immune) {
 					send_to_char("$c0005Immune to: $c0014", ch);
@@ -1789,7 +1789,7 @@ ACTION_FUNC(do_stat) {
                 j = tmpW;
             else
                 j = tmpV;
-            
+
 			iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
 			sprintf(buf,
 					"$c0005Object name: [$c0011%s$c0005], R-number: [$c0014%d$c0005], V-number: [$c0011%d$c0005] Item type: $c0014",
@@ -1838,7 +1838,7 @@ ACTION_FUNC(do_stat) {
             strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
-            
+
             send_to_char("$c0005Extra flags2: $c0014", ch);
             sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf2);
             sprintf(buf, "$c0014");
@@ -2138,7 +2138,7 @@ ACTION_FUNC(do_ooedit) {
 			j->obj_flags.extra_flags = atol(parmstr);
 			return;
 		} /* end exflags */
-        
+
         if(!strcmp(field, "exflags2")) {
             arg = one_argument(arg, parmstr);
             j->obj_flags.extra_flags2 = atol(parmstr);
@@ -2431,7 +2431,7 @@ ACTION_FUNC(do_set) {
 	}
 	else if(!strcmp(field, "class")) {
 		sscanf(parmstr, "%X", &uparm);
-		parm=abs(uparm);
+		parm=uparm;
 		/*
 		 ** this will do almost nothing. (hopefully);
 		 */
@@ -3340,7 +3340,7 @@ ACTION_FUNC(do_return) {
 
 		if(IS_SET(ch->specials.act, ACT_POLYSELF) && cmd) {
 			mudlog(LOG_CHECK, "%s was a POLY.", ch->player.name);
-            
+
 			mob = ch;
 			per = ch->desc->original;
 
@@ -3352,7 +3352,7 @@ ACTION_FUNC(do_return) {
 
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
-            
+
 		}
 
 		ch->desc->character = ch->desc->original;
@@ -6284,39 +6284,39 @@ ACTION_FUNC(do_personalize)
     char arg2[MAX_INPUT_LENGTH];
     struct obj_data* obj;
     struct char_data* plr;
-    
+
     argument_interpreter(arg, arg1, arg2);
-    
+
     if(!*arg1 || !*arg2)
     {
         send_to_char("\n\rSintassi:\n\r   Personalize nomeoggetto nomepg\n\r", ch);
         return;
     }
-    
+
     if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying)))
     {
         send_to_char("Non hai niente del genere con te...\n\r", ch);
         return;
     }
-    
+
     if(!(plr = get_char_room_vis(ch, arg2)))
     {
         send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
         return;
     }
-    
+
     if(IS_MOB(plr))
     {
         send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r",ch);
         return;
     }
-    
+
     if(pers_on(plr, obj))
     {
         act("Il nome di $N e' gia' inciso su $p!", FALSE, ch, obj, plr, TO_CHAR);
         return;
     }
-    
+
     if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
     {
         send_to_char("Di nuovo?!?\n\r",ch);
@@ -6324,7 +6324,7 @@ ACTION_FUNC(do_personalize)
     }
 
     pers_obj(ch, plr, obj, CMD_PERSONALIZE);
-    
+
     act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
     act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
 }
@@ -6341,7 +6341,7 @@ ACTION_FUNC(do_checktypos)
     if( !str_cmp( arg, "clear now" ) && IS_MAESTRO_DEL_CREATO(ch))
     {
         FILE *fp;
-        
+
         if( !( fp = fopen( TYPO_FILE, "w" ) ) )
         {
             mudlog(LOG_ERROR,"%s:%s","do_checktypos",strerror(errno));
@@ -6352,13 +6352,13 @@ ACTION_FUNC(do_checktypos)
         mudlog(LOG_PLAYERS, "%s ha cancellato il file dei typos.", GET_NAME(ch));
         return;
     }
-    
+
     if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
     {
         int num = 0;
         char buf[MAX_STRING_LENGTH];
         FILE *fp;
-        
+
         if( ( fp = fopen( TYPO_FILE, "r" ) ) != nullptr )
         {
             page_string(ch->desc, "\r\n", 1);
@@ -6366,11 +6366,11 @@ ACTION_FUNC(do_checktypos)
             {
                 while( num < ( MAX_STRING_LENGTH - 4 ) && ( buf[num] = fgetc( fp ) ) != EOF && buf[num] != '\n' && buf[num] != '\r' )
                     ++num;
-                
+
                 int c = fgetc( fp );
                 if( ( c != '\n' && c != '\r' ) || c == buf[num] )
                     ungetc( c, fp );
-                
+
                 buf[num++] = '\r';
                 buf[num++] = '\n';
                 buf[num] = '\0';
