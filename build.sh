@@ -24,7 +24,7 @@ rm -f mudroot/myst
 rm -rf build
 (
 export PATH="/usr/lib/cache:$PATH" 
-mkdir -p build 
+mkdir -p build/src/include
 cd build 
 cmake .. 
 jobs=$(cat makejobs)
