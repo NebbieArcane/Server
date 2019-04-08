@@ -1,4 +1,4 @@
-language: cpp
+language: clang
 dist: xenial  
 cache: ccache
 before_install:
