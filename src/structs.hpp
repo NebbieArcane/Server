@@ -75,6 +75,20 @@ struct ClassAchieTable
     int grado_diff;
     int n_livelli;
 };
+
+struct XpAchieTable
+{
+    int lev_1_xp;
+    int lev_2_xp;
+    int lev_3_xp;
+    int lev_4_xp;
+    int lev_5_xp;
+    int lev_6_xp;
+    int lev_7_xp;
+    int lev_8_xp;
+    int lev_9_xp;
+    int lev_10_xp;
+};
     
 #define MIN_GLOB_TRACK_LEV 31   /* mininum level for global track */
 /*

@@ -3154,7 +3154,7 @@ ACTION_FUNC(do_score) {
 		act(buf,FALSE,ch,0,0,TO_CHAR);
 	}
 
-	snprintf(buf,999,"$c0005Le rune degli dei tatuate sul tuo corpo sono: $c0015%d ",
+	snprintf(buf,999,"$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015%d ",
 			 GET_RUNEDEI(ch));
 	act(buf,FALSE,ch,0,0,TO_CHAR);
 

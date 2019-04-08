@@ -395,7 +395,7 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
     strcat(buffer, space);
     strcat(buffer, "| |\n   ");
     strcat(buffer, space);
-    strcat(buffer, "(@)\n");
+    strcat(buffer, "(@)\n\n\r");
 
     return buffer;
 }
@@ -858,9 +858,6 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
     int valore = 0;
     struct char_data* tch;
 
-    // salvo il pg
-    // do_save(ch, "", 0);
-
     tch = ch;
 
     if(!IS_PC(ch))
@@ -943,8 +940,77 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
     if(valore > 0)
     {
+        int reward;
+
         sprintf(buf, "%s", spamAchie(tch, titolo, valore, stringa, achievement_type, achievement_class));
         send_to_all(buf);
+
+        switch(AchievementsList[achievement_type].grado_diff)
+        {
+            case LEV_BEGINNER:
+                reward = RewardXp[GetMaxLevel(ch)].lev_1_xp;
+                break;
+            case LEV_VERY_EASY:
+                reward = RewardXp[GetMaxLevel(ch)].lev_2_xp;
+                break;
+            case LEV_EASY:
+                reward = RewardXp[GetMaxLevel(ch)].lev_3_xp;
+                break;
+            case LEV_NORMAL:
+                reward = RewardXp[GetMaxLevel(ch)].lev_4_xp;
+                break;
+            case LEV_HARD:
+                reward = RewardXp[GetMaxLevel(ch)].lev_5_xp;
+                break;
+            case LEV_EXPERT:
+                reward = RewardXp[GetMaxLevel(ch)].lev_6_xp;
+                break;
+            case LEV_CHAMPION:
+                reward = RewardXp[GetMaxLevel(ch)].lev_7_xp;
+                break;
+            case LEV_IMPERIAL:
+                reward = RewardXp[GetMaxLevel(ch)].lev_8_xp;
+                break;
+            case LEV_TORMENT:
+                reward = RewardXp[GetMaxLevel(ch)].lev_9_xp;
+                break;
+            case LEV_GOD_MODE:
+                reward = RewardXp[GetMaxLevel(ch)].lev_10_xp;
+                break;
+
+            default:
+                reward = RewardXp[GetMaxLevel(ch)].lev_1_xp;
+                mudlog(LOG_CHECK, "Achievement's difficulty level is missing");
+                break;
+        }
+        mudlog(LOG_PLAYERS, "Reward prima della modifiche e' %d", reward);
+        switch (HowManyClasses(tch))
+        {
+                // monoclasee: il pg prende xp pieni
+            case 1:
+                reward = reward;
+                break;
+                // biclasse: il pg prende 150% degli xp
+            case 2:
+                reward = int (reward * 15 / 10);
+                break;
+                
+                // triclasse o +: il pg prende 200% degli xp
+            default:
+                reward *= 2;
+                break;
+        }
+        mudlog(LOG_PLAYERS, "Reward dopo la modifica classi e' %d", reward);
+        int basso = int(reward - reward * 5 / 100);
+        int alto = int(reward + reward * 5 / 100);
+
+        reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
+
+        mudlog(LOG_PLAYERS, "Reward finale: %d (numero tra %d e %d)", reward, basso, alto);
+        gain_exp(tch, reward);
+        sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
+        act(buf, FALSE, tch, 0, 0, TO_CHAR);
+        do_save(tch, "", 0);
     }
 }
 
