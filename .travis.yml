@@ -1,4 +1,4 @@
-language: cpp
+language: clang
 cache: ccache
 before_install:
   - sudo apt-get -y update
