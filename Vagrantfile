@@ -7,7 +7,7 @@
 # you're doing.
 Vagrant.configure("2") do |config|
  	if Vagrant.has_plugin?("vagrant-timezone")
-    	config.timezone.value =":host"
+    	config.timezone.value =:host
     end
   config.vbguest.auto_update = false
   # The most common configuration options are documented and commented below.
@@ -48,6 +48,7 @@ Vagrant.configure("2") do |config|
   # Bridged networks make the machine appear as another physical device on
   # your network.
   # config.vm.network "public_network"
+  config.vm.network "public_network"
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
@@ -63,6 +64,8 @@ Vagrant.configure("2") do |config|
   #   # Display the VirtualBox GUI when booting the machine
   #   vb.gui = true
   #
+  # defaulting to a sane nic
+    vb.default_nic_type = "82543GC"
   #   # Customize the amount of memory on the VM:
      vb.memory = 2048
   	  vb.cpus = 6
@@ -87,6 +90,7 @@ Vagrant.configure("2") do |config|
 	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb libcurl4-openssl-dev
 	apt-get -qq install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev liblog4cxx-dev
 	apt-get -qq install libboost-date-time-dev odb libodb-dev libodb-mysql-dev libodb-sqlite-dev libodb-boost-dev
+  apt-get -qq  install librtmp-dev  libnghttp2-dev libkrb5-dev comerr-dev libpsl-dev
 	echo "Installing mysql related packages"
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
 	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections

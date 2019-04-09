@@ -912,9 +912,10 @@ void spell_cure_critic(byte level, struct char_data* ch,
             sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
-    
-    if(healpoints > 0)
-        send_to_char("Ti senti decisamente meglio!\n\r", victim);
+
+    if(healpoints > 0) {
+    	send_to_char("Ti senti decisamente meglio!\n\r", victim);
+    }
 
 	update_pos(victim);
 	/*
@@ -928,7 +929,7 @@ void spell_cure_light(byte level, struct char_data* ch,
 					  struct char_data* victim, struct obj_data* obj) {
 	int healpoints;
     char buf[MAX_STRING_LENGTH];
-    
+
 	if(!victim) {
 		send_to_char("Chi vuoi curare?",ch);
 		mudlog(LOG_SYSERR,"Cure light failed check");
@@ -950,7 +951,7 @@ void spell_cure_light(byte level, struct char_data* ch,
 		GET_HIT(victim) += healpoints;
 		alter_hit(victim,0);
 	}
-    
+
     if(ch != victim)
     {
         sprintf(buf, "$c0015Curi $N$c0015.");
@@ -971,10 +972,10 @@ void spell_cure_light(byte level, struct char_data* ch,
             sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
-    
-    if(healpoints > 0)
-        send_to_char("Ti senti leggermente meglio!\n\r", victim);
 
+    if(healpoints > 0) {
+        send_to_char("Ti senti leggermente meglio!\n\r", victim);
+    }
 	update_pos(victim);
 	/*
 	  if (IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL( ch ) )
@@ -1281,7 +1282,7 @@ void spell_heal(byte level, struct char_data* ch,
 
 	if(GET_HIT(victim) >= hit_limit(victim)) {
         healpoints = 100 - (GET_HIT(victim) - hit_limit(victim));
-        
+
         if(GET_HIT(victim) == hit_limit(victim))
         {
             GET_HIT(victim) = hit_limit(victim)-dice(1,4);
@@ -1292,12 +1293,12 @@ void spell_heal(byte level, struct char_data* ch,
             GET_HIT(victim) = hit_limit(victim)-dice(1,4);
             healpoints = healpoints + (GET_HIT(victim) - hit_limit(victim));
         }
-        
+
 //		alter_hit(victim,0);
 	}
     alter_hit(victim,0);
 	update_pos(victim);
-    
+
     if(ch != victim)
     {
         sprintf(buf, "$c0015Curi $N$c0015.");
@@ -1333,10 +1334,10 @@ void spell_heal(byte level, struct char_data* ch,
         }
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
-    
-    if(healpoints > 0)
-        send_to_char("$c0015Senti un caldo formicolio pervadere il tuo corpo.\n\r", victim);
 
+    if(healpoints > 0)  {
+        send_to_char("$c0015Senti un caldo formicolio pervadere il tuo corpo.\n\r", victim);
+    }
 	/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
 		GET_ALIGNMENT(ch) += 5;
@@ -1938,7 +1939,7 @@ void spell_summon(byte level, struct char_data* ch,
 	if((rp = real_roomp(ch->in_room)) == NULL) {
 		return;
 	}
-    
+
     if(!IS_PC(victim) && affected_by_spell(victim,STATUS_QUEST)) {
         act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
         return;
@@ -2216,7 +2217,7 @@ void spell_charm_monster(byte level, struct char_data* ch,
 		send_to_char("Non puoi incantare una pianta!\n\r", ch);
 		return;
 	}
-    
+
     if(IS_NPC(victim) && (mob_index[victim->nr].iVNum >= QUEST_ZONE && mob_index[victim->nr].iVNum <= QUEST_ZONE+99))
     {
         act("$N non vuole seguire nessuno!", TRUE, ch, 0, victim, TO_CHAR);
@@ -2421,7 +2422,7 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
             act("$N evoca uno $c0012scudo anti-magia$c0007 attorno a se.", FALSE, ch, 0, victim, TO_NOTVICT);
             act("$c0012Crei uno scudo anti-magia attorno a te.", FALSE, ch, 0, victim, TO_CHAR);
         }
-        
+
 		spell_dispel_magic(CREATORE,ch,ch,0);
 
 		af.type      = SPELL_ANTI_MAGIC_SHELL;
@@ -2646,19 +2647,21 @@ void spell_identify(byte level, struct char_data* ch,
 	*/
 
 	assert(ch && (obj || victim));
-    
+
     do
     {
         color[1] = number(2,8);
     } while (color[1] == 4);
     color[2] = number(9,15);
-    
+
     sprintf(col1, "$c000%d", color[1]);
     sprintf(col2, "$c00%s%d", (color[2] > 9 ? "" : "0"), color[2]);
-    if(color[2] == 9)
+    if(color[2] == 9) {
         sprintf(col3, "$c0015");
-    else
+    }
+    else {
         sprintf(col3, "$c0009");
+    }
 
 	if(obj)
     {
@@ -2698,7 +2701,7 @@ void spell_identify(byte level, struct char_data* ch,
 
 		sprintf(buf,"%sPeso: %s%d%s, Valore: %s%d%s, Costo di rent: %s%d %s%s\n\r",
 				col1, col2, obj->obj_flags.weight, col1, col2, obj->obj_flags.cost,
-				col1, col2, obj->obj_flags.cost_per_day, col3, 
+				col1, col2, obj->obj_flags.cost_per_day, col3,
 				obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ");
 		send_to_char(buf, ch);
 
@@ -3007,9 +3010,9 @@ void spell_fire_breath(byte level, struct char_data* ch,
 	if(saves_spell(victim, SAVING_BREATH)) {
 		dam >>= 1;
 	}
-    
+
 	MissileDamage(ch, victim, dam, SPELL_FIRE_BREATH, 5);
-    
+
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_FIRE_BREATH, dam, 5);
 }
@@ -3067,7 +3070,7 @@ void spell_acid_breath(byte level, struct char_data* ch,
 	}
 
 	MissileDamage(ch, victim, dam, SPELL_ACID_BREATH, 5);
-    
+
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_ACID_BREATH, dam, 5);
 }
@@ -3095,7 +3098,7 @@ void spell_gas_breath(byte level, struct char_data* ch,
 	}
 
 	MissileDamage(ch, victim, dam, SPELL_GAS_BREATH, 5);
-    
+
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_GAS_BREATH, dam, 5);
 }
@@ -3123,10 +3126,10 @@ void spell_lightning_breath(byte level, struct char_data* ch,
 	}
 
 	MissileDamage(ch, victim, dam, SPELL_LIGHTNING_BREATH, 5);
-    
+
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_LIGHTNING_BREATH, dam, 5);
-    
+
 }
 
 

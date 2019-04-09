@@ -769,7 +769,7 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 	long bc = 2000;
 	long dvnums[2000]; /* guess 2000 stored objects is enuff */
 	int mobvnum = 0;
-	char buf[82], tbuf[128];
+	char buf[300], tbuf[128];
 	char loaded[100000];
 	for(i = 0; i < 100000; i++) {
 		loaded[i] = 0;
@@ -858,7 +858,7 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 		if(dvnums[j] == vnum) {
 			continue;
 		}
-		sprintf(buf, "%s/%s", dirname, ent->d_name);
+		snprintf(buf, sizeof(buf)-1,"%s/%s", dirname, ent->d_name);
 		if((f = fopen(buf, "rt")) == NULL) {
 			mudlog(LOG_ERROR, "Can't open file %s for reading\n", buf);
 			continue;
@@ -1257,7 +1257,7 @@ void boot_saved_zones() {
 	DIR* dir;
 	FILE* fp;
 	struct dirent* ent;
-	char buf[80];
+	char buf[300];
 	long zone;
 
 	if((dir = opendir("zones")) == NULL) {
@@ -1273,7 +1273,7 @@ void boot_saved_zones() {
 		if(!zone || zone > top_of_zone_table) {
 			continue;
 		}
-		sprintf(buf, "zones/%s", ent->d_name);
+		snprintf(buf, sizeof(buf)-1 ,"zones/%s", ent->d_name);
 		if((fp = fopen(buf, "rt")) == NULL) {
 			mudlog(LOG_ERROR, "Can't open file %s for reading\n", buf);
 			continue;
@@ -1290,7 +1290,7 @@ void boot_saved_rooms() {
 	FILE* fp;
 	long oldnum = 0;
 	struct dirent* ent;
-	char buf[80];
+	char buf[300];
 	struct room_data* rp;
 	long rooms = 0, vnum;
 
@@ -1307,7 +1307,7 @@ void boot_saved_rooms() {
 		if(!vnum || vnum > top_of_world) {
 			continue;
 		}
-		sprintf(buf, "rooms/%s", ent->d_name);
+		snprintf(buf, sizeof(buf)-1, "rooms/%s", ent->d_name);
 		if((fp = fopen(buf, "rt")) == NULL) {
 			mudlog(LOG_ERROR, "Can't open file %s for reading\n", buf);
 			continue;
@@ -1986,10 +1986,10 @@ struct char_data* read_mobile(int nr, int type) {
 	mob->commandp = 0;
 	mob->commandp2 = 0;
 	mob->waitp = 0;
-    
+
     mob->lastpkill = NULL;
     mob->lastmkill = NULL;
-    
+
     mob->points.max_move = NewMobMov(mob);
     mob->points.move = mob->points.max_move;
 
@@ -2189,7 +2189,7 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 			break;
 		}
 	}
-    
+
 	for(; (i < MAX_OBJ_AFFECT); i++) {
 		obj->affected[i].location = APPLY_NONE;
 		obj->affected[i].modifier = 0;
@@ -2199,7 +2199,7 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
     {
         obj->obj_flags.extra_flags2 = fread_number(f);
     }
-    
+
 	SetStatus("Reading forbidden string in read_obj_from_file", NULL);
 
 	if(*chk == 'P') {
@@ -2249,13 +2249,13 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 			fprintf(f, "A\n%d %d\n", obj->affected[i].location,
 					obj->affected[i].modifier);
 	}
-    
+
     if(obj->obj_flags.extra_flags2)
     {
         fprintf(f, "F\n");
         fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
     }
-        
+
 	if(obj->szForbiddenWearToChar) {
 		fprintf(f, "P\n");
 		fwrite_string(f, obj->szForbiddenWearToChar);
@@ -2270,7 +2270,7 @@ struct obj_data* read_object(int nr, int type) {
 	struct obj_data* obj;
 	int i;
 	long bc;
-	char buf[100];
+	char buf[300];
 
 	SetStatus("read_object start", NULL);
 	i = nr;
@@ -2296,7 +2296,7 @@ struct obj_data* read_object(int nr, int type) {
 		/* object haven't data structure */
 		if(obj_index[nr].pos == -1) {
 			/* object in external file */
-			sprintf(buf, "%s/%d", OBJ_DIR, obj_index[nr].iVNum);
+			snprintf(buf, sizeof(buf)-1, "%s/%d", OBJ_DIR, obj_index[nr].iVNum);
 			if((f = fopen(buf, "rt")) == NULL) {
 				mudlog(LOG_ERROR, "can't open object file for object %d",
 					   obj_index[nr].iVNum);
@@ -2478,10 +2478,10 @@ void reset_zone(int zone) {
 	zone_table[zone].bottom = d;
 	e = zone_table[zone].top;
 	if(zone_table[zone].start == 0)
-		sprintf(buf, "Run time initialization of zone %s (%d), rooms (%d-%d)",
+		snprintf(buf, sizeof(buf)-1,"Run time initialization of zone %s (%d), rooms (%d-%d)",
 				s, zone, d, e);
 	else
-		sprintf(buf, "Run time reset of zone %s (%d), rooms (%d-%d)", s, zone,
+		snprintf(buf, sizeof(buf)-1, "Run time reset of zone %s (%d), rooms (%d-%d)", s, zone,
 				d, e);
 
 	mudlog(LOG_CHECK, buf);
@@ -2496,7 +2496,7 @@ void reset_zone(int zone) {
 		}
 
 		if(nLastCmd || ZCMD.if_flag <= 0) {
-			sprintf(rbuf, "<%d %d %d %d %d>",
+			snprintf(rbuf,sizeof(rbuf)-1, "<%d %d %d %d %d>",
 					ZCMD.if_flag, ZCMD.arg1, ZCMD.arg2, ZCMD.arg3, ZCMD.arg4);
 			switch(ZCMD.command) {
 			case 'M': /* read a mobile */
@@ -2748,7 +2748,7 @@ int load_char(const char* name, struct char_file_u* char_element) {
 	char szFileName[41];
 	long filesize = 0;
 
-	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(name));
+	snprintf(szFileName, sizeof(szFileName)-1,"%s/%s.dat", PLAYERS_DIR, lower(name));
 	if((fl = fopen(szFileName, "r")) != NULL) {
 		if(stat(szFileName, &fileinfo)) {
 			filesize = fileinfo.st_size;
@@ -3025,7 +3025,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 			/* subtract effect of the spell or the effect will be doubled */
 			affect_modify(ch, st->affected[i].location,
 						  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
-			sprintf(buf, "Saving %s modifies %s by %d points", GET_NAME(ch),
+			snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
 					apply_types[st->affected[i].location],
 					st->affected[i].modifier);
 
@@ -3070,11 +3070,11 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	ch->specials.charging = 0; /* null it out to be sure. */
 	ch->specials.charge_dir = -1; /* null it out */
-    
+
     if(!affected_by_spell(ch,STATUS_QUEST)) {
         ch->specials.quest_ref = 0;
     }
-    
+
 	st->abilities = ch->abilities;
 
 	st->points = ch->points;
@@ -3579,13 +3579,13 @@ void free_char(struct char_data* ch) {
         free(ch->lastpkill);
         ch->lastpkill = NULL;
     }
-    
+
     if(ch->lastmkill)       // quests
     {
         free(ch->lastmkill);
         ch->lastmkill = NULL;
     }
-    
+
 	if(ch->skills) {
 		free(ch->skills);
 		ch->skills = NULL;
@@ -3905,7 +3905,7 @@ void reset_char(struct char_data* ch) {
 	}
 	if(!strcmp(GET_NAME(ch), "Nihil")) {        //Marco
 		GET_LEVEL(ch, 0) = 58;
-        
+
         if(PORT == DEVEL_PORT)                  //Marco su DEVEL_PORT
         {
             GET_LEVEL(ch, 0) = 59;
@@ -3934,7 +3934,7 @@ void reset_char(struct char_data* ch) {
                 GET_LEVEL(ch, i) = GetMaxLevel(ch);
             }
         }
-    
+
         /* le classi */
         for(i = 1; i <= CLASS_PSI; i *= 2)
         {
@@ -3942,7 +3942,7 @@ void reset_char(struct char_data* ch) {
                 ch->player.iClass += i;
             }
         }
-        
+
         /* le skill */
         for(i = 0; i <= MAX_SKILLS - 1; i++)
         {
@@ -3952,9 +3952,9 @@ void reset_char(struct char_data* ch) {
             ch->skills[i].nummem = 0;
         }
 
-        
+
     } /* fine Montero 10-Sep-2018 db.cpp */
-    
+
 	/* this is to clear up bogus levels on people that where here before */
 	/* these classes where made... */
 
@@ -4765,13 +4765,13 @@ void clean_playerfile() {
 	if((dir = opendir(PLAYERS_DIR)) != NULL) {
 		while((ent = readdir(dir)) != NULL) {
 			FILE* pFile;
-			char szFileName[256];
+			char szFileName[300];
 
 			if(*ent->d_name == '.') {
 				continue;
 			}
 
-			sprintf(szFileName, "%s/%s", PLAYERS_DIR, ent->d_name);
+			snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
 			if(strstr(ent->d_name, ".dat")) {
 				if((pFile = fopen(szFileName, "r+")) != NULL) {
@@ -4930,12 +4930,12 @@ ACTION_FUNC(do_WorldSave) {
 	send_to_char("Comando disabilitato\r\n", ch);
 	return;
 }
-    
+
 /* Mob related handy functions */
-    
+
     int NewMobMov (struct char_data* mob) {
         int extra_mov = 0;
-    
+
     /* Nuova assegnazione punti movimento mob */
         if(GET_LEVEL(mob, WARRIOR_LEVEL_IND) > ALLIEVO && GET_LEVEL(mob, WARRIOR_LEVEL_IND) < INIZIATO )
         {
@@ -4953,9 +4953,9 @@ ACTION_FUNC(do_WorldSave) {
         {
             extra_mov += (250 + GET_LEVEL(mob, WARRIOR_LEVEL_IND));
         }
-        
+
     return(mob->points.max_move+extra_mov);
-    
+
     }
 
 }

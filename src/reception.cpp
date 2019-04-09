@@ -57,7 +57,7 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,
 			cost->total_cost += obj->obj_flags.cost_per_day;
 
 			if(re && DontShow==0) {
-				sprintf(buf, "%-40s : %s%7d%s monete %s\n\r",
+				snprintf(buf,sizeof(buf)-1, "%-40s : %s%7d%s monete %s\n\r",
 						obj->short_description,
 						obj->obj_flags.cost_per_day ? "$c0015" : "",
 						obj->obj_flags.cost_per_day,
@@ -70,6 +70,7 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,
 			case ITEM_FOOD:
 			case ITEM_DRINKCON:
 				RentItem--;
+				/* FALLTHRU */
 			default:
 				cost->no_carried++;
 				RentItem++;
@@ -125,7 +126,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 
 	if(IS_AFFECTED2((IS_POLY(ch)) ? ch->desc->original : ch, AFF2_PKILLER)) {  // SALVO controllo pkiller
 		if(receptionist) {
-			sprintf(buf, "$n tells you 'Sorry, but someone accused you of murder"
+			snprintf(buf, sizeof(buf)-1, "$n tells you 'Sorry, but someone accused you of murder"
 					"... so you better stay a little more!!");
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
@@ -158,7 +159,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 #if LIMITED_ITEMS
 	if(limited_items > MaxLimited(GetMaxLevel(ch))|| limited_items_carrying) {
 		if(receptionist) {
-			sprintf(buf, "$n tells you 'Sorry, but I can't store more than %d "
+			snprintf(buf, sizeof(buf), "$n tells you 'Sorry, but I can't store more than %d "
 					"limited items.",
 					MaxLimited(GetMaxLevel(ch)));
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
@@ -208,7 +209,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 
 	if(cost->no_carried > MAX_OBJ_SAVE) {
 		if(receptionist) {
-			sprintf(buf,"$n tells you 'Sorry, but I can't store more than %d items.",
+			snprintf(buf, sizeof(buf)-1,"$n tells you 'Sorry, but I can't store more than %d items.",
 					MAX_OBJ_SAVE);
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
@@ -254,15 +255,15 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 
 	if(receptionist) {
 #if ALAR_RENT
-		sprintf(buf, "$n ti dice 'Hai con te %d oggett%c escluso le vettovaglie.'",
+		snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai con te %d oggett%c escluso le vettovaglie.'",
 				RentItem,RentItem>1?'i':'o');
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
-		sprintf(buf, "$n ti dice 'Il che significa %s$c0007 del %d%%!'",
+		snprintf(buf, sizeof(buf)-1,"$n ti dice 'Il che significa %s$c0007 del %d%%!'",
 				sconto>0?"$c0001una maggiorazione":"$c0010uno sconto",
 				abs(sconto));
 #endif
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
-		sprintf(buf,
+		snprintf(buf,sizeof(buf)-1,
 				"$n ti dice 'Ti viene a costare $c0015%d$c0007 monete al giorno.'",
 				cost->total_cost);
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
@@ -270,7 +271,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 		/* Controllo se sono in una rece di un castello e aggiusto il conto ***Flyp 20020214 *** */
 		if(FindMobInRoomWithFunction(receptionist->in_room, reinterpret_cast<genericspecial_func>(creceptionist))) {
 			cost->total_cost=(int)(cost->total_cost*0.8);
-			sprintf(buf, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%d$c0007 monete al giorno.'", cost->total_cost);
+			snprintf(buf, sizeof(buf)-1, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%d$c0007 monete al giorno.'", cost->total_cost);
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
 
@@ -280,13 +281,13 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 			if(forcerent > 1000000) {
 				GET_GOLD(ch)=-5000000;
 				cost->total_cost=1000000;
-				sprintf(buf,"$n ti dice 'Poiche` hai barato.....  prenotando  %d giorni, "
+				snprintf(buf,sizeof(buf)-1,"$n ti dice 'Poiche` hai barato.....  prenotando  %d giorni, "
 						"ci rimetti anche la camicia.",
 						forcerent);
 				mudlog(LOG_CHECK,"%s ci ha provato e ora ha %d coins.",GET_NAME(ch),GET_GOLD(ch));
 			}
 			else {
-				sprintf(buf,"$n ti dice 'Poiche` hai prenotato per %d giorni, "
+				snprintf(buf,sizeof(buf)-1,"$n ti dice 'Poiche` hai prenotato per %d giorni, "
 						"$c0001 ti costa SUBITO$c0007 $c0015%d$c0007 monete.",
 						forcerent,cost->total_cost);
 			}
@@ -296,16 +297,16 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 		/* just a bit on informative coding, wasted space... msw */
 
 		if(limited_items <= 5)
-			sprintf(buf, "$n ti dice 'Hai %d oggetti rari.'",
+			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai %d oggetti rari.'",
 					limited_items);
 		else if(limited_items <= 8)
-			sprintf(buf, "$n ti dice 'Hum, ha i %d oggetti rari, mica male.'",
+			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hum, ha i %d oggetti rari, mica male.'",
 					limited_items);
 		else if(limited_items < 10)
-			sprintf(buf, "$n ti dice 'Hai %d oggetti rari. Cosa vuoi fare? Aprire un supermarket?'",
+			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai %d oggetti rari. Cosa vuoi fare? Aprire un supermarket?'",
 					limited_items);
 		else if(limited_items >= 10)
-			sprintf(buf, "$n ti dice 'WOW! Hai %d oggetti  rari. Pensi di essere sol$b a giocare?!?'",
+			snprintf(buf, sizeof(buf)-1,"$n ti dice 'WOW! Hai %d oggetti  rari. Pensi di essere sol$b a giocare?!?'",
 					limited_items);
 
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
@@ -370,7 +371,7 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 		k=ch;
 	}
 	PushStatus("update_file");
-	sprintf(buf, "%s/%s", RENT_DIR, lower(GET_NAME(k)));
+	snprintf(buf,sizeof(buf)-1, "%s/%s", RENT_DIR, lower(GET_NAME(k)));
 	PushStatus("update_file1");
 
 	write_char_extra(k);
@@ -536,10 +537,10 @@ void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 {
     char personal[MAX_INPUT_LENGTH];
 
-    sprintf(personal,"%s ED%s",obj->name,GET_NAME(ch));
+    snprintf(personal,sizeof(personal)-1,"%s ED%s",obj->name,GET_NAME(ch));
     free(obj->name);
     obj->name = (char*)strdup(personal);
-        
+
     if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
     {
         SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
@@ -695,7 +696,7 @@ void load_char_objs(struct char_data* ch) {
 	SetStatus(tbuf);
 
 
-	sprintf(tbuf, "%s/%s", RENT_DIR, lower(ch->player.name));
+	snprintf(tbuf, sizeof(tbuf)-1, "%s/%s",RENT_DIR, lower(ch->player.name));
 
 
 	/* r+b is for Binary Reading/Writing */
@@ -708,7 +709,7 @@ void load_char_objs(struct char_data* ch) {
 
     if(IS_SET(ch->specials.act,PLR_NEW_EQ))
     {
-        
+
         if(!ReadObjs(fl, &st))
         {
             mudlog(LOG_PLAYERS, "No objects found");
@@ -780,9 +781,9 @@ void load_char_objs(struct char_data* ch) {
 #endif
 
 		mudlog(LOG_PLAYERS, "Char ran up charges of %ld gold in rent", timegold);
-		sprintf(buf, "Il conto della pensione e` di %ld monete.\n\r", timegold);
+		snprintf(buf,sizeof(buf)-1, "Il conto della pensione e` di %ld monete.\n\r", timegold);
 		send_to_char(buf, ch);
-		sprintf(buf, "%d monete al giorno.\n\r", st.total_cost);   // Gaia 2001
+		snprintf(buf, sizeof(buf)-1,"%d monete al giorno.\n\r", st.total_cost);   // Gaia 2001
 		send_to_char(buf, ch); // Gaia 2001
 		GET_GOLD(ch) -= timegold;
 		found = TRUE;
@@ -922,7 +923,7 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
     {
         SetPersonOnSave(ch, obj);
     }
-    
+
 	oe->extra_flags = obj->obj_flags.extra_flags;
     oe->extra_flags2 = obj->obj_flags.extra_flags2;
 	oe->weight  = obj->obj_flags.weight;
@@ -983,7 +984,7 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 #if NODUPLICATES
 #else
 		if(ch != NULL) {
-			sprintf(buf, "You're told: '%s is just old junk, I'll throw it away for "
+			snprintf(buf, sizeof(tbuf)-1,"You're told: '%s is just old junk, I'll throw it away for "
 					"you.'\n\r", obj->short_description);
 			send_to_char(buf, ch);
 		}
@@ -994,7 +995,7 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 #if NODUPLICATES
 #else
 		if(ch != NULL) {
-			sprintf(buf, "You're told: '%s is just old junk, I'll throw it away for "
+			snprintf(buf, sizeof(tbuf)-1, "You're told: '%s is just old junk, I'll throw it away for "
 					"you.'\n\r", obj->short_description);
 			send_to_char(buf, ch);
 		}
@@ -1048,7 +1049,7 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 	if((obj->obj_flags.timer < 0) && (obj->obj_flags.timer != OBJ_NOTIMER)) {
 #if NODUPLICATES
 #else
-		sprintf(buf, "You're told: '%s is just old junk, I'll throw it away for you.'\n\r", obj->short_description);
+		snprintf(buf, sizeof(tbuf)-1, "You're told: '%s is just old junk, I'll throw it away for you.'\n\r", obj->short_description);
 		send_to_char(buf, ch);
 #endif
 	}
@@ -1057,7 +1058,7 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 #if NODUPLICATES
 #else
 		if(ch != NULL) {
-			sprintf(buf, "You're told: '%s is just old junk, I'll throw it away for you.'\n\r", obj->short_description);
+			snprintf(buf,  sizeof(tbuf)-1,"You're told: '%s is just old junk, I'll throw it away for you.'\n\r", obj->short_description);
 			send_to_char(buf, ch);
 		}
 #endif
@@ -1163,7 +1164,7 @@ void update_obj_file() {
         while((ent = readdir(dir)) != NULL)
         {
             FILE* pCharFile;
-            char szFileName[ 40 ];
+            char szFileName[ 300];
 
             if(*ent->d_name == '.')
             {
@@ -1174,14 +1175,14 @@ void update_obj_file() {
                 continue;
             }
 
-            sprintf(szFileName, "%s/%s", PLAYERS_DIR, ent->d_name);
+            snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
             if((pCharFile = fopen(szFileName, "r+")) != NULL)
             {
                 if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
                 {
-                    sprintf(szFileName, "%s/%s", RENT_DIR, lower(ch_st.name));
-                    /* r+b is for Binary Reading/Writing */
+                    snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
+                    // r+b is for Binary Reading/Writing
                     if((pObjFile = fopen(szFileName, "r+b")) != NULL)
                     {
                         if(!IS_SET(ch_st.act,PLR_NEW_EQ))
@@ -1217,9 +1218,9 @@ void update_obj_file() {
 
                                 if(ch_st.load_room == AUTO_RENT)
                                 {
-                                    /* this person was autorented */
+                                    // this person was autorented
                                     ch_st.load_room = NOWHERE;
-                                    st.last_update = time(0)+3600;  /* one hour grace period */
+                                    st.last_update = time(0)+3600;  // one hour grace period
 
                                     mudlog(LOG_SAVE, "   Deautorenting %s", st.owner);
 
@@ -1242,11 +1243,11 @@ void update_obj_file() {
                                     fclose(pObjFile);
                                 }
                                 else
-                                { /* if( ch_st.load_room == AUTO_RENT ) */
+                                { // if( ch_st.load_room == AUTO_RENT )
                                     if(days_passed > 0)
                                     {
 #if NEW_RENT
-                                        /* RENTAL COST ADJUSTMENT */
+                                        // RENTAL COST ADJUSTMENT
                                         st.total_cost = 0;
 #endif
                                         if((st.total_cost * days_passed) > st.gold_left)
@@ -1304,15 +1305,15 @@ void update_obj_file() {
                                         }
                                         fclose(pObjFile);
                                     }
-                                } /* if( ch_st.load_room == AUTO_RENT ) else */
+                                } // if( ch_st.load_room == AUTO_RENT ) else
                             }
                             else
                             {
                                 mudlog(LOG_SYSERR, "Wrong person written into object file! (%s/%s)", st.owner, ch_st.name);
                                 assert(0);
                             }
-                        } /* Il personaggio non ha oggetti. */
-                    } /* Non esiste il file degli oggetti. */
+                        } // Il personaggio non ha oggetti.
+                    } // Non esiste il file degli oggetti.
                 }
                 else
                 {
@@ -1324,7 +1325,7 @@ void update_obj_file() {
             {
                 mudlog(LOG_ERROR, "Errore opening file %s.", szFileName);
             }
-        } /* Fine dei giocatori */
+        } // Fine dei giocatori
     }
     else
     {
@@ -1396,7 +1397,7 @@ void CountLimitedItems(struct obj_file_u* st) {
 					obj_index[ obj->item_number ].number++;
 
 					/*Acidus 2004-show rare*/
-					sprintf(buf, "  %5d %s %s\n\r", (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0), obj->name, st->owner);
+					snprintf(buf, sizeof(buf)-1, "  %5d %s %s\n\r", (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0), obj->name, st->owner);
 					strncat(rarelist, " ",MAX_STRING_LENGTH);
 					strncat(rarelist, buf,MAX_STRING_LENGTH);
 
@@ -1729,7 +1730,7 @@ void ZeroRent(char* n) {
 	FILE* fl;
 	char buf[200];
 
-	sprintf(buf, "%s/%s", RENT_DIR, lower(n));
+	snprintf(buf, sizeof(buf)-1, "%s/%s", RENT_DIR, lower(n));
 
 	if(!(fl = fopen(buf, "w"))) {
 		mudlog(LOG_ERROR,"%s:%s","saving PC's objects",strerror(errno));
@@ -1879,10 +1880,10 @@ void load_char_extra(struct char_data* ch) {
 	char* p, *s, *chk;
 	int n;
 	/* Cerca prima il file col nome in lower case */
-	sprintf(buf, "%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
+	snprintf(buf, sizeof(buf)-1,"%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
 	if((fp = fopen(buf, "r")) == NULL) {
 		/* Ok, proviamo col nome non trasformato */
-		sprintf(buf, "%s/%s.aux", RENT_DIR, GET_NAME(ch));
+		snprintf(buf, sizeof(buf)-1,"%s/%s.aux", RENT_DIR, GET_NAME(ch));
 		if((fp = fopen(buf, "r")) == NULL) {
 			return;    /* nothing to look at */
 		}
@@ -1952,7 +1953,7 @@ void load_char_extra(struct char_data* ch) {
 						n = atoi(p);
 						if(n >=0 && n <= 9) {
 							/* set up alias */
-							sprintf(tmp, "%d %s", n, s+1);
+							snprintf(tmp, sizeof(tmp)-1,"%d %s", n, s+1);
 							do_alias(ch, replace(tmp,'\n','\0'), CMD_ALIAS);
 						}
 					}
@@ -1972,7 +1973,7 @@ void write_char_extra(struct char_data* ch) {
 	char buf[80];
 	int i;
 	PushStatus("write char extra");
-	sprintf(buf, "%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
+	snprintf(buf,sizeof(buf)-1, "%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
 	/*
 	 * open the file.. read in the lines, use them as the aliases and
 	 * poofin and outs, depending on tags:
@@ -2104,7 +2105,7 @@ void load_room_objs(int room) {
 	struct obj_file_u st;
 	char buf[200];
 
-	sprintf(buf, "world/%d", room);
+	snprintf(buf, sizeof(buf)-1, "world/%d", room);
 	mudlog(LOG_CHECK,"loading saved room: %s",buf);
 
 	if((fl = fopen(buf, "r+b")) != NULL) {
@@ -2129,7 +2130,7 @@ void save_room(int room) {
 	rm = real_roomp(room);
 
 	obj = rm->contents;
-	sprintf(buf, "world/%d", room);
+	snprintf(buf, sizeof(buf)-1, "world/%d", room);
 	st.number = 0;
 
 	if(obj) {
@@ -2143,7 +2144,7 @@ void save_room(int room) {
 				st.number = 50;
 			}
 
-			sprintf(buf, "Room %d", room);
+			snprintf(buf, sizeof(buf)-1, "Room %d", room);
 			strcpy(st.owner, buf);
 			st.gold_left = 0;
 			st.total_cost = 0;

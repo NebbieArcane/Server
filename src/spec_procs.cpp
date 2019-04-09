@@ -5519,6 +5519,7 @@ MOBSPECIAL_FUNC(NewThalosMayor) {
 			if(time_info.hours == 19) {
 				ch->generic = NTMGOALNN;
 			}
+			/* FALLTHRU */
 		case NTMGOALNN: { /* north gate */
 			if(ch->in_room != NTMNGATE) {
 				int        dir;
