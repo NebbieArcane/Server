@@ -2166,11 +2166,11 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	struct obj_data* i;
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
-	int l, was_in, j, w;
+	int l, was_in, j;
 
 #ifndef NOEVENTS
 	/* cancel point updates */
-	for(w = 0; w < 3; w++)
+	for(int w = 0; w < 3; w++)
 		if(GET_POINTS_EVENT(ch, w)) {
 			event_cancel(GET_POINTS_EVENT(ch, w));
 			GET_POINTS_EVENT(ch, w) = NULL;
@@ -2292,7 +2292,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
         extract_char(ch->specials.quest_ref);
         ch->specials.quest_ref = NULL;
     }
-    
+
 	if(IS_NPC(ch)) {
 		for(k = character_list; k; k = k->next) {
 			if(k->specials.hunting)
@@ -2766,7 +2766,7 @@ struct obj_data* create_money(int amount) {
 void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd)
 {
     char personal[MAX_INPUT_LENGTH];
-    
+
     if(cmd == CMD_PERSONALIZE)
     {
         mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
@@ -2780,20 +2780,20 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
         mudlog(LOG_ERROR,"pers_obj: wrong command");
         return;
     }
-    
+
     SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-    
+
     sprintf(personal,"%s ED%s",obj->name,GET_NAME(plr));
     free(obj->name);
     obj->name = (char*)strdup(personal);
-    
+
     mudlog(LOG_PLAYERS, "%s Add key%s on %s[%d].", GET_NAME(god), personal, obj->short_description, obj->item_number);
 }
 
 bool pers_on(struct char_data* ch, struct obj_data* obj)
 {
     char name[25];
-    
+
     strcpy(name, "ED");
     strcat(name, GET_NAME(ch));
 
