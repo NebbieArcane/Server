@@ -305,23 +305,27 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
     sprintf(riga2, "%s", titolo);
     sprintf(riga3, "%d %s", valore, stringa);
 
-    lung[1] = strlen(riga1);
-    lung[2] = strlen(riga2);
-    lung[3] = strlen(riga3);
+    lung[0] = strlen(riga1);
+    lung[1] = strlen(riga2);
+    lung[2] = strlen(riga3);
 
     sprintf(riga1, "$c0009%s $c0007ha completato l'achievement$c0011", GET_NAME(ch));
     sprintf(riga2, "$c0015%s$c0011", titolo);
     sprintf(riga3, "$c0009%d %s$c0011", valore, stringa);
 
-    for(i = 1 ; i <= 3 ; i++)
+    for(i = 0 ; i < 3 ; i++)
     {
         if(lung[i] > max)
+        {
             max = lung[i];
+        }
     }
 
     strcpy(space, " ");
     for (i = 0; i < (max + 7); i++)
+    {
         strcat(space, " ");
+    }
 
     strcpy(buffer, "$c0011 _\n(@)");
     strcat(buffer, space);
@@ -329,8 +333,36 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
     strcat(buffer, space);
     strcat(buffer, "(@)\n|-|");
     for (i = 0; i < (max + 8); i++)
+    {
         strcat(buffer, "-");
+    }
     strcat(buffer, "|-|\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[0])
+    {
+        diff = int((max - lung[0]) /2);
+        if((diff * 2) != (max - lung[0]))
+        {
+            diff += 1;
+        }
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, riga1);
+    if(max > lung[0])
+    {
+        diff = int((max - lung[0]) /2);
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, "    |-|\n| |");
+    
     strcat(buffer, space);
     strcat(buffer, "| |\n|-|");
     strcat(buffer, "    ");
@@ -338,19 +370,24 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
     {
         diff = int((max - lung[1]) /2);
         if((diff * 2) != (max - lung[1]))
+        {
             diff += 1;
+        }
         for(i = 0; i < diff; i++)
+        {
             strcat(buffer, " ");
+        }
     }
-    strcat(buffer, riga1);
+    strcat(buffer, riga2);
     if(max > lung[1])
     {
         diff = int((max - lung[1]) /2);
         for(i = 0; i < diff; i++)
+        {
             strcat(buffer, " ");
+        }
     }
     strcat(buffer, "    |-|\n| |");
-    
     strcat(buffer, space);
     strcat(buffer, "| |\n|-|");
     strcat(buffer, "    ");
@@ -358,39 +395,28 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
     {
         diff = int((max - lung[2]) /2);
         if((diff * 2) != (max - lung[2]))
+        {
             diff += 1;
+        }
         for(i = 0; i < diff; i++)
+        {
             strcat(buffer, " ");
+        }
     }
-    strcat(buffer, riga2);
+    strcat(buffer, riga3);
     if(max > lung[2])
     {
         diff = int((max - lung[2]) /2);
         for(i = 0; i < diff; i++)
+        {
             strcat(buffer, " ");
-    }
-    strcat(buffer, "    |-|\n| |");
-    strcat(buffer, space);
-    strcat(buffer, "| |\n|-|");
-    strcat(buffer, "    ");
-    if(max > lung[3])
-    {
-        diff = int((max - lung[3]) /2);
-        if((diff * 2) != (max - lung[3]))
-            diff += 1;
-        for(i = 0; i < diff; i++)
-            strcat(buffer, " ");
-    }
-    strcat(buffer, riga3);
-    if(max > lung[3])
-    {
-        diff = int((max - lung[3]) /2);
-        for(i = 0; i < diff; i++)
-            strcat(buffer, " ");
+        }
     }
     strcat(buffer, "    |-|\n| |");
     for (i = 0; i < (max + 8); i++)
+    {
         strcat(buffer, "_");
+    }
     strcat(buffer, "| |\n(@)");
     strcat(buffer, space);
     strcat(buffer, "| |\n   ");
@@ -855,87 +881,105 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class)
 {
     char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
-    int valore = 0;
+    int valore = 0, molt = 0;
     struct char_data* tch;
 
     tch = ch;
 
     if(!IS_PC(ch))
+    {
         return;
+    }
 
     if(IS_POLY(tch))
+    {
         tch = ch->desc->original;
+    }
 
     switch(achievement_class)
     {
         case CLASS_ACHIE:
             if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl1_val)
             {
+                molt = 10;
                 valore = AchievementsList[achievement_type].lvl1_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl1);
                 if(valore == 1)
+                {
                     strcpy(stringa, AchievementsList[achievement_type].achie_string1);
+                }
                 else
-                    strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+                {
+                        strcpy(stringa, AchievementsList[achievement_type].achie_string2);
+                }
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl2_val)
             {
+                molt = 15;
                 valore = AchievementsList[achievement_type].lvl2_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl2);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl3_val)
             {
+                molt = 20;
                 valore = AchievementsList[achievement_type].lvl3_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl3);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl4_val)
             {
+                molt = 25;
                 valore = AchievementsList[achievement_type].lvl4_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl4);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl5_val)
             {
+                molt = 30;
                 valore = AchievementsList[achievement_type].lvl5_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl5);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl6_val)
             {
+                molt = 35;
                 valore = AchievementsList[achievement_type].lvl6_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl6);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl7_val)
             {
+                molt = 40;
                 valore = AchievementsList[achievement_type].lvl7_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl7);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl8_val)
             {
+                molt = 45;
                 valore = AchievementsList[achievement_type].lvl8_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl8);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl9_val)
             {
+                molt = 50;
                 valore = AchievementsList[achievement_type].lvl9_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl9);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             else if(tch->specials.achie_class[achievement_type] == AchievementsList[achievement_type].lvl10_val)
             {
+                molt = 60;
                 valore = AchievementsList[achievement_type].lvl10_val;
                 strcpy(titolo, AchievementsList[achievement_type].lvl10);
                 strcpy(stringa, AchievementsList[achievement_type].achie_string2);
             }
             break;
-            
-            default:
-                break;
+
+        default:
+            break;
     }
 
     if(valore > 0)
@@ -980,7 +1024,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
             default:
                 reward = RewardXp[GetMaxLevel(ch)].lev_1_xp;
-                mudlog(LOG_CHECK, "Achievement's difficulty level is missing");
+                mudlog(LOG_CHECK, "Achievement's difficulty level is missing for achievement type %d (class %d)", achievement_type, achievement_class);
                 break;
         }
         mudlog(LOG_PLAYERS, "Reward prima della modifiche e' %d", reward);
@@ -994,7 +1038,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
             case 2:
                 reward = int (reward * 15 / 10);
                 break;
-                
+
                 // triclasse o +: il pg prende 200% degli xp
             default:
                 reward *= 2;
@@ -1004,9 +1048,11 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         int basso = int(reward - reward * 5 / 100);
         int alto = int(reward + reward * 5 / 100);
 
+        reward = reward * molt / 10;
+
         reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
 
-        mudlog(LOG_PLAYERS, "Reward finale: %d (numero tra %d e %d)", reward, basso, alto);
+        mudlog(LOG_PLAYERS, "Reward finale: %d (numero tra %d e %d), il moltiplicatore era %d", reward, basso, alto, float(molt/10));
         gain_exp(tch, reward);
         sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
         act(buf, FALSE, tch, 0, 0, TO_CHAR);
