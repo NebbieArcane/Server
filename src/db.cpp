@@ -2471,17 +2471,17 @@ void reset_zone(int zone) {
 	// Lascio commentato nel caso scopra invece che mi era sfuggito l'utilizzo
 	//struct obj_data* pLastCont = 0;
 	char* s;
-	int d, e;
+	int d, e, valore_max = 0;
 
 	s = zone_table[zone].name;
 	d = (zone ? (zone_table[zone - 1].top + 1) : 0);
 	zone_table[zone].bottom = d;
 	e = zone_table[zone].top;
 	if(zone_table[zone].start == 0)
-		snprintf(buf, sizeof(buf)-1,"Run time initialization of zone %s (%d), rooms (%d-%d)",
+		sprintf(buf, "Run time initialization of zone %s (%d), rooms (%d-%d)",
 				s, zone, d, e);
 	else
-		snprintf(buf, sizeof(buf)-1, "Run time reset of zone %s (%d), rooms (%d-%d)", s, zone,
+		sprintf(buf, "Run time reset of zone %s (%d), rooms (%d-%d)", s, zone,
 				d, e);
 
 	mudlog(LOG_CHECK, buf);
@@ -2496,7 +2496,7 @@ void reset_zone(int zone) {
 		}
 
 		if(nLastCmd || ZCMD.if_flag <= 0) {
-			snprintf(rbuf,sizeof(rbuf)-1, "<%d %d %d %d %d>",
+			sprintf(rbuf, "<%d %d %d %d %d>",
 					ZCMD.if_flag, ZCMD.arg1, ZCMD.arg2, ZCMD.arg3, ZCMD.arg4);
 			switch(ZCMD.command) {
 			case 'M': /* read a mobile */
@@ -2574,16 +2574,19 @@ void reset_zone(int zone) {
 
 			case 'O': /* read an object */
 				SetStatus("Command O", rbuf);
+                valore_max = ZCMD.arg2;
 #if NICE_LIMITED
-                if(ZCMD.arg2 > 0)
-                    ZCMD.arg2 *= 2;
+                if(valore_max > 0)
+                {
+                    valore_max *= 2;
+                }
 #endif
 				pObj = NULL;
 				nLastCmd = FALSE;
-				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < ZCMD.arg2)
+				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < valore_max)
 				  ) {
 					if((ZCMD.arg3 >= 0 && (rp = real_roomp(ZCMD.arg3)) != NULL)) {
-						if(ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) {
+						if((ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) && ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg2) {
 							if((pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 								obj_to_room(pObj, ZCMD.arg3);
 								nLastCmd = TRUE;
@@ -2601,13 +2604,16 @@ void reset_zone(int zone) {
 
 			case 'P': /* object to object */
 				SetStatus("Command P", rbuf);
+                valore_max = ZCMD.arg2;
 #if NICE_LIMITED
-                if(ZCMD.arg2 > 0)
-                    ZCMD.arg2 *= 2;
+                if(valore_max > 0)
+                {
+                    valore_max *= 2;
+                }
 #endif
 				if(ZCMD.arg1 >= 0 &&
 						(ZCMD.arg2 == 0 ||
-						 obj_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
+						 obj_index[ ZCMD.arg1 ].number < valore_max) &&
 						(pCont = get_obj_num(ZCMD.arg3)) != NULL &&
 						(pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 					obj_to_obj(pObj, pCont);
@@ -2615,19 +2621,22 @@ void reset_zone(int zone) {
 				}
 				else {
 					pObj = pCont = NULL;
-					nLastCmd = FALSE;
+					// nLastCmd = FALSE;    commentando questo viene caricato tutto nel contenitore, escluso gli oggetti maxxati
 				}
 				break;
 
 			case 'G': /* obj_to_char */
 				SetStatus("Command G", rbuf);
+                valore_max = ZCMD.arg2;
 #if NICE_LIMITED
-                if(ZCMD.arg2 > 0)
-                    ZCMD.arg2 *= 2;
+                if(valore_max > 0)
+                {
+                    valore_max *= 2;
+                }
 #endif
 				if(ZCMD.arg1 >= 0 &&
 						(ZCMD.arg2 == 0 ||
-						 obj_index[ ZCMD.arg1 ].number < ZCMD.arg2) &&
+						 obj_index[ ZCMD.arg1 ].number < valore_max) &&
 						pLastMob && (pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 					obj_to_char(pObj, pLastMob);
 					//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
@@ -2651,12 +2660,15 @@ void reset_zone(int zone) {
 
 			case 'E': /* object to equipment list */
 				SetStatus("Command E", rbuf);
+                valore_max = ZCMD.arg2;
 #if NICE_LIMITED
-                if(ZCMD.arg2 > 0)
-                    ZCMD.arg2 *= 2;
+                if(valore_max > 0)
+                {
+                    valore_max *= 2;
+                }
 #endif
 				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 ||
-									  obj_index[ZCMD.arg1].number < ZCMD.arg2) &&
+									  obj_index[ZCMD.arg1].number < valore_max) &&
 						pLastMob && (pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
 					if(!pLastMob->equipment[ ZCMD.arg3 ]) {
 						equip_char(pLastMob, pObj, ZCMD.arg3);
