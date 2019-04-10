@@ -2414,7 +2414,7 @@ NANNY_FUNC(con_slct) {
 			break;
 		}
 	}
-	/* no break */
+	/* FALLTHRU */
 	case '1':
 	{
 		reset_char(d->character);

@@ -448,8 +448,8 @@ const byte saving_throws[MAX_CLASS][5][ABS_MAX_LVL] = {
 
 void spellid(int nr,struct char_data* ch,int cl,int sl) {
 	char buf[1000];
-	char aligndesc[17];
-	char ostilitydesc[17];
+	char aligndesc[100];
+	char ostilitydesc[100];
 	int vmin,vmax;
 	int ostilityvalue;
 	int alignvalue;
@@ -489,7 +489,7 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 	if(ostilityvalue>10) 	{
 		strcpy(ostilitydesc,"$c0001Molto aggressiva$c0007");
 	}
-	sprintf(buf,
+	snprintf(buf,sizeof(buf)-1,
 			"\n\rYou cast as about %d level, with spell at about %d level\n\r"
 			"Lag      : %d\n\r"
 			"Fighting : %s\n\r"
@@ -593,11 +593,11 @@ void SpellWearOffSoon(int s, struct char_data* ch) {
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
-    
+
     if(s == STATUS_QUEST && !IS_PC(ch)) {
         return;
     }
-    
+
 	if(spell_wear_off_soon_msg[s] && *spell_wear_off_soon_msg[s]) {
 		act(spell_wear_off_soon_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
@@ -829,7 +829,7 @@ void check_decharm(struct char_data* ch) {
 
 void SpellWearOff(int s, struct char_data* ch) {
     char buf[128];
-    
+
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
@@ -839,11 +839,11 @@ void SpellWearOff(int s, struct char_data* ch) {
     {
         GET_POS(ch) = POSITION_RESTING;
     }
-    
+
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
 		act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
-    
+
     if(s == SPELL_PARALYSIS || s == SPELL_ENTANGLE || s == SKILL_DAIMOKU)
     {
         GET_POS(ch) = POSITION_STUNNED;
@@ -853,11 +853,11 @@ void SpellWearOff(int s, struct char_data* ch) {
 			(IS_NPC(ch) || !IS_SET(ch->specials.act, PLR_STEALTH))) {
 		act(spell_wear_off_room_msg[s], TRUE, ch, 0, 0, TO_ROOM);
 	}
-    
+
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
             affect_from_char(ch, STATUS_QUEST);
-            
+
             if(ch->specials.quest_ref) {
                 if(GET_POS(ch->specials.quest_ref) > POSITION_DEAD)
                     ch->specials.quest_ref = NULL;
@@ -866,7 +866,7 @@ void SpellWearOff(int s, struct char_data* ch) {
         else {
             /* fine dei giochi, si torna a casa */
             switch(GET_POS(ch)) {
-                    
+
                 case POSITION_FIGHTING  :
                     WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
                     sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!\n\r",ch->player.name);
@@ -874,10 +874,10 @@ void SpellWearOff(int s, struct char_data* ch) {
                     stop_fighting(ch);
                     extract_char(ch);
                     break;
-                    
+
                 case POSITION_DEAD  :
                     break;
-                    
+
                 default:
                     sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...\n\r",ch->player.name);
                     act(buf, FALSE, ch, 0, ch, TO_ROOM);
@@ -890,7 +890,7 @@ void SpellWearOff(int s, struct char_data* ch) {
     if(s == SPELL_CREEPING_DEATH) {
         REMOVE_BIT(ch->specials.affected_by, AFF_SILENCE);
     }
-    
+
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {
 		check_decharm(ch);
 	}
@@ -1164,7 +1164,7 @@ void affect_update(unsigned long localPulse) {
 						drunk_gain+=1;
 						thirst_gain+=1;
 					}
-					else if(GET_RACE(i) == RACE_HALF_OGRE || RACE_HALF_GIANT) {
+					else if((GET_RACE(i) == RACE_HALF_OGRE) || (GET_RACE(i) == RACE_HALF_GIANT)) {
 						full_gain+=2;
 						drunk_gain+=0;
 						thirst_gain+=1;
@@ -2340,13 +2340,13 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			targ = 0;
 		}
 	}
-    
+
     if(IS_SET(rp->room_flags, DEATH)) {
         obj_from_room(obj);
         obj_to_room(obj, 1);
         return;
     }
-    
+
 	if(count >= 100) {
 		mudlog(LOG_ERROR, "Someone screwed up an air room.");
 		obj_from_room(obj);

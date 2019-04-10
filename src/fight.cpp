@@ -627,7 +627,7 @@ void make_corpse(struct char_data* ch, int killedbytype) {
         }
         else
             sprintf(spec_desc, "l corpo sfigurato di qualcuno");
-        
+
         if(GET_NAME(ch))
             sprintf(buf, "corpo %s",GET_NAME(ch));
         else
@@ -1003,7 +1003,7 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	if(IS_SET(ch->specials.affected_by2, AFF2_PARRY)) {
 		REMOVE_BIT(ch->specials.affected_by2, AFF2_PARRY);
 	}
-    
+
     if(IS_SET(ch->specials.affected_by2,AFF2_BERSERK)) {
         REMOVE_BIT(ch->specials.affected_by2,AFF2_BERSERK);
     }
@@ -1137,7 +1137,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 					gain_exp_rev(ch,-5000000);
 				}
 			}
-            
+
 			if(IS_PC(ch) && !(killedbytype == SPELL_CHANGE_FORM)) {
 				if(!IS_PRINCE(ch)) {
 					gain_exp_rev(killer,-GET_EXP(killer)/100);
@@ -1772,13 +1772,13 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 			"#w $N #l $c0010devastandol$B$c0007!",
 			"$n ti #W #L $c0009devastandoti$c0007!"
 		},
-        
+
 		{
 			"$n #W $N #l $c0011sbaragliandol$B$c0007!",    /* 56..65 */
 			"#w $N #l $c0010sbaragliandol$B$c0007!",
 			"$n ti #W #L $c0009sbaragliandoti$c0007!"
 		},
-        
+
 		{
 			"$n #W $N #l $c0011polverizzandol$B$c0007!",    /* 66..75 */
 			"#w $N #l $c0010polverizzandol$B$c0007!",
@@ -1790,13 +1790,13 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 			"#w $N #l $c0010sbriciolandol$B$c0007!",
 			"$n ti #W #L $c0009sbriciolandoti$c0007!"
 		},
-        
+
 		{
 			"$n #W $N #l $c0011annientandol$B$c0007!",    /* 86..95 */
 			"#w $N #l $c0010annientandol$B$c0007!",
 			"$n ti #W #L $c0009annientandoti$c0007!"
 		},
-        
+
 		{
 			"$n #W $N #l $c0011sterminandol$B$c0007!",    /* > 95 */
 			"#w $N #l $c0010sterminandol$B$c0007!",
@@ -1853,7 +1853,7 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	else {
 		snum = 13;
 	}
-    
+
 	buf = replace_string(dam_weapons[snum].to_room, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
 	act(buf, FALSE, ch, wield, victim, TO_NOTVICT);
@@ -1999,8 +1999,9 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		classe=CLASS_BARBARIAN;
 	}
     /* controllo se il mob che sferra il colpo ha o meno l'act_class monaco o barbaro, in quel caso colpisce sempre l'altro mob contro cui sta combattendo */
-    if(IS_NPC(ch) && IS_NPC(v) && !IS_SET(ch->specials.act, (ACT_MONK)) && !IS_SET(ch->specials.act, (ACT_BARBARIAN)))
-        classe = -1;
+    if(IS_NPC(ch) && IS_NPC(v) && !IS_SET(ch->specials.act, (ACT_MONK)) && !IS_SET(ch->specials.act, (ACT_BARBARIAN))) {
+    	classe = -1;
+    }
 	dam = PreProcDam(v, type, dam, classe);
 
 
@@ -2530,10 +2531,10 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 		}
 		else { /* victim is not pc */
 			if(IS_PC(ch)) {
-                
+
                 free(ch->lastmkill);
                 ch->lastmkill = strdup(GET_NAME(victim));
-                
+
 				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch),
 					   GET_NAME_DESC(victim));
 			}
@@ -4256,11 +4257,11 @@ void MakeScrap(struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 
 	free(t->description);
 	t->description = (char*)strdup(buf);
-    
+
     sprintf(buf, "i frammenti di %s", obj->short_description);
     free(t->short_description);
     t->short_description = (char*)strdup(buf);
-    
+
 	if(obj->carried_by) {
 		obj_from_char(obj);
 	}

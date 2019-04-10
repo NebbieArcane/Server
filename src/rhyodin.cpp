@@ -1410,6 +1410,7 @@ MOBSPECIAL_FUNC(lattimore) {
 						}
 						break;
 					}
+					/* FALLTHRU */
 				/* no break */
 				/* Il break qui non ci va, perche' se la chiave data a Lattimore
 				   non e' il rod (CrowBar) deve fare quello che fa per qualunque

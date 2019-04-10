@@ -1091,6 +1091,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				cast_energy_drain(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 				break;
 			}
+			/* FALLTHRU */
 		/* no break */
 		case 23:
 		case 24:
@@ -1106,7 +1107,6 @@ MOBSPECIAL_FUNC(magic_user) {
 					alter_mana(ch,0);
 				}
 				cast_colour_spray(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
-				break;
 			}
 			else {
 				act("$n pronuncia le parole, '$c0015Get the sensation!$c0007'.", 1, ch, 0, 0, TO_ROOM);
@@ -1115,8 +1115,8 @@ MOBSPECIAL_FUNC(magic_user) {
 					alter_mana(ch,0);
 				}
 				cast_cone_of_cold(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
-				break;
 			}
+			break;
 		case 30:
 		case 31:
 		case 32:
@@ -1253,7 +1253,7 @@ MOBSPECIAL_FUNC(cleric) {
 		 stanno combattendo in prima persona */
 
 		injuried = ch;
-		
+
 		if(IS_AFFECTED(ch, AFF_CHARM)) {
 			rp = real_roomp(ch->in_room);
 			for(tmp = rp->people; tmp; tmp = tmp2) {
@@ -1631,6 +1631,7 @@ MOBSPECIAL_FUNC(cleric) {
 				}
 				break;
 			}
+			/* FALLTHRU */
 		/* no break */
 		case 3:
 		case 4:
@@ -2721,6 +2722,7 @@ void  SayHello(struct char_data* ch, struct char_data* t) {
 		case SKY_CLOUDLESS:
 			sprintf(buf, "Bel tempo abbiamo quest%s, non e' vero, %s?",
 					buf2, GET_NAME(t));
+			/* FALLTHRU */
 		case SKY_CLOUDY:
 			sprintf(buf, "Quest%s si fanno ottime passeggiate, %s.", buf2, GET_NAME(t));
 			break;
@@ -5972,7 +5974,7 @@ OBJSPECIAL_FUNC(scraps)
         {
 			obj->obj_flags.value[0]--;
 		}
-        
+
 		if(obj->obj_flags.value[0] <= 0 && obj->in_room)
         {
 			if((obj->in_room != NOWHERE) &&(real_roomp(obj->in_room)->people))
@@ -7769,24 +7771,24 @@ MOBSPECIAL_FUNC(MobIdent)
     struct obj_data* obj;
     struct char_data* mobident;
     struct char_data* vict;
-    
+
     if(!AWAKE(ch))
     {
         return(FALSE);
     }
-    
+
     if(check_soundproof(ch))
     {
         return(FALSE);
     }
-    
+
     mobident = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent));
 
     if(!mobident)
     {
         return(FALSE);
     }
-    
+
   //  int choice; va tolto
     if(!IS_NPC(ch) && cmd == CMD_BUY)
     {
@@ -7846,7 +7848,7 @@ MOBSPECIAL_FUNC(MobIdent)
         send_to_char("$c0013'\n\r",ch);
         return(TRUE);
     }
-    
+
     if(cmd == CMD_GIVE)
     {
         arg=one_argument(arg,obj_name);
@@ -7892,10 +7894,10 @@ MOBSPECIAL_FUNC(MobIdent)
         spell_identify(GET_LEVEL(mobident, WARRIOR_LEVEL_IND), ch, mobident,obj);
         act("$N ti restituisce $p.",FALSE, ch, obj, mobident, TO_CHAR);
         act("$N restituisce $p a $n.",TRUE, ch, obj, mobident, TO_ROOM);
-            
+
         return(TRUE);
     }
-    
+
     return(FALSE);
 }
 
@@ -7906,17 +7908,17 @@ OBJSPECIAL_FUNC(key_one_use)
     struct char_data* victim;
     struct obj_data* oggetto;
     struct room_direction_data* exitp;
-    
+
     if(type != EVENT_COMMAND)
     {
         return FALSE;
     }
-    
+
     if(cmd != CMD_UNLOCK)
     {
         return FALSE;
     }
-    
+
     argument_interpreter(arg, tipo, dir);
     if(!*tipo)
     {
@@ -7947,7 +7949,7 @@ OBJSPECIAL_FUNC(key_one_use)
             REMOVE_BIT(obj->obj_flags.value[1], CONT_LOCKED);
             send_to_char("*Click*\n\r", ch);
             act("$n apre $p.", FALSE, ch, oggetto, 0, TO_ROOM);
-            
+
             /* distruggo la chiave */
             if(obj->carried_by)
             {
@@ -7961,7 +7963,7 @@ OBJSPECIAL_FUNC(key_one_use)
             {
                 mudlog(LOG_ERROR, "Can't find %s.", obj->short_description);
             }
-            
+
             if(obj)
             {
                 act("$p scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_CHAR);
@@ -7974,7 +7976,7 @@ OBJSPECIAL_FUNC(key_one_use)
     else if((door = find_door(ch, tipo, dir)) >= 0)
     {
         exitp = EXIT(ch, door);
-        
+
         if(!IS_SET(exitp->exit_info, EX_ISDOOR))
         {
             send_to_char("Questo e' assurdo.\n\r", ch);
@@ -8008,7 +8010,7 @@ OBJSPECIAL_FUNC(key_one_use)
                 act("$n sblocca la porta.", FALSE, ch, 0, 0, TO_ROOM);
             }
             send_to_char("*Click*\n\r", ch);
-            
+
             /* distruggo la chiave */
             if(obj->carried_by)
             {
@@ -8022,16 +8024,16 @@ OBJSPECIAL_FUNC(key_one_use)
             {
                 mudlog(LOG_ERROR, "Can't find %s.", obj->short_description);
             }
-            
+
             if(obj)
             {
                 act("$p scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_CHAR);
                 act("$p, nelle mani di $n, scompare in una $c0008nuvola di fumo$c0007!", FALSE, ch, obj, 0, TO_ROOM);
                 extract_obj(obj);
             }
-            
+
             raw_unlock_door(ch, exitp, door);
-            
+
             return(TRUE);
         }
     }

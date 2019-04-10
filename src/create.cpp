@@ -127,7 +127,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
         send_to_char(buf, ch);
         sprintf(buf, "Room Flags:");
         send_to_char(buf, ch);
-        
+
         row = 0;
         for(i = 0; i < 32; i++)
         {
@@ -140,7 +140,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
             sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->room_flags & (1<<i)) ? "X" : " "), room_bits[i]);
             send_to_char(buf, ch);
         }
-        
+
         sprintf(buf, VT_CURSPOS, 20, 1);
         send_to_char(buf, ch);
     }
@@ -150,7 +150,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
         boost::format fmt ("     %-2d [%s] %s");
         char buf2[255];
         int x = 0;
-        
+
         send_to_char("\n\rRoom Flags:\n\r\n\r", ch);
 
         for(i = 0; i < 32; i++)
@@ -159,7 +159,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
             sprintf(buf2, "%s%d", buf2, 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
-            
+
             if(i & 1)
             {
                 fmt2 % "" % (i + 1) % ((rp->room_flags & (1<<i)) ? "X" : " ") % room_bits[i];
@@ -171,15 +171,15 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
                 sb.append(fmt.str().c_str());
                 x = strlen(fmt.str().c_str());
             }
-            
+
             fmt.clear();
             fmt2.clear();
         }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
-	
+
 	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
 }
 
@@ -370,6 +370,7 @@ void RoomEdit(struct char_data* ch, const char* arg) {
 		break;
     case CHANGE_EXIT_DELETE:
         DeleteExit(real_roomp(ch->in_room), ch, arg, 0);
+        break;
 	default:
 		mudlog(LOG_ERROR, "Got to bad spot in RoomEdit");
 		return;
@@ -489,7 +490,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
         send_to_char(buf, ch);
         sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
         send_to_char(buf, ch);
-        
+
         row = 0;
         for(i = 0; i < E_SECTOR_TYPES_COUNT; i++)
         {
@@ -502,7 +503,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
             sprintf(buf, "%-2d %s", i + 1, sector_types[i]);
             send_to_char(buf, ch);
         }
-        
+
         sprintf(buf, VT_CURSPOS, 20, 1);
         send_to_char(buf, ch);
     }
@@ -512,17 +513,17 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
         boost::format fmt ("     %-2d %s");
         char buf2[255];
         int x = 0;
-        
+
         sprintf(buf, "\n\rSector Type: %s\n\r\n\r", sector_types[rp->sector_type]);
         send_to_char(buf, ch);
-        
+
         for(i = 0; i < E_SECTOR_TYPES_COUNT; i++)
         {
             sprintf(buf2, "%s", "%-");
             sprintf(buf2, "%s%d", buf2, 45-x);
             strcat(buf2, "s%-2d %s\n\r");
             boost::format fmt2 (buf2);
-            
+
             if(i & 1)
             {
                 fmt2 % "" % (i + 1) % sector_types[i];
@@ -534,11 +535,11 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
                 sb.append(fmt.str().c_str());
                 x = strlen(fmt.str().c_str());
             }
-            
+
             fmt.clear();
             fmt2.clear();
         }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
@@ -653,7 +654,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
         send_to_char(buf, ch);
         sprintf(buf, "Flags of %s exit:", aszExitName[ dir ]);
         send_to_char(buf, ch);
-        
+
         row = 0;
         for(i = 0; i < 9; i++)
         {
@@ -666,7 +667,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
             sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " "), exit_bits[ i ]);
             send_to_char(buf, ch);
         }
-        
+
         sprintf(buf, VT_CURSPOS, 20, 1);
         send_to_char(buf, ch);
     }
@@ -676,17 +677,17 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
         boost::format fmt ("     %-2d [%s] %s");
         char buf2[255];
         int x = 0;
-        
+
         sprintf(buf, "\n\rFlags of %s exit:\n\r\n\r", aszExitName[ dir ]);
         send_to_char(buf, ch);
-        
+
         for(i = 0; i < 9; i++)
         {
             sprintf(buf2, "%s", "%-");
             sprintf(buf2, "%s%d", buf2, 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
-            
+
             if(i & 1)
             {
                 fmt2 % "" % (i + 1) % ((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " ") % exit_bits[i];
@@ -698,15 +699,15 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
                 sb.append(fmt.str().c_str());
                 x = strlen(fmt.str().c_str());
             }
-            
+
             fmt.clear();
             fmt2.clear();
         }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
-    
+
 	send_to_char("Select the number to toggle, <C/R> to return to continue.\n\r--> ", ch);
 }
 
@@ -838,7 +839,7 @@ void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int
 {
     int update, x = 0, i = 0;
     char buf[1024];
-    
+
     if(type != ENTER_CHECK)
     {
         if(!*arg || (*arg == '\n'))
@@ -847,14 +848,14 @@ void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int
             UpdateRoomMenu(ch);
             return;
         }
-        
+
         update = atoi(arg) - 1;
         if(update == -1)
         {
             DeleteExit(rp, ch, "", ENTER_CHECK);
             return;
         }
-        
+
         if(update >= 0 && update <= 5)
         {
             if(rp->dir_option[update])
