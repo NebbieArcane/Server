@@ -63,7 +63,6 @@ struct queue* queue_init(void) {
 struct q_element* queue_enq(struct queue* q, void* data, long key) {
 	struct q_element* qe, *i;
 	int bucket;
-
 	CREATE(qe, struct q_element, 1);
 	qe->data = data;
 	qe->key = key;
@@ -161,7 +160,6 @@ long queue_key(struct queue* q) {
 	int i;
 
 	i = pulse % NUM_EVENT_QUEUES;
-
 	if(q->head[i]) {
 		return q->head[i]->key;
 	}
