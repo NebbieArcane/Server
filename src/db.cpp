@@ -418,11 +418,13 @@ int intcomp(struct wizs* j, struct wizs* k) {
 }
 
 char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
-#define SBB 10240
+	//FIXME: Use c string instead og static char buffer
+#define SBB 20480
 	char buf[512];
-	static char bigbuf[SBB];
+	static char bigbuf[SBB+1];
 	int center, i, j, ciclo;
 	bigbuf[0] = '\0';
+	//bigbuf[SBB] = '\0';
 	switch(livello) {
 	case IMMENSO:
 		sprintf(buf, "$c0011-* Immenso *-$c0007\n\r");
@@ -507,28 +509,27 @@ char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
 	 return("\0"); */
 	center = 38 - (int)(Ansi_len(buf) / 2);
 	for(i = 0; i <= center; i++) {
-		strcat(bigbuf, " ");
+		strncat(bigbuf, " ",SBB -strlen(buf));
 	}
-	strcat(bigbuf, buf);
-
+	strncat(bigbuf, buf,SBB -strlen(buf));
 	for(i = 0; i < list_wiz->number[livello]; i++) {
 		sprintf(buf, "%s %s\n\r", list_wiz->lookup[livello].stuff[i].name,
 				list_wiz->lookup[livello].stuff[i].title);
 
 		center = 38 - (int)(Ansi_len(buf) / 2);
 		for(j = 0; j <= center; j++) {
-			strncat(bigbuf, " ", SBB);
+			strncat(bigbuf, " ", SBB -strlen(buf));
 		}
-		strncat(bigbuf, buf, SBB);
+		strncat(bigbuf, buf, SBB -strlen(buf));
 	}
 	for(; livello > DIO_MINORE && i < ciclo; i++) {
 		sprintf(buf, "%s %s\n\r", " ", " ");
 
 		center = 38 - (int)(Ansi_len(buf) / 2);
 		for(j = 0; j <= center; j++) {
-			strncat(bigbuf, " ", SBB);
+			strncat(bigbuf, " ", SBB -strlen(buf));
 		}
-		strncat(bigbuf, buf, SBB);
+		strncat(bigbuf, buf, SBB -strlen(buf));
 	}
 	return (bigbuf);
 }
