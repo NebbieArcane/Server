@@ -1,10 +1,10 @@
 language: cpp
+dist: bionic  
 cache: ccache
 before_install:
   - sudo apt-get -y update
   - sudo apt-get -y install libconfig++-dev libcurlpp-dev liblog4cxx-dev libmysqlcppconn-dev libcurl4-openssl-dev
   - sudo apt-get -y install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev
   - sudo apt-get -y install libboost-date-time-dev odb libodb-dev libodb-mysql-dev libodb-sqlite-dev libodb-boost-dev
-dist: xenial  
 script: travis_wait "./build.sh"
 

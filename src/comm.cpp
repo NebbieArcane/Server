@@ -2224,10 +2224,10 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					break;
 				case 's':
 					s_flag = 1;
-				/* no break */
+					/* FALLTHRU */
 				case 'S':   /* affected spells */
 					*tbuf=0;
-                        
+
                     // Parentesi affette da darkness
                     if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
                         strcat(tbuf, (i > 1) ? "$c0008[$c0007" : "$c5008[$c0007");
@@ -2235,8 +2235,8 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
                     else {
                         strcat(tbuf,"[");
                     }
-                        
-                        
+
+
 					if((i = _affected_by_s(ch, SPELL_FIRESHIELD)) != -1) {
 						strcat(tbuf, (i > 1) ? "$c0009F$c0007" : "$c0001f$c0007");
 					}
@@ -2285,7 +2285,7 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
 					else if(s_flag) {
 						strcat(tbuf, "-");
 					}
-					
+
                     // Parentesi affette da darkness
                     if((i = _affected_by_s(ch, SPELL_GLOBE_DARKNESS)) != -1) {
                         strcat(tbuf, (i > 1) ? "$c0008]$c0007" : "$c5008]$c0007");
@@ -2293,9 +2293,9 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
                     else {
                         strcat(tbuf,"]");
                     }
-                        
+
                     break;
-                        
+
 				case 'R': /* room number for immortals */
 					if(IS_DIO(ch)) {
 						rm = real_roomp(ch->in_room);

@@ -199,9 +199,10 @@ configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UN
 
 
 #Warning managements
+target_link_libraries(${CMAKE_PROJECT_NAME} -g -gdwarf-3)
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
-#	-Werror
-#	-Wfatal-errors
+	-Werror
+	-Wfatal-errors
 	-Wall
 	-Wextra
 	-Wcast-align
@@ -213,7 +214,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 	-Wno-format-nonliteral
 	-Wformat=2
 	-Wformat-overflow
-	-Wimplicit-fallthrough
+	-Wimplicit-fallthrough=3
 	-Winit-self
 	-Wlogical-op
 	-Wmissing-include-dirs

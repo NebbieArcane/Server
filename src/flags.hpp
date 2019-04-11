@@ -227,7 +227,7 @@ logDefineStatus(NEW_GAIN)
 #endif
 
 #ifndef NEW_RENT
-#define NEW_RENT			false
+#define NEW_RENT			true
 #else
 logDefineStatus(NEW_RENT)
 #endif
@@ -268,16 +268,22 @@ logDefineStatus(NICE_MULTICLASS)
 logDefineStatus(NICE_PKILL)
 #endif
 
-#ifndef NOREGISTER
-#define NOREGISTER		true
-#else
-logDefineStatus(NOREGISTER)
-#endif
-
 #ifndef NODUPLICATES
 #define NODUPLICATES		true
 #else
 logDefineStatus(NODUPLICATES)
+#endif
+
+#ifndef NOEVENTS
+#define NOEVENTS		false
+#else
+logDefineStatus(NOEVENTS)
+#endif
+
+#ifndef NOREGISTER
+#define NOREGISTER		true
+#else
+logDefineStatus(NOREGISTER)
 #endif
 
 #ifndef NOSCRAP

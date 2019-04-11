@@ -448,8 +448,8 @@ const byte saving_throws[MAX_CLASS][5][ABS_MAX_LVL] = {
 
 void spellid(int nr,struct char_data* ch,int cl,int sl) {
 	char buf[1000];
-	char aligndesc[17];
-	char ostilitydesc[17];
+	char aligndesc[100];
+	char ostilitydesc[100];
 	int vmin,vmax;
 	int ostilityvalue;
 	int alignvalue;
@@ -489,7 +489,7 @@ void spellid(int nr,struct char_data* ch,int cl,int sl) {
 	if(ostilityvalue>10) 	{
 		strcpy(ostilitydesc,"$c0001Molto aggressiva$c0007");
 	}
-	sprintf(buf,
+	snprintf(buf,sizeof(buf)-1,
 			"\n\rYou cast as about %d level, with spell at about %d level\n\r"
 			"Lag      : %d\n\r"
 			"Fighting : %s\n\r"
@@ -593,11 +593,11 @@ void SpellWearOffSoon(int s, struct char_data* ch) {
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
-    
+
     if(s == STATUS_QUEST && !IS_PC(ch)) {
         return;
     }
-    
+
 	if(spell_wear_off_soon_msg[s] && *spell_wear_off_soon_msg[s]) {
 		act(spell_wear_off_soon_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
@@ -829,7 +829,7 @@ void check_decharm(struct char_data* ch) {
 
 void SpellWearOff(int s, struct char_data* ch) {
     char buf[128];
-    
+
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
@@ -839,11 +839,11 @@ void SpellWearOff(int s, struct char_data* ch) {
     {
         GET_POS(ch) = POSITION_RESTING;
     }
-    
+
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
 		act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 	}
-    
+
     if(s == SPELL_PARALYSIS || s == SPELL_ENTANGLE || s == SKILL_DAIMOKU)
     {
         GET_POS(ch) = POSITION_STUNNED;
@@ -853,11 +853,11 @@ void SpellWearOff(int s, struct char_data* ch) {
 			(IS_NPC(ch) || !IS_SET(ch->specials.act, PLR_STEALTH))) {
 		act(spell_wear_off_room_msg[s], TRUE, ch, 0, 0, TO_ROOM);
 	}
-    
+
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
             affect_from_char(ch, STATUS_QUEST);
-            
+
             if(ch->specials.quest_ref) {
                 if(GET_POS(ch->specials.quest_ref) > POSITION_DEAD)
                     ch->specials.quest_ref = NULL;
@@ -866,7 +866,7 @@ void SpellWearOff(int s, struct char_data* ch) {
         else {
             /* fine dei giochi, si torna a casa */
             switch(GET_POS(ch)) {
-                    
+
                 case POSITION_FIGHTING  :
                     WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
                     sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!\n\r",ch->player.name);
@@ -874,10 +874,10 @@ void SpellWearOff(int s, struct char_data* ch) {
                     stop_fighting(ch);
                     extract_char(ch);
                     break;
-                    
+
                 case POSITION_DEAD  :
                     break;
-                    
+
                 default:
                     sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...\n\r",ch->player.name);
                     act(buf, FALSE, ch, 0, ch, TO_ROOM);
@@ -890,7 +890,7 @@ void SpellWearOff(int s, struct char_data* ch) {
     if(s == SPELL_CREEPING_DEATH) {
         REMOVE_BIT(ch->specials.affected_by, AFF_SILENCE);
     }
-    
+
 	if(s == SPELL_CHARM_PERSON || s == SPELL_CHARM_MONSTER) {
 		check_decharm(ch);
 	}
@@ -977,7 +977,7 @@ void CheckSpecialties(struct char_data* ch, struct affected_type* af)
 
 void affect_update(unsigned long localPulse) {
 	static struct affected_type* af, *next_af_dude;
-	register struct char_data* i;
+	register struct char_data* ch;
 	register struct obj_data* j;
 	struct obj_data* next_thing;
 	struct char_data*  next_char;
@@ -992,31 +992,31 @@ void affect_update(unsigned long localPulse) {
 	int regainroom=0;
 
 	/* Chiamata ogni ora mud, ovvero 4*75 pulse */
-	for(i = character_list; i; i = next_char) {
-		next_char = i->next;
-		if(IS_SET(i->specials.act,PLR_FREEZE)) {
+	for(ch = character_list; ch; ch = next_char) {
+		next_char = ch->next;
+		if(IS_SET(ch->specials.act,PLR_FREEZE)) {
 			continue;
 		}
-		if(CheckMulti(i)) {
+		if(CheckMulti(ch)) {
 			continue;
 		}
 		/* Imposta un po' di puntatori e flag */
-		rp = real_roomp(i->in_room);
+		rp = real_roomp(ch->in_room);
 		regainroom=(IS_SET(rp->room_flags,NO_REGAIN))?0:1;
 
 		/* Calcola la posizione prevalente */
 		for(k=0; k<=MAX_POSITION; k++) {
-			ggtmp=GET_TEMPO_IN(i,k);
+			ggtmp=GET_TEMPO_IN(ch,k);
 			if(ggtmp>posprev) {
-				GET_POS_PREV(i)=k;
+				GET_POS_PREV(ch)=k;
 				posprev=ggtmp;
 			}
 		}
-		GET_TEMPO_IN(i,GET_POS_PREV(i))=MAX(0,ggtmp-(PULSE_PER_SEC *
+		GET_TEMPO_IN(ch,GET_POS_PREV(ch))=MAX(0,ggtmp-(PULSE_PER_SEC *
 											SECS_PER_MUD_HOUR));
-		if(i->nMagicNumber != CHAR_VALID_MAGIC) {
+		if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
 			mudlog(LOG_SYSERR, "Invalid char magic number %d in affect_update",
-				   i->nMagicNumber);
+				   ch->nMagicNumber);
 			abort();
 		}
 
@@ -1025,11 +1025,11 @@ void affect_update(unsigned long localPulse) {
 		 */
 		dead=FALSE;
 
-		for(af = i->affected; af && !dead; af = next_af_dude)
+		for(af = ch->affected; af && !dead; af = next_af_dude)
 			/* Affect loop */
 		{
 			next_af_dude = af->next;
-			CheckSpecialties(i,af);
+			CheckSpecialties(ch,af);
 
 			if(af->duration >= 1) {
 				af->duration--;
@@ -1040,7 +1040,7 @@ void affect_update(unsigned long localPulse) {
 						 af->next->duration != 2))
 					/* && af->location != APPLY_INTRINSIC) */
 				{
-					SpellWearOffSoon(af->type, i);
+					SpellWearOffSoon(af->type, ch);
 				}
 			}
 			else {
@@ -1050,26 +1050,26 @@ void affect_update(unsigned long localPulse) {
 					if(!af->next || af->next->type != af->type ||
 							af->next->duration > 0) {
 						/* if(af->location != APPLY_INTRINSIC) */
-						SpellWearOff(af->type, i);
+						SpellWearOff(af->type, ch);
 					}
 
 					/* Se il tipo di affect e' SPELL_CHARM_PERSON o STATUS_QUEST, l'affect e' gia' stato
 					* tolto da SpellWearOff */
 					if(iType != SPELL_CHARM_PERSON && iType != STATUS_QUEST) {
-						check_memorize(i, af);
-						affect_remove(i, af);
+						check_memorize(ch, af);
+						affect_remove(ch, af);
 					}
 				}
 				else if(af->type >= FIRST_BREATH_WEAPON &&
 						af->type <= LAST_BREATH_WEAPON) {
-					bweapons[ af->type-FIRST_BREATH_WEAPON ](-af->modifier/2, i, "",
-							SPELL_TYPE_SPELL, i, 0);
-					if(!i->affected) {
+					bweapons[ af->type-FIRST_BREATH_WEAPON ](-af->modifier/2, ch, "",
+							SPELL_TYPE_SPELL, ch, 0);
+					if(!ch->affected) {
 						/* oops, you're dead :) */
 						dead = TRUE;
 						break;
 					}
-					affect_remove(i, af);
+					affect_remove(ch, af);
 				}
 			}
 		} /*Fine affect loop*/
@@ -1082,8 +1082,8 @@ void affect_update(unsigned long localPulse) {
 			 * nelle stanze dove finiscono i polimorfati. Inoltre esiste il rischio
 			 * di morire per il veleno anche se si finisce LD.
 			 */
-			if(GET_POS(i) >= POSITION_STUNNED && i->in_room != 3 &&
-					i->in_room != 2) {
+			if(GET_POS(ch) >= POSITION_STUNNED && ch->in_room != 3 &&
+					ch->in_room != 2) {
 				/* note - because of poison, this one has to be in the
 				 * opposite order of the others.  The logic:
 				 *
@@ -1093,37 +1093,37 @@ void affect_update(unsigned long localPulse) {
 				 * the hps after poison are lower, but No one cares!
 				 * and that is why the gain is added to the hits, not vice versa
 				 */
-#ifdef NOEVENTS
-				int hgain = hit_gain(i);
+#if NOEVENTS
+				int hgain = hit_gain(ch);
 				if(ch==NULL || GET_NAME(ch)==NULL) { // SALVO controllo che dopo hit_gain sia ancora vivo
 					return;
 				}
-				GET_HIT(i)  = MIN((regainroom * hgain) + GET_HIT(i),  hit_limit(i));
-				GET_MANA(i) = MIN(GET_MANA(i) + (regainroom * mana_gain(i)), mana_limit(i));
-				GET_MOVE(i) = MIN(GET_MOVE(i) + (regainroom * move_gain(i)), move_limit(i));
+				GET_HIT(ch)  = MIN((regainroom * hgain) + GET_HIT(ch),  hit_limit(ch));
+				GET_MANA(ch) = MIN(GET_MANA(ch) + (regainroom * mana_gain(ch)), mana_limit(ch));
+				GET_MOVE(ch) = MIN(GET_MOVE(ch) + (regainroom * move_gain(ch)), move_limit(ch));
 #endif
-				if(GET_POS(i) == POSITION_STUNNED) {
-					update_pos(i);
+				if(GET_POS(ch) == POSITION_STUNNED) {
+					update_pos(ch);
 				}
 			}
-			else if(GET_POS(i) == POSITION_INCAP) {
+			else if(GET_POS(ch) == POSITION_INCAP) {
 				/* do nothing */
-				damage(i, i, 0, TYPE_SUFFERING, 5);
+				damage(ch, ch, 0, TYPE_SUFFERING, 5);
 			}
-			else if(GET_POS(i) == POSITION_MORTALLYW) {
-				damage(i, i, 1, TYPE_SUFFERING, 5);
+			else if(GET_POS(ch) == POSITION_MORTALLYW) {
+				damage(ch, ch, 1, TYPE_SUFFERING, 5);
 			}
 
-			if(IS_PC(i)) {
-				update_char_objects(i);
-				if(GetMaxLevel(i) < DIO && i->in_room != 3 && i->in_room != 2) {
-					check_idling(i);
+			if(IS_PC(ch)) {
+				update_char_objects(ch);
+				if(GetMaxLevel(ch) < DIO && ch->in_room != 3 && ch->in_room != 2) {
+					check_idling(ch);
 				}
 				/*
 				 * Se e' linkdead
 				 * non diventa assetato od affamato.
 				 * */
-				if(rp && i->desc) {
+				if(rp && ch->desc) {
 					/*
 					* Controllo sul tipo della stanza
 					* */
@@ -1159,12 +1159,12 @@ void affect_update(unsigned long localPulse) {
 					/*
 					* Controllo per razza
 					* */
-					if(GET_RACE(i) == RACE_HALFLING) {
+					if(GET_RACE(ch) == RACE_HALFLING) {
 						full_gain+=1;
 						drunk_gain+=1;
 						thirst_gain+=1;
 					}
-					else if(GET_RACE(i) == RACE_HALF_OGRE || RACE_HALF_GIANT) {
+					else if((GET_RACE(ch) == RACE_HALF_OGRE) || (GET_RACE(ch) == RACE_HALF_GIANT)) {
 						full_gain+=2;
 						drunk_gain+=0;
 						thirst_gain+=1;
@@ -1172,32 +1172,32 @@ void affect_update(unsigned long localPulse) {
 					/*
 					* Controllo per classe
 					* */
-					if(HasClass(i,CLASS_MONK)) {
+					if(HasClass(ch,CLASS_MONK)) {
 						if(localPulse % (PULSE_TICK*
-										 MAX((GET_LEVEL(i,MONK_LEVEL_IND)-29),1)
+										 MAX((GET_LEVEL(ch,MONK_LEVEL_IND)-29),1)
 										)
 						  ) {
 							full_gain=0;
 						}
 						thirst_gain=0;
 					}
-					gain_condition(i,FULL,-MAX(0,full_gain) * regainroom);
-					gain_condition(i,DRUNK,-MAX(0,drunk_gain) * regainroom);
-					gain_condition(i,THIRST,-MAX(0,thirst_gain) * regainroom);
+					gain_condition(ch,FULL,-MAX(0,full_gain) * regainroom);
+					gain_condition(ch,DRUNK,-MAX(0,drunk_gain) * regainroom);
+					gain_condition(ch,THIRST,-MAX(0,thirst_gain) * regainroom);
 
 				}
-				if(i->specials.tick == time_info.hours) {
+				if(ch->specials.tick == time_info.hours) {
 					/* works for 24, change for anything else */
 					/* the special case for room 3 is a hack to keep link dead
 					* people who have no stuff from being saved without stuff..  */
-					if(!IS_IMMORTAL(i)
-							&& i->in_room != 3
-							&& i->in_room != NOWHERE) {
-						do_save(i,"",0);
+					if(!IS_IMMORTAL(ch)
+							&& ch->in_room != 3
+							&& ch->in_room != NOWHERE) {
+						do_save(ch,"",0);
 					}
 				}
 			}
-			check_nature(i);  /* check falling, check drowning, etc */
+			check_nature(ch);  /* check falling, check drowning, etc */
 		} /*Regen check loop */
 
 	}
@@ -2340,13 +2340,13 @@ void check_falling_obj(struct obj_data* obj, int room) {
 			targ = 0;
 		}
 	}
-    
+
     if(IS_SET(rp->room_flags, DEATH)) {
         obj_from_room(obj);
         obj_to_room(obj, 1);
         return;
     }
-    
+
 	if(count >= 100) {
 		mudlog(LOG_ERROR, "Someone screwed up an air room.");
 		obj_from_room(obj);

@@ -7584,4 +7584,3 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 	return TRUE;
 }
 } // namespace Alarmud
-

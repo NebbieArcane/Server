@@ -45,12 +45,12 @@
 #include "weather.hpp"
 
 namespace Alarmud {
-    
+
 const char* zonename_by_room(int room) {
-    
+
     struct zone_data* zd;
     int zone;
-    
+
     const char* zonename[]= {
         "Scratch zone for static game",
         "il Limbo",
@@ -224,7 +224,7 @@ const char* zonename_by_room(int room) {
         "last_area",
         "\0"
     };
-    
+
     for(zone = 0; zone <= top_of_zone_table; zone++) {
         zd = zone_table + zone;
         if(room >= zd->bottom && room <= zd->top && zonename[zone] != NULL) {
@@ -236,14 +236,14 @@ const char* zonename_by_room(int room) {
 
 #define NUM_ZONERANGES 29
 int RandomRoomByLevel(int level) {
-    
+
     int y, t;
-    
+
     struct range_vnum_type {
         int da_vnum;
         int a_vnum;
     };
-    
+
     struct range_vnum_type zone_list[NUM_ZONERANGES]= {
         {3004,3049},    /* Myst */
         {32501,32549},  /* Municipio */
@@ -275,7 +275,7 @@ int RandomRoomByLevel(int level) {
         {19806,19882},  /* Guaracanos spiaggia */
         {19901,19926}   /* Foresta Delrean */
     };
-    
+
     if(level >= PRINCIPE) {
         t = NUM_ZONERANGES-1;
     } else {
@@ -285,14 +285,14 @@ int RandomRoomByLevel(int level) {
             t = 5;
         }
     }
-    
+
     y = number(0,t);
     do {
         t = number(zone_list[y].da_vnum,zone_list[y].a_vnum);
     } while (!real_roomp(t) || IS_SET(real_roomp(t)->room_flags, NO_MOB|DEATH|PRIVATE|PEACEFUL));
-    
+
     return(t);
-    
+
 }
 
 char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa, int achievement_type, int achievement_class)
@@ -362,7 +362,7 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
         }
     }
     strcat(buffer, "    |-|\n| |");
-    
+
     strcat(buffer, space);
     strcat(buffer, "| |\n|-|");
     strcat(buffer, "    ");
@@ -425,7 +425,7 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
 
     return buffer;
 }
-    
+
 int maxAchievements(struct char_data* ch)
 {
     struct char_data* tch;
@@ -498,7 +498,7 @@ bool hasAchievement(struct char_data* ch, int achievement_class)
     }
     return FALSE;
 }
-    
+
 std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check)
 {
     std::string sb;
@@ -1804,7 +1804,7 @@ void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2
             nr++;
         }
     }
-    
+
     for(nr=0; vektor2; vektor2>>=1) {
         if(IS_SET(1, vektor2)) {
             if(*names2[nr] != '\n') {
@@ -4245,6 +4245,7 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_SEA_ELF:
 		/* e poi prosegue per le altre caratteristiche degli elfi */
 		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
+		/* FALLTHRU */
 	/* no break */
 	case RACE_ELVEN:
 	case RACE_DARK_ELF:
@@ -5825,7 +5826,7 @@ int CanFightEachOther(struct char_data* ch,struct char_data* ch2) {
     {
         return FALSE;
     }
-    
+
 	if(IS_SET(ch->player.user_flags,RACE_WAR) &&
 			IS_SET(ch2->player.user_flags,RACE_WAR) /* &&
       real_roomp(ch->in_room)->sector_type!=SECT_INSIDE &&
@@ -5864,10 +5865,10 @@ int fighting_in_room(int room_n) {
 void DoNothing(void* pDummy) {
 	return;
 }
-    
+
 bool inRange(int low, int high, int x)
-{ 
-    return ((x-high)*(x-low) <= 0); 
+{
+    return ((x-high)*(x-low) <= 0);
 }
 
 // caricare troppo lo stack (WORLD_SIZE e'
@@ -6300,4 +6301,3 @@ char RemColorString(char * buffer)
     return *buffer;
 }
 } // namespace Alarmud
-

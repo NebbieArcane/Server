@@ -444,7 +444,7 @@ MOBSPECIAL_FUNC(EditMaster) {
 				break;
 			}
 
-			if(ITEM_TYPE(obj) == ITEM_ARMOR || ITEM_WEAPON) {
+			if((ITEM_TYPE(obj) == ITEM_ARMOR) || (ITEM_TYPE(obj) == ITEM_WEAPON)) {
 
 				if(comandi[iCom].tipo != 0 && comandi[iCom].tipo != OGG
 						&& comandi[iCom].tipo != RES && comandi[iCom].tipo != IMM) {

@@ -1,4 +1,4 @@
 #!/bin/bash
 echo You need a ssh access to the server for this to work
-scp nebbie@nebbie.hexkeep.com:Run/master/lib/players/$1* mudroot/lib/players
-scp nebbie@nebbie.hexkeep.com:Run/master/lib/rent/$1* mudroot/lib/rent
+scp nebbie@nebbie:Run/release/lib/players/$1* mudroot/lib/players
+scp nebbie@nebbie:Run/release/lib/rent/$1* mudroot/lib/rent

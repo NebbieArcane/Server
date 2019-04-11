@@ -3701,6 +3701,7 @@ void cast_feeblemind(byte level, struct char_data* ch, const char* arg,
 	switch(type) {
 	case SPELL_TYPE_POTION:
 		spell_feeblemind(level, ch, ch, 0);
+		/* FALLTHRU */
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:
@@ -4201,6 +4202,7 @@ void cast_silence(byte level, struct char_data* ch, const char* arg,
 	switch(type) {
 	case SPELL_TYPE_POTION:
 		spell_silence(level, ch, ch, 0);
+		break;
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
 	case SPELL_TYPE_WAND:

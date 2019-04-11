@@ -51,7 +51,7 @@ struct queue* event_q;          /* the event queue */
 
 /* initializes the event queue */
 void event_init(void) {
-#ifndef NOEVENTS
+#if !NOEVENTS
 	event_q = queue_init();
 #endif
 }
@@ -76,7 +76,7 @@ struct event* event_create(EVENTFUNC(*func), void* event_obj, long when) {
 
 /* removes the event from the system */
 void event_cancel(struct event* event) {
-#ifndef NOEVENTS
+#if !NOEVENTS
 	if(!event) {
 		mudlog(LOG_SYSERR,"Attempted to cancel a NULL event"); // Gaia 2001
 		return;
@@ -97,8 +97,8 @@ void event_cancel(struct event* event) {
 
 /* Process any events whose time has come. */
 void event_process(void) {
+#if !NOEVENTS
 	struct event* the_event;
-#ifndef NOEVENTS
 	while((long) pulse >= queue_key(event_q)) {
 		if(!(the_event = (struct event*) queue_head(event_q))) {
 			mudlog(LOG_SYSERR,"Attempt to get a NULL event");
@@ -117,7 +117,7 @@ void event_process(void) {
 /* returns the time remaining before the event */
 long event_time(struct event* event) {
 	long when;
-#ifndef NOEVENTS
+#if !NOEVENTS
 	when = queue_elmt_key(event->q_el);
 #else
 	when=pulse;
@@ -129,8 +129,8 @@ long event_time(struct event* event) {
 
 /* frees all events in the queue */
 void event_free_all(void) {
+#if !NOEVENTS
 	struct event* the_event;
-#ifndef NOEVENTS
 	while((the_event = (struct event*) queue_head(event_q))) {
 		if(the_event->event_obj) {
 			free(the_event->event_obj);
