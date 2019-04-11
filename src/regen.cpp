@@ -298,7 +298,9 @@ void alter_hit(struct char_data* ch, int amount) {
 		GET_HIT(ch) = MIN(GET_HIT(ch) - amount, GET_MAX_HIT(ch));
 	}
 #ifdef NOEVENTS
-	return;
+#if NOEVENTS
+    return;
+#endif
 #endif
 	/*  if (IS_AFFECTED(ch,AFF_POISON) || IS_AFFECTED2(ch,AFF2_HEAT_STUFF))
 	     return;
@@ -324,7 +326,9 @@ void alter_mana(struct char_data* ch, int amount) {
 
 	GET_MANA(ch) = MIN(GET_MANA(ch) - amount, GET_MAX_MANA(ch));
 #ifdef NOEVENTS
-	return;
+#if NOEVENTS
+    return;
+#endif
 #endif
 	if(!GET_POINTS_EVENT(ch, REGEN_MANA) && (GET_MANA(ch) < GET_MAX_MANA(ch))) {
 
@@ -349,9 +353,10 @@ void alter_move(struct char_data* ch, int amount) {
 
 	GET_MOVE(ch) = MIN(GET_MOVE(ch) - amount, GET_MAX_MOVE(ch));
 #ifdef NOEVENTS
-	return;
+#if NOEVENTS
+    return;
 #endif
-
+#endif
 	if(!GET_POINTS_EVENT(ch, REGEN_MOVE) && (GET_MOVE(ch) < GET_MAX_MOVE(ch))) {
 
 		/* make sure the character isn't dying */
