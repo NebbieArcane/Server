@@ -2479,10 +2479,10 @@ void reset_zone(int zone) {
 	zone_table[zone].bottom = d;
 	e = zone_table[zone].top;
 	if(zone_table[zone].start == 0)
-		sprintf(buf, "Run time initialization of zone %s (%d), rooms (%d-%d)",
+		snprintf(buf, sizeof(buf)-1, "Run time initialization of zone %s (%d), rooms (%d-%d)",
 				s, zone, d, e);
 	else
-		sprintf(buf, "Run time reset of zone %s (%d), rooms (%d-%d)", s, zone,
+		snprintf(buf, sizeof(buf)-1, "Run time reset of zone %s (%d), rooms (%d-%d)", s, zone,
 				d, e);
 
 	mudlog(LOG_CHECK, buf);
@@ -2497,7 +2497,7 @@ void reset_zone(int zone) {
 		}
 
 		if(nLastCmd || ZCMD.if_flag <= 0) {
-			sprintf(rbuf, "<%d %d %d %d %d>",
+			snprintf(rbuf,sizeof(rbuf)-1, "<%d %d %d %d %d>",
 					ZCMD.if_flag, ZCMD.arg1, ZCMD.arg2, ZCMD.arg3, ZCMD.arg4);
 			switch(ZCMD.command) {
 			case 'M': /* read a mobile */
