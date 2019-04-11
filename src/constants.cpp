@@ -4560,7 +4560,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       0, /* da definire */                        5
+        CLASS_MAGIC_USER,                                       LEV_BEGINNER,                               5
     },
     {
         ACHIE_MAGE_2,                                           "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
@@ -4574,7 +4574,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       0, /* da definire */                        5
+        CLASS_MAGIC_USER,                                       LEV_VERY_EASY,                              5
     },
     {
         ACHIE_MAGE_3,                                           "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
@@ -4588,7 +4588,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       0, /* da definire */                        5
+        CLASS_MAGIC_USER,                                       LEV_VERY_EASY,                              5
     },
     {
         ACHIE_CLERIC_1,                                         "incantesimo di guarigione lanciato",       "incantesimi di guarigione lanciati",
@@ -4602,7 +4602,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_CLERIC,                                           0, /* da definire */                        5
+        CLASS_CLERIC,                                           LEV_BEGINNER,                               5
     },
     {
         ACHIE_CLERIC_2,                                         "resurrezione fatta",                       "resurrezioni fatte",
@@ -4616,7 +4616,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_CLERIC,                                           0, /* da definire */                        5
+        CLASS_CLERIC,                                           LEV_HARD,                                   5
     },
     {
         ACHIE_CLERIC_3,                                         "incantesimo di santuario lanciato",        "incantesimi di santuario lanciati",
@@ -4630,7 +4630,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_CLERIC,                                           0, /* da definire */                        5
+        CLASS_CLERIC,                                           LEV_BEGINNER,                               5
     },
     {
         ACHIE_WARRIOR_1,                                        "avversario buttato a terra",               "avversari buttati a terra",
@@ -4644,7 +4644,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_WARRIOR,                                          0, /* da definire */                        5
+        CLASS_WARRIOR,                                          LEV_BEGINNER,                               5
     },
     {
         ACHIE_WARRIOR_2,                                        "atterramento fallito",                     "atterramenti falliti",
@@ -4658,7 +4658,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_WARRIOR,                                          0, /* da definire */                        5
+        CLASS_WARRIOR,                                          LEV_BEGINNER,                               5
     },
     {
         ACHIE_WARRIOR_3,                                        "compagno salvato",                         "compagni salvati",
@@ -4672,7 +4672,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_WARRIOR,                                          0, /* da definire */                        5
+        CLASS_WARRIOR,                                          LEV_EASY,                                   5
     },
     {
         ACHIE_THIEF_1,                                          "avversario pugnalato alle spalle",         "avversari pugnalati alle spalle",
@@ -4686,7 +4686,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_THIEF,                                            0, /* da definire */                        5
+        CLASS_THIEF,                                            LEV_BEGINNER,                               5
     },
     {
         ACHIE_THIEF_2,                                          "avversario ucciso con un colpo",           "avversari uccisi con un colpo",
@@ -4700,7 +4700,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_THIEF,                                            0, /* da definire */                        5
+        CLASS_THIEF,                                            LEV_VERY_EASY,                              5
     },
     {
         ACHIE_THIEF_3,                                          "avversario derubato",                      "avversari derubati",
@@ -4714,7 +4714,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_THIEF,                                            0, /* da definire */                        5
+        CLASS_THIEF,                                            LEV_NORMAL,                                 5
     },
     {
         ACHIE_DRUID_1,                                          "massa di insetti evocata",                 "masse di insetti evocate",
@@ -4728,7 +4728,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_DRUID,                                            0, /* da definire */                        5
+        CLASS_DRUID,                                            LEV_NORMAL,                                 5
     },
     {
         ACHIE_DRUID_2,                                          "metamorfosi riuscita",                     "metamorfosi riuscite",
@@ -4742,7 +4742,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_DRUID,                                            0, /* da definire */                        5
+        CLASS_DRUID,                                            LEV_EASY,                                   5
     },
     {
         ACHIE_DRUID_3,                                          "reincarnazione fatta",                     "reincarnazioni fatte",
@@ -4756,7 +4756,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_DRUID,                                            0, /* da definire */                        5
+        CLASS_DRUID,                                            LEV_HARD,                                   5
     },
     {
         ACHIE_MONK_1,                                           "avversario disarmato",                     "avversari disarmati",
@@ -4770,7 +4770,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MONK,                                             0, /* da definire */                        5
+        CLASS_MONK,                                             LEV_BEGINNER,                               5
     },
     {
         ACHIE_MONK_2,                                           "palmo vibrante",                           "palmo vibrante",
@@ -4784,7 +4784,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MONK,                                             0, /* da definire */                        5
+        CLASS_MONK,                                             LEV_NORMAL,                                 5
     },
     {
         ACHIE_MONK_3,                                           "nemico accecato",                          "nemici accecati",
@@ -4798,7 +4798,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MONK,                                             0, /* da definire */                        5
+        CLASS_MONK,                                             LEV_VERY_EASY,                              5
     },
     {
         ACHIE_BARBARIAN_1,                                      "volta in berserk",                         "volte in berserk",
@@ -4812,7 +4812,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_BARBARIAN,                                        0, /* da definire */                        5
+        CLASS_BARBARIAN,                                        LEV_BEGINNER,                               5
     },
     {
         ACHIE_BARBARIAN_2,                                      "pugnalata alle spalle evitata",            "pugnalate alle spalle evitate",
@@ -4826,7 +4826,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_BARBARIAN,                                        0, /* da definire */                        5
+        CLASS_BARBARIAN,                                        LEV_EASY,                                   5
     },
     {
         ACHIE_BARBARIAN_3,                                      "medicazione effettuata",                   "medicazioni effettuate",
@@ -4840,7 +4840,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_BARBARIAN,                                        0, /* da definire */                        5
+        CLASS_BARBARIAN,                                        LEV_VERY_EASY,                              5
     },
     {
         ACHIE_SORCERER_1,                                       "portale fatto",                            "portali fatti",
@@ -4854,7 +4854,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_SORCERER,                                         0, /* da definire */                        5
+        CLASS_SORCERER,                                         LEV_BEGINNER,                               5
     },
     {
         ACHIE_SORCERER_2,                                       "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
@@ -4868,7 +4868,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_SORCERER,                                         0, /* da definire */                        5
+        CLASS_SORCERER,                                         LEV_VERY_EASY,                              5
     },
     {
         ACHIE_SORCERER_3,                                       "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
@@ -4882,7 +4882,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_SORCERER,                                         0, /* da definire */                        5
+        CLASS_SORCERER,                                         LEV_VERY_EASY,                              5
     },
     {
         ACHIE_PALADIN_1,                                        "benedizione invocata",                     "benedizioni invocate",
@@ -4896,7 +4896,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PALADIN,                                          0, /* da definire */                        5
+        CLASS_PALADIN,                                          LEV_EASY,                                   5
     },
     {
         ACHIE_PALADIN_2,                                        "grido di guerra lanciato",                 "grido di guerra lanciati",
@@ -4910,7 +4910,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PALADIN,                                          0, /* da definire */                        5
+        CLASS_PALADIN,                                          LEV_VERY_EASY,                              5
     },
     {
         ACHIE_PALADIN_3,                                        "consacrazione",                            "consacrazioni",
@@ -4924,7 +4924,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PALADIN,                                          0, /* da definire */                        5
+        CLASS_PALADIN,                                          LEV_EASY,                                   5
     },
     {
         ACHIE_RANGER_1,                                         "pelle ottenuta squoiando",                 "pelli ottenute squoiando",
@@ -4938,7 +4938,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_RANGER,                                           0, /* da definire */                        5
+        CLASS_RANGER,                                           LEV_VERY_EASY,                              5
     },
     {
         ACHIE_RANGER_2,                                         "evocazione di animali",                    "evocazioni di animali",
@@ -4952,7 +4952,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_RANGER,                                           0, /* da definire */                        5
+        CLASS_RANGER,                                           LEV_EASY,                                   5
     },
     {
         ACHIE_RANGER_3,                                         "razione ottenuta",                         "razioni ottenute",
@@ -4966,7 +4966,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_RANGER,                                           0, /* da definire */                        5
+        CLASS_RANGER,                                           LEV_BEGINNER,                               5
     },
     {
         ACHIE_PSI_1,                                            "porta dimensionale aperta",                "porte dimensionali aperte",
@@ -4980,7 +4980,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PSI,                                              0, /* da definire */                        5
+        CLASS_PSI,                                              LEV_BEGINNER,                               5
     },
     {
         ACHIE_PSI_2,                                            "cervello spappolato",                      "cervelli spappolati",
@@ -4994,7 +4994,7 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PSI,                                              0, /* da definire */                        5
+        CLASS_PSI,                                              LEV_BEGINNER,                               5
     },
     {
         ACHIE_PSI_3,                                            "scarica adrenalinica",                     "scariche adrenaliniche",
@@ -5008,7 +5008,234 @@ struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
         "", /* lvl8 */                                          0, //   lvl8_val
         "", /* lvl9 */                                          0, //   lvl9_val
         "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PSI,                                              0, /* da definire */                        5
+        CLASS_PSI,                                              LEV_VERY_EASY,                              5
+    }
+};
+
+struct BossAchieTable AchievementsList[MAX_BOSS] = {
+  /*  {
+        0,  // achie_type //                                    "",// achie_string1 //                      "", // achie_string2
+        "", // lvl1 //                                          0, //   lvl1_val
+        "", // lvl2 //                                          0, //   lvl2_val
+        "", // lvl3 //                                          0, //   lvl3_val
+        "", // lvl4 //                                          0, //   lvl4_val
+        "", // lvl5 //                                          0, //   lvl5_val
+        "", // lvl6 //                                          0, //   lvl6_val
+        "", // lvl7 //                                          0, //   lvl7_val
+        "", // lvl8 //                                          0, //   lvl8_val
+        "", // lvl9 //                                          0, //   lvl9_val
+        "", // lvl10 //                                         0, //   lvl10_val
+        0,  // classe //                                        0, //   grado_diff //                       0   //n_livelli
+    }, */
+    {
+        21017,  /* Evangeline   */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        32124,  /* Salomone     */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        19719,  /* Thion        */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        18419,  /* Warlock      */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        8916,   /* Stanislav    */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        37318,  /* Sauron       */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        4219,   /* Xagelon      */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        3424,   /* Slavalous    */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        18524,  /* Morphail     */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        1201,   /* Naris         */                             "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        19920,  /* Tsuchigumo   */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        321,    /* thanatos     */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        30113,  /* Strahd       */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        37107,  /* Shelob       */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+    },
+    {
+        16039,  /* Roc         */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+        "evangeline1",                                          1,
+        "evangeline2     ",                                     10,
+        "evangeline3            ",                              100,
+        "evangeline4      ",                                    500,
+        "evangeline5        ",                                  5000,
+        "", /* lvl6 */                                          0, //   lvl6_val
+        "", /* lvl7 */                                          0, //   lvl7_val
+        "", /* lvl8 */                                          0, //   lvl8_val
+        "", /* lvl9 */                                          0, //   lvl9_val
+        "", /* lvl10 */                                         0, //   lvl10_val
+        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
     }
 };
 } // namespace Alarmud
