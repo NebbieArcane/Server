@@ -2587,7 +2587,7 @@ void reset_zone(int zone) {
 				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < valore_max)
 				  ) {
 					if((ZCMD.arg3 >= 0 && (rp = real_roomp(ZCMD.arg3)) != NULL)) {
-						if((ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) && (ZCMD.arg2 == 0 ||  ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg2) {
+						if((ZCMD.arg4 == 0 || ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg4) && (ZCMD.arg2 == 0 ||  ObjRoomCount(ZCMD.arg1, rp) < ZCMD.arg2)) {
 							if((pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
                                 if(IS_SET(pObj->obj_flags.type_flag, ITEM_KEY) && ZCMD.arg2 == 1 && obj_index[ ZCMD.arg1 ].number > 1)
                                 {
