@@ -112,36 +112,48 @@
             "value": 34,
             "comment": "Achievements stuffs"
         },
-        "MAX_BOSS": {
+        "MAX_BOSS_ACHIE": {
             "value": 15,
             "comment": "Achievements stuffs"
         },
-        "MAX_QUEST": {
-            "value": 5,
-            "comment": "Achievements stuffs"
-        },
-        "MAX_OTHER": {
-            "value": 15,
-            "comment": "Achievements stuffs"
-        },
-        "CLASS_ACHIE": {
+        "MAX_QUEST_ACHIE": {
             "value": 1,
             "comment": "Achievements stuffs"
         },
+        "MAX_OTHER_ACHIE": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_RACE_ACHIE": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "CLASS_ACHIE": {
+            "value": 0,
+            "comment": "Achievements stuffs"
+        },
         "BOSSKILL_ACHIE": {
-            "value": 2,
+            "value": 1,
             "comment": "Achievements stuffs"
         },
         "QUEST_ACHIE": {
-            "value": 3,
+            "value": 2,
             "comment": "Achievements stuffs"
         },
         "OTHER_ACHIE": {
-            "value": 4,
+            "value": 3,
             "comment": "Achievements stuffs"
         },
         "RACESLAYER_ACHIE": {
+            "value": 4,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_ACHIE_CLASSES": {
             "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_ACHIE_TYPE": {
+            "value": 100,
             "comment": "Achievements stuffs"
         },
         "ACHIE_MAGE_1": {
@@ -274,6 +286,66 @@
         },
         "ACHIE_PSI_3": {
             "value": 33,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_EVANGELINE": {
+            "value": 21017,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SALOMONE": {
+            "value": 32124,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_THION": {
+            "value": 19719,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_WARLOCK": {
+            "value": 18419,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_STANISLAV": {
+            "value": 8916,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SAURON": {
+            "value": 37318,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_XAGELON": {
+            "value": 4219,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SLAVALOUS": {
+            "value": 3424,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MORPHAIL": {
+            "value": 18524,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_NARIS": {
+            "value": 1201,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_TSUCHIGUMO": {
+            "value": 19920,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_THANATOS": {
+            "value": 321,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_STRAHD": {
+            "value": 30113,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SHELOB": {
+            "value": 37107,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_ROC": {
+            "value": 16039,
             "comment": "Achievements stuffs"
         },
         "LEV_BEGINNER": {

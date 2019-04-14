@@ -141,13 +141,13 @@ void spell_resurrection(byte level, struct char_data* ch,
             {
                 if(IS_POLY(ch))
                 {
-                    ch->desc->original->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
                     if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                         SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                 }
                 else
                 {
-                    ch->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))
                         SET_BIT(ch->specials.act, PLR_ACHIE);
                 }
@@ -234,13 +234,13 @@ void spell_resurrection(byte level, struct char_data* ch,
                 {
                     if(IS_POLY(ch))
                     {
-                        ch->desc->original->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
                         if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                             SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                     }
                     else
                     {
-                        ch->specials.achie_class[ACHIE_CLERIC_2] += 1;
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
                         if(!IS_SET(ch->specials.act,PLR_ACHIE))
                             SET_BIT(ch->specials.act, PLR_ACHIE);
                     }

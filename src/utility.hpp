@@ -16,6 +16,8 @@ FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
 char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
 int maxAchievements(struct char_data* ch);
+int MaxValueAchievement(int achievement_class, int achievement_type, int achievement_level);
+int n_bosskill(int vnumber);
 bool hasAchievement(struct char_data* ch, int achievement_class);
 std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check);
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class);

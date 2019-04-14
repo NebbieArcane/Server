@@ -4533,709 +4533,767 @@ struct XpAchieTable RewardXp[ABS_MAX_LVL] = {
     {   1250000,    1375000,    1537500,    1662500,    1837500,    2037500,    2231250,    2475000,    2837500,    5000000 }
 };
 
-struct ClassAchieTable AchievementsList[MAX_CLASS_ACHIE] = {
+struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
     {
-        0,  /* achie_type */                                    "",/* achie_string1 */                      "", // achie_string2
-        "", /* lvl1 */                                          0, //   lvl1_val
-        "", /* lvl2 */                                          0, //   lvl2_val
-        "", /* lvl3 */                                          0, //   lvl3_val
-        "", /* lvl4 */                                          0, //   lvl4_val
-        "", /* lvl5 */                                          0, //   lvl5_val
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        0,  /* classe */                                        0, /*   grado_diff */                       0   //n_livelli
+        //  CLASS_ACHIE
+        {
+            0,  /* achie_number */                                  "",/* achie_string1 */                      "", // achie_string2
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* classe */                                        0, /*   grado_diff */                       0   //n_livelli
+        },
+        {
+            ACHIE_MAGE_1,                                           "portale fatto",                            "portali fatti",
+            "Non sono sicuro dove porti...",                        1,
+            "Un taxi signore?",                                     50,
+            "Scarpe? A cosa servono?",                              300,
+            "Un piccolo mondo!",                                    1000,
+            "Signore dei Portali",                                  10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_MAGIC_USER,                                       LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_MAGE_2,                                           "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
+            "Ops, non volevo",                                      1,
+            "Quasi quasi ci prendo gusto",                          50,
+            "Sei sicuro di volermi provocare?",                     300,
+            "Nemico? Quale nemico?",                                1000,
+            "Disintegratore",                                       10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_MAGIC_USER,                                       LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_MAGE_3,                                           "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
+            "Cosa mi e' successo?!?",                               1,
+            "Guardami adesso!",                                     50,
+            "Ti giuro che non ci sono!",                            300,
+            "Sono dietro di te",                                    1000,
+            "Mr. Nessuno",                                          10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_MAGIC_USER,                                       LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_CLERIC_1,                                         "incantesimo di guarigione lanciato",       "incantesimi di guarigione lanciati",
+            "Mi sembra di ricordare si faccia cosi'",               1,
+            "Ne ho visti tanti messi peggio",                       50,
+            "Vai sereno tank!",                                     300,
+            "Chi trova un chierico trova un tesoro",                1000,
+            "Lasciatemi passare, sono IL medico!",                  10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_CLERIC,                                           LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_CLERIC_2,                                         "resurrezione fatta",                       "resurrezioni fatte",
+            "Ci posso provare",                                     1,
+            "Ci penso io!",                                         50,
+            "Morte non ti temo",                                    300,
+            "Immortalis",                                           1000,
+            "Nemesi di Thanatos",                                   10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_CLERIC,                                           LEV_HARD,                                   5
+        },
+        {
+            ACHIE_CLERIC_3,                                         "incantesimo di santuario lanciato",        "incantesimi di santuario lanciati",
+            "Cosi' dovrebbe andare meglio",                         1,
+            "Se mi lasci non ti accendo",                           50,
+            "Inserisco la spina",                                   300,
+            "Ti copro io, tranquillo!",                             1000,
+            "Portatore di Luce",                                    10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_CLERIC,                                           LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_WARRIOR_1,                                        "avversario buttato a terra",               "avversari buttati a terra",
+            "Scusa, sono inciampato",                               1,
+            "Attaccabrighe",                                        50,
+            "Bullo",                                                300,
+            "Bulldozer",                                            1000,
+            "Demolitore",                                           10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_WARRIOR,                                          LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_WARRIOR_2,                                        "atterramento fallito",                     "atterramenti falliti",
+            "Buccia di banana",                                     1,
+            "Zoppo",                                                50,
+            "Ubriacone",                                            300,
+            "Maldestro",                                            1000,
+            "Il guerriero non e' il mio mestiere",                  10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_WARRIOR,                                          LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_WARRIOR_3,                                        "compagno salvato",                         "compagni salvati",
+            "Dici a me?",                                           1,
+            "Ti guardo le spalle",                                  50,
+            "Impiccione",                                           300,
+            "Salva donzelle",                                       1000,
+            "Risolvi problemi",                                     10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_WARRIOR,                                          LEV_EASY,                                   5
+        },
+        {
+            ACHIE_THIEF_1,                                          "avversario pugnalato alle spalle",         "avversari pugnalati alle spalle",
+            "Non sono stato io!",                                   1,
+            "Ci prendo gusto",                                      50,
+            "Toh, un puntaspilli",                                  300,
+            "Non darmi mai le spalle",                              1000,
+            "Punitore",                                             10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_THIEF,                                            LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_THIEF_2,                                          "avversario ucciso con un colpo",           "avversari uccisi con un colpo",
+            "Era gia' morto!",                                      1,
+            "Ora lo zittisco",                                      50,
+            "Ne uccide piu' lo stab della spada",                   300,
+            "Fratello morte",                                       1000,
+            "Assassino",                                            10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_THIEF,                                            LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_THIEF_3,                                          "avversario derubato",                      "avversari derubati",
+            "Ti e' caduto qualcosa?",                               1,
+            "Povero e' chi il povero fa",                           50,
+            "Robin Hood!",                                          300,
+            "Me lo hai dato tu, giuro!",                            1000,
+            "Lupin III",                                            10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_THIEF,                                            LEV_NORMAL,                                 5
+        },
+        {
+            ACHIE_DRUID_1,                                          "massa di insetti evocata",                 "masse di insetti evocate",
+            "Mi sto per sentire male",                              1,
+            "Ho mangiato pesante oggi, state attenti!",             50,
+            "Forse non c'e' bisogno di entrare...",                 300,
+            "Sta a vedere!",                                        1000,
+            "Morte Strisciante",                                    10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_DRUID,                                            LEV_NORMAL,                                 5
+        },
+        {
+            ACHIE_DRUID_2,                                          "metamorfosi riuscita",                     "metamorfosi riuscite",
+            "Cosa... mi... sta... succedendo...",                   1,
+            "Mi sto imbufalendo",                                   50,
+            "Ci vorrebbe la forza di un orso!",                     300,
+            "Sei sicuro fossi io?",                                 1000,
+            "Doppleganger",                                         10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_DRUID,                                            LEV_EASY,                                   5
+        },
+        {
+            ACHIE_DRUID_3,                                          "reincarnazione fatta",                     "reincarnazioni fatte",
+            "Cosa ho combinato? Scusa, non volevo!",                1,
+            "Non vorrei essere nei tuoi panni!",                    50,
+            "Conosci la fiaba del principe ranocchio?",             300,
+            "Vorresti essere qualcun'altro, vero?",                 1000,
+            "Maestro Manipolatore",                                 10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_DRUID,                                            LEV_HARD,                                   5
+        },
+        {
+            ACHIE_MONK_1,                                           "avversario disarmato",                     "avversari disarmati",
+            "Non volevo, scusami :-)",                              1,
+            "Ti e' caduta l'arma?",                                 50,
+            "Vuoi vedere che tela faccio volare?",                  300,
+            "Arma? Quale arma?",                                    1000,
+            "Io e te, senza armi, ora, qui!",                       10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_MONK,                                             LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_MONK_2,                                           "palmo vibrante",                           "palmo vibrante",
+            "Volevo solo stringerti la mano!",                      1,
+            "Tirami il dito!",                                      50,
+            "One Inch Punch",                                       300,
+            "Ti spiezzo con un dito",                               1000,
+            "Nirvana",                                              10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_MONK,                                             LEV_NORMAL,                                 5
+        },
+        {
+            ACHIE_MONK_3,                                           "nemico accecato",                          "nemici accecati",
+            "Ops, non l'ho fatto apposta...",                       1,
+            "Ops, l'ho fatto di nuovo...",                          50,
+            "Aspetta, hai qualcosa nell'occhio!",                   300,
+            "Guarda qui e sorridi",                                 1000,
+            "Tu, non puoi, vedermi!",                               10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_MONK,                                             LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_BARBARIAN_1,                                      "volta in berserk",                         "volte in berserk",
+            "Mi sono un po' innervosito",                           1,
+            "Ora mi arrabbio sul serio!",                           50,
+            "Statemi lontano adesso",                               300,
+            "Prova a ripeterlo, se hai il coraggio!",               1000,
+            "Furia Rossa",                                          10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_BARBARIAN,                                        LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_BARBARIAN_2,                                      "pugnalata alle spalle evitata",            "pugnalate alle spalle evitate",
+            "Che cosa e' stato?",                                   1,
+            "Andra' meglio la prossima volta",                      50,
+            "Ne sei proprio sicuro?",                               300,
+            "Cosa pensavi di fare?",                                1000,
+            "Occhi di Beholder",                                    10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_BARBARIAN,                                        LEV_EASY,                                   5
+        },
+        {
+            ACHIE_BARBARIAN_3,                                      "medicazione effettuata",                   "medicazioni effettuate",
+            "Aspetta che ci soffio sopra!",                         1,
+            "Ora si che va meglio!",                                50,
+            "Dammi un pezzo della tua maglia!",                     300,
+            "E' solo un graffio...",                                1000,
+            "Maestro Sciamano",                                     10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_BARBARIAN,                                        LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_SORCERER_1,                                       "portale fatto",                            "portali fatti",
+            "Non sono sicuro dove porti...",                        1,
+            "Un taxi signore?",                                     50,
+            "Scarpe? A cosa servono?",                              300,
+            "Un piccolo mondo!",                                    1000,
+            "Signore dei Portali",                                  10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_SORCERER,                                         LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_SORCERER_2,                                       "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
+            "Ops, non volevo",                                      1,
+            "Quasi quasi ci prendo gusto",                          50,
+            "Sei sicuro di volermi provocare?",                     300,
+            "Nemico? Quale nemico?",                                1000,
+            "Disintegratore",                                       10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_SORCERER,                                         LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_SORCERER_3,                                       "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
+            "Cosa mi e' successo?!?",                               1,
+            "Guardami adesso!",                                     50,
+            "Ti giuro che non ci sono!",                            300,
+            "Sono dietro di te",                                    1000,
+            "Mr. Nessuno",                                          10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_SORCERER,                                         LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_PALADIN_1,                                        "benedizione invocata",                     "benedizioni invocate",
+            "Che cos'e' questa luce?",                              1,
+            "Hai visto la luce!",                                   50,
+            "Gli Dei sono dalla mia parte",                         300,
+            "Sono il prescelto!",                                   1000,
+            "L'Eletto",                                             10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_PALADIN,                                          LEV_EASY,                                   5
+        },
+        {
+            ACHIE_PALADIN_2,                                        "grido di guerra lanciato",                 "grido di guerra lanciati",
+            "Volevo solo chiamarti...",                             1,
+            "Posso sussurrarti una cosa all'orecchio?",             50,
+            "Huj, Huj, Hajra'",                                     300,
+            "Forse ho esagerato con la birra",                      1000,
+            "Furia di Guerra",                                      10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_PALADIN,                                          LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_PALADIN_3,                                        "consacrazione",                            "consacrazioni",
+            "Aiuto, le mie mani brillano!",                         1,
+            "Ho le mani d'oro io",                                  50,
+            "Serve un massaggio?",                                  300,
+            "Non ti muovere e fatti toccare!",                      1000,
+            "Io porto la Luce nel Mondo",                           10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_PALADIN,                                          LEV_EASY,                                   5
+        },
+        {
+            ACHIE_RANGER_1,                                         "pelle ottenuta squoiando",                 "pelli ottenute squoiando",
+            "Povera bestia, mi viene da piangere",                  1,
+            "Mi sa che posso farci qualcosa di utile",              50,
+            "Dammi una lama e ti concio per le feste!",             300,
+            "Faccio solo capolavori",                               1000,
+            "Mastro Conciatore",                                    10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_RANGER,                                           LEV_VERY_EASY,                              5
+        },
+        {
+            ACHIE_RANGER_2,                                         "evocazione di animali",                    "evocazioni di animali",
+            "Cosa vuole da me questa creatura?",                    1,
+            "Ho un amico che puo' aiutarci",                        50,
+            "Il ranger che sussurrava ai cavalli",                  300,
+            "Lasciate che gli animali vengano da me",               1000,
+            "Animal Man",                                           10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_RANGER,                                           LEV_EASY,                                   5
+        },
+        {
+            ACHIE_RANGER_3,                                         "razione ottenuta",                         "razioni ottenute",
+            "Povera creatura, mi viene da piangere",                1,
+            "Pero', sai che non vengono male cotte?",               50,
+            "Facciamo una o due bistecche, siora?",                 300,
+            "Ora ti faccio vedere come ricavarne delle bistecche",  1000,
+            "Mastro Macellaio",                                     10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_RANGER,                                           LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_PSI_1,                                            "porta dimensionale aperta",                "porte dimensionali aperte",
+            "Ricordavo fosse piu' lontano",                         1,
+            "Taxi? No grazie!",                                     50,
+            "Basta pensarlo e sei li'!",                            300,
+            "A cosa servono i maghi se hai uno psi?",               1000,
+            "Il Mondo nelle Mie Mani",                              10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_PSI,                                              LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_PSI_2,                                            "cervello spappolato",                      "cervelli spappolati",
+            "Dici che gli ho fatto male?",                          1,
+            "Stasera cervello alla coque!",                         50,
+            "E' un cervello od un uovo?",                           300,
+            "Master Blaster",                                       1000,
+            "Mind Melter",                                          10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_PSI,                                              LEV_BEGINNER,                               5
+        },
+        {
+            ACHIE_PSI_3,                                            "scarica adrenalinica",                     "scariche adrenaliniche",
+            "Provala anche solo una volta...",                      1,
+            "Forse ho qualcosa che puo' piacerti",                  50,
+            "Meglio di una benedizione, vero?",                     300,
+            "Ho solo roba buona, io!",                              1000,
+            "Signore dei Cartelli Nebbiosi",                        10000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            CLASS_PSI,                                              LEV_VERY_EASY,                              5
+        }
     },
-    {
-        ACHIE_MAGE_1,                                           "portale fatto",                            "portali fatti",
-        "Non sono sicuro dove porti...",                        1,
-        "Un taxi signore?",                                     50,
-        "Scarpe? A cosa servono?",                              300,
-        "Un piccolo mondo!",                                    1000,
-        "Signore dei Portali",                                  10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_MAGE_2,                                           "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
-        "Ops, non volevo",                                      1,
-        "Quasi quasi ci prendo gusto",                          50,
-        "Sei sicuro di volermi provocare?",                     300,
-        "Nemico? Quale nemico?",                                1000,
-        "Disintegratore",                                       10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_MAGE_3,                                           "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
-        "Cosa mi e' successo?!?",                               1,
-        "Guardami adesso!",                                     50,
-        "Ti giuro che non ci sono!",                            300,
-        "Sono dietro di te",                                    1000,
-        "Mr. Nessuno",                                          10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_CLERIC_1,                                         "incantesimo di guarigione lanciato",       "incantesimi di guarigione lanciati",
-        "Mi sembra di ricordare si faccia cosi'",               1,
-        "Ne ho visti tanti messi peggio",                       50,
-        "Vai sereno tank!",                                     300,
-        "Chi trova un chierico trova un tesoro",                1000,
-        "Lasciatemi passare, sono IL medico!",                  10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_CLERIC,                                           LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_CLERIC_2,                                         "resurrezione fatta",                       "resurrezioni fatte",
-        "Ci posso provare",                                     1,
-        "Ci penso io!",                                         50,
-        "Morte non ti temo",                                    300,
-        "Immortalis",                                           1000,
-        "Nemesi di Thanatos",                                   10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_CLERIC,                                           LEV_HARD,                                   5
-    },
-    {
-        ACHIE_CLERIC_3,                                         "incantesimo di santuario lanciato",        "incantesimi di santuario lanciati",
-        "Cosi' dovrebbe andare meglio",                         1,
-        "Se mi lasci non ti accendo",                           50,
-        "Inserisco la spina",                                   300,
-        "Ti copro io, tranquillo!",                             1000,
-        "Portatore di Luce",                                    10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_CLERIC,                                           LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_WARRIOR_1,                                        "avversario buttato a terra",               "avversari buttati a terra",
-        "Scusa, sono inciampato",                               1,
-        "Attaccabrighe",                                        50,
-        "Bullo",                                                300,
-        "Bulldozer",                                            1000,
-        "Demolitore",                                           10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_WARRIOR,                                          LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_WARRIOR_2,                                        "atterramento fallito",                     "atterramenti falliti",
-        "Buccia di banana",                                     1,
-        "Zoppo",                                                50,
-        "Ubriacone",                                            300,
-        "Maldestro",                                            1000,
-        "Il guerriero non è il mio mestiere",                   10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_WARRIOR,                                          LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_WARRIOR_3,                                        "compagno salvato",                         "compagni salvati",
-        "Dici a me?",                                           1,
-        "Ti guardo le spalle",                                  50,
-        "Impiccione",                                           300,
-        "Salva donzelle",                                       1000,
-        "Risolvi problemi",                                     10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_WARRIOR,                                          LEV_EASY,                                   5
-    },
-    {
-        ACHIE_THIEF_1,                                          "avversario pugnalato alle spalle",         "avversari pugnalati alle spalle",
-        "Non sono stato io!",                                   1,
-        "Ci prendo gusto",                                      50,
-        "Toh, un puntaspilli",                                  300,
-        "Non darmi mai le spalle",                              1000,
-        "Punitore",                                             10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_THIEF,                                            LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_THIEF_2,                                          "avversario ucciso con un colpo",           "avversari uccisi con un colpo",
-        "Era gia' morto!",                                      1,
-        "Ora lo zittisco",                                      50,
-        "Ne uccide piu' lo stab della spada",                   300,
-        "Fratello morte",                                       1000,
-        "Assassino",                                            10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_THIEF,                                            LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_THIEF_3,                                          "avversario derubato",                      "avversari derubati",
-        "Ti e' caduto qualcosa?",                               1,
-        "Povero e' chi il povero fa",                           50,
-        "Robin Hood!",                                          300,
-        "Me lo hai dato tu, giuro!",                            1000,
-        "Lupin III",                                            10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_THIEF,                                            LEV_NORMAL,                                 5
-    },
-    {
-        ACHIE_DRUID_1,                                          "massa di insetti evocata",                 "masse di insetti evocate",
-        "Mi sto per sentire male",                              1,
-        "Ho mangiato pesante oggi, state attenti!",             50,
-        "Forse non c'e' bisogno di entrare...",                 300,
-        "Sta a vedere!",                                        1000,
-        "Morte Strisciante",                                    10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_DRUID,                                            LEV_NORMAL,                                 5
-    },
-    {
-        ACHIE_DRUID_2,                                          "metamorfosi riuscita",                     "metamorfosi riuscite",
-        "Cosa... mi... sta... succedendo...",                   1,
-        "Mi sto imbufalendo",                                   50,
-        "Ci vorrebbe la forza di un orso!",                     300,
-        "Sei sicuro fossi io?",                                 1000,
-        "Doppleganger",                                         10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_DRUID,                                            LEV_EASY,                                   5
-    },
-    {
-        ACHIE_DRUID_3,                                          "reincarnazione fatta",                     "reincarnazioni fatte",
-        "Cosa ho combinato? Scusa, non volevo!",                1,
-        "Non vorrei essere nei tuoi panni!",                    50,
-        "Conosci la fiaba del principe ranocchio?",             300,
-        "Vorresti essere qualcun'altro, vero?",                 1000,
-        "Maestro Manipolatore",                                 10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_DRUID,                                            LEV_HARD,                                   5
-    },
-    {
-        ACHIE_MONK_1,                                           "avversario disarmato",                     "avversari disarmati",
-        "Non volevo, scusami :-)",                              1,
-        "Ti e' caduta l'arma?",                                 50,
-        "Vuoi vedere che tela faccio volare?",                  300,
-        "Arma? Quale arma?",                                    1000,
-        "Io e te, senza armi, ora, qui!",                       10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MONK,                                             LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_MONK_2,                                           "palmo vibrante",                           "palmo vibrante",
-        "Volevo solo stringerti la mano!",                      1,
-        "Tirami il dito!",                                      50,
-        "One Inch Punch",                                       300,
-        "Ti spiezzo con un dito",                               1000,
-        "Nirvana",                                              10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MONK,                                             LEV_NORMAL,                                 5
-    },
-    {
-        ACHIE_MONK_3,                                           "nemico accecato",                          "nemici accecati",
-        "Ops, non l'ho fatto apposta...",                       1,
-        "Ops, l'ho fatto di nuovo...",                          50,
-        "Aspetta, hai qualcosa nell'occhio!",                   300,
-        "Guarda qui e sorridi",                                 1000,
-        "Tu, non puoi, vedermi!",                               10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MONK,                                             LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_BARBARIAN_1,                                      "volta in berserk",                         "volte in berserk",
-        "Mi sono un po' innervosito",                           1,
-        "Ora mi arrabbio sul serio!",                           50,
-        "Statemi lontano adesso",                               300,
-        "Prova a ripeterlo, se hai il coraggio!",               1000,
-        "Furia Rossa",                                          10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_BARBARIAN,                                        LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_BARBARIAN_2,                                      "pugnalata alle spalle evitata",            "pugnalate alle spalle evitate",
-        "Che cosa e' stato?",                                   1,
-        "Andra' meglio la prossima volta",                      50,
-        "Ne sei proprio sicuro?",                               300,
-        "Cosa pensavi di fare?",                                1000,
-        "Occhi di Beholder",                                    10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_BARBARIAN,                                        LEV_EASY,                                   5
-    },
-    {
-        ACHIE_BARBARIAN_3,                                      "medicazione effettuata",                   "medicazioni effettuate",
-        "Aspetta che ci soffio sopra!",                         1,
-        "Ora si che va meglio!",                                50,
-        "Dammi un pezzo della tua maglia!",                     300,
-        "E' solo un graffio...",                                1000,
-        "Maestro Sciamano",                                     10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_BARBARIAN,                                        LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_SORCERER_1,                                       "portale fatto",                            "portali fatti",
-        "Non sono sicuro dove porti...",                        1,
-        "Un taxi signore?",                                     50,
-        "Scarpe? A cosa servono?",                              300,
-        "Un piccolo mondo!",                                    1000,
-        "Signore dei Portali",                                  10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_SORCERER,                                         LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_SORCERER_2,                                       "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
-        "Ops, non volevo",                                      1,
-        "Quasi quasi ci prendo gusto",                          50,
-        "Sei sicuro di volermi provocare?",                     300,
-        "Nemico? Quale nemico?",                                1000,
-        "Disintegratore",                                       10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_SORCERER,                                         LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_SORCERER_3,                                       "incantesimo di invisibilita' lanciato",    "incantesimi di invisibilita' lanciati",
-        "Cosa mi e' successo?!?",                               1,
-        "Guardami adesso!",                                     50,
-        "Ti giuro che non ci sono!",                            300,
-        "Sono dietro di te",                                    1000,
-        "Mr. Nessuno",                                          10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_SORCERER,                                         LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_PALADIN_1,                                        "benedizione invocata",                     "benedizioni invocate",
-        "Che cos'e' questa luce?",                              1,
-        "Hai visto la luce!",                                   50,
-        "Gli Dei sono dalla mia parte",                         300,
-        "Sono il prescelto!",                                   1000,
-        "L'Eletto",                                             10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PALADIN,                                          LEV_EASY,                                   5
-    },
-    {
-        ACHIE_PALADIN_2,                                        "grido di guerra lanciato",                 "grido di guerra lanciati",
-        "Volevo solo chiamarti...",                             1,
-        "Posso sussurrarti una cosa all'orecchio?",             50,
-        "Huj, Huj, Hajra'",                                     300,
-        "Forse ho esagerato con la birra",                      1000,
-        "Furia di Guerra",                                      10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PALADIN,                                          LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_PALADIN_3,                                        "consacrazione",                            "consacrazioni",
-        "Aiuto, le mie mani brillano!",                         1,
-        "Ho le mani d'oro io",                                  50,
-        "Serve un massaggio?",                                  300,
-        "Non ti muovere e fatti toccare!",                      1000,
-        "Io porto la Luce nel Mondo",                           10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PALADIN,                                          LEV_EASY,                                   5
-    },
-    {
-        ACHIE_RANGER_1,                                         "pelle ottenuta squoiando",                 "pelli ottenute squoiando",
-        "Povera bestia, mi viene da piangere",                  1,
-        "Mi sa che posso farci qualcosa di utile",              50,
-        "Dammi una lama e ti concio per le feste!",             300,
-        "Faccio solo capolavori",                               1000,
-        "Mastro Conciatore",                                    10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_RANGER,                                           LEV_VERY_EASY,                              5
-    },
-    {
-        ACHIE_RANGER_2,                                         "evocazione di animali",                    "evocazioni di animali",
-        "Cosa vuole da me questa creatura?",                    1,
-        "Ho un amico che puo' aiutarci",                        50,
-        "Il ranger che sussurrava ai cavalli",                  300,
-        "Lasciate che gli animali vengano da me",               1000,
-        "Animal Man",                                           10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_RANGER,                                           LEV_EASY,                                   5
-    },
-    {
-        ACHIE_RANGER_3,                                         "razione ottenuta",                         "razioni ottenute",
-        "Povera creatura, mi viene da piangere",                1,
-        "Pero', sai che non vengono male cotte?",               50,
-        "Facciamo una o due bistecche, siora?",                 300,
-        "Ora ti faccio vedere come ricavarne delle bistecche",  1000,
-        "Mastro Macellaio",                                     10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_RANGER,                                           LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_PSI_1,                                            "porta dimensionale aperta",                "porte dimensionali aperte",
-        "Ricordavo fosse piu' lontano",                         1,
-        "Taxi? No grazie!",                                     50,
-        "Basta pensarlo e sei li'!",                            300,
-        "A cosa servono i maghi se hai uno psi?",               1000,
-        "Il Mondo nelle Mie Mani",                              10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PSI,                                              LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_PSI_2,                                            "cervello spappolato",                      "cervelli spappolati",
-        "Dici che gli ho fatto male?",                          1,
-        "Stasera cervello alla coque!",                         50,
-        "E' un cervello od un uovo?",                           300,
-        "Master Blaster",                                       1000,
-        "Mind Melter",                                          10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PSI,                                              LEV_BEGINNER,                               5
-    },
-    {
-        ACHIE_PSI_3,                                            "scarica adrenalinica",                     "scariche adrenaliniche",
-        "Provala anche solo una volta...",                      1,
-        "Forse ho qualcosa che puo' piacerti",                  50,
-        "Meglio di una benedizione, vero?",                     300,
-        "Ho solo roba buona, io!",                              1000,
-        "Signore dei Cartelli Nebbiosi",                        10000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_PSI,                                              LEV_VERY_EASY,                              5
-    }
-};
 
-struct BossAchieTable AchievementsList[MAX_BOSS] = {
-  /*  {
-        0,  // achie_type //                                    "",// achie_string1 //                      "", // achie_string2
-        "", // lvl1 //                                          0, //   lvl1_val
-        "", // lvl2 //                                          0, //   lvl2_val
-        "", // lvl3 //                                          0, //   lvl3_val
-        "", // lvl4 //                                          0, //   lvl4_val
-        "", // lvl5 //                                          0, //   lvl5_val
-        "", // lvl6 //                                          0, //   lvl6_val
-        "", // lvl7 //                                          0, //   lvl7_val
-        "", // lvl8 //                                          0, //   lvl8_val
-        "", // lvl9 //                                          0, //   lvl9_val
-        "", // lvl10 //                                         0, //   lvl10_val
-        0,  // classe //                                        0, //   grado_diff //                       0   //n_livelli
-    }, */
+    //  BOSSKILL_ACHIE
     {
-        21017,  /* Evangeline   */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+        {
+            ACHIE_EVANGELINE,                                       "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_SALOMONE,                                         "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "salomone1",                                            1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_THION,                                            "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_WARLOCK,                                          "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_STANISLAV,                                        "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_SAURON,                                           "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_XAGELON,                                          "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_SLAVALOUS,                                        "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_MORPHAIL,                                         "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_NARIS,                                            "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_TSUCHIGUMO,                                       "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_THANATOS,                                         "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_STRAHD,                                           "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_SHELOB,                                           "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        },
+        {
+            ACHIE_ROC,                                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
+            "evangeline1",                                          1,
+            "evangeline2     ",                                     10,
+            "evangeline3            ",                              100,
+            "evangeline4      ",                                    500,
+            "evangeline5        ",                                  5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* tutte le classi */                               0,                                          5
+        }
     },
+
+    //  QUEST_ACHIE
     {
-        32124,  /* Salomone     */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+        {
+            0,  /* achie_number */                                  "Xarah completata",                         "Xarah completate",
+            "Conquistatore di Torri",                               1,
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+        }
     },
+
+    //  OTHER_ACHIE
     {
-        19719,  /* Thion        */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+        {
+            0,  /* achie_number */                                  "Pkill effettuato",                         "Pkill effettuati",
+            "Ben fatto!",                                           1,
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+        }
     },
+
+    //  RACESLAYER_ACHIE
     {
-        18419,  /* Warlock      */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        8916,   /* Stanislav    */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        37318,  /* Sauron       */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        4219,   /* Xagelon      */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        3424,   /* Slavalous    */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        18524,  /* Morphail     */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        1201,   /* Naris         */                             "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        19920,  /* Tsuchigumo   */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        321,    /* thanatos     */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        30113,  /* Strahd       */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        37107,  /* Shelob       */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
-    },
-    {
-        16039,  /* Roc         */                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-        "evangeline1",                                          1,
-        "evangeline2     ",                                     10,
-        "evangeline3            ",                              100,
-        "evangeline4      ",                                    500,
-        "evangeline5        ",                                  5000,
-        "", /* lvl6 */                                          0, //   lvl6_val
-        "", /* lvl7 */                                          0, //   lvl7_val
-        "", /* lvl8 */                                          0, //   lvl8_val
-        "", /* lvl9 */                                          0, //   lvl9_val
-        "", /* lvl10 */                                         0, //   lvl10_val
-        CLASS_MAGIC_USER,                                       LEV_HARD,                                   5
+        {
+            RACE_HALFBREED,                                         "mezzosangue ucciso",                       "mezzosangue uccisi",
+            "mezzosangue1",                                         1,
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+        },
+        {
+            RACE_HUMAN,                                             "umano ucciso",                             "umani uccisi",
+            "umano1",                                               1,
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+        }
     }
 };
 } // namespace Alarmud

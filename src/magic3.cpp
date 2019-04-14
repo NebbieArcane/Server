@@ -1137,13 +1137,13 @@ void spell_creeping_death(byte level, struct char_data* ch,
     {
         if(IS_POLY(ch))
         {
-            ch->desc->original->specials.achie_class[ACHIE_DRUID_1] += 1;
+            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_DRUID_1] += 1;
             if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                 SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
         }
         else
         {
-            ch->specials.achie_class[ACHIE_DRUID_1] += 1;
+            ch->specials.achievements[CLASS_ACHIE][ACHIE_DRUID_1] += 1;
             if(!IS_SET(ch->specials.act,PLR_ACHIE))
                 SET_BIT(ch->specials.act, PLR_ACHIE);
         }
@@ -1317,13 +1317,13 @@ void spell_animal_summon(byte level, struct char_data* ch,
     {
         if(IS_POLY(ch))
         {
-            ch->desc->original->specials.achie_class[ACHIE_RANGER_2] += 1;
+            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_RANGER_2] += 1;
             if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                 SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
         }
         else
         {
-            ch->specials.achie_class[ACHIE_RANGER_2] += 1;
+            ch->specials.achievements[CLASS_ACHIE][ACHIE_RANGER_2] += 1;
             if(!IS_SET(ch->specials.act,PLR_ACHIE))
                 SET_BIT(ch->specials.act, PLR_ACHIE);
         }
@@ -1534,13 +1534,13 @@ void spell_reincarnate(byte level, struct char_data* ch,
             {
                 if(IS_POLY(ch))
                 {
-                    ch->desc->original->specials.achie_class[ACHIE_DRUID_3] += 1;
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_DRUID_3] += 1;
                     if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                         SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                 }
                 else
                 {
-                    ch->specials.achie_class[ACHIE_DRUID_3] += 1;
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_DRUID_3] += 1;
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))
                         SET_BIT(ch->specials.act, PLR_ACHIE);
                 }
@@ -2740,18 +2740,18 @@ void spell_portal(byte level, struct char_data* ch,
         if(IS_POLY(ch))
         {
             if(HasClass(ch, CLASS_MAGIC_USER))
-                ch->desc->original->specials.achie_class[ACHIE_MAGE_1] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_1] += 1;
             else if(HasClass(ch, CLASS_SORCERER))
-                ch->desc->original->specials.achie_class[ACHIE_SORCERER_1] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_1] += 1;
             if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                 SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
         }
         else
         {
             if(HasClass(ch, CLASS_MAGIC_USER))
-                ch->specials.achie_class[ACHIE_MAGE_1] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_1] += 1;
             else if(HasClass(ch, CLASS_SORCERER))
-                ch->specials.achie_class[ACHIE_SORCERER_1] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_1] += 1;
             if(!IS_SET(ch->specials.act,PLR_ACHIE))
                 SET_BIT(ch->specials.act, PLR_ACHIE);
         }

@@ -1325,13 +1325,13 @@ void spell_heal(byte level, struct char_data* ch,
         {
             if(IS_POLY(ch))
             {
-                ch->desc->original->specials.achie_class[ACHIE_CLERIC_1] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_1] += 1;
                 if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                     SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
             }
             else
             {
-                ch->specials.achie_class[ACHIE_CLERIC_1] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_1] += 1;
                 if(!IS_SET(ch->specials.act,PLR_ACHIE))
                     SET_BIT(ch->specials.act, PLR_ACHIE);
             }
@@ -1402,18 +1402,18 @@ void spell_invisibility(byte level, struct char_data* ch,
                 if(IS_POLY(ch))
                 {
                     if(HasClass(ch, CLASS_MAGIC_USER))
-                        ch->desc->original->specials.achie_class[ACHIE_MAGE_3] += 1;
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_3] += 1;
                     else if(HasClass(ch, CLASS_SORCERER))
-                        ch->desc->original->specials.achie_class[ACHIE_SORCERER_3] += 1;
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_3] += 1;
                     if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                         SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                 }
                 else
                 {
                     if(HasClass(ch, CLASS_MAGIC_USER))
-                        ch->specials.achie_class[ACHIE_MAGE_3] += 1;
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_3] += 1;
                     else if(HasClass(ch, CLASS_SORCERER))
-                        ch->specials.achie_class[ACHIE_SORCERER_3] += 1;
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_3] += 1;
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))
                         SET_BIT(ch->specials.act, PLR_ACHIE);
                 }
@@ -1825,13 +1825,13 @@ void spell_sanctuary(byte level, struct char_data* ch,
         {
             if(IS_POLY(ch))
             {
-                ch->desc->original->specials.achie_class[ACHIE_CLERIC_3] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_3] += 1;
                 if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                     SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
             }
             else
             {
-                ch->specials.achie_class[ACHIE_CLERIC_3] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_3] += 1;
                 if(!IS_SET(ch->specials.act,PLR_ACHIE))
                     SET_BIT(ch->specials.act, PLR_ACHIE);
             }
@@ -3312,18 +3312,18 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
         if(IS_POLY(ch))
         {
             if(HasClass(ch, CLASS_MAGIC_USER))
-                ch->desc->original->specials.achie_class[ACHIE_MAGE_2] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_2] += 1;
             else if(HasClass(ch, CLASS_SORCERER))
-                ch->desc->original->specials.achie_class[ACHIE_SORCERER_2] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_2] += 1;
             if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                 SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
         }
         else
         {
             if(HasClass(ch, CLASS_MAGIC_USER))
-                ch->specials.achie_class[ACHIE_MAGE_2] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_2] += 1;
             else if(HasClass(ch, CLASS_SORCERER))
-                ch->specials.achie_class[ACHIE_SORCERER_2] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_2] += 1;
             if(!IS_SET(ch->specials.act,PLR_ACHIE))
                 SET_BIT(ch->specials.act, PLR_ACHIE);
         }

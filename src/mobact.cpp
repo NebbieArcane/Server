@@ -1290,13 +1290,13 @@ void MobHit(struct char_data* ch, struct char_data* v, int type) {
                             {
                                 if(IS_POLY(v))
                                 {
-                                    v->desc->original->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                                    v->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
                                     if(!IS_SET(v->desc->original->specials.act,PLR_ACHIE))
                                         SET_BIT(v->desc->original->specials.act, PLR_ACHIE);
                                 }
                                 else
                                 {
-                                    v->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                                    v->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
                                     if(!IS_SET(v->specials.act,PLR_ACHIE))
                                         SET_BIT(v->specials.act, PLR_ACHIE);
                                 }

@@ -851,13 +851,13 @@ ACTION_FUNC(do_steal) {
                     {
                         if(IS_POLY(ch))
                         {
-                            ch->desc->original->specials.achie_class[ACHIE_THIEF_3] += 1;
+                            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
                             if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                                 SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                         }
                         else
                         {
-                            ch->specials.achie_class[ACHIE_THIEF_3] += 1;
+                            ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
                             if(!IS_SET(ch->specials.act,PLR_ACHIE))
                                 SET_BIT(ch->specials.act, PLR_ACHIE);
                         }
@@ -921,13 +921,13 @@ ACTION_FUNC(do_steal) {
                         {
                             if(IS_POLY(ch))
                             {
-                                ch->desc->original->specials.achie_class[ACHIE_THIEF_3] += 1;
+                                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
                                 if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                                     SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                             }
                             else
                             {
-                                ch->specials.achie_class[ACHIE_THIEF_3] += 1;
+                                ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
                                 if(!IS_SET(ch->specials.act,PLR_ACHIE))
                                     SET_BIT(ch->specials.act, PLR_ACHIE);
                             }
@@ -978,13 +978,13 @@ ACTION_FUNC(do_steal) {
                 {
                     if(IS_POLY(ch))
                     {
-                        ch->desc->original->specials.achie_class[ACHIE_THIEF_3] += 1;
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
                         if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                             SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                     }
                     else
                     {
-                        ch->specials.achie_class[ACHIE_THIEF_3] += 1;
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
                         if(!IS_SET(ch->specials.act,PLR_ACHIE))
                             SET_BIT(ch->specials.act, PLR_ACHIE);
                     }

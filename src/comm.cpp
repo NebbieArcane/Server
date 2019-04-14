@@ -1463,6 +1463,20 @@ void send_to_all(const char* messg) {
 
 }
 
+/* manda un pessaggio a tutti escluso ch */
+void send_to_all_not_ch(struct char_data* ch, const char* messg) {
+    struct descriptor_data* i;
+
+    if(messg)
+        for(i = descriptor_list; i; i = i->next)
+            if(!i->connected || i->character->player.name != ch->player.name)
+            {
+                if(i->character != ch)
+                    SEND_TO_Q(
+                              ParseAnsiColors(IS_SET(i->character->player.user_flags, USE_ANSI),
+                                              messg), i);
+            }
+}
 
 void send_to_outdoor(const char* messg) {
 	struct descriptor_data* i;

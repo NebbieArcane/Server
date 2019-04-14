@@ -2535,6 +2535,35 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 free(ch->lastmkill);
                 ch->lastmkill = strdup(GET_NAME(victim));
 
+                if(n_bosskill(mob_index[victim->nr].iVNum) > -1)
+                {
+                    struct char_data* tmp;
+                    
+                    for(tmp = real_roomp(ch->in_room)->people; tmp; tmp=tmp->next_in_room)
+                    {
+                        if(IS_PC(tmp) && in_group(tmp, ch))
+                        {
+                            if(IS_POLY(tmp))
+                            {
+                                tmp->desc->original->specials.achievements[BOSSKILL_ACHIE][n_bosskill(mob_index[victim->nr].iVNum)] += 1;
+                                if(!IS_SET(tmp->desc->original->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(tmp->desc->original->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            else
+                            {
+                                tmp->specials.achievements[BOSSKILL_ACHIE][n_bosskill(mob_index[victim->nr].iVNum)] += 1;
+                                if(!IS_SET(tmp->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(tmp->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            CheckAchie(tmp, n_bosskill(mob_index[victim->nr].iVNum), BOSSKILL_ACHIE);
+                        }
+                    }
+                }
+
 				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch),
 					   GET_NAME_DESC(victim));
 			}
@@ -2681,13 +2710,13 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
         {
             if(IS_POLY(ch))
             {
-                ch->desc->original->specials.achie_class[ACHIE_THIEF_1] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
                 if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                     SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
             }
             else
             {
-                ch->specials.achie_class[ACHIE_THIEF_1] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
                 if(!IS_SET(ch->specials.act,PLR_ACHIE))
                     SET_BIT(ch->specials.act, PLR_ACHIE);
             }
@@ -2706,13 +2735,13 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
             {
                 if(IS_POLY(ch))
                 {
-                    ch->desc->original->specials.achie_class[ACHIE_THIEF_2] += 1;
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_2] += 1;
                     if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
                         SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
                 }
                 else
                 {
-                    ch->specials.achie_class[ACHIE_THIEF_2] += 1;
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_2] += 1;
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))
                         SET_BIT(ch->specials.act, PLR_ACHIE);
                 }

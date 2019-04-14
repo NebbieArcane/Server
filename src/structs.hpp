@@ -48,7 +48,7 @@ struct QuestItem {
  */
 struct ClassAchieTable
 {
-    int achie_type;
+    int achie_number;
     const char* achie_string1;
     const char* achie_string2;
     const char* lvl1;
@@ -612,11 +612,7 @@ struct char_special_data {
 	int alignment;           /* +-1000 for alignments               */
 
     /* ACHIEVEMENTS */
-    int achie_racekill[MAX_RACE];
-    int achie_bosskill[MAX_BOSS];
-    int achie_class[MAX_CLASS_ACHIE];
-    int achie_quest[MAX_QUEST];
-    int achie_other[MAX_OTHER];
+    int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
 
 	char* poofin;
 	char* poofout;

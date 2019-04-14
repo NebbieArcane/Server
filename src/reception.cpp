@@ -1919,7 +1919,7 @@ void load_char_extra(struct char_data* ch) {
                     achie_n = (char*)strtok(s, "#");
                     achie_v = (char*)strtok(0, "\0");
                     n = atoi(achie_n);
-                    ch->specials.achie_racekill[n] = atoi(achie_v);
+                    ch->specials.achievements[RACESLAYER_ACHIE][n] = atoi(achie_v);
                 }
                 else if(!strcmp(p, "achie_bosskill"))
                 {
@@ -1927,7 +1927,7 @@ void load_char_extra(struct char_data* ch) {
                     achie_n = (char*)strtok(s, "#");
                     achie_v = (char*)strtok(0, "\0");
                     n = atoi(achie_n);
-                    ch->specials.achie_bosskill[n] = atoi(achie_v);
+                    ch->specials.achievements[BOSSKILL_ACHIE][n] = atoi(achie_v);
                 }
                 else if(!strcmp(p, "achie_class"))
                 {
@@ -1935,7 +1935,7 @@ void load_char_extra(struct char_data* ch) {
                     achie_n = (char*)strtok(s, "#");
                     achie_v = (char*)strtok(0, "\0");
                     n = atoi(achie_n);
-                    ch->specials.achie_class[n] = atoi(achie_v);
+                    ch->specials.achievements[CLASS_ACHIE][n] = atoi(achie_v);
                 }
                 else if(!strcmp(p, "achie_quest"))
                 {
@@ -1943,7 +1943,7 @@ void load_char_extra(struct char_data* ch) {
                     achie_n = (char*)strtok(s, "#");
                     achie_v = (char*)strtok(0, "\0");
                     n = atoi(achie_n);
-                    ch->specials.achie_quest[n] = atoi(achie_v);
+                    ch->specials.achievements[QUEST_ACHIE][n] = atoi(achie_v);
                 }
                 else if(!strcmp(p, "achie_other"))
                 {
@@ -1951,7 +1951,7 @@ void load_char_extra(struct char_data* ch) {
                     achie_n = (char*)strtok(s, "#");
                     achie_v = (char*)strtok(0, "\0");
                     n = atoi(achie_n);
-                    ch->specials.achie_other[n] = atoi(achie_v);
+                    ch->specials.achievements[OTHER_ACHIE][n] = atoi(achie_v);
                 }
 				else if(!strcmp(p, "email")) {
 					/* setup email */
@@ -2040,34 +2040,34 @@ void write_char_extra(struct char_data* ch) {
 
     if(IS_SET(ch->specials.act,PLR_ACHIE))
     {
-        for(i = 0; i < MAX_RACE; i++)
+        for(i = 0; i < MAX_RACE_ACHIE; i++)
         {
-            if(ch->specials.achie_racekill[i] > 0)
-                fprintf(fp, "achie_racekill:%d#%d\n", i, ch->specials.achie_racekill[i]);
+            if(ch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+                fprintf(fp, "achie_racekill:%d#%d\n", i, ch->specials.achievements[RACESLAYER_ACHIE][i]);
         }
 
-        for(i = 0; i < MAX_BOSS; i++)
+        for(i = 0; i < MAX_BOSS_ACHIE; i++)
         {
-            if(ch->specials.achie_bosskill[i] > 0)
-                fprintf(fp, "achie_bosskill:%d#%d\n", i, ch->specials.achie_bosskill[i]);
+            if(ch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+                fprintf(fp, "achie_bosskill:%d#%d\n", i, ch->specials.achievements[BOSSKILL_ACHIE][i]);
         }
 
         for(i = 0; i < MAX_CLASS_ACHIE; i++)
         {
-            if(ch->specials.achie_class[i] > 0)
-                fprintf(fp, "achie_class:%d#%d\n", i, ch->specials.achie_class[i]);
+            if(ch->specials.achievements[CLASS_ACHIE][i] > 0)
+                fprintf(fp, "achie_class:%d#%d\n", i, ch->specials.achievements[CLASS_ACHIE][i]);
         }
 
-        for(i = 0; i < MAX_QUEST; i++)
+        for(i = 0; i < MAX_QUEST_ACHIE; i++)
         {
-            if(ch->specials.achie_quest[i] > 0)
-                fprintf(fp, "achie_quest:%d#%d\n", i, ch->specials.achie_quest[i]);
+            if(ch->specials.achievements[QUEST_ACHIE][i] > 0)
+                fprintf(fp, "achie_quest:%d#%d\n", i, ch->specials.achievements[QUEST_ACHIE][i]);
         }
 
-        for(i = 0; i < MAX_OTHER; i++)
+        for(i = 0; i < MAX_OTHER_ACHIE; i++)
         {
-            if(ch->specials.achie_other[i] > 0)
-                fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achie_other[i]);
+            if(ch->specials.achievements[OTHER_ACHIE][i] > 0)
+                fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achievements[OTHER_ACHIE][i]);
         }
     }
 

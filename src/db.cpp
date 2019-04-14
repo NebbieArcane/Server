@@ -3760,25 +3760,25 @@ void reset_char(struct char_data* ch) {
 	ch->specials.spellfail = 101;
 
     /* Achievemets */
-    for( i = 0; i < MAX_RACE; i++)
+    for( i = 0; i < MAX_RACE_ACHIE; i++)
     {
-        ch->specials.achie_racekill[i] = 0;
+        ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
     }
-    for( i = 0; i < MAX_BOSS; i++)
+    for( i = 0; i < MAX_BOSS_ACHIE; i++)
     {
-        ch->specials.achie_bosskill[i] = 0;
+        ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
     }
     for( i = 0; i < MAX_CLASS_ACHIE; i++)
     {
-        ch->specials.achie_class[i] = 0;
+        ch->specials.achievements[CLASS_ACHIE][i] = 0;
     }
-    for( i = 0; i < MAX_QUEST; i++)
+    for( i = 0; i < MAX_QUEST_ACHIE; i++)
     {
-        ch->specials.achie_quest[i] = 0;
+        ch->specials.achievements[QUEST_ACHIE][i] = 0;
     }
-    for( i = 0; i < MAX_OTHER; i++)
+    for( i = 0; i < MAX_OTHER_ACHIE; i++)
     {
-        ch->specials.achie_other[i] = 0;
+        ch->specials.achievements[OTHER_ACHIE][i] = 0;
     }
 
 	if(GET_HIT(ch) <= 0) {

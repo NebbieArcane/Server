@@ -439,15 +439,19 @@ ACTION_FUNC(do_backstab) {
             {
                 if(IS_POLY(victim))
                 {
-                    victim->desc->original->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                    victim->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
                     if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                    {
                         SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                    }
                 }
                 else
                 {
-                    victim->specials.achie_class[ACHIE_BARBARIAN_2] += 1;
+                    victim->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
                     if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                    {
                         SET_BIT(victim->specials.act, PLR_ACHIE);
+                    }
                 }
 
                 CheckAchie(victim, ACHIE_BARBARIAN_2, CLASS_ACHIE);
@@ -1131,15 +1135,19 @@ ACTION_FUNC(do_bash) {
         {
             if(IS_POLY(ch))
             {
-                ch->desc->original->specials.achie_class[ACHIE_WARRIOR_2] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_2] += 1;
                 if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
                     SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
             }
             else
             {
-                ch->specials.achie_class[ACHIE_WARRIOR_2] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_2] += 1;
                 if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
                     SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
             }
 
             CheckAchie(ch, ACHIE_WARRIOR_2, CLASS_ACHIE);
@@ -1170,15 +1178,19 @@ ACTION_FUNC(do_bash) {
         {
             if(IS_POLY(ch))
             {
-                ch->desc->original->specials.achie_class[ACHIE_WARRIOR_1] += 1;
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_1] += 1;
                 if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
                     SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
             }
             else
             {
-                ch->specials.achie_class[ACHIE_WARRIOR_1] += 1;
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_1] += 1;
                 if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
                     SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
             }
 
             CheckAchie(ch, ACHIE_WARRIOR_1, CLASS_ACHIE);
@@ -1301,15 +1313,19 @@ ACTION_FUNC(do_rescue) {
     {
         if(IS_POLY(ch))
         {
-            ch->desc->original->specials.achie_class[ACHIE_WARRIOR_3] += 1;
+            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_3] += 1;
             if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+            {
                 SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
         }
         else
         {
-            ch->specials.achie_class[ACHIE_WARRIOR_3] += 1;
+            ch->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_3] += 1;
             if(!IS_SET(ch->specials.act,PLR_ACHIE))
+            {
                 SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
         }
 
         CheckAchie(ch, ACHIE_WARRIOR_3, CLASS_ACHIE);
@@ -2021,15 +2037,19 @@ ACTION_FUNC(do_quivering_palm) {
             {
                 if(IS_POLY(ch))
                 {
-                    ch->desc->original->specials.achie_class[ACHIE_MONK_2] += 1;
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MONK_2] += 1;
                     if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    {
                         SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
                 }
                 else
                 {
-                    ch->specials.achie_class[ACHIE_MONK_2] += 1;
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_MONK_2] += 1;
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    {
                         SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
                 }
 
                 CheckAchie(ch, ACHIE_MONK_2, CLASS_ACHIE);
@@ -2317,15 +2337,19 @@ ACTION_FUNC(do_berserk) {
             {
                 if(IS_POLY(ch))
                 {
-                    ch->desc->original->specials.achie_class[ACHIE_BARBARIAN_1] += 1;
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_1] += 1;
                     if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    {
                         SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
                 }
                 else
                 {
-                    ch->specials.achie_class[ACHIE_BARBARIAN_1] += 1;
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_1] += 1;
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    {
                         SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
                 }
 
                 CheckAchie(ch, ACHIE_BARBARIAN_1, CLASS_ACHIE);
