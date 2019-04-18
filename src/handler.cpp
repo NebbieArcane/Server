@@ -2285,6 +2285,12 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
     if(IS_PC(ch) && ch->specials.quest_ref != NULL)
     {
         send_to_char("$c0011Mi dispiace, hai fallito la tua quest!\n\r", ch);
+        mudlog(LOG_PLAYERS, "%s has failed the quest!", GET_NAME(ch));
+
+    // Quest Achievement
+        CheckQuestFail(ch);
+        write_char_extra(ch);
+
         if(real_roomp((ch->specials.quest_ref)->in_room)->people)
         {
             act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, ch->specials.quest_ref, 0, 0, TO_ROOM);

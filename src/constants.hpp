@@ -162,10 +162,8 @@ extern const char* spell_desc[];
 extern struct QuestItem QuestList[4][IMMORTAL];
 
             /* Achievements */
-// Rewards
 extern struct XpAchieTable RewardXp[ABS_MAX_LVL];
-
-// Achievements_Class
+extern struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE];
 extern struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
 
 extern const char* QuestKind[];

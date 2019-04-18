@@ -113,7 +113,7 @@
             "comment": "Achievements stuffs"
         },
         "MAX_BOSS_ACHIE": {
-            "value": 15,
+            "value": 21,
             "comment": "Achievements stuffs"
         },
         "MAX_QUEST_ACHIE": {
@@ -121,11 +121,15 @@
             "comment": "Achievements stuffs"
         },
         "MAX_OTHER_ACHIE": {
-            "value": 1,
+            "value": 20,
+            "comment": "Achievements stuffs"
+        },
+        "MAX_MOB_QUEST": {
+            "value": 10,
             "comment": "Achievements stuffs"
         },
         "MAX_RACE_ACHIE": {
-            "value": 1,
+            "value": 97,
             "comment": "Achievements stuffs"
         },
         "CLASS_ACHIE": {
@@ -155,6 +159,54 @@
         "MAX_ACHIE_TYPE": {
             "value": 100,
             "comment": "Achievements stuffs"
+        },
+        "GROUP_INSECTOID": {
+            "value": 85,
+            "comment": "Achievements stuffs, the value is the same of MAX_RACE"
+        },
+        "GROUP_ANIMAL": {
+            "value": 86,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 1"
+        },
+        "GROUP_VEGGIE": {
+            "value": 87,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 2"
+        },
+        "GROUP_SPECIALS": {
+            "value": 88,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 3"
+        },
+        "GROUP_DARKRACES": {
+            "value": 89,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 4"
+        },
+        "GROUP_DRAKES": {
+            "value": 90,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 5"
+        },
+        "GROUP_GIANTS": {
+            "value": 91,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 6"
+        },
+        "GROUP_RACEHALFBREED": {
+            "value": 92,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 7"
+        },
+        "GROUP_PLANAR": {
+            "value": 93,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 8"
+        },
+        "GROUP_UNDEAD": {
+            "value": 94,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 9"
+        },
+        "GROUP_GREENSKIN": {
+            "value": 95,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 10"
+        },
+        "GROUP_HUMANOID": {
+            "value": 96,
+            "comment": "Achievements stuffs, the value is MAX_RACE + 11"
         },
         "ACHIE_MAGE_1": {
             "value": 1,
@@ -288,6 +340,10 @@
             "value": 33,
             "comment": "Achievements stuffs"
         },
+        "ACHIE_QUEST_XARAH": {
+            "value": 0,
+            "comment": "Achievements stuffs"
+        },
         "ACHIE_EVANGELINE": {
             "value": 21017,
             "comment": "Achievements stuffs"
@@ -346,6 +402,130 @@
         },
         "ACHIE_ROC": {
             "value": 16039,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_LAZLO": {
+            "value": 8910,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_HYPNOS": {
+            "value": 6116,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DEMI_LICH": {
+            "value": 25000,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_BALROG": {
+            "value": 37317,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_FIDEX_GATOR": {
+            "value": 8001,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DRAGGSYLIA": {
+            "value": 16314,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PKILL_WIN": {
+            "value": 0,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_PKILL_LOSS": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DEATH": {
+            "value": 2,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_JUNK": {
+            "value": 3,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_ASTRAL": {
+            "value": 4,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_REPAIR": {
+            "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MINING": {
+            "value": 6,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_BAR": {
+            "value": 7,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_GOLDENBAR": {
+            "value": 8,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_WEAPONSMITH": {
+            "value": 9,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_COMPLETE": {
+            "value": 10,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_FAILED": {
+            "value": 11,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_HUNT_COMPLETE": {
+            "value": 12,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_HUNT_FAILED": {
+            "value": 13,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_RESCUE_COMPLETE": {
+            "value": 14,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_RESCUE_FAILED": {
+            "value": 15,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_RESEARCH_COMPLETE": {
+            "value": 16,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_RESEARCH_FAILED": {
+            "value": 17,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_DELIVERY_COMPLETE": {
+            "value": 18,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_DELIVERY_FAILED": {
+            "value": 19,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_TOTAL": {
+            "value": 20,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_HUNT_TOTAL": {
+            "value": 21,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_RESCUE_TOTAL": {
+            "value": 22,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_RESEARCH_TOTAL": {
+            "value": 23,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_QUEST_DELIVERY_TOTAL": {
+            "value": 24,
             "comment": "Achievements stuffs"
         },
         "LEV_BEGINNER": {

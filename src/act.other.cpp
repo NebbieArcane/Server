@@ -198,6 +198,25 @@ ACTION_FUNC(do_junk) {
 		act("Rinunciare ai beni terreni ti fa progredire nel tuo cammino.",
 			FALSE, ch, 0, 0, TO_CHAR);
 		gain_exp(ch, (value2*number(10,30))/10);
+
+    // Junk Achievement
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+            {
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+        }
+        else
+        {
+            ch->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+            {
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+        }
+        CheckAchie(ch, ACHIE_JUNK, OTHER_ACHIE);
 	}
 	return;
 }
@@ -1534,8 +1553,6 @@ ACTION_FUNC(do_typo)
 {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
-    char buf[MAX_BUF_LENGTH];
-    struct char_data* temp_char = ch;
 
 	if(IS_NPC(ch))
     {
@@ -1566,11 +1583,11 @@ ACTION_FUNC(do_typo)
 
 	send_to_char("Ok. Grazie.\n\r", ch);
 
-    parse_name("LadyOfPain", buf);
-    temp_char->desc->name = (char*)strdup(buf);
-    temp_char->desc->showstr_head = (char*)strdup("Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
-    store_mail( temp_char->desc->name, GET_NAME(ch), temp_char->desc->showstr_head);
-    mudlog(LOG_PLAYERS,"%s ha segnalato un typo a LadyOfPain.",GET_NAME(ch));
+    mail_to_god(ch, "LadyOfPain", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+    mail_to_god(ch, "Requiem", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+    mail_to_god(ch, "Croneh", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+
+    mudlog(LOG_PLAYERS,"%s reports a typo to the Gods.", GET_NAME(ch));
 }
 
 ACTION_FUNC(do_bug) {

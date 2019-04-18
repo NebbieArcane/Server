@@ -857,6 +857,8 @@ void SpellWearOff(int s, struct char_data* ch) {
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
             affect_from_char(ch, STATUS_QUEST);
+        // Quest Achievement
+            CheckQuestFail(ch);
 
             if(ch->specials.quest_ref) {
                 if(GET_POS(ch->specials.quest_ref) > POSITION_DEAD)

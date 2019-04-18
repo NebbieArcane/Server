@@ -2005,6 +2005,10 @@ void spell_dispel_magic(byte level, struct char_data* ch,
                 extract_char(victim->specials.quest_ref);
             }
             victim->specials.quest_ref = NULL;
+
+        // Quest Achievement
+            CheckQuestFail(victim);
+
             send_to_char("$c0011Non sei piu' in missione.\n\r",victim);
         }
 

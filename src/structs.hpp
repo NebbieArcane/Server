@@ -76,6 +76,21 @@ struct ClassAchieTable
     int n_livelli;
 };
 
+struct MobQuestAchie
+{
+    int numero_mob;
+    int mob_0;
+    int mob_1;
+    int mob_2;
+    int mob_3;
+    int mob_4;
+    int mob_5;
+    int mob_6;
+    int mob_7;
+    int mob_8;
+    int mob_9;
+};
+
 struct XpAchieTable
 {
     int lev_1_xp;
@@ -613,6 +628,7 @@ struct char_special_data {
 
     /* ACHIEVEMENTS */
     int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+    int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
 
 	char* poofin;
 	char* poofout;

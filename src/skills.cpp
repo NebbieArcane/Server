@@ -6752,7 +6752,7 @@ void do_miner(struct char_data* ch) {
 				TRUE, ch, 0, 0, TO_ROOM);
 			LearnFromMistake(ch, SKILL_MINER, 0, 95);
 
-			//3% di probabilit\E0 che si rompa l'attrezzo
+			//3% di probabilita' che si rompa l'attrezzo
 			if(percent >= 98) {
 				struct obj_data* pObj = ch->equipment[ HOLD ];
 				if(pObj && IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG)
@@ -6769,7 +6769,7 @@ void do_miner(struct char_data* ch) {
 			}
 		}
 		else {
-			//testo il livello di scavabilit\E0
+			//testo il livello di scavabilita'
 			if(real_roomp(ch->in_room)->dig >=10) {
 				send_to_char("Qui non si riesce piu' a scavare, il filone sembra esaurito!\n\r",ch);
 				return;
@@ -6961,6 +6961,25 @@ void do_miner(struct char_data* ch) {
 				}
 
 			}
+
+        // Mining Achievement
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_MINING] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+            }
+            else
+            {
+                ch->specials.achievements[OTHER_ACHIE][ACHIE_MINING] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+            }
+            CheckAchie(ch, ACHIE_MINING, OTHER_ACHIE);
 
 			if(r_num >= 0) {
 				obj = read_object(r_num, REAL);
@@ -8278,10 +8297,28 @@ ACTION_FUNC(do_forge) {
 			sprintf(buf,"%s wflags %ld",itemname,wflags);
 			do_ooedit(ch,buf,0);
 
-			//Il peso \E8 cambiato, quindi lo ricalcolo
+			//Il peso e' cambiato, quindi lo ricalcolo
 			IS_CARRYING_W(obj->carried_by) -= peso_old;
 			IS_CARRYING_W(obj->carried_by) += GET_OBJ_WEIGHT(obj);
 
+            // Weaponsmith Achievement
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_WEAPONSMITH] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+            }
+            else
+            {
+                ch->specials.achievements[OTHER_ACHIE][ACHIE_WEAPONSMITH] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+            }
+            CheckAchie(ch, ACHIE_WEAPONSMITH, OTHER_ACHIE);
 
 			if(urka) {
 				ch->specials.objedit=obj;

@@ -2193,7 +2193,7 @@ ACTION_FUNC(do_achievements)
             if(IS_POLY(tch))
                 tch = tch->desc->original;
 
-            if(IS_SET(tch->specials.act,PLR_ACHIE))
+            if(IS_SET(tch->specials.act,PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
             {
                 int num = 0;
 
@@ -2207,7 +2207,7 @@ ACTION_FUNC(do_achievements)
                 }
 
                 // Race Achievements
-                if(hasAchievement(tch, RACESLAYER_ACHIE) || IS_QUESTMASTER(ch))
+                if(hasAchievement(tch, RACESLAYER_ACHIE, 1) || IS_QUESTMASTER(ch))
                 {
                     sb.append("$c0009");
                     sb.append(45u,'-').append(" $c0015Race  Achievements$c0009 ");
@@ -2215,7 +2215,12 @@ ACTION_FUNC(do_achievements)
                 }
                 for(i = 0; i < MAX_RACE_ACHIE; i++)
                 {
-                    if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, 0));
@@ -2230,7 +2235,7 @@ ACTION_FUNC(do_achievements)
                 }
 
                 // Boss Achievements
-                if(hasAchievement(tch, BOSSKILL_ACHIE) || IS_QUESTMASTER(ch))
+                if(hasAchievement(tch, BOSSKILL_ACHIE, 1) || IS_QUESTMASTER(ch))
                 {
                     sb.append("$c0009");
                     sb.append(45u,'-').append(" $c0015Boss  Achievements$c0009 ");
@@ -2238,7 +2243,12 @@ ACTION_FUNC(do_achievements)
                 }
                 for(i = 0; i < MAX_BOSS_ACHIE; i++)
                 {
-                    if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, 0));
@@ -2253,7 +2263,7 @@ ACTION_FUNC(do_achievements)
                 }
 
                 // Class Skill Achievements
-                if(hasAchievement(tch, CLASS_ACHIE) || IS_QUESTMASTER(ch))
+                if(hasAchievement(tch, CLASS_ACHIE, 1) || IS_QUESTMASTER(ch))
                 {
                     sb.append("$c0009");
                     sb.append(45u,'-').append(" $c0015Skill Achievements$c0009 ");
@@ -2261,7 +2271,12 @@ ACTION_FUNC(do_achievements)
                 }
                 for(i = 1; i < MAX_CLASS_ACHIE; i++)
                 {
-                    if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                    if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, 0));
@@ -2270,7 +2285,7 @@ ACTION_FUNC(do_achievements)
                 }
 
                 // Quest Achievements
-                if(hasAchievement(tch, QUEST_ACHIE) || IS_QUESTMASTER(ch))
+                if(hasAchievement(tch, QUEST_ACHIE, 1) || IS_QUESTMASTER(ch))
                 {
                     sb.append("$c0009");
                     sb.append(45u,'-').append(" $c0015Quest Achievements$c0009 ");
@@ -2278,7 +2293,12 @@ ACTION_FUNC(do_achievements)
                 }
                 for(i = 0; i < MAX_QUEST_ACHIE; i++)
                 {
-                    if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, 0));
@@ -2293,7 +2313,7 @@ ACTION_FUNC(do_achievements)
                 }
 
                 // Various Achievements
-                if(hasAchievement(tch, OTHER_ACHIE) || IS_QUESTMASTER(ch))
+                if(hasAchievement(tch, OTHER_ACHIE, 1) || IS_QUESTMASTER(ch))
                 {
                     sb.append("$c0009");
                     sb.append(45u,'-').append(" $c0015Other Achievements$c0009 ");
@@ -2301,7 +2321,12 @@ ACTION_FUNC(do_achievements)
                 }
                 for(i = 0; i < MAX_OTHER_ACHIE; i++)
                 {
-                    if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
                         sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, 0));
@@ -2375,7 +2400,12 @@ ACTION_FUNC(do_achievements)
                 // Race Achievements
                 for(i = 0; i < MAX_RACE_ACHIE; i++)
                 {
-                    if(HasClass(ch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                         {
@@ -2408,7 +2438,12 @@ ACTION_FUNC(do_achievements)
                 // Boss Achievements
                 for(i = 0; i < MAX_BOSS_ACHIE; i++)
                 {
-                    if(HasClass(ch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                         {
@@ -2441,7 +2476,12 @@ ACTION_FUNC(do_achievements)
                 // Class Skill Achievements
                 for(i = 1; i < MAX_CLASS_ACHIE; i++)
                 {
-                    if(HasClass(ch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                    if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
                         {
@@ -2460,7 +2500,12 @@ ACTION_FUNC(do_achievements)
                 // Quest Achievements
                 for(i = 0; i < MAX_QUEST_ACHIE; i++)
                 {
-                    if(HasClass(ch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                         {
@@ -2493,7 +2538,12 @@ ACTION_FUNC(do_achievements)
                 // Various Achievements
                 for(i = 0; i < MAX_OTHER_ACHIE; i++)
                 {
-                    if(HasClass(ch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                         {
@@ -2586,7 +2636,12 @@ ACTION_FUNC(do_achievements)
                         // Race Achievements
                         for(i = 0; i < MAX_RACE_ACHIE; i++)
                         {
-                            if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_d > num && achi_d <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                                 {
@@ -2622,7 +2677,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_d > num && achi_d <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                                 {
@@ -2658,7 +2718,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                            if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
                             {
                                 if(achi_d > num && achi_d <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
                                 {
@@ -2694,7 +2759,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_d > num && achi_d <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                                 {
@@ -2730,7 +2800,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_d > num && achi_d <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                                 {
@@ -2844,7 +2919,12 @@ ACTION_FUNC(do_achievements)
                         // Race Achievements
                         for(i = 0; i < MAX_RACE_ACHIE; i++)
                         {
-                            if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_n > num && achi_n <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                                 {
@@ -2880,7 +2960,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_n > num && achi_n <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                                 {
@@ -2916,7 +3001,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                            if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
                             {
                                 if(achi_n > num && achi_n <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
                                 {
@@ -2952,7 +3042,12 @@ ACTION_FUNC(do_achievements)
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_n > num && achi_n <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                                 {
@@ -2983,14 +3078,17 @@ ACTION_FUNC(do_achievements)
                         // Various Achievements
                         for(i = 0; i < MAX_OTHER_ACHIE; i++)
                         {
-                            if(tch->specials.achievements[OTHER_ACHIE][i] > 0)
-                                send_to_char("qui dovrebbe cercare gli other", ch);
                             if(trovato)
                             {
                                 break;
                             }
 
-                            if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                             {
                                 if(achi_n > num && achi_n <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                                 {
@@ -3066,27 +3164,27 @@ ACTION_FUNC(do_achievements)
                 }
 
                 mudlog(LOG_PLAYERS, "%s starts to delete all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
-                if(hasAchievement(tch, RACESLAYER_ACHIE))
+                if(hasAchievement(tch, RACESLAYER_ACHIE, 1))
                 {
                     for(i = 0; i < MAX_RACE_ACHIE; i++)
                         tch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
                 }
-                if(hasAchievement(tch, BOSSKILL_ACHIE))
+                if(hasAchievement(tch, BOSSKILL_ACHIE, 1))
                 {
                     for(i = 0; i < MAX_BOSS_ACHIE; i++)
                         tch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
                 }
-                if(hasAchievement(tch, CLASS_ACHIE))
+                if(hasAchievement(tch, CLASS_ACHIE, 1))
                 {
                     for(i = 0; i < MAX_CLASS_ACHIE; i++)
                         tch->specials.achievements[CLASS_ACHIE][i] = 0;
                 }
-                if(hasAchievement(tch, QUEST_ACHIE))
+                if(hasAchievement(tch, QUEST_ACHIE, 1))
                 {
                     for(i = 0; i < MAX_QUEST_ACHIE; i++)
                         tch->specials.achievements[QUEST_ACHIE][i] = 0;
                 }
-                if(hasAchievement(tch, OTHER_ACHIE))
+                if(hasAchievement(tch, OTHER_ACHIE, 1))
                 {
                     for(i = 0; i < MAX_OTHER_ACHIE; i++)
                         tch->specials.achievements[OTHER_ACHIE][i] = 0;
@@ -3141,13 +3239,13 @@ ACTION_FUNC(do_achievements)
         if(IS_POLY(tch))
             tch = tch->desc->original;
 
-        if(IS_SET(tch->specials.act,PLR_ACHIE))
+        if(IS_SET(tch->specials.act,PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
         {
             int num = 0;
             send_to_char("\n\r$c0011Ecco i tuoi achievements:\n\r", ch);
 
             // Race Achievements
-            if(hasAchievement(tch, RACESLAYER_ACHIE))
+            if(hasAchievement(tch, RACESLAYER_ACHIE, 0))
             {
                 sb.append("$c0009");
                 sb.append(40u,'-').append(" $c0015Race  Achievements$c0009 ");
@@ -3220,7 +3318,7 @@ ACTION_FUNC(do_achievements)
             }
 
             // Boss Achievements
-            if(hasAchievement(tch, BOSSKILL_ACHIE))
+            if(hasAchievement(tch, BOSSKILL_ACHIE, 0))
             {
                 sb.append("$c0009");
                 sb.append(40u,'-').append(" $c0015Boss  Achievements$c0009 ");
@@ -3293,7 +3391,7 @@ ACTION_FUNC(do_achievements)
             }
 
             // Class Skill Achievements
-            if(hasAchievement(tch, CLASS_ACHIE))
+            if(hasAchievement(tch, CLASS_ACHIE, 0))
             {
                 sb.append("$c0009");
                 sb.append(40u,'-').append(" $c0015Skill Achievements$c0009 ");
@@ -3366,7 +3464,7 @@ ACTION_FUNC(do_achievements)
             }
 
             // Quest Achievements
-            if(hasAchievement(tch, QUEST_ACHIE))
+            if(hasAchievement(tch, QUEST_ACHIE, 0))
             {
                 sb.append("$c0009");
                 sb.append(40u,'-').append(" $c0015Quest Achievements$c0009 ");
@@ -3439,7 +3537,7 @@ ACTION_FUNC(do_achievements)
             }
 
             // Various Achievements
-            if(hasAchievement(tch, OTHER_ACHIE))
+            if(hasAchievement(tch, OTHER_ACHIE, 0))
             {
                 sb.append("$c0009");
                 sb.append(40u,'-').append(" $c0015Other Achievements$c0009 ");

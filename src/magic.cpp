@@ -586,6 +586,25 @@ void spell_astral_walk(byte level, struct char_data* ch,
 				NULL, NULL, TO_ROOM);
 		}
 	}
+
+// AstralWalk Achievement
+    if(IS_POLY(ch))
+    {
+        ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_ASTRAL] += 1;
+        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+        {
+            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+    }
+    else
+    {
+        ch->specials.achievements[OTHER_ACHIE][ACHIE_ASTRAL] += 1;
+        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+        {
+            SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+    }
+    CheckAchie(ch, ACHIE_ASTRAL, OTHER_ACHIE);
 }
 
 void spell_teleport(byte level, struct char_data* ch,

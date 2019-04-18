@@ -1723,6 +1723,7 @@ void zero_rent(struct char_data* ch) {
 	}
 
 	ZeroRent(GET_NAME(ch));
+    write_char_extra(ch);   //  salvo gli achievements su file alla morte
 
 }
 

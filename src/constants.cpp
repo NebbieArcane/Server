@@ -4533,6 +4533,11 @@ struct XpAchieTable RewardXp[ABS_MAX_LVL] = {
     {   1250000,    1375000,    1537500,    1662500,    1837500,    2037500,    2231250,    2475000,    2837500,    5000000 }
 };
 
+struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE] = {
+    // Xarah
+    {   8,  19709,  19719,  19605,  19712,  19710,  19724,  19602,  19933,      0,      0   }
+};
+
 struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
     {
         //  CLASS_ACHIE
@@ -5016,241 +5021,437 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 
     //  BOSSKILL_ACHIE
     {
-        {
-            ACHIE_EVANGELINE,                                       "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  0
+            ACHIE_EVANGELINE,                                       "Signora delle Bambole uccisa",             "Evangeline uccise",
+            "Ah, non era una Barbie?",                              1,
+            "Le bambole mi inquietano",                             10,
+            "Non sono qui a pettinare bambole!",                    100,
+            "Mi piacciono solo quelle gonfiabili...",               500,
+            "Master of Puppets",                                    5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_SALOMONE,                                         "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "salomone1",                                            1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  1
+            ACHIE_SALOMONE,                                         "Re Salomone ucciso",                       "Re Salomone uccisi",
+            "Ah, c'era un piano di sopra?",                         1,
+            "Interessante questo scettro",                          10,
+            "Io pulisco Apo sul serio!",                            100,
+            "Al di sopra dei Cavalieri ci sono io!",                500,
+            "Distruttore di Equilibrio",                            5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_THION,                                            "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  2
+            ACHIE_THION,                                            "Dio delle Ombre ucciso",                   "Thion uccisi",
+            "Ma non potevamo farci i fatti nostri?",                1,
+            "The Lord of the Earings",                              10,
+            "Ammazza (che) Dio",                                    100,
+            "Lucertole, spettri ed ombre... tutto qui?",            500,
+            "Colui che spazza via l'Ombra",                         5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_WARLOCK,                                          "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  3
+            ACHIE_WARLOCK,                                          "Warlock ucciso",                           "Warlock uccisi",
+            "E questo da dove esce?",                               1,
+            "Piu' lo spezzetti piu' torna",                         10,
+            "Scoperchia bare",                                      100,
+            "Pacificatore di anime",                                500,
+            "Castiga dinastie",                                     5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_STANISLAV,                                        "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  4
+            ACHIE_STANISLAV,                                        "Spettro di Stanislav ucciso",              "Spettri di Stanislav uccisi",
+            "Ma io non volevo pestarlo!",                           1,
+            "Sembrava un vecchietto a modo...",                     10,
+            "Misericordioso",                                       100,
+            "Scaccia spettri",                                      500,
+            "Sovrano di Nilmys",                                    5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_SAURON,                                           "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  5
+            ACHIE_SAURON,                                           "Oscuro Signore ucciso",                    "Sauron uccisi",
+            "Ma io non ci volevo venire...",                        1,
+            "Attenti al pozzo!",                                    10,
+            "AAA anello cercasi",                                   100,
+            "Mandami contro anche i tuoi Nazgul!",                  500,
+            "Signore di Mordor",                                    5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_XAGELON,                                          "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  6
+            ACHIE_XAGELON,                                          "Terrore Divino ucciso",                    "Xagelon uccisi",
+            "Ma vedi, sembrava cosi' piccolo...",                   1,
+            "Agli Dei piace piccolo",                               10,
+            "Botte piccola, vino buono",                            100,
+            "Fattela con quelli alla tua altezza",                  500,
+            "Signore di Bofgorak",                                  5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_SLAVALOUS,                                        "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  7
+            ACHIE_SLAVALOUS,                                        "Slavalous ucciso",                         "Slavalous uccisi",
+            "Che diavoletto!",                                      1,
+            "Medaglia medaglia medaglia!",                          10,
+            "Il suonatore di campane",                              100,
+            "L'esorcista",                                          500,
+            "Signore dei Diavoli",                                  5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_MORPHAIL,                                         "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  8
+            ACHIE_MORPHAIL,                                         "Sacerdote della Morte ucciso",             "Morphail uccisi",
+            "Il Bevitore di Sangue",                                1,
+            "Araldo della Morte",                                   10,
+            "L'uomo del Fiume",                                     100,
+            "Il Signore del Fiume",                                 500,
+            "Distruttore di filatteri",                             5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_NARIS,                                            "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  9
+            ACHIE_NARIS,                                            "Demone della Morte ucciso",                "Naris uccisi",
+            "Non era esattamente un Imp",                           1,
+            "Il demone incompreso",                                 10,
+            "Demone? Vediamo cosa sa fare!",                        100,
+            "Un demone al giorno toglie il paladino di torno",      500,
+            "Signore dei Nove Gironi",                              5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_TSUCHIGUMO,                                       "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  10
+            ACHIE_TSUCHIGUMO,                                       "Tsuchigumo ucciso",                        "Tsuchigumo uccisi",
+            "Aracnofobia",                                          1,
+            "Occhio che morde!",                                    10,
+            "Brutto e peloso",                                      100,
+            "Il disinfestatore",                                    500,
+            "Altro che Minamoto!",                                  5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_THANATOS,                                         "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  11
+            ACHIE_THANATOS,                                         "Thanatos ucciso",                          "Thanatos uccisi",
+            "L'eredita' di Shelin",                                 1,
+            "Che i morti restino morti",                            10,
+            "Eroe delle Nebbie!",                                   100,
+            "Cavaliere delle Nebbie",                               500,
+            "Signore delle Nebbie",                                 5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_STRAHD,                                           "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  12
+            ACHIE_STRAHD,                                           "Signore di Ravenloft ucciso",              "Strahd uccisi",
+            "Ho qui con me un paletto di frassino",                 1,
+            "Ammazza pipistrelli",                                  10,
+            "Ammazza non morti",                                    100,
+            "Ammazza Vampiri",                                      500,
+            "Van Helsing",                                          5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_SHELOB,                                           "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  13
+            ACHIE_SHELOB,                                           "Shelob uccisa",                            "Shelob uccise",
+            "Toglietemi le ragnatele da dosso!",                    1,
+            "Questo si che e' un ragno!",                           10,
+            "Se ci portassi mia moglie qui...",                     100,
+            "E' solo un ragnetto!",                                 500,
+            "Stermina Aracnidi",                                    5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
         },
-        {
-            ACHIE_ROC,                                              "Signora delle Bambole uccisa",             "Signore delle Bambole uccise",
-            "evangeline1",                                          1,
-            "evangeline2     ",                                     10,
-            "evangeline3            ",                              100,
-            "evangeline4      ",                                    500,
-            "evangeline5        ",                                  5000,
+        {   //  14
+            ACHIE_ROC,                                              "Roc ucciso",                               "Roc uccisi",
+            "E' un aereo? E' un uccello? No! E' un Roc!",           1,
+            "L'avidita' puo' essere letale",                        10,
+            "Prova ad ingoiarmi",                                   100,
+            "Sterminatore di grandi Uccelli!",                      500,
+            "Signore dei Roc",                                      5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* tutte le classi */                               0,                                          5
+            0,                                                      0,                                          5
+        },
+        {   //  15
+            ACHIE_LAZLO,                                            "Capitano di Nilmys ucciso",                "Roc uccisi",
+            "Ahia! Ma questo fa male!",                             1,
+            "Non saro' io di vedetta!",                             10,
+            "Punitore di soldati",                                  100,
+            "Celata di stagno",                                     500,
+            "Capitano della Guardia",                               5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0,                                          5
+        },
+        {   //  16
+            ACHIE_HYPNOS,                                           "Signore dei Sogni ucciso",                 "Hypnos uccisi",
+            "Salve, soffro di insonnia, mi puo' aiutare?",          1,
+            "Ho fatto un brutto sogno",                             10,
+            "Se mi vedi chiudere gli occhi scuotimi!",              100,
+            "Anche tu fai sempre tardi la notte?",                  500,
+            "? ? ? ? ? ? ? ? ? ? ? ? ? ?",                          5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0,                                          5
+        },
+        {   //  17
+            ACHIE_DEMI_LICH,                                        "Demi Lich ucciso",                         "Demi Lich uccisi",
+            "Fa freddo o sono io?",                                 1,
+            "Per Alar, sei sciupatissimo! Mangia un po'!",          10,
+            "Era un lick o un lich?",                               100,
+            "Distruttore di non morti",                             500,
+            "Signore dei Lich",                                     5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0,                                          5
+        },
+        {   //  18
+            ACHIE_BALROG,                                           "Balrog ucciso",                            "Balrog uccisi",
+            "Ma questo mi fa paura!",                               1,
+            "Frustino infuocato eh... mmm",                         10,
+            "Tamburi nella notte",                                  100,
+            "Quando scavi troppo a fondo...",                       500,
+            "Signore di Moria",                                     5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0,                                          5
+        },
+        {   //  19
+            ACHIE_FIDEX_GATOR,                                      "Fidex Gator ucciso",                       "Fodex Gator uccisi",
+            "Che bello! Dite che morde?",                           1,
+            "Aspettate, io ci so fare con i cani",                  10,
+            "Dog sitter",                                           100,
+            "Che bel cagnolino! Lo vuoi un croccantino?",           500,
+            "Addestratore di cani",                                 5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0,                                          5
+        },
+        {   //  20
+            ACHIE_DRAGGSYLIA,                                       "Draggsylia uccisa",                        "Draggsylia uccise",
+            "Tranquilli, non soffia questa!",                       1,
+            "Io vi sostengo e, se riesco, meno qualcosa",           10,
+            "Guardate, un drago!",                                  100,
+            "Una lucertola allo spiedo?",                           500,
+            "Dominatore di Draghi",                                 5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0,                                          5
         }
     },
 
     //  QUEST_ACHIE
     {
-        {
-            0,  /* achie_number */                                  "Xarah completata",                         "Xarah completate",
+        {   //  0
+            ACHIE_QUEST_XARAH,                                      "Xarah completata",                         "Xarah completate",
             "Conquistatore di Torri",                               1,
-            "", /* lvl2 */                                          0, //   lvl2_val
-            "", /* lvl3 */                                          0, //   lvl3_val
-            "", /* lvl4 */                                          0, //   lvl4_val
-            "", /* lvl5 */                                          0, //   lvl5_val
+            "Signore dei Protettori",                               30,
+            "Maestro dei Sortilegi",                                150,
+            "Re delle Lucertole",                                   1000,
+            "Signore delle Ombre",                                  5000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+            0,                                                      LEV_CHAMPION,                               5
         }
     },
 
     //  OTHER_ACHIE
     {
-        {
-            0,  /* achie_number */                                  "Pkill effettuato",                         "Pkill effettuati",
+        {   //  0
+            ACHIE_PKILL_WIN,                                        "Pkill effettuato",                         "Pkill effettuati",
             "Ben fatto!",                                           1,
+            "Sei un professionista",                                50,
+            "Ma allora sei infame",                                 500,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  1
+            ACHIE_PKILL_LOSS,                                       "morte in Pkill",                           "morti in Pkill",
+            "Ehi, cosa ti ho fatto?",                               1,
+            "Ma perche' sempre a me?",                              50,
+            "Calimero!",                                            500,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  2
+            ACHIE_DEATH,                                            "morte",                                    "morti",
+            "E' solo un graffio",                                   10,
+            "E' una ferita leggera",                                100,
+            "Barcollo ma non mollo",                                1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  3
+            ACHIE_JUNK,                                             "oggetto distrutto",                        "oggetti distrutti",
+            "Non gettare la carta!",                                10,
+            "Il riciclo e' il futuro",                              1000,
+            "Ti prego, fermati!",                                   100000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  4
+            ACHIE_ASTRAL,                                           "incantesimo di cammino astrale",           "incantesimi di cammino astrale",
+            "Noi ce ne andiamo",                                    100,
+            "Il mondo a portata di stagno",                         1000,
+            "Il piano astrale e' il mio salotto",                   100000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  5
+            ACHIE_REPAIR,                                           "oggetto riparato",                         "oggetti riparati",
+            "Togliamo i graffi",                                    100,
+            "Mai pensato ad un'assicurazione?",                     1000,
+            "Il fabbro ti ama",                                     10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  6
+            ACHIE_MINING,                                           "colpo di piccone a segno",                 "colpi di piccone a segno",
+            "Toh, un piccone",                                      100,
+            "Se brilla e' buono",                                   1000,
+            "Andiam, andiam, andiamo a lavorar...",                 10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  7
+            ACHIE_BAR,                                              "lingotto forgiato",                        "lingotti forgiati",
+            "Verso la ricchezza",                                   1000,
+            "Non e' tutto oro quello che luccica",                  10000,
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       2
+        },
+        {   //  8
+            ACHIE_GOLDENBAR,                                        "lingotto d'oro forgiato",                  "lingotti d'oro forgiati",
+            "Verso la ricchezza",                                   5000,
             "", /* lvl2 */                                          0, //   lvl2_val
             "", /* lvl3 */                                          0, //   lvl3_val
             "", /* lvl4 */                                          0, //   lvl4_val
@@ -5260,15 +5461,239 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+            0,                                                      0, /*   grado_diff */                       1
+        },
+        {   //  9
+            ACHIE_WEAPONSMITH,                                      "arma forgiata",                            "armi forgiate",
+            "E' arrivato l'arrotino",                               50,
+            "Ammazza che mazza",                                    100,
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       2
+        },
+        {   //  10
+            ACHIE_QUEST_COMPLETE,                                   "quest completata in totale",               "quest completate in totale",
+            "Investigatore",                                        10,
+            "Philip Marlowe",                                       100,
+            "Sherlock Holmes",                                      1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  11
+            ACHIE_QUEST_FAILED,                                     "quest fallita in totale",                  "quest fallite in totale",
+            "Scusi signor mob, un'informazione!",                   10,
+            "Eppure la sapevo...",                                  100,
+            "King of Epic Fail",                                    1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  12
+            ACHIE_QUEST_HUNT_COMPLETE,                              "quest di caccia completata",               "quest di caccia completate",
+            "",                                 10,
+            "",                                 100,
+            "",                                      1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  13
+            ACHIE_QUEST_HUNT_FAILED,                                "quest di caccia fallita",                  "quest di caccia fallite",
+            "",                                        10,
+            "",                                 100,
+            "",                                      1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  14
+            ACHIE_QUEST_RESCUE_COMPLETE,                            "quest di salvataggio completata",          "quest di salvataggio completate",
+            "",                                        10,
+            "",                                 100,
+            "",                                      1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  15
+            ACHIE_QUEST_RESCUE_FAILED,                              "quest di salvataggio fallita",             "quest di salvataggio fallite",
+            "",                                        10,
+            "",                                 100,
+            "",                                      1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      0, /*   grado_diff */                       3
+        },
+        {   //  16  non attiva, futura implementazione
+            ACHIE_QUEST_RESEARCH_COMPLETE,                          "quest di ricerca completata",              "quest di ricerca completate",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  17  non attiva, futura implementazione
+            ACHIE_QUEST_RESEARCH_FAILED,                            "quest di ricerca fallita",                 "quest di ricerca fallite",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  18  non attiva, futura implementazione
+            ACHIE_QUEST_DELIVERY_COMPLETE,                          "quest di consegna completata",             "quest di consegna completate",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  19  non attiva, futura implementazione
+            ACHIE_QUEST_DELIVERY_FAILED,                            "quest di consegna fallita",                "quest di consegna fallite",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  20  non attiva, serve per il conteggio
+            ACHIE_QUEST_TOTAL,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  21  non attiva, serve per il conteggio
+            ACHIE_QUEST_HUNT_TOTAL,                                 "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  22  non attiva, serve per il conteggio
+            ACHIE_QUEST_RESCUE_TOTAL,                               "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  23  non attiva, serve per il conteggio
+            ACHIE_QUEST_RESEARCH_TOTAL,                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
+        },
+        {   //  24  non attiva, serve per il conteggio
+            ACHIE_QUEST_DELIVERY_TOTAL,                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   // n_livelli
         }
     },
 
-    //  RACESLAYER_ACHIE
+    //  RACESLAYER_ACHIE        classe -1 = achievement non attivo
     {
-        {
-            RACE_HALFBREED,                                         "mezzosangue ucciso",                       "mezzosangue uccisi",
-            "mezzosangue1",                                         1,
+        {   //  0
+            RACE_HALFBREED,                                         "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
             "", /* lvl2 */                                          0, //   lvl2_val
             "", /* lvl3 */                                          0, //   lvl3_val
             "", /* lvl4 */                                          0, //   lvl4_val
@@ -5278,11 +5703,25 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
         },
-        {
+        {   //  1
             RACE_HUMAN,                                             "umano ucciso",                             "umani uccisi",
-            "umano1",                                               1,
+            "Serial Killer",                                        1000,
+            "Omofobico",                                            10000,
+            "L'Apocalisse sono io!",                                300000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  2
+            RACE_ELVEN,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
             "", /* lvl2 */                                          0, //   lvl2_val
             "", /* lvl3 */                                          0, //   lvl3_val
             "", /* lvl4 */                                          0, //   lvl4_val
@@ -5292,7 +5731,1323 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,  /* classe */                                        0, /*   grado_diff */                       1   //n_livelli
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   // 3
+            RACE_DWARF,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  4
+            RACE_HALFLING,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  5
+            RACE_GNOME,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  6
+            RACE_REPTILE,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  7
+            RACE_SPECIAL,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  8
+            RACE_LYCANTH,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  9
+            RACE_DRAGON,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  10
+            RACE_UNDEAD,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  11
+            RACE_ORC,                                               "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  12
+            RACE_INSECT,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  13
+            RACE_ARACHNID,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  14
+            RACE_DINOSAUR,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  15
+            RACE_FISH,                                              "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  16
+            RACE_BIRD,                                              "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  17
+            RACE_GIANT,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  18
+            RACE_PREDATOR,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  19
+            RACE_PARASITE,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  20
+            RACE_SLIME,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  21
+            RACE_DEMON,                                             "demone ucciso",                            "demoni uccisi",
+            "Per un mondo buono!",                                  100,
+            "Il Signore della Loggia Bianca",                       1000,
+            "Asmodeus e' il mio scendiletto",                       5000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  22
+            RACE_SNAKE,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  23
+            RACE_HERBIV,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  24
+            RACE_TREE,                                              "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  25
+            RACE_VEGGIE,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  26
+            RACE_ELEMENT,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  27
+            RACE_PLANAR,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  28
+            RACE_DEVIL,                                             "diavolo ucciso",                           "diavoli uccisi",
+            "Odore di Zolfo",                                       100,
+            "Diavoli? Perche' ce ne sono ancora?",                  1000,
+            "Araldo del Bene",                                      5000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  29
+            RACE_GHOST,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  30
+            RACE_GOBLIN,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  31
+            RACE_TROLL,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  32
+            RACE_VEGMAN,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  33
+            RACE_MFLAYER,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  34
+            RACE_PRIMATE,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  35
+            RACE_ENFAN,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  36
+            RACE_DARK_ELF,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  37
+            RACE_GOLEM,                                             "golem ucciso",                             "golem uccisi",
+            "E' solo un oggetto!",                                  10,
+            "Cio' che e' vivo non si muova!",                       1000,
+            "Disgregatore",                                         10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  38
+            RACE_SKEXIE,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  39
+            RACE_TROGMAN,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  40
+            RACE_PATRYN,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  41
+            RACE_LABRAT,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  42
+            RACE_SARTAN,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  43
+            RACE_TYTAN,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  44
+            RACE_SMURF,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  45
+            RACE_ROO,                                               "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  46
+            RACE_HORSE,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  47
+            RACE_DRAAGDIM,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  48
+            RACE_ASTRAL,                                            "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  49
+            RACE_GOD,                                               "Dio ucciso",                               "Dei uccisi",
+            "Non temo nessuno",                                     10,
+            "Ribelliamoci agli Dei!",                               100,
+            "Godslayer",                                            1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     LEV_BEGINNER,                               3
+        },
+        {   //  50
+            RACE_GIANT_HILL,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  51
+            RACE_GIANT_FROST,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  52
+            RACE_GIANT_FIRE,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  53
+            RACE_GIANT_CLOUD,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  54
+            RACE_GIANT_STORM,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  55
+            RACE_GIANT_STONE,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  56
+            RACE_DRAGON_RED,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  57
+            RACE_DRAGON_BLACK,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  58
+            RACE_DRAGON_GREEN,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  59
+            RACE_DRAGON_WHITE,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  60
+            RACE_DRAGON_BLUE,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  61
+            RACE_DRAGON_SILVER,                                     "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  62
+            RACE_DRAGON_GOLD,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  63
+            RACE_DRAGON_BRONZE,                                     "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  64
+            RACE_DRAGON_COPPER,                                     "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  65
+            RACE_DRAGON_BRASS,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  66
+            RACE_UNDEAD_VAMPIRE,                                    "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  67
+            RACE_UNDEAD_LICH,                                       "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  68
+            RACE_UNDEAD_WIGHT,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  69
+            RACE_UNDEAD_GHAST,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  70
+            RACE_UNDEAD_SPECTRE,                                    "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  71
+            RACE_UNDEAD_ZOMBIE,                                     "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  72
+            RACE_UNDEAD_SKELETON,                                   "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  73
+            RACE_UNDEAD_GHOUL,                                      "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  74
+            RACE_HALF_ELVEN,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  75
+            RACE_HALF_OGRE,                                         "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  76
+            RACE_HALF_ORC,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  77
+            RACE_HALF_GIANT,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  78
+            RACE_LIZARDMAN,                                         "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  79
+            RACE_DARK_DWARF,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  80
+            RACE_DEEP_GNOME,                                        "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  81
+            RACE_GNOLL,                                             "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  82
+            RACE_GOLD_ELF,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  83
+            RACE_WILD_ELF,                                          "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  84
+            RACE_SEA_ELF,                                           "",                                         "",
+            "", /* lvl1 */                                          0, //   lvl1_val
+            "", /* lvl2 */                                          0, //   lvl2_val
+            "", /* lvl3 */                                          0, //   lvl3_val
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            -1,                                                     0, /*   grado_diff */                       0   //n_livelli
+        },
+        {   //  85
+            GROUP_INSECTOID,                                        "insettoide ucciso",                        "insettoidi uccisi",
+            "Autan",                                                100,
+            "Ti schiaccio come un...",                              1000,
+            "Mister Raid",                                          10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  86
+            GROUP_ANIMAL,                                           "animale ucciso",                           "animali uccisi",
+            "Carnivoro",                                            10,
+            "Amo le carneficine",                                   1000,
+            "Animal Killer",                                        10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  87
+            GROUP_VEGGIE,                                           "vegetale ucciso",                          "vegetali uccisi",
+            "Solo un'insalatina leggera",                           10,
+            "Ma lo sai che la carne fa male?",                      1000,
+            "Mr. Vegan",                                            10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  88
+            GROUP_SPECIALS,                                         "mostro esotico ucciso",                    "mostri esotici uccisi",
+            "Speciale? No, ordinario!",                             10,
+            "Specializzato",                                        100,
+            "Special One",                                          1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  89
+            GROUP_DARKRACES,                                        "abitante del sottosuolo ucciso",           "abitanti del sottosuolo uccisi",
+            "Io porto la luce!",                                    10,
+            "Paint it White",                                       100,
+            "Ritorna ell'ombra!",                                   1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  90
+            GROUP_DRAKES,                                           "drago ucciso",                             "draghi uccisi",
+            "Soffia Soffia!",                                       100,
+            "Flagello di Draghi",                                   1000,
+            "Un mondo di scaglie",                                  10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  91
+            GROUP_GIANTS,                                           "gigante ucciso",                           "giganti uccisi",
+            "Mira sempre alle ginocchia!",                          100,
+            "Attento che cade!",                                    1000,
+            "Chiamami Jack",                                        5000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  92
+            GROUP_RACEHALFBREED,                                    "mezzosangue ucciso",                       "mezzosangue uccisi",
+            "Scegli da che parte stare!",                           10,
+            "Ne' carne ne' pesce",                                  100,
+            "Scusa ma sono xenofobo",                               10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  93
+            GROUP_PLANAR,                                           "creatura planare uccisa",                  "creature planare uccise",
+            "Ognuno a casa sua",                                    10,
+            "Killing Planner",                                      100,
+            "Tu... non puoi... passare",                            1000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  94
+            GROUP_UNDEAD,                                           "non morto ucciso",                         "non morti uccisi",
+            "Spaccaossa",                                           10,
+            "Tritaossa",                                            1000,
+            "Drain nun te temo!",                                   10000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  95
+            GROUP_GREENSKIN,                                        "pelleverde ucciso",                        "pelleverde uccisi",
+            "Sono brutti e puzzano!",                               1000,
+            "Muoiono in un niente",                                 5000,
+            "Flagello dei pelleverde",                              20000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
+        },
+        {   //  96
+            GROUP_HUMANOID,                                         "umanoide ucciso",                          "umanoidi uccisi",
+            "Se non e' umano non conta",                            500,
+            "Ma due hobbit valgono uno o due?",                     2500,
+            "Sterminiamoli tutti",                                  15000,
+            "", /* lvl4 */                                          0, //   lvl4_val
+            "", /* lvl5 */                                          0, //   lvl5_val
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_BEGINNER,                               3
         }
     }
 };

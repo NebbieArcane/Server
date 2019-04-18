@@ -295,6 +295,17 @@ int RandomRoomByLevel(int level) {
 
 }
 
+extern void store_mail(char* to, char* from, char* message_pointer);
+
+void mail_to_god(struct char_data* ch, const char* god, const char* message)
+{
+    struct char_data* temp_char = ch;
+    
+    temp_char->desc->name = (char*)strdup(god);
+    temp_char->desc->showstr_head = (char*)strdup(message);
+    store_mail( temp_char->desc->name, GET_NAME(ch), temp_char->desc->showstr_head);
+}
+
 char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa, int achievement_type, int achievement_class)
 {
     int i, lung[3], max = 0, diff = 0;
@@ -531,13 +542,223 @@ int maxAchievements(struct char_data* ch)
     return conteggio;
 }
 
-int n_bosskill(int vnumber)
+void CheckQuestFail(struct char_data* ch)
 {
-    int i;
+    struct char_data* tch;
+    int diff_hunt = 0, diff_resc = 0, diff_resea = 0, diff_deliv = 0;
 
-    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+    tch = ch;
+
+    if(IS_POLY(tch))
     {
-        if(vnumber == AchievementsList[BOSSKILL_ACHIE][i].achie_number)
+        tch = ch->desc->original;
+    }
+
+    if(!IS_PC(tch))
+    {
+        return;
+    }
+
+    if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is less than the correct", GET_NAME(tch));
+            
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
+            }
+            
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is greater than the correct", GET_NAME(tch));
+            
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
+            }
+            
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
+        }
+    }
+
+    diff_hunt   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED];
+    diff_resc   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED];
+    diff_resea  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED];
+    diff_deliv  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED];
+
+    if(diff_hunt != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Hunt on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is greater than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Hunt on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+        }
+    }
+    else if(diff_resc != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Rescue on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is greater than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Rescue on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+        }
+    }
+    else if(diff_resea != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Research on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is greater than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Research on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+        }
+    }
+    else if(diff_deliv != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Delivery on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is greater than the correct", GET_NAME(tch));
+            
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Delivery on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+        }
+    }
+
+    diff_hunt   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED];
+    diff_resc   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED];
+    diff_resea  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED];
+    diff_deliv  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED];
+
+    if(diff_hunt != 0 || diff_deliv != 0 || diff_resea != 0 || diff_resc != 0)
+    {
+        CheckQuestFail(tch);
+    }
+}
+
+int n_bosskill(int vnumber, int achievement_class)
+{
+    int i, max = 0;
+
+    switch (achievement_class)
+    {
+        case BOSSKILL_ACHIE:
+            max = MAX_BOSS_ACHIE;
+            break;
+
+        case CLASS_ACHIE:
+            max = MAX_CLASS_ACHIE;
+            break;
+
+        default:
+            return -1;
+            break;
+    }
+
+    for(i = 0; i < max; i++)
+    {
+        if(vnumber == AchievementsList[achievement_class][i].achie_number)
         {
             return i;
         }
@@ -546,7 +767,11 @@ int n_bosskill(int vnumber)
     return -1;
 }
 
-bool hasAchievement(struct char_data* ch, int achievement_class)
+/*
+ *  display = 0     ==> achievement senza argomenti
+ *  display = 1     ==> achievement all
+ */
+bool hasAchievement(struct char_data* ch, int achievement_class, int display)
 {
     struct char_data* tch;
     int i;
@@ -561,9 +786,19 @@ bool hasAchievement(struct char_data* ch, int achievement_class)
         case CLASS_ACHIE:
             for(i = 1; i < MAX_CLASS_ACHIE; i++)
             {
-                if(ch->specials.achievements[CLASS_ACHIE][i] > 0)
+                if(display == 0)
                 {
-                    return TRUE;
+                    if(ch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl1_val && AchievementsList[CLASS_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[CLASS_ACHIE][i] > 0 && AchievementsList[CLASS_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
                 }
             }
             break;
@@ -571,9 +806,19 @@ bool hasAchievement(struct char_data* ch, int achievement_class)
         case BOSSKILL_ACHIE:
             for(i = 0; i < MAX_BOSS_ACHIE; i++)
             {
-                if(ch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+                if(display == 0)
                 {
-                    return TRUE;
+                    if(ch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl1_val && AchievementsList[BOSSKILL_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[BOSSKILL_ACHIE][i] > 0 && AchievementsList[BOSSKILL_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
                 }
             }
             break;
@@ -581,9 +826,19 @@ bool hasAchievement(struct char_data* ch, int achievement_class)
         case RACESLAYER_ACHIE:
             for(i = 0; i < MAX_RACE_ACHIE; i++)
             {
-                if(ch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+                if(display == 0)
                 {
-                    return TRUE;
+                    if(ch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl1_val && AchievementsList[RACESLAYER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[RACESLAYER_ACHIE][i] > 0 && AchievementsList[RACESLAYER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
                 }
             }
             break;
@@ -591,9 +846,19 @@ bool hasAchievement(struct char_data* ch, int achievement_class)
         case QUEST_ACHIE:
             for(i = 0; i < MAX_QUEST_ACHIE ; i++)
             {
-                if(ch->specials.achievements[QUEST_ACHIE][i] > 0)
+                if(display == 0)
                 {
-                    return TRUE;
+                    if(ch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl1_val && AchievementsList[QUEST_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[QUEST_ACHIE][i] > 0 && AchievementsList[QUEST_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
                 }
             }
             break;
@@ -601,9 +866,19 @@ bool hasAchievement(struct char_data* ch, int achievement_class)
         case OTHER_ACHIE:
             for(i = 0; i < MAX_OTHER_ACHIE; i++)
             {
-                if(ch->specials.achievements[OTHER_ACHIE][i] > 0)
+                if(display == 0)
                 {
-                    return TRUE;
+                    if(ch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl1_val && AchievementsList[OTHER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[OTHER_ACHIE][i] > 0 && AchievementsList[OTHER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
                 }
             }
             break;
@@ -985,6 +1260,153 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
     return sb;
 }
 
+int race_achievement(int race)
+{
+    int razza = -1;
+    
+    switch(race)
+    {
+        case RACE_INSECT:
+        case RACE_ARACHNID:
+            razza = GROUP_INSECTOID;
+            break;
+
+        case RACE_DINOSAUR:
+        case RACE_FISH:
+        case RACE_BIRD:
+        case RACE_PREDATOR:
+        case RACE_PARASITE:
+        case RACE_SNAKE:
+        case RACE_HERBIV:
+        case RACE_HORSE:
+        case RACE_PRIMATE:
+        case RACE_ROO:
+            razza = GROUP_ANIMAL;
+            break;
+
+        case RACE_TREE:
+        case RACE_VEGGIE:
+        case RACE_VEGMAN:
+            razza = GROUP_VEGGIE;
+            break;
+
+        case RACE_SPECIAL:
+        case RACE_LYCANTH:
+        case RACE_SLIME:
+        case RACE_ENFAN:
+        case RACE_SKEXIE:
+        case RACE_SMURF:
+        case RACE_PATRYN:
+        case RACE_LABRAT:
+        case RACE_DRAAGDIM:
+            razza = GROUP_SPECIALS;
+            break;
+
+        case RACE_GOLEM:
+            razza = RACE_GOLEM;
+            break;
+
+        case RACE_DARK_DWARF:
+        case RACE_DEEP_GNOME:
+        case RACE_DARK_ELF:
+            razza = GROUP_DARKRACES;
+            break;
+
+        case RACE_DRAGON:
+        case RACE_DRAGON_RED:
+        case RACE_DRAGON_BLACK:
+        case RACE_DRAGON_GREEN:
+        case RACE_DRAGON_WHITE:
+        case RACE_DRAGON_BLUE:
+        case RACE_DRAGON_SILVER:
+        case RACE_DRAGON_GOLD:
+        case RACE_DRAGON_BRONZE:
+        case RACE_DRAGON_COPPER:
+        case RACE_DRAGON_BRASS:
+            razza = GROUP_DRAKES;
+            break;
+
+        case RACE_GIANT:
+        case RACE_GIANT_HILL:
+        case RACE_GIANT_FROST:
+        case RACE_GIANT_FIRE:
+        case RACE_GIANT_CLOUD:
+        case RACE_GIANT_STORM:
+        case RACE_GIANT_STONE:
+        case RACE_TYTAN:
+            razza = GROUP_GIANTS;
+            break;
+
+        case RACE_HALF_ELVEN:
+        case RACE_HALF_OGRE:
+        case RACE_HALF_ORC:
+        case RACE_HALF_GIANT:
+        case RACE_HALFBREED:
+            razza = GROUP_RACEHALFBREED;
+            break;
+
+        case RACE_PLANAR:
+        case RACE_ASTRAL:
+        case RACE_ELEMENT:
+        case RACE_MFLAYER:
+        case RACE_SARTAN:
+            razza = GROUP_PLANAR;
+            break;
+
+        case RACE_UNDEAD:
+        case RACE_UNDEAD_VAMPIRE:
+        case RACE_UNDEAD_LICH:
+        case RACE_UNDEAD_WIGHT:
+        case RACE_UNDEAD_GHAST:
+        case RACE_UNDEAD_SPECTRE:
+        case RACE_UNDEAD_ZOMBIE:
+        case RACE_UNDEAD_SKELETON:
+        case RACE_UNDEAD_GHOUL:
+        case RACE_GHOST:
+            razza = GROUP_UNDEAD;
+            break;
+
+        case RACE_ORC:
+        case RACE_GOBLIN:
+        case RACE_TROLL:
+        case RACE_REPTILE:
+        case RACE_LIZARDMAN:
+        case RACE_GNOLL:
+            razza = GROUP_GREENSKIN;
+            break;
+
+        case RACE_HUMAN:
+        case RACE_ELVEN:
+        case RACE_DWARF:
+        case RACE_HALFLING:
+        case RACE_GNOME:
+        case RACE_GOLD_ELF:
+        case RACE_WILD_ELF:
+        case RACE_SEA_ELF:
+        case RACE_TROGMAN:
+            razza = GROUP_HUMANOID;
+            break;
+
+        case RACE_DEVIL:
+            race = RACE_DEVIL;
+            break;
+            
+        case RACE_DEMON:
+            race = RACE_DEMON;
+            break;
+
+        case RACE_GOD:
+            razza = RACE_GOD;
+            break;
+            
+        default:
+            mudlog(LOG_CHECK, "Wrong race found in CheckAchie");
+            break;
+    }
+
+    return razza;
+}
+
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class)
 {
     char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
@@ -1003,18 +1425,32 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         tch = ch->desc->original;
     }
 
+    if(AchievementsList[achievement_class][achievement_type].classe == -1)
+    {
+        // se l'achievement classe e' -1 non effettua il check
+        return;
+    }
+
+    // se il numero un pg arriva al valore massimo in un achievement mando una mail ai coder
+    if(tch->specials.achievements[achievement_class][achievement_type] == MaxValueAchievement(achievement_class, achievement_type, AchievementsList[achievement_class][achievement_type].n_livelli))
+    {
+        sprintf(buf, "%s ha raggiunto il valore massimo di '%s' pari a '%d'.\n\r\n\r", GET_NAME(tch), AchievementsList[achievement_class][achievement_type].achie_string2, tch->specials.achievements[achievement_class][achievement_type]);
+        mail_to_god(ch, "Requiem", buf);
+        mail_to_god(ch, "Croneh", buf);
+    }
+
     if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl1_val)
     {
         molt = 10;
         valore = AchievementsList[achievement_class][achievement_type].lvl1_val;
         strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl1);
-        if(valore == 1)
+        if(tch->specials.achievements[achievement_class][achievement_type] == 1)
         {
             strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string1);
         }
         else
         {
-                strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+            strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
         }
     }
     else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl2_val)
@@ -1083,7 +1519,9 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
     if(valore > 0)
     {
+        extern void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete);
         int reward;
+        struct obj_cost cost;
 
         sprintf(buf, "%s", spamAchie(tch, titolo, valore, stringa, achievement_type, achievement_class));
         send_to_char(buf, ch);
@@ -1124,11 +1562,12 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
                 break;
 
             default:
-                reward = RewardXp[GetMaxLevel(ch)].lev_1_xp;
+                reward = 0;
                 mudlog(LOG_CHECK, "Achievement's difficulty level is missing for achievement type %d (class %d)", achievement_type, achievement_class);
+                return;
                 break;
         }
-        mudlog(LOG_PLAYERS, "Reward prima della modifiche e' %d", reward);
+
         switch (HowManyClasses(tch))
         {
                 // monoclasee: il pg prende xp pieni
@@ -1145,20 +1584,250 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
                 reward *= 2;
                 break;
         }
-        mudlog(LOG_PLAYERS, "Reward dopo la modifica classi e' %d", reward);
-        int basso = int(reward - reward * 5 / 100);
-        int alto = int(reward + reward * 5 / 100);
 
         reward = reward * molt / 10;
 
         reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
 
-        mudlog(LOG_PLAYERS, "Reward finale: %d (numero tra %d e %d), il moltiplicatore era %d", reward, basso, alto, float(molt/10));
         gain_exp(tch, reward);
         sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
         act(buf, FALSE, tch, 0, 0, TO_CHAR);
-        do_save(tch, "", 0);
+        save_obj(ch, &cost, 0);
     }
+}
+
+int CheckMobQuest(int vnumber)
+{
+    int i;
+    
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(QuestMobAchie[i].mob_0 == vnumber && QuestMobAchie[i].mob_0 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_1 == vnumber && QuestMobAchie[i].mob_1 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_2 == vnumber && QuestMobAchie[i].mob_2 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_3 == vnumber && QuestMobAchie[i].mob_3 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_4 == vnumber && QuestMobAchie[i].mob_4 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_5 == vnumber && QuestMobAchie[i].mob_5 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_6 == vnumber && QuestMobAchie[i].mob_6 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_7 == vnumber && QuestMobAchie[i].mob_7 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_8 == vnumber && QuestMobAchie[i].mob_8 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_9 == vnumber && QuestMobAchie[i].mob_9 != 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void AssignMobQuestToToon(struct char_data* ch, int quest, int vnumber)
+{
+    int i;
+    struct char_data* tch;
+
+    tch = ch;
+
+    if(!IS_PC(ch))
+    {
+        return;
+    }
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+    
+    for(i = 0; i < QuestMobAchie[quest].numero_mob; i++)
+    {
+        if(tch->specials.quest_mob[quest][i] == vnumber && vnumber > 0)
+        {
+            // ho gia' ucciso questo mob
+            return;
+        }
+    }
+
+    for(i = 0; i < QuestMobAchie[quest].numero_mob; i++)
+    {
+        if(tch->specials.quest_mob[quest][i] == 0)
+        {
+            tch->specials.quest_mob[quest][i] = vnumber;
+            return;
+        }
+    }
+}
+
+bool CheckQuest(struct char_data* ch, int quest_number)
+{
+    int i, check[10] = {0,0,0,0,0,0,0,0,0,0}, totale = 0;
+    struct char_data* tch;
+
+    tch = ch;
+
+    if(!IS_PC(ch))
+    {
+        return FALSE;
+    }
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    if(QuestMobAchie[quest_number].numero_mob == 10)
+    {
+        for(i = 0; i < quest_number; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_9)
+            {
+                // trovato il mob
+                check[9] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 9)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_8)
+            {
+                // trovato il mob
+                check[8] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 8)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_7)
+            {
+                // trovato il mob
+                check[7] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 7)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_6)
+            {
+                // trovato il mob
+                check[6] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 6)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_5)
+            {
+                // trovato il mob
+                check[5] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 5)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_4)
+            {
+                // trovato il mob
+                check[4] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 4)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_3)
+            {
+                // trovato il mob
+                check[3] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 3)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_2)
+            {
+                // trovato il mob
+                check[2] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 2)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_1)
+            {
+                // trovato il mob
+                check[1] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 1)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_0)
+            {
+                // trovato il mob
+                check[0] = 1;
+            }
+        }
+    }
+
+    for(i = 0; i < 10; i++)
+    {
+        totale += check[i];
+    }
+
+    if(totale == QuestMobAchie[quest_number].numero_mob)
+    {
+        // tutti i mob uccisi, azzero i contatori
+        for(i = 0; i < 10; i++)
+        {
+            tch->specials.quest_mob[quest_number][i] = 0;
+        }
+        do_save(tch, "", 0);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 int EgoBladeSave(struct char_data* ch) {

@@ -3808,6 +3808,10 @@ void reset_char(struct char_data* ch) {
     {
         ch->specials.achievements[OTHER_ACHIE][i] = 0;
     }
+    for( i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
+    }
 
 	if(GET_HIT(ch) <= 0) {
 		GET_HIT(ch) = 1;
