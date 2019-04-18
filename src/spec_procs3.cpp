@@ -4860,7 +4860,7 @@ OBJSPECIAL_FUNC(thion_loader) {
 				//estrazione casuale del premio
 				percent = number(1,100);
 
-				if(percent <= 4) {
+				if(percent <= 10) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4883,7 +4883,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19777);
                     }
 				}
-				else if(percent > 4 && percent <= 10) {
+				else if(percent > 10 && percent <= 20) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4906,7 +4906,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19784);
                     }
 				}
-				else if(percent > 10 && percent <= 20) {
+				else if(percent > 20 && percent <= 35) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4929,37 +4929,37 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19788);
                     }
 				}
-				else if(percent > 20 && percent <= 30) {
+				else if(percent > 35 && percent <= 45) {
                     percent = number(1,100);
-                    if(percent <= 70)
+                    if(percent <= 68)
                     {
                         r_num = real_object(19758);
                     }
-                    else if(percent > 70 && percent <= 85)
+                    else if(percent > 68 && percent <= 84)
                     {
                         r_num = real_object(19789);
                     }
-                    else if(percent > 85 && percent <= 100)
+                    else if(percent > 84 && percent <= 100)
                     {
                         r_num = real_object(19790);
                     }
 				}
-				else if(percent > 30 && percent <= 40) {
+				else if(percent > 45 && percent <= 55) {
                     percent = number(1,100);
-                    if(percent <= 70)
+                    if(percent <= 68)
                     {
                         r_num = real_object(19759);
                     }
-                    else if(percent > 70 && percent <= 85)
+                    else if(percent > 68 && percent <= 84)
                     {
                         r_num = real_object(19791);
                     }
-                    else if(percent > 85 && percent <= 100)
+                    else if(percent > 84 && percent <= 100)
                     {
                         r_num = real_object(19792);
                     }
 				}
-				else if(percent > 40 && percent <= 50) {
+				else if(percent > 55 && percent <= 70) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4982,7 +4982,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19796);
                     }
 				}
-				else if(percent > 50 && percent <= 60) {
+				else if(percent > 70 && percent <= 80) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -5005,7 +5005,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19696);
                     }
 				}
-				else if(percent > 60 && percent <= 70) {
+				else if(percent > 80 && percent <= 85) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -5020,7 +5020,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19798);
                     }
 				}
-				else if(percent > 70 && percent <= 80) {
+				else if(percent > 85 && percent <= 90) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -5035,7 +5035,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19694);
                     }
 				}
-				else if(percent > 80 && percent <= 90) {
+				else if(percent > 90 && percent <= 95) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -5050,7 +5050,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19692);
                     }
 				}
-				else if(percent > 90 && percent <= 100) {
+				else if(percent > 95 && percent <= 100) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {

@@ -607,7 +607,7 @@ l'array connected_types in constants.cpp
 **MAX_CLASS_ACHIE                              34 
 **MAX_BOSS_ACHIE                               21 
 **MAX_QUEST_ACHIE                              1 
-**MAX_OTHER_ACHIE                              20 
+**MAX_OTHER_ACHIE                              25 
 **MAX_MOB_QUEST                                10 
 **MAX_RACE_ACHIE                               97 
 **CLASS_ACHIE                                  0 

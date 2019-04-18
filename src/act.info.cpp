@@ -2150,6 +2150,80 @@ ACTION_FUNC(do_status) {
 	act(buf, FALSE, ch, 0, 0, TO_CHAR);
 }
 
+ACTION_FUNC(do_checkachielevel)
+{
+    int i, num = 0;
+    std::string sb;
+
+    if(strcmp(GET_NAME(ch), "Croneh") && strcmp(GET_NAME(ch), "Alar") && strcmp(GET_NAME(ch), "Requiem"))
+    {
+        send_to_char("Pardon?\n\r", ch);
+        return;
+    }
+
+    sb.append("$c0011I seguenti achievement non hanno impostato il grado di difficolta':\n\r");
+    for(i = 0; i < MAX_RACE_ACHIE; i++)
+    {
+        if(AchievementsList[RACESLAYER_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0010%-12s %6d %-34s %s\n\r");
+            fmt % num % "Raceslayer:" % AchievementsList[RACESLAYER_ACHIE][i].achie_number % AchievementsList[RACESLAYER_ACHIE][i].achie_string2 % (AchievementsList[RACESLAYER_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[RACESLAYER_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[RACESLAYER_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+    {
+        if(AchievementsList[BOSSKILL_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0011%-12s %6d %-34s %s\n\r");
+            fmt % num % "Bosskill:" % AchievementsList[BOSSKILL_ACHIE][i].achie_number % AchievementsList[BOSSKILL_ACHIE][i].achie_string2 % (AchievementsList[BOSSKILL_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[BOSSKILL_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[BOSSKILL_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 1; i < MAX_CLASS_ACHIE; i++)
+    {
+        if(AchievementsList[CLASS_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0012%%-12s %6d %-34s %s\n\r");
+            fmt % num % "Class:" % AchievementsList[CLASS_ACHIE][i].achie_number % AchievementsList[CLASS_ACHIE][i].achie_string2 % (AchievementsList[CLASS_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[CLASS_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[CLASS_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(AchievementsList[QUEST_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0013%-12s %6d %-304s %s\n\r");
+            fmt % num % "Quest:" % AchievementsList[QUEST_ACHIE][i].achie_number % AchievementsList[QUEST_ACHIE][i].achie_string2 % (AchievementsList[QUEST_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[QUEST_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[QUEST_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 0; i < MAX_OTHER_ACHIE; i++)
+    {
+        if(AchievementsList[OTHER_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0014%-12s %6d %-34s %s\n\r");
+            fmt % num % "Other:" % AchievementsList[OTHER_ACHIE][i].achie_number % AchievementsList[OTHER_ACHIE][i].achie_string2 % (AchievementsList[OTHER_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[OTHER_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[OTHER_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    page_string(ch->desc, sb.c_str(), true);
+}
+
 ACTION_FUNC(do_achievements)
 {
     int i;

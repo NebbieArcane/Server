@@ -27,6 +27,7 @@ const char* SpellfailDesc(int a) ;
 void argument_split_2(const char* argument,char* first_arg,char* second_arg) ;
 int can_see_linear(struct char_data* ch, struct char_data* targ, int* rng,int* dr);
 ACTION_FUNC(do_achievements) ;
+ACTION_FUNC(do_checkachielevel) ;
 ACTION_FUNC(do_actual_wiz_help) ;
 ACTION_FUNC(do_attribute) ;
 ACTION_FUNC(do_command_list) ;

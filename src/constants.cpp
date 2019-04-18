@@ -5232,7 +5232,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             0,                                                      0,                                          5
         },
         {   //  15
-            ACHIE_LAZLO,                                            "Capitano di Nilmys ucciso",                "Roc uccisi",
+            ACHIE_LAZLO,                                            "Capitano di Nilmys ucciso",                "Lazlo uccisi",
             "Ahia! Ma questo fa male!",                             1,
             "Non saro' io di vedetta!",                             10,
             "Punitore di soldati",                                  100,
@@ -5507,9 +5507,9 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
         },
         {   //  12
             ACHIE_QUEST_HUNT_COMPLETE,                              "quest di caccia completata",               "quest di caccia completate",
-            "",                                 10,
-            "",                                 100,
-            "",                                      1000,
+            "Cacciatore in ascesa",                                 10,
+            "Boba Fett",                                            100,
+            "Cacciatore di Taglie",                                 1000,
             "", /* lvl4 */                                          0, //   lvl4_val
             "", /* lvl5 */                                          0, //   lvl5_val
             "", /* lvl6 */                                          0, //   lvl6_val
@@ -5521,9 +5521,9 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
         },
         {   //  13
             ACHIE_QUEST_HUNT_FAILED,                                "quest di caccia fallita",                  "quest di caccia fallite",
-            "",                                        10,
-            "",                                 100,
-            "",                                      1000,
+            "Ma dove diavolo era?",                                 10,
+            "Ehm, era troppo grosso per me...",                     100,
+            "Forse e' meglio farseli amici",                        1000,
             "", /* lvl4 */                                          0, //   lvl4_val
             "", /* lvl5 */                                          0, //   lvl5_val
             "", /* lvl6 */                                          0, //   lvl6_val
@@ -5535,9 +5535,9 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
         },
         {   //  14
             ACHIE_QUEST_RESCUE_COMPLETE,                            "quest di salvataggio completata",          "quest di salvataggio completate",
-            "",                                        10,
-            "",                                 100,
-            "",                                      1000,
+            "Boy scout",                                            10,
+            "Salva principesse",                                    100,
+            "S.W.A.T.",                                             1000,
             "", /* lvl4 */                                          0, //   lvl4_val
             "", /* lvl5 */                                          0, //   lvl5_val
             "", /* lvl6 */                                          0, //   lvl6_val
@@ -5549,9 +5549,9 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
         },
         {   //  15
             ACHIE_QUEST_RESCUE_FAILED,                              "quest di salvataggio fallita",             "quest di salvataggio fallite",
-            "",                                        10,
-            "",                                 100,
-            "",                                      1000,
+            "Scusami, avevo da fare...",                            10,
+            "Ti giuro che stavo arrivando...",                      100,
+            "Per chi mi avete preso, per un chierichetto?",         1000,
             "", /* lvl4 */                                          0, //   lvl4_val
             "", /* lvl5 */                                          0, //   lvl5_val
             "", /* lvl6 */                                          0, //   lvl6_val

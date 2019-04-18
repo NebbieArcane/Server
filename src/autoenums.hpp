@@ -1118,7 +1118,7 @@ enum e_wear {
 #define	MAX_CLASS_ACHIE                              34 
 #define	MAX_BOSS_ACHIE                               21 
 #define	MAX_QUEST_ACHIE                              1 
-#define	MAX_OTHER_ACHIE                              20 
+#define	MAX_OTHER_ACHIE                              25 
 #define	MAX_MOB_QUEST                                10 
 #define	MAX_RACE_ACHIE                               97 
 #define	CLASS_ACHIE                                  0 
