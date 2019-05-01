@@ -4533,6 +4533,883 @@ struct XpAchieTable RewardXp[ABS_MAX_LVL] = {
     {   1250000,    1375000,    1537500,    1662500,    1837500,    2037500,    2231250,    2475000,    2837500,    5000000 }
 };
 
+struct RandomMaterialsTable MaterialName[5][100] = {
+    //  organic 16
+    {   //  female                              neutral                             4                                       5                                   key
+        {   "d'ossa",                           "d'ossa",                           "d'ossa",                               "d'ossa",                           "ossa"                      },
+        {   "di legno",                         "di legno",                         "di legno",                             "di legno",                         "legno"                     },
+        {   "in pelle di drago",                "in pelle di drago",                "in pelle di drago",                    "in pelle di drago",                "pelle drago"               },
+        {   "ricoperta di conchiglie",          "ricoperto di conchiglie",          "ricoperte di conchiglie",              "ricoperti di conchiglie",          "conchiglie"                },
+        {   "di legno di quercia",              "di legno di quercia",              "di legno di quercia",                  "di legno di quercia",              "quercia"                   },
+        {   "di seta",                          "di seta",                          "di seta",                              "di seta",                          "seta"                      },
+        {   "di ebano",                         "di ebano",                         "di ebano",                             "di ebano",                         "ebano"                     },
+        {   "ricoperta da una strana corteccia","ricoperto da una strana corteccia","ricoperte da una strana corteccia",    "ricoperti da una strana corteccia","corteccia"                 },
+        {   "di sangue condensato",             "di sangue condensato",             "di sangue condensato",                 "di sangue condensato",             "sangue"                    },
+        {   "di ghiaccio",                      "di ghiaccio",                      "di ghiaccio",                          "di ghiaccio",                      "ghiaccio"                  },
+        {   "in pelle di lupo",                 "in pelle di lupo",                 "in pelle di lupo",                     "in pelle di lupo",                 "pelle lupo"                },
+        {   "in pelle di serpente",             "in pelle di serpente",             "in pelle di serpente",                 "in pelle di serpente",             "pelle serpente"            },
+        {   "di cuoio",                         "di cuoio",                         "di cuoio",                             "di cuoio",                         "cuoio"                     },
+        {   "di ebano nero",                    "di ebano nero",                    "di ebano nero",                        "di ebano nero",                    "ebano nero"                },
+        {   "di pelle",                         "di pelle",                         "di pelle",                             "di pelle",                         "pelle"                     },
+        {   "di legno di frassino",             "di legno di frassino",             "di legno di frassino",                 "di legno di frassino",             "frassiono"                 }
+    },
+    //  metallic    17
+    {   //  female                              neutral                             4                                       5                                   key
+        {   "d'oro",                            "d'oro",                            "d'oro",                                "d'oro",                            "oro"                       },
+        {   "di bronzo",                        "di bronzo",                        "di bronzo",                            "di bronzo",                        "bronzo"                    },
+        {   "di rame",                          "di rame",                          "di rame",                              "di rame",                          "rame"                      },
+        {   "di argento",                       "di argento",                       "di argento",                           "di argento",                       "argento"                   },
+        {   "di ferro",                         "di ferro",                         "di ferro",                             "di ferro",                         "ferro"                     },
+        {   "di mithril",                       "di mithril",                       "di mithril",                           "di mithril",                       "mithril"                   },
+        {   "di platino",                       "di platino",                       "di platino",                           "di platino",                       "platino"                   },
+        {   "di vibranio",                      "di vibranio",                      "di vibranio",                          "di vibranio",                      "vibranio"                  },
+        {   "di metallo",                       "di metallo",                       "di metallo",                           "di metallo",                       "metallo"                   },
+        {   "di acciaio",                       "di acciaio",                       "di acciaio",                           "di acciaio",                       "acciaio"                   },
+        {   "di stagno",                        "di stagno",                        "di stagno",                            "di stagno",                        "stagno"                    },
+        {   "di adamantio",                     "di adamantio",                     "di adamantio",                         "di adamantio",                     "adamantio"                 },
+        {   "di titanio",                       "di titanio",                       "di titanio",                           "di titanio",                       "titanio"                   },
+        {   "di gromril",                       "di gromril",                       "di gromril",                           "di gromril",                       "gromril"                   },
+        {   "di warpietra",                     "di warpietra",                     "di warpietra",                         "di warpietra",                     "warpietra"                 },
+        {   "di saronite",                      "di saronite",                      "di saronite",                          "di saronite",                      "saronite"                  },
+        {   "di azerite",                       "di azerite",                       "di azerite",                           "di azerite",                       "azerite"                   }
+    },
+    //  various 29
+    {   //  female                              neutral                             4                                       5                                   key
+        {   "antica",                           "antico",                           "antiche",                              "antichi",                          ""                          },
+        {   "maledetta",                        "maledetto",                        "maledette",                            "maledetti",                        ""                          },
+        {   "benedetta",                        "benedetto",                        "benedette",                            "benedetti",                        ""                          },
+        {   "invisibile",                       "invisibile",                       "invisibili",                           "invisibili",                       ""                          },
+        {   "sacra",                            "sacro",                            "sacre",                                "sacri",                            ""                          },
+        {   "magica",                           "magico",                           "magiche",                              "magici",                           ""                          },
+        {   "molto antica",                     "molto antico",                     "molto antiche",                        "molto antichi",                    ""                          },
+        {   "malandata",                        "malandato",                        "malandate",                            "malandati",                        ""                          },
+        {   "infuocata",                        "infuocato",                        "infuocate",                            "infuocati",                        ""                          },
+        {   "rara",                             "raro",                             "rare",                                 "raroi",                            ""                          },
+        {   "rinforzata",                       "rinforzato",                       "rinforzate",                           "rinforzati",                       ""                          },
+        {   "scheggiata",                       "scheggiato",                       "scheggiate",                           "scheggiati",                       ""                          },
+        {   "con delle crepe",                  "con delle crepe",                  "con delle crepe",                      "con delle crepe",                  "crepe"                     },
+        {   "ammaccata",                        "ammaccato",                        "ammaccate",                            "ammaccati",                        ""                          },
+        {   "insanguinata",                     "insanguinato",                     "insanguinate",                         "insanguinati",                     ""                          },
+        {   "cesellata",                        "cesellato",                        "cesellate",                            "cesellati",                        ""                          },
+        {   "ammantata d'Ombra",                "ammantato d'Ombra",                "ammantate d'Ombra",                    "ammantati d'Ombra",                "ombra"                     },
+        {   "luminosa",                         "luminoso",                         "luminose",                             "luminosi",                         ""                          },
+        {   "risplendete di luce",              "risplendete di luce",              "risplendeti di luce",                  "risplendeti di luce",              "luce"                      },
+        {   "d'Ombra",                          "d'Ombra",                          "d'Ombra",                              "d'Ombra",                          "ombra"                     },
+        {   "intarsiata",                       "intarsiato",                       "intarsiate",                           "intarsiati",                       ""                          },
+        {   "con venature metalliche",          "con venature metalliche",          "con venature metalliche",              "con venature metalliche",          "venature"                  },
+        {   "decorata",                         "decorato",                         "decorate",                             "decorati",                         ""                          },
+        {   "molto ben lavorata",               "molto ben lavorato",               "molto ben lavorate",                   "molto ben lavorati",               ""                          },
+        {   "trasparente",                      "trasparente",                      "trasparenti",                          "trasparenti",                      ""                          },
+        {   "leggendaria",                      "leggendario",                      "leggendarie",                          "leggendari",                       ""                          },
+        {   "usurata",                          "usurato",                          "usurate",                              "usurati",                          ""                          },
+        {   "di rara bellezza",                 "di rara bellezza",                 "di rara bellezza",                     "di rara bellezza",                 ""                          },
+        {   "scintillante",                     "scintillante",                     "scintillanti",                         "scintillanti",                     ""                          }
+    },
+    //  colour 24
+    {   //  female                              neutral                             4                                       5                                   key
+        {   "$c0009rossa$c0007",                "$c0009rosso$c0007",                "$c0009rosse$c0007",                    "$c0009rossi$c0007",                ""                          },
+        {   "$c0008nera$c0007",                 "$c0008nero$c0007",                 "$c0008nere$c0007",                     "$c0008neri$c0007",                 ""                          },
+        {   "$c0015bianca$c0007",               "$c0015bianco$c0007",               "$c0015bianche$c0007",                  "$c0015bianchi$c0007",              ""                          },
+        {   "$c0010verde$c0007",                "$c0010verde$c0007",                "$c0010verdi$c0007",                    "$c0010verdi$c0007",                ""                          },
+        {   "$c0011gialla$c0007",               "$c0011giallo$c0007",               "$c0011gialle$c0007",                   "$c0011gialli$c0007",               ""                          },
+        {   "$c0005viola$c0007",                "$c0005viola$c0007",                "$c0005viola$c0007",                    "$c0005viola$c0007",                ""                          },
+        {   "arancione",                        "arancione",                        "arancioni",                            "arancioni",                        ""                          },
+        {   "$c0004blu$c0007",                  "$c0004blu$c0007",                  "$c0004blu$c0007",                      "$c0004blu$c0007",                  ""                          },
+        {   "$c0012azzurra$c0007",              "$c0012azzurro$c0007",              "$c0012azzurre$c0007",                  "$c0012azzurri$c0007",              ""                          },
+        {   "$c0012in$c0005da$c0012co$c0007",   "$c0012in$c0005da$c0012co$c0007",   "$c0012in$c0005da$c0012co$c0007",       "$c0012in$c0005da$c0012co$c0007",   ""                          },
+        {   "$c0003marrone$c0007",              "$c0003marrone$c0007",              "$c0003marroni$c0007",                  "$c0003marroni$c0007",              ""                          },
+        {   "$c0008nero pece$c0007",            "$c0008nero pece$c0007",            "$c0008nero pece$c0007",                "$c0008nero pece$c0007",            ""                          },
+        {   "$c0011giallo canarino$c0007",      "$c0011giallo canarino$c0007",      "$c0011giallo canarino$c0007",          "$c0011giallo canarino$c0007",      ""                          },
+        {   "$c0012blu intenso$c0007",          "$c0012blu intenso$c0007",          "$c0012blu intenso$c0007",              "$c0012blu intenso$c0007",          ""                          },
+        {   "$c0004blu mare$c0007",             "$c0004blu mare$c0007",             "$c0004blu mare$c0007",                 "$c0004blu mare$c0007",             ""                          },
+        {   "$c0001amaranto$c0007",             "$c0001amaranto$c0007",             "$c0001amaranto$c0007",                 "$c0001amaranto$c0007",             ""                          },
+        {   "$c0009rosso fuoco$c0007",          "$c0009rosso fuoco$c0007",          "$c0009rosso fuoco$c0007",              "$c0009rosso fuoco$c0007",          ""                          },
+        {   "$c0011dorata$c0007",               "$c0011dorato$c0007",               "$c0011dorate$c0007",                   "$c0011dorati$c0007",               ""                          },
+        {   "$c0015argentata$c0007",            "$c0015argentato$c0007",            "$c0015argentate$c0007",                "$c0015argentati$c0007",            ""                          },
+        {   "$c0014celeste$c0007",              "$c0014celeste$c0007",              "$c0014celesti$c0007",                  "$c0014celesti$c0007",              ""                          },
+        {   "grigia",                           "grigio",                           "grigie",                               "grigi",                            ""                          },
+        {   "bianco sporco",                    "bianco sporco",                    "bianco sporco",                        "bianco sporco",                    ""                          },
+        {   "$c0013rosa$c0007",                 "$c0013rosa$c0007",                 "$c0013rosa$c0007",                     "$c0013rosa$c0007",                 ""                          },
+        {   "$c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0007",  "$c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014e$c0007",  "$c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014i$c0007",  "$c0014m$c0013u$c0012l$c0011t$c0010i$c0009c$c0010o$c0011l$c0012o$c0013r$c0014i$c0007",  ""}
+    },
+    //  mineral 15
+    {   //  female                              neutral                             4                                       5                                   key
+        {   "di roccia",                        "di roccia",                        "di roccia",                            "di roccia",                        "roccia"                    },
+        {   "di ossidiana",                     "di ossidiana",                     "di ossidiana",                         "di ossidiana",                     "ossidiana"                 },
+        {   "di argilla",                       "di argilla",                       "di argilla",                           "di argilla",                       "argilla"                   },
+        {   "di diamante",                      "di diamante",                      "di diamante",                          "di diamante",                      "diamante"                  },
+        {   "di cristallo",                     "di cristallo",                     "di cristallo",                         "di cristallo",                     "cristallo"                 },
+        {   "di vetro",                         "di vetro",                         "di vetro",                             "di vetro",                         "vetro"                     },
+        {   "di granito",                       "di granito",                       "di granito",                           "di granito",                       "granito"                   },
+        {   "di marmo",                         "di marmo",                         "di marmo",                             "di marmo",                         "marmo"                     },
+        {   "di quarzo",                        "di quarzo",                        "di quarzo",                            "di quarzo",                        "quarzo"                    },
+        {   "in resina",                        "in resina",                        "in resina",                            "in resina",                        "resina"                    },
+        {   "di basalto",                       "di basalto",                       "di basalto",                           "di basalto",                       "basalto"                   },
+        {   "di avorio",                        "di avorio",                        "di avorio",                            "di avorio",                        "avorio"                    },
+        {   "di kryptonite",                    "di kryptonite",                    "di kryptonite",                        "di kryptonite",                    "kryptonite"                },
+        {   "d'ambra",                          "d'ambra",                          "d'ambra",                              "d'ambra",                          "ambra"                     },
+        {   "di bachelite",                     "di bachelite",                     "di bachelite",                         "di bachelite",                     "bachelite"                 }
+    }
+};
+
+struct RandomEquipTable EquipName[22][20] = {
+                    //  4 = plurale femminile     5 = plurale neutro
+    {   //  finger 9                    gender          key
+        {   "un anello",                SEX_NEUTRAL,    "anello"            },
+        {   "una fede",                 SEX_FEMALE,     "fede"              },
+        {   "un anellino",              SEX_NEUTRAL,    "anellino"          },
+        {   "una fedina",               SEX_FEMALE,     "fedina"            },
+        {   "un cerchietto",            SEX_NEUTRAL,    "cerchietto"        },
+        {   "un simbolo",               SEX_NEUTRAL,    "simbolo"           },
+        {   "un sigillo",               SEX_NEUTRAL,    "sigillo"           },
+        {   "un tirapugni",             SEX_NEUTRAL,    "tirapugni"         },
+        {   "una fascetta",             SEX_FEMALE,     "fascetta"          }
+    },
+    {   //  wrist 9                     gender          key
+        {   "un bracciale",             SEX_NEUTRAL,    "bracciale"         },
+        {   "un braccialetto",          SEX_NEUTRAL,    "braccialetto"      },
+        {   "otto braccialetti",        5,              "otto braccialetti" },
+        {   "un ciondolo",              SEX_NEUTRAL,    "ciondolo"          },
+        {   "una catenina",             SEX_FEMALE,     "catenina"          },
+        {   "un cinturino",             SEX_NEUTRAL,    "cinturino"         },
+        {   "delle manette",            4,              "manette"           },
+        {   "una fascia",               SEX_FEMALE,     "fascia"            },
+        {   "un cerchietto",            SEX_NEUTRAL,    "cerchietto"        }
+    },
+    {   //  ear 9                       gender          key
+        {   "un orecchino",             SEX_NEUTRAL,    "orecchino"         },
+        {   "un pendente",              SEX_NEUTRAL,    "pendente"          },
+        {   "un gioiello",              SEX_NEUTRAL,    "gioiello"          },
+        {   "un monile",                SEX_NEUTRAL,    "monile"            },
+        {   "una buccola",              SEX_FEMALE,     "buccola"           },
+        {   "degli orecchini",          5,              "orecchini"         },
+        {   "un anellino",              SEX_NEUTRAL,    "anellino"          },
+        {   "un cerchio",               SEX_NEUTRAL,    "cerchio"           },
+        {   "una gocciola",             SEX_FEMALE,     "gocciola"          }
+    },
+    {   //  neck 11                     gender          key
+        {   "una collana",              SEX_FEMALE,     "collana"           },
+        {   "un ciondolo",              SEX_NEUTRAL,    "ciondolo"          },
+        {   "una catenina",             SEX_FEMALE,     "catenina"          },
+        {   "un amuleto",               SEX_NEUTRAL,    "amuleto"           },
+        {   "un medaglione",            SEX_NEUTRAL,    "medaglione"        },
+        {   "uno scarabeo",             SEX_NEUTRAL,    "scarabeo"          },
+        {   "un pendaglio",             SEX_NEUTRAL,    "pendaglio"         },
+        {   "un talismano",             SEX_NEUTRAL,    "talismano"         },
+        {   "un monile",                SEX_NEUTRAL,    "monile"            },
+        {   "un girocollo",             SEX_NEUTRAL,    "girocollo"         },
+        {   "un collare",               SEX_NEUTRAL,    "collare"           }
+    },
+    {   //  eyes 11                     gender          key
+        {   "degli occhiali",           5,              "occhiali"          },
+        {   "un monocolo",              SEX_NEUTRAL,    "monocolo"          },
+        {   "una visiera",              SEX_FEMALE,     "visiera"           },
+        {   "delle lenti",              4,              "lenti"             },
+        {   "una lente",                SEX_FEMALE,     "lente"             },
+        {   "una maschera",             SEX_FEMALE,     "maschera"          },
+        {   "una mascherina",           SEX_FEMALE,     "mascherina"        },
+        {   "un occhio",                SEX_NEUTRAL,    "occhio"            },
+        {   "una benda",                SEX_FEMALE,     "benda"             },
+        {   "una celata",               SEX_FEMALE,     "celata"            },
+        {   "un visore",                SEX_NEUTRAL,    "visore"            }
+    },
+    {   //  hold 11                     gender          key
+        {   "un tomo",                  SEX_NEUTRAL,    "tomo"              },
+        {   "un corno",                 SEX_NEUTRAL,    "corno"             },
+        {   "un simbolo",               SEX_NEUTRAL,    "simbolo"           },
+        {   "un grimorio",              SEX_NEUTRAL,    "grimorio"          },
+        {   "una collanina",            SEX_FEMALE,     "collanina"         },
+        {   "un rosario",               SEX_NEUTRAL,    "rosario"           },
+        {   "una pietra",               SEX_FEMALE,     "pietra"            },
+        {   "una perla",                SEX_FEMALE,     "perla"             },
+        {   "una roccia",               SEX_FEMALE,     "roccia"            },
+        {   "una gemma",                SEX_FEMALE,     "gemma"             },
+        {   "un sigillo",               SEX_NEUTRAL,    "sigillo"           }
+    },
+    {   //  light 14                    gender          key
+        {   "una sfera di luce",        SEX_FEMALE,     "sfera luce"        },
+        {   "un diamante brillante",    SEX_NEUTRAL,    "diamante brillante"},
+        {   "una fiamma eterna",        SEX_FEMALE,     "fiamma eterna"     },
+        {   "una sfera danzante",       SEX_FEMALE,     "sfera danzante"    },
+        {   "una torcia infuocata",     SEX_FEMALE,     "torcia infuocata"  },
+        {   "una lampada antica",       SEX_FEMALE,     "lampada antica"    },
+        {   "una lanterna da minatore", SEX_FEMALE,     "lanterna minatore" },
+        {   "una lanterna antica",      SEX_FEMALE,     "lanterna antica"   },
+        {   "una piccola stella",       SEX_FEMALE,     "stella piccola"    },
+        {   "un frammento di stella",   SEX_NEUTRAL,    "stella frammento"  },
+        {   "una gemma splendente",     SEX_FEMALE,     "gemma splendente"  },
+        {   "una candela",              SEX_FEMALE,     "candela"           },
+        {   "una fatina",               SEX_FEMALE,     "fatina"            },
+        {   "un cerino",                SEX_NEUTRAL,    "cerino"            },
+        {   "un fiammifero",            SEX_NEUTRAL,    "fiammifero"        }
+    },
+    {   //  back 10                     gender          key
+        {   "una borsa",                SEX_FEMALE,     "borsa"             },
+        {   "uno zaino",                SEX_NEUTRAL,    "zaino"             },
+        {   "una sacca",                SEX_FEMALE,     "sacca"             },
+        {   "un forziere",              SEX_NEUTRAL,    "forziere"          },
+        {   "un barile",                SEX_NEUTRAL,    "barile"            },
+        {   "un cesto",                 SEX_NEUTRAL,    "cesto"             },
+        {   "una gerla",                SEX_FEMALE,     "gerla"             },
+        {   "una cassapanca",           SEX_FEMALE,     "cassapanca"        },
+        {   "una bisaccia",             SEX_FEMALE,     "bisaccia"          },
+        {   "una cesta",                SEX_FEMALE,     "cesta"             }
+    },
+    {   //  about body 9                gender          key
+        {   "un mantello",              SEX_NEUTRAL,    "mantello"          },
+        {   "un manto",                 SEX_NEUTRAL,    "manto"             },
+        {   "una pelliccia",            SEX_FEMALE,     "pelliccia"         },
+        {   "un vello",                 SEX_NEUTRAL,    "vello"             },
+        {   "una cappa",                SEX_FEMALE,     "cappa"             },
+        {   "un tabarro",               SEX_NEUTRAL,    "tabarro"           },
+        {   "un sari",                  SEX_NEUTRAL,    "sari"              },
+        {   "una pianeta",              SEX_FEMALE,     "pianeta"           },
+        {   "un caftano",               SEX_NEUTRAL,    "caftano"           }
+    },
+    {   //  waist 9                     gender          key
+        {   "una cintura",              SEX_FEMALE,     "cintura"           },
+        {   "un nastro",                SEX_NEUTRAL,    "nastro"            },
+        {   "un cinturone",             SEX_NEUTRAL,    "cinturone"         },
+        {   "una corda",                SEX_FEMALE,     "corda"             },
+        {   "una liana",                SEX_FEMALE,     "liana"             },
+        {   "un gonnellino",            SEX_NEUTRAL,    "gonnellino"        },
+        {   "una fascia",               SEX_FEMALE,     "fascia"            },
+        {   "una catena",               SEX_FEMALE,     "catena"            },
+        {   "una fusciacca",            SEX_FEMALE,     "fusciacca"         }
+    },
+    {   //  feet 9                      gender          key
+        {   "degli stivali",            5,              "stivali"           },
+        {   "un paio di stivali",       5,              "stivali paio"      },
+        {   "delle scarpe",             4,              "scarpe"            },
+        {   "un paio di scarpe",        4,              "scarpe paio"       },
+        {   "dei calzari",              5,              "calzari"           },
+        {   "degli anfibi",             5,              "anfibi"            },
+        {   "dei sandali",              5,              "sandali"           },
+        {   "degli scarponi",           5,              "scarponi"          },
+        {   "un paio di scarponi",      5,              "scarponi paio"     }
+    },
+    {   //  hands 9                     gender          key
+        {   "un paio di guanti",        5,              "guanti paio"       },
+        {   "dei guanti",               5,              "guanti"            },
+        {   "dei guantoni",             5,              "guantoni"          },
+        {   "delle fasce",              4,              "fasce"             },
+        {   "delle placche",            4,              "placche"           },
+        {   "delle protezioni",         4,              "protezioni"        },
+        {   "dei gusci",                5,              "gusci"             },
+        {   "degli uncini",             5,              "unicini"           },
+        {   "degli artigli",            5,              "artigli"           }
+    },
+    {   //  body 10                     gender          key
+        {   "una armatura",             SEX_FEMALE,     "armatura"          },
+        {   "una veste",                SEX_FEMALE,     "veste"             },
+        {   "una corazza",              SEX_FEMALE,     "corazza"           },
+        {   "una cotta",                SEX_FEMALE,     "cotta"             },
+        {   "un corpetto",              SEX_NEUTRAL,    "corpetto"          },
+        {   "un giustacuore",           SEX_NEUTRAL,    "giustacuore"       },
+        {   "una uniforme",             SEX_FEMALE,     "uniforme"          },
+        {   "un pettorale",             SEX_NEUTRAL,    "pettorale"         },
+        {   "un saio",                  SEX_NEUTRAL,    "saio"              },
+        {   "un'armatura",              SEX_FEMALE,     "armatura"          },
+        {   "un kimono",                SEX_NEUTRAL,    "kimono"            }
+    },
+    {   //  head 9                      gender          key
+        {   "un elmo",                  SEX_NEUTRAL,    "elmo"              },
+        {   "una corona",               SEX_FEMALE,     "corona"            },
+        {   "una fascia",               SEX_FEMALE,     "fascia"            },
+        {   "una bandana",              SEX_FEMALE,     "bandana"           },
+        {   "una testa",                SEX_FEMALE,     "testa"             },
+        {   "un cappello",              SEX_NEUTRAL,    "cappello"          },
+        {   "un cappuccio",             SEX_NEUTRAL,    "cappuccio"         },
+        {   "un diadema",               SEX_NEUTRAL,    "diadema"           },
+        {   "un copricapo",             SEX_NEUTRAL,    "copricapo"         }
+    },
+
+    {   //  legs 9                      gender          key
+        {   "dei gambali",              5,              "gambali"           },
+        {   "dei pantaloni",            5,              "pantaloni"         },
+        {   "delle calze",              4,              "calze"             },
+        {   "un paio di pantaloni",     5,              "pantaloni paio"    },
+        {   "degli schinieri",          5,              "schinieri"         },
+        {   "delle fasciature",         4,              "fasciature"        },
+        {   "delle stecche",            4,              "stecche"           },
+        {   "delle protezioni",         4,              "protezioni"        },
+        {   "delle calotte",            4,              "calotte"           }
+    },
+    {   //  arms 9                      gender          key
+        {   "delle maniche",            4,              "maniche"           },
+        {   "dei bracciali",            5,              "bracciali"         },
+        {   "dei parabraccia",          5,              "parabraccia"       },
+        {   "una cubitiera",            SEX_FEMALE,     "cubitiera"         },
+        {   "delle lastre",             4,              "lastra"            },
+        {   "un vambrace",              SEX_NEUTRAL,    "vambrace"          },
+        {   "una protezione",           SEX_FEMALE,     "protezione"        },
+        {   "delle bende",              4,              "bende"             },
+        {   "un carapace",              SEX_NEUTRAL,    "carapace"          }
+    },
+    {   //  shield 14                   gender          key
+        {   "uno scudo",                SEX_NEUTRAL,    "scudo"             },
+        {   "uno scutum",               SEX_NEUTRAL,    "scutum"            },
+        {   "un pavese",                SEX_NEUTRAL,    "pavese"            },
+        {   "uno scudo crociato",       SEX_NEUTRAL,    "scudo crociato"    },
+        {   "uno scudo rotondo",        SEX_NEUTRAL,    "scudo rotondo"     },
+        {   "uno scudo vichingo",       SEX_NEUTRAL,    "scudo vichingo"    },
+        {   "uno scudo puntuto",        SEX_NEUTRAL,    "scudo puntuto"     },
+        {   "un buckler",               SEX_NEUTRAL,    "buckler"           },
+        {   "una lastra",               SEX_FEMALE,     "lastra"            },
+        {   "uno scudo triangolare",    SEX_NEUTRAL,    "scudo triangolare" },
+        {   "uno scudo antisommossa",   SEX_NEUTRAL,    "scudo antisommossa"},
+        {   "una porta",                SEX_FEMALE,     "porta"             },
+        {   "un kite",                  SEX_NEUTRAL,    "kite"              },
+        {   "uno scudo a rotella",      SEX_NEUTRAL,    "scudo rotella"     }
+    },
+    {   //  blunt weapon 15             gender          key
+        {   "un martello",              SEX_NEUTRAL,    "martello"          },
+        {   "una mazza",                SEX_FEMALE,     "mazza"             },
+        {   "una stella del mattino",   SEX_FEMALE,     "stella mattino"    },
+        {   "una tazza da te'",         SEX_FEMALE,     "tazza te"          },
+        {   "uno scettro",              SEX_NEUTRAL,    "scettro"           },
+        {   "un manganello",            SEX_NEUTRAL,    "manganello"        },
+        {   "una clava",                SEX_FEMALE,     "clava"             },
+        {   "una padella",              SEX_FEMALE,     "padella"           },
+        {   "un tonfa",                 SEX_NEUTRAL,    "tonfa"             },
+        {   "un bastone",               SEX_NEUTRAL,    "bastone"           },
+        {   "una mazza ferrata",        SEX_FEMALE,     "mazza ferrata"     },
+        {   "un mazzafrusto",           SEX_NEUTRAL,    "mazzafrusto"       },
+        {   "un nunchaku",              SEX_NEUTRAL,    "nunchaku"          },
+        {   "un flagello",              SEX_NEUTRAL,    "flagello"          },
+        {   "un martello da guerra",    SEX_NEUTRAL,    "martello guerra"   }
+    },
+    {   //  slash weapon 19             gender          key
+        {   "una spada",                SEX_FEMALE,     "spada"             },
+        {   "una scimitarra",           SEX_FEMALE,     "scimitarra"        },
+        {   "una falce",                SEX_FEMALE,     "falce"             },
+        {   "un'ascia",                 SEX_FEMALE,     "ascia"             },
+        {   "una spada corta",          SEX_FEMALE,     "spada corta"       },
+        {   "un'azza",                  SEX_FEMALE,     "azza"              },
+        {   "uno spadone",              SEX_NEUTRAL,    "spadone"           },
+        {   "un'alabarda",              SEX_FEMALE,     "alabarda"          },
+        {   "una sciabola",             SEX_FEMALE,     "sciabola"          },
+        {   "una claymore",             SEX_FEMALE,     "claymore"          },
+        {   "una daga",                 SEX_FEMALE,     "daga"              },
+        {   "una spatha",               SEX_FEMALE,     "spatha"            },
+        {   "un falcione",              SEX_NEUTRAL,    "falcione"          },
+        {   "una flamberga",            SEX_FEMALE,     "flamberga"         },
+        {   "un gladio",                SEX_NEUTRAL,    "gladio"            },
+        {   "una katana",               SEX_FEMALE,     "katana"            },
+        {   "un machete",               SEX_NEUTRAL,    "machete"           },
+        {   "un tomahawk",              SEX_NEUTRAL,    "tomahawk"          },
+        {   "un'ascia bipenne",         SEX_FEMALE,     "ascia bipenne"     }
+    },
+    {   //  pierce weapon 15            gender          key
+        {   "un pugnale",               SEX_NEUTRAL,    "pugnale"           },
+        {   "uno stocco",               SEX_NEUTRAL,    "stocco"            },
+        {   "un fioretto",              SEX_NEUTRAL,    "fioretto"          },
+        {   "un coltello",              SEX_NEUTRAL,    "coltello"          },
+        {   "una lancia",               SEX_FEMALE,     "lancia"            },
+        {   "un paio di forbici",       4,              "forbici paio"      },
+        {   "uno stiletto",             SEX_NEUTRAL,    "stiletto"          },
+        {   "un tridente",              SEX_NEUTRAL,    "tridente"          },
+        {   "un punteruolo",            SEX_NEUTRAL,    "punteruolo"        },
+        {   "una picca",                SEX_FEMALE,     "picca"             },
+        {   "un dirk",                  SEX_NEUTRAL,    "dirk"              },
+        {   "un giavellotto",           SEX_NEUTRAL,    "giavellotto"       },
+        {   "una partigiana",           SEX_FEMALE,     "partigiana"        },
+        {   "uno spiedo",               SEX_NEUTRAL,    "spiedo"            },
+        {   "un kris",                  SEX_NEUTRAL,    "kris"              }
+    },
+    {   //  wand 9                      gender          key
+        {   "una bacchetta",            SEX_FEMALE,     "bacchetta"         },
+        {   "un bastoncino",            SEX_NEUTRAL,    "bastoncino"        },
+        {   "un rametto",               SEX_NEUTRAL,    "rametto"           },
+        {   "una stecca",               SEX_FEMALE,     "stecca"            },
+        {   "un corno",                 SEX_NEUTRAL,    "corno"             },
+        {   "un vincastro",             SEX_NEUTRAL,    "vincastro"         },
+        {   "un cucchiaio",             SEX_NEUTRAL,    "cucchiaio"         },
+        {   "una spatola",              SEX_FEMALE,     "spatola"           },
+        {   "un rabdo",                 SEX_NEUTRAL,    "rabdo"             }
+    },
+    {   //  staff 9                     gender          key
+        {   "un bastone",               SEX_NEUTRAL,    "bastone"           },
+        {   "un'asta",                  SEX_FEMALE,     "asta"              },
+        {   "un pastorale",             SEX_NEUTRAL,    "pastorale"         },
+        {   "uno scettro",              SEX_NEUTRAL,    "scettro"           },
+        {   "un caduceo",               SEX_NEUTRAL,    "caduceo"           },
+        {   "una verga",                SEX_FEMALE,     "verga"             },
+        {   "un bacchio",               SEX_NEUTRAL,    "bucchio"           },
+        {   "un alpenstock",            SEX_NEUTRAL,    "alpenstock"        },
+        {   "una pertica",              SEX_FEMALE,     "pertica"           }
+    }
+};
+
+struct ObjAchieTable RewardObj[3][20] = {
+    {
+        //  Casters
+        {   //  Finger
+            1374,               ITEM_TREASURE,
+            APPLY_MANA_REGEN,   APPLY_MANA,         STAT_RANDOM,        ELEM_RESI_RANDOM,   APPLY_HIT,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Wrist
+            1375,               ITEM_TREASURE,
+            APPLY_SPELLFAIL,    APPLY_MANA,         STAT_RANDOM,        APPLY_HIT,          APPLY_MANA_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Ear
+            1376,               ITEM_TREASURE,
+            APPLY_MANA,         APPLY_SPELLFAIL,    APPLY_MANA_REGEN,   OBJ_TELEPATHY,      STAT_RANDOM,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Neck
+            1377,               ITEM_TREASURE,
+            APPLY_MANA,         APPLY_SPELLFAIL,    STAT_RANDOM,        APPLY_AC,           APPLY_MANA_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Eyes
+            1378,               ITEM_TREASURE,
+            OBJ_TRUE_SIGHT,     APPLY_MANA,         STAT_RANDOM,        ELEM_RESI_RANDOM,   APPLY_MANA_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Hold
+            1379,               ITEM_TREASURE,
+            ELEM_RESI_RANDOM,   APPLY_MANA,         APPLY_MANA_REGEN,   APPLY_SPELLFAIL,    OBJ_INVISIBILITY,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Light
+            1380,               ITEM_LIGHT,
+            OBJ_SENCE_LIFE,     APPLY_MANA,         APPLY_MANA_REGEN,   APPLY_SPELLFAIL,    OBJ_LIFE_PROT,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Back
+            1381,               ITEM_CONTAINER,
+            OBJ_ARTIFACT,       APPLY_MANA,         APPLY_MANA_REGEN,   STAT_RANDOM,        APPLY_HIT,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  About Body
+            1382,               ITEM_ARMOR,
+            APPLY_SPELLFAIL,    STAT_RANDOM,        APPLY_MANA_REGEN,   APPLY_HIT,          APPLY_MANA,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Waist
+            1383,               ITEM_ARMOR,
+            APPLY_SPELLFAIL,    APPLY_MANA,         APPLY_MANA_REGEN,   STAT_RANDOM,        APPLY_HIT,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Feet
+            1384,               ITEM_ARMOR,
+            APPLY_MOVE,         OBJ_FLY,            STAT_RANDOM,        APPLY_MOVE_REGEN,   OBJ_SNEAK,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Hands
+            1385,               ITEM_ARMOR,
+            APPLY_MANA_REGEN,   APPLY_SPELLFAIL,    APPLY_HITROLL,      APPLY_MANA,         STAT_RANDOM,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Body
+            1386,               ITEM_ARMOR,
+            APPLY_MANA,         APPLY_MANA_REGEN,   OBJ_RESI_SLASH,     APPLY_SPELLFAIL,    APPLY_HIT,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Head
+            1387,               ITEM_ARMOR,
+            APPLY_MANA,         APPLY_AC,           OBJ_SPY,            APPLY_MANA_REGEN,   APPLY_HIT,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Legs
+            1388,               ITEM_ARMOR,
+            APPLY_MANA_REGEN,   APPLY_MANA,         STAT_RANDOM,        APPLY_SPELLFAIL,    APPLY_AC,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Arms
+            1389,               ITEM_ARMOR,
+            APPLY_HIT,          APPLY_MANA,         STAT_RANDOM,        APPLY_MANA_REGEN,   APPLY_SPELLFAIL,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Shield
+            1390,               ITEM_ARMOR,
+            APPLY_HITROLL,      APPLY_MANA,         OBJ_RESI_PIERCE,    APPLY_MANA_REGEN,   APPLY_AC,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Wield
+            1391,               ITEM_WEAPON,
+            APPLY_MANA,         APPLY_HITROLL,      APPLY_DAMROLL,      APPLY_SPELLFAIL,    APPLY_HITROLL,
+            100,                70,                 40,                 20,                 5
+        },
+        {   //  Wand
+            1392,               ITEM_WAND,
+            APPLY_MANA,         STAT_RANDOM,        APPLY_MANA_REGEN,   APPLY_SPELLFAIL,    APPLY_HIT,
+            100,                70,                 40,                 20,                 5
+        },
+        {   //  Staff
+            1393,               ITEM_STAFF,
+            APPLY_MANA,         STAT_RANDOM,        APPLY_HIT,          APPLY_MANA_REGEN,   APPLY_SPELLFAIL,
+            100,                70,                 40,                 20,                 5
+        }
+    },
+    {
+        //  Multi
+        {   //  Finger
+            1374,               ITEM_TREASURE,
+            APPLY_SPELLFAIL,    APPLY_MANA,         APPLY_HITNDAM,      APPLY_HIT,          APPLY_HIT_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Wrist
+            1375,               ITEM_TREASURE,
+            APPLY_HIT,          APPLY_SPELLFAIL,    APPLY_MANA,         APPLY_MANA_REGEN,   APPLY_DAMROLL,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Ear
+            1376,               ITEM_TREASURE,
+            APPLY_MANA,         APPLY_HIT_REGEN,    APPLY_HITROLL,      APPLY_HIT,          APPLY_SPELLFAIL,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Neck
+            1377,               ITEM_TREASURE,
+            APPLY_AC,           APPLY_MANA_REGEN,   APPLY_HIT,          APPLY_HITNDAM,      APPLY_MANA,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Eyes
+            1378,               ITEM_TREASURE,
+            APPLY_HIT,          OBJ_SENCE_LIFE,     APPLY_MANA,         OBJ_SPY,            APPLY_MANA_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Hold
+            1379,               ITEM_TREASURE,
+            APPLY_HIT,          STAT_RANDOM,        ELEM_RESI_RANDOM,   APPLY_DAMROLL,      OBJ_LIFE_PROT,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Light
+            1380,               ITEM_LIGHT,
+            APPLY_HIT_REGEN,    APPLY_HIT,          APPLY_SPELLFAIL,    APPLY_HITNDAM,      STAT_RANDOM,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Back
+            1381,               ITEM_CONTAINER,
+            OBJ_ARTIFACT,       APPLY_SPELLFAIL,    APPLY_MANA,         APPLY_HIT_REGEN,    APPLY_HIT,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  About Body
+            1382,               ITEM_ARMOR,
+            APPLY_AC,           STAT_RANDOM,        ELEM_RESI_RANDOM,   APPLY_HIT,          APPLY_HITNDAM,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Waist
+            1383,               ITEM_ARMOR,
+            APPLY_SPELLFAIL,    OBJ_FLY,            APPLY_MANA,         APPLY_MANA_REGEN,   APPLY_HITROLL,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Feet
+            1384,               ITEM_ARMOR,
+            APPLY_MOVE,         APPLY_MOVE_REGEN,   STAT_RANDOM,        APPLY_HITROLL,      APPLY_AC,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Hands
+            1385,               ITEM_ARMOR,
+            APPLY_HITROLL,      APPLY_MANA,         APPLY_HIT,          APPLY_AC,           APPLY_MANA_REGEN,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Body
+            1386,               ITEM_ARMOR,
+            APPLY_HIT,          APPLY_AC,           OBJ_RESI_SLASH,     APPLY_MANA,         APPLY_HITNDAM,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Head
+            1387,               ITEM_ARMOR,
+            APPLY_HIT,          ELEM_RESI_RANDOM,   OBJ_TRUE_SIGHT,     APPLY_MANA,         APPLY_MANA_REGEN,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Legs
+            1388,               ITEM_ARMOR,
+            APPLY_MANA,         APPLY_HIT,          STAT_RANDOM,        APPLY_MANA_REGEN,   APPLY_HITNDAM,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Arms
+            1389,               ITEM_ARMOR,
+            APPLY_HIT_REGEN,    ELEM_RESI_RANDOM,   APPLY_MANA_REGEN,   APPLY_SPELLFAIL,    APPLY_HITNDAM,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Shield
+            1390,               ITEM_ARMOR,
+            APPLY_HIT,          OBJ_RESI_PIERCE,    APPLY_HITNDAM,      APPLY_SPELLFAIL,    APPLY_HIT_REGEN,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Wield
+            1391,               ITEM_WEAPON,
+            APPLY_HITROLL,      APPLY_DAMROLL,      STAT_RANDOM,        APPLY_HITNDAM,      APPLY_HITROLL,
+            100,                70,                 40,                 20,                 5
+        },
+        {   //  Wand
+            1392,               ITEM_WAND,
+            APPLY_MANA_REGEN,   APPLY_SPELLFAIL,    APPLY_MANA,         STAT_RANDOM,        APPLY_HITROLL,
+            100,                70,                 40,                 20,                 5
+        },
+        {   //  Staff
+            1393,               ITEM_STAFF,
+            APPLY_MANA,         APPLY_HIT,          STAT_RANDOM,        APPLY_SPELLFAIL,    APPLY_HIT_REGEN,
+            100,                70,                 40,                 20,                 5
+        }
+    },
+    {
+        //  Melee
+        {   //  Finger
+            1374,               ITEM_TREASURE,
+            APPLY_HITROLL,      APPLY_HIT,          APPLY_DAMROLL,      STAT_RANDOM,        APPLY_HIT_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Wrist
+            1394,               ITEM_ARMOR,
+            APPLY_HIT_REGEN,    APPLY_HITROLL,      STAT_RANDOM,        APPLY_HIT,          APPLY_MANA_REGEN,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Ear
+            1376,               ITEM_TREASURE,
+            APPLY_HITROLL,      APPLY_HIT_REGEN,    STAT_RANDOM,        ELEM_RESI_RANDOM,   APPLY_MANA,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Neck
+            1377,               ITEM_TREASURE,
+            APPLY_HIT,          ELEM_RESI_RANDOM,   STAT_RANDOM,        APPLY_HITNDAM,      APPLY_SPELLFAIL,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Eyes
+            1395,               ITEM_ARMOR,
+            OBJ_SENCE_LIFE,     APPLY_HIT,          APPLY_HIT_REGEN,    OBJ_SPY,            APPLY_MANA,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Hold
+            1379,               ITEM_TREASURE,
+            APPLY_HITROLL,      OBJ_TELEPATHY,      APPLY_DAMROLL,      STAT_RANDOM,        APPLY_SPELLFAIL,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Light
+            1380,               ITEM_LIGHT,
+            APPLY_HITROLL,      STAT_RANDOM,        APPLY_DAMROLL,      STAT_RANDOM,        OBJ_LIFE_PROT,
+            100,                75,                 50,                 25,                 10
+        },
+        {   //  Back
+            1396,               ITEM_ARMOR,
+            APPLY_HITROLL,      APPLY_AC,           APPLY_HIT_REGEN,    APPLY_DAMROLL,      APPLY_HIT,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  About Body
+            1382,               ITEM_ARMOR,
+            APPLY_AC,           APPLY_HITROLL,      APPLY_HIT_REGEN,    APPLY_HIT,          OBJ_INVISIBILITY,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Waist
+            1383,               ITEM_ARMOR,
+            ELEM_RESI_RANDOM,   APPLY_HIT,          APPLY_HIT_REGEN,    APPLY_HITNDAM,      APPLY_SPELLFAIL,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Feet
+            1384,               ITEM_ARMOR,
+            APPLY_MOVE,         APPLY_MOVE_REGEN,   OBJ_FLY,            STAT_RANDOM,        APPLY_HITNDAM,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Hands
+            1385,               ITEM_ARMOR,
+            APPLY_HITNDAM,      APPLY_HIT_REGEN,    APPLY_HITROLL,      APPLY_HIT,          APPLY_DAMROLL,
+            100,                80,                 50,                 30,                 10
+        },
+        {   //  Body
+            1386,               ITEM_ARMOR,
+            APPLY_HIT,          OBJ_RESI_SLASH,     APPLY_AC,           APPLY_HITNDAM,      APPLY_HIT_REGEN,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Head
+            1387,               ITEM_ARMOR,
+            OBJ_TRUE_SIGHT,     APPLY_HIT,          ELEM_RESI_RANDOM,   APPLY_HITROLL,      APPLY_DAMROLL,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Legs
+            1388,               ITEM_ARMOR,
+            APPLY_HITROLL,      APPLY_HIT,          STAT_RANDOM,        APPLY_AC,           APPLY_HITNDAM,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Arms
+            1389,               ITEM_ARMOR,
+            APPLY_HITNDAM,      APPLY_HIT,          STAT_RANDOM,        APPLY_AC,           APPLY_HIT_REGEN,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Shield
+            1390,               ITEM_ARMOR,
+            APPLY_DAMROLL,      OBJ_RESI_PIERCE,    APPLY_AC,           APPLY_HITROLL,      APPLY_HIT_REGEN,
+            100,                80,                 60,                 40,                 20
+        },
+        {   //  Wield
+            1391,               ITEM_WEAPON,
+            APPLY_HITROLL,      APPLY_DAMROLL,      APPLY_HITROLL,      APPLY_DAMROLL,      APPLY_HITNDAM,
+            100,                70,                 40,                 20,                 5
+        },
+        {   //  Wand
+            1392,               ITEM_WAND,
+            0,                  0,                  0,                  0,                  0,
+            100,                70,                 40,                 20,                 5
+        },
+        {   //  Staff
+            1393,               ITEM_STAFF,
+            0,                  0,                  0,                  0,                  0,
+            100,                70,                 40,                 20,                 5
+        }
+    }
+};
+
+struct ObjBonusTable AchieBonus[MAX_CLASS][12] = {
+    {   //  CLASS_MAGIC_USER
+        {    5,      7,     10,     12,     20  },  //  Mana
+        {    3,      5,      5,      5,     10  },  //  Mana Regen
+        {    5,      5,      7,     10,     12  },  //  Spellfail
+        {    5,      5,      5,      6,      8  },  //  Hit
+        {    5,      5,      5,      5,      5  },  //  Hit Regen
+        {    5,      5,      5,      5,     10  },  //  Move
+        {    5,      5,      5,      5,      5  },  //  Move Regen
+        {    1,      1,      1,      1,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      1  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      7,      9,     10  },  //  Armor
+        {    1,      2,      2,      3,      4  }   //  AC
+    },
+    {   //  CLASS_CLERIC
+        {    5,      7,     10,     12,     15  },  //  Mana
+        {    2,      4,      5,      5,      8  },  //  Mana Regen
+        {    5,      5,      5,      8,     10  },  //  Spellfail
+        {    5,      5,      6,      8,     10  },  //  Hit
+        {    5,      5,      5,      6,      8  },  //  Hit Regen
+        {    5,      5,      5,      5,     10  },  //  Move
+        {    5,      5,      5,      5,      5  },  //  Move Regen
+        {    1,      1,      1,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      1  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      8,     10,     12  },  //  Armor
+        {    3,      4,      4,      5,      6  }   //  AC
+    },
+    {   //  CLASS_WARRIOR
+        {    5,      5,      5,      5,      5  },  //  Mana
+        {    1,      1,      1,      1,      2  },  //  Mana Regen
+        {    5,      5,      5,      5,      5  },  //  Spellfail
+        {    5,      6,      9,     12,     15  },  //  Hit
+        {    5,      5,      8,     12,     15  },  //  Hit Regen
+        {   10,     10,     10,     15,     20  },  //  Move
+        {    5,      5,     10,     12,     15  },  //  Move Regen
+        {    1,      1,      2,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      2  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      7,     10,     12,     15  },  //  Armor
+        {    6,      7,      8,      9,     10  }   //  AC
+    },
+    {   //  CLASS_THIEF
+        {    5,      5,      5,      5,      5  },  //  Mana
+        {    1,      1,      1,      1,      2  },  //  Mana Regen
+        {    5,      5,      5,      5,      5  },  //  Spellfail
+        {    5,      5,      5,      6,      8  },  //  Hit
+        {    5,      5,      5,      6,      8  },  //  Hit Regen
+        {   10,     10,     10,     15,     20  },  //  Move
+        {    5,      5,      8,     10,     10  },  //  Move Regen
+        {    1,      1,      2,      2,      3  },  //  Hitroll
+        {    1,      1,      1,      1,      2  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      5,     10,     10  },  //  Armor
+        {    3,      3,      3,      4,      5  }   //  AC
+    },
+    {   //  CLASS_DRUID
+        {    5,      7,     10,     12,     15  },  //  Mana
+        {    2,      4,      5,      5,      8  },  //  Mana Regen
+        {    5,      5,      5,      8,     10  },  //  Spellfail
+        {    5,      5,      6,      8,     10  },  //  Hit
+        {    5,      5,      5,      6,      8  },  //  Hit Regen
+        {    5,      5,      5,      5,     10  },  //  Move
+        {    5,      5,      5,      5,      5  },  //  Move Regen
+        {    1,      1,      1,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      1  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      7,      9,     10  },  //  Armor
+        {    2,      3,      3,      4,      5  }   //  AC
+    },
+    {   //  CLASS_MONK
+        {    5,      5,      5,      5,      5  },  //  Mana
+        {    1,      1,      1,      1,      2  },  //  Mana Regen
+        {    5,      5,      5,      5,      5  },  //  Spellfail
+        {    5,      5,      7,     10,     12  },  //  Hit
+        {    5,      5,      7,     10,     12  },  //  Hit Regen
+        {   10,     10,     10,     15,     20  },  //  Move
+        {    5,      5,     10,     12,     15  },  //  Move Regen
+        {    1,      1,      2,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      2  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      8,     10,     12  },  //  Armor
+        {    3,      4,      4,      5,      6  }   //  AC
+    },
+    {   //  CLASS_BARBARIAN
+        {    0,      0,      0,      0,      0  },  //  Mana
+        {    0,      0,      0,      0,      0  },  //  Mana Regen
+        {    0,      0,      0,      0,      0  },  //  Spellfail
+        {    5,      6,      9,     12,     15  },  //  Hit
+        {    5,      5,      8,     12,     15  },  //  Hit Regen
+        {   10,     10,     10,     15,     20  },  //  Move
+        {    5,      5,     10,     12,     15  },  //  Move Regen
+        {    1,      1,      1,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      2  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      8,     10,     12  },  //  Armor
+        {    4,      5,      5,      6,      7  }   //  AC
+    },
+    {   //  CLASS_SORCERER
+        {    5,      7,     10,     12,     20  },  //  Mana
+        {    3,      5,      5,      5,     10  },  //  Mana Regen
+        {    5,      5,      7,     10,     12  },  //  Spellfail
+        {    5,      5,      5,      6,      8  },  //  Hit
+        {    5,      5,      5,      5,      5  },  //  Hit Regen
+        {    5,      5,      5,      5,     10  },  //  Move
+        {    5,      5,      5,      5,      5  },  //  Move Regen
+        {    1,      1,      1,      1,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      1  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      7,      9,     10  },  //  Armor
+        {    1,      2,      2,      3,      4  }   //  AC
+    },
+    {   //  CLASS_PALADIN
+        {    5,      5,      5,      8,     10  },  //  Mana
+        {    1,      1,      2,      3,      5  },  //  Mana Regen
+        {    5,      5,      5,      5,      5  },  //  Spellfail
+        {    5,      5,      7,     10,     12  },  //  Hit
+        {    5,      5,      6,      8,     10  },  //  Hit Regen
+        {   10,     10,     10,     10,     15  },  //  Move
+        {    5,      5,      5,      5,      5  },  //  Move Regen
+        {    1,      1,      2,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      2  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      7,     10,     12,     15  },  //  Armor
+        {    5,      6,      6,      7,      8  }   //  AC
+    },
+    {   //  CLASS_RANGER
+        {    5,      5,      5,      5,      5  },  //  Mana
+        {    1,      1,      2,      3,      5  },  //  Mana Regen
+        {    5,      5,      5,      5,      5  },  //  Spellfail
+        {    5,      5,      7,     10,     12  },  //  Hit
+        {    5,      5,      7,     10,     12  },  //  Hit Regen
+        {   10,     10,     10,     10,     15  },  //  Move
+        {    5,      5,      5,      5,      5  },  //  Move Regen
+        {    1,      1,      2,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      2  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      8,     10,     10  },  //  Armor
+        {    4,      5,      5,      6,      7  }   //  AC
+    },
+    {   //  CLASS_PSI
+        {    5,      7,     10,     12,     20  },  //  Mana
+        {    3,      5,      5,      5,     10  },  //  Mana Regen
+        {    5,      5,      7,     10,     12  },  //  Spellfail
+        {    5,      5,      6,      8,     12  },  //  Hit
+        {    5,      5,      6,      8,     12  },  //  Hit Regen
+        {    5,      5,      5,      5,     10  },  //  Move
+        {    5,      5,      8,     10,     10  },  //  Move Regen
+        {    1,      1,      1,      2,      2  },  //  Hitroll
+        {    1,      1,      1,      1,      1  },  //  Damroll
+        {    1,      1,      1,      1,      1  },  //  Hit&Dam
+        {    5,      5,      7,      9,     10  },  //  Armor
+        {    1,      2,      2,      3,      4  }   //  AC
+    }
+};
+
 struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE] = {
     // Xarah
     {   8,  19709,  19719,  19605,  19712,  19710,  19724,  19602,  19933,      0,      0   }
@@ -4791,7 +5668,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            CLASS_MONK,                                             LEV_NORMAL,                                 5
+            CLASS_MONK,                                             LEV_HARD,                                   5
         },
         {
             ACHIE_MONK_3,                                           "nemico accecato",                          "nemici accecati",
@@ -4959,7 +5836,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            CLASS_RANGER,                                           LEV_EASY,                                   5
+            CLASS_RANGER,                                           LEV_NORMAL,                                 5
         },
         {
             ACHIE_RANGER_3,                                         "razione ottenuta",                         "razioni ottenute",
@@ -5033,7 +5910,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_CHAMPION,                               5
         },
         {   //  1
             ACHIE_SALOMONE,                                         "Re Salomone ucciso",                       "Re Salomone uccisi",
@@ -5047,7 +5924,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_HARD,                                   5
         },
         {   //  2
             ACHIE_THION,                                            "Dio delle Ombre ucciso",                   "Thion uccisi",
@@ -5061,7 +5938,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_EXPERT,                                 5
         },
         {   //  3
             ACHIE_WARLOCK,                                          "Warlock ucciso",                           "Warlock uccisi",
@@ -5075,7 +5952,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_EXPERT,                                 5
         },
         {   //  4
             ACHIE_STANISLAV,                                        "Spettro di Stanislav ucciso",              "Spettri di Stanislav uccisi",
@@ -5089,7 +5966,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_NORMAL,                                 5
         },
         {   //  5
             ACHIE_SAURON,                                           "Oscuro Signore ucciso",                    "Sauron uccisi",
@@ -5103,7 +5980,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_HARD,                                   5
         },
         {   //  6
             ACHIE_XAGELON,                                          "Terrore Divino ucciso",                    "Xagelon uccisi",
@@ -5117,7 +5994,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_CHAMPION,                               5
         },
         {   //  7
             ACHIE_SLAVALOUS,                                        "Slavalous ucciso",                         "Slavalous uccisi",
@@ -5131,7 +6008,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_EXPERT,                                 5
         },
         {   //  8
             ACHIE_MORPHAIL,                                         "Sacerdote della Morte ucciso",             "Morphail uccisi",
@@ -5145,7 +6022,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_NORMAL,                                 5
         },
         {   //  9
             ACHIE_NARIS,                                            "Demone della Morte ucciso",                "Naris uccisi",
@@ -5159,7 +6036,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_EXPERT,                                 5
         },
         {   //  10
             ACHIE_TSUCHIGUMO,                                       "Tsuchigumo ucciso",                        "Tsuchigumo uccisi",
@@ -5173,7 +6050,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_CHAMPION,                               5
         },
         {   //  11
             ACHIE_THANATOS,                                         "Thanatos ucciso",                          "Thanatos uccisi",
@@ -5187,7 +6064,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_GOD_MODE,                               5
         },
         {   //  12
             ACHIE_STRAHD,                                           "Signore di Ravenloft ucciso",              "Strahd uccisi",
@@ -5201,7 +6078,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_IMPERIAL,                               5
         },
         {   //  13
             ACHIE_SHELOB,                                           "Shelob uccisa",                            "Shelob uccise",
@@ -5215,7 +6092,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_HARD,                                   5
         },
         {   //  14
             ACHIE_ROC,                                              "Roc ucciso",                               "Roc uccisi",
@@ -5229,7 +6106,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_NORMAL,                                 5
         },
         {   //  15
             ACHIE_LAZLO,                                            "Capitano di Nilmys ucciso",                "Lazlo uccisi",
@@ -5243,7 +6120,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_HARD,                                   5
         },
         {   //  16
             ACHIE_HYPNOS,                                           "Signore dei Sogni ucciso",                 "Hypnos uccisi",
@@ -5257,7 +6134,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_HARD,                                   5
         },
         {   //  17
             ACHIE_DEMI_LICH,                                        "Demi Lich ucciso",                         "Demi Lich uccisi",
@@ -5271,7 +6148,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_NORMAL,                                 5
         },
         {   //  18
             ACHIE_BALROG,                                           "Balrog ucciso",                            "Balrog uccisi",
@@ -5285,7 +6162,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_HARD,                                   5
         },
         {   //  19
             ACHIE_FIDEX_GATOR,                                      "Fidex Gator ucciso",                       "Fodex Gator uccisi",
@@ -5299,7 +6176,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_EXPERT,                                 5
         },
         {   //  20
             ACHIE_DRAGGSYLIA,                                       "Draggsylia uccisa",                        "Draggsylia uccise",
@@ -5313,7 +6190,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0,                                          5
+            0,                                                      LEV_CHAMPION,                               5
         }
     },
 
@@ -5349,7 +6226,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  1
             ACHIE_PKILL_LOSS,                                       "morte in Pkill",                           "morti in Pkill",
@@ -5363,7 +6240,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  2
             ACHIE_DEATH,                                            "morte",                                    "morti",
@@ -5377,7 +6254,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  3
             ACHIE_JUNK,                                             "oggetto distrutto",                        "oggetti distrutti",
@@ -5391,7 +6268,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  4
             ACHIE_ASTRAL,                                           "incantesimo di cammino astrale",           "incantesimi di cammino astrale",
@@ -5405,7 +6282,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  5
             ACHIE_REPAIR,                                           "oggetto riparato",                         "oggetti riparati",
@@ -5419,7 +6296,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  6
             ACHIE_MINING,                                           "colpo di piccone a segno",                 "colpi di piccone a segno",
@@ -5433,7 +6310,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  7
             ACHIE_BAR,                                              "lingotto forgiato",                        "lingotti forgiati",
@@ -5447,7 +6324,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       2
+            0,                                                      LEV_BEGINNER,                               2
         },
         {   //  8
             ACHIE_GOLDENBAR,                                        "lingotto d'oro forgiato",                  "lingotti d'oro forgiati",
@@ -5461,7 +6338,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       1
+            0,                                                      LEV_BEGINNER,                               1
         },
         {   //  9
             ACHIE_WEAPONSMITH,                                      "arma forgiata",                            "armi forgiate",
@@ -5475,7 +6352,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       2
+            0,                                                      LEV_BEGINNER,                               2
         },
         {   //  10
             ACHIE_QUEST_COMPLETE,                                   "quest completata in totale",               "quest completate in totale",
@@ -5489,7 +6366,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  11
             ACHIE_QUEST_FAILED,                                     "quest fallita in totale",                  "quest fallite in totale",
@@ -5503,7 +6380,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  12
             ACHIE_QUEST_HUNT_COMPLETE,                              "quest di caccia completata",               "quest di caccia completate",
@@ -5517,7 +6394,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  13
             ACHIE_QUEST_HUNT_FAILED,                                "quest di caccia fallita",                  "quest di caccia fallite",
@@ -5531,7 +6408,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  14
             ACHIE_QUEST_RESCUE_COMPLETE,                            "quest di salvataggio completata",          "quest di salvataggio completate",
@@ -5545,7 +6422,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  15
             ACHIE_QUEST_RESCUE_FAILED,                              "quest di salvataggio fallita",             "quest di salvataggio fallite",
@@ -5559,7 +6436,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            0,                                                      0, /*   grado_diff */                       3
+            0,                                                      LEV_BEGINNER,                               3
         },
         {   //  16  non attiva, futura implementazione
             ACHIE_QUEST_RESEARCH_COMPLETE,                          "quest di ricerca completata",              "quest di ricerca completate",

@@ -14,6 +14,25 @@
 namespace Alarmud {
 
 #define QUEST_ZONE 9700
+
+// achievement's stuff
+#define CONT_REWARD 1371
+#define POT_REWARD  1370
+#define GOLD_REWARD 1372
+#define OBJ_REWARD  1373
+#define STAT_RANDOM         100
+#define ELEM_RESI_RANDOM    101
+#define OBJ_TELEPATHY       102
+#define OBJ_TRUE_SIGHT      103
+#define OBJ_INVISIBILITY    104
+#define OBJ_SENCE_LIFE      105
+#define OBJ_LIFE_PROT       106
+#define OBJ_ARTIFACT        107
+#define OBJ_FLY             108
+#define OBJ_SNEAK           109
+#define OBJ_RESI_SLASH      110
+#define OBJ_RESI_PIERCE     111
+#define OBJ_SPY             112
     
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
@@ -378,6 +397,52 @@ namespace Alarmud {
 #define IS_THIEF(ch)    (HasClass(ch,CLASS_THIEF))
 #define IS_MONK(ch)    (HasClass(ch,CLASS_MONK))
 /* GGPATCHEND */
+
+#define IS_MELEE(ch)    (HasClass(ch,    CLASS_WARRIOR |    \
+                                         CLASS_BARBARIAN |  \
+                                         CLASS_RANGER |     \
+                                         CLASS_THIEF |      \
+                                         CLASS_MONK |       \
+                                         CLASS_PALADIN      \
+                                         )                  \
+                        && !HasClass(ch, CLASS_MAGIC_USER | \
+                                         CLASS_SORCERER |   \
+                                         CLASS_CLERIC |     \
+                                         CLASS_DRUID |      \
+                                         CLASS_PSI          \
+                                         )                  \
+                        )
+
+#define IS_CASTER_N(ch) (HasClass(ch,    CLASS_MAGIC_USER | \
+                                         CLASS_SORCERER |   \
+                                         CLASS_CLERIC |     \
+                                         CLASS_DRUID |      \
+                                         CLASS_PSI          \
+                                         )                  \
+                        && !HasClass(ch, CLASS_WARRIOR |    \
+                                         CLASS_BARBARIAN |  \
+                                         CLASS_RANGER |     \
+                                         CLASS_THIEF |      \
+                                         CLASS_MONK |       \
+                                         CLASS_PALADIN      \
+                                         )                  \
+                        )
+
+#define IS_MULTI(ch)  (HasClass(ch,     CLASS_MAGIC_USER | \
+                                        CLASS_SORCERER |   \
+                                        CLASS_CLERIC |     \
+                                        CLASS_DRUID |      \
+                                        CLASS_PSI          \
+                                        )                  \
+                        && HasClass(ch, CLASS_WARRIOR |    \
+                                        CLASS_BARBARIAN |  \
+                                        CLASS_RANGER |     \
+                                        CLASS_THIEF |      \
+                                        CLASS_MONK |       \
+                                        CLASS_PALADIN      \
+                                        )                  \
+                        )
+
 #define ITEM_TYPE(obj)  (static_cast<int>((obj)->obj_flags.type_flag))
 
 #define IS_NPC(ch)  (IS_SET((ch)->specials.act, ACT_ISNPC))

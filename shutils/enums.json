@@ -156,6 +156,66 @@
             "value": 5,
             "comment": "Achievements stuffs"
         },
+        "CLASS_CASTER": {
+            "value": 0,
+            "comment": "Achievements stuffs"
+        },
+        "CLASS_MULTI": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "CLASS_MELEE": {
+            "value": 2,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MANA_TABLE": {
+            "value": 0,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MANAREG_TABLE": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_SPELLFAIL_TABLE": {
+            "value": 2,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_HIT_TABLE": {
+            "value": 3,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_HITREG_TABLE": {
+            "value": 4,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MOVE_TABLE": {
+            "value": 5,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_MOVEREG_TABLE": {
+            "value": 6,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_HITROLL_TABLE": {
+            "value": 7,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_DAMROLL_TABLE": {
+            "value": 8,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_HITNDAM_TABLE": {
+            "value": 9,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_ARMOR_TABLE": {
+            "value": 10,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_AC_TABLE": {
+            "value": 11,
+            "comment": "Achievements stuffs"
+        },
         "MAX_ACHIE_TYPE": {
             "value": 100,
             "comment": "Achievements stuffs"

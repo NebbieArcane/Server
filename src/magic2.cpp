@@ -646,7 +646,7 @@ void spell_track(byte level, struct char_data* ch,
 		send_to_char("I tuoi occhi $c0015brillano$c0007 per un attimo di un color $c0010verde smeraldo$c0007!\n\r", ch);
 	}
 
-	act("Gli occhi di $N $c0015brillano$c0007 per un attimo di un riflesso color $c0010verde smeraldo$c0007.", 0,  ch, 0, targ, TO_ROOM);
+	act("Gli occhi di $N $c0015brillano$c0007 per un attimo di un riflesso color $c0010verde smeraldo$c0007.", 0,  ch, 0, targ, TO_NOTVICT);
 
 	if(!obj) {
 		af.type      = SPELL_MINOR_TRACK;

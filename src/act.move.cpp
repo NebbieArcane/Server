@@ -1165,7 +1165,7 @@ ACTION_FUNC(do_open) {
 		}
 		else {
 			REMOVE_BIT(obj->obj_flags.value[1], CONT_CLOSED);
-            act("Apri $p", FALSE, ch, obj, 0, TO_CHAR);
+            act("Apri $p.", FALSE, ch, obj, 0, TO_CHAR);
 			act("$n apre $p.", FALSE, ch, obj, 0, TO_ROOM);
 		}
 	}

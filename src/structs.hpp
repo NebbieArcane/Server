@@ -76,6 +76,47 @@ struct ClassAchieTable
     int n_livelli;
 };
 
+struct RandomEquipTable
+{
+    const char* name;
+    int gender;
+    const char* key;
+};
+
+struct RandomMaterialsTable
+{
+    const char* fem_gen;
+    const char* neu_gen;
+    const char* m_fem_gen;
+    const char* m_neu_gen;
+    const char* key;
+};
+
+struct ObjAchieTable
+{
+    int vnum_obj;
+    int item_type;
+    int bonus1;
+    int bonus2;
+    int bonus3;
+    int bonus4;
+    int bonus5;
+    int perc1;
+    int perc2;
+    int perc3;
+    int perc4;
+    int perc5;
+};
+
+struct ObjBonusTable
+{
+    int lev1_10;
+    int lev11_20;
+    int lev21_30;
+    int lev31_40;
+    int lev41_50;
+};
+
 struct MobQuestAchie
 {
     int numero_mob;

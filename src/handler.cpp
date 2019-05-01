@@ -2773,6 +2773,12 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
 {
     char personal[MAX_INPUT_LENGTH];
 
+    if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+    {
+        mudlog(LOG_PLAYERS,"pers_obj: can't personalize twice %s.", obj->short_description);
+        return;
+    }
+
     if(cmd == CMD_PERSONALIZE)
     {
         mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));

@@ -19,6 +19,7 @@ void mail_to_god(struct char_data* ch, const char* god, const char* message);
     // Achievements stuff
 char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
 int CheckMobQuest(int vnumber);
+void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level);
 void CheckQuestFail(struct char_data* ch);
 void AssignMobQuestToToon(struct char_data* ch, int quest, int vnumber);
 bool CheckQuest(struct char_data* ch, int quest_number);
@@ -28,6 +29,7 @@ int n_bosskill(int vnumber, int achievement_class);
 bool hasAchievement(struct char_data* ch, int achievement_class, int display);
 std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check);
 int race_achievement(int race);
+void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random);
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class);
 
 FILE* MakeZoneFile(struct char_data* c, int zone);

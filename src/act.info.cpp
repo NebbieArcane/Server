@@ -25,6 +25,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "act.info.hpp"
+#include "act.comm.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
@@ -939,7 +940,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		 * spell_descriptions, etc.
 		 */
 		otype = -1;
-        if((IS_AFFECTED(i, AFF_GLOBE_DARKNESS) || affected_by_spell(i, SPELL_GLOBE_DARKNESS)) && (!IS_IMMORTALE(ch) && ch != i && saves_spell(i, SAVING_SPELL)))
+        if((IS_AFFECTED(i, AFF_GLOBE_DARKNESS) || affected_by_spell(i, SPELL_GLOBE_DARKNESS)) && (!is_same_group(i, ch) && !IS_IMMORTALE(ch) && ch != i && saves_spell(i, SAVING_SPELL)))
         {
             act(spell_desc[ SPELL_GLOBE_DARKNESS ], FALSE, i, 0, ch, TO_VICT);
         }
