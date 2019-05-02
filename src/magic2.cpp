@@ -686,13 +686,14 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	char_to_room(mob, ch->in_room);
 	SwitchStuff(ch, mob);
-    if(GET_SEX(ch) != GET_SEX(mob) )
-    {
-        GET_SEX(mob) = GET_SEX(ch);
-    }
 
     if(GET_SEX(ch) == SEX_FEMALE)
     {
+        if(GET_SEX(ch) != GET_SEX(mob) )
+        {
+            GET_SEX(mob) = GET_SEX(ch);
+        }
+
         if(mob_index[mob->nr].iVNum == 1347)
         {
             mob->player.short_descr = (char*)strdup("una Incubus");
