@@ -3,9 +3,10 @@ EMPTY SLOT
 
 #
 MULTICLASSE
+
 E' possibile avere personaggi che appartengono a piu' classi.
 I Multiclasse hanno pero' una serie di svantaggi:
-1) Gli xp vengono considerati ``per classe''. Un triclasse deve quindi
+1) Gli xp vengono considerati ''per classe''. Un triclasse deve quindi
 fare il triplo di xp di un singola classe
 2) Per i caster, il livello a cui si impara una spell e' piu' alto di quello 
 reale
@@ -20,6 +21,7 @@ prevede un livello massimo inferiore al 50, non sara' possibile portare
 quella classe oltre il livello previsto, pero' passato quel livello si
 guadagneranno xp come se si avesse una classe in meno.
 
+#
 ALIGNMENT ALLINEAMENTO ALIGN
 
 Su Nebbie Arcane l'allineamento e' parte integrante del personaggio.
@@ -35,6 +37,26 @@ Al primo livello e' possibile cambiare allineameto in qualsiasi momento,
 senza nessun costo.
 Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
 ogni livello
+
+#
+ACHIEVEMENT ACHIEVEMENTS
+Sintassi:
+Achievements               - mostra gli achievements che hai completato
+Achievements all           - mostra tutti i tuoi achievements
+Achievements spam <numero> - mostra in stanza l'achievement scelto
+
+Gli achievements sono ricompense per aver completato un obiettivo o per
+aver compiuto una predeterminata azione in gioco.
+Attualmente si dividono in cinque categorie:
+Racekill     - quando uccidi un mostro di una determinata razza (da solo);
+Bosskill     - quando uccidi un particolare mostro (da solo o in gruppo);
+Class Skill  - quando compi una determinata azione legata a una delle tue classi;
+Quest        - quando completi una quest fissa (tipo Xarah);
+Other        - tutto quello che non e' qui sopra!
+
+Ogni achievement ha uno o piu' livelli e al completamento di ogni livello puoi
+ottenere un premio, che va dalla semplice esperienza fino a... sta a te scoprirlo!
+
 
 #
 PRINCIPI
