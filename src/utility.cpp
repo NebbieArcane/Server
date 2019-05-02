@@ -1447,7 +1447,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
     reward[3] = AchievementsList[achievement_class][achievement_type].grado_diff + (achievement_level * 2);
 
     god = number(0, 12);
-    reward[2] = 100;            // da togliere
+
     for(i = 0; i < 4; i++)
     {
         if(IS_PRINCE(ch) && i == 2)
@@ -1460,8 +1460,8 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
             // se il toon non è Prince e il reward sono rune lo ignoro
             i++;
         }
-        percent = number(1, 4);    // da rimettere a 100
-        mudlog(LOG_PLAYERS, "%s ha tirato %d e doveva fare meno di %d (%s)", GET_NAME(ch), percent, (reward[i] + 1), (i == 0 ? "coin" : i == 1 ? "rune" : i == 2 ? "oggetti" : "bonus"));
+        percent = number(1, 100);
+
         if(percent <= reward[i])
         {
             win = TRUE;
@@ -3604,10 +3604,76 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                 case 3:     // reward bonus
                     {
                         struct obj_data* obj;
-                        int rew;
+                        int reward, dust;
+                        string oggetto;
 
-                        rew = real_object(OBJ_REWARD);
-                        obj = read_object(rew, REAL);
+                        reward = real_object(OBJ_REWARD);
+                        obj = read_object(reward, REAL);
+
+                        dust = number(1, 11);
+                        switch(dust)
+                        {
+                            case 1:
+                            case 6:
+                            case 8:
+                            {
+                                obj->affected[0].location = APPLY_MANA;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0012blu$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0012blu$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere blu");
+                            }
+                                break;
+
+                            case 2:
+                            case 10:
+                            {
+                                obj->affected[0].location = APPLY_MANA_REGEN;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0013viola$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0013viola$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere viola");
+                            }
+                                break;
+
+                            case 3:
+                            case 7:
+                            case 9:
+                            {
+                                obj->affected[0].location = APPLY_HIT;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0009rossa$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0009rossa$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere rossa");
+                            }
+                                break;
+
+                            case 4:
+                            case 11:
+                            {
+                                obj->affected[0].location = APPLY_HIT_REGEN;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0011gialla$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0011gialla$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere gialla");
+                            }
+                                break;
+
+                            case 5:
+                            {
+                                obj->affected[0].location = APPLY_SPELLFAIL;
+                                obj->affected[0].modifier = -1;
+                                obj->short_description = (char*)strdup("della polvere $c0014celeste$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0014celeste$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere celeste");
+                            }
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        SetPersonOnSave(ch, obj);
 
                         obj_to_char(obj, ch);
 
@@ -3619,7 +3685,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                         fmt2 % rand_god[god] % obj->short_description;
                         sbroom.append(fmt2.str().c_str());
                         fmt2.clear();
-                        mudlog(LOG_PLAYERS, "%s won a bonus with Achievements.", GET_NAME(ch));
+                        mudlog(LOG_PLAYERS, "%s won %s with Achievements.", GET_NAME(ch), obj->short_description);
                     }
                     break;
 
@@ -3724,7 +3790,7 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
     }
     else
     {
-        boost::format fmt2("%s %s");
+        boost::format fmt2("%s%s");
         fmt2 % EquipName[obj_slot_number][z].key % MaterialName[mn][zz].key;
         oggetto.append(fmt2.str().c_str());
         fmt2.clear();

@@ -2131,48 +2131,48 @@ Ecco la lista:
   Creature      Level (Comments)
   ------------------------------
   "goblin"      4*
-  "parrot"      4    (blue)
-  "bat"         4
-  "orc"         5*
-  "trog"        5*
+  "pappagallo"  4    (blu)
+  "pipistrello" 4
+  "orco"        5*
+  "troglodita"  5*
   "gnoll"       6*
-  "parrot"      6    (black)
-  "lizard"      6
+  "pappagallo"  6    (nero)
+  "lucertola"   6
   "ogre"        8*
-  "parrot"      8    (red)
-  "wolf"        8
-  "spider"      9
-  "beast"       9    (displacer)
-  "minotaur"    9*
-  "snake"       10   (rattle)
-  "bull"        10
-  "warg"        10
-  "rat"         11   (sewer)
-  "sapling"     12
-  "ogre-maji"   12*!
-  "black"       12   (dragon)
-  "troll"       14*  (regenerates)
-  "crocodile"   14
-  "mindflayer"  14*! (junior)
-  "giant"       16*  (hill)
-  "bear"        16   (grizzly)
-  "blue"        16   (dragon)
-  "enfan"       18*  (blue)
+  "pappagallo"  8    (rosso)
+  "Lupo"        8
+  "ragno"       9
+  "belva"       9 
+  "minotauro"   9*
+  "serpente"    10   (serpente a sonagli)
+  "toro"        10
+  "incubus"     10*
+  "ratto"       11   (ratto delle fogne)
+  "albero"      12
+  "magi"        12*!
+  "nero"        12   (drago)
+  "troll"       14*  (rigenera)
+  "coccodrillo" 14
+  "giovane"     14*! (giovane mindflayer)
+  "colline"     16*  (gigante delle colline)
+  "orso"        16   (grizzly)
+  "blu"         16   (drago)
+  "enfan"       18*  (blu enfan)
   "lamia"       18*
-  "drider"      18
-  "wererat"     19
-  "wyvern"      20
-  "mindflayer"  20*! (senior)
-  "spider"      20   (bird)
-  "snog"        22
+  "mannaro"     19.  (ratto mannaro)
+  "viverna"     20
+  "mindflayer"  20*!
+  "tarantola"   20
   "roc"         22
-  "mud"         23   (mudmonster)
-  "giant"       24*  (frost)
-  "white"       26   (dragon)
-  "master"      28*! (mindflayer)
-  "red"         30   (dragon)
-  "roo"         35*  (hunter)
-  "brontosaurus"35   (oltre 1000 hp)
+  "mostrofango" 23
+  "viola".      23   (enfan viola)
+  "ghiacci"     24*  (gigante dei ghiacci)
+  "drow".       25
+  "bianco"      26   (drago)
+  "maestro"     28*! (maestro mindflayer)
+  "rosso"       30   (drago)
+  "canguro"     35*  (cacciacanguro)
+  "brontosauro" 35   (1000 hp)
   "mulichort"   40
   "beholder"    45!
 

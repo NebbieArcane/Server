@@ -686,6 +686,29 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	char_to_room(mob, ch->in_room);
 	SwitchStuff(ch, mob);
+    if(GET_SEX(ch) != GET_SEX(mob) )
+    {
+        GET_SEX(mob) = GET_SEX(ch);
+    }
+
+    if(GET_SEX(ch) == SEX_FEMALE)
+    {
+        if(mob_index[mob->nr].iVNum == 1347)
+        {
+            mob->player.short_descr = (char*)strdup("una Incubus");
+            mob->player.long_descr = (char*)strdup("Una Incubus, viaggiatrice dell'inconscio e' qui.\n");
+        }
+        else if(mob_index[mob->nr].iVNum == 1368)
+        {
+            mob->player.short_descr = (char*)strdup("una Drow");
+            mob->player.long_descr = (char*)strdup("Una drow ti fissa minacciosamente poco prima di estrarre la sua spada.\n");
+        }
+        else if(mob_index[mob->nr].iVNum == 1372)
+        {
+            mob->player.short_descr = (char*)strdup("una CacciaCanguRo");
+            mob->player.long_descr = (char*)strdup("Una Cacciatrice... Diamine, e' armata di una Canna!\n");
+        }
+    }
 
 	/* move char to storage */
 
