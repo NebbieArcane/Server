@@ -133,18 +133,26 @@ ACTION_FUNC(do_disarm) {
 		return;
 	}
 
-	if((!HasClass(ch, CLASS_WARRIOR | CLASS_MONK | CLASS_BARBARIAN | CLASS_RANGER | CLASS_PALADIN) && cmd == SKILL_DISARM) && (IS_POLY(ch) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN)))
-	{
-		send_to_char("Non sei la persona adatta!\n\r", ch);
-		return;
-	}
-
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-		if(!IsHumanoid(ch)) {
-			send_to_char("Non hai la forma giusta!\n\r", ch);
-			return;
-		}
-	}
+    if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+        if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN | CLASS_MONK) && cmd == CMD_DISARM)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN | ACT_MONK) && cmd == 0)
+            {
+                // do nothing
+            }
+            else
+            {
+                send_to_char("Non sei la persona adatta!\n\r", ch);
+                return;
+            }
+        }
+        
+        if(!IsHumanoid(ch)) {
+            send_to_char("Non hai la forma giusta!\n\r", ch);
+            return;
+        }
+    }
 
 	/*
 	 *   make roll - modified by dex && level

@@ -227,7 +227,7 @@ logDefineStatus(NEW_GAIN)
 #endif
 
 #ifndef NEW_RENT
-#define NEW_RENT			true
+#define NEW_RENT			false
 #else
 logDefineStatus(NEW_RENT)
 #endif

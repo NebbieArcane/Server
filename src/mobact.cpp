@@ -451,12 +451,32 @@ void mobile_activity(struct char_data* ch) {
 			}
 
 		if(IS_SET(ch->specials.act, ACT_CLERIC)) {
-			int nRetVal;
-			nRetVal = cleric(ch, 0, "", ch, EVENT_TICK);
-			SetStatus("Return from cleric spec proc", NULL);
-			if(nRetVal) {
-				return;
-			}
+            if(IS_SET(ch->specials.act,ACT_WARRIOR) && number(1,100) > 49)
+            {
+                if(IS_POLY(ch) && !IS_WAITING(ch))
+                {
+                    if(fighter(ch,0,"",ch,EVENT_TICK))
+                    {
+                        return;
+                    }
+                }
+                else if(!IS_POLY(ch))
+                {
+                    if(fighter(ch,0,"",ch,EVENT_TICK))
+                    {
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                int nRetVal;
+                nRetVal = cleric(ch, 0, "", ch, EVENT_TICK);
+                SetStatus("Return from cleric spec proc", NULL);
+                if(nRetVal) {
+                    return;
+                }
+            }
 		}
 
 		if(IS_SET(ch->specials.act,ACT_WARRIOR))
@@ -468,6 +488,14 @@ void mobile_activity(struct char_data* ch) {
 					return;
 				}
 			}
+            else if(!IS_POLY(ch))
+            {
+                if(fighter(ch,0,"",ch,EVENT_TICK))
+                {
+                    return;
+                }
+            }
+                
 		}
 
 		if(IS_SET(ch->specials.act,ACT_THIEF))

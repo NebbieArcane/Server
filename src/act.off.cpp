@@ -1013,11 +1013,19 @@ ACTION_FUNC(do_bash) {
 		return;
 	}
 
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-
-		if((!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN) && cmd == CMD_BASH) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN)) {
-			send_to_char("Solo i combattenti possono farlo!\n\r", ch);
-			return;
+	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+		if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN) && cmd == CMD_BASH)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN) && cmd == 0)
+            {
+                // do nothing
+            }
+            else
+            {
+                send_to_char("Solo i combattenti possono farlo!\n\r", ch);
+                return;
+            }
 		}
 
 		if(!IsHumanoid(ch)) {
@@ -1222,15 +1230,20 @@ ACTION_FUNC(do_rescue) {
 		return;
 	}
 
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-		if((!HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN | CLASS_RANGER) && cmd == CMD_RESCUE) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN)) {
-			/**** SALVO skills prince ****/
-			if(!IS_PRINCE(ch)) {
-				/**** fine skills prince ****/
-				send_to_char("Non sei un guerriero!\n\r", ch);
-				return;
-			}
-		}
+    if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+        if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN) && cmd == CMD_RESCUE)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN) && cmd == 0)
+            {
+                // do nothing
+            }
+            else if(!IS_PRINCE(ch))
+            {
+                send_to_char("Non sei un guerriero!\n\r", ch);
+                return;
+            }
+        }
 	}
 
 	only_argument(arg, victim_name);
@@ -1522,13 +1535,20 @@ ACTION_FUNC(do_kick) {
 		return;
 	}
 
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-
-		if((!HasClass(ch, CLASS_WARRIOR|CLASS_BARBARIAN|CLASS_RANGER|CLASS_PALADIN|CLASS_MONK) && cmd == CMD_KICK) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN | CLASS_MONK))
-		{
-			send_to_char("Non puoi farlo!\n\r", ch);
-			return;
-		}
+    if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+        if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN | CLASS_MONK) && cmd == CMD_KICK)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN | ACT_MONK) && cmd == 0)
+            {
+                // do nothing
+            }
+            else
+            {
+                send_to_char("Non puoi farlo!\n\r", ch);
+                return;
+            }
+        }
 
 		if(!IsHumanoid(ch)) {
 			send_to_char("Non hai la forma adatta!\n\r", ch);
