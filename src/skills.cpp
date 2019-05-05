@@ -133,8 +133,8 @@ ACTION_FUNC(do_disarm) {
 		return;
 	}
 
-	if(!HasClass(ch, CLASS_WARRIOR | CLASS_MONK | CLASS_BARBARIAN |
-				 CLASS_RANGER | CLASS_PALADIN)) {
+	if((!HasClass(ch, CLASS_WARRIOR | CLASS_MONK | CLASS_BARBARIAN | CLASS_RANGER | CLASS_PALADIN) && cmd == SKILL_DISARM) && (IS_POLY(ch) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN)))
+	{
 		send_to_char("Non sei la persona adatta!\n\r", ch);
 		return;
 	}
@@ -1107,7 +1107,7 @@ ACTION_FUNC(do_daimoku) {
 	GET_POS(ch) = POSITION_INCAP;
 	GET_HIT(ch) = -1;
 	alter_hit(ch, 0);
-    
+
 	af.type      = SPELL_NO_MESSAGE;
 	af.duration  = dummy;
 	af.modifier  = MAX(100, GET_MAX_HIT(ch));
@@ -3581,7 +3581,7 @@ ACTION_FUNC(do_tan) {
 					send_to_char("Non sai nemmeno cos'e'!\n\r",ch);
 					return;
 				}
-                
+
 				sprintf(buf,"%s name %s%s",itemtype,itemtype,hidekeys);
 				do_ooedit(ch,buf,0);
 
@@ -4446,7 +4446,7 @@ ACTION_FUNC(do_doorway) {
 		send_to_char("You can't sense that person anywhere.\n\r",ch);
 		return;
 	}
-    
+
 	location = target->in_room;
 	rp = real_roomp(location);
 
@@ -4470,7 +4470,7 @@ ACTION_FUNC(do_doorway) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;
 	}
-    
+
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
         send_to_char("Non si bara ;)\n\r", ch);
         return;
@@ -4590,12 +4590,12 @@ ACTION_FUNC(do_psi_portal) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;
 	}
-    
+
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
         send_to_char("Non si bara! ;)\n\r", ch);
         return;
     }
-    
+
 	/* Added for Pkillers Gaia 2001 */
 	if(IS_AFFECTED2((IS_POLY(ch)) ? ch->desc->original : ch, AFF2_PKILLER) &&  // SALVO controllo pkiller
 			IS_SET(rp->room_flags, PEACEFUL))  {
@@ -4719,12 +4719,12 @@ ACTION_FUNC(do_mindsummon) {
 		send_to_char("You can't sense that person anywhere.\n\r",ch);
 		return;
 	}
-    
+
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
         act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
         return;
     }
-    
+
 	if(target==ch)   {
 		send_to_char("You're already in the room with yourself!\n\r",ch);
 		return;
@@ -5502,7 +5502,7 @@ ACTION_FUNC(do_blast) {
 
     if(IS_IMMORTAL(ch) && IS_PC(victim))
         stop_fighting(ch);
-    
+
     if(HasClass(ch, CLASS_PSI) && IS_PC(ch))
     {
         if(IS_POLY(ch))
@@ -5696,10 +5696,10 @@ ACTION_FUNC(do_scry) {
 		send_to_char("Your mind is not yet strong enough.\n\r", ch);
 		return;
 	}
-    
-    
+
+
     if(!IS_PC(target) && affected_by_spell(target,STATUS_QUEST)) {
-        
+
         if(IS_SINGLE(ch)) {
             send_to_char("Forte della tua disciplina mentale tenti l'impossibile...\n\r", ch);
         } else {
@@ -6716,7 +6716,7 @@ void do_miner(struct char_data* ch) {
 		send_to_char("Qui non puoi scavare.\n\r",ch);
 		return;
 	}
-    
+
     /* Se forgiare e' un arte di pochi, scavare e' per tutti i fessi.
 	switch(GET_RACE(ch)) {
 	case RACE_DWARF:
@@ -8333,4 +8333,3 @@ ACTION_FUNC(do_forge) {
 
 }
 } // namespace Alarmud
-

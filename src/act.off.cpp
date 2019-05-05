@@ -1015,8 +1015,7 @@ ACTION_FUNC(do_bash) {
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
 
-		if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
-					 CLASS_BARBARIAN)) {
+		if((!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN) && cmd == CMD_BASH) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN)) {
 			send_to_char("Solo i combattenti possono farlo!\n\r", ch);
 			return;
 		}
@@ -1195,7 +1194,7 @@ ACTION_FUNC(do_bash) {
 
             CheckAchie(ch, ACHIE_WARRIOR_1, CLASS_ACHIE);
         }
-        
+
 	}
 }
 
@@ -1224,8 +1223,7 @@ ACTION_FUNC(do_rescue) {
 	}
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-		if(!HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN |
-					 CLASS_RANGER)) {
+		if((!HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN | CLASS_RANGER) && cmd == CMD_RESCUE) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN)) {
 			/**** SALVO skills prince ****/
 			if(!IS_PRINCE(ch)) {
 				/**** fine skills prince ****/
@@ -1348,7 +1346,7 @@ ACTION_FUNC(do_support) {
         send_to_char(buf, ch);
         return;
     }
-    
+
 	if(!(victim = get_char_room_vis(ch, victim_name))) {
 		send_to_char("Chi vorresti supportare, esattamente?\n\r", ch);
 		return;
@@ -1379,9 +1377,9 @@ ACTION_FUNC(do_support) {
 	ch->specials.supporting=strdup(victim->player.name);
     sprintf(buf, "Ok, ora supporti %s.\n\r", ch->specials.supporting);
     send_to_char(buf, ch);
-    
+
 }
-       
+
 ACTION_FUNC(do_bodyguard) {
 	struct char_data* victim,*lg;
 	char victim_name[240];
@@ -1526,8 +1524,8 @@ ACTION_FUNC(do_kick) {
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
 
-		if(!HasClass(ch, CLASS_WARRIOR|CLASS_BARBARIAN|CLASS_RANGER|CLASS_PALADIN)
-				&& !HasClass(ch, CLASS_MONK)) {
+		if((!HasClass(ch, CLASS_WARRIOR|CLASS_BARBARIAN|CLASS_RANGER|CLASS_PALADIN|CLASS_MONK) && cmd == CMD_KICK) && !IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN | CLASS_MONK))
+		{
 			send_to_char("Non puoi farlo!\n\r", ch);
 			return;
 		}
@@ -2174,7 +2172,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	default:
 		i=18;
 	};
-    
+
     WEARING_N(ch,dummy,result);
     if(HasClass(ch, CLASS_MONK) &&
        !((ch->equipment[WIELD]) &&
@@ -2192,17 +2190,17 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
     {
         classe=CLASS_BARBARIAN;
     }
-    
+
     if(classe != CLASS_MONK)
     {
         if(IS_SET(victim->susc, IMM_BLUNT)) {
             damage <<= 1;
         }
-        
+
         if(IS_SET(victim->immune, IMM_BLUNT)) {
             damage >>= 1;
         }
-        
+
         if(classe != CLASS_BARBARIAN) {
             if(IS_SET(victim->M_immune, IMM_BLUNT)) {
                 damage = 0;
@@ -2213,9 +2211,9 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
                 damage >>= 1;
             }
         }
-        
+
     }
-    
+
 	if(!damage) {
         sprintf(buf, "%s", att_kick_miss_ch[i]);
         if(IS_SET(ch->player.user_flags,PWP_MODE))
@@ -2816,4 +2814,3 @@ ACTION_FUNC(do_stopfight) {
 
 }
 } // namespace Alarmud
-
