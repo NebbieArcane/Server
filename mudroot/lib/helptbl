@@ -3,9 +3,10 @@ EMPTY SLOT
 
 #
 MULTICLASSE
+
 E' possibile avere personaggi che appartengono a piu' classi.
 I Multiclasse hanno pero' una serie di svantaggi:
-1) Gli xp vengono considerati ``per classe''. Un triclasse deve quindi
+1) Gli xp vengono considerati ''per classe''. Un triclasse deve quindi
 fare il triplo di xp di un singola classe
 2) Per i caster, il livello a cui si impara una spell e' piu' alto di quello 
 reale
@@ -20,6 +21,7 @@ prevede un livello massimo inferiore al 50, non sara' possibile portare
 quella classe oltre il livello previsto, pero' passato quel livello si
 guadagneranno xp come se si avesse una classe in meno.
 
+#
 ALIGNMENT ALLINEAMENTO ALIGN
 
 Su Nebbie Arcane l'allineamento e' parte integrante del personaggio.
@@ -35,6 +37,27 @@ Al primo livello e' possibile cambiare allineameto in qualsiasi momento,
 senza nessun costo.
 Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
 ogni livello
+
+#
+ACHIEVEMENT ACHIEVEMENTS
+
+Sintassi:
+Achievements               - mostra gli achievements che hai completato
+Achievements all           - mostra tutti i tuoi achievements
+Achievements spam <numero> - mostra in stanza l'achievement scelto
+
+Gli achievements sono ricompense per aver completato un obiettivo o per
+aver compiuto una predeterminata azione in gioco.
+Attualmente si dividono in cinque categorie:
+Racekill     - quando uccidi un mostro di una determinata razza (da solo);
+Bosskill     - quando uccidi un particolare mostro (da solo o in gruppo);
+Class Skill  - quando compi una determinata azione legata a una delle tue classi;
+Quest        - quando completi una quest fissa (tipo Xarah);
+Other        - tutto quello che non e' qui sopra!
+
+Ogni achievement ha uno o piu' livelli e al completamento di ogni livello puoi
+ottenere un premio, che va dalla semplice esperienza fino a... sta a te scoprirlo!
+
 
 #
 PRINCIPI
@@ -2131,48 +2154,48 @@ Ecco la lista:
   Creature      Level (Comments)
   ------------------------------
   "goblin"      4*
-  "parrot"      4    (blue)
-  "bat"         4
-  "orc"         5*
-  "trog"        5*
+  "pappagallo"  4    (blu)
+  "pipistrello" 4
+  "orco"        5*
+  "troglodita"  5*
   "gnoll"       6*
-  "parrot"      6    (black)
-  "lizard"      6
+  "pappagallo"  6    (nero)
+  "lucertola"   6
   "ogre"        8*
-  "parrot"      8    (red)
-  "wolf"        8
-  "spider"      9
-  "beast"       9    (displacer)
-  "minotaur"    9*
-  "snake"       10   (rattle)
-  "bull"        10
-  "warg"        10
-  "rat"         11   (sewer)
-  "sapling"     12
-  "ogre-maji"   12*!
-  "black"       12   (dragon)
-  "troll"       14*  (regenerates)
-  "crocodile"   14
-  "mindflayer"  14*! (junior)
-  "giant"       16*  (hill)
-  "bear"        16   (grizzly)
-  "blue"        16   (dragon)
-  "enfan"       18*  (blue)
+  "pappagallo"  8    (rosso)
+  "Lupo"        8
+  "ragno"       9
+  "belva"       9 
+  "minotauro"   9*
+  "serpente"    10   (serpente a sonagli)
+  "toro"        10
+  "incubus"     10*
+  "ratto"       11   (ratto delle fogne)
+  "albero"      12
+  "magi"        12*!
+  "nero"        12   (drago)
+  "troll"       14*  (rigenera)
+  "coccodrillo" 14
+  "giovane"     14*! (giovane mindflayer)
+  "colline"     16*  (gigante delle colline)
+  "orso"        16   (grizzly)
+  "blu"         16   (drago)
+  "enfan"       18*  (blu enfan)
   "lamia"       18*
-  "drider"      18
-  "wererat"     19
-  "wyvern"      20
-  "mindflayer"  20*! (senior)
-  "spider"      20   (bird)
-  "snog"        22
+  "mannaro"     19.  (ratto mannaro)
+  "viverna"     20
+  "mindflayer"  20*!
+  "tarantola"   20
   "roc"         22
-  "mud"         23   (mudmonster)
-  "giant"       24*  (frost)
-  "white"       26   (dragon)
-  "master"      28*! (mindflayer)
-  "red"         30   (dragon)
-  "roo"         35*  (hunter)
-  "brontosaurus"35   (oltre 1000 hp)
+  "mostrofango" 23
+  "viola".      23   (enfan viola)
+  "ghiacci"     24*  (gigante dei ghiacci)
+  "drow".       25*!
+  "bianco"      26   (drago)
+  "maestro"     28*! (maestro mindflayer)
+  "rosso"       30   (drago)
+  "canguro"     35*  (cacciacanguro)
+  "brontosauro" 35   (1000 hp)
   "mulichort"   40
   "beholder"    45!
 

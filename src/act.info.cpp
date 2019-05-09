@@ -25,7 +25,9 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "act.info.hpp"
+#include "act.comm.hpp"
 #include "act.off.hpp"
+#include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "breath.hpp"
 #include "cmdid.hpp"
@@ -938,7 +940,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		 * spell_descriptions, etc.
 		 */
 		otype = -1;
-        if((IS_AFFECTED(i, AFF_GLOBE_DARKNESS) || affected_by_spell(i, SPELL_GLOBE_DARKNESS)) && (!IS_IMMORTALE(ch) && ch != i && saves_spell(i, SAVING_SPELL)))
+        if((IS_AFFECTED(i, AFF_GLOBE_DARKNESS) || affected_by_spell(i, SPELL_GLOBE_DARKNESS)) && (!is_same_group(i, ch) && !IS_IMMORTALE(ch) && ch != i && saves_spell(i, SAVING_SPELL)))
         {
             act(spell_desc[ SPELL_GLOBE_DARKNESS ], FALSE, i, 0, ch, TO_VICT);
         }
@@ -2149,6 +2151,1546 @@ ACTION_FUNC(do_status) {
 	act(buf, FALSE, ch, 0, 0, TO_CHAR);
 }
 
+ACTION_FUNC(do_checkachielevel)
+{
+    int i, num = 0;
+    std::string sb;
+
+    if(strcmp(GET_NAME(ch), "Croneh") && strcmp(GET_NAME(ch), "Alar") && strcmp(GET_NAME(ch), "Requiem"))
+    {
+        send_to_char("Pardon?\n\r", ch);
+        return;
+    }
+
+    sb.append("$c0011I seguenti achievement non hanno impostato il grado di difficolta':\n\r");
+    for(i = 0; i < MAX_RACE_ACHIE; i++)
+    {
+        if(AchievementsList[RACESLAYER_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0010%-12s %6d %-34s %s\n\r");
+            fmt % num % "Raceslayer:" % AchievementsList[RACESLAYER_ACHIE][i].achie_number % AchievementsList[RACESLAYER_ACHIE][i].achie_string2 % (AchievementsList[RACESLAYER_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[RACESLAYER_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[RACESLAYER_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+    {
+        if(AchievementsList[BOSSKILL_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0011%-12s %6d %-34s %s\n\r");
+            fmt % num % "Bosskill:" % AchievementsList[BOSSKILL_ACHIE][i].achie_number % AchievementsList[BOSSKILL_ACHIE][i].achie_string2 % (AchievementsList[BOSSKILL_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[BOSSKILL_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[BOSSKILL_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 1; i < MAX_CLASS_ACHIE; i++)
+    {
+        if(AchievementsList[CLASS_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0012%%-12s %6d %-34s %s\n\r");
+            fmt % num % "Class:" % AchievementsList[CLASS_ACHIE][i].achie_number % AchievementsList[CLASS_ACHIE][i].achie_string2 % (AchievementsList[CLASS_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[CLASS_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[CLASS_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(AchievementsList[QUEST_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0013%-12s %6d %-304s %s\n\r");
+            fmt % num % "Quest:" % AchievementsList[QUEST_ACHIE][i].achie_number % AchievementsList[QUEST_ACHIE][i].achie_string2 % (AchievementsList[QUEST_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[QUEST_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[QUEST_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+    for(i = 0; i < MAX_OTHER_ACHIE; i++)
+    {
+        if(AchievementsList[OTHER_ACHIE][i].grado_diff == 0)
+        {
+            num += 1;
+            boost::format fmt("$c0009%6d $c0014%-12s %6d %-34s %s\n\r");
+            fmt % num % "Other:" % AchievementsList[OTHER_ACHIE][i].achie_number % AchievementsList[OTHER_ACHIE][i].achie_string2 % (AchievementsList[OTHER_ACHIE][i].classe == 0 ? "tutte le classi" : AchievementsList[OTHER_ACHIE][i].classe == -1 ? "non abilitato" : pc_class_types[AchievementsList[OTHER_ACHIE][i].classe]);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    page_string(ch->desc, sb.c_str(), true);
+}
+
+ACTION_FUNC(do_achievements)
+{
+    int i;
+    char arg1[128], arg2[128];
+    std::string sb;
+
+    if(!IS_PC(ch)) {
+        return;
+    }
+
+    arg = one_argument(arg, arg1);
+
+    if(*arg1)
+    {
+        if(!strcmp(arg1,"all"))
+        {
+            struct char_data* tch;
+
+            tch = ch;
+
+            if(IS_QUESTMASTER(ch))
+            {
+                arg = one_argument(arg, arg2);
+
+                if(*arg2)
+                {
+                    if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                    {
+                        send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
+                        return;
+                    }
+                }
+            }
+
+            if(!IS_PC(tch))
+            {
+                send_to_char("Vuoi veramente vedere gli achievements di uno stupido mob?\n\r", ch);
+                return;
+            }
+
+            if(IS_POLY(tch))
+                tch = tch->desc->original;
+
+            if(IS_SET(tch->specials.act,PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
+            {
+                int num = 0;
+
+                if(ch == tch)
+                {
+                    send_to_char("\n\r$c0011Ecco tutti i tuoi achievements:\n\r", ch);
+                }
+                else
+                {
+                    act("\n\r$c0011Lista completa degli achievements di $c0015$N$c0011:", FALSE, ch, 0, tch, TO_CHAR);
+                }
+
+                // Race Achievements
+                if(hasAchievement(tch, RACESLAYER_ACHIE, 1) || IS_QUESTMASTER(ch))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Race  Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_RACE_ACHIE; i++)
+                {
+                    if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+                    }
+                    else if(tch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+                    }
+                }
+
+                // Boss Achievements
+                if(hasAchievement(tch, BOSSKILL_ACHIE, 1) || IS_QUESTMASTER(ch))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Boss  Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                {
+                    if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+                    }
+                    else if(tch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+                    }
+                }
+
+                // Class Skill Achievements
+                if(hasAchievement(tch, CLASS_ACHIE, 1) || IS_QUESTMASTER(ch))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Skill Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                {
+                    if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
+                    }
+                }
+
+                // Quest Achievements
+                if(hasAchievement(tch, QUEST_ACHIE, 1) || IS_QUESTMASTER(ch))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Quest Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_QUEST_ACHIE; i++)
+                {
+                    if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+                    }
+                    else if(tch->specials.achievements[QUEST_ACHIE][i] > 0)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+                    }
+                }
+
+                // Various Achievements
+                if(hasAchievement(tch, OTHER_ACHIE, 1) || IS_QUESTMASTER(ch))
+                {
+                    sb.append("$c0009");
+                    sb.append(45u,'-').append(" $c0015Other Achievements$c0009 ");
+                    sb.append(45u,'-').append("\n\r");
+                }
+                for(i = 0; i < MAX_OTHER_ACHIE; i++)
+                {
+                    if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+                    }
+                    else if(tch->specials.achievements[OTHER_ACHIE][i] > 0)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+                    }
+                }
+
+                page_string(ch->desc, sb.c_str(), true);
+            }
+            else if (ch == tch)
+            {
+                send_to_char("Non hai completato nessun achievement.\n\r", ch);
+            }
+            else
+            {
+                act("$N non ha completato nessun achievement.", FALSE, ch, 0, tch, TO_CHAR);
+            }
+        }
+        else if(!strcmp(arg1,"spam"))
+        {
+            int n_spam;
+            char buf[MAX_STRING_LENGTH];
+
+            const char* rand_spamAchie[] =
+            {
+                "$c0011$n$c0007 e' proprio $u sborone:",
+                "$c0011$n$c0007 si gigioneggia mostrandoti il suo achievement:",
+                "$c0011$n$c0007 ti dice: 'Si ho fatto anche questo!',",
+                "$c0011$n$c0007 mostra a tutti il cartello 'W i criceti' e poi dice:",
+                "$c0011$n$c0007 canticchia allegr$b 'In the name of my new Achievemeeent!':",
+                "$c0011$n$c0007 sogghigna mentre ti mostra che",
+                "Inizi a schiumare di rabbia appena $c0011$n$c0007 ti dice che",
+                "Ma davero davero? Nuovo achievement di $c0011$n$c0007? WTF, ",
+                "$c0011$n$c0007 si muove come $u supercafone mentre esclama che",
+                "Mentre tu stai a rosica' $c0011$n$c0007 urla 'Daje!',",
+                "Fai lo sborone e mostri a tutti che",
+                "Ti gigioneggi mentre fai vedere il tuo achievement:",
+                "Dici: 'E anche questo l'ho fatto,",
+                "Mostri il cartello 'W i criceti', poi dici che",
+                "Canti allegramente 'In the name of my new Achievemeeeent!':",
+                "Sogghigni mentre mostri a tutti che",
+                "Fai schiumare i presenti dalla rabbia appena esclami che",
+                "Fai rimanere tutti a bocca aperta:",
+                "Con il passo da $c5011K$c0007oatto esclami che",
+                "Esclami 'Daje!' e fai rosicare tutti urlando che"
+            };
+
+            const int nMaxSpamAchie = 9;
+
+            arg = one_argument(arg, arg2);
+
+            if(!*arg2)
+            {
+                send_to_char("Quale achievement vuoi mostrare? Digita 'achievements all' per vedere il numero.\n\r", ch);
+                return;
+            }
+
+            n_spam = atoi(arg2);
+
+            if(IS_SET(ch->specials.act,PLR_ACHIE))
+            {
+                int num = 0;
+                bool trovato = FALSE;
+
+                // Race Achievements
+                for(i = 0; i < MAX_RACE_ACHIE; i++)
+                {
+                    if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
+                        }
+                    }
+                    else if(ch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
+                        }
+                    }
+                }
+
+                // Boss Achievements
+                for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                {
+                    if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
+                        }
+                    }
+                    else if(ch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
+                        }
+                    }
+                }
+
+                // Class Skill Achievements
+                for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                {
+                    if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb = bufferAchie(ch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, n_spam);
+                            num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[CLASS_ACHIE][i].n_livelli;
+                        }
+                    }
+                }
+
+                // Quest Achievements
+                for(i = 0; i < MAX_QUEST_ACHIE; i++)
+                {
+                    if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[QUEST_ACHIE][i].n_livelli;
+                        }
+                    }
+                    else if(ch->specials.achievements[QUEST_ACHIE][i] > 0)
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[QUEST_ACHIE][i].n_livelli;
+                        }
+                    }
+                }
+
+                // Various Achievements
+                for(i = 0; i < MAX_OTHER_ACHIE; i++)
+                {
+                    if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                    {
+                        // se l'achievement classe e' -1 viene skippato
+                        continue;
+                    }
+                    else if(HasClass(ch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[OTHER_ACHIE][i].n_livelli;
+                        }
+                    }
+                    else if(ch->specials.achievements[OTHER_ACHIE][i] > 0)
+                    {
+                        if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
+                        {
+                            num += 1;
+                            sb.append(bufferAchie(ch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+                            trovato = TRUE;
+                        }
+                        else
+                        {
+                            num += AchievementsList[OTHER_ACHIE][i].n_livelli;
+                        }
+                    }
+                }
+                
+                if(!trovato)
+                {
+                    send_to_char("Quell'achievement esiste solo nella tua fantasia...\n\r", ch);
+                    return;
+                }
+
+                int Snum = number(0, nMaxSpamAchie);
+
+                sprintf(buf,"%s %s %s.",rand_spamAchie[Snum + 10], (sb.substr(0,3) == "com" ? "hai" : "ti"), sb.c_str());
+                act(buf, FALSE, ch, 0, 0, TO_CHAR);
+                sprintf(buf,"%s %s %s.",rand_spamAchie[Snum], (sb.substr(0,3) == "com" ? "ha" : "$d"), sb.c_str());
+                act(buf, FALSE, ch, 0, 0, TO_ROOM);
+            }
+            else
+            {
+                send_to_char("Ma se non hai completato nessun achievement...\n\r", ch);
+            }
+        }
+        else if(!strcmp(arg1,"delete") && IS_QUESTMASTER(ch))
+        {
+            struct char_data* tch;
+            char arg3[128], buf1[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
+            bool trovato = FALSE;
+
+            arg = one_argument(arg, arg2);
+            arg = one_argument(arg, arg3);
+
+            if(*arg2)
+            {
+                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                {
+                    send_to_char("Non c'e' nessuno con quel nome qui, a chi vorresti cancellare gli achievements?\n\r", ch);
+                    return;
+                }
+
+                if(!IS_PC(tch))
+                {
+                    send_to_char("Vuoi veramente cancellare gli achivements ad uno stupido mob?\n\r", ch);
+                    return;
+                }
+
+                if(IS_POLY(tch))
+                    tch = tch->desc->original;
+
+                if(*arg3)
+                {
+                    int achi_d;
+
+                    achi_d = atoi(arg3);
+
+                    if(achi_d <= 0)
+                    {
+                        act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(IS_SET(tch->specials.act,PLR_ACHIE))
+                    {
+                        int num = 0;
+
+                        // Race Achievements
+                        for(i = 0; i < MAX_RACE_ACHIE; i++)
+                        {
+                            if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_d > num && achi_d <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
+                                {
+                                    if(tch->specials.achievements[RACESLAYER_ACHIE][i] == 0)
+                                    {
+                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch))
+                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
+                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Boss Achievements
+                        for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_d > num && achi_d <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
+                                {
+                                    if(tch->specials.achievements[BOSSKILL_ACHIE][i] == 0)
+                                    {
+                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch))
+                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
+                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Class Skill Achievements
+                        for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                            {
+                                if(achi_d > num && achi_d <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
+                                {
+                                    if(tch->specials.achievements[CLASS_ACHIE][i] == 0)
+                                    {
+                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[CLASS_ACHIE][i].achie_string2);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[CLASS_ACHIE][i] = 0;
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch))
+                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[CLASS_ACHIE][i].achie_string2);
+                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[CLASS_ACHIE][i].achie_string2);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[CLASS_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Quest Achievements
+                        for(i = 0; i < MAX_QUEST_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_d > num && achi_d <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
+                                {
+                                    if(tch->specials.achievements[QUEST_ACHIE][i] == 0)
+                                    {
+                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[QUEST_ACHIE][i].achie_string2);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[QUEST_ACHIE][i] = 0;
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch))
+                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[QUEST_ACHIE][i].achie_string2);
+                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[QUEST_ACHIE][i].achie_string2);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[QUEST_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Various Achievements
+                        for(i = 0; i < MAX_OTHER_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_d > num && achi_d <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
+                                {
+                                    if(tch->specials.achievements[OTHER_ACHIE][i] == 0)
+                                    {
+                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[OTHER_ACHIE][i].achie_string2);
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[OTHER_ACHIE][i] = 0;
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch))
+                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[OTHER_ACHIE][i].achie_string2);
+                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[OTHER_ACHIE][i].achie_string2);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[OTHER_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                        tch = get_char_vis_world(ch, arg2, NULL);
+                        act(buf2, FALSE, ch, 0, tch, TO_VICT);
+                    }
+                    else
+                    {
+                        act("$N non ha completato nessun achievement!", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+                }
+                else
+                {
+                    act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                    return;
+                }
+            }
+            else
+            {
+                send_to_char("A chi vorresti cancellare l'achievement?\n\r", ch);
+                return;
+            }
+        }
+        else if(!strcmp(arg1,"set") && IS_MAESTRO_DEL_CREATO(ch))
+        {
+            struct char_data* tch;
+            char arg3[128], arg4[128], buf1[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
+            bool trovato = FALSE;
+
+            arg = one_argument(arg, arg2);
+            arg = one_argument(arg, arg3);
+            arg = one_argument(arg, arg4);
+
+            if(*arg2)
+            {
+                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                {
+                    send_to_char("Non c'e' nessuno con quel nome qui!\n\r", ch);
+                    return;
+                }
+
+                if(!IS_PC(tch))
+                {
+                    send_to_char("Vuoi veramente assegnare un achivement ad uno stupido mob?\n\r", ch);
+                    return;
+                }
+
+                if(IS_POLY(tch))
+                    tch = tch->desc->original;
+
+                if(*arg3)
+                {
+                    int achi_n;
+
+                    achi_n = atoi(arg3);
+
+                    if(achi_n <= 0)
+                    {
+                        act("A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(achi_n > maxAchievements(tch))
+                    {
+                        sprintf(buf1, "Il numero massimo di achievements per $N e' %d.", maxAchievements(tch));
+                        act(buf1 , FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(*arg4)
+                    {
+                        int achi_v, num = 0;
+
+                        achi_v = atoi(arg4);
+
+                        if(achi_v <= 0)
+                        {
+                            act("Puoi assegnare solo un valore maggiore di zero.", FALSE, ch, 0, tch, TO_CHAR);
+                            return;
+                        }
+
+                        if(!IS_SET(tch->specials.act, PLR_ACHIE))
+                            SET_BIT(tch->specials.act, PLR_ACHIE);
+
+                        // Race Achievements
+                        for(i = 0; i < MAX_RACE_ACHIE; i++)
+                        {
+                            if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_n > num && achi_n <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
+                                {
+                                    if(achi_v > MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
+                                    {
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli));
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[RACESLAYER_ACHIE][i] = achi_v;
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
+                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
+                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Boss Achievements
+                        for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_n > num && achi_n <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
+                                {
+                                    if(achi_v > MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
+                                    {
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli));
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[BOSSKILL_ACHIE][i] = achi_v;
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
+                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
+                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Class Skill Achievements
+                        for(i = 1; i < MAX_CLASS_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                            {
+                                if(achi_n > num && achi_n <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
+                                {
+                                    if(achi_v > MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli))
+                                    {
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli));
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[CLASS_ACHIE][i] = achi_v;
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
+                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
+                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[CLASS_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Quest Achievements
+                        for(i = 0; i < MAX_QUEST_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_n > num && achi_n <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
+                                {
+                                    if(achi_v > MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli))
+                                    {
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli));
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[QUEST_ACHIE][i] = achi_v;
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
+                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
+                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[QUEST_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        // Various Achievements
+                        for(i = 0; i < MAX_OTHER_ACHIE; i++)
+                        {
+                            if(trovato)
+                            {
+                                break;
+                            }
+
+                            if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+                            {
+                                // se l'achievement classe e' -1 viene skippato
+                                continue;
+                            }
+                            else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                            {
+                                if(achi_n > num && achi_n <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
+                                {
+                                    if(achi_v > MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli))
+                                    {
+                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli));
+                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tch->specials.achievements[OTHER_ACHIE][i] = achi_v;
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
+                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
+                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
+                                        do_save(tch, "", 0);
+                                        trovato = TRUE;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    num += AchievementsList[OTHER_ACHIE][i].n_livelli;
+                                }
+                            }
+                        }
+
+                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                        tch = get_char_vis_world(ch, arg2, NULL);
+                        act(buf2, FALSE, ch, 0, tch, TO_VICT);
+                    }
+                    else
+                    {
+                        act("Quale valore vuoi assegnare all'achievement di $N?", FALSE, ch, 0, tch, TO_CHAR);
+                        return;
+                    }
+                }
+                else
+                {
+                    act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                    return;
+                }
+            }
+            else
+            {
+                send_to_char("A chi vorresti assegnare l'achievement?\n\r", ch);
+                return;
+            }
+        }
+        else if(!strcmp(arg1,"reset") && IS_MAESTRO_DEL_CREATO(ch))
+        {
+            struct char_data* tch;
+
+            arg = one_argument(arg, arg2);
+
+            if(*arg2)
+            {
+                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                {
+                    send_to_char("Non c'e' nessuno con quel nome qui, a chi vorresti resettare gli achievements?\n\r", ch);
+                    return;
+                }
+
+                if(!IS_PC(tch))
+                {
+                    send_to_char("Vuoi veramente resettare gli achievements di uno stupido mob?\n\r", ch);
+                    return;
+                }
+
+                if(IS_POLY(tch))
+                {
+                    tch = tch->desc->original;
+                }
+
+                mudlog(LOG_PLAYERS, "%s starts to delete all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
+                if(hasAchievement(tch, RACESLAYER_ACHIE, 1))
+                {
+                    for(i = 0; i < MAX_RACE_ACHIE; i++)
+                        tch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
+                }
+                if(hasAchievement(tch, BOSSKILL_ACHIE, 1))
+                {
+                    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                        tch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
+                }
+                if(hasAchievement(tch, CLASS_ACHIE, 1))
+                {
+                    for(i = 0; i < MAX_CLASS_ACHIE; i++)
+                        tch->specials.achievements[CLASS_ACHIE][i] = 0;
+                }
+                if(hasAchievement(tch, QUEST_ACHIE, 1))
+                {
+                    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+                        tch->specials.achievements[QUEST_ACHIE][i] = 0;
+                }
+                if(hasAchievement(tch, OTHER_ACHIE, 1))
+                {
+                    for(i = 0; i < MAX_OTHER_ACHIE; i++)
+                        tch->specials.achievements[OTHER_ACHIE][i] = 0;
+                }
+                if(IS_SET(tch->specials.act,PLR_ACHIE))
+                    REMOVE_BIT(tch->specials.act, PLR_ACHIE);
+                mudlog(LOG_PLAYERS, "Done. %s has deleted all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
+                do_save(tch, "", 0);
+
+                act("Tutti gli achievements di $N sono stati resettati.", FALSE, ch, 0, tch, TO_CHAR);
+                tch = get_char_vis_world(ch, arg2, NULL);
+                act("$n ti ha resettato tutti gli achievements.", FALSE, ch, 0, tch, TO_VICT);
+            }
+            else
+            {
+                send_to_char("A chi vorresti resettare gli achievements?\n\r", ch);
+                return;
+            }
+        }
+        else
+        {
+            send_to_char("$c0009Sintassi:\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements$c0007                                 - mostra gli achievements che hai completato\n\r", ch);
+            else
+                send_to_char("$c0015Achievements$c0007               - mostra gli achievements che hai completato\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements all$c0007                             - mostra tutti i tuoi achievements\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007>                   - mostra tutti gli achievements del personaggio scelto\n\r", ch);
+            else
+                send_to_char("$c0015Achievements all$c0007           - mostra tutti i tuoi achievements\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007>                   - mostra in stanza l'achievement scelto\n\r", ch);
+            else
+                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
+            if(IS_QUESTMASTER(ch))
+                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007>       - cancella un determinato achievement dal personaggio scelto\n\r", ch);
+            if(IS_MAESTRO_DEL_CREATO(ch))
+                send_to_char("$c0015Achievements set $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> <$c0015valore$c0007> - assegna al personaggio scelto un valore ad un determinato achievement\n\r", ch);
+            if(IS_MAESTRO_DEL_CREATO(ch))
+                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007>                 - resetta tutti gli achievements del personaggio scelto\n\r", ch);
+
+        }
+    }
+    else
+    {
+        struct char_data* tch;
+
+        tch = ch;
+
+        if(IS_POLY(tch))
+            tch = tch->desc->original;
+
+        if(IS_SET(tch->specials.act,PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
+        {
+            int num = 0;
+            send_to_char("\n\r$c0011Ecco i tuoi achievements:\n\r", ch);
+
+            // Race Achievements
+            if(hasAchievement(tch, RACESLAYER_ACHIE, 0))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Race  Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 0; i < MAX_RACE_ACHIE; i++)
+            {
+                if(tch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+                {
+                    if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl10_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 10)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 10, num, FALSE, 0));
+                        num += 9;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl9_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 9)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 9, num, FALSE, 0));
+                        num += 8;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl8_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 8)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 8, num, FALSE, 0));
+                        num += 7;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl7_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 7)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 7, num, FALSE, 0));
+                        num += 6;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl6_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 6)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 6, num, FALSE, 0));
+                        num += 5;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl5_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 5)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 5, num, FALSE, 0));
+                        num += 4;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl4_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 4)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 4, num, FALSE, 0));
+                        num += 3;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl3_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 3)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 3, num, FALSE, 0));
+                        num += 2;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl2_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 2)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 2, num, FALSE, 0));
+                        num += 1;
+                    }
+                    else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl1_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 1)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 1, num, FALSE, 0));
+                    }
+                }
+            }
+
+            // Boss Achievements
+            if(hasAchievement(tch, BOSSKILL_ACHIE, 0))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Boss  Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 0; i < MAX_BOSS_ACHIE; i++)
+            {
+                if(tch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+                {
+                    if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl10_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 10)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 10, num, FALSE, 0));
+                        num += 9;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl9_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 9)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 9, num, FALSE, 0));
+                        num += 8;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl8_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 8)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 8, num, FALSE, 0));
+                        num += 7;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl7_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 7)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 7, num, FALSE, 0));
+                        num += 6;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl6_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 6)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 6, num, FALSE, 0));
+                        num += 5;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl5_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 5)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 5, num, FALSE, 0));
+                        num += 4;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl4_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 4)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 4, num, FALSE, 0));
+                        num += 3;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl3_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 3)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 3, num, FALSE, 0));
+                        num += 2;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl2_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 2)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 2, num, FALSE, 0));
+                        num += 1;
+                    }
+                    else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl1_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 1)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 1, num, FALSE, 0));
+                    }
+                }
+            }
+
+            // Class Skill Achievements
+            if(hasAchievement(tch, CLASS_ACHIE, 0))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Skill Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 1; i < MAX_CLASS_ACHIE; i++)
+            {
+                if(tch->specials.achievements[CLASS_ACHIE][i] > 0)
+                {
+                    if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl10_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 10)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 10, num, FALSE, 0));
+                        num += 9;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl9_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 9)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 9, num, FALSE, 0));
+                        num += 8;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl8_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 8)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 8, num, FALSE, 0));
+                        num += 7;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl7_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 7)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 7, num, FALSE, 0));
+                        num += 6;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl6_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 6)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 6, num, FALSE, 0));
+                        num += 5;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl5_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 5)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, FALSE, 0));
+                        num += 4;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl4_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 4)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 4, num, FALSE, 0));
+                        num += 3;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl3_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 3)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 3, num, FALSE, 0));
+                        num += 2;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl2_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 2)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 2, num, FALSE, 0));
+                        num += 1;
+                    }
+                    else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl1_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 1)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 1, num, FALSE, 0));
+                    }
+                }
+            }
+
+            // Quest Achievements
+            if(hasAchievement(tch, QUEST_ACHIE, 0))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Quest Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 0; i < MAX_QUEST_ACHIE; i++)
+            {
+                if(tch->specials.achievements[QUEST_ACHIE][i] > 0)
+                {
+                    if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl10_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 10)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 10, num, FALSE, 0));
+                        num += 9;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl9_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 9)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 9, num, FALSE, 0));
+                        num += 8;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl8_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 8)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 8, num, FALSE, 0));
+                        num += 7;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl7_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 7)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 7, num, FALSE, 0));
+                        num += 6;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl6_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 6)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 6, num, FALSE, 0));
+                        num += 5;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl5_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 5)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 5, num, FALSE, 0));
+                        num += 4;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl4_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 4)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 4, num, FALSE, 0));
+                        num += 3;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl3_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 3)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 3, num, FALSE, 0));
+                        num += 2;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl2_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 2)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 2, num, FALSE, 0));
+                        num += 1;
+                    }
+                    else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl1_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 1)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 1, num, FALSE, 0));
+                    }
+                }
+            }
+
+            // Various Achievements
+            if(hasAchievement(tch, OTHER_ACHIE, 0))
+            {
+                sb.append("$c0009");
+                sb.append(40u,'-').append(" $c0015Other Achievements$c0009 ");
+                sb.append(40u,'-').append("\n\r");
+            }
+            for(i = 0; i < MAX_OTHER_ACHIE; i++)
+            {
+                if(tch->specials.achievements[OTHER_ACHIE][i] > 0)
+                {
+                    if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl10_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 10)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 10, num, FALSE, 0));
+                        num += 9;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl9_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 9)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 9, num, FALSE, 0));
+                        num += 8;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl8_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 8)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 8, num, FALSE, 0));
+                        num += 7;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl7_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 7)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 7, num, FALSE, 0));
+                        num += 6;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl6_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 6)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 6, num, FALSE, 0));
+                        num += 5;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl5_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 5)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 5, num, FALSE, 0));
+                        num += 4;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl4_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 4)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 4, num, FALSE, 0));
+                        num += 3;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl3_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 3)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 3, num, FALSE, 0));
+                        num += 2;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl2_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 2)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 2, num, FALSE, 0));
+                        num += 1;
+                    }
+                    else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl1_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 1)
+                    {
+                        num += 1;
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 1, num, FALSE, 0));
+                    }
+                }
+            }
+
+            page_string(ch->desc, sb.c_str(), true);
+        }
+        else
+            send_to_char("Non hai completato nessun achievement.\n\r", ch);
+    }
+}
+
 ACTION_FUNC(do_score) {
 	struct time_info_data playing_time;
 	char buf[1000], buf2[1000];
@@ -2433,7 +3975,7 @@ ACTION_FUNC(do_score) {
 		act(buf,FALSE,ch,0,0,TO_CHAR);
 	}
 
-	snprintf(buf,999,"$c0005Le rune degli dei tatuate sul tuo corpo sono: $c0015%d ",
+	snprintf(buf,999,"$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015%d ",
 			 GET_RUNEDEI(ch));
 	act(buf,FALSE,ch,0,0,TO_CHAR);
 

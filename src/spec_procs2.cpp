@@ -1906,6 +1906,7 @@ MOBSPECIAL_FUNC(RepairGuy) {
 	int cost, ave, iVNum;
 	struct char_data* vict;
 	struct obj_data* obj;
+    bool riparato = FALSE;
 	/* special procedure for this mob/obj       */
 
 	if(!AWAKE(ch)) {
@@ -2041,6 +2042,10 @@ MOBSPECIAL_FUNC(RepairGuy) {
 				else
                 {
 					GET_GOLD(ch) -= cost;
+                    if(cost > 0)
+                    {
+                        riparato = TRUE;
+                    }
 
 					sprintf(buf, "Dai a $N %d monete d'oro.",cost);
 					act(buf,TRUE,ch,0,vict,TO_CHAR);
@@ -2137,6 +2142,10 @@ MOBSPECIAL_FUNC(RepairGuy) {
 				}
 				else {
 					GET_GOLD(ch) -= cost;
+                    if(cost > 0)
+                    {
+                        riparato = TRUE;
+                    }
 
 					sprintf(buf, "Dai a $N %d monete d'oro.",cost);
 					act(buf,TRUE,ch,0,vict,TO_CHAR);
@@ -2169,6 +2178,28 @@ MOBSPECIAL_FUNC(RepairGuy) {
 
 			}
 		}
+
+        if(riparato)
+        {
+        // Repair Achievement
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_REPAIR] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+            }
+            else
+            {
+                ch->specials.achievements[OTHER_ACHIE][ACHIE_REPAIR] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+            }
+            CheckAchie(ch, ACHIE_REPAIR, OTHER_ACHIE);
+        }
 
 		act("$N ti da' $p.",TRUE,ch,obj,vict,TO_CHAR);
 		act("$N da' $p a $n.",TRUE,ch,obj,vict,TO_ROOM);

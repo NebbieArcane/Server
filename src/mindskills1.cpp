@@ -340,7 +340,7 @@ void mind_levitation(byte level, struct char_data* ch,
 	if(!affected_by_spell(victim, SKILL_LEVITATION)) {
 		if(ch != victim) {
 			act("Sollevi $N  da terra con la sola forza del pensiero.",FALSE,ch,0,victim,TO_CHAR);
-			act("$N viene sollevat$b in aria con un sepmlice pensiero di $n.",FALSE,ch,0,victim,TO_ROOM);
+			act("$N viene sollevat$b in aria con un semplice pensiero di $n.",FALSE,ch,0,victim,TO_ROOM);
 		}
 		else {
 			act("$n si solleva da terra con la mente.",TRUE,victim,0,0,TO_ROOM);

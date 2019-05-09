@@ -159,7 +159,7 @@ void MobHunt(struct char_data* ch) {
         /* se ch e il suo master sono nella stessa room il mob non si muove */
         return;
     }
-    
+
 	if(ch->persist <= 0) {
 		res = choose_exit_in_zone(ch->in_room, ch->old_room, 2000);
 		if(res > -1) {
@@ -375,7 +375,7 @@ void mobile_activity(struct char_data* ch) {
 		mudlog(LOG_SYSERR, "ch == NULL in mobile_activity (mobact.c)");
 		return;
 	}
-    
+
     if(ch->in_room > 99999 || ch->in_room <= -1)
     {
         mudlog(LOG_SYSERR, "ch->in_room = %d", ch->in_room);
@@ -451,18 +451,52 @@ void mobile_activity(struct char_data* ch) {
 			}
 
 		if(IS_SET(ch->specials.act, ACT_CLERIC)) {
-			int nRetVal;
-			nRetVal = cleric(ch, 0, "", ch, EVENT_TICK);
-			SetStatus("Return from cleric spec proc", NULL);
-			if(nRetVal) {
-				return;
-			}
+            if(IS_SET(ch->specials.act,ACT_WARRIOR) && number(1,100) > 49)
+            {
+                if(IS_POLY(ch) && !IS_WAITING(ch))
+                {
+                    if(fighter(ch,0,"",ch,EVENT_TICK))
+                    {
+                        return;
+                    }
+                }
+                else if(!IS_POLY(ch))
+                {
+                    if(fighter(ch,0,"",ch,EVENT_TICK))
+                    {
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                int nRetVal;
+                nRetVal = cleric(ch, 0, "", ch, EVENT_TICK);
+                SetStatus("Return from cleric spec proc", NULL);
+                if(nRetVal) {
+                    return;
+                }
+            }
 		}
 
 		if(IS_SET(ch->specials.act,ACT_WARRIOR))
-			if(fighter(ch,0,"",ch,EVENT_TICK)) {
-				return;
+		{
+			if(IS_POLY(ch) && !IS_WAITING(ch))
+			{
+				if(fighter(ch,0,"",ch,EVENT_TICK))
+				{
+					return;
+				}
 			}
+            else if(!IS_POLY(ch))
+            {
+                if(fighter(ch,0,"",ch,EVENT_TICK))
+                {
+                    return;
+                }
+            }
+                
+		}
 
 		if(IS_SET(ch->specials.act,ACT_THIEF))
 			if(thief(ch,0,"",ch,EVENT_TICK)) {
@@ -1274,12 +1308,71 @@ void MobHit(struct char_data* ch, struct char_data* v, int type) {
 					}
 				}
 			}
-			else {
-				AddHated(v, ch);
-				GET_HITROLL(ch) += base;
-				if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead) {
-					GET_HITROLL(ch) -= base;
-				}
+            else
+            {
+                if(IS_PC(v))
+                {
+                    if(v->skills && v->skills[SKILL_AVOID_BACK_ATTACK].learned && GET_POS(v) > POSITION_SITTING)
+                    {
+                        percent = number(1,101); /* 101% is a complete failure */
+                        if(percent < v->skills[SKILL_AVOID_BACK_ATTACK].learned)
+                        {
+                            act("Ti accorgi del tentativo di attacco di $N e lo eviti abilmente!", FALSE, v, 0, ch, TO_CHAR);
+                            act("$n evita l'attacco alla schiena di $N!", FALSE, v, 0, ch, TO_ROOM);
+
+                            if(HasClass(v, CLASS_BARBARIAN) && IS_PC(v))
+                            {
+                                if(IS_POLY(v))
+                                {
+                                    v->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
+                                    if(!IS_SET(v->desc->original->specials.act,PLR_ACHIE))
+                                        SET_BIT(v->desc->original->specials.act, PLR_ACHIE);
+                                }
+                                else
+                                {
+                                    v->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
+                                    if(!IS_SET(v->specials.act,PLR_ACHIE))
+                                        SET_BIT(v->specials.act, PLR_ACHIE);
+                                }
+
+                                CheckAchie(v, ACHIE_BARBARIAN_2, CLASS_ACHIE);
+                            }
+
+                            AddHated(v, ch);
+                            damage(ch, v, 0, SKILL_BACKSTAB, location);
+                        }
+                        else
+                        {
+                            act("Non ti sei accort$b dell'attacco alla schiena di $N!", FALSE, v, 0, ch, TO_CHAR);
+                            act("$n non si accorge dell'attacco alla schiena di $N!", FALSE, v, 0, ch, TO_ROOM);
+                            LearnFromMistake(v, SKILL_AVOID_BACK_ATTACK, 0, 95);
+                            AddHated(v, ch);
+                            GET_HITROLL(ch) += base;
+                            if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead)
+                            {
+                                GET_HITROLL(ch) -= base;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        AddHated(v, ch);
+                        GET_HITROLL(ch) += base;
+                        if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead)
+                        {
+                            GET_HITROLL(ch) -= base;
+                        }
+                    }
+                }
+                else
+                {
+                    AddHated(v, ch);
+                    GET_HITROLL(ch) += base;
+                    if(hit(ch,v,SKILL_BACKSTAB) != SubjectDead)
+                    {
+                        GET_HITROLL(ch) -= base;
+                    }
+                }
 			}
 		}
 	}
@@ -1288,4 +1381,3 @@ void MobHit(struct char_data* ch, struct char_data* v, int type) {
 	}
 }
 } // namespace Alarmud
-

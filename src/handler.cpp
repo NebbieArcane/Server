@@ -2285,6 +2285,12 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
     if(IS_PC(ch) && ch->specials.quest_ref != NULL)
     {
         send_to_char("$c0011Mi dispiace, hai fallito la tua quest!\n\r", ch);
+        mudlog(LOG_PLAYERS, "%s has failed the quest!", GET_NAME(ch));
+
+    // Quest Achievement
+        CheckQuestFail(ch);
+        write_char_extra(ch);
+
         if(real_roomp((ch->specials.quest_ref)->in_room)->people)
         {
             act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, ch->specials.quest_ref, 0, 0, TO_ROOM);
@@ -2766,6 +2772,12 @@ struct obj_data* create_money(int amount) {
 void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd)
 {
     char personal[MAX_INPUT_LENGTH];
+
+    if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
+    {
+        mudlog(LOG_PLAYERS,"pers_obj: can't personalize twice %s.", obj->short_description);
+        return;
+    }
 
     if(cmd == CMD_PERSONALIZE)
     {

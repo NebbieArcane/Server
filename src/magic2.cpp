@@ -137,6 +137,23 @@ void spell_resurrection(byte level, struct char_data* ch,
 			/* get rid of corpse */
 			extract_obj(obj);
 
+            if(HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_CLERIC_2, CLASS_ACHIE);
+            }
 
 		}
 		else {
@@ -212,6 +229,24 @@ void spell_resurrection(byte level, struct char_data* ch,
 					act("$n cade a terra privo di sensi!",TRUE, ch, 0, 0, TO_ROOM);
 					send_to_char("Svieni e crolli a terra.\n\r",ch);
 				}
+
+                if(HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_CLERIC_2, CLASS_ACHIE);
+                }
 
 				rewind(fl);
 				fwrite(&st, sizeof(struct char_file_u), 1, fl);
@@ -611,7 +646,7 @@ void spell_track(byte level, struct char_data* ch,
 		send_to_char("I tuoi occhi $c0015brillano$c0007 per un attimo di un color $c0010verde smeraldo$c0007!\n\r", ch);
 	}
 
-	act("Gli occhi di $N $c0015brillano$c0007 per un attimo di un riflesso color $c0010verde smeraldo$c0007.", 0,  ch, 0, targ, TO_ROOM);
+	act("Gli occhi di $N $c0015brillano$c0007 per un attimo di un riflesso color $c0010verde smeraldo$c0007.", 0,  ch, 0, targ, TO_NOTVICT);
 
 	if(!obj) {
 		af.type      = SPELL_MINOR_TRACK;
@@ -651,6 +686,30 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	char_to_room(mob, ch->in_room);
 	SwitchStuff(ch, mob);
+
+    if(GET_SEX(ch) == SEX_FEMALE)
+    {
+        if(GET_SEX(ch) != GET_SEX(mob) )
+        {
+            GET_SEX(mob) = GET_SEX(ch);
+        }
+
+        if(mob_index[mob->nr].iVNum == 1347)
+        {
+            mob->player.short_descr = (char*)strdup("una Incubus");
+            mob->player.long_descr = (char*)strdup("Una Incubus, viaggiatrice dell'inconscio e' qui.\n");
+        }
+        else if(mob_index[mob->nr].iVNum == 1368)
+        {
+            mob->player.short_descr = (char*)strdup("una Drow");
+            mob->player.long_descr = (char*)strdup("Una drow ti fissa minacciosamente poco prima di estrarre la sua spada.\n");
+        }
+        else if(mob_index[mob->nr].iVNum == 1372)
+        {
+            mob->player.short_descr = (char*)strdup("una CacciaCanguRo");
+            mob->player.long_descr = (char*)strdup("Una Cacciatrice... Diamine, e' armata di una Canna!\n");
+        }
+    }
 
 	/* move char to storage */
 
@@ -1510,6 +1569,13 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	assert(ch && (victim || obj));
 
 	if(obj) {
+        if((IS_SET(obj->obj_flags.extra_flags2, ITEM2_EDIT) || IS_SET(obj->obj_flags.extra_flags2, ITEM2_INSERT) ||IS_SET(obj->obj_flags.extra_flags2, ITEM2_PERSONAL) || IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST)) && level <= IMMORTALE)
+        {
+            act("$p resiste al tuo incantesimo.", FALSE, ch, obj, 0, TO_CHAR);
+            return;
+        }
+        
+        
 		if(IS_SET(obj->obj_flags.extra_flags, ITEM_INVISIBLE)) {
 			REMOVE_BIT(obj->obj_flags.extra_flags, ITEM_INVISIBLE);
 		}
@@ -1963,6 +2029,10 @@ void spell_dispel_magic(byte level, struct char_data* ch,
                 extract_char(victim->specials.quest_ref);
             }
             victim->specials.quest_ref = NULL;
+
+        // Quest Achievement
+            CheckQuestFail(victim);
+
             send_to_char("$c0011Non sei piu' in missione.\n\r",victim);
         }
 

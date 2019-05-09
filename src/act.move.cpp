@@ -664,6 +664,14 @@ void DisplayMove(struct char_data* ch, int dir, int was_in, int total) {
 						}
 					}
 					tmp[DMMAX - 1] = 0;
+
+                    if(tmp[1] == '$')
+                        tmp[7] = UPPER(tmp[7]);
+                    else if(tmp[0] == '$')
+                        tmp[6] = UPPER(tmp[6]);
+                    else
+                        CAP(tmp);
+
 					send_to_char(tmp, tmp_ch);
 				}
 			}
@@ -728,6 +736,14 @@ void DisplayMove(struct char_data* ch, int dir, int was_in, int total) {
 					}
 				}
 				tmp[DMMAX - 1] = '\0';
+
+                if(tmp[1] == '$')
+                    tmp[7] = UPPER(tmp[7]);
+                else if(tmp[0] == '$')
+                    tmp[6] = UPPER(tmp[6]);
+                else
+                    CAP(tmp);
+
 				send_to_char(tmp, tmp_ch);
 			}
 		}
@@ -1149,7 +1165,7 @@ ACTION_FUNC(do_open) {
 		}
 		else {
 			REMOVE_BIT(obj->obj_flags.value[1], CONT_CLOSED);
-            act("Apri $p", FALSE, ch, obj, 0, TO_CHAR);
+            act("Apri $p.", FALSE, ch, obj, 0, TO_CHAR);
 			act("$n apre $p.", FALSE, ch, obj, 0, TO_ROOM);
 		}
 	}

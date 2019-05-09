@@ -38,6 +38,7 @@
 #include "magic2.hpp"
 #include "mobact.hpp"
 #include "opinion.hpp"
+#include "reception.hpp"
 #include "skills.hpp"
 #include "sound.hpp"
 #include "spell_parser.hpp"
@@ -134,7 +135,7 @@ const char* zonename_by_room(int room) {
         "il Crepaccio di Ghiaccio",
         "il Regno del Gelo",
         "la Foresta dei Ragni",
-        "QUestFisse",
+        "QuestFisse",
         "free",
         "il Labirinto del Tempio",
         "il Maniero di Lord Python",
@@ -295,6 +296,3943 @@ int RandomRoomByLevel(int level) {
 
 }
 
+extern void store_mail(char* to, char* from, char* message_pointer);
+
+void mail_to_god(struct char_data* ch, const char* god, const char* message)
+{
+    struct char_data* temp_char = ch;
+    
+    temp_char->desc->name = (char*)strdup(god);
+    temp_char->desc->showstr_head = (char*)strdup(message);
+    store_mail( temp_char->desc->name, GET_NAME(ch), temp_char->desc->showstr_head);
+}
+
+char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa, int achievement_type, int achievement_class)
+{
+    int i, lung[3], max = 0, diff = 0;
+    char riga1[100], riga2[100], riga3[100], space[100];
+    static char buffer[MAX_STRING_LENGTH];
+
+    sprintf(riga1, "%s ha completato l'achievement", GET_NAME(ch));
+    sprintf(riga2, "%s", titolo);
+    sprintf(riga3, "%d %s", valore, stringa);
+
+    lung[0] = strlen(riga1);
+    lung[1] = strlen(riga2);
+    lung[2] = strlen(riga3);
+
+    sprintf(riga1, "$c0009%s $c0007ha completato l'achievement$c0011", GET_NAME(ch));
+    sprintf(riga2, "$c0015%s$c0011", titolo);
+    sprintf(riga3, "$c0009%d %s$c0011", valore, stringa);
+
+    for(i = 0 ; i < 3 ; i++)
+    {
+        if(lung[i] > max)
+        {
+            max = lung[i];
+        }
+    }
+
+    strcpy(space, " ");
+    for (i = 0; i < (max + 7); i++)
+    {
+        strcat(space, " ");
+    }
+
+    strcpy(buffer, "$c0011 _\n(@)");
+    strcat(buffer, space);
+    strcat(buffer, " _\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "(@)\n|-|");
+    for (i = 0; i < (max + 8); i++)
+    {
+        strcat(buffer, "-");
+    }
+    strcat(buffer, "|-|\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[0])
+    {
+        diff = int((max - lung[0]) /2);
+        if((diff * 2) != (max - lung[0]))
+        {
+            diff += 1;
+        }
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, riga1);
+    if(max > lung[0])
+    {
+        diff = int((max - lung[0]) /2);
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, "    |-|\n| |");
+
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[1])
+    {
+        diff = int((max - lung[1]) /2);
+        if((diff * 2) != (max - lung[1]))
+        {
+            diff += 1;
+        }
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, riga2);
+    if(max > lung[1])
+    {
+        diff = int((max - lung[1]) /2);
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, "    |-|\n| |");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n|-|");
+    strcat(buffer, "    ");
+    if(max > lung[2])
+    {
+        diff = int((max - lung[2]) /2);
+        if((diff * 2) != (max - lung[2]))
+        {
+            diff += 1;
+        }
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, riga3);
+    if(max > lung[2])
+    {
+        diff = int((max - lung[2]) /2);
+        for(i = 0; i < diff; i++)
+        {
+            strcat(buffer, " ");
+        }
+    }
+    strcat(buffer, "    |-|\n| |");
+    for (i = 0; i < (max + 8); i++)
+    {
+        strcat(buffer, "_");
+    }
+    strcat(buffer, "| |\n(@)");
+    strcat(buffer, space);
+    strcat(buffer, "| |\n   ");
+    strcat(buffer, space);
+    strcat(buffer, "(@)\n\n\r");
+
+    return buffer;
+}
+
+int MaxValueAchievement(int achievement_class, int achievement_type, int achievement_level)
+{
+    int massimo = 0;
+
+    switch(achievement_level)
+    {
+        case 1:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl1_val;
+            break;
+        case 2:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl2_val;
+            break;
+        case 3:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl3_val;
+            break;
+        case 4:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl4_val;
+            break;
+        case 5:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl5_val;
+            break;
+        case 6:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl6_val;
+            break;
+        case 7:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl7_val;
+            break;
+        case 8:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl8_val;
+            break;
+        case 9:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl9_val;
+            break;
+        case 10:
+            massimo = AchievementsList[achievement_class][achievement_type].lvl10_val;
+            break;
+            
+        default:
+            mudlog(LOG_CHECK, "Something wrong in MaxValueAchievement, check the Achievement table");
+            break;
+    }
+
+    return massimo;
+}
+
+int maxAchievements(struct char_data* ch)
+{
+    struct char_data* tch;
+    int conteggio = 0, i;
+
+    tch = ch;
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    // Race Achievements
+    for(i = 0; i < MAX_RACE_ACHIE; i++)
+    {
+        if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || AchievementsList[RACESLAYER_ACHIE][i].classe == 0)
+        {
+            conteggio += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
+        }
+    }
+
+    // Boss Achievements
+    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+    {
+        if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || AchievementsList[BOSSKILL_ACHIE][i].classe == 0)
+        {
+            conteggio += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
+        }
+    }
+
+    // Class Skill Achievements
+    for(i = 1; i < MAX_CLASS_ACHIE; i++)
+    {
+        if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+        {
+            conteggio += AchievementsList[CLASS_ACHIE][i].n_livelli;
+        }
+    }
+
+    // Quest Achievements
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || AchievementsList[QUEST_ACHIE][i].classe == 0)
+        {
+            conteggio += AchievementsList[QUEST_ACHIE][i].n_livelli;
+        }
+    }
+
+    // Various Achievements
+    for(i = 0; i < MAX_OTHER_ACHIE; i++)
+    {
+        if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || AchievementsList[OTHER_ACHIE][i].classe == 0)
+        {
+            conteggio += AchievementsList[OTHER_ACHIE][i].n_livelli;
+        }
+    }
+
+    return conteggio;
+}
+
+void CheckQuestFail(struct char_data* ch)
+{
+    struct char_data* tch;
+    int diff_hunt = 0, diff_resc = 0, diff_resea = 0, diff_deliv = 0;
+
+    tch = ch;
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    if(!IS_PC(tch))
+    {
+        return;
+    }
+
+    if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is less than the correct", GET_NAME(tch));
+            
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
+            }
+            
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is greater than the correct", GET_NAME(tch));
+            
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
+            }
+            
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
+        }
+    }
+
+    diff_hunt   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED];
+    diff_resc   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED];
+    diff_resea  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED];
+    diff_deliv  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED];
+
+    if(diff_hunt != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Hunt on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is greater than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Hunt on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+        }
+    }
+    else if(diff_resc != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Rescue on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is greater than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Rescue on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+        }
+    }
+    else if(diff_resea != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Research on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is greater than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Research on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+        }
+    }
+    else if(diff_deliv != 0)
+    {
+        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is less than the correct", GET_NAME(tch));
+
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
+                CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Delivery on %s", GET_NAME(tch));
+        }
+        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+        {
+            mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is greater than the correct", GET_NAME(tch));
+            
+            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+            {
+                tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] -= 1;
+                CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+            }
+
+            mudlog(LOG_CHECK, "Fixed amount for Quest Fail Delivery on %s", GET_NAME(tch));
+        }
+        else
+        {
+            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
+            CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+        }
+    }
+
+    diff_hunt   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED];
+    diff_resc   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED];
+    diff_resea  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED];
+    diff_deliv  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED];
+
+    if(diff_hunt != 0 || diff_deliv != 0 || diff_resea != 0 || diff_resc != 0)
+    {
+        mudlog(LOG_CHECK, "Check the Quest's values on %s", GET_NAME(tch));
+        CheckQuestFail(tch);
+    }
+}
+
+int n_bosskill(int vnumber, int achievement_class)
+{
+    int i, max = 0;
+
+    switch (achievement_class)
+    {
+        case BOSSKILL_ACHIE:
+            max = MAX_BOSS_ACHIE;
+            break;
+
+        case CLASS_ACHIE:
+            max = MAX_CLASS_ACHIE;
+            break;
+
+        default:
+            return -1;
+            break;
+    }
+
+    for(i = 0; i < max; i++)
+    {
+        if(vnumber == AchievementsList[achievement_class][i].achie_number)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/*
+ *  display = 0     ==> comando 'achievement' senza argomenti
+ *  display = 1     ==> comando 'achievement all'
+ */
+bool hasAchievement(struct char_data* ch, int achievement_class, int display)
+{
+    struct char_data* tch;
+    int i;
+
+    tch = ch;
+
+    if(IS_POLY(tch))
+        tch = ch->desc->original;
+
+    switch(achievement_class)
+    {
+        case CLASS_ACHIE:
+            for(i = 1; i < MAX_CLASS_ACHIE; i++)
+            {
+                if(display == 0)
+                {
+                    if(ch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl1_val && AchievementsList[CLASS_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[CLASS_ACHIE][i] > 0 && AchievementsList[CLASS_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+            break;
+
+        case BOSSKILL_ACHIE:
+            for(i = 0; i < MAX_BOSS_ACHIE; i++)
+            {
+                if(display == 0)
+                {
+                    if(ch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl1_val && AchievementsList[BOSSKILL_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[BOSSKILL_ACHIE][i] > 0 && AchievementsList[BOSSKILL_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+            break;
+
+        case RACESLAYER_ACHIE:
+            for(i = 0; i < MAX_RACE_ACHIE; i++)
+            {
+                if(display == 0)
+                {
+                    if(ch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl1_val && AchievementsList[RACESLAYER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[RACESLAYER_ACHIE][i] > 0 && AchievementsList[RACESLAYER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+            break;
+
+        case QUEST_ACHIE:
+            for(i = 0; i < MAX_QUEST_ACHIE ; i++)
+            {
+                if(display == 0)
+                {
+                    if(ch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl1_val && AchievementsList[QUEST_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[QUEST_ACHIE][i] > 0 && AchievementsList[QUEST_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+            break;
+
+        case OTHER_ACHIE:
+            for(i = 0; i < MAX_OTHER_ACHIE; i++)
+            {
+                if(display == 0)
+                {
+                    if(ch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl1_val && AchievementsList[OTHER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+                else if (display == 1)
+                {
+                    if(ch->specials.achievements[OTHER_ACHIE][i] > 0 && AchievementsList[OTHER_ACHIE][i].classe > -1)
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+            break;
+
+        default:
+            return FALSE;
+            break;
+    }
+    return FALSE;
+}
+
+std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check)
+{
+    std::string sb;
+    std::string sb2;
+    struct char_data* tch;
+    bool spam = FALSE;
+
+    tch = ch;
+
+    if(IS_POLY(tch))
+        tch = ch->desc->original;
+
+    if (lvl >= 1)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl1_val ? "$c0015" : "$c0007") % (num) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl1_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl1 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl1_val ? AchievementsList[achievement_class][achievement_type].lvl1_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl1_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl1_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl1_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl1_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == num)
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl1_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl1 % AchievementsList[achievement_class][achievement_type].lvl1_val % (AchievementsList[achievement_class][achievement_type].lvl1_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl1_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl1_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl1_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl1_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl1;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % (num%2 == 0 ? "$c0015" : "$c0007") % (num) % AchievementsList[achievement_class][achievement_type].lvl1 % AchievementsList[achievement_class][achievement_type].lvl1_val % (AchievementsList[achievement_class][achievement_type].lvl1_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 2)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl2_val ? "$c0015" : "$c0007") % (num + 1) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl2_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl2 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl2_val ? AchievementsList[achievement_class][achievement_type].lvl2_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl2_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl2_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl2_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl2_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 1))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl2_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl2 % AchievementsList[achievement_class][achievement_type].lvl2_val % (AchievementsList[achievement_class][achievement_type].lvl2_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl2_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl2_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl2_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl2_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl2;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 1)%2 == 0 ? "$c0015" : "$c0007") % (num + 1) % AchievementsList[achievement_class][achievement_type].lvl2 % AchievementsList[achievement_class][achievement_type].lvl2_val % (AchievementsList[achievement_class][achievement_type].lvl2_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 3)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl3_val ? "$c0015" : "$c0007") % (num + 2) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl3_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl3 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl3_val ? AchievementsList[achievement_class][achievement_type].lvl3_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl3_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl3_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl3_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl3_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 2))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl3_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl3 % AchievementsList[achievement_class][achievement_type].lvl3_val % (AchievementsList[achievement_class][achievement_type].lvl3_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl3_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl3_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl3_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl3_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl3;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 2)%2 == 0 ? "$c0015" : "$c0007") % (num + 2) % AchievementsList[achievement_class][achievement_type].lvl3 % AchievementsList[achievement_class][achievement_type].lvl3_val % (AchievementsList[achievement_class][achievement_type].lvl3_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 4)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl4_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl4_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl4 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl4_val ? AchievementsList[achievement_class][achievement_type].lvl4_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl4_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl4_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl4_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl4_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 3))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl4_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl4 % AchievementsList[achievement_class][achievement_type].lvl4_val % (AchievementsList[achievement_class][achievement_type].lvl4_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+            fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl4_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl4_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl4_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl4_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl4;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl4 % AchievementsList[achievement_class][achievement_type].lvl4_val % (AchievementsList[achievement_class][achievement_type].lvl4_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 5)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl5_val ? "$c0015" : "$c0007") % (num + 4) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl5_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl5 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl5_val ? AchievementsList[achievement_class][achievement_type].lvl5_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl5_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl5_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl5_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl5_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 4))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl5_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl5 % AchievementsList[achievement_class][achievement_type].lvl5_val % (AchievementsList[achievement_class][achievement_type].lvl5_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl5_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl5_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl5_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl5_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl5;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 4)%2 == 0 ? "$c0015" : "$c0007") % (num + 4) % AchievementsList[achievement_class][achievement_type].lvl5 % AchievementsList[achievement_class][achievement_type].lvl5_val % (AchievementsList[achievement_class][achievement_type].lvl5_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 6)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? AchievementsList[achievement_class][achievement_type].lvl6_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 3))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl6 % AchievementsList[achievement_class][achievement_type].lvl6_val % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl6_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl6_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl6_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl6_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl6;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl6 % AchievementsList[achievement_class][achievement_type].lvl6_val % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 7)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? AchievementsList[achievement_class][achievement_type].lvl7_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 3))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl7 % AchievementsList[achievement_class][achievement_type].lvl7_val % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl7_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl7_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl7_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl7_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl7;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl7 % AchievementsList[achievement_class][achievement_type].lvl7_val % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 8)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? AchievementsList[achievement_class][achievement_type].lvl8_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 3))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl8 % AchievementsList[achievement_class][achievement_type].lvl8_val % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl8_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl8_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl8_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl8_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl8;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl8 % AchievementsList[achievement_class][achievement_type].lvl8_val % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 9)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? AchievementsList[achievement_class][achievement_type].lvl9_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 3))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl9 % AchievementsList[achievement_class][achievement_type].lvl9_val % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl9_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl9_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl9_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl9_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl9;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl9 % AchievementsList[achievement_class][achievement_type].lvl9_val % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+    if (lvl >= 10)
+    {
+        if(formato)
+        {
+            boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? AchievementsList[achievement_class][achievement_type].lvl10_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+            if(check == (num + 3))
+            {
+                if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val)
+                {
+                    boost::format fmt("completato '$c0011%s$c0007' ($c0011%d$c0007 %s)");
+                    fmt % AchievementsList[achievement_class][achievement_type].lvl10 % AchievementsList[achievement_class][achievement_type].lvl10_val % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                else
+                {
+                    boost::format fmt("manca%s %s $c0011%d$c0007 %s per completare '$c0011%s$c0007'");
+                    fmt % ((AchievementsList[achievement_class][achievement_type].lvl10_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? "" : "no") % ((AchievementsList[achievement_class][achievement_type].lvl10_val - ch->specials.achievements[achievement_class][achievement_type]) < 20 ? "solo" : "ancora") % (AchievementsList[achievement_class][achievement_type].lvl10_val - ch->specials.achievements[achievement_class][achievement_type]) % ((AchievementsList[achievement_class][achievement_type].lvl10_val - ch->specials.achievements[achievement_class][achievement_type]) == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2) % AchievementsList[achievement_class][achievement_type].lvl10;
+                    sb2.append(fmt.str().c_str());
+                    fmt.clear();
+                }
+                spam = TRUE;
+            }
+        }
+        else
+        {
+            boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
+            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl10 % AchievementsList[achievement_class][achievement_type].lvl10_val % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            sb.append(fmt.str().c_str());
+            fmt.clear();
+        }
+    }
+
+
+    if(spam)
+        sb = sb2;
+
+    return sb;
+}
+
+int race_achievement(int race)
+{
+    int razza = -1;
+    
+    switch(race)
+    {
+        case RACE_INSECT:
+        case RACE_ARACHNID:
+            razza = GROUP_INSECTOID;
+            break;
+
+        case RACE_DINOSAUR:
+        case RACE_FISH:
+        case RACE_BIRD:
+        case RACE_PREDATOR:
+        case RACE_PARASITE:
+        case RACE_SNAKE:
+        case RACE_HERBIV:
+        case RACE_HORSE:
+        case RACE_PRIMATE:
+        case RACE_ROO:
+            razza = GROUP_ANIMAL;
+            break;
+
+        case RACE_TREE:
+        case RACE_VEGGIE:
+        case RACE_VEGMAN:
+            razza = GROUP_VEGGIE;
+            break;
+
+        case RACE_SPECIAL:
+        case RACE_LYCANTH:
+        case RACE_SLIME:
+        case RACE_ENFAN:
+        case RACE_SKEXIE:
+        case RACE_SMURF:
+        case RACE_PATRYN:
+        case RACE_LABRAT:
+        case RACE_DRAAGDIM:
+            razza = GROUP_SPECIALS;
+            break;
+
+        case RACE_GOLEM:
+            razza = RACE_GOLEM;
+            break;
+
+        case RACE_DARK_DWARF:
+        case RACE_DEEP_GNOME:
+        case RACE_DARK_ELF:
+            razza = GROUP_DARKRACES;
+            break;
+
+        case RACE_DRAGON:
+        case RACE_DRAGON_RED:
+        case RACE_DRAGON_BLACK:
+        case RACE_DRAGON_GREEN:
+        case RACE_DRAGON_WHITE:
+        case RACE_DRAGON_BLUE:
+        case RACE_DRAGON_SILVER:
+        case RACE_DRAGON_GOLD:
+        case RACE_DRAGON_BRONZE:
+        case RACE_DRAGON_COPPER:
+        case RACE_DRAGON_BRASS:
+            razza = GROUP_DRAKES;
+            break;
+
+        case RACE_GIANT:
+        case RACE_GIANT_HILL:
+        case RACE_GIANT_FROST:
+        case RACE_GIANT_FIRE:
+        case RACE_GIANT_CLOUD:
+        case RACE_GIANT_STORM:
+        case RACE_GIANT_STONE:
+        case RACE_TYTAN:
+            razza = GROUP_GIANTS;
+            break;
+
+        case RACE_HALF_ELVEN:
+        case RACE_HALF_OGRE:
+        case RACE_HALF_ORC:
+        case RACE_HALF_GIANT:
+        case RACE_HALFBREED:
+            razza = GROUP_RACEHALFBREED;
+            break;
+
+        case RACE_PLANAR:
+        case RACE_ASTRAL:
+        case RACE_ELEMENT:
+        case RACE_MFLAYER:
+        case RACE_SARTAN:
+            razza = GROUP_PLANAR;
+            break;
+
+        case RACE_UNDEAD:
+        case RACE_UNDEAD_VAMPIRE:
+        case RACE_UNDEAD_LICH:
+        case RACE_UNDEAD_WIGHT:
+        case RACE_UNDEAD_GHAST:
+        case RACE_UNDEAD_SPECTRE:
+        case RACE_UNDEAD_ZOMBIE:
+        case RACE_UNDEAD_SKELETON:
+        case RACE_UNDEAD_GHOUL:
+        case RACE_GHOST:
+            razza = GROUP_UNDEAD;
+            break;
+
+        case RACE_ORC:
+        case RACE_GOBLIN:
+        case RACE_TROLL:
+        case RACE_REPTILE:
+        case RACE_LIZARDMAN:
+        case RACE_GNOLL:
+            razza = GROUP_GREENSKIN;
+            break;
+
+        case RACE_HUMAN:
+        case RACE_ELVEN:
+        case RACE_DWARF:
+        case RACE_HALFLING:
+        case RACE_GNOME:
+        case RACE_GOLD_ELF:
+        case RACE_WILD_ELF:
+        case RACE_SEA_ELF:
+        case RACE_TROGMAN:
+            razza = GROUP_HUMANOID;
+            break;
+
+        case RACE_DEVIL:
+            race = RACE_DEVIL;
+            break;
+            
+        case RACE_DEMON:
+            race = RACE_DEMON;
+            break;
+
+        case RACE_GOD:
+            razza = RACE_GOD;
+            break;
+            
+        default:
+            mudlog(LOG_CHECK, "Wrong race found in CheckAchie");
+            break;
+    }
+
+    return razza;
+}
+
+void RewardQAchie(struct char_data* ch, int quest_number)
+{
+    // per i reward delle quest fisse
+}
+
+void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level)
+{
+    int reward[4] = {0, 0, 0, 0}, i, percent = 0, premio = 0, god = -1;
+    bool win = FALSE;
+    string sbch;
+    string sbroom;
+    
+    const string rand_god[] = {
+        "Xanathon",
+        "Alar",
+        "Darkstar",
+        "LadyOfPain",
+        "Requiem",
+        "Isildur",
+        "Flyp",
+        "Jethro",
+        "Denethor",
+        "Ryltar",
+        "Croneh",
+        "Tethys",
+        "Sirio"
+    };
+    
+    // coin / pozioni / pietre
+    reward[0] = AchievementsList[achievement_class][achievement_type].grado_diff * 5 + 45;
+    // rune solo dal 51
+    reward[1] = AchievementsList[achievement_class][achievement_type].grado_diff * achievement_level * 2;
+    // oggetti - no prince
+    reward[2] = 50 - GetMaxLevel(ch) + (AchievementsList[achievement_class][achievement_type].grado_diff * 3) + (achievement_level * 5);
+    // bonus
+    reward[3] = AchievementsList[achievement_class][achievement_type].grado_diff + (achievement_level * 2);
+
+    god = number(0, 12);
+
+    for(i = 0; i < 4; i++)
+    {
+        if(IS_PRINCE(ch) && i == 2)
+        {
+            // se il toon è Prince e il reward sono gli oggetti lo ignoro
+            i++;
+        }
+        else if(!IS_PRINCE(ch) && i == 1)
+        {
+            // se il toon non è Prince e il reward sono rune lo ignoro
+            i++;
+        }
+        percent = number(1, 100);
+
+        if(percent <= reward[i])
+        {
+            win = TRUE;
+
+            switch(i)
+            {
+                case 0:     // reward coin, pozioni e pietre
+                    {
+                        int r_num[10] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, x = 0, nperc = 0, vnumber, xyz;
+                        struct obj_data* obj;
+                        struct obj_data* container;
+
+                        vnumber = real_object(CONT_REWARD);
+                        container = read_object(vnumber, REAL);
+                        obj_to_char(container, ch);
+
+                        percent = number(1,100);
+                        percent += GetMaxLevel(ch);
+
+                        if(percent <= 60)
+                        {
+                            vnumber = real_object(GOLD_REWARD);
+                            obj = read_object(vnumber, REAL);
+                            obj->obj_flags.value[0] = percent * (number (1000, 3000)) * achievement_level * AchievementsList[achievement_class][achievement_type].grado_diff;
+
+                            if(obj->short_description)
+                            {
+                                free(obj->short_description);
+                            }
+
+                            if(obj->obj_flags.value[0] <= 20000)
+                            {
+                                obj->short_description = (char*)strdup("un mucchio di monete");
+                            }
+                            else if(obj->obj_flags.value[0] <= 100000)
+                            {
+                                obj->short_description = (char*)strdup("un bel mucchio di monete");
+                            }
+                            else if(obj->obj_flags.value[0] <= 250000)
+                            {
+                                obj->short_description = (char*)strdup("un grosso mucchio di monete");
+                            }
+                            else if(obj->obj_flags.value[0] <= 500000)
+                            {
+                                obj->short_description = (char*)strdup("un ENORME mucchio di monete");
+                            }
+                            else
+                            {
+                                obj->short_description = (char*)strdup("una grossa fetta del tesoro di Smaug");
+                                if(obj->name)
+                                {
+                                    free(obj->name);
+                                }
+                                obj->name = (char*)strdup("tesoro fetta monete");
+                            }
+
+                            obj_to_obj(obj, container);
+                        }
+                        else if(percent > 60 && percent <= 100)
+                        {
+                            nperc = int(((percent - 60) / 10) + achievement_level + AchievementsList[achievement_class][achievement_type].grado_diff);
+                            if(nperc > 12)
+                            {
+                                nperc = 12;
+                            }
+
+                            for(x = 0; x < nperc; x++)
+                            {
+                                vnumber = real_object(POT_REWARD);
+                                obj = read_object(vnumber, REAL);
+
+                                if(obj->name)
+                                {
+                                    free(obj->name);
+                                }
+                                if(obj->short_description)
+                                {
+                                    free(obj->short_description);
+                                }
+
+                                obj->obj_flags.value[0] = GetMaxLevel(ch);
+                                xyz = number(0, 17);
+
+                                switch(xyz)
+                                {
+                                    case 0:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione bianco sporco");
+                                            obj->name = (char*)strdup("pozione bianco sporco");
+                                        }
+                                        break;
+
+                                    case 1:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = 28;   //  heal
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione bianco latte");
+                                            obj->name = (char*)strdup("pozione bianco latte");
+                                        }
+                                        break;
+
+                                    case 2:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = 28;   //  heal
+                                            obj->obj_flags.value[3] = 28;   //  heal
+                                            obj->short_description = (char*)strdup("una pozione $c0015bianco brillante$c0007");
+                                            obj->name = (char*)strdup("pozione bianco brillante");
+                                        }
+                                        break;
+
+                                    case 3:
+                                        {
+                                            obj->obj_flags.value[1] = 36;   //  sanc
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0015bianco splendente$c0007");
+                                            obj->name = (char*)strdup("pozione bianco splendente");
+                                        }
+                                        break;
+
+                                    case 4:
+                                        {
+                                            obj->obj_flags.value[1] = 81;   //  fireshield
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0009rosso fuoco$c0007");
+                                            obj->name = (char*)strdup("pozione rosso fuoco");
+                                        }
+                                        break;
+
+                                    case 5:
+                                        {
+                                            obj->obj_flags.value[1] = 81;   //  fireshield
+                                            obj->obj_flags.value[2] = 36;   //  sanc
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0009rossa$c0007 e $c0015bianca$c0007");
+                                            obj->name = (char*)strdup("pozione rossa bianca");
+                                        }
+                                        break;
+
+                                    case 6:
+                                        {
+                                            obj->obj_flags.value[1] = 81;   //  fireshield
+                                            obj->obj_flags.value[2] = 28;   //  heal
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0015bianco$c0009rossa$c0007");
+                                            obj->name = (char*)strdup("pozione biancorossa");
+                                        }
+                                        break;
+
+                                    case 7:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = 81;   //  fireshield
+                                            obj->obj_flags.value[3] = 36;   //  sanc
+                                            obj->short_description = (char*)strdup("una pozione $c0001amaranto$c0007");
+                                            obj->name = (char*)strdup("pozione amaranto");
+                                        }
+                                        break;
+
+                                    case 8:
+                                        {
+                                            obj->obj_flags.value[1] = 100;  //  mana
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0014azzurra$c0007");
+                                            obj->name = (char*)strdup("pozione azzurra");
+                                        }
+                                        break;
+
+                                    case 9:
+                                        {
+                                            obj->obj_flags.value[1] = 100;  //  mana
+                                            obj->obj_flags.value[2] = 100;  //  mana
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0012blu$c0007");
+                                            obj->name = (char*)strdup("pozione blu");
+                                        }
+                                        break;
+
+                                    case 10:
+                                        {
+                                            obj->obj_flags.value[1] = 100;  //  mana
+                                            obj->obj_flags.value[2] = 100;  //  mana
+                                            obj->obj_flags.value[3] = 100;  //  mana
+                                            obj->short_description = (char*)strdup("una pozione $c0012blu intenso$c0007");
+                                            obj->name = (char*)strdup("pozione blu intenso");
+                                        }
+                                        break;
+
+                                    case 11:
+                                        {
+                                            obj->obj_flags.value[1] = 86;   // second wind
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0002verde$c0007");
+                                            obj->name = (char*)strdup("pozione verde");
+                                        }
+                                        break;
+
+                                    case 12:
+                                        {
+                                            obj->obj_flags.value[1] = 86;   // second wind
+                                            obj->obj_flags.value[2] = 108;  // major track
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0010verde brillante$c0007");
+                                            obj->name = (char*)strdup("pozione verde brillante");
+                                        }
+                                        break;
+
+                                    case 13:
+                                        {
+                                            obj->obj_flags.value[1] = 86;   // second wind
+                                            obj->obj_flags.value[2] = 108;  // major track
+                                            obj->obj_flags.value[3] = 69;   // fly
+                                            obj->short_description = (char*)strdup("una pozione $c0014celeste$c0007");
+                                            obj->name = (char*)strdup("pozione celeste");
+                                        }
+                                        break;
+
+                                    case 14:
+                                        {
+                                            obj->obj_flags.value[1] = 39;   // strength
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0001rosso scuro$c0007");
+                                            obj->name = (char*)strdup("pozione rosso scuro");
+                                        }
+                                        break;
+
+                                    case 15:
+                                        {
+                                            obj->obj_flags.value[1] = 92;   // stone skin
+                                            obj->obj_flags.value[2] = 73;   // shield
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0003marrone$c0007");
+                                            obj->name = (char*)strdup("pozione marrone");
+                                        }
+                                        break;
+
+                                    case 16:
+                                        {
+                                            obj->obj_flags.value[1] = 155;  // haste
+                                            obj->obj_flags.value[2] = 28;   // heal
+                                            obj->obj_flags.value[3] = 36;   // sanc
+                                            obj->short_description = (char*)strdup("un distillato di $c0003Tarrasque$c0007");
+                                            obj->name = (char*)strdup("distillato tarrasque");
+                                        }
+                                        break;
+
+                                    default:
+                                        {
+                                            obj->obj_flags.value[1] = 101;  //  astral
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0015e$c0007t$c0015e$c0007r$c0015e$c0007a");
+                                            obj->name = (char*)strdup("pozione eterea");
+                                        }
+                                        break;
+                                }
+                                obj_to_obj(obj, container);
+                            }
+                            mudlog(LOG_PLAYERS, "%s won some potions with Achievements.", GET_NAME(ch));
+                        }
+                        else if(percent > 100 && percent <= 120)
+                        {
+                            nperc = int (((percent - 60) / 10) + achievement_level + AchievementsList[achievement_class][achievement_type].grado_diff);
+                            if(nperc > 8)
+                            {
+                                nperc = 8;
+                            }
+
+                            vnumber = real_object(GOLD_REWARD);
+                            obj = read_object(vnumber, REAL);
+                            obj->obj_flags.value[0] = percent * (number (1000, 3000)) * achievement_level * AchievementsList[achievement_class][achievement_type].grado_diff;
+                            if(obj->short_description)
+                            {
+                                free(obj->short_description);
+                            }
+                            
+                            if(obj->obj_flags.value[0] <= 20000)
+                            {
+                                obj->short_description = (char*)strdup("un mucchio di monete");
+                            }
+                            else if(obj->obj_flags.value[0] <= 100000)
+                            {
+                                obj->short_description = (char*)strdup("un bel mucchio di monete");
+                            }
+                            else if(obj->obj_flags.value[0] <= 250000)
+                            {
+                                obj->short_description = (char*)strdup("un grosso mucchio di monete");
+                            }
+                            else if(obj->obj_flags.value[0] <= 500000)
+                            {
+                                obj->short_description = (char*)strdup("un ENORME mucchio di monete");
+                            }
+                            else
+                            {
+                                obj->short_description = (char*)strdup("una grossa fetta del tesoro di Smaug");
+                                if(obj->name)
+                                {
+                                    free(obj->name);
+                                }
+                                obj->name = (char*)strdup("tesoro fetta monete");
+                            }
+
+                            obj_to_obj(obj, container);
+                            mudlog(LOG_PLAYERS, "%s won %d gold coins with Achievements and...", GET_NAME(ch), obj->obj_flags.value[0]);
+                            
+
+                            for(x = 0; x < nperc; x++)
+                            {
+                                vnumber = real_object(POT_REWARD);
+                                obj = read_object(vnumber, REAL);
+
+                                if(obj->name)
+                                {
+                                    free(obj->name);
+                                }
+                                if(obj->short_description)
+                                {
+                                    free(obj->short_description);
+                                }
+
+                                obj->obj_flags.value[0] = GetMaxLevel(ch);
+                                xyz = number(0, 17);
+
+                                switch(xyz)
+                                {
+                                    case 0:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione bianco sporco");
+                                            obj->name = (char*)strdup("pozione bianco sporco");
+                                        }
+                                        break;
+                                        
+                                    case 1:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = 28;   //  heal
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione bianco latte");
+                                            obj->name = (char*)strdup("pozione bianco latte");
+                                        }
+                                        break;
+                                        
+                                    case 2:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = 28;   //  heal
+                                            obj->obj_flags.value[3] = 28;   //  heal
+                                            obj->short_description = (char*)strdup("una pozione $c0015bianco brillante$c0007");
+                                            obj->name = (char*)strdup("pozione bianco brillante");
+                                        }
+                                        break;
+                                        
+                                    case 3:
+                                        {
+                                            obj->obj_flags.value[1] = 36;   //  sanc
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0015bianco splendente$c0007");
+                                            obj->name = (char*)strdup("pozione bianco splendente");
+                                        }
+                                        break;
+                                        
+                                    case 4:
+                                        {
+                                            obj->obj_flags.value[1] = 81;   //  fireshield
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0009rosso fuoco$c0007");
+                                            obj->name = (char*)strdup("pozione rosso fuoco");
+                                        }
+                                        break;
+                                        
+                                    case 5:
+                                        {
+                                            obj->obj_flags.value[1] = 81;   //  fireshield
+                                            obj->obj_flags.value[2] = 36;   //  sanc
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0009rossa$c0007 e $c0015bianca$c0007");
+                                            obj->name = (char*)strdup("pozione rossa bianca");
+                                        }
+                                        break;
+                                        
+                                    case 6:
+                                        {
+                                            obj->obj_flags.value[1] = 81;   //  fireshield
+                                            obj->obj_flags.value[2] = 28;   //  heal
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0015bianco$c0009rossa$c0007");
+                                            obj->name = (char*)strdup("pozione biancorossa");
+                                        }
+                                        break;
+                                        
+                                    case 7:
+                                        {
+                                            obj->obj_flags.value[1] = 28;   //  heal
+                                            obj->obj_flags.value[2] = 81;   //  fireshield
+                                            obj->obj_flags.value[3] = 36;   //  sanc
+                                            obj->short_description = (char*)strdup("una pozione $c0001amaranto$c0007");
+                                            obj->name = (char*)strdup("pozione amaranto");
+                                        }
+                                        break;
+                                        
+                                    case 8:
+                                        {
+                                            obj->obj_flags.value[1] = 100;  //  mana
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0014azzurra$c0007");
+                                            obj->name = (char*)strdup("pozione azzurra");
+                                        }
+                                        break;
+                                        
+                                    case 9:
+                                        {
+                                            obj->obj_flags.value[1] = 100;  //  mana
+                                            obj->obj_flags.value[2] = 100;  //  mana
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0012blu$c0007");
+                                            obj->name = (char*)strdup("pozione blu");
+                                        }
+                                        break;
+                                        
+                                    case 10:
+                                        {
+                                            obj->obj_flags.value[1] = 100;  //  mana
+                                            obj->obj_flags.value[2] = 100;  //  mana
+                                            obj->obj_flags.value[3] = 100;  //  mana
+                                            obj->short_description = (char*)strdup("una pozione $c0012blu intenso$c0007");
+                                            obj->name = (char*)strdup("pozione blu intenso");
+                                        }
+                                        break;
+                                        
+                                    case 11:
+                                        {
+                                            obj->obj_flags.value[1] = 86;   // second wind
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0002verde$c0007");
+                                            obj->name = (char*)strdup("pozione verde");
+                                        }
+                                        break;
+                                        
+                                    case 12:
+                                        {
+                                            obj->obj_flags.value[1] = 86;   // second wind
+                                            obj->obj_flags.value[2] = 108;  // major track
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0012verde brillante$c0007");
+                                            obj->name = (char*)strdup("pozione verde brillante");
+                                        }
+                                        break;
+                                        
+                                    case 13:
+                                        {
+                                            obj->obj_flags.value[1] = 86;   // second wind
+                                            obj->obj_flags.value[2] = 108;  // major track
+                                            obj->obj_flags.value[3] = 69;   // fly
+                                            obj->short_description = (char*)strdup("una pozione $c0014celeste$c0007");
+                                            obj->name = (char*)strdup("pozione celeste");
+                                        }
+                                        break;
+                                        
+                                    case 14:
+                                        {
+                                            obj->obj_flags.value[1] = 39;   // strength
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0001rosso scuro$c0007");
+                                            obj->name = (char*)strdup("pozione rosso scuro");
+                                        }
+                                        break;
+                                        
+                                    case 15:
+                                        {
+                                            obj->obj_flags.value[1] = 92;   // stone skin
+                                            obj->obj_flags.value[2] = 73;   // shield
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0003marrone$c0007");
+                                            obj->name = (char*)strdup("pozione marrone");
+                                        }
+                                        break;
+                                        
+                                    case 16:
+                                        {
+                                            obj->obj_flags.value[1] = 155;  // haste
+                                            obj->obj_flags.value[2] = 28;   // heal
+                                            obj->obj_flags.value[3] = 36;   // sanc
+                                            obj->short_description = (char*)strdup("un distillato di $c0003Tarrasque$c0007");
+                                            obj->name = (char*)strdup("distillato tarrasque");
+                                        }
+                                        break;
+                                        
+                                    default:
+                                        {
+                                            obj->obj_flags.value[1] = 101;  //  astral
+                                            obj->obj_flags.value[2] = -1;
+                                            obj->obj_flags.value[3] = -1;
+                                            obj->short_description = (char*)strdup("una pozione $c0015e$c0007t$c0015e$c0007r$c0015e$c0007a");
+                                            obj->name = (char*)strdup("pozione eterea");
+                                        }
+                                        break;
+                                }
+
+                                obj_to_obj(obj, container);
+                            }
+                            mudlog(LOG_PLAYERS, "... %d potion$s too.", nperc, (nperc == 1 ? "" : "s"));
+                        }
+                        else if(percent > 120 && percent <= 130)
+                        {
+                            nperc = percent - 120;
+
+                            for(x = 0; x < nperc; x++)
+                            {
+                                percent = number(1,100);
+                                if(percent <= 10)
+                                {
+                                    r_num[x] = real_object(19509);    //quarzo comune
+                                }
+                                else if(percent > 10 && percent <= 20)
+                                {
+                                    r_num[x] = real_object(19510);    //ossidiana
+                                }
+                                else if(percent > 20 && percent <= 30)
+                                {
+                                    r_num[x] = real_object(19511);    //opale
+                                }
+                                else if(percent > 30 && percent <= 40)
+                                {
+                                    r_num[x] = real_object(19512);    //turchese
+                                }
+                                else if(percent > 40 && percent <= 50)
+                                {
+                                    r_num[x] = real_object(19513);    //zircone
+                                }
+                                else if(percent > 50 && percent <= 60)
+                                {
+                                    r_num[x] = real_object(19514);    //lapislazzuli
+                                }
+                                else if(percent > 60 && percent <= 70)
+                                {
+                                    r_num[x] = real_object(19515);    //onice
+                                }
+                                else if(percent > 70 && percent <= 80)
+                                {
+                                    r_num[x] = real_object(19516);    //malachite
+                                }
+                                else if(percent > 80 && percent <= 90)
+                                {
+                                    r_num[x] = real_object(19517);    //ematite
+                                }
+                                else if(percent > 90)
+                                {
+                                    r_num[x] = real_object(19518);    //giada
+                                }
+
+                                if(r_num[x] >= 0)
+                                {
+                                    obj = read_object(r_num[x], REAL);
+                                    obj_to_obj(obj, container);
+                                }
+                                mudlog(LOG_PLAYERS, "%s won %d gem%s with Achievements.", GET_NAME(ch), x, (x == 1 ? "" : "s"));
+                            }
+                        }
+                        else if(percent > 130 && percent <= 140)
+                        {
+                            nperc = percent - 130;
+
+                            for(x = 0; x < nperc; x++)
+                            {
+                                percent = number(1,100);
+                                if(percent <= 10)
+                                {
+                                    r_num[x] = real_object(19519);    //resina fossile
+                                }
+                                else if(percent > 10 && percent <= 20)
+                                {
+                                    r_num[x] = real_object(19520);    //crisoberillo
+                                }
+                                else if(percent > 20 && percent <= 30)
+                                {
+                                    r_num[x] = real_object(19521);    //spinello blu
+                                }
+                                else if(percent > 30 && percent <= 40)
+                                {
+                                    r_num[x] = real_object(19522);    //tormalina
+                                }
+                                else if(percent > 40 && percent <= 50)
+                                {
+                                    r_num[x] = real_object(19523);    //quarzo comune, clone
+                                }
+                                else if(percent > 50 && percent <= 60)
+                                {
+                                    r_num[x] = real_object(19524);    //quarzo rosa
+                                }
+                                else if(percent > 60 && percent <= 70)
+                                {
+                                    r_num[x] = real_object(19525);    //agata
+                                }
+                                else if(percent > 70 && percent <= 80)
+                                {
+                                    r_num[x] = real_object(19526);    //acquamarina
+                                }
+                                else if(percent > 80 && percent <= 90)
+                                {
+                                    r_num[x] = real_object(19527);    //berillo
+                                }
+                                else if(percent > 90)
+                                {
+                                    r_num[x] = real_object(19528);    //topazio
+                                }
+
+                                if(r_num[x] >= 0)
+                                {
+                                    obj = read_object(r_num[x], REAL);
+                                    obj_to_obj(obj, container);
+                                }
+                                mudlog(LOG_PLAYERS, "%s won %d gem%s with Achievements.", GET_NAME(ch), x, (x == 1 ? "" : "s"));
+                            }
+                        }
+                        else if(percent > 140)
+                        {
+                            nperc = percent - 140;
+
+                            for(x = 0; x < nperc; x++)
+                            {
+                                percent = number(1,100);
+                                if(percent <= 12)
+                                {
+                                    r_num[x] = real_object(19529);    //spinello nero
+                                }
+                                else if(percent > 12 && percent <= 24)
+                                {
+                                    r_num[x] = real_object(19530);    //fluorite
+                                }
+                                else if(percent > 24 && percent <= 36)
+                                {
+                                    r_num[x] = real_object(19531);    //ametista
+                                }
+                                else if(percent > 36 && percent <= 48)
+                                {
+                                    r_num[x] = real_object(19532);    //corindone
+                                }
+                                else if(percent > 48 && percent <= 60)
+                                {
+                                    r_num[x] = real_object(19533);    //granato
+                                }
+                                else if(percent > 60 && percent <= 70)
+                                {
+                                    r_num[x] = real_object(19534);    //zaffiro
+                                }
+                                else if(percent > 70 && percent <= 80)
+                                {
+                                    r_num[x] = real_object(19535);    //smeraldo
+                                }
+                                else if(percent > 80 && percent <= 90)
+                                {
+                                    r_num[x] = real_object(19536);    //rubino
+                                }
+                                else if(percent > 90)
+                                {
+                                    r_num[x] = real_object(19537);    //diamante
+                                }
+
+                                if(r_num[x] >= 0)
+                                {
+                                    obj = read_object(r_num[x], REAL);
+                                    obj_to_obj(obj, container);
+                                }
+                                mudlog(LOG_PLAYERS, "%s won %d gem%s with Achievements.", GET_NAME(ch), x, (x == 1 ? "" : "s"));
+                            }
+                        }
+
+                        boost::format fmt("$c0014L'ombra di %s ti consegna un elaborato cofanetto di avorio.\n\r");
+                        fmt % rand_god[god];
+                        sbch.append(fmt.str().c_str());
+                        fmt.clear();
+                        boost::format fmt2("$c0014L'ombra di %s consegna un elaborato cofanetto di avorio a $N.\n\r");
+                        fmt2 % rand_god[god];
+                        sbroom.append(fmt2.str().c_str());
+                        fmt2.clear();
+                    }
+                    break;
+
+                case 1:     // reward rune
+                    {
+                        premio = AchievementsList[achievement_class][achievement_type].grado_diff + number(1, (2 * achievement_level)) - 1;
+                        boost::format fmt("$c0011L'ombra di %s incide %d run%s sulla tua pelle.\n\r");
+                        fmt % rand_god[god] % premio % (premio == 1 ? "a" : "e");
+                        sbch.append(fmt.str().c_str());
+                        fmt.clear();
+                        boost::format fmt2("$c0011L'ombra di %s incide %s run%s sulla pelle di $N.\n\r");
+                        fmt2 % rand_god[god] % (premio == 1 ? "una" : "alcune") % (premio == 1 ? "a" : "e");
+                        sbroom.append(fmt2.str().c_str());
+                        fmt2.clear();
+                        GET_RUNEDEI(ch) += premio;
+                        mudlog(LOG_PLAYERS, "%s won %d rune%s with Achievements.", GET_NAME(ch), premio, (premio == 1 ? "" : "s"));
+                    }
+                    break;
+
+                case 2:     // reward oggetti
+                    {
+                        struct obj_data* obj;
+                        int x, y, vnum, random_obj = 0, apply[5] = {0, 0, 0, 0, 0}, bonus[5] = {0, 0, 0, 0, 0}, roll, classe = 0, livello, weapon_rand;
+
+                        random_obj = number(0, 19);
+
+                        if(HasClass(ch, CLASS_MONK) && random_obj == 17)
+                        {
+                            random_obj = 5;
+                        }
+
+                        if(IS_MELEE(ch) && random_obj > 17)
+                        {
+                            random_obj = number(0, 17);
+                            if(HasClass(ch, CLASS_MONK) && random_obj == 17)
+                            {
+                                random_obj = 5;
+                            }
+                        }
+
+                        if(IS_MELEE(ch))
+                        {
+                            classe = CLASS_MELEE;
+                        }
+                        else if(IS_CASTER_N(ch))
+                        {
+                            classe = CLASS_CASTER;
+                        }
+                        else if(IS_MULTI(ch))
+                        {
+                            classe = CLASS_MULTI;
+                        }
+                        else if(IS_IMMORTAL(ch))
+                        {
+                            classe = number(0, 2);
+                        }
+
+                        if(GetMaxLevel(ch) <= 10)
+                        {
+                            livello = 0;
+                        }
+                        else if(GetMaxLevel(ch) > 10 && GetMaxLevel(ch) <= 20)
+                        {
+                            livello = 1;
+                        }
+                        else if(GetMaxLevel(ch) > 20 && GetMaxLevel(ch) <= 30)
+                        {
+                            livello = 2;
+                        }
+                        else if(GetMaxLevel(ch) > 30 && GetMaxLevel(ch) <= 40)
+                        {
+                            livello = 3;
+                        }
+                        else if(GetMaxLevel(ch) > 40 && GetMaxLevel(ch) < 51)
+                        {
+                            livello = 4;
+                        }
+                        else if(GetMaxLevel(ch) > 51)
+                        {
+                            livello = number(0, 4);
+                        }
+
+                        for(x = 0; x < MAX_OBJ_AFFECT; x++)
+                        {
+                            roll = number(1, 100);
+                            roll -= (GetMaxLevel(ch) / 3 + number(1, 5));
+
+                            switch(x)
+                            {
+                                case 0:
+                                    if(roll <= RewardObj[classe][random_obj].perc1)
+                                    {
+                                        apply[x] = RewardObj[classe][random_obj].bonus1;
+                                    }
+                                    break;
+
+                                case 1:
+                                    if(roll <= RewardObj[classe][random_obj].perc2)
+                                    {
+                                        apply[x] = RewardObj[classe][random_obj].bonus2;
+                                    }
+                                    break;
+
+                                case 2:
+                                    if(roll <= RewardObj[classe][random_obj].perc3)
+                                    {
+                                        apply[x] = RewardObj[classe][random_obj].bonus3;
+                                    }
+                                    break;
+
+                                case 3:
+                                    if(roll <= RewardObj[classe][random_obj].perc4)
+                                    {
+                                        apply[x] = RewardObj[classe][random_obj].bonus4;
+                                    }
+                                    break;
+
+                                case 4:
+                                    if(roll <= RewardObj[classe][random_obj].perc5)
+                                    {
+                                        apply[x] = RewardObj[classe][random_obj].bonus5;
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+
+                            switch(apply[x])
+                            {
+                                case APPLY_HIT:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HIT_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+ 
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HIT_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HIT_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HIT_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HIT_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_MANA:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANA_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANA_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANA_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANA_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANA_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_MOVE:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVE_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVE_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVE_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVE_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVE_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_HIT_REGEN:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITREG_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITREG_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITREG_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITREG_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITREG_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_MANA_REGEN:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANAREG_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANAREG_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANAREG_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANAREG_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MANAREG_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_MOVE_REGEN:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVEREG_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVEREG_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVEREG_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVEREG_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_MOVEREG_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case STAT_RANDOM:
+                                    {
+                                        apply[x] = number(1, 6);
+                                        bonus[x] = MAX(number(0, (livello-1)), 1);
+                                    }
+                                    break;
+
+                                case APPLY_SPELLFAIL:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_SPELLFAIL_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_SPELLFAIL_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_SPELLFAIL_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_SPELLFAIL_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_SPELLFAIL_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case ELEM_RESI_RANDOM:
+                                    {
+                                        apply[x] = APPLY_IMMUNE;
+                                        switch(number(1,5))
+                                        {
+                                            case 1:
+                                                bonus[x] = IMM_FIRE;
+                                                break;
+
+                                            case 2:
+                                                bonus[x] = IMM_COLD;
+                                                break;
+
+                                            case 3:
+                                                bonus[x] = IMM_ELEC;
+                                                break;
+
+                                            case 4:
+                                                bonus[x] = IMM_ENERGY;
+                                                break;
+
+                                            case 5:
+                                                bonus[x] = IMM_ACID;
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                    break;
+
+                                case OBJ_RESI_PIERCE:
+                                    {
+                                        apply[x] = APPLY_IMMUNE;
+                                        bonus[x] = IMM_PIERCE;
+                                    }
+                                    break;
+
+                                case OBJ_RESI_SLASH:
+                                    {
+                                        apply[x] = APPLY_IMMUNE;
+                                        bonus[x] = IMM_SLASH;
+                                    }
+                                    break;
+
+                                case APPLY_HITROLL:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITROLL_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITROLL_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITROLL_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITROLL_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITROLL_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_DAMROLL:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_DAMROLL_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_DAMROLL_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_DAMROLL_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_DAMROLL_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_DAMROLL_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_HITNDAM:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITNDAM_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITNDAM_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITNDAM_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITNDAM_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] += AchieBonus[y][ACHIE_HITNDAM_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case APPLY_AC:
+                                    {
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_ARMOR_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_ARMOR_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_ARMOR_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_ARMOR_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            bonus[x] -= AchieBonus[y][ACHIE_ARMOR_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        bonus[x] /= HowManyClasses(ch);
+                                    }
+                                    break;
+
+                                case OBJ_ARTIFACT:
+                                    break;
+
+                                case OBJ_SENCE_LIFE:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_SENSE_LIFE;
+                                    }
+                                    break;
+
+                                case OBJ_TRUE_SIGHT:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_TRUE_SIGHT;
+                                    }
+                                    break;
+
+                                case OBJ_SNEAK:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_SNEAK;
+                                    }
+                                    break;
+
+                                case OBJ_FLY:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_FLYING;
+                                    }
+                                    break;
+
+                                case OBJ_INVISIBILITY:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_INVISIBLE;
+                                    }
+                                    break;
+
+                                case OBJ_LIFE_PROT:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_LIFE_PROT;
+                                    }
+                                    break;
+
+                                case OBJ_TELEPATHY:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_TELEPATHY;
+                                    }
+                                    break;
+
+                                case OBJ_SPY:
+                                    {
+                                        apply[x] = APPLY_SPELL;
+                                        bonus[x] = AFF_SCRYING;
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+
+                        vnum = RewardObj[classe][random_obj].vnum_obj;
+
+                        random_obj = real_object(vnum);
+
+                        obj = read_object(random_obj, REAL);
+
+                        roll = number(1, 100);
+                        if(roll < 100)
+                        {
+                            roll -= (GetMaxLevel(ch) / 2);
+                        }
+                        if(roll <= 70)
+                        {
+                            SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
+                        }
+
+                        if(GET_ITEM_TYPE(obj) == ITEM_ARMOR)
+                        {
+                            switch(vnum)
+                            {
+                                case 1382:  //  about body
+                                case 1383:  //  waist
+                                case 1394:  //  wrist melee
+                                case 1395:  //  eyes melee
+                                    {
+                                        obj->obj_flags.value[0] = number(1, livello);
+                                        obj->obj_flags.value[1] = obj->obj_flags.value[0];
+                                    }
+                                    break;
+
+                                case 1384:  //  feet
+                                case 1385:  //  hands
+                                case 1386:  //  body
+                                case 1387:  //  head
+                                case 1388:  //  legs
+                                case 1389:  //  arms
+                                case 1390:  //  shield
+                                case 1396:  //  back melee
+                                    {
+                                        obj->obj_flags.value[0] = 0;
+                                        switch(livello)
+                                        {
+                                            case 0:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            obj->obj_flags.value[0] += AchieBonus[y][ACHIE_AC_TABLE].lev1_10;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 1:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            obj->obj_flags.value[0] += AchieBonus[y][ACHIE_AC_TABLE].lev11_20;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 2:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            obj->obj_flags.value[0] += AchieBonus[y][ACHIE_AC_TABLE].lev21_30;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 3:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            obj->obj_flags.value[0] += AchieBonus[y][ACHIE_AC_TABLE].lev31_40;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            case 4:
+                                                {
+                                                    for(y = 0; y < MAX_CLASS; y++)
+                                                    {
+                                                        if(HasClass(ch, (1 << y)))
+                                                        {
+                                                            obj->obj_flags.value[0] += AchieBonus[y][ACHIE_AC_TABLE].lev41_50;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                        obj->obj_flags.value[0] /= HowManyClasses(ch);
+                                        if(vnum > 1385 && vnum <= 1390)
+                                        {
+                                            obj->obj_flags.value[0] += number(1, 2);
+                                        }
+                                        obj->obj_flags.value[1] = obj->obj_flags.value[0];
+                                    }
+
+                                default:
+                                    break;
+                            }
+                        }
+
+                        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
+                        {
+                            if(IS_CASTER_N(ch))
+                            {
+                                obj->obj_flags.value[1] = 4;
+                                obj->obj_flags.value[2] = 4;
+                            }
+                            else
+                            {
+                                obj->obj_flags.value[1] = 5;
+                                obj->obj_flags.value[2] = 4;
+                            }
+
+                            if(GetMaxLevel(ch) < 21)
+                            {
+                                obj->obj_flags.value[1] -= 1;
+                            }
+                        }
+
+                        if(GET_ITEM_TYPE(obj) == ITEM_STAFF || GET_ITEM_TYPE(obj) == ITEM_WAND)
+                        {
+                            const int randomSpell[] = {
+                                SPELL_DISINTEGRATE,
+                                SPELL_INCENDIARY_CLOUD,
+                                SPELL_FIRESHIELD,
+                                SPELL_HASTE,
+                                SPELL_PROT_BREATH_FIRE,
+                                SPELL_PROT_BREATH_ACID,
+                                SPELL_PROT_BREATH_ELEC,
+                                SPELL_PROT_BREATH_FROST,
+                                SPELL_PROT_BREATH_GAS,
+                                SPELL_WIZARDEYE,
+                                SPELL_GLOBE_MAJOR_INV,
+                                SPELL_SANCTUARY,
+                                SPELL_FIREBALL,
+                                SPELL_CHAIN_LIGHTNING,
+                                SPELL_H_FEAST,
+                                SPELL_ENERGY_DRAIN,
+                                SPELL_FLY_GROUP,
+                                SPELL_PARALYSIS,
+                                SPELL_GLOBE_MINOR_INV,
+                                SPELL_TRUE_SIGHT,
+                                SPELL_SLOW,
+                                SPELL_TELEPORT,
+                                SPELL_MAJOR_TRACK,
+                                SPELL_PRISMATIC_SPRAY,
+                                SPELL_EARTHQUAKE,
+                                SPELL_FIND_TRAPS,
+                                SPELL_GUST_OF_WIND,
+                                SPELL_DISPEL_MAGIC,
+                                SPELL_POISON,
+                                SPELL_BURNING_HANDS,
+                                SPELL_STRENGTH,
+                                SPELL_REMOVE_PARALYSIS,
+                                SPELL_INVISIBLE,
+                                SPELL_BARKSKIN,
+                                SPELL_SHOCKING_GRASP,
+                                SPELL_SHIELD
+                            };
+
+                            obj->obj_flags.value[0] = GetMaxLevel(ch);
+                            obj->obj_flags.value[1] = MAX(5, number(1, int(GetMaxLevel(ch) / 2)));
+                            obj->obj_flags.value[2] = obj->obj_flags.value[1];
+                            obj->obj_flags.value[3] = randomSpell[number(0, 35)];
+                        }
+
+                        for(x = 0; x < MAX_OBJ_AFFECT; x++)
+                        {
+                            switch(apply[x])
+                            {
+                                case APPLY_NONE:
+                                    break;
+
+                                case OBJ_ARTIFACT:
+                                    {
+                                        SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
+                                    }
+                                    break;
+
+                                default:
+                                    {
+                                        obj->affected[x].location = apply[x];
+                                        obj->affected[x].modifier = bonus[x];
+                                    }
+                                    break;
+                            }
+                        }
+
+                        switch(vnum)
+                        {
+                            case 1374:  //  finger
+                                restringReward(obj, 0, 9, 12);
+                                break;
+
+                            case 1375:  //  wrist
+                            case 1394:
+                                restringReward(obj, 1, 9, 12);
+                                break;
+
+                            case 1376:  //  ear
+                                restringReward(obj, 2, 9, 12);
+                                break;
+
+                            case 1377:  //  neck
+                                restringReward(obj, 3, 11, 15);
+                                break;
+
+                            case 1378:  //  eyes
+                            case 1395:
+                                restringReward(obj, 4, 11, 15);
+                                break;
+
+                            case 1379:  //  hold
+                                restringReward(obj, 5, 11, 15);
+                                break;
+
+                            case 1380:  //  light
+                                restringReward(obj, 6, 14, 20);
+                                break;
+
+                            case 1381:  //  back
+                                restringReward(obj, 7, 10, 13);
+                                break;
+
+                            case 1382:  //  about body
+                                restringReward(obj, 8, 9, 12);
+                                break;
+
+                            case 1383:  //  waist
+                                restringReward(obj, 9, 9, 12);
+                                break;
+
+                            case 1384:  //  feet
+                                restringReward(obj, 10, 9, 12);
+                                break;
+
+                            case 1385:  //  hands
+                                restringReward(obj, 11, 9, 12);
+                                break;
+
+                            case 1386:  //  body
+                                restringReward(obj, 12, 10, 13);
+                                break;
+
+                            case 1387:  //  head
+                                restringReward(obj, 13, 9, 12);
+                                break;
+
+                            case 1388:  //  legs
+                                restringReward(obj, 14, 9, 12);
+                                break;
+
+                            case 1389:  //  arms
+                                restringReward(obj, 15, 9, 12);
+                                break;
+
+                            case 1390:  //  shield
+                            case 1396:  //  back
+                                restringReward(obj, 16, 14, 20);
+                                break;
+
+                            case 1391:  //  weapon
+                            {
+                                weapon_rand = number(0, 2);
+
+                                if(HasClass(ch, CLASS_THIEF) && weapon_rand != 2)
+                                {
+                                    weapon_rand = number(0, 2);
+                                    if(weapon_rand != 2)
+                                    {
+                                        weapon_rand = number(0, 2);
+                                    }
+                                    if(weapon_rand != 2)
+                                    {
+                                        weapon_rand = number(0, 2);
+                                    }
+                                }
+
+                                switch(weapon_rand)
+                                {
+                                    case 0:
+                                    {
+                                        switch(number(1, 6))
+                                        {
+                                            case 1:
+                                                obj->obj_flags.value[3] = TYPE_BLUDGEON;
+                                                break;
+
+                                            case 2:
+                                                obj->obj_flags.value[3] = TYPE_CRUSH;
+                                                break;
+
+                                            case 3:
+                                                obj->obj_flags.value[3] = TYPE_BITE;
+                                                break;
+
+                                            case 4:
+                                                obj->obj_flags.value[3] = TYPE_SMASH;
+                                                break;
+
+                                            case 5:
+                                                obj->obj_flags.value[3] = TYPE_SMITE;
+                                                break;
+
+                                            case 6:
+                                                obj->obj_flags.value[3] = TYPE_BLAST;
+                                                break;
+
+                                            default:
+                                                obj->obj_flags.value[3] = TYPE_SMASH;
+                                                break;
+                                        }
+                                        restringReward(obj, 17, 15, 21);
+                                    }
+                                        break;
+
+                                    case 1:
+                                    {
+                                        switch(number(1, 4))
+                                        {
+                                            case 1:
+                                                obj->obj_flags.value[3] = TYPE_SLASH;
+                                                break;
+                                                
+                                            case 2:
+                                                obj->obj_flags.value[3] = TYPE_WHIP;
+                                                break;
+                                                
+                                            case 3:
+                                                obj->obj_flags.value[3] = TYPE_CLEAVE;
+                                                break;
+                                                
+                                            case 4:
+                                                obj->obj_flags.value[3] = TYPE_CLAW;
+                                                break;
+                                                
+                                            default:
+                                                obj->obj_flags.value[3] = TYPE_SLASH;
+                                                break;
+                                        }
+                                        restringReward(obj, 18, 19, 27);
+                                    }
+                                        break;
+
+                                    case 2:
+                                    {
+                                        switch(number(1, 3))
+                                        {
+                                            case 1:
+                                                obj->obj_flags.value[3] = TYPE_PIERCE;
+                                                break;
+                                                
+                                            case 2:
+                                                obj->obj_flags.value[3] = TYPE_STING;
+                                                break;
+                                                
+                                            case 3:
+                                                obj->obj_flags.value[3] = TYPE_STAB;
+                                                break;
+                                                
+                                            default:
+                                                obj->obj_flags.value[3] = TYPE_PIERCE;
+                                                break;
+                                        }
+                                        restringReward(obj, 19, 15, 21);
+                                    }
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+                            }
+                                break;
+ 
+                            case 1392:  //  wand
+                                restringReward(obj, 20, 9, 12);
+                                break;
+
+                            case 1393:  //  staff
+                                restringReward(obj, 21, 9, 12);
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        SetPersonOnSave(ch, obj);
+
+                        obj_to_char(obj, ch);
+
+                        boost::format fmt("$c0010L'ombra di %s ti da' %s$c0010.\n\r");
+                        fmt % rand_god[god] % obj->short_description;
+                        sbch.append(fmt.str().c_str());
+                        fmt.clear();
+                        boost::format fmt2("$c0010L'ombra di %s da' %s$c0010 a $N.\n\r");
+                        fmt2 % rand_god[god] % obj->short_description;
+                        sbroom.append(fmt2.str().c_str());
+                        fmt2.clear();
+                        mudlog(LOG_PLAYERS, "%s won %s with Achievements.", GET_NAME(ch), obj->short_description);
+                    }
+                    break;
+
+                case 3:     // reward bonus
+                    {
+                        struct obj_data* obj;
+                        int reward, dust;
+                        string oggetto;
+
+                        reward = real_object(OBJ_REWARD);
+                        obj = read_object(reward, REAL);
+
+                        dust = number(1, 11);
+                        switch(dust)
+                        {
+                            case 1:
+                            case 6:
+                            case 8:
+                            {
+                                obj->affected[0].location = APPLY_MANA;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0012blu$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0012blu$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere blu");
+                            }
+                                break;
+
+                            case 2:
+                            case 10:
+                            {
+                                obj->affected[0].location = APPLY_MANA_REGEN;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0013viola$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0013viola$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere viola");
+                            }
+                                break;
+
+                            case 3:
+                            case 7:
+                            case 9:
+                            {
+                                obj->affected[0].location = APPLY_HIT;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0009rossa$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0009rossa$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere rossa");
+                            }
+                                break;
+
+                            case 4:
+                            case 11:
+                            {
+                                obj->affected[0].location = APPLY_HIT_REGEN;
+                                obj->affected[0].modifier = 1;
+                                obj->short_description = (char*)strdup("della polvere $c0011gialla$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0011gialla$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere gialla");
+                            }
+                                break;
+
+                            case 5:
+                            {
+                                obj->affected[0].location = APPLY_SPELLFAIL;
+                                obj->affected[0].modifier = -1;
+                                obj->short_description = (char*)strdup("della polvere $c0014celeste$c0007");
+                                obj->description = (char*)strdup("Della polvere $c0014celeste$c0007 fluttua qui di fronte a te.");
+                                obj->name = (char*)strdup("polvere celeste");
+                            }
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        SetPersonOnSave(ch, obj);
+
+                        obj_to_char(obj, ch);
+
+                        boost::format fmt("$c0011L'ombra di %s ti sorride, subito dopo fa apparire tra le tue mani %s.\n\r");
+                        fmt % rand_god[god] % obj->short_description;
+                        sbch.append(fmt.str().c_str());
+                        fmt.clear();
+                        boost::format fmt2("$c0011L'ombra di %s sorride a $N, poi improvvisamente %s $D appare tra le mani.\n\r");
+                        fmt2 % rand_god[god] % obj->short_description;
+                        sbroom.append(fmt2.str().c_str());
+                        fmt2.clear();
+                        mudlog(LOG_PLAYERS, "%s won %s with Achievements.", GET_NAME(ch), obj->short_description);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    if(win)
+    {
+        send_to_char("Una figura ultraterrena appare improvvisamente di fronte a te.\n\r\n\r", ch);
+        act("Una figura eterea appare improvvisamente di fronte a te.\n\r", FALSE, ch, 0, ch, TO_ROOM);
+        act(sbch.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+        act(sbroom.c_str(), FALSE, ch, 0, ch, TO_ROOM);
+        send_to_char("Poi, lentamente, la figura scompare ai tuoi occhi.\n\r", ch);
+        act("Poi, lentamente, la figura scompare ai tuoi occhi.", FALSE, ch, 0, ch, TO_ROOM);
+    }
+    sbch.clear();
+    sbroom.clear();
+    return;
+}
+
+void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random)
+{
+    int z, mn, zz;
+    string oggetto;
+
+    z = number(1, val_random);
+    if(z > (max_name - 1))
+    {
+        z = 0;
+    }
+    mn = number(0, 4);
+    switch(mn)
+    {
+        case 0:
+            zz = number(0, 15);
+            break;
+            
+        case 1:
+            zz = number(0, 16);
+            break;
+            
+        case 2:
+            zz = number(0, 28);
+            break;
+            
+        case 3:
+            zz = number(0, 23);
+            break;
+            
+        case 4:
+            zz = number(0, 14);
+            break;
+            
+        default:
+            zz = 0;
+            break;
+    }
+    // short description
+    if(GET_ITEM_TYPE(obj) == ITEM_LIGHT)
+    {
+        boost::format fmt("%s");
+        fmt % EquipName[obj_slot_number][z].name;
+        oggetto.append(fmt.str().c_str());
+        fmt.clear();
+    }
+    else
+    {
+        boost::format fmt("%s %s");
+        fmt % EquipName[obj_slot_number][z].name % (EquipName[obj_slot_number][z].gender == SEX_FEMALE ? MaterialName[mn][zz].fem_gen : EquipName[obj_slot_number][z].gender == SEX_NEUTRAL ? MaterialName[mn][zz].neu_gen : EquipName[obj_slot_number][z].gender == 4 ? MaterialName[mn][zz].m_fem_gen : MaterialName[mn][zz].m_neu_gen);
+        oggetto.append(fmt.str().c_str());
+        fmt.clear();
+    }
+    obj->short_description = (char*)strdup(oggetto.c_str());
+    oggetto.clear();
+    // long description
+    if(GET_ITEM_TYPE(obj) == ITEM_LIGHT)
+    {
+        boost::format fmt1("%s %s qui per terra.");
+        fmt1 % EquipName[obj_slot_number][z].name % (EquipName[obj_slot_number][z].gender < 4 ? "e'" : "sono");
+        oggetto.append(fmt1.str().c_str());
+        fmt1.clear();
+    }
+    else
+    {
+        boost::format fmt1("%s %s %s qui per terra.");
+        fmt1 % EquipName[obj_slot_number][z].name % (EquipName[obj_slot_number][z].gender == SEX_FEMALE ? MaterialName[mn][zz].fem_gen : EquipName[obj_slot_number][z].gender == SEX_NEUTRAL ? MaterialName[mn][zz].neu_gen : EquipName[obj_slot_number][z].gender == 4 ? MaterialName[mn][zz].m_fem_gen : MaterialName[mn][zz].m_neu_gen) % (EquipName[obj_slot_number][z].gender < 4 ? "e'" : "sono");
+        oggetto.append(fmt1.str().c_str());
+        fmt1.clear();
+    }
+    obj->description = (char*)strdup(oggetto.c_str());
+    oggetto.clear();
+    // name
+    if(GET_ITEM_TYPE(obj) == ITEM_LIGHT)
+    {
+        boost::format fmt2("%s");
+        fmt2 % EquipName[obj_slot_number][z].key;
+        oggetto.append(fmt2.str().c_str());
+        fmt2.clear();
+    }
+    else
+    {
+        boost::format fmt2("%s%s");
+        fmt2 % EquipName[obj_slot_number][z].key % MaterialName[mn][zz].key;
+        oggetto.append(fmt2.str().c_str());
+        fmt2.clear();
+    }
+    obj->name = (char*)strdup(oggetto.c_str());
+    oggetto.clear();
+}
+
+void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class)
+{
+    char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
+    int valore = 0, molt = 0, lvl = 0;
+    struct char_data* tch;
+
+    tch = ch;
+
+    if(!IS_PC(ch))
+    {
+        return;
+    }
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    if(AchievementsList[achievement_class][achievement_type].classe == -1)
+    {
+        // se l'achievement classe e' -1 non effettua il check
+        return;
+    }
+
+    // se il numero un pg arriva al valore massimo in un achievement mando una mail ai coder
+    if(tch->specials.achievements[achievement_class][achievement_type] == MaxValueAchievement(achievement_class, achievement_type, AchievementsList[achievement_class][achievement_type].n_livelli))
+    {
+        sprintf(buf, "%s ha raggiunto il valore massimo di '%s' pari a '%d'.\n\r\n\r", GET_NAME(tch), AchievementsList[achievement_class][achievement_type].achie_string2, tch->specials.achievements[achievement_class][achievement_type]);
+        mail_to_god(ch, "Requiem", buf);
+        mail_to_god(ch, "Croneh", buf);
+    }
+
+    if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl1_val)
+    {
+        molt = 10;
+        lvl = 1;
+        valore = AchievementsList[achievement_class][achievement_type].lvl1_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl1);
+        if(tch->specials.achievements[achievement_class][achievement_type] == 1)
+        {
+            strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string1);
+        }
+        else
+        {
+            strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+        }
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl2_val)
+    {
+        molt = 15;
+        lvl = 2;
+        valore = AchievementsList[achievement_class][achievement_type].lvl2_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl2);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl3_val)
+    {
+        molt = 20;
+        lvl = 3;
+        valore = AchievementsList[achievement_class][achievement_type].lvl3_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl3);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl4_val)
+    {
+        molt = 25;
+        lvl = 4;
+        valore = AchievementsList[achievement_class][achievement_type].lvl4_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl4);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl5_val)
+    {
+        molt = 30;
+        lvl = 5;
+        valore = AchievementsList[achievement_class][achievement_type].lvl5_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl5);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl6_val)
+    {
+        molt = 35;
+        lvl = 6;
+        valore = AchievementsList[achievement_class][achievement_type].lvl6_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl6);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl7_val)
+    {
+        molt = 40;
+        lvl = 7;
+        valore = AchievementsList[achievement_class][achievement_type].lvl7_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl7);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl8_val)
+    {
+        molt = 45;
+        lvl = 8;
+        valore = AchievementsList[achievement_class][achievement_type].lvl8_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl8);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl9_val)
+    {
+        molt = 50;
+        lvl = 9;
+        valore = AchievementsList[achievement_class][achievement_type].lvl9_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl9);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+    else if(tch->specials.achievements[achievement_class][achievement_type] == AchievementsList[achievement_class][achievement_type].lvl10_val)
+    {
+        molt = 60;
+        lvl = 10;
+        valore = AchievementsList[achievement_class][achievement_type].lvl10_val;
+        strcpy(titolo, AchievementsList[achievement_class][achievement_type].lvl10);
+        strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
+    }
+
+    if(valore > 0)
+    {
+        extern void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete);
+        int reward;
+        struct obj_cost cost;
+
+        sprintf(buf, "%s", spamAchie(tch, titolo, valore, stringa, achievement_type, achievement_class));
+        send_to_char(buf, ch);
+        sprintf(buf, "\n\r$c0009%s $c0007ha completato l'achievement $c0015'%s$c0007' ($c0011%d $c0009%s$c0007).\n\r\n\r", GET_NAME(ch), titolo, valore, stringa);
+        send_to_all_not_ch(ch, buf);
+
+        switch(AchievementsList[achievement_class][achievement_type].grado_diff)
+        {
+            case LEV_BEGINNER:
+                reward = RewardXp[GetMaxLevel(ch)].lev_1_xp;
+                break;
+            case LEV_VERY_EASY:
+                reward = RewardXp[GetMaxLevel(ch)].lev_2_xp;
+                break;
+            case LEV_EASY:
+                reward = RewardXp[GetMaxLevel(ch)].lev_3_xp;
+                break;
+            case LEV_NORMAL:
+                reward = RewardXp[GetMaxLevel(ch)].lev_4_xp;
+                break;
+            case LEV_HARD:
+                reward = RewardXp[GetMaxLevel(ch)].lev_5_xp;
+                break;
+            case LEV_EXPERT:
+                reward = RewardXp[GetMaxLevel(ch)].lev_6_xp;
+                break;
+            case LEV_CHAMPION:
+                reward = RewardXp[GetMaxLevel(ch)].lev_7_xp;
+                break;
+            case LEV_IMPERIAL:
+                reward = RewardXp[GetMaxLevel(ch)].lev_8_xp;
+                break;
+            case LEV_TORMENT:
+                reward = RewardXp[GetMaxLevel(ch)].lev_9_xp;
+                break;
+            case LEV_GOD_MODE:
+                reward = RewardXp[GetMaxLevel(ch)].lev_10_xp;
+                break;
+
+            default:
+                reward = 0;
+                mudlog(LOG_CHECK, "Achievement's difficulty level is missing for achievement type %d (class %d)", achievement_type, achievement_class);
+                return;
+                break;
+        }
+
+        switch (HowManyClasses(tch))
+        {
+                // monoclasee: il pg prende xp pieni
+            case 1:
+                reward = reward;
+                break;
+                // biclasse: il pg prende 150% degli xp
+            case 2:
+                reward = int (reward * 15 / 10);
+                break;
+
+                // triclasse o +: il pg prende 200% degli xp
+            default:
+                reward *= 2;
+                break;
+        }
+
+        reward = reward * molt / 10;
+        reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
+        gain_exp(tch, reward);
+
+        RewardAll(tch, achievement_type, achievement_class, lvl);
+
+        send_to_char("\n\r", tch);
+        sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
+        act(buf, FALSE, tch, 0, 0, TO_CHAR);
+        save_obj(ch, &cost, 0);
+    }
+}
+
+int CheckMobQuest(int vnumber)
+{
+    int i;
+    
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(QuestMobAchie[i].mob_0 == vnumber && QuestMobAchie[i].mob_0 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_1 == vnumber && QuestMobAchie[i].mob_1 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_2 == vnumber && QuestMobAchie[i].mob_2 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_3 == vnumber && QuestMobAchie[i].mob_3 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_4 == vnumber && QuestMobAchie[i].mob_4 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_5 == vnumber && QuestMobAchie[i].mob_5 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_6 == vnumber && QuestMobAchie[i].mob_6 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_7 == vnumber && QuestMobAchie[i].mob_7 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_8 == vnumber && QuestMobAchie[i].mob_8 != 0)
+        {
+            return i;
+        }
+        if(QuestMobAchie[i].mob_9 == vnumber && QuestMobAchie[i].mob_9 != 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void AssignMobQuestToToon(struct char_data* ch, int quest, int vnumber)
+{
+    int i;
+    struct char_data* tch;
+
+    tch = ch;
+
+    if(!IS_PC(ch))
+    {
+        return;
+    }
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+    
+    for(i = 0; i < QuestMobAchie[quest].numero_mob; i++)
+    {
+        if(tch->specials.quest_mob[quest][i] == vnumber && vnumber > 0)
+        {
+            // ho gia' ucciso questo mob
+            return;
+        }
+    }
+
+    for(i = 0; i < QuestMobAchie[quest].numero_mob; i++)
+    {
+        if(tch->specials.quest_mob[quest][i] == 0)
+        {
+            tch->specials.quest_mob[quest][i] = vnumber;
+            return;
+        }
+    }
+}
+
+bool CheckQuest(struct char_data* ch, int quest_number)
+{
+    int i, check[10] = {0,0,0,0,0,0,0,0,0,0}, totale = 0;
+    struct char_data* tch;
+
+    tch = ch;
+
+    if(!IS_PC(ch))
+    {
+        return FALSE;
+    }
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    if(QuestMobAchie[quest_number].numero_mob == 10)
+    {
+        for(i = 0; i < quest_number; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_9)
+            {
+                // trovato il mob
+                check[9] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 9)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_8)
+            {
+                // trovato il mob
+                check[8] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 8)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_7)
+            {
+                // trovato il mob
+                check[7] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 7)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_6)
+            {
+                // trovato il mob
+                check[6] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 6)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_5)
+            {
+                // trovato il mob
+                check[5] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 5)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_4)
+            {
+                // trovato il mob
+                check[4] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 4)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_3)
+            {
+                // trovato il mob
+                check[3] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 3)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_2)
+            {
+                // trovato il mob
+                check[2] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 2)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_1)
+            {
+                // trovato il mob
+                check[1] = 1;
+            }
+        }
+    }
+    if(QuestMobAchie[quest_number].numero_mob >= 1)
+    {
+        for(i = 0; i < 10; i++)
+        {
+            if(tch->specials.quest_mob[quest_number][i] == QuestMobAchie[quest_number].mob_0)
+            {
+                // trovato il mob
+                check[0] = 1;
+            }
+        }
+    }
+
+    for(i = 0; i < 10; i++)
+    {
+        totale += check[i];
+    }
+
+    if(totale == QuestMobAchie[quest_number].numero_mob)
+    {
+        // tutti i mob uccisi, azzero i contatori
+        for(i = 0; i < 10; i++)
+        {
+            tch->specials.quest_mob[quest_number][i] = 0;
+        }
+        do_save(tch, "", 0);
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 int EgoBladeSave(struct char_data* ch) {
 	int total;
@@ -5537,4 +9475,3 @@ char RemColorString(char * buffer)
     return *buffer;
 }
 } // namespace Alarmud
-

@@ -41,52 +41,51 @@ namespace Alarmud {
 /* total number of polies choices */
 
 struct PolyType PolyList[MAX_MAGE_POLY] = {
-	{"goblin",      4, 5100},
-	{"parrot",      4, 9001},
-	{"bat",        4, 7001},
-	{"orc",         5, 4005},
-	{"trog",        5, 9210},
-	{"gnoll",       6, 9211},
-	{"parrot",      6, 9010 },
-	{"lizard",      6, 224},
-	{"ogre",        8, 4113},
-	{"parrot",      8, 9011},
-	{"wolf",        8, 3094},
-	{"spider",      9, 227},
-	{"beast",       9, 242},
-	{"minotaur",    9, 247},
-	{"snake",       10, 249},
-	{"bull",        10, 1008},
-	{"incubus",     10, 6119},
-	{"rat",         11, 7002},
-	{"sapling",     12, 1421},
-	{"ogre-maji",   12, 257},
-	{"black",       12, 230},
-	{"giant",          13, 261},
-	{"troll",       14, 4101},
-	{"crocodile",   14, 5310},
-	{"mindflayer",  14, 7202},
-	{"bear",        16, 9024},
-	{"blue",        16, 233},
-	{"enfan",       18, 21001},
-	{"lamia",       18, 5201},
-	{"drider",      18, 5011},
-	{"wererat",     19, 7203},
-	{"wyvern",      20, 3752},
-	{"mindflayer",  20, 7201},
-	{"spider",      20, 20010},
-	/* {"snog",        22, 27008}, */
-	{"roc",         22, 3724},
-	{"mud",         23, 7000},
-	{"enfan",       23, 21004},
-	{"giant",       24, 9406},
-	{"white",       26, 243},
-	{"master",      28, 7200},
-	{"red",         30, 7040},
-	{"roo",         35, 27411},
-	{"brontosaurus",35, 21802},
-	{"mulichort",   40, 15830},
-	{"beholder",    45, 5200}  /* number 47 (48) */
+    {   "goblin",        4, 1331    },
+    {   "pappagallo",    4, 1332    },  //  pappagallo blu
+    {   "pipistrello",   4, 1333    },
+    {   "orco",          5, 1334    },
+    {   "troglodita",    5, 1335    },
+    {   "gnoll",         6, 1336    },
+    {   "pappagallo",    6, 1337    },  //  pappagallo nero
+    {   "lucertola",     6, 1338    },
+    {   "ogre",          8, 1339    },
+    {   "pappagallo",    8, 1340    },  //  pappagallo rosso
+    {   "lupo",          8, 1341    },
+    {   "ragno",         9, 1342    },
+    {   "belva",         9, 1343    },
+    {   "minotauro",     9, 1344    },
+    {   "serpente",     10, 1345    },
+    {   "toro",         10, 1346    },
+    {   "incubus",      10, 1347    },  // cl lvl 25
+    {   "ratto",        11, 1348    },
+    {   "albero",       12, 1349    },
+    {   "magi",         12, 1350    },  //  ogre magi
+    {   "nero",         12, 1351    },  //  drago nero
+    {   "colline",      13, 1352    },  //  gigante delle colline
+    {   "troll",        14, 1353    },
+    {   "coccodrillo",  14, 1354    },
+    {   "giovane",      14, 1355    },  //  giovane mindlflayer
+    {   "orso",         16, 1356    },
+    {   "blu" ,         16, 1357    },  //  drago blu
+    {   "enfan",        18, 1358    },  //  enfan blu
+    {   "lamia",        18, 1359    },
+    {   "mannaro",      19, 1360    },  //  ratto mannaro
+    {   "viverna",      20, 1361    },
+    {   "mindflayer",   20, 1362    },  // mindlflayer
+    {   "tarantola",    20, 1363    },
+    {   "roc",          22, 1364    },
+    {   "mostrofango",  23, 1365    },
+    {   "viola",        23, 1366    },  //  enfan viola
+    {   "ghiacci",      24, 1367    },  //  gigante dei ghiacci
+    {   "drow",         25, 1368    },
+    {   "bianco",       26, 1369    },  //  drago bianco
+    {   "maestro",      28, 1370    },  //  maestro mindflyer
+    {   "rosso",        30, 1371    },
+    {   "canguro",      35, 1372    },
+    {   "brontosauro",  35, 1373    },
+    {   "mulichort",    40, 1374    },
+    {   "beholder",     45, 1375    }  /* number 47 (48) */
 };
 
 #define LAST_POLY_MOB 46 /* I think this is the highest level you get a */
@@ -3510,7 +3509,7 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 					return;
 				}
 
-				if(number(1,10) == 1) {
+				if(number(1,10) == 1 && !IS_IMMORTAL(ch)) {
 					act("Alteri completamente la tua forma, la personalita' della forma $c0003animale$c0007 prende il sopravvento, la tua anima abbandona il corpo!", TRUE, ch, NULL, ch,
 						TO_CHAR);
 					act("$n altera completamente la sua forma, la personalita' della forma $c0003animale$c0007 prende il sopravvento, la sua anima abbandona il corpo!", TRUE, ch, NULL, ch,
@@ -3534,6 +3533,24 @@ void cast_change_form(byte level, struct char_data* ch, const char* arg,
 				affect_to_char(ch, &af);
 
 				spell_poly_self(level, ch, mob, 0);
+
+                if(HasClass(ch, CLASS_DRUID) && DruidList[X].level >= 50 && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_DRUID_2] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_DRUID_2] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_DRUID_2, CLASS_ACHIE);
+                }
 			}
 			else {
 				send_to_char("Non riesci ad evocare un'immagine di quella creatura.\n\r", ch);

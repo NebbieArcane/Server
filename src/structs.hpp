@@ -43,6 +43,109 @@ struct QuestItem {
 	const char* where;
 };
 
+/*
+ * Achievements
+ */
+struct ClassAchieTable
+{
+    int achie_number;
+    const char* achie_string1;
+    const char* achie_string2;
+    const char* lvl1;
+    int lvl1_val;
+    const char* lvl2;
+    int lvl2_val;
+    const char* lvl3;
+    int lvl3_val;
+    const char* lvl4;
+    int lvl4_val;
+    const char* lvl5;
+    int lvl5_val;
+    const char* lvl6;
+    int lvl6_val;
+    const char* lvl7;
+    int lvl7_val;
+    const char* lvl8;
+    int lvl8_val;
+    const char* lvl9;
+    int lvl9_val;
+    const char* lvl10;
+    int lvl10_val;
+    int classe;
+    int grado_diff;
+    int n_livelli;
+};
+
+struct RandomEquipTable
+{
+    const char* name;
+    int gender;
+    const char* key;
+};
+
+struct RandomMaterialsTable
+{
+    const char* fem_gen;
+    const char* neu_gen;
+    const char* m_fem_gen;
+    const char* m_neu_gen;
+    const char* key;
+};
+
+struct ObjAchieTable
+{
+    int vnum_obj;
+    int item_type;
+    int bonus1;
+    int bonus2;
+    int bonus3;
+    int bonus4;
+    int bonus5;
+    int perc1;
+    int perc2;
+    int perc3;
+    int perc4;
+    int perc5;
+};
+
+struct ObjBonusTable
+{
+    int lev1_10;
+    int lev11_20;
+    int lev21_30;
+    int lev31_40;
+    int lev41_50;
+};
+
+struct MobQuestAchie
+{
+    int numero_mob;
+    int mob_0;
+    int mob_1;
+    int mob_2;
+    int mob_3;
+    int mob_4;
+    int mob_5;
+    int mob_6;
+    int mob_7;
+    int mob_8;
+    int mob_9;
+};
+
+struct XpAchieTable
+{
+    int lev_1_xp;
+    int lev_2_xp;
+    int lev_3_xp;
+    int lev_4_xp;
+    int lev_5_xp;
+    int lev_6_xp;
+    int lev_7_xp;
+    int lev_8_xp;
+    int lev_9_xp;
+    int lev_10_xp;
+};
+    
 #define MIN_GLOB_TRACK_LEV 31   /* mininum level for global track */
 /*
 **  Site locking stuff.. written by Scot Gardner
@@ -563,6 +666,10 @@ struct char_special_data {
 	int was_in_room;         /* storage of location for linkdead people */
 	int attack_type;         /* The Attack Type Bitvector for NPC's */
 	int alignment;           /* +-1000 for alignments               */
+
+    /* ACHIEVEMENTS */
+    int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+    int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
 
 	char* poofin;
 	char* poofout;

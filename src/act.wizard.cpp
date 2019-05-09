@@ -1786,9 +1786,13 @@ ACTION_FUNC(do_stat) {
 		/* stat on object - prima fa il check in inventario poi nel mondo */
         else if((tmpV = (struct obj_data*) get_obj_in_list_vis(ch, arg1, ch->carrying)) || (tmpW = (struct obj_data*) get_obj_vis_world(ch, arg1, &count))) {
             if(!tmpV)
+            {
                 j = tmpW;
+            }
             else
+            {
                 j = tmpV;
+            }
 
 			iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
 			sprintf(buf,

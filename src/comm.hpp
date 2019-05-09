@@ -65,6 +65,7 @@ void raw_force_all(const char* to_force);
 void run_the_game(int port) ;
 void save_all() ;
 void send_to_all(const char* messg) ;
+void send_to_all_not_ch(struct char_data* ch, const char* messg) ;
 void send_to_arctic(const char* messg) ;
 void send_to_char(const char* messg, struct char_data* ch) ;
 void send_to_desert(const char* messg) ;

@@ -198,6 +198,25 @@ ACTION_FUNC(do_junk) {
 		act("Rinunciare ai beni terreni ti fa progredire nel tuo cammino.",
 			FALSE, ch, 0, 0, TO_CHAR);
 		gain_exp(ch, (value2*number(10,30))/10);
+
+    // Junk Achievement
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+            {
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+        }
+        else
+        {
+            ch->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+            {
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+        }
+        CheckAchie(ch, ACHIE_JUNK, OTHER_ACHIE);
 	}
 	return;
 }
@@ -847,6 +866,24 @@ ACTION_FUNC(do_steal) {
 						GET_ALIGNMENT(ch)-=20;
 					}
 
+                    if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+                    {
+                        if(IS_POLY(ch))
+                        {
+                            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
+                            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        }
+                        else
+                        {
+                            ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
+                            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                                SET_BIT(ch->specials.act, PLR_ACHIE);
+                        }
+
+                        CheckAchie(ch, ACHIE_THIEF_3, CLASS_ACHIE);
+                    }
+
 				}
 			}
 		}
@@ -854,7 +891,7 @@ ACTION_FUNC(do_steal) {
 			/* obj found in inventory */
 
 			if(IS_OBJ_STAT(obj,ITEM_NODROP) && !IS_IMMORTAL(ch)) {
-				send_to_char("Non riesci a rubarla... probabilmente e' maledetta!\n\r", ch);
+				send_to_char("Non riesci a rubare quella cosa... probabilmente e' maledetta!\n\r", ch);
 			}
 
 			if(!CheckEgoGet(ch, obj)) {
@@ -899,6 +936,24 @@ ACTION_FUNC(do_steal) {
 							GET_ALIGNMENT(ch)-=20;
 						}
 
+                        if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+                        {
+                            if(IS_POLY(ch))
+                            {
+                                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
+                                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                            }
+                            else
+                            {
+                                ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
+                                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                            }
+
+                            CheckAchie(ch, ACHIE_THIEF_3, CLASS_ACHIE);
+                        }
+
 					}
 					else {
 						send_to_char("You cannot carry that much.\n\r", ch);
@@ -937,6 +992,24 @@ ACTION_FUNC(do_steal) {
 				if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 					GET_ALIGNMENT(ch)-=20;
 				}
+
+                if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+                {
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                    else
+                    {
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_3] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+
+                    CheckAchie(ch, ACHIE_THIEF_3, CLASS_ACHIE);
+                }
 			}
 			else {
 				send_to_char("You couldn't get any gold...\n\r", ch);
@@ -1480,8 +1553,6 @@ ACTION_FUNC(do_typo)
 {
 	FILE* fl;
 	char str[MAX_INPUT_LENGTH+20];
-    char buf[MAX_BUF_LENGTH];
-    struct char_data* temp_char = ch;
 
 	if(IS_NPC(ch))
     {
@@ -1512,11 +1583,11 @@ ACTION_FUNC(do_typo)
 
 	send_to_char("Ok. Grazie.\n\r", ch);
 
-    parse_name("LadyOfPain", buf);
-    temp_char->desc->name = (char*)strdup(buf);
-    temp_char->desc->showstr_head = (char*)strdup("Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
-    store_mail( temp_char->desc->name, GET_NAME(ch), temp_char->desc->showstr_head);
-    mudlog(LOG_PLAYERS,"%s ha segnalato un typo a LadyOfPain.",GET_NAME(ch));
+    mail_to_god(ch, "LadyOfPain", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+    mail_to_god(ch, "Requiem", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+    mail_to_god(ch, "Croneh", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+
+    mudlog(LOG_PLAYERS,"%s reports a typo to the Gods.", GET_NAME(ch));
 }
 
 ACTION_FUNC(do_bug) {
@@ -2019,7 +2090,7 @@ ACTION_FUNC(do_use) {
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object, *stick;
 
-	int bits;
+	int bits, vnum = 0;
 
 	arg = one_argument(arg,buf);
 
@@ -2109,6 +2180,129 @@ ACTION_FUNC(do_use) {
 			send_to_char("What should the wand be pointed at?\n\r", ch);
 		}
 	}
+    else if(stick->obj_flags.type_flag == ITEM_TREASURE && (vnum = (stick->item_number >= 0) ? obj_index[stick->item_number].iVNum : 0) == OBJ_REWARD)
+    {
+        string sbch, sbroom;
+        char name[25], risultato[255];
+        int percent, bonus = 1, i;
+        bool found = FALSE;
+
+        tmp_object = get_obj_in_list_vis(ch, arg, ch->carrying);
+
+        if(tmp_object)
+        {
+            if(IS_RARE(tmp_object))
+            {
+                act("Non puoi spargere la polvere su $p.", FALSE, ch, tmp_object, 0, TO_CHAR);
+                return;
+            }
+
+            strcpy(name, "ED");
+            strcat(name, GET_NAME(ch));
+            if(!isname(name, stick->name))
+            {
+                act("Non puoi spargere $p da nessuna parte, non e' tua!", FALSE, ch, stick, 0, TO_CHAR);
+                return;
+            }
+
+            if(IS_OBJ_STAT2(tmp_object, ITEM2_PERSONAL) && !pers_on(ch, tmp_object))
+            {
+                SetPersonOnSave(ch, tmp_object);
+                act("Non puoi farlo, $p non ti appartiene!", FALSE, ch, tmp_object, 0, TO_CHAR);
+                return;
+            }
+
+            boost::format fmt("%s $p su %s.\n\r");
+            fmt % "Spargi" % tmp_object->short_description;
+            sbch.append(fmt.str().c_str());
+            fmt.clear();
+            fmt % "$n sparge" % tmp_object->short_description;
+            sbroom.append(fmt.str().c_str());
+            fmt.clear();
+
+            percent = number(1, 100);
+            if(IS_PRINCE(ch))
+            {
+                percent += 1;
+            }
+
+            if(percent >= 95)
+            {
+                bonus += 1;
+                sprintf(risultato, "Una $c0011luce dorata$c0007 si diffonde tutto intorno per poi venir risucchiata dentro %s.\n\r", tmp_object->short_description);
+            }
+            else if(percent >= 100)
+            {
+                bonus += 1;
+                sprintf(risultato, "Una $c0015cascata di luce$c0007 scende su %s.\n\r", tmp_object->short_description);
+            }
+            else
+            {
+                sprintf(risultato, "Un'intensa $c0015luce$c0007 avvolge %s per un attimo per poi spengersi.\n\r", tmp_object->short_description);
+            }
+
+            sbch.append(risultato);
+            sbroom.append(risultato);
+
+            for(i = 0; i < MAX_OBJ_AFFECT; i++)
+            {
+                if(tmp_object->affected[i].location == stick->affected[0].location)
+                {
+                    if(stick->affected[0].location == APPLY_SPELLFAIL)
+                    {
+                        tmp_object->affected[i].modifier -= bonus;
+                    }
+                    else
+                    {
+                        tmp_object->affected[i].modifier += bonus;
+                    }
+                    found = TRUE;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                for(i = 0; i < MAX_OBJ_AFFECT; i++)
+                {
+                    if(tmp_object->affected[i].location == APPLY_NONE)
+                    {
+                        tmp_object->affected[i].location = stick->affected[0].location;
+                        if(stick->affected[0].location == APPLY_SPELLFAIL)
+                        {
+                            tmp_object->affected[i].modifier -= bonus;
+                        }
+                        else
+                        {
+                            tmp_object->affected[i].modifier += bonus;
+                        }
+                        found = TRUE;
+                        break;
+                    }
+                }
+            }
+
+            if(!found)
+            {
+                act("Non puoi spargere questo tipo di polvere su $p!", FALSE, ch, tmp_object, 0, TO_CHAR);
+                return;
+            }
+
+            act(sbch.c_str(), FALSE, ch, stick, 0, TO_CHAR);
+            act(sbroom.c_str(),TRUE ,ch, stick, 0, TO_ROOM);
+            if(!pers_on(ch, tmp_object))
+            {
+                SetPersonOnSave(ch, tmp_object);
+            }
+            unequip_char(ch, HOLD);
+            extract_obj(stick);
+        }
+        else
+        {
+            act("Non hai niente del genere con te! Su cosa vuoi spargere $p?", FALSE, ch, stick, 0, TO_CHAR);
+            return;
+        }
+    }
 	else {
 		send_to_char("Use is normally only for wand's and staff's.\n\r", ch);
 	}

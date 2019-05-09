@@ -4595,7 +4595,7 @@ MOBSPECIAL_FUNC(Capo_Fucina) {
 				}
 				i = i+1;
 			}
-			//Se � tutto ok cancello i componenti e creo il lingotto
+			//Se e' tutto ok cancello i componenti e creo il lingotto
 			if(found) {
 				i = 0;
 				while(i<N_TAB) {
@@ -4618,6 +4618,74 @@ MOBSPECIAL_FUNC(Capo_Fucina) {
 					obj = read_object(r_num, REAL);
 					obj_to_char(obj,ch);
 					act("[$N] ti dice 'Ecco fatto!!'",FALSE,ch,0,mob,TO_CHAR);
+
+                // Bar Achievement
+                    if(k == 8)
+                    {
+                        for(c = 0; c < 4; c++)
+                        {
+                            if(IS_POLY(ch))
+                            {
+                                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_BAR] += 1;
+                                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            else
+                            {
+                                ch->specials.achievements[OTHER_ACHIE][ACHIE_BAR] += 1;
+                                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            CheckAchie(ch, ACHIE_BAR, OTHER_ACHIE);
+                        }
+                    }
+                    else
+                    {
+                        if(IS_POLY(ch))
+                        {
+                            ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_BAR] += 1;
+                            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            {
+                                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                            }
+                        }
+                        else
+                        {
+                            ch->specials.achievements[OTHER_ACHIE][ACHIE_BAR] += 1;
+                            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            {
+                                SET_BIT(ch->specials.act, PLR_ACHIE);
+                            }
+                        }
+                        CheckAchie(ch, ACHIE_BAR, OTHER_ACHIE);
+                    }
+
+                // GoldenBar Achievement
+                    if(k == 4)
+                    {
+                        if(IS_POLY(ch))
+                        {
+                            ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_GOLDENBAR] += 1;
+                            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                            {
+                                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                            }
+                        }
+                        else
+                        {
+                            ch->specials.achievements[OTHER_ACHIE][ACHIE_GOLDENBAR] += 1;
+                            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                            {
+                                SET_BIT(ch->specials.act, PLR_ACHIE);
+                            }
+                        }
+                        CheckAchie(ch, ACHIE_GOLDENBAR, OTHER_ACHIE);
+                    }
+
 					built = TRUE;
 				}
 			}
@@ -4792,7 +4860,7 @@ OBJSPECIAL_FUNC(thion_loader) {
 				//estrazione casuale del premio
 				percent = number(1,100);
 
-				if(percent <= 4) {
+				if(percent <= 10) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4815,7 +4883,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19777);
                     }
 				}
-				else if(percent > 4 && percent <= 10) {
+				else if(percent > 10 && percent <= 20) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4838,7 +4906,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19784);
                     }
 				}
-				else if(percent > 10 && percent <= 20) {
+				else if(percent > 20 && percent <= 35) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4861,37 +4929,37 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19788);
                     }
 				}
-				else if(percent > 20 && percent <= 30) {
+				else if(percent > 35 && percent <= 45) {
                     percent = number(1,100);
-                    if(percent <= 70)
+                    if(percent <= 68)
                     {
                         r_num = real_object(19758);
                     }
-                    else if(percent > 70 && percent <= 85)
+                    else if(percent > 68 && percent <= 84)
                     {
                         r_num = real_object(19789);
                     }
-                    else if(percent > 85 && percent <= 100)
+                    else if(percent > 84 && percent <= 100)
                     {
                         r_num = real_object(19790);
                     }
 				}
-				else if(percent > 30 && percent <= 40) {
+				else if(percent > 45 && percent <= 55) {
                     percent = number(1,100);
-                    if(percent <= 70)
+                    if(percent <= 68)
                     {
                         r_num = real_object(19759);
                     }
-                    else if(percent > 70 && percent <= 85)
+                    else if(percent > 68 && percent <= 84)
                     {
                         r_num = real_object(19791);
                     }
-                    else if(percent > 85 && percent <= 100)
+                    else if(percent > 84 && percent <= 100)
                     {
                         r_num = real_object(19792);
                     }
 				}
-				else if(percent > 40 && percent <= 50) {
+				else if(percent > 55 && percent <= 70) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4914,7 +4982,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19796);
                     }
 				}
-				else if(percent > 50 && percent <= 60) {
+				else if(percent > 70 && percent <= 80) {
                     percent = number(1,100);
                     if(percent <= 68)
                     {
@@ -4937,7 +5005,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19696);
                     }
 				}
-				else if(percent > 60 && percent <= 70) {
+				else if(percent > 80 && percent <= 85) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -4952,7 +5020,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19798);
                     }
 				}
-				else if(percent > 70 && percent <= 80) {
+				else if(percent > 85 && percent <= 90) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -4967,7 +5035,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19694);
                     }
 				}
-				else if(percent > 80 && percent <= 90) {
+				else if(percent > 90 && percent <= 95) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -4982,7 +5050,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                         r_num = real_object(19692);
                     }
 				}
-				else if(percent > 90 && percent <= 100) {
+				else if(percent > 95 && percent <= 100) {
                     percent = number(1,100);
                     if(percent <= 70)
                     {
@@ -5182,7 +5250,27 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     quest_tgt->points.damroll = (GetMaxLevel(ch)/10)+ch->points.damroll;
                     
                     sprintf(buf, "%s Pare ci sia una grossa taglia su %s, l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt), zonename_by_room(quest_tgt->in_room));
-                    
+
+                // Quest Achievement
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] += 1;
+                        ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    else
+                    {
+                        ch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] += 1;
+                        ch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                        }
+                    }
+
                     break;
                 case 1      :
                     durata = GetMaxLevel(ch)/4;
@@ -5242,6 +5330,26 @@ MOBSPECIAL_FUNC(AssignQuest) {
 
                     sprintf(buf, "%s %s si e' smarrit%s, l'ultima volta e' stato vist%s a %s... troval%s!",GET_NAME(ch), quest_tgt->player.name,SSLF(quest_tgt),SSLF(quest_tgt), zonename_by_room(quest_tgt->in_room),SSLF(quest_tgt));
                     
+                // Quest Achievement
+                    if(IS_POLY(ch))
+                    {
+                        ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] += 1;
+                        ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    else
+                    {
+                        ch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] += 1;
+                        ch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] += 1;
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                        }
+                    }
+
                     break;
                 case 2      :
                     break;
@@ -5513,6 +5621,29 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     }
                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                 act(buf, FALSE, t, 0, 0, TO_ROOM);
+
+            // Quest Achievement
+                if(IS_POLY(t))
+                {
+                    t->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] += 1;
+                    t->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] += 1;
+                    if(!IS_SET(t->desc->original->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(t->desc->original->specials.act, PLR_ACHIE);
+                    }
+                }
+                else
+                {
+                    t->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] += 1;
+                    t->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] += 1;
+                    if(!IS_SET(t->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(t->specials.act, PLR_ACHIE);
+                    }
+                }
+                CheckAchie(t, ACHIE_QUEST_COMPLETE, OTHER_ACHIE);
+                CheckAchie(t, ACHIE_QUEST_HUNT_COMPLETE, OTHER_ACHIE);
+
                 return TRUE;
             }
         }
@@ -5633,7 +5764,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
             send_to_char("\n\r$c0014Il tuo obiettivo ha fatto una brutta fine e finisci senza paga.$c0007\n\r", t);
             
             t->specials.quest_ref = NULL;
-            
+
+        // Quest Achievement
+            CheckQuestFail(t);
+
             return FALSE;
         
     break;
@@ -5781,6 +5915,29 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 }
                                 sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
                                 act(buf, FALSE, t, 0, 0, TO_ROOM);
+
+                            // Quest Achievement
+                                if(IS_POLY(t))
+                                {
+                                    t->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] += 1;
+                                    t->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] += 1;
+                                    if(!IS_SET(t->desc->original->specials.act,PLR_ACHIE))
+                                    {
+                                        SET_BIT(t->desc->original->specials.act, PLR_ACHIE);
+                                    }
+                                }
+                                else
+                                {
+                                    t->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] += 1;
+                                    t->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] += 1;
+                                    if(!IS_SET(t->specials.act,PLR_ACHIE))
+                                    {
+                                        SET_BIT(t->specials.act, PLR_ACHIE);
+                                    }
+                                }
+                                CheckAchie(t, ACHIE_QUEST_COMPLETE, OTHER_ACHIE);
+                                CheckAchie(t, ACHIE_QUEST_RESCUE_COMPLETE, OTHER_ACHIE);
+
                                 return TRUE;
                             }
                         }

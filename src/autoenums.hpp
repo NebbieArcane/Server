@@ -124,6 +124,8 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_NO_LOCATE                              =4; /*no-locate item*/
 	constexpr unsigned long ITEM2_PERSONAL                               =8; /*personalized item*/
 	constexpr unsigned long ITEM2_INSERT                                 =16; /*item with gems mounted*/
+	constexpr unsigned long ITEM2_NO_PRINCE                              =32; /*prince can't use the item*/
+	constexpr unsigned long ITEM2_ONLY_PRINCE                            =64; /*only prince can use the item*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
@@ -244,7 +246,7 @@ For players : specials.act*/
 	constexpr unsigned long PLR_NOTELL                                   =65536; /*The player does not hear tells*/
 	constexpr unsigned long PLR_MAILING                                  =131072;
 	constexpr unsigned long PLR_NEW_EQ                                   =262144;
-	constexpr unsigned long PLR_EMPTY5                                   =524288;
+	constexpr unsigned long PLR_ACHIE                                    =524288; /*The player has achievements*/
 	constexpr unsigned long PLR_NOBEEP                                   =1048576; /*ignore all beeps*/
 // Flag type: E_ROOM_FLAGS -- start
 /*
@@ -1113,6 +1115,136 @@ enum e_wear {
 #define	SKILL_UNDEFINED                              2 
 #define	SKILL_UNDEFINED2                             4 
 #define	ABS_MAX_LVL                                  70 
+#define	MAX_CLASS_ACHIE                              34 
+#define	MAX_BOSS_ACHIE                               21 
+#define	MAX_QUEST_ACHIE                              1 
+#define	MAX_OTHER_ACHIE                              25 
+#define	MAX_MOB_QUEST                                10 
+#define	MAX_RACE_ACHIE                               97 
+#define	CLASS_ACHIE                                  0 
+#define	BOSSKILL_ACHIE                               1 
+#define	QUEST_ACHIE                                  2 
+#define	OTHER_ACHIE                                  3 
+#define	RACESLAYER_ACHIE                             4 
+#define	MAX_ACHIE_CLASSES                            5 
+#define	CLASS_CASTER                                 0 
+#define	CLASS_MULTI                                  1 
+#define	CLASS_MELEE                                  2 
+#define	ACHIE_MANA_TABLE                             0 
+#define	ACHIE_MANAREG_TABLE                          1 
+#define	ACHIE_SPELLFAIL_TABLE                        2 
+#define	ACHIE_HIT_TABLE                              3 
+#define	ACHIE_HITREG_TABLE                           4 
+#define	ACHIE_MOVE_TABLE                             5 
+#define	ACHIE_MOVEREG_TABLE                          6 
+#define	ACHIE_HITROLL_TABLE                          7 
+#define	ACHIE_DAMROLL_TABLE                          8 
+#define	ACHIE_HITNDAM_TABLE                          9 
+#define	ACHIE_ARMOR_TABLE                            10 
+#define	ACHIE_AC_TABLE                               11 
+#define	MAX_ACHIE_TYPE                               100 
+#define	GROUP_INSECTOID                              85 
+#define	GROUP_ANIMAL                                 86 
+#define	GROUP_VEGGIE                                 87 
+#define	GROUP_SPECIALS                               88 
+#define	GROUP_DARKRACES                              89 
+#define	GROUP_DRAKES                                 90 
+#define	GROUP_GIANTS                                 91 
+#define	GROUP_RACEHALFBREED                          92 
+#define	GROUP_PLANAR                                 93 
+#define	GROUP_UNDEAD                                 94 
+#define	GROUP_GREENSKIN                              95 
+#define	GROUP_HUMANOID                               96 
+#define	ACHIE_MAGE_1                                 1 
+#define	ACHIE_MAGE_2                                 2 
+#define	ACHIE_MAGE_3                                 3 
+#define	ACHIE_CLERIC_1                               4 
+#define	ACHIE_CLERIC_2                               5 
+#define	ACHIE_CLERIC_3                               6 
+#define	ACHIE_WARRIOR_1                              7 
+#define	ACHIE_WARRIOR_2                              8 
+#define	ACHIE_WARRIOR_3                              9 
+#define	ACHIE_THIEF_1                                10 
+#define	ACHIE_THIEF_2                                11 
+#define	ACHIE_THIEF_3                                12 
+#define	ACHIE_DRUID_1                                13 
+#define	ACHIE_DRUID_2                                14 
+#define	ACHIE_DRUID_3                                15 
+#define	ACHIE_MONK_1                                 16 
+#define	ACHIE_MONK_2                                 17 
+#define	ACHIE_MONK_3                                 18 
+#define	ACHIE_BARBARIAN_1                            19 
+#define	ACHIE_BARBARIAN_2                            20 
+#define	ACHIE_BARBARIAN_3                            21 
+#define	ACHIE_SORCERER_1                             22 
+#define	ACHIE_SORCERER_2                             23 
+#define	ACHIE_SORCERER_3                             24 
+#define	ACHIE_PALADIN_1                              25 
+#define	ACHIE_PALADIN_2                              26 
+#define	ACHIE_PALADIN_3                              27 
+#define	ACHIE_RANGER_1                               28 
+#define	ACHIE_RANGER_2                               29 
+#define	ACHIE_RANGER_3                               30 
+#define	ACHIE_PSI_1                                  31 
+#define	ACHIE_PSI_2                                  32 
+#define	ACHIE_PSI_3                                  33 
+#define	ACHIE_QUEST_XARAH                            0 
+#define	ACHIE_EVANGELINE                             21017 
+#define	ACHIE_SALOMONE                               32124 
+#define	ACHIE_THION                                  19719 
+#define	ACHIE_WARLOCK                                18419 
+#define	ACHIE_STANISLAV                              8916 
+#define	ACHIE_SAURON                                 37318 
+#define	ACHIE_XAGELON                                4219 
+#define	ACHIE_SLAVALOUS                              3424 
+#define	ACHIE_MORPHAIL                               18524 
+#define	ACHIE_NARIS                                  1201 
+#define	ACHIE_TSUCHIGUMO                             19920 
+#define	ACHIE_THANATOS                               321 
+#define	ACHIE_STRAHD                                 30113 
+#define	ACHIE_SHELOB                                 37107 
+#define	ACHIE_ROC                                    16039 
+#define	ACHIE_LAZLO                                  8910 
+#define	ACHIE_HYPNOS                                 6116 
+#define	ACHIE_DEMI_LICH                              25000 
+#define	ACHIE_BALROG                                 37317 
+#define	ACHIE_FIDEX_GATOR                            8001 
+#define	ACHIE_DRAGGSYLIA                             16314 
+#define	ACHIE_PKILL_WIN                              0 
+#define	ACHIE_PKILL_LOSS                             1 
+#define	ACHIE_DEATH                                  2 
+#define	ACHIE_JUNK                                   3 
+#define	ACHIE_ASTRAL                                 4 
+#define	ACHIE_REPAIR                                 5 
+#define	ACHIE_MINING                                 6 
+#define	ACHIE_BAR                                    7 
+#define	ACHIE_GOLDENBAR                              8 
+#define	ACHIE_WEAPONSMITH                            9 
+#define	ACHIE_QUEST_COMPLETE                         10 
+#define	ACHIE_QUEST_FAILED                           11 
+#define	ACHIE_QUEST_HUNT_COMPLETE                    12 
+#define	ACHIE_QUEST_HUNT_FAILED                      13 
+#define	ACHIE_QUEST_RESCUE_COMPLETE                  14 
+#define	ACHIE_QUEST_RESCUE_FAILED                    15 
+#define	ACHIE_QUEST_RESEARCH_COMPLETE                16 
+#define	ACHIE_QUEST_RESEARCH_FAILED                  17 
+#define	ACHIE_QUEST_DELIVERY_COMPLETE                18 
+#define	ACHIE_QUEST_DELIVERY_FAILED                  19 
+#define	ACHIE_QUEST_TOTAL                            20 
+#define	ACHIE_QUEST_HUNT_TOTAL                       21 
+#define	ACHIE_QUEST_RESCUE_TOTAL                     22 
+#define	ACHIE_QUEST_RESEARCH_TOTAL                   23 
+#define	ACHIE_QUEST_DELIVERY_TOTAL                   24 
+#define	LEV_BEGINNER                                 1 
+#define	LEV_VERY_EASY                                2 
+#define	LEV_EASY                                     3 
+#define	LEV_NORMAL                                   4 
+#define	LEV_HARD                                     5 
+#define	LEV_EXPERT                                   6 
+#define	LEV_CHAMPION                                 7 
+#define	LEV_IMPERIAL                                 8 
+#define	LEV_TORMENT                                  9 
+#define	LEV_GOD_MODE                                 10 
 #define	MAX_RACE                                     E_RACES_COUNT 
 #define	STATUS_BEFORELOOP                            "BEFORELOOP" 
 #define	STATUS_INITLOOP                              "INITLOOP" 

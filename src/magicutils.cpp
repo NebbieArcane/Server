@@ -168,6 +168,11 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         }
         
     }
+
+    if(giver->lastpkill != NULL) {
+        free(taker->lastpkill);
+        taker->lastpkill = strdup(giver->lastpkill);
+    }
     
     if(giver->lastmkill != NULL) {
         free(taker->lastmkill);

@@ -586,6 +586,25 @@ void spell_astral_walk(byte level, struct char_data* ch,
 				NULL, NULL, TO_ROOM);
 		}
 	}
+
+// AstralWalk Achievement
+    if(IS_POLY(ch))
+    {
+        ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_ASTRAL] += 1;
+        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+        {
+            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+    }
+    else
+    {
+        ch->specials.achievements[OTHER_ACHIE][ACHIE_ASTRAL] += 1;
+        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+        {
+            SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+    }
+    CheckAchie(ch, ACHIE_ASTRAL, OTHER_ACHIE);
 }
 
 void spell_teleport(byte level, struct char_data* ch,
@@ -1320,6 +1339,24 @@ void spell_heal(byte level, struct char_data* ch,
                 sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
         }
         act(buf, FALSE, ch, 0, victim, TO_VICT);
+
+        if(healpoints == 100 && IS_PC(victim) && HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_1] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_1] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_CLERIC_1, CLASS_ACHIE);
+        }
     }
     if(ch == victim)
     {
@@ -1378,6 +1415,33 @@ void spell_invisibility(byte level, struct char_data* ch,
 			af.location  = APPLY_NONE;
 			af.bitvector = 0;
 			affect_to_char(victim, &af);
+
+            if((HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch, CLASS_SORCERER)) && ch == victim && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    if(HasClass(ch, CLASS_MAGIC_USER))
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_3] += 1;
+                    else if(HasClass(ch, CLASS_SORCERER))
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_3] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    if(HasClass(ch, CLASS_MAGIC_USER))
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_3] += 1;
+                    else if(HasClass(ch, CLASS_SORCERER))
+                        ch->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_3] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                if(HasClass(ch, CLASS_MAGIC_USER))
+                    CheckAchie(ch, ACHIE_MAGE_3, CLASS_ACHIE);
+                else if(HasClass(ch, CLASS_SORCERER))
+                    CheckAchie(ch, ACHIE_SORCERER_3, CLASS_ACHIE);
+            }
 		}
 	}
 }
@@ -1403,6 +1467,13 @@ void spell_locate_object(byte level, struct char_data* ch,
 		send_to_char("Cosa stai cercando??\n\r", ch);
 		return;
 	}
+
+    if(IS_OBJ_STAT2(obj, ITEM2_NO_LOCATE) && !IS_IMMORTAL(ch))
+    {
+        send_to_char("Non trovi nulla di simile.\n\r",ch);
+        return;
+    }
+
 	isgod=IS_CREATORE(ch);
 
 	strcpy(name, obj->name);
@@ -1768,6 +1839,24 @@ void spell_sanctuary(byte level, struct char_data* ch,
 		af.location  = APPLY_NONE;
 		af.bitvector = AFF_SANCTUARY;
 		affect_to_char(victim, &af);
+
+        if(HasClass(ch, CLASS_CLERIC) && IS_PC(victim) && ch != victim && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_3] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_3] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_CLERIC_3, CLASS_ACHIE);
+        }
 	}
 }
 
@@ -1970,7 +2059,7 @@ void spell_summon(byte level, struct char_data* ch,
 	}
 
 	if(IS_SET(real_roomp(victim->in_room)->room_flags, NO_SUM)) {
-		send_to_char("Un'antica $c00012magia$c0007 blocca l'evocazione.\n\r", ch);
+		send_to_char("Un'antica $c0012magia$c0007 blocca l'evocazione.\n\r", ch);
 		return;
 	}
 
@@ -3236,6 +3325,33 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 	}
 
 	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);
+
+    if((HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch, CLASS_SORCERER)) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            if(HasClass(ch, CLASS_MAGIC_USER))
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_2] += 1;
+            else if(HasClass(ch, CLASS_SORCERER))
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_2] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+        }
+        else
+        {
+            if(HasClass(ch, CLASS_MAGIC_USER))
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_MAGE_2] += 1;
+            else if(HasClass(ch, CLASS_SORCERER))
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_SORCERER_2] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+        }
+
+        if(HasClass(ch, CLASS_MAGIC_USER))
+            CheckAchie(ch, ACHIE_MAGE_2, CLASS_ACHIE);
+        else if(HasClass(ch, CLASS_SORCERER))
+            CheckAchie(ch, ACHIE_SORCERER_2, CLASS_ACHIE);
+    }
 }
 
 } // namespace Alarmud

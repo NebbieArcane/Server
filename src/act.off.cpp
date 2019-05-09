@@ -434,6 +434,29 @@ ACTION_FUNC(do_backstab) {
 				FALSE, victim, 0, ch, TO_CHAR);
 			act("$n evita l'attacco alla schiena di $N!", FALSE, victim, 0, ch,
 				TO_ROOM);
+
+            if(HasClass(victim, CLASS_BARBARIAN) && IS_PC(victim))
+            {
+                if(IS_POLY(victim))
+                {
+                    victim->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
+                    if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                    }
+                }
+                else
+                {
+                    victim->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_2] += 1;
+                    if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(victim->specials.act, PLR_ACHIE);
+                    }
+                }
+
+                CheckAchie(victim, ACHIE_BARBARIAN_2, CLASS_ACHIE);
+            }
+
 			SetVictFighting(ch,victim); /* he avoided, so make him hit! */
 			SetCharFighting(ch,victim);
 			if(IS_NPC(victim)) {
@@ -990,12 +1013,19 @@ ACTION_FUNC(do_bash) {
 		return;
 	}
 
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-
-		if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER |
-					 CLASS_BARBARIAN)) {
-			send_to_char("Solo i combattenti possono farlo!\n\r", ch);
-			return;
+	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+		if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN) && cmd == CMD_BASH)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN) && cmd == 0)
+            {
+                // do nothing
+            }
+            else
+            {
+                send_to_char("Solo i combattenti possono farlo!\n\r", ch);
+                return;
+            }
 		}
 
 		if(!IsHumanoid(ch)) {
@@ -1107,6 +1137,29 @@ ACTION_FUNC(do_bash) {
 		else {
 			WAIT_STATE(ch, PULSE_VIOLENCE * 3);    // bash
 		}
+
+        if(HasClass(ch, CLASS_WARRIOR) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_2] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+            }
+            else
+            {
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_2] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+            }
+
+            CheckAchie(ch, ACHIE_WARRIOR_2, CLASS_ACHIE);
+        }
+
 	}
 	else {
 		if(!CheckMirror(victim)) {
@@ -1127,6 +1180,29 @@ ACTION_FUNC(do_bash) {
 			}
 			WAIT_STATE(ch, PULSE_VIOLENCE * 2);
 		}
+
+        if(HasClass(ch, CLASS_WARRIOR) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_1] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+            }
+            else
+            {
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_1] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                {
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+            }
+
+            CheckAchie(ch, ACHIE_WARRIOR_1, CLASS_ACHIE);
+        }
+
 	}
 }
 
@@ -1154,16 +1230,20 @@ ACTION_FUNC(do_rescue) {
 		return;
 	}
 
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-		if(!HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN |
-					 CLASS_RANGER)) {
-			/**** SALVO skills prince ****/
-			if(!IS_PRINCE(ch)) {
-				/**** fine skills prince ****/
-				send_to_char("Non sei un guerriero!\n\r", ch);
-				return;
-			}
-		}
+    if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+        if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN) && cmd == CMD_RESCUE)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN) && cmd == 0)
+            {
+                // do nothing
+            }
+            else if(!IS_PRINCE(ch))
+            {
+                send_to_char("Non sei un guerriero!\n\r", ch);
+                return;
+            }
+        }
 	}
 
 	only_argument(arg, victim_name);
@@ -1240,6 +1320,28 @@ ACTION_FUNC(do_rescue) {
 
 	WAIT_STATE(victim, 2*PULSE_VIOLENCE); // rescue
 
+    if(HasClass(ch, CLASS_WARRIOR) && IS_PC(victim) && IS_PC(ch))
+    {
+        if(IS_POLY(ch))
+        {
+            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_3] += 1;
+            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+            {
+                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+        }
+        else
+        {
+            ch->specials.achievements[CLASS_ACHIE][ACHIE_WARRIOR_3] += 1;
+            if(!IS_SET(ch->specials.act,PLR_ACHIE))
+            {
+                SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+        }
+
+        CheckAchie(ch, ACHIE_WARRIOR_3, CLASS_ACHIE);
+    }
+
 }
 
 
@@ -1257,7 +1359,7 @@ ACTION_FUNC(do_support) {
         send_to_char(buf, ch);
         return;
     }
-    
+
 	if(!(victim = get_char_room_vis(ch, victim_name))) {
 		send_to_char("Chi vorresti supportare, esattamente?\n\r", ch);
 		return;
@@ -1288,9 +1390,9 @@ ACTION_FUNC(do_support) {
 	ch->specials.supporting=strdup(victim->player.name);
     sprintf(buf, "Ok, ora supporti %s.\n\r", ch->specials.supporting);
     send_to_char(buf, ch);
-    
+
 }
-       
+
 ACTION_FUNC(do_bodyguard) {
 	struct char_data* victim,*lg;
 	char victim_name[240];
@@ -1433,13 +1535,20 @@ ACTION_FUNC(do_kick) {
 		return;
 	}
 
-	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF)) {
-
-		if(!HasClass(ch, CLASS_WARRIOR|CLASS_BARBARIAN|CLASS_RANGER|CLASS_PALADIN)
-				&& !HasClass(ch, CLASS_MONK)) {
-			send_to_char("Non puoi farlo!\n\r", ch);
-			return;
-		}
+    if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
+    {
+        if(!HasClass(ch, CLASS_WARRIOR | CLASS_PALADIN | CLASS_RANGER | CLASS_BARBARIAN | CLASS_MONK) && cmd == CMD_KICK)
+        {
+            if(IS_POLY(ch) && IS_SET(ch->specials.act, ACT_WARRIOR | ACT_RANGER | ACT_BARBARIAN | ACT_PALADIN | ACT_MONK) && cmd == 0)
+            {
+                // do nothing
+            }
+            else
+            {
+                send_to_char("Non puoi farlo!\n\r", ch);
+                return;
+            }
+        }
 
 		if(!IsHumanoid(ch)) {
 			send_to_char("Non hai la forma adatta!\n\r", ch);
@@ -1941,6 +2050,28 @@ ACTION_FUNC(do_quivering_palm) {
 			if(GET_POS(victim) > POSITION_DEAD) {
 				damage(ch, victim, GET_MAX_HIT(victim)*20,SKILL_QUIV_PALM, location);
 			}
+
+            if(HasClass(ch, CLASS_MONK) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_MONK_2] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                }
+                else
+                {
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_MONK_2] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+                }
+
+                CheckAchie(ch, ACHIE_MONK_2, CLASS_ACHIE);
+            }
 		}
 	}
 	WAIT_STATE(ch, PULSE_VIOLENCE * 1);   // quivering
@@ -2061,7 +2192,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	default:
 		i=18;
 	};
-    
+
     WEARING_N(ch,dummy,result);
     if(HasClass(ch, CLASS_MONK) &&
        !((ch->equipment[WIELD]) &&
@@ -2079,17 +2210,17 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
     {
         classe=CLASS_BARBARIAN;
     }
-    
+
     if(classe != CLASS_MONK)
     {
         if(IS_SET(victim->susc, IMM_BLUNT)) {
             damage <<= 1;
         }
-        
+
         if(IS_SET(victim->immune, IMM_BLUNT)) {
             damage >>= 1;
         }
-        
+
         if(classe != CLASS_BARBARIAN) {
             if(IS_SET(victim->M_immune, IMM_BLUNT)) {
                 damage = 0;
@@ -2100,9 +2231,9 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
                 damage >>= 1;
             }
         }
-        
+
     }
-    
+
 	if(!damage) {
         sprintf(buf, "%s", att_kick_miss_ch[i]);
         if(IS_SET(ch->player.user_flags,PWP_MODE))
@@ -2219,6 +2350,28 @@ ACTION_FUNC(do_berserk) {
 			SET_BIT(ch->specials.affected_by2,AFF2_BERSERK);
 			act("$c1012$n growls at $mself, and whirls into a killing frenzy!", FALSE, ch, 0, victim, TO_ROOM);
 			act("$c1012The madness overtakes you quickly!",FALSE,ch,0,0,TO_CHAR);
+
+            if(HasClass(ch, CLASS_BARBARIAN) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_1] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                }
+                else
+                {
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_BARBARIAN_1] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+                }
+
+                CheckAchie(ch, ACHIE_BARBARIAN_1, CLASS_ACHIE);
+            }
 		}
 		WAIT_STATE(victim, PULSE_VIOLENCE); // berserk
 	}
@@ -2681,4 +2834,3 @@ ACTION_FUNC(do_stopfight) {
 
 }
 } // namespace Alarmud
-

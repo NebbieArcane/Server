@@ -482,7 +482,8 @@ namespace Alarmud {
 #define CMD_DESTROY             470
 #define CMD_PERSONALIZE         471
 #define CMD_INSERT_GEMS         472
-//  free 473-479
+#define CMD_ACHIEVEMENTS        473
+//  free 474-479
 #define CMD_DMANAGE             480
 #define CMD_DRESTRICT           481
 #define CMD_DLINK               482
@@ -508,7 +509,8 @@ namespace Alarmud {
 #define CMD_PERDONO             501 //FLYP 2003 Perdono
 #define CMD_IMMOLATION	        502 //Flyp 20180128 --> canibalize per demoni
 #define CMD_IMPTEST             503 //Alar, enables test mode
-//  free 504-508
+#define CMD_CHECKACHIELEVEL     504 //Montero check on achievement table
+//  free 505-508
 #define MAX_CMD_LIST            509
 } // namespace Alarmud
 

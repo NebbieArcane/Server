@@ -670,7 +670,21 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
         send_to_char(buffer, ch);
         return;
     }
-    
+
+    if(IS_OBJ_STAT2(obj_object, ITEM2_NO_PRINCE) && IS_PRINCE(ch))
+    {
+        sprintf(buffer, "Sei troppo potente per usare %s!\n\r", obj_object->short_description);
+        send_to_char(buffer, ch);
+        return;
+    }
+
+    if(IS_OBJ_STAT2(obj_object, ITEM2_ONLY_PRINCE) && !IS_PRINCE(ch) && !IS_IMMORTAL(ch))
+    {
+        sprintf(buffer, "%s e' troppo potente per te!\n\r", obj_object->short_description);
+        send_to_char(buffer, ch);
+        return;
+    }
+
 	if(!IS_IMMORTAL(ch) && IS_PC(ch)) {
 
 		BitMask = GetItemClassRestrictions(obj_object);

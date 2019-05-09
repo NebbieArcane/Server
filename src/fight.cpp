@@ -1055,7 +1055,6 @@ void save_exp_to_file(struct char_data* ch,int xp) {
 }
 
 void die(struct char_data* ch,int killedbytype, struct char_data* killer)
-
 {
 	struct char_data* pers;
 	struct affected_type af;
@@ -2520,6 +2519,117 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 						}
 					}
 
+                // Racekill Achievement in PvP
+                    if(IS_POLY(ch))
+                    {
+                        if(GET_RACE(victim) == RACE_HUMAN)
+                        {
+                            ch->desc->original->specials.achievements[RACESLAYER_ACHIE][RACE_HUMAN] += 1;
+                        }
+                        else if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                        {
+                            // da togliere il commento se attivi gli achievement per ogni razza
+                            // ch->desc->original->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
+                        }
+                        
+                        if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                        {
+                            ch->desc->original->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
+                        }
+                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    else
+                    {
+                        if(GET_RACE(victim) == RACE_HUMAN)
+                        {
+                            ch->specials.achievements[RACESLAYER_ACHIE][RACE_HUMAN] += 1;
+                        }
+                        else if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                        {
+                            // da togliere il commento se attivi gli achievement per ogni razza
+                            // ch->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
+                        }
+                        
+                        if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                        {
+                            ch->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
+                        }
+                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(ch->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    CheckAchie(ch, race_achievement(GET_RACE(victim)), RACESLAYER_ACHIE);
+                    if(GET_RACE(victim) == RACE_HUMAN)
+                    {
+                        CheckAchie(ch, RACE_HUMAN, RACESLAYER_ACHIE);
+                    }
+
+                // Pkill Achievement
+                    if(IS_PC(victim) && !IS_IMMORTALE(ch))
+                    {
+                        if((GetMaxLevel(victim) >= INIZIATO && GetMaxLevel(victim) < ESPERTO && (GetMaxLevel(ch) - GetMaxLevel(victim)) < 5) || (GetMaxLevel(victim) >= ESPERTO && GetMaxLevel(victim) < MAESTRO && (GetMaxLevel(ch) - GetMaxLevel(victim)) < 4) || (GetMaxLevel(victim) >= MAESTRO && GetMaxLevel(victim) < BARONE && (GetMaxLevel(ch) - GetMaxLevel(victim)) < 3) || (GetMaxLevel(victim) == BARONE && (GetMaxLevel(ch) - GetMaxLevel(victim)) < 2) || (IS_PRINCE(ch) && IS_PRINCE(victim)))
+                        {
+                            if(IS_POLY(ch))
+                            {
+                                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_PKILL_WIN] += 1;
+                                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            else
+                            {
+                                ch->specials.achievements[OTHER_ACHIE][ACHIE_PKILL_WIN] += 1;
+                                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(ch->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            CheckAchie(ch, ACHIE_PKILL_WIN, OTHER_ACHIE);
+                            
+                            if(IS_POLY(victim))
+                            {
+                                victim->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_PKILL_LOSS] += 1;
+                                if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            else
+                            {
+                                victim->specials.achievements[OTHER_ACHIE][ACHIE_PKILL_LOSS] += 1;
+                                if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(victim->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            CheckAchie(victim, ACHIE_PKILL_LOSS, OTHER_ACHIE);
+                        }
+                    }
+
+                // Conteggio morti PG
+                    if(IS_POLY(victim))
+                    {
+                        victim->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_DEATH] += 1;
+                        if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    else
+                    {
+                        victim->specials.achievements[OTHER_ACHIE][ACHIE_DEATH] += 1;
+                        if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(victim->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    CheckAchie(victim, ACHIE_DEATH, OTHER_ACHIE);
+
 					sprintf(buf, "%s e' stat%s uccis%s da %s a %s\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim),
 							GET_NAME(ch),victim->in_room > -1 ?
@@ -2535,8 +2645,121 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 free(ch->lastmkill);
                 ch->lastmkill = strdup(GET_NAME(victim));
 
-				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch),
-					   GET_NAME_DESC(victim));
+                // Achievement stuff
+                
+            // Bosskill Achievement
+                if(n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE) > -1)
+                {
+                    struct char_data* tmp;
+                    
+                    for(tmp = real_roomp(ch->in_room)->people; tmp; tmp=tmp->next_in_room)
+                    {
+                        if(IS_PC(tmp) && in_group(tmp, ch))
+                        {
+                            if(IS_POLY(tmp))
+                            {
+                                tmp->desc->original->specials.achievements[BOSSKILL_ACHIE][n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE)] += 1;
+                                if(!IS_SET(tmp->desc->original->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(tmp->desc->original->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            else
+                            {
+                                tmp->specials.achievements[BOSSKILL_ACHIE][n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE)] += 1;
+                                if(!IS_SET(tmp->specials.act,PLR_ACHIE))
+                                {
+                                    SET_BIT(tmp->specials.act, PLR_ACHIE);
+                                }
+                            }
+                            CheckAchie(tmp, n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE), BOSSKILL_ACHIE);
+                        }
+                    }
+                }
+                
+            // Quest Achievement
+                if(CheckMobQuest(mob_index[victim->nr].iVNum) > -1)
+                {
+                    struct char_data* tmp;
+                    for(tmp = real_roomp(ch->in_room)->people; tmp; tmp=tmp->next_in_room)
+                    {
+                        if(IS_PC(tmp) && in_group(tmp, ch))
+                        {
+                            AssignMobQuestToToon(tmp, CheckMobQuest(mob_index[victim->nr].iVNum), mob_index[victim->nr].iVNum);
+                            if(CheckQuest(tmp, CheckMobQuest(mob_index[victim->nr].iVNum)))
+                            {
+                                if(IS_POLY(tmp))
+                                {
+                                    tmp->desc->original->specials.achievements[QUEST_ACHIE][CheckMobQuest(mob_index[victim->nr].iVNum)] += 1;
+                                    if(!IS_SET(tmp->desc->original->specials.act,PLR_ACHIE))
+                                    {
+                                        SET_BIT(tmp->desc->original->specials.act, PLR_ACHIE);
+                                    }
+                                }
+                                else
+                                {
+                                    tmp->specials.achievements[QUEST_ACHIE][CheckMobQuest(mob_index[victim->nr].iVNum)] += 1;
+                                    if(!IS_SET(tmp->specials.act,PLR_ACHIE))
+                                    {
+                                        SET_BIT(tmp->specials.act, PLR_ACHIE);
+                                    }
+                                }
+                                CheckAchie(tmp, CheckMobQuest(mob_index[victim->nr].iVNum), QUEST_ACHIE);
+                            }
+                        }
+                    }
+                }
+
+            // Racekill Achievement in PvE
+                if(IS_POLY(ch))
+                {
+                    if(GET_RACE(victim) == RACE_HUMAN)
+                    {
+                        ch->desc->original->specials.achievements[RACESLAYER_ACHIE][RACE_HUMAN] += 1;
+                    }
+                    else if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    {
+                        // da togliere il commento se attivi gli achievement per ogni razza
+                        // ch->desc->original->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
+                    }
+
+                    if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    {
+                        ch->desc->original->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
+                    }
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    }
+                }
+                else
+                {
+                    if(GET_RACE(victim) == RACE_HUMAN)
+                    {
+                        ch->specials.achievements[RACESLAYER_ACHIE][RACE_HUMAN] += 1;
+                    }
+                    else if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    {
+                        // da togliere il commento se attivi gli achievement per ogni razza
+                        // ch->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
+                    }
+
+                    if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    {
+                        ch->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
+                    }
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                    }
+                }
+                CheckAchie(ch, race_achievement(GET_RACE(victim)), RACESLAYER_ACHIE);
+                if(GET_RACE(victim) == RACE_HUMAN)
+                {
+                    CheckAchie(ch, RACE_HUMAN, RACESLAYER_ACHIE);
+                }
+
+				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch), GET_NAME_DESC(victim));
 			}
 		}
 		die(victim, killedbytype, ch);
@@ -2568,7 +2791,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 regenerate = MIN((con_app[(int)GET_CON(victim)].hitp+ number(0,GetMaxLevel(ch))), dam/2);
                 GET_HIT(victim)+= regenerate;
 				alter_hit(victim,0);
-				if(dam>0) {
+				if(dam > 0 && regenerate > 0) {
                     sprintf(buf, "Rigeneri!");
                     if(IS_SET(victim->player.user_flags,PWP_MODE))
                         sprintf(buf, "%s $c0006[%s%d]$c0007",buf, (regenerate == 0 ? "" : "+"), (regenerate < 0 ? 0 : regenerate));
@@ -2675,10 +2898,51 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 
 	DamageMessages(ch, victim, dam, attacktype, location);
 
+    if(attacktype == SKILL_BACKSTAB)
+    {
+        if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+        {
+            if(IS_POLY(ch))
+            {
+                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
+                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+            }
+            else
+            {
+                ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
+                if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                    SET_BIT(ch->specials.act, PLR_ACHIE);
+            }
+
+            CheckAchie(ch, ACHIE_THIEF_1, CLASS_ACHIE);
+        }
+        
+    }
 
 
 
 	if(DamageEpilog(ch, victim, attacktype, dam)) {
+        if(attacktype == SKILL_BACKSTAB)
+        {
+            if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+            {
+                if(IS_POLY(ch))
+                {
+                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_2] += 1;
+                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                }
+                else
+                {
+                    ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_2] += 1;
+                    if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        SET_BIT(ch->specials.act, PLR_ACHIE);
+                }
+
+                CheckAchie(ch, ACHIE_THIEF_2, CLASS_ACHIE);
+            }
+        }
 		return VictimDead;
 	}
 
