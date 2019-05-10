@@ -33,7 +33,7 @@ Poiche' questo modo di gestire l'allineamento richiede una grande attenzione
 al giocatore e d'altro canto il sistema complessivamente richiede una
 taratura che non puo' essere fatta solo su un mud di prova, e' stato
 implementato il comando SETALIGN (vedi).
-Al primo livello e' possibile cambiare allineameto in qualsiasi momento,
+Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
 senza nessun costo.
 Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
 ogni livello
@@ -63,7 +63,7 @@ ottenere un premio, che va dalla semplice esperienza fino a... sta a te scoprirl
 PRINCIPI
 
 Con questo comando potrai vedere l'elenco dei Principi di Nebbie Arcane.
-I principi sono coloro che rinunciando all'immortalita` scelgono la via
+I principi sono coloro che rinunciando all'immortalita' scelgono la via
 del potere terreno.
 Per diventare Principe si devono totalizzare 400Mxp.
 
@@ -71,8 +71,8 @@ Per diventare Principe si devono totalizzare 400Mxp.
 SETALIGN
 
 Sintassi: setalign evil/neutral/good
-Forza il prorio allineamento come richiesto.
-Al primo livello e' possibile cambiare allineameto in qualsiasi momento,
+Forza il proprio allineamento come richiesto.
+Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
 senza nessun costo.
 Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
 ogni livello per ogni classe
@@ -122,10 +122,10 @@ Inoltre dopo aver vomitato  non si potranno dare comandi per 3  round
 #
 MAPPA MAPPE
 
-Abbiamo varie mappe qui a Nebbie Arcane. Il mondo e` grande, quindi tutte
+Abbiamo varie mappe qui a Nebbie Arcane. Il mondo e' grande, quindi tutte
 insieme non ve le possiamo mostrare.
 
-Pero` ci sono alcune mappe parziali che ti possono servire. Ad esempio la
+Pero' ci sono alcune mappe parziali che ti possono servire. Ad esempio la
 mappa di Myst o la mappa globale.
 
 Per ottenere una di queste mappe, usa:
@@ -136,8 +136,8 @@ Sostituisci <nome> con il nome della zona di cui vuoi vedere la mappa.
 
 Le mappe attualmente presenti sono: Myst e Nebbie Arcane.
 
-La prima e` la mappa della cittadina principale di Myst, e la
-seconda e` una mappa generale di Nebbie Arcane.
+La prima e' la mappa della cittadina principale di Myst, e la
+seconda e' una mappa generale di Nebbie Arcane.
 
 
 
@@ -171,7 +171,7 @@ seconda e` una mappa generale di Nebbie Arcane.
                  |   |       |      |       M - Torre della Magia(gilda maghi)
           municipio [4]     [W]    [p]      N - Antro del Mercante
                      |       |      |       P - Tempio dei Paladini(gilda)
-                    [4]     the  cimite     Q - il Fabbro
+                    [4]     the  cimitero   Q - il Fabbro
                      |     river di Myst    R - Campo dei Ranger(gilda)
                     [5]                     S - la Panetteria
                      |                      T - Torre delle Leggi
@@ -221,7 +221,7 @@ Atlantide |                        |
               ----------------*         *---------------------------------
               |                ***********
               |                    |     
-              |----- Ymmryr        |
+              |----- Imrryr        |
               |                    |
         La foresta Incantata       |
                                    v
@@ -233,13 +233,13 @@ Atlantide |                        |
 DAIMOKU
 Sintassi : DAIMOKU
 
-Questa azione permette di accellerare il proprio hit-regen fino ad un massimo 
+Questa azione permette di accelerare il proprio hit-regen fino ad un massimo 
 di 100hp per tick. La durata di questo effetto e' variabile.
 Concentrandosi il monaco riesce a rigenerare le proprie energie, ma lo sforzo
 mentale e' tale che resta svenuto.
 $c0001ATTENZIONE$c0007
 Mentre e' svenuto il monaco e' a -1hp.
-Evitate di usare il daimoku in zone meno che strasicure
+Evitate di usare il daimoku in zone meno che strasicure.
 
 
 #
@@ -645,7 +645,7 @@ Quando questo spell viene pronunciato la vittima viene circondata
 da una luce rosa. Lo spell in se' non produce danni sulla
 vittima ma la rende piu' facile da colpire (la classe armatura
 si alza di 20 punti). Non si tratta di uno spell che produce 
-aggressivita del mob nei vostri confronti.
+aggressivita' del mob nei vostri confronti.
 
 Vedi anche:
 
@@ -729,7 +729,7 @@ Save        : Nessuno
 Costo di lancio: 30 mana
 
 Con questo spell il caster puo' trasportarsi sul piano astrale.
-Se il caster e` seguito od in gruppo con altri giocatori o creature,
+Se il caster e' seguito od in gruppo con altri giocatori o creature,
 anche questi verranno trasportati sul piano astrale insieme al caster.
 
 Vedi anche: -
@@ -957,13 +957,13 @@ Sintassi     : cast 'meteor swarm' <nome>
 Accumulazione: No...  Colpiscilo spesso, colpiscilo duro.
 Durata       : Istantanea
 Livello      : Level 36 mage.
-Tiro salvezza: contro incantesimi per meta` danno.
+Tiro salvezza: contro incantesimi per meta' danno.
 Costo di lancio: 35 mana
 
 Questo spell crea uno sciame di meteore che il caster puo' dirigere
-contro una vittima. Le danno delle meteore e` di un dado da 12 (d12) per ogni
+contro una vittima. Le danno delle meteore e' di un dado da 12 (d12) per ogni
 livello del caster. Se la vittima non fallisce il suo tiro salvezza contro
-gli incantesimi il danno e` dimezzato.
+gli incantesimi il danno e' dimezzato.
 
 #
 "SPELL COMMAND"
@@ -1130,8 +1130,8 @@ caster. Gli insetti si uniscono in una massa solida che avanza nella
 direzione indicata, entra nella stanza, attacca ed uccide chiunque vi sia e
 che non sia cosi furbo da scappare.
 Ogni insetto fa un HP di danno, ma muore subito dopo.
-La massa di insetti continua a viaggiare finche` puo` nella direzione
-indicata dal druido o finche ci sono insetti vivi. Dopodiche` si disperde.
+La massa di insetti continua a viaggiare finche' puo' nella direzione
+indicata dal druido o finche' ci sono insetti vivi. Dopodiche' si disperde.
 Puo' essere usata solo all'aperto e rende inabile il caster per un
 breve periodo dopo la pronuncia dello spell.
 
@@ -1447,7 +1447,7 @@ Save        : Nessuno
 Costo di lancio: 10 mana
 
 Puo' essere applicata solo su se stessi. Con questo spell
-si diventa invisibili a tutti gli animanli.
+si diventa invisibili a tutti gli animali.
 
 Vedi anche: INVISIBILITY
 
@@ -1594,7 +1594,7 @@ Costo di lancio: 20 mana
 Questo spell consente al caster di essere trasportato istantaneamente
 attraverso una coppia di alberi. Prima pero' il caster deve conoscere
 la locazione di un albero e il nome dell'albero dove vuole andare.
-Il caster deve trovarsi presso un'albero se vuole essere trasportato
+Il caster deve trovarsi presso un albero se vuole essere trasportato
 all'altro. Devi chiacchierare con gli alberi per trovarli e sapere
 il loro nome. (speak with plants)
 
@@ -1611,7 +1611,7 @@ Save        : Nessuno
 Costo di lancio: 5 mana
 
 Con questo spell puoi parlare con le piante e conoscerne il nome.
-E' molto utile in congiunzione con lo spell 'trasport via plant'.
+E' molto utile in congiunzione con lo spell 'transport via plant'.
 
 Vedi anche: TRANSPORT VIA PLANT
 
@@ -1710,16 +1710,16 @@ Livello     : Level 23 mage.
 Save        : Nessuno
 Costo di lancio: 20 mana
 
-Questo spell fa guadagnare velocita` alla vittima, il che si traduce
+Questo spell fa guadagnare velocita' alla vittima, il che si traduce
 in un maggiore numero di attacchi che varia ogni round.
-Questo pero` fiacca velocemente la vittima a causa dell'enorme spreco 
+Questo pero' fiacca velocemente la vittima a causa dell'enorme spreco 
 di energia fisica richiesto. I mostri di solito non gradiscono essere
 colpiti da questo spell.
 
-nota: l'eq che da` haste si comportera` diversamente dalla spell, 
+nota: l'eq che da' haste si comportera' diversamente dalla spell, 
 aumentando i tuoi attacchi in relazione al valore riportato. 
 
-Ex. Haste by 1 ti dara` un attacco in piu' ogni round.
+Ex. Haste by 1 ti dara' un attacco in piu' ogni round.
 
 ps. spell ed haste da eq non sono cumulabili.
 
@@ -1873,17 +1873,17 @@ Save        : Nessuno
 Costo di lancio: 20 mana
 
 Questo spell crea una lama di fuoco, ghiaccio, fulmini o pietra il cui danno 
-varia in base al livello del druido; ad alti livelli e` veramente molto potente.
+varia in base al livello del druido; ad alti livelli e' veramente molto potente.
 
-Il tipo di lama che otterreai sara` casuale, ed otterrai un nuovo elemento
+Il tipo di lama che otterrai sara' casuale, ed otterrai un nuovo elemento
 ogni 17 livelli fino al 51:
 
 Da liv 7(ottenimento spell) al liv 16 otterrai solo fire blades  
-dal liv 17 al 33 aggiungi frost alle possibilita`
-dal liv 34 al 50 aggiungi thunder alle possibilita`  
-al liv 51 aggiungi earth alle possibilita`
+dal liv 17 al 33 aggiungi frost alle possibilita'
+dal liv 34 al 50 aggiungi thunder alle possibilita'  
+al liv 51 aggiungi earth alle possibilita'
 
-Questo spell e` MOLTO importante se vuoi avanzare oltre il livello 10.
+Questo spell e' MOLTO importante se vuoi avanzare oltre il livello 10.
 
 Vedi anche: -
 
@@ -2058,7 +2058,7 @@ Sintassi: nessuna
 
 Sintassi: nessuna
 
-	Consente a un guerriero, monaco o ladro di scappere da una
+	Consente a un guerriero, monaco o ladro di scappare da una
 	battaglia senza panico. Se il tiro riesce tu lasci la stanza
 	e vedi in che direzione ti sei mosso.
 	Fuggire di fronte al nemico, comunque, provoca una perdita
@@ -2081,7 +2081,7 @@ Sintassi: feign death (senza argomenti)
 #
 "RESURRECTION"
 
-Sintassi    : cast 'resurection' <nome>
+Sintassi    : cast 'resurrection' <nome>
 Accumulazione: -
 Livello     : Level 37 clerics
 
@@ -2106,7 +2106,7 @@ seguace del caster per 36 ore.
 
 Sintassi: monsum <num>
 
-<num> puo` essere one, two, three, four, five o six.
+<num> puo' essere one, two, three, four, five o six.
 
 Le varie incarnazioni di questo spell creano mostri del livello appropriato
 per servirti come seguace per un certo tempo. Il tempo e' lo stesso che
@@ -2212,12 +2212,12 @@ Sintassi      : cast 'acid blast' <nome>
 Accumulazione : No.
 Durata        : Istantanea
 Area d'effetto: una creatura
-Tiro salvezza : contro incantesimi per meta` danno.
+Tiro salvezza : contro incantesimi per meta' danno.
 Costo di lancio: 15 mana
 
-Questo spell crea un potente schizzo di acido che produra danni per un dado
+Questo spell crea un potente schizzo di acido che produrra' danni per un dado
 da 6 (d6) per livello  del caster. Se la vittima non fallisce il suo tiro
-salvezza con gli incantesimi, il danno e` dimezzato.
+salvezza con gli incantesimi, il danno e' dimezzato.
 L'unico vantaggio di questo spell su 'lightning bolt' e' che pochissime cose
 sono immuni all'acido.
 
@@ -2639,11 +2639,11 @@ STOPFIGHT
 
 Sintassi: stopfight
 
-Questo e` il comando per smettere di combattere. Smetti di combattere TU non
+Questo e' il comando per smettere di combattere. Smetti di combattere TU non
 il tuo avversario.
-Smettere di combattere ti lascia un po` disorientato, quindi per un po`
+Smettere di combattere ti lascia un po' disorientato, quindi per un po'
 non riuscirai a dare altri comandi. Non pensare, quindi, di poter smettere
-di combattere e scappare via (c'e` il comando flee per quello).
+di combattere e scappare via (c'e' il comando flee per quello).
 
 Vedi anche: flee
 
@@ -2904,7 +2904,7 @@ bug il mud si blocca non appena scrivo 'put bag in bag'
 idea costruisci un ristorante a Myst
 typo 'regla' dovrebbe essere scritto 'regola'
 
-Puoi mandare i bug report anche via e-mail a bug@nebbie.hexkeep.com
+Puoi mandare i bug report anche via e-mail a staff@nebbie.it
 Verranno cosi' esaminati piu' celermente.
 
 #
@@ -2945,17 +2945,17 @@ Vedi anche: INN STORE
 STORE
 
 Si usa alla reception delle locande.
-Con questo comando e' possibile ``congelare'' il proprio personaggio 
+Con questo comando e' possibile ''congelare'' il proprio personaggio 
 per un certo periodo, pagando un rent ridotto.
 Il comando e' STORE <numero giorni>. ATTENZIONE: Store senza parametri
-assume come numero giorni il monimo consentito, ovvero 20.
+assume come numero giorni il minimo consentito, ovvero 20.
 Ad esempio:
 Diciamo che e' il primo luglio, e sto per partire per le vacanze:
 Immagino di tornare il 31 luglio.
 Digito quindi store 30. La locandiera mi calcola subito il costo di 30 giorni
 di rent, su cui mi fa il 50% di sconto. Pago pero' subito. Il vantaggio e' che
 non corro il rischio di aver sbagliato i conti e perdere l'eq per pochi coins
-di differenza, lo svantaggio che se rientro primna del tempo ho comunque gia'
+di differenza, lo svantaggio che se rientro prima del tempo ho comunque gia'
 pagato.
 STORE serve anche per chi pensa di non poter giocare per un periodo lungo, ma
 no sa esattamente quanto.
@@ -3027,7 +3027,7 @@ del tempo che hai passato negli ultimi tick in una determinata posizione.
 #
 POUR
 
-Per travasare liquidi da un contenitore ad un'altro.
+Per travasare liquidi da un contenitore ad un altro.
 O svuotare un determinato contenitore del liquido:
 esempio:
 pout barrel out
@@ -3045,7 +3045,7 @@ FOLLOW
 
 Sintassi: follow <personaggio>
 
-Con follow inizi a seguire un'altro personaggio. In piu' in questo
+Con follow inizi a seguire un altro personaggio. In piu' in questo
 modo lui puo' prenderti come membro nel suo gruppo.
 Per smettere di seguire qualcuno devi usare FOLLOW <il tuo nome>
 In pratica devi seguire te stesso.
@@ -3076,28 +3076,28 @@ nuovo orpello o qualche quest.
 #
 GUILD GILDE
 
-La Gilda e` un posto dove i mortali possono fuggire dai pericoli ed i
-problemi di un mondo crudele. Ogni Gilda e` protetta (AH!), cosi` che solo
+La Gilda e' un posto dove i mortali possono fuggire dai pericoli ed i
+problemi di un mondo crudele. Ogni Gilda e' protetta (AH!), cosi' che solo
 i membri della stessa possono entrarci. Le Gilde sono anche i posti dove
 la gente va ad imparare i rudimenti della propria professione.
 
-La Gilda dei Chierici e` ad ovest di Temple Square a Myst.
-La Gilda dei Paladini e`accanto a quella dei chierici
+La Gilda dei Chierici e' ad ovest di Temple Square a Myst.
+La Gilda dei Paladini e' accanto a quella dei chierici
 La Gilda dei Maghi (e stregoni) si affaccia sulla main street di Myst.
 La Gilda dei Ladri e quella degli Psionici le trovate nella Dark Alley.
 La Gilda dei Guerrieri si affaccia sulla main street di Myst.
-La Gilda dei Ranger e` subito a ovest e poi sud della porta ovest di Myst.
-La Gilda dei Monaci e` nord ovest degli Shire
-La Gilda dei Barbari e` sul sentiero a Nord di Myst
-La Gilda dei Druidi e` nella foresta di Haon-Dor, fuori dalla porta ovest di 
+La Gilda dei Ranger e' subito a ovest e poi sud della porta ovest di Myst.
+La Gilda dei Monaci e' nord ovest degli Shire
+La Gilda dei Barbari e' sul sentiero a Nord di Myst
+La Gilda dei Druidi e' nella foresta di Haon-Dor, fuori dalla porta ovest di 
                     Myst. ATTENTI a non finire dai quickling, ci 
 		    lascereste le penne! Il maestro si chiama Arromon, la 
 		    direzione (dal sentiero) e' fondamentalmente  sud
 		    
-  I Druidi dal 10^ livello in su` troveranno la loro Gilda dentro il
+  I Druidi dal 10^ livello in su' troveranno la loro Gilda dentro il
   Colossal Tree. I Druidi DEVONO avere l'incantesimo 'tree travelling' per
   entrare nella gilda di alto livello. Inoltre devono avere l'incantesimo
-  'Flame Blade' per vincere la competizione che gli si ripresentera` ad ogni
+  'Flame Blade' per vincere la competizione che gli si ripresentera' ad ogni
   passaggio di livello superiore al 10^.
 Anche i monaci, ai livelli piu' alti dovranno combattere per livellare.
 Inoltre molte classi dopo il decimo livello devono cambiare maestro
@@ -3193,7 +3193,7 @@ RECITE SCROLL SCROLLS
 Utilizzo : Recite <Scroll> [Target]
 
 E' utilizzato per leggere una pergamena (scroll) magica.
-Il target puo essere un oggetto o una persona o nulla (te stesso).
+Il target puo' essere un oggetto o una persona o nulla (te stesso).
 
 
 #
@@ -3411,7 +3411,7 @@ Durata      : 5 ore per livello
 Costo di lancio: 5 mana
 
 Questo spell ti rende capace di vedere l'aura rossa di malvagita'
-che circonda cose o persone malvage.
+che circonda cose o persone malvagie.
 
 Vedi anche: -
 
@@ -3560,7 +3560,7 @@ Sintassi    : cast 'protection from evil' [vittima]
 Accumulazione: No
 Durata      : 24 ore
 Costo di lancio: 5 mana
-Questo spell ti protegge dalle creature malvage e previene tutti gli
+Questo spell ti protegge dalle creature malvagie e previene tutti gli
 attacchi che sono ti tipo 'touch' cioe' di contatto. Per esempio il tocco
 dei ghoul (ammesso che si tratti di ghoul malvagi).
 
@@ -3703,7 +3703,7 @@ su cui tenti lo spell e' di piu' di tre livelli superiore al tuo.
 Il tiro salvezza che si applica e' del tipo contro paralisi.
 
 Una persona sotto charm ti seguira' e non sara' in grado di attaccarti,
-inotre puoi dargli ordini con il comando ORDER.
+inoltre puoi dargli ordini con il comando ORDER.
 
 Vedi anche: FOLLOW ORDER
 
@@ -3850,7 +3850,7 @@ Vedi anche: COLOR SPRAY
 "PRISMATIC SPRAY"
 
 Sintassi    :case 'prismatac spray' nome
-Durata      :Istantaneous
+Durata      :Istantanea
 Livello     :Use AllSpells
 Save        :Versus spells for no damage.
 Costo di lancio: 40 mana
@@ -4101,7 +4101,7 @@ del soffio, questo causera' tanto danno quanto e' il tuo valore di
 punti vita. Se il tuo livello e' doppio di quello del soffio questo
 fara' solo meta' dei tuoi punti vita di danno.
 Il soffio naturale di alcuni mostri va oltre alle limitazioni sulla
-costituzione, e perfino un mostro di livello 50 puo generare il
+costituzione, e perfino un mostro di livello 50 puo' generare il
 danno intero. Poiche' la maggior parte dei mostri di grossa mole
 hanno anche moltissimi punti vita, e' ovvio che il loro soffio causera'
 una grande quantita' di danno. Non combattere mai un drago di titanio !
@@ -4154,7 +4154,7 @@ Usato in un negozio questo comando ti consente di sapere quanto e'
 disposto a pagare il padrone per l'oggetto.
 Usato da un ladro gli permette  di identificare un oggetto senza svenire come
 accade per le pergamene di identificazione la correttezza dell'
-identificazzione dipende dalla pratica effettuata su questo skill.
+identificazione dipende dalla pratica effettuata su questo skill.
 
 #
 LIST
@@ -4539,7 +4539,7 @@ divinita'. Aumenta di potere con l'aumentare del livello del paladino.
 BLESSING
 
 E' l'abilita' del paladino di pronunciare la benedizione del suo dio
-su di una persona. Attenzione tale spell funzionera esclusivamente su personaggi GOOD.
+su di una persona. Attenzione tale spell funzionera' esclusivamente su personaggi GOOD.
 
 
 #
@@ -4549,7 +4549,7 @@ Gli psionisti sono personaggi che usano il potere della mente.
 Possono evocare persone da grandi distanze e sanno anche trasformare in
 gelatina la mente di potenti mostri.
 
-Le abilita` segli psionisti vengono dalla forza della mente, e non sono
+Le abilita' segli psionisti vengono dalla forza della mente, e non sono
 magie. Quindi possono essere usate anche dove gli incantesimi dei maghi o dei
 chierici spesso non funzionano.
 Per vedere gli skill dei psionisti usa 'pratice I'
@@ -4631,9 +4631,9 @@ Sintassi: mind 'psionic danger sense'
 Spell: 23 lev psi
 Costo di lancio: 50 mana
 
-Questa abilita` vi dice se, intorno a voi, vi sono delle Death Trap. Lo
+Questa abilita' vi dice se, intorno a voi, vi sono delle Death Trap. Lo
 lanciate su voi stessi e, per un certo periodo, ogni volta che entrate in
-una locazione o la guardate vi avverte se ci ono pericoli nelle locazioni
+una locazione o la guardate vi avverte se ci sono pericoli nelle locazioni
 vicine.
 
 #
@@ -4865,7 +4865,7 @@ Sintassi    : mind 'psychic impersonation'
 Spell: lev 3 psi
 Costo di lancio: 50 mana
 
-Questa abilita` vi permette di modificare i vostri lineamenti cosi` che
+Questa abilita' vi permette di modificare i vostri lineamenti cosi' che
 le creature vi odiano, vi temono o vi stanno cercando, si dimentichino di voi.
 Molto comodo se state fuggendo da un mob che non siete riusciti ad uccidere.
 
@@ -5175,7 +5175,7 @@ guardare nelle stanze specificando la direzione. (look n, look s etc.)
 #
 COLORI
 
-Quando scrivete qualcosa che puo` essere visto dagli altri giocatori (un
+Quando scrivete qualcosa che puo' essere visto dagli altri giocatori (un
 emote, un titolo, ecc.) lo potete colorare. I colori saranno visti solo dai
 giocatori che hanno il flag ANSI abilitato. I colori si ottengono mettendo
 la sequenza \$cXXXX prima dei caratteri che intendete colorare.
@@ -5193,7 +5193,7 @@ $c00070007 Grigio (default)        $c00140014 Celeste chiaro
 $c00080008 Grigio scuro            $c00150015 Bianco
 $c0007
 Ad esempio la stringa:  Sono \$c0015molto \$c0009infuriato\$c0007!!!!
-verra` visualizzata: Sono $c0015molto $c0009infuriato$c0007!!!!
+verra' visualizzata: Sono $c0015molto $c0009infuriato$c0007!!!!
 
 
 Vedi: SET
@@ -5201,23 +5201,23 @@ Vedi: SET
 #
 "PLAYERS KILLING" PKILL
 
-Normalmente su Nebbie Arcane i giocatori non si uccidono fra loro. Pero` c'e` la
-possibilita` di uscire dalla normalita` e sfidare altri giocatori.
+Normalmente su Nebbie Arcane i giocatori non si uccidono fra loro. Pero' c'e' la
+possibilita' di uscire dalla normalita' e sfidare altri giocatori.
 
 Il flag PKILL permette di attaccare ed essere attaccato da altri giocatori
 che abbiano abilitato il flag PKILL.
 
-Il PK puo` essere una sfida avvincente ma ha anche degli aspetti negativi.
+Il PK puo' essere una sfida avvincente ma ha anche degli aspetti negativi.
 Bisogna stare attenti a non farsi troppi nemici ed ad avere tanti amici,
-altrimenti sopravvivere puo` essere molto difficile.
+altrimenti sopravvivere puo' essere molto difficile.
 
 Le regole di combattimento fra i giocatori sono le stesse del combattimento
-contro le creature di Nebbie Arcane. L'unica differenza e` che per l'uccisione di un
+contro le creature di Nebbie Arcane. L'unica differenza e' che per l'uccisione di un
 giocatore non si guadagnano punti esperienza, mentre il giocatore che muore
 perde l'esperienza come nelle morti dovute alle altre creature.
 
 State molto attenti nell'abilitare il flag PKILL sul vostro personaggio. Una
-volta fatto NON POTRETE TORNARE PIU` INDIETRO!
+volta fatto NON POTRETE TORNARE PIU' INDIETRO!
 
 #
 REGISTER REGISTRAZIONE
@@ -5225,7 +5225,7 @@ REGISTER REGISTRAZIONE
 Nebbie Arcane e' un mud aperto a tutti, ma per superare il decimo livello e' 
 necessario identificarsi.
 La registrazione e' del tutto automatica, e rispetta la vostra privacy.
-L'unico dato ``reale'' che viene memorizzato e' infatti l'indirizzo email
+L'unico dato ''reale'' che viene memorizzato e' infatti l'indirizzo email
 che vorrete fornirci.
 Per vedere il funzionamento del comando digitate
 register
@@ -5312,7 +5312,7 @@ MINER
 Skill per DWARF: da sempre i nani sono grandi scavatori;
 ora avendo una pala o un piccone possono recarsi nelle miniere di Boffgorrak
 e cercare metalli di vario genere e tantissime varieta' di pietre preziose.
-Scavare e` faticoso, da` affaticamento e, raramente, si possono disturbare
+Scavare e' faticoso, da' affaticamento e, raramente, si possono disturbare
 creature sotterranee aggressive che non gradiranno la picconata in
 testa...Le singole vene delle miniere non possono essere sfruttate
 all'infinito. Mettete da parte i materiali trovati perche' vi serviranno.
