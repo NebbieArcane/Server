@@ -214,16 +214,12 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 	 *  taker
 	 */
 
-	for(j = 0; j< MAX_WEAR; j++) {
-		if(giver->equipment[j]) {
+	for(j = 0; j< MAX_WEAR; j++)
+    {
+		if(giver->equipment[j])
+        {
 			obj = unequip_char(giver, j);
-			/* ALAR */
-			if(IsHumanoid(taker)) {
-				equip_char(taker,obj,j);
-			}
-			else {
-				obj_to_char(obj, taker);
-			}
+            obj_to_char(obj, taker);
 		}
 	}
 
@@ -232,6 +228,10 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 		obj_from_char(obj);
 		obj_to_char(obj, taker);
 	}
+
+    // rune
+
+    GET_RUNEDEI(taker) = GET_RUNEDEI(giver);
 
 	/*
 	 *    gold...
@@ -251,6 +251,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 
 	GET_MANA(taker) = GET_MANA(giver);
 	alter_mana(taker,0);
+    affect_total(taker);
 
 }
 

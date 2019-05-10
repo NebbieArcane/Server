@@ -1921,7 +1921,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->obj_flags.value[1] = 86;   // second wind
                                             obj->obj_flags.value[2] = 108;  // major track
                                             obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0012verde brillante$c0007");
+                                            obj->short_description = (char*)strdup("una pozione $c0010verde brillante$c0007");
                                             obj->name = (char*)strdup("pozione verde brillante");
                                         }
                                         break;
@@ -3989,13 +3989,13 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
         reward = reward * molt / 10;
         reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
-        gain_exp(tch, reward);
+        gain_exp(ch, reward);
 
-        RewardAll(tch, achievement_type, achievement_class, lvl);
+        RewardAll(ch, achievement_type, achievement_class, lvl);
 
-        send_to_char("\n\r", tch);
+        send_to_char("\n\r", ch);
         sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
-        act(buf, FALSE, tch, 0, 0, TO_CHAR);
+        act(buf, FALSE, ch, 0, 0, TO_CHAR);
         save_obj(ch, &cost, 0);
     }
 }
