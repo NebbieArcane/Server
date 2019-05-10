@@ -148,25 +148,37 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         }
     }
     
-    for(af = giver->affected; af; af = af->next) {
-        if(!affected_by_spell(taker,af->type)) {
-            
-            af2.type      = af->type;
-            af2.duration  = af->duration;
-            af2.modifier  = af->modifier;
-            af2.location  = af->location;
-            af2.bitvector = af->bitvector;
-            
-            affect_to_char(taker, &af2);
-        }
-        
-        if(af->type == STATUS_QUEST) {
-            taker->specials.quest_ref = giver->specials.quest_ref;
-            if(giver->specials.quest_ref) {
-                (giver->specials.quest_ref)->specials.quest_ref = taker;
+    for(af = giver->affected; af; af = af->next)
+    {
+        if(IS_NPC(giver) && af->type == SPELL_POLY_SELF)
+        {
+            if(affected_by_spell(taker,af->type))
+            {
+                affect_from_char(taker, af->type);
             }
         }
-        
+        else
+        {
+            if(!affected_by_spell(taker,af->type))
+            {
+                af2.type      = af->type;
+                af2.duration  = af->duration;
+                af2.modifier  = af->modifier;
+                af2.location  = af->location;
+                af2.bitvector = af->bitvector;
+
+                affect_to_char(taker, &af2);
+            }
+
+            if(af->type == STATUS_QUEST)
+            {
+                taker->specials.quest_ref = giver->specials.quest_ref;
+                if(giver->specials.quest_ref)
+                {
+                    (giver->specials.quest_ref)->specials.quest_ref = taker;
+                }
+            }
+        }
     }
 
     if(giver->lastpkill != NULL) {

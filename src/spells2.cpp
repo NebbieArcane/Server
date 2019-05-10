@@ -2589,6 +2589,7 @@ void cast_poly_self(byte level, struct char_data* ch, const char* arg, int type,
 	char buffer[40];
 	int mobn = -1, X=LAST_POLY_MOB, found=FALSE;
 	struct char_data* mob;
+    struct affected_type af;
 
 	one_argument(arg,buffer);
 
@@ -2621,7 +2622,16 @@ void cast_poly_self(byte level, struct char_data* ch, const char* arg, int type,
 			send_to_char("Non trovo nulla di simile.\n\r", ch);
 			return;
 		}
-		else {
+		else
+        {
+            af.type      = SPELL_POLY_SELF;
+            af.duration  = (GetMaxLevel(ch) - PolyList[X].level) *  2 + 2;
+            af.modifier  = 0;
+            af.location  = APPLY_NONE;
+            af.bitvector = 0;
+
+            affect_to_char(ch, &af);
+
 			mob = read_mobile(mobn, VIRTUAL);
 			if(mob) {
 				spell_poly_self(level, ch, mob, 0);

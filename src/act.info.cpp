@@ -2428,6 +2428,7 @@ ACTION_FUNC(do_achievements)
         }
         else if(!strcmp(arg1,"spam"))
         {
+            struct char_data* tch;
             int n_spam;
             char buf[MAX_STRING_LENGTH];
 
@@ -2467,7 +2468,14 @@ ACTION_FUNC(do_achievements)
 
             n_spam = atoi(arg2);
 
-            if(IS_SET(ch->specials.act,PLR_ACHIE))
+            tch = ch;
+
+            if(IS_POLY(tch))
+            {
+                tch = tch->desc->original;
+            }
+
+            if(IS_SET(tch->specials.act,PLR_ACHIE))
             {
                 int num = 0;
                 bool trovato = FALSE;
@@ -2480,12 +2488,12 @@ ACTION_FUNC(do_achievements)
                         // se l'achievement classe e' -1 viene skippato
                         continue;
                     }
-                    else if(HasClass(ch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(tch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2499,7 +2507,7 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2518,12 +2526,12 @@ ACTION_FUNC(do_achievements)
                         // se l'achievement classe e' -1 viene skippato
                         continue;
                     }
-                    else if(HasClass(ch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(tch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2537,7 +2545,7 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2556,12 +2564,12 @@ ACTION_FUNC(do_achievements)
                         // se l'achievement classe e' -1 viene skippato
                         continue;
                     }
-                    else if(HasClass(ch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+                    else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb = bufferAchie(ch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, n_spam);
+                            sb = bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, n_spam);
                             num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2580,12 +2588,12 @@ ACTION_FUNC(do_achievements)
                         // se l'achievement classe e' -1 viene skippato
                         continue;
                     }
-                    else if(HasClass(ch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(tch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2599,7 +2607,7 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2618,12 +2626,12 @@ ACTION_FUNC(do_achievements)
                         // se l'achievement classe e' -1 viene skippato
                         continue;
                     }
-                    else if(HasClass(ch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+                    else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(tch))
                     {
                         if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2637,7 +2645,7 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(ch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
                             num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
                             trovato = TRUE;
                         }
@@ -2690,7 +2698,9 @@ ACTION_FUNC(do_achievements)
                 }
 
                 if(IS_POLY(tch))
+                {
                     tch = tch->desc->original;
+                }
 
                 if(*arg3)
                 {
