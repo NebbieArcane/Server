@@ -2250,7 +2250,20 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
                         strcat(tbuf,"[");
                     }
 
-
+                    if((i = _affected_by_s(ch, SPELL_POLY_SELF)) != -1)
+                    {
+                        strcat(tbuf, (i > 1) ? "$c0013P$c0007" : "$c0005p$c0007");
+                    }
+                    else if(s_flag) {
+                        strcat(tbuf, "-");
+                    }
+                    if((i = _affected_by_s(ch, SPELL_CHANGE_FORM)) != -1)
+                    {
+                        strcat(tbuf, (i > 1) ? "$c0010P$c0007" : "$c0002p$c0007");
+                    }
+                    else if(s_flag) {
+                        strcat(tbuf, "-");
+                    }
 					if((i = _affected_by_s(ch, SPELL_FIRESHIELD)) != -1) {
 						strcat(tbuf, (i > 1) ? "$c0009F$c0007" : "$c0001f$c0007");
 					}

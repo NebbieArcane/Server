@@ -148,25 +148,37 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         }
     }
     
-    for(af = giver->affected; af; af = af->next) {
-        if(!affected_by_spell(taker,af->type)) {
-            
-            af2.type      = af->type;
-            af2.duration  = af->duration;
-            af2.modifier  = af->modifier;
-            af2.location  = af->location;
-            af2.bitvector = af->bitvector;
-            
-            affect_to_char(taker, &af2);
-        }
-        
-        if(af->type == STATUS_QUEST) {
-            taker->specials.quest_ref = giver->specials.quest_ref;
-            if(giver->specials.quest_ref) {
-                (giver->specials.quest_ref)->specials.quest_ref = taker;
+    for(af = giver->affected; af; af = af->next)
+    {
+        if(IS_NPC(giver) && af->type == SPELL_POLY_SELF)
+        {
+            if(affected_by_spell(taker,af->type))
+            {
+                affect_from_char(taker, af->type);
             }
         }
-        
+        else
+        {
+            if(!affected_by_spell(taker,af->type))
+            {
+                af2.type      = af->type;
+                af2.duration  = af->duration;
+                af2.modifier  = af->modifier;
+                af2.location  = af->location;
+                af2.bitvector = af->bitvector;
+
+                affect_to_char(taker, &af2);
+            }
+
+            if(af->type == STATUS_QUEST)
+            {
+                taker->specials.quest_ref = giver->specials.quest_ref;
+                if(giver->specials.quest_ref)
+                {
+                    (giver->specials.quest_ref)->specials.quest_ref = taker;
+                }
+            }
+        }
     }
 
     if(giver->lastpkill != NULL) {
@@ -214,16 +226,12 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 	 *  taker
 	 */
 
-	for(j = 0; j< MAX_WEAR; j++) {
-		if(giver->equipment[j]) {
+	for(j = 0; j< MAX_WEAR; j++)
+    {
+		if(giver->equipment[j])
+        {
 			obj = unequip_char(giver, j);
-			/* ALAR */
-			if(IsHumanoid(taker)) {
-				equip_char(taker,obj,j);
-			}
-			else {
-				obj_to_char(obj, taker);
-			}
+            obj_to_char(obj, taker);
 		}
 	}
 
@@ -232,6 +240,10 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 		obj_from_char(obj);
 		obj_to_char(obj, taker);
 	}
+
+    // rune
+
+    GET_RUNEDEI(taker) = GET_RUNEDEI(giver);
 
 	/*
 	 *    gold...
@@ -251,6 +263,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 
 	GET_MANA(taker) = GET_MANA(giver);
 	alter_mana(taker,0);
+    affect_total(taker);
 
 }
 
