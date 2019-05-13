@@ -5633,7 +5633,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "Cosa ho combinato? Scusa, non volevo!",                1,
             "Non vorrei essere nei tuoi panni!",                    50,
             "Conosci la fiaba del principe ranocchio?",             300,
-            "Vorresti essere qualcun'altro, vero?",                 1000,
+            "Vorresti essere qualcun altro, vero?",                 1000,
             "Maestro Manipolatore",                                 10000,
             "", /* lvl6 */                                          0, //   lvl6_val
             "", /* lvl7 */                                          0, //   lvl7_val

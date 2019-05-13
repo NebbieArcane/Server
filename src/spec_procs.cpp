@@ -265,7 +265,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 					}
 				}
 				else {
-					send_to_char("Non posso allenarti, devi cercare qualcun'altro.\n\r",
+					send_to_char("Non posso allenarti, devi cercare qualcun altro.\n\r",
 								 ch);
 				}
 			}
@@ -283,7 +283,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 					}
 				}
 				else {
-					send_to_char("Non posso allenarti, devi cercare qualcun'altro.\n\r",
+					send_to_char("Non posso allenarti, devi cercare qualcun altro.\n\r",
 								 ch);
 				}
 			}

@@ -7675,7 +7675,7 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 				}
 			}
 			else {
-				send_to_char("Non posso allenarti, prova da qualcun'altro.\n\r",ch);
+				send_to_char("Non posso allenarti, prova da qualcun altro.\n\r",ch);
 			}
 			return(TRUE);
 		}

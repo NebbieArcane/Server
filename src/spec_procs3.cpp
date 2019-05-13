@@ -5648,7 +5648,7 @@ MOBSPECIAL_FUNC(MobCaccia) {
             }
         }
     } else {
-        send_to_char("\n\r$c0014Qualcun'altro compie il tuo dovere e finisci senza paga.$c0007\n\r", t);
+        send_to_char("\n\r$c0014Qualcun altro compie il tuo dovere e finisci senza paga.$c0007\n\r", t);
         affect_from_char(t, STATUS_QUEST);
         SpellWearOff(STATUS_QUEST, t);
         return FALSE;
