@@ -62,21 +62,21 @@ char DestroyedItems;  /* set in MakeScraps */
 
 /* Weapon attack texts */
 struct attack_hit_type attack_hit_text[] = {
-	{"colpisci",    "colpisce"},            /* TYPE_HIT      */
-	{"randelli",  "randella"},          /* TYPE_BLUDGEON */
-	{"perfori", "perfora"},         /* TYPE_PIERCE   */
-	{"fendi",  "fende"},         /* TYPE_SLASH    */
-	{"frusti",   "frusta"},           /* TYPE_WHIP     */
-	{"artigli",   "artiglia"},           /* TYPE_CLAW     */
-	{"mordi",   "morde"},           /* TYPE_BITE     */
-	{"pungi",  "punge"},          /* TYPE_STING    */
-	{"frantumi",  "frantuma"},         /* TYPE_CRUSH    */
-	{"fendi", "fende"},
-	{"pugnali",   "pugnala"},
-	{"distruggi",  "distrugge"},
-	{"impatti",  "impatta"},
-	{"fracassi",  "fracassa"},
-	{"centri","centra"}                /* type RANGE_WEAPON */
+	{"colpisci",    "colpisce"  },          /*  TYPE_HIT            */
+	{"randelli",    "randella"  },          /*  TYPE_BLUDGEON       */
+	{"perfori",     "perfora"   },          /*  TYPE_PIERCE         */
+	{"tagli",       "taglia"    },          /*  TYPE_SLASH          */
+	{"frusti",      "frusta"    },          /*  TYPE_WHIP           */
+	{"artigli",     "artiglia"  },          /*  TYPE_CLAW           */
+	{"mordi",       "morde"     },          /*  TYPE_BITE           */
+	{"pungi",       "punge"     },          /*  TYPE_STING          */
+	{"frantumi",    "frantuma"  },          /*  TYPE_CRUSH          */
+	{"fendi",       "fende"     },          /*  TYPE_CLEAVE         */
+	{"pugnali",     "pugnala"   },          /*  TYPE_STAB           */
+	{"distruggi",   "distrugge" },          /*  TYPE_SMASH          */
+	{"impatti",     "impatta"   },          /*  TYPE_SMITE          */
+	{"fracassi",    "fracassa"  },          /*  TYPE_BLAST          */
+	{"centri",      "centra"    }           /*  type RANGE_WEAPON   */
 };
 
 /* Location of attack texts */
@@ -86,24 +86,24 @@ struct attack_hit_type attack_hit_text[] = {
    Gaia 7/2000 */
 
 struct attack_hit_type location_hit_text[] = {
-	{"sul corpo"," sul corpo",},                /* 0 */
-	{"sulle spalle","sulle spalle",},        /* 1 */
-	{"in petto","in petto",},              /* 2 */
-	{"sul collo",      "sul collo"},           /* 3 */
-	{"sul collo",      "sul collo"},           /* 4 */
-	{"sul corpo",     "sul corpo"},            /* 5 */
-	{"alla testa",      "alla testa"},           /* 6 */
-	{"alla gamba",  "alla gamba"},                 /* 7 */
-	{"sul piede","sul piede"},                 /* 8 */
-	{"sulla mano sinistra", "sulla mano sinistra"},      /* 9 */
-	{"sul braccio destro", "sul braccio destro"},      /* 10 */
-	{"sul braccio sinistro",  "sul braccio sinistro"},       /* 11 */
-	{"dietro la schiena",      "dietro la schiena"},           /* 12 */
-	{"nello stomaco",   "nello stomaco"},        /* 13 */
-	{"sul polso sinistro",  "sul polso sinistro"},   /* 14 */
-	{"sul polso destro", "sul polso destro"},  /* 15 */
-	{"sulla mano destra", "sulla mano destra"},    /* 16 */
-	{"sulla mano sinistra","sulla mano sinistra"}        /* 17 */
+	{"sul corpo",               "sul corpo"             },  /* 0 */
+	{"sulle spalle",            "sulle spalle"          },  /* 1 */
+	{"in petto",                "in petto"              },  /* 2 */
+	{"sul collo",               "sul collo"             },  /* 3 */
+	{"sul collo",               "sul collo"             },  /* 4 */
+	{"sul corpo",               "sul corpo"             },  /* 5 */
+	{"alla testa",              "alla testa"            },  /* 6 */
+	{"alla gamba",              "alla gamba"            },  /* 7 */
+	{"sul piede",               "sul piede"             },  /* 8 */
+	{"sulla mano sinistra",     "sulla mano sinistra"   },  /* 9 */
+	{"sul braccio destro",      "sul braccio destro"    },  /* 10 */
+	{"sul braccio sinistro",    "sul braccio sinistro"  },  /* 11 */
+	{"dietro la schiena",       "dietro la schiena"     },  /* 12 */
+	{"nello stomaco",           "nello stomaco"         },  /* 13 */
+	{"sul polso sinistro",      "sul polso sinistro"    },  /* 14 */
+	{"sul polso destro",        "sul polso destro"      },  /* 15 */
+	{"sulla mano destra",       "sulla mano destra"     },  /* 16 */
+	{"sulla mano sinistra",     "sulla mano sinistra"   }   /* 17 */
 };
 
 /* Questa routine viene tolta dal damage message
@@ -1211,7 +1211,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			//if (IS_PRINCE(ch))
 			//  loss=50000000;
 			if(loss>20000000) {
-				loss=20000000;    // Capapggio della hole per tutti a 20MXp
+				loss=20000000;    // Cappaggio della hole per tutti a 20MXp
 			}
 			gain_exp(ch,-loss);
 			mudlog(LOG_PLAYERS,"%s ha perso %d(%d) xp",GET_NAME(ch),loss,oldloss);
@@ -1227,7 +1227,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 		for(i=0; i<MAX_CLASS; i++) {
 			if(GET_LEVEL(ch,i) > 1) {
 				if(GET_EXP(ch) < (titles[i][(int)GET_LEVEL(ch, i) ].exp / fraction)) {
-					send_to_char("\n\r\n\rATTENZIONE! ATTENZIONE! ATTENZIONE! ATTENZIONE!\n\r",
+					send_to_char("\n\r\n\r$c5009ATTENZIONE! ATTENZIONE! ATTENZIONE! ATTENZIONE!\n\r",
 								 ch);
 					send_to_char("La tua prossima morte ti costera' la perdita di un livello,\n\r",
 								 ch);
@@ -1719,85 +1719,85 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	} dam_weapons[] = {
 
 		{
-			"$n manca $N.",                           /*    0    */
+			"$n manca $N.",                                 /*     0    */
 			"manchi $N.",
 			"$n ti manca."
 		},
 
 		{
-			"$n #W $N #l graffiandol$B.",                       /*  1.. 2  */
+			"$n #W $N #l graffiandol$B.",                   /*  1..  2  */
 			"#w $N #l graffiandol$B.",
 			"$n ti #W #L graffiandoti."
 		},
 
 		{
-			"$n #W appena $N #l.",                                   /*  3.. 4  */
+			"$n #W appena $N #l.",                          /*  3..  4  */
 			"#w appena $N #l.",
 			"$n ti #W appena #L."
 		},
 
 		{
-			"$n #W $N #l.",                                          /*  5.. 10   */
+			"$n #W $N #l.",                                 /*  5.. 10  */
 			"#w $N #l.",
 			"$n ti #W #L."
 		},
 
 		{
-			"$n #W $N duramente #l.",                                     /*  11..15 */
+			"$n #W $N duramente #l.",                       /* 11.. 15  */
 			"#w $N duramente #l.",
 			"$n ti #W duramente #L."
 		},
 
 		{
-			"$n #W $N molto duramente #l.",                                /* 16..25  */
+			"$n #W $N molto duramente #l.",                 /* 16.. 25  */
 			"#w $N molto duramente #l.",
 			"$n ti #W molto duramente #L."
 		},
 
 		{
-			"$n #W $N con estrema forza #l.",                          /* 26..35  */
+			"$n #W $N con estrema forza #l.",               /* 26.. 35  */
 			"#w $N con estrema forza #l.",
 			"$n ti #W con estrema forza #L."
 		},
 
 		{
-			"$n #W $N #l $c0011massacrandol$B$c0007!",     /* 36..45    */
+			"$n #W $N #l $c0011massacrandol$B$c0007!",      /* 36.. 45  */
 			"#w $N #l $c0010massacrandol$B$c0007!",
 			"$n ti #W #L $c0009massacrandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011devastandol$B$c0007!",    /* 46..55 */
+			"$n #W $N #l $c0011devastandol$B$c0007!",       /* 46.. 55  */
 			"#w $N #l $c0010devastandol$B$c0007!",
 			"$n ti #W #L $c0009devastandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011sbaragliandol$B$c0007!",    /* 56..65 */
+			"$n #W $N #l $c0011sbaragliandol$B$c0007!",     /* 56.. 65  */
 			"#w $N #l $c0010sbaragliandol$B$c0007!",
 			"$n ti #W #L $c0009sbaragliandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011polverizzandol$B$c0007!",    /* 66..75 */
+			"$n #W $N #l $c0011polverizzandol$B$c0007!",    /* 66.. 75  */
 			"#w $N #l $c0010polverizzandol$B$c0007!",
 			"$n ti #W #L $c0009polverizzandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011sbriciolandol$B$c0007!",    /* 76..85 */
+			"$n #W $N #l $c0011sbriciolandol$B$c0007!",     /* 76.. 85  */
 			"#w $N #l $c0010sbriciolandol$B$c0007!",
 			"$n ti #W #L $c0009sbriciolandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011annientandol$B$c0007!",    /* 86..95 */
+			"$n #W $N #l $c0011annientandol$B$c0007!",      /* 86.. 95  */
 			"#w $N #l $c0010annientandol$B$c0007!",
 			"$n ti #W #L $c0009annientandoti$c0007!"
 		},
 
 		{
-			"$n #W $N #l $c0011sterminandol$B$c0007!",    /* > 95 */
+			"$n #W $N #l $c0011sterminandol$B$c0007!",      /* > 95     */
 			"#w $N #l $c0010sterminandol$B$c0007!",
 			"$n ti #W #L $c0009sterminandoti$c0007!"
 		}
