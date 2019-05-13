@@ -5374,6 +5374,8 @@ MOBSPECIAL_FUNC(fighter) {
 #define NTMSGATE   13413
 #define NTMWGATE   13423
 
+#define NTKEY      13401
+
 #define NTMWMORN    0
 #define NTMSTARTM   1
 #define NTMGOALNM   2
@@ -5393,6 +5395,9 @@ MOBSPECIAL_FUNC(fighter) {
 
 MOBSPECIAL_FUNC(NewThalosMayor)
 {
+    struct obj_data* nt_key;
+    int nt_vnum = 0;
+
 	if(cmd || !AWAKE(ch))
     {
 		return(FALSE);
@@ -5404,7 +5409,6 @@ MOBSPECIAL_FUNC(NewThalosMayor)
 	}
 	else
     {
-        mudlog(LOG_PLAYERS, "la generic di %s e' %d", GET_NAME(ch), ch->generic);
 		switch(ch->generic)
         {
                 /* state info */
@@ -5426,143 +5430,207 @@ MOBSPECIAL_FUNC(NewThalosMayor)
                 break;
 
             case NTMGOALNM:
-                { /* north gate */
-                    if(ch->in_room != NTMNGATE)
+            { /* north gate */
+                if(ch->in_room != NTMNGATE)
+                {
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMNGATE, -2000);
+                    if(ch->in_room == 13400)
                     {
-                        int dir;
-                        dir = choose_exit_global(ch->in_room, NTMNGATE, -2000);
-                        if(dir < 0)
-                        {
-                            ch->generic = NTM_FIX;
-                            return(FALSE);
-                        }
-                        else
-                        {
-                            mudlog(LOG_PLAYERS, "il califfo da %d va verso %d", ch->in_room, dir);
-                            go_direction(ch, dir);
-                        }
+                        dir = 0;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
                     }
                     else
                     {
-                        /*
-                         * unlock and open door.
-                         */
-                        do_unlock(ch, " porta", 0);
-                        do_open(ch, " porta", 0);
-                        do_say(ch, "Bene, ora devo aprire la porta Orientale!", 0);
-                        for(int i = 0; i < 6; i++)
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13400 && ch->in_room != NTMNGATE)
                         {
-                            go_direction(ch, 2);
+                            do_say(ch, "La porta Settentrionale, devo aprire la porta Settentrionale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13400);
+                            act("$n arriva a grande velocita' da sud.", FALSE, ch, 0, 0, TO_ROOM);
                         }
-                        ch->generic = NTMGOALEM;
                     }
-                    return(FALSE);
                 }
+                else
+                {
+                    /*
+                     * unlock and open door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_unlock(ch, " porta", 0);
+                    do_open(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene, ora devo aprire la porta Orientale!", 0);
+                    ch->generic = NTMGOALEM;
+                }
+                return(FALSE);
+            }
                 break;
 
             case NTMGOALEM:
+            {
+                if(ch->in_room != NTMEGATE)
                 {
-                    if(ch->in_room != NTMEGATE)
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMEGATE, -2000);
+                    if(ch->in_room == 13396)
                     {
-                        int dir;
-                        dir = choose_exit_global(ch->in_room, NTMEGATE, -2000);
-                        if(dir < 0)
-                        {
-                            ch->generic = NTM_FIX;
-                            return(FALSE);
-                        }
-                        else
-                        {
-                            mudlog(LOG_PLAYERS, "il califfo da %d va verso %d", ch->in_room, dir);
-                            go_direction(ch, dir);
-                        }
+                        dir = 1;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
                     }
                     else
                     {
-                        /*
-                         * unlock and open door.
-                         */
-                        do_unlock(ch, " porta", 0);
-                        do_open(ch, " porta", 0);
-                        do_say(ch, "Bene, ora devo aprire la porta Meridionale!", 0);
-                        for(int i = 0; i < 6; i++)
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13396 && ch->in_room != NTMEGATE)
                         {
-                            go_direction(ch, 3);
+                            do_say(ch, "La porta Orientale, devo aprire la porta Orientale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13396);
+                            act("$n arriva a grande velocita' da ovest.", FALSE, ch, 0, 0, TO_ROOM);
                         }
-                        ch->generic = NTMGOALSM;
                     }
-                    return(FALSE);
                 }
+                else
+                {
+                    /*
+                     * unlock and open door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_unlock(ch, " porta", 0);
+                    do_open(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene, ora devo aprire la porta Meridionale!", 0);
+                    ch->generic = NTMGOALSM;
+                }
+                return(FALSE);
+            }
                 break;
 
             case NTMGOALSM:
+            {
+                if(ch->in_room != NTMSGATE)
                 {
-                    if(ch->in_room != NTMSGATE)
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMSGATE, -2000);
+                    if(ch->in_room == 13412)
                     {
-                        int dir;
-                        dir = choose_exit_global(ch->in_room, NTMSGATE, -2000);
-                        if(dir < 0)
-                        {
-                            ch->generic = NTM_FIX;
-                            return(FALSE);
-                        }
-                        else
-                        {
-                            mudlog(LOG_PLAYERS, "il califfo da %d va verso %d", ch->in_room, dir);
-                            go_direction(ch, dir);
-                        }
+                        dir = 2;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
                     }
                     else
                     {
-                        /*
-                         * unlock and open door.
-                         */
-                        do_unlock(ch, " porta", 0);
-                        do_open(ch, " porta", 0);
-                        do_say(ch, "Bene, ora devo aprire la porta Occidentale!", 0);
-                        for(int i = 0; i < 6; i++)
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13412 && ch->in_room != NTMSGATE)
                         {
-                            go_direction(ch, 0);
+                            do_say(ch, "La porta Meridionale, devo aprire la porta Meridionale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13412);
+                            act("$n arriva a grande velocita' da nord.", FALSE, ch, 0, 0, TO_ROOM);
                         }
-                        ch->generic = NTMGOALWM;
                     }
-                    return(FALSE);
                 }
+                else
+                {
+                    /*
+                     * unlock and open door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_unlock(ch, " porta", 0);
+                    do_open(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene, ora devo aprire la porta Occidentale!", 0);
+                    ch->generic = NTMGOALWM;
+                }
+                return(FALSE);
+            }
                 break;
 
             case NTMGOALWM:
+            {
+                if(ch->in_room != NTMWGATE)
                 {
-                    if(ch->in_room != NTMWGATE)
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMWGATE, -2000);
+                    if(ch->in_room == 13437)
                     {
-                        int dir;
-                        dir = choose_exit_global(ch->in_room, NTMWGATE, -2000);
-                        if(dir < 0)
-                        {
-                            ch->generic = NTM_FIX;
-                            return(FALSE);
-                        }
-                        else
-                        {
-                            mudlog(LOG_PLAYERS, "il califfo da %d va verso %d", ch->in_room, dir);
-                            go_direction(ch, dir);
-                        }
+                        dir = 3;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
                     }
                     else
                     {
-                        /*
-                         * unlock and open door.
-                         */
-                        do_unlock(ch, " porta", 0);
-                        do_open(ch, " porta", 0);
-                        do_say(ch, "Si e' fatto tardi, ho un appuntamento in ufficio!", 0);
-                        for(int i = 0; i < 6; i++)
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13437 && ch->in_room != NTMWGATE)
                         {
-                            go_direction(ch, 1);
+                            do_say(ch, "La porta Occidentale, devo aprire la porta Occidentale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13437);
+                            act("$n arriva a grande velocita' da est.", FALSE, ch, 0, 0, TO_ROOM);
                         }
-                        ch->generic = NTMGOALOM;
                     }
-                    return(FALSE);
                 }
+                else
+                {
+                    /*
+                     * unlock and open door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_unlock(ch, " porta", 0);
+                    do_open(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Si e' fatto tardi, ho un appuntamento in ufficio!", 0);
+                    ch->generic = NTMGOALOM;
+                }
+                return(FALSE);
+            }
                 break;
 
             case NTMGOALOM:
@@ -5578,8 +5646,15 @@ MOBSPECIAL_FUNC(NewThalosMayor)
                     }
                     else
                     {
-                        mudlog(LOG_PLAYERS, "il califfo da %d va verso %d", ch->in_room, dir);
                         go_direction(ch, dir);
+                        if(ch->in_room != 13408 && ch->in_room != NTMOFFICE)
+                        {
+                            do_say(ch, "Largo largo, devo tornare in ufficio!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13408);
+                            act("$n arriva a grande velocita' da ovest.", FALSE, ch, 0, 0, TO_ROOM);
+                        }
                     }
                 }
                 else
@@ -5589,8 +5664,10 @@ MOBSPECIAL_FUNC(NewThalosMayor)
                 return(FALSE);
             }
                 break;
-		case NTMWNIGHT:  /* go back to wait for 7pm */
-			if(time_info.hours == 19) {
+
+            case NTMWNIGHT:  /* go back to wait for 7pm */
+			if(time_info.hours == 19)
+            {
                 if(ch->in_room != NTMOFFICE)
                 {
                     do_say(ch, "Devo correre in ufficio!", 0);
@@ -5602,158 +5679,266 @@ MOBSPECIAL_FUNC(NewThalosMayor)
 				ch->generic = NTMGOALNN;
                 return(FALSE);
             }
-            break;
-		case NTMGOALNN: { /* north gate */
-			if(ch->in_room != NTMNGATE) {
-				int        dir;
-				dir = choose_exit_global(ch->in_room, NTMNGATE, -2000);
-				if(dir<0) {
-					ch->generic = NTM_FIX;
-					return(FALSE);
-				}
-				else {
-                    mudlog(LOG_PLAYERS, "il califfo va verso %d", dir);
-					go_direction(ch, dir);
-				}
-			}
-			else {
-				/*
-				 * close and lock door.
-				 */
-				do_close(ch, " porta", 0);
-                do_lock(ch, " porta", 0);
-                do_say(ch, "Bene, ora devo chiudere la porta Orientale!", 0);
-                for(int i = 0; i < 6; i++)
+                break;
+
+            case NTMGOALNN:
+            { /* north gate */
+                if(ch->in_room != NTMNGATE)
                 {
-                    go_direction(ch, 2);
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMNGATE, -2000);
+                    if(ch->in_room == 13400)
+                    {
+                        dir = 0;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
+                    }
+                    else
+                    {
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13400 && ch->in_room != NTMNGATE)
+                        {
+                            do_say(ch, "La porta Settentrionale, devo chiudere la porta Settentrionale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13400);
+                            act("$n arriva a grande velocita' da sud.", FALSE, ch, 0, 0, TO_ROOM);
+                        }
+                    }
                 }
-				ch->generic = NTMGOALEN;
-			}
-			return(FALSE);
-			break;
-		}
-		case NTMGOALEN:       {
-			if(ch->in_room != NTMEGATE) {
-				int        dir;
-				dir = choose_exit_global(ch->in_room, NTMEGATE, -2000);
-				if(dir<0) {
-					ch->generic = NTM_FIX;
-					return(FALSE);
-				}
-				else {
-                    mudlog(LOG_PLAYERS, "il califfo va verso %d", dir);
-					go_direction(ch, dir);
-				}
-			}
-			else {
+                else
+                {
+                    /*
+                     * close and lock door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_close(ch, " porta", 0);
+                    do_lock(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene, ora devo chiudere la porta Orientale!", 0);
+                    ch->generic = NTMGOALEN;
+                }
+                return(FALSE);
+            }
+                break;
+
+            case NTMGOALEN:
+            {
+                if(ch->in_room != NTMEGATE)
+                {
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMEGATE, -2000);
+                    if(ch->in_room == 13396)
+                    {
+                        dir = 1;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
+                    }
+                    else
+                    {
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13396 && ch->in_room != NTMEGATE)
+                        {
+                            do_say(ch, "La porta Orientale, devo chiudere la porta Orientale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13396);
+                            act("$n arriva a grande velocita' da est.", FALSE, ch, 0, 0, TO_ROOM);
+                        }
+                    }
+                }
+                else
+                {
+                    /*
+                     * close and lock door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_close(ch, " porta", 0);
+                    do_lock(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene, ora devo chiudere la porta Meridionale!", 0);
+                    ch->generic = NTMGOALSN;
+                }
+                return(FALSE);
+            }
+                break;
+                
+            case NTMGOALSN:
+            {
+                if(ch->in_room != NTMSGATE)
+                {
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMSGATE, -2000);
+                    if(ch->in_room == 13412)
+                    {
+                        dir = 2;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
+                    }
+                    else
+                    {
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13412 && ch->in_room != NTMSGATE)
+                        {
+                            do_say(ch, "La porta Meridionale, devo chiudere la porta Meridionale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13412);
+                            act("$n arriva a grande velocita' da nord.", FALSE, ch, 0, 0, TO_ROOM);
+                        }
+                    }
+                }
+                else
+                {
+                    /*
+                     * close and lock door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_close(ch, " porta", 0);
+                    do_lock(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene, ora devo chiudere la porta Occidentale!", 0);
+                    ch->generic = NTMGOALWN;
+                }
+                return(FALSE);
+            }
+                break;
+
+            case NTMGOALWN:
+            {
+                if(ch->in_room != NTMWGATE)
+                {
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMWGATE, -2000);
+                    if(ch->in_room == 13437)
+                    {
+                        dir = 3;
+                    }
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
+                    }
+                    else
+                    {
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13437 && ch->in_room != NTMWGATE)
+                        {
+                            do_say(ch, "La porta Occidentale, devo chiudere la porta Occidentale!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13437);
+                            act("$n arriva a grande velocita' da est.", FALSE, ch, 0, 0, TO_ROOM);
+                        }
+                    }
+                }
+                else
+                {
+                    /*
+                     * close and lock door.
+                     */
+                    do_remove(ch, " catenina", 0);
+                    nt_key = get_obj_in_list_vis(ch, "catenina", ch->carrying);
+                    if(!nt_key)
+                    {
+                        nt_vnum = real_object(NTKEY);
+                        nt_key = read_object(nt_vnum, REAL);
+                        obj_to_char(nt_key, ch);
+                    }
+                    do_close(ch, " porta", 0);
+                    do_lock(ch, " porta", 0);
+                    do_wear(ch, " catenina", 0);
+                    do_say(ch, "Bene bene, posso tornare in ufficio!", 0);
+                    ch->generic = NTMGOALON;
+                }
+                return(FALSE);
+            }
+                break;
+
+            case NTMGOALON:
+            {
+                if(ch->in_room != NTMOFFICE)
+                {
+                    int dir;
+                    dir = choose_exit_global(ch->in_room, NTMOFFICE, -2000);
+                    if(dir < 0)
+                    {
+                        ch->generic = NTM_FIX;
+                        return(FALSE);
+                    }
+                    else
+                    {
+                        go_direction(ch, dir);
+                        if(ch->in_room != 13408 && ch->in_room != NTMOFFICE)
+                        {
+                            do_say(ch, "Largo largo, devo tornare in ufficio!", 0);
+                            act("$n scompare tra la folla.", FALSE, ch, 0, 0, TO_ROOM);
+                            char_from_room(ch);
+                            char_to_room(ch, 13408);
+                            act("$n arriva a grande velocita' da ovest.", FALSE, ch, 0, 0, TO_ROOM);
+                        }
+                    }
+                }
+                else
+                {
+                    ch->generic = NTMWMORN;
+                }
+                return(FALSE);
+            }
+                break;
+
+            case NTM_FIX:
+            {
                 /*
-                 * close and lock door.
+                 * move to correct spot (office)
                  */
-                do_close(ch, " porta", 0);
-                do_lock(ch, " porta", 0);
-                do_say(ch, "Bene, ora devo chiudere la porta Meridionale!", 0);
-                for(int i = 0; i < 6; i++)
-                {
-                    go_direction(ch, 3);
-                }
-				ch->generic = NTMGOALSN;
-			}
-			return(FALSE);
-		}
-		case NTMGOALSN:       {
-			if(ch->in_room != NTMSGATE) {
-				int        dir;
-				dir = choose_exit_global(ch->in_room, NTMSGATE, -2000);
-				if(dir<0) {
-					ch->generic = NTM_FIX;
-					return(FALSE);
-				}
-				else {
-                    mudlog(LOG_PLAYERS, "il califfo va verso %d", dir);
-					go_direction(ch, dir);
-				}
-			}
-			else {
-                /*
-                 * close and lock door.
-                 */
-                do_close(ch, " porta", 0);
-                do_lock(ch, " porta", 0);
-                do_say(ch, "Bene, ora devo chiudere la porta Occidentale!", 0);
-                for(int i = 0; i < 6; i++)
-                {
-                    go_direction(ch, 0);
-                }
-				ch->generic = NTMGOALWN;
-			}
-			return(FALSE);
-		}
-		case NTMGOALWN:       {
-			if(ch->in_room != NTMWGATE) {
-				int        dir;
-				dir = choose_exit_global(ch->in_room, NTMWGATE, -2000);
-				if(dir<0) {
-					ch->generic = NTM_FIX;
-					return(FALSE);
-				}
-				else {
-                    mudlog(LOG_PLAYERS, "il califfo va verso %d", dir);
-					go_direction(ch, dir);
-				}
-			}
-			else {
-                /*
-                 * close and lock door.
-                 */
-                do_close(ch, " porta", 0);
-                do_lock(ch, " porta", 0);
-                do_say(ch, "Bene bene, posso tornare in ufficio!", 0);
-                for(int i = 0; i < 6; i++)
-                {
-                    go_direction(ch, 3);
-                }
-				ch->generic = NTMGOALOM;
-			}
-			return(FALSE);
-		}
-		case NTMGOALON:      {
-			if(ch->in_room != NTMOFFICE) {
-				int        dir;
-				dir = choose_exit_global(ch->in_room, NTMOFFICE, -2000);
-				if(dir<0) {
-					ch->generic = NTM_FIX;
-					return(FALSE);
-				}
-				else {
-                    mudlog(LOG_PLAYERS, "il califfo va verso %d", dir);
-					go_direction(ch, dir);
-				}
-			}
-			else {
-				ch->generic = NTMWMORN;
-			}
-			return(FALSE);
-			break;
-		}
-		case NTM_FIX: {
-			/*
-			 * move to correct spot (office)
-			 */
-			do_say(ch, "Woah! Cosa ci faccio qui!", 0);
-            act("$n scompare all'improvviso!", FALSE, ch, 0, 0, TO_ROOM);
-			char_from_room(ch);
-			char_to_room(ch, NTMOFFICE);
-            do_say(ch, "Dove ho messo la chiave?!?", 0);
-            do_action(ch, "grin", 0);
-			ch->generic = NTMWMORN;
-			return(FALSE);
-			break;
-		}
-		default: {
-			ch->generic = NTM_FIX;
-			return(FALSE);
-			break;
-		}
+                do_say(ch, "Woah! Cosa ci faccio qui!", 0);
+                act("$n scompare all'improvviso!", FALSE, ch, 0, 0, TO_ROOM);
+                char_from_room(ch);
+                char_to_room(ch, NTMOFFICE);
+                do_say(ch, "Dove ho messo la chiave?!?", 0);
+                do_action(ch, "grin", 0);
+                ch->generic = NTMWMORN;
+                return(FALSE);
+            }
+                break;
+
+            default:
+            {
+                ch->generic = NTM_FIX;
+                return(FALSE);
+            }
+                break;
 		}
 	}
 	return FALSE;
