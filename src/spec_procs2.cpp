@@ -1276,29 +1276,29 @@ MOBSPECIAL_FUNC(cleric) {
 					alter_mana(ch,0);
 				}
 			}
-			else if(lspell > 12 && (GET_MANA(ch) >= 25 || injuried == ch)) {
+			else if(lspell > 12 && (GET_MANA(ch) >= 11 || injuried == ch)) {
 				act("$n pronuncia le parole, '$c0015Hey! Va decisamente meglio!$c0007'.", 1,
 					ch, 0, 0, TO_ROOM);
 				cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
-					GET_MANA(ch) -= 25;
+					GET_MANA(ch) -= 11;
 					alter_mana(ch,0);
 				}
 			}
-			else if(lspell > 8 && (GET_MANA(ch) >= 20 || injuried == ch)) {
+			else if(lspell > 8 && (GET_MANA(ch) >= 9 || injuried == ch)) {
 				act("$n pronuncia le parole, '$c0015Va molto meglio, ora!$c0007'.", 1, ch,0,0,
 					TO_ROOM);
 				cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
-					GET_MANA(ch) -= 20;
+					GET_MANA(ch) -= 9;
 					alter_mana(ch,0);
 				}
 			}
-			else if(GET_MANA(ch) >= 15 || injuried == ch) {
+			else if(GET_MANA(ch) >= 5 || injuried == ch) {
 				act("$n pronuncia le parole, '$c0015Va meglio!$c0007'.", 1, ch,0,0,TO_ROOM);
 				cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, injuried, 0);
 				if(injuried != ch) {
-					GET_MANA(ch) -= 15;
+					GET_MANA(ch) -= 5;
 					alter_mana(ch,0);
 				}
 			}
@@ -1476,7 +1476,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Tuoni e fulmini!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_call_lightning(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 50;
+				GET_MANA(ch) -= 20;
 				alter_mana(ch,0);
 			}
 			return(TRUE);
@@ -1489,7 +1489,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Moo ha ha!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_cause_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 10;
+				GET_MANA(ch) -= 8;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1499,7 +1499,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Hocus Pocus!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_blindness(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 20;
+				GET_MANA(ch) -= 15;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1507,7 +1507,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Va-Voom!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_dispel_magic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 25;
+				GET_MANA(ch) -= 15;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1515,7 +1515,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Urgle Blurg$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 20;
+				GET_MANA(ch) -= 10;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1524,7 +1524,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Prendi questo!$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_cause_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 30;
+				GET_MANA(ch) -= 11;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1532,7 +1532,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Brucia Baby Brucia$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_flamestrike(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 35;
+				GET_MANA(ch) -= 15;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1544,7 +1544,7 @@ MOBSPECIAL_FUNC(cleric) {
 				act("$n pronuncia le parole, '$c0015Brucia Baby Brucia$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_flamestrike(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 				if(ch->desc) {
-					GET_MANA(ch) -= 35;
+					GET_MANA(ch) -= 15;
 					alter_mana(ch,0);
 				}
 			}
@@ -1553,7 +1553,7 @@ MOBSPECIAL_FUNC(cleric) {
 				act("$n pronuncia le parole, '$c0015Va-Voom!$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_dispel_magic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 				if(ch->desc) {
-					GET_MANA(ch) -= 20;
+					GET_MANA(ch) -= 15;
 					alter_mana(ch,0);
 				}
 			}
@@ -1561,7 +1561,7 @@ MOBSPECIAL_FUNC(cleric) {
 				act("$n pronuncia le parole, '$c0015Prendi questo$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_cause_critic(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL, vict, 0);
 				if(ch->desc) {
-					GET_MANA(ch) -= 30;
+					GET_MANA(ch) -= 11;
 					alter_mana(ch,0);
 				}
 			}
@@ -1574,7 +1574,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 50;
+				GET_MANA(ch) -= 35;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1591,7 +1591,7 @@ MOBSPECIAL_FUNC(cleric) {
 				TO_ROOM);
 			cast_cure_blind(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 30;
+				GET_MANA(ch) -= 5;
 				alter_mana(ch,0);
 			}
 			return(TRUE);
@@ -1601,7 +1601,7 @@ MOBSPECIAL_FUNC(cleric) {
 			act("$n pronuncia le parole, '$c0015Per Xanathon, via questa roba!$c0007'.", 1, ch, 0, 0, TO_ROOM);
 			cast_remove_curse(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 20;
+				GET_MANA(ch) -= 5;
 				alter_mana(ch,0);
 			}
 			return(TRUE);
@@ -1612,7 +1612,7 @@ MOBSPECIAL_FUNC(cleric) {
 				"ora!$c0007'.", 1, ch,0,0,TO_ROOM);
 			cast_remove_poison(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 20;
+				GET_MANA(ch) -= 5;
 				alter_mana(ch,0);
 			}
 			return(TRUE);
@@ -1626,7 +1626,7 @@ MOBSPECIAL_FUNC(cleric) {
 				act("$n pronuncia le parole, '$c0015Abrazak$c0007'.",1,ch,0,0,TO_ROOM);
 				cast_armor(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {
-					GET_MANA(ch) -= 10;
+					GET_MANA(ch) -= 5;
 					alter_mana(ch,0);
 				}
 				break;
@@ -1640,7 +1640,7 @@ MOBSPECIAL_FUNC(cleric) {
 				TO_ROOM);
 			cast_cure_light(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 15;
+				GET_MANA(ch) -= 5;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1653,7 +1653,7 @@ MOBSPECIAL_FUNC(cleric) {
 				0, 0, TO_ROOM);
 			cast_cure_serious(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 20;
+				GET_MANA(ch) -= 9;
 				alter_mana(ch,0);
 			}
 			break;
@@ -1667,7 +1667,7 @@ MOBSPECIAL_FUNC(cleric) {
 				ch, 0, 0, TO_ROOM);
 			cast_cure_critic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			if(ch->desc) {
-				GET_MANA(ch) -= 25;
+				GET_MANA(ch) -= 11;
 				alter_mana(ch,0);
 			}
 			break;

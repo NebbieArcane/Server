@@ -2441,7 +2441,7 @@ ACTION_FUNC(do_achievements)
                 "$c0011$n$c0007 canticchia allegr$b 'In the name of my new Achievemeeent!':",
                 "$c0011$n$c0007 sogghigna mentre ti mostra che",
                 "Inizi a schiumare di rabbia appena $c0011$n$c0007 ti dice che",
-                "Ma davero davero? Nuovo achievement di $c0011$n$c0007? WTF, ",
+                "Ma davero davero? Nuovo achievement di $c0011$n$c0007? WTF,",
                 "$c0011$n$c0007 si muove come $u supercafone mentre esclama che",
                 "Mentre tu stai a rosica' $c0011$n$c0007 urla 'Daje!',",
                 "Fai lo sborone e mostri a tutti che",
