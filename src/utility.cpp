@@ -1562,7 +1562,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->obj_flags.value[1] = 28;   //  heal
                                             obj->obj_flags.value[2] = 28;   //  heal
                                             obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione bianco latte");
+                                            obj->short_description = (char*)strdup("una pozione bianco $c0015latte$c0007");
                                             obj->name = (char*)strdup("pozione bianco latte");
                                         }
                                         break;
@@ -1632,7 +1632,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->obj_flags.value[1] = 100;  //  mana
                                             obj->obj_flags.value[2] = -1;
                                             obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0014azzurra$c0007");
+                                            obj->short_description = (char*)strdup("una pozione $c0012azzurra$c0007");
                                             obj->name = (char*)strdup("pozione azzurra");
                                         }
                                         break;
@@ -1811,7 +1811,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->obj_flags.value[1] = 28;   //  heal
                                             obj->obj_flags.value[2] = 28;   //  heal
                                             obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione bianco latte");
+                                            obj->short_description = (char*)strdup("una pozione bianco $c0015latte$c0007");
                                             obj->name = (char*)strdup("pozione bianco latte");
                                         }
                                         break;
@@ -1881,7 +1881,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->obj_flags.value[1] = 100;  //  mana
                                             obj->obj_flags.value[2] = -1;
                                             obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0014azzurra$c0007");
+                                            obj->short_description = (char*)strdup("una pozione $c0012azzurra$c0007");
                                             obj->name = (char*)strdup("pozione azzurra");
                                         }
                                         break;
