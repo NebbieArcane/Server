@@ -1108,8 +1108,7 @@ void assign_command_pointers() {
 	AddCommand( "spit",                 do_action,          CMD_SPIT,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "squeeze",              do_action,          CMD_SQUEEZE,                POSITION_RESTING,   TUTTI                   );
 	AddCommand( "stare",                do_action,          CMD_STARE,                  POSITION_RESTING,   TUTTI                   );
-    AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  140 */
-    AddCommand( "associate",            do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  140 */
+    AddCommand( "assist",               do_assist,          CMD_ASSIST,                 POSITION_FIGHTING,  1                       );  /*  140 */
 	AddCommand( "thank",                do_action,          CMD_THANK,                  POSITION_RESTING,   TUTTI                   );
 	AddCommand( "twiddle",              do_action,          CMD_TWIDDLE,                POSITION_RESTING,   TUTTI                   );
 	AddCommand( "wave",                 do_action,          CMD_WAVE,                   POSITION_RESTING,   TUTTI                   );
@@ -1207,7 +1206,8 @@ void assign_command_pointers() {
 	AddCommand( "highfive",             do_highfive,        CMD_HIGHFIVE,               POSITION_DEAD,      TUTTI                   );
 	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );
 	AddCommand( "whozone",              do_who,             CMD_WHOZONE,                POSITION_DEAD,      TUTTI                   );
-	AddCommand( "assist",               do_assist,          CMD_ASSIST,                 POSITION_FIGHTING,  1                       );  /*  235 */
+    AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
+    AddCommand( "associate",            do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
 	AddCommand( "attribute",            do_attribute,       CMD_ATTRIBUTE,              POSITION_DEAD,      5                       );
 	AddCommand( "world",                do_world,           CMD_WORLD,                  POSITION_DEAD,      TUTTI                   );
 	AddCommand( "allspells",            do_spells,          CMD_ALLSPELLS,              POSITION_DEAD,      TUTTI                   );

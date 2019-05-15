@@ -149,7 +149,7 @@ namespace Alarmud {
 #define CMD_SPIT                137
 #define CMD_SQUEEZE             138
 #define CMD_STARE               139
-#define CMD_ASSOCIA             140
+#define CMD_ASSIST              140
 #define CMD_THANK               141
 #define CMD_TWIDDLE             142
 #define CMD_WAVE                143
@@ -244,7 +244,7 @@ namespace Alarmud {
 #define CMD_HIGHFIVE            232
 #define CMD_TITLE               233
 #define CMD_WHOZONE             234
-#define CMD_ASSIST              235
+#define CMD_ASSOCIA             235
 #define CMD_ATTRIBUTE           236
 #define CMD_WORLD               237
 #define CMD_ALLSPELLS           238
