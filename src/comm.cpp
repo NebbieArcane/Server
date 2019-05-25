@@ -1469,7 +1469,7 @@ void send_to_all_not_ch(struct char_data* ch, const char* messg) {
 
     if(messg)
         for(i = descriptor_list; i; i = i->next)
-            if(!i->connected || i->character->player.name != ch->player.name)
+            if(!i->connected)
             {
                 if(i->character != ch)
                     SEND_TO_Q(
