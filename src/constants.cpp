@@ -5447,7 +5447,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             CLASS_MAGIC_USER,                                       LEV_BEGINNER,                               5
         },
         {
-            ACHIE_MAGE_2,                                           "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
+            ACHIE_MAGE_2,                                           "raggio disintegrante lanciato",            "raggi disintegranti lanciati",
             "Ops, non volevo",                                      1,
             "Quasi quasi ci prendo gusto",                          50,
             "Sei sicuro di volermi provocare?",                     300,
@@ -5657,7 +5657,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             CLASS_MONK,                                             LEV_BEGINNER,                               5
         },
         {
-            ACHIE_MONK_2,                                           "palmo vibrante",                           "palmo vibrante",
+            ACHIE_MONK_2,                                           "palmo vibrante",                           "palmi vibranti",
             "Volevo solo stringerti la mano!",                      1,
             "Tirami il dito!",                                      50,
             "One Inch Punch",                                       300,
@@ -5741,7 +5741,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             CLASS_SORCERER,                                         LEV_BEGINNER,                               5
         },
         {
-            ACHIE_SORCERER_2,                                       "raggio disintegrante lanciato",            "raggio disintegranti lanciati",
+            ACHIE_SORCERER_2,                                       "raggio disintegrante lanciato",            "raggi disintegranti lanciati",
             "Ops, non volevo",                                      1,
             "Quasi quasi ci prendo gusto",                          50,
             "Sei sicuro di volermi provocare?",                     300,
@@ -5783,7 +5783,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             CLASS_PALADIN,                                          LEV_EASY,                                   5
         },
         {
-            ACHIE_PALADIN_2,                                        "grido di guerra lanciato",                 "grido di guerra lanciati",
+            ACHIE_PALADIN_2,                                        "grido di guerra lanciato",                 "grida di guerra lanciati",
             "Volevo solo chiamarti...",                             1,
             "Posso sussurrarti una cosa all'orecchio?",             50,
             "Huj, Huj, Hajra'",                                     300,
@@ -5811,7 +5811,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             CLASS_PALADIN,                                          LEV_EASY,                                   5
         },
         {
-            ACHIE_RANGER_1,                                         "pelle ottenuta squoiando",                 "pelli ottenute squoiando",
+            ACHIE_RANGER_1,                                         "pelle ottenuta scuoiando",                 "pelli ottenute scuoiando",
             "Povera bestia, mi viene da piangere",                  1,
             "Mi sa che posso farci qualcosa di utile",              50,
             "Dammi una lama e ti concio per le feste!",             300,
@@ -5929,7 +5929,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
         {   //  2
             ACHIE_THION,                                            "Dio delle Ombre ucciso",                   "Thion uccisi",
             "Ma non potevamo farci i fatti nostri?",                1,
-            "The Lord of the Earings",                              10,
+            "The Lord of the Earrings",                             10,
             "Ammazza (che) Dio",                                    100,
             "Lucertole, spettri ed ombre... tutto qui?",            500,
             "Colui che spazza via l'Ombra",                         5000,
@@ -6585,7 +6585,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
         {   //  1
             RACE_HUMAN,                                             "umano ucciso",                             "umani uccisi",
             "Serial Killer",                                        1000,
-            "Omofobico",                                            10000,
+            "Misantropo",                                           10000,
             "L'Apocalisse sono io!",                                300000,
             "", /* lvl4 */                                          0, //   lvl4_val
             "", /* lvl5 */                                          0, //   lvl5_val
