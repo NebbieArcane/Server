@@ -176,6 +176,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
                 if(giver->specials.quest_ref)
                 {
                     (giver->specials.quest_ref)->specials.quest_ref = taker;
+                    giver->specials.quest_ref = NULL;
                 }
             }
         }
