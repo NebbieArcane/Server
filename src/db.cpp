@@ -3223,6 +3223,12 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	 }
 	 }*/
 
+    // rimuovo il realname se presente
+    if(ch->specials.realname) {
+        free(ch->specials.realname);
+        ch->specials.realname = NULL;
+    }
+
 	GET_HIT(ch) = hit;
 	GET_MANA(ch) = mana;
 	GET_MOVE(ch) = move;
