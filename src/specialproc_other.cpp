@@ -21,6 +21,7 @@
 #include "spec_procs3.hpp"
 #include "speciali.hpp"
 #include "lucertole.hpp"
+#include "nilmys.hpp"
 #include "rhyodin.hpp"
 #include "breath.hpp"
 #include "board.hpp"
@@ -228,6 +229,8 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "zombie_master",(genericspecial_func) zombie_master },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
+    //  Quest di Nilmys
+    { "urna_nilmys",(genericspecial_func) urna_nilmys },
 	{ "zFineprocedure", NULL },
 };
 } // namespace Alarmud
