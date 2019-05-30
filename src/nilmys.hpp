@@ -8,6 +8,7 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 OBJSPECIAL_FUNC(urna_nilmys);
+MOBSPECIAL_FUNC(stanislav_spirit);
 } // namespace Alarmud
 #endif // __SPEC_PROCS3_HPP
 

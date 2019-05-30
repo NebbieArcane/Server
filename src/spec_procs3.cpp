@@ -4308,10 +4308,6 @@ MOBSPECIAL_FUNC(banshee_lorelai) {
 	return(banshee(ch,cmd,arg,mob,type));
 
 }
-    
-/* Procedure per Nilmys */
-    
-
 
 /*
 	Diamo un po' di vita ad alcuni mob! Con questa procedura un mob marchiato come "Interact" reagisce a
