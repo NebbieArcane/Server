@@ -7,8 +7,15 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
+    //  oggetti
 OBJSPECIAL_FUNC(urna_nilmys);
+    //  mob
 MOBSPECIAL_FUNC(stanislav_spirit);
+MOBSPECIAL_FUNC(Boris_Ivanhoe);
+    //  stanze
+ROOMSPECIAL_FUNC(portale_ombra);
+    //  altro
+void CheckBorisRoom(struct char_data* boris);
 } // namespace Alarmud
 #endif // __SPEC_PROCS3_HPP
 

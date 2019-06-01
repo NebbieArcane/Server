@@ -15,6 +15,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "specialproc_room.hpp"
+#include "nilmys.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
@@ -38,6 +39,7 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "monk_challenge_prep_room", monk_challenge_prep_room },
 	{ "monk_challenge_room", monk_challenge_room },
 	{ "pet_shops", pet_shops },
+    { "portale_ombra", portale_ombra },
 	{ "pray_for_items", pray_for_items },
 	{ "BlockAlign", BlockAlign },
 	{ "MobKillInRoom", MobKillInRoom },   // SALVO 2006 Quest fisse

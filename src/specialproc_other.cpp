@@ -33,7 +33,6 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "AbyssGateKeeper",(genericspecial_func) AbyssGateKeeper },
 	{ "Ankheg",(genericspecial_func) Ankheg },
 	{ "banshee_lorelai",(genericspecial_func) banshee_lorelai },
-	{ "stanislav_spirit",(genericspecial_func) stanislav_spirit },
 	{ "Beholder",(genericspecial_func) Beholder },
 	{ "BerserkerItem",(genericspecial_func) BerserkerItem },
 	{ "BiosKaiThanatos",(genericspecial_func) BiosKaiThanatos },
@@ -230,7 +229,9 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
     //  Quest di Nilmys
+    { "stanislav_spirit",(genericspecial_func) stanislav_spirit },
     { "urna_nilmys",(genericspecial_func) urna_nilmys },
+    { "Boris_Ivanhoe",(genericspecial_func) Boris_Ivanhoe },
 	{ "zFineprocedure", NULL },
 };
 } // namespace Alarmud

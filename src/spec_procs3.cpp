@@ -3081,13 +3081,12 @@ MOBSPECIAL_FUNC(Psionist) {
 }
 /*-------------------------end Psionist-------------------------*/
 /* church bell for ators zone in town */
-#define PULL        224
 ROOMSPECIAL_FUNC(ChurchBell) {
 	if(type != EVENT_COMMAND) {
 		return FALSE;
 	}
 
-	if(cmd==PULL) {
+	if(cmd==CMD_PULL) {
 		char buf[128];
 		arg=one_argument(arg,buf); /* buf == object */
 
