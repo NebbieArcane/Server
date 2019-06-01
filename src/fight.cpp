@@ -2485,6 +2485,24 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 							SSLF(victim));
 				}
 
+                if(IS_POLY(victim))
+                {
+                    victim->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_DEATH] += 1;
+                    if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                    }
+                }
+                else
+                {
+                    victim->specials.achievements[OTHER_ACHIE][ACHIE_DEATH] += 1;
+                    if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                    {
+                        SET_BIT(victim->specials.act, PLR_ACHIE);
+                    }
+                }
+                CheckAchie(victim, ACHIE_DEATH, OTHER_ACHIE);
+
 				/* global death messages */
 				send_to_all(buf);
 			}
@@ -2500,6 +2518,25 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					if(IS_STEALER(victim)) {
 						REMOVE_BIT(victim->player.user_flags,STOLE_1);
 					}
+
+                    if(IS_POLY(victim))
+                    {
+                        victim->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_DEATH] += 1;
+                        if(!IS_SET(victim->desc->original->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(victim->desc->original->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    else
+                    {
+                        victim->specials.achievements[OTHER_ACHIE][ACHIE_DEATH] += 1;
+                        if(!IS_SET(victim->specials.act,PLR_ACHIE))
+                        {
+                            SET_BIT(victim->specials.act, PLR_ACHIE);
+                        }
+                    }
+                    CheckAchie(victim, ACHIE_DEATH, OTHER_ACHIE);
+
 					sprintf(buf, "%s e' stat%s uccis%s da %s a %s\n\r",
 							GET_NAME(victim), SSLF(victim), SSLF(victim),
 							ch->player.short_descr,
