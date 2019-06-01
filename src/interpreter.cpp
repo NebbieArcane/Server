@@ -2528,6 +2528,10 @@ NANNY_FUNC(con_slct) {
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
         do_save(d->character, "", 0);
 
+    // Quest Achievement
+        CheckQuestFail(d->character);
+        write_char_extra(d->character);
+
 		{
 			struct room_data* rp = real_roomp(d->character->in_room);
 
