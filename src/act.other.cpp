@@ -42,6 +42,7 @@
 #include "maximums.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
+#include "nilmys.hpp"
 #include "opinion.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
@@ -2300,6 +2301,181 @@ ACTION_FUNC(do_use) {
         else
         {
             act("Non hai niente del genere con te! Su cosa vuoi spargere $p?", FALSE, ch, stick, 0, TO_CHAR);
+            return;
+        }
+    }
+    else if((vnum = (stick->item_number >= 0) ? obj_index[stick->item_number].iVNum : 0) == NILMYS_FLASK)
+    {
+        struct obj_data* arkhat_equip;
+        struct char_data* Arkhat;
+        int r_num = 0;
+        
+        arg = one_argument(arg, buf);
+        
+        if(!strcmp("punta", buf))
+        {
+            switch(ch->in_room)
+            {
+                case 9115:
+                {
+                    if(!IS_SET(stick->iGeneric, NILMYS_PORTAL_ONE))
+                    {
+                        act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        stick->iGeneric += NILMYS_PORTAL_ONE;
+                    }
+                    else
+                    {
+                        act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                    }
+                }
+                    break;
+
+                case 9116:
+                {
+                    if(!IS_SET(stick->iGeneric, NILMYS_PORTAL_TWO))
+                    {
+                        act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        stick->iGeneric += NILMYS_PORTAL_TWO;
+                    }
+                    else
+                    {
+                        act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                    }
+                }
+                    break;
+
+                case 9117:
+                {
+                    if(!IS_SET(stick->iGeneric, NILMYS_PORTAL_THREE))
+                    {
+                        act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        stick->iGeneric += NILMYS_PORTAL_THREE;
+                    }
+                    else
+                    {
+                        act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                    }
+                }
+                    break;
+
+                case 9118:
+                {
+                    if(!IS_SET(stick->iGeneric, NILMYS_PORTAL_FOUR))
+                    {
+                        act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        stick->iGeneric += NILMYS_PORTAL_FOUR;
+                    }
+                    else
+                    {
+                        act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                    }
+                }
+                    break;
+
+                case 9119:
+                {
+                    if(!IS_SET(stick->iGeneric, NILMYS_PORTAL_FIVE))
+                    {
+                        act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        stick->iGeneric += NILMYS_PORTAL_FIVE;
+                    }
+                    else
+                    {
+                        act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
+                        act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                    }
+                }
+                    break;
+                    
+                default:
+                    act("Non vedi nessuna punta qui.", FALSE, ch, NULL, NULL, TO_CHAR);
+                    return;
+                    break;
+            }
+
+            if(stick->iGeneric == 31)
+            {
+                send_to_all("\n\r\n\r");
+                send_to_all("$c0008Ho aspettato centinaia di vite mortali per potermi manifestare in questo mondo.$c0007\n\r");
+                send_to_all("$c0008Inutile insetto hai compiuto il tuo ultimo errore.$c0007\n\r");
+                send_to_all("\n\r\n\r");
+                
+                if((Arkhat = read_mobile(real_mobile(ARKHAT_GOD), REAL)))
+                {
+                    char_to_room(Arkhat, ARKHAT_GOD_ROOM);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_NECK_1);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_BODY);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_HEAD);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_FEET);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_ARMS);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_ABOUT);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_BACK);
+                    
+                    r_num = real_object(LOST_SOUL_EQ);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, WEAR_EYES);
+                    
+                    r_num = real_object(NILNYS_VICTORY_KEY);
+                    arkhat_equip = read_object(r_num, REAL);
+                    obj_to_char(arkhat_equip, Arkhat);
+                    obj_from_char(arkhat_equip);
+                    equip_char(Arkhat, arkhat_equip, HOLD);
+                    
+                    send_to_zone("$c0015[$c0013Arkhat$c0007, il Dio Divoratore$c0015] dice '$c0009ORA CHE SONO LIBERO NESSUNO HA PIU' SPERANZA!$c0015'\n\r\n\r", Arkhat);
+                    send_to_zone("$c0015[$c0013Arkhat$c0007, il Dio Divoratore$c0015] dice '$c0009ADESSO MORIRETE!$c0015'\n\r\n\r", Arkhat);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            act("Use is normally only for wand's and staff's.", FALSE, ch, NULL, NULL, TO_CHAR);
             return;
         }
     }

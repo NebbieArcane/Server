@@ -39,7 +39,9 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "monk_challenge_prep_room", monk_challenge_prep_room },
 	{ "monk_challenge_room", monk_challenge_room },
 	{ "pet_shops", pet_shops },
+//  Quest Nilmys
     { "portale_ombra", portale_ombra },
+//  fine Quest Nilmys
 	{ "pray_for_items", pray_for_items },
 	{ "BlockAlign", BlockAlign },
 	{ "MobKillInRoom", MobKillInRoom },   // SALVO 2006 Quest fisse

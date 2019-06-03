@@ -228,10 +228,13 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "zombie_master",(genericspecial_func) zombie_master },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
-    //  Quest di Nilmys
-    { "stanislav_spirit",(genericspecial_func) stanislav_spirit },
+//  Quest Nilmys
+    //  oggetti
     { "urna_nilmys",(genericspecial_func) urna_nilmys },
+    //  mob
     { "Boris_Ivanhoe",(genericspecial_func) Boris_Ivanhoe },
+    { "stanislav_spirit",(genericspecial_func) stanislav_spirit },
+//  fine Quest Nilmys
 	{ "zFineprocedure", NULL },
 };
 } // namespace Alarmud
