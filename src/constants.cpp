@@ -7818,7 +7818,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             GROUP_DARKRACES,                                        "abitante del sottosuolo ucciso",           "abitanti del sottosuolo uccisi",
             "Io porto la luce!",                                    10,
             "Paint it White",                                       100,
-            "Ritorna ell'ombra!",                                   1000,
+            "Ritorna nell'ombra!",                                   1000,
             "", /* lvl4 */                                          0, //   lvl4_val
             "", /* lvl5 */                                          0, //   lvl5_val
             "", /* lvl6 */                                          0, //   lvl6_val
