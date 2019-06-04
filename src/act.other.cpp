@@ -4302,30 +4302,33 @@ ACTION_FUNC(do_insert)
             }
             
         }
-        
-        for(i = 0; i < MAX_OBJ_AFFECT; i++)
+
+        if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
         {
-            if(obj->affected[i].location == APPLY_HITROLL)
+            for(i = 0; i < MAX_OBJ_AFFECT; i++)
             {
-                hitroll += obj->affected[i].modifier;
-                obj->affected[i].location = APPLY_NONE;
-                obj->affected[i].modifier = 0;
-            }
-            else if(obj->affected[i].location == APPLY_DAMROLL)
-            {
-                damroll += obj->affected[i].modifier;
-                obj->affected[i].location = APPLY_NONE;
-                obj->affected[i].modifier = 0;
-            }
-            else if(obj->affected[i].location == APPLY_HITNDAM)
-            {
-                hitroll += obj->affected[i].modifier;
-                damroll += obj->affected[i].modifier;
-                obj->affected[i].location = APPLY_NONE;
-                obj->affected[i].modifier = 0;
+                if(obj->affected[i].location == APPLY_HITROLL)
+                {
+                    hitroll += obj->affected[i].modifier;
+                    obj->affected[i].location = APPLY_NONE;
+                    obj->affected[i].modifier = 0;
+                }
+                else if(obj->affected[i].location == APPLY_DAMROLL)
+                {
+                    damroll += obj->affected[i].modifier;
+                    obj->affected[i].location = APPLY_NONE;
+                    obj->affected[i].modifier = 0;
+                }
+                else if(obj->affected[i].location == APPLY_HITNDAM)
+                {
+                    hitroll += obj->affected[i].modifier;
+                    damroll += obj->affected[i].modifier;
+                    obj->affected[i].location = APPLY_NONE;
+                    obj->affected[i].modifier = 0;
+                }
             }
         }
-        
+
         switch(aff)
         {
             case 0:
