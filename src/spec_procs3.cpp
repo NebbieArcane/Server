@@ -5531,7 +5531,9 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         premio[0] += x*100;
                         premio[1] += x*500;
                     }
-                    
+
+                    ch->specials.eq_val_idx = 0;
+
                     if(premio[0]+premio[1]+premio[2] <= 0) {
                         send_to_char("\n\r$c0011...non vinci un piffero. Cerca di essere piu' veloce e piu' coerente!$c0007\n\r", t);
                         
