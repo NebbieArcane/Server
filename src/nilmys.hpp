@@ -18,12 +18,8 @@ namespace Alarmud {
 #define STANISLAV_ROOM      8957
 #define SHADOWS_PORTAL      8987
 #define BORIS_HOME          9013
-#define NILMYS_PORTAL_ONE   1
-#define NILMYS_PORTAL_TWO   2
-#define NILMYS_PORTAL_THREE 4
-#define NILMYS_PORTAL_FOUR  8
-#define NILMYS_PORTAL_FIVE  16
 #define ARKHAT_GOD_ROOM     9119
+#define MASS_GRAVE          9132
     
     //  objects
 #define SHADOW_WALLS_KEY    9032
@@ -31,12 +27,20 @@ namespace Alarmud {
 #define NILNYS_VICTORY_KEY  9067
 #define LOST_SOUL_EQ        9080
 #define NILMYS_DIAMOND      9096
+#define NILMYS_CORPSE       9100
 
+    //  other
+#define NILMYS_PORTAL_ONE   1
+#define NILMYS_PORTAL_TWO   2
+#define NILMYS_PORTAL_THREE 4
+#define NILMYS_PORTAL_FOUR  8
+#define NILMYS_PORTAL_FIVE  16
 
                     //  special function
     //  objects
 OBJSPECIAL_FUNC(urna_nilmys);
     //  mobiles
+MOBSPECIAL_FUNC(Arkhat);
 MOBSPECIAL_FUNC(Boris_Ivanhoe);
 MOBSPECIAL_FUNC(stanislav_spirit);
     //  rooms

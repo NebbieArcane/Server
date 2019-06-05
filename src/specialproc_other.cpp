@@ -232,6 +232,7 @@ struct OtherSpecialProcEntry otherproc[] = {
     //  oggetti
     { "urna_nilmys",(genericspecial_func) urna_nilmys },
     //  mob
+    { "Arkhat",(genericspecial_func) Arkhat },
     { "Boris_Ivanhoe",(genericspecial_func) Boris_Ivanhoe },
     { "stanislav_spirit",(genericspecial_func) stanislav_spirit },
 //  fine Quest Nilmys

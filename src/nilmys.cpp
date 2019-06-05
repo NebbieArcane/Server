@@ -26,6 +26,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "regen.hpp"
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
 namespace Alarmud {
@@ -87,6 +88,197 @@ MOBSPECIAL_FUNC(stanislav_spirit)
     }
 
     return(fighter(mob,cmd,arg,mob,type));
+}
+
+MOBSPECIAL_FUNC(Arkhat)
+{
+    struct char_data* tch;
+    struct char_data* arkhat;
+    struct obj_data* co, *o, *corpse;
+    struct char_data* targ;
+    struct room_data* rp;
+    char buf[1024];
+
+    arkhat = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!arkhat) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == ARKHAT_GOD)
+            {
+                arkhat = tch;
+            }
+        }
+    }
+
+    if(cmd && cmd != CMD_STEAL)
+    {
+        return(FALSE);
+    }
+    
+    if(cmd == CMD_STEAL)
+    {
+        send_to_char("Hai troppa paura per provare a rubare qualcosa!\n\r", ch);
+        return(TRUE);
+    }
+
+    DestroyedItems = 0;
+
+    DamageStuff(arkhat, SPELL_ACID_BLAST, 100, 5);
+
+    if(DestroyedItems)
+    {
+        act("$n emette un potente ruggito!", FALSE, arkhat, 0, 0, TO_ROOM);
+        DestroyedItems = 0;
+    }
+
+    if(AWAKE(arkhat))
+    {
+        if((targ = FindAnAttacker(arkhat)) != NULL)
+        {
+            act("$c0009Spalanchi la sua enorme bocca ed attacchi!", FALSE, arkhat, 0, 0, TO_CHAR);
+            act("$c0009$n $c0009spalanca la sua enorme bocca ed attacca!", FALSE, arkhat, 0, 0, TO_ROOM);
+            if(!CAN_SEE(ch, targ))
+            {
+                if(saves_spell(targ, SAVING_PARA))
+                {
+                    act("$c0014$N $c0014evita con un balzo fulmineo il tuo morso!", FALSE, arkhat, 0, targ, TO_CHAR);
+                    act("$c0014$N $c0014evita con un balzo fulmineo il morso di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                    switch(number(0, 1))
+                    {
+                        case 0:
+                            act("$c0014Ti sposti rapidamente alla tua sinistra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                            break;
+
+                        default:
+                            act("$c0014Ti sposti rapidamente alla tua destra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                            break;
+                    }
+                    return(FALSE);
+                }
+            }
+            if(!saves_spell(targ, SAVING_PARA))
+            {
+                act("$c0011Spalanchi le enormi fauci sbavanti e divori avidamente $N$c0011!", FALSE, arkhat, 0, targ, TO_CHAR);
+                act("$c0011$n$c0011 spalanca le enormi fauci sbavanti e divora $N$c0011 avidamente!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                act("$c0011Le fauci sbavanti di Arkhat si avvicinano sempre piu' a te... finche' non ti afferra con la mascella e ti divora con avidita'!", FALSE, arkhat, 0, targ, TO_VICT);
+                send_to_char("$c0011Senti la tua carne dilaniarsi sotto la potenza delle fauci del Dio, poi... $c0008il buio.\n\r", targ);
+                send_to_char("MMM.  Burp!\n\r", arkhat);
+
+                GET_HIT(targ) = 0;
+                alter_hit(targ, 0);
+                mudlog(LOG_PLAYERS, "%s killed by %s (being swallowed whole)", GET_NAME(targ), GET_NAME(arkhat));
+                die(targ, 0, NULL);
+                /*
+                 all stuff to monster:  this one is tricky.  assume that corpse is
+                 top item on item_list now that corpse has been made.
+                 */
+                rp = real_roomp(ch->in_room);
+                if(!rp)
+                {
+                    return(FALSE);
+                }
+                for(co = rp->contents; co; co = co->next_content)
+                {
+                    if(IS_CORPSE(co))
+                    {
+                        /* il corpo della vittima dovrebbe essere il primo oggetto in lista */
+                        while(co->contains)
+                        {
+                            o = co->contains;
+                            obj_from_obj(o);
+                            obj_to_char(o, arkhat);
+                        }
+                        extract_obj(co);  /* rimuovo il corpo */
+                        /* danneggio l'equipaggiamento della vittima */
+                        DamageStuff(arkhat, SPELL_ACID_BLAST, 100, 5);
+
+                        // carico il contenitore, gli do il nome del pg morto e ci metto l'eq, poi lo porto nella room cimitero
+                        corpse = read_object(real_object(NILMYS_CORPSE), REAL);
+
+                        sprintf(buf, "resti %s", GET_NAME(targ));
+                        free(corpse->name);
+                        corpse->name = (char*)strdup(buf);
+                        sprintf(buf, "i resti martoriati di $c0015%s$c0007", GET_NAME(targ));
+                        free(corpse->short_description);
+                        corpse->short_description = (char*)strdup(buf);
+                        sprintf(buf, "Tutto quello che rimane dell'equipaggiamento di $c0015%s$c0007 e' sparso qui a terra.", GET_NAME(targ));
+                        free(corpse->description);
+                        corpse->description = (char*)strdup(buf);
+
+                        while(arkhat->carrying)
+                        {
+                            o = arkhat->carrying;
+                            if(o->obj_flags.type_flag == ITEM_CONTAINER)
+                            {
+                                obj_from_char(o);
+                                obj_to_room(o, MASS_GRAVE);
+                            }
+                            else
+                            {
+                                obj_from_char(o);
+                                obj_to_obj(o, corpse);
+                            }
+                        }
+                        obj_to_room(corpse, MASS_GRAVE);
+                        do_action(arkhat, NULL, CMD_GRIN);
+                        act("\n\r$c0008Arkhat rigurgita gli avanzi della sua vittima che si perdono nell'oscuro vuoto sotto al circolo rituale.\n\r", TRUE, arkhat, 0, 0, TO_ROOM);
+                        sprintf(buf, "\n\rImprovvisamente, dall'alto, cadono %s... che fine ingloriosa...\n\r", corpse->short_description);
+                        send_to_room(buf, MASS_GRAVE);
+                        return(TRUE);
+                    }
+                }
+            }
+            else
+            {
+                switch(number(0, 4))
+                {
+                    case 0:
+                        act("$c0014$N$c0014 abbassa velocemente la testa ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Abbassi velocemente la testa ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 abbassa velocemente la testa ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                    break;
+
+                    case 1:
+                        act("$c0014$N$c0014 indietreggia ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Eviti le fauci di $n$c0014 facendo due passi indietro!", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 indietreggia ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                    break;
+
+                    case 2:
+                        act("$c0014$N$c0014 si sposta alla sua sinistra ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Ti sposti rapidamente a sinistra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 si sposta alla sua sinistra ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                    break;
+
+                    case 3:
+                        act("$c0014$N$c0014 si sposta alla sua destra ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Ti sposti rapidamente a destra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 si sposta alla sua destra ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                    break;
+
+                    default:
+                    {
+                        if(targ->equipment[WEAR_SHIELD])
+                        {
+                            act("$c0014$N$c0014 blocca con lo scudo le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
+                            act("$c0014Blocchi con lo scudo le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                            act("$c0014$N$c0014 blocca con lo scudo le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                        }
+                        else
+                        {
+                            act("$c0014$N$c0014 abbassa velocemente la testa ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
+                            act("$c0014Abbassi velocemente la testa ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                            act("$c0014$N$c0014 abbassa velocemente la testa ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return FALSE;
 }
 
 MOBSPECIAL_FUNC(Boris_Ivanhoe)
