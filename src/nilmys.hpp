@@ -12,6 +12,7 @@ namespace Alarmud {
 #define STANISLAV_SPECTRE   8916
 #define BORIS_IVANHOE       9000
 #define ARKHAT_GOD          9007
+#define GONHAG              9009
 #define UGUIK_AURUM         9029
     
     //  rooms
@@ -24,6 +25,8 @@ namespace Alarmud {
     //  objects
 #define SHADOW_WALLS_KEY    9032
 #define NILMYS_FLASK        9051
+#define GONHAG_KEY          9052
+#define GONHAG_TOOL         9054
 #define NILNYS_VICTORY_KEY  9067
 #define LOST_SOUL_EQ        9080
 #define NILMYS_DIAMOND      9096
@@ -44,6 +47,8 @@ MOBSPECIAL_FUNC(Arkhat);
 MOBSPECIAL_FUNC(Boris_Ivanhoe);
 MOBSPECIAL_FUNC(stanislav_spirit);
     //  rooms
+ROOMSPECIAL_FUNC(gonhag_block);
+ROOMSPECIAL_FUNC(gonhag_chain);
 ROOMSPECIAL_FUNC(portale_ombra);
 
     

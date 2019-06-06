@@ -417,7 +417,7 @@ void CheckBorisRoom(struct char_data* boris)
             if(boris->in_room != boris->commandp)
             {
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9008);
-                send_to_room("$c0015 'Attento al Golem di Umag, l’ha piazzato qui a protezione della grotta, se non lo tocchi non ti attacchera'.\n\r  Ci sono diverse trappole lungo il cammino, Umag e' molto prudente, state attenti.\n\r", 9008);
+                send_to_room("$c0015 'Attento al Golem di Umag, l'ha piazzato qui a protezione della grotta, se non lo tocchi non ti attacchera'.\n\r  Ci sono diverse trappole lungo il cammino, Umag e' molto prudente, state attenti.\n\r", 9008);
             }
             boris->commandp = boris->in_room;
         }
@@ -906,6 +906,147 @@ ROOMSPECIAL_FUNC(portale_ombra)
         }
     }
 
+    return FALSE;
+}
+
+ROOMSPECIAL_FUNC(gonhag_block)
+{
+    if(type != EVENT_COMMAND)
+    {
+        return FALSE;
+    }
+
+    if(cmd == CMD_PUT)
+    {
+        int iVNum;
+        char buf[128];
+        struct obj_data* tool, *key;
+        
+        arg = one_argument(arg, buf);
+        
+        if(!strcmp("strumento", buf))
+        {
+            tool = get_obj_in_list_vis(ch, buf, ch->carrying);
+
+            if(tool)
+            {
+                iVNum = (tool->item_number >= 0) ? obj_index[tool->item_number].iVNum : 0;
+                if(iVNum == GONHAG_TOOL)
+                {
+                    arg = one_argument(arg, buf);
+
+                    if(!strcmp("meccanismo", buf))
+                    {
+                        act("Quando metti questo pezzo nel meccanismo noti subito che la manovella puo' adesso ruotare liberamente...", FALSE, ch, 0, 0, TO_CHAR);
+                        WAIT_STATE(ch, PULSE_VIOLENCE * 2);
+                        act("Vedi $n armeggiare con il pezzo meccanico e sembra che stia riuscendo a farlo collimare nel meccanismo.", FALSE, ch, 0, 0, TO_ROOM);
+                        act("Infine... ti giri con aria soddisfatta e il pollice in su!", FALSE, ch, 0, 0, TO_CHAR);
+                        act("Infine... si gira con aria soddisfatta e il pollice in su!", FALSE, ch, 0, 0, TO_ROOM);
+                        extract_obj(tool);
+
+                        key = get_obj(obj_index[real_object(GONHAG_KEY)].name);
+                        if(key)
+                        {
+                            //  se la key esiste gli assegno il valore di 1 a iGeneric
+                            key->iGeneric = 1;
+                            mudlog(LOG_PLAYERS, "key generic = %d", key->iGeneric);
+                        }
+                        return TRUE;
+                    }
+                    else
+                    {
+                        return FALSE;
+                    }
+                }
+                else
+                {
+                    return FALSE;
+                }
+            }
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+
+    return FALSE;
+}
+
+ROOMSPECIAL_FUNC(gonhag_chain)
+{
+    if(type != EVENT_COMMAND)
+    {
+        return FALSE;
+    }
+    
+    if(cmd == CMD_UNLOCK)
+    {
+        char buf[128];
+        struct obj_data* key;
+        struct char_data* gonhag, *tch;
+        
+        gonhag = 0;
+        
+        for(tch = real_roomp(ch->in_room)->people; (!gonhag) && (tch); tch = tch->next_in_room)
+        {
+            if(IS_MOB(tch))
+            {
+                if(mob_index[tch->nr].iVNum == GONHAG)
+                {
+                    gonhag = tch;
+                }
+            }
+        }
+        
+        arg = one_argument(arg, buf);
+        
+        if(!strcmp("collare", buf))
+        {
+            key = get_obj_in_list_vis(ch, obj_index[real_object(GONHAG_KEY)].name, ch->carrying);
+            
+            if(key)
+            {
+                //  controllo se il meccanismo e' stato attivato, se non e' attivo il Gonhag attacca
+                if(key->iGeneric != 1)
+                {
+                    act("Silenziosamente ti avvicini alla creatura ma ahime' non riesci ad inserire la chiave.", FALSE, ch, 0, gonhag, TO_CHAR);
+                    act("$N ti attacca!", FALSE, ch, 0, gonhag, TO_CHAR);
+                    act("Osservi attentamente $n avvicinarsi alla tremenda bestia, proprio quando e' a un metro da lui... inciampa!", FALSE, ch, 0, gonhag, TO_NOTVICT);
+                    act("Il $N si solleva guardandolo furioso... buona fortuna $n!", FALSE, ch, 0, gonhag, TO_NOTVICT);
+                    act("Osservi $n avvicinarsi con fare sospetto, ne sei indispettit$B e l$b attacchi!", FALSE, ch, 0, gonhag, TO_VICT);
+                    do_hit(gonhag, GET_NAME(ch), 0);
+                    return TRUE;
+                }
+                else
+                {
+                    act("Silenziosamente ti avvicini alla creatura, inserisci la chiave e... *CLICK*!", FALSE, ch, 0, gonhag, TO_CHAR);
+                    act("L'enorme collare si apre e il $N sembra non essersi accorto di te!", FALSE, ch, 0, gonhag, TO_CHAR);
+                    act("Osservi $n avvicinarsi silenziosamente alla creatura colossale... trattieni il fiato... *CLICK*!", FALSE, ch, 0, gonhag, TO_NOTVICT);
+                    act("L'enorme collare si apre e il $N sembra non essersi accorto di $n!", FALSE, ch, 0, gonhag, TO_NOTVICT);
+                    act("*CLICK*\n\rSei liber$B!", FALSE, ch, 0, gonhag, TO_VICT);
+                    if(IS_SET(gonhag->specials.act, ACT_SENTINEL))
+                    {
+                        if(gonhag->specials.fighting)
+                        {
+                            stop_fighting(gonhag);
+                        }
+                        WAIT_STATE(gonhag, PULSE_VIOLENCE*5);
+                        REMOVE_BIT(gonhag->specials.act, ACT_SENTINEL);
+                    }
+                    return TRUE;
+                }
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
     return FALSE;
 }
 

@@ -40,6 +40,8 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "monk_challenge_room", monk_challenge_room },
 	{ "pet_shops", pet_shops },
 //  Quest Nilmys
+    { "gonhag_block", gonhag_block },
+    { "gonhag_chain", gonhag_chain },
     { "portale_ombra", portale_ombra },
 //  fine Quest Nilmys
 	{ "pray_for_items", pray_for_items },

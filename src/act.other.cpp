@@ -2308,7 +2308,7 @@ ACTION_FUNC(do_use) {
     {
         struct obj_data* arkhat_equip;
         struct char_data* Arkhat;
-        int r_num = 0;
+        int r_num = 0, wait_ch = 0, wait_party = 0;
         
         arg = one_argument(arg, buf);
         
@@ -2323,11 +2323,15 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         stick->iGeneric += NILMYS_PORTAL_ONE;
+                        wait_ch = 3;
+                        wait_party = 2;
                     }
                     else
                     {
                         act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        wait_ch = 2;
+                        wait_party = 1;
                     }
                 }
                     break;
@@ -2339,11 +2343,15 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         stick->iGeneric += NILMYS_PORTAL_TWO;
+                        wait_ch = 3;
+                        wait_party = 2;
                     }
                     else
                     {
                         act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        wait_ch = 2;
+                        wait_party = 1;
                     }
                 }
                     break;
@@ -2355,11 +2363,15 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         stick->iGeneric += NILMYS_PORTAL_THREE;
+                        wait_ch = 3;
+                        wait_party = 2;
                     }
                     else
                     {
                         act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        wait_ch = 2;
+                        wait_party = 1;
                     }
                 }
                     break;
@@ -2371,11 +2383,15 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         stick->iGeneric += NILMYS_PORTAL_FOUR;
+                        wait_ch = 3;
+                        wait_party = 2;
                     }
                     else
                     {
                         act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        wait_ch = 2;
+                        wait_party = 1;
                     }
                 }
                     break;
@@ -2387,11 +2403,15 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0011Cospargi con cura, ma anche con un certo ribrezzo, il liquido sulla punta rituale, cercando di coprire interamente la figura.", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0011$n$c0011 cosparge con cura il liquido di $p$c0011 sulla punta rituale.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         stick->iGeneric += NILMYS_PORTAL_FIVE;
+                        wait_ch = 3;
+                        wait_party = 2;
                     }
                     else
                     {
                         act("\n\r$c0010Ti avvicini punta rituale e ti rendi conto che un liquido viscoso la copre interamente.\n\r", FALSE, ch, NULL, NULL, TO_CHAR);
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
+                        wait_ch = 2;
+                        wait_party = 1;
                     }
                 }
                     break;
@@ -2402,11 +2422,25 @@ ACTION_FUNC(do_use) {
                     break;
             }
 
-            if(stick->iGeneric == 31)
+            // lagghiamo chi usa l'ampolla e il party per evitare furbate
+            for(tmp_char = real_roomp(ch->in_room)->people; tmp_char; tmp_char = tmp_char->next_in_room)
+            {
+                if(tmp_char == ch)
+                {
+                    WAIT_STATE(ch, PULSE_VIOLENCE * wait_ch);
+                }
+                else if(tmp_char && is_same_group(ch, tmp_char))
+                {
+                    WAIT_STATE(tmp_char, PULSE_VIOLENCE * wait_party);
+                }
+            }
+
+            if(stick->iGeneric == NILMYS_PORTAL_ONE + NILMYS_PORTAL_TWO + NILMYS_PORTAL_THREE + NILMYS_PORTAL_FOUR + NILMYS_PORTAL_FIVE)
             {
                 send_to_all("\n\r\n\r");
-                send_to_all("$c0008Ho aspettato centinaia di vite mortali per potermi manifestare in questo mondo.$c0007\n\r");
-                send_to_all("$c0008Inutile insetto hai compiuto il tuo ultimo errore.$c0007\n\r");
+                send_to_all("$c0008La voce di Arkhat, il Dio Divoratore, tuona:\n\r");
+                send_to_all("$c0008 'Ho aspettato centinaia di vite mortali per potermi manifestare in questo mondo.$c0007\n\r");
+                send_to_all("$c0008  Inutile insetto hai compiuto il tuo ultimo errore.'\n\r");
                 send_to_all("\n\r\n\r");
                 
                 if((Arkhat = read_mobile(real_mobile(ARKHAT_GOD), REAL)))
