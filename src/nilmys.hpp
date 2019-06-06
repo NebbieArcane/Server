@@ -11,6 +11,7 @@ namespace Alarmud {
     // mobiles
 #define STANISLAV_SPECTRE   8916
 #define BORIS_IVANHOE       9000
+#define ISKRA_STANISLAV     9006
 #define ARKHAT_GOD          9007
 #define GONHAG              9009
 #define UGUIK_AURUM         9029
@@ -24,6 +25,9 @@ namespace Alarmud {
     
     //  objects
 #define SHADOW_WALLS_KEY    9032
+#define NILMYS_SHADOW_KEY   9045
+#define STANISLAV_BONES     9047
+#define NILMYS_BLEEDER      9050
 #define NILMYS_FLASK        9051
 #define GONHAG_KEY          9052
 #define GONHAG_TOOL         9054
@@ -45,6 +49,7 @@ OBJSPECIAL_FUNC(urna_nilmys);
     //  mobiles
 MOBSPECIAL_FUNC(Arkhat);
 MOBSPECIAL_FUNC(Boris_Ivanhoe);
+MOBSPECIAL_FUNC(Uguik_Aurum);
 MOBSPECIAL_FUNC(stanislav_spirit);
     //  rooms
 ROOMSPECIAL_FUNC(gonhag_block);
@@ -54,6 +59,7 @@ ROOMSPECIAL_FUNC(portale_ombra);
     
                     //  other
 void CheckBorisRoom(struct char_data* boris);
+bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris);
 bool FindKeyByNumber(struct char_data* ch, int number);
 } // namespace Alarmud
 #endif // __SPEC_PROCS3_HPP

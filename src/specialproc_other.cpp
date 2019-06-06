@@ -234,6 +234,7 @@ struct OtherSpecialProcEntry otherproc[] = {
     //  mob
     { "Arkhat",(genericspecial_func) Arkhat },
     { "Boris_Ivanhoe",(genericspecial_func) Boris_Ivanhoe },
+    { "Uguik_Aurum",(genericspecial_func) Uguik_Aurum },
     { "stanislav_spirit",(genericspecial_func) stanislav_spirit },
 //  fine Quest Nilmys
 	{ "zFineprocedure", NULL },

@@ -2509,7 +2509,53 @@ ACTION_FUNC(do_use) {
         }
         else
         {
-            act("Use is normally only for wand's and staff's.", FALSE, ch, NULL, NULL, TO_CHAR);
+            act("Su cosa vuoi usare $p?", FALSE, ch, stick, NULL, TO_CHAR);
+            return;
+        }
+    }
+    else if((vnum = (stick->item_number >= 0) ? obj_index[stick->item_number].iVNum : 0) == NILMYS_BLEEDER)
+    {
+        struct char_data* iskra;
+
+        if(stick->iGeneric == 1)
+        {
+            act("Hai gia' prelevato abbastanza $c0009sangue$c0007 dalla povera Iskra!", FALSE, ch, NULL, NULL, TO_CHAR);
+            return;
+        }
+
+        arg = one_argument(arg, buf);
+
+        if(!strcmp("iskra", buf))
+        {
+            iskra = 0;
+
+            for(tmp_char = real_roomp(ch->in_room)->people; (!iskra) && (tmp_char); tmp_char = tmp_char->next_in_room)
+            {
+                if(IS_MOB(tmp_char))
+                {
+                    if(mob_index[tmp_char->nr].iVNum == ISKRA_STANISLAV)
+                    {
+                        iskra = tmp_char;
+                    }
+                }
+            }
+
+            if(!iskra)
+            {
+                act("$N non e' qui!", FALSE, ch, NULL, iskra, TO_CHAR);
+                return;
+            }
+
+            act("$c0008Inserisci lo strano marchingegno nel braccio della giovane Iskra e ne prelevi il $c0009sangue$c0008.\n\r$c0008Lei, coraggiosamente, emette solo un flebile gemito.", FALSE, ch, NULL, NULL, TO_CHAR);
+            act("$c0008$n inserisci lo strano marchingegno nel braccio della giovane Iskra prelevandole del $c0009sangue$c0008.\n\r$c0008Lei, coraggiosamente, emette solo un flebile gemito.", FALSE, ch, NULL, iskra, TO_NOTVICT);
+            act("$c0008$n inserisce uno strano marchingegno nel tuo braccio ed iniza a prelevare il tuo $c0009sangue$c0008.\n\r$c0008Emetti un flebile gemito per il dolore.", FALSE, ch, NULL, iskra, TO_VICT);
+
+            //  assegno al salassatore il valore di 1 su IGeneric
+            stick->iGeneric = 1;
+        }
+        else
+        {
+            act("Su chi vuoi usare $p?", FALSE, ch, stick, NULL, TO_CHAR);
             return;
         }
     }

@@ -21,6 +21,7 @@
 #include "act.comm.hpp"
 #include "act.obj1.hpp"
 #include "act.social.hpp"
+#include "act.wizard.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -578,32 +579,51 @@ void CheckBorisRoom(struct char_data* boris)
                     case 0:
                         break;
 
-                    case 3:
-                        send_to_room("$c0008Uguik tremante, e con le mani di Boris ancora attorno al collo, risponde:\n\r", 9051);
+                    case 2:
+                        send_to_room("$c0008Uguik tremante, con le mani di Boris ancora attorno al collo, risponde:\n\r", 9051);
                         send_to_room("$c0011 'Per attivare il portale servono i resti degli Stanislav,\n\r  $c0011ci abbiamo provato ma a quanto pare c'era un altro Stanislav in giro nel piano materiale...\n\r  $c0011E' per questo che siamo bloccati qui!\n\r  $c0011Mi dispiace informarvi che avete fallito, non possiamo evocare Arkhat.\n\r  $c0011Sembra che il vostro piano sia naufragato!'\n\r", 9051);
                         do_action(uguik, NULL, CMD_GRIN);
                         break;
 
-                    case 6:
+                    case 3:
                         send_to_room("$c0015[$c0009Boris Ivanhoe Gudonov$c0015] $c0009urla:\n\r $c0009'IDIOTA! Sappiamo noi dove si trova l'altro Stanislav! Ti porteremo il suo sangue, dacci lo strumento adatto.'\n\r", 9051);
                         break;
 
-                    case 9:
+                    case 4:
                         sprintf(buf, "salassatore %s", GET_NAME((boris)->master));
-                        do_give(uguik, buf, 0);
+                        if((boris)->master->in_room == uguik->in_room)
+                        {
+                            do_give(uguik, buf, 0);
+                        }
+                        else
+                        {
+                            do_drop(uguik, "salassatore", 0);
+                        }
                         sprintf(buf, "chiave %s", GET_NAME((boris)->master));
                         do_give(uguik, buf, 0);
+                        if((boris)->master->in_room == uguik->in_room)
+                        {
+                            do_give(uguik, buf, 0);
+                        }
+                        else
+                        {
+                            do_drop(uguik, "chiave", 0);
+                        }
                         break;
 
-                    case 12:
-                        send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Bene, ora resta qui! O ti verro' a cercare ovunque tu sia e ti faro' a pezzi lentamente!'\n\r", 9051);
+                    case 6:
+                        if(FindKeyByNumber(boris, NILMYS_BLEEDER) && FindKeyByNumber(boris, NILMYS_SHADOW_KEY))
+                        {
+                            send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Bene, ora resta qui! O ti verro' a cercare ovunque tu sia e ti faro' a pezzi lentamente!'\n\r", 9051);
+                        }
+                        else
+                        {
+                            boris->commandp2 = 5;
+                        }
                         break;
 
-                    case 15:
-                        send_to_room("$c0015Boris si volta verso di te e dice:\n\r $c0015'Torniamo sui nostri passi per recuperare le ossa degli Stanislav ed il sangue di Iskra.\n\r  $c0015Uguik ci dira' poi come procedere.'", 9051);
-                        break;
-
-                    case 16:
+                    case 7:
+                        send_to_room("$c0015Boris si volta verso di te e dice:\n\r $c0015'Torniamo sui nostri passi per recuperare le ossa degli Stanislav ed il sangue di Iskra.\n\r  $c0015Uguik ci dira' poi come procedere.'\n\r", 9051);
                         uguik->commandp2 = 1;
                         break;
 
@@ -779,11 +799,299 @@ bool FindKeyByNumber(struct char_data* ch, int number)
     {
         for(tch = real_roomp(ch->in_room)->people; tch; tch = tch->next_in_room)
         {
-            if(key->carried_by == tch && is_same_group(ch, tch))
+            if(key->carried_by == tch && (is_same_group(ch, tch) || IS_DIO(tch)))
             {
                 return TRUE;
             }
         }
+    }
+    return FALSE;
+}
+
+MOBSPECIAL_FUNC(Uguik_Aurum)
+{
+    struct obj_data* oggetto;
+    struct char_data* uguik, *tch, *boris;
+    int iVNum;
+    char buf[512];
+
+    const char* rand_Uguik_says[] = {
+        "$c0015$n$c0015 dice 'Cosa ci faccio con questa spazzatura?'",
+        "$c0015$n$c0015 dice '$p$c0015? Si mi piace, ma al momento non mi serve!'",
+        "$c0015$n$c0015 dice 'E che cosa dovrei fare con $p$c0015?'",
+        "$c0011$n$c0011 piagnucolando 'Basta, ti prego, basta. Smetti di portarmi questo ciarpame!'",
+        "$c0015$n$c0015 dice '$p$c0015? Interessante... forse... ma anche no!'",
+        "$c0014$n$c0014 esclama 'Non mi interessa minimamente!'",
+        "$c0013$n$c0013 domanda a $N$c0013 'Mi hai scambiato per un accumulatore seriale?'",
+        "$c0009$n$c0009, imprecando, 'Questa cosa qui vai a darla a tua sorella!'",
+    };
+
+    const int maxUguikSay = 7;
+
+    uguik = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!uguik) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == UGUIK_AURUM)
+            {
+                uguik = tch;
+            }
+        }
+    }
+
+    boris = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!boris) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            {
+                boris = tch;
+            }
+        }
+    }
+
+    if(CheckUguikRoom(uguik, boris))
+    {
+        return TRUE;
+    }
+
+    if(uguik->generic == 4)
+    {
+        switch(number(0,30))
+        {
+            case 11:
+                do_say(uguik, "Cosa volete nuovamente da me? Vi ho gia' detto tutto!", 0);
+                do_say(uguik, "Andatevene!", 0);
+                break;
+                
+            default:
+                break;
+        }
+        return FALSE;
+    }
+
+    if(uguik->commandp2 == 1)
+    {
+        switch(number(0,15))
+        {
+            case 8:
+                do_say(uguik, "Avete tutto quello che vi ho chiesto?", 0);
+                if(uguik->commandp != 1)
+                {
+                    do_say(uguik, "Cosa aspettate ad andare?!?", 0);
+                    uguik->commandp = 1;
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    if(cmd && cmd != CMD_GIVE)
+    {
+        return(FALSE);
+    }
+
+    if(cmd == CMD_GIVE)
+    {
+        if(AWAKE(uguik))
+        {
+            if(!arg)
+            {
+                return FALSE;
+            }
+
+            arg = one_argument(arg, buf);
+
+            if(!buf)
+            {
+                return FALSE;
+            }
+
+            oggetto = get_obj_in_list_vis(ch, buf, ch->carrying);
+
+            if(!oggetto)
+            {
+                return FALSE;
+            }
+
+            iVNum = (oggetto->item_number >= 0) ? obj_index[oggetto->item_number].iVNum : 0;
+
+            act("Dai $p a $n.", FALSE, uguik, oggetto, ch, TO_VICT);
+            act("$N ti da' $p.", FALSE, uguik, oggetto, ch, TO_CHAR);
+            act("$N da' $p a $n.", FALSE, uguik, oggetto, ch, TO_NOTVICT);
+
+            if(iVNum == STANISLAV_BONES)
+            {
+                extract_obj(oggetto);
+                if(uguik->generic == 2)
+                {
+                    uguik->generic = 3;
+                    do_say(uguik, "Ottimo, ora ho tutto!", 0);
+                    do_action(uguik, NULL, CMD_GRIN);
+                    return TRUE;
+                }
+                else
+                {
+                    uguik->generic = 1;
+                    do_say(uguik, "Bene, molto bene.", 0);
+                    do_emote(uguik, "si sfrega le mani.", 0);
+                    do_say(uguik, "Dovete riportarmi il salassatore con il sangue!", 0);
+                    return TRUE;
+                }
+            }
+            else if(iVNum == NILMYS_BLEEDER)
+            {
+                if(oggetto->iGeneric != 1)
+                {
+                    do_say(uguik, "Il salassatore non contiene neppure una goccia di sangue!", 0);
+                    do_say(uguik, "Tornate quando ne avrete recuperato un quantitativo sufficente.", 0);
+                    act("Restituisci $p a $N.", FALSE, uguik, oggetto, ch, TO_CHAR);
+                    act("$n ti restituisce $p.", FALSE, uguik, oggetto, ch, TO_VICT);
+                    act("$n restituisce $p a $N.", FALSE, uguik, oggetto, ch, TO_NOTVICT);
+                    return TRUE;
+                }
+
+                extract_obj(oggetto);
+
+                if(uguik->generic == 1)
+                {
+                    uguik->generic = 3;
+                    do_say(uguik, "Perfetto!", 0);
+                    return TRUE;
+                }
+                else
+                {
+                    uguik->generic = 2;
+                    do_say(uguik, "Bene, molto bene.", 0);
+                    do_emote(uguik, "si sfrega le mani.", 0);
+                    do_say(uguik, "Mancano ancora le ossa, fate presto!", 0);
+                    return TRUE;
+                }
+
+            }
+            else
+            {
+                act("Farfugli qualcosa di incomprensibile.", FALSE, uguik, NULL, NULL, TO_CHAR);
+                sprintf(buf, "%s", rand_Uguik_says[number(0, maxUguikSay)]);
+                act(buf, FALSE, uguik, oggetto, ch, TO_ROOM);
+                act("Restituisci $p a $N.", FALSE, uguik, oggetto, ch, TO_CHAR);
+                act("$n ti restituisce $p con disprezzo.", FALSE, uguik, oggetto, ch, TO_VICT);
+                act("$n restituisce con disprezzo $p a $N.", FALSE, uguik, oggetto, ch, TO_NOTVICT);
+                return TRUE;
+            }
+        }
+        else
+        {
+            send_to_char("Non puoi farlo!\n\r", ch);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
+{
+    struct obj_data* oggetto;
+    char buf[512];
+
+    if(uguik->generic == 3)
+    {
+        switch(uguik->commandp)
+        {
+            case 1:
+                act("$c0008Dopo aver armeggiato con alambicchi, sostanze alchemiche e fuoco,\n\r$c0008porgi un'ampolla piena di un liquido traslucido a $N$c0008.", FALSE, uguik, NULL, boris->master, TO_CHAR);
+                act("$c0008Dopo aver armeggiato con alambicchi, sostanze alchemiche e fuoco,\n\r$c0008Uguik Aurum ti porge un'ampolla piena di un liquido traslucido.", FALSE, uguik, NULL, boris->master, TO_VICT);
+                act("$c0008Dopo aver armeggiato con alambicchi, sostanze alchemiche e fuoco,\n\r$c0008Uguik Aurum porge un'ampolla piena di un liquido traslucido a $N$c0008.", FALSE, uguik, NULL, boris->master, TO_NOTVICT);
+                break;
+
+            case 2:
+                send_to_room("$c0008Uguik Aurum si gira verso di te poi dice:\n\r", uguik->in_room);
+                send_to_room("$c0008 'In questa ampolla ci sono le cinque dosi che ti serviranno per cospargere il portale di Arkhat.\n\r  $c0008Ricordate di cospargere una dose su ogni punta ed una al centro altrimenti il rituale fallira'.\n\r\n\r", uguik->in_room);
+                break;
+
+            case 3:
+            {
+                oggetto = get_obj_in_list_vis(uguik, obj_index[real_object(NILMYS_FLASK)].name, uguik->carrying);
+                
+                if(oggetto)
+                {
+                    if((boris)->master->in_room == uguik->in_room)
+                    {
+                        sprintf(buf, "ampolla %s", GET_NAME((boris)->master));
+                        do_give(uguik, buf, 0);
+                    }
+                    else
+                    {
+                        do_drop(uguik, "ampolla", 0);
+                    }
+                }
+                else
+                {
+                    oggetto = read_object(real_object(NILMYS_FLASK), REAL);
+                    obj_to_char(oggetto, uguik);
+                    
+                    if((boris)->master->in_room == uguik->in_room)
+                    {
+                        sprintf(buf, "ampolla %s", GET_NAME((boris)->master));
+                        do_give(uguik, buf, 0);
+                    }
+                    else
+                    {
+                        do_drop(uguik, "ampolla", 0);
+                    }
+                }
+            }
+                break;
+
+            case 4:
+                send_to_room("$c0008Uguik Aurum riprende a parlare:\n\r", uguik->in_room);
+                send_to_room("$c0008  Scalate la montagna e raggiungerete il circolo rituale.\n\r  $c0008RHo fatto quello che mi avevate chiesto ora abbiate pieta' di me, non uccidetemi!'\n\r", uguik->in_room);
+                break;
+
+            case 5:
+                send_to_room("\n\r\n\r$c0015Boris stringe il collo dello gnomo.\n\r\n\r", uguik->in_room);
+                break;
+
+            case 6:
+                do_say(uguik, "$c0011Fermo! Vi daro' un ultimo aiuto! Ma non uccidermi!", 0);
+                break;
+
+            case 7:
+                send_to_room("\n\r\n\r$c0015Boris allenta la presa.\n\r\n\r", uguik->in_room);
+                break;
+
+            case 8:
+                do_say(uguik, "$c0011Uscite dal retro del mio laboratorio, da li' eviterete la maggior parte dell'esercito...", 0);
+                do_say(uguik, "$c0011Nel mio forziere segreto c'e' la chiave per uscire dal retro, prendetela pure e seguite la strada.", 0);
+                do_say(uguik, "Certo c'e' il Gonhag mutato, il mio capolavoro... ma sono sicuro che non vi creera' problemi.", 0);
+                do_emote(uguik, "aggiunge con un ghigno beffardo.", 0);
+                break;
+
+            case 9:
+                send_to_room("\n\r\n\r$c0008Boris scaraventa Uguik a terra e sputa al di la' della propria spalla.\n\r\n\r", uguik->in_room);
+                break;
+
+            case 10:
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] si gira verso di te, poi dice 'Andiamo!'\n\r", uguik->in_room);
+                uguik->generic = 4;
+                break;
+
+        }
+        
+        uguik->commandp += 1;
+
+        return TRUE;
     }
     return FALSE;
 }
@@ -1025,15 +1333,19 @@ ROOMSPECIAL_FUNC(gonhag_chain)
                     act("Osservi $n avvicinarsi silenziosamente alla creatura colossale... trattieni il fiato... *CLICK*!", FALSE, ch, 0, gonhag, TO_NOTVICT);
                     act("L'enorme collare si apre e il $N sembra non essersi accorto di $n!", FALSE, ch, 0, gonhag, TO_NOTVICT);
                     act("*CLICK*\n\rSei liber$B!", FALSE, ch, 0, gonhag, TO_VICT);
+
                     if(IS_SET(gonhag->specials.act, ACT_SENTINEL))
                     {
-                        if(gonhag->specials.fighting)
-                        {
-                            stop_fighting(gonhag);
-                        }
-                        WAIT_STATE(gonhag, PULSE_VIOLENCE*5);
                         REMOVE_BIT(gonhag->specials.act, ACT_SENTINEL);
                     }
+
+                    if(gonhag->specials.fighting)
+                    {
+                        stop_fighting(gonhag);
+                    }
+                    WAIT_STATE(gonhag, PULSE_VIOLENCE*5);
+                    send_to_zone("\n\r\n\r$c0008Un fragoroso ruggito riecheggia nel silenzio della dimensione ombra...\n\r$c0008Il Gonhag e' libero!\n\r\n\r", gonhag);
+
                     return TRUE;
                 }
             }
