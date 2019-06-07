@@ -19,6 +19,8 @@
 /***************************  Local    include ************************************/
 #include "nilmys.hpp"
 #include "act.comm.hpp"
+#include "act.info.hpp"
+#include "act.move.hpp"
 #include "act.obj1.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
@@ -94,7 +96,7 @@ MOBSPECIAL_FUNC(stanislav_spirit)
 MOBSPECIAL_FUNC(Arkhat)
 {
     struct char_data* tch;
-    struct char_data* arkhat;
+    struct char_data* arkhat, *boris;
     struct obj_data* co, *o, *corpse;
     struct char_data* targ;
     struct room_data* rp;
@@ -110,6 +112,33 @@ MOBSPECIAL_FUNC(Arkhat)
             {
                 arkhat = tch;
             }
+        }
+    }
+
+    boris = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!boris) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            {
+                boris = tch;
+            }
+        }
+    }
+
+    if(type == EVENT_DEATH)
+    {
+        if(boris)
+        {
+            boris->commandp2 = 1000;
+            return TRUE;
+        }
+        else
+        {
+            mudlog(LOG_PLAYERS, "Arkhat was killed by players but Boris is not alive, this is not possible.")
+            return TRUE;
         }
     }
 
@@ -282,10 +311,56 @@ MOBSPECIAL_FUNC(Arkhat)
     return FALSE;
 }
 
+void ArkhatDeath(struct char_data* boris)
+{
+    struct obj_data* portale;
+
+    switch(boris->commandp2)
+    {
+        case 1000:
+            send_to_room("\n\r\n\r$c0014Con l'ultimo poderoso colpo $c0013Arkhat$c0014 vacilla, la spada di Vlad penetra profondamente\n\r", boris->in_room);
+            send_to_room("$c0014nel suo mostruoso petto.\n\r", boris->in_room);
+            break;
+
+        case 1001:
+            send_to_room("\n\r$c0014Una grande $c0015luce$c0014 inizia a generarsi dalla spada e diventa sempre piu' intesa... poi...\n\r", boris->in_room);
+            send_to_room("\n\r$c0014con una fragorosa esplosione di $c0015luce $c0013Arkhat$c0014, il divoratore, di dissolve come cancellato\n\r", boris->in_room);
+            send_to_room("\n\r$c0014dall'esistenza e dalla memoria.\n\r", boris->in_room);
+            break;
+
+        case 1002:
+            send_to_room("\n\r$c0014Le $c0015anime$c0014 che lo circondavano e si tormentavano in una macabra danza attorno al suo corpo,\n\r", boris->in_room);
+            send_to_room("\n\r$c0014iniziano ad emettere $c0015luce$c0014 ed a convergere verso un punto in alto poco sopra la tua testa.\n\r", boris->in_room);
+            send_to_room("\n\r$c0014Noti una di esse che indugia sulla carcassa materiale rimasta del $c0013Dio$c0014 sconfitto.\n\r", boris->in_room);
+            break;
+
+        case 1003:
+            send_to_room("\n\r$c0014E' lei la prima anima presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
+            send_to_room("\n\r$c0014le altre sono radunate.\n\r", boris->in_room);
+            break;
+
+        case 1004:
+            send_to_room("\n\r$c0014Un varco si apre e tutte le $c0015anime$c0014 entrano rapidamente disperdendosi verso una grande $c0015luce$c0014.\n\r", boris->in_room);
+            portale = read_object(real_object(VICTORY_PORTAL), REAL);
+            obj_to_room(portale, boris->in_room);
+            break;
+
+        case 1005:
+            send_to_room("\n\r$c0014Boris esclama '$c0011VITTORIA!$c0014', e sale verso la $c0015luce$c0014.\n\r", boris->in_room);
+            do_enter(boris, "portale", 0);
+            break;
+
+        default:
+            break;
+    }
+    boris->commandp2 += 1;
+}
+
 MOBSPECIAL_FUNC(Boris_Ivanhoe)
 {
     struct char_data* tch;
     struct char_data* boris;
+    struct obj_data* eq_boris;
 
     boris = 0;
 
@@ -297,6 +372,45 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             {
                 boris = tch;
             }
+        }
+    }
+
+    if(!AWAKE(boris))
+    {
+        return FALSE;
+    }
+
+    if(type == EVENT_DEATH)
+    {
+        if(boris)
+        {
+            boris->commandp2 = 1000;
+            return TRUE;
+        }
+        else
+        {
+            mudlog(LOG_PLAYERS, "Arkhat was killed by players but Boris is not alive, this is not possible.")
+            return TRUE;
+        }
+    }
+
+    if(cmd == CMD_TELL)
+    {
+        if(strstr(arg, "seguimi"))
+        {
+            boris->specials.quest_ref = ch;
+            return FALSE;
+        }
+        else if(strstr(arg, "casa"))
+        {
+            char_from_room(ch);
+            char_to_room(ch, 3001);
+            do_look(ch, NULL, 0);
+            return FALSE;
+        }
+        else
+        {
+            return FALSE;
         }
     }
 
@@ -322,17 +436,23 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         {
             if(cmd == CMD_NOD)
             {
+                do_say(boris, "Se per qualsiasi ragione qualcun'altro volesse guidarci fino alla vittoria, mi dica di seguirlo ed io lo faro'!", 0);
+                do_say(boris, "Inoltre, se qualcuno volesse ritirarsi, deve dirmi che vuole tornare a casa!", 0);
                 if(!IS_PC(ch) && ch->master == NULL)
                 {
-                    boris->generic = 2;
+                    boris->generic = 4;
                 }
                 else if(IS_PC(ch) && ch->master == NULL)
                 {
                     extract_char(boris);
                     boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
                     char_to_room(boris, BORIS_HOME);
+                    if(IS_SET(boris->specials.act, ACT_IMMORTAL))
+                    {
+                        REMOVE_BIT(boris->specials.act, ACT_IMMORTAL);
+                    }
                     boris->specials.quest_ref = ch;
-                    boris->generic = 2;
+                    boris->generic = 4;
                 }
                 else if(IS_PC((ch)->master))
                 {
@@ -340,7 +460,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                     boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
                     char_to_room(boris, BORIS_HOME);
                     boris->specials.quest_ref = (ch)->master;
-                    boris->generic = 2;
+                    boris->generic = 4;
                 }
             }
         }
@@ -361,7 +481,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             {
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Non fatemi perdere tempo!'\n\r", ch->in_room);
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'C'e' qualcuno che comanda qui?'\n\r", ch->in_room);
-                boris->generic = 1;
+                do_say(boris, "Chi vuole comandare mi dica di seguirlo!", 0);
                 return FALSE;
             }
             break;
@@ -369,6 +489,10 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         case 3:
             if(boris->master != NULL)
             {
+                if(boris->master != boris->specials.quest_ref)
+                {
+                    boris->generic = 2;
+                }
                 CheckBorisRoom(boris);
                 return FALSE;
             }
@@ -376,9 +500,45 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             {
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Abbiamo perso la nostra guida!'\n\r", boris->in_room);
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Il tempo scorre, ditemi chi devo seguire!'\n\r", boris->in_room);
-                boris->generic = 1;
+                do_say(boris, "Chi vuole comandare mi dica di seguirlo!", 0);
                 return FALSE;
             }
+            break;
+
+        case 4:
+        {
+            eq_boris = read_object(real_object(9102), REAL);
+            obj_to_char(eq_boris, boris);
+            obj_from_char(eq_boris);
+            equip_char(boris, eq_boris, WEAR_EYES);
+
+            eq_boris = read_object(real_object(9103), REAL);
+            obj_to_char(eq_boris, boris);
+            obj_from_char(eq_boris);
+            equip_char(boris, eq_boris, WIELD);
+
+            eq_boris = read_object(real_object(9104), REAL);
+            obj_to_char(eq_boris, boris);
+            obj_from_char(eq_boris);
+            equip_char(boris, eq_boris, WEAR_HANDS);
+
+            eq_boris = read_object(real_object(9105), REAL);
+            obj_to_char(eq_boris, boris);
+            obj_from_char(eq_boris);
+            equip_char(boris, eq_boris, WEAR_SHIELD);
+
+            eq_boris = read_object(real_object(9106), REAL);
+            obj_to_char(eq_boris, boris);
+            obj_from_char(eq_boris);
+            equip_char(boris, eq_boris, WEAR_LEGS);
+
+            eq_boris = read_object(real_object(9107), REAL);
+            obj_to_char(eq_boris, boris);
+            obj_from_char(eq_boris);
+            equip_char(boris, eq_boris, WEAR_FEET);
+
+            boris->generic = 2;
+        }
             break;
 
         default:
@@ -390,6 +550,11 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
 
 void CheckBorisRoom(struct char_data* boris)
 {
+    if(boris->specials.fighting)
+    {
+        return;
+    }
+
     switch(boris->in_room)
     {
         case BORIS_HOME:
@@ -701,14 +866,70 @@ void CheckBorisRoom(struct char_data* boris)
         }
             break;
 
+        case 9115:
+        {
+            if(boris->commandp2 >= 1000)
+            {
+                ArkhatDeath(boris);
+            }
+            else
+            {
+                boris->commandp = boris->in_room;
+            }
+        }
+            break;
+
+        case 9116:
+        {
+            if(boris->commandp2 >= 1000)
+            {
+                ArkhatDeath(boris);
+            }
+            else
+            {
+                boris->commandp = boris->in_room;
+            }
+        }
+            break;
+
+        case 9117:
+        {
+            if(boris->commandp2 >= 1000)
+            {
+                ArkhatDeath(boris);
+            }
+            else
+            {
+                boris->commandp = boris->in_room;
+            }
+        }
+            break;
+
+        case 9118:
+        {
+            if(boris->commandp2 >= 1000)
+            {
+                ArkhatDeath(boris);
+            }
+            else
+            {
+                boris->commandp = boris->in_room;
+            }
+        }
+            break;
+
         case 9119:
         {
-            if(boris->in_room != boris->commandp)
+            if(boris->commandp2 >= 1000)
+            {
+                ArkhatDeath(boris);
+            }
+            else if(boris->in_room != boris->commandp)
             {
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9119);
                 send_to_room("$c0015 'Garebeth finalmente ci troviamo faccia a faccia! MUORI LURIDO VERME!'\n\r", 9119);
+                boris->commandp = boris->in_room;
             }
-            boris->commandp = boris->in_room;
         }
             break;
 
@@ -1056,7 +1277,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
 
             case 4:
                 send_to_room("$c0008Uguik Aurum riprende a parlare:\n\r", uguik->in_room);
-                send_to_room("$c0008  Scalate la montagna e raggiungerete il circolo rituale.\n\r  $c0008RHo fatto quello che mi avevate chiesto ora abbiate pieta' di me, non uccidetemi!'\n\r", uguik->in_room);
+                send_to_room("$c0008  Scalate la montagna e raggiungerete il circolo rituale.\n\r  $c0008Ho fatto quello che mi avevate chiesto ora abbiate pieta' di me, non uccidetemi!'\n\r", uguik->in_room);
                 break;
 
             case 5:

@@ -20,7 +20,7 @@ namespace Alarmud {
 #define STANISLAV_ROOM      8957
 #define SHADOWS_PORTAL      8987
 #define BORIS_HOME          9013
-#define ARKHAT_GOD_ROOM     9119
+#define ARKHAT_GOD_ROOM     9116
 #define MASS_GRAVE          9132
     
     //  objects
@@ -31,7 +31,9 @@ namespace Alarmud {
 #define NILMYS_FLASK        9051
 #define GONHAG_KEY          9052
 #define GONHAG_TOOL         9054
+#define VICTORY_PORTAL      9066
 #define NILNYS_VICTORY_KEY  9067
+#define FAREWELL_PORTAL     9071
 #define LOST_SOUL_EQ        9080
 #define NILMYS_DIAMOND      9096
 #define NILMYS_CORPSE       9100
