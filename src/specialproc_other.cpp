@@ -230,12 +230,14 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
 //  Quest Nilmys
     //  oggetti
-    { "urna_nilmys",(genericspecial_func) urna_nilmys },
+    { "urna_nilmys", (genericspecial_func) urna_nilmys },
     //  mob
-    { "Arkhat",(genericspecial_func) Arkhat },
-    { "Boris_Ivanhoe",(genericspecial_func) Boris_Ivanhoe },
-    { "Uguik_Aurum",(genericspecial_func) Uguik_Aurum },
-    { "stanislav_spirit",(genericspecial_func) stanislav_spirit },
+    { "Arkhat", (genericspecial_func) Arkhat },
+    { "Boris_Ivanhoe", (genericspecial_func) Boris_Ivanhoe },
+    { "Garebeth", (genericspecial_func) Garebeth},
+    { "Uguik_Aurum", (genericspecial_func) Uguik_Aurum },
+    { "Umag_Ulbar", (genericspecial_func) Umag_Ulbar},
+    { "stanislav_spirit", (genericspecial_func) stanislav_spirit },
 //  fine Quest Nilmys
 	{ "zFineprocedure", NULL },
 };

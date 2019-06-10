@@ -29,6 +29,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "reception.hpp"
 #include "regen.hpp"
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
@@ -167,22 +168,22 @@ MOBSPECIAL_FUNC(Arkhat)
     {
         if((targ = FindAnAttacker(arkhat)) != NULL)
         {
-            act("$c0009Spalanchi la sua enorme bocca ed attacchi!", FALSE, arkhat, 0, 0, TO_CHAR);
-            act("$c0009$n $c0009spalanca la sua enorme bocca ed attacca!", FALSE, arkhat, 0, 0, TO_ROOM);
+            act("$c0009Spalanchi la sua enorme bocca ed attacchi!\n\r", FALSE, arkhat, 0, 0, TO_CHAR);
+            act("$c0009$n $c0009spalanca la sua enorme bocca ed attacca!\n\r", FALSE, arkhat, 0, 0, TO_ROOM);
             if(!CAN_SEE(ch, targ))
             {
                 if(saves_spell(targ, SAVING_PARA))
                 {
-                    act("$c0014$N $c0014evita con un balzo fulmineo il tuo morso!", FALSE, arkhat, 0, targ, TO_CHAR);
-                    act("$c0014$N $c0014evita con un balzo fulmineo il morso di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                    act("$c0014$N $c0014evita con un balzo fulmineo il tuo morso!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                    act("$c0014$N $c0014evita con un balzo fulmineo il morso di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                     switch(number(0, 1))
                     {
                         case 0:
-                            act("$c0014Ti sposti rapidamente alla tua sinistra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                            act("$c0014Ti sposti rapidamente alla tua sinistra ed eviti le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
                             break;
 
                         default:
-                            act("$c0014Ti sposti rapidamente alla tua destra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
+                            act("$c0014Ti sposti rapidamente alla tua destra ed eviti le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
                             break;
                     }
                     return(FALSE);
@@ -265,42 +266,42 @@ MOBSPECIAL_FUNC(Arkhat)
                 switch(number(0, 4))
                 {
                     case 0:
-                        act("$c0014$N$c0014 abbassa velocemente la testa ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
-                        act("$c0014Abbassi velocemente la testa ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
-                        act("$c0014$N$c0014 abbassa velocemente la testa ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                        act("$c0014$N$c0014 abbassa velocemente la testa ed evita le tue fauci!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Abbassi velocemente la testa ed eviti le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 abbassa velocemente la testa ed evita le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                     break;
 
                     case 1:
-                        act("$c0014$N$c0014 indietreggia ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
-                        act("$c0014Eviti le fauci di $n$c0014 facendo due passi indietro!", FALSE, arkhat, 0, targ, TO_VICT);
-                        act("$c0014$N$c0014 indietreggia ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                        act("$c0014$N$c0014 indietreggia ed evita le tue fauci!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Eviti le fauci di $n$c0014 facendo due passi indietro!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 indietreggia ed evita le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                     break;
 
                     case 2:
-                        act("$c0014$N$c0014 si sposta alla sua sinistra ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
-                        act("$c0014Ti sposti rapidamente a sinistra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
-                        act("$c0014$N$c0014 si sposta alla sua sinistra ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                        act("$c0014$N$c0014 si sposta alla sua sinistra ed evita le tue fauci!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Ti sposti rapidamente a sinistra ed eviti le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 si sposta alla sua sinistra ed evita le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                     break;
 
                     case 3:
-                        act("$c0014$N$c0014 si sposta alla sua destra ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
-                        act("$c0014Ti sposti rapidamente a destra ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
-                        act("$c0014$N$c0014 si sposta alla sua destra ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                        act("$c0014$N$c0014 si sposta alla sua destra ed evita le tue fauci!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                        act("$c0014Ti sposti rapidamente a destra ed eviti le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
+                        act("$c0014$N$c0014 si sposta alla sua destra ed evita le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                     break;
 
                     default:
                     {
                         if(targ->equipment[WEAR_SHIELD])
                         {
-                            act("$c0014$N$c0014 blocca con lo scudo le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
-                            act("$c0014Blocchi con lo scudo le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
-                            act("$c0014$N$c0014 blocca con lo scudo le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                            act("$c0014$N$c0014 blocca con lo scudo le tue fauci!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                            act("$c0014Blocchi con lo scudo le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
+                            act("$c0014$N$c0014 blocca con lo scudo le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                         }
                         else
                         {
-                            act("$c0014$N$c0014 abbassa velocemente la testa ed evita le tue fauci!", FALSE, arkhat, 0, targ, TO_CHAR);
-                            act("$c0014Abbassi velocemente la testa ed eviti le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_VICT);
-                            act("$c0014$N$c0014 abbassa velocemente la testa ed evita le fauci di $n$c0014!", FALSE, arkhat, 0, targ, TO_NOTVICT);
+                            act("$c0014$N$c0014 abbassa velocemente la testa ed evita le tue fauci!\n\r", FALSE, arkhat, 0, targ, TO_CHAR);
+                            act("$c0014Abbassi velocemente la testa ed eviti le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_VICT);
+                            act("$c0014$N$c0014 abbassa velocemente la testa ed evita le fauci di $n$c0014!\n\r", FALSE, arkhat, 0, targ, TO_NOTVICT);
                         }
                     }
                     break;
@@ -324,19 +325,19 @@ void ArkhatDeath(struct char_data* boris)
 
         case 1001:
             send_to_room("\n\r$c0014Una grande $c0015luce$c0014 inizia a generarsi dalla spada e diventa sempre piu' intesa... poi...\n\r", boris->in_room);
-            send_to_room("\n\r$c0014con una fragorosa esplosione di $c0015luce $c0013Arkhat$c0014, il divoratore, di dissolve come cancellato\n\r", boris->in_room);
-            send_to_room("\n\r$c0014dall'esistenza e dalla memoria.\n\r", boris->in_room);
+            send_to_room("$c0014con una fragorosa esplosione di $c0015luce $c0013Arkhat$c0014, il divoratore, di dissolve come cancellato\n\r", boris->in_room);
+            send_to_room("$c0014dall'esistenza e dalla memoria.\n\r", boris->in_room);
             break;
 
         case 1002:
             send_to_room("\n\r$c0014Le $c0015anime$c0014 che lo circondavano e si tormentavano in una macabra danza attorno al suo corpo,\n\r", boris->in_room);
-            send_to_room("\n\r$c0014iniziano ad emettere $c0015luce$c0014 ed a convergere verso un punto in alto poco sopra la tua testa.\n\r", boris->in_room);
-            send_to_room("\n\r$c0014Noti una di esse che indugia sulla carcassa materiale rimasta del $c0013Dio$c0014 sconfitto.\n\r", boris->in_room);
+            send_to_room("$c0014iniziano ad emettere $c0015luce$c0014 ed a convergere verso un punto in alto poco sopra la tua testa.\n\r", boris->in_room);
+            send_to_room("$c0014Noti una di esse che indugia sulla carcassa materiale rimasta del $c0013Dio$c0014 sconfitto.\n\r", boris->in_room);
             break;
 
         case 1003:
-            send_to_room("\n\r$c0014E' lei la prima anima presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
-            send_to_room("\n\r$c0014le altre sono radunate.\n\r", boris->in_room);
+            send_to_room("$c0014E' lei la prima anima presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
+            send_to_room("$c0014le altre sono radunate.\n\r", boris->in_room);
             break;
 
         case 1004:
@@ -347,7 +348,11 @@ void ArkhatDeath(struct char_data* boris)
 
         case 1005:
             send_to_room("\n\r$c0014Boris esclama '$c0011VITTORIA!$c0014', e sale verso la $c0015luce$c0014.\n\r", boris->in_room);
-            do_enter(boris, "portale", 0);
+            boris->generic = 100;
+            act("Entri nel Portale della Vittoria.", FALSE, boris, NULL, NULL, TO_CHAR);
+            act("$n entra nel Portale della Vittoria.", FALSE, boris, NULL, NULL, TO_ROOM);
+            char_from_room(boris);
+            char_to_room(boris, 9121);
             break;
 
         default:
@@ -359,7 +364,7 @@ void ArkhatDeath(struct char_data* boris)
 MOBSPECIAL_FUNC(Boris_Ivanhoe)
 {
     struct char_data* tch;
-    struct char_data* boris;
+    struct char_data* boris, *umag;
     struct obj_data* eq_boris;
 
     boris = 0;
@@ -375,23 +380,38 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
     }
 
-    if(!AWAKE(boris))
+    umag = 0;
+
+    for(tch = real_roomp(UMAG_ROOM)->people; (!umag) && (tch); tch = tch->next_in_room)
     {
-        return FALSE;
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == UMAG_ULBAR)
+            {
+                umag = tch;
+            }
+        }
     }
 
     if(type == EVENT_DEATH)
     {
-        if(boris)
+        if(umag)
         {
-            boris->commandp2 = 1000;
+            send_to_zone("\n\r$c0011Boris si accascia morente... con lui la speranza svanisce.\n\r", umag);
+            umag->commandp = 1;
+            BorisDeath(umag);
             return TRUE;
         }
         else
         {
-            mudlog(LOG_PLAYERS, "Arkhat was killed by players but Boris is not alive, this is not possible.")
+            mudlog(LOG_PLAYERS, "Umag is missing, this is not possible.")
             return TRUE;
         }
+    }
+
+    if(!AWAKE(boris))
+    {
+        return FALSE;
     }
 
     if(cmd == CMD_TELL)
@@ -405,7 +425,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         {
             char_from_room(ch);
             char_to_room(ch, 3001);
-            do_look(ch, NULL, 0);
+            do_look(ch, NULL, 15);
             return FALSE;
         }
         else
@@ -541,6 +561,36 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
             break;
 
+        case 100:
+        {
+            if(cmd == CMD_ASK)
+            {
+                if(strstr(arg, "ricompensa") || strstr(arg, "premio"))
+                {
+                    act("$c0006$N$c0006 ti chiede la ricompensa.", FALSE, boris, NULL, ch, TO_CHAR);
+                    act("$c0006Chiedi il giusto premio a $n.", FALSE, boris, NULL, ch, TO_VICT);
+                    act("$c0006$N$c0006 chiede qualcosa a $n.", FALSE, boris, NULL, ch, TO_NOTVICT);
+                    if(ch->generic == 10)
+                    {
+                        GiveRewardNilmys(boris, ch);
+                    }
+                    else
+                    {
+                        act("$c0015[$c0013$n$c0015] dice '$N non sei degn$B di ricevere il premio!'", FALSE, boris, NULL, ch, TO_ROOM);
+                    }
+                    return TRUE;
+                }
+                else
+                {
+                    act("$c0006$N$c0006 ti chiede qualcosa di completamente inutile.", FALSE, boris, NULL, ch, TO_CHAR);
+                    act("$c0006Chiedi qualcosa di completamente inutile a $n.", FALSE, boris, NULL, ch, TO_VICT);
+                    act("$c0006$N$c0006 chiede qualcosa a $n.", FALSE, boris, NULL, ch, TO_NOTVICT);
+                    return TRUE;
+                }
+            }
+        }
+            break;
+
         default:
             break;
     }
@@ -548,13 +598,143 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     return FALSE;
 }
 
+MOBSPECIAL_FUNC(Umag_Ulbar)
+{
+    struct char_data* umag, *tch;
+
+    umag = 0;
+
+    for(tch = real_roomp(UMAG_ROOM)->people; (!umag) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == UMAG_ULBAR)
+            {
+                umag = tch;
+            }
+        }
+    }
+
+    if(umag->commandp > 1)
+    {
+        BorisDeath(umag);
+    }
+    return FALSE;
+}
+
+void BorisDeath(struct char_data* umag)
+{
+    switch(umag->commandp)
+    {
+        case 1:
+            send_to_zone("\n\r$c0008Non appena la vita scivola via dal corpo di Boris, un varco dimensionale si apre.\n\r", umag);
+            send_to_zone("$c0008Tamarang e Daggar prendono il corpo di Boris mentre Umag vi dice mestamente di avvicinarvi al varco.\n\r", umag);
+            send_to_zone("$c0008Mentre vi avvicinate al passaggio, Umag compie un gesto con il suo bastone.\n\r", umag);
+            send_to_zone("$c0008Chiudi per un attimo gli occhi e quando li riapri ti ritrovi nella caverna di Boris.\n\r", umag);
+            MoveToonInRangeToRoom(9000, 9199, BORIS_HOME);
+            break;
+            
+        case 3:
+            send_to_room("\n\r$c0015Mentre gli altri iniziano a prendersi cura del corpo del compagno caduto, il mago vi parla per congedarvi:\n\r", BORIS_HOME);
+            send_to_room("\n\r$c0015 'Dovete sapere che $c0013Arkhat$c0015 era possibile sconfiggerlo solo brandendo la spada del nipote di Boris.\n\r", BORIS_HOME);
+            send_to_room("  $c0015Ed il solo Boris aveva il potere di evocarla.\n\r", BORIS_HOME);
+            send_to_room("  $c0015Le speranze sono, ormai, perdute.\n\r", BORIS_HOME);
+            send_to_room("  $c0015Noi resteremo in eterno in questa dimensione d'Ombra per non permettere ad Arkhat di manifestarsi.\n\r", BORIS_HOME);
+            send_to_room("  $c0015Grazie a tutti voi, per il vostro tentativo.\n\r", BORIS_HOME);
+            send_to_room("  $c0015Le nostre giornate saranno uguali all'infinito... non e' detto che non ci rincontreremo.'\n\r", BORIS_HOME);
+            break;
+            
+        case 4:
+            send_to_all("\n\r\n\r$c0009Daggar, Tamarang, Cormac, Ireiin, Isrka ed Umag vi ringraziano dal profondo del cuore per averci provato.\n\r");
+            send_to_room("\n\r\n\r$c0008Il mago pronuncia delle parole arcane e, lentamente, l'immagine di Umag e della caverna iniziano a sbiadire...\n\r", BORIS_HOME);
+            send_to_room("\n\r$c0015Una forte luce ti investe ed improvvisamente ti ritrovi di fronte alla fontana di Myst.\n\r", BORIS_HOME);
+            MoveToonInRangeToRoom(9000, 9199, 3004);
+            umag->commandp = 0;
+            break;
+
+        default:
+            break;
+    }
+    umag->commandp += 1;
+}
+
+void CheckReward(struct char_data* boris)
+{
+    struct descriptor_data* i;
+
+    if(boris)
+    {
+        for(i = descriptor_list; i; i = i->next)
+        {
+            if(!i->connected)
+            {
+                if(real_roomp(i->character->in_room)->zone == real_roomp(boris->in_room)->zone || (real_roomp(i->character->in_room)->zone + 1) == real_roomp(boris->in_room)->zone)
+                {
+                    if(i->character->generic == 10)
+                    {
+                        GiveRewardNilmys(boris, i->character);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
+{
+    struct obj_data* coin;
+    char buf[256];
+
+    ch->generic = 0;
+
+    coin = read_object(real_object(NILMYS_COIN), REAL);
+
+    sprintf(buf, "un Augustale di proprieta' di %s", GET_NAME(ch));
+    free(coin->short_description);
+    coin->short_description = (char*)strdup(buf);
+    SetPersonOnSave(ch, coin);
+    
+    act("Dai $p a $N.", FALSE, boris, coin, ch, TO_CHAR);
+    act("$n ti da' $p.", FALSE, boris, coin, ch, TO_VICT);
+    act("$n da' $p a $N.", FALSE, boris, coin, ch, TO_NOTVICT);
+    
+    obj_to_char(coin, ch);
+}
+
+void MoveToonInRangeToRoom(int low_number, int high_number, int room)
+{
+    struct descriptor_data* i;
+
+    if(low_number && high_number && room)
+    {
+        for(i = descriptor_list; i; i = i->next)
+        {
+            if(i->character->in_room >= low_number && i->character->in_room <= high_number)
+            {
+                if(!IS_IMMORTALE(i->character))
+                {
+                    char_from_room(i->character);
+                    char_to_room(i->character, room);
+                }
+            }
+        }
+    }
+}
+
+
 void CheckBorisRoom(struct char_data* boris)
 {
+    if(!boris)
+    {
+        return;
+    }
+
     if(boris->specials.fighting)
     {
         return;
     }
 
+    send_to_room("\n\r", boris->in_room);
     switch(boris->in_room)
     {
         case BORIS_HOME:
@@ -571,7 +751,7 @@ void CheckBorisRoom(struct char_data* boris)
             }
             else
             {
-                if(number(0, 12) == 5)
+                if(number(0, 30) == 26)
                 {
                     act("$c0015[$c0005$n$c0015] dice 'Cosa facciamo fermi qui? Andiamo!'", FALSE, boris, NULL, NULL, TO_ROOM);
                 }
@@ -648,8 +828,8 @@ void CheckBorisRoom(struct char_data* boris)
                 do_say(boris, "Sembra proprio che i due Generali non amino condividere gli spazi.", 0);
                 do_action(boris, NULL, CMD_CHUCKLE);
                 do_say(boris, "Meglio per noi, li affronteremo uno alla volta.", 0);
-                send_to_room("$c0005[$c0015Boris Ivanhoe Gudonov$c0005] sussurra:\n\r", 9035);
-                send_to_room("$c0005 'Avverto un brivido lungo la schiena guardando verso sud, qualcosa mi dice che dobbiamo riuscire a passare.'\n\r", 9035);
+                send_to_room("$c0013[$c0015Boris Ivanhoe Gudonov$c0013] sussurra:\n\r", 9035);
+                send_to_room("$c0013 'Avverto un brivido lungo la schiena guardando verso sud, qualcosa mi dice che dobbiamo riuscire a passare.'\n\r", 9035);
             }
             boris->commandp = boris->in_room;
         }
@@ -868,61 +1048,65 @@ void CheckBorisRoom(struct char_data* boris)
 
         case 9115:
         {
-            if(boris->commandp2 >= 1000)
+            if(boris->commandp2 >= 1000 && boris->commandp2 < 2000)
             {
                 ArkhatDeath(boris);
             }
-            else
+            else if(boris->commandp2 >= 2000)
             {
-                boris->commandp = boris->in_room;
+                GarebethDeath(boris);
             }
         }
             break;
 
         case 9116:
         {
-            if(boris->commandp2 >= 1000)
+            if(boris->commandp2 >= 1000 && boris->commandp2 < 2000)
             {
                 ArkhatDeath(boris);
             }
-            else
+            else if(boris->commandp2 >= 2000)
             {
-                boris->commandp = boris->in_room;
+                GarebethDeath(boris);
             }
         }
             break;
 
         case 9117:
         {
-            if(boris->commandp2 >= 1000)
+            if(boris->commandp2 >= 1000 && boris->commandp2 < 2000)
             {
                 ArkhatDeath(boris);
             }
-            else
+            else if(boris->commandp2 >= 2000)
             {
-                boris->commandp = boris->in_room;
+                GarebethDeath(boris);
             }
         }
             break;
 
         case 9118:
         {
-            if(boris->commandp2 >= 1000)
+            if(boris->commandp2 >= 1000 && boris->commandp2 < 2000)
             {
                 ArkhatDeath(boris);
             }
-            else
+            else if(boris->commandp2 >= 2000)
             {
-                boris->commandp = boris->in_room;
+                GarebethDeath(boris);
             }
         }
             break;
 
         case 9119:
         {
-            if(boris->commandp2 >= 1000)
+            if(boris->commandp2 >= 1000 && boris->commandp2 < 2000)
             {
                 ArkhatDeath(boris);
+            }
+            else if(boris->commandp2 >= 2000)
+            {
+                GarebethDeath(boris);
             }
             else if(boris->in_room != boris->commandp)
             {
@@ -935,17 +1119,20 @@ void CheckBorisRoom(struct char_data* boris)
 
         case 9121:
         {
-            if(boris->in_room != boris->commandp)
+            if(boris->in_room != boris->commandp && boris->in_room == (boris)->master->in_room)
             {
-                send_to_room("$c0015Boris vi abbraccia uno ad uno poi dice:\n\r", 9021);
-                send_to_room("$c0015 'Grazie amici, non dimentichero' mai cio' che avete fatto per noi.\n\r  $c0015E' stato un onore per me combattere al vostro fianco.\n\r  $c0015Vi prego accettare questo come segno della nostra riconoscenza.'\n\r", 9008);
+                send_to_zone("$c0015Boris vi abbraccia uno ad uno poi dice:\n\r", boris);
+                send_to_zone("$c0015 'Grazie amici, non dimentichero' mai cio' che avete fatto per noi.\n\r  $c0015E' stato un onore per me combattere al vostro fianco.\n\r  $c0015Vi prego, accettate questo come segno della nostra riconoscenza.'\n\r", boris);
 
-                // mettere la parte relativa al premio
-                do_say(boris, "mo ve premio, daje!", 0);
+                // ed infine... il premio!
+                CheckReward(boris);
 
-                do_say(boris, "Possano le nostre strade reincontrarsi un giorno! Addio.", 0);
+                do_say(boris, "Se qualcuno di voi degno di ricevere il premio non ha ottenuto la ricompensa me la chieda!", 0);
+
+                do_say(boris, "Possano le nostre strade rincontrarsi un giorno! Addio.", 0);
+                boris->commandp = boris->in_room;
+                stop_follower(boris);
             }
-            boris->commandp = boris->in_room;
         }
             break;
 
@@ -953,57 +1140,70 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room == boris->commandp)
             {
-                if(number(0, 12) == 5)
+                if(number(0, 30) == 28)
                 {
                     act("$c0015[$c0005$n$c0015] dice 'Cosa facciamo fermi qui? Andiamo!'", FALSE, boris, NULL, NULL, TO_ROOM);
                 }
             }
-            boris->commandp = boris->in_room;
-
-            switch(number(0, 50))
+            else
             {
-                case 0:
-                    do_say(boris, "Quel dannato Garebeth la paghera'... ah se la paghera'!", 0);
-                    break;
-                case 2:
-                    do_say(boris, "Non indugiate troppo! Il destino di molta gente dipende da noi!", 0);
-                    break;
-                case 7:
-                    do_say(boris, "Valutiamo bene ogni scelta e non sottovalutiamo nessun nemico...", 0);
-                    break;
-                case 11:
-                    do_say(boris, "Arkhat probabilmente ci ridurra' in pezzi! Non temo il mio destino, non temiate il vostro.", 0);
-                    break;
-                case 15:
-                    do_say(boris, "Andiamo avanti, non esitiamo!", 0);
-                    do_say(boris, "Dobbiamo farlo per la gente di Nilmys, dobbiamo farlo per Vlad e per i compagni caduti!", 0);
-                    do_say(boris, "Non ci arrenderemo mai!", 0);
-                    break;
-                case 18:
-                    do_say(boris, "I miei occhi ormai si sono abituati a questo buio, temo solo di sbattere inavvertitamente con un mignolo ad uno spigolo.", 0);
-                    break;
-                case 22:
-                    do_say(boris, "Qualunque cosa accada, non temiate l'oscurita'...", 0);
-                    do_say(boris, "Del resto siamo proprio dentro di essa...", 0);
-                    do_say(boris, "Cosa potrebbe andare peggio?", 0);
-                    break;
-                case 26:
-                    do_say(boris, "Quando mettero' le mani su Gorath vedrete come lo ridurro'! Lo avete gia' seccato?! Mi dovete una birra allora, era mio!", 0);
-                    break;
-                case 30:
-                    do_say(boris, "Vi ho mai raccontato di quando Umag provo' a creare il suo primo golem?", 0);
-                    do_say(boris, "Vi dico solo che uso' gli scarti alimentari di una taverna per farlo...", 0);
-                    break;
-                case 32:
-                    do_say(boris, "Sapete che ero solito avere incontri con donne che vendevano amore e fedelta' a pagamento?", 0);
-                    do_say(boris, "Beh una di queste aveva un odore simile alla creatura appena incontrata!", 0);
-                    break;
-                default:
-                    break;
+                switch(number(0, 70))
+                {
+                    case 0:
+                        do_say(boris, "Quel dannato Garebeth la paghera'... ah se la paghera'!", 0);
+                        break;
+
+                    case 2:
+                        do_say(boris, "Non indugiate troppo! Il destino di molta gente dipende da noi!", 0);
+                        break;
+
+                    case 7:
+                        do_say(boris, "Valutiamo bene ogni scelta e non sottovalutiamo nessun nemico...", 0);
+                        break;
+
+                    case 11:
+                        do_say(boris, "Arkhat probabilmente ci ridurra' in pezzi! Non temo il mio destino, non temiate il vostro.", 0);
+                        break;
+
+                    case 15 :
+                        do_say(boris, "Andiamo avanti, non esitiamo!", 0);
+                        do_say(boris, "Dobbiamo farlo per la gente di Nilmys, dobbiamo farlo per Vlad e per i compagni caduti!", 0);
+                        do_say(boris, "Non ci arrenderemo mai!", 0);
+                        break;
+
+                    case 18:
+                        do_say(boris, "I miei occhi ormai si sono abituati a questo buio, temo solo di sbattere inavvertitamente con un mignolo ad uno spigolo.", 0);
+                        break;
+
+                    case 22:
+                        do_say(boris, "Qualunque cosa accada, non temiate l'oscurita'...", 0);
+                        do_say(boris, "Del resto siamo proprio dentro di essa...", 0);
+                        do_say(boris, "Cosa potrebbe andare peggio?", 0);
+                        break;
+
+                    case 26:
+                        do_say(boris, "Quando mettero' le mani su Gorath vedrete come lo ridurro'! Lo avete gia' seccato?! Mi dovete una birra allora, era mio!", 0);
+                        break;
+
+                    case 30:
+                        do_say(boris, "Vi ho mai raccontato di quando Umag provo' a creare il suo primo golem?", 0);
+                        do_say(boris, "Vi dico solo che uso' gli scarti alimentari di una taverna per farlo...", 0);
+                        break;
+
+                    case 32:
+                        do_say(boris, "Sapete che ero solito avere incontri con donne che vendevano amore e fedelta' a pagamento?", 0);
+                        do_say(boris, "Beh una di queste aveva un odore simile alla creatura appena incontrata!", 0);
+                        break;
+
+                    default:
+                        break;
+                }
+                boris->commandp = boris->in_room;
             }
         }
             break;
     }
+    send_to_room("\n\r", boris->in_room);
 }
 
 bool FindKeyByNumber(struct char_data* ch, int number)
@@ -1238,7 +1438,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
 
             case 2:
                 send_to_room("$c0008Uguik Aurum si gira verso di te poi dice:\n\r", uguik->in_room);
-                send_to_room("$c0008 'In questa ampolla ci sono le cinque dosi che ti serviranno per cospargere il portale di Arkhat.\n\r  $c0008Ricordate di cospargere una dose su ogni punta ed una al centro altrimenti il rituale fallira'.\n\r\n\r", uguik->in_room);
+                send_to_room("$c0008 'In questa ampolla ci sono le cinque dosi che ti serviranno per cospargere il portale di Arkhat.\n\r  $c0008Ricordate di cospargere una dose su ogni punta ed una al centro altrimenti il rituale fallira'.'\n\r\n\r", uguik->in_room);
                 break;
 
             case 3:
@@ -1277,7 +1477,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
 
             case 4:
                 send_to_room("$c0008Uguik Aurum riprende a parlare:\n\r", uguik->in_room);
-                send_to_room("$c0008  Scalate la montagna e raggiungerete il circolo rituale.\n\r  $c0008Ho fatto quello che mi avevate chiesto ora abbiate pieta' di me, non uccidetemi!'\n\r", uguik->in_room);
+                send_to_room("$c0008 'Scalate la montagna e raggiungerete il circolo rituale.\n\r  $c0008Ho fatto quello che mi avevate chiesto ora abbiate pieta' di me, non uccidetemi!'\n\r", uguik->in_room);
                 break;
 
             case 5:
@@ -1315,6 +1515,174 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
         return TRUE;
     }
     return FALSE;
+}
+
+MOBSPECIAL_FUNC(Garebeth)
+{
+    struct char_data* tch, *boris;
+    struct char_data* tar, *garebeth;
+    int i;
+
+    garebeth = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!garebeth) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == GAREBETH)
+            {
+                garebeth = tch;
+            }
+        }
+    }
+
+    boris = 0;
+    
+    for(tch = real_roomp(ch->in_room)->people; (!boris) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            {
+                boris = tch;
+            }
+        }
+    }
+
+    if(type == EVENT_DEATH)
+    {
+        if(boris)
+        {
+            boris->commandp2 = 2000;
+            return (TRUE);
+        }
+        else
+        {
+            mudlog(LOG_PLAYERS, "Garebeth was killed by players but Boris is not alive, this is not possible.")
+            return (TRUE);
+        }
+    }
+
+    if(cmd || !AWAKE(garebeth))
+    {
+        return(FALSE);
+    }
+    
+    if(StandUp(garebeth))
+    {
+        return(TRUE);
+    }
+
+    if((GET_POS(garebeth) > POSITION_STUNNED) && (GET_POS(garebeth) < POSITION_FIGHTING))
+    {
+        return(FALSE);
+    }
+    
+    if((tar = garebeth->specials.fighting) && (garebeth->specials.fighting->in_room == garebeth->in_room))
+    {
+        if(HitOrMiss(ch, tar, CalcThaco(ch, NULL)))
+        {
+            act("Mordi $N e gli succhi forza vitale!", 1, garebeth, 0, tar, TO_CHAR);
+            act("$n morde $N e gli succhia forza vitale!", 1, garebeth, 0, tar, TO_NOTVICT);
+            act("$n ti morde e ti succhia forza vitale!", 1, garebeth, 0, tar, TO_VICT);
+
+            /*toglie 1 hp per livello e se ne prende met�*/
+            i = GetMaxLevel(garebeth);
+            GET_HIT(tar) -= i;
+            i = (i/2);
+            GET_HIT(garebeth) += i;
+            GET_HIT(garebeth) = MIN(GET_HIT(garebeth), GET_MAX_HIT(garebeth));
+            alter_hit(garebeth, 0);
+            alter_hit(tar, 0);
+            return TRUE;
+        }
+        else {
+            act("Provi a mordere $N!", 1, garebeth, 0, tar, TO_CHAR);
+            act("$n prova a mordere $N!", 1, garebeth, 0, tar, TO_NOTVICT);
+            act("$n prova a morderti!", 1, garebeth, 0, tar, TO_VICT);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+void GarebethDeath(struct char_data* boris)
+{
+    struct obj_data* armor, *sword;
+
+    switch(boris->commandp2)
+    {
+        case 2000:
+        {
+            send_to_room("\n\r", boris->in_room);
+            do_say(boris, "Queste sono le vestigia del mio amato nipote Vladimir.", 0);
+            act("$n ti mostra l'$c0015Armatura$c0007 $c0015Consacrata $c0007dalle vittime di $c0013Arkhat$c0007 e la $c0015Divina $c0007Spada di Vlad.", FALSE, boris, NULL, NULL, TO_ROOM);
+        }
+            break;
+            
+        case 2001:
+        {
+            send_to_room("\n\r", boris->in_room);
+            do_say(boris, "Usate questa spada amici miei, ho giurato al mio carissimo nipote che la sua arma sarebbe vissuta in eterno...", 0);
+            do_say(boris, "E che solo i piu' valorosi guerrieri mortali l'avrebbero brandita!", 0);
+            send_to_room("\n\r", boris->in_room);
+
+            sword = read_object(real_object(VLAD_SWORD), REAL);
+
+            if(boris->in_room == (boris)->master->in_room)
+            {
+                act("Dai $p a $N.", FALSE, boris, sword, (boris)->master, TO_CHAR);
+                act("$n ti da' $p.", FALSE, boris, sword, (boris)->master, TO_VICT);
+                act("$n da' $p a $N.", FALSE, boris, sword, (boris)->master, TO_NOTVICT);
+                obj_to_char(sword, boris->master);
+            }
+            else
+            {
+                do_say(boris, "Il piu' valoroso di voi estragga la spada!", 0);
+                act("Conficchi $p nel terreno.", FALSE, boris, sword, NULL, TO_CHAR);
+                act("$n conficca $p nel terreno.", FALSE, boris, sword, NULL, TO_ROOM);
+                obj_to_room(sword, boris->in_room);
+            }
+        }
+            break;
+            
+        case 2002:
+        {
+            send_to_room("\n\r", boris->in_room);
+            do_say(boris, "Usate la sua armatura e datemi l'opportunita' di combattere ancora una volta al suo fianco.", 0);
+            do_say(boris, "Portatela con rispetto ed usatela con onore!", 0);
+            send_to_room("\n\r", boris->in_room);
+
+            armor = read_object(real_object(VLAD_ARMOR), REAL);
+
+            if(boris->in_room == (boris)->master->in_room)
+            {
+                act("Dai $p a $N.", FALSE, boris, armor, (boris)->master, TO_CHAR);
+                act("$n ti da' $p.", FALSE, boris, armor, (boris)->master, TO_VICT);
+                act("$n da' $p a $N.", FALSE, boris, armor, (boris)->master, TO_NOTVICT);
+                obj_to_char(armor, boris->master);
+            }
+            else
+            {
+                do_say(boris, "Chi vuole sfidare $c0013Arkhat$c0007 indossi l'armatura!", 0);
+                act("Adagi $p a terra.", FALSE, boris, armor, NULL, TO_CHAR);
+                act("$n adagia $p a terra.", FALSE, boris, armor, NULL, TO_ROOM);
+                obj_to_room(armor, boris->in_room);
+            }
+        }
+            break;
+            
+        case 2003:
+            send_to_room("\n\r", boris->in_room);
+            do_say(boris, "Vi ringrazio a tutti, comunque andra' a finire!", 0);
+            do_say(boris, "Ora andiamo e non temete l'oscurita'!", 0);
+            break;
+
+        default:
+            break;
+    }
+    send_to_room("\n\r", boris->in_room);
+    boris->commandp2 += 1;
 }
 
 OBJSPECIAL_FUNC(urna_nilmys)
@@ -1582,6 +1950,34 @@ ROOMSPECIAL_FUNC(gonhag_chain)
     }
     return FALSE;
 }
+/*
+ROOMSPECIAL_FUNC(reward_giver)
+{
+    int count = 0;
+
+    if(type != EVENT_COMMAND)
+    {
+        return FALSE;
+    }
+
+    if(cmd == CMD_GIVE)
+    {
+        
+    }
+
+    switch(ch->in_room)
+    {
+        case BORIS_HOME:
+            break;
+
+        case UMAG_ROOM:
+
+        default:
+            break;
+    }
+
+    return FALSE;
+} */
 
 } // namespace Alarmud
 

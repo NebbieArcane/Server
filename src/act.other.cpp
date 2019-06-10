@@ -2437,6 +2437,18 @@ ACTION_FUNC(do_use) {
 
             if(stick->iGeneric == NILMYS_PORTAL_ONE + NILMYS_PORTAL_TWO + NILMYS_PORTAL_THREE + NILMYS_PORTAL_FOUR + NILMYS_PORTAL_FIVE)
             {
+                for(tmp_char = real_roomp(ch->in_room)->people; tmp_char; tmp_char = tmp_char->next_in_room)
+                {
+                    if(tmp_char == ch)
+                    {
+                        ch->generic = 10;
+                    }
+                    else if(tmp_char && is_same_group(ch, tmp_char))
+                    {
+                        tmp_char->generic = 10;
+                    }
+                }
+
                 send_to_all("\n\r\n\r");
                 send_to_all("$c0008La voce di Arkhat, il Dio Divoratore, tuona:\n\r");
                 send_to_all("$c0008 'Ho aspettato centinaia di vite mortali per potermi manifestare in questo mondo.$c0007\n\r");

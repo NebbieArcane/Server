@@ -2053,6 +2053,12 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
+    if(!IsOnPmp(ch->in_room))
+    {
+        send_to_char("Non puoi evocare nessuno! Sei in un altro piano dimensionale!\n\r", ch);
+        return;
+    }
+
 	if(check_peaceful(victim, "")) {
 		send_to_char("Non riesci a superare le difese magiche.\n\r", ch);
 		return;
