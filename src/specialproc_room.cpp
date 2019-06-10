@@ -43,6 +43,7 @@ struct RoomSpecialProcEntry roomproc[] = {
     { "gonhag_block", gonhag_block },
     { "gonhag_chain", gonhag_chain },
     { "portale_ombra", portale_ombra },
+    { "reward_giver", reward_giver },
 //  fine Quest Nilmys
 	{ "pray_for_items", pray_for_items },
 	{ "BlockAlign", BlockAlign },

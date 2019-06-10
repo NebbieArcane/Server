@@ -2208,7 +2208,6 @@ ACTION_FUNC(do_use) {
 
             if(IS_OBJ_STAT2(tmp_object, ITEM2_PERSONAL) && !pers_on(ch, tmp_object))
             {
-                SetPersonOnSave(ch, tmp_object);
                 act("Non puoi farlo, $p non ti appartiene!", FALSE, ch, tmp_object, 0, TO_CHAR);
                 return;
             }

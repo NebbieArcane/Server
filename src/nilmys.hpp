@@ -11,7 +11,11 @@ namespace Alarmud {
     // mobiles
 #define STANISLAV_SPECTRE   8916
 #define BORIS_IVANHOE       9000
+#define TAMARANG_PRINCE     9001
 #define UMAG_ULBAR          9002
+#define DAGGAR_IVRAM        9003
+#define IREIIN_DRUID        9004
+#define CORMAC_RUNAR        9005
 #define ISKRA_STANISLAV     9006
 #define ARKHAT_GOD          9007
 #define GAREBETH            9008
@@ -65,6 +69,7 @@ MOBSPECIAL_FUNC(stanislav_spirit);
 ROOMSPECIAL_FUNC(gonhag_block);
 ROOMSPECIAL_FUNC(gonhag_chain);
 ROOMSPECIAL_FUNC(portale_ombra);
+ROOMSPECIAL_FUNC(reward_giver);
 
     
                     //  other

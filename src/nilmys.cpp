@@ -615,6 +615,16 @@ MOBSPECIAL_FUNC(Umag_Ulbar)
         }
     }
 
+    if(!AWAKE(umag))
+    {
+        return FALSE;
+    }
+
+    if(cmd && cmd != CMD_GIVE)
+    {
+        return(FALSE);
+    }
+
     if(umag->commandp > 1)
     {
         BorisDeath(umag);
@@ -1131,6 +1141,7 @@ void CheckBorisRoom(struct char_data* boris)
 
                 do_say(boris, "Possano le nostre strade rincontrarsi un giorno! Addio.", 0);
                 boris->commandp = boris->in_room;
+                boris->specials.quest_ref = 0;
                 stop_follower(boris);
             }
         }
@@ -1193,6 +1204,14 @@ void CheckBorisRoom(struct char_data* boris)
                     case 32:
                         do_say(boris, "Sapete che ero solito avere incontri con donne che vendevano amore e fedelta' a pagamento?", 0);
                         do_say(boris, "Beh una di queste aveva un odore simile alla creatura appena incontrata!", 0);
+                        break;
+
+                    case 41:
+                        do_say(boris, "Ci vogliono 6 monete, non una di piu' non una di meno, per ottenere finalmente il vostro premio!", 0);
+                        break;
+
+                    case 65:
+                        do_say(boris, "Ricordatevi questa cosa: io ed i miei compagni possiamo scambiare le vostre monete con un premio favoloso!", 0);
                         break;
 
                     default:
@@ -1837,8 +1856,8 @@ ROOMSPECIAL_FUNC(gonhag_block)
                         act("Quando metti questo pezzo nel meccanismo noti subito che la manovella puo' adesso ruotare liberamente...", FALSE, ch, 0, 0, TO_CHAR);
                         WAIT_STATE(ch, PULSE_VIOLENCE * 2);
                         act("Vedi $n armeggiare con il pezzo meccanico e sembra che stia riuscendo a farlo collimare nel meccanismo.", FALSE, ch, 0, 0, TO_ROOM);
-                        act("Infine... ti giri con aria soddisfatta e il pollice in su!", FALSE, ch, 0, 0, TO_CHAR);
-                        act("Infine... si gira con aria soddisfatta e il pollice in su!", FALSE, ch, 0, 0, TO_ROOM);
+                        act("Infine... ti giri con aria soddisfatta ed il pollice in su!", FALSE, ch, 0, 0, TO_CHAR);
+                        act("Infine... si gira con aria soddisfatta ed il pollice in su!", FALSE, ch, 0, 0, TO_ROOM);
                         extract_obj(tool);
 
                         key = get_obj(obj_index[real_object(GONHAG_KEY)].name);
@@ -1950,34 +1969,306 @@ ROOMSPECIAL_FUNC(gonhag_chain)
     }
     return FALSE;
 }
-/*
+
 ROOMSPECIAL_FUNC(reward_giver)
 {
-    int count = 0;
+    struct char_data *shopper, *tch;
+    struct obj_data* coin, *reward;
+    char buf[256];
+    int i, j, count = 0, premio, rnum;
 
     if(type != EVENT_COMMAND)
     {
         return FALSE;
     }
 
-    if(cmd == CMD_GIVE)
+    shopper = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!shopper) && (tch); tch = tch->next_in_room)
     {
-        
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum >= BORIS_IVANHOE && mob_index[tch->nr].iVNum <= CORMAC_RUNAR)
+            {
+                shopper = tch;
+            }
+        }
     }
 
-    switch(ch->in_room)
+    if(!shopper)
     {
-        case BORIS_HOME:
-            break;
+        return FALSE;
+    }
 
-        case UMAG_ROOM:
+    if(!IS_PC(ch))
+    {
+        return FALSE;
+    }
 
-        default:
-            break;
+    if(!AWAKE(shopper))
+    {
+        return FALSE;
+    }
+
+    if(cmd == CMD_BUY)
+    {
+        for(i = 0; i < 6; i++)
+        {
+            coin = get_obj_in_list_vis(ch, obj_index[real_object(NILMYS_COIN)].name, ch->carrying);
+
+            if(coin)
+            {
+                if(IS_OBJ_STAT2(coin, ITEM2_PERSONAL) && !pers_on(ch, coin))
+                {
+                    act("Mi dispiace ma $p non ti appartiene!", FALSE, ch, coin, NULL, TO_CHAR);
+
+                    //  restituisco le monete prese
+                    if(count > 0)
+                    {
+                        for(j = 0; j < count; j++)
+                        {
+                            coin = read_object(real_object(NILMYS_COIN), REAL);
+                            obj_to_char(coin, ch);
+                            
+                            sprintf(buf, "un Augustale di proprieta' di %s", GET_NAME(ch));
+                            free(coin->short_description);
+                            coin->short_description = (char*)strdup(buf);
+                            SetPersonOnSave(ch, coin);
+                        }
+                    }
+                    return TRUE;
+                }
+
+                count += 1;
+                extract_obj(coin);
+            }
+            else
+            {
+                act("Mi dispiace ma non hai abbastanza monete con te!", FALSE, ch, NULL, NULL, TO_CHAR);
+                //  ha meno di 6 monete, le restituisco al proprietario
+                if(count > 0)
+                {
+                    for(j = 0; j < count; j++)
+                    {
+                        coin = read_object(real_object(NILMYS_COIN), REAL);
+                        obj_to_char(coin, ch);
+
+                        sprintf(buf, "un Augustale di proprieta' di %s", GET_NAME(ch));
+                        free(coin->short_description);
+                        coin->short_description = (char*)strdup(buf);
+                        SetPersonOnSave(ch, coin);
+                    }
+                }
+
+                return TRUE;
+            }
+        }
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    if(count == 6)
+    {
+        premio = number(1, 100);
+        switch(mob_index[shopper->nr].iVNum)
+        {
+            case BORIS_IVANHOE:
+            {
+                if(premio <= 7)
+                {
+                    rnum = 9019;
+                }
+                else if(premio > 7 && premio <= 18)
+                {
+                    rnum = 9018;
+                }
+                else if(premio > 18 && premio <= 29)
+                {
+                    rnum = 9020;
+                }
+                else if(premio > 29 && premio <= 59)
+                {
+                    rnum = 9021;
+                }
+                else if(premio > 59 && premio <= 70)
+                {
+                    rnum = 9084;
+                }
+                else if(premio > 70)
+                {
+                    rnum = 9085;
+                }
+            }
+                break;
+
+            case TAMARANG_PRINCE:
+            {
+                if(premio <= 7)
+                {
+                    rnum = 9005;
+                }
+                else if(premio > 7 && premio <= 18)
+                {
+                    rnum = 9006;
+                }
+                else if(premio > 18 && premio <= 29)
+                {
+                    rnum = 9007;
+                }
+                else if(premio > 29 && premio <= 59)
+                {
+                    rnum = 9009;
+                }
+                else if(premio > 59 && premio <= 70)
+                {
+                    rnum = 9097;
+                }
+                else if(premio > 70)
+                {
+                    rnum = 9087;
+                }
+            }
+                break;
+
+            case UMAG_ULBAR:
+            {
+                if(premio <= 7)
+                {
+                    rnum = 9015;
+                }
+                else if(premio > 7 && premio <= 18)
+                {
+                    rnum = 9016;
+                }
+                else if(premio > 18 && premio <= 29)
+                {
+                    rnum = 9017;
+                }
+                else if(premio > 29 && premio <= 59)
+                {
+                    rnum = 9014;
+                }
+                else if(premio > 59 && premio <= 89)
+                {
+                    rnum = 9095;
+                }
+                else if(premio > 89)
+                {
+                    rnum = 9094;
+                }
+            }
+                break;
+
+            case DAGGAR_IVRAM:
+            {
+                if(premio <= 7)
+                {
+                    rnum = 9010;
+                }
+                else if(premio > 7 && premio <= 18)
+                {
+                    rnum = 9011;
+                }
+                else if(premio > 18 && premio <= 29)
+                {
+                    rnum = 9012;
+                }
+                else if(premio > 29 && premio <= 59)
+                {
+                    rnum = 9013;
+                }
+                else if(premio > 59 && premio <= 89)
+                {
+                    rnum = 9090;
+                }
+                else if(premio > 89)
+                {
+                    rnum = 9091;
+                }
+            }
+                break;
+
+            case IREIIN_DRUID:
+            {
+                if(premio <= 7)
+                {
+                    rnum = 9029;
+                }
+                else if(premio > 7 && premio <= 37)
+                {
+                    rnum = 9031;
+                }
+                else if(premio > 37 && premio <= 48)
+                {
+                    rnum = 9030;
+                }
+                else if(premio > 48 && premio <= 78)
+                {
+                    rnum = 9028;
+                }
+                else if(premio > 78 && premio <= 89)
+                {
+                    rnum = 9092;
+                }
+                else if(premio > 89)
+                {
+                    rnum = 9093;
+                }
+            }
+                break;
+
+            case CORMAC_RUNAR:
+            {
+                if(premio <= 7)
+                {
+                    rnum = 9023;
+                }
+                else if(premio > 7 && premio <= 18)
+                {
+                    rnum = 9025;
+                }
+                else if(premio > 18 && premio <= 48)
+                {
+                    rnum = 9024;
+                }
+                else if(premio > 48 && premio <= 78)
+                {
+                    rnum = 9026;
+                }
+                else if(premio > 78 && premio <= 89)
+                {
+                    rnum = 9088;
+                }
+                else if(premio > 89)
+                {
+                    rnum = 9089;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
+        //  consegna premio al player
+        reward = read_object(real_object(rnum), REAL);
+        SetPersonOnSave(ch, reward);
+
+        act("\n\r$c0015$N$c0015 ti da' sei monete di Nilmys.", FALSE, shopper, NULL, ch, TO_CHAR);
+        act("\n\r$c0015Dai sei monete di Nilmys a $n$c0015.", FALSE, shopper, NULL, ch, TO_VICT);
+        act("\n\r$c0015$N$c0015 da' alcune monete di Nilmys a $n$c0015.", FALSE, shopper, NULL, ch, TO_NOTVICT);
+
+        act("\n\r$c0011Consegni $p$c0011 a $N$c0011.", FALSE, shopper, reward, ch, TO_CHAR);
+        act("\n\r$c0011$n$c0011 ti consegna $p$c0011.", FALSE, shopper, reward, ch, TO_VICT);
+        act("\n\r$c0011$n$c0011 consegna $p$c0011 a $N$c0011.", FALSE, shopper, reward, ch, TO_NOTVICT);
+        obj_to_char(reward, ch);
+        return TRUE;
     }
 
     return FALSE;
-} */
+}
 
 } // namespace Alarmud
 
