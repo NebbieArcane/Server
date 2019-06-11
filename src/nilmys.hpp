@@ -21,6 +21,7 @@ namespace Alarmud {
 #define GAREBETH            9008
 #define GONHAG              9009
 #define UGUIK_AURUM         9029
+#define BORIS_IVANHOE_CLONE 9048
     
     //  rooms
 #define STANISLAV_ROOM      8957
@@ -74,6 +75,7 @@ ROOMSPECIAL_FUNC(reward_giver);
     
                     //  other
 void BorisDeath(struct char_data* umag);
+void BorisInFight(struct char_data* boris);
 void CheckBorisRoom(struct char_data* boris);
 void CheckReward(struct char_data* boris);
 bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris);

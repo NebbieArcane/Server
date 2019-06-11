@@ -122,7 +122,7 @@ MOBSPECIAL_FUNC(Arkhat)
     {
         if(IS_MOB(tch))
         {
-            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE_CLONE)
             {
                 boris = tch;
             }
@@ -361,6 +361,110 @@ void ArkhatDeath(struct char_data* boris)
     boris->commandp2 += 1;
 }
 
+int CountBorisParty(struct char_data* boris)
+{
+    struct follow_type* fol;
+    int totale = 0;
+
+    if(!boris->master)
+    {
+        return 0;
+    }
+
+    for(fol = boris->master->followers; fol; fol = fol->next)
+    {
+        if(boris->in_room == fol->follower->in_room)
+        {
+            if(IS_PC(fol->follower) && !IS_IMMORTALE(fol->follower))
+            {
+                totale += 1;
+            }
+        }
+    }
+    return totale;
+}
+
+void BorisInFight(struct char_data* boris)
+{
+    struct char_data* targ;
+    struct follow_type* fol;
+    char buf[256];
+    int found = FALSE;
+
+    const char* rand_Boris_says[] = {
+        "\n\r$c0009[$c0015$n$c0009] urla 'Per Vlad!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Assaggia questo, oscura creatura!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Ora capirai che significa sfidare Boris!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Mi piace annientare bestie come voi!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Su fatemi divertire, cerchiamo un degno avversario!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Il primo che lo ammazza si prende tutto l'eq!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Mi sto solo riscaldando!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Cercate di starmi dietro!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Io lo colpisco alla testa, tu mira alle gambe!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Posso unirmi alla festa?!?'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Vediamo quanto dura questo!'\n\r",
+        "\n\r$c0009[$c0015$n$c0009] urla 'Fate largo al Re del DPS!'\n\r"
+    };
+    
+    const int maxBorisSay = 11;
+
+    if(boris->in_room > -1)
+    {
+        if(!boris->master)
+        {
+            return;
+        }
+
+        if(boris->in_room == boris->master->in_room && boris->master->specials.fighting)
+        {
+            targ = FindAnAttacker(boris->master);
+            
+            if(targ)
+            {
+                found = TRUE;
+                sprintf(buf, "%s", rand_Boris_says[number(0, maxBorisSay)]);
+            }
+            
+            if(found)
+            {
+                act(buf, FALSE, boris, 0, 0, TO_ROOM);
+
+                if(CAN_SEE(boris, targ))
+                {
+                    hit(boris, targ, 0);
+                }
+            }
+            return;
+        }
+
+        for(fol = boris->master->followers; fol; fol = fol->next)
+        {
+            if(boris->in_room == fol->follower->in_room && fol->follower->specials.fighting)
+            {
+                targ = FindAnAttacker(fol->follower);
+
+                if(targ)
+                {
+                    found = TRUE;
+                    sprintf(buf, "%s", rand_Boris_says[number(0, maxBorisSay)]);
+                }
+
+                if(!found)
+                {
+                    return;
+                }
+
+                act(buf, FALSE, boris, 0, 0, TO_ROOM);
+
+                if(CAN_SEE(boris, targ))
+                {
+                    hit(boris, targ, 0);
+                }
+            }
+        }
+    }
+}
+
 MOBSPECIAL_FUNC(Boris_Ivanhoe)
 {
     struct char_data* tch;
@@ -373,7 +477,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     {
         if(IS_MOB(tch))
         {
-            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE_CLONE)
             {
                 boris = tch;
             }
@@ -412,6 +516,13 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     if(!AWAKE(boris))
     {
         return FALSE;
+    }
+    else if(!(boris->specials.fighting))
+    {
+        if(CountBorisParty(boris) < 5)
+        {
+            BorisInFight(boris);
+        }
     }
 
     if(cmd == CMD_TELL)
@@ -465,7 +576,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                 else if(IS_PC(ch) && ch->master == NULL)
                 {
                     extract_char(boris);
-                    boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
+                    boris = read_mobile(real_mobile(BORIS_IVANHOE_CLONE), REAL);
                     char_to_room(boris, BORIS_HOME);
                     if(IS_SET(boris->specials.act, ACT_IMMORTAL))
                     {
@@ -477,7 +588,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                 else if(IS_PC((ch)->master))
                 {
                     extract_char(boris);
-                    boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
+                    boris = read_mobile(real_mobile(BORIS_IVANHOE_CLONE), REAL);
                     char_to_room(boris, BORIS_HOME);
                     boris->specials.quest_ref = (ch)->master;
                     boris->generic = 4;
@@ -499,8 +610,8 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             }
             else
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Non fatemi perdere tempo!'\n\r", ch->in_room);
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'C'e' qualcuno che comanda qui?'\n\r", ch->in_room);
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Non fatemi perdere tempo!'\n\r", boris->in_room);
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'C'e' qualcuno che comanda qui?'\n\r", boris->in_room);
                 do_say(boris, "Chi vuole comandare mi dica di seguirlo!", 0);
                 return FALSE;
             }
@@ -744,26 +855,25 @@ void CheckBorisRoom(struct char_data* boris)
         return;
     }
 
-    send_to_room("\n\r", boris->in_room);
     switch(boris->in_room)
     {
         case BORIS_HOME:
             if(boris->generic == 0)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", BORIS_HOME);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", BORIS_HOME);
                 send_to_room("$c0015 'Ora che ci siete abbiamo qualche speranza. Abbiamo interrotto il rituale di Garebeth, colui che viaggia tra i piani.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Stava per evocare Arkhat, il dio divoratore, ma aveva bisogno di una parte di ognuno degli Stanislav,\n\r  la famiglia che eoni fa lo confino' li' dove risiede ora.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Abbiamo scoperto pero' che a Nilmys c'era un'altra Stanislav : Isrka, figlia illegittima del signore della citta' Aaron.\n\r", BORIS_HOME);
                 send_to_room("$c0015  L'abbiamo protetta e portata in salvo nel portale un attimo prima che il rituale che ha convertito tutti i cittadini\n\r$c0015  in non morti avesse effetto su di noi e su di lei.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Alcuni dei miei compagni sono feriti, gli altri devono restare a proteggere Iskra.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Solo voi potete aiutarci.\n\r", BORIS_HOME);
-                send_to_room("$c0015  Chiunque di voi comandi o sia colui che guida in battaglia il gruppo mi annuisca e io lo seguiro'.\n\r$c0015  Vi raccontero' tutto lungo la strada.'\n\r", BORIS_HOME);
+                send_to_room("$c0015  Chiunque di voi comandi o sia colui che guida in battaglia il gruppo mi annuisca e io lo seguiro'.\n\r$c0015  Vi raccontero' tutto lungo la strada.'\n\r\n\r", BORIS_HOME);
             }
             else
             {
                 if(number(0, 30) == 26)
                 {
-                    act("$c0015[$c0005$n$c0015] dice 'Cosa facciamo fermi qui? Andiamo!'", FALSE, boris, NULL, NULL, TO_ROOM);
+                    act("\n\r$c0015[$c0005$n$c0015] dice 'Cosa facciamo fermi qui? Andiamo!'\n\r", FALSE, boris, NULL, NULL, TO_ROOM);
                 }
             }
             break;
@@ -772,8 +882,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9008);
-                send_to_room("$c0015 'Attento al Golem di Umag, l'ha piazzato qui a protezione della grotta, se non lo tocchi non ti attacchera'.\n\r  Ci sono diverse trappole lungo il cammino, Umag e' molto prudente, state attenti.\n\r", 9008);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9008);
+                send_to_room("$c0015 'Attento al Golem di Umag, l'ha piazzato qui a protezione della grotta, se non lo tocchi non ti attacchera'.\n\r  Ci sono diverse trappole lungo il cammino, Umag e' molto prudente, state attenti.\n\r\n\r", 9008);
             }
             boris->commandp = boris->in_room;
         }
@@ -783,8 +893,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9020);
-                send_to_room("$c0015 'Attenti ora, c'e' una piana molto pericolosa qui sotto.\n\r  $c0015Diverse creature si aggirano in cerca di prede, il mio mago ha messo un altro Golem per bloccarli,\n\r  $c0015ed e' molto piu' potente di prima. Non temetelo, non vi attacchera'.'\n\r", 9020);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9020);
+                send_to_room("$c0015 'Attenti ora, c'e' una piana molto pericolosa qui sotto.\n\r  $c0015Diverse creature si aggirano in cerca di prede, il mio mago ha messo un altro Golem per bloccarli,\n\r  $c0015ed e' molto piu' potente di prima. Non temetelo, non vi attacchera'.'\n\r\n\r", 9020);
             }
             boris->commandp = boris->in_room;
         }
@@ -794,8 +904,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9025);
-                send_to_room("$c0015 'Il custode di questi luoghi e' una creatura temibile, non sottovalutatelo!\n\r  $c0015Deve essere vicino, non e' necessario affrontarlo, vi suggerisco di aggirarlo.\n\r  $c0015Se deciderete di affrontarlo sappiate che non temo la morte, nessuna sfida e' troppo grande per Boris!'\n\r", 9025);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9025);
+                send_to_room("$c0015 'Il custode di questi luoghi e' una creatura temibile, non sottovalutatelo!\n\r  $c0015Deve essere vicino, non e' necessario affrontarlo, vi suggerisco di aggirarlo.\n\r  $c0015Se deciderete di affrontarlo sappiate che non temo la morte, nessuna sfida e' troppo grande per Boris!'\n\r\n\r", 9025);
             }
             boris->commandp = boris->in_room;
         }
@@ -807,13 +917,13 @@ void CheckBorisRoom(struct char_data* boris)
             {
                 if(FindKeyByNumber(boris, SHADOW_WALLS_KEY))
                 {
-                    send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9032);
-                    send_to_room("$c0015 'Fermi ora. Qui dobbiamo decidere quale strada intraprendere.\n\r  $c0015So per certo che ad est e' accampato l'intero esercito di Arkhat, il lezzo arriva fin qui perfino in questa dimensione.\n\r  $c0015Non so cosa aspettarmi a sud.\n\r  $c0015E' una decisione definitiva, il rituale aprira' solo uno dei due muri oscuri.'\n\r", 9032);
+                    send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9032);
+                    send_to_room("$c0015 'Fermi ora. Qui dobbiamo decidere quale strada intraprendere.\n\r  $c0015So per certo che ad est e' accampato l'intero esercito di Arkhat, il lezzo arriva fin qui perfino in questa dimensione.\n\r  $c0015Non so cosa aspettarmi a sud.\n\r  $c0015E' una decisione definitiva, il rituale aprira' solo uno dei due muri oscuri.'\n\r\n\r", 9032);
                 }
                 else
                 {
-                    send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9032);
-                    send_to_room("$c0015 'Da qui non si passa. Dobbiamo trovare un altro modo di farlo, cerchiamo ancora nella vallata.'\n\r", 9032);
+                    send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9032);
+                    send_to_room("$c0015 'Da qui non si passa. Dobbiamo trovare un altro modo di farlo, cerchiamo ancora nella vallata.'\n\r\n\r", 9032);
                 }
             }
             boris->commandp = boris->in_room;
@@ -824,8 +934,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9034);
-                send_to_room("$c0015 'Bene, siamo tra le tende di comando. Forse riusciremo ad aggirare l'esercito.\n\r  $c0015I due scheletri a guardia non ci impensieriranno...'\n\r", 9034);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9034);
+                send_to_room("$c0015 'Bene, siamo tra le tende di comando. Forse riusciremo ad aggirare l'esercito.\n\r  $c0015I due scheletri a guardia non ci impensieriranno...'\n\r\n\r", 9034);
             }
             boris->commandp = boris->in_room;
         }
@@ -835,11 +945,12 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
+                send_to_room("\n\r", 9035);
                 do_say(boris, "Sembra proprio che i due Generali non amino condividere gli spazi.", 0);
                 do_action(boris, NULL, CMD_CHUCKLE);
                 do_say(boris, "Meglio per noi, li affronteremo uno alla volta.", 0);
                 send_to_room("$c0013[$c0015Boris Ivanhoe Gudonov$c0013] sussurra:\n\r", 9035);
-                send_to_room("$c0013 'Avverto un brivido lungo la schiena guardando verso sud, qualcosa mi dice che dobbiamo riuscire a passare.'\n\r", 9035);
+                send_to_room("$c0013 'Avverto un brivido lungo la schiena guardando verso sud, qualcosa mi dice che dobbiamo riuscire a passare.'\n\r\n\r", 9035);
             }
             boris->commandp = boris->in_room;
         }
@@ -849,8 +960,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9037);
-                send_to_room("$c0015 'Da qui si vede la tenda di Athelstan.\n\r  $c0015E' uno dei due generali maggiori dell'esercito, e' potente ma per andare avanti dobbiamo sconfiggerlo.\n\r  $c0015Odio i suoi baffoni, sembra uscito da altri tempi, strappiamoglieli da quella faccia da carogna!'\n\r", 9037);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9037);
+                send_to_room("$c0015 'Da qui si vede la tenda di Athelstan.\n\r  $c0015E' uno dei due generali maggiori dell'esercito, e' potente ma per andare avanti dobbiamo sconfiggerlo.\n\r  $c0015Odio i suoi baffoni, sembra uscito da altri tempi, strappiamoglieli da quella faccia da carogna!'\n\r\n\r", 9037);
             }
             boris->commandp = boris->in_room;
         }
@@ -860,8 +971,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9040);
-                send_to_room("$c0015 'Da qui si vede la tenda di Rexar.\n\r  $c0015La sua fama la precede, l'avrete sicuramente sentita nominare.\n\r  $c0015E' una degna avversaria, non commettete il mio stesso errore,\n\r  $c0015la scambiai anni fa per una donna che vendeva amore e fedelta' a pagamento... fui in errore.'\n\r", 9040);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9040);
+                send_to_room("$c0015 'Da qui si vede la tenda di Rexar.\n\r  $c0015La sua fama la precede, l'avrete sicuramente sentita nominare.\n\r  $c0015E' una degna avversaria, non commettete il mio stesso errore,\n\r  $c0015la scambiai anni fa per una donna che vendeva amore e fedelta' a pagamento... fui in errore.'\n\r\n\r", 9040);
             }
             boris->commandp = boris->in_room;
         }
@@ -871,9 +982,9 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9043);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9043);
                 send_to_room("$c0015 'Dannazione, lo sapevo!\n\r  $c0015Da qualche parte qui intorno ci deve essere il laboratorio della mente deviata,\n\r  $c0015al servizio di Garebeth, che crea gli ibridi.\n\r", 9043);
-                send_to_room("  $c0015Dobbiamo trovare quel bastardo!\n\r  $c0015Umag mi ha detto che ci sara' utile e non possiamo ucciderlo...\n\r  $c0015trattenetemi dal farlo per piacere!\n\r  $c0015Si chiama Uguik e so che ci devono essere anche le cavie che usa per i suoi esperimenti, cerchiamole!'\n\r", 9043);
+                send_to_room("  $c0015Dobbiamo trovare quel bastardo!\n\r  $c0015Umag mi ha detto che ci sara' utile e non possiamo ucciderlo...\n\r  $c0015trattenetemi dal farlo per piacere!\n\r  $c0015Si chiama Uguik e so che ci devono essere anche le cavie che usa per i suoi esperimenti, cerchiamole!'\n\r\n\r", 9043);
             }
             boris->commandp = boris->in_room;
         }
@@ -883,8 +994,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9046);
-                send_to_room("$c0015 'Quell'essere immondo e' il boia di Uguik! Muori maledetto!'\n\r", 9046);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9046);
+                send_to_room("$c0015 'Quell'essere immondo e' il boia di Uguik! Muori maledetto!'\n\r\n\r", 9046);
             }
             boris->commandp = boris->in_room;
         }
@@ -895,7 +1006,7 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0008Ti sembra di sentire ringhi di rabbia misti a lacrime provenire da dietro alla maschera di Boris.\n\r", 9048);
+                send_to_room("\n\r$c0008Ti sembra di sentire ringhi di rabbia misti a lacrime provenire da dietro alla maschera di Boris.\n\r\n\r", 9048);
             }
             boris->commandp = boris->in_room;
         }
@@ -924,8 +1035,8 @@ void CheckBorisRoom(struct char_data* boris)
             {
                 if(boris->in_room != boris->commandp)
                 {
-                    send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9051);
-                    send_to_room("$c0015 'Ti ucciderei volentieri dopo averti torturato, ma Umag mi ha detto che solo tu\n\r  $c0015possiedi il sapere per attivare il portale.\n\r  $c0015Dicci quello che dobbiamo fare o giuro che il tuo dio Arkhat sembrera'\n\r  un chierichetto in confronto al trattamento che ti riservero'!'\n\r", 9051);
+                    send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9051);
+                    send_to_room("$c0015 'Ti ucciderei volentieri dopo averti torturato, ma Umag mi ha detto che solo tu\n\r  $c0015possiedi il sapere per attivare il portale.\n\r  $c0015Dicci quello che dobbiamo fare o giuro che il tuo dio Arkhat sembrera'\n\r  un chierichetto in confronto al trattamento che ti riservero'!'\n\r\n\r", 9051);
                 }
                 boris->commandp = boris->in_room;
                 boris->commandp2 += 1;
@@ -935,13 +1046,13 @@ void CheckBorisRoom(struct char_data* boris)
                         break;
 
                     case 2:
-                        send_to_room("$c0008Uguik tremante, con le mani di Boris ancora attorno al collo, risponde:\n\r", 9051);
-                        send_to_room("$c0011 'Per attivare il portale servono i resti degli Stanislav,\n\r  $c0011ci abbiamo provato ma a quanto pare c'era un altro Stanislav in giro nel piano materiale...\n\r  $c0011E' per questo che siamo bloccati qui!\n\r  $c0011Mi dispiace informarvi che avete fallito, non possiamo evocare Arkhat.\n\r  $c0011Sembra che il vostro piano sia naufragato!'\n\r", 9051);
+                        send_to_room("\n\r$c0008Uguik tremante, con le mani di Boris ancora attorno al collo, risponde:\n\r", 9051);
+                        send_to_room("$c0011 'Per attivare il portale servono i resti degli Stanislav,\n\r  $c0011ci abbiamo provato ma a quanto pare c'era un altro Stanislav in giro nel piano materiale...\n\r  $c0011E' per questo che siamo bloccati qui!\n\r  $c0011Mi dispiace informarvi che avete fallito, non possiamo evocare Arkhat.\n\r  $c0011Sembra che il vostro piano sia naufragato!'\n\r\n\r", 9051);
                         do_action(uguik, NULL, CMD_GRIN);
                         break;
 
                     case 3:
-                        send_to_room("$c0015[$c0009Boris Ivanhoe Gudonov$c0015] $c0009urla:\n\r $c0009'IDIOTA! Sappiamo noi dove si trova l'altro Stanislav! Ti porteremo il suo sangue, dacci lo strumento adatto.'\n\r", 9051);
+                        send_to_room("\n\r$c0015[$c0009Boris Ivanhoe Gudonov$c0015] $c0009urla:\n\r $c0009'IDIOTA! Sappiamo noi dove si trova l'altro Stanislav! Ti porteremo il suo sangue, dacci lo strumento adatto.'\n\r\n\r", 9051);
                         break;
 
                     case 4:
@@ -969,7 +1080,7 @@ void CheckBorisRoom(struct char_data* boris)
                     case 6:
                         if(FindKeyByNumber(boris, NILMYS_BLEEDER) && FindKeyByNumber(boris, NILMYS_SHADOW_KEY))
                         {
-                            send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Bene, ora resta qui! O ti verro' a cercare ovunque tu sia e ti faro' a pezzi lentamente!'\n\r", 9051);
+                            send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Bene, ora resta qui! O ti verro' a cercare ovunque tu sia e ti faro' a pezzi lentamente!'\n\r\n\r", 9051);
                         }
                         else
                         {
@@ -978,7 +1089,7 @@ void CheckBorisRoom(struct char_data* boris)
                         break;
 
                     case 7:
-                        send_to_room("$c0015Boris si volta verso di te e dice:\n\r $c0015'Torniamo sui nostri passi per recuperare le ossa degli Stanislav ed il sangue di Iskra.\n\r  $c0015Uguik ci dira' poi come procedere.'\n\r", 9051);
+                        send_to_room("\n\r$c0015Boris si volta verso di te e dice:\n\r $c0015'Torniamo sui nostri passi per recuperare le ossa degli Stanislav ed il sangue di Iskra.\n\r  $c0015Uguik ci dira' poi come procedere.'\n\r\n\r", 9051);
                         uguik->commandp2 = 1;
                         break;
 
@@ -993,8 +1104,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9052);
-                send_to_room("$c0015 'Fermatevi un attimo. Sappiate che siamo entrati nella dimensione ombra del piano materiale di Nilmys.\n\r  $c0015Questo significa che i nemici che troveremo sono proiezioni di quelli gia' uccisi in precedenza,\n\r  $c0015alcuni riescono a muoversi tra le dimensioni.\n\r  $c0015Il problema e' che qui sono molto, molto piu' potenti, quindi fate attenzione.'\n\r", 9052);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9052);
+                send_to_room("$c0015 'Fermatevi un attimo. Sappiate che siamo entrati nella dimensione ombra del piano materiale di Nilmys.\n\r  $c0015Questo significa che i nemici che troveremo sono proiezioni di quelli gia' uccisi in precedenza,\n\r  $c0015alcuni riescono a muoversi tra le dimensioni.\n\r  $c0015Il problema e' che qui sono molto, molto piu' potenti, quindi fate attenzione.'\n\r\n\r", 9052);
             }
             boris->commandp = boris->in_room;
         }
@@ -1004,8 +1115,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp && boris->commandp2 > 14)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9088);
-                send_to_room("$c0015 'Quanto detesto quello gnomo, se penso a quanta sofferenza ha inflitto...\n\r  $c0015Ora torno indietro e lo faccio a pezzi!'\n\r", 9088);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9088);
+                send_to_room("$c0015 'Quanto detesto quello gnomo, se penso a quanta sofferenza ha inflitto...\n\r  $c0015Ora torno indietro e lo faccio a pezzi!'\n\r\n\r", 9088);
             }
             boris->commandp = boris->in_room;
         }
@@ -1015,8 +1126,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9091);
-                send_to_room("$c0015 'Siamo molto cauti qui, dietro al Gonhag scorgo l'esercito di Garebeth,\n\r  $c0015forse se riuscissimo a liberare la bestia...'\n\r", 9091);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9091);
+                send_to_room("$c0015 'Siamo molto cauti qui, dietro al Gonhag scorgo l'esercito di Garebeth,\n\r  $c0015forse se riuscissimo a liberare la bestia...'\n\r\n\r", 9091);
             }
             boris->commandp = boris->in_room;
         }
@@ -1026,9 +1137,9 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9093);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9093);
                 send_to_room("$c0015 'Bene ora non ci resta che scalare la montagna, da qui non si torna indietro,\n\r  $c0015sembra che la dimensione d'ombra sia piu' debole.\n\r  $c0015E' l'ultima occasione per prepararci alla scalata.\n\r", 9093);
-                send_to_room("  $c0015Possano gli Dei vegliare su di noi... e se non lo fanno... VADANO ALLA MALORA!'\n\r", 9093);
+                send_to_room("  $c0015Possano gli Dei vegliare su di noi... e se non lo fanno... VADANO ALLA MALORA!'\n\r\n\r", 9093);
             }
             boris->commandp = boris->in_room;
         }
@@ -1038,8 +1149,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9008);
-                send_to_room("$c0015 'Non e' finita a quanto pare. Dobbiamo scendere.\n\r  $c0015Se siamo arrivati fin qui non mi tirero' certo indietro ora.'\n\r", 9008);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9008);
+                send_to_room("$c0015 'Non e' finita a quanto pare. Dobbiamo scendere.\n\r  $c0015Se siamo arrivati fin qui non mi tirero' certo indietro ora.'\n\r\n\r", 9008);
             }
             boris->commandp = boris->in_room;
         }
@@ -1049,8 +1160,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9114);
-                send_to_room("$c0015 'Troveremo una forte resistenza sul portale, sicuramente Garebeth in persona lo difendera'.\n\r  $c0015Restiamo calmi e poi potremo far uscire Arkhat l'immondo dal suo lungo sonno\n\r  $c0015ed impartirgli una sonora lezione!'\n\r", 9114);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9114);
+                send_to_room("$c0015 'Troveremo una forte resistenza sul portale, sicuramente Garebeth in persona lo difendera'.\n\r  $c0015Restiamo calmi e poi potremo far uscire Arkhat l'immondo dal suo lungo sonno\n\r  $c0015ed impartirgli una sonora lezione!'\n\r\n\r", 9114);
             }
             boris->commandp = boris->in_room;
         }
@@ -1120,8 +1231,8 @@ void CheckBorisRoom(struct char_data* boris)
             }
             else if(boris->in_room != boris->commandp)
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9119);
-                send_to_room("$c0015 'Garebeth finalmente ci troviamo faccia a faccia! MUORI LURIDO VERME!'\n\r", 9119);
+                send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", 9119);
+                send_to_room("$c0015 'Garebeth finalmente ci troviamo faccia a faccia! MUORI LURIDO VERME!'\n\r\n\r", 9119);
                 boris->commandp = boris->in_room;
             }
         }
@@ -1131,8 +1242,9 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp && boris->in_room == (boris)->master->in_room)
             {
-                send_to_zone("$c0015Boris vi abbraccia uno ad uno poi dice:\n\r", boris);
-                send_to_zone("$c0015 'Grazie amici, non dimentichero' mai cio' che avete fatto per noi.\n\r  $c0015E' stato un onore per me combattere al vostro fianco.\n\r  $c0015Vi prego, accettate questo come segno della nostra riconoscenza.'\n\r", boris);
+                struct char_data* new_boris;
+                send_to_zone("\n\r$c0015Boris vi abbraccia uno ad uno poi dice:\n\r", boris);
+                send_to_zone("$c0015 'Grazie amici, non dimentichero' mai cio' che avete fatto per noi.\n\r  $c0015E' stato un onore per me combattere al vostro fianco.\n\r  $c0015Vi prego, accettate questo come segno della nostra riconoscenza.'\n\r\n\r", boris);
 
                 // ed infine... il premio!
                 CheckReward(boris);
@@ -1140,9 +1252,12 @@ void CheckBorisRoom(struct char_data* boris)
                 do_say(boris, "Se qualcuno di voi degno di ricevere il premio non ha ottenuto la ricompensa me la chieda!", 0);
 
                 do_say(boris, "Possano le nostre strade rincontrarsi un giorno! Addio.", 0);
-                boris->commandp = boris->in_room;
-                boris->specials.quest_ref = 0;
                 stop_follower(boris);
+                extract_char(boris);
+
+                //  carico la versione di Boris per gli oggetti
+                new_boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
+                char_to_room(new_boris, 9121);
             }
         }
             break;
@@ -1153,7 +1268,7 @@ void CheckBorisRoom(struct char_data* boris)
             {
                 if(number(0, 30) == 28)
                 {
-                    act("$c0015[$c0005$n$c0015] dice 'Cosa facciamo fermi qui? Andiamo!'", FALSE, boris, NULL, NULL, TO_ROOM);
+                    act("\n\r$c0015[$c0005$n$c0015] dice 'Cosa facciamo fermi qui? Andiamo!'\n\r", FALSE, boris, NULL, NULL, TO_ROOM);
                 }
             }
             else
@@ -1161,68 +1276,95 @@ void CheckBorisRoom(struct char_data* boris)
                 switch(number(0, 70))
                 {
                     case 0:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Quel dannato Garebeth la paghera'... ah se la paghera'!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 2:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Non indugiate troppo! Il destino di molta gente dipende da noi!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 7:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Valutiamo bene ogni scelta e non sottovalutiamo nessun nemico...", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 11:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Arkhat probabilmente ci ridurra' in pezzi! Non temo il mio destino, non temiate il vostro.", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
-                    case 15 :
+                    case 15:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Andiamo avanti, non esitiamo!", 0);
                         do_say(boris, "Dobbiamo farlo per la gente di Nilmys, dobbiamo farlo per Vlad e per i compagni caduti!", 0);
                         do_say(boris, "Non ci arrenderemo mai!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 18:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "I miei occhi ormai si sono abituati a questo buio, temo solo di sbattere inavvertitamente con un mignolo ad uno spigolo.", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 22:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Qualunque cosa accada, non temiate l'oscurita'...", 0);
                         do_say(boris, "Del resto siamo proprio dentro di essa...", 0);
                         do_say(boris, "Cosa potrebbe andare peggio?", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 26:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Quando mettero' le mani su Gorath vedrete come lo ridurro'! Lo avete gia' seccato?! Mi dovete una birra allora, era mio!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 30:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Vi ho mai raccontato di quando Umag provo' a creare il suo primo golem?", 0);
                         do_say(boris, "Vi dico solo che uso' gli scarti alimentari di una taverna per farlo...", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 32:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Sapete che ero solito avere incontri con donne che vendevano amore e fedelta' a pagamento?", 0);
                         do_say(boris, "Beh una di queste aveva un odore simile alla creatura appena incontrata!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 41:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Ci vogliono 6 monete, non una di piu' non una di meno, per ottenere finalmente il vostro premio!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     case 65:
+                        send_to_room("\n\r", boris->in_room);
                         do_say(boris, "Ricordatevi questa cosa: io ed i miei compagni possiamo scambiare le vostre monete con un premio favoloso!", 0);
+                        send_to_room("\n\r", boris->in_room);
                         break;
 
                     default:
                         break;
                 }
-                boris->commandp = boris->in_room;
+
+                if(boris->in_room != 9121)
+                {
+                    boris->commandp = boris->in_room;
+                }
             }
         }
             break;
     }
-    send_to_room("\n\r", boris->in_room);
 }
 
 bool FindKeyByNumber(struct char_data* ch, int number)
@@ -1287,7 +1429,7 @@ MOBSPECIAL_FUNC(Uguik_Aurum)
     {
         if(IS_MOB(tch))
         {
-            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE_CLONE)
             {
                 boris = tch;
             }
@@ -1561,7 +1703,7 @@ MOBSPECIAL_FUNC(Garebeth)
     {
         if(IS_MOB(tch))
         {
-            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE)
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE_CLONE)
             {
                 boris = tch;
             }
@@ -2018,11 +2160,11 @@ ROOMSPECIAL_FUNC(reward_giver)
 
             if(coin)
             {
-                if(IS_OBJ_STAT2(coin, ITEM2_PERSONAL) && !pers_on(ch, coin))
+                if((IS_OBJ_STAT2(coin, ITEM2_PERSONAL) && !pers_on(ch, coin)) || !IS_OBJ_STAT2(coin, ITEM2_PERSONAL))
                 {
                     act("Mi dispiace ma $p non ti appartiene!", FALSE, ch, coin, NULL, TO_CHAR);
 
-                    //  restituisco le monete prese
+                    //  restituisco le monete prese dato che non sono personal sul toon
                     if(count > 0)
                     {
                         for(j = 0; j < count; j++)
@@ -2094,11 +2236,11 @@ ROOMSPECIAL_FUNC(reward_giver)
                 }
                 else if(premio > 59 && premio <= 70)
                 {
-                    rnum = 9084;
+                    rnum = 9098;
                 }
                 else if(premio > 70)
                 {
-                    rnum = 9085;
+                    rnum = 9099;
                 }
             }
                 break;
