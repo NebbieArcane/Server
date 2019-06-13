@@ -101,7 +101,7 @@ MOBSPECIAL_FUNC(Arkhat)
     struct obj_data* co, *o, *corpse;
     struct char_data* targ;
     struct room_data* rp;
-    char buf[1024];
+    char buf[1024], name[128], sName[128];
 
     arkhat = 0;
 
@@ -164,6 +164,72 @@ MOBSPECIAL_FUNC(Arkhat)
         DestroyedItems = 0;
     }
 
+    rp = real_roomp(arkhat->in_room);
+    if(!rp)
+    {
+        return(FALSE);
+    }
+
+    for(co = rp->contents; co; co = co->next_content)
+    {
+        if(IS_CORPSE(co))
+        {
+            act("\n\r$c0009Arkhat divora $p.\n\r", TRUE, arkhat, co, 0, TO_ROOM);
+            while(co->contains)
+            {
+                o = co->contains;
+                obj_from_obj(o);
+                obj_to_char(o, arkhat);
+            }
+
+            sprintf(sName, "%s", co->short_description);
+            sprintf(name, "%s", co->name);
+            strncpy(sName, &sName[12], strlen(sName));
+            if(strlen(name) > 5)
+            {
+                strncpy(name, &name[6], strlen(name));
+            }
+
+            // carico il contenitore, gli do il nome del pg morto e ci metto l'eq, poi lo porto nella room cimitero
+            corpse = read_object(real_object(NILMYS_CORPSE), REAL);
+            
+            sprintf(buf, "resti %s", name);
+            free(corpse->name);
+            corpse->name = (char*)strdup(buf);
+            sprintf(buf, "i resti martoriati di $c0015%s$c0007", sName);
+            free(corpse->short_description);
+            corpse->short_description = (char*)strdup(buf);
+            sprintf(buf, "Tutto quello che rimane dell'equipaggiamento di $c0015%s$c0007 e' sparso qui a terra.", sName);
+            free(corpse->description);
+            corpse->description = (char*)strdup(buf);
+
+            extract_obj(co);  /* rimuovo il corpo */
+            /* danneggio l'equipaggiamento della vittima */
+            DamageStuff(arkhat, SPELL_ACID_BLAST, 100, 5);
+            
+            while(arkhat->carrying)
+            {
+                o = arkhat->carrying;
+                if(o->obj_flags.type_flag == ITEM_CONTAINER)
+                {
+                    obj_from_char(o);
+                    obj_to_room(o, MASS_GRAVE);
+                }
+                else
+                {
+                    obj_from_char(o);
+                    obj_to_obj(o, corpse);
+                }
+            }
+            obj_to_room(corpse, MASS_GRAVE);
+            do_action(arkhat, NULL, CMD_GRIN);
+            act("\n\r$c0008Arkhat rigurgita gli avanzi della sua vittima che si perdono nell'oscuro vuoto sotto al circolo rituale.\n\r", TRUE, arkhat, 0, 0, TO_ROOM);
+            sprintf(buf, "\n\rImprovvisamente, dall'alto, cadono %s... che fine ingloriosa...\n\r", corpse->short_description);
+            send_to_room(buf, MASS_GRAVE);
+            return(TRUE);
+        }
+    }
+
     if(AWAKE(arkhat))
     {
         if((targ = FindAnAttacker(arkhat)) != NULL)
@@ -197,6 +263,9 @@ MOBSPECIAL_FUNC(Arkhat)
                 send_to_char("$c0011Senti la tua carne dilaniarsi sotto la potenza delle fauci del Dio, poi... $c0008il buio.\n\r", targ);
                 send_to_char("MMM.  Burp!\n\r", arkhat);
 
+                sprintf(sName, "%s", (!IS_PC(targ) ? targ->player.short_descr : GET_NAME(ch)));
+                sprintf(name, "%s", GET_NAME(targ));
+
                 GET_HIT(targ) = 0;
                 alter_hit(targ, 0);
                 mudlog(LOG_PLAYERS, "%s killed by %s (being swallowed whole)", GET_NAME(targ), GET_NAME(arkhat));
@@ -205,7 +274,7 @@ MOBSPECIAL_FUNC(Arkhat)
                  all stuff to monster:  this one is tricky.  assume that corpse is
                  top item on item_list now that corpse has been made.
                  */
-                rp = real_roomp(ch->in_room);
+                rp = real_roomp(arkhat->in_room);
                 if(!rp)
                 {
                     return(FALSE);
@@ -228,13 +297,13 @@ MOBSPECIAL_FUNC(Arkhat)
                         // carico il contenitore, gli do il nome del pg morto e ci metto l'eq, poi lo porto nella room cimitero
                         corpse = read_object(real_object(NILMYS_CORPSE), REAL);
 
-                        sprintf(buf, "resti %s", GET_NAME(targ));
+                        sprintf(buf, "resti %s", name);
                         free(corpse->name);
                         corpse->name = (char*)strdup(buf);
-                        sprintf(buf, "i resti martoriati di $c0015%s$c0007", GET_NAME(targ));
+                        sprintf(buf, "i resti martoriati di $c0015%s$c0007", sName);
                         free(corpse->short_description);
                         corpse->short_description = (char*)strdup(buf);
-                        sprintf(buf, "Tutto quello che rimane dell'equipaggiamento di $c0015%s$c0007 e' sparso qui a terra.", GET_NAME(targ));
+                        sprintf(buf, "Tutto quello che rimane dell'equipaggiamento di $c0015%s$c0007 e' sparso qui a terra.", sName);
                         free(corpse->description);
                         corpse->description = (char*)strdup(buf);
 
@@ -331,12 +400,12 @@ void ArkhatDeath(struct char_data* boris)
 
         case 1002:
             send_to_room("\n\r$c0014Le $c0015anime$c0014 che lo circondavano e si tormentavano in una macabra danza attorno al suo corpo,\n\r", boris->in_room);
-            send_to_room("$c0014iniziano ad emettere $c0015luce$c0014 ed a convergere verso un punto in alto poco sopra la tua testa.\n\r", boris->in_room);
+            send_to_room("$c0014iniziano ad emettere $c0015luce$c0014 ed a convergere verso un punto in alto poco sopra la tua testa.\n\r\n\r", boris->in_room);
             send_to_room("$c0014Noti una di esse che indugia sulla carcassa materiale rimasta del $c0013Dio$c0014 sconfitto.\n\r", boris->in_room);
             break;
 
         case 1003:
-            send_to_room("$c0014E' lei la prima anima presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
+            send_to_room("$c0014E' lei la prima $c0015anima$c0013 presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
             send_to_room("$c0014le altre sono radunate.\n\r", boris->in_room);
             break;
 
@@ -347,7 +416,7 @@ void ArkhatDeath(struct char_data* boris)
             break;
 
         case 1005:
-            send_to_room("\n\r$c0014Boris esclama '$c0011VITTORIA!$c0014', e sale verso la $c0015luce$c0014.\n\r", boris->in_room);
+            send_to_room("\n\r$c0014Boris esclama '$c0011VITTORIA!$c0014', e sale verso la $c0015luce$c0014.\n\r\n\r", boris->in_room);
             boris->generic = 100;
             act("Entri nel Portale della Vittoria.", FALSE, boris, NULL, NULL, TO_CHAR);
             act("$n entra nel Portale della Vittoria.", FALSE, boris, NULL, NULL, TO_ROOM);
@@ -536,7 +605,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         {
             char_from_room(ch);
             char_to_room(ch, 3001);
-            do_look(ch, NULL, 15);
+            do_look(ch, "\0", 15);
             return FALSE;
         }
         else
@@ -674,16 +743,40 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
 
         case 100:
         {
+            if(boris->master != NULL)
+            {
+                CheckBorisRoom(boris);
+                return FALSE;
+            }
+
+            if(cmd == CMD_NOD)
+            {
+                struct char_data* new_boris;
+
+                do_say(boris, "Bene. Possano le nostre strade incontrarsi di nuovo un giorno! Addio.", 0);
+                send_to_room("\n\r", boris->in_room);
+
+                extract_char(boris);
+            
+                //  carico la versione di Boris per gli oggetti
+                new_boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
+                char_to_room(new_boris, 9121);
+            }
+
             if(cmd == CMD_ASK)
             {
                 if(strstr(arg, "ricompensa") || strstr(arg, "premio"))
                 {
-                    act("$c0006$N$c0006 ti chiede la ricompensa.", FALSE, boris, NULL, ch, TO_CHAR);
-                    act("$c0006Chiedi il giusto premio a $n.", FALSE, boris, NULL, ch, TO_VICT);
-                    act("$c0006$N$c0006 chiede qualcosa a $n.", FALSE, boris, NULL, ch, TO_NOTVICT);
+                    act("$c0006$N$c0006 ti chiede la ricompensa.\n\r", FALSE, boris, NULL, ch, TO_CHAR);
+                    act("$c0006Chiedi il giusto premio a $n.\n\r", FALSE, boris, NULL, ch, TO_VICT);
+                    act("$c0006$N$c0006 chiede qualcosa a $n.\n\r", FALSE, boris, NULL, ch, TO_NOTVICT);
                     if(ch->generic == 10)
                     {
                         GiveRewardNilmys(boris, ch);
+                    }
+                    if(ch->generic == 20)
+                    {
+                        act("$c0015[$c0013$n$c0015] dice '$N puoi ricevere il tuo premio una sola volta!'", FALSE, boris, NULL, ch, TO_ROOM);
                     }
                     else
                     {
@@ -781,24 +874,19 @@ void BorisDeath(struct char_data* umag)
 
 void CheckReward(struct char_data* boris)
 {
-    struct descriptor_data* i;
+    struct char_data* tch;
 
     if(boris)
     {
-        for(i = descriptor_list; i; i = i->next)
+        for(tch = real_roomp(boris->in_room)->people; tch; tch = tch->next_in_room)
         {
-            if(!i->connected)
+            if(IS_PC(tch) && tch->generic == 10)
             {
-                if(real_roomp(i->character->in_room)->zone == real_roomp(boris->in_room)->zone || (real_roomp(i->character->in_room)->zone + 1) == real_roomp(boris->in_room)->zone)
-                {
-                    if(i->character->generic == 10)
-                    {
-                        GiveRewardNilmys(boris, i->character);
-                    }
-                }
+                GiveRewardNilmys(boris, tch);
             }
         }
     }
+
 }
 
 void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
@@ -806,7 +894,7 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
     struct obj_data* coin;
     char buf[256];
 
-    ch->generic = 0;
+    ch->generic = 20;
 
     coin = read_object(real_object(NILMYS_COIN), REAL);
 
@@ -818,6 +906,10 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
     act("Dai $p a $N.", FALSE, boris, coin, ch, TO_CHAR);
     act("$n ti da' $p.", FALSE, boris, coin, ch, TO_VICT);
     act("$n da' $p a $N.", FALSE, boris, coin, ch, TO_NOTVICT);
+
+    act("$c0013Tu dici a $N$c0013 'Ricordati $N$c0013, se possiedi 6 $p$c0013 potrai scambiarli con un premio.'\n\r", FALSE, boris, coin, ch, TO_CHAR);
+    act("$c0013[$c0015$n$c0015]$c0013 ti dice 'Ricordati $N$c0013, se possiedi 6 $p$c0013 potrai scambiarli con un premio.'\n\r", FALSE, boris, coin, ch, TO_VICT);
+    act("$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, boris, coin, ch, TO_NOTVICT);
     
     obj_to_char(coin, ch);
 }
@@ -1242,7 +1334,8 @@ void CheckBorisRoom(struct char_data* boris)
         {
             if(boris->in_room != boris->commandp && boris->in_room == (boris)->master->in_room)
             {
-                struct char_data* new_boris;
+                stop_follower(boris);
+
                 send_to_zone("\n\r$c0015Boris vi abbraccia uno ad uno poi dice:\n\r", boris);
                 send_to_zone("$c0015 'Grazie amici, non dimentichero' mai cio' che avete fatto per noi.\n\r  $c0015E' stato un onore per me combattere al vostro fianco.\n\r  $c0015Vi prego, accettate questo come segno della nostra riconoscenza.'\n\r\n\r", boris);
 
@@ -1250,14 +1343,7 @@ void CheckBorisRoom(struct char_data* boris)
                 CheckReward(boris);
 
                 do_say(boris, "Se qualcuno di voi degno di ricevere il premio non ha ottenuto la ricompensa me la chieda!", 0);
-
-                do_say(boris, "Possano le nostre strade rincontrarsi un giorno! Addio.", 0);
-                stop_follower(boris);
-                extract_char(boris);
-
-                //  carico la versione di Boris per gli oggetti
-                new_boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
-                char_to_room(new_boris, 9121);
+                send_to_room("\n\r", 9121);
             }
         }
             break;
@@ -1770,6 +1856,8 @@ MOBSPECIAL_FUNC(Garebeth)
 void GarebethDeath(struct char_data* boris)
 {
     struct obj_data* armor, *sword;
+    struct follow_type* fol;
+    bool ulrich = FALSE;
 
     switch(boris->commandp2)
     {
@@ -1777,7 +1865,8 @@ void GarebethDeath(struct char_data* boris)
         {
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Queste sono le vestigia del mio amato nipote Vladimir.", 0);
-            act("$n ti mostra l'$c0015Armatura$c0007 $c0015Consacrata $c0007dalle vittime di $c0013Arkhat$c0007 e la $c0015Divina $c0007Spada di Vlad.", FALSE, boris, NULL, NULL, TO_ROOM);
+            act("\n\r$n ti mostra l'$c0015Armatura$c0007 $c0015Consacrata $c0007dalle vittime di $c0013Arkhat$c0007 e la $c0015Divina $c0007Spada di Vlad.", FALSE, boris, NULL, NULL, TO_ROOM);
+//            send_to_room("\n\r", boris->in_room);
         }
             break;
             
@@ -1786,24 +1875,50 @@ void GarebethDeath(struct char_data* boris)
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Usate questa spada amici miei, ho giurato al mio carissimo nipote che la sua arma sarebbe vissuta in eterno...", 0);
             do_say(boris, "E che solo i piu' valorosi guerrieri mortali l'avrebbero brandita!", 0);
-            send_to_room("\n\r", boris->in_room);
+//            send_to_room("\n\r", boris->in_room);
 
             sword = read_object(real_object(VLAD_SWORD), REAL);
 
-            if(boris->in_room == (boris)->master->in_room)
+            for(fol = boris->master->followers; fol; fol = fol->next)
+            {
+                if(boris->in_room == fol->follower->in_room)
+                {
+                    if(!strcmp(GET_NAME(fol->follower), "Ulrich"))
+                    {
+                        act("Stai per passare $p a $N ma poi ti fermi di colpo.", FALSE, boris, sword, (boris)->master, TO_CHAR);
+                        act("$n ti per passare $p ma poi indugia.", FALSE, boris, sword, (boris)->master, TO_VICT);
+                        act("$n sta per passare $p a $N ma poi si ferma di colpo.", FALSE, boris, sword, (boris)->master, TO_NOTVICT);
+
+                        act("\n\rTi giri verso $N e dici 'Tu... ho come l'impressione di conoscerti da sempre.'\n\r", FALSE, boris, sword, (fol)->follower, TO_CHAR);
+                        act("\n\r$n si gira verso di te e dice 'Tu... ho come l'impressione di conoscerti da sempre.'\n\r", FALSE, boris, sword, (fol)->follower, TO_VICT);
+                        act("\n\r$n si gira verso $N e dice 'Tu... ho come l'impressione di conoscerti da sempre.'\n\r", FALSE, boris, sword, (fol)->follower, TO_NOTVICT);
+
+                        act("Dai $p a $N.", FALSE, boris, sword, (fol)->follower, TO_CHAR);
+                        act("$n ti da' $p.", FALSE, boris, sword, (fol)->follower, TO_VICT);
+                        act("$n da' $p a $N.", FALSE, boris, sword, (fol)->follower, TO_NOTVICT);
+                        obj_to_char(sword, fol->follower);
+                        ulrich = TRUE;
+                    }
+                }
+                send_to_room("\n\r", boris->in_room);
+            }
+
+            if(boris->in_room == (boris)->master->in_room && !ulrich)
             {
                 act("Dai $p a $N.", FALSE, boris, sword, (boris)->master, TO_CHAR);
                 act("$n ti da' $p.", FALSE, boris, sword, (boris)->master, TO_VICT);
                 act("$n da' $p a $N.", FALSE, boris, sword, (boris)->master, TO_NOTVICT);
                 obj_to_char(sword, boris->master);
             }
-            else
+            else if(!ulrich)
             {
                 do_say(boris, "Il piu' valoroso di voi estragga la spada!", 0);
+                send_to_room("\n\r", boris->in_room);
                 act("Conficchi $p nel terreno.", FALSE, boris, sword, NULL, TO_CHAR);
                 act("$n conficca $p nel terreno.", FALSE, boris, sword, NULL, TO_ROOM);
                 obj_to_room(sword, boris->in_room);
             }
+//            send_to_room("\n\r", boris->in_room);
         }
             break;
             
@@ -1816,20 +1931,37 @@ void GarebethDeath(struct char_data* boris)
 
             armor = read_object(real_object(VLAD_ARMOR), REAL);
 
-            if(boris->in_room == (boris)->master->in_room)
+            for(fol = boris->master->followers; fol; fol = fol->next)
+            {
+                if(boris->in_room == fol->follower->in_room)
+                {
+                    if(!strcmp(GET_NAME(fol->follower), "Ulrich"))
+                    {
+                        act("Dai $p a $N.", FALSE, boris, armor, (fol)->follower, TO_CHAR);
+                        act("$n ti da' $p.", FALSE, boris, armor, (fol)->follower, TO_VICT);
+                        act("$n da' $p a $N.", FALSE, boris, armor, (fol)->follower, TO_NOTVICT);
+                        obj_to_char(armor, fol->follower);
+                        ulrich = TRUE;
+                    }
+                }
+            }
+
+            if(boris->in_room == (boris)->master->in_room && !ulrich)
             {
                 act("Dai $p a $N.", FALSE, boris, armor, (boris)->master, TO_CHAR);
                 act("$n ti da' $p.", FALSE, boris, armor, (boris)->master, TO_VICT);
                 act("$n da' $p a $N.", FALSE, boris, armor, (boris)->master, TO_NOTVICT);
                 obj_to_char(armor, boris->master);
             }
-            else
+            else if(!ulrich)
             {
                 do_say(boris, "Chi vuole sfidare $c0013Arkhat$c0007 indossi l'armatura!", 0);
+                send_to_room("\n\r", boris->in_room);
                 act("Adagi $p a terra.", FALSE, boris, armor, NULL, TO_CHAR);
                 act("$n adagia $p a terra.", FALSE, boris, armor, NULL, TO_ROOM);
                 obj_to_room(armor, boris->in_room);
             }
+//            send_to_room("\n\r", boris->in_room);
         }
             break;
             
@@ -1837,12 +1969,13 @@ void GarebethDeath(struct char_data* boris)
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Vi ringrazio a tutti, comunque andra' a finire!", 0);
             do_say(boris, "Ora andiamo e non temete l'oscurita'!", 0);
+ //           send_to_room("\n\r", boris->in_room);
             break;
 
         default:
             break;
     }
-    send_to_room("\n\r", boris->in_room);
+
     boris->commandp2 += 1;
 }
 

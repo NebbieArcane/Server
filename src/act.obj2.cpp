@@ -663,6 +663,14 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 	char buffer[MAX_STRING_LENGTH];
 	int BitMask;
 	struct room_data* rp;
+    struct char_data* tch;
+    
+    tch = ch;
+    
+    if(IS_POLY(ch))
+    {
+        tch = ch->desc->original;
+    }
     
     if(IS_OBJ_STAT2(obj_object, ITEM2_PERSONAL) && !IS_IMMORTAL(ch) && IS_PC(ch) && !pers_on(ch,obj_object))
     {
@@ -695,7 +703,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				BitMask |= CLASS_SORCERER;
 			}
 
-			if(!OnlyClass(ch, BitMask)) {
+			if(!OnlyClass(tch, BitMask)) {
 				/* check here only for class restricts */
 				if(obj_object->szForbiddenWearToChar &&
 						*obj_object->szForbiddenWearToChar) {
@@ -716,7 +724,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				return;
 			}
 		}
-		else if(IsRestricted(obj_object, ch->player.iClass))
+		else if(IsRestricted(obj_object, tch->player.iClass))
 			/* not only-class, okay to check normal anti-settings */
 		{
 			if(obj_object->szForbiddenWearToChar &&
