@@ -594,6 +594,11 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
     }
 
+    if(boris->specials.fighting)
+    {
+        return FALSE;
+    }
+
     if(cmd == CMD_TELL)
     {
         if(strstr(arg, "seguimi"))
@@ -603,6 +608,21 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
         else if(strstr(arg, "casa"))
         {
+            act("\n\rDici a $N di voler tornare a casa.\n\r", FALSE, ch, FALSE, boris, TO_CHAR);
+            act("\n\r$c0013[$c0015$n$c0015]$c0013 ti dice 'Voglio tornare a casa.'\n\r", FALSE, ch, FALSE, boris, TO_VICT);
+            act("\n\r$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, ch, FALSE, boris, TO_NOTVICT);
+
+            do_say(boris, "Capisco... Umag per tua fortuna mi ha istruito su di un sistema per rimandarti a casa immediatamente.", 0);
+
+            act("\n\rSubito dopo $N tira fuori da un sacchetto un rametto runico bianco e te lo porge.\n\r", FALSE, ch, FALSE, boris, TO_CHAR);
+            act("\n\rTiri fuori da un sacchetto un rametto runico bianco e lo porgi a $n.\n\r", FALSE, ch, FALSE, boris, TO_VICT);
+            act("\n\r$N tira fuori da un sacchetto un rametto runico bianco e lo porge a $n.\n\r", FALSE, ch, FALSE, boris, TO_NOTVICT);
+
+            do_say(boris, "Spezzalo e tornerai a casa... buona fortuna.", 0);
+
+            act("\n\rNon appena spezzi il rametto un $c0015lampo di luce$c0007 smaterializza il tuo corpo...\n\rTi ricomponi a Myst... finalmente sei a casa.\n\r", FALSE, ch, FALSE, boris, TO_CHAR);
+            act("\n\rNon appena $n spezza il rametto si smaterializza in un $c0015lampo di luce$c0007.\n\r", FALSE, ch, FALSE, boris, TO_ROOM);
+
             char_from_room(ch);
             char_to_room(ch, 3001);
             do_look(ch, "\0", 15);
@@ -1520,6 +1540,11 @@ MOBSPECIAL_FUNC(Uguik_Aurum)
                 boris = tch;
             }
         }
+    }
+
+    if(!boris)
+    {
+        return FALSE;
     }
 
     if(CheckUguikRoom(uguik, boris))
