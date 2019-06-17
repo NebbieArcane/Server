@@ -233,6 +233,7 @@ struct OtherSpecialProcEntry otherproc[] = {
     { "urna_nilmys", (genericspecial_func) urna_nilmys },
     //  mob
     { "Arkhat", (genericspecial_func) Arkhat },
+    { "Atropal", (genericspecial_func) Atropal},
     { "Boris_Ivanhoe", (genericspecial_func) Boris_Ivanhoe },
     { "Garebeth", (genericspecial_func) Garebeth},
     { "Uguik_Aurum", (genericspecial_func) Uguik_Aurum },

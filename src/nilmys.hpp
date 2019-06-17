@@ -22,6 +22,7 @@ namespace Alarmud {
 #define GONHAG              9009
 #define UGUIK_AURUM         9029
 #define BORIS_IVANHOE_CLONE 9048
+#define ATROPAL             9049
     
     //  rooms
 #define STANISLAV_ROOM      8957
@@ -29,6 +30,7 @@ namespace Alarmud {
 #define BORIS_HOME          9013
 #define UMAG_ROOM           9015
 #define ARKHAT_GOD_ROOM     9116
+#define ATROPAL_ROOM        9149
 #define MASS_GRAVE          9199
     
     //  objects
@@ -61,6 +63,7 @@ namespace Alarmud {
 OBJSPECIAL_FUNC(urna_nilmys);
     //  mobiles
 MOBSPECIAL_FUNC(Arkhat);
+MOBSPECIAL_FUNC(Atropal);
 MOBSPECIAL_FUNC(Boris_Ivanhoe);
 MOBSPECIAL_FUNC(Garebeth);
 MOBSPECIAL_FUNC(Uguik_Aurum);

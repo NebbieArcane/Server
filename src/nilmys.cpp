@@ -94,6 +94,67 @@ MOBSPECIAL_FUNC(stanislav_spirit)
     return(fighter(mob,cmd,arg,mob,type));
 }
 
+MOBSPECIAL_FUNC(Atropal)
+{
+    struct char_data* tch;
+    struct char_data* atropal, *boris;
+    struct obj_data* key;
+
+    atropal = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!atropal) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == ATROPAL)
+            {
+                atropal = tch;
+            }
+        }
+    }
+
+    boris = 0;
+
+    for(tch = real_roomp(ch->in_room)->people; (!boris) && (tch); tch = tch->next_in_room)
+    {
+        if(IS_MOB(tch))
+        {
+            if(mob_index[tch->nr].iVNum == BORIS_IVANHOE_CLONE)
+            {
+                boris = tch;
+            }
+        }
+    }
+
+    if(type == EVENT_DEATH)
+    {
+        key = read_object(real_object(SHADOW_WALLS_KEY), REAL);
+        obj_to_room(key, 9032);
+
+        send_to_room("\n\r\n\rImprovvisamente una strana nebbia $c0013purpurea$c0007 si forma dal corpo ormai senza vita\n\rdi Atropal e, lentamente, inizia a formarsi quello che ti sembra essere un $c0015portale$c0007.\n\r\n\r", ATROPAL_ROOM);
+
+        if(boris)
+        {
+            do_say(boris, "Presto entriamo prima che il portale scompaia!", 0);
+            send_to_room("\n\rBoris entra nel portale e, subito dopo, una strana forza, proveniente dal portale stesso, ti risucchia dentro.\n\r", ATROPAL_ROOM);
+            char_from_room(boris);
+            char_to_room(boris, 9032);
+        }
+        else
+        {
+            send_to_room("\n\rTi avvicini titubante al portale e, subito dopo, una strana forza, proveniente dal portale stesso, ti risucchia dentro.\n\r", ATROPAL_ROOM);
+        }
+
+        MoveToonInRangeToRoom(ATROPAL_ROOM, ATROPAL_ROOM, 9032);
+
+        send_to_room("\n\rAppena riapri gli occhi ti rendi conto di trovarti nuovamente al bivio che hai passato poche ore fa.\n\rNoti qualcosa per terra.\n\r", 9032);
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 MOBSPECIAL_FUNC(Arkhat)
 {
     struct char_data* tch;
@@ -608,20 +669,20 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
         else if(strstr(arg, "casa"))
         {
-            act("\n\rDici a $N di voler tornare a casa.\n\r", FALSE, ch, FALSE, boris, TO_CHAR);
-            act("\n\r$c0013[$c0015$n$c0015]$c0013 ti dice 'Voglio tornare a casa.'\n\r", FALSE, ch, FALSE, boris, TO_VICT);
-            act("\n\r$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, ch, FALSE, boris, TO_NOTVICT);
+            act("\n\rDici a $N di voler tornare a casa.\n\r", FALSE, ch, NULL, boris, TO_CHAR);
+            act("\n\r$c0013[$c0015$n$c0015]$c0013 ti dice 'Voglio tornare a casa.'\n\r", FALSE, ch, NULL, boris, TO_VICT);
+            act("\n\r$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, ch, NULL, boris, TO_NOTVICT);
 
             do_say(boris, "Capisco... Umag per tua fortuna mi ha istruito su di un sistema per rimandarti a casa immediatamente.", 0);
 
-            act("\n\rSubito dopo $N tira fuori da un sacchetto un rametto runico bianco e te lo porge.\n\r", FALSE, ch, FALSE, boris, TO_CHAR);
-            act("\n\rTiri fuori da un sacchetto un rametto runico bianco e lo porgi a $n.\n\r", FALSE, ch, FALSE, boris, TO_VICT);
-            act("\n\r$N tira fuori da un sacchetto un rametto runico bianco e lo porge a $n.\n\r", FALSE, ch, FALSE, boris, TO_NOTVICT);
+            act("\n\rSubito dopo $N tira fuori da un sacchetto un rametto runico bianco e te lo porge.\n\r", FALSE, ch, NULL, boris, TO_CHAR);
+            act("\n\rTiri fuori da un sacchetto un rametto runico bianco e lo porgi a $n.\n\r", FALSE, ch, NULL, boris, TO_VICT);
+            act("\n\r$N tira fuori da un sacchetto un rametto runico bianco e lo porge a $n.\n\r", FALSE, ch, NULL, boris, TO_NOTVICT);
 
             do_say(boris, "Spezzalo e tornerai a casa... buona fortuna.", 0);
 
-            act("\n\rNon appena spezzi il rametto un $c0015lampo di luce$c0007 smaterializza il tuo corpo...\n\rTi ricomponi a Myst... finalmente sei a casa.\n\r", FALSE, ch, FALSE, boris, TO_CHAR);
-            act("\n\rNon appena $n spezza il rametto si smaterializza in un $c0015lampo di luce$c0007.\n\r", FALSE, ch, FALSE, boris, TO_ROOM);
+            act("\n\rNon appena spezzi il rametto un $c0015lampo di luce$c0007 smaterializza il tuo corpo...\n\rTi ricomponi a Myst... finalmente sei a casa.\n\r", FALSE, ch, NULL, boris, TO_CHAR);
+            act("\n\rNon appena $n spezza il rametto si smaterializza in un $c0015lampo di luce$c0007.\n\r", FALSE, ch, NULL, boris, TO_ROOM);
 
             char_from_room(ch);
             char_to_room(ch, 3001);
@@ -2273,9 +2334,10 @@ ROOMSPECIAL_FUNC(gonhag_chain)
 ROOMSPECIAL_FUNC(reward_giver)
 {
     struct char_data *shopper, *tch;
-    struct obj_data* coin, *reward;
-    char buf[256];
+    struct obj_data* coin, *reward, *obj_to_sell;
+    char buf[256], sell[100];
     int i, j, count = 0, premio, rnum;
+    bool Ok = FALSE;
 
     if(type != EVENT_COMMAND)
     {
@@ -2310,7 +2372,201 @@ ROOMSPECIAL_FUNC(reward_giver)
         return FALSE;
     }
 
-    if(cmd == CMD_BUY)
+    if(cmd == CMD_SELL)
+    {
+        sell[0]='\0';
+
+        only_argument(arg, sell);
+
+        if(!(*sell))
+        {
+            if(CAN_SEE(shopper, ch))
+            {
+                sprintf(buf, "%s Cosa vorresti vendermi?", GET_NAME(ch));
+            }
+            else
+            {
+                sprintf(buf, "Non compro niente da chi non posso vedere!");
+            }
+            do_tell(shopper, buf, 0);
+            return TRUE;
+        }
+
+        if(!(obj_to_sell = get_obj_in_list_vis(ch, sell, ch->carrying)))
+        {
+            if(CAN_SEE(shopper, ch))
+            {
+                sprintf(buf, "%s Non hai niente del genere con te!", GET_NAME(ch));
+            }
+            else
+            {
+                sprintf(buf, "Non compro niente da chi non posso vedere!");
+            }
+            do_tell(shopper, buf, 0);
+            return TRUE;
+        }
+
+        if(IS_OBJ_STAT(obj_to_sell, ITEM_NODROP) && !IS_IMMORTAL(ch))
+        {
+            send_to_char("Non puoi lasciarlo, deve essere MALEDETTO!\n\r", ch);
+            return TRUE;
+        }
+
+        rnum = (obj_to_sell->item_number >= 0) ? obj_index[obj_to_sell->item_number].iVNum : 0;
+
+        switch(rnum)
+        {
+            case 9019:
+            case 9018:
+            case 9020:
+            case 9021:
+            case 9098:
+            case 9099:
+            {
+                if(mob_index[shopper->nr].iVNum == BORIS_IVANHOE)
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Ok, ti posso dare una moneta di Nilmys in cambio di $p$c0013!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                    Ok = TRUE;
+                }
+                else
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Mi dispiace, non mi interessa! Prova da Boris!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                }
+            }
+                break;
+
+            case 9005:
+            case 9006:
+            case 9007:
+            case 9009:
+            case 9097:
+            case 9087:
+            {
+                if(mob_index[shopper->nr].iVNum == TAMARANG_PRINCE)
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Ok, ma posso darti solo una moneta di Nilmys in cambio di $p$c0013!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                    Ok = TRUE;
+                }
+                else
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Io non prendo quella cosa li'! Prova da Tamarang!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                }
+            }
+                break;
+
+            case 9015:
+            case 9016:
+            case 9017:
+            case 9014:
+            case 9095:
+            case 9094:
+            {
+                if(mob_index[shopper->nr].iVNum == UMAG_ULBAR)
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Mi interessa $p$c0013: ecco un Augustale per te!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                    Ok = TRUE;
+                }
+                else
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Non mi interessa $p$c0013! Forse Umag potrebbe essere interessato.'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                }
+            }
+                break;
+
+            case 9010:
+            case 9011:
+            case 9012:
+            case 9013:
+            case 9090:
+            case 9091:
+            {
+                if(mob_index[shopper->nr].iVNum == DAGGAR_IVRAM)
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Per $p$c0013 posso darti ben una moneta!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                    Ok = TRUE;
+                }
+                else
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice '$p$c0013? E cosa ci faccio? Chiedi a Daggar, magari a lui interessa.'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                }
+            }
+                break;
+
+            case 9029:
+            case 9031:
+            case 9030:
+            case 9028:
+            case 9092:
+            case 9093:
+            {
+                if(mob_index[shopper->nr].iVNum == IREIIN_DRUID)
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Si, $p$c0013 mi interessa. Ti do un Augustale!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                    Ok = TRUE;
+                }
+                else
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Prova con Ireiin, io non tratto questa robaccia!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                }
+            }
+                break;
+
+            case 9023:
+            case 9025:
+            case 9024:
+            case 9026:
+            case 9088:
+            case 9089:
+            {
+                if(mob_index[shopper->nr].iVNum == CORMAC_RUNAR)
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Per $p$c0013 ti posso dare... una moneta di Nilmys!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                    Ok = TRUE;
+                }
+                else
+                {
+                    act("\n\r$c0013[$c0015$n$c0013] ti dice 'Non ci faccio niente ma sicuramente puo' interessare a Cormac!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                }
+            }
+                break;
+
+            default:
+                act("\n\r$c0013[$c0015$n$c0013] ti dice 'Cosa ci faccio con $p$c0013?'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+                break;
+        }
+
+        if(Ok)
+        {
+            act("\n\r$c0013Tu dici a $N$c0013 'Ok, ti posso dare una moneta di Nilmys per $p$c0013.'\n\r",FALSE, shopper, obj_to_sell, ch, TO_CHAR);
+            act("\n\r$c0013$n$c0013 dice qualcosa a $N$c0013.\n\r",FALSE, shopper, NULL, ch, TO_NOTVICT);
+
+            act("$c0015$N$c0015 ti da' $p$c0015.", FALSE, shopper, obj_to_sell, ch, TO_CHAR);
+            act("$c0015Dai $p$c0015 a $n$c0015.", FALSE, shopper, obj_to_sell, ch, TO_VICT);
+            act("$c0015$N$c0015 da' $p$c0015 a $n$c0015.", FALSE, shopper, obj_to_sell, ch, TO_NOTVICT);
+
+            extract_obj(obj_to_sell);
+
+            coin = read_object(real_object(NILMYS_COIN), REAL);
+            obj_to_char(coin, ch);
+
+            sprintf(buf, "un Augustale di proprieta' di %s", GET_NAME(ch));
+            free(coin->short_description);
+            coin->short_description = (char*)strdup(buf);
+            SetPersonOnSave(ch, coin);
+
+            act("$c0011Consegni $p$c0011 a $N$c0011.", FALSE, shopper, coin, ch, TO_CHAR);
+            act("$c0011$n$c0011 ti consegna $p$c0011.", FALSE, shopper, coin, ch, TO_VICT);
+            act("$c0011$n$c0011 consegna $p$c0011 a $N$c0011.", FALSE, shopper, coin, ch, TO_NOTVICT);
+        }
+        else
+        {
+            act("\n\r$c0013Scuoti la testa e fai intendere a $N$c0013 che non sei interessat$b a $p$c0013.\n\r",FALSE, shopper, obj_to_sell, ch, TO_CHAR);
+            act("\n\r$c0013$n$c0013 scuote la testa e dice qualcosa a $N$c0013.\n\r",FALSE, shopper, NULL, ch, TO_NOTVICT);
+        }
+
+        return TRUE;
+    }
+    else if(cmd == CMD_BUY)
     {
         for(i = 0; i < 6; i++)
         {
