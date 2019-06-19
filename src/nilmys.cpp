@@ -29,6 +29,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "opinion.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
 #include "spec_procs.hpp"
@@ -655,20 +656,28 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
     }
 
-    if(boris->specials.fighting)
-    {
-        return FALSE;
-    }
-
     if(cmd == CMD_TELL)
     {
         if(strstr(arg, "seguimi"))
         {
             boris->specials.quest_ref = ch;
+            stop_fighting(boris);
+            StopAllFightingWith(boris);
+            FreeHates(boris);
             return FALSE;
         }
         else if(strstr(arg, "casa"))
         {
+            if(boris->specials.fighting)
+            {
+                act("\n\rDici a $N di voler tornare a casa.\n\r", FALSE, ch, NULL, boris, TO_CHAR);
+                act("\n\r$c0013[$c0015$n$c0015]$c0013 ti dice 'Voglio tornare a casa.'\n\r", FALSE, ch, NULL, boris, TO_VICT);
+                act("\n\r$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, ch, NULL, boris, TO_NOTVICT);
+
+                do_say(boris, "Non ora, sono troppo impegnato!", 0);
+                return TRUE;
+            }
+
             act("\n\rDici a $N di voler tornare a casa.\n\r", FALSE, ch, NULL, boris, TO_CHAR);
             act("\n\r$c0013[$c0015$n$c0015]$c0013 ti dice 'Voglio tornare a casa.'\n\r", FALSE, ch, NULL, boris, TO_VICT);
             act("\n\r$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, ch, NULL, boris, TO_NOTVICT);
@@ -693,6 +702,11 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         {
             return FALSE;
         }
+    }
+
+    if(boris->specials.fighting)
+    {
+        return FALSE;
     }
 
     switch(boris->generic)
@@ -760,8 +774,8 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             }
             else
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Non fatemi perdere tempo!'\n\r", boris->in_room);
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'C'e' qualcuno che comanda qui?'\n\r", boris->in_room);
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice 'Non fatemi perdere tempo!'\n\r", boris->in_room);
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice 'C'e' qualcuno che comanda qui?'\n\r", boris->in_room);
                 do_say(boris, "Chi vuole comandare mi dica di seguirlo!", 0);
                 return FALSE;
             }
@@ -779,9 +793,10 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             }
             else
             {
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Abbiamo perso la nostra guida!'\n\r", boris->in_room);
-                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Il tempo scorre, ditemi chi devo seguire!'\n\r", boris->in_room);
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice 'Abbiamo perso la nostra guida!'\n\r", boris->in_room);
+                send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice 'Il tempo scorre, ditemi chi devo seguire!'\n\r", boris->in_room);
                 do_say(boris, "Chi vuole comandare mi dica di seguirlo!", 0);
+                boris->generic = 2;
                 return FALSE;
             }
             break;
@@ -2098,7 +2113,7 @@ OBJSPECIAL_FUNC(urna_nilmys)
                 send_to_room(" \n\r", numero);
                 send_to_room("$c0008Un vento gelido entra nella cripta non appena seppellisci le $c0015ossa$c0008...\n\r", numero);
                 send_to_room("$c0008Improvvisamente l'urna si illumina di $c0009rosso$c0008 poi, subito dopo, la luce scompare inghiottita dalle tenebre...\n\r", numero);
-                send_to_room("$c0008Subito dopo un rumore sordo rimbomba nel sottosuolo, giureresti che provenga dalla chiesa.\n\r", numero);
+                send_to_room("$c0008Poi un rumore sordo rimbomba nel sottosuolo, giureresti che provenga dalla chiesa.\n\r", numero);
                 send_to_room(" \n\r", numero);
 
                 for(tmp_urna = obj->contains; tmp_urna; tmp_urna = tmp_urna->next_content)

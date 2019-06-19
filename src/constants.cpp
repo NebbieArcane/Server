@@ -5411,8 +5411,11 @@ struct ObjBonusTable AchieBonus[MAX_CLASS][12] = {
 };
 
 struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE] = {
-    // Xarah
-    {   8,  19709,  19719,  19605,  19712,  19710,  19724,  19602,  19933,      0,      0   }
+    //  Xarah
+    {   8,  19709,  19719,  19605,  19712,  19710,  19724,  19602,  19933,      0,      0   },
+
+    //  Nilmys
+    {   10,  9007,   9020,   9021,   9047,   9015,   9014,   9018,   8916,   8923,   8902   }
 };
 
 struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
@@ -6191,6 +6194,34 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
             0,                                                      LEV_CHAMPION,                               5
+        },
+        {   //  21
+            ACHIE_ARKHAT,                                           "Arkhat ucciso",                            "Arkhat uccisi",
+            "Va giu' in un colpo!",                                 1,
+            "Hey, ha provato a mangiarmi!",                         10,
+            "Ma che bel circolo sanguinoleto!",                     100,
+            "Ti mangio io se non stai attento!",                    500,
+            "Signore delle Tenebre",                                5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_TORMENT,                                5
+        },
+        {   //  22
+            ACHIE_GONHAG,                                           "Gonhag ucciso",                            "Gonhag uccisi",
+            "Whisky! Vieni qui bello!",                             1,
+            "Ho dimenticato il guinzaglio, lo avete?",              10,
+            "Hey, non mi sbavare cosi'!",                           100,
+            "A cuccia su, da bravo",                                500,
+            "Dominatore di Draghi",                                 5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_IMPERIAL,                               5
         }
     },
 
@@ -6209,6 +6240,20 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
             0,                                                      LEV_CHAMPION,                               5
+        },
+        {   //  1
+            ACHIE_QUEST_NILMYS,                                     "Nilmys completata",                        "Nilmys completate",
+            "Oscuro Signore",                                       1,
+            "Colui che cammina nella Nebbia",                       30,
+            "Distruttore di Circoli",                               150,
+            "Sterminatore dell'Ombra",                              1000,
+            "Portatore di Luce",                                    5000,
+            "", /* lvl6 */                                          0, //   lvl6_val
+            "", /* lvl7 */                                          0, //   lvl7_val
+            "", /* lvl8 */                                          0, //   lvl8_val
+            "", /* lvl9 */                                          0, //   lvl9_val
+            "", /* lvl10 */                                         0, //   lvl10_val
+            0,                                                      LEV_IMPERIAL,                               5
         }
     },
 

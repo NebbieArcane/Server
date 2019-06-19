@@ -1116,8 +1116,8 @@ enum e_wear {
 #define	SKILL_UNDEFINED2                             4 
 #define	ABS_MAX_LVL                                  70 
 #define	MAX_CLASS_ACHIE                              34 
-#define	MAX_BOSS_ACHIE                               21 
-#define	MAX_QUEST_ACHIE                              1 
+#define	MAX_BOSS_ACHIE                               23 
+#define	MAX_QUEST_ACHIE                              2 
 #define	MAX_OTHER_ACHIE                              25 
 #define	MAX_MOB_QUEST                                10 
 #define	MAX_RACE_ACHIE                               97 
@@ -1189,6 +1189,7 @@ enum e_wear {
 #define	ACHIE_PSI_2                                  32 
 #define	ACHIE_PSI_3                                  33 
 #define	ACHIE_QUEST_XARAH                            0 
+#define	ACHIE_QUEST_NILMYS                           1 
 #define	ACHIE_EVANGELINE                             21017 
 #define	ACHIE_SALOMONE                               32124 
 #define	ACHIE_THION                                  19719 
@@ -1210,6 +1211,8 @@ enum e_wear {
 #define	ACHIE_BALROG                                 37317 
 #define	ACHIE_FIDEX_GATOR                            8001 
 #define	ACHIE_DRAGGSYLIA                             16314 
+#define	ACHIE_ARKHAT                                 9007 
+#define	ACHIE_GONHAG                                 9009 
 #define	ACHIE_PKILL_WIN                              0 
 #define	ACHIE_PKILL_LOSS                             1 
 #define	ACHIE_DEATH                                  2 

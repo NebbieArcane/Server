@@ -605,8 +605,8 @@ l'array connected_types in constants.cpp
 **SKILL_UNDEFINED2                             4 
 **ABS_MAX_LVL                                  70 
 **MAX_CLASS_ACHIE                              34 
-**MAX_BOSS_ACHIE                               21 
-**MAX_QUEST_ACHIE                              1 
+**MAX_BOSS_ACHIE                               23 
+**MAX_QUEST_ACHIE                              2 
 **MAX_OTHER_ACHIE                              25 
 **MAX_MOB_QUEST                                10 
 **MAX_RACE_ACHIE                               97 
@@ -678,6 +678,7 @@ l'array connected_types in constants.cpp
 **ACHIE_PSI_2                                  32 
 **ACHIE_PSI_3                                  33 
 **ACHIE_QUEST_XARAH                            0 
+**ACHIE_QUEST_NILMYS                           1 
 **ACHIE_EVANGELINE                             21017 
 **ACHIE_SALOMONE                               32124 
 **ACHIE_THION                                  19719 
@@ -699,6 +700,8 @@ l'array connected_types in constants.cpp
 **ACHIE_BALROG                                 37317 
 **ACHIE_FIDEX_GATOR                            8001 
 **ACHIE_DRAGGSYLIA                             16314 
+**ACHIE_ARKHAT                                 9007 
+**ACHIE_GONHAG                                 9009 
 **ACHIE_PKILL_WIN                              0 
 **ACHIE_PKILL_LOSS                             1 
 **ACHIE_DEATH                                  2 

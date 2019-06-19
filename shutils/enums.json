@@ -113,11 +113,11 @@
             "comment": "Achievements stuffs"
         },
         "MAX_BOSS_ACHIE": {
-            "value": 21,
+            "value": 23,
             "comment": "Achievements stuffs"
         },
         "MAX_QUEST_ACHIE": {
-            "value": 1,
+            "value": 2,
             "comment": "Achievements stuffs"
         },
         "MAX_OTHER_ACHIE": {
@@ -404,6 +404,10 @@
             "value": 0,
             "comment": "Achievements stuffs"
         },
+        "ACHIE_QUEST_NILMYS": {
+            "value": 1,
+            "comment": "Achievements stuffs"
+        },
         "ACHIE_EVANGELINE": {
             "value": 21017,
             "comment": "Achievements stuffs"
@@ -486,6 +490,14 @@
         },
         "ACHIE_DRAGGSYLIA": {
             "value": 16314,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_ARKHAT": {
+            "value": 9007,
+            "comment": "Achievements stuffs"
+        },
+        "ACHIE_GONHAG": {
+            "value": 9009,
             "comment": "Achievements stuffs"
         },
         "ACHIE_PKILL_WIN": {
