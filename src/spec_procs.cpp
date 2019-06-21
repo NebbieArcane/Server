@@ -6516,7 +6516,7 @@ OBJSPECIAL_FUNC(zone_obj) {
 
 	if((numero<room_da) || (numero>room_a)) {
 		send_to_room("\n\r", numero);
-		sprintf(buf, "$c0006Un'arcana forza fa dissolvere %s nel nulla.\n\r$c0007", obj->short_description);
+		sprintf(buf, "$c0006Un'arcana forza fa dissolvere %s$c0006 nel nulla.\n\r$c0007", obj->short_description);
 		send_to_room(buf, numero);
 		send_to_room("\n\r", numero);
 		if(obj->carried_by) {

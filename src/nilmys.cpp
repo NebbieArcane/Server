@@ -467,7 +467,7 @@ void ArkhatDeath(struct char_data* boris)
             break;
 
         case 1003:
-            send_to_room("$c0014E' lei la prima $c0015anima$c0013 presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
+            send_to_room("$c0014E' lei la prima $c0015anima$c0014 presa da $c0013Arkhat$c0014, e' lei che lentamente sale fino al punto in cui tutte\n\r", boris->in_room);
             send_to_room("$c0014le altre sono radunate.\n\r", boris->in_room);
             break;
 
@@ -601,6 +601,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     struct char_data* tch;
     struct char_data* boris, *umag;
     struct obj_data* eq_boris;
+    int j;
 
     boris = 0;
 
@@ -852,9 +853,28 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                 do_say(boris, "Bene. Possano le nostre strade incontrarsi di nuovo un giorno! Addio.", 0);
                 send_to_room("\n\r", boris->in_room);
 
+                //  estraggo l'equipaggiamento di Boris
+                if(boris->carrying)
+                {
+                    for(j = 0; j < MAX_WEAR; j++)
+                    {
+                        if(boris->equipment[ j ])
+                        {
+                            obj_to_char(unequip_char(boris, j), boris);
+                        }
+                    }
+
+                    while(boris->carrying)
+                    {
+                        eq_boris = boris->carrying;
+                        obj_from_char(eq_boris);
+                        extract_obj(eq_boris);
+                    }
+                }
+
                 extract_char(boris);
             
-                //  carico la versione di Boris per gli oggetti
+                //  carico la versione di Boris senza special
                 new_boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
                 char_to_room(new_boris, 9121);
             }
@@ -870,7 +890,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                     {
                         GiveRewardNilmys(boris, ch);
                     }
-                    if(ch->generic == 20)
+                    else if(ch->generic == 20)
                     {
                         act("$c0015[$c0013$n$c0015] dice '$N puoi ricevere il tuo premio una sola volta!'", FALSE, boris, NULL, ch, TO_ROOM);
                     }
@@ -989,8 +1009,12 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
 {
     struct obj_data* coin;
     char buf[256];
+    int rune;
 
     ch->generic = 20;
+
+    rune = ch->commandp;
+    ch->commandp = 0;
 
     coin = read_object(real_object(NILMYS_COIN), REAL);
 
@@ -1003,11 +1027,18 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
     act("$n ti da' $p.", FALSE, boris, coin, ch, TO_VICT);
     act("$n da' $p a $N.", FALSE, boris, coin, ch, TO_NOTVICT);
 
-    act("$c0013Tu dici a $N$c0013 'Ricordati $N$c0013, se possiedi 6 $p$c0013 potrai scambiarli con un premio.'\n\r", FALSE, boris, coin, ch, TO_CHAR);
-    act("$c0013[$c0015$n$c0015]$c0013 ti dice 'Ricordati $N$c0013, se possiedi 6 $p$c0013 potrai scambiarli con un premio.'\n\r", FALSE, boris, coin, ch, TO_VICT);
-    act("$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, boris, coin, ch, TO_NOTVICT);
+    act("$c0013Tu dici a $N$c0013 'Ricordati $N$c0013, potrai scambiare sei monete di Nilmys con un premio.'\n\r", FALSE, boris, NULL, ch, TO_CHAR);
+    act("$c0013[$c0015$n$c0015]$c0013 ti dice 'Ricordati $N$c0013, potrai scambiare sei monete di Nilmys con un premio.'\n\r", FALSE, boris, NULL, ch, TO_VICT);
+    act("$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, boris, NULL, ch, TO_NOTVICT);
+
+    GET_RUNEDEI(ch) += rune;
+    sprintf(buf,"$c0011Vieni marchiat%s con %d run%s degli Dei!$c0007\n\r\n\r",SSLF(ch), rune, (rune == 1 ? "a" : "e"));
+    send_to_char(buf, ch);
     
     obj_to_char(coin, ch);
+
+    do_say(boris, "Se tutti quanti avete ricevuto il vostro premio, fatemi un cenno con la testa!", 0);
+    send_to_room("\n\r", 9121);
 }
 
 void MoveToonInRangeToRoom(int low_number, int high_number, int room)

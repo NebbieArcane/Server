@@ -2307,7 +2307,7 @@ ACTION_FUNC(do_use) {
     {
         struct obj_data* arkhat_equip;
         struct char_data* Arkhat;
-        int r_num = 0, wait_ch = 0, wait_party = 0;
+        int r_num = 0, wait_ch = 0, wait_party = 0, rune;
         
         arg = one_argument(arg, buf);
         
@@ -2436,6 +2436,8 @@ ACTION_FUNC(do_use) {
 
             if(stick->iGeneric == NILMYS_PORTAL_ONE + NILMYS_PORTAL_TWO + NILMYS_PORTAL_THREE + NILMYS_PORTAL_FOUR + NILMYS_PORTAL_FIVE)
             {
+                rune = number(1, 3);
+
                 for(tmp_char = real_roomp(ch->in_room)->people; tmp_char; tmp_char = tmp_char->next_in_room)
                 {
                     if(IS_PC(tmp_char))
@@ -2443,10 +2445,12 @@ ACTION_FUNC(do_use) {
                         if(tmp_char == ch)
                         {
                             ch->generic = 10;
+                            ch->commandp = rune;
                         }
                         else if(tmp_char && (is_same_group(ch, tmp_char) || ch->master == tmp_char->master || ch->master == tmp_char || ch == tmp_char->master))
                         {
                             tmp_char->generic = 10;
+                            tmp_char->commandp = rune;
                         }
                     }
                 }
