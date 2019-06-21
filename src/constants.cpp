@@ -5415,7 +5415,7 @@ struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE] = {
     {   8,  19709,  19719,  19605,  19712,  19710,  19724,  19602,  19933,      0,      0   },
 
     //  Nilmys
-    {   10,  9007,   9020,   9021,   9047,   9015,   9014,   9018,   8916,   8923,   8902   }
+    {   9,   9007,   9020,   9021,   9047,   9015,   9014,   9018,   8916,   8923,      0   }
 };
 
 struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
