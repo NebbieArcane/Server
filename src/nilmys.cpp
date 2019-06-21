@@ -849,26 +849,28 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             if(cmd == CMD_NOD)
             {
                 struct char_data* new_boris;
+                struct obj_data* equip;
 
                 do_say(boris, "Bene. Possano le nostre strade incontrarsi di nuovo un giorno! Addio.", 0);
                 send_to_room("\n\r", boris->in_room);
 
                 //  estraggo l'equipaggiamento di Boris
+
+                for(j = 0; j < MAX_WEAR; j++)
+                {
+                    if(boris->equipment[ j ])
+                    {
+                        obj_to_char(unequip_char(boris, j), boris);
+                    }
+                }
+
                 if(boris->carrying)
                 {
-                    for(j = 0; j < MAX_WEAR; j++)
-                    {
-                        if(boris->equipment[ j ])
-                        {
-                            obj_to_char(unequip_char(boris, j), boris);
-                        }
-                    }
-
                     while(boris->carrying)
                     {
-                        eq_boris = boris->carrying;
-                        obj_from_char(eq_boris);
-                        extract_obj(eq_boris);
+                        equip = boris->carrying;
+                        obj_from_char(equip);
+                        extract_obj(equip);
                     }
                 }
 
