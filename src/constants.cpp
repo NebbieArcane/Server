@@ -3614,7 +3614,7 @@ const char* spell_desc[] = {
     /*   91 SPELL_CALM                  */  "!calm!",
 	/*   92 SPELL_STONE_SKIN            */  "La pelle di $n ha la consistenza del piu' duro $c0003granito$c0007.",
 	/*   93 SPELL_CONJURE_ELEMENTAL     */  "!conjure elemental!",
-	/*   94 SPELL_TRUE_SIGHT            */  "Gli occhi $n emanano una $c0015luce argentea$c0007.",
+	/*   94 SPELL_TRUE_SIGHT            */  "Gli occhi di $n emanano una $c0015luce argentea$c0007.",
 	/*   95 SPELL_MINOR_CREATE          */  "!minor creation!",
 	/*   96 SPELL_FAERIE_FIRE           */  "$n e' circondat$b da un $c0013alone rosa$c0007.",
     /*   97 SPELL_FAERIE_FOG            */  "!faerie fog!",

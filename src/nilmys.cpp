@@ -657,6 +657,11 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
     }
 
+    if(cmd && cmd != CMD_TELL && cmd != CMD_ASK && cmd != CMD_NOD)
+    {
+        return(FALSE);
+    }
+
     if(cmd == CMD_TELL)
     {
         if(strstr(arg, "seguimi"))
@@ -667,7 +672,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             FreeHates(boris);
             return FALSE;
         }
-        else if(strstr(arg, "casa"))
+        else if(strstr(arg, "casa") && boris->master)
         {
             if(boris->specials.fighting)
             {
@@ -697,7 +702,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             char_from_room(ch);
             char_to_room(ch, 3001);
             do_look(ch, "\0", 15);
-            return FALSE;
+            return TRUE;
         }
         else
         {
@@ -763,6 +768,11 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             break;
 
         case 2:
+        {
+            if(cmd && cmd != CMD_TELL)
+            {
+                return(FALSE);
+            }
             if(boris->specials.quest_ref != NULL)
             {
                 if(boris->master)
@@ -780,9 +790,15 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                 do_say(boris, "Chi vuole comandare mi dica di seguirlo!", 0);
                 return FALSE;
             }
+        }
             break;
 
         case 3:
+        {
+            if(cmd && cmd != CMD_TELL)
+            {
+                return(FALSE);
+            }
             if(boris->master != NULL)
             {
                 if(boris->master != boris->specials.quest_ref)
@@ -800,6 +816,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                 boris->generic = 2;
                 return FALSE;
             }
+        }
             break;
 
         case 4:
@@ -2000,7 +2017,6 @@ void GarebethDeath(struct char_data* boris)
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Queste sono le vestigia del mio amato nipote Vladimir.", 0);
             act("\n\r$n ti mostra l'$c0015Armatura$c0007 $c0015Consacrata $c0007dalle vittime di $c0013Arkhat$c0007 e la $c0015Divina $c0007Spada di Vlad.", FALSE, boris, NULL, NULL, TO_ROOM);
-//            send_to_room("\n\r", boris->in_room);
         }
             break;
             
@@ -2009,7 +2025,6 @@ void GarebethDeath(struct char_data* boris)
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Usate questa spada amici miei, ho giurato al mio carissimo nipote che la sua arma sarebbe vissuta in eterno...", 0);
             do_say(boris, "E che solo i piu' valorosi guerrieri mortali l'avrebbero brandita!", 0);
-//            send_to_room("\n\r", boris->in_room);
 
             sword = read_object(real_object(VLAD_SWORD), REAL);
 
@@ -2052,7 +2067,6 @@ void GarebethDeath(struct char_data* boris)
                 act("$n conficca $p nel terreno.", FALSE, boris, sword, NULL, TO_ROOM);
                 obj_to_room(sword, boris->in_room);
             }
-//            send_to_room("\n\r", boris->in_room);
         }
             break;
             
@@ -2095,7 +2109,6 @@ void GarebethDeath(struct char_data* boris)
                 act("$n adagia $p a terra.", FALSE, boris, armor, NULL, TO_ROOM);
                 obj_to_room(armor, boris->in_room);
             }
-//            send_to_room("\n\r", boris->in_room);
         }
             break;
             
@@ -2103,7 +2116,6 @@ void GarebethDeath(struct char_data* boris)
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Vi ringrazio a tutti, comunque andra' a finire!", 0);
             do_say(boris, "Ora andiamo e non temete l'oscurita'!", 0);
- //           send_to_room("\n\r", boris->in_room);
             break;
 
         default:
