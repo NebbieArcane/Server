@@ -2015,11 +2015,11 @@ ACTION_FUNC(do_look) {
 				}
 			}
 			if(RM_BLOOD(ch->in_room) > 0) {
-				mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
+			//	mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
 				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, 0, 0, TO_CHAR);
 			}
 			else {
-				mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
+			//	mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
 			}
 			list_exits_in_room(ch);
 			list_obj_in_room(pRoomWithChar->contents, ch);
