@@ -1796,9 +1796,9 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		else if(value==1) {
 			send_to_char("\n\rValue2 is the attack type of the trap.\n\r\n\r",ch);
 			send_to_char(" 10 - blasted          26 - seared\n\r",ch);
-			send_to_char(" 67 - corroded        203 - frozen\n\r",ch);
-			send_to_char("207 - pounded         208 - pierced\n\r",ch);
-			send_to_char("209 - sliced\n\r",ch);
+			send_to_char(" 67 - corroded        327 - frozen\n\r",ch);
+			send_to_char("331 - pounded         332 - pierced\n\r",ch);
+			send_to_char("333 - sliced\n\r",ch);
 		}
 		else if(value==2) {
 			send_to_char("\n\rValue3 should be set to 80.",ch);

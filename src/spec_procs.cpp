@@ -2964,7 +2964,7 @@ MOBSPECIAL_FUNC(puff) {
 
 	switch(number(0, 250)) {
 	case 0:
-		sprintf(buf,"Anyone know where I am at?\n");
+		sprintf(buf,"Anyone know where I am at?");
 		do_say(ch, buf, 0);
 		return(1);
 	case 1:
@@ -3271,12 +3271,22 @@ MOBSPECIAL_FUNC(puff) {
 	return FALSE;
 }
 
-MOBSPECIAL_FUNC(regenerator) {
-	if(type == EVENT_TICK) {
-		if(GET_HIT(ch) < GET_MAX_HIT(ch)) {
-			GET_HIT(ch) +=9;
+MOBSPECIAL_FUNC(regenerator)
+{
+    int min = 0;
+
+	if(type == EVENT_TICK)
+    {
+		if(GET_HIT(ch) < GET_MAX_HIT(ch))
+        {
+            min = int (GET_MAX_HIT(ch) / 50);
+            if(min < 9)
+            {
+                min = 9;
+            }
+			GET_HIT(ch) += min;
 			GET_HIT(ch) = MIN(GET_HIT(ch), GET_MAX_HIT(ch));
-			alter_hit(ch,0);
+			alter_hit(ch, 0);
 			act("$n rigenera.", TRUE, ch, 0, 0, TO_ROOM);
 			return(TRUE);
 		}
@@ -6506,7 +6516,7 @@ OBJSPECIAL_FUNC(zone_obj) {
 
 	if((numero<room_da) || (numero>room_a)) {
 		send_to_room("\n\r", numero);
-		sprintf(buf, "$c0006Un'arcana forza fa dissolvere %s nel nulla.\n\r$c0007", obj->short_description);
+		sprintf(buf, "$c0006Un'arcana forza fa dissolvere %s$c0006 nel nulla.\n\r$c0007", obj->short_description);
 		send_to_room(buf, numero);
 		send_to_room("\n\r", numero);
 		if(obj->carried_by) {

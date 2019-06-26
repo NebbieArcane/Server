@@ -123,7 +123,7 @@ const char* zonename_by_room(int room) {
         "dove tutto ha Inizio",
         "la Tenuta dei Redferne",
         "la Banca",
-        "l’Ingresso di Bosco Cet",
+        "l'Ingresso di Bosco Cet",
         "Bosco Cet",
         "il Cuore di Bosco Cet",
         "il Villaggio Isgha",

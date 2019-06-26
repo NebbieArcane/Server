@@ -4750,6 +4750,12 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
+    if(!IsOnPmp(ch->in_room))
+    {
+        send_to_char("Non puoi evocare nessuno! Sei in un altro piano dimensionale!\n\r", ch);
+        return;
+    }
+
 	if(!IsOnPmp(target->in_room)) {
 		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
 		return;

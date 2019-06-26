@@ -356,6 +356,10 @@ MOBSPECIAL_FUNC(Summoner) {
 		return(TRUE);
 	}
 
+    if(!IsOnPmp(ch->in_room)){
+        return(FALSE);
+    }
+
 	/*
 	**  wait till at 75% of hitpoints.
 	*/

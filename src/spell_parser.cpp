@@ -1004,7 +1004,10 @@ void affect_update(unsigned long localPulse) {
 		}
 		/* Imposta un po' di puntatori e flag */
 		rp = real_roomp(ch->in_room);
-		regainroom=(IS_SET(rp->room_flags,NO_REGAIN))?0:1;
+        if(!IS_SET(rp->room_flags, NO_REGAIN))
+        {
+            regainroom = 1;
+        }
 
 		/* Calcola la posizione prevalente */
 		for(k=0; k<=MAX_POSITION; k++) {

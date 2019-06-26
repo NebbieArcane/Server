@@ -21,6 +21,7 @@
 #include "spec_procs3.hpp"
 #include "speciali.hpp"
 #include "lucertole.hpp"
+#include "nilmys.hpp"
 #include "rhyodin.hpp"
 #include "breath.hpp"
 #include "board.hpp"
@@ -32,7 +33,6 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "AbyssGateKeeper",(genericspecial_func) AbyssGateKeeper },
 	{ "Ankheg",(genericspecial_func) Ankheg },
 	{ "banshee_lorelai",(genericspecial_func) banshee_lorelai },
-	{ "stanislav_spirit",(genericspecial_func) stanislav_spirit },
 	{ "Beholder",(genericspecial_func) Beholder },
 	{ "BerserkerItem",(genericspecial_func) BerserkerItem },
 	{ "BiosKaiThanatos",(genericspecial_func) BiosKaiThanatos },
@@ -228,6 +228,18 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "zombie_master",(genericspecial_func) zombie_master },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
+//  Quest Nilmys
+    //  oggetti
+    { "urna_nilmys", (genericspecial_func) urna_nilmys },
+    //  mob
+    { "Arkhat", (genericspecial_func) Arkhat },
+    { "Atropal", (genericspecial_func) Atropal},
+    { "Boris_Ivanhoe", (genericspecial_func) Boris_Ivanhoe },
+    { "Garebeth", (genericspecial_func) Garebeth},
+    { "Uguik_Aurum", (genericspecial_func) Uguik_Aurum },
+    { "Umag_Ulbar", (genericspecial_func) Umag_Ulbar},
+    { "stanislav_spirit", (genericspecial_func) stanislav_spirit },
+//  fine Quest Nilmys
 	{ "zFineprocedure", NULL },
 };
 } // namespace Alarmud
