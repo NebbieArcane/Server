@@ -1609,6 +1609,11 @@ bool FindKeyByNumber(struct char_data* ch, int number)
 
     key = get_obj_vis(ch, obj_index[vnum].name);
 
+    if(!key)
+    {
+        return FALSE;
+    }
+
     if(key->carried_by != NULL)
     {
         for(tch = real_roomp(ch->in_room)->people; tch; tch = tch->next_in_room)
