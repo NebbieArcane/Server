@@ -651,7 +651,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     }
     else if(!(boris->specials.fighting))
     {
-        if(CountBorisParty(boris) < 5)
+        if(CountBorisParty(boris) < 5 && CountBorisParty(boris) > 0)
         {
             BorisInFight(boris);
         }
