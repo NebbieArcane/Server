@@ -651,7 +651,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     }
     else if(!(boris->specials.fighting))
     {
-        if(CountBorisParty(boris) < 5)
+        if(CountBorisParty(boris) < 5 && CountBorisParty(boris) > 0)
         {
             BorisInFight(boris);
         }
@@ -760,6 +760,10 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                     extract_char(boris);
                     boris = read_mobile(real_mobile(BORIS_IVANHOE_CLONE), REAL);
                     char_to_room(boris, BORIS_HOME);
+                    if(IS_SET(boris->specials.act, ACT_IMMORTAL))
+                    {
+                        REMOVE_BIT(boris->specials.act, ACT_IMMORTAL);
+                    }
                     boris->specials.quest_ref = (ch)->master;
                     boris->generic = 4;
                 }
