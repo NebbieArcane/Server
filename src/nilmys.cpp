@@ -1299,7 +1299,7 @@ void CheckBorisRoom(struct char_data* boris)
 
                     case 4:
                         sprintf(buf, "salassatore %s", GET_NAME((boris)->master));
-                        if((boris)->master->in_room == uguik->in_room)
+                        if((boris)->master->in_room == uguik->in_room && CAN_SEE(uguik, (boris)->master))
                         {
                             do_give(uguik, buf, 0);
                         }
@@ -1309,7 +1309,7 @@ void CheckBorisRoom(struct char_data* boris)
                         }
                         sprintf(buf, "chiave %s", GET_NAME((boris)->master));
                         do_give(uguik, buf, 0);
-                        if((boris)->master->in_room == uguik->in_room)
+                        if((boris)->master->in_room == uguik->in_room && CAN_SEE(uguik, (boris)->master))
                         {
                             do_give(uguik, buf, 0);
                         }
