@@ -50,6 +50,7 @@ namespace Alarmud {
 #define NILMYS_DIAMOND      9096
 #define NILMYS_CORPSE       9100
 #define NILMYS_COIN         9101
+#define UGUIK_CHEST_KEY     9109
 
     //  other
 #define NILMYS_PORTAL_ONE   1

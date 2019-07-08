@@ -1907,10 +1907,19 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
                 break;
 
             case 9:
-                send_to_room("\n\r\n\r$c0008Boris scaraventa Uguik a terra e sputa al di la' della propria spalla.\n\r\n\r", uguik->in_room);
+            {
+                oggetto = read_object(real_object(UGUIK_CHEST_KEY), REAL);
+                obj_to_char(oggetto, uguik);
+                do_unlock(uguik, "forziere", 0);
+                do_open(uguik, "forziere", 0);
+            }
                 break;
 
             case 10:
+                send_to_room("\n\r\n\r$c0008Boris scaraventa Uguik a terra e sputa al di la' della propria spalla.\n\r\n\r", uguik->in_room);
+                break;
+
+            case 11:
                 send_to_room("$c0015[$c0005Boris Ivanhoe Gudonov$c0015] si gira verso di te, poi dice 'Andiamo!'\n\r", uguik->in_room);
                 uguik->generic = 4;
                 break;
