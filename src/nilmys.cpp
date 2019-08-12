@@ -739,6 +739,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
             {
                 do_say(boris, "Se per qualsiasi ragione qualcun'altro volesse guidarci fino alla vittoria, mi dica di seguirlo ed io lo faro'!", 0);
                 do_say(boris, "Inoltre, se qualcuno volesse ritirarsi, deve dirmi che vuole tornare a casa!", 0);
+                do_say(boris, "Umag ha aperto un passaggio dalla cripta per tornare qui piu' velocemente in caso di necessita'.", 0);
                 if(!IS_PC(ch) && ch->master == NULL)
                 {
                     boris->generic = 4;
@@ -1102,6 +1103,8 @@ void CheckBorisRoom(struct char_data* boris)
         case BORIS_HOME:
             if(boris->generic == 0)
             {
+                struct room_data* rp;
+
                 send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice:\n\r", BORIS_HOME);
                 send_to_room("$c0015 'Ora che ci siete abbiamo qualche speranza. Abbiamo interrotto il rituale di Garebeth, colui che viaggia tra i piani.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Stava per evocare Arkhat, il dio divoratore, ma aveva bisogno di una parte di ognuno degli Stanislav,\n\r  la famiglia che eoni fa lo confino' li' dove risiede ora.\n\r", BORIS_HOME);
@@ -1110,6 +1113,11 @@ void CheckBorisRoom(struct char_data* boris)
                 send_to_room("$c0015  Alcuni dei miei compagni sono feriti, gli altri devono restare a proteggere Iskra.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Solo voi potete aiutarci.\n\r", BORIS_HOME);
                 send_to_room("$c0015  Chiunque di voi comandi o sia colui che guida in battaglia il gruppo mi annuisca e io lo seguiro'.\n\r$c0015  Vi raccontero' tutto lungo la strada.'\n\r\n\r", BORIS_HOME);
+
+                rp = real_roomp(9133);
+                CREATE(rp->dir_option[2], struct room_direction_data, 1);
+                rp->dir_option[2]->exit_info = 0;
+                rp->dir_option[2]->to_room = BORIS_HOME;
             }
             else
             {
@@ -1854,7 +1862,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
                 
                 if(oggetto)
                 {
-                    if((boris)->master->in_room == uguik->in_room)
+                    if((boris)->master->in_room == uguik->in_room && CAN_SEE(uguik, (boris)->master))
                     {
                         sprintf(buf, "ampolla %s", GET_NAME((boris)->master));
                         do_give(uguik, buf, 0);
@@ -1869,7 +1877,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
                     oggetto = read_object(real_object(NILMYS_FLASK), REAL);
                     obj_to_char(oggetto, uguik);
                     
-                    if((boris)->master->in_room == uguik->in_room)
+                    if((boris)->master->in_room == uguik->in_room && CAN_SEE(uguik, (boris)->master))
                     {
                         sprintf(buf, "ampolla %s", GET_NAME((boris)->master));
                         do_give(uguik, buf, 0);
