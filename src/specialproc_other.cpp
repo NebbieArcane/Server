@@ -228,6 +228,8 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "zombie_master",(genericspecial_func) zombie_master },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
+//  Mob Editor
+    { "RentEditor", (genericspecial_func) RentEditor },
 //  Quest Nilmys
     //  oggetti
     { "urna_nilmys", (genericspecial_func) urna_nilmys },

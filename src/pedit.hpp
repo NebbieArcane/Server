@@ -9,6 +9,7 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 MOBSPECIAL_FUNC(EditMaster);
+MOBSPECIAL_FUNC(RentEditor);
 void SayMenu(struct char_data* pCh, const char* apchMenu[]) ;
 int calc_costopq(int i, int p) ;
 int calc_costoxp(int i, int p) ;
