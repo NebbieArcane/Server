@@ -978,6 +978,11 @@ MOBSPECIAL_FUNC(Umag_Ulbar)
 
 void BorisDeath(struct char_data* umag)
 {
+    struct obj_data* portale;
+
+    portale = read_object(real_object(FAREWELL_PORTAL), REAL);
+    obj_to_room(portale, 9012);
+
     switch(umag->commandp)
     {
         case 1:
