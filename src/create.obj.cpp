@@ -732,7 +732,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 	if(type != ENTER_CHECK) {
 		switch(ch->specials.oedit) {
 		case CHANGE_OBJ_TYPE:
-			if(update < 0 || update > 24) {
+			if(update < 0 || update > 29) {
 				return;
 			}
 			else {
@@ -775,7 +775,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
         send_to_char(buf, ch);
 
         row = 0;
-        for(i = 0; i < 25; i++)
+        for(i = 0; i < 30; i++)
         {
             sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
@@ -801,7 +801,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
         sprintf(buf, "\n\rObject Type: %s\n\r\n\r", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
         send_to_char(buf, ch);
         
-        for(i = 0; i < 27; i++)
+        for(i = 0; i < 30; i++)
         {
             sprintf(buf2, "%s", "%-");
             sprintf(buf2, "%s%d", buf2, 45-x);

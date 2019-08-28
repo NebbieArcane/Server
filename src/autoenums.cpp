@@ -1126,6 +1126,9 @@ e_item_type encode_e_item_type(std::string s,e_item_type fallback) {
 	if (s == "ITEM_BOARD") return ITEM_BOARD;
 	if (s == "ITEM_TREE") return ITEM_TREE;
 	if (s == "ITEM_ROCK") return ITEM_ROCK;
+	if (s == "ITEM_M_GEM") return ITEM_M_GEM;
+	if (s == "ITEM_M_MINERAL") return ITEM_M_MINERAL;
+	if (s == "ITEM_BAR") return ITEM_BAR;
 	return fallback;
 }
 
@@ -1185,6 +1188,12 @@ std::string translate(const e_item_type e) {
 		return "ITEM_TREE";
 	case ITEM_ROCK:
 		return "ITEM_ROCK";
+	case ITEM_M_GEM:
+		return "ITEM_M_GEM";
+	case ITEM_M_MINERAL:
+		return "ITEM_M_MINERAL";
+	case ITEM_BAR:
+		return "ITEM_BAR";
 	default:
 		return "UNKNOWN";
 	}
@@ -1218,6 +1227,9 @@ bool enum_validate(const e_item_type value) {
 		case ITEM_BOARD:
 		case ITEM_TREE:
 		case ITEM_ROCK:
+		case ITEM_M_GEM:
+		case ITEM_M_MINERAL:
+		case ITEM_BAR:
 		return true;
 		default:
 		return false;

@@ -2582,6 +2582,9 @@ const char* item_types[] = {
     "BOARD",
     "TREE",
     "ROCK",
+    "MINED GEM",
+    "MINED MINERAL",
+    "BAR",
 	"\n"
 };
 

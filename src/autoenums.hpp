@@ -704,11 +704,14 @@ enum e_item_type {
 	ITEM_AUDIO                                   =23,
 	ITEM_BOARD                                   =24,
 	ITEM_TREE                                    =25,
-	ITEM_ROCK                                    =26
+	ITEM_ROCK                                    =26,
+	ITEM_M_GEM                                   =27,
+	ITEM_M_MINERAL                               =28,
+	ITEM_BAR                                     =29
 };
-#define E_ITEM_TYPE_COUNT 27
+#define E_ITEM_TYPE_COUNT 30
 #define E_ITEM_TYPE_MIN 0
-#define E_ITEM_TYPE_MAX 26
+#define E_ITEM_TYPE_MAX 29
 #define E_ITEM_TYPE_KEY "e_item_type"
 
 #define E_ITEM_TYPE_ACCEPT_ZERO true

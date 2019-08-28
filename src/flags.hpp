@@ -226,6 +226,20 @@ logDefineStatus(NEW_EQ_GAIN)
 logDefineStatus(NEW_GAIN)
 #endif
 
+// se true Robin e' attivo
+#ifndef ROBIN_HOOD
+#define ROBIN_HOOD          false
+#else
+    logDefineStatus(ROBIN_HOOD)
+#endif
+
+// se true vengono prelevati i soldi dalla banca
+#ifndef BANK_RENT
+#define BANK_RENT          false
+#else
+    logDefineStatus(BANK_RENT)
+#endif
+
 #ifndef NEW_RENT
 #define NEW_RENT			false
 #else
