@@ -300,6 +300,9 @@ l'array connected_types in constants.cpp
 ** ITEM_BOARD                                   =24
 ** ITEM_TREE                                    =25
 ** ITEM_ROCK                                    =26
+** ITEM_M_GEM                                   =27
+** ITEM_M_MINERAL                               =28
+** ITEM_BAR                                     =29
 == Enumerations ==
 
 === enum e_liquids ===

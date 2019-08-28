@@ -2593,7 +2593,19 @@
 			"ITEM_ROCK": {
 				"value": 26,
 				"comment": ""
-			}
+			},
+            "ITEM_M_GEM": {
+                "value": 27,
+                "comment": ""
+            },
+            "ITEM_M_MINERAL": {
+                "value": 28,
+                "comment": ""
+            },
+            "ITEM_BAR": {
+                "value": 29,
+                "comment": ""
+            }
 		},
 		"e_liquids": {
 			"comment": "Some different kind of liquids\n",

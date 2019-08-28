@@ -36,6 +36,11 @@ namespace Alarmud {
     
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
+#define TANNED(obj)     (obj_index[obj->item_number].iVNum ==  (TAN_BAG | TAN_SHIELD | TAN_JACKET |     \
+                                                                TAN_BOOTS | TAN_GLOVES | TAN_LEGGINGS | \
+                                                                TAN_SLEEVES | TAN_HELMET | TAN_ARMOR)   \
+                                                                ? TRUE : FALSE)
+
 //#define TRUE  1
 
 //#define FALSE 0
