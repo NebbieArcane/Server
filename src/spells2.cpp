@@ -255,7 +255,7 @@ void cast_armor(byte level, struct char_data* ch, const char* arg, int type,
 			return;
 		}
 		if(ch != tar_ch) {
-			act("$N viene protett$b da un'$c0011armatura magica$c0007.", FALSE, ch, 0, tar_ch, TO_CHAR);
+			act("$N viene protett$B da un'$c0011armatura magica$c0007.", FALSE, ch, 0, tar_ch, TO_CHAR);
 		}
 
 		spell_armor(level,ch,tar_ch,0);

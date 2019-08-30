@@ -265,8 +265,7 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 
 	if(receptionist) {
 #if ALAR_RENT
-		snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai con te %d oggett%c escluso le vettovaglie e materiali vari.'",
-				RentItem,RentItem>1?'i':'o');
+		snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai con te %d oggett%c escluso le vettovaglie e materiali vari.'", RentItem,RentItem > 1 ? 'i' : RentItem == 0 ? 'i' : 'o');
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		snprintf(buf, sizeof(buf)-1,"$n ti dice 'Il che significa %s$c0007 del %d%%!'",
 				sconto>0?"$c0001una maggiorazione":"$c0010uno sconto",
