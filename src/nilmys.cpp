@@ -1056,8 +1056,8 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
     act("$n ti da' $p.", FALSE, boris, coin, ch, TO_VICT);
     act("$n da' $p a $N.", FALSE, boris, coin, ch, TO_NOTVICT);
 
-    act("$c0013Tu dici a $N$c0013 'Ricordati $N$c0013, potrai scambiare sei monete di Nilmys con un premio.'\n\r", FALSE, boris, NULL, ch, TO_CHAR);
-    act("$c0013[$c0015$n$c0015]$c0013 ti dice 'Ricordati $N$c0013, potrai scambiare sei monete di Nilmys con un premio.'\n\r", FALSE, boris, NULL, ch, TO_VICT);
+    act("$c0013Tu dici a $N$c0013 'Ricordati $N$c0013, potrai scambiare tre monete di Nilmys con un premio.'\n\r", FALSE, boris, NULL, ch, TO_CHAR);
+    act("$c0013[$c0015$n$c0015]$c0013 ti dice 'Ricordati $N$c0013, potrai scambiare tre monete di Nilmys con un premio.'\n\r", FALSE, boris, NULL, ch, TO_VICT);
     act("$c0013[$c0015$n$c0015]$c0013 dice qualcosa a $N$c0013.\n\r", FALSE, boris, NULL, ch, TO_NOTVICT);
 
     GET_RUNEDEI(ch) += rune;
@@ -1592,7 +1592,7 @@ void CheckBorisRoom(struct char_data* boris)
 
                     case 41:
                         send_to_room("\n\r", boris->in_room);
-                        do_say(boris, "Ci vogliono 6 monete, non una di piu' non una di meno, per ottenere finalmente il vostro premio!", 0);
+                        do_say(boris, "Ci vogliono 3 monete, non una di piu' non una di meno, per ottenere finalmente il vostro premio!", 0);
                         send_to_room("\n\r", boris->in_room);
                         break;
 
@@ -2659,7 +2659,7 @@ ROOMSPECIAL_FUNC(reward_giver)
     }
     else if(cmd == CMD_BUY)
     {
-        for(i = 0; i < 6; i++)
+        for(i = 0; i < 3; i++)
         {
             coin = get_obj_in_list_vis(ch, obj_index[real_object(NILMYS_COIN)].name, ch->carrying);
 
@@ -2692,7 +2692,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             else
             {
                 act("Mi dispiace ma non hai abbastanza monete con te!", FALSE, ch, NULL, NULL, TO_CHAR);
-                //  ha meno di 6 monete, le restituisco al proprietario
+                //  ha meno di 3 monete, le restituisco al proprietario
                 if(count > 0)
                 {
                     for(j = 0; j < count; j++)
@@ -2716,7 +2716,7 @@ ROOMSPECIAL_FUNC(reward_giver)
         return FALSE;
     }
 
-    if(count == 6)
+    if(count == 3)
     {
         premio = number(1, 100);
         switch(mob_index[shopper->nr].iVNum)
@@ -2903,8 +2903,8 @@ ROOMSPECIAL_FUNC(reward_giver)
         reward = read_object(real_object(rnum), REAL);
         SetPersonOnSave(ch, reward);
 
-        act("\n\r$c0015$N$c0015 ti da' sei monete di Nilmys.", FALSE, shopper, NULL, ch, TO_CHAR);
-        act("\n\r$c0015Dai sei monete di Nilmys a $n$c0015.", FALSE, shopper, NULL, ch, TO_VICT);
+        act("\n\r$c0015$N$c0015 ti da' tre monete di Nilmys.", FALSE, shopper, NULL, ch, TO_CHAR);
+        act("\n\r$c0015Dai tre monete di Nilmys a $n$c0015.", FALSE, shopper, NULL, ch, TO_VICT);
         act("\n\r$c0015$N$c0015 da' alcune monete di Nilmys a $n$c0015.", FALSE, shopper, NULL, ch, TO_NOTVICT);
 
         act("\n\r$c0011Consegni $p$c0011 a $N$c0011.", FALSE, shopper, reward, ch, TO_CHAR);
