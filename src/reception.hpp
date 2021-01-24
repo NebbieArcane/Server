@@ -22,7 +22,7 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,struct obj_data* ob
 int contained_weight(struct obj_data* container) ;
 int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 void load_char_extra(struct char_data* ch) ;
-void load_char_objs(struct char_data* ch) ;
+void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) ;
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st) ;
@@ -41,4 +41,3 @@ void write_char_extra(struct char_data* ch) ;
 void zero_rent(struct char_data* ch) ;
 } // namespace Alarmud
 #endif // __RECEPTION_HPP
-

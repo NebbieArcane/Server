@@ -1108,7 +1108,7 @@ void assign_command_pointers() {
 	AddCommand( "spit",                 do_action,          CMD_SPIT,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "squeeze",              do_action,          CMD_SQUEEZE,                POSITION_RESTING,   TUTTI                   );
 	AddCommand( "stare",                do_action,          CMD_STARE,                  POSITION_RESTING,   TUTTI                   );
-    AddCommand( "assist",               do_assist,          CMD_ASSIST,                 POSITION_FIGHTING,  1                       );  /*  140 */
+  AddCommand( "assist",               do_assist,          CMD_ASSIST,                 POSITION_FIGHTING,  1                       );  /*  140 */
 	AddCommand( "thank",                do_action,          CMD_THANK,                  POSITION_RESTING,   TUTTI                   );
 	AddCommand( "twiddle",              do_action,          CMD_TWIDDLE,                POSITION_RESTING,   TUTTI                   );
 	AddCommand( "wave",                 do_action,          CMD_WAVE,                   POSITION_RESTING,   TUTTI                   );
@@ -1139,17 +1139,16 @@ void assign_command_pointers() {
 	AddCommand( "examine",              do_examine,         CMD_EXAMINE,                POSITION_RESTING,   TUTTI                   );
 	AddCommand( "take",                 do_get,             CMD_TAKE,                   POSITION_RESTING,   1                       );
 	AddCommand( "info",                 do_info,            CMD_INFO,                   POSITION_SLEEPING,  TUTTI                   );
-	AddCommand( "'",                    do_new_say,         CMD_SAY_APICE,              POSITION_RESTING,   TUTTI                   );
-    AddCommand( "?",                    do_commune,         CMD_THINK_SUPERNI,          POSITION_RESTING,   CREATORE                );  /*  170 */
-    AddCommand( "curse",                do_action,          CMD_CURSE,                  POSITION_RESTING,   5                       );
+	AddCommand( "'",                    do_new_say,         CMD_SAY_APICE,              POSITION_RESTING,   TUTTI                   );    AddCommand( "?",                    do_commune,         CMD_THINK_SUPERNI,          POSITION_RESTING,   CREATORE                );  /*  170 */
+  AddCommand( "curse",                do_action,          CMD_CURSE,                  POSITION_RESTING,   5                       );
 	AddCommand( "use",                  do_use,             CMD_USE,                    POSITION_SITTING,   1                       );
 	AddCommand( "where",                do_where,           CMD_WHERE,                  POSITION_DEAD,      1                       );
 	AddCommand( "levels",               do_levels,          CMD_LEVELS,                 POSITION_DEAD,      TUTTI                   );
 	AddCommand( "register",             do_register,        CMD_REGISTER,               POSITION_DEAD,      TUTTI                   );  /*  175 */
-    AddCommand( "pray",                 do_pray,            CMD_PRAY,                   POSITION_SITTING,   1                       );
-    AddCommand( ",",                    do_emote,           CMD_EMOTE_VIRGOLA,          POSITION_SLEEPING,  TUTTI                   );
+  AddCommand( "pray",                 do_pray,            CMD_PRAY,                   POSITION_SITTING,   1                       );
+  AddCommand( ",",                    do_emote,           CMD_EMOTE_VIRGOLA,          POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "beg",                  do_action,          CMD_BEG,                    POSITION_RESTING,   TUTTI                   );
-    AddCommand( "forge",                do_forge,           CMD_FORGE,                  POSITION_STANDING,  1                       );
+  AddCommand( "forge",                do_forge,           CMD_FORGE,                  POSITION_STANDING,  1                       );
 	AddCommand( "cringe",               do_action,          CMD_CRINGE,                 POSITION_RESTING,   TUTTI                   );  /*  180 */
 	AddCommand( "daydream",             do_action,          CMD_DAYDREAM,               POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "fume",                 do_action,          CMD_FUME,                   POSITION_RESTING,   TUTTI                   );
@@ -1206,8 +1205,8 @@ void assign_command_pointers() {
 	AddCommand( "highfive",             do_highfive,        CMD_HIGHFIVE,               POSITION_DEAD,      TUTTI                   );
 	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );
 	AddCommand( "whozone",              do_who,             CMD_WHOZONE,                POSITION_DEAD,      TUTTI                   );
-    AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
-    AddCommand( "associate",            do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
+  AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
+  AddCommand( "associate",            do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
 	AddCommand( "attribute",            do_attribute,       CMD_ATTRIBUTE,              POSITION_DEAD,      5                       );
 	AddCommand( "world",                do_world,           CMD_WORLD,                  POSITION_DEAD,      TUTTI                   );
 	AddCommand( "allspells",            do_spells,          CMD_ALLSPELLS,              POSITION_DEAD,      TUTTI                   );
@@ -1362,7 +1361,7 @@ void assign_command_pointers() {
 	AddCommand( "run",                  do_run,             CMD_RUN,                    POSITION_STANDING,  TUTTI                   );
 	AddCommand( "notch",                do_weapon_load,     CMD_NOTCH,                  POSITION_RESTING,   TUTTI                   );  /*  385 */
 	AddCommand( "load",                 do_weapon_load,     CMD_NOTCH,                  POSITION_RESTING,   TUTTI                   );  /*  385 */
-    AddCommand( "know",                 do_cast,            CMD_SPELLID,                POSITION_SITTING,   TUTTI                   );
+  AddCommand( "know",                 do_cast,            CMD_SPELLID,                POSITION_SITTING,   TUTTI                   );
 	AddCommand( "spot",                 do_scan,            CMD_SPOT,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "view",                 do_viewfile,        CMD_VIEW,                   POSITION_DEAD,      DIO                     );
 	AddCommand( "afk",                  do_set_afk,         CMD_AFK,                    POSITION_DEAD,      1                       );
@@ -1372,10 +1371,10 @@ void assign_command_pointers() {
 	AddCommand( "bid",                  do_auction,         CMD_BID,                    POSITION_RESTING,   ALLIEVO                 );
 	AddCommand( "eavesdrop",            do_eavesdrop,       CMD_EAVESDROP,              POSITION_STANDING,  INIZIATO                );
 	AddCommand( "pquest",               do_pquest,          CMD_PQUEST,                 POSITION_STANDING,  QUESTMASTER             );  /*  395 */
-    AddCommand( "setalign",             do_setalign,        CMD_SETALIGN,               POSITION_RESTING,   TUTTI                   );
-    AddCommand( "wreset",               do_wreset,          CMD_WRESET,                 POSITION_STANDING,  CREATORE                );
+  AddCommand( "setalign",             do_setalign,        CMD_SETALIGN,               POSITION_RESTING,   TUTTI                   );
+  AddCommand( "wreset",               do_wreset,          CMD_WRESET,                 POSITION_STANDING,  CREATORE                );
 	AddCommand( "parry",                do_parry,           CMD_PARRY,                  POSITION_RESTING,   TUTTI                   );
-    AddCommand( "checktypos",           do_checktypos,      CMD_CHECKTYPOS,             POSITION_DEAD,      DIO                     );
+  AddCommand( "checktypos",           do_checktypos,      CMD_CHECKTYPOS,             POSITION_DEAD,      DIO                     );
 	AddCommand( "adore",                do_action,          CMD_ADORE,                  POSITION_RESTING,   TUTTI                   );  /*  400 */
 	AddCommand( "agree",                do_action,          CMD_AGREE,                  POSITION_RESTING,   TUTTI                   );
 	AddCommand( "bleed",                do_action,          CMD_BLEED,                  POSITION_RESTING,   TUTTI                   );
@@ -1446,11 +1445,12 @@ void assign_command_pointers() {
 	AddCommand( "whap",                 do_action,          CMD_WHAP,                   POSITION_RESTING,   TUTTI                   );
 	AddCommand( "wedge",                do_action,          CMD_WEDGE,                  POSITION_RESTING,   TUTTI                   );
 	AddCommand( "apologize",            do_action,          CMD_APOLOGIZE,              POSITION_RESTING,   TUTTI                   );
-    AddCommand( "destroy",              do_destroy,         CMD_DESTROY,                POSITION_RESTING,   TUTTI                   );  /*  470 */
-    AddCommand( "personalize",          do_personalize,     CMD_PERSONALIZE,            POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
-    AddCommand( "insert",               do_insert,          CMD_INSERT_GEMS,            POSITION_STANDING,  IMMORTALE               );
-    AddCommand( "achievements",         do_achievements,    CMD_ACHIEVEMENTS,           POSITION_RESTING,   TUTTI                   );
-    /*          Liberi 474-479 (-488)*/
+  AddCommand( "destroy",              do_destroy,         CMD_DESTROY,                POSITION_RESTING,   TUTTI                   );  /*  470 */
+  AddCommand( "personalize",          do_personalize,     CMD_PERSONALIZE,            POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
+  AddCommand( "insert",               do_insert,          CMD_INSERT_GEMS,            POSITION_STANDING,  IMMORTALE               );
+  AddCommand( "achievements",         do_achievements,    CMD_ACHIEVEMENTS,           POSITION_RESTING,   TUTTI                   );
+	AddCommand( "refund",								do_refund,					CMD_REFUND,									POSITION_DEAD,			MAESTRO_DEL_CREATO			);
+  /*          Liberi 475-479 (-488)*/
   //            DIMD stuff
   //AddCommand( "dmanage",              do_dmanage,         CMD_DMANAGE,                POSITION_RESTING,   MAESTRO_DEL_CREATO      );  /*  480 */
   //AddCommand( "drestrict",            do_drestrict,       CMD_DRESTRICT,              POSITION_RESTING,   DIO_MINORE              );
@@ -1476,7 +1476,7 @@ void assign_command_pointers() {
   //AddCommand("perdono",               do_perdono,         CMD_PERDONO,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "immolate",             do_immolation,      CMD_IMMOLATION,             POSITION_FIGHTING,  TUTTI                   );
 	AddCommand( "SetTest",              do_imptest,         CMD_IMPTEST,                POSITION_DEAD,      MAESTRO_DEL_CREATO      );
-    AddCommand( "checkachie",           do_checkachielevel, CMD_CHECKACHIELEVEL,        POSITION_DEAD,      TUTTI                   );
+  AddCommand( "checkachie",           do_checkachielevel, CMD_CHECKACHIELEVEL,        POSITION_DEAD,      TUTTI                   );
 }
 
 
@@ -2428,7 +2428,7 @@ NANNY_FUNC(con_slct) {
 		}
 		toonUpdate(d);
 		mudlog(LOG_PLAYERS, "M1.Loading %s's equipment",d->character->player.name);
-		load_char_objs(d->character);
+		load_char_objs(d->character, FALSE);
 		mudlog(LOG_CHECK, "Sending Welcome message to %s",d->character->player.name);
 		send_to_char(WELC_MESSG, d->character);
 		mudlog(LOG_CHECK, "Putting %s in list",
@@ -3211,7 +3211,7 @@ NANNY_FUNC(con_city_choice) {
 			reset_char(d->character);
 			mudlog(LOG_CONNECT, "1.Loading %s's equipment",
 				   d->character->player.name);
-			load_char_objs(d->character);
+			load_char_objs(d->character, FALSE);
 			SetStatus("int 1",NULL,NULL);
 			save_char(d->character, AUTO_RENT, 0);
 			SetStatus("int 2",NULL,NULL);
@@ -3245,7 +3245,7 @@ NANNY_FUNC(con_city_choice) {
 		case '2':
 			reset_char(d->character);
 			mudlog(LOG_CONNECT, "2.Loading %s's equipment",d->character->player.name);
-			load_char_objs(d->character);
+			load_char_objs(d->character, FALSE);
 			save_char(d->character, AUTO_RENT, 0);
 			send_to_char(WELC_MESSG, d->character);
 			d->character->next = character_list;
@@ -3269,7 +3269,7 @@ NANNY_FUNC(con_city_choice) {
 				reset_char(d->character);
 				mudlog(LOG_CONNECT, "3.Loading %s's equipment",
 					   d->character->player.name);
-				load_char_objs(d->character);
+				load_char_objs(d->character, FALSE);
 				save_char(d->character, AUTO_RENT, 0);
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
@@ -3300,7 +3300,7 @@ NANNY_FUNC(con_city_choice) {
 				reset_char(d->character);
 				mudlog(LOG_CONNECT, "4.Loading %s's equipment",
 					   d->character->player.name);
-				load_char_objs(d->character);
+				load_char_objs(d->character, FALSE);
 				save_char(d->character, AUTO_RENT, 0);
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
@@ -3333,7 +3333,7 @@ NANNY_FUNC(con_city_choice) {
 				reset_char(d->character);
 				mudlog(LOG_CONNECT, "5.Loading %s's equipment",
 					   d->character->player.name);
-				load_char_objs(d->character);
+				load_char_objs(d->character, FALSE);
 				save_char(d->character, AUTO_RENT, 0);
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
@@ -3800,4 +3800,3 @@ void check_affected(char* msg) {
 
 
 } // namespace Alarmud
-
