@@ -939,7 +939,7 @@ ACTION_FUNC(do_system) {
 ACTION_FUNC(do_trans) {
 	struct descriptor_data* i;
 	struct char_data* victim;
-	char buf[100];
+	char buf[MAX_INPUT_LENGTH];
 	long target;
 
 	only_argument(arg, buf);
@@ -2411,7 +2411,7 @@ ACTION_FUNC(do_set) {
 			"$c0009Questo comando DEVE essere usato con molta attenzione dato che puo'"
 			"cambiare qualasiasi abilita' o attributo di un personaggio.$c0007\n\r"
 			"Questa e' la lista dei campi,\n\r"
-			"il tipo di valore puo' essere differente a seconda del campo (es. numbero/carattere)\n\r"
+			"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
 			"\n\r"
 			"align class exp expadd lev sex race hunger thirst one hit mhit ghit tohit todam"
 			"ac bank gold age modage prac str add saves skills stadd int wis dex con chr pkill"
@@ -3142,7 +3142,7 @@ ACTION_FUNC(do_snoop) {
 	only_argument(arg, tmp);
 
 	if(!*tmp) {
-		send_to_char("Snoop who ?\n\r", ch);
+		send_to_char("Snoop who?\n\r", ch);
 		return;
 	}
 
@@ -3430,7 +3430,7 @@ ACTION_FUNC(do_force) {
  *************************************************************************/
 ACTION_FUNC(do_mload) {
 	struct char_data* mob;
-	char num[100];
+	char num[MAX_INPUT_LENGTH];
 	int number;
 
 	if(IS_NPC(ch)) {
@@ -3625,7 +3625,7 @@ ACTION_FUNC(do_purge) {
 	struct char_data* vict, *next_v;
 	struct obj_data* obj, *next_o;
 
-	char name[100];
+	char name[MAX_INPUT_LENGTH];
 
 	if(IS_NPC(ch)) {
 		return;
@@ -4399,7 +4399,7 @@ ACTION_FUNC(do_reroll) {
 
 ACTION_FUNC(do_immort) {
 	struct char_data* victim;
-	char buf[100];
+	char buf[MAX_INPUT_LENGTH];
 	int i;
 	if(cmd == 0) {
 		return;
@@ -4432,11 +4432,11 @@ ACTION_FUNC(do_immort) {
 			ch->specials.spells_to_learn = MAX(1,
 											   MIN(ch->specials.spells_to_learn, 5));
 			act(
-				"$c0008L'oscurita' ti avvolge, senti la realta' torcersi e urlare \n\r"
-				"Tutta la tua vita ti scorre davanti agli occhi....\n\r",
+				"$c0008L'oscurita' ti avvolge, senti la realta' torcersi ed urlare.\n\r"
+				"Tutta la tua vita ti scorre davanti agli occhi...\n\r",
 				FALSE, victim, 0, ch, TO_CHAR);
 			act(
-				"Scorgi per un attimo un sorriso.. un sorriso di lupo.\n\n\r"
+				"Scorgi per un attimo un sorriso... un sorriso di lupo.\n\n\r"
 				"$c0001ORA SEI IMMORTALE!\n\r$c0007",
 				FALSE, victim, 0, ch, TO_CHAR);
 		}
@@ -4450,7 +4450,7 @@ ACTION_FUNC(do_immort) {
 
 ACTION_FUNC(do_restore) {
 	struct char_data* victim;
-	char buf[100];
+	char buf[MAX_INPUT_LENGTH];
 
 	if(cmd == 0) {
 		return;
@@ -6419,4 +6419,3 @@ ACTION_FUNC(do_checktypos)
  }
  */
 } // namespace Alarmud
-

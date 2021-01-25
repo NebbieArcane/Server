@@ -60,22 +60,17 @@ void spell_resurrection(byte level, struct char_data* ch,
 	if(IS_CORPSE(obj)) {
 
 		if(obj->char_vnum) {
-
-
             if(obj->char_vnum >= QUEST_ZONE && obj->char_vnum <= QUEST_ZONE+99) {
                 send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
                 return;
             }
 
-            victim = read_mobile(obj->char_vnum, VIRTUAL);
-
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch)) {
                 if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[victim->nr].specname)) {
-                    send_to_char("Gli dei non ti concedono questo potere su questa creatura!\n\r",ch);
+                    send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
                     return;
-
                 }
 			}
 			/* fine modifica */
@@ -87,6 +82,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 				GET_GOLD(ch) -= 25000;
 			}
 
+			victim = read_mobile(obj->char_vnum, VIRTUAL);
 			char_to_room(victim, ch->in_room);
 			GET_GOLD(victim)=0;
 			GET_EXP(victim)=0;
@@ -1574,8 +1570,8 @@ void spell_dispel_magic(byte level, struct char_data* ch,
             act("$p resiste al tuo incantesimo.", FALSE, ch, obj, 0, TO_CHAR);
             return;
         }
-        
-        
+
+
 		if(IS_SET(obj->obj_flags.extra_flags, ITEM_INVISIBLE)) {
 			REMOVE_BIT(obj->obj_flags.extra_flags, ITEM_INVISIBLE);
 		}
@@ -2993,4 +2989,3 @@ void spell_prot_dragon_breath_gas(byte level, struct char_data* ch,
 	}
 }
 } // namespace Alarmud
-

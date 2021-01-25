@@ -138,7 +138,7 @@ ACTION_FUNC(do_junk) {
                 act("Non puoi gettare via $p, c'e' inciso il nome di qualcuno!",FALSE, ch, tmp_object, 0, TO_CHAR);
                 return ;
             }
-            
+
 			if(IS_OBJ_STAT(tmp_object,ITEM_NODROP)  && !IS_IMMORTAL(ch)) {
 				send_to_char
 				("Non puoi farlo, una $c0009maledizione$c0007 te lo impedisce!\n\r", ch);
@@ -235,7 +235,7 @@ ACTION_FUNC(do_destroy)
     }
 
     one_argument(arg, tmp);
-    
+
     if(*tmp)
     {
         tmp_object = get_obj_in_list_vis(ch, tmp, ch->carrying);
@@ -290,7 +290,7 @@ ACTION_FUNC(do_destroy)
                 act(buf,FALSE, ch, tmp_object, 0, TO_CHAR);
                 return;
             }
-                
+
             if(IS_OBJ_STAT(tmp_object,ITEM_NODROP) && !IS_IMMORTAL(ch))
             {
                 send_to_char("Non puoi farlo, una $c0009maledizione$c0007 te lo impedisce!\n\r", ch);
@@ -309,7 +309,7 @@ ACTION_FUNC(do_destroy)
             obj_from_char(tmp_object);
             extract_obj(tmp_object);
         }
-        
+
         if(value > 0)
         {
             sprintf(buf, "Distruggi %s.\n\r", arg);
@@ -330,11 +330,11 @@ ACTION_FUNC(do_destroy)
     }
 
     value /= 2;
-    
+
     if(value)
     {
         act("Sei stat$b ricompensat$b.", FALSE, ch, 0, 0, TO_CHAR);
-        
+
         if(GetMaxLevel(ch) < 3)
         {
             gain_exp(ch, MIN(100,value));
@@ -1584,7 +1584,7 @@ ACTION_FUNC(do_typo)
 
 	send_to_char("Ok. Grazie.\n\r", ch);
 
-    mail_to_god(ch, "LadyOfPain", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
+    mail_to_god(ch, "Tethys", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
     mail_to_god(ch, "Requiem", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
     mail_to_god(ch, "Croneh", "Ti ha segnalato un typo, digita '$c0009checktypos list$c0007' per vederlo!\n\r\n\r");
 
@@ -1884,7 +1884,7 @@ ACTION_FUNC(do_group_name) {
 }
 
 ACTION_FUNC(do_quaff) {
-	char buf[100];
+	char buf[MAX_INPUT_LENGTH];
 	struct obj_data* temp;
 	int i;
 	bool equipped;
@@ -1963,7 +1963,7 @@ ACTION_FUNC(do_quaff) {
 
 
 ACTION_FUNC(do_recite) {
-	char buf[100];
+	char buf[MAX_INPUT_LENGTH];
 	struct obj_data* scroll, *obj;
 	struct char_data* victim;
 	int i, bits;
@@ -2087,7 +2087,7 @@ ACTION_FUNC(do_recite) {
 
 
 ACTION_FUNC(do_use) {
-	char buf[100];
+	char buf[MAX_INPUT_LENGTH];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object, *stick;
 
@@ -2308,9 +2308,9 @@ ACTION_FUNC(do_use) {
         struct obj_data* arkhat_equip;
         struct char_data* Arkhat;
         int r_num = 0, wait_ch = 0, wait_party = 0, rune;
-        
+
         arg = one_argument(arg, buf);
-        
+
         if(!strcmp("punta", buf))
         {
             switch(ch->in_room)
@@ -2414,7 +2414,7 @@ ACTION_FUNC(do_use) {
                     }
                 }
                     break;
-                    
+
                 default:
                     act("Non vedi nessuna punta qui.", FALSE, ch, NULL, NULL, TO_CHAR);
                     return;
@@ -2460,65 +2460,65 @@ ACTION_FUNC(do_use) {
                 send_to_all("$c0008 'Ho aspettato centinaia di vite mortali per potermi manifestare in questo mondo.$c0007\n\r");
                 send_to_all("$c0008  Inutile insetto hai compiuto il tuo ultimo errore.'\n\r");
                 send_to_all("\n\r\n\r");
-                
+
                 if((Arkhat = read_mobile(real_mobile(ARKHAT_GOD), REAL)))
                 {
                     char_to_room(Arkhat, ARKHAT_GOD_ROOM);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_NECK_1);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_BODY);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_HEAD);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_FEET);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_ARMS);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_ABOUT);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_BACK);
-                    
+
                     r_num = real_object(LOST_SOUL_EQ);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, WEAR_EYES);
-                    
+
                     r_num = real_object(NILNYS_VICTORY_KEY);
                     arkhat_equip = read_object(r_num, REAL);
                     obj_to_char(arkhat_equip, Arkhat);
                     obj_from_char(arkhat_equip);
                     equip_char(Arkhat, arkhat_equip, HOLD);
-                    
+
                     send_to_zone("$c0015[$c0013Arkhat$c0007, il Dio Divoratore$c0015] dice '$c0009ORA CHE SONO LIBERO NESSUNO HA PIU' SPERANZA!$c0015'\n\r\n\r", Arkhat);
                     send_to_zone("$c0015[$c0013Arkhat$c0007, il Dio Divoratore$c0015] dice '$c0009ADESSO MORIRETE!$c0015'\n\r\n\r", Arkhat);
                     return;
@@ -2583,7 +2583,7 @@ ACTION_FUNC(do_use) {
 }
 
 ACTION_FUNC(do_plr_noshout) {
-	char buf[128];
+	char buf[MAX_INPUT_LENGTH];
 
 	if(IS_NPC(ch)) {
 		return;
@@ -2608,7 +2608,7 @@ ACTION_FUNC(do_plr_noshout) {
 }
 
 ACTION_FUNC(do_plr_nogossip) {
-	char buf[128];
+	char buf[MAX_INPUT_LENGTH];
 
 	if(IS_NPC(ch)) {
 		return;
@@ -2633,7 +2633,7 @@ ACTION_FUNC(do_plr_nogossip) {
 }
 
 ACTION_FUNC(do_plr_noauction) {
-	char buf[128];
+	char buf[MAX_INPUT_LENGTH];
 
 	if(IS_NPC(ch)) {
 		return;
@@ -2658,7 +2658,7 @@ ACTION_FUNC(do_plr_noauction) {
 }
 
 ACTION_FUNC(do_plr_notell) {
-	char buf[128];
+	char buf[MAX_INPUT_LENGTH];
 
 	if(IS_NPC(ch)) {
 		return;
@@ -2794,7 +2794,7 @@ void Dismount(struct char_data* ch, struct char_data* h, int pos) {
 }
 
 ACTION_FUNC(do_mount) {
-	char name[112];
+	char name[MAX_INPUT_LENGTH];
 	int check;
 	struct char_data* horse;
 
@@ -3230,7 +3230,7 @@ ACTION_FUNC(do_set_flags) {
 			return;
 		}
 	}
-    
+
     if(!strcmp("who",type) && (!*field)) {
 		send_to_char("Usa 'set who showclasses/hideclasses'\n\r"
 					 "Questo comando ti permette di mostrare o nascondere "
@@ -3655,7 +3655,7 @@ ACTION_FUNC(do_insert)
     bool ok = FALSE;
     char tmp[100], gemma[100], buf[MAX_STRING_LENGTH], color1[50], color2[50];
     struct obj_data* obj, *gem, *gem_tmp;
-    
+
     const char* rand_reaction[] = {
         "Studi meticolosamente $p, poi sorridi tra te e te.",
         "Guardi entusiasta $p pensando 'Ma quanto sono brav$b!'",
@@ -3678,18 +3678,18 @@ ACTION_FUNC(do_insert)
         "Un ghigno malefico compare sulle labbra di $n: e' chiaramente soddisfatt$b.",
         "$n pensa ad alta voce: 'E anche questa e' fatta!'"
     };
-    
+
     const int nRandReac = 9;
-    
+
     if(IS_NPC(ch))
     {
         send_to_char("Chi ti pensi di essere? Un gioielliere? Sei solo uno stupido mob!\n\r", ch);
         return;
     }
-    
+
     arg = one_argument(arg, tmp);
     obj = get_obj_in_list_vis(ch, tmp, ch->carrying);
-    
+
     if(obj)
     {
         for(i = 0; i < MAX_OBJ_AFFECT; i++)
@@ -3730,7 +3730,7 @@ ACTION_FUNC(do_insert)
             mudlog(LOG_PLAYERS, "%s try to insert gems in %s but there are already 5 affects", GET_NAME(ch), obj->short_description);
             return;
         }
-        
+
         switch(GET_ITEM_TYPE(obj))
         {
             case ITEM_LIGHT :
@@ -3776,7 +3776,7 @@ ACTION_FUNC(do_insert)
                 sprintf(buf, "Non puoi incastonare questo tipo di oggetto!\n\r");
                 ok = FALSE;
         }
-        
+
         if(!ok)
         {
             send_to_char(buf, ch);
@@ -3791,20 +3791,20 @@ ACTION_FUNC(do_insert)
             act("Inizi ad armeggiare con $c0015$p$c0007.\n\r",TRUE, ch, obj, 0, TO_CHAR);
             act("$n tira fuori una serie di utensili da lavoro, controlla sapientemente $c0015$p$c0007 poi,\n\rcon mano ferma, si mette all'opera.\n\r", TRUE, ch, obj, 0, TO_ROOM);
         }
-        
+
         castoni = 5 - affect;
-        
+
         for(i = 0; i < castoni; i++)
         {
             arg = one_argument(arg, gemma);
             if(*gemma)
             {
                 gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
-                
+
                 if(gem)
                 {
                     gems[i] = (gem->item_number >= 0) ? obj_index[gem->item_number].iVNum : 0;
-                    
+
                     // controllo se il vnum è una gemma incastonabile
                     if(gems[i] < 19509 || gems[i] > 19537)
                     {
@@ -3840,7 +3840,7 @@ ACTION_FUNC(do_insert)
                         }
                         return;
                     }
-                    
+
                     // controllo se si può incastonare il tipo di pietro nell'arma
                     if (GET_ITEM_TYPE(obj) == ITEM_WEAPON && (gems[i] == 19511 || gems[i] == 19512 || gems[i] == 19513 || gems[i] == 19514 || gems[i] == 19515 || gems[i] == 19516 || gems[i] == 19517 || gems[i] == 19518 || gems[i] == 19519 || gems[i] == 19520 || gems[i] == 19521 || gems[i] == 19524 || gems[i] == 19526 || gems[i] == 19527 || gems[i] == 19532))
                     {
@@ -3927,11 +3927,11 @@ ACTION_FUNC(do_insert)
                     }
                     return;
                 }
-                
+
                 if(gems[i] == 19511)        // opale
                 {
                     gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
-                    
+
                     if(gem)
                     {
                         if(!IS_DIO_MINORE(ch))
@@ -4035,7 +4035,7 @@ ACTION_FUNC(do_insert)
                 else if(gems[i] == 19513)       // zircone
                 {
                     gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
-                    
+
                     if(gem)
                     {
                         if(!IS_DIO_MINORE(ch))
@@ -4055,11 +4055,11 @@ ACTION_FUNC(do_insert)
                     {
                         continue;
                     }
-                    
+
                     if(zir == 2)
                     {
                         gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
-                    
+
                         if(gem)
                         {
                             if(!IS_DIO_MINORE(ch))
@@ -4157,9 +4157,9 @@ ACTION_FUNC(do_insert)
                         }
                         return;
                     }
-                    
+
                     gem = get_obj_in_list_vis(ch, gemma, ch->carrying);
-                    
+
                     if(gem)
                     {
                         if(!IS_DIO_MINORE(ch))
@@ -4223,14 +4223,14 @@ ACTION_FUNC(do_insert)
                 break;
             }
         }
-        
+
         for(i = 0; i < MAX_OBJ_AFFECT; i++)
         {
             while((obj->affected[i].location != APPLY_NONE) && (obj->affected[i].modifier != 0) && (obj->affected[i].location != APPLY_SKIP))
             {
                 i++;
             }
-            
+
             if(aff < castoni)
             {
                 switch(gems[aff])
@@ -4556,14 +4556,14 @@ ACTION_FUNC(do_insert)
                         colore[aff] = 15;
                         SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
                         break;
-                        
+
                     default :
                         mudlog(LOG_ERROR, "Do_insert: missing gem");
                         send_to_char("Qualcosa e' andato storto, contatta un immortale...\n\r", ch);
                         return;
                 }
             }
-            
+
             if(val > 0)
             {
                 obj->affected[i].location = loc;
@@ -4574,7 +4574,7 @@ ACTION_FUNC(do_insert)
                 loc = 0;
                 mod = 0;
             }
-            
+
         }
 
         if(GET_ITEM_TYPE(obj) == ITEM_WEAPON)
@@ -4617,7 +4617,7 @@ ACTION_FUNC(do_insert)
                     sprintf(color2, "gemme");
                 }
                 break;
-                
+
             case 1:
                 if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
                 {
@@ -4630,7 +4630,7 @@ ACTION_FUNC(do_insert)
                     sprintf(color2, "$c00%s%dgemme$c0007", (colore[0] > 9 ? "" : "0"), colore[0]);
                 }
                 break;
-                
+
             case 2:
                 if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
                 {
@@ -4643,7 +4643,7 @@ ACTION_FUNC(do_insert)
                     sprintf(color2, "$c00%s%dgem$c00%s%dme$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1]);
                 }
                 break;
-                
+
             case 3:
                 if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
                 {
@@ -4656,7 +4656,7 @@ ACTION_FUNC(do_insert)
                     sprintf(color2, "$c00%s%dge$c00%s%dm$c00%s%dme$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2]);
                 }
                 break;
-                
+
             case 4:
                 if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
                 {
@@ -4669,7 +4669,7 @@ ACTION_FUNC(do_insert)
                     sprintf(color2, "$c00%s%dg$c00%s%dem$c00%s%dm$c00%s%de$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3]);
                 }
                 break;
-            
+
             case 5:
                 if(((obj->obj_flags.cost - val_orig)/aff) <= 1500 || (((obj->obj_flags.cost - val_orig)/aff) > 3000 && ((obj->obj_flags.cost - val_orig)/aff) <= 4500) || (((obj->obj_flags.cost - val_orig)/aff) > 6000 && ((obj->obj_flags.cost - val_orig)/aff) < 7500))
                 {
@@ -4682,17 +4682,17 @@ ACTION_FUNC(do_insert)
                     sprintf(color2, "$c00%s%dg$c00%s%de$c00%s%dm$c00%s%dm$c00%s%de$c0007", (colore[0] > 9 ? "" : "0"), colore[0], (colore[1] > 9 ? "" : "0"), colore[1], (colore[2] > 9 ? "" : "0"), colore[2], (colore[3] > 9 ? "" : "0"), colore[3], (colore[4] > 9 ? "" : "0"), colore[4]);
                 }
                 break;
-            
+
             default:
                 mudlog(LOG_CHECK, "Do_insert: something going wrong with number of gems[%d]", aff);
                 send_to_char("Qualcosa e' andato storto, contatta un immortale per cortesia", ch);
                 return;
         }
-        
+
         if((hitroll + damroll) > 0 && GET_ITEM_TYPE(obj) == ITEM_WEAPON)
         {
             bool hnd = FALSE, h = FALSE, d = FALSE;
-            
+
             for(i = 0; i < MAX_OBJ_AFFECT; i++)
             {
                 if(hitroll == damroll && obj->affected[i].location == APPLY_NONE && !hnd)
@@ -4715,13 +4715,13 @@ ACTION_FUNC(do_insert)
                 }
             }
         }
-        
+
         mudlog(LOG_PLAYERS, "%s insert with success some gems in %s", GET_NAME(ch), obj->short_description);
         WAIT_STATE(ch, wait);
         act("\n\rHai terminato il tuo lavoro su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_CHAR);
         act("\n\r", TRUE, ch, obj, 0, TO_ROOM);
         act("$n mette via tutti gli attrezzi, e' soddisfatt$b del suo lavoro su $c0015$p$c0007.", TRUE, ch, obj, 0, TO_ROOM);
-        
+
         if(((obj->obj_flags.cost - val_orig)/aff) <= 1500)
         {
             if(aff == 1)
@@ -4764,7 +4764,7 @@ ACTION_FUNC(do_insert)
             else
                 sprintf(buf, "%s con alcune %s uniche cesellate ad arte", obj->short_description, color2);
         }
-        
+
         free(obj->short_description);
         obj->short_description = (char*)strdup(buf);
         free(obj->description);
@@ -4777,8 +4777,7 @@ ACTION_FUNC(do_insert)
         send_to_char("Cosa vuoi incastonare?\n\r",ch);
         return;
     }
-    
-}
-    
-} // namespace Alarmud
 
+}
+
+} // namespace Alarmud
