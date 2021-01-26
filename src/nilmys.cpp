@@ -602,6 +602,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
     struct char_data* boris, *umag;
     struct obj_data* eq_boris;
     int j;
+    char tmp[MAX_INPUT_LENGTH];
 
     boris = 0;
 
@@ -664,6 +665,12 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
 
     if(cmd == CMD_TELL)
     {
+        one_argument(arg, tmp);
+        if((tch = get_char_room_vis(ch, tmp)) != boris)
+        {
+          return FALSE;
+        }
+
         if(strstr(arg, "seguimi"))
         {
             boris->specials.quest_ref = ch;
@@ -1782,6 +1789,17 @@ MOBSPECIAL_FUNC(Uguik_Aurum)
             }
 
             iVNum = (oggetto->item_number >= 0) ? obj_index[oggetto->item_number].iVNum : 0;
+
+            arg = one_argument(arg, buf);
+
+            if(!buf)
+            {
+              return FALSE;
+            }
+        		else if((tch = get_char_room_vis(ch, buf)) != uguik)
+            {
+        			return FALSE;
+            }
 
             act("Dai $p a $n.", FALSE, uguik, oggetto, ch, TO_VICT);
             act("$N ti da' $p.", FALSE, uguik, oggetto, ch, TO_CHAR);
