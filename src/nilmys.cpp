@@ -209,7 +209,7 @@ MOBSPECIAL_FUNC(Arkhat)
     {
         return(FALSE);
     }
-    
+
     if(cmd == CMD_STEAL)
     {
         send_to_char("Hai troppa paura per provare a rubare qualcosa!\n\r", ch);
@@ -254,7 +254,7 @@ MOBSPECIAL_FUNC(Arkhat)
 
             // carico il contenitore, gli do il nome del pg morto e ci metto l'eq, poi lo porto nella room cimitero
             corpse = read_object(real_object(NILMYS_CORPSE), REAL);
-            
+
             sprintf(buf, "resti %s", name);
             free(corpse->name);
             corpse->name = (char*)strdup(buf);
@@ -268,7 +268,7 @@ MOBSPECIAL_FUNC(Arkhat)
             extract_obj(co);  /* rimuovo il corpo */
             /* danneggio l'equipaggiamento della vittima */
             DamageStuff(arkhat, SPELL_ACID_BLAST, 100, 5);
-            
+
             while(arkhat->carrying)
             {
                 o = arkhat->carrying;
@@ -536,7 +536,7 @@ void BorisInFight(struct char_data* boris)
         "\n\r$c0009[$c0015$n$c0009] urla 'Vediamo quanto dura questo!'\n\r",
         "\n\r$c0009[$c0015$n$c0009] urla 'Fate largo al Re del DPS!'\n\r"
     };
-    
+
     const int maxBorisSay = 11;
 
     if(boris->in_room > -1)
@@ -549,13 +549,13 @@ void BorisInFight(struct char_data* boris)
         if(boris->in_room == boris->master->in_room && boris->master->specials.fighting)
         {
             targ = FindAnAttacker(boris->master);
-            
+
             if(targ)
             {
                 found = TRUE;
                 sprintf(buf, "%s", rand_Boris_says[number(0, maxBorisSay)]);
             }
-            
+
             if(found)
             {
                 act(buf, FALSE, boris, 0, 0, TO_ROOM);
@@ -897,7 +897,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
                 }
 
                 extract_char(boris);
-            
+
                 //  carico la versione di Boris senza special
                 new_boris = read_mobile(real_mobile(BORIS_IVANHOE), REAL);
                 char_to_room(new_boris, 9121);
@@ -992,7 +992,7 @@ void BorisDeath(struct char_data* umag)
             send_to_zone("$c0008Chiudi per un attimo gli occhi e quando li riapri ti ritrovi nella caverna di Boris.\n\r", umag);
             MoveToonInRangeToRoom(9000, 9199, BORIS_HOME);
             break;
-            
+
         case 3:
             send_to_room("\n\r$c0015Mentre gli altri iniziano a prendersi cura del corpo del compagno caduto, il mago vi parla per congedarvi:\n\r", BORIS_HOME);
             send_to_room("\n\r$c0015 'Dovete sapere che $c0013Arkhat$c0015 era possibile sconfiggerlo solo brandendo la spada del nipote di Boris.\n\r", BORIS_HOME);
@@ -1002,7 +1002,7 @@ void BorisDeath(struct char_data* umag)
             send_to_room("  $c0015Grazie a tutti voi, per il vostro tentativo.\n\r", BORIS_HOME);
             send_to_room("  $c0015Le nostre giornate saranno uguali all'infinito... non e' detto che non ci rincontreremo.'\n\r", BORIS_HOME);
             break;
-            
+
         case 4:
             send_to_all("\n\r\n\r$c0009Daggar, Tamarang, Cormac, Ireiin, Isrka ed Umag vi ringraziano dal profondo del cuore per averci provato.\n\r");
             send_to_room("\n\r\n\r$c0008Il mago pronuncia delle parole arcane e, lentamente, l'immagine di Umag e della caverna iniziano a sbiadire...\n\r", BORIS_HOME);
@@ -1051,7 +1051,7 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
     free(coin->short_description);
     coin->short_description = (char*)strdup(buf);
     SetPersonOnSave(ch, coin);
-    
+
     act("Dai $p a $N.", FALSE, boris, coin, ch, TO_CHAR);
     act("$n ti da' $p.", FALSE, boris, coin, ch, TO_VICT);
     act("$n da' $p a $N.", FALSE, boris, coin, ch, TO_NOTVICT);
@@ -1063,7 +1063,7 @@ void GiveRewardNilmys(struct char_data* boris, struct char_data* ch)
     GET_RUNEDEI(ch) += rune;
     sprintf(buf,"$c0011Vieni marchiat%s con %d run%s degli Dei!$c0007\n\r\n\r",SSLF(ch), rune, (rune == 1 ? "a" : "e"));
     send_to_char(buf, ch);
-    
+
     obj_to_char(coin, ch);
 
     do_say(boris, "Se tutti quanti avete ricevuto il vostro premio, fatemi un cenno con la testa!", 0);
@@ -1284,6 +1284,22 @@ void CheckBorisRoom(struct char_data* boris)
                         uguik = tch;
                     }
                 }
+            }
+
+            if(!uguik)
+            {
+              mudlog(LOG_CHECK, "Something goes wrong in Nilmys quest: Uguik is not on room 9051");
+              send_to_room("\n\r$c0015[$c0005Boris Ivanhoe Gudonov$c0015] dice: 'Per Alar, dove ti sei nascosto gnomo?!?'\n\r\n\r", 9051);
+              if((uguik = read_mobile(real_mobile(UGUIK_AURUM), REAL)))
+              {
+                char_to_room(uguik, 9051);
+                if(boris->commandp2 == 5)
+                {
+                  uguik->commandp2 = 1;
+                }
+              }
+              send_to_room("\n\r$c0008All'improvviso Uguik sbuca da dietro una cassa e, risponde:\n\r$c0011 'Ehm mi ero appisolato un secondo...'\n\r", 9051);
+              return;
             }
 
             if(uguik->commandp2 != 1)
@@ -1708,7 +1724,7 @@ MOBSPECIAL_FUNC(Uguik_Aurum)
                 do_say(uguik, "Cosa volete nuovamente da me? Vi ho gia' detto tutto!", 0);
                 do_say(uguik, "Andatevene!", 0);
                 break;
-                
+
             default:
                 break;
         }
@@ -1864,7 +1880,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
             case 3:
             {
                 oggetto = get_obj_in_list_vis(uguik, obj_index[real_object(NILMYS_FLASK)].name, uguik->carrying);
-                
+
                 if(oggetto)
                 {
                     if((boris)->master->in_room == uguik->in_room && CAN_SEE(uguik, (boris)->master))
@@ -1881,7 +1897,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
                 {
                     oggetto = read_object(real_object(NILMYS_FLASK), REAL);
                     obj_to_char(oggetto, uguik);
-                    
+
                     if((boris)->master->in_room == uguik->in_room && CAN_SEE(uguik, (boris)->master))
                     {
                         sprintf(buf, "ampolla %s", GET_NAME((boris)->master));
@@ -1938,7 +1954,7 @@ bool CheckUguikRoom(struct char_data* uguik, struct char_data* boris)
                 break;
 
         }
-        
+
         uguik->commandp += 1;
 
         return TRUE;
@@ -1966,7 +1982,7 @@ MOBSPECIAL_FUNC(Garebeth)
     }
 
     boris = 0;
-    
+
     for(tch = real_roomp(ch->in_room)->people; (!boris) && (tch); tch = tch->next_in_room)
     {
         if(IS_MOB(tch))
@@ -1996,7 +2012,7 @@ MOBSPECIAL_FUNC(Garebeth)
     {
         return(FALSE);
     }
-    
+
     if(StandUp(garebeth))
     {
         return(TRUE);
@@ -2006,7 +2022,7 @@ MOBSPECIAL_FUNC(Garebeth)
     {
         return(FALSE);
     }
-    
+
     if((tar = garebeth->specials.fighting) && (garebeth->specials.fighting->in_room == garebeth->in_room))
     {
         if(HitOrMiss(ch, tar, CalcThaco(ch, NULL)))
@@ -2050,7 +2066,7 @@ void GarebethDeath(struct char_data* boris)
             act("\n\r$n ti mostra l'$c0015Armatura$c0007 $c0015Consacrata $c0007dalle vittime di $c0013Arkhat$c0007 e la $c0015Divina $c0007Spada di Vlad.", FALSE, boris, NULL, NULL, TO_ROOM);
         }
             break;
-            
+
         case 2001:
         {
             send_to_room("\n\r", boris->in_room);
@@ -2100,7 +2116,7 @@ void GarebethDeath(struct char_data* boris)
             }
         }
             break;
-            
+
         case 2002:
         {
             send_to_room("\n\r", boris->in_room);
@@ -2142,7 +2158,7 @@ void GarebethDeath(struct char_data* boris)
             }
         }
             break;
-            
+
         case 2003:
             send_to_room("\n\r", boris->in_room);
             do_say(boris, "Vi ringrazio a tutti, comunque andra' a finire!", 0);
@@ -2289,9 +2305,9 @@ ROOMSPECIAL_FUNC(gonhag_block)
         int iVNum;
         char buf[128];
         struct obj_data* tool, *key;
-        
+
         arg = one_argument(arg, buf);
-        
+
         if(!strcmp("strumento", buf))
         {
             tool = get_obj_in_list_vis(ch, buf, ch->carrying);
@@ -2347,15 +2363,15 @@ ROOMSPECIAL_FUNC(gonhag_chain)
     {
         return FALSE;
     }
-    
+
     if(cmd == CMD_UNLOCK)
     {
         char buf[128];
         struct obj_data* key;
         struct char_data* gonhag, *tch;
-        
+
         gonhag = 0;
-        
+
         for(tch = real_roomp(ch->in_room)->people; (!gonhag) && (tch); tch = tch->next_in_room)
         {
             if(IS_MOB(tch))
@@ -2366,13 +2382,13 @@ ROOMSPECIAL_FUNC(gonhag_chain)
                 }
             }
         }
-        
+
         arg = one_argument(arg, buf);
-        
+
         if(!strcmp("collare", buf))
         {
             key = get_obj_in_list_vis(ch, obj_index[real_object(GONHAG_KEY)].name, ch->carrying);
-            
+
             if(key)
             {
                 //  controllo se il meccanismo e' stato attivato, se non e' attivo il Gonhag attacca
@@ -2676,7 +2692,7 @@ ROOMSPECIAL_FUNC(reward_giver)
                         {
                             coin = read_object(real_object(NILMYS_COIN), REAL);
                             obj_to_char(coin, ch);
-                            
+
                             sprintf(buf, "un Augustale di proprieta' di %s", GET_NAME(ch));
                             free(coin->short_description);
                             coin->short_description = (char*)strdup(buf);
@@ -2918,4 +2934,3 @@ ROOMSPECIAL_FUNC(reward_giver)
 }
 
 } // namespace Alarmud
-
