@@ -152,6 +152,10 @@ int mana_limit(struct char_data* ch) {
 		max += 100;
 	}
 
+	if(HasClass(ch, CLASS_BARBARIAN)) {
+		max += 100;
+	}
+
 	chClasses = HowManyClasses(ch);
 
 	if(chClasses) {
@@ -185,9 +189,10 @@ int mana_limit(struct char_data* ch) {
 	 * Add class mana maximums here...
 	 */
 
-	if(OnlyClass(ch,CLASS_BARBARIAN)) {  /* 100 mana max for barbs */
-		max=100;  /* barbarians only get 100 mana... */
-	}
+//	rimosso il limite di 100 mana ai barbari
+//	if(OnlyClass(ch,CLASS_BARBARIAN)) {  /* 100 mana max for barbs */
+//		max=100;  /* barbarians only get 100 mana... */
+//	}
 
 	return(max);
 }
@@ -1530,4 +1535,3 @@ void ClassSpecificStuff(struct char_data* ch) {
 
 
 } // namespace Alarmud
-

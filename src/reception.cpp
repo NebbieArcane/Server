@@ -227,8 +227,8 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	}
 
 	if(!IS_IMMORTAL(ch) && HasClass(ch, CLASS_MONK)) {
-		if(cost->no_carried > MONK_MAX_RENT) {
-			send_to_char("Your vows forbid you to carry more than 20 items\n\r", ch);
+		if(cost->no_carried > MONK_MAX_RENT+4980) {
+			send_to_char("Your vows forbid you to carry more than 5000 items.\n\r", ch);
 			return(FALSE);
 		}
 	}
@@ -309,23 +309,23 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai %d oggetti rari.'",
 					limited_items);
 		else if(limited_items <= 8)
-			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hum, ha i %d oggetti rari, mica male.'",
+			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hum, hai %d oggetti rari, mica male.'",
 					limited_items);
 		else if(limited_items < 10)
 			snprintf(buf, sizeof(buf)-1,"$n ti dice 'Hai %d oggetti rari. Cosa vuoi fare? Aprire un supermarket?'",
 					limited_items);
 		else if(limited_items >= 10)
-			snprintf(buf, sizeof(buf)-1,"$n ti dice 'WOW! Hai %d oggetti rari. Pensi di essere sol$b a giocare?!?'",
+			snprintf(buf, sizeof(buf)-1,"$n ti dice 'WOW! Hai %d oggetti rari. Pensi di essere sol$B a giocare?!?'",
 					limited_items);
 
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 
 		if(cost->total_cost > (unsigned int)GET_GOLD(ch)) {  // SALVO meglio unsigned
-			act("$n ti dice 'Che oltretutto nemmeno ti puoi permettere'",
+			act("$n ti dice 'Che oltretutto nemmeno ti puoi permettere.'",
 				FALSE,receptionist,0,ch,TO_VICT);
 
 			if(GetMaxLevel(ch) >=IMMORTALE) {
-				act("$n ti dice 'Va beh... visto che sei Immortale... suppongo vada bene cosi'",
+				act("$n ti dice 'Va beh... visto che sei Immortale... suppongo vada bene cosi'.",
 					FALSE,receptionist,0,ch,TO_VICT);
 				cost->total_cost = 0;
 			}
