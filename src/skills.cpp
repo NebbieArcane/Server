@@ -147,7 +147,7 @@ ACTION_FUNC(do_disarm) {
                 return;
             }
         }
-        
+
         if(!IsHumanoid(ch)) {
             send_to_char("Non hai la forma giusta!\n\r", ch);
             return;
@@ -4221,7 +4221,7 @@ ACTION_FUNC(do_find_traps) {
 
 
 ACTION_FUNC(do_find) {
-	char findwhat[30];
+	char findwhat[MAX_INPUT_LENGTH];
 
 	if(!ch->skills) {
 		return;
@@ -4697,7 +4697,7 @@ ACTION_FUNC(do_psi_portal) {
 
 
 ACTION_FUNC(do_mindsummon) {
-	char target_name[140];
+	char target_name[MAX_INPUT_LENGTH];
 	struct char_data* target;
 	int location;
 	struct room_data* rp;
@@ -4866,9 +4866,12 @@ ACTION_FUNC(do_immolation) {
 	int count;
 	bool num_found=TRUE;
 
-	if(GET_RACE(ch) != RACE_DEMON || !ch->skills[SKILL_IMMOLATION].learned) {
-		send_to_char("Ma se non hai neanche le corna....", ch);
-		return;
+	if(!IS_IMMORTAL(ch))
+	{
+		if(GET_RACE(ch) != RACE_DEMON || !ch->skills[SKILL_IMMOLATION].learned) {
+			send_to_char("Ma se non hai neanche le corna...", ch);
+			return;
+		}
 	}
 
 	/**
@@ -4886,6 +4889,12 @@ ACTION_FUNC(do_immolation) {
 	}
 
 	only_argument(arg,number);
+
+	if(!*number)
+	{
+		send_to_char("Ok, ma quanto?\n\r",ch);
+		return;
+	}
 
 	/* polax version of number validation */
 	/* NOTE: i changed num_found to be initially TRUE */
@@ -5010,6 +5019,12 @@ ACTION_FUNC(do_canibalize) {
 	}
 
 	only_argument(arg,number);
+
+	if(!*number)
+	{
+		send_to_char("Ok, ma quanto?\n\r",ch);
+		return;
+	}
 
 	/* polax version of number validation */
 	/* NOTE: i changed num_found to be initially TRUE */
@@ -5537,7 +5552,7 @@ ACTION_FUNC(do_blast) {
 }
 
 ACTION_FUNC(do_hypnosis) {
-	char target_name[140];
+	char target_name[MAX_INPUT_LENGTH];
 	struct char_data* victim;
 	struct affected_type af;
 
@@ -5568,6 +5583,13 @@ ACTION_FUNC(do_hypnosis) {
 
 
 	only_argument(arg, target_name);
+
+	if(!*target_name)
+	{
+		send_to_char("Chi vorresti ipnotizzare?\n\r",ch);
+		return;
+	}
+
 	victim = get_char_room_vis(ch, target_name);
 
 	if(!victim) {
@@ -5581,7 +5603,7 @@ ACTION_FUNC(do_hypnosis) {
 	}
 
 	if(IS_IMMORTAL(victim)) {
-		send_to_char("Pah! Non penserai che questa sia una buona idea ?\n\r",
+		send_to_char("Pah! Non penserai che questa sia una buona idea?\n\r",
 					 ch);
 		return;
 	}
@@ -5669,7 +5691,7 @@ ACTION_FUNC(do_hypnosis) {
 
 
 ACTION_FUNC(do_scry) {
-	char target_name[140];
+	char target_name[MAX_INPUT_LENGTH];
 	struct char_data* target;
 	int location,old_location;
 	struct room_data* rp;
@@ -5696,6 +5718,13 @@ ACTION_FUNC(do_scry) {
 	}
 
 	only_argument(arg,target_name);
+
+	if(!*target_name)
+	{
+		send_to_char("Scry? Who?\n\r",ch);
+		return;
+	}
+
 	if(!(target=get_char_vis_world(ch,target_name,NULL))) {
 		send_to_char("You can't sense that person anywhere.\n\r",ch);
 		return;
@@ -5827,6 +5856,13 @@ ACTION_FUNC(do_adrenalize) {
 	}
 
 	only_argument(arg,target_name);
+
+	if(!*target_name)
+	{
+		send_to_char("A chi vorresti infondere la tua energia?\n\r",ch);
+		return;
+	}
+
 	if(!(target=get_char_room_vis(ch,target_name))) {
 		send_to_char("Non ti sembra di vedere nessuno con quel nome qui.\n\r",ch);
 		return;
@@ -6341,7 +6377,7 @@ ACTION_FUNC(do_lay_on_hands) {
 
 
 ACTION_FUNC(do_holy_warcry) {
-	char name[140];
+	char name[MAX_INPUT_LENGTH];
 	int dam, dif,level;
 	struct char_data* dude;
 

@@ -1107,7 +1107,7 @@ ACTION_FUNC(do_pquest) {
 				if(punti_quest == 1) {
 					act("Fiamme divine ti avvolgono e piano piano si concentrano in una zona del tuo corpo!", FALSE, ch, NULL, vict, TO_VICT);
 					act("$n ti tatua una runa degli Dei sul corpo!", FALSE, ch, NULL, vict, TO_VICT);
-					sprintf(buf, "Assegni una rune dagli Dei a $N che ne aveva %d.", old_punti);
+					sprintf(buf, "Assegni una runa dagli Dei a $N, ne aveva %d.", old_punti);
 					act(buf, FALSE, ch, NULL, vict, TO_CHAR);
 				}
 				else {
@@ -1178,4 +1178,3 @@ ACTION_FUNC(do_pquest) {
 
 
 } // namespace Alarmud
-

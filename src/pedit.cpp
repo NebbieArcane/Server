@@ -549,11 +549,11 @@ MOBSPECIAL_FUNC(EditMaster) {
 #define PAY_RUNE    1
 #define PAY_EXP     2
 #define PAY_GOLD    4
-    
+
 #define PRICE_RUNE  1
 #define PRICE_EXP   2000000
 #define PRICE_GOLD  300000
-    
+
 MOBSPECIAL_FUNC(RentEditor)
 {
     char obj_name[80], vict_name[80], spec_buf[256], buf[MAX_STRING_LENGTH];
@@ -785,7 +785,8 @@ MOBSPECIAL_FUNC(RentEditor)
                 fclose(f);
 
                 sprintf(buf, "%s ha diminuito il rent sull'oggetto vnum %d di 1000 monete d'oro da %s.\n\rOra paga %d monete d'oro di rent.\n\r", GET_NAME(ch), iVNum, GET_NAME(derent), obj->obj_flags.cost_per_day);
-                mail_to_god(ch, "LadyOfPain", buf);
+                mail_to_god(ch, "Sirio", buf);
+								mail_to_god(ch, "Tethys", buf);
                 mail_to_god(ch, "Requiem", buf);
                 mail_to_god(ch, "Croneh", buf);
 
@@ -803,4 +804,3 @@ MOBSPECIAL_FUNC(RentEditor)
     return FALSE;
 }
 } // namespace Alarmud
-

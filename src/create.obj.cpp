@@ -165,10 +165,10 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         boost::format fmt ("     %-2d [%s] %s");
         char buf2[255];
         int x = 0;
-        
+
         sprintf(buf, "\n\rObject Extra Flags:\n\r\n\r");
         send_to_char(buf, ch);
-        
+
         for(i = 0; i < 39; i++)
         {
             check = 1;
@@ -176,7 +176,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
             sprintf(buf2, "%s%d", buf2, 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
-            
+
             if(i > 0 && i < 32)
                 for(a=1; a<=i; a++)
                 {
@@ -187,7 +187,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
                 {
                     check*=2;
                 }
-            
+
             if(i < 32)
             {
                 if(i & 1)
@@ -220,7 +220,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
             fmt.clear();
             fmt2.clear();
         }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
         send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
@@ -296,9 +296,9 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
         boost::format fmt ("     %-2d [%s] %s");
         char buf2[255];
         int x = 0;
-        
+
         send_to_char("\n\rObject Wear Flags:\n\r\n\r", ch);
-        
+
         for(i = 0; i < 16; i++)
         {
             check = 1;
@@ -306,13 +306,13 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
             sprintf(buf2, "%s%d", buf2, 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
-            
+
             if(i>0)
                 for(a=1; a<=i; a++)
                 {
                     check*=2;
                 }
-            
+
             if(i & 1)
             {
                 fmt2 % "" % (i + 1) % ((ch->specials.objedit->obj_flags.wear_flags & (check)) ? "X" : " ") % wear_bits[i];
@@ -324,11 +324,11 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
                 sb.append(fmt.str().c_str());
                 x = strlen(fmt.str().c_str());
             }
-            
+
             fmt.clear();
             fmt2.clear();
         }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
         send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
@@ -337,7 +337,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 
 
 ACTION_FUNC(do_oedit) {
-	char name[20];
+	char name[MAX_INPUT_LENGTH];
 	struct obj_data* obj;
 	int i;
 
@@ -389,7 +389,7 @@ ACTION_FUNC(do_oedit) {
     {
         SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT);
     }
-    
+
 	act("$n inizia a $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 	GET_POS(ch)=POSITION_SLEEPING;
 
@@ -797,17 +797,17 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
         boost::format fmt ("     %-2d %s");
         char buf2[255];
         int x = 0;
-        
+
         sprintf(buf, "\n\rObject Type: %s\n\r\n\r", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
         send_to_char(buf, ch);
-        
+
         for(i = 0; i < 30; i++)
         {
             sprintf(buf2, "%s", "%-");
             sprintf(buf2, "%s%d", buf2, 45-x);
             strcat(buf2, "s%-2d %s\n\r");
             boost::format fmt2 (buf2);
-            
+
             if(i & 1)
             {
                 fmt2 % "" % (i + 1) % item_types[i];
@@ -819,11 +819,11 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
                 sb.append(fmt.str().c_str());
                 x = strlen(fmt.str().c_str());
             }
-            
+
             fmt.clear();
             fmt2.clear();
         }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
         send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
@@ -1099,9 +1099,9 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                 boost::format fmt ("    %-10u : %s");
                 char buf2[255];
                 int x = 0, column = 0;
-                
+
                 send_to_char("\n\r", ch);
-                
+
                 for(i = 0; *affected_bits2[i] != '\n'; i++)
                 {
                     check=1;
@@ -1109,13 +1109,13 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                     sprintf(buf2, "%s%d", buf2, 45-x);
                     strcat(buf2, "s%-10u : %s\n\r");
                     boost::format fmt2 (buf2);
-                    
+
                     if(i>0)
                         for(a=1; a<=i; a++)
                         {
                             check*=2;
                         }
-                    
+
                     if(column & 1)
                     {
                         fmt2 % "" % check % affected_bits2[i];
@@ -1129,7 +1129,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                         x = strlen(fmt.str().c_str());
                         column += 1;
                     }
-                    
+
                     fmt.clear();
                     fmt2.clear();
                 }
@@ -1222,13 +1222,13 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                     sprintf(buf2, "%s%d", buf2, 45-x);
                     strcat(buf2, "s%-6u : %s\n\r");
                     boost::format fmt2 (buf2);
-                    
+
                     if(i>0)
                         for(a=1; a<=i; a++)
                         {
                             check*=2;
                         }
-                    
+
                     if(i & 1)
                     {
                         fmt2 % "" % check % immunity_names[i];
@@ -1279,9 +1279,9 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                     boost::format fmt ("    %-10u : %s");
                     char buf2[255];
                     int x = 0, column = 0;
-                    
+
                     send_to_char("\n\r", ch);
-                    
+
                     for(i = 0; *affected_bits[i] != '\n'; i++)
                     {
                         check=1;
@@ -1289,13 +1289,13 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                         sprintf(buf2, "%s%d", buf2, 45-x);
                         strcat(buf2, "s%-10u : %s\n\r");
                         boost::format fmt2 (buf2);
-                        
+
                         if(i>0)
                             for(a=1; a<=i; a++)
                             {
                                 check*=2;
                             }
-                        
+
                         if(column & 1)
                         {
                             fmt2 % "" % check % affected_bits[i];
@@ -1309,7 +1309,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
                             x = strlen(fmt.str().c_str());
                             column += 1;
                         }
-                        
+
                         fmt.clear();
                         fmt2.clear();
                     }
@@ -1378,7 +1378,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
     {
         sprintf(buf, VT_HOMECLR);
         send_to_char(buf, ch);
-        
+
         for(i = 0; i < 56; i++)
         {
             a++;
@@ -1414,9 +1414,9 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
         char buf2[255];
         boost::format fmt ("     %-2d %s");
         int x = 0;
-        
+
         send_to_char("\n\r\n\r", ch);
-        
+
         for(i = 0; i < 56; i++)
         {
             a++;
@@ -1452,7 +1452,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 
             fmt.clear();
             }
-        
+
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
@@ -1881,4 +1881,3 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 
 
 } // namespace Alarmud
-

@@ -231,7 +231,7 @@ ACTION_FUNC(do_action) {
 
 ACTION_FUNC(do_insult) {
 	static char buf[100];
-	static char tmp[MAX_STRING_LENGTH];
+	static char tmp[MAX_INPUT_LENGTH];
 	struct char_data* victim;
 
 	only_argument(arg, tmp);
@@ -351,4 +351,3 @@ ACTION_FUNC(do_pose) {
 
 }
 } // namespace Alarmud
-
