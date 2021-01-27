@@ -686,7 +686,7 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
 
 // date  +%s --date='TZ="Europe/Rome" 00:00 today'
 #define MUD_REBOOT_TIME 1516316400
-void load_char_objs(struct char_data* ch) {
+void load_char_objs(struct char_data* ch, bool ghost) {
 	FILE* fl;
 	bool found = FALSE;
 	long timegold;
@@ -794,7 +794,10 @@ void load_char_objs(struct char_data* ch) {
 		send_to_char(buf, ch);
 		snprintf(buf, sizeof(buf)-1,"Il costo e' di %d monete al giorno.\n\r", st.total_cost);   // Gaia 2001
 		send_to_char(buf, ch); // Gaia 2001
-		GET_GOLD(ch) -= timegold;
+		if(!ghost)	// nuovo Ghost
+    {
+      GET_GOLD(ch) -= timegold;
+    }
 
 #if BANK_RENT
         // rent con gold presi dalla banca: va testato, per ora lo tengo disattivo

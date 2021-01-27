@@ -4448,6 +4448,298 @@ ACTION_FUNC(do_immort) {
 	}
 }
 
+#define REFUND_ALL			 1
+#define REFUND_EQ				 2
+#define REFUND_PG				 4
+#define REFUND_ACHIE		 8
+#define REFUND_MORNING	16
+#define REFUND_NOON			32
+#define REFUND_EVENING	64
+
+// sintassi: refund nome_pg data(formato aaaammgg) orario(m/p/s) all/eq/pg/achie
+ACTION_FUNC(do_refund) {
+	char GodDir[100], tar_buf[256], name[100], date[16], time[16], type[16], FileName[80];
+	int valore = 0, i, found = -1, refund = 0;
+	FILE* fl;
+
+	if(cmd == 0)
+	{
+		return;
+	}
+
+	arg = one_argument(arg, name);
+	arg = one_argument(arg, date);
+	arg = one_argument(arg, time);
+	only_argument(arg, type);
+
+	if(!*name || !*date || !*time || !*type)
+	{
+		send_to_char("Hai dimenticato qualcosa!\n\r", ch);
+		send_to_char("La sintassi corretta e':\n\r$c0015refund nome_pg data(formato $c0009aaaammgg$c0015) orario($c0009m$c0015/$c0009p$c0015/$c0009s$c0015) $c0009all$c0015/$c0009eq$c0015/$c0009pg$c0015/$c0009achie$c0007\n\r", ch);
+		return;
+	}
+
+	if(strlen(date) != 8 || atoi(date) < 0 || atoi(date) >29999999 )
+	{
+		send_to_char("Il formato da usare per la data e' $c0009aaaa$c0015mm$c0011gg$c0007!\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(time, "m") || !strcmp(time, "p") || !strcmp(time, "s"))
+	{
+		if(!strcmp(time, "m"))
+		{
+			SET_BIT(valore, REFUND_MORNING);
+		}
+		else if(!strcmp(time, "p"))
+		{
+			SET_BIT(valore, REFUND_NOON);
+		}
+		else if(!strcmp(time, "s"))
+		{
+			SET_BIT(valore, REFUND_EVENING);
+		}
+	}
+	else
+	{
+		send_to_char("Quale vuoi recuperare? Quello della $c0009m$c0007attina, del $c0009p$c0007omeriggio o della $c0009s$c0007?\n\r", ch);
+		send_to_char("La sintassi corretta e':\n\rrefund nome_pg data(formato aaaammgg) orario($c0009m$c0007/$c0009p$c0007/$c0009s$c0007) all/eq/pg/achie$c0007\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(type, "all") || !strcmp(type, "pg") || !strcmp(type, "eq") || !strcmp(type, "achie"))
+	{
+		if(!strcmp(type, "all"))
+		{
+			SET_BIT(valore, REFUND_ALL);
+		}
+		else if(!strcmp(type, "pg"))
+		{
+			SET_BIT(valore, REFUND_PG);
+		}
+		else if(!strcmp(type, "eq"))
+		{
+			SET_BIT(valore, REFUND_EQ);
+		}
+		else if(!strcmp(type, "achie"))
+		{
+			SET_BIT(valore, REFUND_ACHIE);
+		}
+	}
+	else
+	{
+		send_to_char("Puoi scegliere di recuperare o tutto o l'equipaggiamento o i dati del personaggio oppure gli achievements!\n\r", ch);
+		send_to_char("La sintassi corretta e':\n\rrefund nome_pg data(formato aaaammgg) orario(m/p/s) $c0009all$c0007/$c0009eq$c0007/$c0009pg$c0007/$c0009achie$c0007\n\r", ch);
+		return;
+	}
+
+// creo la directory temporanea con il nome del dio
+	sprintf(GodDir, "%sBackup", ch->player.name);
+	sprintf(tar_buf, "mkdir %s", GodDir);
+	system(tar_buf);
+	mudlog(LOG_PLAYERS, "Created %s temp's directory.", GodDir);
+
+// cerco lo zip del rent e lo unzippo nella cartella temporanea
+	if(IS_SET(valore, REFUND_ALL) || IS_SET(valore, REFUND_EQ) || IS_SET(valore, REFUND_ACHIE))
+	{
+		for(i = 0; i < 10; i++)
+		{
+			sprintf(FileName, "../backups/rent%s.%s%d.zip", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
+			if((fl = fopen(FileName, "r+")) == NULL)
+			{
+				continue;
+			}
+			else
+			{
+				found = i;
+				fclose(fl);
+				break;
+			}
+		}
+
+		if(found > -1)
+		{
+			send_to_char("Ok. I files di rent sono stati copiati nella directory temporanea.\n\r", ch);
+			sprintf(tar_buf, "tar xzf ../backups/rent%s.%s%d.zip -C %s", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", found, GodDir);
+			system(tar_buf);
+			mudlog(LOG_PLAYERS, "Rent's files generated on %s temp's directory.", GodDir);
+			found = -1;
+		}
+		else
+		{
+			send_to_char("Non riesco a trovare il file di backup rent per questa data ed orario.\n\r", ch);
+			sprintf(tar_buf, "rm -r %s", GodDir);
+			system(tar_buf);
+			mudlog(LOG_PLAYERS, "Deleted %s temp's directory.", GodDir);
+			return;
+		}
+	}
+
+// cerco lo zip dei pg e lo unzippo nella cartella temporanea
+	if(IS_SET(valore, REFUND_ALL) || IS_SET(valore,REFUND_PG))
+	{
+		for(i = 0; i < 10; i++)
+		{
+			sprintf(FileName, "../backups/pg%s.%s%d.zip", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
+			if((fl = fopen(FileName, "r+")) == NULL)
+			{
+				continue;
+			}
+			else
+			{
+				found = i;
+				fclose(fl);
+				break;
+			}
+		}
+
+		if(found > -1)
+		{
+			send_to_char("Ok. I files dei pg sono stati copiati nella directory temporanea.\n\r", ch);
+			sprintf(tar_buf, "tar xzf ../backups/pg%s.%s%d.zip -C %s", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", found, GodDir);
+			system(tar_buf);
+			mudlog(LOG_PLAYERS, "Players' files generated on %s temp's directory.", GodDir);
+		}
+		else
+		{
+			send_to_char("Non riesco a trovare il file di backup pg per questa data ed orario.\n\r", ch);
+			sprintf(tar_buf, "rm -r %s", GodDir);
+			system(tar_buf);
+			mudlog(LOG_PLAYERS, "Deleted %s temp's directory.", GodDir);
+			return;
+		}
+	}
+
+	if(IS_SET(valore, REFUND_ALL))
+	{
+		found = 4;
+	}
+	else
+	{
+		found = 1;
+	}
+
+// copia dei files
+	if(IS_SET(valore, REFUND_ALL) || IS_SET(valore, REFUND_EQ))
+	{
+		found --;
+		sprintf(FileName, "%s/lib/rent/%s", GodDir, lower(name));
+		if((fl = fopen(FileName, "r+")) == NULL)
+		{
+			if(found == 0)
+			{
+				sprintf(tar_buf, "Qualcosa e' andato storto: non ho trovato il file dell'equipaggiamento per %s.\n\r", name);
+				send_to_char(tar_buf, ch);
+				sprintf(tar_buf, "rm -r %s", GodDir);
+				system(tar_buf);
+				return;
+			}
+		}
+		else
+		{
+			fclose(fl);
+			SET_BIT(refund, REFUND_EQ);
+			sprintf(tar_buf, "cp -f %s rent/%s", FileName, name);
+			system(tar_buf);
+			sprintf(tar_buf, "Il file dell'equipaggiamento di %s e' stato recuperato.\n\r", name);
+			send_to_char(tar_buf, ch);
+			mudlog(LOG_PLAYERS, "%s has refunded equipment's file on %s.", GET_NAME(ch), name);
+		}
+	}
+
+	if(IS_SET(valore, REFUND_ALL) || IS_SET(valore, REFUND_PG))
+	{
+		found --;
+		sprintf(FileName, "%s/lib/players/%s.dat", GodDir, lower(name));
+		if((fl = fopen(FileName, "r+")) == NULL)
+		{
+			if(found == 0)
+			{
+				sprintf(tar_buf, "Qualcosa e' andato storto: non ho trovato il file del personaggio per %s.\n\r", name);
+				send_to_char(tar_buf, ch);
+				sprintf(tar_buf, "rm -r %s", GodDir);
+				system(tar_buf);
+				return;
+			}
+		}
+		else
+		{
+			fclose(fl);
+			SET_BIT(refund, REFUND_PG);
+			sprintf(tar_buf, "cp -f %s players/%s.dat", FileName, name);
+			system(tar_buf);
+			sprintf(tar_buf, "Il file dei dati del personaggio di %s e' stato recuperato.\n\r", name);
+			send_to_char(tar_buf, ch);
+			mudlog(LOG_PLAYERS, "%s has refunded data's file on %s.", GET_NAME(ch), name);
+		}
+	}
+
+	if(IS_SET(valore, REFUND_ALL) || IS_SET(valore, REFUND_ACHIE))
+	{
+		found --;
+		sprintf(FileName, "%s/lib/rent/%s.aux", GodDir, lower(name));
+		if((fl = fopen(FileName, "r+")) == NULL)
+		{
+			if(found == 0)
+			{
+				sprintf(tar_buf, "Qualcosa e' andato storto: non ho trovato il file degli achievements per %s.\n\r", name);
+				send_to_char(tar_buf, ch);
+				sprintf(tar_buf, "rm -r %s", GodDir);
+				system(tar_buf);
+				return;
+			}
+		}
+		else
+		{
+			fclose(fl);
+			SET_BIT(refund, REFUND_ACHIE);
+			sprintf(tar_buf, "cp -f %s rent/%s.aux", FileName, name);
+			system(tar_buf);
+			sprintf(tar_buf, "Il file degli achievements di %s e' stato recuperato.\n\r", name);
+			send_to_char(tar_buf, ch);
+			mudlog(LOG_PLAYERS, "%s has refunded achievements' file on %s.", GET_NAME(ch), name);
+		}
+	}
+
+	if(found > 0)
+	{
+		if(refund < 14)
+		{
+			if(!IS_SET(refund, REFUND_EQ))
+			{
+				sprintf(tar_buf, "Non ho trovato il file dell'equipaggiamento per %s.\n\r", name);
+				send_to_char(tar_buf, ch);
+				mudlog(LOG_PLAYERS, "%s can't refund equipment's file on %s.", GET_NAME(ch), name);
+			}
+			if(!IS_SET(refund, REFUND_PG))
+			{
+				sprintf(tar_buf, "Non ho trovato il file del personaggio per %s.\n\r", name);
+				send_to_char(tar_buf, ch);
+				mudlog(LOG_PLAYERS, "%s can't refund data's file on %s.", GET_NAME(ch), name);
+			}
+			if(!IS_SET(refund, REFUND_ACHIE))
+			{
+				sprintf(tar_buf, "Non ho trovato il file degli achievements per %s.\n\r", name);
+				send_to_char(tar_buf, ch);
+				mudlog(LOG_PLAYERS, "%s can't refund achievements file on %s.", GET_NAME(ch), name);
+			}
+		}
+		else
+		{
+			sprintf(tar_buf, "Il refund di %s e' andato a buon fine, tutti i file sono stati copiati.\n\r", name);
+			send_to_char(tar_buf, ch);
+			mudlog(LOG_PLAYERS, "All the files are refunded on %s.", name);
+		}
+	}
+
+	// alla fine di tutto elimino la directory temporanea che ho creato con il nome del dio
+	sprintf(tar_buf, "rm -r %s", GodDir);
+	system(tar_buf);
+	mudlog(LOG_PLAYERS, "Deleted %s temp's directory.", GodDir);
+
+	return;
+}
+
 ACTION_FUNC(do_restore) {
 	struct char_data* victim;
 	char buf[100];
@@ -5746,10 +6038,12 @@ ACTION_FUNC(do_force_rent) {
 							   "%s had a failed recp_offer, they are losing EQ!",
 							   GET_NAME(victim));
 					}
+					save_ghost_forcerent(victim);       // salvo il pg senza desc
 					extract_char(victim);
 				} /* higher than presons level */
 			} /* was linkdead */
 		} /* end for */
+		send_to_char("Tutti i personaggi LD sono stati rentati.\n\r", ch);
 		return;
 	} /* alldead */
 
@@ -5788,9 +6082,41 @@ ACTION_FUNC(do_force_rent) {
 				   "%s had a failed recp_offer, they are losing EQ!",
 				   GET_NAME(victim));
 		}
+		save_ghost_forcerent(victim);       // salvo il pg senza desc
 		extract_char(victim);
+		send_to_char("Fatto.\n\r", ch);
 		return;
 	} /* higher than presons level */
+}
+
+void save_ghost_forcerent(struct char_data* ch)
+{
+    struct char_file_u tmp_store;
+    FILE* fl;
+    char szFileName[200];
+
+    if(!IS_SET(ch->specials.act,PLR_NEW_EQ))
+    {
+        SET_BIT(ch->specials.act,PLR_NEW_EQ);
+    }
+
+    char_to_store(ch, &tmp_store);
+    tmp_store.load_room = AUTO_RENT;
+
+    sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(ch->player.name));
+    if((fl = fopen(szFileName, "r+b")) == NULL)
+    {
+        if((fl = fopen(szFileName, "wb")) == NULL)
+        {
+            mudlog(LOG_ERROR, "Cannot create file %s for saving player.", szFileName);
+            return;
+        }
+    }
+
+    rewind(fl);
+    fwrite(&tmp_store, sizeof(struct char_file_u), 1, fl);
+    fclose(fl);
+
 }
 
 ACTION_FUNC(do_ghost) {
@@ -5820,7 +6146,8 @@ ACTION_FUNC(do_ghost) {
 		clear_char(tmp_ch);
 		store_to_char(&tmp_store, tmp_ch);
 		reset_char(tmp_ch);
-		load_char_objs(tmp_ch);
+		load_char_objs(tmp_ch, TRUE);
+		save_ghost_forcerent(tmp_ch);       // salvo il pg senza desc
 //send_to_char("stop5\n\r",ch);
 //return;
 		save_char(tmp_ch, AUTO_RENT, 0);
@@ -6419,4 +6746,3 @@ ACTION_FUNC(do_checktypos)
  }
  */
 } // namespace Alarmud
-

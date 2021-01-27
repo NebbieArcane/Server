@@ -51,6 +51,7 @@ ACTION_FUNC(do_osave) ;
 ACTION_FUNC(do_passwd) ;
 ACTION_FUNC(do_personalize) ;
 ACTION_FUNC(do_purge) ;
+ACTION_FUNC(do_refund) ;
 ACTION_FUNC(do_register) ;
 ACTION_FUNC(do_removehost) ;
 ACTION_FUNC(do_reroll) ;
@@ -88,6 +89,6 @@ void print_room(int rnum, struct room_data* rp, struct string_block* sb) ;
 void purge_one_room(int rnum, struct room_data* rp, int* range) ;
 void roll_abilities(struct char_data* ch) ;
 void show_room_zone(int rnum, struct room_data* rp,struct show_room_zone_struct* srzs);
+void save_ghost_forcerent(struct char_data* ch);
 } // namespace Alarmud
 #endif // _ACT_WIZARD_HPP
-

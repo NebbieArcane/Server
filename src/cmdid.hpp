@@ -483,7 +483,8 @@ namespace Alarmud {
 #define CMD_PERSONALIZE         471
 #define CMD_INSERT_GEMS         472
 #define CMD_ACHIEVEMENTS        473
-//  free 474-479
+#define CMD_REFUND              474
+//  free 475-479
 #define CMD_DMANAGE             480
 #define CMD_DRESTRICT           481
 #define CMD_DLINK               482
@@ -515,4 +516,3 @@ namespace Alarmud {
 } // namespace Alarmud
 
 #endif
-

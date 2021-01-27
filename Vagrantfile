@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "ubuntu/bionic64"
   config.vm.define  "nebbieserver"
   config.vm.hostname = "nebbieserver"
 
@@ -87,7 +87,7 @@ Vagrant.configure("2") do |config|
   	echo "Updating apt cache"
     sudo apt-get -qq  update
     echo "Installing dev tools"
-	apt-get -qq install git php7.0-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb libcurl4-openssl-dev
+	apt-get -qq install git php7.2-cli g++ apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb libcurl4-openssl-dev
 	apt-get -qq install libboost-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev liblog4cxx-dev
 	apt-get -qq install libboost-date-time-dev odb libodb-dev libodb-mysql-dev libodb-sqlite-dev libodb-boost-dev
   apt-get -qq  install librtmp-dev  libnghttp2-dev libkrb5-dev comerr-dev libpsl-dev
