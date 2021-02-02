@@ -4455,6 +4455,7 @@ ACTION_FUNC(do_immort) {
 #define REFUND_MORNING	16
 #define REFUND_NOON			32
 #define REFUND_EVENING	64
+#define BACKUP_DIR			"~/Run/release/backups/"
 
 // sintassi: refund nome_pg data(formato aaaammgg) orario(m/p/s) all/eq/pg/achie
 ACTION_FUNC(do_refund) {
@@ -4544,7 +4545,7 @@ ACTION_FUNC(do_refund) {
 	{
 		for(i = 0; i < 10; i++)
 		{
-			sprintf(FileName, "../backups/rent%s.%s%d.zip", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
+			sprintf(FileName, "%srent%s.%s%d.zip", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
 			if((fl = fopen(FileName, "r+")) == NULL)
 			{
 				continue;
@@ -4560,7 +4561,7 @@ ACTION_FUNC(do_refund) {
 		if(found > -1)
 		{
 			send_to_char("Ok. I files di rent sono stati copiati nella directory temporanea.\n\r", ch);
-			sprintf(tar_buf, "tar xzf ../backups/rent%s.%s%d.zip -C %s", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", found, GodDir);
+			sprintf(tar_buf, "tar xzf %srent%s.%s%d.zip -C %s", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", found, GodDir);
 			system(tar_buf);
 			mudlog(LOG_PLAYERS, "Rent's files generated on %s temp's directory.", GodDir);
 			found = -1;
@@ -4580,7 +4581,7 @@ ACTION_FUNC(do_refund) {
 	{
 		for(i = 0; i < 10; i++)
 		{
-			sprintf(FileName, "../backups/pg%s.%s%d.zip", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
+			sprintf(FileName, "%spg%s.%s%d.zip", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
 			if((fl = fopen(FileName, "r+")) == NULL)
 			{
 				continue;
@@ -4596,7 +4597,7 @@ ACTION_FUNC(do_refund) {
 		if(found > -1)
 		{
 			send_to_char("Ok. I files dei pg sono stati copiati nella directory temporanea.\n\r", ch);
-			sprintf(tar_buf, "tar xzf ../backups/pg%s.%s%d.zip -C %s", date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", found, GodDir);
+			sprintf(tar_buf, "tar xzf %spg%s.%s%d.zip -C %s", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", found, GodDir);
 			system(tar_buf);
 			mudlog(LOG_PLAYERS, "Players' files generated on %s temp's directory.", GodDir);
 		}

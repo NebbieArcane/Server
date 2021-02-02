@@ -2331,6 +2331,7 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         wait_ch = 2;
                         wait_party = 1;
+												return;
                     }
                 }
                     break;
@@ -2351,6 +2352,7 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         wait_ch = 2;
                         wait_party = 1;
+												return;
                     }
                 }
                     break;
@@ -2371,6 +2373,7 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         wait_ch = 2;
                         wait_party = 1;
+												return;
                     }
                 }
                     break;
@@ -2391,6 +2394,7 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         wait_ch = 2;
                         wait_party = 1;
+												return;
                     }
                 }
                     break;
@@ -2411,6 +2415,7 @@ ACTION_FUNC(do_use) {
                         act("\n\r$c0010$n$c0011 si avvicina alla punta rituale, ma subito dopo fa un passo indietro.\n\r", FALSE, ch, stick, NULL, TO_ROOM);
                         wait_ch = 2;
                         wait_party = 1;
+												return;
                     }
                 }
                     break;
