@@ -4546,7 +4546,7 @@ ACTION_FUNC(do_refund) {
 		for(i = 0; i < 10; i++)
 		{
 			sprintf(FileName, "%srent%s.%s%d.zip", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
-			if((fl = fopen(FileName, "r+")) == NULL)
+			if((fl = fopen(FileName, "r")) == NULL)
 			{
 				continue;
 			}
@@ -4582,7 +4582,7 @@ ACTION_FUNC(do_refund) {
 		for(i = 0; i < 10; i++)
 		{
 			sprintf(FileName, "%spg%s.%s%d.zip", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
-			if((fl = fopen(FileName, "r+")) == NULL)
+			if((fl = fopen(FileName, "r")) == NULL)
 			{
 				continue;
 			}
