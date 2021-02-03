@@ -4455,7 +4455,7 @@ ACTION_FUNC(do_immort) {
 #define REFUND_MORNING	16
 #define REFUND_NOON			32
 #define REFUND_EVENING	64
-#define BACKUP_DIR			"~/Run/release/backups/"
+#define BACKUP_DIR			"/home/nebbie/Run/release/backups/"
 
 // sintassi: refund nome_pg data(formato aaaammgg) orario(m/p/s) all/eq/pg/achie
 ACTION_FUNC(do_refund) {
