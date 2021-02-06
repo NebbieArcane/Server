@@ -4455,7 +4455,7 @@ ACTION_FUNC(do_immort) {
 #define REFUND_MORNING	16
 #define REFUND_NOON			32
 #define REFUND_EVENING	64
-#define BACKUP_DIR			"~/Run/release/backups/"
+#define BACKUP_DIR			"/home/nebbie/Run/release/backups/"
 
 // sintassi: refund nome_pg data(formato aaaammgg) orario(m/p/s) all/eq/pg/achie
 ACTION_FUNC(do_refund) {
@@ -4546,7 +4546,7 @@ ACTION_FUNC(do_refund) {
 		for(i = 0; i < 10; i++)
 		{
 			sprintf(FileName, "%srent%s.%s%d.zip", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
-			if((fl = fopen(FileName, "r+")) == NULL)
+			if((fl = fopen(FileName, "r")) == NULL)
 			{
 				continue;
 			}
@@ -4582,7 +4582,7 @@ ACTION_FUNC(do_refund) {
 		for(i = 0; i < 10; i++)
 		{
 			sprintf(FileName, "%spg%s.%s%d.zip", BACKUP_DIR, date, IS_SET(valore, REFUND_MORNING) ? "043" : IS_SET(valore, REFUND_NOON) ? "113" : "183", i);
-			if((fl = fopen(FileName, "r+")) == NULL)
+			if((fl = fopen(FileName, "r")) == NULL)
 			{
 				continue;
 			}
