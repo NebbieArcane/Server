@@ -68,7 +68,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch)) {
-                if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[victim->nr].specname)) {
+                if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[obj->char_vnum].specname)) {
                     send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
                     return;
                 }
