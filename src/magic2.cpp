@@ -117,6 +117,9 @@ void spell_resurrection(byte level, struct char_data* ch,
 				affect_to_char(victim, &af);
 
 				add_follower(victim, ch);
+				
+				act("$N inizia a seguirti.", FALSE, ch, NULL, victim, TO_CHAR);
+				act("$N inizia a seguire $n.", TRUE, ch, NULL, victim, TO_ROOM);
 			}
 
 			IS_CARRYING_W(victim) = 0;
