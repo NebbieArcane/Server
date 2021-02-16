@@ -59,30 +59,45 @@ void spell_resurrection(byte level, struct char_data* ch,
 
 	if(IS_CORPSE(obj)) {
 
-		if(obj->char_vnum) {
-            if(obj->char_vnum >= QUEST_ZONE && obj->char_vnum <= QUEST_ZONE+99) {
-                send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
-                return;
-            }
-
-			/* corpse is a npc */
-			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
-			if(!IS_IMMORTALE(ch)) {
-                if(!IS_SINGLE(ch) || isname2("BossKill",mob_index[obj->char_vnum].specname)) {
-                    send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
-                    return;
-                }
-			}
-			/* fine modifica */
-			if(GET_GOLD(ch) < 25000) {
-				send_to_char("Gli dei non sono soddisfatti del tuo sacrificio.\n\r",ch);
+		if(obj->char_vnum)
+		{
+			if(obj->char_vnum >= QUEST_ZONE && obj->char_vnum <= QUEST_ZONE+99)
+			{
+				send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
 				return;
-			}
-			else {
-				GET_GOLD(ch) -= 25000;
 			}
 
 			victim = read_mobile(obj->char_vnum, VIRTUAL);
+
+			/* corpse is a npc */
+			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
+			if(!IS_IMMORTALE(ch))
+			{
+				if(!IS_SINGLE(ch) || isname2("BossKill", mob_index[victim->nr].specname))
+				{
+					send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
+					if(victim)
+					{
+						extract_char(victim);
+					}
+					return;
+				}
+			}
+			/* fine modifica */
+			if(GET_GOLD(ch) < 25000)
+			{
+				send_to_char("Gli dei non sono soddisfatti del tuo sacrificio.\n\r",ch);
+				if(victim)
+				{
+					extract_char(victim);
+				}
+				return;
+			}
+			else
+			{
+				GET_GOLD(ch) -= 25000;
+			}
+
 			char_to_room(victim, ch->in_room);
 			GET_GOLD(victim)=0;
 			GET_EXP(victim)=0;
@@ -117,9 +132,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 				affect_to_char(victim, &af);
 
 				add_follower(victim, ch);
-				
-				act("$N inizia a seguirti.", FALSE, ch, NULL, victim, TO_CHAR);
-				act("$N inizia a seguire $n.", TRUE, ch, NULL, victim, TO_ROOM);
+
 			}
 
 			IS_CARRYING_W(victim) = 0;
