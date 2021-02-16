@@ -4503,7 +4503,7 @@ ACTION_FUNC(do_refund) {
 	}
 	else
 	{
-		send_to_char("Quale vuoi recuperare? Quello della $c0009m$c0007attina, del $c0009p$c0007omeriggio o della $c0009s$c0007?\n\r", ch);
+		send_to_char("Quale vuoi recuperare? Quello della $c0009m$c0007attina, del $c0009p$c0007omeriggio o della $c0009s$c0007era?\n\r", ch);
 		send_to_char("La sintassi corretta e':\n\rrefund nome_pg data(formato aaaammgg) orario($c0009m$c0007/$c0009p$c0007/$c0009s$c0007) all/eq/pg/achie$c0007\n\r", ch);
 		return;
 	}
