@@ -168,16 +168,17 @@ extern struct RandomMaterialsTable MaterialName[5][100];
 extern struct ObjAchieTable RewardObj[3][20];
 extern struct ObjBonusTable AchieBonus[MAX_CLASS][12];
 extern struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE];
+extern struct MercySystem QuestNumber[MAX_QUEST_ACHIE];
 extern struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
 
 extern const char* QuestKind[];
-    
+
 extern const char* NameGenStart[];
-    
+
 extern const char* NameGenMid[];
-    
+
 extern const char* NameGenEnd[];
-    
+
 extern const char* att_kick_kill_ch[];
 
 extern const char* att_kick_kill_victim[];
@@ -197,4 +198,3 @@ extern const char* att_kick_hit_victim[];
 extern const char* att_kick_hit_room[];
 } // namespace Alarmud
 #endif
-

@@ -2006,6 +2006,14 @@ void load_char_extra(struct char_data* ch) {
                     n = atoi(achie_n);
                     ch->specials.achievements[OTHER_ACHIE][n] = atoi(achie_v);
                 }
+				else if(!strcmp(p, "mercy"))
+				{
+					/* setup achievement racekill */
+					achie_n = (char*)strtok(s, "#");
+					achie_v = (char*)strtok(0, "\0");
+					n = atoi(achie_n);
+					ch->specials.mercy[n] = atoi(achie_v);
+				}
 				else if(!strcmp(p, "email")) {
 					/* setup email */
 					RECREATE(GET_EMAIL(ch),char,strlen(s));
@@ -2122,6 +2130,14 @@ void write_char_extra(struct char_data* ch) {
             if(ch->specials.achievements[OTHER_ACHIE][i] > 0)
                 fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achievements[OTHER_ACHIE][i]);
         }
+
+		for(i = 0; i < MAX_QUEST_ACHIE; i++)
+		{
+			if(ch->specials.mercy[i] > 0)
+			{
+				fprintf(fp, "mercy:%d#%d\n", i, ch->specials.mercy[i]);
+			}
+		}
     }
 
 	if(ch->specials.prompt) {

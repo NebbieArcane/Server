@@ -2659,7 +2659,7 @@ const char* extra_bits2[] = {
     "ONLY-PRINCE",
     "\n"
 };
-    
+
 const char* room_bits[] = {
 	"DARK",
 	"DEATH",
@@ -3821,7 +3821,7 @@ const char* spell_desc[] = {
                                             "\n"
 };
 
-    
+
 /* Requiem: queste fan parte del diku, le terrei in cantiere per un eventuale implementazione
  rispetto i gain, e renderli un po' piu' complicati richiedendo il completamento
  della quest oltre agli xp */
@@ -4066,7 +4066,7 @@ const char* QuestKind [] = {
     "\0"
 
 };
-    
+
 const char* NameGenStart [] = {
 "A",
 "Ab",
@@ -4255,7 +4255,7 @@ const char* NameGenEnd [] = {
 "\0"
 };
 
-    
+
 const char* att_kick_kill_ch[] = {
 	"Il tuo calcio sfonda il torace di $N causandone la morte immediata.",
 	"Il tuo calcio distrugge un braccio a $N e gli sfonda la cassa toracica.",
@@ -5419,6 +5419,14 @@ struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE] = {
 
     //  Nilmys
     {   9,   9007,   9020,   9021,   9047,   9015,   9014,   9018,   8916,   8923,      0   }
+};
+
+struct MercySystem QuestNumber[MAX_QUEST_ACHIE] = {
+	//  Xarah
+	{	11,	1,		31,	2,		46,	3,		51,	3,		56,	4,		61,		"Xarah"		},
+
+	//  Nilmys
+	{	11,	1,		31,	2,		46,	3,		51,	3,		56,	4,		61,		"Nilmys"	}
 };
 
 struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
@@ -7977,4 +7985,3 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
     }
 };
 } // namespace Alarmud
-

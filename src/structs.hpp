@@ -132,6 +132,22 @@ struct MobQuestAchie
     int mob_9;
 };
 
+struct MercySystem
+{
+	int mercy_min;
+	int increment_min;
+	int mercy_1;
+	int increment_1;
+	int mercy_2;
+	int increment_2;
+	int mercy_3;
+	int increment_3;
+	int mercy_4;
+	int increment_4;
+	int mercy_max;
+	const char* mercy_name;
+};
+
 struct XpAchieTable
 {
     int lev_1_xp;
@@ -667,9 +683,10 @@ struct char_special_data {
 	int attack_type;         /* The Attack Type Bitvector for NPC's */
 	int alignment;           /* +-1000 for alignments               */
 
-    /* ACHIEVEMENTS */
-    int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
-    int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
+	/* ACHIEVEMENTS */
+	int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+	int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
+	int mercy[MAX_QUEST_ACHIE];
 
 	char* poofin;
 	char* poofout;

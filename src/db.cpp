@@ -3809,6 +3809,7 @@ void reset_char(struct char_data* ch) {
     for( i = 0; i < MAX_QUEST_ACHIE; i++)
     {
         ch->specials.achievements[QUEST_ACHIE][i] = 0;
+		ch->specials.mercy[i] = 0;
     }
     for( i = 0; i < MAX_OTHER_ACHIE; i++)
     {
@@ -5038,5 +5039,3 @@ ACTION_FUNC(do_WorldSave) {
     }
 
 }
-
-

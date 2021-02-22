@@ -18,6 +18,7 @@ void mail_to_god(struct char_data* ch, const char* god, const char* message);
 
     // Achievements stuff
 char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
+bool CheckMercyTable(struct char_data* ch, int quest, int amount);
 int CheckMobQuest(int vnumber);
 void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level);
 void CheckQuestFail(struct char_data* ch);
@@ -200,4 +201,3 @@ T tonumber(std::string source,T fallback) {
 
 } // namespace Alarmud
 #endif
-
