@@ -1449,8 +1449,9 @@ void assign_command_pointers() {
   AddCommand( "personalize",          do_personalize,     CMD_PERSONALIZE,            POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
   AddCommand( "insert",               do_insert,          CMD_INSERT_GEMS,            POSITION_STANDING,  IMMORTALE               );
   AddCommand( "achievements",         do_achievements,    CMD_ACHIEVEMENTS,           POSITION_RESTING,   TUTTI                   );
-	AddCommand( "refund",								do_refund,					CMD_REFUND,									POSITION_DEAD,			MAESTRO_DEL_CREATO			);
-  /*          Liberi 475-479 (-488)*/
+	AddCommand( "refund",				do_refund,			CMD_REFUND,					POSITION_DEAD,		MAESTRO_DEL_CREATO		);
+	AddCommand( "mercy",				do_mercy,			CMD_MERCY,					POSITION_DEAD,		QUESTMASTER				);	/*	475	*/
+  /*          Liberi 476-479 (-488)*/
   //            DIMD stuff
   //AddCommand( "dmanage",              do_dmanage,         CMD_DMANAGE,                POSITION_RESTING,   MAESTRO_DEL_CREATO      );  /*  480 */
   //AddCommand( "drestrict",            do_drestrict,       CMD_DRESTRICT,              POSITION_RESTING,   DIO_MINORE              );

@@ -40,6 +40,7 @@ ACTION_FUNC(do_immort) ;
 ACTION_FUNC(do_imptest) ;
 ACTION_FUNC(do_invis) ;
 ACTION_FUNC(do_listhosts) ;
+ACTION_FUNC(do_mercy) ;
 ACTION_FUNC(do_mforce) ;
 ACTION_FUNC(do_mload) ;
 ACTION_FUNC(do_nohassle) ;
