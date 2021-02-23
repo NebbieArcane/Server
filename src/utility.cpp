@@ -4080,7 +4080,7 @@ bool CheckMercyTable(struct char_data* ch, int quest, int amount)
     }
     else
     {
-        mudlog(LOG_CHECK, "%s (%d achievements) ha gia' ottenuto %d premi%s per '%s' (mercy_max = %d).", GET_NAME(ch), amount, ch->specials.mercy[quest], QuestNumber[quest].mercy_name, QuestNumber[quest].mercy_max);
+        mudlog(LOG_CHECK, "%s (%d achievements) ha gia' ottenuto %d premi%s per '%s' (mercy_max = %d).", GET_NAME(ch), amount, ch->specials.mercy[quest], (ch->specials.mercy[quest] == 1 ? "o" : ""), QuestNumber[quest].mercy_name, QuestNumber[quest].mercy_max);
         return FALSE;
     }
 
