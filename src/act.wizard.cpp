@@ -765,6 +765,7 @@ ACTION_FUNC(do_mercy)
 {
 	char name[256], quest[256], amount[256], buf[MAX_STRING_LENGTH];
 	int valore = 0, numero_quest = -1, i;
+	std::string sb;
 	struct char_data* tch;
 
 	if(IS_NPC(ch))
@@ -776,84 +777,99 @@ ACTION_FUNC(do_mercy)
 	arg = one_argument(arg, quest);
 	only_argument(arg, amount);
 
-	if(!*name || !*quest || !*amount)
+	if(!*name && !*quest && !*amount)
 	{
-		send_to_char("La sintassi corretta e':\n\r$c0015mercy nome_pg numero_quest valore\n\r", ch);
+		send_to_char("La sintassi corretta e' '$c0015mercy nome_pg$c0007' se desideri conoscere i valori \n\roppure $c0015'mercy nome_pg numero_quest valore$c0007' se vuoi apportare delle modifiche.\n\r", ch);
 		return;
 	}
-	else
-	{
-		if(*name)
-		{
-			if(!(tch = get_char_vis_world(ch, name, NULL)))
-			{
-				send_to_char("Non c'e' nessuno con quel nome in gioco.\n\r", ch);
-				return;
-			}
-		}
 
-		if(!IS_PC(tch))
+	if(*name)
+	{
+		if(!(tch = get_char_vis_world(ch, name, NULL)))
 		{
-			send_to_char("Non puoi farlo sui mob!\n\r", ch);
+			send_to_char("Non c'e' nessuno con quel nome in gioco.\n\r", ch);
 			return;
 		}
+	}
 
+	if(!IS_PC(tch))
+	{
+		send_to_char("Non puoi farlo sui mob!\n\r", ch);
+		return;
+	}
+
+	if(IS_POLY(tch))
+	{
+		tch = tch->desc->original;
+	}
+
+	if(!*quest && !*amount)
+	{
+		sb.append("I valori di mercy per $c0009").append(GET_NAME(tch)).append(" $c0007sono:\n\r");
 		for(i = 0; i < MAX_QUEST_ACHIE; i++)
 		{
-			mudlog(LOG_CHECK, "la quest e' %s ed il mercy e' %s", quest, lower(QuestNumber[i].mercy_name));
-			if(!strcmp(quest, lower(QuestNumber[i].mercy_name)))
-			{
-				numero_quest = i;
-				break;
-			}
+			boost::format fmt("$c0009[$c0015%4d$c0009] $c0015%-25s %6d\n\r");
+			fmt % i % QuestNumber[i].mercy_name % tch->specials.mercy[numero_quest];
+			sb.append(fmt.str().c_str());
+			fmt.clear();
 		}
-
-		if(numero_quest == -1)
-		{
-			if(is_number(quest))
-			{
-				numero_quest = atoi(quest);
-			}
-		}
-
-		if(numero_quest < 0 || numero_quest >= MAX_QUEST_ACHIE)
-		{
-			std::string sb;
-
-			send_to_char("A quale quest vuoi modificare il valore?\n\r", ch);
-			for(i = 0; i < MAX_QUEST_ACHIE; i++)
-			{
-				boost::format fmt("$c0009[$c0015%4d$c0009] $c0015%s\n\r");
-				fmt % (i) % (QuestNumber[i].mercy_name);
-				sb.append(fmt.str().c_str());
-				fmt.clear();
-			}
-			page_string(ch->desc, sb.c_str(), true);
-			return;
-		}
-
-		if(IS_POLY(tch))
-		{
-			tch = tch->desc->original;
-		}
-
-		valore = atoi(amount);
-
-		if(valore < 0)
-		{
-			send_to_char("Il valore deve essere maggiore od uguale a zero.\n\r", ch);
-			return;
-		}
-
-		tch->specials.mercy[numero_quest] = valore;
-
-		do_save(tch, "", 0);
-		mudlog(LOG_PLAYERS, "%s set mercy amount for '%s' on %s to %d", GET_NAME(ch), QuestNumber[i].mercy_name, GET_NAME(tch), valore);
-		sprintf(buf, "Hai assegnato %d come valore di mercy per '%s' a $N.", valore, QuestNumber[i].mercy_name);
-		act(buf, FALSE, ch, NULL, tch, TO_CHAR);
-		sprintf(buf, "$n ti ha assegnato %d come valore di mercy per '%s'.", valore, QuestNumber[i].mercy_name);
-		act(buf, FALSE, ch, NULL, tch, TO_VICT);
+		page_string(ch->desc, sb.c_str(), true);
+		return;
 	}
+
+	if(!*quest || !*amount)
+	{
+		send_to_char("La sintassi corretta e' '$c0015mercy nome_pg$c0007' se desideri conoscere i valori \n\roppure $c0015'mercy nome_pg numero_quest valore$c0007' se vuoi apportare delle modifiche.\n\r", ch);
+		return;
+	}
+
+	for(i = 0; i < MAX_QUEST_ACHIE; i++)
+	{
+		if(!strcmp(quest, lower(QuestNumber[i].mercy_name)))
+		{
+			numero_quest = i;
+			break;
+		}
+	}
+
+	if(numero_quest == -1)
+	{
+		if(is_number(quest))
+		{
+			numero_quest = atoi(quest);
+		}
+	}
+
+	if(numero_quest < 0 || numero_quest >= MAX_QUEST_ACHIE)
+	{
+		send_to_char("A quale quest vuoi modificare il valore?\n\r", ch);
+		for(i = 0; i < MAX_QUEST_ACHIE; i++)
+		{
+			boost::format fmt("$c0009[$c0015%4d$c0009] $c0015%s\n\r");
+			fmt % i % QuestNumber[i].mercy_name;
+			sb.append(fmt.str().c_str());
+			fmt.clear();
+		}
+		page_string(ch->desc, sb.c_str(), true);
+		return;
+	}
+
+	valore = atoi(amount);
+
+	if(valore < 0)
+	{
+		send_to_char("Il valore deve essere maggiore od uguale a zero.\n\r", ch);
+		return;
+	}
+
+	tch->specials.mercy[numero_quest] = valore;
+
+	do_save(tch, "", 0);
+	mudlog(LOG_PLAYERS, "%s set mercy amount for '%s' on %s to %d", GET_NAME(ch), QuestNumber[i].mercy_name, GET_NAME(tch), valore);
+	sprintf(buf, "Hai assegnato %d come valore di mercy per '%s' a $N.", valore, QuestNumber[i].mercy_name);
+	act(buf, FALSE, ch, NULL, tch, TO_CHAR);
+	sprintf(buf, "$n ti ha assegnato %d come valore di mercy per '%s'.", valore, QuestNumber[i].mercy_name);
+	act(buf, FALSE, ch, NULL, tch, TO_VICT);
 }
 
 ACTION_FUNC(do_rload) {
