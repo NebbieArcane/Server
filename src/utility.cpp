@@ -4061,28 +4061,32 @@ bool CheckMercyTable(struct char_data* ch, int quest, int amount)
 
     if(val > ch->specials.mercy[quest])
     {
+        mudlog(LOG_CHECK, "%s ha effettuato %d achievements per %s ed ha preso solo %d premi%s ha quindi vinto il premio!", GET_NAME(ch), amount, QuestNumber[quest].mercy_name, ch->specials.mercy[quest], (ch->specials.mercy[quest] == 1 ? "o," : ","));
         ch->specials.mercy[quest] += 1;
-        mudlog(LOG_CHECK, "epic win!!!");
         return TRUE;
     }
 
-    mudlog(LOG_CHECK, "il valore di val sul check del mercy e' %d", val);
+    mudlog(LOG_CHECK, "Il rapporto tra numero di achievements ed i premi ottenibili da %s e' pari a %d. Ne ha ottenuti %d per ora.", GET_NAME(ch), val, ch->specials.mercy[quest]);
 
     if(val > 0)
     {
         num = amount - (QuestNumber[quest].mercy_max * val);
+        mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d.", GET_NAME(ch), num);
     }
-    else if(val == 0)
+    else if(val == 0 && ch->specials.mercy[quest] == 0)
     {
         num = amount;
+        mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d (non ha mai ottenuto il premio).", GET_NAME(ch), num);
     }
     else
     {
+        mudlog(LOG_CHECK, "%s (%d achievements) ha gia' ottenuto %d premi%s per '%s' (mercy_max = %d).", GET_NAME(ch), amount, ch->specials.mercy[quest], QuestNumber[quest].mercy_name, QuestNumber[quest].mercy_max);
         return FALSE;
     }
 
     if(num < QuestNumber[quest].mercy_min)
     {
+        mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d, ed e' inferiore al valore minimo che e' %d.", GET_NAME(ch), num, QuestNumber[quest].mercy_min);
         return FALSE;
     }
 
@@ -4094,36 +4098,35 @@ bool CheckMercyTable(struct char_data* ch, int quest, int amount)
     if(num >= QuestNumber[quest].mercy_min && num < QuestNumber[quest].mercy_1)
     {
         val = (num - QuestNumber[quest].mercy_min) * QuestNumber[quest].increment_min;
-        mudlog(LOG_CHECK, "num = %d il valore di val sul check del mercy e' %d (mercy min)", num, val);
     }
     else if(num >= QuestNumber[quest].mercy_1 && num < QuestNumber[quest].mercy_2)
     {
         val = ((num - QuestNumber[quest].mercy_1) * QuestNumber[quest].increment_1) + mercy[0];
-        mudlog(LOG_CHECK, "num = %d il valore di val sul check del mercy e' %d (mercy_1)", num, val);
     }
     if(num >= QuestNumber[quest].mercy_2 && num < QuestNumber[quest].mercy_3)
     {
         val = ((num - QuestNumber[quest].mercy_2) * QuestNumber[quest].increment_2) + mercy[0] + mercy[1];
-        mudlog(LOG_CHECK, "num = %d il valore di val sul check del mercy e' %d (mercy_2)", num, val);
     }
     if(num >= QuestNumber[quest].mercy_3 && num < QuestNumber[quest].mercy_4)
     {
         val = ((num - QuestNumber[quest].mercy_3) * QuestNumber[quest].increment_3) + mercy[0] + mercy[1] + mercy[2];
-        mudlog(LOG_CHECK, "num = %d il valore di val sul check del mercy e' %d (mercy_3)", num, val);
     }
     if(num >= QuestNumber[quest].mercy_4 && num < QuestNumber[quest].mercy_max)
     {
         val = ((num - QuestNumber[quest].mercy_4) * QuestNumber[quest].increment_4) + mercy[0] + mercy[1] + mercy[2] + mercy[3];
-        mudlog(LOG_CHECK, "num = %d il valore di val sul check del mercy e' %d (mercy_4)", num, val);
     }
+    mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d, ha quindi una probabilita' pari a %d/100.", GET_NAME(ch), num, val);
+
+    mudlog(LOG_CHECK, "Il valore di check per %s e' di %d quindi...", GET_NAME(ch), check);
 
     if(val > check)
     {
-        mudlog(LOG_CHECK, "il valore di val (%d) e' maggiore di check (%d)", val, check);
+        mudlog(LOG_CHECK, "%s vince il premio!", GET_NAME(ch));
         ch->specials.mercy[quest] += 1;
         return TRUE;
     }
 
+    mudlog(LOG_CHECK, "%s non vince un tubo!", GET_NAME(ch));
     return FALSE;
 }
 
