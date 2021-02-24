@@ -7323,7 +7323,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
             "", /* lvl8 */                                          0, //   lvl8_val
             "", /* lvl9 */                                          0, //   lvl9_val
             "", /* lvl10 */                                         0, //   lvl10_val
-            -1,                                                     LEV_BEGINNER,                               3
+			0,														LEV_BEGINNER,                               3
         },
         {   //  50
             RACE_GIANT_HILL,                                        "",                                         "",

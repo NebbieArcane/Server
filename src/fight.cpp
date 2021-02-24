@@ -2569,7 +2569,8 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                             // ch->desc->original->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                         }
 
-                        if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                        //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+						if(GET_RACE(victim) <= GROUP_HUMANOID)
                         {
                             ch->desc->original->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                         }
@@ -2590,7 +2591,8 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                             // ch->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                         }
 
-                        if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                        //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+						if(GET_RACE(victim) <= GROUP_HUMANOID)
                         {
                             ch->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                         }
@@ -2760,7 +2762,8 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                         // ch->desc->original->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                     }
 
-                    if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+					if(GET_RACE(victim) <= GROUP_HUMANOID)
                     {
                         ch->desc->original->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                     }
@@ -2771,8 +2774,6 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 }
                 else
                 {
-					sprintf(buf, "la razza e' %s\n\r", RaceName[GET_RACE(victim)]);
-					send_to_char(buf, ch);
                     if(GET_RACE(victim) == RACE_HUMAN)
                     {
                         ch->specials.achievements[RACESLAYER_ACHIE][RACE_HUMAN] += 1;
@@ -2783,10 +2784,9 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                         // ch->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                     }
 
-                    if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+					if(GET_RACE(victim) <= GROUP_HUMANOID)
                     {
-						sprintf(buf, "la razza e' %s\n\r", RaceName[GET_RACE(victim)]);
-						send_to_char(buf, ch);
                         ch->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                     }
                     if(!IS_SET(ch->specials.act,PLR_ACHIE))

@@ -1682,11 +1682,11 @@ int race_achievement(int race)
             break;
 
         case RACE_DEVIL:
-            race = RACE_DEVIL;
+            razza = RACE_DEVIL;
             break;
 
         case RACE_DEMON:
-            race = RACE_DEMON;
+            razza = RACE_DEMON;
             break;
 
         case RACE_GOD:
@@ -4343,7 +4343,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         save_obj(ch, &cost, 0);
     }
 
-    if(valore <= 0)
+    if(valore <= 0 && IS_SET(ch->player.user_flags,ACHIE_MODE))
     {
         sb.append(AchievementNumber(ch, achievement_type, achievement_class));
         page_string(ch->desc, sb.c_str(), true);

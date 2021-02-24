@@ -333,6 +333,7 @@ user flags*/
 	constexpr unsigned long CAN_OBJ_EDIT                                 =4096; /*this user can use oedit to edit objects*/
 	constexpr unsigned long CAN_MOB_EDIT                                 =8192; /*this user can use medit to edit mobs*/
 	constexpr unsigned long PWP_MODE                                     =16384; /*show the exact amount of damage for each attack*/
+	constexpr unsigned long ACHIE_MODE                                   =32768; /*show the amount of each increased achievement*/
 
 //Template for enum to unsigned byte
 
