@@ -3192,15 +3192,16 @@ ACTION_FUNC(do_set_flags) {
 
 	if(!*type) {
 		send_to_char("Actually supported:\n\r"
+					 "Achie	\n\r"
 					 "Ansi       \n\r"
 					 "Autoexits \n\r"
 					 "Color     \n\r"
 					 "Display      \n\r"
 					 "Email\n\r"
-					 "Realname \n\r"
 					 "Pkill \n\r"
-					 "Who \n\r"
 					 "Pwp \n\r"
+					 "Realname \n\r"
+					 "Who \n\r"
 					 ,ch);
 		return;
 	}
@@ -3215,6 +3216,34 @@ ACTION_FUNC(do_set_flags) {
                      "inferti personalmente, e gli altri non "
                      "ne visualizzeranno il valore esatto.\n\r", ch);
 		return;
+	}
+
+	if(!strcmp("achie",type) && (!*field)) {
+		send_to_char("Usa 'set achie on/off'\n\r"
+					 "Questo comando ti permette di vedere "
+					 "il valore parziale ed il numero dell'"
+					 "achievement che hai appena "
+					 "incrementato.\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(type,"achie")) {
+		if(!strcmp("on",field) || !strcmp("enable",field)) {
+			SET_BIT(ch->player.user_flags, ACHIE_MODE);
+			send_to_char("Adesso ti verra' mostrato l'achievement che hai appena incrementato.\n\r",ch);
+			return;
+		}
+		else if(!strcmp("off",field) || !strcmp("disable",field)) {
+			if(IS_SET(ch->player.user_flags, ACHIE_MODE)) {
+				REMOVE_BIT(ch->player.user_flags, ACHIE_MODE);
+			}
+			send_to_char("Adesso non ti verra' mostrato l'achievement che hai appena incrementato.\n\r",ch);
+			return;
+		}
+		else {
+			send_to_char("Uso: set achie on(enable)/off(disable) \n\r",ch);
+			return;
+		}
 	}
 
 	if(!strcmp(type,"pwp")) {

@@ -32,6 +32,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
 int race_achievement(int race);
 void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random);
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class);
+struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
 
 FILE* MakeZoneFile(struct char_data* c, int zone);
 bool CheckPrac(int classe, int id, int liv);

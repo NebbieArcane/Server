@@ -3431,6 +3431,10 @@
 			"PWP_MODE": {
 				"value": 16384,
 				"comment": "show the exact amount of damage for each attack"
+			},
+			"ACHIE_MODE": {
+				"value": 32768,
+				"comment": "show the amount of each increased achievement"
 			}
 		},
 		"e_sys_flags": {

@@ -2818,6 +2818,7 @@ const char* special_user_flags[] = {
 	"OBJECT-EDITOR-OK",
 	"MOBILE-EDITOR-OK",
     "PWP_MODE",
+	"ACHIE_SHOW",
 	"\n"
 };
 

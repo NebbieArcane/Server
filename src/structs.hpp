@@ -162,6 +162,13 @@ struct XpAchieTable
     int lev_10_xp;
 };
 
+struct LivelloAchie
+{
+  std::string stringa;
+  int livello;
+  int valore;
+};
+
 #define MIN_GLOB_TRACK_LEV 31   /* mininum level for global track */
 /*
 **  Site locking stuff.. written by Scot Gardner

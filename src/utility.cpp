@@ -37,6 +37,7 @@
 #include "interpreter.hpp"
 #include "magic2.hpp"
 #include "mobact.hpp"
+#include "modify.hpp"
 #include "opinion.hpp"
 #include "reception.hpp"
 #include "skills.hpp"
@@ -891,6 +892,296 @@ bool hasAchievement(struct char_data* ch, int achievement_class, int display)
             break;
     }
     return FALSE;
+}
+
+std::string AchievementNumber(struct char_data* ch, int achievement_type, int achievement_class)
+{
+    int num = 0, i;
+    struct char_data* tch;
+    std::string sb;
+    LivelloAchie stringa;
+
+    tch = ch;
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    // Race Achievements
+    for(i = 0; i < MAX_RACE_ACHIE; i++)
+    {
+        if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == RACESLAYER_ACHIE && achievement_type == AchievementsList[RACESLAYER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == RACESLAYER_ACHIE && achievement_type == AchievementsList[RACESLAYER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Boss Achievements
+    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+    {
+        if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == BOSSKILL_ACHIE && achievement_type == AchievementsList[BOSSKILL_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == BOSSKILL_ACHIE && achievement_type == AchievementsList[BOSSKILL_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Class Skill Achievements
+    for(i = 1; i < MAX_CLASS_ACHIE; i++)
+    {
+        if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+        {
+            num += 1;
+            if(achievement_class == CLASS_ACHIE && achievement_type == AchievementsList[CLASS_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Quest Achievements
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == QUEST_ACHIE && achievement_type == AchievementsList[QUEST_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;;
+            }
+            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[QUEST_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == QUEST_ACHIE && achievement_type == AchievementsList[QUEST_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Various Achievements
+    for(i = 0; i < MAX_OTHER_ACHIE; i++)
+    {
+        if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == OTHER_ACHIE && achievement_type == AchievementsList[OTHER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[OTHER_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == OTHER_ACHIE && achievement_type == AchievementsList[OTHER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+        }
+    }
+    return sb;
+}
+
+LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class)
+{
+    std::string sb;
+    int val = 0, livello = 0;
+
+    if(valore < AchievementsList[achievement_class][achievement_type].lvl1_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl1);
+        val = AchievementsList[achievement_class][achievement_type].lvl1_val;
+        livello = 0;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl2_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl2);
+        val = AchievementsList[achievement_class][achievement_type].lvl2_val;
+        livello = 1;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl3_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl3);
+        val = AchievementsList[achievement_class][achievement_type].lvl3_val;
+        livello = 2;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl4_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl4);
+        val = AchievementsList[achievement_class][achievement_type].lvl4_val;
+        livello = 3;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl5_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl5);
+        val = AchievementsList[achievement_class][achievement_type].lvl5_val;
+        livello = 4;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl6_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl6);
+        val = AchievementsList[achievement_class][achievement_type].lvl6_val;
+        livello = 5;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl7_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl7);
+        val = AchievementsList[achievement_class][achievement_type].lvl7_val;
+        livello = 6;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl8_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl8);
+        val = AchievementsList[achievement_class][achievement_type].lvl8_val;
+        livello = 7;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl9_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl9);
+        val = AchievementsList[achievement_class][achievement_type].lvl9_val;
+        livello = 8;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl10_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl10);
+        val = AchievementsList[achievement_class][achievement_type].lvl10_val;
+        livello = 9;
+    }
+    else
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl10);
+        val = AchievementsList[achievement_class][achievement_type].lvl10_val;
+        livello = 9;
+    }
+
+    LivelloAchie stringa =
+    {
+        sb, livello, val
+    };
+
+    return stringa;
 }
 
 std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check)
@@ -3842,6 +4133,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
     struct char_data* tch;
     extern void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete);
     struct obj_cost cost;
+    std::string sb;
 
     tch = ch;
 
@@ -4046,9 +4338,15 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
     if(quest)
     {
         RewardQAchie(ch, AchievementsList[achievement_class][achievement_type].achie_number);
-        sprintf(buf,"$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
+        sprintf(buf, "$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
         act(buf, FALSE, ch, 0, 0, TO_CHAR);
         save_obj(ch, &cost, 0);
+    }
+
+    if(valore <= 0)
+    {
+        sb.append(AchievementNumber(ch, achievement_type, achievement_class));
+        page_string(ch->desc, sb.c_str(), true);
     }
 }
 
