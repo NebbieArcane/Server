@@ -1703,8 +1703,65 @@ int race_achievement(int race)
 
 void RewardQAchie(struct char_data* ch, int quest_number)
 {
-    // per i reward delle quest fisse
-    send_to_char("Bravo bravo bravo, hai vinto!\n\r", ch);
+    int vnumber;
+    struct obj_data* obj;
+    char buf[256], buf2[256];
+
+    const char* rand_desc[] = {
+        "un buono per ricevere un premio di %s",
+        "un piccolo biglietto con una $c5009%s$c0007",
+        "la fortuna ti ha baciato ed a %s hai raccattato",
+        "$c0011uno %sstale d'oro$c0007",
+        "il biglietto della lotteria di %s",
+        "un buono per %s gentilmente offerto da LadyOfPain",
+        "un buono per un NukeFouler o per un premio di %s",
+        "$c0009un buono marchiato dal simbolo di %s$c0007",
+        "$c0014il premio per aver nerdato a%s$c0007"
+    };
+
+    vnumber = real_object(QUEST_REWARD);
+    obj = read_object(vnumber, REAL);
+
+    if(obj->short_description)
+    {
+        free(obj->short_description);
+        sprintf(buf, "%s", rand_desc[number(0, 8)]);
+        sprintf(buf2, buf, QuestNumber[quest_number].mercy_name);
+        obj->short_description = (char*)strdup(buf2);
+    }
+
+    if(obj->description)
+    {
+        free(obj->description);
+        obj->description = (char*)strdup("$c0014Un biglietto di inestimabile valore fluttua qui di fronte a te.$c0007");
+    }
+
+    if(obj->name)
+    {
+        free(obj->name);
+        sprintf(buf, "biglietto buono premio %s", QuestNumber[quest_number].mercy_name);
+        obj->name = (char*)strdup(buf);
+    }
+
+    if(!IS_OBJ_STAT(obj, ITEM_IMMUNE))
+    {
+        SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
+    }
+
+    if(IS_OBJ_STAT2(obj, ITEM2_NO_PRINCE))
+    {
+        REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_NO_PRINCE);
+    }
+
+    SetPersonOnSave(ch, obj);
+    obj_to_char(obj, ch);
+
+    send_to_char("\n\rUn mistico portale appare all'improvviso!\n\r\n\r", ch);
+    act("\n\rUn mistico portale appare all'improvviso!\n\r", FALSE, ch, 0, ch, TO_ROOM);
+    act("Improvvisamente un paio di braccia sbucano fuori dal portale...\n\rLa mano destra ha in mano una frusta mentre la sinistra ti porge $p.\n\r", FALSE, ch, obj, 0, TO_CHAR);
+    act("Improvvisamente un paio di braccia sbucano fuori dal portale...\n\rLa mano destra ha in mano una frusta mentre la sinistra porge $p a $N.\n\r", FALSE, ch, obj, ch, TO_ROOM);
+    send_to_char("Senti un boato ed il portale, braccia comprese, spariscono in un PUFF!\n\r\n\r", ch);
+    act("Senti un boato ed il portale, braccia comprese, spariscono in un PUFF!\n\r", FALSE, ch, 0, ch, TO_ROOM);
 }
 
 void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level)
@@ -4338,12 +4395,12 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
     if(quest)
     {
         RewardQAchie(ch, AchievementsList[achievement_class][achievement_type].achie_number);
-        sprintf(buf, "$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
+        sprintf(buf, "$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.\n\r", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
         act(buf, FALSE, ch, 0, 0, TO_CHAR);
         save_obj(ch, &cost, 0);
     }
 
-    if(valore <= 0 && IS_SET(ch->player.user_flags,ACHIE_MODE))
+    if(valore <= 0 && IS_SET(ch->player.user_flags, ACHIE_MODE))
     {
         sb.append(AchievementNumber(ch, achievement_type, achievement_class));
         page_string(ch->desc, sb.c_str(), true);
@@ -4364,7 +4421,7 @@ bool CheckMercyTable(struct char_data* ch, int quest, int amount)
         return TRUE;
     }
 
-    mudlog(LOG_CHECK, "Il rapporto tra numero di achievements ed i premi ottenibili da %s e' pari a %d. Ne ha ottenuti %d per ora.", GET_NAME(ch), val, ch->specials.mercy[quest]);
+    mudlog(LOG_CHECK, "Il rapporto tra numero di achievements ed i premi ottenibili da %s e' pari a %d. Ne ha ottenuti %d per ora (%s).", GET_NAME(ch), val, ch->specials.mercy[quest], QuestNumber[quest].mercy_name);
 
     if(val > 0)
     {
