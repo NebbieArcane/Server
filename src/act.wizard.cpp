@@ -809,7 +809,7 @@ ACTION_FUNC(do_mercy)
 		for(i = 0; i < MAX_QUEST_ACHIE; i++)
 		{
 			boost::format fmt("$c0009[$c0015%4d$c0009] $c0015%-25s %6d\n\r");
-			fmt % i % QuestNumber[i].mercy_name % tch->specials.mercy[numero_quest];
+			fmt % i % QuestNumber[i].mercy_name % tch->specials.mercy[i];
 			sb.append(fmt.str().c_str());
 			fmt.clear();
 		}
@@ -865,10 +865,10 @@ ACTION_FUNC(do_mercy)
 	tch->specials.mercy[numero_quest] = valore;
 
 	do_save(tch, "", 0);
-	mudlog(LOG_PLAYERS, "%s set mercy amount for '%s' on %s to %d", GET_NAME(ch), QuestNumber[i].mercy_name, GET_NAME(tch), valore);
-	sprintf(buf, "Hai assegnato %d come valore di mercy per '%s' a $N.", valore, QuestNumber[i].mercy_name);
+	mudlog(LOG_PLAYERS, "%s set mercy amount for '%s' on %s to %d", GET_NAME(ch), QuestNumber[numero_quest].mercy_name, GET_NAME(tch), valore);
+	sprintf(buf, "Hai assegnato %d come valore di mercy per '%s' a $N.", valore, QuestNumber[numero_quest].mercy_name);
 	act(buf, FALSE, ch, NULL, tch, TO_CHAR);
-	sprintf(buf, "$n ti ha assegnato %d come valore di mercy per '%s'.", valore, QuestNumber[i].mercy_name);
+	sprintf(buf, "$n ti ha assegnato %d come valore di mercy per '%s'.", valore, QuestNumber[numero_quest].mercy_name);
 	act(buf, FALSE, ch, NULL, tch, TO_VICT);
 }
 
