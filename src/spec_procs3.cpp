@@ -5000,7 +5000,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                     }
                     else if(percent > 70 && percent <= 85)
                     {
-                        r_num = real_object(19692);
+                        r_num = real_object(19690);
                     }
                     else if(percent > 85 && percent <= 100)
                     {
