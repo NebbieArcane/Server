@@ -5414,7 +5414,7 @@ struct ObjBonusTable AchieBonus[MAX_CLASS][12] = {
     }
 };
 
-struct QuestRewardsTable QuestNebbie [MAX_QUEST_ACHIE] [] = {
+struct QuestRewardsTable QuestNebbie [MAX_QUEST_ACHIE] [100] = {
 	//	Xarah
 	{
 		{	19755	},
