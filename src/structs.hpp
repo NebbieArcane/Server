@@ -148,6 +148,11 @@ struct MercySystem
 	const char* mercy_name;
 };
 
+struct QuestRewardsTable
+{
+	int quest_item;
+};
+
 struct XpAchieTable
 {
     int lev_1_xp;
