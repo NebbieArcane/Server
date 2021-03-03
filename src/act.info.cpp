@@ -5087,7 +5087,7 @@ ACTION_FUNC(do_where) {
 	if(!strcmp(tipo, "obj") && IS_DIO(ch))
 	{
 		only_argument(copia, name);
-		mudlog(LOG_PLAYERS, "cerco %s", name);
+		mudlog(LOG_PLAYERS, "Looking for '%s' in game and on rented toon", name);
 		owhere(ch, name);
 		return;
 	}
