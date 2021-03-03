@@ -1711,7 +1711,7 @@ void RewardQAchie(struct char_data* ch, int quest_number)
         "un buono per ricevere un premio di %s",
         "un piccolo biglietto con una $c5009%s$c0007",
         "la fortuna ti ha baciato ed a %s hai raccattato",
-        "$c0011uno %sstale d'oro$c0007",
+        "$c0011un bel %sstale d'oro$c0007",
         "il biglietto della lotteria di %s",
         "un buono per %s gentilmente offerto da LadyOfPain",
         "un buono per un NukeFouler o per un premio di %s",
