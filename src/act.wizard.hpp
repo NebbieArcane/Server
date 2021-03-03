@@ -90,6 +90,12 @@ void print_room(int rnum, struct room_data* rp, struct string_block* sb) ;
 void purge_one_room(int rnum, struct room_data* rp, int* range) ;
 void roll_abilities(struct char_data* ch) ;
 void show_room_zone(int rnum, struct room_data* rp,struct show_room_zone_struct* srzs);
+struct stringa_valore
+{
+    string sb;
+    int conteggio;
+};
+stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count);
 void save_ghost_forcerent(struct char_data* ch);
 } // namespace Alarmud
 #endif // _ACT_WIZARD_HPP

@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <dirent.h>
 #include <unistd.h>
 #include <ctime>
 #include <boost/algorithm/string.hpp>
@@ -6825,6 +6826,149 @@ ACTION_FUNC(do_checktypos)
         return;
     }
 }
+
+stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
+{
+	struct obj_file_u st;
+	struct old_obj_file_u old_st;
+//	struct obj_file_u_old st_old;	future implementazioni
+	struct char_file_u ch_st;
+	struct char_data* vict;
+	FILE* pObjFile;
+	DIR* dir;
+	struct stringa_valore sb_count;
+	int vnum;
+	struct obj_data* oggetto;
+
+	sb_count.conteggio = count;
+
+	if((dir = opendir(PLAYERS_DIR)) != NULL)
+	{
+		struct dirent* ent;
+		while((ent = readdir(dir)) != NULL)
+		{
+			FILE* pCharFile;
+			char szFileName[ 300];
+
+			if(*ent->d_name == '.')
+			{
+				continue;
+			}
+			if(!strstr(ent->d_name,".dat"))
+			{
+				continue;
+			}
+
+			snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
+
+			if((pCharFile = fopen(szFileName, "r")) != NULL)
+			{
+				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
+				{
+					snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
+					if(!(vict = get_char(ch_st.name)))
+					{
+						if((pObjFile = fopen(szFileName, "rb")) != NULL)
+						{
+							if(!IS_SET(ch_st.act,PLR_NEW_EQ))
+							{
+								int i;
+								// carico i dati dei pg formato vecchio
+								fread(old_st.owner, sizeof(old_st.owner), 1, pObjFile);
+								fread(&old_st.gold_left, sizeof(old_st.gold_left), 1, pObjFile);
+								fread(&old_st.total_cost, sizeof(old_st.total_cost), 1, pObjFile);
+								fread(&old_st.last_update, sizeof(old_st.last_update), 1, pObjFile);
+								fread(&old_st.minimum_stay, sizeof(old_st.minimum_stay), 1, pObjFile);
+								fread(&old_st.number, sizeof(old_st.number), 1, pObjFile);
+								for(i=0; i<old_st.number; i++)
+								{
+									fread(&old_st.objects[i], sizeof(struct old_obj_file_elem), 1, pObjFile);
+								}
+								// effettuo la ricerca dell'oggetto
+								for(i = 0; i < old_st.number; i++)
+								{
+									if(old_st.objects[i].item_number == vnumber)
+									{
+										vnum = real_object(vnumber);
+										oggetto = read_object(vnum, REAL);
+										boost::format fmt("[%3d] %-50s- rentato da %s\n\r");
+										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
+										sb_count.sb.append(fmt.str().c_str());
+										fmt.clear();
+										extract_obj(oggetto);
+									}
+								}
+							}
+							/* future implementazioni
+							else if(!IS_SET(ch_st.act, PLR_EQ_HP))
+							{
+								int i;
+								// carico i dati dei pg formato vecchio
+								fread(st_old.owner, sizeof(st_old.owner), 1, pObjFile);
+								fread(&st_old.gold_left, sizeof(st_old.gold_left), 1, pObjFile);
+								fread(&st_old.total_cost, sizeof(st_old.total_cost), 1, pObjFile);
+								fread(&st_old.last_update, sizeof(st_old.last_update), 1, pObjFile);
+								fread(&st_old.minimum_stay, sizeof(st_old.minimum_stay), 1, pObjFile);
+								fread(&st_old.number, sizeof(st_old.number), 1, pObjFile);
+								for(i = 0; i < st_old.number; i++)
+								{
+									fread(&st_old.objects[i], sizeof(struct obj_file_elem_old), 1, pObjFile);
+								}
+								// effettuo la ricerca dell'oggetto
+								for(i = 0; i < st_old.number; i++)
+								{
+									if(st_old.objects[i].item_number == vnumber)
+									{
+										vnum = real_object(vnumber);
+										oggetto = read_object(vnum, REAL);
+										boost::format fmt("[%3d] %-50s- rentato da %s\n\r");
+										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
+										sb_count.sb.append(fmt.str().c_str());
+										fmt.clear();
+										extract_obj(oggetto);
+									}
+								}
+							} fino a qui */
+							else
+							{
+								int i;
+								// carico i dati dei pg
+								fread(st.owner, sizeof(st.owner), 1, pObjFile);
+								fread(&st.gold_left, sizeof(st.gold_left), 1, pObjFile);
+								fread(&st.total_cost, sizeof(st.total_cost), 1, pObjFile);
+								fread(&st.last_update, sizeof(st.last_update), 1, pObjFile);
+								fread(&st.minimum_stay, sizeof(st.minimum_stay), 1, pObjFile);
+								fread(&st.number, sizeof(st.number), 1, pObjFile);
+								for(i = 0; i < st.number; i++)
+								{
+									fread(&st.objects[i], sizeof(struct obj_file_elem), 1, pObjFile);
+								}
+								// effettuo la ricerca dell'oggetto
+								for(i = 0; i < st.number; i++)
+								{
+									if(st.objects[i].item_number == vnumber)
+									{
+										vnum = real_object(vnumber);
+										oggetto = read_object(vnum, REAL);
+										boost::format fmt("[%3d] %-50s- rentato da %s\n\r");
+										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
+										sb_count.sb.append(fmt.str().c_str());
+										fmt.clear();
+										extract_obj(oggetto);
+									}
+								}
+							}
+						}
+						fclose(pObjFile);
+					}
+				}
+			}
+			fclose(pCharFile);
+		}
+	}
+	return sb_count;
+}
+
 
 //FLYP 2004 Perdono
 /*void do_perdono(struct char_data *ch, char *arg, int cmd)
