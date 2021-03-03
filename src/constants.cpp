@@ -2588,6 +2588,40 @@ const char* item_types[] = {
 	"\n"
 };
 
+const char* item_types_ita[] = {
+	"Nessuno",
+	"Luce",
+	"Pergamena",
+	"Bacchetta",
+	"Bastone",
+	"Arma",
+	"Arma da Tiro",
+	"Proiettile",
+	"Tesoro",
+	"Armatura",
+	"Pozione",
+	"Logoro",
+	"Altro",
+	"Spazzatura",
+	"Trappola",
+	"Contenitore",
+	"Appunto",
+	"Contenitore per Bevande",
+	"Chiave",
+	"Cibo",
+	"Monete",
+	"Penna",
+	"Nave",
+	"Audio",
+	"Bacheca",
+	"Albero",
+	"Roccia",
+	"Gemma",
+	"Minerale",
+	"Lingotto",
+	"\n"
+};
+
 const char* wear_bits[] = {
 	"TAKE",
 	"FINGER",

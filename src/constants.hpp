@@ -79,6 +79,8 @@ extern const char* RaceName[];
 
 extern const char* item_types[];
 
+extern const char* item_types_ita[];
+
 extern const char* wear_bits[];
 
 extern const char* extra_bits[];
