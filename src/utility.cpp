@@ -1730,12 +1730,6 @@ void RewardQAchie(struct char_data* ch, int quest_number)
         obj->short_description = (char*)strdup(buf2);
     }
 
-    if(obj->description)
-    {
-        free(obj->description);
-        obj->description = (char*)strdup("$c0014Un biglietto di inestimabile valore fluttua qui di fronte a te.$c0007");
-    }
-
     if(obj->name)
     {
         free(obj->name);
@@ -1746,11 +1740,6 @@ void RewardQAchie(struct char_data* ch, int quest_number)
     if(!IS_OBJ_STAT(obj, ITEM_IMMUNE))
     {
         SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
-    }
-
-    if(IS_OBJ_STAT2(obj, ITEM2_NO_PRINCE))
-    {
-        REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_NO_PRINCE);
     }
 
     SetPersonOnSave(ch, obj);

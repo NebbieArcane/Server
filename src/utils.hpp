@@ -20,7 +20,7 @@ namespace Alarmud {
 #define POT_REWARD          1370
 #define GOLD_REWARD         1372
 #define OBJ_REWARD          1373
-#define QUEST_REWARD        1379
+#define QUEST_REWARD        1397
 #define STAT_RANDOM         100
 #define ELEM_RESI_RANDOM    101
 #define OBJ_TELEPATHY       102
