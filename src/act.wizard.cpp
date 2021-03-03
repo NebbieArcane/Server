@@ -6868,7 +6868,7 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 					snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
 					if(!(vict = get_char(ch_st.name)))
 					{
-						if((pObjFile = fopen(szFileName, "rb")) != NULL)
+						if((pObjFile = fopen(szFileName, "r+b")) != NULL)
 						{
 							if(!IS_SET(ch_st.act,PLR_NEW_EQ))
 							{
@@ -6958,12 +6958,12 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 									}
 								}
 							}
+							fclose(pObjFile);
 						}
-						fclose(pObjFile);
 					}
 				}
+				fclose(pCharFile);
 			}
-			fclose(pCharFile);
 		}
 	}
 	return sb_count;
