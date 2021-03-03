@@ -15,9 +15,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctime>
+#include <sys/stat.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
-
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -6833,7 +6833,6 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 	struct old_obj_file_u old_st;
 //	struct obj_file_u_old st_old;	future implementazioni
 	struct char_file_u ch_st;
-	struct char_data* vict;
 	FILE* pObjFile;
 	DIR* dir;
 	struct stringa_valore sb_count;
@@ -6866,9 +6865,11 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
 				{
 					snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
-					if(!(vict = get_char(ch_st.name)))
+					if((pObjFile = fopen(szFileName, "r+b")) != NULL)
 					{
-						if((pObjFile = fopen(szFileName, "r+b")) != NULL)
+						struct stat rentfile;
+						stat(szFileName, &rentfile);
+						if(rentfile.st_size > 0)
 						{
 							if(!IS_SET(ch_st.act,PLR_NEW_EQ))
 							{
@@ -6958,8 +6959,8 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 									}
 								}
 							}
-							fclose(pObjFile);
 						}
+						fclose(pObjFile);
 					}
 				}
 				fclose(pCharFile);

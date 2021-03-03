@@ -4994,22 +4994,25 @@ void owhere(struct char_data* ch, char* nome)
 
 	init_string_block(&sb);
 
-	for(k = object_list; k; k = k->next)
+	if(!is_number(name))
 	{
-		if(isname(name, k->name) && CAN_SEE_OBJ(ch, k))
+		for(k = object_list; k; k = k->next)
 		{
-			if(number==0 || (--count)==0)
+			if(isname(name, k->name) && CAN_SEE_OBJ(ch, k))
 			{
-				if(number==0)
+				if(number==0 || (--count)==0)
 				{
-					snprintf(buf, MAX_STRING_LENGTH-1,"[%3d] ", ++count);
-					append_to_string_block(&sb, buf);
-				}
-				do_where_object(ch, k, number!=0, &sb);
-				*buf = 1;
-				if(number!=0)
-				{
-					break;
+					if(number==0)
+					{
+						snprintf(buf, MAX_STRING_LENGTH-1,"[%3d] ", ++count);
+						append_to_string_block(&sb, buf);
+					}
+					do_where_object(ch, k, number!=0, &sb);
+					*buf = 1;
+					if(number!=0)
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -5044,7 +5047,7 @@ void owhere(struct char_data* ch, char* nome)
 	{
 		if(N_oggetto > 0 && N_oggetto < 99999)
 		{
-			sb_count = find_obj(ch, obj_index[number].iVNum, count++);
+			sb_count = find_obj(ch, N_oggetto, count++);
 			found = TRUE;
 			append_to_string_block(&sb, sb_count.sb.c_str());
 			count = sb_count.conteggio;
