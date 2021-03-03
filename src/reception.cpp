@@ -2299,4 +2299,25 @@ void save_room(int room) {
 	}
 }
 
+void IsQuestItem(struct obj_data* obj)
+{
+    int i, j, iVNum;
+
+	iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+
+    for (j = 0; j < MAX_QUEST_ACHIE; j++)
+    {
+        for(i = 0; QuestNebbie[j][i].quest_item != -1; i++)
+        {
+            if(iVNum == QuestNebbie[j][i].quest_item)
+            {
+				if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
+				{
+                	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_QUEST);
+				}
+            }
+        }
+    }
+}
+
 } // namespace Alarmud

@@ -2357,6 +2357,8 @@ struct obj_data* read_object(int nr, int type) {
 
 	total_obc += bc;
 
+	IsQuestItem(obj);
+
 	SetStatus("ending read_object", NULL);
 
 	return (obj);
