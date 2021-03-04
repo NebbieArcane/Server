@@ -2275,7 +2275,7 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 struct obj_data* read_object(int nr, int type) {
 	FILE* f;
 	struct obj_data* obj;
-	int i;
+	int i, tmp;
 	long bc;
 	char buf[300];
 
@@ -2310,7 +2310,9 @@ struct obj_data* read_object(int nr, int type) {
 				free(obj);
 				return (0);
 			}
-			fscanf(f, "#%*d \n");
+			fscanf(f, "#%d \n", &tmp);
+			obj->char_vnum = tmp;
+//			fscanf(f, "#%*d \n");	formato vecchio
 			SetStatus("before read_obj_from_file 1", NULL);
 			read_obj_from_file(obj, f);
 			fclose(f);
@@ -2357,7 +2359,7 @@ struct obj_data* read_object(int nr, int type) {
 
 	total_obc += bc;
 
-	IsQuestItem(obj);
+	IsQuestItem(obj);	// se l'oggetto e' un premio di una quest setto il bit
 
 	SetStatus("ending read_object", NULL);
 

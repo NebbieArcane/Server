@@ -449,14 +449,15 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.value[2] = st->objects[i].value[2];
 				obj->obj_flags.value[3] = st->objects[i].value[3];
 				obj->obj_flags.extra_flags  = st->objects[i].extra_flags;
-                if(IS_SET(ch->specials.act,PLR_NEW_EQ))
-                {
-                    obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
-                }
-                else
-                {
-                    obj->obj_flags.extra_flags2 = 0;
-                }
+				if(IS_SET(ch->specials.act,PLR_NEW_EQ))
+				{
+					obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+				}
+				else
+				{
+					obj->obj_flags.extra_flags2 = 0;
+				}
+				IsQuestItem(obj);	// se l'oggetto e' un premio di una quest setto il bit
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
 				obj->obj_flags.bitvector    = st->objects[i].bitvector;
@@ -2309,7 +2310,7 @@ void IsQuestItem(struct obj_data* obj)
     {
         for(i = 0; QuestNebbie[j][i].quest_item != -1; i++)
         {
-            if(iVNum == QuestNebbie[j][i].quest_item)
+            if(iVNum == QuestNebbie[j][i].quest_item || obj->char_vnum == QuestNebbie[j][i].quest_item)
             {
 				if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
 				{
