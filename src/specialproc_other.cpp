@@ -19,6 +19,7 @@
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
+#include "spec_procs4.hpp"
 #include "speciali.hpp"
 #include "lucertole.hpp"
 #include "nilmys.hpp"
@@ -229,20 +230,20 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
 //  Mob Editor
-    { "RentEditor", (genericspecial_func) RentEditor },
+	{ "RentEditor", (genericspecial_func) RentEditor },
+	{ "quest_item_shop", (genericspecial_func) quest_item_shop},
 //  Quest Nilmys
-    //  oggetti
-    { "urna_nilmys", (genericspecial_func) urna_nilmys },
-    //  mob
-    { "Arkhat", (genericspecial_func) Arkhat },
-    { "Atropal", (genericspecial_func) Atropal},
-    { "Boris_Ivanhoe", (genericspecial_func) Boris_Ivanhoe },
-    { "Garebeth", (genericspecial_func) Garebeth},
-    { "Uguik_Aurum", (genericspecial_func) Uguik_Aurum },
-    { "Umag_Ulbar", (genericspecial_func) Umag_Ulbar},
-    { "stanislav_spirit", (genericspecial_func) stanislav_spirit },
+	//  oggetti
+	{ "urna_nilmys", (genericspecial_func) urna_nilmys },
+	//  mob
+	{ "Arkhat", (genericspecial_func) Arkhat },
+	{ "Atropal", (genericspecial_func) Atropal},
+	{ "Boris_Ivanhoe", (genericspecial_func) Boris_Ivanhoe },
+	{ "Garebeth", (genericspecial_func) Garebeth},
+	{ "Uguik_Aurum", (genericspecial_func) Uguik_Aurum },
+	{ "Umag_Ulbar", (genericspecial_func) Umag_Ulbar},
+	{ "stanislav_spirit", (genericspecial_func) stanislav_spirit },
 //  fine Quest Nilmys
 	{ "zFineprocedure", NULL },
 };
 } // namespace Alarmud
-
