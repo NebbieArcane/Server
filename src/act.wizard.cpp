@@ -6776,12 +6776,6 @@ ACTION_FUNC(do_personalize)
 
 ACTION_FUNC(do_checktypos)
 {
-    if(!*arg)
-    {
-        send_to_char("Digita 'checktypos list' oppure 'checktypos clear now'\n\r",         ch);
-        return;
-    }
-
     if( !str_cmp( arg, "clear now" ) && IS_MAESTRO_DEL_CREATO(ch))
     {
         FILE *fp;
@@ -6796,8 +6790,7 @@ ACTION_FUNC(do_checktypos)
         mudlog(LOG_PLAYERS, "%s ha cancellato il file dei typos.", GET_NAME(ch));
         return;
     }
-
-    if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
+    else if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
     {
         int num = 0;
         char buf[MAX_STRING_LENGTH];
@@ -6825,6 +6818,11 @@ ACTION_FUNC(do_checktypos)
         }
         return;
     }
+	else
+	{
+		send_to_char("Digita 'checktypos list' oppure 'checktypos clear now'.\n\r",         ch);
+        return;
+	}
 }
 
 stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
