@@ -92,6 +92,8 @@ extern struct help_index_element* wizhelp_index;
 extern int top_of_wizhelpt;
 extern int top_of_helpt;
 
+extern struct NebbieQuest KnownObjQuest[MAX_QUEST_ACHIE];
+
 extern FILE* mob_f; /* file containing mob prototypes  */
 extern FILE* obj_f; /* obj prototypes                  */
 extern FILE* help_fl; /* file for help texts (HELP <kwd>)*/
@@ -283,5 +285,3 @@ int NewMobMov (struct char_data* mob);
 
 } // namespace Alarmud
 #endif
-
-

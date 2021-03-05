@@ -452,12 +452,18 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				if(IS_SET(ch->specials.act,PLR_NEW_EQ))
 				{
 					obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+					if(IsQuestItem(obj)) 	// se l'oggetto e' un premio di una quest setto il bit
+					{
+						if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
+						{
+							SET_BIT(obj->obj_flags.extra_flags2, ITEM2_QUEST);
+						}
+					}
 				}
 				else
 				{
 					obj->obj_flags.extra_flags2 = 0;
 				}
-				IsQuestItem(obj);	// se l'oggetto e' un premio di una quest setto il bit
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
 				obj->obj_flags.bitvector    = st->objects[i].bitvector;
@@ -1455,6 +1461,10 @@ void CountLimitedItems(struct obj_file_u* st) {
 					strncat(rarelist, buf,MAX_STRING_LENGTH);
 
 				}
+				if(IsQuestItem(obj))
+				{
+					continue;
+				}
 				extract_obj(obj);
 			}
 		}
@@ -2300,25 +2310,27 @@ void save_room(int room) {
 	}
 }
 
-void IsQuestItem(struct obj_data* obj)
+bool IsQuestItem(struct obj_data* obj)
 {
-    int i, j, iVNum;
+	int i, j, iVNum;
 
 	iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
 
-    for (j = 0; j < MAX_QUEST_ACHIE; j++)
-    {
-        for(i = 0; QuestNebbie[j][i].quest_item != -1; i++)
-        {
-            if(iVNum == QuestNebbie[j][i].quest_item || obj->char_vnum == QuestNebbie[j][i].quest_item)
-            {
-				if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
+	for (j = 0; j < MAX_QUEST_ACHIE; j++)
+	{
+		for(i = 0; QuestNebbie[j][i].quest_item != -1; i++)
+		{
+			if(iVNum == QuestNebbie[j][i].quest_item || obj->char_vnum == QuestNebbie[j][i].quest_item)
+			{
+				if(KnownObjQuest[j].known[i] != TRUE)
 				{
-                	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_QUEST);
+					KnownObjQuest[j].known[i] = TRUE;
 				}
-            }
-        }
-    }
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
 }
 
 } // namespace Alarmud

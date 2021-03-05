@@ -110,6 +110,8 @@ int top_of_alloc_objt = 0;
 int top_of_helpt; /* top of help index table         */
 int top_of_wizhelpt; /* top of wiz help index table         */
 
+struct NebbieQuest KnownObjQuest[MAX_QUEST_ACHIE];
+
 struct time_info_data time_info; /* the infomation about the time   */
 struct weather_data weather_info; /* the infomation about the weather */
 long saved_rooms[WORLD_SIZE];
@@ -2359,7 +2361,17 @@ struct obj_data* read_object(int nr, int type) {
 
 	total_obc += bc;
 
-	IsQuestItem(obj);	// se l'oggetto e' un premio di una quest setto il bit
+	// se l'oggetto e' un premio di una quest setto il bit solo se il caricamento e' 'REAL'
+	if(type == REAL)
+	{
+		if(IsQuestItem(obj))
+		{
+			if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
+			{
+				SET_BIT(obj->obj_flags.extra_flags2, ITEM2_QUEST);
+			}
+		}
+	}
 
 	SetStatus("ending read_object", NULL);
 

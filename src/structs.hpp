@@ -43,6 +43,11 @@ struct QuestItem {
 	const char* where;
 };
 
+struct NebbieQuest
+{
+	bool known[100];
+};
+
 /*
  * Achievements
  */
