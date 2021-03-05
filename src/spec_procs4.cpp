@@ -170,14 +170,12 @@ void IdentifyObj(struct char_data* ch, struct char_data* keeper, int quest, int 
 	{
 		act("\n\r$N inizia a studiare $p.\n\rDopo qualche attimo sorride ed esclama: 'Eureka!'.\n\r", FALSE, ch, obj, keeper, TO_NOTVICT);
 		spell_identify(GET_LEVEL(keeper, WARRIOR_LEVEL_IND), ch, keeper, obj);
-		return;
 	}
 	else
 	{
 		act("\n\r$N inizia a studiare $p.\n\rDopo qualche attimo scuote la testa e mette via $p.\n\r", FALSE, ch, obj, keeper, TO_NOTVICT);
 		sprintf(buf, "%s Mi dispiace ma nessuno ha ancora scoperto le proprieta' di questo oggetto...", GET_NAME(ch));
 		do_tell(keeper, buf, CMD_TELL);
-		return;
 	}
 
 	extract_obj(obj);
