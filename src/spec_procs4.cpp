@@ -285,7 +285,7 @@ void SellObj(struct char_data* ch, struct char_data* keeper, int quest, int nume
 	sprintf(buf, "%s Ecco quello che mi hai chiesto.", GET_NAME(ch));
 	do_tell(keeper, buf, CMD_TELL);
 
-	sprintf(buf, "premio %s", GET_NAME(ch));
+	sprintf(buf, "ed%s %s", GET_NAME(ch), GET_NAME(ch));
 	do_give(keeper, buf, 0);
 
 	return;
