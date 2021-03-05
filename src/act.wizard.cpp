@@ -6892,7 +6892,7 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 									{
 										vnum = real_object(vnumber);
 										oggetto = read_object(vnum, REAL);
-										boost::format fmt("[%3d] %-50s- rentato da %s\n\r");
+										boost::format fmt("[%3d] %-40s- rentato da %s\n\r");
 										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
 										sb_count.sb.append(fmt.str().c_str());
 										fmt.clear();
@@ -6951,7 +6951,7 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 									{
 										vnum = real_object(vnumber);
 										oggetto = read_object(vnum, REAL);
-										boost::format fmt("[%3d] %-50s- rentato da %s\n\r");
+										boost::format fmt("[%3d] %-40s- rentato da %s\n\r");
 										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
 										sb_count.sb.append(fmt.str().c_str());
 										fmt.clear();

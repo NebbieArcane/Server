@@ -5094,7 +5094,7 @@ ACTION_FUNC(do_where) {
 
 	if(!*name) {
 		if(GetMaxLevel(ch) < DIO) {
-			send_to_char("Cosa stai cercando ?\n\r", ch);
+			send_to_char("Cosa stai cercando?\n\r", ch);
 		}
 		else {
 			init_string_block(&sb);
