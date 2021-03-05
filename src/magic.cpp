@@ -37,6 +37,7 @@
 #include "skills.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
+#include "spec_procs4.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
 namespace Alarmud {
@@ -2760,7 +2761,7 @@ void spell_identify(byte level, struct char_data* ch,
 
 	if(obj)
     {
-        if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
+        if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)) && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)))
         {
             send_to_char("$c0011La conoscenza ti pervade:\n\r", ch);
         }
@@ -3361,4 +3362,3 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 }
 
 } // namespace Alarmud
-
