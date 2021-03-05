@@ -4925,38 +4925,44 @@ void do_where_person(struct char_data* ch, struct char_data* person,
 
 void do_where_object(struct char_data* ch, struct obj_data* obj,
 					 int recurse, struct string_block* sb) {
-	char buf[MAX_STRING_LENGTH];
+	char buf[MAX_STRING_LENGTH], short_desc[256];
+	int diff;
+
+	diff	= strlen(obj->short_description) - strlen(ParseAnsiColors(0, obj->short_description));
+	sprintf(buf, "%%-%ds", diff + 55);
+	sprintf(short_desc, buf, obj->short_description);
+
 	if(obj->in_room != NOWHERE) {
 		/* object in a room */
 		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%-40s- %s [%d]\n\r",
-				 obj->short_description,
+				 "%s- %s [%d]\n\r",
+				 short_desc,
 				 real_roomp(obj->in_room)->name,
 				 obj->in_room);
 	}
 	else if(obj->carried_by != NULL) {
 		/* object carried by monster */
 		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%-40s- trasportato da %s\n\r",
-				 obj->short_description,
+				 "%s- trasportato da %s\n\r",
+				 short_desc,
 				 numbered_person(ch, obj->carried_by));
 	}
 	else if(obj->equipped_by != NULL) {
 		/* object equipped by monster */
 		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%-40s- usato da %s\n\r",
-				 obj->short_description,
+				 "%s- usato da %s\n\r",
+				 short_desc,
 				 numbered_person(ch, obj->equipped_by));
 	}
 	else if(obj->in_obj) {
 		/* object in object */
-		snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- in %s\n\r",
-				 obj->short_description,
+		snprintf(buf, MAX_STRING_LENGTH-1,"%s- in %s\n\r",
+				 short_desc,
 				 numbered_object(ch, obj->in_obj));
 	}
 	else {
-		snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- Nemmeno Dio sa dove...\n\r",
-				 obj->short_description);
+		snprintf(buf, MAX_STRING_LENGTH-1,"%s- Nemmeno Dio sa dove...\n\r",
+				 short_desc);
 	}
 	if(*buf) {
 		append_to_string_block(sb, buf);
@@ -5087,7 +5093,14 @@ ACTION_FUNC(do_where) {
 	if(!strcmp(tipo, "obj") && IS_DIO(ch))
 	{
 		only_argument(copia, name);
-		mudlog(LOG_PLAYERS, "Looking for '%s' in game and on rented toon", name);
+		if(is_number(name))
+		{
+			mudlog(LOG_PLAYERS, "Looking for object #%s on rented toon", name);
+		}
+		else
+		{
+			mudlog(LOG_PLAYERS, "Looking for '%s' in game and on rented toon", name);
+		}
 		owhere(ch, name);
 		return;
 	}

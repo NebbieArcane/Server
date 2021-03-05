@@ -118,6 +118,7 @@ MOBSPECIAL_FUNC(quest_item_shop)
 		// mostro la lista degli oggetti scambiabili con il buono
 		if(cmd == CMD_LIST)
 		{
+			act("$c0013$N$c0013 dice qualcosa a $n$c0013.", TRUE, ch, NULL, keeper, TO_ROOM);
 			ListaOggetti(ch, quest);
 			return(TRUE);
 		}
@@ -168,12 +169,14 @@ void IdentifyObj(struct char_data* ch, struct char_data* keeper, int quest, int 
 
 	if(KnownObjQuest[quest].known[numero - 1])
 	{
-		act("\n\r$N inizia a studiare $p.\n\rDopo qualche attimo sorride ed esclama: 'Eureka!'.\n\r", FALSE, ch, obj, keeper, TO_NOTVICT);
+		act("\n\r$n apre un'anta dello scaffale dietro di $l e prende $p.\n\r$n inizia a studiare $p.\n\rDopo qualche attimo sorride ed esclama: 'Eureka!'.", TRUE, keeper, obj, ch, TO_ROOM);
+		act("$c0013[$c0015$N$c0013] ti dice '$p$c0013 ha le seguenti caratteristiche:\n\r", FALSE, ch, obj, keeper, TO_CHAR);
+		act("$c0013$N$c0013 dice qualcosa a $n$c0013.", FALSE, ch, 0, keeper, TO_NOTVICT);
 		spell_identify(GET_LEVEL(keeper, WARRIOR_LEVEL_IND), ch, keeper, obj);
 	}
 	else
 	{
-		act("\n\r$N inizia a studiare $p.\n\rDopo qualche attimo scuote la testa e mette via $p.\n\r", FALSE, ch, obj, keeper, TO_NOTVICT);
+		act("\n\r$n apre un'anta dello scaffale dietro di $l e prende $p.\n\r$n inizia a studiare $p.\n\rDopo qualche attimo scuote la testa e mette via $p.", TRUE, keeper, obj, ch, TO_ROOM);
 		sprintf(buf, "%s Mi dispiace ma nessuno ha ancora scoperto le proprieta' di questo oggetto...", GET_NAME(ch));
 		do_tell(keeper, buf, CMD_TELL);
 	}
@@ -280,7 +283,7 @@ void SellObj(struct char_data* ch, struct char_data* keeper, int quest, int nume
 
 	obj_to_char(obj, keeper);
 
-	act("\n\r$N apre un'anta dello scaffale dietro di $L e prende $p.\n\r", FALSE, ch, obj, keeper, TO_NOTVICT);
+	act("\n\r$n apre un'anta dello scaffale dietro di $n e prende $p.", TRUE, keeper, obj, ch, TO_ROOM);
 	sprintf(buf, "%s Ecco quello che mi hai chiesto.", GET_NAME(ch));
 	do_tell(keeper, buf, CMD_TELL);
 

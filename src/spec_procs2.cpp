@@ -7925,7 +7925,7 @@ MOBSPECIAL_FUNC(MobIdent)
         act("$N studia per un attimo $p.",FALSE, ch, obj, mobident, TO_CHAR);
         act("$N studia per un attimo $p.",TRUE, ch, obj, mobident, TO_ROOM);
         act("$c0013[$c0015$N$c0013] ti dice '$p$c0013 ha le seguenti caratteristiche:\n\r", FALSE, ch, obj, mobident, TO_CHAR);
-        act("$c0013$N dice qualcosa a $n.", FALSE, ch, 0, mobident, TO_NOTVICT);
+        act("$c0013$N$c0013 dice qualcosa a $n$c0013.", FALSE, ch, 0, mobident, TO_NOTVICT);
         spell_identify(GET_LEVEL(mobident, WARRIOR_LEVEL_IND), ch, mobident,obj);
         act("$N ti restituisce $p.",FALSE, ch, obj, mobident, TO_CHAR);
         act("$N restituisce $p a $n.",TRUE, ch, obj, mobident, TO_ROOM);
@@ -8205,4 +8205,3 @@ MOBSPECIAL_FUNC(mage_specialist_guildmaster) {
 }
 
 } // namespace Alarmud
-

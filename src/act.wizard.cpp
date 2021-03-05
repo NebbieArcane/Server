@@ -6836,8 +6836,9 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 	FILE* pObjFile;
 	DIR* dir;
 	struct stringa_valore sb_count;
-	int vnum;
+	int diff;
 	struct obj_data* oggetto;
+	string buf;
 
 	sb_count.conteggio = count;
 
@@ -6864,6 +6865,12 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 			{
 				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
 				{
+					// controllo se il ch_st e' in gioco, se e' in gioco passo al successivo
+					if(get_char(lower(ch_st.name)) && !IS_NPC(get_char(lower(ch_st.name))))
+					{
+						continue;
+					}
+
 					snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
 					if((pObjFile = fopen(szFileName, "r+b")) != NULL)
 					{
@@ -6890,9 +6897,10 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 								{
 									if(old_st.objects[i].item_number == vnumber)
 									{
-										vnum = real_object(vnumber);
-										oggetto = read_object(vnum, REAL);
-										boost::format fmt("[%3d] %-40s- rentato da %s\n\r");
+										oggetto = read_object(vnumber, VIRTUAL);
+										diff = strlen(oggetto->short_description) - strlen(ParseAnsiColors(0, oggetto->short_description));
+										buf = "[%3d] %-" + std::to_string(55 + diff) + "s- rentato da %s\n\r";
+										boost::format fmt(buf);
 										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
 										sb_count.sb.append(fmt.str().c_str());
 										fmt.clear();
@@ -6920,9 +6928,10 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 								{
 									if(st_old.objects[i].item_number == vnumber)
 									{
-										vnum = real_object(vnumber);
-										oggetto = read_object(vnum, REAL);
-										boost::format fmt("[%3d] %-50s- rentato da %s\n\r");
+										oggetto = read_object(vnumber, VIRTUAL);
+										diff = strlen(oggetto->short_description) - strlen(ParseAnsiColors(0, oggetto->short_description));
+										buf = "[%3d] %-" + std::to_string(55 + diff) + "s- rentato da %s\n\r";
+										boost::format fmt(buf);
 										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
 										sb_count.sb.append(fmt.str().c_str());
 										fmt.clear();
@@ -6949,9 +6958,10 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 								{
 									if(st.objects[i].item_number == vnumber)
 									{
-										vnum = real_object(vnumber);
-										oggetto = read_object(vnum, REAL);
-										boost::format fmt("[%3d] %-40s- rentato da %s\n\r");
+										oggetto = read_object(vnumber, VIRTUAL);
+										diff = strlen(oggetto->short_description) - strlen(ParseAnsiColors(0, oggetto->short_description));
+										buf = "[%3d] %-" + std::to_string(55 + diff) + "s- rentato da %s\n\r";
+										boost::format fmt(buf);
 										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
 										sb_count.sb.append(fmt.str().c_str());
 										fmt.clear();
