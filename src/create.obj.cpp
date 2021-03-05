@@ -243,7 +243,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 15) {
+		if(update < 0 || update > 19) {
 			return;
 		}
 		i=1;
@@ -268,7 +268,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
         send_to_char(buf, ch);
 
         row = 0;
-        for(i = 0; i < 16; i++)
+        for(i = 0; i < 20; i++)
         {
             sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
@@ -299,7 +299,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 
         send_to_char("\n\rObject Wear Flags:\n\r\n\r", ch);
 
-        for(i = 0; i < 16; i++)
+        for(i = 0; i < 20; i++)
         {
             check = 1;
             sprintf(buf2, "%s", "%-");
