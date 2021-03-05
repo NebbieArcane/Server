@@ -211,6 +211,7 @@ void ListaOggetti(struct char_data* ch, int quest)
 		}
 
 		descBW.clear();
+		extract_obj(obj);
 	}
 
 	sb.append("\n\r$c0011Puoi scegliere tra i seguenti oggetti:\n\r$c0013");

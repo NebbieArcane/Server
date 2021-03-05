@@ -1463,7 +1463,7 @@ void CountLimitedItems(struct obj_file_u* st) {
 				}
 				if(IsQuestItem(obj))
 				{
-					continue;
+					
 				}
 				extract_obj(obj);
 			}
