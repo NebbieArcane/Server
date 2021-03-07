@@ -13,7 +13,9 @@
 #include "multiclass.hpp"
 namespace Alarmud {
 
-#define QUEST_ZONE 9700
+#define QUEST_ZONE          9700
+#define LOW_EDITED_ITEMS    34030
+#define HIGH_EDITED_ITEMS   34999
 
 // achievement's stuff
 #define CONT_REWARD         1371

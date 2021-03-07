@@ -406,8 +406,6 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 /**************************************************************************
  * Routines used to load a characters equipment from disk
  **************************************************************************/
-#define LOW_EDITED_ITEMS    34030
-#define HIGH_EDITED_ITEMS   34999
 
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 	struct obj_data* obj;
@@ -1463,7 +1461,7 @@ void CountLimitedItems(struct obj_file_u* st) {
 				}
 				if(IsQuestItem(obj))
 				{
-					
+
 				}
 				extract_obj(obj);
 			}
