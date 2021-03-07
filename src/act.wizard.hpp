@@ -29,6 +29,7 @@ ACTION_FUNC(do_drainlevel) ;
 ACTION_FUNC(do_echo) ;
 ACTION_FUNC(do_emote) ;
 ACTION_FUNC(do_event) ;
+ACTION_FUNC(do_find_original) ;
 ACTION_FUNC(do_force) ;
 ACTION_FUNC(do_force_rent) ;
 ACTION_FUNC(do_freeze) ;
