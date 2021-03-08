@@ -5250,6 +5250,55 @@ ACTION_FUNC(do_show) {
 			append_to_string_block(&sb, buf);
 		}
 	}
+	else if((is_abbrev(buf, "items") && (which_i = obj_index) && (topi = top_of_objt)))
+	{
+		int objn;
+		struct index_data* oi;
+		struct obj_data* obj;
+		int vnum, i;
+
+		only_argument(arg, zonenum);
+
+		for(i = 0; i < 20; i++)
+		{
+			if(is_abbrev(zonenum, wear_bits[i]))
+			{
+				break;
+			}
+		}
+		/*    zone = -1;
+		if(sscanf(zonenum, "%i", &zone) == 1 && (zone < 0 || zone > top_of_zone_table))
+		{
+			append_to_string_block(&sb, "That is not a valid zone_number\n\r");
+			return;
+		}
+		if(zone >= 0)
+		{
+			bottom = zone ? (zone_table[zone - 1].top + 1) : 0;
+			top = zone_table[zone].top;
+		} */
+
+		append_to_string_block(&sb, "VNUM  rnum count names\n\r");
+		for(objn = 0; objn < topi; objn++)
+		{
+			oi = which_i + objn;
+
+			vnum = real_object(oi->iVNum);
+			if(vnum > 0 && vnum < 99999 && oi->iVNum != 99999)
+			{
+				obj = read_object(oi->iVNum, VIRTUAL);
+
+				if(!IS_SET(obj->obj_flags.wear_flags, (1 << i)))
+				{
+					extract_obj(obj);
+					continue;
+				} /* optimize later*/
+				extract_obj(obj);
+				sprintf(buf, "%5d %4d %3d  %s\n\r", oi->iVNum, objn, oi->number, oi->name);
+				append_to_string_block(&sb, buf);
+			}
+		}
+	}
 	else if(is_abbrev(buf, "rooms")) {
 
 		only_argument(arg, zonenum);
@@ -5326,7 +5375,8 @@ ACTION_FUNC(do_show) {
 							   "  show zones\n\r"
 							   "  show (objects|mobiles) (zone#|name)\n\r"
 							   "  show rare (only liv>=58)\n\r"
-							   "  show rooms (zone#|death|private)\n\r");
+							   "  show rooms (zone#|death|private)\n\r"
+                               "  show items (location)\n\r");
 	}
 	page_string_block(&sb, ch);
 	destroy_string_block(&sb);
