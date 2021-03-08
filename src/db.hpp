@@ -276,7 +276,7 @@ ACTION_FUNC(reboot_text);
 void InitScripts();
 void ReloadRooms();
 void FreeZone(int zone_nr);
-void write_obj_to_file(struct obj_data* obj, FILE* f);
+void write_obj_to_file(struct obj_data* obj, FILE* f, long vnumber);
 void InsertObject(struct obj_data* pObj, int nVNum);
 void InsertMobile(struct char_data* pMob, int nVNum);
 void Start_Auction();

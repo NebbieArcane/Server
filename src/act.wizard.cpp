@@ -6619,69 +6619,100 @@ ACTION_FUNC(do_viewfile) {
 ACTION_FUNC(do_osave) {
 	FILE* f;
 	struct obj_data* obj;
-	char oname[128], field[120], buf[254];
-	long vnum = -1;
+	char oname[128], field[120], field2[120], buf[254];
+	long vnum = -1, vnum2 = -1;
 
-	if(IS_NPC(ch) || GetMaxLevel(ch) < IMMORTALE) {
+	if(IS_NPC(ch) || GetMaxLevel(ch) < IMMORTALE)
+	{
 		return;
 	}
 
 	arg = one_argument(arg, oname);
-	if(!*oname) {
-		send_to_char("Osave <object name> <new_vnum>\n\r", ch);
+	if(!*oname)
+	{
+		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
 		return;
 	}
 
 	arg = one_argument(arg, field);
-	if(!*field) {
-		send_to_char("osave <object name> <vnum>\n\r", ch);
+	if(!*field)
+	{
+		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
 		return;
 	}
 
-	if(!(obj = get_obj_vis_accessible(ch, oname))) {
-		send_to_char("Hum, I do not know where that is?!?!?\n\r", ch);
+    arg = one_argument(arg, field2);
+    if(!*field2)
+	{
+        send_to_char("Ok, il vnum originale non verra' cambiato.\n\r", ch);
+    }
+
+	if(!(obj = get_obj_vis_accessible(ch, oname)))
+	{
+		send_to_char("Hum, non ho idea di dove sia!\n\r", ch);
 		return;
 	}
 
 	vnum = atoi(field);
-	if(vnum < 1 || vnum > 99999) {
-		send_to_char("Invalid object number\n\r", ch);
+	if(vnum < 1 || vnum > 99999)
+	{
+		send_to_char("Il v-number non e' valido.\n\r", ch);
 		return;
 	}
+
+    if(*field2)
+    {
+        vnum2 = atoi(field2);
+        if(vnum2 < 1 || vnum2 > 99999)
+        {
+            send_to_char("Il secondo valore non e' corretto.\n\r", ch);
+            return;
+        }
+    }
+    else
+    {
+        vnum2 = obj->char_vnum;
+    }
 
 	/* check for valid VNUM in this zone */
 
-	if(GetMaxLevel(ch) <= CREATORE && GET_ZONE(ch) == 0) {
-		send_to_char("Sorry, you do not have access to a zone.\n\r", ch);
+	if(GetMaxLevel(ch) <= CREATORE && GET_ZONE(ch) == 0)
+	{
+		send_to_char("Mi dispiace ma non hai accesso a quella zona.\n\r", ch);
 		return;
 	}
 
-	if(GetMaxLevel(ch) <= CREATORE) {
+	if(GetMaxLevel(ch) <= CREATORE)
+	{
 		long start, end;
 		start = GET_ZONE(ch) ? (zone_table[GET_ZONE(ch) - 1].top + 1) : 0;
 		end = zone_table[GET_ZONE(ch)].top;
-		if(vnum > end) {
-			send_to_char("VNum is larger than your zone allows.\n\r", ch);
+		if(vnum > end)
+		{
+			send_to_char("Il v-number e' troppo grande per la zona che puoi modificare.\n\r", ch);
 			return;
 		}
 		if(vnum < start) {
-			send_to_char("VNUM is smaller than your zone allows.\n\r", ch);
+			send_to_char("Il v-number e' troppo piccolo per la zona che puoi modificare.\n\r", ch);
 			return;
 		}
 	}
 
 	sprintf(buf, "objects/%ld", vnum);
-	if((f = fopen(buf, "wt")) == NULL) {
-		send_to_char("Can't write to disk now..try later.\n\r", ch);
+	if((f = fopen(buf, "wt")) == NULL)
+	{
+		send_to_char("Non posso salvare l'oggetto... prova piu' tardi.\n\r", ch);
 		return;
 	}
 
-	write_obj_to_file(obj, f);
+//	write_obj_to_file(obj, f);
+    write_obj_to_file(obj, f, vnum2);
 	fclose(f);
 
 	/* check for valid VNUM period */
-	if(real_object(vnum) != -1) {
-		send_to_char("WARNING: Vnum already in use, OVER-WRITING\n\r", ch);
+	if(real_object(vnum) != -1)
+	{
+		send_to_char("WARNING: il v-number e' gia' in uso, OVER-WRITING.\n\r", ch);
 	}
 
 	InsertObject(obj, vnum);

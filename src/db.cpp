@@ -2226,44 +2226,46 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	return bc;
 }
 
-void write_obj_to_file(struct obj_data* obj, FILE* f) {
+void write_obj_to_file(struct obj_data* obj, FILE* f, long vnumber)
+{
 	int i;
 	struct extra_descr_data* descr;
 
-	fprintf(f, "#%d\n",
-			obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0);
+//	fprintf(f, "#%d\n", obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0);
+	fprintf(f, "#%ld\n", vnumber);
 	fwrite_string(f, obj->name);
 	fwrite_string(f, obj->short_description);
 	fwrite_string(f, obj->description);
 	fwrite_string(f, obj->action_description);
 
-	fprintf(f, "%d %d %d\n", obj->obj_flags.type_flag,
-			obj->obj_flags.extra_flags, obj->obj_flags.wear_flags);
-	fprintf(f, "%d %d %d %d\n", obj->obj_flags.value[0],
-			obj->obj_flags.value[1], obj->obj_flags.value[2],
-			obj->obj_flags.value[3]);
-	fprintf(f, "%d %d %d\n", obj->obj_flags.weight, obj->obj_flags.cost,
-			obj->obj_flags.cost_per_day);
+	fprintf(f, "%d %d %d\n", obj->obj_flags.type_flag, obj->obj_flags.extra_flags, obj->obj_flags.wear_flags);
+	fprintf(f, "%d %d %d %d\n", obj->obj_flags.value[0], obj->obj_flags.value[1], obj->obj_flags.value[2], obj->obj_flags.value[3]);
+	fprintf(f, "%d %d %d\n", obj->obj_flags.weight, obj->obj_flags.cost, obj->obj_flags.cost_per_day);
 
 	/* *** extra descriptions *** */
 	if(obj->ex_description)
-		for(descr = obj->ex_description; descr; descr = descr->next) {
+	{
+		for(descr = obj->ex_description; descr; descr = descr->next)
+		{
 			fprintf(f, "E\n");
 			fwrite_string(f, descr->keyword);
 			fwrite_string(f, descr->description);
 		}
-
-	for(i = 0; i < MAX_OBJ_AFFECT; i++) {
-		if(obj->affected[i].location != APPLY_NONE)
-			fprintf(f, "A\n%d %d\n", obj->affected[i].location,
-					obj->affected[i].modifier);
 	}
 
-    if(obj->obj_flags.extra_flags2)
-    {
-        fprintf(f, "F\n");
-        fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
-    }
+	for(i = 0; i < MAX_OBJ_AFFECT; i++)
+	{
+		if(obj->affected[i].location != APPLY_NONE)
+		{
+			fprintf(f, "A\n%d %d\n", obj->affected[i].location, obj->affected[i].modifier);
+		}
+	}
+
+	if(obj->obj_flags.extra_flags2)
+	{
+		fprintf(f, "F\n");
+		fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
+	}
 
 	if(obj->szForbiddenWearToChar) {
 		fprintf(f, "P\n");
