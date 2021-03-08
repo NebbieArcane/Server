@@ -521,7 +521,7 @@ char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
 	}
 	strncat(bigbuf, buf,SBB -strlen(buf));
 	for(i = 0; i < list_wiz->number[livello]; i++) {
-		sprintf(buf, "%s %s\n\r", list_wiz->lookup[livello].stuff[i].name,
+		sprintf(buf, "%s %s$c0007\n\r", list_wiz->lookup[livello].stuff[i].name,
 				list_wiz->lookup[livello].stuff[i].title);
 
 		center = 38 - (int)(Ansi_len(buf) / 2);
@@ -531,7 +531,7 @@ char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
 		strncat(bigbuf, buf, SBB -strlen(buf));
 	}
 	for(; livello > DIO_MINORE && i < ciclo; i++) {
-		sprintf(buf, "%s %s\n\r", " ", " ");
+		sprintf(buf, "%s %s$c0007\n\r", " ", " ");
 
 		center = 38 - (int)(Ansi_len(buf) / 2);
 		for(j = 0; j <= center; j++) {
