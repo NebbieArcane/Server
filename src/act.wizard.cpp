@@ -6634,6 +6634,12 @@ ACTION_FUNC(do_osave) {
 		return;
 	}
 
+	if(!(obj = get_obj_vis_accessible(ch, oname)))
+	{
+		send_to_char("Hum, non ho idea di dove sia!\n\r", ch);
+		return;
+	}
+
 	arg = one_argument(arg, field);
 	if(!*field)
 	{
@@ -6641,16 +6647,15 @@ ACTION_FUNC(do_osave) {
 		return;
 	}
 
-    arg = one_argument(arg, field2);
-    if(!*field2)
+	arg = one_argument(arg, field2);
+	if(!*field2)
 	{
-        send_to_char("Ok, il vnum originale non verra' cambiato.\n\r", ch);
-    }
+		send_to_char("Ok, il vnum originale non verra' cambiato.\n\r", ch);
 
-	if(!(obj = get_obj_vis_accessible(ch, oname)))
-	{
-		send_to_char("Hum, non ho idea di dove sia!\n\r", ch);
-		return;
+		if(obj->char_vnum == 0)
+		{
+			sprintf(field2, "%d", (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0);
+		}
 	}
 
 	vnum = atoi(field);
@@ -6660,19 +6665,19 @@ ACTION_FUNC(do_osave) {
 		return;
 	}
 
-    if(*field2)
-    {
-        vnum2 = atoi(field2);
-        if(vnum2 < 1 || vnum2 > 99999)
-        {
-            send_to_char("Il secondo valore non e' corretto.\n\r", ch);
-            return;
-        }
-    }
-    else
-    {
-        vnum2 = obj->char_vnum;
-    }
+	if(*field2)
+	{
+		vnum2 = atoi(field2);
+		if(vnum2 < 1 || vnum2 > 99999)
+		{
+			send_to_char("Il secondo valore non e' corretto.\n\r", ch);
+			return;
+		}
+	}
+	else
+	{
+		vnum2 = obj->char_vnum;
+	}
 
 	/* check for valid VNUM in this zone */
 
@@ -6706,7 +6711,7 @@ ACTION_FUNC(do_osave) {
 	}
 
 //	write_obj_to_file(obj, f);
-    write_obj_to_file(obj, f, vnum2);
+	write_obj_to_file(obj, f, vnum2);
 	fclose(f);
 
 	/* check for valid VNUM period */
@@ -6719,6 +6724,7 @@ ACTION_FUNC(do_osave) {
 
 	sprintf(buf, "Object %s saved as vnum %ld\n\r", obj->name, vnum);
 	mudlog(LOG_PLAYERS, buf);
+	sprintf(buf, "Ho salvato %s con il vnum %ld (originale %ld).\n\r", obj->name, vnum, vnum2);
 	send_to_char(buf, ch);
 }
 
