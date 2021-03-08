@@ -138,7 +138,7 @@ MOBSPECIAL_FUNC(quest_item_shop)
 			only_argument(arg, numero);
 			num = atoi(numero);
 
-			SellObj(ch, keeper, quest, num);
+			SellObj(ch, keeper, buono, quest, num);
 			return(TRUE);
 		}
 	}
@@ -258,7 +258,7 @@ void ListaOggetti(struct char_data* ch, int quest)
 	sb.clear();
 }
 
-void SellObj(struct char_data* ch, struct char_data* keeper, int quest, int numero)
+void SellObj(struct char_data* ch, struct char_data* keeper, struct obj_data* buono, int quest, int numero)
 {
 	char buf[MAX_STRING_LENGTH];
 	int i = 0, num;
@@ -283,7 +283,20 @@ void SellObj(struct char_data* ch, struct char_data* keeper, int quest, int nume
 
 	obj_to_char(obj, keeper);
 
-	act("\n\r$n apre un'anta dello scaffale dietro di $n e prende $p.", TRUE, keeper, obj, ch, TO_ROOM);
+	mudlog(LOG_PLAYERS,"%s, thanks to the Mercy System, gets %s from %s", GET_NAME(ch), obj->short_description, GET_NAME(keeper));
+
+	if(IS_QUESTMASTER(ch))
+	{
+		sprintf(buf, "%s Mio signore a te non posso chiedere niente in cambio.", GET_NAME(ch));
+		do_tell(keeper, buf, CMD_TELL);
+	}
+	else
+	{
+		act("Dai $p a $N.", TRUE, ch, buono, keeper, TO_CHAR);
+		act("$N da' $p a $n.", TRUE, ch, buono, keeper, TO_ROOM);
+		extract_obj(buono);
+	}
+	act("$n apre un'anta dello scaffale dietro di $n e prende $p.", TRUE, keeper, obj, ch, TO_ROOM);
 	sprintf(buf, "%s Ecco quello che mi hai chiesto.", GET_NAME(ch));
 	do_tell(keeper, buf, CMD_TELL);
 

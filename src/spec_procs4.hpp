@@ -13,7 +13,7 @@ MOBSPECIAL_FUNC(quest_item_shop);
 // funzioni
 void IdentifyObj(struct char_data* ch, struct char_data* keeper, int quest, int numero);
 void ListaOggetti(struct char_data* ch, int quest);
-void SellObj(struct char_data* ch, struct char_data* keeper, int quest, int numero);
+void SellObj(struct char_data* ch, struct char_data* keeper, struct obj_data* buono, int quest, int numero);
 std::string get_last_word(const std::string& s);
 } // namespace Alarmud
 #endif // __SPEC_PROCS4_HPP
