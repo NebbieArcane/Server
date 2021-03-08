@@ -5485,11 +5485,11 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         send_to_char("\n\r$c0014La Gilda dei Mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", t);
 
                         if(t->followers) {
-                            send_to_char("\n\r$c0014risulta che hai dei followers.$c0007\n\r", t);
+                            send_to_char("\n\r$c0014Non puoi affrontare una sfida con dei seguaci.$c0007\n\r", t);
                         }
 
                         if(t->master) {
-                            send_to_char("\n\r$c0014risulta che hai un master.$c0007\n\r", t);
+                            send_to_char("\n\r$c0014Non puoi affrontare una sfida con quando segui qualcuno.$c0007\n\r", t);
                         }
 
                         return FALSE;
