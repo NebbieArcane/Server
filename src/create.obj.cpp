@@ -1034,339 +1034,360 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			return;
 		}
 
-		update = atoi(arg)-1;
+		update = atoi(arg) - 1;
 
-		if(update < 0 || update > 55) {
+		if(update < 0 || update >= APPLY_SKIP - 9)
+		{
 			ch->specials.oedit = OBJ_MAIN_MENU;
 			UpdateObjMenu(ch);
 			return;
 		}
 
+		if(update > APPLY_MOD_DRUNK)
+		{
+			update += 9;
+		}
 		ch->specials.objedit->affected[affect-1].location=update;
 		ch->specials.objedit->affected[affect-1].modifier=0;
 
-		switch(affect) {
-		case 1:
-			ch->specials.oedit = CHANGE_AFFECT1_MOD;
-			break;
-		case 2:
-			ch->specials.oedit = CHANGE_AFFECT2_MOD;
-			break;
-		case 3:
-			ch->specials.oedit = CHANGE_AFFECT3_MOD;
-			break;
-		case 4:
-			ch->specials.oedit = CHANGE_AFFECT4_MOD;
-			break;
-		case 5:
-			ch->specials.oedit = CHANGE_AFFECT5_MOD;
-			break;
+		switch(affect)
+		{
+			case 1:
+				ch->specials.oedit = CHANGE_AFFECT1_MOD;
+				break;
+
+			case 2:
+				ch->specials.oedit = CHANGE_AFFECT2_MOD;
+				break;
+
+			case 3:
+				ch->specials.oedit = CHANGE_AFFECT3_MOD;
+				break;
+
+			case 4:
+				ch->specials.oedit = CHANGE_AFFECT4_MOD;
+				break;
+
+			case 5:
+				ch->specials.oedit = CHANGE_AFFECT5_MOD;
+				break;
 		}
 		sprintf(buf, VT_HOMECLR);
 		send_to_char(buf, ch);
-		switch(update) {
-		case APPLY_NONE:
-		case APPLY_SKIP:
-            break;
-		case APPLY_AFF2:
-            send_to_char("\n\rNote: Modifier should be ADDED together from this "
-                            "list of affection flags 2.\n\r",ch);
-            if(ch->term == VT100)
-            {
-                row = 0;
-                for(i = 0; *affected_bits2[i] != '\n'; i++)
-                {
-                    sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-                    if(i & 1)
-                    {
-                        row++;
-                    }
-                    send_to_char(buf, ch);
-                    check=1;
-                    if(i>0)
-                        for(a=1; a<=i; a++)
-                        {
-                            check*=2;
-                        }
-                    sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
-                    send_to_char(buf, ch);
-                }
-                send_to_char("\n\r\n\r", ch);
-            }
-            else
-            {
-                string sb;
-                boost::format fmt ("    %-10u : %s");
-                char buf2[255];
-                int x = 0, column = 0;
+		switch(update)
+		{
+			case APPLY_NONE:
+			case APPLY_SKIP:
+				break;
 
-                send_to_char("\n\r", ch);
+			case APPLY_AFF2:
+				send_to_char("\n\rNote: Modifier should be ADDED together from this "
+								"list of affection flags 2.\n\r", ch);
+				if(ch->term == VT100)
+				{
+					row = 0;
+					for(i = 0; *affected_bits2[i] != '\n'; i++)
+					{
+						sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+						if(i & 1)
+						{
+							row++;
+						}
+						send_to_char(buf, ch);
+						check = 1;
+						if(i > 0)
+						{
+							for(a = 1; a <= i; a++)
+							{
+								check *= 2;
+							}
+						}
+						sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
+						send_to_char(buf, ch);
+					}
+					send_to_char("\n\r\n\r", ch);
+				}
+				else
+				{
+					string sb;
+					boost::format fmt ("    %-10u : %s");
+					char buf2[255];
+					int x = 0, column = 0;
 
-                for(i = 0; *affected_bits2[i] != '\n'; i++)
-                {
-                    check=1;
-                    sprintf(buf2, "%s", "%-");
-                    sprintf(buf2, "%s%d", buf2, 45-x);
-                    strcat(buf2, "s%-10u : %s\n\r");
-                    boost::format fmt2 (buf2);
+					send_to_char("\n\r", ch);
 
-                    if(i>0)
-                        for(a=1; a<=i; a++)
-                        {
-                            check*=2;
-                        }
+					for(i = 0; *affected_bits2[i] != '\n'; i++)
+					{
+						check = 1;
+						sprintf(buf2, "%s", "%-");
+						sprintf(buf2, "%s%d", buf2, 45-x);
+						strcat(buf2, "s%-10u : %s\n\r");
+						boost::format fmt2 (buf2);
 
-                    if(column & 1)
-                    {
-                        fmt2 % "" % check % affected_bits2[i];
-                        sb.append(fmt2.str().c_str());
-                        column += 1;
-                    }
-                    else
-                    {
-                        fmt % check % affected_bits2[i];
-                        sb.append(fmt.str().c_str());
-                        x = strlen(fmt.str().c_str());
-                        column += 1;
-                    }
+						if(i > 0)
+						{
+							for(a = 1; a <= i; a++)
+							{
+								check *= 2;
+							}
+						}
 
-                    fmt.clear();
-                    fmt2.clear();
-                }
-                page_string(ch->desc, sb.c_str(), true);
-                send_to_char("\n\r\n\r", ch);
-            }
+						if(column & 1)
+						{
+							fmt2 % "" % check % affected_bits2[i];
+							sb.append(fmt2.str().c_str());
+							column += 1;
+						}
+						else
+						{
+							fmt % check % affected_bits2[i];
+							sb.append(fmt.str().c_str());
+							x = strlen(fmt.str().c_str());
+							column += 1;
+						}
+
+						fmt.clear();
+						fmt2.clear();
+					}
+					page_string(ch->desc, sb.c_str(), true);
+					send_to_char("\n\r\n\r", ch);
+				}
+				break;
+
+			case APPLY_STR:
+			case APPLY_DEX:
+			case APPLY_INT:
+			case APPLY_WIS:
+			case APPLY_CON:
+			case APPLY_CHR:
+			case APPLY_ATTACKS:
+			case APPLY_LEVEL:
+			case APPLY_AGE:
+			case APPLY_CHAR_WEIGHT:
+			case APPLY_CHAR_HEIGHT:
+			case APPLY_MANA:
+			case APPLY_HIT:
+			case APPLY_MOVE:
+			case APPLY_GOLD:
+			case APPLY_EXP:
+			case APPLY_HITROLL:
+			case APPLY_DAMROLL:
+			case APPLY_HITNDAM:
+			case APPLY_SPELLPOWER:
+			case APPLY_HITNSP:
+			case APPLY_SPELLFAIL:
+				send_to_char("\n\rNote: Modifier will make field go up modifier number of points.\n\r",ch);
+				send_to_char("      Positive modifier will make field go up, negative modifier will make\n\r      field go down.\n\r",ch);
+				break;
+
+			case APPLY_SEX:
+				send_to_char("\n\rNote: Modifier will change characters sex by adding.\n\r      0=neutral, 1=male, 2=female\n\r",ch);
+				break;
+
+			case APPLY_SAVING_PARA:
+			case APPLY_SAVING_ROD:
+			case APPLY_SAVING_PETRI:
+			case APPLY_SAVING_BREATH:
+			case APPLY_SAVING_SPELL:
+			case APPLY_SAVE_ALL:
+			case APPLY_AC:
+				send_to_char("\n\rNote: Modifier will make field go up modifier number of points.\n\r",ch);
+				send_to_char("      Positive modifier will make field go up, negative modifier will make\n\r      field go down.\n\r",ch);
+				send_to_char("      $c0015Negative values are BETTER.$c0007", ch);
 			break;
-		case APPLY_STR:
-		case APPLY_DEX:
-		case APPLY_INT:
-		case APPLY_WIS:
-		case APPLY_CON:
-		case APPLY_CHR:
-        case APPLY_ATTACKS:
-		case APPLY_LEVEL:
-		case APPLY_AGE:
-		case APPLY_CHAR_WEIGHT:
-		case APPLY_CHAR_HEIGHT:
-		case APPLY_MANA:
-		case APPLY_HIT:
-		case APPLY_MOVE:
-		case APPLY_GOLD:
-		case APPLY_EXP:
-		case APPLY_HITROLL:
-		case APPLY_DAMROLL:
-		case APPLY_HITNDAM:
-		case APPLY_SPELLFAIL:
-			send_to_char("\n\rNote: Modifier will make field go up modifier number "
-						 "of points.\n\r",ch);
-			send_to_char("      Positive modifier will make field go up, negative "
-						 "modifier will make\n\r      field go down.\n\r",ch);
-			break;
-		case APPLY_SEX:
-			send_to_char("\n\rNote: Modifier will change characters sex by "
-						 "adding.\n\r      0=neutral, 1=male, 2=female\n\r",ch);
-			break;
-		case APPLY_SAVING_PARA:
-		case APPLY_SAVING_ROD:
-		case APPLY_SAVING_PETRI:
-		case APPLY_SAVING_BREATH:
-		case APPLY_SAVING_SPELL:
-		case APPLY_SAVE_ALL:
-		case APPLY_AC:
-			send_to_char("\n\rNote: Modifier will make field go up modifier number "
-						 "of points.\n\r",ch);
-			send_to_char("      Positive modifier will make field go up, negative "
-						 "modifier will make\n\r      field go down.\n\r",ch);
-			send_to_char("      $c0015Negative values are BETTER.$c0007", ch);
-			break;
 
-		case APPLY_IMMUNE:
-		case APPLY_SUSC:
-		case APPLY_M_IMMUNE:
-			send_to_char("\n\rNote: Modifier should be ADDED together from this "
-						 "list of immunity flags.\n\r",ch);
-            if(ch->term == VT100)
-            {
-                row = 0;
-                for(i = 0; i < 18; i++)
-                {
-                    sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-                    if(i & 1)
-                    {
-                        row++;
-                    }
-                    send_to_char(buf, ch);
-                    check=1;
-                    if(i>0)
-                        for(a=1; a<=i; a++)
-                        {
-                            check*=2;
-                        }
-                    sprintf(buf, "%-6u :   %s", check, immunity_names[i]);
-                    send_to_char(buf, ch);
-                }
-                sprintf(buf, VT_CURSPOS, 20, 1);
-                send_to_char(buf, ch);
-            }
-            else
-            {
-                string sb;
-                boost::format fmt ("    %-6u : %s");
-                char buf2[255];
-                int x = 0;
+			case APPLY_IMMUNE:
+			case APPLY_SUSC:
+			case APPLY_M_IMMUNE:
+				send_to_char("\n\rNote: Modifier should be ADDED together from this list of immunity flags.\n\r",ch);
+				if(ch->term == VT100)
+				{
+					row = 0;
+					for(i = 0; i < 18; i++)
+					{
+						sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+						if(i & 1)
+						{
+							row++;
+						}
+						send_to_char(buf, ch);
+						check = 1;
+						if(i > 0)
+						{
+							for(a = 1; a <= i; a++)
+							{
+								check *= 2;
+							}
+						}
+						sprintf(buf, "%-6u :   %s", check, immunity_names[i]);
+						send_to_char(buf, ch);
+					}
+					sprintf(buf, VT_CURSPOS, 20, 1);
+					send_to_char(buf, ch);
+				}
+				else
+				{
+					string sb;
+					boost::format fmt ("    %-6u : %s");
+					char buf2[255];
+					int x = 0;
 
-                for(i = 0; i < 18; i++)
-                {
-                    check=1;
-                    sprintf(buf2, "%s", "%-");
-                    sprintf(buf2, "%s%d", buf2, 45-x);
-                    strcat(buf2, "s%-6u : %s\n\r");
-                    boost::format fmt2 (buf2);
+					for(i = 0; i < 18; i++)
+					{
+						check = 1;
+						sprintf(buf2, "%s", "%-");
+						sprintf(buf2, "%s%d", buf2, 45-x);
+						strcat(buf2, "s%-6u : %s\n\r");
+						boost::format fmt2 (buf2);
 
-                    if(i>0)
-                        for(a=1; a<=i; a++)
-                        {
-                            check*=2;
-                        }
+						if(i > 0)
+						{
+							for(a = 1; a <= i; a++)
+							{
+								check *= 2;
+							}
+						}
 
-                    if(i & 1)
-                    {
-                        fmt2 % "" % check % immunity_names[i];
-                        sb.append(fmt2.str().c_str());
-                    }
-                    else
-                    {
-                        fmt % check % immunity_names[i];
-                        sb.append(fmt.str().c_str());
-                        x = strlen(fmt.str().c_str());
-                    }
+						if(i & 1)
+						{
+							fmt2 % "" % check % immunity_names[i];
+							sb.append(fmt2.str().c_str());
+						}
+						else
+						{
+							fmt % check % immunity_names[i];
+							sb.append(fmt.str().c_str());
+							x = strlen(fmt.str().c_str());
+						}
 
-                    fmt.clear();
-                    fmt2.clear();
-                }
-                sb.append("\r\n\n\r");
-                page_string(ch->desc, sb.c_str(), true);
-            }
-			break;
-		case APPLY_SPELL:
-			send_to_char("\n\rNote: Modifier should be ADDED together from this "
-						 "list of affection flags.\n\r",ch);
-                if(ch->term == VT100)
-                {
-                    row = 0;
-                    for(i = 0; *affected_bits[i] != '\n'; i++)
-                    {
-                        sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-                        if(i & 1)
-                        {
-                            row++;
-                        }
-                        send_to_char(buf, ch);
-                        check=1;
-                        if(i>0)
-                            for(a=1; a<=i; a++)
-                            {
-                                check*=2;
-                            }
-                        sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
-                        send_to_char(buf, ch);
-                    }
-                    send_to_char("\n\r\n\r", ch);
-                }
-                else
-                {
-                    string sb;
-                    boost::format fmt ("    %-10u : %s");
-                    char buf2[255];
-                    int x = 0, column = 0;
+						fmt.clear();
+						fmt2.clear();
+					}
+					sb.append("\r\n\n\r");
+					page_string(ch->desc, sb.c_str(), true);
+				}
+				break;
 
-                    send_to_char("\n\r", ch);
+			case APPLY_SPELL:
+				send_to_char("\n\rNote: Modifier should be ADDED together from this list of affection flags.\n\r",ch);
+				if(ch->term == VT100)
+				{
+					row = 0;
+					for(i = 0; *affected_bits[i] != '\n'; i++)
+					{
+						sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+						if(i & 1)
+						{
+							row++;
+						}
+						send_to_char(buf, ch);
+						check = 1;
+						if(i > 0)
+						{
+							for(a = 1; a <= i; a++)
+							{
+								check *= 2;
+							}
+						}
+						sprintf(buf, "%-10u : %s", check, affected_bits2[i]);
+						send_to_char(buf, ch);
+					}
+					send_to_char("\n\r\n\r", ch);
+				}
+				else
+				{
+					string sb;
+					boost::format fmt ("    %-10u : %s");
+					char buf2[255];
+					int x = 0, column = 0;
 
-                    for(i = 0; *affected_bits[i] != '\n'; i++)
-                    {
-                        check=1;
-                        sprintf(buf2, "%s", "%-");
-                        sprintf(buf2, "%s%d", buf2, 45-x);
-                        strcat(buf2, "s%-10u : %s\n\r");
-                        boost::format fmt2 (buf2);
+					send_to_char("\n\r", ch);
 
-                        if(i>0)
-                            for(a=1; a<=i; a++)
-                            {
-                                check*=2;
-                            }
+					for(i = 0; *affected_bits[i] != '\n'; i++)
+					{
+						check = 1;
+						sprintf(buf2, "%s", "%-");
+						sprintf(buf2, "%s%d", buf2, 45-x);
+						strcat(buf2, "s%-10u : %s\n\r");
+						boost::format fmt2 (buf2);
 
-                        if(column & 1)
-                        {
-                            fmt2 % "" % check % affected_bits[i];
-                            sb.append(fmt2.str().c_str());
-                            column += 1;
-                        }
-                        else
-                        {
-                            fmt % check % affected_bits[i];
-                            sb.append(fmt.str().c_str());
-                            x = strlen(fmt.str().c_str());
-                            column += 1;
-                        }
+						if(i > 0)
+						{
+							for(a = 1; a <= i; a++)
+							{
+								check *= 2;
+							}
+						}
 
-                        fmt.clear();
-                        fmt2.clear();
-                    }
-                    page_string(ch->desc, sb.c_str(), true);
-                    send_to_char("\n\r\n\r", ch);
-                }
-			break;
-		case APPLY_WEAPON_SPELL:
-		case APPLY_EAT_SPELL:
-			send_to_char("\n\rNote: Modifier will be a spell # which you can get "
-						 "from the allspells.\n\r",ch);
-			break;
-		case APPLY_BACKSTAB:
-		case APPLY_KICK:
-		case APPLY_SNEAK:
-		case APPLY_HIDE:
-		case APPLY_BASH:
-		case APPLY_PICK:
-		case APPLY_STEAL:
-		case APPLY_TRACK:
-		case APPLY_FIND_TRAPS:
-		case APPLY_RIDE:
-			send_to_char("\n\rNote: Modifier will affect % learned of "
-						 "skill.\n\r",ch);
-			send_to_char("      Positive values will increase the % learned making "
-						 "the char less likely\n\r      to fail while negative "
-						 "numbers will do the opposite.\n\r",ch);
-			break;
-		case APPLY_HASTE:
-			send_to_char("\n\rNote: Valori positivi = num. attacchi guadagnati,"
-						 "i negativi saranno ignorati.\n\r", ch);
-			break;
-		case APPLY_SLOW:
-			send_to_char("\n\rNote: Positive modifier will halve attacks number,"
-						 "negative will double.\n\r", ch);
-			break;
-		case APPLY_RACE_SLAYER:
-			send_to_char("\n\rNote: Modifier is the race number "
-						 "(see help races)\n\r", ch);
-			break;
-		case APPLY_ALIGN_SLAYER:
-			send_to_char("\n\rNote: Modifier should be ADDED together from this "
-						 "list of align flags.\n\r",ch);
-			send_to_char("\n\r 1 = GOOD  2 = NEUTRAL  4 = EVIL\n\r.", ch);
-			break;
-		case APPLY_MANA_REGEN:
-		case APPLY_HIT_REGEN:
-		case APPLY_MOVE_REGEN:
-			send_to_char("\n\rNote: Modifier will add the point regained from "
-						 "char affected by object.\n\r", ch);
-			break;
-		case APPLY_MOD_THIRST:
-		case APPLY_MOD_HUNGER:
-		case APPLY_MOD_DRUNK:
-			send_to_char("\n\rNote: Set thirst/hunger/drunk of char to "
-						 "modifier.\n\r", ch);
-			break;
+						if(column & 1)
+						{
+							fmt2 % "" % check % affected_bits[i];
+							sb.append(fmt2.str().c_str());
+							column += 1;
+						}
+						else
+						{
+							fmt % check % affected_bits[i];
+							sb.append(fmt.str().c_str());
+							x = strlen(fmt.str().c_str());
+							column += 1;
+						}
+
+						fmt.clear();
+						fmt2.clear();
+					}
+					page_string(ch->desc, sb.c_str(), true);
+					send_to_char("\n\r\n\r", ch);
+				}
+				break;
+
+			case APPLY_WEAPON_SPELL:
+			case APPLY_EAT_SPELL:
+				send_to_char("\n\rNote: Modifier will be a spell # which you can get from the allspells.\n\r",ch);
+				break;
+
+			case APPLY_BACKSTAB:
+			case APPLY_KICK:
+			case APPLY_SNEAK:
+			case APPLY_HIDE:
+			case APPLY_BASH:
+			case APPLY_PICK:
+			case APPLY_STEAL:
+			case APPLY_TRACK:
+			case APPLY_FIND_TRAPS:
+			case APPLY_RIDE:
+				send_to_char("\n\rNote: Modifier will affect % learned of skill.\n\r",ch);
+				send_to_char("      Positive values will increase the % learned making the char less likely\n\r      to fail while negative numbers will do the opposite.\n\r",ch);
+				break;
+
+			case APPLY_HASTE:
+				send_to_char("\n\rNota: Valori positivi = num. attacchi guadagnati, i negativi saranno ignorati.\n\r", ch);
+				break;
+
+			case APPLY_SLOW:
+				send_to_char("\n\rNote: Positive modifier will halve attacks number, negative will double.\n\r", ch);
+				break;
+
+			case APPLY_RACE_SLAYER:
+				send_to_char("\n\rNote: Modifier is the race number (see help races)\n\r", ch);
+				break;
+
+			case APPLY_ALIGN_SLAYER:
+				send_to_char("\n\rNote: Modifier should be ADDED together from this list of align flags.\n\r",ch);
+				send_to_char("\n\r 1 = GOOD  2 = NEUTRAL  4 = EVIL\n\r.", ch);
+				break;
+
+			case APPLY_MANA_REGEN:
+			case APPLY_HIT_REGEN:
+			case APPLY_MOVE_REGEN:
+				send_to_char("\n\rNote: Modifier will add the point regained from char affected by object.\n\r", ch);
+				break;
+
+			case APPLY_MOD_THIRST:
+			case APPLY_MOD_HUNGER:
+			case APPLY_MOD_DRUNK:
+				send_to_char("\n\rNote: Set thirst/hunger/drunk of char to modifier.\n\r", ch);
+				break;
 		}
 
 		send_to_char("\n\r\n\rEnter new Modifier (return for 0): ", ch);
@@ -1374,88 +1395,103 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-    if(ch->term == VT100)
-    {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+	if(ch->term == VT100)
+	{
+		sprintf(buf, VT_HOMECLR);
+		send_to_char(buf, ch);
 
-        for(i = 0; i < 56; i++)
-        {
-            a++;
-            if(a==1)
-            {
-                column=5;
-            }
-            else if(a==2)
-            {
-                column = 30;
-            }
-            else if(a==3)
-            {
-                column = 55;
-            }
-            sprintf(buf, VT_CURSPOS, row + 1, column);
-            if(a==3)
-            {
-                row++;
-                a=0;
-            }
-            send_to_char(buf, ch);
-            sprintf(buf, "%-2d %s", i + 1, apply_types[i]);
-            send_to_char(buf, ch);
-        }
+		for(i = 0; i < APPLY_SKIP; i++)
+		{
+			if(i >= APPLY_T_STR && i <= APPLY_T_MANA)
+			{
+				continue;
+			}
+			a++;
+			if(a == 1)
+			{
+				column=5;
+			}
+			else if(a == 2)
+			{
+				column = 30;
+			}
+			else if(a == 3)
+			{
+				column = 55;
+			}
+			sprintf(buf, VT_CURSPOS, row + 1, column);
+			if(a == 3)
+			{
+				row++;
+				a = 0;
+			}
+			send_to_char(buf, ch);
+			if(i > APPLY_T_MANA)
+			{
+				sprintf(buf, "%-2d %s", i - 8, apply_types[i]);
+			}
+			else
+			{
+				sprintf(buf, "%-2d %s", i + 1, apply_types[i]);
+			}
+			send_to_char(buf, ch);
+		}
 
-        sprintf(buf, VT_CURSPOS, 21, 1);
-        send_to_char(buf, ch);
-    }
-    else
-    {
-        string sb;
-        char buf2[255];
-        boost::format fmt ("     %-2d %s");
-        int x = 0;
+		sprintf(buf, VT_CURSPOS, 21, 1);
+		send_to_char(buf, ch);
+	}
+	else
+	{
+		string sb;
+		char buf2[255];
+		boost::format fmt ("     %-2d %s");
+		int x = 0;
 
-        send_to_char("\n\r\n\r", ch);
+		send_to_char("\n\r\n\r", ch);
 
-        for(i = 0; i < 56; i++)
-        {
-            a++;
-            if(a == 1)
-            {
-                boost::format fmt ("     %-2d %s");
-                fmt % (i + 1) % apply_types[i];
-                sb.append(fmt.str().c_str());
-                x = strlen(fmt.str().c_str());
-            }
-            else if(a == 2)
-            {
-                sprintf(buf2, "%s", "%-");
-                sprintf(buf2, "%s%d", buf2, 30-x);
-                strcat(buf2, "s%-2d %s");
-                boost::format fmt2 (buf2);
-                fmt2 % "" % (i + 1) % apply_types[i];
-                sb.append(fmt2.str().c_str());
-                x += strlen(fmt2.str().c_str());
-                fmt2.clear();
-            }
-            else if(a == 3)
-            {
-                sprintf(buf2, "%s", "%-");
-                sprintf(buf2, "%s%d", buf2, 55-x);
-                strcat(buf2, "s%-2d %s\n\r");
-                boost::format fmt (buf2);
-                fmt % "" % (i + 1) % apply_types[i];
-                sb.append(fmt.str().c_str());
-                x = 0;
-                a = 0;
-            }
+		for(i = 0; i < APPLY_SKIP; i++)
+		{
+			if(i >= APPLY_T_STR && i <= APPLY_T_MANA)
+			{
+				continue;
+			}
+			a++;
+			if(a == 1)
+			{
+				boost::format fmt ("     %-2d %s");
+				fmt % (i > APPLY_T_MANA ? i - 8 : i + 1) % apply_types[i];
+				sb.append(fmt.str().c_str());
+				x = strlen(fmt.str().c_str());
+			}
+			else if(a == 2)
+			{
+				sprintf(buf2, "%s", "%-");
+				sprintf(buf2, "%s%d", buf2, 30-x);
+				strcat(buf2, "s%-2d %s");
+				boost::format fmt2 (buf2);
+				fmt2 % "" % (i > APPLY_T_MANA ? i - 8 : i + 1) % apply_types[i];
+				sb.append(fmt2.str().c_str());
+				x += strlen(fmt2.str().c_str());
+				fmt2.clear();
+			}
+			else if(a == 3)
+			{
+				sprintf(buf2, "%s", "%-");
+				sprintf(buf2, "%s%d", buf2, 55-x);
+				strcat(buf2, "s%-2d %s\n\r");
+				boost::format fmt (buf2);
+				fmt % "" % (i > APPLY_T_MANA ? i - 8 : i + 1) % apply_types[i];
+				sb.append(fmt.str().c_str());
+				x = 0;
+				a = 0;
+			}
 
-            fmt.clear();
-            }
+			fmt.clear();
+		}
 
-        sb.append("\r\n\n\r");
-        page_string(ch->desc, sb.c_str(), true);
-    }
+		sb.append("\r\n\n\r");
+		page_string(ch->desc, sb.c_str(), true);
+	}
 
 
 	send_to_char("Select the apply number or hit enter for the main menu.\n\r--> ",ch);

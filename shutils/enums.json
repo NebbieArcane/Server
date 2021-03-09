@@ -1582,8 +1582,16 @@
 				"value": 64,
 				"comment": ""
 			},
-			"APPLY_SKIP": {
+			"APPLY_SPELLPOWER": {
 				"value": 65,
+				"comment": ""
+			},
+			"APPLY_HITNSP": {
+				"value": 66,
+				"comment": ""
+			},
+			"APPLY_SKIP": {
+				"value": 67,
 				"comment": "Non viene toccato il bitvector"
 			}
 		},

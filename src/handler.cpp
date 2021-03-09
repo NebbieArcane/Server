@@ -632,6 +632,15 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		GET_DAMROLL(ch) += mod;
 		break;
 
+	case APPLY_SPELLPOWER:
+	//	GET_SPELLPOWER(ch) += mod;
+		break;
+
+	case APPLY_HITNSP:
+	//	GET_HITROLL(ch) += mod;
+	//	GET_SPELLPOWER(ch) += mod;
+		break;
+
 	/* negatives make saving throws better */
 
 	case APPLY_SAVING_PARA:
@@ -2937,4 +2946,3 @@ void AddAffects(struct char_data* ch, struct obj_data* o) {
 	}
 }
 } // namespace Alarmud
-

@@ -719,10 +719,17 @@ float GetCharBonusIndex(struct char_data* ch) {
 					thismod-=mod*2;
 					break;
 				case APPLY_HITROLL:
-					thismod+=iif(IS_FIGHTER(ch),10,8);
+					thismod+=mod*iif(IS_FIGHTER(ch),10,8);
 					break;
 				case APPLY_DAMROLL:
-					thismod+=iif(IS_FIGHTER(ch),20,15);
+					thismod+=mod*iif(IS_FIGHTER(ch),20,15);
+					break;
+				case APPLY_SPELLPOWER:
+					thismod+=mod*iif(IS_CASTER(ch),20,15);
+					break;
+				case APPLY_HITNSP:
+					thismod+=mod*iif(IS_FIGHTER(ch),10,8);
+					thismod+=mod*iif(IS_CASTER(ch),20,15);
 					break;
 				case APPLY_SAVING_PARA:
 					thismod+=mod*2;
@@ -847,4 +854,3 @@ ACTION_FUNC(do_setalign) {
 
 
 } // namespace Alarmud
-

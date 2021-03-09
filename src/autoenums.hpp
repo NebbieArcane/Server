@@ -420,11 +420,13 @@ modifiers to char's abilities*/
 	APPLY_T_HPS                                  =62,
 	APPLY_T_MOVE                                 =63,
 	APPLY_T_MANA                                 =64,
-	APPLY_SKIP                                   =65 /*Non viene toccato il bitvector*/
+	APPLY_SPELLPOWER                             =65,
+	APPLY_HITNSP                                 =66,
+	APPLY_SKIP                                   =67 /*Non viene toccato il bitvector*/
 };
-#define E_APPLY_COUNT 66
+#define E_APPLY_COUNT 68
 #define E_APPLY_MIN 0
-#define E_APPLY_MAX 65
+#define E_APPLY_MAX 67
 #define E_APPLY_KEY "e_apply"
 
 #define E_APPLY_ACCEPT_ZERO true

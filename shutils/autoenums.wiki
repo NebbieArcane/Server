@@ -68,7 +68,9 @@
 ** APPLY_T_HPS                                  =62
 ** APPLY_T_MOVE                                 =63
 ** APPLY_T_MANA                                 =64
-** APPLY_SKIP                                   =65Non viene toccato il bitvector
+** APPLY_SPELLPOWER                             =65
+** APPLY_HITNSP                                 =66
+** APPLY_SKIP                                   =67Non viene toccato il bitvector
 == Enumerations ==
 
 === enum e_class_index ===

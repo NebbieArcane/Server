@@ -2944,6 +2944,8 @@ const char* apply_types[] = {
 	"T_HPS",
 	"T_MOVE",
 	"T_MANA",
+	"SPELLPOWER",
+	"HIT-N-SP",
 	"\n"
 };
 

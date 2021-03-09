@@ -76,6 +76,8 @@ e_apply encode_e_apply(std::string s,e_apply fallback) {
 	if (s == "APPLY_T_HPS") return APPLY_T_HPS;
 	if (s == "APPLY_T_MOVE") return APPLY_T_MOVE;
 	if (s == "APPLY_T_MANA") return APPLY_T_MANA;
+	if (s == "APPLY_SPELLPOWER") return APPLY_SPELLPOWER;
+	if (s == "APPLY_HITNSP") return APPLY_HITNSP;
 	if (s == "APPLY_SKIP") return APPLY_SKIP;
 	return fallback;
 }
@@ -212,6 +214,10 @@ std::string translate(const e_apply e) {
 		return "APPLY_T_MOVE";
 	case APPLY_T_MANA:
 		return "APPLY_T_MANA";
+	case APPLY_SPELLPOWER:
+		return "APPLY_SPELLPOWER";
+	case APPLY_HITNSP:
+		return "APPLY_HITNSP";
 	case APPLY_SKIP:
 		return "APPLY_SKIP";
 	default:
@@ -285,6 +291,8 @@ bool enum_validate(const e_apply value) {
 		case APPLY_T_HPS:
 		case APPLY_T_MOVE:
 		case APPLY_T_MANA:
+		case APPLY_SPELLPOWER:
+		case APPLY_HITNSP:
 		case APPLY_SKIP:
 		return true;
 		default:
