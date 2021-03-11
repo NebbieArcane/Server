@@ -5255,7 +5255,7 @@ ACTION_FUNC(do_show) {
 		int objn;
 		struct index_data* oi;
 		struct obj_data* obj;
-		int vnum, i = 0;
+		int vnum, i = 0, lp = 0;
 
 		only_argument(arg, zonenum);
 
@@ -5291,7 +5291,23 @@ ACTION_FUNC(do_show) {
 					else
 					{
 						obj = read_object(oi->iVNum, VIRTUAL);
-						if(!IS_SET(obj->obj_flags.wear_flags, (1 << i)))
+						if(!strcmp(zonenum, "lifeprot"))
+						{
+							lp = 0;
+							for(i = 0; i < MAX_OBJ_AFFECT; i++)
+							{
+								if(obj->affected[i].location == APPLY_SPELL && IS_SET(obj->affected[i].modifier, AFF_LIFE_PROT))
+								{
+									lp = 1;
+								}
+							}
+							if(lp == 0)
+							{
+								extract_obj(obj);
+								continue;
+							}
+						}
+						else if(!IS_SET(obj->obj_flags.wear_flags, (1 << i)))
 						{
 							extract_obj(obj);
 							continue;
@@ -5299,7 +5315,7 @@ ACTION_FUNC(do_show) {
 						extract_obj(obj);
 					}
 
-					sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, objn, oi->number, oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "");
+					sprintf(buf, "%5d %4d %3d  %s %s %s\n\r", oi->iVNum, objn, oi->number, oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "", lp == 1 ? "($c0014lp$c0007)" : "");
 					append_to_string_block(&sb, buf);
 				}
 			}
