@@ -5245,8 +5245,8 @@ ACTION_FUNC(do_show) {
 				continue;
 			} /* optimize later*/
 
-			sprintf(buf, "%5d %4d %3d  %s\n\r", oi->iVNum, objn, oi->number,
-					oi->name);
+			sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, objn, oi->number,
+					oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "");
 			append_to_string_block(&sb, buf);
 		}
 	}
@@ -5255,47 +5255,53 @@ ACTION_FUNC(do_show) {
 		int objn;
 		struct index_data* oi;
 		struct obj_data* obj;
-		int vnum, i;
+		int vnum, i = 0;
 
 		only_argument(arg, zonenum);
 
-		for(i = 0; i < 20; i++)
+		if(strcmp(zonenum, "storage"))
 		{
-			if(is_abbrev(zonenum, wear_bits[i]))
+			for(i = 0; i < 20; i++)
 			{
-				break;
+				if(is_abbrev(zonenum, wear_bits[i]))
+				{
+					break;
+				}
 			}
 		}
-		/*    zone = -1;
-		if(sscanf(zonenum, "%i", &zone) == 1 && (zone < 0 || zone > top_of_zone_table))
-		{
-			append_to_string_block(&sb, "That is not a valid zone_number\n\r");
-			return;
-		}
-		if(zone >= 0)
-		{
-			bottom = zone ? (zone_table[zone - 1].top + 1) : 0;
-			top = zone_table[zone].top;
-		} */
 
 		append_to_string_block(&sb, "VNUM  rnum count names\n\r");
-		for(objn = 0; objn < topi; objn++)
+
+		if(*zonenum)
 		{
-			oi = which_i + objn;
-
-			vnum = real_object(oi->iVNum);
-			if(vnum > 0 && vnum < 99999 && oi->iVNum != 99999)
+			for(objn = 0; objn < topi; objn++)
 			{
-				obj = read_object(oi->iVNum, VIRTUAL);
+				oi = which_i + objn;
 
-				if(!IS_SET(obj->obj_flags.wear_flags, (1 << i)))
+				vnum = real_object(oi->iVNum);
+				if(vnum > 0 && vnum < 99999 && oi->iVNum != 99999)
 				{
-					extract_obj(obj);
-					continue;
-				} /* optimize later*/
-				extract_obj(obj);
-				sprintf(buf, "%5d %4d %3d  %s\n\r", oi->iVNum, objn, oi->number, oi->name);
-				append_to_string_block(&sb, buf);
+					if(!strcmp(zonenum, "storage"))
+					{
+						if(oi->pos != -1)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						obj = read_object(oi->iVNum, VIRTUAL);
+						if(!IS_SET(obj->obj_flags.wear_flags, (1 << i)))
+						{
+							extract_obj(obj);
+							continue;
+						}
+						extract_obj(obj);
+					}
+
+					sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, objn, oi->number, oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "");
+					append_to_string_block(&sb, buf);
+				}
 			}
 		}
 	}
@@ -5376,7 +5382,7 @@ ACTION_FUNC(do_show) {
 							   "  show (objects|mobiles) (zone#|name)\n\r"
 							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r"
-                               "  show items (location)\n\r");
+                               "  show items (location/storage)\n\r");
 	}
 	page_string_block(&sb, ch);
 	destroy_string_block(&sb);
