@@ -3753,7 +3753,7 @@ void ClearDeadBit(struct char_data* ch) {
 }
 
 /* clear some of the the working variables of a char */
-void reset_char(struct char_data* ch) {
+void reset_char(struct char_data* ch, bool reincarnate) {
 	double ratio = 0.0;
 	int i;
 	double absmaxhp;
@@ -3811,28 +3811,31 @@ void reset_char(struct char_data* ch) {
 	ch->specials.carry_items = 0;
 	ch->specials.spellfail = 101;
 
-	/* Achievemets */
-	for( i = 0; i < MAX_RACE_ACHIE; i++)
+	if(reincarnate == FALSE)
 	{
-		ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
-	}
-	for( i = 0; i < MAX_BOSS_ACHIE; i++)
-	{
-		ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
-	}
-	for( i = 0; i < MAX_CLASS_ACHIE; i++)
-	{
-		ch->specials.achievements[CLASS_ACHIE][i] = 0;
-	}
-	for( i = 0; i < MAX_QUEST_ACHIE; i++)
-	{
-		ch->specials.achievements[QUEST_ACHIE][i] = 0;
-		ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
-		ch->specials.mercy[i] = 0;
-	}
-	for( i = 0; i < MAX_OTHER_ACHIE; i++)
-	{
-		ch->specials.achievements[OTHER_ACHIE][i] = 0;
+		/* Achievemets */
+		for( i = 0; i < MAX_RACE_ACHIE; i++)
+		{
+			ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
+		}
+		for( i = 0; i < MAX_BOSS_ACHIE; i++)
+		{
+			ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
+		}
+		for( i = 0; i < MAX_CLASS_ACHIE; i++)
+		{
+			ch->specials.achievements[CLASS_ACHIE][i] = 0;
+		}
+		for( i = 0; i < MAX_QUEST_ACHIE; i++)
+		{
+			ch->specials.achievements[QUEST_ACHIE][i] = 0;
+			ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
+			ch->specials.mercy[i] = 0;
+		}
+		for( i = 0; i < MAX_OTHER_ACHIE; i++)
+		{
+			ch->specials.achievements[OTHER_ACHIE][i] = 0;
+		}
 	}
 
 	if(GET_HIT(ch) <= 0) {
