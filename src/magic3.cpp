@@ -1558,7 +1558,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 
 			store_to_char(&st, newch);
 
-			reset_char(newch, TRUE);
+			reset_char(newch);
 			load_char_extra(newch);
 
 			newch->next = character_list;
