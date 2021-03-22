@@ -1975,16 +1975,49 @@ ACTION_FUNC(do_stat) {
 					j->obj_flags.cost_per_day, j->obj_flags.timer);
 			send_to_char(buf, ch);
 
-			strcpy(buf, "$c0005In room: $c0005");
-			if(j->in_room == NOWHERE) {
+			strcpy(buf, "$c0005In room: $c0014");
+			if(j->in_room == NOWHERE)
+			{
 				strcat(buf, "Nowhere");
 			}
-			else {
+			else
+			{
 				sprintf(buf2, "%d", j->in_room);
 				strcat(buf, buf2);
 			}
-			strcat(buf, "$c0005 ,In object: $c0014");
+			strcat(buf, "$c0005, In object: $c0014");
 			strcat(buf, (!j->in_obj ? "None" : fname(j->in_obj->name)));
+			strcat(buf, "\n\r");
+			send_to_char(buf, ch);
+
+			strcpy(buf, "\n\r$c0005Equipment Status: $c0014");
+			if(!j->carried_by)
+			{
+				strcat(buf, "NONE");
+			}
+			else
+			{
+				found = FALSE;
+				for(i = 0; i < MAX_WEAR; i++)
+				{
+					if(j->carried_by->equipment[i] == j)
+					{
+						sprinttype(i, equipment_types, buf2);
+						strcat(buf, buf2);
+						found = TRUE;
+					}
+				}
+				if(!found)
+				{
+					strcat(buf, "$c0005Inventory of $c0011");
+				}
+				else
+				{
+					strcat(buf, "$c0005 by $c0011");
+				}
+				strcat(buf, GET_NAME_DESC(j->carried_by));
+			}
+			send_to_char(buf, ch);
 
 			switch(j->obj_flags.type_flag) {
 			case ITEM_LIGHT:
@@ -2014,7 +2047,6 @@ ACTION_FUNC(do_stat) {
 				strcat(buf, buf2);
 				sprinttype(j->obj_flags.value[3], aszWeaponType, buf2);
 				strcat(buf, buf2);
-				strcat(buf, "\n\r");
 				break;
 			case ITEM_FIREWEAPON:
 				sprintf(buf, "$c0005Min Strength: $c0014%d\n\r$c0005Max range: $c0014%d\n\r"
@@ -2073,29 +2105,6 @@ ACTION_FUNC(do_stat) {
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[2], j->obj_flags.value[3]);
 				break;
-			}
-			send_to_char(buf, ch);
-
-			strcpy(buf, "\n\r$c0005Equipment Status: $c0014");
-			if(!j->carried_by) {
-				strcat(buf, "NONE");
-			}
-			else {
-				found = FALSE;
-				for(i = 0; i < MAX_WEAR; i++) {
-					if(j->carried_by->equipment[i] == j) {
-						sprinttype(i, equipment_types, buf2);
-						strcat(buf, buf2);
-						found = TRUE;
-					}
-				}
-				if(!found) {
-					strcat(buf, "$c0005Inventory of $c0011");
-				}
-				else {
-					strcat(buf, "$c0005 by $c0011");
-				}
-				strcat(buf, GET_NAME_DESC(j->carried_by));
 			}
 			send_to_char(buf, ch);
 
