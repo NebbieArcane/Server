@@ -1448,6 +1448,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 	struct descriptor_data* d;
 	FILE* fl,*fdeath;
 	char szFileName[ 40 ];
+	extern void load_char_extra(struct char_data* ch);
 
 	if(!obj) {
 		return;
@@ -1558,6 +1559,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			store_to_char(&st, newch);
 
 			reset_char(newch, TRUE);
+			load_char_extra(newch);
 
 			newch->next = character_list;
 			character_list = newch;
