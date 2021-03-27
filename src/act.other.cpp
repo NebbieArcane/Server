@@ -3201,6 +3201,7 @@ ACTION_FUNC(do_set_flags) {
 					 "Pkill \n\r"
 					 "Pwp \n\r"
 					 "Realname \n\r"
+					 "Warnings \n\r"
 					 "Who \n\r"
 					 ,ch);
 		return;
@@ -3242,6 +3243,34 @@ ACTION_FUNC(do_set_flags) {
 		}
 		else {
 			send_to_char("Uso: set achie on(enable)/off(disable) \n\r",ch);
+			return;
+		}
+	}
+
+	if(!strcmp("warnings",type) && (!*field)) {
+		send_to_char("Usa 'set warnings on/off'\n\r"
+					 "Questo comando ti permette di attivare "
+					 "o disattivare i messaggi di warnings, "
+					 "al momento l'unico avviso e' sul numero degli "
+					 "oggetti che stai portando con te.\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(type,"warnings")) {
+		if(!strcmp("off",field) || !strcmp("disable",field)) {
+			SET_BIT(ch->player.user_flags, WARNINGS_MODE_OFF);
+			send_to_char("Da ora in poi non riceverai piu' nessun tipo di avviso.\n\r",ch);
+			return;
+		}
+		else if(!strcmp("on",field) || !strcmp("enable",field)) {
+			if(IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF)) {
+				REMOVE_BIT(ch->player.user_flags, WARNINGS_MODE_OFF);
+			}
+			send_to_char("Da ora in poi potrai ricevere avvisi.\n\r",ch);
+			return;
+		}
+		else {
+			send_to_char("Uso: set warning on(enable)/off(disable) \n\r",ch);
 			return;
 		}
 	}

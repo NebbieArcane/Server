@@ -2853,6 +2853,7 @@ const char* special_user_flags[] = {
 	"MOBILE-EDITOR-OK",
     "PWP_MODE",
 	"ACHIE_SHOW",
+	"WARNINGS_OFF",
 	"\n"
 };
 

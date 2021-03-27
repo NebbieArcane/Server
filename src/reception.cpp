@@ -217,11 +217,18 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 #endif
 
 
-	if(cost->no_carried > MAX_OBJ_SAVE) {
-		if(receptionist) {
-			snprintf(buf, sizeof(buf)-1,"$n tells you 'Sorry, but I can't store more than %d items.",
-					MAX_OBJ_SAVE);
-			act(buf,FALSE,receptionist,0,ch,TO_VICT);
+	if(cost->no_carried > MAX_OBJ_SAVE)
+	{
+		if(receptionist)
+		{
+			snprintf(buf, sizeof(buf)-1, "$n tells you 'Sorry, but I can't store more than %d items.", MAX_OBJ_SAVE);
+			act(buf, FALSE, receptionist, 0, ch, TO_VICT);
+		}
+		else if(!IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF))
+		{
+			snprintf(buf, sizeof(buf)-1, "$c5009WARNING$c0011 - $c0015Stai portando troppa roba con te,\n\r"
+			"          $c0015verranno salvati solamente %d oggetti.", MAX_OBJ_SAVE);
+			act(buf, FALSE, ch, 0, ch, TO_VICT);
 		}
 		return(FALSE);
 	}

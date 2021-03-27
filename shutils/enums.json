@@ -3443,6 +3443,10 @@
 			"ACHIE_MODE": {
 				"value": 32768,
 				"comment": "show the amount of each increased achievement"
+			},
+			"WARNINGS_MODE_OFF": {
+				"value": 65536,
+				"comment": "show the amount of each increased achievement"
 			}
 		},
 		"e_sys_flags": {

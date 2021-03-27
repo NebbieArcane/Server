@@ -3981,9 +3981,20 @@ ACTION_FUNC(do_score) {
 	/* Drow fight -4 in lighted rooms! */
 	if(!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
 			!affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
-		snprintf(buf,999,"$c0011La luce nell'area ti da molto dolore$c0009!");
+		snprintf(buf,999,"$c0011La luce nell'area ti provoca molto dolore$c0009!");
 		act(buf,FALSE,ch,0,0,TO_CHAR);
 	}
+
+	snprintf(buf,999,	"$c0005I tuoi set sono: "
+						"$c0015Achie$c0005($c0015%s$c0005) $c0015Ansi$c0005($c0015%s$c0005) $c0015Autoexits$c0005($c0015%s$c0005) "
+						"$c0015Pwp$c0005($c0015%s$c0005) $c0015Warnings$c0005($c0015%s$c0005) $c0015Who$c0005($c0015%s$c0005)",
+						IS_SET(ch->player.user_flags, ACHIE_MODE) ? "on" : "off",
+						IS_SET(ch->player.user_flags, USE_ANSI) ? "on" : "off",
+						IS_SET(ch->player.user_flags, SHOW_EXITS) ? "on" : "off",
+						IS_SET(ch->player.user_flags, PWP_MODE) ? "on" : "off",
+						IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF) ? "off" : "on",
+						IS_SET(ch->player.user_flags, SHOW_CLASSES) ? "on" : "off");
+	act(buf, FALSE, ch, 0, 0, TO_CHAR);
 
 	snprintf(buf,999,"$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015%d ",
 			 GET_RUNEDEI(ch));
