@@ -924,7 +924,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Race Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -940,7 +940,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Race Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -966,7 +966,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Boss Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -982,7 +982,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Boss Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -1008,7 +1008,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Skill Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -1034,7 +1034,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Quest Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -1050,7 +1050,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Quest Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -1076,7 +1076,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Other Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
@@ -1092,7 +1092,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
                 num += stringa.livello;
-                boost::format fmt("$c0014Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                boost::format fmt("$c0014Other Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
                 fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
                 sb.append(fmt.str().c_str());
                 fmt.clear();
