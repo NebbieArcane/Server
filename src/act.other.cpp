@@ -2825,11 +2825,11 @@ ACTION_FUNC(do_mount) {
 			}
 
 			if(RIDDEN(horse)) {
-				send_to_char("Already ridden\n\r", ch);
+				send_to_char("Already ridden.\n\r", ch);
 				return;
 			}
 			else if(MOUNTED(ch)) {
-				send_to_char("Already riding\n\r", ch);
+				send_to_char("Already riding.\n\r", ch);
 				return;
 			}
 
