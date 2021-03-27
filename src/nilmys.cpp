@@ -2217,7 +2217,7 @@ OBJSPECIAL_FUNC(urna_nilmys)
                 default:
                     break;
             }
-            if( s1 + s2 + s3 +s4 == 4)
+            if( s1 + s2 + s3 +s4 == 4 && obj->iGeneric == 0)
             {
                 numero = room_of_object(obj);
                 send_to_room(" \n\r", numero);
