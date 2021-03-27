@@ -62,7 +62,7 @@ ACTION_FUNC(do_say) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -128,7 +128,7 @@ ACTION_FUNC(do_shout) {
 		send_to_char("Non puoi urlare!!\n\r", ch);
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi urlare in queste condizioni.\n\r", ch);
@@ -212,7 +212,7 @@ ACTION_FUNC(do_gossip) {
 		send_to_char("It may return after a bit.\n\r", ch);
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -274,7 +274,7 @@ ACTION_FUNC(do_auction) {
 		send_to_char("It may return after a bit.\n\r", ch);
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi farlo.\n\r", ch);
@@ -362,7 +362,7 @@ ACTION_FUNC(do_tell) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -444,7 +444,7 @@ ACTION_FUNC(do_whisper) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -495,7 +495,7 @@ ACTION_FUNC(do_ask) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -513,7 +513,7 @@ ACTION_FUNC(do_ask) {
 	else if(vict == ch) {
 		act("$c0006[$c0015$n$c0006] si chiede qualcosa... trovera' la soluzione?",
 			FALSE,ch,0,0,TO_ROOM);
-		act("$c0006Oltre alla domanda, conosci anche la risposta ?", FALSE, ch, 0,
+		act("$c0006Oltre alla domanda, conosci anche la risposta?", FALSE, ch, 0,
 			0, TO_CHAR);
 	}
 	else if(IS_LINKDEAD(vict)) {
@@ -535,19 +535,19 @@ ACTION_FUNC(do_ask) {
 			act(buf,FALSE, ch,0,0,TO_CHAR);
 		}
 		act("$c0006$n fa una domanda a $N.",FALSE,ch,0,vict,TO_NOTVICT);
-        
+
     /* indizi per le quest */
     if(!IS_PC(vict) && affected_by_spell(ch,STATUS_QUEST) && (isname2("ladro",GET_NAME(vict)) || isname2("cacciatore",GET_NAME(vict)) || isname2("spia",GET_NAME(vict)) || isname2("shop_keeper",mob_index[vict->nr].specname)))    {
-        
+
         if(ch->specials.quest_ref == NULL)    {
             sprintf(buf,"%s Cio' che cerchi appartiene al passato.",
                     GET_NAME(ch));
             do_tell(vict,buf,CMD_TELL);
             return;
         }
-        
+
         if(strstr(message, "indizio") != NULL && IsHumanoid(vict)) {
-            
+
             if(ch->specials.quest_ref && !(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, NULL))) {
                 sprintf(buf,"%s Mi spiace, ma non ho informazioni al riguardo...",
                         GET_NAME(ch));
@@ -555,9 +555,9 @@ ACTION_FUNC(do_ask) {
                 return;
             }
             else {
-                
+
                 int price = number(250000,300000) - (5000*GET_CHR(ch));
-                
+
                 if(GET_GOLD(ch) >= price) {
                     if(!IS_DIO(ch)) {
                         GET_GOLD(ch) -= price;
@@ -565,7 +565,7 @@ ACTION_FUNC(do_ask) {
                                 price,GET_NAME(vict));
                         send_to_char(buf, ch);
                     }
-                    
+
                     if(real_roomp(ch->in_room)->zone == real_roomp(ch->specials.quest_ref->in_room)->zone) {
                         sprintf(buf, "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",GET_NAME(ch), ch->specials.quest_ref->player.name,SSLF(ch->specials.quest_ref), real_roomp(ch->specials.quest_ref->in_room)->name);
                     } else {
@@ -579,7 +579,7 @@ ACTION_FUNC(do_ask) {
                 }
                 return;
             }
-            
+
         } else {
             sprintf(buf,"%s Se vuoi un indizio chiedimelo chiaramente... ma ti costera'!",
                     GET_NAME(ch));
@@ -588,7 +588,7 @@ ACTION_FUNC(do_ask) {
         }
      }
     /* end indizi quest*/
-        
+
 	}
 }
 
@@ -875,7 +875,7 @@ ACTION_FUNC(do_new_say) {
 		if(apply_soundproof(ch)) {
 			return;
 		}
-        
+
         if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
         {
             send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -1026,7 +1026,7 @@ ACTION_FUNC(do_gtell) {
 	if(apply_soundproof(ch)) {
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
@@ -1268,7 +1268,7 @@ ACTION_FUNC(do_telepathy) {
 		send_to_char("Cosa pensi di essere? Un telepate?\n\r", ch);
 		return;
 	}
-    
+
     if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
     {
         send_to_char("Non puoi farlo in queste condizioni.\n\r", ch);
@@ -1387,4 +1387,3 @@ ACTION_FUNC(do_eavesdrop) {
 
 
 } // namespace Alarmud
-
