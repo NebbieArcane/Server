@@ -961,7 +961,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
         else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
         {
             num += 1;
-            if(achievement_class == BOSSKILL_ACHIE && achievement_type == AchievementsList[BOSSKILL_ACHIE][i].achie_number)
+            if(achievement_class == BOSSKILL_ACHIE && achievement_type == n_bosskill(AchievementsList[BOSSKILL_ACHIE][i].achie_number, BOSSKILL_ACHIE))
             {
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
@@ -977,7 +977,7 @@ std::string AchievementNumber(struct char_data* ch, int achievement_type, int ac
         else if(tch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
         {
             num += 1;
-            if(achievement_class == BOSSKILL_ACHIE && achievement_type == AchievementsList[BOSSKILL_ACHIE][i].achie_number)
+            if(achievement_class == BOSSKILL_ACHIE && achievement_type == n_bosskill(AchievementsList[BOSSKILL_ACHIE][i].achie_number, BOSSKILL_ACHIE))
             {
                 // ho trovato l'achievement
                 stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
