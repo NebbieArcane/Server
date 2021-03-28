@@ -1990,7 +1990,7 @@ ACTION_FUNC(do_stat) {
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
-			strcpy(buf, "\n\r$c0005Equipment Status: $c0014");
+			strcpy(buf, "$c0005Equipment Status: $c0014");
 			if(!j->carried_by)
 			{
 				strcat(buf, "NONE");
@@ -2017,6 +2017,7 @@ ACTION_FUNC(do_stat) {
 				}
 				strcat(buf, GET_NAME_DESC(j->carried_by));
 			}
+			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
 			switch(j->obj_flags.type_flag) {
