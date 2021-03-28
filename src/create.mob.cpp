@@ -589,57 +589,71 @@ void MobEdit(struct char_data* ch, const char* arg) {
 
 
 void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) {
-    char buf[256], proc[256], parms[256];
-    struct char_data* mob;
-    struct OtherSpecialProcEntry* op;
-    int i;
-    int lastotherproc = 0;
+	char buf[256], proc[256], parms[256];
+	struct char_data* mob;
+	struct OtherSpecialProcEntry* op;
+	int i;
+	int lastotherproc = 0;
 
-    if(type != ENTER_CHECK)
-        if(!*arg || (*arg == '\n')) {
-            ch->specials.medit = MOB_MAIN_MENU;
-            UpdateMobMenu(ch);
-            return;
-        }
+	if(type != ENTER_CHECK)
+	{
+		if(!*arg || (*arg == '\n'))
+		{
+			ch->specials.medit = MOB_MAIN_MENU;
+			UpdateMobMenu(ch);
+			return;
+		}
+	}
 
-    mob=ch->specials.mobedit;
-    if(type != ENTER_CHECK) {
-        arg = one_argument(arg, proc);
-        only_argument(arg,parms);
-        for(i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++)
-        {
-            lastotherproc++;
-        }
+	mob = ch->specials.mobedit;
+	if(type != ENTER_CHECK)
+	{
+		arg = one_argument(arg, proc);
+		only_argument(arg, parms);
 
-        if(!(op=(struct OtherSpecialProcEntry*)
-        bsearch(&proc,
-                otherproc,
-                lastotherproc,
-                sizeof(struct OtherSpecialProcEntry),
-                nomecompare)))
-        {
-            mudlog(LOG_ERROR,
-                   "mobile_assign: Mobile %d not found in database.",mob_index[mob->nr].iVNum);
-        }
-        else
-        {
-            mob_index[mob->nr].func         = op->proc;
-            mob_index[mob->nr].specname     = op->nome;
-            mob_index[mob->nr].specparms    = strdup(parms);
-        }
-        ch->specials.medit = MOB_MAIN_MENU;
-        UpdateMobMenu(ch);
-        return;
-    }
+		if(strstr(proc, "nessuna") || strstr(proc, "none"))
+		{
+			mob_index[mob->nr].func         = NULL;
+			mob_index[mob->nr].specname     = NULL;
+			mob_index[mob->nr].specparms    = NULL;
+		}
+		else
+		{
+			for(i = 0; strcmp(otherproc[i].nome, "zFineprocedure"); i++)
+			{
+				lastotherproc++;
+			}
 
-    sprintf(buf, VT_HOMECLR);
-    send_to_char(buf, ch);
+			if(!(op = (struct OtherSpecialProcEntry*) bsearch(&proc, otherproc, lastotherproc, sizeof(struct OtherSpecialProcEntry), nomecompare)))
+			{
+				mudlog(LOG_ERROR, "mobile_assign: Mobile %d not found in database.", mob_index[mob->nr].iVNum);
+			}
+			else
+			{
+				mob_index[mob->nr].func         = op->proc;
+				mob_index[mob->nr].specname     = op->nome;
+				mob_index[mob->nr].specparms    = strdup(parms);
+			}
+		}
 
-    sprintf(buf, "Current Mobile Special: %s %s",mob_index[mob->nr].specname, mob_index[mob->nr].specparms);
-    send_to_char(buf, ch);
-    send_to_char("\n\r\n\rNew Mobile Special (name, parameters): ", ch);
+		ch->specials.medit = MOB_MAIN_MENU;
+		UpdateMobMenu(ch);
+		return;
+	}
 
-    return;
+	sprintf(buf, VT_HOMECLR);
+	send_to_char(buf, ch);
+
+	sprintf(buf, "Current Mobile Special: %s %s", 	mob_index[mob->nr].specname ?
+													mob_index[mob->nr].specname :
+													"nothing",
+													mob_index[mob->nr].specparms ?
+													mob_index[mob->nr].specparms :
+													"");
+	send_to_char(buf, ch);
+	send_to_char("\n\r\n\rNew Mobile Special (name, parameters), type 'none' for no-special: ", ch);
+
+	return;
 }
 
 

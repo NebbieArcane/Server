@@ -562,58 +562,71 @@ void ObjEdit(struct char_data* ch, const char* arg) {
 }
 
 void ChangeObjSpecial(struct char_data* ch, const char* arg, int type) {
-    char buf[256], proc[256];
-    struct obj_data* obj;
-    struct OtherSpecialProcEntry* op;
-    int i;
-    int lastotherproc = 0;
+	char buf[256], proc[256], parms[256];
+	struct obj_data* obj;
+	struct OtherSpecialProcEntry* op;
+	int i;
+	int lastotherproc = 0;
 
-    if(type != ENTER_CHECK)
-        if(!*arg || (*arg == '\n'))
-        {
-            ch->specials.oedit = OBJ_MAIN_MENU;
-            UpdateObjMenu(ch);
-            return;
-        }
+	if(type != ENTER_CHECK)
+	{
+		if(!*arg || (*arg == '\n'))
+		{
+			ch->specials.oedit = OBJ_MAIN_MENU;
+			UpdateObjMenu(ch);
+			return;
+		}
+	}
 
-    obj = ch->specials.objedit;
-    if(type != ENTER_CHECK)
-    {
-        only_argument(arg,proc);
-        for(i=0; strcmp(otherproc[i].nome,"zFineprocedure"); i++)
-        {
-            lastotherproc++;
-        }
+	obj = ch->specials.objedit;
+	if(type != ENTER_CHECK)
+	{
+		arg = one_argument(arg, proc);
+		only_argument(arg, parms);
 
-        if(!(op=(struct OtherSpecialProcEntry*)
-                bsearch(&proc,
-                        otherproc,
-                        lastotherproc,
-                        sizeof(struct OtherSpecialProcEntry),
-                        nomecompare)))
-        {
-            mudlog(LOG_ERROR,
-                    "obj_assign: Obj %d not found in database.",obj_index[obj->item_number].iVNum);
-        }
-        else
-        {
-            obj_index[obj->item_number].func         = op->proc;
-            obj_index[obj->item_number].specname     = op->nome;
-            obj_index[obj->item_number].specparms    = strdup("");
-        }
-        ch->specials.oedit = OBJ_MAIN_MENU;
-        UpdateObjMenu(ch);
-        return;
-    }
+		if(strstr(proc, "nessuna") || strstr(proc, "none"))
+		{
+			obj_index[obj->item_number].func         = NULL;
+			obj_index[obj->item_number].specname     = NULL;
+			obj_index[obj->item_number].specparms    = NULL;
+		}
+		else
+		{
+			for(i = 0; strcmp(otherproc[i].nome, "zFineprocedure"); i++)
+			{
+				lastotherproc++;
+			}
 
-    sprintf(buf, VT_HOMECLR);
-    send_to_char(buf, ch);
+			if(!(op = (struct OtherSpecialProcEntry*) bsearch(&proc, otherproc, lastotherproc, sizeof(struct OtherSpecialProcEntry), nomecompare)))
+			{
+				mudlog(LOG_ERROR, "obj_assign: Obj %d not found in database.", obj_index[obj->item_number].iVNum);
+			}
+			else
+			{
+				obj_index[obj->item_number].func         = op->proc;
+				obj_index[obj->item_number].specname     = op->nome;
+				obj_index[obj->item_number].specparms    = strdup(parms);
+			}
+		}
 
-    sprintf(buf, "Current Obj Special: %s",obj_index[obj->item_number].specname);
-    send_to_char(buf, ch);
-    send_to_char("\n\r\n\rNew Obj Special (name): ", ch);
+		ch->specials.oedit = OBJ_MAIN_MENU;
+		UpdateObjMenu(ch);
+		return;
+	}
 
-    return;
+	sprintf(buf, VT_HOMECLR);
+	send_to_char(buf, ch);
+
+	sprintf(buf, "Current Obj Special: %s %s", 	obj_index[obj->item_number].specname ?
+												obj_index[obj->item_number].specname :
+												"nothing",
+												obj_index[obj->item_number].specparms ?
+												obj_index[obj->item_number].specparms :
+												"");
+	send_to_char(buf, ch);
+	send_to_char("\n\r\n\rNew Obj Special (name, parameters), type 'none' for no-special: ", ch);
+
+	return;
 }
 
 void ChangeObjName(struct char_data* ch, const char* arg, int type) {
