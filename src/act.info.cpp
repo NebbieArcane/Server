@@ -4005,7 +4005,7 @@ ACTION_FUNC(do_score) {
 		act("$c0009Sei mort$b!",FALSE, ch,0,0,TO_CHAR);
 		break;
 	case POSITION_MORTALLYW :
-		act("$c0009Sei ferit$b a morte e dovresti cercare aiuto !", FALSE, ch,
+		act("$c0009Sei ferit$b a morte e dovresti cercare aiuto!", FALSE, ch,
 			0,0,TO_CHAR);
 		break;
 	case POSITION_INCAP :
