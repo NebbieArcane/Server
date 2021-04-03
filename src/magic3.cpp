@@ -2775,6 +2775,9 @@ void spell_mount(byte level, struct char_data* ch,
 	struct char_data* m;
 	int mnr;
 
+	send_to_char("Non puoi piu' lanciare questo incantesimo!\n\r", ch);
+	return;
+
     if(GET_POS(ch) == POSITION_MOUNTED)
     {
         send_to_char("Stai gia' cavalcando qualcosa!\n\r", ch);
@@ -2811,15 +2814,15 @@ void spell_mount(byte level, struct char_data* ch,
 	if(m) {
 		char_to_room(m, ch->in_room);
 		act("Con un $c0011lampo di luce$c0007, $N appare.", FALSE, ch, 0, m, TO_CHAR);
-		act("Con un $c0011lampo di luce$c0007, $N appare, e $n gli salta in groppa.", FALSE,
+		act("Con un $c0011lampo di luce$c0007, $N appare, e $n $D salta in groppa.", FALSE,
 			ch, 0, m, TO_ROOM);
-		send_to_char("Salti in groppa alla tua cavalcatura.\n\r", ch);
+		send_to_char("Salti sulla groppa della tua cavalcatura.\n\r", ch);
 		MOUNTED(ch) = m;
 		RIDDEN(m) = ch;
 		GET_POS(ch) = POSITION_MOUNTED;
 	}
 	else {
-		send_to_char("Qualcosa e' andato storto, contatta un immportale.\n\r", ch);
+		send_to_char("Qualcosa e' andato storto, contatta un immortale.\n\r", ch);
 		return;
 	}
 }

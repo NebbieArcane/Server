@@ -1709,14 +1709,14 @@ void RewardQAchie(struct char_data* ch, int quest_number)
 
     const char* rand_desc[] = {
         "un buono per ricevere un premio di %s",
-        "un piccolo biglietto con una $c5009%s$c0007",
+        "un piccolo biglietto con su scritto '$c5009%s'$c0007",
         "la fortuna ti ha baciato ed a %s hai raccattato",
         "$c0011un bel %sstale d'oro$c0007",
         "il biglietto della lotteria di %s",
         "un buono per %s gentilmente offerto da LadyOfPain",
         "un buono per un NukeFouler o per un premio di %s",
         "$c0009un buono marchiato dal simbolo di %s$c0007",
-        "$c0014il premio per aver nerdato a%s$c0007"
+        "$c0014il premio per aver nerdato a %s$c0007"
     };
 
     vnumber = real_object(QUEST_REWARD);

@@ -2803,6 +2803,8 @@ ACTION_FUNC(do_mount) {
 	int check;
 	struct char_data* horse;
 
+	send_to_char("Nebbie non e' piu' il posto adatto ai fantini!\n\r", ch);
+	return;
 
 	if(cmd == CMD_MOUNT || cmd == CMD_RIDE) {
 		only_argument(arg, name);
