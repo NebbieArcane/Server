@@ -4253,6 +4253,9 @@ void cast_dragon_ride(byte level, struct char_data* ch, const char* arg,
 void cast_mount(byte level, struct char_data* ch, const char* arg,
 				int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
+	send_to_char("Non puoi piu' lanciare questo incantesimo!\n\r", ch);
+	return;
+
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_SCROLL:
@@ -4643,4 +4646,3 @@ void cast_prot_dragon_breath_gas(byte level, struct char_data* ch, const char* a
 
 }
 } // namespace Alarmud
-

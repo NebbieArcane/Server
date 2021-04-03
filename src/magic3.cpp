@@ -2775,9 +2775,6 @@ void spell_mount(byte level, struct char_data* ch,
 	struct char_data* m;
 	int mnr;
 
-	send_to_char("Non puoi piu' lanciare questo incantesimo!\n\r", ch);
-	return;
-
     if(GET_POS(ch) == POSITION_MOUNTED)
     {
         send_to_char("Stai gia' cavalcando qualcosa!\n\r", ch);
