@@ -153,6 +153,8 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 		limited_items +=CountLims(ch->equipment[i]);
 	}
 
+	ch->player.oggetti = cost->no_carried;
+
 	if(!cost->ok) {
 		return(FALSE);
 	}

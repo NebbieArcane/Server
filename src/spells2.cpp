@@ -4253,8 +4253,16 @@ void cast_dragon_ride(byte level, struct char_data* ch, const char* arg,
 void cast_mount(byte level, struct char_data* ch, const char* arg,
 				int type, struct char_data* tar_ch, struct obj_data* tar_obj) {
 
-	send_to_char("Non puoi piu' lanciare questo incantesimo!\n\r", ch);
-	return;
+/*
+#if NODUPLICATES
+	do_save(ch, "", 0);
+#endif */
+
+	if(ch->player.oggetti > MAX_OBJ_SAVE - 5)
+	{
+		send_to_char("Stai trasportando troppa roba con te, nessuna cavalcatura reggerebbe tutto quel peso!\n\r", ch);
+		return;
+	}
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:

@@ -1655,6 +1655,8 @@ struct char_data* read_mobile(int nr, int type) {
 
 	mob->player.iClass = CLASS_WARRIOR;
 
+	mob->player.oggetti = 0;
+
 	fscanf(mob_f, " %c ", &letter);
     mob->specials.mobtype = letter;
 	if(letter == 'S') {
@@ -2896,6 +2898,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	ch->player.weight = st->weight;
 	ch->player.height = st->height;
 
+	ch->player.oggetti = 0;
+
 	ch->abilities = st->abilities;
 	ch->tmpabilities = st->abilities;
 	mudlog(LOG_SAVE, "<-Mana/Hits prima di reload: %d/%d", GET_MAX_MANA(ch),
@@ -3762,6 +3766,7 @@ void reset_char(struct char_data* ch) {
 		ch->equipment[i] = 0;
 	}
 
+	ch->player.oggetti = 0;
 	ch->followers = 0;
 	ch->master = 0;
 	ch->carrying = 0;

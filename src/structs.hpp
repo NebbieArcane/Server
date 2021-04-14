@@ -607,7 +607,7 @@ struct char_player_data {
 
 	ubyte level[ABS_MAX_CLASS];      /* NEEDS TO BE ABS_MAX_CLASS */
 	/* PC / NPC s level         */
-
+	short oggetti;		/* numero di oggetti trasportati */
 };
 
 
