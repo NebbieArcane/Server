@@ -1671,7 +1671,7 @@ ACTION_FUNC(do_cast) {
 				send_to_char("Stai ancora annaspando per rialzarti!\n\r", ch);
 				break;
 			case POSITION_FIGHTING :
-				send_to_char("Un pugno nei denti ti impedisce di formulare l'incatesimo.\n\r", ch);
+				send_to_char("Un pugno nei denti ti impedisce di formulare l'incantesimo.\n\r", ch);
 				break;
 			default:
 				send_to_char("Non mi sembri in gran forma!\n\r",ch);
@@ -2361,4 +2361,3 @@ void check_falling_obj(struct obj_data* obj, int room) {
 }
 
 } // namespace Alarmud
-

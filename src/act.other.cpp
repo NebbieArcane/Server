@@ -2970,7 +2970,7 @@ ACTION_FUNC(do_memorize) {
 	argument = skip_spaces(argument);
 
 	if(!(CheckContempMemorize(ch)) && *argument) {
-		act("Non riesci a imparare tutti questi incatesimi contemporaneamente.",
+		act("Non riesci a imparare tutti questi incantesimi contemporaneamente.",
 			FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
