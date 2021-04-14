@@ -1032,12 +1032,12 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				perform_wear(ch,obj_object,keyword);
 				obj_from_char(obj_object);
 				if(ch->equipment[WEAR_WRIST_L]) {
-					act("Indossi $p intorno al polso destro.\n\r",
+					act("Indossi $p intorno al polso destro.",
 						FALSE, ch, obj_object, NULL, TO_CHAR);
 					equip_char(ch,  obj_object, WEAR_WRIST_R);
 				}
 				else {
-					act("Indossi $p intorno al polso sinistro.\n\r",
+					act("Indossi $p intorno al polso sinistro.",
 						FALSE, ch, obj_object, NULL, TO_CHAR);
 					equip_char(ch, obj_object, WEAR_WRIST_L);
 				}
