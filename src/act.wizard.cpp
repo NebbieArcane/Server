@@ -1692,6 +1692,19 @@ ACTION_FUNC(do_stat) {
 				sprintf(buf2, "$c0005Items in equipment: $c0014%d", i2);
 				strcat(buf, buf2);
 
+				if(!IS_PC(k))
+				{
+					k->player.oggetti = 0;
+					k->player.oggetti = ContaOggetti(k->carrying);
+					for(i = 0; i < MAX_WEAR; i++)
+					{
+						k->player.oggetti += ContaOggetti(k->equipment[i]);
+					}
+
+				}
+				sprintf(buf2, " $c0005Total items: $c0014%d", k->player.oggetti);
+				strcat(buf, buf2);
+
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
 
 				sprintf(buf, "$c0005Apply saving throws: [$c0014%d$c0005] "

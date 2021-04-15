@@ -7820,6 +7820,25 @@ int CountLims(struct obj_data* obj) {
 	return(total);
 }
 
+int ContaOggetti(struct obj_data* obj) {
+	int total=0;
+
+	if(!obj) {
+		return(0);
+	}
+
+	if(obj->contains) {
+		total += ContaOggetti(obj->contains);
+	}
+	if(obj->next_content) {
+		total += ContaOggetti(obj->next_content);
+	}
+
+	total++;
+
+	return(total);
+}
+
 int LimObj(struct char_data* ch) {  // Gaia 2001
 	int i,tot=0;
 

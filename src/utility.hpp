@@ -64,6 +64,7 @@ int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_soundproof(struct char_data* ch);
 int CountLims(struct obj_data* obj);
+int ContaOggetti(struct obj_data* obj);
 int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
 const char* zonename_by_room(int room);

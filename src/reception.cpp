@@ -148,12 +148,12 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	RentItem=0;
 	add_obj_cost(ch, receptionist, ch->carrying, cost);
 	limited_items +=CountLims(ch->carrying);
+	ch->player.oggetti = ContaOggetti(ch->carrying);
 	for(i = 0; i<MAX_WEAR; i++) {
 		add_obj_cost(ch, receptionist, ch->equipment[i], cost);
 		limited_items +=CountLims(ch->equipment[i]);
+		ch->player.oggetti += ContaOggetti(ch->equipment[i]);
 	}
-
-	ch->player.oggetti = cost->no_carried;
 
 	if(!cost->ok) {
 		return(FALSE);
