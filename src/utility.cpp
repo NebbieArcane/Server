@@ -8824,7 +8824,7 @@ int anti_barbarian_stuff(struct obj_data* obj_object) {
 
 int CheckGetBarbarianOK(struct char_data* ch, struct obj_data* obj_object) {
 	if(GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 &&
-			anti_barbarian_stuff(obj_object) && !IS_IMMORTAL(ch)) {
+			anti_barbarian_stuff(obj_object) && GetMaxLevel(ch) < IMMORTALE) {
 		act("Percepisci la magia su $p e rabbrividisci disgustat$b.", FALSE, ch,
 			obj_object, 0, TO_CHAR);
 		act("$n scuote la testa e si rifiuta di prendere $p.", TRUE, ch,

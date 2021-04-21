@@ -750,7 +750,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 
 	if(anti_barbarian_stuff(obj_object) &&
 			GET_LEVEL(ch, BARBARIAN_LEVEL_IND) != 0 &&
-			!IS_IMMORTAL(ch) && IS_PC(ch)) {
+			GetMaxLevel(ch) < IMMORTALE && IS_PC(ch)) {
 		act("Eck! Non questo! Percepisci la magia su $p e lo "
 			"getti via schifato!", FALSE, ch, obj_object, NULL, TO_CHAR);
 		act("$n rabbrividisce e getta $p!", FALSE, ch, obj_object, 0, TO_ROOM);
