@@ -98,9 +98,9 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 		if(IS_SET(mob->specials.act, ACT_MONK) || IS_SET(mob->specials.act, ACT_WARRIOR) || IS_SET(mob->specials.act, ACT_THIEF) || IS_SET(mob->specials.act, ACT_BARBARIAN) || IS_SET(mob->specials.act, ACT_PALADIN || IS_SET(mob->specials.act, ACT_RANGER))) {
 			mob->points.max_hit += (char_bonus*number(1,5));
 			GET_HIT(mob) = GET_MAX_HIT(mob);
-			
+
             int multiplier=2;
-            
+
 			if(mob->specials.mobtype=='A' || mob->specials.mobtype=='L' || mob->specials.mobtype=='B') {
 				multiplier = int(mob->mult_att) * 2;
 			}
@@ -124,7 +124,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 	int j;
     struct affected_type* af;
     struct affected_type af2;
-    
+
 
 	/*
 	 * experience
@@ -137,20 +137,20 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 
 		GET_EXP(taker) = MIN(GET_EXP(taker), ABS_MAX_EXP);
 	}
-    
+
     /*
      *  switch affects
      */
-    
+
     for(af = taker->affected; af; af = af->next) {
         if(!affected_by_spell(giver,af->type)) {
             affect_from_char(taker, af->type);
         }
     }
-    
+
     for(af = giver->affected; af; af = af->next)
     {
-        if(IS_NPC(giver) && af->type == SPELL_POLY_SELF)
+        if(IS_NPC(giver) && (af->type == SPELL_POLY_SELF || af->type == SPELL_TREE))
         {
             if(affected_by_spell(taker,af->type))
             {
@@ -186,7 +186,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         free(taker->lastpkill);
         taker->lastpkill = strdup(giver->lastpkill);
     }
-    
+
     if(giver->lastmkill != NULL) {
         free(taker->lastmkill);
             taker->lastmkill = strdup(giver->lastmkill);
@@ -375,4 +375,3 @@ void FailPoison(struct char_data* victim, struct char_data* ch) {
 	}
 }
 } // namespace Alarmud
-

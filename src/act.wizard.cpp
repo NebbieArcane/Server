@@ -3476,7 +3476,10 @@ ACTION_FUNC(do_return) {
 			return;
 		}
 
-		send_to_char("Ritorni alla tua forma originale.\n\r", ch);
+		if(cmd != -1)
+		{
+			send_to_char("Ritorni alla tua forma originale.\n\r", ch);
+		}
 
 		mudlog(LOG_CHECK, "%s has still the descriptors.", ch->player.name);
 		if(ch->desc->snoop.snoop_by) {
@@ -3491,8 +3494,14 @@ ACTION_FUNC(do_return) {
 			mob = ch;
 			per = ch->desc->original;
 
-			act("$n riprende la sua forma originale.", TRUE, mob, 0, per,
-				TO_ROOM);
+			if(cmd == -1)
+			{
+				cmd = CMD_RETURN;
+			}
+			else
+			{
+				act("$n riprende la sua forma originale.", TRUE, mob, NULL, per, TO_ROOM);
+			}
 
 			char_from_room(per);
 			char_to_room(per, mob->in_room);

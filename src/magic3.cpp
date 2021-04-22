@@ -1756,6 +1756,7 @@ void spell_veggie_growth(byte level, struct char_data* ch,
 void spell_tree(byte level, struct char_data* ch,
 				struct char_data* victim, struct obj_data* obj) {
 	struct char_data* mob;
+	struct affected_type af;
 	int mobn;
 
 
@@ -1778,6 +1779,15 @@ void spell_tree(byte level, struct char_data* ch,
 	if(level > 48) {
 		mobn++;
 	}
+
+	af.type      = SPELL_TREE;
+	af.duration  = static_cast <int>(GetMaxLevel(ch) / 3) + (IS_PRINCE(ch) ? 3 : 0);
+	af.modifier  = 0;
+	af.location  = APPLY_NONE;
+	af.bitvector = 0;
+
+	affect_to_char(ch, &af);
+
 	mob = read_mobile(mobn, VIRTUAL);
 	if(mob) {
 		spell_poly_self(level, ch, mob, 0);

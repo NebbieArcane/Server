@@ -27,6 +27,7 @@
 #include "act.info.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
+#include "act.wizard.hpp"
 #include "breath.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -841,7 +842,14 @@ void SpellWearOff(int s, struct char_data* ch) {
     }
 
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
-		act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
+		if(!IS_SET(ch->specials.act, ACT_POLYSELF) && s == SPELL_CHANGE_FORM)
+		{
+			send_to_char("$c0010Puoi nuovamente mutare la tua forma.\n\r", ch);
+		}
+		else
+		{
+			act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
+		}
 	}
 
     if(s == SPELL_PARALYSIS || s == SPELL_ENTANGLE || s == SKILL_DAIMOKU)
@@ -1063,6 +1071,13 @@ void affect_update(unsigned long localPulse) {
 					if(iType != SPELL_CHARM_PERSON && iType != STATUS_QUEST) {
 						check_memorize(ch, af);
 						affect_remove(ch, af);
+						if(iType == SPELL_POLY_SELF || iType == SPELL_TREE || iType == SPELL_CHANGE_FORM)
+						{
+							if(IS_SET(ch->specials.act, ACT_POLYSELF))
+							{
+								do_return(ch, "", -1);
+							}
+						}
 					}
 				}
 				else if(af->type >= FIRST_BREATH_WEAPON &&
