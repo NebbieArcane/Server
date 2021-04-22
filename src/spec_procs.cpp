@@ -2165,18 +2165,20 @@ MOBSPECIAL_FUNC(SporeCloud) {
 
 	assert(ch);
 
-	if(type == EVENT_COMMAND && cmd == CMD_BASH && strlen(arg)>0 &&
-			strstr(GET_NAME(mob), arg)) {
-		act("Ti schianti contro $n!\r\n",FALSE,mob,0,ch,TO_VICT);
-		act("Da $n si leva una nuvola di spore!\r\n",FALSE,mob,0,ch,TO_VICT);
-		act("La tua vista si offusca per qualche secondo, fatichi a respirare..\r\n",FALSE,mob,0,ch,TO_VICT);
-		act("$N si schianta contro $n!\r\n",FALSE,mob,0,ch,TO_NOTVICT);
-		act("Da $n si leva una nuvola di spore! Fatichi a respirare..\r\n",FALSE,mob,0,ch,TO_NOTVICT);
+	if(type == EVENT_COMMAND && cmd == CMD_BASH && strlen(arg) > 0 && strstr(GET_NAME(mob), arg))
+	{
+		act("Ti schianti contro $n!\r\n", FALSE, mob, NULL, ch, TO_VICT); 
+		act("Da $n si leva una nuvola di spore!\r\n", FALSE, mob, NULL, ch, TO_VICT);
+		act("La tua vista si offusca per qualche secondo, fatichi a respirare...\r\n", FALSE, mob, NULL, ch, TO_VICT);
+		act("$N si schianta contro $n!\r\n", FALSE, mob, NULL, ch, TO_NOTVICT);
+		act("Da $n si leva una nuvola di spore! Fatichi a respirare...\r\n", FALSE, mob, NULL, ch, TO_NOTVICT);
 
-		for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
+		for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim; tmp_victim = temp)
+		{
 			temp = tmp_victim->next;
-			if((ch->in_room == tmp_victim->in_room) && !IS_IMMORTAL(tmp_victim) && (mob != tmp_victim)) {
-				damage(tmp_victim, tmp_victim, GetMaxLevel(mob),SPELL_POISON, 5);
+			if(!in_group(mob, tmp_victim) && !IS_IMMORTAL(tmp_victim) && (mob != tmp_victim))
+			{
+				damage(mob, tmp_victim, GetMaxLevel(mob),SPELL_POISON, 5);
 			}
 			else {
 				act("Osservando le spore vedi le piante che diventeranno...",FALSE, ch, 0, tmp_victim, TO_VICT);
@@ -5792,7 +5794,7 @@ MOBSPECIAL_FUNC(NewThalosMayor)
                 return(FALSE);
             }
                 break;
-                
+
             case NTMGOALSN:
             {
                 if(ch->in_room != NTMSGATE)
