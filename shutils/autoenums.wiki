@@ -707,6 +707,12 @@ l'array connected_types in constants.cpp
 **ACHIE_DRAGGSYLIA                             16314 
 **ACHIE_ARKHAT                                 9007 
 **ACHIE_GONHAG                                 9009 
+**ACHIE_BARBALBERO                             32822 
+**ACHIE_ORRORE_DETURPANTE                      17215 
+**ACHIE_TIMNUS                                 22605 
+**ACHIE_SHERAZADE                              5716 
+**ACHIE_DRAGO_DUNA_NERA                        5710 
+**ACHIE_INHEP                                  19001 
 **ACHIE_PKILL_WIN                              0 
 **ACHIE_PKILL_LOSS                             1 
 **ACHIE_DEATH                                  2 

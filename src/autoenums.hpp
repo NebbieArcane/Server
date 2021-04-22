@@ -1220,6 +1220,12 @@ enum e_wear {
 #define	ACHIE_DRAGGSYLIA                             16314 
 #define	ACHIE_ARKHAT                                 9007 
 #define	ACHIE_GONHAG                                 9009 
+#define	ACHIE_BARBALBERO                             32822 
+#define	ACHIE_ORRORE_DETURPANTE                      17215 
+#define	ACHIE_TIMNUS                                 22605 
+#define	ACHIE_SHERAZADE                              5716 
+#define	ACHIE_DRAGO_DUNA_NERA                        5710 
+#define	ACHIE_INHEP                                  19001 
 #define	ACHIE_PKILL_WIN                              0 
 #define	ACHIE_PKILL_LOSS                             1 
 #define	ACHIE_DEATH                                  2 
