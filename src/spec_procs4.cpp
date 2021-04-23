@@ -296,7 +296,7 @@ void SellObj(struct char_data* ch, struct char_data* keeper, struct obj_data* bu
 		act("$N da' $p a $n.", TRUE, ch, buono, keeper, TO_ROOM);
 		extract_obj(buono);
 	}
-	act("$n apre un'anta dello scaffale dietro di $n e prende $p.", TRUE, keeper, obj, ch, TO_ROOM);
+	act("$n apre un'anta dello scaffale dietro di $l e prende $p.", TRUE, keeper, obj, ch, TO_ROOM);
 	sprintf(buf, "%s Ecco quello che mi hai chiesto.", GET_NAME(ch));
 	do_tell(keeper, buf, CMD_TELL);
 
