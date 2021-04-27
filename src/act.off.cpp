@@ -2303,7 +2303,7 @@ ACTION_FUNC(do_berserk) {
 
 	only_argument(arg, name);
 
-	if(!(victim = get_char_room_vis(ch, name))) {
+	if(!(victim = get_char_room_vis(ch, name)) || !(ch->specials.fighting)) {
 		if(ch->specials.fighting)     {
 			victim = ch->specials.fighting;
 		}
