@@ -524,6 +524,10 @@
 			"value": 19001,
 			"comment": " Boss Achievements stuffs"
 		},
+		"ACHIE_ARTEFATTO": {
+			"value": 32011,
+			"comment": " Boss Achievements stuffs"
+		},
 		"ACHIE_PKILL_WIN": {
 			"value": 0,
 			"comment": " Achievements stuffs"
@@ -2627,17 +2631,21 @@
 				"comment": ""
 			},
 			"ITEM_M_GEM": {
-    			"value": 27,
-    			"comment": ""
-    		},
+				"value": 27,
+				"comment": ""
+			},
 			"ITEM_M_MINERAL": {
-    			"value": 28,
-    			"comment": ""
-    		},
+				"value": 28,
+				"comment": ""
+			},
 			"ITEM_BAR": {
-    			"value": 29,
-    			"comment": ""
-    		}
+				"value": 29,
+				"comment": ""
+			},
+			"ITEM_JEWEL": {
+				"value": 30,
+				"comment": ""
+			}
 		},
 		"e_liquids": {
 			"comment": "Some different kind of liquids\n",
@@ -3870,33 +3878,33 @@
 		"e_item2_flag": {
 			"comment": "Bitvector for 'extra_flags2'\n",
 			"ITEM2_QUEST": {
-    			"value": 1,
-    			"comment": " item part of a quest"
-    		},
+				"value": 1,
+				"comment": " item part of a quest"
+			},
 			"ITEM2_EDIT": {
-    			"value": 2,
-    			"comment": " edited item"
-    		},
+				"value": 2,
+				"comment": " edited item"
+			},
 			"ITEM2_NO_LOCATE": {
-    			"value": 4,
-    			"comment": " no-locate item"
-    		},
+				"value": 4,
+				"comment": " no-locate item"
+			},
 			"ITEM2_PERSONAL": {
-    			"value": 8,
-    			"comment": " personalized item"
-    		},
+				"value": 8,
+				"comment": " personalized item"
+			},
 			"ITEM2_INSERT": {
-    			"value": 16,
-    			"comment": " item with gems mounted"
-    		},
+				"value": 16,
+				"comment": " item with gems mounted"
+			},
 			"ITEM2_NO_PRINCE": {
-    			"value": 32,
-    			"comment": " prince can't use the item"
-    		},
+				"value": 32,
+				"comment": " prince can't use the item"
+			},
 			"ITEM2_ONLY_PRINCE": {
-    			"value": 64,
-    			"comment": " only prince can use the item"
-    		}
+				"value": 64,
+				"comment": " only prince can use the item"
+			}
 		}
 	}
 }

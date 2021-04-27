@@ -305,6 +305,7 @@ l'array connected_types in constants.cpp
 ** ITEM_M_GEM                                   =27
 ** ITEM_M_MINERAL                               =28
 ** ITEM_BAR                                     =29
+** ITEM_JEWEL                                   =30
 == Enumerations ==
 
 === enum e_liquids ===
@@ -713,6 +714,7 @@ l'array connected_types in constants.cpp
 **ACHIE_SHERAZADE                              5716 
 **ACHIE_DRAGO_DUNA_NERA                        5710 
 **ACHIE_INHEP                                  19001 
+**ACHIE_ARTEFATTO                              32011 
 **ACHIE_PKILL_WIN                              0 
 **ACHIE_PKILL_LOSS                             1 
 **ACHIE_DEATH                                  2 

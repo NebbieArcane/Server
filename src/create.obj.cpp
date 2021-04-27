@@ -729,7 +729,7 @@ void ChangeObjDesc(struct char_data* ch, const char* arg, int type) {
 void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
-    struct obj_data* obj;
+	struct obj_data* obj;
 
 	if(type != ENTER_CHECK)
 		if(!*arg || (*arg == '\n')) {
@@ -740,107 +740,111 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 
 	update = atoi(arg);
 	update--;
-    obj = ch->specials.objedit;
+	obj = ch->specials.objedit;
 
-	if(type != ENTER_CHECK) {
-		switch(ch->specials.oedit) {
-		case CHANGE_OBJ_TYPE:
-			if(update < 0 || update > 29) {
+	if(type != ENTER_CHECK)
+	{
+		switch(ch->specials.oedit)
+		{
+			case CHANGE_OBJ_TYPE:
+				if(update < 0 || update > E_ITEM_TYPE_MAX)
+				{
+					return;
+				}
+				else
+				{
+					ch->specials.objedit->obj_flags.type_flag = update;
+					if(ch->specials.objedit->obj_flags.type_flag == ITEM_AUDIO)
+					{
+						send_to_char("\n\rCurrent Sound:\n\r", ch);
+						send_to_char(ch->specials.objedit->action_description, ch);
+						send_to_char("\n\r\n\rNew Sound:\n\r", ch);
+						ch->specials.oedit = CHANGE_OBJ_TYPE2;
+					}
+					else
+					{
+						ch->specials.oedit = OBJ_MAIN_MENU;
+						UpdateObjMenu(ch);
+					}
+					return;
+				}
+			case CHANGE_OBJ_TYPE2:
+				if(type != ENTER_CHECK)
+				{
+					if(obj->action_description)
+					{
+						free(obj->action_description);
+					}
+				}
+				obj->action_description = (char*)strdup(arg);
+				send_to_char("\n\r\n\rDone, sound assigned.\n\rRemember to change Object Value1 to a number greater than 0.\n\r", ch);
+				ch->specials.oedit = OBJ_MAIN_MENU;
+				UpdateObjMenu(ch);
 				return;
-			}
-			else {
-				ch->specials.objedit->obj_flags.type_flag = update;
-                if(ch->specials.objedit->obj_flags.type_flag == ITEM_AUDIO)
-                {
-                    send_to_char("\n\rCurrent Sound:\n\r", ch);
-                    send_to_char(ch->specials.objedit->action_description, ch);
-                    send_to_char("\n\r\n\rNew Sound:\n\r", ch);
-                    ch->specials.oedit = CHANGE_OBJ_TYPE2;
-                }
-                else
-                {
-                    ch->specials.oedit = OBJ_MAIN_MENU;
-                    UpdateObjMenu(ch);
-                }
-				return;
-			}
-        case CHANGE_OBJ_TYPE2:
-                if(type != ENTER_CHECK)
-                {
-                    if(obj->action_description)
-                    {
-                        free(obj->action_description);
-                    }
-                }
-                obj->action_description = (char*)strdup(arg);
-                send_to_char("\n\r\n\rDone, sound assigned.\n\rRemember to change Object Value1 to a number greater than 0.\n\r", ch);
-                ch->specials.oedit = OBJ_MAIN_MENU;
-                UpdateObjMenu(ch);
-                return;
 		}
 	}
 
-    if(ch->term == VT100)
-    {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
-        sprintf(buf, "Object Type: %s", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
-        send_to_char(buf, ch);
+	if(ch->term == VT100)
+	{
+		sprintf(buf, VT_HOMECLR);
+		send_to_char(buf, ch);
+		sprintf(buf, "Object Type: %s", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
+		send_to_char(buf, ch);
 
-        row = 0;
-        for(i = 0; i < 30; i++)
-        {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
-            if(i & 1)
-            {
-                row++;
-            }
-            send_to_char(buf, ch);
-            sprintf(buf, "%-2d %s", i + 1, item_types[i]);
-            send_to_char(buf, ch);
-        }
+		row = 0;
+		for(i = 0; i < E_ITEM_TYPE_COUNT; i++)
+		{
+			sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+			if(i & 1)
+			{
+				row++;
+			}
+			send_to_char(buf, ch);
+			sprintf(buf, "%-2d %s", i + 1, item_types[i]);
+			send_to_char(buf, ch);
+		}
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
-        send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
-    }
-    else
-    {
-        string sb;
-        boost::format fmt ("     %-2d %s");
-        char buf2[255];
-        int x = 0;
+		sprintf(buf, VT_CURSPOS, 20, 1);
+		send_to_char(buf, ch);
+		send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+	}
+	else
+	{
+		string sb;
+		boost::format fmt ("     %-2d %s");
+		char buf2[255];
+		int x = 0;
 
-        sprintf(buf, "\n\rObject Type: %s\n\r\n\r", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
-        send_to_char(buf, ch);
+		sprintf(buf, "\n\rObject Type: %s\n\r\n\r", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
+		send_to_char(buf, ch);
 
-        for(i = 0; i < 30; i++)
-        {
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
-            strcat(buf2, "s%-2d %s\n\r");
-            boost::format fmt2 (buf2);
+		for(i = 0; i < E_ITEM_TYPE_COUNT; i++)
+		{
+			sprintf(buf2, "%s", "%-");
+			sprintf(buf2, "%s%d", buf2, 45-x);
+			strcat(buf2, "s%-2d %s\n\r");
+			boost::format fmt2 (buf2);
 
-            if(i & 1)
-            {
-                fmt2 % "" % (i + 1) % item_types[i];
-                sb.append(fmt2.str().c_str());
-            }
-            else
-            {
-                fmt % (i + 1) % item_types[i];
-                sb.append(fmt.str().c_str());
-                x = strlen(fmt.str().c_str());
-            }
+			if(i & 1)
+			{
+				fmt2 % "" % (i + 1) % item_types[i];
+				sb.append(fmt2.str().c_str());
+			}
+			else
+			{
+				fmt % (i + 1) % item_types[i];
+				sb.append(fmt.str().c_str());
+				x = strlen(fmt.str().c_str());
+			}
 
-            fmt.clear();
-            fmt2.clear();
-        }
+			fmt.clear();
+			fmt2.clear();
+		}
 
-        sb.append("\r\n\n\r");
-        page_string(ch->desc, sb.c_str(), true);
-        send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
-    }
+		sb.append("\r\n\n\r");
+		page_string(ch->desc, sb.c_str(), true);
+		send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+	}
 }
 
 void ChangeObjWeight(struct char_data* ch, const char* arg, int type) {

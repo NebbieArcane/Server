@@ -65,7 +65,7 @@ extern int RacialHome[MAX_RACE+1][2];
 
 /*  fire cold elec blow acid */
 
-extern int ItemSaveThrows[22][5];
+extern int ItemSaveThrows[E_ITEM_TYPE_MAX][E_DAMAGE_TYPE_MAX];
 
 extern int drink_aff[][3];
 

@@ -711,11 +711,12 @@ enum e_item_type {
 	ITEM_ROCK                                    =26,
 	ITEM_M_GEM                                   =27,
 	ITEM_M_MINERAL                               =28,
-	ITEM_BAR                                     =29
+	ITEM_BAR                                     =29,
+	ITEM_JEWEL                                   =30
 };
-#define E_ITEM_TYPE_COUNT 30
+#define E_ITEM_TYPE_COUNT 31
 #define E_ITEM_TYPE_MIN 0
-#define E_ITEM_TYPE_MAX 29
+#define E_ITEM_TYPE_MAX 30
 #define E_ITEM_TYPE_KEY "e_item_type"
 
 #define E_ITEM_TYPE_ACCEPT_ZERO true
@@ -1226,6 +1227,7 @@ enum e_wear {
 #define	ACHIE_SHERAZADE                              5716 
 #define	ACHIE_DRAGO_DUNA_NERA                        5710 
 #define	ACHIE_INHEP                                  19001 
+#define	ACHIE_ARTEFATTO                              32011 
 #define	ACHIE_PKILL_WIN                              0 
 #define	ACHIE_PKILL_LOSS                             1 
 #define	ACHIE_DEATH                                  2 
