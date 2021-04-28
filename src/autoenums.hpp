@@ -1124,7 +1124,7 @@ enum e_wear {
 #define	SKILL_UNDEFINED2                             4 
 #define	ABS_MAX_LVL                                  70 
 #define	MAX_CLASS_ACHIE                              34 
-#define	MAX_BOSS_ACHIE                               23 
+#define	MAX_BOSS_ACHIE                               30 
 #define	MAX_QUEST_ACHIE                              2 
 #define	MAX_OTHER_ACHIE                              25 
 #define	MAX_MOB_QUEST                                10 

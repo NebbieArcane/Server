@@ -4719,268 +4719,268 @@ struct RandomEquipTable EquipName[22][20] = {
 		{	"una fascia",				SEX_FEMALE,		"fascia"				},
 		{	"un cerchietto",			SEX_NEUTRAL,	"cerchietto"			}
 	},
-	{   //  ear 9                       gender          key
-		{	"un orecchino",             SEX_NEUTRAL,    "orecchino" 		},
-		{	"un pendente",              SEX_NEUTRAL,    "pendente"  		},
-		{	"un gioiello",              SEX_NEUTRAL,    "gioiello"  		},
-		{	"un monile",                SEX_NEUTRAL,    "monile"    		},
-		{	"una buccola",              SEX_FEMALE,     "buccola"   		},
-		{	"degli orecchini",          5,  			"orecchini" 		},
-		{	"un anellino",              SEX_NEUTRAL,    "anellino"  		},
-		{	"un cerchio",               SEX_NEUTRAL,    "cerchio"   		},
-		{	"una gocciola",             SEX_FEMALE,     "gocciola"  		}
+	{	//	ear 9						gender			key
+		{	"un orecchino",				SEX_NEUTRAL,	"orecchino"				},
+		{	"un pendente",				SEX_NEUTRAL,	"pendente"				},
+		{	"un gioiello",				SEX_NEUTRAL,	"gioiello"				},
+		{	"un monile",				SEX_NEUTRAL,	"monile"				},
+		{	"una buccola",				SEX_FEMALE,		"buccola"				},
+		{	"degli orecchini",			5,				"orecchini"				},
+		{	"un anellino",				SEX_NEUTRAL,	"anellino"				},
+		{	"un cerchio",				SEX_NEUTRAL,	"cerchio"				},
+		{	"una gocciola",				SEX_FEMALE,		"gocciola"				}
 	},
-	{   //  neck 11                     gender          key
-		{	"una collana",              SEX_FEMALE,     "collana"   		},
-		{	"un ciondolo",              SEX_NEUTRAL,    "ciondolo"  		},
-		{	"una catenina",             SEX_FEMALE,     "catenina"  		},
-		{	"un amuleto",               SEX_NEUTRAL,    "amuleto"   		},
-		{	"un medaglione",            SEX_NEUTRAL,    "medaglione"		},
-		{	"uno scarabeo",             SEX_NEUTRAL,    "scarabeo"  		},
-		{	"un pendaglio",             SEX_NEUTRAL,    "pendaglio" 		},
-		{	"un talismano",             SEX_NEUTRAL,    "talismano" 		},
-		{	"un monile",                SEX_NEUTRAL,    "monile"    		},
-		{	"un girocollo",             SEX_NEUTRAL,    "girocollo" 		},
-		{	"un collare",               SEX_NEUTRAL,    "collare"   		}
+	{	//	neck 11						gender			key
+		{	"una collana",				SEX_FEMALE,		"collana"				},
+		{	"un ciondolo",				SEX_NEUTRAL,	"ciondolo"				},
+		{	"una catenina",				SEX_FEMALE,		"catenina"				},
+		{	"un amuleto",				SEX_NEUTRAL,	"amuleto"				},
+		{	"un medaglione",			SEX_NEUTRAL,	"medaglione"			},
+		{	"uno scarabeo",				SEX_NEUTRAL,	"scarabeo"				},
+		{	"un pendaglio",				SEX_NEUTRAL,	"pendaglio"				},
+		{	"un talismano",				SEX_NEUTRAL,	"talismano"				},
+		{	"un monile",				SEX_NEUTRAL,	"monile"				},
+		{	"un girocollo",				SEX_NEUTRAL,	"girocollo"				},
+		{	"un collare",				SEX_NEUTRAL,	"collare"				}
 	},
-	{   //  eyes 11                     gender          key
-		{	"degli occhiali",           5,  			"occhiali"  		},
-		{	"un monocolo",              SEX_NEUTRAL,    "monocolo"  		},
-		{	"una visiera",              SEX_FEMALE,     "visiera"   		},
-		{	"delle lenti",              4,  			"lenti"     		},
-		{	"una lente",                SEX_FEMALE,     "lente"     		},
-		{	"una maschera",             SEX_FEMALE,     "maschera"  		},
-		{	"una mascherina",           SEX_FEMALE,     "mascherina"		},
-		{	"un occhio",                SEX_NEUTRAL,    "occhio"    		},
-		{	"una benda",                SEX_FEMALE,     "benda"     		},
-		{	"una celata",               SEX_FEMALE,     "celata"    		},
-		{	"un visore",                SEX_NEUTRAL,    "visore"    		}
+	{	//	eyes 11						gender			key
+		{	"degli occhiali",			5,				"occhiali"				},
+		{	"un monocolo",				SEX_NEUTRAL,	"monocolo"				},
+		{	"una visiera",				SEX_FEMALE,		"visiera"				},
+		{	"delle lenti",				4,				"lenti"					},
+		{	"una lente",				SEX_FEMALE,		"lente"					},
+		{	"una maschera",				SEX_FEMALE,		"maschera"				},
+		{	"una mascherina",			SEX_FEMALE,		"mascherina"			},
+		{	"un occhio",				SEX_NEUTRAL,	"occhio"				},
+		{	"una benda",				SEX_FEMALE,		"benda"					},
+		{	"una celata",				SEX_FEMALE,		"celata"				},
+		{	"un visore",				SEX_NEUTRAL,	"visore"				}
 	},
-	{   //  hold 11                     gender          key
-		{	"un tomo",                  SEX_NEUTRAL,    "tomo"      		},
-		{	"un corno",                 SEX_NEUTRAL,    "corno"     		},
-		{	"un simbolo",               SEX_NEUTRAL,    "simbolo"   		},
-		{	"un grimorio",              SEX_NEUTRAL,    "grimorio"  		},
-		{	"una collanina",            SEX_FEMALE,     "collanina" 		},
-		{	"un rosario",               SEX_NEUTRAL,    "rosario"   		},
-		{	"una pietra",               SEX_FEMALE,     "pietra"    		},
-		{	"una perla",                SEX_FEMALE,     "perla"     		},
-		{	"una roccia",               SEX_FEMALE,     "roccia"    		},
-		{	"una gemma",				SEX_FEMALE,     "gemma"     		},
+	{	//	hold 11						gender			key
+		{	"un tomo",					SEX_NEUTRAL,	"tomo"					},
+		{	"un corno",					SEX_NEUTRAL,	"corno"					},
+		{	"un simbolo",				SEX_NEUTRAL,	"simbolo"				},
+		{	"un grimorio",				SEX_NEUTRAL,	"grimorio"				},
+		{	"una collanina",			SEX_FEMALE,		"collanina"				},
+		{	"un rosario",				SEX_NEUTRAL,	"rosario"				},
+		{	"una pietra",				SEX_FEMALE,		"pietra"				},
+		{	"una perla",				SEX_FEMALE,		"perla"					},
+		{	"una roccia",				SEX_FEMALE,		"roccia"				},
+		{	"una gemma",				SEX_FEMALE,		"gemma"					},
 		{	"un sigillo",				SEX_NEUTRAL,	"sigillo"				}
 	},
 	{	//	light 14					gender			key
 		{	"una sfera di luce",		SEX_FEMALE,		"sfera luce"			},
 		{	"un diamante brillante",	SEX_NEUTRAL,	"diamante brillante"	},
-		{	"una fiamma eterna",        SEX_FEMALE,     "fiamma eterna" 	},
-		{	"una sfera danzante",       SEX_FEMALE,     "sfera danzante"	},
-		{	"una torcia infuocata",     SEX_FEMALE,     "torcia infuocata"  },
-		{	"una lampada antica",       SEX_FEMALE,     "lampada antica"	},
-		{	"una lanterna da minatore", SEX_FEMALE,     "lanterna minatore" },
-		{	"una lanterna antica",      SEX_FEMALE,     "lanterna antica"   },
-		{	"una piccola stella",       SEX_FEMALE,     "stella piccola"	},
-		{	"un frammento di stella",   SEX_NEUTRAL,    "stella frammento"  },
-		{	"una gemma splendente",     SEX_FEMALE,     "gemma splendente"  },
-		{	"una candela",              SEX_FEMALE,     "candela"   		},
-		{	"una fatina",               SEX_FEMALE,     "fatina"    		},
-		{	"un cerino",                SEX_NEUTRAL,    "cerino"    		},
-		{	"un fiammifero",            SEX_NEUTRAL,    "fiammifero"		}
+		{	"una fiamma eterna",		SEX_FEMALE,		"fiamma eterna"			},
+		{	"una sfera danzante",		SEX_FEMALE,		"sfera danzante"		},
+		{	"una torcia infuocata",		SEX_FEMALE,		"torcia infuocata"		},
+		{	"una lampada antica",		SEX_FEMALE,		"lampada antica"		},
+		{	"una lanterna da minatore",	SEX_FEMALE,		"lanterna minatore"		},
+		{	"una lanterna antica",		SEX_FEMALE,		"lanterna antica"		},
+		{	"una piccola stella",		SEX_FEMALE,		"stella piccola"		},
+		{	"un frammento di stella",	SEX_NEUTRAL,	"stella frammento"		},
+		{	"una gemma splendente",		SEX_FEMALE,		"gemma splendente"		},
+		{	"una candela",				SEX_FEMALE,		"candela"				},
+		{	"una fatina",				SEX_FEMALE,		"fatina"				},
+		{	"un cerino",				SEX_NEUTRAL,	"cerino"				},
+		{	"un fiammifero",			SEX_NEUTRAL,	"fiammifero"			}
 	},
-	{   //  back 10                     gender          key
-		{	"una borsa",                SEX_FEMALE,     "borsa"     		},
-		{	"uno zaino",                SEX_NEUTRAL,    "zaino"     		},
-		{	"una sacca",                SEX_FEMALE,     "sacca"     		},
-		{	"un forziere",              SEX_NEUTRAL,    "forziere"  		},
-		{	"un barile",                SEX_NEUTRAL,    "barile"    		},
-		{	"un cesto",                 SEX_NEUTRAL,    "cesto"     		},
-		{	"una gerla",                SEX_FEMALE,     "gerla"     		},
-		{	"una cassapanca",           SEX_FEMALE,     "cassapanca"		},
-		{	"una bisaccia",             SEX_FEMALE,     "bisaccia"  		},
-		{	"una cesta",                SEX_FEMALE,     "cesta"     		}
+	{	//	back 10						gender			key
+		{	"una borsa",				SEX_FEMALE,		"borsa"					},
+		{	"uno zaino",				SEX_NEUTRAL,	"zaino"					},
+		{	"una sacca",				SEX_FEMALE,		"sacca"					},
+		{	"un forziere",				SEX_NEUTRAL,	"forziere"				},
+		{	"un barile",				SEX_NEUTRAL,	"barile"				},
+		{	"un cesto",					SEX_NEUTRAL,	"cesto"					},
+		{	"una gerla",				SEX_FEMALE,		"gerla"					},
+		{	"una cassapanca",			SEX_FEMALE,		"cassapanca"			},
+		{	"una bisaccia",				SEX_FEMALE,		"bisaccia"				},
+		{	"una cesta",				SEX_FEMALE,		"cesta"					}
 	},
-	{   //  about body 9                gender          key
-		{	"un mantello",              SEX_NEUTRAL,    "mantello"  		},
-		{	"un manto",                 SEX_NEUTRAL,    "manto"     		},
-		{	"una pelliccia",            SEX_FEMALE,     "pelliccia" 		},
-		{	"un vello",                 SEX_NEUTRAL,    "vello"     		},
-		{	"una cappa",                SEX_FEMALE,     "cappa"     		},
-		{	"un tabarro",               SEX_NEUTRAL,    "tabarro"   		},
-		{	"un sari",                  SEX_NEUTRAL,    "sari"      		},
-		{	"una pianeta",              SEX_FEMALE,     "pianeta"   		},
-		{	"un caftano",               SEX_NEUTRAL,    "caftano"   		}
+	{	//	about body 9				gender			key
+		{	"un mantello",				SEX_NEUTRAL,	"mantello"				},
+		{	"un manto",					SEX_NEUTRAL,	"manto"					},
+		{	"una pelliccia",			SEX_FEMALE,		"pelliccia"				},
+		{	"un vello",					SEX_NEUTRAL,	"vello"					},
+		{	"una cappa",				SEX_FEMALE,		"cappa"					},
+		{	"un tabarro",				SEX_NEUTRAL,	"tabarro"				},
+		{	"un sari",					SEX_NEUTRAL,	"sari"					},
+		{	"una pianeta",				SEX_FEMALE,		"pianeta"				},
+		{	"un caftano",				SEX_NEUTRAL,	"caftano"				}
 	},
-	{   //  waist 9                     gender          key
-		{	"una cintura",              SEX_FEMALE,     "cintura"   		},
-		{	"un nastro",                SEX_NEUTRAL,    "nastro"    		},
-		{	"un cinturone",             SEX_NEUTRAL,    "cinturone" 		},
-		{	"una corda",                SEX_FEMALE,     "corda"     		},
-		{	"una liana",                SEX_FEMALE,     "liana"     		},
-		{	"un gonnellino",            SEX_NEUTRAL,    "gonnellino"		},
-		{	"una fascia",               SEX_FEMALE,     "fascia"    		},
-		{	"una catena",               SEX_FEMALE,     "catena"    		},
-		{	"una fusciacca",            SEX_FEMALE,     "fusciacca" 		}
+	{	//	waist 9						gender			key
+		{	"una cintura",				SEX_FEMALE,		"cintura"				},
+		{	"un nastro",				SEX_NEUTRAL,	"nastro"				},
+		{	"un cinturone",				SEX_NEUTRAL,	"cinturone"				},
+		{	"una corda",				SEX_FEMALE,		"corda"					},
+		{	"una liana",				SEX_FEMALE,		"liana"					},
+		{	"un gonnellino",			SEX_NEUTRAL,	"gonnellino"			},
+		{	"una fascia",				SEX_FEMALE,		"fascia"				},
+		{	"una catena",				SEX_FEMALE,		"catena"				},
+		{	"una fusciacca",			SEX_FEMALE,		"fusciacca"				}
 	},
-	{   //  feet 9                      gender          key
-		{	"degli stivali",            5,  			"stivali"   		},
-		{	"un paio di stivali",       5,  			"stivali paio"  	},
-		{	"delle scarpe",             4,  			"scarpe"    		},
-		{	"un paio di scarpe",        4,  			"scarpe paio"   	},
-		{	"dei calzari",              5,  			"calzari"   		},
-		{	"degli anfibi",             5,  			"anfibi"    		},
-		{	"dei sandali",              5,  			"sandali"   		},
-		{	"degli scarponi",           5,  			"scarponi"  		},
-		{	"un paio di scarponi",      5,  			"scarponi paio" 	}
+	{	//	feet 9						gender			key
+		{	"degli stivali",			5,				"stivali"				},
+		{	"un paio di stivali",		5,				"stivali paio"			},
+		{	"delle scarpe",				4,				"scarpe"				},
+		{	"un paio di scarpe",		4,				"scarpe paio"			},
+		{	"dei calzari",				5,				"calzari"				},
+		{	"degli anfibi",				5,				"anfibi"				},
+		{	"dei sandali",				5,				"sandali"				},
+		{	"degli scarponi",			5,				"scarponi"				},
+		{	"un paio di scarponi",		5,				"scarponi paio"			}
 	},
-	{   //  hands 9                     gender          key
-		{	"un paio di guanti",        5,  			"guanti paio"   	},
-		{	"dei guanti",               5,  			"guanti"    		},
-		{	"dei guantoni",             5,  			"guantoni"  		},
-		{	"delle fasce",              4,  			"fasce"     		},
-		{	"delle placche",            4,  			"placche"   		},
-		{	"delle protezioni",         4,  			"protezioni"		},
-		{	"dei gusci",                5,  			"gusci"     		},
-		{	"degli uncini",             5,  			"unicini"   		},
-		{	"degli artigli",            5,  			"artigli"   		}
+	{	//	hands 9						gender			key
+		{	"un paio di guanti",		5,				"guanti paio"			},
+		{	"dei guanti",				5,				"guanti"				},
+		{	"dei guantoni",				5,				"guantoni"				},
+		{	"delle fasce",				4,				"fasce"					},
+		{	"delle placche",			4,				"placche"				},
+		{	"delle protezioni",			4,				"protezioni"			},
+		{	"dei gusci",				5,				"gusci"					},
+		{	"degli uncini",				5,				"unicini"				},
+		{	"degli artigli",			5,				"artigli"				}
 	},
-	{   //  body 10                     gender          key
-		{	"una armatura",             SEX_FEMALE,     "armatura"  		},
-		{	"una veste",                SEX_FEMALE,     "veste"     		},
-		{	"una corazza",              SEX_FEMALE,     "corazza"   		},
-		{	"una cotta",                SEX_FEMALE,     "cotta"     		},
-		{	"un corpetto",              SEX_NEUTRAL,    "corpetto"  		},
-		{	"un giustacuore",           SEX_NEUTRAL,    "giustacuore"   	},
-		{	"una uniforme",             SEX_FEMALE,     "uniforme"  		},
-		{	"un pettorale",             SEX_NEUTRAL,    "pettorale" 		},
-		{	"un saio",                  SEX_NEUTRAL,    "saio"      		},
-		{	"un'armatura",              SEX_FEMALE,     "armatura"  		},
-		{	"un kimono",                SEX_NEUTRAL,    "kimono"    		}
+	{	//	body 10						gender			key
+		{	"una armatura",				SEX_FEMALE,		"armatura"				},
+		{	"una veste",				SEX_FEMALE,		"veste"					},
+		{	"una corazza",				SEX_FEMALE,		"corazza"				},
+		{	"una cotta",				SEX_FEMALE,		"cotta"					},
+		{	"un corpetto",				SEX_NEUTRAL,	"corpetto"				},
+		{	"un giustacuore",			SEX_NEUTRAL,	"giustacuore"			},
+		{	"una uniforme",				SEX_FEMALE,		"uniforme"				},
+		{	"un pettorale",				SEX_NEUTRAL,	"pettorale"				},
+		{	"un saio",					SEX_NEUTRAL,	"saio"					},
+		{	"un'armatura",				SEX_FEMALE,		"armatura"				},
+		{	"un kimono",				SEX_NEUTRAL,	"kimono"				}
 	},
-	{   //  head 9                      gender          key
-		{	"un elmo",                  SEX_NEUTRAL,    "elmo"      		},
-		{	"una corona",               SEX_FEMALE,     "corona"    		},
-		{	"una fascia",               SEX_FEMALE,     "fascia"    		},
-		{	"una bandana",              SEX_FEMALE,     "bandana"   		},
-		{	"una testa",                SEX_FEMALE,     "testa"     		},
-		{	"un cappello",              SEX_NEUTRAL,    "cappello"  		},
-		{	"un cappuccio",             SEX_NEUTRAL,    "cappuccio" 		},
-		{	"un diadema",               SEX_NEUTRAL,    "diadema"   		},
-		{	"un copricapo",             SEX_NEUTRAL,    "copricapo" 		}
+	{	//	head 9						gender			key
+		{	"un elmo",					SEX_NEUTRAL,	"elmo"					},
+		{	"una corona",				SEX_FEMALE,		"corona"				},
+		{	"una fascia",				SEX_FEMALE,		"fascia"				},
+		{	"una bandana",				SEX_FEMALE,		"bandana"				},
+		{	"una testa",				SEX_FEMALE,		"testa"					},
+		{	"un cappello",				SEX_NEUTRAL,	"cappello"				},
+		{	"un cappuccio",				SEX_NEUTRAL,	"cappuccio"				},
+		{	"un diadema",				SEX_NEUTRAL,	"diadema"				},
+		{	"un copricapo",				SEX_NEUTRAL,	"copricapo"				}
 	},
 
-	{   //  legs 9                      gender          key
-		{	"dei gambali",              5,  			"gambali"   		},
-		{	"dei pantaloni",            5,  			"pantaloni" 		},
-		{	"delle calze",              4,  			"calze"     		},
-		{	"un paio di pantaloni",     5,  			"pantaloni paio"	},
-		{	"degli schinieri",          5,  			"schinieri" 		},
-		{	"delle fasciature",         4,  			"fasciature"		},
-		{	"delle stecche",            4,  			"stecche"   		},
-		{	"delle protezioni",         4,  			"protezioni"		},
-		{	"delle calotte",            4,  			"calotte"   		}
+	{	//	legs 9						gender			key
+		{	"dei gambali",				5,				"gambali"				},
+		{	"dei pantaloni",			5,				"pantaloni"				},
+		{	"delle calze",				4,				"calze"					},
+		{	"un paio di pantaloni",		5,				"pantaloni paio"		},
+		{	"degli schinieri",			5,				"schinieri"				},
+		{	"delle fasciature",			4,				"fasciature"			},
+		{	"delle stecche",			4,				"stecche"				},
+		{	"delle protezioni",			4,				"protezioni"			},
+		{	"delle calotte",			4,				"calotte"				}
 	},
-	{   //  arms 9                      gender          key
-		{	"delle maniche",            4,  			"maniche"   		},
-		{	"dei bracciali",            5,  			"bracciali" 		},
-		{	"dei parabraccia",          5,  			"parabraccia"   	},
-		{	"una cubitiera",            SEX_FEMALE,     "cubitiera" 		},
-		{	"delle lastre",             4,  			"lastre"    		},
-		{	"un vambrace",              SEX_NEUTRAL,    "vambrace"  		},
-		{	"una protezione",           SEX_FEMALE,     "protezione"		},
-		{	"delle bende",              4,  			"bende"     		},
-		{	"un carapace",              SEX_NEUTRAL,    "carapace"  		}
+	{	//	arms 9						gender			key
+		{	"delle maniche",			4,				"maniche"				},
+		{	"dei bracciali",			5,				"bracciali"				},
+		{	"dei parabraccia",			5,				"parabraccia"			},
+		{	"una cubitiera",			SEX_FEMALE,		"cubitiera"				},
+		{	"delle lastre",				4,				"lastre"				},
+		{	"un vambrace",				SEX_NEUTRAL,	"vambrace"				},
+		{	"una protezione",			SEX_FEMALE,		"protezione"			},
+		{	"delle bende",				4,				"bende"					},
+		{	"un carapace",				SEX_NEUTRAL,	"carapace"				}
 	},
 	{   //  shield 14                   gender          key
-		{	"uno scudo",                SEX_NEUTRAL,    "scudo"     		},
-		{	"uno scutum",               SEX_NEUTRAL,    "scutum"    		},
-		{	"un pavese",                SEX_NEUTRAL,    "pavese"    		},
-		{	"uno scudo crociato",       SEX_NEUTRAL,    "scudo crociato"	},
-		{	"uno scudo rotondo",        SEX_NEUTRAL,    "scudo rotondo" 	},
-		{	"uno scudo vichingo",       SEX_NEUTRAL,    "scudo vichingo"	},
-		{	"uno scudo puntuto",        SEX_NEUTRAL,    "scudo puntuto" 	},
-		{	"un buckler",               SEX_NEUTRAL,    "buckler"   		},
-		{	"una lastra",               SEX_FEMALE,     "lastra"    		},
-		{	"uno scudo triangolare",    SEX_NEUTRAL,    "scudo triangolare" },
-		{	"uno scudo antisommossa",   SEX_NEUTRAL,    "scudo antisommossa"},
-		{	"una porta",                SEX_FEMALE,     "porta"     		},
-		{	"un kite",                  SEX_NEUTRAL,    "kite"      		},
-		{	"uno scudo a rotella",      SEX_NEUTRAL,    "scudo rotella" 	}
+		{	"uno scudo",                SEX_NEUTRAL,	"scudo"     		},
+		{	"uno scutum",               SEX_NEUTRAL,	"scutum"    		},
+		{	"un pavese",                SEX_NEUTRAL,	"pavese"    		},
+		{	"uno scudo crociato",       SEX_NEUTRAL,	"scudo crociato"	},
+		{	"uno scudo rotondo",        SEX_NEUTRAL,	"scudo rotondo" 	},
+		{	"uno scudo vichingo",       SEX_NEUTRAL,	"scudo vichingo"	},
+		{	"uno scudo puntuto",        SEX_NEUTRAL,	"scudo puntuto" 	},
+		{	"un buckler",               SEX_NEUTRAL,	"buckler"   		},
+		{	"una lastra",               SEX_FEMALE,		"lastra"    		},
+		{	"uno scudo triangolare",    SEX_NEUTRAL,	"scudo triangolare" },
+		{	"uno scudo antisommossa",   SEX_NEUTRAL,	"scudo antisommossa"},
+		{	"una porta",                SEX_FEMALE,		"porta"     		},
+		{	"un kite",                  SEX_NEUTRAL,	"kite"      		},
+		{	"uno scudo a rotella",      SEX_NEUTRAL,	"scudo rotella" 	}
 	},
 	{   //  blunt weapon 15             gender          key
-		{	"un martello",              SEX_NEUTRAL,    "martello"  		},
-		{	"una mazza",                SEX_FEMALE,     "mazza"     		},
-		{	"una stella del mattino",   SEX_FEMALE,     "stella mattino"	},
-		{	"una tazza da te'",         SEX_FEMALE,     "tazza te"  		},
-		{	"uno scettro",              SEX_NEUTRAL,    "scettro"   		},
-		{	"un manganello",            SEX_NEUTRAL,    "manganello"		},
-		{	"una clava",                SEX_FEMALE,     "clava"     		},
-		{	"una padella",              SEX_FEMALE,     "padella"   		},
-		{	"un tonfa",                 SEX_NEUTRAL,    "tonfa"     		},
-		{	"un bastone",               SEX_NEUTRAL,    "bastone"   		},
-		{	"una mazza ferrata",        SEX_FEMALE,     "mazza ferrata" 	},
-		{	"un mazzafrusto",           SEX_NEUTRAL,    "mazzafrusto"   	},
-		{	"un nunchaku",              SEX_NEUTRAL,    "nunchaku"  		},
-		{	"un flagello",              SEX_NEUTRAL,    "flagello"  		},
-		{	"un martello da guerra",    SEX_NEUTRAL,    "martello guerra"   }
+		{	"un martello",              SEX_NEUTRAL,	"martello"  		},
+		{	"una mazza",                SEX_FEMALE,		"mazza"     		},
+		{	"una stella del mattino",   SEX_FEMALE,		"stella mattino"	},
+		{	"una tazza da te'",         SEX_FEMALE,		"tazza te"  		},
+		{	"uno scettro",              SEX_NEUTRAL,	"scettro"   		},
+		{	"un manganello",            SEX_NEUTRAL,	"manganello"		},
+		{	"una clava",                SEX_FEMALE,		"clava"     		},
+		{	"una padella",              SEX_FEMALE,		"padella"   		},
+		{	"un tonfa",                 SEX_NEUTRAL,	"tonfa"     		},
+		{	"un bastone",               SEX_NEUTRAL,	"bastone"   		},
+		{	"una mazza ferrata",        SEX_FEMALE,		"mazza ferrata" 	},
+		{	"un mazzafrusto",           SEX_NEUTRAL,	"mazzafrusto"   	},
+		{	"un nunchaku",              SEX_NEUTRAL,	"nunchaku"  		},
+		{	"un flagello",              SEX_NEUTRAL,	"flagello"  		},
+		{	"un martello da guerra",    SEX_NEUTRAL,	"martello guerra"   }
 	},
 	{   //  slash weapon 19             gender          key
-		{	"una spada",                SEX_FEMALE,     "spada"     		},
-		{	"una scimitarra",           SEX_FEMALE,     "scimitarra"		},
-		{	"una falce",                SEX_FEMALE,     "falce"     		},
-		{	"un'ascia",                 SEX_FEMALE,     "ascia"     		},
-		{	"una spada corta",          SEX_FEMALE,     "spada corta"   	},
-		{	"un'azza",                  SEX_FEMALE,     "azza"      		},
-		{	"uno spadone",              SEX_NEUTRAL,    "spadone"   		},
-		{	"un'alabarda",              SEX_FEMALE,     "alabarda"  		},
-		{	"una sciabola",             SEX_FEMALE,     "sciabola"  		},
-		{	"una claymore",             SEX_FEMALE,     "claymore"  		},
-		{	"una daga",                 SEX_FEMALE,     "daga"      		},
-		{	"una spatha",               SEX_FEMALE,     "spatha"    		},
-		{	"un falcione",              SEX_NEUTRAL,    "falcione"  		},
-		{	"una flamberga",            SEX_FEMALE,     "flamberga" 		},
-		{	"un gladio",                SEX_NEUTRAL,    "gladio"    		},
-		{	"una katana",               SEX_FEMALE,     "katana"    		},
-		{	"un machete",               SEX_NEUTRAL,    "machete"   		},
-		{	"un tomahawk",              SEX_NEUTRAL,    "tomahawk"  		},
-		{	"un'ascia bipenne",         SEX_FEMALE,     "ascia bipenne" 	}
+		{	"una spada",                SEX_FEMALE,		"spada"     		},
+		{	"una scimitarra",           SEX_FEMALE,		"scimitarra"		},
+		{	"una falce",                SEX_FEMALE,		"falce"     		},
+		{	"un'ascia",                 SEX_FEMALE,		"ascia"     		},
+		{	"una spada corta",          SEX_FEMALE,		"spada corta"   	},
+		{	"un'azza",                  SEX_FEMALE,		"azza"      		},
+		{	"uno spadone",              SEX_NEUTRAL,	"spadone"   		},
+		{	"un'alabarda",              SEX_FEMALE,		"alabarda"  		},
+		{	"una sciabola",             SEX_FEMALE,		"sciabola"  		},
+		{	"una claymore",             SEX_FEMALE,		"claymore"  		},
+		{	"una daga",                 SEX_FEMALE,		"daga"      		},
+		{	"una spatha",               SEX_FEMALE,		"spatha"    		},
+		{	"un falcione",              SEX_NEUTRAL,	"falcione"  		},
+		{	"una flamberga",            SEX_FEMALE,		"flamberga" 		},
+		{	"un gladio",                SEX_NEUTRAL,	"gladio"    		},
+		{	"una katana",               SEX_FEMALE,		"katana"    		},
+		{	"un machete",               SEX_NEUTRAL,	"machete"   		},
+		{	"un tomahawk",              SEX_NEUTRAL,	"tomahawk"  		},
+		{	"un'ascia bipenne",         SEX_FEMALE,		"ascia bipenne" 	}
 	},
 	{   //  pierce weapon 15            gender          key
-		{	"un pugnale",               SEX_NEUTRAL,    "pugnale"   		},
-		{	"uno stocco",               SEX_NEUTRAL,    "stocco"    		},
-		{	"un fioretto",              SEX_NEUTRAL,    "fioretto"  		},
-		{	"un coltello",              SEX_NEUTRAL,    "coltello"  		},
-		{	"una lancia",               SEX_FEMALE,     "lancia"    		},
-		{	"un paio di forbici",       4,  			"forbici paio"  	},
-		{	"uno stiletto",             SEX_NEUTRAL,    "stiletto"  		},
-		{	"un tridente",              SEX_NEUTRAL,    "tridente"  		},
-		{	"un punteruolo",            SEX_NEUTRAL,    "punteruolo"		},
-		{	"una picca",                SEX_FEMALE,     "picca"     		},
-		{	"un dirk",                  SEX_NEUTRAL,    "dirk"      		},
-		{	"un giavellotto",           SEX_NEUTRAL,    "giavellotto"   	},
-		{	"una partigiana",           SEX_FEMALE,     "partigiana"		},
-		{	"uno spiedo",               SEX_NEUTRAL,    "spiedo"    		},
-		{	"un kris",                  SEX_NEUTRAL,    "kris"      		}
+		{	"un pugnale",               SEX_NEUTRAL,	"pugnale"   		},
+		{	"uno stocco",               SEX_NEUTRAL,	"stocco"    		},
+		{	"un fioretto",              SEX_NEUTRAL,	"fioretto"  		},
+		{	"un coltello",              SEX_NEUTRAL,	"coltello"  		},
+		{	"una lancia",               SEX_FEMALE,		"lancia"    		},
+		{	"un paio di forbici",       4,				"forbici paio"  	},
+		{	"uno stiletto",             SEX_NEUTRAL,	"stiletto"  		},
+		{	"un tridente",              SEX_NEUTRAL,	"tridente"  		},
+		{	"un punteruolo",            SEX_NEUTRAL,	"punteruolo"		},
+		{	"una picca",                SEX_FEMALE,		"picca"     		},
+		{	"un dirk",                  SEX_NEUTRAL,	"dirk"      		},
+		{	"un giavellotto",           SEX_NEUTRAL,	"giavellotto"   	},
+		{	"una partigiana",           SEX_FEMALE,		"partigiana"		},
+		{	"uno spiedo",               SEX_NEUTRAL,	"spiedo"    		},
+		{	"un kris",                  SEX_NEUTRAL,	"kris"      		}
 	},
 	{   //  wand 9                      gender          key
-		{	"una bacchetta",            SEX_FEMALE,     "bacchetta" 		},
-		{	"un bastoncino",            SEX_NEUTRAL,    "bastoncino"		},
-		{	"un rametto",               SEX_NEUTRAL,    "rametto"   		},
-		{	"una stecca",               SEX_FEMALE,     "stecca"    		},
-		{	"un corno",                 SEX_NEUTRAL,    "corno"     		},
-		{	"un vincastro",             SEX_NEUTRAL,    "vincastro" 		},
-		{	"un cucchiaio",             SEX_NEUTRAL,    "cucchiaio" 		},
-		{	"una spatola",              SEX_FEMALE,     "spatola"   		},
-		{	"un rabdo",                 SEX_NEUTRAL,    "rabdo"     		}
+		{	"una bacchetta",            SEX_FEMALE,		"bacchetta" 		},
+		{	"un bastoncino",            SEX_NEUTRAL,	"bastoncino"		},
+		{	"un rametto",               SEX_NEUTRAL,	"rametto"   		},
+		{	"una stecca",               SEX_FEMALE,		"stecca"    		},
+		{	"un corno",                 SEX_NEUTRAL,	"corno"     		},
+		{	"un vincastro",             SEX_NEUTRAL,	"vincastro" 		},
+		{	"un cucchiaio",             SEX_NEUTRAL,	"cucchiaio" 		},
+		{	"una spatola",              SEX_FEMALE,		"spatola"   		},
+		{	"un rabdo",                 SEX_NEUTRAL,	"rabdo"     		}
 	},
 	{   //  staff 9                     gender          key
-		{	"un bastone",               SEX_NEUTRAL,    "bastone"   		},
-		{	"un'asta",                  SEX_FEMALE,     "asta"      		},
-		{	"un pastorale",             SEX_NEUTRAL,    "pastorale" 		},
-		{	"uno scettro",              SEX_NEUTRAL,    "scettro"   		},
-		{	"un caduceo",               SEX_NEUTRAL,    "caduceo"   		},
-		{	"una verga",                SEX_FEMALE,     "verga"     		},
-		{	"un bacchio",               SEX_NEUTRAL,    "bucchio"   		},
-		{	"un alpenstock",            SEX_NEUTRAL,    "alpenstock"		},
-		{	"una pertica",              SEX_FEMALE,     "pertica"   		}
+		{	"un bastone",               SEX_NEUTRAL,	"bastone"   		},
+		{	"un'asta",                  SEX_FEMALE,		"asta"      		},
+		{	"un pastorale",             SEX_NEUTRAL,	"pastorale" 		},
+		{	"uno scettro",              SEX_NEUTRAL,	"scettro"   		},
+		{	"un caduceo",               SEX_NEUTRAL,	"caduceo"   		},
+		{	"una verga",                SEX_FEMALE,		"verga"     		},
+		{	"un bacchio",               SEX_NEUTRAL,	"bucchio"   		},
+		{	"un alpenstock",            SEX_NEUTRAL,	"alpenstock"		},
+		{	"una pertica",              SEX_FEMALE,		"pertica"   		}
 	}
 };
 
@@ -6063,7 +6063,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Interessante questo scettro",              			10,
 			"Io pulisco Apo sul serio!",                			100,
 			"Al di sopra dei Cavalieri ci sono io!",                500,
-			"Distruttore di Equilibrio",                            5000,
+			"Distruttore dell'Equilibrio",							5000,
 			"", /* lvl6 */								 			0, //   lvl6_val
 			"", /* lvl7 */								 			0, //   lvl7_val
 			"", /* lvl8 */								 			0, //   lvl8_val
@@ -6100,7 +6100,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			0,														LEV_EXPERT,                                 5
 		},
 		{   //  4
-			ACHIE_STANISLAV,                            			"Spettro di Stanislav ucciso",  			"Spettri di Stanislav uccisi",
+			ACHIE_STANISLAV,                            			"Spettro di Stanislav ucciso",				"Spettri di Stanislav uccisi",
 			"Ma io non volevo pestarlo!",               			1,
 			"Sembrava un vecchietto a modo...",         			10,
 			"Misericordioso",                           			100,
@@ -6212,7 +6212,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			0,														LEV_GOD_MODE,                               5
 		},
 		{   //  12
-			ACHIE_STRAHD,                               			"Signore di Ravenloft ucciso",  			"Strahd uccisi",
+			ACHIE_STRAHD,                               			"Signore di Ravenloft ucciso",				"Strahd uccisi",
 			"Ho qui con me un paletto di frassino",     			1,
 			"Ammazza pipistrelli",                      			10,
 			"Ammazza non morti",                        			100,
@@ -6287,7 +6287,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Per Alar, sei sciupatissimo! Mangia un po'!",          10,
 			"Era un lick o un lich?",                   			100,
 			"Distruttore di non morti",                             500,
-			"Signore dei Lich",									 5000,
+			"Signore dei Lich",										5000,
 			"", /* lvl6 */								 			0, //   lvl6_val
 			"", /* lvl7 */								 			0, //   lvl7_val
 			"", /* lvl8 */								 			0, //   lvl8_val
@@ -6301,7 +6301,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Frustino infuocato eh... mmm",             			10,
 			"Tamburi nella notte",                      			100,
 			"Quando scavi troppo a fondo...",                       500,
-			"Signore di Moria",									 5000,
+			"Signore di Moria",										5000,
 			"", /* lvl6 */								 			0, //   lvl6_val
 			"", /* lvl7 */								 			0, //   lvl7_val
 			"", /* lvl8 */								 			0, //   lvl8_val
@@ -6351,19 +6351,117 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"", /* lvl10 */											0, //   lvl10_val
 			0,														LEV_TORMENT,                                5
 		},
-		{   //  22
-			ACHIE_GONHAG,                               			"Gonhag ucciso",                			"Gonhag uccisi",
-			"Whisky! Vieni qui bello!",                 			1,
-			"Ho dimenticato il guinzaglio, lo avete?",  			10,
-			"Hey, non mi sbavare cosi'!",               			100,
-			"A cuccia su, da bravo",                                500,
-			"Dominatore di Draghi",                                 5000,
-			"", /* lvl6 */								 			0, //   lvl6_val
-			"", /* lvl7 */								 			0, //   lvl7_val
-			"", /* lvl8 */								 			0, //   lvl8_val
-			"", /* lvl9 */								 			0, //   lvl9_val
-			"", /* lvl10 */											0, //   lvl10_val
-			0,														LEV_IMPERIAL,                               5
+		{	//	22
+			ACHIE_GONHAG,											"Gonhag ucciso",							"Gonhag uccisi",
+			"Whisky! Vieni qui bello!",								1,
+			"Ho dimenticato il guinzaglio, lo avete?",				10,
+			"Hey, non mi sbavare cosi'!",							100,
+			"A cuccia su, da bravo",								500,
+			"Dominatore di Draghi",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_IMPERIAL,								5
+		},
+		{	//	23
+			ACHIE_BARBALBERO,										"Barbalbero ucciso",						"Barbalbero uccisi",
+			"Che bel bastoncino!",									1,
+			"Con questo facciamo un bel falo'!",					10,
+			"Ho sempre odiato la natura!",							100,
+			"Ora mi faccio un bell'arco",							500,
+			"Signore di Fangorn",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_EXPERT,									5
+		},
+		{	//	24
+			ACHIE_ORRORE_DETURPANTE,								"Orrore Deturpante ucciso",					"Orrori Deturpanti uccisi",
+			"Sono tutto sporco di fango",							1,
+			"Ma questo non si fa schifo da solo?",					10,
+			"Qui ora ci coltivo dei mirtilli...",					100,
+			"Quanto puzza questo...",								500,
+			"Signore della Fenice",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_EXPERT,									5
+		},
+		{	//	25
+			ACHIE_TIMNUS,											"Timnus ucciso",							"Timus uccisi",
+			"Ma era un Dio?",										1,
+			"Pensavo fosse uno gnomo...",							10,
+			"Avevo bisogno di orecchie per la mia collana",			100,
+			"Questi elfi si credono di essere sempre i piu' fighi",	500,
+			"Signore degli Elfi",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	26
+			ACHIE_SHERAZADE,										"Sherazade uccisa",							"Sherazade uccise",
+			"Volevo solo portarti a cena",							1,
+			"Hey, ma lo sai che hai degli occhi bellissimi!",		10,
+			"Avrei fatto di tutto per te!",							100,
+			"Prendi il mio cuore... o prendero' io il tuo!",		500,
+			"Signore dell'Harem",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_EASY,									5
+		},
+		{	//	27
+			ACHIE_DRAGO_DUNA_NERA,									"Drago delle Dune ucciso",					"Draghi delle Dune uccisi",
+			"Ah, ma non era un mucchietto di sabbia?",				1,
+			"Voglio fare un bel castello di sabbia",				10,
+			"Avete delle formine con voi?",							100,
+			"Spaleremo tutto con dei bulldozer",					500,
+			"Signore delle Dune",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_EXPERT,									5
+		},
+		{	//	28
+			ACHIE_INHEP,											"Inhep ucciso",								"Inhep uccisi",
+			"Ma questo e' proprio grosso!",							1,
+			"Non mi fai paura, gigantone",							10,
+			"Sono piu' piccolo ma faccio piu' male!",				100,
+			"Piu' sono grossi piu' fanno rumore quando cadono",		500,
+			"Signore del Monolito",									5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_CHAMPION,								5
+		},
+		{	//	29
+			ACHIE_ARTEFATTO,										"Costrutto Atlantideo ucciso",				"Artefatti uccisi",
+			"Ops, ho rotto il giocattolino",						1,
+			"Fermi tutti, lo rimonto io",							10,
+			"Mi piace un sacco giocare con i lego",					100,
+			"Lo smonto e lo rimonto quanto mi pare e piace",		500,
+			"Signore dei Costrutti",								5000,
+			"",	/* lvl6 */								 			0,	//	lvl6_val
+			"",	/* lvl7 */								 			0,	//	lvl7_val
+			"",	/* lvl8 */								 			0,	//	lvl8_val
+			"",	/* lvl9 */								 			0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_HARD,									5
 		}
 	},
 
@@ -6626,7 +6724,7 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			0,														LEV_BEGINNER,                               3
 		},
 		{   //  16  non attiva, futura implementazione
-			ACHIE_QUEST_RESEARCH_COMPLETE,              			"quest di ricerca completata",  			"quest di ricerca completate",
+			ACHIE_QUEST_RESEARCH_COMPLETE,              			"quest di ricerca completata",				"quest di ricerca completate",
 			"", /* lvl1 */								 			0, //   lvl1_val
 			"", /* lvl2 */								 			0, //   lvl2_val
 			"", /* lvl3 */								 			0, //   lvl3_val
