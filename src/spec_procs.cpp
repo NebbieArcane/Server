@@ -162,6 +162,31 @@ int GainLevel(struct char_data* ch, int iClass) {
 	return(FALSE);
 }
 
+struct obj_data* FindObjInRoomWithFunction(int room, genericspecial_func func) {
+	struct obj_data* temp_obj, *obj;
+
+	obj = NULL;
+
+	if(room > NOWHERE) {
+		for(temp_obj = real_roomp(room)->contents; (!obj) && (temp_obj);
+				temp_obj = temp_obj->next_content) {
+
+			if(temp_obj) {
+				if(obj_index[temp_obj->item_number].func == func) {
+					obj = temp_obj;
+					break;
+				}
+			}
+		}
+	}
+	else {
+		return(NULL);
+	}
+
+	return(obj);
+
+}
+
 struct char_data* FindMobInRoomWithFunction(int room, genericspecial_func func) {
 	struct char_data* temp_char, *targ;
 
@@ -2167,7 +2192,7 @@ MOBSPECIAL_FUNC(SporeCloud) {
 
 	if(type == EVENT_COMMAND && cmd == CMD_BASH && strlen(arg) > 0 && strstr(GET_NAME(mob), arg))
 	{
-		act("Ti schianti contro $n!\r\n", FALSE, mob, NULL, ch, TO_VICT); 
+		act("Ti schianti contro $n!\r\n", FALSE, mob, NULL, ch, TO_VICT);
 		act("Da $n si leva una nuvola di spore!\r\n", FALSE, mob, NULL, ch, TO_VICT);
 		act("La tua vista si offusca per qualche secondo, fatichi a respirare...\r\n", FALSE, mob, NULL, ch, TO_VICT);
 		act("$N si schianta contro $n!\r\n", FALSE, mob, NULL, ch, TO_NOTVICT);
@@ -6462,43 +6487,53 @@ MOBSPECIAL_FUNC(Tyrannosaurus_swallower) {
 OBJSPECIAL_FUNC(enter_obj) {
 	char obj_key[80], chiave[100];
 	int numero;
+	struct obj_data* ent_obj;
 
-
-	if(type != EVENT_COMMAND) {
+	if(type != EVENT_COMMAND)
+	{
 		return(FALSE);
 	}
 
-	if(cmd != CMD_ENTER) {
+	if(cmd != CMD_ENTER)
+	{
 		return(FALSE);
 	}
 
-	arg = one_argument(arg,obj_key);
+	arg = one_argument(arg, obj_key);
 
-	if(!*obj_key) {
-		return(FALSE);
-	}
-	char* p=chiave;
-	sscanf(obj_index[obj->item_number].specparms,"%100s %d",p,&numero);
-
-	if((ch) && (ch->specials.fighting)) {
-		send_to_char("Non mentre combatti!\n\r",ch);
+	if(!*obj_key)
+	{
 		return(FALSE);
 	}
 
-	if(!strcmp(obj_key,chiave)) {
+	ent_obj = FindObjInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(enter_obj));
+
+	char* p = chiave;
+	sscanf(obj_index[obj->item_number].specparms,"%100s %d", p, &numero);
+
+	if((ch) && (ch->specials.fighting))
+	{
+		send_to_char("Non mentre combatti!\n\r", ch);
+		return(FALSE);
+	}
+
+//	if(!strcmp(obj_key,chiave)) {
+	if(isname(obj_key, ent_obj->name))
+	{
 		send_to_char("\n\r",ch);
-		act("$c0008Entri in $p...il tuo corpo si dissolve...si ricompone...e ti trovi altrove.$c0007",
-			FALSE, ch, obj, 0, TO_CHAR);
+		act("$c0008Entri in $p... il tuo corpo si dissolve... si ricompone... e ti trovi altrove.$c0007",
+			FALSE, ch, ent_obj, 0, TO_CHAR);
 		send_to_char("\n\r",ch);
-		act("$c0008$n entra in $p e il suo corpo si dissolve velocemente.$c0007",
-			FALSE, ch, obj, 0, TO_ROOM);
+		act("$c0008$n entra in $p ed il suo corpo si dissolve velocemente.$c0007",
+			FALSE, ch, ent_obj, 0, TO_ROOM);
 		char_from_room(ch);
-		char_to_room(ch,numero);
+		char_to_room(ch, numero);
 		do_look(ch, "", 15);
 		act("$c0008$n compare all'improvviso dal nulla.$c0007",
-			FALSE, ch, obj, 0, TO_ROOM);
+			FALSE, ch, ent_obj, 0, TO_ROOM);
 	}
-	else {
+	else
+	{
 		return(FALSE);
 	}
 
