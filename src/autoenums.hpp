@@ -333,6 +333,8 @@ user flags*/
 	constexpr unsigned long CAN_OBJ_EDIT                                 =4096; /*this user can use oedit to edit objects*/
 	constexpr unsigned long CAN_MOB_EDIT                                 =8192; /*this user can use medit to edit mobs*/
 	constexpr unsigned long PWP_MODE                                     =16384; /*show the exact amount of damage for each attack*/
+	constexpr unsigned long ACHIE_MODE                                   =32768; /*show the amount of each increased achievement*/
+	constexpr unsigned long WARNINGS_MODE_OFF                            =65536; /*show the amount of each increased achievement*/
 
 //Template for enum to unsigned byte
 
@@ -419,11 +421,13 @@ modifiers to char's abilities*/
 	APPLY_T_HPS                                  =62,
 	APPLY_T_MOVE                                 =63,
 	APPLY_T_MANA                                 =64,
-	APPLY_SKIP                                   =65 /*Non viene toccato il bitvector*/
+	APPLY_SPELLPOWER                             =65,
+	APPLY_HITNSP                                 =66,
+	APPLY_SKIP                                   =67 /*Non viene toccato il bitvector*/
 };
-#define E_APPLY_COUNT 66
+#define E_APPLY_COUNT 68
 #define E_APPLY_MIN 0
-#define E_APPLY_MAX 65
+#define E_APPLY_MAX 67
 #define E_APPLY_KEY "e_apply"
 
 #define E_APPLY_ACCEPT_ZERO true
@@ -707,11 +711,12 @@ enum e_item_type {
 	ITEM_ROCK                                    =26,
 	ITEM_M_GEM                                   =27,
 	ITEM_M_MINERAL                               =28,
-	ITEM_BAR                                     =29
+	ITEM_BAR                                     =29,
+	ITEM_JEWEL                                   =30
 };
-#define E_ITEM_TYPE_COUNT 30
+#define E_ITEM_TYPE_COUNT 31
 #define E_ITEM_TYPE_MIN 0
-#define E_ITEM_TYPE_MAX 29
+#define E_ITEM_TYPE_MAX 30
 #define E_ITEM_TYPE_KEY "e_item_type"
 
 #define E_ITEM_TYPE_ACCEPT_ZERO true
@@ -1119,7 +1124,7 @@ enum e_wear {
 #define	SKILL_UNDEFINED2                             4 
 #define	ABS_MAX_LVL                                  70 
 #define	MAX_CLASS_ACHIE                              34 
-#define	MAX_BOSS_ACHIE                               23 
+#define	MAX_BOSS_ACHIE                               30 
 #define	MAX_QUEST_ACHIE                              2 
 #define	MAX_OTHER_ACHIE                              25 
 #define	MAX_MOB_QUEST                                10 
@@ -1216,6 +1221,13 @@ enum e_wear {
 #define	ACHIE_DRAGGSYLIA                             16314 
 #define	ACHIE_ARKHAT                                 9007 
 #define	ACHIE_GONHAG                                 9009 
+#define	ACHIE_BARBALBERO                             32822 
+#define	ACHIE_ORRORE_DETURPANTE                      17215 
+#define	ACHIE_TIMNUS                                 22605 
+#define	ACHIE_SHERAZADE                              5716 
+#define	ACHIE_DRAGO_DUNA_NERA                        5710 
+#define	ACHIE_INHEP                                  19001 
+#define	ACHIE_ARTEFATTO                              32011 
 #define	ACHIE_PKILL_WIN                              0 
 #define	ACHIE_PKILL_LOSS                             1 
 #define	ACHIE_DEATH                                  2 

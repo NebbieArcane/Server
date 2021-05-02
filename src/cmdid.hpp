@@ -484,7 +484,9 @@ namespace Alarmud {
 #define CMD_INSERT_GEMS         472
 #define CMD_ACHIEVEMENTS        473
 #define CMD_REFUND              474
-//  free 475-479
+#define CMD_MERCY               475
+#define CMD_FIND_ORIGINAL       476
+//  free 477-479
 #define CMD_DMANAGE             480
 #define CMD_DRESTRICT           481
 #define CMD_DLINK               482

@@ -12,11 +12,12 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <dirent.h>
 #include <unistd.h>
 #include <ctime>
+#include <sys/stat.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
-
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -759,6 +760,117 @@ ACTION_FUNC(do_wizlock) {
 	}
 	return;
 
+}
+
+ACTION_FUNC(do_mercy)
+{
+	char name[256], quest[256], amount[256], buf[MAX_STRING_LENGTH];
+	int valore = 0, numero_quest = -1, i;
+	std::string sb;
+	struct char_data* tch;
+
+	if(IS_NPC(ch))
+	{
+		return;
+	}
+
+	arg = one_argument(arg, name);
+	arg = one_argument(arg, quest);
+	only_argument(arg, amount);
+
+	if(!*name && !*quest && !*amount)
+	{
+		send_to_char("La sintassi corretta e' '$c0015mercy nome_pg$c0007' se desideri conoscere i valori \n\roppure $c0015'mercy nome_pg numero_quest valore$c0007' se vuoi apportare delle modifiche.\n\r", ch);
+		return;
+	}
+
+	if(*name)
+	{
+		if(!(tch = get_char_vis_world(ch, name, NULL)))
+		{
+			send_to_char("Non c'e' nessuno con quel nome in gioco.\n\r", ch);
+			return;
+		}
+	}
+
+	if(!IS_PC(tch))
+	{
+		send_to_char("Non puoi farlo sui mob!\n\r", ch);
+		return;
+	}
+
+	if(IS_POLY(tch))
+	{
+		tch = tch->desc->original;
+	}
+
+	if(!*quest && !*amount)
+	{
+		sb.append("I valori di mercy per $c0009").append(GET_NAME(tch)).append(" $c0007sono:\n\r");
+		for(i = 0; i < MAX_QUEST_ACHIE; i++)
+		{
+			boost::format fmt("$c0009[$c0015%4d$c0009] $c0015%-25s %6d\n\r");
+			fmt % i % QuestNumber[i].mercy_name % tch->specials.mercy[i];
+			sb.append(fmt.str().c_str());
+			fmt.clear();
+		}
+		page_string(ch->desc, sb.c_str(), true);
+		return;
+	}
+
+	if(!*quest || !*amount)
+	{
+		send_to_char("La sintassi corretta e' '$c0015mercy nome_pg$c0007' se desideri conoscere i valori \n\roppure $c0015'mercy nome_pg numero_quest valore$c0007' se vuoi apportare delle modifiche.\n\r", ch);
+		return;
+	}
+
+	for(i = 0; i < MAX_QUEST_ACHIE; i++)
+	{
+		if(!strcmp(quest, lower(QuestNumber[i].mercy_name)))
+		{
+			numero_quest = i;
+			break;
+		}
+	}
+
+	if(numero_quest == -1)
+	{
+		if(is_number(quest))
+		{
+			numero_quest = atoi(quest);
+		}
+	}
+
+	if(numero_quest < 0 || numero_quest >= MAX_QUEST_ACHIE)
+	{
+		send_to_char("A quale quest vuoi modificare il valore?\n\r", ch);
+		for(i = 0; i < MAX_QUEST_ACHIE; i++)
+		{
+			boost::format fmt("$c0009[$c0015%4d$c0009] $c0015%s\n\r");
+			fmt % i % QuestNumber[i].mercy_name;
+			sb.append(fmt.str().c_str());
+			fmt.clear();
+		}
+		page_string(ch->desc, sb.c_str(), true);
+		return;
+	}
+
+	valore = atoi(amount);
+
+	if(valore < 0)
+	{
+		send_to_char("Il valore deve essere maggiore od uguale a zero.\n\r", ch);
+		return;
+	}
+
+	tch->specials.mercy[numero_quest] = valore;
+
+	do_save(tch, "", 0);
+	mudlog(LOG_PLAYERS, "%s set mercy amount for '%s' on %s to %d", GET_NAME(ch), QuestNumber[numero_quest].mercy_name, GET_NAME(tch), valore);
+	sprintf(buf, "Hai assegnato %d come valore di mercy per '%s' a $N.", valore, QuestNumber[numero_quest].mercy_name);
+	act(buf, FALSE, ch, NULL, tch, TO_CHAR);
+	sprintf(buf, "$n ti ha assegnato %d come valore di mercy per '%s'.", valore, QuestNumber[numero_quest].mercy_name);
+	act(buf, FALSE, ch, NULL, tch, TO_VICT);
 }
 
 ACTION_FUNC(do_rload) {
@@ -1580,6 +1692,19 @@ ACTION_FUNC(do_stat) {
 				sprintf(buf2, "$c0005Items in equipment: $c0014%d", i2);
 				strcat(buf, buf2);
 
+				if(!IS_PC(k))
+				{
+					k->player.oggetti = 0;
+					k->player.oggetti = ContaOggetti(k->carrying);
+					for(i = 0; i < MAX_WEAR; i++)
+					{
+						k->player.oggetti += ContaOggetti(k->equipment[i]);
+					}
+
+				}
+				sprintf(buf2, " $c0005Total items: $c0014%d", k->player.oggetti);
+				strcat(buf, buf2);
+
 				act(buf, FALSE, ch, 0, 0, TO_CHAR);
 
 				sprintf(buf, "$c0005Apply saving throws: [$c0014%d$c0005] "
@@ -1784,15 +1909,16 @@ ACTION_FUNC(do_stat) {
 			return;
 		}
 		/* stat on object - prima fa il check in inventario poi nel mondo */
-        else if((tmpV = (struct obj_data*) get_obj_in_list_vis(ch, arg1, ch->carrying)) || (tmpW = (struct obj_data*) get_obj_vis_world(ch, arg1, &count))) {
-            if(!tmpV)
-            {
-                j = tmpW;
-            }
-            else
-            {
-                j = tmpV;
-            }
+		else if((tmpV = (struct obj_data*) get_obj_in_list_vis(ch, arg1, ch->carrying)) || (tmpW = (struct obj_data*) get_obj_vis_world(ch, arg1, &count)))
+		{
+			if(!tmpV)
+			{
+				j = tmpW;
+			}
+			else
+			{
+				j = tmpV;
+			}
 
 			iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
 			sprintf(buf,
@@ -1802,7 +1928,14 @@ ACTION_FUNC(do_stat) {
 			strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
-			sprintf(buf, "$c0005Corpse original V-number: [$c0014%d$c0005]\r\n", j->char_vnum);
+			if(IS_CORPSE(j))
+			{
+				sprintf(buf, "$c0005Corpse original V-number: [$c0014%d$c0005]\r\n", j->char_vnum);
+			}
+			else
+			{
+				sprintf(buf, "$c0005Object Original V-number: [$c0014%d$c0005]\r\n", j->char_vnum);
+			}
 			send_to_char(buf, ch);
 			sprintf(buf, "$c0005Short description: $c0014%s$c0005\n\r$c0005Long description:\n\r$c0014%s\n\r",
 					((j->short_description) ? j->short_description : "None"),
@@ -1824,47 +1957,81 @@ ACTION_FUNC(do_stat) {
 
 			send_to_char("$c0005Can be worn on: ", ch);
 			sprintbit((unsigned) j->obj_flags.wear_flags, wear_bits, buf2);
-            sprintf(buf, "$c0014");
-            strcat(buf, buf2);
+			sprintf(buf, "$c0014");
+			strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
 			send_to_char("$c0005Set char bits: $c0014", ch);
 			sprintbit((unsigned) j->obj_flags.bitvector, affected_bits, buf2);
-            sprintf(buf, "$c0014");
-            strcat(buf, buf2);
+			sprintf(buf, "$c0014");
+			strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
 			send_to_char("$c0005Extra flags: $c0014", ch);
 			sprintbit((unsigned) j->obj_flags.extra_flags, extra_bits, buf2);
-            sprintf(buf, "$c0014");
-            strcat(buf, buf2);
+			sprintf(buf, "$c0014");
+			strcat(buf, buf2);
 			strcat(buf, "\n\r");
 			send_to_char(buf, ch);
 
-            send_to_char("$c0005Extra flags2: $c0014", ch);
-            sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf2);
-            sprintf(buf, "$c0014");
-            strcat(buf, buf2);
-            strcat(buf, "\n\r");
-            send_to_char(buf, ch);
+			send_to_char("$c0005Extra flags2: $c0014", ch);
+			sprintbit((unsigned) j->obj_flags.extra_flags2, extra_bits2, buf2);
+			sprintf(buf, "$c0014");
+			strcat(buf, buf2);
+			strcat(buf, "\n\r");
+			send_to_char(buf, ch);
 
 			sprintf(buf, "$c0005Weight: $c0014%d$c0005, Value: $c0014%d$c0005, Cost/day: $c0014%d$c0005, Timer: $c0014%d\n\r",
 					j->obj_flags.weight, j->obj_flags.cost,
 					j->obj_flags.cost_per_day, j->obj_flags.timer);
 			send_to_char(buf, ch);
 
-			strcpy(buf, "$c0005In room: $c0005");
-			if(j->in_room == NOWHERE) {
+			strcpy(buf, "$c0005In room: $c0014");
+			if(j->in_room == NOWHERE)
+			{
 				strcat(buf, "Nowhere");
 			}
-			else {
+			else
+			{
 				sprintf(buf2, "%d", j->in_room);
 				strcat(buf, buf2);
 			}
-			strcat(buf, "$c0005 ,In object: $c0014");
+			strcat(buf, "$c0005, In object: $c0014");
 			strcat(buf, (!j->in_obj ? "None" : fname(j->in_obj->name)));
+			strcat(buf, "\n\r");
+			send_to_char(buf, ch);
+
+			strcpy(buf, "$c0005Equipment Status: $c0014");
+			if(!j->carried_by)
+			{
+				strcat(buf, "NONE");
+			}
+			else
+			{
+				found = FALSE;
+				for(i = 0; i < MAX_WEAR; i++)
+				{
+					if(j->carried_by->equipment[i] == j)
+					{
+						sprinttype(i, equipment_types, buf2);
+						strcat(buf, buf2);
+						found = TRUE;
+					}
+				}
+				if(!found)
+				{
+					strcat(buf, "$c0005Inventory of $c0011");
+				}
+				else
+				{
+					strcat(buf, "$c0005 by $c0011");
+				}
+				strcat(buf, GET_NAME_DESC(j->carried_by));
+			}
+			strcat(buf, "\n\r");
+			send_to_char(buf, ch);
 
 			switch(j->obj_flags.type_flag) {
 			case ITEM_LIGHT:
@@ -1894,7 +2061,6 @@ ACTION_FUNC(do_stat) {
 				strcat(buf, buf2);
 				sprinttype(j->obj_flags.value[3], aszWeaponType, buf2);
 				strcat(buf, buf2);
-				strcat(buf, "\n\r");
 				break;
 			case ITEM_FIREWEAPON:
 				sprintf(buf, "$c0005Min Strength: $c0014%d\n\r$c0005Max range: $c0014%d\n\r"
@@ -1953,29 +2119,6 @@ ACTION_FUNC(do_stat) {
 						j->obj_flags.value[0], j->obj_flags.value[1],
 						j->obj_flags.value[2], j->obj_flags.value[3]);
 				break;
-			}
-			send_to_char(buf, ch);
-
-			strcpy(buf, "\n\r$c0005Equipment Status: $c0014");
-			if(!j->carried_by) {
-				strcat(buf, "NONE");
-			}
-			else {
-				found = FALSE;
-				for(i = 0; i < MAX_WEAR; i++) {
-					if(j->carried_by->equipment[i] == j) {
-						sprinttype(i, equipment_types, buf2);
-						strcat(buf, buf2);
-						found = TRUE;
-					}
-				}
-				if(!found) {
-					strcat(buf, "$c0005Inventory of $c0011");
-				}
-				else {
-					strcat(buf, "$c0005 by $c0011");
-				}
-				strcat(buf, GET_NAME_DESC(j->carried_by));
 			}
 			send_to_char(buf, ch);
 
@@ -3333,7 +3476,10 @@ ACTION_FUNC(do_return) {
 			return;
 		}
 
-		send_to_char("Ritorni alla tua forma originale.\n\r", ch);
+		if(cmd != -1)
+		{
+			send_to_char("Ritorni alla tua forma originale.\n\r", ch);
+		}
 
 		mudlog(LOG_CHECK, "%s has still the descriptors.", ch->player.name);
 		if(ch->desc->snoop.snoop_by) {
@@ -3348,8 +3494,14 @@ ACTION_FUNC(do_return) {
 			mob = ch;
 			per = ch->desc->original;
 
-			act("$n riprende la sua forma originale.", TRUE, mob, 0, per,
-				TO_ROOM);
+			if(cmd == -1)
+			{
+				cmd = CMD_RETURN;
+			}
+			else
+			{
+				act("$n riprende la sua forma originale.", TRUE, mob, NULL, per, TO_ROOM);
+			}
 
 			char_from_room(per);
 			char_to_room(per, mob->in_room);
@@ -5125,9 +5277,80 @@ ACTION_FUNC(do_show) {
 				continue;
 			} /* optimize later*/
 
-			sprintf(buf, "%5d %4d %3d  %s\n\r", oi->iVNum, objn, oi->number,
-					oi->name);
+			sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, objn, oi->number,
+					oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "");
 			append_to_string_block(&sb, buf);
+		}
+	}
+	else if((is_abbrev(buf, "items") && (which_i = obj_index) && (topi = top_of_objt)))
+	{
+		int objn;
+		struct index_data* oi;
+		struct obj_data* obj;
+		int vnum, i = 0, lp = 0;
+
+		only_argument(arg, zonenum);
+
+		if(strcmp(zonenum, "storage"))
+		{
+			for(i = 0; i < 20; i++)
+			{
+				if(is_abbrev(zonenum, wear_bits[i]))
+				{
+					break;
+				}
+			}
+		}
+
+		append_to_string_block(&sb, "VNUM  rnum count names\n\r");
+
+		if(*zonenum)
+		{
+			for(objn = 0; objn < topi; objn++)
+			{
+				oi = which_i + objn;
+
+				vnum = real_object(oi->iVNum);
+				if(vnum > 0 && vnum < 99999 && oi->iVNum != 99999)
+				{
+					if(!strcmp(zonenum, "storage"))
+					{
+						if(oi->pos != -1)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						obj = read_object(oi->iVNum, VIRTUAL);
+						if(!strcmp(zonenum, "lifeprot"))
+						{
+							lp = 0;
+							for(i = 0; i < MAX_OBJ_AFFECT; i++)
+							{
+								if(obj->affected[i].location == APPLY_SPELL && IS_SET(obj->affected[i].modifier, AFF_LIFE_PROT))
+								{
+									lp = 1;
+								}
+							}
+							if(lp == 0)
+							{
+								extract_obj(obj);
+								continue;
+							}
+						}
+						else if(!IS_SET(obj->obj_flags.wear_flags, (1 << i)))
+						{
+							extract_obj(obj);
+							continue;
+						}
+						extract_obj(obj);
+					}
+
+					sprintf(buf, "%5d %4d %3d  %s %s %s\n\r", oi->iVNum, objn, oi->number, oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "", lp == 1 ? "($c0014lp$c0007)" : "");
+					append_to_string_block(&sb, buf);
+				}
+			}
 		}
 	}
 	else if(is_abbrev(buf, "rooms")) {
@@ -5206,7 +5429,8 @@ ACTION_FUNC(do_show) {
 							   "  show zones\n\r"
 							   "  show (objects|mobiles) (zone#|name)\n\r"
 							   "  show rare (only liv>=58)\n\r"
-							   "  show rooms (zone#|death|private)\n\r");
+							   "  show rooms (zone#|death|private)\n\r"
+                               "  show items (location/storage)\n\r");
 	}
 	page_string_block(&sb, ch);
 	destroy_string_block(&sb);
@@ -6499,75 +6723,112 @@ ACTION_FUNC(do_viewfile) {
 ACTION_FUNC(do_osave) {
 	FILE* f;
 	struct obj_data* obj;
-	char oname[128], field[120], buf[254];
-	long vnum = -1;
+	char oname[128], field[120], field2[120], buf[254];
+	long vnum = -1, vnum2 = -1;
 
-	if(IS_NPC(ch) || GetMaxLevel(ch) < IMMORTALE) {
+	if(IS_NPC(ch) || GetMaxLevel(ch) < IMMORTALE)
+	{
 		return;
 	}
 
 	arg = one_argument(arg, oname);
-	if(!*oname) {
-		send_to_char("Osave <object name> <new_vnum>\n\r", ch);
+	if(!*oname)
+	{
+		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
+		return;
+	}
+
+	if(!(obj = get_obj_vis_accessible(ch, oname)))
+	{
+		send_to_char("Hum, non ho idea di dove sia!\n\r", ch);
 		return;
 	}
 
 	arg = one_argument(arg, field);
-	if(!*field) {
-		send_to_char("osave <object name> <vnum>\n\r", ch);
+	if(!*field)
+	{
+		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
 		return;
 	}
 
-	if(!(obj = get_obj_vis_accessible(ch, oname))) {
-		send_to_char("Hum, I do not know where that is?!?!?\n\r", ch);
-		return;
+	arg = one_argument(arg, field2);
+	if(!*field2)
+	{
+		send_to_char("Ok, il vnum originale non verra' cambiato.\n\r", ch);
+
+		if(obj->char_vnum == 0)
+		{
+			sprintf(field2, "%d", (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0);
+		}
 	}
 
 	vnum = atoi(field);
-	if(vnum < 1 || vnum > 99999) {
-		send_to_char("Invalid object number\n\r", ch);
+	if(vnum < 1 || vnum > 99999)
+	{
+		send_to_char("Il v-number non e' valido.\n\r", ch);
 		return;
+	}
+
+	if(*field2)
+	{
+		vnum2 = atoi(field2);
+		if(vnum2 < 1 || vnum2 > 99999)
+		{
+			send_to_char("Il secondo valore non e' corretto.\n\r", ch);
+			return;
+		}
+	}
+	else
+	{
+		vnum2 = obj->char_vnum;
 	}
 
 	/* check for valid VNUM in this zone */
 
-	if(GetMaxLevel(ch) <= CREATORE && GET_ZONE(ch) == 0) {
-		send_to_char("Sorry, you do not have access to a zone.\n\r", ch);
+	if(GetMaxLevel(ch) <= CREATORE && GET_ZONE(ch) == 0)
+	{
+		send_to_char("Mi dispiace ma non hai accesso a quella zona.\n\r", ch);
 		return;
 	}
 
-	if(GetMaxLevel(ch) <= CREATORE) {
+	if(GetMaxLevel(ch) <= CREATORE)
+	{
 		long start, end;
 		start = GET_ZONE(ch) ? (zone_table[GET_ZONE(ch) - 1].top + 1) : 0;
 		end = zone_table[GET_ZONE(ch)].top;
-		if(vnum > end) {
-			send_to_char("VNum is larger than your zone allows.\n\r", ch);
+		if(vnum > end)
+		{
+			send_to_char("Il v-number e' troppo grande per la zona che puoi modificare.\n\r", ch);
 			return;
 		}
 		if(vnum < start) {
-			send_to_char("VNUM is smaller than your zone allows.\n\r", ch);
+			send_to_char("Il v-number e' troppo piccolo per la zona che puoi modificare.\n\r", ch);
 			return;
 		}
 	}
 
 	sprintf(buf, "objects/%ld", vnum);
-	if((f = fopen(buf, "wt")) == NULL) {
-		send_to_char("Can't write to disk now..try later.\n\r", ch);
+	if((f = fopen(buf, "wt")) == NULL)
+	{
+		send_to_char("Non posso salvare l'oggetto... prova piu' tardi.\n\r", ch);
 		return;
 	}
 
-	write_obj_to_file(obj, f);
+//	write_obj_to_file(obj, f);
+	write_obj_to_file(obj, f, vnum2);
 	fclose(f);
 
 	/* check for valid VNUM period */
-	if(real_object(vnum) != -1) {
-		send_to_char("WARNING: Vnum already in use, OVER-WRITING\n\r", ch);
+	if(real_object(vnum) != -1)
+	{
+		send_to_char("WARNING: il v-number e' gia' in uso, OVER-WRITING.\n\r", ch);
 	}
 
 	InsertObject(obj, vnum);
 
 	sprintf(buf, "Object %s saved as vnum %ld\n\r", obj->name, vnum);
 	mudlog(LOG_PLAYERS, buf);
+	sprintf(buf, "Ho salvato %s con il vnum %ld (originale %ld).\n\r", obj->name, vnum, vnum2);
 	send_to_char(buf, ch);
 }
 
@@ -6662,14 +6923,285 @@ ACTION_FUNC(do_personalize)
 }
 
 
+ACTION_FUNC(do_find_original)
+{
+	struct obj_data* obj;
+	register struct obj_data* obj_temp;
+	struct extra_descr_data* desc, *desc_temp;
+	char obj_key[MAX_INPUT_LENGTH], force[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH], short_primo[MAX_STRING_LENGTH], short_secondo[MAX_STRING_LENGTH];
+	int iVNum, check, i, j = 0, k = 0, l, temp_vnum, primo, secondo;
+
+	arg = one_argument(arg, obj_key);
+	only_argument(arg, force);
+
+	if(!*obj_key)
+	{
+		send_to_char("Digita '$c0015findoriginal nome-oggetto$c0007' per cercare il vnum originale dell'oggetto.\n\r", ch);
+		return;
+	}
+
+	obj = get_obj_in_list_vis(ch, obj_key, ch->carrying);
+
+	if(!obj)
+	{
+		sprintf(buf, "Non hai '%s' in inventario, guarda meglio!\n\r", obj_key);
+		send_to_char(buf, ch);
+		return;
+	}
+
+	iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+
+	if(obj->char_vnum != iVNum && obj->char_vnum != 0)
+	{
+		if(!strcmp("force", force))
+		{
+			//	vado avanti ed inizio a cercare
+		}
+		else
+		{
+			sprintf(buf, "Il vnum dell'oggetto originale di %s e' %d.\n\rSe vuoi forzare la ricerca digita $c0015findoriginal %s force$c0007.\n\r", obj->short_description, obj->char_vnum, obj_key);
+			send_to_char(buf, ch);
+			return;
+		}
+	}
+	else if(obj->char_vnum == 0)
+	{
+		if(!strcmp("force", force))
+		{
+			//	vado avanti ed inizio a cercare
+		}
+		else
+		{
+			sprintf(buf, "%s e' un oggetto del database e non di un edit.\n\rSe vuoi forzare comunque la ricerca digita $c0015findoriginal %s force$c0007.", obj->short_description, obj_key);
+			act(buf, TRUE, ch, NULL, NULL, TO_CHAR);
+			return;
+		}
+	}
+
+	for(i = 0; i < top_of_objt - 1; i++)
+	{
+		obj_temp = read_object(obj_index[i].iVNum, VIRTUAL);
+		temp_vnum = (obj_temp->item_number >= 0) ? obj_index[obj_temp->item_number].iVNum : 0;
+
+		if(obj_temp)
+		{
+			extract_obj(obj_temp);
+		}
+
+		if(temp_vnum == iVNum || (temp_vnum >= LOW_EDITED_ITEMS && temp_vnum <= HIGH_EDITED_ITEMS))
+		{
+			continue;
+		}
+
+		check = 0;
+		obj_temp = read_object(obj_index[i].iVNum, VIRTUAL);
+
+		//	controllo le extra description
+		if(obj->ex_description && obj_temp->ex_description)
+		{
+			desc_temp = obj_temp->ex_description;
+
+			for(desc = obj->ex_description; desc; desc = desc->next)
+			{
+				if(!desc || !desc_temp || !desc->keyword || !desc_temp->keyword || !desc->description || !desc_temp->description)
+				{
+					break;
+				}
+				if(!strcmp(desc->keyword, desc_temp->keyword) && !strncmp(desc->description, desc_temp->description, 10))
+				{
+					check += 15;
+				}
+
+				desc_temp = desc_temp->next;
+				if(!desc_temp)
+				{
+					break;
+				}
+			}
+		}
+		if((obj->ex_description && !obj_temp->ex_description) || (!obj->ex_description && obj_temp->ex_description))
+		{
+			check -= 15;
+		}
+
+		//	controllo se e' raro in origine
+		if(IS_RARE(obj) && IS_RARE(obj_temp))
+		{
+			check -= 5;
+		}
+
+		//	controllo il tipo ed i relativi valori
+		if(obj->obj_flags.type_flag == obj_temp->obj_flags.type_flag)
+		{
+			check += 2;
+
+			switch(obj->obj_flags.type_flag)
+			{
+				case ITEM_LIGHT:
+					if(obj->obj_flags.value[2] == obj_temp->obj_flags.value[2])
+					{
+						check += 2;
+					}
+					break;
+
+				case ITEM_WAND:
+				case ITEM_STAFF:
+					for(l = 0; l < 4; l++)
+					{
+						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
+						{
+							check ++;
+						}
+					}
+					break;
+
+				case ITEM_WEAPON:
+					for(l = 1; l < 4; l++)
+					{
+						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
+						{
+							check += 2;
+						}
+					}
+					break;
+
+				case ITEM_FIREWEAPON:
+					for(l = 0; l < 4; l++)
+					{
+						if(l == 2)
+						{
+							l = 3;
+						}
+						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
+						{
+							check ++;
+						}
+					}
+					break;
+
+				case ITEM_ARMOR:
+					for(l = 0; l < 2; l++)
+					{
+						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
+						{
+							check += 3;
+						}
+					}
+					break;
+
+				case ITEM_CONTAINER:
+					for(l = 0; l < 3; l++)
+					{
+						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
+						{
+							check ++;
+						}
+					}
+					break;
+
+				case ITEM_KEY:
+					if(obj->obj_flags.value[0] == obj_temp->obj_flags.value[0])
+					{
+						check += 2;
+					}
+					/* FALLTHRU */
+				case ITEM_AUDIO:
+					if(!obj->action_description || !obj_temp->action_description)
+					{
+						break;
+					}
+					if(!strncmp(obj->action_description, obj_temp->action_description, 15))
+					{
+						check += 15;
+					}
+					break;
+				}
+		}
+
+		//	controllo gli extra flags
+		for(l = 0; l < 32; l++)
+		{
+			if(IS_SET(obj->obj_flags.extra_flags, 1 << l) && IS_SET(obj_temp->obj_flags.extra_flags, 1 << l))
+			{
+				check ++;
+			}
+		}
+
+		// controllo i wear flags
+		for(l = 0; l < 20; l++)
+		{
+			if(IS_SET(obj->obj_flags.wear_flags, 1 << l) && IS_SET(obj_temp->obj_flags.wear_flags, 1 << l))
+			{
+				check ++;
+			}
+		}
+
+		//	controllo il peso
+		if(obj->obj_flags.weight == obj_temp->obj_flags.weight)
+		{
+			check += 10;
+		}
+
+		//	controllo il valore dell'oggetto
+		if(obj->obj_flags.cost == obj_temp->obj_flags.cost)
+		{
+			check += 5;
+		}
+
+		//	controllo il rent dell'oggetto
+		if(obj->obj_flags.cost_per_day == obj_temp->obj_flags.cost_per_day)
+		{
+			check ++;
+		}
+
+		//	controllo gli affects
+		for(l = 0; l < MAX_OBJ_AFFECT; l++)
+		{
+			if(obj->affected[l].location == obj_temp->affected[l].location && obj->affected[l].location != AFF_NONE)
+			{
+				check += 3;
+				if(obj->affected[l].modifier == obj_temp->affected[l].modifier)
+				{
+					check += 2;
+				}
+			}
+		}
+
+		if(check > k)
+		{
+			if(primo > 0)
+			{
+				secondo = primo;
+				j = k;
+				sprintf(short_secondo, "%s", obj_temp->short_description);
+			}
+			primo = temp_vnum;
+			k = check;
+			sprintf(short_primo, "%s", obj_temp->short_description);
+		}
+		else if(check > j)
+		{
+			secondo = temp_vnum;
+			j = check;
+			sprintf(short_secondo, "%s", obj_temp->short_description);
+		}
+		extract_obj(obj_temp);
+	}
+
+	if(k + j > 0)
+	{
+		sprintf(buf, "\n\rL'oggetto piu' simile a %s e': $c0009%d$c0007 (%d) - %s.\n\rIl secondo oggetto piu' simile e': $c0011%d$c0007 (%d) - %s.\n\r", obj->short_description, primo, k, short_primo, secondo, j, short_secondo);
+		send_to_char(buf, ch);
+	}
+	else
+	{
+		sprintf(buf, "\n\rNon ho trovato nessun oggetto simile a %s.", obj->short_description);
+		send_to_char(buf, ch);
+	}
+}
+
 ACTION_FUNC(do_checktypos)
 {
-    if(!*arg)
-    {
-        send_to_char("Digita 'checktypos list' oppure 'checktypos clear now'\n\r",         ch);
-        return;
-    }
-
     if( !str_cmp( arg, "clear now" ) && IS_MAESTRO_DEL_CREATO(ch))
     {
         FILE *fp;
@@ -6684,8 +7216,7 @@ ACTION_FUNC(do_checktypos)
         mudlog(LOG_PLAYERS, "%s ha cancellato il file dei typos.", GET_NAME(ch));
         return;
     }
-
-    if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
+    else if( !str_cmp( arg, "list" ) && IS_DIO(ch) )
     {
         int num = 0;
         char buf[MAX_STRING_LENGTH];
@@ -6713,7 +7244,166 @@ ACTION_FUNC(do_checktypos)
         }
         return;
     }
+	else
+	{
+		send_to_char("Digita 'checktypos list' oppure 'checktypos clear now'.\n\r", ch);
+		return;
+	}
 }
+
+stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
+{
+	struct obj_file_u st;
+	struct old_obj_file_u old_st;
+//	struct obj_file_u_old st_old;	future implementazioni
+	struct char_file_u ch_st;
+	FILE* pObjFile;
+	DIR* dir;
+	struct stringa_valore sb_count;
+	int diff;
+	struct obj_data* oggetto;
+	string buf;
+
+	sb_count.conteggio = count;
+
+	if((dir = opendir(PLAYERS_DIR)) != NULL)
+	{
+		struct dirent* ent;
+		while((ent = readdir(dir)) != NULL)
+		{
+			FILE* pCharFile;
+			char szFileName[ 300];
+
+			if(*ent->d_name == '.')
+			{
+				continue;
+			}
+			if(!strstr(ent->d_name,".dat"))
+			{
+				continue;
+			}
+
+			snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
+
+			if((pCharFile = fopen(szFileName, "r")) != NULL)
+			{
+				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
+				{
+					// controllo se il ch_st e' in gioco, se e' in gioco passo al successivo
+					if(get_char(lower(ch_st.name)) && !IS_NPC(get_char(lower(ch_st.name))))
+					{
+						continue;
+					}
+
+					snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
+					if((pObjFile = fopen(szFileName, "r+b")) != NULL)
+					{
+						struct stat rentfile;
+						stat(szFileName, &rentfile);
+						if(rentfile.st_size > 0)
+						{
+							if(!IS_SET(ch_st.act,PLR_NEW_EQ))
+							{
+								int i;
+								// carico i dati dei pg formato vecchio
+								fread(old_st.owner, sizeof(old_st.owner), 1, pObjFile);
+								fread(&old_st.gold_left, sizeof(old_st.gold_left), 1, pObjFile);
+								fread(&old_st.total_cost, sizeof(old_st.total_cost), 1, pObjFile);
+								fread(&old_st.last_update, sizeof(old_st.last_update), 1, pObjFile);
+								fread(&old_st.minimum_stay, sizeof(old_st.minimum_stay), 1, pObjFile);
+								fread(&old_st.number, sizeof(old_st.number), 1, pObjFile);
+								for(i=0; i<old_st.number; i++)
+								{
+									fread(&old_st.objects[i], sizeof(struct old_obj_file_elem), 1, pObjFile);
+								}
+								// effettuo la ricerca dell'oggetto
+								for(i = 0; i < old_st.number; i++)
+								{
+									if(old_st.objects[i].item_number == vnumber)
+									{
+										oggetto = read_object(vnumber, VIRTUAL);
+										diff = strlen(oggetto->short_description) - strlen(ParseAnsiColors(0, oggetto->short_description));
+										buf = "[%3d] %-" + std::to_string(55 + diff) + "s- rentato da %s\n\r";
+										boost::format fmt(buf);
+										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
+										sb_count.sb.append(fmt.str().c_str());
+										fmt.clear();
+										extract_obj(oggetto);
+									}
+								}
+							}
+							/* future implementazioni
+							else if(!IS_SET(ch_st.act, PLR_EQ_HP))
+							{
+								int i;
+								// carico i dati dei pg formato vecchio
+								fread(st_old.owner, sizeof(st_old.owner), 1, pObjFile);
+								fread(&st_old.gold_left, sizeof(st_old.gold_left), 1, pObjFile);
+								fread(&st_old.total_cost, sizeof(st_old.total_cost), 1, pObjFile);
+								fread(&st_old.last_update, sizeof(st_old.last_update), 1, pObjFile);
+								fread(&st_old.minimum_stay, sizeof(st_old.minimum_stay), 1, pObjFile);
+								fread(&st_old.number, sizeof(st_old.number), 1, pObjFile);
+								for(i = 0; i < st_old.number; i++)
+								{
+									fread(&st_old.objects[i], sizeof(struct obj_file_elem_old), 1, pObjFile);
+								}
+								// effettuo la ricerca dell'oggetto
+								for(i = 0; i < st_old.number; i++)
+								{
+									if(st_old.objects[i].item_number == vnumber)
+									{
+										oggetto = read_object(vnumber, VIRTUAL);
+										diff = strlen(oggetto->short_description) - strlen(ParseAnsiColors(0, oggetto->short_description));
+										buf = "[%3d] %-" + std::to_string(55 + diff) + "s- rentato da %s\n\r";
+										boost::format fmt(buf);
+										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
+										sb_count.sb.append(fmt.str().c_str());
+										fmt.clear();
+										extract_obj(oggetto);
+									}
+								}
+							} fino a qui */
+							else
+							{
+								int i;
+								// carico i dati dei pg
+								fread(st.owner, sizeof(st.owner), 1, pObjFile);
+								fread(&st.gold_left, sizeof(st.gold_left), 1, pObjFile);
+								fread(&st.total_cost, sizeof(st.total_cost), 1, pObjFile);
+								fread(&st.last_update, sizeof(st.last_update), 1, pObjFile);
+								fread(&st.minimum_stay, sizeof(st.minimum_stay), 1, pObjFile);
+								fread(&st.number, sizeof(st.number), 1, pObjFile);
+								for(i = 0; i < st.number; i++)
+								{
+									fread(&st.objects[i], sizeof(struct obj_file_elem), 1, pObjFile);
+								}
+								// effettuo la ricerca dell'oggetto
+								for(i = 0; i < st.number; i++)
+								{
+									if(st.objects[i].item_number == vnumber)
+									{
+										oggetto = read_object(vnumber, VIRTUAL);
+										diff = strlen(oggetto->short_description) - strlen(ParseAnsiColors(0, oggetto->short_description));
+										buf = "[%3d] %-" + std::to_string(55 + diff) + "s- rentato da %s\n\r";
+										boost::format fmt(buf);
+										fmt % sb_count.conteggio++ % oggetto->short_description % ch_st.name;
+										sb_count.sb.append(fmt.str().c_str());
+										fmt.clear();
+										extract_obj(oggetto);
+									}
+								}
+							}
+						}
+						fclose(pObjFile);
+					}
+				}
+				fclose(pCharFile);
+			}
+		}
+	}
+	return sb_count;
+}
+
 
 //FLYP 2004 Perdono
 /*void do_perdono(struct char_data *ch, char *arg, int cmd)

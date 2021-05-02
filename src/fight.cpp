@@ -2568,8 +2568,9 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                             // da togliere il commento se attivi gli achievement per ogni razza
                             // ch->desc->original->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                         }
-                        
-                        if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+
+                        //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+						if(GET_RACE(victim) <= GROUP_HUMANOID)
                         {
                             ch->desc->original->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                         }
@@ -2589,8 +2590,9 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                             // da togliere il commento se attivi gli achievement per ogni razza
                             // ch->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                         }
-                        
-                        if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+
+                        //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+						if(GET_RACE(victim) <= GROUP_HUMANOID)
                         {
                             ch->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                         }
@@ -2627,7 +2629,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                                 }
                             }
                             CheckAchie(ch, ACHIE_PKILL_WIN, OTHER_ACHIE);
-                            
+
                             if(IS_POLY(victim))
                             {
                                 victim->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_PKILL_LOSS] += 1;
@@ -2683,12 +2685,12 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 ch->lastmkill = strdup(GET_NAME(victim));
 
                 // Achievement stuff
-                
+
             // Bosskill Achievement
                 if(n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE) > -1)
                 {
                     struct char_data* tmp;
-                    
+
                     for(tmp = real_roomp(ch->in_room)->people; tmp; tmp=tmp->next_in_room)
                     {
                         if(IS_PC(tmp) && in_group(tmp, ch))
@@ -2713,7 +2715,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                         }
                     }
                 }
-                
+
             // Quest Achievement
                 if(CheckMobQuest(mob_index[victim->nr].iVNum) > -1)
                 {
@@ -2760,7 +2762,8 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                         // ch->desc->original->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                     }
 
-                    if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+					if(GET_RACE(victim) <= GROUP_HUMANOID)
                     {
                         ch->desc->original->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                     }
@@ -2781,7 +2784,8 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                         // ch->specials.achievements[RACESLAYER_ACHIE][GET_RACE(victim)] += 1;
                     }
 
-                    if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+                    //if(GET_RACE(victim) != RACE_GOLEM && GET_RACE(victim) != RACE_GOD)
+					if(GET_RACE(victim) <= GROUP_HUMANOID)
                     {
                         ch->specials.achievements[RACESLAYER_ACHIE][race_achievement(GET_RACE(victim))] += 1;
                     }
@@ -2954,7 +2958,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 
             CheckAchie(ch, ACHIE_THIEF_1, CLASS_ACHIE);
         }
-        
+
     }
 
 
@@ -5509,4 +5513,3 @@ void increase_blood(int rm) {
 }
 
 } // namespace Alarmud
-

@@ -68,7 +68,9 @@
 ** APPLY_T_HPS                                  =62
 ** APPLY_T_MOVE                                 =63
 ** APPLY_T_MANA                                 =64
-** APPLY_SKIP                                   =65Non viene toccato il bitvector
+** APPLY_SPELLPOWER                             =65
+** APPLY_HITNSP                                 =66
+** APPLY_SKIP                                   =67Non viene toccato il bitvector
 == Enumerations ==
 
 === enum e_class_index ===
@@ -303,6 +305,7 @@ l'array connected_types in constants.cpp
 ** ITEM_M_GEM                                   =27
 ** ITEM_M_MINERAL                               =28
 ** ITEM_BAR                                     =29
+** ITEM_JEWEL                                   =30
 == Enumerations ==
 
 === enum e_liquids ===
@@ -608,7 +611,7 @@ l'array connected_types in constants.cpp
 **SKILL_UNDEFINED2                             4 
 **ABS_MAX_LVL                                  70 
 **MAX_CLASS_ACHIE                              34 
-**MAX_BOSS_ACHIE                               23 
+**MAX_BOSS_ACHIE                               30 
 **MAX_QUEST_ACHIE                              2 
 **MAX_OTHER_ACHIE                              25 
 **MAX_MOB_QUEST                                10 
@@ -705,6 +708,13 @@ l'array connected_types in constants.cpp
 **ACHIE_DRAGGSYLIA                             16314 
 **ACHIE_ARKHAT                                 9007 
 **ACHIE_GONHAG                                 9009 
+**ACHIE_BARBALBERO                             32822 
+**ACHIE_ORRORE_DETURPANTE                      17215 
+**ACHIE_TIMNUS                                 22605 
+**ACHIE_SHERAZADE                              5716 
+**ACHIE_DRAGO_DUNA_NERA                        5710 
+**ACHIE_INHEP                                  19001 
+**ACHIE_ARTEFATTO                              32011 
 **ACHIE_PKILL_WIN                              0 
 **ACHIE_PKILL_LOSS                             1 
 **ACHIE_DEATH                                  2 

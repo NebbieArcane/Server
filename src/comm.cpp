@@ -2264,6 +2264,12 @@ void construct_prompt(char* outbuf, struct char_data* ch) {
                     else if(s_flag) {
                         strcat(tbuf, "-");
                     }
+					if((i = _affected_by_s(ch, SPELL_TREE)) != -1) {
+						strcat(tbuf, (i > 1) ? "$c0011P$c0007" : "$c0003p$c0007");
+					}
+					else if(s_flag) {
+						strcat(tbuf,"-");
+					}
 					if((i = _affected_by_s(ch, SPELL_FIRESHIELD)) != -1) {
 						strcat(tbuf, (i > 1) ? "$c0009F$c0007" : "$c0001f$c0007");
 					}
@@ -2560,4 +2566,3 @@ int update_max_usage(void) {
 	return max_usage;
 }
 } // namespace Alarmud
-

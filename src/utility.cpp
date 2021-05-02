@@ -37,6 +37,7 @@
 #include "interpreter.hpp"
 #include "magic2.hpp"
 #include "mobact.hpp"
+#include "modify.hpp"
 #include "opinion.hpp"
 #include "reception.hpp"
 #include "skills.hpp"
@@ -302,7 +303,7 @@ extern void store_mail(char* to, char* from, char* message_pointer);
 void mail_to_god(struct char_data* ch, const char* god, const char* message)
 {
     struct char_data* temp_char = ch;
-    
+
     temp_char->desc->name = (char*)strdup(god);
     temp_char->desc->showstr_head = (char*)strdup(message);
     store_mail( temp_char->desc->name, GET_NAME(ch), temp_char->desc->showstr_head);
@@ -475,7 +476,7 @@ int MaxValueAchievement(int achievement_class, int achievement_type, int achieve
         case 10:
             massimo = AchievementsList[achievement_class][achievement_type].lvl10_val;
             break;
-            
+
         default:
             mudlog(LOG_CHECK, "Something wrong in MaxValueAchievement, check the Achievement table");
             break;
@@ -566,25 +567,25 @@ void CheckQuestFail(struct char_data* ch)
         if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is less than the correct", GET_NAME(tch));
-            
+
             while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] += 1;
                 CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
             }
-            
+
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
         }
         else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is greater than the correct", GET_NAME(tch));
-            
+
             while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] -= 1;
                 CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
             }
-            
+
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
         }
         else
@@ -712,7 +713,7 @@ void CheckQuestFail(struct char_data* ch)
         else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is greater than the correct", GET_NAME(tch));
-            
+
             while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] -= 1;
@@ -891,6 +892,296 @@ bool hasAchievement(struct char_data* ch, int achievement_class, int display)
             break;
     }
     return FALSE;
+}
+
+std::string AchievementNumber(struct char_data* ch, int achievement_type, int achievement_class)
+{
+    int num = 0, i;
+    struct char_data* tch;
+    std::string sb;
+    LivelloAchie stringa;
+
+    tch = ch;
+
+    if(IS_POLY(tch))
+    {
+        tch = ch->desc->original;
+    }
+
+    // Race Achievements
+    for(i = 0; i < MAX_RACE_ACHIE; i++)
+    {
+        if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == RACESLAYER_ACHIE && achievement_type == AchievementsList[RACESLAYER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Race Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == RACESLAYER_ACHIE && achievement_type == AchievementsList[RACESLAYER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Race Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Boss Achievements
+    for(i = 0; i < MAX_BOSS_ACHIE; i++)
+    {
+        if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == BOSSKILL_ACHIE && achievement_type == n_bosskill(AchievementsList[BOSSKILL_ACHIE][i].achie_number, BOSSKILL_ACHIE))
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Boss Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == BOSSKILL_ACHIE && achievement_type == n_bosskill(AchievementsList[BOSSKILL_ACHIE][i].achie_number, BOSSKILL_ACHIE))
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Boss Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Class Skill Achievements
+    for(i = 1; i < MAX_CLASS_ACHIE; i++)
+    {
+        if(AchievementsList[CLASS_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
+        {
+            num += 1;
+            if(achievement_class == CLASS_ACHIE && achievement_type == AchievementsList[CLASS_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Skill Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Quest Achievements
+    for(i = 0; i < MAX_QUEST_ACHIE; i++)
+    {
+        if(AchievementsList[QUEST_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == QUEST_ACHIE && achievement_type == AchievementsList[QUEST_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Quest Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;;
+            }
+            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[QUEST_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == QUEST_ACHIE && achievement_type == AchievementsList[QUEST_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Quest Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
+        }
+    }
+
+    // Various Achievements
+    for(i = 0; i < MAX_OTHER_ACHIE; i++)
+    {
+        if(AchievementsList[OTHER_ACHIE][i].classe == -1)
+        {
+            // se l'achievement classe e' -1 viene skippato
+            continue;
+        }
+        else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
+        {
+            num += 1;
+            if(achievement_class == OTHER_ACHIE && achievement_type == AchievementsList[OTHER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Other Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+        }
+        else if(tch->specials.achievements[OTHER_ACHIE][i] > 0)
+        {
+            num += 1;
+            if(achievement_class == OTHER_ACHIE && achievement_type == AchievementsList[OTHER_ACHIE][i].achie_number)
+            {
+                // ho trovato l'achievement
+                stringa = StringaAchie(tch->specials.achievements[achievement_class][i], i, achievement_class);
+                num += stringa.livello;
+                boost::format fmt("$c0014Other Achievement $c0015#$c0009%d $c0014'$c0015%s$c0014' $c0009%d$c0015/$c0009%d$c0014.\n\r");
+                fmt % num % stringa.stringa % tch->specials.achievements[achievement_class][i] % stringa.valore;
+                sb.append(fmt.str().c_str());
+                fmt.clear();
+                return sb;
+            }
+            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
+        }
+    }
+    return sb;
+}
+
+LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class)
+{
+    std::string sb;
+    int val = 0, livello = 0;
+
+    if(valore < AchievementsList[achievement_class][achievement_type].lvl1_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl1);
+        val = AchievementsList[achievement_class][achievement_type].lvl1_val;
+        livello = 0;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl2_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl2);
+        val = AchievementsList[achievement_class][achievement_type].lvl2_val;
+        livello = 1;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl3_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl3);
+        val = AchievementsList[achievement_class][achievement_type].lvl3_val;
+        livello = 2;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl4_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl4);
+        val = AchievementsList[achievement_class][achievement_type].lvl4_val;
+        livello = 3;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl5_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl5);
+        val = AchievementsList[achievement_class][achievement_type].lvl5_val;
+        livello = 4;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl6_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl6);
+        val = AchievementsList[achievement_class][achievement_type].lvl6_val;
+        livello = 5;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl7_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl7);
+        val = AchievementsList[achievement_class][achievement_type].lvl7_val;
+        livello = 6;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl8_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl8);
+        val = AchievementsList[achievement_class][achievement_type].lvl8_val;
+        livello = 7;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl9_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl9);
+        val = AchievementsList[achievement_class][achievement_type].lvl9_val;
+        livello = 8;
+    }
+    else if(valore < AchievementsList[achievement_class][achievement_type].lvl10_val)
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl10);
+        val = AchievementsList[achievement_class][achievement_type].lvl10_val;
+        livello = 9;
+    }
+    else
+    {
+        sb.append(AchievementsList[achievement_class][achievement_type].lvl10);
+        val = AchievementsList[achievement_class][achievement_type].lvl10_val;
+        livello = 9;
+    }
+
+    LivelloAchie stringa =
+    {
+        sb, livello, val
+    };
+
+    return stringa;
 }
 
 std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check)
@@ -1266,7 +1557,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
 int race_achievement(int race)
 {
     int razza = -1;
-    
+
     switch(race)
     {
         case RACE_INSECT:
@@ -1391,17 +1682,17 @@ int race_achievement(int race)
             break;
 
         case RACE_DEVIL:
-            race = RACE_DEVIL;
+            razza = RACE_DEVIL;
             break;
-            
+
         case RACE_DEMON:
-            race = RACE_DEMON;
+            razza = RACE_DEMON;
             break;
 
         case RACE_GOD:
             razza = RACE_GOD;
             break;
-            
+
         default:
             mudlog(LOG_CHECK, "Wrong race found in CheckAchie");
             break;
@@ -1412,7 +1703,54 @@ int race_achievement(int race)
 
 void RewardQAchie(struct char_data* ch, int quest_number)
 {
-    // per i reward delle quest fisse
+    int vnumber;
+    struct obj_data* obj;
+    char buf[256], buf2[256];
+
+    const char* rand_desc[] = {
+        "un buono per ricevere un premio di %s",
+        "un piccolo biglietto con su scritto '$c5009%s'$c0007",
+        "la fortuna ti ha baciato ed a %s hai raccattato",
+        "$c0011un bel %sstale d'oro$c0007",
+        "il biglietto della lotteria di %s",
+        "un buono per %s gentilmente offerto da LadyOfPain",
+        "un buono per un NukeFouler o per un premio di %s",
+        "$c0009un buono marchiato dal simbolo di %s$c0007",
+        "$c0014il premio per aver nerdato a %s$c0007"
+    };
+
+    vnumber = real_object(QUEST_REWARD);
+    obj = read_object(vnumber, REAL);
+
+    if(obj->short_description)
+    {
+        free(obj->short_description);
+        sprintf(buf, "%s", rand_desc[number(0, 8)]);
+        sprintf(buf2, buf, QuestNumber[quest_number].mercy_name);
+        obj->short_description = (char*)strdup(buf2);
+    }
+
+    if(obj->name)
+    {
+        free(obj->name);
+        sprintf(buf, "biglietto buono premio %s", QuestNumber[quest_number].mercy_name);
+        obj->name = (char*)strdup(buf);
+    }
+
+    if(!IS_OBJ_STAT(obj, ITEM_IMMUNE))
+    {
+        SET_BIT(obj->obj_flags.extra_flags, ITEM_IMMUNE);
+    }
+
+    SetPersonOnSave(ch, obj);
+    obj_to_char(obj, ch);
+
+    send_to_char("\n\rUn mistico portale appare all'improvviso!\n\r\n\r", ch);
+    act("\n\rUn mistico portale appare all'improvviso!\n\r", FALSE, ch, 0, ch, TO_ROOM);
+    act("Improvvisamente un paio di braccia sbucano fuori dal portale...\n\rLa mano destra ha in mano una frusta mentre la sinistra ti porge $p.\n\r", FALSE, ch, obj, 0, TO_CHAR);
+    act("Improvvisamente un paio di braccia sbucano fuori dal portale...\n\rLa mano destra ha in mano una frusta mentre la sinistra porge $p a $N.\n\r", FALSE, ch, obj, ch, TO_ROOM);
+    send_to_char("Senti un boato ed il portale, braccia comprese, spariscono in un PUFF!\n\r\n\r", ch);
+    act("Senti un boato ed il portale, braccia comprese, spariscono in un PUFF!\n\r", FALSE, ch, 0, ch, TO_ROOM);
 }
 
 void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level)
@@ -1421,7 +1759,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
     bool win = FALSE;
     string sbch;
     string sbroom;
-    
+
     const string rand_god[] = {
         "Xanathon",
         "Alar",
@@ -1437,7 +1775,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
         "Tethys",
         "Sirio"
     };
-    
+
     // coin / pozioni / pietre
     reward[0] = AchievementsList[achievement_class][achievement_type].grado_diff * 5 + 45;
     // rune solo dal 51
@@ -1747,7 +2085,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                             {
                                 free(obj->short_description);
                             }
-                            
+
                             if(obj->obj_flags.value[0] <= 20000)
                             {
                                 obj->short_description = (char*)strdup("un mucchio di monete");
@@ -1776,7 +2114,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
 
                             obj_to_obj(obj, container);
                             mudlog(LOG_PLAYERS, "%s won %d gold coins with Achievements and...", GET_NAME(ch), obj->obj_flags.value[0]);
-                            
+
 
                             for(x = 0; x < nperc; x++)
                             {
@@ -1806,7 +2144,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione bianco sporco");
                                         }
                                         break;
-                                        
+
                                     case 1:
                                         {
                                             obj->obj_flags.value[1] = 28;   //  heal
@@ -1816,7 +2154,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione bianco latte");
                                         }
                                         break;
-                                        
+
                                     case 2:
                                         {
                                             obj->obj_flags.value[1] = 28;   //  heal
@@ -1826,7 +2164,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione bianco brillante");
                                         }
                                         break;
-                                        
+
                                     case 3:
                                         {
                                             obj->obj_flags.value[1] = 36;   //  sanc
@@ -1836,7 +2174,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione bianco splendente");
                                         }
                                         break;
-                                        
+
                                     case 4:
                                         {
                                             obj->obj_flags.value[1] = 81;   //  fireshield
@@ -1846,7 +2184,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione rosso fuoco");
                                         }
                                         break;
-                                        
+
                                     case 5:
                                         {
                                             obj->obj_flags.value[1] = 81;   //  fireshield
@@ -1856,7 +2194,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione rossa bianca");
                                         }
                                         break;
-                                        
+
                                     case 6:
                                         {
                                             obj->obj_flags.value[1] = 81;   //  fireshield
@@ -1866,7 +2204,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione biancorossa");
                                         }
                                         break;
-                                        
+
                                     case 7:
                                         {
                                             obj->obj_flags.value[1] = 28;   //  heal
@@ -1876,7 +2214,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione amaranto");
                                         }
                                         break;
-                                        
+
                                     case 8:
                                         {
                                             obj->obj_flags.value[1] = 100;  //  mana
@@ -1886,7 +2224,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione azzurra");
                                         }
                                         break;
-                                        
+
                                     case 9:
                                         {
                                             obj->obj_flags.value[1] = 100;  //  mana
@@ -1896,7 +2234,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione blu");
                                         }
                                         break;
-                                        
+
                                     case 10:
                                         {
                                             obj->obj_flags.value[1] = 100;  //  mana
@@ -1906,7 +2244,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione blu intenso");
                                         }
                                         break;
-                                        
+
                                     case 11:
                                         {
                                             obj->obj_flags.value[1] = 86;   // second wind
@@ -1916,7 +2254,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione verde");
                                         }
                                         break;
-                                        
+
                                     case 12:
                                         {
                                             obj->obj_flags.value[1] = 86;   // second wind
@@ -1926,7 +2264,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione verde brillante");
                                         }
                                         break;
-                                        
+
                                     case 13:
                                         {
                                             obj->obj_flags.value[1] = 86;   // second wind
@@ -1936,7 +2274,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione celeste");
                                         }
                                         break;
-                                        
+
                                     case 14:
                                         {
                                             obj->obj_flags.value[1] = 39;   // strength
@@ -1946,7 +2284,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione rosso scuro");
                                         }
                                         break;
-                                        
+
                                     case 15:
                                         {
                                             obj->obj_flags.value[1] = 92;   // stone skin
@@ -1956,7 +2294,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("pozione marrone");
                                         }
                                         break;
-                                        
+
                                     case 16:
                                         {
                                             obj->obj_flags.value[1] = 155;  // haste
@@ -1966,7 +2304,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             obj->name = (char*)strdup("distillato tarrasque");
                                         }
                                         break;
-                                        
+
                                     default:
                                         {
                                             obj->obj_flags.value[1] = 101;  //  astral
@@ -2333,7 +2671,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                                     }
                                                 }
                                                 break;
- 
+
                                             case 1:
                                                 {
                                                     for(y = 0; y < MAX_CLASS; y++)
@@ -2452,7 +2790,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                                     }
                                                 }
                                                 break;
-                                            
+
                                             default:
                                                 break;
                                         }
@@ -3556,19 +3894,19 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             case 1:
                                                 obj->obj_flags.value[3] = TYPE_SLASH;
                                                 break;
-                                                
+
                                             case 2:
                                                 obj->obj_flags.value[3] = TYPE_WHIP;
                                                 break;
-                                                
+
                                             case 3:
                                                 obj->obj_flags.value[3] = TYPE_CLEAVE;
                                                 break;
-                                                
+
                                             case 4:
                                                 obj->obj_flags.value[3] = TYPE_CLAW;
                                                 break;
-                                                
+
                                             default:
                                                 obj->obj_flags.value[3] = TYPE_SLASH;
                                                 break;
@@ -3584,15 +3922,15 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                             case 1:
                                                 obj->obj_flags.value[3] = TYPE_PIERCE;
                                                 break;
-                                                
+
                                             case 2:
                                                 obj->obj_flags.value[3] = TYPE_STING;
                                                 break;
-                                                
+
                                             case 3:
                                                 obj->obj_flags.value[3] = TYPE_STAB;
                                                 break;
-                                                
+
                                             default:
                                                 obj->obj_flags.value[3] = TYPE_PIERCE;
                                                 break;
@@ -3606,7 +3944,7 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                 }
                             }
                                 break;
- 
+
                             case 1392:  //  wand
                                 restringReward(obj, 20, 9, 12);
                                 break;
@@ -3759,23 +4097,23 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
         case 0:
             zz = number(0, 15);
             break;
-            
+
         case 1:
             zz = number(0, 16);
             break;
-            
+
         case 2:
             zz = number(0, 28);
             break;
-            
+
         case 3:
             zz = number(0, 23);
             break;
-            
+
         case 4:
             zz = number(0, 14);
             break;
-            
+
         default:
             zz = 0;
             break;
@@ -3837,7 +4175,11 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 {
     char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
     int valore = 0, molt = 0, lvl = 0;
+    bool quest = FALSE;
     struct char_data* tch;
+    extern void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete);
+    struct obj_cost cost;
+    std::string sb;
 
     tch = ch;
 
@@ -3855,6 +4197,14 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
     {
         // se l'achievement classe e' -1 non effettua il check
         return;
+    }
+
+    if(achievement_class == QUEST_ACHIE)
+    {
+        if(CheckMercyTable(tch, AchievementsList[achievement_class][achievement_type].achie_number, tch->specials.achievements[achievement_class][achievement_type]))
+        {
+            quest = TRUE;
+        }
     }
 
     // se il numero un pg arriva al valore massimo in un achievement mando una mail ai coder
@@ -3955,9 +4305,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
     if(valore > 0)
     {
-        extern void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete);
         int reward;
-        struct obj_cost cost;
 
         sprintf(buf, "%s", spamAchie(tch, titolo, valore, stringa, achievement_type, achievement_class));
         send_to_char(buf, ch);
@@ -4032,12 +4380,104 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         act(buf, FALSE, ch, 0, 0, TO_CHAR);
         save_obj(ch, &cost, 0);
     }
+
+    if(quest)
+    {
+        RewardQAchie(ch, AchievementsList[achievement_class][achievement_type].achie_number);
+        sprintf(buf, "$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.\n\r", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
+        act(buf, FALSE, ch, 0, 0, TO_CHAR);
+        save_obj(ch, &cost, 0);
+    }
+
+    if(valore <= 0 && IS_SET(ch->player.user_flags, ACHIE_MODE))
+    {
+        sb.append(AchievementNumber(ch, achievement_type, achievement_class));
+        page_string(ch->desc, sb.c_str(), true);
+    }
+}
+
+bool CheckMercyTable(struct char_data* ch, int quest, int amount)
+{
+    int val = 0, num = 0, mercy[4], check;
+
+    val = static_cast<int> (amount / QuestNumber[quest].mercy_max);
+    check = number(1, 100);
+
+    if(val > ch->specials.mercy[quest])
+    {
+//        mudlog(LOG_CHECK, "%s ha effettuato %d achievements per %s ed ha preso solo %d premi%s ha quindi vinto il premio!", GET_NAME(ch), amount, QuestNumber[quest].mercy_name, ch->specials.mercy[quest], (ch->specials.mercy[quest] == 1 ? "o," : ","));
+        ch->specials.mercy[quest] += 1;
+        return TRUE;
+    }
+
+//    mudlog(LOG_CHECK, "Il rapporto tra numero di achievements ed i premi ottenibili da %s e' pari a %d. Ne ha ottenuti %d per ora (%s).", GET_NAME(ch), val, ch->specials.mercy[quest], QuestNumber[quest].mercy_name);
+
+    if(val > 0)
+    {
+        num = amount - (QuestNumber[quest].mercy_max * val);
+//        mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d.", GET_NAME(ch), num);
+    }
+    else if(val == 0 && ch->specials.mercy[quest] == 0)
+    {
+        num = amount;
+//        mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d (non ha mai ottenuto il premio).", GET_NAME(ch), num);
+    }
+    else
+    {
+//        mudlog(LOG_CHECK, "%s (%d achievements) ha gia' ottenuto %d premi%s per '%s' (mercy_max = %d).", GET_NAME(ch), amount, ch->specials.mercy[quest], (ch->specials.mercy[quest] == 1 ? "o" : ""), QuestNumber[quest].mercy_name, QuestNumber[quest].mercy_max);
+        return FALSE;
+    }
+
+    if(num < QuestNumber[quest].mercy_min)
+    {
+//        mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d, ed e' inferiore al valore minimo che e' %d.", GET_NAME(ch), num, QuestNumber[quest].mercy_min);
+        return FALSE;
+    }
+
+    mercy[0] = (QuestNumber[quest].mercy_1 - QuestNumber[quest].mercy_min) * QuestNumber[quest].increment_min;
+    mercy[1] = (QuestNumber[quest].mercy_2 - QuestNumber[quest].mercy_1) * QuestNumber[quest].increment_1;
+    mercy[2] = (QuestNumber[quest].mercy_3 - QuestNumber[quest].mercy_2) * QuestNumber[quest].increment_2;
+    mercy[3] = (QuestNumber[quest].mercy_4 - QuestNumber[quest].mercy_3) * QuestNumber[quest].increment_3;
+
+    if(num >= QuestNumber[quest].mercy_min && num < QuestNumber[quest].mercy_1)
+    {
+        val = (num - QuestNumber[quest].mercy_min) * QuestNumber[quest].increment_min;
+    }
+    else if(num >= QuestNumber[quest].mercy_1 && num < QuestNumber[quest].mercy_2)
+    {
+        val = ((num - QuestNumber[quest].mercy_1) * QuestNumber[quest].increment_1) + mercy[0];
+    }
+    if(num >= QuestNumber[quest].mercy_2 && num < QuestNumber[quest].mercy_3)
+    {
+        val = ((num - QuestNumber[quest].mercy_2) * QuestNumber[quest].increment_2) + mercy[0] + mercy[1];
+    }
+    if(num >= QuestNumber[quest].mercy_3 && num < QuestNumber[quest].mercy_4)
+    {
+        val = ((num - QuestNumber[quest].mercy_3) * QuestNumber[quest].increment_3) + mercy[0] + mercy[1] + mercy[2];
+    }
+    if(num >= QuestNumber[quest].mercy_4 && num < QuestNumber[quest].mercy_max)
+    {
+        val = ((num - QuestNumber[quest].mercy_4) * QuestNumber[quest].increment_4) + mercy[0] + mercy[1] + mercy[2] + mercy[3];
+    }
+//    mudlog(LOG_CHECK, "Il numero di achievements valutabili per %s su questo step del mercy system e' %d, ha quindi una probabilita' pari a %d/100.", GET_NAME(ch), num, val);
+
+//    mudlog(LOG_CHECK, "Il valore di check per %s e' di %d quindi...", GET_NAME(ch), check);
+
+    if(val > check)
+    {
+//        mudlog(LOG_CHECK, "%s vince il premio!", GET_NAME(ch));
+        ch->specials.mercy[quest] += 1;
+        return TRUE;
+    }
+
+//    mudlog(LOG_CHECK, "%s non vince un tubo!", GET_NAME(ch));
+    return FALSE;
 }
 
 int CheckMobQuest(int vnumber)
 {
     int i;
-    
+
     for(i = 0; i < MAX_QUEST_ACHIE; i++)
     {
         if(QuestMobAchie[i].mob_0 == vnumber && QuestMobAchie[i].mob_0 != 0)
@@ -4101,7 +4541,7 @@ void AssignMobQuestToToon(struct char_data* ch, int quest, int vnumber)
     {
         tch = ch->desc->original;
     }
-    
+
     for(i = 0; i < QuestMobAchie[quest].numero_mob; i++)
     {
         if(tch->specials.quest_mob[quest][i] == vnumber && vnumber > 0)
@@ -7380,6 +7820,25 @@ int CountLims(struct obj_data* obj) {
 	return(total);
 }
 
+int ContaOggetti(struct obj_data* obj) {
+	int total=0;
+
+	if(!obj) {
+		return(0);
+	}
+
+	if(obj->contains) {
+		total += ContaOggetti(obj->contains);
+	}
+	if(obj->next_content) {
+		total += ContaOggetti(obj->next_content);
+	}
+
+	total++;
+
+	return(total);
+}
+
 int LimObj(struct char_data* ch) {  // Gaia 2001
 	int i,tot=0;
 
@@ -8365,7 +8824,7 @@ int anti_barbarian_stuff(struct obj_data* obj_object) {
 
 int CheckGetBarbarianOK(struct char_data* ch, struct obj_data* obj_object) {
 	if(GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 &&
-			anti_barbarian_stuff(obj_object) && !IS_IMMORTAL(ch)) {
+			anti_barbarian_stuff(obj_object) && GetMaxLevel(ch) < IMMORTALE) {
 		act("Percepisci la magia su $p e rabbrividisci disgustat$b.", FALSE, ch,
 			obj_object, 0, TO_CHAR);
 		act("$n scuote la testa e si rifiuta di prendere $p.", TRUE, ch,

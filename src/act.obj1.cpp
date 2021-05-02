@@ -62,6 +62,7 @@ void get(struct char_data* ch, struct obj_data* obj_object,
 				act("$n prende $p da $P.", TRUE, ch, obj_object, sub_object, TO_ROOM);
 				obj_from_obj(obj_object);
 				obj_to_char(obj_object, ch);
+				ch->player.oggetti += 1;
 			}
 			else {
 				act("Prima dovresti aprire $P.", TRUE, ch, 0, sub_object, TO_CHAR);
@@ -76,6 +77,7 @@ void get(struct char_data* ch, struct obj_data* obj_object,
 			act("$n prende $p.", TRUE, ch, obj_object, 0, TO_ROOM);
 			obj_from_room(obj_object);
 			obj_to_char(obj_object, ch);
+			ch->player.oggetti += 1;
 		}
 		if(obj_object->obj_flags.type_flag == ITEM_MONEY &&
 				obj_object->obj_flags.value[0] >= 1) {
@@ -172,6 +174,18 @@ ACTION_FUNC(do_get) {
 
 
 			if(CAN_SEE_OBJ(ch,obj_object)) {
+				if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch))
+				{
+					act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
+					SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 1", NULL);
+#if NODUPLICATES
+					if(IS_PC(ch))
+					{
+						do_save(ch, "", 0);
+					}
+#endif
+					return;
+				}
 				if((IS_CARRYING_N(ch) + 1) <= CAN_CARRY_N(ch)) {
 					if((IS_CARRYING_W(ch) + obj_object->obj_flags.weight) <=
 							CAN_CARRY_W(ch)) {
@@ -225,6 +239,19 @@ ACTION_FUNC(do_get) {
 
 		while(num != 0) {
 			obj_object = get_obj_in_list_vis(ch, arg1, pObjList);
+
+			if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch) && obj_object)
+			{
+				act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
+				SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 2", NULL);
+#if NODUPLICATES
+				if(IS_PC(ch))
+				{
+					do_save(ch, "", 0);
+				}
+#endif
+				return;
+			}
 
 			if(obj_object) {
 				pObjList = obj_object->next_content;
@@ -316,6 +343,18 @@ ACTION_FUNC(do_get) {
 					}
 
 					if(CAN_SEE_OBJ(ch, obj_object)) {
+						if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch))
+						{
+							act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
+							SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 4", NULL);
+#if NODUPLICATES
+							if(IS_PC(ch))
+							{
+								do_save(ch, "", 0);
+							}
+#endif
+							return;
+						}
 						if((IS_CARRYING_N(ch) + 1) < CAN_CARRY_N(ch)) {
 							if(has ||
 									(IS_CARRYING_W(ch) + obj_object->obj_flags.weight) <
@@ -401,6 +440,19 @@ ACTION_FUNC(do_get) {
 
 				while(num != 0) {
 					obj_object = get_obj_in_list_vis(ch, arg1, pObjList);
+
+					if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch) && obj_object)
+					{
+						act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
+						SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 6", NULL);
+#if NODUPLICATES
+						if(IS_PC(ch))
+						{
+							do_save(ch, "", 0);
+						}
+#endif
+						return;
+					}
 
 					if(obj_object) {
 						pObjList = obj_object->next_content;

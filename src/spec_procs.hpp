@@ -10,6 +10,7 @@
 #include "specialproc_other.hpp"
 namespace Alarmud {
 struct char_data* FindMobInRoomWithFunction(int room,genericspecial_func);
+struct obj_data* FindObjInRoomWithFunction(int room, genericspecial_func func);
 struct char_data* FindMobInRoomWithVNum(int room, int VNum) ;
 int GainLevel(struct char_data* ch, int iClass) ;
 int chalice(struct char_data* ch, int cmd, char* arg) ;
@@ -120,4 +121,3 @@ MOBSPECIAL_FUNC(zombie_master);
 OBJSPECIAL_FUNC(zone_obj);
 } // namespace Alarmud
 #endif // __SPEC_PROCS_HPP
-

@@ -148,9 +148,11 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 	RentItem=0;
 	add_obj_cost(ch, receptionist, ch->carrying, cost);
 	limited_items +=CountLims(ch->carrying);
+	ch->player.oggetti = ContaOggetti(ch->carrying);
 	for(i = 0; i<MAX_WEAR; i++) {
 		add_obj_cost(ch, receptionist, ch->equipment[i], cost);
 		limited_items +=CountLims(ch->equipment[i]);
+		ch->player.oggetti += ContaOggetti(ch->equipment[i]);
 	}
 
 	if(!cost->ok) {
@@ -217,11 +219,18 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 #endif
 
 
-	if(cost->no_carried > MAX_OBJ_SAVE) {
-		if(receptionist) {
-			snprintf(buf, sizeof(buf)-1,"$n tells you 'Sorry, but I can't store more than %d items.",
-					MAX_OBJ_SAVE);
-			act(buf,FALSE,receptionist,0,ch,TO_VICT);
+	if(cost->no_carried > MAX_OBJ_SAVE)
+	{
+		if(receptionist)
+		{
+			snprintf(buf, sizeof(buf)-1, "$n tells you 'Sorry, but I can't store more than %d items.", MAX_OBJ_SAVE);
+			act(buf, FALSE, receptionist, 0, ch, TO_VICT);
+		}
+		else if(!IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF))
+		{
+			snprintf(buf, sizeof(buf)-1, "$c5009WARNING$c0011 - $c0015Stai portando troppa roba con te,\n\r"
+			"          $c0015verranno salvati solamente %d oggetti.", MAX_OBJ_SAVE);
+			act(buf, FALSE, ch, 0, ch, TO_VICT);
 		}
 		return(FALSE);
 	}
@@ -406,8 +415,6 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 /**************************************************************************
  * Routines used to load a characters equipment from disk
  **************************************************************************/
-#define LOW_EDITED_ITEMS    34030
-#define HIGH_EDITED_ITEMS   34999
 
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 	struct obj_data* obj;
@@ -449,14 +456,21 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 				obj->obj_flags.value[2] = st->objects[i].value[2];
 				obj->obj_flags.value[3] = st->objects[i].value[3];
 				obj->obj_flags.extra_flags  = st->objects[i].extra_flags;
-                if(IS_SET(ch->specials.act,PLR_NEW_EQ))
-                {
-                    obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
-                }
-                else
-                {
-                    obj->obj_flags.extra_flags2 = 0;
-                }
+				if(IS_SET(ch->specials.act,PLR_NEW_EQ))
+				{
+					obj->obj_flags.extra_flags2 = st->objects[i].extra_flags2;
+					if(IsQuestItem(obj)) 	// se l'oggetto e' un premio di una quest setto il bit
+					{
+						if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
+						{
+							SET_BIT(obj->obj_flags.extra_flags2, ITEM2_QUEST);
+						}
+					}
+				}
+				else
+				{
+					obj->obj_flags.extra_flags2 = 0;
+				}
 				obj->obj_flags.weight       = st->objects[i].weight;
 				obj->obj_flags.timer        = st->objects[i].timer;
 				obj->obj_flags.bitvector    = st->objects[i].bitvector;
@@ -1454,6 +1468,10 @@ void CountLimitedItems(struct obj_file_u* st) {
 					strncat(rarelist, buf,MAX_STRING_LENGTH);
 
 				}
+				if(IsQuestItem(obj))
+				{
+
+				}
 				extract_obj(obj);
 			}
 		}
@@ -2006,6 +2024,14 @@ void load_char_extra(struct char_data* ch) {
                     n = atoi(achie_n);
                     ch->specials.achievements[OTHER_ACHIE][n] = atoi(achie_v);
                 }
+				else if(!strcmp(p, "mercy"))
+				{
+					/* setup achievement racekill */
+					achie_n = (char*)strtok(s, "#");
+					achie_v = (char*)strtok(0, "\0");
+					n = atoi(achie_n);
+					ch->specials.mercy[n] = atoi(achie_v);
+				}
 				else if(!strcmp(p, "email")) {
 					/* setup email */
 					RECREATE(GET_EMAIL(ch),char,strlen(s));
@@ -2122,6 +2148,14 @@ void write_char_extra(struct char_data* ch) {
             if(ch->specials.achievements[OTHER_ACHIE][i] > 0)
                 fprintf(fp, "achie_other:%d#%d\n", i, ch->specials.achievements[OTHER_ACHIE][i]);
         }
+
+		for(i = 0; i < MAX_QUEST_ACHIE; i++)
+		{
+			if(ch->specials.mercy[i] > 0)
+			{
+				fprintf(fp, "mercy:%d#%d\n", i, ch->specials.mercy[i]);
+			}
+		}
     }
 
 	if(ch->specials.prompt) {
@@ -2281,6 +2315,29 @@ void save_room(int room) {
 			fclose(f1);
 		}
 	}
+}
+
+bool IsQuestItem(struct obj_data* obj)
+{
+	int i, j, iVNum;
+
+	iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+
+	for (j = 0; j < MAX_QUEST_ACHIE; j++)
+	{
+		for(i = 0; QuestNebbie[j][i].quest_item != -1; i++)
+		{
+			if(iVNum == QuestNebbie[j][i].quest_item || obj->char_vnum == QuestNebbie[j][i].quest_item)
+			{
+				if(KnownObjQuest[j].known[i] != TRUE)
+				{
+					KnownObjQuest[j].known[i] = TRUE;
+				}
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
 }
 
 } // namespace Alarmud

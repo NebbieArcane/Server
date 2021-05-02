@@ -13,13 +13,16 @@
 #include "multiclass.hpp"
 namespace Alarmud {
 
-#define QUEST_ZONE 9700
+#define QUEST_ZONE          9700
+#define LOW_EDITED_ITEMS    34030
+#define HIGH_EDITED_ITEMS   34999
 
 // achievement's stuff
-#define CONT_REWARD 1371
-#define POT_REWARD  1370
-#define GOLD_REWARD 1372
-#define OBJ_REWARD  1373
+#define CONT_REWARD         1371
+#define POT_REWARD          1370
+#define GOLD_REWARD         1372
+#define OBJ_REWARD          1373
+#define QUEST_REWARD        1397
 #define STAT_RANDOM         100
 #define ELEM_RESI_RANDOM    101
 #define OBJ_TELEPATHY       102
@@ -33,7 +36,7 @@ namespace Alarmud {
 #define OBJ_RESI_SLASH      110
 #define OBJ_RESI_PIERCE     111
 #define OBJ_SPY             112
-    
+
 #define RM_BLOOD(rm)   (real_roomp(rm)->blood)
 
 #define TANNED(obj)     ((   obj_index[obj->item_number].iVNum == TAN_BAG || obj_index[obj->item_number].iVNum == TAN_SHIELD       \
@@ -504,4 +507,3 @@ inline struct room_data* real_roomp(long lVNum) {
 
 } // namespace Alarmud
 #endif
-

@@ -39,5 +39,6 @@ void update_file(struct char_data* ch, struct obj_file_u* st) ;
 void update_obj_file() ;
 void write_char_extra(struct char_data* ch) ;
 void zero_rent(struct char_data* ch) ;
+bool IsQuestItem(struct obj_data* obj);
 } // namespace Alarmud
 #endif // __RECEPTION_HPP

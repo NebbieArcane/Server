@@ -110,6 +110,8 @@ int top_of_alloc_objt = 0;
 int top_of_helpt; /* top of help index table         */
 int top_of_wizhelpt; /* top of wiz help index table         */
 
+struct NebbieQuest KnownObjQuest[MAX_QUEST_ACHIE];
+
 struct time_info_data time_info; /* the infomation about the time   */
 struct weather_data weather_info; /* the infomation about the weather */
 long saved_rooms[WORLD_SIZE];
@@ -519,7 +521,7 @@ char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
 	}
 	strncat(bigbuf, buf,SBB -strlen(buf));
 	for(i = 0; i < list_wiz->number[livello]; i++) {
-		sprintf(buf, "%s %s\n\r", list_wiz->lookup[livello].stuff[i].name,
+		sprintf(buf, "%s %s$c0007\n\r", list_wiz->lookup[livello].stuff[i].name,
 				list_wiz->lookup[livello].stuff[i].title);
 
 		center = 38 - (int)(Ansi_len(buf) / 2);
@@ -529,7 +531,7 @@ char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
 		strncat(bigbuf, buf, SBB -strlen(buf));
 	}
 	for(; livello > DIO_MINORE && i < ciclo; i++) {
-		sprintf(buf, "%s %s\n\r", " ", " ");
+		sprintf(buf, "%s %s$c0007\n\r", " ", " ");
 
 		center = 38 - (int)(Ansi_len(buf) / 2);
 		for(j = 0; j <= center; j++) {
@@ -1653,6 +1655,8 @@ struct char_data* read_mobile(int nr, int type) {
 
 	mob->player.iClass = CLASS_WARRIOR;
 
+	mob->player.oggetti = 0;
+
 	fscanf(mob_f, " %c ", &letter);
     mob->specials.mobtype = letter;
 	if(letter == 'S') {
@@ -2224,44 +2228,46 @@ int read_obj_from_file(struct obj_data* obj, FILE* f) {
 	return bc;
 }
 
-void write_obj_to_file(struct obj_data* obj, FILE* f) {
+void write_obj_to_file(struct obj_data* obj, FILE* f, long vnumber)
+{
 	int i;
 	struct extra_descr_data* descr;
 
-	fprintf(f, "#%d\n",
-			obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0);
+//	fprintf(f, "#%d\n", obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0);
+	fprintf(f, "#%ld\n", vnumber);
 	fwrite_string(f, obj->name);
 	fwrite_string(f, obj->short_description);
 	fwrite_string(f, obj->description);
 	fwrite_string(f, obj->action_description);
 
-	fprintf(f, "%d %d %d\n", obj->obj_flags.type_flag,
-			obj->obj_flags.extra_flags, obj->obj_flags.wear_flags);
-	fprintf(f, "%d %d %d %d\n", obj->obj_flags.value[0],
-			obj->obj_flags.value[1], obj->obj_flags.value[2],
-			obj->obj_flags.value[3]);
-	fprintf(f, "%d %d %d\n", obj->obj_flags.weight, obj->obj_flags.cost,
-			obj->obj_flags.cost_per_day);
+	fprintf(f, "%d %d %d\n", obj->obj_flags.type_flag, obj->obj_flags.extra_flags, obj->obj_flags.wear_flags);
+	fprintf(f, "%d %d %d %d\n", obj->obj_flags.value[0], obj->obj_flags.value[1], obj->obj_flags.value[2], obj->obj_flags.value[3]);
+	fprintf(f, "%d %d %d\n", obj->obj_flags.weight, obj->obj_flags.cost, obj->obj_flags.cost_per_day);
 
 	/* *** extra descriptions *** */
 	if(obj->ex_description)
-		for(descr = obj->ex_description; descr; descr = descr->next) {
+	{
+		for(descr = obj->ex_description; descr; descr = descr->next)
+		{
 			fprintf(f, "E\n");
 			fwrite_string(f, descr->keyword);
 			fwrite_string(f, descr->description);
 		}
-
-	for(i = 0; i < MAX_OBJ_AFFECT; i++) {
-		if(obj->affected[i].location != APPLY_NONE)
-			fprintf(f, "A\n%d %d\n", obj->affected[i].location,
-					obj->affected[i].modifier);
 	}
 
-    if(obj->obj_flags.extra_flags2)
-    {
-        fprintf(f, "F\n");
-        fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
-    }
+	for(i = 0; i < MAX_OBJ_AFFECT; i++)
+	{
+		if(obj->affected[i].location != APPLY_NONE)
+		{
+			fprintf(f, "A\n%d %d\n", obj->affected[i].location, obj->affected[i].modifier);
+		}
+	}
+
+	if(obj->obj_flags.extra_flags2)
+	{
+		fprintf(f, "F\n");
+		fprintf(f, "%d\n", obj->obj_flags.extra_flags2);
+	}
 
 	if(obj->szForbiddenWearToChar) {
 		fprintf(f, "P\n");
@@ -2275,7 +2281,7 @@ void write_obj_to_file(struct obj_data* obj, FILE* f) {
 struct obj_data* read_object(int nr, int type) {
 	FILE* f;
 	struct obj_data* obj;
-	int i;
+	int i, tmp;
 	long bc;
 	char buf[300];
 
@@ -2310,7 +2316,9 @@ struct obj_data* read_object(int nr, int type) {
 				free(obj);
 				return (0);
 			}
-			fscanf(f, "#%*d \n");
+			fscanf(f, "#%d \n", &tmp);
+			obj->char_vnum = tmp;
+//			fscanf(f, "#%*d \n");	formato vecchio
 			SetStatus("before read_obj_from_file 1", NULL);
 			read_obj_from_file(obj, f);
 			fclose(f);
@@ -2356,6 +2364,18 @@ struct obj_data* read_object(int nr, int type) {
 	obj_count++;
 
 	total_obc += bc;
+
+	// se l'oggetto e' un premio di una quest setto il bit solo se il caricamento e' 'REAL'
+	if(type == REAL)
+	{
+		if(IsQuestItem(obj))
+		{
+			if(!IS_SET(obj->obj_flags.extra_flags2, ITEM2_QUEST))
+			{
+				SET_BIT(obj->obj_flags.extra_flags2, ITEM2_QUEST);
+			}
+		}
+	}
 
 	SetStatus("ending read_object", NULL);
 
@@ -2877,6 +2897,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 
 	ch->player.weight = st->weight;
 	ch->player.height = st->height;
+
+	ch->player.oggetti = 0;
 
 	ch->abilities = st->abilities;
 	ch->tmpabilities = st->abilities;
@@ -3744,6 +3766,7 @@ void reset_char(struct char_data* ch) {
 		ch->equipment[i] = 0;
 	}
 
+	ch->player.oggetti = 0;
 	ch->followers = 0;
 	ch->master = 0;
 	ch->carrying = 0;
@@ -3793,31 +3816,30 @@ void reset_char(struct char_data* ch) {
 	ch->specials.carry_items = 0;
 	ch->specials.spellfail = 101;
 
-    /* Achievemets */
-    for( i = 0; i < MAX_RACE_ACHIE; i++)
-    {
-        ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
-    }
-    for( i = 0; i < MAX_BOSS_ACHIE; i++)
-    {
-        ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
-    }
-    for( i = 0; i < MAX_CLASS_ACHIE; i++)
-    {
-        ch->specials.achievements[CLASS_ACHIE][i] = 0;
-    }
-    for( i = 0; i < MAX_QUEST_ACHIE; i++)
-    {
-        ch->specials.achievements[QUEST_ACHIE][i] = 0;
-    }
-    for( i = 0; i < MAX_OTHER_ACHIE; i++)
-    {
-        ch->specials.achievements[OTHER_ACHIE][i] = 0;
-    }
-    for( i = 0; i < MAX_QUEST_ACHIE; i++)
-    {
-        ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
-    }
+
+	/* Achievemets */
+	for( i = 0; i < MAX_RACE_ACHIE; i++)
+	{
+		ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
+	}
+	for( i = 0; i < MAX_BOSS_ACHIE; i++)
+	{
+		ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
+	}
+	for( i = 0; i < MAX_CLASS_ACHIE; i++)
+	{
+		ch->specials.achievements[CLASS_ACHIE][i] = 0;
+	}
+	for( i = 0; i < MAX_QUEST_ACHIE; i++)
+	{
+		ch->specials.achievements[QUEST_ACHIE][i] = 0;
+		ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
+		ch->specials.mercy[i] = 0;
+	}
+	for( i = 0; i < MAX_OTHER_ACHIE; i++)
+	{
+		ch->specials.achievements[OTHER_ACHIE][i] = 0;
+	}
 
 	if(GET_HIT(ch) <= 0) {
 		GET_HIT(ch) = 1;
@@ -5038,5 +5060,3 @@ ACTION_FUNC(do_WorldSave) {
     }
 
 }
-
-

@@ -556,251 +556,251 @@ MOBSPECIAL_FUNC(EditMaster) {
 
 MOBSPECIAL_FUNC(RentEditor)
 {
-    char obj_name[80], vict_name[80], spec_buf[256], buf[MAX_STRING_LENGTH];
-    struct char_data* derent, *vict;
-    struct obj_data* obj;
-    int iVNum;
-    int tipo;           //  tipo:   1 = rune    2 = exp     4 = monete
-    bool rune = FALSE, exp = FALSE, gold = FALSE;
-    bool editNO = FALSE;
-    long vnum;
+	char obj_name[80], vict_name[80], spec_buf[256], buf[MAX_STRING_LENGTH];
+	struct char_data* derent, *vict;
+	struct obj_data* obj;
+	int iVNum;
+	int tipo;           //  tipo:   1 = rune    2 = exp     4 = monete
+	bool rune = FALSE, exp = FALSE, gold = FALSE;
+	bool editNO = FALSE;
+	long vnum;
 
-    if(!AWAKE(ch))
-    {
-        return (FALSE);
-    }
+	if(!AWAKE(ch))
+	{
+		return (FALSE);
+	}
 
-    if(check_soundproof(ch))
-    {
-        return (FALSE);
-    }
+	if(check_soundproof(ch))
+	{
+		return (FALSE);
+	}
 
-    derent = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor));
+	derent = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor));
 
-    if(!derent)
-    {
-        return (FALSE);
-    }
+	if(!derent)
+	{
+		return (FALSE);
+	}
 
-    const char* p = GET_SPEC_PARM(derent);
-    p = one_argument(p, spec_buf);
-    tipo = abs(atoi(spec_buf));
-    if(tipo < 1)
-    {
-        tipo = 1;
-    }
-    else if(tipo > 7)
-    {
-        tipo = number(1, 7);
-    }
+	const char* p = GET_SPEC_PARM(derent);
+	p = one_argument(p, spec_buf);
+	tipo = abs(atoi(spec_buf));
+	if(tipo < 1)
+	{
+		tipo = 1;
+	}
+	else if(tipo > 7)
+	{
+		tipo = number(1, 7);
+	}
 
-    if(cmd == CMD_VALUE)
-    {
-        sprintf(buf, "$N ti dice 'Diminuire l'affitto in locanda di un TUO oggetto ti costera' ");
+	if(cmd == CMD_VALUE)
+	{
+		sprintf(buf, "$N ti dice 'Diminuire l'affitto in locanda di un TUO oggetto ti costera' ");
 
-        if(IS_SET(tipo, PAY_RUNE))
-        {
-            sprintf(buf, "%s%d run%s", buf, PRICE_RUNE, (PRICE_RUNE == 1 ? "a" : "e"));
-        }
+		if(IS_SET(tipo, PAY_RUNE))
+		{
+			sprintf(buf, "%s%d run%s", buf, PRICE_RUNE, (PRICE_RUNE == 1 ? "a" : "e"));
+		}
 
-        if(IS_SET(tipo, PAY_EXP))
-        {
-            sprintf(buf, "%s%s%d punti esperienza", buf, (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_GOLD) ? ", " : " e ") : (IS_SET(tipo, PAY_GOLD) ? "" : "")), PRICE_EXP);
-        }
+		if(IS_SET(tipo, PAY_EXP))
+		{
+			sprintf(buf, "%s%s%d punti esperienza", buf, (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_GOLD) ? ", " : " e ") : (IS_SET(tipo, PAY_GOLD) ? "" : "")), PRICE_EXP);
+		}
 
-        if(IS_SET(tipo, PAY_GOLD))
-        {
-            sprintf(buf, "%s%s%d monete d'oro", buf, (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_EXP) ? " e " : " e ") : (IS_SET(tipo, PAY_EXP) ? " e " : " ")), PRICE_GOLD);
-        }
+		if(IS_SET(tipo, PAY_GOLD))
+		{
+			sprintf(buf, "%s%s%d monete d'oro", buf, (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_EXP) ? " e " : " e ") : (IS_SET(tipo, PAY_EXP) ? " e " : " ")), PRICE_GOLD);
+		}
 
-        sprintf(buf, "%s.'", buf);
+		sprintf(buf, "%s.'", buf);
 
-        act(buf, FALSE, ch, NULL, derent, TO_CHAR);
+		act(buf, FALSE, ch, NULL, derent, TO_CHAR);
 
-        return (TRUE);
-    }
+		return (TRUE);
+	}
 
-    if(cmd == CMD_GIVE)
-    {
-        arg = one_argument(arg, obj_name);
+	if(cmd == CMD_GIVE)
+	{
+		arg = one_argument(arg, obj_name);
 
-        if(!*obj_name)
-        {
-            return (FALSE);
-        }
+		if(!*obj_name)
+		{
+			return (FALSE);
+		}
 
-        if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
-        {
-            send_to_char("Cosa vuoi dare a chi?\n\r", ch);
-            return (TRUE);
-        }
+		if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
+		{
+			send_to_char("Cosa vuoi dare a chi?\n\r", ch);
+			return (TRUE);
+		}
 
-        arg = one_argument(arg, vict_name);
+		arg = one_argument(arg, vict_name);
 
-        if(!*vict_name)
-        {
-            return (FALSE);
-        }
+		if(!*vict_name)
+		{
+			return (FALSE);
+		}
 
-        if(!(vict = get_char_room_vis(ch, vict_name)))
-        {
-            return (FALSE);
-        }
+		if(!(vict = get_char_room_vis(ch, vict_name)))
+		{
+			return (FALSE);
+		}
 
-        if(vict != derent)
-        {
-            return (FALSE);
-        }
+		if(vict != derent)
+		{
+			return (FALSE);
+		}
 
-        if(!IS_PC(ch))
-        {
-            send_to_char("Mi dispiace ma non puoi farlo.\n\r", ch);
-            return (TRUE);
-        }
+		if(!IS_PC(ch))
+		{
+			send_to_char("Mi dispiace ma non puoi farlo.\n\r", ch);
+			return (TRUE);
+		}
 
-        if(IS_POLY(ch))
-        {
-            act("$N ti dice 'Mi dispiace non puoi farlo in questa forma.'", FALSE, ch, NULL, derent, TO_CHAR);
-            return (TRUE);
-        }
+		if(IS_POLY(ch))
+		{
+			act("$N ti dice 'Mi dispiace non puoi farlo in questa forma.'", FALSE, ch, NULL, derent, TO_CHAR);
+			return (TRUE);
+		}
 
-        if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL) || !pers_on(ch, obj))
-        {
-            act("$N ti dice 'Non posso fare niente su $p, non e' di tua proprieta'!'", FALSE, ch, obj, derent, TO_CHAR);
-            return (TRUE);
-        }
+		if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL) || !pers_on(ch, obj))
+		{
+			act("$N ti dice 'Non posso fare niente su $p, non e' di tua proprieta'!'", FALSE, ch, obj, derent, TO_CHAR);
+			return (TRUE);
+		}
 
-        if(!IS_OBJ_STAT2(obj, ITEM2_EDIT) || IS_OBJ_STAT2(obj, ITEM2_INSERT))
-        {
-            act("$N ti dice 'Mi dispiace ma ancora non posso lavorare su questo tipo di oggetto.'", FALSE, ch, NULL, derent, TO_CHAR);
-            return (TRUE);
-        }
+		if(!IS_OBJ_STAT2(obj, ITEM2_EDIT) || IS_OBJ_STAT2(obj, ITEM2_INSERT))
+		{
+			act("$N ti dice 'Mi dispiace ma ancora non posso lavorare su questo tipo di oggetto.'", FALSE, ch, NULL, derent, TO_CHAR);
+			return (TRUE);
+		}
 
-        act("Dai $p a $N.",FALSE, ch, obj, derent, TO_CHAR);
-        act("$n da' $p a $N.",TRUE, ch, obj, derent, TO_ROOM);
+		act("Dai $p a $N.",FALSE, ch, obj, derent, TO_CHAR);
+		act("$n da' $p a $N.",TRUE, ch, obj, derent, TO_ROOM);
 
-        if(IS_SET(tipo, PAY_RUNE))
-        {
-            if(obj->obj_flags.cost_per_day <= 0)
-            {
-                act("$N ti dice 'Non posso diminuire ulteriormente il costo dell'affitto su $p!'", FALSE, ch, obj, derent, TO_CHAR);
-                editNO = TRUE;
-            }
+		if(IS_SET(tipo, PAY_RUNE))
+		{
+			if(obj->obj_flags.cost_per_day <= 0)
+			{
+				act("$N ti dice 'Non posso diminuire ulteriormente il costo dell'affitto su $p!'", FALSE, ch, obj, derent, TO_CHAR);
+				editNO = TRUE;
+			}
 
-            if(GET_RUNEDEI(ch) < PRICE_RUNE)
-            {
-                act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
-                editNO = TRUE;
-            }
-            else
-            {
-                rune = TRUE;
-            }
-        }
+			if(GET_RUNEDEI(ch) < PRICE_RUNE)
+			{
+				act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
+				editNO = TRUE;
+			}
+			else
+			{
+				rune = TRUE;
+			}
+		}
 
-        if(IS_SET(tipo, PAY_EXP))
-        {
-            if(GET_EXP(ch) < 200000000)
-            {
-                if(!editNO)
-                {
-                    act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
-                }
-                editNO = TRUE;
-            }
-            else
-            {
-                exp = TRUE;
-            }
-        }
+		if(IS_SET(tipo, PAY_EXP))
+		{
+			if(GET_EXP(ch) < 200000000)
+			{
+				if(!editNO)
+				{
+					act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
+				}
+				editNO = TRUE;
+			}
+			else
+			{
+				exp = TRUE;
+			}
+		}
 
-        if(IS_SET(tipo, PAY_GOLD))
-        {
-            if(GET_GOLD(ch) < PRICE_GOLD)
-            {
-                if(!editNO)
-                {
-                    act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
-                }
-                editNO = TRUE;
-            }
-            else
-            {
-                gold = TRUE;
-            }
-        }
+		if(IS_SET(tipo, PAY_GOLD))
+		{
+			if(GET_GOLD(ch) < PRICE_GOLD)
+			{
+				if(!editNO)
+				{
+					act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
+				}
+				editNO = TRUE;
+			}
+			else
+			{
+				gold = TRUE;
+			}
+		}
 
-        if(!editNO)
-        {
-            FILE* f;
+		if(!editNO)
+		{
+			FILE* f;
 
-            iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+			iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
 
-            vnum = (long) iVNum;
+			vnum = (long) iVNum;
 
-            sprintf(buf, "objects/%ld", vnum);
-            if((f = fopen(buf, "wt")) == NULL)
-            {
-                mudlog(LOG_PLAYERS,"RentEditor %s: can't wirte obj %ld to disk", GET_NAME(derent), vnum);
-                act("$N ti dice 'Ci lavorerei volentieri, ma adesso non posso fare nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
-                editNO = TRUE;
-            }
+			sprintf(buf, "objects/%ld", vnum);
+			if((f = fopen(buf, "wt")) == NULL)
+			{
+				mudlog(LOG_PLAYERS,"RentEditor %s: can't wirte obj %ld to disk", GET_NAME(derent), vnum);
+				act("$N ti dice 'Ci lavorerei volentieri, ma adesso non posso fare nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
+				editNO = TRUE;
+			}
 
-            if(!editNO)
-            {
-                sprintf(buf, "\n\r$N ti dice 'Per");
+			if(!editNO)
+			{
+				sprintf(buf, "\n\r$N ti dice 'Per");
 
-                if(rune)
-                {
-                    sprintf(buf, "%s %d run%s", buf, PRICE_RUNE, (PRICE_RUNE == 1 ? "a" : "e"));
-                    GET_RUNEDEI(ch) -= PRICE_RUNE;
-                }
+				if(rune)
+				{
+					sprintf(buf, "%s %d run%s", buf, PRICE_RUNE, (PRICE_RUNE == 1 ? "a" : "e"));
+					GET_RUNEDEI(ch) -= PRICE_RUNE;
+				}
 
-                if(exp)
-                {
-                    sprintf(buf, "%s%s%d punti esperienza", buf, (rune == TRUE ? (gold == TRUE ? ", " : " e ") : (gold == TRUE ? " " : "")), PRICE_EXP);
-                    GET_EXP(ch) -= PRICE_EXP;
-                }
+				if(exp)
+				{
+					sprintf(buf, "%s%s%d punti esperienza", buf, (rune == TRUE ? (gold == TRUE ? ", " : " e ") : (gold == TRUE ? " " : "")), PRICE_EXP);
+					GET_EXP(ch) -= PRICE_EXP;
+				}
 
-                if(gold)
-                {
-                    sprintf(buf, "%s %s%d monete d'oro", buf, (rune == TRUE ? (exp == TRUE ? "e " : "e ") : (exp == TRUE ? "e " : "")), PRICE_GOLD);
-                    GET_GOLD(ch) -= PRICE_GOLD;
-                }
+				if(gold)
+				{
+					sprintf(buf, "%s %s%d monete d'oro", buf, (rune == TRUE ? (exp == TRUE ? "e " : "e ") : (exp == TRUE ? "e " : "")), PRICE_GOLD);
+					GET_GOLD(ch) -= PRICE_GOLD;
+				}
 
-                sprintf(buf, "%s ho abbassato il costo d'affitto di 1000 monete d'oro.'", buf);
+				sprintf(buf, "%s ho abbassato il costo d'affitto di 1000 monete d'oro.'", buf);
 
-                act(buf, FALSE, ch, NULL, derent, TO_CHAR);
+				act(buf, FALSE, ch, NULL, derent, TO_CHAR);
 
-                obj->obj_flags.cost_per_day -= 1000;
+				obj->obj_flags.cost_per_day -= 1000;
 
-                if(obj->obj_flags.cost_per_day < 0)
-                {
-                    obj->obj_flags.cost_per_day = 0;
-                }
+				if(obj->obj_flags.cost_per_day < 0)
+				{
+					obj->obj_flags.cost_per_day = 0;
+				}
 
-                mudlog(LOG_PLAYERS, "Rent on vnum %d decrease from %d to %d gold coins. Owner: %s, MobEditor: %s", iVNum, (obj->obj_flags.cost_per_day + 1000), obj->obj_flags.cost_per_day, GET_NAME(ch), GET_NAME(derent));
-                // write_obj_to_file(obj, f, obj->char_vnum);
-                write_obj_to_file(obj, f);
-                fclose(f);
+				mudlog(LOG_PLAYERS, "Rent on vnum %d decrease from %d to %d gold coins. Owner: %s, MobEditor: %s", iVNum, (obj->obj_flags.cost_per_day + 1000), obj->obj_flags.cost_per_day, GET_NAME(ch), GET_NAME(derent));
+				write_obj_to_file(obj, f, obj->char_vnum);
+                //write_obj_to_file(obj, f);	old format
+				fclose(f);
 
-                sprintf(buf, "%s ha diminuito il rent sull'oggetto vnum %d di 1000 monete d'oro da %s.\n\rOra paga %d monete d'oro di rent.\n\r", GET_NAME(ch), iVNum, GET_NAME(derent), obj->obj_flags.cost_per_day);
-                mail_to_god(ch, "Sirio", buf);
-								mail_to_god(ch, "Tethys", buf);
-                mail_to_god(ch, "Requiem", buf);
-                mail_to_god(ch, "Croneh", buf);
+				sprintf(buf, "%s ha diminuito il rent sull'oggetto vnum %d di 1000 monete d'oro da %s.\n\rOra paga %d monete d'oro di rent.\n\r", GET_NAME(ch), iVNum, GET_NAME(derent), obj->obj_flags.cost_per_day);
+				mail_to_god(ch, "Sirio", buf);
+				mail_to_god(ch, "Tethys", buf);
+				mail_to_god(ch, "Requiem", buf);
+				mail_to_god(ch, "Croneh", buf);
 
-                send_to_char("\n\r", ch);
-                spell_identify(GET_LEVEL(derent, WARRIOR_LEVEL_IND), ch, derent,obj);
-                send_to_char("\n\r", ch);
-            }
-        }
+				send_to_char("\n\r", ch);
+				spell_identify(GET_LEVEL(derent, WARRIOR_LEVEL_IND), ch, derent,obj);
+				send_to_char("\n\r", ch);
+			}
+		}
 
-        act("$N ti restituisce $p.",FALSE, ch, obj, derent, TO_CHAR);
-        act("$N restituisce $p a $n.",TRUE, ch, obj, derent, TO_ROOM);
-        return(TRUE);
-    }
+		act("$N ti restituisce $p.",FALSE, ch, obj, derent, TO_CHAR);
+		act("$N restituisce $p a $n.",TRUE, ch, obj, derent, TO_ROOM);
+		return(TRUE);
+	}
 
-    return FALSE;
+	return (FALSE);
 }
 } // namespace Alarmud

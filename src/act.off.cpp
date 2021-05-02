@@ -1418,14 +1418,14 @@ ACTION_FUNC(do_bodyguard) {
 				lg->specials.bodyguard=(char*)NULL;
 			}
 			else {
-				send_to_char("Chi fa  da se.. fa per tre!", ch);
+				send_to_char("Chi fa da se'... fa per tre!", ch);
 			}
 		}
 		return;
 	}
 
 	if(ch->specials.fighting == victim) {
-		send_to_char("Non mi sembra una grande idea\n\r",ch);
+		send_to_char("Non mi sembra una grande idea.\n\r",ch);
 		return;
 	}
 
@@ -2303,7 +2303,7 @@ ACTION_FUNC(do_berserk) {
 
 	only_argument(arg, name);
 
-	if(!(victim = get_char_room_vis(ch, name))) {
+	if(!(victim = get_char_room_vis(ch, name)) || !(ch->specials.fighting)) {
 		if(ch->specials.fighting)     {
 			victim = ch->specials.fighting;
 		}

@@ -43,6 +43,11 @@ struct QuestItem {
 	const char* where;
 };
 
+struct NebbieQuest
+{
+	bool known[100];
+};
+
 /*
  * Achievements
  */
@@ -132,6 +137,27 @@ struct MobQuestAchie
     int mob_9;
 };
 
+struct MercySystem
+{
+	int mercy_min;
+	int increment_min;
+	int mercy_1;
+	int increment_1;
+	int mercy_2;
+	int increment_2;
+	int mercy_3;
+	int increment_3;
+	int mercy_4;
+	int increment_4;
+	int mercy_max;
+	const char* mercy_name;
+};
+
+struct QuestRewardsTable
+{
+	int quest_item;
+};
+
 struct XpAchieTable
 {
     int lev_1_xp;
@@ -144,6 +170,13 @@ struct XpAchieTable
     int lev_8_xp;
     int lev_9_xp;
     int lev_10_xp;
+};
+
+struct LivelloAchie
+{
+  std::string stringa;
+  int livello;
+  int valore;
 };
 
 #define MIN_GLOB_TRACK_LEV 31   /* mininum level for global track */
@@ -574,7 +607,7 @@ struct char_player_data {
 
 	ubyte level[ABS_MAX_CLASS];      /* NEEDS TO BE ABS_MAX_CLASS */
 	/* PC / NPC s level         */
-
+	short oggetti;		/* numero di oggetti trasportati */
 };
 
 
@@ -667,9 +700,10 @@ struct char_special_data {
 	int attack_type;         /* The Attack Type Bitvector for NPC's */
 	int alignment;           /* +-1000 for alignments               */
 
-    /* ACHIEVEMENTS */
-    int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
-    int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
+	/* ACHIEVEMENTS */
+	int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+	int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
+	int mercy[MAX_QUEST_ACHIE];
 
 	char* poofin;
 	char* poofout;

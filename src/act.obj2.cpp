@@ -672,7 +672,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
         tch = ch->desc->original;
     }
 
-    if(IS_OBJ_STAT2(obj_object, ITEM2_PERSONAL) && !IS_IMMORTAL(ch) && IS_PC(ch) && !pers_on(ch,obj_object))
+    if(IS_OBJ_STAT2(obj_object, ITEM2_PERSONAL) && !IS_IMMORTAL(ch) && !pers_on(ch,obj_object))
     {
         sprintf(buffer, "Non puoi usare %s, non ti appartiene!\n\r", obj_object->short_description);
         send_to_char(buffer, ch);
@@ -750,7 +750,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 
 	if(anti_barbarian_stuff(obj_object) &&
 			GET_LEVEL(ch, BARBARIAN_LEVEL_IND) != 0 &&
-			!IS_IMMORTAL(ch) && IS_PC(ch)) {
+			GetMaxLevel(ch) < IMMORTALE && IS_PC(ch)) {
 		act("Eck! Non questo! Percepisci la magia su $p e lo "
 			"getti via schifato!", FALSE, ch, obj_object, NULL, TO_CHAR);
 		act("$n rabbrividisce e getta $p!", FALSE, ch, obj_object, 0, TO_ROOM);
@@ -1032,12 +1032,12 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				perform_wear(ch,obj_object,keyword);
 				obj_from_char(obj_object);
 				if(ch->equipment[WEAR_WRIST_L]) {
-					act("Indossi $p intorno al polso destro.\n\r",
+					act("Indossi $p intorno al polso destro.",
 						FALSE, ch, obj_object, NULL, TO_CHAR);
 					equip_char(ch,  obj_object, WEAR_WRIST_R);
 				}
 				else {
-					act("Indossi $p intorno al polso sinistro.\n\r",
+					act("Indossi $p intorno al polso sinistro.",
 						FALSE, ch, obj_object, NULL, TO_CHAR);
 					equip_char(ch, obj_object, WEAR_WRIST_L);
 				}

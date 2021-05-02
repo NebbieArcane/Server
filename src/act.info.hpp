@@ -59,6 +59,7 @@ ACTION_FUNC(do_weather) ;
 ACTION_FUNC(do_where) ;
 void do_where_object(struct char_data* ch, struct obj_data* obj,int recurse, struct string_block* sb);
 void do_where_person(struct char_data* ch, struct char_data* person,struct string_block* sb);
+void owhere(struct char_data* ch, char* nome);
 ACTION_FUNC(do_who) ;
 ACTION_FUNC(do_wizhelp) ;
 ACTION_FUNC(do_wizlist) ;
@@ -85,4 +86,3 @@ int which_number_mobile(struct char_data* ch, struct char_data* mob) ;
 int which_number_object(struct obj_data* obj) ;
 } // namespace Alarmud
 #endif // _ACT_INFO_HPP
-

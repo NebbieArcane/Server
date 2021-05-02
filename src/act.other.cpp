@@ -2803,6 +2803,14 @@ ACTION_FUNC(do_mount) {
 	int check;
 	struct char_data* horse;
 
+	if(ch->player.oggetti > MAX_OBJ_SAVE - 5)
+	{
+		send_to_char("Stai trasportando troppa roba con te, nessuna cavalcatura reggerebbe tutto quel peso!\n\r", ch);
+		return;
+	}
+
+//	send_to_char("Nebbie non e' piu' il posto adatto ai fantini!\n\r", ch);
+//	return;
 
 	if(cmd == CMD_MOUNT || cmd == CMD_RIDE) {
 		only_argument(arg, name);
@@ -2825,11 +2833,11 @@ ACTION_FUNC(do_mount) {
 			}
 
 			if(RIDDEN(horse)) {
-				send_to_char("Already ridden\n\r", ch);
+				send_to_char("Already ridden.\n\r", ch);
 				return;
 			}
 			else if(MOUNTED(ch)) {
-				send_to_char("Already riding\n\r", ch);
+				send_to_char("Already riding.\n\r", ch);
 				return;
 			}
 
@@ -2968,7 +2976,7 @@ ACTION_FUNC(do_memorize) {
 	argument = skip_spaces(argument);
 
 	if(!(CheckContempMemorize(ch)) && *argument) {
-		act("Non riesci a imparare tutti questi incatesimi contemporaneamente.",
+		act("Non riesci a imparare tutti questi incantesimi contemporaneamente.",
 			FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
@@ -3192,15 +3200,17 @@ ACTION_FUNC(do_set_flags) {
 
 	if(!*type) {
 		send_to_char("Actually supported:\n\r"
+					 "Achie	\n\r"
 					 "Ansi       \n\r"
 					 "Autoexits \n\r"
 					 "Color     \n\r"
 					 "Display      \n\r"
 					 "Email\n\r"
-					 "Realname \n\r"
 					 "Pkill \n\r"
-					 "Who \n\r"
 					 "Pwp \n\r"
+					 "Realname \n\r"
+					 "Warnings \n\r"
+					 "Who \n\r"
 					 ,ch);
 		return;
 	}
@@ -3215,6 +3225,62 @@ ACTION_FUNC(do_set_flags) {
                      "inferti personalmente, e gli altri non "
                      "ne visualizzeranno il valore esatto.\n\r", ch);
 		return;
+	}
+
+	if(!strcmp("achie",type) && (!*field)) {
+		send_to_char("Usa 'set achie on/off'\n\r"
+					 "Questo comando ti permette di vedere "
+					 "il valore parziale ed il numero dell'"
+					 "achievement che hai appena "
+					 "incrementato.\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(type,"achie")) {
+		if(!strcmp("on",field) || !strcmp("enable",field)) {
+			SET_BIT(ch->player.user_flags, ACHIE_MODE);
+			send_to_char("Adesso ti verra' mostrato l'achievement che hai appena incrementato.\n\r",ch);
+			return;
+		}
+		else if(!strcmp("off",field) || !strcmp("disable",field)) {
+			if(IS_SET(ch->player.user_flags, ACHIE_MODE)) {
+				REMOVE_BIT(ch->player.user_flags, ACHIE_MODE);
+			}
+			send_to_char("Adesso non ti verra' mostrato l'achievement che hai appena incrementato.\n\r",ch);
+			return;
+		}
+		else {
+			send_to_char("Uso: set achie on(enable)/off(disable) \n\r",ch);
+			return;
+		}
+	}
+
+	if(!strcmp("warnings",type) && (!*field)) {
+		send_to_char("Usa 'set warnings on/off'\n\r"
+					 "Questo comando ti permette di attivare "
+					 "o disattivare i messaggi di warnings, "
+					 "al momento l'unico avviso e' sul numero degli "
+					 "oggetti che stai portando con te.\n\r", ch);
+		return;
+	}
+
+	if(!strcmp(type,"warnings")) {
+		if(!strcmp("off",field) || !strcmp("disable",field)) {
+			SET_BIT(ch->player.user_flags, WARNINGS_MODE_OFF);
+			send_to_char("Da ora in poi non riceverai piu' nessun tipo di avviso.\n\r",ch);
+			return;
+		}
+		else if(!strcmp("on",field) || !strcmp("enable",field)) {
+			if(IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF)) {
+				REMOVE_BIT(ch->player.user_flags, WARNINGS_MODE_OFF);
+			}
+			send_to_char("Da ora in poi potrai ricevere avvisi.\n\r",ch);
+			return;
+		}
+		else {
+			send_to_char("Uso: set warning on(enable)/off(disable) \n\r",ch);
+			return;
+		}
 	}
 
 	if(!strcmp(type,"pwp")) {

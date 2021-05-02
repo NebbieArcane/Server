@@ -33,10 +33,12 @@
 #include "magicutils.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
+#include "pedit.hpp"
 #include "regen.hpp"
 #include "skills.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
+#include "spec_procs4.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
 namespace Alarmud {
@@ -2743,54 +2745,60 @@ void spell_identify(byte level, struct char_data* ch,
 
 	assert(ch && (obj || victim));
 
-    do
-    {
-        color[1] = number(2,8);
-    } while (color[1] == 4);
-    color[2] = number(9,15);
+	do
+	{
+		color[1] = number(2,8);
+	} while (color[1] == 4);
+	color[2] = number(9,15);
 
-    sprintf(col1, "$c000%d", color[1]);
-    sprintf(col2, "$c00%s%d", (color[2] > 9 ? "" : "0"), color[2]);
-    if(color[2] == 9) {
-        sprintf(col3, "$c0015");
-    }
-    else {
-        sprintf(col3, "$c0009");
-    }
+	sprintf(col1, "$c000%d", color[1]);
+	sprintf(col2, "$c00%s%d", (color[2] > 9 ? "" : "0"), color[2]);
+	if(color[2] == 9)
+	{
+		sprintf(col3, "$c0015");
+	}
+	else
+	{
+		sprintf(col3, "$c0009");
+	}
 
 	if(obj)
-    {
-        if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
-        {
-            send_to_char("$c0011La conoscenza ti pervade:\n\r", ch);
-        }
+	{
+		if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)) &&
+			!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)) &&
+			!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor)))
+		{
+			send_to_char("$c0011La conoscenza ti pervade:\n\r", ch);
+		}
 
 		sprintf(buf, "%sOggetto: '%s%s%s', Tipo di Oggetto %s", col1, col2, obj->name, col1, col2);
 		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
 		strcat(buf,buf2);
-		if IS_DIO(ch) {
-            sprintf(buf2," %sV-Number Originario: %s%d", col1, col2, static_cast<int>(obj->char_vnum));
+		if IS_DIO(ch)
+		{
+			sprintf(buf2," %sV-Number Originario: %s%d", col1, col2, static_cast<int>(obj->char_vnum));
 			strcat(buf,buf2);
 		}
 
 		strcat(buf,"\n\r");
 		send_to_char(buf, ch);
 
-		if(obj->obj_flags.bitvector) {
+		if(obj->obj_flags.bitvector)
+		{
 			sprintf(buf, "%sL'oggetto dona le seguenti abilita':  ", col1);
-            send_to_char(buf, ch);
+			send_to_char(buf, ch);
 			sprintbit(static_cast<unsigned>(obj->obj_flags.bitvector),affected_bits,buf2);
-            sprintf(buf, "%s", col2);
-            strcat(buf, buf2);
+			sprintf(buf, "%s", col2);
+			strcat(buf, buf2);
 			strcat(buf,"\n\r");
 			send_to_char(buf, ch);
 		}
 
 		sprintf(buf,"%sL'oggetto e': ", col1);
-        send_to_char(buf, ch);
+		send_to_char(buf, ch);
 		sprintbit2(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,static_cast<unsigned>(obj->obj_flags.extra_flags2),extra_bits2,buf2);
-        sprintf(buf, "%s", col2);
-        strcat(buf, buf2);
+		sprintf(buf, "%s", col2);
+		strcat(buf, buf2);
 		strcat(buf,"\n\r");
 		send_to_char(buf,ch);
 
@@ -2806,24 +2814,27 @@ void spell_identify(byte level, struct char_data* ch,
 		case ITEM_POTION :
 			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
 			send_to_char(buf, ch);
-			if(obj->obj_flags.value[1] >= 1) {
+			if(obj->obj_flags.value[1] >= 1)
+			{
 				sprinttype(obj->obj_flags.value[1]-1,spells,buf2);
-                sprintf(buf, "%s", col2);
-                strcat(buf, buf2);
+				sprintf(buf, "%s", col2);
+				strcat(buf, buf2);
 				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
 			}
-			if(obj->obj_flags.value[2] >= 1) {
+			if(obj->obj_flags.value[2] >= 1)
+			{
 				sprinttype(obj->obj_flags.value[2]-1,spells,buf2);
-                sprintf(buf, "%s", col2);
-                strcat(buf, buf2);
+				sprintf(buf, "%s", col2);
+				strcat(buf, buf2);
 				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
 			}
-			if(obj->obj_flags.value[3] >= 1) {
+			if(obj->obj_flags.value[3] >= 1)
+			{
 				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-                sprintf(buf, "%s", col2);
-                strcat(buf, buf2);
+				sprintf(buf, "%s", col2);
+				strcat(buf, buf2);
 				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
 			}
@@ -2839,11 +2850,12 @@ void spell_identify(byte level, struct char_data* ch,
 			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
 			send_to_char(buf, ch);
 
-			if(obj->obj_flags.value[3] >= 1) {
+			if(obj->obj_flags.value[3] >= 1)
+			{
 				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-                sprintf(buf, "%s", col2);
-                strcat(buf, buf2);
-                strcat(buf,"\n\r");
+				sprintf(buf, "%s", col2);
+				strcat(buf, buf2);
+				strcat(buf,"\n\r");
 				send_to_char(buf, ch);
 			}
 			break;
@@ -2871,64 +2883,75 @@ void spell_identify(byte level, struct char_data* ch,
 		for(i=0; i<MAX_OBJ_AFFECT; i++) {
 			if((obj->affected[i].location != APPLY_NONE) &&
 					(obj->affected[i].modifier != 0) &&
-					//(obj->affected[i].location !=APPLY_AFF2) &&
-					(obj->affected[i].location !=APPLY_SKIP)) {
-				if(!found) {
+					(obj->affected[i].location != APPLY_SPELLPOWER) &&
+					(obj->affected[i].location != APPLY_HITNSP) &&
+					(obj->affected[i].location !=APPLY_SKIP))
+			{
+				if(!found)
+				{
 					sprintf(buf, "%sCaratteristiche: \n\r", col1);
-                    send_to_char(buf, ch);
+					send_to_char(buf, ch);
 					found = TRUE;
 				}
 
 				sprinttype(obj->affected[i].location,apply_types,buf2);
 				sprintf(buf,"    %sTi puo' dare : %s%s%s by ", col1, col2, buf2, col1);
 				send_to_char(buf,ch);
-				switch(obj->affected[i].location) {
-				case APPLY_M_IMMUNE:
-				case APPLY_IMMUNE:
-				case APPLY_SUSC:
-                    sprintf(buf, "%s", col2);
-					sprintbit(obj->affected[i].modifier,immunity_names,buf2);
-                    strcat(buf, buf2);
-                    strcat(buf,"\n\r");
+				switch(obj->affected[i].location)
+				{
+					case APPLY_M_IMMUNE:
+					case APPLY_IMMUNE:
+					case APPLY_SUSC:
+						sprintf(buf, "%s", col2);
+						sprintbit(obj->affected[i].modifier,immunity_names,buf2);
+						strcat(buf, buf2);
+						strcat(buf,"\n\r");
+						break;
+
+					case APPLY_ATTACKS:
+						sprintf(buf,"%s%f\n\r", col2, static_cast<double>(obj->affected[i].modifier / 10));
+						break;
+
+					case APPLY_WEAPON_SPELL:
+					case APPLY_EAT_SPELL:
+						sprintf(buf,"%s%s\n\r", col2, spells[obj->affected[i].modifier-1]);
+						break;
+
+					case APPLY_SPELL:
+						sprintf(buf, "%s", col2);
+						sprintbit(obj->affected[i].modifier,affected_bits, buf2);
+						strcat(buf, buf2);
+						strcat(buf,"\n\r");
+						break;
+
+					case APPLY_AFF2:
+						sprintf(buf, "%s", col2);
+						sprintbit(obj->affected[i].modifier,affected_bits2, buf2);
+						strcat(buf, buf2);
+						strcat(buf,"\n\r");
 					break;
-				case APPLY_ATTACKS:
-					sprintf(buf,"%s%f\n\r", col2, static_cast<double>(obj->affected[i].modifier / 10));
-					break;
-				case APPLY_WEAPON_SPELL:
-				case APPLY_EAT_SPELL:
-					sprintf(buf,"%s%s\n\r", col2, spells[obj->affected[i].modifier-1]);
-					break;
-				case APPLY_SPELL:
-                    sprintf(buf, "%s", col2);
-					sprintbit(obj->affected[i].modifier,affected_bits, buf2);
-                    strcat(buf, buf2);
-                    strcat(buf,"\n\r");
-					break;
-                case APPLY_AFF2:
-                    sprintf(buf, "%s", col2);
-                    sprintbit(obj->affected[i].modifier,affected_bits2, buf2);
-                    strcat(buf, buf2);
-                    strcat(buf,"\n\r");
-                    break;
-				case APPLY_RACE_SLAYER:
-					sprintf(buf, "%s%s\n\r", col2, RaceName[ obj->affected[i].modifier ]);
-					break;
-				case APPLY_ALIGN_SLAYER:
-                    sprintf(buf, "%s", col2);
-					sprintbit(static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits,
-							  buf2);
-                    strcat(buf, buf2);
-                    strcat(buf,"\n\r");
-					break;
-				default:
-					sprintf(buf,"%s%d\n\r", col2, obj->affected[i].modifier);
-					break;
+
+					case APPLY_RACE_SLAYER:
+						sprintf(buf, "%s%s\n\r", col2, RaceName[ obj->affected[i].modifier ]);
+						break;
+
+					case APPLY_ALIGN_SLAYER:
+						sprintf(buf, "%s", col2);
+						sprintbit(static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits, buf2);
+						strcat(buf, buf2);
+						strcat(buf,"\n\r");
+						break;
+
+					default:
+						sprintf(buf,"%s%d\n\r", col2, obj->affected[i].modifier);
+						break;
 				}
 				send_to_char(buf, ch);
 			}
 		}
 	}
-	else {
+	else
+	{
 		/* victim */
 
 		if(!IS_NPC(victim)) {
@@ -2937,7 +2960,7 @@ void spell_identify(byte level, struct char_data* ch,
 			age3(victim, &ma);
 			sprintf(buf,"%s%d%s Anni,  %s%d%s Mesi,  %s%d%s Giorni,  %s%d%s Or%s di vita.\n\r",
 					col2, ma.year, col1, col2, ma.month,
-                    col1, col2, ma.day, col1, col2, ma.hours, col1, (ma.hours > 1 ? "e" : "a"));
+					col1, col2, ma.day, col1, col2, ma.hours, col1, (ma.hours > 1 ? "e" : "a"));
 			send_to_char(buf,ch);
 
 			sprintf(buf,"%sAltezza %s%d%s cm  Peso %s%d%s kg.\n\r",
@@ -2947,7 +2970,8 @@ void spell_identify(byte level, struct char_data* ch,
 			sprintf(buf,"%sClasse Armatura %s%d%s.\n\r", col1, col2, victim->points.armor, col1);
 			send_to_char(buf,ch);
 
-			if(level > 30) {
+			if(level > 30)
+			{
 				sprintf(buf,"%sForza %s%d%s/%s%d%s, Intelligenza %s%d%s, Saggezza %s%d%s, Destrezza %s%d%s, Costituzione %s%d%s, Carisma %s%d%s.\n\r",
 						col1, col2, GET_STR(victim), col1, col2, GET_ADD(victim),
 						col1, col2, GET_INT(victim),
@@ -2958,15 +2982,20 @@ void spell_identify(byte level, struct char_data* ch,
 				send_to_char(buf,ch);
 			}
 		}
-		else {
+		else
+		{
 			send_to_char("Non scopri nulla di nuovo.\n\r", ch);
 		}
 	}
 
-	if(GetMaxLevel(ch)<LOW_IMMORTAL && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)))
-    {
-		act("Vieni sopraffatt$b da un'ondata di stanchezza.",FALSE,ch,0,0,TO_CHAR);
-		act("$c0008$n$c0008 cade a terra privo di sensi.",FALSE,ch,0,0,TO_ROOM);
+	if(GetMaxLevel(ch)<LOW_IMMORTAL && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent))
+									&& !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)))
+	{
+		if(!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor)))
+		{
+			act("Vieni sopraffatt$b da un'ondata di stanchezza.",FALSE,ch,0,0,TO_CHAR);
+			act("$c0008$n$c0008 cade a terra privo di sensi.",FALSE,ch,0,0,TO_ROOM);
+		}
 		WAIT_STATE(ch,PULSE_VIOLENCE*2); // identify
 		//GET_POS(ch) = POSITION_STUNNED;
 	}
@@ -3361,4 +3390,3 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 }
 
 } // namespace Alarmud
-

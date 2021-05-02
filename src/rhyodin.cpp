@@ -236,7 +236,7 @@ const char* nonecklace[] = {
 };
 
 const char* quest_intro[] = {
-	"'Vuoi conoscere la storia di Rhyodin ? Bene. Devi sapere",
+	"'Vuoi conoscere la storia di Rhyodin? Bene. Devi sapere",
 	"che Rhyodin e' un reame a sudest dell'Alpes Oppidum.",
 	"Un giorno, l'unica grande strada sotterranea che collegava",
 	"il regno con il resto del mondo, fu interrotta da una frana.",
@@ -1817,4 +1817,3 @@ MOBSPECIAL_FUNC(Moribondo) {
 	return FALSE;
 }
 } // namespace Alarmud
-

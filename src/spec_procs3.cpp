@@ -5000,7 +5000,7 @@ OBJSPECIAL_FUNC(thion_loader) {
                     }
                     else if(percent > 70 && percent <= 85)
                     {
-                        r_num = real_object(19692);
+                        r_num = real_object(19690);
                     }
                     else if(percent > 85 && percent <= 100)
                     {
@@ -5485,11 +5485,11 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         send_to_char("\n\r$c0014La Gilda dei Mercenari.... si vergogna di te! Non hai avuto il coraggio di affrontarlo in solitaria.$c0007\n\r", t);
 
                         if(t->followers) {
-                            send_to_char("\n\r$c0014risulta che hai dei followers.$c0007\n\r", t);
+                            send_to_char("\n\r$c0014Non puoi affrontare una sfida con dei seguaci.$c0007\n\r", t);
                         }
 
                         if(t->master) {
-                            send_to_char("\n\r$c0014risulta che hai un master.$c0007\n\r", t);
+                            send_to_char("\n\r$c0014Non puoi affrontare una sfida con quando segui qualcuno.$c0007\n\r", t);
                         }
 
                         return FALSE;
@@ -6062,19 +6062,26 @@ OBJSPECIAL_FUNC(ItemPut) {
 		p=one_argument(p,premio);
 		only_argument(p,sideprocedure);
 		arg=one_argument(arg,obj_name1);
-		if((obj1 = get_obj_in_list_vis(ch, obj_name1, ch->carrying))) {
+		if((obj1 = get_obj_in_list_vis(ch, obj_name1, ch->carrying)))
+		{
 			struct obj_data* obj2=nullptr;
 			char obj_name2[80];
 
 			arg=one_argument(arg,obj_name2);
-			if((GET_OBJ_VNUM(obj1) == iOggetto) && obj2) {
-				if(iTipo == 2) {
-					char buf[80];
-					sprintf(buf,"Complimenti hai vinto %s rune degli eroi.\n\r",premio);
-					send_to_all(buf);
-				}
-				else {
-					send_to_all("ATTENZIONE il tipo di premio implementato e' solo il 2 ovvero in rune.\n\r");
+			if(obj1 && (obj2 = get_obj_in_list_vis(ch, obj_name2, ch->carrying)))
+			{
+				if(GET_OBJ_VNUM(obj2) == iOggetto)
+				{
+					if(iTipo == 2)
+					{
+						char buf[80];
+						sprintf(buf,"Complimenti hai vinto %s rune degli eroi.\n\r",premio);
+						send_to_all(buf);
+					}
+					else
+					{
+						send_to_all("ATTENZIONE il tipo di premio implementato e' solo il 2 ovvero in rune.\n\r");
+					}
 				}
 			}
 		}

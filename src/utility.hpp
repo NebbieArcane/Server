@@ -18,6 +18,7 @@ void mail_to_god(struct char_data* ch, const char* god, const char* message);
 
     // Achievements stuff
 char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
+bool CheckMercyTable(struct char_data* ch, int quest, int amount);
 int CheckMobQuest(int vnumber);
 void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level);
 void CheckQuestFail(struct char_data* ch);
@@ -31,6 +32,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
 int race_achievement(int race);
 void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random);
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class);
+struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
 
 FILE* MakeZoneFile(struct char_data* c, int zone);
 bool CheckPrac(int classe, int id, int liv);
@@ -62,6 +64,7 @@ int check_nomagic(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_soundproof(struct char_data* ch);
 int CountLims(struct obj_data* obj);
+int ContaOggetti(struct obj_data* obj);
 int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
 const char* zonename_by_room(int room);
@@ -200,4 +203,3 @@ T tonumber(std::string source,T fallback) {
 
 } // namespace Alarmud
 #endif
-

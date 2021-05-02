@@ -1118,14 +1118,14 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		GET_POS(ch) = POSITION_STUNNED;
 		WAIT_STATE(ch, 3*PULSE_VIOLENCE);   // creeping
 	}
-    
+
 	af.type      = SPELL_CREEPING_DEATH;
 	af.duration  = 2;
 	af.modifier  = 0;
 	af.location  = 0;
 	af.bitvector = AFF_SILENCE;
 	affect_to_char(ch, &af);
-    
+
     af.type      = SPELL_CREEPING_DEATH;
     af.duration  = 24;
     af.modifier  = 0;
@@ -1312,7 +1312,7 @@ void spell_animal_summon(byte level, struct char_data* ch,
 	af.location  = 0;
 	af.bitvector = 0;
 	affect_to_char(ch, &af);
-    
+
     if(HasClass(ch, CLASS_RANGER) && IS_PC(ch))
     {
         if(IS_POLY(ch))
@@ -1382,7 +1382,7 @@ void spell_elemental_summoning(byte level, struct char_data* ch,
             act("$n esegue uno strano rituale.", TRUE, ch, 0, 0, TO_ROOM);
             act("Esegui il rituale dell'evocazione.", TRUE, ch, 0, 0, TO_CHAR);
     }
-	
+
 
 	char_to_room(mob, ch->in_room);
 	RelateMobToCaster(ch, mob);
@@ -1448,6 +1448,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 	struct descriptor_data* d;
 	FILE* fl,*fdeath;
 	char szFileName[ 40 ];
+	extern void load_char_extra(struct char_data* ch);
 
 	if(!obj) {
 		return;
@@ -1558,6 +1559,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			store_to_char(&st, newch);
 
 			reset_char(newch);
+			load_char_extra(newch);
 
 			newch->next = character_list;
 			character_list = newch;
@@ -1616,7 +1618,7 @@ void spell_charm_veggie(byte level, struct char_data* ch,
 		send_to_char("Puoi farlo solo sulle $c0010piante$c0007!\n\r", ch);
 		return;
 	}
-    
+
     if(IS_NPC(victim) && (mob_index[victim->nr].iVNum >= QUEST_ZONE && mob_index[victim->nr].iVNum <= QUEST_ZONE+99))
     {
         act("$N non vuole seguire nessuno!", TRUE, ch, 0, victim, TO_CHAR);
@@ -1754,6 +1756,7 @@ void spell_veggie_growth(byte level, struct char_data* ch,
 void spell_tree(byte level, struct char_data* ch,
 				struct char_data* victim, struct obj_data* obj) {
 	struct char_data* mob;
+	struct affected_type af;
 	int mobn;
 
 
@@ -1776,6 +1779,15 @@ void spell_tree(byte level, struct char_data* ch,
 	if(level > 48) {
 		mobn++;
 	}
+
+	af.type      = SPELL_TREE;
+	af.duration  = static_cast <int>(GetMaxLevel(ch) / 3) + (IS_PRINCE(ch) ? 3 : 0);
+	af.modifier  = 0;
+	af.location  = APPLY_NONE;
+	af.bitvector = 0;
+
+	affect_to_char(ch, &af);
+
 	mob = read_mobile(mobn, VIRTUAL);
 	if(mob) {
 		spell_poly_self(level, ch, mob, 0);
@@ -1909,7 +1921,7 @@ void spell_animal_friendship(byte level, struct char_data* ch,
 		send_to_char("Puoi farlo solo su animali di allineamento $c0010neutrale$c0007.\n\r", ch);
 		return;
 	}
-    
+
     if(HasClass(ch, CLASS_RANGER) && IS_EVIL(victim) && !IS_IMMORTALE(ch)) {
         send_to_char("Non puoi farlo su animali di allineamento $c0009malvagio$c0007.\n\r", ch);
         return;
@@ -2528,7 +2540,7 @@ void spell_find_traps(byte level, struct char_data* ch,
 	}
 
     send_to_char("Inizi a percepire le trappole!\n\r", ch);
-    
+
 	af.type =      SPELL_FIND_TRAPS;
 	af.duration  = level;
 	af.modifier  = 50+level;
@@ -2662,7 +2674,7 @@ void spell_portal(byte level, struct char_data* ch,
 		send_to_char("L'incantesimo non riesce.\n\r", ch);
 		return;
 	}
-    
+
 	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("Un'$c0008oscura magia$c0007 blocca il tuo incantesimo.\n\r", ch);
 		return;
@@ -2678,7 +2690,7 @@ void spell_portal(byte level, struct char_data* ch,
 		send_to_char("Non c'e' nulla di simile in giro.\n", ch);
 		return;
 	}
-    
+
     if(!IS_PC(tmp_ch) && affected_by_spell(tmp_ch,STATUS_QUEST)) {
         act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
         return;
@@ -2778,7 +2790,7 @@ void spell_mount(byte level, struct char_data* ch,
         send_to_char("Stai gia' cavalcando qualcosa!\n\r", ch);
         return;
     }
-    
+
 	/* create a ridable mount, and automatically mount said creature */
 
 	mnr = MOUNT_ONE;
@@ -2809,15 +2821,15 @@ void spell_mount(byte level, struct char_data* ch,
 	if(m) {
 		char_to_room(m, ch->in_room);
 		act("Con un $c0011lampo di luce$c0007, $N appare.", FALSE, ch, 0, m, TO_CHAR);
-		act("Con un $c0011lampo di luce$c0007, $N appare, e $n gli salta in groppa.", FALSE,
+		act("Con un $c0011lampo di luce$c0007, $N appare, e $n $D salta in groppa.", FALSE,
 			ch, 0, m, TO_ROOM);
-		send_to_char("Salti in groppa alla tua cavalcatura.\n\r", ch);
+		send_to_char("Salti sulla groppa della tua cavalcatura.\n\r", ch);
 		MOUNTED(ch) = m;
 		RIDDEN(m) = ch;
 		GET_POS(ch) = POSITION_MOUNTED;
 	}
 	else {
-		send_to_char("Qualcosa e' andato storto, contatta un immportale.\n\r", ch);
+		send_to_char("Qualcosa e' andato storto, contatta un immortale.\n\r", ch);
 		return;
 	}
 }
@@ -2833,7 +2845,7 @@ void spell_dragon_ride(byte level, struct char_data* ch,
 
     act("Un $c0015fascio$c0007 di $c0015luce$c0007 intensa ti investe, i suoi occhi $c0015brillano$c0007 per un istante... ora assomigliano a quelli di un $c0003drago$c0007!", FALSE, ch, 0, 0, TO_CHAR);
     act("Un $c0015fascio$c0007 di $c0015luce$c0007 intensa investe $n, i suoi occhi $c0015brillano$c0007 per un istante... ora assomigliano a quelli di un $c0003drago$c0007.", FALSE, ch, 0, 0, TO_ROOM);
-    
+
 	af.type = SPELL_DRAGON_RIDE;
 	af.duration = level;
 	af.modifier  = 0;
@@ -2843,4 +2855,3 @@ void spell_dragon_ride(byte level, struct char_data* ch,
 }
 
 } // namespace Alarmud
-

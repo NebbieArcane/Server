@@ -792,7 +792,7 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
             RemColorString(buffer2);
             CAP(buffer2);
         }
-        
+
 		if(IS_AFFECTED(i, AFF_SANCTUARY))
         {
 			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
@@ -1233,7 +1233,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
             RemColorString(buffer2);
             CAP(buffer2);
         }
-        
+
         if(IS_AFFECTED(i, AFF_SANCTUARY))
         {
             if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
@@ -1244,7 +1244,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
                 act(buffer, FALSE, i, 0, ch, TO_VICT);
             }
         }
-        
+
         if(IS_AFFECTED(i, AFF_GROWTH))
         {
             sprintf(buffer,"$c0003");
@@ -1252,7 +1252,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
             strcat(buffer, " e' enorme!");
             act(buffer, FALSE, i, 0, ch, TO_VICT);
         }
-        
+
         if(IS_AFFECTED(i, AFF_FIRESHIELD))
         {
             if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
@@ -1263,7 +1263,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
                 act(buffer, FALSE, i, 0, ch, TO_VICT);
             }
         }
-        
+
         if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
         {
             sprintf(buffer,"$c0008");
@@ -1271,7 +1271,7 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
             strcat(buffer, " e' avvolt$b nell'oscurita'!");
             act(buffer, FALSE, i, 0, ch, TO_VICT);
         }
-        
+
 	}
 	else if(mode == 1) {
 		if(i->player.description) {
@@ -2655,7 +2655,7 @@ ACTION_FUNC(do_achievements)
                         }
                     }
                 }
-                
+
                 if(!trovato)
                 {
                     send_to_char("Quell'achievement esiste solo nella tua fantasia...\n\r", ch);
@@ -3981,9 +3981,20 @@ ACTION_FUNC(do_score) {
 	/* Drow fight -4 in lighted rooms! */
 	if(!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
 			!affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
-		snprintf(buf,999,"$c0011La luce nell'area ti da molto dolore$c0009!");
+		snprintf(buf,999,"$c0011La luce nell'area ti provoca molto dolore$c0009!");
 		act(buf,FALSE,ch,0,0,TO_CHAR);
 	}
+
+	snprintf(buf,999,	"$c0005I tuoi set sono: "
+						"$c0015Achie$c0005($c0015%s$c0005) $c0015Ansi$c0005($c0015%s$c0005) $c0015Autoexits$c0005($c0015%s$c0005) "
+						"$c0015Pwp$c0005($c0015%s$c0005) $c0015Warnings$c0005($c0015%s$c0005) $c0015Who$c0005($c0015%s$c0005)",
+						IS_SET(ch->player.user_flags, ACHIE_MODE) ? "on" : "off",
+						IS_SET(ch->player.user_flags, USE_ANSI) ? "on" : "off",
+						IS_SET(ch->player.user_flags, SHOW_EXITS) ? "on" : "off",
+						IS_SET(ch->player.user_flags, PWP_MODE) ? "on" : "off",
+						IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF) ? "off" : "on",
+						IS_SET(ch->player.user_flags, SHOW_CLASSES) ? "on" : "off");
+	act(buf, FALSE, ch, 0, 0, TO_CHAR);
 
 	snprintf(buf,999,"$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015%d ",
 			 GET_RUNEDEI(ch));
@@ -3994,7 +4005,7 @@ ACTION_FUNC(do_score) {
 		act("$c0009Sei mort$b!",FALSE, ch,0,0,TO_CHAR);
 		break;
 	case POSITION_MORTALLYW :
-		act("$c0009Sei ferit$b a morte e dovresti cercare aiuto !", FALSE, ch,
+		act("$c0009Sei ferit$b a morte e dovresti cercare aiuto!", FALSE, ch,
 			0,0,TO_CHAR);
 		break;
 	case POSITION_INCAP :
@@ -4925,38 +4936,44 @@ void do_where_person(struct char_data* ch, struct char_data* person,
 
 void do_where_object(struct char_data* ch, struct obj_data* obj,
 					 int recurse, struct string_block* sb) {
-	char buf[MAX_STRING_LENGTH];
+	char buf[MAX_STRING_LENGTH], short_desc[256];
+	int diff;
+
+	diff	= strlen(obj->short_description) - strlen(ParseAnsiColors(0, obj->short_description));
+	sprintf(buf, "%%-%ds", diff + 55);
+	sprintf(short_desc, buf, obj->short_description);
+
 	if(obj->in_room != NOWHERE) {
 		/* object in a room */
 		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%-40s- %s [%d]\n\r",
-				 obj->short_description,
+				 "%s- %s [%d]\n\r",
+				 short_desc,
 				 real_roomp(obj->in_room)->name,
 				 obj->in_room);
 	}
 	else if(obj->carried_by != NULL) {
 		/* object carried by monster */
 		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%-40s- trasportato da %s\n\r",
-				 obj->short_description,
+				 "%s- trasportato da %s\n\r",
+				 short_desc,
 				 numbered_person(ch, obj->carried_by));
 	}
 	else if(obj->equipped_by != NULL) {
 		/* object equipped by monster */
 		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%-40s- usato da %s\n\r",
-				 obj->short_description,
+				 "%s- usato da %s\n\r",
+				 short_desc,
 				 numbered_person(ch, obj->equipped_by));
 	}
 	else if(obj->in_obj) {
 		/* object in object */
-		snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- in %s\n\r",
-				 obj->short_description,
+		snprintf(buf, MAX_STRING_LENGTH-1,"%s- in %s\n\r",
+				 short_desc,
 				 numbered_object(ch, obj->in_obj));
 	}
 	else {
-		snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- Nemmeno Dio sa dove...\n\r",
-				 obj->short_description);
+		snprintf(buf, MAX_STRING_LENGTH-1,"%s- Nemmeno Dio sa dove...\n\r",
+				 short_desc);
 	}
 	if(*buf) {
 		append_to_string_block(sb, buf);
@@ -4978,6 +4995,97 @@ void do_where_object(struct char_data* ch, struct obj_data* obj,
 	}
 }
 
+void owhere(struct char_data* ch, char* nome)
+{
+	char name [MAX_STRING_LENGTH], buf[MAX_STRING_LENGTH];
+//    register struct char_data* i;
+	register struct obj_data* k;
+//    struct descriptor_data* d;
+	int        number = 0, count = 0;
+	struct string_block        sb;
+ //   string sb_rent_pg;
+
+	only_argument(nome, name);
+
+	int N_oggetto = atoi(name);
+
+	init_string_block(&sb);
+
+	if(!is_number(name))
+	{
+		for(k = object_list; k; k = k->next)
+		{
+			if(isname(name, k->name) && CAN_SEE_OBJ(ch, k))
+			{
+				if(number==0 || (--count)==0)
+				{
+					if(number==0)
+					{
+						snprintf(buf, MAX_STRING_LENGTH-1,"[%3d] ", ++count);
+						append_to_string_block(&sb, buf);
+					}
+					do_where_object(ch, k, number!=0, &sb);
+					*buf = 1;
+					if(number!=0)
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	count++;
+	bool found = FALSE;
+	struct stringa_valore sb_count;
+	if(N_oggetto < 1)
+	{
+		for(number = 0; number < top_of_objt; number++)
+		{
+			if(isname(name, obj_index[number].name))
+			{
+				sb_count = find_obj(ch, obj_index[number].iVNum, count++);
+				found = TRUE;
+				append_to_string_block(&sb, sb_count.sb.c_str());
+				count = sb_count.conteggio;
+			}
+		}
+		if(number >= top_of_objt)
+		{
+			number = -1;
+		}
+	}
+
+	if((number < 0 || number >= top_of_objt) && !*sb.data)
+	{
+		send_to_char("Non trovo niente del genere da nessuna parte.\n\r", ch);
+	}
+	else
+	{
+		if(N_oggetto > 0 && N_oggetto < 99999)
+		{
+			sb_count = find_obj(ch, N_oggetto, count++);
+			found = TRUE;
+			append_to_string_block(&sb, sb_count.sb.c_str());
+			count = sb_count.conteggio;
+		}
+
+		if(!*sb.data)
+		{
+			send_to_char("Non trovo niente del genere da nessuna parte.\n\r", ch);
+		}
+		else if(!found)
+		{
+			append_to_string_block(&sb,"Non trovo niente del genere nei personaggi rentati.\n\r");
+		}
+		else
+		{
+			page_string_block(&sb, ch);
+		}
+	}
+	destroy_string_block(&sb);
+}
+
 ACTION_FUNC(do_where) {
 	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
 	char*        nameonly;
@@ -4986,12 +5094,31 @@ ACTION_FUNC(do_where) {
 	struct descriptor_data* d;
 	int        number, count;
 	struct string_block        sb;
+	char tipo[10];
+	const char* copia;
 
+	copia = arg;
 	only_argument(arg, name);
+
+	copia = one_argument(copia, tipo);
+	if(!strcmp(tipo, "obj") && IS_DIO(ch))
+	{
+		only_argument(copia, name);
+		if(is_number(name))
+		{
+			mudlog(LOG_PLAYERS, "Looking for object #%s on rented toon", name);
+		}
+		else
+		{
+			mudlog(LOG_PLAYERS, "Looking for '%s' in game and on rented toon", name);
+		}
+		owhere(ch, name);
+		return;
+	}
 
 	if(!*name) {
 		if(GetMaxLevel(ch) < DIO) {
-			send_to_char("Cosa stai cercando ?\n\r", ch);
+			send_to_char("Cosa stai cercando?\n\r", ch);
 		}
 		else {
 			init_string_block(&sb);
@@ -5004,14 +5131,14 @@ ACTION_FUNC(do_where) {
 						CAN_SEE(ch, d->character)) {
 					if(d->original)    /* If switched */
 						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "%-20s - %s [%d] Nel corpo di %s\n\r",
+								 "%-20s - %s [%3d] Nel corpo di %s\n\r",
 								 d->original->player.name,
 								 real_roomp(d->character->in_room)->name,
 								 d->character->in_room,
 								 fname(d->character->player.name));
 					else
 						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "%-20s - %s [%d]\n\r",
+								 "%-20s - %s [%3d]\n\r",
 								 d->character->player.name,
 								 real_roomp(d->character->in_room)->name,
 								 d->character->in_room);
@@ -5039,19 +5166,19 @@ ACTION_FUNC(do_where) {
 
 	for(i = character_list; i; i = i->next) {
 		if(isname(name, i->player.name) && CAN_SEE(ch, i)) {
-            
-            if(!IS_PC(i) && affected_by_spell(i,STATUS_QUEST) && GetMaxLevel(ch) < IMMORTALE) {
-                act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
-                break;
-            }
-            
+
+			if(!IS_PC(i) && affected_by_spell(i,STATUS_QUEST) && GetMaxLevel(ch) < IMMORTALE) {
+				act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
+				break;
+			}
+
 			if((i->in_room != NOWHERE) &&
 					((GetMaxLevel(ch)>=IMMORTALE) || (real_roomp(i->in_room)->zone ==
 							real_roomp(ch->in_room)->zone))) {
 				if(number==0 || (--count) == 0) {
 					if(number==0) {
 						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "[%2d] ", ++count); /* I love short circuiting :) */
+								 "[%3d] ", ++count); /* I love short circuiting :) */
 						append_to_string_block(&sb, buf);
 					}
 					do_where_person(ch, i, &sb);
@@ -5073,7 +5200,7 @@ ACTION_FUNC(do_where) {
 			if(isname(name, k->name) && CAN_SEE_OBJ(ch, k)) {
 				if(number==0 || (--count)==0) {
 					if(number==0) {
-						snprintf(buf, MAX_STRING_LENGTH-1,"[%2d] ", ++count);
+						snprintf(buf, MAX_STRING_LENGTH-1,"[%3d] ", ++count);
 						append_to_string_block(&sb, buf);
 					}
 					do_where_object(ch, k, number!=0, &sb);
@@ -6737,4 +6864,3 @@ struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf,
 	return NULL;
 }
 } // namespace Alarmud
-
