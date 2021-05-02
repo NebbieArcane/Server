@@ -4391,8 +4391,11 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
     if(valore <= 0 && IS_SET(ch->player.user_flags, ACHIE_MODE))
     {
-        sb.append(AchievementNumber(ch, achievement_type, achievement_class));
-        page_string(ch->desc, sb.c_str(), true);
+        if(ch->specials.achievements[achievement_class][achievement_type] <= MaxValueAchievement(achievement_class, achievement_type, AchievementsList[achievement_class][achievement_type].n_livelli))
+        {
+            sb.append(AchievementNumber(ch, achievement_type, achievement_class));
+            page_string(ch->desc, sb.c_str(), true);
+        }
     }
 }
 
