@@ -4303,7 +4303,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
     }
 
-    if(valore > 0)
+    if(valore > 0 && amount > 0)
     {
         int reward;
 
