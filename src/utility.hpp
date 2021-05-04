@@ -31,7 +31,7 @@ bool hasAchievement(struct char_data* ch, int achievement_class, int display);
 std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check);
 int race_achievement(int race);
 void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random);
-void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class);
+void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount = 1);
 struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
 
 FILE* MakeZoneFile(struct char_data* c, int zone);

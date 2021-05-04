@@ -104,7 +104,7 @@ ACTION_FUNC(do_guard) {
 ACTION_FUNC(do_junk) {
 	char tmp[100], buf[100], newarg[100];
 	struct obj_data* tmp_object;
-	int num, p, count, value=0,value2=0;
+	int num, p, count, value = 0, value2 = 0;
 
 	/*
 	 *   get object name & verify
@@ -200,24 +200,34 @@ ACTION_FUNC(do_junk) {
 			FALSE, ch, 0, 0, TO_CHAR);
 		gain_exp(ch, (value2*number(10,30))/10);
 
-    // Junk Achievement
-        if(IS_POLY(ch))
-        {
-            ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
-            if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
-            {
-                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
-            }
-        }
-        else
-        {
-            ch->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
-            if(!IS_SET(ch->specials.act,PLR_ACHIE))
-            {
-                SET_BIT(ch->specials.act, PLR_ACHIE);
-            }
-        }
-        CheckAchie(ch, ACHIE_JUNK, OTHER_ACHIE);
+		p = count;
+	// Junk Achievement
+		while(count > 0)
+		{
+			if(IS_POLY(ch))
+			{
+				ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
+				if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+				{
+					SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+				}
+			}
+			else
+			{
+				ch->specials.achievements[OTHER_ACHIE][ACHIE_JUNK] += 1;
+				if(!IS_SET(ch->specials.act,PLR_ACHIE))
+				{
+					SET_BIT(ch->specials.act, PLR_ACHIE);
+				}
+			}
+			CheckAchie(ch, ACHIE_JUNK, OTHER_ACHIE, p);
+
+			count--;
+		}
+		if(p > 1)
+		{
+			CheckAchie(ch, ACHIE_JUNK, OTHER_ACHIE, -1);
+		}
 	}
 	return;
 }
