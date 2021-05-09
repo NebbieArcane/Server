@@ -4068,7 +4068,7 @@ ACTION_FUNC(do_time) {
 
 	day = time_info.day + 1;   /* day in [1..35] */
 
-	snprintf(buf, 99,"Il %d^ giorno del %s, nell'anno %d.\n\r",
+	snprintf(buf, 99,"%d^ giorno del %s, nell'anno %d.\n\r",
 			 day,
 			 month_name[(int)time_info.month ],
 			 time_info.year);

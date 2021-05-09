@@ -5584,12 +5584,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Scarpe? A cosa servono?",								300,
 			"Un piccolo mondo!",									1000,
 			"Signore dei Portali",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Stargate",												50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_MAGIC_USER,										LEV_BEGINNER,								5
+			CLASS_MAGIC_USER,										LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_MAGE_2,											"raggio disintegrante lanciato",			"raggi disintegranti lanciati",
@@ -5598,12 +5598,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Sei sicuro di volermi provocare?",						300,
 			"Nemico? Quale nemico?",								1000,
 			"Disintegratore",										10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Cannone al plasma!",									50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_MAGIC_USER,										LEV_VERY_EASY,								5
+			CLASS_MAGIC_USER,										LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_MAGE_3,											"incantesimo di invisibilita' lanciato",	"incantesimi di invisibilita' lanciati",
@@ -5612,12 +5612,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Ti giuro che non ci sono!",							300,
 			"Sono dietro di te",									1000,
 			"Mr. Nessuno",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Dicono che sia esistito ma nessuno l'ha mai visto",	50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_MAGIC_USER,										LEV_VERY_EASY,								5
+			CLASS_MAGIC_USER,										LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_CLERIC_1,											"incantesimo di guarigione lanciato",		"incantesimi di guarigione lanciati",
@@ -5626,12 +5626,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Vai sereno tank!",										300,
 			"Chi trova un chierico trova un tesoro",				1000,
 			"Lasciatemi passare, sono IL medico!",					10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Con la sola imposizione delle mani...",				50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_CLERIC,											LEV_BEGINNER,								5
+			CLASS_CLERIC,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_CLERIC_2,											"resurrezione fatta",						"resurrezioni fatte",
@@ -5640,12 +5640,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Morte non ti temo",									300,
 			"Immortalis",											1000,
 			"Nemesi di Thanatos",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Arcangelo!",											50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_CLERIC,											LEV_HARD,									5
+			CLASS_CLERIC,											LEV_HARD,									6
 		},
 		{
 			ACHIE_CLERIC_3,											"incantesimo di santuario lanciato",		"incantesimi di santuario lanciati",
@@ -5654,12 +5654,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Inserisco la spina",									300,
 			"Ti copro io, tranquillo!",								1000,
 			"Portatore di Luce",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Vi illumino di immenso",								50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_CLERIC,											LEV_BEGINNER,								5
+			CLASS_CLERIC,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_WARRIOR_1,										"avversario buttato a terra",				"avversari buttati a terra",
@@ -5668,12 +5668,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Bullo",												300,
 			"Bulldozer",											1000,
 			"Demolitore",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Schiacciasassi",										50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_WARRIOR,											LEV_BEGINNER,								5
+			CLASS_WARRIOR,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_WARRIOR_2,										"atterramento fallito",						"atterramenti falliti",
@@ -5682,12 +5682,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Ubriacone",											300,
 			"Maldestro",											1000,
 			"Il guerriero non e' il mio mestiere",					10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Goofy!",												50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_WARRIOR,											LEV_BEGINNER,								5
+			CLASS_WARRIOR,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_WARRIOR_3,										"compagno salvato",							"compagni salvati",
@@ -5696,12 +5696,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Impiccione",											300,
 			"Salva donzelle",										1000,
 			"Risolvi problemi",										10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Darei la vita per i miei compagni",					50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_WARRIOR,											LEV_EASY,									5
+			CLASS_WARRIOR,											LEV_EASY,									6
 		},
 		{
 			ACHIE_THIEF_1,											"avversario pugnalato alle spalle",			"avversari pugnalati alle spalle",
@@ -5710,12 +5710,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Toh, un puntaspilli",									300,
 			"Non darmi mai le spalle",								1000,
 			"Punitore",												10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Approfittatore",										50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_THIEF,											LEV_BEGINNER,								5
+			CLASS_THIEF,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_THIEF_2,											"avversario ucciso con un colpo",			"avversari uccisi con un colpo",
@@ -5724,12 +5724,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Ne uccide piu' lo stab della spada",					300,
 			"Fratello morte",										1000,
 			"Assassino",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Natural Born Killer",									50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_THIEF,											LEV_VERY_EASY,								5
+			CLASS_THIEF,											LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_THIEF_3,											"avversario derubato",						"avversari derubati",
@@ -5738,12 +5738,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Robin Hood!",											300,
 			"Me lo hai dato tu, giuro!",							1000,
 			"Lupin III",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Rubo ai ricchi... per arricchirmi",					50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_THIEF,											LEV_NORMAL,									5
+			CLASS_THIEF,											LEV_NORMAL,									6
 		},
 		{
 			ACHIE_DRUID_1,											"massa di insetti evocata",					"masse di insetti evocate",
@@ -5752,12 +5752,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Forse non c'e' bisogno di entrare...",					300,
 			"Sta a vedere!",										1000,
 			"Morte Strisciante",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Signore delle mosche",									50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_DRUID,											LEV_NORMAL,									5
+			CLASS_DRUID,											LEV_NORMAL,									6
 		},
 		{
 			ACHIE_DRUID_2,											"metamorfosi riuscita",						"metamorfosi riuscite",
@@ -5766,12 +5766,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Ci vorrebbe la forza di un orso!",						300,
 			"Sei sicuro fossi io?",									1000,
 			"Doppleganger",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Philip Dick ero io...",								50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_DRUID,											LEV_EASY,									5
+			CLASS_DRUID,											LEV_EASY,									6
 		},
 		{
 			ACHIE_DRUID_3,											"reincarnazione fatta",						"reincarnazioni fatte",
@@ -5780,12 +5780,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Conosci la fiaba del principe ranocchio?",				300,
 			"Vorresti essere qualcun altro, vero?",					1000,
 			"Maestro Manipolatore",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Il limite e' solo la mente...",						50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_DRUID,											LEV_HARD,									5
+			CLASS_DRUID,											LEV_HARD,									6
 		},
 		{
 			ACHIE_MONK_1,											"avversario disarmato",						"avversari disarmati",
@@ -5794,12 +5794,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Vuoi vedere che tela faccio volare?",					300,
 			"Arma? Quale arma?",									1000,
 			"Io e te, senza armi, ora, qui!",						10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Quello e' un coltello? Quest... ah no",				50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_MONK,												LEV_BEGINNER,								5
+			CLASS_MONK,												LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_MONK_2,											"palmo vibrante",							"palmi vibranti",
@@ -5808,12 +5808,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"One Inch Punch",										300,
 			"Ti spiezzo con un dito",								1000,
 			"Nirvana",												10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Potrei ucciderti usando solo questo pollice",			50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_MONK,												LEV_HARD,									5
+			CLASS_MONK,												LEV_HARD,									6
 		},
 		{
 			ACHIE_MONK_3,											"nemico accecato",							"nemici accecati",
@@ -5822,12 +5822,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Aspetta, hai qualcosa nell'occhio!",					300,
 			"Guarda qui e sorridi",									1000,
 			"Tu, non puoi, vedermi!",								10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Hey, ma lo sai che hai dei begl'occhi?",				50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_MONK,												LEV_VERY_EASY,								5
+			CLASS_MONK,												LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_BARBARIAN_1,										"volta in berserk",							"volte in berserk",
@@ -5836,12 +5836,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Statemi lontano adesso",								300,
 			"Prova a ripeterlo, se hai il coraggio!",				1000,
 			"Furia Rossa",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Conan sono io!",										50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_BARBARIAN,										LEV_BEGINNER,								5
+			CLASS_BARBARIAN,										LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_BARBARIAN_2,										"pugnalata alle spalle evitata",			"pugnalate alle spalle evitate",
@@ -5850,12 +5850,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Ne sei proprio sicuro?",								300,
 			"Cosa pensavi di fare?",								1000,
 			"Occhi di Beholder",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Pensi che sia nato ieri?",								50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_BARBARIAN,										LEV_EASY,									5
+			CLASS_BARBARIAN,										LEV_EASY,									6
 		},
 		{
 			ACHIE_BARBARIAN_3,										"medicazione effettuata",					"medicazioni effettuate",
@@ -5864,12 +5864,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Dammi un pezzo della tua maglia!",						300,
 			"E' solo un graffio...",								1000,
 			"Maestro Sciamano",										10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Ho insegnato io a Candy Candy come si benda",			50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_BARBARIAN,										LEV_VERY_EASY,								5
+			CLASS_BARBARIAN,										LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_SORCERER_1,										"portale fatto",							"portali fatti",
@@ -5878,12 +5878,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Scarpe? A cosa servono?",								300,
 			"Un piccolo mondo!",									1000,
 			"Signore dei Portali",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Stargate",												50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_SORCERER,											LEV_BEGINNER,								5
+			CLASS_SORCERER,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_SORCERER_2,										"raggio disintegrante lanciato",			"raggi disintegranti lanciati",
@@ -5892,12 +5892,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Sei sicuro di volermi provocare?",						300,
 			"Nemico? Quale nemico?",								1000,
 			"Disintegratore",										10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Cannone al plasma!",									50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_SORCERER,											LEV_VERY_EASY,								5
+			CLASS_SORCERER,											LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_SORCERER_3,										"incantesimo di invisibilita' lanciato",	"incantesimi di invisibilita' lanciati",
@@ -5906,12 +5906,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Ti giuro che non ci sono!",							300,
 			"Sono dietro di te",									1000,
 			"Mr. Nessuno",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Dicono che sia esistito ma nessuno l'ha mai visto",	50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_SORCERER,											LEV_VERY_EASY,								5
+			CLASS_SORCERER,											LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_PALADIN_1,										"benedizione invocata",						"benedizioni invocate",
@@ -5920,12 +5920,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Gli Dei sono dalla mia parte",							300,
 			"Sono il prescelto!",									1000,
 			"L'Eletto",												10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Io sono Leggenda",										50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_PALADIN,											LEV_EASY,									5
+			CLASS_PALADIN,											LEV_EASY,									6
 		},
 		{
 			ACHIE_PALADIN_2,										"grido di guerra lanciato",					"grida di guerra lanciati",
@@ -5934,12 +5934,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Huj, Huj, Hajra'",										300,
 			"Forse ho esagerato con la birra",						1000,
 			"Furia di Guerra",										10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Non e' il ruggito di un drago quello?",				50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_PALADIN,											LEV_VERY_EASY,								5
+			CLASS_PALADIN,											LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_PALADIN_3,										"consacrazione",							"consacrazioni",
@@ -5948,12 +5948,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Serve un massaggio?",									300,
 			"Non ti muovere e fatti toccare!",						1000,
 			"Io porto la Luce nel Mondo",							10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Tu fidati, io ti tocchero' soltato... nell'anima!",	50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_PALADIN,											LEV_EASY,									5
+			CLASS_PALADIN,											LEV_EASY,									6
 		},
 		{
 			ACHIE_RANGER_1,											"pelle ottenuta scuoiando",					"pelli ottenute scuoiando",
@@ -5962,12 +5962,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Dammi una lama e ti concio per le feste!",				300,
 			"Faccio solo capolavori",								1000,
 			"Mastro Conciatore",									10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Gran maestro delle pelli",								50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_RANGER,											LEV_VERY_EASY,								5
+			CLASS_RANGER,											LEV_VERY_EASY,								6
 		},
 		{
 			ACHIE_RANGER_2,											"evocazione di animali",					"evocazioni di animali",
@@ -5976,12 +5976,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Il ranger che sussurrava ai cavalli",					300,
 			"Lasciate che gli animali vengano da me",				1000,
 			"Animal Man",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"San Francesco scansati",								50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_RANGER,											LEV_NORMAL,									5
+			CLASS_RANGER,											LEV_NORMAL,									6
 		},
 		{
 			ACHIE_RANGER_3,											"razione ottenuta",							"razioni ottenute",
@@ -5990,12 +5990,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Facciamo una o due bistecche, siora?",					300,
 			"Ora ti faccio vedere come ricavarne delle bistecche",	1000,
 			"Mastro Macellaio",										10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Non spreco nemmeno un grammo",							50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_RANGER,											LEV_BEGINNER,								5
+			CLASS_RANGER,											LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_PSI_1,											"porta dimensionale aperta",				"porte dimensionali aperte",
@@ -6004,12 +6004,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Basta pensarlo e sei li'!",							300,
 			"A cosa servono i maghi se hai uno psi?",				1000,
 			"Il Mondo nelle Mie Mani",								10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Beam me up!",											50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_PSI,												LEV_BEGINNER,								5
+			CLASS_PSI,												LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_PSI_2,											"cervello spappolato",						"cervelli spappolati",
@@ -6018,12 +6018,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"E' un cervello od un uovo?",							300,
 			"Master Blaster",										1000,
 			"Mind Melter",											10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Sono nella tua mente... paura?",						50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_PSI,												LEV_BEGINNER,								5
+			CLASS_PSI,												LEV_BEGINNER,								6
 		},
 		{
 			ACHIE_PSI_3,											"scarica adrenalinica",						"scariche adrenaliniche",
@@ -6032,12 +6032,12 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Meglio di una benedizione, vero?",						300,
 			"Ho solo roba buona, io!",								1000,
 			"Signore dei Cartelli Nebbiosi",						10000,
-			"",	/* lvl6 */											0,	//	lvl6_val
+			"Pablo Escobar",										50000,
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
-			CLASS_PSI,												LEV_VERY_EASY,								5
+			CLASS_PSI,												LEV_VERY_EASY,								6
 		}
 	},
 

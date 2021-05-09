@@ -8,7 +8,7 @@ E' possibile avere personaggi che appartengono a piu' classi.
 I Multiclasse hanno pero' una serie di svantaggi:
 1) Gli xp vengono considerati ''per classe''. Un triclasse deve quindi
 fare il triplo di xp di un singola classe
-2) Per i caster, il livello a cui si impara una spell e' piu' alto di quello 
+2) Per i caster, il livello a cui si impara una spell e' piu' alto di quello
 reale
 Esempio:
 mu/wa (dual class) al 50 puo' imparare le spell del 49
@@ -110,7 +110,7 @@ dal livello e dall'agilita'.
 #
 PUKE
 
-Con questo comando  vomiti. Puo' capitare a volte di essere troppo sazi per 
+Con questo comando  vomiti. Puo' capitare a volte di essere troppo sazi per
 mangiare o bere ancora, ed essere quindi impossibilitati ad usare pozioni o
 altro.
 Vomitando ritorni sobrio e diventi  affamato e assetato.
@@ -157,8 +157,8 @@ seconda e' una mappa generale di Nebbie Arcane.
     /           /        /                  6 - Fuori dalle Porte di Myst
    [A]     [F] [Z]  [H] [T]                 7 - il Crocevia
     /       | /      |   /                  8 - Piazzetta del Municipio
-   [A]-[A]-[Y]------[2]-[J]-[D]             A - Zona dei Principi 
-            |        |                      B - Accampamento Barbari(gilda) 
+   [A]-[A]-[Y]------[2]-[J]-[D]             A - Zona dei Principi
+            |        |                      B - Accampamento Barbari(gilda)
            [U]       |                      C - la Chiesa(gilda chierici)
                      |                      D - Stanza delle Donazioni
     [G] [M] [P]      |  [V] [N]    [E]      E - il Laboratorio dell'Alchimista
@@ -193,12 +193,12 @@ dell'ovest           |          dell'est    Y - Ingresso della Locanda
 
 #
 "MAPPA NEBBIE ARCANE"
-                                        
-                                 Artica   Apocalisse 
+
+                                 Artica   Apocalisse
                                    |       |             Palude
                                    | -------                |
                                    |                     Gypsy
-                                   |            Nani   
+                                   |            Nani
                            Brea- - |              |        |
                                    |             -----------
                              doom  |              |  R   |
@@ -208,10 +208,10 @@ dell'ovest           |          dell'est    Y - Ingresso della Locanda
           |                 | *********** |    |     N        Eastern Desert
           -- Foresta di     | *  MYST   * |    |     E        Dragon Sea)
 Grecia----   HAON-DOR  -------*         * ------  Castle
-  |             |             *********** |       Python       
+  |             |             *********** |       Python
   |       | ======Dark River=======|========Dark River========
 Atlantide |                        |
-          |                        |     
+          |                        |
           |--|         Ragni   ----|
       Palazzo|                     |                                     il
       Skexie |                     |                                   Monolito
@@ -220,7 +220,7 @@ Atlantide |                        |
                               *MORDILNIA*                                |
               ----------------*         *---------------------------------
               |                ***********
-              |                    |     
+              |                    |
               |----- Imrryr        |
               |                    |
         La foresta Incantata       |
@@ -233,7 +233,7 @@ Atlantide |                        |
 DAIMOKU
 Sintassi : DAIMOKU
 
-Questa azione permette di accelerare il proprio hit-regen fino ad un massimo 
+Questa azione permette di accelerare il proprio hit-regen fino ad un massimo
 di 100hp per tick. La durata di questo effetto e' variabile.
 Concentrandosi il monaco riesce a rigenerare le proprie energie, ma lo sforzo
 mentale e' tale che resta svenuto.
@@ -263,7 +263,7 @@ Skill dei monaci ma puo' essere anche praticato da tutte le classi guerriere
 anche se con meno risultati.
 Va praticata come kick o disarm.
 Se il colpo riesce, l'avversario viene accecato permanentemente ma da un solo
-occhio. Gli sara' quindi molto piu' difficile colpirvi ma restera' in grado di 
+occhio. Gli sara' quindi molto piu' difficile colpirvi ma restera' in grado di
 inseguirvi e lanciare incantesimi.
 NON si posso cumulare i finger
 ATTENZIONE il finger rende evil!!!!!
@@ -302,7 +302,7 @@ DISGUISE
 
 Disguise e' uno skill che consente a ladri ed altre classi di travestire
 se stessi. Ti permette nel caso tu venga inseguito da qualche mob di non
-venire riconosciuto col conseguente effetto di veder tornare il mob 
+venire riconosciuto col conseguente effetto di veder tornare il mob
 tranquillamente sui propri passi. E' uno skill che si puo' imparare.
 
 #
@@ -378,7 +378,7 @@ Inoltre:
 
 Non ci sono limiti ai livelli che possono gruppare assieme, pero' esistono
 dei correttivi per evitare l'uso dei newbie come "carne da cannone"
-La morte di un giocatore di livello basso provoca una perdita di xp in tutti i 
+La morte di un giocatore di livello basso provoca una perdita di xp in tutti i
 membri del gruppo che hanno da 10 livelli piu' di lui in su.
 La perdita e' proporzionale alla differenza.
 In compenso, per ogni giocatore che perde xp oltre al morto, il morto avra'
@@ -472,7 +472,7 @@ Acquista o trova una pergamena (scroll) di identificazione. Cosi' sarai
 in grado di vedere le piu' importanti statistiche di un oggetto.
 Lo scroll puo' essere usato anche su un mostro o un giocatore.
 Sintassi: recite identif <oggetto>
-Attenzione: identificare produce uno spossamento e confusione che porta 
+Attenzione: identificare produce uno spossamento e confusione che porta
 a laggare per due tick, quindi si consiglia di usare lo scroll in luoghi
 perlomeno sicuri.
 
@@ -602,7 +602,7 @@ Costo di lancio: 40 mana
 
 
 Con questo spell il caster crea un magnifico banchetto a cui tutto il
-gruppo partecipa e che sazia, disseta e fa ritornare al massimo i punti 
+gruppo partecipa e che sazia, disseta e fa ritornare al massimo i punti
 movimento.
 
 Vedi anche: -
@@ -644,7 +644,7 @@ Costo di lancio: 10 mana
 Quando questo spell viene pronunciato la vittima viene circondata
 da una luce rosa. Lo spell in se' non produce danni sulla
 vittima ma la rende piu' facile da colpire (la classe armatura
-si alza di 20 punti). Non si tratta di uno spell che produce 
+si alza di 20 punti). Non si tratta di uno spell che produce
 aggressivita' del mob nei vostri confronti.
 
 Vedi anche:
@@ -721,7 +721,7 @@ le proprie magie.
 #
 "ASTRAL WALK"
 
-Sintassi    : cast 'astral walk' 
+Sintassi    : cast 'astral walk'
 Accumulazione: -
 Durata      : Istantanea
 Livello     : Level 30 Cleric.
@@ -986,7 +986,7 @@ intelligenza minore di 13.
 Sintassi    : cast 'mount'
 Accumulazione: No
 Durata      : Istantanea
-Livello     : 
+Livello     :
 Save        : Nessuno
 Costo di lancio: 20 mana
 
@@ -1712,12 +1712,12 @@ Costo di lancio: 20 mana
 
 Questo spell fa guadagnare velocita' alla vittima, il che si traduce
 in un maggiore numero di attacchi che varia ogni round.
-Questo pero' fiacca velocemente la vittima a causa dell'enorme spreco 
+Questo pero' fiacca velocemente la vittima a causa dell'enorme spreco
 di energia fisica richiesto. I mostri di solito non gradiscono essere
 colpiti da questo spell.
 
-nota: l'eq che da' haste si comportera' diversamente dalla spell, 
-aumentando i tuoi attacchi in relazione al valore riportato. 
+nota: l'eq che da' haste si comportera' diversamente dalla spell,
+aumentando i tuoi attacchi in relazione al valore riportato.
 
 Ex. Haste by 1 ti dara' un attacco in piu' ogni round.
 
@@ -1872,15 +1872,15 @@ Livello     : Level 7 druid.
 Save        : Nessuno
 Costo di lancio: 20 mana
 
-Questo spell crea una lama di fuoco, ghiaccio, fulmini o pietra il cui danno 
+Questo spell crea una lama di fuoco, ghiaccio, fulmini o pietra il cui danno
 varia in base al livello del druido; ad alti livelli e' veramente molto potente.
 
 Il tipo di lama che otterrai sara' casuale, ed otterrai un nuovo elemento
 ogni 17 livelli fino al 51:
 
-Da liv 7(ottenimento spell) al liv 16 otterrai solo fire blades  
+Da liv 7(ottenimento spell) al liv 16 otterrai solo fire blades
 dal liv 17 al 33 aggiungi frost alle possibilita'
-dal liv 34 al 50 aggiungi thunder alle possibilita'  
+dal liv 34 al 50 aggiungi thunder alle possibilita'
 al liv 51 aggiungi earth alle possibilita'
 
 Questo spell e' MOLTO importante se vuoi avanzare oltre il livello 10.
@@ -2165,7 +2165,7 @@ Ecco la lista:
   "pappagallo"  8    (rosso)
   "Lupo"        8
   "ragno"       9
-  "belva"       9 
+  "belva"       9
   "minotauro"   9*
   "serpente"    10   (serpente a sonagli)
   "toro"        10
@@ -2377,7 +2377,7 @@ Durata      : come sanctuary
 Costo di lancio: 40 mana
 
 Crea uno scudo di fuoco intorno al corpo e fa si' che ogni
-attacco contro di te causi un danno all'avversario proporzionato al danno 
+attacco contro di te causi un danno all'avversario proporzionato al danno
 subito. L'essere affetti dallo spell fireshield rende praticamente
 immuni dal fuoco e quindi dagli effetti di combattere con un avversario
 a sua volta fireshieldato.
@@ -2405,9 +2405,9 @@ essere notati.
 Quando usi questo skill molti mostri che altrimenti ti attaccherebbero
 non lo fanno perche' non ti notano, consentendoti di andare in posti
 dove altri non potrebbero.
-Piu' alta e' la tua destrezza piu' alta e' la probabilita' che tu possa 
+Piu' alta e' la tua destrezza piu' alta e' la probabilita' che tu possa
 muoverti silenziosamente senza essere notato.
-La durata e' influenzata dal livello. 
+La durata e' influenzata dal livello.
 Esempio:
 
   > sneak
@@ -2561,7 +2561,7 @@ Esempio : say sono proprio fico (ti capiscono quelli della tua stessa razza pres
         whisper pippo ciao come va (sussurrerai all'orecchio di pippo)
         ask pippo quanti anni hai? (rivolgi una domanda a pippo)
         gossip ciao come va? (tutte le persone nella tua stessa area sentiranno e capiranno)
-  
+
 Puoi usare un semplice ' come abbreviazione di SAY
 
 Vedi anche : SPEAK
@@ -2743,7 +2743,7 @@ REMOVE
 
 Importantissimo perche' consente di togliersi di dosso un vestito
 o un'arma senza farli cadere in pratica fa passare un oggetto da
-equipaggiato all'inventario.Se volete gettare via una spada che avete 
+equipaggiato all'inventario.Se volete gettare via una spada che avete
 impugnato (wield) dovete prima usare remove.
 Esempio : remove sword
           drop sword
@@ -2945,7 +2945,7 @@ Vedi anche: INN STORE
 STORE
 
 Si usa alla reception delle locande.
-Con questo comando e' possibile ''congelare'' il proprio personaggio 
+Con questo comando e' possibile ''congelare'' il proprio personaggio
 per un certo periodo, pagando un rent ridotto.
 Il comando e' STORE <numero giorni>. ATTENZIONE: Store senza parametri
 assume come numero giorni il minimo consentito, ovvero 20.
@@ -2979,7 +2979,7 @@ per esempio "GET pane from borsa"
   get all.pane from borsa
   get 9*pane from borsa
   get all from corpse
-  
+
 
 Vedi anche: DROP PUT
 
@@ -3089,11 +3089,11 @@ La Gilda dei Guerrieri si affaccia sulla main street di Myst.
 La Gilda dei Ranger e' subito a ovest e poi sud della porta ovest di Myst.
 La Gilda dei Monaci e' nord ovest degli Shire
 La Gilda dei Barbari e' sul sentiero a Nord di Myst
-La Gilda dei Druidi e' nella foresta di Haon-Dor, fuori dalla porta ovest di 
-                    Myst. ATTENTI a non finire dai quickling, ci 
-		    lascereste le penne! Il maestro si chiama Arromon, la 
+La Gilda dei Druidi e' nella foresta di Haon-Dor, fuori dalla porta ovest di
+                    Myst. ATTENTI a non finire dai quickling, ci
+		    lascereste le penne! Il maestro si chiama Arromon, la
 		    direzione (dal sentiero) e' fondamentalmente  sud
-		    
+
   I Druidi dal 10^ livello in su' troveranno la loro Gilda dentro il
   Colossal Tree. I Druidi DEVONO avere l'incantesimo 'tree travelling' per
   entrare nella gilda di alto livello. Inoltre devono avere l'incantesimo
@@ -3547,7 +3547,7 @@ Accumulazione: No
 Duration    : 24hrs
 Costo di lancio: 45 mana
 Questo spell viene applicata su tutte le persone che seguono il caster
-(o che fanno parte del suo gruppo), per il resto e' identico allo spell 
+(o che fanno parte del suo gruppo), per il resto e' identico allo spell
 'protection from evil'
 
 Vedi anche : Protection from Evil
@@ -3732,7 +3732,7 @@ Livello     : Level 1 magic user.
 Save        : Nessuno
 Costo di lancio: 15 mana
 
-Produce danni per 1d4+1/2 livelli 
+Produce danni per 1d4+1/2 livelli
 Lo spell 'shield' resiste completamente agli effetti di questo spell.
 
 #
@@ -3994,7 +3994,7 @@ AUCTION
 E' simile a SHOUT, ma solo quelli che hanno il canale AUCTION aperto
 ricevono il messaggio. Se vuoi vendere qualcosa questo e' il canale
 giusto da utilizzare.
-auction nomeoggetto 
+auction nomeoggetto
   mette all'asta un oggetto
 auction
   se un oggetto e' all'asta ne dice il nom
@@ -4214,20 +4214,18 @@ Vedi anche BARBARIAN
 #
 TAN SKIN
 
-Questo skill permette ai guerrieri di ogni tipo di conciare il corpo
-di una vittima in indumenti o armature. I tipi di armatura consentita
-sono:
+Questo skill permette ai chi ne diventi esperto di conciare il corpo di una
+vittima in indumenti o armature.  I tipi di oggetto consentiti sono:
 
-armor,bag,shield,helmet,jacket,sleeves,leggings,boots and gloves.
+armatura, borsa, scudo, elmo, giacca, maniche, gambali, stivali, guanti
 
-Ricordati che alcuni mostri hanno la pelle piu' dura di altri, quindi
-esplora per trovare la migliore armatura. I draghi hanno sempre una
-pelle ottima per questo scopo. Piu' forte e' il mostro da cui ricavi
-l'armatura e piu' forte (normalmente) sara' la resistenza dell'armatura
-ricavata. Mostri di alto livello occasionalmente possono dare armature con
-bonus o resistenza particolari.
+Ricordati che i mostri hanno tutti pelli diverse, quindi esplora per trovare
+le migliori combinazioni di pelle e oggetto conciato.  Si dice che la pelle di
+drago sia la piu’ potente in assoluto.  Piu’ forte sara’ il mostro scuoiato,
+piu’ forte sara’ la protezione data dal pezzo ricavato.  Inoltre, da mostri
+particolarmente forti si potranno  ottenere pezzi con dei bonus molto utili.
 
-Esempio : tan dragon shield
+esempio: tan corp maniche
 
 
 #
@@ -4266,7 +4264,7 @@ Questo e' il comando che viene utilizzato dai Sorcerer per memorizzare
 uno spell. Ovviamente ci vogliono certe condizioni per poter memorizzare
 lo spell, in particolare ti devi trovare seduto e non devi essere in lotta
 con nessuno.
-Usare memorize senza il target spell ti offrira' la lista e la quantita' 
+Usare memorize senza il target spell ti offrira' la lista e la quantita'
 dei soli incantesimi memorizzati.
 
 Vedi anche : RECALL
@@ -4458,7 +4456,7 @@ pray (nome dio) un sanc
 saranno  ignorate.
 
 esempio rpg corretto:
-pray (nome dio) donami la luce sacra per sconfiggere i miei nemici 
+pray (nome dio) donami la luce sacra per sconfiggere i miei nemici
 
 Tieni sempre presente che un Dio non ha l'obbligo di esaudire i tuoi
 desideri.
@@ -4566,11 +4564,11 @@ spell: level 2 psi
 Costo di lancio: 20 mana
 
 Questo skill consente ad uno psionista di ipnotizzare una vittima
-trasformandola in un seguace. E' simile allo spell 'charm monster' 
-e ne rispetta le regole. Ricorda che e' considerata aggressiva, 
-per cui alcuni mostri potrebbero attaccarti se lo skill non ha 
+trasformandola in un seguace. E' simile allo spell 'charm monster'
+e ne rispetta le regole. Ricorda che e' considerata aggressiva,
+per cui alcuni mostri potrebbero attaccarti se lo skill non ha
 successo.
-La riuscita dipende da molti fattori, come la tua Intelligenza, 
+La riuscita dipende da molti fattori, come la tua Intelligenza,
 quella del mob, il Carisma tuo e del mob.
 
 #
@@ -4581,7 +4579,7 @@ spell: lev 1 psi
 Costo di lancio: 10 mana
 
 Questo skill consente ad uno psionista di leggere il pensiero delle
-persone che parlano. In pratica riuscira' a comprendere tutti i 
+persone che parlano. In pratica riuscira' a comprendere tutti i
 linguaggi di quelli vicino  a lui.
 
 #
@@ -4603,13 +4601,13 @@ spell: level 15 psi
 Costo di lancio: 20 mana
 
 Lo psionista ricorre ai suoi poteri mentali per circondarsi
-di uno schermo di fiamme che si attiva automaticamente in caso di 
+di uno schermo di fiamme che si attiva automaticamente in caso di
 attacco. Simile al fireshield, ma di durata molto piu' lunga.
-Lo scudo di fiamma restituisce al mob il doppio del danno che lui 
+Lo scudo di fiamma restituisce al mob il doppio del danno che lui
 infligge  a te. E distrugge spesso anche gli oggetti che il mob
 indossa o trasporta.
-Attenti: i mob che ti attaccano vedono il tuo scudo di fiamma 
-e spesso, per non bruciarsi, rivolgono le loro ire su altre persone 
+Attenti: i mob che ti attaccano vedono il tuo scudo di fiamma
+e spesso, per non bruciarsi, rivolgono le loro ire su altre persone
 nella stanza.
 
 #
@@ -4644,7 +4642,7 @@ Spell: lev 38 psi
 Costo di lancio: 50 mana
 
 E' il piu' potente degli spell degli psi, distrugge l'equipaggiamento
-della vittima. Non e' uno spell di area e non fa entrare in 
+della vittima. Non e' uno spell di area e non fa entrare in
 combattimento automaticamente.
 
 #
@@ -4806,7 +4804,7 @@ Con questo skill lo psionista focalizza i suoi poteri mentali su un
 mostro e colpisce la sua mente. Piu' potente e' lo psionista piu'
 sara' il danno prodotto.
 Ha anche altri vantaggi.. sta a te scoprire quali.:-)
-Al livello 50 ha il potere di fare svenire, a volte, il mob che viene 
+Al livello 50 ha il potere di fare svenire, a volte, il mob che viene
 colpito.
 
 #
@@ -4876,9 +4874,9 @@ Sintassi    : MIND 'PSYONIC CRUSH' <nome>
 Spell: lev 37 psi
 Costo di lancio: 45 mana
 
-E' il secondo spell piu' potente degli PSI. E' leggermente inferiore 
-al DISINTEGRATE, ma ha il vantaggio di non distruggere l'equipaggiamento 
-del mob. 
+E' il secondo spell piu' potente degli PSI. E' leggermente inferiore
+al DISINTEGRATE, ma ha il vantaggio di non distruggere l'equipaggiamento
+del mob.
 Anche questo spell non fa entrare in combattimento automaticamente.
 
 #
@@ -5182,7 +5180,7 @@ la sequenza \$cXXXX prima dei caratteri che intendete colorare.
 
 Al posto di XXXX dovete mettere una serie di numeri.
 Ecco l'elenco delle serie di numeri e dei colori corrispondenti che
-otterrete. 
+otterrete.
 
 $c00010001 Rosso scuro             $c00090009 Rosso chiaro
 $c00020002 Verde scuro             $c00100010 Verde chiaro
@@ -5222,7 +5220,7 @@ volta fatto NON POTRETE TORNARE PIU' INDIETRO!
 #
 REGISTER REGISTRAZIONE
 
-Nebbie Arcane e' un mud aperto a tutti, ma per superare il decimo livello e' 
+Nebbie Arcane e' un mud aperto a tutti, ma per superare il decimo livello e'
 necessario identificarsi.
 La registrazione e' del tutto automatica, e rispetta la vostra privacy.
 L'unico dato ''reale'' che viene memorizzato e' infatti l'indirizzo email
@@ -5251,7 +5249,7 @@ avrete la prova e la testimonianza tangibile della vostra impresa.
 MIRROR IMAGES
 Questo spell permette ad un mago di poter evocare delle immagini illusorie
 a seconda del proprio livello. La durate di tali immagini e' variabile.
-Quando il mago viene colpito, se il colpo va su una immagine, questa viene 
+Quando il mago viene colpito, se il colpo va su una immagine, questa viene
 distrutta, ma il mago non subisce danni.Pure Bash e kick sono influenzati dalle
 immagini illusorie.Se il mago non sta gia' combattendo, il primo colpo che subisce
 va AUTOMATICAMENTE su una immagine.
@@ -5282,7 +5280,7 @@ PRINCIPE, VASSALLO, RIPUDIA
 #
 RIPUDIA
 
-E' il comando usato dal principe per espellere un vassallo 
+E' il comando usato dal principe per espellere un vassallo
 dalla propria casata (o clan).
 Puo' essere usato anche dal vassallo stesso per uscirne.
 VEDI ANCHE:
@@ -5296,8 +5294,8 @@ Appartenere ad una casata offre numerosi vantaggi, come possedere l'oggetto
 simbolo della casata, la protezione da parte degli altri membri e del principe,
 lo sharing degli xp e la possibilita' di rentare nel castello del Principe.
 Quando Vassallo e Principe sono nella stessa locazione, eventuali mob
-aggressivi che attaccherebbero il vassallo, rivolgeranno le loro attenzioni 
-al principe. In compenso il rescue sul principe riesce AUTOMATICAMENTE e 
+aggressivi che attaccherebbero il vassallo, rivolgeranno le loro attenzioni
+al principe. In compenso il rescue sul principe riesce AUTOMATICAMENTE e
 rescue senza parametri rescuera' il principe.I VASSALLI e Principi possono scambiarsi
 punti esperienza col comando give n xp (simile a give n coins).
 Esistono delle limitazioni per impedire cose "strane".
@@ -5431,5 +5429,3 @@ per Master, Adept, Lord e Principi  la mitica Scala Nera e' nascosta
 tra i ghiacciai del profondo Nord.
 
 #~
-
-

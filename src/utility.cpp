@@ -4171,7 +4171,7 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
     oggetto.clear();
 }
 
-void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class)
+void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount)
 {
     char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
     int valore = 0, molt = 0, lvl = 0;
@@ -4303,7 +4303,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         strcpy(stringa, AchievementsList[achievement_class][achievement_type].achie_string2);
     }
 
-    if(valore > 0)
+    if(valore > 0 && amount > 0)
     {
         int reward;
 
@@ -4371,17 +4371,20 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
         reward = reward * molt / 10;
         reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
-        gain_exp(ch, reward);
+        if(amount > 0)
+        {
+            gain_exp(ch, reward);
 
-        RewardAll(ch, achievement_type, achievement_class, lvl);
+            RewardAll(ch, achievement_type, achievement_class, lvl);
 
-        send_to_char("\n\r", ch);
-        sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
-        act(buf, FALSE, ch, 0, 0, TO_CHAR);
-        save_obj(ch, &cost, 0);
+            send_to_char("\n\r", ch);
+            sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
+            act(buf, FALSE, ch, 0, 0, TO_CHAR);
+            save_obj(ch, &cost, 0);
+        }
     }
 
-    if(quest)
+    if(quest && amount > 0)
     {
         RewardQAchie(ch, AchievementsList[achievement_class][achievement_type].achie_number);
         sprintf(buf, "$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.\n\r", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
@@ -4391,8 +4394,14 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
     if(valore <= 0 && IS_SET(ch->player.user_flags, ACHIE_MODE))
     {
-        sb.append(AchievementNumber(ch, achievement_type, achievement_class));
-        page_string(ch->desc, sb.c_str(), true);
+        if(amount == 1 || amount == -1)
+        {
+            if(ch->specials.achievements[achievement_class][achievement_type] <= MaxValueAchievement(achievement_class, achievement_type, AchievementsList[achievement_class][achievement_type].n_livelli))
+            {
+                sb.append(AchievementNumber(ch, achievement_type, achievement_class));
+                page_string(ch->desc, sb.c_str(), true);
+            }
+        }
     }
 }
 
