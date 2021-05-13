@@ -4388,11 +4388,11 @@ ACTION_FUNC(do_carve) {
 
 	if((r_num = real_object(FOUND_FOOD)) >= 0) {
 		food = read_object(r_num, REAL);
-		food->name= (char*)strdup("ration slice filet food");
-		sprintf(buffer,"a Ration of %s",corpse->short_description+10);
+		food->name= (char*)strdup("razione cibo");
+		sprintf(buffer, "una razione %s", corpse->short_description + 9);
 		food->short_description= (char*)strdup(buffer);
 		food->action_description= (char*)strdup(buffer);
-		sprintf(arg2,"%s is lying on the ground.",buffer);
+		sprintf(arg2,"%s giace qui per terra.",buffer);
 		food->description= (char*)strdup(arg2);
 		corpse->obj_flags.weight=corpse->obj_flags.weight-50;
 		i=number(1,6);
