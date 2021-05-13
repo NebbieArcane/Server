@@ -2939,27 +2939,26 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 
 	DamageMessages(ch, victim, dam, attacktype, location);
 
-    if(attacktype == SKILL_BACKSTAB)
-    {
-        if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
-        {
-            if(IS_POLY(ch))
-            {
-                ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
-                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
-                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
-            }
-            else
-            {
-                ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
-                if(!IS_SET(ch->specials.act,PLR_ACHIE))
-                    SET_BIT(ch->specials.act, PLR_ACHIE);
-            }
+	if(attacktype == SKILL_BACKSTAB && dam > 0)
+	{
+		if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
+		{
+			if(IS_POLY(ch))
+			{
+				ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
+				if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
+					SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+			}
+			else
+			{
+				ch->specials.achievements[CLASS_ACHIE][ACHIE_THIEF_1] += 1;
+				if(!IS_SET(ch->specials.act,PLR_ACHIE))
+					SET_BIT(ch->specials.act, PLR_ACHIE);
+			}
 
-            CheckAchie(ch, ACHIE_THIEF_1, CLASS_ACHIE);
-        }
-
-    }
+			CheckAchie(ch, ACHIE_THIEF_1, CLASS_ACHIE);
+		}
+	}
 
 
 
