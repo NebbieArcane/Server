@@ -5428,4 +5428,167 @@ per gli expert essa risiede nei pressi di New Thalos
 per Master, Adept, Lord e Principi  la mitica Scala Nera e' nascosta
 tra i ghiacciai del profondo Nord.
 
+#
+"LISTINO EDIT" LISTINO EDIT
+
+Regole generali:
+Il listino per gli EDIT serve a calcolare il costo in xp per le modifiche agli
+oggetti editabili.  Di seguito le regole per editare:
+
+- I biclasse devono corrispondere all'editor 1,5 volte il valore del proprio
+  edit rispetto al listino sottostante.
+- I triclasse devono corrispondere all'editor 2,0 volte il valore del proprio
+  edit rispetto al listino sottostante.
+- Non e' possibile in nessun caso editare oggetti flaggati come RARI o che
+  superano il valore di 19999 coin.
+- L'edit e' possibile solo presentando un oggetto esistente, esclusi premi delle
+  quest (QUEST-ITEM).
+- I massimali indicati sono per personaggio.
+
+Resistenze                                  Costo
+                                        in MXp  in Rune
+Acido                                       75       90
+Elettricita'                               150      180
+Fuoco                                      100      120
+Freddo                                      75       90
+Energia                                    150      180
+Drain                                       30       35
+Hold                                        75       90
+Veleno                                      30       35
+Taglio                                     150      200
+Punta                                      150      200
+Impatto                                    300      400
+
+
+Statistica                                  Costo                      Massimale
+                                        in MXp  in Rune
+Forza                                       15       15            3 per oggetto
+Saggezza                                    15       15            3 per oggetto
+Intelligenza                                15       15            3 per oggetto
+Destrezza                                   15       15            3 per oggetto
+Carisma                                     15       10            3 per oggetto
+
+
+Bonus                                       Costo                      Massimale
+                                        in MXp  in Rune
+Punti Magia           [per  10 unita']      15       15               150 totali
+Punti Ferita          [per  10 unita']      30       30               100 totali
+Punti Movimento       [per  10 unita']      10       15               100 totali
+Regen Punti Magia     [per   5 unita']      15       15                50 totali
+Regen Punti Ferita    [per   5 unita']      15       15                50 totali
+Regen Punti Movimento [per   5 unita']      10       30                50 totali
+Classe Armatura       [per -10 unita']      10       15          -40 per oggetto
+Tiro per Colpire      [per   1 unita']      45       50            2 per oggetto
+Punti Danno           [per   1 unita']     100      120            2 per oggetto
+          Nota Bene:  il valore massimo di punti danno editabili e' pari a 30.
+
+
+Immunita'                                   Costo
+                                        in MXp  in Rune
+Drain                                      100      100
+Charm                                       60       60
+Poison                                     100      100
+
+Incantesimi                                 Costo
+                                        in MXp  in Rune
+Telepathy                                   50       70
+Darkness                                    50       70
+Waterbreath                                 50       70
+True Sight                                  50       70
+Invisibility                                30       70
+Sense Life                                  50       70
+Psionic Danger Sense                       150      180
+Spy                                        150      180
+Protection from Evil                        50       70
+Fly                                         50       70
+
+VEDI ANCHE: LISTINO ARMI, SIMBOLO DEL CLAN
+
+#
+"SIMBOLO DEL CLAN" SIMBOLO
+
+Ogni principe puo' coniare un simbolo distintivo per il proprio clan.
+Questo oggetto NON potra' :
+
+- Contenere piu' di 2 dam
+- Contenere eventuali bonus su resistenze
+- Contenere piu' di uno Spell Affect
+- Essere rieditato
+
+Il costo del simboli di clan e' lo stesso del listino edit e ha le medesime
+restrizioni, piu' richiede per la creazione del simbolo un aggiunta di 50 mega
+da pagare una tantum.  A tale costo verranno corrisposti 5 simboli identici che
+dovranno essere consegnati ognuno ad un vassallo diverso, pena la confisca
+degli stessi.
+
+Per ogni ulteriore simbolo il principe dovra' corrispondere all'editor la spesa
+di partenza dell'edit + un bonus finale di 25 mega.
+
+Il simbolo di clan non e' refundabile.  Se lo si perde per scrap, dt o altro il
+suo prezzo va ripagato per intero dal vassallo o dal principe.
+
+Le caratteristiche del Simbolo di Clan non possono essere cambiate nel tempo.
+
+VEDI ANCHE: LISTINO EDIT, LISTINO ARMI
+
+#
+"LISTINO ARMI"
+
+Le armi possono essere modificate seguendo alcune regole.  La modifica che puo'
+essere fatta alle armi editabili e' sul DANNO MEDIO.
+Il costo varia in base quanto si incrementa il DANNO MEDIO.
+
+Il DANNO MEDIO viene calcolato sommando il valore minimo dei dadi di un'arma
+al valore massimo degli stessi dadi e dividendo poi per 2.
+
+Il DANNO MEDIO puo' essere incrementato secondo la progressione qui di seguito:
+
+Costo per ogni 0,5 danni in piu', rispetto ad arma base =
+
+- 9M sino a 15 di danno
+- 14M da 15,5 a 18
+
+Con limite di danno medio pari a 18 (13 se larma fa PIERCE o se e per Barbari)
+
+ECCEZIONE: un' arma ONLY CLASS per una classe con pochi attacchi (Mu, CL, DR,
+PSI) paga sempre 9M ogni 0,5 di danno, anche oltre i 15.
+
+ATTENZIONE: i bonus +DAM verranno conteggiati per il calcolo del danno medio.
+
+Esempi di calcolo:
+
+1)
+Takuba Blu (arma base) 3d6 = 10,5 di danno medio, senza bonus al dam.
+Per portarla ad una media di 12 danni il costo sara':
+costo 3 x 9M = 27M
+I nuovi dadi potranno essere (il danno medio resta 12)
+1d23 2d11 3d7 4d5 6d3 8d2 12d1
+
+2)
+Spada del Cacciatore (arma base) 3d7 +3 bonus al danno = 15 di danno medio.
+Per portarla ad una media di 18 danni, lasciando il +3 del bonus inalterato.
+Costo: 6 x 14M = 84M
+La nuova arma potra' diventare (il danno medio e' comunque 18 [15+3] ):
+1d29 2d14 3d9 5d5 6d4 10d2 15d1
+
+SPELL DI ATTACCO
+(ATTENZIONE: non si possono superare i massimali di danno elencati sopra)
+
+Incantesimo               Costo
+                     in MXp   in Rune
+Cause light              40        80
+Cause serious           100       200
+Cause critical          150       300
+Chill Touch	            100       200
+Faerie fire              20        40
+Curse                    20        40
+Blindness               150       300
+Sunray                  100       200
+Warp Weapon              20        40
+
+Enchant Weapon : +4 Hitroll +4 Damroll [Solo per monoclasse 50 Mxp/100 Rune]
+Attenzione: il damroll dell'enchant tiene conto dei massimali.
+
+VEDI ANCHE: LISTINO EDIT, SIMBOLO DEL CLAN
+
 #~
