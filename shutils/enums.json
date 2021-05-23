@@ -77,7 +77,7 @@
 			"comment": "USER FILE, DO NOT CHANGE!"
 		},
 		"MAX_POSITION": {
-			"value": 9,
+			"value": 10,
 			"comment": ""
 		},
 		"HIT_INCAP": {
