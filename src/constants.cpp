@@ -2844,7 +2844,7 @@ const char* affected_bits2[] = {
 const char* special_user_flags[] = {
 	"NO-DELETE",
 	"USE-ANSI",
-	"RACE-WARRIOR",
+	"PKILL",
 	"SHOW-CLASSES",
 	"SHOW-EXITS",
 	"MURDER-1",
