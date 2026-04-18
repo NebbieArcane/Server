@@ -59,7 +59,7 @@ if ! mysql -h 127.0.0.1 -P 3306 --protocol=TCP -u$MYSQL_USER -p$MYSQL_PASSWORD -
 fi
 
 # 6. Avvia l'applicazione come utente 'vagrant'
-SERVER_PORT=4000
+SERVER_PORT=${SERVER_PORT:-4000}
 EXEC_PATH="/app" # <-- ESEGUI DALLA RADICE DEL PROGETTO
 DATA_DIR="mudroot/lib" # <-- PERCORSO DATI RELATIVO ALLA RADICE
 

@@ -23,6 +23,24 @@
  use utilities for this
 * The /vagrant folder in the vagrant machine is mounted from the folder where the vagrantfile resides and is synced 2-way
 
+---
 
+## Docker
+* Getting started
+    * FIRST TIME
+        * install Docker Desktop from https://www.docker.com/products/docker-desktop/
+        * ./getworld
+        * ./docker-run.sh build
+        * ./docker-run.sh up
+    * DAY BY DAY
+        * ./docker-run.sh up
+        * ./docker-run.sh down
+    * To start on a custom port:
+        * SERVER_PORT=4001 ./docker-run.sh up
+        * SERVER_PORT=4002 ./docker-run.sh up
 
-
+## NOTES (Docker)
+* docker-run.sh auto-detects the host architecture (Intel or Apple Silicon) and sets the correct platform
+* On Apple Silicon, ODB files (src/odb/account-odb*.cxx) are pre-generated in the repo. If missing, docker-run.sh regenerates them automatically before building
+* MySQL runs inside the container, same as Vagrant. Data is persisted in the mud_data Docker volume
+* The server listens on 127.0.0.1 only by default (see docker-compose.yml to expose it publicly)
