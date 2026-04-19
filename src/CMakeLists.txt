@@ -133,12 +133,10 @@ if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
 	# e AGGIUNGE -DNDEBUG per disattivare le istruzioni assert() (handler.cpp crash).
 	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0, defining env_vagrant, and disabling assertions (NDEBUG).")
 	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -Denv_vagrant -DNDEBUG")
-	set(CMAKE_C_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -Denv_vagrant -DNDEBUG")
 else()
 	# Vagrant/Locale: Usa i flag di ottimizzazione originali (compatibilità)
 	message(STATUS "VAGRANT BUILD: Using original optimization flags.")
 	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_vagrant")
-	set(CMAKE_C_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_vagrant")
 endif()
 # FINE LOGICA CONDIZIONALE
 
