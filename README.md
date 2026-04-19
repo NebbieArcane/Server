@@ -25,6 +25,14 @@
 
 ---
 
+## Roadmap di modernizzazione
+* `roadmap-modernizzazione.html` — apri nel browser, niente dipendenze
+* `roadmap-modernizzazione.canvas.tsx` — versione interattiva per Cursor:
+    * Copia il file in `~/.cursor/projects/<tuo-workspace>/canvases/`
+    * Aprilo in Cursor con **Open Canvas**
+
+---
+
 ## Docker
 * Getting started
     * FIRST TIME
