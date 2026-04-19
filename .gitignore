@@ -234,3 +234,6 @@ src/info
 /check.xml
 /lastcommit
 /codealike.json
+# Vagrant
+.vagrant/
+.vagrant.d/
