@@ -22,7 +22,8 @@ services:
     # volumes:
     #   - .:/app
     volumes:
-      - mud_data:/mudroot # Persistenza dei file di gioco (lib/players, lib/objects)
+      - ./mudroot:/mudroot         # Persistenza dei file di gioco (lib/players, lib/rent, ecc.)
+      - ./mysql_data:/var/lib/mysql # Persistenza del database MySQL (visibile sul tuo HD)
     ports:
       - "127.0.0.1:4000:4000"
       - "127.0.0.1:4001:4001"
@@ -33,4 +34,4 @@ services:
       - SERVER_PORT  # se non specificato in shell, l'entrypoint usa il default 4000
 
 volumes:
-  mud_data:
+  mud_data: # non più usato, tenuto per retrocompatibilità
