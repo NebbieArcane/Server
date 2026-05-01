@@ -237,3 +237,4 @@ src/info
 # Vagrant
 .vagrant/
 .vagrant.d/
+mysql_data/
