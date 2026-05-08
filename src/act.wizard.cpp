@@ -363,7 +363,6 @@ ACTION_FUNC(do_passwd) {
 
 ACTION_FUNC(do_setsev) {
 	char buf[255];
-	char buf2[255];
 	int sev;
 
 	arg = one_argument(arg, buf);
@@ -380,8 +379,10 @@ ACTION_FUNC(do_setsev) {
 		}
 		sprintbit(sev, aszLogMessagesType, buf);
 		ch->specials.sev = sev;
-		sprintf(buf2, "Riceverai i seguenti tipi di messaggi: [%s].\n\r", buf);
-		send_to_char(buf2, ch);
+		std::string msg = "Riceverai i seguenti tipi di messaggi: [";
+		msg += buf;
+		msg += "].\n\r";
+		send_to_char(msg.c_str(), ch);
 		return;
 	}
 	else {
@@ -429,10 +430,10 @@ ACTION_FUNC(do_setsev) {
 		send_to_char("bugs.\n\r\n\r", ch);
 
 		sprintbit(ch->specials.sev, aszLogMessagesType, buf);
-		sprintf(buf2,
-				"Attualmente ricevi i seguenti tipi di messaggi: [%s].\n\r",
-				buf);
-		send_to_char(buf2, ch);
+		std::string msg = "Attualmente ricevi i seguenti tipi di messaggi: [";
+		msg += buf;
+		msg += "].\n\r";
+		send_to_char(msg.c_str(), ch);
 
 		return;
 	}
@@ -3209,7 +3210,7 @@ ACTION_FUNC(do_purge) {
 			arg = one_argument(arg, name);
 			if(0 == str_cmp("room", name)) {
 				int range[2];
-				register int i;
+				int i;
 				struct room_data* rp;
 				if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
 					send_to_char("I'm sorry, I can't let you do that.\n\r", ch);
@@ -4204,7 +4205,15 @@ ACTION_FUNC(do_refund) {
 
 			SET_BIT(refund, REFUND_EQ);
             /* Percorso DESTINAZIONE (assoluto) */
-			sprintf(tar_buf, "cp -f %s %s/%s", source_path, RENT_DIR, name);
+			{
+				std::string cmd = "cp -f ";
+				cmd += source_path;
+				cmd += " ";
+				cmd += RENT_DIR;
+				cmd += "/";
+				cmd += name;
+				std::snprintf(tar_buf, sizeof(tar_buf), "%s", cmd.c_str());
+			}
             mudlog(LOG_PLAYERS, "do_refund: Eseguo copia RENT: %s", tar_buf);
 			system(tar_buf);
 			sprintf(tar_buf, "Il file dell'equipaggiamento di %s e' stato recuperato.\n\r", name);
@@ -4246,7 +4255,16 @@ ACTION_FUNC(do_refund) {
 
 			SET_BIT(refund, REFUND_PG);
             /* Percorso DESTINAZIONE (assoluto) */
-			sprintf(tar_buf, "cp -f %s %s/%s.dat", source_path, PLAYERS_DIR, name);
+			{
+				std::string cmd = "cp -f ";
+				cmd += source_path;
+				cmd += " ";
+				cmd += PLAYERS_DIR;
+				cmd += "/";
+				cmd += name;
+				cmd += ".dat";
+				std::snprintf(tar_buf, sizeof(tar_buf), "%s", cmd.c_str());
+			}
             mudlog(LOG_PLAYERS, "do_refund: Eseguo copia PG: %s", tar_buf);
 			system(tar_buf);
 			sprintf(tar_buf, "Il file dei dati del personaggio di %s e' stato recuperato.\n\r", name);
@@ -4288,7 +4306,16 @@ ACTION_FUNC(do_refund) {
 
 			SET_BIT(refund, REFUND_ACHIE);
             /* Percorso DESTINAZIONE (assoluto) */
-			sprintf(tar_buf, "cp -f %s %s/%s.aux", source_path, RENT_DIR, name);
+			{
+				std::string cmd = "cp -f ";
+				cmd += source_path;
+				cmd += " ";
+				cmd += RENT_DIR;
+				cmd += "/";
+				cmd += name;
+				cmd += ".aux";
+				std::snprintf(tar_buf, sizeof(tar_buf), "%s", cmd.c_str());
+			}
             mudlog(LOG_PLAYERS, "do_refund: Eseguo copia ACHIE: %s", tar_buf);
 			system(tar_buf);
 			sprintf(tar_buf, "Il file degli achievements di %s e' stato recuperato.\n\r", name);
@@ -5356,7 +5383,7 @@ ACTION_FUNC(do_drainlevel) {
 		sprintf(buf, "You drain %d level(s) How Evil!\n\r", numtolose);
 		send_to_char(buf, ch);
 
-		for(i = 0; i <= numtolose - 1; i++) {
+		for(i = 0; i < numtolose; i++) {
 			if(GetMaxLevel(victim) <= 1) {
 				i = numtolose;
 				send_to_char(
@@ -6255,17 +6282,15 @@ ACTION_FUNC(do_clone) {
 			}
 
 			/* clone EQ equiped */
-			if(mob->equipment) {
-				for(j = 0; j < MAX_WEAR; j++) {
-					if(mob->equipment[j]) {
-						/* clone mob->equipment[j] */
-						if((ocopy = clone_obj(mob->equipment[j])) != NULL) {
-							if(mob->equipment[j]->contains) {
-								clone_container_obj(ocopy,
-													mob->equipment[j]);
-							}
-							equip_char(mcopy, ocopy, j);
+			for(j = 0; j < MAX_WEAR; j++) {
+				if(mob->equipment[j]) {
+					/* clone mob->equipment[j] */
+					if((ocopy = clone_obj(mob->equipment[j])) != NULL) {
+						if(mob->equipment[j]->contains) {
+							clone_container_obj(ocopy,
+												mob->equipment[j]);
 						}
+						equip_char(mcopy, ocopy, j);
 					}
 				}
 			}
@@ -6589,7 +6614,7 @@ ACTION_FUNC(do_personalize)
 ACTION_FUNC(do_find_original)
 {
 	struct obj_data* obj;
-	register struct obj_data* obj_temp;
+	struct obj_data* obj_temp;
 	struct extra_descr_data* desc, *desc_temp;
 	char obj_key[MAX_INPUT_LENGTH], force[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH], short_primo[MAX_STRING_LENGTH], short_secondo[MAX_STRING_LENGTH];
 	int iVNum, check, i, j = 0, k = 0, l, temp_vnum, primo, secondo;
@@ -6853,8 +6878,22 @@ ACTION_FUNC(do_find_original)
 
 	if(k + j > 0)
 	{
-		sprintf(buf, "\n\rL'oggetto piu' simile a %s e': $c0009%d$c0007 (%d) - %s.\n\rIl secondo oggetto piu' simile e': $c0011%d$c0007 (%d) - %s.\n\r", obj->short_description, primo, k, short_primo, secondo, j, short_secondo);
-		send_to_char(buf, ch);
+		std::string msg = "\n\rL'oggetto piu' simile a ";
+		msg += obj->short_description;
+		msg += " e': $c0009";
+		msg += std::to_string(primo);
+		msg += "$c0007 (";
+		msg += std::to_string(k);
+		msg += ") - ";
+		msg += short_primo;
+		msg += ".\n\rIl secondo oggetto piu' simile e': $c0011";
+		msg += std::to_string(secondo);
+		msg += "$c0007 (";
+		msg += std::to_string(j);
+		msg += ") - ";
+		msg += short_secondo;
+		msg += ".\n\r";
+		send_to_char(msg.c_str(), ch);
 	}
 	else
 	{

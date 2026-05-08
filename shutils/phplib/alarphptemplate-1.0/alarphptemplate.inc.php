@@ -310,7 +310,7 @@ HEREDOC;
 		$this->markInfo("Template init",false,$options);
 		$this->options=array_change_key_case($options);
 		foreach ($this->options as $option=>$value) {
-			$method=$this->optionsMap[$option];
+			$method=$this->optionsMap[$option] ?? '';
 			if (empty($method)) {
 				$method="set{$option}";
 			}
@@ -588,8 +588,8 @@ HEREDOC;
 	}
 
 	function tmpl_var($flags) {
-		$param=$flags['NAME'];
-		$escape=$flags['ESCAPE'];
+		$param=$flags['NAME'] ?? '';
+		$escape=$flags['ESCAPE'] ?? '';
 		return $this->wrap("\$this->show('$param','$escape');");
 	}
 	function tmpl_var_xml($flag) {
@@ -723,7 +723,10 @@ HEREDOC;
 		$coppie=explode(' ',$param);
 		$rv=array();
 		foreach ($coppie as $coppia) {
-			list($k,$v)=explode('=',$coppia);
+			if ($coppia === '') {
+				continue;
+			}
+			list($k,$v)=array_pad(explode('=',$coppia,2),2,'');
 			if (empty($v)) {
 				$v=$k;
 				$k='NAME';
@@ -745,6 +748,8 @@ HEREDOC;
 		$flags['CLOSE']=!empty($closed);
 		$flags['_FULL']=$match;
 		extract($flags,EXTR_SKIP);
+		$NAME=$NAME ?? '';
+		$ESCAPE=$ESCAPE ?? '';
 		$this->markNotice(htmlspecialchars($match). ": $tag NAME=$NAME ESCAPE=$ESCAPE");
 		return $this->$tag($flags);
 	}
@@ -898,6 +903,9 @@ HEREDOC;
 
 	}
 	function escape($rvalue,$escape) {
+		if (is_null($rvalue)) {
+			$rvalue='';
+		}
 		switch ($escape) {
 			case 'HTML':
 				return htmlspecialchars($rvalue, ENT_QUOTES, $this->encoding);

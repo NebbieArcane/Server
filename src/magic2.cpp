@@ -356,12 +356,12 @@ void spell_cure_serious(byte level, struct char_data* ch,
     {
         sprintf(buf, "$c0015Curi $N$c0015.");
         if(IS_SET(ch->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_CHAR);
         act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
         sprintf(buf, "$c0015$n$c0015 ti cura.");
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
     if(ch == victim)
@@ -369,7 +369,7 @@ void spell_cure_serious(byte level, struct char_data* ch,
         act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
         sprintf(buf, "$c0015Ti curi.");
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
 

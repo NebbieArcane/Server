@@ -76,7 +76,7 @@ struct social_type {
 /* predicates for find_path function */
 
 FIND_FUNC(is_target_room_p) {
-	return room == reinterpret_cast<const intptr_t>(tgt_room);
+	return room == reinterpret_cast<intptr_t>(tgt_room);
 }
 
 FIND_FUNC(named_object_on_ground) {
@@ -277,7 +277,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 	if(HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch,CLASS_SORCERER)) {
 		if(cmd == CMD_GAIN) {
 			if(HasClass(ch,CLASS_MAGIC_USER)) {
-				if(GET_LEVEL(ch,MAGE_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+				if(GET_LEVEL(ch,MAGE_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 					if(GET_EXP(ch) <
 							titles[MAGE_LEVEL_IND][GET_LEVEL(ch, MAGE_LEVEL_IND)+1].exp) {
 						act("Non sei ancora pront$b\n\r", FALSE, ch, 0, guildmaster,
@@ -295,7 +295,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 				}
 			}
 			else if(HasClass(ch,CLASS_SORCERER)) {
-				if(GET_LEVEL(ch,SORCERER_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+				if(GET_LEVEL(ch,SORCERER_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 					if(GET_EXP(ch) < titles[SORCERER_LEVEL_IND]
 							[GET_LEVEL(ch, SORCERER_LEVEL_IND)+1].exp) {
 						act("Non sei ancora pront$b\n\r", FALSE, ch, 0, guildmaster,
@@ -331,7 +331,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 									spell_info[ i + 1 ].min_level_magic <=
 									GET_LEVEL_CASTER(ch, MAGE_LEVEL_IND) &&
 									spell_info[ i + 1 ].min_level_magic <=
-									GetMaxLevel(guildmaster) - 10) {
+									(GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10)) {
 								sprintf(buf,"[%d] %s %s \n\r",
 										spell_info[i+1].min_level_magic,
 										spells[i],how_good(ch->skills[i+1].learned));
@@ -346,7 +346,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 									spell_info[ i + 1 ].min_level_sorcerer <= // SALVO mi pare che qui non sia min_level_magic
 									GET_LEVEL_CASTER(ch, SORCERER_LEVEL_IND) &&
 									spell_info[ i + 1 ].min_level_sorcerer <= // SALVO mi pare che qui non sia min_level_magic
-									GetMaxLevel(guildmaster) - 10) {
+									(GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10)) {
 								sprintf(buf,"[%d] %s %s \n\r",
 										spell_info[ i + 1 ].min_level_sorcerer, // SALVO mi pare che qui non sia min_level_magic
 										spells[i],how_good(ch->skills[i+1].learned));
@@ -379,7 +379,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 					return TRUE;
 				}
 
-                if((HasClass(ch, CLASS_MAGIC_USER) && GetMaxLevel(guildmaster) - 10 < spell_info[ number ].min_level_magic) || (HasClass(ch, CLASS_SORCERER) && GetMaxLevel(guildmaster) - 10 < spell_info[ number ].min_level_sorcerer))
+                if((HasClass(ch, CLASS_MAGIC_USER) && (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10) < spell_info[ number ].min_level_magic) || (HasClass(ch, CLASS_SORCERER) && (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10) < spell_info[ number ].min_level_sorcerer))
                 {
 					do_say(guildmaster,
 						   "Non sono abbastanza potente per insegnarti questa magia.\n\r",
@@ -523,7 +523,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 		if(cmd == CMD_GAIN)   /*gain */
 #endif
 		{
-			if(GET_LEVEL(ch,CLERIC_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,CLERIC_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 #if QUEST_GAIN
 				MakeQuest(ch, guildmaster, CLERIC_LEVEL_IND, arg, cmd);
 #else
@@ -558,7 +558,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 							(spell_info[i+1].min_level_cleric <=
 							 GET_LEVEL_CASTER(ch,CLERIC_LEVEL_IND)) &&
 							(spell_info[i+1].min_level_cleric <=
-							 GetMaxLevel(guildmaster)-10)) {
+							 (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10))) {
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_cleric,spells[i],
 								how_good(ch->skills[i+1].learned));
@@ -579,7 +579,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
-		if(GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_cleric) {
+		if((GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_cleric) {
 			do_say(guildmaster, "I don't know of this spell.", 0);
 			return(TRUE);
 		}
@@ -769,7 +769,7 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 		/**** fine skills prince ****/
 
 		if(cmd == CMD_GAIN) {
-			if(GET_LEVEL(ch,THIEF_LEVEL_IND) >= GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,THIEF_LEVEL_IND) >= (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 				send_to_char("Devi cercare un altro maestro, io non posso piu' insegnarti niente al riguardo.\n\r",ch);
 				return(TRUE);
 			}
@@ -996,7 +996,7 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 		/**** fine skills prince ****/
 
 		if(cmd==CMD_GAIN) {
-			if(GET_LEVEL(ch,WARRIOR_LEVEL_IND) >= GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,WARRIOR_LEVEL_IND) >= (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 				send_to_char("You must learn from another, I can no longer train you.\n\r",ch);
 				return(TRUE);
 			}
@@ -3451,9 +3451,9 @@ MOBSPECIAL_FUNC(AbbarachDragon) {
 
 MOBSPECIAL_FUNC(fido) {
 
-	register struct obj_data* i, *temp, *next_obj, *next_r_obj;
-	register struct char_data* v, *next;
-	register struct room_data* rp;
+	struct obj_data* i, *temp, *next_obj, *next_r_obj;
+	struct char_data* v, *next;
+	struct room_data* rp;
 	char found = FALSE;
 
 	if(cmd || !AWAKE(ch)) {

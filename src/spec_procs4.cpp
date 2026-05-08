@@ -158,7 +158,7 @@ void IdentifyObj(struct char_data* ch, struct char_data* keeper, int quest, int 
 		i++;
 	}
 
-	if(numero <= 0 || numero > i + 1)
+	if(numero <= 0 || numero > i)
 	{
 		sprintf(buf, "%s Non ho quell'oggetto in lista, controlla meglio!", GET_NAME(ch));
 		do_tell(keeper, buf, CMD_TELL);
@@ -189,6 +189,7 @@ void IdentifyObj(struct char_data* ch, struct char_data* keeper, int quest, int 
 void ListaOggetti(struct char_data* ch, int quest)
 {
 	int i, len, maxlen = 0, maxlentype = 0;
+	int list_width = 0;
 	std::string sb, desc, descBW;
 	struct obj_data* obj;
 	string buf;
@@ -217,8 +218,12 @@ void ListaOggetti(struct char_data* ch, int quest)
 		extract_obj(obj);
 	}
 
+	list_width = maxlen;
+	list_width += maxlentype;
+	list_width += 12;
+
 	sb.append("\n\r$c0011Puoi scegliere tra i seguenti oggetti:\n\r$c0013");
-	for(i = 0; i < maxlen + maxlentype + 12; i++)
+	for(i = 0; i < list_width; i++)
 	{
 		sb.append("-");
 	}
@@ -248,7 +253,7 @@ void ListaOggetti(struct char_data* ch, int quest)
 	}
 
 	sb.append("$c0013");
-	for(i = 0; i < maxlen + maxlentype + 12; i++)
+	for(i = 0; i < list_width; i++)
 	{
 		sb.append("-");
 	}
@@ -269,7 +274,7 @@ void SellObj(struct char_data* ch, struct char_data* keeper, struct obj_data* bu
 		i++;
 	}
 
-	if(numero <= 0 || numero > i + 1)
+	if(numero <= 0 || numero > i)
 	{
 		sprintf(buf, "%s Non ho quell'oggetto in lista, controlla meglio!", GET_NAME(ch));
 		do_tell(keeper, buf, CMD_TELL);

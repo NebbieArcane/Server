@@ -13,10 +13,8 @@
 //#include <odb/boost/date-time/exceptions.hxx>
 //#include <odb/boost/date-time/mysql/posix-time-mapping.hxx>
 #include <odb/core.hxx>
-#include <odb/boost/lazy-ptr.hxx>
 #include <odb/nullable.hxx>
 #include <string>
-#include "../utility.hpp"
 
 namespace Alarmud {
 using std::string;

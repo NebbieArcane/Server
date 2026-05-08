@@ -923,7 +923,7 @@ int check_nature(struct char_data* i) {
 }
 int CheckMulti(struct char_data* i) {
 	char buf[256];
-	register struct char_data* test;
+	struct char_data* test;
 	for(test=character_list; test; test=test->next) {
 
 		if(GET_AUTHCODE(test)
@@ -987,8 +987,8 @@ void CheckSpecialties(struct char_data* ch, struct affected_type* af)
 
 void affect_update(unsigned long localPulse) {
 	static struct affected_type* af, *next_af_dude;
-	register struct char_data* ch;
-	register struct obj_data* j;
+	struct char_data* ch;
+	struct obj_data* j;
 	struct obj_data* next_thing;
 	struct char_data*  next_char;
 	struct room_data* rp;
@@ -1082,7 +1082,8 @@ void affect_update(unsigned long localPulse) {
 				}
 				else if(af->type >= FIRST_BREATH_WEAPON &&
 						af->type <= LAST_BREATH_WEAPON) {
-					bweapons[ af->type-FIRST_BREATH_WEAPON ](-af->modifier/2, ch, "",
+					const int breath_damage = -(af->modifier / 2);
+					bweapons[ af->type-FIRST_BREATH_WEAPON ](breath_damage, ch, "",
 							SPELL_TYPE_SPELL, ch, 0);
 					if(!ch->affected) {
 						/* oops, you're dead :) */
@@ -1445,8 +1446,8 @@ void say_spell(struct char_data* ch, int si) {
 
 
 
-	sprintf(buf2,"$n pronuncia le parole, '$c0015%s$c0007'.", buf);
-	sprintf(buf, "$n pronuncia le parole, '$c0015%s$c0007'.", spells[si-1]);
+	std::snprintf(buf2, sizeof(buf2), "$n pronuncia le parole, '$c0015%.20000s$c0007'.", buf);
+	std::snprintf(buf, sizeof(buf), "$n pronuncia le parole, '$c0015%s$c0007'.", spells[si-1]);
 
 	for(temp_char = real_roomp(ch->in_room)->people;
 			temp_char;

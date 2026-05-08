@@ -1,16 +1,16 @@
 #!/bin/bash
-# Wrapper di docker compose con rilevamento automatico dell'architettura host.
+# Wrapper di docker compose con rilevamento automatico architettura host.
 #
-# Su Apple Silicon (ARM64): forza l'immagine linux/amd64 via QEMU e verifica
-# che i file ODB siano pre-generati (non possono essere generati sotto QEMU).
-# Su Intel/AMD (x86_64): usa linux/amd64 nativo, senza emulazione.
+# Su Apple Silicon (ARM64): forza linux/amd64 per allinearsi all'ambiente
+# x86_64 (Vagrant/CI). Se mancano i file ODB, li genera in un container ARM64.
+# Su Intel/AMD (x86_64): usa linux/amd64 nativo.
 #
 # Uso:
-#   ./run.sh up            # avvia sulla porta di default (4000)
-#   ./run.sh up -d         # avvia in background
-#   SERVER_PORT=4002 ./run.sh up
-#   ./run.sh down
-#   ./run.sh build
+#   ./docker-run.sh up            # avvia sulla porta di default (4000)
+#   ./docker-run.sh up -d         # avvia in background
+#   SERVER_PORT=4002 ./docker-run.sh up
+#   ./docker-run.sh down
+#   ./docker-run.sh build
 
 set -e
 
@@ -23,8 +23,8 @@ if [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
     # Apple Silicon (M1/M2/M3) o Linux ARM64
     export DOCKER_PLATFORM=linux/amd64
 
-    # I file ODB non possono essere generati sotto QEMU x86_64 (bug cc1plus).
-    # Se mancano, li generiamo con un container ARM64 nativo.
+    # Se i file ODB non sono presenti nel workspace, li generiamo localmente
+    # in un container ARM64 nativo prima della build linux/amd64.
     ODB_FILES=(
         src/odb/account-odb.cxx
         src/odb/account-odb-mysql.cxx
@@ -49,7 +49,7 @@ if [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
                     libodb-mysql-dev libboost-dev libboost-date-time-dev 2>/dev/null
                 cd /src/odb && odb \
                     --profile boost/smart-ptr --profile boost/date-time \
-                    --std c++11 -m dynamic -d common -d mysql \
+                    --std c++17 -m dynamic -d common -d mysql \
                     --generate-query --generate-prepared --show-sloc \
                     --generate-session --generate-schema \
                     --schema-format separate --at-once \

@@ -2476,7 +2476,7 @@ void spell_know_monster(byte level, struct char_data* ch,
 			}
 			if(IS_SET(victim->hatefield, HATE_CLASS)) {
 				sprintbit((unsigned)victim->hates.iClass, pc_class_types, buf2);
-				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
@@ -2488,21 +2488,21 @@ void spell_know_monster(byte level, struct char_data* ch,
 		if(level > 25) {
 			if(victim->susc) {
 				sprintbit(victim->susc, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 30) {
 			if(victim->immune) {
 				sprintbit(victim->immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 35) {
 			if(victim->M_immune) {
 				sprintbit(victim->M_immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}

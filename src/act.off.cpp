@@ -533,7 +533,6 @@ ACTION_FUNC(do_backstab) {
 
 ACTION_FUNC(do_order) {
 	char name[100], message[256];
-	char buf[256];
 	bool found = FALSE;
 	int org_room;
 	struct char_data* victim;
@@ -576,9 +575,12 @@ ACTION_FUNC(do_order) {
 			if(check_soundproof(victim)) {
 				return;
 			}
-			/*snprintf(buf, 255,"$N orders you to '%s'", message);*/
-			snprintf(buf, 255,"$N ti ordina di '%s'", message);
-			act(buf, FALSE, victim, 0, ch, TO_CHAR);
+			{
+				std::string order_msg = "$N ti ordina di '";
+				order_msg += message;
+				order_msg += "'";
+				act(order_msg.c_str(), FALSE, victim, 0, ch, TO_CHAR);
+			}
 
 			if(GetMaxLevel(ch)<IMMORTALE)													/* Aggiungo il check per non */
 				/*act("$n gives $N an order.", FALSE, ch, 0, victim, TO_NOTVICT);*/ {		/* far vedere ai player      */
@@ -634,8 +636,10 @@ ACTION_FUNC(do_order) {
 
 			if(!IS_IMMORTALE(ch))
             {                                                                   /* Aggiungo il check per non    */
-				snprintf(buf,255, "$n ordina '%s'.", message);                  /* far vedere ai player         */
-                act(buf, FALSE, ch, 0, victim, TO_ROOM);                        /* un ordine IMMORTALE          */
+				std::string order_room = "$n ordina '";
+				order_room += message;
+				order_room += "'.";
+                act(order_room.c_str(), FALSE, ch, 0, victim, TO_ROOM);                        /* un ordine IMMORTALE          */
 			}
 			/******* FLYP 20020610 *******/
 
@@ -669,7 +673,6 @@ ACTION_FUNC(do_order) {
 
 ACTION_FUNC(do_order_old) {
 	char name[100], message[256];
-	char buf[256];
 	bool found = FALSE;
 	int org_room;
 	struct char_data* victim;
@@ -703,8 +706,12 @@ ACTION_FUNC(do_order_old) {
 			if(check_soundproof(victim)) {
 				return;
 			}
-			snprintf(buf, 255,"$N orders you to '%s'", message);
-			act(buf, FALSE, victim, 0, ch, TO_CHAR);
+			{
+				std::string order_msg = "$N orders you to '";
+				order_msg += message;
+				order_msg += "'";
+				act(order_msg.c_str(), FALSE, victim, 0, ch, TO_CHAR);
+			}
 			act("$n gives $N an order.", FALSE, ch, 0, victim, TO_NOTVICT);
 
 			if(victim->master != ch || !IS_AFFECTED(victim, AFF_CHARM)) {
@@ -750,8 +757,10 @@ ACTION_FUNC(do_order_old) {
 		}
 		else {
 			/* This is order "followers" */
-			snprintf(buf,255, "$n issues the order '%s'.", message);
-			act(buf, FALSE, ch, 0, victim, TO_ROOM);
+			std::string order_room = "$n issues the order '";
+			order_room += message;
+			order_room += "'.";
+			act(order_room.c_str(), FALSE, ch, 0, victim, TO_ROOM);
 
 			org_room = ch->in_room;
 
@@ -2235,38 +2244,59 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
     }
 
 	if(!damage) {
-        sprintf(buf, "%s", att_kick_miss_ch[i]);
-        if(IS_SET(ch->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		std::string msg = att_kick_miss_ch[i];
+		if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+			msg += " $c0003[" + std::to_string(damage) + "]$c0007";
+		}
+		std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
-        sprintf(buf, "%s", att_kick_miss_victim[i]);
-        if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (damage > 0 ? "-" : ""), damage);
+		msg = att_kick_miss_victim[i];
+		if(IS_SET(victim->player.user_flags,PWP_MODE)) {
+			msg += " $c0001[";
+			msg += (damage > 0 ? "-" : "");
+			msg += std::to_string(damage);
+			msg += "]$c0007";
+		}
+		std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_VICT);
 		act(att_kick_miss_room[i],FALSE, ch, ch->equipment[WIELD], victim,
 			TO_NOTVICT);
 	}
 	else if(GET_HIT(victim) - DamageTrivia(ch,victim,damage,SKILL_KICK, 7) < -10) {
-        sprintf(buf, "%s", att_kick_kill_ch[i]);
-        if(IS_SET(ch->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		std::string msg = att_kick_kill_ch[i];
+		if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+			msg += " $c0003[" + std::to_string(damage) + "]$c0007";
+		}
+		std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
-        sprintf(buf, "%s", att_kick_kill_victim[i]);
-        if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (damage > 0 ? "-" : ""), damage);
+		msg = att_kick_kill_victim[i];
+		if(IS_SET(victim->player.user_flags,PWP_MODE)) {
+			msg += " $c0001[";
+			msg += (damage > 0 ? "-" : "");
+			msg += std::to_string(damage);
+			msg += "]$c0007";
+		}
+		std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 		act(buf, FALSE, ch, ch->equipment[WIELD],victim,
 			TO_VICT);
 		act(att_kick_kill_room[i],FALSE, ch, ch->equipment[WIELD], victim,
 			TO_NOTVICT);
 	}
 	else {
-        sprintf(buf, "%s", att_kick_hit_ch[i]);
-        if(IS_SET(ch->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0003[%d]$c0007",buf, damage);
+		std::string msg = att_kick_hit_ch[i];
+		if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+			msg += " $c0003[" + std::to_string(damage) + "]$c0007";
+		}
+		std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 		act(buf, FALSE, ch, ch->equipment[WIELD], victim, TO_CHAR);
-        sprintf(buf, "%s", att_kick_hit_victim[i]);
-        if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (damage > 0 ? "-" : ""), damage);
+		msg = att_kick_hit_victim[i];
+		if(IS_SET(victim->player.user_flags,PWP_MODE)) {
+			msg += " $c0001[";
+			msg += (damage > 0 ? "-" : "");
+			msg += std::to_string(damage);
+			msg += "]$c0007";
+		}
+		std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 		act(buf, FALSE, ch, ch->equipment[WIELD],victim,
 			TO_VICT);
 		act(att_kick_hit_room[i],FALSE, ch, ch->equipment[WIELD], victim,

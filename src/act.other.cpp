@@ -1929,28 +1929,29 @@ ACTION_FUNC(do_quaff) {
 
 	/*  my stuff */
 	if(ch->specials.fighting) {
+		const long long roll = static_cast<long long>(number(1, 20));
+		bool drop_potion = false;
 		if(equipped) {
-			if(number(1,20) > ch->abilities.dex) {
-				act("$n is jolted and drops $p!  It shatters!",
-					TRUE, ch, temp, 0, TO_ROOM);
-				act("You arm is jolted and $p flies from your hand, *SMASH*",
-					TRUE, ch, temp, 0, TO_CHAR);
-				if(equipped) {
-					temp = unequip_char(ch, HOLD);
-				}
-				extract_obj(temp);
-				return;
-			}
+			drop_potion = roll > static_cast<long long>(ch->abilities.dex);
 		}
 		else {
-			if(number(1,20) > ch->abilities.dex - 4) {
-				act("$n is jolted and drops $p!  It shatters!",
-					TRUE, ch, temp, 0, TO_ROOM);
-				act("You arm is jolted and $p flies from your hand, *SMASH*",
-					TRUE, ch, temp, 0, TO_CHAR);
-				extract_obj(temp);
-				return;
+			if(ch->abilities.dex <= 4) {
+				drop_potion = true;
 			}
+			else {
+				drop_potion = roll > static_cast<long long>(ch->abilities.dex - 4);
+			}
+		}
+		if(drop_potion) {
+			act("$n is jolted and drops $p!  It shatters!",
+				TRUE, ch, temp, 0, TO_ROOM);
+			act("You arm is jolted and $p flies from your hand, *SMASH*",
+				TRUE, ch, temp, 0, TO_CHAR);
+			if(equipped) {
+				temp = unequip_char(ch, HOLD);
+			}
+			extract_obj(temp);
+			return;
 		}
 	}
 
@@ -2786,9 +2787,11 @@ ACTION_FUNC(do_alias) {
 			if(GET_ALIAS(ch, num)) {
 				strcpy(buf, GET_ALIAS(ch, num));
 				if(*arg) {
-					sprintf(buf2,"%s %s",buf,arg);
-					send_to_char(buf2,ch);
-					command_interpreter(ch, buf2);
+					std::string alias_cmd = buf;
+					alias_cmd += " ";
+					alias_cmd += arg;
+					send_to_char(alias_cmd.c_str(), ch);
+					command_interpreter(ch, alias_cmd.c_str());
 				}
 				else {
 					command_interpreter(ch, buf);
@@ -4848,9 +4851,10 @@ ACTION_FUNC(do_insert)
 
         free(obj->short_description);
         obj->short_description = (char*)strdup(buf);
-        free(obj->description);
-        sprintf(buf, "%s e' qui per terra.", buf);
-        obj->description = (char*)strdup(buf);
+		free(obj->description);
+		std::string obj_desc = obj->short_description;
+		obj_desc += " e' qui per terra.";
+		obj->description = (char*)strdup(obj_desc.c_str());
         SET_BIT(obj->obj_flags.extra_flags2, ITEM2_INSERT);
     }
     else

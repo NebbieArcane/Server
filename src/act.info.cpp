@@ -13,6 +13,10 @@
 #include <ctime>
 #include <cstdlib>
 #include <cstdint>
+#include <array>
+#include <iomanip>
+#include <sstream>
+#include <string>
 #include <unistd.h>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -62,7 +66,7 @@ int attrefzone=0;
 int HowManyConnection(int ToAdd) {
 	static int NumberOfConnection=0;
 	NumberOfConnection+=ToAdd;
-	return(NumberOfConnection);
+	return NumberOfConnection;
 }
 
 int singular(struct obj_data* o) {
@@ -71,9 +75,9 @@ int singular(struct obj_data* o) {
 			IS_SET(o->obj_flags.wear_flags, ITEM_WEAR_FEET) ||
 			IS_SET(o->obj_flags.wear_flags, ITEM_WEAR_LEGS) ||
 			IS_SET(o->obj_flags.wear_flags, ITEM_WEAR_ARMS)) {
-		return(FALSE);
+		return FALSE;
 	}
-	return(TRUE);
+	return TRUE;
 }
 
 /* Procedures related to 'look' */
@@ -141,7 +145,7 @@ char* find_ex_description(char* word, struct extra_descr_data* list) {
 #endif
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
@@ -150,26 +154,32 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 
 	buffer[0] = 0;
 	if((mode == 0) && object->description && *object->description) {
-		strcpy(buffer, object->description);
-        if(buffer[1] == '$')
-            buffer[7] = UPPER(buffer[7]);
-        else
-            CAP(buffer);
+		std::strncpy(buffer, object->description, sizeof(buffer) - 1);
+		buffer[sizeof(buffer) - 1] = '\0';
+		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+			buffer[7] = UPPER(buffer[7]);
+		}
+		else if(buffer[0] != '\0') {
+			CAP(buffer);
+		}
 	}
 	else if(object->short_description &&
 			(mode == 1 || mode == 2 || mode == 3 || mode == 4)) {
-		strcpy(buffer,object->short_description);
-        if(buffer[1] == '$')
-            buffer[7] = UPPER(buffer[7]);
-        else
-            CAP(buffer);
+		std::strncpy(buffer, object->short_description, sizeof(buffer) - 1);
+		buffer[sizeof(buffer) - 1] = '\0';
+		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+			buffer[7] = UPPER(buffer[7]);
+		}
+		else if(buffer[0] != '\0') {
+			CAP(buffer);
+		}
 	}
 	else if(mode == 5) {
 		if(object->obj_flags.type_flag == ITEM_NOTE) {
 			if(object->action_description && *object->action_description) {
-				strcpy(buffer, "C'e' scritto sopra qualcosa:\n\r\n\r");
-				strcat(buffer, object->action_description);
-				page_string(ch->desc, buffer, 1);
+				std::string noteText = "C'e' scritto sopra qualcosa:\n\r\n\r";
+				noteText += object->action_description;
+				page_string(ch->desc, noteText.c_str(), 1);
 			}
 			else {
 				act("Non c'e' scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
@@ -178,134 +188,141 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 
 		}
 		else if((object->obj_flags.type_flag != ITEM_DRINKCON)) {
-			strcpy(buffer,"Non vedi nulla di speciale...");
+			std::strncpy(buffer, "Non vedi nulla di speciale...", sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
 		}
 		else {
 			/* ITEM_TYPE == ITEM_DRINKCON */
-			strcpy(buffer, "Sembra un contenitore per bevande.");
+			std::strncpy(buffer, "Sembra un contenitore per bevande.", sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
 		}
 	}
 
+	std::string output = buffer;
 	if(mode != 3) {
 		if(IS_OBJ_STAT(object, ITEM_INVISIBLE)) {
-			strcat(buffer,"$c0011 (invisibile)$c0007");
+			output += "$c0011 (invisibile)$c0007";
 		}
 		if(IS_OBJ_STAT(object, ITEM_ANTI_GOOD) &&
 				IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 			if(singular(object)) {
-				strcat(buffer, "$c0009 (ha un alone di luce rossa)$c0007");
+				output += "$c0009 (ha un alone di luce rossa)$c0007";
 			}
 			else {
-				strcat(buffer,"$c0009 (hanno un alone di luce rossa)$c0007");
+				output += "$c0009 (hanno un alone di luce rossa)$c0007";
 			}
 		}
 		if(IS_OBJ_STAT(object, ITEM_MAGIC) &&
 				IS_AFFECTED(ch, AFF_DETECT_MAGIC)) {
 			if(singular(object)) {
-				strcat(buffer,"$c0012 (ha un alone di luce blu)$c0007");
+				output += "$c0012 (ha un alone di luce blu)$c0007";
 			}
 			else {
-				strcat(buffer,"$c0012 (hanno un alone di luce blu)$c0007");
+				output += "$c0012 (hanno un alone di luce blu)$c0007";
 			}
 		}
 		if(IS_OBJ_STAT(object, ITEM_GLOW)) {
 			if(singular(object)) {
-				strcat(buffer, "$c0015 (ha un alone luminoso)$c0007");
+				output += "$c0015 (ha un alone luminoso)$c0007";
 			}
 			else {
-				strcat(buffer,"$c0015 (hanno un alone luminoso)$c0007");
+				output += "$c0015 (hanno un alone luminoso)$c0007";
 			}
 		}
-		if(IS_OBJ_STAT(object,ITEM_HUM)) {
+		if(IS_OBJ_STAT(object, ITEM_HUM)) {
 			if(singular(object)) {
-				strcat(buffer,"$c0008 (emette un forte ronzio)$c0007");
+				output += "$c0008 (emette un forte ronzio)$c0007";
 			}
 			else {
-				strcat(buffer,"$c0008 (emettono un forte ronzio)$c0007");
+				output += "$c0008 (emettono un forte ronzio)$c0007";
 			}
 		}
 		if(object->obj_flags.type_flag == ITEM_ARMOR) {
 			if(object->obj_flags.value[ 0 ] <
 					(object->obj_flags.value[ 1 ] / 4)) {
 				if(singular(object)) {
-					strcat(buffer, "$c0009 (distrutto)$c0007");
+					output += "$c0009 (distrutto)$c0007";
 				}
 				else {
-					strcat(buffer,"$c0009 (sono distrutti)$c0007");
+					output += "$c0009 (sono distrutti)$c0007";
 				}
 			}
 			else if(object->obj_flags.value[ 0 ] <
 					(object->obj_flags.value[ 1 ] / 3)) {
 				if(singular(object)) {
-					strcat(buffer, "$c0009 (ha bisogno di essere riparato)$c0007");
+					output += "$c0009 (ha bisogno di essere riparato)$c0007";
 				}
 				else {
-					strcat(buffer,"$c0009 (hanno bisogno di essere riparati)$c0007");
+					output += "$c0009 (hanno bisogno di essere riparati)$c0007";
 				}
 			}
 			else if(object->obj_flags.value[ 0 ] <
 					(object->obj_flags.value[ 1 ] / 2)) {
 				if(singular(object)) {
-					strcat(buffer, "$c0011 (in buone condizioni)$c0007");
+					output += "$c0011 (in buone condizioni)$c0007";
 				}
 				else {
-					strcat(buffer,"$c0011 (in buone condizioni)$c0007");
+					output += "$c0011 (in buone condizioni)$c0007";
 				}
 			}
 			else if(object->obj_flags.value[ 0 ] <
 					object->obj_flags.value[1]) {
 				if(singular(object)) {
-					strcat(buffer, "$c0010 (in ottime condizioni)$c0007");
+					output += "$c0010 (in ottime condizioni)$c0007";
 				}
 				else {
-					strcat(buffer,"$c0010 (in ottime condizioni)$c0007");
+					output += "$c0010 (in ottime condizioni)$c0007";
 				}
 			}
 			else {
 				if(singular(object)) {
-					strcat(buffer, "$c0010 (in condizioni eccellenti)$c0007");
+					output += "$c0010 (in condizioni eccellenti)$c0007";
 				}
 				else {
-					strcat(buffer,"$c0010 (in condizioni eccellenti)$c0007");
+					output += "$c0010 (in condizioni eccellenti)$c0007";
 				}
 			}
 		}
 	}
-	if(buffer[ 0 ]) {
-		strcat(buffer, "\n\r");
-		page_string(ch->desc, buffer, 1);
+	if(!output.empty()) {
+		output += "\n\r";
+		page_string(ch->desc, output.c_str(), 1);
 	}
 }
 
 void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 						   int mode, int num) {
 	char buffer[ MAX_STRING_LENGTH ];
-	char tmp[ 10 ];
 
 	buffer[0] = 0;
-	tmp[0] = 0;
 
 	if((mode == 0) && object->description && *object->description) {
-		strcpy(buffer,object->description);
-        if(buffer[1] == '$')
-            buffer[7] = UPPER(buffer[7]);
-        else
-            CAP(buffer);
+		std::strncpy(buffer, object->description, sizeof(buffer) - 1);
+		buffer[sizeof(buffer) - 1] = '\0';
+		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+			buffer[7] = UPPER(buffer[7]);
+		}
+		else if(buffer[0] != '\0') {
+			CAP(buffer);
+		}
 	}
 	else if(object->short_description && ((mode == 1) ||
 										  (mode == 2) || (mode == 3) || (mode == 4))) {
-		strcpy(buffer, object->short_description);
-        if(buffer[1] == '$')
-            buffer[7] = UPPER(buffer[7]);
-        else
-            CAP(buffer);
+		std::strncpy(buffer, object->short_description, sizeof(buffer) - 1);
+		buffer[sizeof(buffer) - 1] = '\0';
+		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+			buffer[7] = UPPER(buffer[7]);
+		}
+		else if(buffer[0] != '\0') {
+			CAP(buffer);
+		}
 	}
 	else if(mode == 5) {
 		if(object->obj_flags.type_flag == ITEM_NOTE) {
 			if(object->action_description && *object->action_description) {
-				strcpy(buffer, "C'e' scritto sopra qualcosa:\n\r\n\r");
-				strcat(buffer, object->action_description);
-				page_string(ch->desc, buffer, 1);
+				std::string noteText = "C'e' scritto sopra qualcosa:\n\r\n\r";
+				noteText += object->action_description;
+				page_string(ch->desc, noteText.c_str(), 1);
 			}
 			else {
 				act("Non c'e' scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
@@ -313,41 +330,45 @@ void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 			return;
 		}
 		else if((object->obj_flags.type_flag != ITEM_DRINKCON)) {
-			strcpy(buffer,"Non vedi nulla di speciale...");
+			std::strncpy(buffer, "Non vedi nulla di speciale...", sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
 		}
 		else {
 			/* ITEM_TYPE == ITEM_DRINKCON */
-			strcpy(buffer, "Sembra un contenitore per bevande.");
+			std::strncpy(buffer, "Sembra un contenitore per bevande.", sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
 		}
 	}
 
+	std::string output = buffer;
 	if(mode != 3) {
 		if(IS_OBJ_STAT(object, ITEM_INVISIBLE)) {
-			strcat(buffer," $c0011(invisibile)$c0007");
+			output += " $c0011(invisibile)$c0007";
 		}
 		if(IS_OBJ_STAT(object, ITEM_ANTI_GOOD) &&
-				IS_AFFECTED(ch,AFF_DETECT_EVIL)) {
-			strcat(buffer," $c0009(ha un alone di luce rossa)$c0007");
+				IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
+			output += " $c0009(ha un alone di luce rossa)$c0007";
 		}
-		if(IS_OBJ_STAT(object,ITEM_MAGIC) &&
+		if(IS_OBJ_STAT(object, ITEM_MAGIC) &&
 				IS_AFFECTED(ch, AFF_DETECT_MAGIC)) {
-			strcat(buffer," $c0012(ha un alone di luce blu)$c0007");
+			output += " $c0012(ha un alone di luce blu)$c0007";
 		}
 		if(IS_OBJ_STAT(object, ITEM_GLOW)) {
-			strcat(buffer," $c0015(ha un alone luminoso)$c0007");
+			output += " $c0015(ha un alone luminoso)$c0007";
 		}
-		if(IS_OBJ_STAT(object,ITEM_HUM)) {
-			strcat(buffer," $c0008(emette un forte ronzio)$c0007");
+		if(IS_OBJ_STAT(object, ITEM_HUM)) {
+			output += " $c0008(emette un forte ronzio)$c0007";
 		}
 	}
 
 	if(num > 1) {
-		snprintf(tmp,9,"[%d]", num);
-		strcat(buffer, tmp);
+		output += "[";
+		output += std::to_string(num);
+		output += "]";
 	}
-	if(buffer[ 0 ]) {
-		strcat(buffer, "\n\r");
-		page_string(ch->desc, buffer, 1);
+	if(!output.empty()) {
+		output += "\n\r";
+		page_string(ch->desc, output.c_str(), 1);
 	}
 }
 
@@ -498,7 +519,7 @@ void list_obj_to_char(struct obj_data* list, struct char_data* ch, int mode,
 
 void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 	float fRapp;
-	char szBuf[ 256 ];
+	std::string szBuf = "$n e' ";
 
 	const char* DescAltezze[] = {
 		"altissim$b",
@@ -533,54 +554,52 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 		return;
 	}
 
-	strcpy(szBuf, "$n e' ");
-
 	if(pChar->player.height > 250) {
-		strcat(szBuf, DescAltezze[ 0 ]);
+		szBuf += DescAltezze[ 0 ];
 	}
 	else if(pChar->player.height > 190) {
-		strcat(szBuf, DescAltezze[ 1 ]);
+		szBuf += DescAltezze[ 1 ];
 	}
 	else if(pChar->player.height > 170) {
-		strcat(szBuf, DescAltezze[ 2 ]);
+		szBuf += DescAltezze[ 2 ];
 	}
 	else if(pChar->player.height > 155) {
-		strcat(szBuf, DescAltezze[ 3 ]);
+		szBuf += DescAltezze[ 3 ];
 	}
 	else if(pChar->player.height > 140) {
-		strcat(szBuf, DescAltezze[ 4 ]);
+		szBuf += DescAltezze[ 4 ];
 	}
 	else {
-		strcat(szBuf, DescAltezze[ 5 ]);
+		szBuf += DescAltezze[ 5 ];
 	}
 
-	strcat(szBuf, " e ");
+	szBuf += " e ";
 
-	fRapp = (float)GET_HEIGHT(pChar) /
-			((float)pChar->player.weight * 0.4536);
+	fRapp = static_cast<float>(GET_HEIGHT(pChar)) /
+			(static_cast<float>(pChar->player.weight) * 0.4536f);
 
 
 	if(fRapp > 3.27) {
-		strcat(szBuf, DescCostituzione[ 5 ]);
+		szBuf += DescCostituzione[ 5 ];
 	}
 	else if(fRapp > 3) {
-		strcat(szBuf, DescCostituzione[ 4 ]);
+		szBuf += DescCostituzione[ 4 ];
 	}
 	else if(fRapp > 2.25) {
-		strcat(szBuf, DescCostituzione[ 3 ]);
+		szBuf += DescCostituzione[ 3 ];
 	}
 	else if(fRapp > 2) {
-		strcat(szBuf, DescCostituzione[ 2 ]);
+		szBuf += DescCostituzione[ 2 ];
 	}
 	else if(fRapp > 1.6) {
-		strcat(szBuf, DescCostituzione[ 1 ]);
+		szBuf += DescCostituzione[ 1 ];
 	}
 	else {
-		strcat(szBuf, DescCostituzione[ 0 ]);
+		szBuf += DescCostituzione[ 0 ];
 	}
 
-	strcat(szBuf, ".");
-	act(szBuf, FALSE, pChar, NULL, pTo, TO_VICT);
+	szBuf += ".";
+	act(szBuf.c_str(), FALSE, pChar, NULL, pTo, TO_VICT);
 }
 
 void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
@@ -613,135 +632,141 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		if(!(i->player.long_descr) ||
 				(GET_POS(i) != i->specials.default_pos)) {
 			/* A player char or a mobile without long descr, or not in default pos.*/
+			std::string line;
 			if(!IS_NPC(i)) {
-				strcpy(buffer, GET_NAME(i));
-				strcat(buffer, " ");
+				std::string playerLine = GET_NAME(i);
+				playerLine += " ";
 				if(GET_TITLE(i)) {
-					strcat(buffer, GET_TITLE(i));
+					playerLine += GET_TITLE(i);
 				}
+				line = playerLine;
 			}
 			else {
-				strcpy(buffer, i->player.short_descr);
-                if(buffer[1] == '$')
-                    buffer[7] = UPPER(buffer[7]);
-                else
-                    CAP(buffer);
+				std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
+				buffer[sizeof(buffer) - 1] = '\0';
+				if(buffer[1] == '$') {
+					buffer[7] = UPPER(buffer[7]);
+				}
+				else {
+					CAP(buffer);
+				}
+				line = buffer;
 			}
 
 			if(IS_AFFECTED(i, AFF_INVISIBLE) || i->invis_level >= IMMORTALE) {
-				strcat(buffer," $c0011(invisibile)$c0007");
+				line += " $c0011(invisibile)$c0007";
 			}
 			if(IS_AFFECTED(i, AFF_CHARM)) {
-				strcat(buffer," $c0015(schiavo)$c0007");
+				line += " $c0015(schiavo)$c0007";
 			}
 
 			switch(GET_POS(i)) {
 			case POSITION_STUNNED:
-				strcat(buffer," giace qui, svenut$b.");
+				line += " giace qui, svenut$b.";
 				break;
 			case POSITION_INCAP:
-				strcat(buffer," giace qui, incapacitat$b.");
+				line += " giace qui, incapacitat$b.";
 				break;
 			case POSITION_MORTALLYW:
-				strcat(buffer," giace qui, ferit$b a morte.");
+				line += " giace qui, ferit$b a morte.";
 				break;
 			case POSITION_DEAD:
-				strcat(buffer," giace qui, mort$b.");
+				line += " giace qui, mort$b.";
 				break;
 			case POSITION_MOUNTED:
 				if(MOUNTED(i)) {
-					strcat(buffer, " e' qui, cavalcando ");
-					strcat(buffer, MOUNTED(i)->player.short_descr);
+					line += " e' qui, cavalcando ";
+					line += MOUNTED(i)->player.short_descr;
 				}
 				else {
-					strcat(buffer, " e' qui, in piedi.");
+					line += " e' qui, in piedi.";
 				}
 				break;
 			case POSITION_STANDING :
 				if(!IS_AFFECTED(i, AFF_FLYING) &&
 						!affected_by_spell(i,SKILL_LEVITATION)) {
 					if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-						strcat(buffer, " sta galleggiando qui.");
+						line += " sta galleggiando qui.";
 					}
 					else {
-						strcat(buffer," e' qui, in piedi.");
+						line += " e' qui, in piedi.";
 					}
 				}
 				else {
-					strcat(buffer," vola qui intorno.");
+					line += " vola qui intorno.";
 				}
 				break;
 			case POSITION_SITTING  :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta galleggiando qui.");
+					line += " sta galleggiando qui.";
 				}
 				else {
-					strcat(buffer," e' sedut$b qui.");
+					line += " e' sedut$b qui.";
 				}
 				break;
 			case POSITION_RESTING  :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta facendo il morto nell'$c0012acqua$c0007.");
+					line += " sta facendo il morto nell'$c0012acqua$c0007.";
 				}
 				else {
-					strcat(buffer," sta riposando qui.");
+					line += " sta riposando qui.";
 				}
 				break;
 			case POSITION_SLEEPING :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta dormendo qui nell'$c0012acqua$c0007.");
+					line += " sta dormendo qui nell'$c0012acqua$c0007.";
 				}
 				else {
-					strcat(buffer," sta dormendo qui.");
+					line += " sta dormendo qui.";
 				}
 				break;
 			case POSITION_FIGHTING :
 				if(i->specials.fighting) {
-					strcat(buffer," e' qui, combattendo contro ");
+					line += " e' qui, combattendo contro ";
 					if(i->specials.fighting == ch) {
-						strcat(buffer," DI TE!");
+						line += " DI TE!";
 					}
 					else {
 						if(i->in_room == i->specials.fighting->in_room) {
 							if(IS_NPC(i->specials.fighting)) {
-								strcat(buffer, i->specials.fighting->player.short_descr);
+								line += i->specials.fighting->player.short_descr;
 							}
 							else {
-								strcat(buffer, GET_NAME(i->specials.fighting));
+								line += GET_NAME(i->specials.fighting);
 							}
 						}
 						else {
-							strcat(buffer, "qualcuno che se ne e' appena andato.");
+							line += "qualcuno che se ne e' appena andato.";
 						}
 					}
 				}
 				else { /* NIL fighting pointer */
-					strcat(buffer," e' qui dimenandosi contro l'aria.");
+					line += " e' qui dimenandosi contro l'aria.";
 				}
 				break;
 			default:
-				strcat(buffer," fluttua qui intorno.");
+				line += " fluttua qui intorno.";
 				break;
 			} /*switch */
 
 			if(IS_AFFECTED2(i, AFF2_AFK)) {
-				strcat(buffer, "$c0006 (AFK)$c0007");
+				line += "$c0006 (AFK)$c0007";
 			}
 
 			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
 				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009 (alone rosso)$c0007");
+					line += "$c0009 (alone rosso)$c0007";
 				}
 			}
 
 			if(IS_LINKDEAD(i)) {
-				strcat(buffer, "$c0015 (link dead)$c0007");
+				line += "$c0015 (link dead)$c0007";
 			}
 
-			act(buffer, FALSE, i, 0, ch, TO_VICT);
+			act(line.c_str(), FALSE, i, 0, ch, TO_VICT);
 			if(!IS_AFFECTED(ch,AFF_TRUE_SIGHT)) {
 				for(j=how_many_spell(i, SPELL_MIRROR_IMAGES); j>0; j--) {
-					act(buffer,FALSE,i,0,ch,TO_VICT);
+					act(line.c_str(), FALSE, i, 0, ch, TO_VICT);
 				}
 			}
 
@@ -749,46 +774,43 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		else {
 			/* npc with long */
 
+			std::string longLine;
 			if(IS_AFFECTED(i, AFF_INVISIBLE)) {
-				strcpy(buffer,"*");
-			}
-			else {
-				*buffer = '\0';
+				longLine = "*";
 			}
 
 			if(IS_LINKDEAD(i)) {
-				strcat(buffer, "$c0015(link dead)$c0007 ");
+				longLine += "$c0015(link dead)$c0007 ";
 			}
 
-			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
-				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009(alone rosso)$c0007 ");
-				}
+			if(IS_AFFECTED(ch, AFF_DETECT_EVIL) && IS_EVIL(i)) {
+				longLine += "$c0009(alone rosso)$c0007 ";
 			}
-
 
 			if(IS_AFFECTED2(i, AFF2_AFK)) {
-				strcat(buffer,"$c0006(AFK)$c0007 ");
+				longLine += "$c0006(AFK)$c0007 ";
 			}
 
-			strcat(buffer, i->player.long_descr);
+			longLine += i->player.long_descr;
 
-			/* strip \n\r's off */
-			while((buffer[ strlen(buffer) - 1 ] == '\r') ||
-					(buffer[ strlen(buffer) - 1 ] == '\n') ||
-					(buffer[ strlen(buffer) - 1 ] == ' ')) {
-				buffer[ strlen(buffer) - 1 ] = '\0';
+			while(!longLine.empty() &&
+					(longLine.back() == '\r' ||
+					 longLine.back() == '\n' ||
+					 longLine.back() == ' ')) {
+				longLine.pop_back();
 			}
-			act(buffer, FALSE, i, 0, ch, TO_VICT);
+			act(longLine.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
         if(IS_PC(i))
         {
-            strcpy(buffer2, i->player.name);
+            std::strncpy(buffer2, i->player.name, sizeof(buffer2) - 1);
+            buffer2[sizeof(buffer2) - 1] = '\0';
         }
         else
         {
-            strcpy(buffer2, i->player.short_descr);
+            std::strncpy(buffer2, i->player.short_descr, sizeof(buffer2) - 1);
+            buffer2[sizeof(buffer2) - 1] = '\0';
             RemColorString(buffer2);
             CAP(buffer2);
         }
@@ -797,49 +819,53 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
         {
 			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
             {
-                sprintf(buffer,"$c0015");
-                strcat(buffer,buffer2);
-                strcat(buffer, " brilla di luce propria!");
-				act(buffer, FALSE, i, 0, ch, TO_VICT);
+				std::string auraMsg = "$c0015";
+				auraMsg += buffer2;
+				auraMsg += " brilla di luce propria!";
+				act(auraMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 			}
 		}
 
 		if(IS_AFFECTED(i, AFF_GROWTH))
         {
-            sprintf(buffer,"$c0003");
-            strcat(buffer,buffer2);
-			strcat(buffer, " e' enorme!");
-            act(buffer, FALSE, i, 0, ch, TO_VICT);
+			std::string growthMsg = "$c0003";
+			growthMsg += buffer2;
+			growthMsg += " e' enorme!";
+			act(growthMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
 		if(IS_AFFECTED(i, AFF_FIRESHIELD))
         {
 			if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
             {
-                sprintf(buffer,"$c0001");
-                strcat(buffer,buffer2);
-                strcat(buffer, " e' avvolt$b in una luce fiammeggiante!");
-                act(buffer, FALSE, i, 0, ch, TO_VICT);
+				std::string fireMsg = "$c0001";
+				fireMsg += buffer2;
+				fireMsg += " e' avvolt$b in una luce fiammeggiante!";
+				act(fireMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
             }
 		}
 
 		if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
         {
-            sprintf(buffer,"$c0008");
-            strcat(buffer,buffer2);
-            strcat(buffer, " e' avvolt$b nell'oscurita'!");
-            act(buffer, FALSE, i, 0, ch, TO_VICT);
+			std::string darkMsg = "$c0008";
+			darkMsg += buffer2;
+			darkMsg += " e' avvolt$b nell'oscurita'!";
+			act(darkMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
 	}
 	else if(mode == 1) {
 		if(i->player.description) {
-            strcpy(buffer, i->player.description);
-            if(buffer[1] == '$')
-                buffer[7] = UPPER(buffer[7]);
-            else
-                CAP(buffer);
-            send_to_char(buffer, ch);
+			std::string description = i->player.description;
+			if(description.size() > 1 && description[1] == '$') {
+				if(description.size() > 7) {
+					description[7] = UPPER(description[7]);
+				}
+			}
+			else if(!description.empty()) {
+				description[0] = UPPER(description[0]);
+			}
+			send_to_char(description.c_str(), ch);
 		}
 		else {
 			if(IS_MAESTRO_DEL_CREATO(i)) {
@@ -863,8 +889,10 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		}
 		if(HAS_PRINCE(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n appartiene al clan di %s.", GET_PRINCE(i));
-			act(buffer,FALSE,i,0,ch,TO_VICT);
+			std::string clanMsg = "$n appartiene al clan di ";
+			clanMsg += (GET_PRINCE(i) ? GET_PRINCE(i) : "");
+			clanMsg += ".";
+			act(clanMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
 		/*
@@ -874,21 +902,26 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 		ShowAltezzaCostituzione(i, ch);
 
 		if(IS_PC(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1, "$n e' un$b %s.", RaceName[ GET_RACE(i) ]);
-			act(buffer, FALSE, i, 0, ch, TO_VICT);
+			std::string raceMsg = "$n e' un$b ";
+			raceMsg += RaceName[ GET_RACE(i) ];
+			raceMsg += ".";
+			act(raceMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
 
 		if(MOUNTED(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n sta cavalcando %s.", MOUNTED(i)->player.short_descr);
-			act(buffer, FALSE, i, 0, ch, TO_VICT);
+			std::string mountMsg = "$n sta cavalcando ";
+			mountMsg += MOUNTED(i)->player.short_descr;
+			mountMsg += ".";
+			act(mountMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
 		if(RIDDEN(i)) {
-			snprintf(buffer,MAX_STRING_LENGTH-1,"$n e' cavalcat$b da %s.",
-					 IS_NPC(RIDDEN(i)) ? RIDDEN(i)->player.short_descr :
-					 GET_NAME(RIDDEN(i)));
-			act(buffer, FALSE, i, 0, ch, TO_VICT);
+			std::string riddenMsg = "$n e' cavalcat$b da ";
+			riddenMsg += IS_NPC(RIDDEN(i)) ? RIDDEN(i)->player.short_descr :
+						 GET_NAME(RIDDEN(i));
+			riddenMsg += ".";
+			act(riddenMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
 		/* Show a character to another */
@@ -900,40 +933,47 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			percent = -1;    /* How could MAX_HIT be < 1?? */
 		}
 
+		std::string conditionMsg;
 		if(IS_NPC(i)) {
-			strcpy(buffer, i->player.short_descr);
-            if(buffer[1] == '$')
-                buffer[7] = UPPER(buffer[7]);
-            else
-                CAP(buffer);
+			std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
+			if(buffer[1] == '$') {
+				buffer[7] = UPPER(buffer[7]);
+			}
+			else {
+				CAP(buffer);
+			}
+			conditionMsg = buffer;
 		}
 		else {
-			strcpy(buffer, GET_NAME(i));
+			std::strncpy(buffer, GET_NAME(i), sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
+			conditionMsg = buffer;
 		}
 
 		if(percent >= 100) {
-			strcat(buffer, " e' in condizioni $c0010eccellenti$c0007.");
+			conditionMsg += " e' in condizioni $c0010eccellenti$c0007.";
 		}
 		else if(percent >= 80) {
-			strcat(buffer, " ha pochi graffi.");
+			conditionMsg += " ha pochi graffi.";
 		}
 		else if(percent >= 60) {
-			strcat(buffer, " ha alcuni tagli ed abrasioni.");
+			conditionMsg += " ha alcuni tagli ed abrasioni.";
 		}
 		else if(percent >= 40) {
-			strcat(buffer, " e' ferit$B.");
+			conditionMsg += " e' ferit$B.";
 		}
 		else if(percent >= 20) {
-			strcat(buffer, " $c0001sanguina$c0007 abbondantemente.");
+			conditionMsg += " $c0001sanguina$c0007 abbondantemente.";
 		}
 		else if(percent >= 0) {
-			strcat(buffer, " $c0001ha grossi squarci aperti$c0007.");
+			conditionMsg += " $c0001ha grossi squarci aperti$c0007.";
 		}
 		else {
-			strcat(buffer, " $c0009sta morendo per le ferite ed i colpi ricevuti$c0007.");
+			conditionMsg += " $c0009sta morendo per le ferite ed i colpi ricevuti$c0007.";
 		}
 
-		act(buffer,FALSE, ch,0,i,TO_CHAR);
+		act(conditionMsg.c_str(), FALSE, ch, 0, i, TO_CHAR);
 
 
 		/*
@@ -1027,7 +1067,6 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 							int mode, int num) {
 	char buffer[MAX_STRING_LENGTH], buffer2[MAX_STRING_LENGTH];
-	char tmp[10];
 	int j, found, percent;
 	struct obj_data* tmp_obj;
 
@@ -1052,184 +1091,189 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 				(GET_POS(i) != i->specials.default_pos)) {
 			/* A player char or a mobile without long descr, or not in default pos. */
 			if(!IS_NPC(i)) {
-				strcpy(buffer, GET_NAME(i));
-				strcat(buffer," ");
+				std::string playerLine = GET_NAME(i);
+				playerLine += " ";
 				if(GET_TITLE(i)) {
-					strcat(buffer,GET_TITLE(i));
+					playerLine += GET_TITLE(i);
 				}
+				std::strncpy(buffer, playerLine.c_str(), sizeof(buffer) - 1);
+				buffer[sizeof(buffer) - 1] = '\0';
 			}
 			else {
-				strcpy(buffer, i->player.short_descr);
-                if(buffer[1] == '$')
-                    buffer[7] = UPPER(buffer[7]);
-                else
-                    CAP(buffer);
+				std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
+				buffer[sizeof(buffer) - 1] = '\0';
+				if(buffer[1] == '$') {
+					buffer[7] = UPPER(buffer[7]);
+				}
+				else {
+					CAP(buffer);
+				}
 			}
 
-			if(IS_AFFECTED(i,AFF_INVISIBLE)) {
-				strcat(buffer,"$c0011 (invisibile)");
+			std::string line = buffer;
+			if(IS_AFFECTED(i, AFF_INVISIBLE)) {
+				line += "$c0011 (invisibile)";
 			}
 			if(IS_AFFECTED(i, AFF_CHARM)) {
-				strcat(buffer,"$c0010 (schiavo)");
+				line += "$c0010 (schiavo)";
 			}
 
 			switch(GET_POS(i)) {
 			case POSITION_STUNNED:
-				strcat(buffer," giace qui, svenut$b.");
+				line += " giace qui, svenut$b.";
 				break;
 			case POSITION_INCAP:
-				strcat(buffer," giace qui, incapacitat$b.");
+				line += " giace qui, incapacitat$b.";
 				break;
 			case POSITION_MORTALLYW:
-				strcat(buffer," giace qui, ferit$b a morte.");
+				line += " giace qui, ferit$b a morte.";
 				break;
 			case POSITION_DEAD:
-				strcat(buffer," giace qui, mort$b.");
+				line += " giace qui, mort$b.";
 				break;
 			case POSITION_MOUNTED:
 				if(MOUNTED(i)) {
-					strcat(buffer, " e' qui, montando ");
-					strcat(buffer, MOUNTED(i)->player.short_descr);
+					line += " e' qui, montando ";
+					line += MOUNTED(i)->player.short_descr;
 				}
 				else {
-					strcat(buffer, " e' qui, in piedi.");
+					line += " e' qui, in piedi.";
 				}
 				break;
 			case POSITION_STANDING :
 				if(!IS_AFFECTED(i, AFF_FLYING) &&
 						!affected_by_spell(i,SKILL_LEVITATION)) {
 					if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-						strcat(buffer, " sta galleggiano qui.");
+						line += " sta galleggiano qui.";
 					}
 					else {
-						strcat(buffer," e' qui, in piedi.");
+						line += " e' qui, in piedi.";
 					}
 				}
 				else {
-					strcat(buffer," vola qui intorno.");
+					line += " vola qui intorno.";
 				}
 				break;
 			case POSITION_SITTING  :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta galleggiando qui.");
+					line += " sta galleggiando qui.";
 				}
 				else {
-					strcat(buffer," e' sedut$b qui.");
+					line += " e' sedut$b qui.";
 				}
 				break;
 			case POSITION_RESTING  :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta riposando qui nell'acqua.");
+					line += " sta riposando qui nell'acqua.";
 				}
 				else {
-					strcat(buffer," sta riposando qui.");
+					line += " sta riposando qui.";
 				}
 				break;
 			case POSITION_SLEEPING :
 				if(real_roomp(i->in_room)->sector_type == SECT_WATER_NOSWIM) {
-					strcat(buffer, " sta dormendo qui nell'acqua.");
+					line += " sta dormendo qui nell'acqua.";
 				}
 				else {
-					strcat(buffer," sta dormendo qui.");
+					line += " sta dormendo qui.";
 				}
 				break;
 			case POSITION_FIGHTING :
 				if(i->specials.fighting) {
-					strcat(buffer," e' qui, combattendo contro ");
+					line += " e' qui, combattendo contro ";
 					if(i->specials.fighting == ch) {
-						strcat(buffer," DI TE!");
+						line += " DI TE!";
 					}
 					else {
 						if(i->in_room == i->specials.fighting->in_room) {
 							if(IS_NPC(i->specials.fighting)) {
-								strcat(buffer, i->specials.fighting->player.short_descr);
+								line += i->specials.fighting->player.short_descr;
 							}
 							else {
-								strcat(buffer, GET_NAME(i->specials.fighting));
+								line += GET_NAME(i->specials.fighting);
 							}
 						}
 						else {
-							strcat(buffer, "qualcuno che se ne e' appena andato.");
+							line += "qualcuno che se ne e' appena andato.";
 						}
 					}
 				}
 				else { /* NIL fighting pointer */
-					strcat(buffer," e' qui dimenandosi contro l'aria.");
+					line += " e' qui dimenandosi contro l'aria.";
 				}
 				break;
 			default:
-				strcat(buffer," fluttua qui intorno.");
+				line += " fluttua qui intorno.";
 				break;
 			}
 
-			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
-				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009 (alone rosso)$c0007");
-				}
+			if(IS_AFFECTED(ch, AFF_DETECT_EVIL) && IS_EVIL(i)) {
+				line += "$c0009 (alone rosso)$c0007";
 			}
 
 			if(IS_LINKDEAD(i)) {
-				strcat(buffer, "$c0015 (link dead)$c0007");
+				line += "$c0015 (link dead)$c0007";
 			}
 
 			if(IS_AFFECTED2(i, AFF2_AFK)) {
-				strcat(buffer,"$c0006 (AFK)$c0007");
+				line += "$c0006 (AFK)$c0007";
 			}
 
 			if(num > 1) {
-				snprintf(tmp,9," [%d]", num);
-				strcat(buffer, tmp);
+				line += " [";
+				line += std::to_string(num);
+				line += "]";
 			}
-			act(buffer,FALSE, i, 0, ch, TO_VICT);
+			act(line.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 		else {
 			/* npc with long */
 
+			std::string longLine;
 			if(IS_AFFECTED(i, AFF_INVISIBLE)) {
-				strcpy(buffer,"*");
-			}
-			else {
-				*buffer = '\0';
+				longLine = "*";
 			}
 
-			if(IS_AFFECTED(ch, AFF_DETECT_EVIL)) {
-				if(IS_EVIL(i)) {
-					strcat(buffer, "$c0009(alone rosso)$c0007 ");
-				}
+			if(IS_AFFECTED(ch, AFF_DETECT_EVIL) && IS_EVIL(i)) {
+				longLine += "$c0009(alone rosso)$c0007 ";
 			}
 
 			if(IS_LINKDEAD(i)) {
-				strcat(buffer, "$c0015(link dead)$c0007 ");
+				longLine += "$c0015(link dead)$c0007 ";
 			}
 
 			if(IS_AFFECTED2(i, AFF2_AFK)) {
-				strcat(buffer, "$c0006(AFK)$c0007 ");
+				longLine += "$c0006(AFK)$c0007 ";
 			}
 
-			strcat(buffer, i->player.long_descr);
+			longLine += i->player.long_descr;
 
 			/* this gets a little annoying */
 
 			if(num > 1) {
-				while((buffer[ strlen(buffer) - 1 ] == '\r') ||
-						(buffer[ strlen(buffer) - 1 ] == '\n') ||
-						(buffer[ strlen(buffer) - 1 ] == ' ')) {
-					buffer[ strlen(buffer) - 1 ] = '\0';
+				while(!longLine.empty() &&
+						(longLine.back() == '\r' ||
+						 longLine.back() == '\n' ||
+						 longLine.back() == ' ')) {
+					longLine.pop_back();
 				}
-				snprintf(tmp,9, " [%d]", num);
-				strcat(buffer, tmp);
+				longLine += " [";
+				longLine += std::to_string(num);
+				longLine += "]";
 			}
 
-			act(buffer, FALSE, i, 0, ch, TO_VICT);
+			act(longLine.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
         if(IS_PC(i))
         {
-            strcpy(buffer2, i->player.name);
+            std::strncpy(buffer2, i->player.name, sizeof(buffer2) - 1);
+            buffer2[sizeof(buffer2) - 1] = '\0';
         }
         else
         {
-            strcpy(buffer2, i->player.short_descr);
+            std::strncpy(buffer2, i->player.short_descr, sizeof(buffer2) - 1);
+            buffer2[sizeof(buffer2) - 1] = '\0';
             RemColorString(buffer2);
             CAP(buffer2);
         }
@@ -1238,38 +1282,38 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
         {
             if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
             {
-                sprintf(buffer,"$c0015");
-                strcat(buffer,buffer2);
-                strcat(buffer, " brilla di luce propria!");
-                act(buffer, FALSE, i, 0, ch, TO_VICT);
+                std::string auraMsg = "$c0015";
+                auraMsg += buffer2;
+                auraMsg += " brilla di luce propria!";
+                act(auraMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
             }
         }
 
         if(IS_AFFECTED(i, AFF_GROWTH))
         {
-            sprintf(buffer,"$c0003");
-            strcat(buffer,buffer2);
-            strcat(buffer, " e' enorme!");
-            act(buffer, FALSE, i, 0, ch, TO_VICT);
+            std::string growthMsg = "$c0003";
+            growthMsg += buffer2;
+            growthMsg += " e' enorme!";
+            act(growthMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
         }
 
         if(IS_AFFECTED(i, AFF_FIRESHIELD))
         {
             if(!IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
             {
-                sprintf(buffer,"$c0001");
-                strcat(buffer,buffer2);
-                strcat(buffer, " e' avvolt$b in una luce fiammeggiante!");
-                act(buffer, FALSE, i, 0, ch, TO_VICT);
+                std::string fireMsg = "$c0001";
+                fireMsg += buffer2;
+                fireMsg += " e' avvolt$b in una luce fiammeggiante!";
+                act(fireMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
             }
         }
 
         if(IS_AFFECTED(i, AFF_GLOBE_DARKNESS))
         {
-            sprintf(buffer,"$c0008");
-            strcat(buffer,buffer2);
-            strcat(buffer, " e' avvolt$b nell'oscurita'!");
-            act(buffer, FALSE, i, 0, ch, TO_VICT);
+            std::string darkMsg = "$c0008";
+            darkMsg += buffer2;
+            darkMsg += " e' avvolt$b nell'oscurita'!";
+            act(darkMsg.c_str(), FALSE, i, 0, ch, TO_VICT);
         }
 
 	}
@@ -1292,36 +1336,41 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			percent = -1;    /* How could MAX_HIT be < 1?? */
 		}
 
+		std::string conditionMsg;
 		if(IS_NPC(i)) {
-			strcpy(buffer, i->player.short_descr);
+			std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
+			conditionMsg = buffer;
 		}
 		else {
-			strcpy(buffer, GET_NAME(i));
+			std::strncpy(buffer, GET_NAME(i), sizeof(buffer) - 1);
+			buffer[sizeof(buffer) - 1] = '\0';
+			conditionMsg = buffer;
 		}
 
 		if(percent >= 100) {
-			strcat(buffer, " e' in condizioni eccellenti.");
+			conditionMsg += " e' in condizioni eccellenti.";
 		}
 		else if(percent >= 80) {
-			strcat(buffer, " ha pochi graffi.");
+			conditionMsg += " ha pochi graffi.";
 		}
 		else if(percent >= 60) {
-			strcat(buffer, " ha alcuni tagli ed abrasioni.");
+			conditionMsg += " ha alcuni tagli ed abrasioni.";
 		}
 		else if(percent >= 40) {
-			strcat(buffer, " e' ferit$B.");
+			conditionMsg += " e' ferit$B.";
 		}
 		else if(percent >= 20) {
-			strcat(buffer, " sanguina abbondatemente.");
+			conditionMsg += " sanguina abbondatemente.";
 		}
 		else if(percent >= 0) {
-			strcat(buffer, " $c0001ha grossi squarci aperti.");
+			conditionMsg += " $c0001ha grossi squarci aperti.";
 		}
 		else {
-			strcat(buffer, " $c0009sta morendo per le ferite ed i colpi ricevuti.");
+			conditionMsg += " $c0009sta morendo per le ferite ed i colpi ricevuti.";
 		}
 
-		act(buffer, FALSE, ch, 0, i, TO_CHAR);
+		act(conditionMsg.c_str(), FALSE, ch, 0, i, TO_CHAR);
 
 		found = FALSE;
 		for(j=0; j< MAX_WEAR; j++) {
@@ -1432,14 +1481,12 @@ void list_char_to_char(struct char_data* list, struct char_data* ch,
 /* Added by Mike Wilson 9/23/93 */
 
 void list_exits_in_room(struct char_data* ch) {
-	int door,seeit=FALSE;
-	char buf[MAX_STRING_LENGTH],buf2[MAX_STRING_LENGTH];
-	struct room_direction_data*        exitdata;
-
-	*buf = '\0';
+	int door, seeit = FALSE;
+	std::string buf;
+	struct room_direction_data* exitdata;
 
 	for(door = 0; door <= 5; door++) {
-		exitdata = EXIT(ch,door);
+		exitdata = EXIT(ch, door);
 		if(exitdata) {
 			if(real_roomp(exitdata->to_room)) {
 				if(GET_RACE(ch) == RACE_ELVEN ||
@@ -1448,34 +1495,34 @@ void list_exits_in_room(struct char_data* ch) {
 						GET_RACE(ch) == RACE_SEA_ELF)
 					/* elves can see secret doors 1-3 on d6 */
 				{
-					seeit=(number(1,6)<=3);
+					seeit = (number(1, 6) <= 3);
 				}
-				else if(GET_RACE(ch)==RACE_HALF_ELVEN)
+				else if(GET_RACE(ch) == RACE_HALF_ELVEN)
 					/* half-elves can see exits, not as good as full */
 				{
-					seeit=(number(1,6)<=2);
+					seeit = (number(1, 6) <= 2);
 				}
-				else if(GET_RACE(ch)==RACE_DWARF ||
-						GET_RACE(ch)==RACE_DARK_DWARF) {
-					seeit=(number(1,12)<=7);
+				else if(GET_RACE(ch) == RACE_DWARF ||
+						GET_RACE(ch) == RACE_DARK_DWARF) {
+					seeit = (number(1, 12) <= 7);
 				}
 				/* I nani le vedono meglio di tutti!!!! */
 				else {
-					seeit=FALSE;
+					seeit = FALSE;
 				}
 
 				if(exitdata->to_room != NOWHERE || IS_IMMORTAL(ch)) {
 					if((!IS_SET(exitdata->exit_info, EX_CLOSED) ||
 							IS_IMMORTAL(ch)) ||
 							(IS_SET(exitdata->exit_info, EX_SECRET) && seeit)) {
-						snprintf(buf2, MAX_STRING_LENGTH-1," %s", listexits[ door ]);
-						strcat(buf,buf2);
+						buf += ' ';
+						buf += listexits[door];
 						if(IS_SET(exitdata->exit_info, EX_CLOSED) && IS_IMMORTAL(ch)) {
-							strcat(buf, " (chiuso)");
+							buf += " (chiuso)";
 						}
 						if(IS_SET(exitdata->exit_info, EX_SECRET) && (seeit ||
 								IS_IMMORTAL(ch))) {
-							strcat(buf, " $c5009(segreto)$c0007");    /* blink red */
+							buf += " $c5009(segreto)$c0007";    /* blink red */
 						}
 					} /* exit */
 				} /* ! = NOWHERE */
@@ -1483,10 +1530,9 @@ void list_exits_in_room(struct char_data* ch) {
 		} /* exitdata */
 	} /* for */
 
-
-	if(*buf) {
+	if(!buf.empty()) {
 		send_to_char("Uscite:", ch);
-		act(buf, FALSE, ch, 0, 0, TO_CHAR);
+		act(buf.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 }
 
@@ -1851,7 +1897,7 @@ ACTION_FUNC(do_look) {
 			}
 			else {
 				/* no argument */
-				send_to_char("Guardare a cosa ?\n\r", ch);
+				send_to_char("Guardare a cosa?\n\r", ch);
 			}
 
 			break;
@@ -2037,27 +2083,27 @@ ACTION_FUNC(do_look) {
 
 
 ACTION_FUNC(do_read) {
-	char buf[100];
-
 	/* This is just for now - To be changed later.! */
-	snprintf(buf,99,"at %s",arg);
-	do_look(ch,buf,15);
+	std::string lookArg = "at ";
+	lookArg += (arg != nullptr) ? arg : "";
+	do_look(ch, lookArg.c_str(), 15);
 }
 
 
 
 ACTION_FUNC(do_examine) {
-	char name[1000], buf[1000];
+	char name[1000];
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object;
 
-	snprintf(buf,999,"at %s",arg);
-	do_look(ch, buf, 15);
+	std::string lookAtArg = "at ";
+	lookAtArg += (arg != nullptr) ? arg : "";
+	do_look(ch, lookAtArg.c_str(), 15);
 
 	one_argument(arg, name);
 
 	if(!*name) {
-		send_to_char("Esaminare che cosa ?\n\r", ch);
+		send_to_char("Esaminare che cosa?\n\r", ch);
 		return;
 	}
 
@@ -2068,8 +2114,9 @@ ACTION_FUNC(do_examine) {
 		if((GET_ITEM_TYPE(tmp_object)==ITEM_DRINKCON) ||
 				(GET_ITEM_TYPE(tmp_object)==ITEM_CONTAINER)) {
 			send_to_char("Quando ci guardi dentro, vedi:\n\r", ch);
-			snprintf(buf,999,"in %s",arg);
-			do_look(ch,buf,15);
+			std::string lookInArg = "in ";
+			lookInArg += (arg != nullptr) ? arg : "";
+			do_look(ch, lookInArg.c_str(), 15);
 		}
 	}
 }
@@ -2080,45 +2127,53 @@ ACTION_FUNC(do_examine) {
 ACTION_FUNC(do_exits) {
 	/* NOTE: Input var 'cmd' is not used. */
 	int door;
-	char buf[1000];
+	std::string buf;
 	struct room_direction_data* exitdata;
 
-
-	*buf = '\0';
-
 	for(door = 0; door <= 5; door++) {
-		exitdata = EXIT(ch,door);
+		exitdata = EXIT(ch, door);
 		if(exitdata && exitdata->to_room > 0) {
 			if(!real_roomp(exitdata->to_room)) {
 				/* don't print unless immortal */
 				if(IS_IMMORTAL(ch)) {
-					sprintf(buf + strlen(buf), "$c0007%s $c0015- $c0007turbinante chaos di $c0015#%ld\n\r",
-							exits[door], exitdata->to_room);
+					buf += "$c0007";
+					buf += exits[door];
+					buf += " $c0015- $c0007turbinante chaos di $c0015#";
+					buf += std::to_string(exitdata->to_room);
+					buf += "\n\r";
 				}
 			}
 			else if(exitdata->to_room != NOWHERE) {
 				if(IS_DIO(ch)) {
-					sprintf(buf + strlen(buf), "$c0007%s $c0015-$c0007 %s", exits[door],
-							real_roomp(exitdata->to_room)->name);
+					buf += "$c0007";
+					buf += exits[door];
+					buf += " $c0015-$c0007 ";
+					buf += real_roomp(exitdata->to_room)->name;
 					if(IS_SET(exitdata->exit_info, EX_SECRET)) {
-						strcat(buf," $c0009(segreta)");
+						buf += " $c0009(segreta)";
 					}
 					if(IS_SET(exitdata->exit_info, EX_CLOSED)) {
-						strcat(buf, " $c0015(chiusa)");
+						buf += " $c0015(chiusa)";
 					}
 					if(IS_DARK(exitdata->to_room)) {
-						strcat(buf, " $c0008(buia)");
+						buf += " $c0008(buia)";
 					}
-					sprintf(buf + strlen(buf), " $c0015#%ld\n\r", exitdata->to_room);
+					buf += " $c0015#";
+					buf += std::to_string(exitdata->to_room);
+					buf += "\n\r";
 				}
 				else if(!IS_SET(exitdata->exit_info, EX_CLOSED) ||
 						!IS_SET(exitdata->exit_info, EX_SECRET)) {
-					if(IS_DARK(exitdata->to_room))
-						sprintf(buf + strlen(buf), "$c0007%s $c0015-$c0008 Troppo buio per dirlo\n\r",
-								exits[ door ]);
-					else
-						sprintf(buf + strlen(buf), "$c0007%s $c0015-$c0007 %s\n\r", exits[ door ],
-								real_roomp(exitdata->to_room)->name);
+					buf += "$c0007";
+					buf += exits[door];
+					if(IS_DARK(exitdata->to_room)) {
+						buf += " $c0015-$c0008 Troppo buio per dirlo\n\r";
+					}
+					else {
+						buf += " $c0015-$c0007 ";
+						buf += real_roomp(exitdata->to_room)->name;
+						buf += "\n\r";
+					}
 				}
 			}
 		}
@@ -2126,8 +2181,8 @@ ACTION_FUNC(do_exits) {
 
 	send_to_char("Uscite visibili:\n\r", ch);
 
-	if(*buf) {
-		send_to_char(buf, ch);
+	if(!buf.empty()) {
+		send_to_char(buf.c_str(), ch);
 	}
 	else {
 		send_to_char("$c0009Nessuna!\n\r", ch);
@@ -2135,20 +2190,27 @@ ACTION_FUNC(do_exits) {
 }
 
 ACTION_FUNC(do_status) {
-	static char buf[1000];
-	snprintf(buf, 999,
-			 "$c0005Tu hai $c0015%d$c0005($c0011%d$c0005) hit, "
-			 "$c0015%d$c0005($c0011%d$c0005) mana e "
-			 "$c0015%d$c0005($c0011%d$c0005) punti di movimento.",
-			 GET_HIT(ch),GET_MAX_HIT(ch),
-			 GET_MANA(ch),GET_MAX_MANA(ch),
-			 GET_MOVE(ch),GET_MAX_MOVE(ch));
-	act(buf, FALSE, ch, 0, 0, TO_CHAR);
-	snprintf(buf, 999,
-			 "$c0005Hai effettuato $c0015%d$c0005 exp, ed "
-			 "hai $c0015%d$c0005 monete d'oro.",
-			 GET_EXP(ch), GET_GOLD(ch));
-	act(buf, FALSE, ch, 0, 0, TO_CHAR);
+	std::string statusMsg = "$c0005Tu hai $c0015";
+	statusMsg += std::to_string(static_cast<int>(GET_HIT(ch)));
+	statusMsg += "$c0005($c0011";
+	statusMsg += std::to_string(GET_MAX_HIT(ch));
+	statusMsg += "$c0005) hit, $c0015";
+	statusMsg += std::to_string(static_cast<int>(GET_MANA(ch)));
+	statusMsg += "$c0005($c0011";
+	statusMsg += std::to_string(GET_MAX_MANA(ch));
+	statusMsg += "$c0005) mana e $c0015";
+	statusMsg += std::to_string(static_cast<int>(GET_MOVE(ch)));
+	statusMsg += "$c0005($c0011";
+	statusMsg += std::to_string(GET_MAX_MOVE(ch));
+	statusMsg += "$c0005) punti di movimento.";
+	act(statusMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+
+	std::string expMsg = "$c0005Hai effettuato $c0015";
+	expMsg += std::to_string(GET_EXP(ch));
+	expMsg += "$c0005 exp, ed hai $c0015";
+	expMsg += std::to_string(GET_GOLD(ch));
+	expMsg += "$c0005 monete d'oro.";
+	act(expMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 }
 
 ACTION_FUNC(do_checkachielevel)
@@ -2228,30 +2290,54 @@ ACTION_FUNC(do_checkachielevel)
 ACTION_FUNC(do_achievements)
 {
     int i;
-    char arg1[128], arg2[128];
+    std::array<char, 128> arg1{};
+    std::array<char, 128> arg2{};
     std::string sb;
 
     if(!IS_PC(ch)) {
         return;
     }
 
-    arg = one_argument(arg, arg1);
-
-    if(*arg1)
-    {
-        if(!strcmp(arg1,"all"))
+    arg = one_argument(arg, arg1.data());
+    const auto isCommand = [&](const char* cmd) {
+        return std::strcmp(arg1.data(), cmd) == 0;
+    };
+    const auto resolveVisiblePlayerTarget = [&](char_data*& target, const char* name, const char* notFoundMsg, const char* notPcMsg) {
+        target = get_char_vis_world(ch, name, nullptr);
+        if(target == nullptr)
         {
-            struct char_data* tch;
+            send_to_char(notFoundMsg, ch);
+            return false;
+        }
 
-            tch = ch;
+        if(!IS_PC(target))
+        {
+            send_to_char(notPcMsg, ch);
+            return false;
+        }
+
+        if(IS_POLY(target))
+        {
+            target = target->desc->original;
+        }
+
+        return true;
+    };
+
+    if(arg1[0] != '\0')
+    {
+        if(isCommand("all"))
+        {
+            char_data* tch = ch;
 
             if(IS_QUESTMASTER(ch))
             {
-                arg = one_argument(arg, arg2);
+                arg = one_argument(arg, arg2.data());
 
-                if(*arg2)
+                if(arg2[0] != '\0')
                 {
-                    if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                    tch = get_char_vis_world(ch, arg2.data(), nullptr);
+                    if(tch == nullptr)
                     {
                         send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
                         return;
@@ -2266,9 +2352,11 @@ ACTION_FUNC(do_achievements)
             }
 
             if(IS_POLY(tch))
+            {
                 tch = tch->desc->original;
+            }
 
-            if(IS_SET(tch->specials.act,PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
+            if(IS_SET(tch->specials.act, PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
             {
                 int num = 0;
 
@@ -2278,7 +2366,7 @@ ACTION_FUNC(do_achievements)
                 }
                 else
                 {
-                    act("\n\r$c0011Lista completa degli achievements di $c0015$N$c0011:", FALSE, ch, 0, tch, TO_CHAR);
+                    act("\n\r$c0011Lista completa degli achievements di $c0015$N$c0011:", false, ch, nullptr, tch, TO_CHAR);
                 }
 
                 // Race Achievements
@@ -2298,13 +2386,13 @@ ACTION_FUNC(do_achievements)
                     else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
                     }
                     else if(tch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
                     }
                 }
@@ -2326,13 +2414,13 @@ ACTION_FUNC(do_achievements)
                     else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
                     }
                     else if(tch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
                     }
                 }
@@ -2354,7 +2442,7 @@ ACTION_FUNC(do_achievements)
                     else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
                     }
                 }
@@ -2376,13 +2464,13 @@ ACTION_FUNC(do_achievements)
                     else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
                     }
                     else if(tch->specials.achievements[QUEST_ACHIE][i] > 0)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
                     }
                 }
@@ -2404,36 +2492,33 @@ ACTION_FUNC(do_achievements)
                     else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
                     }
                     else if(tch->specials.achievements[OTHER_ACHIE][i] > 0)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, true, 0));
                         num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
                     }
                 }
 
                 page_string(ch->desc, sb.c_str(), true);
             }
-            else if (ch == tch)
+            else if(ch == tch)
             {
                 send_to_char("Non hai completato nessun achievement.\n\r", ch);
             }
             else
             {
-                act("$N non ha completato nessun achievement.", FALSE, ch, 0, tch, TO_CHAR);
+                act("$N non ha completato nessun achievement.", false, ch, nullptr, tch, TO_CHAR);
             }
         }
-        else if(!strcmp(arg1,"spam"))
+        else if(isCommand("spam"))
         {
-            struct char_data* tch;
-            int n_spam;
-            char buf[MAX_STRING_LENGTH];
+            char_data* tch = ch;
 
-            const char* rand_spamAchie[] =
-            {
+            static const std::array<const char*, 20> rand_spamAchie = {{
                 "$c0011$n$c0007 e' proprio $u sborone:",
                 "$c0011$n$c0007 si gigioneggia mostrandoti il suo achievement:",
                 "$c0011$n$c0007 ti dice: 'Si ho fatto anche questo!',",
@@ -2454,31 +2539,30 @@ ACTION_FUNC(do_achievements)
                 "Fai rimanere tutti a bocca aperta:",
                 "Con il passo da $c5011K$c0007oatto esclami che",
                 "Esclami 'Daje!' e fai rosicare tutti urlando che"
-            };
+            }};
 
-            const int nMaxSpamAchie = 9;
+            constexpr std::size_t spamVariantsPerTarget = rand_spamAchie.size() / 2;
+            constexpr int nMaxSpamAchie = static_cast<int>(spamVariantsPerTarget - 1);
 
-            arg = one_argument(arg, arg2);
+            arg = one_argument(arg, arg2.data());
 
-            if(!*arg2)
+            if(arg2[0] == '\0')
             {
                 send_to_char("Quale achievement vuoi mostrare? Digita 'achievements all' per vedere il numero.\n\r", ch);
                 return;
             }
 
-            n_spam = atoi(arg2);
-
-            tch = ch;
+            const int n_spam = std::atoi(arg2.data());
 
             if(IS_POLY(tch))
             {
                 tch = tch->desc->original;
             }
 
-            if(IS_SET(tch->specials.act,PLR_ACHIE))
+            if(IS_SET(tch->specials.act, PLR_ACHIE))
             {
                 int num = 0;
-                bool trovato = FALSE;
+                bool trovato = false;
 
                 // Race Achievements
                 for(i = 0; i < MAX_RACE_ACHIE; i++)
@@ -2493,9 +2577,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2507,9 +2591,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2531,9 +2615,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2545,9 +2629,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2569,9 +2653,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb = bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, TRUE, n_spam);
+                            sb = bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, true, n_spam);
                             num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2593,9 +2677,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2607,9 +2691,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2631,9 +2715,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2645,9 +2729,9 @@ ACTION_FUNC(do_achievements)
                         if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
                         {
                             num += 1;
-                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, TRUE, n_spam));
+                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, true, n_spam));
                             num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
-                            trovato = TRUE;
+                            trovato = true;
                         }
                         else
                         {
@@ -2662,59 +2746,63 @@ ACTION_FUNC(do_achievements)
                     return;
                 }
 
-                int Snum = number(0, nMaxSpamAchie);
+                const int spamIndex = number(0, nMaxSpamAchie);
+                const std::size_t spamIndexSz = static_cast<std::size_t>(spamIndex);
+                constexpr std::size_t selfSpamOffset = spamVariantsPerTarget;
+                constexpr char completedPrefix[] = "com";
+                constexpr std::size_t completedPrefixLen = sizeof(completedPrefix) - 1;
+                const bool completedVerb = (sb.compare(0, completedPrefixLen, completedPrefix) == 0);
+                const char* const toCharAux = completedVerb ? "hai" : "ti";
+                const char* const toRoomAux = completedVerb ? "ha" : "$d";
+                const auto emitSpamLine = [&](const char* prefix, const char* aux, int target) {
+                    std::string spamLine = prefix;
+                    spamLine += ' ';
+                    spamLine += aux;
+                    spamLine += ' ';
+                    spamLine += sb;
+                    spamLine += '.';
+                    act(spamLine.c_str(), false, ch, nullptr, nullptr, target);
+                };
 
-                sprintf(buf,"%s %s %s.",rand_spamAchie[Snum + 10], (sb.substr(0,3) == "com" ? "hai" : "ti"), sb.c_str());
-                act(buf, FALSE, ch, 0, 0, TO_CHAR);
-                sprintf(buf,"%s %s %s.",rand_spamAchie[Snum], (sb.substr(0,3) == "com" ? "ha" : "$d"), sb.c_str());
-                act(buf, FALSE, ch, 0, 0, TO_ROOM);
+                emitSpamLine(rand_spamAchie[spamIndexSz + selfSpamOffset], toCharAux, TO_CHAR);
+                emitSpamLine(rand_spamAchie[spamIndexSz], toRoomAux, TO_ROOM);
             }
             else
             {
                 send_to_char("Ma se non hai completato nessun achievement...\n\r", ch);
             }
         }
-        else if(!strcmp(arg1,"delete") && IS_QUESTMASTER(ch))
+        else if(isCommand("delete") && IS_QUESTMASTER(ch))
         {
-            struct char_data* tch;
-            char arg3[128], buf1[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
-            bool trovato = FALSE;
+            char_data* tch = nullptr;
+            std::array<char, 128> arg3{};
+            std::array<char, MAX_STRING_LENGTH> buf1{};
+            std::array<char, MAX_STRING_LENGTH> buf2{};
+            bool trovato = false;
 
-            arg = one_argument(arg, arg2);
-            arg = one_argument(arg, arg3);
+            arg = one_argument(arg, arg2.data());
+            arg = one_argument(arg, arg3.data());
 
-            if(*arg2)
+            if(arg2[0] != '\0')
             {
-                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                if(!resolveVisiblePlayerTarget(tch, arg2.data(),
+                    "Non c'e' nessuno con quel nome qui, a chi vorresti cancellare gli achievements?\n\r",
+                    "Vuoi veramente cancellare gli achivements ad uno stupido mob?\n\r"))
                 {
-                    send_to_char("Non c'e' nessuno con quel nome qui, a chi vorresti cancellare gli achievements?\n\r", ch);
                     return;
                 }
 
-                if(!IS_PC(tch))
+                if(arg3[0] != '\0')
                 {
-                    send_to_char("Vuoi veramente cancellare gli achivements ad uno stupido mob?\n\r", ch);
-                    return;
-                }
-
-                if(IS_POLY(tch))
-                {
-                    tch = tch->desc->original;
-                }
-
-                if(*arg3)
-                {
-                    int achi_d;
-
-                    achi_d = atoi(arg3);
+                    const int achi_d = std::atoi(arg3.data());
 
                     if(achi_d <= 0)
                     {
-                        act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                        act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
 
-                    if(IS_SET(tch->specials.act,PLR_ACHIE))
+                    if(IS_SET(tch->specials.act, PLR_ACHIE))
                     {
                         int num = 0;
 
@@ -2732,18 +2820,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(tch->specials.achievements[RACESLAYER_ACHIE][i] == 0)
                                     {
-                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch))
-                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
-                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch));
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -2773,18 +2861,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(tch->specials.achievements[BOSSKILL_ACHIE][i] == 0)
                                     {
-                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch))
-                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
-                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch));
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -2814,18 +2902,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(tch->specials.achievements[CLASS_ACHIE][i] == 0)
                                     {
-                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[CLASS_ACHIE][i].achie_string2);
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[CLASS_ACHIE][i].achie_string2);
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[CLASS_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch))
-                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[CLASS_ACHIE][i].achie_string2);
-                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[CLASS_ACHIE][i].achie_string2);
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch));
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[CLASS_ACHIE][i].achie_string2);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[CLASS_ACHIE][i].achie_string2);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -2855,18 +2943,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(tch->specials.achievements[QUEST_ACHIE][i] == 0)
                                     {
-                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[QUEST_ACHIE][i].achie_string2);
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[QUEST_ACHIE][i].achie_string2);
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[QUEST_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch))
-                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[QUEST_ACHIE][i].achie_string2);
-                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[QUEST_ACHIE][i].achie_string2);
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch));
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[QUEST_ACHIE][i].achie_string2);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[QUEST_ACHIE][i].achie_string2);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -2896,18 +2984,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(tch->specials.achievements[OTHER_ACHIE][i] == 0)
                                     {
-                                        sprintf(buf1, "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[OTHER_ACHIE][i].achie_string2);
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[OTHER_ACHIE][i].achie_string2);
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[OTHER_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch))
-                                        sprintf(buf1, "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[OTHER_ACHIE][i].achie_string2);
-                                        sprintf(buf2, "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[OTHER_ACHIE][i].achie_string2);
+                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch));
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[OTHER_ACHIE][i].achie_string2);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[OTHER_ACHIE][i].achie_string2);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -2918,19 +3006,19 @@ ACTION_FUNC(do_achievements)
                             }
                         }
 
-                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
-                        tch = get_char_vis_world(ch, arg2, NULL);
-                        act(buf2, FALSE, ch, 0, tch, TO_VICT);
+                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
+                        tch = get_char_vis_world(ch, arg2.data(), nullptr);
+                        act(buf2.data(), false, ch, nullptr, tch, TO_VICT);
                     }
                     else
                     {
-                        act("$N non ha completato nessun achievement!", FALSE, ch, 0, tch, TO_CHAR);
+                        act("$N non ha completato nessun achievement!", false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
                 }
                 else
                 {
-                    act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                    act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
                     return;
                 }
             }
@@ -2940,66 +3028,60 @@ ACTION_FUNC(do_achievements)
                 return;
             }
         }
-        else if(!strcmp(arg1,"set") && IS_MAESTRO_DEL_CREATO(ch))
+        else if(isCommand("set") && IS_MAESTRO_DEL_CREATO(ch))
         {
-            struct char_data* tch;
-            char arg3[128], arg4[128], buf1[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
-            bool trovato = FALSE;
+            char_data* tch = nullptr;
+            std::array<char, 128> arg3{};
+            std::array<char, 128> arg4{};
+            std::array<char, MAX_STRING_LENGTH> buf1{};
+            std::array<char, MAX_STRING_LENGTH> buf2{};
+            bool trovato = false;
 
-            arg = one_argument(arg, arg2);
-            arg = one_argument(arg, arg3);
-            arg = one_argument(arg, arg4);
+            arg = one_argument(arg, arg2.data());
+            arg = one_argument(arg, arg3.data());
+            arg = one_argument(arg, arg4.data());
 
-            if(*arg2)
+            if(arg2[0] != '\0')
             {
-                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                if(!resolveVisiblePlayerTarget(tch, arg2.data(),
+                    "Non c'e' nessuno con quel nome qui!\n\r",
+                    "Vuoi veramente assegnare un achivement ad uno stupido mob?\n\r"))
                 {
-                    send_to_char("Non c'e' nessuno con quel nome qui!\n\r", ch);
                     return;
                 }
 
-                if(!IS_PC(tch))
+                if(arg3[0] != '\0')
                 {
-                    send_to_char("Vuoi veramente assegnare un achivement ad uno stupido mob?\n\r", ch);
-                    return;
-                }
-
-                if(IS_POLY(tch))
-                    tch = tch->desc->original;
-
-                if(*arg3)
-                {
-                    int achi_n;
-
-                    achi_n = atoi(arg3);
+                    const int achi_n = std::atoi(arg3.data());
 
                     if(achi_n <= 0)
                     {
-                        act("A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                        act("A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
 
                     if(achi_n > maxAchievements(tch))
                     {
-                        sprintf(buf1, "Il numero massimo di achievements per $N e' %d.", maxAchievements(tch));
-                        act(buf1 , FALSE, ch, 0, tch, TO_CHAR);
+                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di achievements per $N e' %d.", maxAchievements(tch));
+                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
 
-                    if(*arg4)
+                    if(arg4[0] != '\0')
                     {
-                        int achi_v, num = 0;
-
-                        achi_v = atoi(arg4);
+                        int num = 0;
+                        const int achi_v = std::atoi(arg4.data());
 
                         if(achi_v <= 0)
                         {
-                            act("Puoi assegnare solo un valore maggiore di zero.", FALSE, ch, 0, tch, TO_CHAR);
+                            act("Puoi assegnare solo un valore maggiore di zero.", false, ch, nullptr, tch, TO_CHAR);
                             return;
                         }
 
                         if(!IS_SET(tch->specials.act, PLR_ACHIE))
+                        {
                             SET_BIT(tch->specials.act, PLR_ACHIE);
+                        }
 
                         // Race Achievements
                         for(i = 0; i < MAX_RACE_ACHIE; i++)
@@ -3015,18 +3097,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(achi_v > MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
                                     {
-                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli));
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli));
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[RACESLAYER_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
-                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
-                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -3056,18 +3138,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(achi_v > MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
                                     {
-                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli));
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli));
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[BOSSKILL_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
-                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
-                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -3097,18 +3179,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(achi_v > MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli))
                                     {
-                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli));
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli));
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[CLASS_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
-                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
-                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -3138,18 +3220,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(achi_v > MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli))
                                     {
-                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli));
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli));
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[QUEST_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
-                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
-                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -3179,18 +3261,18 @@ ACTION_FUNC(do_achievements)
                                 {
                                     if(achi_v > MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli))
                                     {
-                                        sprintf(buf1, "Il numero massimo di %s assegnabili e' %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli));
-                                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
+                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli));
+                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
                                         return;
                                     }
                                     else
                                     {
                                         tch->specials.achievements[OTHER_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v)
-                                        sprintf(buf1, "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
-                                        sprintf(buf2, "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
+                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
+                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
+                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
                                         do_save(tch, "", 0);
-                                        trovato = TRUE;
+                                        trovato = true;
                                         break;
                                     }
                                 }
@@ -3201,19 +3283,19 @@ ACTION_FUNC(do_achievements)
                             }
                         }
 
-                        act(buf1, FALSE, ch, 0, tch, TO_CHAR);
-                        tch = get_char_vis_world(ch, arg2, NULL);
-                        act(buf2, FALSE, ch, 0, tch, TO_VICT);
+                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
+                        tch = get_char_vis_world(ch, arg2.data(), nullptr);
+                        act(buf2.data(), false, ch, nullptr, tch, TO_VICT);
                     }
                     else
                     {
-                        act("Quale valore vuoi assegnare all'achievement di $N?", FALSE, ch, 0, tch, TO_CHAR);
+                        act("Quale valore vuoi assegnare all'achievement di $N?", false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
                 }
                 else
                 {
-                    act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.", FALSE, ch, 0, tch, TO_CHAR);
+                    act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
                     return;
                 }
             }
@@ -3223,65 +3305,57 @@ ACTION_FUNC(do_achievements)
                 return;
             }
         }
-        else if(!strcmp(arg1,"reset") && IS_MAESTRO_DEL_CREATO(ch))
+        else if(isCommand("reset") && IS_MAESTRO_DEL_CREATO(ch))
         {
-            struct char_data* tch;
+            char_data* tch = nullptr;
 
-            arg = one_argument(arg, arg2);
+            arg = one_argument(arg, arg2.data());
 
-            if(*arg2)
+            if(arg2[0] != '\0')
             {
-                if(!(tch = get_char_vis_world(ch, arg2, NULL)))
+                if(!resolveVisiblePlayerTarget(tch, arg2.data(),
+                    "Non c'e' nessuno con quel nome qui, a chi vorresti resettare gli achievements?\n\r",
+                    "Vuoi veramente resettare gli achievements di uno stupido mob?\n\r"))
                 {
-                    send_to_char("Non c'e' nessuno con quel nome qui, a chi vorresti resettare gli achievements?\n\r", ch);
                     return;
-                }
-
-                if(!IS_PC(tch))
-                {
-                    send_to_char("Vuoi veramente resettare gli achievements di uno stupido mob?\n\r", ch);
-                    return;
-                }
-
-                if(IS_POLY(tch))
-                {
-                    tch = tch->desc->original;
                 }
 
                 mudlog(LOG_PLAYERS, "%s starts to delete all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
-                if(hasAchievement(tch, RACESLAYER_ACHIE, 1))
+                const auto resetAchievementCategory = [&](const int category, const int maxCount) {
+                    if(hasAchievement(tch, category, 1))
+                    {
+                        for(int idx = 0; idx < maxCount; ++idx)
+                        {
+                            tch->specials.achievements[category][idx] = 0;
+                        }
+                    }
+                };
+                struct AchievementCategorySpec
                 {
-                    for(i = 0; i < MAX_RACE_ACHIE; i++)
-                        tch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
-                }
-                if(hasAchievement(tch, BOSSKILL_ACHIE, 1))
+                    int category;
+                    int maxCount;
+                };
+                constexpr std::array<AchievementCategorySpec, 5> achievementCategories = {{
+                    {RACESLAYER_ACHIE, MAX_RACE_ACHIE},
+                    {BOSSKILL_ACHIE, MAX_BOSS_ACHIE},
+                    {CLASS_ACHIE, MAX_CLASS_ACHIE},
+                    {QUEST_ACHIE, MAX_QUEST_ACHIE},
+                    {OTHER_ACHIE, MAX_OTHER_ACHIE}
+                }};
+                for(const auto& categorySpec : achievementCategories)
                 {
-                    for(i = 0; i < MAX_BOSS_ACHIE; i++)
-                        tch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
+                    resetAchievementCategory(categorySpec.category, categorySpec.maxCount);
                 }
-                if(hasAchievement(tch, CLASS_ACHIE, 1))
+                if(IS_SET(tch->specials.act, PLR_ACHIE))
                 {
-                    for(i = 0; i < MAX_CLASS_ACHIE; i++)
-                        tch->specials.achievements[CLASS_ACHIE][i] = 0;
-                }
-                if(hasAchievement(tch, QUEST_ACHIE, 1))
-                {
-                    for(i = 0; i < MAX_QUEST_ACHIE; i++)
-                        tch->specials.achievements[QUEST_ACHIE][i] = 0;
-                }
-                if(hasAchievement(tch, OTHER_ACHIE, 1))
-                {
-                    for(i = 0; i < MAX_OTHER_ACHIE; i++)
-                        tch->specials.achievements[OTHER_ACHIE][i] = 0;
-                }
-                if(IS_SET(tch->specials.act,PLR_ACHIE))
                     REMOVE_BIT(tch->specials.act, PLR_ACHIE);
+                }
                 mudlog(LOG_PLAYERS, "Done. %s has deleted all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
                 do_save(tch, "", 0);
 
-                act("Tutti gli achievements di $N sono stati resettati.", FALSE, ch, 0, tch, TO_CHAR);
-                tch = get_char_vis_world(ch, arg2, NULL);
-                act("$n ti ha resettato tutti gli achievements.", FALSE, ch, 0, tch, TO_VICT);
+                act("Tutti gli achievements di $N sono stati resettati.", false, ch, nullptr, tch, TO_CHAR);
+                tch = get_char_vis_world(ch, arg2.data(), nullptr);
+                act("$n ti ha resettato tutti gli achievements.", false, ch, nullptr, tch, TO_VICT);
             }
             else
             {
@@ -3293,38 +3367,58 @@ ACTION_FUNC(do_achievements)
         {
             send_to_char("$c0009Sintassi:\n\r", ch);
             if(IS_QUESTMASTER(ch))
+            {
                 send_to_char("$c0015Achievements$c0007                                 - mostra gli achievements che hai completato\n\r", ch);
+            }
             else
+            {
                 send_to_char("$c0015Achievements$c0007               - mostra gli achievements che hai completato\n\r", ch);
+            }
             if(IS_QUESTMASTER(ch))
+            {
                 send_to_char("$c0015Achievements all$c0007                             - mostra tutti i tuoi achievements\n\r", ch);
+            }
             if(IS_QUESTMASTER(ch))
+            {
                 send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007>                   - mostra tutti gli achievements del personaggio scelto\n\r", ch);
+            }
             else
+            {
                 send_to_char("$c0015Achievements all$c0007           - mostra tutti i tuoi achievements\n\r", ch);
+            }
             if(IS_QUESTMASTER(ch))
+            {
                 send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007>                   - mostra in stanza l'achievement scelto\n\r", ch);
+            }
             else
+            {
                 send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
+            }
             if(IS_QUESTMASTER(ch))
+            {
                 send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007>       - cancella un determinato achievement dal personaggio scelto\n\r", ch);
+            }
             if(IS_MAESTRO_DEL_CREATO(ch))
+            {
                 send_to_char("$c0015Achievements set $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> <$c0015valore$c0007> - assegna al personaggio scelto un valore ad un determinato achievement\n\r", ch);
+            }
             if(IS_MAESTRO_DEL_CREATO(ch))
+            {
                 send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007>                 - resetta tutti gli achievements del personaggio scelto\n\r", ch);
+            }
 
         }
     }
     else
     {
-        struct char_data* tch;
-
-        tch = ch;
+        char_data* tch = ch;
 
         if(IS_POLY(tch))
+        {
             tch = tch->desc->original;
+        }
 
-        if(IS_SET(tch->specials.act,PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
+        if(IS_SET(tch->specials.act, PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
         {
             int num = 0;
             send_to_char("\n\r$c0011Ecco i tuoi achievements:\n\r", ch);
@@ -3343,61 +3437,61 @@ ACTION_FUNC(do_achievements)
                     if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl10_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 10)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 10, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 10, num, false, 0));
                         num += 9;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl9_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 9)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 9, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 9, num, false, 0));
                         num += 8;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl8_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 8)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 8, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 8, num, false, 0));
                         num += 7;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl7_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 7)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 7, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 7, num, false, 0));
                         num += 6;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl6_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 6)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 6, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 6, num, false, 0));
                         num += 5;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl5_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 5)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 5, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 5, num, false, 0));
                         num += 4;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl4_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 4)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 4, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 4, num, false, 0));
                         num += 3;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl3_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 3)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 3, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 3, num, false, 0));
                         num += 2;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl2_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 2)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 2, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 2, num, false, 0));
                         num += 1;
                     }
                     else if (tch->specials.achievements[RACESLAYER_ACHIE][i] >= AchievementsList[RACESLAYER_ACHIE][i].lvl1_val && AchievementsList[RACESLAYER_ACHIE][i].n_livelli >= 1)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 1, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, 1, num, false, 0));
                     }
                 }
             }
@@ -3416,61 +3510,61 @@ ACTION_FUNC(do_achievements)
                     if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl10_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 10)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 10, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 10, num, false, 0));
                         num += 9;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl9_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 9)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 9, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 9, num, false, 0));
                         num += 8;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl8_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 8)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 8, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 8, num, false, 0));
                         num += 7;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl7_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 7)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 7, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 7, num, false, 0));
                         num += 6;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl6_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 6)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 6, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 6, num, false, 0));
                         num += 5;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl5_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 5)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 5, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 5, num, false, 0));
                         num += 4;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl4_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 4)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 4, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 4, num, false, 0));
                         num += 3;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl3_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 3)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 3, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 3, num, false, 0));
                         num += 2;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl2_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 2)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 2, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 2, num, false, 0));
                         num += 1;
                     }
                     else if (tch->specials.achievements[BOSSKILL_ACHIE][i] >= AchievementsList[BOSSKILL_ACHIE][i].lvl1_val && AchievementsList[BOSSKILL_ACHIE][i].n_livelli >= 1)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 1, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, 1, num, false, 0));
                     }
                 }
             }
@@ -3489,61 +3583,61 @@ ACTION_FUNC(do_achievements)
                     if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl10_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 10)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 10, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 10, num, false, 0));
                         num += 9;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl9_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 9)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 9, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 9, num, false, 0));
                         num += 8;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl8_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 8)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 8, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 8, num, false, 0));
                         num += 7;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl7_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 7)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 7, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 7, num, false, 0));
                         num += 6;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl6_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 6)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 6, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 6, num, false, 0));
                         num += 5;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl5_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 5)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 5, num, false, 0));
                         num += 4;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl4_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 4)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 4, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 4, num, false, 0));
                         num += 3;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl3_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 3)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 3, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 3, num, false, 0));
                         num += 2;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl2_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 2)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 2, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 2, num, false, 0));
                         num += 1;
                     }
                     else if (tch->specials.achievements[CLASS_ACHIE][i] >= AchievementsList[CLASS_ACHIE][i].lvl1_val && AchievementsList[CLASS_ACHIE][i].n_livelli >= 1)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 1, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, CLASS_ACHIE, 1, num, false, 0));
                     }
                 }
             }
@@ -3562,61 +3656,61 @@ ACTION_FUNC(do_achievements)
                     if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl10_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 10)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 10, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 10, num, false, 0));
                         num += 9;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl9_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 9)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 9, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 9, num, false, 0));
                         num += 8;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl8_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 8)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 8, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 8, num, false, 0));
                         num += 7;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl7_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 7)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 7, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 7, num, false, 0));
                         num += 6;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl6_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 6)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 6, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 6, num, false, 0));
                         num += 5;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl5_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 5)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 5, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 5, num, false, 0));
                         num += 4;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl4_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 4)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 4, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 4, num, false, 0));
                         num += 3;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl3_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 3)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 3, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 3, num, false, 0));
                         num += 2;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl2_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 2)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 2, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 2, num, false, 0));
                         num += 1;
                     }
                     else if (tch->specials.achievements[QUEST_ACHIE][i] >= AchievementsList[QUEST_ACHIE][i].lvl1_val && AchievementsList[QUEST_ACHIE][i].n_livelli >= 1)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 1, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, QUEST_ACHIE, 1, num, false, 0));
                     }
                 }
             }
@@ -3635,61 +3729,61 @@ ACTION_FUNC(do_achievements)
                     if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl10_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 10)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 10, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 10, num, false, 0));
                         num += 9;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl9_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 9)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 9, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 9, num, false, 0));
                         num += 8;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl8_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 8)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 8, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 8, num, false, 0));
                         num += 7;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl7_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 7)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 7, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 7, num, false, 0));
                         num += 6;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl6_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 6)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 6, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 6, num, false, 0));
                         num += 5;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl5_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 5)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 5, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 5, num, false, 0));
                         num += 4;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl4_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 4)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 4, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 4, num, false, 0));
                         num += 3;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl3_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 3)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 3, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 3, num, false, 0));
                         num += 2;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl2_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 2)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 2, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 2, num, false, 0));
                         num += 1;
                     }
                     else if (tch->specials.achievements[OTHER_ACHIE][i] >= AchievementsList[OTHER_ACHIE][i].lvl1_val && AchievementsList[OTHER_ACHIE][i].n_livelli >= 1)
                     {
                         num += 1;
-                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 1, num, FALSE, 0));
+                        sb.append(bufferAchie(tch, i, OTHER_ACHIE, 1, num, false, 0));
                     }
                 }
             }
@@ -3703,8 +3797,6 @@ ACTION_FUNC(do_achievements)
 
 ACTION_FUNC(do_score) {
 	struct time_info_data playing_time;
-	char buf[1000], buf2[1000];
-	char datanasc[200];
 	struct time_info_data my_age;
 	struct time_info_data my_birth;
 
@@ -3722,34 +3814,41 @@ ACTION_FUNC(do_score) {
 	else {
 		my_birth.year=(time_info.year-my_age.ayear);
 	}
-	snprintf(datanasc,sizeof datanasc,"$c0005Sei nat$b nel %s$c0005, %d^ del %s$c0005, nell'anno %d %s.",
-			 weekdays[weekday]+3,
-			 day,
-			 month_name[(int)my_birth.month ],
-			 my_birth.year,
-			 (my_birth.year>0?"dopo Nebbie":"avanti Nebbie"));
-
-	snprintf(buf,999,"%s\n\rHai $c0015%d$c0005 anni.", datanasc,my_age.ayear);
-	//FIXME: check for buffer overrun
+	std::string ageMsg = "$c0005Sei nat$b nel ";
+	ageMsg += weekdays[weekday] + 3;
+	ageMsg += "$c0005, ";
+	ageMsg += std::to_string(day);
+	ageMsg += "^ del ";
+	ageMsg += month_name[static_cast<int>(my_birth.month)];
+	ageMsg += "$c0005, nell'anno ";
+	ageMsg += std::to_string(static_cast<int>(my_birth.year));
+	ageMsg += " ";
+	ageMsg += (my_birth.year > 0) ? "dopo Nebbie" : "avanti Nebbie";
+	ageMsg += ".";
+	ageMsg += "\n\rHai $c0015";
+	ageMsg += std::to_string(static_cast<int>(my_age.ayear));
+	ageMsg += "$c0005 anni.";
 	if(my_age.year != my_age.ayear) {
-		char app[50];
-		snprintf(app,sizeof app,"\nMa ne dimostri $c0015%d$c0005.",my_age.year);
-		strcat(buf,app);
+		ageMsg += "\nMa ne dimostri $c0015";
+		ageMsg += std::to_string(static_cast<int>(my_age.year));
+		ageMsg += "$c0005.";
 	}
 
 	if((my_age.month == my_birth.month) && (my_age.day == my_birth.month)) {
-		strcat(buf,"\n$c0015 Oggi e' il tuo compleanno!!");
+		ageMsg += "\n$c0015 Oggi e' il tuo compleanno!!";
 	}
 
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	act(ageMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
-	snprintf(buf, 999,"$c0005Appartieni alla razza $c0015%s$c0005",
-			 RaceName[GET_RACE(ch)]);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	std::string raceMsg = "$c0005Appartieni alla razza $c0015";
+	raceMsg += RaceName[GET_RACE(ch)];
+	raceMsg += "$c0005";
+	act(raceMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	if(HAS_PRINCE(ch)) {
-		snprintf(buf, 999,"$c0005Appartieni al clan di $c0015%s$c0005",
-				 GET_PRINCE(ch));
-		act(buf,FALSE, ch,0,0,TO_CHAR);
+		std::string princeMsg = "$c0005Appartieni al clan di $c0015";
+		princeMsg += GET_PRINCE(ch);
+		princeMsg += "$c0005";
+		act(princeMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 
 	if(!IS_IMMORTAL(ch) && (!IS_NPC(ch))) {
@@ -3764,26 +3863,36 @@ ACTION_FUNC(do_score) {
 		}
 	}
 
-	snprintf(buf, 999,
-			 "$c0005Hai $c0015%d$c0005($c0011%d$c0005) hit, "
-			 "$c0015%d$c0005($c0011%d$c0005) mana e "
-			 "$c0015%d$c0005($c0011%d$c0005) movimento.",
-			 GET_HIT(ch),GET_MAX_HIT(ch),
-			 GET_MANA(ch),GET_MAX_MANA(ch),
-			 GET_MOVE(ch),GET_MAX_MOVE(ch));
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	std::string statsMsg = "$c0005Hai $c0015";
+	statsMsg += std::to_string(static_cast<int>(GET_HIT(ch)));
+	statsMsg += "$c0005($c0011";
+	statsMsg += std::to_string(GET_MAX_HIT(ch));
+	statsMsg += "$c0005) hit, $c0015";
+	statsMsg += std::to_string(static_cast<int>(GET_MANA(ch)));
+	statsMsg += "$c0005($c0011";
+	statsMsg += std::to_string(GET_MAX_MANA(ch));
+	statsMsg += "$c0005) mana e $c0015";
+	statsMsg += std::to_string(static_cast<int>(GET_MOVE(ch)));
+	statsMsg += "$c0005($c0011";
+	statsMsg += std::to_string(GET_MAX_MOVE(ch));
+	statsMsg += "$c0005) movimento.";
+	act(statsMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
-	snprintf(buf, 999, "$c0005Il tuo allineamento e': $c0015%s",
-			 AlignDesc(GET_ALIGNMENT(ch)));
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	std::string alignMsg = "$c0005Il tuo allineamento e': $c0015";
+	alignMsg += AlignDesc(GET_ALIGNMENT(ch));
+	act(alignMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
-	snprintf(buf,999, "$c0005Hai effettuato $c0015%d$c0005 exp, ed "
-			 "hai $c0015%d$c0005 monete d'oro.",
-			 GET_EXP(ch),GET_GOLD(ch));
-	act(buf,FALSE,ch,0,0,TO_CHAR);
-	snprintf(buf,999, "$c0005Non puoi donare xp se hai meno di: $c0015%d$c0005 exp",
-			 IS_PRINCE(ch)?PRINCEEXP:MIN_EXP(ch));
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	std::string expMsg = "$c0005Hai effettuato $c0015";
+	expMsg += std::to_string(GET_EXP(ch));
+	expMsg += "$c0005 exp, ed hai $c0015";
+	expMsg += std::to_string(GET_GOLD(ch));
+	expMsg += "$c0005 monete d'oro.";
+	act(expMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+
+	std::string donateMsg = "$c0005Non puoi donare xp se hai meno di: $c0015";
+	donateMsg += std::to_string(IS_PRINCE(ch) ? PRINCEEXP : MIN_EXP(ch));
+	donateMsg += "$c0005 exp";
+	act(donateMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
 	/* the mud will crash without this check! */
 	if(GetMaxLevel(ch)>MAX_MORT ||
@@ -3791,214 +3900,253 @@ ACTION_FUNC(do_score) {
 		/* do nothing! */
 	}
 	else {
-		buf[0] = '\0';
-		snprintf(buf,999,"$c0005Exp al prossimo livello: ");
+		std::string nextLevelMsg = "$c0005Exp al prossimo livello: ";
 		if(HasClass(ch, CLASS_MAGIC_USER)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"M:$c0015%d$c0005 ",
-						 (titles[MAGE_LEVEL_IND]
-						  [GET_LEVEL(ch, MAGE_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"M:0 ");
+			nextLevelMsg += "M:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[MAGE_LEVEL_IND]
+					[GET_LEVEL(ch, MAGE_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_CLERIC)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"C:$c0015%d$c0005 ",
-						 (titles[CLERIC_LEVEL_IND]
-						  [GET_LEVEL(ch, CLERIC_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"C:0 ");
+			nextLevelMsg += "C:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[CLERIC_LEVEL_IND]
+					[GET_LEVEL(ch, CLERIC_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_THIEF)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"T:$c0015%d$c0005 ",
-						 (titles[THIEF_LEVEL_IND]
-						  [GET_LEVEL(ch, THIEF_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"T:0 ");
+			nextLevelMsg += "T:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[THIEF_LEVEL_IND]
+					[GET_LEVEL(ch, THIEF_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_WARRIOR)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"W:$c0015%d$c0005 ",
-						 (titles[WARRIOR_LEVEL_IND]
-						  [GET_LEVEL(ch, WARRIOR_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"W:0 ");
+			nextLevelMsg += "W:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[WARRIOR_LEVEL_IND]
+					[GET_LEVEL(ch, WARRIOR_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_DRUID)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"D:$c0015%d$c0005 ",
-						 (titles[DRUID_LEVEL_IND]
-						  [GET_LEVEL(ch, DRUID_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"D:0 ");
+			nextLevelMsg += "D:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[DRUID_LEVEL_IND]
+					[GET_LEVEL(ch, DRUID_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 		if(HasClass(ch, CLASS_MONK)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"K:$c0015%d$c0005 ",
-						 (titles[MONK_LEVEL_IND]
-						  [GET_LEVEL(ch, MONK_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"K:0 ");
+			nextLevelMsg += "K:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[MONK_LEVEL_IND]
+					[GET_LEVEL(ch, MONK_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_BARBARIAN)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"B:$c0015%d$c0005 ",
-						 (titles[BARBARIAN_LEVEL_IND]
-						  [GET_LEVEL(ch, BARBARIAN_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"B:0 ");
+			nextLevelMsg += "B:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[BARBARIAN_LEVEL_IND]
+					[GET_LEVEL(ch, BARBARIAN_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_SORCERER)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"S:$c0015%d$c0005 ",
-						 (titles[SORCERER_LEVEL_IND]
-						  [GET_LEVEL(ch, SORCERER_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"S:0 ");
+			nextLevelMsg += "S:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[SORCERER_LEVEL_IND]
+					[GET_LEVEL(ch, SORCERER_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_PALADIN)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"P:$c0015%d$c0005 ",
-						 (titles[PALADIN_LEVEL_IND]
-						  [GET_LEVEL(ch, PALADIN_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"P:0 ");
+			nextLevelMsg += "P:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[PALADIN_LEVEL_IND]
+					[GET_LEVEL(ch, PALADIN_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_RANGER)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"R:$c0015%d$c0005 ",
-						 (titles[RANGER_LEVEL_IND]
-						  [GET_LEVEL(ch, RANGER_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"R:0 ");
+			nextLevelMsg += "R:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[RANGER_LEVEL_IND]
+					[GET_LEVEL(ch, RANGER_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
 		if(HasClass(ch, CLASS_PSI)) {
-			if(GetMaxLevel(ch)<MAX_IMMORT)
-				snprintf(buf2,999,"I:$c0015%d$c0005 ",
-						 (titles[PSI_LEVEL_IND]
-						  [GET_LEVEL(ch, PSI_LEVEL_IND)+1].exp)-GET_EXP(ch));
-			else {
-				snprintf(buf2,999,"I:0 ");
+			nextLevelMsg += "I:";
+			if(GetMaxLevel(ch)<MAX_IMMORT) {
+				nextLevelMsg += "$c0015";
+				nextLevelMsg += std::to_string((titles[PSI_LEVEL_IND]
+					[GET_LEVEL(ch, PSI_LEVEL_IND)+1].exp)-GET_EXP(ch));
+				nextLevelMsg += "$c0005 ";
 			}
-			strcat(buf,buf2);
+			else {
+				nextLevelMsg += "0 ";
+			}
 		}
 
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		act(nextLevelMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 
-	buf[0] = '\0';
-	snprintf(buf, 999,"$c0005I tuoi livelli:");
+	std::string levelsMsg = "$c0005I tuoi livelli:";
 	if(HasClass(ch, CLASS_MAGIC_USER)) {
-		snprintf(buf2, 999," M:$c0015%d$c0005", GET_LEVEL(ch, MAGE_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " M:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, MAGE_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_CLERIC)) {
-		snprintf(buf2, 999," C:$c0015%d$c0005", GET_LEVEL(ch, CLERIC_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " C:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, CLERIC_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_WARRIOR)) {
-		snprintf(buf2, 999," W:$c0015%d$c0005", GET_LEVEL(ch, WARRIOR_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " W:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, WARRIOR_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_THIEF)) {
-		snprintf(buf2, 999," T:$c0015%d$c0005", GET_LEVEL(ch, THIEF_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " T:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, THIEF_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_DRUID)) {
-		snprintf(buf2, 999," D:$c0015%d$c0005", GET_LEVEL(ch, DRUID_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " D:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, DRUID_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_MONK)) {
-		snprintf(buf2, 999," K:$c0015%d$c0005", GET_LEVEL(ch, MONK_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " K:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, MONK_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_BARBARIAN)) {
-		snprintf(buf2, 999," B:$c0015%d$c0005", GET_LEVEL(ch, BARBARIAN_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " B:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, BARBARIAN_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
-
 	if(HasClass(ch, CLASS_SORCERER)) {
-		snprintf(buf2, 999," S:$c0015%d$c0005", GET_LEVEL(ch, SORCERER_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " S:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, SORCERER_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_PALADIN)) {
-		snprintf(buf2, 999," P:$c0015%d$c0005", GET_LEVEL(ch, PALADIN_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " P:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, PALADIN_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_RANGER)) {
-		snprintf(buf2, 999," R:$c0015%d$c0005", GET_LEVEL(ch, RANGER_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " R:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, RANGER_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 	if(HasClass(ch, CLASS_PSI)) {
-		snprintf(buf2, 999," I:$c0015%d$c0005", GET_LEVEL(ch, PSI_LEVEL_IND));
-		strcat(buf, buf2);
+		levelsMsg += " I:$c0015";
+		levelsMsg += std::to_string(static_cast<int>(GET_LEVEL(ch, PSI_LEVEL_IND)));
+		levelsMsg += "$c0005";
 	}
 
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	act(levelsMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
 	if(GET_TITLE(ch)) {
-		snprintf(buf,999,"$c0005Questo ti qualifica come $c0015%s $c0011%s",
-				 GET_NAME(ch), GET_TITLE(ch));
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		std::string titleMsg = "$c0005Questo ti qualifica come $c0015";
+		titleMsg += GET_NAME(ch);
+		titleMsg += " $c0011";
+		titleMsg += GET_TITLE(ch);
+		act(titleMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 
 	playing_time = real_time_passed((time(0)-ch->player.time.logon) + ch->player.time.played, 0);
-	snprintf(buf,999,"$c0005Hai giocato per $c0015%d$c0005 giorni e $c0015%d$c0005 ore.",
-			 playing_time.day,
-			 playing_time.hours);
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	std::string playingMsg = "$c0005Hai giocato per $c0015";
+	playingMsg += std::to_string(static_cast<int>(playing_time.day));
+	playingMsg += "$c0005 giorni e $c0015";
+	playingMsg += std::to_string(static_cast<int>(playing_time.hours));
+	playingMsg += "$c0005 ore.";
+	act(playingMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
 	/* Drow fight -4 in lighted rooms! */
 	if(!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
 			!affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
-		snprintf(buf,999,"$c0011La luce nell'area ti provoca molto dolore$c0009!");
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		act("$c0011La luce nell'area ti provoca molto dolore$c0009!", FALSE, ch, 0, 0, TO_CHAR);
 	}
 
-	snprintf(buf,999,	"$c0005I tuoi set sono: "
-						"$c0015Achie$c0005($c0015%s$c0005) $c0015Ansi$c0005($c0015%s$c0005) $c0015Autoexits$c0005($c0015%s$c0005) "
-						"$c0015Pwp$c0005($c0015%s$c0005) $c0015Warnings$c0005($c0015%s$c0005) $c0015Who$c0005($c0015%s$c0005)",
-						IS_SET(ch->player.user_flags, ACHIE_MODE) ? "on" : "off",
-						IS_SET(ch->player.user_flags, USE_ANSI) ? "on" : "off",
-						IS_SET(ch->player.user_flags, SHOW_EXITS) ? "on" : "off",
-						IS_SET(ch->player.user_flags, PWP_MODE) ? "on" : "off",
-						IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF) ? "off" : "on",
-						IS_SET(ch->player.user_flags, SHOW_CLASSES) ? "on" : "off");
-	act(buf, FALSE, ch, 0, 0, TO_CHAR);
+	std::string settingsMsg = "$c0005I tuoi set sono: "
+		"$c0015Achie$c0005($c0015";
+	settingsMsg += IS_SET(ch->player.user_flags, ACHIE_MODE) ? "on" : "off";
+	settingsMsg += "$c0005) $c0015Ansi$c0005($c0015";
+	settingsMsg += IS_SET(ch->player.user_flags, USE_ANSI) ? "on" : "off";
+	settingsMsg += "$c0005) $c0015Autoexits$c0005($c0015";
+	settingsMsg += IS_SET(ch->player.user_flags, SHOW_EXITS) ? "on" : "off";
+	settingsMsg += "$c0005) $c0015Pwp$c0005($c0015";
+	settingsMsg += IS_SET(ch->player.user_flags, PWP_MODE) ? "on" : "off";
+	settingsMsg += "$c0005) $c0015Warnings$c0005($c0015";
+	settingsMsg += IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF) ? "off" : "on";
+	settingsMsg += "$c0005) $c0015Who$c0005($c0015";
+	settingsMsg += IS_SET(ch->player.user_flags, SHOW_CLASSES) ? "on" : "off";
+	settingsMsg += "$c0005)";
+	act(settingsMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
-	snprintf(buf,999,"$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015%d ",
-			 GET_RUNEDEI(ch));
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	std::string runesMsg = "$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015";
+	runesMsg += std::to_string(static_cast<int>(GET_RUNEDEI(ch)));
+	runesMsg += " ";
+	act(runesMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 
 	switch(GET_POS(ch)) {
 	case POSITION_DEAD :
@@ -4037,9 +4185,9 @@ ACTION_FUNC(do_score) {
 		break;
 	case POSITION_MOUNTED:
 		if(MOUNTED(ch)) {
-			snprintf(buf,999,"$c0005Stai montando su $c0015%s",
-					 MOUNTED(ch)->player.short_descr);
-			act(buf,FALSE,ch,0,0,TO_CHAR);
+			std::string mountedMsg = "$c0005Stai montando su $c0015";
+			mountedMsg += MOUNTED(ch)->player.short_descr;
+			act(mountedMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 		}
 		else {
 			act("$c0005Sei in piedi.",FALSE,ch,0,0,TO_CHAR);
@@ -4053,32 +4201,39 @@ ACTION_FUNC(do_score) {
 
 
 ACTION_FUNC(do_time) {
-	char buf[100];
 	int weekday, day;
+	std::string buf;
 
-	snprintf(buf, 99,"Sono le %d del%s, de ",
-			 ((time_info.hours % 12 == 0) ? 12 : ((time_info.hours) % 12)),
-			 ((time_info.hours >= 12) ? " pomeriggio" : "la mattina"));
+	buf = "Sono le ";
+	{
+		const int hour12 = static_cast<int>(time_info.hours) % 12;
+		buf += std::to_string(hour12 == 0 ? 12 : hour12);
+	}
+	buf += " del";
+	buf += (time_info.hours >= 12) ? " pomeriggio" : "la mattina";
+	buf += ", de ";
 
 	weekday = ((35*time_info.month)+time_info.day+1) % 7;/* 35 days in a month */
 
-	strcat(buf,weekdays[weekday]);
-	strcat(buf,".\n\r");
-	send_to_char(buf,ch);
+	buf += weekdays[weekday];
+	buf += ".\n\r";
+	send_to_char(buf.c_str(), ch);
 
 	day = time_info.day + 1;   /* day in [1..35] */
 
-	snprintf(buf, 99,"%d^ giorno del %s, nell'anno %d.\n\r",
-			 day,
-			 month_name[(int)time_info.month ],
-			 time_info.year);
+	buf = std::to_string(day);
+	buf += "^ giorno del ";
+	buf += month_name[static_cast<int>(time_info.month)];
+	buf += ", nell'anno ";
+	buf += std::to_string(static_cast<int>(time_info.year));
+	buf += ".\n\r";
 
-	send_to_char(buf,ch);
+	send_to_char(buf.c_str(), ch);
 }
 
 
 ACTION_FUNC(do_weather) {
-	char buf[ 256 ];
+	std::string weatherMsg;
 	const char* sky_look[] = {
 		"$c0014sereno$c0007",
 		"$c0015nuvoloso$c0007",
@@ -4087,12 +4242,14 @@ ACTION_FUNC(do_weather) {
 	};
 
 	if(OUTSIDE(ch)) {
-		snprintf(buf, 255,
-				 "Il cielo e' %s e%s.\n\r",
-				 sky_look[weather_info.sky],
-				 (weather_info.change >=0 ? " senti un vento $c0009caldo$c0007 da sud" :
-				  "d i tuoi reumatismi ti dicono che il tempo cambiera'"));
-		send_to_char(buf, ch);
+		weatherMsg = "Il cielo e' ";
+		weatherMsg += sky_look[weather_info.sky];
+		weatherMsg += " e";
+		weatherMsg += (weather_info.change >= 0 ?
+			" senti un vento $c0009caldo$c0007 da sud" :
+			"d i tuoi reumatismi ti dicono che il tempo cambiera'");
+		weatherMsg += ".\n\r";
+		send_to_char(weatherMsg.c_str(), ch);
 	}
 	else {
 		send_to_char("Non riesci a vedere il tempo che fa fuori.\n\r", ch);
@@ -4103,7 +4260,7 @@ ACTION_FUNC(do_weather) {
 ACTION_FUNC(do_help) {
 
 	int chk, bot, top, mid, minlen;
-	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
+	std::array<char, 80> buf{};
 
 
 	if(!ch->desc) {
@@ -4128,19 +4285,19 @@ ACTION_FUNC(do_help) {
 
 			if(!(chk = strn_cmp(arg, help_index[mid].keyword, minlen))) {
 				fseek(help_fl, help_index[mid].pos, 0);
-				*buffer = '\0';
+				std::string buffer;
 				for(;;) {
-					fgets(buf, 80, help_fl);
-					if(*buf == '#') {
+					fgets(buf.data(), static_cast<int>(buf.size()), help_fl);
+					if(buf[0] == '#') {
 						break;
 					}
-					if(strlen(buf)+strlen(buffer) > MAX_STRING_LENGTH-2) {
+					if(buffer.size() + std::strlen(buf.data()) + 1 > MAX_STRING_LENGTH - 2) {
 						break;
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
+					buffer += buf.data();
+					buffer += "\r";
 				}
-				page_string(ch->desc, buffer, 1);
+				page_string(ch->desc, buffer.c_str(), 1);
 				return;
 			}
 			else if(bot >= top) {
@@ -4164,7 +4321,7 @@ ACTION_FUNC(do_help) {
 
 
 ACTION_FUNC(do_wizhelp) {
-	char buf[1000];
+	std::array<char, 1000> queryBuf{};
 	int i, j = 1;
 	NODE* n;
 
@@ -4172,23 +4329,24 @@ ACTION_FUNC(do_wizhelp) {
 		return;
 	}
 
-	one_argument(arg,buf);                /* new msw */
+	one_argument(arg, queryBuf.data());                /* new msw */
 	if(*arg) {
 		/* asking for help on keyword, try looking in file */
 		do_actual_wiz_help(ch,arg,cmd);
 		return;
 	}
 
-	snprintf(buf, 999,"Wizhelp <keyword>\n\r"
-			 "Wizard Commands disponibili per te:\n\r\n\r");
+	std::string buf = "Wizhelp <keyword>\n\rWizard Commands disponibili per te:\n\r\n\r";
 
 	for(i = 0; i < 27; i++) {
 		n = radix_head[i].next;
 		while(n) {
 			if(n->min_level <= GetMaxLevel(ch) && n->min_level >= IMMORTALE) {
-				sprintf((buf + strlen(buf)), "%-10s", n->name);
+				char formattedName[32];
+				snprintf(formattedName, sizeof(formattedName), "%-10s", n->name);
+				buf += formattedName;
 				if(!(j % 7)) {
-					sprintf((buf + strlen(buf)), "\n\r");
+					buf += "\n\r";
 				}
 				j++;
 			}
@@ -4196,15 +4354,15 @@ ACTION_FUNC(do_wizhelp) {
 		}
 	}
 
-	strcat(buf, "\n\r");
+	buf += "\n\r";
 
-	page_string(ch->desc, buf, 1);
+	page_string(ch->desc, buf.c_str(), 1);
 }
 
 ACTION_FUNC(do_actual_wiz_help) {
 
 	int chk, bot, top, mid, minlen;
-	char buf[MAX_STRING_LENGTH], buffer[MAX_STRING_LENGTH];
+	std::array<char, 80> buf{};
 
 
 	if(!ch->desc) {
@@ -4228,19 +4386,19 @@ ACTION_FUNC(do_actual_wiz_help) {
 
 			if(!(chk = strn_cmp(arg, wizhelp_index[mid].keyword, minlen))) {
 				fseek(wizhelp_fl, wizhelp_index[mid].pos, 0);
-				*buffer = '\0';
+				std::string buffer;
 				for(;;) {
-					fgets(buf, 80, wizhelp_fl);
-					if(*buf == '#') {
+					fgets(buf.data(), static_cast<int>(buf.size()), wizhelp_fl);
+					if(buf[0] == '#') {
 						break;
 					}
-					if(strlen(buf)+strlen(buffer) > MAX_STRING_LENGTH-2) {
+					if(buffer.size() + std::strlen(buf.data()) + 1 > MAX_STRING_LENGTH - 2) {
 						break;
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
+					buffer += buf.data();
+					buffer += "\r";
 				}
-				page_string(ch->desc, buffer, 1);
+				page_string(ch->desc, buffer.c_str(), 1);
 				return;
 			}
 			else if(bot >= top) {
@@ -4261,7 +4419,6 @@ ACTION_FUNC(do_actual_wiz_help) {
 
 
 ACTION_FUNC(do_command_list) {
-	char buf[MAX_STRING_LENGTH];
 	int i, j = 1;
 	NODE* n;
 
@@ -4269,18 +4426,20 @@ ACTION_FUNC(do_command_list) {
 		return;
 	}
 
-	snprintf(buf, MAX_STRING_LENGTH-1,"Comandi disponibili per te:\n\r\n\r");
+	std::string buf = "Comandi disponibili per te:\n\r\n\r";
 
 	for(i = 0; i < 27; i++) {
 		n = radix_head[i].next;
 		while(n) {
 			if(n->min_level <= GetMaxLevel(ch)) {
-				if(strlen(buf)+strlen(n->name) <= MAX_STRING_LENGTH) {
-					sprintf((buf + strlen(buf)), "%-10s", n->name);
+				char formattedName[32];
+				snprintf(formattedName, sizeof(formattedName), "%-10s", n->name);
+				if(buf.size() + std::strlen(formattedName) <= MAX_STRING_LENGTH) {
+					buf += formattedName;
 				}
 				if(!(j % 7))
-					if(strlen(buf)+4 <= MAX_STRING_LENGTH) {
-						sprintf((buf + strlen(buf)), "\n\r");
+					if(buf.size() + 2 <= MAX_STRING_LENGTH) {
+						buf += "\n\r";
 					}
 				j++;
 			}
@@ -4288,9 +4447,11 @@ ACTION_FUNC(do_command_list) {
 		}
 	}
 
-	strcat(buf, "\n\r");
+	if(buf.size() + 2 <= MAX_STRING_LENGTH) {
+		buf += "\n\r";
+	}
 
-	page_string(ch->desc, buf, 1);
+	page_string(ch->desc, buf.c_str(), 1);
 }
 
 #define OK_NAME(name,mask)  (mask[0]=='\0' || \
@@ -4308,10 +4469,27 @@ int OK_NAME(struct char_data *name,const char*mask)
 }
 */
 
+namespace {
+/* Centra la stringa colorata livello+classi nel campo a 34 caratteri (logica who originale). */
+std::string who_center_label34(const std::string& inner) {
+	std::string pad(34, ' ');
+	const int len = static_cast<int>(inner.size());
+	int start = 17 - len / 2;
+	if(start < 0) {
+		start = 0;
+	}
+	const int n = std::min(len, 34 - start);
+	for(int i = 0; i < n; ++i) {
+		pad[static_cast<size_t>(start + i)] = inner[static_cast<size_t>(i)];
+	}
+	return pad;
+}
+} // namespace
 
 ACTION_FUNC(do_who) {
 	struct char_data* person;
-	char buffer[MAX_STRING_LENGTH*2]="",tbuf[512];
+	std::string whoBuf;
+	std::array<char, 512> argBuf{};
 	int count;
 	char flags[20]="";
 	char name_mask[40]="";
@@ -4319,40 +4497,45 @@ ACTION_FUNC(do_who) {
 	int listed = 0;
 	int lcount =0;
 	int  skip = FALSE;
-	long l;
 	char ttbuf[256];
 
 	/*  check for an arg */
-	arg = one_argument(arg,tbuf);
-	if(tbuf[0]=='-' && tbuf[1]!='\0') {
-		strcpy(flags,tbuf+1);
-	}
-	else {
-		strcpy(name_mask,tbuf);
-	}
-	if(*arg) {
-		arg = one_argument(arg,tbuf);
-		if(tbuf[0]=='-' && tbuf[1]!='\0') {
-			strcpy(flags,tbuf+1);
+	auto storeWhoToken = [&](const char* token) {
+		if(token[0] == '-' && token[1] != '\0') {
+			std::snprintf(flags, sizeof(flags), "%s", token + 1);
 		}
 		else {
-			strcpy(name_mask,tbuf);
+			std::snprintf(name_mask, sizeof(name_mask), "%s", token);
 		}
+	};
+
+	arg = one_argument(arg, argBuf.data());
+	storeWhoToken(argBuf.data());
+	if(*arg) {
+		arg = one_argument(arg, argBuf.data());
+		storeWhoToken(argBuf.data());
 	}
+
+	const auto hasFlag = [&](char f) {
+		return std::strchr(flags, f) != nullptr;
+	};
 
 	if((IS_DIO_MINORE(ch) && flags[0] == '\0') || !IS_DIO_MINORE(ch) ||
 			cmd == CMD_WHOZONE) {
-		if(IS_DIO_MINORE(ch))
-			snprintf(buffer,(MAX_STRING_LENGTH*2)-1,
-					 "$c0005                         Giocatori [God Version -? for Help]\n\r"
-					 "                       -------------------------------------\n\r");
-		else if(cmd == CMD_WHOZONE)
-			snprintf(buffer,(MAX_STRING_LENGTH*2)-1,"$c0005Giocatori\n\r"
-					 "---------\n\r");
-		else
-			snprintf(buffer,(MAX_STRING_LENGTH*2)-1,
-					 "$c0005                         Nelle nebbie........\n\r"
-					 "                       ---------------------------\n\r");
+		if(IS_DIO_MINORE(ch)) {
+			whoBuf =
+				"$c0005                         Giocatori [God Version -? for Help]\n\r"
+				"                       -------------------------------------\n\r";
+		}
+		else if(cmd == CMD_WHOZONE) {
+			whoBuf = "$c0005Giocatori\n\r"
+					 "---------\n\r";
+		}
+		else {
+			whoBuf =
+				"$c0005                         Nelle nebbie........\n\r"
+				"                       ---------------------------\n\r";
+		}
 		count=0;
 		for(person = character_list; person; person = person->next) {
 			if(!IS_LINKDEAD(person) and IS_PC(person) and
@@ -4362,25 +4545,32 @@ ACTION_FUNC(do_who) {
 					 (real_roomp(person->in_room) and
 					  real_roomp(person->in_room)->zone ==
 					  real_roomp(ch->in_room)->zone))and
-					(!index(flags,'g') or IS_IMMORTAL(person))) {
+					(!hasFlag('g') or IS_IMMORTAL(person))) {
 				if(OK_NAME(person,name_mask)) {
 					count++;
 
+					std::string row;
 					if(cmd == CMD_WHOZONE) {
 						/* it's a whozone command */
 						if((!IS_AFFECTED(person, AFF_HIDE)) || (IS_IMMORTAL(ch))) {
-							snprintf(tbuf,511,
-									 "$c0012%-25s - %s", GET_NAME_DESC(person),
-									 IS_AFFECTED(person,AFF_SNEAK)?
-									 "sneaking around":
-									 real_roomp(person->in_room)->name);
+							std::ostringstream wz;
+							wz << "$c0012" << std::left << std::setw(25)
+							   << (GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "")
+							   << " - "
+							   << (IS_AFFECTED(person, AFF_SNEAK) ?
+								   "sneaking around" :
+								   real_roomp(person->in_room)->name);
+							row = wz.str();
 							if(GetMaxLevel(ch) >= IMMORTALE) {
-								sprintf(tbuf+strlen(tbuf)," [%d]", person->in_room);
+								row += " [";
+								row += std::to_string(person->in_room);
+								row += "]";
 							}
 						}
 					}
 					else {
-						char levels[40]="", classes[20]="";
+						std::string levelsStr;
+						std::string classesStr;
 						const char* classname[]= { "Mu","Cl","Wa","Th","Dr","Mo","Ba","So","Pa",
 												   "Ra","Ps"
 												 };
@@ -4391,11 +4581,11 @@ ACTION_FUNC(do_who) {
 								if(HasClass(person,bit)) {
 									classn++;
 									total+=person->player.level[i];
-									if(strlen(classes)!=0) {
-										strcat(classes,"/");
+									if(!classesStr.empty()) {
+										classesStr += "/";
 									}
 									if(IS_SET(person->player.user_flags,SHOW_CLASSES)) {
-										sprintf(classes+strlen(classes),"%s",classname[i]);
+										classesStr += classname[i];
 									}
 								}
 							}
@@ -4404,166 +4594,173 @@ ACTION_FUNC(do_who) {
 							total= GetMaxLevel(person);
 							/* fine modifica */
 							if(IS_PRINCE(person) || total == PRINCIPE) {  // SALVO per riconoscere anche il poly
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0008Principe":
-									   "$c0008Principessa");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0008Principe":
+									   "$c0008Principessa";
 							}
 							else if(total<ALLIEVO)  /* 1-10 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0002Novizio":
-									   "$c0002Novizia");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0002Novizio":
+									   "$c0002Novizia";
 							else if(total<APPRENDISTA) {   /* 11-20 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0004Allievo":"$c0004Allieva");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0004Allievo":"$c0004Allieva";
 							}
 							else if(total<INIZIATO)       /* 21-30 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0006Apprendista":
-									   "$c0006Apprendista");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0006Apprendista":
+									   "$c0006Apprendista";
 							else if(total<ESPERTO)      /* 31-40 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0014Iniziato":
-									   "$c0014Iniziata");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0014Iniziato":
+									   "$c0014Iniziata";
 							else if(total<MAESTRO)      /* 41-45 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0009Esperto":
-									   "$c0009Esperta");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0009Esperto":
+									   "$c0009Esperta";
 							else if(total<BARONE)       /* 46-49 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0015Maestro":
-									   "$c0015Maestra");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Maestro":
+									   "$c0015Maestra";
 							else if(GET_EXP(person)<CONTE) /* 50 */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0015Barone":
-									   "$c0015Baronessa");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Barone":
+									   "$c0015Baronessa";
 							else if(GET_EXP(person)<MARCHESE)   /* fino ai 200M */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0015Conte":
-									   "$c0015Contessa");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Conte":
+									   "$c0015Contessa";
 							else if(GET_EXP(person)<DUCA)       /* 250M */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0015Marchese":
-									   "$c0015Marchesa");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Marchese":
+									   "$c0015Marchesa";
 							else if(GET_EXP(person)<GRANDUCA)   /* 300M */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0015Duca":
-									   "$c0015Duchessa");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Duca":
+									   "$c0015Duchessa";
 							else if(GET_EXP(person)<PRINCEEXP)   /* 350M */
-								strcpy(levels,GET_SEX(person)==SEX_MALE?"$c0001Granduca":
-									   "$c0001Granduchessa");
-							snprintf(tbuf, 511,"%s $c0012%s",levels, classes);
-							sprintf(levels,"%34s","");
-							strcpy(levels+17-((strlen(tbuf))/2),tbuf);
-							snprintf(tbuf, 511,
-									 "%-34s $c0005: $c0007%s %s $c0007%s%s",
-									 levels,
-									 GET_NAME_DESC(person) ?
-									 GET_NAME_DESC(person): "nemo",
-									 person->player.title ?
-									 person->player.title : "",
-									 HAS_PRINCE(person)?"del clan di ":"",
-									 HAS_PRINCE(person)?GET_PRINCE(person):"");
+								levelsStr = GET_SEX(person)==SEX_MALE?"$c0001Granduca":
+									   "$c0001Granduchessa";
+							const std::string mid = levelsStr + " $c0012" + classesStr;
+							const std::string centered = who_center_label34(mid);
+							const char* nm = GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "nemo";
+							row = centered + "$c0005: $c0007" + std::string(nm) + " ";
+							row += person->player.title ? person->player.title : "";
+							row += " $c0007";
+							row += HAS_PRINCE(person) ? "del clan di " : "";
+							row += HAS_PRINCE(person) && GET_PRINCE(person) ? GET_PRINCE(person) : "";
 
 						}
 						else {
 							if(GET_SEX(person) == SEX_FEMALE) {
 								switch(GetMaxLevel(person)) {
 								case 52:
-									sprintf(levels,"Immortale");
+									levelsStr = "Immortale";
 									break;
 								case 53:
-									sprintf(levels,"Dea Minore");
+									levelsStr = "Dea Minore";
 									break;
 								case 54:
-									sprintf(levels,"Dea");
+									levelsStr = "Dea";
 									break;
 								case 55:
-									sprintf(levels,"Maestra degli Dei");
+									levelsStr = "Maestra degli Dei";
 									break;
 								case 56:
-									sprintf(levels,"Creatrice");
+									levelsStr = "Creatrice";
 									break;
 								case 57:
-									sprintf(levels,"Maestra del Fato");
+									levelsStr = "Maestra del Fato";
 									break;
 								case 58:
-									sprintf(levels,"Maestra del Creato");
+									levelsStr = "Maestra del Creato";
 									break;
 								case 59:
-									sprintf(levels,"Maestra dei Creatori");
+									levelsStr = "Maestra dei Creatori";
 									break;
 								case 60:
-									sprintf(levels,"Immensa");
+									levelsStr = "Immensa";
 									break;
 								}
 							}
 							else {
 								switch(GetMaxLevel(person)) {
 								case 52:
-									sprintf(levels,"Immortale");
+									levelsStr = "Immortale";
 									break;
 								case 53:
-									sprintf(levels,"Dio Minore");
+									levelsStr = "Dio Minore";
 									break;
 								case 54:
-									sprintf(levels,"Dio");
+									levelsStr = "Dio";
 									break;
 								case 55:
-									sprintf(levels,"Maestro degli Dei");
+									levelsStr = "Maestro degli Dei";
 									break;
 								case 56:
-									sprintf(levels,"Creatore");
+									levelsStr = "Creatore";
 									break;
 								case 57:
-									sprintf(levels,"Maestro del Fato");
+									levelsStr = "Maestro del Fato";
 									break;
 								case 58:
-									sprintf(levels,"Maestro del Creato");
+									levelsStr = "Maestro del Creato";
 									break;
 								case 59:
-									sprintf(levels,"Maestro dei Creatori");
+									levelsStr = "Maestro dei Creatori";
 									break;
 								case 60:
-									sprintf(levels,"Immenso");
+									levelsStr = "Immenso";
 									break;
 								};
 							}
-							snprintf(tbuf,511, "$c0008%s $c0005",levels);
-							sprintf(levels,"%34s","");
-							strcpy(levels+17-(strlen(tbuf)/2),tbuf);
-							snprintf(tbuf, 511,"%-34s $c0005: $c0011%-10s %s$c0007",levels,
-									 GET_NAME_DESC(person),
-									 person->player.title ? person->player.title : "");
+							const std::string immMid = std::string("$c0008") + levelsStr + " $c0005";
+							const std::string centered = who_center_label34(immMid);
+							std::ostringstream nm10;
+							nm10 << std::left << std::setw(10)
+								 << (GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "");
+							row = centered + "$c0005: $c0011" + nm10.str() + " ";
+							row += person->player.title ? person->player.title : "";
+							row += "$c0007";
 						}
 					}
-					if(IS_AFFECTED2(person,AFF2_AFK)) {
-						strcat(tbuf, "$c0008 AF");
-					}
-					if(IS_SET(person->player.user_flags,RACE_WAR)) {
-						strcat(tbuf, "$c0001 PK");
-					}
-					strcat(tbuf, " $c0007\n\r");
-					if(strlen(buffer)+strlen(tbuf) < (MAX_STRING_LENGTH*2)-512) {
-						strcat(buffer,tbuf);
+					if(!row.empty()) {
+						if(IS_AFFECTED2(person,AFF2_AFK)) {
+							row += "$c0008 AF";
+						}
+						if(IS_SET(person->player.user_flags,RACE_WAR)) {
+							row += "$c0001 PK";
+						}
+						row += " $c0007\n\r";
+						if(whoBuf.size() + row.size() < (MAX_STRING_LENGTH * 2) - 512) {
+							whoBuf += row;
+						}
 					}
 				}
 			}
 		}
-		if(index(flags,'g')) {
-			snprintf(tbuf, 511,"\n\r$c0005Totale Divinita' visibili: $c0015%d\n\r", count);
+		if(hasFlag('g')) {
+			const std::string totalsLine =
+				"\n\r$c0005Totale Divinita' visibili: $c0015" + std::to_string(count) + "\n\r";
+			if(whoBuf.size() + totalsLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
+				whoBuf += totalsLine;
+			}
 		}
 		else {
-			snprintf(tbuf, 511,"\n\r$c0005Totale giocatori visibili: $c0015%d\n\r", count);
+			const std::string totalsLine =
+				"\n\r$c0005Totale giocatori visibili: $c0015" + std::to_string(count) + "\n\r";
+			if(whoBuf.size() + totalsLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
+				whoBuf += totalsLine;
+			}
 		}
-		if(strlen(buffer)+strlen(tbuf) < MAX_STRING_LENGTH*2-512) {
-			strcat(buffer,tbuf);
-		}
-		snprintf(tbuf, 511,"\n\r$c0005Max giocatori connessi dall'ultimo reboot: $c0015%d\r\n", update_max_usage());
-		if(strlen(buffer)+strlen(tbuf) < MAX_STRING_LENGTH*2-512) {
-			strcat(buffer,tbuf);
+		const std::string maxLine =
+			"\n\r$c0005Max giocatori connessi dall'ultimo reboot: $c0015"
+			+ std::to_string(update_max_usage()) + "\r\n";
+		if(whoBuf.size() + maxLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
+			whoBuf += maxLine;
 		}
 	}
 	else {
 		/* GOD WHO */
 
 
-		snprintf(buffer,(MAX_STRING_LENGTH*2)-1,
-				 "$c0005Giocatori [God Version -? for Help]\n\r"
-				 "---------\n\r");
+		whoBuf =
+			"$c0005Giocatori [God Version -? for Help]\n\r"
+			"---------\n\r";
 
 		count=0;
 		lcount=0;
-		if(index(flags,'?')) {
-			send_to_char(buffer,ch);
+		if(hasFlag('?')) {
+			send_to_char(whoBuf.c_str(), ch);
 			send_to_char("$c0007[-]i=idle l=levels t=title h=hit/mana/move "
 						 "s=stats r=race \n\r",ch);
 			send_to_char("[-]d=linkdead e=eq g=God o=Mort a=align "
@@ -4572,6 +4769,20 @@ ACTION_FUNC(do_who) {
 						 ch);
 			return;
 		}
+		const bool filterGods = hasFlag('g');
+		const bool filterMortals = hasFlag('o');
+		const bool filterMage = hasFlag('1');
+		const bool filterCleric = hasFlag('2');
+		const bool filterWarrior = hasFlag('3');
+		const bool filterThief = hasFlag('4');
+		const bool filterDruid = hasFlag('5');
+		const bool filterMonk = hasFlag('6');
+		const bool filterBarbarian = hasFlag('7');
+		const bool filterSorcerer = hasFlag('8');
+		const bool filterPaladin = hasFlag('9');
+		const bool filterRanger = hasFlag('!');
+		const bool filterPsi = hasFlag('@');
+		const bool showLinkdead = hasFlag('d');
 
 		for(person = character_list; person; person = person->next) {
 			if(!IS_NPC(person) and CAN_SEE(ch, person) and OK_NAME(person,name_mask)) {
@@ -4579,102 +4790,77 @@ ACTION_FUNC(do_who) {
 				if(person->desc == NULL) {
 					lcount ++;
 				}
-				skip = FALSE;
-				if(index(flags,'g') != NULL)
-					if(!IS_IMMORTAL(person)) {
-						skip = TRUE;
-					}
-				if(index(flags,'o') != NULL)
-					if(IS_IMMORTAL(person)) {
-						skip = TRUE;
-					}
-				if(index(flags,'1') != NULL)
-					if(!HasClass(person,CLASS_MAGIC_USER)) {
-						skip = TRUE;
-					}
-				if(index(flags,'2') != NULL)
-					if(!HasClass(person,CLASS_CLERIC)) {
-						skip = TRUE;
-					}
-				if(index(flags,'3') != NULL)
-					if(!HasClass(person,CLASS_WARRIOR)) {
-						skip = TRUE;
-					}
-				if(index(flags,'4') != NULL)
-					if(!HasClass(person,CLASS_THIEF)) {
-						skip = TRUE;
-					}
-				if(index(flags,'5') != NULL)
-					if(!HasClass(person,CLASS_DRUID)) {
-						skip = TRUE;
-					}
-				if(index(flags,'6') != NULL)
-					if(!HasClass(person,CLASS_MONK)) {
-						skip = TRUE;
-					}
-				if(index(flags,'7') != NULL)
-					if(!HasClass(person,CLASS_BARBARIAN)) {
-						skip = TRUE;
-					}
-				if(index(flags,'8') != NULL)
-					if(!HasClass(person,CLASS_SORCERER)) {
-						skip = TRUE;
-					}
-				if(index(flags,'9') != NULL)
-					if(!HasClass(person,CLASS_PALADIN)) {
-						skip = TRUE;
-					}
-				if(index(flags,'!') != NULL)
-					if(!HasClass(person,CLASS_RANGER)) {
-						skip = TRUE;
-					}
-				if(index(flags,'@') != NULL)
-					if(!HasClass(person,CLASS_PSI)) {
-						skip = TRUE;
-					}
+				skip = (filterGods && !IS_IMMORTAL(person))
+					   || (filterMortals && IS_IMMORTAL(person))
+					   || (filterMage && !HasClass(person, CLASS_MAGIC_USER))
+					   || (filterCleric && !HasClass(person, CLASS_CLERIC))
+					   || (filterWarrior && !HasClass(person, CLASS_WARRIOR))
+					   || (filterThief && !HasClass(person, CLASS_THIEF))
+					   || (filterDruid && !HasClass(person, CLASS_DRUID))
+					   || (filterMonk && !HasClass(person, CLASS_MONK))
+					   || (filterBarbarian && !HasClass(person, CLASS_BARBARIAN))
+					   || (filterSorcerer && !HasClass(person, CLASS_SORCERER))
+					   || (filterPaladin && !HasClass(person, CLASS_PALADIN))
+					   || (filterRanger && !HasClass(person, CLASS_RANGER))
+					   || (filterPsi && !HasClass(person, CLASS_PSI));
 
 				if(!skip) {
+					std::string godLine;
+					std::array<char, 512> line0{};
 					if(person->desc == NULL) {
-						if(index(flags,'d') != NULL) {
-							snprintf(tbuf, 511, "$c0003[%-12s] ", GET_NAME(person));
+						if(showLinkdead) {
+							std::snprintf(line0.data(), line0.size(),
+										  "$c0003[%-12s] ", GET_NAME(person));
+							godLine = line0.data();
 							listed++;
 						}
+					}
+					else if(IS_NPC(person) && IS_SET(person->specials.act, ACT_POLYSELF)) {
+						std::snprintf(line0.data(), line0.size(), "(%-12s) ", GET_NAME(person));
+						godLine = line0.data();
+						listed++;
 					}
 					else {
-						if(IS_NPC(person) && IS_SET(person->specials.act, ACT_POLYSELF)) {
-							snprintf(tbuf, 511, "(%-12s) ", GET_NAME(person));
-							listed++;
-						}
-						else {
-							snprintf(tbuf, 511, "$c0012%-14s ", GET_NAME(person));
-							listed++;
-						}
+						std::snprintf(line0.data(), line0.size(), "$c0012%-14s ",
+									  GET_NAME(person));
+						godLine = line0.data();
+						listed++;
 					}
-					if((person->desc != NULL) || (index(flags,'d') != NULL)) {
-						for(l = 0; l < (int)strlen(flags) ; l++) {
-							switch(flags[l]) {
+					const bool appendDetail =
+						(person->desc != NULL) || showLinkdead;
+					if(appendDetail) {
+						for(const char* fp = flags; *fp != '\0'; ++fp) {
+							const char fc = *fp;
+							switch(fc) {
 							case 'r': {
 								/* show race */
-								char bbuf[256];
 								sprinttype((person->race),RaceName,ttbuf);
-								snprintf(bbuf,255," [%s] ",ttbuf);
-								strcat(tbuf,bbuf);
+								godLine += " [";
+								godLine += ttbuf;
+								godLine += "] ";
 								break;
 							}
-							case 'e':
-								snprintf(ttbuf,255,"Eq:[%f] ",GetCharBonusIndex(person));
-								strcat(tbuf,ttbuf);
+							case 'e': {
+								char u[256];
+								std::snprintf(u, sizeof(u), "Eq:[%f] ", GetCharBonusIndex(person));
+								godLine += u;
 								break;
-							case 'a':
-								snprintf(ttbuf,255,"Al:[%d] ",GET_ALIGNMENT(person));
-								strcat(tbuf,ttbuf);
+							}
+							case 'a': {
+								char u[256];
+								std::snprintf(u, sizeof(u), "Al:[%d] ", GET_ALIGNMENT(person));
+								godLine += u;
 								break;
-							case 'i':
-								snprintf(ttbuf,255,"Idle:[%-3d] ",person->specials.timer);
-								strcat(tbuf,ttbuf);
+							}
+							case 'i': {
+								char u[256];
+								std::snprintf(u, sizeof(u), "Idle:[%-3d] ", person->specials.timer);
+								godLine += u;
 								break;
-							case 'l':
-								snprintf(ttbuf, 255,"Level:[%-2d/%-2d/%-2d/%-2d/%-2d/"
+							}
+							case 'l': {
+								char u[256];
+								std::snprintf(u, sizeof(u), "Level:[%-2d/%-2d/%-2d/%-2d/%-2d/"
 										 "%-2d/%-2d/%-2d/%-2d/%-2d/%-2d] ",
 										 person->player.level[0],person->player.level[1],
 										 person->player.level[2],person->player.level[3],
@@ -4682,50 +4868,58 @@ ACTION_FUNC(do_who) {
 										 person->player.level[6],person->player.level[7],
 										 person->player.level[8],person->player.level[9],
 										 person->player.level[10]);
-								strcat(tbuf,ttbuf);
+								godLine += u;
 								break;
-							case 'h':
-								snprintf(ttbuf, 255,"Hit:[%-3d] Mana:[%-3d] Move:[%-3d] ",
+							}
+							case 'h': {
+								char u[256];
+								std::snprintf(u, sizeof(u), "Hit:[%-3d] Mana:[%-3d] Move:[%-3d] ",
 										 GET_HIT(person), GET_MANA(person), GET_MOVE(person));
-								strcat(tbuf,ttbuf);
+								godLine += u;
 								break;
+							}
 							case 'c':
 								if(HAS_PRINCE(person)) {
-									snprintf(ttbuf,255, "del clan di %s",
+									char u[256];
+									std::snprintf(u, sizeof(u), "del clan di %s",
 											 GET_PRINCE(person));
-									strcat(tbuf,ttbuf);
+									godLine += u;
 								}
 								break;
 							case 's':
-								if(GET_STR(person) != 18)
-									snprintf(ttbuf, 255,"[S:%-2d I:%-2d W:%-2d "
+								if(GET_STR(person) != 18) {
+									std::snprintf(ttbuf, sizeof(ttbuf), "[S:%-2d I:%-2d W:%-2d "
 											 "C:%-2d D:%-2d CH:%-2d] ",
 											 GET_STR(person),GET_INT(person),GET_WIS(person),
 											 GET_CON(person),GET_DEX(person),GET_CHR(person));
-								else
-									snprintf(ttbuf, 255,"[S:%-2d(%1d) I:%-2d W:%-2d "
+								}
+								else {
+									std::snprintf(ttbuf, sizeof(ttbuf), "[S:%-2d(%1d) I:%-2d W:%-2d "
 											 "C:%-2d D:%-2d CH:%-2d] ",
 											 GET_STR(person),GET_ADD(person),GET_INT(person),
 											 GET_WIS(person),GET_CON(person),GET_DEX(person),
 											 GET_CHR(person));
-								strcat(tbuf,ttbuf);
+								}
+								godLine += ttbuf;
 								break;
-							case 't':
-								snprintf(ttbuf, 255," %-16s ", (person->player.title ?
+							case 't': {
+								char u[256];
+								std::snprintf(u, sizeof(u), " %-16s ", (person->player.title ?
 																person->player.title :
 																"(null)"));
-								strcat(tbuf,ttbuf);
+								godLine += u;
 								break;
+							}
 							default:
 								break;
 							}
 						}
 					}
-					if((person->desc != NULL) || (index(flags,'d') != NULL)) {
+					if(appendDetail) {
 						if(OK_NAME(person,name_mask)) {
-							if(strlen(buffer)+strlen(tbuf) < (MAX_STRING_LENGTH*2)-512) {
-								strcat(buffer,tbuf);
-								strcat(buffer,"\n\r");
+							if(whoBuf.size() + godLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
+								whoBuf += godLine;
+								whoBuf += "\n\r";
 							}
 						}
 					}
@@ -4733,61 +4927,56 @@ ACTION_FUNC(do_who) {
 			}
 		}
 
-		if(listed<=0)
-			snprintf(tbuf, 255,"\n\r$c0005Nessun personaggio con le caratteristiche "
-					 "richieste.\n\r");
-		else
-			snprintf(tbuf, 255,"\n\r$c0005Totale giocatori / Link dead [%d/%d] "
-					 "(%2.0f%%)\n\r",
-					 count, lcount, ((float)lcount / (int)count) * 100);
-		if(strlen(buffer)+strlen(tbuf) < (MAX_STRING_LENGTH*2)-512) {
-			strcat(buffer,tbuf);
+		std::string totalsLine;
+		if(listed<=0) {
+			totalsLine = "\n\r$c0005Nessun personaggio con le caratteristiche richieste.\n\r";
 		}
-		snprintf(tbuf, 255,"\n\r$c0005Max giocatori connessi dall'ultimo reboot: $c0015%d\r\n", update_max_usage());
-		if(strlen(buffer)+strlen(tbuf) < (MAX_STRING_LENGTH*2)-512) {
-			strcat(buffer,tbuf);
+		else {
+			char totalsBuf[256];
+			std::snprintf(totalsBuf, sizeof(totalsBuf),
+					  "\n\r$c0005Totale giocatori / Link dead [%d/%d] (%2.0f%%)\n\r",
+					  count, lcount, ((float)lcount / (int)count) * 100);
+			totalsLine = totalsBuf;
+		}
+		if(whoBuf.size() + totalsLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
+			whoBuf += totalsLine;
+		}
+		const std::string maxLine =
+			"\n\r$c0005Max giocatori connessi dall'ultimo reboot: $c0015"
+			+ std::to_string(update_max_usage()) + "\r\n";
+		if(whoBuf.size() + maxLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
+			whoBuf += maxLine;
 		}
 	}
-	page_string(ch->desc, buffer, TRUE);
+	page_string(ch->desc, whoBuf.c_str(), TRUE);
 }
 
 ACTION_FUNC(do_users) {
-	char buf[MAX_STRING_LENGTH], line[200], buf2[255];
+	std::string buf = "Connessioni:\n\r------------\n\r";
 
 	struct descriptor_data* d;
 
-	strcpy(buf, "Connessioni:\n\r"
-		   "------------\n\r");
-
 	for(d = descriptor_list; d; d = d->next) {
 		if(CAN_SEE(ch, d->character) || GetMaxLevel(ch)==IMMENSO) {
+			std::ostringstream row;
 			if(d->character && d->character->player.name) {
-				if(d->original) {
-					snprintf(line, 199,"%-16s: ", d->original->player.name);
-				}
-				else {
-					snprintf(line, 199,"%-16s: ", d->character->player.name);
-				}
+				row << std::left << std::setw(16)
+					<< (d->original ? d->original->player.name : d->character->player.name)
+					<< ": ";
 			}
 			else {
-				snprintf(line,199, "NON DEFINITO  : ");
+				row << "NON DEFINITO  : ";
 			}
 
-			if(d->host && *d->host) {
-				snprintf(buf2, 254,"%-22s [%s] %5d\n\r",
-						 connected_types[d->connected],d->host,d->wait);
-			}
-			else {
-				snprintf(buf2, 254,"%-22s [%s] %5d\n\r",
-						 connected_types[d->connected],"????",d->wait);
-			}
-			strcat(line, buf2);
-			strcat(buf, line);
+			row << std::left << std::setw(22) << connected_types[d->connected]
+				<< " [" << ((*d->host) ? d->host : "????") << "] "
+				<< std::right << std::setw(5) << d->wait << "\n\r";
+			buf += row.str();
 		} /* could not see the person */
 	} /* end for */
 
 	/*  send_to_char(buf, ch); */
-	page_string(ch->desc,buf,0);
+	page_string(ch->desc, buf.c_str(), 0);
 }
 
 
@@ -4802,15 +4991,15 @@ ACTION_FUNC(do_inventory) {
 ACTION_FUNC(do_equipment) {
 	int j,Worn_Index;
 	bool found;
-	char String[256];
 
 	send_to_char("Stai usando:\n\r", ch);
 	found = FALSE;
 	for(Worn_Index = j=0; j< MAX_WEAR; j++) {
 		if(ch->equipment[j]) {
 			Worn_Index++;
-			snprintf(String,255,"[%2d] %s",Worn_Index,eqWhere[j]);
-			send_to_char(String,ch);
+			std::ostringstream itemLine;
+			itemLine << "[" << std::setw(2) << Worn_Index << "] " << eqWhere[j];
+			send_to_char(itemLine.str().c_str(), ch);
 			if(CAN_SEE_OBJ(ch,ch->equipment[j])) {
 				show_obj_to_char(ch->equipment[j],ch,1);
 				found = TRUE;
@@ -4874,14 +5063,19 @@ int which_number_object(struct obj_data* obj) {
 }
 
 char* numbered_object(struct char_data* ch, struct obj_data* obj) {
-	static char buf[MAX_STRING_LENGTH];
+	static std::array<char, MAX_STRING_LENGTH> buf{};
+	std::string value;
 	if(IS_IMMORTAL(ch)) {
-		snprintf(buf,MAX_STRING_LENGTH-1,"%d.%s", which_number_object(obj), fname(obj->name));
+		value = std::to_string(which_number_object(obj));
+		value += ".";
+		value += fname(obj->name);
 	}
 	else {
-		strcpy(buf, obj->short_description);
+		value = obj->short_description ? obj->short_description : "";
 	}
-	return buf;
+	std::strncpy(buf.data(), value.c_str(), buf.size() - 1);
+	buf[buf.size() - 1] = '\0';
+	return buf.data();
 }
 
 int which_number_mobile(struct char_data* ch, struct char_data* mob) {
@@ -4902,81 +5096,82 @@ int which_number_mobile(struct char_data* ch, struct char_data* mob) {
 }
 
 char* numbered_person(struct char_data* ch, struct char_data* person) {
-	static char buf[MAX_STRING_LENGTH];
+	static std::array<char, MAX_STRING_LENGTH> buf{};
+	std::string value;
 	if(IS_NPC(person) && IS_IMMORTAL(ch)) {
-		snprintf(buf,MAX_STRING_LENGTH-1,"%d.%s", which_number_mobile(ch, person),
-				 fname(person->player.name));
+		value = std::to_string(which_number_mobile(ch, person));
+		value += ".";
+		value += fname(person->player.name);
 	}
 	else {
-		strcpy(buf, PERS(person, ch));
+		value = PERS(person, ch);
 	}
-	return buf;
+	std::strncpy(buf.data(), value.c_str(), buf.size() - 1);
+	buf[buf.size() - 1] = '\0';
+	return buf.data();
 }
 
 void do_where_person(struct char_data* ch, struct char_data* person,
 					 struct string_block* sb) {
-	char buf[MAX_STRING_LENGTH];
-
 	if(!CAN_SEE(ch, person)) {
 		return;
 	}
-
-	snprintf(buf, MAX_STRING_LENGTH-1,"%-40s- %s ", PERS(person, ch),
-			 (person->in_room > -1 ? real_roomp(person->in_room)->name :
-			  "Nowhere"));
-
+	std::ostringstream row;
+	row << std::left << std::setw(40) << PERS(person, ch) << "- "
+		<< (person->in_room > -1 ? real_roomp(person->in_room)->name : "Nowhere") << " ";
 	if(GetMaxLevel(ch) >= DIO) {
-		sprintf(buf+strlen(buf),"[%d]", person->in_room);
+		row << "[" << person->in_room << "]";
 	}
-
-	strcpy(buf+strlen(buf), "\n\r");
-
-	append_to_string_block(sb, buf);
+	row << "\n\r";
+	append_to_string_block(sb, row.str().c_str());
 }
 
 void do_where_object(struct char_data* ch, struct obj_data* obj,
 					 int recurse, struct string_block* sb) {
-	char buf[MAX_STRING_LENGTH], short_desc[256];
-	int diff;
-
-	diff	= strlen(obj->short_description) - strlen(ParseAnsiColors(0, obj->short_description));
-	sprintf(buf, "%%-%ds", diff + 55);
-	sprintf(short_desc, buf, obj->short_description);
+	const char* rawShortDesc = obj->short_description ? obj->short_description : "(null)";
+	int diff = static_cast<int>(std::strlen(rawShortDesc))
+		- static_cast<int>(std::strlen(ParseAnsiColors(0, rawShortDesc)));
+	std::ostringstream descBuilder;
+	descBuilder << std::left << std::setw(diff + 55) << rawShortDesc;
+	std::string shortDesc = descBuilder.str();
+	std::string line;
 
 	if(obj->in_room != NOWHERE) {
 		/* object in a room */
-		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%s- %s [%d]\n\r",
-				 short_desc,
-				 real_roomp(obj->in_room)->name,
-				 obj->in_room);
+		line = shortDesc;
+		line += "- ";
+		line += real_roomp(obj->in_room)->name;
+		line += " [";
+		line += std::to_string(obj->in_room);
+		line += "]\n\r";
 	}
 	else if(obj->carried_by != NULL) {
 		/* object carried by monster */
-		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%s- trasportato da %s\n\r",
-				 short_desc,
-				 numbered_person(ch, obj->carried_by));
+		line = shortDesc;
+		line += "- trasportato da ";
+		line += numbered_person(ch, obj->carried_by);
+		line += "\n\r";
 	}
 	else if(obj->equipped_by != NULL) {
 		/* object equipped by monster */
-		snprintf(buf, MAX_STRING_LENGTH-1,
-				 "%s- usato da %s\n\r",
-				 short_desc,
-				 numbered_person(ch, obj->equipped_by));
+		line = shortDesc;
+		line += "- usato da ";
+		line += numbered_person(ch, obj->equipped_by);
+		line += "\n\r";
 	}
 	else if(obj->in_obj) {
 		/* object in object */
-		snprintf(buf, MAX_STRING_LENGTH-1,"%s- in %s\n\r",
-				 short_desc,
-				 numbered_object(ch, obj->in_obj));
+		line = shortDesc;
+		line += "- in ";
+		line += numbered_object(ch, obj->in_obj);
+		line += "\n\r";
 	}
 	else {
-		snprintf(buf, MAX_STRING_LENGTH-1,"%s- Nemmeno Dio sa dove...\n\r",
-				 short_desc);
+		line = shortDesc;
+		line += "- Nemmeno Dio sa dove...\n\r";
 	}
-	if(*buf) {
-		append_to_string_block(sb, buf);
+	if(!line.empty()) {
+		append_to_string_block(sb, line.c_str());
 	}
 
 	if(recurse) {
@@ -4997,35 +5192,35 @@ void do_where_object(struct char_data* ch, struct obj_data* obj,
 
 void owhere(struct char_data* ch, char* nome)
 {
-	char name [MAX_STRING_LENGTH], buf[MAX_STRING_LENGTH];
-//    register struct char_data* i;
-	register struct obj_data* k;
+	std::array<char, MAX_STRING_LENGTH> name{};
+//    struct char_data* i;
+	struct obj_data* k;
 //    struct descriptor_data* d;
 	int        number = 0, count = 0;
 	struct string_block        sb;
  //   string sb_rent_pg;
 
-	only_argument(nome, name);
+	only_argument(nome, name.data());
 
-	int N_oggetto = atoi(name);
+	int N_oggetto = std::atoi(name.data());
 
 	init_string_block(&sb);
 
-	if(!is_number(name))
+	if(!is_number(name.data()))
 	{
 		for(k = object_list; k; k = k->next)
 		{
-			if(isname(name, k->name) && CAN_SEE_OBJ(ch, k))
+			if(isname(name.data(), k->name) && CAN_SEE_OBJ(ch, k))
 			{
 				if(number==0 || (--count)==0)
 				{
 					if(number==0)
 					{
-						snprintf(buf, MAX_STRING_LENGTH-1,"[%3d] ", ++count);
-						append_to_string_block(&sb, buf);
+						std::ostringstream countPrefix;
+						countPrefix << "[" << std::setw(3) << ++count << "] ";
+						append_to_string_block(&sb, countPrefix.str().c_str());
 					}
 					do_where_object(ch, k, number!=0, &sb);
-					*buf = 1;
 					if(number!=0)
 					{
 						break;
@@ -5036,13 +5231,13 @@ void owhere(struct char_data* ch, char* nome)
 	}
 
 	count++;
-	bool found = FALSE;
+	bool found = false;
 	struct stringa_valore sb_count;
 	if(N_oggetto < 1)
 	{
 		for(number = 0; number < top_of_objt; number++)
 		{
-			if(isname(name, obj_index[number].name))
+			if(isname(name.data(), obj_index[number].name))
 			{
 				sb_count = find_obj(ch, obj_index[number].iVNum, count++);
 				found = TRUE;
@@ -5087,36 +5282,35 @@ void owhere(struct char_data* ch, char* nome)
 }
 
 ACTION_FUNC(do_where) {
-	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
+	std::array<char, MAX_INPUT_LENGTH> name{};
 	char*        nameonly;
-	register struct char_data* i;
-	register struct obj_data* k;
+	struct char_data* i;
+	struct obj_data* k;
 	struct descriptor_data* d;
 	int        number, count;
 	struct string_block        sb;
-	char tipo[10];
-	const char* copia;
+	std::array<char, 10> tipo{};
+	const char* copia = arg;
 
-	copia = arg;
-	only_argument(arg, name);
+	only_argument(arg, name.data());
 
-	copia = one_argument(copia, tipo);
-	if(!strcmp(tipo, "obj") && IS_DIO(ch))
+	copia = one_argument(copia, tipo.data());
+	if(std::strcmp(tipo.data(), "obj") == 0 && IS_DIO(ch))
 	{
-		only_argument(copia, name);
-		if(is_number(name))
+		only_argument(copia, name.data());
+		if(is_number(name.data()))
 		{
-			mudlog(LOG_PLAYERS, "Looking for object #%s on rented toon", name);
+			mudlog(LOG_PLAYERS, "Looking for object #%s on rented toon", name.data());
 		}
 		else
 		{
-			mudlog(LOG_PLAYERS, "Looking for '%s' in game and on rented toon", name);
+			mudlog(LOG_PLAYERS, "Looking for '%s' in game and on rented toon", name.data());
 		}
-		owhere(ch, name);
+		owhere(ch, name.data());
 		return;
 	}
 
-	if(!*name) {
+	if(name[0] == '\0') {
 		if(GetMaxLevel(ch) < DIO) {
 			send_to_char("Cosa stai cercando?\n\r", ch);
 		}
@@ -5129,21 +5323,16 @@ ACTION_FUNC(do_where) {
 				if(d->character && (d->connected == CON_PLYNG) &&
 						(d->character->in_room != NOWHERE) &&
 						CAN_SEE(ch, d->character)) {
-					if(d->original)    /* If switched */
-						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "%-20s - %s [%3d] Nel corpo di %s\n\r",
-								 d->original->player.name,
-								 real_roomp(d->character->in_room)->name,
-								 d->character->in_room,
-								 fname(d->character->player.name));
-					else
-						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "%-20s - %s [%3d]\n\r",
-								 d->character->player.name,
-								 real_roomp(d->character->in_room)->name,
-								 d->character->in_room);
-
-					append_to_string_block(&sb, buf);
+					std::ostringstream row;
+					row << std::left << std::setw(20)
+						<< (d->original ? d->original->player.name : d->character->player.name)
+						<< " - " << real_roomp(d->character->in_room)->name
+						<< " [" << std::setw(3) << d->character->in_room << "]";
+					if(d->original) {   /* If switched */
+						row << " Nel corpo di " << fname(d->character->player.name);
+					}
+					row << "\n\r";
+					append_to_string_block(&sb, row.str().c_str());
 				}
 			}
 			page_string_block(&sb,ch);
@@ -5152,20 +5341,18 @@ ACTION_FUNC(do_where) {
 		return;
 	}
 
-	if(isdigit(*name)) {
-		nameonly = name;
+	if(std::isdigit(static_cast<unsigned char>(name[0]))) {
+		nameonly = name.data();
 		count = number = get_number(&nameonly);
 	}
 	else {
 		count = number = 0;
 	}
 
-	*buf = '\0';
-
 	init_string_block(&sb);
 
 	for(i = character_list; i; i = i->next) {
-		if(isname(name, i->player.name) && CAN_SEE(ch, i)) {
+		if(isname(name.data(), i->player.name) && CAN_SEE(ch, i)) {
 
 			if(!IS_PC(i) && affected_by_spell(i,STATUS_QUEST) && GetMaxLevel(ch) < IMMORTALE) {
 				act("Non si bara! ;)\n\r", FALSE, ch, 0, ch, TO_CHAR);
@@ -5177,12 +5364,11 @@ ACTION_FUNC(do_where) {
 							real_roomp(ch->in_room)->zone))) {
 				if(number==0 || (--count) == 0) {
 					if(number==0) {
-						snprintf(buf, MAX_STRING_LENGTH-1,
-								 "[%3d] ", ++count); /* I love short circuiting :) */
-						append_to_string_block(&sb, buf);
+						std::ostringstream countPrefix;
+						countPrefix << "[" << std::setw(3) << ++count << "] "; /* I love short circuiting :) */
+						append_to_string_block(&sb, countPrefix.str().c_str());
 					}
 					do_where_person(ch, i, &sb);
-					*buf = 1;
 					if(number!=0) {
 						break;
 					}
@@ -5197,14 +5383,14 @@ ACTION_FUNC(do_where) {
 
 	if(GetMaxLevel(ch) >= DIO) {
 		for(k = object_list; k; k = k->next) {
-			if(isname(name, k->name) && CAN_SEE_OBJ(ch, k)) {
+			if(isname(name.data(), k->name) && CAN_SEE_OBJ(ch, k)) {
 				if(number==0 || (--count)==0) {
 					if(number==0) {
-						snprintf(buf, MAX_STRING_LENGTH-1,"[%3d] ", ++count);
-						append_to_string_block(&sb, buf);
+						std::ostringstream countPrefix;
+						countPrefix << "[" << std::setw(3) << ++count << "] ";
+						append_to_string_block(&sb, countPrefix.str().c_str());
 					}
 					do_where_object(ch, k, number!=0, &sb);
-					*buf = 1;
 					if(number!=0) {
 						break;
 					}
@@ -5227,7 +5413,7 @@ ACTION_FUNC(do_where) {
 
 ACTION_FUNC(do_levels) {
 	int i, RaceMax, iClass;
-	char buf[MAX_STRING_LENGTH*2],buf2[MAX_STRING_LENGTH];
+	std::string buf;
 
 
 	if(IS_NPC(ch)) {
@@ -5235,7 +5421,6 @@ ACTION_FUNC(do_levels) {
 		return;
 	}
 
-	*buf = '\0';
 	/*
 	 *  get the class
 	 */
@@ -5299,30 +5484,32 @@ ACTION_FUNC(do_levels) {
 		break;
 
 	default:
-		snprintf(buf, (MAX_STRING_LENGTH*2)-1,"Non riconosco %s\n\r", arg);
-		send_to_char(buf,ch);
+		{
+			std::string unknownClassMsg = "Non riconosco ";
+			unknownClassMsg += arg;
+			unknownClassMsg += "\n\r";
+			send_to_char(unknownClassMsg.c_str(), ch);
+		}
 		return;
 		break;
 	}
 
 	RaceMax = RacialMax[GET_RACE(ch)][iClass];
 
-	buf[ 0 ] = 0;
+	buf.clear();
 
 	for(i = 1; i <= RaceMax; i++) {
-		/* crashed in sprintf here, see if you can figure out why. msw, 8/24/94 */
-		snprintf(buf2, MAX_STRING_LENGTH-1,
-				 "[%2d] %9d-%-9d : %s\n\r", i,
-				 titles[iClass][i].exp,
-				 titles[iClass][i + 1].exp,
-				 (GET_SEX(ch)==SEX_FEMALE ?
-				  titles[iClass][i].title_f :
-				  titles[iClass][i].title_m));
-		/* send_to_char(buf, ch); */
-		strcat(buf,buf2);
+		std::ostringstream levelLine;
+		levelLine << "[" << std::setw(2) << i << "] "
+				  << std::setw(9) << titles[iClass][i].exp
+				  << "-" << std::left << std::setw(9) << titles[iClass][i + 1].exp
+				  << " : "
+				  << (GET_SEX(ch)==SEX_FEMALE ? titles[iClass][i].title_f : titles[iClass][i].title_m)
+				  << "\n\r";
+		buf += levelLine.str();
 	}
-	strcat(buf,"\n\r");
-	page_string(ch->desc,buf,1);
+	buf += "\n\r";
+	page_string(ch->desc, buf.c_str(), 1);
 
 }
 
@@ -5330,13 +5517,13 @@ ACTION_FUNC(do_levels) {
 
 ACTION_FUNC(do_consider) {
 	struct char_data* victim;
-	char name[256], buf[256];
+	std::array<char, 256> name{};
 	int diff;
 
-	only_argument(arg, name);
+	only_argument(arg, name.data());
 
-	if(!(victim = get_char_room_vis(ch, name))) {
-		send_to_char("Chi stai considerando di uccidere ?\n\r", ch);
+	if(!(victim = get_char_room_vis(ch, name.data()))) {
+		send_to_char("Chi stai considerando di uccidere?\n\r", ch);
 		return;
 	}
 
@@ -5356,7 +5543,7 @@ ACTION_FUNC(do_consider) {
 
 
 	if(GetMaxLevel(ch)>=IMMORTALE && GetMaxLevel(ch)<IMMENSO) {
-		act("Che bisogno hai di considerare $N ?", FALSE, ch, 0, victim, TO_CHAR);
+		act("Che bisogno hai di considerare $N?", FALSE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
@@ -5486,23 +5673,32 @@ ACTION_FUNC(do_consider) {
 			num2=1;
 		}
 		fnum = ((int)num/(int)num2);
-		snprintf(buf, 255,"Il numero massimo di punti ferita e' %s.\n\r", DescRatio(fnum));
-		send_to_char(buf, ch);
+		{
+			std::string msg = "Il numero massimo di punti ferita e' ";
+			msg += DescRatio(fnum);
+			msg += ".\n\r";
+			send_to_char(msg.c_str(), ch);
+		}
 
 		num = 105+(int)GetApprox(GET_AC(victim), learn);
 		num2 = 105+(int)GET_AC(ch);
 //    if (!num2) num2=1;
 		fnum = ((int)num-(int)num2);
 
-		snprintf(buf, 255,"La classe di armatura e' %s.\n\r", DescArmorf(fnum));
-		send_to_char(buf, ch);
+		{
+			std::string msg = "La classe di armatura e' ";
+			msg += DescArmorf(fnum);
+			msg += ".\n\r";
+			send_to_char(msg.c_str(), ch);
+		}
 
 
 
 		if(learn > 60) {
-			snprintf(buf, 255,"Ha %s attacchi per turno.\n\r",
-					 DescAttacks((int)GetApprox((int)victim->mult_att, learn)));
-			send_to_char(buf, ch);
+			std::string msg = "Ha ";
+			msg += DescAttacks((int)GetApprox((int)victim->mult_att, learn));
+			msg += " attacchi per turno.\n\r";
+			send_to_char(msg.c_str(), ch);
 		}
 
 		if(learn > 70) {
@@ -5513,9 +5709,12 @@ ACTION_FUNC(do_consider) {
 				num2=1;
 			}
 			fnum = (int)num*(num2/2.0);
-			snprintf(buf, 255,"Il danno per attacco e' %s.\n\r", DescDamage(fnum));
-
-			send_to_char(buf, ch);
+			{
+				std::string msg = "Il danno per attacco e' ";
+				msg += DescDamage(fnum);
+				msg += ".\n\r";
+				send_to_char(msg.c_str(), ch);
+			}
 		}
 
 		if(learn > 80) {
@@ -5532,9 +5731,12 @@ ACTION_FUNC(do_consider) {
 				fnum = 2.0;
 			}
 
-			snprintf(buf, 255,"La sua probabilita' di colpirti e' %s.\n\r", DescRatioF(fnum));
-
-			send_to_char(buf, ch);
+			{
+				std::string msg = "La sua probabilita' di colpirti e' ";
+				msg += DescRatioF(fnum);
+				msg += ".\n\r";
+				send_to_char(msg.c_str(), ch);
+			}
 
 
 			num =   GetApprox(GET_DAMROLL(victim), learn);
@@ -5544,9 +5746,12 @@ ACTION_FUNC(do_consider) {
 			}
 			fnum = ((int)num/(int)num2);
 
-			snprintf(buf, 255,"Il bonus al danno e' %s.\n\r", DescRatio(fnum));
-
-			send_to_char(buf, ch);
+			{
+				std::string msg = "Il bonus al danno e' ";
+				msg += DescRatio(fnum);
+				msg += ".\n\r";
+				send_to_char(msg.c_str(), ch);
+			}
 
 		}
 #endif
@@ -5558,7 +5763,6 @@ ACTION_FUNC(do_consider) {
 
 ACTION_FUNC(do_spells) {
 	int spl, i;        /* 16384 */
-	char buf[ 256 ];
 	struct string_block sb;
 
 	if(IS_NPC(ch)) {
@@ -5567,13 +5771,12 @@ ACTION_FUNC(do_spells) {
 	}
 
 	init_string_block(&sb);
-	*buf=0;
-
-	sprintf(buf + strlen(buf),
-			"[#  ] %-30s  MANA, Cl, Mu, Dr, Sc, Pa, Ra, Ps\n\r",
-			"SPELL/SKILL\0");
-
-	append_to_string_block(&sb, buf);
+	{
+		std::ostringstream header;
+		header << "[#  ] " << std::left << std::setw(30) << "SPELL/SKILL"
+			   << "  MANA, Cl, Mu, Dr, Sc, Pa, Ra, Ps\n\r";
+		append_to_string_block(&sb, header.str().c_str());
+	}
 
 	for(i = 1, spl = 0; i <= MAX_EXIST_SPELL; i++, spl++) {
 		if(GetMaxLevel(ch) > IMMORTALE ||
@@ -5583,18 +5786,17 @@ ACTION_FUNC(do_spells) {
 				mudlog(LOG_ERROR, "!spells[spl] on %d, do_spells in act.info.c", i);
 			}
 			else {
-				snprintf(buf, 255, "[%3d] %-30s  <%3d> %2d %3d %3d %3d %3d %3d %3d\n\r",
-						 i, spells[spl],
-						 spell_info[i].min_usesmana,
-						 spell_info[i].min_level_cleric,
-						 spell_info[i].min_level_magic,
-						 spell_info[i].min_level_druid,
-						 spell_info[i].min_level_sorcerer,
-						 spell_info[i].min_level_paladin,
-						 spell_info[i].min_level_ranger,
-						 spell_info[i].min_level_psi
-						);
-				append_to_string_block(&sb, buf);
+				std::ostringstream line;
+				line << "[" << std::setw(3) << i << "] " << std::left << std::setw(30) << spells[spl]
+					 << "  <" << std::setw(3) << spell_info[i].min_usesmana << "> "
+					 << std::right << std::setw(2) << spell_info[i].min_level_cleric << " "
+					 << std::setw(3) << spell_info[i].min_level_magic << " "
+					 << std::setw(3) << spell_info[i].min_level_druid << " "
+					 << std::setw(3) << spell_info[i].min_level_sorcerer << " "
+					 << std::setw(3) << spell_info[i].min_level_paladin << " "
+					 << std::setw(3) << spell_info[i].min_level_ranger << " "
+					 << std::setw(3) << spell_info[i].min_level_psi << "\n\r";
+				append_to_string_block(&sb, line.str().c_str());
 			}
 		}
 	}
@@ -5612,82 +5814,125 @@ double GetLagIndex() {
 }
 
 ACTION_FUNC(do_world) {
-	char buf[1000];
 
 	long ct, ot;
 	char* tmstr, *otmstr;
 
-	snprintf(buf, 999,"$c0005Base Source: $c0014AlarMUD\n$c0005"
-			 "Versione $c0015%s\n$c0005Commit: $c0015%s$c0005.",
-			 version(), release());
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-	snprintf(buf, 999,"$c0005Compilazione del : $c0014%s.", compilazione());
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Base Source: $c0014AlarMUD\n$c0005"
+			 "Versione $c0015" << version() << "\n$c0005Commit: $c0015" << release() << "$c0005.";
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
+	{
+		std::ostringstream o;
+		o << "$c0005Compilazione del : $c0014" << compilazione() << ".";
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 	ot = Uptime;
 	otmstr = asctime(localtime(&ot));
 	*(otmstr + strlen(otmstr) - 1) = '\0';
-	snprintf(buf, 999,"$c0005Orario di partenza: $c0015%s $c0005", otmstr);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Orario di partenza: $c0015" << otmstr << " $c0005";
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
 	ct = time(0);
 	tmstr = asctime(localtime(&ct));
 	*(tmstr + strlen(tmstr) - 1) = '\0';
-	snprintf(buf, 999, "$c0005Orario attuale    : $c0015%s $c0005", tmstr);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Orario attuale    : $c0015" << tmstr << " $c0005";
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
-	snprintf(buf,999, "$c0005Indice di attesa desiderato: $c0015%.6f $c0005secs", static_cast<double>(OPT_USEC)/1000000.0);
-	act(buf, FALSE, ch, 0, 0, TO_CHAR);
-	snprintf(buf, 999,"$c0005Indice di attesa attuale   : $c0015%.6f $c0005sec", GetLagIndex());
-	act(buf, FALSE, ch, 0, 0, TO_CHAR);
+	{
+		std::ostringstream o;
+		o << std::fixed << std::setprecision(6);
+		o << "$c0005Indice di attesa desiderato: $c0015" << (static_cast<double>(OPT_USEC) / 1000000.0)
+		  << " $c0005secs";
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
+	{
+		std::ostringstream o;
+		o << std::fixed << std::setprecision(6);
+		o << "$c0005Indice di attesa attuale   : $c0015" << GetLagIndex() << " $c0005sec";
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
 	if(GetMaxLevel(ch) >=IMMORTALE) {
-		char tbuf[256];
-		sprintbit((unsigned long)SystemFlags,system_flag_types,tbuf);
-		snprintf(buf,255,"$c0005Flags di sistema:[$c0015%s$c0005]\n\r",tbuf);
-		act(buf,FALSE,ch,0,0,TO_CHAR);
-		snprintf(buf,255,"$c0005Connessioni dalla partenza:$c0015%d\n\r",
-				 HowManyConnection(0));
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		std::array<char, 256> tbuf{};
+		sprintbit((unsigned long)SystemFlags, system_flag_types, tbuf.data());
+		{
+			std::ostringstream o;
+			o << "$c0005Flags di sistema:[$c0015" << tbuf.data() << "$c0005]\n\r";
+			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		}
+		{
+			std::ostringstream o;
+			o << "$c0005Connessioni dalla partenza:$c0015" << HowManyConnection(0) << "\n\r";
+			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		}
 
 	}
 
 #if HASH
-	snprintf(buf,255,"$c0005Numero di stanze nel mondo          : $c0015%ld",
-			 room_db.klistlen);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di stanze nel mondo          : $c0015" << room_db.klistlen;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 #else
-	snprintf(buf,255,"$c0005Numero di stanze nel mondo          : $c0015%ld",
-			 room_count);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di stanze nel mondo          : $c0015" << room_count;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 #endif
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-	snprintf(buf,999,"$c0005Numero di zone nel mondo            : $c0015%d",
-			 top_of_zone_table + 1);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di zone nel mondo            : $c0015" << (top_of_zone_table + 1);
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
-	snprintf(buf,999,"$c0005Numero di personaggi attivi         : $c0015%d",
-			 top_of_p_table);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di personaggi attivi         : $c0015" << top_of_p_table;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
 	// Result of an aggregate query contains only one element so let's
 	// use the query_value() shortcut.
 	//
 	auto c =Sql::getOne<userCount>();
-	snprintf(buf,999,"$c0005Numero di giocatori registrati      : $c0015%ld",
-			 c->count);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di giocatori registrati      : $c0015" << c->count;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
-	snprintf(buf,999,"$c0005Numero di tipi di creature nel mondo: $c0015%d",
-			 top_of_mobt);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-	snprintf(buf,999,"$c0005Numero di tipi di oggetti nel mondo  : $c0015%d",
-			 top_of_objt);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di tipi di creature nel mondo: $c0015" << top_of_mobt;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di tipi di oggetti nel mondo  : $c0015" << top_of_objt;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
-	snprintf(buf,999,"$c0005Numero di creature nel gioco         : $c0015%ld",
-			 mob_count);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-	snprintf(buf,999,"$c0005Numero di oggetti nel gioco          : $c0015%ld",
-			 obj_count);
-	act(buf, FALSE,ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di creature nel gioco         : $c0015" << mob_count;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
+	{
+		std::ostringstream o;
+		o << "$c0005Numero di oggetti nel gioco          : $c0015" << obj_count;
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 	/**** SALVO controllo lag refresh zone init */
 	if(IS_IMMORTAL(ch)) {
 		int i,c;
@@ -5695,22 +5940,28 @@ ACTION_FUNC(do_world) {
 			if(zone_table[i].start != 0) {
 				c++;
 			}
-		snprintf(buf,999,"$c0005Totale zone init nel mondo           : $c0015%d su $c0015%d",
-				 c, top_of_zone_table+1);
-		act(buf, FALSE,ch,0,0,TO_CHAR);
-		snprintf(buf,999,"$c0005Indice attesa refresh zone init      : $c0015%d $c0005sec",
-				 attrefzone);
-		act(buf, FALSE,ch,0,0,TO_CHAR);
+		{
+			std::ostringstream o;
+			o << "$c0005Totale zone init nel mondo           : $c0015" << c << " su $c0015" << (top_of_zone_table + 1);
+			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		}
+		{
+			std::ostringstream o;
+			o << "$c0005Indice attesa refresh zone init      : $c0015" << attrefzone << " $c0005sec";
+			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		}
 	}
 	/****/
-	snprintf(buf,999,"$c0005Valore medio dell'eq in gioco        : $c0015%f",
-			 AverageEqIndex(-1));
-	act(buf, FALSE,ch,0,0,TO_CHAR);
+	{
+		std::ostringstream o;
+		o << std::fixed << std::setprecision(6);
+		o << "$c0005Valore medio dell'eq in gioco        : $c0015" << AverageEqIndex(-1);
+		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
 }
 
 ACTION_FUNC(do_attribute) {
-	char buf[MAX_STRING_LENGTH];
 	struct affected_type* aff;
 
 	struct time_info_data my_age;
@@ -5718,44 +5969,58 @@ ACTION_FUNC(do_attribute) {
 
 	age3(ch, &my_age);
 
-	snprintf(buf,MAX_STRING_LENGTH-1,
-			 "$c0005Tu hai $c0014%d (ma ne dimostri %d) $c0005 anni e $c0014%d$c0005 mesi, "
-			 "$c0014%d$c0005 cm, e pesi $c0014%d$c0005 chili.",
-			 my_age.ayear, my_age.year,my_age.month,
-			 ch->player.height,
-			 (ch->player.weight * 4536) / 10000);
+	{
+		std::string msg = "$c0005Tu hai $c0014";
+		msg += std::to_string(static_cast<int>(my_age.ayear));
+		msg += "$c0005 (ma ne dimostri $c0014";
+		msg += std::to_string(static_cast<int>(my_age.year));
+		msg += "$c0005) anni e $c0014";
+		msg += std::to_string(static_cast<int>(my_age.month));
+		msg += "$c0005 mesi, sei ";
+		msg += (GET_SEX(ch) == SEX_FEMALE) ? "alta " : "alto ";
+		msg += "$c0014";
+		msg += std::to_string(static_cast<int>(ch->player.height));
+		msg += "$c0005 cm, e pesi $c0014";
+		msg += std::to_string(static_cast<int>((ch->player.weight * 4536) / 10000));
+		msg += "$c0005 chili.";
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::string msg = "$c0005Stai trasportando $c0014";
+		msg += std::to_string(static_cast<int>((IS_CARRYING_W(ch) * 4536) / 1000));
+		msg += "$c0005 etti di equipaggiamento su $c0014";
+		msg += std::to_string(static_cast<int>((CAN_CARRY_W(ch) * 4536) / 1000));
+		msg += ".";
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
+	{
+		std::string msg = "$c0005Stai trasportando $c0014";
+		msg += std::to_string(static_cast<int>(IS_CARRYING_N(ch)));
+		msg += "$c0005 oggetti su $c0014";
+		msg += std::to_string(static_cast<int>(CAN_CARRY_N(ch)));
+		msg += ".";
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 
-	snprintf(buf, MAX_STRING_LENGTH-1,
-			 "$c0005Stai trasportando $c0014%d$c0005 etti di "
-			 "equipaggiamento su $c0014%d.",
-			 (IS_CARRYING_W(ch) * 4536) / 1000,
-			 (CAN_CARRY_W(ch) *4536) /1000);
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-	snprintf(buf, MAX_STRING_LENGTH-1,
-			 "$c0005Stai trasportando $c0014%d$c0005 oggetti "
-			 "su $c0014%d.",
-			 IS_CARRYING_N(ch),
-			 CAN_CARRY_N(ch));
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-
-	snprintf(buf,MAX_STRING_LENGTH-1,
-			 "$c0005Tu sei$c0014 %s",ArmorDesc(ch->points.armor));
-	act(buf,FALSE,ch,0,0,TO_CHAR);
+	{
+		std::string msg = "$c0005Tu sei$c0014 ";
+		msg += ArmorDesc(ch->points.armor);
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 	if(GetMaxLevel(ch)>=MAESTRO_DEL_CREATO) {
-		snprintf(buf,MAX_STRING_LENGTH-1,
-				 "$c0005Armor class: $c0014%d",ch->points.armor);
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		std::string msg = "$c0005Armor class: $c0014";
+		msg += std::to_string(static_cast<int>(ch->points.armor));
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 	//GGPATCH, inserita valutazione spellfail
 	int iSpellfail = 0;
 	if(IS_CASTER(ch)) {
 		iSpellfail=ch->specials.spellfail;
 		if(GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
-			snprintf(buf,MAX_STRING_LENGTH-1,
-					 "$c0005Spellfail : $c0014 %d",iSpellfail);
-			act(buf,FALSE,ch,0,0,TO_CHAR);
+			std::string msg = "$c0005Spellfail : $c0014 ";
+			msg += std::to_string(iSpellfail);
+			act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 		}
 		iSpellfail = ch->specials.spellfail-
 					 GET_LEVEL(ch, BestMagicClass(ch))+
@@ -5768,35 +6033,51 @@ ACTION_FUNC(do_attribute) {
 						 (EqWBits(ch,ITEM_ANTI_PALADIN) && HasClass(ch,CLASS_PALADIN)) ||
 						 (EqWBits(ch,ITEM_ANTI_RANGER) && HasClass(ch,CLASS_RANGER)) ||
 						 (EqWBits(ch,ITEM_ANTI_PSI) && HasClass(ch,CLASS_PSI)))?20:0);
-		snprintf(buf,MAX_STRING_LENGTH-1,
-				 "$c0005La tua capacita' di lanciare incantesimi e'$c0014 %s",
-				 SpellfailDesc(IS_IMMORTAL(ch)?0:iSpellfail));
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		{
+			std::string msg = "$c0005La tua capacita' di lanciare incantesimi e'$c0014 ";
+			msg += SpellfailDesc(IS_IMMORTAL(ch)?0:iSpellfail);
+			act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		}
 	}
 	if(GetMaxLevel(ch) >= CHUMP) {
-		snprintf(buf,MAX_STRING_LENGTH-1,
-				 "$c0005Tu hai $c0014%d$c0005/$c0015%d $c0005STR, "
-				 "$c0014%d $c0005INT, $c0014%d $c0005WIS, $c0014%d "
-				 "$c0005DEX, $c0014%d $c0005CON, $c0014%d $c0005CHR",
-				 GET_STR(ch), GET_ADD(ch), GET_INT(ch), GET_WIS(ch), GET_DEX(ch),
-				 GET_CON(ch), GET_CHR(ch));
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		std::string msg = "$c0005Tu hai $c0014";
+		msg += std::to_string(static_cast<int>(GET_STR(ch)));
+		msg += "$c0005/$c0015";
+		msg += std::to_string(static_cast<int>(GET_ADD(ch)));
+		msg += " $c0005STR, $c0014";
+		msg += std::to_string(static_cast<int>(GET_INT(ch)));
+		msg += " $c0005INT, $c0014";
+		msg += std::to_string(static_cast<int>(GET_WIS(ch)));
+		msg += " $c0005WIS, $c0014";
+		msg += std::to_string(static_cast<int>(GET_DEX(ch)));
+		msg += " $c0005DEX, $c0014";
+		msg += std::to_string(static_cast<int>(GET_CON(ch)));
+		msg += " $c0005CON, $c0014";
+		msg += std::to_string(static_cast<int>(GET_CHR(ch)));
+		msg += " $c0005CHR";
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 
-	snprintf(buf, MAX_STRING_LENGTH-1,
-			 "$c0005I tuoi hit e damage bonus sono $c0014%s$c0005 e "
-			 "$c0014%s$c0005 rispettivamente.",
-			 HitRollDesc(GET_HITROLL(ch)), DamRollDesc(GET_DAMROLL(ch)));
-	act(buf,FALSE, ch,0,0,TO_CHAR);
-	snprintf(buf, MAX_STRING_LENGTH-1,
-			 "$c0005Il tuo equipaggiamento e' $c0014%s$c0005",
-			 EqDesc(GetCharBonusIndex(ch)));
-	act(buf,FALSE, ch,0,0,TO_CHAR);
+	{
+		std::string msg = "$c0005I tuoi hit e damage bonus sono $c0014";
+		msg += HitRollDesc(GET_HITROLL(ch));
+		msg += "$c0005 e $c0014";
+		msg += DamRollDesc(GET_DAMROLL(ch));
+		msg += "$c0005 rispettivamente.";
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
+	{
+		std::string msg = "$c0005Il tuo equipaggiamento e' $c0014";
+		msg += EqDesc(GetCharBonusIndex(ch));
+		msg += "$c0005";
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	}
 	if(GetMaxLevel(ch)>=MAESTRO_DEL_CREATO) {
-		snprintf(buf,MAX_STRING_LENGTH-1,
-				 "$c0005Hit:$c0014+%d$c0005 Dam:$c0014+%d",
-				 GET_HITROLL(ch),GET_DAMROLL(ch));
-		act(buf,FALSE,ch,0,0,TO_CHAR);
+		std::string msg = "$c0005Hit:$c0014+";
+		msg += std::to_string(static_cast<int>(GET_HITROLL(ch)));
+		msg += "$c0005 Dam:$c0014+";
+		msg += std::to_string(static_cast<int>(GET_DAMROLL(ch)));
+		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 
 	/*
@@ -5830,9 +6111,12 @@ ACTION_FUNC(do_attribute) {
 					}
 					if(*spells[aff->type-1] || *spells[aff->type-1]=='!') {
 
-                        snprintf(buf, MAX_STRING_LENGTH-1,
-                                 "$c0005Spell : '$c0014%s$c0005' - $c0014%d$c0005",spells[aff->type-1],aff->duration);
-						act(buf,FALSE, ch,0,0,TO_CHAR);
+						std::string spellLine = "$c0005Spell : '$c0014";
+						spellLine += spells[aff->type - 1];
+						spellLine += "$c0005' - $c0014";
+						spellLine += std::to_string(static_cast<int>(aff->duration));
+						spellLine += "$c0005";
+						act(spellLine.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 					}
 
 					break;
@@ -5843,7 +6127,7 @@ ACTION_FUNC(do_attribute) {
 }
 
 ACTION_FUNC(do_value) {
-	char buf[1000],buf2[1000], name[1000];
+	std::array<char, MAX_INPUT_LENGTH> name{};
 	struct obj_data* obj=0;
 	struct char_data* vict=0;
 
@@ -5858,16 +6142,16 @@ ACTION_FUNC(do_value) {
 		return;
 	}
 
-	arg = one_argument(arg, name);
+	arg = one_argument(arg, name.data());
 
-	if((obj = get_obj_in_list_vis(ch, name, ch->carrying))==0) {
-		if((vict = get_char_room_vis(ch, name))==0) {
-			send_to_char("Di chi o di cosa stai parlando ?\n\r", ch);
+	if((obj = get_obj_in_list_vis(ch, name.data(), ch->carrying))==0) {
+		if((vict = get_char_room_vis(ch, name.data()))==0) {
+			send_to_char("Di chi o di cosa stai parlando?\n\r", ch);
 			return;
 		}
 		else {
-			only_argument(arg, name);
-			if((obj = get_obj_in_list_vis(ch, name, vict->carrying))==0) {
+			only_argument(arg, name.data());
+			if((obj = get_obj_in_list_vis(ch, name.data(), vict->carrying))==0) {
 				act("Non vedi $p addosso a $N", FALSE, ch, obj, vict, TO_CHAR);
 				act("$n ti sta esaminando", FALSE, ch, 0, vict, TO_VICT);
 				act("$n esamina $N", FALSE, ch, 0, vict, TO_NOTVICT);
@@ -5894,11 +6178,16 @@ ACTION_FUNC(do_value) {
 	}
 
 
-	snprintf(buf,999, "Oggetto: %s.  Tipo: ", obj->short_description);
-	sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
-	strcat(buf,buf2);
-	strcat(buf,"\n\r");
-	send_to_char(buf, ch);
+	{
+		std::string header = "Oggetto: ";
+		header += (obj->short_description ? obj->short_description : "(null)");
+		header += ".  Tipo: ";
+		std::array<char, 512> typeBuf{};
+		sprinttype(GET_ITEM_TYPE(obj), item_types, typeBuf.data());
+		header += typeBuf.data();
+		header += "\n\r";
+		send_to_char(header.c_str(), ch);
+	}
 
 	if(!ch->skills) {
 		return;
@@ -5907,43 +6196,52 @@ ACTION_FUNC(do_value) {
 
 	if(number(1,101) < ch->skills[SKILL_EVALUATE].learned/3) {
 		if(obj->obj_flags.bitvector) {
-			snprintf(buf, 999,"%s ti da' le seguenti abilita': ", fname((obj)->name));
-			sprintbit((unsigned long)obj->obj_flags.bitvector,affected_bits,buf2);
-			strcat(buf, buf2);
-			strcat(buf,"\n\r");
-			send_to_char(buf, ch);
+			std::string affLine = fname(obj->name);
+			affLine += " ti da' le seguenti abilita': ";
+			std::array<char, MAX_STRING_LENGTH> affBuf{};
+			sprintbit((unsigned long)obj->obj_flags.bitvector, affected_bits, affBuf.data());
+			affLine += affBuf.data();
+			affLine += "\n\r";
+			send_to_char(affLine.c_str(), ch);
 		}
 	}
 
 	if(number(1,101) < ch->skills[SKILL_EVALUATE].learned/2) {
 		send_to_char("L'oggetto e': ", ch);
-		sprintbit2((unsigned long)obj->obj_flags.extra_flags, extra_bits, (unsigned long)obj->obj_flags.extra_flags2, extra_bits2, buf);
-		strcat(buf,"\n\r");
-		send_to_char(buf,ch);
+		std::array<char, MAX_STRING_LENGTH> extraBuf{};
+		sprintbit2((unsigned long)obj->obj_flags.extra_flags, extra_bits,
+				   (unsigned long)obj->obj_flags.extra_flags2, extra_bits2, extraBuf.data());
+		std::string extraLine(extraBuf.data());
+		extraLine += "\n\r";
+		send_to_char(extraLine.c_str(), ch);
 	}
 
-	snprintf(buf,999,"Peso: %d, Valore: %d, Rent cost: %d  %s\n\r",
-			 obj->obj_flags.weight,
-			 GetApprox(obj->obj_flags.cost, ch->skills[SKILL_EVALUATE].learned-10),
-			 GetApprox(obj->obj_flags.cost_per_day,
-					   ch->skills[SKILL_EVALUATE].learned-10),
-			 obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ");
-	send_to_char(buf, ch);
+	{
+		std::ostringstream statsLine;
+		statsLine << "Peso: " << obj->obj_flags.weight
+				  << ", Valore: " << GetApprox(obj->obj_flags.cost, ch->skills[SKILL_EVALUATE].learned - 10)
+				  << ", Rent cost: " << GetApprox(obj->obj_flags.cost_per_day,
+					  ch->skills[SKILL_EVALUATE].learned - 10)
+				  << "  " << (obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ") << "\n\r";
+		send_to_char(statsLine.str().c_str(), ch);
+	}
 
 	if(ITEM_TYPE(obj) == ITEM_WEAPON) {
-		snprintf(buf, 999,"Valore di danno: '%dD%d'\n\r",
-				 GetApprox(obj->obj_flags.value[1],
-						   ch->skills[SKILL_EVALUATE].learned-10),
-				 GetApprox(obj->obj_flags.value[2],
-						   ch->skills[SKILL_EVALUATE].learned-10));
-		send_to_char(buf, ch);
+		std::ostringstream weaponLine;
+		weaponLine << "Valore di danno: '"
+				   << GetApprox(obj->obj_flags.value[1], ch->skills[SKILL_EVALUATE].learned - 10)
+				   << "D"
+				   << GetApprox(obj->obj_flags.value[2], ch->skills[SKILL_EVALUATE].learned - 10)
+				   << "'\n\r";
+		send_to_char(weaponLine.str().c_str(), ch);
 	}
 	else if(ITEM_TYPE(obj) == ITEM_ARMOR) {
 
-		snprintf(buf, 999,"L'AC e' %d\n\r",
-				 GetApprox(obj->obj_flags.value[0],
-						   ch->skills[SKILL_EVALUATE].learned-10));
-		send_to_char(buf, ch);
+		std::ostringstream armorLine;
+		armorLine << "L'AC e' "
+				  << GetApprox(obj->obj_flags.value[0], ch->skills[SKILL_EVALUATE].learned - 10)
+				  << "\n\r";
+		send_to_char(armorLine.str().c_str(), ch);
 	}
 }
 
@@ -6241,7 +6539,7 @@ ACTION_FUNC(do_display) {
 		return;
 	}
 
-	i = atoi(arg);
+	i = std::atoi(arg);
 
 	switch(i) {
 	case 0:
@@ -6289,7 +6587,7 @@ ACTION_FUNC(do_resize) {
 		return;
 	}
 
-	i = atoi(arg);
+	i = std::atoi(arg);
 
 	if(i < 7) {
 		send_to_char("L'altezza dello schermo deve essere maggiore di 7.\n\r", ch);
@@ -6349,10 +6647,7 @@ int MobLevBonus(struct char_data* ch) {
 }
 
 ACTION_FUNC(do_show_skill) {
-	char buf[254], buffer[MAX_STRING_LENGTH];
 	int i,max;
-
-	buffer[0]='\0';
 
 	if(!ch->skills) {
 		return;
@@ -6395,22 +6690,29 @@ ACTION_FUNC(do_show_skill) {
 		}
 		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_magic==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_magic,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer &&
+							spell_info[i+1].min_level_magic==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_magic));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 		break;
 	}
@@ -6421,22 +6723,29 @@ ACTION_FUNC(do_show_skill) {
 			return;
 		}
 		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_cleric==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_cleric,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer &&
+							spell_info[i+1].min_level_cleric==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_cleric));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 		break;
 	}
@@ -6447,22 +6756,29 @@ ACTION_FUNC(do_show_skill) {
 			return;
 		}
 		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_druid==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_druid,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer &&
+							spell_info[i+1].min_level_druid==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_druid));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 		break;
 	}
@@ -6494,22 +6810,29 @@ ACTION_FUNC(do_show_skill) {
 		}
 		send_to_char("La tua classe puo' imparare i seguenti incantesimi:\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_magic==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_magic,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer &&
+							spell_info[i+1].min_level_sorcerer==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_sorcerer));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 
 		break;
@@ -6523,22 +6846,29 @@ ACTION_FUNC(do_show_skill) {
 		}
 		send_to_char("La tua classe puo' imparare le seguenti abilita':\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_paladin==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_paladin,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer &&
+							spell_info[i+1].min_level_paladin==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_paladin));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 		break;
 	}
@@ -6550,22 +6880,29 @@ ACTION_FUNC(do_show_skill) {
 		}
 		send_to_char("La tua classe puo' imparare le seguenti abilita':\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer &&
-						spell_info[i+1].min_level_ranger==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_ranger,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer &&
+							spell_info[i+1].min_level_ranger==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_ranger));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 		break;
 	}
@@ -6577,26 +6914,33 @@ ACTION_FUNC(do_show_skill) {
 		}
 		send_to_char("La tua classe puo' imparare le seguenti abilita':\n\r", ch);
 		SET_BIT(ch->player.user_flags,USE_PAGING);
-		for(max=0; max<IMMORTALE; max++) {
-			for(i=0; *spells[i] != '\n'; i++) {
-				if(spell_info[i+1].spell_pointer && spell_info[i+1].min_level_psi==max) {
-					snprintf(buf,254,"[%d] %s %s", spell_info[i+1].min_level_psi,
-							 spells[i],how_good(ch->skills[i+1].learned));
-					strcat(buf," \n\r");
-					if(strlen(buf)+strlen(buffer) > (MAX_STRING_LENGTH*2)-2) {
-						break;
+		{
+			std::string buffer;
+			for(max=0; max<IMMORTALE; max++) {
+				for(i=0; *spells[i] != '\n'; i++) {
+					if(spell_info[i+1].spell_pointer && spell_info[i+1].min_level_psi==max) {
+						std::string line = "[";
+						line += std::to_string(static_cast<int>(spell_info[i+1].min_level_psi));
+						line += "] ";
+						line += spells[i];
+						line += " ";
+						line += how_good(ch->skills[i+1].learned);
+						line += " \n\r";
+						if(buffer.size() + line.size() + 1 > (MAX_STRING_LENGTH * 2) - 2) {
+							break;
+						}
+						buffer += line;
+						buffer += "\r";
 					}
-					strcat(buffer, buf);
-					strcat(buffer, "\r");
 				}
 			}
+			page_string(ch->desc, buffer.c_str(), 1);
 		}
-		page_string(ch->desc, buffer, 1);
 		return;
 		break;
 	}
 	default:
-		send_to_char("Quale classe ?\n\r", ch);
+		send_to_char("Quale classe?\n\r", ch);
 	}
 }
 
@@ -6624,8 +6968,8 @@ ACTION_FUNC(do_scan) {
 		"in lontananza",
 		"in lontananza"
 	};
-	char buf[MAX_STRING_LENGTH], buf2[MAX_STRING_LENGTH];
-	char arg1[MAX_STRING_LENGTH], arg2[MAX_STRING_LENGTH];
+	std::array<char, MAX_STRING_LENGTH> arg1{};
+	std::array<char, MAX_STRING_LENGTH> arg2{};
 	int sd, smin, smax, swt, i, max_range = 6, range, rm, nfnd;
 	struct char_data* spud;
 
@@ -6655,39 +6999,44 @@ ACTION_FUNC(do_scan) {
 
 	}  /* was mortal */
 
-	argument_split_2(arg,arg1,arg2);
-	sd = search_block(arg1, dirs, FALSE);
-	if(sd==-1) {
+	argument_split_2(arg, arg1.data(), arg2.data());
+	sd = search_block(arg1.data(), dirs, FALSE);
+	std::string roomAct;
+	std::string viewerMsg;
+	if(sd == -1) {
 		smin = 0;
 		smax = 5;
 		swt = 3;
-		snprintf(buf,MAX_STRING_LENGTH-1,"$n scruta intensamente i dintorni.");
-		snprintf(buf2,MAX_STRING_LENGTH-1,"Guardandoti intorno con attenzione vedi...\n\r");
+		roomAct = "$n scruta intensamente i dintorni.";
+		viewerMsg = "Guardandoti intorno con attenzione vedi...\n\r";
 	}
 	else {
 		smin = sd;
 		smax = sd;
 		swt = 1;
-		snprintf(buf,MAX_STRING_LENGTH-1,"$n scruta intensamente %s.",dirsTo[sd]);
-		snprintf(buf2,MAX_STRING_LENGTH-1,"Guardando attentamente %s, vedi...\n\r",dirsTo[sd]);
+		roomAct = "$n scruta intensamente ";
+		roomAct += dirsTo[sd];
+		roomAct += ".";
+		viewerMsg = "Guardando attentamente ";
+		viewerMsg += dirsTo[sd];
+		viewerMsg += ", vedi...\n\r";
 	}
 
-	act(buf, FALSE, ch, 0, 0, TO_ROOM);
-	send_to_char(buf2,ch);
+	act(roomAct.c_str(), FALSE, ch, 0, 0, TO_ROOM);
+	send_to_char(viewerMsg.c_str(), ch);
 	nfnd = 0;
 	/* Check in room first */
 	for(spud = real_roomp(ch->in_room)->people; spud;
 			spud = spud->next_in_room) {
 		if(CAN_SEE(ch, spud) && !IS_SET(spud->specials.affected_by, AFF_HIDE) &&
 				spud != ch) {
-			if(IS_NPC(spud)) {
-				snprintf(buf,MAX_STRING_LENGTH-1, "%30s : qui\n\r", spud->player.short_descr);
+			const char* label = IS_NPC(spud) ? spud->player.short_descr : GET_NAME(spud);
+			if(!label) {
+				label = "";
 			}
-			else {
-				snprintf(buf,MAX_STRING_LENGTH-1, "%30s : qui\n\r", GET_NAME(spud));
-			}
-
-			send_to_char(buf,ch);
+			std::ostringstream hereLine;
+			hereLine << std::setw(30) << std::right << label << " : qui\n\r";
+			send_to_char(hereLine.str().c_str(), ch);
 			nfnd++;
 		}
 	}
@@ -6701,15 +7050,14 @@ ACTION_FUNC(do_scan) {
 					for(spud=real_roomp(rm)->people; spud; spud=spud->next_in_room) {
 						if(CAN_SEE(ch,spud) &&
 								!IS_SET(spud->specials.affected_by,AFF_HIDE)) {
-							if(IS_NPC(spud))
-								snprintf(buf, MAX_STRING_LENGTH-1,
-										 "%30s : %s %s\n\r", spud->player.short_descr,
-										 rng_desc[range], dir_desc[ i ]);
-							else
-								snprintf(buf, MAX_STRING_LENGTH-1,
-										 "%30s : %s %s\n\r", GET_NAME(spud),
-										 rng_desc[range], dir_desc[i]);
-							send_to_char(buf, ch);
+							const char* label = IS_NPC(spud) ? spud->player.short_descr : GET_NAME(spud);
+							if(!label) {
+								label = "";
+							}
+							std::ostringstream scanLine;
+							scanLine << std::setw(30) << std::right << label << " : "
+									 << rng_desc[range] << " " << dir_desc[i] << "\n\r";
+							send_to_char(scanLine.str().c_str(), ch);
 							nfnd++;
 						}
 					}
@@ -6733,9 +7081,9 @@ void list_groups(struct char_data* ch,const char* szArg, int iCmd) {
 	struct char_data* person;
 	struct follow_type* f;
 	int count = 0;
-	char buf[MAX_STRING_LENGTH],tbuf[255];
+	std::string buf;
 
-	snprintf(buf,MAX_STRING_LENGTH-1,"$c0015[------- Gruppi di avventurieri -------]\n\r");
+	buf += "$c0015[------- Gruppi di avventurieri -------]\n\r";
 
 	/* go through the descriptor list */
 	for(i = descriptor_list; i; i=i->next) {
@@ -6745,9 +7093,11 @@ void list_groups(struct char_data* ch,const char* szArg, int iCmd) {
 			/* list the master and the group name */
 			if(person && !person->master && IS_AFFECTED(person, AFF_GROUP)) {
 				if(person->specials.group_name && CAN_SEE(ch, person)) {
-					snprintf(tbuf,254, "          $c0015%s\n\r$c0014%s\n\r",
-							 person->specials.group_name, fname(GET_NAME(person)));
-					strcat(buf,tbuf);
+					buf += "          $c0015";
+					buf += person->specials.group_name;
+					buf += "\n\r$c0014";
+					buf += fname(GET_NAME(person));
+					buf += "\n\r";
 
 					/* list the members that ch can see */
 					count = 0;
@@ -6759,13 +7109,13 @@ void list_groups(struct char_data* ch,const char* szArg, int iCmd) {
 						else if(IS_AFFECTED(f->follower, AFF_GROUP) && IS_PC(f->follower)) {
 							count++;
 							if(CAN_SEE(ch, f->follower) &&
-									strlen(GET_NAME(f->follower)) > 1) {
-								snprintf(tbuf,254,"$c0013%s\n\r", fname(GET_NAME(f->follower)));
-								strcat(buf,tbuf);
+									std::strlen(GET_NAME(f->follower)) > 1) {
+								buf += "$c0013";
+								buf += fname(GET_NAME(f->follower));
+								buf += "\n\r";
 							}
 							else {
-								snprintf(tbuf,254,"$c0013Qualcuno\n\r");
-								strcat(buf,tbuf);
+								buf += "$c0013Qualcuno\n\r";
 							}
 						}
 					}
@@ -6780,8 +7130,8 @@ void list_groups(struct char_data* ch,const char* szArg, int iCmd) {
 			}
 		}
 	}
-	strcat(buf,"\n\r$c0015[---------- Fine lista --------------]\n\r");
-	page_string(ch->desc,buf,1);
+	buf += "\n\r$c0015[---------- Fine lista --------------]\n\r";
+	page_string(ch->desc, buf.c_str(), 1);
 }
 
 int can_see_linear(struct char_data* ch, struct char_data* targ, int* rng,

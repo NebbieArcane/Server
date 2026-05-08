@@ -27,6 +27,9 @@ export PATH="/usr/lib/cache:$PATH"
 mkdir -p build/src/include
 cd build 
 cmake .. 
+# Workaround: in some environments the generator does not materialize this
+# intermediate object directory before compiling ODB-generated .cxx files.
+mkdir -p src/CMakeFiles/myst.dir/odb
 jobs=$(cat makejobs)
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../mudroot/Makefile
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile

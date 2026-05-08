@@ -1,20 +1,20 @@
 # MySQL gira DENTRO il container insieme all'app (stesso setup di Vagrant).
 # docker-entrypoint.sh si occupa di inizializzare e avviare il demone MySQL
-# prima di lanciare il server MUD.
+# prima di lanciare il server nebbieserver.
 # Le credenziali e il nome DB devono corrispondere a quelli nel Dockerfile
 # (~/Confs/vagrant.conf): root / secret / nebbie.
-# NOTA: platform: linux/amd64 è necessario su Mac Apple Silicon (M1/M2/M3)
-# per evitare il bug '-mtune=/dev/null' dell'odb compiler sotto QEMU.
+# NOTA: su Apple Silicon forziamo linux/amd64 per allineare ambiente Docker
+# e VM Vagrant (x86_64), riducendo differenze di toolchain/ABI.
 
 services:
-  mud:
+  nebbieserver:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         TARGETPLATFORM: ${DOCKER_PLATFORM:-linux/amd64}
     platform: ${DOCKER_PLATFORM:-linux/amd64}
-    container_name: mud_server
+    container_name: nebbieserver
     # NOTA SVILUPPO: decommentare il mount qui sotto per montare il codice
     # sorgente live dall'host (utile per rebuild manuali dentro il container).
     # Attenzione: sovrascrive /app e quindi il binario compilato nella build
@@ -22,7 +22,9 @@ services:
     # volumes:
     #   - .:/app
     volumes:
-      - ./mudroot:/app/mudroot         # Persistenza dei file di gioco (lib/players, lib/rent, ecc.)
+      # Solo lib/: se monti tutta ./mudroot su /app/mudroot sostituisci anche il myst
+      # copiato in immagine da CMake (POST_BUILD) e l'entrypoint va in errore.
+      - ./mudroot/lib:/app/mudroot/lib
       - ./mysql_data:/var/lib/mysql # Persistenza del database MySQL (visibile sul tuo HD)
     ports:
       - "127.0.0.1:4000:4000"

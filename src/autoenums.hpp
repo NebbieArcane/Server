@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from  by code_generator.php */
+ * Generated from /vagrant/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
@@ -1096,174 +1096,508 @@ enum e_wear {
 // Enum type: E_WEAR -- end
 
 //#defines
-#define	ALL_DARK                                     1 
+/*
+ALARMUD* AlarMUD 2.0
+ALARMUD* See COPYING for licence information
+ALARMUD
+For 'equipment'*/
+#define	ALL_DARK                                     1  /*ALARMUD* AlarMUD 2.0
+ALARMUD* See COPYING for licence information
+ALARMUD
+For 'equipment'*/
 #define	FOREST_DARK                                  2 
 #define	NO_DARK                                      3 
-#define	ABS_MAX_EXP                                  2000000000 
+/*
+used in polies/switching*/
+#define	ABS_MAX_EXP                                  2000000000  /*used in polies/switching*/
 #define	MAX_XP                                       2147483647 
-#define	MAX_STAT                                     6 
-#define	BIT_POOF_IN                                  1 
+/*
+s i, w, d, co (ch)*/
+#define	MAX_STAT                                     6  /*s i, w, d, co (ch)*/
+/*
+the poofin and poofout shit.  Dm gave this to Parallax, and the
+other gods are demanding it, so I'll install it :-)*/
+#define	BIT_POOF_IN                                  1  /*the poofin and poofout shit.  Dm gave this to Parallax, and the
+other gods are demanding it, so I'll install it :-)*/
 #define	BIT_POOF_OUT                                 2 
 #define	MAX_WEAR_POS                                 E_WEAR_MAX 
-#define	MAX_TOUNGE                                   3 
-#define	MAX_NEW_LANGUAGES                            10 
-#define	MAX_SKILLS                                   350 
+/*
+For 'char_player_data'
+#2 has been used!!!!  Don't try using the last of the 3, because it is
+the keeper of active/inactive status for dead characters for resurrection!
+Used in CHAR_FILE_U *DO*NOT*CHANGE**/
+#define	MAX_TOUNGE                                   3  /*For 'char_player_data'
+#2 has been used!!!!  Don't try using the last of the 3, because it is
+the keeper of active/inactive status for dead characters for resurrection!
+Used in CHAR_FILE_U *DO*NOT*CHANGE**/
+/*
+for new languages DO NOT CHANGE!*/
+#define	MAX_NEW_LANGUAGES                            10  /*for new languages DO NOT CHANGE!*/
+/*
+Used in CHAR_FILE_U *DO*NOT*CHANGE* 200->350*/
+#define	MAX_SKILLS                                   350  /*Used in CHAR_FILE_U *DO*NOT*CHANGE* 200->350*/
 #define	MAX_WEAR                                     E_WEAR_COUNT 
-#define	MAX_AFFECT                                   40 
-#define	MAX_SAVES                                    8 
-#define	MAX_CONDITIONS                               5 
-#define	MAX_CLASS                                    11 
+/*
+Used in CHAR_FILE_U *DO*NOT*CHANGE* 25->30*/
+#define	MAX_AFFECT                                   40  /*Used in CHAR_FILE_U *DO*NOT*CHANGE* 25->30*/
+/*
+number of saving throws types... DO NOT CHANGE*/
+#define	MAX_SAVES                                    8  /*number of saving throws types... DO NOT CHANGE*/
+/*
+Predifined  conditions
+USER FILE, DO NOT CHANGE*/
+#define	MAX_CONDITIONS                               5  /*Predifined  conditions
+USER FILE, DO NOT CHANGE*/
+/*
+'class' for PC's*/
+#define	MAX_CLASS                                    11  /*'class' for PC's*/
 #define	OLD_MAX_CLASS                                4 
-#define	ABS_MAX_CLASS                                20 
+/*
+USER FILE, DO NOT CHANGE!*/
+#define	ABS_MAX_CLASS                                20  /*USER FILE, DO NOT CHANGE!*/
 #define	MAX_POSITION                                 9 
-#define	HIT_INCAP                                    -3 
-#define	HIT_MORTALLYW                                -6 
-#define	HIT_DEAD                                     -11 
-#define	SKILL_SPECIALIZED                            1 
+/*
+hit level per incapacitato*/
+#define	HIT_INCAP                                    -3  /*hit level per incapacitato*/
+/*
+hit level per mortalmente ferito*/
+#define	HIT_MORTALLYW                                -6  /*hit level per mortalmente ferito*/
+/*
+hit level per morto..*/
+#define	HIT_DEAD                                     -11  /*hit level per morto..*/
+/*
+need to make byte flags, to long or int flags in char_skill_data
+end
+skill_data special*/
+#define	SKILL_SPECIALIZED                            1  /*need to make byte flags, to long or int flags in char_skill_data
+end
+skill_data special*/
 #define	SKILL_UNDEFINED                              2 
 #define	SKILL_UNDEFINED2                             4 
 #define	ABS_MAX_LVL                                  70 
-#define	MAX_CLASS_ACHIE                              34 
-#define	MAX_BOSS_ACHIE                               30 
-#define	MAX_QUEST_ACHIE                              2 
-#define	MAX_OTHER_ACHIE                              25 
-#define	MAX_MOB_QUEST                                10 
-#define	MAX_RACE_ACHIE                               97 
-#define	CLASS_ACHIE                                  0 
-#define	BOSSKILL_ACHIE                               1 
-#define	QUEST_ACHIE                                  2 
-#define	OTHER_ACHIE                                  3 
-#define	RACESLAYER_ACHIE                             4 
-#define	MAX_ACHIE_CLASSES                            5 
-#define	CLASS_CASTER                                 0 
-#define	CLASS_MULTI                                  1 
-#define	CLASS_MELEE                                  2 
-#define	ACHIE_MANA_TABLE                             0 
-#define	ACHIE_MANAREG_TABLE                          1 
-#define	ACHIE_SPELLFAIL_TABLE                        2 
-#define	ACHIE_HIT_TABLE                              3 
-#define	ACHIE_HITREG_TABLE                           4 
-#define	ACHIE_MOVE_TABLE                             5 
-#define	ACHIE_MOVEREG_TABLE                          6 
-#define	ACHIE_HITROLL_TABLE                          7 
-#define	ACHIE_DAMROLL_TABLE                          8 
-#define	ACHIE_HITNDAM_TABLE                          9 
-#define	ACHIE_ARMOR_TABLE                            10 
-#define	ACHIE_AC_TABLE                               11 
-#define	MAX_ACHIE_TYPE                               100 
-#define	GROUP_INSECTOID                              85 
-#define	GROUP_ANIMAL                                 86 
-#define	GROUP_VEGGIE                                 87 
-#define	GROUP_SPECIALS                               88 
-#define	GROUP_DARKRACES                              89 
-#define	GROUP_DRAKES                                 90 
-#define	GROUP_GIANTS                                 91 
-#define	GROUP_RACEHALFBREED                          92 
-#define	GROUP_PLANAR                                 93 
-#define	GROUP_UNDEAD                                 94 
-#define	GROUP_GREENSKIN                              95 
-#define	GROUP_HUMANOID                               96 
-#define	ACHIE_MAGE_1                                 1 
-#define	ACHIE_MAGE_2                                 2 
-#define	ACHIE_MAGE_3                                 3 
-#define	ACHIE_CLERIC_1                               4 
-#define	ACHIE_CLERIC_2                               5 
-#define	ACHIE_CLERIC_3                               6 
-#define	ACHIE_WARRIOR_1                              7 
-#define	ACHIE_WARRIOR_2                              8 
-#define	ACHIE_WARRIOR_3                              9 
-#define	ACHIE_THIEF_1                                10 
-#define	ACHIE_THIEF_2                                11 
-#define	ACHIE_THIEF_3                                12 
-#define	ACHIE_DRUID_1                                13 
-#define	ACHIE_DRUID_2                                14 
-#define	ACHIE_DRUID_3                                15 
-#define	ACHIE_MONK_1                                 16 
-#define	ACHIE_MONK_2                                 17 
-#define	ACHIE_MONK_3                                 18 
-#define	ACHIE_BARBARIAN_1                            19 
-#define	ACHIE_BARBARIAN_2                            20 
-#define	ACHIE_BARBARIAN_3                            21 
-#define	ACHIE_SORCERER_1                             22 
-#define	ACHIE_SORCERER_2                             23 
-#define	ACHIE_SORCERER_3                             24 
-#define	ACHIE_PALADIN_1                              25 
-#define	ACHIE_PALADIN_2                              26 
-#define	ACHIE_PALADIN_3                              27 
-#define	ACHIE_RANGER_1                               28 
-#define	ACHIE_RANGER_2                               29 
-#define	ACHIE_RANGER_3                               30 
-#define	ACHIE_PSI_1                                  31 
-#define	ACHIE_PSI_2                                  32 
-#define	ACHIE_PSI_3                                  33 
-#define	ACHIE_QUEST_XARAH                            0 
-#define	ACHIE_QUEST_NILMYS                           1 
-#define	ACHIE_EVANGELINE                             21017 
-#define	ACHIE_SALOMONE                               32124 
-#define	ACHIE_THION                                  19719 
-#define	ACHIE_WARLOCK                                18419 
-#define	ACHIE_STANISLAV                              8916 
-#define	ACHIE_SAURON                                 37318 
-#define	ACHIE_XAGELON                                4219 
-#define	ACHIE_SLAVALOUS                              3424 
-#define	ACHIE_MORPHAIL                               18524 
-#define	ACHIE_NARIS                                  1201 
-#define	ACHIE_TSUCHIGUMO                             19920 
-#define	ACHIE_THANATOS                               321 
-#define	ACHIE_STRAHD                                 30113 
-#define	ACHIE_SHELOB                                 37107 
-#define	ACHIE_ROC                                    16039 
-#define	ACHIE_LAZLO                                  8910 
-#define	ACHIE_HYPNOS                                 6116 
-#define	ACHIE_DEMI_LICH                              25000 
-#define	ACHIE_BALROG                                 37317 
-#define	ACHIE_FIDEX_GATOR                            8001 
-#define	ACHIE_DRAGGSYLIA                             16314 
-#define	ACHIE_ARKHAT                                 9007 
-#define	ACHIE_GONHAG                                 9009 
-#define	ACHIE_BARBALBERO                             32822 
-#define	ACHIE_ORRORE_DETURPANTE                      17215 
-#define	ACHIE_TIMNUS                                 22605 
-#define	ACHIE_SHERAZADE                              5716 
-#define	ACHIE_DRAGO_DUNA_NERA                        5710 
-#define	ACHIE_INHEP                                  19001 
-#define	ACHIE_ARTEFATTO                              32011 
-#define	ACHIE_PKILL_WIN                              0 
-#define	ACHIE_PKILL_LOSS                             1 
-#define	ACHIE_DEATH                                  2 
-#define	ACHIE_JUNK                                   3 
-#define	ACHIE_ASTRAL                                 4 
-#define	ACHIE_REPAIR                                 5 
-#define	ACHIE_MINING                                 6 
-#define	ACHIE_BAR                                    7 
-#define	ACHIE_GOLDENBAR                              8 
-#define	ACHIE_WEAPONSMITH                            9 
-#define	ACHIE_QUEST_COMPLETE                         10 
-#define	ACHIE_QUEST_FAILED                           11 
-#define	ACHIE_QUEST_HUNT_COMPLETE                    12 
-#define	ACHIE_QUEST_HUNT_FAILED                      13 
-#define	ACHIE_QUEST_RESCUE_COMPLETE                  14 
-#define	ACHIE_QUEST_RESCUE_FAILED                    15 
-#define	ACHIE_QUEST_RESEARCH_COMPLETE                16 
-#define	ACHIE_QUEST_RESEARCH_FAILED                  17 
-#define	ACHIE_QUEST_DELIVERY_COMPLETE                18 
-#define	ACHIE_QUEST_DELIVERY_FAILED                  19 
-#define	ACHIE_QUEST_TOTAL                            20 
-#define	ACHIE_QUEST_HUNT_TOTAL                       21 
-#define	ACHIE_QUEST_RESCUE_TOTAL                     22 
-#define	ACHIE_QUEST_RESEARCH_TOTAL                   23 
-#define	ACHIE_QUEST_DELIVERY_TOTAL                   24 
-#define	LEV_BEGINNER                                 1 
-#define	LEV_VERY_EASY                                2 
-#define	LEV_EASY                                     3 
-#define	LEV_NORMAL                                   4 
-#define	LEV_HARD                                     5 
-#define	LEV_EXPERT                                   6 
-#define	LEV_CHAMPION                                 7 
-#define	LEV_IMPERIAL                                 8 
-#define	LEV_TORMENT                                  9 
-#define	LEV_GOD_MODE                                 10 
-#define	MAX_RACE                                     E_RACES_COUNT 
+/*
+Achievements stuffs*/
+#define	MAX_CLASS_ACHIE                              34  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_BOSS_ACHIE                               30  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_QUEST_ACHIE                              2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_OTHER_ACHIE                              25  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_MOB_QUEST                                10  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_RACE_ACHIE                               97  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	CLASS_ACHIE                                  0  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	BOSSKILL_ACHIE                               1  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	QUEST_ACHIE                                  2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	OTHER_ACHIE                                  3  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	RACESLAYER_ACHIE                             4  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_ACHIE_CLASSES                            5  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	CLASS_CASTER                                 0  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	CLASS_MULTI                                  1  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	CLASS_MELEE                                  2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MANA_TABLE                             0  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MANAREG_TABLE                          1  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_SPELLFAIL_TABLE                        2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_HIT_TABLE                              3  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_HITREG_TABLE                           4  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MOVE_TABLE                             5  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MOVEREG_TABLE                          6  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_HITROLL_TABLE                          7  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_DAMROLL_TABLE                          8  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_HITNDAM_TABLE                          9  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_ARMOR_TABLE                            10  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_AC_TABLE                               11  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	MAX_ACHIE_TYPE                               100  /*Achievements stuffs*/
+/*
+Achievements stuffs, the value is the same of MAX_RACE*/
+#define	GROUP_INSECTOID                              85  /*Achievements stuffs, the value is the same of MAX_RACE*/
+/*
+Achievements stuffs, the value is MAX_RACE + 1*/
+#define	GROUP_ANIMAL                                 86  /*Achievements stuffs, the value is MAX_RACE + 1*/
+/*
+Achievements stuffs, the value is MAX_RACE + 2*/
+#define	GROUP_VEGGIE                                 87  /*Achievements stuffs, the value is MAX_RACE + 2*/
+/*
+Achievements stuffs, the value is MAX_RACE + 3*/
+#define	GROUP_SPECIALS                               88  /*Achievements stuffs, the value is MAX_RACE + 3*/
+/*
+Achievements stuffs, the value is MAX_RACE + 4*/
+#define	GROUP_DARKRACES                              89  /*Achievements stuffs, the value is MAX_RACE + 4*/
+/*
+Achievements stuffs, the value is MAX_RACE + 5*/
+#define	GROUP_DRAKES                                 90  /*Achievements stuffs, the value is MAX_RACE + 5*/
+/*
+Achievements stuffs, the value is MAX_RACE + 6*/
+#define	GROUP_GIANTS                                 91  /*Achievements stuffs, the value is MAX_RACE + 6*/
+/*
+Achievements stuffs, the value is MAX_RACE + 7*/
+#define	GROUP_RACEHALFBREED                          92  /*Achievements stuffs, the value is MAX_RACE + 7*/
+/*
+Achievements stuffs, the value is MAX_RACE + 8*/
+#define	GROUP_PLANAR                                 93  /*Achievements stuffs, the value is MAX_RACE + 8*/
+/*
+Achievements stuffs, the value is MAX_RACE + 9*/
+#define	GROUP_UNDEAD                                 94  /*Achievements stuffs, the value is MAX_RACE + 9*/
+/*
+Achievements stuffs, the value is MAX_RACE + 10*/
+#define	GROUP_GREENSKIN                              95  /*Achievements stuffs, the value is MAX_RACE + 10*/
+/*
+Achievements stuffs, the value is MAX_RACE + 11*/
+#define	GROUP_HUMANOID                               96  /*Achievements stuffs, the value is MAX_RACE + 11*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MAGE_1                                 1  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MAGE_2                                 2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MAGE_3                                 3  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_CLERIC_1                               4  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_CLERIC_2                               5  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_CLERIC_3                               6  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_WARRIOR_1                              7  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_WARRIOR_2                              8  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_WARRIOR_3                              9  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_THIEF_1                                10  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_THIEF_2                                11  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_THIEF_3                                12  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_DRUID_1                                13  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_DRUID_2                                14  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_DRUID_3                                15  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MONK_1                                 16  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MONK_2                                 17  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MONK_3                                 18  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_BARBARIAN_1                            19  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_BARBARIAN_2                            20  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_BARBARIAN_3                            21  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_SORCERER_1                             22  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_SORCERER_2                             23  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_SORCERER_3                             24  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PALADIN_1                              25  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PALADIN_2                              26  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PALADIN_3                              27  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_RANGER_1                               28  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_RANGER_2                               29  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_RANGER_3                               30  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PSI_1                                  31  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PSI_2                                  32  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PSI_3                                  33  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_XARAH                            0  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_NILMYS                           1  /*Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_EVANGELINE                             21017  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_SALOMONE                               32124  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_THION                                  19719  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_WARLOCK                                18419  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_STANISLAV                              8916  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_SAURON                                 37318  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_XAGELON                                4219  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_SLAVALOUS                              3424  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_MORPHAIL                               18524  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_NARIS                                  1201  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_TSUCHIGUMO                             19920  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_THANATOS                               321  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_STRAHD                                 30113  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_SHELOB                                 37107  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_ROC                                    16039  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_LAZLO                                  8910  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_HYPNOS                                 6116  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_DEMI_LICH                              25000  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_BALROG                                 37317  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_FIDEX_GATOR                            8001  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_DRAGGSYLIA                             16314  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_ARKHAT                                 9007  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_GONHAG                                 9009  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_BARBALBERO                             32822  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_ORRORE_DETURPANTE                      17215  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_TIMNUS                                 22605  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_SHERAZADE                              5716  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_DRAGO_DUNA_NERA                        5710  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_INHEP                                  19001  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_ARTEFATTO                              32011  /*Boss Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PKILL_WIN                              0  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PKILL_LOSS                             1  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_DEATH                                  2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_JUNK                                   3  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_ASTRAL                                 4  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_REPAIR                                 5  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_MINING                                 6  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_BAR                                    7  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_GOLDENBAR                              8  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_WEAPONSMITH                            9  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_COMPLETE                         10  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_FAILED                           11  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_HUNT_COMPLETE                    12  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_HUNT_FAILED                      13  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_RESCUE_COMPLETE                  14  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_RESCUE_FAILED                    15  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_RESEARCH_COMPLETE                16  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_RESEARCH_FAILED                  17  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_DELIVERY_COMPLETE                18  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_DELIVERY_FAILED                  19  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_TOTAL                            20  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_HUNT_TOTAL                       21  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_RESCUE_TOTAL                     22  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_RESEARCH_TOTAL                   23  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_QUEST_DELIVERY_TOTAL                   24  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_BEGINNER                                 1  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_VERY_EASY                                2  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_EASY                                     3  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_NORMAL                                   4  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_HARD                                     5  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_EXPERT                                   6  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_CHAMPION                                 7  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_IMPERIAL                                 8  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_TORMENT                                  9  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	LEV_GOD_MODE                                 10  /*Achievements stuffs*/
+/*
+Max available races*/
+#define	MAX_RACE                                     E_RACES_COUNT  /*Max available races*/
 #define	STATUS_BEFORELOOP                            "BEFORELOOP" 
 #define	STATUS_INITLOOP                              "INITLOOP" 
 #define	STATUS_AFTERPCOM                             "AFTERPCOM" 
@@ -1290,7 +1624,9 @@ enum e_wear {
 #define	STATUS_OTCBAGTREE                            "OTCBAGTREE" 
 #define	STATUS_OTCENDLOOP                            "OTCENDLOOP" 
 #define	STATUS_OTCAFTERLOOP                          "OTCAFTERLOOP" 
-#define	STATUS_MAX                                   25 
+/*
+Highest status*/
+#define	STATUS_MAX                                   25  /*Highest status*/
 
 namespace G {
 extern e_apply encode_e_apply(std::string s,e_apply fallback = APPLY_NONE);

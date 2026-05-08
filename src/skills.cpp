@@ -4392,7 +4392,7 @@ ACTION_FUNC(do_carve) {
 		sprintf(buffer,"a Ration of %s",corpse->short_description+10);
 		food->short_description= (char*)strdup(buffer);
 		food->action_description= (char*)strdup(buffer);
-		sprintf(arg2,"%s is lying on the ground.",buffer);
+		std::snprintf(arg2, MAX_STRING_LENGTH, "%.20440s is lying on the ground.", buffer);
 		food->description= (char*)strdup(arg2);
 		corpse->obj_flags.weight=corpse->obj_flags.weight-50;
 		i=number(1,6);
@@ -4833,7 +4833,8 @@ ACTION_FUNC(do_mindsummon) {
 	}
 
 	act("You open a portal and bring forth $N!",FALSE,ch,0,target,TO_CHAR);
-	if(GetMaxLevel(target) < GetMaxLevel(ch)+2 && !IS_PC(target)) {
+	const long long summon_level_gap = static_cast<long long>(GetMaxLevel(ch)) + 2LL;
+	if(static_cast<long long>(GetMaxLevel(target)) < summon_level_gap && !IS_PC(target)) {
 		send_to_char("Their head is reeling. Give them a moment to recover.\n\r",ch);
 	}
 	act("$n disappears in a shimmering wave of light!",TRUE,target,0,0,TO_ROOM);
@@ -4847,7 +4848,7 @@ ACTION_FUNC(do_mindsummon) {
 
 	act("$n summons $N from nowhere!",TRUE,ch,0,target,TO_NOTVICT);
 
-	if(GetMaxLevel(target) < GetMaxLevel(ch)+2 && !IS_PC(target))  {
+	if(static_cast<long long>(GetMaxLevel(target)) < summon_level_gap && !IS_PC(target))  {
 		act("$N is lying on the ground stunned!",TRUE,ch,0,target,TO_ROOM);
 		target->specials.position = POSITION_STUNNED;
 	}
@@ -4951,12 +4952,13 @@ ACTION_FUNC(do_immolation) {
 		send_to_char("You can't do that, You Knob!\n\r",ch);
 	}
 
-	if((int)ch->points.hit < (hit_points+5)) {
+	const long long min_required_hit = static_cast<long long>(hit_points) + 5LL;
+	if(static_cast<long long>(ch->points.hit) < min_required_hit) {
 		send_to_char("You don't have enough physical stamina to immolate.\n\r",ch);
 		return;
 	}
 
-	if((GET_MANA(ch)+mana_points) > (GET_MAX_MANA(ch))) {
+	if((static_cast<long long>(GET_MANA(ch)) + mana_points) > static_cast<long long>(GET_MAX_MANA(ch))) {
 		send_to_char("Your mind cannot handle that much extra energy.\n\r",ch);
 		return;
 	}
@@ -5070,12 +5072,13 @@ ACTION_FUNC(do_canibalize) {
 		send_to_char("You can't do that, You Knob!\n\r",ch);
 	}
 
-	if((int)ch->points.hit < (hit_points+5)) {
+	const long long min_required_hit = static_cast<long long>(hit_points) + 5LL;
+	if(static_cast<long long>(ch->points.hit) < min_required_hit) {
 		send_to_char("You don't have enough physical stamina to canibalize.\n\r",ch);
 		return;
 	}
 
-	if((GET_MANA(ch)+mana_points) > (GET_MAX_MANA(ch))) {
+	if((static_cast<long long>(GET_MANA(ch)) + mana_points) > static_cast<long long>(GET_MAX_MANA(ch))) {
 		send_to_char("Your mind cannot handle that much extra energy.\n\r",ch);
 		return;
 	}

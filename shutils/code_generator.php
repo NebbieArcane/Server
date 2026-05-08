@@ -7,9 +7,9 @@ require('./phplib/getopt.php');
 require('./phplib/alarphptemplate-1.0/alarphptemplate.inc.php');
 $fname=realpath("./enums.json");
 $data=json_decode(@file_get_contents($fname),true);
-$allenums=$data['enums'];
-$defines=$data['defines'];
-$allflags=$data['flags'];
+$allenums=$data['enums'] ?? [];
+$defines=$data['defines'] ?? [];
+$allflags=$data['flags'] ?? [];
 $program=basename(__FILE__);
 // ENUMS LOOP
 $loop=array();
@@ -30,7 +30,9 @@ $flags_loop=$loop;
 //DEFINES LOOP
 $loop=[];
 foreach ($defines as $desc => $val) {
-    $loop[]=['name'=>$desc,'value'=>$val['value'],'comment'=>trim($value['comment']),'filler'=>str_repeat(' ',45-strlen($desc))];
+    $value=$val['value'] ?? '';
+    $comment=(string)($val['comment'] ?? '');
+    $loop[]=['name'=>$desc,'value'=>$value,'comment'=>trim($comment),'filler'=>str_repeat(' ',45-strlen($desc))];
 }
 $defines_loop=$loop;
 $tmpl=new alarTemplate(
@@ -39,6 +41,7 @@ $tmpl=new alarTemplate(
 		'stripSpaces'=>true,
 	)
 );
+$source=(string)$fname;
 $tmpl->addParam('generator',"$source by $program");
 $tmpl->addParam('loop_enums',$enums_loop);
 $tmpl->addParam('loop_flags',$flags_loop);
@@ -74,11 +77,11 @@ function genFlagEnum($enum,$enums) {
         }
         else {
             ++$howmany;
-            $comment=$value['comment'];
-            $value=$value['value'];
+            $comment=(string)($value['comment'] ?? '');
+            $value=$value['value'] ?? 0;
             if (is_null($accept0)) {
                 if ($value !==0) {
-                    list($name,$dummy)=explode('_',$desc,2);
+                    list($name,$dummy)=array_pad(explode('_',$desc,2),2,'');
                     $name.="_NONE";
                     //$item['values'][]=array('name'=>$name,'value'=>0,'filler'=>str_repeat(' ',45-strlen($name)),'comment'=>trim($comment));
                     $accept0=false;

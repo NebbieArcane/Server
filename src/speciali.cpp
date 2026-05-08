@@ -75,8 +75,9 @@ ROOMSPECIAL_FUNC(sBlockWay) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
-			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,ch);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			send_to_char(out_msg.c_str(), ch);
 			return TRUE;
 		}
 	}
@@ -109,8 +110,9 @@ MOBSPECIAL_FUNC(sMobBlockWay) {
 			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
-			sprintf(lev2,"%s\r\n",msg);
-			act(msg, FALSE, mob, 0, ch, TO_VICT);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			act(out_msg.c_str(), FALSE, mob, 0, ch, TO_VICT);
 			act("$n dice qualcosa a $N.", FALSE, mob, 0, ch, TO_NOTVICT);
 			return TRUE;
 		}
@@ -802,8 +804,9 @@ ROOMSPECIAL_FUNC(BlockAlign) {
 			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
-			sprintf(dir,"%s\r\n",msg);
-			send_to_char(dir,ch);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			send_to_char(out_msg.c_str(), ch);
 			return TRUE;
 		}
 	}

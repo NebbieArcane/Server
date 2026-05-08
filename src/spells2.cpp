@@ -4005,7 +4005,7 @@ void cast_entangle(byte level, struct char_data* ch, const char* arg,
 			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
 				spell_entangle(level,ch,tar_ch,0);
 			}
-
+		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in entangle.");
 		break;
@@ -4030,7 +4030,7 @@ void cast_snare(byte level, struct char_data* ch, const char* arg,
 			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
 				spell_snare(level,ch,tar_ch,0);
 			}
-
+		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in snare.");
 		break;
@@ -4073,6 +4073,7 @@ void cast_barkskin(byte level, struct char_data* ch, const char* arg,
 			if(!in_group(tar_ch,ch)) {
 				spell_barkskin(level,ch,tar_ch,0);
 			}
+		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in barkskin.");
 		break;
@@ -4226,6 +4227,7 @@ void cast_silence(byte level, struct char_data* ch, const char* arg,
 			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
 				spell_silence(level,ch,tar_ch,0);
 			}
+		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in silence.");
 		break;

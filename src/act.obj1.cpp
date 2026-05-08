@@ -104,7 +104,6 @@ void get(struct char_data* ch, struct obj_data* obj_object,
 ACTION_FUNC(do_get) {
 	char arg1[MAX_STRING_LENGTH];
 	char arg2[MAX_STRING_LENGTH];
-	char buffer[MAX_STRING_LENGTH];
 	struct obj_data* sub_object, *obj_object,*next_obj;
 	bool found = FALSE;
 	bool fail  = FALSE;
@@ -174,7 +173,7 @@ ACTION_FUNC(do_get) {
 
 
 			if(CAN_SEE_OBJ(ch,obj_object)) {
-				if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch))
+				if((ch->player.oggetti > (MAX_OBJ_SAVE - 5)) && MOUNTED(ch))
 				{
 					act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
 					SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 1", NULL);
@@ -186,8 +185,8 @@ ACTION_FUNC(do_get) {
 #endif
 					return;
 				}
-				if((IS_CARRYING_N(ch) + 1) <= CAN_CARRY_N(ch)) {
-					if((IS_CARRYING_W(ch) + obj_object->obj_flags.weight) <=
+				if(IS_CARRYING_N(ch) < CAN_CARRY_N(ch)) {
+					if((static_cast<long long>(IS_CARRYING_W(ch)) + obj_object->obj_flags.weight) <=
 							CAN_CARRY_W(ch)) {
 						if(CAN_WEAR(obj_object,ITEM_TAKE)) {
 							get(ch,obj_object,sub_object);
@@ -240,7 +239,7 @@ ACTION_FUNC(do_get) {
 		while(num != 0) {
 			obj_object = get_obj_in_list_vis(ch, arg1, pObjList);
 
-			if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch) && obj_object)
+			if((ch->player.oggetti > (MAX_OBJ_SAVE - 5)) && MOUNTED(ch) && obj_object)
 			{
 				act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
 				SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 2", NULL);
@@ -271,8 +270,8 @@ ACTION_FUNC(do_get) {
 					return;
 				}
 
-				if((IS_CARRYING_N(ch) + 1 < CAN_CARRY_N(ch))) {
-					if((IS_CARRYING_W(ch) + obj_object->obj_flags.weight) <
+				if(IS_CARRYING_N(ch) < (CAN_CARRY_N(ch) - 1)) {
+					if((static_cast<long long>(IS_CARRYING_W(ch)) + obj_object->obj_flags.weight) <
 							CAN_CARRY_W(ch)) {
 						if(CAN_WEAR(obj_object, ITEM_TAKE)) {
 							get(ch, obj_object, sub_object);
@@ -306,8 +305,10 @@ ACTION_FUNC(do_get) {
 		}
 
 		if(!found && !fail) {
-			sprintf(buffer, "Non c'e' nessun %s qui.\n\r", arg1);
-			send_to_char(buffer, ch);
+			std::string msg = "Non c'e' nessun ";
+			msg += arg1;
+			msg += " qui.\n\r";
+			send_to_char(msg.c_str(), ch);
 		}
 	}
 
@@ -343,7 +344,7 @@ ACTION_FUNC(do_get) {
 					}
 
 					if(CAN_SEE_OBJ(ch, obj_object)) {
-						if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch))
+						if((ch->player.oggetti > (MAX_OBJ_SAVE - 5)) && MOUNTED(ch))
 						{
 							act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
 							SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 4", NULL);
@@ -355,9 +356,9 @@ ACTION_FUNC(do_get) {
 #endif
 							return;
 						}
-						if((IS_CARRYING_N(ch) + 1) < CAN_CARRY_N(ch)) {
+						if(IS_CARRYING_N(ch) < (CAN_CARRY_N(ch) - 1)) {
 							if(has ||
-									(IS_CARRYING_W(ch) + obj_object->obj_flags.weight) <
+									(static_cast<long long>(IS_CARRYING_W(ch)) + obj_object->obj_flags.weight) <
 									CAN_CARRY_W(ch)) {
 								if(CAN_WEAR(obj_object,ITEM_TAKE)) {
 									get(ch, obj_object, sub_object);
@@ -396,8 +397,10 @@ ACTION_FUNC(do_get) {
 			}
 		}
 		else {
-			sprintf(buffer,"Non vedi nessun %s.\n\r", arg2);
-			send_to_char(buffer, ch);
+			std::string msg = "Non vedi nessun ";
+			msg += arg2;
+			msg += ".\n\r";
+			send_to_char(msg.c_str(), ch);
 			fail = TRUE;
 		}
 		break;
@@ -441,7 +444,7 @@ ACTION_FUNC(do_get) {
 				while(num != 0) {
 					obj_object = get_obj_in_list_vis(ch, arg1, pObjList);
 
-					if((ch->player.oggetti > MAX_OBJ_SAVE - 5) && MOUNTED(ch) && obj_object)
+					if((ch->player.oggetti > (MAX_OBJ_SAVE - 5)) && MOUNTED(ch) && obj_object)
 					{
 						act("Non riesci a prendere $p mentre stai cavalcando.", FALSE, ch, obj_object, NULL, TO_CHAR);
 						SetStatus("Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 6", NULL);
@@ -464,9 +467,9 @@ ACTION_FUNC(do_get) {
 							return;
 						}
 
-						if((IS_CARRYING_N(ch) + 1 < CAN_CARRY_N(ch))) {
+						if(IS_CARRYING_N(ch) < (CAN_CARRY_N(ch) - 1)) {
 							if(has ||
-									(IS_CARRYING_W(ch) + obj_object->obj_flags.weight) <
+									(static_cast<long long>(IS_CARRYING_W(ch)) + obj_object->obj_flags.weight) <
 									CAN_CARRY_W(ch)) {
 								if(CAN_WEAR(obj_object, ITEM_TAKE)) {
 									get(ch, obj_object, sub_object);
@@ -501,8 +504,10 @@ ACTION_FUNC(do_get) {
 				}
 
 				if(!fail && !found) {
-					sprintf(buffer, "$p non contiene nessun %s.", arg1);
-					act(buffer, TRUE, ch, sub_object, 0, TO_CHAR);
+					std::string msg = "$p non contiene nessun ";
+					msg += arg1;
+					msg += ".";
+					act(msg.c_str(), TRUE, ch, sub_object, 0, TO_CHAR);
 				}
 			}
 			else {
@@ -511,8 +516,10 @@ ACTION_FUNC(do_get) {
 			}
 		}
 		else {
-			sprintf(buffer, "Non vedi nessun %s.", arg2);
-			act(buffer, TRUE, ch, 0, 0, TO_CHAR);
+			std::string msg = "Non vedi nessun ";
+			msg += arg2;
+			msg += ".";
+			act(msg.c_str(), TRUE, ch, 0, 0, TO_CHAR);
 			fail = TRUE;
 		}
 		break;
@@ -549,19 +556,23 @@ void get_trophy(struct char_data* ch, struct obj_data* ob) {
 			strncpy(buffer,strstr(ob->short_description,CORPO)?
 					strstr(ob->short_description,CORPO)+strlen(CORPO):ob->name,
 					160);
-			sprintf(buf,"trofeo %s",buffer);
+			std::string trophy_name = "trofeo ";
+			trophy_name += buffer;
 			free(cp->name);
-			cp->name=strdup(buf);
+			cp->name = strdup(trophy_name.c_str());
 
-			sprintf(buf,"un trofeo dell'uccisione di %s",buffer);
+			std::string trophy_short = "un trofeo dell'uccisione di ";
+			trophy_short += buffer;
 			free(cp->short_description);
-			cp->short_description=strdup(buf);
+			cp->short_description = strdup(trophy_short.c_str());
 			free(cp->action_description);
-			cp->action_description=strdup(buf);
+			cp->action_description = strdup(trophy_short.c_str());
 
-			sprintf(buf,"Un trofeo dell'uccisione di %s giace per terra.",buffer);
+			std::string trophy_desc = "Un trofeo dell'uccisione di ";
+			trophy_desc += buffer;
+			trophy_desc += " giace per terra.";
 			free(cp->description);
-			cp->description=strdup(buf);
+			cp->description = strdup(trophy_desc.c_str());
 			cp->obj_flags.type_flag = ITEM_CONTAINER;
 			cp->obj_flags.wear_flags = ITEM_TAKE;
 			cp->obj_flags.value[0] = 0; /* You can't store stuff in a trophy */
@@ -574,10 +585,14 @@ void get_trophy(struct char_data* ch, struct obj_data* ob) {
 			cp->obj_flags.cost=0;
 			cp->obj_flags.weight=0;
 			obj_to_room(cp,ch->in_room);
-			sprintf(buf,"Ti avventi sul corpo di %s e ne trai un trofeo!",buffer);
-			act(buf,TRUE,ch,0,0,TO_CHAR);
-			sprintf(buf,"$n si avventa sul corpo di %s e ne trae un trofeo!",buffer);
-			act(buf,TRUE,ch,0,0,TO_ROOM);
+			std::string msg = "Ti avventi sul corpo di ";
+			msg += buffer;
+			msg += " e ne trai un trofeo!";
+			act(msg.c_str(), TRUE, ch, 0, 0, TO_CHAR);
+			msg = "$n si avventa sul corpo di ";
+			msg += buffer;
+			msg += " e ne trae un trofeo!";
+			act(msg.c_str(), TRUE, ch, 0, 0, TO_ROOM);
 			do_get(ch,"trofeo\0",CMD_GET);
 		}
 	}
@@ -1078,7 +1093,7 @@ ACTION_FUNC(do_give) {
 						return;
 					}
 
-					if((1+IS_CARRYING_N(vict)) > CAN_CARRY_N(vict)) {
+					if(IS_CARRYING_N(vict) >= CAN_CARRY_N(vict)) {
 						act("$N sembra avere le mani piene.", 0, ch, 0, vict, TO_CHAR);
 						return;
 					}

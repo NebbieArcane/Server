@@ -48,7 +48,7 @@ const char* fname(const char* namelist) {
 #define ML 30
 	static char holder[ML];
 	int i=ML;
-	register char* point;
+	char* point;
 
 	if(namelist) {
 		for(point = holder; isalpha(*namelist) && i ; i--,namelist++, point++) {
@@ -515,7 +515,7 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		if(GET_STR(ch) > 18 && GET_STR(ch) > MaxStrForRace(ch)) {
 			nTmpAdd += (GET_STR(ch) - 18) * 10;
 		}
-		while(nTmpAdd > 100 && GET_STR(ch) + 1 <= MaxStrForRace(ch)) {
+		while(nTmpAdd > 100 && GET_STR(ch) < MaxStrForRace(ch)) {
 			GET_STR(ch) +=1;
 			nTmpAdd -= 100;
 		}

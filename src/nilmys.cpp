@@ -200,7 +200,7 @@ MOBSPECIAL_FUNC(Arkhat)
         }
         else
         {
-            mudlog(LOG_PLAYERS, "Arkhat was killed by players but Boris is not alive, this is not possible.")
+            mudlog(LOG_PLAYERS, "Arkhat was killed by players but Boris is not alive, this is not possible.");
             return TRUE;
         }
     }
@@ -641,7 +641,7 @@ MOBSPECIAL_FUNC(Boris_Ivanhoe)
         }
         else
         {
-            mudlog(LOG_PLAYERS, "Umag is missing, this is not possible.")
+            mudlog(LOG_PLAYERS, "Umag is missing, this is not possible.");
             return TRUE;
         }
     }
@@ -1776,11 +1776,6 @@ MOBSPECIAL_FUNC(Uguik_Aurum)
 
             arg = one_argument(arg, buf);
 
-            if(!buf)
-            {
-                return FALSE;
-            }
-
             oggetto = get_obj_in_list_vis(ch, buf, ch->carrying);
 
             if(!oggetto)
@@ -1792,11 +1787,7 @@ MOBSPECIAL_FUNC(Uguik_Aurum)
 
             arg = one_argument(arg, buf);
 
-            if(!buf)
-            {
-              return FALSE;
-            }
-        		else if((tch = get_char_room_vis(ch, buf)) != uguik)
+        		if((tch = get_char_room_vis(ch, buf)) != uguik)
             {
         			return FALSE;
             }
@@ -2021,7 +2012,7 @@ MOBSPECIAL_FUNC(Garebeth)
         }
         else
         {
-            mudlog(LOG_PLAYERS, "Garebeth was killed by players but Boris is not alive, this is not possible.")
+            mudlog(LOG_PLAYERS, "Garebeth was killed by players but Boris is not alive, this is not possible.");
             return (TRUE);
         }
     }

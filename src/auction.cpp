@@ -166,7 +166,7 @@ ACTION_FUNC(do_auction_int) {
 			newbet = parsebet(auction->bet, arg1);
 			mudlog(LOG_PLAYERS,"ASTA: %s offre %d monete per (%s)", GET_NAME(ch), newbet, auction->item->name);
 
-			if(newbet < (auction->bet + 100)) {
+			if((newbet <= auction->bet) || ((newbet - auction->bet) < 100)) {
 				send_to_char("Devi impegnare almeno 100 monete oltre l'offerta attuale.\n\r",ch);
 				return;
 			}
@@ -257,8 +257,9 @@ ACTION_FUNC(do_auction_int) {
 void auction_update(void) {
 	char buf[MAX_STRING_LENGTH];
 
-	if(auction->item != NULL)
-		if(--auction->pulse <= 0) {  /* decrease pulse */
+	if(auction->item != NULL) {
+		auction->pulse--;
+		if(auction->pulse <= 0) {  /* decrease pulse */
 			auction->pulse = PULSE_INTERNAL;
 			switch(++auction->going) {  /* increase the going state */
 			case 1 : /* going once */
@@ -340,6 +341,7 @@ void auction_update(void) {
 				} /* else */
 			} /* switch */
 		} /* if */
+	}
 } /* func */
 /***************************************************************/
 

@@ -137,8 +137,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 
         for(i = 0; i < 32; i++)
         {
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 
@@ -167,9 +166,10 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 
 
 void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
-	int a, row, update;
+	int row, update;
 	char buf[255];
-	long i, check=0;
+	long i;
+	unsigned long check = 0;
 
 	if(type != ENTER_CHECK)
 		if(!*arg || (*arg == '\n')) {
@@ -184,32 +184,24 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
 		if(update < 0 || update > 36) {
 			return;
 		}
-		i=1;
-        if(update > 0 && update < 32)
-            for(a=1; a<=update; a++) {
-                i*=2;
-            }
-        else
-            for(a=1; a<=update-32; a++) {
-                i*=2;
-            }
+		check = (update < 32) ? (1UL << update) : (1UL << (update - 32));
 
         if(update<32)
         {
-            if(IS_SET(ch->specials.mobedit->specials.affected_by, i)) {
-                REMOVE_BIT(ch->specials.mobedit->specials.affected_by, i);
+            if(IS_SET(ch->specials.mobedit->specials.affected_by, check)) {
+                REMOVE_BIT(ch->specials.mobedit->specials.affected_by, check);
             }
             else {
-                SET_BIT(ch->specials.mobedit->specials.affected_by, i);
+                SET_BIT(ch->specials.mobedit->specials.affected_by, check);
             }
         }
         else
         {
-            if(IS_SET(ch->specials.mobedit->specials.affected_by2, i)) {
-                REMOVE_BIT(ch->specials.mobedit->specials.affected_by2, i);
+            if(IS_SET(ch->specials.mobedit->specials.affected_by2, check)) {
+                REMOVE_BIT(ch->specials.mobedit->specials.affected_by2, check);
             }
             else {
-                SET_BIT(ch->specials.mobedit->specials.affected_by2, i);
+                SET_BIT(ch->specials.mobedit->specials.affected_by2, check);
             }
         }
 	}
@@ -230,17 +222,7 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
                 row++;
             }
             send_to_char(buf, ch);
-            check=1;
-            if(i > 0 && i < 32)
-                for(a=1; a<=i; a++)
-                {
-                    check*=2;
-                }
-            else
-                for(a=1; a<=(i-32); a++)
-                {
-                    check*=2;
-                }
+            check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             if (i < 32)
             {
                 sprintf(buf, "%-2ld [%s] %s", i + 1, ((ch->specials.mobedit->specials.affected_by & (check)) ? "X" : " "), affected_bits[ i ]);
@@ -267,22 +249,10 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
 
         for(i = 0; i < 41; i++)
         {
-            check=1;
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
-
-            if(i > 0 && i < 32)
-                for(a=1; a<=i; a++)
-                {
-                    check*=2;
-                }
-            else
-                for(a=1; a<=(i-32); a++)
-                {
-                    check*=2;
-                }
 
             if(i < 32)
             {
@@ -1260,8 +1230,7 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
             }
             else if(a == 2)
             {
-                sprintf(buf2, "%s", "%-");
-                sprintf(buf2, "%s%d", buf2, 30-x);
+                snprintf(buf2, sizeof(buf2), "%%-%d", 30-x);
                 strcat(buf2, "s%-2d %s");
                 boost::format fmt2 (buf2);
                 fmt2 % "" % (i + 1) % RaceName[i];
@@ -1271,8 +1240,7 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
             }
             else if(a == 3)
             {
-                sprintf(buf2, "%s", "%-");
-                sprintf(buf2, "%s%d", buf2, 55-x);
+                snprintf(buf2, sizeof(buf2), "%%-%d", 55-x);
                 strcat(buf2, "s%-2d %s\n\r");
                 boost::format fmt (buf2);
                 fmt % "" % (i + 1) % RaceName[i];
@@ -1366,8 +1334,7 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
         for(i = 0; i < 18; i++)
         {
             check = 1;
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 
@@ -1475,8 +1442,7 @@ void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
         for(i = 0; i < 18; i++)
         {
             check = 1;
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 
@@ -1582,8 +1548,7 @@ void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
         for(i = 0; i < 18; i++)
         {
             check = 1;
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 

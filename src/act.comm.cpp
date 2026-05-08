@@ -438,8 +438,7 @@ ACTION_FUNC(do_tell) {
 
 ACTION_FUNC(do_whisper) {
 	struct char_data* vict;
-	char name[100], message[MAX_INPUT_LENGTH],
-		 buf[MAX_INPUT_LENGTH];
+	char name[100], message[MAX_INPUT_LENGTH];
 
 	if(apply_soundproof(ch)) {
 		return;
@@ -474,12 +473,20 @@ ACTION_FUNC(do_whisper) {
 			return;
 		}
 
-		snprintf(buf,MAX_INPUT_LENGTH-1,"$c0005[$c0015$n$c0005] ti sussurra '%s'",scramble(ch,message));
-		act(buf, FALSE, ch, 0, vict, TO_VICT);
+		std::string whisper_to_vict = "$c0005[$c0015$n$c0005] ti sussurra '";
+		whisper_to_vict += scramble(ch, message);
+		whisper_to_vict += "'";
+		act(whisper_to_vict.c_str(), FALSE, ch, 0, vict, TO_VICT);
 		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf(buf,MAX_INPUT_LENGTH-1,"$c0005Tu sussurri a %s%s, '%s'",
-					 (IS_NPC(vict) ? vict->player.name : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e' AFK)" : ""), message);
-			act(buf,FALSE, ch,0,0,TO_CHAR);
+			std::string whisper_to_char = "$c0005Tu sussurri a ";
+			whisper_to_char += (IS_NPC(vict) ? vict->player.name : GET_NAME(vict));
+			if(IS_AFFECTED2(vict, AFF2_AFK)) {
+				whisper_to_char += " (che e' AFK)";
+			}
+			whisper_to_char += ", '";
+			whisper_to_char += message;
+			whisper_to_char += "'";
+			act(whisper_to_char.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 		}
 		act("$c0005$n sussurra qualcosa a $N.", FALSE, ch, 0, vict, TO_NOTVICT);
 		thief_listen(ch,vict,message,cmd);
@@ -526,13 +533,21 @@ ACTION_FUNC(do_ask) {
 			return;
 		}
 
-		snprintf(buf,MAX_INPUT_LENGTH-1,"$c0006[$c0015$n$c0006] ti chiede '%s'",scramble(ch,message));
-		act(buf, FALSE, ch, 0, vict, TO_VICT);
+		std::string ask_to_vict = "$c0006[$c0015$n$c0006] ti chiede '";
+		ask_to_vict += scramble(ch, message);
+		ask_to_vict += "'";
+		act(ask_to_vict.c_str(), FALSE, ch, 0, vict, TO_VICT);
 
 		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf(buf, MAX_INPUT_LENGTH-1,"$c0006Tu chiedi a %s%s, '%s'",
-					 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), (IS_AFFECTED2(vict, AFF2_AFK) ? " (che e' AFK)" : ""), message);
-			act(buf,FALSE, ch,0,0,TO_CHAR);
+			std::string ask_to_char = "$c0006Tu chiedi a ";
+			ask_to_char += (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict));
+			if(IS_AFFECTED2(vict, AFF2_AFK)) {
+				ask_to_char += " (che e' AFK)";
+			}
+			ask_to_char += ", '";
+			ask_to_char += message;
+			ask_to_char += "'";
+			act(ask_to_char.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 		}
 		act("$c0006$n fa una domanda a $N.",FALSE,ch,0,vict,TO_NOTVICT);
 
@@ -711,12 +726,14 @@ ACTION_FUNC(do_sign) {
 		  buf2 is now the "corrected" string.
 		  */
 
-		snprintf(buf,MAX_INPUT_LENGTH+39,"$c0015[$c0005$n$c0015], con i segni,  dice '%s'", buf2);
+		std::string sign_message = "$c0015[$c0005$n$c0015], con i segni,  dice '";
+		sign_message += buf2;
+		sign_message += "'";
 
 		for(t = rp->people; t; t=t->next_in_room) {
 			if(t != ch) {
 				if(t->skills && number(1,diff) < t->skills[SKILL_SIGN].learned) {
-					act(buf, FALSE, ch, 0, t, TO_VICT);
+					act(sign_message.c_str(), FALSE, ch, 0, t, TO_VICT);
 				}
 				else {
 					act("$n muove le mani in modo molto buffo.",
@@ -726,8 +743,10 @@ ACTION_FUNC(do_sign) {
 		}
 
 		if(IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf(buf,MAX_INPUT_LENGTH+39,"Tu hai detto '%s'\n\r", arg + i);
-			send_to_char(buf, ch);
+			std::string echo_message = "Tu hai detto '";
+			echo_message += (arg + i);
+			echo_message += "'\n\r";
+			send_to_char(echo_message.c_str(), ch);
 		}
 	}
 }
@@ -942,7 +961,12 @@ ACTION_FUNC(do_new_say) {
 		buf2[0] = '\0';
 
 		/* we use this for ESP and immortals and comprehend lang */
-		snprintf(buf3,MAX_INPUT_LENGTH+39,"$c0015[$c0005$n$c0015] dice '%s'",buf);
+		{
+			std::string say_understood = "$c0015[$c0005$n$c0015] dice '";
+			say_understood += buf;
+			say_understood += "'";
+			std::snprintf(buf3, sizeof(buf3), "%s", say_understood.c_str());
+		}
 
 		/*
 		  work through the arg, word by word.  if you fail your
@@ -978,7 +1002,12 @@ ACTION_FUNC(do_new_say) {
 			return;
 		}
 
-		snprintf(buf,MAX_INPUT_LENGTH+39,"$c0015[$c0005$n$c0015] dice '%s'", buf2);
+		{
+			std::string say_garbled = "$c0015[$c0005$n$c0015] dice '";
+			say_garbled += buf2;
+			say_garbled += "'";
+			std::snprintf(buf, sizeof(buf), "%s", say_garbled.c_str());
+		}
 
 		for(t = rp->people; t; t=t->next_in_room) {
 			if(t != ch) {
@@ -1009,8 +1038,10 @@ ACTION_FUNC(do_new_say) {
 		}
 
 		if(IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			snprintf(buf,MAX_INPUT_LENGTH+39,"$c0015Tu dici '%s'", arg + i);
-			act(buf,FALSE, ch,0,0,TO_CHAR);
+			std::string say_echo = "$c0015Tu dici '";
+			say_echo += (arg + i);
+			say_echo += "'";
+			act(say_echo.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 		}
 	}
 }
@@ -1259,8 +1290,7 @@ bool is_same_group(struct char_data* ach, struct char_data* bch) {
 
 ACTION_FUNC(do_telepathy) {
 	struct char_data* vict;
-	char name[100], message[MAX_INPUT_LENGTH+20],
-		 buf[MAX_INPUT_LENGTH+60];
+	char name[100], message[MAX_INPUT_LENGTH+20];
 
 	half_chop(arg, name, message,sizeof name -1,sizeof message -1);
 
@@ -1331,18 +1361,22 @@ ACTION_FUNC(do_telepathy) {
 		alter_mana(ch,0);
 	}
 
-	snprintf(buf,MAX_INPUT_LENGTH+59,
-			 "$c0013[$c0015%s$c0013] ti manda il pensiero '%s'",
-			 (IS_NPC(ch) ? ch->player.short_descr :
-			  GET_NAME(ch)), message);
-	act(buf, FALSE, vict, 0, 0, TO_CHAR);
+	{
+		std::string telepathy_to_vict = "$c0013[$c0015";
+		telepathy_to_vict += (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch));
+		telepathy_to_vict += "$c0013] ti manda il pensiero '";
+		telepathy_to_vict += message;
+		telepathy_to_vict += "'";
+		act(telepathy_to_vict.c_str(), FALSE, vict, 0, 0, TO_CHAR);
+	}
 
 	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-		snprintf(buf, MAX_INPUT_LENGTH+59,
-				 "$c0013Tu mandi a %s il pensiero '%s'",
-				 (IS_NPC(vict) ? vict->player.short_descr :
-				  GET_NAME(vict)), message);
-		act(buf,FALSE, ch,0,0,TO_CHAR);
+		std::string telepathy_echo = "$c0013Tu mandi a ";
+		telepathy_echo += (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict));
+		telepathy_echo += " il pensiero '";
+		telepathy_echo += message;
+		telepathy_echo += "'";
+		act(telepathy_echo.c_str(), FALSE, ch, 0, 0, TO_CHAR);
 	}
 }
 

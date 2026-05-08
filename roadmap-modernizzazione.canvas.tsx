@@ -2,7 +2,6 @@ import {
   Card, CardBody, CardHeader,
   Divider, Grid, H1, H2,
   Pill, Row, Stack, Stat, Table, Text,
-  TodoList,
   useHostTheme,
 } from 'cursor/canvas';
 
@@ -98,22 +97,28 @@ export default function Roadmap() {
                 </Text>
                 <Divider />
                 <Text size="small" weight="semibold">Personaggio e inventario</Text>
-                <TodoList todos={[
-                  { id: 'a1', content: 'Definire CharacterRecord, SkillRecord in odb/character.hpp', status: 'pending' },
-                  { id: 'a2', content: 'Schema: character_stats, character_skills, character_affects', status: 'pending' },
-                  { id: 'a3', content: 'Schema: character_equipment, character_inventory', status: 'pending' },
-                  { id: 'a4', content: 'Script migrazione players.dat + rent/ → DB', status: 'pending' },
-                  { id: 'a5', content: 'load_char_from_db() / save_char_to_db() in parallelo ai file', status: 'pending' },
-                ]} />
+                <Table
+                  headers={['Compito']}
+                  rows={[
+                    ['Definire CharacterRecord, SkillRecord in odb/character.hpp'],
+                    ['Schema: character_stats, character_skills, character_affects'],
+                    ['Schema: character_equipment, character_inventory'],
+                    ['Script migrazione players.dat + rent/ → DB'],
+                    ['load_char_from_db() / save_char_to_db() in parallelo ai file'],
+                  ]}
+                />
                 <Divider />
                 <Text size="small" weight="semibold">Mondo e achievements</Text>
-                <TodoList todos={[
-                  { id: 'a6', content: 'Schema: rooms, room_exits, zones, zone_resets', status: 'pending' },
-                  { id: 'a7', content: 'Schema: mob_prototypes, obj_prototypes, obj_affects, shops', status: 'pending' },
-                  { id: 'a8', content: 'Schema: achievement_defs, character_achievements', status: 'pending' },
-                  { id: 'a9', content: 'Script importazione myst.wld/mob/obj/zon/shp → DB', status: 'pending' },
-                  { id: 'a10', content: 'world.hpp ODB (già placeholder vuoto in src/odb/)', status: 'pending' },
-                ]} />
+                <Table
+                  headers={['Compito']}
+                  rows={[
+                    ['Schema: rooms, room_exits, zones, zone_resets'],
+                    ['Schema: mob_prototypes, obj_prototypes, obj_affects, shops'],
+                    ['Schema: achievement_defs, character_achievements'],
+                    ['Script importazione myst.wld/mob/obj/zon/shp → DB'],
+                    ['world.hpp ODB (già placeholder vuoto in src/odb/)'],
+                  ]}
+                />
               </Stack>
             </CardBody>
           </Card>
@@ -127,26 +132,77 @@ export default function Roadmap() {
                 </Text>
                 <Divider />
                 <Text size="small" weight="semibold">Strutture e memoria</Text>
-                <TodoList todos={[
-                  { id: 'b1', content: 'CMakeLists: C++14 → C++17 (-std=c++17, -Wpedantic)', status: 'pending' },
-                  { id: 'b2', content: 'char* → std::string in structs.hpp (name, title, descr...)', status: 'pending' },
-                  { id: 'b3', content: 'Macro CREATE/REALLOC → new + std::unique_ptr dove possibile', status: 'pending' },
-                  { id: 'b4', content: 'character_list/object_list → std::list<char_data>', status: 'pending' },
-                  { id: 'b5', content: 'room_db/mob_index/obj_index → std::unordered_map<int, *>', status: 'pending' },
-                ]} />
+                <Table
+                  headers={['Compito']}
+                  rows={[
+                    ['C++17 toolchain completato: GCC 12 + ODB 2.5 su Jammy, build Docker/Vagrant allineate e warning cleanup in corso'],
+                    ['char* → std::string in structs.hpp (name, title, descr...)'],
+                    ['Macro CREATE/REALLOC → new + std::unique_ptr dove possibile'],
+                    ['character_list/object_list → std::list<char_data>'],
+                    ['room_db/mob_index/obj_index → std::unordered_map<int, *>'],
+                  ]}
+                />
                 <Divider />
                 <Text size="small" weight="semibold">I/O, utilities, accessor</Text>
-                <TodoList todos={[
-                  { id: 'b6', content: 'Convertire utilities/*.c in .cpp', status: 'pending' },
-                  { id: 'b7', content: 'sprintf/FILE* → std::ostringstream/fstream', status: 'pending' },
-                  { id: 'b8', content: 'Macro GET_NAME, IS_NPC ecc. → inline methods su char_data', status: 'pending' },
-                  { id: 'b9', content: 'constants.cpp: AchievementsList → std::array constexpr', status: 'pending' },
-                  { id: 'b10', content: 'Rimuovere globali nude → wrapper con accessor statici', status: 'pending' },
-                ]} />
+                <Table
+                  headers={['Compito']}
+                  rows={[
+                    ['Convertire utilities/*.c in .cpp'],
+                    ['sprintf/FILE* → std::ostringstream/fstream'],
+                    ['Macro GET_NAME, IS_NPC ecc. → inline methods su char_data'],
+                    ['constants.cpp: AchievementsList → std::array constexpr'],
+                    ['Rimuovere globali nude → wrapper con accessor statici'],
+                  ]}
+                />
               </Stack>
             </CardBody>
           </Card>
 
+        </Grid>
+      </Stack>
+
+      <Divider />
+
+      <Stack gap={12}>
+        <H2>Checklist operativa corrente</H2>
+        <Text tone="secondary" size="small">
+          Stessa todo usata in sessione agent (id stabili); aggiorna gli stati quando completi.
+        </Text>
+        <Grid columns={2} gap={16}>
+          <Card>
+            <CardHeader trailing={badge(devA)}>Dev A — operativo</CardHeader>
+            <CardBody>
+              <Table
+                headers={['Id', 'Compito']}
+                rows={[
+                  ['a1-schema', 'Estendere schema ODB in src/odb/account.hpp (toonData, toonSkills, toonAffects)'],
+                  ['a1-loadsave', 'Riscrivere load_char/save_char/store_to_char/char_to_store in db.cpp per MySQL'],
+                  ['a1-refund', 'Adattare do_refund in act.wizard.cpp per backup/restore da MySQL'],
+                  ['a2-achievements', 'toonAchievement su MySQL, logica centralizzata; eliminare file .achie'],
+                  ['a3-world-schema', 'Schema MySQL zone/room/mob/obj + script import CircleMUD'],
+                  ['a3-world-loader', 'Riscrivere boot_world/boot_zones in db.cpp da MySQL'],
+                  ['a4-web-editor', 'API REST + editor CRUD mondo con reload in-game'],
+                ]}
+              />
+            </CardBody>
+          </Card>
+          <Card>
+            <CardHeader trailing={badge(devB)}>Dev B — operativo</CardHeader>
+            <CardBody>
+              <Table
+                headers={['Id', 'Compito']}
+                rows={[
+                  ['b1-cleanup', 'Rimuovere utilities/ (C legacy) e src/attic/ (vecchio SQL), aggiornare CMakeLists'],
+                  ['b2-modernize', 'Sostituire pattern C-style con C++ moderno (coordinare con Dev A su structs/db)'],
+                  ['b2-vt100-review', 'Rivedere VT100 (comm.cpp, act.info.cpp), compatibilità e fallback'],
+                  ['b2-mini-infobar-compatible', 'Mini-infobar VT100 compatibile, comando esplicito, redraw sicuro'],
+                  ['b3-world-cpp', 'Dopo schema mondo: zone_table/world → vector/unordered_map'],
+                  ['b4-docker-prod-setup', 'Docker production-grade (compose, secrets, backup, healthcheck)'],
+                  ['cpp17-toolchain', 'Completato: C++17 + ODB 2.5 + build Docker/Vagrant'],
+                ]}
+              />
+            </CardBody>
+          </Card>
         </Grid>
       </Stack>
 
@@ -177,7 +233,7 @@ export default function Roadmap() {
           headers={['Settimane', 'Dev A (Database)', 'Dev B (C++17)', 'Sync']}
           rows={[
             ['1', 'S1: accordo sullo schema', 'S1: accordo sullo schema', 'S1 — insieme'],
-            ['2–4', 'ODB character.hpp + schema personaggio', 'C++17, char* → string, CMake', '—'],
+            ['2–4', 'ODB character.hpp + schema personaggio', 'Modernizzazione C++17 (toolchain completata), char* → string, CMake', '—'],
             ['4–6', 'Script migrazione players.dat/rent/', 'Utilities, FILE*, macro → metodi', 'S2 — adapter layer'],
             ['6–9', 'Schema mondo + script importazione world files', 'unordered_map, globals, constants', '—'],
             ['9–11', 'Integrazione load/save DB nel codice server', 'Refactoring act.*.cpp, handler.cpp', 'S3 — attivazione DB'],
@@ -285,14 +341,17 @@ export default function Roadmap() {
       <Stack gap={12}>
         <H2>Agenda S1 aggiornata</H2>
         <Text tone="secondary">Punti da decidere insieme prima di scrivere una riga di codice DB.</Text>
-        <TodoList todos={[
-          { id: 's1a', content: 'Concordare i tipi delle colonne DB partendo da char_file_u (la mappa del tesoro)', status: 'pending' },
-          { id: 's1b', content: 'Definire i nomi delle tabelle: character_stats, character_skills, character_affects, character_equipment, character_inventory, character_achievements, character_quests', status: 'pending' },
-          { id: 's1c', content: 'Confermare strategia Dual Write: save_char_to_db() chiama anche save_char_to_file()', status: 'pending' },
-          { id: 's1d', content: 'Dev A: legacy_loader.cpp è il PRIMO deliverable — deve esistere prima che Dev B tocchi le struct', status: 'pending' },
-          { id: 's1e', content: 'Concordare il feature flag: USE_DB_LOAD / USE_FILE_LOAD', status: 'pending' },
-          { id: 's1f', content: 'Decidere cosa fare dei char* in char_special_data non presenti in char_file_u (poofin, prompt, email, ecc.) — salvati altrove o nuovi campi DB?', status: 'pending' },
-        ]} />
+        <Table
+          headers={['Punto', 'Argomento']}
+          rows={[
+            ['S1a', 'Concordare i tipi delle colonne DB partendo da char_file_u (la mappa del tesoro)'],
+            ['S1b', 'Definire i nomi delle tabelle: character_stats, character_skills, character_affects, character_equipment, character_inventory, character_achievements, character_quests'],
+            ['S1c', 'Confermare strategia Dual Write: save_char_to_db() chiama anche save_char_to_file()'],
+            ['S1d', 'Dev A: legacy_loader.cpp è il PRIMO deliverable — deve esistere prima che Dev B tocchi le struct'],
+            ['S1e', 'Concordare il feature flag: USE_DB_LOAD / USE_FILE_LOAD'],
+            ['S1f', 'Decidere cosa fare dei char* in char_special_data non presenti in char_file_u (poofin, prompt, email, ecc.) — salvati altrove o nuovi campi DB?'],
+          ]}
+        />
       </Stack>
 
       <Divider />

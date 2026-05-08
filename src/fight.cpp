@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -633,14 +634,17 @@ void make_corpse(struct char_data* ch, int killedbytype) {
         else
             sprintf(buf, "corpo");
 		corpse->name = strdup(buf);
-		if(IS_AFFECTED(ch,AFF_FLYING)) {
-			sprintf(buf, "I%s, ancora a mezz'aria.", spec_desc);
+		{
+			std::string corpse_desc = "I";
+			corpse_desc += spec_desc;
+			if(IS_AFFECTED(ch,AFF_FLYING)) {
+				corpse_desc += ", ancora a mezz'aria.";
+			}
+			else {
+				corpse_desc += ".";
+			}
+			corpse->description = strdup(corpse_desc.c_str());
 		}
-		else {
-			sprintf(buf, "I%s.", spec_desc);
-		}
-
-		corpse->description = strdup(buf);
 
         if(GET_NAME(ch))
             sprintf(buf, "il corpo di %s",  /* for the dissolve message */
@@ -1130,7 +1134,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			}
 			else {
 				if(!IS_PRINCE(ch)) {
-					gain_exp_rev(ch,-GET_EXP(ch)/100);
+					gain_exp_rev(ch, -(GET_EXP(ch) / 100));
 				}
 				else {
 					gain_exp_rev(ch,-5000000);
@@ -1139,7 +1143,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 
 			if(IS_PC(ch) && !(killedbytype == SPELL_CHANGE_FORM)) {
 				if(!IS_PRINCE(ch)) {
-					gain_exp_rev(killer,-GET_EXP(killer)/100);
+					gain_exp_rev(killer, -(GET_EXP(killer) / 100));
 				}
 				else {
 					gain_exp_rev(killer,-5000000);
@@ -1490,9 +1494,13 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 	}
 
 	if(IS_AFFECTED(k, AFF_GROUP) &&
-			(k->in_room == ch->in_room) && IS_PC(k) &&
-			GetMaxLevel(k) > group_max_level - 25) {
+			(k->in_room == ch->in_room) && IS_PC(k)) {
+		const long long level_gap =
+			static_cast<long long>(group_max_level) -
+			static_cast<long long>(GetMaxLevel(k));
+		if(level_gap < 25LL) {
 		group_count++;
+		}
 	}
 
 	for(f = k->followers; f; f = f->next) {
@@ -1859,12 +1867,27 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 
 	buf = replace_string(dam_weapons[snum].to_char, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
-    if(IS_SET(ch->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam)); }
+    if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+        std::string msg = buf;
+        msg += " $c0003[";
+        msg += std::to_string((dam < 0 ? 0 : dam));
+        msg += "]$c0007";
+        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+    }
 	act(buf, FALSE, ch, wield, victim, TO_CHAR);
 
 	buf = replace_string(dam_weapons[snum].to_victim, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
 						 location_hit_text[location].plural,   location_hit_text[location].singular);
-    if(IS_SET(victim->player.user_flags,PWP_MODE)) { sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam)); }
+    if(IS_SET(victim->player.user_flags,PWP_MODE)) {
+        std::string msg = buf;
+        msg += " $c0001[";
+        if(dam > 0) {
+            msg += "-";
+        }
+        msg += std::to_string((dam < 0 ? 0 : dam));
+        msg += "]$c0007";
+        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+    }
 	act(buf, FALSE, ch, wield, victim, TO_VICT);
 
 }
@@ -2265,11 +2288,26 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 				if(!IS_NPC(v) && (GetMaxLevel(v) > MAX_MORT)) {
                     sprintf(buf, "%s", messages->god_msg.attacker_msg);
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
+                    {
+                        std::string msg = buf;
+                        msg += " $c0003[";
+                        msg += std::to_string((dam < 0 ? 0 : dam));
+                        msg += "]$c0007";
+                        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                    }
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->god_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
+                    {
+                        std::string msg = buf;
+                        msg += " $c0001[";
+                        if(dam > 0) {
+                            msg += "-";
+                        }
+                        msg += std::to_string((dam < 0 ? 0 : dam));
+                        msg += "]$c0007";
+                        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                    }
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2278,12 +2316,27 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					if(GET_POS(v) == POSITION_DEAD) {
                         sprintf(buf, "%s", messages->die_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
+                        {
+                            std::string msg = buf;
+                            msg += " $c0003[";
+                            msg += std::to_string((dam < 0 ? 0 : dam));
+                            msg += "]$c0007";
+                            std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                        }
                         if(ch != v)
                             act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->die_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
+                        {
+                            std::string msg = buf;
+                            msg += " $c0001[";
+                            if(dam > 0) {
+                                msg += "-";
+                            }
+                            msg += std::to_string((dam < 0 ? 0 : dam));
+                            msg += "]$c0007";
+                            std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                        }
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->die_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2291,12 +2344,27 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					else {
                         sprintf(buf, "%s", messages->hit_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
+                        {
+                            std::string msg = buf;
+                            msg += " $c0003[";
+                            msg += std::to_string((dam < 0 ? 0 : dam));
+                            msg += "]$c0007";
+                            std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                        }
                         if(ch != v)
                             act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                         sprintf(buf, "%s", messages->hit_msg.victim_msg);
                         if(IS_SET(v->player.user_flags,PWP_MODE))
-                            sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
+                        {
+                            std::string msg = buf;
+                            msg += " $c0001[";
+                            if(dam > 0) {
+                                msg += "-";
+                            }
+                            msg += std::to_string((dam < 0 ? 0 : dam));
+                            msg += "]$c0007";
+                            std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                        }
 						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 						act(messages->hit_msg.room_msg,
 							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2305,12 +2373,27 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 				else if(dam == 0) {
                     sprintf(buf, "%s", messages->miss_msg.attacker_msg);
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, (dam < 0 ? 0 : dam));
+                    {
+                        std::string msg = buf;
+                        msg += " $c0003[";
+                        msg += std::to_string((dam < 0 ? 0 : dam));
+                        msg += "]$c0007";
+                        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                    }
                     if(ch != v)
                         act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
                     sprintf(buf, "%s", messages->miss_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[%s%d]$c0007",buf, (dam > 0 ? "-" : ""), (dam < 0 ? 0 : dam));
+                    {
+                        std::string msg = buf;
+                        msg += " $c0001[";
+                        if(dam > 0) {
+                            msg += "-";
+                        }
+                        msg += std::to_string((dam < 0 ? 0 : dam));
+                        msg += "]$c0007";
+                        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
+                    }
 					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
 					act(messages->miss_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
@@ -2370,11 +2453,11 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 		}
 		if(MOUNTED(v)) {
 			/* chance they fall off */
-			RideCheck(v, -dam / 2);
+			RideCheck(v, -(dam / 2));
 		}
 		if(RIDDEN(v)) {
 			/* chance the rider falls off */
-			RideCheck(RIDDEN(v), -dam);
+			RideCheck(RIDDEN(v), (0 - dam));
 		}
 		break;
 	}
@@ -2835,11 +2918,29 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				if(dam > 0 && regenerate > 0) {
                     sprintf(buf, "Rigeneri!");
                     if(IS_SET(victim->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0006[%s%d]$c0007",buf, (regenerate == 0 ? "" : "+"), (regenerate < 0 ? 0 : regenerate));
+                    {
+                        std::string msg = buf;
+                        msg += " $c0006[";
+                        if(regenerate != 0) {
+                            msg += "+";
+                        }
+                        msg += std::to_string((regenerate < 0 ? 0 : regenerate));
+                        msg += "]$c0007";
+                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
+                    }
 					act(buf,TRUE,victim,0,ch,TO_CHAR);
                     sprintf(buf, "$N rigenera!");
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0006[%s%d]$c0007",buf, (regenerate == 0 ? "" : "+"), (regenerate < 0 ? 0 : regenerate));
+                    {
+                        std::string msg = buf;
+                        msg += " $c0006[";
+                        if(regenerate != 0) {
+                            msg += "+";
+                        }
+                        msg += std::to_string((regenerate < 0 ? 0 : regenerate));
+                        msg += "]$c0007";
+                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
+                    }
 					act(buf,TRUE,ch,0,victim,TO_CHAR);
                     act("$N rigenera!",TRUE,ch,0,victim,TO_NOTVICT);
 				}

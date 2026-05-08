@@ -46,7 +46,7 @@ MACRO(ODB_GENERATE dbtype header)
 			COMMAND odb
 			--profile boost/smart-ptr
 			--profile boost/date-time
-			--std c++11
+			--std c++17
 			-m dynamic
 			-d common
 			-d ${dbtype}
@@ -89,7 +89,7 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 			COMMAND odb
 			--profile boost/smart-ptr
 			--profile boost/date-time
-			--std c++11
+			--std c++17
 			-m dynamic
 			-d common
 
@@ -133,10 +133,12 @@ if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
 	# e AGGIUNGE -DNDEBUG per disattivare le istruzioni assert() (handler.cpp crash).
 	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0, defining env_vagrant, and disabling assertions (NDEBUG).")
 	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -Denv_vagrant -DNDEBUG")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0 -Denv_vagrant -DNDEBUG")
 else()
 	# Vagrant/Locale: Usa i flag di ottimizzazione originali (compatibilità)
 	message(STATUS "VAGRANT BUILD: Using original optimization flags.")
 	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_vagrant")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_vagrant")
 endif()
 # FINE LOGICA CONDIZIONALE
 
@@ -226,7 +228,6 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 		-Wextra
 		-Wcast-align
 		-Wcast-qual
-		-Wchkp
 		-Wno-ctor-dtor-privacy
 		-Wdisabled-optimization
 		-Wenum-compare
@@ -268,14 +269,14 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
 
-# DOCKER FIX: Override -Werror flags if DOCKER_BUILD is set.
+# DOCKER/VAGRANT FIX: allow non-blocking warning cleanup loops.
 # This must be done after the target_compile_options call above to override the settings.
-if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
-	message(STATUS "Overriding -Werror and -Wfatal-errors for Docker compilation.")
+if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "" OR
+	NOT "$ENV{RELAX_WARNINGS}" STREQUAL "")
+	message(STATUS "Overriding -Werror and -Wfatal-errors for non-strict warning build.")
 	target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 			-Wno-error
 			-Wno-fatal-errors
-			-Wno-type-limits # Flag specifico per l'errore registrato nel log
 	)
 endif()
 

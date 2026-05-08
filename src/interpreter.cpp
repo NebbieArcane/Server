@@ -887,8 +887,8 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 
 
 int special(struct char_data* ch, int cmd, const char* arg) {
-	register struct obj_data* i;
-	register struct char_data* k;
+	struct obj_data* i;
+	struct char_data* k;
 	int j;
 	if(ch->in_room == NOWHERE) {
 		char_to_room(ch, 3001);
@@ -1667,7 +1667,6 @@ void ShowStatInstruction(struct descriptor_data* d) {
 }
 void ShowRollInstruction(struct descriptor_data* d) {
 	char buf[ 200 ];
-	char temp[200];
 
 	sprintf(buf, "Hai scelto la creazione del personaggio per esperti.\n\r");
 	SEND_TO_Q(buf, d);
@@ -1690,8 +1689,9 @@ void ShowRollInstruction(struct descriptor_data* d) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d\n\r\n\r",temp,
+	SEND_TO_Q(buf,d);
+	SEND_TO_Q("FO IN SA AG CO CA RN\n\r",d);
+	snprintf(buf, sizeof(buf), "%2d %2d %2d %2d %2d %2d\n\r\n\r",
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1706,8 +1706,9 @@ void ShowRollInstruction(struct descriptor_data* d) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",temp,
+	SEND_TO_Q(buf,d);
+	SEND_TO_Q("FO IN SA AG CO CA RN\n\r",d);
+	snprintf(buf, sizeof(buf), "%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1842,14 +1843,11 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
 	if (d->AccountData.id) { short n=0;
-		constexpr int nlen=5;
-		char order[nlen]="";
 		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==d->AccountData.id);
 		d->toons.clear();
 		for(toonPtr pg : r) {
 			++n;
-			snprintf(order,nlen-1,"%2d",n);
-			message.append(order).append(". ").append(pg->name).append(" ");
+			message.append(std::to_string(n)).append(". ").append(pg->name).append(" ");
 			message.append(ParseAnsiColors(true,pg->title.c_str())).append("\r\n");
 			d->toons.emplace_back(pg->name);
 		}
@@ -3024,7 +3022,7 @@ NANNY_FUNC(con_qrace) {
 				i++;
 			}
 			tmpi=atoi(arg);
-			if(tmpi>=0 && tmpi <=i-1) {
+			if(tmpi >= 0 && tmpi < i) {
 				/* set the chars race to this */
 				GET_RACE(d->character) = race_choice[tmpi];
 				string buf("Quale'e' il sesso di ");
@@ -3800,7 +3798,7 @@ void check_affected(char* msg) {
 	struct char_data* c;
 	static FILE* f=NULL;
 	static long lines=0;
-	char* (b[5]);
+	char* b[5];
 	char buf[5000];
 	int i,j;
 

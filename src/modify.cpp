@@ -1085,7 +1085,13 @@ void check_reboot() {
 		update_max_usage();
 		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
 		lastCheck=tc;
-		sprintf(REBOOTFILE,"REBOOT%02d%1d0",t_info->tm_hour,(t_info->tm_min / 10));
+		int reboot_hour = t_info->tm_hour;
+		int reboot_tens = t_info->tm_min / 10;
+		if(reboot_hour < 0) reboot_hour = 0;
+		if(reboot_hour > 23) reboot_hour = 23;
+		if(reboot_tens < 0) reboot_tens = 0;
+		if(reboot_tens > 5) reboot_tens = 5;
+		std::snprintf(REBOOTFILE, sizeof(REBOOTFILE), "REBOOT%02d%d0", reboot_hour, reboot_tens);
 		if((boot = fopen(REBOOTFILE, "r+"))) {
 			fclose(boot);
 			bBootSequenceStarted=TRUE;

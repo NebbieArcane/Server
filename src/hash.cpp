@@ -198,7 +198,7 @@ void* hash_remove(struct hash_header* ht, long key) {
 }
 
 void room_iterate(struct room_data* rb[],iterate_func func,void* cdata) {
-	register int        i;
+	int        i;
 	for(i=0; i<WORLD_SIZE; i++) {
 		struct room_data*  temp;
 
@@ -214,7 +214,7 @@ void hash_iterate(struct hash_header* ht,iterate_func func,void* cdata) {
 	int        i;
 	for(i=0; i<ht->klistlen; i++) {
 		void*        temp;
-		register long key;
+		long key;
 
 		key = ht->keylist[i];
 		temp = hash_find(ht, key);

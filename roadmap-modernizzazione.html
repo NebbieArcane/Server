@@ -254,7 +254,7 @@
           <hr style="margin: 6px 0;">
           <p class="label-section">Strutture e memoria</p>
           <ul class="todo-list">
-            <li><div class="todo-icon"></div>CMakeLists: C++14 → C++17 (<code>-std=c++17</code>, <code>-Wpedantic</code>) ✓ fatto</li>
+            <li><div class="todo-icon"></div>C++17 toolchain completato: GCC 12 + ODB 2.5 su Jammy, build Docker/Vagrant allineate e warning cleanup in corso</li>
             <li><div class="todo-icon"></div><code>char*</code> → <code>std::string</code> in structs.hpp (name, title, descr...)</li>
             <li><div class="todo-icon"></div>Macro CREATE/REALLOC → new + <code>std::unique_ptr</code> dove possibile</li>
             <li><div class="todo-icon"></div>character_list/object_list → <code>std::list&lt;char_data&gt;</code></li>
@@ -272,6 +272,50 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Checklist operativa (todo agent) -->
+  <div class="section stack">
+    <h2>Checklist operativa corrente</h2>
+    <p class="secondary small">Stessa todo usata in sessione agent (id stabili); spunta o aggiorna a mano quando completi.</p>
+    <div class="grid-2" style="margin-top: 10px;">
+      <div class="card">
+        <div class="card-header">
+          Dev A — operativo
+          <span class="pill pill-info">Dev A</span>
+        </div>
+        <div class="card-body">
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div><code>a1-schema</code> — Estendere schema ODB in <code>src/odb/account.hpp</code> (toonData, toonSkills, toonAffects)</li>
+            <li><div class="todo-icon"></div><code>a1-loadsave</code> — Riscrivere load_char/save_char/store_to_char/char_to_store in <code>db.cpp</code> per MySQL</li>
+            <li><div class="todo-icon"></div><code>a1-refund</code> — Adattare <code>do_refund</code> in <code>act.wizard.cpp</code> per backup/restore da MySQL</li>
+            <li><div class="todo-icon"></div><code>a2-achievements</code> — toonAchievement su MySQL, logica centralizzata; eliminare file <code>.achie</code></li>
+            <li><div class="todo-icon"></div><code>a3-world-schema</code> — Schema MySQL zone/room/mob/obj + script import CircleMUD</li>
+            <li><div class="todo-icon"></div><code>a3-world-loader</code> — Riscrivere boot_world/boot_zones in <code>db.cpp</code> da MySQL</li>
+            <li><div class="todo-icon"></div><code>a4-web-editor</code> — API REST + editor CRUD mondo con reload in-game</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          Dev B — operativo
+          <span class="pill pill-warning">Dev B</span>
+        </div>
+        <div class="card-body">
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div><code>b1-cleanup</code> — Rimuovere <code>utilities/</code> (C legacy) e <code>src/attic/</code> (vecchio SQL), aggiornare CMakeLists</li>
+            <li><div class="todo-icon"></div><code>b2-modernize</code> — Sostituire pattern C-style con C++ moderno (coordinare con Dev A)</li>
+            <li><div class="todo-icon"></div><code>b2-vt100-review</code> — Rivedere VT100 (<code>comm.cpp</code>, <code>act.info.cpp</code>), compatibilità e fallback</li>
+            <li><div class="todo-icon"></div><code>b2-mini-infobar-compatible</code> — Mini-infobar VT100, comando esplicito, redraw sicuro</li>
+            <li><div class="todo-icon"></div><code>b3-world-cpp</code> — Dopo schema mondo: zone_table/world → vector/unordered_map</li>
+            <li><div class="todo-icon"></div><code>b4-docker-prod-setup</code> — Docker production-grade (compose, secrets, backup, healthcheck)</li>
+            <li><div class="todo-icon"></div><code>cpp17-toolchain</code> — <strong>completato</strong> (C++17 + ODB 2.5 + build Docker/Vagrant)</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -300,7 +344,7 @@
       <thead><tr><th>Settimane</th><th>Dev A (Database)</th><th>Dev B (C++17)</th><th>Sync</th></tr></thead>
       <tbody>
         <tr class="success-row"><td><strong>1</strong></td><td>S1: accordo sullo schema</td><td>S1: accordo sullo schema</td><td><strong>S1 — insieme</strong></td></tr>
-        <tr><td>2–4</td><td>ODB character.hpp + schema personaggio</td><td>C++17, char* → string, CMake</td><td>—</td></tr>
+        <tr><td>2–4</td><td>ODB character.hpp + schema personaggio</td><td>Modernizzazione C++17 (toolchain completata), char* → string, CMake</td><td>—</td></tr>
         <tr><td>4–6</td><td>Script migrazione players.dat/rent/</td><td>Utilities, FILE*, macro → metodi</td><td><strong>S2 — adapter layer</strong></td></tr>
         <tr><td>6–9</td><td>Schema mondo + script importazione world files</td><td>unordered_map, globals, constants</td><td>—</td></tr>
         <tr><td>9–11</td><td>Integrazione load/save DB nel codice server</td><td>Refactoring act.*.cpp, handler.cpp</td><td><strong>S3 — attivazione DB</strong></td></tr>

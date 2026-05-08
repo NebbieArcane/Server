@@ -3,6 +3,7 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -682,22 +683,25 @@ void build_player_index() {
 
 	sprintf(wizlist, "\033[2J\033[0;0H\n\r\n\r");
 	for(i = IMMENSO; i > IMMORTALE; i--) {
-		strncat(wizlist, GeneraSezione(i, &list_wiz), MAX_STRING_LENGTH * 2);
+		strncat(wizlist, GeneraSezione(i, &list_wiz),
+				sizeof(wizlist) - strlen(wizlist) - 1);
 	}
-	strncat(wizlist, "\n\r", MAX_STRING_LENGTH * 2);
+	strncat(wizlist, "\n\r", sizeof(wizlist) - strlen(wizlist) - 1);
 	j = 0;
 	for(i = DIO_MINORE; i <= IMMENSO; i++) {
 		j += list_wiz.number[i];
 	}
 	sprintf(buf, "$c0007Totale Dei: %d\n\r", j);
-	strncat(wizlist, buf, MAX_STRING_LENGTH);
+	strncat(wizlist, buf, sizeof(wizlist) - strlen(wizlist) - 1);
 
 	/* Immortali */
 	sprintf(immlist, "\033[2J\033[0;0H\n\r\n\r");
-	strncat(immlist, GeneraSezione(IMMORTALE, &list_wiz), MAX_STRING_LENGTH);
+	strncat(immlist, GeneraSezione(IMMORTALE, &list_wiz),
+			sizeof(immlist) - strlen(immlist) - 1);
 	/* Principi */
 	sprintf(princelist, "\033[2J\033[0;0H\n\r\n\r");
-	strncat(princelist, GeneraSezione(PRINCIPE, &list_wiz), MAX_STRING_LENGTH);
+	strncat(princelist, GeneraSezione(PRINCIPE, &list_wiz),
+			sizeof(princelist) - strlen(princelist) - 1);
 
 	return;
 }
@@ -3162,7 +3166,8 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	st->act = ch->specials.act;
 	st->affected_by = ch->specials.affected_by;
 	st->affected_by2 = ch->specials.affected_by2;
-	sprintf(st->WimpyLevel, "%03d", ch->specials.WimpyLevel);
+	const int wimpy = std::clamp<int>(ch->specials.WimpyLevel, 0, 999);
+	std::snprintf(st->WimpyLevel, sizeof(st->WimpyLevel), "%03d", wimpy);
 	/* do not store group_name */
 	st->startroom = ch->specials.start_room;
 	st->extra_flags = ch->player.extra_flags;
@@ -4699,7 +4704,7 @@ void InitScripts() {
 
 		sscanf(buf, "%s %d", buf2, &i);
 
-		sprintf(buf, "scripts/%s", buf2);
+		std::snprintf(buf, sizeof(buf), "scripts/%.240s", buf2);
 		if(!(f2 = fopen(buf, "r"))) {
 			mudlog(LOG_ERROR, "Unable to open script \"%s\" for reading.", buf2);
 		}

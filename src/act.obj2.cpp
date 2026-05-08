@@ -1268,7 +1268,6 @@ ACTION_FUNC(do_wear) {
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
 	char buf[256];
-	char buffer[MAX_INPUT_LENGTH];
 	struct obj_data* obj_object, *next_obj;
 	int keyword;
 
@@ -1412,9 +1411,10 @@ ACTION_FUNC(do_wear) {
 				}
 			}
 			else {
-				snprintf(buffer, MAX_INPUT_LENGTH-1,
-						 "Non sembra che tu abbia un '%s'.\n\r",arg1);
-				send_to_char(buffer,ch);
+				std::string msg = "Non sembra che tu abbia un '";
+				msg += arg1;
+				msg += "'.\n\r";
+				send_to_char(msg.c_str(), ch);
 			}
 		}
 	}
@@ -1427,7 +1427,6 @@ ACTION_FUNC(do_wear) {
 ACTION_FUNC(do_wield) {
 	char arg1[MAX_INPUT_LENGTH];
 	char arg2[MAX_INPUT_LENGTH];
-	char buffer[MAX_INPUT_LENGTH];
 	struct obj_data* obj_object;
 	int keyword = 12;
 
@@ -1438,9 +1437,10 @@ ACTION_FUNC(do_wield) {
 			wear(ch, obj_object, keyword);
 		}
 		else {
-			snprintf(buffer, MAX_INPUT_LENGTH-1,
-					 "Non sembra che ti abbia un '%s'.\n\r",arg1);
-			send_to_char(buffer,ch);
+			std::string msg = "Non sembra che ti abbia un '";
+			msg += arg1;
+			msg += "'.\n\r";
+			send_to_char(msg.c_str(), ch);
 		}
 	}
 	else {

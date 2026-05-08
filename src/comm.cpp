@@ -394,7 +394,9 @@ void game_loop(int s) {
 				GET_TEMPO_IN(point->character,GET_POS(point->character))++;
 			}
 			else {
-				if((point->wait<-1) && (abs(point->wait) > abs(MAXIDLESTARTTIME)) && (point->connected !=CON_PLYNG)) {
+				if((static_cast<long long>(point->wait) <
+						-static_cast<long long>(MAXIDLESTARTTIME)) &&
+						(point->connected != CON_PLYNG)) {
 					// Was not doing anything useful, probably waiting at initial prompt
 					mudlog(LOG_CHECK,"Fried dummy connection from [HOST:%s]",point->host);
 					write_to_descriptor(point->descriptor,"Timeout!\n\r");
@@ -407,7 +409,10 @@ void game_loop(int s) {
                     else close_socket(point);
 				}
 			}
-			if((--(point->wait) <= 0) && get_from_q(&point->input, comm)) {
+			const long long wait_after =
+				static_cast<long long>(point->wait) - 1LL;
+			point->wait = static_cast<int>(wait_after);
+			if((wait_after <= 0LL) && get_from_q(&point->input, comm)) {
 				if(point->character && point->connected == CON_PLYNG && point->character->specials.was_in_room != NOWHERE) {
 					point->character->specials.was_in_room = NOWHERE;
 					act("$n e' rientrat$b.", TRUE, point->character, 0, 0, TO_ROOM);
@@ -906,7 +911,9 @@ int new_descriptor(int s) {
 	}
 
 
-	if((desc + 1) >= MAX_CONNECTS) {
+	// Avoid signed-overflow-sensitive form: (desc + 1) >= MAX_CONNECTS.
+	// This is equivalent and safer for optimizer assumptions with -Wstrict-overflow.
+	if(desc >= (MAX_CONNECTS - 1)) {
 		sprintf(buf,"Mi dispiace... Il gioco e' pieno (# giocatori %d). "
 				"Riprova piu' tardi.\n\r", desc);
 		write_to_descriptor(desc,buf);

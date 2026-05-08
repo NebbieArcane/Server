@@ -52,3 +52,5 @@
 * On Apple Silicon, ODB files (src/odb/account-odb*.cxx) are pre-generated in the repo. If missing, docker-run.sh regenerates them automatically before building
 * MySQL runs inside the container, same as Vagrant. Data is persisted in the mud_data Docker volume
 * The server listens on 127.0.0.1 only by default (see docker-compose.yml to expose it publicly)
+* MySQL migration helper (legacy MySQL 5.7 datadir -> MySQL 8): `./docker_migrate_mysql57_to_8.sh`
+* Vagrant/MySQL migration helper (no Docker, import da dump): `./vagrant_migrate_mysql57_to_8.sh /path/to/dump.sql`

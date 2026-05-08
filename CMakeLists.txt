@@ -4,7 +4,7 @@ project (myst)
 enable_language(CXX)
 
 # IMPOSTAZIONE C++ STANDARD (Necessaria per ODB su Bionic)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # LOGICA CONDIZIONALE PER DOCKER: Disabilita -Werror solo nel container
