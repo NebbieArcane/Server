@@ -182,7 +182,7 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 				page_string(ch->desc, noteText.c_str(), 1);
 			}
 			else {
-				act("Non c'e' scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
+				act("Non c'e' scritto nulla.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 			}
 			return;  /* mail fix, thanks brett */
 
@@ -319,7 +319,7 @@ void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 				page_string(ch->desc, noteText.c_str(), 1);
 			}
 			else {
-				act("Non c'e' scritto nulla.", FALSE, ch, 0, 0, TO_CHAR);
+				act("Non c'e' scritto nulla.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 			}
 			return;
 		}
@@ -1073,10 +1073,10 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			if(IS_AFFECTED(ch, AFF_SENSE_LIFE) || IS_IMMORTAL(i)) {
 				if(num == 1)
 					act("$c0002Percepisci una forma di vita invisibile qui intorno.",
-						FALSE, ch,0,0,TO_CHAR);
+						FALSE, ch, nullptr, nullptr, TO_CHAR);
 				else
 					act("$c0002Percepisci alcune forme di vita invisibile qui intorno.",
-						FALSE, ch,0,0,TO_CHAR);
+						FALSE, ch, nullptr, nullptr, TO_CHAR);
 				return;
 			}
 			else {
@@ -1529,7 +1529,7 @@ void list_exits_in_room(struct char_data* ch) {
 
 	if(!buf.empty()) {
 		send_to_char("Uscite:", ch);
-		act(buf.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(buf.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 }
 
@@ -1726,7 +1726,7 @@ ACTION_FUNC(do_look) {
 						std::string roomAct = "$n guarda ";
 						roomAct += dirsTo[keyword_no];
 						roomAct += ".";
-						act(roomAct.c_str(), FALSE, ch, 0, 0, TO_ROOM);
+						act(roomAct.c_str(), FALSE, ch, nullptr, nullptr, TO_ROOM);
 					}
 
 					rp = real_roomp(exitp->to_room);
@@ -1758,7 +1758,7 @@ ACTION_FUNC(do_look) {
 					/* Found something */
 					if(GET_ITEM_TYPE(tmp_object)== ITEM_DRINKCON) {
 						if(tmp_object->obj_flags.value[1] <= 0) {
-							act("E' vuoto.", FALSE, ch, 0, 0, TO_CHAR);
+							act("E' vuoto.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 						}
 						else {
 							temp=((tmp_object->obj_flags.value[1]*3)/tmp_object->obj_flags.value[0]);
@@ -1940,7 +1940,7 @@ ACTION_FUNC(do_look) {
 			if(RM_BLOOD(ch->in_room) > 0) {
 				/* mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
 				 * */
-				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, 0, 0, TO_CHAR);
+				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, nullptr, nullptr, TO_CHAR);
 			}
 			else {
 				/*   mudlog(LOG_ERROR,"Blood trovato:
@@ -1954,7 +1954,7 @@ ACTION_FUNC(do_look) {
 					roomp && (roomp->tele_targ > 0) && (GET_RACE(ch)==RACE_DWARF)
 					&& (number(1,100) < ch->skills[SKILL_DETERMINE].learned)
 				) {
-					act("$c0006Noti qualcosa di instabile nella struttura di questo luogo.", FALSE, ch, 0, 0, TO_CHAR);
+					act("$c0006Noti qualcosa di instabile nella struttura di questo luogo.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 				}
 			}
 
@@ -2064,7 +2064,7 @@ ACTION_FUNC(do_look) {
 			}
 			if(RM_BLOOD(ch->in_room) > 0) {
 			//	mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
-				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, 0, 0, TO_CHAR);
+				act(blood_messages[static_cast<int8_t>(RM_BLOOD(ch->in_room))], FALSE, ch, nullptr, nullptr, TO_CHAR);
 			}
 			else {
 			//	mudlog(LOG_ERROR,"Blood trovato: %d",RM_BLOOD(ch->in_room));
@@ -2205,14 +2205,14 @@ ACTION_FUNC(do_status) {
 	statusMsg += "$c0005($c0011";
 	statusMsg += std::to_string(GET_MAX_MOVE(ch));
 	statusMsg += "$c0005) punti di movimento.";
-	act(statusMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+act(statusMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string expMsg = "$c0005Hai effettuato $c0015";
 	expMsg += std::to_string(GET_EXP(ch));
 	expMsg += "$c0005 exp, ed hai $c0015";
 	expMsg += std::to_string(GET_GOLD(ch));
 	expMsg += "$c0005 monete d'oro.";
-	act(expMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+act(expMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 }
 
 ACTION_FUNC(do_checkachielevel)
@@ -3512,28 +3512,28 @@ ACTION_FUNC(do_score) {
 		ageMsg += "\n$c0015 Oggi e' il tuo compleanno!!";
 	}
 
-	act(ageMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(ageMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string raceMsg = "$c0005Appartieni alla razza $c0015";
 	raceMsg += RaceName[GET_RACE(ch)];
 	raceMsg += "$c0005";
-	act(raceMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(raceMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	if(HAS_PRINCE(ch)) {
 		std::string princeMsg = "$c0005Appartieni al clan di $c0015";
 		princeMsg += GET_PRINCE(ch);
 		princeMsg += "$c0005";
-		act(princeMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(princeMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	if(!IS_IMMORTAL(ch) && (!IS_NPC(ch))) {
 		if(GET_COND(ch,DRUNK)>10) {
-			act("$c0011Sei sbronz$b.",FALSE, ch,0,0,TO_CHAR);
+			act("$c0011Sei sbronz$b.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		if(GET_COND(ch,FULL)<2 && GET_COND(ch,FULL) != -1) {
-			act("$c0005Hai $c0015fame$c0005...",FALSE, ch,0,0,TO_CHAR);
+			act("$c0005Hai $c0015fame$c0005...", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		if(GET_COND(ch,THIRST)<2  && GET_COND(ch,THIRST) != -1) {
-			act("$c0005Hai $c0015sete$c0005...",FALSE, ch,0,0,TO_CHAR);
+			act("$c0005Hai $c0015sete$c0005...", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 	}
 
@@ -3550,23 +3550,23 @@ ACTION_FUNC(do_score) {
 	statsMsg += "$c0005($c0011";
 	statsMsg += std::to_string(GET_MAX_MOVE(ch));
 	statsMsg += "$c0005) movimento.";
-	act(statsMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(statsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string alignMsg = "$c0005Il tuo allineamento e': $c0015";
 	alignMsg += AlignDesc(GET_ALIGNMENT(ch));
-	act(alignMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(alignMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string expMsg = "$c0005Hai effettuato $c0015";
 	expMsg += std::to_string(GET_EXP(ch));
 	expMsg += "$c0005 exp, ed hai $c0015";
 	expMsg += std::to_string(GET_GOLD(ch));
 	expMsg += "$c0005 monete d'oro.";
-	act(expMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(expMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string donateMsg = "$c0005Non puoi donare xp se hai meno di: $c0015";
 	donateMsg += std::to_string(IS_PRINCE(ch) ? PRINCEEXP : MIN_EXP(ch));
 	donateMsg += "$c0005 exp";
-	act(donateMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(donateMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	/* the mud will crash without this check! */
 	if(GetMaxLevel(ch)>MAX_MORT ||
@@ -3717,7 +3717,7 @@ ACTION_FUNC(do_score) {
 			}
 		}
 
-		act(nextLevelMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(nextLevelMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	std::string levelsMsg = "$c0005I tuoi livelli:";
@@ -3777,14 +3777,14 @@ ACTION_FUNC(do_score) {
 		levelsMsg += "$c0005";
 	}
 
-	act(levelsMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(levelsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	if(GET_TITLE(ch)) {
 		std::string titleMsg = "$c0005Questo ti qualifica come $c0015";
 		titleMsg += GET_NAME(ch);
 		titleMsg += " $c0011";
 		titleMsg += GET_TITLE(ch);
-		act(titleMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(titleMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	playing_time = real_time_passed((time(0)-ch->player.time.logon) + ch->player.time.played, 0);
@@ -3793,12 +3793,12 @@ ACTION_FUNC(do_score) {
 	playingMsg += "$c0005 giorni e $c0015";
 	playingMsg += std::to_string(static_cast<int>(playing_time.hours));
 	playingMsg += "$c0005 ore.";
-	act(playingMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(playingMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	/* Drow fight -4 in lighted rooms! */
 	if(!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
 			!affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
-		act("$c0011La luce nell'area ti provoca molto dolore$c0009!", FALSE, ch, 0, 0, TO_CHAR);
+		act("$c0011La luce nell'area ti provoca molto dolore$c0009!", FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	std::string settingsMsg = "$c0005I tuoi set sono: "
@@ -3815,60 +3815,60 @@ ACTION_FUNC(do_score) {
 	settingsMsg += "$c0005) $c0015Who$c0005($c0015";
 	settingsMsg += IS_SET(ch->player.user_flags, SHOW_CLASSES) ? "on" : "off";
 	settingsMsg += "$c0005)";
-	act(settingsMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(settingsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string runesMsg = "$c0005Le rune degli Dei tatuate sul tuo corpo sono: $c0015";
 	runesMsg += std::to_string(static_cast<int>(GET_RUNEDEI(ch)));
 	runesMsg += " ";
-	act(runesMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+	act(runesMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	switch(GET_POS(ch)) {
 	case POSITION_DEAD :
-		act("$c0009Sei mort$b!",FALSE, ch,0,0,TO_CHAR);
+		act("$c0009Sei mort$b!", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	case POSITION_MORTALLYW :
 		act("$c0009Sei ferit$b a morte e dovresti cercare aiuto!", FALSE, ch,
 			0,0,TO_CHAR);
 		break;
 	case POSITION_INCAP :
-		act("$c0009Sei incapacitat$b, e stai morendo lentamente",FALSE, ch,0,0,
+		act("$c0009Sei incapacitat$b, e stai morendo lentamente", FALSE, ch, nullptr, nullptr,
 			TO_CHAR);
 		break;
 	case POSITION_STUNNED :
-		act("$c0011Sei svenut$b! Non ti puoi muovere.",FALSE, ch,0,0,TO_CHAR);
+		act("$c0011Sei svenut$b! Non ti puoi muovere.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	case POSITION_SLEEPING :
-		act("$c0010Stai dormendo.",FALSE,ch,0,0,TO_CHAR);
+		act("$c0010Stai dormendo.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	case POSITION_RESTING  :
-		act("$c0012Stai riposando.",FALSE,ch,0,0,TO_CHAR);
+		act("$c0012Stai riposando.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	case POSITION_SITTING  :
-		act("$c0013Sei sedut$b.",FALSE,ch,0,0,TO_CHAR);
+		act("$c0013Sei sedut$b.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	case POSITION_FIGHTING :
 		if(ch->specials.fighting)
 			act("$c1009Stai combattendo contro $N.", FALSE, ch, 0,
 				ch->specials.fighting, TO_CHAR);
 		else {
-			act("$c1009Stai combattendo contro l'aria.",FALSE, ch,0,0,TO_CHAR);
+			act("$c1009Stai combattendo contro l'aria.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		break;
 	case POSITION_STANDING :
-		act("$c0005Sei in piedi.",FALSE,ch,0,0,TO_CHAR);
+		act("$c0005Sei in piedi.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	case POSITION_MOUNTED:
 		if(MOUNTED(ch)) {
 			std::string mountedMsg = "$c0005Stai montando su $c0015";
 			mountedMsg += MOUNTED(ch)->player.short_descr;
-			act(mountedMsg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(mountedMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		else {
-			act("$c0005Sei in piedi.",FALSE,ch,0,0,TO_CHAR);
+			act("$c0005Sei in piedi.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		break;
 	default :
-		act("$c0005Sta fluttuando.",FALSE,ch,0,0,TO_CHAR);
+		act("$c0005Sta fluttuando.", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		break;
 	}
 }
@@ -5542,12 +5542,12 @@ ACTION_FUNC(do_world) {
 		std::ostringstream o;
 		o << "$c0005Base Source: $c0014AlarMUD\n$c0005"
 			 "Versione $c0015" << version() << "\n$c0005Commit: $c0015" << release() << "$c0005.";
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
 		std::ostringstream o;
 		o << "$c0005Compilazione del : $c0014" << compilazione() << ".";
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	ot = Uptime;
 	otmstr = asctime(localtime(&ot));
@@ -5555,7 +5555,7 @@ ACTION_FUNC(do_world) {
 	{
 		std::ostringstream o;
 		o << "$c0005Orario di partenza: $c0015" << otmstr << " $c0005";
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	ct = time(0);
@@ -5564,7 +5564,7 @@ ACTION_FUNC(do_world) {
 	{
 		std::ostringstream o;
 		o << "$c0005Orario attuale    : $c0015" << tmstr << " $c0005";
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
@@ -5572,13 +5572,13 @@ ACTION_FUNC(do_world) {
 		o << std::fixed << std::setprecision(6);
 		o << "$c0005Indice di attesa desiderato: $c0015" << (static_cast<double>(OPT_USEC) / 1000000.0)
 		  << " $c0005secs";
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
 		std::ostringstream o;
 		o << std::fixed << std::setprecision(6);
 		o << "$c0005Indice di attesa attuale   : $c0015" << GetLagIndex() << " $c0005sec";
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	if(GetMaxLevel(ch) >=IMMORTALE) {
@@ -5587,12 +5587,12 @@ ACTION_FUNC(do_world) {
 		{
 			std::ostringstream o;
 			o << "$c0005Flags di sistema:[$c0015" << tbuf.data() << "$c0005]\n\r";
-			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		{
 			std::ostringstream o;
 			o << "$c0005Connessioni dalla partenza:$c0015" << HowManyConnection(0) << "\n\r";
-			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 
 	}
@@ -5601,25 +5601,25 @@ ACTION_FUNC(do_world) {
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di stanze nel mondo          : $c0015" << room_db.klistlen;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 #else
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di stanze nel mondo          : $c0015" << room_count;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 #endif
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di zone nel mondo            : $c0015" << (top_of_zone_table + 1);
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di personaggi attivi         : $c0015" << top_of_p_table;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	// Result of an aggregate query contains only one element so let's
@@ -5629,29 +5629,29 @@ ACTION_FUNC(do_world) {
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di giocatori registrati      : $c0015" << c->count;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di tipi di creature nel mondo: $c0015" << top_of_mobt;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di tipi di oggetti nel mondo  : $c0015" << top_of_objt;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di creature nel gioco         : $c0015" << mob_count;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di oggetti nel gioco          : $c0015" << obj_count;
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	/**** SALVO controllo lag refresh zone init */
 	if(IS_IMMORTAL(ch)) {
@@ -5663,12 +5663,12 @@ ACTION_FUNC(do_world) {
 		{
 			std::ostringstream o;
 			o << "$c0005Totale zone init nel mondo           : $c0015" << c << " su $c0015" << (top_of_zone_table + 1);
-			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		{
 			std::ostringstream o;
 			o << "$c0005Indice attesa refresh zone init      : $c0015" << attrefzone << " $c0005sec";
-			act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 	}
 	/****/
@@ -5676,7 +5676,7 @@ ACTION_FUNC(do_world) {
 		std::ostringstream o;
 		o << std::fixed << std::setprecision(6);
 		o << "$c0005Valore medio dell'eq in gioco        : $c0015" << AverageEqIndex(-1);
-		act(o.str().c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(o.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 }
@@ -5703,7 +5703,7 @@ ACTION_FUNC(do_attribute) {
 		msg += "$c0005 cm, e pesi $c0014";
 		msg += std::to_string(static_cast<int>((ch->player.weight * 4536) / 10000));
 		msg += "$c0005 chili.";
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
@@ -5712,7 +5712,7 @@ ACTION_FUNC(do_attribute) {
 		msg += "$c0005 etti di equipaggiamento su $c0014";
 		msg += std::to_string(static_cast<int>((CAN_CARRY_W(ch) * 4536) / 1000));
 		msg += ".";
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
 		std::string msg = "$c0005Stai trasportando $c0014";
@@ -5720,18 +5720,18 @@ ACTION_FUNC(do_attribute) {
 		msg += "$c0005 oggetti su $c0014";
 		msg += std::to_string(static_cast<int>(CAN_CARRY_N(ch)));
 		msg += ".";
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
 		std::string msg = "$c0005Tu sei$c0014 ";
 		msg += ArmorDesc(ch->points.armor);
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	if(GetMaxLevel(ch)>=MAESTRO_DEL_CREATO) {
 		std::string msg = "$c0005Armor class: $c0014";
 		msg += std::to_string(static_cast<int>(ch->points.armor));
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	//GGPATCH, inserita valutazione spellfail
 	int iSpellfail = 0;
@@ -5740,7 +5740,7 @@ ACTION_FUNC(do_attribute) {
 		if(GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
 			std::string msg = "$c0005Spellfail : $c0014 ";
 			msg += std::to_string(iSpellfail);
-			act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 		iSpellfail = ch->specials.spellfail-
 					 GET_LEVEL(ch, BestMagicClass(ch))+
@@ -5756,7 +5756,7 @@ ACTION_FUNC(do_attribute) {
 		{
 			std::string msg = "$c0005La tua capacita' di lanciare incantesimi e'$c0014 ";
 			msg += SpellfailDesc(IS_IMMORTAL(ch)?0:iSpellfail);
-			act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+			act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 		}
 	}
 	if(GetMaxLevel(ch) >= CHUMP) {
@@ -5775,7 +5775,7 @@ ACTION_FUNC(do_attribute) {
 		msg += " $c0005CON, $c0014";
 		msg += std::to_string(static_cast<int>(GET_CHR(ch)));
 		msg += " $c0005CHR";
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	{
@@ -5784,20 +5784,20 @@ ACTION_FUNC(do_attribute) {
 		msg += "$c0005 e $c0014";
 		msg += DamRollDesc(GET_DAMROLL(ch));
 		msg += "$c0005 rispettivamente.";
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
 		std::string msg = "$c0005Il tuo equipaggiamento e' $c0014";
 		msg += EqDesc(GetCharBonusIndex(ch));
 		msg += "$c0005";
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 	if(GetMaxLevel(ch)>=MAESTRO_DEL_CREATO) {
 		std::string msg = "$c0005Hit:$c0014+";
 		msg += std::to_string(static_cast<int>(GET_HITROLL(ch)));
 		msg += "$c0005 Dam:$c0014+";
 		msg += std::to_string(static_cast<int>(GET_DAMROLL(ch)));
-		act(msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	/*
@@ -5836,7 +5836,7 @@ ACTION_FUNC(do_attribute) {
 						spellLine += "$c0005' - $c0014";
 						spellLine += std::to_string(static_cast<int>(aff->duration));
 						spellLine += "$c0005";
-						act(spellLine.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+						act(spellLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 					}
 
 					break;
@@ -6759,7 +6759,7 @@ ACTION_FUNC(do_scan) {
 		viewerMsg += ", vedi...\n\r";
 	}
 
-	act(roomAct.c_str(), FALSE, ch, 0, 0, TO_ROOM);
+	act(roomAct.c_str(), FALSE, ch, nullptr, nullptr, TO_ROOM);
 	send_to_char(viewerMsg.c_str(), ch);
 	nfnd = 0;
 	/* Check in room first */
