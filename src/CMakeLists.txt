@@ -157,6 +157,11 @@ list(SORT file_cpp)
 add_executable(${CMAKE_PROJECT_NAME}  ${file_cpp} ${file_hpp} release.hpp)
 #add_precompiled_header(${CMAKE_PROJECT_NAME} pchheader.h FORCEINCLUDE)
 
+# Ensure the object subdirectory used by ODB-generated translation units
+# exists before parallel compilation starts (some generators/toolchains race
+# on first creation and the assembler fails with "No such file or directory").
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${CMAKE_PROJECT_NAME}.dir/odb")
+
 #Boost
 find_package( Boost COMPONENTS system filesystem program_options date_time REQUIRED )
 include_directories(
