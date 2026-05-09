@@ -1395,10 +1395,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? AchievementsList[achievement_class][achievement_type].lvl6_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (num + 5) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? AchievementsList[achievement_class][achievement_type].lvl6_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 5))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val)
                 {
@@ -1420,7 +1420,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl6 % AchievementsList[achievement_class][achievement_type].lvl6_val % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 5)%2 == 0 ? "$c0015" : "$c0007") % (num + 5) % AchievementsList[achievement_class][achievement_type].lvl6 % AchievementsList[achievement_class][achievement_type].lvl6_val % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1430,10 +1430,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? AchievementsList[achievement_class][achievement_type].lvl7_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (num + 6) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? AchievementsList[achievement_class][achievement_type].lvl7_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 6))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val)
                 {
@@ -1455,7 +1455,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl7 % AchievementsList[achievement_class][achievement_type].lvl7_val % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 6)%2 == 0 ? "$c0015" : "$c0007") % (num + 6) % AchievementsList[achievement_class][achievement_type].lvl7 % AchievementsList[achievement_class][achievement_type].lvl7_val % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1465,10 +1465,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? AchievementsList[achievement_class][achievement_type].lvl8_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (num + 7) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? AchievementsList[achievement_class][achievement_type].lvl8_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 7))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val)
                 {
@@ -1490,7 +1490,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl8 % AchievementsList[achievement_class][achievement_type].lvl8_val % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 7)%2 == 0 ? "$c0015" : "$c0007") % (num + 7) % AchievementsList[achievement_class][achievement_type].lvl8 % AchievementsList[achievement_class][achievement_type].lvl8_val % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1500,10 +1500,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? AchievementsList[achievement_class][achievement_type].lvl9_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (num + 8) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? AchievementsList[achievement_class][achievement_type].lvl9_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 8))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val)
                 {
@@ -1525,7 +1525,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl9 % AchievementsList[achievement_class][achievement_type].lvl9_val % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 8)%2 == 0 ? "$c0015" : "$c0007") % (num + 8) % AchievementsList[achievement_class][achievement_type].lvl9 % AchievementsList[achievement_class][achievement_type].lvl9_val % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1535,10 +1535,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? AchievementsList[achievement_class][achievement_type].lvl10_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (num + 9) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? AchievementsList[achievement_class][achievement_type].lvl10_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 9))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val)
                 {
@@ -1560,7 +1560,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl10 % AchievementsList[achievement_class][achievement_type].lvl10_val % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 9)%2 == 0 ? "$c0015" : "$c0007") % (num + 9) % AchievementsList[achievement_class][achievement_type].lvl10 % AchievementsList[achievement_class][achievement_type].lvl10_val % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }

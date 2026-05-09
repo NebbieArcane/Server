@@ -13,8 +13,12 @@
 #include <ctime>
 #include <cstdlib>
 #include <cstdint>
+#include <algorithm>
 #include <array>
+#include <cerrno>
 #include <iomanip>
+#include <limits>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <unistd.h>
@@ -150,28 +154,24 @@ char* find_ex_description(char* word, struct extra_descr_data* list) {
 
 
 void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
-	char buffer[MAX_STRING_LENGTH];
-
-	buffer[0] = 0;
+	std::string buffer;
 	if((mode == 0) && object->description && *object->description) {
-		std::strncpy(buffer, object->description, sizeof(buffer) - 1);
-		buffer[sizeof(buffer) - 1] = '\0';
-		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+		buffer = object->description;
+		if(buffer.size() > 7 && buffer[1] == '$') {
 			buffer[7] = UPPER(buffer[7]);
 		}
-		else if(buffer[0] != '\0') {
-			CAP(buffer);
+		else if(!buffer.empty()) {
+			buffer[0] = UPPER(buffer[0]);
 		}
 	}
 	else if(object->short_description &&
 			(mode == 1 || mode == 2 || mode == 3 || mode == 4)) {
-		std::strncpy(buffer, object->short_description, sizeof(buffer) - 1);
-		buffer[sizeof(buffer) - 1] = '\0';
-		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+		buffer = object->short_description;
+		if(buffer.size() > 7 && buffer[1] == '$') {
 			buffer[7] = UPPER(buffer[7]);
 		}
-		else if(buffer[0] != '\0') {
-			CAP(buffer);
+		else if(!buffer.empty()) {
+			buffer[0] = UPPER(buffer[0]);
 		}
 	}
 	else if(mode == 5) {
@@ -188,13 +188,11 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 
 		}
 		else if((object->obj_flags.type_flag != ITEM_DRINKCON)) {
-			std::strncpy(buffer, "Non vedi nulla di speciale...", sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
+			buffer = "Non vedi nulla di speciale...";
 		}
 		else {
 			/* ITEM_TYPE == ITEM_DRINKCON */
-			std::strncpy(buffer, "Sembra un contenitore per bevande.", sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
+			buffer = "Sembra un contenitore per bevande.";
 		}
 	}
 
@@ -292,29 +290,25 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 
 void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 						   int mode, int num) {
-	char buffer[ MAX_STRING_LENGTH ];
-
-	buffer[0] = 0;
+	std::string buffer;
 
 	if((mode == 0) && object->description && *object->description) {
-		std::strncpy(buffer, object->description, sizeof(buffer) - 1);
-		buffer[sizeof(buffer) - 1] = '\0';
-		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+		buffer = object->description;
+		if(buffer.size() > 7 && buffer[1] == '$') {
 			buffer[7] = UPPER(buffer[7]);
 		}
-		else if(buffer[0] != '\0') {
-			CAP(buffer);
+		else if(!buffer.empty()) {
+			buffer[0] = UPPER(buffer[0]);
 		}
 	}
 	else if(object->short_description && ((mode == 1) ||
 										  (mode == 2) || (mode == 3) || (mode == 4))) {
-		std::strncpy(buffer, object->short_description, sizeof(buffer) - 1);
-		buffer[sizeof(buffer) - 1] = '\0';
-		if(std::strlen(buffer) > 7 && buffer[1] == '$') {
+		buffer = object->short_description;
+		if(buffer.size() > 7 && buffer[1] == '$') {
 			buffer[7] = UPPER(buffer[7]);
 		}
-		else if(buffer[0] != '\0') {
-			CAP(buffer);
+		else if(!buffer.empty()) {
+			buffer[0] = UPPER(buffer[0]);
 		}
 	}
 	else if(mode == 5) {
@@ -330,13 +324,11 @@ void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,
 			return;
 		}
 		else if((object->obj_flags.type_flag != ITEM_DRINKCON)) {
-			std::strncpy(buffer, "Non vedi nulla di speciale...", sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
+			buffer = "Non vedi nulla di speciale...";
 		}
 		else {
 			/* ITEM_TYPE == ITEM_DRINKCON */
-			std::strncpy(buffer, "Sembra un contenitore per bevande.", sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
+			buffer = "Sembra un contenitore per bevande.";
 		}
 	}
 
@@ -376,7 +368,6 @@ void list_obj_in_room(struct obj_data* list, struct char_data* ch) {
 	struct obj_data* i, *cond_ptr[50];
 	int Inventory_Num = 1;
 	int k, cond_top, cond_tot[50], found=FALSE;
-	char buf[MAX_STRING_LENGTH];
 
 	cond_top = 0;
 
@@ -421,8 +412,9 @@ void list_obj_in_room(struct obj_data* list, struct char_data* ch) {
 				if(CAN_SEE_OBJ(ch,cond_ptr[ k ])) {
 					/* Credo che l'if qui sopra sia inutile. */
 					if(cond_tot[ k ] > 1) {
-						snprintf(buf, MAX_STRING_LENGTH-1,"[%2d] ", Inventory_Num++);
-						send_to_char(buf,ch);
+						std::ostringstream prefix;
+						prefix << "[" << std::setw(2) << Inventory_Num++ << "] ";
+						send_to_char(prefix.str().c_str(), ch);
 						show_mult_obj_to_char(cond_ptr[ k ], ch, 0, cond_tot[ k ]);
 					}
 					else {
@@ -432,8 +424,9 @@ void list_obj_in_room(struct obj_data* list, struct char_data* ch) {
 			}
 			else {
 				if(cond_tot[ k ] > 1) {
-					snprintf(buf, MAX_STRING_LENGTH-1,"[%2d] ", Inventory_Num++);
-					send_to_char(buf, ch);
+					std::ostringstream prefix;
+					prefix << "[" << std::setw(2) << Inventory_Num++ << "] ";
+					send_to_char(prefix.str().c_str(), ch);
 					show_mult_obj_to_char(cond_ptr[ k ], ch, 0, cond_tot[ k ]);
 				}
 				else {
@@ -448,7 +441,6 @@ void list_obj_in_room(struct obj_data* list, struct char_data* ch) {
 void list_obj_in_heap(struct obj_data* list, struct char_data* ch) {
 	struct obj_data* i, *cond_ptr[50];
 	int k, cond_top, cond_tot[50], found=FALSE;
-	char buf[MAX_STRING_LENGTH];
 
 	int Num_Inventory = 1;
 	cond_top = 0;
@@ -482,8 +474,9 @@ void list_obj_in_heap(struct obj_data* list, struct char_data* ch) {
 
 	if(cond_top) {
 		for(k=0; k < cond_top; k++) {
-			snprintf(buf, MAX_STRING_LENGTH-1, "[%2d] ", Num_Inventory++);
-			send_to_char(buf, ch);
+			std::ostringstream prefix;
+			prefix << "[" << std::setw(2) << Num_Inventory++ << "] ";
+			send_to_char(prefix.str().c_str(), ch);
 			if(cond_tot[ k ] > 1) {
 				Num_Inventory += cond_tot[ k ] - 1;
 				show_mult_obj_to_char(cond_ptr[ k ], ch, 2, cond_tot[ k ]);
@@ -497,7 +490,6 @@ void list_obj_in_heap(struct obj_data* list, struct char_data* ch) {
 
 void list_obj_to_char(struct obj_data* list, struct char_data* ch, int mode,
 					  bool show) {
-	char buf[MAX_STRING_LENGTH];
 	int Num_In_Bag = 1;
 	struct obj_data* i;
 	bool found;
@@ -505,8 +497,9 @@ void list_obj_to_char(struct obj_data* list, struct char_data* ch, int mode,
 	found = FALSE;
 	for(i = list ; i ; i = i->next_content) {
 		if(CAN_SEE_OBJ(ch, i)) {
-			snprintf(buf, MAX_STRING_LENGTH-1, "[%2d] ", Num_In_Bag++);
-			send_to_char(buf, ch);
+			std::ostringstream prefix;
+			prefix << "[" << std::setw(2) << Num_In_Bag++ << "] ";
+			send_to_char(prefix.str().c_str(), ch);
 			show_obj_to_char(i, ch, mode);
 			found = TRUE;
 		}
@@ -599,11 +592,10 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) {
 	}
 
 	szBuf += ".";
-	act(szBuf.c_str(), FALSE, pChar, NULL, pTo, TO_VICT);
+	act(szBuf.c_str(), FALSE, pChar, nullptr, pTo, TO_VICT);
 }
 
 void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
-	char buffer[MAX_STRING_LENGTH],buffer2[MAX_STRING_LENGTH];
 	int j, found, percent, otype;
 	struct obj_data* tmp_obj;
 	struct affected_type* aff;
@@ -642,15 +634,16 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 				line = playerLine;
 			}
 			else {
-				std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
-				buffer[sizeof(buffer) - 1] = '\0';
-				if(buffer[1] == '$') {
-					buffer[7] = UPPER(buffer[7]);
+				std::string npcShort = i->player.short_descr ? i->player.short_descr : "";
+				if(npcShort.size() > 7 && npcShort[1] == '$') {
+					npcShort[7] = UPPER(npcShort[7]);
 				}
 				else {
-					CAP(buffer);
+					if(!npcShort.empty()) {
+						npcShort[0] = UPPER(npcShort[0]);
+					}
 				}
-				line = buffer;
+				line = npcShort;
 			}
 
 			if(IS_AFFECTED(i, AFF_INVISIBLE) || i->invis_level >= IMMORTALE) {
@@ -802,18 +795,25 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 			act(longLine.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
-        if(IS_PC(i))
-        {
-            std::strncpy(buffer2, i->player.name, sizeof(buffer2) - 1);
-            buffer2[sizeof(buffer2) - 1] = '\0';
-        }
-        else
-        {
-            std::strncpy(buffer2, i->player.short_descr, sizeof(buffer2) - 1);
-            buffer2[sizeof(buffer2) - 1] = '\0';
-            RemColorString(buffer2);
-            CAP(buffer2);
-        }
+		std::string buffer2;
+		if(IS_PC(i))
+		{
+			buffer2 = i->player.name ? i->player.name : "";
+		}
+		else
+		{
+			std::array<char, MAX_STRING_LENGTH> tempName{};
+			const std::string shortDescr = i->player.short_descr ? i->player.short_descr : "";
+			const std::size_t copyLen = std::min(shortDescr.size(), tempName.size() - 1);
+			std::copy_n(shortDescr.data(), copyLen, tempName.data());
+			tempName[copyLen] = '\0';
+			RemColorString(tempName.data());
+			if(tempName[0] != '\0')
+			{
+				CAP(tempName.data());
+			}
+			buffer2 = tempName.data();
+		}
 
 		if(IS_AFFECTED(i, AFF_SANCTUARY))
         {
@@ -935,20 +935,19 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		std::string conditionMsg;
 		if(IS_NPC(i)) {
-			std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
-			if(buffer[1] == '$') {
-				buffer[7] = UPPER(buffer[7]);
+			std::string npcShort = i->player.short_descr ? i->player.short_descr : "";
+			if(npcShort.size() > 7 && npcShort[1] == '$') {
+				npcShort[7] = UPPER(npcShort[7]);
 			}
 			else {
-				CAP(buffer);
+				if(!npcShort.empty()) {
+					npcShort[0] = UPPER(npcShort[0]);
+				}
 			}
-			conditionMsg = buffer;
+			conditionMsg = npcShort;
 		}
 		else {
-			std::strncpy(buffer, GET_NAME(i), sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
-			conditionMsg = buffer;
+			conditionMsg = GET_NAME(i);
 		}
 
 		if(percent >= 100) {
@@ -1066,7 +1065,6 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 							int mode, int num) {
-	char buffer[MAX_STRING_LENGTH], buffer2[MAX_STRING_LENGTH];
 	int j, found, percent;
 	struct obj_data* tmp_obj;
 
@@ -1090,27 +1088,23 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 		if(!(i->player.long_descr) ||
 				(GET_POS(i) != i->specials.default_pos)) {
 			/* A player char or a mobile without long descr, or not in default pos. */
+			std::string line;
 			if(!IS_NPC(i)) {
-				std::string playerLine = GET_NAME(i);
-				playerLine += " ";
+				line = GET_NAME(i);
+				line += " ";
 				if(GET_TITLE(i)) {
-					playerLine += GET_TITLE(i);
+					line += GET_TITLE(i);
 				}
-				std::strncpy(buffer, playerLine.c_str(), sizeof(buffer) - 1);
-				buffer[sizeof(buffer) - 1] = '\0';
 			}
 			else {
-				std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
-				buffer[sizeof(buffer) - 1] = '\0';
-				if(buffer[1] == '$') {
-					buffer[7] = UPPER(buffer[7]);
+				line = i->player.short_descr ? i->player.short_descr : "";
+				if(line.size() > 7 && line[1] == '$') {
+					line[7] = UPPER(line[7]);
 				}
-				else {
-					CAP(buffer);
+				else if(!line.empty()) {
+					line[0] = UPPER(line[0]);
 				}
 			}
-
-			std::string line = buffer;
 			if(IS_AFFECTED(i, AFF_INVISIBLE)) {
 				line += "$c0011 (invisibile)";
 			}
@@ -1265,18 +1259,25 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 			act(longLine.c_str(), FALSE, i, 0, ch, TO_VICT);
 		}
 
-        if(IS_PC(i))
-        {
-            std::strncpy(buffer2, i->player.name, sizeof(buffer2) - 1);
-            buffer2[sizeof(buffer2) - 1] = '\0';
-        }
-        else
-        {
-            std::strncpy(buffer2, i->player.short_descr, sizeof(buffer2) - 1);
-            buffer2[sizeof(buffer2) - 1] = '\0';
-            RemColorString(buffer2);
-            CAP(buffer2);
-        }
+		std::string buffer2;
+		if(IS_PC(i))
+		{
+			buffer2 = i->player.name ? i->player.name : "";
+		}
+		else
+		{
+			std::array<char, MAX_STRING_LENGTH> tempName{};
+			const std::string shortDescr = i->player.short_descr ? i->player.short_descr : "";
+			const std::size_t copyLen = std::min(shortDescr.size(), tempName.size() - 1);
+			std::copy_n(shortDescr.data(), copyLen, tempName.data());
+			tempName[copyLen] = '\0';
+			RemColorString(tempName.data());
+			if(tempName[0] != '\0')
+			{
+				CAP(tempName.data());
+			}
+			buffer2 = tempName.data();
+		}
 
         if(IS_AFFECTED(i, AFF_SANCTUARY))
         {
@@ -1338,14 +1339,10 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 
 		std::string conditionMsg;
 		if(IS_NPC(i)) {
-			std::strncpy(buffer, i->player.short_descr, sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
-			conditionMsg = buffer;
+			conditionMsg = i->player.short_descr ? i->player.short_descr : "";
 		}
 		else {
-			std::strncpy(buffer, GET_NAME(i), sizeof(buffer) - 1);
-			buffer[sizeof(buffer) - 1] = '\0';
-			conditionMsg = buffer;
+			conditionMsg = GET_NAME(i);
 		}
 
 		if(percent >= 100) {
@@ -1538,9 +1535,8 @@ void list_exits_in_room(struct char_data* ch) {
 
 
 ACTION_FUNC(do_look) {
-	char buffer[MAX_STRING_LENGTH];
-	char arg1[MAX_INPUT_LENGTH];
-	char arg2[MAX_INPUT_LENGTH];
+	std::array<char, MAX_INPUT_LENGTH> arg1{};
+	std::array<char, MAX_INPUT_LENGTH> arg2{};
 	int keyword_no, res;
 	int j, bits, temp;
 	struct room_data* roomp;
@@ -1553,24 +1549,24 @@ ACTION_FUNC(do_look) {
 	struct room_data* pRoomWithChar;
 
 	const char* blood_messages[] = {
-		"$c0009Non si deve vedere questo.",
-		"$c0009C'e' un po di sangue qui a terra.",
-		"$c0009C'e' del sangue ai tuoi piedi.",
-		"$c0009Del sangue scorre in terra.",
-		"$c0009C'e' tanto sangue da dare la nausea!",
-		"$c0009C'e' sangue ovunque guardi.",
-		"$c0009Che carneficina! Il Dio della Morte fara' festa questa notte!",
-		"$c0009Non riesci a non sporcarti con il sangue che vedi ovunque!",
-		"$c0009Tutto pare rivoltarsi per la morte e distruzione che aleggia qui!",
-		"$c0009Gli Dei dovrebbero avere pieta' e ripulire questo orrido posto dal sangue!",
-		"$c0009C'e' cosi' tanto sangue qui che rischi di affogarci dentro!",
+		"$c0009Non si deve vedere questo.$c0007",
+		"$c0009C'e' un po di sangue qui a terra.$c0007",
+		"$c0009C'e' del sangue ai tuoi piedi.$c0007",
+		"$c0009Del sangue scorre in terra.$c0007",
+		"$c0009C'e' tanto sangue da dare la nausea!$c0007",
+		"$c0009C'e' sangue ovunque guardi.$c0007",
+		"$c0009Che carneficina! Il Dio della Morte fara' festa questa notte!$c0007",
+		"$c0009Non riesci a non sporcarti con il sangue che vedi ovunque!$c0007",
+		"$c0009Tutto pare rivoltarsi per la morte e distruzione che aleggia qui!$c0007",
+		"$c0009Gli Dei dovrebbero avere pieta' e ripulire questo orrido posto dal sangue!$c0007",
+		"$c0009C'e' cosi' tanto sangue qui che rischi di affogarci dentro!$c0007",
 		"\n"
 	};
 
 
 
 	if(!ch) {
-		mudlog(LOG_SYSERR, "ch==NULL in do_look (act.info.c)");
+		mudlog(LOG_SYSERR, "ch==nullptr in do_look (act.info.c)");
 		return;
 	}
 
@@ -1599,23 +1595,23 @@ ACTION_FUNC(do_look) {
 		}
 	}
 	else {
-		only_argument(arg, arg1);
+		only_argument(arg, arg1.data());
 
-		if(0==strn_cmp(arg1,"at",2) && isspace(arg1[2])) {
-			only_argument(arg+3, arg2);
+		if(0==strn_cmp(arg1.data(),"at",2) && isspace(arg1[2])) {
+			only_argument(arg+3, arg2.data());
 			keyword_no = 7;
 		}
-		else if(0==strn_cmp(arg1,"in",2) && isspace(arg1[2])) {
-			only_argument(arg+3, arg2);
+		else if(0==strn_cmp(arg1.data(),"in",2) && isspace(arg1[2])) {
+			only_argument(arg+3, arg2.data());
 			keyword_no = 6;
 		}
 		else {
-			keyword_no = search_block(arg1, lookKeywords, FALSE);
+			keyword_no = search_block(arg1.data(), lookKeywords, FALSE);
 		}
 
-		if((keyword_no == -1) && *arg1) {
+		if((keyword_no == -1) && arg1[0] != '\0') {
 			keyword_no = 7;
-			only_argument(arg, arg2);
+			only_argument(arg, arg2.data());
 		}
 
 
@@ -1659,10 +1655,10 @@ ACTION_FUNC(do_look) {
 					}
 					else if(exitp->keyword && *(exitp->keyword) &&
 							!IS_SET(exitp->exit_info, EX_SECRET)) {
-						snprintf(buffer, MAX_STRING_LENGTH-1, "%s %s.\n\r",
-								 IS_SET(exitp->exit_info, EX_MALE) ? "Un" : "Una",
-								 fname(exitp->keyword));
-						send_to_char(buffer, ch);
+						std::string line = IS_SET(exitp->exit_info, EX_MALE) ? "Un " : "Una ";
+						line += fname(exitp->keyword);
+						line += ".\n\r";
+						send_to_char(line.c_str(), ch);
 					}
 					else {
 						send_to_char("Non vedi nulla di speciale.\n\r", ch);
@@ -1673,38 +1669,39 @@ ACTION_FUNC(do_look) {
 					if(IS_SET(exitp->exit_info, EX_CLOSED)) {
 						if(!IS_SET(exitp->exit_info, EX_SECRET)) {
 							if(exitp->keyword && *(exitp->keyword)) {
-								snprintf(buffer, MAX_STRING_LENGTH-1, "%s %s e' chius%c.\n\r",
-										 IS_SET(exitp->exit_info, EX_MALE) ? "Il" : "La",
-										 fname(exitp->keyword),
-										 IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
-								send_to_char(buffer, ch);
+								std::string line = IS_SET(exitp->exit_info, EX_MALE) ? "Il " : "La ";
+								line += fname(exitp->keyword);
+								line += IS_SET(exitp->exit_info, EX_MALE) ? " e' chiuso.\n\r" : " e' chiusa.\n\r";
+								send_to_char(line.c_str(), ch);
 							}
 							else {
-								snprintf(buffer, MAX_STRING_LENGTH-1,"La porta %s e' chiusa.\n\r",
-										 dirsTo[ keyword_no ]);
-								send_to_char(buffer, ch);
+								std::string line = "La porta ";
+								line += dirsTo[keyword_no];
+								line += " e' chiusa.\n\r";
+								send_to_char(line.c_str(), ch);
 							}
 						}
 					}
 					else {
 						if(!IS_SET(exitp->exit_info, EX_SECRET)) {
 							if(exitp->keyword && *(exitp->keyword)) {
-								snprintf(buffer, MAX_STRING_LENGTH-1,"%s %s e' apert%c.\n\r",
-										 IS_SET(exitp->exit_info, EX_MALE) ? "Il" : "La",
-										 fname(exitp->keyword),
-										 IS_SET(exitp->exit_info, EX_MALE) ? 'o' : 'a');
-								send_to_char(buffer, ch);
+								std::string line = IS_SET(exitp->exit_info, EX_MALE) ? "Il " : "La ";
+								line += fname(exitp->keyword);
+								line += IS_SET(exitp->exit_info, EX_MALE) ? " e' aperto.\n\r" : " e' aperta.\n\r";
+								send_to_char(line.c_str(), ch);
 							}
 							else {
-								snprintf(buffer, MAX_STRING_LENGTH-1,"La porta %s e' aperta.\n\r",
-										 dirsTo[ keyword_no ]);
-								send_to_char(buffer, ch);
+								std::string line = "La porta ";
+								line += dirsTo[keyword_no];
+								line += " e' aperta.\n\r";
+								send_to_char(line.c_str(), ch);
 							}
 						}
 						else {
-							snprintf(buffer, MAX_STRING_LENGTH-1,"Il passaggio %s e' aperto.\n\r",
-									 dirsTo[ keyword_no ]);
-							send_to_char(buffer, ch);
+							std::string line = "Il passaggio ";
+							line += dirsTo[keyword_no];
+							line += " e' aperto.\n\r";
+							send_to_char(line.c_str(), ch);
 						}
 					}
 				}
@@ -1720,14 +1717,16 @@ ACTION_FUNC(do_look) {
 				if((IS_AFFECTED(ch, AFF_SCRYING) &&
 						!IS_SET(exitp->exit_info, EX_NOLOOKT)) || IS_IMMORTAL(ch)) {
 					struct room_data* rp;
-					snprintf(buffer,MAX_STRING_LENGTH-1,
-							 "Guardando %s vedi...\n\r", dirsTo[keyword_no]);
-					send_to_char(buffer, ch);
+					std::string lookLine = "Guardando ";
+					lookLine += dirsTo[keyword_no];
+					lookLine += " vedi...\n\r";
+					send_to_char(lookLine.c_str(), ch);
 
 					if(!IS_IMMORTAL(ch) || !IS_SET(ch->specials.act, PLR_STEALTH)) {
-						snprintf(buffer,MAX_STRING_LENGTH-1,
-								 "$n guarda %s.", dirsTo[keyword_no]);
-						act(buffer, FALSE, ch, 0, 0, TO_ROOM);
+						std::string roomAct = "$n guarda ";
+						roomAct += dirsTo[keyword_no];
+						roomAct += ".";
+						act(roomAct.c_str(), FALSE, ch, 0, 0, TO_ROOM);
 					}
 
 					rp = real_roomp(exitp->to_room);
@@ -1736,8 +1735,8 @@ ACTION_FUNC(do_look) {
 					}
 					else if(exitp) {
 						bNotShowTitle = TRUE;
-						snprintf(buffer, MAX_STRING_LENGTH-1,"%ld look", exitp->to_room);
-						do_at(ch, buffer, 0);
+						const std::string lookCommand = std::to_string(exitp->to_room) + " look";
+						do_at(ch, lookCommand.c_str(), 0);
 						bNotShowTitle = FALSE;
 					}
 					else { /* non arrivera' mai qui */
@@ -1750,9 +1749,9 @@ ACTION_FUNC(do_look) {
 
 		/* look 'in'        */
 		case 6: {
-			if(*arg2) {
+			if(arg2[0] != '\0') {
 				/* Item carried */
-				bits = generic_find(arg2, FIND_OBJ_INV | FIND_OBJ_ROOM |
+				bits = generic_find(arg2.data(), FIND_OBJ_INV | FIND_OBJ_ROOM |
 									FIND_OBJ_EQUIP, ch, &tmp_char, &tmp_object);
 
 				if(bits) {
@@ -1763,9 +1762,12 @@ ACTION_FUNC(do_look) {
 						}
 						else {
 							temp=((tmp_object->obj_flags.value[1]*3)/tmp_object->obj_flags.value[0]);
-							snprintf(buffer,MAX_STRING_LENGTH-1,"E' %s di un liquido %s.\n\r",
-									 fullness[temp],color_liquid[tmp_object->obj_flags.value[2]]);
-							send_to_char(buffer, ch);
+							std::string liquidLine = "E' ";
+							liquidLine += fullness[temp];
+							liquidLine += " di un liquido ";
+							liquidLine += color_liquid[tmp_object->obj_flags.value[2]];
+							liquidLine += ".\n\r";
+							send_to_char(liquidLine.c_str(), ch);
 						}
 					}
 					else if(GET_ITEM_TYPE(tmp_object) == ITEM_CONTAINER) {
@@ -1805,8 +1807,8 @@ ACTION_FUNC(do_look) {
 		}
 		/* look 'at'        */
 		case 7 : {
-			if(*arg2) {
-				bits = generic_find(arg2, FIND_OBJ_INV | FIND_OBJ_ROOM |
+			if(arg2[0] != '\0') {
+				bits = generic_find(arg2.data(), FIND_OBJ_INV | FIND_OBJ_ROOM |
 									FIND_OBJ_EQUIP | FIND_CHAR_ROOM, ch, &tmp_char, &found_object);
 				if(tmp_char) {
 					show_char_to_char(tmp_char, ch, 1);
@@ -1823,7 +1825,7 @@ ACTION_FUNC(do_look) {
 
 				/* Extra description in room?? */
 				if(!found) {
-					tmp_desc = find_ex_description(arg2,
+					tmp_desc = find_ex_description(arg2.data(),
 												   pRoomWithChar->ex_description);
 					if(tmp_desc) {
 						page_string(ch->desc, tmp_desc, 0);
@@ -1838,7 +1840,7 @@ ACTION_FUNC(do_look) {
 					for(j = 0; j< MAX_WEAR && !found; j++) {
 						if(ch->equipment[j]) {
 							if(CAN_SEE_OBJ(ch,ch->equipment[j])) {
-								tmp_desc = find_ex_description(arg2,
+								tmp_desc = find_ex_description(arg2.data(),
 															   ch->equipment[j]->ex_description);
 								if(tmp_desc) {
 									page_string(ch->desc, tmp_desc, 1);
@@ -1854,7 +1856,7 @@ ACTION_FUNC(do_look) {
 							tmp_object && !found;
 							tmp_object = tmp_object->next_content) {
 						if(CAN_SEE_OBJ(ch, tmp_object)) {
-							tmp_desc = find_ex_description(arg2,
+							tmp_desc = find_ex_description(arg2.data(),
 														   tmp_object->ex_description);
 							if(tmp_desc) {
 								page_string(ch->desc, tmp_desc, 1);
@@ -1870,7 +1872,7 @@ ACTION_FUNC(do_look) {
 							tmp_object && !found;
 							tmp_object = tmp_object->next_content) {
 						if(CAN_SEE_OBJ(ch, tmp_object)) {
-							tmp_desc = find_ex_description(arg2,
+							tmp_desc = find_ex_description(arg2.data(),
 														   tmp_object->ex_description);
 							if(tmp_desc) {
 								page_string(ch->desc, tmp_desc, 1);
@@ -1972,7 +1974,7 @@ ACTION_FUNC(do_look) {
 						pRoom = real_roomp(pExit->to_room);
 						if(pRoom && IS_SET(pRoom->room_flags, DEATH)) {
 							act("$c0009Percepisci un grande pericolo qui intorno.",
-								FALSE, ch, NULL, NULL, TO_CHAR);
+								FALSE, ch, nullptr, nullptr, TO_CHAR);
 							break;
 						}
 					}
@@ -2092,7 +2094,7 @@ ACTION_FUNC(do_read) {
 
 
 ACTION_FUNC(do_examine) {
-	char name[1000];
+	std::array<char, 1000> name{};
 	struct char_data* tmp_char;
 	struct obj_data* tmp_object;
 
@@ -2100,14 +2102,14 @@ ACTION_FUNC(do_examine) {
 	lookAtArg += (arg != nullptr) ? arg : "";
 	do_look(ch, lookAtArg.c_str(), 15);
 
-	one_argument(arg, name);
+	one_argument(arg, name.data());
 
-	if(!*name) {
+	if(name[0] == '\0') {
 		send_to_char("Esaminare che cosa?\n\r", ch);
 		return;
 	}
 
-	generic_find(name, FIND_OBJ_INV | FIND_OBJ_ROOM |
+	generic_find(name.data(), FIND_OBJ_INV | FIND_OBJ_ROOM |
 				 FIND_OBJ_EQUIP, ch, &tmp_char, &tmp_object);
 
 	if(tmp_object) {
@@ -2322,6 +2324,105 @@ ACTION_FUNC(do_achievements)
         }
 
         return true;
+    };
+    const auto parsePositiveIntArg = [&](const char* rawValue,
+                                         const char* invalidMsg,
+                                         const char* tooHighMsg,
+                                         const char* nonPositiveMsg,
+                                         int& outValue) {
+        char* parseEnd = nullptr;
+        errno = 0;
+        const long long parsedValue = std::strtoll(rawValue, &parseEnd, 10);
+        if(parseEnd == rawValue || *parseEnd != '\0')
+        {
+            send_to_char(invalidMsg, ch);
+            return false;
+        }
+        if(errno == ERANGE || parsedValue > static_cast<long long>(std::numeric_limits<int>::max()))
+        {
+            send_to_char(tooHighMsg, ch);
+            return false;
+        }
+        if(parsedValue <= 0)
+        {
+            send_to_char(nonPositiveMsg, ch);
+            return false;
+        }
+        outValue = static_cast<int>(parsedValue);
+        return true;
+    };
+    struct AchievementSlot
+    {
+        int category;
+        int index;
+        int baseNum;
+        int levels;
+    };
+    constexpr std::array<int, 5> achievementCategoryOrder = {{
+        RACESLAYER_ACHIE, BOSSKILL_ACHIE, CLASS_ACHIE, QUEST_ACHIE, OTHER_ACHIE
+    }};
+    const auto categoryStartIndex = [](int category) {
+        return (category == CLASS_ACHIE) ? 1 : 0;
+    };
+    const auto categoryMaxCount = [](int category) {
+        switch(category)
+        {
+            case RACESLAYER_ACHIE: return MAX_RACE_ACHIE;
+            case BOSSKILL_ACHIE:   return MAX_BOSS_ACHIE;
+            case CLASS_ACHIE:      return MAX_CLASS_ACHIE;
+            case QUEST_ACHIE:      return MAX_QUEST_ACHIE;
+            case OTHER_ACHIE:      return MAX_OTHER_ACHIE;
+            default:               return 0;
+        }
+    };
+    const auto isCategorySlotVisible = [&](int category, int index, char_data* target, char_data* actor) {
+        if(AchievementsList[category][index].classe == -1)
+        {
+            return false;
+        }
+        if(category == CLASS_ACHIE)
+        {
+            return HasClass(target, AchievementsList[category][index].classe) ||
+                   AchievementsList[category][index].classe == 0;
+        }
+        return HasClass(target, AchievementsList[category][index].classe) || IS_QUESTMASTER(actor);
+    };
+    const auto hasCategoryProgress = [&](int category, int index, char_data* target) {
+        if(category == CLASS_ACHIE)
+        {
+            return false;
+        }
+        return target->specials.achievements[category][index] > 0;
+    };
+    const auto findAchievementSlotByNumber = [&](char_data* target,
+                                                 char_data* actor,
+                                                 const int requestedNumber,
+                                                 const bool includeProgressFallback)
+                                                 -> std::optional<AchievementSlot> {
+        int num = 0;
+        for(const int category : achievementCategoryOrder)
+        {
+            const int start = categoryStartIndex(category);
+            const int maxCount = categoryMaxCount(category);
+            for(int index = start; index < maxCount; ++index)
+            {
+                const bool visible = isCategorySlotVisible(category, index, target, actor);
+                const bool includeByProgress = includeProgressFallback &&
+                                               hasCategoryProgress(category, index, target);
+                if(!visible && !includeByProgress)
+                {
+                    continue;
+                }
+
+                const int levels = AchievementsList[category][index].n_livelli;
+                if(requestedNumber > num && requestedNumber <= (num + levels))
+                {
+                    return AchievementSlot{category, index, num, levels};
+                }
+                num += levels;
+            }
+        }
+        return std::nullopt;
     };
 
     if(arg1[0] != '\0')
@@ -2545,6 +2646,16 @@ ACTION_FUNC(do_achievements)
             constexpr int nMaxSpamAchie = static_cast<int>(spamVariantsPerTarget - 1);
 
             arg = one_argument(arg, arg2.data());
+            while(*arg == ' ')
+            {
+                ++arg;
+            }
+
+            if(*arg != '\0')
+            {
+                send_to_char("Sintassi: achievements spam <numero>\n\r", ch);
+                return;
+            }
 
             if(arg2[0] == '\0')
             {
@@ -2552,199 +2663,46 @@ ACTION_FUNC(do_achievements)
                 return;
             }
 
-            const int n_spam = std::atoi(arg2.data());
+            int n_spam = 0;
+            if(!parsePositiveIntArg(arg2.data(),
+                "Il numero achievement deve essere un intero valido.\n\r",
+                "Il numero achievement inserito e' troppo alto.\n\r",
+                "Quale achievement vuoi mostrare? Digita 'achievements all' per vedere il numero.\n\r",
+                n_spam))
+            {
+                return;
+            }
 
             if(IS_POLY(tch))
             {
                 tch = tch->desc->original;
             }
 
+            if(n_spam > maxAchievements(tch))
+            {
+                std::string msgToChar = "Il numero massimo di achievements per te e' ";
+                msgToChar += std::to_string(maxAchievements(tch));
+                msgToChar += ".\n\r";
+                send_to_char(msgToChar.c_str(), ch);
+                return;
+            }
+
             if(IS_SET(tch->specials.act, PLR_ACHIE))
             {
-                int num = 0;
-                bool trovato = false;
-
-                // Race Achievements
-                for(i = 0; i < MAX_RACE_ACHIE; i++)
-                {
-                    if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
-                    {
-                        // se l'achievement classe e' -1 viene skippato
-                        continue;
-                    }
-                    else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(tch))
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
-                        }
-                    }
-                    else if(ch->specials.achievements[RACESLAYER_ACHIE][i] > 0)
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, RACESLAYER_ACHIE, AchievementsList[RACESLAYER_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
-                        }
-                    }
-                }
-
-                // Boss Achievements
-                for(i = 0; i < MAX_BOSS_ACHIE; i++)
-                {
-                    if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
-                    {
-                        // se l'achievement classe e' -1 viene skippato
-                        continue;
-                    }
-                    else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(tch))
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
-                        }
-                    }
-                    else if(ch->specials.achievements[BOSSKILL_ACHIE][i] > 0)
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, BOSSKILL_ACHIE, AchievementsList[BOSSKILL_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
-                        }
-                    }
-                }
-
-                // Class Skill Achievements
-                for(i = 1; i < MAX_CLASS_ACHIE; i++)
-                {
-                    if(AchievementsList[CLASS_ACHIE][i].classe == -1)
-                    {
-                        // se l'achievement classe e' -1 viene skippato
-                        continue;
-                    }
-                    else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb = bufferAchie(tch, i, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][i].n_livelli, num, true, n_spam);
-                            num += AchievementsList[CLASS_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[CLASS_ACHIE][i].n_livelli;
-                        }
-                    }
-                }
-
-                // Quest Achievements
-                for(i = 0; i < MAX_QUEST_ACHIE; i++)
-                {
-                    if(AchievementsList[QUEST_ACHIE][i].classe == -1)
-                    {
-                        // se l'achievement classe e' -1 viene skippato
-                        continue;
-                    }
-                    else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(tch))
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[QUEST_ACHIE][i].n_livelli;
-                        }
-                    }
-                    else if(ch->specials.achievements[QUEST_ACHIE][i] > 0)
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, QUEST_ACHIE, AchievementsList[QUEST_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[QUEST_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[QUEST_ACHIE][i].n_livelli;
-                        }
-                    }
-                }
-
-                // Various Achievements
-                for(i = 0; i < MAX_OTHER_ACHIE; i++)
-                {
-                    if(AchievementsList[OTHER_ACHIE][i].classe == -1)
-                    {
-                        // se l'achievement classe e' -1 viene skippato
-                        continue;
-                    }
-                    else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(tch))
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[OTHER_ACHIE][i].n_livelli;
-                        }
-                    }
-                    else if(ch->specials.achievements[OTHER_ACHIE][i] > 0)
-                    {
-                        if(n_spam > num && n_spam <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
-                        {
-                            num += 1;
-                            sb.append(bufferAchie(tch, i, OTHER_ACHIE, AchievementsList[OTHER_ACHIE][i].n_livelli, num, true, n_spam));
-                            num += AchievementsList[OTHER_ACHIE][i].n_livelli - 1;
-                            trovato = true;
-                        }
-                        else
-                        {
-                            num += AchievementsList[OTHER_ACHIE][i].n_livelli;
-                        }
-                    }
-                }
-
-                if(!trovato)
+                const auto slot = findAchievementSlotByNumber(tch, tch, n_spam, true);
+                if(!slot.has_value())
                 {
                     send_to_char("Quell'achievement esiste solo nella tua fantasia...\n\r", ch);
                     return;
                 }
+                const int displayNum = slot->baseNum + 1;
+                sb = bufferAchie(tch,
+                                 slot->index,
+                                 slot->category,
+                                 slot->levels,
+                                 displayNum,
+                                 true,
+                                 n_spam);
 
                 const int spamIndex = number(0, nMaxSpamAchie);
                 const std::size_t spamIndexSz = static_cast<std::size_t>(spamIndex);
@@ -2776,12 +2734,21 @@ ACTION_FUNC(do_achievements)
         {
             char_data* tch = nullptr;
             std::array<char, 128> arg3{};
-            std::array<char, MAX_STRING_LENGTH> buf1{};
-            std::array<char, MAX_STRING_LENGTH> buf2{};
-            bool trovato = false;
+            std::string msgToChar;
+            std::string msgToVict;
 
             arg = one_argument(arg, arg2.data());
             arg = one_argument(arg, arg3.data());
+            while(*arg == ' ')
+            {
+                ++arg;
+            }
+
+            if(*arg != '\0')
+            {
+                send_to_char("Sintassi: achievements delete <nome_pg> <numero>\n\r", ch);
+                return;
+            }
 
             if(arg2[0] != '\0')
             {
@@ -2794,221 +2761,63 @@ ACTION_FUNC(do_achievements)
 
                 if(arg3[0] != '\0')
                 {
-                    const int achi_d = std::atoi(arg3.data());
-
-                    if(achi_d <= 0)
+                    int achi_d = 0;
+                    if(!parsePositiveIntArg(arg3.data(),
+                        "Il numero achievement deve essere un intero valido.\n\r",
+                        "Il numero achievement inserito e' troppo alto.\n\r",
+                        "Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.\n\r",
+                        achi_d))
                     {
-                        act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
+                        return;
+                    }
+
+                    if(achi_d > maxAchievements(tch))
+                    {
+                        std::string msgToChar = "Il numero massimo di achievements per $N e' ";
+                        msgToChar += std::to_string(maxAchievements(tch));
+                        msgToChar += ".";
+                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
 
                     if(IS_SET(tch->specials.act, PLR_ACHIE))
                     {
-                        int num = 0;
-
-                        // Race Achievements
-                        for(i = 0; i < MAX_RACE_ACHIE; i++)
+                        const auto setAlreadyZeroMsg = [&](const char* achievementName) {
+                            msgToChar = "L'achievement del numero di ";
+                            msgToChar += achievementName;
+                            msgToChar += " di $N e' gia' 0.";
+                        };
+                        const auto setDeletedMsgs = [&](const char* achievementName) {
+                            msgToChar = "Hai cancellato l'achievement del numero di ";
+                            msgToChar += achievementName;
+                            msgToChar += " di $N.";
+                            msgToVict = "$n ti ha cancellato l'achievement del numero di ";
+                            msgToVict += achievementName;
+                            msgToVict += ".";
+                        };
+                        const auto slot = findAchievementSlotByNumber(tch, ch, achi_d, false);
+                        if(!slot.has_value())
                         {
-                            if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_d > num && achi_d <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
-                                {
-                                    if(tch->specials.achievements[RACESLAYER_ACHIE][i] == 0)
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch));
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
-                                }
-                            }
+                            act("$N non ha completato nessun achievement!", false, ch, nullptr, tch, TO_CHAR);
+                            return;
                         }
-
-                        // Boss Achievements
-                        for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                        const int category = slot->category;
+                        const int index = slot->index;
+                        if(tch->specials.achievements[category][index] == 0)
                         {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_d > num && achi_d <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
-                                {
-                                    if(tch->specials.achievements[BOSSKILL_ACHIE][i] == 0)
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch));
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
-                                }
-                            }
+                            setAlreadyZeroMsg(AchievementsList[category][index].achie_string2);
+                            act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
+                            return;
                         }
+                        tch->specials.achievements[category][index] = 0;
+                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s",
+                               GET_NAME(ch), AchievementsList[category][index].achie_string2, GET_NAME(tch));
+                        setDeletedMsgs(AchievementsList[category][index].achie_string2);
+                        do_save(tch, "", 0);
 
-                        // Class Skill Achievements
-                        for(i = 1; i < MAX_CLASS_ACHIE; i++)
-                        {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[CLASS_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
-                            {
-                                if(achi_d > num && achi_d <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
-                                {
-                                    if(tch->specials.achievements[CLASS_ACHIE][i] == 0)
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[CLASS_ACHIE][i].achie_string2);
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[CLASS_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch));
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[CLASS_ACHIE][i].achie_string2);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[CLASS_ACHIE][i].achie_string2);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[CLASS_ACHIE][i].n_livelli;
-                                }
-                            }
-                        }
-
-                        // Quest Achievements
-                        for(i = 0; i < MAX_QUEST_ACHIE; i++)
-                        {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[QUEST_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_d > num && achi_d <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
-                                {
-                                    if(tch->specials.achievements[QUEST_ACHIE][i] == 0)
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[QUEST_ACHIE][i].achie_string2);
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[QUEST_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch));
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[QUEST_ACHIE][i].achie_string2);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[QUEST_ACHIE][i].achie_string2);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[QUEST_ACHIE][i].n_livelli;
-                                }
-                            }
-                        }
-
-                        // Various Achievements
-                        for(i = 0; i < MAX_OTHER_ACHIE; i++)
-                        {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[OTHER_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_d > num && achi_d <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
-                                {
-                                    if(tch->specials.achievements[OTHER_ACHIE][i] == 0)
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "L'achievement del numero di %s di $N e' gia' 0.", AchievementsList[OTHER_ACHIE][i].achie_string2);
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[OTHER_ACHIE][i] = 0;
-                                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch));
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai cancellato l'achievement del numero di %s di $N.", AchievementsList[OTHER_ACHIE][i].achie_string2);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha cancellato l'achievement del numero di %s.", AchievementsList[OTHER_ACHIE][i].achie_string2);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[OTHER_ACHIE][i].n_livelli;
-                                }
-                            }
-                        }
-
-                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
+                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
                         tch = get_char_vis_world(ch, arg2.data(), nullptr);
-                        act(buf2.data(), false, ch, nullptr, tch, TO_VICT);
+                        act(msgToVict.c_str(), false, ch, nullptr, tch, TO_VICT);
                     }
                     else
                     {
@@ -3033,13 +2842,22 @@ ACTION_FUNC(do_achievements)
             char_data* tch = nullptr;
             std::array<char, 128> arg3{};
             std::array<char, 128> arg4{};
-            std::array<char, MAX_STRING_LENGTH> buf1{};
-            std::array<char, MAX_STRING_LENGTH> buf2{};
-            bool trovato = false;
+            std::string msgToChar;
+            std::string msgToVict;
 
             arg = one_argument(arg, arg2.data());
             arg = one_argument(arg, arg3.data());
             arg = one_argument(arg, arg4.data());
+            while(*arg == ' ')
+            {
+                ++arg;
+            }
+
+            if(*arg != '\0')
+            {
+                send_to_char("Sintassi: achievements set <nome_pg> <numero> <valore>\n\r", ch);
+                return;
+            }
 
             if(arg2[0] != '\0')
             {
@@ -3052,29 +2870,34 @@ ACTION_FUNC(do_achievements)
 
                 if(arg3[0] != '\0')
                 {
-                    const int achi_n = std::atoi(arg3.data());
-
-                    if(achi_n <= 0)
+                    int achi_n = 0;
+                    if(!parsePositiveIntArg(arg3.data(),
+                        "Il numero achievement deve essere un intero valido.\n\r",
+                        "Il numero achievement inserito e' troppo alto.\n\r",
+                        "A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.\n\r",
+                        achi_n))
                     {
-                        act("A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
 
                     if(achi_n > maxAchievements(tch))
                     {
-                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di achievements per $N e' %d.", maxAchievements(tch));
-                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
+                        msgToChar = "Il numero massimo di achievements per $N e' ";
+                        msgToChar += std::to_string(maxAchievements(tch));
+                        msgToChar += ".";
+                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
                         return;
                     }
 
                     if(arg4[0] != '\0')
                     {
-                        int num = 0;
-                        const int achi_v = std::atoi(arg4.data());
-
-                        if(achi_v <= 0)
+                        int achi_v = 0;
+                        if(!parsePositiveIntArg(arg4.data(),
+                            "Il valore deve essere un numero intero valido.\n\r",
+                            "Il valore inserito e' troppo alto.\n\r",
+                            "Puoi assegnare solo un valore maggiore di zero.\n\r",
+                            achi_v))
                         {
-                            act("Puoi assegnare solo un valore maggiore di zero.", false, ch, nullptr, tch, TO_CHAR);
                             return;
                         }
 
@@ -3082,210 +2905,51 @@ ACTION_FUNC(do_achievements)
                         {
                             SET_BIT(tch->specials.act, PLR_ACHIE);
                         }
-
-                        // Race Achievements
-                        for(i = 0; i < MAX_RACE_ACHIE; i++)
+                        const auto setMaxAssignableMsg = [&](const char* achievementName, const int maxValue) {
+                            msgToChar = "Il numero massimo di ";
+                            msgToChar += achievementName;
+                            msgToChar += " assegnabili e' ";
+                            msgToChar += std::to_string(maxValue);
+                            msgToChar += ".";
+                        };
+                        const auto setAssignedMsgs = [&](const char* achievementName, const int assignedValue) {
+                            msgToChar = "Hai assegnato all'achievement del numero di ";
+                            msgToChar += achievementName;
+                            msgToChar += " di $N un valore pari a ";
+                            msgToChar += std::to_string(assignedValue);
+                            msgToChar += ".";
+                            msgToVict = "$n ti ha assegnato all'achievement del numero di ";
+                            msgToVict += achievementName;
+                            msgToVict += " un valore pari a ";
+                            msgToVict += std::to_string(assignedValue);
+                            msgToVict += ".";
+                        };
+                        const auto slot = findAchievementSlotByNumber(tch, ch, achi_n, false);
+                        if(!slot.has_value())
                         {
-                            if(AchievementsList[RACESLAYER_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[RACESLAYER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_n > num && achi_n <= (num + AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
-                                {
-                                    if(achi_v > MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli))
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, MaxValueAchievement(RACESLAYER_ACHIE, i, AchievementsList[RACESLAYER_ACHIE][i].n_livelli));
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[RACESLAYER_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[RACESLAYER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[RACESLAYER_ACHIE][i].achie_string2, achi_v);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[RACESLAYER_ACHIE][i].n_livelli;
-                                }
-                            }
+                            act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.",
+                                false, ch, nullptr, tch, TO_CHAR);
+                            return;
                         }
 
-                        // Boss Achievements
-                        for(i = 0; i < MAX_BOSS_ACHIE; i++)
+                        const int category = slot->category;
+                        const int index = slot->index;
+                        const int maxAssignableValue = MaxValueAchievement(category, index, slot->levels);
+                        if(achi_v > maxAssignableValue)
                         {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[BOSSKILL_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[BOSSKILL_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_n > num && achi_n <= (num + AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
-                                {
-                                    if(achi_v > MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli))
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, MaxValueAchievement(BOSSKILL_ACHIE, i, AchievementsList[BOSSKILL_ACHIE][i].n_livelli));
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[BOSSKILL_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[BOSSKILL_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[BOSSKILL_ACHIE][i].achie_string2, achi_v);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[BOSSKILL_ACHIE][i].n_livelli;
-                                }
-                            }
+                            setMaxAssignableMsg(AchievementsList[category][index].achie_string2, maxAssignableValue);
+                            act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
+                            return;
                         }
+                        tch->specials.achievements[category][index] = achi_v;
+                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d",
+                               GET_NAME(ch), AchievementsList[category][index].achie_string2, GET_NAME(tch), achi_v);
+                        setAssignedMsgs(AchievementsList[category][index].achie_string2, achi_v);
+                        do_save(tch, "", 0);
 
-                        // Class Skill Achievements
-                        for(i = 1; i < MAX_CLASS_ACHIE; i++)
-                        {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[CLASS_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[CLASS_ACHIE][i].classe) || AchievementsList[CLASS_ACHIE][i].classe == 0)
-                            {
-                                if(achi_n > num && achi_n <= (num + AchievementsList[CLASS_ACHIE][i].n_livelli))
-                                {
-                                    if(achi_v > MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli))
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, MaxValueAchievement(CLASS_ACHIE, i, AchievementsList[CLASS_ACHIE][i].n_livelli));
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[CLASS_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[CLASS_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[CLASS_ACHIE][i].achie_string2, achi_v);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[CLASS_ACHIE][i].n_livelli;
-                                }
-                            }
-                        }
-
-                        // Quest Achievements
-                        for(i = 0; i < MAX_QUEST_ACHIE; i++)
-                        {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[QUEST_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[QUEST_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_n > num && achi_n <= (num + AchievementsList[QUEST_ACHIE][i].n_livelli))
-                                {
-                                    if(achi_v > MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli))
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, MaxValueAchievement(QUEST_ACHIE, i, AchievementsList[QUEST_ACHIE][i].n_livelli));
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[QUEST_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[QUEST_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[QUEST_ACHIE][i].achie_string2, achi_v);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[QUEST_ACHIE][i].n_livelli;
-                                }
-                            }
-                        }
-
-                        // Various Achievements
-                        for(i = 0; i < MAX_OTHER_ACHIE; i++)
-                        {
-                            if(trovato)
-                            {
-                                break;
-                            }
-
-                            if(AchievementsList[OTHER_ACHIE][i].classe == -1)
-                            {
-                                // se l'achievement classe e' -1 viene skippato
-                                continue;
-                            }
-                            else if(HasClass(tch, AchievementsList[OTHER_ACHIE][i].classe) || IS_QUESTMASTER(ch))
-                            {
-                                if(achi_n > num && achi_n <= (num + AchievementsList[OTHER_ACHIE][i].n_livelli))
-                                {
-                                    if(achi_v > MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli))
-                                    {
-                                        std::snprintf(buf1.data(), buf1.size(), "Il numero massimo di %s assegnabili e' %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, MaxValueAchievement(OTHER_ACHIE, i, AchievementsList[OTHER_ACHIE][i].n_livelli));
-                                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tch->specials.achievements[OTHER_ACHIE][i] = achi_v;
-                                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d", GET_NAME(ch), AchievementsList[OTHER_ACHIE][i].achie_string2, GET_NAME(tch), achi_v);
-                                        std::snprintf(buf1.data(), buf1.size(), "Hai assegnato all'achievement del numero di %s di $N un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
-                                        std::snprintf(buf2.data(), buf2.size(), "$n ti ha assegnato all'achievement del numero di %s un valore pari a %d.", AchievementsList[OTHER_ACHIE][i].achie_string2, achi_v);
-                                        do_save(tch, "", 0);
-                                        trovato = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    num += AchievementsList[OTHER_ACHIE][i].n_livelli;
-                                }
-                            }
-                        }
-
-                        act(buf1.data(), false, ch, nullptr, tch, TO_CHAR);
+                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
                         tch = get_char_vis_world(ch, arg2.data(), nullptr);
-                        act(buf2.data(), false, ch, nullptr, tch, TO_VICT);
+                        act(msgToVict.c_str(), false, ch, nullptr, tch, TO_VICT);
                     }
                     else
                     {
@@ -3310,6 +2974,16 @@ ACTION_FUNC(do_achievements)
             char_data* tch = nullptr;
 
             arg = one_argument(arg, arg2.data());
+            while(*arg == ' ')
+            {
+                ++arg;
+            }
+
+            if(*arg != '\0')
+            {
+                send_to_char("Sintassi: achievements reset <nome_pg>\n\r", ch);
+                return;
+            }
 
             if(arg2[0] != '\0')
             {
@@ -4342,9 +4016,9 @@ ACTION_FUNC(do_wizhelp) {
 		n = radix_head[i].next;
 		while(n) {
 			if(n->min_level <= GetMaxLevel(ch) && n->min_level >= IMMORTALE) {
-				char formattedName[32];
-				snprintf(formattedName, sizeof(formattedName), "%-10s", n->name);
-				buf += formattedName;
+				std::ostringstream formattedName;
+				formattedName << std::left << std::setw(10) << n->name;
+				buf += formattedName.str();
 				if(!(j % 7)) {
 					buf += "\n\r";
 				}
@@ -4432,10 +4106,11 @@ ACTION_FUNC(do_command_list) {
 		n = radix_head[i].next;
 		while(n) {
 			if(n->min_level <= GetMaxLevel(ch)) {
-				char formattedName[32];
-				snprintf(formattedName, sizeof(formattedName), "%-10s", n->name);
-				if(buf.size() + std::strlen(formattedName) <= MAX_STRING_LENGTH) {
-					buf += formattedName;
+				std::ostringstream formattedName;
+				formattedName << std::left << std::setw(10) << n->name;
+				const std::string commandColumn = formattedName.str();
+				if(buf.size() + commandColumn.size() <= MAX_STRING_LENGTH) {
+					buf += commandColumn;
 				}
 				if(!(j % 7))
 					if(buf.size() + 2 <= MAX_STRING_LENGTH) {
@@ -4453,21 +4128,6 @@ ACTION_FUNC(do_command_list) {
 
 	page_string(ch->desc, buf.c_str(), 1);
 }
-
-#define OK_NAME(name,mask)  (mask[0]=='\0' || \
-							 strncmp(strcpy(tmpname1,lower(GET_NAME(name))),\
-									 strcpy(tmpname2,lower(mask)),\
-									 strlen(mask))==0)
-/*
-int OK_NAME(struct char_data *name,const char*mask)
-{
-  char n1[80],n2[80];
-  if(!*mask) return 1;
-  strcpy(n1,lower(GET_NAME(name)));
-  strcpy(n2,lower(mask));
-  return(strncmp(n1,n2,strlen(mask))==0);
-}
-*/
 
 namespace {
 /* Centra la stringa colorata livello+classi nel campo a 34 caratteri (logica who originale). */
@@ -4491,21 +4151,25 @@ ACTION_FUNC(do_who) {
 	std::string whoBuf;
 	std::array<char, 512> argBuf{};
 	int count;
-	char flags[20]="";
-	char name_mask[40]="";
-	char tmpname1[80],tmpname2[80];
+	std::string flags;
+	std::string nameMask;
 	int listed = 0;
 	int lcount =0;
 	int  skip = FALSE;
-	char ttbuf[256];
 
 	/*  check for an arg */
 	auto storeWhoToken = [&](const char* token) {
 		if(token[0] == '-' && token[1] != '\0') {
-			std::snprintf(flags, sizeof(flags), "%s", token + 1);
+			flags = token + 1;
+			if(flags.size() > 19) {
+				flags.resize(19);
+			}
 		}
 		else {
-			std::snprintf(name_mask, sizeof(name_mask), "%s", token);
+			nameMask = token;
+			if(nameMask.size() > 39) {
+				nameMask.resize(39);
+			}
 		}
 	};
 
@@ -4517,10 +4181,30 @@ ACTION_FUNC(do_who) {
 	}
 
 	const auto hasFlag = [&](char f) {
-		return std::strchr(flags, f) != nullptr;
+		return flags.find(f) != std::string::npos;
+	};
+	const auto lowerCopy = [](const std::string& value) {
+		std::string out;
+		out.reserve(value.size());
+		for(const unsigned char ch : value) {
+			out.push_back(static_cast<char>(std::tolower(ch)));
+		}
+		return out;
+	};
+	const std::string loweredNameMask = lowerCopy(nameMask);
+	const auto matchesNameMask = [&](const struct char_data* target) {
+		if(loweredNameMask.empty()) {
+			return true;
+		}
+		const char* baseName = GET_NAME(target);
+		if(baseName == nullptr) {
+			return false;
+		}
+		const std::string loweredName = lowerCopy(baseName);
+		return loweredName.compare(0, loweredNameMask.size(), loweredNameMask) == 0;
 	};
 
-	if((IS_DIO_MINORE(ch) && flags[0] == '\0') || !IS_DIO_MINORE(ch) ||
+	if((IS_DIO_MINORE(ch) && flags.empty()) || !IS_DIO_MINORE(ch) ||
 			cmd == CMD_WHOZONE) {
 		if(IS_DIO_MINORE(ch)) {
 			whoBuf =
@@ -4539,191 +4223,189 @@ ACTION_FUNC(do_who) {
 		count=0;
 		for(person = character_list; person; person = person->next) {
 			if(!IS_LINKDEAD(person) and IS_PC(person) and
-					OK_NAME(person, name_mask) and
+					matchesNameMask(person) and
 					person->invis_level <= GetMaxLevel(ch) and
 					(cmd != CMD_WHOZONE or
 					 (real_roomp(person->in_room) and
 					  real_roomp(person->in_room)->zone ==
 					  real_roomp(ch->in_room)->zone))and
 					(!hasFlag('g') or IS_IMMORTAL(person))) {
-				if(OK_NAME(person,name_mask)) {
-					count++;
+				count++;
 
-					std::string row;
-					if(cmd == CMD_WHOZONE) {
-						/* it's a whozone command */
-						if((!IS_AFFECTED(person, AFF_HIDE)) || (IS_IMMORTAL(ch))) {
-							std::ostringstream wz;
-							wz << "$c0012" << std::left << std::setw(25)
-							   << (GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "")
-							   << " - "
-							   << (IS_AFFECTED(person, AFF_SNEAK) ?
-								   "sneaking around" :
-								   real_roomp(person->in_room)->name);
-							row = wz.str();
-							if(GetMaxLevel(ch) >= IMMORTALE) {
-								row += " [";
-								row += std::to_string(person->in_room);
-								row += "]";
+				std::string row;
+				if(cmd == CMD_WHOZONE) {
+					/* it's a whozone command */
+					if((!IS_AFFECTED(person, AFF_HIDE)) || (IS_IMMORTAL(ch))) {
+						std::ostringstream wz;
+						wz << "$c0012" << std::left << std::setw(25)
+						   << (GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "")
+						   << " - "
+						   << (IS_AFFECTED(person, AFF_SNEAK) ?
+							   "sneaking around" :
+							   real_roomp(person->in_room)->name);
+						row = wz.str();
+						if(GetMaxLevel(ch) >= IMMORTALE) {
+							row += " [";
+							row += std::to_string(person->in_room);
+							row += "]";
+						}
+					}
+				}
+				else {
+					std::string levelsStr;
+					std::string classesStr;
+					const char* classname[]= { "Mu","Cl","Wa","Th","Dr","Mo","Ba","So","Pa",
+											   "Ra","Ps"
+											 };
+					int i,total,classn;
+					long bit;
+					if(GetMaxLevel(person) < IMMORTALE) {
+						for(bit=1,i=total=classn=0; i<PSI_LEVEL_IND+1; i++, bit<<=1) {
+							if(HasClass(person,bit)) {
+								classn++;
+								total+=person->player.level[i];
+								if(!classesStr.empty()) {
+									classesStr += "/";
+								}
+								if(IS_SET(person->player.user_flags,SHOW_CLASSES)) {
+									classesStr += classname[i];
+								}
 							}
 						}
+						/*		     total/=classn; */
+						/* Modifica Urhar dello who in base alla classe piu' alta e non alla media */
+						total= GetMaxLevel(person);
+						/* fine modifica */
+						if(IS_PRINCE(person) || total == PRINCIPE) {  // SALVO per riconoscere anche il poly
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0008Principe":
+								   "$c0008Principessa";
+						}
+						else if(total<ALLIEVO)  /* 1-10 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0002Novizio":
+								   "$c0002Novizia";
+						else if(total<APPRENDISTA) {   /* 11-20 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0004Allievo":"$c0004Allieva";
+						}
+						else if(total<INIZIATO)       /* 21-30 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0006Apprendista":
+								   "$c0006Apprendista";
+						else if(total<ESPERTO)      /* 31-40 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0014Iniziato":
+								   "$c0014Iniziata";
+						else if(total<MAESTRO)      /* 41-45 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0009Esperto":
+								   "$c0009Esperta";
+						else if(total<BARONE)       /* 46-49 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Maestro":
+								   "$c0015Maestra";
+						else if(GET_EXP(person)<CONTE) /* 50 */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Barone":
+								   "$c0015Baronessa";
+						else if(GET_EXP(person)<MARCHESE)   /* fino ai 200M */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Conte":
+								   "$c0015Contessa";
+						else if(GET_EXP(person)<DUCA)       /* 250M */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Marchese":
+								   "$c0015Marchesa";
+						else if(GET_EXP(person)<GRANDUCA)   /* 300M */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Duca":
+								   "$c0015Duchessa";
+						else if(GET_EXP(person)<PRINCEEXP)   /* 350M */
+							levelsStr = GET_SEX(person)==SEX_MALE?"$c0001Granduca":
+								   "$c0001Granduchessa";
+						const std::string mid = levelsStr + " $c0012" + classesStr;
+						const std::string centered = who_center_label34(mid);
+						const char* nm = GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "nemo";
+						row = centered + "$c0005: $c0007" + std::string(nm) + " ";
+						row += person->player.title ? person->player.title : "";
+						row += " $c0007";
+						row += HAS_PRINCE(person) ? "del clan di " : "";
+						row += HAS_PRINCE(person) && GET_PRINCE(person) ? GET_PRINCE(person) : "";
+
 					}
 					else {
-						std::string levelsStr;
-						std::string classesStr;
-						const char* classname[]= { "Mu","Cl","Wa","Th","Dr","Mo","Ba","So","Pa",
-												   "Ra","Ps"
-												 };
-						int i,total,classn;
-						long bit;
-						if(GetMaxLevel(person) < IMMORTALE) {
-							for(bit=1,i=total=classn=0; i<PSI_LEVEL_IND+1; i++, bit<<=1) {
-								if(HasClass(person,bit)) {
-									classn++;
-									total+=person->player.level[i];
-									if(!classesStr.empty()) {
-										classesStr += "/";
-									}
-									if(IS_SET(person->player.user_flags,SHOW_CLASSES)) {
-										classesStr += classname[i];
-									}
-								}
+						if(GET_SEX(person) == SEX_FEMALE) {
+							switch(GetMaxLevel(person)) {
+							case 52:
+								levelsStr = "Immortale";
+								break;
+							case 53:
+								levelsStr = "Dea Minore";
+								break;
+							case 54:
+								levelsStr = "Dea";
+								break;
+							case 55:
+								levelsStr = "Maestra degli Dei";
+								break;
+							case 56:
+								levelsStr = "Creatrice";
+								break;
+							case 57:
+								levelsStr = "Maestra del Fato";
+								break;
+							case 58:
+								levelsStr = "Maestra del Creato";
+								break;
+							case 59:
+								levelsStr = "Maestra dei Creatori";
+								break;
+							case 60:
+								levelsStr = "Immensa";
+								break;
 							}
-							/*		     total/=classn; */
-							/* Modifica Urhar dello who in base alla classe piu' alta e non alla media */
-							total= GetMaxLevel(person);
-							/* fine modifica */
-							if(IS_PRINCE(person) || total == PRINCIPE) {  // SALVO per riconoscere anche il poly
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0008Principe":
-									   "$c0008Principessa";
-							}
-							else if(total<ALLIEVO)  /* 1-10 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0002Novizio":
-									   "$c0002Novizia";
-							else if(total<APPRENDISTA) {   /* 11-20 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0004Allievo":"$c0004Allieva";
-							}
-							else if(total<INIZIATO)       /* 21-30 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0006Apprendista":
-									   "$c0006Apprendista";
-							else if(total<ESPERTO)      /* 31-40 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0014Iniziato":
-									   "$c0014Iniziata";
-							else if(total<MAESTRO)      /* 41-45 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0009Esperto":
-									   "$c0009Esperta";
-							else if(total<BARONE)       /* 46-49 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Maestro":
-									   "$c0015Maestra";
-							else if(GET_EXP(person)<CONTE) /* 50 */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Barone":
-									   "$c0015Baronessa";
-							else if(GET_EXP(person)<MARCHESE)   /* fino ai 200M */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Conte":
-									   "$c0015Contessa";
-							else if(GET_EXP(person)<DUCA)       /* 250M */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Marchese":
-									   "$c0015Marchesa";
-							else if(GET_EXP(person)<GRANDUCA)   /* 300M */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0015Duca":
-									   "$c0015Duchessa";
-							else if(GET_EXP(person)<PRINCEEXP)   /* 350M */
-								levelsStr = GET_SEX(person)==SEX_MALE?"$c0001Granduca":
-									   "$c0001Granduchessa";
-							const std::string mid = levelsStr + " $c0012" + classesStr;
-							const std::string centered = who_center_label34(mid);
-							const char* nm = GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "nemo";
-							row = centered + "$c0005: $c0007" + std::string(nm) + " ";
-							row += person->player.title ? person->player.title : "";
-							row += " $c0007";
-							row += HAS_PRINCE(person) ? "del clan di " : "";
-							row += HAS_PRINCE(person) && GET_PRINCE(person) ? GET_PRINCE(person) : "";
-
 						}
 						else {
-							if(GET_SEX(person) == SEX_FEMALE) {
-								switch(GetMaxLevel(person)) {
-								case 52:
-									levelsStr = "Immortale";
-									break;
-								case 53:
-									levelsStr = "Dea Minore";
-									break;
-								case 54:
-									levelsStr = "Dea";
-									break;
-								case 55:
-									levelsStr = "Maestra degli Dei";
-									break;
-								case 56:
-									levelsStr = "Creatrice";
-									break;
-								case 57:
-									levelsStr = "Maestra del Fato";
-									break;
-								case 58:
-									levelsStr = "Maestra del Creato";
-									break;
-								case 59:
-									levelsStr = "Maestra dei Creatori";
-									break;
-								case 60:
-									levelsStr = "Immensa";
-									break;
-								}
-							}
-							else {
-								switch(GetMaxLevel(person)) {
-								case 52:
-									levelsStr = "Immortale";
-									break;
-								case 53:
-									levelsStr = "Dio Minore";
-									break;
-								case 54:
-									levelsStr = "Dio";
-									break;
-								case 55:
-									levelsStr = "Maestro degli Dei";
-									break;
-								case 56:
-									levelsStr = "Creatore";
-									break;
-								case 57:
-									levelsStr = "Maestro del Fato";
-									break;
-								case 58:
-									levelsStr = "Maestro del Creato";
-									break;
-								case 59:
-									levelsStr = "Maestro dei Creatori";
-									break;
-								case 60:
-									levelsStr = "Immenso";
-									break;
-								};
-							}
-							const std::string immMid = std::string("$c0008") + levelsStr + " $c0005";
-							const std::string centered = who_center_label34(immMid);
-							std::ostringstream nm10;
-							nm10 << std::left << std::setw(10)
-								 << (GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "");
-							row = centered + "$c0005: $c0011" + nm10.str() + " ";
-							row += person->player.title ? person->player.title : "";
-							row += "$c0007";
+							switch(GetMaxLevel(person)) {
+							case 52:
+								levelsStr = "Immortale";
+								break;
+							case 53:
+								levelsStr = "Dio Minore";
+								break;
+							case 54:
+								levelsStr = "Dio";
+								break;
+							case 55:
+								levelsStr = "Maestro degli Dei";
+								break;
+							case 56:
+								levelsStr = "Creatore";
+								break;
+							case 57:
+								levelsStr = "Maestro del Fato";
+								break;
+							case 58:
+								levelsStr = "Maestro del Creato";
+								break;
+							case 59:
+								levelsStr = "Maestro dei Creatori";
+								break;
+							case 60:
+								levelsStr = "Immenso";
+								break;
+							};
 						}
+						const std::string immMid = std::string("$c0008") + levelsStr + " $c0005";
+						const std::string centered = who_center_label34(immMid);
+						std::ostringstream nm10;
+						nm10 << std::left << std::setw(10)
+							 << (GET_NAME_DESC(person) ? GET_NAME_DESC(person) : "");
+						row = centered + "$c0005: $c0011" + nm10.str() + " ";
+						row += person->player.title ? person->player.title : "";
+						row += "$c0007";
 					}
-					if(!row.empty()) {
-						if(IS_AFFECTED2(person,AFF2_AFK)) {
-							row += "$c0008 AF";
-						}
-						if(IS_SET(person->player.user_flags,RACE_WAR)) {
-							row += "$c0001 PK";
-						}
-						row += " $c0007\n\r";
-						if(whoBuf.size() + row.size() < (MAX_STRING_LENGTH * 2) - 512) {
-							whoBuf += row;
-						}
+				}
+				if(!row.empty()) {
+					if(IS_AFFECTED2(person,AFF2_AFK)) {
+						row += "$c0008 AF";
+					}
+					if(IS_SET(person->player.user_flags,RACE_WAR)) {
+						row += "$c0001 PK";
+					}
+					row += " $c0007\n\r";
+					if(whoBuf.size() + row.size() < (MAX_STRING_LENGTH * 2) - 512) {
+						whoBuf += row;
 					}
 				}
 			}
@@ -4785,9 +4467,9 @@ ACTION_FUNC(do_who) {
 		const bool showLinkdead = hasFlag('d');
 
 		for(person = character_list; person; person = person->next) {
-			if(!IS_NPC(person) and CAN_SEE(ch, person) and OK_NAME(person,name_mask)) {
+			if(!IS_NPC(person) and CAN_SEE(ch, person) and matchesNameMask(person)) {
 				count++;
-				if(person->desc == NULL) {
+				if(person->desc == nullptr) {
 					lcount ++;
 				}
 				skip = (filterGods && !IS_IMMORTAL(person))
@@ -4806,108 +4488,122 @@ ACTION_FUNC(do_who) {
 
 				if(!skip) {
 					std::string godLine;
-					std::array<char, 512> line0{};
-					if(person->desc == NULL) {
+					if(person->desc == nullptr) {
 						if(showLinkdead) {
-							std::snprintf(line0.data(), line0.size(),
-										  "$c0003[%-12s] ", GET_NAME(person));
-							godLine = line0.data();
+							std::ostringstream line;
+							line << "$c0003[" << std::left << std::setw(12) << GET_NAME(person) << "] ";
+							godLine = line.str();
 							listed++;
 						}
 					}
 					else if(IS_NPC(person) && IS_SET(person->specials.act, ACT_POLYSELF)) {
-						std::snprintf(line0.data(), line0.size(), "(%-12s) ", GET_NAME(person));
-						godLine = line0.data();
+						std::ostringstream line;
+						line << "(" << std::left << std::setw(12) << GET_NAME(person) << ") ";
+						godLine = line.str();
 						listed++;
 					}
 					else {
-						std::snprintf(line0.data(), line0.size(), "$c0012%-14s ",
-									  GET_NAME(person));
-						godLine = line0.data();
+						std::ostringstream line;
+						line << "$c0012" << std::left << std::setw(14) << GET_NAME(person) << " ";
+						godLine = line.str();
 						listed++;
 					}
 					const bool appendDetail =
-						(person->desc != NULL) || showLinkdead;
+						(person->desc != nullptr) || showLinkdead;
 					if(appendDetail) {
-						for(const char* fp = flags; *fp != '\0'; ++fp) {
-							const char fc = *fp;
+						for(const char fc : flags) {
 							switch(fc) {
 							case 'r': {
 								/* show race */
-								sprinttype((person->race),RaceName,ttbuf);
+								std::array<char, 256> raceBuf{};
+								sprinttype((person->race), RaceName, raceBuf.data());
 								godLine += " [";
-								godLine += ttbuf;
+								godLine += raceBuf.data();
 								godLine += "] ";
 								break;
 							}
 							case 'e': {
-								char u[256];
-								std::snprintf(u, sizeof(u), "Eq:[%f] ", GetCharBonusIndex(person));
-								godLine += u;
+								std::ostringstream out;
+								out << "Eq:[" << GetCharBonusIndex(person) << "] ";
+								godLine += out.str();
 								break;
 							}
 							case 'a': {
-								char u[256];
-								std::snprintf(u, sizeof(u), "Al:[%d] ", GET_ALIGNMENT(person));
-								godLine += u;
+								std::ostringstream out;
+								out << "Al:[" << GET_ALIGNMENT(person) << "] ";
+								godLine += out.str();
 								break;
 							}
 							case 'i': {
-								char u[256];
-								std::snprintf(u, sizeof(u), "Idle:[%-3d] ", person->specials.timer);
-								godLine += u;
+								std::ostringstream out;
+								out << "Idle:[" << std::left << std::setw(3) << person->specials.timer << "] ";
+								godLine += out.str();
 								break;
 							}
 							case 'l': {
-								char u[256];
-								std::snprintf(u, sizeof(u), "Level:[%-2d/%-2d/%-2d/%-2d/%-2d/"
-										 "%-2d/%-2d/%-2d/%-2d/%-2d/%-2d] ",
-										 person->player.level[0],person->player.level[1],
-										 person->player.level[2],person->player.level[3],
-										 person->player.level[4],person->player.level[5],
-										 person->player.level[6],person->player.level[7],
-										 person->player.level[8],person->player.level[9],
-										 person->player.level[10]);
-								godLine += u;
+								const auto lvl = [&](int idx) {
+									return static_cast<int>(person->player.level[idx]);
+								};
+								std::ostringstream out;
+								out << "Level:["
+									<< std::left << std::setw(2) << lvl(0) << "/"
+									<< std::left << std::setw(2) << lvl(1) << "/"
+									<< std::left << std::setw(2) << lvl(2) << "/"
+									<< std::left << std::setw(2) << lvl(3) << "/"
+									<< std::left << std::setw(2) << lvl(4) << "/"
+									<< std::left << std::setw(2) << lvl(5) << "/"
+									<< std::left << std::setw(2) << lvl(6) << "/"
+									<< std::left << std::setw(2) << lvl(7) << "/"
+									<< std::left << std::setw(2) << lvl(8) << "/"
+									<< std::left << std::setw(2) << lvl(9) << "/"
+									<< std::left << std::setw(2) << lvl(10) << "] ";
+								godLine += out.str();
 								break;
 							}
 							case 'h': {
-								char u[256];
-								std::snprintf(u, sizeof(u), "Hit:[%-3d] Mana:[%-3d] Move:[%-3d] ",
-										 GET_HIT(person), GET_MANA(person), GET_MOVE(person));
-								godLine += u;
+								std::ostringstream out;
+								out << "Hit:[" << std::left << std::setw(3) << GET_HIT(person)
+									<< "] Mana:[" << std::left << std::setw(3) << GET_MANA(person)
+									<< "] Move:[" << std::left << std::setw(3) << GET_MOVE(person) << "] ";
+								godLine += out.str();
 								break;
 							}
 							case 'c':
 								if(HAS_PRINCE(person)) {
-									char u[256];
-									std::snprintf(u, sizeof(u), "del clan di %s",
-											 GET_PRINCE(person));
-									godLine += u;
+									godLine += "del clan di ";
+									godLine += GET_PRINCE(person);
 								}
 								break;
 							case 's':
 								if(GET_STR(person) != 18) {
-									std::snprintf(ttbuf, sizeof(ttbuf), "[S:%-2d I:%-2d W:%-2d "
-											 "C:%-2d D:%-2d CH:%-2d] ",
-											 GET_STR(person),GET_INT(person),GET_WIS(person),
-											 GET_CON(person),GET_DEX(person),GET_CHR(person));
+									std::ostringstream out;
+									out << "[S:" << std::left << std::setw(2) << GET_STR(person)
+										<< " I:" << std::left << std::setw(2) << GET_INT(person)
+										<< " W:" << std::left << std::setw(2) << GET_WIS(person)
+										<< " C:" << std::left << std::setw(2) << GET_CON(person)
+										<< " D:" << std::left << std::setw(2) << GET_DEX(person)
+										<< " CH:" << std::left << std::setw(2) << GET_CHR(person)
+										<< "] ";
+									godLine += out.str();
 								}
 								else {
-									std::snprintf(ttbuf, sizeof(ttbuf), "[S:%-2d(%1d) I:%-2d W:%-2d "
-											 "C:%-2d D:%-2d CH:%-2d] ",
-											 GET_STR(person),GET_ADD(person),GET_INT(person),
-											 GET_WIS(person),GET_CON(person),GET_DEX(person),
-											 GET_CHR(person));
+									std::ostringstream out;
+									out << "[S:" << std::left << std::setw(2) << GET_STR(person)
+										<< "(" << std::setw(1) << GET_ADD(person) << ")"
+										<< " I:" << std::left << std::setw(2) << GET_INT(person)
+										<< " W:" << std::left << std::setw(2) << GET_WIS(person)
+										<< " C:" << std::left << std::setw(2) << GET_CON(person)
+										<< " D:" << std::left << std::setw(2) << GET_DEX(person)
+										<< " CH:" << std::left << std::setw(2) << GET_CHR(person)
+										<< "] ";
+									godLine += out.str();
 								}
-								godLine += ttbuf;
 								break;
 							case 't': {
-								char u[256];
-								std::snprintf(u, sizeof(u), " %-16s ", (person->player.title ?
-																person->player.title :
-																"(null)"));
-								godLine += u;
+								std::ostringstream out;
+								out << " " << std::left << std::setw(16)
+									<< (person->player.title ? person->player.title : "(null)") << " ";
+								godLine += out.str();
 								break;
 							}
 							default:
@@ -4916,7 +4612,7 @@ ACTION_FUNC(do_who) {
 						}
 					}
 					if(appendDetail) {
-						if(OK_NAME(person,name_mask)) {
+						if(matchesNameMask(person)) {
 							if(whoBuf.size() + godLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
 								whoBuf += godLine;
 								whoBuf += "\n\r";
@@ -4932,11 +4628,13 @@ ACTION_FUNC(do_who) {
 			totalsLine = "\n\r$c0005Nessun personaggio con le caratteristiche richieste.\n\r";
 		}
 		else {
-			char totalsBuf[256];
-			std::snprintf(totalsBuf, sizeof(totalsBuf),
-					  "\n\r$c0005Totale giocatori / Link dead [%d/%d] (%2.0f%%)\n\r",
-					  count, lcount, ((float)lcount / (int)count) * 100);
-			totalsLine = totalsBuf;
+			const float linkdeadPct = (count > 0) ? (static_cast<float>(lcount) / static_cast<float>(count)) * 100.0f : 0.0f;
+			std::ostringstream totals;
+			totals << "\n\r$c0005Totale giocatori / Link dead ["
+				   << count << "/" << lcount << "] ("
+				   << std::fixed << std::setprecision(0) << linkdeadPct
+				   << "%)\n\r";
+			totalsLine = totals.str();
 		}
 		if(whoBuf.size() + totalsLine.size() < (MAX_STRING_LENGTH * 2) - 512) {
 			whoBuf += totalsLine;
@@ -5073,8 +4771,9 @@ char* numbered_object(struct char_data* ch, struct obj_data* obj) {
 	else {
 		value = obj->short_description ? obj->short_description : "";
 	}
-	std::strncpy(buf.data(), value.c_str(), buf.size() - 1);
-	buf[buf.size() - 1] = '\0';
+	const std::size_t copyLen = std::min(value.size(), buf.size() - 1);
+	std::copy_n(value.data(), copyLen, buf.data());
+	buf[copyLen] = '\0';
 	return buf.data();
 }
 
@@ -5106,8 +4805,9 @@ char* numbered_person(struct char_data* ch, struct char_data* person) {
 	else {
 		value = PERS(person, ch);
 	}
-	std::strncpy(buf.data(), value.c_str(), buf.size() - 1);
-	buf[buf.size() - 1] = '\0';
+	const std::size_t copyLen = std::min(value.size(), buf.size() - 1);
+	std::copy_n(value.data(), copyLen, buf.data());
+	buf[copyLen] = '\0';
 	return buf.data();
 }
 
@@ -5145,14 +4845,14 @@ void do_where_object(struct char_data* ch, struct obj_data* obj,
 		line += std::to_string(obj->in_room);
 		line += "]\n\r";
 	}
-	else if(obj->carried_by != NULL) {
+	else if(obj->carried_by != nullptr) {
 		/* object carried by monster */
 		line = shortDesc;
 		line += "- trasportato da ";
 		line += numbered_person(ch, obj->carried_by);
 		line += "\n\r";
 	}
-	else if(obj->equipped_by != NULL) {
+	else if(obj->equipped_by != nullptr) {
 		/* object equipped by monster */
 		line = shortDesc;
 		line += "- usato da ";
@@ -5178,13 +4878,13 @@ void do_where_object(struct char_data* ch, struct obj_data* obj,
 		if(obj->in_room != NOWHERE) {
 			return;
 		}
-		else if(obj->carried_by != NULL) {
+		else if(obj->carried_by != nullptr) {
 			do_where_person(ch, obj->carried_by, sb);
 		}
-		else if(obj->equipped_by != NULL) {
+		else if(obj->equipped_by != nullptr) {
 			do_where_person(ch, obj->equipped_by, sb);
 		}
-		else if(obj->in_obj != NULL) {
+		else if(obj->in_obj != nullptr) {
 			do_where_object(ch, obj->in_obj, TRUE, sb);
 		}
 	}
@@ -5201,8 +4901,28 @@ void owhere(struct char_data* ch, char* nome)
  //   string sb_rent_pg;
 
 	only_argument(nome, name.data());
-
-	int N_oggetto = std::atoi(name.data());
+	int N_oggetto = -1;
+	if(is_number(name.data()))
+	{
+		char* parseEnd = nullptr;
+		errno = 0;
+		const long long parsedObjectNum = std::strtoll(name.data(), &parseEnd, 10);
+		if(parseEnd != name.data() && *parseEnd == '\0')
+		{
+			if(errno == ERANGE || parsedObjectNum > static_cast<long long>(std::numeric_limits<int>::max()))
+			{
+				N_oggetto = std::numeric_limits<int>::max();
+			}
+			else if(parsedObjectNum < static_cast<long long>(std::numeric_limits<int>::min()))
+			{
+				N_oggetto = std::numeric_limits<int>::min();
+			}
+			else
+			{
+				N_oggetto = static_cast<int>(parsedObjectNum);
+			}
+		}
+	}
 
 	init_string_block(&sb);
 
@@ -5667,12 +5387,12 @@ ACTION_FUNC(do_consider) {
 
 #if 1
 
-		num = (int)GetApprox(GET_MAX_HIT(victim), learn);
-		num2 = (int)GET_MAX_HIT(ch);
+		num = static_cast<int>(GetApprox(GET_MAX_HIT(victim), learn));
+		num2 = static_cast<int>(GET_MAX_HIT(ch));
 		if(!num2) {
 			num2=1;
 		}
-		fnum = ((int)num/(int)num2);
+		fnum = static_cast<int>(num) / static_cast<int>(num2);
 		{
 			std::string msg = "Il numero massimo di punti ferita e' ";
 			msg += DescRatio(fnum);
@@ -5680,10 +5400,10 @@ ACTION_FUNC(do_consider) {
 			send_to_char(msg.c_str(), ch);
 		}
 
-		num = 105+(int)GetApprox(GET_AC(victim), learn);
-		num2 = 105+(int)GET_AC(ch);
+		num = 105 + static_cast<int>(GetApprox(GET_AC(victim), learn));
+		num2 = 105 + static_cast<int>(GET_AC(ch));
 //    if (!num2) num2=1;
-		fnum = ((int)num-(int)num2);
+		fnum = static_cast<int>(num) - static_cast<int>(num2);
 
 		{
 			std::string msg = "La classe di armatura e' ";
@@ -5696,19 +5416,19 @@ ACTION_FUNC(do_consider) {
 
 		if(learn > 60) {
 			std::string msg = "Ha ";
-			msg += DescAttacks((int)GetApprox((int)victim->mult_att, learn));
+			msg += DescAttacks(static_cast<int>(GetApprox(static_cast<int>(victim->mult_att), learn)));
 			msg += " attacchi per turno.\n\r";
 			send_to_char(msg.c_str(), ch);
 		}
 
 		if(learn > 70) {
 
-			num = (int)GetApprox((int)victim->specials.damnodice, learn);
-			num2 = (int)GetApprox((int)victim->specials.damsizedice, learn);
+			num = static_cast<int>(GetApprox(static_cast<int>(victim->specials.damnodice), learn));
+			num2 = static_cast<int>(GetApprox(static_cast<int>(victim->specials.damsizedice), learn));
 			if(!num2) {
 				num2=1;
 			}
-			fnum = (int)num*(num2/2.0);
+			fnum = static_cast<int>(num) * (num2 / 2.0);
 			{
 				std::string msg = "Il danno per attacco e' ";
 				msg += DescDamage(fnum);
@@ -5719,13 +5439,13 @@ ACTION_FUNC(do_consider) {
 
 		if(learn > 80) {
 
-			num = (int)GetApprox(GET_HITROLL(victim), learn);
-			num2 = ((int)21 - CalcThaco(ch, NULL));
+			num = static_cast<int>(GetApprox(GET_HITROLL(victim), learn));
+			num2 = static_cast<int>(21) - CalcThaco(ch, nullptr);
 			if(!num2) {
 				num2=1;
 			}
 			if(num2 > 0) {
-				fnum = ((int)num/(int)num2);
+				fnum = static_cast<int>(num) / static_cast<int>(num2);
 			}
 			else {
 				fnum = 2.0;
@@ -5744,7 +5464,7 @@ ACTION_FUNC(do_consider) {
 			if(!num2) {
 				num2=1;
 			}
-			fnum = ((int)num/(int)num2);
+			fnum = static_cast<int>(num) / static_cast<int>(num2);
 
 			{
 				std::string msg = "Il bonus al danno e' ";
@@ -6533,13 +6253,22 @@ const char* DescAttacks(float a) {
 
 
 ACTION_FUNC(do_display) {
-	int i;
+	int i = -1;
 
 	if(IS_NPC(ch)) {
 		return;
 	}
 
-	i = std::atoi(arg);
+	if(arg != nullptr && *arg != '\0') {
+		char* parseEnd = nullptr;
+		errno = 0;
+		const long parsedMode = std::strtol(arg, &parseEnd, 10);
+		if(parseEnd != arg && *parseEnd == '\0' && errno != ERANGE &&
+				parsedMode >= std::numeric_limits<int>::min() &&
+				parsedMode <= std::numeric_limits<int>::max()) {
+			i = static_cast<int>(parsedMode);
+		}
+	}
 
 	switch(i) {
 	case 0:
@@ -6573,10 +6302,9 @@ ACTION_FUNC(do_display) {
 }
 
 void ScreenOff(struct char_data* ch) {
-	char buf[255];
-
-	snprintf(buf, 254,VT_MARGSET, 0, ch->size- 1);
-	send_to_char(buf, ch);
+	std::array<char, 255> buf{};
+	std::snprintf(buf.data(), buf.size(), VT_MARGSET, 0, ch->size - 1);
+	send_to_char(buf.data(), ch);
 	send_to_char(VT_HOMECLR, ch);
 }
 
@@ -6587,7 +6315,16 @@ ACTION_FUNC(do_resize) {
 		return;
 	}
 
-	i = std::atoi(arg);
+	char* parseEnd = nullptr;
+	errno = 0;
+	const long parsedHeight = std::strtol(arg, &parseEnd, 10);
+	if(parseEnd == arg || *parseEnd != '\0' || errno == ERANGE ||
+			parsedHeight < std::numeric_limits<int>::min() ||
+			parsedHeight > std::numeric_limits<int>::max()) {
+		send_to_char("Inserisci un numero valido.\n\r", ch);
+		return;
+	}
+	i = static_cast<int>(parsedHeight);
 
 	if(i < 7) {
 		send_to_char("L'altezza dello schermo deve essere maggiore di 7.\n\r", ch);
@@ -6628,7 +6365,7 @@ int MobLevBonus(struct char_data* ch) {
 		t+=3;
 	}
 
-	t += (int)((ch->mult_att - 1) * 3);
+	t += static_cast<int>((ch->mult_att - 1) * 3);
 
 	if(GET_HIT(ch) > GetMaxLevel(ch)*8) {
 		t+=1;
@@ -7102,7 +6839,7 @@ void list_groups(struct char_data* ch,const char* szArg, int iCmd) {
 					/* list the members that ch can see */
 					count = 0;
 					for(f=person->followers; f; f=f->next) {
-						if(f == NULL) {
+						if(f == nullptr) {
 							mudlog(LOG_ERROR, "person is affected by AFF_GROUP and don't "
 								   "have followers.");
 						}
@@ -7173,26 +6910,26 @@ struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf,
 	long rm;
 	int range = 0;
 	struct char_data* spud;
-	char tmpname[ MAX_STRING_LENGTH ];
+	std::array<char, MAX_STRING_LENGTH> tmpname{};
 
 
 
-	arg = one_argument(arg, tmpname);
+	arg = one_argument(arg, tmpname.data());
 
-	if((spud = get_char_room_vis(ch, tmpname)) != NULL) {
+	if((spud = get_char_room_vis(ch, tmpname.data())) != nullptr) {
 		*rf = 0;
 		*df = -1;
 		return spud;
 	}
 
-	*df = search_block(tmpname, exitKeywords, FALSE);
+	*df = search_block(tmpname.data(), exitKeywords, FALSE);
 	if(*df < 0) {
-		return NULL;
+		return nullptr;
 	}
 
-	arg = one_argument(arg, tmpname);
-	if(strn_cmp(tmpname, "at", 2) && isspace(tmpname[ 2 ])) {
-		arg = one_argument(arg, tmpname);
+	arg = one_argument(arg, tmpname.data());
+	if(strn_cmp(tmpname.data(), "at", 2) && isspace(tmpname[ 2 ])) {
+		arg = one_argument(arg, tmpname.data());
 	}
 
 	rm = ch->in_room;
@@ -7201,7 +6938,7 @@ struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf,
 		range++;
 		if(clearpath(ch, rm, *df)) {
 			rm = real_roomp(rm)->dir_option[ *df ]->to_room;
-			if((spud = get_char_near_room_vis(ch, tmpname, rm)) != NULL) {
+			if((spud = get_char_near_room_vis(ch, tmpname.data(), rm)) != nullptr) {
 				*rf = range;
 				return spud;
 			}
@@ -7211,6 +6948,6 @@ struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf,
 			break;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 } // namespace Alarmud
