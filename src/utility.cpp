@@ -568,7 +568,7 @@ void CheckQuestFail(struct char_data* ch)
 
     const long long quest_total_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL]) -
                                          static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE]);
-    const long long quest_total_failed_target = quest_total_target - 1LL;
+    const long long quest_total_failed_target = (quest_total_target > 0LL) ? quest_total_target : 0LL;
     if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) != quest_total_failed_target)
     {
         if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) < quest_total_failed_target)
@@ -611,7 +611,7 @@ void CheckQuestFail(struct char_data* ch)
     {
         const long long quest_hunt_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) -
                                             static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]);
-        const long long quest_hunt_failed_target = quest_hunt_target - 1LL;
+        const long long quest_hunt_failed_target = (quest_hunt_target > 0LL) ? quest_hunt_target : 0LL;
         if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]) < quest_hunt_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is less than the correct", GET_NAME(tch));
@@ -646,7 +646,7 @@ void CheckQuestFail(struct char_data* ch)
     {
         const long long quest_rescue_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) -
                                               static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]);
-        const long long quest_rescue_failed_target = quest_rescue_target - 1LL;
+        const long long quest_rescue_failed_target = (quest_rescue_target > 0LL) ? quest_rescue_target : 0LL;
         if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]) < quest_rescue_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is less than the correct", GET_NAME(tch));
@@ -681,7 +681,7 @@ void CheckQuestFail(struct char_data* ch)
     {
         const long long quest_research_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) -
                                                 static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]);
-        const long long quest_research_failed_target = quest_research_target - 1LL;
+        const long long quest_research_failed_target = (quest_research_target > 0LL) ? quest_research_target : 0LL;
         if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]) < quest_research_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is less than the correct", GET_NAME(tch));
@@ -716,7 +716,7 @@ void CheckQuestFail(struct char_data* ch)
     {
         const long long quest_delivery_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) -
                                                 static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]);
-        const long long quest_delivery_failed_target = quest_delivery_target - 1LL;
+        const long long quest_delivery_failed_target = (quest_delivery_target > 0LL) ? quest_delivery_target : 0LL;
         if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]) < quest_delivery_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is less than the correct", GET_NAME(tch));
