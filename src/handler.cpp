@@ -2318,10 +2318,14 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 
 	if(IS_NPC(ch)) {
 		for(k = character_list; k; k = k->next) {
-			if(k->specials.hunting)
+			if(k->specials.hunting) {
 				if(k->specials.hunting == ch) {
+					if(IS_PC(k) && k->desc) {
+						send_to_char("$c0012Hai perso la tua preda.$c0007\n\r", k);
+					}
 					k->specials.hunting = 0;
 				}
+			}
 
 			if(Hates(k, ch)) {
 				RemHated(k, ch);
@@ -2338,10 +2342,14 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	}
 	else {
 		for(k = character_list; k; k = k->next) {
-			if(k->specials.hunting)
+			if(k->specials.hunting) {
 				if(k->specials.hunting == ch) {
+					if(IS_PC(k) && k->desc) {
+						send_to_char("$c0012Hai perso la tua preda.$c0007\n\r", k);
+					}
 					k->specials.hunting = 0;
 				}
+			}
 
 			if(Hates(k, ch)) {
 				ZeroHatred(k, ch);
