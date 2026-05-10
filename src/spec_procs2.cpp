@@ -6307,7 +6307,7 @@ OBJSPECIAL_FUNC(SlotMachine) {
 	static long jackpot = 25;
 
 
-	if(type != EVENT_COMMAND && cmd != CMD_PULL) {
+	if(type != EVENT_COMMAND || cmd != CMD_PULL) {
 		return FALSE;
 	}
 	if(!arg) {
