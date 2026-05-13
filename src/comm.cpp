@@ -101,7 +101,7 @@ int tics = 0;        /* for extern checkpointing */
 int PORT=0;
 
 uint64_t aTimeCheck[ PULSE_MOBILE ];
-uint16_t NumTimeCheck = sizeof(aTimeCheck); /* dovrebbe essere il piu' grande dei PULSE */
+uint16_t NumTimeCheck = 0; /* indice anello per aTimeCheck[] (modulo PULSE_MOBILE) */
 
 
 struct affected_type*  Check_hjp, *Check_old_af;
@@ -593,7 +593,7 @@ void game_loop(int s) {
 	}
 	while(lag.count()<0);
 	/* check out the time */
-	aTimeCheck[ NumTimeCheck % sizeof(aTimeCheck)] = lag.count()+OPT_USEC;
+	aTimeCheck[NumTimeCheck % PULSE_MOBILE] = lag.count() + OPT_USEC;
 	NumTimeCheck++;
 
 

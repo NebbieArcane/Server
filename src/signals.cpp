@@ -54,8 +54,8 @@ void PrintStatus() {
 }
 void PrintStatus(int level) {
 	int i=0;
-	mudlog(LOG_SYSERR, "Connections from start: %d",
-		   HowManyConnection(0));
+	mudlog(LOG_SYSERR, "Connections from start: %llu",
+		   static_cast<unsigned long long>(HowManyConnection(0)));
 	if(level==1) {
 		mudlog(LOG_SYSERR,"CurrentTrack %s at %d",currentfile,currentline);
 		mudlog(LOG_SYSERR, "Mud status: '%s'",gszMudStatus);
