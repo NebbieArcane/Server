@@ -4,6 +4,7 @@
  *ALARMUD*/
 //  Original intial comments
 /***************************  System  include ************************************/
+#include <string>
 /***************************  Local    include ************************************/
 #ifndef _ACT_COMM_HPP
 #define _ACT_COMM_HPP
@@ -27,7 +28,7 @@ ACTION_FUNC(do_tell) ;
 ACTION_FUNC(do_whisper) ;
 ACTION_FUNC(do_write) ;
 bool is_same_group(struct char_data* ach, struct char_data* bch) ;
-char* scrambler(struct char_data* ch,const char* message) ;
+std::string scrambler(struct char_data* ch, const char* message);
 void talk_auction(const char* argument) ;
 void thief_listen(struct char_data* ch,struct char_data* victim,const char* frase,int cmd) ;
 } // namespace Alarmud
