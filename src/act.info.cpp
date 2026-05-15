@@ -21,6 +21,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unistd.h>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -170,6 +171,11 @@ char* find_ex_description(const char* word, const struct extra_descr_data* list)
 }
 
 namespace {
+
+bool info_cstr_nonempty_equal(const char* a, const char* b) {
+	return a != nullptr && b != nullptr && *a != '\0' && std::string_view(a) == std::string_view(b);
+}
+
 void CapitalizeGameLabel(std::string& text) {
 	if(text.size() > 7 && text[1] == '$') {
 		text[7] = UPPER(text[7]);
@@ -518,9 +524,7 @@ void list_obj_in_room(struct obj_data* list, struct char_data* ch) {
 			bool found = false;
 			for(int k = 0; k < cond_top && !found; k++) {
 				if((i->item_number == cond_ptr[k]->item_number) &&
-				   (i->description && *i->description &&
-				    cond_ptr[k]->description &&
-				    !strcmp(i->description, cond_ptr[k]->description))) {
+				   info_cstr_nonempty_equal(i->description, cond_ptr[k]->description)) {
 					cond_tot[k] += 1;
 					found = true;
 				}
@@ -566,8 +570,7 @@ void list_obj_in_heap(struct obj_data* list, struct char_data* ch) {
 			bool found = false;
 			for(int k = 0; k < cond_top && !found; k++) {
 				if((i->item_number == cond_ptr[k]->item_number) &&
-				   (i->short_description && cond_ptr[k]->short_description &&
-				    (!strcmp(i->short_description, cond_ptr[k]->short_description)))) {
+				   info_cstr_nonempty_equal(i->short_description, cond_ptr[k]->short_description)) {
 					cond_tot[k] += 1;
 					found = true;
 				}
@@ -1322,8 +1325,7 @@ void list_char_in_room(struct char_data* list, struct char_data* ch) {
 					   (GET_POS(i) == GET_POS(cond_ptr[k])) &&
 					   (i->specials.affected_by == cond_ptr[k]->specials.affected_by) &&
 					   (i->specials.fighting == cond_ptr[k]->specials.fighting) &&
-					   (i->player.short_descr && cond_ptr[k]->player.short_descr &&
-					    (0 == strcmp(i->player.short_descr, cond_ptr[k]->player.short_descr)))) {
+					   info_cstr_nonempty_equal(i->player.short_descr, cond_ptr[k]->player.short_descr)) {
 						cond_tot[k] += 1;
 						found = true;
 					}
@@ -2248,7 +2250,8 @@ ACTION_FUNC(do_checkachielevel)
         kAchievementLevelReviewers.begin(),
         kAchievementLevelReviewers.end(),
         [playerName](const char* allowedName) {
-            return std::strcmp(playerName, allowedName) == 0;
+            return playerName != nullptr && allowedName != nullptr &&
+                   std::string_view(playerName) == std::string_view(allowedName);
         });
     if(!isReviewer) {
         send_to_char("Pardon?\n\r", ch);
@@ -2281,8 +2284,8 @@ ACTION_FUNC(do_achievements)
     std::string sb;
 
     arg = one_argument(arg, arg1.data());
-    const auto isCommand = [&](const char* cmd) {
-        return std::strcmp(arg1.data(), cmd) == 0;
+    const auto isCommand = [&](std::string_view cmd) {
+        return std::string_view(arg1.data()) == cmd;
     };
     const auto applyPolyOriginalOrAbort = [&](char_data*& who) -> bool {
         if(!IS_POLY(who)) {
@@ -4541,7 +4544,7 @@ ACTION_FUNC(do_where) {
 	only_argument(copia, name.data());
 
 	copia = one_argument(copia, tipo.data());
-	if(std::strcmp(tipo.data(), "obj") == 0 && IS_DIO(ch)) {
+	if(std::string_view(tipo.data()) == "obj" && IS_DIO(ch)) {
 		only_argument(copia, name.data());
 		if(is_number(name.data())) {
 			mudlog(LOG_PLAYERS, "Looking for object #%s on rented toon", name.data());
