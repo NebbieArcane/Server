@@ -8,8 +8,10 @@
 #ifndef _ACT_MOVE_HPP
 #define _ACT_MOVE_HPP
 namespace Alarmud {
-int AddToCharHeap(struct char_data* heap[50], int* top, int total[50],struct char_data* k) ;
-void DisplayGroupMove(struct char_data* ch, int dir, int was_in, int total) ;
+constexpr int kMoveGroupHeapMax = 50;
+int AddToCharHeap(struct char_data* heap[kMoveGroupHeapMax], int* top, int totals[kMoveGroupHeapMax],
+                  struct char_data* k);
+void DisplayGroupMove(struct char_data* ch, int dir, int was_in, int total);
 void DisplayMove(struct char_data* ch, int dir, int was_in, int total) ;
 void DisplayOneMove(struct char_data* ch, int dir, int was_in) ;
 void MoveGroup(struct char_data* ch, int dir) ;
