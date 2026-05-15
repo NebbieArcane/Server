@@ -1054,14 +1054,23 @@ void show_string(struct descriptor_data* d, const char* input) {
 	}
 }
 
+static bool s_rebootSequenceStarted = FALSE;
+static int s_shutdownLevel = 0;
+
+bool auction_blocked_near_reboot(void) {
+	if(mudshutdown) {
+		return true;
+	}
+	/* shutdownlevel 20 = avviso "entro 10 minuti" in check_reboot */
+	return s_rebootSequenceStarted && s_shutdownLevel >= 20;
+}
+
 void check_reboot() {
 	static time_t lastCheck=time(0);
 	time_t tc;
 	struct tm* t_info;
 	FILE* boot;
 	static int TooMuchLag=-1;
-	static bool bBootSequenceStarted = FALSE;
-	static int shutdownlevel=0;
 	static int forceshutdown=0;
 	char REBOOTFILE[15];
 	if(GetLagIndex()> 400000) {
@@ -1078,12 +1087,12 @@ void check_reboot() {
 	tc = time(0);
 	t_info = localtime(&tc);
 	if(forceshutdown) {
-		shutdownlevel=25;
+		s_shutdownLevel=25;
 	}
 	// If we already on a reboot sequence, checking is pointless
-	if(!bBootSequenceStarted && (tc-lastCheck) >=60) {  //Once every minute
+	if(!s_rebootSequenceStarted && (tc-lastCheck) >=60) {  //Once every minute
 		update_max_usage();
-		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
+		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",s_shutdownLevel,s_rebootSequenceStarted,(tc-lastCheck));
 		lastCheck=tc;
 		int reboot_hour = t_info->tm_hour;
 		int reboot_tens = t_info->tm_min / 10;
@@ -1094,24 +1103,24 @@ void check_reboot() {
 		std::snprintf(REBOOTFILE, sizeof(REBOOTFILE), "REBOOT%02d%d0", reboot_hour, reboot_tens);
 		if((boot = fopen(REBOOTFILE, "r+"))) {
 			fclose(boot);
-			bBootSequenceStarted=TRUE;
-			shutdownlevel=0;
+			s_rebootSequenceStarted=TRUE;
+			s_shutdownLevel=0;
 		}
 		else {
 			sprintf(REBOOTFILE,"REBOOT.NOW");
 			if((boot = fopen(REBOOTFILE, "r+"))) {
 				fclose(boot);
 				unlink(REBOOTFILE);
-				bBootSequenceStarted=TRUE;
-				shutdownlevel=19;
+				s_rebootSequenceStarted=TRUE;
+				s_shutdownLevel=19;
 			}
 		}
 	}
-	else if(bBootSequenceStarted) {
-		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",shutdownlevel,bBootSequenceStarted,(tc-lastCheck));
-		shutdownlevel+=((tc-lastCheck)/60);
+	else if(s_rebootSequenceStarted) {
+		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",s_shutdownLevel,s_rebootSequenceStarted,(tc-lastCheck));
+		s_shutdownLevel+=((tc-lastCheck)/60);
 		lastCheck=tc;
-		if(shutdownlevel > 30) {
+		if(s_shutdownLevel > 30) {
 			struct descriptor_data* pDesc;
 			for(pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
 				/* send_to_all qui non funziona a causa della bufferizzazione. */
@@ -1126,36 +1135,36 @@ void check_reboot() {
 			raw_force_all("save");
 			mudshutdown = rebootgame = 1;
 		}
-		else if(shutdownlevel <= 30) {
-			if(shutdownlevel > 29) {
+		else if(s_shutdownLevel <= 30) {
+			if(s_shutdownLevel > 29) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro un minuto!\n\r");
 			}
-			else if(shutdownlevel >= 28) {
+			else if(s_shutdownLevel >= 28) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 2 minuti.\n\r");
 			}
-			else if(shutdownlevel >= 27) {
+			else if(s_shutdownLevel >= 27) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 3 minuti.\n\r");
 			}
-			else if(shutdownlevel >= 26) {
+			else if(s_shutdownLevel >= 26) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 4 minuti.\n\r");
 			}
-			else if(shutdownlevel >= 25) {
+			else if(s_shutdownLevel >= 25) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 5 minuti.\n\r");
 			}
-			else if(shutdownlevel == 20) {
+			else if(s_shutdownLevel == 20) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 10 minuti.\n\r");
 			}
-			else if(shutdownlevel == 15) {
+			else if(s_shutdownLevel == 15) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 15 minuti.\n\r");
 			}
-			else if(shutdownlevel == 10) {
+			else if(s_shutdownLevel == 10) {
 				send_to_all("$c0015ATTENZIONE! $c0014Nebbie Arcane ripartira' entro 20 minuti.\n\r");
 			}
 		}
 	}
 	if(TooMuchLag>10 && !forceshutdown) {
 		send_to_all("$c0015ATTENZIONE! $c0014Lag eccessivo. Iniziata sequenza di shutdown!\n\r");
-		bBootSequenceStarted=TRUE;
+		s_rebootSequenceStarted=TRUE;
 		forceshutdown=t_info->tm_min;
 		if(!forceshutdown) {
 			forceshutdown=1;
@@ -1164,7 +1173,8 @@ void check_reboot() {
 	if(TooMuchLag<5 && forceshutdown) {
 
 		send_to_all("$c0015ATTENZIONE! $c0014Lag risolto. Shutdown cancellato!\n\r");
-		bBootSequenceStarted=FALSE;
+		s_rebootSequenceStarted=FALSE;
+		s_shutdownLevel=0;
 		forceshutdown=0;
 	}
 
