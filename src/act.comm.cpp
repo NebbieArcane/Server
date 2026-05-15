@@ -89,6 +89,206 @@ bool comm_charm_master_blocks(struct char_data* ch) {
 	send_to_char("Non credo proprio :-)", ch->master);
 	return true;
 }
+
+const char* comm_display_name(struct char_data* who) {
+	if(who == nullptr) {
+		return "?";
+	}
+	if(IS_NPC(who)) {
+		if(who->player.short_descr != nullptr && who->player.short_descr[0] != '\0') {
+			return who->player.short_descr;
+		}
+		if(GET_NAME(who) != nullptr) {
+			return GET_NAME(who);
+		}
+		return "?";
+	}
+	return (GET_NAME(who) != nullptr) ? GET_NAME(who) : "?";
+}
+
+/** @return true se il bersaglio ha PLR_NOTELL e il mittente non puo' forzare il tell. */
+bool tell_vict_refuses(struct char_data* ch, struct char_data* vict) {
+	if(IS_NPC(vict) || !IS_SET(vict->specials.act, PLR_NOTELL)) {
+		return false;
+	}
+	if(GetMaxLevel(ch) < IMMORTALE) {
+		return true;
+	}
+	return GetMaxLevel(vict) >= IMMORTALE && GetMaxLevel(ch) < GetMaxLevel(vict);
+}
+
+enum class CommDirectScope { VisWorld, RoomOnly };
+
+enum class CommSelfPolicy { TellReject, Whisper, Ask };
+
+struct CommDirectRules {
+	CommDirectScope scope = CommDirectScope::VisWorld;
+	CommSelfPolicy self_policy = CommSelfPolicy::TellReject;
+	bool check_sleeping = false;
+	bool check_notell = false;
+	bool zone_comm_only = false;
+	const char* prompt_empty = nullptr;
+	const char* msg_not_found = nullptr;
+	/** Se nullptr, soundproof sul bersaglio termina senza messaggio al mittente. */
+	const char* msg_vict_soundproof = nullptr;
+};
+
+struct CommDirectFormat {
+	const char* color_tag = nullptr;
+	bool embedded_sender = false;
+	const char* victim_phrase = nullptr;
+	const char* echo_verb = nullptr;
+	bool echo_comma_before_quote = false;
+	const char* room_observers = nullptr;
+};
+
+struct CommDirectCtx {
+	struct char_data* vict = nullptr;
+	std::array<char, MAX_INPUT_LENGTH + 20> message{};
+};
+
+enum class CommPrepareResult { Ready, Done };
+
+bool comm_direct_sender_ok(struct char_data* ch) {
+	if(apply_soundproof(ch)) {
+		return false;
+	}
+	if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM)) {
+		send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+		return false;
+	}
+	return true;
+}
+
+bool comm_direct_handle_self(struct char_data* ch, CommSelfPolicy policy) {
+	switch(policy) {
+	case CommSelfPolicy::TellReject:
+		send_to_char("Parlare a se stessi puo' essere utile, a volte...\n\r", ch);
+		return true;
+	case CommSelfPolicy::Whisper:
+		act("$n sussurra silenziosamente a se stesso.", FALSE, ch, nullptr, nullptr, TO_ROOM);
+		send_to_char("Sembra che le tue orecchie non siano abbastanza vicine alla bocca...\n\r", ch);
+		return true;
+	case CommSelfPolicy::Ask:
+		act("$c0006[$c0015$n$c0006] si chiede qualcosa... trovera' la soluzione?", FALSE, ch, nullptr,
+		    nullptr, TO_ROOM);
+		act("$c0006Oltre alla domanda, conosci anche la risposta?", FALSE, ch, nullptr, nullptr, TO_CHAR);
+		return true;
+	}
+	return false;
+}
+
+CommPrepareResult comm_direct_prepare(struct char_data* ch, const char* arg, const CommDirectRules& rules,
+                                      CommDirectCtx& ctx) {
+	ctx.vict = nullptr;
+	ctx.message.fill('\0');
+
+	std::array<char, 100> name{};
+	half_chop(arg, name.data(), ctx.message.data(), static_cast<int>(name.size()) - 1,
+	          static_cast<int>(ctx.message.size()) - 1);
+
+	if(name[0] == '\0' || ctx.message[0] == '\0') {
+		if(rules.prompt_empty != nullptr) {
+			send_to_char(rules.prompt_empty, ch);
+		}
+		return CommPrepareResult::Done;
+	}
+
+	if(rules.scope == CommDirectScope::VisWorld) {
+		ctx.vict = get_char_vis(ch, name.data());
+	}
+	else {
+		ctx.vict = get_char_room_vis(ch, name.data());
+	}
+
+	if(ctx.vict == nullptr) {
+		if(rules.msg_not_found != nullptr) {
+			send_to_char(rules.msg_not_found, ch);
+		}
+		return CommPrepareResult::Done;
+	}
+
+	if(ctx.vict == ch) {
+		comm_direct_handle_self(ch, rules.self_policy);
+		return CommPrepareResult::Done;
+	}
+
+	if(rules.check_sleeping && GET_POS(ctx.vict) == POSITION_SLEEPING && !IS_IMMORTAL(ch)) {
+		act("Sta dormendo, shhh.", FALSE, ch, nullptr, ctx.vict, TO_CHAR);
+		return CommPrepareResult::Done;
+	}
+
+	if(rules.check_notell && tell_vict_refuses(ch, ctx.vict)) {
+		act("$N non sta ascoltando adesso.", FALSE, ch, nullptr, ctx.vict, TO_CHAR);
+		return CommPrepareResult::Done;
+	}
+
+	if(IS_LINKDEAD(ctx.vict)) {
+		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r", ch);
+		return CommPrepareResult::Done;
+	}
+
+	if(check_soundproof(ctx.vict)) {
+		if(rules.msg_vict_soundproof != nullptr) {
+			send_to_char(rules.msg_vict_soundproof, ch);
+		}
+		return CommPrepareResult::Done;
+	}
+
+#if ZONE_COMM_ONLY
+	if(rules.zone_comm_only) {
+		const struct room_data* const chRoom = real_roomp(ch->in_room);
+		const struct room_data* const victRoom = real_roomp(ctx.vict->in_room);
+		if(chRoom == nullptr || victRoom == nullptr) {
+			mudlog(LOG_SYSERR, "comm_direct_prepare: stanza nulla per %s o bersaglio", GET_NAME(ch));
+			return CommPrepareResult::Done;
+		}
+		if(chRoom->zone != victRoom->zone && GetMaxLevel(ch) < IMMORTALE) {
+			send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
+			return CommPrepareResult::Done;
+		}
+	}
+#endif
+
+	return CommPrepareResult::Ready;
+}
+
+void comm_direct_deliver(struct char_data* ch, struct char_data* vict, const char* message, int cmd,
+                         const CommDirectFormat& fmt) {
+	if(fmt.embedded_sender) {
+		std::ostringstream toVictOs;
+		toVictOs << fmt.color_tag << "[$c0015" << comm_display_name(ch) << fmt.color_tag << "] "
+		         << fmt.victim_phrase << " '" << message << "'";
+		act(toVictOs.str().c_str(), FALSE, vict, nullptr, nullptr, TO_CHAR);
+	}
+	else {
+		std::ostringstream toVictOs;
+		toVictOs << fmt.color_tag << "[$c0015$n" << fmt.color_tag << "] " << fmt.victim_phrase << " '"
+		         << message << "'";
+		act(toVictOs.str().c_str(), FALSE, ch, nullptr, vict, TO_VICT);
+	}
+
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream echoOs;
+		echoOs << fmt.color_tag << fmt.echo_verb << comm_display_name(vict);
+		if(IS_AFFECTED2(vict, AFF2_AFK)) {
+			echoOs << " (che e' AFK)";
+		}
+		if(fmt.echo_comma_before_quote) {
+			echoOs << ", '";
+		}
+		else {
+			echoOs << " '";
+		}
+		echoOs << message << "'";
+		act(echoOs.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+
+	if(fmt.room_observers != nullptr) {
+		act(fmt.room_observers, FALSE, ch, nullptr, vict, TO_NOTVICT);
+	}
+	thief_listen(ch, vict, message, cmd);
+}
 } // namespace
 
 std::string scrambler(struct char_data* ch, const char* message) {
@@ -448,755 +648,952 @@ void talk_auction(const char* arg) {
 
 
 ACTION_FUNC(do_commune) {
-	struct descriptor_data* i;
-	int livello;
-	const char* sep = nullptr;
-	if(cmd==CMD_THINK_SUPERNI) {
-		livello=CREATORE;
-		sep = "||";
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_commune (act.comm.cpp)");
+		return;
 	}
-	else {
-		livello=IMMORTALE;
-		sep = "::";
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_commune (act.comm.cpp)");
+		return;
 	}
-	for(; *arg == ' '; arg++);
 
-	if(!(*arg)) {
-		send_to_char("Comunicare fra gli Dei e' ottimo, ma COSA?\n\r",ch);
+	const int minLevel = (cmd == CMD_THINK_SUPERNI) ? CREATORE : IMMORTALE;
+	const char* const sep = (cmd == CMD_THINK_SUPERNI) ? "||" : "::";
+
+	while(*arg == ' ') {
+		arg++;
 	}
-	else {
-		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			std::string selfLine = "$c0014Tu pensi ";
-			selfLine += sep;
-			selfLine += " '";
-			selfLine += arg;
-			selfLine += "'";
-			act(selfLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+
+	if(*arg == '\0') {
+		send_to_char("Comunicare fra gli Dei e' ottimo, ma COSA?\n\r", ch);
+		return;
+	}
+
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream selfOs;
+		selfOs << "$c0014Tu pensi " << sep << " '" << arg << "'";
+		act(selfOs.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+
+	std::ostringstream communeOs;
+	communeOs << "$c0014" << sep << "$c0015$n$c0014" << sep << " '" << arg << "'";
+	const std::string communeLine = communeOs.str();
+
+	for(struct descriptor_data* i = descriptor_list; i != nullptr; i = i->next) {
+		if(i->character == nullptr || i->character == ch || i->connected != 0) {
+			continue;
 		}
-		std::string communeLine = "$c0014";
-		communeLine += sep;
-		communeLine += "$c0015$n$c0014";
-		communeLine += sep;
-		communeLine += " '";
-		communeLine += arg;
-		communeLine += "'";
-
-		for(i = descriptor_list; i; i = i->next)
-			if(i->character != ch && !i->connected && !IS_NPC(i->character) &&
-					!IS_SET(i->character->specials.act, PLR_NOSHOUT) &&
-					(GetMaxLevel(i->character) >= livello)) {
-				act(communeLine.c_str(), 0, ch, 0, i->character, TO_VICT);
-			}
+		if(IS_NPC(i->character)) {
+			continue;
+		}
+		if(IS_SET(i->character->specials.act, PLR_NOSHOUT)) {
+			continue;
+		}
+		if(GetMaxLevel(i->character) < minLevel) {
+			continue;
+		}
+		act(communeLine.c_str(), FALSE, ch, nullptr, i->character, TO_VICT);
 	}
 }
 
 
 ACTION_FUNC(do_tell) {
-	struct char_data* vict;
-	std::array<char, 100> name{};
-	std::array<char, MAX_INPUT_LENGTH + 20> message{};
-
-
-	if(apply_soundproof(ch)) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_tell (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_tell (act.comm.cpp)");
+		return;
+	}
+	if(!comm_direct_sender_ok(ch)) {
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
-        return;
-    }
+	static const CommDirectRules kTellRules{
+	    CommDirectScope::VisWorld, CommSelfPolicy::TellReject, true,  true,  true,
+	    "A chi e' che vuoi parlare?\n\r",
+	    "Non c'e' nessuno con quel nome qui...\n\r",
+	    "Non riesce a sentire nemmeno la sua voce, li' dentro.\n\r",
+	};
+	static const CommDirectFormat kTellFmt{
+	    "$c0013", true, "ti dice", "Tu dici a ", false, "$c0013$n dice qualcosa a $N.",
+	};
 
-	half_chop(arg, name.data(), message.data(), static_cast<int>(name.size()) - 1,
-	          static_cast<int>(message.size()) - 1);
-
-	if(name[0] == '\0' || message[0] == '\0') {
-		send_to_char("A chi e' che vuoi parlare ?\n\r", ch);
+	CommDirectCtx ctx;
+	if(comm_direct_prepare(ch, arg, kTellRules, ctx) != CommPrepareResult::Ready) {
 		return;
 	}
-	else if(!(vict = get_char_vis(ch, name.data()))) {
-		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
-		return;
-	}
-	else if(ch == vict) {
-		send_to_char("Parlare a se stessi puo' essere utile, a volte...\n\r", ch);
-		return;
-	}
-	else if(GET_POS(vict) == POSITION_SLEEPING && !IS_IMMORTAL(ch)) {
-		act("Sta dormendo, shhh.",FALSE,ch,0,vict,TO_CHAR);
-		return;
-	}
-	else if(!(GetMaxLevel(ch) >= IMMORTALE) &&
-			!IS_NPC(vict) && IS_SET(vict->specials.act,PLR_NOTELL)) {
-		act("$N non sta ascoltando adesso.",FALSE,ch,0,vict,TO_CHAR);
-		return;
-	}
-	else if((GetMaxLevel(vict) >= IMMORTALE) &&
-			(GetMaxLevel(ch) >= IMMORTALE) &&
-			(GetMaxLevel(ch) < GetMaxLevel(vict)) &&
-			!IS_NPC(vict) && IS_SET(vict->specials.act, PLR_NOTELL)) {
-		act("$N non sta ascoltando adesso.",FALSE,ch,0,vict,TO_CHAR);
-		return;
-	}
-	else if(IS_LINKDEAD(vict)) {
-		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r",
-					 ch);
-		return;
-	}
-
-	if(check_soundproof(vict)) {
-		send_to_char("Non riesce a sentire nemmeno la sua voce, li' dentro.\n\r",
-					 ch);
-		return;
-	}
-
-#if ZONE_COMM_ONLY
-	if(real_roomp(ch->in_room)->zone !=
-			real_roomp(vict->in_room)->zone
-			&& GetMaxLevel(ch) < IMMORTALE) {
-		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
-		return;
-	}
-#endif
-
-	std::string tellToVict = "$c0013[$c0015";
-	tellToVict += (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch));
-	tellToVict += "$c0013] ti dice '";
-	tellToVict += scramble(ch, message.data());
-	tellToVict += "'";
-	act(tellToVict.c_str(), FALSE, vict, nullptr, nullptr, TO_CHAR);
-
-	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-		std::string tellToChar = "$c0013Tu dici a ";
-		tellToChar += (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict));
-		tellToChar += " ";
-		tellToChar += (IS_AFFECTED2(vict, AFF2_AFK) ? "(che e' AFK) " : "");
-		tellToChar += "'";
-		tellToChar += message.data();
-		tellToChar += "'";
-		act(tellToChar.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-	}
-	act("$c0013$n dice qualcosa a $N.", FALSE, ch, 0, vict, TO_NOTVICT);
-	thief_listen(ch, vict, message.data(), cmd);
+	comm_direct_deliver(ch, ctx.vict, ctx.message.data(), cmd, kTellFmt);
 }
 
 
 
 ACTION_FUNC(do_whisper) {
-	struct char_data* vict;
-	std::array<char, 100> name{};
-	std::array<char, MAX_INPUT_LENGTH> message{};
-
-	if(apply_soundproof(ch)) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_whisper (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_whisper (act.comm.cpp)");
+		return;
+	}
+	if(!comm_direct_sender_ok(ch)) {
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
-        return;
-    }
+	static const CommDirectRules kWhisperRules{
+	    CommDirectScope::RoomOnly, CommSelfPolicy::Whisper, false, false, false,
+	    "A chi vuoi sussurrare? E cosa?\n\r",
+	    "Non c'e' nessuno con quel nome qui...\n\r",
+	    nullptr,
+	};
+	static const CommDirectFormat kWhisperFmt{
+	    "$c0005", false, "ti sussurra", "Tu sussurri a ", true, "$c0005$n sussurra qualcosa a $N.",
+	};
 
-	half_chop(arg, name.data(), message.data(), static_cast<int>(name.size()) - 1,
-	          static_cast<int>(message.size()) - 1);
-
-	if(name[0] == '\0' || message[0] == '\0') {
-		send_to_char("A chi vuoi sussurrare ? e cosa ?\n\r", ch);
-	}
-	else if(!(vict = get_char_room_vis(ch, name.data()))) {
-		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
-	}
-	else if(vict == ch) {
-		act("$n sussurra silenziosamente a se stesso.", FALSE, ch, nullptr, nullptr, TO_ROOM);
-		send_to_char("Sembra che le tue orecchie non siano abbastanza vicine "
-					 "alla bocca...\n\r", ch);
-	}
-	else if(IS_LINKDEAD(vict)) {
-		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r",
-					 ch);
+	CommDirectCtx ctx;
+	if(comm_direct_prepare(ch, arg, kWhisperRules, ctx) != CommPrepareResult::Ready) {
 		return;
 	}
-	else {
-		if(check_soundproof(vict)) {
-			return;
-		}
-
-		std::string whisper_to_vict = "$c0005[$c0015$n$c0005] ti sussurra '";
-		whisper_to_vict += scramble(ch, message.data());
-		whisper_to_vict += "'";
-		act(whisper_to_vict.c_str(), FALSE, ch, 0, vict, TO_VICT);
-		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
-			std::string whisper_to_char = "$c0005Tu sussurri a ";
-			whisper_to_char += (IS_NPC(vict) ? vict->player.name : GET_NAME(vict));
-			if(IS_AFFECTED2(vict, AFF2_AFK)) {
-				whisper_to_char += " (che e' AFK)";
-			}
-			whisper_to_char += ", '";
-			whisper_to_char += message.data();
-			whisper_to_char += "'";
-			act(whisper_to_char.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-		}
-		act("$c0005$n sussurra qualcosa a $N.", FALSE, ch, 0, vict, TO_NOTVICT);
-		thief_listen(ch, vict, message.data(), cmd);
-	}
+	comm_direct_deliver(ch, ctx.vict, ctx.message.data(), cmd, kWhisperFmt);
 }
 
+namespace {
+bool ask_quest_try_hint_response(struct char_data* ch, struct char_data* vict, const char* message);
+} // namespace
 
 ACTION_FUNC(do_ask) {
-	struct char_data* vict;
-	std::array<char, 100> name{};
-	std::array<char, MAX_INPUT_LENGTH> message{};
-	std::array<char, MAX_INPUT_LENGTH> buf{};
-
-	if(apply_soundproof(ch)) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_ask (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_ask (act.comm.cpp)");
+		return;
+	}
+	if(!comm_direct_sender_ok(ch)) {
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
-        return;
-    }
+	static const CommDirectRules kAskRules{
+	    CommDirectScope::RoomOnly, CommSelfPolicy::Ask, false, false, false,
+	    "A chi vuoi chiedere... e cosa?\n\r",
+	    "Non vedi nessuno con quel nome qui...\n\r",
+	    nullptr,
+	};
+	static const CommDirectFormat kAskFmt{
+	    "$c0006", false, "ti chiede", "Tu chiedi a ", true, "$c0006$n fa una domanda a $N.",
+	};
 
-	half_chop(arg, name.data(), message.data(), static_cast<int>(name.size()) - 1,
-	          static_cast<int>(message.size()) - 1);
-
-	if(name[0] == '\0' || message[0] == '\0') {
-		send_to_char("A chi vuoi chiedere... e cosa ?\n\r", ch);
-	}
-	else if(!(vict = get_char_room_vis(ch, name.data()))) {
-		send_to_char("Non vedi nessuno con quel nome qui...\n\r", ch);
-	}
-	else if(vict == ch) {
-		act("$c0006[$c0015$n$c0006] si chiede qualcosa... trovera' la soluzione?",
-			FALSE,ch,0,0,TO_ROOM);
-		act("$c0006Oltre alla domanda, conosci anche la risposta?", FALSE, ch, 0,
-			0, TO_CHAR);
-	}
-	else if(IS_LINKDEAD(vict)) {
-		send_to_char("Non puo' sentirti. Ha perso il senso della realta'.\n\r",
-					 ch);
+	CommDirectCtx ctx;
+	if(comm_direct_prepare(ch, arg, kAskRules, ctx) != CommPrepareResult::Ready) {
 		return;
 	}
-	else {
-		if(check_soundproof(vict)) {
-			return;
-		}
-
-		std::string ask_to_vict = "$c0006[$c0015$n$c0006] ti chiede '";
-		ask_to_vict += scramble(ch, message.data());
-		ask_to_vict += "'";
-		act(ask_to_vict.c_str(), FALSE, ch, 0, vict, TO_VICT);
-
-		if(IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
-			std::string ask_to_char = "$c0006Tu chiedi a ";
-			ask_to_char += (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict));
-			if(IS_AFFECTED2(vict, AFF2_AFK)) {
-				ask_to_char += " (che e' AFK)";
-			}
-			ask_to_char += ", '";
-			ask_to_char += message.data();
-			ask_to_char += "'";
-			act(ask_to_char.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-		}
-		act("$c0006$n fa una domanda a $N.",FALSE,ch,0,vict,TO_NOTVICT);
-
-    /* indizi per le quest */
-    if(!IS_PC(vict) && affected_by_spell(ch,STATUS_QUEST) && (isname2("ladro",GET_NAME(vict)) || isname2("cacciatore",GET_NAME(vict)) || isname2("spia",GET_NAME(vict)) || isname2("shop_keeper",mob_index[vict->nr].specname)))    {
-
-        if(ch->specials.quest_ref == nullptr)    {
-            std::snprintf(buf.data(), buf.size(), "%s Cio' che cerchi appartiene al passato.",
-                          GET_NAME(ch));
-            do_tell(vict, buf.data(), CMD_TELL);
-            return;
-        }
-
-        if(strstr(message.data(), "indizio") != nullptr && IsHumanoid(vict)) {
-
-            if(ch->specials.quest_ref && !(ch->specials.quest_ref = get_char_vis_world(ch, ch->specials.quest_ref->player.name, nullptr))) {
-                std::snprintf(buf.data(), buf.size(), "%s Mi spiace, ma non ho informazioni al riguardo...",
-                              GET_NAME(ch));
-                do_tell(vict, buf.data(), CMD_TELL);
-                return;
-            }
-            else {
-
-                int price = number(250000,300000) - (5000*GET_CHR(ch));
-
-                if(GET_GOLD(ch) >= price) {
-                    if(!IS_DIO(ch)) {
-                        GET_GOLD(ch) -= price;
-                        std::snprintf(buf.data(), buf.size(), "Paghi %d monete a %s per le sue informazioni. \n\r",
-                                      price, GET_NAME(vict));
-                        send_to_char(buf.data(), ch);
-                    }
-
-                    if(real_roomp(ch->in_room)->zone == real_roomp(ch->specials.quest_ref->in_room)->zone) {
-                        std::snprintf(buf.data(), buf.size(), "%s %s? Ho sentito che l'ultima volta e' stato vist%s a %s.",
-                                      GET_NAME(ch), ch->specials.quest_ref->player.name, SSLF(ch->specials.quest_ref),
-                                      real_roomp(ch->specials.quest_ref->in_room)->name);
-                    } else {
-                        std::snprintf(buf.data(), buf.size(), "%s %s? Pare fosse dirett%s verso %s.",
-                                      GET_NAME(ch), ch->specials.quest_ref->player.name, SSLF(ch->specials.quest_ref),
-                                      zonename_by_room(ch->specials.quest_ref->in_room));
-                    }
-                    do_tell(vict, buf.data(), CMD_TELL);
-                } else {
-                    std::snprintf(buf.data(), buf.size(), "%s ...ma chi credi di comprare con quegli spiccioli!",
-                                  GET_NAME(ch));
-                    do_tell(vict, buf.data(), CMD_TELL);
-                }
-                return;
-            }
-
-        } else {
-            std::snprintf(buf.data(), buf.size(), "%s Se vuoi un indizio chiedimelo chiaramente... ma ti costera'!",
-                          GET_NAME(ch));
-            do_tell(vict, buf.data(), CMD_TELL);
-            return;
-        }
-     }
-    /* end indizi quest*/
-
-	}
+	comm_direct_deliver(ch, ctx.vict, ctx.message.data(), cmd, kAskFmt);
+	ask_quest_try_hint_response(ch, ctx.vict, ctx.message.data());
 }
 
 
 
-#define MAX_NOTE_LENGTH 1000      /* arbitrary */
+namespace {
+constexpr int kMaxNoteLength = 1000;
+
+std::string sign_build_corrected(struct char_data* ch, const std::string& spokenText) {
+	std::ostringstream correctedStream;
+	std::istringstream wordStream(spokenText);
+	std::string token;
+	bool firstWord = true;
+	while(wordStream >> token) {
+		if(!firstWord) {
+			correctedStream << ' ';
+		}
+		const int learned = (ch->skills != nullptr) ? ch->skills[SKILL_SIGN].learned : 0;
+		if(ch->skills != nullptr &&
+		   number(1, 75 + static_cast<int>(token.size())) < learned) {
+			correctedStream << token;
+		}
+		else {
+			correctedStream << RandomWord();
+		}
+		firstWord = false;
+	}
+	return correctedStream.str();
+}
+
+/** Match esatto o abbreviazione (es. elv -> elvish), senza strstr su sottostringhe spurie. */
+bool speak_language_matches(const char* userTok, const char* languageToken) {
+	if(userTok == nullptr || languageToken == nullptr || userTok[0] == '\0') {
+		return false;
+	}
+	if(str_cmp(userTok, languageToken) == 0) {
+		return true;
+	}
+	return is_abbrev(userTok, languageToken) != 0;
+}
+
+void sign_broadcast_room(struct char_data* ch, struct room_data* rp, const std::string& spokenText,
+                         const std::string& correctedText) {
+	const int diff = std::max(1, static_cast<int>(spokenText.size()));
+	std::ostringstream signOs;
+	signOs << "$c0015[$c0005$n$c0015], con i segni, dice '" << correctedText << "'";
+	const std::string signMessage = signOs.str();
+
+	for(struct char_data* t = rp->people; t != nullptr; t = t->next_in_room) {
+		if(t == ch) {
+			continue;
+		}
+		const int learned = (t->skills != nullptr) ? t->skills[SKILL_SIGN].learned : 0;
+		if(t->skills != nullptr && number(1, diff) < learned) {
+			act(signMessage.c_str(), FALSE, ch, nullptr, t, TO_VICT);
+		}
+		else {
+			act("$n muove le mani in modo molto buffo.", FALSE, ch, nullptr, t, TO_VICT);
+		}
+	}
+}
+
+int thief_listen_malus(struct char_data* ch, int cmd) {
+	int malus = 0;
+	if(cmd == CMD_WHISPER) {
+		malus = 5;
+	}
+	else if(cmd == CMD_GTELL) {
+		malus = 10;
+	}
+	if(!IS_SINGLE(ch)) {
+		malus += 20;
+	}
+	return malus;
+}
+
+bool thief_listener_eligible(struct char_data* listener, struct char_data* speaker,
+                           struct char_data* victim) {
+	if(listener == speaker || listener == victim) {
+		return false;
+	}
+	if(!HasClass(listener, CLASS_THIEF)) {
+		return false;
+	}
+	if(listener->skills == nullptr || listener->skills[SKILL_TSPY].learned <= 0) {
+		return false;
+	}
+	return affected_by_spell(listener, SKILL_TSPY);
+}
+
+void say_resolve_language(struct char_data* ch, int& learned, int& skillNum) {
+	learned = 0;
+	skillNum = LANG_COMMON;
+	if(ch->skills == nullptr) {
+		return;
+	}
+	switch(ch->player.speaks) {
+	case SPEAK_COMMON:
+		learned = ch->skills[LANG_COMMON].learned;
+		skillNum = LANG_COMMON;
+		break;
+	case SPEAK_ELVISH:
+		learned = ch->skills[LANG_ELVISH].learned;
+		skillNum = LANG_ELVISH;
+		break;
+	case SPEAK_HALFLING:
+		learned = ch->skills[LANG_HALFLING].learned;
+		skillNum = LANG_HALFLING;
+		break;
+	case SPEAK_DWARVISH:
+		learned = ch->skills[LANG_DWARVISH].learned;
+		skillNum = LANG_DWARVISH;
+		break;
+	case SPEAK_ORCISH:
+		learned = ch->skills[LANG_ORCISH].learned;
+		skillNum = LANG_ORCISH;
+		break;
+	case SPEAK_GIANTISH:
+		learned = ch->skills[LANG_GIANTISH].learned;
+		skillNum = LANG_GIANTISH;
+		break;
+	case SPEAK_OGRE:
+		learned = ch->skills[LANG_OGRE].learned;
+		skillNum = LANG_OGRE;
+		break;
+	case SPEAK_GNOMISH:
+		learned = ch->skills[LANG_GNOMISH].learned;
+		skillNum = LANG_GNOMISH;
+		break;
+	default:
+		learned = ch->skills[LANG_COMMON].learned;
+		skillNum = LANG_COMMON;
+		break;
+	}
+}
+
+std::string say_build_corrected(struct char_data* ch, const std::string& spokenText, int learned) {
+	std::ostringstream correctedStream;
+	std::istringstream wordStream(spokenText);
+	std::string token;
+	bool firstWord = true;
+	while(wordStream >> token) {
+		if(!firstWord) {
+			correctedStream << ' ';
+		}
+		if(number(1, 75 + static_cast<int>(token.size())) < learned || GetMaxLevel(ch) >= IMMORTALE) {
+			correctedStream << token;
+		}
+		else {
+			correctedStream << RandomWord();
+		}
+		firstWord = false;
+	}
+	return correctedStream.str();
+}
+
+bool say_listener_hears_language(struct char_data* listener, struct char_data* speaker, int skillNum,
+                               int diff) {
+	if(GetMaxLevel(listener) >= IMMORTALE || GetMaxLevel(speaker) >= IMMORTALE || IS_NPC(listener)) {
+		return true;
+	}
+	if(affected_by_spell(listener, SKILL_ESP) || affected_by_spell(listener, SPELL_COMP_LANGUAGES)) {
+		return true;
+	}
+	return listener->skills != nullptr && number(1, diff) < listener->skills[skillNum].learned;
+}
+
+bool say_listener_hears_clear(struct char_data* listener) {
+	return GetMaxLevel(listener) >= IMMORTALE || IS_NPC(listener) ||
+	       affected_by_spell(listener, SKILL_ESP) ||
+	       affected_by_spell(listener, SPELL_COMP_LANGUAGES);
+}
+
+void say_broadcast_room(struct char_data* ch, struct room_data* rp, const std::string& spokenText,
+                        const std::string& correctedText, int skillNum) {
+	const int diff = std::max(1, static_cast<int>(spokenText.size()));
+	std::ostringstream understoodOs;
+	understoodOs << "$c0015[$c0005$n$c0015] dice '" << spokenText << "'";
+	const std::string sayUnderstood = understoodOs.str();
+
+	std::ostringstream garbledOs;
+	garbledOs << "$c0015[$c0005$n$c0015] dice '" << correctedText << "'";
+	const std::string sayGarbled = garbledOs.str();
+
+	for(struct char_data* t = rp->people; t != nullptr; t = t->next_in_room) {
+		if(t == ch) {
+			continue;
+		}
+		if(!say_listener_hears_language(t, ch, skillNum, diff)) {
+			act("$c0010$n parla una lingua che non riesci a capire.", FALSE, ch, nullptr, t, TO_VICT);
+			continue;
+		}
+		if(say_listener_hears_clear(t)) {
+			act(sayUnderstood.c_str(), FALSE, ch, nullptr, t, TO_VICT);
+		}
+		else {
+			act(sayGarbled.c_str(), FALSE, ch, nullptr, t, TO_VICT);
+		}
+	}
+}
+
+std::string gtell_format_line(struct char_data* speaker, const char* message) {
+	std::ostringstream os;
+	os << "$c0012[$c0015" << comm_display_name(speaker) << "$c0012] dice al gruppo '" << message
+	   << "'";
+	return os.str();
+}
+
+void gtell_deliver(struct char_data* recipient, struct char_data* speaker, const std::string& line) {
+	if(recipient == nullptr || recipient == speaker || recipient->desc == nullptr) {
+		return;
+	}
+	if(check_soundproof(recipient)) {
+		return;
+	}
+	act(line.c_str(), FALSE, recipient, nullptr, nullptr, TO_CHAR);
+}
+
+void gtell_broadcast(struct char_data* ch, const char* message) {
+	struct char_data* const leader = ch->master != nullptr ? ch->master : ch;
+	const std::string line = gtell_format_line(ch, message);
+
+	for(struct follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		if(f->follower == nullptr || !IS_AFFECTED(f->follower, AFF_GROUP)) {
+			continue;
+		}
+		gtell_deliver(f->follower, ch, line);
+	}
+
+	if(ch->master != nullptr && IS_AFFECTED(ch->master, AFF_GROUP)) {
+		gtell_deliver(ch->master, ch, line);
+	}
+}
+
+std::string split_gold_amount_phrase(int amount) {
+	std::string s = std::to_string(amount);
+	s += (amount == 1) ? " moneta d'oro" : " monete d'oro";
+	return s;
+}
+
+std::string split_coin_part_phrase(int amount) {
+	std::string s = std::to_string(amount);
+	s += (amount == 1) ? " moneta" : " monete";
+	return s;
+}
+
+int split_count_group_in_room(struct room_data* rp, struct char_data* ch) {
+	int members = 0;
+	for(struct char_data* gch = rp->people; gch != nullptr; gch = gch->next_in_room) {
+		if(is_same_group(gch, ch)) {
+			members++;
+		}
+	}
+	return members;
+}
+
+bool split_parse_amount(const char* token, int& amountOut) {
+	if(token == nullptr || token[0] == '\0') {
+		return false;
+	}
+	char* parseEnd = nullptr;
+	errno = 0;
+	const long parsed = std::strtol(token, &parseEnd, 10);
+	if(parseEnd == token || (parseEnd != nullptr && *parseEnd != '\0')) {
+		return false;
+	}
+	if(errno == ERANGE || parsed > std::numeric_limits<int>::max() ||
+	   parsed < std::numeric_limits<int>::min()) {
+		return false;
+	}
+	amountOut = static_cast<int>(parsed);
+	return true;
+}
+
+int pray_spell_duration_remaining(struct char_data* ch) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	for(struct affected_type* aff = ch->affected; aff != nullptr; aff = aff->next) {
+		if(aff->type == SPELL_PRAYER) {
+			return aff->duration;
+		}
+	}
+	return 0;
+}
+
+void pray_send_cooldown_message(struct char_data* ch, int hoursRemaining) {
+	std::ostringstream msg;
+	msg << "Hai gia' pregato di recente.";
+	if(hoursRemaining > 0) {
+		msg << " Potrai pregare di nuovo tra circa " << hoursRemaining << " ore di gioco.";
+	}
+	msg << "\n\r";
+	send_to_char(msg.str().c_str(), ch);
+}
+
+const char* pray_pick_room_emote(bool isDevoutClass) {
+	switch(number(1, 6)) {
+	case 1:
+		return isDevoutClass ? "$n china il capo e mormora una preghiera sottovoce."
+		                     : "$n resta in silenzio, raccogliendosi per un istante.";
+	case 2:
+		return isDevoutClass ? "Un fremito percorre l'aria mentre $n invoca il suo dio."
+		                     : "$n mormora poche parole, con tono misurato.";
+	case 3:
+		return isDevoutClass ? "$n intreccia le mani e sussurra parole antiche."
+		                     : "$n abbassa lo sguardo e riflette in silenzio.";
+	case 4:
+		return isDevoutClass ? "Per un istante, attorno a $n cala un silenzio solenne."
+		                     : "$n chiude gli occhi per un breve momento.";
+	case 5:
+		return isDevoutClass ? "$n alza lo sguardo al cielo e prega con fervore."
+		                     : "$n sussurra una breve invocazione, senza enfasi.";
+	default:
+		return isDevoutClass ? "Una tenue aura di devozione sembra avvolgere $n."
+		                     : "$n si concentra un attimo, poi torna composto.";
+	}
+}
+
+int pray_success_threshold(struct char_data* ch) {
+	int threshold = static_cast<int>(GetMaxLevel(ch) * 1.5 + 20);
+	if(HasClass(ch, CLASS_CLERIC | CLASS_DRUID)) {
+		threshold += 10;
+	}
+	if(ch->desc != nullptr && ch->desc->AccountData.authorized) {
+		threshold += 60;
+	}
+	return threshold;
+}
+
+void pray_notify_immortals(struct char_data* ch, const char* godName, const char* prayerText) {
+	if(ch == nullptr || godName == nullptr || prayerText == nullptr) {
+		return;
+	}
+	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+		if(d->character == nullptr || d->character == ch || d->connected != 0) {
+			continue;
+		}
+		struct char_data* imm = d->character;
+		if(IS_NPC(imm) || IS_SET(imm->specials.act, PLR_NOSHOUT)) {
+			continue;
+		}
+		if(GetMaxLevel(imm) < IMMORTALE) {
+			continue;
+		}
+		std::string prayerLine;
+		if(!str_cmp2(godName, GET_NAME(imm))) {
+			prayerLine = "$c0013[$c0015$n$c0013] TI PREGA: '";
+		}
+		else {
+			prayerLine = "$c0014[$c0015$n$c0014] prega :'";
+		}
+		prayerLine += prayerText;
+		prayerLine += "'";
+		act(prayerLine.c_str(), FALSE, ch, nullptr, imm, TO_VICT);
+	}
+}
+
+void telepathy_deliver(struct char_data* ch, struct char_data* vict, const char* message) {
+	if(ch == nullptr || vict == nullptr || message == nullptr) {
+		return;
+	}
+	std::ostringstream toVict;
+	toVict << "$c0013[$c0015" << comm_display_name(ch) << "$c0013] ti manda il pensiero '"
+	       << message << "'";
+	act(toVict.str().c_str(), FALSE, vict, nullptr, nullptr, TO_CHAR);
+
+	if(!IS_NPC(ch) && !IS_SET(ch->specials.act, PLR_ECHO)) {
+		return;
+	}
+	std::ostringstream echo;
+	echo << "$c0013Tu mandi a " << comm_display_name(vict) << " il pensiero '" << message << "'";
+	act(echo.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+}
+
+constexpr CommDirectFormat kQuestNpcTellFmt{
+    "$c0013", true, "ti dice", "Tu dici a ", false, "$c0013$n dice qualcosa a $N.",
+};
+
+void ask_quest_npc_tell(struct char_data* npc, struct char_data* player, const std::string& line) {
+	if(npc == nullptr || player == nullptr || line.empty()) {
+		return;
+	}
+	comm_direct_deliver(npc, player, line.c_str(), CMD_TELL, kQuestNpcTellFmt);
+}
+
+std::string ask_quest_prefixed_line(struct char_data* ch, const char* text) {
+	std::ostringstream os;
+	if(ch != nullptr && GET_NAME(ch) != nullptr) {
+		os << GET_NAME(ch) << ' ';
+	}
+	os << (text != nullptr ? text : "");
+	return os.str();
+}
+
+bool ask_quest_is_hint_vendor(struct char_data* vict) {
+	if(vict == nullptr || IS_PC(vict)) {
+		return false;
+	}
+	const char* const victName = GET_NAME(vict);
+	if(victName == nullptr) {
+		return false;
+	}
+	return isname2("ladro", victName) || isname2("cacciatore", victName) ||
+	       isname2("spia", victName) ||
+	       isname2("shop_keeper", mob_index[vict->nr].specname);
+}
+
+bool ask_quest_message_requests_hint(const char* message) {
+	return message != nullptr && std::strstr(message, "indizio") != nullptr;
+}
+
+bool ask_quest_refresh_target(struct char_data* ch) {
+	if(ch == nullptr || ch->specials.quest_ref == nullptr) {
+		return false;
+	}
+	const char* const targetName = ch->specials.quest_ref->player.name;
+	if(targetName == nullptr || targetName[0] == '\0') {
+		return false;
+	}
+	struct char_data* const located = get_char_vis_world(ch, targetName, nullptr);
+	if(located == nullptr) {
+		return false;
+	}
+	ch->specials.quest_ref = located;
+	return true;
+}
+
+std::string ask_quest_build_location_hint(struct char_data* ch) {
+	if(ch == nullptr) {
+		return {};
+	}
+	struct char_data* const tgt = ch->specials.quest_ref;
+	if(tgt == nullptr) {
+		return ask_quest_prefixed_line(ch, "Mi spiace, ma non ho informazioni al riguardo...");
+	}
+
+	const char* const tgtName = (tgt->player.name != nullptr) ? tgt->player.name : "?";
+	const struct room_data* const here = real_roomp(ch->in_room);
+	const struct room_data* const there = real_roomp(tgt->in_room);
+	if(here == nullptr || there == nullptr) {
+		mudlog(LOG_SYSERR, "ask_quest_build_location_hint: stanza nulla per %s",
+		       comm_display_name(ch));
+		return ask_quest_prefixed_line(ch, "Mi spiace, ma non ho informazioni al riguardo...");
+	}
+
+	std::ostringstream os;
+	if(GET_NAME(ch) != nullptr) {
+		os << GET_NAME(ch) << ' ';
+	}
+	os << tgtName;
+	if(here->zone == there->zone) {
+		os << "? Ho sentito che l'ultima volta e' stato vist" << SSLF(tgt) << " a " << there->name;
+	}
+	else {
+		const char* const zoneName = zonename_by_room(tgt->in_room);
+		os << "? Pare fosse dirett" << SSLF(tgt) << " verso "
+		   << (zoneName != nullptr ? zoneName : "?");
+	}
+	return os.str();
+}
+
+/** @return true se gestita (messaggi gia' inviati). */
+bool ask_quest_try_hint_response(struct char_data* ch, struct char_data* vict, const char* message) {
+	if(ch == nullptr || vict == nullptr || message == nullptr) {
+		return false;
+	}
+	if(!affected_by_spell(ch, STATUS_QUEST) || !ask_quest_is_hint_vendor(vict)) {
+		return false;
+	}
+
+	if(ch->specials.quest_ref == nullptr) {
+		ask_quest_npc_tell(vict, ch,
+		                   ask_quest_prefixed_line(ch, "Cio' che cerchi appartiene al passato."));
+		return true;
+	}
+
+	if(!ask_quest_message_requests_hint(message) || !IsHumanoid(vict)) {
+		ask_quest_npc_tell(
+		    vict, ch,
+		    ask_quest_prefixed_line(ch,
+		                            "Se vuoi un indizio chiedimelo chiaramente... ma ti costera'!"));
+		return true;
+	}
+
+	if(!ask_quest_refresh_target(ch)) {
+		ask_quest_npc_tell(
+		    vict, ch,
+		    ask_quest_prefixed_line(ch, "Mi spiace, ma non ho informazioni al riguardo..."));
+		return true;
+	}
+
+	const int price = number(250000, 300000) - (5000 * GET_CHR(ch));
+	if(GET_GOLD(ch) < price) {
+		ask_quest_npc_tell(
+		    vict, ch,
+		    ask_quest_prefixed_line(ch, "...ma chi credi di comprare con quegli spiccioli!"));
+		return true;
+	}
+
+	if(!IS_DIO(ch)) {
+		GET_GOLD(ch) -= price;
+		std::ostringstream payMsg;
+		payMsg << "Paghi " << price << " monete a " << comm_display_name(vict)
+		       << " per le sue informazioni. \n\r";
+		send_to_char(payMsg.str().c_str(), ch);
+	}
+
+	ask_quest_npc_tell(vict, ch, ask_quest_build_location_hint(ch));
+	return true;
+}
+
+std::string thief_garble_overheard(struct char_data* speaker, struct char_data* listener,
+                                   const char* frase, int malus) {
+	std::string overheard = (frase != nullptr) ? frase : "";
+	const int percent = GetMaxLevel(speaker) - GetMaxLevel(listener);
+	const int spyLearned = listener->skills[SKILL_TSPY].learned;
+
+	for(char& c : overheard) {
+		if((percent + number(20, 120) + malus) <= spyLearned) {
+			continue;
+		}
+		if((malus + number(1, 40) - GET_INT(listener)) <= 0) {
+			continue;
+		}
+		if(number(0, 20) == 0) {
+			continue;
+		}
+		PushStatus("Random");
+		if(number(1, 101) > 100 && spyLearned < 100) {
+			listener->skills[SKILL_TSPY].learned++;
+		}
+		c = RandomChar();
+		PopStatus();
+	}
+	return overheard;
+}
+} // namespace
 
 ACTION_FUNC(do_write) {
-	struct obj_data* paper = nullptr;
-	struct obj_data* pen = nullptr;
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_write (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_write (act.comm.cpp)");
+		return;
+	}
+	if(ch->desc == nullptr) {
+		mudlog(LOG_SYSERR, "ch->desc==nullptr in do_write (act.comm.cpp)");
+		return;
+	}
+
 	std::array<char, MAX_INPUT_LENGTH> papername{};
 	std::array<char, MAX_INPUT_LENGTH> penname{};
-	std::array<char, MAX_STRING_LENGTH> buf{};
-
 	argument_interpreter(arg, papername.data(), penname.data());
 
-	if(!ch->desc) {
+	if(papername[0] == '\0' || penname[0] == '\0') {
+		send_to_char("write <foglio> <penna>\n\r"
+		              "write on <foglio> with <penna>\n\r",
+		              ch);
 		return;
 	}
 
-	if(papername[0] == '\0') {  /* nothing was delivered */
-		send_to_char("write (on) papername (with) penname.\n\r", ch);
+	OBJ_DATA* const paper = get_obj_in_list_vis(ch, papername.data(), ch->carrying);
+	if(paper == nullptr) {
+		std::ostringstream os;
+		os << "Tu non hai nessun " << papername.data() << ".\n\r";
+		send_to_char(os.str().c_str(), ch);
 		return;
 	}
 
-	if(penname[0] == '\0') {
-		send_to_char("write (on) papername (with) penname.\n\r", ch);
-		return;
-	}
-	if(!(paper = get_obj_in_list_vis(ch, papername.data(), ch->carrying))) {
-		std::snprintf(buf.data(), buf.size(), "Tu non hai nessun %s.\n\r", papername.data());
-		send_to_char(buf.data(), ch);
-		return;
-	}
-	if(!(pen = get_obj_in_list_vis(ch, penname.data(), ch->carrying))) {
-		std::snprintf(buf.data(), buf.size(), "Tu non hai nessun %s.\n\r", papername.data());
-		send_to_char(buf.data(), ch);
+	OBJ_DATA* const pen = get_obj_in_list_vis(ch, penname.data(), ch->carrying);
+	if(pen == nullptr) {
+		std::ostringstream os;
+		os << "Tu non hai nessun " << penname.data() << ".\n\r";
+		send_to_char(os.str().c_str(), ch);
 		return;
 	}
 
-	/* ok.. now let's see what kind of stuff we've found */
 	if(pen->obj_flags.type_flag != ITEM_PEN) {
-		act("Non puoi scrivere con $p.", FALSE, ch, pen, 0, TO_CHAR);
+		act("Non puoi scrivere con $p.", FALSE, ch, pen, nullptr, TO_CHAR);
+		return;
 	}
-	else if(paper->obj_flags.type_flag != ITEM_NOTE) {
-		act("Non puoi scrivere su $p.", FALSE, ch, paper, 0, TO_CHAR);
+	if(paper->obj_flags.type_flag != ITEM_NOTE) {
+		act("Non puoi scrivere su $p.", FALSE, ch, paper, nullptr, TO_CHAR);
+		return;
 	}
-	else if(paper->action_description && *paper->action_description) {
+	if(paper->action_description != nullptr && paper->action_description[0] != '\0') {
 		send_to_char("C'e' gia' scritto sopra qualcosa.\n\r", ch);
 		return;
 	}
-	else {
-		/* we can write - hooray! */
-		send_to_char
-		("Ok... puoi scrivere... finisci la nota con un @.\n\r", ch);
-		act("$n comincia a scrivere qualcosa.", TRUE, ch, nullptr, nullptr, TO_ROOM);
-#if 0
-		if(paper->action_description) {
-			free(paper->action_description);
-		}
-		paper->action_description = nullptr;
-#endif
-		ch->desc->str = &paper->action_description;
-		ch->desc->max_str = MAX_NOTE_LENGTH;
-	}
+
+	send_to_char("Ok... puoi scrivere... finisci la nota con un @.\n\r", ch);
+	act("$n comincia a scrivere qualcosa.", TRUE, ch, nullptr, nullptr, TO_ROOM);
+	ch->desc->str = &paper->action_description;
+	ch->desc->max_str = kMaxNoteLength;
 }
 
 
 
 ACTION_FUNC(do_sign) {
-	int i;
-	int diff;
-	struct char_data* t;
-	struct room_data* rp;
-
-	for(i = 0; *(arg + i) == ' '; i++);
-
-	if(!*(arg + i)) {
-		send_to_char("D'accordo, ma cosa vuoi dire ?\n\r", ch);
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_sign (act.comm.cpp)");
+		return;
 	}
-	else {
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_sign (act.comm.cpp)");
+		return;
+	}
 
-		rp = real_roomp(ch->in_room);
-		if(!rp) {
-			return;
-		}
+	while(*arg == ' ') {
+		arg++;
+	}
 
-		if(!HasHands(ch)) {
-			send_to_char("Si giusto... ma con QUALI MANI ?????????\n\r", ch);
-			return;
-		}
+	if(*arg == '\0') {
+		send_to_char("D'accordo, ma cosa vuoi dire?\n\r", ch);
+		return;
+	}
 
-		const std::string spokenText = arg + i;
-		std::ostringstream correctedStream;
-		std::istringstream wordStream(spokenText);
-		std::string token;
-		bool firstWord = true;
-		while(wordStream >> token) {
-			if(!firstWord) {
-				correctedStream << ' ';
-			}
-			if(ch->skills && number(1, 75 + static_cast<int>(token.size())) < ch->skills[SKILL_SIGN].learned) {
-				correctedStream << token;
-			}
-			else {
-				correctedStream << RandomWord();
-			}
-			firstWord = false;
-		}
-		const std::string correctedText = correctedStream.str();
-		diff = std::max(1, static_cast<int>(spokenText.size()));
-		/*
-		  if a recipient fails a roll, a word comes out garbled.
-		  */
+	struct room_data* const rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		mudlog(LOG_SYSERR, "do_sign: real_roomp null per %s", GET_NAME(ch));
+		return;
+	}
 
-		/*
-		  buf2 is now the "corrected" string.
-		  */
+	if(!HasHands(ch)) {
+		send_to_char("Si giusto... ma con QUALI MANI?\n\r", ch);
+		return;
+	}
 
-		std::string sign_message = "$c0015[$c0005$n$c0015], con i segni, dice '";
-		sign_message += correctedText;
-		sign_message += "'";
+	const std::string spokenText = arg;
+	const std::string correctedText = sign_build_corrected(ch, spokenText);
+	sign_broadcast_room(ch, rp, spokenText, correctedText);
 
-		for(t = rp->people; t; t=t->next_in_room) {
-			if(t != ch) {
-				if(t->skills && number(1,diff) < t->skills[SKILL_SIGN].learned) {
-					act(sign_message.c_str(), FALSE, ch, 0, t, TO_VICT);
-				}
-				else {
-					act("$n muove le mani in modo molto buffo.",
-						FALSE, ch, 0, t, TO_VICT);
-				}
-			}
-		}
-
-		if(IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			std::string echo_message = "Tu hai detto '";
-			echo_message += (arg + i);
-			echo_message += "'\n\r";
-			send_to_char(echo_message.c_str(), ch);
-		}
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream echoOs;
+		echoOs << "Tu hai detto '" << spokenText << "'\n\r";
+		send_to_char(echoOs.str().c_str(), ch);
 	}
 }
 
-/* speak elvish, speak dwarvish, etc...                    */
+/* speak elvish, speak dwarvish, etc... */
 ACTION_FUNC(do_speak) {
-	std::array<char, 255> buf{};
-	int i = -1;
-	const char* selectedLanguageLabel = nullptr;
-	struct SpeakLanguage
-	{
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_speak (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_speak (act.comm.cpp)");
+		return;
+	}
+
+	struct SpeakLanguage {
 		int speakValue;
 		const char* commandToken;
 		const char* displayLabel;
 	};
-	constexpr std::array<SpeakLanguage, 8> speakLanguages = {{
-		{SPEAK_COMMON, "common", "la lingua comune"},
-		{SPEAK_ELVISH, "elvish", "elfico"},
-		{SPEAK_HALFLING, "halfling", "la lingua halfling"},
-		{SPEAK_DWARVISH, "dwarvish", "nanico"},
-		{SPEAK_ORCISH, "orcish", "orchesco"},
-		{SPEAK_GIANTISH, "giantish", "la lingua dei giganti"},
-		{SPEAK_OGRE, "ogre", "la lingua degli ogre"},
-		{SPEAK_GNOMISH, "gnomish", "gnomesco"}
+
+	static constexpr std::array<SpeakLanguage, 8> kSpeakLanguages = {{
+	    {SPEAK_COMMON, "common", "la lingua comune"},
+	    {SPEAK_ELVISH, "elvish", "elfico"},
+	    {SPEAK_HALFLING, "halfling", "la lingua halfling"},
+	    {SPEAK_DWARVISH, "dwarvish", "nanico"},
+	    {SPEAK_ORCISH, "orcish", "orchesco"},
+	    {SPEAK_GIANTISH, "giantish", "la lingua dei giganti"},
+	    {SPEAK_OGRE, "ogre", "la lingua degli ogre"},
+	    {SPEAK_GNOMISH, "gnomish", "gnomesco"},
 	}};
 
-	only_argument(arg, buf.data());
+	std::array<char, 255> langTok{};
+	only_argument(arg, langTok.data());
 
-	if(buf[0] == '\0') {
-		send_to_char("In quale lingua vuoi parlare?\n\r",ch);
+	if(langTok[0] == '\0') {
+		send_to_char("Sintassi: speak <lingua>\n\r"
+		              "         (common, elvish, dwarvish, orcish, halfling, giantish, ogre, gnomish)\n\r",
+		              ch);
 		return;
 	}
 
-	for(const auto& language : speakLanguages) {
-		if(strstr(buf.data(), language.commandToken)) {
-			i = language.speakValue;
-			selectedLanguageLabel = language.displayLabel;
+	const SpeakLanguage* selected = nullptr;
+	for(const auto& language : kSpeakLanguages) {
+		if(speak_language_matches(langTok.data(), language.commandToken)) {
+			selected = &language;
 			break;
 		}
 	}
 
-	if(i == -1) {
-		send_to_char("Non e' un linguaggio molto conosciuto.\n\r",ch);
-		return;
-	}
-
-	/* set language that we're gonna speak */
-	ch->player.speaks = i;
-	if(selectedLanguageLabel == nullptr) {
+	if(selected == nullptr) {
 		send_to_char("Non e' un linguaggio molto conosciuto.\n\r", ch);
 		return;
 	}
-	std::snprintf(buf.data(), buf.size(), "Ti concentri nel parlare %s.\n\r",
-	              selectedLanguageLabel);
-	send_to_char(buf.data(), ch);
+
+	ch->player.speaks = selected->speakValue;
+
+	std::ostringstream os;
+	os << "Ti concentri nel parlare " << selected->displayLabel << ".\n\r";
+	send_to_char(os.str().c_str(), ch);
 }
 
-void thief_listen(struct char_data* ch,struct char_data* victim, const char* frase,int cmd) {
-	struct char_data* t;
-	struct room_data* rp;
-	int malus=0;
-	int percent =0;
-	rp = real_roomp(ch->in_room);
-	if(cmd==CMD_WHISPER) {
-		malus=5;
-	}
-	if(cmd==CMD_GTELL) {
-		malus=10;
-	}
-	if(!IS_SINGLE(ch)) {
-		malus+=20;
-	}
-	if(!rp) {
+void thief_listen(struct char_data* ch, struct char_data* victim, const char* frase, int cmd) {
+	if(ch == nullptr || victim == nullptr || frase == nullptr) {
+		mudlog(LOG_SYSERR, "thief_listen: parametro nullo (act.comm.cpp)");
 		return;
 	}
-	PushStatus("Thief_listen");
-	for(t = rp->people; t; t=t->next_in_room) {
-		if(!IS_DIO(ch) && !IS_DIO(victim))
-			if((t != ch) && (t !=victim)) {
-				if(HasClass(t,CLASS_THIEF) && t->skills &&
-						t->skills[SKILL_TSPY].learned>0 &&
-						affected_by_spell(t,SKILL_TSPY)) {
-					percent=GetMaxLevel(ch)-GetMaxLevel(t);
-					std::string overheard = frase;
-					for(char& c : overheard) {
-						if((percent+number(20,120)+malus)>t->skills[SKILL_TSPY].learned) {
-							if((malus+number(1,40)-GET_INT(t))>(0)) {
-								if(number(0,20)) {
-									PushStatus("Random");
-									if(number(1,101)>100 &&
-											t->skills[SKILL_TSPY].learned <100) {
-										t->skills[SKILL_TSPY].learned++;
-									}
-									c = RandomChar();
-									PopStatus();
-								}
 
-							}
-						}
-					}
-					std::vector<char> overheardBuffer(overheard.begin(), overheard.end());
-					overheardBuffer.push_back('\0');
-					act("$c0013Riesci ad origliare: '$T'", FALSE,
-						t, nullptr, overheardBuffer.data(), TO_CHAR);
-				}
-			}
+	struct room_data* const rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		return;
+	}
+	if(IS_DIO(ch) || IS_DIO(victim)) {
+		return;
+	}
+
+	const int malus = thief_listen_malus(ch, cmd);
+	PushStatus("Thief_listen");
+	for(struct char_data* t = rp->people; t != nullptr; t = t->next_in_room) {
+		if(!thief_listener_eligible(t, ch, victim)) {
+			continue;
+		}
+		const std::string overheard = thief_garble_overheard(ch, t, frase, malus);
+		std::vector<char> overheardBuf(overheard.begin(), overheard.end());
+		overheardBuf.push_back('\0');
+		act("$c0013Riesci ad origliare: '$T'", FALSE, t, nullptr, overheardBuf.data(), TO_CHAR);
 	}
 	PopStatus();
-
 }
 
-/* this is where we do the language says */
+/* say con lingua (speak) — testo al parlante in chiaro, ascoltatori in base a skill lingua */
 ACTION_FUNC(do_new_say) {
-	int i, learned, skill_num;
-	int diff;
-	struct char_data* t;
-	struct room_data* rp;
-
-	if(!arg) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_new_say (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_new_say (act.comm.cpp)");
 		return;
 	}
 
-	for(i = 0; *(arg + i) == ' '; i++);
-
-	if(!arg[i]) {
-		send_to_char("Ok, ma cosa hai da dire?\n\r", ch);
+	while(*arg == ' ') {
+		arg++;
 	}
-	else {
 
-		if(apply_soundproof(ch)) {
-			return;
-		}
+	if(*arg == '\0') {
+		send_to_char("Ok, ma cosa hai da dire?\n\r", ch);
+		return;
+	}
 
-        if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-        {
-            send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
-            return;
-        }
+	if(apply_soundproof(ch)) {
+		return;
+	}
 
-		rp = real_roomp(ch->in_room);
-		if(!rp) {
-			return;
-		}
+	if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM)) {
+		send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+		return;
+	}
 
+	struct room_data* const rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		mudlog(LOG_SYSERR, "do_new_say: real_roomp null per %s", GET_NAME(ch));
+		return;
+	}
 
-		if(!ch->skills) {
-			learned = 0;
-			skill_num = LANG_COMMON;
-		}
-		else {
-			/* find the language we are speaking */
+	int learned = 0;
+	int skillNum = LANG_COMMON;
+	say_resolve_language(ch, learned, skillNum);
 
-			switch(ch->player.speaks) {
-			case SPEAK_COMMON:
-				learned = ch->skills[LANG_COMMON].learned;
-				skill_num=LANG_COMMON;
-				break;
-			case SPEAK_ELVISH:
-				learned = ch->skills[LANG_ELVISH].learned;
-				skill_num=LANG_ELVISH;
-				break;
-			case SPEAK_HALFLING:
-				learned = ch->skills[LANG_HALFLING].learned;
-				skill_num=LANG_HALFLING;
-				break;
-			case SPEAK_DWARVISH:
-				learned = ch->skills[LANG_DWARVISH].learned;
-				skill_num=LANG_DWARVISH;
-				break;
-			case SPEAK_ORCISH:
-				learned = ch->skills[LANG_ORCISH].learned;
-				skill_num=LANG_ORCISH;
-				break;
-			case SPEAK_GIANTISH:
-				learned = ch->skills[LANG_GIANTISH].learned;
-				skill_num=LANG_GIANTISH;
-				break;
-			case SPEAK_OGRE:
-				learned = ch->skills[LANG_OGRE].learned;
-				skill_num=LANG_OGRE;
-				break;
-			case SPEAK_GNOMISH:
-				learned = ch->skills[LANG_GNOMISH].learned;
-				skill_num=LANG_GNOMISH;
-				break;
+	const std::string spokenText = arg;
+	const std::string correctedText = say_build_corrected(ch, spokenText, learned);
+	if(correctedText.empty()) {
+		send_to_char("Ok, ma cosa hai da dire?\n\r", ch);
+		return;
+	}
 
-			default:
-				learned = ch->skills[LANG_COMMON].learned;
-				skill_num = LANG_COMMON;
-				break;
-			} /* end switch */
-		}
-		/* end finding language */
+	say_broadcast_room(ch, rp, spokenText, correctedText, skillNum);
 
-
-		const std::string spokenText = arg + i;
-
-		/* we use this for ESP and immortals and comprehend lang */
-		std::string say_understood = "$c0015[$c0005$n$c0015] dice '";
-		say_understood += spokenText;
-		say_understood += "'";
-
-		/*
-		  work through the arg, word by word.  if you fail your
-		  skill roll, the word comes out garbled.
-		  */
-		std::ostringstream correctedStream;
-		std::istringstream wordStream(spokenText);
-		std::string token;
-		bool firstWord = true;
-		while(wordStream >> token) {
-			if(!firstWord) {
-				correctedStream << ' ';
-			}
-			if((number(1, 75 + static_cast<int>(token.size())) < learned) || (GetMaxLevel(ch) >= IMMORTALE)) {
-				correctedStream << token;
-			}
-			else {
-				/* add case statement here to use random words from clips of elvish */
-				/* dwarvish etc so the words look like they came from that language */
-				correctedStream << RandomWord();
-			}
-			firstWord = false;
-		}
-		const std::string correctedText = correctedStream.str();
-		diff = std::max(1, static_cast<int>(spokenText.size()));
-		/*
-		  if a recipient fails a roll, a word comes out garbled.
-		  */
-
-		/*
-		  buf2 is now the "corrected" string.
-		  */
-		if(correctedText.empty()) {
-			send_to_char("OK, ma cosa hai da dire?\n\r", ch);
-			return;
-		}
-
-		std::string say_garbled = "$c0015[$c0005$n$c0015] dice '";
-		say_garbled += correctedText;
-		say_garbled += "'";
-
-		for(t = rp->people; t; t=t->next_in_room) {
-			if(t != ch) {
-				if((t->skills && number(1,diff) < t->skills[skill_num].learned) ||
-						GetMaxLevel(t) >= IMMORTALE || IS_NPC(t) ||
-						affected_by_spell(t, SKILL_ESP) ||
-						affected_by_spell(t, SPELL_COMP_LANGUAGES) ||
-						GetMaxLevel(ch) >= IMMORTALE) {
-
-					/* these guys always understand */
-					if(GetMaxLevel(t) >= IMMORTALE ||
-							affected_by_spell(t,SKILL_ESP) ||
-							affected_by_spell(t,SPELL_COMP_LANGUAGES) || IS_NPC(t)) {
-						act(say_understood.c_str(), FALSE, ch, nullptr, t, TO_VICT);
-					}
-					else
-						/* otherwise */
-
-					{
-						act(say_garbled.c_str(), FALSE, ch, nullptr, t, TO_VICT);
-					}
-				}
-				else {
-					act("$c0010$n parla una lingua che non riesci a capire.", FALSE,
-						ch, nullptr, t, TO_VICT);
-				}
-			}
-		}
-
-		if(IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-			std::string say_echo = "$c0015Tu dici '";
-			say_echo += (arg + i);
-			say_echo += "'";
-			act(say_echo.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-		}
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream echoOs;
+		echoOs << "$c0015Tu dici '" << spokenText << "'";
+		act(echoOs.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 }
 
 
 
 ACTION_FUNC(do_gtell) {
-	int i;
-	struct char_data* k;
-	struct follow_type* f;
-
-	if(apply_soundproof(ch)) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_gtell (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_gtell (act.comm.cpp)");
+		return;
+	}
+	if(!comm_direct_sender_ok(ch)) {
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
-        return;
-    }
+	while(*arg == ' ') {
+		arg++;
+	}
 
-	for(i = 0; *(arg + i) == ' '; i++);
-
-	if(!*(arg+i)) {
+	if(*arg == '\0') {
 		send_to_char("Cosa vuoi dire al gruppo?\n\r", ch);
 		return;
 	}
@@ -1205,64 +1602,17 @@ ACTION_FUNC(do_gtell) {
 		send_to_char("Forse dovresti unirti ad un gruppo, prima.\n\r", ch);
 		return;
 	}
-	else {
-		const char* message = arg + i;
-		thief_listen(ch, ch, message, cmd);
-		if(ch->master) {
-			k = ch->master;
-		}
-		else {
-			k = ch;
-		}
 
-		for(f=k->followers; f; f=f->next) {
-			if(IS_AFFECTED(f->follower, AFF_GROUP)) {
-				if(!f->follower->desc) {
-					/* link dead */
-				}
-				else if(ch == f->follower) {
-					/* can't tell yourself! */
-				}
-				else if(!check_soundproof(f->follower)) {
-					std::string groupLine = "$c0012[$c0015";
-					groupLine += (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch));
-					groupLine += "$c0012] dice al gruppo '";
-					groupLine += message;
-					groupLine += "'";
-					act(groupLine.c_str(), FALSE, f->follower, nullptr, nullptr, TO_CHAR);
-				} /* !soundproof */
-			}
-		} /* end for loop */
+	const char* const message = arg;
+	thief_listen(ch, ch, message, cmd);
+	gtell_broadcast(ch, message);
 
-		/* send to master now */
-		if(ch->master) {
-			if(IS_AFFECTED(ch->master, AFF_GROUP)) {
-				if(!ch->master->desc) {
-					/* link dead */
-				}
-				else if(ch == ch->master) {
-					/* can't tell yourself! */
-				}
-				else if(!check_soundproof(ch->master)) {
-					std::string groupLine = "$c0012[$c0015";
-					groupLine += (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch));
-					groupLine += "$c0012] dice al gruppo '";
-					groupLine += message;
-					groupLine += "'";
-					act(groupLine.c_str(), FALSE, ch->master, nullptr, nullptr, TO_CHAR);
-				} /* !soundproof */
-			}
-		}         /* end master send */
-
-		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			std::string selfLine = "$c0012Tu dici al gruppo '";
-			selfLine += message;
-			selfLine += "'";
-			act(selfLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-		} /* if echo */
-
-	} /* they where grouped... */
-} /* end of gtel */
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream echoOs;
+		echoOs << "$c0012Tu dici al gruppo '" << message << "'";
+		act(echoOs.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
 
 /*
  * 'Split' originally by Gnort, God of Chaos. I stole it from Merc
@@ -1270,12 +1620,17 @@ ACTION_FUNC(do_gtell) {
  */
 
 ACTION_FUNC(do_split) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_split (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_split (act.comm.cpp)");
+		return;
+	}
 
-	std::array<char, MAX_INPUT_LENGTH> tmp{};
-	struct char_data* gch;
-	int members, amount, share, extra;
-
-	const char* rest = one_argument(arg, tmp.data());
+	std::array<char, MAX_INPUT_LENGTH> amountTok{};
+	const char* rest = one_argument(arg, amountTok.data());
 	while(*rest == ' ') {
 		++rest;
 	}
@@ -1285,24 +1640,16 @@ ACTION_FUNC(do_split) {
 		return;
 	}
 
-	if(tmp[0] == '\0') {
+	if(amountTok[0] == '\0') {
 		send_to_char("Quanto vuoi dividere?\n\r", ch);
 		return;
 	}
 
-	char* parseEnd = nullptr;
-	errno = 0;
-	const long parsedAmount = std::strtol(tmp.data(), &parseEnd, 10);
-	if(parseEnd == tmp.data() || *parseEnd != '\0') {
+	int amount = 0;
+	if(!split_parse_amount(amountTok.data(), amount)) {
 		send_to_char("Inserisci un numero valido.\n\r", ch);
 		return;
 	}
-	if(errno == ERANGE || parsedAmount > std::numeric_limits<int>::max() ||
-	   parsedAmount < std::numeric_limits<int>::min()) {
-		send_to_char("Numero fuori intervallo.\n\r", ch);
-		return;
-	}
-	amount = static_cast<int>(parsedAmount);
 
 	if(amount < 0) {
 		send_to_char("Non cercare di fare il furbo con il tuo gruppo.\n\r", ch);
@@ -1314,193 +1661,108 @@ ACTION_FUNC(do_split) {
 		return;
 	}
 
-	if(ch->points.gold < amount) {
+	if(GET_GOLD(ch) < amount) {
 		send_to_char("Non hai tutto quell'oro.\n\r", ch);
 		return;
 	}
 
 	struct room_data* const rp = real_roomp(ch->in_room);
 	if(rp == nullptr) {
+		mudlog(LOG_SYSERR, "do_split: real_roomp null per %s", GET_NAME(ch));
 		return;
 	}
 
-	members = 0;
-	for(gch = rp->people; gch != nullptr; gch = gch->next_in_room) {
-		if(is_same_group(gch, ch)) {
-			members++;
-		}
-	}
-
+	const int members = split_count_group_in_room(rp, ch);
 	if(members < 2) {
 		send_to_char("Ma cosa vuoi dividere che sei solo.\n\r", ch);
 		return;
 	}
 
-	share = amount / members;
-	extra = amount % members;
-
+	const int share = amount / members;
+	const int extra = amount % members;
 	if(share == 0) {
 		send_to_char("C'e' poco da dividere, siete in troppi.\n\r", ch);
 		return;
 	}
 
-	ch->points.gold -= amount;
-	ch->points.gold += share + extra;
-
-	const auto goldAmountPhrase = [](int n) {
-		std::string s = std::to_string(n);
-		s += (n == 1) ? " moneta d'oro" : " monete d'oro";
-		return s;
-	};
-	const auto coinPartPhrase = [](int n) {
-		std::string s = std::to_string(n);
-		s += (n == 1) ? " moneta" : " monete";
-		return s;
-	};
+	const int selfShare = share + extra;
+	GET_GOLD(ch) -= amount;
+	GET_GOLD(ch) += selfShare;
 
 	{
 		std::ostringstream selfMsg;
-		selfMsg << "Hai diviso " << goldAmountPhrase(amount) << ". La tua parte e' di "
-		        << coinPartPhrase(share + extra) << ".\n\r";
+		selfMsg << "Hai diviso " << split_gold_amount_phrase(amount) << ". La tua parte e' di "
+		        << split_coin_part_phrase(selfShare) << ".\n\r";
 		send_to_char(selfMsg.str().c_str(), ch);
 	}
 
-	std::string groupAct = "$n divide ";
-	groupAct += goldAmountPhrase(amount);
-	groupAct += ". La tua parte e' di ";
-	groupAct += coinPartPhrase(share);
-	groupAct += '.';
+	std::ostringstream groupActOs;
+	groupActOs << "$n divide " << split_gold_amount_phrase(amount) << ". La tua parte e' di "
+	           << split_coin_part_phrase(share) << '.';
+	const std::string groupAct = groupActOs.str();
 
-	for(gch = rp->people; gch != nullptr; gch = gch->next_in_room) {
-		if(gch != ch && is_same_group(gch, ch)) {
-			act(groupAct.c_str(), FALSE, ch, nullptr, gch, TO_VICT);
-			gch->points.gold += share;
+	for(struct char_data* gch = rp->people; gch != nullptr; gch = gch->next_in_room) {
+		if(gch == ch || !is_same_group(gch, ch)) {
+			continue;
 		}
+		act(groupAct.c_str(), FALSE, ch, nullptr, gch, TO_VICT);
+		GET_GOLD(gch) += share;
 	}
-
-	return;
 }
 
 
 ACTION_FUNC(do_pray) {
-	struct affected_type af;
-	std::array<char, MAX_INPUT_LENGTH> godName{};
-	struct descriptor_data* i;
-	int ii = 0;
-	int durata = 6;
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_pray (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_pray (act.comm.cpp)");
+		return;
+	}
 	if(!IS_PC(ch)) {
 		return;
 	}
 
 	if(affected_by_spell(ch, SPELL_PRAYER)) {
-		int ore_rimanenti = 0;
-		for(struct affected_type* aff = ch->affected; aff != nullptr;
-		    aff = aff->next) {
-			if(aff->type == SPELL_PRAYER) {
-				ore_rimanenti = aff->duration;
-				break;
-			}
-		}
-		std::ostringstream msg;
-		msg << "Hai gia' pregato di recente.";
-		if(ore_rimanenti > 0) {
-			msg << " Potrai pregare di nuovo tra circa " << ore_rimanenti
-			    << " ore di gioco.";
-		}
-		msg << "\n\r";
-		send_to_char(msg.str().c_str(), ch);
+		pray_send_cooldown_message(ch, pray_spell_duration_remaining(ch));
 		return;
 	}
 
-	for(; *arg == ' '; arg++);
-	if(!(*arg)) {
-		send_to_char("Vuoi pregare. Ottimo, ma chi? "
-					 "(pray <NomeDio> <preghiera>)\n\r", ch);
+	while(*arg == ' ') {
+		++arg;
 	}
-	else {
-		ii = (GetMaxLevel(ch) * 1.5  + 20);
-		one_argument(arg, godName.data());
-		mudlog(LOG_CHECK, "%s ha pregato %s", GET_NAME(ch), godName.data());
-		const bool isDevoutClass = HasClass(ch, CLASS_CLERIC | CLASS_DRUID);
-		if(isDevoutClass) {
-			ii +=10;    /* clerics get a 10% bonus :) */
-		}
-
-		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			std::string selfPrayer = "Tu preghi '";
-			selfPrayer += arg;
-			selfPrayer += "'\n\r";
-			send_to_char(selfPrayer.c_str(), ch);
-		}
-
-		const char* roomPrayerEmote = nullptr;
-		switch(number(1, 6)) {
-		case 1:
-			roomPrayerEmote = isDevoutClass
-			                  ? "$n china il capo e mormora una preghiera sottovoce."
-			                  : "$n resta in silenzio, raccogliendosi per un istante.";
-			break;
-		case 2:
-			roomPrayerEmote = isDevoutClass
-			                  ? "Un fremito percorre l'aria mentre $n invoca il suo dio."
-			                  : "$n mormora poche parole, con tono misurato.";
-			break;
-		case 3:
-			roomPrayerEmote = isDevoutClass
-			                  ? "$n intreccia le mani e sussurra parole antiche."
-			                  : "$n abbassa lo sguardo e riflette in silenzio.";
-			break;
-		case 4:
-			roomPrayerEmote = isDevoutClass
-			                  ? "Per un istante, attorno a $n cala un silenzio solenne."
-			                  : "$n chiude gli occhi per un breve momento.";
-			break;
-		case 5:
-			roomPrayerEmote = isDevoutClass
-			                  ? "$n alza lo sguardo al cielo e prega con fervore."
-			                  : "$n sussurra una breve invocazione, senza enfasi.";
-			break;
-		default:
-			roomPrayerEmote = isDevoutClass
-			                  ? "Una tenue aura di devozione sembra avvolgere $n."
-			                  : "$n si concentra un attimo, poi torna composto.";
-			break;
-		}
-		act(roomPrayerEmote, FALSE, ch, nullptr, nullptr, TO_ROOM);
-
-		if(ch->desc != nullptr && ch->desc->AccountData.authorized) {
-			ii += 60;
-		}
-		if(ii > number(1, 101)) {
-
-			for(i = descriptor_list; i; i = i->next) {
-				if(i->character != ch && ! i->connected && ! IS_NPC(i->character) &&
-						!IS_SET(i->character->specials.act, PLR_NOSHOUT) &&
-						(GetMaxLevel(i->character) >= IMMORTALE)) {
-					std::string prayerLine;
-					if(!str_cmp2(godName.data(), GET_NAME(i->character))) {
-						prayerLine = "$c0013[$c0015$n$c0013] TI PREGA: '";
-					}
-					else {
-						prayerLine = "$c0014[$c0015$n$c0014] prega :'";
-					}
-					prayerLine += arg;
-					prayerLine += "'";
-					act(prayerLine.c_str(), 0, ch, nullptr, i->character, TO_VICT);
-				}
-
-			} /* end for */
-			durata = 12;
-		} /* failed prayer */
-
-		af.type = SPELL_PRAYER;
-		af.duration = durata;
-		af.modifier = 0;
-		af.location = APPLY_NONE;
-		af.bitvector = 0;
-		affect_to_char(ch, &af);
+	if(*arg == '\0') {
+		send_to_char("Vuoi pregare. Ottimo, ma chi? (pray <NomeDio> <preghiera>)\n\r", ch);
 		return;
 	}
+
+	std::array<char, MAX_INPUT_LENGTH> godName{};
+	one_argument(arg, godName.data());
+	mudlog(LOG_CHECK, "%s ha pregato %s", GET_NAME(ch), godName.data());
+
+	const bool isDevoutClass = HasClass(ch, CLASS_CLERIC | CLASS_DRUID);
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream selfPrayer;
+		selfPrayer << "Tu preghi '" << arg << "'\n\r";
+		send_to_char(selfPrayer.str().c_str(), ch);
+	}
+
+	act(pray_pick_room_emote(isDevoutClass), FALSE, ch, nullptr, nullptr, TO_ROOM);
+
+	int durata = 6;
+	if(pray_success_threshold(ch) > number(1, 101)) {
+		pray_notify_immortals(ch, godName.data(), arg);
+		durata = 12;
+	}
+
+	struct affected_type af{};
+	af.type = SPELL_PRAYER;
+	af.duration = durata;
+	af.modifier = 0;
+	af.location = APPLY_NONE;
+	af.bitvector = 0;
+	affect_to_char(ch, &af);
 }
 
 /* modified by Aarcerak */
@@ -1519,134 +1781,134 @@ bool is_same_group(struct char_data* ach, struct char_data* bch) {
 
 
 ACTION_FUNC(do_telepathy) {
-	struct char_data* vict;
-	char name[100], message[MAX_INPUT_LENGTH+20];
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_telepathy (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_telepathy (act.comm.cpp)");
+		return;
+	}
 
-	half_chop(arg, name, message,sizeof name -1,sizeof message -1);
+	std::array<char, 100> name{};
+	std::array<char, MAX_INPUT_LENGTH + 20> message{};
+	half_chop(arg, name.data(), message.data(), static_cast<int>(name.size()) - 1,
+	          static_cast<int>(message.size()) - 1);
 
 	if(!HasClass(ch, CLASS_PSI) && !IS_AFFECTED(ch, AFF_TELEPATHY)) {
 		send_to_char("Cosa pensi di essere? Un telepate?\n\r", ch);
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi farlo in queste condizioni.\n\r", ch);
-        return;
-    }
-
-	if(GET_MANA(ch) < 5 && !IS_AFFECTED(ch, AFF_TELEPATHY)) {
-		send_to_char("Non hai la potenza mentale sufficiente.\n\r",ch);
+	if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM)) {
+		send_to_char("Non puoi farlo in queste condizioni.\n\r", ch);
 		return;
 	}
 
-	if(!*name || !*message) {
+	if(GET_MANA(ch) < 5 && !IS_AFFECTED(ch, AFF_TELEPATHY)) {
+		send_to_char("Non hai la potenza mentale sufficiente.\n\r", ch);
+		return;
+	}
+
+	if(name[0] == '\0' || message[0] == '\0') {
 		send_to_char("A chi vuoi mandare il tuo pensiero?\n\r", ch);
 		return;
 	}
-	else if(!(vict = get_char_vis(ch, name))) {
+
+	struct char_data* vict = get_char_vis(ch, name.data());
+	if(vict == nullptr) {
 		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
 	}
-	else if(ch == vict) {
+	if(ch == vict) {
 		send_to_char("Nella tua mente risuona il tuo pensiero...\n\r", ch);
 		return;
 	}
-	else if(GET_POS(vict) == POSITION_SLEEPING && !IS_IMMORTAL(ch)) {
-		act("Sta dormendo, shhh.",FALSE,ch,0,vict,TO_CHAR);
+	if(GET_POS(vict) == POSITION_SLEEPING && !IS_IMMORTAL(ch)) {
+		act("Sta dormendo, shhh.", FALSE, ch, nullptr, vict, TO_CHAR);
 		return;
 	}
-	else if(IS_NPC(vict) && !(vict->desc)) {
+	if(IS_NPC(vict) && vict->desc == nullptr) {
 		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
 	}
-	else if(!(GetMaxLevel(ch) >= IMMORTALE) &&
-			IS_SET(vict->specials.act, PLR_NOTELL)) {
-		act("$N non sta ascoltando adesso.", FALSE, ch, 0, vict, TO_CHAR);
+	if(tell_vict_refuses(ch, vict)) {
+		if(GetMaxLevel(vict) >= IMMORTALE && GetMaxLevel(ch) >= IMMORTALE) {
+			act("La mente di $N e' chiusa in questo momento!", FALSE, ch, nullptr, vict, TO_CHAR);
+		}
+		else {
+			act("$N non sta ascoltando adesso.", FALSE, ch, nullptr, vict, TO_CHAR);
+		}
 		return;
 	}
-	else if((GetMaxLevel(vict) >= IMMORTALE) &&
-			(GetMaxLevel(ch) >= IMMORTALE) &&
-			(GetMaxLevel(ch) < GetMaxLevel(vict)) &&
-			IS_SET(vict->specials.act, PLR_NOTELL)) {
-		act("La mente di $N e' chiusa in questo momento!", FALSE, ch, 0, vict,
-			TO_CHAR);
+	if(vict->desc == nullptr) {
+		send_to_char("Non puo' sentirti. Gli e' caduta la linea (link dead).\n\r", ch);
 		return;
 	}
-	else if(!vict->desc) {
-		send_to_char("Non puo' sentirti. Gli e' caduta la linea (link dead).\n\r",
-					 ch);
-		return;
-	}
-
-	/*
-	  if (check_soundproof(vict)) {
-	        send_to_char("In a silenced room, try again later.\n\r",ch);
-	        return;
-	  }
-	*/
 
 	if(!IS_AFFECTED(ch, AFF_TELEPATHY)) {
-		GET_MANA(ch) -=5;
-		alter_mana(ch,0);
+		GET_MANA(ch) -= 5;
+		alter_mana(ch, 0);
 	}
 
-	{
-		std::string telepathy_to_vict = "$c0013[$c0015";
-		telepathy_to_vict += (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch));
-		telepathy_to_vict += "$c0013] ti manda il pensiero '";
-		telepathy_to_vict += message;
-		telepathy_to_vict += "'";
-		act(telepathy_to_vict.c_str(), FALSE, vict, nullptr, nullptr, TO_CHAR);
-	}
-
-	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-		std::string telepathy_echo = "$c0013Tu mandi a ";
-		telepathy_echo += (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict));
-		telepathy_echo += " il pensiero '";
-		telepathy_echo += message;
-		telepathy_echo += "'";
-		act(telepathy_echo.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-	}
+	telepathy_deliver(ch, vict, message.data());
 }
 
 ACTION_FUNC(do_eavesdrop) {
-	char buf[MAX_STRING_LENGTH];
-	struct room_direction_data* exitp;
-	int dir;
-	one_argument(arg, buf);
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_eavesdrop (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_eavesdrop (act.comm.cpp)");
+		return;
+	}
 
+	std::array<char, MAX_INPUT_LENGTH> dirTok{};
+	one_argument(arg, dirTok.data());
 
-	if(!*buf) {
+	if(dirTok[0] == '\0') {
 		send_to_char("In quale direzione vuoi ascoltare?\r\n", ch);
 		return;
 	}
-	if((dir = search_block(buf, dirs, FALSE)) < 0) {
+
+	const int dir = search_block(dirTok.data(), dirs, FALSE);
+	if(dir < 0) {
 		send_to_char("Che direzione sarebbe?\r\n", ch);
 		return;
 	}
-	if(ch->skills[SKILL_EAVESDROP].learned<number(1,101)) {
+
+	if(ch->skills[SKILL_EAVESDROP].learned < number(1, 101)) {
 		send_to_char("Resti immobile concentrandoti sui rumori che provengono da quella parte.\r\n", ch);
-		WAIT_STATE(ch, PULSE_VIOLENCE); // eavesdrop
+		WAIT_STATE(ch, PULSE_VIOLENCE);
 		return;
 	}
-	exitp = EXIT(ch, dir); // SALVO se la stanza e' -1 crash
-	if(exitp && exitp->to_room > 0 && real_roomp(exitp->to_room)) {
-		if(IS_SET(exitp->exit_info, EX_CLOSED) && exitp->keyword) {
-			snprintf(buf, MAX_STRING_LENGTH-1, "The %s is closed.\r\n", fname(exitp->keyword));
-			send_to_char(buf, ch);
-		}
-		else {
-			ch->next_listener = real_roomp(exitp->to_room)->listeners;
-			real_roomp(exitp->to_room)->listeners = ch;
-			ch->listening_to = exitp->to_room;
-			send_to_char("Resti immobile concentrandoti sui rumori che provengono da quella parte.", ch);
-			WAIT_STATE(ch, PULSE_VIOLENCE); // eavesdrop
-		}
-	}
-	else {
+
+	struct room_direction_data* const exitp = EXIT(ch, dir);
+	if(exitp == nullptr || exitp->to_room <= 0) {
 		send_to_char("Non c'e' nulla da quella parte...\r\n", ch);
+		return;
 	}
+
+	struct room_data* const destRoom = real_roomp(exitp->to_room);
+	if(destRoom == nullptr) {
+		mudlog(LOG_SYSERR, "do_eavesdrop: real_roomp null per stanza %d", exitp->to_room);
+		send_to_char("Non c'e' nulla da quella parte...\r\n", ch);
+		return;
+	}
+
+	if(IS_SET(exitp->exit_info, EX_CLOSED) && exitp->keyword != nullptr) {
+		std::ostringstream closedMsg;
+		closedMsg << "The " << fname(exitp->keyword) << " is closed.\r\n";
+		send_to_char(closedMsg.str().c_str(), ch);
+		return;
+	}
+
+	ch->next_listener = destRoom->listeners;
+	destRoom->listeners = ch;
+	ch->listening_to = exitp->to_room;
+	send_to_char("Resti immobile concentrandoti sui rumori che provengono da quella parte.", ch);
+	WAIT_STATE(ch, PULSE_VIOLENCE);
 }
 
 
