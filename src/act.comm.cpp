@@ -56,6 +56,39 @@ std::size_t mud_capped_strlen(const char* s, std::size_t cap) {
 	}
 	return n;
 }
+
+void append_report_hp_mana_mv_pct(std::ostringstream& os, double hitPct, double manaPct,
+                                  double movePct) {
+	os << std::setw(2) << std::fixed << std::setprecision(0) << hitPct
+	   << "% MANA:" << std::setw(2) << manaPct
+	   << "% MV:" << std::setw(2) << movePct << "%'";
+}
+
+/** Seconda riga quando Silence blocca un NPC in polimorfo su canali pubblici. */
+constexpr char kPolySilenceFollowup[] =
+	"La limitazione e' temporanea e dipende dalla gestione del gioco.\n\r";
+
+/** @return true se bloccato (messaggi gia' inviati a ch). */
+bool comm_poly_silence_blocks(struct char_data* ch, const char* channelBlockedMsg) {
+	if(!IS_NPC(ch) || Silence != 1 || !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		return false;
+	}
+	send_to_char(channelBlockedMsg, ch);
+	send_to_char(kPolySilenceFollowup, ch);
+	return true;
+}
+
+/** Charm: schiavo non usa il canale se il master non e' immortale. @return true se bloccato. */
+bool comm_charm_master_blocks(struct char_data* ch) {
+	if(ch->master == nullptr || !IS_AFFECTED(ch, AFF_CHARM)) {
+		return false;
+	}
+	if(IS_IMMORTAL(ch->master)) {
+		return false;
+	}
+	send_to_char("Non credo proprio :-)", ch->master);
+	return true;
+}
 } // namespace
 
 std::string scrambler(struct char_data* ch, const char* message) {
@@ -78,7 +111,12 @@ std::string scrambler(struct char_data* ch, const char* message) {
 #define scramble(ch, msg) (msg)
 
 ACTION_FUNC(do_say) {
-	if(ch == nullptr || arg == nullptr) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_say (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_say (act.comm.cpp)");
 		return;
 	}
 	if(apply_soundproof(ch)) {
@@ -111,60 +149,74 @@ ACTION_FUNC(do_say) {
 }
 
 ACTION_FUNC(do_report) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_report (act.comm.cpp)");
+		return;
+	}
 	if(apply_soundproof(ch)) {
 		return;
 	}
-
 	if(IS_NPC(ch)) {
 		return;
 	}
 
-	if(GET_HIT(ch) > GET_MAX_HIT(ch) ||                 /* bug fix */
-			GET_MANA(ch) > GET_MAX_MANA(ch) ||
-			GET_MOVE(ch) > GET_MAX_MOVE(ch)) {
-		send_to_char("Mi spiace, ma non puoi farlo ora.\n\r",ch);
+	if(GET_HIT(ch) > GET_MAX_HIT(ch) || GET_MANA(ch) > GET_MAX_MANA(ch) ||
+	   GET_MOVE(ch) > GET_MAX_MOVE(ch)) {
+		send_to_char("Mi spiace, ma non puoi farlo ora.\n\r", ch);
 		return;
 	}
 
-	const double hitPct = (static_cast<double>(GET_HIT(ch)) / static_cast<double>(GET_MAX_HIT(ch))) * 100.0 + 0.5;
-	const double manaPct = (static_cast<double>(GET_MANA(ch)) / static_cast<double>(GET_MAX_MANA(ch))) * 100.0 + 0.5;
-	const double movePct = (static_cast<double>(GET_MOVE(ch)) / static_cast<double>(GET_MAX_MOVE(ch))) * 100.0 + 0.5;
-	std::ostringstream roomReport;
-	roomReport << "$c0014[$c0015$n$c0014] dichiara 'HP:"
-			   << std::setw(2) << std::fixed << std::setprecision(0) << hitPct
-			   << "% MANA:" << std::setw(2) << manaPct
-			   << "% MV:" << std::setw(2) << movePct << "%'";
-	act(roomReport.str().c_str(), FALSE, ch, nullptr, nullptr, TO_ROOM);
-	std::ostringstream selfReport;
-	selfReport << "$c0014Dichiari 'HP:"
-			   << std::setw(2) << std::fixed << std::setprecision(0) << hitPct
-			   << "% MANA:" << std::setw(2) << manaPct
-			   << "% MV:" << std::setw(2) << movePct << "%'";
-	act(selfReport.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	const int maxHit = GET_MAX_HIT(ch);
+	const int maxMana = GET_MAX_MANA(ch);
+	const int maxMove = GET_MAX_MOVE(ch);
+	if(maxHit <= 0 || maxMana <= 0 || maxMove <= 0) {
+		send_to_char("Mi spiace, ma non puoi farlo ora.\n\r", ch);
+		return;
+	}
 
+	const double hitPct =
+	    (static_cast<double>(GET_HIT(ch)) / static_cast<double>(maxHit)) * 100.0 + 0.5;
+	const double manaPct =
+	    (static_cast<double>(GET_MANA(ch)) / static_cast<double>(maxMana)) * 100.0 + 0.5;
+	const double movePct =
+	    (static_cast<double>(GET_MOVE(ch)) / static_cast<double>(maxMove)) * 100.0 + 0.5;
+
+	std::ostringstream roomReport;
+	roomReport << "$c0014[$c0015$n$c0014] dichiara 'HP:";
+	append_report_hp_mana_mv_pct(roomReport, hitPct, manaPct, movePct);
+	act(roomReport.str().c_str(), FALSE, ch, nullptr, nullptr, TO_ROOM);
+
+	std::ostringstream selfReport;
+	selfReport << "$c0014Dichiari 'HP:";
+	append_report_hp_mana_mv_pct(selfReport, hitPct, manaPct, movePct);
+	act(selfReport.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 }
 
 
 
 ACTION_FUNC(do_shout) {
-	struct descriptor_data* i;
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_shout (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_shout (act.comm.cpp)");
+		return;
+	}
 
 	if(!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
 		send_to_char("Non puoi urlare!!\n\r", ch);
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi urlare in queste condizioni.\n\r", ch);
-        return;
-    }
+	if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM)) {
+		send_to_char("Non puoi urlare in queste condizioni.\n\r", ch);
+		return;
+	}
 
-	if(IS_NPC(ch) &&
-			(Silence == 1) &&
-			(IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		send_to_char("Polymorphed shouting has been banned.\n\r", ch);
-		send_to_char("It may return after a bit.\n\r", ch);
+	if(comm_poly_silence_blocks(
+	       ch,
+	       "Urlare mentre sei in forma polimorfa non e' consentito al momento.\n\r")) {
 		return;
 	}
 
@@ -172,180 +224,222 @@ ACTION_FUNC(do_shout) {
 		return;
 	}
 
-	for(; *arg == ' '; arg++);
-
-	if(ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
-		if(!IS_IMMORTAL(ch->master)) {
-			send_to_char("Non credo proprio :-)", ch->master);
-			return;
-		}
+	const char* speech = arg;
+	while(*speech == ' ') {
+		speech++;
 	}
 
-	if((GET_MOVE(ch)<10 || GET_MANA(ch)<10) && GetMaxLevel(ch) < IMMORTALE) {
-		send_to_char("Non hai abbastanza forza per gridare !\n\r",ch);
+	if(comm_charm_master_blocks(ch)) {
 		return;
 	}
 
-	if(!(*arg)) {
-		send_to_char("Vuoi urlare ? Ottimo ! Ma COSA ??\n\r", ch);
+	if((GET_MOVE(ch) < 10 || GET_MANA(ch) < 10) && GetMaxLevel(ch) < IMMORTALE) {
+		send_to_char("Non hai abbastanza forza per gridare!\n\r", ch);
+		return;
 	}
-	else {
-		std::string shoutLine;
-		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			std::string selfLine = "$c0009Tu gridi '";
-			selfLine += arg;
-			selfLine += "'";
-			act(selfLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-		}
-		shoutLine = "$c0009[$c0015$n$c0009] grida '";
-		shoutLine += scramble(ch, arg);
-		shoutLine += "'";
 
-		act("$c0009[$c0015$n$c0009] alza la testa e grida forte", FALSE, ch, nullptr, nullptr,
-			TO_ROOM);
+	if(*speech == '\0') {
+		send_to_char("Vuoi urlare? Ottimo! Ma COSA?\n\r", ch);
+		return;
+	}
 
-		if(GetMaxLevel(ch)<IMMORTALE) {
-			GET_MOVE(ch) -=10;
-			alter_move(ch,0);
-			GET_MANA(ch) -=10;
-			alter_mana(ch,0);
-		}
+	std::string shoutLine;
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::string selfLine = "$c0009Tu gridi '";
+		selfLine += speech;
+		selfLine += "'";
+		act(selfLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+	shoutLine = "$c0009[$c0015$n$c0009] grida '";
+	shoutLine += scramble(ch, speech);
+	shoutLine += "'";
 
-		for(i = descriptor_list; i; i = i->next) {
-			if(i->character != ch && !i->connected &&
-					(IS_NPC(i->character) ||
-					 (!IS_SET(i->character->specials.act, PLR_NOSHOUT) &&
-					  !IS_SET(i->character->specials.act, PLR_DEAF))) &&
-					!check_soundproof(i->character)) {
-				act(shoutLine.c_str(), 0, ch, 0, i->character, TO_VICT);
-			}
+	act("$c0009[$c0015$n$c0009] alza la testa e grida forte", FALSE, ch, nullptr, nullptr,
+	    TO_ROOM);
+
+	if(GetMaxLevel(ch) < IMMORTALE) {
+		GET_MOVE(ch) -= 10;
+		alter_move(ch, 0);
+		GET_MANA(ch) -= 10;
+		alter_mana(ch, 0);
+	}
+
+	for(struct descriptor_data* i = descriptor_list; i != nullptr; i = i->next) {
+		if(i->character == nullptr || i->character == ch || i->connected != 0) {
+			continue;
 		}
+		if(!(IS_NPC(i->character) ||
+		     (!IS_SET(i->character->specials.act, PLR_NOSHOUT) &&
+		      !IS_SET(i->character->specials.act, PLR_DEAF)))) {
+			continue;
+		}
+		if(check_soundproof(i->character)) {
+			continue;
+		}
+		act(shoutLine.c_str(), FALSE, ch, nullptr, i->character, TO_VICT);
 	}
 }
 
 
 ACTION_FUNC(do_gossip) {
-	struct descriptor_data* i;
-
-	int IsRoomDistanceInRange(int nFirstRoom, int nSecondRoom, int nRange);
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_gossip (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_gossip (act.comm.cpp)");
+		return;
+	}
 
 	if(!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
-		send_to_char("Non puoi gridare, parlare od annunciare.\n\r", ch);
+		send_to_char("Non puoi parlare!\n\r", ch);
 		return;
 	}
 
-	if(IS_NPC(ch) &&
-			(Silence == 1) &&
-			(IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		send_to_char("Polymorphed gossiping has been banned.\n\r", ch);
-		send_to_char("It may return after a bit.\n\r", ch);
+	if(comm_poly_silence_blocks(
+	       ch,
+	       "Usare il gossip in forma polimorfa non e' consentito al momento.\n\r")) {
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
-        return;
-    }
+	if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM)) {
+		send_to_char("Non puoi parlare in queste condizioni.\n\r", ch);
+		return;
+	}
 
 	if(apply_soundproof(ch)) {
 		return;
 	}
 
-	for(; *arg == ' '; arg++);
-
-	if(ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
-		if(!IS_IMMORTAL(ch->master)) {
-			send_to_char("Non credo proprio :-)", ch->master);
-			return;
-		}
+	const struct room_data* const chRoom = real_roomp(ch->in_room);
+	if(chRoom == nullptr) {
+		mudlog(LOG_SYSERR, "do_gossip: real_roomp(ch->in_room) nullo per %s", GET_NAME(ch));
+		return;
 	}
 
-	if(!(*arg)) {
-		send_to_char("Parlare ? Ma di COSA !\n\r", ch);
+	const char* speech = arg;
+	while(*speech == ' ') {
+		speech++;
 	}
-	else {
-		std::string gossipLine;
-		if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
-			std::string selfLine = "$c0011Tu dici '";
-			selfLine += arg;
-			selfLine += "'";
-			act(selfLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-		}
-		gossipLine = "$c0011[$c0015$n$c0011] vi dice '";
-		gossipLine += scramble(ch, arg);
-		gossipLine += "'";
-		for(i = descriptor_list; i; i = i->next) {
-			if(i->character != ch && !i->connected &&
-					(IS_NPC(i->character) ||
-					 !IS_SET(i->character->specials.act, PLR_NOGOSSIP)) &&
-					!check_soundproof(i->character)) {
 
-				if(i->character->in_room != NOWHERE) {
-					if(real_roomp(ch->in_room)->zone ==
-							real_roomp(i->character->in_room)->zone ||
-							GetMaxLevel(i->character) >= IMMORTALE ||
-							GetMaxLevel(ch) >= IMMORTALE) {
-						act(gossipLine.c_str(), 0, ch, 0, i->character, TO_VICT);
-					}
-				}
-			}
-		} /* end for */
+	if(comm_charm_master_blocks(ch)) {
+		return;
+	}
+
+	if(*speech == '\0') {
+		send_to_char("Parlare? Ma di COSA!\n\r", ch);
+		return;
+	}
+
+	std::string gossipLine;
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::string selfLine = "$c0011Tu dici '";
+		selfLine += speech;
+		selfLine += "'";
+		act(selfLine.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+	gossipLine = "$c0011[$c0015$n$c0011] vi dice '";
+	gossipLine += scramble(ch, speech);
+	gossipLine += "'";
+
+	for(struct descriptor_data* i = descriptor_list; i != nullptr; i = i->next) {
+		if(i->character == nullptr || i->character == ch || i->connected != 0) {
+			continue;
+		}
+		if(!(IS_NPC(i->character) ||
+		     !IS_SET(i->character->specials.act, PLR_NOGOSSIP))) {
+			continue;
+		}
+		if(check_soundproof(i->character)) {
+			continue;
+		}
+		if(i->character->in_room == NOWHERE) {
+			continue;
+		}
+		const struct room_data* const victRoom = real_roomp(i->character->in_room);
+		if(victRoom == nullptr) {
+			continue;
+		}
+		if(chRoom->zone != victRoom->zone && GetMaxLevel(i->character) < IMMORTALE &&
+		   GetMaxLevel(ch) < IMMORTALE) {
+			continue;
+		}
+		act(gossipLine.c_str(), FALSE, ch, nullptr, i->character, TO_VICT);
 	}
 }
 
 
 ACTION_FUNC(do_auction) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_auction (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_auction (act.comm.cpp)");
+		return;
+	}
 
 	if(!IS_NPC(ch) && IS_SET(ch->specials.act, PLR_NOSHOUT)) {
-		send_to_char("Non puoi gridare, parlare od annunciare.\n\r", ch);
-		return;
-	}
-	if(IS_NPC(ch) &&
-			(Silence == 1) &&
-			(IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		send_to_char("Polymorphed auctioning has been banned.\n\r", ch);
-		send_to_char("It may return after a bit.\n\r", ch);
+		send_to_char("Non puoi annunciare all'asta!\n\r", ch);
 		return;
 	}
 
-    if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM))
-    {
-        send_to_char("Non puoi farlo.\n\r", ch);
-        return;
-    }
+	if(comm_poly_silence_blocks(
+	       ch,
+	       "Annunciare all'asta in forma polimorfa non e' consentito al momento.\n\r")) {
+		return;
+	}
+
+	if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM)) {
+		send_to_char("Non puoi farlo.\n\r", ch);
+		return;
+	}
 
 	if(apply_soundproof(ch)) {
 		return;
 	}
 
-	for(; *arg == ' '; arg++);
-
-	if(ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
-		if(!IS_IMMORTAL(ch->master)) {
-			send_to_char("Non credo proprio :-)", ch->master);
-			return;
-		}
+	for(; *arg == ' '; arg++) {
 	}
-	do_auction_int(ch,arg,cmd);
+
+	if(comm_charm_master_blocks(ch)) {
+		return;
+	}
+	do_auction_int(ch, arg, cmd);
 }
 
 void talk_auction(const char* arg) {
-	struct descriptor_data* i;
-	std::string auctionLine = "$c0010[$c0015AUCTION$c0010] '";
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in talk_auction (act.comm.cpp)");
+		return;
+	}
+	if(auction == nullptr) {
+		mudlog(LOG_SYSERR, "auction==nullptr in talk_auction (act.comm.cpp)");
+		return;
+	}
+
+	std::string auctionLine = "$c0010[$c0015Il Banditore$c0010] '";
 	auctionLine += arg;
 	auctionLine += "'";
 
-	for(i = descriptor_list; i; i = i->next) {
-		if(!i->connected &&
-				(IS_NPC(i->character) ||
-				 !IS_SET(i->character->specials.act, PLR_NOGOSSIP)) &&
-				!check_soundproof(i->character)) {
-
-			if(i->character->in_room != NOWHERE) {
-				act(auctionLine.c_str(), 0, (auction->seller) ? auction->seller : i->character, 0, i->character, TO_VICT); // SALVO se non c'era venditore, act deve essere visualizzato
-			}
+	for(struct descriptor_data* i = descriptor_list; i != nullptr; i = i->next) {
+		if(i->character == nullptr || i->connected != 0) {
+			continue;
 		}
+		if(!(IS_NPC(i->character) ||
+		     !IS_SET(i->character->specials.act, PLR_NOGOSSIP))) {
+			continue;
+		}
+		if(check_soundproof(i->character)) {
+			continue;
+		}
+		if(i->character->in_room == NOWHERE) {
+			continue;
+		}
+		/* SALVO: senza venditore, $n deve comunque risolversi per il messaggio */
+		struct char_data* const actor =
+		    auction->seller != nullptr ? auction->seller : i->character;
+		act(auctionLine.c_str(), FALSE, actor, nullptr, i->character, TO_VICT);
 	}
 }
 
