@@ -32,7 +32,6 @@ else()
 	)
 endif()
 
-set (CMAKE_USE_RELATIVE_PATHS true)
 add_subdirectory(src)
 include(UsePkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)

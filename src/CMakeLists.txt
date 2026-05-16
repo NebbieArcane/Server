@@ -119,7 +119,6 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 ENDMACRO()
 
 enable_language(CXX)
-set (CMAKE_USE_RELATIVE_PATHS true)
 set (MYSQL_USER $ENV{MYSQL_USER})
 # ... (le altre impostazioni ENV rimangono invariate) ...
 
@@ -157,10 +156,17 @@ list(SORT file_cpp)
 add_executable(${CMAKE_PROJECT_NAME}  ${file_cpp} ${file_hpp} release.hpp)
 #add_precompiled_header(${CMAKE_PROJECT_NAME} pchheader.h FORCEINCLUDE)
 
-# Ensure the object subdirectory used by ODB-generated translation units
-# exists before parallel compilation starts (some generators/toolchains race
-# on first creation and the assembler fails with "No such file or directory").
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${CMAKE_PROJECT_NAME}.dir/odb")
+# Object files: build/src/CMakeFiles/myst.dir/ (and myst.dir/odb/ for ODB).
+# On Vagrant shared folders parallel make can fail to create these paths in time.
+set(MYST_OBJ_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${CMAKE_PROJECT_NAME}.dir")
+file(MAKE_DIRECTORY "${MYST_OBJ_DIR}")
+file(MAKE_DIRECTORY "${MYST_OBJ_DIR}/odb")
+add_custom_command(
+		TARGET ${CMAKE_PROJECT_NAME} PRE_BUILD
+		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}/odb"
+		COMMENT "Ensure object output directories exist"
+)
 
 #Boost
 find_package( Boost COMPONENTS system filesystem program_options date_time REQUIRED )

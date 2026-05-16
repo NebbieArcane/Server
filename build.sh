@@ -23,21 +23,24 @@ rm -f src/myst src/info
 rm -f mudroot/myst
 rm -rf build
 (
-export PATH="/usr/lib/cache:$PATH" 
+export PATH="/usr/lib/cache:$PATH"
 mkdir -p build/src/include
-cd build 
-cmake .. 
-# Workaround: in some environments the generator does not materialize this
-# intermediate object directory before compiling ODB-generated .cxx files.
-mkdir -p src/CMakeFiles/myst.dir/odb
+cd build
+cmake ..
 jobs=$(cat makejobs)
+MYST_OBJ_DIR="src/CMakeFiles/myst.dir"
+cmake -E make_directory "${MYST_OBJ_DIR}"
+cmake -E make_directory "${MYST_OBJ_DIR}/odb"
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../mudroot/Makefile
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
 sed -e "s|FOLDER|./build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile
-make -j$jobs
-)  
+if ! cmake --build . --parallel "${jobs}"; then
+	echo "Parallel build failed; retrying with -j1 (common on Vagrant/shared FS)..."
+	cmake --build . --parallel 1
+fi
+)
 if [ -x mudroot/myst ] ; then
-	echo "Ready" 
+	echo "Ready"
 	exit 0
 fi
 echo "Myst executable not found"
