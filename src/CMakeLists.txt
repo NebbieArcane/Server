@@ -119,8 +119,10 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 ENDMACRO()
 
 enable_language(CXX)
-set (MYSQL_USER $ENV{MYSQL_USER})
-# ... (le altre impostazioni ENV rimangono invariate) ...
+set(MYSQL_USER $ENV{MYSQL_USER})
+set(MYSQL_PASSWORD $ENV{MYSQL_PASSWORD})
+set(MYSQL_HOST $ENV{MYSQL_HOST})
+set(MYSQL_DB $ENV{MYSQL_DB})
 
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
@@ -222,8 +224,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}  ${CONF_STATIC_LDFLAGS})
 #Crypt
 find_library(CRYPT crypt)
 target_link_libraries(${CMAKE_PROJECT_NAME} ${CRYPT})
-
-#set( MYSQL_HOST $ENV{MYSQL_HOST} )
 
 # Generate configuration file
 configure_file(config.hpp.in ${CMAKE_SOURCE_DIR}/src/config.hpp NEWLINE_STYLE UNIX)

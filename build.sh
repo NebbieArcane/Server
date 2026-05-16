@@ -16,6 +16,9 @@ if [ -f $conf ] ; then
 else
 	echo "No Conf file for $environment present, using builtin defaults"
 fi
+if [ -n "${DOCKER_BUILD}" ]; then
+	MYSQL_HOST=127.0.0.1
+fi
 rm -f CMakeCache.txt
 rm -f src/CMakeCache.txt
 rm -f src/release.h

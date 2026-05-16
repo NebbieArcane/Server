@@ -10,6 +10,8 @@
 #include "logging.hpp"
 #include <mutex>
 #include <memory>
+#include <cstring>
+#include <cstdlib>
 using std::string;
 using std::endl;
 using std::cout;
@@ -17,8 +19,19 @@ namespace Alarmud {
 bool forceDbInit=false;
 odb::session odbSession;
 #if USE_MYSQL
+namespace {
+/* libmysql: "localhost" = Unix socket; myst in Docker runs as vagrant (EACCES on mysqld.sock). */
+const char* mysql_connect_host() {
+	const char* host = MYSQL_HOST;
+	if(!host || !host[0] || std::strcmp(host, "localhost") == 0) {
+		return "127.0.0.1";
+	}
+	return host;
+}
+}
 odb::database* Sql::getMysql() {
-	thread_local static odb::database* db(new odb::mysql::database(MYSQL_USER,MYSQL_PASSWORD,MYSQL_DB,MYSQL_HOST));
+	thread_local static odb::database* db(
+		new odb::mysql::database(MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, mysql_connect_host()));
 	return db;
 }
 #endif
@@ -77,8 +90,8 @@ void Sql::dbUpdate() {
 		}
 		catch(std::exception &e) {
 			mudlog(LOG_SYSERR,"DB error: %s",e.what());
-			assert(false);
-			return;
+			std::cerr << "FATAL: cannot initialize MySQL/ODB schema: " << e.what() << std::endl;
+			std::exit(1);
 		}
 	}
 #endif
