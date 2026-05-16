@@ -24,7 +24,7 @@
 #include "act.comm.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
-#include "act.obj1.hpp"
+#include "act.obj.hpp"
 #include "aree.hpp"
 #include "charlist.hpp"
 #include "comm.hpp"

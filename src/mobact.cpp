@@ -21,9 +21,8 @@
 /***************************  Local    include ************************************/
 #include "mobact.hpp"
 #include "act.comm.hpp"
-#include "act.obj1.hpp"
-#include "act.obj2.hpp"
 #include "act.off.hpp"
+#include "act.obj.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "comm.hpp"

@@ -25,7 +25,7 @@
 /***************************  Local    include ************************************/
 #include "handler.hpp"
 #include "act.info.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "comm.hpp"

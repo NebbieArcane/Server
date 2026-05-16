@@ -19,7 +19,6 @@
 /***************************  Local    include ************************************/
 #include "spec_procs4.hpp"
 #include "act.comm.hpp"
-#include "act.obj1.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -30,6 +29,7 @@
 #include "reception.hpp"
 #include "spec_procs.hpp"
 #include "utility.hpp"
+#include "act.obj.hpp"
 namespace Alarmud {
 
 /***************************  Procedure ***************************/

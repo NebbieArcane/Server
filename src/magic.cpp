@@ -22,7 +22,7 @@
 /***************************  Local    include ************************************/
 #include "magic.hpp"
 #include "act.info.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.wizard.hpp"
 #include "comm.hpp"
 #include "db.hpp"
