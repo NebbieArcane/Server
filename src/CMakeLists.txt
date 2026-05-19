@@ -158,17 +158,17 @@ list(SORT file_cpp)
 add_executable(${CMAKE_PROJECT_NAME}  ${file_cpp} ${file_hpp} release.hpp)
 #add_precompiled_header(${CMAKE_PROJECT_NAME} pchheader.h FORCEINCLUDE)
 
-# Object files: build/src/CMakeFiles/myst.dir/ (and myst.dir/odb/ for ODB).
-# On Vagrant shared folders parallel make can fail to create these paths in time.
+# Object files: build/src/CMakeFiles/myst.dir/odb/ (ODB sources live under src/odb/).
+# PRE_BUILD is ignored by Makefile generators; use a dependency target instead.
 set(MYST_OBJ_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${CMAKE_PROJECT_NAME}.dir")
 file(MAKE_DIRECTORY "${MYST_OBJ_DIR}")
 file(MAKE_DIRECTORY "${MYST_OBJ_DIR}/odb")
-add_custom_command(
-		TARGET ${CMAKE_PROJECT_NAME} PRE_BUILD
+add_custom_target(myst_obj_dirs
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}/odb"
-		COMMENT "Ensure object output directories exist"
+		COMMENT "Ensure myst object output directories exist"
 )
+add_dependencies(${CMAKE_PROJECT_NAME} myst_obj_dirs)
 
 #Boost
 find_package( Boost COMPONENTS system filesystem program_options date_time REQUIRED )
