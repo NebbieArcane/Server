@@ -32,14 +32,27 @@ cd build
 cmake ..
 jobs=$(cat makejobs)
 MYST_OBJ_DIR="src/CMakeFiles/myst.dir"
-cmake -E make_directory "${MYST_OBJ_DIR}"
-cmake -E make_directory "${MYST_OBJ_DIR}/odb"
+ensure_myst_obj_dirs() {
+	cmake -E make_directory "${MYST_OBJ_DIR}"
+	cmake -E make_directory "${MYST_OBJ_DIR}/odb"
+}
+ensure_myst_obj_dirs
+# Shared /vagrant mounts often break parallel writes into myst.dir/odb/.
+if [ "$environment" = "vagrant" ] && [ "${jobs}" -gt 2 ] 2>/dev/null; then
+	echo "Vagrant: limiting parallel jobs from ${jobs} to 2 (shared filesystem)"
+	jobs=2
+fi
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../mudroot/Makefile
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
 sed -e "s|FOLDER|./build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile
 if ! cmake --build . --parallel "${jobs}"; then
-	echo "Parallel build failed; retrying with -j1 (common on Vagrant/shared FS)..."
-	cmake --build . --parallel 1
+	echo "Parallel build failed; reconfiguring and retrying with -j1 (Vagrant/shared FS)..."
+	cmake ..
+	ensure_myst_obj_dirs
+	if ! cmake --build . --parallel 1; then
+		echo "Serial build failed."
+		exit 1
+	fi
 fi
 )
 if [ -x mudroot/myst ] ; then
