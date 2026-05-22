@@ -4349,8 +4349,8 @@ ACTION_FUNC(do_carve) {
 		return;
 	}
 
-	half_chop(arg,arg1,arg2,sizeof arg1 -1,sizeof arg2 -1);
-	corpse=get_obj_in_list_vis(ch,arg1,(real_roomp(ch->in_room)->contents));
+	const auto corpseToken = chop_argument(arg, sizeof(arg1) - 1, sizeof(arg2) - 1).first;
+	corpse=get_obj_in_list_vis(ch, corpseToken.c_str(), (real_roomp(ch->in_room)->contents));
 
 	if(!corpse)  {
 		send_to_char("That's not here.\n\r",ch);
@@ -6662,8 +6662,9 @@ ACTION_FUNC(do_sending) {
 		GET_MANA(ch) -=5;
 		alter_mana(ch,0);
 	}
-	half_chop(arg,target_name,message,sizeof target_name -1,sizeof message -1);
-	if(!(target=get_char_vis_world(ch,target_name,NULL))) {
+	const auto [targetName, msgBody] =
+	    chop_argument(arg, sizeof(target_name) - 1, sizeof(message) - 1);
+	if(!(target=get_char_vis_world(ch, targetName.c_str(), NULL))) {
 		send_to_char("You can't sense that person anywhere.\n\r",ch);
 		return;
 	}
@@ -6691,10 +6692,10 @@ ACTION_FUNC(do_sending) {
 		return;
 	}
 
-	sprintf(buf, "$c0013[$c0015$n$c0013] ti manda il messaggio '%s'", message);
+	sprintf(buf, "$c0013[$c0015$n$c0013] ti manda il messaggio '%s'", msgBody.c_str());
 	act(buf, TRUE, ch, 0, target, TO_VICT);
 	sprintf(buf, "$c0013Mandi a $N%s il messaggio '%s'",
-			(IS_AFFECTED2(target,AFF2_AFK)?" (che e' AFK)":""), message);
+			(IS_AFFECTED2(target,AFF2_AFK)?" (che e' AFK)":""), msgBody.c_str());
 	act(buf, TRUE, ch, 0, target, TO_CHAR);
 }
 

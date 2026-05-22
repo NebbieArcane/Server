@@ -536,29 +536,41 @@ OBJSPECIAL_FUNC(jive_box) {
 			return TRUE;
 			break;
 
-		case CMD_TELL:
-			half_chop(arg, tmp, buf,len,len);
-			invert(buf, buf2,len);
+		case CMD_TELL: {
+			const auto [who, rest] = chop_argument(arg, len, len);
+			std::strncpy(tmp, who.c_str(), sizeof(tmp) - 1);
+			tmp[sizeof(tmp) - 1] = '\0';
+			std::strncpy(buf, rest.c_str(), sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			invert(buf, buf2, len);
 			std::snprintf(buf, sizeof(buf), "%.120s %.120s", tmp, buf2);
 			do_tell(ch, buf, cmd);
 			return TRUE;
-			break;
+		}
 
-		case CMD_WHISPER:
-			half_chop(arg, tmp, buf,len);
-			invert(buf, buf2,len);
+		case CMD_WHISPER: {
+			const auto [who, rest] = chop_argument(arg, len, len);
+			std::strncpy(tmp, who.c_str(), sizeof(tmp) - 1);
+			tmp[sizeof(tmp) - 1] = '\0';
+			std::strncpy(buf, rest.c_str(), sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			invert(buf, buf2, len);
 			std::snprintf(buf, sizeof(buf), "%.120s %.120s", tmp, buf2);
 			do_whisper(ch, buf, cmd);
 			return TRUE;
-			break;
+		}
 
-		case CMD_ASK:
-			half_chop(arg, tmp, buf,sizeof tmp -1,sizeof buf -1);
-			invert(buf, buf2,len);
+		case CMD_ASK: {
+			const auto [who, rest] = chop_argument(arg, sizeof(tmp) - 1, sizeof(buf) - 1);
+			std::strncpy(tmp, who.c_str(), sizeof(tmp) - 1);
+			tmp[sizeof(tmp) - 1] = '\0';
+			std::strncpy(buf, rest.c_str(), sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			invert(buf, buf2, len);
 			std::snprintf(buf, sizeof(buf), "%.120s %.120s", tmp, buf2);
 			do_ask(ch, buf, cmd);
 			return TRUE;
-			break;
+		}
 
 		case CMD_GOSSIP:
 			invert(arg, buf,len);

@@ -183,22 +183,24 @@ CommPrepareResult comm_direct_prepare(struct char_data* ch, const char* arg, con
 	ctx.vict = nullptr;
 	ctx.message.fill('\0');
 
-	std::array<char, 100> name{};
-	half_chop(arg, name.data(), ctx.message.data(), static_cast<int>(name.size()) - 1,
-	          static_cast<int>(ctx.message.size()) - 1);
+	const auto [nameStr, messageStr] =
+	    chop_argument(arg, 99, static_cast<std::size_t>(ctx.message.size()) - 1);
 
-	if(name[0] == '\0' || ctx.message[0] == '\0') {
+	if(nameStr.empty() || messageStr.empty()) {
 		if(rules.prompt_empty != nullptr) {
 			send_to_char(rules.prompt_empty, ch);
 		}
 		return CommPrepareResult::Done;
 	}
 
+	ctx.message.fill('\0');
+	std::strncpy(ctx.message.data(), messageStr.c_str(), ctx.message.size() - 1);
+
 	if(rules.scope == CommDirectScope::VisWorld) {
-		ctx.vict = get_char_vis(ch, name.data());
+		ctx.vict = get_char_vis(ch, nameStr.c_str());
 	}
 	else {
-		ctx.vict = get_char_room_vis(ch, name.data());
+		ctx.vict = get_char_room_vis(ch, nameStr.c_str());
 	}
 
 	if(ctx.vict == nullptr) {
@@ -1790,10 +1792,8 @@ ACTION_FUNC(do_telepathy) {
 		return;
 	}
 
-	std::array<char, 100> name{};
-	std::array<char, MAX_INPUT_LENGTH + 20> message{};
-	half_chop(arg, name.data(), message.data(), static_cast<int>(name.size()) - 1,
-	          static_cast<int>(message.size()) - 1);
+	const auto [nameStr, messageStr] =
+	    chop_argument(arg, 99, static_cast<std::size_t>(MAX_INPUT_LENGTH + 19));
 
 	if(!HasClass(ch, CLASS_PSI) && !IS_AFFECTED(ch, AFF_TELEPATHY)) {
 		send_to_char("Cosa pensi di essere? Un telepate?\n\r", ch);
@@ -1810,12 +1810,12 @@ ACTION_FUNC(do_telepathy) {
 		return;
 	}
 
-	if(name[0] == '\0' || message[0] == '\0') {
+	if(nameStr.empty() || messageStr.empty()) {
 		send_to_char("A chi vuoi mandare il tuo pensiero?\n\r", ch);
 		return;
 	}
 
-	struct char_data* vict = get_char_vis(ch, name.data());
+	struct char_data* vict = get_char_vis(ch, nameStr.c_str());
 	if(vict == nullptr) {
 		send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
 		return;
@@ -1851,7 +1851,7 @@ ACTION_FUNC(do_telepathy) {
 		alter_mana(ch, 0);
 	}
 
-	telepathy_deliver(ch, vict, message.data());
+	telepathy_deliver(ch, vict, messageStr.c_str());
 }
 
 ACTION_FUNC(do_eavesdrop) {

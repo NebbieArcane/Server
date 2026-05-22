@@ -5,10 +5,12 @@
 //  Original intial comments
 /*AlarMUD*/
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstring>
 #include <cctype>
 #include <cstdio>
 #include <string>
+#include <string_view>
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <cstdlib>
@@ -511,11 +513,14 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 			}
 		}
 		else {
-			int i=0;
-			half_chop(argument, buf1, buf2,sizeof buf1 -1,sizeof buf2 -1);
-			while(buf1[i] != '\0') {
+			const auto [cmd, rest] =
+			    chop_argument(argument, sizeof(buf1) - 1, sizeof(buf2) - 1);
+			std::strncpy(buf1, cmd.c_str(), sizeof(buf1) - 1);
+			buf1[sizeof(buf1) - 1] = '\0';
+			std::strncpy(buf2, rest.c_str(), sizeof(buf2) - 1);
+			buf2[sizeof(buf2) - 1] = '\0';
+			for(int i = 0; buf1[i] != '\0'; ++i) {
 				buf1[i] = LOWER(buf1[i]);
-				i++;
 			}
 		}
 
@@ -827,30 +832,51 @@ int is_abbrev(const char* arg1, const char* arg2) {
 
 
 
+std::pair<std::string, std::string> chop_argument(const char* argument, std::size_t maxFirst,
+                                                  std::size_t maxSecond) {
+	std::pair<std::string, std::string> result;
+	if(argument == nullptr || argument[0] == '\0') {
+		return result;
+	}
+
+	std::string_view rest(argument);
+	const std::size_t lead = rest.find_first_not_of(' ');
+	if(lead == std::string_view::npos) {
+		return result;
+	}
+	rest.remove_prefix(lead);
+
+	const std::size_t space = rest.find(' ');
+	if(space == std::string_view::npos) {
+		result.first = std::string(rest.substr(0, maxFirst));
+		return result;
+	}
+
+	result.first = std::string(rest.substr(0, std::min(space, maxFirst)));
+	rest.remove_prefix(space);
+	if(maxSecond == 0) {
+		return result;
+	}
+
+	const std::size_t cmdLead = rest.find_first_not_of(' ');
+	if(cmdLead != std::string_view::npos) {
+		rest.remove_prefix(cmdLead);
+		result.second = std::string(rest.substr(0, maxSecond));
+	}
+	return result;
+}
+
 /**
  * Split the string in two at the first space
- * Arguments returned are guaranteed to not be longer than requeste.
+ * Arguments returned are guaranteed to not be longer than requested.
  * Default length is 99 for both arguments
  */
-void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t len2) {
-	std::string work(argument);
-	try {
-		boost::algorithm::trim_left(work);
-	}
-	catch(exception &e) {
-		LOG_ALERT("Chopping " << work << " " << e.what());
-	}
-	size_t space=work.find_first_of(" ");
-	if(space==std::string::npos) {  // No space found, only one argument
-		arg2[0]='\0';
-		std::strcpy(arg1,work.substr(0,len1).c_str());
-	}
-	else {
-		std::strcpy(arg1,work.substr(0,min<size_t>(space,len1)).c_str());
-		work=work.substr(space);
-		boost::algorithm::trim_left(work);
-		std::strcpy(arg2,work.substr(0,len2).c_str());
-	}
+void half_chop(const char* argument, char* arg1, char* arg2, size_t len1, size_t len2) {
+	const auto [first, second] = chop_argument(argument, len1, len2);
+	std::strncpy(arg1, first.c_str(), len1);
+	arg1[len1] = '\0';
+	std::strncpy(arg2, second.c_str(), len2);
+	arg2[len2] = '\0';
 	return;
 	/*
 
