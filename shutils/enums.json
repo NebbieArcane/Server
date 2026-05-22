@@ -77,8 +77,8 @@
 			"comment": "USER FILE, DO NOT CHANGE!"
 		},
 		"MAX_POSITION": {
-			"value": 9,
-			"comment": ""
+			"value": 10,
+			"comment": "Dimensione TempoPassatoIn[] (10 posizioni: 0..E_POSITIONS_MAX)"
 		},
 		"HIT_INCAP": {
 			"value": -3,

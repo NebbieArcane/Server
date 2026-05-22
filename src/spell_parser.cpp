@@ -1017,9 +1017,9 @@ void affect_update(unsigned long localPulse) {
             regainroom = 1;
         }
 
-		/* Calcola la posizione prevalente */
-		for(k=0; k<=MAX_POSITION; k++) {
-			ggtmp=GET_TEMPO_IN(ch,k);
+		/* Calcola la posizione prevalente (indici 0..E_POSITIONS_MAX) */
+		for(k = 0; k < E_POSITIONS_COUNT; k++) {
+			ggtmp = GET_TEMPO_IN(ch, k);
 			if(ggtmp>posprev) {
 				GET_POS_PREV(ch)=k;
 				posprev=ggtmp;

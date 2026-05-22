@@ -1155,7 +1155,7 @@ USER FILE, DO NOT CHANGE*/
 /*
 USER FILE, DO NOT CHANGE!*/
 #define	ABS_MAX_CLASS                                20  /*USER FILE, DO NOT CHANGE!*/
-#define	MAX_POSITION                                 9 
+#define	MAX_POSITION                                 10 
 /*
 hit level per incapacitato*/
 #define	HIT_INCAP                                    -3  /*hit level per incapacitato*/
