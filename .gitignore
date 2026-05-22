@@ -219,6 +219,7 @@ autom4te.cache
 *.log
 *.log.*
 *.sql
+!docs/*.sql
 myst
 /config.h
 /.cproject
