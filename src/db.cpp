@@ -47,7 +47,7 @@
 #include "multiclass.hpp" //Sirio per gestione registrazione pg su db
 #include <fstream>
 #include <sstream>
-#include <string> //Sirio aggiunte per la conversione in c++ di file_to_string
+#include <string>
 
 namespace Alarmud {
 
@@ -3762,72 +3762,35 @@ void free_obj(struct obj_data* obj) {
 	free(obj);
 }
 
-/* read contents of a text file, and place in buf */
-/*int file_to_string(const char* name, char* buf) {
-	FILE* fl;
-	char tmp[100];
-	struct stat fileinfo;
-	*buf = '\0';
-	stat(name, &fileinfo);
-	mudlog(LOG_CHECK, "File %s lunghezza %d", name, fileinfo.st_size);
-	if(!(fl = fopen(name, "r"))) {
-		mudlog(LOG_ERROR, "Unable to open %s, continuing", name);
-		*buf = '\0';
-		return (-1);
+/** Legge un file di testo in buf (max MAX_STRING_LENGTH-1). Ritorna 0 ok, -1 errore. */
+int file_to_string(const char* name, char* buf) {
+	if(!name || !buf) {
+		return -1;
 	}
+	buf[0] = '\0';
 
-	do {
-		fgets(tmp, 99, fl);
-
-		if(!feof(fl)) {
-			if(strlen(buf) + strlen(tmp) + 2 > MAX_STRING_LENGTH) {
-				mudlog(LOG_ERROR, "fl->strng: string too big");
-				*buf = '\0';
-				fclose(fl);
-				return (-1);
-			}
-
-			strcat(buf, tmp);
-			*(buf + strlen(buf) + 1) = '\0';
-			*(buf + strlen(buf)) = '\r';
-		}
-	}
-	while(!feof(fl));
-
-	fclose(fl);
-
-	return (0);
-}*/
-
-	// Sostituisce la vecchia file_to_string
-	int file_to_string(const char* name, char* buf) {
-	// Usa ifstream per aprire il file in modalità lettura
 	std::ifstream file(name);
-
-	if (!file.is_open()) {
+	if(!file.is_open()) {
 		mudlog(LOG_ERROR, "Unable to open %s, continuing", name);
-		*buf = '\0';
 		return -1;
 	}
 
-	// Usa uno stringstream per leggere tutto il buffer del file in memoria
-	std::stringstream buffer;
-	buffer << file.rdbuf();
+	std::ostringstream oss;
+	oss << file.rdbuf();
+	std::string content = oss.str();
 
-	std::string content = buffer.str();
-
-	// Controllo di sicurezza per il buffer di destinazione (vecchio codice C)
-	// MAX_STRING_LENGTH è definito nei tuoi header (solitamente 16k o 32k)
-	if (content.length() >= MAX_STRING_LENGTH - 1) {
-		mudlog(LOG_ERROR, "File %s too big for buffer (len: %lu)!", name, content.length());
-		// Tronchiamo per evitare crash, ma avvisiamo
-		content = content.substr(0, MAX_STRING_LENGTH - 2);
+	const std::size_t max_len = MAX_STRING_LENGTH - 1;
+	int rc = 0;
+	if(content.size() > max_len) {
+		mudlog(LOG_ERROR, "File %s too big for buffer (len: %zu)!", name,
+			content.size());
+		content.resize(max_len);
+		rc = -1;
 	}
 
-	// Copia nel buffer di destinazione (necessario per compatibilità col resto del MUD)
-	strcpy(buf, content.c_str());
-
-	return 0;
+	std::memcpy(buf, content.data(), content.size());
+	buf[content.size()] = '\0';
+	return rc;
 }
 
 void ClearDeadBit(struct char_data* ch) {
