@@ -24,6 +24,9 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <charconv>
+#include <optional>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1000,7 +1003,12 @@ ACTION_FUNC(do_emote) {
 	}
 }
 
-	ACTION_FUNC(do_echo) {
+ACTION_FUNC(do_echo) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_echo (act.wizard.cpp)");
+		return;
+	}
+
 	// Convertiamo l'input char* in stringa C++
 	std::string argument(arg);
 
@@ -1028,269 +1036,151 @@ ACTION_FUNC(do_emote) {
 	}
 }
 
-/*ACTION_FUNC(do_system) {
-	int i;
-	char buf[256];
-
-	for(i = 0; *(arg + i) == ' '; i++)
-		;
-
-	if(!*(arg + i)) {
-		send_to_char("Cosa vuoi comunicare a tutto il mondo?\n\r", ch);
-	}
-	else {
-		sprintf(buf, "\n\r%s\n\r", arg + i);
-		send_to_all(buf);
-	}
-}*/
-
 ACTION_FUNC(do_system) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_system (act.wizard.cpp)");
+		return;
+	}
+
 	std::string argument(arg);
 	boost::algorithm::trim_left(argument);
 
 	if (argument.empty()) {
 		send_to_char("Cosa vuoi comunicare a tutto il mondo?\n\r", ch);
 	} else {
-		// Costruiamo il messaggio in modo sicuro
 		std::string message = "\n\r" + argument + "\n\r";
 		send_to_all(message.c_str());
+		mudlog(LOG_PLAYERS, "%s system: %s", GET_NAME(ch), argument.c_str());
 	}
 }
 
-/*ACTION_FUNC(do_trans) {
+ACTION_FUNC(do_trans) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_trans (act.wizard.cpp)");
+		return;
+	}
+
 	struct descriptor_data* i;
 	struct char_data* victim;
 	char buf[MAX_INPUT_LENGTH];
-	long target;
+	const long dest = ch->in_room;
 
-	only_argument(arg, buf);
-	if(!*buf) {
-		send_to_char("Who do you wich to transfer?\n\r", ch);
-	}
-	else if(str_cmp("all", buf)) {
-		if(!(victim = get_char_vis_world(ch, buf, NULL))) {
-			send_to_char("No-one by that name around.\n\r", ch);
+	auto transfer_one = [&](struct char_data* vict) {
+		if(!vict) {
+			return;
 		}
-		else {
-			act("$n viene risucchiato dalla nebbia.", FALSE, victim, 0, 0,
-				TO_ROOM);
-			target = ch->in_room;
-			char_from_room(victim);
-			char_to_room(victim, target);
-			act("$n prende forma davanti a te.", FALSE, victim, 0, 0, TO_ROOM);
-			act("$n has transferred you!", FALSE, ch, 0, victim, TO_VICT);
-			if(IS_NPC(victim)) {
-				victim->lStartRoom = 0;
-			}
-			do_look(victim, "", 15);
-			send_to_char("Ok.\n\r", ch);
+		act("$n viene risucchiato dalla nebbia.", FALSE, vict, 0, 0, TO_ROOM);
+		char_from_room(vict);
+		char_to_room(vict, dest);
+		act("$n prende forma davanti a te.", FALSE, vict, 0, 0, TO_ROOM);
+		act("$n ti ha trasferito!", FALSE, ch, 0, vict, TO_VICT);
+		if(IS_NPC(vict)) {
+			vict->lStartRoom = 0;
 		}
+		do_look(vict, "", 15);
+	};
+
+	one_argument(arg, buf);
+	std::string target_name(buf);
+
+	if(target_name.empty()) {
+		send_to_char("Chi vuoi trasferire?\n\r", ch);
+		return;
 	}
-	else {*/
-		/* Trans All */
-		/*for(i = descriptor_list; i; i = i->next) {
-			if(i->character != ch && !i->connected) {
-				victim = i->character;
-				act("$n viene risucchiato dalla nebbia.", FALSE, victim, 0, 0,
-					TO_ROOM);
-				target = ch->in_room;
-				char_from_room(victim);
-				char_to_room(victim, target);
-				act("$n prende forma davanti a te.", FALSE, victim, 0, 0,
-					TO_ROOM);
-				act("$n has transferred you!", FALSE, ch, 0, victim, TO_VICT);
-				if(IS_NPC(victim)) {
-					victim->lStartRoom = 0;
-				}
-				do_look(victim, "", 15);
+
+	if(boost::iequals(target_name, "all")) {
+		for(i = descriptor_list; i; i = i->next) {
+			if(i->character && i->character != ch && !i->connected) {
+				transfer_one(i->character);
 			}
 		}
-
+		send_to_char("Ok. Tutti trasferiti.\n\r", ch);
+		mudlog(LOG_PLAYERS, "%s transfer all -> room %ld", GET_NAME(ch), dest);
+	} else if(!(victim = get_char_vis_world(ch, target_name.c_str(), NULL))) {
+		send_to_char("Non c'e' nessuno con quel nome in gioco.\n\r", ch);
+	} else {
+		transfer_one(victim);
 		send_to_char("Ok.\n\r", ch);
+		mudlog(LOG_PLAYERS, "%s transfer %s -> room %ld", GET_NAME(ch),
+			GET_NAME(victim), dest);
 	}
-}*/
-
-ACTION_FUNC(do_trans) {
-    struct descriptor_data* i;
-    struct char_data* victim;
-    char buf[MAX_INPUT_LENGTH]; // Manteniamo per one_argument per ora
-    long target;
-
-    one_argument(arg, buf);
-    std::string target_name(buf);
-
-    if (target_name.empty()) {
-        send_to_char("Who do you wish to transfer?\n\r", ch);
-        return;
-    }
-
-    // Uso stringhe C++ per il confronto (case insensitive sarebbe meglio, ma manteniamo logica attuale)
-    // str_cmp torna 0 se uguale, quindi if (str_cmp) è vero se DIVERSI.
-    // Qui vogliamo agire se è "all".
-
-    if (boost::iequals(target_name, "all")) { // Boost iequals è case-insensitive
-        /* Trans All */
-        for (i = descriptor_list; i; i = i->next) {
-            if (i->character != ch && !i->connected) {
-                victim = i->character;
-                act("$n viene risucchiato dalla nebbia.", FALSE, victim, 0, 0, TO_ROOM);
-                target = ch->in_room;
-                char_from_room(victim);
-                char_to_room(victim, target);
-                act("$n prende forma davanti a te.", FALSE, victim, 0, 0, TO_ROOM);
-                act("$n has transferred you!", FALSE, ch, 0, victim, TO_VICT);
-                if (IS_NPC(victim)) {
-                    victim->lStartRoom = 0;
-                }
-                do_look(victim, "", 15);
-            }
-        }
-        send_to_char("Ok. Tutti trasferiti.\n\r", ch);
-    } else {
-        // Trans Target Singolo
-        if (!(victim = get_char_vis_world(ch, target_name.c_str(), NULL))) {
-            send_to_char("No-one by that name around.\n\r", ch);
-        } else {
-            act("$n viene risucchiato dalla nebbia.", FALSE, victim, 0, 0, TO_ROOM);
-            target = ch->in_room;
-            char_from_room(victim);
-            char_to_room(victim, target);
-            act("$n prende forma davanti a te.", FALSE, victim, 0, 0, TO_ROOM);
-            act("$n has transferred you!", FALSE, ch, 0, victim, TO_VICT);
-            if (IS_NPC(victim)) {
-                victim->lStartRoom = 0;
-            }
-            do_look(victim, "", 15);
-            send_to_char("Ok.\n\r", ch);
-        }
-    }
 }
 
 ACTION_FUNC(do_at) {
-    std::string argument(arg);
-    boost::algorithm::trim_left(argument);
-
-    if (argument.empty()) {
-        send_to_char("You must supply a room number or a name.\n\r", ch);
-        return;
-    }
-
-    // Split tra locazione e comando
-    std::string loc_str;
-    std::string command;
-
-    size_t space_pos = argument.find(' ');
-    if (space_pos == std::string::npos) {
-        send_to_char("What do you want to do there?\n\r", ch);
-        return;
-    }
-
-    loc_str = argument.substr(0, space_pos);
-    command = argument.substr(space_pos + 1);
-    boost::algorithm::trim_left(command);
-
-    int location = NOWHERE;
-    struct char_data* target_mob = nullptr;
-    struct obj_data* target_obj = nullptr;
-
-    // Parsing della locazione
-    if (isdigit(loc_str[0])) {
-        int loc_nr = std::stoi(loc_str);
-        if (NULL == real_roomp(loc_nr)) {
-            send_to_char("No room exists with that number.\n\r", ch);
-            return;
-        }
-        location = loc_nr;
-    } else if ((target_mob = get_char_vis(ch, loc_str.c_str()))) {
-        location = target_mob->in_room;
-    } else if ((target_obj = get_obj_vis_world(ch, loc_str.c_str(), NULL))) {
-        if (target_obj->in_room != NOWHERE) {
-            location = target_obj->in_room;
-        } else {
-            send_to_char("The object is not available.\n\r", ch);
-            return;
-        }
-    } else {
-        send_to_char("No such creature or object around.\n\r", ch);
-        return;
-    }
-
-    /* Esecuzione */
-    int original_loc = ch->in_room;
-    char_from_room(ch);
-    char_to_room(ch, location);
-
-    // command_interpreter vuole un const char*
-    command_interpreter(ch, command.c_str());
-
-    /* Controllo se il personaggio è ancora lì prima di riportarlo indietro */
-    /* Nota: Usiamo la logica originale per sicurezza */
-    bool found = false;
-    for (target_mob = real_roomp(location)->people; target_mob; target_mob = target_mob->next_in_room) {
-        if (ch == target_mob) {
-            found = true;
-            break;
-        }
-    }
-
-    if (found) {
-        char_from_room(ch);
-        char_to_room(ch, original_loc);
-    }
-}
-
-/*ACTION_FUNC(do_at) {
-	char command[MAX_INPUT_LENGTH], loc_str[MAX_INPUT_LENGTH];
-	int loc_nr, location, original_loc;
-	struct char_data* target_mob;
-	struct obj_data* target_obj;
-
-	half_chop(arg, loc_str, command, sizeof loc_str - 1, sizeof command - 1);
-	if(!*loc_str) {
-		send_to_char("You must supply a room number or a name.\n\r", ch);
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_at (act.wizard.cpp)");
 		return;
 	}
 
-	if(isdigit(*loc_str)) {
-		loc_nr = atoi(loc_str);
+	std::string argument(arg);
+	boost::algorithm::trim_left(argument);
+
+	if(argument.empty()) {
+		send_to_char("Devi indicare un numero di stanza o un nome.\n\r", ch);
+		return;
+	}
+
+	const size_t space_pos = argument.find(' ');
+	if(space_pos == std::string::npos) {
+		send_to_char("Cosa vuoi fare li'?\n\r", ch);
+		return;
+	}
+
+	std::string loc_str = argument.substr(0, space_pos);
+	std::string command = argument.substr(space_pos + 1);
+	boost::algorithm::trim_left(command);
+
+	if(command.empty()) {
+		send_to_char("Cosa vuoi fare li'?\n\r", ch);
+		return;
+	}
+
+	int location = NOWHERE;
+	struct char_data* target_mob = nullptr;
+	struct obj_data* target_obj = nullptr;
+
+	if(isdigit(static_cast<unsigned char>(loc_str[0]))) {
+		const int loc_nr = atoi(loc_str.c_str());
 		if(NULL == real_roomp(loc_nr)) {
-			send_to_char("No room exists with that number.\n\r", ch);
+			send_to_char("Non esiste una stanza con quel numero.\n\r", ch);
 			return;
 		}
 		location = loc_nr;
-	}
-	else if((target_mob = get_char_vis(ch, loc_str))) {
+	} else if((target_mob = get_char_vis(ch, loc_str.c_str()))) {
 		location = target_mob->in_room;
-	}
-	else if((target_obj = get_obj_vis_world(ch, loc_str, NULL))) {
+	} else if((target_obj = get_obj_vis_world(ch, loc_str.c_str(), NULL))) {
 		if(target_obj->in_room != NOWHERE) {
 			location = target_obj->in_room;
-		}
-		else {
-			send_to_char("The object is not available.\n\r", ch);
+		} else {
+			send_to_char("L'oggetto non e' disponibile.\n\r", ch);
 			return;
 		}
-	}
-	else {
-		send_to_char("No such creature or object around.\n\r", ch);
+	} else {
+		send_to_char("Nessuna creatura o oggetto del genere nei paraggi.\n\r", ch);
 		return;
-	}*/
+	}
 
-	/* a location has been found. */
-
-	/*original_loc = ch->in_room;
+	const int original_loc = ch->in_room;
 	char_from_room(ch);
 	char_to_room(ch, location);
-	command_interpreter(ch, command);*/
+	command_interpreter(ch, command.c_str());
 
-	/* check if the guy's still there */
-	/*for(target_mob = real_roomp(location)->people; target_mob; target_mob =
-				target_mob->next_in_room)
+	bool found = false;
+	for(target_mob = real_roomp(location)->people; target_mob;
+			target_mob = target_mob->next_in_room) {
 		if(ch == target_mob) {
-			char_from_room(ch);
-			char_to_room(ch, original_loc);
+			found = true;
+			break;
 		}
-}*/
+	}
+
+	if(found) {
+		char_from_room(ch);
+		char_to_room(ch, original_loc);
+	}
+
+	mudlog(LOG_PLAYERS, "%s at %d: %s", GET_NAME(ch), location, command.c_str());
+}
 
 ACTION_FUNC(do_goto) {
 	char buf[MAX_INPUT_LENGTH];
@@ -1427,376 +1317,826 @@ ACTION_FUNC(do_goto) {
 	do_look(ch, "", 15);
 }
 
+namespace {
+
+void stat_act(struct char_data* ch, const std::string& msg) {
+	act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+}
+
+/** Come send_to_char sul master: niente ParseAct né reset $c0007 di act(). */
+void stat_send(struct char_data* ch, const std::string& msg) {
+	if(!msg.empty()) {
+		send_to_char(msg.c_str(), ch);
+	}
+}
+
+template<typename... Args>
+void stat_format(struct char_data* ch, const char* fmt, Args&&... args) {
+	boost::format f(fmt);
+	(f % ... % std::forward<Args>(args));
+	stat_act(ch, f.str());
+}
+
+std::string stat_ctime_strip(long t) {
+	std::time_t tt = static_cast<std::time_t>(t);
+	char buf[100];
+	ctime_r(&tt, buf);
+	std::string s(buf);
+	if(!s.empty() && s.back() == '\n') {
+		s.pop_back();
+	}
+	return s;
+}
+
+/** Lookup tabella Circle (sprinttype/sprintbit) → std::string per do_stat. */
+std::string stat_lookup_type(int type, const char** names) {
+	char buf[MAX_STRING_LENGTH];
+	sprinttype(type, names, buf);
+	return buf;
+}
+
+std::string stat_lookup_bits(unsigned long bits, const char** names) {
+	char buf[MAX_STRING_LENGTH];
+	sprintbit(bits, names, buf);
+	return buf;
+}
+
+void stat_room(struct char_data* ch) {
+	struct room_data* rm = real_roomp(ch->in_room);
+
+	send_to_char((boost::format(
+		"Room name: %s, Of zone : %ld. V-Number : %ld, R-number : %d\n\r")
+		% rm->name % rm->zone % rm->number % ch->in_room).str().c_str(), ch);
+
+	send_to_char((std::string("Sector type : ") +
+		stat_lookup_type(rm->sector_type, sector_types) + " ").c_str(), ch);
+
+	std::string spec = "Special procedure : ";
+	if(rm->funct) {
+		spec += "Exists ";
+		spec += rm->specname ? rm->specname : "";
+		spec += " ";
+		spec += rm->specparms ? rm->specparms : "";
+	}
+	else {
+		spec += "NO";
+	}
+	send_to_char((spec + "\r\n").c_str(), ch);
+
+	send_to_char((std::string("Room flags: ") +
+		stat_lookup_bits(static_cast<unsigned long>(rm->room_flags), room_bits) +
+		"\n\r").c_str(), ch);
+
+	send_to_char("Description:\n\r", ch);
+	send_to_char(rm->description ? rm->description : "None", ch);
+
+	std::string extra = "Extra description keywords(s): ";
+	if(rm->ex_description) {
+		extra += "\n\r";
+		for(struct extra_descr_data* desc = rm->ex_description; desc;
+				desc = desc->next) {
+			extra += desc->keyword;
+			extra += "\n\r";
+		}
+		extra += "\n\r";
+	}
+	else {
+		extra += "None\n\r";
+	}
+	send_to_char(extra.c_str(), ch);
+
+	std::string listeners = "------- Chars listeners -------\n\r";
+	for(struct char_data* k = rm->listeners; k; k = k->next_listener) {
+		listeners += GET_NAME(k);
+	}
+	send_to_char((listeners + "\n\r").c_str(), ch);
+
+	std::string present = "------- Chars present -------\n\r";
+	for(struct char_data* k = rm->people; k; k = k->next_in_room) {
+		if(CAN_SEE(ch, k)) {
+			present += GET_NAME(k);
+			present += (!IS_NPC(k) ?
+				"(PC)\n\r" :
+				(!IS_MOB(k) ? "(NPC)\n\r" : "(MOB)\n\r"));
+		}
+	}
+	send_to_char((present + "\n\r").c_str(), ch);
+
+	std::string contents = "--------- Contents ---------\n\r";
+	for(struct obj_data* j = rm->contents; j; j = j->next_content) {
+		if(j->name) {
+			contents += j->name;
+		}
+		contents += "\n\r";
+	}
+	send_to_char((contents + "\n\r").c_str(), ch);
+
+	send_to_char("------- Exits defined -------\n\r", ch);
+	for(int i = 0; i <= 5; i++) {
+		if(!rm->dir_option[i]) {
+			continue;
+		}
+		struct room_direction_data* ex = rm->dir_option[i];
+		if(ex->keyword) {
+			send_to_char((boost::format("Direction %s . Keyword : %s\n\r")
+				% dirs[i] % ex->keyword).str().c_str(), ch);
+		}
+		else {
+			send_to_char((boost::format("Direction %s \n\r") % dirs[i]).str().c_str(), ch);
+		}
+		std::string desc = "Description:\n\r";
+		desc += ex->general_description ? ex->general_description : "UNDEFINED\n\r";
+		send_to_char(desc.c_str(), ch);
+		send_to_char((boost::format(
+			"Exit flag: %s \n\rKey no: %ld\n\rTo room (R-Number): %ld\r\n")
+			% stat_lookup_bits(static_cast<unsigned>(ex->exit_info), exit_bits)
+			% ex->key % ex->to_room).str().c_str(), ch);
+		if(ex->open_cmd != -1) {
+			send_to_char((boost::format(" OpenCommand: %ld\r\n") % ex->open_cmd).str().c_str(), ch);
+		}
+		send_to_char("---------------------------\r\n", ch);
+	}
+}
+
+void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
+	const char* sex_tag = "$c0015ILLEGAL-SEX!!";
+	switch(k->player.sex) {
+	case SEX_NEUTRAL: sex_tag = "$c0015NEUTRAL-SEX"; break;
+	case SEX_MALE: sex_tag = "$c0015MALE"; break;
+	case SEX_FEMALE: sex_tag = "$c0015FEMALE"; break;
+	default: break;
+	}
+	stat_act(ch, std::string(sex_tag) +
+		(boost::format(
+			" $c0014%s $c0005- Name : $c0015%s "
+			"$c0005[R-Number $c0015%d$c0005], "
+			"In room [$c0015%d$c0005]")
+			% (!IS_NPC(k) ? "PC" : (!IS_MOB(k) ? "NPC" : "MOB"))
+			% GET_NAME(k) % k->nr % k->in_room).str());
+
+	if(IS_MOB(k)) {
+		stat_format(ch, "$c0005V-Number [$c0015%d$c0005]",
+			mob_index[k->nr].iVNum);
+	}
+
+	if(cmd == CMD_NAME) {
+		stat_act(ch, std::string("$c0005Short description: $c0015") +
+			(k->player.short_descr ? k->player.short_descr : "None"));
+		stat_act(ch, std::string("$c0005Title:$c0015 ") +
+			(k->player.title ? k->player.title : "None"));
+		stat_format(ch, "$c0005Long description: $c0015%s",
+			k->player.long_descr ? k->player.long_descr : "None");
+		stat_format(ch, "$c0005Target type is: $c0015%s",
+			GetTargetTypeString(GetTargetType(ch, k, 0)));
+	}
+
+	if(cmd == CMD_NAME || cmd == CMD_CKEQ) {
+		if(!IS_PC(k)) {
+			stat_act(ch, std::string("$c0005Monster Class:$c0015 ") +
+				stat_lookup_type(k->player.iClass, npc_class_types));
+		}
+		else {
+			stat_act(ch, std::string("$c0005Class:$c0015 ") +
+				stat_lookup_bits(static_cast<unsigned>(k->player.iClass),
+					pc_class_types));
+		}
+
+		stat_format(ch,
+			"$c0005Level [M:$c0014%d$c0005/C:$c0015%d$c0005/W:$c0014%d$c0005/T:"
+			"$c0015%d$c0005/D:$c0014%d$c0005/K:$c0015%d$c0005/B:$c0014%d$c0005"
+			"/S:$c0015%d$c0005/P:$c0014%d$c0005/R:$c0015%d$c0005/I:"
+			"$c0014%d$c0005] Alignment[$c0014%d$c0005]",
+			static_cast<int>(k->player.level[0]),
+			static_cast<int>(k->player.level[1]),
+			static_cast<int>(k->player.level[2]),
+			static_cast<int>(k->player.level[3]),
+			static_cast<int>(k->player.level[4]),
+			static_cast<int>(k->player.level[5]),
+			static_cast<int>(k->player.level[6]),
+			static_cast<int>(k->player.level[7]),
+			static_cast<int>(k->player.level[8]),
+			static_cast<int>(k->player.level[9]),
+			static_cast<int>(k->player.level[10]),
+			GET_ALIGNMENT(k));
+	}
+
+	if(cmd == CMD_NAME) {
+		stat_format(ch, "$c0005Xp:$c0014%d (%d)$c0007", GET_EXP(k),
+			MIN_EXP(k));
+
+		stat_format(ch, "$c0005Birth : $c0014%s$c0005",
+			stat_ctime_strip(k->player.time.birth));
+		stat_format(ch, "$c0005Logon : $c0014%s$c0005",
+			stat_ctime_strip(k->player.time.logon));
+
+		long played_h = k->player.time.played / SECS_PER_REAL_HOUR;
+		long played_m =
+			(k->player.time.played % SECS_PER_REAL_HOUR) / 60;
+		stat_format(ch, "$c0005Played : $c0014%-5d ore %2d minuti",
+			static_cast<int>(played_h), static_cast<int>(played_m));
+
+		struct time_info_data ma;
+		age3(k, &ma);
+		stat_format(ch,
+			"$c0005Age: [$c0014%d (%d) $c0005] Y, [$c0014%d$c0005] M, "
+			"[$c0014%d$c0005] D, [$c0014%d$c0005] H. ",
+			static_cast<int>(ma.ayear), static_cast<int>(ma.year),
+			static_cast<int>(ma.month), static_cast<int>(ma.day),
+			static_cast<int>(ma.hours));
+
+		stat_format(ch, "$c0005Height [$c0014%d$c0005]cm, "
+			"Wgt [$c0014%d$c0005]chili NumAtks[$c0014%.1f$c0005]",
+			GET_HEIGHT(k), (GET_WEIGHT(k) * 4536) / 10000, k->mult_att);
+
+		if(IS_MAESTRO_DEL_CREATO(ch)) {
+			stat_act(ch,
+				"$c0005Pos. DEA MOR INC STU SLE RES SIT FIG STA MOU");
+			stat_format(ch,
+				"$c0014     %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld %3ld",
+				static_cast<long>(GET_TEMPO_IN(k, 0)),
+				static_cast<long>(GET_TEMPO_IN(k, 1)),
+				static_cast<long>(GET_TEMPO_IN(k, 2)),
+				static_cast<long>(GET_TEMPO_IN(k, 3)),
+				static_cast<long>(GET_TEMPO_IN(k, 4)),
+				static_cast<long>(GET_TEMPO_IN(k, 5)),
+				static_cast<long>(GET_TEMPO_IN(k, 6)),
+				static_cast<long>(GET_TEMPO_IN(k, 7)),
+				static_cast<long>(GET_TEMPO_IN(k, 8)),
+				static_cast<long>(GET_TEMPO_IN(k, 9)));
+			stat_format(ch, "$c0005Pos prev. : $c0014%d",
+				static_cast<int>(GET_POS_PREV(k)));
+		}
+	}
+
+	if(cmd == CMD_STAT || cmd == CMD_CKEQ) {
+		stat_format(ch,
+			"$c0015Stats: $c0005Str:[$c0014%d$c0005/$c0015%d$c0005] "
+			"Int:[$c0014%d$c0005] Wis:[$c0014%d$c0005] "
+			"Dex:[$c0014%d$c0005] Con:[$c0014%d$c0005] "
+			"Cha:[$c0014%d$c0005]", static_cast<int>(GET_STR(k)),
+			static_cast<int>(GET_ADD(k)), static_cast<int>(GET_INT(k)),
+			static_cast<int>(GET_WIS(k)), static_cast<int>(GET_DEX(k)),
+			static_cast<int>(GET_CON(k)), static_cast<int>(GET_CHR(k)));
+
+		if(k == nullptr || GET_NAME(k) == nullptr) {
+			return;
+		}
+		stat_format(ch,
+			"$c0005Mana:[$c0014%d$c0005/$c0015%d$c0005+$c0011%d$c0005]\n"
+			"Hit:[$c0014%d$c0005/$c0015%d$c0005+$c0011%d$c0005](%d)\n"
+			"Move:[$c0014%d$c0005/$c0015%d$c0005+$c0011%d$c0005]",
+			GET_MANA(k), mana_limit(k), mana_gain(k), GET_HIT(k),
+			hit_limit(k), hit_gain(k), GetExtimatedHp(k),
+			GET_MOVE(k), move_limit(k), move_gain(k));
+	}
+
+	if(cmd == CMD_STAT) {
+		stat_format(ch,
+			"$c0005AC:[$c0014%d$c0005/$c001510$c0005], "
+			"Coins: [$c0014%d$c0005], Bank: [$c0014%d$c0005] \n\r"
+			"Exp: [$c0014%d$c0005], Rune degli Dei: [$c0014%d$c0005]\n\r"
+			"$c0005Hitroll: [$c0014%d$c0005+($c0015%d$c0005)], "
+			"Damroll: [$c0014%d$c0005+($c0015%d$c0005)] "
+			"Spellfail: [$c0014%d$c0005]", GET_AC(k),
+			GET_GOLD(k), GET_BANK(k), GET_EXP(k), GET_RUNEDEI(k),
+			static_cast<int>(k->points.hitroll),
+			str_app[STRENGTH_APPLY_INDEX(k)].tohit,
+			static_cast<int>(k->points.damroll),
+			str_app[STRENGTH_APPLY_INDEX(k)].todam,
+			k->specials.spellfail);
+
+		std::string pos_line = "$c0005Position: $c0014";
+		pos_line += stat_lookup_type(GET_POS(k), position_types);
+		pos_line += "$c0005, Default position: $c0014";
+		pos_line += stat_lookup_type(k->specials.default_pos, position_types);
+		pos_line += "$c0005, Fighting: $c0014";
+		pos_line += (k->specials.fighting ?
+			GET_NAME(k->specials.fighting) : "Nobody");
+		stat_act(ch, pos_line);
+
+		if(k->desc) {
+			stat_format(ch, "$c0005Connected: $c0014%s",
+				stat_lookup_type(k->desc->connected, connected_types));
+		}
+
+		stat_format(ch,
+			"$c0005Level [M:$c0014%d$c0005/C:$c0015%d$c0005/W:$c0014%d$c0005/T:"
+			"$c0015%d$c0005/D:$c0014%d$c0005/K:$c0015%d$c0005/B:$c0014%d$c0005"
+			"/S:$c0015%d$c0005/P:$c0014%d$c0005/R:$c0015%d$c0005/I:"
+			"$c0014%d$c0005] Alignment[$c0014%d$c0005]",
+			static_cast<int>(k->player.level[0]),
+			static_cast<int>(k->player.level[1]),
+			static_cast<int>(k->player.level[2]),
+			static_cast<int>(k->player.level[3]),
+			static_cast<int>(k->player.level[4]),
+			static_cast<int>(k->player.level[5]),
+			static_cast<int>(k->player.level[6]),
+			static_cast<int>(k->player.level[7]),
+			static_cast<int>(k->player.level[8]),
+			static_cast<int>(k->player.level[9]),
+			static_cast<int>(k->player.level[10]),
+			GET_ALIGNMENT(k));
+
+		stat_format(ch, "$c0005Timer [$c0014%d$c0005]", k->specials.timer);
+
+		if(IS_NPC(k)) {
+			stat_act(ch, std::string("$c0005NPC flags:$c0014 ") +
+				stat_lookup_bits(k->specials.act, action_bits));
+		}
+		else {
+			stat_act(ch, std::string("$c0005PC flags:$c0014 ") +
+				stat_lookup_bits(k->specials.act, player_bits));
+		}
+
+		if(IS_MOB(k)) {
+			std::string mob_spec = "$c0005Mobile Special procedure:$c0014 ";
+			if(mob_index[k->nr].func) {
+				mob_spec += "Exists ";
+				mob_spec += mob_index[k->nr].specname;
+				mob_spec += " ";
+				mob_spec += mob_index[k->nr].specparms;
+			}
+			else {
+				mob_spec += "NO";
+			}
+			stat_act(ch, mob_spec);
+		}
+
+		if(IS_NPC(k)) {
+			stat_format(ch,
+				"$c0005NPC Bare Hand Damage $c0014%dd$c0015%d$c0005.",
+				static_cast<int>(k->specials.damnodice),
+				static_cast<int>(k->specials.damsizedice));
+		}
+
+		int i2 = 0;
+		for(int i = 0; i < MAX_WEAR; i++) {
+			if(k->equipment[i]) {
+				i2++;
+			}
+		}
+
+		std::string carry_msg = (boost::format(
+			"$c0005Carried weight: $c0014%d/%d$c0005 etti "
+			"Carried items: $c0014%d/%d ")
+			% static_cast<int>((IS_CARRYING_W(k) * 4536) / 1000)
+			% static_cast<int>((CAN_CARRY_W(k) * 4536) / 1000)
+			% static_cast<int>(IS_CARRYING_N(k))
+			% static_cast<int>(CAN_CARRY_N(k))).str();
+		carry_msg += (boost::format("$c0005Items in equipment: $c0014%d")
+			% i2).str();
+
+		int tot_obj = k->player.oggetti;
+		if(!IS_PC(k)) {
+			tot_obj = ContaOggetti(k->carrying);
+			for(int i = 0; i < MAX_WEAR; i++) {
+				tot_obj += ContaOggetti(k->equipment[i]);
+			}
+		}
+		carry_msg += (boost::format(" $c0005Total items: $c0014%d")
+			% tot_obj).str();
+		stat_act(ch, carry_msg);
+
+		stat_format(ch,
+			"$c0005Apply saving throws: [$c0014%d$c0005] "
+			"[$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] "
+			"[$c0014%d$c0005] ",
+			k->specials.apply_saving_throw[0],
+			k->specials.apply_saving_throw[1],
+			k->specials.apply_saving_throw[2],
+			k->specials.apply_saving_throw[3],
+			k->specials.apply_saving_throw[4]);
+
+		stat_format(ch,
+			"$c0005Thirst: $c0014%d$c0005, Hunger: $c0014%d$c0005, "
+			"Drunk: $c0014%d",
+			static_cast<int>(k->specials.conditions[THIRST]),
+			static_cast<int>(k->specials.conditions[FULL]),
+			static_cast<int>(k->specials.conditions[DRUNK]));
+
+		stat_format(ch, "$c0005Supported is '$c0014%s$c0005' ",
+			(k->specials.supporting ?
+				k->specials.supporting : "NOBODY"));
+		stat_format(ch, "$c0005Bodyguarded is '$c0014%s$c0005' ",
+			(k->specials.bodyguarding ?
+				k->specials.bodyguarding : "NOBODY"));
+		stat_format(ch, "$c0005Bodyguard is '$c0014%s$c0005' ",
+			(k->specials.bodyguard ?
+				k->specials.bodyguard : "NOBODY"));
+
+		stat_format(ch, "$c0005Master is '$c0014%s$c0005' ",
+			((k->master) ? GET_NAME(k->master) : "NOBODY"));
+
+		if(k->specials.quest_ref) {
+			if(IS_PC(k)) {
+				stat_format(ch, "$c0005Quest Target: $c0014%s",
+					(k->specials.quest_ref->player.name ?
+						k->specials.quest_ref->player.name : "-"));
+			}
+			else {
+				stat_format(ch, "$c0005Quest Owner: $c0014%s",
+					(k->specials.quest_ref->player.name ?
+						k->specials.quest_ref->player.name : "-"));
+			}
+		}
+
+		stat_act(ch, "$c0005Followers are:");
+		for(struct follow_type* fol = k->followers; fol; fol = fol->next) {
+			if(fol->follower != nullptr) {
+				stat_format(ch, "$c0014 %s", GET_NAME(fol->follower));
+			}
+			else {
+				mudlog(LOG_ERROR,
+					"fol->follower == NULL in do_stat. Player %s.",
+					GET_NAME(k));
+			}
+		}
+
+		stat_format(ch, "$c0005Last PKill: $c0014%s",
+			k->lastpkill == nullptr ? "-" : k->lastpkill);
+		stat_format(ch, "$c0005Last MKill: $c0014%s",
+			k->lastmkill == nullptr ? "-" : k->lastmkill);
+
+		if(IS_SET(k->specials.pmask, BIT_POOF_IN) && IS_PC(k) &&
+				IS_IMMORTAL(k)) {
+			stat_format(ch, "$c0005Bamfin : $c0014%s",
+				k->specials.poofin == nullptr ? "-" : k->specials.poofin);
+		}
+
+		if(IS_SET(k->specials.pmask, BIT_POOF_OUT) && IS_PC(k) &&
+				IS_IMMORTAL(k)) {
+			stat_format(ch, "$c0005Bamfout: $c0014%s",
+				k->specials.poofout == nullptr ? "-" :
+				k->specials.poofout);
+		}
+
+		if(k->M_immune) {
+			std::string imm = stat_lookup_bits(k->M_immune, immunity_names);
+			imm += "\n\r";
+			stat_send(ch, "$c0005Immune to: $c0014");
+			stat_send(ch, imm);
+		}
+
+		if(k->immune) {
+			std::string imm = stat_lookup_bits(k->immune, immunity_names);
+			imm += "\n\r";
+			stat_send(ch, "$c0005Resistant to: $c0014");
+			stat_send(ch, imm);
+		}
+
+		if(k->susc) {
+			std::string imm = stat_lookup_bits(k->susc, immunity_names);
+			imm += "\n\r";
+			stat_send(ch, "$c0005Susceptible to: $c0014");
+			stat_send(ch, imm);
+		}
+
+		if(k->player.user_flags) {
+			std::string flags = stat_lookup_bits(
+				k->player.user_flags, special_user_flags);
+			flags += "\n\r";
+			stat_send(ch, "$c0005SPECIAL FLAGS: $c0014");
+			stat_send(ch, flags);
+		}
+
+		stat_send(ch, "$c0005Race: $c0014");
+		stat_send(ch, stat_lookup_type(k->race, RaceName));
+		stat_send(ch, (boost::format("  $c0005Generic value: $c0014%d")
+			% k->generic).str());
+		stat_send(ch, (boost::format(
+			"  $c0005Action pointer: $c0014%s\n\r")
+			% (k->act_ptr ?
+				boost::str(boost::format("%p") % k->act_ptr) :
+				std::string("(nil)"))).str());
+		if(IS_NPC(k)) {
+			stat_send(ch, (boost::format("$c0005Start room: $c0014%ld\n\r")
+				% k->lStartRoom).str());
+		}
+
+		if(k->specials.affected_by) {
+			std::string aff = stat_lookup_bits(
+				k->specials.affected_by, affected_bits);
+			aff += "\n\r";
+			stat_send(ch, "$c0005Affected by: $c0014");
+			stat_send(ch, aff);
+		}
+
+		if(k->specials.affected_by2) {
+			std::string aff = stat_lookup_bits(
+				k->specials.affected_by2, affected_bits2);
+			aff += "\n\r";
+			stat_send(ch, "$c0005Affected by2: $c0014");
+			stat_send(ch, aff);
+		}
+	}
+
+	if(cmd == CMD_CKEQ || cmd == CMD_STAT) {
+		stat_format(ch, "$c0005Equipment index:$c0014%f",
+			GetCharBonusIndex(k));
+		stat_format(ch, "$c0005 (Medium value):$c0014%f",
+			AverageEqIndex(-1));
+	}
+
+	if(cmd == CMD_SPELL) {
+		if(k->affected) {
+			stat_act(ch,
+				"\n\r$c0005Affecting Spells:\n\r$c0015--------------");
+			for(struct affected_type* aff = k->affected; aff;
+					aff = aff->next) {
+				if(aff->type <= MAX_EXIST_SPELL) {
+					stat_format(ch, "$c0005Spell : '$c0014%s$c0005'",
+						spells[aff->type - 1]);
+					stat_format(ch,
+						" $c0005Modifies $c0014%s $c0005by "
+						"$c0015%d$c0005 points",
+						apply_types[aff->location], aff->modifier);
+
+					const std::string aff_bits =
+						(aff->location != APPLY_AFF2) ?
+						stat_lookup_bits(aff->bitvector, affected_bits) :
+						stat_lookup_bits(aff->bitvector, affected_bits2);
+					send_to_char((boost::format(
+						" Expires in %3d hours, Bits set %s\n\r")
+						% aff->duration % aff_bits).str().c_str(), ch);
+				}
+				else {
+					mudlog(LOG_ERROR,
+						"<%s> had a bogus aff->type act.wizard, do_stat",
+						GET_NAME(k));
+				}
+			}
+		}
+	}
+}
+
+std::string stat_object_type_values(struct obj_data* j) {
+	std::string out;
+
+	switch(j->obj_flags.type_flag) {
+	case ITEM_LIGHT:
+		out = (boost::format(
+			"$c0005Colour : [$c0014%d$c0005]\n\r$c0005Type : [$c0014%d$c0005]\n\r$c0005Hours : [$c0014%d$c0005]")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2]).str();
+		break;
+	case ITEM_SCROLL:
+		out = (boost::format(
+			"$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
+	case ITEM_WAND:
+	case ITEM_STAFF:
+		out = (boost::format(
+			"$c0005Level: $c0014%d $c0005Spell : $c0014%d\n\r$c0005Charges : $c0014%d")
+			% j->obj_flags.value[0] % j->obj_flags.value[3]
+			% j->obj_flags.value[2]).str();
+		break;
+	case ITEM_WEAPON: {
+		out = (boost::format("$c0005Reserved: $c0014%d\n\r")
+			% j->obj_flags.value[0]).str();
+		std::string todam = (boost::format(
+			"$c0005Todam: $c0014%d$c0005D$c0014%d\n\r$c0005Damage type: $c0014")
+			% j->obj_flags.value[1] % j->obj_flags.value[2]).str();
+		out += todam;
+		out += stat_lookup_type(j->obj_flags.value[3], aszWeaponType);
+		break;
+	}
+	case ITEM_FIREWEAPON:
+		out = (boost::format(
+			"$c0005Min Strength: $c0014%d\n\r$c0005Max range: $c0014%d\n\r"
+			"$c0005Bonus range: $c0014%d\n\r$c0005Type: $c0014%d")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
+	case ITEM_MISSILE:
+		out = (boost::format(
+			"$c0005%% to break: $c0014%d\n\r$c0005Todam: $c0014%d$c0005D$c0014%d\n\r$c0005Type : $c0014%d")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
+	case ITEM_ARMOR:
+		out = (boost::format(
+			"$c0005AC-apply : [$c0014%d$c0005]\n\r$c0005Full Strength : [$c0014%d$c0005]")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]).str();
+		break;
+	case ITEM_POTION:
+		out = (boost::format(
+			"$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
+	case ITEM_TRAP:
+		out = (boost::format(
+			"$c0005Eff type: $c0014%d$c0005, Dam type: $c0014%d$c0005, level: $c0014%d$c0005, charges: $c0014%d")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
+	case ITEM_CONTAINER:
+		out = (boost::format(
+			"$c0005Max-contains : $c0014%d\n\r$c0005Locktype : $c0014%d\n\r$c0005Corpse : $c0014%s")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% (j->obj_flags.value[3] ? "Yes" : "No")).str();
+		break;
+	case ITEM_DRINKCON:
+		out = (boost::format(
+			"$c0005Max-contains : $c0014%d\n\r$c0005Contains : $c0014%d\n\r$c0005Poisoned : $c0014%s"
+			"\n\r$c0005Liquid : $c0014%s")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% (j->obj_flags.value[3] ? "Yes" : "No")
+			% stat_lookup_type(j->obj_flags.value[2], drinks)).str();
+		break;
+	case ITEM_NOTE:
+		out = (boost::format("$c0005Tounge : $c0014%d")
+			% j->obj_flags.value[0]).str();
+		break;
+	case ITEM_KEY:
+		out = (boost::format("$c0005Keytype : $c0014%d")
+			% j->obj_flags.value[0]).str();
+		break;
+	case ITEM_FOOD:
+		out = (boost::format(
+			"$c0005Makes full : $c0014%d\n\r$c0005Poisoned : $c0014%s")
+			% j->obj_flags.value[0]
+			% (j->obj_flags.value[3] ? "Yes" : "No")).str();
+		break;
+	default:
+		out = (boost::format(
+			"$c0005Values 0-3 : [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
+	}
+	return out;
+}
+
+void stat_object(struct char_data* ch, struct obj_data* j) {
+	const int iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
+	send_to_char((boost::format(
+		"$c0005Object name: [$c0011%s$c0005], R-number: [$c0014%d$c0005], "
+		"V-number: [$c0011%d$c0005] Item type: $c0014%s\n\r")
+		% j->name % j->item_number % iVNum
+		% stat_lookup_type(GET_ITEM_TYPE(j), item_types)).str().c_str(), ch);
+
+	if(IS_CORPSE(j)) {
+		send_to_char((boost::format(
+			"$c0005Corpse original V-number: [$c0014%d$c0005]\r\n")
+			% j->char_vnum).str().c_str(), ch);
+	}
+	else {
+		send_to_char((boost::format(
+			"$c0005Object Original V-number: [$c0014%d$c0005]\r\n")
+			% j->char_vnum).str().c_str(), ch);
+	}
+
+	send_to_char((boost::format(
+		"$c0005Short description: $c0014%s$c0005\n\r"
+		"$c0005Long description:\n\r$c0014%s\n\r")
+		% (j->short_description ? j->short_description : "None")
+		% (j->description ? j->description : "None")).str().c_str(), ch);
+
+	if(j->ex_description) {
+		std::string extra =
+			"$c0005Extra description keyword(s):\n\r----------\n\r$c0014";
+		for(struct extra_descr_data* desc = j->ex_description; desc;
+				desc = desc->next) {
+			extra += desc->keyword;
+			extra += "\n\r";
+		}
+		send_to_char((extra + "$c0005----------\n\r").c_str(), ch);
+	}
+	else {
+		send_to_char("$c0005Extra description keyword(s): $c0014None\n\r", ch);
+	}
+
+	send_to_char((std::string("$c0005Can be worn on: $c0014") +
+		stat_lookup_bits(j->obj_flags.wear_flags, wear_bits) + "\n\r").c_str(), ch);
+
+	send_to_char((std::string("$c0005Set char bits: $c0014") +
+		stat_lookup_bits(j->obj_flags.bitvector, affected_bits) + "\n\r").c_str(), ch);
+
+	send_to_char((std::string("$c0005Extra flags: $c0014") +
+		stat_lookup_bits(j->obj_flags.extra_flags, extra_bits) + "\n\r").c_str(), ch);
+
+	send_to_char((std::string("$c0005Extra flags2: $c0014") +
+		stat_lookup_bits(j->obj_flags.extra_flags2, extra_bits2) + "\n\r").c_str(), ch);
+
+	send_to_char((boost::format(
+		"$c0005Weight: $c0014%d$c0005, Value: $c0014%d$c0005, "
+		"Cost/day: $c0014%d$c0005, Timer: $c0014%d\n\r")
+		% j->obj_flags.weight % j->obj_flags.cost
+		% j->obj_flags.cost_per_day % j->obj_flags.timer).str().c_str(), ch);
+
+	std::string loc = "$c0005In room: $c0014";
+	loc += (j->in_room == NOWHERE) ?
+		"Nowhere" : std::to_string(j->in_room);
+	loc += "$c0005, In object: $c0014";
+	loc += (!j->in_obj ? "None" : fname(j->in_obj->name));
+	send_to_char((loc + "\n\r").c_str(), ch);
+
+	std::string equip = "$c0005Equipment Status: $c0014";
+	if(!j->carried_by) {
+		equip += "NONE";
+	}
+	else {
+		bool worn = false;
+		for(int i = 0; i < MAX_WEAR; i++) {
+			if(j->carried_by->equipment[i] == j) {
+				equip += stat_lookup_type(i, equipment_types);
+				worn = true;
+			}
+		}
+		equip += worn ? "$c0005 by $c0011" : "$c0005Inventory of $c0011";
+		equip += GET_NAME_DESC(j->carried_by);
+	}
+	send_to_char((equip + "\n\r").c_str(), ch);
+
+	send_to_char(stat_object_type_values(j).c_str(), ch);
+
+	std::string spec = "\n\r$c0005Special procedure : $c0014";
+	if(j->item_number >= 0 && obj_index[j->item_number].func) {
+		spec += "Exists ";
+		spec += obj_index[j->item_number].specname;
+		spec += " ";
+		spec += obj_index[j->item_number].specparms;
+	}
+	else {
+		spec += "NO";
+	}
+	send_to_char((spec + "\r\n").c_str(), ch);
+
+	send_to_char((boost::format("$c0005Generic int: $c0014%d$c0005.\n")
+		% j->iGeneric).str().c_str(), ch);
+
+	if(j->contains) {
+		std::string contains = "$c0005Contains :$c0014\n\r";
+		bool any = false;
+		for(struct obj_data* j2 = j->contains; j2; j2 = j2->next_content) {
+			contains += fname(j2->name);
+			contains += "\n\r";
+			any = true;
+		}
+		if(!any) {
+			contains = "$c0005Contains : $c0014Nothing\n\r";
+		}
+		send_to_char(contains.c_str(), ch);
+	}
+
+	send_to_char("$c0005Can affect char :$c0014\n\r", ch);
+	for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
+		if(j->affected[i].location) {
+			send_to_char((boost::format(
+				" $c0005Affects : $c0014%s $c0005By $c0014%d\n\r")
+				% stat_lookup_type(j->affected[i].location, apply_types)
+				% j->affected[i].modifier).str().c_str(), ch);
+		}
+	}
+}
+
+} // namespace
+
 ACTION_FUNC(do_stat) {
-    std::string argument(arg);
-    std::string target_name;
-    std::stringstream ss(argument);
-    ss >> target_name; // Estrae il primo argomento
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_stat (act.wizard.cpp)");
+		return;
+	}
 
-    if (target_name.empty()) {
-        send_to_char("On who or what?\n\r", ch);
-        return;
-    }
+	if(!IS_PC(ch)) {
+		return;
+	}
 
-    struct room_data* rm = 0;
-    struct char_data* k = 0;
-    struct obj_data* j = 0;
-    struct obj_data* tmpW = 0;
-    struct obj_data* tmpV = 0;
-    int count = 1;
-    char buf_legacy[MAX_STRING_LENGTH]; // Buffer per le funzioni legacy come sprintbit
+	char buf[MAX_INPUT_LENGTH];
+	only_argument(arg, buf);
+	const std::string target_name(buf);
 
-    // --- STAT ROOM ---
-    if (boost::iequals(target_name, "room")) {
-        rm = real_roomp(ch->in_room);
+	if(target_name.empty()) {
+		send_to_char("Su chi o cosa?\n\r", ch);
+		return;
+	}
 
-        boost::format fmt(
-            "Room name: %s, Of zone : %d. V-Number : %d, R-number : %d\n\r"
-            "Sector type : %s "
-        );
-        fmt % rm->name % rm->zone % rm->number % ch->in_room % sector_types[rm->sector_type];
-        send_to_char(fmt.str().c_str(), ch);
+	if(boost::iequals(target_name, "room")) {
+		stat_room(ch);
+		return;
+	}
 
-        std::string spec_proc = "Special procedure : NO";
-        if (rm->funct) {
-            spec_proc = "Special procedure : Exists " +
-                        std::string(rm->specname ? rm->specname : "") + " " +
-                        std::string(rm->specparms ? rm->specparms : "");
-        }
-        send_to_char((spec_proc + "\r\n").c_str(), ch);
+	int count = 1;
+	struct char_data* k = get_char_vis_world(ch, target_name.c_str(), &count);
+	if(k) {
+		stat_character(ch, k, cmd);
+		return;
+	}
 
-        sprintbit((unsigned long) rm->room_flags, room_bits, buf_legacy);
-        send_to_char((std::string("Room flags: ") + buf_legacy + "\n\r").c_str(), ch);
+	struct obj_data* tmpV =
+		(struct obj_data*)get_obj_in_list_vis(ch, target_name.c_str(), ch->carrying);
+	struct obj_data* tmpW =
+		(struct obj_data*)get_obj_vis_world(ch, target_name.c_str(), &count);
+	if(tmpV || tmpW) {
+		struct obj_data* j = tmpV ? tmpV : tmpW;
+		stat_object(ch, j);
+		return;
+	}
 
-        send_to_char("Description:\n\r", ch);
-        send_to_char((rm->description ? rm->description : "None"), ch);
-
-        send_to_char("Extra description keywords(s): ", ch);
-        if (rm->ex_description) {
-            send_to_char("\n\r", ch);
-            for (struct extra_descr_data* desc = rm->ex_description; desc; desc = desc->next) {
-                send_to_char((std::string(desc->keyword) + "\n\r").c_str(), ch);
-            }
-        } else {
-            send_to_char("None\n\r", ch);
-        }
-        send_to_char("\n\r", ch);
-
-        send_to_char("------- Chars listeners -------\n\r", ch);
-        for (k = rm->listeners; k; k = k->next_listener) {
-            send_to_char((std::string(GET_NAME(k)) + " ").c_str(), ch);
-        }
-        send_to_char("\n\r------- Chars present -------\n\r", ch);
-        for (k = rm->people; k; k = k->next_in_room) {
-            if (CAN_SEE(ch, k)) {
-                std::string type = (!IS_NPC(k) ? "(PC)" : (!IS_MOB(k) ? "(NPC)" : "(MOB)"));
-                send_to_char((std::string(GET_NAME(k)) + type + "\n\r").c_str(), ch);
-            }
-        }
-
-        send_to_char("\n\r--------- Contents ---------\n\r", ch);
-        for (j = rm->contents; j; j = j->next_content) {
-            if (j->name) send_to_char((std::string(j->name) + "\n\r").c_str(), ch);
-        }
-        send_to_char("\n\r------- Exits defined -------\n\r", ch);
-
-        for (int i = 0; i <= 5; i++) {
-            if (rm->dir_option[i]) {
-                if (rm->dir_option[i]->keyword)
-                    send_to_char((std::string("Direction ") + dirs[i] + " . Keyword : " + rm->dir_option[i]->keyword + "\n\r").c_str(), ch);
-                else
-                    send_to_char((std::string("Direction ") + dirs[i] + " \n\r").c_str(), ch);
-
-                send_to_char("Description:\n\r", ch);
-                send_to_char((rm->dir_option[i]->general_description ? rm->dir_option[i]->general_description : "UNDEFINED\n\r"), ch);
-
-                sprintbit((unsigned) rm->dir_option[i]->exit_info, exit_bits, buf_legacy);
-                boost::format exit_fmt("Exit flag: %s \n\rKey no: %d\n\rTo room (R-Number): %d\r\n");
-                exit_fmt % buf_legacy % rm->dir_option[i]->key % rm->dir_option[i]->to_room;
-                send_to_char(exit_fmt.str().c_str(), ch);
-
-                if (rm->dir_option[i]->open_cmd != -1) {
-                    send_to_char((std::string(" OpenCommand: ") + std::to_string(rm->dir_option[i]->open_cmd) + "\r\n").c_str(), ch);
-                }
-                send_to_char("---------------------------\r\n", ch);
-            }
-        }
-        return;
-    }
-
-    // --- STAT MOBILE/PLAYER ---
-    else if ((k = get_char_vis_world(ch, target_name.c_str(), &count))) {
-        std::string sex_str;
-        switch (k->player.sex) {
-            case SEX_NEUTRAL: sex_str = "NEUTRAL-SEX"; break;
-            case SEX_MALE: sex_str = "MALE"; break;
-            case SEX_FEMALE: sex_str = "FEMALE"; break;
-            default: sex_str = "ILLEGAL-SEX!!"; break;
-        }
-
-        boost::format header_fmt(" $c0014%s $c0005- Name : $c0015%s $c0005[R-Number $c0015%d$c0005], In room [$c0015%d$c0005]\n\r");
-        header_fmt % (!IS_NPC(k) ? "PC" : (!IS_MOB(k) ? "NPC" : "MOB")) % GET_NAME(k) % k->nr % k->in_room;
-        send_to_char(header_fmt.str().c_str(), ch);
-        send_to_char((std::string("$c0015") + sex_str + "\n\r").c_str(), ch);
-
-        if (IS_MOB(k)) {
-            send_to_char((boost::format("$c0005V-Number [$c0015%d$c0005]\n\r") % mob_index[k->nr].iVNum).str().c_str(), ch);
-        }
-
-        if (cmd == CMD_NAME) {
-            send_to_char((std::string("$c0005Short description: $c0015") + (k->player.short_descr ? k->player.short_descr : "None") + "\n\r").c_str(), ch);
-            send_to_char((std::string("$c0005Title:$c0015 ") + (k->player.title ? k->player.title : "None") + "\n\r").c_str(), ch);
-            send_to_char((std::string("$c0005Long description: $c0015") + (k->player.long_descr ? k->player.long_descr : "None")).c_str(), ch);
-            send_to_char((std::string("$c0005Target type is: $c0015") + GetTargetTypeString(GetTargetType(ch, k, 0)) + "\n\r").c_str(), ch);
-        }
-
-        if (cmd == CMD_NAME || cmd == CMD_CKEQ) {
-            if (!IS_PC(k)) {
-                sprinttype(k->player.iClass, npc_class_types, buf_legacy);
-                send_to_char((std::string("$c0005Monster Class:$c0015 ") + buf_legacy + "\n\r").c_str(), ch);
-            } else {
-                sprintbit((unsigned) k->player.iClass, pc_class_types, buf_legacy);
-                send_to_char((std::string("$c0005Class:$c0015 ") + buf_legacy + "\n\r").c_str(), ch);
-            }
-
-            boost::format lvl_fmt(
-                "$c0005Level [M:$c0014%d$c0005/C:$c0015%d$c0005/W:$c0014%d$c0005/T:$c0015%d$c0005"
-                "/D:$c0014%d$c0005/K:$c0015%d$c0005/B:$c0014%d$c0005/S:$c0015%d$c0005/P:$c0014%d$c0005"
-                "/R:$c0015%d$c0005/I:$c0014%d$c0005] Alignment[$c0014%d$c0005]\n\r"
-            );
-            lvl_fmt % k->player.level[0] % k->player.level[1] % k->player.level[2] % k->player.level[3]
-                    % k->player.level[4] % k->player.level[5] % k->player.level[6] % k->player.level[7]
-                    % k->player.level[8] % k->player.level[9] % k->player.level[10] % GET_ALIGNMENT(k);
-            send_to_char(lvl_fmt.str().c_str(), ch);
-        }
-
-        if (cmd == CMD_NAME) {
-            boost::format xp_fmt("$c0005Xp:$c0014%d (%d)$c0007\n\r");
-            xp_fmt % GET_EXP(k) % MIN_EXP(k);
-            send_to_char(xp_fmt.str().c_str(), ch);
-
-            long xbirth = k->player.time.birth;
-            long xlogon = k->player.time.logon;
-            char time_buf[100];
-
-            ctime_r(&xbirth, time_buf);
-            time_buf[strlen(time_buf)-1] = '\0';
-            send_to_char((boost::format("$c0005Birth : $c0014%s$c0005\n\r") % time_buf).str().c_str(), ch);
-
-            ctime_r(&xlogon, time_buf);
-            time_buf[strlen(time_buf)-1] = '\0';
-            send_to_char((boost::format("$c0005Logon : $c0014%s$c0005\n\r") % time_buf).str().c_str(), ch);
-
-            long played_h = k->player.time.played / SECS_PER_REAL_HOUR;
-            long played_m = (k->player.time.played % SECS_PER_REAL_HOUR) / 60;
-            send_to_char((boost::format("$c0005Played : $c0014%-5d ore %2d minuti\n\r") % played_h % played_m).str().c_str(), ch);
-
-            struct time_info_data ma;
-            age3(k, &ma);
-            send_to_char((boost::format("$c0005Age: [$c0014%d (%d) $c0005] Y, [$c0014%d$c0005] M, [$c0014%d$c0005] D, [$c0014%d$c0005] H.\n\r")
-                % ma.ayear % ma.year % ma.month % ma.day % ma.hours).str().c_str(), ch);
-
-            send_to_char((boost::format("$c0005Height [$c0014%d$c0005]cm, Wgt [$c0014%d$c0005]chili NumAtks[$c0014%.1f$c0005]\n\r")
-                % GET_HEIGHT(k) % ((GET_WEIGHT(k) * 4536) / 10000) % k->mult_att).str().c_str(), ch);
-        }
-
-        if (cmd == CMD_STAT || cmd == CMD_CKEQ) {
-            boost::format stats_fmt(
-                "$c0015Stats: $c0005Str:[$c0014%d$c0005/$c0015%d$c0005] Int:[$c0014%d$c0005] Wis:[$c0014%d$c0005] "
-                "Dex:[$c0014%d$c0005] Con:[$c0014%d$c0005] Cha:[$c0014%d$c0005]\n\r"
-            );
-            stats_fmt % GET_STR(k) % GET_ADD(k) % GET_INT(k) % GET_WIS(k) % GET_DEX(k) % GET_CON(k) % GET_CHR(k);
-            send_to_char(stats_fmt.str().c_str(), ch);
-
-            boost::format points_fmt(
-                "$c0005Mana:[$c0014%d$c0005/$c0015%d$c0005+$c0011%d$c0005]\n"
-                "Hit:[$c0014%d$c0005/$c0015%d$c0005+$c0011%d$c0005](%d)\n"
-                "Move:[$c0014%d$c0005/$c0015%d$c0005+$c0011%d$c0005]\n\r"
-            );
-            points_fmt % GET_MANA(k) % mana_limit(k) % mana_gain(k)
-                       % GET_HIT(k) % hit_limit(k) % hit_gain(k) % GetExtimatedHp(k)
-                       % GET_MOVE(k) % move_limit(k) % move_gain(k);
-            if (!k || !GET_NAME(k)) return;
-            send_to_char(points_fmt.str().c_str(), ch);
-        }
-
-        if (cmd == CMD_STAT) {
-            boost::format detail_fmt(
-                "$c0005AC:[$c0014%d$c0005/10], Coins: [$c0014%d$c0005], Bank: [$c0014%d$c0005] \n\r"
-                "Exp: [$c0014%d$c0005], Rune degli Dei: [$c0014%d$c0005]\n\r"
-                "$c0005Hitroll: [$c0014%d$c0005+($c0015%d$c0005)], Damroll: [$c0014%d$c0005+($c0015%d$c0005)] "
-                "Spellfail: [$c0014%d$c0005]\n\r"
-            );
-            detail_fmt % GET_AC(k) % GET_GOLD(k) % GET_BANK(k) % GET_EXP(k) % GET_RUNEDEI(k)
-                       % k->points.hitroll % str_app[STRENGTH_APPLY_INDEX(k)].tohit
-                       % k->points.damroll % str_app[STRENGTH_APPLY_INDEX(k)].todam
-                       % k->specials.spellfail;
-            send_to_char(detail_fmt.str().c_str(), ch);
-
-            sprinttype(GET_POS(k), position_types, buf_legacy);
-            std::string pos_str = buf_legacy;
-            sprinttype((k->specials.default_pos), position_types, buf_legacy);
-            std::string def_pos_str = buf_legacy;
-
-            send_to_char((boost::format("$c0005Position: $c0014%s$c0005, Default position: $c0014%s$c0005, Fighting: $c0014%s\n\r")
-                % pos_str % def_pos_str % ((k->specials.fighting) ? GET_NAME(k->specials.fighting) : "Nobody")).str().c_str(), ch);
-
-            if (k->desc) {
-                sprinttype(k->desc->connected, connected_types, buf_legacy);
-                send_to_char((std::string("$c0005Connected: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-            }
-
-            if (IS_NPC(k)) {
-                sprintbit(k->specials.act, action_bits, buf_legacy);
-                send_to_char((std::string("$c0005NPC flags:$c0014 ") + buf_legacy + "\n\r").c_str(), ch);
-
-                std::string spec_proc = "$c0005Mobile Special procedure:$c0014 ";
-                if (mob_index[k->nr].func) {
-                    spec_proc += "Exists " + std::string(mob_index[k->nr].specname) + " " + std::string(mob_index[k->nr].specparms);
-                } else {
-                    spec_proc += "NO";
-                }
-                send_to_char((spec_proc + "\n\r").c_str(), ch);
-                send_to_char((boost::format("$c0005NPC Bare Hand Damage $c0014%dd$c0015%d$c0005.\n\r") % k->specials.damnodice % k->specials.damsizedice).str().c_str(), ch);
-            } else {
-                sprintbit(k->specials.act, player_bits, buf_legacy);
-                send_to_char((std::string("$c0005PC flags:$c0014 ") + buf_legacy + "\n\r").c_str(), ch);
-            }
-
-            send_to_char((boost::format("$c0005Timer [$c0014%d$c0005]\n\r") % k->specials.timer).str().c_str(), ch);
-
-            int i2 = 0;
-            for (int i = 0; i < MAX_WEAR; i++) if (k->equipment[i]) i2++;
-
-            int tot_obj = k->player.oggetti;
-            if (!IS_PC(k)) {
-                tot_obj = ContaOggetti(k->carrying);
-                for(int i = 0; i < MAX_WEAR; i++) tot_obj += ContaOggetti(k->equipment[i]);
-            }
-
-            boost::format weight_fmt(
-                "$c0005Carried weight: $c0014%d/%d$c0005 etti Carried items: $c0014%d/%d "
-                "$c0005Items in equipment: $c0014%d $c0005Total items: $c0014%d\n\r"
-            );
-            weight_fmt % ((IS_CARRYING_W(k) * 4536) / 1000) % ((CAN_CARRY_W(k) * 4536) / 1000)
-                       % IS_CARRYING_N(k) % CAN_CARRY_N(k) % i2 % tot_obj;
-            send_to_char(weight_fmt.str().c_str(), ch);
-
-            boost::format save_fmt("$c0005Apply saving throws: [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]\n\r");
-            for(int i=0; i<5; ++i) save_fmt % k->specials.apply_saving_throw[i];
-            send_to_char(save_fmt.str().c_str(), ch);
-
-            send_to_char((boost::format("$c0005Thirst: $c0014%d$c0005, Hunger: $c0014%d$c0005, Drunk: $c0014%d\n\r")
-                % k->specials.conditions[THIRST] % k->specials.conditions[FULL] % k->specials.conditions[DRUNK]).str().c_str(), ch);
-
-            // Master/Follower/Quest info
-            send_to_char((std::string("$c0005Master is '$c0014") + ((k->master) ? GET_NAME(k->master) : "NOBODY") + "$c0005'\n\r").c_str(), ch);
-            if(k->specials.quest_ref) {
-                std::string quest_info = IS_PC(k) ? "$c0005Quest Target: $c0014" : "$c0005Quest Owner: $c0014";
-                quest_info += (k->specials.quest_ref->player.name ? k->specials.quest_ref->player.name : "-");
-                send_to_char((quest_info + "\n\r").c_str(), ch);
-            }
-
-            if (k->followers) {
-                send_to_char("$c0005Followers are:\n\r", ch);
-                for (struct follow_type* fol = k->followers; fol; fol = fol->next) {
-                    if (fol->follower) send_to_char((std::string("$c0014    ") + GET_NAME(fol->follower) + "\n\r").c_str(), ch);
-                }
-            }
-
-            // Immunities
-            if (k->M_immune) {
-                sprintbit(k->M_immune, immunity_names, buf_legacy);
-                send_to_char((std::string("$c0005Immune to: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-            }
-            if (k->immune) {
-                sprintbit(k->immune, immunity_names, buf_legacy);
-                send_to_char((std::string("$c0005Resistant to: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-            }
-            if (k->susc) {
-                sprintbit(k->susc, immunity_names, buf_legacy);
-                send_to_char((std::string("$c0005Susceptible to: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-            }
-
-            // Affected by
-            if (k->specials.affected_by) {
-                sprintbit((unsigned) k->specials.affected_by, affected_bits, buf_legacy);
-                send_to_char((std::string("$c0005Affected by: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-            }
-            if (k->specials.affected_by2) {
-                sprintbit((unsigned) k->specials.affected_by2, affected_bits2, buf_legacy);
-                send_to_char((std::string("$c0005Affected by2: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-            }
-        }
-
-        if (cmd == CMD_CKEQ || cmd == CMD_STAT) {
-            send_to_char((boost::format("$c0005Equipment index:$c0014%f\n\r") % GetCharBonusIndex(k)).str().c_str(), ch);
-            send_to_char((boost::format("$c0005 (Medium value):$c0014%f\n\r") % AverageEqIndex(-1)).str().c_str(), ch);
-        }
-
-        if (cmd == CMD_SPELL && k->affected) {
-            send_to_char("\n\r$c0005Affecting Spells:\n\r$c0015--------------\n\r", ch);
-            for (struct affected_type* aff = k->affected; aff; aff = aff->next) {
-                if (aff->type <= MAX_EXIST_SPELL) {
-                    send_to_char((boost::format("$c0005Spell : '$c0014%s$c0005'\n\r") % spells[aff->type - 1]).str().c_str(), ch);
-                    send_to_char((boost::format("     $c0005Modifies $c0014%s $c0005by $c0015%d$c0005 points\n\r") % apply_types[aff->location] % aff->modifier).str().c_str(), ch);
-
-                    sprintbit((unsigned) aff->bitvector, (aff->location != APPLY_AFF2 ? affected_bits : affected_bits2), buf_legacy);
-                    send_to_char((boost::format("     Expires in %3d hours, Bits set %s\n\r") % aff->duration % buf_legacy).str().c_str(), ch);
-                }
-            }
-        }
-        return;
-    }
-
-    // --- STAT OBJECT ---
-    else if ((tmpV = (struct obj_data*) get_obj_in_list_vis(ch, target_name.c_str(), ch->carrying)) ||
-             (tmpW = (struct obj_data*) get_obj_vis_world(ch, target_name.c_str(), &count))) {
-        j = tmpV ? tmpV : tmpW;
-        int iVNum = (j->item_number >= 0) ? obj_index[j->item_number].iVNum : 0;
-
-        sprinttype(GET_ITEM_TYPE(j), item_types, buf_legacy);
-        boost::format obj_head("$c0005Object name: [$c0011%s$c0005], R-number: [$c0014%d$c0005], V-number: [$c0011%d$c0005] Item type: $c0014%s\n\r");
-        obj_head % j->name % j->item_number % iVNum % buf_legacy;
-        send_to_char(obj_head.str().c_str(), ch);
-
-        send_to_char((boost::format("$c0005Object Original V-number: [$c0014%d$c0005]\r\n") % j->char_vnum).str().c_str(), ch);
-        send_to_char((boost::format("$c0005Short description: $c0014%s$c0005\n\r$c0005Long description:\n\r$c0014%s\n\r")
-            % ((j->short_description) ? j->short_description : "None")
-            % ((j->description) ? j->description : "None")).str().c_str(), ch);
-
-        if (j->ex_description) {
-            send_to_char("$c0005Extra description keyword(s):\n\r----------\n\r$c0014", ch);
-            for (struct extra_descr_data* desc = j->ex_description; desc; desc = desc->next) {
-                send_to_char((std::string(desc->keyword) + "\n\r").c_str(), ch);
-            }
-            send_to_char("$c0005----------\n\r", ch);
-        }
-
-        sprintbit((unsigned) j->obj_flags.wear_flags, wear_bits, buf_legacy);
-        send_to_char((std::string("$c0005Can be worn on: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-
-        sprintbit((unsigned) j->obj_flags.extra_flags, extra_bits, buf_legacy);
-        send_to_char((std::string("$c0005Extra flags: $c0014") + buf_legacy + "\n\r").c_str(), ch);
-
-        send_to_char((boost::format("$c0005Weight: $c0014%d$c0005, Value: $c0014%d$c0005, Cost/day: $c0014%d$c0005, Timer: $c0014%d\n\r")
-            % j->obj_flags.weight % j->obj_flags.cost % j->obj_flags.cost_per_day % j->obj_flags.timer).str().c_str(), ch);
-
-        send_to_char((boost::format("$c0005In room: $c0014%s$c0005, In object: $c0014%s\n\r")
-            % (j->in_room == NOWHERE ? "Nowhere" : std::to_string(j->in_room))
-            % (!j->in_obj ? "None" : fname(j->in_obj->name))).str().c_str(), ch);
-
-        send_to_char("$c0005Can affect char :$c0014\n\r", ch);
-        for (int i = 0; i < MAX_OBJ_AFFECT; i++) {
-            if (j->affected[i].location) {
-                sprinttype(j->affected[i].location, apply_types, buf_legacy);
-                send_to_char((boost::format("    $c0005Affects : $c0014%s $c0005By $c0014%d\n\r") % buf_legacy % j->affected[i].modifier).str().c_str(), ch);
-            }
-        }
-        return;
-    } else {
-        send_to_char("No mobile or object by that name in the world\n\r", ch);
-    }
+	send_to_char("Nessun mobile od oggetto con quel nome nel mondo.\n\r", ch);
 }
 
 ACTION_FUNC(do_ooedit) {
@@ -2158,436 +2498,870 @@ ACTION_FUNC(do_showskills) {
 	}
 }
 
+
+namespace {
+
+void send_set_help(struct char_data* ch) {
+	send_to_char(
+		"@\n\r"
+		"Sintassi :@ <campo> <personaggio> [<valore>]\n\r"
+		"$c0009Questo comando DEVE essere usato con molta attenzione dato che puo'"
+		"cambiare qualasiasi abilita' o attributo di un personaggio.$c0007\n\r"
+		"Questa e' la lista dei campi,\n\r"
+		"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
+		"\n\r"
+		"align class exp expadd lev sex race hunger thirst hit mhit ghit tohit todam "
+		"ac bank gold age modage prac str stadd saves skills known specskill zone "
+		"pkill aff1 aff2 act numatks remaffect mana mmana gmana start move mmove "
+		"gmove height weight position startroom prince murder stole nodelete "
+		"objedit mobedit specflags kill\n\r"
+		"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
+		ch);
+}
+
+void set_mudlog(struct char_data* ch, const char* field, struct char_data* mob,
+		const std::string& detail = {}) {
+	if(!detail.empty()) {
+		mudlog(LOG_PLAYERS, "%s @ %s %s: %s", GET_NAME(ch), field, GET_NAME(mob),
+			detail.c_str());
+	} else {
+		mudlog(LOG_PLAYERS, "%s @ %s %s", GET_NAME(ch), field, GET_NAME(mob));
+	}
+}
+
+void set_fmt(struct char_data* ch, const boost::format& fmt) {
+	send_to_char(fmt.str().c_str(), ch);
+}
+
+struct SetParse {
+	std::string field;
+	std::string name;
+	std::string value;
+};
+
+std::string take_set_word(std::string_view& input) {
+	while(!input.empty()
+			&& std::isspace(static_cast<unsigned char>(input.front()))) {
+		input.remove_prefix(1);
+	}
+	std::string word;
+	while(!input.empty() && input.front() > ' ') {
+		word.push_back(static_cast<char>(LOWER(input.front())));
+		input.remove_prefix(1);
+	}
+	return word;
+}
+
+std::string take_set_argument(std::string_view& input) {
+	std::string word;
+	do {
+		word = take_set_word(input);
+	} while(!word.empty() && fill_word(word.c_str()));
+	return word;
+}
+
+bool parse_set_line(const char* argument, SetParse& out) {
+	if(argument == nullptr) {
+		return false;
+	}
+	std::string_view rest(argument);
+	out.field = take_set_argument(rest);
+	if(out.field.empty()) {
+		return false;
+	}
+	out.name = take_set_argument(rest);
+	if(out.name.empty()) {
+		return false;
+	}
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	out.value.assign(rest);
+	return true;
+}
+
+bool parse_int1(const std::string& s, int& v) {
+	if(s.empty()) {
+		return false;
+	}
+	const char* begin = s.data();
+	const char* end = begin + s.size();
+	const auto [ptr, ec] = std::from_chars(begin, end, v);
+	return ec == std::errc{} && ptr == end;
+}
+
+bool parse_int2(const std::string& s, int& a, int& b) {
+	if(s.empty()) {
+		return false;
+	}
+	const char* begin = s.data();
+	const char* end = begin + s.size();
+	const auto [ptr1, ec1] = std::from_chars(begin, end, a);
+	if(ec1 != std::errc{}) {
+		return false;
+	}
+	const char* ptr = ptr1;
+	while(ptr < end && std::isspace(static_cast<unsigned char>(*ptr))) {
+		++ptr;
+	}
+	if(ptr == end) {
+		return false;
+	}
+	const auto [ptr2, ec2] = std::from_chars(ptr, end, b);
+	return ec2 == std::errc{} && ptr2 == end;
+}
+
+bool parse_hex1(const std::string& s, unsigned int& v) {
+	if(s.empty()) {
+		return false;
+	}
+	try {
+		std::size_t pos = 0;
+		v = static_cast<unsigned int>(std::stoul(s, &pos, 16));
+		return pos == s.size();
+	} catch(...) {
+		return false;
+	}
+}
+
+bool parse_ulong1(const std::string& s, unsigned long& v) {
+	if(s.empty()) {
+		return false;
+	}
+	try {
+		std::size_t pos = 0;
+		v = std::stoul(s, &pos);
+		return pos == s.size();
+	} catch(...) {
+		return false;
+	}
+}
+
+bool parse_float1(const std::string& s, float& v) {
+	if(s.empty()) {
+		return false;
+	}
+	try {
+		std::size_t pos = 0;
+		v = std::stof(s, &pos);
+		return pos == s.size();
+	} catch(...) {
+		return false;
+	}
+}
+
+void handle_set_lev(struct char_data* ch, struct char_data* mob,
+		const std::string& value) {
+	int level_val = 0;
+	int class_num = 0;
+	if(!parse_int2(value, level_val, class_num)) {
+		send_to_char("Sintassi: @ lev <nome> <nuovo_livello> <numero_classe>\n\r", ch);
+		return;
+	}
+
+	if(IS_NPC(mob)) {
+		if(level_val >= 0 && class_num > 0 && class_num <= MAX_CLASS) {
+			GET_LEVEL(mob, class_num - 1) = level_val;
+			send_to_char("Livello impostato.\n\r", ch);
+			set_mudlog(ch, "lev", mob,
+				(boost::format("%d class %d") % level_val % class_num).str().c_str());
+		}
+		return;
+	}
+
+	if((GetMaxLevel(mob) > GetMaxLevel(ch)) && (ch != mob)) {
+		send_to_char(GET_NAME(ch), mob);
+		act("$N ha provato a cambiare il tuo livello.", FALSE, mob, 0, ch, TO_CHAR);
+		return;
+	}
+	if(GetMaxLevel(mob) < IMMORTALE && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI
+			&& level_val > 50) {
+		send_to_char("Non puoi creare nuovi immortali cosi', usa advance.\n\r", ch);
+		return;
+	}
+	if(level_val < 0) {
+		send_to_char("Bug fix. :-)\n\r", ch);
+		return;
+	}
+
+	if(level_val < GetMaxLevel(ch) || boost::iequals(GET_NAME(ch), "alar")) {
+		if(GetMaxLevel(ch) >= MAESTRO_DEI_CREATORI) {
+			if(class_num > 0 && class_num <= MAX_CLASS) {
+				GET_LEVEL(mob, class_num - 1) = level_val;
+				send_to_char("Livello impostato.\n\r", ch);
+				set_mudlog(ch, "lev", mob,
+					(boost::format("%d class %d") % level_val % class_num)
+						.str()
+						.c_str());
+			}
+		} else {
+			if(level_val > DIO) {
+				send_to_char(
+					"Mi dispiace, non puoi avanzare il livello oltre il 54.\n", ch);
+				return;
+			}
+			if(class_num > 0 && class_num <= MAX_CLASS) {
+				GET_LEVEL(mob, class_num - 1) = level_val;
+				send_to_char("Livello impostato.\n\r", ch);
+				set_mudlog(ch, "lev", mob,
+					(boost::format("%d class %d") % level_val % class_num)
+						.str()
+						.c_str());
+			}
+		}
+	}
+}
+
+enum class SkillField { Learned, Flags, Special };
+
+void handle_set_skill(struct char_data* ch, struct char_data* mob,
+		const std::string& value, const char* cmd_name, SkillField part) {
+	int skill_id = 0;
+	int skill_val = 0;
+	const char* label = "valore";
+	if(part == SkillField::Flags) {
+		label = "flags";
+	} else if(part == SkillField::Special) {
+		label = "special";
+	}
+
+	if(parse_int1(value, skill_id)) {
+		if(skill_id < 1 || skill_id >= MAX_SKILLS) {
+			set_fmt(ch, boost::format("Non esiste uno skill con il numero %d.\n\r")
+					% skill_id);
+		} else if(!mob->skills) {
+			set_fmt(ch, boost::format("%s non ha spazio per gli skills.\n\r")
+					% GET_NAME(mob));
+		} else if(part == SkillField::Learned) {
+			set_fmt(ch, boost::format("Il valore dello skill %d e' %d.\n\r")
+					% skill_id % mob->skills[skill_id].learned);
+		} else if(part == SkillField::Flags) {
+			set_fmt(ch, boost::format("Il valore dei flags dello skill %d e' %d.\n\r")
+					% skill_id % mob->skills[skill_id].flags);
+		} else {
+			set_fmt(ch, boost::format("Il valore di special dello skill %d e' %d.\n\r")
+					% skill_id % mob->skills[skill_id].special);
+		}
+		return;
+	}
+	if(parse_int2(value, skill_id, skill_val)) {
+		if(skill_id < 0 || skill_id >= MAX_SKILLS) {
+			set_fmt(ch, boost::format("Non esiste uno skill con il numero %d.\n\r")
+					% skill_id);
+		} else if(part == SkillField::Learned && (skill_val < 0 || skill_val > 100)) {
+			set_fmt(ch, boost::format(
+					"'%d' non e' un valore valido per lo skill %d.\n\r")
+					% skill_val % skill_id);
+		} else if(!mob->skills) {
+			set_fmt(ch,
+				boost::format(
+					"%s non ha spazio per gli skills.\n\rMandalo alla gilda prima.\n\r")
+					% GET_NAME(mob));
+		} else {
+			if(part == SkillField::Learned) {
+				mob->skills[skill_id].learned = skill_val;
+			} else if(part == SkillField::Flags) {
+				mob->skills[skill_id].flags = skill_val;
+			} else {
+				mob->skills[skill_id].special = skill_val;
+			}
+			const std::string msg =
+				(boost::format("Hai posto il %s dello skill %d a %d.\n\r") % label
+					% skill_id % skill_val)
+					.str();
+			set_fmt(ch, boost::format("%s") % msg);
+			set_mudlog(ch, cmd_name, mob, msg);
+		}
+		return;
+	}
+	set_fmt(ch, boost::format("Sintassi: @ %s <nome> <skill_id#> [<valore>]\n\r")
+			% cmd_name);
+}
+
+} // namespace
+
 ACTION_FUNC(do_set) {
-    std::string argument(arg);
-    std::vector<std::string> parts;
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_set (act.wizard.cpp)");
+		return;
+	}
+	if((GetMaxLevel(ch) < MAESTRO_DEL_CREATO) || IS_NPC(ch)) {
+		return;
+	}
 
-    // Splitta la stringa in parti ignorando spazi multipli
-    boost::split(parts, argument, boost::is_any_of(" "), boost::token_compress_on);
+	SetParse parsed;
+	if(!parse_set_line(arg, parsed)) {
+		send_set_help(ch);
+		return;
+	}
 
-    // Rimuove elementi vuoti (spazi iniziali/finali)
-    auto it = std::remove_if(parts.begin(), parts.end(), [](const std::string& s){ return s.empty(); });
-    parts.erase(it, parts.end());
+	struct char_data* mob = get_char_vis(ch, parsed.name.c_str());
+	if(!mob) {
+		send_to_char("Nessuno con quel nome qui.\n\r", ch);
+		return;
+	}
 
-    if ((GetMaxLevel(ch) < MAESTRO_DEL_CREATO) || (IS_NPC(ch))) {
-        return;
-    }
+	const std::string& field = parsed.field;
+	const std::string& value = parsed.value;
+	int parm = 0;
+	unsigned int uparm = 0;
+	unsigned long lparm = 0;
+	float fparm = 0.0f;
 
-    // parts[0] è il campo, parts[1] è il nome, parts[2] è il valore
-    if (parts.size() < 3) {
-        send_to_char(
-			"@\n\r"
-			"Sintassi :@ <campo> <personaggio> <valore>\n\r"
-			"$c0009Questo comando DEVE essere usato con molta attenzione dato che puo'"
-			"cambiare qualasiasi abilita' o attributo di un personaggio.$c0007\n\r"
-			"Questa e' la lista dei campi,\n\r"
-			"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
-			"\n\r"
-			"align class exp expadd lev sex race hunger thirst one hit mhit ghit tohit todam"
-			"ac bank gold age modage prac str add saves skills stadd int wis dex con chr pkill"
-			"mana mmana gmana start murder stole known specskill zone nodelete specflags kill"
-			"numatks objedit mobedit remaffect gmove height weight position startroom\n\r"
-			"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
-			ch);
-        return;
-    }
-
-    std::string field = parts[0];
-    std::string name = parts[1];
-    std::string value_str;
-
-    // Ricostruisce il valore (dal 3° elemento in poi)
-    for (size_t i = 2; i < parts.size(); ++i) {
-        value_str += parts[i] + (i < parts.size() - 1 ? " " : "");
-    }
-
-    struct char_data* mob = get_char_vis(ch, name.c_str());
-    if (!mob) {
-        send_to_char("Nessuno con quel nome qui.\n\r", ch);
-        return;
-    }
-
-    // Helper per conversione sicura
-    int parm = 0;
-    try {
-        // Gestione esadecimale per 'class'
-        if (field == "class") {
-            std::stringstream ss;
-            ss << std::hex << value_str;
-            ss >> parm;
-        } else {
-            // Gestione decimale standard
-            // Rimuovi eventuali caratteri non numerici se necessario, ma stoi gestisce +/-
-            parm = std::stoi(value_str);
-        }
-    } catch (...) {
-        // Se fallisce la conversione, parm resta 0 o valore parziale,
-        // logghiamo l'errore se non è un campo testuale
-        // send_to_char("Valore numerico non valido.\n\r", ch);
-    }
-
-    // --- LOGICA CAMPI ---
+	if(field == "lev") {
+		handle_set_lev(ch, mob, value);
+		return;
+	}
+	if(field == "skills") {
+		handle_set_skill(ch, mob, value, "skills", SkillField::Learned);
+		return;
+	}
+	if(field == "known") {
+		handle_set_skill(ch, mob, value, "known", SkillField::Flags);
+		return;
+	}
+	if(field == "specskill") {
+		handle_set_skill(ch, mob, value, "specskill", SkillField::Special);
+		return;
+	}
+	if(field == "saves") {
+		int idx = 0;
+		int val2 = 0;
+		if(parse_int2(value, idx, val2) && idx >= 0 && idx <= 4) {
+			mob->specials.apply_saving_throw[idx] = val2;
+			send_to_char("Tiro salvezza modificato.\n\r", ch);
+			set_mudlog(ch, "saves", mob, value.c_str());
+		} else {
+			send_to_char("Sintassi: @ saves <nome> <indice 0-4> <valore>\n\r", ch);
+		}
+		return;
+	}
+	if(field == "kill") {
+		if(PeacefulWorks) {
+			PeacefulWorks = false;
+			EasySummon = false;
+			mudlog(LOG_PLAYERS, "Peaceful rooms and Easy Summon disabled by %s",
+				GET_NAME(ch));
+			send_to_char("Stanze peaceful e summon facili disattivati.\n\r", ch);
+		} else {
+			PeacefulWorks = true;
+			EasySummon = true;
+			mudlog(LOG_PLAYERS, "Peaceful rooms and Easy Summon enabled by %s",
+				GET_NAME(ch));
+			send_to_char("Stanze peaceful e summon facili attivati.\n\r", ch);
+		}
+		return;
+	}
 
 	if(field == "align") {
-        GET_ALIGNMENT(mob) = parm;
-        send_to_char("Allineamento settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_ALIGNMENT(mob) = parm;
+			send_to_char("Allineamento settato.\n\r", ch);
+			set_mudlog(ch, "align", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Allineamento: %d\n\r") % GET_ALIGNMENT(mob));
+		}
 	}
 	else if(field == "class") {
-		if(parm) {
-			mob->player.iClass = parm;
-            send_to_char("Classe settata (hex).\n\r", ch);
-		}
-		else {
-			send_to_char("ATTENZIONE. USARE VALORI ESADECIMALI\nClasse attuale non modificata.\n\r", ch);
+		if(parse_hex1(value, uparm) && uparm) {
+			mob->player.iClass = uparm;
+			send_to_char("Classe settata (hex).\n\r", ch);
+			set_mudlog(ch, "class", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("ATTENZIONE. USARE VALORI ESADECIMALI\nClasse:%04Xh\n\r") % mob->player.iClass);
 		}
 	}
 	else if(field == "exp") {
-		GET_EXP(mob) = parm;
-        send_to_char("Exp settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_EXP(mob) = parm;
+			send_to_char("Exp settata.\n\r", ch);
+			set_mudlog(ch, "exp", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "expadd") {
-		GET_EXP(mob) += parm;
-        send_to_char("Exp aggiunta.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_EXP(mob) += parm;
+			send_to_char("Exp aggiunta.\n\r", ch);
+			set_mudlog(ch, "expadd", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "specflags") {
-		GET_SPECFLAGS(mob) = parm;
-		send_to_char("Flag cambiato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_SPECFLAGS(mob) = parm;
+			send_to_char("Flag cambiato.\n\r", ch);
+			set_mudlog(ch, "specflags", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "zone") {
-		GET_ZONE(mob) = parm;
-        send_to_char((boost::format("Zona di accesso cambiata in: %d.\n\r") % parm).str().c_str(), ch);
+		if(parse_int1(value, parm)) {
+			GET_ZONE(mob) = parm;
+			set_fmt(ch, boost::format("Zona di accesso cambiata in: %d.\n\r") % parm);
+			set_mudlog(ch, "zone", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "pkill") {
 		if(IS_PC(mob)) {
 			if(IS_SET(mob->player.user_flags, RACE_WAR)) {
 				REMOVE_BIT(mob->player.user_flags, RACE_WAR);
-                send_to_char((boost::format("Rimosso PKILL da %s.\n\r") % GET_NAME(mob)).str().c_str(), ch);
-			}
-			else {
+				set_fmt(ch, boost::format("Rimosso PKILL da %s.\n\r") % GET_NAME(mob));
+			} else {
 				SET_BIT(mob->player.user_flags, RACE_WAR);
-                send_to_char((boost::format("Assegnato PKILL a %s.\n\r") % GET_NAME(mob)).str().c_str(), ch);
+				set_fmt(ch, boost::format("Assegnato PKILL a %s.\n\r") % GET_NAME(mob));
 			}
-		}
-		else {
-            send_to_char((boost::format("%s non e' un giocatore.\n\r") % GET_NAME_DESC(mob)).str().c_str(), ch);
+			set_mudlog(ch, "pkill", mob);
+		} else {
+			set_fmt(ch, boost::format("%s non e' un giocatore.\n\r") % GET_NAME_DESC(mob));
 		}
 	}
 	else if(field == "aff1") {
-		mob->specials.affected_by = parm;
-		send_to_char("Affected_by cambiato.\n\r", ch);
+		if(parse_ulong1(value, lparm)) {
+			mob->specials.affected_by = lparm;
+			send_to_char("Affected_by cambiato.\n\r", ch);
+			set_mudlog(ch, "aff1", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Affected_by: %ld\n\r") % mob->specials.affected_by);
+		}
 	}
 	else if(field == "aff2") {
-		mob->specials.affected_by2 = parm;
-		send_to_char("Affected_by2 cambiato.\n\r", ch);
+		if(parse_ulong1(value, lparm)) {
+			mob->specials.affected_by2 = lparm;
+			send_to_char("Affected_by2 cambiato.\n\r", ch);
+			set_mudlog(ch, "aff2", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Affected_by2: %ld\n\r") % mob->specials.affected_by2);
+		}
 	}
 	else if(field == "act") {
-		mob->specials.act = parm;
-        send_to_char("Act flags cambiati.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->specials.act = parm;
+			send_to_char("Act flags cambiati.\n\r", ch);
+			set_mudlog(ch, "act", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "numatks") {
-        // Numatks è float nel vecchio codice, ma qui usiamo parm (int).
-        // Se serve float, dobbiamo usare stof
-        try { mob->mult_att = std::stof(value_str); } catch(...) { mob->mult_att = (float)parm; }
-        send_to_char((boost::format("Numero attacchi cambiato in: %f\n\r") % mob->mult_att).str().c_str(), ch);
+		if(parse_float1(value, fparm)) {
+			mob->mult_att = fparm;
+			set_fmt(ch, boost::format("Numero attacchi cambiato in: %f\n\r") % mob->mult_att);
+			set_mudlog(ch, "numatks", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Numero attacchi: %f\n\r") % mob->mult_att);
+		}
 	}
 	else if(field == "remaffect") {
-		mob->affected = NULL;
+		mob->affected = nullptr;
 		mob->specials.affected_by = 0;
 		mob->specials.affected_by2 = 0;
 		send_to_char("Tutti gli affect sono stati rimossi dal personaggio!\n\r", ch);
-	}
-	else if(field == "lev") {
-        // Parsing speciale per lev: <livello> <classe>
-        // parts[2] è livello, parts[3] è classe
-        if (parts.size() < 4) {
-			send_to_char("Sintassi: @ lev <nome> <nuovo_livello> <numero_classe>\n\r", ch);
-			return;
-		}
-        int level_val = 0, class_num = 0;
-        try {
-            level_val = std::stoi(parts[2]);
-            class_num = std::stoi(parts[3]);
-        } catch(...) {}
-
-		if(!IS_NPC(mob)) {
-			if((GetMaxLevel(mob) > GetMaxLevel(ch)) && (ch != mob)) {
-				send_to_char(GET_NAME(ch), mob);
-                act("$N ha provato a cambiare il tuo livello.", FALSE, mob, 0, ch, TO_CHAR);
-				return;
-			}
-			else if(GetMaxLevel(mob) < IMMORTALE && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI && level_val > 50) {
-				send_to_char("Non puoi creare nuovi immortali cosi', usa advance.\n\r", ch);
-                return;
-			}
-		}
-
-        if(level_val >= 0 && class_num > 0 && class_num <= MAX_CLASS) {
-             GET_LEVEL(mob, class_num - 1) = level_val;
-             send_to_char("Livello impostato.\n\r", ch);
-        }
+		set_mudlog(ch, "remaffect", mob);
 	}
 	else if(field == "sex") {
-		GET_SEX(mob) = parm;
-        send_to_char("Sesso cambiato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_SEX(mob) = parm;
+			send_to_char("Sesso cambiato.\n\r", ch);
+			set_mudlog(ch, "sex", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "race") {
-		GET_RACE(mob) = parm;
-        send_to_char("Razza cambiata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_RACE(mob) = parm;
+			send_to_char("Razza cambiata.\n\r", ch);
+			set_mudlog(ch, "race", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "hunger") {
-		GET_COND(mob, FULL) = parm;
-        send_to_char("Fame settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_COND(mob, FULL) = parm;
+			send_to_char("Fame settata.\n\r", ch);
+			set_mudlog(ch, "hunger", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "thirst") {
-		GET_COND(mob, THIRST) = parm;
-        send_to_char("Sete settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_COND(mob, THIRST) = parm;
+			send_to_char("Sete settata.\n\r", ch);
+			set_mudlog(ch, "thirst", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "hit") {
-		GET_HIT(mob) = parm;
-		alter_hit(mob, 0);
-        send_to_char("Hit points settati.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_HIT(mob) = parm;
+			alter_hit(mob, 0);
+			send_to_char("Hit points settati.\n\r", ch);
+			set_mudlog(ch, "hit", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "mhit") {
-		mob->points.max_hit = parm;
-        send_to_char("Max Hit points settati.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->points.max_hit = parm;
+			send_to_char("Max Hit points settati.\n\r", ch);
+			set_mudlog(ch, "mhit", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Bonus punti ferita: %d\r\n") % GET_MAX_HIT(mob));
+		}
 	}
 	else if(field == "ghit") {
-		mob->points.hit_gain = parm;
-        send_to_char("Hit gain settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->points.hit_gain = parm;
+			send_to_char("Hit gain settato.\n\r", ch);
+			set_mudlog(ch, "ghit", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Recupero punti ferita: %d\r\n") % mob->points.hit_gain);
+		}
 	}
 	else if(field == "tohit") {
-		GET_HITROLL(mob) = parm;
-        send_to_char("Hitroll settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_HITROLL(mob) = parm;
+			send_to_char("Hitroll settato.\n\r", ch);
+			set_mudlog(ch, "tohit", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "todam") {
-		GET_DAMROLL(mob) = parm;
-        send_to_char("Damroll settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_DAMROLL(mob) = parm;
+			send_to_char("Damroll settato.\n\r", ch);
+			set_mudlog(ch, "todam", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "ac") {
-		GET_AC(mob) = parm;
-        send_to_char("AC settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_AC(mob) = parm;
+			send_to_char("AC settata.\n\r", ch);
+			set_mudlog(ch, "ac", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "bank") {
-		GET_BANK(mob) = parm;
-        send_to_char("Banca settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_BANK(mob) = parm;
+			send_to_char("Banca settata.\n\r", ch);
+			set_mudlog(ch, "bank", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Monete in banca: %d\r\n") % GET_BANK(mob));
+		}
 	}
 	else if(field == "gold") {
-		GET_GOLD(mob) = parm;
-        send_to_char("Gold settati.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_GOLD(mob) = parm;
+			send_to_char("Gold settati.\n\r", ch);
+			set_mudlog(ch, "gold", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "prac") {
-		mob->specials.spells_to_learn = parm;
-        send_to_char("Pratiche settate.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->specials.spells_to_learn = parm;
+			send_to_char("Pratiche settate.\n\r", ch);
+			set_mudlog(ch, "prac", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Sessioni di pratica: %d\r\n") % mob->specials.spells_to_learn);
+		}
 	}
 	else if(field == "age") {
-        // Modifica la data di nascita per cambiare l'età
-		mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
-        send_to_char("Eta' modificata.\n\r", ch);
+		if(parse_int1(value, parm) && parm > 0) {
+			mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
+			send_to_char("Eta' modificata.\n\r", ch);
+			set_mudlog(ch, "age", mob, value.c_str());
+		} else {
+			send_to_char("Usa stat per vedere l'eta'.\r\n", ch);
+		}
 	}
 	else if(field == "modage") {
-		mob->AgeModifier = parm;
-        send_to_char("Modificatore eta' settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->AgeModifier = parm;
+			send_to_char("Modificatore eta' settato.\n\r", ch);
+			set_mudlog(ch, "modage", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Modificatore dell'eta': %d\n\r") % int(mob->AgeModifier));
+		}
 	}
 	else if(field == "str") {
-        mob->abilities.str = parm;
-        mob->tmpabilities.str = parm;
-        send_to_char("Forza settata.\n\r", ch);
-	}
-	else if(field == "saves") {
-        if (parts.size() > 3) {
-            int val2 = std::stoi(parts[3]);
-            if (parm >= 0 && parm <= 4) {
-		        mob->specials.apply_saving_throw[parm] = val2;
-                send_to_char("Tiro salvezza modificato.\n\r", ch);
-            }
-        }
-	}
-	else if(field == "skills") {
-        // Syntax: set skills nome id valore
-        if (parts.size() > 3) {
-            int val2 = std::stoi(parts[3]);
-            if(parm > 0 && parm < MAX_SKILLS && mob->skills) {
-				mob->skills[parm].learned = val2;
-				send_to_char("Skill settata.\n\r", ch);
-            }
-        }
-	}
-	else if(field == "known") {
-        if (parts.size() > 3) {
-            int val2 = std::stoi(parts[3]);
-            if(parm > 0 && parm < MAX_SKILLS && mob->skills) {
-				mob->skills[parm].flags = val2;
-				send_to_char("Skill flags settati.\n\r", ch);
-            }
-        }
-	}
-	else if(field == "specskill") {
-        if (parts.size() > 3) {
-            int val2 = std::stoi(parts[3]);
-            if(parm > 0 && parm < MAX_SKILLS && mob->skills) {
-				mob->skills[parm].special = val2;
-				send_to_char("Skill special settato.\n\r", ch);
-            }
-        }
+		if(parse_int1(value, parm)) {
+			mob->abilities.str = parm;
+			mob->tmpabilities.str = parm;
+			send_to_char("Forza settata.\n\r", ch);
+			set_mudlog(ch, "str", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "stadd") {
-		mob->abilities.str_add = parm;
-		mob->tmpabilities.str_add = parm;
-        send_to_char("Str add settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->abilities.str_add = parm;
+			mob->tmpabilities.str_add = parm;
+			send_to_char("Str add settata.\n\r", ch);
+			set_mudlog(ch, "stadd", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "int") {
-		mob->abilities.intel = parm;
-		mob->tmpabilities.intel = parm;
-        send_to_char("Int settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->abilities.intel = parm;
+			mob->tmpabilities.intel = parm;
+			send_to_char("Int settata.\n\r", ch);
+			set_mudlog(ch, "int", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "wis") {
-		mob->abilities.wis = parm;
-		mob->tmpabilities.wis = parm;
-        send_to_char("Wis settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->abilities.wis = parm;
+			mob->tmpabilities.wis = parm;
+			send_to_char("Wis settata.\n\r", ch);
+			set_mudlog(ch, "wis", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "dex") {
-		mob->abilities.dex = parm;
-		mob->tmpabilities.dex = parm;
-        send_to_char("Dex settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->abilities.dex = parm;
+			mob->tmpabilities.dex = parm;
+			send_to_char("Dex settata.\n\r", ch);
+			set_mudlog(ch, "dex", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "con") {
-		mob->abilities.con = parm;
-		mob->tmpabilities.con = parm;
-        send_to_char("Con settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->abilities.con = parm;
+			mob->tmpabilities.con = parm;
+			send_to_char("Con settata.\n\r", ch);
+			set_mudlog(ch, "con", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "chr") {
-		mob->abilities.chr = parm;
-		mob->tmpabilities.chr = parm;
-        send_to_char("Chr settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->abilities.chr = parm;
+			mob->tmpabilities.chr = parm;
+			send_to_char("Chr settato.\n\r", ch);
+			set_mudlog(ch, "chr", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "nodelete") {
 		if(IS_SET(mob->player.user_flags, NO_DELETE)) {
 			send_to_char("Flag no-delete disattivato.\n\r", ch);
 			REMOVE_BIT(mob->player.user_flags, NO_DELETE);
-		}
-		else {
+		} else {
 			send_to_char("Flag no-delete attivato.\n\r", ch);
 			SET_BIT(mob->player.user_flags, NO_DELETE);
 		}
+		set_mudlog(ch, "nodelete", mob);
 	}
 	else if(field == "murder") {
-		if(IS_SET(mob->player.user_flags,MURDER_1) && IS_PC(mob)) {
+		if(IS_SET(mob->player.user_flags, MURDER_1) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, MURDER_1);
 			send_to_char("Flag 'assassino' rimosso.\n\r", ch);
-		}
-		else {
+		} else {
 			SET_BIT(mob->player.user_flags, MURDER_1);
 			send_to_char("Flag 'assassino' assegnato!\n\r", ch);
 		}
+		set_mudlog(ch, "murder", mob);
 	}
 	else if(field == "objedit") {
-		if(IS_SET(mob->player.user_flags,CAN_OBJ_EDIT) && IS_PC(mob)) {
+		if(IS_SET(mob->player.user_flags, CAN_OBJ_EDIT) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
 			send_to_char("Flag di edit oggetti rimosso.\n\r", ch);
-		}
-		else {
+		} else {
 			SET_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
 			send_to_char("Flag di edit oggetti attivato.\n\r", ch);
 		}
+		set_mudlog(ch, "objedit", mob);
 	}
 	else if(field == "mobedit") {
-		if(IS_SET(mob->player.user_flags,CAN_MOB_EDIT) && IS_PC(mob)) {
+		if(IS_SET(mob->player.user_flags, CAN_MOB_EDIT) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, CAN_MOB_EDIT);
 			send_to_char("Flag di edit mob rimosso.\n\r", ch);
-		}
-		else {
+		} else {
 			SET_BIT(mob->player.user_flags, CAN_MOB_EDIT);
 			send_to_char("Flag di edit mob attivato.\n\r", ch);
 		}
+		set_mudlog(ch, "mobedit", mob);
 	}
 	else if(field == "stole") {
-		if(IS_SET(mob->player.user_flags,STOLE_1) && IS_PC(mob)) {
+		if(IS_SET(mob->player.user_flags, STOLE_1) && IS_PC(mob)) {
 			REMOVE_BIT(mob->player.user_flags, STOLE_1);
 			send_to_char("Flag 'ladro' rimosso.\n\r", ch);
-		}
-		else {
+		} else {
 			SET_BIT(mob->player.user_flags, STOLE_1);
 			send_to_char("Flag 'ladro' assegnato!\n\r", ch);
 		}
-	}
-	else if(field == "kill") {
-        // Questo comando in realtà agisce globalmente, non sul mob target
-		if(PeacefulWorks) {
-			PeacefulWorks = false;
-			EasySummon = false;
-			mudlog(LOG_PLAYERS, "Peaceful rooms and Easy Summon disabled by %s", GET_NAME(ch));
-		} else {
-			PeacefulWorks = true;
-			EasySummon = true;
-			mudlog(LOG_ERROR, "Peaceful rooms and Easy Summon enabled by %s", GET_NAME(ch));
-		}
+		set_mudlog(ch, "stole", mob);
 	}
 	else if(field == "prince") {
-		if(HAS_PRINCE(mob)) {
-			free(GET_PRINCE(mob));
-			GET_PRINCE(mob)=(char*)NULL;
+		if(value.empty()) {
+			const char* title = HAS_PRINCE(mob) ? GET_PRINCE(mob) : "(nessuno)";
+			set_fmt(ch, boost::format("Prince: %s\n\rUsa @ prince <nome> . per rimuovere.\n\r") % title);
+		} else {
+			if(HAS_PRINCE(mob)) {
+				free(GET_PRINCE(mob));
+				GET_PRINCE(mob) = nullptr;
+			}
+			if(value != ".") {
+				GET_PRINCE(mob) = strdup(value.c_str());
+				send_to_char("Prince title settato.\n\r", ch);
+				set_mudlog(ch, "prince", mob, value.c_str());
+			} else {
+				send_to_char("Prince title rimosso.\n\r", ch);
+				set_mudlog(ch, "prince", mob, ".");
+			}
 		}
-        if(value_str != ".") {
-            GET_PRINCE(mob)=strdup(value_str.c_str());
-            send_to_char("Prince title settato.\n\r", ch);
-        } else {
-            send_to_char("Prince title rimosso.\n\r", ch);
-        }
 	}
 	else if(field == "mana") {
-		GET_MANA(mob) = parm;
-		alter_mana(mob,0);
-        send_to_char("Mana settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_MANA(mob) = parm;
+			alter_mana(mob, 0);
+			send_to_char("Mana settato.\n\r", ch);
+			set_mudlog(ch, "mana", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Punti magia: %d\n\r") % GET_MANA(mob));
+		}
 	}
 	else if(field == "mmana") {
-		mob->points.max_mana = parm;
-        send_to_char("Max Mana settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->points.max_mana = parm;
+			send_to_char("Max Mana settato.\n\r", ch);
+			set_mudlog(ch, "mmana", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Punti magia bonus: %d\r\n") % GET_MAX_MANA(mob));
+		}
 	}
 	else if(field == "gmana") {
-		mob->points.mana_gain = parm;
-        send_to_char("Mana gain settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->points.mana_gain = parm;
+			send_to_char("Mana gain settato.\n\r", ch);
+			set_mudlog(ch, "gmana", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Recupero punti magia: %d\r\n") % mob->points.mana_gain);
+		}
 	}
 	else if(field == "start") {
-		mob->specials.start_room = parm;
-        send_to_char("Start room settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->specials.start_room = parm;
+			send_to_char("Start room settata.\n\r", ch);
+			set_mudlog(ch, "start", mob, value.c_str());
+		} else {
+			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
 	}
 	else if(field == "move") {
-		GET_MOVE(mob) = parm;
-		alter_move(mob,0);
-        send_to_char("Move settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_MOVE(mob) = parm;
+			alter_move(mob, 0);
+			send_to_char("OK.\n\r", ch);
+			set_mudlog(ch, "move", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Punti movimento: %d\n\r") % GET_MOVE(mob));
+		}
 	}
 	else if(field == "mmove") {
-		mob->points.max_move = parm;
-        send_to_char("Max Move settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->points.max_move = parm;
+			send_to_char("OK.\n\r", ch);
+			set_mudlog(ch, "mmove", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Bonus punti movimento: %d\n\r") % GET_MAX_MOVE(mob));
+		}
 	}
 	else if(field == "gmove") {
-		mob->points.move_gain = parm;
-        send_to_char("Move gain settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			mob->points.move_gain = parm;
+			send_to_char("OK.\n\r", ch);
+			set_mudlog(ch, "gmove", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Recupero punti movimento: %d\n\r") % mob->points.move_gain);
+		}
 	}
 	else if(field == "height") {
-		GET_HEIGHT(mob) = parm;
-        send_to_char("Altezza settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_HEIGHT(mob) = parm;
+			send_to_char("OK.\n\r", ch);
+			set_mudlog(ch, "height", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("L'altezza e' uguale a %d.\n\r") % GET_HEIGHT(mob));
+		}
 	}
 	else if(field == "weight") {
-		GET_WEIGHT(mob) = parm;
-        send_to_char("Peso settato.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			GET_WEIGHT(mob) = parm;
+			send_to_char("OK.\n\r", ch);
+			set_mudlog(ch, "weight", mob, value.c_str());
+		} else {
+			set_fmt(ch, boost::format("Il peso e' uguale a %d.\n\r") % GET_WEIGHT(mob));
+		}
 	}
 	else if(field == "position") {
-		if(parm >= 0 && parm <= 9) {
-			GET_POS(mob) = parm;
-            send_to_char("Posizione settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			if(parm < 0 || parm > E_POSITIONS_MAX) {
+				send_to_char(
+					"Posizione non valida. Ecco l'elenco:\r"
+					"0 Dead\r"
+					"1 Mortally wounded\r"
+					"2 Incapacitated\r"
+					"3 Stunned\r"
+					"4 Sleeping\r"
+					"5 Resting\r"
+					"6 Sitting\r"
+					"7 Fighting\r"
+					"8 Standing\r"
+					"9 Mounted\r", ch);
+			} else {
+				GET_POS(mob) = parm;
+				send_to_char("OK.\n\r", ch);
+				set_mudlog(ch, "position", mob, value.c_str());
+			}
 		} else {
-            send_to_char("Posizione invalida (0-9).\n\r", ch);
-        }
+			set_fmt(ch, boost::format("La sua posizione e': %d\n\r") % GET_POS(mob));
+		}
 	}
 	else if(field == "startroom") {
-		if(parm >= 0) {
-			mob->lStartRoom = parm;
-			send_to_char("Start room (long) settata.\n\r", ch);
+		if(parse_int1(value, parm)) {
+			if(parm < 0) {
+				send_to_char("Il numero della stanza deve essere maggiore di 0.\r\n",
+					ch);
+			} else {
+				mob->lStartRoom = parm;
+				send_to_char("OK.\n\r", ch);
+				set_mudlog(ch, "startroom", mob, value.c_str());
+			}
+		} else {
+			set_fmt(ch, boost::format("Il numero della stanza di partenza e': %ld\n\r") % mob->lStartRoom);
 		}
 	}
 	else {
-		send_to_char("Che cosa vuoi assegnare?\n\r",ch);
+		send_to_char("Che cosa vuoi assegnare?\n\r", ch);
 	}
 }
 
@@ -2907,19 +3681,19 @@ ACTION_FUNC(do_return) {
 ACTION_FUNC(do_force) {
 	struct descriptor_data* i;
 	struct char_data* vict;
-	char name[100], to_force[100], buf[150];
+	char buf[150];
 
 	if(!IS_PC(ch) && cmd != 0) {
 		return;
 	}
 
-	half_chop(arg, name, to_force, sizeof name - 1, sizeof to_force - 1);
+	const auto [victimName, forceCmd] = chop_argument(arg, 99, 99);
 
-	if(!*name || !*to_force) {
+	if(victimName.empty() || forceCmd.empty()) {
 		send_to_char("Chi vuoi forzare ed a fare cosa ?\n\r", ch);
 	}
-	else if(str_cmp("all", name)) {
-		if(!(vict = get_char_vis(ch, name))) {
+	else if(str_cmp("all", victimName.c_str())) {
+		if(!(vict = get_char_vis(ch, victimName.c_str()))) {
 			send_to_char("Non c'e' nessuno con quel nome...\n\r", ch);
 		}
 		else {
@@ -2930,10 +3704,10 @@ ACTION_FUNC(do_force) {
 			}
 			else {
 				if(!IS_NPC(ch) && !IS_SET(ch->specials.act, PLR_STEALTH)) {
-					safe_sprintf(buf, "$n ti ha obbligat$B a '%s'.", to_force);
+					safe_sprintf(buf, "$n ti ha obbligat$B a '%s'.", forceCmd.c_str());
 				}
 				send_to_char("Ok.\n\r", ch);
-				command_interpreter(vict, to_force);
+				command_interpreter(vict, forceCmd.c_str());
 			}
 		}
 	}
@@ -2949,10 +3723,10 @@ ACTION_FUNC(do_force) {
 				}
 				else {
 					if(!IS_NPC(ch) && !IS_SET(ch->specials.act, PLR_STEALTH)) {
-						sprintf(buf, "$n ti ha obbligat$B a '%s'.", to_force);
+						sprintf(buf, "$n ti ha obbligat$B a '%s'.", forceCmd.c_str());
 						act(buf, FALSE, ch, 0, vict, TO_VICT);
 					}
-					command_interpreter(vict, to_force);
+					command_interpreter(vict, forceCmd.c_str());
 				}
 			}
 		}
@@ -3096,7 +3870,7 @@ ACTION_FUNC(do_oload) {
 	}
 	if(obj_index[number].iVNum >= 150 && obj_index[number].iVNum < 200
 			&& !isname("Alar", GET_NAME(ch))
-			&& !isname("Salvo", GET_NAME(ch))) { /*GGPATCH*/
+			&& !isname("Croneh", GET_NAME(ch))) { /*GGPATCH*/
 		send_to_char("Mi dispiace, ma e' un oggetto riservato.\n\r", ch); // Gaia 2001
 		return;
 	}
@@ -6095,19 +6869,19 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 
 ACTION_FUNC(do_mforce) {
 	struct char_data* vict;
-	char name[100], to_force[100], buf[150];
+	char buf[150];
 
 	if(IS_NPC(ch) && (cmd != 0)) {
 		return;
 	}
-	half_chop(arg, name, to_force, sizeof name - 1, sizeof to_force - 1);
-	mudlog(LOG_ALWAYS, "%s -> %s = %s", arg, name, to_force);
+	const auto [victimName, forceCmd] = chop_argument(arg, 99, 99);
+	mudlog(LOG_ALWAYS, "%s -> %s = %s", arg, victimName.c_str(), forceCmd.c_str());
 
-	if(!*name || !*to_force) {
+	if(victimName.empty() || forceCmd.empty()) {
 		send_to_char("Who do you wish to force to do what?\n\r", ch);
 	}
-	else if(str_cmp("all", name)) {
-		if(!(vict = get_char_vis(ch, name))) {
+	else if(str_cmp("all", victimName.c_str())) {
+		if(!(vict = get_char_vis(ch, victimName.c_str()))) {
 			send_to_char("No-one by that name here..\n\r", ch);
 		}
 		else {
@@ -6115,10 +6889,10 @@ ACTION_FUNC(do_mforce) {
 				send_to_char("Oh no you don't!!\n\r", ch);
 			}
 			else {
-				safe_sprintf(buf, "$n has forced you to '%s'.", to_force);
+				safe_sprintf(buf, "$n has forced you to '%s'.", forceCmd.c_str());
 				act(buf, FALSE, ch, 0, vict, TO_VICT);
 				send_to_char("Ok.\n\r", ch);
-				command_interpreter(vict, to_force);
+				command_interpreter(vict, forceCmd.c_str());
 			}
 		}
 	}
@@ -6126,9 +6900,9 @@ ACTION_FUNC(do_mforce) {
 		for(vict = real_roomp(ch->in_room)->people; vict;
 				vict = vict->next_in_room) {
 			if(vict != ch && !IS_PC(vict)) {
-				sprintf(buf, "$n has forced you to '%s'.", to_force);
+				sprintf(buf, "$n has forced you to '%s'.", forceCmd.c_str());
 				act(buf, FALSE, ch, 0, vict, TO_VICT);
-				command_interpreter(vict, to_force);
+				command_interpreter(vict, forceCmd.c_str());
 			}
 		}
 		send_to_char("Ok.\n\r", ch);
