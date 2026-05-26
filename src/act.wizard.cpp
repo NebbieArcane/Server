@@ -4990,6 +4990,42 @@ ACTION_FUNC(do_refund) {
 			}
             mudlog(LOG_PLAYERS, "do_refund: Eseguo copia RENT: %s", tar_buf);
 			system(tar_buf);
+			{
+				std::string rent_file = std::string(RENT_DIR) + "/" + lower(name);
+				FILE* rent_fl = fopen(rent_file.c_str(), "r+b");
+				if(!rent_fl) {
+					mudlog(LOG_SYSERR,
+						   "do_refund: impossibile aprire rent per reset arretrati %s",
+						   rent_file.c_str());
+				}
+				else {
+					obj_file_u layout {};
+					const long total_cost_offset = static_cast<long>(sizeof(layout.owner) +
+														   sizeof(layout.gold_left));
+					const int zero_cost = 0;
+					const int now = static_cast<int>(time(nullptr));
+					bool reset_ok = true;
+
+					if(fseek(rent_fl, total_cost_offset, SEEK_SET) != 0 ||
+							fwrite(&zero_cost, sizeof(zero_cost), 1, rent_fl) != 1 ||
+							fwrite(&now, sizeof(now), 1, rent_fl) != 1 ||
+							fflush(rent_fl) != 0) {
+						reset_ok = false;
+					}
+
+					if(fclose(rent_fl) != 0) {
+						reset_ok = false;
+					}
+
+					if(!reset_ok) {
+						mudlog(LOG_SYSERR, "do_refund: reset arretrati rent fallito per %s",
+							   rent_file.c_str());
+					}
+					else {
+						mudlog(LOG_PLAYERS, "do_refund: azzerati arretrati rent per %s", name);
+					}
+				}
+			}
 			sprintf(tar_buf, "Il file dell'equipaggiamento di %s e' stato recuperato.\n\r", name);
 			send_to_char(tar_buf, ch);
 			mudlog(LOG_PLAYERS, "%s has refunded equipment's file on %s.", GET_NAME(ch), name);
