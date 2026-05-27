@@ -39,6 +39,8 @@ ACTION_FUNC(do_goto) ;
 ACTION_FUNC(do_highfive) ;
 ACTION_FUNC(do_immort) ;
 ACTION_FUNC(do_imptest) ;
+ACTION_FUNC(do_legacyprobe) ;
+ACTION_FUNC(do_legacyimport) ;
 ACTION_FUNC(do_invis) ;
 ACTION_FUNC(do_listhosts) ;
 ACTION_FUNC(do_mercy) ;
