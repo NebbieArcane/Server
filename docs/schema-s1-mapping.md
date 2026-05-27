@@ -39,11 +39,11 @@ Una riga per personaggio. PK: `id` (BIGINT), unique su `name` (VARCHAR 20).
 | `pwd[11]` | `desc->pwd` (solo save) | `.dat` + `toon.password` | `character_core` | `VARCHAR(11)` | Save da `ch->desc->pwd`, non da struct file in load |
 | `title[80]` | `player.title` (heap) | `.dat` + `toon.title` | `character_core` | `VARCHAR(80)` | |
 | `description[240]` | `player.description` | `.dat` | `character_core` | `VARCHAR(240)` NULL | |
-| `extra_str[255]` | — | `.dat` | `character_core` | `VARCHAR(255)` | Verificare uso in game; in mapping store non visto |
+| `extra_str[255]` | — (non in runtime) | `.dat` solo | — | — | Slot file legacy; **non** persistito in DB (vedi `schema-s1-ddl-drop-extra-str.sql`) |
 | `iClass` | `player.iClass` | `.dat` | `character_core` | `INT` | |
 | `sex` | `player.sex` | `.dat` | `character_core` | `TINYINT UNSIGNED` | |
 | `race` | `GET_RACE(ch)` | `.dat` | `character_core` | `INT` | |
-| `level[ABS_MAX_CLASS]` (20) | `player.level[]` | `.dat` | `character_classes` | vedi §2 | Normalizzare: una riga per indice classe con `level > 0` |
+| `level[ABS_MAX_CLASS]` (20 slot file) | `player.level[0..MAX_CLASS-1]` | `.dat` | `character_classes` | vedi §2 | DB: solo indici 0–10 con `level > 0`; slot 11–19 ignorati |
 | `birth` | `player.time.birth` | `.dat` | `character_core` | `INT UNSIGNED` | epoch seconds |
 | `played` | `player.time.played` | `.dat` | `character_core` | `INT` | |
 | `last_logon` | aggiornato in save | `.dat` | `character_core` | `INT UNSIGNED` | |
@@ -65,18 +65,19 @@ Una riga per personaggio. PK: `id` (BIGINT), unique su `name` (VARCHAR 20).
 | `act` | `specials.act` | `.dat` | `character_core` | `INT UNSIGNED` | PLR_* flags |
 | `affected_by` | `specials.affected_by` | `.dat` | `character_core` | `INT UNSIGNED` | bitvector permanente |
 | `affected_by2` | `specials.affected_by2` | `.dat` | `character_core` | `INT UNSIGNED` | |
-| `conditions[MAX_CONDITIONS]` (5 in file, 3 usati in loop) | `GET_COND` / `specials.conditions` | `.dat` | `character_core` | `TINYINT` ×5 o JSON | Save/load loop `0..2` oggi |
+| `conditions[0..2]` (DRUNK/FULL/THIRST; file ne ha 5, save/load solo 3) | `GET_COND` / `specials.conditions` | `.dat` | `character_core` | `condition_drunk`, `condition_full`, `condition_thirst` `TINYINT` | Range -1..24 |
 | `apply_saving_throw[MAX_SAVES]` (8) | `specials.apply_saving_throw` | `.dat` | `character_core` | `SMALLINT` ×8 o tabella | Load azzera poi save ripristina |
 
 ---
 
 ## 2. `character_classes` (proposta)
 
-`level[20]` in file → tabella figlia.
+`char_file_u.level[20]` (`ABS_MAX_CLASS`) in file → tabella figlia; **semantica** solo `MAX_CLASS` (=11) classi.
 
 | Campo file | SQL (proposta) | Note |
 |------------|----------------|------|
-| `level[i]` | `class_index TINYINT`, `level TINYINT UNSIGNED` | Solo indici `MAGE_LEVEL_IND..MAX_CLASS-1` copiati in store; resto 0 |
+| `level[i]` per `i < MAX_CLASS` | `class_index`, `level` | `store_to_char` / `char_to_store`: indici 0–10; slot 11–19 azzerati in RAM, non classi |
+| `level[i]` per `i >= MAX_CLASS` | — | Non importare in DB (`legacy_import`: loop `i < MAX_CLASS`) |
 
 ---
 
@@ -284,5 +285,6 @@ Da tenere fuori schema S1 o marcare *session-only*:
 | `load_char_extra` / `write_char_extra` | `src/reception.cpp` ~1946–2187 |
 | `load_char_objs` | `src/reception.cpp` ~703+ |
 | `struct char_file_u` | `src/structs.hpp` ~879–919 |
+| `legacy_load_char_file` / `legacy_load_rent_file` | `src/legacy_loader.cpp` |
 
 *Generato in S1 — aggiornare quando cambiano costanti in `autoenums.hpp` (MAX_SKILLS, MAX_AFFECT, ecc.).*

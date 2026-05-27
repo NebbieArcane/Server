@@ -15,7 +15,8 @@
 --
 -- Riferimenti: docs/schema-s1-mapping.md, docs/schema-s1-vs-mysql.md,
 --               docs/resistance-bit-to-value.md
--- Costanti: MAX_SKILLS=350, MAX_AFFECT=40, MAX_OBJ_SAVE=200, MAX_OBJ_AFFECT=5
+-- Costanti: MAX_CLASS=11, MAX_SKILLS=350, MAX_AFFECT=40, MAX_OBJ_SAVE=200, MAX_OBJ_AFFECT=5
+-- (char_file_u.level[] ha ABS_MAX_CLASS=20 slot file; DB/import usano solo 0..MAX_CLASS-1)
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `character_core` (
   `toon_id`           BIGINT UNSIGNED NOT NULL COMMENT 'FK → toon.id, 1 PG = 1 riga',
 
   `description`       VARCHAR(240)    NULL,
-  `extra_str`         VARCHAR(255)    NULL,
+  -- extra_str[255] resta solo nel .dat (char_file_u); non persistito in DB
 
   `class_primary`     INT             NOT NULL DEFAULT 0 COMMENT 'char_file_u.iClass',
   `sex`               TINYINT UNSIGNED NOT NULL DEFAULT 0,
@@ -63,11 +64,9 @@ CREATE TABLE IF NOT EXISTS `character_core` (
   `affected_by`       INT UNSIGNED    NOT NULL DEFAULT 0,
   `affected_by2`      INT UNSIGNED    NOT NULL DEFAULT 0,
 
-  `condition_0`       TINYINT         NOT NULL DEFAULT 0,
-  `condition_1`       TINYINT         NOT NULL DEFAULT 0,
-  `condition_2`       TINYINT         NOT NULL DEFAULT 0,
-  `condition_3`       TINYINT         NOT NULL DEFAULT 0,
-  `condition_4`       TINYINT         NOT NULL DEFAULT 0 COMMENT 'MAX_CONDITIONS=5; loop save/load usa 0..2',
+  `condition_drunk`   TINYINT         NOT NULL DEFAULT 0 COMMENT 'conditions[0] DRUNK',
+  `condition_full`    TINYINT         NOT NULL DEFAULT 0 COMMENT 'conditions[1] FULL',
+  `condition_thirst`  TINYINT         NOT NULL DEFAULT 0 COMMENT 'conditions[2] THIRST',
 
   `save_throw_0`      SMALLINT        NOT NULL DEFAULT 0,
   `save_throw_1`      SMALLINT        NOT NULL DEFAULT 0,
@@ -90,18 +89,22 @@ CREATE TABLE IF NOT EXISTS `character_core` (
 -- restano su `toon` (account/registry layer).
 
 -- -----------------------------------------------------------------------------
--- 2. character_classes — char_file_u.level[ABS_MAX_CLASS] (20)
+-- 2. character_classes — player.level[0..MAX_CLASS-1] (da char_file_u.level[], file 20 slot)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `character_classes` (
   `toon_id`       BIGINT UNSIGNED NOT NULL,
-  `class_index`   TINYINT UNSIGNED NOT NULL COMMENT '0 .. ABS_MAX_CLASS-1',
+  `class_index`   TINYINT UNSIGNED NOT NULL COMMENT '0=mage .. 10=psi (MAX_CLASS=11)',
   `level`         TINYINT UNSIGNED NOT NULL DEFAULT 0,
 
   PRIMARY KEY (`toon_id`, `class_index`),
   CONSTRAINT `fk_character_classes_toon`
     FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `chk_character_classes_index`
+    CHECK (`class_index` < 11)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Migrazione: solo righe con level>0 e class_index valido (legacy_import.cpp).
 
 -- -----------------------------------------------------------------------------
 -- 3. character_stats — char_ability_data + char_point_data (1 riga per PG)
@@ -372,9 +375,12 @@ LEFT JOIN `character_stats` cs ON cs.toon_id = t.id;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- -----------------------------------------------------------------------------
--- 10. Apply incrementale (DB già creato senza character_resistance)
+-- 10. Apply incrementale (DB già creato)
 -- -----------------------------------------------------------------------------
 -- Vedi: docs/schema-s1-ddl-add-resistance.sql
+-- Vedi: docs/schema-s1-ddl-drop-unused-conditions.sql
+-- Vedi: docs/schema-s1-ddl-fix-character-classes.sql
+-- Vedi: docs/schema-s1-ddl-drop-extra-str.sql
 
 -- =============================================================================
 -- Dopo apply manuale:

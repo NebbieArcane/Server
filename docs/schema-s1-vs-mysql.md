@@ -56,8 +56,8 @@ Legenda stato:
 | `name` | `name` | ✅ | Mantenere; allineare lunghezza S1 `VARCHAR(20)` vs DB `32` |
 | `pwd` | `password` | 🔶 | File max 11; DB 128 — OK per hash futuro |
 | `title` | `title` | ✅ | File max 80; DB 128 — OK |
-| `description` | — | ❌ | 🆕 `character_core` o colonna su estensione |
-| `extra_str` | — | ❌ | 🆕 dopo verifica uso |
+| `description` | — | ❌ | 🆕 `character_core` |
+| `extra_str` | — | `.dat` solo | ❌ non in DB (slot legacy file) |
 | `iClass`, `sex`, `race` | — | ❌ | 🆕 `character_core` |
 | `level[20]` | `level` (singolo) | 🔶 | 🆕 `character_classes`; **non** sovrascrivere semantica `toon.level` senza adapter |
 | `birth`, `played`, `last_logon` | — | ❌ | 🆕; `last_logon` ≠ `lastlogin` (tipi: INT epoch vs DATETIME) |
@@ -87,9 +87,10 @@ Legenda stato:
 
 | S1 | MySQL | Stato |
 |----|-------|-------|
-| Tabella figlia `level[class_index]` | — | ❌ 🆕 |
+| Tabella figlia `level[class_index]` per `class_index` 0..10 (`MAX_CLASS`) | — | ❌ 🆕 |
 
-`toon.level` non sostituisce questa tabella (è solo il livello della classe “migliore”).
+`toon.level` non sostituisce questa tabella (è solo il livello della classe “migliore”).  
+Il file `.dat` ha 20 slot (`ABS_MAX_CLASS`); import e CHECK SQL usano solo le 11 classi reali.
 
 ---
 
@@ -268,7 +269,10 @@ Nota: `affected_by` / `affected_by2` in §1 sono **bitvector permanenti** su `ch
 - [x] `docs/schema-s1-ddl-draft.sql` — bozza CREATE (+ `character_resistance`)
 - [x] `docs/resistance-bit-to-value.md` — migrazione bit → -100..+100
 - [x] `docs/schema-s1-ddl-add-resistance.sql` — apply solo tabella resistenze
-- [ ] `legacy_loader.cpp` — lettura file senza write
+- [x] `docs/schema-s1-ddl-fix-character-classes.sql` — CHECK `class_index < 11`, purge slot file 11–19
+- [x] `docs/schema-s1-ddl-drop-extra-str.sql` — drop `character_core.extra_str` (solo .dat)
+- [x] `legacy_loader.cpp` — lettura file senza write (`docs/legacy-loader.md`)
+- [ ] Script/command migrazione file → `character_*`
 - [ ] `src/odb/character.hpp` — modello ODB `"character"`
 
 ---
