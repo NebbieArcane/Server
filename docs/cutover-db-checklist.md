@@ -132,11 +132,11 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 
 | # | Voce | Stato | Note |
 |---|------|-------|------|
-| 1.1 | `ALTER TABLE toon ADD migrated_at DATETIME NULL` | ❌ | Opz.: `schema_version SMALLINT NOT NULL DEFAULT 1` |
-| 1.2 | Campi in `src/odb/account.hpp` + rigenerare ODB | ❌ | |
-| 1.3 | `legacy_import` setta `migrated_at` solo dopo `commit` | ❌ | |
-| 1.4 | Helper `toon_needs_migration` / `toon_mark_migrated` | ❌ | Un solo posto per la regola |
-| 1.5 | Sanità: `migrated_at` set ma no `character_core` → errore | ❌ | |
+| 1.1 | `ALTER TABLE toon` (`migrated_at`, `schema_version`) | 🔶 | SQL: [schema-s1-toon-migration-flags.sql](schema-s1-toon-migration-flags.sql); oppure ODB migrate |
+| 1.2 | Campi cutover su `toon` (SQL + struct C++ `transient`) | ✅ | DDL: [schema-s1-toon-migration-flags.sql](schema-s1-toon-migration-flags.sql); ODB account resta v1 (no migrate ODB per questi campi) |
+| 1.3 | `legacy_import` setta flag in transazione prima di `commit` | ✅ | `toon_mark_migrated_tx` in `legacy_import.cpp` |
+| 1.4 | Helper in `toon_migration.hpp` / `.cpp` | ✅ | fetch SQL + mark/clear/sanity |
+| 1.5 | Sanità: `migrated_at` set ma no `character_core` → errore | ✅ | `toon_migration_sanity_check` (da chiamare al login in §5) |
 
 **Gate 1:** almeno un PG test con import OK + `migrated_at` valorizzato.
 
@@ -263,7 +263,7 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 
 | Blocco | Pronto? |
 |--------|---------|
-| Schema + `migrated_at` | ❌ |
+| Schema + `migrated_at` | 🔶 |
 | Import batch (+ aux strutturato se serve) | 🔶 |
 | Load da DB | ❌ |
 | Save DB + stop file | ❌ |
@@ -287,6 +287,49 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 
 ---
 
+## Ambiente Vagrant (sviluppo locale)
+
+Su questo PC si usa **Vagrant**, non Docker. Il repo è montato in `/vagrant` nella VM `nebbieserver` (Ubuntu Jammy).
+
+### Giorno per giorno
+
+```bash
+# host
+vagrant up
+vagrant ssh
+
+# nella VM
+cd /vagrant
+./build.sh vagrant          # rigenera ODB se account.hpp è cambiato (target CMake account)
+cd mudroot && ./myst        # come README
+```
+
+`./build.sh vagrant` limita i job paralleli a 2 sul filesystem condiviso; se fallisce, riprova con build seriale (già gestito dallo script).
+
+### DDL cutover su MySQL (§1)
+
+MySQL gira **nella VM** (come in README), non in un container Docker.
+
+```bash
+cd /vagrant
+mysql -u root -p"${MYSQL_PASSWORD:-secret}" "${MYSQL_DB:-nebbie}" \
+  < docs/schema-s1-toon-migration-flags.sql
+```
+
+I flag cutover **non** passano da migrate ODB (`migrated_at` / `schema_version` sono `transient` in `account.hpp`); usare sempre lo script SQL sopra.
+
+### Test §1 in-game
+
+1. Applicare DDL SQL (obbligatorio)  
+2. `./build.sh vagrant`  
+3. `cd mudroot && ./myst`  
+4. Immortale: `legacyimport montero`  
+5. Verifica SQL (sotto)
+
+**Nota:** finché ODB non è rigenerato, `toon_migration` legge/scrive `migrated_at` via **SQL diretto** — `legacyimport` funziona ugualmente dopo l’`ALTER TABLE`.
+
+---
+
 ## Comandi utili oggi (staging)
 
 ```text
@@ -301,10 +344,8 @@ python3 docs/export-legacy-import-csv.py <nome>
 Verifica SQL esempio:
 
 ```sql
-SELECT t.id, t.name, t.migrated_at, cc.toon_id
+SELECT t.id, t.name, t.migrated_at, t.schema_version, cc.toon_id
 FROM toon t
 LEFT JOIN character_core cc ON cc.toon_id = t.id
 WHERE t.name = 'montero';
 ```
-
-*(Aggiornare la query quando `migrated_at` esiste.)*

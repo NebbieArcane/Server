@@ -98,7 +98,11 @@ void Sql::dbUpdate() {
 }
 
 void sqlTrace::execute(odb::connection &c, const char* statement) {
-	mudlog(LOG_QUERY,statement);
+	(void)c;
+	/* SQL letterale: non passare statement come format-string (% nei .dat/.aux) */
+	if(statement) {
+		mudlog(LOG_QUERY, "%s", statement);
+	}
 }
 sqlTrace logTracer;
 

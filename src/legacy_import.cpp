@@ -12,6 +12,7 @@
 #include "legacy_loader.hpp"
 #include "logging.hpp"
 #include "Sql.hpp"
+#include "toon_migration.hpp"
 #include "odb/account-odb.hxx"
 #include "autoenums.hpp"
 
@@ -106,6 +107,23 @@ int legacy_condition_for_db(int raw) {
 		return 24;
 	}
 	return raw;
+}
+
+/** Chiave univoca per character_prefs: achievement/mercy hanno piu righe .aux con lo stesso tag. */
+std::string legacy_pref_key_for_aux(const std::string& tag, const std::string& value) {
+	std::string key = tag;
+	if(key == "achie_racekill" || key == "achie_bosskill" || key == "achie_class" ||
+	   key == "achie_quest" || key == "achie_other" || key == "mercy") {
+		const std::size_t hash = value.find('#');
+		if(hash != std::string::npos && hash > 0) {
+			key.push_back('#');
+			key.append(value, 0, hash);
+		}
+	}
+	if(key.size() > 32) {
+		key.resize(32);
+	}
+	return key;
 }
 
 void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id) {
@@ -272,10 +290,7 @@ std::size_t legacy_insert_prefs(odb::database* db, unsigned long long toon_id,
 		if(e.tag.empty()) {
 			continue;
 		}
-		std::string key = e.tag;
-		if(key.size() > 32) {
-			key.resize(32);
-		}
+		const std::string key = legacy_pref_key_for_aux(e.tag, e.value);
 		std::string val = e.value;
 		if(val.size() > 1024) {
 			val.resize(1024);
@@ -283,7 +298,7 @@ std::size_t legacy_insert_prefs(odb::database* db, unsigned long long toon_id,
 		std::ostringstream sql;
 		sql << "INSERT INTO character_prefs (toon_id, pref_key, pref_value) VALUES (" << toon_id
 			<< ",'" << legacy_sql_escape(key.c_str()) << "','" << legacy_sql_escape(val.c_str())
-			<< "')";
+			<< "') ON DUPLICATE KEY UPDATE pref_value = VALUES(pref_value)";
 		db->execute(sql.str().c_str());
 		++n;
 	}
@@ -382,6 +397,8 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		if(legacy_load_rent_file(file_name, rent)) {
 			report.inventory = legacy_insert_rent(db, pg->id, rent);
 		}
+
+		toon_mark_migrated_tx(db, pg->id, CHARACTER_MIGRATION_SCHEMA_VERSION);
 
 		t.commit();
 

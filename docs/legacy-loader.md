@@ -2,6 +2,8 @@
 
 Modulo **sola lettura**: `src/legacy_loader.hpp`, `src/legacy_loader.cpp`.
 
+Checklist cutover completa (login/save da DB, batch, test): [cutover-db-checklist.md](cutover-db-checklist.md).
+
 ## Perché la directory conta
 
 Il server parte con `-d mudroot/lib` e fa `chdir` lì. I path sono **relativi**:
