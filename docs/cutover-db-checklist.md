@@ -6,7 +6,7 @@ Checklist per il **taglio netto** da file (`.dat` / rent / `.aux`) a MySQL come 
 
 **Riferimenti:**
 
-- Mapping campi: [schema-s1-mapping.md](schema-s1-mapping.md)
+- Mapping campi: [schema-s1-mapping.md](schema-s1-mapping.md) (`.dead` escluso — vedi sezione dedicata sotto)
 - DDL: [schema-s1-ddl-draft.sql](schema-s1-ddl-draft.sql) (+ script incrementali: resistance, condition, `extra_str`, classi)
 - Import file → DB: [legacy-loader.md](legacy-loader.md), `src/legacy_import.cpp`
 - Stato schema vs codice: [schema-s1-vs-mysql.md](schema-s1-vs-mysql.md)
@@ -73,11 +73,51 @@ PG mai più loggati possono avere solo il file finché non si fa (1) o (2).
 
 ---
 
+## File sidecar `.dead` (DEATH_FIX)
+
+Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` né uno “PG morto”.
+
+| Campo file | Contenuto |
+|------------|-----------|
+| Riga unica | `saved_exp : saved_at` (INT exp + epoch) |
+
+| Momento | Comportamento codice |
+|---------|----------------------|
+| Morte PC (senza loss livello) | `save_exp_to_file` → riscrive `.dead` |
+| Nuovo PG (`roll_abilities`) | Crea `.dead` iniziale (exp=1) |
+| XpMaster (compra stat) | Aggiorna `.dead` con exp corrente |
+| Sacrificio (`sacrifice`) | Legge `.dead` (max ~4 h), ripristina `GET_EXP` |
+| Resurrezione / reincarnazione | Legge `.dead` per exp su `.dat` |
+| Nuke PG | `rm` di `<nome>.dead` |
+
+### Nel database S1?
+
+| Domanda | Risposta |
+|---------|----------|
+| Tabella `character_*` prevista? | **No** — exp “ufficiale” resta in `character_stats.exp` (da `.dat`) |
+| `legacyimport` importa `.dead`? | **No** |
+| Ha senso una tabella al cutover? | **No** (fase 1) — meccanica file; basso valore per batch/report |
+| Dopo D2 (PG migrato, no `.dat`)? | **Resta file** finché morte/sacrificio/resurrezione non vengono riscritti su DB |
+
+**Scelta documentata:** `.dead` = **solo filesystem**, come oggi. Opzionale in futuro: `character_death_snapshot (toon_id, saved_exp, saved_at)` se si elimina del tutto il sidecar file.
+
+### Implicazioni cutover
+
+| Fase | Cosa fare |
+|------|-----------|
+| Backup (0.1) | Includere `players/*.dead` nello snapshot (piccoli, spesso in zip `pg*`) |
+| Import batch | Nessuna azione DB; non blocca il GO |
+| Load/save DB | Non coprire `.dead`; codice `fight.cpp` / `spec_procs*.cpp` / `magic*.cpp` invariato |
+| `do_refund` | Opzionale: copiare anche `./lib/players/<nome>.dead` dal backup pg (non implementato oggi) |
+| PG migrato in gioco | `.dead` continua ad aggiornarsi su disco anche con D2 attivo |
+
+---
+
 ## 0. Pre-cutover (ops)
 
 | # | Voce | Stato | Note |
 |---|------|-------|------|
-| 0.1 | Backup `players/`, `rent/`, dump MySQL | ☐ | Snapshot datato; path documentato |
+| 0.1 | Backup `players/` (`.dat` + `.dead`), `rent/`, dump MySQL | ☐ | Snapshot datato; path documentato; `.dead` = sidecar DEATH_FIX |
 | 0.2 | Inventario `.dat` vs `toon` | ☐ | Vedi sezione sopra; risolvere orfani prima del batch |
 | 0.3 | DDL S1 applicato su DB target | ☐ | `schema-s1-ddl-draft.sql` + `schema-s1-ddl-add-resistance.sql`, `drop-unused-conditions`, `drop-extra-str`, `fix-character-classes` |
 | 0.4 | Build con `USE_MYSQL` | ✅ | Verificato da `legacyimport montero` OK |
@@ -106,7 +146,7 @@ PG mai più loggati possono avere solo il file finché non si fa (1) o (2).
 
 | # | Voce | Stato | Note |
 |---|------|-------|------|
-| 2.1 | `legacy_import_character_mysql` | ✅ | `.dat` + stats/class/skill/affect/resist + rent → inventory; test OK su Montero |
+| 2.1 | `legacy_import_character_mysql` | ✅ | `.dat` + stats/class/skill/affect/resist + rent → inventory; test OK su Montero; **non** `.dead` |
 | 2.2 | `.aux` → `character_prefs` (KV grezzo) | 🔶 | Non equivale al parse di `load_char_extra` |
 | 2.3 | `.aux` → `character_achievements` / `aliases` / `mercy` | ❌ | DDL c’è; import cancella tabelle ma non popola queste righe strutturate |
 | 2.4 | `quest_mob` / progress quest | ❌ | Gap in mapping |
@@ -155,6 +195,7 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ❌ | |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ❌ | |
 | 4.7 | Menu `'1'..'4'`: oggi `load_char_objs` + `save_char` | 🚫 | `interpreter.cpp` ~3293 — riscrive file subito |
+| 4.8 | `.dead`: scrittura file **consentita** anche se migrato | ☐ | Sidecar DEATH_FIX; nessuna tabella DB; vedi sezione `.dead` |
 
 **Gate 4:** login → modifica stato/oggetti → quit → re-login identico **solo da DB**; mtime file invariato.
 
@@ -180,7 +221,8 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 |------|---------|
 | `.aux` strutturato | Import in `character_prefs` non alimenta RAM; serve load/save extra o import 2.3 |
 | Achievements fuori `.aux` | Verificare se `.achie` è ancora usato |
-| `do_refund` | Resta su file; post-cutover = procedura manuale |
+| `do_refund` | Resta su file; post-cutover = procedura manuale; opz. includere `.dead` nel restore pg |
+| `.dead` (DEATH_FIX) | Non in DB; sacrificio/resurrezione leggono ancora `players/<nome>.dead` |
 | Nome `.dat` ≠ `toon.name` | Allineare prima del batch |
 | `character_core` senza title/pwd | By design su `toon`; load deve unire le fonti |
 
@@ -198,8 +240,9 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 | 7.6 | Achievement / alias / mercy (PG con `.aux` ricco) | |
 | 7.7 | mtime `.dat` e `rent/*` invariati dopo sessione migrata | |
 | 7.8 | Restore drill: 1 PG da backup file + re-import | |
+| 7.9 | Morte / sacrificio / resurrect (PG con `.dead` rilevante) | | Solo se usate quelle meccaniche; file sidecar presente |
 
-**GO** se 7.1–7.5 e 7.7 passano; 7.6 se avete PG con `.aux` non banali.
+**GO** se 7.1–7.5 e 7.7 passano; 7.6 se avete PG con `.aux` non banali; 7.9 se il mud usa DEATH_FIX in produzione.
 
 ---
 
