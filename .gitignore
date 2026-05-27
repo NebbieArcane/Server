@@ -240,4 +240,5 @@ src/info
 .vagrant.d/
 mysql_data/
 /migration_artifacts/
+/backups/
 /tmp-odb-inspect/
