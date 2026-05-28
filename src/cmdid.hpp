@@ -515,7 +515,8 @@ namespace Alarmud {
 #define CMD_CHECKACHIELEVEL     504 //Montero check on achievement table
 #define CMD_LEGACYPROBE         505 /* debug: legacy_loader read .dat/.aux/rent */
 #define CMD_LEGACYIMPORT        506 /* import file → character_* tables */
-//  free 507-508
+#define CMD_LEGACYLOADCHECK     507 /* compare load_char(file) vs load_char_mysql(db) */
+//  free 508
 #define MAX_CMD_LIST            509
 } // namespace Alarmud
 

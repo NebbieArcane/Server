@@ -387,6 +387,80 @@ ACTION_FUNC(do_legacyimport) {
 	send_to_char(buf, ch);
 }
 
+ACTION_FUNC(do_legacyloadcheck) {
+	char name[MAX_INPUT_LENGTH];
+	char buf[MAX_STRING_LENGTH];
+
+	if(!IS_IMMORTAL(ch)) {
+		send_to_char("Non autorizzato.\r\n", ch);
+		return;
+	}
+
+	arg = one_argument(arg, name);
+	if(!*name) {
+		send_to_char("Uso: legacyloadcheck <nome-pg>\r\n", ch);
+		return;
+	}
+
+	char_file_u file_st {};
+	char_file_u db_st {};
+	const int file_ok = load_char(name, &file_st);
+	const int db_ok = load_char_mysql(name, &db_st);
+
+	std::snprintf(buf, sizeof(buf), "legacyloadcheck '%s': file=%s db=%s\r\n", name,
+				  file_ok ? "OK" : "KO", db_ok ? "OK" : "KO");
+	send_to_char(buf, ch);
+	if(!file_ok || !db_ok) {
+		return;
+	}
+
+	auto count_skills = [](const char_file_u& st) {
+		int n = 0;
+		for(int i = 0; i < MAX_SKILLS; ++i) {
+			if(st.skills[i].learned || st.skills[i].flags || st.skills[i].special ||
+			   st.skills[i].nummem) {
+				++n;
+			}
+		}
+		return n;
+	};
+	auto count_affects = [](const char_file_u& st) {
+		int n = 0;
+		for(int i = 0; i < MAX_AFFECT; ++i) {
+			if(st.affected[i].type != 0) {
+				++n;
+			}
+		}
+		return n;
+	};
+	auto count_classes = [](const char_file_u& st) {
+		int n = 0;
+		for(int i = 0; i < MAX_CLASS; ++i) {
+			if(st.level[i] > 0) {
+				++n;
+			}
+		}
+		return n;
+	};
+
+	std::snprintf(buf, sizeof(buf),
+				  " exp file=%d db=%d | gold file=%d db=%d | hit file=%d/%d db=%d/%d\r\n",
+				  file_st.points.exp, db_st.points.exp, file_st.points.gold, db_st.points.gold,
+				  file_st.points.hit, file_st.points.max_hit, db_st.points.hit,
+				  db_st.points.max_hit);
+	send_to_char(buf, ch);
+	std::snprintf(buf, sizeof(buf),
+				  " classi file=%d db=%d | skill file=%d db=%d | affect file=%d db=%d\r\n",
+				  count_classes(file_st), count_classes(db_st), count_skills(file_st),
+				  count_skills(db_st), count_affects(file_st), count_affects(db_st));
+	send_to_char(buf, ch);
+	std::snprintf(buf, sizeof(buf),
+				  " race file=%d db=%d | align file=%d db=%d | talks2 file=%d db=%d\r\n",
+				  file_st.race, db_st.race, file_st.alignment, db_st.alignment, file_st.talks[2],
+				  db_st.talks[2]);
+	send_to_char(buf, ch);
+}
+
 
 ACTION_FUNC(do_passwd) {
 	char name[30], npasswd[20], buf[256];

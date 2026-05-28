@@ -48,8 +48,39 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
 
 namespace Alarmud {
+
+namespace {
+
+long long sql_to_ll(const char* s, long long fallback = 0) {
+	if(!s) {
+		return fallback;
+	}
+	char* end = nullptr;
+	const long long v = std::strtoll(s, &end, 10);
+	return (end == s) ? fallback : v;
+}
+
+bool mysql_query_select(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
+	out_res = nullptr;
+	if(!db) {
+		return false;
+	}
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+	if(mysql_query(h, sql.c_str()) != 0) {
+		mudlog(LOG_SYSERR, "load_char_mysql query error: %s", mysql_error(h));
+		return false;
+	}
+	out_res = mysql_store_result(h);
+	return true;
+}
+
+} // namespace
 
 /**************************************************************************
  *  declarations of most of the 'global' variables                         *
@@ -2844,6 +2875,193 @@ int load_char(const char* name, struct char_file_u* char_element) {
 	else {
 		return FALSE;
 	}
+}
+
+/* Load character from MySQL character_* into char_file_u. */
+int load_char_mysql(const char* name, struct char_file_u* char_element) {
+#if !USE_MYSQL
+	(void)name;
+	(void)char_element;
+	return FALSE;
+#else
+	if(!name || !*name || !char_element) {
+		return FALSE;
+	}
+
+	*char_element = char_file_u {};
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return FALSE;
+	}
+
+	DB* db = Sql::getMysql();
+	odb::transaction t(db->begin());
+	t.tracer(logTracer);
+
+	const std::string toon_id = std::to_string(pg->id);
+	MYSQL_RES* res = nullptr;
+
+	const std::string core_stats_sql =
+		"SELECT "
+		"cc.class_primary, cc.sex, cc.race, cc.birth, cc.played, cc.weight, cc.height, "
+		"cc.hometown, cc.description, cc.talks_0, cc.talks_1, cc.talks_2, "
+		"cc.speaks, cc.user_flags, cc.extra_flags, cc.age_modifier, cc.authcode, "
+		"cc.wimpy_level, cc.load_room, cc.start_room, cc.spells_to_learn, cc.alignment, "
+		"cc.act, cc.affected_by, cc.affected_by2, cc.last_logon, "
+		"cc.condition_drunk, cc.condition_full, cc.condition_thirst, "
+		"cc.save_throw_0, cc.save_throw_1, cc.save_throw_2, cc.save_throw_3, "
+		"cc.save_throw_4, cc.save_throw_5, cc.save_throw_6, cc.save_throw_7, "
+		"cs.str, cs.str_add, cs.intel, cs.wis, cs.dex, cs.con, cs.chr, cs.extra, cs.extra2, "
+		"cs.mana, cs.max_mana, cs.mana_gain, cs.hit, cs.max_hit, cs.hit_gain, "
+		"cs.move, cs.max_move, cs.move_gain, cs.p_rune_dei, cs.points_extra1, cs.points_extra2, "
+		"cs.points_extra3, cs.armor, cs.gold, cs.bank_gold, cs.exp, cs.true_exp, "
+		"cs.extra_dual, cs.hitroll, cs.damroll, cs.libero "
+		"FROM character_core cc "
+		"INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
+		"WHERE cc.toon_id = " + toon_id + " LIMIT 1";
+
+	if(!mysql_query_select(db, core_stats_sql, res) || !res) {
+		t.commit();
+		return FALSE;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row) {
+		mysql_free_result(res);
+		t.commit();
+		return FALSE;
+	}
+
+	int c = 0;
+	char_file_u& st = *char_element;
+
+	st.iClass = static_cast<int>(sql_to_ll(row[c++]));
+	st.sex = static_cast<ubyte>(sql_to_ll(row[c++]));
+	st.race = static_cast<int>(sql_to_ll(row[c++]));
+	st.birth = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.played = static_cast<int>(sql_to_ll(row[c++]));
+	st.weight = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.height = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.hometown = static_cast<sh_int>(sql_to_ll(row[c++]));
+	std::snprintf(st.description, sizeof(st.description), "%s", row[c++] ? row[c - 1] : "");
+	st.talks[0] = (sql_to_ll(row[c++]) != 0);
+	st.talks[1] = (sql_to_ll(row[c++]) != 0);
+	st.talks[2] = (sql_to_ll(row[c++]) != 0);
+	st.speaks = static_cast<int>(sql_to_ll(row[c++]));
+	st.user_flags = static_cast<int>(sql_to_ll(row[c++]));
+	st.extra_flags = static_cast<int>(sql_to_ll(row[c++]));
+	st.agemod = static_cast<int>(sql_to_ll(row[c++]));
+	std::snprintf(st.authcode, sizeof(st.authcode), "%s", row[c++] ? row[c - 1] : "");
+	const int wimpy = static_cast<int>(sql_to_ll(row[c++]));
+	std::snprintf(st.WimpyLevel, sizeof(st.WimpyLevel), "%03d", std::clamp(wimpy, 0, 999));
+	st.load_room = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.startroom = static_cast<int>(sql_to_ll(row[c++]));
+	st.spells_to_learn = static_cast<byte>(sql_to_ll(row[c++]));
+	st.alignment = static_cast<int>(sql_to_ll(row[c++]));
+	st.act = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.affected_by = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.affected_by2 = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.last_logon = static_cast<unsigned int>(sql_to_ll(row[c++]));
+	st.conditions[0] = static_cast<int>(sql_to_ll(row[c++]));
+	st.conditions[1] = static_cast<int>(sql_to_ll(row[c++]));
+	st.conditions[2] = static_cast<int>(sql_to_ll(row[c++]));
+	for(int i = 0; i < MAX_SAVES; ++i) {
+		st.apply_saving_throw[i] = static_cast<sh_int>(sql_to_ll(row[c++]));
+	}
+	st.abilities.str = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.str_add = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.intel = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.wis = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.dex = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.con = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.chr = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.extra = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.abilities.extra2 = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.points.mana = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.max_mana = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.mana_gain = static_cast<ubyte>(sql_to_ll(row[c++]));
+	st.points.hit = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.max_hit = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.hit_gain = static_cast<ubyte>(sql_to_ll(row[c++]));
+	st.points.move = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.max_move = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.move_gain = static_cast<ubyte>(sql_to_ll(row[c++]));
+	st.points.pRuneDei = static_cast<ush_int>(sql_to_ll(row[c++]));
+	st.points.extra1 = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.extra2 = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.extra3 = static_cast<ubyte>(sql_to_ll(row[c++]));
+	st.points.armor = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.points.gold = static_cast<int>(sql_to_ll(row[c++]));
+	st.points.bankgold = static_cast<int>(sql_to_ll(row[c++]));
+	st.points.exp = static_cast<int>(sql_to_ll(row[c++]));
+	st.points.true_exp = static_cast<int>(sql_to_ll(row[c++]));
+	st.points.extra_dual = static_cast<int>(sql_to_ll(row[c++]));
+	st.points.hitroll = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.points.damroll = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.points.libero = static_cast<sbyte>(sql_to_ll(row[c++]));
+
+	mysql_free_result(res);
+	res = nullptr;
+
+	std::snprintf(st.name, sizeof(st.name), "%s", pg->name.c_str());
+	std::snprintf(st.title, sizeof(st.title), "%s", pg->title.c_str());
+	std::snprintf(st.pwd, sizeof(st.pwd), "%s", pg->password.c_str());
+
+	const std::string classes_sql =
+		"SELECT class_index, level FROM character_classes WHERE toon_id = " + toon_id;
+	if(mysql_query_select(db, classes_sql, res) && res) {
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const int idx = static_cast<int>(sql_to_ll(row[0], -1));
+			const int lvl = static_cast<int>(sql_to_ll(row[1]));
+			if(idx >= 0 && idx < ABS_MAX_CLASS) {
+				st.level[idx] = static_cast<ubyte>(std::clamp(lvl, 0, 255));
+			}
+		}
+		mysql_free_result(res);
+		res = nullptr;
+	}
+
+	const std::string skills_sql =
+		"SELECT skill_id, learned, flags, special, nummem FROM character_skills WHERE toon_id = " +
+		toon_id;
+	if(mysql_query_select(db, skills_sql, res) && res) {
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const int skill_id = static_cast<int>(sql_to_ll(row[0], -1));
+			if(skill_id >= 0 && skill_id < MAX_SKILLS) {
+				st.skills[skill_id].learned = static_cast<ubyte>(sql_to_ll(row[1]));
+				st.skills[skill_id].flags = static_cast<byte>(sql_to_ll(row[2]));
+				st.skills[skill_id].special = static_cast<byte>(sql_to_ll(row[3]));
+				st.skills[skill_id].nummem = static_cast<byte>(sql_to_ll(row[4]));
+			}
+		}
+		mysql_free_result(res);
+		res = nullptr;
+	}
+
+	const std::string affects_sql =
+		"SELECT slot, type, duration, modifier, location, bitvector "
+		"FROM character_affects WHERE toon_id = " +
+		toon_id;
+	if(mysql_query_select(db, affects_sql, res) && res) {
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const int slot = static_cast<int>(sql_to_ll(row[0], -1));
+			if(slot >= 0 && slot < MAX_AFFECT) {
+				st.affected[slot].type = static_cast<short>(sql_to_ll(row[1]));
+				st.affected[slot].duration = static_cast<sh_int>(sql_to_ll(row[2]));
+				st.affected[slot].modifier = static_cast<int>(sql_to_ll(row[3]));
+				st.affected[slot].location = static_cast<int>(sql_to_ll(row[4]));
+				st.affected[slot].bitvector = static_cast<int>(sql_to_ll(row[5]));
+				st.affected[slot].next = 0;
+			}
+		}
+		mysql_free_result(res);
+		res = nullptr;
+	}
+
+	t.commit();
+	st.talks[2] = FALSE; // compat load_char file-path
+	return TRUE;
+#endif
 }
 
 /* copy data from the file structure to a char struct */
