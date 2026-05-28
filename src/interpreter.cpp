@@ -59,6 +59,8 @@
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
 #include "Sql.hpp"
+#include "legacy_import.hpp"
+#include "toon_migration.hpp"
 
 namespace Alarmud {
 using std::string;
@@ -2867,10 +2869,41 @@ NANNY_FUNC(con_pwdok) {
 	 */
 	if(!d->justCreated) {
 		char_file_u tmp_store;
-		if(load_char(d->AccountData.choosen.c_str(), &tmp_store)) {
+		bool loaded = false;
+		const std::string toon_name = d->AccountData.choosen;
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == toon_name);
+		if(pg && pg->id) {
+			DB* db = Sql::getMysql();
+			if(toon_needs_migration(db, *pg)) {
+				LegacyImportReport rep {};
+				if(legacy_import_character_mysql(toon_name.c_str(), rep)) {
+					mudlog(LOG_CONNECT, "con_pwdok: lazy migration OK for %s (%s)",
+						   toon_name.c_str(), rep.message.c_str());
+				}
+				else {
+					mudlog(LOG_SYSERR, "con_pwdok: lazy migration FAILED for %s (%s)",
+						   toon_name.c_str(), rep.message.c_str());
+				}
+			}
+
+			if(toon_migration_sanity_check(db, *pg) &&
+			   load_char_mysql(toon_name.c_str(), &tmp_store)) {
+				store_to_char(&tmp_store, d->character);
+				loaded = true;
+				mudlog(LOG_CONNECT, "con_pwdok: loaded %s from MySQL", toon_name.c_str());
+			}
+			else {
+				mudlog(LOG_SYSERR,
+					   "con_pwdok: MySQL load failed/sanity KO for %s, fallback to file",
+					   toon_name.c_str());
+			}
+		}
+		if(!loaded && load_char(toon_name.c_str(), &tmp_store)) {
 			store_to_char(&tmp_store, d->character);
-		}	//TODO: Inserire qui load del pg
-		else {
+			loaded = true;
+			mudlog(LOG_CONNECT, "con_pwdok: loaded %s from file fallback", toon_name.c_str());
+		}
+		if(!loaded) {
 			//Something went terribly wrong
 			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
 			FLUSH_TO_Q("Unable to load ",d);
