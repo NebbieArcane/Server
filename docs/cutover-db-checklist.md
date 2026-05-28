@@ -175,7 +175,7 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 | 3.5 | `character_affects` + resistenze | 🔶 | `character_affects` caricato; resistenze da tabella non ancora applicate |
 | 3.6 | Titolo / password / level da `toon` | 🔶 | Oggi molto da `.dat` / `desc` |
 | 3.7 | Kludge `talks[2]`, `load_room` +65536, mana/hit | ❌ | Come `load_char` / `store_to_char` |
-| 3.8 | `load_character_inventory_from_db` | ❌ | `load_char_objs` + `ReadObjs` |
+| 3.8 | `load_character_inventory_from_db` | 🔶 | `load_rent_mysql` + `load_char_objs` se `migrated_at` |
 | 3.9 | `load_character_extra_from_db` | ❌ | `load_char_extra` (.aux) |
 | 3.10 | PG `justCreated` | ☐ | Solo DB, mai file |
 | 3.11 | Poly / ghost / impersonate | ☐ | Test espliciti |
@@ -191,7 +191,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 |---|------|-------|------|
 | 4.1 | `save_character_to_db(ch)` transazionale | ❌ | |
 | 4.2 | Aggiorna `toon` (password, title, level, lastlogin, lasthost) | 🔶 | Oggi sync parziale in `save_char` |
-| 4.3 | `save_character_inventory_to_db` | ❌ | `update_file` / `WriteObjs` su rent file |
+| 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` in `update_file` (dual-write con rent file) |
 | 4.4 | `save_character_extra_to_db` | ❌ | `write_char_extra` su `.aux` |
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ❌ | |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ❌ | |
@@ -267,8 +267,8 @@ Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset
 |--------|---------|
 | Schema + `migrated_at` | 🔶 |
 | Import batch (+ aux strutturato se serve) | 🔶 |
-| Load da DB | 🔶 |
-| Save DB + stop file | ❌ |
+| Load da DB | 🔶 (corpo + rent se migrato) |
+| Save DB + stop file | 🔶 (corpo + rent dual-write; D2 file off no) |
 | Login/menu wired | 🔶 |
 | Test 7.x su staging | 🔶 |
 | Runbook ops | ☐ |
@@ -280,8 +280,8 @@ Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset
 ## 10. Ordine di implementazione consigliato
 
 1. `migrated_at` + set in `legacy_import` (§1)  
-2. Completare `load_character_from_db` inventario+extra (§3.8, §3.9)  
-3. `save_character_to_db` + inventario + stop file (§4)  
+2. Completare load/save **extra** (.aux) (§3.9, §4.4)  
+3. `save_character_to_db` unificato + stop file (§4.1, §4.5–4.6)  
 4. Load/save extra **oppure** import strutturato da `.aux` (§2.3)  
 5. Script batch + report (§2.5–2.6)  
 6. Rimuovere fallback file in `con_pwdok` (hard cutover §5)  

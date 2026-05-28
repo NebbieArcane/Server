@@ -27,6 +27,11 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "spec_procs.hpp"
+#if USE_MYSQL
+#include "Sql.hpp"
+#include "toon_migration.hpp"
+#include "odb/account-odb.hxx"
+#endif
 
 namespace Alarmud {
 
@@ -406,6 +411,13 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 	WriteObjs(fl, st);
 
 	fclose(fl);
+
+#if USE_MYSQL
+	if(!save_rent_mysql(GET_NAME(k), *st)) {
+		mudlog(LOG_SYSERR, "update_file: save_rent_mysql failed for %s", GET_NAME(k));
+	}
+#endif
+
 	PopStatus();
 	PopStatus();
 	PopStatus();
@@ -721,43 +733,62 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 
 	snprintf(tbuf, sizeof(tbuf)-1, "%s/%s",RENT_DIR, lower(ch->player.name));
 
-
-	/* r+b is for Binary Reading/Writing */
-	if(!(fl = fopen(tbuf, "r+b"))) {
-		mudlog(LOG_PLAYERS, "Char has no equipment");
-		return;
+	bool rent_from_db = false;
+#if USE_MYSQL
+	{
+		const toonPtr pg =
+			Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(ch)));
+		if(pg && pg->id) {
+			DB* db = Sql::getMysql();
+			if(toon_is_migrated(db, *pg) && load_rent_mysql(GET_NAME(ch), &st)) {
+				rent_from_db = true;
+				mudlog(LOG_PLAYERS, "load_char_objs: rent da DB per %s (%d oggetti)",
+					   GET_NAME(ch), st.number);
+			}
+		}
 	}
+#endif
 
-	rewind(fl);
+	if(!rent_from_db) {
+		/* r+b is for Binary Reading/Writing */
+		if(!(fl = fopen(tbuf, "r+b"))) {
+			mudlog(LOG_PLAYERS, "Char has no equipment");
+			return;
+		}
 
-    if(IS_SET(ch->specials.act,PLR_NEW_EQ))
-    {
+		rewind(fl);
 
-        if(!ReadObjs(fl, &st))
-        {
-            mudlog(LOG_PLAYERS, "No objects found");
-            snprintf(tbuf,199,"File %s.aux chiuso",GET_NAME(ch));
-            SetStatus(tbuf);
-            return;
-        }
-    }
-    else
-    {
-        if(!ReadObjsOld(fl, &old_st))
-        {
-            mudlog(LOG_PLAYERS, "No objects found");
-            snprintf(tbuf,199,"File %s.aux chiuso",GET_NAME(ch));
-            SetStatus(tbuf);
-            return;
-        }
+		if(IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+			if(!ReadObjs(fl, &st)) {
+				mudlog(LOG_PLAYERS, "No objects found");
+				snprintf(tbuf, 199, "File %s.aux chiuso", GET_NAME(ch));
+				SetStatus(tbuf);
+				fclose(fl);
+				return;
+			}
+		}
+		else {
+			if(!ReadObjsOld(fl, &old_st)) {
+				mudlog(LOG_PLAYERS, "No objects found");
+				snprintf(tbuf, 199, "File %s.aux chiuso", GET_NAME(ch));
+				SetStatus(tbuf);
+				fclose(fl);
+				return;
+			}
 
-        old_st_to_st(&old_st, &st);
-    }
+			old_st_to_st(&old_st, &st);
+		}
+	}
+	else {
+		fl = nullptr;
+	}
 
 	if(str_cmp(st.owner, GET_NAME(ch)) != 0) {
 		mudlog(LOG_ERROR,
 			   "Bad item-file write. %s is losing his/her objects",GET_NAME(ch));
-		fclose(fl);
+		if(fl) {
+			fclose(fl);
+		}
 		return;
 	}
 	/* Nebbie was stopped for 2 years, here we make sure people are not naked.
@@ -910,21 +941,21 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		}
 	}
 
-	fclose(fl);
+	if(fl) {
+		fclose(fl);
+	}
 
 	if(found) {
 		mudlog(LOG_CHECK, "Reading objects...");
-        if(IS_SET(ch->specials.act,PLR_NEW_EQ))
-        {
-            mudlog(LOG_CHECK,"New Format Objects %s",GET_NAME(ch));
-            obj_store_to_char(ch, &st);
-        }
-        else
-        {
-            mudlog(LOG_CHECK,"Old Format Objects %s",GET_NAME(ch));
-            old_obj_store_to_char(ch, &old_st);
-            old_st_to_st(&old_st, &st);
-        }
+		if(rent_from_db || IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+			mudlog(LOG_CHECK, "New Format Objects %s", GET_NAME(ch));
+			obj_store_to_char(ch, &st);
+		}
+		else {
+			mudlog(LOG_CHECK, "Old Format Objects %s", GET_NAME(ch));
+			old_obj_store_to_char(ch, &old_st);
+			old_st_to_st(&old_st, &st);
+		}
 #if LIMITEEQALRIENTRO
 		limited_items_carrying =CountLims(ch->carrying);
 		if(limited_items_carrying && !IS_IMMORTALE(ch)) {

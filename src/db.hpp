@@ -247,6 +247,8 @@ void reset_zone(int zone);
 int is_empty(int zone_nr);
 int load_char(const char* name, struct char_file_u* char_element);
 int load_char_mysql(const char* name, struct char_file_u* char_element);
+bool load_rent_mysql(const char* name, struct obj_file_u* rent);
+bool save_rent_mysql(const char* name, const struct obj_file_u& rent);
 void store_to_char(struct char_file_u* st, struct char_data* ch);
 void char_to_store(struct char_data* ch, struct char_file_u* st);
 int create_entry(char* name);

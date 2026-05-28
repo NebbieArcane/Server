@@ -459,6 +459,22 @@ ACTION_FUNC(do_legacyloadcheck) {
 				  file_st.race, db_st.race, file_st.alignment, db_st.alignment, file_st.talks[2],
 				  db_st.talks[2]);
 	send_to_char(buf, ch);
+
+	obj_file_u file_rent {};
+	obj_file_u db_rent {};
+	const bool file_rent_ok = legacy_load_rent_file(name, file_rent);
+	const bool db_rent_ok = load_rent_mysql(name, &db_rent);
+	std::snprintf(buf, sizeof(buf), " rent file=%s db=%s | oggetti file=%d db=%d\r\n",
+				  file_rent_ok ? "OK" : "KO", db_rent_ok ? "OK" : "KO",
+				  file_rent_ok ? file_rent.number : -1, db_rent_ok ? db_rent.number : -1);
+	send_to_char(buf, ch);
+	if(file_rent_ok && db_rent_ok) {
+		std::snprintf(buf, sizeof(buf),
+					  " rent gold file=%d db=%d | cost file=%d db=%d | lastupd file=%d db=%d\r\n",
+					  file_rent.gold_left, db_rent.gold_left, file_rent.total_cost,
+					  db_rent.total_cost, file_rent.last_update, db_rent.last_update);
+		send_to_char(buf, ch);
+	}
 }
 
 

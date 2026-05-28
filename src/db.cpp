@@ -54,8 +54,6 @@
 
 namespace Alarmud {
 
-namespace {
-
 long long sql_to_ll(const char* s, long long fallback = 0) {
 	if(!s) {
 		return fallback;
@@ -102,6 +100,8 @@ std::string db_sql_literal(const char* s, bool allow_null = false) {
 	}
 	return "'" + db_sql_escape(s) + "'";
 }
+
+namespace {
 
 bool save_char_mysql_body(struct char_data* ch, const struct char_file_u& st) {
 	if(!ch || !IS_PC(ch)) {
@@ -3210,6 +3210,192 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	t.commit();
 	st.talks[2] = FALSE; // compat load_char file-path
 	return TRUE;
+#endif
+}
+
+bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
+#if !USE_MYSQL
+	(void)name;
+	(void)rent;
+	return false;
+#else
+	if(!name || !*name || !rent) {
+		return false;
+	}
+
+	*rent = obj_file_u {};
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string toon_id = std::to_string(pg->id);
+	MYSQL_RES* res = nullptr;
+
+	const std::string rent_sql =
+		"SELECT gold_left, total_cost, last_update, minimum_stay, object_count "
+		"FROM character_rent WHERE toon_id = " +
+		toon_id + " LIMIT 1";
+	if(!mysql_query_select(db, rent_sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row) {
+		mysql_free_result(res);
+		return false;
+	}
+
+	rent->gold_left = static_cast<int>(sql_to_ll(row[0]));
+	rent->total_cost = static_cast<int>(sql_to_ll(row[1]));
+	rent->last_update = static_cast<int>(sql_to_ll(row[2]));
+	rent->minimum_stay = static_cast<int>(sql_to_ll(row[3]));
+	rent->number = static_cast<int>(sql_to_ll(row[4]));
+	if(rent->number < 0) {
+		rent->number = 0;
+	}
+	if(rent->number > MAX_OBJ_SAVE) {
+		rent->number = MAX_OBJ_SAVE;
+	}
+	mysql_free_result(res);
+	res = nullptr;
+
+	const std::string inv_sql =
+		"SELECT list_index, item_number, value0, value1, value2, value3, extra_flags, "
+		"extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
+		"wear_pos, depth FROM character_inventory WHERE toon_id = " +
+		toon_id + " ORDER BY list_index";
+	if(!mysql_query_select(db, inv_sql, res) || !res) {
+		return false;
+	}
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int idx = static_cast<int>(sql_to_ll(row[0], -1));
+		if(idx < 0 || idx >= MAX_OBJ_SAVE) {
+			continue;
+		}
+		obj_file_elem& o = rent->objects[idx];
+		o = obj_file_elem {};
+		o.item_number = static_cast<ush_int>(sql_to_ll(row[1]));
+		o.value[0] = static_cast<int>(sql_to_ll(row[2]));
+		o.value[1] = static_cast<int>(sql_to_ll(row[3]));
+		o.value[2] = static_cast<int>(sql_to_ll(row[4]));
+		o.value[3] = static_cast<int>(sql_to_ll(row[5]));
+		o.extra_flags = static_cast<int>(sql_to_ll(row[6]));
+		o.extra_flags2 = static_cast<int>(sql_to_ll(row[7]));
+		o.weight = static_cast<int>(sql_to_ll(row[8]));
+		o.timer = static_cast<int>(sql_to_ll(row[9]));
+		o.bitvector = static_cast<unsigned int>(sql_to_ll(row[10]));
+		std::snprintf(o.name, sizeof(o.name), "%s", row[11] ? row[11] : "");
+		std::snprintf(o.sd, sizeof(o.sd), "%s", row[12] ? row[12] : "");
+		std::snprintf(o.desc, sizeof(o.desc), "%s", row[13] ? row[13] : "");
+		o.wearpos = static_cast<ubyte>(sql_to_ll(row[14]));
+		o.depth = static_cast<ubyte>(sql_to_ll(row[15]));
+	}
+	mysql_free_result(res);
+	res = nullptr;
+
+	const std::string aff_sql =
+		"SELECT ci.list_index, cia.affect_slot, cia.location, cia.modifier "
+		"FROM character_inventory_affect cia "
+		"INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+		"WHERE ci.toon_id = " +
+		toon_id + " ORDER BY ci.list_index, cia.affect_slot";
+	if(mysql_query_select(db, aff_sql, res) && res) {
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const int idx = static_cast<int>(sql_to_ll(row[0], -1));
+			const int slot = static_cast<int>(sql_to_ll(row[1], -1));
+			if(idx < 0 || idx >= MAX_OBJ_SAVE || slot < 0 || slot >= MAX_OBJ_AFFECT) {
+				continue;
+			}
+			rent->objects[idx].affected[slot].location =
+				static_cast<short>(sql_to_ll(row[2]));
+			rent->objects[idx].affected[slot].modifier = static_cast<int>(sql_to_ll(row[3]));
+		}
+		mysql_free_result(res);
+	}
+
+	std::snprintf(rent->owner, sizeof(rent->owner), "%s", pg->name.c_str());
+	return true;
+#endif
+}
+
+bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
+#if !USE_MYSQL
+	(void)name;
+	(void)rent;
+	return false;
+#else
+	if(!name || !*name) {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "save_rent_mysql: toon mancante per %s", name);
+		return false;
+	}
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+
+		db->execute(("DELETE cia FROM character_inventory_affect cia "
+					 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+					 "WHERE ci.toon_id = " +
+					 toon_id)
+						.c_str());
+		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id).c_str());
+		db->execute(("DELETE FROM character_rent WHERE toon_id = " + toon_id).c_str());
+
+		const int object_count =
+			std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
+		std::ostringstream rent_sql;
+		rent_sql << "INSERT INTO character_rent (toon_id, gold_left, total_cost, last_update, "
+					"minimum_stay, object_count) VALUES ("
+				 << toon_id << ',' << rent.gold_left << ',' << rent.total_cost << ','
+				 << rent.last_update << ',' << rent.minimum_stay << ',' << object_count << ')';
+		db->execute(rent_sql.str().c_str());
+
+		for(int i = 0; i < object_count; ++i) {
+			const obj_file_elem& o = rent.objects[i];
+			std::ostringstream ins;
+			ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+				   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+				   "obj_name, short_desc, description, wear_pos, depth) VALUES ("
+				<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ','
+				<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags
+				<< ',' << o.extra_flags2 << ',' << o.weight << ',' << o.timer << ','
+				<< o.bitvector << ',' << db_sql_literal(o.name, false) << ','
+				<< db_sql_literal(o.sd, false) << ',' << db_sql_literal(o.desc, false) << ','
+				<< static_cast<int>(o.wearpos) << ',' << static_cast<int>(o.depth) << ')';
+			db->execute(ins.str().c_str());
+
+			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+				const obj_affected_type& oa = o.affected[a];
+				if(oa.location == 0 && oa.modifier == 0) {
+					continue;
+				}
+				std::ostringstream aff;
+				aff << "INSERT INTO character_inventory_affect (inventory_id, affect_slot, "
+					   "location, modifier) SELECT id, "
+					<< a << ',' << static_cast<int>(oa.location) << ','
+					<< static_cast<int>(oa.modifier)
+					<< " FROM character_inventory WHERE toon_id = " << toon_id
+					<< " AND list_index = " << i;
+				db->execute(aff.str().c_str());
+			}
+		}
+
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "save_rent_mysql: %s", e.what());
+		return false;
+	}
 #endif
 }
 
