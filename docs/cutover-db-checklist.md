@@ -168,11 +168,11 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 
 | # | Voce | Stato | Equivalente file oggi |
 |---|------|-------|------------------------|
-| 3.1 | `load_character_from_db(toon_id, char_data*)` | ❌ | `load_char` + `store_to_char` |
-| 3.2 | `character_core` + `character_stats` | ❌ | |
-| 3.3 | `character_classes` | ❌ | |
-| 3.4 | `character_skills` | ❌ | |
-| 3.5 | `character_affects` + resistenze | ❌ | |
+| 3.1 | `load_character_from_db(toon_id, char_data*)` | 🔶 | Implementato MVP come `load_char_mysql(name, char_file_u*)` + `store_to_char` |
+| 3.2 | `character_core` + `character_stats` | ✅ | Popolati da `load_char_mysql` |
+| 3.3 | `character_classes` | ✅ | Popolate in `level[]` |
+| 3.4 | `character_skills` | ✅ | Popolate in `skills[]` |
+| 3.5 | `character_affects` + resistenze | 🔶 | `character_affects` caricato; resistenze da tabella non ancora applicate |
 | 3.6 | Titolo / password / level da `toon` | 🔶 | Oggi molto da `.dat` / `desc` |
 | 3.7 | Kludge `talks[2]`, `load_room` +65536, mana/hit | ❌ | Come `load_char` / `store_to_char` |
 | 3.8 | `load_character_inventory_from_db` | ❌ | `load_char_objs` + `ReadObjs` |
@@ -180,7 +180,8 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 | 3.10 | PG `justCreated` | ☐ | Solo DB, mai file |
 | 3.11 | Poly / ghost / impersonate | ☐ | Test espliciti |
 
-**Gate 3:** 3+ PG rappresentativi — import → load solo DB → confronto con attese (pre-cutover).
+**Gate 3:** 3+ PG rappresentativi — import → load solo DB → confronto con attese (pre-cutover).  
+Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi chiave file vs DB).
 
 ---
 
@@ -205,13 +206,14 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 
 | Punto | Oggi | Dopo cutover |
 |-------|------|--------------|
-| `con_pwdok` | `load_char` + `store_to_char` | resolve `toon` → se !`migrated_at` import → `load_character_from_db` |
-| Fallimento load DB | — | stop; **no** fallback file automatico |
+| `con_pwdok` | 🔶 DB-first con fallback | resolve `toon` → se !`migrated_at` lazy import → `load_char_mysql` |
+| Fallimento load DB | fallback file con log | temporaneo in staging; da rimuovere prima del cutover definitivo |
 | Entrata `'1'`… | `load_char_objs` + `save_char` | load/save inventario + corpo da DB |
 | Quit / autorent | `save_char` → file | `save_character_to_db` |
 | `do_refund` | restore da zip → file | Runbook: file + reset flag + re-import |
 
-**Gate 5:** ciclo account → pwd → menu 1 → gioco → quit senza scrittura su `players/*.dat`.
+**Gate 5:** ciclo account → pwd → menu 1 → gioco → quit senza scrittura su `players/*.dat`.  
+Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset DB → import automatico OK → load MySQL OK).
 
 ---
 
@@ -265,10 +267,10 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 |--------|---------|
 | Schema + `migrated_at` | 🔶 |
 | Import batch (+ aux strutturato se serve) | 🔶 |
-| Load da DB | ❌ |
+| Load da DB | 🔶 |
 | Save DB + stop file | ❌ |
-| Login/menu wired | ❌ |
-| Test 7.x su staging | ❌ |
+| Login/menu wired | 🔶 |
+| Test 7.x su staging | 🔶 |
 | Runbook ops | ☐ |
 
 **Verdetto attuale:** si può migrare e verificare su **staging**; **non** tagliare in produzione finché §3–§5 non sono implementati.
@@ -278,11 +280,11 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 ## 10. Ordine di implementazione consigliato
 
 1. `migrated_at` + set in `legacy_import` (§1)  
-2. `load_character_from_db` + inventario (§3)  
+2. Completare `load_character_from_db` inventario+extra (§3.8, §3.9)  
 3. `save_character_to_db` + inventario + stop file (§4)  
 4. Load/save extra **oppure** import strutturato da `.aux` (§2.3)  
 5. Script batch + report (§2.5–2.6)  
-6. Wire `con_pwdok` + menu (§5)  
+6. Rimuovere fallback file in `con_pwdok` (hard cutover §5)  
 7. Test §7 → batch prod → deploy  
 
 ---
