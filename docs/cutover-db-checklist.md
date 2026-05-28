@@ -176,7 +176,7 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 | 3.6 | Titolo / password / level da `toon` | 🔶 | Oggi molto da `.dat` / `desc` |
 | 3.7 | Kludge `talks[2]`, `load_room` +65536, mana/hit | ❌ | Come `load_char` / `store_to_char` |
 | 3.8 | `load_character_inventory_from_db` | 🔶 | `load_rent_mysql` + `load_char_objs` se `migrated_at` |
-| 3.9 | `load_character_extra_from_db` | ❌ | `load_char_extra` (.aux) |
+| 3.9 | `load_character_extra_from_db` | 🔶 | `load_char_extra_mysql` + `load_char_extra` se `migrated_at` |
 | 3.10 | PG `justCreated` | ☐ | Solo DB, mai file |
 | 3.11 | Poly / ghost / impersonate | ☐ | Test espliciti |
 
@@ -192,7 +192,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 | 4.1 | `save_character_to_db(ch)` transazionale | ❌ | |
 | 4.2 | Aggiorna `toon` (password, title, level, lastlogin, lasthost) | 🔶 | Oggi sync parziale in `save_char` |
 | 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` in `update_file` (dual-write con rent file) |
-| 4.4 | `save_character_extra_to_db` | ❌ | `write_char_extra` su `.aux` |
+| 4.4 | `save_character_extra_to_db` | 🔶 | `save_char_extra_mysql` in `write_char_extra` (dual-write) |
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ❌ | |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ❌ | |
 | 4.7 | Menu `'1'..'4'`: oggi `load_char_objs` + `save_char` | 🚫 | `interpreter.cpp` ~3293 — riscrive file subito |
@@ -267,8 +267,8 @@ Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset
 |--------|---------|
 | Schema + `migrated_at` | 🔶 |
 | Import batch (+ aux strutturato se serve) | 🔶 |
-| Load da DB | 🔶 (corpo + rent se migrato) |
-| Save DB + stop file | 🔶 (corpo + rent dual-write; D2 file off no) |
+| Load da DB | 🔶 (corpo + rent + extra se migrato) |
+| Save DB + stop file | 🔶 (corpo + rent + extra dual-write; D2 file off no) |
 | Login/menu wired | 🔶 |
 | Test 7.x su staging | 🔶 |
 | Runbook ops | ☐ |
@@ -280,9 +280,8 @@ Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset
 ## 10. Ordine di implementazione consigliato
 
 1. `migrated_at` + set in `legacy_import` (§1)  
-2. Completare load/save **extra** (.aux) (§3.9, §4.4)  
-3. `save_character_to_db` unificato + stop file (§4.1, §4.5–4.6)  
-4. Load/save extra **oppure** import strutturato da `.aux` (§2.3)  
+2. `save_character_to_db` unificato + stop file (§4.1, §4.5–4.6)  
+3. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
 5. Script batch + report (§2.5–2.6)  
 6. Rimuovere fallback file in `con_pwdok` (hard cutover §5)  
 7. Test §7 → batch prod → deploy  

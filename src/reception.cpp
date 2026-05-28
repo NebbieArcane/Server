@@ -27,10 +27,14 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "spec_procs.hpp"
+#include "version.hpp"
 #if USE_MYSQL
 #include "Sql.hpp"
 #include "toon_migration.hpp"
 #include "odb/account-odb.hxx"
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
+#include <sstream>
 #endif
 
 namespace Alarmud {
@@ -740,10 +744,22 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(ch)));
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
-			if(toon_is_migrated(db, *pg) && load_rent_mysql(GET_NAME(ch), &st)) {
-				rent_from_db = true;
-				mudlog(LOG_PLAYERS, "load_char_objs: rent da DB per %s (%d oggetti)",
-					   GET_NAME(ch), st.number);
+			if(toon_is_migrated(db, *pg)) {
+				if(load_rent_mysql(GET_NAME(ch), &st)) {
+					rent_from_db = true;
+					mudlog(LOG_PLAYERS, "load_char_objs: rent da DB per %s (%d oggetti)",
+						   GET_NAME(ch), st.number);
+				}
+				else {
+					/* PG migrato senza character_rent: inventario vuoto, non file legacy */
+					st = obj_file_u {};
+					std::snprintf(st.owner, sizeof(st.owner), "%s", GET_NAME(ch));
+					st.last_update = static_cast<int>(time(nullptr));
+					rent_from_db = true;
+					mudlog(LOG_PLAYERS,
+						   "load_char_objs: rent da DB (vuoto) per %s — niente fallback file",
+						   GET_NAME(ch));
+				}
 			}
 		}
 	}
@@ -1974,144 +1990,175 @@ void WriteObjsOld(FILE* fl, struct old_obj_file_u* st) {
     PopStatus();
 }
 
+void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* value) {
+	char tmp[260];
+	char line_buf[260];
+	char* achie_n;
+	char* achie_v;
+	int n;
+
+	if(!ch || !tag || !*tag || !value) {
+		return;
+	}
+
+	if(!strcmp(tag, "out")) {
+		do_bamfout(ch, const_cast<char*>(value), CMD_BAMFOUT);
+	}
+	else if(!strcmp(tag, "in")) {
+		do_bamfin(ch, const_cast<char*>(value), CMD_BAMFIN);
+	}
+	else if(!strcmp(tag, "achie_racekill")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		achie_n = strtok(line_buf, "#");
+		achie_v = strtok(nullptr, "\0");
+		if(achie_n && achie_v) {
+			n = atoi(achie_n);
+			if(n >= 0 && n < MAX_RACE_ACHIE) {
+				ch->specials.achievements[RACESLAYER_ACHIE][n] = atoi(achie_v);
+			}
+		}
+	}
+	else if(!strcmp(tag, "achie_bosskill")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		achie_n = strtok(line_buf, "#");
+		achie_v = strtok(nullptr, "\0");
+		if(achie_n && achie_v) {
+			n = atoi(achie_n);
+			if(n >= 0 && n < MAX_BOSS_ACHIE) {
+				ch->specials.achievements[BOSSKILL_ACHIE][n] = atoi(achie_v);
+			}
+		}
+	}
+	else if(!strcmp(tag, "achie_class")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		achie_n = strtok(line_buf, "#");
+		achie_v = strtok(nullptr, "\0");
+		if(achie_n && achie_v) {
+			n = atoi(achie_n);
+			if(n >= 0 && n < MAX_CLASS_ACHIE) {
+				ch->specials.achievements[CLASS_ACHIE][n] = atoi(achie_v);
+			}
+		}
+	}
+	else if(!strcmp(tag, "achie_quest")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		achie_n = strtok(line_buf, "#");
+		achie_v = strtok(nullptr, "\0");
+		if(achie_n && achie_v) {
+			n = atoi(achie_n);
+			if(n >= 0 && n < MAX_QUEST_ACHIE) {
+				ch->specials.achievements[QUEST_ACHIE][n] = atoi(achie_v);
+			}
+		}
+	}
+	else if(!strcmp(tag, "achie_other")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		achie_n = strtok(line_buf, "#");
+		achie_v = strtok(nullptr, "\0");
+		if(achie_n && achie_v) {
+			n = atoi(achie_n);
+			if(n >= 0 && n < MAX_OTHER_ACHIE) {
+				ch->specials.achievements[OTHER_ACHIE][n] = atoi(achie_v);
+			}
+		}
+	}
+	else if(!strcmp(tag, "mercy")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		achie_n = strtok(line_buf, "#");
+		achie_v = strtok(nullptr, "\0");
+		if(achie_n && achie_v) {
+			n = atoi(achie_n);
+			if(n >= 0 && n < MAX_QUEST_ACHIE) {
+				ch->specials.mercy[n] = atoi(achie_v);
+			}
+		}
+	}
+	else if(!strcmp(tag, "email")) {
+		RECREATE(GET_EMAIL(ch), char, std::strlen(value) + 1);
+		std::strcpy(GET_EMAIL(ch), replace(const_cast<char*>(value), '\n', '\0'));
+	}
+	else if(!strcmp(tag, "realname")) {
+		RECREATE(GET_REALNAME(ch), char, std::strlen(value) + 1);
+		std::strcpy(GET_REALNAME(ch), replace(const_cast<char*>(value), '\n', '\0'));
+	}
+	else if(!strcmp(tag, "principe")) {
+		RECREATE(GET_PRINCE(ch), char, std::strlen(value) + 1);
+		std::strcpy(GET_PRINCE(ch), replace(const_cast<char*>(value), '\n', '\0'));
+	}
+	else if(!strcmp(tag, "version")) {
+		RECREATE(ch->specials.lastversion, char, std::strlen(value) + 1);
+		std::strcpy(ch->specials.lastversion, replace(const_cast<char*>(value), '\n', '\0'));
+	}
+	else if(!strcmp(tag, "zone")) {
+		GET_ZONE(ch) = atoi(value);
+	}
+	else if(!strcmp(tag, "prompt")) {
+		std::snprintf(line_buf, sizeof(line_buf), "%s", value);
+		if(char* nl = strchr(line_buf, '\n')) {
+			*nl = '\0';
+		}
+		if(char* cr = strchr(line_buf, '\r')) {
+			*cr = '\0';
+		}
+		do_set_prompt(ch, line_buf, 0);
+	}
+	else {
+		n = atoi(tag);
+		if(n >= 0 && n <= 9) {
+			const char* alias_text = value;
+			while(*alias_text == ' ' || *alias_text == '\t') {
+				++alias_text;
+			}
+			std::snprintf(tmp, sizeof(tmp) - 1, "%d %s", n, alias_text);
+			do_alias(ch, replace(tmp, '\n', '\0'), CMD_ALIAS);
+		}
+	}
+}
+
 void load_char_extra(struct char_data* ch) {
 	FILE* fp;
 	char buf[80];
 	char line[260];
-	char  tmp[260];
-	char* p, *s, *chk, *achie_n, *achie_v;
-	int n;
-	/* Cerca prima il file col nome in lower case */
-	snprintf(buf, sizeof(buf)-1,"%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
-	if((fp = fopen(buf, "r")) == NULL) {
-		/* Ok, proviamo col nome non trasformato */
-		snprintf(buf, sizeof(buf)-1,"%s/%s.aux", RENT_DIR, GET_NAME(ch));
-		if((fp = fopen(buf, "r")) == NULL) {
-			return;    /* nothing to look at */
-		}
-	}
-	/*
-	* open the file.. read in the lines, use them as the aliases and
-	* poofin and outs, depending on tags:
-	*
-	* format:
-	*
-	* <id>:string
-	*
-	*/
+	char* p;
+	char* s;
+	char* chk;
 
 	PushStatus("load char extra");
-	while(!feof(fp)) {
-		chk = fgets(line, 260, fp);
-		if(chk) {
-			p = (char*)strtok(line, ":");
-			s = (char*)strtok(0, "\0");
-			if(p) {
-				if(!strcmp(p,"out")) {
-					/*setup bamfout */
-					do_bamfout(ch, s, CMD_BAMFOUT);
-				}
-				else if(!strcmp(p, "in")) {
-					/* setup bamfin */
-					do_bamfin(ch, s, CMD_BAMFIN);
-				}
-                else if(!strcmp(p, "achie_racekill"))
-                {
-                    /* setup achievement racekill */
-                    achie_n = (char*)strtok(s, "#");
-                    achie_v = (char*)strtok(0, "\0");
-                    n = atoi(achie_n);
-                    ch->specials.achievements[RACESLAYER_ACHIE][n] = atoi(achie_v);
-                }
-                else if(!strcmp(p, "achie_bosskill"))
-                {
-                    /* setup achievement racekill */
-                    achie_n = (char*)strtok(s, "#");
-                    achie_v = (char*)strtok(0, "\0");
-                    n = atoi(achie_n);
-                    ch->specials.achievements[BOSSKILL_ACHIE][n] = atoi(achie_v);
-                }
-                else if(!strcmp(p, "achie_class"))
-                {
-                    /* setup achievement racekill */
-                    achie_n = (char*)strtok(s, "#");
-                    achie_v = (char*)strtok(0, "\0");
-                    n = atoi(achie_n);
-                    ch->specials.achievements[CLASS_ACHIE][n] = atoi(achie_v);
-                }
-                else if(!strcmp(p, "achie_quest"))
-                {
-                    /* setup achievement racekill */
-                    achie_n = (char*)strtok(s, "#");
-                    achie_v = (char*)strtok(0, "\0");
-                    n = atoi(achie_n);
-                    ch->specials.achievements[QUEST_ACHIE][n] = atoi(achie_v);
-                }
-                else if(!strcmp(p, "achie_other"))
-                {
-                    /* setup achievement racekill */
-                    achie_n = (char*)strtok(s, "#");
-                    achie_v = (char*)strtok(0, "\0");
-                    n = atoi(achie_n);
-                    ch->specials.achievements[OTHER_ACHIE][n] = atoi(achie_v);
-                }
-				else if(!strcmp(p, "mercy"))
-				{
-					/* setup achievement racekill */
-					achie_n = (char*)strtok(s, "#");
-					achie_v = (char*)strtok(0, "\0");
-					n = atoi(achie_n);
-					ch->specials.mercy[n] = atoi(achie_v);
-				}
-				else if(!strcmp(p, "email")) {
-					/* setup email */
-					RECREATE(GET_EMAIL(ch),char,strlen(s));
-					strcpy(GET_EMAIL(ch),replace(s,'\n','\0'));
-				}
-				else if(!strcmp(p, "realname")) {
-					/* setup realname */
-					RECREATE(GET_REALNAME(ch),char,strlen(s));
-					strcpy(GET_REALNAME(ch),replace(s,'\n','\0'));
-				}
-				else if(!strcmp(p, "principe")) {
-					/* setup realname */
-					RECREATE(GET_PRINCE(ch),char,strlen(s));
-					strcpy(GET_PRINCE(ch),replace(s,'\n','\0'));
-				}
-				else if(!strcmp(p, "version")) {
-					/* setup realname */
-					RECREATE(ch->specials.lastversion,char,strlen(s));
-					strcpy(ch->specials.lastversion,replace(s,'\n','\0'));
-				}
-				else if(!strcmp(p, "zone")) {
-					/* set zone permisions */
-					GET_ZONE(ch) = atoi(s);
-				}
-				else if(!strcmp(p, "prompt")) {
-					/* setup prompt */
-					if(strchr(s, '\n') != 0) {
-						*((char*)strchr(s,'\n')) = 0;
-					}
-					if(strchr(s, '\r') != 0) {
-						*((char*)strchr(s, '\r')) = 0;
-					}
-					do_set_prompt(ch, s, 0);
-				}
-				else {
-					if(s) {
-						s[strlen(s)]= '\0';
-						n = atoi(p);
-						if(n >=0 && n <= 9) {
-							/* set up alias */
-							snprintf(tmp, sizeof(tmp)-1,"%d %s", n, s+1);
-							do_alias(ch, replace(tmp,'\n','\0'), CMD_ALIAS);
-						}
-					}
-				}
+
+#if USE_MYSQL
+	{
+		const toonPtr pg =
+			Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(ch)));
+		if(pg && pg->id) {
+			DB* db = Sql::getMysql();
+			if(toon_is_migrated(db, *pg) && load_char_extra_mysql(GET_NAME(ch), ch)) {
+				mudlog(LOG_PLAYERS, "load_char_extra: extra da DB per %s", GET_NAME(ch));
+				PopStatus();
+				return;
 			}
 		}
-		else {
+	}
+#endif
+
+	/* Cerca prima il file col nome in lower case */
+	snprintf(buf, sizeof(buf) - 1, "%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
+	if((fp = fopen(buf, "r")) == NULL) {
+		snprintf(buf, sizeof(buf) - 1, "%s/%s.aux", RENT_DIR, GET_NAME(ch));
+		if((fp = fopen(buf, "r")) == NULL) {
+			PopStatus();
+			return;
+		}
+	}
+
+	while(!feof(fp)) {
+		chk = fgets(line, 260, fp);
+		if(!chk) {
 			break;
+		}
+		p = strtok(line, ":");
+		s = strtok(nullptr, "\0");
+		if(p && s) {
+			apply_char_extra_entry(ch, p, s);
 		}
 	}
 	fclose(fp);
@@ -2214,8 +2261,256 @@ void write_char_extra(struct char_data* ch) {
 		}
 	}
 	fclose(fp);
+
+#if USE_MYSQL
+	if(!save_char_extra_mysql(GET_NAME(ch), ch)) {
+		mudlog(LOG_SYSERR, "write_char_extra: save_char_extra_mysql failed for %s",
+			   GET_NAME(ch));
+	}
+#endif
+
 	PopStatus();
 }
+
+#if USE_MYSQL
+namespace {
+
+std::string extra_sql_escape(const char* s) {
+	if(!s) {
+		return "";
+	}
+	std::string out;
+	out.reserve(std::strlen(s) * 2 + 4);
+	for(const char* p = s; *p; ++p) {
+		if(*p == '\'' || *p == '\\') {
+			out.push_back('\\');
+		}
+		out.push_back(*p);
+	}
+	return out;
+}
+
+std::string extra_sql_literal(const char* s) {
+	if(!s) {
+		return "''";
+	}
+	return "'" + extra_sql_escape(s) + "'";
+}
+
+std::string extra_pref_key(const char* tag, const char* value) {
+	std::string key = tag ? tag : "";
+	if(key == "achie_racekill" || key == "achie_bosskill" || key == "achie_class" ||
+	   key == "achie_quest" || key == "achie_other" || key == "mercy") {
+		const char* hash = value ? std::strchr(value, '#') : nullptr;
+		if(hash && hash > value) {
+			key.push_back('#');
+			key.append(value, static_cast<std::size_t>(hash - value));
+		}
+	}
+	if(key.size() > 32) {
+		key.resize(32);
+	}
+	return key;
+}
+
+void extra_insert_pref(odb::database* db, unsigned long long toon_id, const char* tag,
+					   const char* value) {
+	if(!tag || !*tag || !value) {
+		return;
+	}
+	std::string val = value;
+	if(val.size() > 1024) {
+		val.resize(1024);
+	}
+	const std::string key = extra_pref_key(tag, val.c_str());
+	std::ostringstream sql;
+	sql << "INSERT INTO character_prefs (toon_id, pref_key, pref_value) VALUES (" << toon_id
+		<< ",'" << extra_sql_escape(key.c_str()) << "','" << extra_sql_escape(val.c_str())
+		<< "') ON DUPLICATE KEY UPDATE pref_value = VALUES(pref_value)";
+	db->execute(sql.str().c_str());
+}
+
+const char* extra_tag_from_pref_key(const std::string& key, std::string& tag_out) {
+	const std::size_t hash = key.find('#');
+	if(hash == std::string::npos) {
+		tag_out = key;
+		return tag_out.c_str();
+	}
+	const std::string base = key.substr(0, hash);
+	if(base == "achie_racekill" || base == "achie_bosskill" || base == "achie_class" ||
+	   base == "achie_quest" || base == "achie_other" || base == "mercy") {
+		tag_out = base;
+		return tag_out.c_str();
+	}
+	tag_out = key;
+	return tag_out.c_str();
+}
+
+bool extra_mysql_query(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
+	out_res = nullptr;
+	if(!db) {
+		return false;
+	}
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+	if(mysql_query(h, sql.c_str()) != 0) {
+		mudlog(LOG_SYSERR, "char_extra_mysql query error: %s", mysql_error(h));
+		return false;
+	}
+	out_res = mysql_store_result(h);
+	return true;
+}
+
+} /* namespace */
+
+bool load_char_extra_mysql(const char* name, struct char_data* ch) {
+	if(!name || !*name || !ch) {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string toon_id = std::to_string(pg->id);
+	MYSQL_RES* res = nullptr;
+	bool any = false;
+
+	/* Solo character_prefs (come legacy_import). Non caricare anche achievements/
+	 * aliases/mercy strutturati: il save dual-write li popola e riapplicare via
+	 * prefs + tabelle causava doppio do_alias / double free. */
+	const std::string prefs_sql =
+		"SELECT pref_key, pref_value FROM character_prefs WHERE toon_id = " + toon_id;
+	if(extra_mysql_query(db, prefs_sql, res) && res) {
+		MYSQL_ROW row;
+		std::string tag;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			if(!row[0] || !row[1]) {
+				continue;
+			}
+			apply_char_extra_entry(ch, extra_tag_from_pref_key(row[0], tag), row[1]);
+			any = true;
+		}
+		mysql_free_result(res);
+	}
+
+	return any;
+}
+
+bool save_char_extra_mysql(const char* name, struct char_data* ch) {
+	if(!name || !*name || !ch) {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "save_char_extra_mysql: toon mancante per %s", name);
+		return false;
+	}
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+
+		db->execute(("DELETE FROM character_prefs WHERE toon_id = " + toon_id).c_str());
+		db->execute(("DELETE FROM character_achievements WHERE toon_id = " + toon_id).c_str());
+		db->execute(("DELETE FROM character_aliases WHERE toon_id = " + toon_id).c_str());
+		db->execute(("DELETE FROM character_mercy WHERE toon_id = " + toon_id).c_str());
+
+		if(IS_IMMORTAL(ch)) {
+			if(ch->specials.poofin) {
+				extra_insert_pref(db, pg->id, "in", ch->specials.poofin);
+			}
+			if(ch->specials.poofout) {
+				extra_insert_pref(db, pg->id, "out", ch->specials.poofout);
+			}
+			{
+				char zbuf[32];
+				std::snprintf(zbuf, sizeof(zbuf), "%d", GET_ZONE(ch));
+				extra_insert_pref(db, pg->id, "zone", zbuf);
+			}
+		}
+
+		if(IS_SET(ch->specials.act, PLR_ACHIE)) {
+			auto save_ach = [&](int category, int max_slot, const char* tag) {
+				for(int i = 0; i < max_slot; ++i) {
+					const int val = ch->specials.achievements[category][i];
+					if(val <= 0) {
+						continue;
+					}
+					char vbuf[64];
+					std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, val);
+					extra_insert_pref(db, pg->id, tag, vbuf);
+					std::ostringstream sql;
+					sql << "INSERT INTO character_achievements (toon_id, category, slot_index, "
+						   "value) VALUES ("
+						<< toon_id << ',' << category << ',' << i << ',' << val << ')';
+					db->execute(sql.str().c_str());
+				}
+			};
+			save_ach(RACESLAYER_ACHIE, MAX_RACE_ACHIE, "achie_racekill");
+			save_ach(BOSSKILL_ACHIE, MAX_BOSS_ACHIE, "achie_bosskill");
+			save_ach(CLASS_ACHIE, MAX_CLASS_ACHIE, "achie_class");
+			save_ach(QUEST_ACHIE, MAX_QUEST_ACHIE, "achie_quest");
+			save_ach(OTHER_ACHIE, MAX_OTHER_ACHIE, "achie_other");
+
+			for(int i = 0; i < MAX_QUEST_ACHIE; ++i) {
+				if(ch->specials.mercy[i] <= 0) {
+					continue;
+				}
+				char vbuf[64];
+				std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, ch->specials.mercy[i]);
+				extra_insert_pref(db, pg->id, "mercy", vbuf);
+				std::ostringstream sql;
+				sql << "INSERT INTO character_mercy (toon_id, quest_index, value) VALUES ("
+					<< toon_id << ',' << i << ',' << ch->specials.mercy[i] << ')';
+				db->execute(sql.str().c_str());
+			}
+		}
+
+		if(ch->specials.prompt) {
+			extra_insert_pref(db, pg->id, "prompt", ch->specials.prompt);
+		}
+		if(ch->specials.email) {
+			extra_insert_pref(db, pg->id, "email", ch->specials.email);
+		}
+		if(GET_PRINCE(ch)) {
+			extra_insert_pref(db, pg->id, "principe", GET_PRINCE(ch));
+		}
+		if(ch->specials.realname) {
+			extra_insert_pref(db, pg->id, "realname", ch->specials.realname);
+		}
+		extra_insert_pref(db, pg->id, "version", version());
+
+		if(ch->specials.A_list) {
+			for(int i = 0; i < 10; ++i) {
+				if(!GET_ALIAS(ch, i)) {
+					continue;
+				}
+				char slot[8];
+				std::snprintf(slot, sizeof(slot), "%d", i);
+				extra_insert_pref(db, pg->id, slot, GET_ALIAS(ch, i));
+				std::ostringstream sql;
+				sql << "INSERT INTO character_aliases (toon_id, slot, alias_text) VALUES ("
+					<< toon_id << ',' << i << ',' << extra_sql_literal(GET_ALIAS(ch, i)) << ')';
+				db->execute(sql.str().c_str());
+			}
+		}
+
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "save_char_extra_mysql: %s", e.what());
+		return false;
+	}
+}
+#endif /* USE_MYSQL */
 
 
 void obj_store_to_room(int room, struct obj_file_u* st) {

@@ -68,6 +68,10 @@
 #include "magicutils.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
+#if USE_MYSQL
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
+#endif
 #include "legacy_loader.hpp"
 #include "legacy_import.hpp"
 namespace Alarmud {
@@ -475,6 +479,40 @@ ACTION_FUNC(do_legacyloadcheck) {
 					  db_rent.total_cost, file_rent.last_update, db_rent.last_update);
 		send_to_char(buf, ch);
 	}
+
+	LegacyCharAux file_aux {};
+	const bool file_aux_ok = legacy_load_char_aux(name, file_aux);
+	std::size_t db_prefs = 0;
+#if USE_MYSQL
+	{
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(pg && pg->id) {
+			try {
+				DB* db = Sql::getMysql();
+				odb::connection_ptr cp(db->connection());
+				auto& mc = static_cast<odb::mysql::connection&>(*cp);
+				MYSQL* h = mc.handle();
+				const std::string sql = "SELECT COUNT(*) FROM character_prefs WHERE toon_id = " +
+										std::to_string(pg->id);
+				if(mysql_query(h, sql.c_str()) == 0) {
+					MYSQL_RES* res = mysql_store_result(h);
+					if(res) {
+						if(MYSQL_ROW row = mysql_fetch_row(res)) {
+							db_prefs = static_cast<std::size_t>(std::strtoull(
+								row[0] ? row[0] : "0", nullptr, 10));
+						}
+						mysql_free_result(res);
+					}
+				}
+			}
+			catch(const odb::exception&) {
+			}
+		}
+	}
+#endif
+	std::snprintf(buf, sizeof(buf), " aux file=%s righe=%zu | prefs db=%zu\r\n",
+				  file_aux_ok ? "OK" : "KO", file_aux.entries.size(), db_prefs);
+	send_to_char(buf, ch);
 }
 
 
