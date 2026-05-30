@@ -3823,7 +3823,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	struct char_file_u st;
-	FILE* fl;
+	FILE* fl = NULL;
 	char szFileName[200];
 	struct char_data* tmp = NULL;
 
@@ -3906,7 +3906,9 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 		}
 	}
 	/* === FINE BLOCCO === */
-	fclose(fl);
+	if(fl) {
+		fclose(fl);
+	}
 
 }
 /* void save_char(struct char_data *ch, sh_int load_room)

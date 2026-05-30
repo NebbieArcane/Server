@@ -1864,38 +1864,31 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 	int i;
 
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 
 	fread(st->owner, sizeof(st->owner), 1, fl);
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 	fread(&st->gold_left, sizeof(st->gold_left), 1, fl);
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 	fread(&st->total_cost, sizeof(st->total_cost), 1, fl);
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 	fread(&st->last_update, sizeof(st->last_update), 1, fl);
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 	fread(&st->minimum_stay, sizeof(st->minimum_stay), 1, fl);
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 	fread(&st->number, sizeof(st->number), 1, fl);
 	if(feof(fl)) {
-		fclose(fl);
 		return(FALSE);
 	}
 	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
@@ -1911,38 +1904,31 @@ int ReadObjsOld(FILE* fl, struct old_obj_file_u* st) {
 
     if(feof(fl))
     {
-        fclose(fl);
         return(FALSE);
     }
 
     fread(st->owner, sizeof(st->owner), 1, fl);
     if(feof(fl)) {
-        fclose(fl);
         return(FALSE);
     }
     fread(&st->gold_left, sizeof(st->gold_left), 1, fl);
     if(feof(fl)) {
-        fclose(fl);
         return(FALSE);
     }
     fread(&st->total_cost, sizeof(st->total_cost), 1, fl);
     if(feof(fl)) {
-        fclose(fl);
         return(FALSE);
     }
     fread(&st->last_update, sizeof(st->last_update), 1, fl);
     if(feof(fl)) {
-        fclose(fl);
         return(FALSE);
     }
     fread(&st->minimum_stay, sizeof(st->minimum_stay), 1, fl);
     if(feof(fl)) {
-        fclose(fl);
         return(FALSE);
     }
     fread(&st->number, sizeof(st->number), 1, fl);
     if(feof(fl)) {
-        fclose(fl);
         return(FALSE);
     }
     mudlog(LOG_SAVE,"Letto_old %s %d %d %d %d %d",st->owner, st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
