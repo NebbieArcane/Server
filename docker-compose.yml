@@ -3,8 +3,8 @@
 # prima di lanciare il server nebbieserver.
 # Le credenziali e il nome DB devono corrispondere a quelli nel Dockerfile
 # (~/Confs/vagrant.conf): root / secret / nebbie.
-# NOTA: su Apple Silicon forziamo linux/amd64 per allineare ambiente Docker
-# e VM Vagrant (x86_64), riducendo differenze di toolchain/ABI.
+# Base image: Ubuntu 24.04 (Noble). Su Apple Silicon forziamo linux/amd64
+# per compatibilità con toolchain x86_64/ODB precompilati.
 
 services:
   nebbieserver:

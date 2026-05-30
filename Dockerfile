@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Imposta variabili d'ambiente per installazioni non interattive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,16 +10,16 @@ RUN echo "mysql-server mysql-server/root_password password secret" | debconf-set
 # 2. Installazione dipendenze e creazione utente 'vagrant'
 RUN apt-get update && \
     apt-get install -y \
-        sudo git php8.1-cli gcc-12 g++-12 gcc-12-plugin-dev apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb wget \
+        sudo git php8.3-cli gcc-12 g++-12 gcc-12-plugin-dev apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb wget \
         libcurl4-openssl-dev libboost-dev libboost-program-options-dev libboost-system-dev \
         libboost-filesystem-dev liblog4cxx-dev libboost-date-time-dev \
         librtmp-dev libnghttp2-dev libkrb5-dev comerr-dev libpsl-dev libssh-dev libbrotli-dev \
         mysql-server mysql-client libmysqlclient-dev libmysqlcppconn-dev net-tools iproute2 vim less dos2unix && \
-    BUILD2_DEB_BASE="https://download.build2.org/0.18.1/bindist/ubuntu/ubuntu22.04/x86_64" && \
+    BUILD2_DEB_BASE="https://download.build2.org/0.18.1/bindist/ubuntu/ubuntu24.04/x86_64" && \
     mkdir -p /tmp/build2-debs && \
     cd /tmp/build2-debs && \
-    wget -q "${BUILD2_DEB_BASE}/build2-toolchain_0.18.1-0~ubuntu22.04_amd64.deb" && \
-    apt-get install -y ./build2-toolchain_0.18.1-0~ubuntu22.04_amd64.deb && \
+    wget -q "${BUILD2_DEB_BASE}/build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb" && \
+    apt-get install -y ./build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb && \
     BPKG_STABLE_REPO="https://pkg.cppget.org/1/stable" && \
     mkdir -p /tmp/odb-build && \
     bpkg create -d /tmp/odb-build/odb-gcc-12 cc \

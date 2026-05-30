@@ -85,6 +85,18 @@ fi
 
 echo "Database '$MYSQL_DB' created successfully."
 
+# 5b) Flag cutover su toon (migrated_at / schema_version) se mancanti
+MIGRATION_FLAGS=/app/docs/schema-s1-toon-migration-flags.sql
+if [ -f "$MIGRATION_FLAGS" ]; then
+  HAS_MIGRATED_AT=$(mysql -h 127.0.0.1 -P 3306 --protocol=TCP -u$MYSQL_USER -p$MYSQL_PASSWORD -N -e \
+    "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='${MYSQL_DB}' AND TABLE_NAME='toon' AND COLUMN_NAME='migrated_at';" 2>/dev/null || echo "0")
+  if [ "$HAS_MIGRATED_AT" = "0" ]; then
+    echo "Applying toon migration flags (migrated_at, schema_version)..."
+    mysql -h 127.0.0.1 -P 3306 --protocol=TCP -u$MYSQL_USER -p$MYSQL_PASSWORD "$MYSQL_DB" < "$MIGRATION_FLAGS"
+    echo "Toon migration flags applied."
+  fi
+fi
+
 # 6) Avvia il server nebbieserver come utente vagrant
 SERVER_PORT=${SERVER_PORT:-4000}
 EXEC_PATH="/app" # Esegui dalla root del progetto

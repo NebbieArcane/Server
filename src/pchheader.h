@@ -9,7 +9,11 @@
 #include <log4cxx/logger.h>
 #include <log4cxx/logger.h>
 #include <log4cxx/patternlayout.h>
+#if __has_include(<log4cxx/rolling/rollingfileappender.h>)
+#include <log4cxx/rolling/rollingfileappender.h>
+#else
 #include <log4cxx/rollingfileappender.h>
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pwd.h>

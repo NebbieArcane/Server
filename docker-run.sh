@@ -42,7 +42,7 @@ if [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
         echo "File ODB mancanti — generazione su container ARM64 nativo..."
         docker run --rm --platform linux/arm64 \
             -v "$(cd "$(dirname "$0")" && pwd)/src:/src" \
-            ubuntu:bionic \
+            ubuntu:24.04 \
             sh -c "
                 apt-get update -qq 2>/dev/null
                 apt-get install -qq -y g++ odb libodb-dev libodb-boost-dev \

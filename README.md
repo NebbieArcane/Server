@@ -48,6 +48,7 @@
         * SERVER_PORT=4002 ./docker-run.sh up
 
 ## NOTES (Docker)
+* Immagine base: **Ubuntu 24.04 (Noble)** con MySQL 8, GCC 12 e toolchain ODB via build2
 * docker-run.sh auto-detects the host architecture (Intel or Apple Silicon) and sets the correct platform
 * On Apple Silicon, ODB files (src/odb/account-odb*.cxx) are pre-generated in the repo. If missing, docker-run.sh regenerates them automatically before building
 * MySQL runs inside the container, same as Vagrant. Data is persisted in the mud_data Docker volume
