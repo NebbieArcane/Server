@@ -236,8 +236,8 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 |---|------|-------|-----------------------------------|
 | 7.1 | PG nuovo: solo DB, login/logout | ✅ | Ritest post `bb6d942`: niente crash menu 5 / delete |
 | 7.2 | PG legacy migrato: gioco + save + re-login | ✅ | **Alar**: `loaded … from MySQL`, quit room 7801/1000, re-login rent da DB (1 oggetto), 1M coins |
-| 7.3 | Rent: equip + pensione | ☐ | `quit`: &lt;58 drop a terra + rent vuoto; ≥58 `save_obj` conserva eq (MySQL/file) |
-| 7.4 | Poly + save | ☐ | |
+| 7.3 | Rent: equip + pensione | ✅ | A: mortale &lt;58 rent+quit drop OK; B: Alar ≥58 quit conserva eq + rent OK |
+| 7.4 | Poly + save | ✅ | Quit in poly bloccato; `return` + quit + re-login OK |
 | 7.5 | Ghost / reconnect (se usato) | ☐ | |
 | 7.6 | Achievement / alias / mercy (PG con `.aux` ricco) | ☐ | Solo se PG pilota con `.aux` non banale |
 | 7.7 | mtime `.dat` / rent dopo sessione migrata | ✅ | **Alar**: `.dat` 3040 B e `.aux` 92 B invariati; `rent/alar` 0 B, solo mtime (+67 s), log `skip rent file` |
@@ -247,7 +247,7 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → `after` → `diff` (PASS se `.dat`/`.aux` identici; rent stub 0 byte può cambiare solo mtime).
 
 **GO** se 7.1–7.5 e 7.7 passano; 7.6 se avete PG con `.aux` non banali; 7.9 se il mud usa DEATH_FIX in produzione.  
-**Staging oggi:** 7.1 + 7.2 + 7.7 OK su Alar; mancano 7.3–7.5 (e 7.6/7.8/7.9 se applicabili).
+**Staging oggi:** 7.1–7.4 + 7.7 OK; mancano 7.5 (e 7.6/7.8/7.9 se applicabili).
 
 ---
 
@@ -273,10 +273,10 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 | Load da DB | 🔶 (corpo + rent + extra se migrato) |
 | Save DB + stop file | 🔶 (D2 attivo se `migrated_at`; PG non migrati ancora dual-write) |
 | Login/menu wired | ✅ | Fix menu/delete/`justCreated` (`bb6d942`); `con_pwdok` no fallback se migrato |
-| Test 7.x su staging | 🔶 | **7.1, 7.2, 7.7** OK (Alar); **7.3–7.5** da fare |
+| Test 7.x su staging | 🔶 | **7.1–7.4, 7.7** OK; **7.5** da fare |
 | Runbook ops | ☐ |
 
-**Verdetto attuale:** **staging Vagrant** validato su PG migrato pilota (Alar) per load/save D2 e re-login; **non** GO produzione finché **7.3–7.5**, batch §2.5, §4.1 save unificato, §0.1 backup.
+**Verdetto attuale:** **staging Vagrant** validato su load/save D2, re-login, rent, quit e poly; **non** GO produzione finché **7.5** (se serve), batch §2.5, §4.1 save unificato, §0.1 backup.
 
 ---
 
@@ -284,7 +284,7 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 
 1. ~~`migrated_at` + set in `legacy_import` (§1)~~ ✅  
 2. ~~Test **7.7** + **7.2** su Alar~~ ✅ (2026-05-31); ~~**7.1** PG nuovo~~ ✅  
-3. **Adesso:** test **7.3** (rent equip + pensione su PG migrato), poi **7.4** poly, **7.5** ghost se usato  
+3. ~~Test **7.3** rent + quit per livello~~ ✅ — ~~**7.4** poly~~ ✅ — **Adesso:** **7.5** ghost se usato  
 4. `save_character_to_db` unificato (§4.1) + fix `toon.lastlogin` (§4.2)  
 5. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
 6. Script batch + report (§2.5–2.6) + backup §0.1  

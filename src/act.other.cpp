@@ -465,7 +465,17 @@ ACTION_FUNC(do_title) {
 
 ACTION_FUNC(do_quit) {
 
-	if(IS_NPC(ch) || !ch->desc || IS_AFFECTED(ch, AFF_CHARM)) {
+	if(!ch->desc || IS_AFFECTED(ch, AFF_CHARM)) {
+		return;
+	}
+
+	if(IS_POLY(ch)) {
+		send_to_char(
+			"Se vuoi abbandonare il gioco, fallo nella tua forma originale!\n\r", ch);
+		return;
+	}
+
+	if(IS_NPC(ch)) {
 		return;
 	}
 
