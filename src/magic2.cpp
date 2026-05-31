@@ -32,6 +32,19 @@
 
 namespace Alarmud {
 
+namespace {
+
+bool char_active_in_game(struct char_data* ch) {
+	if(!ch || ch->nMagicNumber != CHAR_VALID_MAGIC) {
+		return false;
+	}
+	if(IS_PC(ch)) {
+		return ch->desc && ch->desc->connected == CON_PLYNG;
+	}
+	return true;
+}
+
+} // namespace
 
 /*
  * cleric spells
@@ -52,7 +65,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 	FILE* fdeath;
 	char szFileName[ 40 ];
 
-	if(!obj) {
+	if(!obj || !char_active_in_game(ch)) {
 		return;
 	}
 
@@ -68,12 +81,23 @@ void spell_resurrection(byte level, struct char_data* ch,
 			}
 
 			victim = read_mobile(obj->char_vnum, VIRTUAL);
+			if(!victim || victim->nr < 0 || victim->nr > top_of_mobt) {
+				mudlog(LOG_SYSERR,
+					   "spell_resurrection: read_mobile(%d) invalid (ch=%s)",
+					   obj->char_vnum, GET_NAME_DESC(ch));
+				if(victim) {
+					extract_char(victim);
+				}
+				return;
+			}
 
 			/* corpse is a npc */
 			/* Modifica Urhar, toglie ai multi la possibilita' di resurrectare mob */
 			if(!IS_IMMORTALE(ch))
 			{
-				if(!IS_SINGLE(ch) || isname2("BossKill", mob_index[victim->nr].specname))
+				if(!IS_SINGLE(ch) ||
+				   !mob_index[victim->nr].specname ||
+				   isname2("BossKill", mob_index[victim->nr].specname))
 				{
 					send_to_char("Gli Dei non ti concedono questo potere su questa creatura!\n\r",ch);
 					if(victim)
@@ -153,9 +177,12 @@ void spell_resurrection(byte level, struct char_data* ch,
             {
                 if(IS_POLY(ch))
                 {
-                    ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
-                    if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
-                        SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                    if(ch->desc && ch->desc->original) {
+                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
+                        if(!IS_SET(ch->desc->original->specials.act, PLR_ACHIE)) {
+                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        }
+                    }
                 }
                 else
                 {
@@ -246,14 +273,17 @@ void spell_resurrection(byte level, struct char_data* ch,
                 {
                     if(IS_POLY(ch))
                     {
-                        ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
-                        if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
-                            SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                        if(ch->desc && ch->desc->original) {
+                            ch->desc->original->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
+                            if(!IS_SET(ch->desc->original->specials.act, PLR_ACHIE)) {
+                                SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
+                            }
+                        }
                     }
                     else
                     {
                         ch->specials.achievements[CLASS_ACHIE][ACHIE_CLERIC_2] += 1;
-                        if(!IS_SET(ch->specials.act,PLR_ACHIE))
+                        if(!IS_SET(ch->specials.act, PLR_ACHIE))
                             SET_BIT(ch->specials.act, PLR_ACHIE);
                     }
 

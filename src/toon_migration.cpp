@@ -20,13 +20,17 @@
 #include <string>
 
 #include "Sql.hpp"
+#include "odb/account-odb.hxx"
 
 namespace Alarmud {
 namespace {
 
 unsigned long long toon_query_scalar_conn(odb::database* db, const std::string& sql) {
-	odb::connection_ptr cp(db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	odb::connection_ptr owned;
+	odb::connection& conn = odb::transaction::has_current()
+		? odb::transaction::current().connection()
+		: *(owned = db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(conn);
 	MYSQL* h = mc.handle();
 	if(mysql_query(h, sql.c_str()) != 0) {
 		mudlog(LOG_SYSERR, "toon_query_scalar: %s", mysql_error(h));
@@ -46,6 +50,9 @@ unsigned long long toon_query_scalar_conn(odb::database* db, const std::string& 
 }
 
 unsigned long long toon_query_scalar(odb::database* db, const std::string& sql) {
+	if(odb::transaction::has_current()) {
+		return toon_query_scalar_conn(db, sql);
+	}
 	odb::transaction t(db->begin());
 	t.tracer(logTracer);
 	const unsigned long long n = toon_query_scalar_conn(db, sql);
@@ -117,6 +124,23 @@ bool toon_is_migrated(odb::database* db, const toon& pg) {
 	return migrated;
 }
 
+bool toon_is_migrated_by_name(const char* name) {
+	if(!name || !*name) {
+		return false;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		return toon_is_migrated(Sql::getMysql(), *pg);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "toon_is_migrated_by_name(%s): %s", name, e.what());
+		return false;
+	}
+}
+
 bool toon_needs_migration(odb::database* db, const toon& pg) {
 	bool migrated = false;
 	unsigned short ver = 0;
@@ -150,6 +174,9 @@ bool toon_has_character_core(odb::database* db, unsigned long long toon_id) {
 void toon_mark_migrated_tx(odb::database* db, unsigned long long toon_id,
 						   unsigned short schema_version) {
 	if(!db || !toon_id) {
+		return;
+	}
+	if(!toon_column_exists(db, "migrated_at")) {
 		return;
 	}
 	std::string sql = "UPDATE toon SET migrated_at = NOW(), schema_version = ";
@@ -214,6 +241,11 @@ bool toon_fetch_migration_state(odb::database* db, unsigned long long toon_id, b
 bool toon_is_migrated(odb::database* db, const toon& pg) {
 	(void)db;
 	(void)pg;
+	return false;
+}
+
+bool toon_is_migrated_by_name(const char* name) {
+	(void)name;
 	return false;
 }
 

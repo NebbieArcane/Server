@@ -404,6 +404,22 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 	write_char_extra(k);
 	PushStatus("update_file2");
 
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(k))) {
+		std::strcpy(st->owner, GET_NAME(k));
+		if(!save_rent_mysql(GET_NAME(k), *st)) {
+			mudlog(LOG_SYSERR, "update_file: save_rent_mysql failed for %s", GET_NAME(k));
+		}
+		else {
+			mudlog(LOG_SAVE, "update_file: skip rent file for migrated %s", GET_NAME(k));
+		}
+		PopStatus();
+		PopStatus();
+		PopStatus();
+		return;
+	}
+#endif
+
 	if(!(fl = fopen(buf, "w"))) {
 		mudlog(LOG_ERROR,"%s:%s","saving PC's objects",strerror(errno));
 		assert(0);
@@ -2156,6 +2172,22 @@ void write_char_extra(struct char_data* ch) {
 	char buf[80];
 	int i;
 	PushStatus("write char extra");
+
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(ch))) {
+		if(!save_char_extra_mysql(GET_NAME(ch), ch)) {
+			mudlog(LOG_SYSERR, "write_char_extra: save_char_extra_mysql failed for %s",
+				   GET_NAME(ch));
+		}
+		else {
+			mudlog(LOG_SAVE, "write_char_extra: skip .aux file for migrated %s",
+				   GET_NAME(ch));
+		}
+		PopStatus();
+		return;
+	}
+#endif
+
 	snprintf(buf,sizeof(buf)-1, "%s/%s.aux", RENT_DIR, lower(GET_NAME(ch)));
 	/*
 	 * open the file.. read in the lines, use them as the aliases and
@@ -2168,6 +2200,7 @@ void write_char_extra(struct char_data* ch) {
 	 */
 
 	if((fp = fopen(buf, "w")) == NULL) {
+		PopStatus();
 		return;  /* nothing to write */
 	}
 

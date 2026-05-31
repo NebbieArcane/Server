@@ -126,27 +126,6 @@ std::string legacy_pref_key_for_aux(const std::string& tag, const std::string& v
 	return key;
 }
 
-void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id) {
-	const std::string id = std::to_string(toon_id);
-	db->execute(("DELETE cia FROM character_inventory_affect cia "
-				 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
-				 "WHERE ci.toon_id = " +
-				 id)
-					.c_str());
-	const char* tables[] = {"character_inventory", "character_rent",	 "character_prefs",
-							"character_aliases", "character_achievements", "character_mercy",
-							"character_quest_progress", "character_resistance", "character_affects",
-							"character_skills",		"character_classes",	"character_stats",
-							"character_core"};
-	for(const char* table : tables) {
-		std::string sql = "DELETE FROM ";
-		sql += table;
-		sql += " WHERE toon_id = ";
-		sql += id;
-		db->execute(sql.c_str());
-	}
-}
-
 void legacy_insert_core(odb::database* db, unsigned long long toon_id, const char_file_u& st) {
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream sql;
@@ -351,6 +330,27 @@ std::size_t legacy_insert_rent(odb::database* db, unsigned long long toon_id,
 
 } /* anonymous */
 
+void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id) {
+	const std::string id = std::to_string(toon_id);
+	db->execute(("DELETE cia FROM character_inventory_affect cia "
+				 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+				 "WHERE ci.toon_id = " +
+				 id)
+					.c_str());
+	const char* tables[] = {"character_inventory", "character_rent",	 "character_prefs",
+							"character_aliases", "character_achievements", "character_mercy",
+							"character_quest_progress", "character_resistance", "character_affects",
+							"character_skills",		"character_classes",	"character_stats",
+							"character_core"};
+	for(const char* table : tables) {
+		std::string sql = "DELETE FROM ";
+		sql += table;
+		sql += " WHERE toon_id = ";
+		sql += id;
+		db->execute(sql.c_str());
+	}
+}
+
 bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& report) {
 	report = LegacyImportReport {};
 
@@ -435,6 +435,11 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 	report = LegacyImportReport {};
 	report.message = "MySQL non abilitato in build";
 	return false;
+}
+
+void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id) {
+	(void)db;
+	(void)toon_id;
 }
 
 } /* namespace Alarmud */

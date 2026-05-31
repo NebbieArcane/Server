@@ -119,7 +119,7 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 |---|------|-------|------|
 | 0.1 | Backup `players/` (`.dat` + `.dead`), `rent/`, dump MySQL | ☐ | Snapshot datato; path documentato; `.dead` = sidecar DEATH_FIX |
 | 0.2 | Inventario `.dat` vs `toon` | ☐ | Vedi sezione sopra; risolvere orfani prima del batch |
-| 0.3 | DDL S1 applicato su DB target | ☐ | `schema-s1-ddl-draft.sql` + `schema-s1-ddl-add-resistance.sql`, `drop-unused-conditions`, `drop-extra-str`, `fix-character-classes` |
+| 0.3 | DDL S1 applicato su DB target | 🔶 | Vagrant: fatto a mano; script: `./scripts/apply-schema-s1.sh` |
 | 0.4 | Build con `USE_MYSQL` | ✅ | Verificato da `legacyimport montero` OK |
 | 0.5 | `legacy_loader` / `legacy_import` nel link del binario | ✅ | Verificato da `legacyprobe` / `legacyimport` in-game |
 | 0.6 | Runbook restore singolo PG | ☐ | Backup file → `migrated_at = NULL` → `legacyimport` |
@@ -132,7 +132,7 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 
 | # | Voce | Stato | Note |
 |---|------|-------|------|
-| 1.1 | `ALTER TABLE toon` (`migrated_at`, `schema_version`) | 🔶 | SQL: [schema-s1-toon-migration-flags.sql](schema-s1-toon-migration-flags.sql); oppure ODB migrate |
+| 1.1 | `ALTER TABLE toon` (`migrated_at`, `schema_version`) | ✅ | Vagrant + `apply-schema-s1.sh`; SQL: [schema-s1-toon-migration-flags.sql](schema-s1-toon-migration-flags.sql) |
 | 1.2 | Campi cutover su `toon` (SQL + struct C++ `transient`) | ✅ | DDL: [schema-s1-toon-migration-flags.sql](schema-s1-toon-migration-flags.sql); ODB account resta v1 (no migrate ODB per questi campi) |
 | 1.3 | `legacy_import` setta flag in transazione prima di `commit` | ✅ | `toon_mark_migrated_tx` in `legacy_import.cpp` |
 | 1.4 | Helper in `toon_migration.hpp` / `.cpp` | ✅ | fetch SQL + mark/clear/sanity |
@@ -193,8 +193,8 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 | 4.2 | Aggiorna `toon` (password, title, level, lastlogin, lasthost) | 🔶 | Oggi sync parziale in `save_char` |
 | 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` in `update_file` (dual-write con rent file) |
 | 4.4 | `save_character_extra_to_db` | 🔶 | `save_char_extra_mysql` in `write_char_extra` (dual-write) |
-| 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ❌ | |
-| 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ❌ | |
+| 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ✅ | `save_char` + `toon_is_migrated_by_name` |
+| 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ✅ | `update_file` / `write_char_extra` |
 | 4.7 | Menu `'1'..'4'`: oggi `load_char_objs` + `save_char` | 🚫 | `interpreter.cpp` ~3293 — riscrive file subito |
 | 4.8 | `.dead`: scrittura file **consentita** anche se migrato | ☐ | Sidecar DEATH_FIX; nessuna tabella DB; vedi sezione `.dead` |
 
@@ -206,8 +206,8 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 
 | Punto | Oggi | Dopo cutover |
 |-------|------|--------------|
-| `con_pwdok` | 🔶 DB-first con fallback | resolve `toon` → se !`migrated_at` lazy import → `load_char_mysql` |
-| Fallimento load DB | fallback file con log | temporaneo in staging; da rimuovere prima del cutover definitivo |
+| `con_pwdok` | 🔶 DB-first; **no fallback file se `migrated_at`** | lazy import se `toon_needs_migration`; PG migrato: solo MySQL |
+| Fallimento load DB | file solo se **non** migrato | staging: migrati bloccati su file (harder cutover) |
 | Entrata `'1'`… | `load_char_objs` + `save_char` | load/save inventario + corpo da DB |
 | Quit / autorent | `save_char` → file | `save_character_to_db` |
 | `do_refund` | restore da zip → file | Runbook: file + reset flag + re-import |
@@ -240,7 +240,7 @@ Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset
 | 7.4 | Poly + save | |
 | 7.5 | Ghost / reconnect (se usato) | |
 | 7.6 | Achievement / alias / mercy (PG con `.aux` ricco) | |
-| 7.7 | mtime `.dat` e `rent/*` invariati dopo sessione migrata | |
+| 7.7 | mtime `.dat` e `rent/*` invariati dopo sessione migrata | ☐ | `./scripts/check-gate-7.7.sh <nome> before` → gioco → `after` → `diff` |
 | 7.8 | Restore drill: 1 PG da backup file + re-import | |
 | 7.9 | Morte / sacrificio / resurrect (PG con `.dead` rilevante) | | Solo se usate quelle meccaniche; file sidecar presente |
 
@@ -265,32 +265,33 @@ Stato: lazy migration + DB-first login verificati su staging (`TheProdigy` reset
 
 | Blocco | Pronto? |
 |--------|---------|
-| Schema + `migrated_at` | 🔶 |
+| Schema + `migrated_at` | ✅ (Vagrant) |
 | Import batch (+ aux strutturato se serve) | 🔶 |
 | Load da DB | 🔶 (corpo + rent + extra se migrato) |
-| Save DB + stop file | 🔶 (corpo + rent + extra dual-write; D2 file off no) |
-| Login/menu wired | 🔶 |
+| Save DB + stop file | 🔶 (D2 attivo se `migrated_at`; PG non migrati ancora dual-write) |
+| Login/menu wired | 🔶 (`con_pwdok` senza fallback file se migrato) |
 | Test 7.x su staging | 🔶 |
 | Runbook ops | ☐ |
 
-**Verdetto attuale:** si può migrare e verificare su **staging**; **non** tagliare in produzione finché §3–§5 non sono implementati.
+**Verdetto attuale:** **staging Vagrant** pronto per test PG singoli (es. Alar); **non** GO produzione finché batch §2.5, test 7.x, §4.1.
 
 ---
 
 ## 10. Ordine di implementazione consigliato
 
-1. `migrated_at` + set in `legacy_import` (§1)  
-2. `save_character_to_db` unificato + stop file (§4.1, §4.5–4.6)  
-3. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
+1. ~~`migrated_at` + set in `legacy_import` (§1)~~ ✅  
+2. **Adesso:** test gate **7.7** su PG migrato (`check-gate-7.7.sh`) + **7.2** re-login  
+3. `save_character_to_db` unificato (§4.1)  
+4. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
 5. Script batch + report (§2.5–2.6)  
-6. Rimuovere fallback file in `con_pwdok` (hard cutover §5)  
+6. ~~Rimuovere fallback file in `con_pwdok` se migrato~~ ✅ (codice)  
 7. Test §7 → batch prod → deploy  
 
 ---
 
 ## Ambiente Vagrant (sviluppo locale)
 
-Su questo PC si usa **Vagrant**, non Docker. Il repo è montato in `/vagrant` nella VM `nebbieserver` (Ubuntu Jammy).
+Su questo PC si usa **Vagrant**, non Docker. Il repo è montato in `/vagrant` nella VM `nebbieserver` (Ubuntu **24.04 Noble**, allineata al Dockerfile Docker).
 
 ### Giorno per giorno
 
@@ -307,17 +308,21 @@ cd mudroot && ./myst        # come README
 
 `./build.sh vagrant` limita i job paralleli a 2 sul filesystem condiviso; se fallisce, riprova con build seriale (già gestito dallo script).
 
-### DDL cutover su MySQL (§1)
+### DDL cutover su MySQL (§0.3 / §1)
 
 MySQL gira **nella VM** (come in README), non in un container Docker.
 
+Dopo import dump `nebbie.sql` (o primo boot ODB):
+
 ```bash
 cd /vagrant
-mysql -u root -p"${MYSQL_PASSWORD:-secret}" "${MYSQL_DB:-nebbie}" \
-  < docs/schema-s1-toon-migration-flags.sql
+./scripts/apply-schema-s1.sh
+./build.sh vagrant
 ```
 
-I flag cutover **non** passano da migrate ODB (`migrated_at` / `schema_version` sono `transient` in `account.hpp`); usare sempre lo script SQL sopra.
+Al provision Noble, `scripts/vagrant-provision-noble.sh` applica solo `migrated_at` se `toon` esiste già (non il DDL S1 completo).
+
+I flag cutover **non** passano da migrate ODB (`migrated_at` / `schema_version` sono `transient` in `account.hpp`); usare sempre lo script SQL sopra se il provision non li ha ancora applicati.
 
 ### Test §1 in-game
 

@@ -1306,13 +1306,25 @@ void gain_exp_regardless(struct char_data* ch, int gain, int iClass,
 
 			else {
 				GET_EXP(ch) += gain;
-				for(i = 0; i < ABS_MAX_LVL && titles[ iClass ][ i ].exp <= GET_EXP(ch); i++) {
-					if(i > GET_LEVEL(ch, iClass) && GET_LEVEL(ch, iClass) < iMaxLevel) {
+				if(iClass < 0 || iClass >= MAX_CLASS) {
+					mudlog(LOG_SYSERR,
+						   "gain_exp_regardless: iClass=%d invalid for %s", iClass,
+						   GET_NAME_DESC(ch));
+				}
+				else {
+					const int start_level = GET_LEVEL(ch, iClass);
+					for(i = start_level + 1;
+						i < ABS_MAX_LVL && i <= iMaxLevel &&
+						titles[iClass][i].exp <= GET_EXP(ch);
+						++i) {
 						send_to_char("Cresci di un livello!\n\r", ch);
 						advance_level(ch, iClass);
 						is_altered = TRUE;
-						mudlog(LOG_SYSERR,"(LIMITS2)Maxxa la classe %d a %d",i,
-							   (titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1));
+						mudlog(LOG_SYSERR, "(LIMITS2)Maxxa la classe %d a %d", iClass,
+							   titles[iClass][GET_LEVEL(ch, iClass)].exp);
+						if(GET_LEVEL(ch, iClass) >= iMaxLevel) {
+							break;
+						}
 					}
 				}
 			}

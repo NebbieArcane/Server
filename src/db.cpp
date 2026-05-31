@@ -3855,17 +3855,27 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	st.last_logon += bonus * 60 * 60 * 24;
 	strcpy(st.pwd, ch->desc->pwd);
 
-	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
-	if((fl = fopen(szFileName, "r+b")) == NULL) {
-		if((fl = fopen(szFileName, "wb")) == NULL) {
-			mudlog(LOG_ERROR, "Cannot create file %s for saving player.",
-				   szFileName);
-			return;
-		}
+	bool skip_dat_file = false;
+#if USE_MYSQL
+	skip_dat_file = toon_is_migrated_by_name(GET_NAME(tmp));
+	if(skip_dat_file) {
+		mudlog(LOG_SAVE, "save_char: skip .dat file for migrated %s", GET_NAME(tmp));
 	}
+#endif
 
-	rewind(fl);
-	fwrite(&st, sizeof(struct char_file_u), 1, fl);
+	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
+	if(!skip_dat_file) {
+		if((fl = fopen(szFileName, "r+b")) == NULL) {
+			if((fl = fopen(szFileName, "wb")) == NULL) {
+				mudlog(LOG_ERROR, "Cannot create file %s for saving player.",
+					   szFileName);
+				return;
+			}
+		}
+
+		rewind(fl);
+		fwrite(&st, sizeof(struct char_file_u), 1, fl);
+	}
 	/* === BLOCCO SINCRONIZZAZIONE DB === */
 	if (IS_PC(ch) || IS_SET(ch->specials.act, ACT_POLYSELF)) {
 
@@ -4269,6 +4279,10 @@ void free_char(struct char_data* ch) {
 	if(ch->skills) {
 		free(ch->skills);
 		ch->skills = NULL;
+	}
+	if(ch->desc) {
+		ch->desc->character = nullptr;
+		ch->desc = nullptr;
 	}
 	if(ch->nMagicNumber != CHAR_FREEDED_MAGIC) {
 		ch->nMagicNumber = CHAR_FREEDED_MAGIC;

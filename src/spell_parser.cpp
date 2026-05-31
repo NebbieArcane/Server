@@ -1351,6 +1351,13 @@ void die_follower(struct char_data* ch) {
 void add_follower(struct char_data* ch, struct char_data* leader) {
 	struct follow_type* k;
 
+	if(!ch || !leader || ch->nMagicNumber != CHAR_VALID_MAGIC ||
+	   leader->nMagicNumber != CHAR_VALID_MAGIC) {
+		mudlog(LOG_SYSERR, "add_follower: invalid ch=%p leader=%p", (void*)ch,
+			   (void*)leader);
+		return;
+	}
+
 #if 0
 	assert(!ch->master);
 #else

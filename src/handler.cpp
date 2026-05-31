@@ -2429,6 +2429,10 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	}
 
 	if(t_desc) {
+		/* PG al menu: non e' in gioco; evita incantesimi/effetti su desc attivo */
+		if(IS_PC(ch)) {
+			ch->desc = NULL;
+		}
 		t_desc->connected = CON_SLCT;
 		SEND_TO_Q(MENU, t_desc);
 	}

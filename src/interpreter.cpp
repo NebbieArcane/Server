@@ -6,6 +6,7 @@
 /*AlarMUD*/
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <random>
 #include <cstring>
 #include <cctype>
 #include <cstdio>
@@ -65,6 +66,17 @@
 namespace Alarmud {
 using std::string;
 
+namespace {
+
+bool toon_exists_in_db(const char* name) {
+	if(!name || !*name) {
+		return false;
+	}
+	toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	return pg && pg->id;
+}
+
+} // namespace
 
 /* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
@@ -2050,6 +2062,7 @@ NANNY_FUNC(con_account_toon) {
 			mudlog(LOG_CONNECT,"Choosen %s",name.c_str());
 			d->AccountData.choosen=name;
 			d->currentInput=name;
+			d->justCreated = false;
 			STATE(d)=CON_PWDOK;
 			return true;
 		}
@@ -2441,6 +2454,11 @@ NANNY_FUNC(con_slct) {
 		break;
 
 	case 'c': {
+		if(!d->character || !GET_NAME(d->character)) {
+			SEND_TO_Q("Nessun personaggio selezionato.\r\n", d);
+			SEND_TO_Q(MENU, d);
+			break;
+		}
 		if(GetMaxLevel(d->character)>=CHUMP) {
 			SEND_TO_Q("Sei sicuro di volerti cancellare ? (si/no): ",d);
 			STATE(d)=CON_DELETE_ME;
@@ -2450,6 +2468,34 @@ NANNY_FUNC(con_slct) {
 	/* FALLTHRU */
 	case '1':
 	{
+		if(d->character && IS_PC(d->character) && !d->character->desc) {
+			/* PG estratto al menu (quit): ricollega desc prima di entrare in gioco */
+			d->character->desc = d;
+		}
+		if(!d->character || !GET_NAME(d->character) || !*GET_NAME(d->character)) {
+			SEND_TO_Q("Nessun personaggio selezionato. Usa l'opzione 5 per sceglierne uno.\r\n", d);
+			SEND_TO_Q(MENU, d);
+			break;
+		}
+		if(!toon_exists_in_db(GET_NAME(d->character))) {
+			const std::string deleted_name(GET_NAME(d->character));
+			mudlog(LOG_PLAYERS, "%s: menu enter after delete/missing toon", deleted_name.c_str());
+			free_char(d->character);
+			d->character = nullptr;
+			d->justCreated = false;
+			auto& roster = d->toons;
+			roster.erase(std::remove(roster.begin(), roster.end(), deleted_name), roster.end());
+			SEND_TO_Q("Questo personaggio non esiste piu'.\r\n", d);
+			if(d->AccountData.authorized) {
+				toonList(d, "");
+				STATE(d) = CON_ACCOUNT_TOON;
+			}
+			else {
+				SEND_TO_Q("Nome: ", d);
+				STATE(d) = CON_NME;
+			}
+			break;
+		}
 		reset_char(d->character);
 		int Level=GetMaxLevel(d->character);
 		if (PORT==RELEASE_PORT) {
@@ -2614,6 +2660,7 @@ NANNY_FUNC(con_slct) {
 	case '5':
 		free_char(d->character);
 		d->character=nullptr;
+		d->justCreated = false;
 		if(d->AccountData.authorized) {
 			toonList(d,"Cambia personaggio:\n\r");
 			STATE(d) = CON_ACCOUNT_TOON;
@@ -2837,6 +2884,7 @@ NANNY_FUNC(con_register) {
 		mudlog(LOG_CONNECT, "Nuovo file .dat (sincronizzato) creato per %s.", GET_NAME(d->character));
 
 		// --- FINE NUOVA LOGICA DI CREAZIONE ---
+		/* justCreated resta true fino a con_pwdok: non ricaricare da MySQL il PG appena creato */
 
 	} else if(d->AccountData.authorized) {
 		// Questa è la vecchia logica di 'con_register',
@@ -2865,13 +2913,18 @@ NANNY_FUNC(con_pwdok) {
 		d->character->desc = d;
 		SET_BIT(d->character->player.user_flags, USE_PAGING);
 	}
-	/* Newly created toons are fully loaded
-	 */
-	if(!d->justCreated) {
+	/* PG appena creato: gia' in RAM da con_register; MySQL ha il corpo ma non
+	 * sovrascrivere (stats/classi potrebbero non essere ancora coerenti). */
+	const bool skip_mysql_load = d->justCreated;
+	if(skip_mysql_load) {
+		d->justCreated = false;
+	}
+	if(!skip_mysql_load) {
 		char_file_u tmp_store;
 		bool loaded = false;
 		const std::string toon_name = d->AccountData.choosen;
 		toonPtr pg = Sql::getOne<toon>(toonQuery::name == toon_name);
+		bool block_file_fallback = false;
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
 			if(toon_needs_migration(db, *pg)) {
@@ -2892,13 +2945,19 @@ NANNY_FUNC(con_pwdok) {
 				loaded = true;
 				mudlog(LOG_CONNECT, "con_pwdok: loaded %s from MySQL", toon_name.c_str());
 			}
+			else if(toon_is_migrated(db, *pg)) {
+				block_file_fallback = true;
+				mudlog(LOG_SYSERR,
+					   "con_pwdok: MySQL load failed for migrated %s — no file fallback",
+					   toon_name.c_str());
+			}
 			else {
 				mudlog(LOG_SYSERR,
 					   "con_pwdok: MySQL load failed/sanity KO for %s, fallback to file",
 					   toon_name.c_str());
 			}
 		}
-		if(!loaded && load_char(toon_name.c_str(), &tmp_store)) {
+		if(!loaded && !block_file_fallback && load_char(toon_name.c_str(), &tmp_store)) {
 			store_to_char(&tmp_store, d->character);
 			loaded = true;
 			mudlog(LOG_CONNECT, "con_pwdok: loaded %s from file fallback", toon_name.c_str());
@@ -3484,32 +3543,58 @@ NANNY_FUNC(con_city_choice) {
 }
 NANNY_FUNC(con_delete_me) {
 	oldarg(false);
+	if(!d->character || !GET_NAME(d->character) || !*GET_NAME(d->character)) {
+		SEND_TO_Q("Nessun personaggio da cancellare.\r\n", d);
+		SEND_TO_Q(MENU, d);
+		STATE(d) = CON_SLCT;
+		return false;
+	}
 	if(!strcmp(arg,"si") && strcmp("Guest",GET_NAME(d->character))) {
 		char buf[MAX_INPUT_LENGTH * 2];
+		const std::string deleted_name(GET_NAME(d->character));
 
-		mudlog(LOG_PLAYERS, "%s just killed self!",
-			   GET_NAME(d->character));
-		sprintf(buf, "rm %s/%s.dat", PLAYERS_DIR,
-				lower(GET_NAME(d->character)));
+		mudlog(LOG_PLAYERS, "%s just killed self!", deleted_name.c_str());
+		sprintf(buf, "rm -f %s/%s.dat", PLAYERS_DIR, lower(deleted_name.c_str()));
 		system(buf);
-		sprintf(buf, "rm %s/%s", RENT_DIR, lower(GET_NAME(d->character)));
+		sprintf(buf, "rm -f %s/%s.dead", PLAYERS_DIR, lower(deleted_name.c_str()));
 		system(buf);
-		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
+		sprintf(buf, "rm -f %s/%s", RENT_DIR, lower(deleted_name.c_str()));
 		system(buf);
-		toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(GET_NAME(d->character)));
-		if (pg) Sql::erase(*pg,true);
-		SEND_TO_Q("Done\n\t",d);
-        if (d->AccountData.id) {    // controllo se ha un id
-		SEND_TO_Q(MENU,d);
-		STATE(d)= CON_SLCT;
-        }
-        else
-        {
-            Sql::update(d->AccountData);
-            toonUpdate(d);
-            close_socket(d);
-            return false;
-        }
+		sprintf(buf, "rm -f %s/%s.aux", RENT_DIR, lower(deleted_name.c_str()));
+		system(buf);
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == deleted_name);
+		if(pg && pg->id) {
+			try {
+				DB* db = Sql::getMysql();
+				odb::transaction t(db->begin());
+				t.tracer(logTracer);
+				legacy_delete_character_rows(db, pg->id);
+				db->erase(*pg);
+				t.commit();
+			}
+			catch(const odb::exception& e) {
+				mudlog(LOG_SYSERR, "con_delete_me: DB delete failed for %s: %s",
+					   deleted_name.c_str(), e.what());
+			}
+		}
+		free_char(d->character);
+		d->character = nullptr;
+		d->justCreated = false;
+		if(d->AccountData.choosen == deleted_name) {
+			d->AccountData.choosen.clear();
+		}
+		auto& roster = d->toons;
+		roster.erase(std::remove(roster.begin(), roster.end(), deleted_name), roster.end());
+		SEND_TO_Q("Done\n\t", d);
+		if(d->AccountData.id) {
+			toonList(d, "");
+			STATE(d) = CON_ACCOUNT_TOON;
+		}
+		else {
+			Sql::update(d->AccountData);
+			close_socket(d);
+			return false;
+		}
 	}
 	else {
 		SEND_TO_Q(MENU,d);
@@ -3529,7 +3614,11 @@ NANNY_FUNC(con_pwdnew) {
 	}
 	string salt(RandomWord());
 	salt.append(RandomWord());
-	random_shuffle(salt.begin(),salt.end());
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::shuffle(salt.begin(), salt.end(), gen);
+	}
 	strncpy(d->pwd,crypt(arg, salt.c_str()), 10);
 	*(d->pwd + 10) = '\0';
 	echoOn(d);
@@ -3635,6 +3724,9 @@ void nanny(struct descriptor_data* d, char* arg) {
 	while(moresteps);
 }
 void toonUpdate(const descriptor_data* d) {
+	if(!d || !d->character) {
+		return;
+	}
 	boost::format fmt(R"(UPDATE toon SET level=%d,lastlogin=now(),lasthost="%s" WHERE name="%s")");
 	fmt % GetMaxLevel(d->character) % d->host % d->AccountData.choosen;
 	try {

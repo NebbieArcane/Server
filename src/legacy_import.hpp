@@ -9,6 +9,10 @@
 #include <cstddef>
 #include <string>
 
+namespace odb {
+class database;
+}
+
 namespace Alarmud {
 
 struct LegacyImportReport {
@@ -28,6 +32,9 @@ struct LegacyImportReport {
  * `file_name`: nome file (minuscolo, es. "montero"); il record toon deve esistere (match su st.name).
  */
 bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& report);
+
+/** Rimuove tutte le righe character_* per un toon (prima di cancellare il record toon). */
+void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id);
 
 } /* namespace Alarmud */
 

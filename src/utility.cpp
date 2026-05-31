@@ -4207,9 +4207,16 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         return;
     }
 
-    if(IS_POLY(tch))
+    if(IS_POLY(ch))
     {
+        if(!ch->desc || !ch->desc->original) {
+            return;
+        }
         tch = ch->desc->original;
+    }
+
+    if(!tch) {
+        return;
     }
 
     if(AchievementsList[achievement_class][achievement_type].classe == -1)

@@ -6,15 +6,27 @@
         * apt install vagrant
         * vagrant plugin install vagrant-timezone
         * ./getworld
-        * vagrant up
+        * vagrant up   # VM Ubuntu 24.04 Noble (box bento/ubuntu-24.04, allineata a Docker)
         * vagrant ssh
     * DAY BY DAY
         * vagrant up
         * vagrant ssh
         * cd /vagrant
-        * make
+        * ./build.sh vagrant
         * cd mudroot
         * ./myst
+    * UPGRADE da VM Jammy (22.04) a Noble
+        * vagrant destroy -f
+        * vagrant box remove ubuntu/jammy64   # opzionale
+        * vagrant up
+    * NOTA box: da Ubuntu 24.04 Canonical non pubblica più `ubuntu/*` su Vagrant Cloud;
+      usiamo `bento/ubuntu-24.04` (Noble vanilla, VirtualBox amd64/arm64).
+    * Provision fallito o interrotto
+        * `vagrant up` **non** rilancia il provision se la VM esiste già
+        * Riprendi con: `vagrant up --provision` oppure `vagrant provision`
+        * ODB parziale resta in `/var/cache/nebbie-odb-build` (riprende da dove era)
+        * Log in VM: `vagrant ssh -c 'sudo tail -100 /var/log/nebbie-vagrant-provision.log'`
+        * Per rifare tutto ODB: `vagrant ssh` poi `sudo rm /var/lib/nebbie/odb-toolchain-installed`
     * In emergency (or when you add a new header or code file to src):
         * ./build.sh # to rebuild the makefiles
 

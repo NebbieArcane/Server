@@ -17,6 +17,7 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <algorithm>
+#include <random>
 #include <filesystem>
 #include <system_error>
 #include <boost/algorithm/string.hpp>
@@ -205,7 +206,11 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 													parts.end())) {
 				realname += s + " ";
 			}
-			random_shuffle(entropy.begin(), entropy.end());
+			{
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::shuffle(entropy.begin(), entropy.end(), gen);
+			}
 			user account(realname, email,
 						 crypt(entropy.substr(0, 6).c_str(),
 							   entropy.substr(11, 2).c_str()));
@@ -4899,12 +4904,13 @@ ACTION_FUNC(do_advance) {
 	}
 	else {
 		if(GET_LEVEL(victim, lin_class) < MAESTRO_DEI_CREATORI) {
-			long lGain =
-				MAX(0,
-					titles[lin_class][ GET_LEVEL(victim, lin_class)
-									   + adv].exp - GET_EXP(victim));
-			gain_exp_regardless(victim, lGain, lin_class,
-								MAESTRO_DEI_CREATORI);
+			const int target_level = GET_LEVEL(victim, lin_class) + adv;
+			if(target_level > 0 && target_level < ABS_MAX_LVL) {
+				GET_LEVEL(victim, lin_class) = target_level;
+				GET_EXP(victim) = titles[lin_class][target_level].exp;
+				set_title(victim);
+				save_char(victim, AUTO_RENT, 0);
+			}
 
 			send_to_char("Character is now advanced.\n\r", ch);
 		}

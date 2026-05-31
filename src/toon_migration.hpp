@@ -23,6 +23,9 @@ bool toon_fetch_migration_state(odb::database* db, unsigned long long toon_id, b
 /** true se migrated_at valorizzato (usa fetch se db != nullptr). */
 bool toon_is_migrated(odb::database* db, const toon& pg);
 
+/** Gate D2: lookup per nome PG (no-op se !USE_MYSQL). */
+bool toon_is_migrated_by_name(const char* name);
+
 /** true se serve import character_* (non migrato o schema obsoleto). */
 bool toon_needs_migration(odb::database* db, const toon& pg);
 
