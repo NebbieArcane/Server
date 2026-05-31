@@ -1855,6 +1855,21 @@ void zero_rent(struct char_data* ch) {
 		return;
 	}
 
+	if(GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
+		return;
+	}
+
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(ch))) {
+		struct obj_file_u st {};
+		std::snprintf(st.owner, sizeof(st.owner), "%s", GET_NAME(ch));
+		st.last_update = static_cast<int>(time(nullptr));
+		save_rent_mysql(GET_NAME(ch), st);
+		write_char_extra(ch);
+		return;
+	}
+#endif
+
 	ZeroRent(GET_NAME(ch));
     write_char_extra(ch);   //  salvo gli achievements su file alla morte
 

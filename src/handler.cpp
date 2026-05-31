@@ -2175,7 +2175,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 	struct obj_data* i;
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
-	int l, was_in, j;
+	int l, was_in;
 
 #ifndef NOEVENTS
 	/* cancel point updates */
@@ -2234,30 +2234,16 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 		ch->desc->snoop.snooping = ch->desc->snoop.snoop_by = 0;
 	}
 
-	if(ch->carrying) {
-		/* transfer ch's objects to room */
-		if(!IS_IMMORTAL(ch)) {
-			while(ch->carrying) {
-				i = ch->carrying;
-				obj_from_char(i);
-				obj_to_room(i, ch->in_room);
-				check_falling_obj(i, ch->in_room);
-			}
-		}
-		else {
-			send_to_char("Hai lasciato della roba, qui. Ci penso io a "
-						 "sbarazzarmene.\n\r", ch);
-			/* equipment too */
-			for(j=0; j<MAX_WEAR; j++) {
-				if(ch->equipment[ j ]) {
-					obj_to_char(unequip_char(ch, j), ch);
-				}
-			}
-			while(ch->carrying) {
-				i = ch->carrying;
-				obj_from_char(i);
-				extract_obj(i);
-			}
+	/* quit: PG livello < 58 → roba a terra; >=58 → save_obj in do_quit; mob come prima */
+	const bool quit_drop_gear_to_room =
+		IS_NPC(ch) || (IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEL_CREATO);
+
+	if(quit_drop_gear_to_room && ch->carrying) {
+		while(ch->carrying) {
+			i = ch->carrying;
+			obj_from_char(i);
+			obj_to_room(i, ch->in_room);
+			check_falling_obj(i, ch->in_room);
 		}
 	}
 
@@ -2285,11 +2271,14 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 
 	char_from_room(ch);
 
-	/* clear equipment_list */
-	for(l = 0; l < MAX_WEAR; l++)
-		if(ch->equipment[ l ]) {
-			obj_to_room(unequip_char(ch, l), was_in);
+	/* clear equipment_list (a terra solo se livello < 58) */
+	if(quit_drop_gear_to_room) {
+		for(l = 0; l < MAX_WEAR; l++) {
+			if(ch->equipment[l]) {
+				obj_to_room(unequip_char(ch, l), was_in);
+			}
 		}
+	}
 
     if(!IS_PC(ch) && ch->specials.eq_val_idx)
     {

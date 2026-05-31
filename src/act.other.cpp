@@ -46,6 +46,7 @@
 #include "opinion.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
+#include "toon_migration.hpp"
 #include "snew.hpp"
 #include "snew.hpp"
 #include "spec_procs.hpp"
@@ -482,7 +483,17 @@ ACTION_FUNC(do_quit) {
 
 	act("Goodbye, friend.. Come back soon!", FALSE, ch, 0, 0, TO_CHAR);
 	act("$n has left the game.", TRUE, ch,0,0,TO_ROOM);
-	zero_rent(ch);
+	if(GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
+		/* Immortale 58+: conserva equip in pensione (file o MySQL), niente drop a terra */
+		struct obj_cost cost {};
+		cost.total_cost = 0;
+		cost.no_carried = 0;
+		save_obj(ch, &cost, 1);
+		write_char_extra(ch);
+	}
+	else {
+		zero_rent(ch);
+	}
 	extract_char(ch); /* Char is saved in extract char */
 }
 
