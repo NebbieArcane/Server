@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -24,13 +25,19 @@
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
+#include "toon_migration.hpp"
 #include "handler.hpp"
 #include "magic.hpp"
 #include "magicutils.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "maximums.hpp"
 
 namespace Alarmud {
+
+#define STATE(d) ((d)->connected)
+
+extern void load_char_extra(struct char_data* ch);
 
 namespace {
 
@@ -61,8 +68,9 @@ void spell_resurrection(byte level, struct char_data* ch,
 	struct char_file_u st;
 	struct affected_type af;
 	struct obj_data* obj_object, *next_obj;
+	struct char_data* newch;
+	struct descriptor_data* d;
 	FILE* fl;
-	FILE* fdeath;
 	char szFileName[ 40 ];
 
 	if(!obj || !char_active_in_game(ch)) {
@@ -197,6 +205,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 		}
 		else {
 			/* corpse is a pc  */
+			const std::string corpse_player{obj->oldfilename};
 
 			if(GET_GOLD(ch) < 75000) {
 				send_to_char("Gli Dei non sono soddisfatti del tuo sacrificio.\n\r",ch);
@@ -205,38 +214,57 @@ void spell_resurrection(byte level, struct char_data* ch,
 			else {
 				GET_GOLD(ch) -= 75000;
 			}
-			sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(obj->oldfilename));
-			if((fl = fopen(szFileName, "r+")) == NULL) {
-				mudlog(LOG_SYSERR, "Cannot find player file %s in resurrect.",
-					   szFileName);
-				send_to_char("Problemi con il file del giocatore da resuscitare.\n\r",
-							 ch);
-				send_to_char("Contattare un Dio.\n\r", ch);
-				return;
+			const bool migrated_pc =
+#if USE_MYSQL
+				toon_is_migrated_by_name(corpse_player.c_str());
+#else
+				false;
+#endif
+			if(!migrated_pc) {
+				sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(corpse_player.c_str()));
+				if((fl = fopen(szFileName, "r+")) == NULL) {
+					mudlog(LOG_SYSERR, "Cannot find player file %s in resurrect.",
+						   szFileName);
+					send_to_char("Problemi con il file del giocatore da resuscitare.\n\r",
+								 ch);
+					send_to_char("Contattare un Dio.\n\r", ch);
+					return;
+				}
+				fread(&st, sizeof(struct char_file_u), 1, fl);
 			}
+			else {
+				if(!load_char_mysql(corpse_player.c_str(), &st)) {
+					mudlog(LOG_SYSERR,
+						   "resurrect: load_char_mysql failed for migrated %s",
+						   corpse_player.c_str());
+					send_to_char("Problemi con il database del giocatore da resuscitare.\n\r",
+								 ch);
+					send_to_char("Contattare un Dio.\n\r", ch);
+					return;
+				}
+				fl = nullptr;
+			}
+			long snap_exp = 0;
+			long snap_at = 0;
 #if DEATH_FIX
-			sprintf(szFileName, "%s/%s.dead", PLAYERS_DIR, lower(obj->oldfilename));
-			if((fdeath = fopen(szFileName, "r+")) == NULL) {
-				mudlog(LOG_SYSERR, "Cannot find dead file %s in resurrect.",
-					   szFileName);
+			if(!death_snapshot_load(corpse_player.c_str(), snap_exp, snap_at)) {
+				mudlog(LOG_SYSERR, "Cannot find death snapshot for %s in resurrect.",
+					   corpse_player.c_str());
 				send_to_char("Problemi con il file del giocatore da resuscitare.\n\r",
 							 ch);
 				send_to_char("Contattare un Dio.\n\r", ch);
-				fclose(fl);
+				if(fl) {
+					fclose(fl);
+				}
 				return;
 			}
 #endif
-			fread(&st, sizeof(struct char_file_u), 1, fl);
 			if(!get_char(st.name) && st.abilities.con > 3) {
 #if DEATH_FIX
-				long xp;
-				long ora;
-				fscanf(fdeath,"%ld : %ld",&xp,&ora);
-				st.points.exp=xp;
-				ora=(long)(time(0)-ora);
+				st.points.exp = static_cast<int>(snap_exp);
+				const long elapsed = static_cast<long>(time(nullptr) - snap_at);
 				mudlog(LOG_PLAYERS, "%s resuscitato dopo %ld secondi",
-					   obj->oldfilename,ora);
-
+					   corpse_player.c_str(), elapsed);
 #else
 				st.points.exp *= 5;
 				st.points.exp /= 4;
@@ -290,19 +318,61 @@ void spell_resurrection(byte level, struct char_data* ch,
                     CheckAchie(ch, ACHIE_CLERIC_2, CLASS_ACHIE);
                 }
 
-				rewind(fl);
-				fwrite(&st, sizeof(struct char_file_u), 1, fl);
-				mudlog(LOG_PLAYERS, "%s e' stato resuscitato da %s.",
-					   obj->oldfilename, GET_NAME(ch));
+				if(fl) {
+					rewind(fl);
+					fwrite(&st, sizeof(struct char_file_u), 1, fl);
+				}
 				ObjFromCorpse(obj);
+
+				CREATE(newch, struct char_data, 1);
+				clear_char(newch);
+				store_to_char(&st, newch);
+				reset_char(newch);
+				load_char_extra(newch);
+
+				newch->next = character_list;
+				character_list = newch;
+				char_to_room(newch, ch->in_room);
+				newch->invis_level = 51;
+
+				set_title(newch);
+				GET_HIT(newch) = 1;
+				alter_hit(newch, 0);
+				GET_MANA(newch) = 1;
+				alter_mana(newch, 0);
+				GET_MOVE(newch) = 1;
+				alter_move(newch, 0);
+				GET_POS(newch) = POSITION_SITTING;
+				save_char(newch, AUTO_RENT, 0);
+
+				for(d = descriptor_list; d; d = d->next) {
+					if(d->character &&
+					   strcmp(GET_NAME(d->character), GET_NAME(newch)) == 0) {
+						if(STATE(d) != CON_PLYNG) {
+							free_char(d->character);
+							d->character = newch;
+							STATE(d) = CON_PLYNG;
+							newch->desc = d;
+							act("$n ritorna in vita!", TRUE, newch, 0, 0, TO_ROOM);
+							send_to_char(
+								"La luce divina ti richiama tra i viventi.\n\r",
+								newch);
+							break;
+						}
+					}
+				}
+
+				mudlog(LOG_PLAYERS, "%s e' stato resuscitato da %s.",
+					   corpse_player.c_str(), GET_NAME(ch));
 
 			}
 			else {
 				send_to_char("Questo corpo e' troppo debole per essere "
 							 "riportato in vita.\n\r", ch);
 			}
-			fclose(fl);
-			fclose(fdeath);
+			if(fl) {
+				fclose(fl);
+			}
 		}
 	}
 }

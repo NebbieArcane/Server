@@ -75,6 +75,7 @@
 #endif
 #include "legacy_loader.hpp"
 #include "legacy_import.hpp"
+#include "toon_migration.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -7071,41 +7072,49 @@ ACTION_FUNC(do_force_rent) {
 
 }*/
 
-	void save_ghost_forcerent(struct char_data* ch)
+void save_ghost_forcerent(struct char_data* ch)
 {
 	struct char_file_u tmp_store;
-	FILE* fl;
+	FILE* fl = nullptr;
 	char szFileName[200];
 
-	if(!IS_SET(ch->specials.act,PLR_NEW_EQ))
-	{
-		SET_BIT(ch->specials.act,PLR_NEW_EQ);
+	if(!IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+		SET_BIT(ch->specials.act, PLR_NEW_EQ);
 	}
 
 	char_to_store(ch, &tmp_store);
 	tmp_store.load_room = AUTO_RENT;
 
-	/* === INIZIO MODIFICA: Recupera Password dal DB prima di salvare su File === */
-	// Questo impedisce che il file .dat venga salvato con una password vuota o corrotta
 	try {
 		toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(GET_NAME(ch)));
-		if (pg && pg->id) {
-			// Copiamo la password sicura dal DB nella struttura che sta per essere scritta su file
+		if(pg && pg->id) {
 			strncpy(tmp_store.pwd, pg->password.c_str(), 10);
-			// Non serve aggiornare il DB qui (Sql::update) perché il fantasma non cambia password/livelli
-		} else {
-			mudlog(LOG_SYSERR, "save_ghost_forcerent: ATTENZIONE PG %s non trovato nel DB!", GET_NAME(ch));
 		}
-	} catch (const odb::exception& e) {
+		else {
+			mudlog(LOG_SYSERR, "save_ghost_forcerent: ATTENZIONE PG %s non trovato nel DB!",
+				   GET_NAME(ch));
+		}
+	}
+	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "save_ghost_forcerent: Errore DB fetch: %s", e.what());
 	}
-	/* === FINE MODIFICA === */
+
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(ch))) {
+		if(!save_char_mysql_snapshot(ch, tmp_store)) {
+			mudlog(LOG_SYSERR, "save_ghost_forcerent: save_char_mysql_snapshot failed for %s",
+				   GET_NAME(ch));
+		}
+		else {
+			mudlog(LOG_SAVE, "save_ghost_forcerent: skip .dat for migrated %s", GET_NAME(ch));
+		}
+		return;
+	}
+#endif
 
 	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(ch->player.name));
-	if((fl = fopen(szFileName, "r+b")) == NULL)
-	{
-		if((fl = fopen(szFileName, "wb")) == NULL)
-		{
+	if((fl = fopen(szFileName, "r+b")) == nullptr) {
+		if((fl = fopen(szFileName, "wb")) == nullptr) {
 			mudlog(LOG_ERROR, "Cannot create file %s for saving player.", szFileName);
 			return;
 		}
@@ -7197,59 +7206,56 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 		return;
 	}
 
-	if(load_char(find_name, &tmp_store)) {
-	/* === INIZIO MODIFICA: Sincronizza DB -> File Struct (Ghost) === */
-        try {
-            toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(find_name));
-            if (pg && pg->id) {
-                // Sovrascrivi la password letta da file con quella (vera) del DB
-                strncpy(tmp_store.pwd, pg->password.c_str(), 10);
-
-                // Opzionale: Sincronizza anche il titolo se necessario
-                if (pg->title.length() > 0) {
-                    strncpy(tmp_store.title, pg->title.c_str(), sizeof(tmp_store.title) - 1);
-                }
-
-                mudlog(LOG_PLAYERS, "do_ghost: Dati sincronizzati dal DB per %s", find_name);
-            }
-        } catch (const odb::exception& e) {
-            mudlog(LOG_SYSERR, "do_ghost: Errore DB sync: %s", e.what());
-        }
-        /* === FINE MODIFICA === */
-		CREATE(tmp_ch, struct char_data, 1);
-		clear_char(tmp_ch);
-		store_to_char(&tmp_store, tmp_ch);
-		reset_char(tmp_ch);
-		load_char_objs(tmp_ch, TRUE);
-		save_ghost_forcerent(tmp_ch);       // salvo il pg senza desc
-//send_to_char("stop5\n\r",ch);
-//return;
-		save_char(tmp_ch, AUTO_RENT, 0);
-		tmp_ch->next = character_list;
-		character_list = tmp_ch;
-		tmp_ch->specials.tick = plr_tick_count++;
-
-		if(plr_tick_count == PLR_TICK_WRAP) {
-			plr_tick_count = 0;
-		}
-
-		char_to_room(tmp_ch, ch->in_room);
-
-		tmp_ch->desc = NULL;
-
-		act("$n calls forth the soul of $N and they come.", FALSE, ch, 0,
-			tmp_ch,
-			TO_ROOM);
-		act("The soul of $N rises forth from the mortal lands.", FALSE, ch,
-			0, tmp_ch, TO_ROOM);
-
-		act("You call forth the soul of $N.", FALSE, ch, 0, tmp_ch,
-			TO_CHAR);
-		send_to_char("Be sure to forcerent them when done!\n\r", ch);
+	bool loaded = false;
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(find_name) &&
+	   load_char_mysql(find_name, &tmp_store)) {
+		loaded = true;
+		mudlog(LOG_PLAYERS, "do_ghost: corpo da MySQL per %s", find_name);
 	}
-	else {
+#endif
+	if(!loaded && !load_char(find_name, &tmp_store)) {
 		send_to_char("That person does not exist.\n\r", ch);
+		return;
 	}
+
+	if(!loaded) {
+		try {
+			toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(find_name));
+			if(pg && pg->id) {
+				strncpy(tmp_store.pwd, pg->password.c_str(), 10);
+				if(pg->title.length() > 0) {
+					strncpy(tmp_store.title, pg->title.c_str(), sizeof(tmp_store.title) - 1);
+				}
+				mudlog(LOG_PLAYERS, "do_ghost: pwd/title sincronizzati dal DB per %s", find_name);
+			}
+		}
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "do_ghost: Errore DB sync: %s", e.what());
+		}
+	}
+
+	CREATE(tmp_ch, struct char_data, 1);
+	clear_char(tmp_ch);
+	store_to_char(&tmp_store, tmp_ch);
+	reset_char(tmp_ch);
+	load_char_objs(tmp_ch, TRUE);
+	save_ghost_forcerent(tmp_ch);
+	tmp_ch->next = character_list;
+	character_list = tmp_ch;
+	tmp_ch->specials.tick = plr_tick_count++;
+
+	if(plr_tick_count == PLR_TICK_WRAP) {
+		plr_tick_count = 0;
+	}
+
+	char_to_room(tmp_ch, ch->in_room);
+	tmp_ch->desc = nullptr;
+
+	act("$n calls forth the soul of $N and they come.", FALSE, ch, 0, tmp_ch, TO_ROOM);
+	act("The soul of $N rises forth from the mortal lands.", FALSE, ch, 0, tmp_ch, TO_ROOM);
+	act("You call forth the soul of $N.", FALSE, ch, 0, tmp_ch, TO_CHAR);
+	send_to_char("Be sure to forcerent them when done!\n\r", ch);
 }
 
 ACTION_FUNC(do_mforce) {

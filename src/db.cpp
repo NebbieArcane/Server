@@ -101,15 +101,13 @@ std::string db_sql_literal(const char* s, bool allow_null = false) {
 	return "'" + db_sql_escape(s) + "'";
 }
 
-namespace {
-
-bool save_char_mysql_body(struct char_data* ch, const struct char_file_u& st) {
+bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st) {
 	if(!ch || !IS_PC(ch)) {
 		return false;
 	}
 	toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(ch)));
 	if(!pg || !pg->id) {
-		mudlog(LOG_SYSERR, "save_char_mysql_body: toon mancante per %s", GET_NAME(ch));
+		mudlog(LOG_SYSERR, "save_char_mysql_snapshot: toon mancante per %s", GET_NAME(ch));
 		return false;
 	}
 
@@ -224,12 +222,10 @@ bool save_char_mysql_body(struct char_data* ch, const struct char_file_u& st) {
 		return true;
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "save_char_mysql_body: %s", e.what());
+		mudlog(LOG_SYSERR, "save_char_mysql_snapshot: %s", e.what());
 		return false;
 	}
 }
-
-} // namespace
 
 /**************************************************************************
  *  declarations of most of the 'global' variables                         *
@@ -3883,8 +3879,8 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 		char_data* ch_to_sync = (IS_POLY(ch) ? ch->desc->original : ch);
 
 		if (ch_to_sync) {
-			if(!save_char_mysql_body(ch_to_sync, st)) {
-				mudlog(LOG_SYSERR, "save_char: save_char_mysql_body failed for %s",
+			if(!save_char_mysql_snapshot(ch_to_sync, st)) {
+				mudlog(LOG_SYSERR, "save_char: save_char_mysql_snapshot failed for %s",
 					   GET_NAME(ch_to_sync));
 			}
 			try {
@@ -4866,12 +4862,13 @@ void init_char(struct char_data* ch) {
 		ch->player.talks[i] = 0;
 	}
 
-	GET_STR(ch) = 9;
-	GET_INT(ch) = 9;
-	GET_WIS(ch) = 9;
-	GET_DEX(ch) = 9;
-	GET_CON(ch) = 9;
-	GET_CHR(ch) = 9;
+	ch->abilities.str = 9;
+	ch->abilities.intel = 9;
+	ch->abilities.wis = 9;
+	ch->abilities.dex = 9;
+	ch->abilities.con = 9;
+	ch->abilities.chr = 9;
+	ch->tmpabilities = ch->abilities;
 
 	/* make favors for sex */
 	switch(GET_RACE(ch)) {
@@ -5671,5 +5668,147 @@ ACTION_FUNC(do_WorldSave) {
     return(mob->points.max_move+extra_mov);
 
     }
+
+#if DEATH_FIX
+
+static void death_snapshot_write_file(const char* name, long saved_exp, long saved_at_epoch) {
+	char nomefile[256];
+	std::snprintf(nomefile, sizeof(nomefile), "%s/%s.dead", PLAYERS_DIR, lower(name));
+	mudlog(LOG_PLAYERS, "death_snapshot: opening %s", nomefile);
+	FILE* fdeath = std::fopen(nomefile, "w+");
+	if(!fdeath) {
+		mudlog(LOG_PLAYERS, "death_snapshot: impossibile salvare xp per %s", name);
+		return;
+	}
+	std::fprintf(fdeath, "%ld : %ld", saved_exp, saved_at_epoch);
+	std::fclose(fdeath);
+	mudlog(LOG_PLAYERS, "death_snapshot: file %s exp=%ld at=%ld", name, saved_exp, saved_at_epoch);
+}
+
+void death_snapshot_save(const char* name, long saved_exp, long saved_at_epoch) {
+	if(!name || !*name) {
+		return;
+	}
+	death_snapshot_write_file(name, saved_exp, saved_at_epoch);
+
+#if USE_MYSQL
+	try {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+		const std::string sql =
+			"INSERT INTO character_death_snapshot (toon_id, saved_exp, saved_at) VALUES (" +
+			toon_id + ',' + std::to_string(saved_exp) + ',' +
+			std::to_string(static_cast<unsigned long>(saved_at_epoch)) +
+			") ON DUPLICATE KEY UPDATE saved_exp = VALUES(saved_exp), saved_at = VALUES(saved_at)";
+		db->execute(sql.c_str());
+		t.commit();
+		mudlog(LOG_SAVE, "death_snapshot: DB per %s exp=%ld at=%ld", name, saved_exp,
+			   saved_at_epoch);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "death_snapshot_save DB(%s): %s", name, e.what());
+	}
+#endif
+}
+
+static bool death_snapshot_read_file(const char* name, long& saved_exp, long& saved_at_epoch) {
+	char nomefile[256];
+	std::snprintf(nomefile, sizeof(nomefile), "%s/%s.dead", PLAYERS_DIR, lower(name));
+	FILE* fdeath = std::fopen(nomefile, "r");
+	if(!fdeath) {
+		return false;
+	}
+	long xp = 0;
+	long ora = 0;
+	if(std::fscanf(fdeath, "%ld : %ld", &xp, &ora) != 2) {
+		std::fclose(fdeath);
+		return false;
+	}
+	std::fclose(fdeath);
+	saved_exp = xp;
+	saved_at_epoch = ora;
+	return true;
+}
+
+bool death_snapshot_load(const char* name, long& saved_exp, long& saved_at_epoch) {
+	if(!name || !*name) {
+		return false;
+	}
+
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(name)) {
+		try {
+			toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+			if(pg && pg->id) {
+				DB* db = Sql::getMysql();
+				const std::string sql =
+					"SELECT saved_exp, saved_at FROM character_death_snapshot WHERE toon_id = " +
+					std::to_string(pg->id) + " LIMIT 1";
+				MYSQL_RES* res = nullptr;
+				if(mysql_query_select(db, sql, res) && res) {
+					MYSQL_ROW row = mysql_fetch_row(res);
+					if(row && row[0] && row[1]) {
+						saved_exp = std::atol(row[0]);
+						saved_at_epoch = std::atol(row[1]);
+						mysql_free_result(res);
+						mudlog(LOG_PLAYERS, "death_snapshot_load: DB %s exp=%ld", name, saved_exp);
+						return true;
+					}
+					mysql_free_result(res);
+				}
+			}
+		}
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "death_snapshot_load DB(%s): %s", name, e.what());
+		}
+	}
+#endif
+
+	if(death_snapshot_read_file(name, saved_exp, saved_at_epoch)) {
+		mudlog(LOG_PLAYERS, "death_snapshot_load: file %s exp=%ld", name, saved_exp);
+		return true;
+	}
+	return false;
+}
+
+bool death_snapshot_sync_exp_mysql(const char* name, long saved_exp) {
+#if !USE_MYSQL
+	(void)name;
+	(void)saved_exp;
+	return false;
+#else
+	if(!name || !*name || !toon_is_migrated_by_name(name)) {
+		return false;
+	}
+	try {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string sql = "UPDATE character_stats SET exp = " +
+								std::to_string(saved_exp) + " WHERE toon_id = " +
+								std::to_string(pg->id);
+		db->execute(sql.c_str());
+		t.commit();
+		mudlog(LOG_SAVE, "death_snapshot_sync_exp_mysql: %s exp=%ld", name, saved_exp);
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "death_snapshot_sync_exp_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+#endif /* DEATH_FIX */
 
 }

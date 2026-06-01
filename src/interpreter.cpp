@@ -2496,6 +2496,17 @@ NANNY_FUNC(con_slct) {
 			}
 			break;
 		}
+#if USE_MYSQL
+		/* Dopo morte/resurrect al menu: RAM puo' avere exp post-morte; ricarica da DB. */
+		if(IS_PC(d->character) && toon_is_migrated_by_name(GET_NAME(d->character))) {
+			char_file_u menu_reload {};
+			if(load_char_mysql(GET_NAME(d->character), &menu_reload)) {
+				store_to_char(&menu_reload, d->character);
+				mudlog(LOG_CONNECT, "con_slct: reloaded %s from MySQL before enter",
+					   GET_NAME(d->character));
+			}
+		}
+#endif
 		reset_char(d->character);
 		int Level=GetMaxLevel(d->character);
 		if (PORT==RELEASE_PORT) {
@@ -2841,6 +2852,9 @@ NANNY_FUNC(con_register) {
 		// 1. Inizializza il personaggio (spostato da con_qclass)
 		// Questo imposta livelli=1, HP, mana, stats, ecc.
 		init_char(d->character);
+		/* roll_abilities era in do_start (solo se livello 0); con StartLevels qui
+		 * do_start non parte più e le stat scelte in creazione non venivano applicate */
+		roll_abilities(d->character);
 		StartLevels(d->character);
 
 		try {

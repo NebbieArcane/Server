@@ -7,42 +7,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections && \
     echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections
 
-# 2. Installazione dipendenze e creazione utente 'vagrant'
+# Script ODB (prima del RUN lungo: serve rete verso pkg.cppget.org con retry/DNS)
+COPY scripts/install-odb-toolchain.sh /usr/local/sbin/install-odb-toolchain.sh
+RUN chmod +x /usr/local/sbin/install-odb-toolchain.sh
+
+# 2. Installazione dipendenze, ODB e creazione utente 'vagrant'
 RUN apt-get update && \
     apt-get install -y \
-        sudo git php8.3-cli gcc-12 g++-12 gcc-12-plugin-dev apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb wget \
+        sudo git php8.3-cli gcc-12 g++-12 gcc-12-plugin-dev apache2 make cmake libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb wget curl ca-certificates \
         libcurl4-openssl-dev libboost-dev libboost-program-options-dev libboost-system-dev \
         libboost-filesystem-dev liblog4cxx-dev libboost-date-time-dev \
         librtmp-dev libnghttp2-dev libkrb5-dev comerr-dev libpsl-dev libssh-dev libbrotli-dev \
         mysql-server mysql-client libmysqlclient-dev libmysqlcppconn-dev net-tools iproute2 vim less dos2unix && \
-    BUILD2_DEB_BASE="https://download.build2.org/0.18.1/bindist/ubuntu/ubuntu24.04/x86_64" && \
-    mkdir -p /tmp/build2-debs && \
-    cd /tmp/build2-debs && \
-    wget -q "${BUILD2_DEB_BASE}/build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb" && \
-    apt-get install -y ./build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb && \
-    BPKG_STABLE_REPO="https://pkg.cppget.org/1/stable" && \
-    mkdir -p /tmp/odb-build && \
-    bpkg create -d /tmp/odb-build/odb-gcc-12 cc \
-      config.cxx=g++-12 \
-      config.cc.coptions=-O2 \
-      config.bin.rpath=/usr/local/lib \
-      config.install.root=/usr/local && \
-    printf 'y\n' | bpkg build --trust-yes -d /tmp/odb-build/odb-gcc-12 "odb@${BPKG_STABLE_REPO}" && \
-    bpkg install -d /tmp/odb-build/odb-gcc-12 odb && \
-    bpkg create -d /tmp/odb-build/libodb-gcc-12 cc \
-      config.cxx=g++-12 \
-      config.cc.coptions=-O2 \
-      config.install.root=/usr/local && \
-    bpkg add --trust-yes -d /tmp/odb-build/libodb-gcc-12 "${BPKG_STABLE_REPO}" && \
-    bpkg fetch -d /tmp/odb-build/libodb-gcc-12 && \
-    printf 'y\n' | bpkg build --trust-yes -d /tmp/odb-build/libodb-gcc-12 libodb && \
-    printf 'y\n' | bpkg build --trust-yes -d /tmp/odb-build/libodb-gcc-12 "libodb-sqlite ?sys:libsqlite3" && \
-    printf 'y\n' | bpkg build --trust-yes -d /tmp/odb-build/libodb-gcc-12 "libodb-mysql ?sys:libmysqlclient" && \
-    printf 'y\n' | bpkg build --trust-yes -d /tmp/odb-build/libodb-gcc-12 libodb-boost && \
-    bpkg install -d /tmp/odb-build/libodb-gcc-12 --all --recursive && \
-    echo "/usr/local/lib" > /etc/ld.so.conf.d/odb-local.conf && \
-    ldconfig && \
-    rm -rf /tmp/build2-debs /tmp/odb-build && \
+    ODB_BUILD=/var/cache/nebbie-odb-build /usr/local/sbin/install-odb-toolchain.sh && \
     # Creazione utente 'vagrant'
     adduser --disabled-password --gecos "" vagrant && \
     usermod -aG sudo vagrant && \

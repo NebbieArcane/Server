@@ -6,6 +6,9 @@
 
 #include "config.hpp"
 #include "flags.hpp"
+#include "structs.hpp"
+#include "db.hpp"
+#include "utility.hpp"
 
 #if USE_MYSQL
 
@@ -397,6 +400,23 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		if(legacy_load_rent_file(file_name, rent)) {
 			report.inventory = legacy_insert_rent(db, pg->id, rent);
 		}
+
+#if DEATH_FIX
+		{
+			char deadpath[256];
+			std::snprintf(deadpath, sizeof(deadpath), "%s/%s.dead", PLAYERS_DIR,
+						  lower(st.name));
+			FILE* fdeath = std::fopen(deadpath, "r");
+			if(fdeath) {
+				long snap_exp = 0;
+				long snap_at = 0;
+				if(std::fscanf(fdeath, "%ld : %ld", &snap_exp, &snap_at) == 2) {
+					death_snapshot_save(st.name, snap_exp, snap_at);
+				}
+				std::fclose(fdeath);
+			}
+		}
+#endif
 
 		toon_mark_migrated_tx(db, pg->id, CHARACTER_MIGRATION_SCHEMA_VERSION);
 

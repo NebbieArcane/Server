@@ -7366,21 +7366,7 @@ MOBSPECIAL_FUNC(StatMaster) {
 		SetStat(ch,number,GetStat(ch,number)+1);
 		ch->specials.spells_to_learn-=2;
 		gain_exp(ch,-prezzo);
-		/* Inserito salvataggio degli xp sul .dead */
-
-		FILE* fdeath;
-		char nomefile[1000];
-		sprintf(nomefile,"%s/%s.dead",PLAYERS_DIR,lower(GET_NAME(ch)));
-		mudlog(LOG_PLAYERS,"Opening %s",nomefile);
-		if((fdeath=fopen(nomefile,"w+"))) {
-			mudlog(LOG_PLAYERS,"Saving xp per %s",GET_NAME(ch));
-			fprintf(fdeath,"%d : %ld",(int)GET_EXP(ch),(long)time(0));
-			fclose(fdeath);
-		}
-
-		else {
-			mudlog(LOG_PLAYERS,"Impossibile salvare xp per %s",GET_NAME(ch));
-		}
+		save_exp_to_file(ch, GET_EXP(ch));
 	}
 	return(TRUE);
 }

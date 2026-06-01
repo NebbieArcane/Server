@@ -44,19 +44,9 @@ odb_already_installed() {
 }
 
 install_odb_toolchain() {
-	echo "==> ODB 2.5 (build2 + bpkg, bindist ubuntu24.04 come Docker)"
-	BUILD2_DEB_BASE="https://download.build2.org/0.18.1/bindist/ubuntu/ubuntu24.04/x86_64"
-	mkdir -p /tmp/build2-debs
-	cd /tmp/build2-debs
-	if [ ! -f build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb ]; then
-		wget -q "${BUILD2_DEB_BASE}/build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb"
-	fi
-	if ! dpkg -s build2-toolchain >/dev/null 2>&1; then
-		apt-get -qq install -y ./build2-toolchain_0.18.1-0~ubuntu24.04_amd64.deb
-	fi
-
-	BPKG_STABLE_REPO="https://pkg.cppget.org/1/stable"
-	mkdir -p "$ODB_BUILD"
+	echo "==> ODB 2.5 (build2 + bpkg, script condiviso con Docker)"
+	SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	export ODB_BUILD
 
 	# Swap temporaneo: build ODB in VM può richiedere molta RAM.
 	if ! swapon --show | grep -q '/swapfile'; then
@@ -68,44 +58,13 @@ install_odb_toolchain() {
 		SWAP_CREATED=1
 	fi
 
-	if [ ! -d "${ODB_BUILD}/odb-gcc-12" ]; then
-		bpkg create -d "${ODB_BUILD}/odb-gcc-12" cc \
-			config.cxx=g++-12 \
-			config.cc.coptions=-O2 \
-			config.bin.rpath=/usr/local/lib \
-			config.install.root=/usr/local
-	fi
-	if ! command -v odb >/dev/null 2>&1; then
-		printf 'y\n' | bpkg build --trust-yes -d "${ODB_BUILD}/odb-gcc-12" "odb@${BPKG_STABLE_REPO}"
-		bpkg install -d "${ODB_BUILD}/odb-gcc-12" odb
-	fi
-
-	if [ ! -d "${ODB_BUILD}/libodb-gcc-12" ]; then
-		bpkg create -d "${ODB_BUILD}/libodb-gcc-12" cc \
-			config.cxx=g++-12 \
-			config.cc.coptions=-O2 \
-			config.install.root=/usr/local
-	fi
-	# Ripresa provision: la directory può esistere senza indice pacchetti (unknown package libodb).
-	bpkg add --trust-yes -d "${ODB_BUILD}/libodb-gcc-12" "${BPKG_STABLE_REPO}" 2>/dev/null || true
-	bpkg rep-fetch -d "${ODB_BUILD}/libodb-gcc-12"
-	bpkg fetch -d "${ODB_BUILD}/libodb-gcc-12"
-	printf 'y\n' | bpkg build --trust-yes -d "${ODB_BUILD}/libodb-gcc-12" libodb
-	printf 'y\n' | bpkg build --trust-yes -d "${ODB_BUILD}/libodb-gcc-12" "libodb-sqlite ?sys:libsqlite3"
-	printf 'y\n' | bpkg build --trust-yes -d "${ODB_BUILD}/libodb-gcc-12" "libodb-mysql ?sys:libmysqlclient"
-	printf 'y\n' | bpkg build --trust-yes -d "${ODB_BUILD}/libodb-gcc-12" libodb-boost
-	bpkg install -d "${ODB_BUILD}/libodb-gcc-12" --all --recursive
-
-	echo "/usr/local/lib" >/etc/ld.so.conf.d/odb-local.conf
-	ldconfig
+	bash "${SCRIPT_DIR}/install-odb-toolchain.sh"
 	touch "$ODB_MARKER"
 
 	if [ "${SWAP_CREATED:-0}" = "1" ]; then
 		swapoff /swapfile || true
 		rm -f /swapfile
 	fi
-	rm -rf /tmp/build2-debs
-	cd /
 }
 
 ensure_guest_dns

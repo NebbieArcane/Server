@@ -7685,8 +7685,6 @@ OBJSPECIAL_FUNC(nodrop) {
 
 MOBSPECIAL_FUNC(BiosKaiThanatos) {
 #define MIN_WEARING 10
-	FILE* fdeath;
-	char buf[MAX_INPUT_LENGTH];
 	struct char_data* god;
 
 	if(type != EVENT_COMMAND) {
@@ -7736,28 +7734,24 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 			ch, 0, god, TO_ROOM);
 		return(TRUE);
 	}
-	sprintf(buf,"%s/%s.dead",PLAYERS_DIR,lower(GET_NAME(ch)));
-	if(!(fdeath=fopen(buf,"r"))) {
-
+	long snap_exp = 0;
+	long snap_at = 0;
+	if(!death_snapshot_load(GET_NAME(ch), snap_exp, snap_at)) {
 		act("$N ti dice 'Impostore! Vattene via subito!'", FALSE,
 			ch, 0, god, TO_CHAR);
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "No dead file for %s", GET_NAME(ch));
+		mudlog(LOG_CHECK, "No dead snapshot for %s", GET_NAME(ch));
 		return(TRUE);
 	}
-	int xp=0;
-	long ora=0;
-	fscanf(fdeath,"%d : %ld",&xp,&ora);
 
-	if(((long)time(0)-ora)>(4 * 60 *60)) {
+	if(((long)time(0) - snap_at) > (4 * 60 * 60)) {
 
 		act("$N ti dice 'Troppo tardi! Il tuo karma si e' compiuto.'", FALSE,
 			ch, 0, god, TO_CHAR);
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
 		mudlog(LOG_CHECK, "%s: to late on sacrifice", GET_NAME(ch));
-		fclose(fdeath);
 		return(TRUE);
 	}
 	if((GET_RCON(ch)<=3) && (number(1,100)<90)) {
@@ -7767,9 +7761,9 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
 		mudlog(LOG_CHECK, "%s: no CON on sacrifice", GET_NAME(ch));
-		fclose(fdeath);
 		return(TRUE);
 	}
+	const int restored_exp = static_cast<int>(snap_exp);
 	GET_RCON(ch)=MAX(GET_RCON(ch)-1,3);
 	act("$N ti dice 'Il karma e' stato benevolo con te!'", FALSE,
 		ch, 0, god, TO_CHAR);
@@ -7777,19 +7771,19 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_CHAR);
 	act("$N dice qualcosa a $n", FALSE,
 		ch, 0, god, TO_ROOM);
-	GET_EXP(ch)=xp;
+	GET_EXP(ch)=restored_exp;
 
 	act("$c0001Senti le viscere rivoltarsi, mentre energie sconosciute ti strappano l'anima", FALSE,
 		ch, 0, god, TO_CHAR);
 	act("$n si solleva da terra e inizia a brillare.", FALSE,
 		ch, 0, god, TO_ROOM);
-	for(xp=TYPE_GENERIC_FIRST; xp<=TYPE_GENERIC_LAST; xp++) {
+	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
 #if NOSCRAP
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
 #endif
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
 	}
 	act("$c0001L'urlo di mille gole sgozzate ti assorda", FALSE,
 		ch, 0, god, TO_CHAR);
@@ -7797,13 +7791,13 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_ROOM);
 	GET_HIT(ch)=MIN(GET_HIT(ch),10);
 	alter_hit(ch,0);
-	for(xp=TYPE_GENERIC_FIRST; xp<=TYPE_GENERIC_LAST; xp++) {
+	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
 #if NOSCRAP
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
 #endif
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
 	}
 	act("Alla fine, giaci a terra spossat$b", FALSE,
 		ch, 0, god, TO_CHAR);
@@ -7811,7 +7805,6 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_ROOM);
 	GET_POS(ch)=POSITION_STUNNED;
 	mudlog(LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
-	fclose(fdeath);
 	return TRUE;
 }
 } // namespace Alarmud

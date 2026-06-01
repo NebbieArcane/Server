@@ -1043,19 +1043,13 @@ int clan_gain(struct char_data* ch,int gain) {
 	return(gain);
 }
 void save_exp_to_file(struct char_data* ch,int xp) {
-
-	FILE* fdeath;
-	char nomefile[1000];
-	sprintf(nomefile,"%s/%s.dead",PLAYERS_DIR,lower(GET_NAME(ch)));
-	mudlog(LOG_PLAYERS,"Opening %s",nomefile);
-	if((fdeath=fopen(nomefile,"w+"))) {
-		mudlog(LOG_PLAYERS,"Saving xp per %s",GET_NAME(ch));
-		fprintf(fdeath,"%d : %ld",(int)GET_EXP(ch),(long)time(0));
-		fclose(fdeath);
+	(void)xp;
+#if DEATH_FIX
+	if(IS_PC(ch)) {
+		death_snapshot_save(GET_NAME(ch), static_cast<long>(GET_EXP(ch)),
+							static_cast<long>(time(nullptr)));
 	}
-	else {
-		mudlog(LOG_PLAYERS,"Impossibile salvare xp per %s",GET_NAME(ch));
-	}
+#endif
 }
 
 void die(struct char_data* ch,int killedbytype, struct char_data* killer)

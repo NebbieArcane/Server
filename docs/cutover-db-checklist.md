@@ -95,11 +95,11 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 | Domanda | Risposta |
 |---------|----------|
 | Tabella `character_*` prevista? | **No** — exp “ufficiale” resta in `character_stats.exp` (da `.dat`) |
-| `legacyimport` importa `.dead`? | **No** |
+| `legacyimport` importa `.dead`? | ✅ | Se esiste `players/<nome>.dead` → `character_death_snapshot` |
 | Ha senso una tabella al cutover? | **No** (fase 1) — meccanica file; basso valore per batch/report |
 | Dopo D2 (PG migrato, no `.dat`)? | **Resta file** finché morte/sacrificio/resurrezione non vengono riscritti su DB |
 
-**Scelta documentata:** `.dead` = **solo filesystem**, come oggi. Opzionale in futuro: `character_death_snapshot (toon_id, saved_exp, saved_at)` se si elimina del tutto il sidecar file.
+**Scelta documentata:** dual-write file `.dead` + tabella `character_death_snapshot` (DDL `schema-s1-death-snapshot.sql`). Load DB-first se migrato; resurrect/reincarnate aggiornano `character_stats.exp`.
 
 ### Implicazioni cutover
 
@@ -122,7 +122,7 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 | 0.3 | DDL S1 applicato su DB target | 🔶 | Vagrant: fatto a mano; script: `./scripts/apply-schema-s1.sh` |
 | 0.4 | Build con `USE_MYSQL` | ✅ | Verificato da `legacyimport montero` OK |
 | 0.5 | `legacy_loader` / `legacy_import` nel link del binario | ✅ | Verificato da `legacyprobe` / `legacyimport` in-game |
-| 0.6 | Runbook restore singolo PG | ☐ | Backup file → `migrated_at = NULL` → `legacyimport` |
+| 0.6 | Runbook restore singolo PG | ✅ | Drill **Montero** 2026-05-31: `restore-pg-drill.sh` + `legacyimport` + verify PASS |
 
 **Gate 0:** backup verificato + DDL su staging = prod.
 
@@ -178,7 +178,7 @@ Funzioni indicative (`db.cpp` o modulo dedicato):
 | 3.8 | `load_character_inventory_from_db` | 🔶 | `load_rent_mysql` + `load_char_objs` se `migrated_at` |
 | 3.9 | `load_character_extra_from_db` | 🔶 | `load_char_extra_mysql` + `load_char_extra` se `migrated_at` |
 | 3.10 | PG `justCreated` | ✅ | `con_register` → `con_pwdok` skip reload MySQL; test 7.1 Vagrant OK |
-| 3.11 | Poly / ghost / impersonate | ☐ | Test espliciti |
+| 3.11 | Poly / ghost / impersonate | 🔶 | Poly ✅ (7.4); extra/alias/achie ✅ (7.6); ghost fix in working tree |
 
 **Gate 3:** 3+ PG rappresentativi — import → load solo DB → confronto con attese (pre-cutover).  
 Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi chiave file vs DB).
@@ -196,7 +196,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ✅ | `save_char` + `toon_is_migrated_by_name` |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ✅ | `update_file` / `write_char_extra` |
 | 4.7 | Menu `'1'..'4'`: oggi `load_char_objs` + `save_char` | 🚫 | `interpreter.cpp` ~3293 — riscrive file subito |
-| 4.8 | `.dead`: scrittura file **consentita** anche se migrato | ☐ | Sidecar DEATH_FIX; nessuna tabella DB; vedi sezione `.dead` |
+| 4.8 | `.dead` + `character_death_snapshot` | ✅ | `death_snapshot_save/load`; resurrect/reincarnate → DB exp; file ancora scritto |
 
 **Gate 4:** login → modifica stato/oggetti → quit → re-login identico **solo da DB**; mtime file invariato.
 
@@ -238,16 +238,16 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 | 7.2 | PG legacy migrato: gioco + save + re-login | ✅ | **Alar**: `loaded … from MySQL`, quit room 7801/1000, re-login rent da DB (1 oggetto), 1M coins |
 | 7.3 | Rent: equip + pensione | ✅ | A: mortale &lt;58 rent+quit drop OK; B: Alar ≥58 quit conserva eq + rent OK |
 | 7.4 | Poly + save | ✅ | Quit in poly bloccato; `return` + quit + re-login OK |
-| 7.5 | Ghost / reconnect (se usato) | ☐ | |
-| 7.6 | Achievement / alias / mercy (PG con `.aux` ricco) | ☐ | Solo se PG pilota con `.aux` non banale |
+| 7.5 | Ghost / reconnect (se usato) | ✅ | **A OK** TheProdigy 2026-05-31: LD → `Riconnessione...` + mtime file invariati; B ghost opz./N/A |
+| 7.6 | Achievement / alias / mercy (PG con `.aux` ricco) | ✅ | **TheProdigy** 2026-05-31: alias 5, achie (es. 9/500, 110/1000), SQL 19/12/5, `.aux` invariato; mercy N/A |
 | 7.7 | mtime `.dat` / rent dopo sessione migrata | ✅ | **Alar**: `.dat` 3040 B e `.aux` 92 B invariati; `rent/alar` 0 B, solo mtime (+67 s), log `skip rent file` |
-| 7.8 | Restore drill: 1 PG da backup file + re-import | ☐ | §0.6 runbook |
-| 7.9 | Morte / sacrificio / resurrect (`.dead`) | ☐ | Solo se DEATH_FIX in uso |
+| 7.8 | Restore drill: 1 PG da backup file + re-import | ✅ | **Montero** 2026-05-31: reset-db → `legacyimport` → verify (`migrated_at`, core+78 prefs) |
+| 7.9 | Morte / sacrificio / resurrect (`.dead`) | ✅ | TheProdigy: snapshot file+DB; fix resurrect/reincarnate su migrati (no fwrite `.dat`) |
 
 Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → `after` → `diff` (PASS se `.dat`/`.aux` identici; rent stub 0 byte può cambiare solo mtime).
 
 **GO** se 7.1–7.5 e 7.7 passano; 7.6 se avete PG con `.aux` non banali; 7.9 se il mud usa DEATH_FIX in produzione.  
-**Staging oggi:** 7.1–7.4 + 7.7 OK; mancano 7.5 (e 7.6/7.8/7.9 se applicabili).
+**Staging oggi:** **7.1–7.9** OK su staging; gap noto: resurrect/`.dat` su PG migrati |
 
 ---
 
@@ -273,10 +273,10 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 | Load da DB | 🔶 (corpo + rent + extra se migrato) |
 | Save DB + stop file | 🔶 (D2 attivo se `migrated_at`; PG non migrati ancora dual-write) |
 | Login/menu wired | ✅ | Fix menu/delete/`justCreated` (`bb6d942`); `con_pwdok` no fallback se migrato |
-| Test 7.x su staging | 🔶 | **7.1–7.4, 7.7** OK; **7.5** da fare |
+| Test 7.x su staging | 🔶 | **7.1–7.8** OK; **7.9** opz. |
 | Runbook ops | ☐ |
 
-**Verdetto attuale:** **staging Vagrant** validato su load/save D2, re-login, rent, quit e poly; **non** GO produzione finché **7.5** (se serve), batch §2.5, §4.1 save unificato, §0.1 backup.
+**Verdetto attuale:** **staging** validato su load/save D2, re-login, rent, quit, poly, **LD/reconnect**; **non** GO produzione finché batch §2.5, §4.1 save unificato, §0.1 backup.
 
 ---
 
@@ -284,12 +284,11 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 
 1. ~~`migrated_at` + set in `legacy_import` (§1)~~ ✅  
 2. ~~Test **7.7** + **7.2** su Alar~~ ✅ (2026-05-31); ~~**7.1** PG nuovo~~ ✅  
-3. ~~Test **7.3** rent + quit per livello~~ ✅ — ~~**7.4** poly~~ ✅ — **Adesso:** **7.5** ghost se usato  
-4. `save_character_to_db` unificato (§4.1) + fix `toon.lastlogin` (§4.2)  
+3. ~~Test **7.3** rent + quit~~ ✅ — ~~**7.4** poly~~ ✅ — ~~**7.5** LD/reconnect (TheProdigy)~~ ✅  
+4. **Adesso:** §4.2 `lastlogin` + §4.1 `save_character_to_db` unificato → batch §2.5–2.6 + backup §0.1  
 5. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
-6. Script batch + report (§2.5–2.6) + backup §0.1  
-7. ~~Rimuovere fallback file in `con_pwdok` se migrato~~ ✅ (codice)  
-8. Test §7 completi → batch prod → deploy  
+6. ~~Rimuovere fallback file in `con_pwdok` se migrato~~ ✅ (codice)  
+7. Test **7.6 / 7.8 / 7.9** (runbook `scripts/test-gate-7.6|7.8|7.9.md`) → batch prod → deploy  
 
 ---
 

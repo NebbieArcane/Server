@@ -21,7 +21,8 @@ for inc in \
 	schema-s1-ddl-add-resistance.sql \
 	schema-s1-ddl-drop-unused-conditions.sql \
 	schema-s1-ddl-drop-extra-str.sql \
-	schema-s1-ddl-fix-character-classes.sql
+	schema-s1-ddl-fix-character-classes.sql \
+	schema-s1-death-snapshot.sql
 do
 	echo "==> incrementale ${inc} (errori ignorati se già applicato)"
 	mysql_base -D "$MYSQL_DB" <"$ROOT/docs/$inc" 2>/dev/null || true
