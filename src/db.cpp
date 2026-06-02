@@ -206,7 +206,9 @@ bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st
 
 		for(int i = 0; i < MAX_AFFECT; ++i) {
 			const affected_type_u& af = st.affected[i];
-			if(af.type == 0) {
+			// Non persistere affect vuoti o già scaduti: in load producono spam
+			// messaggi wear-off (es. "Puoi curarti di nuovo.") e duplicati inutili.
+			if(af.type == 0 || af.duration <= 0) {
 				continue;
 			}
 			std::ostringstream affects;
@@ -3186,7 +3188,7 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	const std::string affects_sql =
 		"SELECT slot, type, duration, modifier, location, bitvector "
 		"FROM character_affects WHERE toon_id = " +
-		toon_id;
+		toon_id + " AND duration > 0";
 	if(mysql_query_select(db, affects_sql, res) && res) {
 		while((row = mysql_fetch_row(res)) != nullptr) {
 			const int slot = static_cast<int>(sql_to_ll(row[0], -1));
@@ -3370,6 +3372,14 @@ bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 			<< " WHERE toon_id = " << toon_id
 			<< " AND (deleted = 0 OR deleted IS NULL)";
 		db->execute(upd.str().c_str());
+		// Allinea il contatore rent al numero di righe attive ripristinate,
+		// altrimenti load_rent_mysql vede number=0 e non ricarica alcun oggetto.
+		db->execute(("UPDATE character_rent SET object_count = ("
+					 "SELECT COUNT(*) FROM character_inventory "
+					 "WHERE toon_id = " + toon_id +
+					 " AND (deleted = 0 OR deleted IS NULL)) "
+					 "WHERE toon_id = " + toon_id)
+						.c_str());
 		t.commit();
 		return true;
 	}
@@ -3439,6 +3449,12 @@ bool refund_restore_inventory_mysql(const char* name, const char* cause,
 				<< " AND FROM_UNIXTIME(" << to_epoch << ")";
 		}
 		db->execute(upd.str().c_str());
+		db->execute(("UPDATE character_rent SET object_count = ("
+					 "SELECT COUNT(*) FROM character_inventory "
+					 "WHERE toon_id = " + toon_id +
+					 " AND (deleted = 0 OR deleted IS NULL)) "
+					 "WHERE toon_id = " + toon_id)
+						.c_str());
 		t.commit();
 		return true;
 	}
@@ -3470,13 +3486,39 @@ bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
+		int soft_delete_cols = 0;
+		{
+			MYSQL_RES* cols_res = nullptr;
+			const std::string cols_sql =
+				"SELECT COUNT(*) FROM information_schema.COLUMNS "
+				"WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'character_inventory' "
+				"AND COLUMN_NAME IN ('deleted','deleted_on','deleted_for')";
+			if(mysql_query_select(db, cols_sql, cols_res) && cols_res) {
+				MYSQL_ROW cols_row = mysql_fetch_row(cols_res);
+				soft_delete_cols = static_cast<int>(cols_row ? sql_to_ll(cols_row[0], 0) : 0);
+				mysql_free_result(cols_res);
+			}
+		}
+		const bool soft_delete_supported = (soft_delete_cols >= 3);
 
-		db->execute(("DELETE cia FROM character_inventory_affect cia "
-					 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
-					 "WHERE ci.toon_id = " +
-					 toon_id)
-						.c_str());
-		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id).c_str());
+		if(soft_delete_supported) {
+			db->execute(("DELETE cia FROM character_inventory_affect cia "
+						 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+						 "WHERE ci.toon_id = " +
+						 toon_id + " AND (ci.deleted = 0 OR ci.deleted IS NULL)")
+							.c_str());
+			db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id +
+						 " AND (deleted = 0 OR deleted IS NULL)")
+							.c_str());
+		}
+		else {
+			db->execute(("DELETE cia FROM character_inventory_affect cia "
+						 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+						 "WHERE ci.toon_id = " +
+						 toon_id)
+							.c_str());
+			db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id).c_str());
+		}
 		db->execute(("DELETE FROM character_rent WHERE toon_id = " + toon_id).c_str());
 
 		const int object_count =
@@ -3491,15 +3533,29 @@ bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
 		for(int i = 0; i < object_count; ++i) {
 			const obj_file_elem& o = rent.objects[i];
 			std::ostringstream ins;
-			ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
-				   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-				   "obj_name, short_desc, description, wear_pos, depth) VALUES ("
-				<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ','
-				<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags
-				<< ',' << o.extra_flags2 << ',' << o.weight << ',' << o.timer << ','
-				<< o.bitvector << ',' << db_sql_literal(o.name, false) << ','
-				<< db_sql_literal(o.sd, false) << ',' << db_sql_literal(o.desc, false) << ','
-				<< static_cast<int>(o.wearpos) << ',' << static_cast<int>(o.depth) << ')';
+			if(soft_delete_supported) {
+				ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+					   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+					   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, deleted_for) VALUES ("
+					<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ','
+					<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags
+					<< ',' << o.extra_flags2 << ',' << o.weight << ',' << o.timer << ','
+					<< o.bitvector << ',' << db_sql_literal(o.name, false) << ','
+					<< db_sql_literal(o.sd, false) << ',' << db_sql_literal(o.desc, false) << ','
+					<< static_cast<int>(o.wearpos) << ',' << static_cast<int>(o.depth)
+					<< ",0,NULL,NULL)";
+			}
+			else {
+				ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+					   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+					   "obj_name, short_desc, description, wear_pos, depth) VALUES ("
+					<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ','
+					<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags
+					<< ',' << o.extra_flags2 << ',' << o.weight << ',' << o.timer << ','
+					<< o.bitvector << ',' << db_sql_literal(o.name, false) << ','
+					<< db_sql_literal(o.sd, false) << ',' << db_sql_literal(o.desc, false) << ','
+					<< static_cast<int>(o.wearpos) << ',' << static_cast<int>(o.depth) << ')';
+			}
 			db->execute(ins.str().c_str());
 
 			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
@@ -3514,6 +3570,9 @@ bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
 					<< static_cast<int>(oa.modifier)
 					<< " FROM character_inventory WHERE toon_id = " << toon_id
 					<< " AND list_index = " << i;
+				if(soft_delete_supported) {
+					aff << " AND deleted = 0";
+				}
 				db->execute(aff.str().c_str());
 			}
 		}

@@ -39,6 +39,7 @@
 #include "reception.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "toon_migration.hpp"
 
 namespace Alarmud {
 
@@ -1113,6 +1114,14 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 #if DEATH_FIX
 		if(IS_PC(ch)) {
 			save_exp_to_file(ch,GET_EXP(ch));
+#if USE_MYSQL
+			if(toon_is_migrated_by_name(GET_NAME(ch))) {
+				if(!mark_inventory_deleted_mysql(GET_NAME(ch), "DEATH")) {
+					mudlog(LOG_SYSERR, "die: mark_inventory_deleted_mysql(DEATH) failed for %s",
+						   GET_NAME(ch));
+				}
+			}
+#endif
 		}
 #endif
 
