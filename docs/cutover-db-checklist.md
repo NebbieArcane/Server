@@ -278,7 +278,67 @@ Stato: **Alar** 2026-05-31; **Montero** 2026-06-02 (lazy import, menu senza save
 | 7.11 | `RENT_EXPIRED` login + storico SQL | ✅ | **TheProdigy** 2026-06-02: rent arretrato → ingresso nudo; 42 righe `deleted_for=RENT_EXPIRED`; `save` non cancella storico |
 | 7.12 | Save unificato + menu §4.7 (Montero) | ✅ | **Montero** 2026-06-02: `save_character_to_db` al `rent`; ingresso menu **senza** save DB; quit→re-login 17 oggetti / gold invariati (`2eca00c`) |
 
-Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → `after` → `diff` (PASS se `.dat`/`.aux` identici; rent stub 0 byte può cambiare solo mtime).
+### 7.5 — Ghost / reconnect
+
+**A — Link dead (obbligatorio):** `check-gate-7.7.sh <nome> before` → gioco → chiudi client **senza** `quit` → log: `linkdead`, `skip .dat file for migrated` → re-login menu `1` → `Riconnessione...` → `check-gate-7.7.sh after` (`.dat`/`.aux` identici).
+
+**B — Ghost + forcerent** (se usato in prod; imm ≥ `MAESTRO_DEL_CREATO`, target offline): `before` → `ghost <nome>` → log `do_ghost: loaded … from MySQL`, `rent from DB (N items)` → `forcerent` → log `save_character_to_db: OK … flags=0x3` / `0xc`, `save_ghost_forcerent: skip .dat for migrated` → `after` → target rilogga coerente. Se ghost non usato: **7.5 B = N/A**.
+
+### 7.6 — Achievement / alias (`.aux` ricco)
+
+PG pilota: **TheProdigy**. Load migrato: prefs KV; save popola anche tabelle strutturate.
+
+```bash
+./scripts/gate-sql.sh theprodigy all    # before
+# login → alias/achievement visibili → quit
+./scripts/gate-sql.sh theprodigy all    # after; diff con before
+./scripts/check-gate-7.7.sh theprodigy before   # poi after post quit
+```
+
+PASS: alias/achie stabili al re-login; SQL prefs/ach ≥ before; `.aux` mtime/size invariati (7.7).
+
+### 7.7 — mtime file (D2)
+
+```bash
+./scripts/check-gate-7.7.sh <nome> before
+# gioco → quit (o ghost/forcerent)
+./scripts/check-gate-7.7.sh <nome> after
+diff -u /tmp/<nome>-mtime-before.txt /tmp/<nome>-mtime-after.txt
+```
+
+PASS se `.dat`/`.aux` identici; `rent/<nome>` può cambiare solo mtime (stub 0 byte).
+
+### 7.8 — Restore drill (§0.6)
+
+Script: `./scripts/restore-pg-drill.sh <nome> backup|reset-db|verify|restore-files`
+
+| PG | Uso |
+|----|-----|
+| **montero** | `migrated_at` NULL — import pulito da file |
+| **theprodigy** | già migrato — disaster recovery (reset DB + re-import) |
+
+```bash
+./scripts/restore-pg-drill.sh montero backup    # annota BACKUP_DIR
+./scripts/restore-pg-drill.sh montero reset-db
+# in mud (immortale): legacyimport montero
+./scripts/restore-pg-drill.sh montero verify
+./scripts/gate-sql.sh montero migration
+```
+
+Variante migrato: dopo `reset-db` serve `legacyimport`; opz. `restore-files` prima dell’import per simulare corruzione file.
+
+PASS: `legacyimport` OK; `verify` → PASS; `migrated_at` + `character_core`; login menu `1` normale.
+
+### 7.9 — `.dead` (DEATH_FIX)
+
+Sidecar `lib/players/<nome>.dead` (non in MySQL). Mortale migrato &lt; 58, non immortale.
+
+1. `check-gate-7.7.sh before` (`.dead` missing o nota mtime)
+2. Muori (morte con `save_exp_to_file`) → `cat mudroot/lib/players/<nome>.dead` → `"<exp> : <epoch>"`
+3. `check-gate-7.7.sh after` → `.dat` invariato su migrato; `.dead` può esistere/aggiornarsi
+4. Re-login: exp coerente; resurrect/reincarnate su migrato senza fwrite `.dat`
+
+B/C (sacrificio / spell): N/A se room o spell assenti in staging.
 
 **GO** se 7.1–7.5 e 7.7 passano; 7.6 se avete PG con `.aux` non banali; 7.9 se il mud usa DEATH_FIX in produzione.  
 **Staging oggi:** **7.1–7.12** OK su Vagrant (ultimo: Montero save/menu 2026-06-02) |
@@ -388,8 +448,11 @@ legacyloadcheck <nome>
 ```
 
 ```bash
+./scripts/apply-schema-s1.sh
+./scripts/check-gate-7.7.sh <nome> before   # gioco → quit → after (vedi §7.7)
+./scripts/gate-sql.sh <nome> [prefs|ach|alias|migration|all]
+./scripts/restore-pg-drill.sh <nome> backup|reset-db|verify   # §7.8
 python3 docs/export-legacy-import-csv.py <nome>
-./scripts/check-gate-7.7.sh <nome> before   # gioco → quit → after
 ```
 
 ### Log utili (PG migrato)
