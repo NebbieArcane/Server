@@ -196,7 +196,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 | 4.4 | `save_character_extra_to_db` | 🔶 | `save_char_extra_mysql` in `write_char_extra` (dual-write) |
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ✅ | `save_char` + `toon_is_migrated_by_name` |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ✅ | `update_file` / `write_char_extra` |
-| 4.7 | Menu `'1'..'4'`: oggi `load_char_objs` + `save_char` | 🚫 | `interpreter.cpp` ~3293 — riscrive file subito |
+| 4.7 | Menu `'1'..'4'`: oggi `load_char_objs` + `save_char` | ✅ | Migrati: no save all'ingresso (`con_slct`/`con_city_choice`, `load_char_objs`); save al quit/rent |
 | 4.8 | `.dead` + `character_death_snapshot` | ✅ | `death_snapshot_save/load`; resurrect/reincarnate → DB exp; file ancora scritto |
 
 **Gate 4:** login → modifica stato/oggetti → quit → re-login identico **solo da DB**; mtime file invariato.
@@ -209,7 +209,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 |-------|------|--------------|
 | `con_pwdok` | 🔶 DB-first; **no fallback file se `migrated_at`** | lazy import se `toon_needs_migration`; PG migrato: solo MySQL |
 | Fallimento load DB | file solo se **non** migrato | staging: migrati bloccati su file (harder cutover) |
-| Entrata `'1'`… | `load_char_objs` + `save_char` | load/save inventario + corpo da DB |
+| Entrata `'1'`… | load da DB; migrati senza save immediato | load rent/extra da DB; `save_character_to_db` al quit/rent |
 | Quit / autorent | `save_char` → file | `save_character_to_db` |
 | `do_refund` | restore da zip -> file | **`eq`**: SQL-first su cause `DEATH`, `RENT_EXPIRED`, `NUKE`, `TRAP`, `MANUAL` (finestra `data+m/p/s`), poi fallback zip rent se 0 righe; **`all`**: stesso `eq` + `pg`/`achie` solo zip |
 
@@ -315,7 +315,7 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 1. ~~`migrated_at` + set in `legacy_import` (§1)~~ ✅  
 2. ~~Test **7.7** + **7.2** su Alar~~ ✅ (2026-05-31); ~~**7.1** PG nuovo~~ ✅  
 3. ~~Test **7.3** rent + quit~~ ✅ — ~~**7.4** poly~~ ✅ — ~~**7.5** LD/reconnect (TheProdigy)~~ ✅  
-4. ~~§4.2 `lastlogin` + §4.1 `save_character_to_db` unificato~~ ✅ — **adesso:** monitor lazy migration + backup §0.1 + §4.7 menu  
+4. ~~§4.2 + §4.1 + §4.7 menu~~ ✅ — **adesso:** monitor lazy migration + backup §0.1  
 5. ~~Import strutturato `.aux` (§2.3)~~ ✅ — verificare su campione con `legacyimport`  
 6. ~~Rimuovere fallback file in `con_pwdok` se migrato~~ ✅ (codice)  
 7. ~~Refund SQL `eq` multi-causa + `RENT_EXPIRED`~~ ✅ (2026-06-02)  

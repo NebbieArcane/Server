@@ -66,6 +66,17 @@
 namespace Alarmud {
 using std::string;
 
+#if USE_MYSQL
+/** PG con cutover DB: niente save rent/corpo all'ingresso menu (gia' in MySQL). */
+static bool skip_menu_enter_save(struct char_data* ch) {
+	return ch && IS_PC(ch) && toon_is_migrated_by_name(GET_NAME(ch));
+}
+#else
+static bool skip_menu_enter_save(struct char_data*) {
+	return false;
+}
+#endif
+
 namespace {
 
 bool toon_exists_in_db(const char* name) {
@@ -2617,11 +2628,16 @@ NANNY_FUNC(con_slct) {
 				d->character);
 		send_zero_gold_warning(d->character);
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
-        do_save(d->character, "", 0);
-
-    // Quest Achievement
-        CheckQuestFail(d->character);
-        write_char_extra(d->character);
+		if(!skip_menu_enter_save(d->character)) {
+			do_save(d->character, "", 0);
+			CheckQuestFail(d->character);
+			write_char_extra(d->character);
+		}
+		else {
+			mudlog(LOG_SAVE, "con_slct: skip enter save for migrated %s",
+				   GET_NAME(d->character));
+			CheckQuestFail(d->character);
+		}
 
 		{
 			struct room_data* rp = real_roomp(d->character->in_room);
@@ -3411,7 +3427,9 @@ NANNY_FUNC(con_city_choice) {
 				   d->character->player.name);
 			load_char_objs(d->character, FALSE);
 			SetStatus("int 1",NULL,NULL);
-			save_char(d->character, AUTO_RENT, 0);
+			if(!skip_menu_enter_save(d->character)) {
+				save_char(d->character, AUTO_RENT, 0);
+			}
 			SetStatus("int 2",NULL,NULL);
 			send_to_char(WELC_MESSG, d->character);
 			SetStatus("int 3",NULL,NULL);
@@ -3444,7 +3462,9 @@ NANNY_FUNC(con_city_choice) {
 			reset_char(d->character);
 			mudlog(LOG_CONNECT, "2.Loading %s's equipment",d->character->player.name);
 			load_char_objs(d->character, FALSE);
-			save_char(d->character, AUTO_RENT, 0);
+			if(!skip_menu_enter_save(d->character)) {
+				save_char(d->character, AUTO_RENT, 0);
+			}
 			send_to_char(WELC_MESSG, d->character);
 			d->character->next = character_list;
 			character_list = d->character;
@@ -3469,7 +3489,9 @@ NANNY_FUNC(con_city_choice) {
 				mudlog(LOG_CONNECT, "3.Loading %s's equipment",
 					   d->character->player.name);
 				load_char_objs(d->character, FALSE);
-				save_char(d->character, AUTO_RENT, 0);
+				if(!skip_menu_enter_save(d->character)) {
+					save_char(d->character, AUTO_RENT, 0);
+				}
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;
@@ -3501,7 +3523,9 @@ NANNY_FUNC(con_city_choice) {
 				mudlog(LOG_CONNECT, "4.Loading %s's equipment",
 					   d->character->player.name);
 				load_char_objs(d->character, FALSE);
-				save_char(d->character, AUTO_RENT, 0);
+				if(!skip_menu_enter_save(d->character)) {
+					save_char(d->character, AUTO_RENT, 0);
+				}
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;
@@ -3535,7 +3559,9 @@ NANNY_FUNC(con_city_choice) {
 				mudlog(LOG_CONNECT, "5.Loading %s's equipment",
 					   d->character->player.name);
 				load_char_objs(d->character, FALSE);
-				save_char(d->character, AUTO_RENT, 0);
+				if(!skip_menu_enter_save(d->character)) {
+					save_char(d->character, AUTO_RENT, 0);
+				}
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;

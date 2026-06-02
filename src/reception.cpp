@@ -1025,9 +1025,18 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		ZeroRent(GET_NAME(ch));
 	}
 
-	/* Save char, to avoid strange data if crashing */
-	mudlog(LOG_CHECK, "Saving character...");
-	save_char(ch, AUTO_RENT, 0);
+	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent) */
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(ch))) {
+		mudlog(LOG_SAVE, "load_char_objs: skip post-load save for migrated %s",
+			   GET_NAME(ch));
+	}
+	else
+#endif
+	{
+		mudlog(LOG_CHECK, "Saving character...");
+		save_char(ch, AUTO_RENT, 0);
+	}
 	AverageEqIndex(GetCharBonusIndex(ch));
 }
 
