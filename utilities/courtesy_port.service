@@ -1,0 +1,29 @@
+# Nebbie courtesy port placeholder
+#
+# Install:
+#   cc -O2 -o /usr/local/bin/courtesy_port courtesy_port.c
+#   sudo install -d /etc/nebbie
+#   sudo cp courtesy_port.env.example /etc/nebbie/courtesy_port.env
+#   sudo cp courtesy_port.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now courtesy_port.service
+
+[Unit]
+Description=Nebbie Arcane courtesy message on game port
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nebbie
+Group=nebbie
+EnvironmentFile=-/etc/nebbie/courtesy_port.env
+Environment=SERVER_PORT=4002
+ExecStart=/usr/local/bin/courtesy_port
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
