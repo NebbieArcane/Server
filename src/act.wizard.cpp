@@ -5037,6 +5037,66 @@ bool refund_wants_achie(int type_flags) {
 	return IS_SET(type_flags, REFUND_ALL) || IS_SET(type_flags, REFUND_ACHIE);
 }
 
+bool refund_build_sql_window(const RefundRequest& request, long long& from_epoch,
+							 long long& to_epoch) {
+	if(request.date.size() != 8) {
+		return false;
+	}
+	int yyyy = 0;
+	int mm = 0;
+	int dd = 0;
+	try {
+		yyyy = std::stoi(request.date.substr(0, 4));
+		mm = std::stoi(request.date.substr(4, 2));
+		dd = std::stoi(request.date.substr(6, 2));
+	}
+	catch(...) {
+		return false;
+	}
+	if(yyyy < 1970 || mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+		return false;
+	}
+
+	int start_hour = 0;
+	int end_hour = 23;
+	if(IS_SET(request.time_flag, REFUND_MORNING)) {
+		start_hour = 0;
+		end_hour = 9;
+	}
+	else if(IS_SET(request.time_flag, REFUND_NOON)) {
+		start_hour = 10;
+		end_hour = 15;
+	}
+	else if(IS_SET(request.time_flag, REFUND_EVENING)) {
+		start_hour = 16;
+		end_hour = 23;
+	}
+
+	std::tm start_tm {};
+	start_tm.tm_year = yyyy - 1900;
+	start_tm.tm_mon = mm - 1;
+	start_tm.tm_mday = dd;
+	start_tm.tm_hour = start_hour;
+	start_tm.tm_min = 0;
+	start_tm.tm_sec = 0;
+	start_tm.tm_isdst = -1;
+
+	std::tm end_tm = start_tm;
+	end_tm.tm_hour = end_hour;
+	end_tm.tm_min = 59;
+	end_tm.tm_sec = 59;
+
+	const std::time_t start_time = std::mktime(&start_tm);
+	const std::time_t end_time = std::mktime(&end_tm);
+	if(start_time <= 0 || end_time <= 0 || end_time < start_time) {
+		return false;
+	}
+
+	from_epoch = static_cast<long long>(start_time);
+	to_epoch = static_cast<long long>(end_time);
+	return true;
+}
+
 std::string refund_shell_quote(const fs::path& path) {
 	std::string out = "'";
 	for(const char c : path.string()) {
@@ -5422,6 +5482,23 @@ ACTION_FUNC(do_refund) {
 		return;
 	}
 
+	bool eq_restored_from_db = false;
+	if(refund_wants_eq(request.type_flags)) {
+		long long from_epoch = 0;
+		long long to_epoch = 0;
+		if(!refund_build_sql_window(request, from_epoch, to_epoch)) {
+			mudlog(LOG_SYSERR, "do_refund: finestra SQL non valida per %s (%s)",
+				   request.name.c_str(), request.date.c_str());
+		}
+		else if(refund_restore_inventory_mysql(request.name.c_str(), "DEATH", from_epoch,
+												to_epoch)) {
+			eq_restored_from_db = true;
+			mudlog(LOG_PLAYERS, "do_refund: SQL restore inventory OK per %s", request.name.c_str());
+			send_to_char("Refund SQL inventario (DEATH) completato per la finestra richiesta.\n\r",
+						 ch);
+		}
+	}
+
 	const char* god_name = GET_NAME(ch) != nullptr ? GET_NAME(ch) : "refund";
 	const fs::path temp_dir = std::string(god_name) + "Backup";
 	std::error_code ec;
@@ -5436,7 +5513,10 @@ ACTION_FUNC(do_refund) {
 	}
 	mudlog(LOG_PLAYERS, "do_refund: Directory temporanea: %s", temp_dir.string().c_str());
 
-	if(refund_wants_rent_archive(request.type_flags)) {
+	const bool need_rent_archive =
+		refund_wants_rent_archive(request.type_flags) &&
+		!(eq_restored_from_db && !refund_wants_achie(request.type_flags));
+	if(need_rent_archive) {
 		mudlog(LOG_PLAYERS, "do_refund: Inizio ricerca file RENT/ACHIE.");
 		const std::optional<fs::path> rent_archive = refund_find_backup_zip("rent", request);
 		if(!rent_archive) {
@@ -5477,7 +5557,7 @@ ACTION_FUNC(do_refund) {
 	const fs::path aux_file = temp_dir / "lib" / "rent" / (request.name_lower + ".aux");
 
 	bool ok = true;
-	if(refund_wants_eq(request.type_flags)) {
+	if(refund_wants_eq(request.type_flags) && !eq_restored_from_db) {
 		const bool restored = refund_restore_from_path(
 			rent_file, fs::path(RENT_DIR) / request.name_lower, "equipaggiamento", ch, request.name,
 			"Il file dell'equipaggiamento di ");

@@ -3215,6 +3215,27 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 	(void)rent;
 	return false;
 #else
+	static int soft_delete_cols_cache = -1; // -1 unknown, 0 missing, 1 available.
+	auto inventory_soft_delete_supported = [&](DB* db) -> bool {
+		if(soft_delete_cols_cache != -1) {
+			return soft_delete_cols_cache == 1;
+		}
+		MYSQL_RES* cols_res = nullptr;
+		const std::string cols_sql =
+			"SELECT COUNT(*) FROM information_schema.COLUMNS "
+			"WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'character_inventory' "
+			"AND COLUMN_NAME IN ('deleted','deleted_on','deleted_for')";
+		if(!mysql_query_select(db, cols_sql, cols_res) || !cols_res) {
+			soft_delete_cols_cache = 0;
+			return false;
+		}
+		MYSQL_ROW cols_row = mysql_fetch_row(cols_res);
+		const long count = cols_row ? sql_to_ll(cols_row[0], 0) : 0;
+		mysql_free_result(cols_res);
+		soft_delete_cols_cache = (count >= 3) ? 1 : 0;
+		return soft_delete_cols_cache == 1;
+	};
+
 	if(!name || !*name || !rent) {
 		return false;
 	}
@@ -3228,6 +3249,7 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 
 	DB* db = Sql::getMysql();
 	const std::string toon_id = std::to_string(pg->id);
+	const bool soft_delete_supported = inventory_soft_delete_supported(db);
 	MYSQL_RES* res = nullptr;
 
 	const std::string rent_sql =
@@ -3257,11 +3279,15 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 	mysql_free_result(res);
 	res = nullptr;
 
-	const std::string inv_sql =
+	std::string inv_sql =
 		"SELECT list_index, item_number, value0, value1, value2, value3, extra_flags, "
 		"extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
 		"wear_pos, depth FROM character_inventory WHERE toon_id = " +
-		toon_id + " ORDER BY list_index";
+		toon_id;
+	if(soft_delete_supported) {
+		inv_sql += " AND deleted = 0";
+	}
+	inv_sql += " ORDER BY list_index";
 	if(!mysql_query_select(db, inv_sql, res) || !res) {
 		return false;
 	}
@@ -3291,12 +3317,15 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 	mysql_free_result(res);
 	res = nullptr;
 
-	const std::string aff_sql =
+	std::string aff_sql =
 		"SELECT ci.list_index, cia.affect_slot, cia.location, cia.modifier "
 		"FROM character_inventory_affect cia "
 		"INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
-		"WHERE ci.toon_id = " +
-		toon_id + " ORDER BY ci.list_index, cia.affect_slot";
+		"WHERE ci.toon_id = " + toon_id;
+	if(soft_delete_supported) {
+		aff_sql += " AND ci.deleted = 0";
+	}
+	aff_sql += " ORDER BY ci.list_index, cia.affect_slot";
 	if(mysql_query_select(db, aff_sql, res) && res) {
 		while((row = mysql_fetch_row(res)) != nullptr) {
 			const int idx = static_cast<int>(sql_to_ll(row[0], -1));
@@ -3313,6 +3342,110 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 
 	std::snprintf(rent->owner, sizeof(rent->owner), "%s", pg->name.c_str());
 	return true;
+#endif
+}
+
+bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
+#if !USE_MYSQL
+	(void)name;
+	(void)cause;
+	return false;
+#else
+	if(!name || !*name || !cause || !*cause) {
+		return false;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+		std::ostringstream upd;
+		upd << "UPDATE character_inventory "
+			   "SET deleted = 1, deleted_on = NOW(), deleted_for = "
+			<< db_sql_literal(cause, false)
+			<< " WHERE toon_id = " << toon_id
+			<< " AND (deleted = 0 OR deleted IS NULL)";
+		db->execute(upd.str().c_str());
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "mark_inventory_deleted_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+bool refund_restore_inventory_mysql(const char* name, const char* cause,
+									long long from_epoch, long long to_epoch) {
+#if !USE_MYSQL
+	(void)name;
+	(void)cause;
+	(void)from_epoch;
+	(void)to_epoch;
+	return false;
+#else
+	if(!name || !*name || !cause || !*cause) {
+		return false;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+
+		// Se non ci sono righe marcate per questa causa, restituiamo false
+		// cosi' do_refund può fare fallback sul restore da backup zip.
+		MYSQL_RES* res = nullptr;
+		MYSQL_ROW row = nullptr;
+		const bool has_time_window = from_epoch > 0 && to_epoch > 0 && from_epoch <= to_epoch;
+		const std::string count_sql =
+			"SELECT COUNT(*) FROM character_inventory WHERE toon_id = " + toon_id +
+			" AND deleted = 1 AND deleted_for = " + db_sql_literal(cause, false) +
+			(has_time_window ? " AND deleted_on BETWEEN FROM_UNIXTIME(" +
+									 std::to_string(from_epoch) + ") AND FROM_UNIXTIME(" +
+									 std::to_string(to_epoch) + ")"
+							: "");
+		if(!mysql_query_select(db, count_sql, res) || !res) {
+			t.commit();
+			return false;
+		}
+		row = mysql_fetch_row(res);
+		const long matching =
+			(row && row[0]) ? sql_to_ll(row[0], 0) : 0;
+		mysql_free_result(res);
+
+		if(matching <= 0) {
+			t.commit();
+			return false;
+		}
+
+		std::ostringstream upd;
+		upd << "UPDATE character_inventory "
+			   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+			   "WHERE toon_id = "
+			<< toon_id
+			<< " AND deleted = 1 AND deleted_for = " << db_sql_literal(cause, false);
+		if(has_time_window) {
+			upd << " AND deleted_on BETWEEN FROM_UNIXTIME(" << from_epoch << ")"
+				<< " AND FROM_UNIXTIME(" << to_epoch << ")";
+		}
+		db->execute(upd.str().c_str());
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_restore_inventory_mysql(%s): %s", name, e.what());
+		return false;
+	}
 #endif
 }
 

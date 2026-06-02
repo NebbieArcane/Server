@@ -8,6 +8,7 @@ Checklist per il **taglio netto** da file (`.dat` / rent / `.aux`) a MySQL come 
 
 - Mapping campi: [schema-s1-mapping.md](schema-s1-mapping.md) (`.dead` escluso — vedi sezione dedicata sotto)
 - DDL: [schema-s1-ddl-draft.sql](schema-s1-ddl-draft.sql) (+ script incrementali: resistance, condition, `extra_str`, classi)
+- Inventario storico (soft delete): [schema-s1-inventory-soft-delete.sql](schema-s1-inventory-soft-delete.sql)
 - Import file → DB: [legacy-loader.md](legacy-loader.md), `src/legacy_import.cpp`
 - Stato schema vs codice: [schema-s1-vs-mysql.md](schema-s1-vs-mysql.md)
 
@@ -32,7 +33,7 @@ Checklist per il **taglio netto** da file (`.dat` / rent / `.aux`) a MySQL come 
 | Login | **B** | Dopo migrate: solo `load_*_from_db`; niente fallback automatico su file |
 | Gate migrazione | **C2** | `toon.migrated_at` (+ opz. `schema_version`); non inferire da sola presenza di `character_core` |
 | Save | **D2** | PG con `migrated_at` set: niente `fwrite` `.dat`, niente `rent/` / `.aux` in scrittura |
-| Transizione | **Nessuna fase lunga A** | Batch + backup prima del deploy; file = archivio |
+| Transizione | **Lazy migration al login** | Niente import di massa obbligatorio; `legacyimport` resta tool operativo |
 
 **Rollback:** binario precedente + file backup intatti (se D2 non ha riscritto i file). Il DB migrato può restare; il vecchio codice rilegge i file.
 
@@ -62,14 +63,14 @@ Sono due layer diversi:
 
 `getFromDb` (`db.cpp`) inserisce un record minimo se manca: `name`, `password`, `title` dal `.dat`. `owner_id` può restare 0 finché l’account non associa il PG in `con_register`.
 
-### Implicazione per il batch pre-cutover
+### Implicazione operativa (lazy migration)
 
-Prima di `legacyimport` su tutti i PG:
+Con lazy migration in `con_pwdok`, i PG vengono migrati quando entrano.
+Quindi:
 
-1. Per ogni `players/*.dat` da migrare: esiste `toon` con lo stesso nome **oppure**
-2. Eseguire un passo che replica `getFromDb` (script o tool) **senza** richiedere il login di ogni giocatore.
-
-PG mai più loggati possono avere solo il file finché non si fa (1) o (2).
+1. Non serve batch `legacyimport` globale come prerequisito GO.
+2. `legacyimport <nome>` resta utile per restore drill, test e casi manuali.
+3. PG che non entrano restano su file (`.dat`) finche' non fanno login.
 
 ---
 
@@ -118,7 +119,7 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 | # | Voce | Stato | Note |
 |---|------|-------|------|
 | 0.1 | Backup `players/` (`.dat` + `.dead`), `rent/`, dump MySQL | ☐ | Snapshot datato; path documentato; `.dead` = sidecar DEATH_FIX |
-| 0.2 | Inventario `.dat` vs `toon` | ☐ | Vedi sezione sopra; risolvere orfani prima del batch |
+| 0.2 | Inventario `.dat` vs `toon` (audit) | 🔶 | Consigliato per pulizia, ma non blocca il GO con strategia lazy |
 | 0.3 | DDL S1 applicato su DB target | 🔶 | Vagrant: fatto a mano; script: `./scripts/apply-schema-s1.sh` |
 | 0.4 | Build con `USE_MYSQL` | ✅ | Verificato da `legacyimport montero` OK |
 | 0.5 | `legacy_loader` / `legacy_import` nel link del binario | ✅ | Verificato da `legacyprobe` / `legacyimport` in-game |
@@ -142,7 +143,7 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 
 ---
 
-## 2. Import batch (prima del deploy gameplay)
+## 2. Import / migrazione runtime (lazy)
 
 | # | Voce | Stato | Note |
 |---|------|-------|------|
@@ -150,15 +151,15 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 | 2.2 | `.aux` → `character_prefs` (KV grezzo) | 🔶 | Non equivale al parse di `load_char_extra` |
 | 2.3 | `.aux` → `character_achievements` / `aliases` / `mercy` | ❌ | DDL c’è; import cancella tabelle ma non popola queste righe strutturate |
 | 2.4 | `quest_mob` / progress quest | ❌ | Gap in mapping |
-| 2.5 | Script batch su tutti i `.dat` | ❌ | Oggi: `legacyimport <nome>` in-game |
-| 2.6 | Report batch (OK / FAIL / no toon) | ❌ | |
+| 2.5 | Lazy migration in `con_pwdok` | ✅ | `toon_needs_migration` + `legacy_import_character_mysql` al login |
+| 2.6 | Report runtime (log) | 🔶 | Monitorare `lazy migration OK/FAILED`; report SQL opzionale |
 | 2.7 | Probe post-import (campione) | 🔶 | Montero verificato via `legacyprobe`, SQL, `export-legacy-import-csv.py`; da ripetere su campione più ampio |
 
-**Gate 2:**
+**Gate 2 (lazy):**
 
-- 100% PG attivi nel cutover: import OK + `migrated_at` set
-- 0 errori su PG che devono entrare
-- Se i PG con achievement/alias/mercy in `.aux` sono critici → **2.3 obbligatorio** prima del GO
+- nessun errore `lazy migration FAILED` sui PG che entrano
+- PG migrato entra e rientra solo da DB (`migrated_at` set)
+- se i PG con achievement/alias/mercy in `.aux` sono critici -> **2.3 obbligatorio**
 
 ---
 
@@ -191,7 +192,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 |---|------|-------|------|
 | 4.1 | `save_character_to_db(ch)` transazionale | ❌ | |
 | 4.2 | Aggiorna `toon` (password, title, level, lastlogin, lasthost) | 🔶 | Oggi sync parziale in `save_char` |
-| 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` in `update_file` (dual-write con rent file) |
+| 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` in `update_file`; prossimo step: soft delete storico (mark automatico) |
 | 4.4 | `save_character_extra_to_db` | 🔶 | `save_char_extra_mysql` in `write_char_extra` (dual-write) |
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ✅ | `save_char` + `toon_is_migrated_by_name` |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ✅ | `update_file` / `write_char_extra` |
@@ -210,7 +211,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 | Fallimento load DB | file solo se **non** migrato | staging: migrati bloccati su file (harder cutover) |
 | Entrata `'1'`… | `load_char_objs` + `save_char` | load/save inventario + corpo da DB |
 | Quit / autorent | `save_char` → file | `save_character_to_db` |
-| `do_refund` | restore da zip → file | Runbook: file + reset flag + re-import |
+| `do_refund` | restore da zip -> file | Ibrido: `eq` tenta prima SQL (`deleted_for='DEATH'`) nella finestra `data+ora`, poi fallback zip |
 
 **Gate 5:** ciclo account → pwd → menu 1 → gioco → quit senza scrittura su `players/*.dat`.  
 Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.2** Alar (account → gioco → quit → re-login) OK da log 2026-05-31, `skip .dat` su migrato.
@@ -223,10 +224,11 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 |------|---------|
 | `.aux` strutturato | Import in `character_prefs` non alimenta RAM; serve load/save extra o import 2.3 |
 | Achievements fuori `.aux` | Verificare se `.achie` è ancora usato |
-| `do_refund` | Resta su file; post-cutover = procedura manuale; opz. includere `.dead` nel restore pg |
+| `do_refund` | Ibrido: oggi tentativo SQL prima del restore file | Nota: il SQL restore funziona solo se esistono righe `deleted_for='DEATH'` in `character_inventory` |
 | `.dead` (DEATH_FIX) | Non in DB; sacrificio/resurrezione leggono ancora `players/<nome>.dead` |
-| Nome `.dat` ≠ `toon.name` | Allineare prima del batch |
+| Nome `.dat` ≠ `toon.name` | Audit consigliato (0.2), non blocco GO in lazy |
 | `character_core` senza title/pwd | By design su `toon`; load deve unire le fonti |
+| Soft delete inventario | 🔶 | oggi: riflette su load/restore (refund SQL), ma la marcatura automatica `deleted_for` non e' ancora collegata a death/rent/expire |
 
 ---
 
@@ -243,6 +245,7 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 | 7.7 | mtime `.dat` / rent dopo sessione migrata | ✅ | **Alar**: `.dat` 3040 B e `.aux` 92 B invariati; `rent/alar` 0 B, solo mtime (+67 s), log `skip rent file` |
 | 7.8 | Restore drill: 1 PG da backup file + re-import | ✅ | **Montero** 2026-05-31: reset-db → `legacyimport` → verify (`migrated_at`, core+78 prefs) |
 | 7.9 | Morte / sacrificio / resurrect (`.dead`) | ✅ | TheProdigy: snapshot file+DB; fix resurrect/reincarnate su migrati (no fwrite `.dat`) |
+| 7.10 | Refund SQL `eq` su finestra data+ora | ✅ | **TheProdigy** 2026-06-02: `m` ripristina (`SQL restore ... OK`), `p` non matcha e va in fallback zip |
 
 Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → `after` → `diff` (PASS se `.dat`/`.aux` identici; rent stub 0 byte può cambiare solo mtime).
 
@@ -256,7 +259,7 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 1. Manutenzione / mud down  
 2. Backup finale (0.1)  
 3. Creare `toon` mancanti da `.dat` se serve (sezione `.dat` e `toon`)  
-4. Batch `legacyimport` + `migrated_at`  
+4. Deploy binario con lazy migration attiva (`con_pwdok`)  
 5. Deploy binario con §3–§5  
 6. Smoke 7.1–7.3  
 7. Monitor log import / load / SQL  
@@ -269,14 +272,14 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 | Blocco | Pronto? |
 |--------|---------|
 | Schema + `migrated_at` | ✅ (Vagrant) |
-| Import batch (+ aux strutturato se serve) | 🔶 |
+| Import runtime lazy (+ aux strutturato se serve) | 🔶 |
 | Load da DB | 🔶 (corpo + rent + extra se migrato) |
 | Save DB + stop file | 🔶 (D2 attivo se `migrated_at`; PG non migrati ancora dual-write) |
 | Login/menu wired | ✅ | Fix menu/delete/`justCreated` (`bb6d942`); `con_pwdok` no fallback se migrato |
 | Test 7.x su staging | 🔶 | **7.1–7.8** OK; **7.9** opz. |
 | Runbook ops | ☐ |
 
-**Verdetto attuale:** **staging** validato su load/save D2, re-login, rent, quit, poly, **LD/reconnect**; **non** GO produzione finché batch §2.5, §4.1 save unificato, §0.1 backup.
+**Verdetto attuale:** **staging** validato su load/save D2, re-login, rent, quit, poly, **LD/reconnect**; **non** GO produzione finche' restano aperti §4.1 save unificato e §0.1 backup finale.
 
 ---
 
@@ -285,10 +288,10 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 1. ~~`migrated_at` + set in `legacy_import` (§1)~~ ✅  
 2. ~~Test **7.7** + **7.2** su Alar~~ ✅ (2026-05-31); ~~**7.1** PG nuovo~~ ✅  
 3. ~~Test **7.3** rent + quit~~ ✅ — ~~**7.4** poly~~ ✅ — ~~**7.5** LD/reconnect (TheProdigy)~~ ✅  
-4. **Adesso:** §4.2 `lastlogin` + §4.1 `save_character_to_db` unificato → batch §2.5–2.6 + backup §0.1  
+4. **Adesso:** §4.2 `lastlogin` + §4.1 `save_character_to_db` unificato + monitor lazy migration + backup §0.1  
 5. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
 6. ~~Rimuovere fallback file in `con_pwdok` se migrato~~ ✅ (codice)  
-7. Test **7.6 / 7.8 / 7.9** (runbook `scripts/test-gate-7.6|7.8|7.9.md`) → batch prod → deploy  
+7. Test **7.6 / 7.8 / 7.9** (runbook `scripts/test-gate-7.6|7.8|7.9.md`) -> deploy prod (lazy)  
 
 ---
 
