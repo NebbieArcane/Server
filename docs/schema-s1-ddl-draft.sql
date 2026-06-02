@@ -13,8 +13,8 @@
 --   toon 1 — 1 character_core (toon_id)
 --   toon 1 — N character_* (tutte con FK toon_id → toon.id)
 --
--- Riferimenti: docs/schema-s1-mapping.md, docs/schema-s1-vs-mysql.md,
---               docs/resistance-bit-to-value.md
+-- Riferimenti: docs/schema-s1-mapping.md, docs/resistance-bit-to-value.md,
+--               docs/cutover-db-checklist.md
 -- Costanti: MAX_CLASS=11, MAX_SKILLS=350, MAX_AFFECT=40, MAX_OBJ_SAVE=200, MAX_OBJ_AFFECT=5
 -- (char_file_u.level[] ha ABS_MAX_CLASS=20 slot file; DB/import usano solo 0..MAX_CLASS-1)
 -- =============================================================================

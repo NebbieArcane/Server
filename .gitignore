@@ -216,6 +216,7 @@ autom4te.cache
 
 ########################################################################
 # Locally added
+docs/legacy-import-*.csv
 *.log
 *.log.*
 *.sql

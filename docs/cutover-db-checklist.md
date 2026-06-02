@@ -10,7 +10,8 @@ Checklist per il **taglio netto** da file (`.dat` / rent / `.aux`) a MySQL come 
 - DDL: [schema-s1-ddl-draft.sql](schema-s1-ddl-draft.sql) (+ script incrementali: resistance, condition, `extra_str`, classi)
 - Inventario storico (soft delete): [schema-s1-inventory-soft-delete.sql](schema-s1-inventory-soft-delete.sql)
 - Import file → DB: [legacy-loader.md](legacy-loader.md), `src/legacy_import.cpp`
-- Stato schema vs codice: [schema-s1-vs-mysql.md](schema-s1-vs-mysql.md)
+- Resistenze (bit → valore): [resistance-bit-to-value.md](resistance-bit-to-value.md)
+- Probe CSV: `python3 docs/export-legacy-import-csv.py <nome>` (output `docs/legacy-import-<nome>.csv`, non versionato)
 
 ---
 
