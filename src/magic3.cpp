@@ -1520,7 +1520,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 #if DEATH_FIX
 			st.points.exp = static_cast<int>(snap_exp);
 			const long elapsed = static_cast<long>(time(nullptr) - snap_at);
-			mudlog(LOG_PLAYERS, "%s resuscitato con reincarnate dopo %ld secondi",
+			mudlog(LOG_PLAYERS, "%s resurrected with reincarnate after %ld seconds",
 				   obj->oldfilename, elapsed);
 #else
 			st.points.exp *= 5;

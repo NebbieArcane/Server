@@ -62,6 +62,7 @@
 #include "Sql.hpp"
 #include "legacy_import.hpp"
 #include "toon_migration.hpp"
+#include "toon_nuke_blacklist.hpp"
 
 namespace Alarmud {
 using std::string;
@@ -1361,6 +1362,7 @@ void assign_command_pointers() {
   //AddCommand( "store",                do_not_here,        CMD_STORE,                  POSITION_STANDING,  1                       );
 	AddCommand( "carve",                do_carve,           CMD_CARVE,                  POSITION_STANDING,  1                       );  /*  335 */
 	AddCommand( "nuke",                 do_nuke,            CMD_NUKE,                   POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "forgive",              do_forgive,         CMD_FORGIVE,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "skills",               do_show_skill,      CMD_SKILLS,                 POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "doorway",              do_doorway,         CMD_DOORWAY,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "portal",               do_psi_portal,      CMD_PORTAL,                 POSITION_STANDING,  TUTTI                   );
@@ -1899,6 +1901,11 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==d->AccountData.id);
 		d->toons.clear();
 		for(toonPtr pg : r) {
+#if USE_MYSQL
+			if(pg->id && toon_nuke_is_blocked(Sql::getMysql(), pg->id, pg->name.c_str())) {
+				continue;
+			}
+#endif
 			++n;
 			message.append(std::to_string(n)).append(". ").append(pg->name).append(" ");
 			message.append(ParseAnsiColors(true,pg->title.c_str())).append("\r\n");
@@ -1909,6 +1916,12 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 	SEND_TO_Q(message.c_str(),d);
 }
 bool toonFromFileSystem(const char* nome) {
+#if USE_MYSQL
+	if(nome && *nome && toon_nuke_is_blocked(Sql::getMysql(), 0, nome)) {
+		mudlog(LOG_CONNECT, "toonFromFileSystem: %s in nuke blacklist", nome);
+		return false;
+	}
+#endif
 	using namespace boost::filesystem;
 	path file(current_path());
 	file/=PLAYERS_DIR; // Overloaded operator: concats adding path separator
@@ -2749,6 +2762,13 @@ NANNY_FUNC(con_nme) {
 		}
 	}
 	if(pg) {
+#if USE_MYSQL
+		if(pg->id && toon_nuke_is_blocked(Sql::getMysql(), pg->id, pg->name.c_str())) {
+			SEND_TO_Q("Questo personaggio e' stato bandito dagli dei e non puo' piu' entrare.\n\r", d);
+			SEND_TO_Q("Nome: ", d);
+			return false;
+		}
+#endif
 		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->owner_id);
 		found=true;
 		strcpy(d->pwd,pg->password.substr(0,11).c_str());
@@ -2897,16 +2917,16 @@ NANNY_FUNC(con_register) {
 
 			// 3. Salva nel DB (FONTE PRIMARIA)
 			if (!Sql::save(*pg)) {
-				mudlog(LOG_SYSERR, "Errore Sql::save in con_register per %s", pg->name.c_str());
+				mudlog(LOG_SYSERR, "con_register: Sql::save failed for %s", pg->name.c_str());
 				SEND_TO_Q("Errore critico nella creazione del personaggio sul DB.\n\r", d);
 				close_socket(d);
 				return false;
 			} else {
-				mudlog(LOG_CONNECT, "Nuovo record 'toon' creato per %s.", pg->name.c_str());
+				mudlog(LOG_CONNECT, "con_register: new toon record for %s", pg->name.c_str());
 			}
 
 		} catch (const odb::exception& e) {
-			mudlog(LOG_SYSERR, "Errore ODB in con_register: %s", e.what());
+			mudlog(LOG_SYSERR, "con_register: ODB error: %s", e.what());
 			SEND_TO_Q("Errore ODB nella creazione del personaggio.\n\r", d);
 			close_socket(d);
 			return false;
@@ -2914,7 +2934,7 @@ NANNY_FUNC(con_register) {
 
 		// 4. Ora salva il file .dat (per compatibilita' con refund/ghost)
 		save_char(d->character, AUTO_RENT, 0);
-		mudlog(LOG_CONNECT, "Nuovo file .dat (sincronizzato) creato per %s.", GET_NAME(d->character));
+		mudlog(LOG_CONNECT, "con_register: new synced .dat for %s", GET_NAME(d->character));
 
 		// --- FINE NUOVA LOGICA DI CREAZIONE ---
 		/* justCreated resta true fino a con_pwdok: non ricaricare da MySQL il PG appena creato */
@@ -2957,6 +2977,20 @@ NANNY_FUNC(con_pwdok) {
 		bool loaded = false;
 		const std::string toon_name = d->AccountData.choosen;
 		toonPtr pg = Sql::getOne<toon>(toonQuery::name == toon_name);
+#if USE_MYSQL
+		if(pg && pg->id && toon_nuke_is_blocked(Sql::getMysql(), pg->id, toon_name.c_str())) {
+			SEND_TO_Q("Questo personaggio e' stato bandito dagli dei e non puo' piu' entrare.\n\r", d);
+			if(d->AccountData.authorized) {
+				toonList(d, "");
+				STATE(d) = CON_ACCOUNT_TOON;
+			}
+			else {
+				STATE(d) = CON_NME;
+				SEND_TO_Q("Nome: ", d);
+			}
+			return false;
+		}
+#endif
 		bool block_file_fallback = false;
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
@@ -2997,7 +3031,7 @@ NANNY_FUNC(con_pwdok) {
 		}
 		if(!loaded) {
 			//Something went terribly wrong
-			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+			mudlog(LOG_SYSERR, "con_pwdok: cannot load %s", d->AccountData.choosen.c_str());
 			FLUSH_TO_Q("Unable to load ",d);
 			FLUSH_TO_Q(d->AccountData.choosen.c_str(),d);
 			close_socket(d);

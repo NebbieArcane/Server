@@ -50,6 +50,7 @@ ACTION_FUNC(do_mload) ;
 ACTION_FUNC(do_nohassle) ;
 ACTION_FUNC(do_noshout) ;
 ACTION_FUNC(do_nuke) ;
+ACTION_FUNC(do_forgive) ;
 ACTION_FUNC(do_oload) ;
 ACTION_FUNC(do_ooedit) ;
 ACTION_FUNC(do_osave) ;

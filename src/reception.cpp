@@ -769,7 +769,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			if(toon_is_migrated(db, *pg)) {
 				if(load_rent_mysql(GET_NAME(ch), &st)) {
 					rent_from_db = true;
-					mudlog(LOG_PLAYERS, "load_char_objs: rent da DB per %s (%d oggetti)",
+					mudlog(LOG_PLAYERS, "load_char_objs: rent from DB for %s (%d items)",
 						   GET_NAME(ch), st.number);
 				}
 				else {
@@ -1476,7 +1476,7 @@ void update_obj_file() {
             }
             else
             {
-                mudlog(LOG_ERROR, "Errore opening file %s.", szFileName);
+                mudlog(LOG_ERROR, "Error opening file %s.", szFileName);
             }
         } // Fine dei giocatori
     }
@@ -2172,7 +2172,7 @@ void load_char_extra(struct char_data* ch) {
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
 			if(toon_is_migrated(db, *pg) && load_char_extra_mysql(GET_NAME(ch), ch)) {
-				mudlog(LOG_PLAYERS, "load_char_extra: extra da DB per %s", GET_NAME(ch));
+				mudlog(LOG_PLAYERS, "load_char_extra: extra from DB for %s", GET_NAME(ch));
 				PopStatus();
 				return;
 			}
@@ -2553,7 +2553,7 @@ bool save_char_extra_mysql(const char* name, struct char_data* ch) {
 
 	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
 	if(!pg || !pg->id) {
-		mudlog(LOG_SYSERR, "save_char_extra_mysql: toon mancante per %s", name);
+		mudlog(LOG_SYSERR, "save_char_extra_mysql: missing toon for %s", name);
 		return false;
 	}
 

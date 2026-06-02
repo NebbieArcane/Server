@@ -111,8 +111,9 @@ struct char_data* save_char_resolve_pc(struct char_data* ch) {
 		}
 		return ch->desc->original;
 	}
+	/* Ghost/LD without desc: save the real PC (pwd in st; empty lasthost if absent). */
 	if(!ch->desc) {
-		return nullptr;
+		return ch;
 	}
 	return ch;
 }
@@ -335,6 +336,11 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 #else
 	struct char_data* pc = save_char_resolve_pc(ch);
 	if(!pc) {
+		const char* who = "?";
+		if(ch && IS_PC(ch) && GET_NAME(ch)) {
+			who = GET_NAME(ch);
+		}
+		mudlog(LOG_SYSERR, "save_character_to_db: cannot resolve PC for %s", who);
 		return false;
 	}
 
@@ -358,7 +364,7 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 
 	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(pc)));
 	if(!pg || !pg->id) {
-		mudlog(LOG_SYSERR, "save_character_to_db: toon mancante per %s", GET_NAME(pc));
+		mudlog(LOG_SYSERR, "save_character_to_db: missing toon for %s", GET_NAME(pc));
 		return false;
 	}
 
@@ -3660,7 +3666,7 @@ bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
 
 	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
 	if(!pg || !pg->id) {
-		mudlog(LOG_SYSERR, "save_rent_mysql: toon mancante per %s", name);
+		mudlog(LOG_SYSERR, "save_rent_mysql: missing toon for %s", name);
 		return false;
 	}
 
@@ -5933,7 +5939,7 @@ static void death_snapshot_write_file(const char* name, long saved_exp, long sav
 	mudlog(LOG_PLAYERS, "death_snapshot: opening %s", nomefile);
 	FILE* fdeath = std::fopen(nomefile, "w+");
 	if(!fdeath) {
-		mudlog(LOG_PLAYERS, "death_snapshot: impossibile salvare xp per %s", name);
+		mudlog(LOG_PLAYERS, "death_snapshot: cannot save xp for %s", name);
 		return;
 	}
 	std::fprintf(fdeath, "%ld : %ld", saved_exp, saved_at_epoch);
@@ -5964,7 +5970,7 @@ void death_snapshot_save(const char* name, long saved_exp, long saved_at_epoch) 
 			") ON DUPLICATE KEY UPDATE saved_exp = VALUES(saved_exp), saved_at = VALUES(saved_at)";
 		db->execute(sql.c_str());
 		t.commit();
-		mudlog(LOG_SAVE, "death_snapshot: DB per %s exp=%ld at=%ld", name, saved_exp,
+		mudlog(LOG_SAVE, "death_snapshot: DB for %s exp=%ld at=%ld", name, saved_exp,
 			   saved_at_epoch);
 	}
 	catch(const odb::exception& e) {

@@ -351,7 +351,22 @@ CREATE TABLE IF NOT EXISTS `character_quest_progress` (
 -- SELECT … FROM toonExtra …;
 
 -- -----------------------------------------------------------------------------
--- 9. Vista di comodo (debug)
+-- 9. Blacklist nuke (audit + blocco login; do_nuke)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `toon_nuke_blacklist` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `toon_id`    BIGINT UNSIGNED NOT NULL,
+  `toon_name`  VARCHAR(32) NOT NULL,
+  `nuked_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `nuked_by`   VARCHAR(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_toon_id` (`toon_id`),
+  KEY `idx_toon_name` (`toon_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+  COMMENT='PG nukati: non possono entrare (vedi toon_nuke_blacklist.cpp)';
+
+-- -----------------------------------------------------------------------------
+-- 10. Vista di comodo (debug)
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW `v_character_summary` AS
 SELECT
@@ -375,9 +390,10 @@ LEFT JOIN `character_stats` cs ON cs.toon_id = t.id;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- -----------------------------------------------------------------------------
--- 10. Apply incrementale (DB già creato)
+-- 11. Apply incrementale (DB già creato)
 -- -----------------------------------------------------------------------------
 -- Vedi: docs/schema-s1-ddl-add-resistance.sql
+-- Vedi: docs/schema-toon-nuke-blacklist.sql (idempotente se §9 già nel draft)
 -- Vedi: docs/schema-s1-ddl-drop-unused-conditions.sql
 -- Vedi: docs/schema-s1-ddl-fix-character-classes.sql
 -- Vedi: docs/schema-s1-ddl-drop-extra-str.sql

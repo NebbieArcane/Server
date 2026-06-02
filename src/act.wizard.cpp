@@ -76,6 +76,7 @@
 #include "legacy_loader.hpp"
 #include "legacy_import.hpp"
 #include "toon_migration.hpp"
+#include "toon_nuke_blacklist.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -196,7 +197,7 @@ void wizRegister(struct char_data* ch, std::vector<string> &parts) {
 		boost::format fmt("Parts: %d\r\n");
 		fmt % parts.size();
 		send_to_char(fmt.str().c_str(),ch);
-		if(parts[0] == "account") { //enabled for testing - 'if(false and' rimossi)
+		if(false && parts[0] == "account") { /* disabilitato in produzione */
 			if(parts.size() < 4) {
 				throw invalid_argument(
 					"Usa 'register account <email> <nome cognome>'");
@@ -522,66 +523,84 @@ ACTION_FUNC(do_legacyloadcheck) {
 }
 
 
+static bool legacy_patch_dat_password(const char* name, const char* crypted_pass) {
+	char szFileName[200];
+	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(name));
+	FILE* fl = fopen(szFileName, "r+b");
+	if(!fl) {
+		return false;
+	}
+	struct char_file_u st {};
+	if(fread(&st, sizeof(st), 1, fl) != 1) {
+		fclose(fl);
+		return false;
+	}
+	std::snprintf(st.pwd, sizeof(st.pwd), "%s", crypted_pass);
+	rewind(fl);
+	const bool ok = (fwrite(&st, sizeof(st), 1, fl) == 1);
+	fclose(fl);
+	return ok;
+}
+
 ACTION_FUNC(do_passwd) {
 	char name[30], npasswd[20], buf[256];
-	
-	sprintf(buf, "Invocato come %d.\n\r", cmd);
-	send_to_char(buf, ch);
 
 	arg = one_argument(arg, name);
 	arg = one_argument(arg, npasswd);
 
-	// Sirio
-	// La logica CMD_SAVE era specifica per salvare i PG "ghost" su file
-	// e non è direttamente traducibile senza rivedere anche il do_ghost.
-	// Ci concentriamo sulla modifica della password (CMD_CHPWD).
-	if (cmd == CMD_CHPWD) {
-		
-		if (!*npasswd || strlen(npasswd) > 10 || strlen(npasswd) < 5) {
+	// CMD_SAVE era per ghost su file; solo CMD_CHPWD e' supportato.
+	if(cmd == CMD_CHPWD) {
+
+		if(!*npasswd || strlen(npasswd) > 10 || strlen(npasswd) < 5) {
 			send_to_char("Password illegale (min 5, max 10 caratteri).\n\r", ch);
 			return;
 		}
 
 		try {
-			// 1. Carica il personaggio (toon) dal database usando il nome
-			// usiamo 'string(name)' per convertire il char*
 			toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(name));
 
-			// 2. Controlla se il personaggio è stato trovato nel DB
-			if (!pg || !pg->id) {
+			if(!pg || !pg->id) {
 				send_to_char("Non ho trovato quel personaggio nel database.\n\r", ch);
-				// Potresti voler controllare anche la vecchia logica qui per sicurezza
-				// ma l'obiettivo è migrare.
 				return;
 			}
 
-			// 3. Cripta la nuova password (usando il nome come salt, come prima)
-			string new_crypted_pass = crypt(npasswd, pg->name.c_str());
-
-			// 4. Aggiorna il campo password nell'oggetto 'toon'
+			const string new_crypted_pass = crypt(npasswd, pg->name.c_str());
 			pg->password = new_crypted_pass;
 
-			// 5. Salva l'oggetto aggiornato nel database
-			if (Sql::update(*pg)) { // Sql::update è definito in Sql.hpp
-				sprintf(buf, "OK, password del database per %s cambiata in %s.\n\r", name, npasswd);
+			if(Sql::update(*pg)) {
+				sprintf(buf, "OK, password di %s aggiornata nel database.\n\r", name);
 				send_to_char(buf, ch);
-				mudlog(LOG_PLAYERS, "%s ha cambiato la password DB di %s.", GET_NAME(ch), name);
-			} else {
+				mudlog(LOG_PLAYERS, "%s changed DB password for %s.", GET_NAME(ch),
+					   name);
+#if USE_MYSQL
+				if(!toon_is_migrated_by_name(name) &&
+				   legacy_patch_dat_password(name, new_crypted_pass.c_str())) {
+					send_to_char("Password allineata anche sul file .dat.\n\r", ch);
+				}
+#else
+				if(legacy_patch_dat_password(name, new_crypted_pass.c_str())) {
+					send_to_char("Password allineata anche sul file .dat.\n\r", ch);
+				}
+#endif
+			}
+			else {
 				send_to_char("Errore durante l'aggiornamento del database.\n\r", ch);
-				mudlog(LOG_SYSERR, "Errore Sql::update in do_passwd per %s", name);
+				mudlog(LOG_SYSERR, "do_passwd: Sql::update failed for %s", name);
 			}
 
-		} catch (const odb::exception& e) {
-			mudlog(LOG_SYSERR, "Errore ODB in do_passwd: %s", e.what());
+		}
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "do_passwd: ODB error: %s", e.what());
 			send_to_char("Si è verificato un errore critico con il database.\n\r", ch);
-		} catch (const std::exception& e) {
-			mudlog(LOG_SYSERR, "Errore generico in do_passwd: %s", e.what());
+		}
+		catch(const std::exception& e) {
+			mudlog(LOG_SYSERR, "do_passwd: error: %s", e.what());
 			send_to_char("Si è verificato un errore generico.\n\r", ch);
 		}
-	
-	} else if (cmd == CMD_SAVE) {
-		send_to_char("La logica 'save' di questo comando è obsoleta e deve essere rimossa o aggiornata.\n\r", ch);
-		send_to_char("Aggiornamento password saltato.\n\r", ch);
+
+	}
+	else if(cmd == CMD_SAVE) {
+		send_to_char("La logica 'save' di questo comando è obsoleta.\n\r", ch);
 	}
 }
 
@@ -4498,17 +4517,17 @@ void roll_abilities(struct char_data* ch) {
 		mudlog(LOG_PLAYERS, "%s ha rollato con metodo: %c", GET_NAME(ch),
 			   Rollata);
 		ch->abilities.str = STAT_MIN_VAL + ch->desc->stat[0]
-							+ (Rollata = 'N' ? 0 : number(0, 2) - 1);
+							+ (Rollata == 'N' ? 0 : number(0, 2) - 1);
 		ch->abilities.intel = STAT_MIN_VAL + ch->desc->stat[1]
-							  + (Rollata = 'N' ? 0 : number(0, 2) - 1);
+							  + (Rollata == 'N' ? 0 : number(0, 2) - 1);
 		ch->abilities.wis = STAT_MIN_VAL + ch->desc->stat[2]
-							+ (Rollata = 'N' ? 0 : number(0, 2) - 1);
+							+ (Rollata == 'N' ? 0 : number(0, 2) - 1);
 		ch->abilities.dex = STAT_MIN_VAL + ch->desc->stat[3]
-							+ (Rollata = 'N' ? 0 : number(0, 2) - 1);
+							+ (Rollata == 'N' ? 0 : number(0, 2) - 1);
 		ch->abilities.con = STAT_MIN_VAL + ch->desc->stat[4]
-							+ (Rollata = 'N' ? 0 : number(0, 2) - 1);
+							+ (Rollata == 'N' ? 0 : number(0, 2) - 1);
 		ch->abilities.chr = STAT_MIN_VAL + ch->desc->stat[5]
-							+ (Rollata = 'N' ? 0 : number(0, 2) - 1);
+							+ (Rollata == 'N' ? 0 : number(0, 2) - 1);
 	}
 #endif
 	ch->points.max_hit = HowManyClasses(ch) * 10;
@@ -5508,7 +5527,7 @@ ACTION_FUNC(do_refund) {
 				}
 			}
 			if(eq_restored_from_db) {
-				mudlog(LOG_PLAYERS, "do_refund: SQL restore inventory OK per %s (cause=%s)",
+				mudlog(LOG_PLAYERS, "do_refund: SQL restore inventory OK for %s (cause=%s)",
 					   request.name.c_str(), matched_cause);
 				std::string msg = "Refund SQL inventario (";
 				msg += matched_cause;
@@ -6990,30 +7009,34 @@ ACTION_FUNC(do_nuke) { 		// SIrio - Riscritto nuke per usare il DB e prevenire i
         // 1. Rimuove il personaggio dal mondo di gioco
 		do_purge(ch, victim_name, 0);
 
-        // 2. NUOVA LOGICA DB: Cancella il record dalla tabella 'toon'
+        // 2. Blacklist DB (audit + blocco login); corpo PG resta in character_*
         try {
             toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(victim_name));
 
-            if (!pg || !pg->id) {
+            if(!pg || !pg->id) {
                 send_to_char("Personaggio non trovato nel database (ma purgato dal gioco).\n\r", ch);
-                mudlog(LOG_SYSERR, "do_nuke: %s purgato ma non trovato nel DB.", victim_name);
-            } else {
-                // Cancella il record
-                if (Sql::erase(*pg)) {
-                    send_to_char("Record del database cancellato.\n\r", ch);
-                    mudlog(LOG_PLAYERS, "Record DB per %s cancellato.", victim_name);
-                } else {
-                    send_to_char("ERRORE: Impossibile cancellare il record dal database.\n\r", ch);
-                    mudlog(LOG_SYSERR, "do_nuke: Fallito Sql::erase per %s.", victim_name);
-                }
+                mudlog(LOG_SYSERR, "do_nuke: %s purged from game but not found in DB.", victim_name);
             }
-        } catch (const odb::exception& e) {
-            mudlog(LOG_SYSERR, "Errore ODB in do_nuke: %s", e.what());
+#if USE_MYSQL
+            else if(toon_nuke_blacklist_add(Sql::getMysql(), pg->id, victim_name, GET_NAME(ch))) {
+                send_to_char("Personaggio inserito in blacklist: non potra' piu' entrare.\n\r", ch);
+            }
+            else {
+                send_to_char("ERRORE: blacklist non aggiornata (tabella assente o errore SQL).\n\r",
+                             ch);
+            }
+#else
+            else {
+                send_to_char("Blacklist nuke richiede MySQL attivo.\n\r", ch);
+            }
+#endif
+        }
+        catch(const odb::exception& e) {
+            mudlog(LOG_SYSERR, "do_nuke: ODB error: %s", e.what());
             send_to_char("Si è verificato un errore critico con il database durante il nuke.\n\r", ch);
         }
 
-        // 3. LOGICA FILE (Completa)
-        // CANCELLIAMO TUTTI I FILE LEGACY ASSOCIATI AL PG
+        // 3. File legacy: rimossi per evitare login da .dat (dati restano su MySQL)
 
         // File .dat (per il login fallback)
 		sprintf(buf, "rm -f %s/%s.dat", PLAYERS_DIR, lower(victim_name));
@@ -7041,6 +7064,59 @@ ACTION_FUNC(do_nuke) { 		// SIrio - Riscritto nuke per usare il DB e prevenire i
 
 		send_to_char("Nuked.\n\r", ch);
 	}
+}
+
+ACTION_FUNC(do_forgive) {
+	char target[MAX_INPUT_LENGTH];
+
+	if(IS_NPC(ch)) {
+		return;
+	}
+
+	one_argument(arg, target);
+	if(!*target) {
+		send_to_char("Forgive whom? (forgive <name>)\n\r", ch);
+		return;
+	}
+
+#if USE_MYSQL
+	try {
+		unsigned long long toon_id = 0;
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(target));
+		if(pg && pg->id) {
+			toon_id = pg->id;
+		}
+
+		DB* db = Sql::getMysql();
+		if(!toon_nuke_table_exists(db)) {
+			send_to_char("Tabella blacklist assente sul database.\n\r", ch);
+			return;
+		}
+
+		if(!toon_nuke_is_blocked(db, toon_id, target)) {
+			send_to_char("Quel personaggio non risulta nella blacklist nuke.\n\r", ch);
+			return;
+		}
+
+		if(toon_nuke_blacklist_remove(db, toon_id, target)) {
+			const string msg = string("Hai perdonato ") + target +
+							   ": puo' di nuovo tentare il login.\n\r";
+			send_to_char(msg.c_str(), ch);
+			mudlog(LOG_PLAYERS, "%s forgave %s (removed from nuke blacklist).", GET_NAME(ch),
+				   target);
+		}
+		else {
+			send_to_char("Errore nella rimozione dalla blacklist.\n\r", ch);
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "do_forgive: %s", e.what());
+		send_to_char("Errore database durante il forgive.\n\r", ch);
+	}
+#else
+	(void)target;
+	send_to_char("Forgive richiede MySQL attivo.\n\r", ch);
+#endif
 }
 
 ACTION_FUNC(do_force_rent) {
@@ -7171,11 +7247,101 @@ ACTION_FUNC(do_force_rent) {
 
 }*/
 
+namespace {
+
+enum class GhostLoadStatus {
+	Ok,
+	NotFound,
+	Nuked,
+	MysqlFailed,
+};
+
+/** Caricamento char_file_u per ghost: stessa logica di con_pwdok (lazy import, DB-first). */
+GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
+{
+	if(!name || !*name) {
+		return GhostLoadStatus::NotFound;
+	}
+
+	bool block_file_fallback = false;
+
+#if USE_MYSQL
+	try {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(pg && pg->id) {
+			DB* db = Sql::getMysql();
+			if(toon_nuke_table_exists(db) && toon_nuke_is_blocked(db, pg->id, name)) {
+				return GhostLoadStatus::Nuked;
+			}
+			if(toon_needs_migration(db, *pg)) {
+				LegacyImportReport rep {};
+				if(legacy_import_character_mysql(name, rep)) {
+					mudlog(LOG_CONNECT, "ghost_load: lazy migration OK for %s (%s)", name,
+						   rep.message.c_str());
+				}
+				else {
+					mudlog(LOG_SYSERR, "ghost_load: lazy migration FAILED for %s (%s)", name,
+						   rep.message.c_str());
+				}
+			}
+			if(toon_migration_sanity_check(db, *pg) && load_char_mysql(name, &st)) {
+				mudlog(LOG_PLAYERS, "do_ghost: loaded %s from MySQL", name);
+				return GhostLoadStatus::Ok;
+			}
+			if(toon_is_migrated(db, *pg)) {
+				block_file_fallback = true;
+				mudlog(LOG_SYSERR,
+					   "do_ghost: MySQL load failed for migrated %s — no file fallback", name);
+			}
+			else {
+				mudlog(LOG_SYSERR,
+					   "do_ghost: MySQL load failed/sanity KO for %s, fallback to file", name);
+			}
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "ghost_load: ODB error for %s: %s", name, e.what());
+	}
+#endif
+
+	if(!block_file_fallback && load_char(name, &st)) {
+		mudlog(LOG_PLAYERS, "do_ghost: loaded %s from file", name);
+#if USE_MYSQL
+		try {
+			toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+			if(pg && pg->id) {
+				std::snprintf(st.pwd, sizeof(st.pwd), "%s", pg->password.c_str());
+				if(!pg->title.empty()) {
+					std::snprintf(st.title, sizeof(st.title), "%s", pg->title.c_str());
+				}
+			}
+		}
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "do_ghost: toon sync on file load: %s", e.what());
+		}
+#endif
+		return GhostLoadStatus::Ok;
+	}
+
+#if USE_MYSQL
+	if(block_file_fallback) {
+		return GhostLoadStatus::MysqlFailed;
+	}
+#endif
+	return GhostLoadStatus::NotFound;
+}
+
+} // namespace
+
 void save_ghost_forcerent(struct char_data* ch)
 {
 	struct char_file_u tmp_store;
 	FILE* fl = nullptr;
 	char szFileName[200];
+
+	if(!IS_PC(ch)) {
+		return;
+	}
 
 	if(!IS_SET(ch->specials.act, PLR_NEW_EQ)) {
 		SET_BIT(ch->specials.act, PLR_NEW_EQ);
@@ -7187,21 +7353,21 @@ void save_ghost_forcerent(struct char_data* ch)
 	try {
 		toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(GET_NAME(ch)));
 		if(pg && pg->id) {
-			strncpy(tmp_store.pwd, pg->password.c_str(), 10);
+			std::snprintf(tmp_store.pwd, sizeof(tmp_store.pwd), "%s", pg->password.c_str());
 		}
 		else {
-			mudlog(LOG_SYSERR, "save_ghost_forcerent: ATTENZIONE PG %s non trovato nel DB!",
+			mudlog(LOG_SYSERR, "save_ghost_forcerent: toon not found in DB for %s",
 				   GET_NAME(ch));
 		}
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "save_ghost_forcerent: Errore DB fetch: %s", e.what());
+		mudlog(LOG_SYSERR, "save_ghost_forcerent: DB fetch error: %s", e.what());
 	}
 
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(ch))) {
-		if(!save_char_mysql_snapshot(ch, tmp_store)) {
-			mudlog(LOG_SYSERR, "save_ghost_forcerent: save_char_mysql_snapshot failed for %s",
+		if(!save_character_to_db(ch, &tmp_store, nullptr, CHAR_DB_SAVE_BODY_TOON)) {
+			mudlog(LOG_SYSERR, "save_ghost_forcerent: save_character_to_db failed for %s",
 				   GET_NAME(ch));
 		}
 		else {
@@ -7305,33 +7471,20 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 		return;
 	}
 
-	bool loaded = false;
-#if USE_MYSQL
-	if(toon_is_migrated_by_name(find_name) &&
-	   load_char_mysql(find_name, &tmp_store)) {
-		loaded = true;
-		mudlog(LOG_PLAYERS, "do_ghost: corpo da MySQL per %s", find_name);
-	}
-#endif
-	if(!loaded && !load_char(find_name, &tmp_store)) {
+	switch(ghost_load_char_store(find_name, tmp_store)) {
+	case GhostLoadStatus::Nuked:
+		send_to_char("Questo personaggio e' stato bandito e non puo' essere evocato.\n\r", ch);
+		return;
+	case GhostLoadStatus::MysqlFailed:
+		send_to_char(
+			"Impossibile caricare il corpo da MySQL (migrazione incompleta o dati mancanti).\n\r",
+			ch);
+		return;
+	case GhostLoadStatus::NotFound:
 		send_to_char("That person does not exist.\n\r", ch);
 		return;
-	}
-
-	if(!loaded) {
-		try {
-			toonPtr pg = Sql::getOne<toon>(toonQuery::name == string(find_name));
-			if(pg && pg->id) {
-				strncpy(tmp_store.pwd, pg->password.c_str(), 10);
-				if(pg->title.length() > 0) {
-					strncpy(tmp_store.title, pg->title.c_str(), sizeof(tmp_store.title) - 1);
-				}
-				mudlog(LOG_PLAYERS, "do_ghost: pwd/title sincronizzati dal DB per %s", find_name);
-			}
-		}
-		catch(const odb::exception& e) {
-			mudlog(LOG_SYSERR, "do_ghost: Errore DB sync: %s", e.what());
-		}
+	case GhostLoadStatus::Ok:
+		break;
 	}
 
 	CREATE(tmp_ch, struct char_data, 1);

@@ -218,7 +218,7 @@ bool toon_migration_sanity_check(odb::database* db, const toon& pg) {
 		return true;
 	}
 	mudlog(LOG_SYSERR,
-		   "toon_migration: %s (id=%lu) ha migrated_at ma manca character_core",
+		   "toon_migration: %s (id=%lu) has migrated_at but missing character_core",
 		   pg.name.c_str(), pg.id);
 	return false;
 }
