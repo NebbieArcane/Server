@@ -959,7 +959,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			mudlog(LOG_PLAYERS, "** %s badly ran out of money in rent **",
 				   GET_NAME(ch));
 			send_to_char("$c0011Hai finito i soldi. "
-						 "La tua roba e' stata venduta\n\r", ch);
+						 "La tua roba e' stata venduta!\n\r", ch);
 			GET_GOLD(ch) = 0;
 			found = FALSE;
 		}
@@ -968,7 +968,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			mudlog(LOG_PLAYERS, "** %s ran out of money in rent **",
 				   GET_NAME(ch));
 			send_to_char("$c0011Occhio, amico... hai finito i soldi. "
-						 "O ti dai da fare... o resti nudo\n\r", ch);
+						 "O ti dai da fare... o resti nudo!\n\r", ch);
 			found = TRUE;
 		}
 	}
@@ -1007,6 +1007,15 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 	}
 	else {
 		mudlog(LOG_CHECK, "Zeroing objects...");
+#if USE_MYSQL
+		if(toon_is_migrated_by_name(GET_NAME(ch))) {
+			if(!mark_inventory_deleted_mysql(GET_NAME(ch), "RENT_EXPIRED")) {
+				mudlog(LOG_SYSERR,
+					   "load_char_objs: mark_inventory_deleted_mysql(RENT_EXPIRED) failed for %s",
+					   GET_NAME(ch));
+			}
+		}
+#endif
 		ZeroRent(GET_NAME(ch));
 	}
 

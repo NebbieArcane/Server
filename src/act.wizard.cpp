@@ -5127,12 +5127,12 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 	arg = one_argument(arg, time);
 	only_argument(arg, type);
 
-	mudlog(LOG_PLAYERS, "do_refund: Invocato con NOME=%s, DATA=%s, ORA=%s, TIPO=%s",
+	mudlog(LOG_PLAYERS, "do_refund: called with NAME=%s, DATE=%s, TIME=%s, TYPE=%s",
 		   name, date, time, type);
 
 	if(!*name || !*date || !*time || !*type) {
 		refund_send_usage(ch);
-		mudlog(LOG_PLAYERS, "do_refund: Argomenti mancanti. Uscita.");
+		mudlog(LOG_PLAYERS, "do_refund: missing arguments, aborting");
 		return false;
 	}
 
@@ -5142,7 +5142,7 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 						 [](unsigned char c) { return std::isdigit(c) != 0; }) ||
 			std::atoi(date) > 29999999) {
 		send_to_char("Il formato da usare per la data e' $c0009aaaa$c0015mm$c0011gg$c0007!\n\r", ch);
-		mudlog(LOG_PLAYERS, "do_refund: Formato data errato: %s", date);
+		mudlog(LOG_PLAYERS, "do_refund: invalid date format: %s", date);
 		return false;
 	}
 
@@ -5157,7 +5157,7 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 	}
 	else {
 		send_to_char("Quale vuoi recuperare? Quello della $c0009m$c0007attina, del $c0009p$c0007omeriggio o della $c0009s$c0007era?\n\r", ch);
-		mudlog(LOG_PLAYERS, "do_refund: Formato ora errato: %s", time);
+		mudlog(LOG_PLAYERS, "do_refund: invalid time selector: %s", time);
 		return false;
 	}
 
@@ -5175,7 +5175,7 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 	}
 	else {
 		send_to_char("Puoi scegliere di recuperare o tutto o l'equipaggiamento o i dati del personaggio oppure gli achievements!\n\r", ch);
-		mudlog(LOG_PLAYERS, "do_refund: Tipo refund errato: %s", type);
+		mudlog(LOG_PLAYERS, "do_refund: invalid refund type: %s", type);
 		return false;
 	}
 
@@ -5183,7 +5183,7 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 	request.name_lower = refund_to_lower(request.name);
 	request.date = date;
 	const int parsed_flags = request.type_flags | request.time_flag;
-	mudlog(LOG_PLAYERS, "do_refund: Valore bitmask parsato: %d", parsed_flags);
+	mudlog(LOG_PLAYERS, "do_refund: parsed bitmask value: %d", parsed_flags);
 	return true;
 }
 
@@ -5196,13 +5196,13 @@ bool refund_verify_toon_exists(struct char_data* ch, const std::string& name) {
 			send_to_char("$c0011SOLUZIONE:$c0007 Se vuoi ripristinarlo:\n\r", ch);
 			send_to_char("1. Crea il personaggio normalmente (login nuovo).\n\r", ch);
 			send_to_char("2. Fai il refund su quel personaggio appena creato.\n\r", ch);
-			mudlog(LOG_PLAYERS, "do_refund: BLOCCATO tentativo di refund su PG inesistente nel DB: %s",
+			mudlog(LOG_PLAYERS, "do_refund: blocked refund attempt on missing DB toon: %s",
 				   name.c_str());
 			return false;
 		}
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "do_refund: Errore controllo DB: %s", e.what());
+		mudlog(LOG_SYSERR, "do_refund: DB verification error: %s", e.what());
 		send_to_char("Errore database durante il controllo di sicurezza.\n\r", ch);
 		return false;
 	}
@@ -5247,7 +5247,7 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 
 	std::error_code ec;
 	if(!fs::is_directory(dir, ec)) {
-		mudlog(LOG_PLAYERS, "do_refund: directory backup assente: %s", dir.string().c_str());
+		mudlog(LOG_PLAYERS, "do_refund: backup directory missing: %s", dir.string().c_str());
 		return std::nullopt;
 	}
 
@@ -5267,7 +5267,7 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 			continue;
 		}
 
-		mudlog(LOG_PLAYERS, "do_refund: candidato %s: %s", kind,
+		mudlog(LOG_PLAYERS, "do_refund: candidate %s: %s", kind,
 			   candidate.filename().string().c_str());
 
 		if(pick == RefundBackupPick::NewestMtime) {
@@ -5293,15 +5293,15 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 	}
 
 	if(ec) {
-		mudlog(LOG_SYSERR, "do_refund: errore scansione %s: %s", dir.string().c_str(),
+		mudlog(LOG_SYSERR, "do_refund: scan error on %s: %s", dir.string().c_str(),
 			   ec.message().c_str());
 	}
 
 	if(best) {
-		mudlog(LOG_PLAYERS, "do_refund: scelto backup %s: %s", kind, best->string().c_str());
+		mudlog(LOG_PLAYERS, "do_refund: selected backup %s: %s", kind, best->string().c_str());
 	}
 	else {
-		mudlog(LOG_PLAYERS, "do_refund: nessun %s per pattern %s[0-9].zip in %s", kind, stem.c_str(),
+		mudlog(LOG_PLAYERS, "do_refund: no %s backup for pattern %s[0-9].zip in %s", kind, stem.c_str(),
 			   dir.string().c_str());
 	}
 
@@ -5336,15 +5336,15 @@ bool refund_extract_archive_members(const fs::path& archive, const fs::path& des
 	for(const std::string& member : members) {
 		command += " ";
 		command += refund_shell_quote(member);
-		mudlog(LOG_PLAYERS, "do_refund: estrazione selettiva %s: %s", label, member.c_str());
+		mudlog(LOG_PLAYERS, "do_refund: selective extract %s: %s", label, member.c_str());
 	}
-	mudlog(LOG_PLAYERS, "do_refund: Eseguo estrazione %s: %s", label, command.c_str());
+	mudlog(LOG_PLAYERS, "do_refund: running extract %s: %s", label, command.c_str());
 	const int rc = std::system(command.c_str());
 	if(rc != 0) {
-		mudlog(LOG_SYSERR, "do_refund: Estrazione selettiva %s fallita con codice %d", label, rc);
+		mudlog(LOG_SYSERR, "do_refund: selective extract %s failed with code %d", label, rc);
 		return false;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: Estrazione %s completata.", label);
+	mudlog(LOG_PLAYERS, "do_refund: extract %s completed", label);
 	return true;
 }
 
@@ -5352,13 +5352,13 @@ bool refund_extract_archive(const fs::path& archive, const fs::path& destination
 							const char* label) {
 	const std::string command = "tar xzf " + refund_shell_quote(archive) + " -C " +
 								refund_shell_quote(destination);
-	mudlog(LOG_PLAYERS, "do_refund: Eseguo estrazione completa %s: %s", label, command.c_str());
+	mudlog(LOG_PLAYERS, "do_refund: running full extract %s: %s", label, command.c_str());
 	const int rc = std::system(command.c_str());
 	if(rc != 0) {
-		mudlog(LOG_SYSERR, "do_refund: Estrazione completa %s fallita con codice %d", label, rc);
+		mudlog(LOG_SYSERR, "do_refund: full extract %s failed with code %d", label, rc);
 		return false;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: Estrazione completa %s completata.", label);
+	mudlog(LOG_PLAYERS, "do_refund: full extract %s completed", label);
 	return true;
 }
 
@@ -5367,7 +5367,7 @@ bool refund_extract_archive_selective(const fs::path& archive, const fs::path& d
 	if(refund_extract_archive_members(archive, destination, label, members)) {
 		return true;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: fallback estrazione completa %s", label);
+	mudlog(LOG_PLAYERS, "do_refund: fallback to full extract %s", label);
 	return refund_extract_archive(archive, destination, label);
 }
 
@@ -5379,7 +5379,7 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 	ec.clear();
 	fs::copy_file(source, destination, fs::copy_options::overwrite_existing, ec);
 	if(ec) {
-		mudlog(LOG_SYSERR, "do_refund: copia %s fallita da %s a %s: %s",
+		mudlog(LOG_SYSERR, "do_refund: copy %s failed from %s to %s: %s",
 			   label, source.string().c_str(), destination.string().c_str(), ec.message().c_str());
 		std::string msg = "Errore durante il recupero del file ";
 		msg += label;
@@ -5389,7 +5389,7 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 		send_to_char(msg.c_str(), ch);
 		return false;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: copiato %s da %s a %s",
+	mudlog(LOG_PLAYERS, "do_refund: copied %s from %s to %s",
 		   label, source.string().c_str(), destination.string().c_str());
 	return true;
 }
@@ -5399,7 +5399,7 @@ void refund_reset_rent_arrears(const std::string& name_lower) {
 	const fs::path rent_path = fs::path(RENT_DIR) / name_lower;
 	FILE* rent_fl = std::fopen(rent_path.string().c_str(), "r+b");
 	if(rent_fl == nullptr) {
-		mudlog(LOG_SYSERR, "do_refund: impossibile aprire rent per reset arretrati %s",
+		mudlog(LOG_SYSERR, "do_refund: unable to open rent file for arrears reset %s",
 			   rent_path.string().c_str());
 		return;
 	}
@@ -5421,11 +5421,11 @@ void refund_reset_rent_arrears(const std::string& name_lower) {
 	}
 
 	if(!reset_ok) {
-		mudlog(LOG_SYSERR, "do_refund: reset arretrati rent fallito per %s",
+		mudlog(LOG_SYSERR, "do_refund: rent arrears reset failed for %s",
 			   name_lower.c_str());
 	}
 	else {
-		mudlog(LOG_PLAYERS, "do_refund: azzerati arretrati rent per %s", name_lower.c_str());
+		mudlog(LOG_PLAYERS, "do_refund: rent arrears reset for %s", name_lower.c_str());
 	}
 }
 
@@ -5434,7 +5434,7 @@ bool refund_restore_from_path(const fs::path& source, const fs::path& destinatio
 							  const std::string& player_name, const char* success_message) {
 	std::error_code ec;
 	if(!fs::is_regular_file(source, ec)) {
-		mudlog(LOG_PLAYERS, "do_refund: file %s assente: %s", label, source.string().c_str());
+		mudlog(LOG_PLAYERS, "do_refund: %s file missing: %s", label, source.string().c_str());
 		std::string msg = "Non ho trovato il file ";
 		msg += label;
 		msg += " per ";
@@ -5457,11 +5457,11 @@ void refund_cleanup_temp_dir(const fs::path& temp_dir) {
 	std::error_code ec;
 	fs::remove_all(temp_dir, ec);
 	if(ec) {
-		mudlog(LOG_SYSERR, "do_refund: errore pulizia directory temp %s: %s",
+		mudlog(LOG_SYSERR, "do_refund: temp directory cleanup error %s: %s",
 			   temp_dir.string().c_str(), ec.message().c_str());
 	}
 	else {
-		mudlog(LOG_PLAYERS, "do_refund: Pulizia directory temp: %s", temp_dir.string().c_str());
+		mudlog(LOG_PLAYERS, "do_refund: temp directory cleaned: %s", temp_dir.string().c_str());
 	}
 }
 
@@ -5487,15 +5487,34 @@ ACTION_FUNC(do_refund) {
 		long long from_epoch = 0;
 		long long to_epoch = 0;
 		if(!refund_build_sql_window(request, from_epoch, to_epoch)) {
-			mudlog(LOG_SYSERR, "do_refund: finestra SQL non valida per %s (%s)",
+			mudlog(LOG_SYSERR, "do_refund: invalid SQL time window for %s (%s)",
 				   request.name.c_str(), request.date.c_str());
 		}
-		else if(refund_restore_inventory_mysql(request.name.c_str(), "DEATH", from_epoch,
-												to_epoch)) {
-			eq_restored_from_db = true;
-			mudlog(LOG_PLAYERS, "do_refund: SQL restore inventory OK per %s", request.name.c_str());
-			send_to_char("Refund SQL inventario (DEATH) completato per la finestra richiesta.\n\r",
-						 ch);
+		else {
+			const char* refund_causes[] = {
+				"DEATH",
+				"RENT_EXPIRED",
+				"NUKE",
+				"TRAP",
+				"MANUAL"
+			};
+			const char* matched_cause = nullptr;
+			for(const char* cause : refund_causes) {
+				if(refund_restore_inventory_mysql(request.name.c_str(), cause, from_epoch,
+												  to_epoch)) {
+					eq_restored_from_db = true;
+					matched_cause = cause;
+					break;
+				}
+			}
+			if(eq_restored_from_db) {
+				mudlog(LOG_PLAYERS, "do_refund: SQL restore inventory OK per %s (cause=%s)",
+					   request.name.c_str(), matched_cause);
+				std::string msg = "Refund SQL inventario (";
+				msg += matched_cause;
+				msg += ") completato per la finestra richiesta.\n\r";
+				send_to_char(msg.c_str(), ch);
+			}
 		}
 	}
 
@@ -5506,18 +5525,18 @@ ACTION_FUNC(do_refund) {
 	ec.clear();
 	fs::create_directories(temp_dir, ec);
 	if(ec) {
-		mudlog(LOG_SYSERR, "do_refund: impossibile creare directory temp %s: %s",
+		mudlog(LOG_SYSERR, "do_refund: unable to create temp directory %s: %s",
 			   temp_dir.string().c_str(), ec.message().c_str());
 		send_to_char("Non riesco a creare la directory temporanea per il refund.\n\r", ch);
 		return;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: Directory temporanea: %s", temp_dir.string().c_str());
+	mudlog(LOG_PLAYERS, "do_refund: temp directory: %s", temp_dir.string().c_str());
 
 	const bool need_rent_archive =
 		refund_wants_rent_archive(request.type_flags) &&
 		!(eq_restored_from_db && !refund_wants_achie(request.type_flags));
 	if(need_rent_archive) {
-		mudlog(LOG_PLAYERS, "do_refund: Inizio ricerca file RENT/ACHIE.");
+		mudlog(LOG_PLAYERS, "do_refund: searching RENT/ACHIE backup files");
 		const std::optional<fs::path> rent_archive = refund_find_backup_zip("rent", request);
 		if(!rent_archive) {
 			send_to_char("Non riesco a trovare il file di backup rent per questa data ed orario.\n\r", ch);
@@ -5535,7 +5554,7 @@ ACTION_FUNC(do_refund) {
 	}
 
 	if(refund_wants_pg_archive(request.type_flags)) {
-		mudlog(LOG_PLAYERS, "do_refund: Inizio ricerca file PG.");
+		mudlog(LOG_PLAYERS, "do_refund: searching PG backup files");
 		const std::optional<fs::path> pg_archive = refund_find_backup_zip("pg", request);
 		if(!pg_archive) {
 			send_to_char("Non riesco a trovare il file di backup pg per questa data ed orario.\n\r", ch);

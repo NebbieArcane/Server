@@ -3449,6 +3449,21 @@ bool refund_restore_inventory_mysql(const char* name, const char* cause,
 				<< " AND FROM_UNIXTIME(" << to_epoch << ")";
 		}
 		db->execute(upd.str().c_str());
+		// Evita collisioni su list_index quando esistono già oggetti attivi presi
+		// dopo la perdita (es. RENT_EXPIRED) e poi si fa refund SQL: senza
+		// reindex due righe possono condividere lo stesso indice e load_rent_mysql
+		// sovrascrive uno slot perdendo un oggetto al login.
+		db->execute("SET @rent_idx := -1");
+		db->execute(("UPDATE character_inventory ci "
+					 "INNER JOIN ("
+					 "SELECT id, (@rent_idx := @rent_idx + 1) AS new_list_index "
+					 "FROM character_inventory "
+					 "WHERE toon_id = " + toon_id +
+					 " AND (deleted = 0 OR deleted IS NULL) "
+					 "ORDER BY id"
+					 ") ord ON ord.id = ci.id "
+					 "SET ci.list_index = ord.new_list_index")
+						.c_str());
 		db->execute(("UPDATE character_rent SET object_count = ("
 					 "SELECT COUNT(*) FROM character_inventory "
 					 "WHERE toon_id = " + toon_id +
