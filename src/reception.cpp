@@ -401,17 +401,23 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 	snprintf(buf,sizeof(buf)-1, "%s/%s", RENT_DIR, lower(GET_NAME(k)));
 	PushStatus("update_file1");
 
-	write_char_extra(k);
 	PushStatus("update_file2");
+#if USE_MYSQL
+	if(!toon_is_migrated_by_name(GET_NAME(k))) {
+		write_char_extra(k);
+	}
+#else
+	write_char_extra(k);
+#endif
 
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(k))) {
 		std::strcpy(st->owner, GET_NAME(k));
-		if(!save_rent_mysql(GET_NAME(k), *st)) {
-			mudlog(LOG_SYSERR, "update_file: save_rent_mysql failed for %s", GET_NAME(k));
+		if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
+			mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
 		}
 		else {
-			mudlog(LOG_SAVE, "update_file: skip rent file for migrated %s", GET_NAME(k));
+			mudlog(LOG_SAVE, "update_file: skip rent/.aux file for migrated %s", GET_NAME(k));
 		}
 		PopStatus();
 		PopStatus();
@@ -1873,8 +1879,7 @@ void zero_rent(struct char_data* ch) {
 		struct obj_file_u st {};
 		std::snprintf(st.owner, sizeof(st.owner), "%s", GET_NAME(ch));
 		st.last_update = static_cast<int>(time(nullptr));
-		save_rent_mysql(GET_NAME(ch), st);
-		write_char_extra(ch);
+		save_character_to_db(ch, nullptr, &st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT);
 		return;
 	}
 #endif
@@ -2199,8 +2204,8 @@ void write_char_extra(struct char_data* ch) {
 
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(ch))) {
-		if(!save_char_extra_mysql(GET_NAME(ch), ch)) {
-			mudlog(LOG_SYSERR, "write_char_extra: save_char_extra_mysql failed for %s",
+		if(!save_character_to_db(ch, nullptr, nullptr, CHAR_DB_SAVE_EXTRA)) {
+			mudlog(LOG_SYSERR, "write_char_extra: save_character_to_db failed for %s",
 				   GET_NAME(ch));
 		}
 		else {
@@ -2443,6 +2448,95 @@ bool load_char_extra_mysql(const char* name, struct char_data* ch) {
 	return any;
 }
 
+void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, struct char_data* ch) {
+	const std::string toon_id_str = std::to_string(toon_id);
+
+	db->execute(("DELETE FROM character_prefs WHERE toon_id = " + toon_id_str).c_str());
+	db->execute(("DELETE FROM character_achievements WHERE toon_id = " + toon_id_str).c_str());
+	db->execute(("DELETE FROM character_aliases WHERE toon_id = " + toon_id_str).c_str());
+	db->execute(("DELETE FROM character_mercy WHERE toon_id = " + toon_id_str).c_str());
+
+	if(IS_IMMORTAL(ch)) {
+		if(ch->specials.poofin) {
+			extra_insert_pref(db, toon_id, "in", ch->specials.poofin);
+		}
+		if(ch->specials.poofout) {
+			extra_insert_pref(db, toon_id, "out", ch->specials.poofout);
+		}
+		{
+			char zbuf[32];
+			std::snprintf(zbuf, sizeof(zbuf), "%d", GET_ZONE(ch));
+			extra_insert_pref(db, toon_id, "zone", zbuf);
+		}
+	}
+
+	if(IS_SET(ch->specials.act, PLR_ACHIE)) {
+		auto save_ach = [&](int category, int max_slot, const char* tag) {
+			for(int i = 0; i < max_slot; ++i) {
+				const int val = ch->specials.achievements[category][i];
+				if(val <= 0) {
+					continue;
+				}
+				char vbuf[64];
+				std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, val);
+				extra_insert_pref(db, toon_id, tag, vbuf);
+				std::ostringstream sql;
+				sql << "INSERT INTO character_achievements (toon_id, category, slot_index, "
+					   "value) VALUES ("
+					<< toon_id_str << ',' << category << ',' << i << ',' << val << ')';
+				db->execute(sql.str().c_str());
+			}
+		};
+		save_ach(RACESLAYER_ACHIE, MAX_RACE_ACHIE, "achie_racekill");
+		save_ach(BOSSKILL_ACHIE, MAX_BOSS_ACHIE, "achie_bosskill");
+		save_ach(CLASS_ACHIE, MAX_CLASS_ACHIE, "achie_class");
+		save_ach(QUEST_ACHIE, MAX_QUEST_ACHIE, "achie_quest");
+		save_ach(OTHER_ACHIE, MAX_OTHER_ACHIE, "achie_other");
+
+		for(int i = 0; i < MAX_QUEST_ACHIE; ++i) {
+			if(ch->specials.mercy[i] <= 0) {
+				continue;
+			}
+			char vbuf[64];
+			std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, ch->specials.mercy[i]);
+			extra_insert_pref(db, toon_id, "mercy", vbuf);
+			std::ostringstream sql;
+			sql << "INSERT INTO character_mercy (toon_id, quest_index, value) VALUES ("
+				<< toon_id_str << ',' << i << ',' << ch->specials.mercy[i] << ')';
+			db->execute(sql.str().c_str());
+		}
+	}
+
+	if(ch->specials.prompt) {
+		extra_insert_pref(db, toon_id, "prompt", ch->specials.prompt);
+	}
+	if(ch->specials.email) {
+		extra_insert_pref(db, toon_id, "email", ch->specials.email);
+	}
+	if(GET_PRINCE(ch)) {
+		extra_insert_pref(db, toon_id, "principe", GET_PRINCE(ch));
+	}
+	if(ch->specials.realname) {
+		extra_insert_pref(db, toon_id, "realname", ch->specials.realname);
+	}
+	extra_insert_pref(db, toon_id, "version", version());
+
+	if(ch->specials.A_list) {
+		for(int i = 0; i < 10; ++i) {
+			if(!GET_ALIAS(ch, i)) {
+				continue;
+			}
+			char slot[8];
+			std::snprintf(slot, sizeof(slot), "%d", i);
+			extra_insert_pref(db, toon_id, slot, GET_ALIAS(ch, i));
+			std::ostringstream sql;
+			sql << "INSERT INTO character_aliases (toon_id, slot, alias_text) VALUES ("
+				<< toon_id_str << ',' << i << ',' << extra_sql_literal(GET_ALIAS(ch, i)) << ')';
+			db->execute(sql.str().c_str());
+		}
+	}
+}
+
 bool save_char_extra_mysql(const char* name, struct char_data* ch) {
 	if(!name || !*name || !ch) {
 		return false;
@@ -2458,93 +2552,7 @@ bool save_char_extra_mysql(const char* name, struct char_data* ch) {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
-		const std::string toon_id = std::to_string(pg->id);
-
-		db->execute(("DELETE FROM character_prefs WHERE toon_id = " + toon_id).c_str());
-		db->execute(("DELETE FROM character_achievements WHERE toon_id = " + toon_id).c_str());
-		db->execute(("DELETE FROM character_aliases WHERE toon_id = " + toon_id).c_str());
-		db->execute(("DELETE FROM character_mercy WHERE toon_id = " + toon_id).c_str());
-
-		if(IS_IMMORTAL(ch)) {
-			if(ch->specials.poofin) {
-				extra_insert_pref(db, pg->id, "in", ch->specials.poofin);
-			}
-			if(ch->specials.poofout) {
-				extra_insert_pref(db, pg->id, "out", ch->specials.poofout);
-			}
-			{
-				char zbuf[32];
-				std::snprintf(zbuf, sizeof(zbuf), "%d", GET_ZONE(ch));
-				extra_insert_pref(db, pg->id, "zone", zbuf);
-			}
-		}
-
-		if(IS_SET(ch->specials.act, PLR_ACHIE)) {
-			auto save_ach = [&](int category, int max_slot, const char* tag) {
-				for(int i = 0; i < max_slot; ++i) {
-					const int val = ch->specials.achievements[category][i];
-					if(val <= 0) {
-						continue;
-					}
-					char vbuf[64];
-					std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, val);
-					extra_insert_pref(db, pg->id, tag, vbuf);
-					std::ostringstream sql;
-					sql << "INSERT INTO character_achievements (toon_id, category, slot_index, "
-						   "value) VALUES ("
-						<< toon_id << ',' << category << ',' << i << ',' << val << ')';
-					db->execute(sql.str().c_str());
-				}
-			};
-			save_ach(RACESLAYER_ACHIE, MAX_RACE_ACHIE, "achie_racekill");
-			save_ach(BOSSKILL_ACHIE, MAX_BOSS_ACHIE, "achie_bosskill");
-			save_ach(CLASS_ACHIE, MAX_CLASS_ACHIE, "achie_class");
-			save_ach(QUEST_ACHIE, MAX_QUEST_ACHIE, "achie_quest");
-			save_ach(OTHER_ACHIE, MAX_OTHER_ACHIE, "achie_other");
-
-			for(int i = 0; i < MAX_QUEST_ACHIE; ++i) {
-				if(ch->specials.mercy[i] <= 0) {
-					continue;
-				}
-				char vbuf[64];
-				std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, ch->specials.mercy[i]);
-				extra_insert_pref(db, pg->id, "mercy", vbuf);
-				std::ostringstream sql;
-				sql << "INSERT INTO character_mercy (toon_id, quest_index, value) VALUES ("
-					<< toon_id << ',' << i << ',' << ch->specials.mercy[i] << ')';
-				db->execute(sql.str().c_str());
-			}
-		}
-
-		if(ch->specials.prompt) {
-			extra_insert_pref(db, pg->id, "prompt", ch->specials.prompt);
-		}
-		if(ch->specials.email) {
-			extra_insert_pref(db, pg->id, "email", ch->specials.email);
-		}
-		if(GET_PRINCE(ch)) {
-			extra_insert_pref(db, pg->id, "principe", GET_PRINCE(ch));
-		}
-		if(ch->specials.realname) {
-			extra_insert_pref(db, pg->id, "realname", ch->specials.realname);
-		}
-		extra_insert_pref(db, pg->id, "version", version());
-
-		if(ch->specials.A_list) {
-			for(int i = 0; i < 10; ++i) {
-				if(!GET_ALIAS(ch, i)) {
-					continue;
-				}
-				char slot[8];
-				std::snprintf(slot, sizeof(slot), "%d", i);
-				extra_insert_pref(db, pg->id, slot, GET_ALIAS(ch, i));
-				std::ostringstream sql;
-				sql << "INSERT INTO character_aliases (toon_id, slot, alias_text) VALUES ("
-					<< toon_id << ',' << i << ',' << extra_sql_literal(GET_ALIAS(ch, i)) << ')';
-				db->execute(sql.str().c_str());
-			}
-		}
-
+		save_char_extra_mysql_tx(db, pg->id, ch);
 		t.commit();
 		return true;
 	}

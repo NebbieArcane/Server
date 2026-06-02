@@ -148,9 +148,9 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 | # | Voce | Stato | Note |
 |---|------|-------|------|
 | 2.1 | `legacy_import_character_mysql` | ✅ | `.dat` + stats/class/skill/affect/resist + rent → inventory; test OK su Montero; **non** `.dead` |
-| 2.2 | `.aux` → `character_prefs` (KV grezzo) | 🔶 | Non equivale al parse di `load_char_extra` |
-| 2.3 | `.aux` → `character_achievements` / `aliases` / `mercy` | ❌ | DDL c’è; import cancella tabelle ma non popola queste righe strutturate |
-| 2.4 | `quest_mob` / progress quest | ❌ | Gap in mapping |
+| 2.2 | `.aux` → `character_prefs` (KV grezzo) | ✅ | `legacy_insert_prefs` + chiavi univoche per achie/mercy |
+| 2.3 | `.aux` → `character_achievements` / `aliases` / `mercy` | ✅ | `legacy_insert_aux_structured` in `legacy_import.cpp` (stesso parse tag del `.aux`) |
+| 2.4 | `quest_mob` / progress quest | ✅ | **Session-only** (decisione 2026-06-02): non in `.aux`/DB; `character_quest_progress` non usata |
 | 2.5 | Lazy migration in `con_pwdok` | ✅ | `toon_needs_migration` + `legacy_import_character_mysql` al login |
 | 2.6 | Report runtime (log) | 🔶 | Monitorare `lazy migration OK/FAILED`; report SQL opzionale |
 | 2.7 | Probe post-import (campione) | 🔶 | Montero verificato via `legacyprobe`, SQL, `export-legacy-import-csv.py`; da ripetere su campione più ampio |
@@ -159,7 +159,7 @@ Sidecar testuale in `lib/players/<nome>.dead` — **non** è un secondo `.dat` n
 
 - nessun errore `lazy migration FAILED` sui PG che entrano
 - PG migrato entra e rientra solo da DB (`migrated_at` set)
-- se i PG con achievement/alias/mercy in `.aux` sono critici -> **2.3 obbligatorio**
+- PG con `.aux` ricco: verificare conteggi `achie`/`alias`/`mercy` nel messaggio `legacyimport` / lazy migration
 
 ---
 
@@ -190,9 +190,9 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 
 | # | Voce | Stato | Note |
 |---|------|-------|------|
-| 4.1 | `save_character_to_db(ch)` transazionale | ❌ | |
-| 4.2 | Aggiorna `toon` (password, title, level, lastlogin, lasthost) | 🔶 | Oggi sync parziale in `save_char` |
-| 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` in `update_file`; prossimo step: soft delete storico (mark automatico) |
+| 4.1 | `save_character_to_db(ch)` transazionale | ✅ | `db.cpp`: body+toon+extra+rent via flag; `update_file` migrati = 1 transazione extra+rent |
+| 4.2 | Aggiorna `toon` (password, title, level, lastlogin, lasthost) | ✅ | `db_update_toon_registry_tx` in ogni `save_char` → `CHAR_DB_SAVE_TOON` (`lastlogin=NOW()`) |
+| 4.3 | `save_character_inventory_to_db` | 🔶 | `save_rent_mysql` preserva righe `deleted=1`; mark automatico: **DEATH** (`die`) + **RENT_EXPIRED** (`load_char_objs` zeroing); **NUKE/TRAP** non collegati |
 | 4.4 | `save_character_extra_to_db` | 🔶 | `save_char_extra_mysql` in `write_char_extra` (dual-write) |
 | 4.5 | Niente `fwrite` `.dat` se `migrated_at` set | ✅ | `save_char` + `toon_is_migrated_by_name` |
 | 4.6 | Niente scrittura `rent/<name>` / `.aux` se migrato | ✅ | `update_file` / `write_char_extra` |
@@ -211,7 +211,7 @@ Stato: testato con `legacyloadcheck` su `Montero` e `TheProdigy` (parita campi c
 | Fallimento load DB | file solo se **non** migrato | staging: migrati bloccati su file (harder cutover) |
 | Entrata `'1'`… | `load_char_objs` + `save_char` | load/save inventario + corpo da DB |
 | Quit / autorent | `save_char` → file | `save_character_to_db` |
-| `do_refund` | restore da zip -> file | Ibrido: `eq` tenta prima SQL (`deleted_for='DEATH'`) nella finestra `data+ora`, poi fallback zip |
+| `do_refund` | restore da zip -> file | **`eq`**: SQL-first su cause `DEATH`, `RENT_EXPIRED`, `NUKE`, `TRAP`, `MANUAL` (finestra `data+m/p/s`), poi fallback zip rent se 0 righe; **`all`**: stesso `eq` + `pg`/`achie` solo zip |
 
 **Gate 5:** ciclo account → pwd → menu 1 → gioco → quit senza scrittura su `players/*.dat`.  
 Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.2** Alar (account → gioco → quit → re-login) OK da log 2026-05-31, `skip .dat` su migrato.
@@ -222,13 +222,39 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 
 | Area | Rischio |
 |------|---------|
-| `.aux` strutturato | Import in `character_prefs` non alimenta RAM; serve load/save extra o import 2.3 |
+| `.aux` strutturato | Import popola prefs + tabelle strutturate; load runtime usa ancora solo `character_prefs` (come `load_char_extra_mysql`) |
+| `quest_mob` | **Session-only** — progresso mob-per-quest solo in RAM; non import/load/save DB (contatori `achie_quest` restano su prefs) |
 | Achievements fuori `.aux` | Verificare se `.achie` è ancora usato |
-| `do_refund` | Ibrido: oggi tentativo SQL prima del restore file | Nota: il SQL restore funziona solo se esistono righe `deleted_for='DEATH'` in `character_inventory` |
-| `.dead` (DEATH_FIX) | Non in DB; sacrificio/resurrezione leggono ancora `players/<nome>.dead` |
-| Nome `.dat` ≠ `toon.name` | Audit consigliato (0.2), non blocco GO in lazy |
-| `character_core` senza title/pwd | By design su `toon`; load deve unire le fonti |
-| Soft delete inventario | 🔶 | oggi: riflette su load/restore (refund SQL), ma la marcatura automatica `deleted_for` non e' ancora collegata a death/rent/expire |
+| `do_refund` | Policy: **solo `eq` serve da MySQL**; `pg`/`achie` restano zip | `eq` = SQL-first + fallback zip; finestra oraria: `m` 00–09, `p` 10–15, `s` 16–23 |
+| `.dead` (DEATH_FIX) | Dual-write file + `character_death_snapshot` su migrati | |
+| Nome `.dat` ≠ `toon.name` | Audit consigliato (0.2), non blocco GO in lazy | |
+| `character_core` senza title/pwd | By design su `toon`; load deve unire le fonti | |
+| Soft delete inventario | 🔶 | **DEATH** + **RENT_EXPIRED** wired; storico non sovrascritto a morti/rent ripetuti; refund reindex `list_index` post-restore |
+| `do_nuke` | `Sql::erase(toon)` + CASCADE | Cancella righe inventario in DB (no soft-delete); **refund SQL `eq` bloccato** se PG non esiste; causa `NUKE` in refund solo se righe marcate manualmente / futuro |
+| `TRAP` | Non collegato | Causa in lista refund SQL; nessun `mark_inventory_deleted_mysql` runtime (voluto per ora) |
+
+---
+
+## Refund e soft-delete (policy 2026-06-02)
+
+| Comando | Equip (`eq`) | PG / achie |
+|---------|----------------|------------|
+| `refund <pg> <data> <m\|p\|s> eq` | SQL-first (tutte le cause in codice), poi zip rent se 0 righe | — |
+| `refund … all` | Come `eq` | Solo backup zip (`pg` / `.aux`) |
+
+**MySQL per refund:** serve **solo l’inventario** (`character_inventory` soft-delete). Non c’è restore storico SQL di `.dat` / achievements.
+
+**Marcatura automatica `deleted_for`:**
+
+| Causa | Wired runtime |
+|-------|----------------|
+| `DEATH` | ✅ `die()` |
+| `RENT_EXPIRED` | ✅ `load_char_objs` quando `found=FALSE` (zeroing rent) |
+| `NUKE` | ❌ `do_nuke` fa `Sql::erase(toon)` → CASCADE cancella inventario; refund SQL bloccato (PG assente) |
+| `TRAP` | ❌ rinviato |
+| `MANUAL` | Solo operazioni DB / tool |
+
+**Nota `do_nuke`:** non ha senso chiamare `mark_inventory_deleted_mysql(..., "NUKE")` prima dell’erase se si cancella subito il `toon` (nessun refund SQL possibile). Per recuperare un nuked serve backup zip/file, non DB.
 
 ---
 
@@ -245,12 +271,13 @@ Stato: lazy migration + DB-first login (`TheProdigy`); **7.1** PG nuovo OK; **7.
 | 7.7 | mtime `.dat` / rent dopo sessione migrata | ✅ | **Alar**: `.dat` 3040 B e `.aux` 92 B invariati; `rent/alar` 0 B, solo mtime (+67 s), log `skip rent file` |
 | 7.8 | Restore drill: 1 PG da backup file + re-import | ✅ | **Montero** 2026-05-31: reset-db → `legacyimport` → verify (`migrated_at`, core+78 prefs) |
 | 7.9 | Morte / sacrificio / resurrect (`.dead`) | ✅ | TheProdigy: snapshot file+DB; fix resurrect/reincarnate su migrati (no fwrite `.dat`) |
-| 7.10 | Refund SQL `eq` su finestra data+ora | ✅ | **TheProdigy** 2026-06-02: `m` ripristina (`SQL restore ... OK`), `p` non matcha e va in fallback zip |
+| 7.10 | Refund SQL `eq` su finestra data+ora | ✅ | **TheProdigy** 2026-06-02: `s` + `RENT_EXPIRED` OK; `p` senza match → fallback zip; reindex `list_index` dopo refund (no oggetto perso se eq preso dopo perdita) |
+| 7.11 | `RENT_EXPIRED` login + storico SQL | ✅ | **TheProdigy** 2026-06-02: rent arretrato → ingresso nudo; 42 righe `deleted_for=RENT_EXPIRED`; `save` non cancella storico |
 
 Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → `after` → `diff` (PASS se `.dat`/`.aux` identici; rent stub 0 byte può cambiare solo mtime).
 
 **GO** se 7.1–7.5 e 7.7 passano; 7.6 se avete PG con `.aux` non banali; 7.9 se il mud usa DEATH_FIX in produzione.  
-**Staging oggi:** **7.1–7.9** OK su staging; gap noto: resurrect/`.dat` su PG migrati |
+**Staging oggi:** **7.1–7.11** OK su staging (refund/rent-expired 2026-06-02) |
 
 ---
 
@@ -274,9 +301,9 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 | Schema + `migrated_at` | ✅ (Vagrant) |
 | Import runtime lazy (+ aux strutturato se serve) | 🔶 |
 | Load da DB | 🔶 (corpo + rent + extra se migrato) |
-| Save DB + stop file | 🔶 (D2 attivo se `migrated_at`; PG non migrati ancora dual-write) |
+| Save DB + stop file | 🔶 (D2 + save unificato; menu §4.7 ancora da fare) |
 | Login/menu wired | ✅ | Fix menu/delete/`justCreated` (`bb6d942`); `con_pwdok` no fallback se migrato |
-| Test 7.x su staging | 🔶 | **7.1–7.8** OK; **7.9** opz. |
+| Test 7.x su staging | 🔶 | **7.1–7.11** OK su Vagrant (2026-06-02) |
 | Runbook ops | ☐ |
 
 **Verdetto attuale:** **staging** validato su load/save D2, re-login, rent, quit, poly, **LD/reconnect**; **non** GO produzione finche' restano aperti §4.1 save unificato e §0.1 backup finale.
@@ -288,10 +315,13 @@ Comando 7.7: `./scripts/check-gate-7.7.sh <nome> before` → gioco → quit → 
 1. ~~`migrated_at` + set in `legacy_import` (§1)~~ ✅  
 2. ~~Test **7.7** + **7.2** su Alar~~ ✅ (2026-05-31); ~~**7.1** PG nuovo~~ ✅  
 3. ~~Test **7.3** rent + quit~~ ✅ — ~~**7.4** poly~~ ✅ — ~~**7.5** LD/reconnect (TheProdigy)~~ ✅  
-4. **Adesso:** §4.2 `lastlogin` + §4.1 `save_character_to_db` unificato + monitor lazy migration + backup §0.1  
-5. Import strutturato `.aux` in batch (§2.3) se serve parità senza prefs KV  
+4. ~~§4.2 `lastlogin` + §4.1 `save_character_to_db` unificato~~ ✅ — **adesso:** monitor lazy migration + backup §0.1 + §4.7 menu  
+5. ~~Import strutturato `.aux` (§2.3)~~ ✅ — verificare su campione con `legacyimport`  
 6. ~~Rimuovere fallback file in `con_pwdok` se migrato~~ ✅ (codice)  
-7. Test **7.6 / 7.8 / 7.9** (runbook `scripts/test-gate-7.6|7.8|7.9.md`) -> deploy prod (lazy)  
+7. ~~Refund SQL `eq` multi-causa + `RENT_EXPIRED`~~ ✅ (2026-06-02)  
+8. **`do_nuke`:** verificato — erase `toon` + CASCADE; nessun soft-delete inventario; refund SQL solo pre-nuke o da zip  
+9. **`TRAP`:** wiring `mark_inventory_deleted_mysql` — rinviato  
+10. Deploy prod (lazy) dopo §0.1 backup finale  
 
 ---
 

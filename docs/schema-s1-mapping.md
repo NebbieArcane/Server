@@ -232,13 +232,13 @@ Da tenere fuori schema S1 o marcare *session-only*:
 
 | Runtime | Note |
 |---------|------|
-| `specials.quest_mob[][]` | Usato in game; **non** trovato in `write_char_extra` — probabile perdita |
+| `specials.quest_mob[][]` | Usato in game; **non** in `write_char_extra` — **session-only** (cutover: non persistere) |
 | `poofin/out/email/...` | Azzerati in `store_to_char` da file; ripopolati solo da `.aux` |
 | `group_name` | `char_to_store`: «do not store group_name» |
 | Puntatori combattimento, mount, edit, ecc. | Session/NPC |
 | `immune` / `M_immune` / `susc` (PG) | Non in `.dat`; → `character_resistance` al save/migrazione |
 
-*Proposta solo:* `quest_mob` → `character_quest_progress` se si decide di persistere (oggi gap).
+*Decisione cutover (2026-06-02):* `quest_mob` resta **session-only**; tabella `character_quest_progress` nel DDL è opzionale/non collegata.
 
 ---
 
@@ -261,7 +261,7 @@ Da tenere fuori schema S1 o marcare *session-only*:
 - [ ] **S1d** — Ordine lavoro: questo doc → `legacy_loader` → ODB `character.hpp`
 - [ ] **S1e** — `USE_DB_LOAD` default OFF
 - [ ] **S1f** — `.aux` → `toonExtra` vs tabelle dedicate vs ibrido
-- [ ] **quest_mob** — bug/feature: persistere o no?
+- [x] **quest_mob** — session-only; non persistere su DB/file
 - [x] **resistenze** — `character_resistance` + `resistance-bit-to-value.md` (scala -100..+100)
 
 ---

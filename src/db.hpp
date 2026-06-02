@@ -248,6 +248,15 @@ void reset_zone(int zone);
 int is_empty(int zone_nr);
 int load_char(const char* name, struct char_file_u* char_element);
 int load_char_mysql(const char* name, struct char_file_u* char_element);
+/** Bitmask per save_character_to_db (§4.1 cutover). */
+constexpr unsigned CHAR_DB_SAVE_BODY = 1u;
+constexpr unsigned CHAR_DB_SAVE_TOON = 2u;
+constexpr unsigned CHAR_DB_SAVE_EXTRA = 4u;
+constexpr unsigned CHAR_DB_SAVE_RENT = 8u;
+constexpr unsigned CHAR_DB_SAVE_BODY_TOON = CHAR_DB_SAVE_BODY | CHAR_DB_SAVE_TOON;
+
+bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
+						  const struct obj_file_u* rent, unsigned save_flags);
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
 bool load_rent_mysql(const char* name, struct obj_file_u* rent);
 bool mark_inventory_deleted_mysql(const char* name, const char* cause);

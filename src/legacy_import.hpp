@@ -24,6 +24,9 @@ struct LegacyImportReport {
 	std::size_t affects = 0;
 	std::size_t resistances = 0;
 	std::size_t prefs = 0;
+	std::size_t achievements = 0;
+	std::size_t aliases = 0;
+	std::size_t mercy = 0;
 	std::size_t inventory = 0;
 };
 

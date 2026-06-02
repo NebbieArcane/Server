@@ -19,6 +19,7 @@
 #include "odb/account-odb.hxx"
 #include "autoenums.hpp"
 
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -265,6 +266,140 @@ std::size_t legacy_insert_resistances(odb::database* db, unsigned long long toon
 	return n;
 }
 
+struct LegacyAuxStructuredCounts {
+	std::size_t achievements = 0;
+	std::size_t aliases = 0;
+	std::size_t mercy = 0;
+};
+
+bool legacy_tag_is_numeric_alias_slot(const std::string& tag, int& slot) {
+	if(tag.empty() || tag.size() > 2) {
+		return false;
+	}
+	for(const char c : tag) {
+		if(!std::isdigit(static_cast<unsigned char>(c))) {
+			return false;
+		}
+	}
+	slot = std::atoi(tag.c_str());
+	return slot >= 0 && slot <= 9;
+}
+
+bool legacy_parse_aux_slot_value(const std::string& value, int& slot, int& val) {
+	const std::size_t hash = value.find('#');
+	if(hash == std::string::npos || hash == 0) {
+		return false;
+	}
+	slot = std::atoi(value.substr(0, hash).c_str());
+	val = std::atoi(value.substr(hash + 1).c_str());
+	return slot >= 0 && val > 0;
+}
+
+bool legacy_insert_achievement(odb::database* db, unsigned long long toon_id, int category,
+							   int max_slot, int slot, int value,
+							   LegacyAuxStructuredCounts& counts) {
+	if(slot < 0 || slot >= max_slot || value <= 0) {
+		return false;
+	}
+	std::ostringstream sql;
+	sql << "INSERT INTO character_achievements (toon_id, category, slot_index, value) VALUES ("
+		<< toon_id << ',' << category << ',' << slot << ',' << value
+		<< ") ON DUPLICATE KEY UPDATE value = VALUES(value)";
+	db->execute(sql.str().c_str());
+	++counts.achievements;
+	return true;
+}
+
+LegacyAuxStructuredCounts legacy_insert_aux_structured(odb::database* db,
+													   unsigned long long toon_id,
+													   const LegacyCharAux& aux) {
+	LegacyAuxStructuredCounts counts;
+	for(const auto& e : aux.entries) {
+		if(e.tag.empty()) {
+			continue;
+		}
+
+		const char* tag = e.tag.c_str();
+		if(!std::strcmp(tag, "achie_racekill")) {
+			int slot = 0;
+			int val = 0;
+			if(legacy_parse_aux_slot_value(e.value, slot, val)) {
+				legacy_insert_achievement(db, toon_id, RACESLAYER_ACHIE, MAX_RACE_ACHIE, slot,
+										  val, counts);
+			}
+		}
+		else if(!std::strcmp(tag, "achie_bosskill")) {
+			int slot = 0;
+			int val = 0;
+			if(legacy_parse_aux_slot_value(e.value, slot, val)) {
+				legacy_insert_achievement(db, toon_id, BOSSKILL_ACHIE, MAX_BOSS_ACHIE, slot, val,
+										  counts);
+			}
+		}
+		else if(!std::strcmp(tag, "achie_class")) {
+			int slot = 0;
+			int val = 0;
+			if(legacy_parse_aux_slot_value(e.value, slot, val)) {
+				legacy_insert_achievement(db, toon_id, CLASS_ACHIE, MAX_CLASS_ACHIE, slot, val,
+										  counts);
+			}
+		}
+		else if(!std::strcmp(tag, "achie_quest")) {
+			int slot = 0;
+			int val = 0;
+			if(legacy_parse_aux_slot_value(e.value, slot, val)) {
+				legacy_insert_achievement(db, toon_id, QUEST_ACHIE, MAX_QUEST_ACHIE, slot, val,
+										  counts);
+			}
+		}
+		else if(!std::strcmp(tag, "achie_other")) {
+			int slot = 0;
+			int val = 0;
+			if(legacy_parse_aux_slot_value(e.value, slot, val)) {
+				legacy_insert_achievement(db, toon_id, OTHER_ACHIE, MAX_OTHER_ACHIE, slot, val,
+										  counts);
+			}
+		}
+		else if(!std::strcmp(tag, "mercy")) {
+			int slot = 0;
+			int val = 0;
+			if(legacy_parse_aux_slot_value(e.value, slot, val) && slot >= 0 &&
+			   slot < MAX_QUEST_ACHIE && val > 0) {
+				std::ostringstream sql;
+				sql << "INSERT INTO character_mercy (toon_id, quest_index, value) VALUES ("
+					<< toon_id << ',' << slot << ',' << val
+					<< ") ON DUPLICATE KEY UPDATE value = VALUES(value)";
+				db->execute(sql.str().c_str());
+				++counts.mercy;
+			}
+		}
+		else {
+			int alias_slot = -1;
+			if(!legacy_tag_is_numeric_alias_slot(e.tag, alias_slot) || e.value.empty()) {
+				continue;
+			}
+			{
+				std::string alias_text = e.value;
+				while(!alias_text.empty() &&
+					  (alias_text.front() == ' ' || alias_text.front() == '\t')) {
+					alias_text.erase(alias_text.begin());
+				}
+				if(alias_text.size() > 512) {
+					alias_text.resize(512);
+				}
+				std::ostringstream sql;
+				sql << "INSERT INTO character_aliases (toon_id, slot, alias_text) VALUES ("
+					<< toon_id << ',' << alias_slot << ','
+					<< legacy_sql_string_literal(alias_text.c_str(), alias_text.size() + 1, false)
+					<< ") ON DUPLICATE KEY UPDATE alias_text = VALUES(alias_text)";
+				db->execute(sql.str().c_str());
+				++counts.aliases;
+			}
+		}
+	}
+	return counts;
+}
+
 std::size_t legacy_insert_prefs(odb::database* db, unsigned long long toon_id,
 								const LegacyCharAux& aux) {
 	std::size_t n = 0;
@@ -394,6 +529,11 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		LegacyCharAux aux {};
 		if(legacy_load_char_aux(file_name, aux)) {
 			report.prefs = legacy_insert_prefs(db, pg->id, aux);
+			const LegacyAuxStructuredCounts structured =
+				legacy_insert_aux_structured(db, pg->id, aux);
+			report.achievements = structured.achievements;
+			report.aliases = structured.aliases;
+			report.mercy = structured.mercy;
 		}
 
 		obj_file_u rent {};
@@ -427,9 +567,10 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		char buf[256];
 		std::snprintf(buf, sizeof(buf),
 					  "import OK toon_id=%llu core+stats classi=%zu skill=%zu affect=%zu "
-					  "resist=%zu prefs=%zu oggetti=%zu",
+					  "resist=%zu prefs=%zu achie=%zu alias=%zu mercy=%zu oggetti=%zu",
 					  static_cast<unsigned long long>(pg->id), report.classes, report.skills,
-					  report.affects, report.resistances, report.prefs, report.inventory);
+					  report.affects, report.resistances, report.prefs, report.achievements,
+					  report.aliases, report.mercy, report.inventory);
 		report.message = buf;
 		return true;
 	}

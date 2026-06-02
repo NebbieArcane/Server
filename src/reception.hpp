@@ -8,6 +8,11 @@
 /***************************  System  include ************************************/
 #include <cstdio>
 /***************************  Local    include ************************************/
+#if USE_MYSQL
+namespace odb {
+class database;
+}
+#endif
 namespace Alarmud {
 extern int DontShow;
 
@@ -25,6 +30,10 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 void load_char_extra(struct char_data* ch) ;
 bool load_char_extra_mysql(const char* name, struct char_data* ch);
 bool save_char_extra_mysql(const char* name, struct char_data* ch);
+#if USE_MYSQL
+void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id,
+							  struct char_data* ch);
+#endif
 void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) ;

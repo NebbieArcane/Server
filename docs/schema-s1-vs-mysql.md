@@ -227,7 +227,7 @@ Nota: `affected_by` / `affected_by2` in §1 sono **bitvector permanenti** su `ch
 | `character_achievements` | ❌ | da `.aux` |
 | `character_aliases` | ❌ | da `.aux` |
 | `character_prefs` | ❌ | oppure `toonExtra` rifatto |
-| `character_quest_progress` | ❌ | opzionale (`quest_mob`) |
+| `character_quest_progress` | 🚫 | DDL opzionale; **non usata** — `quest_mob` session-only |
 | `toon` | ✅ | resta |
 | `user` | ✅ | resta |
 | `legacy` | ✅ | resta |
@@ -260,7 +260,7 @@ Nota: `affected_by` / `affected_by2` in §1 sono **bitvector permanenti** su `ch
 | S1d | Ordine | mapping ✅ → **questo doc** → ddl-draft → legacy_loader |
 | S1e | Feature flag | `USE_DB_LOAD=OFF` fino a adapter |
 | S1f | `.aux` | Achievements/alias → tabelle; poof/prompt → `toonExtra` con **`toon_id`** |
-| quest_mob | Persistenza | ❌ oggi; 🆕 tabella se si vuole fix bug |
+| quest_mob | Persistenza | Session-only (by design); no import/load/save |
 
 ---
 
