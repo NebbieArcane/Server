@@ -2446,6 +2446,8 @@ NANNY_FUNC(con_qclass) {
 	return false;
 }
 
+static inline void send_zero_gold_warning(struct char_data* ch);
+
 NANNY_FUNC(con_slct) {
 	switch(firstChar(d->currentInput)) {
 	case '0':
@@ -2606,13 +2608,14 @@ NANNY_FUNC(con_slct) {
 				d->character);
 		if(IsTest())
 			send_to_char(
-				"                 $c0115SEI SU MYST2!!!!!!!!!!!!!!!!!!!!!                    $c0007\n\r",
+				"                 $c0115SEI SU MYST2!$c0007\n\r",
 				d->character);
 		d->prompt_mode = 1;
 		if(IS_SET(d->character->player.user_flags,RACE_WAR))
 			send_to_char(
-				"$c0115            RICORDATI CHE  SEI PKILL!!.\n\r",
+				"            $c0115RICORDATI CHE SEI PKILL!$c0007\n\r",
 				d->character);
+		send_zero_gold_warning(d->character);
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
         do_save(d->character, "", 0);
 
@@ -3343,6 +3346,15 @@ NANNY_FUNC(con_check_mage_type) {
 	STATE(d) = CON_RNEWD;
 	return false;
 }
+
+static inline void send_zero_gold_warning(struct char_data* ch) {
+	if(IS_PC(ch) && GET_GOLD(ch) <= 0) {
+		send_to_char(
+			"$c0011ATTENZIONE:$c0007 entri senza monete in tasca.\n\r",
+			ch);
+	}
+}
+
 NANNY_FUNC(con_rmotd) {
 	if(GetMaxLevel(d->character) > IMMORTALE) {
 		SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
@@ -3448,6 +3460,7 @@ NANNY_FUNC(con_city_choice) {
 				do_start(d->character);
 			}
 			do_look(d->character, "",15);
+			send_zero_gold_warning(d->character);
 			d->prompt_mode = 1;
 			break;
 		case '3':
@@ -3474,6 +3487,7 @@ NANNY_FUNC(con_city_choice) {
 					do_start(d->character);
 				}
 				do_look(d->character, "",15);
+				send_zero_gold_warning(d->character);
 				d->prompt_mode = 1;
 			}
 			else {
@@ -3507,6 +3521,7 @@ NANNY_FUNC(con_city_choice) {
 					do_start(d->character);
 				}
 				do_look(d->character, "",15);
+				send_zero_gold_warning(d->character);
 				d->prompt_mode = 1;
 			}
 			else {
@@ -3540,6 +3555,7 @@ NANNY_FUNC(con_city_choice) {
 					do_start(d->character);
 				}
 				do_look(d->character, "",15);
+				send_zero_gold_warning(d->character);
 				d->prompt_mode = 1;
 			}
 			else {
