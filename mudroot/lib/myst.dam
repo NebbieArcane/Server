@@ -573,7 +573,21 @@ $c0004L'onda di energia si dissolve al cospetto di $N$c0004.~
 $c0004$n$c0004 ti tira contro un'onda di energia, schiocchi le dita e si dissolve.~
 $c0004$n$c0004 prova a lanciare un'onda di energia contro $N$c0004, che sciocc$b!~
 M
- 325
+ 299
+$c0009$N$c0009 non si riprende tuo poderoso colpo e muore tra atroci sofferenze.~
+$c0009Quando $n$c0009 ti colpisce con violenza senti la tua vita andarsene...~
+$c0009$N$c0009 muore dopo che $n$c0009 l$B colpisce con violenza.~
+$c0009$N$c0009 schiva il tuo colpo. Inciampi e perdi l'equilibrio.~
+$c0009Schivi uno scontro con $n$c0009 che perde l'equilibrio e cade in terra.~
+$c0009$N$c0009 evita di essere colpit$B da $n$c0009 che perde l'equilibrio e cade in terra.~
+$c0009Dai una forte colpo sulle ginocchia a $N$c0009 che perde l'equilibrio e crolla a terra.~
+$c0009$n$c0009 ti colpisce con estrema forza alle ginocchia facendoti cadere per terra.~
+$c0009Il violento colpo alle ginocchia di $n$c0009 fa perdere l'equilibrio a $N$c0009.~
+$c0004Provi a colpire $N$c0004, pover$b sciocc$b.~
+$c0004$n$c0004 tenta invano di colpirti e si ritrova a gambe all'aria.~
+$c0004$n$c0004 prova a colpire inutilmente $N$c0004!~
+M
+ 475
 $c0009$N$c0009 viene uccis$B dal tuo possente alito.~
 $c0009Vieni ridotto in cenere, non appena $n$c0009 alita su di te.~
 $c0009$n$c0009 riduce $N$c0009 ad un mucchietto di cenere fumante.~
@@ -587,7 +601,7 @@ $c0004$N$c0004 e' immortale, ed ignora il tuo soffio di fuoco.~
 $c0004$n$c0004 ti riscalda.~
 $c0004$n$c0004 riscalda $N$c0004.~
 M
- 326
+ 476
 $c0011$N$c0011 viene ucciso dal tuo soffio gassoso.~
 $c0011Muori soffocat$B dal gas che $n$c0011 ti soffia addosso.~
 $c0011$n$c0011 uccide $N$c0011 con un soffio di gas.~
@@ -601,7 +615,7 @@ $c0004$N$c0004 e' immortale ed ignora il tuo gas :-)~
 $c0004$n$c0004 vuole soffocarti col gas, ma non puo' farlo.~
 $c0004$n$c0004 tenta di soffocare $N$c0004 col gas, ma non puo' farlo.~
 M
- 327
+ 477
 $c0014$N$c0014 viene congelat$B a morte dal tuo soffio di ghiaccio.~
 $c0014Rimani congelat$B non appena $n$c0014 soffia su di te.~
 $c0014$n$c0014 riduce $N$c0014 ad un enorme ghiacciolo.~
@@ -615,7 +629,7 @@ $c0004$N$c0004 ignora il tuo stupido attacco.~
 $c0004$n$c0004 ti fornisce di aria condizionata.~
 $c0004$n$c0004 fornisce $N$c0004 di aria condizionata.~
 M
- 328
+ 478
 $c0010$N$c0010 viene fus$B in un mucchio di stecche di carbone davanti ai tuoi occhi.~
 $c0010Vieni corros$B fino all'osso, appena $n$c0010 ti soffia addosso.~
 $c0010$n$c0010 corrode $N$c0010 fino alle ossa.~
@@ -629,7 +643,7 @@ $c0004$N$c0004 usa il tuo acido per sgrassarsi le mani.~
 $c0004$n$c0004 ti aiuta a sgrassarti le mani con un po' di acido.~
 $c0004$n$c0004 aiuta $N$c0004 a pulirsi.~
 M
- 329
+ 479
 $c0012$N$c0012 viene uccis$B dal tuo soffio fulminante.~
 $c0012Vieni uccis$B dal soffio fulminante di $n$c0012.~
 $c0012$n$c0012 uccide $N$c0012 con un soffio fulminante.~
@@ -643,7 +657,7 @@ $c0004$N$c0004 e' immortale, ed ignora il tuo soffio.~
 $c0004$n$c0004 tenta di soffiarti fulmini addosso, tu l$b guardi e ridi!~
 $c0004$n$c0004 tenta di emettere fulmini contro $N$c0004.~
 M
- 345
+ 495
 $c0007~
 Ti senti ferit$B, troppo ferit$B, poi muori.~
 $N$c0007 giace sofferente per terra, e muore dissanguandosi.~

@@ -54,8 +54,8 @@ void PrintStatus() {
 }
 void PrintStatus(int level) {
 	int i=0;
-	mudlog(LOG_SYSERR, "Connections from start: %d",
-		   HowManyConnection(0));
+	mudlog(LOG_SYSERR, "Connections from start: %llu",
+		   static_cast<unsigned long long>(HowManyConnection(0)));
 	if(level==1) {
 		mudlog(LOG_SYSERR,"CurrentTrack %s at %d",currentfile,currentline);
 		mudlog(LOG_SYSERR, "Mud status: '%s'",gszMudStatus);
@@ -107,10 +107,11 @@ void SetStatus(const char* szStatus, const char* szString) {
 }
 
 void PushStatus(const char* szStatus, const char* szNome) {
-	gnPtr++;
-	if(gnPtr>=STACK_SIZE) {
+	const long long next_ptr = static_cast<long long>(gnPtr) + 1LL;
+	if(next_ptr < 0LL || next_ptr >= static_cast<long long>(STACK_SIZE)) {
 		return;
 	}
+	gnPtr = static_cast<int>(next_ptr);
 	if(gnPtr<0) {
 		return;
 	}

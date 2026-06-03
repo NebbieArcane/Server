@@ -13,10 +13,8 @@
 //#include <odb/boost/date-time/exceptions.hxx>
 //#include <odb/boost/date-time/mysql/posix-time-mapping.hxx>
 #include <odb/core.hxx>
-#include <odb/boost/lazy-ptr.hxx>
 #include <odb/nullable.hxx>
 #include <string>
-#include "../utility.hpp"
 
 namespace Alarmud {
 using std::string;
@@ -40,8 +38,28 @@ public:
 };
 class toon {
 public:
-	toon() :id(0),name(""),password(""),title(""),level(0),lastlogin(boost::posix_time::not_a_date_time),lasthost(""),owner_id(0) {};
-	toon(const char* name,const char* password="invalid", const char* title="") :id(0),name(name),password(password),title(title),level(0),lastlogin(boost::posix_time::not_a_date_time),lasthost(""),owner_id(0) {}
+	toon()
+		: id(0),
+		  name(""),
+		  password(""),
+		  title(""),
+		  level(0),
+		  lastlogin(boost::posix_time::not_a_date_time),
+		  lasthost(""),
+		  owner_id(0),
+		  migrated_at(),
+		  schema_version(0) {};
+	toon(const char* name, const char* password = "invalid", const char* title = "")
+		: id(0),
+		  name(name),
+		  password(password),
+		  title(title),
+		  level(0),
+		  lastlogin(boost::posix_time::not_a_date_time),
+		  lasthost(""),
+		  owner_id(0),
+		  migrated_at(),
+		  schema_version(0) {}
 	unsigned long id;
 	string name;
 	string password;
@@ -50,6 +68,9 @@ public:
 	boost::posix_time::ptime lastlogin;
 	string lasthost;
 	unsigned long long owner_id;
+	/** Cutover gate — colonne su MySQL, non mappate ODB (vedi toon_migration + schema SQL). */
+	odb::nullable<boost::posix_time::ptime> migrated_at;
+	unsigned short schema_version;
 };
 class user {
 public:
@@ -109,7 +130,7 @@ public:
 	string email2;
 };
 #ifdef ODB_COMPILER
-#pragma db model version(1,1,open)
+#pragma db model version(1, 1, open)
 
 #pragma db object(toon)
 #pragma db member(toon::id) id auto
@@ -121,6 +142,8 @@ public:
 #pragma db member(toon::lastlogin) type("DATETIME") null
 #pragma db member(toon::lasthost) type("varchar(255)") not_null default ("")
 #pragma db member(toon::owner_id) index
+#pragma db member(toon::migrated_at) transient
+#pragma db member(toon::schema_version) transient
 
 #pragma db object(toonExtra)
 #pragma db member(toonExtra::id) id auto

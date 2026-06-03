@@ -24,7 +24,7 @@
 #include "gilde.hpp"
 #include "act.comm.hpp"
 #include "act.move.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.social.hpp"
 #include "charlist.hpp"
 #include "comm.hpp"

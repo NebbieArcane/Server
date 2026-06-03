@@ -348,7 +348,7 @@ void mind_levitation(byte level, struct char_data* ch,
 		}
 
 		af.type      = SKILL_LEVITATION;
-		af.duration  = (int)(level*2)/10;
+		af.duration  = static_cast<int>(level) / 5;
 		af.modifier  = 0;
 		af.location  = APPLY_NONE;
 		af.bitvector = AFF_FLYING;
@@ -383,7 +383,10 @@ void mind_cell_adjustment(byte level, struct char_data* ch,
 		victim,TO_CHAR);
 	act("$n cade in un profondo trance.",FALSE,ch,0,victim,TO_ROOM);
 
-	if(GET_HIT(victim) + 100 > GET_MAX_HIT(victim)) {
+	const long long current_hit = static_cast<long long>(GET_HIT(victim));
+	const long long max_hit = static_cast<long long>(GET_MAX_HIT(victim));
+	const long long max_partial_heal = max_hit - 100LL;
+	if(current_hit > max_partial_heal) {
 		act("Guarisci completamente il tuo corpo.",FALSE,victim,0,0,TO_CHAR);
 		GET_HIT(victim) = GET_MAX_HIT(victim);
 	}
@@ -562,7 +565,7 @@ void mind_mindblank(byte level, struct char_data* ch,
 		}
 
 		af.type      = SKILL_MINDBLANK;
-		af.duration  = (int)(level*2)/10;
+		af.duration  = static_cast<int>(level) / 5;
 		af.modifier  = 0;
 		af.location  = APPLY_NONE;
 		af.bitvector = 0;
@@ -610,7 +613,7 @@ void mind_psychic_impersonation(byte level, struct char_data* ch,
 	} /* end for */
 
 	af.type = SKILL_PSYCHIC_IMPERSONATION;
-	af.duration = (int)(level * 2) / 10;
+	af.duration = static_cast<int>(level) / 5;
 	af.modifier = 0;
 	af.location = APPLY_NONE;
 	af.bitvector = 0;

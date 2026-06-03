@@ -4,12 +4,18 @@
  *ALARMUD*/
 //  Original intial comments
 /*$Id: auction.c,v 1.3 2002/03/17 16:48:47 Thunder Exp $
-*/
+ */
 /***************************  System  include ************************************/
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
+#include <algorithm>
+#include <array>
 #include <cctype>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <sstream>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -22,454 +28,546 @@
 /***************************  Local    include ************************************/
 #include "act.comm.hpp"
 #include "auction.hpp"
+#include "cmdid.hpp"
 #include "comm.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic.hpp"
+#include "modify.hpp"
 #include "utility.hpp"
 
 namespace Alarmud {
 
+#define SELLER 0 // SALVO ruolo is_present (venditore)
+#define BUYER 1  // SALVO ruolo is_present (compratore)
 
-#define SELLER 0 // SALVO per la nuova is_present
-#define BUYER 1 // SALVO per la nuova is_present
-#define PULSE_INTERNAL             (2) /* si moltiplica per pulse_auction */
-AUCTION_DATA*  auction;
-int advatoi(const char* s);
-int parsebet(const int currentbet, const char* argument);
+AUCTION_DATA* auction;
 
-static bool is_present(int chi, const char* nome) {  // SALVO riscritta
-	struct descriptor_data* d;
-
-	if(chi == SELLER) {
-		if(auction->seller
-				&& !(IS_LINKDEAD(auction->seller) && auction->seller->in_room==3))
-			if(!strcmp(GET_NAME(auction->seller), nome)) {
-				return TRUE;
-			}
+static bool auction_ensure(const char* ctx) {
+	if(auction == nullptr) {
+		mudlog(LOG_SYSERR, "auction==nullptr in %s (auction.cpp)", ctx);
+		return false;
 	}
-	else {
-		if(auction->buyer
-				&& !(IS_LINKDEAD(auction->buyer) && auction->buyer->in_room==3))
-			if(!strcmp(GET_NAME(auction->buyer), nome)) {
-				return TRUE;
-			}
-	}
-	for(d = descriptor_list; d; d = d->next) {
-		if(d->character && d->character->player.name) {
-			if(!strcmp(GET_NAME((d->original) ? d->original : d->character), nome)) {
-				if(chi == SELLER) {
-					auction->seller = d->character;
-				}
-				else {
-					auction->buyer = d->character;
-				}
-				return TRUE;
-			}
-		}
-	}
-	if(chi == SELLER) {
-		auction->seller = NULL;
-	}
-	else {
-		auction->buyer = NULL;
-	}
-	return FALSE;
+	return true;
 }
 
+static void auc_copy_name(char (&dest)[20], const char* src) {
+	if(src == nullptr) {
+		dest[0] = '\0';
+		return;
+	}
+	std::snprintf(dest, sizeof(dest), "%.*s", static_cast<int>(sizeof(dest) - 1), src);
+}
+
+static void auc_set_none(char (&dest)[20]) {
+	std::snprintf(dest, sizeof(dest), "(nessuno)");
+}
+
+static bool linkdead_room3_ok(struct char_data* c) {
+	return c != nullptr && !(IS_LINKDEAD(c) && c->in_room == 3);
+}
+
+/** Allinea seller/buyer al PG connesso di nome `nome`; ritorna false se assente. */
+static bool is_present(int role, const char* nome) {
+	if(!auction_ensure("is_present")) {
+		return false;
+	}
+	if(nome == nullptr) {
+		return false;
+	}
+
+	if(role == SELLER) {
+		if(auction->seller != nullptr && linkdead_room3_ok(auction->seller) &&
+		   std::strcmp(GET_NAME(auction->seller), nome) == 0) {
+			return true;
+		}
+	}
+	else {
+		if(auction->buyer != nullptr && linkdead_room3_ok(auction->buyer) &&
+		   std::strcmp(GET_NAME(auction->buyer), nome) == 0) {
+			return true;
+		}
+	}
+
+	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+		if(d->character == nullptr || d->character->player.name == nullptr) {
+			continue;
+		}
+		struct char_data* const who = d->original != nullptr ? d->original : d->character;
+		if(std::strcmp(GET_NAME(who), nome) != 0) {
+			continue;
+		}
+		if(role == SELLER) {
+			auction->seller = d->character;
+		}
+		else {
+			auction->buyer = d->character;
+		}
+		return true;
+	}
+
+	if(role == SELLER) {
+		auction->seller = nullptr;
+	}
+	else {
+		auction->buyer = nullptr;
+	}
+	return false;
+}
+
+static const char* auc_short_descr(struct obj_data* o) {
+	return (o != nullptr && o->short_description != nullptr) ? o->short_description : "?";
+}
+
+static bool auc_reboot_denied(struct char_data* ch) {
+	if(IS_IMMORTAL(ch) || !auction_blocked_near_reboot()) {
+		return false;
+	}
+	send_to_char("Non puoi usare l'asta: il reboot e' previsto entro dieci minuti.\n\r", ch);
+	return true;
+}
+
+static int advatoi(const char* s);
+static int parsebet(int currentbet, const char* argument);
+
 ACTION_FUNC(do_auction_int) {
-	OBJ_DATA* obj;
-	char arg1[MAX_INPUT_LENGTH];
-	char buf[MAX_STRING_LENGTH];
+	OBJ_DATA* obj = nullptr;
+	std::array<char, MAX_INPUT_LENGTH> arg1{};
 
-	arg = one_argument(arg, arg1);
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_auction_int (auction.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_auction_int (auction.cpp)");
+		return;
+	}
+	if(!auction_ensure("do_auction_int")) {
+		return;
+	}
 
-	if(IS_NPC(ch)) { /* NPC can be extracted at any time and thus can't auction! */
+	arg = one_argument(arg, arg1.data());
+
+	if(IS_NPC(ch)) {
 		return;
 	}
 
 	if(arg1[0] == '\0') {
-		if(auction->item != NULL) {
+		if(auction->item != nullptr) {
+			std::ostringstream os;
 			if(auction->bet > 0) {
-				sprintf(buf, "Offerta corrente, fatta da %s, per %s e' %d monete.\n\rOggetto messo all' asta da %s.\n\r",
-						auction->real_buyer // SALVO il vero comratore
-						, auction->item->short_description
-						, auction->bet
-						, auction->real_seller); // SALVO il vero venditore
+				os << "Offerta corrente, fatta da " << auction->real_buyer << ", per "
+				   << auc_short_descr(auction->item) << " e' " << auction->bet
+				   << " monete.\n\rVenditore: " << auction->real_seller << ".\n\r";
 			}
 			else {
-				sprintf(buf, "%s non ha' ricevuto offerte.\n\rOggetto messo all' asta da %s.\n\r",auction->item->short_description,auction->real_seller);  // SALVO il vero venditore
+				os << auc_short_descr(auction->item)
+				   << " non ha ricevuto offerte.\n\rVenditore: " << auction->real_seller << ".\n\r";
+				if(auction->opening_reserve > 0) {
+					os << "Prezzo minimo richiesto per la prima offerta: " << auction->opening_reserve
+					   << " monete.\n\r";
+				}
 			}
-			send_to_char(buf,ch);
-
+			const std::string msg = os.str();
+			send_to_char(msg.c_str(), ch);
 			if(IS_IMMORTAL(ch)) {
-				spell_identify(10, ch,NULL, auction->item);    /* uuuh! */
+				spell_identify(10, ch, nullptr, auction->item);
 			}
-
 			return;
+		}
+		send_to_char("Mettere all'asta COSA?\n\r"
+		              "Sintassi: auction <nome-oggetto> [prezzo-minimo-prima-offerta]\n\r", ch);
+		return;
+	}
+
+	if(IS_IMMORTAL(ch) &&
+	   (!str_cmp(arg1.data(), "purge") || !str_cmp(arg1.data(), "stop") || !str_cmp(arg1.data(), "halt"))) {
+		if(auction->item == nullptr) {
+			send_to_char("Non c'e' nessuna asta in corso da fermare.\n\r", ch);
+			return;
+		}
+		std::ostringstream os;
+		if(!str_cmp(arg1.data(), "stop") || !str_cmp(arg1.data(), "halt")) {
+			os << "La vendita di " << auc_short_descr(auction->item)
+			   << " e' stata annullata da un Dio. Oggetto confiscato.";
+			mudlog(LOG_CHECK, "ASTA: vendita di (%s) annullata dal Dio %s", auction->item->name, GET_NAME(ch));
+			obj_to_char(auction->item, ch);
 		}
 		else {
-			send_to_char("Mettere all'asta COSA?\n\r",ch);
-			return;
+			os << "Spiacente, la vendita di " << auc_short_descr(auction->item)
+			   << " e' stata revocata. Oggetto distrutto.";
+			mudlog(LOG_CHECK, "ASTA: vendita di (%s) revocata dal Dio %s", auction->item->name, GET_NAME(ch));
+			extract_obj(auction->item);
 		}
+		const std::string immMsg = os.str();
+		const int refundBet = auction->bet;
+		is_present(SELLER, auction->real_seller);
+		talk_auction(immMsg.c_str());
+		if(refundBet > 0 && is_present(BUYER, auction->real_buyer)) {
+			GET_GOLD(auction->buyer) += refundBet;
+			{
+				std::ostringstream payOs;
+				payOs << "Il banditore d'asta appare e ti restituisce " << refundBet << " monete.\n\r";
+				send_to_char(payOs.str().c_str(), auction->buyer);
+			}
+			act("Il banditore d'asta appare e restituisce le monete a $n.", FALSE, auction->buyer, nullptr, nullptr,
+			    TO_ROOM);
+		}
+		auction->item = nullptr;
+		auction->bet = 0;
+		auction->opening_reserve = 0;
+		auction->buyer = nullptr;
+		auc_set_none(auction->real_buyer);
+		auction->seller = nullptr;
+		auc_set_none(auction->real_seller);
+		return;
 	}
-	if(IS_IMMORTAL(ch) && (!str_cmp(arg1,"purge")
-						   || (!str_cmp(arg1,"stop"))
-						   || (!str_cmp(arg1,"halt")))) {
-		if(auction->item == NULL) {
-			send_to_char("Non c'e' nessuna asta in corso da fermare.\n\r",ch);
+
+	if(cmd == CMD_BID) {
+		if(auc_reboot_denied(ch)) {
 			return;
 		}
-		else { /* stop the auction */
-			if(!str_cmp(arg1,"stop") || !str_cmp(arg1,"halt")) {
-				sprintf(buf,"La vendita di %s e' stata annullata da un Dio. Oggetto confiscato.", auction->item->short_description);
-				mudlog(LOG_CHECK, "ASTA: vendita di (%s) annullata dal Dio %s", auction->item->name, GET_NAME(ch));
-				obj_to_char(auction->item, ch);
-			}
-			else {
-				sprintf(buf,"Spiacente, la vendita di %s e' stata revocata. Oggetto distrutto.", auction->item->short_description);
-				mudlog(LOG_CHECK, "ASTA: vendita di (%s) revocata dal Dio %s", auction->item->name, GET_NAME(ch));
-				extract_obj(auction->item);
-			}
-
-			is_present(SELLER, auction->real_seller); // SALVO allineo il venditore
-			talk_auction(buf);
-			auction->item = NULL;
-			auction->bet = 0;
-			auction->buyer = NULL;
-			strcpy(auction->real_buyer, "(nessuno)"); // SALVO il vero compratore
-			auction->seller = ch;
-			strcpy(auction->real_seller, GET_NAME(ch)); // SALVO il vero venditore
-			if(is_present(BUYER, auction->real_buyer)) {  /* SALVO il vero compratore */
-				GET_GOLD(auction->buyer) += auction->bet;
-				send_to_char("Ti sono stati restituiti i soldi.\n\r",auction->buyer);
-			}
-			/**** SALVO resetto auction */
-			auction->buyer = NULL;
-			strcpy(auction->real_buyer, "(nessuno)");
-			auction->seller = NULL;
-			strcpy(auction->real_seller, "(nessuno");
-			/****/
-			return;
-		}
-	}
-	if(cmd==CMD_BID) {
-		if(auction->item != NULL) {
-			int newbet;
-
-			/* make - perhaps - a bet now */
+		if(auction->item != nullptr) {
 			if(arg1[0] == '\0') {
-				send_to_char("Quanto vuoi offrire?\n\r",ch);
+				send_to_char("Quanto vuoi offrire?\n\r", ch);
 				return;
 			}
 
-			newbet = parsebet(auction->bet, arg1);
-			mudlog(LOG_PLAYERS,"ASTA: %s offre %d monete per (%s)", GET_NAME(ch), newbet, auction->item->name);
+			const int newbet = parsebet(auction->bet, arg1.data());
 
-			if(newbet < (auction->bet + 100)) {
-				send_to_char("Devi impegnare almeno 100 monete oltre l'offerta attuale.\n\r",ch);
+			if(auction->bet > 0 &&
+			   (auction->buyer == ch || str_cmp(auction->real_buyer, GET_NAME(ch)) == 0)) {
+				send_to_char("Sei gia' il miglior offerente; attendi una controfferta.\n\r", ch);
+				return;
+			}
+
+			const int minNext = (auction->bet == 0)
+			                        ? std::max(100, auction->opening_reserve)
+			                        : auction->bet + 100;
+			if(newbet <= auction->bet || newbet < minNext) {
+				if(auction->bet == 0) {
+					std::ostringstream err;
+					err << "La prima offerta deve essere di almeno " << minNext << " monete.\n\r";
+					send_to_char(err.str().c_str(), ch);
+				}
+				else {
+					send_to_char("Devi impegnare almeno 100 monete oltre l'offerta attuale.\n\r", ch);
+				}
 				return;
 			}
 
 			if(newbet > GET_GOLD(ch)) {
-				send_to_char("Non hai abbastanza soldi!\n\r",ch);
+				send_to_char("Non hai abbastanza soldi!\n\r", ch);
 				return;
 			}
 
-			/* the actual bet is OK! */
+			mudlog(LOG_PLAYERS, "ASTA: %s offre %d monete per (%s)", GET_NAME(ch), newbet, auction->item->name);
 
-			/* return the gold to the last buyer, if one exists */
 			if(is_present(BUYER, auction->real_buyer)) {
 				GET_GOLD(auction->buyer) += auction->bet;
 			}
 
-			GET_GOLD(ch) -= newbet; /* substract the gold - important :) */
+			GET_GOLD(ch) -= newbet;
 			auction->buyer = ch;
-			strcpy(auction->real_buyer, GET_NAME(ch)); // SALVO il vero compratore
-			auction->bet   = newbet;
+			auc_copy_name(auction->real_buyer, GET_NAME(ch));
+			auction->bet = newbet;
 			auction->going = 0;
-			auction->pulse = PULSE_AUCTION; /* start the auction over again */
+			auction->pulse = AUCTION_WAIT_TICKS;
 
-			sprintf(buf,"Un offerta di %d monete e' stata ricevuta per %s.\n\r",
-					newbet,auction->item->short_description);
-			is_present(SELLER, auction->real_seller); // SALVO allineo il venditore
-			talk_auction(buf);
-			return;
-
-
-		}
-		else {
-			send_to_char("Al momento non c'e' niente in vendita.\n\r",ch);
+			std::ostringstream bidOs;
+			bidOs << "Un offerta di " << newbet << " monete e' stata ricevuta per "
+			      << auc_short_descr(auction->item) << ".\n\r";
+			const std::string bidMsg = bidOs.str();
+			is_present(SELLER, auction->real_seller);
+			talk_auction(bidMsg.c_str());
 			return;
 		}
-	}
-	/* finally... */
-
-	obj = get_obj_in_list(arg1, ch->carrying);  /* does char have the item ? */
-
-	if(obj == NULL) {
-		send_to_char("Non lo porti.\n\r",ch);
+		send_to_char("Al momento non c'e' niente in vendita.\n\r", ch);
 		return;
 	}
 
-	if(auction->item == NULL) {
-		switch(GET_ITEM_TYPE(obj)) {
+	obj = get_obj_in_list(arg1.data(), ch->carrying);
 
+	if(obj == nullptr) {
+		send_to_char("Non lo porti.\n\r", ch);
+		return;
+	}
+
+	if(auction->item == nullptr) {
+		if(auc_reboot_denied(ch)) {
+			return;
+		}
+		switch(GET_ITEM_TYPE(obj)) {
 		default:
-			act("Non puoi vendere all'asta $T.",0,ch, NULL, obj->short_description, TO_CHAR);
+			act("Non puoi vendere all'asta $T.", FALSE, ch, nullptr, obj->short_description, TO_CHAR);
 			return;
 
 		case ITEM_WEAPON:
 		case ITEM_ARMOR:
 		case ITEM_STAFF:
 		case ITEM_WAND:
-		case ITEM_SCROLL:
+		case ITEM_SCROLL: {
+			std::array<char, MAX_INPUT_LENGTH> priceTok{};
+			one_argument(arg, priceTok.data());
+			int openingReserve = 0;
+			if(priceTok[0] != '\0') {
+				char* parseEnd = nullptr;
+				errno = 0;
+				const long pr = std::strtol(priceTok.data(), &parseEnd, 10);
+				if(parseEnd == priceTok.data() || (parseEnd != nullptr && *parseEnd != '\0') ||
+				   errno == ERANGE || pr < 0 || pr > static_cast<long>(std::numeric_limits<int>::max())) {
+					send_to_char(
+					    "Prezzo minimo non valido: dopo il nome oggetto indica un intero non negativo "
+					    "(es. 500), o niente per usare il minimo predefinito (100 monete).\n\r",
+					    ch);
+					return;
+				}
+				openingReserve = static_cast<int>(pr);
+			}
+
 			obj_from_char(obj);
-			/* SALVO eventualmente inserirei un controllo del tipo se l'oggetto non
-			         e' rentabile non si puo' vendere, oppure e' una delle cose che
-			         puo' essere controllata dall'immortale che se vede le caratteristiche
-			         dell'oggetto puo' intervenire in merito */
 			auction->item = obj;
 			auction->bet = 0;
-			auction->buyer = NULL;
-			strcpy(auction->real_buyer, "(nessuno)"); // SALVO il vero compratore
+			auction->opening_reserve = openingReserve;
+			auction->buyer = nullptr;
+			auc_set_none(auction->real_buyer);
 			auction->seller = ch;
-			strcpy(auction->real_seller, GET_NAME(ch)); // SALVO il vero venditore
-			auction->pulse = PULSE_AUCTION;
+			auc_copy_name(auction->real_seller, GET_NAME(ch));
+			auction->pulse = AUCTION_WAIT_TICKS;
 			auction->going = 0;
 
-			sprintf(buf, "Un nuovo oggetto e' stato messo all'asta: %s.",
-					obj->short_description);
-			talk_auction(buf);
-			mudlog(LOG_PLAYERS, "ASTA: %s vende (%s)", auction->real_seller,auction->item->name); // SALVO il vero venditore
-
+			{
+				std::ostringstream startOs;
+				startOs << "Nuovo lotto all'asta: " << auc_short_descr(obj) << ".";
+				if(openingReserve > 0) {
+					startOs << " Prima offerta da almeno " << openingReserve << " monete.";
+				}
+				talk_auction(startOs.str().c_str());
+			}
+			mudlog(LOG_PLAYERS, "ASTA: %s vende (%s)", auction->real_seller, auction->item->name);
 			return;
+		}
+		}
+	}
 
-		} /* switch */
-	}
-	else {
-		act("Riprova piu' tardi - attualmente e' in corso l'asta per $p!",
-			0,ch,auction->item,NULL,TO_CHAR);
-		return;
-	}
+	act("Riprova piu' tardi - attualmente e' in corso l'asta per $p!", FALSE, ch, auction->item, nullptr,
+	    TO_CHAR);
 }
 
 void auction_update(void) {
-	char buf[MAX_STRING_LENGTH];
+	if(!auction_ensure("auction_update")) {
+		return;
+	}
+	if(auction->item == nullptr) {
+		return;
+	}
 
-	if(auction->item != NULL)
-		if(--auction->pulse <= 0) {  /* decrease pulse */
-			auction->pulse = PULSE_INTERNAL;
-			switch(++auction->going) {  /* increase the going state */
-			case 1 : /* going once */
-			case 2 : /* going twice */
-				if(auction->bet > 0)
-					sprintf(buf, "%s: going %s per %d monete.",
-							auction->item->short_description,
-							((auction->going == 1) ? "uno" : "due"), auction->bet);
-				else
-					sprintf(buf, "%s: going %s (nessuna offerta).",
-							auction->item->short_description,
-							((auction->going == 1) ? "uno" : "due"));
+	auction->pulse--;
+	if(auction->pulse > 0) {
+		return;
+	}
 
-				is_present(SELLER, auction->real_seller); // SALVO allineo il venditore
-				talk_auction(buf);
-				break;
+	auction->pulse = AUCTION_CALL_TICKS;
+	switch(++auction->going) {
+	case 1:
+	case 2: {
+		std::ostringstream os;
+		const char* const chiamata =
+		    (auction->going == 1) ? "Prima chiamata" : "Seconda chiamata";
+		if(auction->bet > 0) {
+			os << auc_short_descr(auction->item) << " - " << chiamata << ", offerta corrente "
+			   << auction->bet << " monete.";
+		}
+		else {
+			os << auc_short_descr(auction->item) << " - " << chiamata << "; nessuna offerta";
+			if(auction->opening_reserve > 0) {
+				os << " (minimo prima offerta: " << auction->opening_reserve << " monete)";
+			}
+			os << '.';
+		}
+		is_present(SELLER, auction->real_seller);
+		talk_auction(os.str().c_str());
+		break;
+	}
 
-			case 3 : /* SOLD! */
-
-				if(auction->bet >0) {
-					if(is_present(BUYER, auction->real_buyer)) { // SALVO il vero compratore
-						sprintf(buf, "%s aggiudicata a %s per %d monete.",
-								auction->item->short_description,
-								GET_NAME(auction->buyer),
-								auction->bet);
-						is_present(SELLER, auction->real_seller); // SALVO allineo il venditore
-						talk_auction(buf);
-						mudlog(LOG_PLAYERS, "ASTA: %s compra (%s) per %d monete", GET_NAME(auction->buyer),auction->item->name, auction->bet);
-						obj_to_char(auction->item,auction->buyer);
-						act("Il banditore d'asta appare in un soffio di fumo e ti mette nelle mani $p.", 0, auction->buyer,auction->item,NULL,TO_CHAR);
-						act("Il banditore d'asta appare a $n, da' a $m $p", 0, auction->buyer,auction->item,NULL,TO_ROOM);
-						if(is_present(SELLER, auction->real_seller)) {  // SALVO il vero venditore
-							mudlog(LOG_PLAYERS, "ASTA: %s riceve %d per la vendita di (%s)",
-								   GET_NAME(auction->seller),
-								   auction->bet,
-								   auction->item->name);
-							GET_GOLD(auction->seller) += auction->bet; /* give him the money */
-						}
-						else {
-							mudlog(LOG_CHECK, "ASTA: venditore assente, non prende %d monete dalla vendita", auction->bet);
-						}
-						auction->item = NULL; /* reset item */
+	case 3:
+		if(auction->bet > 0) {
+			if(is_present(BUYER, auction->real_buyer)) {
+				std::ostringstream soldOs;
+				soldOs << auc_short_descr(auction->item) << " aggiudicata a " << GET_NAME(auction->buyer)
+				       << " per " << auction->bet << " monete.";
+				is_present(SELLER, auction->real_seller);
+				talk_auction(soldOs.str().c_str());
+				mudlog(LOG_PLAYERS, "ASTA: %s compra (%s) per %d monete", GET_NAME(auction->buyer),
+				       auction->item->name, auction->bet);
+				obj_to_char(auction->item, auction->buyer);
+				act("Il banditore d'asta appare in un soffio di fumo e ti mette nelle mani $p.", FALSE,
+				    auction->buyer, auction->item, nullptr, TO_CHAR);
+				act("Il banditore d'asta appare e consegna $p a $n.", FALSE, auction->buyer, auction->item,
+				    nullptr, TO_ROOM);
+				if(is_present(SELLER, auction->real_seller)) {
+					mudlog(LOG_PLAYERS, "ASTA: %s riceve %d per la vendita di (%s)", GET_NAME(auction->seller),
+					       auction->bet, auction->item->name);
+					GET_GOLD(auction->seller) += auction->bet;
+					{
+						std::ostringstream payOs;
+						payOs << "Il banditore d'asta appare e ti consegna " << auction->bet
+						      << " monete per la vendita di " << auc_short_descr(auction->item) << ".\n\r";
+						send_to_char(payOs.str().c_str(), auction->seller);
 					}
-					else {
-						sprintf(buf, "Asta non valida.");
-						if(is_present(SELLER, auction->real_seller)) {  // SALVO il vero venditore
-							mudlog(LOG_CHECK, "ASTA: compratore assente, (%s) restituito a %s", auction->item->name, GET_NAME(auction->seller));
-							obj_to_char(auction->item,auction->seller);
-						}
-						else {
-							mudlog(LOG_CHECK, "ASTA: compratore e venditore assenti, (%s) rimosso", auction->item->name);
-							extract_obj(auction->item);
-						}
-						auction->item = NULL;
-						talk_auction(buf);
-					}
+					act("Il banditore d'asta appare e paga $n per la vendita di $p.", FALSE, auction->seller,
+					    auction->item, nullptr, TO_ROOM);
 				}
-				else { /* not sold */
-					sprintf(buf, "Non ci sono state offerte per %s - asta terminata.", auction->item->short_description);
-					if(is_present(SELLER, auction->real_seller)) {  // SALVO il vero venditore
-						mudlog(LOG_PLAYERS, "ASTA: nessuna offerta, (%s) restituito a %s", auction->item->name,GET_NAME(auction->seller));
-						obj_to_char(auction->item,auction->seller);
-						talk_auction(buf);
-						act("Il banditore d'asta appare e ti restituisce $p.", 0,auction->seller,auction->item,NULL,TO_CHAR);
-						act("Il banditore d'asta appare a $n e restituisce $p a $m.", 0,auction->seller,auction->item,NULL,TO_ROOM);
-					}
-					else {
-						mudlog(LOG_CHECK, "ASTA: venditore assente e nessuna offerta, (%s) rimosso", auction->item->name);
-						extract_obj(auction->item);
-						talk_auction(buf);
-					}
-					auction->item = NULL; /* clear auction */
-					/**** SALVO resetto auction */
-					auction->buyer = NULL;
-					strcpy(auction->real_buyer, "(nessuno)");
-					auction->seller = NULL;
-					strcpy(auction->real_seller, "(nessuno");
-					/****/
-				} /* else */
-			} /* switch */
-		} /* if */
-} /* func */
-/***************************************************************/
+				else {
+					mudlog(LOG_CHECK, "ASTA: venditore assente, non prende %d monete dalla vendita",
+					       auction->bet);
+				}
+				auction->item = nullptr;
+				auction->bet = 0;
+				auction->opening_reserve = 0;
+			}
+			else {
+				static constexpr char kInvalid[] = "Asta non valida.";
+				if(is_present(SELLER, auction->real_seller)) {
+					mudlog(LOG_CHECK, "ASTA: compratore assente, (%s) restituito a %s", auction->item->name,
+					       GET_NAME(auction->seller));
+					obj_to_char(auction->item, auction->seller);
+				}
+				else {
+					mudlog(LOG_CHECK, "ASTA: compratore e venditore assenti, (%s) rimosso",
+					       auction->item->name);
+					extract_obj(auction->item);
+				}
+				auction->item = nullptr;
+				auction->bet = 0;
+				auction->opening_reserve = 0;
+				talk_auction(kInvalid);
+			}
+		}
+		else {
+			std::ostringstream endOs;
+			endOs << "Asta terminata senza offerte per " << auc_short_descr(auction->item) << ".";
+			const std::string endMsg = endOs.str();
+			if(is_present(SELLER, auction->real_seller)) {
+				mudlog(LOG_PLAYERS, "ASTA: nessuna offerta, (%s) restituito a %s", auction->item->name,
+				       GET_NAME(auction->seller));
+				obj_to_char(auction->item, auction->seller);
+				talk_auction(endMsg.c_str());
+				act("Il banditore d'asta appare e ti restituisce $p.", FALSE, auction->seller, auction->item,
+				    nullptr, TO_CHAR);
+				act("Il banditore d'asta appare e restituisce $p a $n.", FALSE, auction->seller, auction->item,
+				    nullptr, TO_ROOM);
+			}
+			else {
+				mudlog(LOG_CHECK, "ASTA: venditore assente e nessuna offerta, (%s) rimosso",
+				       auction->item->name);
+				extract_obj(auction->item);
+				talk_auction(endMsg.c_str());
+			}
+			auction->item = nullptr;
+			auction->bet = 0;
+			auction->opening_reserve = 0;
+			auction->buyer = nullptr;
+			auc_set_none(auction->real_buyer);
+			auction->seller = nullptr;
+			auc_set_none(auction->real_seller);
+		}
+		break;
 
+	default:
+		break;
+	}
+}
 
-int advatoi(const char* s)
 /*
-  util function, converts an 'advanced' ASCII-number-string into a number.
-  Used by parsebet() but could also be used by do_give or do_wimpy.
-
-  Advanced strings can contain 'k' (or 'K') and 'm' ('M') in them, not just
-  numbers. The letters multiply whatever is left of them by 1,000 and
-  1,000,000 respectively. Example:
-
-  14k = 14 * 1,000 = 14,000
-  23m = 23 * 1,000,0000 = 23,000,000
-
-  If any digits follow the 'k' or 'm', the are also added, but the number
-  which they are multiplied is divided by ten, each time we get one left. This
-  is best illustrated in an example :)
-
-  14k42 = 14 * 1000 + 14 * 100 + 2 * 10 = 14420
-
-  Of course, it only pays off to use that notation when you can skip many 0's.
-  There is not much point in writing 66k666 instead of 66666, except maybe
-  when you want to make sure that you get 66,666.
-
-  More than 3 (in case of 'k') or 6 ('m') digits after 'k'/'m' are automatically
-  disregarded. Example:
-
-  14k1234 = 14,123
-
-  If the number contains any other characters than digits, 'k' or 'm', the
-  function returns 0. It also returns 0 if 'k' or 'm' appear more than
-  once.
-
+  advatoi / parsebet: logica originale (numeri con suffissi k/m, +percentuale, moltiplicatore).
 */
 
-{
+static int advatoi(const char* s) {
+	if(s == nullptr) {
+		return 0;
+	}
 
-	/* the pointer to buffer stuff is not really necessary, but originally I
-	   modified the buffer, so I had to make a copy of it. What the hell, it
-	   works:) (read: it seems to work:)
-	*/
+	std::array<char, MAX_INPUT_LENGTH> buffer{};
+	std::strncpy(buffer.data(), s, buffer.size() - 1);
+	buffer[buffer.size() - 1] = '\0';
 
-	char buffer[MAX_INPUT_LENGTH]; /* a buffer to hold a copy of the argument */
-	char* stringptr = buffer; /* a pointer to the buffer so we can move around */
-	char tempstring[2];       /* a small temp buffer to pass to atoi*/
-	int number = 0;           /* number to be returned */
-	int multiplier = 0;       /* multiplier used to get the extra digits right */
+	const char* stringptr = buffer.data();
+	int number = 0;
+	int multiplier = 0;
 
-
-	strcpy(buffer,s);         /* working copy */
-
-	while(isdigit(*stringptr)) {    /* as long as the current character is a digit */
-		strncpy(tempstring,stringptr,1);            /* copy first digit */
-		number = (number * 10) + atoi(tempstring);  /* add to current number */
-		stringptr++;                                /* advance */
+	while(std::isdigit(static_cast<unsigned char>(*stringptr)) != 0) {
+		number = (number * 10) + (*stringptr - '0');
+		stringptr++;
 	}
 
 	switch(UPPER(*stringptr)) {
-	case 'K'  :
+	case 'K':
 		multiplier = 1000;
 		number *= multiplier;
 		stringptr++;
 		break;
-	case 'M'  :
+	case 'M':
 		multiplier = 1000000;
 		number *= multiplier;
 		stringptr++;
 		break;
-	case '\0' :
+	case '\0':
 		break;
-	default   :
-		return 0; /* not k nor m nor NUL - return 0! */
+	default:
+		return 0;
 	}
 
-	while(isdigit(*stringptr) && (multiplier > 1)) {    /* if any digits follow k/m, add those too */
-		strncpy(tempstring,stringptr,1);            /* copy first digit */
-		multiplier = multiplier / 10;  /* the further we get to right, the less are the digit 'worth' */
-		number = number + (atoi(tempstring) * multiplier);
+	while(std::isdigit(static_cast<unsigned char>(*stringptr)) != 0 && multiplier > 1) {
+		multiplier /= 10;
+		number += (*stringptr - '0') * multiplier;
 		stringptr++;
 	}
 
-	if(*stringptr != '\0' && !isdigit(*stringptr)) { /* a non-digit character was found, other than NUL */
+	if(*stringptr != '\0' && std::isdigit(static_cast<unsigned char>(*stringptr)) == 0) {
 		return 0;
-	} /* If a digit is found, it means the multiplier is 1 - i.e. extra
-                 digits that just have to be ignore, liked 14k4443 -> 3 is ignored */
+	}
 
-
-	return (number);
+	return number;
 }
 
+static int parsebet(int currentbet, const char* argument) {
+	int newbet = 0;
 
-int parsebet(const int currentbet, const char* argument) {
+	if(argument == nullptr) {
+		return 0;
+	}
 
-	int newbet = 0;                /* a variable to temporarily hold the new bet */
-	char buffer[MAX_INPUT_LENGTH]; /* a buffer to modify the bet string */
-	char* stringptr = buffer;      /* a pointer we can move around */
+	std::array<char, MAX_INPUT_LENGTH> buffer{};
+	std::strncpy(buffer.data(), argument, buffer.size() - 1);
+	buffer[buffer.size() - 1] = '\0';
+	char* stringptr = buffer.data();
 
-	strcpy(buffer,argument);       /* make a work copy of argument */
+	if(*stringptr == '\0') {
+		return 0;
+	}
 
-
-	if(*stringptr) {              /* check for an empty string */
-		if(isdigit(*stringptr)) { /* first char is a digit assume e.g. 433k */
-			newbet = advatoi(stringptr);    /* parse and set newbet to that value */
-		}
-
-		else if(*stringptr == '+') {  /* add ?? percent */
-			if(strlen(stringptr) == 1) { /* only + specified, assume default */
-				newbet = (currentbet * 125) / 100;    /* default: add 25% */
-			}
-			else {
-				newbet = (currentbet * (100 + atoi(++stringptr))) / 100;    /* cut off the first char */
-			}
+	if(std::isdigit(static_cast<unsigned char>(*stringptr)) != 0) {
+		newbet = advatoi(stringptr);
+	}
+	else if(*stringptr == '+') {
+		if(std::strlen(stringptr) == 1) {
+			newbet = (currentbet * 125) / 100;
 		}
 		else {
-			printf("considering: * x \n\r");  /* SALVO anche questa da me finisce nel log */
-			if((*stringptr == '*') || (*stringptr == 'x')) {  /* multiply */
-				if(strlen(stringptr) == 1) { /* only x specified, assume default */
-					newbet = currentbet * 2 ;    /* default: twice */
-				}
-				else { /* user specified a number */
-					newbet = currentbet * atoi(++stringptr);    /* cut off the first char */
-				}
-			}
+			newbet = (currentbet * (100 + std::atoi(stringptr + 1))) / 100;
+		}
+	}
+	else if((*stringptr == '*') || (*stringptr == 'x')) {
+		if(std::strlen(stringptr) == 1) {
+			newbet = currentbet * 2;
+		}
+		else {
+			newbet = currentbet * std::atoi(stringptr + 1);
 		}
 	}
 
-	return newbet;        /* return the calculated bet */
+	return newbet;
 }
 
 } // namespace Alarmud
-

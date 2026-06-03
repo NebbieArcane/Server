@@ -8834,7 +8834,7 @@ class basic_json
     @since version 1.0.0, simplified in version 2.0.9
     */
     template<typename U>
-    class iter_impl : public std::iterator<std::random_access_iterator_tag, U>
+    class iter_impl
     {
         /// allow basic_json to access private members
         friend class basic_json;

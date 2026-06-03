@@ -26,8 +26,7 @@
 #include "act.comm.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
-#include "act.obj1.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
 #include "aree.hpp"
@@ -76,7 +75,7 @@ struct social_type {
 /* predicates for find_path function */
 
 FIND_FUNC(is_target_room_p) {
-	return room == reinterpret_cast<const intptr_t>(tgt_room);
+	return room == reinterpret_cast<intptr_t>(tgt_room);
 }
 
 FIND_FUNC(named_object_on_ground) {
@@ -277,7 +276,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 	if(HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch,CLASS_SORCERER)) {
 		if(cmd == CMD_GAIN) {
 			if(HasClass(ch,CLASS_MAGIC_USER)) {
-				if(GET_LEVEL(ch,MAGE_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+				if(GET_LEVEL(ch,MAGE_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 					if(GET_EXP(ch) <
 							titles[MAGE_LEVEL_IND][GET_LEVEL(ch, MAGE_LEVEL_IND)+1].exp) {
 						act("Non sei ancora pront$b\n\r", FALSE, ch, 0, guildmaster,
@@ -295,7 +294,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 				}
 			}
 			else if(HasClass(ch,CLASS_SORCERER)) {
-				if(GET_LEVEL(ch,SORCERER_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+				if(GET_LEVEL(ch,SORCERER_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 					if(GET_EXP(ch) < titles[SORCERER_LEVEL_IND]
 							[GET_LEVEL(ch, SORCERER_LEVEL_IND)+1].exp) {
 						act("Non sei ancora pront$b\n\r", FALSE, ch, 0, guildmaster,
@@ -331,7 +330,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 									spell_info[ i + 1 ].min_level_magic <=
 									GET_LEVEL_CASTER(ch, MAGE_LEVEL_IND) &&
 									spell_info[ i + 1 ].min_level_magic <=
-									GetMaxLevel(guildmaster) - 10) {
+									(GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10)) {
 								sprintf(buf,"[%d] %s %s \n\r",
 										spell_info[i+1].min_level_magic,
 										spells[i],how_good(ch->skills[i+1].learned));
@@ -346,7 +345,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 									spell_info[ i + 1 ].min_level_sorcerer <= // SALVO mi pare che qui non sia min_level_magic
 									GET_LEVEL_CASTER(ch, SORCERER_LEVEL_IND) &&
 									spell_info[ i + 1 ].min_level_sorcerer <= // SALVO mi pare che qui non sia min_level_magic
-									GetMaxLevel(guildmaster) - 10) {
+									(GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10)) {
 								sprintf(buf,"[%d] %s %s \n\r",
 										spell_info[ i + 1 ].min_level_sorcerer, // SALVO mi pare che qui non sia min_level_magic
 										spells[i],how_good(ch->skills[i+1].learned));
@@ -379,7 +378,7 @@ MOBSPECIAL_FUNC(MageGuildMaster) {
 					return TRUE;
 				}
 
-                if((HasClass(ch, CLASS_MAGIC_USER) && GetMaxLevel(guildmaster) - 10 < spell_info[ number ].min_level_magic) || (HasClass(ch, CLASS_SORCERER) && GetMaxLevel(guildmaster) - 10 < spell_info[ number ].min_level_sorcerer))
+                if((HasClass(ch, CLASS_MAGIC_USER) && (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10) < spell_info[ number ].min_level_magic) || (HasClass(ch, CLASS_SORCERER) && (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10) < spell_info[ number ].min_level_sorcerer))
                 {
 					do_say(guildmaster,
 						   "Non sono abbastanza potente per insegnarti questa magia.\n\r",
@@ -523,7 +522,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 		if(cmd == CMD_GAIN)   /*gain */
 #endif
 		{
-			if(GET_LEVEL(ch,CLERIC_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,CLERIC_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 #if QUEST_GAIN
 				MakeQuest(ch, guildmaster, CLERIC_LEVEL_IND, arg, cmd);
 #else
@@ -558,7 +557,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 							(spell_info[i+1].min_level_cleric <=
 							 GET_LEVEL_CASTER(ch,CLERIC_LEVEL_IND)) &&
 							(spell_info[i+1].min_level_cleric <=
-							 GetMaxLevel(guildmaster)-10)) {
+							 (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10))) {
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_cleric,spells[i],
 								how_good(ch->skills[i+1].learned));
@@ -579,7 +578,7 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
-		if(GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_cleric) {
+		if((GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_cleric) {
 			do_say(guildmaster, "I don't know of this spell.", 0);
 			return(TRUE);
 		}
@@ -769,7 +768,7 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 		/**** fine skills prince ****/
 
 		if(cmd == CMD_GAIN) {
-			if(GET_LEVEL(ch,THIEF_LEVEL_IND) >= GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,THIEF_LEVEL_IND) >= (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 				send_to_char("Devi cercare un altro maestro, io non posso piu' insegnarti niente al riguardo.\n\r",ch);
 				return(TRUE);
 			}
@@ -996,7 +995,7 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 		/**** fine skills prince ****/
 
 		if(cmd==CMD_GAIN) {
-			if(GET_LEVEL(ch,WARRIOR_LEVEL_IND) >= GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,WARRIOR_LEVEL_IND) >= (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 				send_to_char("You must learn from another, I can no longer train you.\n\r",ch);
 				return(TRUE);
 			}
@@ -3451,9 +3450,9 @@ MOBSPECIAL_FUNC(AbbarachDragon) {
 
 MOBSPECIAL_FUNC(fido) {
 
-	register struct obj_data* i, *temp, *next_obj, *next_r_obj;
-	register struct char_data* v, *next;
-	register struct room_data* rp;
+	struct obj_data* i, *temp, *next_obj, *next_r_obj;
+	struct char_data* v, *next;
+	struct room_data* rp;
 	char found = FALSE;
 
 	if(cmd || !AWAKE(ch)) {
@@ -7686,8 +7685,6 @@ OBJSPECIAL_FUNC(nodrop) {
 
 MOBSPECIAL_FUNC(BiosKaiThanatos) {
 #define MIN_WEARING 10
-	FILE* fdeath;
-	char buf[MAX_INPUT_LENGTH];
 	struct char_data* god;
 
 	if(type != EVENT_COMMAND) {
@@ -7737,28 +7734,24 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 			ch, 0, god, TO_ROOM);
 		return(TRUE);
 	}
-	sprintf(buf,"%s/%s.dead",PLAYERS_DIR,lower(GET_NAME(ch)));
-	if(!(fdeath=fopen(buf,"r"))) {
-
+	long snap_exp = 0;
+	long snap_at = 0;
+	if(!death_snapshot_load(GET_NAME(ch), snap_exp, snap_at)) {
 		act("$N ti dice 'Impostore! Vattene via subito!'", FALSE,
 			ch, 0, god, TO_CHAR);
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "No dead file for %s", GET_NAME(ch));
+		mudlog(LOG_CHECK, "No dead snapshot for %s", GET_NAME(ch));
 		return(TRUE);
 	}
-	int xp=0;
-	long ora=0;
-	fscanf(fdeath,"%d : %ld",&xp,&ora);
 
-	if(((long)time(0)-ora)>(4 * 60 *60)) {
+	if(((long)time(0) - snap_at) > (4 * 60 * 60)) {
 
 		act("$N ti dice 'Troppo tardi! Il tuo karma si e' compiuto.'", FALSE,
 			ch, 0, god, TO_CHAR);
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
 		mudlog(LOG_CHECK, "%s: to late on sacrifice", GET_NAME(ch));
-		fclose(fdeath);
 		return(TRUE);
 	}
 	if((GET_RCON(ch)<=3) && (number(1,100)<90)) {
@@ -7768,9 +7761,9 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		act("$N dice qualcosa a $n", FALSE,
 			ch, 0, god, TO_ROOM);
 		mudlog(LOG_CHECK, "%s: no CON on sacrifice", GET_NAME(ch));
-		fclose(fdeath);
 		return(TRUE);
 	}
+	const int restored_exp = static_cast<int>(snap_exp);
 	GET_RCON(ch)=MAX(GET_RCON(ch)-1,3);
 	act("$N ti dice 'Il karma e' stato benevolo con te!'", FALSE,
 		ch, 0, god, TO_CHAR);
@@ -7778,19 +7771,19 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_CHAR);
 	act("$N dice qualcosa a $n", FALSE,
 		ch, 0, god, TO_ROOM);
-	GET_EXP(ch)=xp;
+	GET_EXP(ch)=restored_exp;
 
 	act("$c0001Senti le viscere rivoltarsi, mentre energie sconosciute ti strappano l'anima", FALSE,
 		ch, 0, god, TO_CHAR);
 	act("$n si solleva da terra e inizia a brillare.", FALSE,
 		ch, 0, god, TO_ROOM);
-	for(xp=TYPE_GENERIC_FIRST; xp<=TYPE_GENERIC_LAST; xp++) {
+	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
 #if NOSCRAP
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
 #endif
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
 	}
 	act("$c0001L'urlo di mille gole sgozzate ti assorda", FALSE,
 		ch, 0, god, TO_CHAR);
@@ -7798,13 +7791,13 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_ROOM);
 	GET_HIT(ch)=MIN(GET_HIT(ch),10);
 	alter_hit(ch,0);
-	for(xp=TYPE_GENERIC_FIRST; xp<=TYPE_GENERIC_LAST; xp++) {
+	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
 #if NOSCRAP
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
+		DamageStuff(ch, dmg_type, 200, 5);
 #endif
-		DamageStuff(ch,xp,200,5);
+		DamageStuff(ch, dmg_type, 200, 5);
 	}
 	act("Alla fine, giaci a terra spossat$b", FALSE,
 		ch, 0, god, TO_CHAR);
@@ -7812,7 +7805,6 @@ MOBSPECIAL_FUNC(BiosKaiThanatos) {
 		ch, 0, god, TO_ROOM);
 	GET_POS(ch)=POSITION_STUNNED;
 	mudlog(LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
-	fclose(fdeath);
 	return TRUE;
 }
 } // namespace Alarmud

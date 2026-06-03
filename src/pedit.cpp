@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cctype>
 #include <cstring>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -293,7 +294,8 @@ MOBSPECIAL_FUNC(EditMaster) {
 			arg = one_argument(arg, parmstr);
 			if(!strcmp(parmstr, "xp")) {
 				if(ha_modificato) {
-					if((GET_EXP(ch) - 400000000) < tot_costoxp) {
+					const long long available_exp = static_cast<long long>(GET_EXP(ch)) - 400000000LL;
+					if(available_exp < static_cast<long long>(tot_costoxp)) {
 						act("$N ti dice 'Non hai abbastanza esperienza per pagare il mio prezzo!'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return (TRUE);
@@ -305,7 +307,8 @@ MOBSPECIAL_FUNC(EditMaster) {
 			}
 			else if(!strcmp(parmstr, "pq")) {
 				if(ha_modificato) {
-					if(GET_RUNEDEI(ch) <  tot_costopq + 1) {
+					const long long required_pq = static_cast<long long>(tot_costopq) + 1LL;
+					if(static_cast<long long>(GET_RUNEDEI(ch)) < required_pq) {
 						act("$N ti dice 'Non hai abbastanza punti quest per pagarmi!'", FALSE,
 							ch, 0, editman, TO_CHAR);
 						return (TRUE);
@@ -368,13 +371,13 @@ MOBSPECIAL_FUNC(EditMaster) {
 
 							if(obj->affected[temp].location == APPLY_SPELL) {
 								sprintbit(obj->affected[temp].modifier, affected_bits, buf2);
-								sprintf(scom, "$c0015Magia:$c0007 %s da %s \n\r",
+								sprintf(scom, "$c0015Magia:$c0007 %.80s da %.80s \n\r",
 										apply_types[obj->affected[temp].location], buf2);
 							}
 							else if(obj->affected[temp].location == APPLY_IMMUNE
 									|| obj->affected[temp].location == APPLY_M_IMMUNE) {
 								sprintbit(obj->affected[temp].modifier, immunity_names, buf2);
-								sprintf(scom, "Protezione tipo: $c0015%s$c0007 %s \n\r",
+								sprintf(scom, "Protezione tipo: $c0015%.80s$c0007 %.80s \n\r",
 										apply_types[obj->affected[temp].location], buf2);
 							}
 							else
@@ -391,7 +394,8 @@ MOBSPECIAL_FUNC(EditMaster) {
 						sprintf(scom, "Spesa modifiche %ld xp.\n\r", tot_costoxp);
 					}
 					else {
-						sprintf(scom, "Spesa modifiche %ld pq.\n\r", tot_costopq + 1);
+						const long long total_pq_cost = static_cast<long long>(tot_costopq) + 1LL;
+						sprintf(scom, "Spesa modifiche %lld pq.\n\r", total_pq_cost);
 					}
 					send_to_char(scom, ch);
 				}
@@ -502,14 +506,18 @@ MOBSPECIAL_FUNC(EditMaster) {
 					if(iSpell < MAX_OBJ_AFFECT && iMagie < 1
 							&& atol(parmstr) <= comandi[iCom].max) {
 						if(pagamento) {
-							if((GET_EXP(ch)-400000000L) < tot_costoxp + static_cast<int>(calc_costoxp(iCom, atoi(parmstr)))) {
+							const long long available_exp = static_cast<long long>(GET_EXP(ch)) - 400000000LL;
+							const long long required_xp = static_cast<long long>(tot_costoxp) + static_cast<long long>(calc_costoxp(iCom, atoi(parmstr)));
+							if(available_exp < required_xp) {
 								act("$N ti dice 'Spiacente, non hai abbastanza XP.'", FALSE,
 									ch, 0, editman, TO_CHAR);
 								return (TRUE);
 							}
 						}
 						else {
-							if(GET_RUNEDEI(ch)-1 < tot_costopq + static_cast<int>(calc_costopq(iCom, atoi(parmstr)))) {
+							const long long available_pq = static_cast<long long>(GET_RUNEDEI(ch)) - 1LL;
+							const long long required_pq = static_cast<long long>(tot_costopq) + static_cast<long long>(calc_costopq(iCom, atoi(parmstr)));
+							if(available_pq < required_pq) {
 								act("$N ti dice 'Spiacente, non hai abbastanza punti quest.'", FALSE,
 									ch, 0, editman, TO_CHAR);
 								return (TRUE);
@@ -596,26 +604,31 @@ MOBSPECIAL_FUNC(RentEditor)
 
 	if(cmd == CMD_VALUE)
 	{
-		sprintf(buf, "$N ti dice 'Diminuire l'affitto in locanda di un TUO oggetto ti costera' ");
+		std::string msg = "$N ti dice 'Diminuire l'affitto in locanda di un TUO oggetto ti costera' ";
 
 		if(IS_SET(tipo, PAY_RUNE))
 		{
-			sprintf(buf, "%s%d run%s", buf, PRICE_RUNE, (PRICE_RUNE == 1 ? "a" : "e"));
+			msg += std::to_string(PRICE_RUNE);
+			msg += " run";
+			msg += (PRICE_RUNE == 1 ? "a" : "e");
 		}
 
 		if(IS_SET(tipo, PAY_EXP))
 		{
-			sprintf(buf, "%s%s%d punti esperienza", buf, (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_GOLD) ? ", " : " e ") : (IS_SET(tipo, PAY_GOLD) ? "" : "")), PRICE_EXP);
+			msg += (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_GOLD) ? ", " : " e ") : (IS_SET(tipo, PAY_GOLD) ? "" : ""));
+			msg += std::to_string(PRICE_EXP);
+			msg += " punti esperienza";
 		}
 
 		if(IS_SET(tipo, PAY_GOLD))
 		{
-			sprintf(buf, "%s%s%d monete d'oro", buf, (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_EXP) ? " e " : " e ") : (IS_SET(tipo, PAY_EXP) ? " e " : " ")), PRICE_GOLD);
+			msg += (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_EXP) ? " e " : " e ") : (IS_SET(tipo, PAY_EXP) ? " e " : " "));
+			msg += std::to_string(PRICE_GOLD);
+			msg += " monete d'oro";
 		}
 
-		sprintf(buf, "%s.'", buf);
-
-		act(buf, FALSE, ch, NULL, derent, TO_CHAR);
+		msg += ".'";
+		act(msg.c_str(), FALSE, ch, NULL, derent, TO_CHAR);
 
 		return (TRUE);
 	}
@@ -748,38 +761,46 @@ MOBSPECIAL_FUNC(RentEditor)
 
 			if(!editNO)
 			{
-				sprintf(buf, "\n\r$N ti dice 'Per");
+				std::string cost_msg = "\n\r$N ti dice 'Per";
 
 				if(rune)
 				{
-					sprintf(buf, "%s %d run%s", buf, PRICE_RUNE, (PRICE_RUNE == 1 ? "a" : "e"));
+					cost_msg += " ";
+					cost_msg += std::to_string(PRICE_RUNE);
+					cost_msg += " run";
+					cost_msg += (PRICE_RUNE == 1 ? "a" : "e");
 					GET_RUNEDEI(ch) -= PRICE_RUNE;
 				}
 
 				if(exp)
 				{
-					sprintf(buf, "%s%s%d punti esperienza", buf, (rune == TRUE ? (gold == TRUE ? ", " : " e ") : (gold == TRUE ? " " : "")), PRICE_EXP);
+					cost_msg += (rune == TRUE ? (gold == TRUE ? ", " : " e ") : (gold == TRUE ? " " : ""));
+					cost_msg += std::to_string(PRICE_EXP);
+					cost_msg += " punti esperienza";
 					GET_EXP(ch) -= PRICE_EXP;
 				}
 
 				if(gold)
 				{
-					sprintf(buf, "%s %s%d monete d'oro", buf, (rune == TRUE ? (exp == TRUE ? "e " : "e ") : (exp == TRUE ? "e " : "")), PRICE_GOLD);
+					cost_msg += " ";
+					cost_msg += (rune == TRUE ? (exp == TRUE ? "e " : "e ") : (exp == TRUE ? "e " : ""));
+					cost_msg += std::to_string(PRICE_GOLD);
+					cost_msg += " monete d'oro";
 					GET_GOLD(ch) -= PRICE_GOLD;
 				}
 
-				sprintf(buf, "%s ho abbassato il costo d'affitto di 1000 monete d'oro.'", buf);
+				cost_msg += " ho abbassato il costo d'affitto di 1000 monete d'oro.'";
+				act(cost_msg.c_str(), FALSE, ch, NULL, derent, TO_CHAR);
 
-				act(buf, FALSE, ch, NULL, derent, TO_CHAR);
-
-				obj->obj_flags.cost_per_day -= 1000;
-
-				if(obj->obj_flags.cost_per_day < 0)
+				const long long previous_cost = static_cast<long long>(obj->obj_flags.cost_per_day);
+				long long updated_cost = previous_cost - 1000LL;
+				if(updated_cost < 0LL)
 				{
-					obj->obj_flags.cost_per_day = 0;
+					updated_cost = 0LL;
 				}
+				obj->obj_flags.cost_per_day = static_cast<int>(updated_cost);
 
-				mudlog(LOG_PLAYERS, "Rent on vnum %d decrease from %d to %d gold coins. Owner: %s, MobEditor: %s", iVNum, (obj->obj_flags.cost_per_day + 1000), obj->obj_flags.cost_per_day, GET_NAME(ch), GET_NAME(derent));
+				mudlog(LOG_PLAYERS, "Rent on vnum %d decrease from %lld to %d gold coins. Owner: %s, MobEditor: %s", iVNum, previous_cost, obj->obj_flags.cost_per_day, GET_NAME(ch), GET_NAME(derent));
 				write_obj_to_file(obj, f, obj->char_vnum);
                 //write_obj_to_file(obj, f);	old format
 				fclose(f);

@@ -13,6 +13,7 @@ namespace Alarmud {
 void bisect_arg(char* arg, int* field, char* string);
 struct help_index_element* build_help_index(FILE* fl, int* num);
 void check_reboot();
+bool auction_blocked_near_reboot();
 ACTION_FUNC(do_edit);
 ACTION_FUNC(do_setskill);
 ACTION_FUNC(do_string);

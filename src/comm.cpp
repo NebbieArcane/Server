@@ -101,7 +101,7 @@ int tics = 0;        /* for extern checkpointing */
 int PORT=0;
 
 uint64_t aTimeCheck[ PULSE_MOBILE ];
-uint16_t NumTimeCheck = sizeof(aTimeCheck); /* dovrebbe essere il piu' grande dei PULSE */
+uint16_t NumTimeCheck = 0; /* indice anello per aTimeCheck[] (modulo PULSE_MOBILE) */
 
 
 struct affected_type*  Check_hjp, *Check_old_af;
@@ -362,7 +362,7 @@ void game_loop(int s) {
 			if(new_descriptor(s) < 0) {
 				mudlog(LOG_CONNECT,"Error on select:%s",strerror(errno));
 			}
-			mudlog(LOG_CONNECT, "Connection stabilited");
+			mudlog(LOG_CONNECT, "Connection established");
 		}
 
 		/* kick out the freaky folks */
@@ -394,7 +394,9 @@ void game_loop(int s) {
 				GET_TEMPO_IN(point->character,GET_POS(point->character))++;
 			}
 			else {
-				if((point->wait<-1) && (abs(point->wait) > abs(MAXIDLESTARTTIME)) && (point->connected !=CON_PLYNG)) {
+				if((static_cast<long long>(point->wait) <
+						-static_cast<long long>(MAXIDLESTARTTIME)) &&
+						(point->connected != CON_PLYNG)) {
 					// Was not doing anything useful, probably waiting at initial prompt
 					mudlog(LOG_CHECK,"Fried dummy connection from [HOST:%s]",point->host);
 					write_to_descriptor(point->descriptor,"Timeout!\n\r");
@@ -407,7 +409,10 @@ void game_loop(int s) {
                     else close_socket(point);
 				}
 			}
-			if((--(point->wait) <= 0) && get_from_q(&point->input, comm)) {
+			const long long wait_after =
+				static_cast<long long>(point->wait) - 1LL;
+			point->wait = static_cast<int>(wait_after);
+			if((wait_after <= 0LL) && get_from_q(&point->input, comm)) {
 				if(point->character && point->connected == CON_PLYNG && point->character->specials.was_in_room != NOWHERE) {
 					point->character->specials.was_in_room = NOWHERE;
 					act("$n e' rientrat$b.", TRUE, point->character, 0, 0, TO_ROOM);
@@ -588,7 +593,7 @@ void game_loop(int s) {
 	}
 	while(lag.count()<0);
 	/* check out the time */
-	aTimeCheck[ NumTimeCheck % sizeof(aTimeCheck)] = lag.count()+OPT_USEC;
+	aTimeCheck[NumTimeCheck % PULSE_MOBILE] = lag.count() + OPT_USEC;
 	NumTimeCheck++;
 
 
@@ -906,7 +911,9 @@ int new_descriptor(int s) {
 	}
 
 
-	if((desc + 1) >= MAX_CONNECTS) {
+	// Avoid signed-overflow-sensitive form: (desc + 1) >= MAX_CONNECTS.
+	// This is equivalent and safer for optimizer assumptions with -Wstrict-overflow.
+	if(desc >= (MAX_CONNECTS - 1)) {
 		sprintf(buf,"Mi dispiace... Il gioco e' pieno (# giocatori %d). "
 				"Riprova piu' tardi.\n\r", desc);
 		write_to_descriptor(desc,buf);

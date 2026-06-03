@@ -447,7 +447,7 @@ void shopping_value(char* arg, struct char_data* ch,
 
 void shopping_list(char* arg, struct char_data* ch,
 				   struct char_data* keeper, int shop_nr) {
-	char buf[MAX_STRING_LENGTH], buf2[100],buf3[100];
+	char buf[MAX_STRING_LENGTH], buf2[256],buf3[256];
 	struct obj_data* temp1;
 	int found_obj;
 	long actualcost;
@@ -481,18 +481,18 @@ void shopping_list(char* arg, struct char_data* ch,
 			if((CAN_SEE_OBJ(ch,temp1)) && (temp1->obj_flags.cost>0)) {
 				found_obj = TRUE;
 				if(temp1->obj_flags.type_flag != ITEM_DRINKCON)
-					sprintf(buf2,"%s for %d gold coins.\n\r",
+					std::snprintf(buf2, sizeof(buf2), "%.220s for %d gold coins.\n\r",
 							(temp1->short_description),
 							(int)actualcost);
 
 				else {
 					if(temp1->obj_flags.value[1])
-						sprintf(buf3,"%s of %s",(temp1->short_description)
-								,drinks[temp1->obj_flags.value[2]]);
+						std::snprintf(buf3, sizeof(buf3), "%.180s of %.60s", (temp1->short_description),
+								drinks[temp1->obj_flags.value[2]]);
 					else {
-						sprintf(buf3,"%s",(temp1->short_description));
+						std::snprintf(buf3, sizeof(buf3), "%.240s", (temp1->short_description));
 					}
-					sprintf(buf2,"%s for %d gold coins.\n\r",buf3,
+					std::snprintf(buf2, sizeof(buf2), "%.220s for %d gold coins.\n\r",buf3,
 							(int)actualcost);
 				}
 				CAP(buf2);

@@ -582,16 +582,14 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 		mob->equipment[i] = 0;
 	}
 	/* clone EQ equiped */
-	if(ch->equipment) {
-		for(j=0; j<MAX_WEAR; j++) {
-			if(ch->equipment[j]) {
-				/* clone mob->equipment[j] */
-				if((ocopy = (struct obj_data*)clone_obj(ch->equipment[j])) != NULL) {
-					if(ch->equipment[j]->contains) {
-						clone_container_obj(ocopy,ch->equipment[j]);
-					}
-					equip_char(mob,ocopy,j);
+	for(j=0; j<MAX_WEAR; j++) {
+		if(ch->equipment[j]) {
+			/* clone mob->equipment[j] */
+			if((ocopy = (struct obj_data*)clone_obj(ch->equipment[j])) != NULL) {
+				if(ch->equipment[j]->contains) {
+					clone_container_obj(ocopy,ch->equipment[j]);
 				}
+				equip_char(mob,ocopy,j);
 			}
 		}
 	}

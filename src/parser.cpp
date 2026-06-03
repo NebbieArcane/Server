@@ -67,7 +67,7 @@ void AddCommand(const char* name, command_func func, int number, int min_pos, in
 ** All other results are 0
 */
 void GenerateHash() {
-	register int i;
+	int i;
 
 	for(i = 0; i <= 255; i++)
 		if((i >= 'a') && (i <= 'z')) {
@@ -97,7 +97,7 @@ void AddNodeTail(NODE* n, int length, int radix) {
 
 	/* Traverse the list until we find the end, when we find it, add to it */
 	{
-		register NODE* i;
+		NODE* i;
 
 		for(i = radix_head[radix].next; i->next; i = i->next);
 		i->next = n;
@@ -118,7 +118,7 @@ void AddNodeTail(NODE* n, int length, int radix) {
 ** Return value is the node if it exists, or NULL if it does not.
 */
 NODE* SearchForNodeByName(NODE* head, const char* name, int len) {
-	register NODE* i;
+	NODE* i;
 
 	i = head;
 	while(i) {
@@ -136,7 +136,7 @@ NODE* SearchForNodeByName(NODE* head, const char* name, int len) {
 ** This will generate the hash table and sort everything via the hash-table.
 */
 void InitRadix() {
-	register int i;
+	int i;
 
 	for(i = 0; i <= 26; i++) {
 		radix_head[i].next = NULL;
@@ -153,8 +153,8 @@ void InitRadix() {
 ** Will return a pointer to the NODE if it exists, NULL if it doesn't.
 */
 NODE* FindValidCommand(const char* name) {
-	register int len;
-	register int radix;
+	int len;
+	int radix;
 
 	radix = HashTable[(int)(*name) ];
 	len = strlen(name);

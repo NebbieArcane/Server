@@ -2,6 +2,11 @@
 EMPTY SLOT
 
 #
+"PERDITA LIVELLO"
+
+Vedi anche: MORTE, XP
+
+#
 MULTICLASSE
 
 E' possibile avere personaggi che appartengono a piu' classi.
@@ -721,18 +726,26 @@ le proprie magie.
 #
 "ASTRAL WALK"
 
-Sintassi    : cast 'astral walk' 
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 30 Cleric.
-Save        : Nessuno
-Costo di lancio: 30 mana
+| Sintassi          : cast 'astral walk'
+| Classi            : Chierico livello 30
+| Costo             : 30 punti magia
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : 1 round
+| Spellfail         : 0
+| Area effetto      : il Chierico e il suo gruppo
+| Tiro Salvezza     : -
+| Allineamento      : $c0010Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Con questo incantesimo il chierico proietta lui e il suo gruppo sul piano astrale.
+| 
+|__________________________________________________________________________________________
 
-Con questo spell il caster puo' trasportarsi sul piano astrale.
-Se il caster e' seguito od in gruppo con altri giocatori o creature,
-anche questi verranno trasportati sul piano astrale insieme al caster.
-
-Vedi anche: -
+Vedi anche: PIANO ASTRALE, INCANTESIMI DI TRASPORTO
 
 #
 "CREATE LIGHT"
@@ -3219,28 +3232,52 @@ esatto della wand o staff per evitare confusioni.
 #
 "ARMOR"
 
-Sintassi    : cast 'armor' [vittima]
-Accumulazione: No
-Durata      : 24 ore
-Costo di lancio: 5 mana
+| Sintassi          : cast 'armor' <bersaglio>
+| Classi            : Mago livello 5, Stregone livello 5, Chierico livello 2
+| Costo             : 5 punti magia
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : livello/2 ore
+| Lag               : 1 round
+| Spellfail         : 0
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : -
+| Allineamento      : $c0014Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Un campo di forza invisibile, ma tangibile, circonda il bersaglio dell'incantesimo, 
+|  garantendogli un bonus all'armatura pari a 20 punti.
+| 
+|__________________________________________________________________________________________
 
-Lo spell Armor migliora la tua classe armatura (AC) di 20.
-
-Vedi anche: AC
+Vedi anche: INCANTESIMI DI PROTEZIONE, AC
 
 #
 "TELEPORT"
 
-Sintassi    : cast 'teleport' [vittima]
-Accumulazione: -
-Durata      : Instant
-Costo di lancio: 33 mana
+| Sintassi          : cast 'teleport' <bersaglio>
+| Classi            : Mago livello 17, Stregone livello 17
+| Costo             : 33 punti magia
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : 1 round
+| Spellfail         : 60
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi
+| Allineamento      : $c0010Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Con questo incantesimo l'incantatore trasferira' il bersaglio, che puo' essere anche
+|  lui stesso, in un'altra locazione casuale del mondo.
+| 
+|__________________________________________________________________________________________
 
-Lo spell Teleport (con possibile errore) trasferira' istantaneamente
-la vittima in un'altra locazione nel mondo. La locazione e' casuale
-percio' ci sara' sempre il rischio di trovarsi in un posto pericoloso.
-Puo' essere usato anche come spell di combattimento per mandare al
-diavolo gli avversari.
+Vedi anche: INCANTESIMI DI TRASPORTO
 
 #
 "BLESS"
@@ -3725,126 +3762,210 @@ Vedi anche: HIDE
 #
 "MAGIC MISSILE"
 
-Sintassi    : cast 'magic missile' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 1 magic user.
-Save        : Nessuno
-Costo di lancio: 15 mana
+| Sintassi          : cast 'magic missile' <bersaglio>
+| Classi            : Mago livello 1, Stregone livello 1
+| Costo             : 15 punti magia
+| Tipo di danno     : Energia
+| Danno             : (livello/2)d4 + 1d4 + livello/2
+| Durata            : -
+| Lag               : 1 round
+| Spellfail         : 10
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : -
+| Allineamento      : $c0010Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+| 
+|  Un dardo di energia magica scaturisce dalle dita dell'incantatore e colpisce il
+|  bersaglio. Se la creatura bersaglio e' protetta dall'incantesimo 'shield' il dardo non
+|  provochera' alcun danno.
+|__________________________________________________________________________________________
 
-Produce danni per 1d4+1/2 livelli 
-Lo spell 'shield' resiste completamente agli effetti di questo spell.
+Vedi anche: DANNI ELEMENTALI, SHIELD
 
 #
 "CHILL TOUCH"
 
-Sintassi    : cast 'chill touch' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 3 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 15 mana
+| Sintassi          : cast 'chill touch' <bersaglio>
+| Classi            : Mago livello 4, Stregone livello 4
+| Costo             : 15 punti magia
+| Tipo di danno     : Freddo
+| Danno             : 1d3*livello
+| Durata            : -
+| Lag               : 1 round
+| Spellfail         : 10
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi, danno dimezzato
+| Allineamento      : $c0009Malvagio$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|  
+|  Il tocco della mano, che risplende di energia blu, devasta l’energia vitale delle
+|  creature viventi facendo perdere, in caso di fallimento del tiro salvezza verso
+|  incantesimi, 1 punto Forza al bersaglio per la durata di livello/12 ore.
+|__________________________________________________________________________________________
 
-Questo spell e' piu' potente dello spell 'magic missile' producendo
-1d3 punti danno per livello. La vittima che fallisca il tiro salvezza
-vedra' la sua forza ridotta di un punto.
-
-Vedi anche: MAGIC MISSILE
+Vedi anche: DANNI ELEMENTALI
 
 #
 "BURNING HANDS"
 
-Sintassi    : cast 'burning hands' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 5 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 15 mana
+| Sintassi          : cast 'burning hands' <bersaglio>
+| Classi            : Mago livello 6, Stregone livello 6
+| Costo             : 15 punti magia
+| Tipo di danno     : Fuoco
+| Danno             : 1d4 + livello/2
+| Durata            : -
+| Lag               : 2 rounds
+| Spellfail         : 5
+| Area effetto      : stanza
+| Tiro Salvezza     : Incantesimi, annulla il danno
+| Allineamento      : $c0009Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Un cono di fiamme incandescenti si sprigiona dalle proprie dita ed investe tutte le
+|  creature nella stanza non in gruppo con l'incantatore. Se la stanza e' buia e non si e'
+|  affetti dall'incantesimo 'true sight', ma si possiede l'infravisione, si resta accecati
+|  per un numero variabile di ore (da 1 a 4).
+|__________________________________________________________________________________________
 
-1d4+1/livello.
-Colpisce tutti quelli che non sono nel gruppo del caster-
-
-Vedi anche: CHILL TOUCH
+Vedi anche: DANNI ELEMENTALI, FIREBALL, BLINDNESS
 
 #
 "SHOCKING GRASP"
 
-Sintassi    : cast 'shocking grasp' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 1 magic user.
-Save        : Neg
-Costo di lancio: 15 mana
+| Sintassi          : cast 'shocking grasp' <bersaglio>
+| Classi            : Mago livello 2, Stregone livello 2
+| Costo             : 15 punti magia
+| Tipo di danno     : Elettricita'
+| Danno             : 1d8 + livello
+| Durata            : -
+| Lag               : 1 round
+| Spellfail         : 0
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : -
+| Allineamento      : $c0009Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Un attacco di contatto in mischia compiuto con successo infligge una scarica elettrica 
+|  al bersaglio. Se il bersaglio e' una creatura umanoide in fin di vita l'incantatore
+|  effettuera', con la scarica elettrica, la rianimazione di quest'ultimo. 
+|__________________________________________________________________________________________
 
-2-9 + 1/livello.
-Se il tiro salvezza riesce il tocco necessario per lo spell fallisce e non
-si ha alcun effetto.
-
-Vedi anche: BURNING HANDS
+Vedi anche: DANNI ELEMENTALI
 
 #
 "LIGHTNING BOLT"
 
-Sintassi    : cast 'lightning bolt' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 11 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 15 mana
+| Sintassi          : cast 'lightning bolt' <bersaglio>
+| Classi            : Mago livello 2, Stregone livello 2
+| Costo             : 15 punti magia
+| Tipo di danno     : Elettricita'
+| Danno             : 1d6*livello
+| Durata            : -
+| Lag               : 2 rounds
+| Spellfail         : 20
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi, danno dimezzato
+| Allineamento      : $c0014Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Dalle dita dell'incantatore si genera una potente scarica di energia elettrica che  
+|  colpisce il bersaglio.
+|  
+|__________________________________________________________________________________________
 
-
-1d6/livello.  1 target.
-
-Vedi anche: SHOCKING GRASP
+Vedi anche: DANNI ELEMENTALI
 
 #
 "COLOUR SPRAY"
 
-Sintassi    : cast 'color spray' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 15 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 20 mana
+| Sintassi          : cast 'colour spray' <bersaglio>
+| Classi            : Mago livello 14, Stregone livello 14
+| Costo             : 20 punti magia
+| Tipo di danno     : Energia
+| Danno             : 4*livello
+| Durata            : -
+| Lag               : 2 rounds
+| Spellfail         : 40
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi, danno dimezzato
+| Allineamento      : $c0009Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Un cono di vividi colori si scaturisce dalla mano dell'incantatore investendo il  
+|  bersaglio.
+|  
+|  
+|__________________________________________________________________________________________
 
-4 punti danno per livello. Un solo obiettivo
-
-Vedi anche: LIGHTNING BOLT
+Vedi anche: DANNI ELEMENTALI
 
 #
 "ENERGY DRAIN"
 
-Sintassi    : cast 'energy drain' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 23 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 35 mana
+| Sintassi          : cast 'energy drain' <bersaglio>
+| Classi            : Mago livello 22, Stregone livello 22
+| Costo             : 35 punti magia
+| Tipo di danno     : Speciale
+| Danno             : 1d7*livello
+| Durata            : -
+| Lag               : 3 rounds
+| Spellfail         : 100
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi, danno dimezzato
+| Allineamento      : $c0009Malvagio$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Un raggio nero di energia negativa viene rilasciato dalle dita dell'incantatore verso  
+|  il bersaglio che, se fallisce il tiro salvezza e non e' immune al 'drain', subisce il
+|  risucchio della propria energia vitale. Il personaggio inoltre subisce anche la perdita 
+|  di un decimo dei propri punti esperienza (questo puo' portare anche alla perdita di uno
+|  o piu' livelli) fino ad un massimo di 50 milioni di punti per i Principi.
+|__________________________________________________________________________________________
 
-Risucchia un livello da un personaggio o da un mostro. Il livello perso
-porta via anche punti vita e pratiche di conseguenza. Sta molto attento
-ai mostri che hanno questa capacita'. Stai anche attendo al fatto che
-questo spell ti rende velocemente di allineamento malvagio.
-
-Vedi anche: -
+Vedi anche: PERDITA LIVELLO, PROTECTION FROM DRAIN
 
 #
 FIREBALL
-Sintassi    : cast 'fireball' nome
-Accumulazione: -
-Durata      : Istantanea
-Save        : Versus spell for half damage.
-Costo di lancio: 50 mana
 
-Con questo spell il caster dirige un grande volume di fiamma in una
-stanza. Danneggia tutti coloro che si trovano nella stanza ad
-eccezione dei componenti del suo gruppo. (1d6*livello del caster)
-Come per altre spell di attacco puo' danneggiare l'equipaggiamento.
-Le persone dotate di infravisione che non sono influenzate dallo spell
-'truesight' e che si trovano in una stanza buia saranno momentaneamente
-accecate.
+| Sintassi          : cast 'fireball'
+| Classi            : Mago livello 25, Stregone livello 25
+| Costo             : 50 punti magia
+| Tipo di danno     : Fuoco
+| Danno             : 1d8*livello
+| Durata            : -
+| Lag               : 3 rounds
+| Spellfail         : 25
+| Area effetto      : stanza
+| Tiro Salvezza     : Incantesimi, danno dimezzato
+| Allineamento      : $c0009Malvagio$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Una perla scintillante delle dimensioni di una biglia parte dal dito indice dello
+|  incantatore e cresce di dimensioni fino a diventare una palla di fuoco, una sfera
+|  infuocata che esplode con un sordo boato investendo con le fiamme tutte le creature 
+|  presenti nell'area ad eccezione dei compagni di avventura dell'incantatore. Come per
+|  l'incantesimo 'burning hands', se la stanza e' buia e non si e' affetti dall'incantesimo
+|  'true sight', ma si possiede l'infravisione, si resta accecati per un numero variabile
+|  di ore (da 1 a 4).
+|__________________________________________________________________________________________
 
-Vedi anche: COLOR SPRAY
+Vedi anche: DANNI ELEMENTALI, BURNING HANDS, BLINDNESS
 
 #
 "PRISMATIC SPRAY"
@@ -3878,27 +3999,58 @@ Il danno causato equivale a 1d10*livello del caster.
 
 #
 EARTHQUAKE
-Sintassi    : cast 'earthquake'
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 18 cleric.
-Costo di lancio: 15 mana
 
-Questo spell danneggera' tutti coloro nella stanza che non appartengono
-al gruppo del caster per un totale di 2d8+livello del caster.
+| Sintassi          : cast 'earthquake'
+| Classi            : Chierico livello 15
+| Costo             : 15 punti magia
+| Tipo di danno     : Sacro
+| Danno             : 1d4+livello+1
+| Durata            : -
+| Lag               : 2 rounds
+| Spellfail         : 30
+| Area effetto      : stanza
+| Tiro Salvezza     : -
+| Allineamento      : $c0009Malvagio$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Il chierico prega ed il terreno viene scosso da un tremito localizzato molto intenso
+|  che provoca danni a tutte le creature presenti nella stanza che non fanno parte del
+|  gruppo del chierico. I chierici monoclasse, grazie alla loro maggiore devozione,
+|  invocano un terremoto di una potenza maggiore che provoca alle creature presenti nella
+|  stanza, in caso di fallimento del tiro salvezza basato sulla destrezza, la caduta a
+|  terra per un round.
+|__________________________________________________________________________________________
+
+Vedi anche: DANNO SACRO
 
 #
 "DISPEL EVIL"
 
-Sintassi    : cast 'dispel evil' nome
-Accumulazione: -
-Durata      : Istantanea
-Save        : Speciale
-Costo di lancio: 15 mana
+| Sintassi          : cast 'dispel evil' <bersaglio>
+| Classi            : Chierico livello 20
+| Costo             : 15 punti magia
+| Tipo di danno     : Speciale
+| Danno             : -
+| Durata            : -
+| Lag               : 2 rounds
+| Spellfail         : 30
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi
+| Allineamento      : $c0014Buono$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Un chierico di allineamento buono prova a scacciare da questo piano una creatura di
+|  un altro piano di allineamento malvagio. Se quest'ultima fallisce il tiro salvezza e
+|  non e' di livello maggiore o uguale del chierico scompare da questo piano. 
+|  Il chierico inoltre guadagnerà' dell'esperienza in caso di riuscita dell'incantesimo.
+| 
+|__________________________________________________________________________________________
 
-Questo spell elimina creature di tipo malvagio che siano state evocate.
-
-Vedi anche: -
+Vedi anche: DISPEL GOOD
 
 #
 "DISPEL GOOD"
@@ -3915,38 +4067,54 @@ Vedi anche: -
 #
 "CALL LIGHTNING"
 
-Sintassi    : cast 'call lightning' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 50 cleric, 18 Druid.
-Save        : Versus spell for half damage.
-Costo di lancio: 20 mana
+| Sintassi          : cast 'call lightning' <bersaglio>
+| Classi            : Chierico livello 45, Druido livello 18
+| Costo             : 20 punti magia
+| Tipo di danno     : Elettricita'
+| Danno             : 1d8*(livello + 2)
+| Durata            : -
+| Lag               : 3 rounds
+| Spellfail         : 50
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : Incantesimi, danno dimezzato
+| Allineamento      : $c0014Neutrale$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Questo incantesimo utilizza la forza della natura per richiamare un fulmine che si 
+|  abbatte sul bersaglio. Il fulmine puo' essere evocato solo all'aperto e se le condizioni
+|  atmosferiche lo permettono. Ricordati che puoi manipolare il tempo atmosferico con
+|  l'incantesimo 'control weather'.
+|__________________________________________________________________________________________
 
-Questo spell utilizza la forza della natura per creare un fulmine che
-si abbatte sulla vittima. E' naturalmente possibile utilizzarla solo
-all'aperto e solo se sta piovendo.
-
-Il fulmine infliggera' 1d8*(2+livello del caster) punti danno sulla
-vittima.
-
-Vedi anche: WEATHER and CONTROL WEATHER
+Vedi anche: DANNI ELEMENTALI, CONTROL WEATHER, TEMPO ATMOSFERICO
 
 #
 "HARM"
 
-Sintassi    : cast 'harm' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 25 cleric.
-Save        : Nessuno
-Costo di lancio: 35 mana
+| Sintassi          : cast 'harm' <bersaglio>
+| Classi            : Chierico livello 25
+| Costo             : 35 punti magia
+| Tipo di danno     : Sacro
+| Danno             : 100
+| Durata            : -
+| Lag               : 3 rounds
+| Spellfail         : 200
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : -
+| Allineamento      : $c0009Malvagio$c0007
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Se il chierico riesce a toccare con un attacco da mischia il bersaglio quest'ultimo
+|  subira' l'effetto dell'incantesimo. I non morti che vengono colpiti dal chierico con
+|  l'incantesimo 'harm' saranno curati di 100 punti ferita.
+| 
+|__________________________________________________________________________________________
 
-Questo spell funziona solo se il chierico riesce a toccare (colpire)
-la vittima. Se funziona elimina tutti i punti vita della vittima meno
-1d4, con un massimo di danno di 100.
-Non e' possibile uccidere una vittima con questo spell, ma quasi.
-
-Vedi anche: -
+Vedi anche: DANNO SACRO
 
 #
 HELP
@@ -4294,90 +4462,6 @@ particolari.
 FIND WATER
 
 Questo skill serve per trovare dell'acqua all'aperto.
-
-#
-HALFGIANT HALF-GIANT
-
-E' la razza derivata dall'incrocio di un umano e di un gigante. L'aspetto
-e' quello di un uomo e puo' essere spesso confuso con un uomo molto grosso.
-Gli half-giant sono famosi per la loro forte costituzione e la loro
-eccezionale forza.
-
-#
-ELF ELVEN
-
-Lineamenti affilati, orecchie a punta ed occhi allungati caratterizzano
-questa razza. Sono famosi per essere combattivi e indipendenti. Gli elfi
-sono anche conosciuti per essere tra i migliori nelle arti magiche, cosi'
-come per la loro destrezza.
-
-#
-HALFELF HALF-ELF
-
-Un incrocio tra umani ed elfi, questa razza non ha casa e cerca di far
-propria patria il posto dove risiedono. Un mezz'elfo puo' ereditare sia
-le qualita' degli elfi che quelle degli umani.
-
-#
-DROW DARK-ELF
-
-La razza piu' malvagia tra gli elfi. Vivono nel sottosuolo e raramente
-escono in superficie. Il sole e ogni tipo di luce ferisce i loro occhi
-in maniera estrema. Generalmente gli elfi scuri hanno la pelle nera e
-i capelli bianchi.
-
-#
-GNOME
-
-A qualcuno piace dire che questi esseri somigliano a nani con un grosso
-naso, ma non voglio proprio dire cosa ne pensano gli gnomi di questo.
-Sono famosi per essere molto molto intelligenti, ma non sono affatto saggi.
-
-#
-TROLL
-
-I troll sono bestioni alti dai 2 ai 3 metri, pertanto hanno un 80% di
-probabilita' di bashare gli huge.
-Non non sono limitati nella dexterity come gli h/g.....
-I troll hanno la possibilita' innata di rigenerare punti ferita, per tutti
-i tipi di danno ECCETTO fuoco e acido.
-La rigenerazione avviene in ogni round in cui il troll subisce danno.
-Il troll (causa eccessiva bruttezza e puzza) viene attaccato a vista
-da tutti i tutori dell'ordine.
-
-#
-HALFLING HOBBIT
-
-Umani in miniatura, ecco cosa sembrano, ma non c'e' nulla di umano in loro.
-A loro piace godersi il cibo buono ed il riposo, sono ladri nati, anche se
-normalmente non sono malvagi.
-
-#
-DWARF
-
-Larghi come un barile e alti piu' o meno lo stesso. Questa razza costruisce
-le migliori case nella pietra o tunnel. I nani sono conosciuti per avere
-una costituzione robusta. Se un nano non ha una barba lunga almeno un piede
-vuol dire che e' una bambino.
-
-#
-HALFORC HALF-ORC
-
-Mezzi umani e mezzi orchi, gli appartenenti a questa razza somigliano
-a umani molto brutti. Non ancora certi di dove vivere questi ragazzi
-possono essere molto pericolosi o molto utili.
-
-#
-HUMAN
-
-Guardati nello specchio.
-Gli umani sono mediamente versati in tutto, e non eccellono in nessun campo.
-
-#
-HALFOGRE HALF-OGRE
-
-I mezzi ogre somigliano a grossi umani, non sono particolarmente
-intelligenti ne' veloci, ma hanno una grande forza e buona costituzione.
 
 #
 DARKNESS
@@ -5307,30 +5391,31 @@ VEDI ANCHE:
 PRINCIPE, ASSOCIA, RIPUDIA
 
 #
-MINER
+MINER MINARE DIG
 
-Skill per DWARF: da sempre i nani sono grandi scavatori;
-ora avendo una pala o un piccone possono recarsi nelle miniere di Boffgorrak
-e cercare metalli di vario genere e tantissime varieta' di pietre preziose.
-Scavare e' faticoso, da' affaticamento e, raramente, si possono disturbare
-creature sotterranee aggressive che non gradiranno la picconata in
-testa...Le singole vene delle miniere non possono essere sfruttate
-all'infinito. Mettete da parte i materiali trovati perche' vi serviranno.
-Nelle miniere ci sara' Dendur Lungapicca pronto ad insegnare come si scava.
+Sintassi: dig
 
-Sintassi: DIG
-VEDI ANCHE:
-FUCINA e FORGE
+Con una pala od un piccone chiunque puo' recarsi in una miniera per cercare
+di procurarsi metalli di vario genere e tantissime varieta' di pietre preziose.
+Scavare e' faticoso e, anche se molto raramente, si puo' disturbare il sonno
+di creature molto aggressive. Le singole vene delle miniere non possono
+essere sfruttate all'infinito. Ricordatevi infine di mettere da parte i
+materiali trovati perche' vi serviranno.
+Nelle miniere di BofGorRak troverete Dendur Lungapicca pronto ad insegnarvi
+come si scava.
+
+Vedi anche: FUCINA, FORGIARE
 
 #
 FUCINA
 
-dopo aver trovato in miniera i materiali grezzi (vedi MINER),
-e' possibile recarsi nel laboratorio di Tarmak Bif a farsi creare
-dei lingotti. Dopo aver dato le pepite grezze a Tarmak, ad un vostro
-cenno di assenso provvedera' a creare quanti piu' lingotti potra'
-ed a darveli. Tarmak e' stipendiato da Durin, quindi non vi chiedera'
-soldi. Le combinazioni lingotti/pepite sono le seguenti:
+Quando avete trovato in miniera un sufficiente quantitativo di materiali
+grezzi, e' possibile recarsi nel laboratorio di Tarmak Bif per farsi
+creare i lingotti. Dopo aver dato le pepite grezze a Tarmak, ad un vostro
+cenno di assenso provvedera' a creare quanti piu' lingotti potra' ed a
+darveli. Tarmak e' stipendiato da Durin, quindi non vi chiedera' soldi.
+
+Le combinazioni lingotti/pepite sono le seguenti:
 
 a) 5  pepite di Adamantite    per avere 1 lingotto di Adamantite
 
@@ -5352,57 +5437,104 @@ i) 10 pepite di Ferro         per avere 1 lingotto di Ferro
 
 l) 9  Ferro + 2 Carbone       per avere 1 lingotto di Acciaio
 
-#
-FORGE
-
-Skill per DWARF (nani)
-Dopo aver scavato minerali in miniera (vedi MINER) e aver ottenuto
-dei lingotti (vedi FUCINA, eccoci alla fase finale, la costruzione di
-un'arma. E' nota in tutte le Nebbie la grande qualita' delle armi
-nanesche. Con i lingotti che il nano si e' procurato, puo' costruire
-armi di vario genere. I tipi di arma che si possono forgiare sono:
-pugnale, martello, piccone, mazza, mazzafrusto, spada, ascia.
-La forgiatura deve essere eseguita nel posto in cui ci sono gli
-attrezzi giusti, e cioe' nella Stanza della Forgia.
-Creare armi e' faticoso e, talvolta, puo' non riuscire.
-La qualita', il valore ed il peso dell'arma dipendono dal materiale
-che si usa, dalla destrezza del nano, dal suo livello e dalla sua
-conoscenza delle armi. Questi fattori possono far variare notevolmente
-la riuscita della forgiatura. Ovviamente anche la fortuna fa la sua parte.
-Se il nano esegue un lavoro perfetto, gli Dei gli concederanno di dare
-un nome alla sua arma. Forgiare armi per un nano e' importantissimo
-e quando lo fa acquisisce utile esperienza.
-Per imparare a forgiare armi bisogna rivolgersi a Kroten Fuocolento.
-
-Sintassi: FORGE tipoarma tipomateriale (es. forge ascia bronzo)
+Vedi anche: NANI, FUCINA, MINARE
 
 #
-DETERMINE ESTABLISHED
+FORGE FORGIARE "FORGIARE ARMI"
 
-Skill per DWARF (nani)
+| Sintassi          : forge <tipo_di_arma> <metallo>
+| Razza             : Nani
+| Tempo di ricarica : -
+| Costo             : 10 punti movimento
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : 3 round
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 0%
+| Conoscenza max    : variabile a seconda del numero di classi
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  I Nani, come e' noto in tutte le Nebbie, sono dei fabbri provetti. Grazie alla maestria 
+|  nella lavorazione di tutti i tipi di metalli, i Nani sono in grado di forgiare qualsiasi
+|  varieta' di arma. La forgiatura deve essere eseguita nella Stanza della Forgia.
+|  La qualita', il valore ed il peso dell'arma dipendono dal materiale utilizzato, dalla
+|  destrezza del nano e dal livello della sua conoscenza dell'arte della forgiatura.
+|  Qualora forgiatura avvenga con perfezione gli Dei concederanno la possibilita' al nano
+|  di dare un nome alla sua arma.
+|  Per imparare a forgiare armi bisogna rivolgersi a Kroten Fuocolento.
+|
+|__________________________________________________________________________________________
 
-date le grandi conoscenze in materia di costruzioni, un nano e' in grado,
-guardando in una direzione o passandoci, sopra di determinare se c'e'
-pericolo di frana, collasso strutturale ecc.;in pratica di riconoscere
-delle stanze di tipo teleport.
-Per imparare questa tecnica bisogna rivolgersi a Hrum Hrokar.
-
-Sintassi: nessuna, entra automaticamente.
+Vedi anche: NANI, FUCINA, MINARE
 
 #
-BETTER EQUILIBRIUM
+"DETERMINE ESTABLISHED" "RILEVARE FALLE STRUTTURALI"
 
-skill per DWARF (nani)
+| Sintassi          : nessuna, e' una abilita' passiva
+| Razza             : Nani
+| Tempo di ricarica : -
+| Costo             : -
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : -
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 0%
+| Conoscenza max    : variabile a seconda del numero di classi
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  I Nani, date le grandi conoscenze in materia di costruzioni, sono in grado di
+|  determinare se c'e' il pericolo di frana o qualsiasi tipo di variazione all'interno
+|  della locazione. In pratica, guardando in una direzione oppure passando da una
+|  locazione, possono riconoscere le stanze di tipo teleport.
+|  Questa abilita' viene insegnata da Hrum Hrokar nelle miniere di BofGorRak.
+|
+|__________________________________________________________________________________________
 
-grazie al suo corpo tozzo ed al baricentro basso, un nano puo' cercare
-di tenersi in equilibrio o recuperarlo piu' facilmente rispetto
-ad altre razze. In pratica c'e' una possibilita' variabile tra
-il 5 e il 35%, in base a livello, destrezza e livello della skill,
-che in caso di bash mancato o subito ed in caso di disarm fallito possa
-rialzarsi piu' velocemente e possa resistere a magiche ventate.
-Rivolgersi a Trattok per migliorare il proprio equilibrio.
+Vedi anche: NANI
 
-Sintassi: nessuna, entra automaticamente.
+#
+"BETTER EQUILIBRIUM" "EQUILIBRIO SUPERIORE"
+
+| Sintassi          : nessuna, e' una abilita' passiva
+| Razza             : Nani
+| Tempo di ricarica : -
+| Costo             : -
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : -
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 0%
+| Conoscenza max    : variabile a seconda del numero di classi
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Grazie al corpo tozzo ed al baricentro basso, un nano può' cercare di tenersi in 
+|  equilibrio o recuperarlo con maggiore facilita' rispetto a tutte le altre razze.
+|  I Nani hanno una possibilita' variabile tra il 5 ed il 35% in base a livello,
+|  destrezza e livello dell'abilita' stessa, di rialzarsi piu' velocemente quando perdono
+|  l'equilibrio.
+|  Questa abilita' viene insegnata da Trattok a BofGorRak.
+|
+|__________________________________________________________________________________________
+
+Vedi anche: NANI
 
 #
 G-DEATH "GROUP DEATH"
@@ -5429,6 +5561,309 @@ per i piu' piccoli si trova in una foresta ad ovest di Myst
 per gli expert essa risiede nei pressi di New Thalos
 per Master, Adept, Lord e Principi  la mitica Scala Nera e' nascosta
 tra i ghiacciai del profondo Nord.
+
+#
+HALFGIANT HALF-GIANT
+
+E' la razza derivata dall'incrocio di un umano e di un gigante. L'aspetto
+e' quello di un uomo e puo' essere spesso confuso con un uomo molto grosso.
+Gli half-giant sono famosi per la loro forte costituzione e la loro
+eccezionale forza.
+
+#
+ELF ELVEN "MOON ELF" "ELFO DELLA LUNA"
+
+Lineamenti affilati, orecchie a punta ed occhi allungati caratterizzano
+questa razza. Sono famosi per essere combattivi e indipendenti. Gli elfi
+sono anche conosciuti per essere tra i migliori nelle arti magiche, cosi'
+come per la loro destrezza.
+
+Lingua                       : elfico
+Lingua secondaria            : comune
+Statistiche                  : FOR 4-18 COS 4-17 AGI 8-19 INT 8-18 SAG 6-18 CAR 6-18
+Punti assegnabili massimi    : 73 (78 con lo straccione)
+Citta' di partenza           : Myst
+Bonus / Malus                : -1 al danno, +3 potere magico, -20 fallimento incantesimi,
+                               +30 punti magia, +15 recupero punti magia, +20 punti movimento,
+                               +20 recupero punti movimento in foresta
+Resistenze                   : +100 sonno, +20 fascinazione
+
+                         Abilita' di razza
+
+Infravisione                 : conferisce l'abilita' di vedere le creature al buio
+Rilevare passaggi segreti    : (detect hidden) conferisce la possibilita' di scoprire i passaggi
+                               segreti (50% grado massimo di abilita')
+
+Vedi anche: STRACCIONE
+
+#
+HALFELF HALF-ELF
+
+Un incrocio tra umani ed elfi, questa razza non ha casa e cerca di far
+propria patria il posto dove risiedono. Un mezz'elfo puo' ereditare sia
+le qualita' degli elfi che quelle degli umani.
+
+#
+DROW DARK-ELF
+
+La razza piu' malvagia tra gli elfi. Vivono nel sottosuolo e raramente
+escono in superficie. Il sole e ogni tipo di luce ferisce i loro occhi
+in maniera estrema. Generalmente gli elfi scuri hanno la pelle nera e
+i capelli bianchi.
+
+#
+GNOME
+
+A qualcuno piace dire che questi esseri somigliano a nani con un grosso
+naso, ma non voglio proprio dire cosa ne pensano gli gnomi di questo.
+Sono famosi per essere molto molto intelligenti, ma non sono affatto saggi.
+
+#
+TROLL
+
+I troll sono bestioni alti dai 2 ai 3 metri, pertanto hanno un 80% di
+probabilita' di bashare gli huge.
+Non non sono limitati nella dexterity come gli h/g.....
+I troll hanno la possibilita' innata di rigenerare punti ferita, per tutti
+i tipi di danno ECCETTO fuoco e acido.
+La rigenerazione avviene in ogni round in cui il troll subisce danno.
+Il troll (causa eccessiva bruttezza e puzza) viene attaccato a vista
+da tutti i tutori dell'ordine.
+
+#
+HALFLING HOBBIT
+
+Umani in miniatura, ecco cosa sembrano, ma non c'e' nulla di umano in loro.
+A loro piace godersi il cibo buono ed il riposo, sono ladri nati, anche se
+normalmente non sono malvagi.
+
+#
+DWARF NANI
+
+Larghi come un barile e alti piu' o meno lo stesso. Questa razza costruisce
+le migliori case nella roccia. I nani sono conosciuti per avere una costituzione
+robusta. Se un nano non ha una barba lunga almeno un piede e' di sicuro un
+bambino o una femmina (forse).
+
+Lingua                       : Khuzdul (nanico)
+Lingua secondaria            : comune
+Statistiche                  : FOR 6-18 COS 8-20 AGI 6-17 INT 6-18 SAG 6-18 CAR 4-17
+Punti assegnabili massimi    : 72 (77 con lo straccione)
+Citta' di partenza           : BofGorRak
+Bonus / Malus                : +1 riduzione al danno da impatto, +1 riduzione al danno da taglio
+                               +2 riduzione al danno magico, -15 punti movimento,
+                               +20 recupero punti movimento in montagna e collina
+Resistenze                   : +5 freddo, +5 fuoco, +25 veleno
+
+                         Abilita' di razza
+
+Infravisione                 : conferisce l'abilita' di vedere le creature al buio
+Piccolo                      : gli avversari di grandi dimensioni avranno una penalita' di 4 punti
+                               al tiro per colpire il Nano
+Rilevare passaggi segreti    : (detect hidden) conferisce la possibilita' di scoprire i passaggi
+                               segreti (59% grado massimo di abilita')
+Cupidigia                    : (greed for gold) conferisce la possibilita' di ottenere il 10% di
+                               monete d'oro in piu' dai nemici uccisi
+Forgiare armi                : (forge) conferisce l'abilita' di forgiare armi
+Rilevare falle strutturali   : (determine established) conferisce l'abilità di determinare il
+                               pericolo di frana o collasso strutturale in una stanza
+Equilibrio superiore         : (better equilibrium) possibilita' variabile tra il 5 e il 35% di
+                               diminuire il tempo di reazione su abilita' che fanno perdere
+                               l'equilibrio
+Minatore esperto             : i nani hanno maggiori possibilita' di trovare qualcosa di buono
+                               minando ed anche minori possibilita' di avere brutti incontri
+Colpo alle ginocchia         : (blow to the knee) conferisce la possibilita' di buttare a terra
+                               l'avversario sferrando un potente colpo alle ginocchia (abilita'
+                               con tempo di ricarica)   
+
+Vedi anche: STRACCIONE
+
+
+#
+HALFORC HALF-ORC
+
+Mezzi umani e mezzi orchi, gli appartenenti a questa razza somigliano
+a umani molto brutti. Non ancora certi di dove vivere questi ragazzi
+possono essere molto pericolosi o molto utili.
+
+#
+HUMAN UOMINI UMANI
+
+Gli uomini che vivono tra le Nebbie sono mediamente versatili in tutto, ma non eccellono
+in nessun campo. Inoltre sono in gradi di fare qualsiasi professione.
+
+Citta' di partenza           : Myst
+Lingua                       : comune
+Lingua secondaria            : -
+Statistiche                  : FOR 6-18 COS 6-18 AGI 6-18 INT 6-18 SAG 6-18 CAR 6-18
+Punti assegnabili massimi    : 76 (82 con lo straccione)
+Bonus / Malus                : -
+Resistenze                   : -
+
+                         Abilita' di razza
+
+Sete di potere               : (lust for power) conferisce un bonus sui punti esperienza pari al 5%
+                               (ed il 5% in meno quando perdi esperienza)
+Brama di denaro              : (lust for money) conferisce un bonus al commercio con uno sconto del
+                               10% sul prezzo dai negozianti quando acquista e +10% di ricavo in piu'
+                               quando vende
+Apprendimento rapido         : +2 sessioni di pratica a livello
+
+Vedi anche: STRACCIONE
+
+#
+HALFOGRE HALF-OGRE
+
+I mezzi ogre somigliano a grossi umani, non sono particolarmente
+intelligenti ne' veloci, ma hanno una grande forza e buona costituzione.
+
+
+#
+"LUST FOR POWER" "SETE DI POTERE"
+
+| Sintassi          : nessuna, e' una abilita' passiva
+| Razza             : Uomini
+| Tempo di ricarica : -
+| Costo             : -
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : -
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 15%
+| Conoscenza max    : 50%
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Gli uomini hanno da sempre bramato il potere tra i popoli delle Nebbie e, nel corso
+|  dei secoli, hanno affinato questa abilita': i personaggi di razza umana possono 
+|  guadagnare il 5% di esperienza in piu' rispetto alle altre razze inoltre, nel caso di
+|  morte del personaggio, la perdita di esperienza e' diminuita del 5%.
+|__________________________________________________________________________________________
+
+Vedi anche: UOMINI, SETE DI DENARO
+
+#
+"LUST FOR MONEY" "SETE DI DENARO"
+
+| Sintassi          : nessuna, e' una abilita' passiva
+| Razza             : Uomini
+| Tempo di ricarica : -
+| Costo             : -
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : -
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 25%
+| Conoscenza max    : 75%
+| __________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Gli uomini sono considerati degli ottimi mercanti ed anche molto abili nel riconoscere
+|  il valore delle cose: i personaggi di razza umana riescono a mercanteggiare abilmente 
+|  e possono ottenere uno sconto del 10% dal prezzo degli oggetti dai negozianti ed ad
+|  aumentare il guadagno, sempre del 10%, di monete quando sono loro a vendere.
+|__________________________________________________________________________________________
+
+Vedi anche: UOMINI, SETE DI POTERE
+
+#
+"DETECT HIDDEN" "RIVELARE PASSAGGI SEGRETI"
+
+| Sintassi          : nessuna, e' una abilita' passiva
+| Razza             : Tutte le razze Elfiche, Mezzelfi e Nani
+| Tempo di ricarica : -
+| Costo             : -
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : -
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 10%
+| Conoscenza max    : 50% (Elfi), 40% (Mezzelfo), 59% (Nani)
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  Alcune razze hanno la possibilità' di rivelare i passaggi segreti, tra queste spiccano
+|  i Nani e la loro controparte Oscura poi tutte le razze elfiche (Elfi della Luna, Elfi
+|  Dorati, Elfi dei Boschi, Elfi dei Mari ed Elfi Oscuri) ed infine i Mezzelfi.
+|
+|__________________________________________________________________________________________
+
+Vedi anche: ELFI, NANI, MEZZELFO
+
+#
+BLOWKNEE "BLOW KNEE" "BLOW TO THE KNEE" "COLPO ALLE GINOCCHIA"
+
+| Sintassi          : blowknee <bersaglio>
+| Razza             : Nani
+| Tempo di ricarica : 24 ore
+| Costo             : 20 punti movimento
+| Tipo di danno     : Impatto
+| Danno             : 1d4 + costituzione
+| Durata            : 1d4 ore
+| Lag               : 3 round chi lo subisce, 2 round chi lo effettua
+| Spellfail         : -
+| Area effetto      : 1 creatura bersaglio
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 1%
+| Conoscenza max    : 95%
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  I Nani imparano presto l'Arte della Guerra e sono specializzati nell'abbattere i propri
+|  nemici con dei poderosi colpi alle ginocchia, facendo perdere l'equilibrio al proprio
+|  avversario di qualsiasi razza o forma. La vittima subisce anche una penalita' di 2
+|  punti alla destrezza. A causa dell'enorme sforzo compiuto per portare a segno il colpo
+|  questa abilita' puo' essere usata solo una volta al giorno.
+|
+|__________________________________________________________________________________________
+
+Vedi anche: NANI
+
+#
+"GREED FOR GOLD" CUPIDIGIA
+
+| Sintassi          : nessuna, e' una abilita' passiva
+| Razza             : Nani
+| Tempo di ricarica : -
+| Costo             : -
+| Tipo di danno     : -
+| Danno             : -
+| Durata            : -
+| Lag               : -
+| Spellfail         : -
+| Area effetto      : -
+| Tiro Salvezza     : -
+| Allineamento      : -
+| Conoscenza base   : 1%
+| Conoscenza max    : 50%
+|__________________________________________________________________________________________
+|
+| Effetto:
+|
+|  I Nani sono sicuramente la razza che subisce maggiormente il fascino dell'oro, per 
+|  questa ragione hanno la possibilita' di trovare un maggior quantitativo di monete
+|  d'oro (il 10% in piu') dai nemici sconfitti in battaglia. 
+|
+|__________________________________________________________________________________________
+
+Vedi anche: NANI
 
 #~
 

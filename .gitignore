@@ -216,9 +216,11 @@ autom4te.cache
 
 ########################################################################
 # Locally added
+docs/legacy-import-*.csv
 *.log
 *.log.*
 *.sql
+!docs/*.sql
 myst
 /config.h
 /.cproject
@@ -234,3 +236,10 @@ src/info
 /check.xml
 /lastcommit
 /codealike.json
+# Vagrant
+.vagrant/
+.vagrant.d/
+mysql_data/
+/migration_artifacts/
+/backups/
+/tmp-odb-inspect/

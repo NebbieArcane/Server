@@ -7,7 +7,11 @@
 #include <log4cxx/logger.h>
 #include <log4cxx/patternlayout.h>
 #include <log4cxx/fileappender.h>
+#if __has_include(<log4cxx/rolling/rollingfileappender.h>)
+#include <log4cxx/rolling/rollingfileappender.h>
+#else
 #include <log4cxx/rollingfileappender.h>
+#endif
 #include <log4cxx/consoleappender.h>
 #include <boost/filesystem.hpp>
 /***************************  General include ************************************/
@@ -67,7 +71,14 @@ log4cxx::LoggerPtr log_configure(log4cxx::LoggerPtr &loggerInstance,string logna
 	logfile.append("/").append(logname).append(suffix);
 	log4cxx::helpers::Pool p;
 	log4cxx::LayoutPtr l(new log4cxx::PatternLayout(LAYOUT_2));
-	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile,append));
+#if __has_include(<log4cxx/rolling/rollingfileappender.h>)
+	log4cxx::rolling::RollingFileAppenderPtr r(new log4cxx::rolling::RollingFileAppender());
+	r->setLayout(l);
+	r->setFile(logfile);
+	r->setAppend(append);
+#else
+	log4cxx::RollingFileAppenderPtr r(new log4cxx::RollingFileAppender(l, logfile, append));
+#endif
 	r->setMaxBackupIndex(numLogs);
 	log4cxx::LogString size("200MB");
 	r->setMaxFileSize(size);
