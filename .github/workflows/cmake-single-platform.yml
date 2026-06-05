@@ -3,7 +3,7 @@
 name: CMake on a single platform
 
 on:
-  
+  workflow_dispatch:
   push:
     branches: [ "feature/*" ]
     tags:
