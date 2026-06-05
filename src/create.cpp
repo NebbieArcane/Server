@@ -155,8 +155,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
 
         for(i = 0; i < 32; i++)
         {
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 
@@ -519,8 +518,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 
         for(i = 0; i < E_SECTOR_TYPES_COUNT; i++)
         {
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d %s\n\r");
             boost::format fmt2 (buf2);
 
@@ -683,8 +681,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 
         for(i = 0; i < 9; i++)
         {
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 

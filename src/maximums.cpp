@@ -1114,19 +1114,23 @@ void gain_exp_rev(struct char_data* ch, int gain) {
 								titles[ i ][ GET_LEVEL(ch, i) + 1 ].exp) {
 							/* do nothing..this is cool */
 						}
-						else if((GET_EXP(ch) + gain) >=
-								titles[ i ][ GET_LEVEL(ch, i) + 1].exp) {
+						else {
+							const int class_level = GET_LEVEL(ch, i);
+							const long long projected_exp = static_cast<long long>(GET_EXP(ch)) + static_cast<long long>(gain);
+							if(projected_exp < static_cast<long long>(titles[ i ][ class_level + 1].exp)) {
+								continue;
+							}
 							sprintf(buf, "Sei abbastanza esperto per essere un %s\n\r",
 									GET_CLASS_TITLE(ch, i, GET_LEVEL(ch, i) + 1));
 							send_to_char(buf, ch);
 							send_to_char("Devi passare dalla tua gilda per crescere di "
 										 "livello.\n\r", ch);
-							if((GET_EXP(ch) + gain) >=
-									titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp) {
+							const int next_title_exp = titles[ i ][ class_level + 2 ].exp;
+							if(projected_exp >= static_cast<long long>(next_title_exp)) {
 
 								/*BUG BUG overflow*/
-								if((titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1)>0) {
-									GET_EXP(ch) = titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1;
+								if(next_title_exp > 1) {
+									GET_EXP(ch) = next_title_exp - 1;
 								}
 								else {
 									send_to_char("Non prendi punti esperienza perche' oltrepassi la soglia massima!!!",ch);
@@ -1137,24 +1141,26 @@ void gain_exp_rev(struct char_data* ch, int gain) {
 					}
 				}
 
-				if((GET_EXP(ch) += gain)>0) {
-					GET_EXP(ch) += gain;
-				}
-				else {
+				const long long next_exp = static_cast<long long>(GET_EXP(ch)) + gain;
+				if(next_exp > 0) {
+					GET_EXP(ch) = static_cast<int>(next_exp);
+				} else {
 					send_to_char("Non prendi punti esperienza perche' oltrepassi la soglia massima!!!",ch);
 				}
 
 				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
 					if(GET_LEVEL(ch, i) &&
 							GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
-						if(GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp) {
-							GET_EXP(ch) = titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1;
+						const int class_level = GET_LEVEL(ch, i);
+						const int next_title_exp = titles[ i ][ class_level + 2 ].exp;
+						if(static_cast<long long>(GET_EXP(ch)) > static_cast<long long>(next_title_exp)) {
+							GET_EXP(ch) = next_title_exp - 1;
 						}
 					}
 				}
 			}
 			else { /*IS_NPC*/
-				GET_EXP(ch) += gain;
+				GET_EXP(ch) = static_cast<int>(static_cast<long long>(GET_EXP(ch)) + gain);
 			}
 		}
 		else if(gain < 0) {
@@ -1165,7 +1171,7 @@ void gain_exp_rev(struct char_data* ch, int gain) {
 					   GET_NAME(ch), -gain);
 				mudlog(LOG_SYSERR, "PKill loss 1");
 			}
-			GET_EXP(ch) += gain;
+			GET_EXP(ch) = static_cast<int>(static_cast<long long>(GET_EXP(ch)) + gain);
 			if(GET_EXP(ch) < 0) {
 				GET_EXP(ch) = 0;
 			}
@@ -1300,13 +1306,25 @@ void gain_exp_regardless(struct char_data* ch, int gain, int iClass,
 
 			else {
 				GET_EXP(ch) += gain;
-				for(i = 0; i < ABS_MAX_LVL && titles[ iClass ][ i ].exp <= GET_EXP(ch); i++) {
-					if(i > GET_LEVEL(ch, iClass) && GET_LEVEL(ch, iClass) < iMaxLevel) {
+				if(iClass < 0 || iClass >= MAX_CLASS) {
+					mudlog(LOG_SYSERR,
+						   "gain_exp_regardless: iClass=%d invalid for %s", iClass,
+						   GET_NAME_DESC(ch));
+				}
+				else {
+					const int start_level = GET_LEVEL(ch, iClass);
+					for(i = start_level + 1;
+						i < ABS_MAX_LVL && i <= iMaxLevel &&
+						titles[iClass][i].exp <= GET_EXP(ch);
+						++i) {
 						send_to_char("Cresci di un livello!\n\r", ch);
 						advance_level(ch, iClass);
 						is_altered = TRUE;
-						mudlog(LOG_SYSERR,"(LIMITS2)Maxxa la classe %d a %d",i,
-							   (titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1));
+						mudlog(LOG_SYSERR, "(LIMITS2)Maxxa la classe %d a %d", iClass,
+							   titles[iClass][GET_LEVEL(ch, iClass)].exp);
+						if(GET_LEVEL(ch, iClass) >= iMaxLevel) {
+							break;
+						}
 					}
 				}
 			}

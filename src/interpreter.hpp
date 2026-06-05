@@ -5,6 +5,9 @@
 #ifndef __INTERPRETER_HPP
 #define __INTERPRETER_HPP
 /***************************  System  include ************************************/
+#include <cstddef>
+#include <string>
+#include <utility>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 #define STAT_MIN_VAL 7
@@ -40,7 +43,11 @@ void check_affected(char* msg) ;
 void command_interpreter(struct char_data* ch, const char* argument) ;
 int fill_word(const char* argument) ;
 int find_name(char* name) ;
-void half_chop(const char* string, char* arg1, char* arg2,size_t len1=99,size_t len2=99) ;
+/** Due token separati dal primo spazio (come half_chop, senza buffer C). */
+std::pair<std::string, std::string> chop_argument(const char* argument,
+                                                  std::size_t maxFirst = 99,
+                                                  std::size_t maxSecond = 99);
+void half_chop(const char* string, char* arg1, char* arg2, size_t len1 = 99, size_t len2 = 99);
 int is_abbrev(const char* arg1, const char* arg2) ;
 int is_number(char* str) ;
 void nanny(struct descriptor_data* d, char* arg) ;

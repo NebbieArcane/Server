@@ -350,7 +350,7 @@ int GetThirdMaxLev(struct char_data* ch) {
 }
 
 int GetMaxLevel(struct char_data* ch) {
-	register int max=0, i;
+	int max=0, i;
 
 	for(i=0; i< MAX_CLASS; i++) {
 		if(GET_LEVEL(ch, i) > max) {
@@ -364,7 +364,7 @@ int GetMaxLevel(struct char_data* ch) {
 int GetMaxClass(struct char_data* ch)
 /* LA classe con il max di xp */
 {
-	register int i;
+	int i;
 	short k;
 	long max;
 	max =0;
@@ -383,7 +383,7 @@ int GetMaxClass(struct char_data* ch)
 int GetHighClass(struct char_data* ch)
 /* La classe col livello piu` alto */
 {
-	register int i;
+	int i;
 	short k;
 	k=0;
 	for(i=0; i< MAX_CLASS; i++) {

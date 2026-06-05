@@ -75,8 +75,9 @@ ROOMSPECIAL_FUNC(sBlockWay) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
-			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,ch);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			send_to_char(out_msg.c_str(), ch);
 			return TRUE;
 		}
 	}
@@ -109,8 +110,9 @@ MOBSPECIAL_FUNC(sMobBlockWay) {
 			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
-			sprintf(lev2,"%s\r\n",msg);
-			act(msg, FALSE, mob, 0, ch, TO_VICT);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			act(out_msg.c_str(), FALSE, mob, 0, ch, TO_VICT);
 			act("$n dice qualcosa a $N.", FALSE, mob, 0, ch, TO_NOTVICT);
 			return TRUE;
 		}
@@ -174,8 +176,12 @@ MOBSPECIAL_FUNC(LibroEroi) {
 	num2=0;
 
 	if(type == EVENT_COMMAND && cmd == CMD_SAY) {
-		half_chop(arg,runa,par2,sizeof runa -1,sizeof par2 -1);
-		if(isdigit(*par2)) {
+		const auto [runaStr, par2Str] = chop_argument(arg, sizeof(runa) - 1, sizeof(par2) - 1);
+		std::strncpy(runa, runaStr.c_str(), sizeof(runa) - 1);
+		runa[sizeof(runa) - 1] = '\0';
+		std::strncpy(par2, par2Str.c_str(), sizeof(par2) - 1);
+		par2[sizeof(par2) - 1] = '\0';
+		if(isdigit(static_cast<unsigned char>(par2[0]))) {
 			num2=atoi(par2);
 		}
 
@@ -802,8 +808,9 @@ ROOMSPECIAL_FUNC(BlockAlign) {
 			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
-			sprintf(dir,"%s\r\n",msg);
-			send_to_char(dir,ch);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			send_to_char(out_msg.c_str(), ch);
 			return TRUE;
 		}
 	}

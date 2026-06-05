@@ -29,6 +29,7 @@
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
+#include "toon_migration.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic.hpp"
@@ -1446,7 +1447,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 	struct char_data* newch;
 	struct char_file_u st;
 	struct descriptor_data* d;
-	FILE* fl,*fdeath;
+	FILE* fl;
 	char szFileName[ 40 ];
 	extern void load_char_extra(struct char_data* ch);
 
@@ -1470,39 +1471,57 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			return;
 		}
 
-		sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(obj->oldfilename));
-		if((fl = fopen(szFileName, "r+")) == NULL) {
-			mudlog(LOG_SYSERR, "Cannot find player file %s in reincarnate.",
-				   szFileName);
-			send_to_char("Problemi con il file del giocatore da reincarnare.\n\r",
+		const bool migrated_pc =
+#if USE_MYSQL
+			toon_is_migrated_by_name(obj->oldfilename);
+#else
+			false;
+#endif
+		if(!migrated_pc) {
+			sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(obj->oldfilename));
+			if((fl = fopen(szFileName, "r+")) == NULL) {
+				mudlog(LOG_SYSERR, "Cannot find player file %s in reincarnate.",
+					   szFileName);
+				send_to_char("Problemi con il file del giocatore da reincarnare.\n\r",
+							 ch);
+				send_to_char("Contattare un Dio.\n\r", ch);
+				return;
+			}
+			fread(&st, sizeof(struct char_file_u), 1, fl);
+		}
+		else if(!load_char_mysql(obj->oldfilename, &st)) {
+			mudlog(LOG_SYSERR, "reincarnate: load_char_mysql failed for migrated %s",
+				   obj->oldfilename);
+			send_to_char("Problemi con il database del giocatore da reincarnare.\n\r",
 						 ch);
 			send_to_char("Contattare un Dio.\n\r", ch);
 			return;
 		}
+		else {
+			fl = nullptr;
+		}
 
+		long snap_exp = 0;
+		long snap_at = 0;
 #if DEATH_FIX
-		sprintf(szFileName, "%s/%s.dead", PLAYERS_DIR, lower(obj->oldfilename));
-		if((fdeath = fopen(szFileName, "r+")) == NULL) {
-			mudlog(LOG_SYSERR, "Cannot find dead file %s in reincarnate.",
-				   szFileName);
+		if(!death_snapshot_load(obj->oldfilename, snap_exp, snap_at)) {
+			mudlog(LOG_SYSERR, "Cannot find death snapshot for %s in reincarnate.",
+				   obj->oldfilename);
 			send_to_char("Problemi con il file del giocatore da reincarnare.\n\r",
 						 ch);
 			send_to_char("Contattare un Dio.\n\r", ch);
-			fclose(fl);
+			if(fl) {
+				fclose(fl);
+			}
 			return;
 		}
 #endif
-		fread(&st, sizeof(struct char_file_u), 1, fl);
 		if(!get_char(st.name) && st.abilities.con > 3) {
 #if DEATH_FIX
-			long xp;
-			long ora;
-			fscanf(fdeath,"%ld : %ld",&xp,&ora);
-			st.points.exp=xp;
-			ora=(long)(time(0)-ora);
-			mudlog(LOG_PLAYERS, "%s resuscitato con reincarnate dopo %ld secondi",
-				   obj->oldfilename,ora);
-
+			st.points.exp = static_cast<int>(snap_exp);
+			const long elapsed = static_cast<long>(time(nullptr) - snap_at);
+			mudlog(LOG_PLAYERS, "%s resurrected with reincarnate after %ld seconds",
+				   obj->oldfilename, elapsed);
 #else
 			st.points.exp *= 5;
 			st.points.exp /= 4;
@@ -1549,8 +1568,10 @@ void spell_reincarnate(byte level, struct char_data* ch,
                 CheckAchie(ch, ACHIE_DRUID_3, CLASS_ACHIE);
             }
 
-			rewind(fl);
-			fwrite(&st, sizeof(struct char_file_u), 1, fl);
+			if(fl) {
+				rewind(fl);
+				fwrite(&st, sizeof(struct char_file_u), 1, fl);
+			}
 			ObjFromCorpse(obj);
 
 			CREATE(newch, struct char_data, 1);
@@ -1598,8 +1619,9 @@ void spell_reincarnate(byte level, struct char_data* ch,
 			send_to_char("Lo $c0014s$c0015p$c0014i$c0015r$c0014i$c0015t$c0014o$c0007 non ha abbastanza forza per "
 						 "reincarnarsi.\n\r", ch);
 		}
-		fclose(fl);
-		fclose(fdeath);
+		if(fl) {
+			fclose(fl);
+		}
 	}
 }
 
@@ -2476,7 +2498,7 @@ void spell_know_monster(byte level, struct char_data* ch,
 			}
 			if(IS_SET(victim->hatefield, HATE_CLASS)) {
 				sprintbit((unsigned)victim->hates.iClass, pc_class_types, buf2);
-				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
@@ -2488,21 +2510,21 @@ void spell_know_monster(byte level, struct char_data* ch,
 		if(level > 25) {
 			if(victim->susc) {
 				sprintbit(victim->susc, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 30) {
 			if(victim->immune) {
 				sprintbit(victim->immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}
 		if(level > 35) {
 			if(victim->M_immune) {
 				sprintbit(victim->M_immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%s$c0007.", buf2);
+				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%.200s$c0007.", buf2);
 				act(buf,FALSE, ch, 0, victim, TO_CHAR);
 			}
 		}

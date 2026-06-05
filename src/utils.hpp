@@ -300,8 +300,8 @@ namespace Alarmud {
 #define IS_CARRYING_N(ch) ((ch)->specials.carry_items)
 
 #define CAN_CARRY_OBJ(ch,obj)  \
-	(((IS_CARRYING_W(ch) + GET_OBJ_WEIGHT(obj)) <= CAN_CARRY_W(ch)) &&   \
-	 ((IS_CARRYING_N(ch) + 1) <= CAN_CARRY_N(ch)))
+	((static_cast<long long>(IS_CARRYING_W(ch)) <= (static_cast<long long>(CAN_CARRY_W(ch)) - static_cast<long long>(GET_OBJ_WEIGHT(obj)))) &&   \
+	 (IS_CARRYING_N(ch) < CAN_CARRY_N(ch)))
 
 #define CAN_GET_OBJ(ch, obj)   \
 	(CAN_WEAR((obj), ITEM_TAKE) && CAN_CARRY_OBJ((ch),(obj)) &&          \

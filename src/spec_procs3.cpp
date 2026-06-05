@@ -24,8 +24,7 @@
 #include "act.comm.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
-#include "act.obj1.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
@@ -3910,8 +3909,9 @@ ROOMSPECIAL_FUNC(sTeleport) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
-			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,ch);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			send_to_char(out_msg.c_str(), ch);
 			return TRUE;
 		}
 	}
@@ -3944,8 +3944,9 @@ ROOMSPECIAL_FUNC(BlockWay) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
 
-			sprintf(lev2,"%s\r\n",msg);
-			send_to_char(lev2,ch);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			send_to_char(out_msg.c_str(), ch);
 			return TRUE;
 		}
 	}
@@ -3978,8 +3979,9 @@ MOBSPECIAL_FUNC(MobBlockWay) {
 			if(!msg[0]) {
 				sprintf(msg,"Una forza oscura ti impedisce di passare");
 			}
-			sprintf(lev2,"%s\r\n",msg);
-			act(msg, FALSE, mob, 0, ch, TO_VICT);
+			std::string out_msg = msg;
+			out_msg += "\r\n";
+			act(out_msg.c_str(), FALSE, mob, 0, ch, TO_VICT);
 			act("$n dice qualcosa a $N.", FALSE, mob, 0, ch, TO_NOTVICT);
 			return TRUE;
 		}
@@ -5106,7 +5108,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
 
             switch(quest_type) {
 
-                case 0      :
+                case 0      : {
 
                     durata = GetMaxLevel(ch)/2;
 
@@ -5134,7 +5136,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
 
                     quest_tgt->player.name = (char*)strdup(buf2);
 
-                    sprintf(buf2, "%s, %s",buf2, quest_tgt->player.short_descr);
+                    std::string mob_name = buf2;
+                    mob_name += ", ";
+                    mob_name += quest_tgt->player.short_descr;
+                    std::snprintf(buf2, sizeof(buf2), "%s", mob_name.c_str());
 
                     quest_tgt->player.short_descr = (char*)strdup(buf2);
 
@@ -5215,7 +5220,8 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     }
 
                     break;
-                case 1      :
+                }
+                case 1      : {
                     durata = GetMaxLevel(ch)/4;
 
                     do {
@@ -5242,7 +5248,10 @@ MOBSPECIAL_FUNC(AssignQuest) {
 
                     quest_tgt->player.name = (char*)strdup(buf2);
 
-                    sprintf(buf2, "%s, %s",buf2, quest_tgt->player.short_descr);
+                    std::string mob_name = buf2;
+                    mob_name += ", ";
+                    mob_name += quest_tgt->player.short_descr;
+                    std::snprintf(buf2, sizeof(buf2), "%s", mob_name.c_str());
 
                     quest_tgt->player.short_descr = (char*)strdup(buf2);
 
@@ -5294,6 +5303,7 @@ MOBSPECIAL_FUNC(AssignQuest) {
                     }
 
                     break;
+                }
                 case 2      :
                     break;
                 case 3      :
@@ -5503,7 +5513,10 @@ MOBSPECIAL_FUNC(MobCaccia) {
                     if(x-af->duration < 2) {
                         strcat(buf, "un'ora");
                     } else {
-                        sprintf(buf,"%s%d ore",buf,x-af->duration);
+                        std::string msg = buf;
+                        msg += std::to_string(x - af->duration);
+                        msg += " ore";
+                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
                     }
                     strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
 
@@ -5815,7 +5828,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                 if(x-af->duration < 2) {
                                     strcat(buf, "un ora");
                                 } else {
-                                    sprintf(buf,"%s%d ore",buf,x-af->duration);
+                                    std::string msg = buf;
+                                    msg += std::to_string(x - af->duration);
+                                    msg += " ore";
+                                    std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
                                 }
                                 strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
 

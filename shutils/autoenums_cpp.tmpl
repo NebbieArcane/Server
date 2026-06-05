@@ -46,7 +46,7 @@ bool enum_validate(const <TMPL_VAR KEY ESCAPE="LOWERCASE"> value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const <TMPL_VAR KEY ESCAPE="LOWERCASE"> value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 </TMPL_LOOP>

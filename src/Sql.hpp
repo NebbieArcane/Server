@@ -25,6 +25,16 @@ public:
 extern sqlTrace logTracer;
 class Sql {
 public:
+	template <typename T>
+	static boost::shared_ptr<T> toSharedPtr(T* datum) {
+		return boost::shared_ptr<T>(datum);
+	}
+
+	template <typename T>
+	static boost::shared_ptr<T> toSharedPtr(const boost::shared_ptr<T>& datum) {
+		return datum;
+	}
+
 #if USE_MYSQL
 	static odb::database* getMysql();
 #endif
@@ -40,7 +50,7 @@ public:
 			t.tracer(logTracer);
 			auto datum(db->load<T>(key));
 			t.commit();
-			return datum;
+			return toSharedPtr(datum);
 		}
 		catch (odb::exception &e) {
 			return boost::make_shared<T>();
@@ -68,9 +78,9 @@ public:
 			DB* db = Sql::getMysql();
 			odb::transaction t(db->begin());
 			t.tracer(logTracer);
-			boost::shared_ptr<T> datum=db->query_one<T>(key);
+			auto datum(db->query_one<T>(key));
 			t.commit();
-			return datum;
+			return toSharedPtr(datum);
 		}
 		catch (odb::exception &e) {
 			return boost::make_shared<T>();

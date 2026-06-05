@@ -5,10 +5,13 @@
 //  Original intial comments
 /*AlarMUD*/
 /***************************  System  include ************************************/
+#include <algorithm>
+#include <random>
 #include <cstring>
 #include <cctype>
 #include <cstdio>
 #include <string>
+#include <string_view>
 #include <arpa/telnet.h>
 #include <unistd.h>
 #include <cstdlib>
@@ -34,12 +37,12 @@
 #include "act.comm.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
-#include "act.obj1.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
+#include "multiclass.hpp"	//aggiunto per la nuova gestiopne del salvataggio pwd toon alla creazione
 #include "breath.hpp"
 #include "comm.hpp"
 #include "create.hpp"
@@ -57,10 +60,35 @@
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
 #include "Sql.hpp"
+#include "legacy_import.hpp"
+#include "toon_migration.hpp"
+#include "toon_nuke_blacklist.hpp"
 
 namespace Alarmud {
 using std::string;
 
+#if USE_MYSQL
+/** PG con cutover DB: niente save rent/corpo all'ingresso menu (gia' in MySQL). */
+static bool skip_menu_enter_save(struct char_data* ch) {
+	return ch && IS_PC(ch) && toon_is_migrated_by_name(GET_NAME(ch));
+}
+#else
+static bool skip_menu_enter_save(struct char_data*) {
+	return false;
+}
+#endif
+
+namespace {
+
+bool toon_exists_in_db(const char* name) {
+	if(!name || !*name) {
+		return false;
+	}
+	toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	return pg && pg->id;
+}
+
+} // namespace
 
 /* $Id: interpreter.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $
  * */
@@ -511,11 +539,14 @@ void command_interpreter(struct char_data* ch, const char* argument) {
 			}
 		}
 		else {
-			int i=0;
-			half_chop(argument, buf1, buf2,sizeof buf1 -1,sizeof buf2 -1);
-			while(buf1[i] != '\0') {
+			const auto [cmd, rest] =
+			    chop_argument(argument, sizeof(buf1) - 1, sizeof(buf2) - 1);
+			std::strncpy(buf1, cmd.c_str(), sizeof(buf1) - 1);
+			buf1[sizeof(buf1) - 1] = '\0';
+			std::strncpy(buf2, rest.c_str(), sizeof(buf2) - 1);
+			buf2[sizeof(buf2) - 1] = '\0';
+			for(int i = 0; buf1[i] != '\0'; ++i) {
 				buf1[i] = LOWER(buf1[i]);
-				i++;
 			}
 		}
 
@@ -827,30 +858,51 @@ int is_abbrev(const char* arg1, const char* arg2) {
 
 
 
+std::pair<std::string, std::string> chop_argument(const char* argument, std::size_t maxFirst,
+                                                  std::size_t maxSecond) {
+	std::pair<std::string, std::string> result;
+	if(argument == nullptr || argument[0] == '\0') {
+		return result;
+	}
+
+	std::string_view rest(argument);
+	const std::size_t lead = rest.find_first_not_of(' ');
+	if(lead == std::string_view::npos) {
+		return result;
+	}
+	rest.remove_prefix(lead);
+
+	const std::size_t space = rest.find(' ');
+	if(space == std::string_view::npos) {
+		result.first = std::string(rest.substr(0, maxFirst));
+		return result;
+	}
+
+	result.first = std::string(rest.substr(0, std::min(space, maxFirst)));
+	rest.remove_prefix(space);
+	if(maxSecond == 0) {
+		return result;
+	}
+
+	const std::size_t cmdLead = rest.find_first_not_of(' ');
+	if(cmdLead != std::string_view::npos) {
+		rest.remove_prefix(cmdLead);
+		result.second = std::string(rest.substr(0, maxSecond));
+	}
+	return result;
+}
+
 /**
  * Split the string in two at the first space
- * Arguments returned are guaranteed to not be longer than requeste.
+ * Arguments returned are guaranteed to not be longer than requested.
  * Default length is 99 for both arguments
  */
-void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t len2) {
-	std::string work(argument);
-	try {
-		boost::algorithm::trim_left(work);
-	}
-	catch(exception &e) {
-		LOG_ALERT("Chopping " << work << " " << e.what());
-	}
-	size_t space=work.find_first_of(" ");
-	if(space==std::string::npos) {  // No space found, only one argument
-		arg2[0]='\0';
-		std::strcpy(arg1,work.substr(0,len1).c_str());
-	}
-	else {
-		std::strcpy(arg1,work.substr(0,min<size_t>(space,len1)).c_str());
-		work=work.substr(space);
-		boost::algorithm::trim_left(work);
-		std::strcpy(arg2,work.substr(0,len2).c_str());
-	}
+void half_chop(const char* argument, char* arg1, char* arg2, size_t len1, size_t len2) {
+	const auto [first, second] = chop_argument(argument, len1, len2);
+	std::strncpy(arg1, first.c_str(), len1);
+	arg1[len1] = '\0';
+	std::strncpy(arg2, second.c_str(), len2);
+	arg2[len2] = '\0';
 	return;
 	/*
 
@@ -886,8 +938,8 @@ void half_chop(const char* argument, char* arg1, char* arg2,size_t len1,size_t l
 
 
 int special(struct char_data* ch, int cmd, const char* arg) {
-	register struct obj_data* i;
-	register struct char_data* k;
+	struct obj_data* i;
+	struct char_data* k;
 	int j;
 	if(ch->in_room == NOWHERE) {
 		char_to_room(ch, 3001);
@@ -1310,6 +1362,7 @@ void assign_command_pointers() {
   //AddCommand( "store",                do_not_here,        CMD_STORE,                  POSITION_STANDING,  1                       );
 	AddCommand( "carve",                do_carve,           CMD_CARVE,                  POSITION_STANDING,  1                       );  /*  335 */
 	AddCommand( "nuke",                 do_nuke,            CMD_NUKE,                   POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "forgive",              do_forgive,         CMD_FORGIVE,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "skills",               do_show_skill,      CMD_SKILLS,                 POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "doorway",              do_doorway,         CMD_DOORWAY,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "portal",               do_psi_portal,      CMD_PORTAL,                 POSITION_STANDING,  TUTTI                   );
@@ -1478,6 +1531,9 @@ void assign_command_pointers() {
   //AddCommand("perdono",               do_perdono,         CMD_PERDONO,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "immolate",             do_immolation,      CMD_IMMOLATION,             POSITION_FIGHTING,  TUTTI                   );
 	AddCommand( "SetTest",              do_imptest,         CMD_IMPTEST,                POSITION_DEAD,      MAESTRO_DEL_CREATO      );
+	AddCommand( "legacyprobe",          do_legacyprobe,     CMD_LEGACYPROBE,            POSITION_DEAD,      MAESTRO_DEL_CREATO      );
+	AddCommand( "legacyimport",         do_legacyimport,    CMD_LEGACYIMPORT,           POSITION_DEAD,      MAESTRO_DEL_CREATO      );
+	AddCommand( "legacyloadcheck",      do_legacyloadcheck, CMD_LEGACYLOADCHECK,        POSITION_DEAD,      MAESTRO_DEL_CREATO      );
   AddCommand( "checkachie",           do_checkachielevel, CMD_CHECKACHIELEVEL,        POSITION_DEAD,      TUTTI                   );
 }
 
@@ -1666,7 +1722,6 @@ void ShowStatInstruction(struct descriptor_data* d) {
 }
 void ShowRollInstruction(struct descriptor_data* d) {
 	char buf[ 200 ];
-	char temp[200];
 
 	sprintf(buf, "Hai scelto la creazione del personaggio per esperti.\n\r");
 	SEND_TO_Q(buf, d);
@@ -1689,8 +1744,9 @@ void ShowRollInstruction(struct descriptor_data* d) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d\n\r\n\r",temp,
+	SEND_TO_Q(buf,d);
+	SEND_TO_Q("FO IN SA AG CO CA RN\n\r",d);
+	snprintf(buf, sizeof(buf), "%2d %2d %2d %2d %2d %2d\n\r\n\r",
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1705,8 +1761,9 @@ void ShowRollInstruction(struct descriptor_data* d) {
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*3)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*4)),
 			STAT_MIN_VAL+MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*5)));
-	sprintf(temp,"%sFO IN SA AG CO CA RN\n\r",buf);
-	sprintf(buf,"%s%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",temp,
+	SEND_TO_Q(buf,d);
+	SEND_TO_Q("FO IN SA AG CO CA RN\n\r",d);
+	snprintf(buf, sizeof(buf), "%2d %2d %2d %2d %2d %2d %2s\n\r\n\r",
 			18-STAT_MIN_VAL,
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*1)),
 			MAX(0,MIN(18-STAT_MIN_VAL,STAT_MAX_SUM-(18-STAT_MIN_VAL)*2)),
@@ -1841,14 +1898,16 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 	string message(optional_message);
 	message.append("Scegli un personagggio\r\n").append(" q. Quit\n\r 0. Crea un nuovo pg o usane uno non ancora connesso all'account\r\n");
 	if (d->AccountData.id) { short n=0;
-		constexpr int nlen=5;
-		char order[nlen]="";
 		toonRows r=Sql::getAll<toon>(toonQuery::owner_id==d->AccountData.id);
 		d->toons.clear();
 		for(toonPtr pg : r) {
+#if USE_MYSQL
+			if(pg->id && toon_nuke_is_blocked(Sql::getMysql(), pg->id, pg->name.c_str())) {
+				continue;
+			}
+#endif
 			++n;
-			snprintf(order,nlen-1,"%2d",n);
-			message.append(order).append(". ").append(pg->name).append(" ");
+			message.append(std::to_string(n)).append(". ").append(pg->name).append(" ");
 			message.append(ParseAnsiColors(true,pg->title.c_str())).append("\r\n");
 			d->toons.emplace_back(pg->name);
 		}
@@ -1857,6 +1916,12 @@ void toonList(struct descriptor_data* d,const string &optional_message="") {
 	SEND_TO_Q(message.c_str(),d);
 }
 bool toonFromFileSystem(const char* nome) {
+#if USE_MYSQL
+	if(nome && *nome && toon_nuke_is_blocked(Sql::getMysql(), 0, nome)) {
+		mudlog(LOG_CONNECT, "toonFromFileSystem: %s in nuke blacklist", nome);
+		return false;
+	}
+#endif
 	using namespace boost::filesystem;
 	path file(current_path());
 	file/=PLAYERS_DIR; // Overloaded operator: concats adding path separator
@@ -2021,6 +2086,7 @@ NANNY_FUNC(con_account_toon) {
 			mudlog(LOG_CONNECT,"Choosen %s",name.c_str());
 			d->AccountData.choosen=name;
 			d->currentInput=name;
+			d->justCreated = false;
 			STATE(d)=CON_PWDOK;
 			return true;
 		}
@@ -2381,11 +2447,11 @@ NANNY_FUNC(con_qclass) {
 			/*
 			  ** now that classes are set, initialize
 			  */
-			init_char(d->character);
+			//init_char(d->character);  <-- commentato per implementare il nuovo meccanismo di salvataggio pwd del toon
 
 			/* crea i files relativi a char */
 
-			save_char(d->character, AUTO_RENT, 0);
+			//save_char(d->character, AUTO_RENT, 0);  <-- commentato per implementare il nuovo meccanismo di salvataggio pwd del toon
 
 			if(HasClass(d->character,CLASS_MAGIC_USER)) {
 				SEND_TO_Q(RU_SORCERER, d);
@@ -2404,6 +2470,8 @@ NANNY_FUNC(con_qclass) {
 	return false;
 }
 
+static inline void send_zero_gold_warning(struct char_data* ch);
+
 NANNY_FUNC(con_slct) {
 	switch(firstChar(d->currentInput)) {
 	case '0':
@@ -2412,6 +2480,11 @@ NANNY_FUNC(con_slct) {
 		break;
 
 	case 'c': {
+		if(!d->character || !GET_NAME(d->character)) {
+			SEND_TO_Q("Nessun personaggio selezionato.\r\n", d);
+			SEND_TO_Q(MENU, d);
+			break;
+		}
 		if(GetMaxLevel(d->character)>=CHUMP) {
 			SEND_TO_Q("Sei sicuro di volerti cancellare ? (si/no): ",d);
 			STATE(d)=CON_DELETE_ME;
@@ -2421,6 +2494,45 @@ NANNY_FUNC(con_slct) {
 	/* FALLTHRU */
 	case '1':
 	{
+		if(d->character && IS_PC(d->character) && !d->character->desc) {
+			/* PG estratto al menu (quit): ricollega desc prima di entrare in gioco */
+			d->character->desc = d;
+		}
+		if(!d->character || !GET_NAME(d->character) || !*GET_NAME(d->character)) {
+			SEND_TO_Q("Nessun personaggio selezionato. Usa l'opzione 5 per sceglierne uno.\r\n", d);
+			SEND_TO_Q(MENU, d);
+			break;
+		}
+		if(!toon_exists_in_db(GET_NAME(d->character))) {
+			const std::string deleted_name(GET_NAME(d->character));
+			mudlog(LOG_PLAYERS, "%s: menu enter after delete/missing toon", deleted_name.c_str());
+			free_char(d->character);
+			d->character = nullptr;
+			d->justCreated = false;
+			auto& roster = d->toons;
+			roster.erase(std::remove(roster.begin(), roster.end(), deleted_name), roster.end());
+			SEND_TO_Q("Questo personaggio non esiste piu'.\r\n", d);
+			if(d->AccountData.authorized) {
+				toonList(d, "");
+				STATE(d) = CON_ACCOUNT_TOON;
+			}
+			else {
+				SEND_TO_Q("Nome: ", d);
+				STATE(d) = CON_NME;
+			}
+			break;
+		}
+#if USE_MYSQL
+		/* Dopo morte/resurrect al menu: RAM puo' avere exp post-morte; ricarica da DB. */
+		if(IS_PC(d->character) && toon_is_migrated_by_name(GET_NAME(d->character))) {
+			char_file_u menu_reload {};
+			if(load_char_mysql(GET_NAME(d->character), &menu_reload)) {
+				store_to_char(&menu_reload, d->character);
+				mudlog(LOG_CONNECT, "con_slct: reloaded %s from MySQL before enter",
+					   GET_NAME(d->character));
+			}
+		}
+#endif
 		reset_char(d->character);
 		int Level=GetMaxLevel(d->character);
 		if (PORT==RELEASE_PORT) {
@@ -2520,19 +2632,25 @@ NANNY_FUNC(con_slct) {
 				d->character);
 		if(IsTest())
 			send_to_char(
-				"                 $c0115SEI SU MYST2!!!!!!!!!!!!!!!!!!!!!                    $c0007\n\r",
+				"                 $c0115SEI SU MYST2!$c0007\n\r",
 				d->character);
 		d->prompt_mode = 1;
 		if(IS_SET(d->character->player.user_flags,RACE_WAR))
 			send_to_char(
-				"$c0115            RICORDATI CHE  SEI PKILL!!.\n\r",
+				"            $c0115RICORDATI CHE SEI PKILL!$c0007\n\r",
 				d->character);
+		send_zero_gold_warning(d->character);
 		mudlog(LOG_CHECK, "%s is in game.", d->character->player.name);
-        do_save(d->character, "", 0);
-
-    // Quest Achievement
-        CheckQuestFail(d->character);
-        write_char_extra(d->character);
+		if(!skip_menu_enter_save(d->character)) {
+			do_save(d->character, "", 0);
+			CheckQuestFail(d->character);
+			write_char_extra(d->character);
+		}
+		else {
+			mudlog(LOG_SAVE, "con_slct: skip enter save for migrated %s",
+				   GET_NAME(d->character));
+			CheckQuestFail(d->character);
+		}
 
 		{
 			struct room_data* rp = real_roomp(d->character->in_room);
@@ -2585,6 +2703,7 @@ NANNY_FUNC(con_slct) {
 	case '5':
 		free_char(d->character);
 		d->character=nullptr;
+		d->justCreated = false;
 		if(d->AccountData.authorized) {
 			toonList(d,"Cambia personaggio:\n\r");
 			STATE(d) = CON_ACCOUNT_TOON;
@@ -2643,6 +2762,13 @@ NANNY_FUNC(con_nme) {
 		}
 	}
 	if(pg) {
+#if USE_MYSQL
+		if(pg->id && toon_nuke_is_blocked(Sql::getMysql(), pg->id, pg->name.c_str())) {
+			SEND_TO_Q("Questo personaggio e' stato bandito dagli dei e non puo' piu' entrare.\n\r", d);
+			SEND_TO_Q("Nome: ", d);
+			return false;
+		}
+#endif
 		mudlog(LOG_CONNECT,"Toon found on db, registered to %d",pg->owner_id);
 		found=true;
 		strcpy(d->pwd,pg->password.substr(0,11).c_str());
@@ -2760,7 +2886,62 @@ NANNY_FUNC(con_pwdnrm) {
 	return true;
 }
 NANNY_FUNC(con_register) {
-	if(d->AccountData.authorized) {
+	if(d->justCreated) {
+		// --- INIZIO NUOVA LOGICA DI CREAZIONE ---
+		// 1. Inizializza il personaggio (spostato da con_qclass)
+		// Questo imposta livelli=1, HP, mana, stats, ecc.
+		init_char(d->character);
+		/* roll_abilities era in do_start (solo se livello 0); con StartLevels qui
+		 * do_start non parte più e le stat scelte in creazione non venivano applicate */
+		roll_abilities(d->character);
+		StartLevels(d->character);
+
+		try {
+			// 2. Crea e popola il record del database 'toon'
+			toonPtr pg = boost::make_shared<toon>();
+			pg->name = GET_NAME(d->character);
+
+			// d->pwd è il char[11] che contiene la password criptata
+			// (impostato in con_pwdcnf)
+			pg->password = string(d->pwd);
+
+			pg->title = (GET_TITLE(d->character) ? GET_TITLE(d->character) : "");
+			pg->level = GetMaxLevel(d->character); // Sarà 1
+			pg->lastlogin = boost::posix_time::from_time_t(time(nullptr)); // Ora
+			pg->lasthost = d->host;
+
+			// Associa l'account se l'utente è ga' loggato
+			if(d->AccountData.authorized) {
+				pg->owner_id = d->AccountData.id;
+			}
+
+			// 3. Salva nel DB (FONTE PRIMARIA)
+			if (!Sql::save(*pg)) {
+				mudlog(LOG_SYSERR, "con_register: Sql::save failed for %s", pg->name.c_str());
+				SEND_TO_Q("Errore critico nella creazione del personaggio sul DB.\n\r", d);
+				close_socket(d);
+				return false;
+			} else {
+				mudlog(LOG_CONNECT, "con_register: new toon record for %s", pg->name.c_str());
+			}
+
+		} catch (const odb::exception& e) {
+			mudlog(LOG_SYSERR, "con_register: ODB error: %s", e.what());
+			SEND_TO_Q("Errore ODB nella creazione del personaggio.\n\r", d);
+			close_socket(d);
+			return false;
+		}
+
+		// 4. Ora salva il file .dat (per compatibilita' con refund/ghost)
+		save_char(d->character, AUTO_RENT, 0);
+		mudlog(LOG_CONNECT, "con_register: new synced .dat for %s", GET_NAME(d->character));
+
+		// --- FINE NUOVA LOGICA DI CREAZIONE ---
+		/* justCreated resta true fino a con_pwdok: non ricaricare da MySQL il PG appena creato */
+
+	} else if(d->AccountData.authorized) {
+		// Questa è la vecchia logica di 'con_register',
+		// per associare PG *esistenti* all'account.
 		boost::format fmt(R"(UPDATE toon SET owner_id =%d WHERE name="%s")");
 		fmt % d->AccountData.id % d->AccountData.choosen;
 		try {
@@ -2785,16 +2966,72 @@ NANNY_FUNC(con_pwdok) {
 		d->character->desc = d;
 		SET_BIT(d->character->player.user_flags, USE_PAGING);
 	}
-	/* Newly created toons are fully loaded
-	 */
-	if(!d->justCreated) {
+	/* PG appena creato: gia' in RAM da con_register; MySQL ha il corpo ma non
+	 * sovrascrivere (stats/classi potrebbero non essere ancora coerenti). */
+	const bool skip_mysql_load = d->justCreated;
+	if(skip_mysql_load) {
+		d->justCreated = false;
+	}
+	if(!skip_mysql_load) {
 		char_file_u tmp_store;
-		if(load_char(d->AccountData.choosen.c_str(), &tmp_store)) {
+		bool loaded = false;
+		const std::string toon_name = d->AccountData.choosen;
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == toon_name);
+#if USE_MYSQL
+		if(pg && pg->id && toon_nuke_is_blocked(Sql::getMysql(), pg->id, toon_name.c_str())) {
+			SEND_TO_Q("Questo personaggio e' stato bandito dagli dei e non puo' piu' entrare.\n\r", d);
+			if(d->AccountData.authorized) {
+				toonList(d, "");
+				STATE(d) = CON_ACCOUNT_TOON;
+			}
+			else {
+				STATE(d) = CON_NME;
+				SEND_TO_Q("Nome: ", d);
+			}
+			return false;
+		}
+#endif
+		bool block_file_fallback = false;
+		if(pg && pg->id) {
+			DB* db = Sql::getMysql();
+			if(toon_needs_migration(db, *pg)) {
+				LegacyImportReport rep {};
+				if(legacy_import_character_mysql(toon_name.c_str(), rep)) {
+					mudlog(LOG_CONNECT, "con_pwdok: lazy migration OK for %s (%s)",
+						   toon_name.c_str(), rep.message.c_str());
+				}
+				else {
+					mudlog(LOG_SYSERR, "con_pwdok: lazy migration FAILED for %s (%s)",
+						   toon_name.c_str(), rep.message.c_str());
+				}
+			}
+
+			if(toon_migration_sanity_check(db, *pg) &&
+			   load_char_mysql(toon_name.c_str(), &tmp_store)) {
+				store_to_char(&tmp_store, d->character);
+				loaded = true;
+				mudlog(LOG_CONNECT, "con_pwdok: loaded %s from MySQL", toon_name.c_str());
+			}
+			else if(toon_is_migrated(db, *pg)) {
+				block_file_fallback = true;
+				mudlog(LOG_SYSERR,
+					   "con_pwdok: MySQL load failed for migrated %s — no file fallback",
+					   toon_name.c_str());
+			}
+			else {
+				mudlog(LOG_SYSERR,
+					   "con_pwdok: MySQL load failed/sanity KO for %s, fallback to file",
+					   toon_name.c_str());
+			}
+		}
+		if(!loaded && !block_file_fallback && load_char(toon_name.c_str(), &tmp_store)) {
 			store_to_char(&tmp_store, d->character);
-		}	//TODO: Inserire qui load del pg
-		else {
+			loaded = true;
+			mudlog(LOG_CONNECT, "con_pwdok: loaded %s from file fallback", toon_name.c_str());
+		}
+		if(!loaded) {
 			//Something went terribly wrong
-			mudlog(LOG_SYSERR,"Non trovo %s in CON_PWDOK ?!?",d->AccountData.choosen.c_str());
+			mudlog(LOG_SYSERR, "con_pwdok: cannot load %s", d->AccountData.choosen.c_str());
 			FLUSH_TO_Q("Unable to load ",d);
 			FLUSH_TO_Q(d->AccountData.choosen.c_str(),d);
 			close_socket(d);
@@ -2972,7 +3209,7 @@ NANNY_FUNC(con_qrace) {
 				i++;
 			}
 			tmpi=atoi(arg);
-			if(tmpi>=0 && tmpi <=i-1) {
+			if(tmpi >= 0 && tmpi < i) {
 				/* set the chars race to this */
 				GET_RACE(d->character) = race_choice[tmpi];
 				string buf("Quale'e' il sesso di ");
@@ -3159,6 +3396,15 @@ NANNY_FUNC(con_check_mage_type) {
 	STATE(d) = CON_RNEWD;
 	return false;
 }
+
+static inline void send_zero_gold_warning(struct char_data* ch) {
+	if(IS_PC(ch) && GET_GOLD(ch) <= 0) {
+		send_to_char(
+			"$c0011ATTENZIONE:$c0007 entri senza monete in tasca.\n\r",
+			ch);
+	}
+}
+
 NANNY_FUNC(con_rmotd) {
 	if(GetMaxLevel(d->character) > IMMORTALE) {
 		SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,
@@ -3215,7 +3461,9 @@ NANNY_FUNC(con_city_choice) {
 				   d->character->player.name);
 			load_char_objs(d->character, FALSE);
 			SetStatus("int 1",NULL,NULL);
-			save_char(d->character, AUTO_RENT, 0);
+			if(!skip_menu_enter_save(d->character)) {
+				save_char(d->character, AUTO_RENT, 0);
+			}
 			SetStatus("int 2",NULL,NULL);
 			send_to_char(WELC_MESSG, d->character);
 			SetStatus("int 3",NULL,NULL);
@@ -3248,7 +3496,9 @@ NANNY_FUNC(con_city_choice) {
 			reset_char(d->character);
 			mudlog(LOG_CONNECT, "2.Loading %s's equipment",d->character->player.name);
 			load_char_objs(d->character, FALSE);
-			save_char(d->character, AUTO_RENT, 0);
+			if(!skip_menu_enter_save(d->character)) {
+				save_char(d->character, AUTO_RENT, 0);
+			}
 			send_to_char(WELC_MESSG, d->character);
 			d->character->next = character_list;
 			character_list = d->character;
@@ -3264,6 +3514,7 @@ NANNY_FUNC(con_city_choice) {
 				do_start(d->character);
 			}
 			do_look(d->character, "",15);
+			send_zero_gold_warning(d->character);
 			d->prompt_mode = 1;
 			break;
 		case '3':
@@ -3272,7 +3523,9 @@ NANNY_FUNC(con_city_choice) {
 				mudlog(LOG_CONNECT, "3.Loading %s's equipment",
 					   d->character->player.name);
 				load_char_objs(d->character, FALSE);
-				save_char(d->character, AUTO_RENT, 0);
+				if(!skip_menu_enter_save(d->character)) {
+					save_char(d->character, AUTO_RENT, 0);
+				}
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;
@@ -3290,6 +3543,7 @@ NANNY_FUNC(con_city_choice) {
 					do_start(d->character);
 				}
 				do_look(d->character, "",15);
+				send_zero_gold_warning(d->character);
 				d->prompt_mode = 1;
 			}
 			else {
@@ -3303,7 +3557,9 @@ NANNY_FUNC(con_city_choice) {
 				mudlog(LOG_CONNECT, "4.Loading %s's equipment",
 					   d->character->player.name);
 				load_char_objs(d->character, FALSE);
-				save_char(d->character, AUTO_RENT, 0);
+				if(!skip_menu_enter_save(d->character)) {
+					save_char(d->character, AUTO_RENT, 0);
+				}
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;
@@ -3323,6 +3579,7 @@ NANNY_FUNC(con_city_choice) {
 					do_start(d->character);
 				}
 				do_look(d->character, "",15);
+				send_zero_gold_warning(d->character);
 				d->prompt_mode = 1;
 			}
 			else {
@@ -3336,7 +3593,9 @@ NANNY_FUNC(con_city_choice) {
 				mudlog(LOG_CONNECT, "5.Loading %s's equipment",
 					   d->character->player.name);
 				load_char_objs(d->character, FALSE);
-				save_char(d->character, AUTO_RENT, 0);
+				if(!skip_menu_enter_save(d->character)) {
+					save_char(d->character, AUTO_RENT, 0);
+				}
 				send_to_char(WELC_MESSG, d->character);
 				d->character->next = character_list;
 				character_list = d->character;
@@ -3356,6 +3615,7 @@ NANNY_FUNC(con_city_choice) {
 					do_start(d->character);
 				}
 				do_look(d->character, "",15);
+				send_zero_gold_warning(d->character);
 				d->prompt_mode = 1;
 			}
 			else {
@@ -3373,32 +3633,58 @@ NANNY_FUNC(con_city_choice) {
 }
 NANNY_FUNC(con_delete_me) {
 	oldarg(false);
+	if(!d->character || !GET_NAME(d->character) || !*GET_NAME(d->character)) {
+		SEND_TO_Q("Nessun personaggio da cancellare.\r\n", d);
+		SEND_TO_Q(MENU, d);
+		STATE(d) = CON_SLCT;
+		return false;
+	}
 	if(!strcmp(arg,"si") && strcmp("Guest",GET_NAME(d->character))) {
 		char buf[MAX_INPUT_LENGTH * 2];
+		const std::string deleted_name(GET_NAME(d->character));
 
-		mudlog(LOG_PLAYERS, "%s just killed self!",
-			   GET_NAME(d->character));
-		sprintf(buf, "rm %s/%s.dat", PLAYERS_DIR,
-				lower(GET_NAME(d->character)));
+		mudlog(LOG_PLAYERS, "%s just killed self!", deleted_name.c_str());
+		sprintf(buf, "rm -f %s/%s.dat", PLAYERS_DIR, lower(deleted_name.c_str()));
 		system(buf);
-		sprintf(buf, "rm %s/%s", RENT_DIR, lower(GET_NAME(d->character)));
+		sprintf(buf, "rm -f %s/%s.dead", PLAYERS_DIR, lower(deleted_name.c_str()));
 		system(buf);
-		sprintf(buf, "rm %s/%s.aux", RENT_DIR, lower(GET_NAME(d->character)));
+		sprintf(buf, "rm -f %s/%s", RENT_DIR, lower(deleted_name.c_str()));
 		system(buf);
-		toonPtr pg=Sql::getOne<toon>(toonQuery::name==string(GET_NAME(d->character)));
-		if (pg) Sql::erase(*pg,true);
-		SEND_TO_Q("Done\n\t",d);
-        if (d->AccountData.id) {    // controllo se ha un id
-		SEND_TO_Q(MENU,d);
-		STATE(d)= CON_SLCT;
-        }
-        else
-        {
-            Sql::update(d->AccountData);
-            toonUpdate(d);
-            close_socket(d);
-            return false;
-        }
+		sprintf(buf, "rm -f %s/%s.aux", RENT_DIR, lower(deleted_name.c_str()));
+		system(buf);
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == deleted_name);
+		if(pg && pg->id) {
+			try {
+				DB* db = Sql::getMysql();
+				odb::transaction t(db->begin());
+				t.tracer(logTracer);
+				legacy_delete_character_rows(db, pg->id);
+				db->erase(*pg);
+				t.commit();
+			}
+			catch(const odb::exception& e) {
+				mudlog(LOG_SYSERR, "con_delete_me: DB delete failed for %s: %s",
+					   deleted_name.c_str(), e.what());
+			}
+		}
+		free_char(d->character);
+		d->character = nullptr;
+		d->justCreated = false;
+		if(d->AccountData.choosen == deleted_name) {
+			d->AccountData.choosen.clear();
+		}
+		auto& roster = d->toons;
+		roster.erase(std::remove(roster.begin(), roster.end(), deleted_name), roster.end());
+		SEND_TO_Q("Done\n\t", d);
+		if(d->AccountData.id) {
+			toonList(d, "");
+			STATE(d) = CON_ACCOUNT_TOON;
+		}
+		else {
+			Sql::update(d->AccountData);
+			close_socket(d);
+			return false;
+		}
 	}
 	else {
 		SEND_TO_Q(MENU,d);
@@ -3418,7 +3704,11 @@ NANNY_FUNC(con_pwdnew) {
 	}
 	string salt(RandomWord());
 	salt.append(RandomWord());
-	random_shuffle(salt.begin(),salt.end());
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::shuffle(salt.begin(), salt.end(), gen);
+	}
 	strncpy(d->pwd,crypt(arg, salt.c_str()), 10);
 	*(d->pwd + 10) = '\0';
 	echoOn(d);
@@ -3524,6 +3814,9 @@ void nanny(struct descriptor_data* d, char* arg) {
 	while(moresteps);
 }
 void toonUpdate(const descriptor_data* d) {
+	if(!d || !d->character) {
+		return;
+	}
 	boost::format fmt(R"(UPDATE toon SET level=%d,lastlogin=now(),lasthost="%s" WHERE name="%s")");
 	fmt % GetMaxLevel(d->character) % d->host % d->AccountData.choosen;
 	try {
@@ -3748,7 +4041,7 @@ void check_affected(char* msg) {
 	struct char_data* c;
 	static FILE* f=NULL;
 	static long lines=0;
-	char* (b[5]);
+	char* b[5];
 	char buf[5000];
 	int i,j;
 

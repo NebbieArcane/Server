@@ -27,7 +27,7 @@
 #include "act.comm.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
@@ -46,6 +46,7 @@
 #include "opinion.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
+#include "toon_migration.hpp"
 #include "snew.hpp"
 #include "snew.hpp"
 #include "spec_procs.hpp"
@@ -464,7 +465,17 @@ ACTION_FUNC(do_title) {
 
 ACTION_FUNC(do_quit) {
 
-	if(IS_NPC(ch) || !ch->desc || IS_AFFECTED(ch, AFF_CHARM)) {
+	if(!ch->desc || IS_AFFECTED(ch, AFF_CHARM)) {
+		return;
+	}
+
+	if(IS_POLY(ch)) {
+		send_to_char(
+			"Se vuoi abbandonare il gioco, fallo nella tua forma originale!\n\r", ch);
+		return;
+	}
+
+	if(IS_NPC(ch)) {
 		return;
 	}
 
@@ -482,7 +493,17 @@ ACTION_FUNC(do_quit) {
 
 	act("Goodbye, friend.. Come back soon!", FALSE, ch, 0, 0, TO_CHAR);
 	act("$n has left the game.", TRUE, ch,0,0,TO_ROOM);
-	zero_rent(ch);
+	if(GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
+		/* Immortale 58+: conserva equip in pensione (file o MySQL), niente drop a terra */
+		struct obj_cost cost {};
+		cost.total_cost = 0;
+		cost.no_carried = 0;
+		save_obj(ch, &cost, 1);
+		write_char_extra(ch);
+	}
+	else {
+		zero_rent(ch);
+	}
 	extract_char(ch); /* Char is saved in extract char */
 }
 
@@ -1929,28 +1950,29 @@ ACTION_FUNC(do_quaff) {
 
 	/*  my stuff */
 	if(ch->specials.fighting) {
+		const long long roll = static_cast<long long>(number(1, 20));
+		bool drop_potion = false;
 		if(equipped) {
-			if(number(1,20) > ch->abilities.dex) {
-				act("$n is jolted and drops $p!  It shatters!",
-					TRUE, ch, temp, 0, TO_ROOM);
-				act("You arm is jolted and $p flies from your hand, *SMASH*",
-					TRUE, ch, temp, 0, TO_CHAR);
-				if(equipped) {
-					temp = unequip_char(ch, HOLD);
-				}
-				extract_obj(temp);
-				return;
-			}
+			drop_potion = roll > static_cast<long long>(ch->abilities.dex);
 		}
 		else {
-			if(number(1,20) > ch->abilities.dex - 4) {
-				act("$n is jolted and drops $p!  It shatters!",
-					TRUE, ch, temp, 0, TO_ROOM);
-				act("You arm is jolted and $p flies from your hand, *SMASH*",
-					TRUE, ch, temp, 0, TO_CHAR);
-				extract_obj(temp);
-				return;
+			if(ch->abilities.dex <= 4) {
+				drop_potion = true;
 			}
+			else {
+				drop_potion = roll > static_cast<long long>(ch->abilities.dex - 4);
+			}
+		}
+		if(drop_potion) {
+			act("$n is jolted and drops $p!  It shatters!",
+				TRUE, ch, temp, 0, TO_ROOM);
+			act("You arm is jolted and $p flies from your hand, *SMASH*",
+				TRUE, ch, temp, 0, TO_CHAR);
+			if(equipped) {
+				temp = unequip_char(ch, HOLD);
+			}
+			extract_obj(temp);
+			return;
 		}
 	}
 
@@ -2786,9 +2808,11 @@ ACTION_FUNC(do_alias) {
 			if(GET_ALIAS(ch, num)) {
 				strcpy(buf, GET_ALIAS(ch, num));
 				if(*arg) {
-					sprintf(buf2,"%s %s",buf,arg);
-					send_to_char(buf2,ch);
-					command_interpreter(ch, buf2);
+					std::string alias_cmd = buf;
+					alias_cmd += " ";
+					alias_cmd += arg;
+					send_to_char(alias_cmd.c_str(), ch);
+					command_interpreter(ch, alias_cmd.c_str());
 				}
 				else {
 					command_interpreter(ch, buf);
@@ -3554,79 +3578,13 @@ void ck_eq_action(struct char_data* ch, struct obj_data* obj) {
 			}
 			/* Altrimenti cerca di essere indossato */
 			else if(number(0,1)) {
-				keyword = -2 ;
-				if(CAN_WEAR(obj,ITEM_HOLD)) {
-					j = 0 ;
-					keyword = 13;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_SHIELD)) {
-					j = 11 ;
-					keyword = 14;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_FINGER)) {
-					j = 1;
-					keyword = 1;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_NECK)) {
-					j = 3 ;
-					keyword = 2;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_WRIST)) {
-					j = 14 ;
-					keyword = 11;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_WAISTE)) {
-					j = 13 ;
-					keyword = 10;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_ARMS)) {
-					j = 10 ;
-					keyword = 8;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_HANDS)) {
-					j =  9 ;
-					keyword = 7;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_FEET)) {
-					j =  8 ;
-					keyword = 6;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_LEGS)) {
-					j =  7 ;
-					keyword = 5;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_ABOUT)) {
-					j = 12 ;
-					keyword = 9;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_HEAD)) {
-					j =  6 ;
-					keyword = 4;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_BODY)) {
-					j =  5 ;
-					keyword = 3;
-				}
-				if(CAN_WEAR(obj,ITEM_WIELD)) {
-					j = 16 ;
-					keyword = 12;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_BACK) &&
-						obj->obj_flags.type_flag==ITEM_CONTAINER) {
-					j = 18 ;
-					keyword=15;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_EYE)) {
-					j = 21 ;
-					keyword = 17;
-				}
-				if(CAN_WEAR(obj,ITEM_WEAR_EAR)) {
-					j = 19 ;
-					keyword = 16;
-				}
+				const ObjWearInfer wearSlot =
+				    obj_infer_wear(obj->obj_flags.wear_flags, obj->obj_flags.type_flag);
+				keyword = wearSlot.keyword;
+				j = wearSlot.equipPos;
 
-				if(keyword != -2) {
-					if(ch->equipment[j]) {
+				if(keyword != kObjWearKeywordNone) {
+					if(j >= 0 && ch->equipment[j]) {
 						tmp_obj = unequip_char(ch,j) ;
 						if(tmp_obj) {
 							obj_to_char(tmp_obj, ch);
@@ -4848,9 +4806,10 @@ ACTION_FUNC(do_insert)
 
         free(obj->short_description);
         obj->short_description = (char*)strdup(buf);
-        free(obj->description);
-        sprintf(buf, "%s e' qui per terra.", buf);
-        obj->description = (char*)strdup(buf);
+		free(obj->description);
+		std::string obj_desc = obj->short_description;
+		obj_desc += " e' qui per terra.";
+		obj->description = (char*)strdup(obj_desc.c_str());
         SET_BIT(obj->obj_flags.extra_flags2, ITEM2_INSERT);
     }
     else

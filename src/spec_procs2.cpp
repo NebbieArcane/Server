@@ -380,7 +380,7 @@ MOBSPECIAL_FUNC(Summoner) {
 							break;
 						}
 					}
-					else if(i->name) {
+					else if(i->name[0] != '\0') {
 						/* look up the char_ptr */
 						mudlog(LOG_CHECK, "%s cerca di summonare qualcuno.",
 							   GET_NAME_DESC(ch));
@@ -536,29 +536,41 @@ OBJSPECIAL_FUNC(jive_box) {
 			return TRUE;
 			break;
 
-		case CMD_TELL:
-			half_chop(arg, tmp, buf,len,len);
-			invert(buf, buf2,len);
-			sprintf(buf, "%s %s", tmp, buf2);
+		case CMD_TELL: {
+			const auto [who, rest] = chop_argument(arg, len, len);
+			std::strncpy(tmp, who.c_str(), sizeof(tmp) - 1);
+			tmp[sizeof(tmp) - 1] = '\0';
+			std::strncpy(buf, rest.c_str(), sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			invert(buf, buf2, len);
+			std::snprintf(buf, sizeof(buf), "%.120s %.120s", tmp, buf2);
 			do_tell(ch, buf, cmd);
 			return TRUE;
-			break;
+		}
 
-		case CMD_WHISPER:
-			half_chop(arg, tmp, buf,len);
-			invert(buf, buf2,len);
-			sprintf(buf, "%s %s", tmp, buf2);
+		case CMD_WHISPER: {
+			const auto [who, rest] = chop_argument(arg, len, len);
+			std::strncpy(tmp, who.c_str(), sizeof(tmp) - 1);
+			tmp[sizeof(tmp) - 1] = '\0';
+			std::strncpy(buf, rest.c_str(), sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			invert(buf, buf2, len);
+			std::snprintf(buf, sizeof(buf), "%.120s %.120s", tmp, buf2);
 			do_whisper(ch, buf, cmd);
 			return TRUE;
-			break;
+		}
 
-		case CMD_ASK:
-			half_chop(arg, tmp, buf,sizeof tmp -1,sizeof buf -1);
-			invert(buf, buf2,len);
-			sprintf(buf, "%s %s", tmp, buf2);
+		case CMD_ASK: {
+			const auto [who, rest] = chop_argument(arg, sizeof(tmp) - 1, sizeof(buf) - 1);
+			std::strncpy(tmp, who.c_str(), sizeof(tmp) - 1);
+			tmp[sizeof(tmp) - 1] = '\0';
+			std::strncpy(buf, rest.c_str(), sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			invert(buf, buf2, len);
+			std::snprintf(buf, sizeof(buf), "%.120s %.120s", tmp, buf2);
 			do_ask(ch, buf, cmd);
 			return TRUE;
-			break;
+		}
 
 		case CMD_GOSSIP:
 			invert(arg, buf,len);
@@ -4948,7 +4960,7 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 					}
 					if(spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_druid <= (IS_IMMORTAL(ch)?IMMORTALE:GET_LEVEL_CASTER(ch,DRUID_LEVEL_IND))) &&
-							(spell_info[i+1].min_level_druid <= ((IS_IMMORTAL(ch) && GetMaxLevel(guildmaster)>50) ? IMMORTAL : GetMaxLevel(guildmaster)-10))) { // SALVO adesso gli immortali possono praccare
+							(spell_info[i+1].min_level_druid <= ((IS_IMMORTAL(ch) && GetMaxLevel(guildmaster)>50) ? IMMORTAL : (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)))) { // SALVO adesso gli immortali possono praccare
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_druid,
 								spells[i],how_good(ch->skills[i+1].learned));
@@ -4972,7 +4984,7 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
-		if(((GetMaxLevel(guildmaster)>50) ? IMMORTAL : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_druid) {  // SALVO corretto il prac immortal
+		if(((GetMaxLevel(guildmaster)>50) ? IMMORTAL : (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) < spell_info[number].min_level_druid) {  // SALVO corretto il prac immortal
 			do_say(guildmaster, "I don't know of this spell.", 0);
 			return(TRUE);
 		}
@@ -5603,7 +5615,9 @@ ROOMSPECIAL_FUNC(druid_challenge_prep_room) {
 		return(FALSE);
 	}
 
-	chal = real_roomp(ch->in_room+1);
+	int druid_challenge_room_num = ch->in_room;
+	druid_challenge_room_num += 1;
+	chal = real_roomp(druid_challenge_room_num);
 	if(!chal) {
 		send_to_char("The challenge room is gone.. please contact a god\n\r", ch);
 		return(TRUE);
@@ -5625,8 +5639,10 @@ ROOMSPECIAL_FUNC(druid_challenge_prep_room) {
 			return(FALSE);
 		}
 
-		if(GET_EXP(ch) <= titles[DRUID_LEVEL_IND]
-				[GET_LEVEL(ch, DRUID_LEVEL_IND)+1].exp-100) {
+		const int druid_level = GET_LEVEL(ch, DRUID_LEVEL_IND);
+		const int druid_required_exp = titles[DRUID_LEVEL_IND][druid_level + 1].exp;
+		const long long druid_exp_gap = static_cast<long long>(GET_EXP(ch)) - static_cast<long long>(druid_required_exp);
+		if(druid_exp_gap <= -100LL) {
 			send_to_char("You cannot advance now\n\r", ch);
 			return(TRUE);
 		}
@@ -5647,11 +5663,13 @@ ROOMSPECIAL_FUNC(druid_challenge_prep_room) {
 
 		send_to_char("You are taken into the combat room.\n\r", ch);
 		act("$n is ushered into the combat room", FALSE, ch, 0, 0, TO_ROOM);
-		newr = ch->in_room+1;
+		newr = ch->in_room;
+		newr += 1;
 		char_from_room(ch);
 		char_to_room(ch, newr);
 		/* load the mob at the same lev as char */
-		mob = read_mobile(DRUID_MOB+GET_LEVEL(ch, DRUID_LEVEL_IND)-10, VIRTUAL);
+		const int druid_mob_vnum = DRUID_MOB + druid_level - 10;
+		mob = read_mobile(druid_mob_vnum, VIRTUAL);
 		if(!mob) {
 			send_to_char("The fight is called off.  go home\n\r", ch);
 			return(TRUE);
@@ -5876,7 +5894,9 @@ ROOMSPECIAL_FUNC(monk_challenge_prep_room) {
 		return(FALSE);
 	}
 
-	chal = real_roomp(ch->in_room+1);
+	int monk_challenge_room_num = ch->in_room;
+	monk_challenge_room_num += 1;
+	chal = real_roomp(monk_challenge_room_num);
 	if(!chal) {
 		send_to_char("The challenge room is gone.. please contact a god\n\r", ch);
 		return(TRUE);
@@ -5898,8 +5918,10 @@ ROOMSPECIAL_FUNC(monk_challenge_prep_room) {
 			return(FALSE);
 		}
 
-		if(GET_EXP(ch) <= titles[MONK_LEVEL_IND]
-				[GET_LEVEL(ch, MONK_LEVEL_IND)+1].exp-100) {
+		const int monk_level = GET_LEVEL(ch, MONK_LEVEL_IND);
+		const int monk_required_exp = titles[MONK_LEVEL_IND][monk_level + 1].exp;
+		const long long monk_exp_gap = static_cast<long long>(GET_EXP(ch)) - static_cast<long long>(monk_required_exp);
+		if(monk_exp_gap <= -100LL) {
 			send_to_char("You cannot advance now\n\r", ch);
 			return(TRUE);
 		}
@@ -5920,11 +5942,13 @@ ROOMSPECIAL_FUNC(monk_challenge_prep_room) {
 
 		send_to_char("You are taken into the combat room.\n\r", ch);
 		act("$n is ushered into the combat room", FALSE, ch, 0, 0, TO_ROOM);
-		newr = ch->in_room+1;
+		newr = ch->in_room;
+		newr += 1;
 		char_from_room(ch);
 		char_to_room(ch, newr);
 		/* load the mob at the same lev as char */
-		mob = read_mobile(MONK_MOB+GET_LEVEL(ch, MONK_LEVEL_IND)-10, VIRTUAL);
+		const int monk_mob_vnum = MONK_MOB + monk_level - 10;
+		mob = read_mobile(monk_mob_vnum, VIRTUAL);
 		if(!mob) {
 			send_to_char("The fight is called off.  go home\n\r", ch);
 			return(TRUE);
@@ -6071,7 +6095,7 @@ MOBSPECIAL_FUNC(attack_rats) {
 #define WHO_TO_CALL  3063 /* mercenary */
 
 MOBSPECIAL_FUNC(DragonHunterLeader) {
-	register struct char_data* i, *j;
+	struct char_data* i, *j;
 	int found = FALSE, dir, count;
 	char buf[255];
 
@@ -6295,7 +6319,7 @@ OBJSPECIAL_FUNC(SlotMachine) {
 	static long jackpot = 25;
 
 
-	if(type != EVENT_COMMAND && cmd != CMD_PULL) {
+	if(type != EVENT_COMMAND || cmd != CMD_PULL) {
 		return FALSE;
 	}
 	if(!arg) {
@@ -7095,7 +7119,7 @@ MOBSPECIAL_FUNC(RangerGuildmaster) {
 
 	if(HasClass(ch, CLASS_RANGER)) {
 		if(cmd == CMD_GAIN) {  /*gain */
-			if(GET_LEVEL(ch,RANGER_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,RANGER_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 				if(GET_EXP(ch) <
 						titles[RANGER_LEVEL_IND][GET_LEVEL(ch, RANGER_LEVEL_IND)+1].exp) {
 					send_to_char("You are not yet ready to gain.\n\r", ch);
@@ -7127,7 +7151,7 @@ MOBSPECIAL_FUNC(RangerGuildmaster) {
 							(spell_info[i+1].min_level_ranger <=
 							 GET_LEVEL_CASTER(ch,RANGER_LEVEL_IND)) &&
 							(spell_info[i+1].min_level_ranger <=
-							 GetMaxLevel(guildmaster)-10)) {
+							 (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10))) {
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_ranger,spells[i],
 								how_good(ch->skills[i+1].learned));
@@ -7148,7 +7172,7 @@ MOBSPECIAL_FUNC(RangerGuildmaster) {
 			send_to_char("You do not know of this skill...\n\r", ch);
 			return(TRUE);
 		}
-		if(GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_ranger) {
+		if((GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_ranger) {
 			do_say(guildmaster, "I don't know of this skill.", 0);
 			return(TRUE);
 		}
@@ -7342,21 +7366,7 @@ MOBSPECIAL_FUNC(StatMaster) {
 		SetStat(ch,number,GetStat(ch,number)+1);
 		ch->specials.spells_to_learn-=2;
 		gain_exp(ch,-prezzo);
-		/* Inserito salvataggio degli xp sul .dead */
-
-		FILE* fdeath;
-		char nomefile[1000];
-		sprintf(nomefile,"%s/%s.dead",PLAYERS_DIR,lower(GET_NAME(ch)));
-		mudlog(LOG_PLAYERS,"Opening %s",nomefile);
-		if((fdeath=fopen(nomefile,"w+"))) {
-			mudlog(LOG_PLAYERS,"Saving xp per %s",GET_NAME(ch));
-			fprintf(fdeath,"%d : %ld",(int)GET_EXP(ch),(long)time(0));
-			fclose(fdeath);
-		}
-
-		else {
-			mudlog(LOG_PLAYERS,"Impossibile salvare xp per %s",GET_NAME(ch));
-		}
+		save_exp_to_file(ch, GET_EXP(ch));
 	}
 	return(TRUE);
 }
@@ -7494,7 +7504,7 @@ MOBSPECIAL_FUNC(PsiGuildmaster) {
 
 	if(HasClass(ch, CLASS_PSI)) {
 		if(cmd == CMD_GAIN) {
-			if(GET_LEVEL(ch,PSI_LEVEL_IND) < GetMaxLevel(guildmaster)-10) {
+			if(GET_LEVEL(ch,PSI_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)) {
 				if(GET_EXP(ch)<
 						titles[PSI_LEVEL_IND][GET_LEVEL(ch, PSI_LEVEL_IND)+1].exp) {
 					send_to_char("You are not yet ready to gain.\n\r", ch);
@@ -7526,7 +7536,7 @@ MOBSPECIAL_FUNC(PsiGuildmaster) {
 							(spell_info[i+1].min_level_psi <=
 							 GET_LEVEL_CASTER(ch,PSI_LEVEL_IND)) &&
 							(spell_info[i+1].min_level_psi <=
-							 GetMaxLevel(guildmaster)-10)) {
+							 (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10))) {
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_psi,spells[i],
 								how_good(ch->skills[i+1].learned));
@@ -7547,7 +7557,7 @@ MOBSPECIAL_FUNC(PsiGuildmaster) {
 			send_to_char("You do not know of this skill...\n\r", ch);
 			return(TRUE);
 		}
-		if(GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_psi) {
+		if((GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_psi) {
 			do_say(guildmaster, "I don't know of this skill.", 0);
 			return(TRUE);
 		}
@@ -7667,7 +7677,7 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 
 	if(HasClass(ch, CLASS_PALADIN)) {
 		if(cmd == CMD_GAIN) {   /*gain */
-			if(GET_LEVEL(ch, PALADIN_LEVEL_IND) < GetMaxLevel(guildmaster) - 10) {
+			if(GET_LEVEL(ch, PALADIN_LEVEL_IND) < (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster) - 10)) {
 				if(GET_EXP(ch) < titles[ PALADIN_LEVEL_IND ]
 						[ GET_LEVEL(ch, PALADIN_LEVEL_IND) + 1 ].exp) {
 					send_to_char("Non sei ancora pronto.\n\r", ch);
@@ -7699,7 +7709,7 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 							(spell_info[i+1].min_level_paladin <=
 							 GET_LEVEL_CASTER(ch,PALADIN_LEVEL_IND)) &&
 							(spell_info[i+1].min_level_paladin <=
-							 GetMaxLevel(guildmaster)-10)) {
+							 (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10))) {
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_paladin,spells[i],
 								how_good(ch->skills[i+1].learned));
@@ -7720,7 +7730,7 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 			send_to_char("You do not know of this skill...\n\r", ch);
 			return(TRUE);
 		}
-		if(GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_paladin) {
+		if((GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_paladin) {
 			do_say(guildmaster, "I don't know of this skill.", 0);
 			return(TRUE);
 		}
@@ -7829,7 +7839,7 @@ MOBSPECIAL_FUNC(MobIdent)
     {
         act("$n da' alcune monete d'oro a $N.", FALSE, ch, NULL, mobident, TO_NOTVICT);
         act("Dai $c001510000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, NULL, mobident, TO_CHAR);
-        if(GetMaxLevel(ch) < DIO)
+		if(GetMaxLevel(ch) < DIO)
         {
             GET_GOLD(ch) -= 10000;
             GET_GOLD(mobident) += 10000;
@@ -7846,7 +7856,9 @@ MOBSPECIAL_FUNC(MobIdent)
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
         send_to_char(buf,ch);
-        sprintf(buf,"$c0013 I tuoi Tiri Salvezza sono: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] Petri[$c0015%d$c0013] Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r",ch->specials.apply_saving_throw[0], ch->specials.apply_saving_throw[1], ch->specials.apply_saving_throw[2], ch->specials.apply_saving_throw[3], ch->specials.apply_saving_throw[4]);
+		std::snprintf(buf, sizeof(buf), "$c0013 Tiri Salvezza: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] Petri[$c0015%d$c0013]\n\r", ch->specials.apply_saving_throw[0], ch->specials.apply_saving_throw[1], ch->specials.apply_saving_throw[2]);
+        send_to_char(buf,ch);
+		std::snprintf(buf, sizeof(buf), "$c0013                 Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r", ch->specials.apply_saving_throw[3], ch->specials.apply_saving_throw[4]);
         send_to_char(buf,ch);
         if(ch->M_immune)
         {
@@ -8136,7 +8148,7 @@ MOBSPECIAL_FUNC(mage_specialist_guildmaster) {
 							(spell_info[i+1].min_level_magic<=
 							 GET_LEVEL(ch,MAGE_LEVEL_IND)) &&
 							(spell_info[i+1].min_level_magic <=
-							 GetMaxLevel(guildmaster)-10)) {
+							 (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10))) {
 
 						sprintf(buf,"[%d] %s %s \n\r",
 								spell_info[i+1].min_level_magic,
@@ -8160,7 +8172,7 @@ MOBSPECIAL_FUNC(mage_specialist_guildmaster) {
 			do_say(guildmaster,"You do not know of this spell.",0);
 			return(TRUE);
 		}
-		if(GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_magic) {
+		if((GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10) < spell_info[number].min_level_magic) {
 			do_say(guildmaster, "I don't know of this spell.", 0);
 			return(TRUE);
 		}

@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from  by code_generator.php */
+ * Generated from /vagrant/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
@@ -300,7 +300,7 @@ bool enum_validate(const e_apply value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_apply value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_class_index encode_e_class_index(std::string s,e_class_index fallback) {
@@ -366,7 +366,7 @@ bool enum_validate(const e_class_index value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_class_index value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_conditions encode_e_conditions(std::string s,e_conditions fallback) {
@@ -400,7 +400,7 @@ bool enum_validate(const e_conditions value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_conditions value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_connection_types encode_e_connection_types(std::string s,e_connection_types fallback) {
@@ -598,7 +598,7 @@ bool enum_validate(const e_connection_types value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_connection_types value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_damage_type encode_e_damage_type(std::string s,e_damage_type fallback) {
@@ -644,7 +644,7 @@ bool enum_validate(const e_damage_type value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_damage_type value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_events encode_e_events(std::string s,e_events fallback) {
@@ -746,7 +746,7 @@ bool enum_validate(const e_events value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_events value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_exit_dir encode_e_exit_dir(std::string s,e_exit_dir fallback) {
@@ -792,7 +792,7 @@ bool enum_validate(const e_exit_dir value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_exit_dir value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_find_result encode_e_find_result(std::string s,e_find_result fallback) {
@@ -1102,7 +1102,7 @@ bool enum_validate(const e_find_result value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_find_result value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_item_type encode_e_item_type(std::string s,e_item_type fallback) {
@@ -1248,7 +1248,7 @@ bool enum_validate(const e_item_type value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_item_type value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_liquids encode_e_liquids(std::string s,e_liquids fallback) {
@@ -1334,7 +1334,7 @@ bool enum_validate(const e_liquids value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_liquids value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_log_levels encode_e_log_levels(std::string s,e_log_levels fallback) {
@@ -1408,7 +1408,7 @@ bool enum_validate(const e_log_levels value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_log_levels value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_opinion_op encode_e_opinion_op(std::string s,e_opinion_op fallback) {
@@ -1462,7 +1462,7 @@ bool enum_validate(const e_opinion_op value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_opinion_op value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_positions encode_e_positions(std::string s,e_positions fallback) {
@@ -1524,7 +1524,7 @@ bool enum_validate(const e_positions value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_positions value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_races encode_e_races(std::string s,e_races fallback) {
@@ -1886,7 +1886,7 @@ bool enum_validate(const e_races value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_races value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_seasons encode_e_seasons(std::string s,e_seasons fallback) {
@@ -1924,7 +1924,7 @@ bool enum_validate(const e_seasons value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_seasons value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_sector_types encode_e_sector_types(std::string s,e_sector_types fallback) {
@@ -1998,7 +1998,7 @@ bool enum_validate(const e_sector_types value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_sector_types value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_sex encode_e_sex(std::string s,e_sex fallback) {
@@ -2032,7 +2032,7 @@ bool enum_validate(const e_sex value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_sex value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_sky encode_e_sky(std::string s,e_sky fallback) {
@@ -2070,7 +2070,7 @@ bool enum_validate(const e_sky value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_sky value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_speaks encode_e_speaks(std::string s,e_speaks fallback) {
@@ -2128,7 +2128,7 @@ bool enum_validate(const e_speaks value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_speaks value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_special_events encode_e_special_events(std::string s,e_special_events fallback) {
@@ -2158,7 +2158,7 @@ bool enum_validate(const e_special_events value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_special_events value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_sunlight encode_e_sunlight(std::string s,e_sunlight fallback) {
@@ -2204,7 +2204,7 @@ bool enum_validate(const e_sunlight value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_sunlight value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_tan_result encode_e_tan_result(std::string s,e_tan_result fallback) {
@@ -2262,7 +2262,7 @@ bool enum_validate(const e_tan_result value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_tan_result value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 e_wear encode_e_wear(std::string s,e_wear fallback) {
@@ -2376,7 +2376,7 @@ bool enum_validate(const e_wear value) {
 	}
 }
 std::ostream & operator<<(std::ostream &out,const e_wear value) {
-	out << value << "(" << G::translate(value) << ")";
+	out << enum_to_int(value) << "(" << G::translate(value) << ")";
 	return out;
 }
 } // namespace G

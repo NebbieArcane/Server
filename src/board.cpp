@@ -168,7 +168,7 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 	long ct; /* clock time */
 	char* tmstr;
 
-	if(bnum == -1) {
+	if((bnum < 0) || (bnum >= NUM_BOARDS)) {
 		mudlog(LOG_ERROR,
 			   "Board special procedure called for non-board object.\r\n");
 		send_to_char("La bacheca e' chiusa in questo momento.\n\r", ch);
@@ -184,7 +184,7 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 		return;
 	}
 
-	if((curr_board->number) > (MAX_MSGS - 1)) {
+	if(curr_board->number >= MAX_MSGS) {
 		send_to_char("La bacheca e' piena.\n\r", ch);
 		return;
 	}
@@ -214,7 +214,12 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 	/* Lock set */
 
 	highmessage = boards[bnum].number;
-	curr_msg = &curr_board->msg[++highmessage];
+	if((highmessage < -1) || (highmessage >= MAX_MSGS)) {
+		send_to_char("La bacheca e' piena.\n\r", ch);
+		return;
+	}
+	highmessage += 1;
+	curr_msg = &curr_board->msg[highmessage];
 
 	if(!(strcmp("Topic",arg))) {
 		curr_msg = &curr_board->msg[0];
@@ -222,7 +227,9 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 		free(curr_msg->text);
 		free(curr_msg->author);
 		free(curr_msg->date);
-		(boards[bnum].number)--;
+		if(boards[bnum].number > -1) {
+			boards[bnum].number -= 1;
+		}
 	}
 	curr_msg->title = (char*)malloc(strlen(arg)+1);
 	strcpy(curr_msg->title, arg);
@@ -252,10 +259,13 @@ void board_write_msg(struct char_data* ch, char* arg, int bnum) {
 	ch->desc->str = &curr_msg->text;
 	ch->desc->max_str = MAX_MESSAGE_LENGTH;
 
-	boards[bnum].number +=1;
-
-	if(boards[bnum].number < 0) {
-		boards[bnum].number = 0;
+	{
+		int updated_number = boards[bnum].number;
+		if(updated_number < 0) {
+			updated_number = 0;
+		}
+		updated_number += 1;
+		boards[bnum].number = updated_number;
 	}
 }
 

@@ -21,9 +21,8 @@
 /***************************  Local    include ************************************/
 #include "mobact.hpp"
 #include "act.comm.hpp"
-#include "act.obj1.hpp"
-#include "act.obj2.hpp"
 #include "act.off.hpp"
+#include "act.obj.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "comm.hpp"
@@ -340,7 +339,7 @@ void MobScavenge(struct char_data* ch) {
 
 
 void check_mobile_activity(unsigned long localPulse) {
-	register struct char_data* ch;
+	struct char_data* ch;
 	struct char_data* pNextChar;
 
 	for(ch = character_list; ch; ch = pNextChar) {
@@ -767,11 +766,11 @@ int UseViolentHeldItem(struct char_data* ch) {
 						   GET_NAME(ch->specials.fighting));
 				} /* fighting same named mob */
 
-				if(tokillnum > 0)
-					sprintf(buf, "%s %d.%s", tmp, tokillnum,
+				if(tokillnum > 0) {
+					std::snprintf(buf, sizeof(buf), "%.100s %d.%.130s", tmp, tokillnum,
 							GET_NAME(ch->specials.fighting));
-				else {
-					sprintf(buf, "%s %s", tmp, GET_NAME(ch->specials.fighting));
+				} else {
+					std::snprintf(buf, sizeof(buf), "%.100s %.130s", tmp, GET_NAME(ch->specials.fighting));
 				}
 				do_use(ch, buf, 0);
 
@@ -1036,7 +1035,7 @@ int MobFriend(struct char_data* ch, struct char_data* f) {
 }
 
 void PulseMobiles(int type) {
-	register struct char_data* ch;
+	struct char_data* ch;
 
 	for(ch = character_list; ch; ch = ch->next)
 		if(IS_MOB(ch))

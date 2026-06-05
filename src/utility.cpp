@@ -15,6 +15,8 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <cstdarg>
+#include <cmath>
+#include <limits>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -335,8 +337,10 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
         }
     }
 
+    const int padded_width = ((max > 90) ? 90 : max) + 8;
+
     strcpy(space, " ");
-    for (i = 0; i < (max + 7); i++)
+    for (i = 0; i < (padded_width - 1); i++)
     {
         strcat(space, " ");
     }
@@ -346,7 +350,7 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
     strcat(buffer, " _\n| |");
     strcat(buffer, space);
     strcat(buffer, "(@)\n|-|");
-    for (i = 0; i < (max + 8); i++)
+    for (i = 0; i < padded_width; i++)
     {
         strcat(buffer, "-");
     }
@@ -427,7 +431,7 @@ char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char
         }
     }
     strcat(buffer, "    |-|\n| |");
-    for (i = 0; i < (max + 8); i++)
+    for (i = 0; i < padded_width; i++)
     {
         strcat(buffer, "_");
     }
@@ -548,7 +552,7 @@ int maxAchievements(struct char_data* ch)
 void CheckQuestFail(struct char_data* ch)
 {
     struct char_data* tch;
-    int diff_hunt = 0, diff_resc = 0, diff_resea = 0, diff_deliv = 0;
+    long long diff_hunt = 0, diff_resc = 0, diff_resea = 0, diff_deliv = 0;
 
     tch = ch;
 
@@ -562,13 +566,16 @@ void CheckQuestFail(struct char_data* ch)
         return;
     }
 
-    if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) != 0)
+    const long long quest_total_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL]) -
+                                         static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE]);
+    const long long quest_total_failed_target = (quest_total_target > 0LL) ? quest_total_target : 0LL;
+    if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) != quest_total_failed_target)
     {
-        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+        if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) < quest_total_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is less than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) < quest_total_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] += 1;
                 CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
@@ -576,11 +583,11 @@ void CheckQuestFail(struct char_data* ch)
 
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Total on %s", GET_NAME(tch));
         }
-        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+        else if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) > quest_total_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Total on %s, the value is greater than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED]) > quest_total_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_FAILED] -= 1;
                 CheckAchie(ch, ACHIE_QUEST_FAILED, OTHER_ACHIE);
@@ -595,18 +602,21 @@ void CheckQuestFail(struct char_data* ch)
         }
     }
 
-    diff_hunt   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED];
-    diff_resc   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED];
-    diff_resea  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED];
-    diff_deliv  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED];
+    diff_hunt   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]);
+    diff_resc   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]);
+    diff_resea  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]);
+    diff_deliv  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]);
 
     if(diff_hunt != 0)
     {
-        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+        const long long quest_hunt_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) -
+                                            static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]);
+        const long long quest_hunt_failed_target = (quest_hunt_target > 0LL) ? quest_hunt_target : 0LL;
+        if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]) < quest_hunt_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is less than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]) < quest_hunt_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
                 CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
@@ -614,11 +624,11 @@ void CheckQuestFail(struct char_data* ch)
 
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Hunt on %s", GET_NAME(tch));
         }
-        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+        else if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]) > quest_hunt_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Hunt on %s, the value is greater than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]) > quest_hunt_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] -= 1;
                 CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
@@ -634,11 +644,14 @@ void CheckQuestFail(struct char_data* ch)
     }
     else if(diff_resc != 0)
     {
-        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+        const long long quest_rescue_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) -
+                                              static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]);
+        const long long quest_rescue_failed_target = (quest_rescue_target > 0LL) ? quest_rescue_target : 0LL;
+        if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]) < quest_rescue_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is less than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]) < quest_rescue_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
                 CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
@@ -646,11 +659,11 @@ void CheckQuestFail(struct char_data* ch)
 
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Rescue on %s", GET_NAME(tch));
         }
-        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+        else if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]) > quest_rescue_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Rescue on %s, the value is greater than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]) > quest_rescue_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] -= 1;
                 CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
@@ -666,11 +679,14 @@ void CheckQuestFail(struct char_data* ch)
     }
     else if(diff_resea != 0)
     {
-        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+        const long long quest_research_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) -
+                                                static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]);
+        const long long quest_research_failed_target = (quest_research_target > 0LL) ? quest_research_target : 0LL;
+        if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]) < quest_research_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is less than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]) < quest_research_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
                 CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
@@ -678,11 +694,11 @@ void CheckQuestFail(struct char_data* ch)
 
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Research on %s", GET_NAME(tch));
         }
-        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+        else if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]) > quest_research_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Research on %s, the value is greater than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]) > quest_research_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] -= 1;
                 CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
@@ -698,11 +714,14 @@ void CheckQuestFail(struct char_data* ch)
     }
     else if(diff_deliv != 0)
     {
-        if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+        const long long quest_delivery_target = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) -
+                                                static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]);
+        const long long quest_delivery_failed_target = (quest_delivery_target > 0LL) ? quest_delivery_target : 0LL;
+        if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]) < quest_delivery_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is less than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) < tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]) < quest_delivery_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
                 CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
@@ -710,11 +729,11 @@ void CheckQuestFail(struct char_data* ch)
 
             mudlog(LOG_CHECK, "Fixed amount for Quest Fail Delivery on %s", GET_NAME(tch));
         }
-        else if((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+        else if(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]) > quest_delivery_failed_target)
         {
             mudlog(LOG_CHECK, "Something going wrong in Quest Fail Delivery on %s, the value is greater than the correct", GET_NAME(tch));
 
-            while((tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] + 1) > tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE])
+            while(static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]) > quest_delivery_failed_target)
             {
                 tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] -= 1;
                 CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
@@ -729,10 +748,10 @@ void CheckQuestFail(struct char_data* ch)
         }
     }
 
-    diff_hunt   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED];
-    diff_resc   = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED];
-    diff_resea  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED];
-    diff_deliv  = tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE] - tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED];
+    diff_hunt   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]);
+    diff_resc   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]);
+    diff_resea  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]);
+    diff_deliv  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]);
 
     if(diff_hunt != 0 || diff_deliv != 0 || diff_resea != 0 || diff_resc != 0)
     {
@@ -1376,10 +1395,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? AchievementsList[achievement_class][achievement_type].lvl6_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (num + 5) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? AchievementsList[achievement_class][achievement_type].lvl6_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl6_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 5))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl6_val)
                 {
@@ -1401,7 +1420,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl6 % AchievementsList[achievement_class][achievement_type].lvl6_val % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 5)%2 == 0 ? "$c0015" : "$c0007") % (num + 5) % AchievementsList[achievement_class][achievement_type].lvl6 % AchievementsList[achievement_class][achievement_type].lvl6_val % (AchievementsList[achievement_class][achievement_type].lvl6_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1411,10 +1430,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? AchievementsList[achievement_class][achievement_type].lvl7_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (num + 6) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? AchievementsList[achievement_class][achievement_type].lvl7_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl7_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 6))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl7_val)
                 {
@@ -1436,7 +1455,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl7 % AchievementsList[achievement_class][achievement_type].lvl7_val % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 6)%2 == 0 ? "$c0015" : "$c0007") % (num + 6) % AchievementsList[achievement_class][achievement_type].lvl7 % AchievementsList[achievement_class][achievement_type].lvl7_val % (AchievementsList[achievement_class][achievement_type].lvl7_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1446,10 +1465,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? AchievementsList[achievement_class][achievement_type].lvl8_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (num + 7) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? AchievementsList[achievement_class][achievement_type].lvl8_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl8_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 7))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl8_val)
                 {
@@ -1471,7 +1490,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl8 % AchievementsList[achievement_class][achievement_type].lvl8_val % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 7)%2 == 0 ? "$c0015" : "$c0007") % (num + 7) % AchievementsList[achievement_class][achievement_type].lvl8 % AchievementsList[achievement_class][achievement_type].lvl8_val % (AchievementsList[achievement_class][achievement_type].lvl8_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1481,10 +1500,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? AchievementsList[achievement_class][achievement_type].lvl9_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (num + 8) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? AchievementsList[achievement_class][achievement_type].lvl9_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl9_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 8))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl9_val)
                 {
@@ -1506,7 +1525,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl9 % AchievementsList[achievement_class][achievement_type].lvl9_val % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 8)%2 == 0 ? "$c0015" : "$c0007") % (num + 8) % AchievementsList[achievement_class][achievement_type].lvl9 % AchievementsList[achievement_class][achievement_type].lvl9_val % (AchievementsList[achievement_class][achievement_type].lvl9_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -1516,10 +1535,10 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         if(formato)
         {
             boost::format fmt("$c0009[%s%4d$c0009]%s %-55s $c0011%6d%s/$c0011%-6d%s %-30s\n\r");
-            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (num + 3) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? AchievementsList[achievement_class][achievement_type].lvl10_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (num + 9) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10 % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? AchievementsList[achievement_class][achievement_type].lvl10_val : ch->specials.achievements[achievement_class][achievement_type]) % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % AchievementsList[achievement_class][achievement_type].lvl10_val % (ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val ? "$c0015" : "$c0007") % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
-            if(check == (num + 3))
+            if(check == (num + 9))
             {
                 if(ch->specials.achievements[achievement_class][achievement_type] >= AchievementsList[achievement_class][achievement_type].lvl10_val)
                 {
@@ -1541,7 +1560,7 @@ std::string bufferAchie(struct char_data* ch, int achievement_type, int achievem
         else
         {
             boost::format fmt("%s%4d %-55s %6d %-30s\n\r");
-            fmt % ((num + 3)%2 == 0 ? "$c0015" : "$c0007") % (num + 3) % AchievementsList[achievement_class][achievement_type].lvl10 % AchievementsList[achievement_class][achievement_type].lvl10_val % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
+            fmt % ((num + 9)%2 == 0 ? "$c0015" : "$c0007") % (num + 9) % AchievementsList[achievement_class][achievement_type].lvl10 % AchievementsList[achievement_class][achievement_type].lvl10_val % (AchievementsList[achievement_class][achievement_type].lvl10_val == 1 ? AchievementsList[achievement_class][achievement_type].achie_string1 : AchievementsList[achievement_class][achievement_type].achie_string2);
             sb.append(fmt.str().c_str());
             fmt.clear();
         }
@@ -4087,7 +4106,7 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
     string oggetto;
 
     z = number(1, val_random);
-    if(z > (max_name - 1))
+    if(z >= max_name)
     {
         z = 0;
     }
@@ -4188,9 +4207,16 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         return;
     }
 
-    if(IS_POLY(tch))
+    if(IS_POLY(ch))
     {
+        if(!ch->desc || !ch->desc->original) {
+            return;
+        }
         tch = ch->desc->original;
+    }
+
+    if(!tch) {
+        return;
     }
 
     if(AchievementsList[achievement_class][achievement_type].classe == -1)
@@ -4309,7 +4335,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 
         sprintf(buf, "%s", spamAchie(tch, titolo, valore, stringa, achievement_type, achievement_class));
         send_to_char(buf, ch);
-        sprintf(buf, "\n\r$c0009%s $c0007ha completato l'achievement $c0015'%s$c0007' ($c0011%d $c0009%s$c0007).\n\r\n\r", GET_NAME(ch), titolo, valore, stringa);
+        std::snprintf(buf, sizeof(buf), "\n\r$c0009%.64s $c0007ha completato l'achievement $c0015'%.512s$c0007' ($c0011%d $c0009%.512s$c0007).\n\r\n\r", GET_NAME(ch), titolo, valore, stringa);
         send_to_all_not_ch(ch, buf);
 
         switch(AchievementsList[achievement_class][achievement_type].grado_diff)
@@ -4369,8 +4395,13 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
                 break;
         }
 
-        reward = reward * molt / 10;
-        reward = number(int(reward - reward * 5 / 100), int(reward + reward * 5 / 100));
+        const long long scaled_reward = (static_cast<long long>(reward) * static_cast<long long>(molt)) / 10LL;
+        const long long reward_delta_ll = static_cast<long long>(std::llround(static_cast<double>(scaled_reward) * 0.05));
+        long long min_reward = scaled_reward - reward_delta_ll;
+        long long max_reward = scaled_reward + reward_delta_ll;
+        if(min_reward < static_cast<long long>(std::numeric_limits<int>::min())) min_reward = static_cast<long long>(std::numeric_limits<int>::min());
+        if(max_reward > static_cast<long long>(std::numeric_limits<int>::max())) max_reward = static_cast<long long>(std::numeric_limits<int>::max());
+        reward = number(static_cast<int>(min_reward), static_cast<int>(max_reward));
         if(amount > 0)
         {
             gain_exp(ch, reward);
@@ -4378,7 +4409,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
             RewardAll(ch, achievement_type, achievement_class, lvl);
 
             send_to_char("\n\r", ch);
-            sprintf(buf,"$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%s$c0014'.", reward, titolo);
+            std::snprintf(buf, sizeof(buf), "$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%.512s$c0014'.", reward, titolo);
             act(buf, FALSE, ch, 0, 0, TO_CHAR);
             save_obj(ch, &cost, 0);
         }
@@ -4866,7 +4897,7 @@ bool isNullChar(struct char_data* ch) {
 
 
 int CAN_SEE(struct char_data* s, struct char_data* o) {
-	register int iSLev = GetMaxLevel(s);
+	int iSLev = GetMaxLevel(s);
 	struct room_data* pRoomS;
 	struct room_data* pRoomO;
 	struct affected_type* aff;
@@ -5034,25 +5065,25 @@ void Zwrite(FILE* fp, char cmd, int tf, int arg1, int arg2, int arg3,
 
 	switch(cmd) {
 	case 'O':
-		sprintf(buf, "%c %d %d %d %d %d", cmd, tf, arg1, arg2, arg3, arg4);
+		std::snprintf(buf, sizeof(buf), "%c %d %d %d %d %d", cmd, tf, arg1, arg2, arg3, arg4);
 		break;
 	case 'M':
 	case 'C':
 	case 'E':
 	case 'P':
 	case 'D':
-		sprintf(buf, "%c %d %d %d %d", cmd, tf, arg1, arg2, arg3);
+		std::snprintf(buf, sizeof(buf), "%c %d %d %d %d", cmd, tf, arg1, arg2, arg3);
 		break;
 	default:
-		sprintf(buf, "%c %d %d %d", cmd, tf, arg1, arg2);
+		std::snprintf(buf, sizeof(buf), "%c %d %d %d", cmd, tf, arg1, arg2);
 		break;
 	}
 
 	if(*desc) {
-		sprintf(buf2, "%s   ; %s\n", buf, desc);
+		std::snprintf(buf2, sizeof(buf2), "%.200s   ; %.40s\n", buf, desc);
 	}
 	else {
-		sprintf(buf2, "%s\n", buf);
+		std::snprintf(buf2, sizeof(buf2), "%.250s\n", buf);
 	}
 	fputs(buf2, fp);
 }
@@ -7456,7 +7487,7 @@ int CheckForBlockedMove
 
 
 void TeleportPulseStuff(unsigned long localPulse) {
-	register struct char_data* ch;
+	struct char_data* ch;
 	struct char_data* next;
 	int tick, tm;
 	struct room_data* rp, *dest;
@@ -7561,9 +7592,9 @@ void TeleportPulseStuff(unsigned long localPulse) {
 
 void RiverPulseStuff(unsigned long localPulse) {
 	struct descriptor_data* i;
-	register struct char_data* ch;
+	struct char_data* ch;
 	struct char_data* tmp;
-	register struct obj_data* obj_object;
+	struct obj_data* obj_object;
 	struct obj_data* next_obj;
 	int rd, _or;
 	char buf[80], buffer[100];

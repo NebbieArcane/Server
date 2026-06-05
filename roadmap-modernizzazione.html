@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap — DB e C++17 in parallelo · myst MUD</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      background: #fff;
+      color: #1a1a1a;
+      padding: 32px 24px;
+    }
+
+    .page { max-width: 960px; margin: 0 auto; }
+
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    h2 { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+
+    .secondary { color: #666; }
+    .small { font-size: 12px; }
+    .semibold { font-weight: 600; }
+
+    hr { border: none; border-top: 1px solid #e5e5e5; margin: 24px 0; }
+
+    /* Stats row */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+    .stat {
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .stat-value { font-size: 22px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: #666; margin-top: 2px; }
+    .stat.warning .stat-value { color: #b45309; }
+    .stat.success .stat-value { color: #15803d; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      font-weight: 600;
+      padding: 8px 12px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr.danger td:first-child { color: #b91c1c; font-weight: 600; }
+    tr.danger-row td { background: #fff5f5; }
+    tr.warning-row td { background: #fffbeb; }
+    tr.success-row td { background: #f0fdf4; }
+
+    /* Cards */
+    .card {
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #f9f9f9;
+      border-bottom: 1px solid #e5e5e5;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .card-body { padding: 14px 16px; }
+
+    /* Pills */
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pill-info    { background: #dbeafe; color: #1e40af; }
+    .pill-warning { background: #fef3c7; color: #92400e; }
+    .pill-neutral { background: #f3f4f6; color: #374151; }
+
+    /* Grid 2 columns */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-2-uneven { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    /* Todo list */
+    .todo-list { list-style: none; padding: 0; }
+    .todo-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .todo-list li:last-child { border-bottom: none; }
+    .todo-icon {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid #aaa;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .section { margin-bottom: 8px; }
+    .stack { display: flex; flex-direction: column; gap: 10px; }
+    .stack-sm { display: flex; flex-direction: column; gap: 6px; }
+
+    code {
+      background: #f3f4f6;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+    }
+
+    .label-section {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    @media print {
+      body { padding: 16px; }
+      .stats { break-inside: avoid; }
+      .card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="stack" style="gap:4px; margin-bottom: 20px;">
+    <h1>Roadmap — DB e C++17 in parallelo · myst MUD</h1>
+    <p class="secondary">
+      Un dev lavora al database, l'altro alla modernizzazione C++17 — in contemporanea.
+      Funziona, ma serve una regola fondamentale per evitare conflitti.
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" style="margin-bottom: 24px;">
+    <div class="stat warning">
+      <div class="stat-value">1</div>
+      <div class="stat-label">Regola anti-conflitto</div>
+    </div>
+    <div class="stat warning">
+      <div class="stat-value">4</div>
+      <div class="stat-label">File condivisi a rischio</div>
+    </div>
+    <div class="stat success">
+      <div class="stat-value">2x</div>
+      <div class="stat-label">Velocità teorica vs sequenziale</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Problema centrale -->
+  <div class="section stack">
+    <h2>Il problema: structs.hpp è il punto di conflitto</h2>
+    <p>
+      Entrambi i lavori toccano gli stessi file. Se un dev cambia <code>char*</code> in <code>std::string</code> in
+      <code>structs.hpp</code> mentre l'altro ci aggiunge i <code>#pragma db</code> di ODB, i merge saranno un incubo continuo.
+    </p>
+    <table>
+      <thead><tr><th>File</th><th>C++17 lo tocca?</th><th>DB lo tocca?</th><th>Rischio</th></tr></thead>
+      <tbody>
+        <tr class="danger-row"><td><code>src/structs.hpp</code></td><td>Sì — char* → string, macro → metodi</td><td>Sì — pragma db, nuovi tipi</td><td><strong>ALTO</strong></td></tr>
+        <tr class="danger-row"><td><code>src/db.cpp</code></td><td>Sì — FILE* → stream, globals</td><td>Sì — nuove funzioni load/save DB</td><td><strong>ALTO</strong></td></tr>
+        <tr class="warning-row"><td><code>src/reception.cpp</code></td><td>Sì — stile legacy</td><td>Sì — load_char_objs da DB</td><td>MEDIO</td></tr>
+        <tr><td><code>src/utils.hpp</code></td><td>Sì — macro GET_* → metodi</td><td>No</td><td>BASSO</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- Regola fondamentale -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">La regola che rende possibile il lavoro parallelo</div>
+    <div class="card-body stack">
+      <p>
+        <strong>Dev A non tocca structs.hpp.</strong>
+        Le classi ODB per il DB vivono in file <strong>separati</strong> dentro <code>src/odb/</code>
+        — non aggiunge pragma alle struct di gioco esistenti.
+      </p>
+      <p>
+        <strong>Dev B non tocca <code>src/odb/</code> e <code>src/Sql.cpp</code>.</strong>
+        Modernizza tutto il resto senza entrare nel layer DB.
+      </p>
+      <p class="secondary small">
+        Le "classi ODB" sono modelli DB autonomi (es. <code>CharacterRecord</code> in <code>odb/character.hpp</code>)
+        che vengono popolati leggendo i campi di <code>char_data</code> — non dipendono dalla sua rappresentazione interna.
+        Quando i due branch si fondono, si scrive un unico adapter <code>to_db()</code> / <code>from_db()</code> che fa il bridge.
+      </p>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Divisione compiti -->
+  <div class="section">
+    <h2>Divisione dei compiti</h2>
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-header">
+          Dev A — Database
+          <span class="pill pill-info">Dev A</span>
+        </div>
+        <div class="card-body stack">
+          <p class="small secondary">File esclusivi: <code>src/odb/*</code>, <code>src/Sql.cpp</code>, <code>src/Sql.hpp</code>, <code>src/db.cpp</code> (solo nuove funzioni)</p>
+          <hr style="margin: 6px 0;">
+          <p class="label-section">Personaggio e inventario</p>
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div>Definire CharacterRecord, SkillRecord in <code>odb/character.hpp</code></li>
+            <li><div class="todo-icon"></div>Schema: character_stats, character_skills, character_affects</li>
+            <li><div class="todo-icon"></div>Schema: character_equipment, character_inventory</li>
+            <li><div class="todo-icon"></div>Script migrazione players.dat + rent/ → DB</li>
+            <li><div class="todo-icon"></div><code>load_char_from_db()</code> / <code>save_char_to_db()</code> in parallelo ai file</li>
+          </ul>
+          <hr style="margin: 6px 0;">
+          <p class="label-section">Mondo e achievements</p>
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div>Schema: rooms, room_exits, zones, zone_resets</li>
+            <li><div class="todo-icon"></div>Schema: mob_prototypes, obj_prototypes, obj_affects, shops</li>
+            <li><div class="todo-icon"></div>Schema: achievement_defs, character_achievements</li>
+            <li><div class="todo-icon"></div>Script importazione myst.wld/mob/obj/zon/shp → DB</li>
+            <li><div class="todo-icon"></div>world.hpp ODB (già placeholder vuoto in src/odb/)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          Dev B — C++17
+          <span class="pill pill-warning">Dev B</span>
+        </div>
+        <div class="card-body stack">
+          <p class="small secondary">File esclusivi: <code>structs.hpp</code>, <code>utils.hpp</code>, <code>utilities/*</code>, <code>constants.cpp</code>, <code>act.*.cpp</code>, <code>handler.cpp</code></p>
+          <hr style="margin: 6px 0;">
+          <p class="label-section">Strutture e memoria</p>
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div>C++17 toolchain completato: GCC 12 + ODB 2.5 su Jammy, build Docker/Vagrant allineate e warning cleanup in corso</li>
+            <li><div class="todo-icon"></div><code>char*</code> → <code>std::string</code> in structs.hpp (name, title, descr...)</li>
+            <li><div class="todo-icon"></div>Macro CREATE/REALLOC → new + <code>std::unique_ptr</code> dove possibile</li>
+            <li><div class="todo-icon"></div>character_list/object_list → <code>std::list&lt;char_data&gt;</code></li>
+            <li><div class="todo-icon"></div>room_db/mob_index/obj_index → <code>std::unordered_map&lt;int, *&gt;</code></li>
+          </ul>
+          <hr style="margin: 6px 0;">
+          <p class="label-section">I/O, utilities, accessor</p>
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div>Convertire utilities/*.c in .cpp</li>
+            <li><div class="todo-icon"></div>sprintf/FILE* → std::ostringstream/fstream</li>
+            <li><div class="todo-icon"></div>Macro GET_NAME, IS_NPC ecc. → inline methods su char_data</li>
+            <li><div class="todo-icon"></div>constants.cpp: AchievementsList → std::array constexpr</li>
+            <li><div class="todo-icon"></div>Rimuovere globali nude → wrapper con accessor statici</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Checklist operativa (todo agent) -->
+  <div class="section stack">
+    <h2>Checklist operativa corrente</h2>
+    <p class="secondary small">Stessa todo usata in sessione agent (id stabili); spunta o aggiorna a mano quando completi.</p>
+    <div class="grid-2" style="margin-top: 10px;">
+      <div class="card">
+        <div class="card-header">
+          Dev A — operativo
+          <span class="pill pill-info">Dev A</span>
+        </div>
+        <div class="card-body">
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div><code>a1-schema</code> — Estendere schema ODB in <code>src/odb/account.hpp</code> (toonData, toonSkills, toonAffects)</li>
+            <li><div class="todo-icon"></div><code>a1-loadsave</code> — Riscrivere load_char/save_char/store_to_char/char_to_store in <code>db.cpp</code> per MySQL</li>
+            <li><div class="todo-icon"></div><code>a1-refund</code> — Adattare <code>do_refund</code> in <code>act.wizard.cpp</code> per backup/restore da MySQL</li>
+            <li><div class="todo-icon"></div><code>a2-achievements</code> — toonAchievement su MySQL, logica centralizzata; eliminare file <code>.achie</code></li>
+            <li><div class="todo-icon"></div><code>a3-world-schema</code> — Schema MySQL zone/room/mob/obj + script import CircleMUD</li>
+            <li><div class="todo-icon"></div><code>a3-world-loader</code> — Riscrivere boot_world/boot_zones in <code>db.cpp</code> da MySQL</li>
+            <li><div class="todo-icon"></div><code>a4-web-editor</code> — API REST + editor CRUD mondo con reload in-game</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          Dev B — operativo
+          <span class="pill pill-warning">Dev B</span>
+        </div>
+        <div class="card-body">
+          <ul class="todo-list">
+            <li><div class="todo-icon"></div><code>b1-cleanup</code> — Rimuovere <code>utilities/</code> (C legacy) e <code>src/attic/</code> (vecchio SQL), aggiornare CMakeLists</li>
+            <li><div class="todo-icon"></div><code>b2-modernize</code> — Sostituire pattern C-style con C++ moderno (coordinare con Dev A)</li>
+            <li><div class="todo-icon"></div><code>b2-vt100-review</code> — Rivedere VT100 (<code>comm.cpp</code>, <code>act.info.cpp</code>), compatibilità e fallback</li>
+            <li><div class="todo-icon"></div><code>b2-mini-infobar-compatible</code> — Mini-infobar VT100, comando esplicito, redraw sicuro</li>
+            <li><div class="todo-icon"></div><code>b3-world-cpp</code> — Dopo schema mondo: zone_table/world → vector/unordered_map</li>
+            <li><div class="todo-icon"></div><code>b4-docker-prod-setup</code> — Docker production-grade (compose, secrets, backup, healthcheck)</li>
+            <li><div class="todo-icon"></div><code>cpp17-toolchain</code> — <strong>completato</strong> (C++17 + ODB 2.5 + build Docker/Vagrant)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Sync point -->
+  <div class="section stack">
+    <h2>Sync point — quando si ri-uniscono i branch</h2>
+    <p class="secondary">Le due linee di lavoro si incontrano in 3 momenti. Queste sessioni vanno fatte insieme.</p>
+    <table>
+      <thead><tr><th>Sync</th><th>Quando</th><th>Cosa si fa insieme</th></tr></thead>
+      <tbody>
+        <tr><td><strong>S1 — Schema accordo</strong></td><td>Prima di scrivere codice</td><td>Decidere i tipi delle colonne DB partendo dalle struct attuali. Dev A sa cosa mettere in DB, Dev B sa come cambieranno le struct.</td></tr>
+        <tr><td><strong>S2 — Adapter layer</strong></td><td>Dopo ~4 settimane</td><td>Scrivere <code>to_db(char_data)</code> / <code>from_db(CharacterRecord)</code> che converte tra il modello di gioco (modernizzato) e il modello DB.</td></tr>
+        <tr><td><strong>S3 — Sostituzione file</strong></td><td>Fine progetto</td><td>Attivare il flag <code>USE_DB_LOAD</code>, disattivare il caricamento da file, validare in staging.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- Timeline -->
+  <div class="section stack">
+    <h2>Timeline parallela</h2>
+    <table>
+      <thead><tr><th>Settimane</th><th>Dev A (Database)</th><th>Dev B (C++17)</th><th>Sync</th></tr></thead>
+      <tbody>
+        <tr class="success-row"><td><strong>1</strong></td><td>S1: accordo sullo schema</td><td>S1: accordo sullo schema</td><td><strong>S1 — insieme</strong></td></tr>
+        <tr><td>2–4</td><td>ODB character.hpp + schema personaggio</td><td>Modernizzazione C++17 (toolchain completata), char* → string, CMake</td><td>—</td></tr>
+        <tr><td>4–6</td><td>Script migrazione players.dat/rent/</td><td>Utilities, FILE*, macro → metodi</td><td><strong>S2 — adapter layer</strong></td></tr>
+        <tr><td>6–9</td><td>Schema mondo + script importazione world files</td><td>unordered_map, globals, constants</td><td>—</td></tr>
+        <tr><td>9–11</td><td>Integrazione load/save DB nel codice server</td><td>Refactoring act.*.cpp, handler.cpp</td><td><strong>S3 — attivazione DB</strong></td></tr>
+        <tr><td>11–12</td><td>Achievements DB + test finali</td><td>Cleanup e -Wpedantic zero warnings</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- Pro/contro -->
+  <div class="section">
+    <h2>Pro e contro di questa strategia</h2>
+    <div class="grid-2-uneven" style="margin-top: 10px;">
+      <div class="stack-sm">
+        <p class="semibold secondary">Vantaggi</p>
+        <p class="small">Le fasi non sono più sequenziali — si lavora in parallelo dall'inizio e si finisce prima.</p>
+        <p class="small">Ogni dev ha un dominio chiaro senza sovrapposizioni quotidiane.</p>
+        <p class="small">Il DB può essere testato con le struct attuali (non serve aspettare il C++17).</p>
+        <p class="small">La modernizzazione C++ non è bloccata da decisioni DB.</p>
+      </div>
+      <div class="stack-sm">
+        <p class="semibold secondary">Rischi</p>
+        <p class="small">I 3 sync point richiedono disponibilità coordinata — se uno è bloccato, si blocca anche l'altro.</p>
+        <p class="small">Se Dev B cambia un campo in structs.hpp (es. da char* a string), Dev A deve aggiornare il suo adapter.</p>
+        <p class="small">Branch paralleli per settimane accumulano divergenze. Merge frequenti su main riducono il rischio.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Backup e refund -->
+  <div class="section stack">
+    <h2>Decisione architetturale: backup e comando refund</h2>
+    <p class="secondary">
+      I backup zip esistenti contengono file binari (<code>char_file_u</code>). Il comando <code>refund</code> estrae
+      lo zip e copia i file in <code>lib/players/</code>. Questo meccanismo deve continuare a funzionare
+      anche dopo la migrazione al DB, per qualsiasi backup passato o futuro.
+    </p>
+
+    <p class="small secondary">Ha senso scrivere sia su file che su DB? È ridondante, ma temporaneamente necessario. Le tre opzioni:</p>
+    <table>
+      <thead><tr><th>Opzione</th><th>Come funziona</th><th>Pro</th><th>Contro</th></tr></thead>
+      <tbody>
+        <tr class="success-row">
+          <td><strong>A — Dual Write</strong><br><span style="color:#15803d; font-size:11px;">✓ scelta attuale</span></td>
+          <td>save scrive su DB + file. Load legge solo DB. Backup zippa i file come oggi.</td>
+          <td>Zero modifiche a backup e refund. Funziona con zip di qualsiasi data.</td>
+          <td>Doppio write ad ogni save. File su disco che sembrano attivi ma non lo sono.</td>
+        </tr>
+        <tr>
+          <td><strong>B — Backup da mysqldump</strong><br><span class="secondary small">obiettivo futuro</span></td>
+          <td>Cron fa mysqldump invece di zippare file. refund ripristina da dump SQL.</td>
+          <td>Una sola sorgente di verità. Niente file .dat.</td>
+          <td>Riscrivere cron di backup e comando refund in act.wizard.cpp.</td>
+        </tr>
+        <tr>
+          <td><strong>C — Export JSON per pg</strong></td>
+          <td>Cron esporta ogni pg in JSON → zip. refund legge JSON → INSERT nel DB.</td>
+          <td>Formato leggibile e estensibile.</td>
+          <td>Riscrivere backup e refund. Più lavoro con meno urgenza.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="small secondary">
+      <strong>Raccomandazione:</strong> parti con A (Dual Write) perché non blocca la migrazione e il refund continua a funzionare
+      su zip di qualsiasi data, anche quelli di 3 anni fa. Passa a B dopo, quando il DB è stabile e rodato —
+      è la scelta giusta a lungo termine ma non vale il rischio ora.
+    </p>
+
+    <div class="card">
+      <div class="card-header">Dual Write — come funziona in dettaglio</div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Operazione</th><th>Comportamento</th></tr></thead>
+          <tbody>
+            <tr><td><code>save_char()</code></td><td>Scrive su DB + scrive file binario in lib/players/ (shadow copy)</td></tr>
+            <tr><td><code>load_char()</code></td><td>Legge solo da DB — il file non viene mai letto in condizioni normali</td></tr>
+            <tr><td>backup cron</td><td>Zippa lib/players/ come oggi — <strong>invariato per sempre</strong></td></tr>
+            <tr><td><code>refund</code></td><td>Estrae zip, copia file — <strong>invariato per sempre</strong></td></tr>
+            <tr class="warning-row"><td>login dopo refund</td><td>Auto-import: trova il file → importa nel DB → cancella il file</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">legacy_loader.cpp — da mantenere per sempre</div>
+      <div class="card-body stack">
+        <p>
+          Il codice che legge i formati binari (<code>char_file_u</code>, <code>obj_file_u</code>, <code>.aux</code>) non va mai rimosso.
+          Va spostato in un modulo dedicato chiaramente marcato come <strong>sola lettura</strong>.
+        </p>
+        <table>
+          <thead><tr><th>Struct / File</th><th>Regola</th></tr></thead>
+          <tbody>
+            <tr class="danger-row"><td><code>char_file_u</code></td><td>MAI modificare — formato di lettura zip storici</td></tr>
+            <tr class="danger-row"><td><code>obj_file_u / obj_file_elem</code></td><td>MAI modificare</td></tr>
+            <tr class="danger-row"><td><code>old_obj_file_u</code></td><td>MAI modificare</td></tr>
+            <tr class="warning-row"><td><code>legacy_loader.cpp</code> (nuovo)</td><td>Solo lettura, zero write — usato da auto-import e refund</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Agenda S1 -->
+  <div class="section stack">
+    <h2>Agenda S1 — da decidere insieme prima di scrivere codice</h2>
+    <ul class="todo-list">
+      <li><div class="todo-icon"></div>Concordare i tipi delle colonne DB partendo da <code>char_file_u</code> (la mappa del tesoro)</li>
+      <li><div class="todo-icon"></div>Definire i nomi delle tabelle: character_stats, character_skills, character_affects, character_equipment, character_inventory, character_achievements, character_quests</li>
+      <li><div class="todo-icon"></div>Confermare strategia Dual Write: <code>save_char_to_db()</code> chiama anche <code>save_char_to_file()</code></li>
+      <li><div class="todo-icon"></div><strong>Dev A:</strong> <code>legacy_loader.cpp</code> è il PRIMO deliverable — deve esistere prima che Dev B tocchi le struct</li>
+      <li><div class="todo-icon"></div>Concordare il feature flag: <code>USE_DB_LOAD</code> / <code>USE_FILE_LOAD</code></li>
+      <li><div class="todo-icon"></div>Decidere cosa fare dei <code>char*</code> in <code>char_special_data</code> non presenti in <code>char_file_u</code> (poofin, prompt, email, ecc.) — salvati altrove o nuovi campi DB?</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <p class="secondary small">
+    Consiglio: merge su main almeno ogni settimana con la strategia "feature flag" —
+    il nuovo codice DB vive dietro <code>#ifdef USE_DB</code> / <code>USE_FILE</code> finché non è stabile,
+    così entrambi i branch compilano sempre senza rompere nulla.
+  </p>
+
+</div>
+</body>
+</html>

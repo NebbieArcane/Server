@@ -12,6 +12,7 @@
 #include <cstdio>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
+#include "flags.hpp"
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
 namespace Alarmud {
@@ -246,6 +247,27 @@ void zone_update();
 void reset_zone(int zone);
 int is_empty(int zone_nr);
 int load_char(const char* name, struct char_file_u* char_element);
+int load_char_mysql(const char* name, struct char_file_u* char_element);
+/** Bitmask per save_character_to_db (§4.1 cutover). */
+constexpr unsigned CHAR_DB_SAVE_BODY = 1u;
+constexpr unsigned CHAR_DB_SAVE_TOON = 2u;
+constexpr unsigned CHAR_DB_SAVE_EXTRA = 4u;
+constexpr unsigned CHAR_DB_SAVE_RENT = 8u;
+constexpr unsigned CHAR_DB_SAVE_BODY_TOON = CHAR_DB_SAVE_BODY | CHAR_DB_SAVE_TOON;
+
+bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
+						  const struct obj_file_u* rent, unsigned save_flags);
+bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
+bool load_rent_mysql(const char* name, struct obj_file_u* rent);
+bool mark_inventory_deleted_mysql(const char* name, const char* cause);
+bool refund_restore_inventory_mysql(const char* name, const char* cause,
+									long long from_epoch, long long to_epoch);
+#if DEATH_FIX
+void death_snapshot_save(const char* name, long saved_exp, long saved_at_epoch);
+bool death_snapshot_load(const char* name, long& saved_exp, long& saved_at_epoch);
+bool death_snapshot_sync_exp_mysql(const char* name, long saved_exp);
+#endif
+bool save_rent_mysql(const char* name, const struct obj_file_u& rent);
 void store_to_char(struct char_file_u* st, struct char_data* ch);
 void char_to_store(struct char_data* ch, struct char_file_u* st);
 int create_entry(char* name);

@@ -22,7 +22,7 @@
 /***************************  Local    include ************************************/
 #include "magic.hpp"
 #include "act.info.hpp"
-#include "act.obj2.hpp"
+#include "act.obj.hpp"
 #include "act.wizard.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -388,25 +388,37 @@ void spell_earthquake(byte level, struct char_data* ch,
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 
 				if(GetMaxLevel(tmp_victim) > 4) {
-                    sprintf(buf, "$N cade a terra e si fa male!");
-                    if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, (IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
-                    act(buf, FALSE, ch, 0, tmp_victim, TO_CHAR);
-                    sprintf(buf, "Cadi a terra e ti fai male!!");
-                    if(IS_SET(tmp_victim->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[%s%d]$c0007\n\r",buf, (dam > 0 ? "-" : ""), (IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
-                    else
-                        sprintf(buf, "%s\n\r",buf);
+					std::string msg = "$N cade a terra e si fa male!";
+					if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+						msg += " $c0003[";
+						msg += std::to_string((IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
+						msg += "]$c0007";
+					}
+					act(msg.c_str(), FALSE, ch, 0, tmp_victim, TO_CHAR);
+					msg = "Cadi a terra e ti fai male!!";
+					if(IS_SET(tmp_victim->player.user_flags,PWP_MODE)) {
+						msg += " $c0001[";
+						msg += (dam > 0 ? "-" : "");
+						msg += std::to_string((IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
+						msg += "]$c0007\n\r";
+					}
+					else {
+						msg += "\n\r";
+					}
+					std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
 					MissileDamage(ch, tmp_victim, dam, SPELL_EARTHQUAKE, 5);
 				}
 				else {
-                    sprintf(buf, "La terra si apre ed inghiotte $N!");
-                    if(IS_SET(ch->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0003[%d]$c0007",buf, GET_MAX_HIT(tmp_victim)+30);
-                    act(buf, FALSE, ch, 0, tmp_victim, TO_CHAR);
-                    if(IS_SET(tmp_victim->player.user_flags,PWP_MODE))
-                        sprintf(buf, "%s $c0001[-%d]$c0007",buf, GET_MAX_HIT(tmp_victim)+30);
+					std::string msg = "La terra si apre ed inghiotte $N!";
+					if(IS_SET(ch->player.user_flags,PWP_MODE)) {
+						msg += " $c0003[" + std::to_string(GET_MAX_HIT(tmp_victim) + 30) + "]$c0007";
+					}
+					act(msg.c_str(), FALSE, ch, 0, tmp_victim, TO_CHAR);
+					if(IS_SET(tmp_victim->player.user_flags,PWP_MODE)) {
+						msg += " $c0001[-" + std::to_string(GET_MAX_HIT(tmp_victim) + 30) + "]$c0007";
+					}
+					std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
 					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
 					act("La terra si apre ed inghiotte $N!", FALSE, ch, 0, tmp_victim, TO_NOTVICT);
 					MissileDamage(ch, tmp_victim, GET_MAX_HIT(tmp_victim)+30, SPELL_EARTHQUAKE, 5);
@@ -917,12 +929,12 @@ void spell_cure_critic(byte level, struct char_data* ch,
     {
         sprintf(buf, "$c0015Curi $N$c0015.");
         if(IS_SET(ch->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_CHAR);
         act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
         sprintf(buf, "$c0015$n$c0015 ti cura.");
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
     if(ch == victim)
@@ -930,7 +942,7 @@ void spell_cure_critic(byte level, struct char_data* ch,
         act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
         sprintf(buf, "$c0015Ti curi.");
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
 
@@ -977,12 +989,12 @@ void spell_cure_light(byte level, struct char_data* ch,
     {
         sprintf(buf, "$c0015Curi $N$c0015.");
         if(IS_SET(ch->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_CHAR);
         act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
         sprintf(buf, "$c0015$n$c0015 ti cura.");
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
     if(ch == victim)
@@ -990,7 +1002,7 @@ void spell_cure_light(byte level, struct char_data* ch,
         act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
         sprintf(buf, "$c0015Ti curi.");
         if(IS_SET(victim->player.user_flags,PWP_MODE))
-            sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+            std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
 
@@ -1326,9 +1338,9 @@ void spell_heal(byte level, struct char_data* ch,
         if(IS_SET(ch->player.user_flags,PWP_MODE))
         {
             if(healpoints < 0)
-                sprintf(buf, "%s $c0001[%d]$c0007",buf, healpoints);
+                std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0001[%d]$c0007", healpoints);
             else
-                sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+                std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         }
         act(buf, FALSE, ch, 0, victim, TO_CHAR);
         act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
@@ -1336,9 +1348,9 @@ void spell_heal(byte level, struct char_data* ch,
         if(IS_SET(victim->player.user_flags,PWP_MODE))
         {
             if(healpoints < 0)
-                sprintf(buf, "%s $c0001[%d]$c0007",buf, healpoints);
+                std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0001[%d]$c0007", healpoints);
             else
-                sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+                std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         }
         act(buf, FALSE, ch, 0, victim, TO_VICT);
 
@@ -1367,9 +1379,9 @@ void spell_heal(byte level, struct char_data* ch,
         if(IS_SET(victim->player.user_flags,PWP_MODE))
         {
             if(healpoints < 0)
-                sprintf(buf, "%s $c0001[%d]$c0007",buf, healpoints);
+                std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0001[%d]$c0007", healpoints);
             else
-                sprintf(buf, "%s $c0014[%d]$c0007",buf, healpoints);
+                std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf), " $c0014[%d]$c0007", healpoints);
         }
         act(buf, FALSE, ch, 0, victim, TO_VICT);
     }
@@ -1517,7 +1529,7 @@ void spell_locate_object(byte level, struct char_data* ch,
 				)
 #endif
 		  ) {
-			strncat(buf,buf2,MAX_STRING_LENGTH);
+			strncat(buf, buf2, sizeof(buf) - strlen(buf) - 1);
 		}
 	}/* fine for */
 	page_string(ch->desc, buf, 0);
@@ -2866,7 +2878,7 @@ void spell_identify(byte level, struct char_data* ch,
 					col1, col2, obj->obj_flags.value[2], col1);
 			send_to_char(buf, ch);
 			sprinttype(obj->obj_flags.value[3],aszWeaponType,buf2);
-			sprintf(buf,"%sTipo di danno: '%s%s%s'\n\r", col1, col2, buf2, col1);
+			sprintf(buf,"%sTipo di danno: '%s%.200s%s'\n\r", col1, col2, buf2, col1);
 			send_to_char(buf, ch);
 			break;
 
@@ -2895,7 +2907,7 @@ void spell_identify(byte level, struct char_data* ch,
 				}
 
 				sprinttype(obj->affected[i].location,apply_types,buf2);
-				sprintf(buf,"    %sTi puo' dare : %s%s%s by ", col1, col2, buf2, col1);
+				sprintf(buf,"    %sTi puo' dare : %s%.200s%s by ", col1, col2, buf2, col1);
 				send_to_char(buf,ch);
 				switch(obj->affected[i].location)
 				{

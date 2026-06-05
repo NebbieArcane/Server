@@ -69,7 +69,8 @@ const char* obj_edit_menu = "    1) Name                    2) Short description
 							"   11) Object values          12) Special\n\r\n\r";
 
 void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
-	int i, a, check=0, row, update;
+	int i, row, update;
+	unsigned long check = 0;
 	char buf[255];
 
 	if(type != ENTER_CHECK)
@@ -85,33 +86,25 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 		if(update < 0 || update > 39) {
 			return;
 		}
-		i=1;
-		if(update > 0 && update < 32)
-			for(a=1; a<=update; a++) {
-				i*=2;
-			}
-        else
-            for(a=1; a<=update-32; a++) {
-                i*=2;
-            }
+		check = (update < 32) ? (1UL << update) : (1UL << (update - 32));
         if(update<32)
         {
-            if(IS_SET(ch->specials.objedit->obj_flags.extra_flags, i)) {
-                REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags, i);
+            if(IS_SET(ch->specials.objedit->obj_flags.extra_flags, check)) {
+                REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags, check);
             }
             else
             {
-                SET_BIT(ch->specials.objedit->obj_flags.extra_flags, i);
+                SET_BIT(ch->specials.objedit->obj_flags.extra_flags, check);
             }
         }
         else
         {
-                if(IS_SET(ch->specials.objedit->obj_flags.extra_flags2, i)) {
-                    REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags2, i);
+                if(IS_SET(ch->specials.objedit->obj_flags.extra_flags2, check)) {
+                    REMOVE_BIT(ch->specials.objedit->obj_flags.extra_flags2, check);
                 }
                 else
             {
-                SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, i);
+                SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, check);
             }
         }
 	}
@@ -132,17 +125,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
                 row++;
             }
             send_to_char(buf, ch);
-            check=1;
-            if(i > 0 && i < 32)
-                for(a=1; a<=i; a++)
-                {
-                    check*=2;
-                }
-            else
-                for(a=1; a<=(i-32); a++)
-                {
-                    check*=2;
-                }
+            check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             if (i < 32)
             {
                 sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.objedit->obj_flags.extra_flags & (check)) ? "X" : " "), extra_bits[i]);
@@ -171,22 +154,10 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 
         for(i = 0; i < 39; i++)
         {
-            check = 1;
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
-
-            if(i > 0 && i < 32)
-                for(a=1; a<=i; a++)
-                {
-                    check*=2;
-                }
-            else
-                for(a=1; a<=(i-32); a++)
-                {
-                    check*=2;
-                }
 
             if(i < 32)
             {
@@ -302,8 +273,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
         for(i = 0; i < 20; i++)
         {
             check = 1;
-            sprintf(buf2, "%s", "%-");
-            sprintf(buf2, "%s%d", buf2, 45-x);
+            snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
             strcat(buf2, "s%-2d [%s] %s\n\r");
             boost::format fmt2 (buf2);
 
@@ -820,8 +790,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 
 		for(i = 0; i < E_ITEM_TYPE_COUNT; i++)
 		{
-			sprintf(buf2, "%s", "%-");
-			sprintf(buf2, "%s%d", buf2, 45-x);
+			snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
 			strcat(buf2, "s%-2d %s\n\r");
 			boost::format fmt2 (buf2);
 
@@ -1136,8 +1105,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 					for(i = 0; *affected_bits2[i] != '\n'; i++)
 					{
 						check = 1;
-						sprintf(buf2, "%s", "%-");
-						sprintf(buf2, "%s%d", buf2, 45-x);
+						snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
 						strcat(buf2, "s%-10u : %s\n\r");
 						boost::format fmt2 (buf2);
 
@@ -1252,8 +1220,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 					for(i = 0; i < 18; i++)
 					{
 						check = 1;
-						sprintf(buf2, "%s", "%-");
-						sprintf(buf2, "%s%d", buf2, 45-x);
+						snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
 						strcat(buf2, "s%-6u : %s\n\r");
 						boost::format fmt2 (buf2);
 
@@ -1323,8 +1290,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 					for(i = 0; *affected_bits[i] != '\n'; i++)
 					{
 						check = 1;
-						sprintf(buf2, "%s", "%-");
-						sprintf(buf2, "%s%d", buf2, 45-x);
+						snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
 						strcat(buf2, "s%-10u : %s\n\r");
 						boost::format fmt2 (buf2);
 
@@ -1482,8 +1448,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			}
 			else if(a == 2)
 			{
-				sprintf(buf2, "%s", "%-");
-				sprintf(buf2, "%s%d", buf2, 30-x);
+				snprintf(buf2, sizeof(buf2), "%%-%d", 30-x);
 				strcat(buf2, "s%-2d %s");
 				boost::format fmt2 (buf2);
 				fmt2 % "" % (i > APPLY_T_MANA ? i - 8 : i + 1) % apply_types[i];
@@ -1493,8 +1458,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			}
 			else if(a == 3)
 			{
-				sprintf(buf2, "%s", "%-");
-				sprintf(buf2, "%s%d", buf2, 55-x);
+				snprintf(buf2, sizeof(buf2), "%%-%d", 55-x);
 				strcat(buf2, "s%-2d %s\n\r");
 				boost::format fmt (buf2);
 				fmt % "" % (i > APPLY_T_MANA ? i - 8 : i + 1) % apply_types[i];
