@@ -883,12 +883,14 @@ int off_kick_fighter_class(struct char_data* ch) {
 	int dummy = 0;
 	int carry = 0;
 	WEARING_N(ch, dummy, carry);
+	const unsigned carried =
+		static_cast<unsigned>(IS_CARRYING_N(ch)) + static_cast<unsigned>(carry);
 	if(HasClass(ch, CLASS_MONK) &&
 	   !((ch->equipment[WIELD]) &&
 	     (ch->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON)) &&
 	   !((ch->equipment[HOLD]) &&
 	     (ch->equipment[HOLD]->obj_flags.type_flag == ITEM_WEAPON)) &&
-	   ((IS_CARRYING_N(ch) + carry) < (MONK_MAX_RENT + 5))) {
+	   (carried < static_cast<unsigned>(MONK_MAX_RENT) + 5u)) {
 		return CLASS_MONK;
 	}
 	if(HasClass(ch, CLASS_BARBARIAN)) {

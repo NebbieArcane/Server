@@ -2009,6 +2009,8 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	 * Testo anche hold e totale oggetti portati
 	 */
 	WEARING_N(ch,dummy,result);
+	const unsigned carried =
+		static_cast<unsigned>(IS_CARRYING_N(ch)) + static_cast<unsigned>(result);
 	if(HasClass(ch,CLASS_MONK) &&
 			!((ch->equipment[WIELD]) &&
 			  (ch->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON)
@@ -2016,7 +2018,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 			!((ch->equipment[HOLD]) &&
 			  (ch->equipment[HOLD]->obj_flags.type_flag == ITEM_WEAPON)
 			 ) &&
-			((IS_CARRYING_N(ch)+result)<(MONK_MAX_RENT +5))
+			(carried < static_cast<unsigned>(MONK_MAX_RENT) + 5u)
 	  ) {
 		classe=CLASS_MONK;
 	}
