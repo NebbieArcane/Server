@@ -307,7 +307,7 @@ ACTION_FUNC(do_imptest) {
 		return;
 	}
 	if(!strcasecmp(buf, "off")) {
-		SetTest(true);
+		SetTest(false);
 		send_to_char("Test mode off", ch);
 		return;
 	}
