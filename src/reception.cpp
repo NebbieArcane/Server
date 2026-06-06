@@ -1327,6 +1327,8 @@ void update_obj_file() {
 
             snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
+            ok = FALSE;
+
             if((pCharFile = fopen(szFileName, "r+")) != NULL)
             {
                 if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
@@ -1390,7 +1392,6 @@ void update_obj_file() {
                                         WriteObjs(pObjFile, &st);
                                     }
 
-                                    fclose(pObjFile);
                                 }
                                 else
                                 { // if( ch_st.load_room == AUTO_RENT )
@@ -1413,7 +1414,6 @@ void update_obj_file() {
                                             rewind(pCharFile);
                                             fwrite(&ch_st, sizeof(ch_st), 1, pCharFile);
 
-                                            fclose(pObjFile);
                                             ZeroRent(ch_st.name);
 
                                         }
@@ -1433,7 +1433,6 @@ void update_obj_file() {
                                             {
                                                 WriteObjs(pObjFile, &st);
                                             }
-                                            fclose(pObjFile);
 #if LIMITED_ITEMS
                                             CountLimitedItems(&st);
 #endif
@@ -1456,7 +1455,6 @@ void update_obj_file() {
                                         {
                                             WriteObjs(pObjFile, &st);
                                         }
-                                        fclose(pObjFile);
                                     }
                                 } // if( ch_st.load_room == AUTO_RENT ) else
                             }
@@ -1465,8 +1463,13 @@ void update_obj_file() {
                                 mudlog(LOG_SYSERR, "Wrong person written into object file! (%s/%s)", st.owner, ch_st.name);
                                 assert(0);
                             }
-                        } // Il personaggio non ha oggetti.
-                    } // Non esiste il file degli oggetti.
+                        }
+                        else
+                        {
+                            mudlog(LOG_SYSERR, "Unreadable rent file for %s", ch_st.name);
+                        }
+                        fclose(pObjFile);
+                    } // rent file opened
                 }
                 else
                 {
@@ -1479,6 +1482,7 @@ void update_obj_file() {
                 mudlog(LOG_ERROR, "Error opening file %s.", szFileName);
             }
         } // Fine dei giocatori
+        closedir(dir);
     }
     else
     {
