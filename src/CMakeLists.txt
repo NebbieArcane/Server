@@ -134,20 +134,21 @@ if(DEFINED ENV{ENVIRONMENT} AND NOT "$ENV{ENVIRONMENT}" STREQUAL "")
 else()
 	set(ENVIRONMENT "vagrant")
 endif()
-message(STATUS "Myst build environment: ${ENVIRONMENT} (-Denv_${ENVIRONMENT})")
+message(STATUS "Myst build environment: ${ENVIRONMENT} (config.hpp: env_${ENVIRONMENT})")
 
 # LOGICA CONDIZIONALE PER L'OTTIMIZZAZIONE:
+# env_<target> viene da config.hpp (configure_file), non duplicare con -D qui.
 if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
-	# Docker: Disabilita l'ottimizzazione (-O0), definisce env_<ENVIRONMENT>,
+	# Docker: Disabilita l'ottimizzazione (-O0),
 	# e AGGIUNGE -DNDEBUG per disattivare le istruzioni assert() (handler.cpp crash).
-	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0, defining env_${ENVIRONMENT}, and disabling assertions (NDEBUG).")
-	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -Denv_${ENVIRONMENT} -DNDEBUG")
-	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0 -Denv_${ENVIRONMENT} -DNDEBUG")
+	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0 and disabling assertions (NDEBUG).")
+	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -DNDEBUG")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0 -DNDEBUG")
 else()
 	# Vagrant/Locale: Usa i flag di ottimizzazione originali (compatibilità)
-	message(STATUS "LOCAL BUILD: Using original optimization flags (-Denv_${ENVIRONMENT}).")
-	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_${ENVIRONMENT}")
-	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_${ENVIRONMENT}")
+	message(STATUS "LOCAL BUILD: Using original optimization flags.")
+	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
 endif()
 # FINE LOGICA CONDIZIONALE
 
