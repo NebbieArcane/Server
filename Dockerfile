@@ -32,7 +32,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 90 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 90
 
 # 3. Copia codice sorgente e impostazione permessi
-# Variabile usata dal CMake per selezionare i flag del profilo Docker.
+# Variabile usata dal CMake per il profilo Docker (-O0, NDEBUG); warning come Vagrant (-Werror).
 ENV DOCKER_BUILD=ON
 COPY . /app
 RUN chown -R vagrant:vagrant /app

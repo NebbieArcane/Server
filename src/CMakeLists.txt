@@ -289,11 +289,9 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
 
-# DOCKER/VAGRANT FIX: allow non-blocking warning cleanup loops.
-# This must be done after the target_compile_options call above to override the settings.
-if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "" OR
-	NOT "$ENV{RELAX_WARNINGS}" STREQUAL "")
-	message(STATUS "Overriding -Werror and -Wfatal-errors for non-strict warning build.")
+# Opt-in only: set RELAX_WARNINGS=1 to disable -Werror (e.g. warning cleanup loops).
+if (NOT "$ENV{RELAX_WARNINGS}" STREQUAL "")
+	message(STATUS "RELAX_WARNINGS: overriding -Werror and -Wfatal-errors.")
 	target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 			-Wno-error
 			-Wno-fatal-errors

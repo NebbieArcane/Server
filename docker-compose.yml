@@ -25,7 +25,9 @@ services:
       # Solo lib/: se monti tutta ./mudroot su /app/mudroot sostituisci anche il myst
       # copiato in immagine da CMake (POST_BUILD) e l'entrypoint va in errore.
       - ./mudroot/lib:/app/mudroot/lib
-      - ./mysql_data:/var/lib/mysql # Persistenza del database MySQL (visibile sul tuo HD)
+      # Volume Docker nativo (InnoDB non regge il bind mount macOS/virtiofs).
+      # Copia one-time da ./mysql_data/ già fatta in nebbie_mysql_data.
+      - nebbie_mysql_data:/var/lib/mysql
     ports:
       - "127.0.0.1:4000:4000"
       - "127.0.0.1:4001:4001"
@@ -34,6 +36,8 @@ services:
     tty: true
     environment:
       - SERVER_PORT  # se non specificato in shell, l'entrypoint usa il default 4000
+      - MYSQL_LOWER_CASE_TABLE_NAMES=2  # datadir importato da macOS/APFS
 
 volumes:
+  nebbie_mysql_data:
   mud_data: # non più usato, tenuto per retrocompatibilità

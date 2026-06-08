@@ -7,6 +7,11 @@ MYSQL_RUN_DIR="/var/run/mysqld"
 MYSQL_USER="root"
 MYSQL_PASSWORD="secret"
 MYSQL_DB="nebbie"
+# Volume Linux nativo: default. Per import datadir da macOS: MYSQL_LOWER_CASE_TABLE_NAMES=2
+MYSQL_EXTRA_FLAGS=""
+if [ -n "${MYSQL_LOWER_CASE_TABLE_NAMES:-}" ]; then
+  MYSQL_EXTRA_FLAGS="--lower-case-table-names=${MYSQL_LOWER_CASE_TABLE_NAMES}"
+fi
 
 # 1) Prepara directory e permessi MySQL (entrypoint eseguito come root)
 echo "Setting up MySQL directories and ownership..."
@@ -22,14 +27,14 @@ rm -f ${MYSQL_RUN_DIR}/mysqld.pid
 if [ ! -d "${MYSQL_DATA_DIR}/mysql" ]; then
     echo "Initializing MySQL data directory (First run)..."
     # Inizializzazione esplicita con utente mysql
-    su -s /bin/bash mysql -c "/usr/sbin/mysqld --initialize-insecure --user=mysql --datadir=${MYSQL_DATA_DIR}"
+    su -s /bin/bash mysql -c "/usr/sbin/mysqld --initialize-insecure --user=mysql --datadir=${MYSQL_DATA_DIR} ${MYSQL_EXTRA_FLAGS}"
     echo "Data directory initialized."
 fi
 
 # 3) Avvia MySQL in background con bind esplicito
 echo "Starting MySQL daemon with explicit bind address and datadir..."
 # Avvio mysqld come utente mysql con path espliciti per log/socket/pid
-su -s /bin/bash mysql -c "/usr/sbin/mysqld --bind-address=0.0.0.0 --datadir=${MYSQL_DATA_DIR} --socket=${MYSQL_RUN_DIR}/mysqld.sock --pid-file=${MYSQL_RUN_DIR}/mysqld.pid --log-error=/var/log/mysql/error.log" &
+su -s /bin/bash mysql -c "/usr/sbin/mysqld --bind-address=0.0.0.0 --datadir=${MYSQL_DATA_DIR} --socket=${MYSQL_RUN_DIR}/mysqld.sock --pid-file=${MYSQL_RUN_DIR}/mysqld.pid --log-error=/var/log/mysql/error.log ${MYSQL_EXTRA_FLAGS}" &
 
 # Breve pausa per dare tempo al processo di partire.
 sleep 3
@@ -88,12 +93,16 @@ echo "Database '$MYSQL_DB' created successfully."
 # 5b) Flag cutover su toon (migrated_at / schema_version) se mancanti
 MIGRATION_FLAGS=/app/docs/schema-s1-toon-migration-flags.sql
 if [ -f "$MIGRATION_FLAGS" ]; then
+  HAS_TOON=$(mysql -h 127.0.0.1 -P 3306 --protocol=TCP -u$MYSQL_USER -p$MYSQL_PASSWORD -N -e \
+    "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='${MYSQL_DB}' AND TABLE_NAME='toon';" 2>/dev/null || echo "0")
+  if [ "$HAS_TOON" != "0" ]; then
   HAS_MIGRATED_AT=$(mysql -h 127.0.0.1 -P 3306 --protocol=TCP -u$MYSQL_USER -p$MYSQL_PASSWORD -N -e \
     "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='${MYSQL_DB}' AND TABLE_NAME='toon' AND COLUMN_NAME='migrated_at';" 2>/dev/null || echo "0")
   if [ "$HAS_MIGRATED_AT" = "0" ]; then
     echo "Applying toon migration flags (migrated_at, schema_version)..."
     mysql -h 127.0.0.1 -P 3306 --protocol=TCP -u$MYSQL_USER -p$MYSQL_PASSWORD "$MYSQL_DB" < "$MIGRATION_FLAGS"
     echo "Toon migration flags applied."
+  fi
   fi
 fi
 
