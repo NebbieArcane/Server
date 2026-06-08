@@ -38,6 +38,7 @@
 #include "opinion.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
+#include "procarea.hpp"
 #include "spell_parser.hpp"
 #include "toon_migration.hpp"
 
@@ -1018,6 +1019,9 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	 */
 	make_corpse(ch,killedbytype);
 	zero_rent(ch);
+	if(IS_NPC(ch)) {
+		procarea_on_mob_death(ch);
+	}
 	extract_char(ch);
 }
 
