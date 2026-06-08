@@ -128,18 +128,27 @@ include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+# Ambiente target: release, master, devel, vagrant (build.sh esporta ENVIRONMENT).
+if(DEFINED ENV{ENVIRONMENT} AND NOT "$ENV{ENVIRONMENT}" STREQUAL "")
+	set(ENVIRONMENT "$ENV{ENVIRONMENT}")
+else()
+	set(ENVIRONMENT "vagrant")
+endif()
+message(STATUS "Myst build environment: ${ENVIRONMENT} (config.hpp: env_${ENVIRONMENT})")
+
 # LOGICA CONDIZIONALE PER L'OTTIMIZZAZIONE:
+# env_<target> viene da config.hpp (configure_file), non duplicare con -D qui.
 if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
-	# Docker: Disabilita l'ottimizzazione (-O0), definisce env_vagrant,
+	# Docker: Disabilita l'ottimizzazione (-O0),
 	# e AGGIUNGE -DNDEBUG per disattivare le istruzioni assert() (handler.cpp crash).
-	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0, defining env_vagrant, and disabling assertions (NDEBUG).")
-	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -Denv_vagrant -DNDEBUG")
-	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0 -Denv_vagrant -DNDEBUG")
+	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0 and disabling assertions (NDEBUG).")
+	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -DNDEBUG")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0 -DNDEBUG")
 else()
 	# Vagrant/Locale: Usa i flag di ottimizzazione originali (compatibilità)
-	message(STATUS "VAGRANT BUILD: Using original optimization flags.")
-	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_vagrant")
-	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg -Denv_vagrant")
+	message(STATUS "LOCAL BUILD: Using original optimization flags.")
+	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -finline-functions -fno-strength-reduce -pipe -pg")
 endif()
 # FINE LOGICA CONDIZIONALE
 

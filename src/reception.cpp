@@ -1466,7 +1466,13 @@ void update_obj_file() {
                         }
                         else
                         {
-                            mudlog(LOG_SYSERR, "Unreadable rent file for %s", ch_st.name);
+                            long rent_size = 0;
+                            if(fseek(pObjFile, 0, SEEK_END) == 0) {
+                                rent_size = ftell(pObjFile);
+                            }
+                            if(rent_size != 0) {
+                                mudlog(LOG_SYSERR, "Unreadable rent file for %s", ch_st.name);
+                            }
                         }
                         fclose(pObjFile);
                     } // rent file opened
