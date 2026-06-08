@@ -1471,7 +1471,8 @@ ACTION_FUNC(do_look) {
 		send_to_char("Non riesci a vedere un tubo, sei cieco!\n\r", ch);
 	}
 	else if((IS_DARK_P(pRoomWithChar)) && (!IS_IMMORTAL(ch)) &&
-			(!IS_AFFECTED(ch, AFF_TRUE_SIGHT))&&
+			(!IS_AFFECTED(ch, AFF_TRUE_SIGHT)) &&
+			(!IS_AFFECTED(ch, AFF_SCRYING)) &&
 			GET_RACE(ch)!=RACE_DARK_ELF && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
 			GET_RACE(ch)!=RACE_DEEP_GNOME) {
 		send_to_char("E' molto buio qui...\n\r", ch);
@@ -2009,7 +2010,12 @@ ACTION_FUNC(do_exits) {
 				!IS_SET(exitdata->exit_info, EX_SECRET)) {
 			buf += "$c0007";
 			buf += exits[door];
-			if(IS_DARK(exitdata->to_room)) {
+			const bool dest_too_dark =
+				IS_DARK(exitdata->to_room) && !IS_IMMORTAL(ch) &&
+				!IS_AFFECTED(ch, AFF_TRUE_SIGHT) &&
+				!IS_AFFECTED(ch, AFF_SCRYING) && GET_RACE(ch) != RACE_DARK_ELF &&
+				GET_RACE(ch) != RACE_DARK_DWARF && GET_RACE(ch) != RACE_DEEP_GNOME;
+			if(dest_too_dark) {
 				buf += " $c0015-$c0008 Troppo buio per dirlo\n\r";
 			}
 			else {
@@ -3411,6 +3417,10 @@ void AppendCommandColumns(std::string& out,
                           struct char_data* ch,
                           int minCommandLevel,
                           bool enforceMaxStringLength) {
+	/* Longest registered name is 20 chars ("psionic invisibility"); 4 cols × 20 ≈ 80. */
+	constexpr int kCommandColumnWidth = 20;
+	constexpr int kCommandsPerRow = 4;
+
 	int columnIndex = 1;
 	for(int i = 0; i < 27; ++i) {
 		for(NODE* n = radix_head[i].next; n != nullptr; n = n->next) {
@@ -3419,13 +3429,13 @@ void AppendCommandColumns(std::string& out,
 			}
 
 			std::ostringstream formattedName;
-			formattedName << std::left << std::setw(10) << n->name;
+			formattedName << std::left << std::setw(kCommandColumnWidth) << n->name;
 			const std::string commandColumn = formattedName.str();
 			if(!enforceMaxStringLength ||
 			   (out.size() + commandColumn.size() <= MAX_STRING_LENGTH)) {
 				out += commandColumn;
 			}
-			if(!(columnIndex % 7)) {
+			if(!(columnIndex % kCommandsPerRow)) {
 				if(!enforceMaxStringLength || (out.size() + 2 <= MAX_STRING_LENGTH)) {
 					out += "\n\r";
 				}
@@ -5384,10 +5394,10 @@ ACTION_FUNC(do_attribute) {
 	 */
 	if(ch->affected != nullptr) {
 		bool bFirstTime = true;
-		int otype = -1;
+		bool shown[MAX_EXIST_SPELL + 1] {};
 		for(aff = ch->affected; aff != nullptr; aff = aff->next) {
-			if(aff->type <= MAX_EXIST_SPELL && aff->type != otype) {
-				otype = aff->type;
+			if(aff->type <= MAX_EXIST_SPELL && aff->type > 0 && !shown[aff->type]) {
+				shown[aff->type] = true;
 
 				switch(aff->type) {
 				case SKILL_SNEAK:
