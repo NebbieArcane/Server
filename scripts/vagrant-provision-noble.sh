@@ -1,5 +1,7 @@
 #!/bin/bash
-# Provisioning Vagrant nebbieserver — allineato a Dockerfile (Ubuntu 24.04 Noble).
+# Provisioning Vagrant nebbieserver — Ubuntu 24.04 Noble.
+# Toolchain myst: GCC/G++ 13 (allineato a ~/Server/devel su NebbieArcane).
+# ODB 2.5: build con g++-12 (scripts/install-odb-toolchain.sh, come Docker).
 # Eseguito come root da Vagrantfile. Idempotente: sicuro con `vagrant provision`.
 set -euo pipefail
 exec > >(tee -a /var/log/nebbie-vagrant-provision.log) 2>&1
@@ -44,8 +46,12 @@ odb_already_installed() {
 }
 
 install_odb_toolchain() {
-	echo "==> ODB 2.5 (build2 + bpkg, script condiviso con Docker)"
-	SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	echo "==> ODB 2.5 (build2 + bpkg, g++-12 — come Docker)"
+	# Vagrant copia questo script in /tmp prima di eseguirlo: BASH_SOURCE non è /vagrant/scripts/.
+	local odb_script="/vagrant/scripts/install-odb-toolchain.sh"
+	if [ ! -f "$odb_script" ]; then
+		odb_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/install-odb-toolchain.sh"
+	fi
 	export ODB_BUILD
 
 	# Swap temporaneo: build ODB in VM può richiedere molta RAM.
@@ -58,13 +64,24 @@ install_odb_toolchain() {
 		SWAP_CREATED=1
 	fi
 
-	bash "${SCRIPT_DIR}/install-odb-toolchain.sh"
+	bash "$odb_script"
 	touch "$ODB_MARKER"
 
 	if [ "${SWAP_CREATED:-0}" = "1" ]; then
 		swapoff /swapfile || true
 		rm -f /swapfile
 	fi
+}
+
+# Default gcc/g++ per myst: 13.x come devel. ODB resta su g++-12 (install-odb-toolchain.sh).
+set_default_compiler_devel() {
+	echo "==> Compilatore default myst (allineato a devel)"
+	update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 2>/dev/null || true
+	update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 2>/dev/null || true
+	update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 90 2>/dev/null || true
+	update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 90 2>/dev/null || true
+	gcc --version | head -1
+	g++ --version | head -1
 }
 
 ensure_guest_dns
@@ -77,9 +94,12 @@ if [ ! -f "$APT_MARKER" ]; then
 	echo "mysql-server mysql-server/root_password password secret" | debconf-set-selections
 	echo "mysql-server mysql-server/root_password_again password secret" | debconf-set-selections
 
-	echo "==> Dipendenze (stesso set del Dockerfile)"
+	echo "==> Dipendenze (Noble; myst=gcc-13, ODB=gcc-12)"
 	apt-get -qq install -y \
-		git php8.3-cli gcc-12 g++-12 gcc-12-plugin-dev apache2 make cmake \
+		git php8.3-cli \
+		gcc-13 g++-13 gcc-13-plugin-dev \
+		gcc-12 g++-12 gcc-12-plugin-dev \
+		apache2 make cmake \
 		libconfig++-dev lnav libsqlite3-dev libcurlpp-dev gdb wget \
 		libcurl4-openssl-dev \
 		libboost-dev libboost-program-options-dev libboost-system-dev \
@@ -92,14 +112,16 @@ else
 	echo "==> Dipendenze già installate, skip apt (usa rm ${APT_MARKER} per reinstallare)"
 fi
 
+# VM già provisionate: assicura gcc-13 anche se apt-base è stato saltato.
+apt-get -qq install -y gcc-13 g++-13 gcc-13-plugin-dev 2>/dev/null || true
+
 if [ -f "$ODB_MARKER" ] && odb_already_installed; then
 	echo "==> ODB già installato, skip build ODB (usa rm ${ODB_MARKER} per forzare rebuild)"
 else
 	install_odb_toolchain
 fi
 
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 90 2>/dev/null || true
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 90 2>/dev/null || true
+set_default_compiler_devel
 
 echo "==> Git config utente vagrant"
 sudo -iu vagrant git config --global user.email "nebbie@hexkeep.com"

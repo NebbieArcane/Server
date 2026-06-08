@@ -893,6 +893,24 @@ int new_connection(int s) {
 	return(t);
 }
 
+static int count_descriptor_list(void) {
+	int n = 0;
+	for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
+		++n;
+	}
+	return n;
+}
+
+static void close_login_only_descriptors(void) {
+	for(struct descriptor_data* d = descriptor_list; d; ) {
+		struct descriptor_data* next = d->next;
+		if(!d->character) {
+			close_socket(d);
+		}
+		d = next;
+	}
+}
+
 int new_descriptor(int s) {
 
 	int desc;
@@ -910,27 +928,24 @@ int new_descriptor(int s) {
 		return (-1);
 	}
 
-
-	// Avoid signed-overflow-sensitive form: (desc + 1) >= MAX_CONNECTS.
-	// This is equivalent and safer for optimizer assumptions with -Wstrict-overflow.
-	if(desc >= (MAX_CONNECTS - 1)) {
-		sprintf(buf,"Mi dispiace... Il gioco e' pieno (# giocatori %d). "
-				"Riprova piu' tardi.\n\r", desc);
-		write_to_descriptor(desc,buf);
+	/* Limite connessioni: conta le sessioni MUD, non il numero del file descriptor. */
+	int connections = count_descriptor_list();
+	if(connections >= MAX_CONNECTS - 1) {
+		close_login_only_descriptors();
+		connections = count_descriptor_list();
+	}
+	if(connections >= MAX_CONNECTS) {
+		sprintf(buf,
+				"Mi dispiace... Il gioco e' pieno (# connessioni %d). "
+				"Riprova piu' tardi.\n\r",
+				connections);
+		write_to_descriptor(desc, buf);
 		close(desc);
-
-		for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
-			if(!d->character) {
-				close_socket(d);
-			}
-
-		}
 		return(0);
 	}
-	else {
-		if(desc > maxdesc) {
-			maxdesc = desc;
-		}
+
+	if(desc > maxdesc) {
+		maxdesc = desc;
 	}
 
 	struct descriptor_data* newd = new descriptor_data();
@@ -941,12 +956,7 @@ int new_descriptor(int s) {
 				"Riprova piu' tardi.\n\r");
 		write_to_descriptor(desc,buf);
 		close(desc);
-		for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
-			if(!d->character) {
-				close_socket(d);
-			}
-
-		}
+		close_login_only_descriptors();
 		return(0);
 	}
 

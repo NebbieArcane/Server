@@ -57,6 +57,7 @@ fi
 )
 if [ -x mudroot/myst ] ; then
 	echo "Ready"
+	cp mudroot/myst "../../Deploy/$environment/myst"
 	exit 0
 fi
 echo "Myst executable not found"
