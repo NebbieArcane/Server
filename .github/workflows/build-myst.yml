@@ -33,16 +33,6 @@ jobs:
       options: --entrypoint "" --user ${{ needs.check-user.outputs.RUN_AS }}
 
     steps:
-      - name: Show environment
-        run: |
-          echo "USER=$(id -u)"
-          echo "GROUP=$(id -g)"
-          echo "HOME=$(id -u):$(id -g)"
-          echo "PATH=$(id -u):$(id -g)"
-          echo "PATH=$(id -u):$(id -g)"
-          echo $PWD
-          ls -ld ./
-          ls -l ./
 
       - uses: actions/checkout@v4
 

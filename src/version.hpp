@@ -4,11 +4,14 @@
  *ALARMUD*/
 #ifndef _VERSION_HPP
 #define _VERSION_HPP
-/***************************  System  include ************************************/
-/***************************  Local    include ************************************/
+/***************************  System  include
+ * ************************************/
+/***************************  Local    include
+ * ************************************/
 namespace Alarmud {
-const char* version(void);
-const char* release(void);
-const char* compilazione(void);
+const char *version(void);
+const char *release(void);
+const char *compilazione(void);
+void defaults(void);
 } // namespace Alarmud
 #endif
