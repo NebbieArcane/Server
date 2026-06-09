@@ -4,8 +4,6 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=secret
             - MYSQL_DATABASE=nebbie
-            - MYSQL_USER=root
-            - MYSQL_PASSWORD=secret
         ports:
             - 3306:3306
         volumes:
@@ -22,10 +20,7 @@ services:
             - ADMINER_PASSWORD=secret
             - ADMINER_DEFAULT_SERVER=mysql
             - ADMINER_DEFAULT_PORT=3306
-            - ADMINER_DEFAULT_USER=root
-            - ADMINER_DEFAULT_PASSWORD=secret
-            - ADMINER_DEFAULT_DATABASE=nebbie
-    coding:
+    consumer:
         image: nebbiearcane/mudcompiler:latest
         entrypoint: ["/usr/bin/bash","-c"]
         volumes:
@@ -43,3 +38,4 @@ services:
             - MYSQL_PASSWORD=secret
         depends_on:
             - mysql
+            - adminer
