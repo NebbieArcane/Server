@@ -1,0 +1,40 @@
+# MySQL gira DENTRO il container insieme all'app (stesso setup di Vagrant).
+# docker-entrypoint.sh si occupa di inizializzare e avviare il demone MySQL
+# prima di lanciare il server nebbieserver.
+# Le credenziali e il nome DB devono corrispondere a quelli nel Dockerfile
+# (~/Confs/vagrant.conf): root / secret / nebbie.
+# Base image: Ubuntu 24.04 (Noble). Su Apple Silicon forziamo linux/amd64
+# per compatibilità con toolchain x86_64/ODB precompilati.
+
+services:
+  nebbieserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        TARGETPLATFORM: ${DOCKER_PLATFORM:-linux/amd64}
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
+    container_name: nebbieserver
+    # NOTA SVILUPPO: decommentare il mount qui sotto per montare il codice
+    # sorgente live dall'host (utile per rebuild manuali dentro il container).
+    # Attenzione: sovrascrive /app e quindi il binario compilato nella build
+    # image — usare solo durante lo sviluppo attivo.
+    # volumes:
+    #   - .:/app
+    volumes:
+      # Solo lib/: se monti tutta ./mudroot su /app/mudroot sostituisci anche il myst
+      # copiato in immagine da CMake (POST_BUILD) e l'entrypoint va in errore.
+      - ./mudroot/lib:/app/mudroot/lib
+      - ./mysql_data:/var/lib/mysql # Persistenza del database MySQL (visibile sul tuo HD)
+    ports:
+      - "127.0.0.1:4000:4000"
+      - "127.0.0.1:4001:4001"
+      - "127.0.0.1:4002:4002"
+      - "127.0.0.1:10000:10000"
+    tty: true
+    environment:
+      - SERVER_PORT  # se non specificato in shell, l'entrypoint usa il default 4000
+
+volumes:
+  mud_data: # non più usato, tenuto per retrocompatibilità

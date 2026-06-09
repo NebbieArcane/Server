@@ -1,0 +1,14 @@
+#!/bin/sh
+trap ctrl_c INT
+if [ -x "$(command -v "docker-compose")" ]; then
+    docker=docker-compose
+else
+    docker='docker compose'
+fi
+
+ctrl_c() {
+  $composer down
+}
+
+$docker run --rm coding bash
+$docker down

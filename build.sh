@@ -46,19 +46,15 @@ sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../mud
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
 sed -e "s|FOLDER|./build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile
 if ! cmake --build . --parallel "${jobs}"; then
-	echo "Parallel build failed; reconfiguring and retrying with -j1 (Vagrant/shared FS)..."
+	echo "Build failed"
 	cmake ..
-	ensure_myst_obj_dirs
-	if ! cmake --build . --parallel 1; then
-		echo "Serial build failed."
-		exit 1
-	fi
+	exit 1
 fi
 )
 if [ -x mudroot/myst ] ; then
 	echo "Ready"
-	cp mudroot/myst "../../Deploy/$environment/myst"
+	cp mudroot/myst "./mudrunner"
 	exit 0
+else 
+	exit 1
 fi
-echo "Myst executable not found"
-exit 1
