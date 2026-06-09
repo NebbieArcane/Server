@@ -60,26 +60,24 @@ int main(int argc, char **argv) {
 #endif
   namespace po = boost::program_options;
   po::options_description opt("Allowed options");
-  opt.add_options()("help,h", "Produce help message")(
-      "demonize,D", "Run as daemon")("log_players,L",
-                                     "Logs all players' actions")(
-      "log_mobs,M", "Logs all mobs' actions")("disable_dns,N", "Disables DNS")(
-      "newbie_approve,R", "Requests approvation for new players")(
-      "ansi_off,A", "Disables all colors")(
-      "test_mode,t", "Developer mode, disables password checking")(
-      "version,V", "Display version and terminates")(
-      "verbose_log,v",
-      po::value<unsigned short>(&debug_level)->default_value(debug_level),
-      "Log verbosity level")("directory,d",
-                             po::value<string>(&dir)->default_value(dir),
-                             "Data directory")(
-      "nospecials,s", po::value<bool>(&no_specials)->default_value(false),
-      "Disable specials procedures")("defaults,D", "Display defaults")
+  opt.add_options()
+    ("help,h", "Produce help message")
+    ("version,V", "Display version and terminates")
+    ("demonize,D","Run as daemon")
+    ("verbose_log,v",po::value<unsigned short>(&debug_level)->default_value(debug_level),"Log verbosity level")
+    ("log_players,L","Logs all players' actions")
+    ("log_mobs,M", "Logs all mobs' actions")
+    ("disable_DNS,N", "Disables DNS")
+    ("newbie_approve,R", "Requests approvation for new players")
+    ("ansi_off,A", "Disables all colors")
+    ("test_mode,t", "Developer mode, disables password checking")
+    ("directory,d", po::value<string>(&dir)->default_value(dir),"Data directory")
+    ("nospecials,s", po::value<bool>(&no_specials)->default_value(false),"Disable specials procedures")
+    ("compile_defaults,c", "Display compile defaults")
       //    ;
       //    po::options_description hidden("Hidden options");
       //    hidden.add_options()
-      ("port,P", po::value<int>(&port),
-       "Port (can also be given as first parameter)");
+    ("port,P", po::value<int>(&port),"Port (can also be given as first parameter)");
   po::positional_options_description positional;
   positional.add("port", 1);
   po::options_description all("All");
@@ -97,6 +95,10 @@ int main(int argc, char **argv) {
   po::notify(vm);
   if (vm.count("version")) {
     cout << version() << endl;
+    exit(0);
+  }
+  if (vm.count("compile_defaults")) {
+    defaults();
     exit(0);
   }
   if (vm.count("help") or !vm.count("port")) {
@@ -123,10 +125,6 @@ int main(int argc, char **argv) {
   }
   if (vm.count("log_mobs")) {
     SET_BIT(SystemFlags, SYS_LOGMOB);
-  }
-  if (vm.count("defaults")) {
-    defaults();
-    exit(0);
   }
   log_configure(logger, "alarmud", ".log", get_level(debug_level),
                 vm.count("demonize") ==

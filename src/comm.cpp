@@ -213,18 +213,15 @@ void close_socket_fd(int desc) {
 int run(int port, const char *dir) {
 #ifdef env_release
   boost::format fmt("Release: Starting %s rel %s ");
-#endif
-#ifdef env_master
+#elif defined(env_master)
   boost::format fmt("Master: Starting %s rel %s ");
-#endif
-#ifdef env_devel
+#elif defined(env_devel)
   boost::format fmt("Devel: Starting %s rel %s ");
-#endif
-#ifdef env_vagrant
+#elif defined(env_vagrant)
   boost::format fmt("Vagrant: Starting %s rel %s ");
-#endif
+#else
   boost::format fmt("Unknown: Starting %s rel %s ");
-
+#endif
   fmt % "%s rel %s" % version() % release();
   mudlog(LOG_ALWAYS, fmt.str().c_str());
 #ifndef env_vagrant
