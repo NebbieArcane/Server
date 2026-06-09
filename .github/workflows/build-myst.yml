@@ -16,9 +16,16 @@ jobs:
       contents: write
     container:
       image: nebbiearcane/mudcompiler:latest
-      options: --entrypoint ""
+      options: --entrypoint "" --user 0
 
     steps:
+      - name: Show environment
+        run: |
+          echo "USER=$(id -u)"
+          echo "GROUP=$(id -g)"
+          echo "HOME=$(id -u):$(id -g)"
+          echo "PATH=$(id -u):$(id -g)"
+          echo "PATH=$(id -u):$(id -g)"
       - uses: actions/checkout@v4
 
       - name: Set SERVER_PORT and build environment from event
