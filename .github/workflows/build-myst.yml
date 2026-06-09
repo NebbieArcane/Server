@@ -40,9 +40,9 @@ jobs:
           echo "HOME=$(id -u):$(id -g)"
           echo "PATH=$(id -u):$(id -g)"
           echo "PATH=$(id -u):$(id -g)"
-          ls -ld /_w
-          ls -ld /_w/Server
-          ls -ld /_w/Server/Server
+          echo $PWD
+          ls -ld ./
+          ls -l ./
 
       - uses: actions/checkout@v4
 
