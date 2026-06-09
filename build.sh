@@ -16,7 +16,6 @@ if [ -f $conf ] ; then
 else
 	echo "No Conf file for $environment present, using builtin defaults"
 fi
-exit 1
 if [ -n "${DOCKER_BUILD}" ]; then
 	MYSQL_HOST=127.0.0.1
 fi
