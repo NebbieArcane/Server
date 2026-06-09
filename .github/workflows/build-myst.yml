@@ -16,20 +16,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Show environment
         run: |
-          echo "USER=$(id -u)"
-          echo "GROUP=$(id -g)"
-          ls -ld /_w
-          ls -ld /_w/Server
-          ls -ld /_w/Server/Server
+          echo "RUN_AS=$(id -u)" >>"$GITHUB_ENV"
 
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    # if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
     container:
       image: nebbiearcane/mudcompiler:latest
-      options: --entrypoint "" --user 0
+      options: --entrypoint "" --user ${{env.RUN_AS }}
 
     steps:
       - name: Show environment
