@@ -1,0 +1,35 @@
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: Build myst
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - r*
+#  pull_request:
+#    branches: [ "master" ]
+
+env:
+  MYSQL_HOST: 127.0.0.1
+  MYSQL_USER: nebbie_dev
+  MYSQL_PASSWORD: secret
+  MYSQL_DB: nebbie_dev
+  SERVER_PORT: 4003
+  environment: devel
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+
+jobs:
+  clone:
+    runs-on: alpine-linux
+
+    steps:
+    - uses: actions/checkout@v4
+  
+  build:
+    runs-on: nebbiearcane/mudcompiler:latest
+    steps:
+      - name: Compiles
+        run: ./build.sh ${{ env.environment }}
+
+
