@@ -10,22 +10,23 @@ on:
       - feature/**
 
 jobs:
-  info:
+  check-user:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Show environment
         run: |
-          echo "RUN_AS=$(id -u)" >>"$GITHUB_ENV"
+          echo "RUN_AS=$(id -u)" >>"$GITHUB_OUTPUT"
 
   build:
+    needs: check-user
     runs-on: ubuntu-latest
     # if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
     container:
       image: nebbiearcane/mudcompiler:latest
-      options: --entrypoint "" --user ${{env.RUN_AS }}
+      options: --entrypoint "" --user ${{ needs.check-user.outputs.RUN_AS }}
 
     steps:
       - name: Show environment
