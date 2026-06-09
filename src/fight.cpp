@@ -732,7 +732,9 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 	object_list_new_owner(corpse, 0);
 
 	obj_to_room(corpse, ch->in_room);
-
+	if(!IS_NPC(ch)) {
+		procarea_relocate_pc_corpse_to_temple(ch, corpse);
+	}
 
 	/* this must be set before dispel_magic, because if they */
 	/* are flying and in a fly zone then the mud will crash  */
@@ -1021,8 +1023,15 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	zero_rent(ch);
 	if(IS_NPC(ch)) {
 		procarea_on_mob_death(ch);
+		extract_char(ch);
 	}
-	extract_char(ch);
+	else {
+		const long save_room =
+			procarea_is_generated_room(ch->in_room) ?
+				PROCAREA_DARKSTAR_TEMPLE :
+				static_cast<long>(NOWHERE);
+		extract_char_smarter(ch, save_room);
+	}
 }
 
 int clan_gain(struct char_data* ch,int gain) {

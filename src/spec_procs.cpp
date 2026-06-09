@@ -4396,6 +4396,9 @@ ROOMSPECIAL_FUNC(Fountain) {
 	}
 
 	if(ch->in_room == PROCAREA_FOUNTAIN_ROOM) {
+		if(cmd == CMD_PULL && procarea_try_pull_fountain(ch, arg)) {
+			return TRUE;
+		}
 		if(cmd == CMD_PUSH && procarea_try_push_fountain(ch, arg)) {
 			return TRUE;
 		}

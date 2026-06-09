@@ -12,6 +12,8 @@ constexpr int PROCAREA_SLOTS_PER_INSTANCE = 96;
 constexpr int PROCAREA_MAX_ACTIVE = 200;
 
 constexpr long PROCAREA_FOUNTAIN_ROOM = 3001L;
+/** Tempio nella foresta: corpi da aree effimere e preghiera di soccorso. */
+constexpr long PROCAREA_DARKSTAR_TEMPLE = 3014L;
 
 constexpr int PROCAREA_MIN_LEVEL = 1;
 
@@ -43,8 +45,18 @@ void procarea_on_mob_death(struct char_data* victim);
 void procarea_maybe_destroy(long instance_id);
 void procarea_tick_cleanup();
 
+bool procarea_try_pull_fountain(struct char_data* ch, const char* arg);
 bool procarea_try_push_fountain(struct char_data* ch, const char* arg);
 bool procarea_try_enter_nebbia(struct char_data* ch, const char* arg);
+
+/** Crea al boot il Tempio di DarkStar (3014) e l'uscita verso la piazza fontana. */
+void procarea_boot_darkstar_temple();
+
+/** Sposta il corpo PG dal dungeon effimero al tempio DarkStar (3014). */
+void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data* corpse);
+
+/** pray DarkStar aiuto: da area effimera o piazza fontana → tempio (3014). */
+bool procarea_try_darkstar_aid(struct char_data* ch, const char* prayer);
 
 } // namespace Alarmud
 #endif // __PROCAREA_HPP

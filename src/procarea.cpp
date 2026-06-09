@@ -20,6 +20,7 @@
 #include "snew.hpp"
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -98,6 +99,8 @@ static std::vector<ProcAreaInstance> g_instances;
 static int g_next_instance_id = 1;
 
 struct ProcFountainVeil {
+	bool spirit_dismissed = false;
+	time_t spirit_dismissed_at = 0;
 	bool active = false;
 	time_t opened_at = 0;
 	time_t expires_at = 0;
@@ -414,6 +417,25 @@ static int procarea_assign_zone(long vnum) {
 		zone = top_of_zone_table;
 	}
 	return zone;
+}
+
+static void procarea_link_rooms_one_way(long from_vnum, int dir, long to_vnum,
+										const char* keyword, const char* description) {
+	struct room_data* const from = real_roomp(from_vnum);
+	if(from == nullptr || dir < 0 || dir > 5) {
+		return;
+	}
+
+	if(!from->dir_option[dir]) {
+		CREATE(from->dir_option[dir], struct room_direction_data, 1);
+		from->dir_option[dir]->general_description =
+			strdup(description != nullptr ? description : "");
+		from->dir_option[dir]->keyword = strdup(keyword != nullptr ? keyword : "");
+		from->dir_option[dir]->exit_info = 0;
+		from->dir_option[dir]->key = -1;
+		from->dir_option[dir]->open_cmd = -1;
+	}
+	from->dir_option[dir]->to_room = to_vnum;
 }
 
 static void procarea_link_rooms(long from_vnum, int dir, long to_vnum) {
@@ -963,6 +985,23 @@ static void procarea_send_fountain_plaza(const char* msg) {
 	}
 }
 
+static void procarea_restore_fountain_spirit(bool announce) {
+	if(!g_fountain_veil.spirit_dismissed) {
+		return;
+	}
+	g_fountain_veil.spirit_dismissed = false;
+	g_fountain_veil.spirit_dismissed_at = 0;
+
+	if(!announce) {
+		return;
+	}
+
+	procarea_send_fountain_plaza(
+		"\n\r$c0010Un filo di luce livida ricade sul bordo della fontana:\n\r"
+		"lo spirito della $c0014Dea DarkStar$c0010 riprende a vegliare sul bacino,\n\r"
+		"muto ed immobile.$c0007\n\r\n\r");
+}
+
 static void procarea_dissolve_fountain_veil(bool announce) {
 	if(!g_fountain_veil.active) {
 		return;
@@ -971,18 +1010,75 @@ static void procarea_dissolve_fountain_veil(bool announce) {
 	g_fountain_veil.opened_at = 0;
 	g_fountain_veil.expires_at = 0;
 
-	if(!announce) {
+	if(announce) {
+		procarea_send_fountain_plaza(
+			"\n\r$c0010Un sibilo lontano attraversa la piazza:\n\r"
+			"la bruma viene risucchiata verso il centro, come marea al rovescio.$c0007\n\r");
+		procarea_send_fountain_plaza(
+			"$c0010Il vortice $c0014implode$c0010 in un battito\n\r"
+			"d'ali d'acqua silenzioso.$c0007\n\r");
+		procarea_send_fountain_plaza(
+			"$c0010La Fontana della Vita ricompare al suo posto,\n\r"
+			"lucida e immobile — come se la nebbia non fosse mai passata.$c0007\n\r");
+	}
+
+	procarea_restore_fountain_spirit(announce);
+}
+
+static void procarea_dismiss_fountain_spirit(struct char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
 		return;
 	}
 
+	if(procarea_find_instance_by_vnum(ch->in_room) != nullptr) {
+		send_to_char("Sei gia' oltre il velo del mondo.\n\r", ch);
+		return;
+	}
+
+	if(ch->specials.fighting) {
+		send_to_char("Non puoi disturbare la fontana mentre combatti.\n\r", ch);
+		return;
+	}
+
+	if(g_fountain_veil.spirit_dismissed) {
+		send_to_char(
+			"Non c'e' piu' nulla da strappare al bacino:\n\r"
+			"lo spirito della Dea e' gia' lontano.\n\r",
+			ch);
+		return;
+	}
+
+	if(g_fountain_veil.active) {
+		send_to_char("La nebbia turbinante rende impossibile raggiungere lo spirito.\n\r", ch);
+		return;
+	}
+
+	const time_t now = time(nullptr);
+	g_fountain_veil.spirit_dismissed = true;
+	g_fountain_veil.spirit_dismissed_at = now;
+
+	send_to_char(
+		"Ti aggrappi al bordo scivoloso e $c0014tira$c0007:\n\r"
+		"l'acqua si incupisce, come se qualcuno respirasse sotto la pietra.\n\r",
+		ch);
+	send_to_char(
+		"Una figura eterea si stacca dalla schiuma —\n\r"
+		"$c0014DarkStar Luce Oscura$c0007 ti fissa un istante,\n\r"
+		"poi viene risucchiata verso l'alto.\n\r",
+		ch);
+	act("$n tira con forza dalla Fontana della Vita.", TRUE, ch, nullptr, nullptr, TO_ROOM);
+
 	procarea_send_fountain_plaza(
-		"\n\r$c0010Un sibilo lontano attraversa la piazza: la bruma viene risucchiata verso il centro, "
-		"come marea al rovescio.$c0007\n\r");
+		"\n\r$c0010La Fontana della Vita vibra:\n\r"
+		"un'aura $c0014luce-oscura$c0010 si stacca dal centro del bacino,\n\r"
+		"sospesa tra cielo e acqua.$c0007\n\r");
 	procarea_send_fountain_plaza(
-		"$c0014Il vortice implode$c0007 in un battito d'ali d'acqua silenzioso.\n\r");
+		"$c0010Per un attimo la $c0014Dea DarkStar$c0010 sembra volersi opporre —\n\r"
+		"poi lo spirito svanisce nel cielo di Myst,\n\r"
+		"lasciando l'acqua limpida e muta.$c0007\n\r");
 	procarea_send_fountain_plaza(
-		"$c0010La Fontana della Vita ricompare al suo posto, lucida e immobile — "
-		"come se la nebbia non fosse mai passata.$c0007\n\r");
+		"$c0015Il presidio divino e' caduto.$c0010\n\r"
+		"Ora la fontana obbedisce solo a chi osa spingerla.$c0007\n\r");
 }
 
 static void procarea_invoke_fountain_veil(struct char_data* ch) {
@@ -1000,11 +1096,20 @@ static void procarea_invoke_fountain_veil(struct char_data* ch) {
 		return;
 	}
 
+	if(!g_fountain_veil.spirit_dismissed) {
+		send_to_char(
+			"L'acqua resiste, ancora protetta da un residuo divino.\n\r"
+			"Allontana prima lo spirito della Dea con $c0014pull fontana$c0007.\n\r",
+			ch);
+		return;
+	}
+
 	const time_t now = time(nullptr);
 	if(g_fountain_veil.active) {
 		g_fountain_veil.expires_at = now + kFountainVeilLifetimeSec;
 		send_to_char(
-			"La nebbia risponde al tuo tocco e si infittisce, turbinando piu' bassa intorno al bacino.\n\r",
+			"La nebbia risponde al tuo tocco e si infittisce,\n\r"
+			"turbinando piu' bassa intorno al bacino.\n\r",
 			ch);
 		act("$n sfiora ancora la fontana: il velo di bruma si addensa.", TRUE, ch, nullptr, nullptr,
 			TO_ROOM);
@@ -1016,26 +1121,30 @@ static void procarea_invoke_fountain_veil(struct char_data* ch) {
 	g_fountain_veil.expires_at = now + kFountainVeilLifetimeSec;
 
 	send_to_char(
-		"Appoggi le mani sulla pietra fredda: sotto l'acqua qualcosa $c0014trema$c0007, "
+		"Appoggi le mani sulla pietra fredda:\n\r"
+		"sotto l'acqua qualcosa $c0014trema$c0007,\n\r"
 		"come un respiro trattenuto da secoli.\n\r",
 		ch);
 	send_to_char(
-		"Un rantolo sommerso risponde al tuo spinta — e il mondo sembra inclinarsi verso il basso.\n\r",
+		"Un rantolo sommerso risponde al tuo spinta —\n\r"
+		"e il mondo sembra inclinarsi verso il basso.\n\r",
 		ch);
 	act("$n preme contro la Fontana della Vita.", TRUE, ch, nullptr, nullptr, TO_ROOM);
 
 	procarea_send_fountain_plaza(
-		"\n\r$c0010Gocce si staccano dal bordo della fontana e svaniscono in vapore "
-		"prima di toccare il selciato.$c0007\n\r");
+		"\n\r$c0010Gocce si staccano dal bordo della fontana\n\r"
+		"e svaniscono in vapore prima di toccare il selciato.$c0007\n\r");
 	procarea_send_fountain_plaza(
-		"$c0014Un velo di nebbia argentata$c0007 si alza dal bacino, lambisce le statue "
-		"e ammorbidisce i contorni dei palazzi.\n\r");
+		"$c0010$c0014Un velo di nebbia argentata$c0010 si alza dal bacino,\n\r"
+		"lambisce le statue e ammorbidisce i contorni dei palazzi.$c0007\n\r");
 	procarea_send_fountain_plaza(
-		"Per un istante la fontana sembra $c0014dissolversi$c0007 nel nulla; al suo posto "
-		"danza un turbine di bruma silente, largo quanto la piazza.\n\r");
+		"$c0010Per un istante la fontana sembra $c0014dissolversi$c0010 nel nulla;\n\r"
+		"al suo posto danza un turbine di bruma silente,\n\r"
+		"largo quanto la piazza.$c0007\n\r");
 	procarea_send_fountain_plaza(
-		"$c0015I rumori di Myst si affievoliscono.$c0007 Resta solo un sussurro d'acqua "
-		"e un invito gelido: $c0014enter nebbia$c0007.\n\r");
+		"$c0015I rumori di Myst si affievoliscono.$c0010\n\r"
+		"Resta solo un sussurro d'acqua\n\r"
+		"ed un gelido invito ad entrare nella $c0014nebbia$c0010.$c0007\n\r");
 }
 
 static void procarea_enter_via_veil(struct char_data* ch) {
@@ -1049,21 +1158,35 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 	}
 
 	if(ch->in_room != PROCAREA_FOUNTAIN_ROOM) {
-		send_to_char("Il velo si apre solo davanti alla Fontana della Vita, in Piazza delle Nebbie.\n\r",
-					 ch);
+		send_to_char(
+			"Il velo si apre solo davanti alla Fontana della Vita,\n\r"
+			"in Piazza delle Nebbie.\n\r",
+			ch);
+		return;
+	}
+
+	if(!g_fountain_veil.spirit_dismissed) {
+		send_to_char(
+			"Una luce gelida ancora custodisce il bacino:\n\r"
+			"devi prima allontanare lo spirito della Dea DarkStar\n\r"
+			"con $c0014pull fontana$c0007.\n\r",
+			ch);
 		return;
 	}
 
 	if(!g_fountain_veil.active) {
-		send_to_char("Non c'e' alcun velo di nebbia da attraversare. Prova $c0014push fontana$c0007.\n\r",
-					 ch);
+		send_to_char(
+			"Non c'e' alcun velo di nebbia da attraversare.\n\r"
+			"Convocalo con $c0014push fontana$c0007.\n\r",
+			ch);
 		return;
 	}
 
 	float group_eq_index = 0.0f;
 	if(!procarea_resolve_entry(ch, group_eq_index)) {
 		send_to_char(
-			"La nebbia si rifiuta di riconoscere il gruppo: qualcuno non e' pronto, o non e' adatto.\n\r",
+			"La nebbia si rifiuta di riconoscere il gruppo:\n\r"
+			"qualcuno non e' pronto, o non e' adatto.\n\r",
 			ch);
 		return;
 	}
@@ -1080,21 +1203,24 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		procarea_create_instance(group_eq_index, PROCAREA_FOUNTAIN_ROOM, entrance);
 	if(instance_id < 0 || entrance <= 0) {
 		send_to_char(
-			"La bruma trema, poi si spezza: l'aldila' rifiuta di aprirsi. Riprova tra poco.\n\r", ch);
+			"La bruma trema, poi si spezza:\n\r"
+			"l'aldila' rifiuta di aprirsi. Riprova tra poco.\n\r",
+			ch);
 		return;
 	}
 
 	procarea_send_fountain_plaza(
-		"\n\r$c0014Il vortice si contrae$c0007 su se stesso con un suono di vetro sott'acqua.\n\r");
+		"\n\r$c0010Il vortice $c0014si contrae$c0010 su se stesso\n\r"
+		"con un suono di vetro sott'acqua.$c0007\n\r");
 
 	for(char_data* member : group) {
 		send_to_char(
-			"Fai un passo — un solo passo — e la nebbia ti ruba il peso del corpo, "
-			"la voce, persino il nome.\n\r",
+			"Fai un passo — un solo passo —\n\r"
+			"e la nebbia ti ruba il peso del corpo, la voce, persino il nome.\n\r",
 			member);
 		send_to_char(
-			"Senti scale di ghiaccio sotto i piedi che non esistono, corridoi che si piegano "
-			"come alghe al fondo di un mare dimenticato.\n\r",
+			"Senti scale di ghiaccio sotto i piedi che non esistono,\n\r"
+			"corridoi che si piegano come alghe al fondo di un mare dimenticato.\n\r",
 			member);
 		std::ostringstream enter_msg;
 		enter_msg << "$c0010Oltre il velo attende un regno effimero$c0007 (eq medio gruppo "
@@ -1113,17 +1239,21 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 }
 
 static void procarea_tick_fountain_veil() {
-	if(!g_fountain_veil.active) {
-		return;
-	}
 	const time_t now = time(nullptr);
-	if(now <= g_fountain_veil.expires_at) {
+	if(g_fountain_veil.active && now > g_fountain_veil.expires_at) {
+		procarea_send_fountain_plaza(
+			"\n\r$c0010La nebbia si stanca:\n\r"
+			"filamenti di bruma si distaccano dal vortice\n\r"
+			"e svaniscono nel cielo di Myst.$c0007\n\r");
+		procarea_dissolve_fountain_veil(true);
 		return;
 	}
-	procarea_send_fountain_plaza(
-		"\n\r$c0010La nebbia si stanca: filamenti di bruma si distaccano dal vortice e svaniscono "
-		"nel cielo di Myst.$c0007\n\r");
-	procarea_dissolve_fountain_veil(true);
+
+	if(g_fountain_veil.spirit_dismissed && !g_fountain_veil.active &&
+	   g_fountain_veil.spirit_dismissed_at > 0 &&
+	   now > g_fountain_veil.spirit_dismissed_at + kFountainVeilLifetimeSec) {
+		procarea_restore_fountain_spirit(true);
+	}
 }
 
 static void procarea_leave_via_portal(struct char_data* ch) {
@@ -1148,19 +1278,82 @@ static void procarea_leave_via_portal(struct char_data* ch) {
 	const std::vector<char_data*> group = procarea_entering_group(ch);
 	for(char_data* member : group) {
 		send_to_char(
-			"Attraversi il portale: un soffio gelido ti restituisce alla Piazza delle Nebbie.\n\r",
+			"Attraversi il portale: un soffio gelido\n\r"
+			"ti restituisce alla Piazza delle Nebbie.\n\r",
 			member);
 	}
 	if(dest == PROCAREA_FOUNTAIN_ROOM) {
 		for(char_data* member : group) {
 			send_to_char(
-				"La Fontana della Vita scintilla al sole, indifferente — come se non avesse mai chiuso occhio.\n\r",
+				"La Fontana della Vita scintilla al sole, indifferente —\n\r"
+				"come se non avesse mai chiuso occhio.\n\r",
 				member);
 		}
 	}
 	procarea_teleport_group(ch, dest);
 	procarea_touch_instance(inst->id);
 	procarea_maybe_destroy(inst->id);
+}
+
+[[nodiscard]] static bool procarea_prayer_requests_aid(const char* prayer) {
+	if(prayer == nullptr || *prayer == '\0') {
+		return false;
+	}
+	std::array<char, MAX_INPUT_LENGTH> lowered{};
+	strncpy(lowered.data(), prayer, lowered.size() - 1);
+	lowered[lowered.size() - 1] = '\0';
+	for(char& c : lowered) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return strstr(lowered.data(), "aiuto") != nullptr;
+}
+
+[[nodiscard]] static bool procarea_can_request_darkstar_aid(struct char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return false;
+	}
+	if(procarea_find_instance_by_vnum(ch->in_room) != nullptr) {
+		return true;
+	}
+	return ch->in_room == PROCAREA_FOUNTAIN_ROOM;
+}
+
+static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer) {
+	if(ch == nullptr || prayer == nullptr || !IS_PC(ch)) {
+		return false;
+	}
+	if(!procarea_prayer_requests_aid(prayer)) {
+		return false;
+	}
+	if(!procarea_can_request_darkstar_aid(ch)) {
+		send_to_char(
+			"La preghiera si perde nel vento: DarkStar ti ascolta solo\n\r"
+			"dalle aree effimere o dalla Piazza delle Nebbie.\n\r",
+			ch);
+		return true;
+	}
+	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) == nullptr) {
+		send_to_char("Il tempio di DarkStar non risponde.\n\r", ch);
+		return true;
+	}
+
+	const std::vector<char_data*> group = procarea_entering_group(ch);
+	if(group.empty()) {
+		return true;
+	}
+
+	for(size_t i = 0; i < group.size(); ++i) {
+		send_to_char(
+			"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
+			"la foresta del suo tempio ti accoglie.\n\r",
+			group[i]);
+	}
+	if(!group.empty()) {
+		act("$n invoca DarkStar: la nebbia li avvolge e li conduce al tempio.",
+			TRUE, group[0], nullptr, nullptr, TO_ROOM);
+	}
+	procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
+	return true;
 }
 
 static void procarea_on_mob_death_impl(struct char_data* victim) {
@@ -1180,6 +1373,51 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 	procarea_open_exit_portal(*inst);
 }
 
+static void procarea_boot_darkstar_temple_impl() {
+	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) != nullptr) {
+		mudlog(LOG_CHECK,
+			   "procarea: tempio DarkStar %ld gia' presente (world file?); skip boot create",
+			   PROCAREA_DARKSTAR_TEMPLE);
+		return;
+	}
+	if(real_roomp(PROCAREA_FOUNTAIN_ROOM) == nullptr) {
+		mudlog(LOG_SYSERR,
+			   "procarea: impossibile creare tempio DarkStar: piazza %ld assente",
+			   PROCAREA_FOUNTAIN_ROOM);
+		return;
+	}
+
+	allocate_room(PROCAREA_DARKSTAR_TEMPLE);
+	struct room_data* rp = real_roomp(PROCAREA_DARKSTAR_TEMPLE);
+	if(rp == nullptr) {
+		mudlog(LOG_SYSERR, "procarea: allocate_room(%ld) fallito per tempio DarkStar",
+			   PROCAREA_DARKSTAR_TEMPLE);
+		return;
+	}
+
+	memset(rp, 0, sizeof(*rp));
+	rp->number = PROCAREA_DARKSTAR_TEMPLE;
+	rp->zone = procarea_assign_zone(PROCAREA_DARKSTAR_TEMPLE);
+	rp->sector_type = SECT_FOREST;
+	rp->room_flags = static_cast<long>(NO_MOB | PEACEFUL);
+	rp->light = 0;
+	rp->name = strdup("Il Tempio di DarkStar");
+	rp->description = strdup(
+		"Il sentiero si perde tra cipressi e nebbia fitta fino a una radura\n"
+		"circolare. Al centro sorge un tempio di pietra scura e argento ornato\n"
+		"da simboli della Dea DarkStar; una luce livida filtra tra i rami\n"
+		"senza scaldare l'aria. L'incenso e l'umido della foresta si mescolano.\n"
+		"Qui la Dea accoglie i caduti oltre il velo delle aree effimere.\n"
+		"Verso est, oltre gli alberi, scorge la luce della citta'.\n");
+
+	procarea_link_rooms_one_way(PROCAREA_DARKSTAR_TEMPLE, 1, PROCAREA_FOUNTAIN_ROOM,
+								"La Piazza delle Nebbie",
+								"Un varco tra i tronchi lascia intravedere la piazza e la fontana.");
+
+	mudlog(LOG_CHECK, "procarea: creato tempio DarkStar (vnum %ld) → est piazza %ld",
+		   PROCAREA_DARKSTAR_TEMPLE, PROCAREA_FOUNTAIN_ROOM);
+}
+
 } // namespace
 
 long procarea_vnum_to_instance(long vnum) {
@@ -1197,6 +1435,31 @@ long procarea_vnum_to_instance(long vnum) {
 
 bool procarea_is_generated_room(long vnum) {
 	return procarea_find_instance_by_vnum(vnum) != nullptr;
+}
+
+void procarea_boot_darkstar_temple() {
+	procarea_boot_darkstar_temple_impl();
+}
+
+void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data* corpse) {
+	if(ch == nullptr || corpse == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	if(!procarea_is_generated_room(ch->in_room)) {
+		return;
+	}
+	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) == nullptr) {
+		return;
+	}
+	obj_from_room(corpse);
+	obj_to_room(corpse, PROCAREA_DARKSTAR_TEMPLE);
+	send_to_char(
+		"$c0014DarkStar$c0007 raccoglie il tuo corpo e lo depone nel Tempio tra la foresta.\n\r",
+		ch);
+}
+
+bool procarea_try_darkstar_aid(struct char_data* ch, const char* prayer) {
+	return procarea_darkstar_aid_impl(ch, prayer);
 }
 
 void procarea_on_mob_death(struct char_data* victim) {
@@ -1242,8 +1505,9 @@ ACTION_FUNC(do_antro) {
 
 	if(subcmd.empty() || procarea_cmd_is(subcmd, { "entra", "enter" })) {
 		send_to_char(
-			"Convoca prima la nebbia con $c0014push fontana$c0007 in Piazza delle Nebbie, "
-			"poi attraversala con $c0014enter nebbia$c0007.\n\r",
+			"In Piazza delle Nebbie:\n\r"
+			"$c0014pull fontana$c0007 (allontana lo spirito di DarkStar),\n\r"
+			"poi $c0014push fontana$c0007 e infine $c0014enter nebbia$c0007.\n\r",
 			ch);
 		return;
 	}
@@ -1275,7 +1539,7 @@ ACTION_FUNC(do_antro) {
 	}
 
 	send_to_char(
-		"Uso: push fontana + enter nebbia (Piazza) | antro info | enter portale (sala finale)\n\r",
+		"Uso: pull fontana + push fontana + enter nebbia (Piazza) | antro info | enter portale (sala finale)\n\r",
 		ch);
 }
 
@@ -1318,6 +1582,26 @@ ROOMSPECIAL_FUNC(procarea_t1_exit) {
 	return procarea_boss_exit(ch, cmd, arg, room, type);
 }
 
+[[nodiscard]] static bool procarea_is_fountain_target(const char* token) {
+	return token != nullptr && token[0] != '\0' &&
+		   procarea_cmd_is(token, { "fontana", "fountain", "vita" });
+}
+
+bool procarea_try_pull_fountain(struct char_data* ch, const char* arg) {
+	if(ch == nullptr || arg == nullptr || ch->in_room != PROCAREA_FOUNTAIN_ROOM) {
+		return false;
+	}
+
+	std::array<char, MAX_INPUT_LENGTH> target {};
+	one_argument(arg, target.data());
+	if(!procarea_is_fountain_target(target.data())) {
+		return false;
+	}
+
+	procarea_dismiss_fountain_spirit(ch);
+	return true;
+}
+
 bool procarea_try_push_fountain(struct char_data* ch, const char* arg) {
 	if(ch == nullptr || arg == nullptr || ch->in_room != PROCAREA_FOUNTAIN_ROOM) {
 		return false;
@@ -1328,7 +1612,7 @@ bool procarea_try_push_fountain(struct char_data* ch, const char* arg) {
 	if(target[0] == '\0') {
 		return false;
 	}
-	if(!procarea_cmd_is(target.data(), { "fontana", "fountain", "vita" })) {
+	if(!procarea_is_fountain_target(target.data())) {
 		return false;
 	}
 
