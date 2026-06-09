@@ -12,11 +12,15 @@ on:
 jobs:
   check-user:
     runs-on: ubuntu-latest
+    outputs:
+      RUN_AS: ${{ steps.check.outputs.RUN_AS }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Show environment
+      - name: Determine user
+        id: check
         run: |
-          echo "RUN_AS=$(id -u)" >>"$GITHUB_OUTPUT"
+          # Your logic to determine the user
+          USER_ID=$(id -u)
+          echo "RUN_AS=$USER_ID" >> $GITHUB_OUTPUT
 
   build:
     needs: check-user
@@ -76,7 +80,7 @@ jobs:
 
       - name: Prepare myst release binary
         run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
+          SHORT_SHA="${GITHUB_SHA}"
           if [ "${{ github.ref_type }}" = "tag" ]; then
             RELEASE_NAME="myst-${{ github.ref_name }}"
           else
