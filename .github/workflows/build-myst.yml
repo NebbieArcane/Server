@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: write
     container:
-      image: nebbiearcane/mudcompile:latest
+      image: nebbiearcane/mudcompile:1.0.0
       options: --entrypoint ""
 
     steps:
