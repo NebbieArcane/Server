@@ -10,5 +10,6 @@ ctrl_c() {
   $composer down
 }
 
-$docker run --rm coding bash
+$docker run --rm -u "$(id -u):$(id -g)" consumer bash
+
 $docker down

@@ -38,7 +38,6 @@ RUN ODB_BUILD=/var/cache/nebbie-odb-build /usr/local/sbin/install-odb-toolchain.
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 90 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 90
 
-USER 1000
 WORKDIR /app
 
 ENTRYPOINT ["/app/build.sh"]
