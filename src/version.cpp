@@ -31,6 +31,7 @@ void defaults() {
   cout << "MYSQL_USER: " << MYSQL_USER << endl;
   cout << "MYSQL_PASSWORD: " << MYSQL_PASSWORD << endl;
   cout << "MYSQL_HOST: " << MYSQL_HOST << endl;
+  cout << "MYSQL_PORT: " << MYSQL_PORT << endl;
   cout << "MYSQL_DB: " << MYSQL_DB << endl;
 #ifdef BOOST_VERSION
   cout << "BOOST_VERSION: " << BOOST_VERSION << endl;

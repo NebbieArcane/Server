@@ -9,7 +9,7 @@ fi
 ctrl_c() {
   $composer down
 }
-
+echo "DOCKER_BUILD"
 $docker run --rm -u "$(id -u):$(id -g)" consumer bash
 
 $docker down

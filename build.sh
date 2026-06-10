@@ -7,17 +7,24 @@ MYSQL_USER=${MYSQL_USER:-root} #db user'
 MYSQL_PASSWORD=${MYSQL_PASSWORD:-secret} # db password
 MYSQL_HOST=${MYSQL_HOST:-localhost} #db host
 MYSQL_DB=${MYSQL_DB:-nebbie} #db name
+MYSQL_PORT=${MYSQL_PORT:-3306} #db port
 SERVER_PORT=${SERVER_PORT:-4002} #default server port
 environment=${1:-vagrant}
+echo "MYSQL_USER: $MYSQL_USER"
+echo "MYSQL_PASSWORD: $MYSQL_PASSWORD"
+echo "MYSQL_HOST: $MYSQL_HOST"
+echo "MYSQL_DB: $MYSQL_DB"
+echo "MYSQL_PORT: $MYSQL_PORT"
+echo "SERVER_PORT: $SERVER_PORT"
+echo "environment: $environment"
+echo "DOCKER_BUILD: $DOCKER_BUILD"
+echo "HOME: $HOME"
 ENVIRONMENT=$environment
 conf="$HOME/Confs/$environment.conf"
 if [ -f $conf ] ; then
 	. $conf
 else
-	echo "No Conf file for $environment present, using builtin defaults"
-fi
-if [ -n "${DOCKER_BUILD}" ]; then
-	MYSQL_HOST=127.0.0.1
+	echo "No Conf file for [$environment] present, using builtin defaults"
 fi
 rm -f CMakeCache.txt
 rm -f src/CMakeCache.txt
@@ -38,10 +45,6 @@ ensure_myst_obj_dirs() {
 }
 ensure_myst_obj_dirs
 # Shared /vagrant mounts often break parallel writes into myst.dir/odb/.
-if [ "$environment" = "vagrant" ] && [ "${jobs}" -gt 2 ] 2>/dev/null; then
-	echo "Vagrant: limiting parallel jobs from ${jobs} to 2 (shared filesystem)"
-	jobs=2
-fi
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../mudroot/Makefile
 sed -e "s|FOLDER|./../build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../src/Makefile
 sed -e "s|FOLDER|./build|" -e "s/MAKEJOBS/$jobs/" ../Makefile.source > ../Makefile

@@ -123,6 +123,7 @@ set(MYSQL_USER $ENV{MYSQL_USER})
 set(MYSQL_PASSWORD $ENV{MYSQL_PASSWORD})
 set(MYSQL_HOST $ENV{MYSQL_HOST})
 set(MYSQL_DB $ENV{MYSQL_DB})
+set(MYSQL_PORT $ENV{MYSQL_PORT})
 
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)

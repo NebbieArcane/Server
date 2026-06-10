@@ -5,7 +5,7 @@ services:
             - MYSQL_ROOT_PASSWORD=secret
             - MYSQL_DATABASE=nebbie
         ports:
-            - 3306:3306
+            - 3306:33306
         volumes:
             - ./mysql_data:/var/lib/mysql
     adminer:
@@ -19,7 +19,7 @@ services:
             - ADMINER_USER=root
             - ADMINER_PASSWORD=secret
             - ADMINER_DEFAULT_SERVER=mysql
-            - ADMINER_DEFAULT_PORT=3306
+            - ADMINER_DEFAULT_PORT=33306
     consumer:
         image: nebbiearcane/mudcompiler:latest
         entrypoint: ["/usr/bin/bash","-c"]
@@ -37,7 +37,10 @@ services:
             - MYSQL_HOST=mysql
             - MYSQL_DATABASE=nebbie
             - MYSQL_USER=root
+            - MYSQL_PORT=33306
             - MYSQL_PASSWORD=secret
+            - DATABASE_URL=mysql://root:secret@mysql:33306/nebbie
+            - HOME=/app
         depends_on:
             - mysql
             - adminer
