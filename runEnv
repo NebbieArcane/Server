@@ -1,15 +1,30 @@
 #!/bin/sh
-trap ctrl_c INT
-if [ -x "$(command -v "docker-compose")" ]; then
-    docker=docker-compose
+# Shell interattiva per compilare/lanciare myst con MySQL + Adminer in Docker.
+# Su Mac ARM64 forza linux/amd64 (mudcompiler non ha manifest arm64).
+
+set -e
+
+ARCH=$(uname -m)
+if [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
+	export DOCKER_PLATFORM=linux/amd64
 else
-    docker='docker compose'
+	export DOCKER_PLATFORM=linux/amd64
 fi
 
-ctrl_c() {
-  $composer down
+if command -v docker-compose >/dev/null 2>&1; then
+	compose='docker-compose'
+else
+	compose='docker compose'
+fi
+
+cleanup() {
+	$compose down
 }
 
-$docker run --rm -u "$(id -u):$(id -g)" consumer bash
+trap cleanup INT TERM EXIT
 
-$docker down
+echo "DOCKER_PLATFORM=$DOCKER_PLATFORM"
+$compose run --rm --service-ports \
+	--entrypoint /usr/bin/bash \
+	-u "$(id -u):$(id -g)" \
+	consumer

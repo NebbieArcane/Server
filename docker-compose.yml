@@ -1,3 +1,5 @@
+# Su Apple Silicon (arm64) mudcompiler è solo linux/amd64: forzare la piattaforma.
+# Override: DOCKER_PLATFORM=linux/arm64 se un giorno esiste l'immagine nativa.
 services:
     mysql:
         image: mysql:8
@@ -22,6 +24,7 @@ services:
             - ADMINER_DEFAULT_PORT=3306
     consumer:
         image: nebbiearcane/mudcompiler:latest
+        platform: ${DOCKER_PLATFORM:-linux/amd64}
         entrypoint: ["/usr/bin/bash","-c"]
         volumes:
             - ./:/app
