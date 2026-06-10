@@ -222,7 +222,7 @@ int run(int port, const char *dir) {
 #else
   boost::format fmt("Unknown: Starting %s rel %s ");
 #endif
-  fmt % "%s rel %s" % version() % release();
+  fmt % version() % release();
   mudlog(LOG_ALWAYS, fmt.str().c_str());
 #ifndef env_vagrant
   slackNotify(fmt.str().c_str(), ":european_castle:");
