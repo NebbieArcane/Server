@@ -1454,7 +1454,7 @@ void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data
 	obj_from_room(corpse);
 	obj_to_room(corpse, PROCAREA_DARKSTAR_TEMPLE);
 	send_to_char(
-		"$c0014DarkStar$c0007 raccoglie il tuo corpo e lo depone nel Tempio tra la foresta.\n\r",
+		"$c0014DarkStar$c0007 raccoglie il tuo corpo e lo depone nel Tempio nella foresta.\n\r",
 		ch);
 }
 
