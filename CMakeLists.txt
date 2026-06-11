@@ -7,16 +7,6 @@ enable_language(CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# LOGICA CONDIZIONALE PER DOCKER: Disabilita -Werror solo nel container
-# Verifica se la variabile d'ambiente DOCKER_BUILD è impostata nel Dockerfile.
-if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
-	message(STATUS "Disabling -Werror for Docker Build environment.")
-	# Aggiunge i flag per disabilitare i warning come errori.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -Wno-type-limits")
-else()
-	message(STATUS "Using default compiler flags (Vagrant/Local).")
-endif()
-
 include(ProcessorCount)
 ProcessorCount(N)
 if(NOT N EQUAL 0)

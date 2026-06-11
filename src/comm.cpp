@@ -58,6 +58,7 @@
 #include "interpreter.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
+#include "procarea.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
 #include "snew.hpp"
@@ -531,10 +532,11 @@ void game_loop(int s) {
   pulse++;
   event_process();
 
-  if (!(pulse % PULSE_ZONE)) {
-    zone_update();
-    check_reboot();
-  }
+	if(!(pulse % PULSE_ZONE)) {
+		zone_update();
+		check_reboot();
+		procarea_tick_cleanup();
+	}
 
   if (!(pulse % PULSE_MAXUSAGE)) {
     update_max_usage();

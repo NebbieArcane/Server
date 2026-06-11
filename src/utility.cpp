@@ -4960,7 +4960,8 @@ int CAN_SEE(struct char_data* s, struct char_data* o) {
 	if(pRoomS and pRoomO) {
 
 		if((IS_DARK_P(pRoomS) || IS_DARK_P(pRoomO)) &&
-				!IS_AFFECTED(s, AFF_INFRAVISION) && !(GET_RACE(s)==RACE_DARK_ELF)) {
+				!IS_AFFECTED(s, AFF_INFRAVISION) &&
+				!IS_AFFECTED(s, AFF_SCRYING) && !(GET_RACE(s)==RACE_DARK_ELF)) {
 			return(FALSE);
 		}
 	}
@@ -4993,7 +4994,7 @@ int CAN_SEE_OBJ(struct char_data* ch, struct obj_data* obj) {
 		}
 	} /* not a trap */
 
-	if(IS_AFFECTED(ch, AFF_TRUE_SIGHT)) {
+	if(IS_AFFECTED(ch, AFF_TRUE_SIGHT) || IS_AFFECTED(ch, AFF_SCRYING)) {
 		return(1);
 	}
 
@@ -5006,6 +5007,7 @@ int CAN_SEE_OBJ(struct char_data* ch, struct obj_data* obj) {
 	}
 
 	if(IS_DARK_P(real_roomp(ch->in_room)) &&
+			!IS_AFFECTED(ch, AFF_SCRYING) &&
 			!IS_OBJ_STAT(obj, ITEM_GLOW) &&
 			GET_RACE(ch)!=RACE_DARK_ELF) {
 		return(0);

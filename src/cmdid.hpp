@@ -517,7 +517,8 @@ namespace Alarmud {
 #define CMD_LEGACYIMPORT        506 /* import file → character_* tables */
 #define CMD_LEGACYLOADCHECK     507 /* compare load_char(file) vs load_char_mysql(db) */
 #define CMD_FORGIVE             508
-#define MAX_CMD_LIST            509
+#define CMD_ANTRO               509
+#define MAX_CMD_LIST            510
 } // namespace Alarmud
 
 #endif
