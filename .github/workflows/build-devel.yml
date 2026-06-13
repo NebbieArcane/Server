@@ -17,15 +17,8 @@ jobs:
     env:
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
 
-      - name: Info
-        shell: bash
-        run: |
-          echo "Base ref: ${{ github.ref }}"
-          echo "DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}"
-
-      - uses: ./.github/actions/compile
+      - uses: nebbiearcane/Actions/compile
         with:
           build_env: devel
           mysql_host: ${{ vars.MYSQL_HOST }}
