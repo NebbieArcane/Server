@@ -81,10 +81,10 @@ runs:
         v=`cat  "./assets/version.txt"`
         c=`cat  "./assets/config.txt"`
         b="Version: $v\nConfig: $c"
-        b="${b//'%'/'%25'}"                               # Multiline escape sequences for %
-        b="${b//$'\n'/'%0A'}"                             # Multiline escape sequences for '\n'
-        b="${b//$'\r'/'%0D'}"                             # Multiline escape sequences for '\r'
-        echo "RELEASE_BODY=$b" >> "$GITHUB_ENV"          # <--- Set environment variable
+        b="${b//'%'/'%25'}"                               
+        b="${b//$'\n'/'%0A'}"                             
+        b="${b//$'\r'/'%0D'}"                             
+        echo "RELEASE_BODY=$b" >> "$GITHUB_ENV"          
       
     - id: keydb
       uses: pozetroninc/github-action-get-latest-release@master
