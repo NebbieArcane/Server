@@ -34,6 +34,7 @@ jobs:
           echo "MYSQL_DB: ${{ vars.MYSQL_DB }}"
           echo "MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}"
           echo "MYSQL_PORT: ${{ vars.MYSQL_PORT }}"
+          echo "MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}"
       # - uses: ./.github/actions/dockerize
       #   with:
       #     token: ${{ secrets.GITHUB_TOKEN }}

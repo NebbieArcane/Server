@@ -18,19 +18,6 @@ jobs:
     with:
       build_env: devel
     secrets: inherit
-  #         echo "Base ref: ${{ github.ref }}"
 
-  #     - uses: ./.github/actions/dockerize
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         excludes: latest,prerelease
-      # - uses: NebbieArcane/Actions/dockerize
-      #   with:
-      #     build_env: devel
-      #     mysql_host: ${{ vars.MYSQL_HOST }}
-      #     mysql_user: ${{ vars.MYSQL_USER }}
-      #     mysql_db: ${{ vars.MYSQL_DB }}
-      #     mysql_password: ${{ secrets.MYSQL_PASSWORD }}
-      #     mysql_port: ${{ vars.MYSQL_PORT }}
 
             

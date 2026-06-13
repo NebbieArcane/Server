@@ -1,4 +1,4 @@
-name: Dockerize staging
+name: Dockerize production
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
   call-dockerize-devel:
     uses: ./.github/workflows/dockerize.yml
     with:
-      build_env: staging
+      build_env: production
     secrets: inherit
 
 
