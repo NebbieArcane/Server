@@ -20,23 +20,11 @@ jobs:
         shell: bash
         run: |
           echo "Base ref: ${{ github.ref }}"
-      - id: keydb
-        uses: pozetroninc/github-action-get-latest-release@master
+
+      - uses: ./.github/actions/dockerize
         with:
-          repository: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
           excludes: latest,prerelease
-      - name: Release info
-        shell: bash
-        run: |
-          echo "Release ID: ${{ steps.keydb.outputs.release }}"
-          echo "Release URL: ${{ steps.keydb.outputs.id }}"
-          echo "Release name: ${{ steps.keydb.outputs.description }}"
-      # - uses: dsaltares/fetch-gh-release-asset@master
-      #   with:
-      #     file: myst_devel-${{ github.sha }}.tar.gz
-      #     release_id: ${{ github.event.workflow_run.id }}
-
       # - uses: ./.github/actions/dockerize
       #   with:
       #     build_env: devel
