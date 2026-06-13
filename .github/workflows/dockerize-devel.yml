@@ -12,20 +12,19 @@ on:
       - "feature/odb-discovery"
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    environment: devel
-    steps:
-      - name: Info
-        shell: bash
-        run: |
-          echo "Base ref: ${{ github.ref }}"
 
-      - uses: ./.github/actions/dockerize
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          excludes: latest,prerelease
-      # - uses: ./.github/actions/dockerize
+  call-dockerize-devel:
+    uses: ./.github/workflows/dockerize.yml
+    with:
+      build_env: devel
+    secrets: inherit
+  #         echo "Base ref: ${{ github.ref }}"
+
+  #     - uses: ./.github/actions/dockerize
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         excludes: latest,prerelease
+      # - uses: NebbieArcane/Actions/dockerize
       #   with:
       #     build_env: devel
       #     mysql_host: ${{ vars.MYSQL_HOST }}

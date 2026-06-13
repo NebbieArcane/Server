@@ -1,0 +1,46 @@
+name: Dockerize devel
+
+on:
+  workflow_call:
+    inputs:
+      build_env:
+        type: string
+        description: The environment to build
+        required: true
+        default: devel
+  # workflow_run:
+  #   workflows: ["Build devel"]
+  #   branches: [main]
+  #   types: 
+  #     - completed
+  # push:
+  #   branches:
+  #     - "feature/odb-discovery"
+
+jobs:
+  build:
+    environment:
+      name: ${{ inputs.build_env }}
+      deployment: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info
+        shell: bash
+        run: |
+          echo "Base ref: ${{ github.ref }}"
+          echo
+
+      # - uses: ./.github/actions/dockerize
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     excludes: latest,prerelease
+      # - uses: NebbieArcane/Actions/dockerize
+      #   with:
+      #     build_env: devel
+      #     mysql_host: ${{ vars.MYSQL_HOST }}
+      #     mysql_user: ${{ vars.MYSQL_USER }}
+      #     mysql_db: ${{ vars.MYSQL_DB }}
+      #     mysql_password: ${{ secrets.MYSQL_PASSWORD }}
+      #     mysql_port: ${{ vars.MYSQL_PORT }}
+
+            
