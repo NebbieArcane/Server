@@ -59,7 +59,7 @@ runs:
 
     - name: Fake compile release binary
       shell: bash
-      if: ${{ inputs.dryrun == true}}
+      if: ${{ inputs.dryrun }}
       env:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
@@ -69,12 +69,15 @@ runs:
         cp mudroot/myst "./assets/myst"
         echo "Version dryrun" > "./assets/version.txt" 2>&1 || true
         echo "Config dryrun" > "./assets/config.txt" 2>&1 || true
+        ls -la ./assets
 
-    - id: relnotes
+    - name: Prepare release notes
+      id: relnotes
       shell: bash
       env:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
+        ls -la ./assets
         v=`cat  "./assets/version.txt"`
         c=`cat  "./assets/config.txt"`
         b="Version: $v\nConfig: $c"
