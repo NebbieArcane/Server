@@ -40,12 +40,11 @@ runs:
       shell: bash
       env:
         BUILD_ENV: ${{ inputs.build_env }}
-        ARTIFACT_SUFFIX: ${{ inputs.artifact_suffix }}
       run: |
-        RELEASE_NAME="myst-${BUILD_ENV}${ARTIFACT_SUFFIX}"
+        RELEASE_NAME="myst-${BUILD_ENV}"
         cp mudroot/myst "${RELEASE_NAME}"
         chmod +x "${RELEASE_NAME}"
-        ./mudroot/myst -v > myst-version.txt 2>&1 || true
+        ./mudroot/myst -V > myst-version.txt 2>&1 || true
         ./mudroot/myst -c > myst-config.txt 2>&1 || true
         echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
 

@@ -31,3 +31,9 @@ jobs:
           mysql_host: ${{ vars.MYSQL_HOST }}
           mysql_user: ${{ vars.MYSQL_USER }}
           mysql_db: ${{ vars.MYSQL_DB }}
+      - uses: ./.github/actions/dockerize
+        with:
+          artifact: myst-devel_dev-${{ github.sha }}
+          image: nebbiearcane/myst
+          tag: devel
+            

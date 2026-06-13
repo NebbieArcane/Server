@@ -1,0 +1,40 @@
+name: dockerize
+description: Builds a container with myst binary and upload workflow artifact
+inputs:
+  artifact:
+    description: Artifact name
+    required: true
+  image:
+    description: Image name
+    required: true
+  tag:
+    description: Tag name
+    required: true
+runs:
+  using: composite
+  steps:
+      - name: Checkout
+        uses: actions/checkout@v6  
+      - name: Download artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ inputs.artifact }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            myst
+          tags: |
+            type=custom,pattern={{ inputs.tag }}
+            type=semver,pattern={{version}}
+
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v4
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./mudrunner
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
