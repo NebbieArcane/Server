@@ -57,38 +57,35 @@ runs:
 
     - name: Prepare myst release binary
       shell: bash
-      if: inputs.dryrun == false
+      if: ${{ inputs.dryrun == false}}
       env:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
-        RELEASE_NAME="myst-${BUILD_ENV}"
         chmod +x "./mudroot/myst"
         mkdir -p ./assets
-        cp mudroot/myst "./assets/myst_${RELEASE_NAME}"
-        ./mudroot/myst -V > "./assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
-        ./mudroot/myst -c > "./assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
-        echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
+        cp mudroot/myst "./assets/myst"
+        ./mudroot/myst -V > "./assets/version.txt" 2>&1 || true
+        ./mudroot/myst -c > "./assets/config.txt" 2>&1 || true
     
     - name: Simulate myst release binary
       shell: bash
-      if: inputs.dryrun == true
+      if: ${{ inputs.dryrun == true}}
       env:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
         RELEASE_NAME="myst-${BUILD_ENV}"
         touch "./mudroot/myst"
         mkdir -p ./assets
-        cp mudroot/myst "./assets/myst_${RELEASE_NAME}"
-        echo "Version dryrun" > "./assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
-        echo "Config dryrun" > "./assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
-        echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
+        cp mudroot/myst "./assets/myst"
+        echo "Version dryrun" > "./assets/version.txt" 2>&1 || true
+        echo "Config dryrun" > "./assets/config.txt" 2>&1 || true
     - id: relnotes
       shell: bash
       env:
-        RELEASE_NAME: ${{ env.MYST_RELEASE_NAME }}
+        BUILD_ENV: ${{ inputs.build_env }}
       run: |
-        v=`cat  "./assets/myst_${RELEASE_NAME}-version.txt"`
-        c=`cat  "./assets/myst_${RELEASE_NAME}-config.txt"`
+        v=`cat  "./assets/version.txt"`
+        c=`cat  "./assets/config.txt"`
         b="Version: $v\nConfig: $c"
         b="${b//'%'/'%25'}"                               # Multiline escape sequences for %
         b="${b//$'\n'/'%0A'}"                             # Multiline escape sequences for '\n'
