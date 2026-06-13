@@ -11,11 +11,19 @@ inputs:
   mysql_user:
     description: MySQL user for build.sh
     required: false
-    default: root
+    default: nebbie
   mysql_db:
     description: MySQL database name for build.sh
     required: false
     default: nebbie
+  mysql_password:
+    description: MySQL password for build.sh
+    required: false
+    default: secret
+  mysql_port:
+    description: MySQL port for build.sh
+    required: false
+    default: 3306
   artifact_suffix:
     description: Optional suffix for artifact name (e.g. _dev)
     required: false
@@ -28,7 +36,8 @@ runs:
       env:
         MYSQL_HOST: ${{ inputs.mysql_host }}
         MYSQL_USER: ${{ inputs.mysql_user }}
-        MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+        MYSQL_PASSWORD: ${{ inputs.MYSQL_PASSWORD }}
+        MYSQL_PORT: ${{ inputs.mysql_port }}
         MYSQL_DB: ${{ inputs.mysql_db }}
       run: ./build.sh "${{ inputs.build_env }}"
 
@@ -42,19 +51,31 @@ runs:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
         RELEASE_NAME="myst-${BUILD_ENV}"
-        cp mudroot/myst "${RELEASE_NAME}"
-        chmod +x "${RELEASE_NAME}"
-        ./mudroot/myst -V > myst-version.txt 2>&1 || true
-        ./mudroot/myst -c > myst-config.txt 2>&1 || true
+        chmod +x "mudroot/myst
+        mkdir -p assets
+        cp mudroot/myst "assets/myst_${RELEASE_NAME}"
+        ./mudroot/myst -V > "assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
+        ./mudroot/myst -c > "assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
         echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
 
-    - name: Store myst executable as workflow artifact
-      if: github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
+    # - name: Store myst executable as workflow artifact
+    #   if: github.ref_type != 'tag'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ env.MYST_RELEASE_NAME }}
+    #     path: |
+    #       ${{ env.MYST_RELEASE_NAME }}
+    #       myst-version.txt
+    #       myst-config.txt
+    #     retention-days: 30
+    - name: Prepare a release
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: ${{ env.MYST_RELEASE_NAME }}
-        path: |
-          ${{ env.MYST_RELEASE_NAME }}
-          myst-version.txt
-          myst-config.txt
-        retention-days: 30
+        release_id: ${{ inputs.build_env }}
+        file_glob: true
+        file: ./assets/*
+        body: ""
+        overwrite: true
+        draft: ${{ inputs.build_env == 'devel'}}
+        prerelease: ${{ inputs.build_env == 'staging'}}
+        make_latest: ${{ inputs.build_env == 'production'}}
