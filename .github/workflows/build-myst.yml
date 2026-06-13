@@ -11,26 +11,26 @@ jobs:
     steps:
       - name: Determine user
         id: check
+        shell: bash
         run: |
-          # Your logic to determine the user
           USER_ID=$(id -u)
-          echo "RUN_AS=$USER_ID" >> $GITHUB_OUTPUT
+          echo "RUN_AS=$USER_ID" >> "$GITHUB_OUTPUT"
 
   build:
     needs: check-user
     runs-on: ubuntu-latest
-    # if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
     container:
       image: nebbiearcane/mudcompiler:latest
       options: --entrypoint "" --user ${{ needs.check-user.outputs.RUN_AS }}
-
+    env:
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
     steps:
-
       - uses: actions/checkout@v4
 
-      - name: Set SERVER_PORT and build environment from event
+      - name: Set build environment from event
+        shell: bash
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
             echo "BUILD_ENV=release" >> "$GITHUB_ENV"
@@ -41,38 +41,15 @@ jobs:
           elif [[ "${{ github.ref }}" == refs/heads/feature/* ]]; then
             echo "BUILD_ENV=devel" >> "$GITHUB_ENV"
             echo "SUFFIX=_dev" >> "$GITHUB_ENV"
-          fi
-
-      - name: Compile myst
-        env:
-          MYSQL_HOST: 127.0.0.1
-          MYSQL_USER: nebbie${{ env.SUFFIX }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_DB: nebbie${{ env.SUFFIX }}
-        run: ./build.sh "${BUILD_ENV}"
-
-      - name: Verify myst binary
-        run: test -x mudroot/myst
-
-      - name: Prepare myst release binary
-        run: |
-          SHORT_SHA="${GITHUB_SHA}"
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            RELEASE_NAME="myst-${{ github.ref_name }}"
           else
-            RELEASE_NAME="myst-${BUILD_ENV}${SUFFIX}-${SHORT_SHA}"
+            echo "BUILD_ENV=devel" >> "$GITHUB_ENV"
+            echo "SUFFIX=_dev" >> "$GITHUB_ENV"
           fi
-          cp mudroot/myst "${RELEASE_NAME}"
-          chmod +x "${RELEASE_NAME}"
-          ./mudroot/myst -v > myst-version.txt 2>&1 || true
-          echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
 
-      - name: Store myst executable as workflow artifact
-        if: github.ref_type != 'tag'
-        uses: actions/upload-artifact@v4
+      - uses: ./.github/actions/compile
         with:
-          name: ${{ env.MYST_RELEASE_NAME }}
-          path: |
-            ${{ env.MYST_RELEASE_NAME }}
-            myst-version.txt
-          retention-days: 30
+          build_env: ${{ env.BUILD_ENV }}
+          mysql_host: 127.0.0.1
+          mysql_user: nebbie${{ env.SUFFIX }}
+          mysql_db: nebbie${{ env.SUFFIX }}
+          artifact_suffix: ${{ env.SUFFIX }}-${{ github.sha }}

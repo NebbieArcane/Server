@@ -1,17 +1,33 @@
 name: Build devel
 
 on:
-    workflow_dispatch:
-    push:
-      branches:
-        - feature/*
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/**"
+
 jobs:
   build:
-    # if: ${{ contains(github.base_ref, vars.DEVEL_BRANCH ) }}
+    if: contains(github.ref, vars.DEVEL_BRANCH)
     runs-on: ubuntu-latest
+    environment: devel
+    container:
+      image: nebbiearcane/mudcompiler:latest
+      options: --entrypoint ""
+    env:
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Info
+        shell: bash
         run: |
           echo "Base ref: ${{ github.ref }}"
           echo "DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}"
-    #   - uses: ./actions/compile.yml
+
+      - uses: ./.github/actions/compile
+        with:
+          build_env: devel
+          mysql_host: ${{ vars.MYSQL_HOST }}
+          mysql_user: ${{ vars.MYSQL_USER }}
+          mysql_db: ${{ vars.MYSQL_DB }}
