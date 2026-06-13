@@ -23,19 +23,37 @@
 #include "account-odb.hxx"
 //#include "pg-odb.hxx"
 //#include "world-odb.hxx"
-#define odbTypes(nome) \
-	typedef odb::result<nome> nome##Result; \
-	typedef odb::query<nome> nome##Query; \
-	typedef boost::shared_ptr<nome> nome##Ptr; \
-	typedef std::vector<nome##Ptr> nome##Rows
+#define odbTypes(nome)                                                         \
+  typedef odb::result<nome> nome##Result;                                      \
+  typedef odb::query<nome> nome##Query;                                        \
+  typedef boost::shared_ptr<nome> nome##Ptr;                                   \
+  typedef std::vector<nome##Ptr> nome##Rows
 
 namespace Alarmud {
-odbTypes(user);
-odbTypes(userCount);
+odbTypes(character_achievements);
+odbTypes(character_affects);
+odbTypes(character_aliases);
+odbTypes(character_classes);
+odbTypes(character_core);
+odbTypes(character_death_snapshot);
+odbTypes(character_inventory);
+odbTypes(character_inventory_affect);
+odbTypes(character_mercy);
+odbTypes(character_prefs);
+odbTypes(character_quest_progress);
+odbTypes(character_rent);
+odbTypes(character_resistance);
+odbTypes(character_skills);
+odbTypes(character_stats);
 odbTypes(legacy);
+odbTypes(registered);
 odbTypes(toon);
 odbTypes(toonExtra);
 odbTypes(toonRent);
+odbTypes(toon_nuke_blacklist);
+odbTypes(user);
+odbTypes(userCount);
+odbTypes(v_character_summary);
 typedef odb::database DB;
 } /*namespace Alarmud */
 #include "../Sql.hpp"

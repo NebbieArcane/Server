@@ -15,7 +15,7 @@
 #
 # Base: Ubuntu 24.04 (Noble), GCC 12, ODB 2.5 via build2/bpkg (linux/amd64).
 
-FROM nebbiearcane/mudcompiler:1.0.1
+FROM nebbiearcane/mudcompiler:1
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER_BUILD=ON

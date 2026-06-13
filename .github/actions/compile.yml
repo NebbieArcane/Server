@@ -1,0 +1,41 @@
+name: 'build'
+description: 'Compile myst'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Compile myst
+      env:
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_USER: ${{ env.MYSQL_USER }}
+        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        MYSQL_DB: ${{ env.MYSQL_DB }}
+      run: ./build.sh "${BUILD_ENV}"
+
+    - name: Verify myst binary
+      run: test -x mudroot/myst
+
+    - name: Prepare myst release binary
+      run: |
+        SHORT_SHA="${GITHUB_SHA}"
+        if [ "${{ github.ref_type }}" = "tag" ]; then
+          RELEASE_NAME="myst-${{ github.ref_name }}"
+        else
+          RELEASE_NAME="myst-${BUILD_ENV}${SUFFIX}-${SHORT_SHA}"
+        fi
+        cp mudroot/myst "${RELEASE_NAME}"
+        chmod +x "${RELEASE_NAME}"
+        ./mudroot/myst -v > myst-version.txt 2>&1 || true
+        ./mudroot/myst -c > myst-config.txt 2>&1 || true
+        echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
+
+    - name: Store myst executable as workflow artifact
+      if: github.ref_type != 'tag'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.MYST_RELEASE_NAME }}
+        path: |
+          ${{ env.MYST_RELEASE_NAME }}
+          myst-version.txt
+        retention-days: 30

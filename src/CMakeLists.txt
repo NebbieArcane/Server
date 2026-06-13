@@ -55,7 +55,7 @@ MACRO(ODB_GENERATE dbtype header)
 			--generate-prepared
 			--show-sloc
 			--generate-session
-			--schema-format separate
+			--schema-format sql
 			--at-once
 			--schema-name ${dbschema}-schema
 

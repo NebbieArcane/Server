@@ -2,12 +2,6 @@ name: Build myst
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - r*
-    branches:
-      - master
-      - feature/**
 
 jobs:
   check-user:
@@ -39,29 +33,21 @@ jobs:
       - name: Set SERVER_PORT and build environment from event
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
-            echo "SERVER_PORT=4000" >> "$GITHUB_ENV"
             echo "BUILD_ENV=release" >> "$GITHUB_ENV"
             echo "SUFFIX=" >> "$GITHUB_ENV"
           elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
-            echo "SERVER_PORT=4001" >> "$GITHUB_ENV"
-            echo "BUILD_ENV=master" >> "$GITHUB_ENV"
-            echo "SUFFIX=_mas" >> "$GITHUB_ENV"
+            echo "BUILD_ENV=stage" >> "$GITHUB_ENV"
+            echo "SUFFIX=_stag" >> "$GITHUB_ENV"
           elif [[ "${{ github.ref }}" == refs/heads/feature/* ]]; then
-            echo "SERVER_PORT=4002" >> "$GITHUB_ENV"
-            echo "BUILD_ENV=devel" >> "$GITHUB_ENV"
-            echo "SUFFIX=_dev" >> "$GITHUB_ENV"
-          else
-            echo "SERVER_PORT=4003" >> "$GITHUB_ENV"
             echo "BUILD_ENV=devel" >> "$GITHUB_ENV"
             echo "SUFFIX=_dev" >> "$GITHUB_ENV"
           fi
 
       - name: Compile myst
         env:
-          DOCKER_BUILD: ON
           MYSQL_HOST: 127.0.0.1
           MYSQL_USER: nebbie${{ env.SUFFIX }}
-          MYSQL_PASSWORD: secret
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           MYSQL_DB: nebbie${{ env.SUFFIX }}
         run: ./build.sh "${BUILD_ENV}"
 
@@ -80,14 +66,6 @@ jobs:
           chmod +x "${RELEASE_NAME}"
           ./mudroot/myst -v > myst-version.txt 2>&1 || true
           echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
-
-      - name: Store myst executable as GitHub Release
-        if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ env.MYST_RELEASE_NAME }}
-            myst-version.txt
 
       - name: Store myst executable as workflow artifact
         if: github.ref_type != 'tag'

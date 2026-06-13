@@ -1020,7 +1020,7 @@ public:
 	user AccountData;
 	std::vector<std::string> toons;
 	e_connection_types last_state;
-	string currentInput;
+	std::string currentInput;
 	int descriptor;                    /* file descriptor for socket */
 
 	char* name;                /* ptr to name for mail system */
