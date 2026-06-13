@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Genera procarea.mob da src/procarea_mob_desc.inc + profili di difficolta'."""
+"""Rigenera procarea_band_stats.inc da src/procarea_mob_desc.inc.
+
+I testi mob sono compilati direttamente da procarea_mob_desc.inc in procarea.cpp;
+non serve più scrivere procarea.mob né myst.mob per le istanze effimere.
+"""
 
 from __future__ import annotations
 
@@ -11,10 +15,7 @@ from textwrap import dedent
 ROOT = Path(__file__).resolve().parents[1]
 DESC_INC = ROOT / "src/procarea_mob_desc.inc"
 BAND_STATS_INC = ROOT / "src/procarea_band_stats.inc"
-OUT = ROOT / "mudroot/lib/procarea.mob"
-MYST = ROOT / "mudroot/lib/myst.mob"
-MARKER_START = "# Antro Effimero:"
-MARKER_END = "#99999"
+MARKER_START = "# Antro Effimero:"  # solo per export .mob opzionale (generate())
 
 BOSS_VNUM_BASE = 65000
 BOSS_PER_TIER = 10
@@ -594,25 +595,11 @@ def generate(descs: list[MobDesc]) -> str:
     return "\n".join(chunks) + "\n"
 
 
-def splice_myst(block: str) -> None:
-    text = MYST.read_text(encoding="latin-1", errors="replace")
-    start = text.find(MARKER_START)
-    end = text.find(MARKER_END)
-    if start == -1 or end == -1:
-        raise SystemExit(f"Marker not found in {MYST}")
-    MYST.write_text(text[:start] + block + text[end:], encoding="latin-1")
-
-
 def main() -> None:
     descs = parse_desc_inc(DESC_INC)
     emit_band_stats_inc(descs, BAND_STATS_INC)
-    block = generate(descs)
-    OUT.write_text(block, encoding="latin-1")
-    splice_myst(block)
     print(f"Parsed {len(descs)} archetypes from {DESC_INC}")
     print(f"Wrote {BAND_STATS_INC}")
-    print(f"Wrote {OUT}")
-    print(f"Updated {MYST}")
 
 
 if __name__ == "__main__":
