@@ -73,7 +73,6 @@ runs:
     - name: Prepare a release
       uses: svenstaro/upload-release-action@v2
       with:
-        release_id: ${{ inputs.build_env }}
         file_glob: true
         file: ./assets/*
         body: ""
