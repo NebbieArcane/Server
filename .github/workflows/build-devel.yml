@@ -33,9 +33,5 @@ jobs:
           mysql_db: ${{ vars.MYSQL_DB }}
           mysql_password: ${{ secrets.MYSQL_PASSWORD }}
           mysql_port: ${{ vars.MYSQL_PORT }}
-      - uses: ./.github/actions/dockerize
-        with:
-          artifact: myst-devel_dev-${{ github.sha }}
-          image: nebbiearcane/myst
-          tag: devel
+
             

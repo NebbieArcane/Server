@@ -1,0 +1,49 @@
+name: Dockerize devel
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build devel"]
+    branches: [main]
+    types: 
+      - completed
+  push:
+    branches:
+      - "feature/odb-discovery"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: devel
+    steps:
+      - name: Info
+        shell: bash
+        run: |
+          echo "Base ref: ${{ github.ref }}"
+      - id: keydb
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          excludes: latest,prerelease
+      - name: Release info
+        shell: bash
+        run: |
+          echo "Release ID: ${{ steps.keydb.outputs.release }}"
+          echo "Release URL: ${{ steps.keydb.outputs.id }}"
+          echo "Release name: ${{ steps.keydb.outputs.description }}"
+      # - uses: dsaltares/fetch-gh-release-asset@master
+      #   with:
+      #     file: myst_devel-${{ github.sha }}.tar.gz
+      #     release_id: ${{ github.event.workflow_run.id }}
+
+      # - uses: ./.github/actions/dockerize
+      #   with:
+      #     build_env: devel
+      #     mysql_host: ${{ vars.MYSQL_HOST }}
+      #     mysql_user: ${{ vars.MYSQL_USER }}
+      #     mysql_db: ${{ vars.MYSQL_DB }}
+      #     mysql_password: ${{ secrets.MYSQL_PASSWORD }}
+      #     mysql_port: ${{ vars.MYSQL_PORT }}
+
+            
