@@ -39,6 +39,7 @@
 #include "magic2.hpp"
 #include "mobact.hpp"
 #include "opinion.hpp"
+#include "procarea.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
 #include "skills.hpp"
@@ -4392,6 +4393,18 @@ ROOMSPECIAL_FUNC(Fountain) {
 
 	if(type != EVENT_COMMAND) {
 		return FALSE;
+	}
+
+	if(ch->in_room == PROCAREA_FOUNTAIN_ROOM) {
+		if(cmd == CMD_PULL && procarea_try_pull_fountain(ch, arg)) {
+			return TRUE;
+		}
+		if(cmd == CMD_PUSH && procarea_try_push_fountain(ch, arg)) {
+			return TRUE;
+		}
+		if(cmd == CMD_ENTER && procarea_try_enter_nebbia(ch, arg)) {
+			return TRUE;
+		}
 	}
 
 	if(cmd==CMD_FILL) {

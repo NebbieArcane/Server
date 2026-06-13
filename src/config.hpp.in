@@ -1,4 +1,4 @@
-//Generated file, do not edit
+// Generated file, do not edit
 #ifndef __CONFIG_HPP
 #define __CONFIG_HPP
 #include <boost/preprocessor.hpp>
@@ -14,15 +14,19 @@
 #ifndef MYSQL_HOST
 #define MYSQL_HOST "localhost"
 #endif
+#cmakedefine MYSQL_PORT "@MYSQL_PORT@"
+#ifndef MYSQL_PORT
+#define MYSQL_PORT "3306"
+#endif
 #cmakedefine MYSQL_DB "@MYSQL_DB@"
 #ifndef MYSQL_DB
 #define MYSQL_DB "nebbie"
 #endif
-#define env_@ENVIRONMENT@
-//cmakedefine SQLITE_VERSION
+#define env_ @ENVIRONMENT @
+// cmakedefine SQLITE_VERSION
 #cmakedefine SQLITE_VERSION "@SQLITE_VERSION@"
 #define HAS_SQLITE defined(SQLITE_VERSION)
-//cmakedefine MYSQL_VERSION
+// cmakedefine MYSQL_VERSION
 #cmakedefine MYSQL_VERSION "@MYSQL_VERSION@"
 #define HAS_MYSQL defined(MYSQL_VERSION)
 // Boost is mandatory
@@ -35,32 +39,36 @@
 #define STAFF_EMAIL "staff@nebbie.it"
 #define HAS_LOG true
 #define VV_1(a) % a
-#define VV_2(a,...) % a VV_1(__VA_ARGS__)
-#define VV_3(a,...) % a VV_2(__VA_ARGS__)
-#define VV_4(a,...) % a VV_3(__VA_ARGS__)
-#define VV_5(a,...) % a VV_4(__VA_ARGS__)
-#define VV_6(a,...) % a VV_5(__VA_ARGS__)
-#define VV_7(a,...) % a VV_6(__VA_ARGS__)
-#define VV_8(a,...) % a VV_7(__VA_ARGS__)
-#define VV_9(a,...) % a VV_8(__VA_ARGS__)
-#define PERCENTIZE(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(VV_,__VA_ARGS__)(__VA_ARGS__),BOOST_PP_EMPTY())
+#define VV_2(a, ...) % a VV_1(__VA_ARGS__)
+#define VV_3(a, ...) % a VV_2(__VA_ARGS__)
+#define VV_4(a, ...) % a VV_3(__VA_ARGS__)
+#define VV_5(a, ...) % a VV_4(__VA_ARGS__)
+#define VV_6(a, ...) % a VV_5(__VA_ARGS__)
+#define VV_7(a, ...) % a VV_6(__VA_ARGS__)
+#define VV_8(a, ...) % a VV_7(__VA_ARGS__)
+#define VV_9(a, ...) % a VV_8(__VA_ARGS__)
+#define PERCENTIZE(...)                                                        \
+  BOOST_PP_CAT(BOOST_PP_OVERLOAD(VV_, __VA_ARGS__)(__VA_ARGS__),               \
+               BOOST_PP_EMPTY())
 #define FF_1(a) (a)
-#define FF_2(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_3(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_4(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_5(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_6(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_7(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_8(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_9(a,...) (a) PERCENTIZE(__VA_ARGS__)
-#define FF_10(a,...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_2(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_3(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_4(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_5(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_6(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_7(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_8(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_9(a, ...) (a) PERCENTIZE(__VA_ARGS__)
+#define FF_10(a, ...) (a) PERCENTIZE(__VA_ARGS__)
 
-#define FORMAT(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(FF_,__VA_ARGS__)(__VA_ARGS__),BOOST_PP_EMPTY())
-//#define PERCENTIZE(...) BOOST_PP_OVERLOAD(VV_ ,  __VA_ARGS__)(__VA_ARGS__)
+#define FORMAT(...)                                                            \
+  BOOST_PP_CAT(BOOST_PP_OVERLOAD(FF_, __VA_ARGS__)(__VA_ARGS__),               \
+               BOOST_PP_EMPTY())
+// #define PERCENTIZE(...) BOOST_PP_OVERLOAD(VV_ ,  __VA_ARGS__)(__VA_ARGS__)
 #define SHOW (macro) #macro
 #define FALSE false
 #define TRUE true
 #define RELEASE_PORT 4000
-#define MASTER_PORT  RELEASE_PORT + 1
-#define DEVEL_PORT   RELEASE_PORT + 2
+#define MASTER_PORT RELEASE_PORT + 1
+#define DEVEL_PORT RELEASE_PORT + 2
 #endif

@@ -7,27 +7,31 @@
 /* $Id: constants.c,v 1.1.1.1 2002/02/13 11:14:53 root Exp $ */
 #ifndef __CONSTANTS_HPP
 #define __CONSTANTS_HPP
-/***************************  System  include ************************************/
-/***************************  Local    include ************************************/
+/***************************  System  include
+ * ************************************/
+#include <mysql/mysql.h>
+/***************************  Local    include
+ * ************************************/
+#include "structs.hpp"
 namespace Alarmud {
 /* modificato da Jethro, agosto 2011 */
 #define EQINDEX 600.0
 #define MAX_ALIAS 10
 #define BEG_OF_TIME 827100000
 #define PRINCEEXP 400000000
-extern const char* ignoreKeywords[];
-extern const char* eqKeywords[];
-extern const char* exitKeywords[];
-extern const char* lookKeywords[];
-extern const char* stats[];
+extern const char *ignoreKeywords[];
+extern const char *eqKeywords[];
+extern const char *exitKeywords[];
+extern const char *lookKeywords[];
+extern const char *stats[];
 /*Messaggi per quando una spell scade*/
-extern const char* spell_wear_off_msg[];
+extern const char *spell_wear_off_msg[];
 /*Messaggio per la stanza quando una spell/skill scade*/
-extern const char* spell_wear_off_room_msg[];
+extern const char *spell_wear_off_room_msg[];
 /* Messaggio di opreavviso di fine spell*/
-extern const char* spell_wear_off_soon_msg[];
+extern const char *spell_wear_off_soon_msg[];
 
-extern const char* spell_wear_off_soon_room_msg[];
+extern const char *spell_wear_off_soon_room_msg[];
 
 extern int rev_dir[];
 
@@ -35,33 +39,33 @@ extern int TrapDir[];
 
 extern int movement_loss[];
 
-extern const  char* exits[];
+extern const char *exits[];
 /* used in listing exits for this room */
-extern const  char* listexits[];
+extern const char *listexits[];
 
-extern const char* dirsTo[];
+extern const char *dirsTo[];
 
-extern const char* dirsFrom[];
+extern const char *dirsFrom[];
 
-extern const char* dirs[];
+extern const char *dirs[];
 
-extern const char* ItemDamType[];
+extern const char *ItemDamType[];
 
-extern const char* weekdays[7];
+extern const char *weekdays[7];
 
-extern const char* month_name[17];
+extern const char *month_name[17];
 
 extern const int sharp[];
 
-extern const char* eqWhere[];
+extern const char *eqWhere[];
 
-extern const char* drinks[];
+extern const char *drinks[];
 
-extern const char* drinknames[];
+extern const char *drinknames[];
 
-extern int RacialMax[MAX_RACE+1][MAX_CLASS];
+extern int RacialMax[MAX_RACE + 1][MAX_CLASS];
 
-extern int RacialHome[MAX_RACE+1][2];
+extern int RacialHome[MAX_RACE + 1][2];
 
 /*  fire cold elec blow acid */
 
@@ -69,66 +73,63 @@ extern int ItemSaveThrows[E_ITEM_TYPE_MAX][E_DAMAGE_TYPE_MAX];
 
 extern int drink_aff[][3];
 
-extern const char* color_liquid[];
+extern const char *color_liquid[];
 
-extern const char* fullness[];
+extern const char *fullness[];
 
 extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
 
-extern const char* RaceName[];
+extern const char *RaceName[];
 
-extern const char* item_types[];
+extern const char *item_types[];
 
-extern const char* item_types_ita[];
+extern const char *item_types_ita[];
 
-extern const char* wear_bits[];
+extern const char *wear_bits[];
 
-extern const char* extra_bits[];
+extern const char *extra_bits[];
 
-extern const char* extra_bits2[];
+extern const char *extra_bits2[];
 
-extern const char* room_bits[];
+extern const char *room_bits[];
 
-extern const char* exit_bits[];
+extern const char *exit_bits[];
 
-extern const char* sector_types[];
+extern const char *sector_types[];
 
-extern const char* equipment_types[];
+extern const char *equipment_types[];
 
-extern const char* affected_bits[];
+extern const char *affected_bits[];
 
-extern const char* affected_bits2[];
+extern const char *affected_bits2[];
 
-extern const char* special_user_flags[];
+extern const char *special_user_flags[];
 
-extern const char* immunity_names[];
+extern const char *immunity_names[];
 
-extern const char* apply_types[];
+extern const char *apply_types[];
 
-extern const char* pc_class_types[];
+extern const char *pc_class_types[];
 
-extern const char* npc_class_types[];
+extern const char *npc_class_types[];
 
-extern const char* system_flag_types [];
+extern const char *system_flag_types[];
 
-extern const char* aszLogMessagesType[];
+extern const char *aszLogMessagesType[];
 
-extern const char* action_bits[];
+extern const char *action_bits[];
 
+extern const char *player_bits[];
 
-extern const char* player_bits[];
+extern const char *position_types[];
 
+extern const char *connected_types[];
 
-extern const char* position_types[];
+extern const char *aszWeaponType[];
 
-extern const char* connected_types[];
+extern const char *aszWeaponSpecialEffect[];
 
-extern const char* aszWeaponType[];
-
-extern const char* aszWeaponSpecialEffect[];
-
-extern const char* gaszAlignSlayerBits[];
-
+extern const char *gaszAlignSlayerBits[];
 
 /* [class], [level] (all) */
 extern int thaco[MAX_CLASS][ABS_MAX_LVL];
@@ -159,11 +160,11 @@ extern struct wis_app_type wis_app[26];
 
 extern struct chr_app_type chr_apply[26];
 
-extern const char* spell_desc[];
+extern const char *spell_desc[];
 
 extern struct QuestItem QuestList[4][IMMORTAL];
 
-            /* Achievements */
+/* Achievements */
 extern struct XpAchieTable RewardXp[ABS_MAX_LVL];
 extern struct RandomEquipTable EquipName[22][20];
 extern struct RandomMaterialsTable MaterialName[5][100];
@@ -171,34 +172,35 @@ extern struct ObjAchieTable RewardObj[3][20];
 extern struct ObjBonusTable AchieBonus[MAX_CLASS][12];
 extern struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE];
 extern struct MercySystem QuestNumber[MAX_QUEST_ACHIE];
-extern struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+extern struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES]
+                                              [MAX_ACHIE_TYPE];
 
 extern struct QuestRewardsTable QuestNebbie[MAX_QUEST_ACHIE][100];
 
-extern const char* QuestKind[];
+extern const char *QuestKind[];
 
-extern const char* NameGenStart[];
+extern const char *NameGenStart[];
 
-extern const char* NameGenMid[];
+extern const char *NameGenMid[];
 
-extern const char* NameGenEnd[];
+extern const char *NameGenEnd[];
 
-extern const char* att_kick_kill_ch[];
+extern const char *att_kick_kill_ch[];
 
-extern const char* att_kick_kill_victim[];
+extern const char *att_kick_kill_victim[];
 
-extern const char* att_kick_kill_room[];
+extern const char *att_kick_kill_room[];
 
-extern const char* att_kick_miss_ch[];
+extern const char *att_kick_miss_ch[];
 
-extern const char* att_kick_miss_victim[];
+extern const char *att_kick_miss_victim[];
 
-extern const char* att_kick_miss_room[];
+extern const char *att_kick_miss_room[];
 
-extern const char* att_kick_hit_ch[];
+extern const char *att_kick_hit_ch[];
 
-extern const char* att_kick_hit_victim[];
+extern const char *att_kick_hit_victim[];
 
-extern const char* att_kick_hit_room[];
+extern const char *att_kick_hit_room[];
 } // namespace Alarmud
 #endif

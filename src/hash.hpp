@@ -22,7 +22,7 @@ struct hash_header {
 	struct hash_link**        buckets;
 };
 
-#define WORLD_SIZE 50000
+#define WORLD_SIZE 80000
 void _hash_enter(struct hash_header* ht, long key, void* data);
 void destroy_hash_table(struct hash_header* ht, void (*gman)(void*)) ;
 int hash_enter(struct hash_header* ht, long key, void* data) ;

@@ -46,6 +46,7 @@
 #include "odb/account-odb.hxx" //Sirio per gestione registrazione pg su db
 #include "multiclass.hpp" //Sirio per gestione registrazione pg su db
 #include "toon_migration.hpp"
+#include "procarea.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -596,6 +597,9 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Loading rooms.");
 	boot_world();
+
+	mudlog(LOG_CHECK, "Boot procarea static rooms.");
+	procarea_boot_darkstar_temple();
 
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();

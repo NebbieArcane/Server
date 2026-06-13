@@ -1,5 +1,6 @@
 #No dot files
 .*
+!.github
 # apart gitignore
 !.gitignore
 # and travis

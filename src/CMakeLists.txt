@@ -123,6 +123,7 @@ set(MYSQL_USER $ENV{MYSQL_USER})
 set(MYSQL_PASSWORD $ENV{MYSQL_PASSWORD})
 set(MYSQL_HOST $ENV{MYSQL_HOST})
 set(MYSQL_DB $ENV{MYSQL_DB})
+set(MYSQL_PORT $ENV{MYSQL_PORT})
 
 include(FindPkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
@@ -172,7 +173,7 @@ add_executable(${CMAKE_PROJECT_NAME}  ${file_cpp} ${file_hpp} release.hpp)
 set(MYST_OBJ_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${CMAKE_PROJECT_NAME}.dir")
 file(MAKE_DIRECTORY "${MYST_OBJ_DIR}")
 file(MAKE_DIRECTORY "${MYST_OBJ_DIR}/odb")
-add_custom_target(myst_obj_dirs
+add_custom_target(myst_obj_dirs ALL
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}/odb"
 		COMMENT "Ensure myst object output directories exist"
@@ -289,11 +290,9 @@ target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 #    message(STATUS "${_variableName}=${${_variableName}}")
 #endforeach()
 
-# DOCKER/VAGRANT FIX: allow non-blocking warning cleanup loops.
-# This must be done after the target_compile_options call above to override the settings.
-if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "" OR
-	NOT "$ENV{RELAX_WARNINGS}" STREQUAL "")
-	message(STATUS "Overriding -Werror and -Wfatal-errors for non-strict warning build.")
+# Opt-in only: set RELAX_WARNINGS=1 to disable -Werror (e.g. warning cleanup loops).
+if (NOT "$ENV{RELAX_WARNINGS}" STREQUAL "")
+	message(STATUS "RELAX_WARNINGS: overriding -Werror and -Wfatal-errors.")
 	target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
 			-Wno-error
 			-Wno-fatal-errors
