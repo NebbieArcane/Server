@@ -27,11 +27,15 @@ inputs:
   excludes:
     description: Excludes
     required: true
-    default: latest,prerelease
+    default: latest,prerelease, release
   dryrun:
     description: Dry run
     required: false
     default: true
+  token:
+    description: GitHub token
+    required: false
+    default: "none"
 runs:
   using: composite
   steps:
@@ -64,6 +68,7 @@ runs:
         ./mudroot/myst -V > "./assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
         ./mudroot/myst -c > "./assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
         echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
+    
     - name: Simulate myst release binary
       shell: bash
       if: inputs.dryrun == true
@@ -71,19 +76,24 @@ runs:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
         RELEASE_NAME="myst-${BUILD_ENV}"
-        touchc "./mudroot/myst"
+        touch "./mudroot/myst"
         mkdir -p ./assets
         cp mudroot/myst "./assets/myst_${RELEASE_NAME}"
         echo "Version dryrun" > "./assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
         echo "Config dryrun" > "./assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
         echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
+    - id: relnotes
+      shell: bash
+      env:
+        RELEASE_NAME: ${{ env.MYST_RELEASE_NAME }}
+      run: |
         v=`cat  "./assets/myst_${RELEASE_NAME}-version.txt"`
         c=`cat  "./assets/myst_${RELEASE_NAME}-config.txt"`
         b="Version: $v\nConfig: $c"
         b="${b//'%'/'%25'}"                               # Multiline escape sequences for %
         b="${b//$'\n'/'%0A'}"                             # Multiline escape sequences for '\n'
         b="${b//$'\r'/'%0D'}"                             # Multiline escape sequences for '\r'
-        echo "RELEASE_BODY=$b" >> $GITHUB_OUTPUT          # <--- Set environment variable
+        echo "RELEASE_BODY=$b" >> "$GITHUB_ENV"          # <--- Set environment variable
       
 
     # - name: Store myst executable as workflow artifact
@@ -108,11 +118,11 @@ runs:
       with:
         file_glob: true
         file: ./assets/*
-        tag: ${{ github.ref }}
+        tag: ${{ github.ref_name }}
         release_id: ${{ steps.keydb.outputs.id }}
-        release_name: "Built from ${{ github.ref }} by ${{ github.actor }} "
+        release_name: "${{ github.ref_name }}"
         body: |
-          ${{ steps.read_release.outputs.RELEASE_BODY }}  # <--- Use environment variables that was created earlier
+          ${{ github.env.RELEASE_BODY }} 
         overwrite: true
         draft: ${{ inputs.build_env == 'devel'}}
         prerelease: ${{ inputs.build_env == 'staging'}}
