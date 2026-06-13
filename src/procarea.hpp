@@ -19,19 +19,20 @@ constexpr int PROCAREA_MIN_LEVEL = 1;
 
 /* Curva di difficolta' continua da GetCharBonusIndex() medio del gruppo in ingresso. */
 constexpr float PROCAREA_EQ_SCALE_MIN = 30.0f;
-constexpr float PROCAREA_EQ_SCALE_MAX = 1200.0f;
+constexpr float PROCAREA_EQ_SCALE_MAX = 12000.0f;
 
 constexpr int PROCAREA_ROOMS_MIN = 12;
 constexpr int PROCAREA_ROOMS_MAX = 90;
 
 constexpr int PROCAREA_BOSS_VNUM_BASE = 65000;
 constexpr int PROCAREA_BOSSES_PER_BAND = 10;
-constexpr int PROCAREA_BOSS_COUNT = 50;
+constexpr int PROCAREA_BOSS_COUNT = 10;
 
 constexpr int PROCAREA_MOB_VNUM_BASE = 65100;
 constexpr int PROCAREA_MOBS_PER_BAND = 9;
 constexpr int PROCAREA_MOB_POOL_SIZE = 8;
-constexpr int PROCAREA_TEMPLATE_BANDS = 5;
+constexpr int PROCAREA_ARCHETYPE_COUNT = 19;
+constexpr int PROCAREA_TEMPLATE_BANDS = 6;
 
 ACTION_FUNC(do_antro);
 ROOMSPECIAL_FUNC(procarea_portal);

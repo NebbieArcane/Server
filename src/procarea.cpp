@@ -18,8 +18,11 @@
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "snew.hpp"
+#include "utility.hpp"
+#include "procarea_band_stats.inc"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
@@ -173,18 +176,37 @@ struct ProcAreaDifficulty {
 	int depth_extra_pct;
 };
 
-static constexpr std::array<float, PROCAREA_TEMPLATE_BANDS> kTemplateEqAnchor = {
-	100.0f, 280.0f, 480.0f, 720.0f, 1000.0f,
-};
-
 [[nodiscard]] static float procarea_eq_factor(float eq_index) {
 	return std::clamp((eq_index - PROCAREA_EQ_SCALE_MIN) /
 						  (PROCAREA_EQ_SCALE_MAX - PROCAREA_EQ_SCALE_MIN),
 					  0.0f, 1.0f);
 }
 
+[[nodiscard]] static float procarea_lerp_float(float factor, float lo, float hi) {
+	return lo + (hi - lo) * factor;
+}
+
 [[nodiscard]] static int procarea_lerp_int(float factor, int lo, int hi) {
 	return lo + static_cast<int>((hi - lo) * factor + 0.5f);
+}
+
+[[nodiscard]] static int procarea_template_band_from_eq(float eq_index) {
+	if(eq_index < 2500.0f) {
+		return 0;
+	}
+	if(eq_index < 4500.0f) {
+		return 1;
+	}
+	if(eq_index < 6500.0f) {
+		return 2;
+	}
+	if(eq_index < 8500.0f) {
+		return 3;
+	}
+	if(eq_index < 10500.0f) {
+		return 4;
+	}
+	return 5;
 }
 
 [[nodiscard]] static ProcAreaDifficulty procarea_difficulty_from_eq(float eq_index) {
@@ -192,9 +214,7 @@ static constexpr std::array<float, PROCAREA_TEMPLATE_BANDS> kTemplateEqAnchor = 
 	ProcAreaDifficulty diff{};
 	diff.eq_index = eq_index;
 	diff.factor = factor;
-	diff.template_band = std::min(
-		PROCAREA_TEMPLATE_BANDS - 1,
-		static_cast<int>(factor * static_cast<float>(PROCAREA_TEMPLATE_BANDS)));
+	diff.template_band = procarea_template_band_from_eq(eq_index);
 	diff.rooms_min = procarea_lerp_int(factor, 12, 70);
 	diff.rooms_max = procarea_lerp_int(factor, 20, PROCAREA_ROOMS_MAX);
 	if(diff.rooms_max < diff.rooms_min) {
@@ -209,20 +229,57 @@ static constexpr std::array<float, PROCAREA_TEMPLATE_BANDS> kTemplateEqAnchor = 
 	return diff;
 }
 
-[[nodiscard]] static int procarea_pick_mob_vnum(int template_band, bool trap) {
-	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+[[nodiscard]] static int procarea_pick_mob_vnum(bool trap) {
 	if(trap) {
-		return PROCAREA_MOB_VNUM_BASE + band * PROCAREA_MOBS_PER_BAND +
-			   (PROCAREA_MOBS_PER_BAND - 1);
+		return PROCAREA_MOB_VNUM_BASE + (PROCAREA_MOBS_PER_BAND - 1);
 	}
-	const int base = PROCAREA_MOB_VNUM_BASE + band * PROCAREA_MOBS_PER_BAND;
-	return base + number(0, PROCAREA_MOB_POOL_SIZE - 1);
+	return PROCAREA_MOB_VNUM_BASE + number(0, PROCAREA_MOB_POOL_SIZE - 1);
 }
 
-[[nodiscard]] static int procarea_pick_boss_vnum(int template_band) {
+[[nodiscard]] static int procarea_pick_boss_vnum() {
+	return PROCAREA_BOSS_VNUM_BASE + number(0, PROCAREA_BOSSES_PER_BAND - 1);
+}
+
+[[nodiscard]] static int procarea_archetype_index(int mob_vnum) {
+	if(mob_vnum >= PROCAREA_BOSS_VNUM_BASE &&
+	   mob_vnum < PROCAREA_BOSS_VNUM_BASE + PROCAREA_BOSSES_PER_BAND) {
+		return mob_vnum - PROCAREA_BOSS_VNUM_BASE;
+	}
+	const int slot = mob_vnum - PROCAREA_MOB_VNUM_BASE;
+	if(slot < 0 || slot >= PROCAREA_MOBS_PER_BAND) {
+		return 0;
+	}
+	return PROCAREA_BOSSES_PER_BAND + slot;
+}
+
+static void procarea_apply_band_combat(char_data* mob, int template_band, int mob_vnum) {
+	if(mob == nullptr) {
+		return;
+	}
 	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const int base = PROCAREA_BOSS_VNUM_BASE + band * PROCAREA_BOSSES_PER_BAND;
-	return base + number(0, PROCAREA_BOSSES_PER_BAND - 1);
+	const int archetype =
+		std::clamp(procarea_archetype_index(mob_vnum), 0, PROCAREA_ARCHETYPE_COUNT - 1);
+	const ProcArchetypeCombat& combat = kProcBandCombat[band][archetype];
+
+	GET_LEVEL(mob, WARRIOR_LEVEL_IND) = combat.level;
+	mob->points.hitroll = static_cast<sbyte>(combat.hitroll);
+	mob->points.armor = combat.armor;
+	mob->points.max_hit = std::max(1, dice(combat.level, 8) + combat.hp_bonus);
+	mob->points.hit = mob->points.max_hit;
+	mob->specials.damnodice = static_cast<ubyte>(combat.dam_n);
+	mob->specials.damsizedice = static_cast<ubyte>(combat.dam_s);
+	mob->points.damroll = static_cast<sbyte>(combat.dam_plus);
+	mob->points.gold = combat.gold;
+	mob->specials.position = combat.position;
+	mob->specials.default_pos = combat.default_pos;
+	mob->immune = combat.immune;
+	mob->M_immune = combat.m_immune;
+	mob->susc = combat.susc;
+	SET_BIT(mob->M_immune, IMM_CHARM);
+	mob->susc &= ~IMM_CHARM;
+	mob->specials.act = combat.act;
+	SET_BIT(mob->specials.act, ACT_ISNPC);
+	mob->specials.affected_by = combat.affected_by;
 }
 
 [[nodiscard]] static bool procarea_cmd_is(std::string_view token,
@@ -296,17 +353,68 @@ static constexpr std::array<float, PROCAREA_TEMPLATE_BANDS> kTemplateEqAnchor = 
 	return true;
 }
 
-static void procarea_scale_mob(char_data* mob, float eq_index, int template_band,
+[[nodiscard]] static unsigned procarea_elemental_mask() {
+	return IMM_FIRE | IMM_COLD | IMM_ELEC | IMM_ENERGY | IMM_ACID;
+}
+
+static void procarea_boss_elemental_defenses(unsigned& m_immune, unsigned& immune_resist) {
+	static constexpr unsigned kElemental[] = {
+		IMM_FIRE,
+		IMM_COLD,
+		IMM_ELEC,
+		IMM_ENERGY,
+		IMM_ACID,
+	};
+	constexpr int kElementalCount = static_cast<int>(std::size(kElemental));
+	const int resist_a = number(0, kElementalCount - 1);
+	int resist_b = number(0, kElementalCount - 1);
+	while(resist_b == resist_a) {
+		resist_b = number(0, kElementalCount - 1);
+	}
+
+	m_immune = 0;
+	immune_resist = 0;
+	for(int i = 0; i < kElementalCount; ++i) {
+		if(i == resist_a || i == resist_b) {
+			immune_resist |= kElemental[i];
+		} else {
+			m_immune |= kElemental[i];
+		}
+	}
+}
+
+static void procarea_apply_boss_traits(char_data* mob) {
+	if(mob == nullptr) {
+		return;
+	}
+
+	SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
+	SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
+
+	unsigned elemental_m_immune = 0;
+	unsigned elemental_resist = 0;
+	procarea_boss_elemental_defenses(elemental_m_immune, elemental_resist);
+
+	const unsigned elemental_mask = procarea_elemental_mask();
+	mob->M_immune &= ~elemental_mask;
+	mob->M_immune |= IMM_CHARM | elemental_m_immune;
+	mob->immune &= ~elemental_mask;
+	SET_BIT(mob->immune, IMM_BLUNT | IMM_PIERCE | IMM_SLASH);
+	mob->immune |= elemental_resist;
+	mob->susc &= ~elemental_mask;
+}
+
+static void procarea_scale_mob(char_data* mob, float eq_index, int /*template_band*/,
 							   ProcMobKind kind) {
 	if(mob == nullptr) {
 		return;
 	}
 
-	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const float anchor = kTemplateEqAnchor[static_cast<std::size_t>(band)];
-	float ratio = std::clamp(eq_index / anchor, 0.65f, 1.45f);
+	const float factor = procarea_eq_factor(eq_index);
+	float ratio = procarea_lerp_float(factor, 0.65f, 2.5f);
 	if(kind == ProcMobKind::Boss) {
 		ratio *= 1.12f;
+		ratio = std::min(ratio, 3.0f);
 	} else if(kind == ProcMobKind::Trap) {
 		ratio *= 0.92f;
 	}
@@ -322,16 +430,22 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 		static_cast<int>(mob->points.damroll * ratio), -30, 40));
 	mob->points.armor = static_cast<int>(mob->points.armor * ratio);
 
-	const float factor = procarea_eq_factor(eq_index);
-	if(kind != ProcMobKind::Trap) {
-		if(kind == ProcMobKind::Boss) {
-			if(factor >= 0.35f) {
-				SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
-			}
-			if(factor >= 0.55f) {
-				SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
-			}
-		} else if(factor >= 0.50f) {
+	const float dice_ratio = std::sqrt(ratio);
+	if(mob->specials.damnodice > 0) {
+		mob->specials.damnodice = static_cast<ubyte>(std::clamp(
+			static_cast<int>(mob->specials.damnodice * dice_ratio), 1, 50));
+	}
+	if(mob->specials.damsizedice > 0) {
+		mob->specials.damsizedice = static_cast<ubyte>(std::clamp(
+			static_cast<int>(mob->specials.damsizedice * dice_ratio), 1, 127));
+	}
+	mob->points.hitroll = static_cast<sbyte>(std::clamp(
+		static_cast<int>(mob->points.hitroll * dice_ratio), -50, 50));
+
+	if(kind == ProcMobKind::Boss) {
+		procarea_apply_boss_traits(mob);
+	} else if(kind != ProcMobKind::Trap) {
+		if(factor >= 0.50f) {
 			SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
 			if(factor >= 0.75f && number(0, 99) < 30) {
 				SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
@@ -342,7 +456,7 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 
 static void procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
 									  ProcMobKind kind) {
-	const int mob_vnum = procarea_pick_mob_vnum(template_band, kind == ProcMobKind::Trap);
+	const int mob_vnum = procarea_pick_mob_vnum(kind == ProcMobKind::Trap);
 	if(mob_vnum > 0) {
 		procarea_spawn_mob(room_vnum, mob_vnum, eq_index, template_band, kind);
 	}
@@ -644,6 +758,7 @@ static void procarea_spawn_mob(long room_vnum, int mob_vnum, float eq_index, int
 			   room_vnum);
 		return;
 	}
+	procarea_apply_band_combat(mob, template_band, mob_vnum);
 	procarea_scale_mob(mob, eq_index, template_band, kind);
 	char_to_room(mob, room_vnum);
 }
@@ -690,7 +805,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 		}
 		break;
 	case ProcArchetype::Boss: {
-		const int boss = procarea_pick_boss_vnum(diff.template_band);
+		const int boss = procarea_pick_boss_vnum();
 		if(boss > 0) {
 			procarea_spawn_mob(room_vnum, boss, diff.eq_index, diff.template_band,
 							   ProcMobKind::Boss);
