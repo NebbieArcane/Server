@@ -28,8 +28,12 @@ jobs:
         shell: bash
         run: |
           echo "Base ref: ${{ github.ref }}"
-          echo
-
+          echo "Build environment: ${{ inputs.build_env }}"
+          echo "MYSQL_HOST: ${{ vars.MYSQL_HOST }}"
+          echo "MYSQL_USER: ${{ vars.MYSQL_USER }}"
+          echo "MYSQL_DB: ${{ vars.MYSQL_DB }}"
+          echo "MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}"
+          echo "MYSQL_PORT: ${{ vars.MYSQL_PORT }}"
       # - uses: ./.github/actions/dockerize
       #   with:
       #     token: ${{ secrets.GITHUB_TOKEN }}
