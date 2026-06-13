@@ -1,12 +1,30 @@
 /* procarea_mob_desc.inc
- * Testi mob Antro Effimero (19 archetipi, tier 1).
- * Statistiche in gioco: banda eq in procarea.cpp + src/procarea_band_stats.inc
+ * Testi mob Antro Effimero (19 archetipi). Sorgente unica per runtime e script bande.
  *
- * short: titolo senza articolo; il generatore aggiunge Un/Una/Lo/L' nel .mob.
- * long: frase di presenza in stanza con articolo.
- * look e sound: generate-procarea-mobs.py aggiunge \n\r finale nel .mob.
- * Non aggiungere \n\r a short (nome breve).
+ * short_title: titolo senza articolo; procarea.cpp aggiunge Un/Una/Lo/L'.
+ * long_desc: frase di presenza in stanza (con articolo).
+ * look / sound: procarea.cpp aggiunge \\n\\r in spawn.
+ * agg: messaggio aggressivita' (player.sounds).
+ *
+ * Ordine vettore = indice archetipo: boss 0-9, mob 0-7 (indici 10-17), trap 8 (18).
  */
+
+#ifndef __PROCAREA_MOB_DESC_INC
+#define __PROCAREA_MOB_DESC_INC
+
+struct ProcMobArchetypeText {
+	const char* keywords;
+	const char* short_title;
+	const char* long_desc;
+	const char* look;
+	const char* agg;
+	const char* sound;
+};
+
+#define MOB_DESC(tier, role, slot, kw, st, lg, lk, ag, so) \
+	{ kw, st, lg, lk, ag, so },
+
+static const ProcMobArchetypeText kProcMobArchetypeTexts[] = {
 
 MOB_DESC(1, boss, 0,
 	"alfa nebbia effimera",
@@ -159,3 +177,9 @@ MOB_DESC(1, trap, 8,
 	"La pelle oleosa rende difficile colpirla.",
 	"L'anguilla si avvolge verso di te.",
 	"Schizzi di fango ovunque.")
+
+};
+
+#undef MOB_DESC
+
+#endif /* __PROCAREA_MOB_DESC_INC */
