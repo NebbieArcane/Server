@@ -39,7 +39,9 @@ runs:
         MYSQL_PASSWORD: ${{ inputs.MYSQL_PASSWORD }}
         MYSQL_PORT: ${{ inputs.mysql_port }}
         MYSQL_DB: ${{ inputs.mysql_db }}
-      run: ./build.sh "${{ inputs.build_env }}"
+      run: |
+        git config --global --add safe.directory /__w/Server/Server
+        ./build.sh "${{ inputs.build_env }}"
 
     - name: Verify myst binary
       shell: bash
@@ -51,11 +53,11 @@ runs:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
         RELEASE_NAME="myst-${BUILD_ENV}"
-        chmod +x "mudroot/myst
-        mkdir -p assets
-        cp mudroot/myst "assets/myst_${RELEASE_NAME}"
-        ./mudroot/myst -V > "assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
-        ./mudroot/myst -c > "assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
+        chmod +x "./mudroot/myst"
+        mkdir -p ./assets
+        cp mudroot/myst "./assets/myst_${RELEASE_NAME}"
+        ./mudroot/myst -V > "./assets/myst_${RELEASE_NAME}-version.txt" 2>&1 || true
+        ./mudroot/myst -c > "./assets/myst_${RELEASE_NAME}-config.txt" 2>&1 || true
         echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
 
     # - name: Store myst executable as workflow artifact
