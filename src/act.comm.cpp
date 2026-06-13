@@ -41,6 +41,7 @@
 #include "interpreter.hpp"
 #include "maximums.hpp"
 #include "multiclass.hpp"
+#include "procarea.hpp"
 #include "regen.hpp"
 #include "signals.hpp"    // for PopStatus, PushStatus
 #include "spells.hpp"
@@ -1742,6 +1743,12 @@ ACTION_FUNC(do_pray) {
 	std::array<char, MAX_INPUT_LENGTH> godName{};
 	one_argument(arg, godName.data());
 	mudlog(LOG_CHECK, "%s ha pregato %s", GET_NAME(ch), godName.data());
+
+	if(!strcasecmp(godName.data(), "darkstar")) {
+		if(procarea_try_darkstar_aid(ch, arg)) {
+			return;
+		}
+	}
 
 	const bool isDevoutClass = HasClass(ch, CLASS_CLERIC | CLASS_DRUID);
 	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {

@@ -293,18 +293,22 @@ std::string move_group_counted_label(struct char_data* ch, int total) {
 		return base;
 	}
 	std::ostringstream os;
+	std::string countPart;
 	if(const char* const word = move_italian_count_word(total)) {
-		os << word;
+		countPart = word;
 	}
 	else {
-		os << total;
+		countPart = std::to_string(total);
 	}
-	os << ' ' << move_pluralize_phrase(base);
-	std::string out = os.str();
-	if(!out.empty()) {
-		out[0] = static_cast<char>(UPPER(out[0]));
+	if(!countPart.empty()) {
+		countPart[0] = static_cast<char>(UPPER(countPart[0]));
 	}
-	return out;
+	if(IS_NPC(ch) && total >= 2) {
+		const char* const color = (total >= 4) ? "$c0009" : "$c0011";
+		countPart = std::string(color) + countPart + "$c0007";
+	}
+	os << countPart << ' ' << move_pluralize_phrase(base);
+	return os.str();
 }
 
 /** NPC visibile: "Un hill giant" invece di "A hill giant" (usa UNUNA + short_descr senza articolo). */
