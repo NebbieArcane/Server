@@ -7,11 +7,11 @@ on:
         - feature/*
 jobs:
   build:
-    if: ${{ contains(github.base_ref, vars.DEVEL_BRANCH ) }}
+    # if: ${{ contains(github.base_ref, vars.DEVEL_BRANCH ) }}
     runs-on: ubuntu-latest
     steps:
       - name: Info
         run: |
           echo "Base ref: ${{ github.base_ref }}"
           echo "DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}"
-      - uses: ./actions/compile.yml
+    #   - uses: ./actions/compile.yml
