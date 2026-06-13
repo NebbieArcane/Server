@@ -55,17 +55,17 @@ runs:
       shell: bash
       run: test -x mudroot/myst
 
-    - name: Prepare myst release binary
-      shell: bash
-      if: ${{ inputs.dryrun == false}}
-      env:
-        BUILD_ENV: ${{ inputs.build_env }}
-      run: |
-        chmod +x "./mudroot/myst"
-        mkdir -p ./assets
-        cp mudroot/myst "./assets/myst"
-        ./mudroot/myst -V > "./assets/version.txt" 2>&1 || true
-        ./mudroot/myst -c > "./assets/config.txt" 2>&1 || true
+    # - name: Prepare myst release binary
+    #   shell: bash
+    #   if: ${{ inputs.dryrun == false}}
+    #   env:
+    #     BUILD_ENV: ${{ inputs.build_env }}
+    #   run: |
+    #     chmod +x "./mudroot/myst"
+    #     mkdir -p ./assets
+    #     cp mudroot/myst "./assets/myst"
+    #     ./mudroot/myst -V > "./assets/version.txt" 2>&1 || true
+    #     ./mudroot/myst -c > "./assets/config.txt" 2>&1 || true
     
     - name: Simulate myst release binary
       shell: bash
@@ -79,6 +79,7 @@ runs:
         cp mudroot/myst "./assets/myst"
         echo "Version dryrun" > "./assets/version.txt" 2>&1 || true
         echo "Config dryrun" > "./assets/config.txt" 2>&1 || true
+
     - id: relnotes
       shell: bash
       env:
