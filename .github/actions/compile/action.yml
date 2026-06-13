@@ -53,7 +53,7 @@ runs:
 
     - name: Prepare myst release binary
       shell: bash
-      if: !inputs.dryrun
+      if: inputs.dryrun == false
       env:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
@@ -66,7 +66,7 @@ runs:
         echo "MYST_RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
     - name: Simulate myst release binary
       shell: bash
-      if: inputs.dryrun
+      if: inputs.dryrun == true
       env:
         BUILD_ENV: ${{ inputs.build_env }}
       run: |
