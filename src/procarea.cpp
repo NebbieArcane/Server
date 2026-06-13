@@ -19,6 +19,7 @@
 #include "procarea.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "maximums.hpp"
 #include "procarea_band_stats.inc"
 #include <algorithm>
 #include <array>
@@ -32,6 +33,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <unordered_set>
 #include <vector>
 namespace Alarmud {
 
@@ -117,11 +119,16 @@ static constexpr int kProcExitPortalObj = 9071;
 
 enum class ProcMobKind { Normal, Boss, Trap };
 
-static void procarea_spawn_mob(long room_vnum, int mob_vnum, float eq_index, int template_band,
-							   ProcMobKind kind);
+static char_data* procarea_create_mob(int archetype_index, float eq_index, int template_band,
+									  ProcMobKind kind);
+static void procarea_spawn_mob(long room_vnum, int archetype_index, float eq_index,
+							   int template_band, ProcMobKind kind);
 
-
+#include "procarea_mob_desc.inc"
 #include "procarea_themes.inc"
+
+static_assert(std::size(kProcMobArchetypeTexts) == PROCAREA_ARCHETYPE_COUNT,
+			  "procarea mob text table must match PROCAREA_ARCHETYPE_COUNT");
 
 static constexpr std::size_t kThemeSetCount = std::size(kThemeSets);
 
@@ -229,36 +236,114 @@ struct ProcAreaDifficulty {
 	return diff;
 }
 
-[[nodiscard]] static int procarea_pick_mob_vnum(bool trap) {
+[[nodiscard]] static int procarea_pick_mob_archetype(bool trap) {
 	if(trap) {
-		return PROCAREA_MOB_VNUM_BASE + (PROCAREA_MOBS_PER_BAND - 1);
+		return PROCAREA_BOSSES_PER_BAND + (PROCAREA_MOBS_PER_BAND - 1);
 	}
-	return PROCAREA_MOB_VNUM_BASE + number(0, PROCAREA_MOB_POOL_SIZE - 1);
+	return PROCAREA_BOSSES_PER_BAND + number(0, PROCAREA_MOB_POOL_SIZE - 1);
 }
 
-[[nodiscard]] static int procarea_pick_boss_vnum() {
-	return PROCAREA_BOSS_VNUM_BASE + number(0, PROCAREA_BOSSES_PER_BAND - 1);
+[[nodiscard]] static int procarea_pick_boss_archetype() {
+	return number(0, PROCAREA_BOSSES_PER_BAND - 1);
 }
 
-[[nodiscard]] static int procarea_archetype_index(int mob_vnum) {
-	if(mob_vnum >= PROCAREA_BOSS_VNUM_BASE &&
-	   mob_vnum < PROCAREA_BOSS_VNUM_BASE + PROCAREA_BOSSES_PER_BAND) {
-		return mob_vnum - PROCAREA_BOSS_VNUM_BASE;
+[[nodiscard]] static bool procarea_short_has_article(std::string_view text) {
+	static constexpr std::string_view kArticles[] = {
+		"Un ", "Una ", "Il ", "Lo ", "La ", "L'", "Uno ", "Un' ",
+		"un ", "una ", "il ", "lo ", "la ", "uno ", "un'",
+	};
+	for(const std::string_view prefix : kArticles) {
+		if(text.size() >= prefix.size() &&
+		   text.compare(0, prefix.size(), prefix) == 0) {
+			return true;
+		}
 	}
-	const int slot = mob_vnum - PROCAREA_MOB_VNUM_BASE;
-	if(slot < 0 || slot >= PROCAREA_MOBS_PER_BAND) {
-		return 0;
-	}
-	return PROCAREA_BOSSES_PER_BAND + slot;
+	return false;
 }
 
-static void procarea_apply_band_combat(char_data* mob, int template_band, int mob_vnum) {
+[[nodiscard]] static char procarea_lower_first(char c) {
+	return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+}
+
+[[nodiscard]] static std::string procarea_lower_first(std::string_view text) {
+	if(text.empty()) {
+		return {};
+	}
+	std::string out(text);
+	out[0] = procarea_lower_first(out[0]);
+	return out;
+}
+
+[[nodiscard]] static std::string procarea_article_short(std::string_view title) {
+	std::string s(title);
+	if(s.empty() || procarea_short_has_article(s)) {
+		return s;
+	}
+	const std::string first = s.substr(0, s.find(' '));
+	std::string lower_first = first;
+	for(char& c : lower_first) {
+		c = procarea_lower_first(c);
+	}
+	const std::string body = procarea_lower_first(s);
+
+	static const std::unordered_set<std::string> kLoFirst = {
+		"gnomo", "scheletro", "spettro",
+	};
+	static const std::unordered_set<std::string> kLApostropheFirst = {
+		"alfa", "esecutore", "ermite", "oracolo", "araldo", "augusto", "antico", "avatar",
+		"arpione", "ombra", "augure", "arconte", "archivista", "erinia",
+	};
+	static const std::unordered_set<std::string> kUnaFirst = {
+		"regina", "dama", "matriarca", "larva", "rana", "anguilla", "voce", "divinita",
+		"arpia", "sentinella",
+	};
+
+	if(kLoFirst.count(lower_first) != 0) {
+		return "Lo " + body;
+	}
+	if(kLApostropheFirst.count(lower_first) != 0 ||
+	   (!lower_first.empty() && lower_first[0] == 'a')) {
+		return "L'" + body;
+	}
+	if(kUnaFirst.count(lower_first) != 0 ||
+	   (lower_first.size() > 1 && lower_first.back() == 'a' && lower_first != "arma")) {
+		return "Una " + body;
+	}
+	if(lower_first.size() >= 2 && lower_first[0] == 's' &&
+	   lower_first[1] != 'a' && lower_first[1] != 'e' && lower_first[1] != 'i' &&
+	   lower_first[1] != 'o' && lower_first[1] != 'u' && lower_first[1] != 'h') {
+		return "Uno " + body;
+	}
+	if(!lower_first.empty() &&
+	   (lower_first[0] == 'z' || lower_first.rfind("gn", 0) == 0 ||
+		lower_first.rfind("ps", 0) == 0 || lower_first.rfind("pn", 0) == 0)) {
+		return "Uno " + body;
+	}
+	return "Un " + body;
+}
+
+[[nodiscard]] static char* procarea_dup_text(const char* text, bool trailing_crlf) {
+	if(text == nullptr) {
+		return strdup("");
+	}
+	if(!trailing_crlf) {
+		return strdup(text);
+	}
+	const std::size_t len = std::strlen(text);
+	if(len >= 2 && text[len - 2] == '\n' && text[len - 1] == '\r') {
+		return strdup(text);
+	}
+	const std::string wrapped = std::string(text) + "\n\r";
+	return strdup(wrapped.c_str());
+}
+
+static void procarea_apply_band_combat(char_data* mob, int template_band, int archetype_index) {
 	if(mob == nullptr) {
 		return;
 	}
 	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 	const int archetype =
-		std::clamp(procarea_archetype_index(mob_vnum), 0, PROCAREA_ARCHETYPE_COUNT - 1);
+		std::clamp(archetype_index, 0, PROCAREA_ARCHETYPE_COUNT - 1);
 	const ProcArchetypeCombat& combat = kProcBandCombat[band][archetype];
 
 	GET_LEVEL(mob, WARRIOR_LEVEL_IND) = combat.level;
@@ -456,10 +541,8 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int /*template_ba
 
 static void procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
 									  ProcMobKind kind) {
-	const int mob_vnum = procarea_pick_mob_vnum(kind == ProcMobKind::Trap);
-	if(mob_vnum > 0) {
-		procarea_spawn_mob(room_vnum, mob_vnum, eq_index, template_band, kind);
-	}
+	const int archetype = procarea_pick_mob_archetype(kind == ProcMobKind::Trap);
+	procarea_spawn_mob(room_vnum, archetype, eq_index, template_band, kind);
 }
 
 static int procarea_depth_spawn_bonus(const ProcAreaDifficulty& diff, int depth, int max_depth) {
@@ -750,16 +833,106 @@ static struct room_data* procarea_create_room(long vnum, const ProcRoomTemplate&
 	return rp;
 }
 
-static void procarea_spawn_mob(long room_vnum, int mob_vnum, float eq_index, int template_band,
-							   ProcMobKind kind) {
-	struct char_data* mob = read_mobile(mob_vnum, VIRTUAL);
+static char_data* procarea_create_mob(int archetype_index, float eq_index, int template_band,
+									  ProcMobKind kind) {
+	if(archetype_index < 0 || archetype_index >= PROCAREA_ARCHETYPE_COUNT) {
+		mudlog(LOG_ERROR, "procarea: invalid archetype index %d", archetype_index);
+		return nullptr;
+	}
+
+	const ProcMobArchetypeText& text = kProcMobArchetypeTexts[archetype_index];
+	char_data* mob = nullptr;
+	CREATE(mob, char_data, 1);
 	if(mob == nullptr) {
-		mudlog(LOG_ERROR, "procarea: read_mobile(%d) failed for room %ld", mob_vnum,
+		mudlog(LOG_ERROR, "procarea: CREATE mob failed for archetype %d", archetype_index);
+		return nullptr;
+	}
+
+	clear_char(mob);
+	mob->specials.last_direction = -1;
+	mob->mult_att = 1.0f;
+	mob->specials.spellfail = 101;
+	mob->specials.mobtype = 'L';
+
+	const std::string short_desc = procarea_article_short(text.short_title);
+	mob->player.name = strdup(text.keywords != nullptr ? text.keywords : "");
+	mob->player.short_descr = strdup(short_desc.c_str());
+	mob->player.long_descr = procarea_dup_text(text.long_desc, true);
+	mob->player.description = procarea_dup_text(text.look, true);
+	mob->player.sounds = procarea_dup_text(text.agg, false);
+	mob->player.distant_snds = procarea_dup_text(text.sound, true);
+	mob->player.title = nullptr;
+
+	SET_BIT(mob->specials.act, ACT_ISNPC);
+	mob->player.iClass = 0;
+	mob->player.time.birth = time(nullptr);
+	mob->player.time.played = 0;
+	mob->player.time.logon = time(nullptr);
+	mob->player.weight = 200;
+	mob->player.height = 198;
+	for(int i = 0; i < 3; ++i) {
+		GET_COND(mob, i) = -1;
+	}
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		mob->equipment[i] = nullptr;
+	}
+
+	procarea_apply_band_combat(mob, template_band, archetype_index);
+	procarea_scale_mob(mob, eq_index, template_band, kind);
+
+	const int level = GET_LEVEL(mob, WARRIOR_LEVEL_IND);
+	mob->abilities.str = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
+	mob->abilities.intel = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
+	mob->abilities.wis = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
+	mob->abilities.dex = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
+	mob->abilities.con = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
+	mob->abilities.chr = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
+	mob->tmpabilities = mob->abilities;
+	mob->points.max_mana = 100;
+	mob->points.max_move = 50;
+	for(int i = 0; i < 5; ++i) {
+		mob->specials.apply_saving_throw[i] =
+			static_cast<sbyte>(MAX(20 - level, 2));
+	}
+
+	GET_EXP(mob) = DetermineExp(mob, 0) + mob->points.gold;
+	if(IS_SET(mob->specials.act, ACT_WIMPY)) {
+		GET_EXP(mob) -= GET_EXP(mob) / 10;
+	}
+	if(IS_SET(mob->specials.act, ACT_AGGRESSIVE)) {
+		GET_EXP(mob) += GET_EXP(mob) / 10;
+		if(!IS_SET(mob->specials.act, ACT_WIMPY) ||
+		   IS_SET(mob->specials.act, ACT_META_AGG)) {
+			GET_EXP(mob) += GET_EXP(mob) / 2;
+		}
+	}
+
+	mob->nr = -1;
+	mob->generic = 0;
+	mob->commandp = 0;
+	SetRacialStuff(mob);
+	mob->points.mana = mana_limit(mob);
+	mob->points.move = move_limit(mob);
+	mob->specials.tick = mob_tick_count++;
+	if(mob_tick_count == TICK_WRAP_COUNT) {
+		mob_tick_count = 0;
+	}
+
+	mob->next = character_list;
+	character_list = mob;
+	mob_count++;
+
+	return mob;
+}
+
+static void procarea_spawn_mob(long room_vnum, int archetype_index, float eq_index,
+							   int template_band, ProcMobKind kind) {
+	char_data* mob = procarea_create_mob(archetype_index, eq_index, template_band, kind);
+	if(mob == nullptr) {
+		mudlog(LOG_ERROR, "procarea: spawn failed archetype %d room %ld", archetype_index,
 			   room_vnum);
 		return;
 	}
-	procarea_apply_band_combat(mob, template_band, mob_vnum);
-	procarea_scale_mob(mob, eq_index, template_band, kind);
 	char_to_room(mob, room_vnum);
 }
 
@@ -805,11 +978,8 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 		}
 		break;
 	case ProcArchetype::Boss: {
-		const int boss = procarea_pick_boss_vnum();
-		if(boss > 0) {
-			procarea_spawn_mob(room_vnum, boss, diff.eq_index, diff.template_band,
-							   ProcMobKind::Boss);
-		}
+		const int boss = procarea_pick_boss_archetype();
+		procarea_spawn_mob(room_vnum, boss, diff.eq_index, diff.template_band, ProcMobKind::Boss);
 		for(int i = 0; i < diff.boss_adds; ++i) {
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
 									  ProcMobKind::Normal);

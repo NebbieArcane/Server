@@ -28,6 +28,7 @@ constexpr int PROCAREA_BOSS_VNUM_BASE = 65000;
 constexpr int PROCAREA_BOSSES_PER_BAND = 10;
 constexpr int PROCAREA_BOSS_COUNT = 10;
 
+/** Legacy vnum range (non usato dallo spawn runtime dell'antro). */
 constexpr int PROCAREA_MOB_VNUM_BASE = 65100;
 constexpr int PROCAREA_MOBS_PER_BAND = 9;
 constexpr int PROCAREA_MOB_POOL_SIZE = 8;
