@@ -102,6 +102,7 @@ runs:
         release_name: "${{ github.ref_name }}"
         body: |
           ${{ github.env.RELEASE_BODY }} 
+          aggiornata
         overwrite: true
         draft: ${{ inputs.build_env == 'devel'}}
         prerelease: ${{ inputs.build_env == 'staging'}}
