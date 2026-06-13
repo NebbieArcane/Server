@@ -173,7 +173,7 @@ add_executable(${CMAKE_PROJECT_NAME}  ${file_cpp} ${file_hpp} release.hpp)
 set(MYST_OBJ_DIR "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${CMAKE_PROJECT_NAME}.dir")
 file(MAKE_DIRECTORY "${MYST_OBJ_DIR}")
 file(MAKE_DIRECTORY "${MYST_OBJ_DIR}/odb")
-add_custom_target(myst_obj_dirs
+add_custom_target(myst_obj_dirs ALL
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${MYST_OBJ_DIR}/odb"
 		COMMENT "Ensure myst object output directories exist"
