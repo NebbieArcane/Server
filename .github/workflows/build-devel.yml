@@ -18,7 +18,7 @@ jobs:
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
     steps:
 
-      - uses: nebbiearcane/Actions/compile
+      - uses: NebbieArcane/Actions/compile@main
         with:
           build_env: devel
           mysql_host: ${{ vars.MYSQL_HOST }}
