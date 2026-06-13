@@ -40,6 +40,7 @@ runs:
   using: composite
   steps:
     - name: Compile myst
+      if: ${{ inputs.dryrun == false}}
       shell: bash
       env:
         MYSQL_HOST: ${{ inputs.mysql_host }}
@@ -50,24 +51,13 @@ runs:
       run: |
         git config --global --add safe.directory /__w/Server/Server
         ./build.sh "${{ inputs.build_env }}"
+        chmod +x "./mudroot/myst"
+        mkdir -p ./assets
+        cp mudroot/myst "./assets/myst"
+        ./mudroot/myst -V > "./assets/version.txt" 2>&1 || true
+        ./mudroot/myst -c > "./assets/config.txt" 2>&1 || true
 
-    - name: Verify myst binary
-      shell: bash
-      run: test -x mudroot/myst
-
-    # - name: Prepare myst release binary
-    #   shell: bash
-    #   if: ${{ inputs.dryrun == false}}
-    #   env:
-    #     BUILD_ENV: ${{ inputs.build_env }}
-    #   run: |
-    #     chmod +x "./mudroot/myst"
-    #     mkdir -p ./assets
-    #     cp mudroot/myst "./assets/myst"
-    #     ./mudroot/myst -V > "./assets/version.txt" 2>&1 || true
-    #     ./mudroot/myst -c > "./assets/config.txt" 2>&1 || true
-    
-    - name: Simulate myst release binary
+    - name: Fake compile release binary
       shell: bash
       if: ${{ inputs.dryrun == true}}
       env:
@@ -93,18 +83,6 @@ runs:
         b="${b//$'\r'/'%0D'}"                             # Multiline escape sequences for '\r'
         echo "RELEASE_BODY=$b" >> "$GITHUB_ENV"          # <--- Set environment variable
       
-
-    # - name: Store myst executable as workflow artifact
-    #   if: github.ref_type != 'tag'
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ${{ env.MYST_RELEASE_NAME }}
-    #     path: |
-    #       ${{ env.MYST_RELEASE_NAME }}
-    #       myst-version.txt
-    #       myst-config.txt
-    #     retention-days: 30
-
     - id: keydb
       uses: pozetroninc/github-action-get-latest-release@master
       with:
