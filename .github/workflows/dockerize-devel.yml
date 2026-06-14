@@ -20,6 +20,7 @@ jobs:
       selected_env: ${{ steps.def.outputs.selected_env }}
     steps:
       - id: def
+        name: Environment setup
         env:  
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
