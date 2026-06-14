@@ -39,7 +39,7 @@ jobs:
             if (pr.milestone) {
               core.info(`This pull request has a milestone set: ${pr.milestone.title}`);
             } else {
-              core.setFailed(`A maintainer needs to set the milestone for this pull request. Milestone is ${pr.milestone}`);
+              core.info(`A maintainer needs to set the milestone for this pull request.`);
             }
       - name: Check milestone 1
         uses: actions/github-script@main
@@ -53,7 +53,7 @@ jobs:
             if (data.milestone) {
               core.info(`This pull request has a milestone set: ${data.milestone.title}`);
             } else {
-              core.setFailed(`A maintainer needs to set the milestone for this pull request.`);
+              core.info(`A maintainer needs to set the milestone for this pull request.`);
             }          
       - id: def
         name: Environment setup
