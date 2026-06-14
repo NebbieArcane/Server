@@ -14,7 +14,7 @@ on:
       - "x*"
 
 jobs:
-  define-environment:
+  def:
     runs-on: ubuntu-latest
     outputs:
       selected_env: ${{ steps.def.outputs.selected_env }}
@@ -71,9 +71,9 @@ jobs:
             fi
           fi
           echo "SELECTED_ENV: $SELECTED_ENV"
-          echo "selected=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
-  call-dockerize-devel:
-    needs: define-environment
+          echo "selected_env=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
+  call-dockerize:
+    needs: def
     if: needs.def.outputs.selected_env != 'ignore'
     uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
     with:
