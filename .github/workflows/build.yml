@@ -21,6 +21,12 @@ on:
       - "x*"
 
 jobs:
+  defaction:
+    uses: NebbieArcane/Actions/.github/workflows/server/def.yml@main
+    with:
+      dryrun: true
+      build_env: ${{ inputs.build_env }}
+    secrets: inherit
   def:
     runs-on: ubuntu-latest
     outputs:
