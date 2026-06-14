@@ -10,6 +10,8 @@ on:
   push:
     branches:
       - "feature/odb-discovery"
+    tags:
+      - "x*"
 
 jobs:
   define-environment:
@@ -31,8 +33,8 @@ jobs:
           REF_COMMIT_AUTHOR_EMAIL: ${{ github.ref_commit_author_email }}
           REF_COMMIT_AUTHOR_DATE: ${{ github.ref_commit_author_date }}
           REF_EVENT: ${{ toJson(github.event) }}
-          REF_EVENT_TYPE: ${{ github.event_type }}
-          REF_EVENT_NAME: ${{ github.event_name }}
+          REF_EVENT_TYPE: ${{ github.event.type }}
+          REF_EVENT_NAME: ${{ github.event.name }}
           REF_EVENT_PATH: ${{ github.event_path }}
           REF_EVENT_URL: ${{ github.event_url }}
           REF_EVENT_ACTION: ${{ github.event_action }}
@@ -41,23 +43,28 @@ jobs:
           REF_EVENT_SENDER: ${{ github.event_sender }}
           REF_EVENT_TIMESTAMP: ${{ github.event_timestamp }}
           REF_EVENT_WORKFLOW: ${{ github.event_workflow }}
+          DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}
         shell: bash
         run: |
           export
-          if [ "$REF_TYPE" == "tag" ]; then
+          if [ "$GITHUB_REF_TYPE" == "tag" ]; then
             echo "DEVEL_ENV=production" >> $GITHUB_ENV
-          else if [ "$REF_NAME" == "release/*" ]; then
+          else if [ "$GITHUB_REF_NAME" == "release/*" ]; then
             echo "DEVEL_ENV=staging" >> $GITHUB_ENV
-          else if [ "$REF_NAME" == "feature/*" ]; then
-            echo "DEVEL_ENV=staging" >> $GITHUB_ENV
-          else
-            echo "DEVEL_ENV=devel" >> $GITHUB_ENV
+          else if [ "$GITHUB_REF_NAME" == "feature/*" ]; then
+            if [ "$GITHUB_REF_NAME" == "$DEVEL_BRANCH" ]; then
+              echo "DEVEL_ENV=devel" >> $GITHUB_ENV
+            else
+              echo "DEVEL_ENV=ignore" >> $GITHUB_ENV
+            fi
           fi
           fi
           fi
+
 
 
   call-dockerize-devel:
+    if: ${{ github.env.DEVEL_ENV != 'ignore' }}
     uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
     with:
       build_env: devel
