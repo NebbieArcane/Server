@@ -30,7 +30,7 @@ jobs:
           REF_COMMIT_AUTHOR: ${{ github.ref_commit_author }}
           REF_COMMIT_AUTHOR_EMAIL: ${{ github.ref_commit_author_email }}
           REF_COMMIT_AUTHOR_DATE: ${{ github.ref_commit_author_date }}
-          REF_EVENT: "${{ github.event }}"
+          REF_EVENT: ${{ toJson(github.event) }}
           REF_EVENT_TYPE: ${{ github.event_type }}
           REF_EVENT_NAME: ${{ github.event_name }}
           REF_EVENT_PATH: ${{ github.event_path }}
