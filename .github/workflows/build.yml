@@ -30,9 +30,35 @@ jobs:
         uses: jwalton/gh-find-current-pr@master
         with:
           state: open
+      - name: Check milestone 1
+        uses: actions/github-script@main
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            core.info(`PR: ${JSON.stringify(pr)}`);
+            if (pr.milestone) {
+              core.info(`This pull request has a milestone set: ${pr.milestone.title}`);
+            } else {
+              core.setFailed(`A maintainer needs to set the milestone for this pull request. Milestone is ${pr.milestone}`);
+            }
+      - name: Check milestone 1
+        uses: actions/github-script@main
+        with:
+          script: |
+            const { data } = await github.request("GET /repos/{owner}/{repo}/pulls/{pr}", {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pr: context.payload.pull_request.number
+            });
+            if (data.milestone) {
+              core.info(`This pull request has a milestone set: ${data.milestone.title}`);
+            } else {
+              core.setFailed(`A maintainer needs to set the milestone for this pull request.`);
+            }          
       - id: def
         name: Environment setup
         env:  
+          
           PR: ${{ steps.findr.outputs.pr }}
           PR_NUMBER: ${{ steps.findr.outputs.number }}
           PR_TITLE: ${{ steps.findr.outputs.title }}
