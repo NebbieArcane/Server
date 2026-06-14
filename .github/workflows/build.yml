@@ -22,10 +22,7 @@ on:
 
 jobs:
   defaction:
-    uses: NebbieArcane/Actions/.github/workflows/server/def.yml@main
-    with:
-      dryrun: true
-      build_env: ${{ inputs.build_env }}
+    uses: NebbieArcane/Actions/.github/workflows/server-environment.yml@main
     secrets: inherit
   def:
     runs-on: ubuntu-latest
@@ -106,7 +103,7 @@ jobs:
   compile:
     needs: def
     if: needs.def.outputs.selected_env != 'ignore'
-    uses: NebbieArcane/Actions/.github/workflows/compile.yml@main
+    uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
       build_env: ${{ needs.def.outputs.selected_env }}
       dryrun: true
@@ -116,7 +113,7 @@ jobs:
       - def
       - compile
     if: needs.def.outputs.selected_env != 'ignore'
-    uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
+    uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
     with:
       build_env: ${{ needs.def.outputs.selected_env }}
       dryrun: true
