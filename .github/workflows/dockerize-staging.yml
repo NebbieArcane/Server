@@ -7,14 +7,11 @@ on:
     branches: [main]
     types: 
       - completed
-  push:
-    branches:
-      - "feature/odb-discovery"
 
 jobs:
 
-  call-dockerize-devel:
-    uses: ./.github/workflows/dockerize.yml
+  call-dockerize-stagingl:
+    uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
     with:
       build_env: staging
     secrets: inherit

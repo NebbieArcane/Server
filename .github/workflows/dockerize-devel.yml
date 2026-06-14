@@ -12,6 +12,50 @@ on:
       - "feature/odb-discovery"
 
 jobs:
+  define-environment:
+    runs-on: ubuntu-latest
+    environment:
+      name: devel
+      deployment: false
+    steps:
+      - name: Define environment
+        env:  
+          REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_TAG: ${{ github.ref_tag }}
+          REF_BRANCH: ${{ github.ref_branch }}
+          REF_COMMIT: ${{ github.ref_commit }}
+          REF_COMMIT_MESSAGE: ${{ github.ref_commit_message }}
+          REF_COMMIT_AUTHOR: ${{ github.ref_commit_author }}
+          REF_COMMIT_AUTHOR_EMAIL: ${{ github.ref_commit_author_email }}
+          REF_COMMIT_AUTHOR_DATE: ${{ github.ref_commit_author_date }}
+          REF_EVENT: ${{ github.event }}
+          REF_EVENT_TYPE: ${{ github.event_type }}
+          REF_EVENT_NAME: ${{ github.event_name }}
+          REF_EVENT_PATH: ${{ github.event_path }}
+          REF_EVENT_URL: ${{ github.event_url }}
+          REF_EVENT_ACTION: ${{ github.event_action }}
+          REF_EVENT_LABEL: ${{ github.event_label }}
+          REF_EVENT_REPO: ${{ github.event_repo }}
+          REF_EVENT_SENDER: ${{ github.event_sender }}
+          REF_EVENT_TIMESTAMP: ${{ github.event_timestamp }}
+          REF_EVENT_WORKFLOW: ${{ github.event_workflow }}
+        shell: bash
+        run: |
+          export
+          if [ "$REF_TYPE" == "tag" ]; then
+            echo "DEVEL_ENV=production" >> $GITHUB_ENV
+          else if [ "$REF_NAME" == "release/*" ]; then
+            echo "DEVEL_ENV=staging" >> $GITHUB_ENV
+          else if [ "$REF_NAME" == "feature/*" ]; then
+            echo "DEVEL_ENV=staging" >> $GITHUB_ENV
+          else
+            echo "DEVEL_ENV=devel" >> $GITHUB_ENV
+          fi
+          fi
+          fi
+
 
   call-dockerize-devel:
     uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
