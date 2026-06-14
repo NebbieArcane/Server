@@ -57,6 +57,7 @@ fi
 if [ -x mudroot/myst ] ; then
 	echo "Ready"
 	cp mudroot/myst "./mudrunner"
+	ln -sf mudroot/myst "./myst"
 	exit 0
 else 
 	exit 1

@@ -1,8 +1,9 @@
 # Su Apple Silicon (arm64) mudcompiler è solo linux/amd64: forzare la piattaforma.
-# Override: DOCKER_PLATFORM=linux/arm64 se un giorno esiste l'immagine nativa.
+# UID/GID: runEnv scrive .env con LOCAL_UID/LOCAL_GID (stesso utente di consumer e mysql).
 services:
     mysql:
         image: mysql:8
+        user: "${LOCAL_UID}:${LOCAL_GID}"
         environment:
             - MYSQL_ROOT_PASSWORD=secret
             - MYSQL_DATABASE=nebbie
@@ -10,6 +11,7 @@ services:
             - 3306:33306
         volumes:
             - ./mysql_data:/var/lib/mysql
+        command: ["mysqld", "--port=33306"]
     adminer:
         image: adminer
         ports:
@@ -25,7 +27,11 @@ services:
     consumer:
         image: nebbiearcane/mudcompiler:latest
         platform: ${DOCKER_PLATFORM:-linux/amd64}
-        entrypoint: ["/usr/bin/bash","-c"]
+        user: "${LOCAL_UID}:${LOCAL_GID}"
+        entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+        command: []
+        stdin_open: true
+        tty: true
         volumes:
             - ./:/app
             - /etc/group:/etc/group:ro

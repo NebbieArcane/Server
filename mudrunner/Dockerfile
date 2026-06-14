@@ -15,7 +15,7 @@
 #
 # Base: Ubuntu 24.04 (Noble), GCC 12, ODB 2.5 via build2/bpkg (linux/amd64).
 
-FROM nebbiearcane/mudcompiler:1.0.1
+FROM nebbiearcane/mudcompiler:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER_BUILD=ON
@@ -23,6 +23,9 @@ USER root
 RUN ldconfig
 USER 1000
 WORKDIR /run
+COPY myst .
+COPY ../myst-version.txt .
+COPY ../myst-config.txt .
 
 ENTRYPOINT ["./myst"]
 CMD ["-v"]

@@ -1,0 +1,121 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        type: boolean
+        description: Dry run
+        required: false
+        default: true
+      build_env:
+        type: string
+        description: The environment to build
+        required: true
+        default: devel
+  push:
+    branches:
+      - "feature/*"
+      - "release/*"
+    tags:
+      - "x*"
+
+jobs:
+  def:
+    uses: NebbieArcane/Actions/.github/workflows/server-environment.yml@main
+    secrets: inherit
+  # def:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     selected_env: ${{ steps.def.outputs.selected_env }}
+  #     pullrequest: ${{ steps.findr.outputs.pr }}
+  #     milestone: ${{ steps.ms.outputs.milestone }}
+  #   steps:
+  #     - id: findr
+  #       uses: jwalton/gh-find-current-pr@master
+  #       with:
+  #         state: open
+  #     - name: Check milestone 1
+  #       id: ms
+  #       uses: actions/github-script@main
+  #       with:
+  #         script: |
+  #           const { data } = await github.request("GET /repos/{owner}/{repo}/pulls/{pr}", {
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             pr: ${{ steps.findr.outputs.number }}
+  #           });
+  #           if (data.milestone) {
+  #             core.info(`This pull request has a milestone set: ${data.milestone.title}`);
+  #             core.setOutput("milestone", data.milestone.title);
+  #           } else {
+  #             core.info(`A maintainer needs to set the milestone for this pull request.`);
+  #           }          
+  #     - id: def
+  #       name: Environment setup
+  #       env:  
+          
+  #         PR: ${{ steps.findr.outputs.pr }}
+  #         MILESTONE: ${{ steps.ms.outputs.milestone }}
+  #         PR_NUMBER: ${{ steps.findr.outputs.number }}
+  #         PR_TITLE: ${{ steps.findr.outputs.title }}
+  #         PR_BODY: ${{ steps.findr.outputs.body }}
+  #         REF: ${{ github.ref }}
+  #         REF_NAME: ${{ github.ref_name }}
+  #         REF_TARGET: ${{ github.base_ref  }}
+  #         REF_TYPE: ${{ github.ref_type }}
+  #         REF_EVENT_NAME: ${{ github.event_name }}
+  #         REF_ACTOR: ${{ github.actor }}
+  #         REF_AUTHOR: ${{ github.event.pusher.name }}
+  #         REF_AUTHOR_EMAIL: ${{ github.event.pusher.email }}
+  #         DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}
+  #       shell: bash
+  #       run: |
+  #         echo "MILESTONE: $MILESTONE"
+  #         echo "PR: $PR"
+  #         echo "REF_NAME: $REF_NAME"
+  #         echo "REF_TARGET: $REF_TARGET"
+  #         echo "PR: $PR"
+  #         echo "PR_NUMBER: $PR_NUMBER"
+  #         echo "PR_TITLE: $PR_TITLE"
+  #         echo "PR_BODY: $PR_BODY"
+  #         echo "REF_TYPE: $REF_TYPE"
+  #         echo "REF_EVENT_NAME: $REF_EVENT_NAME"
+  #         echo "REF_ACTOR: $REF_ACTOR"
+  #         echo "REF_AUTHOR: $REF_AUTHOR"
+  #         echo "REF_AUTHOR_EMAIL: $REF_AUTHOR_EMAIL"
+  #         echo "DEVEL_BRANCH: $DEVEL_BRANCH"
+  #         SELECTED_ENV=ignore
+  #         if [ "$REF_TYPE" == "tag" ]; then
+  #           SELECTED_ENV=production
+  #         elif [ "$REF_NAME" == "release/*" ]; then
+  #           SELECTED_ENV=staging
+  #         elif [ "$REF_NAME" == "feature/*" ]; then
+  #           SELECTED_ENV=staging
+  #         else
+  #           if [ "$REF_NAME" == "$DEVEL_BRANCH" ]; then
+  #             SELECTED_ENV=devel
+  #           fi
+  #         fi
+  #         echo "SELECTED_ENV: $SELECTED_ENV"
+  #         echo "selected_env=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
+  #         echo "selected_env=ignore" >> "$GITHUB_OUTPUT"
+  compile:
+    needs: def
+    if: needs.def.outputs.selected_env != 'ignore'
+    uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
+    with:
+      build_env: ${{ needs.def.outputs.selected_env }}
+      dryrun: true
+    secrets: inherit
+  dockerize:
+    needs: 
+      - def
+      - compile
+    if: needs.def.outputs.selected_env != 'ignore'
+    uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
+    with:
+      build_env: ${{ needs.def.outputs.selected_env }}
+      dryrun: true
+    secrets: inherit    
+            
