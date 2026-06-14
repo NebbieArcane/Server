@@ -23,14 +23,14 @@ jobs:
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
-          REF_TAG: ${{ github.ref_tag }}
+          REF_TAG: ${{ github.tag }}
           REF_BRANCH: ${{ github.ref_branch }}
           REF_COMMIT: ${{ github.ref_commit }}
           REF_COMMIT_MESSAGE: ${{ github.ref_commit_message }}
           REF_COMMIT_AUTHOR: ${{ github.ref_commit_author }}
           REF_COMMIT_AUTHOR_EMAIL: ${{ github.ref_commit_author_email }}
           REF_COMMIT_AUTHOR_DATE: ${{ github.ref_commit_author_date }}
-          REF_EVENT: ${{ github.event }}
+          REF_EVENT: "${{ github.event }}"
           REF_EVENT_TYPE: ${{ github.event_type }}
           REF_EVENT_NAME: ${{ github.event_name }}
           REF_EVENT_PATH: ${{ github.event_path }}
