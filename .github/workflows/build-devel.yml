@@ -2,11 +2,6 @@ name: Build devel
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Build devel"]
-    branches: [main]
-    types: 
-      - completed
   push:
     branches:
       - "feature/odb-discovery"
