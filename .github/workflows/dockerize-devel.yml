@@ -47,23 +47,17 @@ jobs:
         shell: bash
         run: |
           export
-          if [ "$GITHUB_REF_TYPE" == "tag" ]; then
+          if [ "$REF_TYPE" == "tag" ]; then
             echo "DEVEL_ENV=production" >> $GITHUB_ENV
-          else if [ "$GITHUB_REF_NAME" == "release/*" ]; then
+          elif [ "$REF_NAME" == "release/*" ]; then
             echo "DEVEL_ENV=staging" >> $GITHUB_ENV
-          else if [ "$GITHUB_REF_NAME" == "feature/*" ]; then
-            if [ "$GITHUB_REF_NAME" == "$DEVEL_BRANCH" ]; then
-              echo "DEVEL_ENV=devel" >> $GITHUB_ENV
-            else
-              echo "DEVEL_ENV=ignore" >> $GITHUB_ENV
-            fi
+          elif [ "$REF_NAME" == "feature/*" ]; then
+            echo "DEVEL_ENV=staging" >> $GITHUB_ENV
+          else
+            echo "DEVEL_ENV=devel" >> $GITHUB_ENV
           fi
-          fi
-          fi
-
-
-
   call-dockerize-devel:
+    needs: define-environment
     if: ${{ github.env.DEVEL_ENV != 'ignore' }}
     uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
     with:
