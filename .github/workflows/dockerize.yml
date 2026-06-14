@@ -1,4 +1,4 @@
-name: Dockerize devel
+name: Dockerize common
 
 on:
   workflow_call:

@@ -14,7 +14,7 @@ on:
 jobs:
 
   call-dockerize-devel:
-    uses: ./.github/workflows/dockerize.yml
+    uses: NebbieArcane/ActionsServer/.github/workflows/dockerize.yml
     with:
       build_env: devel
     secrets: inherit
