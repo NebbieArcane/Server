@@ -2,30 +2,65 @@ name: Build devel
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build devel"]
+    branches: [main]
+    types: 
+      - completed
   push:
     branches:
-      - "feature/**"
+      - "feature/odb-discovery"
+    tags:
+      - "x*"
 
 jobs:
-  build:
-    if: contains(github.ref, vars.DEVEL_BRANCH ) || github.event_name == 'workflow_dispatch' || true
+  def:
     runs-on: ubuntu-latest
-    environment: devel
-    container:
-      image: nebbiearcane/mudcompiler:latest
-      options: --entrypoint ""
-    env:
-      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+    outputs:
+      selected_env: ${{ steps.def.outputs.selected_env }}
     steps:
-
-      - uses: NebbieArcane/Actions/compile@main
-        with:
-          build_env: devel
-          mysql_host: ${{ vars.MYSQL_HOST }}
-          mysql_user: ${{ vars.MYSQL_USER }}
-          mysql_db: ${{ vars.MYSQL_DB }}
-          mysql_password: ${{ secrets.MYSQL_PASSWORD }}
-          mysql_port: ${{ vars.MYSQL_PORT }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          excludes: latest,prerelease,release
+      - id: def
+        name: Environment setup
+        env:  
+          REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TARGET: ${{ github.base_ref  }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_EVENT_NAME: ${{ github.event_name }}
+          REF_ACTOR: ${{ github.actor }}
+          REF_AUTHOR: ${{ github.event.pusher.name }}
+          REF_AUTHOR_EMAIL: ${{ github.event.pusher.email }}
+          DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}
+        shell: bash
+        run: |
+          echo "REF_NAME: $REF_NAME"
+          echo "REF_TARGET: $REF_TARGET"
+          echo "REF_TYPE: $REF_TYPE"
+          echo "REF_EVENT_NAME: $REF_EVENT_NAME"
+          echo "REF_ACTOR: $REF_ACTOR"
+          echo "REF_AUTHOR: $REF_AUTHOR"
+          echo "REF_AUTHOR_EMAIL: $REF_AUTHOR_EMAIL"
+          echo "DEVEL_BRANCH: $DEVEL_BRANCH"
+          SELECTED_ENV=ignore
+          if [ "$REF_TYPE" == "tag" ]; then
+            SELECTED_ENV=production
+          elif [ "$REF_NAME" == "release/*" ]; then
+            SELECTED_ENV=staging
+          elif [ "$REF_NAME" == "feature/*" ]; then
+            SELECTED_ENV=staging
+          else
+            if [ "$REF_NAME" == "$DEVEL_BRANCH" ]; then
+              SELECTED_ENV=devel
+            fi
+          fi
+          echo "SELECTED_ENV: $SELECTED_ENV"
+          echo "selected_env=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
+          echo "selected_env=ignore" >> "$GITHUB_OUTPUT"
+  call-compile:
+    needs: def
+    if: needs.def.outputs.selected_env != 'ignore'
+    uses: NebbieArcane/Actions/.github/workflows/build.yml@main
+    with:
+      build_env: ${{ needs.def.outputs.selected_env }}
+      secrets: inherit
             
