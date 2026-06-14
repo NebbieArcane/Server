@@ -36,7 +36,7 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             core.info(`PR: ${JSON.stringify(pr)}`);
-            if (pr.milestone) {
+            if (pr && pr.milestone) {
               core.info(`This pull request has a milestone set: ${pr.milestone.title}`);
             } else {
               core.info(`A maintainer needs to set the milestone for this pull request.`);
@@ -48,7 +48,7 @@ jobs:
             const { data } = await github.request("GET /repos/{owner}/{repo}/pulls/{pr}", {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pr: context.payload.pull_request.number
+              pr: ${{ steps.findr.outputs.number }}
             });
             if (data.milestone) {
               core.info(`This pull request has a milestone set: ${data.milestone.title}`);
