@@ -24,40 +24,22 @@ jobs:
         env:  
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
+          REF_TARGET: ${{ github.base_ref  }}
           REF_TYPE: ${{ github.ref_type }}
-          REF_TAG: ${{ github.tag }}
-          REF_BRANCH: ${{ github.ref_branch }}
-          REF_COMMIT: ${{ github.ref_commit }}
-          REF_COMMIT_MESSAGE: ${{ github.ref_commit_message }}
-          REF_COMMIT_AUTHOR: ${{ github.ref_commit_author }}
-          REF_COMMIT_AUTHOR_EMAIL: ${{ github.ref_commit_author_email }}
-          REF_COMMIT_AUTHOR_DATE: ${{ github.ref_commit_author_date }}
-          REF_EVENT: ${{ toJson(github.event) }}
-          REF_EVENT_TYPE: ${{ github.event.type }}
-          REF_EVENT_NAME: ${{ github.event.name }}
-          REF_EVENT_PATH: ${{ github.event_path }}
-          REF_EVENT_URL: ${{ github.event_url }}
-          REF_EVENT_ACTION: ${{ github.event_action }}
-          REF_EVENT_LABEL: ${{ github.event_label }}
-          REF_EVENT_REPO: ${{ github.event_repo }}
-          REF_EVENT_SENDER: ${{ github.event_sender }}
-          REF_EVENT_TIMESTAMP: ${{ github.event_timestamp }}
-          REF_EVENT_WORKFLOW: ${{ github.event_workflow }}
+          REF_EVENT_NAME: ${{ github.event_name }}
+          REF_ACTOR: ${{ github.actor }}
+          REF_AUTHOR: ${{ github.event.pusher.name }}
+          REF_AUTHOR_EMAIL: ${{ github.event.pusher.email }}
           DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}
         shell: bash
         run: |
-          echo "REF_TYPE: $REF_TYPE"
           echo "REF_NAME: $REF_NAME"
-          echo "REF_BRANCH: $REF_BRANCH"
-          echo "REF_COMMIT: $REF_COMMIT"
-          echo "REF_COMMIT_MESSAGE: $REF_COMMIT_MESSAGE"
-          echo "REF_COMMIT_AUTHOR: $REF_COMMIT_AUTHOR"
-          echo "REF_COMMIT_AUTHOR_EMAIL: $REF_COMMIT_AUTHOR_EMAIL"
-          echo "REF_COMMIT_AUTHOR_DATE: $REF_COMMIT_AUTHOR_DATE"
-          echo "REF_EVEN_NAMERT: $REF_EVENT_NAME"
-          echo "REF_EVENT_TYPE: $REF_EVENT_TYPE"
+          echo "REF_TARGET: $REF_TARGET"
+          echo "REF_TYPE: $REF_TYPE"
           echo "REF_EVENT_NAME: $REF_EVENT_NAME"
-          echo "REF_EVENT_PATH: $REF_EVENT_PATH"
+          echo "REF_ACTOR: $REF_ACTOR"
+          echo "REF_AUTHOR: $REF_AUTHOR"
+          echo "REF_AUTHOR_EMAIL: $REF_AUTHOR_EMAIL"
           echo "DEVEL_BRANCH: $DEVEL_BRANCH"
           SELECTED_ENV=ignore
           if [ "$REF_TYPE" == "tag" ]; then
@@ -73,6 +55,7 @@ jobs:
           fi
           echo "SELECTED_ENV: $SELECTED_ENV"
           echo "selected_env=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
+          echo "selected_env=ignore" >> "$GITHUB_OUTPUT"
   call-dockerize:
     needs: def
     if: needs.def.outputs.selected_env != 'ignore'
