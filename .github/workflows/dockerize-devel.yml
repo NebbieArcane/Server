@@ -16,11 +16,11 @@ on:
 jobs:
   define-environment:
     runs-on: ubuntu-latest
-    environment:
-      name: devel
-      deployment: false
+    outputs:
+      SELECTED_ENV: ${{ steps.defEnv.outputs.SELECTED_ENV }}
     steps:
       - name: Define environment
+        id: defEnv
         env:  
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
@@ -46,22 +46,29 @@ jobs:
           DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}
         shell: bash
         run: |
-          export
+          echo "REF_TYPE: $REF_TYPE"
+          echo "REF_NAME: $REF_NAME"
+          echo "DEVEL_BRANCH: $DEVEL_BRANCH"
+          SELECTED_ENV=ignore
           if [ "$REF_TYPE" == "tag" ]; then
-            echo "SELECTED_ENV=production" >> $GITHUB_ENV
+            SELECTED_ENV=production
           elif [ "$REF_NAME" == "release/*" ]; then
-            echo "SELECTED_ENV=staging" >> $GITHUB_ENV
+            SELECTED_ENV=staging
           elif [ "$REF_NAME" == "feature/*" ]; then
-            echo "SELECTED_ENV=staging" >> $GITHUB_ENV
+            SELECTED_ENV=staging
           else
-            echo "SELECTED_ENV=devel" >> $GITHUB_ENV
+            if [ "$REF_NAME" == "$DEVEL_BRANCH" ]; then
+              SELECTED_ENV=devel
+            fi
           fi
+          echo "SELECTED_ENV: $SELECTED_ENV"
+          echo "$SELECTED_ENV" >> "$GITHUB_OUTPUT"
   call-dockerize-devel:
     needs: define-environment
-    if: ${{ github.env.DEVEL_ENV != 'ignore' }}
+    if: needs.defEnv.outputs.SELECTED_ENV != 'ignore'
     uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
     with:
-      build_env: ${{ github.env.SELECTED_ENV }}
+      build_env: ${{ needs.defEnv.outputs.SELECTED_ENV }}
     secrets: inherit
 
 
