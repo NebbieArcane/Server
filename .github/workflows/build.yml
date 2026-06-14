@@ -25,23 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       selected_env: ${{ steps.def.outputs.selected_env }}
+      pullrequest: ${{ steps.findr.outputs.pr }}
+      milestone: ${{ steps.ms.outputs.milestone }}
     steps:
       - id: findr
         uses: jwalton/gh-find-current-pr@master
         with:
           state: open
       - name: Check milestone 1
-        uses: actions/github-script@main
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            core.info(`PR: ${JSON.stringify(pr)}`);
-            if (pr && pr.milestone) {
-              core.info(`This pull request has a milestone set: ${pr.milestone.title}`);
-            } else {
-              core.info(`A maintainer needs to set the milestone for this pull request.`);
-            }
-      - name: Check milestone 1
+        id: ms
         uses: actions/github-script@main
         with:
           script: |
@@ -52,6 +44,7 @@ jobs:
             });
             if (data.milestone) {
               core.info(`This pull request has a milestone set: ${data.milestone.title}`);
+              core.setOutput("milestone", data.milestone.title);
             } else {
               core.info(`A maintainer needs to set the milestone for this pull request.`);
             }          
@@ -60,6 +53,7 @@ jobs:
         env:  
           
           PR: ${{ steps.findr.outputs.pr }}
+          MILESTONE: ${{ steps.ms.outputs.milestone }}
           PR_NUMBER: ${{ steps.findr.outputs.number }}
           PR_TITLE: ${{ steps.findr.outputs.title }}
           PR_BODY: ${{ steps.findr.outputs.body }}
@@ -74,6 +68,8 @@ jobs:
           DEVEL_BRANCH: ${{ vars.DEVEL_BRANCH }}
         shell: bash
         run: |
+          echo "MILESTONE: $MILESTONE"
+          echo "PR: $PR"
           echo "REF_NAME: $REF_NAME"
           echo "REF_TARGET: $REF_TARGET"
           echo "PR: $PR"
