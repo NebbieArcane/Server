@@ -57,5 +57,5 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/build.yml@main
     with:
       build_env: ${{ needs.def.outputs.selected_env }}
-      secrets: inherit
+    secrets: inherit
             
