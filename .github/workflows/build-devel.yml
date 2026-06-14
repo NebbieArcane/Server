@@ -2,9 +2,21 @@ name: Build devel
 
 on:
   workflow_dispatch:
+    inputs:
+      dryrun:
+        type: boolean
+        description: Dry run
+        required: false
+        default: true
+      build_env:
+        type: string
+        description: The environment to build
+        required: true
+        default: devel
   push:
     branches:
-      - "feature/odb-discovery"
+      - "feature/*"
+      - "release/*"
     tags:
       - "x*"
 
@@ -14,9 +26,17 @@ jobs:
     outputs:
       selected_env: ${{ steps.def.outputs.selected_env }}
     steps:
+      - id: findr
+        uses: jwalton/gh-find-current-pr@master
+        with:
+          state: open
       - id: def
         name: Environment setup
         env:  
+          PR: ${{ steps.findr.outputs.pr }}
+          PR_NUMBER: ${{ steps.findr.outputs.number }}
+          PR_TITLE: ${{ steps.findr.outputs.title }}
+          PR_BODY: ${{ steps.findr.outputs.body }}
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
           REF_TARGET: ${{ github.base_ref  }}
@@ -30,6 +50,10 @@ jobs:
         run: |
           echo "REF_NAME: $REF_NAME"
           echo "REF_TARGET: $REF_TARGET"
+          echo "PR: $PR"
+          echo "PR_NUMBER: $PR_NUMBER"
+          echo "PR_TITLE: $PR_TITLE"
+          echo "PR_BODY: $PR_BODY"
           echo "REF_TYPE: $REF_TYPE"
           echo "REF_EVENT_NAME: $REF_EVENT_NAME"
           echo "REF_ACTOR: $REF_ACTOR"
@@ -51,11 +75,22 @@ jobs:
           echo "SELECTED_ENV: $SELECTED_ENV"
           echo "selected_env=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
           echo "selected_env=ignore" >> "$GITHUB_OUTPUT"
-  call-compile:
+  compile:
     needs: def
     if: needs.def.outputs.selected_env != 'ignore'
     uses: NebbieArcane/Actions/.github/workflows/build.yml@main
     with:
       build_env: ${{ needs.def.outputs.selected_env }}
+      dryrun: true
     secrets: inherit
+  dockerize:
+    needs: 
+      - def
+      - compile
+    if: needs.def.outputs.selected_env != 'ignore'
+    uses: NebbieArcane/Actions/.github/workflows/dockerize.yml@main
+    with:
+      build_env: ${{ needs.def.outputs.selected_env }}
+      dryrun: true
+    secrets: inherit    
             
