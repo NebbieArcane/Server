@@ -48,6 +48,7 @@ jobs:
         run: |
           echo "REF_TYPE: $REF_TYPE"
           echo "REF_NAME: $REF_NAME"
+          echo "REF_BRANCH: $REF_BRANCH"
           echo "DEVEL_BRANCH: $DEVEL_BRANCH"
           SELECTED_ENV=ignore
           if [ "$REF_TYPE" == "tag" ]; then
@@ -62,7 +63,7 @@ jobs:
             fi
           fi
           echo "SELECTED_ENV: $SELECTED_ENV"
-          echo "$SELECTED_ENV" >> "$GITHUB_OUTPUT"
+          echo "SELECTED_ENV=$SELECTED_ENV" >> "$GITHUB_OUTPUT"
   call-dockerize-devel:
     needs: define-environment
     if: needs.defEnv.outputs.SELECTED_ENV != 'ignore'
