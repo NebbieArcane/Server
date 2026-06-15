@@ -29,20 +29,20 @@ jobs:
     secrets: inherit
   compile:
     needs: setup
-    if: needs.def.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
     uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun }}
+      dryrun: ${{ inputs.dryrun || true }}
     secrets: inherit
   dockerize:
     needs: 
       - setup
       - compile
-    if: needs.def.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
     uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
     with:
-      build_env: ${{ needs.def.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun }}
-    secrets: inherit    
+      build_env: ${{ needs.setup.outputs.selected_env }}
+      dryrun: ${{ inputs.dryrun || true }}
+    secrets: inherit
             
