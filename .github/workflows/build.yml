@@ -9,11 +9,6 @@ on:
         description: Dry run
         required: false
         default: true
-      build_env:
-        type: string
-        description: The environment to build
-        required: true
-        default: devel
   push:
     branches:
       - "feature/*"
@@ -37,7 +32,7 @@ jobs:
     if: needs.def.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
     uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
-      build_env: ${{ needs.def.outputs.selected_env }}
+      build_env: ${{ needs.setup.outputs.selected_env }}
       dryrun: ${{ inputs.dryrun }}
     secrets: inherit
   dockerize:
