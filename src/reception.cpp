@@ -8,7 +8,9 @@
 //#include <sys/ctime>
 #include <ctime>
 #include <dirent.h>
+#include <cerrno>
 #include <cstring>
+#include <sys/stat.h>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -35,6 +37,8 @@
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
 #include <sstream>
+#include <string>
+#include <unordered_set>
 #endif
 
 namespace Alarmud {
@@ -1295,6 +1299,162 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 
 
 /* ************************************************************************
+* Boot: archivia file legacy PG migrati (rent / .aux / .dat)              *
+************************************************************************* */
+
+#if USE_MYSQL
+namespace {
+
+bool legacy_ensure_dir(const char* path) {
+	struct stat st {};
+	if(stat(path, &st) == 0) {
+		return S_ISDIR(st.st_mode);
+	}
+	return mkdir(path, 0755) == 0 || errno == EEXIST;
+}
+
+bool legacy_archive_file(const char* src, const char* dest_dir) {
+	if(src == nullptr || *src == '\0' || dest_dir == nullptr) {
+		return false;
+	}
+	struct stat st {};
+	if(stat(src, &st) != 0) {
+		return false;
+	}
+	if(!legacy_ensure_dir(dest_dir)) {
+		mudlog(LOG_SYSERR, "cleanup_migrated_legacy: cannot mkdir %s (%s)", dest_dir,
+			   std::strerror(errno));
+		return false;
+	}
+	const char* base = std::strrchr(src, '/');
+	base = (base != nullptr) ? base + 1 : src;
+	char dest[512];
+	std::snprintf(dest, sizeof(dest), "%s/%s", dest_dir, base);
+	if(stat(dest, &st) == 0) {
+		std::snprintf(dest, sizeof(dest), "%s/%s.%ld", dest_dir, base,
+					  static_cast<long>(time(nullptr)));
+	}
+	if(std::rename(src, dest) != 0) {
+		mudlog(LOG_SYSERR, "cleanup_migrated_legacy: rename %s -> %s: %s", src, dest,
+			   std::strerror(errno));
+		return false;
+	}
+	mudlog(LOG_SAVE, "cleanup_migrated_legacy: archived %s -> %s", src, dest);
+	return true;
+}
+
+bool legacy_mysql_select(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
+	out_res = nullptr;
+	if(db == nullptr) {
+		return false;
+	}
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+	if(mysql_query(h, sql.c_str()) != 0) {
+		mudlog(LOG_SYSERR, "cleanup_migrated_legacy: %s", mysql_error(h));
+		return false;
+	}
+	out_res = mysql_store_result(h);
+	return out_res != nullptr;
+}
+
+std::unordered_set<std::string> g_boot_migrated_names;
+bool g_boot_migrated_names_ready = false;
+
+/** Una query al boot: LOWER(name) migrati con character_core + character_stats. */
+bool boot_load_migrated_names(DB* db) {
+	if(g_boot_migrated_names_ready) {
+		return true;
+	}
+	g_boot_migrated_names_ready = true;
+	g_boot_migrated_names.clear();
+	if(db == nullptr) {
+		return false;
+	}
+
+	const std::string sql =
+		"SELECT LOWER(t.name) FROM toon t "
+		"INNER JOIN character_core cc ON cc.toon_id = t.id "
+		"INNER JOIN character_stats cs ON cs.toon_id = t.id "
+		"WHERE t.migrated_at IS NOT NULL";
+
+	MYSQL_RES* res = nullptr;
+	if(!legacy_mysql_select(db, sql, res) || res == nullptr) {
+		mudlog(LOG_CHECK, "boot_load_migrated_names: query failed or empty");
+		return false;
+	}
+
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		if(row[0] != nullptr && row[0][0] != '\0') {
+			g_boot_migrated_names.insert(row[0]);
+		}
+	}
+	mysql_free_result(res);
+
+	mudlog(LOG_CHECK, "boot_load_migrated_names: %zu migrated PG cached",
+		   g_boot_migrated_names.size());
+	return true;
+}
+
+bool boot_is_migrated_name(const char* name) {
+	if(name == nullptr || name[0] == '\0') {
+		return false;
+	}
+	boot_load_migrated_names(Sql::getMysql());
+	return g_boot_migrated_names.count(lower(name)) > 0;
+}
+
+void legacy_archive_migrated_player(const char* name) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+	char dat[300];
+	char rent[300];
+	char aux[300];
+	char players_archive[300];
+	char rent_archive[300];
+	std::snprintf(dat, sizeof(dat), "%s/%s.dat", PLAYERS_DIR, lower(name));
+	std::snprintf(rent, sizeof(rent), "%s/%s", RENT_DIR, lower(name));
+	std::snprintf(aux, sizeof(aux), "%s/%s.aux", RENT_DIR, lower(name));
+	std::snprintf(players_archive, sizeof(players_archive), "%s/players", DELETED_DIR);
+	std::snprintf(rent_archive, sizeof(rent_archive), "%s/rent", DELETED_DIR);
+	legacy_ensure_dir(DELETED_DIR);
+	legacy_archive_file(dat, players_archive);
+	legacy_archive_file(rent, rent_archive);
+	legacy_archive_file(aux, rent_archive);
+}
+
+} /* anonymous */
+
+void cleanup_migrated_legacy_files() {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		mudlog(LOG_SYSERR, "cleanup_migrated_legacy: no database connection");
+		return;
+	}
+
+	if(!boot_load_migrated_names(db)) {
+		return;
+	}
+
+	int archived_players = 0;
+	for(const std::string& name : g_boot_migrated_names) {
+		legacy_archive_migrated_player(name.c_str());
+		archived_players++;
+	}
+
+	mudlog(LOG_CHECK, "cleanup_migrated_legacy: processed %d migrated PG", archived_players);
+}
+
+#else /* !USE_MYSQL */
+
+void cleanup_migrated_legacy_files() {}
+
+#endif /* USE_MYSQL */
+
+/* ************************************************************************
 * Routines used to update object file, upon boot time                     *
 ************************************************************************* */
 
@@ -1333,6 +1493,12 @@ void update_obj_file() {
             {
                 if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
                 {
+#if USE_MYSQL
+                    if(boot_is_migrated_name(ch_st.name)) {
+                        fclose(pCharFile);
+                        continue;
+                    }
+#endif
                     snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
                     // r+b is for Binary Reading/Writing
                     if((pObjFile = fopen(szFileName, "r+b")) != NULL)

@@ -592,6 +592,9 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Loading zone table.");
 	boot_zones();
 
+	mudlog(LOG_CHECK, "Boot procarea zone table.");
+	procarea_boot_zone();
+
 	mudlog(LOG_CHECK, "Loading saved zone table.");
 	boot_saved_zones();
 
@@ -642,6 +645,11 @@ void boot_db() {
 	mudlog(LOG_CHECK, "   Spells.");
 	assign_spell_pointers();
 	boot_spells();
+
+#if USE_MYSQL
+	mudlog(LOG_CHECK, "Archiving legacy files for migrated characters:");
+	cleanup_migrated_legacy_files();
+#endif
 
 	mudlog(LOG_CHECK, "Updating characters with saved items:");
 	update_obj_file();

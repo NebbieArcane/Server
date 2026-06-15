@@ -48,6 +48,7 @@ struct RoomSpecialProcEntry roomproc[] = {
 //  Aree effimere procedurali (T1-T5)
     { "procarea_portal", procarea_portal },
     { "procarea_boss_exit", procarea_boss_exit },
+    { "procarea_treasure", procarea_treasure },
     { "procarea_t1_portal", procarea_t1_portal },
     { "procarea_t1_exit", procarea_t1_exit },
 //  fine Quest Nilmys

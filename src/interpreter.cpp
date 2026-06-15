@@ -1095,6 +1095,7 @@ void assign_command_pointers() {
 	AddCommand( "track",                do_track,           CMD_TRACK,                  POSITION_DEAD,      1                       );  /*  230 */
 	AddCommand( "wizlock",              do_wizlock,         CMD_WIZLOCK,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "highfive",             do_highfive,        CMD_HIGHFIVE,               POSITION_DEAD,      TUTTI                   );
+	AddCommand( "dimensione",             do_antro,           CMD_ANTRO,                  POSITION_STANDING,  TUTTI                   );
 	AddCommand( "antro",                  do_antro,           CMD_ANTRO,                  POSITION_STANDING,  TUTTI                   );
 	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );
 	AddCommand( "whozone",              do_who,             CMD_WHOZONE,                POSITION_DEAD,      TUTTI                   );
