@@ -40,7 +40,7 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun || true }}
+      dryrun: ${{ inputs.dryrun}}
     secrets: inherit
   dockerize:
     needs: 
@@ -50,6 +50,6 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun || true }}
+      dryrun: ${{ inputs.dryrun }}
     secrets: inherit
             
