@@ -27,9 +27,9 @@ on:
       - synchronize
     branches:
       - "feature/*"
-      
+
 jobs:
-  def:
+  setup:
     uses: NebbieArcane/Actions/.github/workflows/server-environment.yml@main
     secrets: inherit
   compile:
@@ -38,7 +38,7 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
       build_env: ${{ needs.def.outputs.selected_env }}
-      dryrun: true
+      dryrun: ${{ inputs.dryrun }}
     secrets: inherit
   dockerize:
     needs: 
@@ -48,6 +48,6 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
     with:
       build_env: ${{ needs.def.outputs.selected_env }}
-      dryrun: true
+      dryrun: ${{ inputs.dryrun }}
     secrets: inherit    
             
