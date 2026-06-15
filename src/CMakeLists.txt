@@ -94,14 +94,15 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 			--std c++17
 			-m dynamic
 			-d common
-
 			-d ${dbtype}
 			--generate-query
 			--generate-prepared
 			--show-sloc
 			--generate-session
+			--generate-schema
+			--omit-drop
+			--schema-format separate			
 			--at-once
-
 			--schema-name ${dbschema}
 			--input-name ${dbschema}
 			${dbschema}.hpp

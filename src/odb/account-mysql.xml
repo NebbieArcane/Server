@@ -1,9 +1,5 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
-  <changeset version="2">
-    <alter-table name="character_inventory">
-      <alter-column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')" null="true"/>
-    </alter-table>
-  </changeset>
+  <changeset version="2"/>
 
   <model version="1">
     <table name="character_achievements" options="ENGINE=InnoDB" kind="object">
@@ -122,7 +118,7 @@
       <column name="depth" type="TINYINT UNSIGNED" null="false" default="0"/>
       <column name="deleted" type="TINYINT(1)" null="false" default="0"/>
       <column name="deleted_on" type="DATETIME" null="true"/>
-      <column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL')" null="true"/>
+      <column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')" null="true"/>
       <primary-key auto="true">
         <column name="id"/>
       </primary-key>

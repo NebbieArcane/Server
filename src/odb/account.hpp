@@ -18,7 +18,14 @@
 
 namespace Alarmud {
 
-enum class inventory_deleted_for { DEATH, RENT_EXPIRED, NUKE, TRAP, MANUAL, SCRAP };
+enum class inventory_deleted_for {
+  DEATH,
+  RENT_EXPIRED,
+  NUKE,
+  TRAP,
+  MANUAL,
+  SCRAP
+};
 
 #ifdef ODB_COMPILER
 #pragma db value
@@ -418,6 +425,7 @@ public:
 };
 
 #ifdef ODB_COMPILER
+#pragma db model version(1, 1, closed)
 #pragma db model version(1, 2, open)
 
 #pragma db object(character_achievements) session(false)
