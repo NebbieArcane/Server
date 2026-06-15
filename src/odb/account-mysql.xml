@@ -1,4 +1,10 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="2">
+    <alter-table name="character_inventory">
+      <alter-column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')" null="true"/>
+    </alter-table>
+  </changeset>
+
   <model version="1">
     <table name="character_achievements" options="ENGINE=InnoDB" kind="object">
       <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>

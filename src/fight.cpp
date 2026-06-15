@@ -4673,10 +4673,27 @@ int DamageOneItem(struct char_data* ch, int dam_type, struct obj_data* obj) {
 void MakeScrap(struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 	char buf[200];
 	struct obj_data* t, *x;
+	struct char_data* owner = nullptr;
 
 	if(obj == nullptr) {
 		return;
 	}
+
+	if(obj->carried_by) {
+		owner = obj->carried_by;
+	}
+	else if(obj->equipped_by) {
+		owner = obj->equipped_by;
+	}
+
+#if USE_MYSQL
+	if(owner && IS_PC(owner) && toon_is_migrated_by_name(GET_NAME(owner))) {
+		if(!mark_scrapped_item_mysql(GET_NAME(owner), obj)) {
+			mudlog(LOG_SYSERR, "MakeScrap: mark_scrapped_item_mysql failed for %s",
+				   GET_NAME(owner));
+		}
+	}
+#endif
 
 	act("$p cade a terra in frantumi.", TRUE, ch, obj, 0, TO_CHAR);
 	act("$p cade a terra in frantumi.", TRUE, ch, obj, 0, TO_ROOM);

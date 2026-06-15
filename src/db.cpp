@@ -3533,6 +3533,68 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 #endif
 }
 
+bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
+#if !USE_MYSQL
+	(void)name;
+	(void)obj;
+	return false;
+#else
+	if(!name || !*name || !obj || obj->item_number < 0) {
+		return false;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+		const ush_int vnum = static_cast<ush_int>(obj_index[obj->item_number].iVNum);
+		const int wearpos = obj->equipped_by ? static_cast<int>(obj->eq_pos) + 1 : 0;
+
+		std::ostringstream ins;
+		ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+			   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, deleted_for) VALUES ("
+			<< toon_id << ",0," << vnum << ',' << obj->obj_flags.value[0] << ','
+			<< obj->obj_flags.value[1] << ',' << obj->obj_flags.value[2] << ','
+			<< obj->obj_flags.value[3] << ',' << obj->obj_flags.extra_flags << ','
+			<< obj->obj_flags.extra_flags2 << ',' << obj->obj_flags.weight << ','
+			<< obj->obj_flags.timer << ',' << obj->obj_flags.bitvector << ','
+			<< db_sql_literal(obj->name ? obj->name : "", false) << ','
+			<< db_sql_literal(obj->short_description ? obj->short_description : "", false) << ','
+			<< db_sql_literal(obj->description ? obj->description : "", false) << ','
+			<< wearpos << ",0,1,NOW()," << db_sql_literal("SCRAP", false) << ')';
+		db->execute(ins.str().c_str());
+
+		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+			const obj_affected_type& oa = obj->affected[a];
+			if(oa.location == 0 && oa.modifier == 0) {
+				continue;
+			}
+			std::ostringstream aff;
+			aff << "INSERT INTO character_inventory_affect (inventory_id, affect_slot, "
+				   "location, modifier) SELECT id, "
+				<< a << ',' << static_cast<int>(oa.location) << ','
+				<< static_cast<int>(oa.modifier)
+				<< " FROM character_inventory WHERE id = LAST_INSERT_ID()";
+			db->execute(aff.str().c_str());
+		}
+
+		t.commit();
+		mudlog(LOG_PLAYERS, "mark_scrapped_item_mysql: SCRAP snapshot for %s vnum %u",
+			   name, static_cast<unsigned>(vnum));
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "mark_scrapped_item_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
 bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 #if !USE_MYSQL
 	(void)name;

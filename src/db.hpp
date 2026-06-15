@@ -260,6 +260,7 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
 bool load_rent_mysql(const char* name, struct obj_file_u* rent);
 bool mark_inventory_deleted_mysql(const char* name, const char* cause);
+bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj);
 bool refund_restore_inventory_mysql(const char* name, const char* cause,
 									long long from_epoch, long long to_epoch);
 #if DEATH_FIX
