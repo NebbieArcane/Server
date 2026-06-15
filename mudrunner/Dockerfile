@@ -21,11 +21,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER_BUILD=ON
 USER root
 RUN ldconfig
-USER 1000
 WORKDIR /run
 COPY myst .
-COPY ../myst-version.txt .
-COPY ../myst-config.txt .
+COPY version.txt .
+COPY config.txt .
 
 ENTRYPOINT ["./myst"]
 CMD ["-v"]

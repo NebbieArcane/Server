@@ -82,7 +82,9 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 	SET(ixxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.ixx")
 	SET(Schema		"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-schema-${dbtype}.cxx")
 	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${cxxFile} ${cxxSchema} ${Schema})
-	SET(ODB_GENERATED_FILES ${cxxFile} ${cxxSchema} ${Schema})
+	# account-schema-*.cxx: rigenerare a mano (odb --generate-schema) quando cambia la versione modello;
+	# l'aggiunta di valori ENUM non è gestita automaticamente dall'ODB compiler.
+	SET(ODB_GENERATED_FILES ${cxxFile} ${cxxSchema})
 
 	ADD_CUSTOM_COMMAND(
 			OUTPUT ${ODB_GENERATED_FILES}
@@ -92,16 +94,15 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 			--std c++17
 			-m dynamic
 			-d common
-
 			-d ${dbtype}
 			--generate-query
 			--generate-prepared
 			--show-sloc
 			--generate-session
 			--generate-schema
-			--schema-format separate
+			--omit-drop
+			--schema-format separate			
 			--at-once
-
 			--schema-name ${dbschema}
 			--input-name ${dbschema}
 			${dbschema}.hpp
