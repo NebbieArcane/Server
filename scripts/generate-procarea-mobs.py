@@ -1,35 +1,41 @@
 #!/usr/bin/env python3
-"""Rigenera procarea_band_stats.inc da src/procarea_mob_desc.inc.
+"""Rigenera procarea_mob_desc.inc e procarea_band_stats.inc dal catalogo mob.
 
-I testi mob sono compilati direttamente da procarea_mob_desc.inc in procarea.cpp;
-non serve più scrivere procarea.mob né myst.mob per le istanze effimere.
+Sorgente testi: scripts/procarea_mob_catalog.py
+Stats: generate-procarea-mobs.py -> src/procarea_band_stats.inc
 """
 
 from __future__ import annotations
 
+import importlib.util
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-from textwrap import dedent
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 DESC_INC = ROOT / "src/procarea_mob_desc.inc"
+THEME_INC = ROOT / "src/procarea_mob_themes.inc"
 BAND_STATS_INC = ROOT / "src/procarea_band_stats.inc"
-MARKER_START = "# Antro Effimero:"  # solo per export .mob opzionale (generate())
+AUTOENUMS_HPP = ROOT / "src/autoenums.hpp"
+CATALOG_PY = ROOT / "scripts/procarea_mob_catalog.py"
+MARKER_START = "# Dimensione Effimera:"  # solo per export .mob opzionale (generate())
 
 BOSS_VNUM_BASE = 65000
-BOSS_PER_TIER = 10
-MOB_VNUM_BASE = 65100
-MOBS_PER_TIER = 9
-ARCHETYPE_COUNT = 19
-EXPECTED_ARCHETYPES = 19
+BOSS_PER_TIER = 55
+MOB_VNUM_BASE = 65000
+MOBS_PER_TIER = 170
+ARCHETYPE_COUNT = 225
+EXPECTED_ARCHETYPES = 225
 DICE_RE = re.compile(r"^(\d+)d(\d+)\+(-?\d+)$")
-STAT_LINE_RE = re.compile(r"^8 (\d+) 3 (\S+) (\S+) (\S+)$")
+STAT_LINE_RE = re.compile(r"^8 8 ([345]) (\S+) (\S+) (\S+)$")
 
 MOB_DESC_RE = re.compile(
-    r"MOB_DESC\(\s*(\d+)\s*,\s*(boss|mob|trap)\s*,\s*(\d+)\s*,\s*((?:\s*\"(?:\\.|[^\"\\])*\"\s*,?\s*)+)\)",
+    r"MOB_DESC\(\s*(\d+)\s*,\s*(boss|mob|trap)\s*,\s*(\d+)\s*,\s*(RACE_\w+)\s*,\s*((?:\s*\"(?:\\.|[^\"\\])*\"\s*,?\s*)+)\)",
     re.MULTILINE,
 )
+RACE_ENUM_RE = re.compile(r"^\s*(RACE_\w+)\s*=\s*(\d+)", re.MULTILINE)
 STRING_RE = re.compile(r"\"((?:\\.|[^\"\\])*)\"")
 
 # Short nel .inc senza articolo; il generatore li aggiunge come in myst.mob ("Un elementale...").
@@ -150,11 +156,41 @@ def add_article_short(short: str) -> str:
     return f"Un {body}"
 
 
+def article_prefix(short: str) -> str:
+    """Prefisso articolo come add_article_short / procarea_article_short (senza titolo)."""
+    s = short.strip()
+    if not s or HAS_ARTICLE_RE.match(s):
+        return "un"
+    first = s.split()[0].lower()
+    if first in LO_FIRST:
+        return "lo"
+    if first in L_APOSTROPHE_FIRST or first[0] in "aeiou":
+        return "l'"
+    if first in UNA_FIRST or (first.endswith("a") and first not in {"arma"}):
+        return "una"
+    if len(first) >= 2 and first[0] == "s" and first[1] not in "aeiouh":
+        return "uno"
+    if first[0] == "z" or first.startswith(("gn", "ps", "pn")):
+        return "uno"
+    return "un"
+
+
+def sex_from_short(short: str) -> int:
+    """SEX_NEUTRAL=0, SEX_MALE=1, SEX_FEMALE=2 — regola Un/Una (L' → neutro)."""
+    prefix = article_prefix(short)
+    if prefix == "una":
+        return 2
+    if prefix in ("un", "lo", "uno"):
+        return 1
+    return 0
+
+
 @dataclass(frozen=True)
 class MobDesc:
     tier: int
     role: str
     slot: int
+    race: int
     keywords: str
     short: str
     long: str
@@ -182,7 +218,7 @@ class TierProfile:
 
 TIER_PROFILES: dict[int, TierProfile] = {
     1: TierProfile(
-        act="2|4|4194304 32768 349 L 3",
+        act="2|4194304 32768 349 L 3",
         level=(7, 12),
         hitroll=(12, 19),
         damroll=(4, 9),
@@ -296,23 +332,193 @@ TIER_PROFILES: dict[int, TierProfile] = {
 }
 
 
-def format_stat_line(position: int, immune: str, m_immune: str, susc: str) -> str:
+def archetype_sex(desc: MobDesc) -> int:
+    return sex_from_short(desc.short)
+
+
+def format_stat_line(sex: int, immune: str, m_immune: str, susc: str) -> str:
     """Riga position/default_pos/sex+immune per mob L/A (db.cpp read_mobile)."""
-    return f"8 {position} 3 {immune} {m_immune} {susc}"
+    # 8=STANDING; sex 3..5 => player.sex 0..2 + triple immune
+    return f"8 8 {3 + sex} {immune} {m_immune} {susc}"
+
+
+def parse_race_enums(path: Path) -> dict[str, int]:
+    text = path.read_text(encoding="utf-8")
+    races = {match.group(1): int(match.group(2)) for match in RACE_ENUM_RE.finditer(text)}
+    if not races:
+        raise ValueError(f"No RACE_* enums found in {path}")
+    return races
+
+
+def load_catalog_module():
+    spec = importlib.util.spec_from_file_location("procarea_mob_catalog", CATALOG_PY)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load catalog from {CATALOG_PY}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["procarea_mob_catalog"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def emit_desc_inc(path: Path) -> tuple[list[MobDesc], list[dict]]:
+    catalog = load_catalog_module()
+    bosses = catalog.get_bosses()
+    mobs = catalog.get_mobs()
+    traps = catalog.get_all_traps()
+    if len(bosses) != catalog.BOSS_COUNT:
+        raise ValueError(f"Expected {catalog.BOSS_COUNT} bosses, got {len(bosses)}")
+    if len(mobs) != catalog.MOB_COUNT:
+        raise ValueError(f"Expected {catalog.MOB_COUNT} mobs, got {len(mobs)}")
+    if len(traps) != catalog.TRAP_COUNT:
+        raise ValueError(f"Expected {catalog.TRAP_COUNT} traps, got {len(traps)}")
+
+    catalog_entries: list[dict] = []
+
+    lines: list[str] = [
+        "/* procarea_mob_desc.inc",
+        f" * Testi mob Dimensione Effimera ({catalog.archetype_count()} archetipi).",
+        " * Generato da scripts/generate-procarea-mobs.py — non editare a mano.",
+        " *",
+        " * short_title: titolo senza articolo; procarea.cpp aggiunge Un/Una/Lo/L'.",
+        " * long_desc: frase di presenza in stanza (con articolo).",
+        " * look / sound: procarea.cpp aggiunge \\n\\r in spawn.",
+        " * agg: messaggio aggressivita' (player.sounds).",
+        " * race: razza fissa per archetipo (e_races in autoenums.hpp).",
+        " *",
+        f" * Ordine vettore = indice archetipo: boss 0-{len(bosses) - 1},",
+        f" * mob 0-{len(mobs) - 1} (indici {len(bosses)}-{len(bosses) + len(mobs) - 1}),",
+        f" * trap 0-{len(traps) - 1} (indici {len(bosses) + len(mobs)}-{catalog.archetype_count() - 1}).",
+        " */",
+        "",
+        "#ifndef __PROCAREA_MOB_DESC_INC",
+        "#define __PROCAREA_MOB_DESC_INC",
+        "",
+        "struct ProcMobArchetypeText {",
+        "\tconst char* keywords;",
+        "\tconst char* short_title;",
+        "\tconst char* long_desc;",
+        "\tconst char* look;",
+        "\tconst char* agg;",
+        "\tconst char* sound;",
+        "\tint race;",
+        "};",
+        "",
+        "#define MOB_DESC(tier, role, slot, race, kw, st, lg, lk, ag, so) \\",
+        "\t{ kw, st, lg, lk, ag, so, race },",
+        "",
+        "static const ProcMobArchetypeText kProcMobArchetypeTexts[] = {",
+        "",
+    ]
+
+    descs: list[MobDesc] = []
+
+    def append_entry(role: str, slot: int, entry: dict) -> None:
+        race_name = entry["race"]
+        catalog_entries.append(entry)
+        lines.append(
+            "MOB_DESC(1, {role}, {slot}, {race},\n"
+            '\t"{kw}",\n'
+            '\t"{st}",\n'
+            '\t"{lg}",\n'
+            '\t"{lk}",\n'
+            '\t"{ag}",\n'
+            '\t"{so}")'.format(
+                role=role,
+                slot=slot,
+                race=race_name,
+                kw=entry["keywords"].replace('"', '\\"'),
+                st=entry["short"].replace('"', '\\"'),
+                lg=entry["long"].replace('"', '\\"'),
+                lk=entry["look"].replace('"', '\\"'),
+                ag=entry["agg"].replace('"', '\\"'),
+                so=entry["sound"].replace('"', '\\"'),
+            )
+        )
+        lines.append("")
+        descs.append(
+            MobDesc(
+                1,
+                role,
+                slot,
+                parse_race_enums(AUTOENUMS_HPP)[race_name],
+                entry["keywords"],
+                entry["short"],
+                entry["long"],
+                entry["look"],
+                entry["agg"],
+                entry["sound"],
+            )
+        )
+
+    for slot, entry in enumerate(bosses):
+        append_entry("boss", slot, entry)
+    for slot, entry in enumerate(mobs):
+        append_entry("mob", slot, entry)
+    for slot, entry in enumerate(traps):
+        append_entry("trap", slot, entry)
+
+    lines.extend(
+        [
+            "};",
+            "",
+            "#undef MOB_DESC",
+            "",
+            "#endif /* __PROCAREA_MOB_DESC_INC */",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return descs, catalog_entries
+
+
+def emit_theme_inc(entries: list[dict], path: Path) -> None:
+    from procarea_theme_tags import THEME_COUNT, emit_theme_mask_array
+
+    body = emit_theme_mask_array(entries)
+    path.write_text(
+        f"""/* generated by scripts/generate-procarea-mobs.py — do not edit */
+#ifndef __PROCAREA_MOB_THEMES_INC
+#define __PROCAREA_MOB_THEMES_INC
+
+/** Bit N = tema N ammesso; 0 = universale (fallback). */
+static constexpr unsigned long long kProcArchetypeThemeMask[{ARCHETYPE_COUNT}] = {{
+{body}
+}};
+
+#endif
+""",
+        encoding="utf-8",
+    )
 
 
 def parse_desc_inc(path: Path) -> list[MobDesc]:
+    race_enums = parse_race_enums(AUTOENUMS_HPP)
     text = path.read_text(encoding="utf-8")
     descs: list[MobDesc] = []
     for match in MOB_DESC_RE.finditer(text):
         tier = int(match.group(1))
         role = match.group(2)
         slot = int(match.group(3))
-        strings = [s.replace("\\\"", '"').replace("\\\\", "\\") for s in STRING_RE.findall(match.group(4))]
+        race_name = match.group(4)
+        if race_name not in race_enums:
+            raise ValueError(f"MOB_DESC T{tier} {role} {slot}: unknown race {race_name}")
+        race = race_enums[race_name]
+        strings = [s.replace("\\\"", '"').replace("\\\\", "\\") for s in STRING_RE.findall(match.group(5))]
         if len(strings) != 6:
             raise ValueError(f"MOB_DESC T{tier} {role} {slot}: expected 6 strings, got {len(strings)}")
         descs.append(
-            MobDesc(tier, role, slot, strings[0], strings[1], strings[2], strings[3], strings[4], strings[5])
+            MobDesc(
+                tier,
+                role,
+                slot,
+                race,
+                strings[0],
+                strings[1],
+                strings[2],
+                strings[3],
+                strings[4],
+                strings[5],
+            )
         )
     if len(descs) != EXPECTED_ARCHETYPES:
         raise ValueError(
@@ -387,7 +593,7 @@ def build_stats(desc: MobDesc, profile: TierProfile) -> tuple[str, str, str, str
     susc = sanitize_susc(susc)
     immune, m_immune, susc = apply_charm_immunity(immune, m_immune, susc)
 
-    stat_line = format_stat_line(profile.position, immune, m_immune, susc)
+    stat_line = format_stat_line(archetype_sex(desc), immune, m_immune, susc)
 
     act = profile.act
     if desc.tier >= 5 and desc.role == "boss":
@@ -397,7 +603,7 @@ def build_stats(desc: MobDesc, profile: TierProfile) -> tuple[str, str, str, str
 
     fight = f"{level} {hitroll} {damroll} {ac} {dice}"
     # -1: gold/exp/race su questa riga; position/default_pos sulla riga stat (come myst.mob L)
-    extras = f"-1 {gold} 0 0"
+    extras = f"-1 {gold} 0 {desc.race}"
     return fight, extras, stat_line, act
 
 
@@ -431,12 +637,26 @@ def parse_act_line(act: str) -> tuple[int, int]:
     return act_flags, affected_by
 
 
+def parse_mult_att(act: str) -> float:
+    """Numero attacchi dalla riga act (.mob L/A), es. '... L 3' o '... A 5'."""
+    parts = act.split()
+    mobtypes = frozenset({"L", "A", "B", "N", "S"})
+    for i, part in enumerate(parts):
+        if part in mobtypes and i + 1 < len(parts):
+            try:
+                return float(parts[i + 1])
+            except ValueError:
+                break
+    return 1.0
+
+
 def combat_from_build(desc: MobDesc, tier: int) -> dict[str, int]:
     profile = TIER_PROFILES[tier]
     tier_desc = MobDesc(
         tier,
         desc.role,
         desc.slot,
+        desc.race,
         desc.keywords,
         desc.short,
         desc.long,
@@ -467,13 +687,15 @@ def combat_from_build(desc: MobDesc, tier: int) -> dict[str, int]:
         "dam_s": int(dice_match.group(2)),
         "dam_plus": int(dice_match.group(3)),
         "gold": gold,
-        "position": int(stat_match.group(1)),
-        "default_pos": int(stat_match.group(1)),
+        "position": 8,
+        "default_pos": 8,
+        "sex": archetype_sex(desc),
         "immune": flags_or(stat_match.group(2)),
         "m_immune": flags_or(stat_match.group(3)),
         "susc": flags_or(stat_match.group(4)),
         "act": act_flags,
         "affected_by": affected_by,
+        "mult_att": parse_mult_att(act),
     }
 
 
@@ -501,11 +723,13 @@ def emit_band_stats_inc(archetypes: list[MobDesc], path: Path) -> None:
                         str(combat["gold"]),
                         str(combat["position"]),
                         str(combat["default_pos"]),
+                        str(combat["sex"]),
                         str(combat["immune"]),
                         str(combat["m_immune"]),
                         str(combat["susc"]),
                         str(combat["act"]),
                         str(combat["affected_by"]),
+                        str(combat["mult_att"]),
                     ]
                 )
                 + f"}}, /* band {band - 1} idx {idx} {desc.role} {desc.slot} */"
@@ -528,11 +752,13 @@ struct ProcArchetypeCombat {{
 \tint gold;
 \tint position;
 \tint default_pos;
+\tint sex;
 \tunsigned immune;
 \tunsigned m_immune;
 \tunsigned susc;
 \tlong act;
 \tlong affected_by;
+\tfloat mult_att;
 }};
 
 static constexpr ProcArchetypeCombat kProcBandCombat[{6}][{ARCHETYPE_COUNT}] = {{
@@ -596,9 +822,17 @@ def generate(descs: list[MobDesc]) -> str:
 
 
 def main() -> None:
-    descs = parse_desc_inc(DESC_INC)
+    descs, catalog_entries = emit_desc_inc(DESC_INC)
+    if len(descs) != EXPECTED_ARCHETYPES:
+        raise ValueError(f"Expected {EXPECTED_ARCHETYPES} archetypes, got {len(descs)}")
+    if len(catalog_entries) != EXPECTED_ARCHETYPES:
+        raise ValueError(
+            f"Expected {EXPECTED_ARCHETYPES} catalog entries, got {len(catalog_entries)}"
+        )
+    emit_theme_inc(catalog_entries, THEME_INC)
     emit_band_stats_inc(descs, BAND_STATS_INC)
-    print(f"Parsed {len(descs)} archetypes from {DESC_INC}")
+    print(f"Wrote {DESC_INC} ({len(descs)} archetypes)")
+    print(f"Wrote {THEME_INC}")
     print(f"Wrote {BAND_STATS_INC}")
 
 

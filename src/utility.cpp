@@ -7516,7 +7516,7 @@ void TeleportPulseStuff(unsigned long localPulse) {
 
 	for(ch = character_list; ch; ch = next) {
 		next = ch->next;
-		if(IS_MOB(ch)) {
+		if(IS_NPC(ch)) {
 			if(ch->specials.tick == tick && !ch->specials.fighting &&
 					!ch->specials.tick_to_lag) {
 				mobile_activity(ch);
