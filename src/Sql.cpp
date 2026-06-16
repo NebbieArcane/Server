@@ -11,6 +11,9 @@ namespace {
 const char myst_compile_mysql_port_default[] = MYSQL_PORT;
 }
 
+#if USE_MYSQL
+#include "odb/account-enum-sync-mysql.hxx"
+#endif
 #include "Sql.hpp"
 #include "autoenums.hpp"
 #include "logging.hpp"
@@ -120,6 +123,14 @@ void Sql::dbUpdate() {
         } catch (std::exception &e) {
           mudlog(LOG_SYSERR, "DB error: %s", e.what());
         }
+      }
+      try {
+        odb::transaction t(db->begin());
+        t.tracer(odb::stderr_full_tracer);
+        odb_enum_sync::sync_mysql_enums(*db);
+        t.commit();
+      } catch (std::exception &e) {
+        mudlog(LOG_SYSERR, "DB enum sync error: %s", e.what());
       }
     } catch (std::exception &e) {
       mudlog(LOG_SYSERR, "DB error: %s", e.what());

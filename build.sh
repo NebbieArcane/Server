@@ -26,33 +26,6 @@ if [ -f $conf ] ; then
 else
 	echo "No Conf file for [$environment] present, using builtin defaults"
 fi
-ensure_odb_sources() {
-	ODB_FILES=(
-		src/odb/account-odb.cxx
-		src/odb/account-odb-mysql.cxx
-		src/odb/account-schema-mysql.cxx
-	)
-	for f in "${ODB_FILES[@]}"; do
-		if [ ! -f "$f" ]; then
-			if ! command -v odb >/dev/null 2>&1; then
-				echo "Missing ODB sources ($f) and odb compiler not found in PATH."
-				exit 1
-			fi
-			echo "Missing ODB sources — running odb on account.hpp..."
-			(
-				cd src/odb && odb \
-					--profile boost/smart-ptr --profile boost/date-time \
-					--std c++17 -m dynamic -d common -d mysql \
-					--generate-query --generate-prepared --show-sloc \
-					--generate-session --generate-schema \
-					--omit-drop --schema-format separate --at-once \
-					--schema-name account --input-name account account.hpp
-			) || exit 1
-			return 0
-		fi
-	done
-}
-ensure_odb_sources
 rm -f CMakeCache.txt
 rm -f src/CMakeCache.txt
 rm -f src/release.h

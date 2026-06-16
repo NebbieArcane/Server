@@ -1,4 +1,10 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="3">
+    <alter-table name="character_stats">
+      <add-column name="odb_migration_probe" type="INT UNSIGNED" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
   <changeset version="2"/>
 
   <model version="1">
