@@ -4685,6 +4685,10 @@ void MakeScrap(struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 	else if(obj->equipped_by) {
 		owner = obj->equipped_by;
 	}
+	else if(ch && IS_PC(ch)) {
+		/* DamageAllStuff unequips before MakeScrap; owner links are cleared. */
+		owner = ch;
+	}
 
 #if USE_MYSQL
 	if(owner && IS_PC(owner) && toon_is_migrated_by_name(GET_NAME(owner))) {
