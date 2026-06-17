@@ -221,7 +221,7 @@ int run(int port, const char *dir) {
 #elif defined(env_vagrant)
   boost::format fmt("Vagrant: Starting %s rel %s ");
 #else
-  boost::format fmt("Unknown: Starting %s rel %s ");
+  boost::format fmt("Local: Starting %s rel %s ");
 #endif
   fmt % version() % release();
   mudlog(LOG_ALWAYS, fmt.str().c_str());
@@ -532,11 +532,11 @@ void game_loop(int s) {
   pulse++;
   event_process();
 
-	if(!(pulse % PULSE_ZONE)) {
-		zone_update();
-		check_reboot();
-		procarea_tick_cleanup();
-	}
+  if (!(pulse % PULSE_ZONE)) {
+    zone_update();
+    check_reboot();
+    procarea_tick_cleanup();
+  }
 
   if (!(pulse % PULSE_MAXUSAGE)) {
     update_max_usage();
