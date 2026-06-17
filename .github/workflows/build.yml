@@ -10,10 +10,15 @@ on:
         required: false
         default: false
       build_env:
-        type: string
+        type: choice
         description: The environment to build
         required: true
-        default: ignore
+        options:
+          - auto
+          - devel
+          - staging
+          - production
+        default: auto
   push:
     branches:
       - "feature/*"
