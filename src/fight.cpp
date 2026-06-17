@@ -704,7 +704,7 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 	IS_CARRYING_W(ch) = 0;
 
 	if(IS_NPC(ch)) {
-		corpse->char_vnum = mob_index[ch->nr].iVNum;
+		corpse->char_vnum = procarea_mob_iVNum(ch);
 		corpse->oldfilename[ 0 ] = 0;
 	}
 	else {
@@ -982,7 +982,8 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 
 	death_cry(ch);
 
-	if(IS_MOB(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF) && mob_index[ ch->nr ].func) {
+	if(IS_MOB(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF) &&
+	   ch->nr >= 0 && ch->nr <= top_of_mobt && mob_index[ch->nr].func) {
 		(*mob_index[ch->nr].func)(ch, 0, const_cast<char*>(""), ch, EVENT_DEATH);
 	}
 
@@ -2786,9 +2787,11 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                 ch->lastmkill = strdup(GET_NAME(victim));
 
                 // Achievement stuff
+                const int victim_vnum = procarea_mob_iVNum(victim);
 
             // Bosskill Achievement
-                if(n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE) > -1)
+                if(victim_vnum > 0 &&
+                   n_bosskill(victim_vnum, BOSSKILL_ACHIE) > -1)
                 {
                     struct char_data* tmp;
 
@@ -2798,7 +2801,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                         {
                             if(IS_POLY(tmp))
                             {
-                                tmp->desc->original->specials.achievements[BOSSKILL_ACHIE][n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE)] += 1;
+                                tmp->desc->original->specials.achievements[BOSSKILL_ACHIE][n_bosskill(victim_vnum, BOSSKILL_ACHIE)] += 1;
                                 if(!IS_SET(tmp->desc->original->specials.act,PLR_ACHIE))
                                 {
                                     SET_BIT(tmp->desc->original->specials.act, PLR_ACHIE);
@@ -2806,31 +2809,32 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                             }
                             else
                             {
-                                tmp->specials.achievements[BOSSKILL_ACHIE][n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE)] += 1;
+                                tmp->specials.achievements[BOSSKILL_ACHIE][n_bosskill(victim_vnum, BOSSKILL_ACHIE)] += 1;
                                 if(!IS_SET(tmp->specials.act,PLR_ACHIE))
                                 {
                                     SET_BIT(tmp->specials.act, PLR_ACHIE);
                                 }
                             }
-                            CheckAchie(tmp, n_bosskill(mob_index[victim->nr].iVNum, BOSSKILL_ACHIE), BOSSKILL_ACHIE);
+                            CheckAchie(tmp, n_bosskill(victim_vnum, BOSSKILL_ACHIE), BOSSKILL_ACHIE);
                         }
                     }
                 }
 
             // Quest Achievement
-                if(CheckMobQuest(mob_index[victim->nr].iVNum) > -1)
+                if(victim_vnum > 0 && CheckMobQuest(victim_vnum) > -1)
                 {
                     struct char_data* tmp;
+                    const int quest_idx = CheckMobQuest(victim_vnum);
                     for(tmp = real_roomp(ch->in_room)->people; tmp; tmp=tmp->next_in_room)
                     {
                         if(IS_PC(tmp) && in_group(tmp, ch))
                         {
-                            AssignMobQuestToToon(tmp, CheckMobQuest(mob_index[victim->nr].iVNum), mob_index[victim->nr].iVNum);
-                            if(CheckQuest(tmp, CheckMobQuest(mob_index[victim->nr].iVNum)))
+                            AssignMobQuestToToon(tmp, quest_idx, victim_vnum);
+                            if(CheckQuest(tmp, quest_idx))
                             {
                                 if(IS_POLY(tmp))
                                 {
-                                    tmp->desc->original->specials.achievements[QUEST_ACHIE][CheckMobQuest(mob_index[victim->nr].iVNum)] += 1;
+                                    tmp->desc->original->specials.achievements[QUEST_ACHIE][quest_idx] += 1;
                                     if(!IS_SET(tmp->desc->original->specials.act,PLR_ACHIE))
                                     {
                                         SET_BIT(tmp->desc->original->specials.act, PLR_ACHIE);
@@ -2838,13 +2842,13 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
                                 }
                                 else
                                 {
-                                    tmp->specials.achievements[QUEST_ACHIE][CheckMobQuest(mob_index[victim->nr].iVNum)] += 1;
+                                    tmp->specials.achievements[QUEST_ACHIE][quest_idx] += 1;
                                     if(!IS_SET(tmp->specials.act,PLR_ACHIE))
                                     {
                                         SET_BIT(tmp->specials.act, PLR_ACHIE);
                                     }
                                 }
-                                CheckAchie(tmp, CheckMobQuest(mob_index[victim->nr].iVNum), QUEST_ACHIE);
+                                CheckAchie(tmp, quest_idx, QUEST_ACHIE);
                             }
                         }
                     }
@@ -4666,10 +4670,38 @@ int DamageOneItem(struct char_data* ch, int dam_type, struct obj_data* obj) {
 
 }
 
-
 void MakeScrap(struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 	char buf[200];
 	struct obj_data* t, *x;
+	struct char_data* owner = nullptr;
+
+	if(obj == nullptr) {
+		return;
+	}
+
+	if(obj->carried_by) {
+		owner = obj->carried_by;
+	}
+	else if(obj->equipped_by) {
+		owner = obj->equipped_by;
+	}
+	else if(ch && IS_PC(ch)) {
+		/* DamageAllStuff unequips before MakeScrap; owner links are cleared. */
+		owner = ch;
+	}
+
+#if USE_MYSQL
+	if(owner && IS_PC(owner) && toon_is_migrated_by_name(GET_NAME(owner))) {
+		if(!mark_scrapped_item_mysql(GET_NAME(owner), obj)) {
+			mudlog(LOG_SYSERR, "MakeScrap: mark_scrapped_item_mysql failed for %s",
+				   GET_NAME(owner));
+		}
+	}
+#endif
+
+	if(obj == nullptr) {
+		return;
+	}
 
 	act("$p cade a terra in frantumi.", TRUE, ch, obj, 0, TO_CHAR);
 	act("$p cade a terra in frantumi.", TRUE, ch, obj, 0, TO_ROOM);

@@ -4,9 +4,18 @@
  *  Created on: 24 mar 2018
  *      Author: giovanni
  */
-#include "Sql.hpp"
-#include "autoenums.hpp"
 #include "config.hpp"
+
+/* Expand MYSQL_PORT from config.hpp before libmysql redefines it as int. */
+namespace {
+const char myst_compile_mysql_port_default[] = MYSQL_PORT;
+}
+
+#include "Sql.hpp"
+#if USE_MYSQL
+#include "odb/account-enum-sync-mysql.hxx"
+#endif
+#include "autoenums.hpp"
 #include "logging.hpp"
 #include <cstdlib>
 #include <cstring>
@@ -21,19 +30,45 @@ bool forceDbInit = false;
 odb::session odbSession;
 #if USE_MYSQL
 namespace {
+const char *mysql_cfg(const char *env_key, const char *compile_default) {
+  const char *v = std::getenv(env_key);
+  if (v && v[0]) {
+    return v;
+  }
+  return compile_default;
+}
+
+const char *mysql_cfg_db() {
+  const char *v = std::getenv("MYSQL_DB");
+  if (v && v[0]) {
+    return v;
+  }
+  v = std::getenv("MYSQL_DATABASE");
+  if (v && v[0]) {
+    return v;
+  }
+  return MYSQL_DB;
+}
+
 /* libmysql: "localhost" = Unix socket; myst in Docker runs as vagrant (EACCES
  * on mysqld.sock). */
 const char *mysql_connect_host() {
-  const char *host = MYSQL_HOST;
+  const char *host = mysql_cfg("MYSQL_HOST", MYSQL_HOST);
   if (!host || !host[0] || std::strcmp(host, "localhost") == 0) {
     return "127.0.0.1";
   }
   return host;
 }
+
+unsigned int mysql_connect_port() {
+  const char *port = mysql_cfg("MYSQL_PORT", myst_compile_mysql_port_default);
+  return static_cast<unsigned int>(std::strtoul(port, nullptr, 10));
+}
 } // namespace
 odb::database *Sql::getMysql() {
   thread_local static odb::database *db(new odb::mysql::database(
-      MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, mysql_connect_host(), MYSQL_PORT));
+      mysql_cfg("MYSQL_USER", MYSQL_USER), mysql_cfg("MYSQL_PASSWORD", MYSQL_PASSWORD),
+      mysql_cfg_db(), mysql_connect_host(), mysql_connect_port()));
   return db;
 }
 #endif
@@ -88,6 +123,14 @@ void Sql::dbUpdate() {
         } catch (std::exception &e) {
           mudlog(LOG_SYSERR, "DB error: %s", e.what());
         }
+      }
+      try {
+        odb::transaction t(db->begin());
+        t.tracer(odb::stderr_full_tracer);
+        odb_enum_sync::sync_mysql_enums(*db);
+        t.commit();
+      } catch (std::exception &e) {
+        mudlog(LOG_SYSERR, "DB enum sync error: %s", e.what());
       }
     } catch (std::exception &e) {
       mudlog(LOG_SYSERR, "DB error: %s", e.what());

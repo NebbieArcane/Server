@@ -9,7 +9,7 @@ MYSQL_HOST=${MYSQL_HOST:-localhost} #db host
 MYSQL_DB=${MYSQL_DB:-nebbie} #db name
 MYSQL_PORT=${MYSQL_PORT:-3306} #db port
 SERVER_PORT=${SERVER_PORT:-4002} #default server port
-environment=${1:-vagrant}
+environment=${1:-local}
 echo "MYSQL_USER: $MYSQL_USER"
 echo "MYSQL_PASSWORD: $MYSQL_PASSWORD"
 echo "MYSQL_HOST: $MYSQL_HOST"
@@ -20,6 +20,7 @@ echo "environment: $environment"
 echo "DOCKER_BUILD: $DOCKER_BUILD"
 echo "HOME: $HOME"
 ENVIRONMENT=$environment
+export ENVIRONMENT
 conf="$HOME/Confs/$environment.conf"
 if [ -f $conf ] ; then
 	. $conf

@@ -81,8 +81,12 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 	SET(hxxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.hxx")
 	SET(ixxSchema	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-odb-${dbtype}.ixx")
 	SET(Schema		"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-schema-${dbtype}.cxx")
-	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${cxxFile} ${cxxSchema} ${Schema})
-	SET(ODB_GENERATED_FILES ${cxxFile} ${cxxSchema} ${Schema})
+	SET(changelogXml	"${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-${dbtype}.xml")
+	# account-schema-*.cxx: per migrazioni ENUM/versione modello può servire rigenerazione manuale.
+	SET(ODB_GENERATED_SOURCES ${cxxFile} ${cxxSchema} ${Schema})
+	SET(ODB_GENERATED_FILES ${ODB_GENERATED_SOURCES} ${changelogXml})
+	set_source_files_properties(${ODB_GENERATED_SOURCES} PROPERTIES GENERATED TRUE)
+	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${ODB_GENERATED_SOURCES})
 
 	ADD_CUSTOM_COMMAND(
 			OUTPUT ${ODB_GENERATED_FILES}
@@ -92,16 +96,17 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 			--std c++17
 			-m dynamic
 			-d common
-
 			-d ${dbtype}
 			--generate-query
 			--generate-prepared
 			--show-sloc
 			--generate-session
 			--generate-schema
-			--schema-format separate
+			--omit-drop
+			--schema-format separate			
 			--at-once
-
+			--changelog ${dbschema}-${dbtype}.xml
+			--changelog-dir ${CMAKE_SOURCE_DIR}/src/odb
 			--schema-name ${dbschema}
 			--input-name ${dbschema}
 			${dbschema}.hpp
@@ -116,6 +121,27 @@ MACRO(ODB_GENERATE_DB dbtype dbschema)
 	ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} ${dbschema}
 
 	)
+ENDMACRO()
+MACRO(ENUM_SYNC_GENERATE dbtype dbschema)
+	SET(changelogXml "${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-${dbtype}.xml")
+	SET(enumSyncCxx "${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-enum-sync-${dbtype}.cxx")
+	SET(enumSyncHxx "${CMAKE_SOURCE_DIR}/src/odb/${dbschema}-enum-sync-${dbtype}.hxx")
+	set_source_files_properties(${enumSyncCxx} ${enumSyncHxx} PROPERTIES GENERATED TRUE)
+	target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${enumSyncCxx})
+
+	ADD_CUSTOM_COMMAND(
+			OUTPUT ${enumSyncCxx} ${enumSyncHxx}
+			COMMAND php ${CMAKE_SOURCE_DIR}/shutils/generate-enum-sync.php
+				${changelogXml} ${enumSyncCxx} ${enumSyncHxx}
+			DEPENDS ${changelogXml} ${CMAKE_SOURCE_DIR}/shutils/generate-enum-sync.php
+			COMMENT "Generating enum sync from ${dbschema}-${dbtype}.xml"
+	)
+	ADD_CUSTOM_TARGET(${dbschema}_enum_sync
+			DEPENDS ${enumSyncCxx} ${enumSyncHxx}
+			COMMENT "Checking if enum sync needs regeneration from ${dbschema}-${dbtype}.xml"
+	)
+	ADD_DEPENDENCIES(${dbschema}_enum_sync ${dbschema})
+	ADD_DEPENDENCIES(${CMAKE_PROJECT_NAME} ${dbschema}_enum_sync)
 ENDMACRO()
 
 enable_language(CXX)
@@ -306,4 +332,5 @@ add_custom_command(
 )
 RELEASE()
 ODB_GENERATE_DB(mysql account)
+ENUM_SYNC_GENERATE(mysql account)
 AUTOENUMS()

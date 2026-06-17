@@ -48,6 +48,8 @@ void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) ;
 void save_room(int room) ;
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj) ;
 void update_file(struct char_data* ch, struct obj_file_u* st) ;
+/** Boot: archivia .dat / rent / .aux legacy per PG migrati (sanity DB OK). */
+void cleanup_migrated_legacy_files();
 void update_obj_file() ;
 void write_char_extra(struct char_data* ch) ;
 void zero_rent(struct char_data* ch) ;

@@ -8,12 +8,17 @@ on:
         type: boolean
         description: Dry run
         required: false
-        default: true
+        default: false
       build_env:
-        type: string
+        type: choice
         description: The environment to build
         required: true
-        default: ignore
+        options:
+          - auto
+          - devel
+          - staging
+          - production
+        default: auto
   push:
     branches:
       - "feature/*"
@@ -40,7 +45,7 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun || true }}
+      dryrun: ${{ inputs.dryrun}}
     secrets: inherit
   dockerize:
     needs: 
@@ -50,6 +55,6 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun || true }}
+      dryrun: ${{ inputs.dryrun }}
     secrets: inherit
             

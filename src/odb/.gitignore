@@ -6,3 +6,5 @@
 /account-odb.hxx
 /account-odb.ixx
 /account-schema-mysql.cxx
+/account-enum-sync-mysql.cxx
+/account-enum-sync-mysql.hxx

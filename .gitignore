@@ -244,3 +244,4 @@ mysql_data/
 /migration_artifacts/
 /backups/
 /tmp-odb-inspect/
+read_rent.py

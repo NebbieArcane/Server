@@ -18,7 +18,14 @@
 
 namespace Alarmud {
 
-enum class inventory_deleted_for { DEATH, RENT_EXPIRED, NUKE, TRAP, MANUAL };
+enum class inventory_deleted_for {
+  DEATH,
+  RENT_EXPIRED,
+  NUKE,
+  TRAP,
+  MANUAL,
+  SCRAP
+};
 
 #ifdef ODB_COMPILER
 #pragma db value
@@ -290,6 +297,7 @@ public:
   signed char hitroll;
   signed char damroll;
   signed char libero;
+  unsigned int odb_migration_probe;
 };
 
 class registered {
@@ -418,7 +426,9 @@ public:
 };
 
 #ifdef ODB_COMPILER
-#pragma db model version(1, 1, open)
+#pragma db model version(1, 1, closed)
+#pragma db model version(1, 2, closed)
+#pragma db model version(1, 3, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -523,7 +533,7 @@ public:
 #pragma db member(character_inventory::deleted) not_null default(0)
 #pragma db member(character_inventory::deleted_on) type("DATETIME") null
 #pragma db member(character_inventory::deleted_for)                            \
-    type("ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL')") null
+    type("ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')") null
 #pragma db index(character_inventory::"idx_inventory_toon_active")             \
     members(toon_id, deleted, list_index)
 #pragma db index(character_inventory::"idx_inventory_toon_deleted_on")         \
@@ -613,6 +623,7 @@ public:
 #pragma db member(character_stats::hitroll) not_null default(0)
 #pragma db member(character_stats::damroll) not_null default(0)
 #pragma db member(character_stats::libero) not_null default(0)
+#pragma db member(character_stats::odb_migration_probe) not_null default(0)
 
 #pragma db object(registered) session(false)
 #pragma db member(registered::name) id type("varchar(64)") not_null

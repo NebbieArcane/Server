@@ -5515,7 +5515,8 @@ ACTION_FUNC(do_refund) {
 				"RENT_EXPIRED",
 				"NUKE",
 				"TRAP",
-				"MANUAL"
+				"MANUAL",
+				"SCRAP"
 			};
 			const char* matched_cause = nullptr;
 			for(const char* cause : refund_causes) {

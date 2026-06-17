@@ -45,5 +45,5 @@ if [ -d build ]; then
 		echo "⚠️ La cartella 'build' è stata rimossa."
 	fi
 fi
-
+docker-compose pull
 $compose run --rm -it --service-ports consumer

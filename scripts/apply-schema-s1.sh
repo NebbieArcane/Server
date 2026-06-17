@@ -24,6 +24,7 @@ for inc in \
 	schema-s1-ddl-fix-character-classes.sql \
 	schema-s1-death-snapshot.sql \
 	schema-s1-inventory-soft-delete.sql \
+	schema-s1-inventory-scrap-cause.sql \
 	schema-toon-nuke-blacklist.sql
 do
 	echo "==> incrementale ${inc} (errori ignorati se già applicato)"
