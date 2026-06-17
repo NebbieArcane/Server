@@ -6,7 +6,6 @@ tag=$(git tag --list '[r0-9]*' --sort=-v:refname | head -n1)
 # Use the TAG env variable if defined, otherwise fall back to the latest tag
 if [ -n "$TAG" ]; then
 	version="$TAG"
-
 else
 	# If the tag matches the pattern vMAJOR.MINOR[.PATCH], increment the MINOR
 	if [[ "$tag" =~ ^r([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
@@ -23,13 +22,16 @@ else
 		version="$tag"
 	fi
 fi
+echo "branch: $branch"
+echo "tag: $tag"
+echo "version: $version"
 # echo "temp: $temp"
 
 # If no version is found, use git describe --always
 if [ -z "$version" ]; then
 	version=$(git describe --always)
+	echo "version from describe: $version"
 fi
-
 build=$(git log --pretty=format:"%f" -n1)
 echo "Tag: $branch $version $build"
 #REVISION   = $(shell git rev-list $(LAST_TAG).. --count)
