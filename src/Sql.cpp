@@ -11,10 +11,10 @@ namespace {
 const char myst_compile_mysql_port_default[] = MYSQL_PORT;
 }
 
+#include "Sql.hpp"
 #if USE_MYSQL
 #include "odb/account-enum-sync-mysql.hxx"
 #endif
-#include "Sql.hpp"
 #include "autoenums.hpp"
 #include "logging.hpp"
 #include <cstdlib>
