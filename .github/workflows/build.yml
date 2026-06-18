@@ -17,7 +17,7 @@ on:
           - auto
           - devel
           - staging
-          - production
+          - release
         default: auto
   push:
     branches:

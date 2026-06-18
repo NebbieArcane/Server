@@ -1,6 +1,10 @@
 #!/bin/bash
 # temp=$(git rev-list --tags --max-count=1)
-git tag --list '[r0-9]*' --sort=-v:refname | head -n1
+echo git tag list
+git tag --list
+echo "git tag list 'r[0-9]*' --sort=-v:refname | head -n1"
+(git tag --list 'r[0-9]*' --sort=-v:refname | head -n1)
+echo git rev-parse abbrev-ref HEAD
 git rev-parse --abbrev-ref HEAD
 branch=$(git rev-parse --abbrev-ref HEAD)
 tag=$(git tag --list '[r0-9]*' --sort=-v:refname | head -n1)
