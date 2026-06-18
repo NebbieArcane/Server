@@ -37,7 +37,7 @@ jobs:
   setup:
     uses: NebbieArcane/Actions/.github/workflows/server-environment.yml@main
     with:
-      build_env: ${{ inputs.build_env || 'ignore' }}
+      build_env: ${{ inputs.build_env }}
     secrets: inherit
   compile:
     needs: setup
