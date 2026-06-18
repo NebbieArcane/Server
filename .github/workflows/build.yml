@@ -17,7 +17,7 @@ on:
           - auto
           - devel
           - staging
-          - production
+          - release
         default: auto
   push:
     branches:
@@ -45,6 +45,9 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
+      pr_id: ${{ needs.setup.outputs.pr_id }}
+      pr_title: ${{ needs.setup.outputs.pr_title }}
+      pr_body: ${{ needs.setup.outputs.pr_body }}
       dryrun: ${{ inputs.dryrun}}
     secrets: inherit
   dockerize:
