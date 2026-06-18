@@ -1,0 +1,63 @@
+name: Build
+description: Full automated build and deployment pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        type: boolean
+        description: Dry run
+        required: false
+        default: false
+      build_env:
+        type: choice
+        description: The environment to build
+        required: true
+        options:
+          - auto
+          - devel
+          - staging
+          - release
+        default: auto
+  push:
+    branches:
+      - "feature/*"
+      - "release/*"
+    tags:
+      - "x*"
+      - "r*"
+  pull_request:
+    types: 
+      - opened
+      - synchronize
+    branches:
+      - "feature/*"
+
+jobs:
+  setup:
+    uses: NebbieArcane/Actions/.github/workflows/server-environment.yml@main
+    with:
+      build_env: ${{ inputs.build_env || 'ignore' }}
+    secrets: inherit
+  compile:
+    needs: setup
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
+    with:
+      build_env: ${{ needs.setup.outputs.selected_env }}
+      pr_id: ${{ needs.setup.outputs.pr_id }}
+      pr_title: ${{ needs.setup.outputs.pr_title }}
+      pr_body: ${{ needs.setup.outputs.pr_body }}
+      dryrun: ${{ inputs.dryrun}}
+    secrets: inherit
+  dockerize:
+    needs: 
+      - setup
+      - compile
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
+    with:
+      build_env: ${{ needs.setup.outputs.selected_env }}
+      dryrun: ${{ inputs.dryrun }}
+    secrets: inherit
+            

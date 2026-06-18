@@ -5,6 +5,12 @@ trap cleanup INT TERM EXIT
 set -e
 
 export DOCKER_PLATFORM=linux/amd64
+export LOCAL_UID=$(id -u)
+export LOCAL_GID=$(id -g)
+
+# docker compose legge .env per ${LOCAL_UID}/${LOCAL_GID} su mysql e consumer.
+printf 'LOCAL_UID=%s\nLOCAL_GID=%s\nDOCKER_PLATFORM=%s\n' \
+	"$LOCAL_UID" "$LOCAL_GID" "$DOCKER_PLATFORM" > .env
 
 if command -v docker-compose >/dev/null 2>&1; then
 	compose='docker-compose'
@@ -16,9 +22,28 @@ cleanup() {
 	$compose down
 }
 
+# mysql_data deve essere scrivibile dall'uid del consumer/mysql.
+if [ ! -d mysql_data ]; then
+	mkdir -p mysql_data
+fi
+mysql_owner=$(stat -c %u mysql_data 2>/dev/null || stat -f %u mysql_data 2>/dev/null)
+if [ "$mysql_owner" != "$LOCAL_UID" ]; then
+	echo "⚠️ mysql_data owned by uid $mysql_owner (expected $LOCAL_UID)."
+	if chown -R "$LOCAL_UID:$LOCAL_GID" mysql_data 2>/dev/null; then
+		echo "   Fixed ownership of mysql_data."
+	else
+		echo "   Run once: sudo chown -R $LOCAL_UID:$LOCAL_GID mysql_data"
+	fi
+fi
 
-echo "DOCKER_PLATFORM=$DOCKER_PLATFORM"
-$compose run --rm --service-ports \
-	--entrypoint /usr/bin/bash \
-	-u "$(id -u):$(id -g)" \
-	consumer
+# rimuove la cartella build se l'owner è root
+if [ -d build ]; then
+	owner=$(stat -c %U build 2>/dev/null || stat -f %Su build 2>/dev/null)
+	if [ "$owner" = "root" ]; then
+		echo "⚠️ La cartella 'build' è di proprietà di root, la rimuovo."
+		$compose run --rm --no-deps --entrypoint=/usr/bin/rm consumer -rf build
+		echo "⚠️ La cartella 'build' è stata rimossa."
+	fi
+fi
+docker-compose pull
+$compose run --rm -it --service-ports consumer

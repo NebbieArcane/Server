@@ -344,7 +344,7 @@ void check_mobile_activity(unsigned long localPulse) {
 
 	for(ch = character_list; ch; ch = pNextChar) {
 		pNextChar = ch->next;
-		if(IS_MOB(ch)) {
+		if(IS_NPC(ch)) {
 			if(ch->specials.tick_to_lag) {
 				/*do_say(ch, "I'm lagging..", 0); */
 				ch->specials.tick_to_lag -= PULSE_VIOLENCE;

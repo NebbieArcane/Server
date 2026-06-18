@@ -1,18 +1,54 @@
 #!/bin/bash
-temp=$(git rev-list --tags --max-count=1)
+# temp=$(git rev-list --tags --max-count=1)
+echo git tag list
+git tag --list
+echo "git tag list 'r[0-9]*' --sort=-v:refname | head -n1"
+(git tag --list 'r[0-9]*' --sort=-v:refname | head -n1)
+echo git rev-parse abbrev-ref HEAD
+git rev-parse --abbrev-ref HEAD
 branch=$(git rev-parse --abbrev-ref HEAD)
-version=$(git describe --tags --long)
-if [ -z "$version" ] ; then
+tag=$(git tag --list '[r0-9]*' --sort=-v:refname | head -n1)
+
+# Use the TAG env variable if defined, otherwise fall back to the latest tag
+if [ -n "$TAG" ]; then
+	version="$TAG"
+else
+	# If the tag matches the pattern vMAJOR.MINOR[.PATCH], increment the MINOR
+	if [[ "$tag" =~ ^r([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+		major="${BASH_REMATCH[1]}"
+		minor="${BASH_REMATCH[2]}"
+		patch="${BASH_REMATCH[3]}"
+		new_minor=$((minor + 1))
+		if [ -n "$patch" ]; then
+			version="v${major}.${new_minor}.0-alpha"
+		else
+			version="v${major}.${new_minor}.0-alpha"
+		fi
+	else
+		version="$tag"
+	fi
+fi
+echo "branch: $branch"
+echo "tag: $tag"
+echo "version: $version"
+# echo "temp: $temp"
+
+# If no version is found, use git describe --always
+if [ -z "$version" ]; then
 	version=$(git describe --always)
+	echo "version from describe: $version"
 fi
 build=$(git log --pretty=format:"%f" -n1)
-echo Tag: $branch $version $build
+echo "Tag: $branch $version $build"
 #REVISION   = $(shell git rev-list $(LAST_TAG).. --count)
 #ROOTDIR    = $(shell git rev-parse --show-toplevel)
 outfile=${1:-release.hpp}
-echo 
+echo
+
 if [ "$branch" = "HEAD" ] ; then
 	branch="Release"
 fi
+echo "8<----------------------------"
 echo "#define VERSION \"$version ($branch)\"" > "$outfile"
 echo "#define BUILD \"$build\"" >> "$outfile"
+cat "$outfile"

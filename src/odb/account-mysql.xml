@@ -1,5 +1,275 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="3">
+    <alter-table name="character_stats">
+      <add-column name="odb_migration_probe" type="INT UNSIGNED" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="2"/>
+
   <model version="1">
+    <table name="character_achievements" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_category" type="TINYINT UNSIGNED" null="false"/>
+      <column name="key_slot_index" type="SMALLINT UNSIGNED" null="false"/>
+      <column name="value" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_category"/>
+        <column name="key_slot_index"/>
+      </primary-key>
+    </table>
+    <table name="character_affects" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="type" type="SMALLINT" null="false" default="0"/>
+      <column name="duration" type="SMALLINT" null="false" default="0"/>
+      <column name="modifier" type="INT" null="false" default="0"/>
+      <column name="location" type="INT" null="false" default="0"/>
+      <column name="bitvector" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_slot"/>
+      </primary-key>
+    </table>
+    <table name="character_aliases" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="alias_text" type="varchar(512)" null="false"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_slot"/>
+      </primary-key>
+    </table>
+    <table name="character_classes" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_class_index" type="TINYINT UNSIGNED" null="false"/>
+      <column name="level" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_class_index"/>
+      </primary-key>
+    </table>
+    <table name="character_core" options="ENGINE=InnoDB" kind="object">
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="description" type="varchar(240)" null="true"/>
+      <column name="class_primary" type="INT" null="false" default="0"/>
+      <column name="sex" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="race" type="INT" null="false" default="0"/>
+      <column name="birth" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="played" type="INT" null="false" default="0"/>
+      <column name="last_logon" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="weight" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="height" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="hometown" type="SMALLINT" null="false" default="0"/>
+      <column name="talks_0" type="TINYINT(1)" null="false" default="0"/>
+      <column name="talks_1" type="TINYINT(1)" null="false" default="0"/>
+      <column name="talks_2" type="TINYINT(1)" null="false" default="0"/>
+      <column name="speaks" type="INT" null="false" default="0"/>
+      <column name="user_flags" type="INT" null="false" default="0"/>
+      <column name="extra_flags" type="INT" null="false" default="0"/>
+      <column name="age_modifier" type="INT" null="false" default="0"/>
+      <column name="authcode" type="varchar(7)" null="false" default="''"/>
+      <column name="wimpy_level" type="SMALLINT" null="false" default="0"/>
+      <column name="load_room" type="SMALLINT" null="false" default="0"/>
+      <column name="start_room" type="INT" null="false" default="0"/>
+      <column name="spells_to_learn" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="alignment" type="INT" null="false" default="0"/>
+      <column name="act" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="affected_by" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="affected_by2" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="condition_drunk" type="TINYINT" null="false" default="0"/>
+      <column name="condition_full" type="TINYINT" null="false" default="0"/>
+      <column name="condition_thirst" type="TINYINT" null="false" default="0"/>
+      <column name="save_throw_0" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_1" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_2" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_3" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_4" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_5" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_6" type="SMALLINT" null="false" default="0"/>
+      <column name="save_throw_7" type="SMALLINT" null="false" default="0"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="toon_id"/>
+      </primary-key>
+    </table>
+    <table name="character_death_snapshot" options="ENGINE=InnoDB" kind="object">
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="saved_exp" type="INT" null="false"/>
+      <column name="saved_at" type="INT UNSIGNED" null="false"/>
+      <column name="updated_at" type="DATETIME" null="false"/>
+      <primary-key>
+        <column name="toon_id"/>
+      </primary-key>
+    </table>
+    <table name="character_inventory" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="list_index" type="SMALLINT UNSIGNED" null="false"/>
+      <column name="item_number" type="SMALLINT UNSIGNED" null="false" default="0"/>
+      <column name="value0" type="INT" null="false" default="0"/>
+      <column name="value1" type="INT" null="false" default="0"/>
+      <column name="value2" type="INT" null="false" default="0"/>
+      <column name="value3" type="INT" null="false" default="0"/>
+      <column name="extra_flags" type="INT" null="false" default="0"/>
+      <column name="extra_flags2" type="INT" null="false" default="0"/>
+      <column name="weight" type="INT" null="false" default="0"/>
+      <column name="timer" type="INT" null="false" default="0"/>
+      <column name="bitvector" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="obj_name" type="varchar(128)" null="false" default="''"/>
+      <column name="short_desc" type="varchar(128)" null="false" default="''"/>
+      <column name="description" type="varchar(256)" null="false" default="''"/>
+      <column name="wear_pos" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="depth" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="deleted" type="TINYINT(1)" null="false" default="0"/>
+      <column name="deleted_on" type="DATETIME" null="true"/>
+      <column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="toon_id_i">
+        <column name="toon_id"/>
+      </index>
+      <index name="idx_inventory_toon_active">
+        <column name="toon_id"/>
+        <column name="deleted"/>
+        <column name="list_index"/>
+      </index>
+      <index name="idx_inventory_toon_deleted_on">
+        <column name="toon_id"/>
+        <column name="deleted_on"/>
+      </index>
+      <index name="idx_inventory_toon_deleted_for">
+        <column name="toon_id"/>
+        <column name="deleted_for"/>
+      </index>
+    </table>
+    <table name="character_inventory_affect" options="ENGINE=InnoDB" kind="object">
+      <column name="key_inventory_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_affect_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="location" type="SMALLINT" null="false" default="0"/>
+      <column name="modifier" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_inventory_id"/>
+        <column name="key_affect_slot"/>
+      </primary-key>
+    </table>
+    <table name="character_mercy" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_quest_index" type="SMALLINT UNSIGNED" null="false"/>
+      <column name="value" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_quest_index"/>
+      </primary-key>
+    </table>
+    <table name="character_prefs" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_pref_key" type="varchar(32)" null="false"/>
+      <column name="pref_value" type="varchar(1024)" null="false"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_pref_key"/>
+      </primary-key>
+    </table>
+    <table name="character_quest_progress" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_quest_index" type="SMALLINT UNSIGNED" null="false"/>
+      <column name="key_mob_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="mob_vnum" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_quest_index"/>
+        <column name="key_mob_slot"/>
+      </primary-key>
+    </table>
+    <table name="character_rent" options="ENGINE=InnoDB" kind="object">
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="gold_left" type="INT" null="false" default="0"/>
+      <column name="total_cost" type="INT" null="false" default="0"/>
+      <column name="last_update" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="minimum_stay" type="INT" null="false" default="0"/>
+      <column name="object_count" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="toon_id"/>
+      </primary-key>
+    </table>
+    <table name="character_resistance" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_damage_type" type="INT UNSIGNED" null="false"/>
+      <column name="value" type="SMALLINT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_damage_type"/>
+      </primary-key>
+    </table>
+    <table name="character_skills" options="ENGINE=InnoDB" kind="object">
+      <column name="key_toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_skill_id" type="SMALLINT UNSIGNED" null="false"/>
+      <column name="learned" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="flags" type="TINYINT" null="false" default="0"/>
+      <column name="special" type="TINYINT" null="false" default="0"/>
+      <column name="nummem" type="TINYINT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_toon_id"/>
+        <column name="key_skill_id"/>
+      </primary-key>
+    </table>
+    <table name="character_stats" options="ENGINE=InnoDB" kind="object">
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="str" type="TINYINT" null="false" default="0"/>
+      <column name="str_add" type="TINYINT" null="false" default="0"/>
+      <column name="intel" type="TINYINT" null="false" default="0"/>
+      <column name="wis" type="TINYINT" null="false" default="0"/>
+      <column name="dex" type="TINYINT" null="false" default="0"/>
+      <column name="con" type="TINYINT" null="false" default="0"/>
+      <column name="chr" type="TINYINT" null="false" default="0"/>
+      <column name="extra" type="TINYINT" null="false" default="0"/>
+      <column name="extra2" type="TINYINT" null="false" default="0"/>
+      <column name="mana" type="SMALLINT" null="false" default="0"/>
+      <column name="max_mana" type="SMALLINT" null="false" default="0"/>
+      <column name="mana_gain" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="hit" type="SMALLINT" null="false" default="0"/>
+      <column name="max_hit" type="SMALLINT" null="false" default="0"/>
+      <column name="hit_gain" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="move" type="SMALLINT" null="false" default="0"/>
+      <column name="max_move" type="SMALLINT" null="false" default="0"/>
+      <column name="move_gain" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="p_rune_dei" type="SMALLINT UNSIGNED" null="false" default="0"/>
+      <column name="points_extra1" type="SMALLINT" null="false" default="0"/>
+      <column name="points_extra2" type="SMALLINT" null="false" default="0"/>
+      <column name="points_extra3" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="armor" type="SMALLINT" null="false" default="100"/>
+      <column name="gold" type="INT" null="false" default="0"/>
+      <column name="bank_gold" type="INT" null="false" default="0"/>
+      <column name="exp" type="INT" null="false" default="0"/>
+      <column name="true_exp" type="INT" null="false" default="0"/>
+      <column name="extra_dual" type="INT" null="false" default="0"/>
+      <column name="hitroll" type="TINYINT" null="false" default="0"/>
+      <column name="damroll" type="TINYINT" null="false" default="0"/>
+      <column name="libero" type="TINYINT" null="false" default="0"/>
+      <primary-key>
+        <column name="toon_id"/>
+      </primary-key>
+    </table>
+    <table name="registered" options="ENGINE=InnoDB" kind="object">
+      <column name="name" type="varchar(64)" null="false"/>
+      <column name="realname" type="varchar(256)" null="true"/>
+      <column name="god" type="varchar(64)" null="true"/>
+      <column name="email1" type="varchar(256)" null="true"/>
+      <column name="email2" type="varchar(256)" null="true"/>
+      <column name="note" type="varchar(512)" null="true"/>
+      <primary-key>
+        <column name="name"/>
+      </primary-key>
+      <index name="email1_i">
+        <column name="email1"/>
+      </index>
+      <index name="email2_i">
+        <column name="email2"/>
+      </index>
+    </table>
     <table name="toonExtra" options="ENGINE=InnoDB" kind="object">
       <column name="id" type="BIGINT UNSIGNED" null="false"/>
       <column name="field" type="varchar(32)" null="false"/>
@@ -38,6 +308,22 @@
       </index>
       <index name="owner_id_i">
         <column name="owner_id"/>
+      </index>
+    </table>
+    <table name="toon_nuke_blacklist" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_name" type="varchar(32)" null="false"/>
+      <column name="nuked_at" type="DATETIME" null="false"/>
+      <column name="nuked_by" type="varchar(32)" null="false"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="toon_id_i" type="UNIQUE">
+        <column name="toon_id"/>
+      </index>
+      <index name="toon_name_i">
+        <column name="toon_name"/>
       </index>
     </table>
     <table name="user" options="ENGINE=InnoDB" kind="object">
