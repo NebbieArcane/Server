@@ -520,7 +520,7 @@ void FrozeHim(struct char_data* ch, int hp) {
 void boot_db() {
 	int i;
 
-	mudlog(LOG_CHECK, "Boot db -- BEGIN.");
+	mudlog(LOG_CHECK, "Boot db --- BEGIN.");
 
 	mudlog(LOG_CHECK, "Resetting the game time:");
 	reset_time();
