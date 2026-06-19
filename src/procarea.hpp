@@ -22,6 +22,10 @@ constexpr long PROCAREA_FOUNTAIN_ROOM = 3001L;
 constexpr long PROCAREA_DARKSTAR_TEMPLE = 3014L;
 
 constexpr int PROCAREA_MIN_LEVEL = 1;
+/** Livello massimo PG (mortali) usato per il calcolo livello mob in dimensione. */
+constexpr int PROCAREA_PC_MAX_LEVEL = 51;
+/** Cap livello mostrato per mob/trappole/boss generati in dimensione. */
+constexpr int PROCAREA_MOB_LEVEL_CAP = 60;
 
 /* Curva di difficolta' continua da GetCharBonusIndex() medio del gruppo in ingresso. */
 constexpr float PROCAREA_EQ_SCALE_MIN = 30.0f;
@@ -43,8 +47,7 @@ constexpr int PROCAREA_ARCHETYPE_COUNT = 225;
 constexpr int PROCAREA_THEME_COUNT = 50;
 constexpr int PROCAREA_TEMPLATE_BANDS = 6;
 
-/** Vnum logici runtime oggetti procarea (65000+; possono coincidere con mob/stanze). */
-constexpr int PROCAREA_TREASURE_KEY_OBJ = PROCAREA_MOB_VNUM_BASE + 0;
+/** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 
 ACTION_FUNC(do_antro);

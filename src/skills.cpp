@@ -40,6 +40,7 @@
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
 #include "trap.hpp"
+#include "procarea.hpp"
 
 namespace Alarmud {
 
@@ -205,15 +206,21 @@ ACTION_FUNC(do_disarm) {
 		 */
 		if(victim->equipment[WIELD]) {
 			w = unequip_char(victim, WIELD);
+			const bool keep_in_inventory =
+				IS_PC(victim) && procarea_is_generated_room(victim->in_room);
 			act("$n esegue una impressionante mossa d'arti marziali, disarmando il nemico.",
 				TRUE, ch, 0, 0, TO_ROOM);
 			act("$c0010Abilmente fai volare $p$c0010 dalla mano di $N.", TRUE, ch, w, victim,
 				TO_CHAR);
-			act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
-			/*
-			 * send the object to a nearby room, instead
-			 */
-			obj_to_room(w, victim->in_room);
+			if(keep_in_inventory) {
+				obj_to_char(w, victim);
+				act("Ti disarmano e $p ti sfugge dalle mani, ma le rune del luogo non la lasciano "
+					"cadere.",
+					TRUE, ch, w, victim, TO_VICT);
+			} else {
+				obj_to_room(w, victim->in_room);
+				act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
+			}
 			ActionAlignMod(ch,victim,cmd);
 
             if(HasClass(ch, CLASS_MONK) && IS_PC(ch))

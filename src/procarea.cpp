@@ -13,6 +13,7 @@
 #include "hash.hpp"
 #include "db.hpp"
 #include "handler.hpp"
+#include "act.comm.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
 #include "comm.hpp"
@@ -93,6 +94,7 @@ struct ProcAreaInstance {
 	int id;
 	float group_eq_index;
 	int template_band;
+	int group_max_level;
 	int theme_id;
 	long base_vnum;
 	long entrance_vnum;
@@ -128,7 +130,6 @@ static constexpr int kFountainVeilLifetimeSec = 180;
 
 static constexpr long kProcIsolationFlags = static_cast<long>(NO_ASTRAL | NO_SUM);
 static constexpr int kProcExitPortalObj = 9071;
-static constexpr int kProcTreasureKeyObj = PROCAREA_TREASURE_KEY_OBJ;
 static constexpr int kProcTreasureHoardObj = PROCAREA_TREASURE_HOARD_OBJ;
 static constexpr int kProcSentinelChancePct = 20;
 static constexpr int kProcAggressiveChanceByBand[PROCAREA_TEMPLATE_BANDS] = {
@@ -173,11 +174,12 @@ static_assert(std::size(kProcTreasureClassByBand) == PROCAREA_TEMPLATE_BANDS,
 			  "procarea treasure class table must match PROCAREA_TEMPLATE_BANDS");
 
 static char_data* procarea_create_mob(int archetype_index, float eq_index, int template_band,
-									  ProcMobKind kind, bool follow_anchor_sentinel = false,
+									  int group_max_level, ProcMobKind kind,
+									  bool follow_anchor_sentinel = false,
 									  int add_slot = -1,
 									  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor);
 static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
-											  ProcMobKind kind, int theme_id,
+											  int group_max_level, ProcMobKind kind, int theme_id,
 											  bool follow_anchor_sentinel = false,
 											  int add_slot = -1,
 											  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor);
@@ -233,6 +235,7 @@ struct ProcAreaDifficulty {
 	float eq_index;
 	float factor;
 	int template_band;
+	int group_max_level;
 	int rooms_min;
 	int rooms_max;
 	int max_branches;
@@ -571,31 +574,57 @@ static void procarea_apply_aggressive(char_data* mob, int template_band, ProcMob
 	return false;
 }
 
-[[nodiscard]] static std::vector<char_data*> procarea_entering_group(char_data* ch) {
-	std::vector<char_data*> group;
+[[nodiscard]] static char_data* procarea_group_leader(char_data* ch) {
 	if(ch == nullptr || !IS_PC(ch)) {
-		return group;
+		return ch;
+	}
+	char_data* leader = ch;
+	while(leader->master != nullptr && IS_PC(leader->master) &&
+		  IS_AFFECTED(leader->master, AFF_GROUP)) {
+		leader = leader->master;
+	}
+	return leader;
+}
+
+[[nodiscard]] static bool procarea_party_member_ready(char_data* member, long room) {
+	return member != nullptr && IS_PC(member) && member->in_room == room &&
+		   GET_POS(member) >= POSITION_STANDING && member->specials.fighting == nullptr;
+}
+
+static void procarea_party_add_unique(std::vector<char_data*>& party, char_data* member,
+									  long room) {
+	if(!procarea_party_member_ready(member, room)) {
+		return;
+	}
+	if(std::find(party.begin(), party.end(), member) != party.end()) {
+		return;
+	}
+	party.push_back(member);
+}
+
+[[nodiscard]] static std::vector<char_data*> procarea_party_in_room(char_data* ch) {
+	std::vector<char_data*> party;
+	if(ch == nullptr || !IS_PC(ch)) {
+		return party;
+	}
+	const long room = ch->in_room;
+	if(!IS_AFFECTED(ch, AFF_GROUP)) {
+		procarea_party_add_unique(party, ch, room);
+		for(follow_type* fol = ch->followers; fol != nullptr; fol = fol->next) {
+			procarea_party_add_unique(party, fol->follower, room);
+		}
+		return party;
 	}
 
-	group.push_back(ch);
-	const long source_room = ch->in_room;
-	for(follow_type* fol = ch->followers; fol != nullptr; fol = fol->next) {
-		char_data* follower = fol->follower;
-		if(follower == nullptr || follower == ch || !IS_PC(follower)) {
-			continue;
+	char_data* leader = procarea_group_leader(ch);
+	procarea_party_add_unique(party, leader, room);
+	for(follow_type* fol = leader->followers; fol != nullptr; fol = fol->next) {
+		char_data* member = fol->follower;
+		if(member != nullptr && IS_PC(member) && IS_AFFECTED(member, AFF_GROUP)) {
+			procarea_party_add_unique(party, member, room);
 		}
-		if(follower->in_room != source_room) {
-			continue;
-		}
-		if(GET_POS(follower) < POSITION_STANDING) {
-			continue;
-		}
-		if(follower->specials.fighting != nullptr) {
-			continue;
-		}
-		group.push_back(follower);
 	}
-	return group;
+	return party;
 }
 
 [[nodiscard]] static float procarea_group_equipment_index(
@@ -608,6 +637,34 @@ static void procarea_apply_aggressive(char_data* mob, int template_band, ProcMob
 		sum += GetCharBonusIndex(member);
 	}
 	return sum / static_cast<float>(group.size());
+}
+
+[[nodiscard]] static int procarea_group_max_level(const std::vector<char_data*>& group) {
+	int max_level = 0;
+	for(char_data* member : group) {
+		if(member == nullptr) {
+			continue;
+		}
+		max_level = std::max(max_level,
+							 std::min(GetMaxLevel(member), PROCAREA_PC_MAX_LEVEL));
+	}
+	return max_level;
+}
+
+[[nodiscard]] static int procarea_spawn_level(int group_max_level, int template_band,
+											  ProcMobKind kind) {
+	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	const int fascia = band + 1;
+	const int mob_level =
+		std::clamp((group_max_level - 1) + fascia, 1, PROCAREA_MOB_LEVEL_CAP);
+	switch(kind) {
+	case ProcMobKind::Boss:
+		return std::clamp(mob_level + 3, 1, PROCAREA_MOB_LEVEL_CAP);
+	case ProcMobKind::Trap:
+		return std::clamp(mob_level + number(1, 2), 1, PROCAREA_MOB_LEVEL_CAP);
+	default:
+		return mob_level;
+	}
 }
 
 [[nodiscard]] static bool procarea_group_can_enter(const std::vector<char_data*>& group) {
@@ -624,11 +681,11 @@ static void procarea_apply_aggressive(char_data* mob, int template_band, ProcMob
 
 [[nodiscard]] static bool procarea_resolve_entry(char_data* ch, float& group_eq_index) {
 	group_eq_index = 0.0f;
-	const std::vector<char_data*> group = procarea_entering_group(ch);
-	if(!procarea_group_can_enter(group)) {
+	const std::vector<char_data*> party = procarea_party_in_room(ch);
+	if(!procarea_group_can_enter(party)) {
 		return false;
 	}
-	group_eq_index = procarea_group_equipment_index(group);
+	group_eq_index = procarea_group_equipment_index(party);
 	return true;
 }
 
@@ -683,8 +740,8 @@ static void procarea_apply_boss_traits(char_data* mob) {
 	mob->susc &= ~elemental_mask;
 }
 
-static void procarea_scale_mob(char_data* mob, float eq_index, int /*template_band*/,
-							   ProcMobKind kind) {
+static void procarea_scale_mob(char_data* mob, float eq_index, int template_band,
+							   int group_max_level, ProcMobKind kind) {
 	if(mob == nullptr) {
 		return;
 	}
@@ -697,10 +754,6 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int /*template_ba
 	} else if(kind == ProcMobKind::Trap) {
 		ratio *= 0.92f;
 	}
-
-	const int level = GET_LEVEL(mob, WARRIOR_LEVEL_IND);
-	GET_LEVEL(mob, WARRIOR_LEVEL_IND) =
-		std::clamp(static_cast<int>(level * ratio), 1, 60);
 
 	mob->points.max_hit = std::max(1, static_cast<int>(mob->points.max_hit * ratio));
 	mob->points.hit = mob->points.max_hit;
@@ -731,16 +784,21 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int /*template_ba
 			}
 		}
 	}
+
+	if(group_max_level > 0) {
+		GET_LEVEL(mob, WARRIOR_LEVEL_IND) =
+			procarea_spawn_level(group_max_level, template_band, kind);
+	}
 }
 
 static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
-											ProcMobKind kind, int theme_id,
+											int group_max_level, ProcMobKind kind, int theme_id,
 											bool follow_anchor_sentinel,
 											int add_slot,
 											ProcMobClassContext class_ctx) {
 	const int archetype = procarea_pick_mob_archetype(theme_id, kind == ProcMobKind::Trap);
-	char_data* mob = procarea_create_mob(archetype, eq_index, template_band, kind,
-										 follow_anchor_sentinel, add_slot, class_ctx);
+	char_data* mob = procarea_create_mob(archetype, eq_index, template_band, group_max_level,
+										 kind, follow_anchor_sentinel, add_slot, class_ctx);
 	if(mob == nullptr) {
 		mudlog(LOG_ERROR, "procarea: scaled spawn failed room %ld", room_vnum);
 		return nullptr;
@@ -766,35 +824,6 @@ static void procarea_link_anchor_add(char_data* add, char_data* anchor) {
 	SET_BIT(add->specials.affected_by, AFF_GROUP);
 }
 
-[[nodiscard]] static char_data* procarea_loot_recipient(char_data* victim) {
-	if(victim == nullptr) {
-		return nullptr;
-	}
-	char_data* killer = victim->specials.fighting;
-	if(killer != nullptr && IS_NPC(killer) && killer->master != nullptr &&
-	   IS_PC(killer->master)) {
-		killer = killer->master;
-	}
-	if(killer != nullptr && IS_PC(killer)) {
-		return killer;
-	}
-	struct room_data* rp = real_roomp(victim->in_room);
-	if(rp == nullptr) {
-		return nullptr;
-	}
-	for(char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
-		if(IS_PC(ch)) {
-			return ch;
-		}
-	}
-	return nullptr;
-}
-
-[[nodiscard]] static bool procarea_is_treasure_key(const struct obj_data* obj) {
-	return obj != nullptr && obj->item_number == -1 &&
-		   obj->char_vnum == kProcTreasureKeyObj;
-}
-
 [[nodiscard]] static bool procarea_is_treasure_hoard(const struct obj_data* obj) {
 	return obj != nullptr && obj->item_number == -1 &&
 		   obj->char_vnum == kProcTreasureHoardObj;
@@ -814,59 +843,32 @@ static struct obj_data* procarea_create_runtime_obj(int logical_vnum) {
 	return obj;
 }
 
-static struct obj_data* procarea_create_treasure_key(int instance_id) {
-	struct obj_data* key = procarea_create_runtime_obj(kProcTreasureKeyObj);
-	if(key == nullptr) {
-		return nullptr;
-	}
-	key->name = strdup("chiave tesoro effimero dimensione cumulo forziere");
-	key->short_description = strdup("la chiave del tesoro effimero");
-	key->description =
-		strdup("Una chiave gelida e' qui: rune pallide la legano al guardiano finale.");
-	key->obj_flags.type_flag = ITEM_KEY;
-	key->obj_flags.wear_flags = ITEM_TAKE;
-	key->obj_flags.extra_flags = ITEM_NODROP;
-	key->obj_flags.value[0] = instance_id;
-	key->obj_flags.weight = 1;
-	key->obj_flags.cost = 0;
-	return key;
-}
+static const char* const kTreasureHoardDescriptions[] = {
+	"Detriti e metallo contorto nascondono un forziere sigillato dalle rune effimere.",
+	"Tra scorie e lamiere contorte si intravede un forziere chiuso da sigilli runici instabili.",
+	"Un cumulo di detriti metallici cela un forziere sigillato da rune che vacillano nel vuoto.",
+	"Frammenti d'acciaio piegato e macerie nascondono un forziere ancora sigillato da rune effimere.",
+};
 
 static struct obj_data* procarea_create_treasure_hoard() {
 	struct obj_data* hoard = procarea_create_runtime_obj(kProcTreasureHoardObj);
 	if(hoard == nullptr) {
 		return nullptr;
 	}
+	const int desc_idx = number(0, static_cast<int>(sizeof(kTreasureHoardDescriptions) /
+													 sizeof(kTreasureHoardDescriptions[0])) -
+										1);
 	hoard->name = strdup("cumulo forziere tesoro sigillo reliquie");
 	hoard->short_description = strdup("un cumulo sigillato del tesoro");
-	hoard->description = strdup(
-		"Detriti e metallo contorto nascondono un forziere sigillato da rune effimere.");
+	hoard->description = strdup(kTreasureHoardDescriptions[desc_idx]);
 	hoard->obj_flags.type_flag = ITEM_CONTAINER;
 	hoard->obj_flags.wear_flags = 0;
 	hoard->obj_flags.value[0] = 10000;
 	hoard->obj_flags.value[1] = CONT_CLOSEABLE | CONT_CLOSED | CONT_LOCKED;
-	hoard->obj_flags.value[2] = kProcTreasureKeyObj;
+	hoard->obj_flags.value[2] = -1;
 	hoard->obj_flags.weight = 1;
 	hoard->obj_flags.cost = 0;
 	return hoard;
-}
-
-[[nodiscard]] static struct obj_data* procarea_find_treasure_key(char_data* ch, int instance_id) {
-	if(ch == nullptr) {
-		return nullptr;
-	}
-	auto matches = [instance_id](struct obj_data* obj) {
-		return procarea_is_treasure_key(obj) && obj->obj_flags.value[0] == instance_id;
-	};
-	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = obj->next_content) {
-		if(matches(obj)) {
-			return obj;
-		}
-	}
-	if(matches(ch->equipment[HOLD])) {
-		return ch->equipment[HOLD];
-	}
-	return nullptr;
 }
 
 [[nodiscard]] static struct obj_data* procarea_find_treasure_hoard(long room_vnum) {
@@ -882,32 +884,75 @@ static struct obj_data* procarea_create_treasure_hoard() {
 	return nullptr;
 }
 
-static void procarea_strip_treasure_keys(char_data* ch) {
-	if(ch == nullptr) {
+static void procarea_send_to_instance_members(const ProcAreaInstance& inst, const char* msg) {
+	if(msg == nullptr) {
 		return;
 	}
-	struct obj_data* next = nullptr;
-	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = next) {
-		next = obj->next_content;
-		if(procarea_is_treasure_key(obj)) {
-			obj_from_char(obj);
-			extract_obj(obj);
+	std::unordered_set<char_data*> sent;
+	auto deliver = [&](char_data* member) {
+		if(member == nullptr || !IS_PC(member) || member->desc == nullptr) {
+			return;
 		}
-	}
-	if(ch->equipment[HOLD] != nullptr && procarea_is_treasure_key(ch->equipment[HOLD])) {
-		struct obj_data* obj = unequip_char(ch, HOLD);
-		if(obj != nullptr) {
-			extract_obj(obj);
+		if(sent.insert(member).second) {
+			send_to_char(msg, member);
 		}
+	};
+	if(!inst.owner_name.empty()) {
+		deliver(get_char(inst.owner_name.c_str()));
 	}
+	for(const std::string& name : inst.member_names) {
+		deliver(get_char(name.c_str()));
+	}
+}
+
+[[nodiscard]] static std::string procarea_capitalize_label(std::string_view label) {
+	std::string s(label);
+	if(s.size() > 7 && s[1] == '$') {
+		s[7] = UPPER(s[7]);
+	} else if(!s.empty()) {
+		s[0] = UPPER(s[0]);
+	}
+	return s;
+}
+
+[[nodiscard]] static const char* procarea_mob_display_name(const char_data* mob) {
+	if(mob == nullptr) {
+		return "il custode della dimensione";
+	}
+	if(mob->player.short_descr != nullptr && mob->player.short_descr[0] != '\0') {
+		return mob->player.short_descr;
+	}
+	if(mob->player.long_descr != nullptr && mob->player.long_descr[0] != '\0') {
+		return mob->player.long_descr;
+	}
+	if(GET_NAME(mob) != nullptr && GET_NAME(mob)[0] != '\0') {
+		return GET_NAME(mob);
+	}
+	return "il custode della dimensione";
+}
+
+static void procarea_break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
+	if(inst.boss_key_dropped || inst.treasure_vnums.empty()) {
+		return;
+	}
+	inst.boss_key_dropped = true;
+	const bool boss_female = boss != nullptr && GET_SEX(boss) == SEX_FEMALE;
+	std::ostringstream msg;
+	msg << "\n\r$c0014" << procarea_capitalize_label(procarea_mob_display_name(boss))
+		<< " cade: le rune dei cumuli si incrinano e cedono con "
+		<< (boss_female ? "lei" : "lui") << ".$c0007\n\r"
+		<< "$c0010Tutti i sigilli del tesoro sono sbloccati$c0007 — cerca i cumuli persi nella dimensione effimera\n\r"
+		<< "ed usa $c0014apri cumulo$c0007 in ogni stanza del tesoro.\n\r";
+	procarea_send_to_instance_members(inst, msg.str().c_str());
 }
 
 [[nodiscard]] static int procarea_treasure_gold_amount(const ProcAreaInstance& inst) {
 	const float factor = procarea_eq_factor(inst.group_eq_index);
 	const int band = std::clamp(inst.template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const int base = 250 + band * 200;
+	const float eq_part = inst.group_eq_index * (0.55f + factor * 0.45f);
+	const int band_part = 100 + band * 250;
 	const float jitter = 0.85f + static_cast<float>(number(0, 30)) / 100.0f;
-	return std::max(50, static_cast<int>(base * (1.5f + factor * 2.0f) * jitter));
+	return std::max(50, static_cast<int>((eq_part + band_part) * jitter * 50.0f));
 }
 
 static bool procarea_plant_treasure_hoard(long room_vnum) {
@@ -920,26 +965,14 @@ static bool procarea_plant_treasure_hoard(long room_vnum) {
 	return true;
 }
 
-static void procarea_drop_boss_treasure_key(ProcAreaInstance& inst, char_data* victim) {
-	if(inst.boss_key_dropped || inst.treasure_vnums.empty()) {
-		return;
+[[nodiscard]] static int procarea_count_unclaimed_treasures(const ProcAreaInstance& inst) {
+	int count = 0;
+	for(long vnum : inst.treasure_vnums) {
+		if(inst.treasure_claimed.count(vnum) == 0) {
+			++count;
+		}
 	}
-	char_data* recipient = procarea_loot_recipient(victim);
-	if(recipient == nullptr) {
-		return;
-	}
-	struct obj_data* key = procarea_create_treasure_key(inst.id);
-	if(key == nullptr) {
-		mudlog(LOG_ERROR, "procarea: create treasure key failed instance %d", inst.id);
-		return;
-	}
-	obj_to_char(key, recipient);
-	inst.boss_key_dropped = true;
-	act("$n strappa $p dal cadavere del capo!", TRUE, recipient, key, nullptr, TO_ROOM);
-	act("Strappi $p dal cadavere del capo!", FALSE, recipient, key, nullptr, TO_CHAR);
-	send_to_room(
-		"\n\r$c0014La chiave del tesoro effimero e' tua: cerca i cumuli sigillati nei rami laterali.$c0007\n\r",
-		victim->in_room);
+	return count;
 }
 
 static void procarea_grant_treasure_loot(char_data* ch, ProcAreaInstance& inst, long room_vnum) {
@@ -959,14 +992,25 @@ static void procarea_grant_treasure_loot(char_data* ch, ProcAreaInstance& inst, 
 	struct obj_data* hoard = procarea_find_treasure_hoard(room_vnum);
 	if(hoard != nullptr) {
 		REMOVE_BIT(hoard->obj_flags.value[1], CONT_LOCKED);
+		REMOVE_BIT(hoard->obj_flags.value[1], CONT_CLOSED);
 	}
 
-	act("$n apre il cumulo sigillato con la chiave del capo!", TRUE, ch, nullptr, nullptr, TO_ROOM);
+	act("$n spezza il sigillo runico del cumulo!", TRUE, ch, nullptr, nullptr, TO_ROOM);
 	act("Apri il cumulo sigillato: oro e reliquie effimere fuoriescono dalle rune!", FALSE, ch,
 		nullptr, nullptr, TO_CHAR);
 	send_to_room(
 		"\n\r$c0013Il sigillo cede: il tesoro della dimensione giace ora a terra.$c0007\n\r",
 		room_vnum);
+
+	const int still = procarea_count_unclaimed_treasures(inst);
+	if(still > 0) {
+		std::ostringstream os;
+		os << "Altri sigilli restano attivi: "
+		   << still << " cumul" << (still == 1 ? "o" : "i") << " sigillat"
+		   << (still == 1 ? "o" : "i") << " resta" << (still == 1 ? "" : "no")
+		   << " nella dimensione effimera.\n\r";
+		send_to_char(os.str().c_str(), ch);
+	}
 }
 
 static bool procarea_try_open_treasure(struct char_data* ch, struct room_data* room,
@@ -991,11 +1035,8 @@ static bool procarea_try_open_treasure(struct char_data* ch, struct room_data* r
 		return true;
 	}
 	if(!inst->boss_key_dropped) {
-		send_to_char("Il sigillo resiste: ti serve la chiave del capo finale.\n\r", ch);
-		return true;
-	}
-	if(procarea_find_treasure_key(ch, inst->id) == nullptr) {
-		send_to_char("Non hai la chiave del tesoro effimero.\n\r", ch);
+		send_to_char(
+			"Il sigillo resiste: devi prima abbattere il custode della dimensione.\n\r", ch);
 		return true;
 	}
 
@@ -1380,8 +1421,9 @@ static struct room_data* procarea_create_room(long vnum, const ProcRoomTemplate&
 }
 
 static char_data* procarea_create_mob(int archetype_index, float eq_index, int template_band,
-									  ProcMobKind kind, bool follow_anchor_sentinel,
-									  int add_slot, ProcMobClassContext class_ctx) {
+									  int group_max_level, ProcMobKind kind,
+									  bool follow_anchor_sentinel, int add_slot,
+									  ProcMobClassContext class_ctx) {
 	if(archetype_index < 0 || archetype_index >= PROCAREA_ARCHETYPE_COUNT) {
 		mudlog(LOG_ERROR, "procarea: invalid archetype index %d", archetype_index);
 		return nullptr;
@@ -1428,7 +1470,7 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	procarea_apply_aggressive(mob, template_band, kind);
 	procarea_apply_class_role(mob, kind, add_slot, template_band, class_ctx);
 	procarea_apply_sentinel(mob, kind, follow_anchor_sentinel, class_ctx);
-	procarea_scale_mob(mob, eq_index, template_band, kind);
+	procarea_scale_mob(mob, eq_index, template_band, group_max_level, kind);
 
 	const int level = GET_LEVEL(mob, WARRIOR_LEVEL_IND);
 	mob->abilities.str = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
@@ -1487,12 +1529,12 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 		const int chance = std::clamp(diff.corridor_spawn_pct + depth_bonus, 0, 95);
 		if(number(0, 99) < chance) {
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-									  ProcMobKind::Normal, theme_id);
+									  diff.group_max_level, ProcMobKind::Normal, theme_id);
 		}
 		if(depth >= std::max(2, max_depth / 3) &&
 		   number(0, 99) < std::clamp(25 + depth_bonus, 0, 99)) {
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-									  ProcMobKind::Normal, theme_id);
+									  diff.group_max_level, ProcMobKind::Normal, theme_id);
 		}
 		break;
 	}
@@ -1500,13 +1542,13 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 		const int chance = std::clamp(diff.treasure_spawn_pct + depth_bonus, 0, 98);
 		if(number(0, 99) < chance) {
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-									  ProcMobKind::Normal, theme_id, false, -1,
-									  ProcMobClassContext::Treasure);
+									  diff.group_max_level, ProcMobKind::Normal, theme_id, false,
+									  -1, ProcMobClassContext::Treasure);
 		}
 		if(number(0, 99) < std::clamp(40 + depth_bonus, 0, 99)) {
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-									  ProcMobKind::Normal, theme_id, false, -1,
-									  ProcMobClassContext::Treasure);
+									  diff.group_max_level, ProcMobKind::Normal, theme_id, false,
+									  -1, ProcMobClassContext::Treasure);
 		}
 		procarea_plant_treasure_hoard(room_vnum);
 		break;
@@ -1514,17 +1556,19 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 	case ProcArchetype::Trap: {
 		char_data* trap =
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-									  ProcMobKind::Trap, theme_id);
+									  diff.group_max_level, ProcMobKind::Trap, theme_id);
 		int add_slot = 0;
 		char_data* add =
 			procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-									  ProcMobKind::Normal, theme_id, true, add_slot++);
+									  diff.group_max_level, ProcMobKind::Normal, theme_id, true,
+									  add_slot++);
 		if(trap != nullptr && add != nullptr) {
 			procarea_link_anchor_add(add, trap);
 		}
 		if(number(0, 99) < std::clamp(50 + depth_bonus, 0, 99)) {
 			add = procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-											ProcMobKind::Normal, theme_id, true, add_slot++);
+											diff.group_max_level, ProcMobKind::Normal, theme_id,
+											true, add_slot++);
 			if(trap != nullptr && add != nullptr) {
 				procarea_link_anchor_add(add, trap);
 			}
@@ -1534,7 +1578,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 	case ProcArchetype::Boss: {
 		const int boss_idx = procarea_pick_boss_archetype(theme_id);
 		char_data* boss = procarea_create_mob(boss_idx, diff.eq_index, diff.template_band,
-											  ProcMobKind::Boss);
+											  diff.group_max_level, ProcMobKind::Boss);
 		if(boss == nullptr) {
 			break;
 		}
@@ -1542,7 +1586,8 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 		for(int i = 0; i < diff.boss_adds; ++i) {
 			char_data* add =
 				procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
-										  ProcMobKind::Normal, theme_id, true, i);
+										  diff.group_max_level, ProcMobKind::Normal, theme_id,
+										  true, i);
 			if(add != nullptr) {
 				procarea_link_boss_add(add, boss);
 			}
@@ -1756,12 +1801,24 @@ static void procarea_record_instance_members(ProcAreaInstance& inst,
 			return &inst;
 		}
 	}
+	if(IS_AFFECTED(ch, AFF_GROUP)) {
+		char_data* leader = procarea_group_leader(ch);
+		const char* leader_name = GET_NAME(leader);
+		if(leader_name != nullptr && *leader_name != '\0') {
+			for(ProcAreaInstance& inst : g_instances) {
+				if(inst.owner_name == leader_name) {
+					return &inst;
+				}
+			}
+		}
+	}
 	return nullptr;
 }
 
-static int procarea_create_instance(float group_eq_index, long return_room, long& entrance_vnum,
-									const char* owner_name) {
-	const ProcAreaDifficulty diff = procarea_difficulty_from_eq(group_eq_index);
+static int procarea_create_instance(float group_eq_index, int group_max_level, long return_room,
+									long& entrance_vnum, const char* owner_name) {
+	ProcAreaDifficulty diff = procarea_difficulty_from_eq(group_eq_index);
+	diff.group_max_level = group_max_level;
 	if(static_cast<int>(g_instances.size()) >= PROCAREA_MAX_ACTIVE) {
 		mudlog(LOG_SYSERR, "procarea: too many active instances");
 		return -1;
@@ -1802,6 +1859,7 @@ static int procarea_create_instance(float group_eq_index, long return_room, long
 	inst.id = instance_id;
 	inst.group_eq_index = group_eq_index;
 	inst.template_band = diff.template_band;
+	inst.group_max_level = group_max_level;
 	inst.theme_id = procarea_pick_theme_id();
 	inst.base_vnum = procarea_instance_base_vnum(instance_id);
 	inst.return_room = return_room;
@@ -1885,17 +1943,14 @@ static void procarea_teleport_char(struct char_data* ch, long dest, bool announc
 	do_look(ch, "", CMD_LOOK);
 }
 
-static void procarea_teleport_group(char_data* ch, long dest) {
-	const bool leaving_instance =
-		ch != nullptr && procarea_is_generated_room(ch->in_room) &&
-		!procarea_is_generated_room(dest);
-	const std::vector<char_data*> group = procarea_entering_group(ch);
-	for(size_t i = 0; i < group.size(); ++i) {
-		if(leaving_instance) {
-			procarea_strip_treasure_keys(group[i]);
-		}
-		procarea_teleport_char(group[i], dest, i == 0);
+static void procarea_teleport_party(const std::vector<char_data*>& party, long dest) {
+	for(size_t i = 0; i < party.size(); ++i) {
+		procarea_teleport_char(party[i], dest, i == 0);
 	}
+}
+
+static void procarea_teleport_group(char_data* ch, long dest) {
+	procarea_teleport_party(procarea_party_in_room(ch), dest);
 }
 
 static void procarea_send_fountain_plaza(const char* msg) {
@@ -2107,6 +2162,50 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		return;
 	}
 
+	if(ch->specials.fighting) {
+		send_to_char("Non puoi entrare nella nebbia mentre combatti.\n\r", ch);
+		return;
+	}
+
+	const std::vector<char_data*> party = procarea_party_in_room(ch);
+	if(party.empty()) {
+		send_to_char("Non sei pront$l per attraversare la nebbia.\n\r", ch);
+		return;
+	}
+
+	if(IS_AFFECTED(ch, AFF_GROUP)) {
+		char_data* leader = procarea_group_leader(ch);
+		if(leader == nullptr || leader->in_room != PROCAREA_FOUNTAIN_ROOM) {
+			send_to_char(
+				"Il capogruppo deve essere in Piazza delle Nebbie con il gruppo.\n\r",
+				ch);
+			return;
+		}
+	}
+
+	ProcAreaInstance* existing = procarea_find_instance_for_ch(ch);
+	if(existing != nullptr) {
+		if(existing->entrance_vnum <= 0 || real_roomp(existing->entrance_vnum) == nullptr) {
+			send_to_char("La Dimensione Effimera del gruppo non risponde piu'.\n\r", ch);
+			return;
+		}
+		procarea_record_instance_members(*existing, party);
+		for(char_data* member : party) {
+			send_to_char(
+				"La nebbia si riapre sul sentiero gia' aperto dal tuo gruppo:\n\r"
+				"ti richiama dentro la Dimensione Effimera.\n\r",
+				member);
+		}
+		if(!party.empty()) {
+			act("$n e il gruppo vengono risucchiat$i di nuovo nel vortice di nebbia.", TRUE,
+				party[0], nullptr, nullptr, TO_ROOM);
+		}
+		procarea_dissolve_fountain_veil(true);
+		procarea_teleport_party(party, existing->entrance_vnum);
+		procarea_touch_instance(existing->id);
+		return;
+	}
+
 	float group_eq_index = 0.0f;
 	if(!procarea_resolve_entry(ch, group_eq_index)) {
 		send_to_char(
@@ -2116,27 +2215,12 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		return;
 	}
 
-	if(ch->specials.fighting) {
-		send_to_char("Non puoi entrare nella nebbia mentre combatti.\n\r", ch);
-		return;
-	}
-
-	const std::vector<char_data*> group = procarea_entering_group(ch);
-
-	if(procarea_find_instance_for_ch(ch) != nullptr) {
-		send_to_char(
-			"Hai gia' una Dimensione Effimera aperta"
-			" (o ne fai ancora parte).\n\r"
-			"Usa $c0014pray darkstar aiuto$c0007 per rientrare,\n\r"
-			"oppure attendi che si dissolva da sola.\n\r",
-			ch);
-		return;
-	}
-
+	char_data* owner_ch = IS_AFFECTED(ch, AFF_GROUP) ? procarea_group_leader(ch) : ch;
+	const char* owner = owner_ch != nullptr ? GET_NAME(owner_ch) : GET_NAME(ch);
+	const int group_max_level = procarea_group_max_level(party);
 	long entrance = 0;
-	const char* owner = group.empty() ? GET_NAME(ch) : GET_NAME(group[0]);
-	const int instance_id =
-		procarea_create_instance(group_eq_index, PROCAREA_FOUNTAIN_ROOM, entrance, owner);
+	const int instance_id = procarea_create_instance(group_eq_index, group_max_level,
+													 PROCAREA_FOUNTAIN_ROOM, entrance, owner);
 	if(instance_id < 0 || entrance <= 0) {
 		send_to_char(
 			"La bruma trema, poi si spezza:\n\r"
@@ -2146,14 +2230,14 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 	}
 
 	if(ProcAreaInstance* inst = procarea_find_instance(instance_id); inst != nullptr) {
-		procarea_record_instance_members(*inst, group);
+		procarea_record_instance_members(*inst, party);
 	}
 
 	procarea_send_fountain_plaza(
 		"\n\r$c0010Il vortice $c0014si contrae$c0010 su se stesso\n\r"
 		"con un suono di vetro sott'acqua.$c0007\n\r");
 
-	for(char_data* member : group) {
+	for(char_data* member : party) {
 		send_to_char(
 			"Fai un passo... un solo passo...\n\r"
 			"e la nebbia ti ruba il peso del corpo, la voce, persino il nome.\n\r",
@@ -2168,13 +2252,13 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		send_to_char(enter_msg.str().c_str(), member);
 	}
 
-	if(!group.empty()) {
-		act("$n e il gruppo vengono risucchiat$i nel vortice di nebbia.", TRUE, group[0], nullptr,
+	if(!party.empty()) {
+		act("$n e il gruppo vengono risucchiat$i nel vortice di nebbia.", TRUE, party[0], nullptr,
 			nullptr, TO_ROOM);
 	}
 
 	procarea_dissolve_fountain_veil(true);
-	procarea_teleport_group(ch, entrance);
+	procarea_teleport_party(party, entrance);
 	procarea_touch_instance(instance_id);
 }
 
@@ -2217,7 +2301,7 @@ static void procarea_leave_via_portal(struct char_data* ch) {
 
 	const long dest =
 		inst->return_room > 0 ? inst->return_room : PROCAREA_FOUNTAIN_ROOM;
-	const std::vector<char_data*> group = procarea_entering_group(ch);
+	const std::vector<char_data*> group = procarea_party_in_room(ch);
 	for(char_data* member : group) {
 		send_to_char(
 			"Attraversi il portale: un soffio gelido\n\r"
@@ -2290,7 +2374,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 		return true;
 	}
 
-	const std::vector<char_data*> group = procarea_entering_group(ch);
+	const std::vector<char_data*> group = procarea_party_in_room(ch);
 	if(group.empty()) {
 		return true;
 	}
@@ -2362,7 +2446,7 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 	}
 
 	if(victim->commandp == static_cast<int>(ProcMobKind::Boss)) {
-		procarea_drop_boss_treasure_key(*inst, victim);
+		procarea_break_treasure_seals(*inst, victim);
 	}
 
 	if(inst->exit_portal_open) {
@@ -2503,6 +2587,185 @@ void procarea_tick_cleanup() {
 	procarea_tick_fountain_veil();
 }
 
+[[nodiscard]] static bool procarea_is_immortal_auditor(char_data* ch) {
+	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= 56;
+}
+
+[[nodiscard]] static bool procarea_ch_inside_instance(char_data* ch, const ProcAreaInstance& inst) {
+	if(ch == nullptr) {
+		return false;
+	}
+	const ProcAreaInstance* here = procarea_find_instance_by_vnum(ch->in_room);
+	return here != nullptr && here->id == inst.id;
+}
+
+static void procarea_append_mobs_by_kind(std::ostringstream& info, const ProcAreaInstance& inst,
+										 ProcMobKind kind, const char* label) {
+	bool any = false;
+	for(long vnum : inst.room_vnums) {
+		struct room_data* rp = real_roomp(vnum);
+		if(rp == nullptr) {
+			continue;
+		}
+		for(struct char_data* mob = rp->people; mob != nullptr; mob = mob->next_in_room) {
+			if(!IS_NPC(mob) || IS_SET(mob->specials.act, ACT_POLYSELF)) {
+				continue;
+			}
+			if(mob->commandp != static_cast<int>(kind)) {
+				continue;
+			}
+			if(!any) {
+				info << label;
+				any = true;
+			} else {
+				info << ", ";
+			}
+			const char* name =
+				(mob->player.short_descr != nullptr && mob->player.short_descr[0] != '\0') ?
+					mob->player.short_descr :
+					"(senza nome)";
+			info << name << " [" << vnum << "]";
+		}
+	}
+	if(!any) {
+		info << label << "nessuno";
+	}
+	info << "\n\r";
+}
+
+static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaInstance& inst) {
+	if(ch == nullptr) {
+		return;
+	}
+
+	std::ostringstream info;
+	info << "$c0011--- Vista immortale ---$c0007\n\r";
+	procarea_append_mobs_by_kind(info, inst, ProcMobKind::Boss, "Boss: ");
+	procarea_append_mobs_by_kind(info, inst, ProcMobKind::Trap, "Trappole: ");
+
+	if(inst.treasure_vnums.empty()) {
+		info << "Tesori: nessuna stanza tesoro.\n\r";
+	} else {
+		info << "Stanze tesoro:\n\r";
+		for(long vnum : inst.treasure_vnums) {
+			struct room_data* rp = real_roomp(vnum);
+			const char* room_name = (rp != nullptr && rp->name != nullptr) ? rp->name : "?";
+			const bool claimed = inst.treasure_claimed.count(vnum) != 0;
+			info << "  - " << room_name << " [" << vnum << "]";
+			if(claimed) {
+				info << " (aperto)";
+			} else if(!inst.boss_key_dropped) {
+				info << " (sigillo attivo)";
+			} else {
+				info << " (sbloccato)";
+			}
+			info << "\n\r";
+
+			if(rp == nullptr) {
+				continue;
+			}
+			bool guards = false;
+			for(struct char_data* mob = rp->people; mob != nullptr; mob = mob->next_in_room) {
+				if(!IS_NPC(mob) || IS_SET(mob->specials.act, ACT_POLYSELF)) {
+					continue;
+				}
+				if(!guards) {
+					info << "      guardie: ";
+					guards = true;
+				} else {
+					info << ", ";
+				}
+				const char* name =
+					(mob->player.short_descr != nullptr && mob->player.short_descr[0] != '\0') ?
+						mob->player.short_descr :
+						"(senza nome)";
+				info << name;
+			}
+			if(guards) {
+				info << "\n\r";
+			}
+		}
+	}
+
+	info << "Ingresso [" << inst.entrance_vnum << "] | sala finale [" << inst.boss_vnum << "]\n\r";
+	send_to_char(info.str().c_str(), ch);
+}
+
+static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& inst) {
+	if(ch == nullptr) {
+		return;
+	}
+
+	const bool inside = procarea_ch_inside_instance(ch, inst);
+	const char* theme_label = procarea_theme_set(inst.theme_id).label;
+	const int mobs_left = procarea_count_mobs(inst);
+	const int band = std::clamp(inst.template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+
+	std::ostringstream info;
+	info << "$c0014=== Dimensione Effimera #" << inst.id << " ===$c0007\n\r";
+	info << "Tema: " << theme_label << " | eq medio gruppo "
+		 << std::fixed << std::setprecision(0) << inst.group_eq_index
+		 << " | fascia " << (band + 1) << "/" << PROCAREA_TEMPLATE_BANDS << "\n\r";
+	info << "Stanze: " << inst.room_vnums.size() << " | capogruppo: " << inst.owner_name
+		 << " | membri: " << inst.member_names.size() << "\n\r";
+
+	if(!inst.member_names.empty()) {
+		info << "Gruppo: ";
+		for(std::size_t i = 0; i < inst.member_names.size(); ++i) {
+			if(i > 0) {
+				info << ", ";
+			}
+			info << inst.member_names[i];
+		}
+		info << "\n\r";
+	}
+
+	if(inside) {
+		if(ch->in_room == inst.boss_vnum) {
+			info << "Sei nella $c0014sala finale$c0007.\n\r";
+		} else if(inst.entrance_vnum > 0 && ch->in_room == inst.entrance_vnum) {
+			info << "Sei all'$c0014ingresso$c0007 della dimensione.\n\r";
+		}
+	} else if(!procarea_is_immortal_auditor(ch)) {
+		info << "Sei $c0013fuori$c0007 dalla dimensione: $c0014pray darkstar aiuto$c0007 per rientrare.\n\r";
+	}
+
+	info << "Nemici rimasti: " << mobs_left;
+	if(inst.exit_portal_open) {
+		info << " | $c0010portale di ritorno APERTO$c0007";
+	} else if(mobs_left > 0) {
+		info << " | elimina tutti i nemici per aprire il portale";
+	}
+	info << "\n\r";
+
+	if(inst.exit_portal_open) {
+		info << "Uscita: raggiungi la sala finale ed usa $c0014enter portale$c0007"
+				" (o $c0014dimensione esci$c0007).\n\r";
+	} else {
+		info << "Uscita: il portale si aprira' nella sala finale quando la dimensione sara' ripulita.\n\r";
+	}
+
+	if(!inst.treasure_vnums.empty()) {
+		int treasures_unclaimed = 0;
+		for(long vnum : inst.treasure_vnums) {
+			if(inst.treasure_claimed.find(vnum) == inst.treasure_claimed.end()) {
+				++treasures_unclaimed;
+			}
+		}
+		info << "Tesori: " << inst.treasure_vnums.size() << " cumuli, "
+			 << treasures_unclaimed << " ancora da aprire";
+		if(inst.boss_key_dropped) {
+			info << " | $c0010sigilli sbloccati$c0007";
+		} else {
+			info << " | sigilli attivi finche' vive il custode della dimensione";
+		}
+		info << " — $c0014apri cumulo$c0007 in ogni stanza tesoro.\n\r";
+	}
+
+	info << "Ripiego: $c0014pray darkstar aiuto$c0007 (tempio o rientro).\n\r";
+	send_to_char(info.str().c_str(), ch);
+}
+
 ACTION_FUNC(do_antro) {
 	if(!IS_PC(ch)) {
 		return;
@@ -2514,9 +2777,18 @@ ACTION_FUNC(do_antro) {
 
 	if(subcmd.empty() || procarea_cmd_is(subcmd, { "entra", "enter" })) {
 		send_to_char(
-			"In Piazza delle Nebbie:\n\r"
-			"devi tirare la fontana per allontanare lo spirito di DarkStar,\n\r"
-			"poi con tutta la tua forza devi spingere la fontana ed infine $c0014entrare nel velo della nebbia$c0007.\n\r",
+			"$c0014=== Dimensione Effimera ===$c0007\n\r"
+			"In $c0014Piazza delle Nebbie$c0007 (Fontana della Vita):\n\r"
+			"  1) $c0014pull fontana$c0007 — allontana lo spirito di DarkStar\n\r"
+			"  2) $c0014push fontana$c0007 — evoca il velo di nebbia\n\r"
+			"  3) $c0014enter nebbia$c0007 — entra con tutto il gruppo in piazza (capogruppo presente)\n\r"
+			"Dentro o con istanza attiva:\n\r"
+			"  $c0014dimensione info$c0007 — stato run, nemici, tesori, portale\n\r"
+			"  $c0014pray darkstar aiuto$c0007 — tempio di rifugio o rientro\n\r"
+			"Sala finale (portale aperto):\n\r"
+			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
+			"Tesoro: abbatti il custode della dimensione per sbloccare i cumuli, poi "
+			"$c0014apri cumulo$c0007 nella dimensione effimera.\n\r",
 			ch);
 		return;
 	}
@@ -2527,36 +2799,45 @@ ACTION_FUNC(do_antro) {
 	}
 
 	if(procarea_cmd_is(subcmd, { "info", "status" })) {
-		ProcAreaInstance* inst = procarea_find_instance_by_vnum(ch->in_room);
-		if(inst == nullptr) {
-			send_to_char("Non sei in una Dimensione Effimera.\n\r", ch);
+		if(procarea_is_immortal_auditor(ch)) {
+			if(g_instances.empty()) {
+				send_to_char("Nessuna Dimensione Effimera attiva.\n\r", ch);
+				return;
+			}
+			if(g_instances.size() > 1) {
+				std::ostringstream header;
+				header << "$c0011Dimensioni attive: " << g_instances.size() << "$c0007\n\r";
+				send_to_char(header.str().c_str(), ch);
+			}
+			for(const ProcAreaInstance& inst : g_instances) {
+				procarea_send_dimension_info(ch, inst);
+				procarea_send_dimension_immortal_info(ch, inst);
+				if(&inst != &g_instances.back()) {
+					send_to_char("\n\r", ch);
+				}
+			}
 			return;
 		}
-		const char* theme_label = procarea_theme_set(inst->theme_id).label;
-		std::ostringstream info_msg;
-		info_msg << "Dimensione Effimera #" << inst->id << " (eq medio gruppo "
-				 << std::fixed << std::setprecision(0) << inst->group_eq_index << ", tema "
-				 << theme_label << "), stanze " << inst->room_vnums.size() << ". ";
-		if(inst->exit_portal_open) {
-			info_msg << "Il portale verso Myst e' aperto: 'enter portale' nella sala finale.\n\r";
+
+		ProcAreaInstance* inst = procarea_find_instance_by_vnum(ch->in_room);
+		if(inst == nullptr) {
+			inst = procarea_find_instance_for_ch(ch);
 		}
-		else {
-			info_msg << "Uccidi tutti i nemici per aprire il portale di ritorno.\n\r";
+		if(inst == nullptr) {
+			send_to_char(
+				"Non hai una Dimensione Effimera attiva.\n\r"
+				"Entra dalla Piazza con pull/push/enter nebbia, poi usa $c0014dimensione info$c0007.\n\r",
+				ch);
+			return;
 		}
-		if(!inst->treasure_vnums.empty()) {
-			info_msg << "Stanze tesoro: " << inst->treasure_vnums.size()
-					 << ". La chiave cade dal capo finale; apri il cumulo con "
-					 << "'apri cumulo'.\n\r";
-			if(inst->boss_key_dropped) {
-				info_msg << "Hai gia' ottenuto la chiave del tesoro.\n\r";
-			}
-		}
-		send_to_char(info_msg.str().c_str(), ch);
+		procarea_send_dimension_info(ch, *inst);
 		return;
 	}
 
 	send_to_char(
-		"Uso: pull fontana + push fontana + enter nebbia (Piazza) | dimensione info | enter portale (sala finale)\n\r",
+		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
+		"$c0014dimensione esci$c0007 (sala finale)\n\r"
+		"Piazza: pull fontana → push fontana → enter nebbia\n\r",
 		ch);
 }
 
