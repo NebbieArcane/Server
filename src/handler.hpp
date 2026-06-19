@@ -72,6 +72,7 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
 bool pers_on(struct char_data* ch, struct obj_data* obj) ;
 int split_string(char* str, const char* sep, char** argv);
 struct obj_data* unequip_char(struct char_data* ch, int pos) ;
+void purge_char_inventory(struct char_data* ch) ;
 void update_char_objects(struct char_data* ch) ;
 void update_object(struct obj_data* obj, int use) ;
 } // namespace Alarmud

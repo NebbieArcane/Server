@@ -458,11 +458,30 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
  * Routines used to load a characters equipment from disk
  **************************************************************************/
 
+static void rent_equip_or_carry(struct char_data* ch, struct obj_data* obj, ubyte wearpos,
+								bool worn_slots[MAX_WEAR + 1]) {
+	if(!wearpos) {
+		obj_to_char(obj, ch);
+		return;
+	}
+	const int pos = static_cast<int>(wearpos) - 1;
+	if(pos < 0 || pos >= MAX_WEAR || ch->equipment[pos] || worn_slots[wearpos]) {
+		mudlog(LOG_PLAYERS,
+			   "rent load: duplicate wear_pos for %s putting in inventory",
+			   GET_NAME(ch));
+		obj_to_char(obj, ch);
+		return;
+	}
+	equip_char(ch, obj, pos);
+	worn_slots[wearpos] = true;
+}
+
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
 	int tmp_cur_depth=0;
 	int i, j, iRealObjNumber;
+	bool worn_slots[MAX_WEAR + 1] {};
 
 	void obj_to_char(struct obj_data *object, struct char_data *ch);
 
@@ -576,7 +595,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 					tmp_cur_depth--;
 				}
 				if(st->objects[ i ].wearpos) {
-					equip_char(ch, obj, st->objects[ i ].wearpos - 1);
+					rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots);
 				}
 				else if(tmp_cur_depth) {
 					if(in_obj[ tmp_cur_depth - 1 ]) {
@@ -619,6 +638,7 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
     struct obj_data* in_obj[64],*last_obj = NULL;
     int tmp_cur_depth=0;
     int i, j, iRealObjNumber;
+	bool worn_slots[MAX_WEAR + 1] {};
 
     void obj_to_char(struct obj_data *object, struct char_data *ch);
 
@@ -718,7 +738,7 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                     tmp_cur_depth--;
                 }
                 if(st->objects[ i ].wearpos) {
-                    equip_char(ch, obj, st->objects[ i ].wearpos - 1);
+                    rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots);
                 }
                 else if(tmp_cur_depth) {
                     if(in_obj[ tmp_cur_depth - 1 ]) {

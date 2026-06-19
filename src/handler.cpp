@@ -1295,6 +1295,30 @@ void obj_to_char(struct obj_data* object, struct char_data* ch) {
 }
 
 
+/* Drop all carried/equipped objects before reloading rent (menu enter, refund). */
+void purge_char_inventory(struct char_data* ch) {
+	struct obj_data* obj;
+	struct obj_data* next;
+
+	if(!ch) {
+		return;
+	}
+
+	for(obj = ch->carrying; obj; obj = next) {
+		next = obj->next_content;
+		obj_from_char(obj);
+		extract_obj(obj);
+	}
+
+	for(int i = 0; i < MAX_WEAR; i++) {
+		if(ch->equipment[i]) {
+			extract_obj(unequip_char(ch, i));
+		}
+	}
+
+	ch->player.oggetti = 0;
+}
+
 /* take an object from a char */
 void obj_from_char(struct obj_data* object) {
 	struct obj_data* tmp;

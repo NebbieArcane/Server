@@ -2416,6 +2416,7 @@ NANNY_FUNC(con_slct) {
       }
     }
 #endif
+    purge_char_inventory(d->character);
     reset_char(d->character);
     int Level = GetMaxLevel(d->character);
     if (PORT == RELEASE_PORT) {

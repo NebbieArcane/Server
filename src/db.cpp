@@ -3397,6 +3397,45 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 #endif
 }
 
+#if USE_MYSQL
+static void dedupe_inventory_wear_pos_mysql(DB* db, const std::string& toon_id) {
+	// Dopo refund SQL piu' snapshot DEATH possono riattivare lo stesso wear_pos:
+	// tieni la riga piu' vecchia (id minimo) equipaggiata, le altre vanno in inventario.
+	db->execute(("UPDATE character_inventory ci "
+				 "INNER JOIN ("
+				 "  SELECT c1.id "
+				 "  FROM character_inventory c1 "
+				 "  INNER JOIN character_inventory c2 "
+				 "    ON c1.toon_id = c2.toon_id "
+				 "   AND c1.wear_pos = c2.wear_pos "
+				 "   AND c1.wear_pos > 0 "
+				 "   AND c1.id > c2.id "
+				 "   AND (c1.deleted = 0 OR c1.deleted IS NULL) "
+				 "   AND (c2.deleted = 0 OR c2.deleted IS NULL) "
+				 "  WHERE c1.toon_id = " +
+				 toon_id +
+				 ") dup ON ci.id = dup.id "
+				 "SET ci.wear_pos = 0")
+					.c_str());
+}
+
+static void dedupe_rent_wear_pos(struct obj_file_u* rent) {
+	bool used_wear[MAX_WEAR + 1] {};
+
+	for(int i = 0; i < MAX_OBJ_SAVE; i++) {
+		obj_file_elem& o = rent->objects[i];
+		if(o.item_number <= 0 || o.wearpos == 0) {
+			continue;
+		}
+		if(o.wearpos > MAX_WEAR || used_wear[o.wearpos]) {
+			o.wearpos = 0;
+			continue;
+		}
+		used_wear[o.wearpos] = true;
+	}
+}
+#endif
+
 bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 #if !USE_MYSQL
 	(void)name;
@@ -3527,6 +3566,8 @@ bool load_rent_mysql(const char* name, struct obj_file_u* rent) {
 		}
 		mysql_free_result(res);
 	}
+
+	dedupe_rent_wear_pos(rent);
 
 	std::snprintf(rent->owner, sizeof(rent->owner), "%s", pg->name.c_str());
 	return true;
@@ -3718,6 +3759,7 @@ bool refund_restore_inventory_mysql(const char* name, const char* cause,
 					 " AND (deleted = 0 OR deleted IS NULL)) "
 					 "WHERE toon_id = " + toon_id)
 						.c_str());
+		dedupe_inventory_wear_pos_mysql(db, toon_id);
 		t.commit();
 		return true;
 	}
@@ -5398,8 +5440,15 @@ void init_char(struct char_data* ch) {
 		ch->specials.apply_saving_throw[i] = 0;
 	}
 
-	for(i = 0; i < 3; i++) {
-		GET_COND(ch, i) = (GetMaxLevel(ch) > CREATORE ? -1 : 24);
+	if(GetMaxLevel(ch) > CREATORE) {
+		for(i = 0; i < 3; i++) {
+			GET_COND(ch, i) = -1;
+		}
+	}
+	else {
+		GET_COND(ch, FULL) = 24;
+		GET_COND(ch, THIRST) = 24;
+		GET_COND(ch, DRUNK) = 0;
 	}
 }
 
