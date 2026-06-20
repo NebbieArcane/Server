@@ -166,11 +166,10 @@ message(STATUS "Myst build environment: ${ENVIRONMENT} (config.hpp: env_${ENVIRO
 # LOGICA CONDIZIONALE PER L'OTTIMIZZAZIONE:
 # env_<target> viene da config.hpp (configure_file), non duplicare con -D qui.
 if (NOT "$ENV{DOCKER_BUILD}" STREQUAL "")
-	# Docker: Disabilita l'ottimizzazione (-O0),
-	# e AGGIUNGE -DNDEBUG per disattivare le istruzioni assert() (handler.cpp crash).
-	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0 and disabling assertions (NDEBUG).")
-	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0 -DNDEBUG")
-	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0 -DNDEBUG")
+	# Docker dev: -O0 per debug; assert() lasciati attivi (no NDEBUG).
+	message(STATUS "DOCKER BUILD: Setting CXX flags to -O0 with assertions enabled.")
+	set(CMAKE_CXX_FLAGS "-std=c++17 -ggdb3 -pipe -pg -O0")
+	set(CMAKE_C_FLAGS "-std=gnu11 -ggdb3 -pipe -pg -O0")
 else()
 	# Vagrant/Locale: Usa i flag di ottimizzazione originali (compatibilità)
 	message(STATUS "LOCAL BUILD: Using original optimization flags.")
