@@ -604,6 +604,9 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Boot procarea static rooms.");
 	procarea_boot_darkstar_temple();
 
+	mudlog(LOG_CHECK, "Boot procarea reward object prototypes.");
+	procarea_boot_reward_shields();
+
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();
 

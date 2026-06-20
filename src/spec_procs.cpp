@@ -4402,6 +4402,12 @@ ROOMSPECIAL_FUNC(Fountain) {
 		if(cmd == CMD_PUSH && procarea_try_push_fountain(ch, arg)) {
 			return TRUE;
 		}
+		if(cmd == CMD_TOUCH && procarea_try_touch_solo_fountain(ch, arg)) {
+			return TRUE;
+		}
+		if(cmd == CMD_ENTER && procarea_try_enter_vortice(ch, arg)) {
+			return TRUE;
+		}
 		if(cmd == CMD_ENTER && procarea_try_enter_nebbia(ch, arg)) {
 			return TRUE;
 		}

@@ -50,6 +50,13 @@ constexpr int PROCAREA_TEMPLATE_BANDS = 6;
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 
+/** Premi istanza (eq medio gruppo > 50): scudi indossabili su shield e back. */
+constexpr int PROCAREA_REWARD_SHIELD_VNUM_BASE = 65100;
+constexpr int PROCAREA_REWARD_SHIELD_COUNT = 5;
+constexpr float PROCAREA_REWARD_EQ_THRESHOLD = 50.0f;
+/** Bonus scudo premio per livello max gruppo/solitario: 1-10→1 … 51→5 slot. */
+constexpr int PROCAREA_REWARD_BONUS_MAX = 5;
+
 ACTION_FUNC(do_antro);
 ROOMSPECIAL_FUNC(procarea_portal);
 ROOMSPECIAL_FUNC(procarea_boss_exit);
@@ -68,12 +75,18 @@ void procarea_tick_cleanup();
 bool procarea_try_pull_fountain(struct char_data* ch, const char* arg);
 bool procarea_try_push_fountain(struct char_data* ch, const char* arg);
 bool procarea_try_enter_nebbia(struct char_data* ch, const char* arg);
+/** Sentiero solitario: touch fontana → entra nel vortice (vortice effimero). */
+bool procarea_try_touch_solo_fountain(struct char_data* ch, const char* arg);
+bool procarea_try_enter_vortice(struct char_data* ch, const char* arg);
 
 /** Spezza last_area e aggiunge zona #372 Dimensione Effimera (solo codice, senza myst.zon). */
 void procarea_boot_zone();
 
 /** Crea al boot il Tempio di DarkStar (3014) e l'uscita verso la piazza fontana. */
 void procarea_boot_darkstar_temple();
+
+/** Scrive in objects/ i prototipi premio (65100+) prima dell'indicizzazione oggetti. */
+void procarea_boot_reward_shields();
 
 /** Sposta il corpo PG dal dungeon effimero al tempio DarkStar (3014). */
 void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data* corpse);
