@@ -30,6 +30,7 @@
 #include <array>
 #include <cmath>
 #include <cctype>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -795,6 +796,28 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return false;
 }
 
+/** Caster (spellpower) e melee (damroll, hit&dam) sono mutuamente esclusivi. */
+[[nodiscard]] static bool procarea_shield_bonus_allowed(const struct obj_data* obj, int location) {
+	if(obj == nullptr) {
+		return false;
+	}
+	if(procarea_shield_bonus_used(obj, location)) {
+		return false;
+	}
+	const bool has_spellpower = procarea_shield_bonus_used(obj, APPLY_SPELLPOWER);
+	const bool has_melee =
+		procarea_shield_bonus_used(obj, APPLY_DAMROLL) ||
+		procarea_shield_bonus_used(obj, APPLY_HITNDAM);
+	if(has_spellpower &&
+	   (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
+		return false;
+	}
+	if(has_melee && location == APPLY_SPELLPOWER) {
+		return false;
+	}
+	return true;
+}
+
 /** Riferimento band 4 (eq ~8500+): cap massimi bonus scudo premio. */
 [[nodiscard]] static float procarea_shield_band_factor(int band) {
 	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
@@ -837,6 +860,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 		return procarea_shield_scaled_roll(5, 30, scale);
 	case APPLY_HITROLL:
 	case APPLY_DAMROLL:
+	case APPLY_SPELLPOWER:
 		return procarea_shield_scaled_roll(1, 4, scale);
 	case APPLY_HITNDAM:
 		return procarea_shield_scaled_roll(1, 3, scale);
@@ -862,6 +886,7 @@ static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band) {
 		APPLY_HIT_REGEN,
 		APPLY_DAMROLL,
 		APPLY_HITROLL,
+		APPLY_SPELLPOWER,
 		APPLY_HITNDAM,
 		APPLY_SAVE_ALL,
 	};
@@ -870,7 +895,7 @@ static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band) {
 	int candidates[kBonusPoolSize];
 	int candidate_count = 0;
 	for(int i = 0; i < kBonusPoolSize; ++i) {
-		if(!procarea_shield_bonus_used(obj, kBonusPool[i])) {
+		if(procarea_shield_bonus_allowed(obj, kBonusPool[i])) {
 			candidates[candidate_count++] = kBonusPool[i];
 		}
 	}
@@ -898,7 +923,8 @@ static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj
 
 	const int band = std::clamp(inst.template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 
-	if(number(0, 99) < 30 + band * 10) {
+	const int ac_upgrade_chance = 30 + band * 10;
+	if(number(0, 99) < ac_upgrade_chance) {
 		const int ac_jitter_max = band >= 4 ? 2 : band >= 3 ? 1 : 0;
 		const int ac_jitter = number(0, ac_jitter_max);
 		obj->obj_flags.value[0] = std::max(3, obj->obj_flags.value[0] + ac_jitter);
@@ -921,7 +947,10 @@ static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj
 	}
 
 	const int cost_jitter = number(90, 115);
-	obj->obj_flags.cost = std::max(1, obj->obj_flags.cost * cost_jitter / 100);
+	const long long scaled_cost =
+		(static_cast<long long>(obj->obj_flags.cost) * static_cast<long long>(cost_jitter)) / 100LL;
+	const long long clamped_cost = std::clamp(scaled_cost, 1LL, static_cast<long long>(INT_MAX));
+	obj->obj_flags.cost = static_cast<int>(clamped_cost);
 }
 
 static bool procarea_try_grant_reward_shield(char_data* ch, ProcAreaInstance& inst, long room_vnum) {
