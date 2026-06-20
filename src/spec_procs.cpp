@@ -51,6 +51,20 @@
 
 namespace Alarmud {
 
+static bool can_train_minor_heal(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	if(OnlyClass(ch, CLASS_CLERIC | CLASS_DRUID | CLASS_PALADIN)) {
+		return true;
+	}
+	if(HowManyClasses(ch) != 2) {
+		return false;
+	}
+	return HasClass(ch, CLASS_CLERIC) &&
+		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_DRUID);
+}
+
 
 #define INQ_SHOUT 1
 #define INQ_LOOSE 0
@@ -554,6 +568,9 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 					if(spell_info[i+1].min_level_cleric != max) {
 						continue;
 					}
+					if((i + 1) == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+						continue;
+					}
 					if(spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_cleric <=
 							 GET_LEVEL_CASTER(ch,CLERIC_LEVEL_IND)) &&
@@ -572,6 +589,10 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 		number = old_search_block(arg,0,strlen(arg),spells,FALSE);
 		if(number == -1
 				|| (HasClass(ch,CLASS_CLERIC) && spell_info[ number ].min_level_cleric <1)) { // SALVO non si praccano quelle sconosciute
+			send_to_char("You do not know of this spell...\n\r", ch);
+			return(TRUE);
+		}
+		if(number == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
 			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}

@@ -2995,6 +2995,8 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 		return AllLiving;
 	}
 
+	dam = ApplySpellpowerOffensive(ch, dam, attacktype, true);
+
 	SetVictFighting(ch, victim);
 	/*
 	 * make the ch hate the loser who used a missile attack on them.
@@ -3050,6 +3052,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 		}
 	}
 
+	dam = ApplySpellpowerOffensive(ch, dam, attacktype, false);
 	dam = DamageTrivia(ch, victim, dam, attacktype, location);
 	/* Ecco la riga responsabile del raddoppio del danno.
 	 * Meno male che c'e' papa' Alar che di sabato corregge il mud  :-)))

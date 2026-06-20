@@ -18,6 +18,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "magic2.hpp"
 #include "act.off.hpp"
@@ -440,7 +441,7 @@ void spell_cure_serious(byte level, struct char_data* ch,
 
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	healpoints = dice(2,8)+2;
+	healpoints = dice(2,8)+2 + SpellpowerMinorCureBonus(ch);
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
         healpoints = hit_limit(victim) - GET_HIT(victim);
@@ -1720,7 +1721,9 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 
 	/* gets rid of infravision, invisibility, detect, etc */
 
-	if(GetMaxLevel(victim)<=GetMaxLevel(ch)) {
+	const int dispel_level = GetMaxLevel(ch) + SpellpowerDispelLevelBonus(ch);
+
+	if(GetMaxLevel(victim) <= dispel_level) {
 		yes = TRUE;
 	}
 	else {
@@ -1728,37 +1731,37 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim,SPELL_INVISIBLE))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_INVISIBLE);
 			send_to_char("Torni visibile.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_DETECT_INVISIBLE))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_DETECT_INVISIBLE);
 			send_to_char("Non percepisci piu' l'$c0011invisibile$c0007.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_DETECT_EVIL))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_DETECT_EVIL);
 			send_to_char("Non percepisci piu' il $c0001Male$c0007.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_DETECT_MAGIC))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_DETECT_MAGIC);
 			send_to_char("Non percepisci piu' la $c0012magia$c0007 che ti circonda.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_SENSE_LIFE))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_SENSE_LIFE);
 			send_to_char("Ti senti meno in contatto con le forme di vita.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_SANCTUARY)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_SANCTUARY);
 			send_to_char("Non ti senti piu' cosi' invulnerabile.\n\r",victim);
 			act("L'aura di $c0015luce Divina$c0007 che avvolge $n scompare.",FALSE,victim,0,0,TO_ROOM);
@@ -1773,7 +1776,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(IS_AFFECTED(victim, AFF_SANCTUARY)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_SANCTUARY);
 			send_to_char("Non ti senti piu' cosi' invulnerabile.\n\r",victim);
 			act("La $c0015luce Divina$c0007 che avvolgeva il corpo di $n scompare.",FALSE,victim,0,0,TO_ROOM);
@@ -1788,104 +1791,104 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim,SPELL_PROTECT_FROM_EVIL)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROTECT_FROM_EVIL);
 			send_to_char("Ti senti meno protetto dalla $c0001malvagita'$c0007.\n\r",victim);
 		}
 	}
     if(affected_by_spell(victim,SPELL_PROT_FROM_EVIL_GROUP)) {
-        if(yes || !saves_spell(victim, SAVING_SPELL)) {
+        if(DispelAffectSucceeded(ch, victim, yes)) {
             affect_from_char(victim,SPELL_PROT_FROM_EVIL_GROUP);
             send_to_char("Ti senti meno protetto dalla $c0001malvagita'$c0007.\n\r",victim);
         }
     }
 	if(affected_by_spell(victim,SPELL_INFRAVISION)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_INFRAVISION);
 			send_to_char("La tua visione diventa piu' $c0008scura$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_SLEEP)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_SLEEP);
 			send_to_char("Non hai piu' cosi' tanto sonno.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_CHARM_PERSON)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_CHARM_PERSON);
 			send_to_char("$c0014Ti senti nuovamente padrone delle tue azioni.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_WEAKNESS)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_WEAKNESS);
 			send_to_char("Non ti senti piu' $c0014debole$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_STRENGTH)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_STRENGTH);
 			send_to_char("Non ti senti piu' cosi' $c0009forte$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_ARMOR)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_ARMOR);
 			send_to_char("Perdi la tua $c0011armatura Divina$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_DETECT_POISON)){
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_DETECT_POISON);
 			send_to_char("Non riesci piu' a percepire i $c0010veleni$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_BLESS)){
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_BLESS);
 			send_to_char("Senti di aver perso la tua $c0015benedizione Divina$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_FLY)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_FLY);
 			send_to_char("Non voli piu'.\n\r",victim);
 			check_falling(victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_WATER_BREATH)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_WATER_BREATH);
 			send_to_char("Senti di non poter piu' $c0012respirare$c0007 come un $c0012pesce$c0007.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_FIRE_BREATH)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_FIRE_BREATH);
 			send_to_char("Il $c0001fuoco$c0007 che ti avvolgeva si estingue.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_LIGHTNING_BREATH)){
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_LIGHTNING_BREATH);
 			send_to_char("L'$c0012elettricita'$c0007 che ti avvolgeva si placa.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_GAS_BREATH)){
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_GAS_BREATH);
 			send_to_char("La $c0011nube di gas$c0007 che ti avvolgeva scompare.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_FROST_BREATH)){
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_FROST_BREATH);
 			send_to_char("Il $c0015ghiaccio$c0007 che ti avvolgeva si scioglie.\n\r",victim);
 		}
 	}
 	if(affected_by_spell(victim,SPELL_FIRESHIELD)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_FIRESHIELD);
 			send_to_char("Senti svanire il tuo $c0001scudo di fuoco$c0007.\n\r",victim);
 			act("Lo $c0001scudo di fuoco$c0007 che proteggeva il corpo di $n svanisce.",FALSE,victim,0,0,TO_ROOM);
@@ -1900,7 +1903,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(IS_AFFECTED(victim, AFF_FIRESHIELD)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_FIRESHIELD);
 			send_to_char("Senti svanire il tuo $c0001scudo di fuoco$c0007.\n\r",victim);
 			act("Lo $c0001scudo di fuoco$c0007 che normalmente avvolge $n svanisce.",FALSE,victim,0,0,TO_ROOM);
@@ -1915,109 +1918,109 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim,SPELL_FAERIE_FIRE))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_FAERIE_FIRE);
 			send_to_char("Non ti senti piu' cosi' $c0013rosa$c0007.\n\r",victim);
 			act("L'$c0013alone rosa$c0007 che circondava $n svanisce.", TRUE, ch, 0, 0, TO_ROOM);
 		}
 
 	if(affected_by_spell(victim,SPELL_MINOR_TRACK))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_MINOR_TRACK);
 			send_to_char("Non riesci piu' a seguire le tracce.\n\r",victim);
 
 		}
 
 	if(affected_by_spell(victim,SPELL_MAJOR_TRACK))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_MAJOR_TRACK);
 			send_to_char("Non riesci piu' a seguire le tracce.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_WEB))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_WEB);
             send_to_char("Le $c0008ragnatele$c0007 che ti avvolgevano si dissolvono.\n\r",victim);
         }
 
 	if(affected_by_spell(victim, SPELL_SILENCE))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_SILENCE);
             send_to_char("Torni a parlare di nuovo.\n\r",victim);
         }
 
 	if(affected_by_spell(victim, SPELL_TREE_TRAVEL))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_TREE_TRAVEL);
             send_to_char("Non ti senti piu' cosi' in contatto con gli $c0003alberi$c0007.\n\r", victim);
         }
 
 	if(affected_by_spell(victim, SPELL_HEAT_STUFF))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_HEAT_STUFF);
             send_to_char("Non ti senti piu' cosi' $c0009incandescente$c0007.\n\r", victim);
         }
 
 	if(affected_by_spell(victim, SPELL_HASTE))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_HASTE);
             send_to_char("$c0008Senti che il mondo va molto piu' piano adesso.\n\r", victim);
         }
 
 	if(affected_by_spell(victim, SPELL_SLOW))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_SLOW);
             send_to_char("$c0015Senti i tuoi movimenti accellerare rapidamente.\n\r", victim);
         }
 
 	if(affected_by_spell(victim, SPELL_BARKSKIN))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_BARKSKIN);
             send_to_char("Senti che la tua $c0003pelle$c0007 perde la consistenza del $c0003granito$c0007.\n\r", victim);
         }
 
 	if(affected_by_spell(victim,SPELL_AID))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_AID);
 			send_to_char("Perdi l'$c0015aiuto Divino$c0007.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_SHIELD))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_SHIELD);
 			send_to_char("Senti che il tuo $c0011scudo$c0007 magico viene dissolto.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim,SPELL_TRUE_SIGHT))
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_TRUE_SIGHT);
 			affect_from_char(victim,SPELL_TRUE_SIGHT);
 			send_to_char("L'alone d'$c0015argento$c0007 nei tuoi occhi scompare.\n\r",victim);
 		}
 
 	if(affected_by_spell(victim, SPELL_INVIS_TO_ANIMALS))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_INVIS_TO_ANIMALS);
             send_to_char("Torni visibile... anche agli animali.\n\r",victim);
         }
 
 	if(affected_by_spell(victim, SPELL_DRAGON_RIDE))
-        if(yes || !saves_spell(victim, SAVING_SPELL))
+        if(DispelAffectSucceeded(ch, victim, yes))
         {
             affect_from_char(victim,SPELL_DRAGON_RIDE);
             send_to_char("Non ti senti piu' in grado di cavalcare i draghi!\n\r",victim);
         }
 
 	if(affected_by_spell(victim,SPELL_GLOBE_DARKNESS)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			REMOVE_BIT(victim->specials.affected_by, AFF_GLOBE_DARKNESS);
 			affect_from_char(victim,SPELL_GLOBE_DARKNESS);
 			send_to_char("Il $c0008globo di oscurita'$c0007 che ti avvolgeva scompare.\n\r",victim);
@@ -2026,70 +2029,70 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	}
 
 	if(affected_by_spell(victim,SPELL_GLOBE_MINOR_INV)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_GLOBE_MINOR_INV);
 			send_to_char("Vedi svanire il tuo $c0012globo di protezione$c0014.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_GLOBE_MAJOR_INV)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_GLOBE_MAJOR_INV);
 			send_to_char("Vedi svanire il tuo $c0014globo di protezione$c0014.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_ENERGY_DRAIN)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_ENERGY_DRAIN);
 			send_to_char("Senti di dover temere i $c0008Non-Morti$c0007.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_DRAGON_BREATH)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_DRAGON_BREATH);
 			send_to_char("La tua protezione contro il soffio dei $c0003draghi$c0007 scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_WIZARDEYE)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_WIZARDEYE);
 			send_to_char("Il tuo $c0011occhio magico$c0007 viene dissolto.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_FIRE)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_FIRE);
 			send_to_char("La tua protezione contro il soffio di $c0009fuoco$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_FROST)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_FROST);
 			send_to_char("La tua protezione contro il soffio di $c0014ghiaccio$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_ELEC)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_ELEC);
 			send_to_char("La tua protezione contro il soffio $c0012elettrico$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_ACID)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_ACID);
 			send_to_char("La tua protezione contro il soffio $c0010acido$c0007 dei draghi scompare.\n\r",victim);
 		}
 	}
 
 	if(affected_by_spell(victim,SPELL_PROT_BREATH_GAS)) {
-		if(yes || !saves_spell(victim, SAVING_SPELL)) {
+		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_PROT_BREATH_GAS);
 			send_to_char("La tua protezione contro il soffio $c0011gassoso$c0007 dei draghi scompare.\n\r",victim);
 		}
@@ -2098,21 +2101,21 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 	if(level >= MAESTRO_DEGLI_DEI)  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
-			if(yes || !saves_spell(victim, SAVING_SPELL)) {
+			if(DispelAffectSucceeded(ch, victim, yes)) {
 				affect_from_char(victim,SPELL_ANTI_MAGIC_SHELL);
 				send_to_char("Il tuo scudo $c0012anti-magia$c0007 si dissolve.\n\r",victim);
 			}
 		}
 
 		if(affected_by_spell(victim,SPELL_BLINDNESS)) {
-			if(yes || !saves_spell(victim, SAVING_SPELL)) {
+			if(DispelAffectSucceeded(ch, victim, yes)) {
 				affect_from_char(victim,SPELL_BLINDNESS);
 				send_to_char("Torni a $c0015vedere$c0007.\n\r",victim);
 			}
 		}
 
 		if(affected_by_spell(victim,SPELL_PARALYSIS)) {
-			if(yes || !saves_spell(victim, SAVING_SPELL)) {
+			if(DispelAffectSucceeded(ch, victim, yes)) {
 				affect_from_char(victim,SPELL_PARALYSIS);
 				act("Ti senti liber$b di muoverti.", FALSE, victim, 0, 0, TO_CHAR);
                 act("$n sembra liber$b di muoversi ora.", FALSE, victim, 0, 0, TO_ROOM);
@@ -2121,7 +2124,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 
 
 		if(affected_by_spell(victim,SPELL_POISON)) {
-			if(yes || !saves_spell(victim, SAVING_SPELL)) {
+			if(DispelAffectSucceeded(ch, victim, yes)) {
 				affect_from_char(victim,SPELL_POISON);
                 send_to_char("$c0014Ti senti meglio.\n\r", victim);
 			}

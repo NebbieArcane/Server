@@ -208,6 +208,7 @@ namespace Alarmud {
 #define SPELL_DRAGON_RIDE           165
 #define SPELL_MOUNT                 166
 #define SPELL_NO_MESSAGE            167
+#define SPELL_MINOR_HEAL            168
 
 
 
@@ -218,7 +219,7 @@ namespace Alarmud {
 /* maybe */
 #define SPELL_SUMMON_OBJ
 
-/* add 168 here.......   */
+/* add 168 = SPELL_MINOR_HEAL       */
 #define SKILL_MANTRA                 169
 #define SKILL_FIRST_AID              170
 #define SKILL_SIGN                   171

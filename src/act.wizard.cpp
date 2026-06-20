@@ -1837,12 +1837,16 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			"Exp: [$c0014%d$c0005], Rune degli Dei: [$c0014%d$c0005]\n\r"
 			"$c0005Hitroll: [$c0014%d$c0005+($c0015%d$c0005)], "
 			"Damroll: [$c0014%d$c0005+($c0015%d$c0005)] "
+			"Spellpower: [$c0014%d$c0005+($c0015%d$c0005)=$c0014%d$c0005] "
 			"Spellfail: [$c0014%d$c0005]", GET_AC(k),
 			GET_GOLD(k), GET_BANK(k), GET_EXP(k), GET_RUNEDEI(k),
 			static_cast<int>(k->points.hitroll),
 			str_app[STRENGTH_APPLY_INDEX(k)].tohit,
 			static_cast<int>(k->points.damroll),
 			str_app[STRENGTH_APPLY_INDEX(k)].todam,
+			static_cast<int>(GET_EQ_SPELLPOWER(k)),
+			SpellpowerFromInt(k),
+			SpellpowerTotal(k),
 			k->specials.spellfail);
 
 		std::string pos_line = "$c0005Position: $c0014";

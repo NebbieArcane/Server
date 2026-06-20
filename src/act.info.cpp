@@ -5376,6 +5376,12 @@ ACTION_FUNC(do_attribute) {
 		act(msg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
+		std::string msg = "$c0005Il tuo spellpower e' $c0014";
+		msg += SpellpowerDesc(SpellpowerTotal(ch));
+		msg += "$c0005";
+		act(msg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	{
 		std::string msg = "$c0005Il tuo equipaggiamento e' $c0014";
 		msg += EqDesc(GetCharBonusIndex(ch));
 		msg += "$c0005";
@@ -5386,6 +5392,13 @@ ACTION_FUNC(do_attribute) {
 		msg += std::to_string(static_cast<int>(GET_HITROLL(ch)));
 		msg += "$c0005 Dam:$c0014+";
 		msg += std::to_string(static_cast<int>(GET_DAMROLL(ch)));
+		msg += "$c0005 Sp:$c0014+";
+		msg += std::to_string(SpellpowerTotal(ch));
+		msg += "$c0005 (eq:";
+		msg += std::to_string(static_cast<int>(GET_EQ_SPELLPOWER(ch)));
+		msg += " int:";
+		msg += std::to_string(SpellpowerFromInt(ch));
+		msg += ")";
 		act(msg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 	}
 
@@ -5698,6 +5711,10 @@ const char* HitRollDesc(int a) {
 }
 
 const char* DamRollDesc(int a) {
+	return HitRollDesc(a);
+}
+
+const char* SpellpowerDesc(int a) {
 	return HitRollDesc(a);
 }
 

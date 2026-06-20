@@ -633,12 +633,12 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_SPELLPOWER:
-	//	GET_SPELLPOWER(ch) += mod;
+		GET_EQ_SPELLPOWER(ch) += mod;
 		break;
 
 	case APPLY_HITNSP:
-	//	GET_HITROLL(ch) += mod;
-	//	GET_SPELLPOWER(ch) += mod;
+		GET_HITROLL(ch) += mod;
+		GET_EQ_SPELLPOWER(ch) += mod;
 		break;
 
 	/* negatives make saving throws better */

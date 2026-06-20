@@ -46,6 +46,7 @@
 #include "spec_procs.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 #include "spells1.hpp"
 #include "spells2.hpp"
 
@@ -7853,6 +7854,8 @@ MOBSPECIAL_FUNC(MobIdent)
         sprintf(buf,"$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit > 0 ? "+" : ""), GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit, (GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam > 0 ? "+" : ""), GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam);
+        send_to_char(buf,ch);
+        sprintf(buf,"$c0013 Il tuo spellpower e' $c0015+%d$c0013 ($c0015+%d$c0013 da equip, $c0015+%d$c0013 da INT).\n\r", SpellpowerTotal(ch), static_cast<int>(GET_EQ_SPELLPOWER(ch)), SpellpowerFromInt(ch));
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
         send_to_char(buf,ch);

@@ -19,6 +19,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "magic.hpp"
 #include "act.info.hpp"
@@ -913,7 +914,7 @@ void spell_cure_critic(byte level, struct char_data* ch,
 		return;
 	}
 
-	healpoints = dice(3,8)+3;
+	healpoints = dice(3,8)+3 + SpellpowerMinorCureBonus(ch);
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
         healpoints = hit_limit(victim) - GET_HIT(victim);
@@ -973,7 +974,7 @@ void spell_cure_light(byte level, struct char_data* ch,
 		return;
 	}
 
-	healpoints = dice(1,8);
+	healpoints = dice(1,8) + SpellpowerMinorCureBonus(ch);
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
         healpoints = hit_limit(victim) - GET_HIT(victim);
@@ -1309,12 +1310,12 @@ void spell_heal(byte level, struct char_data* ch,
 
 	spell_cure_blind(level, ch, victim, obj);
 
-    healpoints = 100;
+	const int base_heal = 100 + SpellpowerMajorHealBonus(ch);
+    healpoints = base_heal;
 	GET_HIT(victim) += healpoints;
-//	alter_hit(victim,0);
 
 	if(GET_HIT(victim) >= hit_limit(victim)) {
-        healpoints = 100 - (GET_HIT(victim) - hit_limit(victim));
+        healpoints = base_heal - (GET_HIT(victim) - hit_limit(victim));
 
         if(GET_HIT(victim) == hit_limit(victim))
         {
@@ -1326,8 +1327,6 @@ void spell_heal(byte level, struct char_data* ch,
             GET_HIT(victim) = hit_limit(victim)-dice(1,4);
             healpoints = healpoints + (GET_HIT(victim) - hit_limit(victim));
         }
-
-//		alter_hit(victim,0);
 	}
     alter_hit(victim,0);
 	update_pos(victim);
@@ -1394,6 +1393,66 @@ void spell_heal(byte level, struct char_data* ch,
 		GET_ALIGNMENT(ch) += 5;
 	}
 
+}
+
+
+void spell_minor_heal(byte level, struct char_data* ch,
+					  struct char_data* victim, struct obj_data* obj) {
+	int healpoints;
+	char buf[MAX_STRING_LENGTH];
+
+	if(!victim) {
+		send_to_char("Chi vuoi curare?", ch);
+		mudlog(LOG_SYSERR, "Minor heal failed check");
+		return;
+	}
+
+	if(level < 0 || level > ABS_MAX_LVL) {
+		return;
+	}
+
+	healpoints = 60 + SpellpowerMajorHealBonus(ch);
+
+	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
+		healpoints = hit_limit(victim) - GET_HIT(victim);
+		GET_HIT(victim) = hit_limit(victim);
+		alter_hit(victim, 0);
+	}
+	else {
+		GET_HIT(victim) += healpoints;
+		alter_hit(victim, 0);
+	}
+
+	if(ch != victim) {
+		sprintf(buf, "$c0015Curi $N$c0015.");
+		if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+			std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf),
+						  " $c0014[%d]$c0007", healpoints);
+		}
+		act(buf, FALSE, ch, 0, victim, TO_CHAR);
+		act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
+		sprintf(buf, "$c0015$n$c0015 ti cura.");
+		if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+			std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf),
+						  " $c0014[%d]$c0007", healpoints);
+		}
+		act(buf, FALSE, ch, 0, victim, TO_VICT);
+	}
+	if(ch == victim) {
+		act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
+		sprintf(buf, "$c0015Ti curi.");
+		if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+			std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf),
+						  " $c0014[%d]$c0007", healpoints);
+		}
+		act(buf, FALSE, ch, 0, victim, TO_VICT);
+	}
+
+	if(healpoints > 0) {
+		send_to_char("Ti senti meglio!\n\r", victim);
+	}
+
+	update_pos(victim);
 }
 
 

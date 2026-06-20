@@ -55,6 +55,7 @@ void cast_dispel_good(byte level, struct char_data* ch, const char* arg, int typ
 void cast_faerie_fire(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_enchant_weapon(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_heal(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
+void cast_minor_heal(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_invisibility(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_locate_object(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_poison(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);

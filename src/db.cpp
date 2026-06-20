@@ -3926,6 +3926,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	ch->points.armor = 100;
 	ch->points.hitroll = 0;
 	ch->points.damroll = 0;
+	GET_EQ_SPELLPOWER(ch) = 0;
 	ch->specials.affected_by = st->affected_by;
 	ch->specials.affected_by2 = st->affected_by2;
 	ch->specials.start_room = st->startroom;
@@ -4798,6 +4799,7 @@ void reset_char(struct char_data* ch) {
 
 	GET_HITROLL(ch) = 0;
 	GET_DAMROLL(ch) = 0;
+	GET_EQ_SPELLPOWER(ch) = 0;
 
 	ch->next_fighting = 0;
 	ch->next_in_room = 0;

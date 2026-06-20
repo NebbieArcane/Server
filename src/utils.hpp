@@ -256,6 +256,10 @@ namespace Alarmud {
 
 #define GET_DAMROLL(ch) ((ch)->points.damroll)
 
+#define GET_EQ_SPELLPOWER(ch) ((ch)->specials.spellpower)
+
+#define SPELLPOWER_INT_BASELINE 13
+
 #define GET_SPECFLAGS(ch) ((ch)->player.user_flags)
 
 #define GET_POINTS_EVENT(ch, i) ((ch)->points_event[i])

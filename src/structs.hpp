@@ -661,6 +661,7 @@ struct char_point_data {
 
 struct char_special_data {
 	short spellfail;        /* max # for spell failure (101) */
+	sbyte spellpower;       /* Runtime bonus from eq/affect for spellpower */
 	ubyte tick;             /* the tick that the mob/player is on  */
 	ubyte pmask;            /* poof mask                           */
 	ubyte position;         /* Standing or ...                        */

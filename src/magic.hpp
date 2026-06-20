@@ -41,6 +41,7 @@ void spell_detect_magic(byte level, struct char_data* ch, struct char_data* vict
 void spell_detect_poison(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_enchant_weapon(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_heal(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+void spell_minor_heal(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_invisibility(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_locate_object(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_poison(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);

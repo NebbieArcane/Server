@@ -12,6 +12,7 @@ namespace Alarmud {
 const char* AlignDesc(int a) ;
 const char* ArmorDesc(int a) ;
 const char* DamRollDesc(int a) ;
+const char* SpellpowerDesc(int a) ;
 const char* DescAttacks(float a) ;
 const char* DescArmorf(float f) ; /* theirs / yours */
 const char* DescDamage(float dam) ;

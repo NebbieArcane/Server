@@ -18,6 +18,7 @@
 #include "spell_list.hpp"
 #include "mind_use1.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"
 #include "spells1.hpp"
 #include "spells2.hpp"
 
@@ -2984,6 +2985,24 @@ void boot_spells() {
 		   /*spell fail  */ 0,
 		   /*align       */ 0,
 		   /*ostile      */ 0);
+
+	/* cast_minor_heal */
+	spello(SPELL_MINOR_HEAL,
+		   /*beats       */ 12,
+		   /*min position*/ POSITION_FIGHTING,
+		   /*Mage        */ IMMORTALE,
+		   /*Cleric      */ 20,
+		   /*Druid       */ 25,
+		   /*Sorcerer    */ IMMORTALE,
+		   /*Paladin     */ 30,
+		   /*Ranger      */ IMMORTALE,
+		   /*psIonic     */ IMMORTALE,
+		   /*mana        */ 30,
+		   /*target      */ TAR_FIGHT_SELF | TAR_CHAR_ROOM,
+		   /*funzione    */ cast_minor_heal,
+		   /*spell fail  */ 80,
+		   /*align       */ 1,
+		   /*ostile      */ -1);
 
 	/* 0 */
 	spello(SKILL_SNEAK,

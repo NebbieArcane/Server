@@ -225,7 +225,7 @@ const char* spells[]= {
 	"dragon ride",
 	"mount",
 	"" /* SPELL_NO_MESSAGE*/,
-	"168 non implementata", // SALVO descr
+	"minor heal",
 	"mantra", /*SKILL_MANTRA*/
 	"first aid",        /* 170 */
 	"sign language",

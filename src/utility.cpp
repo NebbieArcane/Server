@@ -45,6 +45,7 @@
 #include "skills.hpp"
 #include "sound.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"
 #include "trap.hpp"
 #include "weather.hpp"
 
@@ -9241,6 +9242,156 @@ void FORGET(struct char_data* ch, int spl) {
 }
 
 /* return the amount max a person can memorize a single spell */
+int SpellpowerFromInt(struct char_data* ch) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	const int intel = static_cast<int>(GET_INT(ch));
+	return (intel > SPELLPOWER_INT_BASELINE) ? (intel - SPELLPOWER_INT_BASELINE) : 0;
+}
+
+int SpellpowerTotal(struct char_data* ch) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	return static_cast<int>(GET_EQ_SPELLPOWER(ch)) + SpellpowerFromInt(ch);
+}
+
+int SpellpowerMajorHealBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return sp * 3;
+	case 2:
+		return sp * 2;
+	default:
+		return sp;
+	}
+}
+
+int SpellpowerMinorCureBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return sp;
+	case 2:
+		return sp / 2;
+	default:
+		return sp / 3;
+	}
+}
+
+int SpellpowerOffensiveBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return dice(sp, 8);
+	case 2:
+		return dice(sp, 5);
+	default:
+		return dice(sp, 3);
+	}
+}
+
+static bool SpellpowerDispelEligible(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(!IS_SINGLE(ch)) {
+		return false;
+	}
+	return HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER |
+					CLASS_CLERIC | CLASS_DRUID | CLASS_PSI);
+}
+
+int SpellpowerDispelLevelBonus(struct char_data* ch) {
+	if(!SpellpowerDispelEligible(ch)) {
+		return 0;
+	}
+	const int over = SpellpowerTotal(ch) - 10;
+	return over > 0 ? over / 10 : 0;
+}
+
+int SpellpowerDispelPctBonus(struct char_data* ch) {
+	if(!SpellpowerDispelEligible(ch)) {
+		return 0;
+	}
+	int bonus = SpellpowerTotal(ch) - 10;
+	if(bonus < 0) {
+		bonus = 0;
+	}
+	if(bonus > 50) {
+		bonus = 50;
+	}
+	return bonus;
+}
+
+bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel) {
+	if(ch == nullptr || victim == nullptr) {
+		return false;
+	}
+	if(auto_dispel) {
+		return true;
+	}
+	if(!saves_spell(victim, SAVING_SPELL)) {
+		return true;
+	}
+	const int pct = SpellpowerDispelPctBonus(ch);
+	return pct > 0 && number(1, 100) <= pct;
+}
+
+bool AttackUsesSpellpower(int attacktype) {
+	if(attacktype < 0 || attacktype >= TYPE_HIT) {
+		return false;
+	}
+	switch(attacktype) {
+	case SKILL_SNEAK:
+	case SKILL_HIDE:
+	case SKILL_STEAL:
+	case SKILL_BACKSTAB:
+	case SKILL_PICK_LOCK:
+	case SKILL_KICK:
+	case SKILL_BASH:
+	case SKILL_RESCUE:
+	case SKILL_QUIV_PALM:
+		return false;
+	default:
+		break;
+	}
+	if(attacktype > 0 && attacktype < MAX_SPL_LIST &&
+			spell_info[attacktype].spell_pointer != nullptr) {
+		return true;
+	}
+	switch(attacktype) {
+	case SKILL_PSIONIC_BLAST:
+	case SKILL_MIND_BURN:
+	case SKILL_ULTRA_BLAST:
+	case SKILL_PSYCHIC_CRUSH:
+		return true;
+	default:
+		return false;
+	}
+}
+
+int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile) {
+	if(ch == nullptr || dam <= 0) {
+		return dam;
+	}
+	if(missile || AttackUsesSpellpower(attacktype)) {
+		dam += SpellpowerOffensiveBonus(ch);
+	}
+	return dam;
+}
+
 int MaxCanMemorize(struct char_data* ch, int spell) {
 	int BONUS;  /* use this later to figure item bonuses or something */
 
