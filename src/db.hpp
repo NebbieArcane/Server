@@ -261,8 +261,10 @@ bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st
 bool load_rent_mysql(const char* name, struct obj_file_u* rent);
 bool mark_inventory_deleted_mysql(const char* name, const char* cause);
 bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj);
-bool refund_restore_inventory_mysql(const char* name, const char* cause,
-									long long from_epoch, long long to_epoch);
+bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long long to_epoch,
+									std::string* matched_cause = nullptr);
+bool refund_restore_inventory_by_cause_mysql(const char* name, const char* cause,
+											 std::string* matched_cause = nullptr);
 #if DEATH_FIX
 void death_snapshot_save(const char* name, long saved_exp, long saved_at_epoch);
 bool death_snapshot_load(const char* name, long& saved_exp, long& saved_at_epoch);

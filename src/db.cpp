@@ -3403,25 +3403,196 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 }
 
 #if USE_MYSQL
+static std::string refund_inventory_time_filter(bool has_time_window, long long from_epoch,
+												long long to_epoch) {
+	if(!has_time_window) {
+		return {};
+	}
+	std::ostringstream filter;
+	filter << " AND deleted_on BETWEEN FROM_UNIXTIME(" << from_epoch << ")"
+		   << " AND FROM_UNIXTIME(" << to_epoch << ")";
+	return filter.str();
+}
+
+
 static void dedupe_inventory_wear_pos_mysql(DB* db, const std::string& toon_id) {
-	// Dopo refund SQL piu' snapshot DEATH possono riattivare lo stesso wear_pos:
-	// tieni la riga piu' vecchia (id minimo) equipaggiata, le altre vanno in inventario.
+	// Dopo refund SQL piu' snapshot possono riattivare lo stesso wear_pos:
+	// tieni la riga piu' vecchia (id minimo) equipaggiata ed elimina le copie.
+	const std::string dup_ids =
+		"SELECT c1.id "
+		"FROM character_inventory c1 "
+		"INNER JOIN character_inventory c2 "
+		"  ON c1.toon_id = c2.toon_id "
+		" AND c1.wear_pos = c2.wear_pos "
+		" AND c1.wear_pos > 0 "
+		" AND c1.id > c2.id "
+		" AND (c1.deleted = 0 OR c1.deleted IS NULL) "
+		" AND (c2.deleted = 0 OR c2.deleted IS NULL) "
+		"WHERE c1.toon_id = " +
+		toon_id;
+	db->execute(("DELETE cia FROM character_inventory_affect cia "
+				 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+				 "INNER JOIN (" +
+				 dup_ids + ") dup ON ci.id = dup.id")
+					.c_str());
+	db->execute(("DELETE ci FROM character_inventory ci "
+				 "INNER JOIN (" +
+				 dup_ids + ") dup ON ci.id = dup.id")
+					.c_str());
+}
+
+static void refund_finalize_inventory_tx(DB* db, const std::string& toon_id) {
+	db->execute("SET @rent_idx := -1");
 	db->execute(("UPDATE character_inventory ci "
 				 "INNER JOIN ("
-				 "  SELECT c1.id "
-				 "  FROM character_inventory c1 "
-				 "  INNER JOIN character_inventory c2 "
-				 "    ON c1.toon_id = c2.toon_id "
-				 "   AND c1.wear_pos = c2.wear_pos "
-				 "   AND c1.wear_pos > 0 "
-				 "   AND c1.id > c2.id "
-				 "   AND (c1.deleted = 0 OR c1.deleted IS NULL) "
-				 "   AND (c2.deleted = 0 OR c2.deleted IS NULL) "
-				 "  WHERE c1.toon_id = " +
-				 toon_id +
-				 ") dup ON ci.id = dup.id "
-				 "SET ci.wear_pos = 0")
+				 "SELECT id, (@rent_idx := @rent_idx + 1) AS new_list_index "
+				 "FROM character_inventory "
+				 "WHERE toon_id = " + toon_id +
+				 " AND (deleted = 0 OR deleted IS NULL) "
+				 "ORDER BY id"
+				 ") ord ON ord.id = ci.id "
+				 "SET ci.list_index = ord.new_list_index")
 					.c_str());
+	db->execute(("UPDATE character_rent SET object_count = ("
+				 "SELECT COUNT(*) FROM character_inventory "
+				 "WHERE toon_id = " + toon_id +
+				 " AND (deleted = 0 OR deleted IS NULL)) "
+				 "WHERE toon_id = " + toon_id)
+					.c_str());
+	dedupe_inventory_wear_pos_mysql(db, toon_id);
+}
+
+static bool refund_detect_inventory_event(DB* db, const std::string& toon_id,
+										  bool has_time_window, long long from_epoch,
+										  long long to_epoch, std::string& cause_out,
+										  std::string& event_time_out, bool& partial_out) {
+	const std::string time_filter =
+		refund_inventory_time_filter(has_time_window, from_epoch, to_epoch);
+	MYSQL_RES* res = nullptr;
+	const std::string full_sql =
+		"SELECT deleted_for, deleted_on, COUNT(*) AS cnt "
+		"FROM character_inventory "
+		"WHERE toon_id = " +
+		toon_id +
+		" AND deleted = 1 "
+		"AND deleted_for IN ('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL')" +
+		time_filter + " GROUP BY deleted_for, deleted_on "
+					  "ORDER BY deleted_on DESC LIMIT 1";
+	if(mysql_query_select(db, full_sql, res) && res) {
+		MYSQL_ROW row = mysql_fetch_row(res);
+		if(row && row[0] && row[1]) {
+			cause_out = row[0];
+			event_time_out = row[1];
+			partial_out = false;
+			mysql_free_result(res);
+			return true;
+		}
+		mysql_free_result(res);
+	}
+
+	res = nullptr;
+	const std::string scrap_sql =
+		"SELECT deleted_for, deleted_on, COUNT(*) AS cnt "
+		"FROM character_inventory "
+		"WHERE toon_id = " +
+		toon_id + " AND deleted = 1 AND deleted_for = 'SCRAP'" + time_filter +
+		" GROUP BY deleted_for, deleted_on "
+		"ORDER BY deleted_on DESC LIMIT 1";
+	if(!mysql_query_select(db, scrap_sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row || !row[0]) {
+		mysql_free_result(res);
+		return false;
+	}
+	cause_out = row[0];
+	event_time_out = row[1] ? row[1] : "";
+	partial_out = true;
+	mysql_free_result(res);
+	return true;
+}
+
+static std::string refund_inventory_snapshot_where(const std::string& toon_id, const char* cause,
+												   bool has_time_window, long long from_epoch,
+												   long long to_epoch) {
+	std::ostringstream where;
+	where << "toon_id = " << toon_id << " AND deleted = 1 AND deleted_for = "
+		  << db_sql_literal(cause, false);
+	where << refund_inventory_time_filter(has_time_window, from_epoch, to_epoch);
+	return where.str();
+}
+
+static std::string refund_inventory_event_filter(const std::string& event_time) {
+	std::ostringstream filter;
+	filter << " AND deleted_on = " << db_sql_literal(event_time.c_str(), false);
+	return filter.str();
+}
+
+static bool refund_fetch_latest_event_time(DB* db, const std::string& toon_id, const char* cause,
+										   bool has_time_window, long long from_epoch,
+										   long long to_epoch, std::string& event_time_out) {
+	std::ostringstream sql;
+	sql << "SELECT deleted_on FROM character_inventory WHERE toon_id = " << toon_id
+		<< " AND deleted = 1 AND deleted_for = " << db_sql_literal(cause, false);
+	sql << refund_inventory_time_filter(has_time_window, from_epoch, to_epoch);
+	sql << " ORDER BY deleted_on DESC LIMIT 1";
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select(db, sql.str().c_str(), res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row || !row[0]) {
+		mysql_free_result(res);
+		return false;
+	}
+	event_time_out = row[0];
+	mysql_free_result(res);
+	return true;
+}
+
+static bool refund_apply_inventory_restore_tx(DB* db, const std::string& toon_id, const char* name,
+											  const std::string& restore_where, bool partial_restore,
+											  const char* cause_label, long* restored_count_out) {
+	MYSQL_RES* res = nullptr;
+	const std::string count_sql =
+		"SELECT COUNT(*) FROM character_inventory WHERE " + restore_where;
+	if(!mysql_query_select(db, count_sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	const long matching =
+		(row && row[0]) ? sql_to_ll(row[0], 0) : 0;
+	mysql_free_result(res);
+
+	if(matching <= 0) {
+		return false;
+	}
+
+	if(!partial_restore) {
+		db->execute(("UPDATE character_inventory "
+					 "SET deleted = 1, deleted_on = NOW(), deleted_for = 'MANUAL' "
+					 "WHERE toon_id = " +
+					 toon_id + " AND (deleted = 0 OR deleted IS NULL)")
+						.c_str());
+	}
+
+	std::ostringstream upd;
+	upd << "UPDATE character_inventory "
+		   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+		   "WHERE "
+		<< restore_where;
+	db->execute(upd.str().c_str());
+
+	refund_finalize_inventory_tx(db, toon_id);
+	if(restored_count_out) {
+		*restored_count_out = matching;
+	}
+	const char* restore_mode = partial_restore ? "partial" : "replace";
+	mudlog(LOG_PLAYERS,
+		   "refund_apply_inventory_restore: %s restored %d items (cause=%s, mode=%s)", name,
+		   static_cast<int>(matching), cause_label, restore_mode);
+	return true;
 }
 
 static void dedupe_rent_wear_pos(struct obj_file_u* rent) {
@@ -3684,13 +3855,12 @@ bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 #endif
 }
 
-bool refund_restore_inventory_mysql(const char* name, const char* cause,
-									long long from_epoch, long long to_epoch) {
+bool refund_restore_inventory_by_cause_mysql(const char* name, const char* cause,
+											 std::string* matched_cause) {
 #if !USE_MYSQL
 	(void)name;
 	(void)cause;
-	(void)from_epoch;
-	(void)to_epoch;
+	(void)matched_cause;
 	return false;
 #else
 	if(!name || !*name || !cause || !*cause) {
@@ -3705,67 +3875,92 @@ bool refund_restore_inventory_mysql(const char* name, const char* cause,
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
+		const bool partial_restore = strcmp(cause, "SCRAP") == 0;
 
-		// Se non ci sono righe marcate per questa causa, restituiamo false
-		// cosi' do_refund può fare fallback sul restore da backup zip.
-		MYSQL_RES* res = nullptr;
-		MYSQL_ROW row = nullptr;
-		const bool has_time_window = from_epoch > 0 && to_epoch > 0 && from_epoch <= to_epoch;
-		const std::string count_sql =
-			"SELECT COUNT(*) FROM character_inventory WHERE toon_id = " + toon_id +
-			" AND deleted = 1 AND deleted_for = " + db_sql_literal(cause, false) +
-			(has_time_window ? " AND deleted_on BETWEEN FROM_UNIXTIME(" +
-									 std::to_string(from_epoch) + ") AND FROM_UNIXTIME(" +
-									 std::to_string(to_epoch) + ")"
-							: "");
-		if(!mysql_query_select(db, count_sql, res) || !res) {
+		std::ostringstream restore_where;
+		restore_where << "toon_id = " << toon_id << " AND deleted = 1 AND deleted_for = "
+					  << db_sql_literal(cause, false);
+		if(!partial_restore) {
+			std::string event_time;
+			if(!refund_fetch_latest_event_time(db, toon_id, cause, false, 0, 0, event_time)) {
+				t.commit();
+				return false;
+			}
+			restore_where << refund_inventory_event_filter(event_time);
+		}
+
+		long restored_count = 0;
+		if(!refund_apply_inventory_restore_tx(db, toon_id, name, restore_where.str(),
+											 partial_restore, cause, &restored_count)) {
 			t.commit();
 			return false;
 		}
-		row = mysql_fetch_row(res);
-		const long matching =
-			(row && row[0]) ? sql_to_ll(row[0], 0) : 0;
-		mysql_free_result(res);
-
-		if(matching <= 0) {
-			t.commit();
-			return false;
-		}
-
-		std::ostringstream upd;
-		upd << "UPDATE character_inventory "
-			   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
-			   "WHERE toon_id = "
-			<< toon_id
-			<< " AND deleted = 1 AND deleted_for = " << db_sql_literal(cause, false);
-		if(has_time_window) {
-			upd << " AND deleted_on BETWEEN FROM_UNIXTIME(" << from_epoch << ")"
-				<< " AND FROM_UNIXTIME(" << to_epoch << ")";
-		}
-		db->execute(upd.str().c_str());
-		// Evita collisioni su list_index quando esistono già oggetti attivi presi
-		// dopo la perdita (es. RENT_EXPIRED) e poi si fa refund SQL: senza
-		// reindex due righe possono condividere lo stesso indice e load_rent_mysql
-		// sovrascrive uno slot perdendo un oggetto al login.
-		db->execute("SET @rent_idx := -1");
-		db->execute(("UPDATE character_inventory ci "
-					 "INNER JOIN ("
-					 "SELECT id, (@rent_idx := @rent_idx + 1) AS new_list_index "
-					 "FROM character_inventory "
-					 "WHERE toon_id = " + toon_id +
-					 " AND (deleted = 0 OR deleted IS NULL) "
-					 "ORDER BY id"
-					 ") ord ON ord.id = ci.id "
-					 "SET ci.list_index = ord.new_list_index")
-						.c_str());
-		db->execute(("UPDATE character_rent SET object_count = ("
-					 "SELECT COUNT(*) FROM character_inventory "
-					 "WHERE toon_id = " + toon_id +
-					 " AND (deleted = 0 OR deleted IS NULL)) "
-					 "WHERE toon_id = " + toon_id)
-						.c_str());
-		dedupe_inventory_wear_pos_mysql(db, toon_id);
 		t.commit();
+		if(matched_cause) {
+			*matched_cause = cause;
+		}
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_restore_inventory_by_cause_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long long to_epoch,
+									std::string* matched_cause) {
+#if !USE_MYSQL
+	(void)name;
+	(void)from_epoch;
+	(void)to_epoch;
+	(void)matched_cause;
+	return false;
+#else
+	if(!name || !*name) {
+		return false;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string toon_id = std::to_string(pg->id);
+		const bool has_time_window = from_epoch > 0 && to_epoch > 0 && from_epoch <= to_epoch;
+
+		std::string detected_cause;
+		std::string event_time;
+		bool partial_restore = false;
+		if(!refund_detect_inventory_event(db, toon_id, has_time_window, from_epoch, to_epoch,
+										  detected_cause, event_time, partial_restore)) {
+			t.commit();
+			return false;
+		}
+
+		std::string restore_where =
+			refund_inventory_snapshot_where(toon_id, detected_cause.c_str(), has_time_window,
+											from_epoch, to_epoch);
+		if(!partial_restore) {
+			if(event_time.empty()) {
+				t.commit();
+				return false;
+			}
+			restore_where += refund_inventory_event_filter(event_time);
+		}
+
+		long restored_count = 0;
+		if(!refund_apply_inventory_restore_tx(db, toon_id, name, restore_where, partial_restore,
+											  detected_cause.c_str(), &restored_count)) {
+			t.commit();
+			return false;
+		}
+		t.commit();
+		if(matched_cause) {
+			*matched_cause = detected_cause;
+		}
 		return true;
 	}
 	catch(const odb::exception& e) {

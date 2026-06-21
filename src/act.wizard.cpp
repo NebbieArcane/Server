@@ -5025,8 +5025,10 @@ struct RefundRequest {
 	std::string name;
 	std::string name_lower;
 	std::string date;
+	std::string sql_cause;
 	int time_flag = 0;
 	int type_flags = 0;
+	bool sql_direct = false;
 };
 
 std::string refund_to_lower(std::string value) {
@@ -5142,75 +5144,112 @@ std::string refund_shell_quote(const fs::path& path) {
 
 void refund_send_usage(struct char_data* ch) {
 	send_to_char("Hai dimenticato qualcosa!\n\r", ch);
-	send_to_char("La sintassi corretta e':\n\r$c0015refund nome_pg data(formato $c0009aaaammgg$c0015) orario($c0009m$c0015/$c0009p$c0015/$c0009s$c0015) $c0009all$c0015/$c0009eq$c0015/$c0009pg$c0015/$c0009achie$c0007\n\r", ch);
+	send_to_char("La sintassi corretta e':\n\r", ch);
+	send_to_char("$c0015refund nome_pg data($c0009aaaammgg$c0015) orario($c0009m$c0015/$c0009p$c0015/$c0009s$c0015) "
+				 "$c0009all$c0015/$c0009eq$c0015/$c0009pg$c0015/$c0009achie$c0007\n\r",
+				 ch);
+	send_to_char("$c0015refund nome_pg $c0009death$c0015/$c0009rent$c0015/$c0009scrap$c0007"
+				 " (solo SQL, ultimo snapshot per causa)\n\r",
+				 ch);
+}
+
+const char* refund_map_direct_cause_keyword(const char* keyword) {
+	if(!keyword || !*keyword) {
+		return nullptr;
+	}
+	if(!str_cmp(keyword, "death")) {
+		return "DEATH";
+	}
+	if(!str_cmp(keyword, "rent")) {
+		return "RENT_EXPIRED";
+	}
+	if(!str_cmp(keyword, "scrap")) {
+		return "SCRAP";
+	}
+	return nullptr;
 }
 
 bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& request) {
 	char name[100] {};
-	char date[16] {};
-	char time[16] {};
-	char type[16] {};
+	char second[16] {};
+	char third[16] {};
+	char fourth[16] {};
 
 	arg = one_argument(arg, name);
-	arg = one_argument(arg, date);
-	arg = one_argument(arg, time);
-	only_argument(arg, type);
+	arg = one_argument(arg, second);
+	arg = one_argument(arg, third);
+	only_argument(arg, fourth);
 
-	mudlog(LOG_PLAYERS, "do_refund: called with NAME=%s, DATE=%s, TIME=%s, TYPE=%s",
-		   name, date, time, type);
+	mudlog(LOG_PLAYERS, "do_refund: called with NAME=%s, ARG2=%s, ARG3=%s, ARG4=%s",
+		   name, second, third, fourth);
 
-	if(!*name || !*date || !*time || !*type) {
+	if(!*name || !*second) {
 		refund_send_usage(ch);
 		mudlog(LOG_PLAYERS, "do_refund: missing arguments, aborting");
 		return false;
 	}
 
-	const std::string date_string(date);
-	if(date_string.size() != 8 ||
-			!std::all_of(date_string.begin(), date_string.end(),
-						 [](unsigned char c) { return std::isdigit(c) != 0; }) ||
-			std::atoi(date) > 29999999) {
-		send_to_char("Il formato da usare per la data e' $c0009aaaa$c0015mm$c0011gg$c0007!\n\r", ch);
-		mudlog(LOG_PLAYERS, "do_refund: invalid date format: %s", date);
+	if(const char* sql_cause = refund_map_direct_cause_keyword(second)) {
+		request.sql_direct = true;
+		request.sql_cause = sql_cause;
+		request.name = name;
+		request.name_lower = refund_to_lower(request.name);
+		mudlog(LOG_PLAYERS, "do_refund: direct SQL mode cause=%s", request.sql_cause.c_str());
+		return true;
+	}
+
+	const std::string date_string(second);
+	if(!*third || !*fourth) {
+		refund_send_usage(ch);
+		mudlog(LOG_PLAYERS, "do_refund: missing backup-mode arguments, aborting");
 		return false;
 	}
 
-	if(!std::strcmp(time, "m")) {
+	if(date_string.size() != 8 ||
+			!std::all_of(date_string.begin(), date_string.end(),
+						 [](unsigned char c) { return std::isdigit(c) != 0; }) ||
+			std::atoi(second) > 29999999) {
+		send_to_char("Il formato da usare per la data e' $c0009aaaa$c0015mm$c0011gg$c0007!\n\r", ch);
+		mudlog(LOG_PLAYERS, "do_refund: invalid date format: %s", second);
+		return false;
+	}
+
+	if(!std::strcmp(third, "m")) {
 		SET_BIT(request.time_flag, REFUND_MORNING);
 	}
-	else if(!std::strcmp(time, "p")) {
+	else if(!std::strcmp(third, "p")) {
 		SET_BIT(request.time_flag, REFUND_NOON);
 	}
-	else if(!std::strcmp(time, "s")) {
+	else if(!std::strcmp(third, "s")) {
 		SET_BIT(request.time_flag, REFUND_EVENING);
 	}
 	else {
 		send_to_char("Quale vuoi recuperare? Quello della $c0009m$c0007attina, del $c0009p$c0007omeriggio o della $c0009s$c0007era?\n\r", ch);
-		mudlog(LOG_PLAYERS, "do_refund: invalid time selector: %s", time);
+		mudlog(LOG_PLAYERS, "do_refund: invalid time selector: %s", third);
 		return false;
 	}
 
-	if(!std::strcmp(type, "all")) {
+	if(!std::strcmp(fourth, "all")) {
 		SET_BIT(request.type_flags, REFUND_ALL);
 	}
-	else if(!std::strcmp(type, "pg")) {
+	else if(!std::strcmp(fourth, "pg")) {
 		SET_BIT(request.type_flags, REFUND_PG);
 	}
-	else if(!std::strcmp(type, "eq")) {
+	else if(!std::strcmp(fourth, "eq")) {
 		SET_BIT(request.type_flags, REFUND_EQ);
 	}
-	else if(!std::strcmp(type, "achie")) {
+	else if(!std::strcmp(fourth, "achie")) {
 		SET_BIT(request.type_flags, REFUND_ACHIE);
 	}
 	else {
 		send_to_char("Puoi scegliere di recuperare o tutto o l'equipaggiamento o i dati del personaggio oppure gli achievements!\n\r", ch);
-		mudlog(LOG_PLAYERS, "do_refund: invalid refund type: %s", type);
+		mudlog(LOG_PLAYERS, "do_refund: invalid refund type: %s", fourth);
 		return false;
 	}
 
 	request.name = name;
 	request.name_lower = refund_to_lower(request.name);
-	request.date = date;
+	request.date = second;
 	const int parsed_flags = request.type_flags | request.time_flag;
 	mudlog(LOG_PLAYERS, "do_refund: parsed bitmask value: %d", parsed_flags);
 	return true;
@@ -5496,7 +5535,8 @@ void refund_cleanup_temp_dir(const fs::path& temp_dir) {
 
 } // namespace
 
-// sintassi: refund nome_pg data(formato aaaammgg) orario(m/p/s) all/eq/pg/achie
+// sintassi: refund nome_pg data(aaaammgg) orario(m/p/s) all/eq/pg/achie
+//           refund nome_pg death/rent/scrap
 ACTION_FUNC(do_refund) {
 	if(ch == nullptr || cmd == 0) {
 		return;
@@ -5511,6 +5551,25 @@ ACTION_FUNC(do_refund) {
 		return;
 	}
 
+	if(request.sql_direct) {
+		std::string matched_cause;
+		if(refund_restore_inventory_by_cause_mysql(request.name.c_str(), request.sql_cause.c_str(),
+												   &matched_cause)) {
+			mudlog(LOG_PLAYERS, "do_refund: direct SQL restore OK for %s (cause=%s)",
+				   request.name.c_str(), matched_cause.c_str());
+			std::string msg = "Refund SQL inventario (";
+			msg += matched_cause;
+			msg += ") completato.\n\r";
+			send_to_char(msg.c_str(), ch);
+		}
+		else {
+			send_to_char("Nessuno snapshot SQL trovato per la causa richiesta.\n\r", ch);
+			mudlog(LOG_PLAYERS, "do_refund: direct SQL restore failed for %s (cause=%s)",
+				   request.name.c_str(), request.sql_cause.c_str());
+		}
+		return;
+	}
+
 	bool eq_restored_from_db = false;
 	if(refund_wants_eq(request.type_flags)) {
 		long long from_epoch = 0;
@@ -5520,26 +5579,12 @@ ACTION_FUNC(do_refund) {
 				   request.name.c_str(), request.date.c_str());
 		}
 		else {
-			const char* refund_causes[] = {
-				"DEATH",
-				"RENT_EXPIRED",
-				"NUKE",
-				"TRAP",
-				"MANUAL",
-				"SCRAP"
-			};
-			const char* matched_cause = nullptr;
-			for(const char* cause : refund_causes) {
-				if(refund_restore_inventory_mysql(request.name.c_str(), cause, from_epoch,
-												  to_epoch)) {
-					eq_restored_from_db = true;
-					matched_cause = cause;
-					break;
-				}
-			}
-			if(eq_restored_from_db) {
+			std::string matched_cause;
+			if(refund_restore_inventory_mysql(request.name.c_str(), from_epoch, to_epoch,
+											  &matched_cause)) {
+				eq_restored_from_db = true;
 				mudlog(LOG_PLAYERS, "do_refund: SQL restore inventory OK for %s (cause=%s)",
-					   request.name.c_str(), matched_cause);
+					   request.name.c_str(), matched_cause.c_str());
 				std::string msg = "Refund SQL inventario (";
 				msg += matched_cause;
 				msg += ") completato per la finestra richiesta.\n\r";
