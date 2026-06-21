@@ -26,7 +26,7 @@ enum class ProcArchetype {
 };
 
 enum class ProcMobKind { Normal, Boss, Trap };
-enum class ProcMobClassContext { Corridor, Treasure };
+enum class ProcMobClassContext { Corridor, Treasure, Trap };
 
 struct ProcRoomTemplate {
 	const char* name;
@@ -85,6 +85,8 @@ struct ProcAreaInstance {
 	std::unordered_set<long> treasure_claimed;
 	bool boss_key_dropped = false;
 	bool solo_mode = false;
+	int party_size_at_scale = 0;
+	float party_power_mult = 1.0f;
 	std::unordered_map<std::string, long> member_saved_load_room;
 	std::unordered_map<std::string, int> member_saved_start_room;
 };
@@ -102,6 +104,8 @@ struct ProcAreaDifficulty {
 	int treasure_spawn_pct;
 	int boss_adds;
 	int depth_extra_pct;
+	bool solo_mode = false;
+	float party_power_mult = 1.0f;
 };
 
 extern std::vector<ProcAreaInstance> g_instances;
@@ -124,7 +128,10 @@ void destroy_rooms(const std::vector<long>& room_vnums);
 void clear_world_links(const ProcAreaInstance& inst);
 
 int create_instance(float group_eq_index, int group_max_level, long return_room,
-					long& entrance_vnum, const char* owner_name, bool solo_mode = false);
+					long& entrance_vnum, const char* owner_name, bool solo_mode = false,
+					int party_size = 1);
+
+void sync_party_power_scale(ProcAreaInstance& inst);
 
 int count_mobs(const ProcAreaInstance& inst);
 void open_exit_portal(ProcAreaInstance& inst);

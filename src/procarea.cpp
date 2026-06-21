@@ -1037,6 +1037,7 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		procarea_dissolve_fountain_veil(true);
 		procarea_teleport_party(party, existing->entrance_vnum);
 		procarea_restore_pc_reentries(party);
+		procarea_internal::sync_party_power_scale(*existing);
 		procarea_touch_instance(existing->id);
 		return;
 	}
@@ -1053,9 +1054,11 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 	char_data* owner_ch = IS_AFFECTED(ch, AFF_GROUP) ? procarea_group_leader(ch) : ch;
 	const char* owner = owner_ch != nullptr ? GET_NAME(owner_ch) : GET_NAME(ch);
 	const int group_max_level = procarea_group_max_level(party);
+	const int party_size = static_cast<int>(party.size());
 	long entrance = 0;
 	const int instance_id = procarea_internal::create_instance(group_eq_index, group_max_level,
-													 PROCAREA_FOUNTAIN_ROOM, entrance, owner);
+													 PROCAREA_FOUNTAIN_ROOM, entrance, owner,
+													 false, party_size);
 	if(instance_id < 0 || entrance <= 0) {
 		send_to_char(
 			"La bruma trema, poi si spezza:\n\r"
@@ -1094,6 +1097,10 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 
 	procarea_dissolve_fountain_veil(true);
 	procarea_teleport_party(party, entrance);
+	procarea_restore_pc_reentries(party);
+	if(ProcAreaInstance* inst = procarea_internal::find_instance(instance_id); inst != nullptr) {
+		procarea_internal::sync_party_power_scale(*inst);
+	}
 	procarea_touch_instance(instance_id);
 }
 
@@ -1830,14 +1837,16 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 				++treasures_unclaimed;
 			}
 		}
-		info << "Tesori: " << inst.treasure_vnums.size() << " cumuli, "
-			 << treasures_unclaimed << " ancora da aprire";
+		info << "Tesori: " << inst.treasure_vnums.size() << " cumuli";
 		if(inst.boss_key_dropped) {
-			info << " | $c0010sigilli sbloccati$c0007";
+			if(treasures_unclaimed > 0) {
+				info << ", " << treasures_unclaimed << " ancora da raccogliere";
+			}
+			info << " | $c0010bottino rilasciato$c0007 — raccogli loot a terra nelle stanze tesoro.\n\r";
 		} else {
-			info << " | sigilli attivi finche' vive il custode della dimensione";
+			info << ", " << treasures_unclaimed << " sigillati"
+				 << " | sigilli attivi finche' vive il custode della dimensione.\n\r";
 		}
-		info << " — $c0014apri cumulo$c0007 in ogni stanza tesoro.\n\r";
 	}
 
 	info << "Ripiego: $c0014pray darkstar aiuto$c0007 (tempio o rientro).\n\r";
@@ -1869,8 +1878,8 @@ ACTION_FUNC(do_antro) {
 			"  $c0014pray darkstar aiuto$c0007 — tempio di rifugio o rientro\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
-			"Tesoro: abbatti il custode della dimensione per sbloccare i cumuli, poi "
-			"$c0014apri cumulo$c0007 nella dimensione effimera.\n\r",
+			"Tesoro: abbatti il custode della dimensione — i cumuli si aprono e il loot cade a terra\n\r"
+			"nelle stanze del tesoro; raccoglilo prima di uscire.\n\r",
 			ch);
 		return;
 	}
@@ -1956,6 +1965,9 @@ ROOMSPECIAL_FUNC(procarea_boss_exit) {
 
 ROOMSPECIAL_FUNC(procarea_treasure) {
 	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
+	if(ch == nullptr || room == nullptr || real_roomp(room->number) == nullptr) {
 		return FALSE;
 	}
 	if(cmd != CMD_OPEN && cmd != CMD_UNLOCK) {

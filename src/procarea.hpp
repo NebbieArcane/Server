@@ -47,6 +47,11 @@ constexpr int PROCAREA_ARCHETYPE_COUNT = 225;
 constexpr int PROCAREA_THEME_COUNT = 50;
 constexpr int PROCAREA_TEMPLATE_BANDS = 6;
 
+/** Gruppo fino a 3 PG: scaling mob invariato; oltre, +7% per PG (cap 9 PG). */
+constexpr int PROCAREA_PARTY_BASE_SIZE = 3;
+constexpr int PROCAREA_PARTY_SIZE_CAP = 9;
+constexpr float PROCAREA_PARTY_EXTRA_MULT = 0.07f;
+
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 
