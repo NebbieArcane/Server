@@ -23,6 +23,7 @@
 #include "fight.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "spells.hpp"
 #include "maximums.hpp"
 #include "procarea_band_stats.inc"
 #include "procarea_mob_themes.inc"
@@ -47,6 +48,9 @@
 #include <vector>
 namespace Alarmud {
 namespace procarea_internal {
+
+#include "procarea_reward_gear.inc"
+#include "procarea_reward_names.inc"
 
 static constexpr long kProcIsolationFlags = static_cast<long>(NO_ASTRAL | NO_SUM);
 static constexpr int kProcExitPortalObj = 9071;
@@ -100,6 +104,7 @@ static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, f
 											  bool follow_anchor_sentinel = false,
 											  int add_slot = -1,
 											  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor);
+
 static void procarea_link_boss_add(char_data* add, char_data* boss);
 static void procarea_link_anchor_add(char_data* add, char_data* anchor);
 
@@ -592,6 +597,16 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 	}
 }
 
+static void procarea_apply_air_room_flight(char_data* mob, long room_vnum) {
+	if(mob == nullptr || !IS_NPC(mob)) {
+		return;
+	}
+	const struct room_data* rp = real_roomp(room_vnum);
+	if(rp != nullptr && rp->sector_type == SECT_AIR) {
+		SET_BIT(mob->specials.affected_by, AFF_FLYING);
+	}
+}
+
 static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
 											int group_max_level, ProcMobKind kind, int theme_id,
 											bool follow_anchor_sentinel,
@@ -605,6 +620,7 @@ static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, f
 		return nullptr;
 	}
 	char_to_room(mob, room_vnum);
+	procarea_apply_air_room_flight(mob, room_vnum);
 	return mob;
 }
 
@@ -784,6 +800,26 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return kElemental[number(0, static_cast<int>(std::size(kElemental)) - 1)];
 }
 
+/** 85% pierce, 14.5% slash, 0.5% blunt (su 10000). */
+[[nodiscard]] static unsigned procarea_roll_physical_resist() {
+	const int roll = number(0, 9999);
+	if(roll < 8500) {
+		return IMM_PIERCE;
+	}
+	if(roll < 9950) {
+		return IMM_SLASH;
+	}
+	return IMM_BLUNT;
+}
+
+/** 5% resistenza fisica solo se consentita (body), altrimenti elementale. */
+[[nodiscard]] static unsigned procarea_roll_gear_resist(bool allow_physical) {
+	if(allow_physical && number(0, 99) < 5) {
+		return procarea_roll_physical_resist();
+	}
+	return procarea_roll_elemental_resist();
+}
+
 [[nodiscard]] static bool procarea_shield_bonus_used(const struct obj_data* obj, int location) {
 	if(obj == nullptr) {
 		return false;
@@ -874,36 +910,276 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	}
 }
 
-static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band) {
+enum class ProcShieldRollModel {
+	Tank,
+	Caster,
+	Hybrid,
+	Generic,
+};
+
+struct ProcShieldBonusWeight {
+	int location;
+	int weight;
+};
+
+/** Prevalenza tank: HP, regen, save, melee. */
+static constexpr ProcShieldBonusWeight kShieldWeightsTank[] = {
+	{ APPLY_HIT, 28 },
+	{ APPLY_HIT_REGEN, 22 },
+	{ APPLY_SAVE_ALL, 18 },
+	{ APPLY_DAMROLL, 14 },
+	{ APPLY_HITROLL, 10 },
+	{ APPLY_HITNDAM, 6 },
+	{ APPLY_MANA, 1 },
+	{ APPLY_MANA_REGEN, 1 },
+};
+
+/** Prevalenza caster: mana, spellpower, regen, save. */
+static constexpr ProcShieldBonusWeight kShieldWeightsCaster[] = {
+	{ APPLY_MANA, 28 },
+	{ APPLY_SPELLPOWER, 24 },
+	{ APPLY_MANA_REGEN, 20 },
+	{ APPLY_SAVE_ALL, 14 },
+	{ APPLY_HIT, 8 },
+	{ APPLY_HIT_REGEN, 4 },
+	{ APPLY_DAMROLL, 1 },
+	{ APPLY_HITROLL, 1 },
+};
+
+/** Multiclasse magic + fighter: mix equilibrato su entrambi i fronti. */
+static constexpr ProcShieldBonusWeight kShieldWeightsHybrid[] = {
+	{ APPLY_HIT, 16 },
+	{ APPLY_MANA, 16 },
+	{ APPLY_SAVE_ALL, 14 },
+	{ APPLY_MANA_REGEN, 12 },
+	{ APPLY_HIT_REGEN, 12 },
+	{ APPLY_SPELLPOWER, 10 },
+	{ APPLY_DAMROLL, 8 },
+	{ APPLY_HITROLL, 6 },
+	{ APPLY_HITNDAM, 6 },
+};
+
+/** Fallback: peso uniforme. */
+static constexpr ProcShieldBonusWeight kShieldWeightsGeneric[] = {
+	{ APPLY_HIT, 10 },
+	{ APPLY_MANA, 10 },
+	{ APPLY_MANA_REGEN, 10 },
+	{ APPLY_HIT_REGEN, 10 },
+	{ APPLY_DAMROLL, 10 },
+	{ APPLY_HITROLL, 10 },
+	{ APPLY_SPELLPOWER, 10 },
+	{ APPLY_HITNDAM, 10 },
+	{ APPLY_SAVE_ALL, 10 },
+};
+
+/** Peso del modello principale in run solitaria (resto ripartito sugli altri). */
+static constexpr int kProcShieldSoloPrimaryWeight = 75;
+static constexpr int kProcShieldSoloSecondaryWeight = 8;
+static constexpr int kProcShieldSoloGenericWeight = 5;
+
+[[nodiscard]] static int procarea_weighted_pick_index(const int* weights, int count) {
+	int total = 0;
+	for(int i = 0; i < count; ++i) {
+		total += weights[i];
+	}
+	if(total <= 0) {
+		return -1;
+	}
+	int roll = number(1, total);
+	for(int i = 0; i < count; ++i) {
+		roll -= weights[i];
+		if(roll <= 0) {
+			return i;
+		}
+	}
+	return count - 1;
+}
+
+[[nodiscard]] static int procarea_shield_model_index(ProcShieldRollModel model) {
+	switch(model) {
+	case ProcShieldRollModel::Tank:
+		return 0;
+	case ProcShieldRollModel::Caster:
+		return 1;
+	case ProcShieldRollModel::Hybrid:
+		return 2;
+	case ProcShieldRollModel::Generic:
+		break;
+	}
+	return 3;
+}
+
+[[nodiscard]] static ProcShieldRollModel procarea_shield_model_from_index(int index) {
+	switch(index) {
+	case 0:
+		return ProcShieldRollModel::Tank;
+	case 1:
+		return ProcShieldRollModel::Caster;
+	case 2:
+		return ProcShieldRollModel::Hybrid;
+	default:
+		return ProcShieldRollModel::Generic;
+	}
+}
+
+[[nodiscard]] static ProcShieldRollModel procarea_shield_archetype_for_char(char_data* ch) {
+	if(ch == nullptr) {
+		return ProcShieldRollModel::Generic;
+	}
+	if(IS_MULTI(ch)) {
+		return ProcShieldRollModel::Hybrid;
+	}
+	if(IS_CASTER_N(ch)) {
+		return ProcShieldRollModel::Caster;
+	}
+	if(IS_MELEE(ch)) {
+		return ProcShieldRollModel::Tank;
+	}
+	if(IS_CASTER(ch) && IS_FIGHTER(ch)) {
+		return ProcShieldRollModel::Hybrid;
+	}
+	if(IS_CASTER(ch)) {
+		return ProcShieldRollModel::Caster;
+	}
+	if(IS_FIGHTER(ch)) {
+		return ProcShieldRollModel::Tank;
+	}
+	return ProcShieldRollModel::Generic;
+}
+
+template<typename Fn>
+static void procarea_for_each_resolved_member(const ProcAreaInstance& inst, Fn&& fn) {
+	std::unordered_set<char_data*> seen;
+	auto visit = [&](char_data* member) {
+		if(member == nullptr || !IS_PC(member) || !seen.insert(member).second) {
+			return;
+		}
+		fn(member);
+	};
+	if(!inst.owner_name.empty()) {
+		visit(get_char(inst.owner_name.c_str()));
+	}
+	for(const std::string& name : inst.member_names) {
+		visit(get_char(name.c_str()));
+	}
+}
+
+[[nodiscard]] static bool procarea_instance_has_ranger(const ProcAreaInstance& inst) {
+	bool found = false;
+	procarea_for_each_resolved_member(inst, [&](char_data* member) {
+		if(HasClass(member, CLASS_RANGER)) {
+			found = true;
+		}
+	});
+	return found;
+}
+
+[[nodiscard]] static ProcShieldRollModel
+procarea_pick_shield_roll_model_solo(char_data* solo_ch) {
+	const ProcShieldRollModel primary = procarea_shield_archetype_for_char(solo_ch);
+	int weights[4] = {
+		kProcShieldSoloSecondaryWeight,
+		kProcShieldSoloSecondaryWeight,
+		kProcShieldSoloSecondaryWeight,
+		kProcShieldSoloGenericWeight,
+	};
+	weights[procarea_shield_model_index(primary)] = kProcShieldSoloPrimaryWeight;
+
+	const int pick = procarea_weighted_pick_index(weights, 4);
+	if(pick < 0) {
+		return primary;
+	}
+	return procarea_shield_model_from_index(pick);
+}
+
+[[nodiscard]] static ProcShieldRollModel
+procarea_pick_shield_roll_model_group(const ProcAreaInstance& inst, char_data* fallback_ch) {
+	int weights[4] = { 0, 0, 0, 0 };
+
+	procarea_for_each_resolved_member(inst, [&](char_data* member) {
+		const ProcShieldRollModel archetype = procarea_shield_archetype_for_char(member);
+		++weights[procarea_shield_model_index(archetype)];
+	});
+
+	if(weights[0] > 0 && weights[1] > 0) {
+		weights[2] += weights[0] + weights[1];
+	}
+
+	const int total = weights[0] + weights[1] + weights[2] + weights[3];
+	if(total <= 0) {
+		return procarea_shield_archetype_for_char(fallback_ch);
+	}
+
+	const int pick = procarea_weighted_pick_index(weights, 4);
+	if(pick < 0) {
+		return procarea_shield_archetype_for_char(fallback_ch);
+	}
+	return procarea_shield_model_from_index(pick);
+}
+
+[[nodiscard]] static ProcShieldRollModel procarea_pick_shield_roll_model(const ProcAreaInstance& inst,
+																		 char_data* fallback_ch) {
+	if(inst.solo_mode) {
+		char_data* solo_ch = fallback_ch;
+		if(solo_ch == nullptr && !inst.owner_name.empty()) {
+			solo_ch = get_char(inst.owner_name.c_str());
+		}
+		if(solo_ch == nullptr && !inst.member_names.empty()) {
+			solo_ch = get_char(inst.member_names.front().c_str());
+		}
+		return procarea_pick_shield_roll_model_solo(solo_ch);
+	}
+	return procarea_pick_shield_roll_model_group(inst, fallback_ch);
+}
+
+[[nodiscard]] static std::pair<const ProcShieldBonusWeight*, std::size_t>
+procarea_shield_weight_table(ProcShieldRollModel model) {
+	switch(model) {
+	case ProcShieldRollModel::Tank:
+		return { kShieldWeightsTank, std::size(kShieldWeightsTank) };
+	case ProcShieldRollModel::Caster:
+		return { kShieldWeightsCaster, std::size(kShieldWeightsCaster) };
+	case ProcShieldRollModel::Hybrid:
+		return { kShieldWeightsHybrid, std::size(kShieldWeightsHybrid) };
+	case ProcShieldRollModel::Generic:
+		break;
+	}
+	return { kShieldWeightsGeneric, std::size(kShieldWeightsGeneric) };
+}
+
+static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band,
+											 ProcShieldRollModel model) {
 	if(obj == nullptr) {
 		return false;
 	}
 
-	static constexpr int kBonusPool[] = {
-		APPLY_HIT,
-		APPLY_MANA,
-		APPLY_MANA_REGEN,
-		APPLY_HIT_REGEN,
-		APPLY_DAMROLL,
-		APPLY_HITROLL,
-		APPLY_SPELLPOWER,
-		APPLY_HITNDAM,
-		APPLY_SAVE_ALL,
-	};
-	constexpr int kBonusPoolSize = static_cast<int>(std::size(kBonusPool));
+	const auto [table, table_size] = procarea_shield_weight_table(model);
 
-	int candidates[kBonusPoolSize];
+	int candidates[MAX_OBJ_AFFECT];
+	int candidate_weights[MAX_OBJ_AFFECT];
 	int candidate_count = 0;
-	for(int i = 0; i < kBonusPoolSize; ++i) {
-		if(procarea_shield_bonus_allowed(obj, kBonusPool[i])) {
-			candidates[candidate_count++] = kBonusPool[i];
+
+	for(std::size_t i = 0; i < table_size; ++i) {
+		const int location = table[i].location;
+		const int weight = table[i].weight;
+		if(weight <= 0 || !procarea_shield_bonus_allowed(obj, location)) {
+			continue;
 		}
+		candidates[candidate_count] = location;
+		candidate_weights[candidate_count] = weight;
+		++candidate_count;
 	}
 	if(candidate_count <= 0) {
 		return false;
 	}
 
-	const int pick = candidates[number(0, candidate_count - 1)];
+	const int pick_idx =
+		procarea_weighted_pick_index(candidate_weights, candidate_count);
+	if(pick_idx < 0) {
+		return false;
+	}
+
+	const int pick = candidates[pick_idx];
 	const int slot = procarea_find_free_affect_slot(obj);
 	if(slot < 0) {
 		return false;
@@ -914,7 +1190,9 @@ static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band) {
 	return true;
 }
 
-static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj_data* obj) {
+static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct obj_data* obj,
+										 char_data* opener, bool allow_physical_immune,
+										 bool try_ac_upgrade) {
 	if(obj == nullptr) {
 		return;
 	}
@@ -923,17 +1201,20 @@ static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj
 
 	const int band = std::clamp(inst.template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 
-	const int ac_upgrade_chance = 30 + band * 10;
-	if(number(0, 99) < ac_upgrade_chance) {
-		const int ac_jitter_max = band >= 4 ? 2 : band >= 3 ? 1 : 0;
-		const int ac_jitter = number(0, ac_jitter_max);
-		obj->obj_flags.value[0] = std::max(3, obj->obj_flags.value[0] + ac_jitter);
-		obj->obj_flags.value[1] = obj->obj_flags.value[0];
+	if(try_ac_upgrade && GET_ITEM_TYPE(obj) == ITEM_ARMOR) {
+		const int ac_upgrade_chance = 30 + band * 10;
+		if(number(0, 99) < ac_upgrade_chance) {
+			const int ac_jitter_max = band >= 4 ? 2 : band >= 3 ? 1 : 0;
+			const int ac_jitter = number(0, ac_jitter_max);
+			obj->obj_flags.value[0] = std::max(3, obj->obj_flags.value[0] + ac_jitter);
+			obj->obj_flags.value[1] = obj->obj_flags.value[0];
+		}
 	}
 
 	const int bonus_count = procarea_shield_bonus_count(inst.group_max_level);
+	const ProcShieldRollModel model = procarea_pick_shield_roll_model(inst, opener);
 	for(int i = 0; i < bonus_count; ++i) {
-		if(!procarea_apply_shield_bonus_roll(obj, band)) {
+		if(!procarea_apply_shield_bonus_roll(obj, band, model)) {
 			break;
 		}
 	}
@@ -942,7 +1223,8 @@ static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj
 	   !procarea_shield_bonus_used(obj, APPLY_IMMUNE)) {
 		if(const int slot = procarea_find_free_affect_slot(obj); slot >= 0) {
 			obj->affected[slot].location = APPLY_IMMUNE;
-			obj->affected[slot].modifier = static_cast<int>(procarea_roll_elemental_resist());
+			obj->affected[slot].modifier =
+				static_cast<int>(procarea_roll_gear_resist(allow_physical_immune));
 		}
 	}
 
@@ -953,34 +1235,102 @@ static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj
 	obj->obj_flags.cost = static_cast<int>(clamped_cost);
 }
 
-static bool procarea_try_grant_reward_shield(char_data* ch, ProcAreaInstance& inst, long room_vnum) {
-	if(ch == nullptr || inst.reward_shield_granted) {
-		return false;
+static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj_data* obj,
+										char_data* opener) {
+	procarea_roll_reward_bonuses(inst, obj, opener, false, true);
+}
+
+static void procarea_roll_reward_gear_item(const ProcAreaInstance& inst, struct obj_data* obj,
+										   char_data* opener, ProcRewardGearSlot slot) {
+	if(obj == nullptr) {
+		return;
 	}
-	if(inst.group_eq_index < PROCAREA_REWARD_EQ_THRESHOLD) {
+	if(slot == ProcRewardGearSlot::Wield) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
+		roll_reward_weapon_impl(obj, inst);
+		return;
+	}
+	const bool allow_physical = slot == ProcRewardGearSlot::Body;
+	const bool try_ac = GET_ITEM_TYPE(obj) == ITEM_ARMOR;
+	procarea_roll_reward_bonuses(inst, obj, opener, allow_physical, try_ac);
+}
+
+[[nodiscard]] static int procarea_treasure_gear_drop_pct(int hoard_count) {
+	if(hoard_count <= 1) {
+		return 100;
+	}
+	return std::max(0, 100 - PROCAREA_TREASURE_GEAR_DROP_DECAY_PCT * (hoard_count - 1));
+}
+
+[[nodiscard]] static int procarea_pick_gear_sub_variant(ProcRewardGearSlot slot) {
+	switch(slot) {
+	case ProcRewardGearSlot::Finger:
+	case ProcRewardGearSlot::Neck:
+	case ProcRewardGearSlot::Wrist:
+	case ProcRewardGearSlot::Ear:
+		return number(0, 1);
+	default:
+		return 0;
+	}
+}
+
+/** true = scudo premio; false = slot gear in @p gear_slot. */
+static void procarea_pick_random_treasure_loot(bool& is_shield, ProcRewardGearSlot& gear_slot) {
+	const int pick = number(0, static_cast<int>(ProcRewardGearSlot::Count));
+	if(pick >= static_cast<int>(ProcRewardGearSlot::Count)) {
+		is_shield = true;
+		gear_slot = ProcRewardGearSlot::Light;
+		return;
+	}
+	is_shield = false;
+	gear_slot = static_cast<ProcRewardGearSlot>(pick);
+}
+
+static bool procarea_try_grant_treasure_item(char_data* ch, ProcAreaInstance& inst, long room_vnum) {
+	const int hoard_count = static_cast<int>(inst.treasure_vnums.size());
+	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_count);
+	if(number(0, 99) >= drop_pct) {
 		return false;
 	}
 
-	const long vnum = procarea_reward_shield_vnum(inst.template_band);
+	bool is_shield = false;
+	ProcRewardGearSlot slot = ProcRewardGearSlot::Light;
+	procarea_pick_random_treasure_loot(is_shield, slot);
+
+	long vnum = -1;
+	if(is_shield) {
+		vnum = procarea_reward_shield_vnum(inst.template_band);
+	} else {
+		const int sub_variant =
+			slot == ProcRewardGearSlot::Wield ? number(0, 2) : procarea_pick_gear_sub_variant(slot);
+		vnum = reward_gear_vnum(slot, inst.template_band, sub_variant);
+	}
+	if(vnum < 0) {
+		return false;
+	}
+
 	const int rnum = real_object(static_cast<int>(vnum));
 	if(rnum < 0) {
-		mudlog(LOG_SYSERR, "procarea: reward shield vnum %ld not in object index", vnum);
+		mudlog(LOG_SYSERR, "procarea: treasure loot vnum %ld not in object index", vnum);
 		return false;
 	}
 
-	struct obj_data* shield = read_object(rnum, REAL);
-	if(shield == nullptr) {
-		mudlog(LOG_ERROR, "procarea: read_object(%ld) failed for reward shield", vnum);
+	struct obj_data* item = read_object(rnum, REAL);
+	if(item == nullptr) {
+		mudlog(LOG_ERROR, "procarea: read_object(%ld) failed for treasure loot", vnum);
 		return false;
 	}
 
-	procarea_roll_reward_shield(inst, shield);
-	obj_to_room(shield, room_vnum);
-	inst.reward_shield_granted = true;
-
-	act("Dal cumulo emerge $p, forgiato dalle rune della dimensione!", FALSE, ch, shield, nullptr,
-		TO_CHAR);
-	act("Dal cumulo emerge $p!", TRUE, ch, shield, nullptr, TO_ROOM);
+	if(is_shield) {
+		procarea_roll_reward_shield(inst, item, ch);
+		act("Dal cumulo emerge $p, forgiato dalle rune della dimensione!", FALSE, ch, item, nullptr,
+			TO_CHAR);
+	} else {
+		procarea_roll_reward_gear_item(inst, item, ch, slot);
+		act("Dal cumulo emerge $p!", FALSE, ch, item, nullptr, TO_CHAR);
+	}
+	obj_to_room(item, room_vnum);
+	act("Dal cumulo emerge $p!", TRUE, ch, item, nullptr, TO_ROOM);
 	return true;
 }
 
@@ -1018,7 +1368,7 @@ static void procarea_grant_treasure_loot(char_data* ch, ProcAreaInstance& inst, 
 		}
 	}
 
-	const bool shield_granted = procarea_try_grant_reward_shield(ch, inst, room_vnum);
+	const bool item_granted = procarea_try_grant_treasure_item(ch, inst, room_vnum);
 
 	struct obj_data* hoard = procarea_find_treasure_hoard(room_vnum);
 	if(hoard != nullptr) {
@@ -1027,9 +1377,9 @@ static void procarea_grant_treasure_loot(char_data* ch, ProcAreaInstance& inst, 
 	}
 
 	act("$n spezza il sigillo runico del cumulo!", TRUE, ch, nullptr, nullptr, TO_ROOM);
-	if(shield_granted) {
-		act("Apri il cumulo sigillato: oro e una reliquia effimera fuoriescono dalle rune!", FALSE,
-			ch, nullptr, nullptr, TO_CHAR);
+	if(item_granted) {
+		act("Apri il cumulo sigillato: oro e un trofeo effimero fuoriescono dalle rune!", FALSE, ch,
+			nullptr, nullptr, TO_CHAR);
 	} else {
 		act("Apri il cumulo sigillato: oro e reliquie effimere fuoriescono dalle rune!", FALSE, ch,
 			nullptr, nullptr, TO_CHAR);
@@ -1479,6 +1829,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 			break;
 		}
 		char_to_room(boss, room_vnum);
+		procarea_apply_air_room_flight(boss, room_vnum);
 		for(int i = 0; i < diff.boss_adds; ++i) {
 			char_data* add =
 				procarea_spawn_scaled_mob(room_vnum, diff.template_band, diff.eq_index,
@@ -1683,52 +2034,56 @@ struct ProcRewardShieldTpl {
 static constexpr ProcRewardShieldTpl kProcRewardShields[PROCAREA_REWARD_SHIELD_COUNT] = {
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 0,
-		"scudo bruma leggera nebbia effimera",
-		"uno scudo di bruma leggera",
+		"disco velo bruma opalescente",
+		"un disco opalescente del velo brumoso",
 		"Un disco opalescente giace a terra: la nebbia lo tiene composto\n"
 		"come vetro appena soffiato, pronto a proteggere chi esce dal velo.\n",
 		4, ITEM_RESISTANT, 0, 500, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 1,
-		"scudo runico effimero sigillo",
-		"uno scudo runico effimero",
+		"scudo runa sigillo pulsante",
+		"uno scudo dal sigillo pulsante",
 		"Runi argentate si accendono e si spengono sulla lamiera;\n"
 		"il sigillo regge finche' qualcuno osa ancora reggerlo.\n",
 		5, ITEM_RESISTANT, 0, 1200, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 2,
-		"scudo nebbia argentata darkstar",
-		"uno scudo di nebbia argentata",
+		"buckler nebbia piazza specchiata",
+		"un buckler dalla Piazza specchiata",
 		"La superficie riflette la Piazza delle Nebbie anche lontano da Myst:\n"
 		"vapori gelidi gli danno forma e lo rendono leggero come un sospiro.\n",
 		7, ITEM_RESISTANT, 0, 2200, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 3,
-		"scudo varco oscuro custode",
-		"lo scudo del varco oscuro",
+		"pavise varco croce darkstar",
+		"un pavise dalla croce DarkStar",
 		"Sul bordo e' incisa la croce obliqua di DarkStar;\n"
 		"pare forgiato per chi torna dal tempio nella foresta con le mani ancora fredde.\n",
 		9, ITEM_RESISTANT, 0, 3500, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 4,
-		"scudo custode caduto dimensione",
-		"lo scudo del custode caduto",
+		"scudo custode lamiera finale",
+		"uno scudo di lamiera finale",
 		"Frammenti di sala finale e sigilli spezzati sono fusi nella lamiera:\n"
 		"e' un trofeo che non dovrebbe esistere fuori dalla Dimensione Effimera.\n",
 		10, ITEM_RESISTANT, 0, 5000, 0,
 	},
+	{
+		PROCAREA_REWARD_SHIELD_VNUM_BASE + 5,
+		"scudo eclisse disco assorbente",
+		"uno scudo disco assorbente",
+		"La lamiera non riflette nulla: assorbe la luce come il varco stesso.\n"
+		"Chi lo regge porta seco l'eco della dimensione ancora aperta.\n",
+		12, ITEM_RESISTANT, 0, 7500, 0,
+	},
 };
 
-static bool procarea_reward_shield_file_exists(long vnum) {
-	char path[96];
-	std::snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
-	struct stat st {};
-	return stat(path, &st) == 0;
-}
+static_assert(PROCAREA_REWARD_SHIELD_COUNT == PROCAREA_TEMPLATE_BANDS,
+			  "procarea reward shields must match template bands");
 
 static bool procarea_write_reward_shield_file(const ProcRewardShieldTpl& tpl) {
 	char path[96];
@@ -1760,14 +2115,293 @@ static bool procarea_write_reward_shield_file(const ProcRewardShieldTpl& tpl) {
 
 void boot_reward_shields_impl() {
 	for(const ProcRewardShieldTpl& tpl : kProcRewardShields) {
-		if(procarea_reward_shield_file_exists(tpl.vnum)) {
-			mudlog(LOG_CHECK, "procarea: reward shield %ld already in %s/", tpl.vnum, OBJ_DIR);
-			continue;
-		}
 		if(procarea_write_reward_shield_file(tpl)) {
 			mudlog(LOG_CHECK, "procarea: wrote reward shield %ld (%s)", tpl.vnum, tpl.short_descr);
 		}
 	}
+}
+
+[[nodiscard]] static int procarea_reward_gear_lerp(int lo, int hi, int band) {
+	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(PROCAREA_TEMPLATE_BANDS <= 1) {
+		return lo;
+	}
+	return lo + (hi - lo) * b / (PROCAREA_TEMPLATE_BANDS - 1);
+}
+
+[[nodiscard]] static const ProcRewardGearSlotDef*
+procarea_reward_gear_slot_def(ProcRewardGearSlot slot) {
+	for(const ProcRewardGearSlotDef& def : kProcRewardGearSlots) {
+		if(def.slot == slot) {
+			return &def;
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] static int procarea_reward_gear_variant_index(const ProcRewardGearSlotDef& def, int band,
+															int sub_variant) {
+	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(def.type_flag == ITEM_WEAPON && def.variant_count == PROCAREA_TEMPLATE_BANDS * 3) {
+		const int dtype = std::clamp(sub_variant, 0, 2);
+		return b * 3 + dtype;
+	}
+	if(def.variant_count > PROCAREA_TEMPLATE_BANDS) {
+		const int side = sub_variant != 0 ? 1 : 0;
+		return b * 2 + side;
+	}
+	return b;
+}
+
+[[nodiscard]] static int procarea_reward_gear_band_from_variant(const ProcRewardGearSlotDef& def,
+																int variant) {
+	if(def.type_flag == ITEM_WEAPON && def.variant_count == PROCAREA_TEMPLATE_BANDS * 3) {
+		return variant / 3;
+	}
+	if(def.variant_count > PROCAREA_TEMPLATE_BANDS) {
+		return variant / 2;
+	}
+	return variant;
+}
+
+[[nodiscard]] static int procarea_reward_gear_weapon_damage_type(const ProcRewardGearSlotDef& def,
+																 int variant) {
+	if(def.type_flag == ITEM_WEAPON && def.variant_count == PROCAREA_TEMPLATE_BANDS * 3) {
+		return variant % 3;
+	}
+	return 0;
+}
+
+struct ProcRewardWeaponDice {
+	int num;
+	int sides;
+};
+
+/** Media danno ~9 (band 0) → ~18 (band 5). */
+static constexpr ProcRewardWeaponDice kProcRewardWeaponDiceByBand[PROCAREA_TEMPLATE_BANDS] = {
+	{ 2, 8 }, /* 9.0 */
+	{ 3, 6 }, /* 10.5 */
+	{ 3, 7 }, /* 12.0 */
+	{ 3, 8 }, /* 13.5 */
+	{ 4, 7 }, /* 16.0 */
+	{ 4, 8 }, /* 18.0 */
+};
+
+static constexpr int kProcRewardWeaponDamageValue[] = {
+	3,  /* slash */
+	11, /* pierce */
+	6,  /* blunt / crush */
+};
+
+[[nodiscard]] static int procarea_weapon_hit_dam_bonus(int band) {
+	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(b >= 4) {
+		return 5;
+	}
+	if(b >= 2) {
+		return 4;
+	}
+	return 3;
+}
+
+long reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant) {
+	const ProcRewardGearSlotDef* def = procarea_reward_gear_slot_def(slot);
+	if(def == nullptr) {
+		return -1;
+	}
+	const int variant = procarea_reward_gear_variant_index(*def, band, sub_variant);
+	if(variant < 0 || variant >= def->variant_count) {
+		return -1;
+	}
+
+	int offset = 0;
+	for(const ProcRewardGearSlotDef& entry : kProcRewardGearSlots) {
+		if(entry.slot == slot) {
+			return PROCAREA_REWARD_GEAR_VNUM_BASE + offset + variant;
+		}
+		offset += entry.variant_count;
+	}
+	return -1;
+}
+
+static void procarea_build_reward_gear_text(const ProcRewardGearSlotDef& def, int /*band*/, int variant,
+											char* name, std::size_t name_len, char* short_descr,
+											std::size_t short_len, char* description,
+											std::size_t desc_len) {
+	const ProcRewardNameEntry* entry = procarea_reward_name_for(def, variant);
+	if(entry == nullptr) {
+		std::snprintf(name, name_len, "reliquia dimensione effimera");
+		std::snprintf(short_descr, short_len, "una reliquia della dimensione effimera");
+		std::snprintf(description, desc_len,
+					  "Il metallo sembra trattenuto da rune instabili:\n"
+					  "e' un premio nato nella Dimensione Effimera, fuori dal tempo di Myst.\n");
+		return;
+	}
+	std::snprintf(name, name_len, "%s", entry->keywords);
+	std::snprintf(short_descr, short_len, "%s", entry->short_descr);
+	std::snprintf(description, desc_len, "%s", entry->description);
+}
+
+static bool procarea_write_reward_gear_file(long vnum, const ProcRewardGearSlotDef& def, int band,
+											int variant) {
+	char path[96];
+	std::snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
+	FILE* f = std::fopen(path, "wt");
+	if(f == nullptr) {
+		mudlog(LOG_SYSERR, "procarea: cannot write reward gear %s (%s)", path,
+			   std::strerror(errno));
+		return false;
+	}
+
+	char name[160];
+	char short_descr[160];
+	char description[256];
+	procarea_build_reward_gear_text(def, band, variant, name, sizeof(name), short_descr,
+									sizeof(short_descr), description, sizeof(description));
+
+	const int cost = kProcRewardGearCosts[std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1)];
+	int value0 = 0;
+	int value1 = 0;
+	int value2 = 0;
+	int value3 = 0;
+	int weight = 1;
+
+	if(def.type_flag == ITEM_ARMOR) {
+		const int ac = procarea_reward_gear_lerp(def.ac_min, def.ac_max, band);
+		value0 = ac;
+		value1 = ac;
+		weight = 3 + band;
+	} else if(def.type_flag == ITEM_WEAPON) {
+		const ProcRewardWeaponDice& dice = kProcRewardWeaponDiceByBand[std::clamp(band, 0,
+																				   PROCAREA_TEMPLATE_BANDS -
+																					   1)];
+		const int dtype =
+			std::clamp(procarea_reward_gear_weapon_damage_type(def, variant), 0, 2);
+		value0 = 0;
+		value1 = dice.num;
+		value2 = dice.sides;
+		value3 = kProcRewardWeaponDamageValue[dtype];
+		weight = 2 + band;
+	} else if(def.type_flag == ITEM_LIGHT) {
+		value2 = def.light_hours;
+		weight = 1;
+	}
+
+	std::fprintf(f, "#%ld\n", vnum);
+	fwrite_string(f, name);
+	fwrite_string(f, short_descr);
+	fwrite_string(f, description);
+	fwrite_string(f, nullptr);
+	std::fprintf(f, "%d %lu %s\n", def.type_flag, ITEM_RESISTANT, def.wear_flags);
+	std::fprintf(f, "%d %d %d %d\n", value0, value1, value2, value3);
+	std::fprintf(f, "%d %d 0\n", weight, cost);
+	if(def.type_flag == ITEM_WEAPON) {
+		const int hit_dam = procarea_weapon_hit_dam_bonus(band);
+		std::fprintf(f, "A\n%d %d\n", APPLY_HITROLL, hit_dam);
+		std::fprintf(f, "A\n%d %d\n", APPLY_DAMROLL, hit_dam);
+	}
+	std::fclose(f);
+	return true;
+}
+
+void boot_reward_gear_impl() {
+	int offset = 0;
+	for(const ProcRewardGearSlotDef& def : kProcRewardGearSlots) {
+		for(int variant = 0; variant < def.variant_count; ++variant) {
+			const long vnum = PROCAREA_REWARD_GEAR_VNUM_BASE + offset + variant;
+			const int band = procarea_reward_gear_band_from_variant(def, variant);
+			if(procarea_write_reward_gear_file(vnum, def, band, variant)) {
+				mudlog(LOG_CHECK, "procarea: wrote reward gear %ld (%s band %d)", vnum,
+					   def.keyword, band);
+			}
+		}
+		offset += def.variant_count;
+	}
+}
+
+static bool procarea_try_add_weapon_affect(struct obj_data* obj, int location,
+										   int modifier) {
+	if(obj == nullptr || modifier == 0) {
+		return false;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(obj->affected[i].location == location) {
+			return false;
+		}
+	}
+	const int slot = procarea_find_free_affect_slot(obj);
+	if(slot < 0) {
+		return false;
+	}
+	obj->affected[slot].location = location;
+	obj->affected[slot].modifier = modifier;
+	return true;
+}
+
+[[nodiscard]] static int procarea_roll_nonhuman_race() {
+	for(int attempt = 0; attempt < 32; ++attempt) {
+		const int race = number(2, MAX_RACE - 1);
+		if(race != RACE_HUMAN) {
+			return race;
+		}
+	}
+	return RACE_ELVEN;
+}
+
+[[nodiscard]] static int procarea_roll_align_slayer_flag() {
+	switch(number(0, 2)) {
+	case 0:
+		return SLAYER_GOOD;
+	case 1:
+		return SLAYER_NEUTRAL;
+	default:
+		return SLAYER_EVIL;
+	}
+}
+
+void roll_reward_weapon_impl(struct obj_data* obj, int template_band,
+							 bool instance_has_ranger) {
+	if(obj == nullptr || GET_ITEM_TYPE(obj) != ITEM_WEAPON) {
+		return;
+	}
+
+	if(instance_has_ranger && number(0, 99) < 30) {
+		SET_BIT(obj->obj_flags.wear_flags, ITEM_HOLD);
+	}
+
+	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(band < 4) {
+		return;
+	}
+
+	if(number(0, 9999) < 100) {
+		procarea_try_add_weapon_affect(obj, APPLY_RACE_SLAYER, procarea_roll_nonhuman_race());
+	}
+	if(number(0, 9999) < 5) {
+		procarea_try_add_weapon_affect(obj, APPLY_ALIGN_SLAYER, procarea_roll_align_slayer_flag());
+	}
+
+	int cause_spell = 0;
+	if(number(0, 9999) < 100) {
+		cause_spell = SPELL_CAUSE_LIGHT;
+	}
+	if(number(0, 9999) < 30) {
+		cause_spell = SPELL_CAUSE_SERIOUS;
+	}
+	if(number(0, 99999) < 10) {
+		cause_spell = SPELL_CAUSE_CRITICAL;
+	}
+	if(cause_spell != 0) {
+		procarea_try_add_weapon_affect(obj, APPLY_WEAPON_SPELL, cause_spell);
+	}
+}
+
+bool instance_has_ranger(const ProcAreaInstance& inst) {
+	return procarea_instance_has_ranger(inst);
+}
+
+void roll_reward_weapon_impl(struct obj_data* obj, const ProcAreaInstance& inst) {
+	roll_reward_weapon_impl(obj, inst.template_band, procarea_instance_has_ranger(inst));
 }
 
 } // namespace procarea_internal

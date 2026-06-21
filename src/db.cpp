@@ -606,6 +606,7 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Boot procarea reward object prototypes.");
 	procarea_boot_reward_shields();
+	procarea_boot_reward_gear();
 
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();

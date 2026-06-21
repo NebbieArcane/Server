@@ -4,1405 +4,1930 @@ static const ProcRoomTemplate kTheme0Entrances[] = {
 	{ "Ingresso della Dimensione Effimera",
 	  "Una fessura nel terreno rivela una discesa verso l'oscurita'.\n"
 	  "L'aria e' fredda e odora di terra bagnata e muschio.\n"
-	  "Passaggi instabili sembrano richiamarti piu' in profondita'.\n",
+	  "Passaggi instabili sembrano richiamarti piu' in profondita'.\n"
+	  "Terreno irregolare costringe a calibrare ogni passo.\n",
 	  SECT_HILLS, static_cast<long>(INDOORS | DARK) },
 	{ "Varco di Pietra Grezza",
 	  "Due massi inclinati formano un varco stretto verso il basso.\n"
-	  "Il terreno e' scivoloso e l'eco dei tuoi passi rimbomba lontano.\n",
+	  "Il terreno e' scivoloso e l'eco dei tuoi passi rimbomba lontano.\n"
+	  "Il vento sale e scende a ondate irregolari.\n"
+	  "Tracce di passaggio recente segnano il terreno.\n",
 	  SECT_HILLS, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme0Corridors[] = {
 	{ "Corridoio Stretto",
 	  "Un passaggio stretto costringe a procedere a singolo file.\n"
-	  "Gocce d'acqua cadono ritmicamente da qualche parte del soffitto.\n",
+	  "Gocce d'acqua cadono ritmicamente da qualche parte del soffitto.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria Rocciosa",
 	  "La roccia grezza forma pareti irregolari e un soffitto basso.\n"
-	  "Ogni passo fa scricchiolare ghiaia sotto i piedi.\n",
+	  "Ogni passo fa scricchiolare ghiaia sotto i piedi.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Cunicolo Umido",
 	  "Il pavimento e' coperto da una sottile patina d'acqua.\n"
-	  "Senti odore di muffa e un debole fruscio da qualche parte.\n",
+	  "Senti odore di muffa e un debole fruscio da qualche parte.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Curvo",
 	  "Il tunnel curva verso destra e perde subito la luce esterna.\n"
-	  "Incisioni primitive segnano alcune pietre lungo il cammino.\n",
+	  "Incisioni primitive segnano alcune pietre lungo il cammino.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio di Pietra",
 	  "Una piccola camera naturale si apre davanti a te.\n"
-	  "Stalattiti sottili pendono dal soffitto come zanne di pietra.\n",
+	  "Stalattiti sottili pendono dal soffitto come zanne di pietra.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme0Treasures[] = {
 	{ "Nicchia Abbandonata",
 	  "Una nicchia nel muro sembra essere stata usata come nascondiglio.\n"
-	  "Resti di stoffa marcia e ossicini piccoli giacciono sparsi.\n",
+	  "Resti di stoffa marcia e ossicini piccoli giacciono sparsi.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Cella del Tesoro",
 	  "Questa stanza e' curiosamente piu' asciutta delle altre.\n"
-	  "Un cumulo di detriti nasconde qualcosa che luccica debolmente.\n",
+	  "Un cumulo di detriti nasconde qualcosa che luccica debolmente.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme0Traps[] = {
 	{ "Sala Trabocchettata",
 	  "Il pavimento presenta piastrelle leggermente piu' basse delle altre.\n"
-	  "Qualcosa non quadra: l'aria qui e' troppo immobile.\n",
+	  "Qualcosa non quadra: l'aria qui e' troppo immobile.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Inquietante",
 	  "Graffi recenti segnano le pareti, come se qualcuno fosse fuggito in fretta.\n"
-	  "Un odore acre ti punge le narici.\n",
+	  "Un odore acre ti punge le narici.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme0Boss = {
 	"Caverna del Predatore",
-	"Una caverna piu' ampia si apre all'improvviso.\n"
-	"Ossa consumate formano un macabro semicerchio al centro.\n"
-	"Un ringhio basso e' l'unico avvertimento prima dell'attacco.\n",
+	  "Una caverna piu' ampia si apre all'improvviso.\n"
+	  "Ossa consumate formano un macabro semicerchio al centro.\n"
+	  "Un ringhio basso e' l'unico avvertimento prima dell'attacco.\n"
+	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme1Entrances[] = {
 	{ "Bocca della Cripta Effimera",
-	  "Radici contorte incorniciano l'accesso a una cripta che non sembra "
-	  "esistere da sempre.\n"
-	  "Ogni tanto un soffio di vento sale dal basso, portando echi lontani.\n",
+	  "Radici contorte incorniciano l'accesso a una cripta che non sembra esistere da sempre.\n"
+	  "Ogni tanto un soffio di vento sale dal basso, portando echi lontani.\n"
+	  "Resina e muschio impregnano l'aria umida.\n"
+	  "Rami scricchiolano oltre il campo visivo.\n",
 	  SECT_FOREST, static_cast<long>(INDOORS | DARK) },
 	{ "Scalinata Sepolta",
 	  "Gradini consumati scendono in una fossa di pietra.\n"
-	  "L'odore di terra secca e rame vecchio aleggia nell'aria.\n",
+	  "L'odore di terra secca e rame vecchio aleggia nell'aria.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme1Corridors[] = {
 	{ "Corridoio delle Ossa",
 	  "Piccole ossa polverose formano strani cumuli lungo le pareti.\n"
-	  "Il silenzio e' rotto solo dal tuo respiro.\n",
+	  "Il silenzio e' rotto solo dal tuo respiro.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Volta Crollata",
 	  "Macigni caduti costringono a passare curvandosi.\n"
-	  "La polvere sollevata ti punge gli occhi.\n",
+	  "La polvere sollevata ti punge gli occhi.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria delle Lapidi",
 	  "Lastre di pietra inclinate segnano passaggi gia' dimenticati.\n"
-	  "Runa sbiadite si intravedono nella penombra.\n",
+	  "Rune sbiadite si intravedono nella penombra.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio Sepolcrale",
 	  "Una nicchia centrale domina la stanza come un altare vuoto.\n"
-	  "Senti un freddo che non appartiene a questo mondo.\n",
+	  "Senti un freddo che non appartiene a questo mondo.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme1Treasures[] = {
 	{ "Tomba Saccheggiata",
 	  "Un sarcofago vuoto giace rovesciato al centro.\n"
-	  "Qualcosa e' stato lasciato indietro nella furia del saccheggio.\n",
+	  "Qualcosa e' stato lasciato indietro nella furia del saccheggio.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Reliquiario Dimenticato",
 	  "Una nicchia murata e' stata forzata di recente.\n"
-	  "Resti di cera e stoffa pregiata giacciono sparsi.\n",
+	  "Resti di cera e stoffa pregiata giacciono sparsi.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme1Traps[] = {
 	{ "Camera a Punta",
 	  "Il pavimento e' coperto di buche poco profonde e sospette.\n"
-	  "Segni di lama segnano la pietra circostante.\n",
+	  "Segni di lama segnano la pietra circostante.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Maledetto",
 	  "Simboli arsi a fuoco ricoprono l'architrave dell'uscita.\n"
-	  "Un brivido ti percorre la schiena senza ragione apparente.\n",
+	  "Un brivido ti percorre la schiena senza ragione apparente.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme1Boss = {
 	"Sanctum del Guardiano",
-	"Una sala circolare si apre davanti a te, dominata da una statua spezzata.\n"
-	"Due fuochi fatui danzano sopra resti di armature antiche.\n"
-	"Qualcosa si stacca dall'ombra con intento assassino.\n",
+	  "Una sala circolare si apre davanti a te, dominata da una statua spezzata.\n"
+	  "Due fuochi fatui danzano sopra resti di armature antiche.\n"
+	  "Qualcosa si stacca dall'ombra con intento assassino.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme2Entrances[] = {
 	{ "Varco Nebbioso",
 	  "Una coltre di nebbia bassa avvolge l'entrata di un antro poco profondo.\n"
-	  "Le pareti sono stillanti e il pavimento e' coperto di ghiaia scivolosa.\n",
+	  "Le pareti sono stillanti e il pavimento e' coperto di ghiaia scivolosa.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_FIELD, static_cast<long>(INDOORS | DARK) },
 	{ "Breccia nella Nebbia",
 	  "La nebbia si condensa in gocce sulle pareti invisibili.\n"
-	  "Ogni passo sembra muffato, come se il suono venisse inghiottito.\n",
+	  "Ogni passo sembra attutito, come se il suono venisse inghiottito.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n"
+	  "La transizione verso l'interno e' netta e irreversibile.\n",
 	  SECT_FIELD, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme2Corridors[] = {
 	{ "Passaggio Evanescente",
 	  "La nebbia e' cosi' fitta che non vedi il soffitto.\n"
-	  "Per un istante credi di sentire passi accanto a te.\n",
+	  "Per un istante credi di sentire passi accanto a te.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria Sbiadita",
 	  "Contorni incerti si dissolvono appena li guardi.\n"
-	  "Il pavimento sembra cedere sotto il peso del tuo corpo.\n",
+	  "Il pavimento sembra cedere sotto il peso del tuo corpo.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Curva di Vapore",
 	  "Una curva improvvisa nasconde cio' che viene dopo.\n"
-	  "Sussurri lontani si confondono con il fruscio del tuo equipaggiamento.\n",
+	  "Sussurri lontani si confondono con il fruscio del tuo equipaggiamento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio di Bruma",
 	  "La stanza sembra piu' ampia di quanto le pareti lascino supporre.\n"
-	  "L'aria vibra di una tensione silenziosa.\n",
+	  "L'aria vibra di una tensione silenziosa.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme2Treasures[] = {
 	{ "Nicchia nella Bruma",
 	  "La nebbia si dirada un istante su un incavo nel muro.\n"
-	  "Qualcosa luccica e scompare subito dopo.\n",
+	  "Qualcosa luccica e scompare subito dopo.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Cumulo Illusorio",
 	  "Detriti e riflessi si mescolano in un mucchio confuso.\n"
-	  "Non sei sicuro di cio' che e' reale e cio' che e' soltanto nebbia.\n",
+	  "Non sei sicuro di cio' che e' reale e cio' che e' soltanto nebbia.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme2Traps[] = {
-	{ "Sala dei Specchi",
+	{ "Sala degli Specchi",
 	  "Superfici lucide suggeriscono passaggi che non esistono.\n"
-	  "Il disorientamento ti fa esitare un passo di troppo.\n",
+	  "Il disorientamento ti fa esitare un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Instabile",
 	  "Il suolo cede leggermente sotto di te, poi torna solido.\n"
-	  "L'antro sembra reagire alla tua presenza.\n",
+	  "L'antro sembra reagire alla tua presenza.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme2Boss = {
 	"Cuore della Nebbia",
-	"La nebbia si dirada in un'arena silenziosa.\n"
-	"Un'ombra massiccia prende forma al centro, alimentata da vortici grigi.\n"
-	"Non hai molto tempo per capire cosa sia.\n",
+	  "La nebbia si dirada in un'arena silenziosa.\n"
+	  "Un'ombra massiccia prende forma al centro, alimentata da vortici grigi.\n"
+	  "Non hai molto tempo per capire cosa sia.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme3Entrances[] = {
 	{ "Crepaccio Inundato",
 	  "Acqua fredda ti arriva alle caviglie appena oltrepassi la soglia.\n"
-	  "Pareti coperte di muschio pulsano debolmente alla luce del tuo passaggio.\n",
+	  "Pareti coperte di muschio pulsano debolmente alla luce del tuo passaggio.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Breccia Sommersa",
 	  "Una frattura nel terreno rivela cunicoli parzialmente allagati.\n"
-	  "Senti odore di alghe e pietra bagnata.\n",
+	  "Senti odore di alghe e pietra bagnata.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme3Corridors[] = {
 	{ "Canale Roccioso",
 	  "Un rivolo d'acqua scorre lungo il centro del passaggio.\n"
-	  "Le pareti gocciolano in un ritmo costante.\n",
+	  "Le pareti gocciolano in un ritmo costante.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria Allagata",
 	  "Chiazze d'acqua stagnante rendono il cammino incerto.\n"
-	  "Ogni passo solleva un'eco smorzata.\n",
+	  "Ogni passo solleva un'eco smorzata.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio di Rovine",
 	  "Blocchi di pietra lavorata sporgono dalle pareti naturali.\n"
-	  "Resti di mosaico si intravedono sotto il muschio.\n",
+	  "Resti di mosaico si intravedono sotto il muschio.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio delle Colonne",
 	  "Mezzecolonne spezzate delimitano uno spazio un tempo piu' nobile.\n"
-	  "L'acqua gocciola dall'alto come pioggia lenta.\n",
+	  "L'acqua gocciola dall'alto come pioggia lenta.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme3Treasures[] = {
 	{ "Camera del Tesoro Sommerso",
 	  "Una volta asciutta, ora invasa da acqua bassa.\n"
-	  "Qualcosa luccica sotto la superficie.\n",
+	  "Qualcosa luccica sotto la superficie.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Relitto di Pietra",
 	  "Frammenti di statue e vasi rotti giacciono ammassati.\n"
-	  "Un oggetto intatto sembra fuori posto tra le macerie.\n",
+	  "Un oggetto intatto sembra fuori posto tra le macerie.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme3Traps[] = {
 	{ "Sala del Ponte Spezzato",
 	  "Resti di un ponte sospeso oscillano sopra un vuoto d'acqua.\n"
-	  "Il legno marcio scricchiola minacciosamente.\n",
+	  "Il legno marcio scricchiola in modo minaccioso.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Sifonante",
 	  "L'acqua sale e scende in cicli imprevedibili.\n"
-	  "Senti correnti nascoste tirare verso il basso.\n",
+	  "Senti correnti nascoste tirare verso il basso.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme3Boss = {
 	"Arena delle Rovine Profonde",
-	"Una vasta sala sommersa fino alle ginocchia si apre davanti a te.\n"
-	"Colonne spezzate incorniciano un trono di pietra vuoto.\n"
-	"Qualcosa si risveglia dal fango al centro.\n",
+	  "Una vasta sala sommersa fino alle ginocchia si apre davanti a te.\n"
+	  "Colonne spezzate incorniciano un trono di pietra vuoto.\n"
+	  "Qualcosa si risveglia dal fango al centro.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme4Entrances[] = {
 	{ "Ingresso della Forgia",
 	  "Un arco di pietra nera conduce in un antro caldo e fumoso.\n"
-	  "Senti odore di ferro bruciato e carbone spento da giorni.\n",
+	  "Senti odore di ferro bruciato e carbone spento da giorni.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Crepaccio Rovente",
 	  "Vapori caldi salgono da fessure nel pavimento.\n"
-	  "La roccia e' scura e lucida come se fosse stata vitrificata.\n",
+	  "La roccia e' scura e lucida come se fosse stata vitrificata.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme4Corridors[] = {
 	{ "Passaggio delle Incudini",
 	  "Incudini rovesciate e martelli arrugginiti bloccano parzialmente il cammino.\n"
-	  "Scintille spente macchiano le pareti.\n",
+	  "Scintille spente macchiano le pareti.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Galleria delle Catene",
 	  "Catene pendono dal soffitto come liane di metallo.\n"
-	  "Ogni passo fa vibrare un debole rintocco.\n",
+	  "Ogni passo fa vibrare un debole rintocco.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Corridoio delle Braci",
 	  "Carboni ardenti illuminano debolmente nicchie vuote.\n"
-	  "L'aria e' secca e punge la gola.\n",
+	  "L'aria e' secca e punge la gola.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Atrio della Fornace",
 	  "Una fornace spenta domina la stanza come un occhio cavo.\n"
-	  "Ceneri sottili coprono ogni superficie.\n",
+	  "Ceneri sottili coprono ogni superficie.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme4Treasures[] = {
 	{ "Deposito di Lingotti",
 	  "Lingotti deformi giacciono ammassati in un angolo.\n"
-	  "Qualcosa di piu' piccolo luccica tra il metallo spento.\n",
+	  "Qualcosa di piu' piccolo luccica tra il metallo spento.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Scrigno del Fabbro",
 	  "Un banco da lavoro crollato nasconde cassetti intrappolati.\n"
-	  "Attrezzi fini sono ancora impigliati nel legno carbonizzato.\n",
+	  "Attrezzi fini sono ancora impigliati nel legno carbonizzato.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme4Traps[] = {
 	{ "Sala delle Lamine",
 	  "Lame a molla sporgono appena dal pavimento polveroso.\n"
-	  "Segni di tagli recenti incrociano le piastrelle.\n",
+	  "Segni di tagli recenti incrociano le piastrelle.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio Rovente",
 	  "Il pavimento e' insolitamente caldo in punti precisi.\n"
-	  "Vapor acido sfiata da fessure sottili.\n",
+	  "Vapori acidi sfiatano da fessure sottili.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme4Boss = {
 	"Forgia del Dominatore",
-	"Una vasta sala riecheggia del calore residuo di mille martellate.\n"
-	"Un'incudine enorme troneggia al centro, circondata da armi incomplete.\n"
-	"Qualcosa si stacca dall'ombra con passi pesanti.\n",
+	  "Una vasta sala riecheggia del calore residuo di mille martellate.\n"
+	  "Un'incudine enorme troneggia al centro, circondata da armi incomplete.\n"
+	  "Qualcosa si stacca dall'ombra con passi pesanti.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT)
 };
 
 static const ProcRoomTemplate kTheme5Entrances[] = {
 	{ "Ghiaccio Sottile",
 	  "Una fessura rivestita di brina conduce verso il freddo profondo.\n"
-	  "Il tuo alito si condensa all'istante.\n",
+	  "Il tuo alito si condensa all'istante.\n"
+	  "La transizione verso l'interno e' netta e irreversibile.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Bocca del Gelo",
 	  "Cristalli di ghiaccio incorniciano un passaggio stretto.\n"
-	  "Scricchiolii lontani echeggiano come passi su neve dura.\n",
+	  "Scricchiolii lontani echeggiano come passi su neve dura.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 };
 static const ProcRoomTemplate kTheme5Corridors[] = {
 	{ "Galleria Ghiacciata",
-	  "Stalattiti di ghiaccio pendono minacciosamente dal soffitto basso.\n"
-	  "Il pavimento e' scivoloso e coperto da una crosta trasparente.\n",
+	  "Stalattiti di ghiaccio pendono in modo minaccioso dal soffitto basso.\n"
+	  "Il pavimento e' scivoloso e coperto da una crosta trasparente.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Passaggio Sibilante",
 	  "Venti gelidi attraversano fessure invisibili nelle pareti.\n"
-	  "La luce sembra assottigliarsi ad ogni passo.\n",
+	  "La luce sembra assottigliarsi ad ogni passo.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Corridoio di Brina",
 	  "Ogni superficie e' ricoperta da un velo bianco e granuloso.\n"
-	  "Senti le dita intorpidite nonostante il movimento.\n",
+	  "Senti le dita intorpidite nonostante il movimento.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Atrio del Gelo Eterno",
 	  "Una colonna di ghiaccio al centro riflette la tua figura distorta.\n"
-	  "Il silenzio qui e' cosi' denso da far male alle orecchie.\n",
+	  "Il silenzio qui e' cosi' denso da far male alle orecchie.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 };
 static const ProcRoomTemplate kTheme5Treasures[] = {
 	{ "Cavità Congelata",
 	  "Oggetti intrappolati nel ghiaccio luccicano debolmente.\n"
-	  "Uno strato superficiale sembra piu' fragile del resto.\n",
+	  "Uno strato superficiale sembra piu' fragile del resto.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Tesoro del Bianco",
 	  "Un mucchio di oggetti congelati forma una scultura caotica.\n"
-	  "Qualcosa spicca ancora riconoscibile in mezzo al ghiaccio.\n",
+	  "Qualcosa spicca ancora riconoscibile in mezzo al ghiaccio.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 };
 static const ProcRoomTemplate kTheme5Traps[] = {
 	{ "Sala delle Lame di Ghiaccio",
 	  "Schegge affilate sporgono dal pavimento come zanne.\n"
-	  "Il freddo qui e' piu' intenso che altrove.\n",
+	  "Il freddo qui e' piu' intenso che altrove.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Passaggio Instabile",
 	  "Il ghiaccio sotto i tuoi piedi scricchiola in modo inquietante.\n"
-	  "Crepe sottili si propagano dove calpesti.\n",
+	  "Crepe sottili si propagano dove calpesti.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 };
 static const ProcRoomTemplate kTheme5Boss = {
 	"Trono di Ghiaccio Nero",
-	"Una caverna aperta culmina in un trono scolpito nel ghiaccio.\n"
-	"Fratture nere attraversano la parete come vene gelide.\n"
-	"Una figura immobile si scolla dal trono.\n",
+	  "Una caverna aperta culmina in un trono scolpito nel ghiaccio.\n"
+	  "Fratture nere attraversano la parete come vene gelide.\n"
+	  "Una figura immobile si scolla dal trono.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD)
 };
 
 static const ProcRoomTemplate kTheme6Entrances[] = {
 	{ "Tela dell'Ingresso",
 	  "Ragnatele dense ostruiscono parzialmente l'accesso.\n"
-	  "Piccoli corpi essiccati pendono come macabri trofei.\n",
+	  "Piccoli corpi essiccati pendono come macabri trofei.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Fessura Infestata",
 	  "Un intreccio di fili appiccicosi ricopre ogni sporgenza rocciosa.\n"
-	  "Senti un fruscio secco provenire da piu' direzioni.\n",
+	  "Senti un fruscio secco provenire da piu' direzioni.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme6Corridors[] = {
 	{ "Galleria delle Tele",
 	  "Tele spesse riducono lo spazio a un corridoio claustrofobico.\n"
-	  "Qualcosa si muove appena fuori dal tuo campo visivo.\n",
+	  "Qualcosa si muove appena fuori dal tuo campo visivo.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Appiccicoso",
 	  "I fili si attaccano alle tue spalle ad ogni passo.\n"
-	  "Resti di prede giacciono avvolti in bozzoli grigi.\n",
+	  "Resti di prede giacciono avvolti in bozzoli grigi.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio dei Bozzoli",
 	  "Sacche ovattate pendono dal soffitto come frutti immaturi.\n"
-	  "Alcuni sembrano ancora pulsare debolmente.\n",
+	  "Alcuni sembrano ancora pulsare debolmente.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Ragnatelaio",
 	  "Una volta naturale e' stata completamente rivestita di seta.\n"
-	  "Ossa piccole formano un tappeto scricchiolante.\n",
+	  "Ossa piccole formano un tappeto scricchiolante.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme6Treasures[] = {
 	{ "Deposito di Prede",
 	  "Equipaggiamenti strappati giacciono ammucchiati in un angolo.\n"
-	  "Qualcosa di valore e' sopravvissuto alla digestione.\n",
+	  "Qualcosa di valore e' sopravvissuto alla digestione.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Nicchia del Tesoro Avvolto",
 	  "Un bozzolo parzialmente aperto rivela oggetti lucidi all'interno.\n"
-	  "Filamenti appiccicosi rendono difficile avvicinarsi.\n",
+	  "Filamenti appiccicosi rendono difficile avvicinarsi.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme6Traps[] = {
 	{ "Sala delle Trappole di Seta",
 	  "Fili tesi attraversano la stanza all'altezza del collo.\n"
-	  "Non li vedi finche' non sfiori qualcosa di appiccicoso.\n",
+	  "Non li vedi finche' non sfiori qualcosa di appiccicoso.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Collante",
 	  "Il pavimento e' coperto da un velo viscoso che frena ogni passo.\n"
-	  "Vibrazioni leggere corrono lungo le pareti.\n",
+	  "Vibrazioni leggere corrono lungo le pareti.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme6Boss = {
 	"Nido della Regina",
-	"Una cupola naturale e' stata trasformata in un nido enorme.\n"
+	  "Una cupola naturale e' stata trasformata in un nido enorme.\n"
 	  "Tele fresche brillano debolmente al centro.\n"
-	  "Occhi multipli si aprono nell'oscurita' sopra di te.\n",
+	  "Occhi multipli si aprono nell'oscurita' sopra di te.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme7Entrances[] = {
 	{ "Cenere e Vento",
 	  "Un crollo parziale rivela un cunicolo pieno di cenere soffocante.\n"
-	  "Ogni respiro ti riempie la bocca di polvere amara.\n",
+	  "Ogni respiro ti riempie la bocca di polvere amara.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Varco Bruciato",
 	  "Pareti annerite segnano il confine di un antro devastato dal fuoco.\n"
-	  "Calore residuo aleggia ancora nell'aria stagnante.\n",
+	  "Calore residuo aleggia ancora nell'aria stagnante.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme7Corridors[] = {
 	{ "Galleria delle Ceneri",
 	  "Ceneri profonde rendono incerto ogni appoggio.\n"
-	  "Resti carbonizzati sporgono come arbusti neri.\n",
+	  "Resti carbonizzati sporgono come arbusti neri.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio Fumoso",
 	  "Fumo basso aleggia a mezz'altezza offuscando la vista.\n"
-	  "Tossi secche echeggiano da qualche parte davanti a te.\n",
+	  "Tossi secche echeggiano da qualche parte davanti a te.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Corridoio delle Scintille",
 	  "Schegge ardenti cadono occasionalmente dal soffitto instabile.\n"
-	  "Odore di legno e carne bruciata si mescolano.\n",
+	  "Odore di legno e carne bruciata si mescolano.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Atrio del Fuoco Spento",
 	  "Un antico rogo al centro e' ridotto a un cumulo di braci morte.\n"
-	  "Simboli scrostati circondano il perimetro.\n",
+	  "Simboli scrostati circondano il perimetro.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme7Treasures[] = {
 	{ "Reliquia Carbonizzata",
 	  "Oggetti mezzo fusi giacciono in una nicchia riparata dal fuoco.\n"
-	  "Qualcosa ha resistito alla temperatura infernale.\n",
+	  "Qualcosa ha resistito alla temperatura infernale.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Forziere delle Braci",
 	  "Un contenitore di metallo scuro e' ancora tiepido al tatto.\n"
-	  "Ceneri soffocanti si sollevano quando ti avvicini.\n",
+	  "Ceneri soffocanti si sollevano quando ti avvicini.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme7Traps[] = {
 	{ "Sala del Fuoco Rinascente",
 	  "Piastrelle incandescenti si accendono a intermittenza sotto i piedi.\n"
-	  "L'aria vibra di calore improvviso.\n",
+	  "L'aria vibra di calore improvviso.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio Instabile",
 	  "Il soffitto gocciola resina bollente in punti imprevedibili.\n"
-	  "Segni di ustioni fresche segnano il cammino.\n",
+	  "Segni di ustioni fresche segnano il cammino.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme7Boss = {
 	"Altare delle Fiamme Morte",
-	"Una piattaforma rialzata domina la sala devastata.\n"
+	  "Una piattaforma rialzata domina la sala devastata.\n"
 	  "Fiamme spettrali danzano senza calore attorno a un trono vuoto.\n"
-	  "Una figura brucia ancora pur essendo viva.\n",
+	  "Una figura brucia ancora pur essendo viva.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT)
 };
 
 static const ProcRoomTemplate kTheme8Entrances[] = {
 	{ "Frattura di Cristallo",
 	  "Pareti luccicanti conducono in un antro di riflessi distorti.\n"
-	  "Ogni suono si moltiplica in echi acuti.\n",
+	  "Ogni suono si moltiplica in echi acuti.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Varco Prismatico",
 	  "Cristalli affilati incorniciano l'ingresso come zanne di vetro.\n"
-	  "La luce sembra piegarsi attraverso le superfici taglienti.\n",
+	  "La luce sembra piegarsi attraverso le superfici taglienti.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme8Corridors[] = {
 	{ "Galleria Riflettente",
 	  "Mille immagini deformate del tuo passaggio ti accompagnano.\n"
-	  "E' difficile distinguere cio' che e' reale da cio' che e' riflesso.\n",
+	  "E' difficile distinguere cio' che e' reale da cio' che e' riflesso.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Passaggio Tagliente",
 	  "Schegge di cristallo sporgono da ogni angolo.\n"
-	  "Un passo incerto potrebbe costare caro.\n",
+	  "Un passo incerto potrebbe costare caro.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Corridoio delle Facette",
 	  "Pareti multifaccette scintillano con luce interna debole.\n"
-	  "Il pavimento e' coperto da polvere di vetro sottile.\n",
+	  "Il pavimento e' coperto da polvere di vetro sottile.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Atrio del Prisma",
 	  "Un cristallo enorme sospeso al centro divide la luce in arcobaleni spenti.\n"
-	  "L'aria sa di ozono e pietra fredda.\n",
+	  "L'aria sa di ozono e pietra fredda.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme8Treasures[] = {
 	{ "Geode Spaccato",
-	  "Una geode aperta rivela minerali grezzi di valore incerto.\n"
-	  "Schegge affilate rendono difficile raccogliere il contenuto.\n",
+	  "Un geode aperto rivela minerali grezzi di valore incerto.\n"
+	  "Schegge affilate rendono difficile raccogliere il contenuto.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Cumulo di Gemme",
 	  "Pietre lucenti giacciono ammucchiate come sabbia grossa.\n"
-	  "Alcune sembrano troppo perfette per essere naturali.\n",
+	  "Alcune sembrano troppo perfette per essere naturali.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme8Traps[] = {
 	{ "Sala delle Schegge",
 	  "Cristalli affilati sporgono dal pavimento in pattern irregolari.\n"
-	  "Riflessi ingannevoli nascondono i punti piu' pericolosi.\n",
+	  "Riflessi ingannevoli nascondono i punti piu' pericolosi.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Passaggio Fratturato",
 	  "Il pavimento di cristallo cede con suoni di vetro rotto.\n"
-	  "Fessure sottili si aprono dove meno te lo aspetti.\n",
+	  "Fessure sottili si aprono dove meno te lo aspetti.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme8Boss = {
 	"Cuore di Cristallo",
-	"Una caverna interamente rivestita di facce lucenti pulsa di luce interna.\n"
+	  "Una caverna interamente rivestita di facce lucenti pulsa di luce interna.\n"
 	  "Al centro, un monolito scintillante domina la sala.\n"
-	  "Qualcosa si muove dentro la pietra vivente.\n",
+	  "Qualcosa si muove dentro la pietra vivente.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT)
 };
 
 static const ProcRoomTemplate kTheme9Entrances[] = {
 	{ "Bocca Fungina",
 	  "Giganteschi funghi luminescenti fiancheggiano l'ingresso.\n"
-	  "Un odore dolciastro ti invade le narici all'istante.\n",
+	  "Un odore dolciastro ti invade le narici all'istante.\n"
+	  "La transizione verso l'interno e' netta e irreversibile.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Discesa Sporigena",
 	  "Spore dense fluttuano nell'aria come nebbia verdastra.\n"
-	  "Il terreno e' molle e elastico sotto i piedi.\n",
+	  "Il terreno e' molle e elastico sotto i piedi.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme9Corridors[] = {
 	{ "Galleria dei Funghi",
 	  "Colonne fungine formano un bosco sotterraneo innaturale.\n"
-	  "Gocce vischiose cadono da cappelli enormi.\n",
+	  "Gocce vischiose cadono da cappelli enormi.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Passaggio Micelio",
 	  "Radici biancastre intrecciate coprono pareti e soffitto.\n"
-	  "Un fruscio costante sembra provenire dal terreno stesso.\n",
+	  "Un fruscio costante sembra provenire dal terreno stesso.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Corridoio delle Spore",
 	  "Nuvole di spore pulsano lentamente nell'aria immobile.\n"
-	  "Tossire qui sembra attirare qualcosa.\n",
+	  "Tossire qui sembra attirare qualcosa.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Atrio del Cappello Rosso",
 	  "Un fungo rosso enorme domina la stanza come un baldacchino.\n"
-	  "Luci biancastre pulsano ritmicamente sotto di esso.\n",
+	  "Luci biancastre pulsano ritmicamente sotto di esso.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme9Treasures[] = {
 	{ "Culla di Spore",
 	  "Sacche di spore dorate giacciono protette da anelli di micelio.\n"
-	  "Qualcosa di solido e' cresciuto al loro interno.\n",
+	  "Qualcosa di solido e' cresciuto al loro interno.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Deposito Organico",
 	  "Oggetti avvolti in tessuto fungino attendono di essere scoperti.\n"
-	  "La materia viscosa si contrae al tuo avvicinarti.\n",
+	  "La materia viscosa si contrae al tuo avvicinarti.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme9Traps[] = {
 	{ "Sala delle Spore Acide",
 	  "Nuvole verdi si concentrano vicino al pavimento.\n"
-	  "La pelle prude appena vi entri.\n",
+	  "La pelle prude appena vi entri.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Passaggio Elastico",
 	  "Il terreno cede e ti riporta indietro con un tonfo sordo.\n"
-	  "Filamenti viscidi tentano di avvolgere le caviglie.\n",
+	  "Filamenti viscidi tentano di avvolgere le caviglie.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme9Boss = {
 	"Santuario del Mycelium",
-	"Una cupola naturale e' completamente rivestita da funghi giganti.\n"
+	  "Una cupola naturale e' completamente rivestita da funghi giganti.\n"
 	  "Al centro, un trono organico pulsa come un cuore lento.\n"
-	  "Una forma massiccia si stacca dalla parete vivente.\n",
+	  "Una forma massiccia si stacca dalla parete vivente.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND)
 };
 
 static const ProcRoomTemplate kTheme10Entrances[] = {
 	{ "Portico Rovinato",
 	  "Colonne spezzate segnano l'ingresso di un tempio dimenticato.\n"
-	  "Sabbia fine ha invaso ogni gradino.\n",
+	  "Sabbia fine ha invaso ogni gradino.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Scalinata Sepolta",
 	  "Gradini consumati scendono verso sale sotterranee di culto.\n"
-	  "Idoli senza volto guardano il tuo passaggio.\n",
+	  "Idoli senza volto guardano il tuo passaggio.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme10Corridors[] = {
 	{ "Galleria delle Colonne",
 	  "File di colonne spezzate creano un labirinto di ombre.\n"
-	  "Iscrizioni sbiadite raccontano riti dimenticati.\n",
+	  "Iscrizioni sbiadite raccontano riti dimenticati.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Passaggio delle Arene",
 	  "Sabbia fine copre il pavimento rendendo faticoso ogni passo.\n"
-	  "Venti secchi sibilano tra le fessure.\n",
+	  "Venti secchi sibilano tra le fessure.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Corridoio degli Idoli",
 	  "Statue mutilate fiancheggiano il cammino con sguardo vuoto.\n"
-	  "Offerte fossilizzate giacciono ai loro piedi.\n",
+	  "Offerte fossilizzate giacciono ai loro piedi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Atrio del Deserto",
 	  "Una volta parzialmente crollata lascia filtrare sabbia dal mondo esterno.\n"
-	  "L'eco dei tuoi passi sembra ripetere preghiere antiche.\n",
+	  "L'eco dei tuoi passi sembra ripetere preghiere antiche.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme10Treasures[] = {
 	{ "Camera delle Offerte",
 	  "Vasi di terracotta e monete antiche giacciono sparsi.\n"
-	  "Un oggetto piu' recente sembra fuori posto tra le reliquie.\n",
+	  "Un oggetto piu' recente sembra fuori posto tra le reliquie.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Santuario del Tesoro",
 	  "Un altare basso sorregge oggetti avvolti in stoffa secca.\n"
-	  "Simboli arcaici ne incorniciano il perimetro.\n",
+	  "Simboli arcaici ne incorniciano il perimetro.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme10Traps[] = {
 	{ "Sala delle Frecce",
 	  "Fori sottili nelle pareti suggeriscono meccanismi ancora attivi.\n"
-	  "Segni sul pavimento indicano dove non calpestare.\n",
+	  "Segni sul pavimento indicano dove non calpestare.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Passaggio del Crollo",
 	  "Macigni instabili bloccano parzialmente il cammino.\n"
-	  "Polvere fresca indica movimenti recenti.\n",
+	  "Polvere fresca indica movimenti recenti.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme10Boss = {
 	"Sanctum del Profeta Morto",
-	"Una sala vasta culmina in un trono di pietra deserta.\n"
+	  "Una sala vasta culmina in un trono di pietra deserta.\n"
 	  "Una figura scheletrica incoronata di sabbia si alza lentamente.\n"
-	  "L'aria sa di incenso rancido e tempo infinito.\n",
+	  "L'aria sa di incenso rancido e tempo infinito.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC)
 };
 
 static const ProcRoomTemplate kTheme11Entrances[] = {
 	{ "Bordo del Baratro",
 	  "Un passaggio stretto costeggia un vuoto senza fondo.\n"
-	  "Venti freddi salgono dal basso strappando via polvere e sassolini.\n",
+	  "Venti freddi salgono dal basso strappando via polvere e sassolini.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Crepaccio Verticale",
 	  "Piattaforme naturali scendono a zig-zag verso l'oscurita'.\n"
-	  "Ogni passo fa eco lontano nel vuoto.\n",
+	  "Ogni passo fa eco lontano nel vuoto.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme11Corridors[] = {
 	{ "Passaggio Sospeso",
 	  "Un sentiero stretto costeggia un abisso senza ringhiere.\n"
-	  "Pietre cadono nel vuoto con ritardo spaventoso.\n",
+	  "Pietre cadono nel vuoto con ritardo spaventoso.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria del Vuoto",
 	  "Il corridoio e' scavato nel fianco di una parete verticale.\n"
-	  "L'oscurita' sotto di te sembra muoversi.\n",
+	  "L'oscurita' sotto di te sembra muoversi.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio Echeggiante",
 	  "Ogni suono rimbalza dal baratro rendendo difficile orientarsi.\n"
-	  "Venti improvvisi spingono con forza inaspettata.\n",
+	  "Venti improvvisi spingono con forza inaspettata.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Precipizio",
 	  "Una sporgenza naturale domina la vista su un abisso immenso.\n"
-	  "Luci lontane sembrano danzare sul fondo invisibile.\n",
+	  "Luci lontane sembrano danzare sul fondo invisibile.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme11Treasures[] = {
 	{ "Riparo sul Vuoto",
 	  "Una nicchia protetta contiene oggetti lasciati da esploratori precedenti.\n"
-	  "Alcuni sembrano troppo vicini al bordo.\n",
+	  "Alcuni sembrano troppo vicini al bordo.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Tesoro del Precipitato",
 	  "Oggetti caduti da chissa' dove giacciono ammucchiati su una sporgenza.\n"
-	  "Qualcosa luccica tra le pietre instabili.\n",
+	  "Qualcosa luccica tra le pietre instabili.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme11Traps[] = {
 	{ "Sala del Vuoto",
 	  "Piastrelle cedevoli nascondono fessure verso l'abisso.\n"
-	  "Un passo falso potrebbe essere l'ultimo.\n",
+	  "Un passo falso potrebbe essere l'ultimo.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Vento",
 	  "Raffiche improvvise spingono verso il baratro laterale.\n"
-	  "Non c'e' nulla a cui aggrapparsi.\n",
+	  "Non c'e' nulla a cui aggrapparsi.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme11Boss = {
 	"Abisso Coronato",
-	"Una piattaforma naturale si affaccia su un vuoto infinito.\n"
+	  "Una piattaforma naturale si affaccia su un vuoto infinito.\n"
 	  "Al centro, una figura massiccia sembra ancorata alla roccia stessa.\n"
-	  "Il vento urla mentre qualcosa si scolla dall'ombra.\n",
+	  "Il vento urla mentre qualcosa si scolla dall'ombra.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme12Entrances[] = {
 	{ "Arco dell'Ossuario",
 	  "Cranii impilati formano un arco macabro verso l'interno.\n"
-	  "Un silenzio pesante aleggia non appena oltrepassi.\n",
+	  "Un silenzio pesante aleggia non appena oltrepassi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Discesa delle Ossa",
 	  "Gradini di pietra sono sparsi di resti umani fossilizzati.\n"
-	  "Ogni passo scricchiola in modo inquietante.\n",
+	  "Ogni passo scricchiola in modo inquietante.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme12Corridors[] = {
 	{ "Galleria delle Costole",
 	  "Arcate ossee ricostruite sostengono il soffitto basso.\n"
-	  "Polvere di osso copre ogni superficie.\n",
+	  "Polvere di osso copre ogni superficie.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Passaggio dei Teschi",
 	  "Muri di teschi ti osservano da entrambi i lati.\n"
-	  "Alcune orbite sembrano seguirti mentre passi.\n",
+	  "Alcune orbite sembrano seguirti mentre passi.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Corridoio del Sacro Resto",
 	  "Resti impilati con cura formano decorazioni disturbanti.\n"
-	  "Simboli ossari segnano il cammino.\n",
+	  "Simboli ossari segnano il cammino.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Atrio del Re delle Ossa",
 	  "Un trono di teschi domina la stanza come trofeo eterno.\n"
-	  "L'aria e' fredda e immobile.\n",
+	  "L'aria e' fredda e immobile.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme12Treasures[] = {
 	{ "Camera del Tesoro Osseo",
 	  "Gioielli antichi giacciono tra resti umani dimenticati.\n"
-	  "Qualcosa di recente brilla fuori contesto.\n",
+	  "Qualcosa di recente brilla fuori contesto.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Reliquiario Macabro",
 	  "Una nicchia murata e' stata forzata di recente.\n"
-	  "Resti avvolti in stoffa nascondono qualcosa di solido.\n",
+	  "Resti avvolti in stoffa nascondono qualcosa di solido.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme12Traps[] = {
 	{ "Sala delle Lame Ossee",
 	  "Schegge d'osso affilate sporgono dal pavimento.\n"
-	  "Segni di lacerazioni recenti segnano le pareti.\n",
+	  "Segni di lacerazioni recenti segnano le pareti.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Passaggio Instabile",
 	  "Pile di ossa cedono sotto il peso del corpo.\n"
-	  "Rumori di crollo risuonano da piu' direzioni.\n",
+	  "Rumori di crollo risuonano da piu' direzioni.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme12Boss = {
 	"Trono di Cranii",
-	"Una sala circolare e' rivestita interamente di teschi umani.\n"
-	  "Al centro, una figura imponente e' coronata di ossa.\n"
-	  "Scheletri incompleti si agitano ai suoi piedi.\n",
+	  "Una sala circolare e' rivestita interamente di teschi umani.\n"
+	  "Al centro, una figura imponente e' incornata di ossa.\n"
+	  "Scheletri incompleti si agitano ai suoi piedi.\n"
+	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND)
 };
 
 static const ProcRoomTemplate kTheme13Entrances[] = {
 	{ "Porta del Culto",
 	  "Due statue acefale fiancheggiano un arco di pietra consacrato.\n"
-	  "Cera rancida e incenso stantio impregnano l'aria.\n",
+	  "Cera rancida e incenso stantio impregnano l'aria.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Scalinata Consacrata",
 	  "Gradini consumati da secoli di pellegrinaggi conducono al basso.\n"
-	  "Simboli sacri coprono ogni superficie disponibile.\n",
+	  "Simboli sacri coprono ogni superficie disponibile.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme13Corridors[] = {
 	{ "Galleria delle Candele",
 	  "Candele spente da tempo riempiono nicchie su entrambi i lati.\n"
-	  "Gocce di cera formano stalattiti grottesche.\n",
+	  "Gocce di cera formano stalattiti grottesche.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Rito",
 	  "Cerchi di sale e cenere segnano il pavimento a intervalli regolari.\n"
-	  "Sussurri sembrano provenire da pareti spesse.\n",
+	  "Sussurri sembrano provenire da pareti spesse.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio delle Icone",
 	  "Icone scrostate osservano il cammino con occhi vuoti.\n"
-	  "Qualcuna e' stata deliberatamente mutilata.\n",
+	  "Qualcuna e' stata deliberatamente mutilata.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Culto Dimenticato",
 	  "Una cupola bassa amplifica ogni respiro in un sussurro.\n"
-	  "Banchi di pietra attendono fedeli che non arriveranno.\n",
+	  "Banchi di pietra attendono fedeli che non arriveranno.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme13Treasures[] = {
 	{ "Camera delle Offerte Sacre",
 	  "Calici d'argento e pergamene sigillate giacciono su un altare.\n"
-	  "Qualcosa e' stato lasciato indietro nel frettoloso abbandono.\n",
+	  "Qualcosa e' stato lasciato indietro nel frettoloso abbandono.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Reliquiario Profanato",
 	  "Una cassa sacra e' stata forzata con violenza.\n"
-	  "Resti di cera e stoffa profumata riempiono l'apertura.\n",
+	  "Resti di cera e stoffa profumata riempiono l'apertura.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme13Traps[] = {
 	{ "Sala del Giudizio",
 	  "Piastrelle con simboli di condanna coprono il pavimento.\n"
-	  "Un brivido sacro ti percorre la schiena senza motivo.\n",
+	  "Un brivido sacro ti percorre la schiena senza motivo.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Maledetto",
-	  "Runa bruciate a fuoco segnano l'architrave dell'uscita.\n"
-	  "Senti un peso inspiegabile sulle spalle.\n",
+	  "Rune bruciate a fuoco segnano l'architrave dell'uscita.\n"
+	  "Senti un peso inspiegabile sulle spalle.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme13Boss = {
 	"Altare del Falso Dio",
-	"Una navata sotterranea culmina in un altare macchiato di secoli.\n"
+	  "Una navata sotterranea culmina in un altare macchiato di secoli.\n"
 	  "Una figura incoronata di luce spenta si alza dal pulpito di pietra.\n"
-	  "Cori invisibili sembrano intonare preghiere distorte.\n",
+	  "Cori invisibili sembrano intonare preghiere distorte.\n"
+	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme14Entrances[] = {
 	{ "Sentiero di Pietra Viva",
 	  "Alberi e cespugli sono stati trasformati in pietra grigia.\n"
-	  "Il silenzio e' assoluto: nemmeno il vento osa muoversi.\n",
+	  "Il silenzio e' assoluto: nemmeno il vento osa muoversi.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n"
+	  "La transizione verso l'interno e' netta e irreversibile.\n",
 	  SECT_FOREST, static_cast<long>(INDOORS | DARK) },
 	{ "Varco del Giardino Morto",
 	  "Un arco di rovine ricopre l'ingresso di un giardino congelato nel tempo.\n"
-	  "Statue vegetali sembrano osservarti senza occhi.\n",
+	  "Statue vegetali sembrano osservarti senza occhi.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_FOREST, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme14Corridors[] = {
 	{ "Viale delle Statue",
 	  "Figure arboree pietrificate fiancheggiano un sentiero stretto.\n"
-	  "Muschio secco ricopre ogni superficie immobile.\n",
+	  "Muschio secco ricopre ogni superficie immobile.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio di Quarzo",
 	  "Cristalli opachi sporgono dalle pareti come spine di pietra.\n"
-	  "I tuoi passi echeggiano in modo innaturale.\n",
+	  "I tuoi passi echeggiano in modo innaturale.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio delle Radici",
 	  "Radici fossilizzate formano un soffitto a volta irregolare.\n"
-	  "Polline di pietra ricopre il pavimento.\n",
+	  "Polline di pietra ricopre il pavimento.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Giardiniere",
 	  "Attrezzi arrugginiti giacciono accanto a vasi di pietra vuoti.\n"
-	  "Una sensazione di attesa permane nell'aria.\n",
+	  "Una sensazione di attesa permane nell'aria.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme14Treasures[] = {
 	{ "Serra Pietrificata",
 	  "Piante rare congelate in minerali luccicano debolmente.\n"
-	  "Qualcosa e' stato nascosto tra i vasi rotti.\n",
+	  "Qualcosa e' stato nascosto tra i vasi rotti.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Nicchia del Seme",
 	  "Una capsula di pietra e' stata scalfita da mani recenti.\n"
-	  "Frammenti di gemme verdi giacciono sparsi.\n",
+	  "Frammenti di gemme verdi giacciono sparsi.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme14Traps[] = {
 	{ "Sala delle Statue Cadenti",
 	  "Figure di pietra sono inclinate in equilibrio precario.\n"
-	  "Un urto potrebbe innescare un crollo a catena.\n",
+	  "Un urto potrebbe innescare un crollo a catena.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Instabile",
 	  "Piastrelle sottili scricchiolano sotto il peso del corpo.\n"
-	  "Crepe sottili si propagano ad ogni passo.\n",
+	  "Crepe sottili si propagano ad ogni passo.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme14Boss = {
 	"Cuore del Giardino Pietrificato",
-	"Un albero colossale di pietra domina la sala circolare.\n"
+	  "Un albero colossale di pietra domina la sala circolare.\n"
 	  "Figure immobili sembrano pronte a scollarsi dalla roccia.\n"
-	  "Una presenza antica pulsa al centro del tronco mineralizzato.\n",
+	  "Una presenza antica pulsa al centro del tronco mineralizzato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme15Entrances[] = {
 	{ "Pozzo della Miniera",
 	  "Una scala di ferro arrugginito scende in profondita'.\n"
-	  "Odore di polvere e metallo stagnante riempie l'aria.\n",
+	  "Odore di polvere e metallo stagnante riempie l'aria.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Galleria di Servizio",
 	  "Carrelli abbandonati bloccano parzialmente l'ingresso.\n"
-	  "Piccoli cristalli brillano nelle pareti umide.\n",
+	  "Piccoli cristalli brillano nelle pareti umide.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme15Corridors[] = {
 	{ "Tunnel di Ardesia",
 	  "Travi di legno marcio sorreggono un soffitto instabile.\n"
-	  "Gocce nere cadono ritmicamente da qualche parte.\n",
+	  "Gocce nere cadono ritmicamente da qualche parte.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Passaggio dei Picconi",
 	  "Attrezzi da miniera giacciono abbandonati lungo il muro.\n"
-	  "Segni di scavo recente contraddicono l'abbandono.\n",
+	  "Segni di scavo recente contraddicono l'abbandono.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Corridoio del Carbone",
 	  "Pareti nere di fuliggine rendono difficile respirare.\n"
-	  "Impronte di stivali si perdono in piu' direzioni.\n",
+	  "Impronte di stivali si perdono in piu' direzioni.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Atrio del Capo Miniera",
 	  "Una lampada spenta pende da un gancio arrugginito.\n"
-	  "Piani polverosi coprono un tavolo di legno.\n",
+	  "Piani polverosi coprono un tavolo di legno.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme15Treasures[] = {
 	{ "Camera del Vezzo",
 	  "Filoni di minerali grezzi affiorano dalle pareti.\n"
-	  "Resti di sacchi strappati indicano un furto interrotto.\n",
+	  "Resti di sacchi strappati indicano un furto interrotto.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Cassaforte del Taglio",
 	  "Una porta di ferro e' stata forzata con violenza.\n"
-	  "Monete coperte di polvere giacciono in cumuli disordinati.\n",
+	  "Monete coperte di polvere giacciono in cumuli disordinati.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme15Traps[] = {
 	{ "Sala del Crollo",
 	  "Macigni sospesi minacciano di cadere da supporti marci.\n"
-	  "Vibrazioni leggere fanno tremare la polvere.\n",
+	  "Vibrazioni leggere fanno tremare la polvere.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 	{ "Passaggio dei Carrelli",
 	  "Binari arrugginiti attraversano il pavimento a sorpresa.\n"
-	  "Un carrello inclinato potrebbe rotolare da un lato.\n",
+	  "Un carrello inclinato potrebbe rotolare da un lato.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
 static const ProcRoomTemplate kTheme15Boss = {
 	"Camera del Filone Nero",
-	"Una vena di minerali oscuri pulsa debolmente al centro della caverna.\n"
+	  "Una vena di minerali oscuri pulsa debolmente al centro della caverna.\n"
 	  "Resti di equipaggiamento da minatore circondano un trono di roccia.\n"
-	  "Qualcosa si muove tra le ombre del filone.\n",
+	  "Qualcosa si muove tra le ombre del filone.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND)
 };
 
 static const ProcRoomTemplate kTheme16Entrances[] = {
 	{ "Riva della Palude Nera",
 	  "Acqua stagnante e fango nero coprono il terreno.\n"
-	  "Vapori velenosi alzano spirali lente sopra la superficie.\n",
+	  "Vapori velenosi alzano spirali lente sopra la superficie.\n"
+	  "Acqua scura riflette poco e nasconde molto.\n"
+	  "Un odore di alghe marcite aleggia sopra la superficie.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio dei Cipressi",
 	  "Alberi morti emergono dall'acqua come dita scheletriche.\n"
-	  "Rane e insetti tacciono all'improvviso al tuo passaggio.\n",
+	  "Rane e insetti tacciono all'improvviso al tuo passaggio.\n"
+	  "Onde lievi sfiorano le pareti come un respiro lento.\n"
+	  "Schiuma verdastra si accumula negli angoli piu' bassi.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme16Corridors[] = {
 	{ "Sentiero di Radici",
-	  "Radici semi sommerse formano un ponte instabile.\n"
-	  "Bollicine di gas salgono dal fango sotto i piedi.\n",
+	  "Radici semisommerse formano un ponte instabile.\n"
+	  "Bollicine di gas salgono dal fango sotto i piedi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria Umida",
 	  "Muschio viscoso ricopre ogni superficie.\n"
-	  "Luci fatue sembrano muoversi nell'acqua laterale.\n",
+	  "Luci fatue sembrano muoversi nell'acqua laterale.\n"
+	  "Schiuma verdastra si accumula negli angoli piu' bassi.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio delle Canne",
 	  "Canne alte nascondono passaggi laterali stretti.\n"
-	  "Zanzare ronzano in nugoli fitii.\n",
+	  "Zanzare ronzano in nugoli fitti.\n"
+	  "Un odore di alghe marcite aleggia sopra la superficie.\n"
+	  "Onde lievi sfiorano le pareti come un respiro lento.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Pantano",
 	  "Un cumulo di detriti forma un isolotto artificiale.\n"
-	  "Ossa di animali sporgono dal fango consolidato.\n",
+	  "Ossa di animali sporgono dal fango consolidato.\n"
+	  "Onde lievi sfiorano le pareti come un respiro lento.\n"
+	  "Schiuma verdastra si accumula negli angoli piu' bassi.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme16Treasures[] = {
 	{ "Isola del Tesoro",
 	  "Una piattaforma di legno marcio sostiene casse parzialmente affondate.\n"
-	  "Metallo arrugginito luccica tra le alghe.\n",
+	  "Metallo arrugginito luccica tra le alghe.\n"
+	  "Onde lievi sfiorano le pareti come un respiro lento.\n"
+	  "Schiuma verdastra si accumula negli angoli piu' bassi.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 	{ "Reliquia del Paludario",
-	  "Un idolo corrosi giace semisommerso nel fango.\n"
-	  "Offerte recenti contraddicono l'abbandono del luogo.\n",
+	  "Un idolo corroso giace semisommerso nel fango.\n"
+	  "Offerte recenti contraddicono l'abbandono del luogo.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme16Traps[] = {
 	{ "Sala del Fango Profondo",
 	  "Il pavimento cede improvvisamente in pozze nascoste.\n"
-	  "L'acqua fredda arriva rapidamente alle ginocchia.\n",
+	  "L'acqua fredda arriva rapidamente alle ginocchia.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio dei Gas",
 	  "Vapori verdognoli fuoriescono da crepe nel terreno.\n"
-	  "La testa gira appena respiri piu' a fondo.\n",
+	  "La testa gira appena respiri piu' a fondo.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme16Boss = {
 	"Cuore della Palude Nera",
-	"Un albero colossale morto domina una radura fangosa.\n"
+	  "Un albero colossale morto domina una radura fangosa.\n"
 	  "Luci biancastre danzano tra i rami nodosi.\n"
-	  "Una figura emerge dal fango ai piedi del tronco.\n",
+	  "Una figura emerge dal fango ai piedi del tronco.\n"
+	  "La pressione dell'aria aumenta verso il centro della sala.\n",
 	SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme17Entrances[] = {
 	{ "Base della Torre Spezzata",
 	  "Macigni caduti bloccano parzialmente l'ingresso crollato.\n"
-	  "Venti alti ululano tra le crepe della struttura.\n",
+	  "Venti alti ululano tra le crepe della struttura.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Scalinata Fratturata",
 	  "Gradini spezzati salgono verso l'oscurita' in curva stretta.\n"
-	  "Polvere di pietra ricopre ogni gradino.\n",
+	  "Polvere di pietra ricopre ogni gradino.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme17Corridors[] = {
 	{ "Passaggio Instabile",
 	  "Pareti inclinate rendono difficile mantenere l'equilibrio.\n"
-	  "Sassi cadono occasionalmente dal soffitto.\n",
+	  "Sassi cadono occasionalmente dal soffitto.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria delle Finestre Rotte",
 	  "Vetri spezzati scintillano sul pavimento coperto di detriti.\n"
-	  "Il vento entra da aperture irregolari.\n",
+	  "Il vento entra da aperture irregolari.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio del Crollo",
 	  "Travi spezzate formano un labirinto di legno e pietra.\n"
-	  "Luce debole filtra da fessure imprevedibili.\n",
+	  "Luce debole filtra da fessure imprevedibili.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Campanile",
 	  "Corde arrugginite pendono da un arco senza campana.\n"
-	  "Echo lontani sembrano provenire dai piani superiori.\n",
+	  "Echi lontani sembrano provenire dai piani superiori.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme17Treasures[] = {
 	{ "Camera del Tesoro Caduto",
-	  "Forzieri schiacciati hanno sparso monete sotto le macerie.\n"
-	  "Qualcosa di intatto brilla tra le pietre.\n",
+	  "Monete sparse giacciono sotto forzieri schiacciati e macerie.\n"
+	  "Qualcosa di intatto brilla tra le pietre.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Archivio Sepolto",
 	  "Pergamene bagnate giacciono in armadi rovesciati.\n"
-	  "Sigilli di cera si sciolgono ancora sul pavimento.\n",
+	  "Sigilli di cera si sciolgono ancora sul pavimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme17Traps[] = {
 	{ "Sala del Vuoto",
 	  "Una sezione del pavimento e' completamente crollata.\n"
-	  "Solo travi sospette collegano i lati opposti.\n",
+	  "Solo travi sospette collegano i lati opposti.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Ventaglio",
 	  "Raffiche improvvise spingono verso il baratro laterale.\n"
-	  "Non c'e' parapetto a proteggerti.\n",
+	  "Non c'e' parapetto a proteggerti.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme17Boss = {
 	"Cima Spezzata",
-	"Il cielo aperto inquadra una piattaforma circolare esposta.\n"
+	  "Il cielo aperto inquadra una piattaforma circolare esposta.\n"
 	  "Fulmini lontani illuminano una figura immobile al centro.\n"
-	  "La torre geme sotto ogni passo come se volesse crollare.\n",
+	  "La torre geme sotto ogni passo come se volesse crollare.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme18Entrances[] = {
 	{ "Fauci del Canyon",
 	  "Pareti rocciose si ergono a tagliare il cielo in una striscia.\n"
-	  "Tuoni lontani rimbombano in modo continuo.\n",
+	  "Tuoni lontani rimbombano in modo continuo.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_MOUNTAIN, static_cast<long>(INDOORS | DARK) },
 	{ "Discesa del Tuono",
 	  "Un sentiero stretto serpeggia verso il basso tra pareti verticali.\n"
-	  "Echi multipli confondono ogni suono.\n",
+	  "Echi multipli confondono ogni suono.\n"
+	  "Pietra nuda e vento tagliente dominano lo spazio.\n"
+	  "La roccia e' fredda al tatto e coperta da polvere sottile.\n",
 	  SECT_MOUNTAIN, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme18Corridors[] = {
-	{ "Passaggio del Eco",
+	{ "Passaggio dell'Eco",
 	  "Ogni parola rimbalta sette volte prima di dissolversi.\n"
-	  "Pietre cadono occasionalmente da invisibili sporgenze.\n",
+	  "Pietre cadono occasionalmente da invisibili sporgenze.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria del Fulmine",
 	  "Segni bruciati segnano pareti e pavimento.\n"
-	  "Odore di ozono e' persistente.\n",
+	  "Odore di ozono e' persistente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio del Vento",
 	  "Raffiche laterali spingono con forza imprevedibile.\n"
-	  "Sabbia e ghiaia graffiano la pelle esposta.\n",
+	  "Sabbia e ghiaia graffiano la pelle esposta.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Tuono",
 	  "Una conca naturale amplifica ogni rumore in un boato.\n"
-	  "Luce intermittente filtra da crepe in alto.\n",
+	  "Luce intermittente filtra da crepe in alto.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme18Treasures[] = {
 	{ "Cavità del Fulmine",
 	  "Metallo fuso forma strane sculture sul pavimento.\n"
-	  "Oggetti calcinati giacciono in un cumulo centrale.\n",
+	  "Oggetti calcinati giacciono in un cumulo centrale.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Tesoro del Tuono",
 	  "Una cassa di pietra e' stata aperta da scariche ripetute.\n"
-	  "Gemme opache resistono al calore passato.\n",
+	  "Gemme opache resistono al calore passato.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme18Traps[] = {
 	{ "Sala del Tuono",
 	  "Piastrelle conduttive scintillano al minimo contatto.\n"
-	  "Capelli si rizzano sulla nuca senza preavviso.\n",
+	  "Capelli si rizzano sulla nuca senza preavviso.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Baratro",
 	  "Il pavimento cede verso un vuoto laterale profondo.\n"
-	  "Venti violenti rendono instabile ogni passo.\n",
+	  "Venti violenti rendono instabile ogni passo.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme18Boss = {
 	"Altare del Tuono",
-	"Colonne naturali formano un arco sopra un altare di roccia.\n"
+	  "Colonne naturali formano un arco sopra un altare di roccia.\n"
 	  "Scariche statiche danzano tra le pareti.\n"
-	  "Una figura corona di fulmini attende al centro.\n",
+	  "Una figura incoronata di fulmini attende al centro.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme19Entrances[] = {
 	{ "Voliera Oscura",
 	  "Piume nere coprono il terreno come una neve macabra.\n"
-	  "Occhi lucenti osservano dall'alto tra le travi.\n",
+	  "Occhi lucenti osservano dall'alto tra le travi.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio dei Nidi",
 	  "Nidi enormi bloccano parzialmente il cammino.\n"
-	  "Graffi profondi segnano le pareti di pietra.\n",
+	  "Graffi profondi segnano le pareti di pietra.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme19Corridors[] = {
 	{ "Galleria delle Piume",
 	  "Piume e viscido ricoprono ogni superficie.\n"
-	  "Crepitii di becchi e artigli risuonano in lontananza.\n",
+	  "Crepitii di becchi e artigli risuonano in lontananza.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Volo",
 	  "Correnti d'aria improvvise spingono verso il basso.\n"
-	  "Ombre rapide attraversano la luce debole.\n",
+	  "Ombre rapide attraversano la luce debole.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio dei Corvi",
 	  "Simboli graffiati da artigli segnano il percorso.\n"
-	  "Ossa piccole e lucenti giacciono ammucchiate.\n",
+	  "Ossa piccole e lucenti giacciono ammucchiate.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Nido",
 	  "Un cumulo di detriti forma un trono di ramoscelli.\n"
-	  "Odore di carogne lontane aleggia nell'aria.\n",
+	  "Odore di carogne lontane aleggia nell'aria.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme19Treasures[] = {
 	{ "Camera del Bottino",
 	  "Oggetti luccicanti sono stati ammassati con cura predatoria.\n"
-	  "Anelli e monete convivono con ossa rosicchiate.\n",
+	  "Anelli e monete convivono con ossa rosicchiate.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Tesoro del Corvo Re",
 	  "Gemme colorate sono incastonate tra piume e fango.\n"
-	  "Qualcosa e' stato nascosto sotto le ali secche.\n",
+	  "Qualcosa e' stato nascosto sotto le ali secche.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Un luccichio falso attira lo sguardo verso gli angoli.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme19Traps[] = {
 	{ "Sala delle Unghie",
 	  "Trappole a schegge di osso coprono il pavimento.\n"
-	  "Segni di sangue recente indicano vittime precedenti.\n",
+	  "Segni di sangue recente indicano vittime precedenti.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Picchiata",
 	  "Correnti verticali spingono verso il basso senza preavviso.\n"
-	  "Artigli scattano da nicchie nascoste.\n",
+	  "Artigli scattano da nicchie nascoste.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme19Boss = {
 	"Nido del Corvo Re",
-	"Un nido colossale domina la cima della caverna.\n"
+	  "Un nido colossale domina la cima della caverna.\n"
 	  "Piume nere come pece ricoprono ogni superficie.\n"
-	  "Una figura alata si stende dal trono di ossa e ramoscelli.\n",
+	  "Una figura alata si stende dal trono di ossa e ramoscelli.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme20Entrances[] = {
 	{ "Antica Porta di Pergamena",
 	  "Rotoli sigillati bloccano parzialmente l'ingresso.\n"
-	  "Polvere di inchiostro ricopre ogni superficie.\n",
+	  "Polvere di inchiostro ricopre ogni superficie.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Scalinata dei Tomi",
 	  "Gradini consumati scendono verso un silenzio opprimente.\n"
-	  "Candele spente segnano il cammino.\n",
+	  "Candele spente segnano il cammino.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme20Corridors[] = {
 	{ "Corridoio degli Scaffali",
 	  "Scaffali crollati formano un labirinto di legno e carta.\n"
-	  "Pagine svolazzano senza vento.\n",
+	  "Pagine svolazzano senza vento.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio dei Tomi Proibiti",
 	  "Libri incatenati pendono dalle pareti.\n"
-	  "Simboli arcani pulsano debolmente sulle copertine.\n",
+	  "Simboli arcani pulsano debolmente sulle copertine.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria del Sapere",
 	  "Mappe e pergamene coprono ogni centimetro disponibile.\n"
-	  "Un odore di muffa e inchiostro e' opprimente.\n",
+	  "Un odore di muffa e inchiostro e' opprimente.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Bibliotecario",
 	  "Un banco di legno regge un registro aperto da secoli.\n"
-	  "Pennini arrugginiti giacciono in fila.\n",
+	  "Pennini arrugginiti giacciono in fila.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme20Treasures[] = {
 	{ "Camera del Tomo Perduto",
 	  "Un libro massiccio e' incastonato in un piedistallo di pietra.\n"
-	  "Runa luminose proteggono la copertina.\n",
+	  "Rune luminose proteggono la copertina.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Reliquiario di Carta",
 	  "Documenti sigillati nascondono oggetti di valore.\n"
-	  "Qualcuno ha forzato la serratura di recente.\n",
+	  "Qualcuno ha forzato la serratura di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme20Traps[] = {
 	{ "Sala delle Pagine Taglienti",
 	  "Fogli affilati volano in sciami al minimo movimento.\n"
-	  "Incisioni sottili segnano chi e' passato prima.\n",
+	  "Incisioni sottili segnano chi e' passato prima.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Silenzio",
-	  "Runa di mutismo rendono impossibile chiamare aiuto.\n"
-	  "Ombre si muovono tra gli scaffali alti.\n",
+	  "Rune di mutismo rendono impossibile chiamare aiuto.\n"
+	  "Ombre si muovono tra gli scaffali alti.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme20Boss = {
 	"Scriptorium Proibito",
-	"Una scrivania colossale domina la sala circolare.\n"
+	  "Una scrivania colossale domina la sala circolare.\n"
 	  "Tomi fluttuanti orbitano una figura incappucciata.\n"
-	  "Parole sussurrate si scrivono da sole sulle pareti.\n",
+	  "Parole sussurrate si scrivono da sole sulle pareti.\n"
+	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme21Entrances[] = {
 	{ "Arco dell'Arena",
 	  "Gradinate spezzate circondano un ingresso verso l'arena.\n"
-	  "Sabbia e sangue secco coprono il pavimento.\n",
+	  "Sabbia e sangue secco coprono il pavimento.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio dei Gladiatori",
 	  "Armature arrugginite pendono da ganci nel muro.\n"
-	  "Odore di ferro e polvere riempie l'aria.\n",
+	  "Odore di ferro e polvere riempie l'aria.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme21Corridors[] = {
 	{ "Corridoio delle Celle",
 	  "Celle vuote mostrano segni di lotta disperata.\n"
-	  "Catene spezzate giacciono sul pavimento.\n",
+	  "Catene spezzate giacciono sul pavimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Galleria del Sangue",
 	  "Macchie scure segnano le pareti a intervalli regolari.\n"
-	  "La sabbia sotto i piedi e' ancora calda.\n",
+	  "La sabbia sotto i piedi e' ancora calda.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio dei Tormenti",
 	  "Strumenti da arena giacciono pronti all'uso.\n"
-	  "Risate lontane echeggiano senza fonte.\n",
+	  "Risate lontane echeggiano senza fonte.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Atrio del Mastro di Arena",
 	  "Un trono di legno domina una piattaforma rialzata.\n"
-	  "Bandiere strappate pendono senza vento.\n",
+	  "Bandiere strappate pendono senza vento.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme21Treasures[] = {
 	{ "Camera del Bottino",
 	  "Armi e trofei sono ammassati dietro una grata forzata.\n"
-	  "Monete d'oro mescolano sabbia e polvere.\n",
+	  "Monete d'oro giacciono mescolate a sabbia e polvere.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Forziero del Campione",
 	  "Una cassa massiccia e' incisa con nomi di vincitori.\n"
-	  "Qualcosa brilla ancora al suo interno.\n",
+	  "Qualcosa brilla ancora al suo interno.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme21Traps[] = {
 	{ "Sala delle Lame",
 	  "Lame emergono dal pavimento di sabbia a intervalli irregolari.\n"
-	  "Segni di calci e pugni segnano le pareti.\n",
+	  "Segni di calci e pugni segnano le pareti.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio del Colosseo",
 	  "Trappole a fossa sono nascoste sotto strati sottili di sabbia.\n"
-	  "Urla lontane sembrano provenire dal centro.\n",
+	  "Urla lontane sembrano provenire dal centro.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme21Boss = {
 	"Arena del Campione",
-	"Un cerchio di sabbia rossa domina la sala centrale.\n"
+	  "Un cerchio di sabbia rossa domina la sala centrale.\n"
 	  "Gradinate vuote osservano da ogni lato.\n"
-	  "Un guerriero corona di ferro attende al centro.\n",
+	  "Un guerriero con corona di ferro attende al centro.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT)
 };
 
 static const ProcRoomTemplate kTheme22Entrances[] = {
 	{ "Cancello di Spine",
 	  "Rovi secchi formano un arco naturale verso l'interno.\n"
-	  "Punte affilate graffiano chi passa troppo vicino.\n",
+	  "Punte affilate graffiano chi passa troppo vicino.\n"
+	  "Resina e muschio impregnano l'aria umida.\n"
+	  "Rami scricchiolano oltre il campo visivo.\n",
 	  SECT_FOREST, static_cast<long>(INDOORS | DARK) },
 	{ "Sentiero Spinato",
 	  "Un sentiero stretto e' fiancheggiato da siepi impenetrabili.\n"
-	  "Petali marci coprono il terreno.\n",
+	  "Petali marci coprono il terreno.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_FOREST, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme22Corridors[] = {
 	{ "Viale delle Spine",
 	  "Rami taglienti sporgono da ogni direzione.\n"
-	  "Strappi recenti su stoffa indicano passaggi pericolosi.\n",
+	  "Strappi recenti su stoffa indicano passaggi pericolosi.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria dei Rovi",
 	  "Pareti vegetali si chiudono dietro di te con rumori secchi.\n"
-	  "Odore di linfa amara e' intenso.\n",
+	  "Odore di linfa amara e' intenso.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio delle Rose Nere",
 	  "Rose nere crescono tra le crepe della roccia.\n"
-	  "Pollini scuri rendono difficile respirare.\n",
+	  "Pollini scuri rendono difficile respirare.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Giardiniere Spinato",
 	  "Attrezzi da potatura arrugginiti giacciono in disordine.\n"
-	  "Guanti strappati indicano una fuga precipitosa.\n",
+	  "Guanti strappati indicano una fuga precipitosa.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme22Treasures[] = {
 	{ "Serra di Spine",
 	  "Vasi di vetro rotti contengono piante predatrici.\n"
-	  "Gemme verdi sono incastonate tra i rami.\n",
+	  "Gemme verdi sono incastonate tra i rami.\n"
+	  "L'aria qui e' piu' ferma, come in attesa di una scelta.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Tesoro del Rovo",
 	  "Oggetti luccicanti sono stati trascinati in un nido di spine.\n"
-	  "Sangue secco indica chi ha tentato prima di te.\n",
+	  "Sangue secco indica chi ha tentato prima di te.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme22Traps[] = {
 	{ "Sala delle Lame Vegetali",
 	  "Rami si chiudono come a forbice al passaggio.\n"
-	  "Segni di tagli profondi segnano le pareti.\n",
+	  "Segni di tagli profondi segnano le pareti.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio del Rovo",
 	  "Spine coprono il pavimento in pattern irregolari.\n"
-	  "Ogni passo falso punge senza pieta'.\n",
+	  "Ogni passo falso punge senza pieta'.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme22Boss = {
 	"Cuore del Labirinto di Spine",
-	"Un albero di rovi domina la sala circolare.\n"
+	  "Un albero di rovi domina la sala circolare.\n"
 	  "Spine lunghe quanto spade si muovono al ritmo di un respiro lontano.\n"
-	  "Una figura fiorita di punte attende al centro.\n",
+	  "Una figura fiorita di punte attende al centro.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
 static const ProcRoomTemplate kTheme23Entrances[] = {
 	{ "Crepaccio Lunare",
 	  "Luce argentea filtra da fessure in alto nonostante l'oscurita'.\n"
-	  "Cristalli bianchi crescono sulle pareti.\n",
+	  "Cristalli bianchi crescono sulle pareti.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Varco delle Maree",
 	  "Segni di marea secca segnano le pareti a mezz'altezza.\n"
-	  "Una brezza salata aleggia senza fonte.\n",
+	  "Una brezza salata aleggia senza fonte.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme23Corridors[] = {
 	{ "Galleria delle Perle",
 	  "Conchiglie fossilizzate incrustano ogni superficie.\n"
-	  "Riflessi argentei danzano sul pavimento bagnato.\n",
+	  "Riflessi argentei danzano sul pavimento bagnato.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
-	{ "Passaggio del Marea",
+	{ "Passaggio della Marea",
 	  "Pozze salate rendono scivoloso ogni passo.\n"
-	  "Luce lunare pulsa in sincronia con un ritmo lontano.\n",
+	  "Luce lunare pulsa in sincronia con un ritmo lontano.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Corridoio delle Conchiglie",
 	  "Conchiglie aperte sembrano ascoltare i tuoi passi.\n"
-	  "Sussurri marini echeggiano senza origine.\n",
+	  "Sussurri marini echeggiano senza origine.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Atrio della Luna",
 	  "Un disco di pietra rappresenta la luna al centro.\n"
-	  "Cristalli crescono verso l'alto come stalagmiti.\n",
+	  "Cristalli crescono verso l'alto come stalagmiti.\n"
+	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme23Treasures[] = {
 	{ "Camera delle Perle",
 	  "Perle opache giacciono in cumuli iridescenti.\n"
-	  "Qualcosa e' stato rimosso di recente dal centro.\n",
+	  "Qualcosa e' stato rimosso di recente dal centro.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Tesoro del Mare Secco",
 	  "Coralli fossilizzati incastonano oggetti luccicanti.\n"
-	  "Sabbia bianca nasconde monete antiche.\n",
+	  "Sabbia bianca nasconde monete antiche.\n"
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme23Traps[] = {
 	{ "Sala delle Maree",
 	  "Acqua salata irrompe periodicamente da fessure laterali.\n"
-	  "La corrente spinge verso pareti cristalline taglienti.\n",
+	  "La corrente spinge verso pareti cristalline taglienti.\n"
+	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Passaggio del Riflesso",
 	  "Riflessi ingannevoli nascondono buchi nel pavimento.\n"
-	  "Cristalli affilati sporgono dove meno te lo aspetti.\n",
+	  "Cristalli affilati sporgono dove meno te lo aspetti.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
 static const ProcRoomTemplate kTheme23Boss = {
 	"Tempio della Luna Effimera",
-	"Una cupola di cristallo proietta luce argentea su un altare.\n"
+	  "Una cupola di cristallo proietta luce argentea su un altare.\n"
 	  "Onde fantasma si infrangono silenziosamente sulle pareti.\n"
-	  "Una figura corona di marea attende immobile.\n",
+	  "Una figura incoronata di marea attende immobile.\n"
+	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT)
 };
 
 static const ProcRoomTemplate kTheme24Entrances[] = {
 	{ "Grotta di Sale",
 	  "Cristalli bianchi ricoprono ogni superficie visibile.\n"
-	  "L'aria e' cosi' secca che la pelle si tende.\n",
+	  "L'aria e' cosi' secca che la pelle si tende.\n"
+	  "Qualcosa nel profondo sembra richiamarti oltre la soglia.\n"
+	  "La transizione verso l'interno e' netta e irreversibile.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Passaggio Salato",
-	  "Pareti di sale translucido brillano debolmente.\n"
-	  "Scricchiolii sottili provengono dalle pareti.\n",
+	  "Pareti di sale translucide brillano debolmente.\n"
+	  "Scricchiolii sottili provengono dalle pareti.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme24Corridors[] = {
 	{ "Galleria Bianca",
 	  "Stalattiti di sale formano colonne irregolari.\n"
-	  "Ogni passo solleva polvere bianca persistente.\n",
+	  "Ogni passo solleva polvere bianca persistente.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Corridoio del Sale",
 	  "Cristalli affilati sporgono dal pavimento come lame.\n"
-	  "Sete improvvisa ti assale senza preavviso.\n",
+	  "Sete improvvisa ti assale senza preavviso.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Passaggio del Deserto Bianco",
 	  "Illusioni di dune danzano alla periferia della vista.\n"
-	  "Calore secco rende difficile pensare lucidamente.\n",
+	  "Calore secco rende difficile pensare lucidamente.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n"
+	  "Segni sulle pareti indicano che altri sono passati di recente.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Atrio del Re di Sale",
 	  "Trono di cristalli bianchi domina la stanza.\n"
-	  "Statue di sale rappresentano cortigiani immobile.\n",
+	  "Statue di sale rappresentano cortigiani immobili.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il passaggio si restringe e poi torna ad aprirsi senza logica.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme24Treasures[] = {
 	{ "Camera del Cristallo",
 	  "Gemme di sale puro giacciono in nicchie protette.\n"
-	  "Qualcuno ha scavato di recente una cavita laterale.\n",
+	  "Qualcuno ha scavato di recente una cavita' laterale.\n"
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "La luce vacilla come se la stanza respirasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Tesoro del Deserto",
 	  "Oggetti avvolti in stoffa secca nascondono metallo lucido.\n"
-	  "Monete antiche resistono alla corrosione del sale.\n",
+	  "Monete antiche resistono alla corrosione del sale.\n"
+	  "L'eco dei passi rimbalza su pareti vicine.\n"
+	  "Polvere antica si solleva a ogni movimento.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme24Traps[] = {
 	{ "Sala del Sale Tagliente",
 	  "Cristalli affilati cadono occasionalmente dal soffitto.\n"
-	  "Polvere salina irrita occhi e gola.\n",
+	  "Polvere salina irrita occhi e gola.\n"
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Passaggio della Sete",
 	  "Calore opprimente aumenta ad ogni passo verso il centro.\n"
-	  "Miraggi distorcono la percezione delle distanze.\n",
+	  "Miraggi distorcono la percezione delle distanze.\n"
+	  "Polvere antica si solleva a ogni movimento.\n"
+	  "Una corrente d'aria fredda tradisce un varco nascosto.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme24Boss = {
 	"Trono del Re di Sale",
-	"Una montagna di cristalli bianchi culmina in un trono scolpito.\n"
+	  "Una montagna di cristalli bianchi culmina in un trono scolpito.\n"
 	  "Statue di sale si sciolgono e riformano lentamente.\n"
-	  "Una figura corona di sale attende senza battere ciglio.\n",
+	  "Una figura incoronata di sale attende senza battere ciglio.\n"
+	  "Per un istante hai la sensazione di essere osservato.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC)
 };
 #include "procarea_themes_ext.inc"

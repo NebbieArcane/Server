@@ -50,12 +50,53 @@ constexpr int PROCAREA_TEMPLATE_BANDS = 6;
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 
-/** Premi istanza (eq medio gruppo > 50): scudi indossabili su shield e back. */
+/** Premi istanza: scudi indossabili su shield e back (65100+). */
 constexpr int PROCAREA_REWARD_SHIELD_VNUM_BASE = 65100;
-constexpr int PROCAREA_REWARD_SHIELD_COUNT = 5;
-constexpr float PROCAREA_REWARD_EQ_THRESHOLD = 50.0f;
+constexpr int PROCAREA_REWARD_SHIELD_COUNT = 6;
 /** Bonus scudo premio per livello max gruppo/solitario: 1-10→1 … 51→5 slot. */
 constexpr int PROCAREA_REWARD_BONUS_MAX = 5;
+
+/** Cooldown pray DarkStar aiuto per uscire dalla dimensione → tempio (secondi). */
+constexpr int PROCAREA_DARKSTAR_EXIT_COOLDOWN_SEC = 30 * 60;
+/** Decadimento % drop oggetto tesoro per ogni cumulo oltre il primo. */
+constexpr int PROCAREA_TREASURE_GEAR_DROP_DECAY_PCT = 25;
+
+/** Premi equip istanza (65106+): un prototipo per slot/banda (12 se slot doppio). */
+constexpr int PROCAREA_REWARD_GEAR_VNUM_BASE = 65106;
+constexpr int PROCAREA_REWARD_GEAR_COUNT = 132;
+
+enum class ProcRewardWeaponDamage : int {
+	Slash = 0,
+	Pierce = 1,
+	Blunt = 2,
+};
+
+enum class ProcRewardGearSlot : int {
+	Light = 0,
+	Finger,
+	Neck,
+	Body,
+	Head,
+	Legs,
+	Feet,
+	Hands,
+	Arms,
+	About,
+	Waist,
+	Wrist,
+	Wield,
+	Hold,
+	Ear,
+	Eyes,
+	Count = 16,
+};
+
+/** Vnum prototipo premio gear per slot, banda (0-5) e sotto-variante (lato doppio o tipo danno). */
+long procarea_reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant = 0);
+
+/** Roll bonus/proc su copia runtime di un'arma premio (band >= 4: slay e cause). */
+void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
+								 bool instance_has_ranger = false);
 
 ACTION_FUNC(do_antro);
 ROOMSPECIAL_FUNC(procarea_portal);
@@ -87,6 +128,9 @@ void procarea_boot_darkstar_temple();
 
 /** Scrive in objects/ i prototipi premio (65100+) prima dell'indicizzazione oggetti. */
 void procarea_boot_reward_shields();
+
+/** Scrive in objects/ i prototipi gear premio (65106+) prima dell'indicizzazione oggetti. */
+void procarea_boot_reward_gear();
 
 /** Sposta il corpo PG dal dungeon effimero al tempio DarkStar (3014). */
 void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data* corpse);

@@ -2978,13 +2978,13 @@ void handle_set_skill(struct char_data* ch, struct char_data* mob,
 					% GET_NAME(mob));
 		} else if(part == SkillField::Learned) {
 			set_fmt(ch, boost::format("Il valore dello skill %d e' %d.\n\r")
-					% skill_id % mob->skills[skill_id].learned);
+					% skill_id % static_cast<int>(mob->skills[skill_id].learned));
 		} else if(part == SkillField::Flags) {
 			set_fmt(ch, boost::format("Il valore dei flags dello skill %d e' %d.\n\r")
-					% skill_id % mob->skills[skill_id].flags);
+					% skill_id % static_cast<int>(mob->skills[skill_id].flags));
 		} else {
 			set_fmt(ch, boost::format("Il valore di special dello skill %d e' %d.\n\r")
-					% skill_id % mob->skills[skill_id].special);
+					% skill_id % static_cast<int>(mob->skills[skill_id].special));
 		}
 		return;
 	}

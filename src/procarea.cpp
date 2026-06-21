@@ -826,8 +826,9 @@ static void procarea_invoke_solo_vortex(struct char_data* ch) {
 		"la fontana risponde solo a te, come ad un nome pronunciato a voce bassa.\n\r",
 		ch);
 	send_to_char(
-		"Sul bacino si apre un $c0014vortice stretto$c0007,\n\r"
-		"personale, effimero — usa subito $c0014entra nel vortice$c0007.\n\r",
+		"Sul bacino si apre un $c0014vortice stretto$c0007, effimero e silente.\n\r"
+		"Una voce rimbomba nella tua testa,\n\r"
+		"ti sta incitando: $c0014entra nel vortice$c0007.\n\r",
 		ch);
 	act("$n sfiora la Fontana della Vita: un vortice silente le cresce sopra.", TRUE, ch, nullptr,
 		nullptr, TO_ROOM);
@@ -1188,6 +1189,58 @@ static void procarea_leave_via_portal(struct char_data* ch) {
 	return false;
 }
 
+static std::unordered_map<std::string, time_t> g_procarea_darkstar_exit_until;
+
+[[nodiscard]] static bool procarea_darkstar_exit_on_cooldown(char_data* ch, int& seconds_left) {
+	seconds_left = 0;
+	if(ch == nullptr || !IS_PC(ch)) {
+		return false;
+	}
+	const char* name = GET_NAME(ch);
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+	const auto it = g_procarea_darkstar_exit_until.find(name);
+	if(it == g_procarea_darkstar_exit_until.end()) {
+		return false;
+	}
+	const time_t now = time(nullptr);
+	if(now >= it->second) {
+		g_procarea_darkstar_exit_until.erase(it);
+		return false;
+	}
+	seconds_left = static_cast<int>(it->second - now);
+	return true;
+}
+
+static void procarea_mark_darkstar_exit_cooldown(const std::vector<char_data*>& group) {
+	const time_t until = time(nullptr) + PROCAREA_DARKSTAR_EXIT_COOLDOWN_SEC;
+	for(char_data* member : group) {
+		if(member == nullptr || !IS_PC(member)) {
+			continue;
+		}
+		const char* name = GET_NAME(member);
+		if(name == nullptr || *name == '\0') {
+			continue;
+		}
+		g_procarea_darkstar_exit_until[name] = until;
+	}
+}
+
+[[nodiscard]] static bool procarea_group_darkstar_exit_blocked(const std::vector<char_data*>& group,
+															  char_data*& blocked_member,
+															  int& seconds_left) {
+	for(char_data* member : group) {
+		int left = 0;
+		if(procarea_darkstar_exit_on_cooldown(member, left)) {
+			blocked_member = member;
+			seconds_left = left;
+			return true;
+		}
+	}
+	return false;
+}
+
 static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer) {
 	if(ch == nullptr || prayer == nullptr || !IS_PC(ch)) {
 		return false;
@@ -1219,6 +1272,25 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 
 	ProcAreaInstance* const in_inst = procarea_internal::find_instance_by_vnum(ch->in_room);
 	if(in_inst != nullptr) {
+		char_data* blocked = nullptr;
+		int seconds_left = 0;
+		if(procarea_group_darkstar_exit_blocked(group, blocked, seconds_left)) {
+			const int minutes = (seconds_left + 59) / 60;
+			if(blocked == ch) {
+				std::ostringstream os;
+				os << "DarkStar ti ha gia' condotto al tempio: attendi ancora "
+				   << minutes << " minut" << (minutes == 1 ? "o" : "i")
+				   << " prima di invocarla di nuovo per uscire.\n\r";
+				send_to_char(os.str().c_str(), ch);
+			} else {
+				std::ostringstream os;
+				os << GET_NAME(blocked)
+				   << " ha gia' invocato DarkStar di recente: il gruppo deve attendere ancora "
+				   << minutes << " minut" << (minutes == 1 ? "o" : "i") << ".\n\r";
+				send_to_char(os.str().c_str(), ch);
+			}
+			return true;
+		}
 		for(size_t i = 0; i < group.size(); ++i) {
 			send_to_char(
 				"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
@@ -1230,6 +1302,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 				nullptr, nullptr, TO_ROOM);
 		}
 		procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
+		procarea_mark_darkstar_exit_cooldown(group);
 		procarea_touch_instance(in_inst->id);
 		return true;
 	}
@@ -1509,6 +1582,19 @@ void procarea_boot_darkstar_temple() {
 
 void procarea_boot_reward_shields() {
 	procarea_internal::boot_reward_shields_impl();
+}
+
+void procarea_boot_reward_gear() {
+	procarea_internal::boot_reward_gear_impl();
+}
+
+long procarea_reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant) {
+	return procarea_internal::reward_gear_vnum(slot, band, sub_variant);
+}
+
+void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
+								 bool instance_has_ranger) {
+	procarea_internal::roll_reward_weapon_impl(obj, template_band, instance_has_ranger);
 }
 
 void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data* corpse) {

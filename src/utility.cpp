@@ -9306,11 +9306,8 @@ static bool SpellpowerDispelEligible(struct char_data* ch) {
 	if(ch == nullptr) {
 		return false;
 	}
-	if(!IS_SINGLE(ch)) {
-		return false;
-	}
-	return HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER |
-					CLASS_CLERIC | CLASS_DRUID | CLASS_PSI);
+	/* Caster puro: mono mage/cleric/druid/psi/sorc oppure multi solo tra classi magiche (es. cleric/mage). */
+	return IS_CASTER_N(ch);
 }
 
 int SpellpowerDispelLevelBonus(struct char_data* ch) {

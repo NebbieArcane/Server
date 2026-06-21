@@ -1588,12 +1588,12 @@ ACTION_FUNC(do_bash) {
 		percent = number(10,60);
 		/*
 		 mudlog( LOG_CHECK,   "percent for 1st bash %d vs %d", percent,
-		       ch->skills[ SKILL_BASH ].learned );
+		       static_cast<int>(ch->skills[ SKILL_BASH ].learned));
 		*/
 	}
 	else {
 		mudlog(LOG_CHECK, "percent for    bash %d vs %d", percent,
-			   ch->skills[ SKILL_BASH ].learned);
+			   static_cast<int>(ch->skills[ SKILL_BASH ].learned));
 	}
 
 
@@ -1611,7 +1611,7 @@ ACTION_FUNC(do_bash) {
 	percent+=MAX(30,MAX(-5,pesi));
 #endif
 	/*  mudlog( LOG_CHECK, "percent for bash adj %d vs %d", percent,
-	          ch->skills[ SKILL_BASH ].learned );
+	          static_cast<int>(ch->skills[ SKILL_BASH ].learned));
 	 */
 	if(percent > MIN(100, ch->skills[ SKILL_BASH ].learned)) {
 		if(GET_POS(victim) > POSITION_DEAD) {

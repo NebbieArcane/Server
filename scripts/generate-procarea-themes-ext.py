@@ -6,6 +6,8 @@ from __future__ import annotations
 from pathlib import Path
 from textwrap import indent
 
+from procarea_room_desc import MIN_DESC_LINES, ensure_min_lines
+
 ROOT = Path(__file__).resolve().parents[1]
 THEMES_INC = ROOT / "src/procarea_themes.inc"
 EXT_INC = ROOT / "src/procarea_themes_ext.inc"
@@ -21,7 +23,7 @@ THEMES_25_49: list[tuple] = [
         [
             ("Porta di Durin",
              "Un arco di pietra nanica si apre su sale infinite.\n"
-             "Runa sbiadite pulsano debolmente nel buio profondo.\n"),
+             "Rune sbiadite pulsano debolmente nel buio profondo.\n"),
             ("Vestibolo dei Martelli",
              "Statue di nani spezzate fiancheggiano un corridoio stretto.\n"
              "L'eco dei passi sembra moltiplicarsi all'infinito.\n"),
@@ -54,7 +56,7 @@ THEMES_25_49: list[tuple] = [
              "Il baratro sotto richiama con vento gelido.\n"),
             ("Sala delle Trappole Naniche",
              "Dardi di pietra sporgono dalle pareti a intervalli regolari.\n"
-             "Piastrelde del pavimento sono leggermente inclinate.\n"),
+             "Piastrelle del pavimento sono leggermente inclinate.\n"),
         ],
         "Sala del Balrog Dimenticato",
         "Una caverna immensa si apre su un abisso fumante.\n"
@@ -88,7 +90,7 @@ THEMES_25_49: list[tuple] = [
              "Solo gli occhi di resina tradiscono vigilanza.\n"),
         ],
         [
-            ("Cavità del Corteccia d'Oro",
+            ("Cavità della Corteccia d'Oro",
              "Schegge preziose si staccano da un tronco antico.\n"
              "Resina ambrata racchiude insetti dimenticati.\n"),
             ("Nicchia dei Semi Antichi",
@@ -101,7 +103,7 @@ THEMES_25_49: list[tuple] = [
              "La foresta reagisce alla tua presenza.\n"),
             ("Pozza di Linfa Acida",
              "Linfa corrosiva gocciola dal soffitto di foglie.\n"
-             "Il terreno si ammorbidisce minacciosamente.\n"),
+             "Il terreno si ammorbidisce in modo minaccioso.\n"),
         ],
         "Cuore di Fangorn",
         "Una radura circolare accoglie un trono di rami intrecciati.\n"
@@ -132,7 +134,7 @@ THEMES_25_49: list[tuple] = [
              "Ceneri di ceri secolari coprono il pavimento.\n"),
             ("Atrio del Re Dormiente",
              "Un sarcofago di pietra domina la stanza.\n"
-             "Runa di protezione sono state violate.\n"),
+             "Rune di protezione sono state violate.\n"),
         ],
         [
             ("Camera del Tesoro Reale",
@@ -191,7 +193,7 @@ THEMES_25_49: list[tuple] = [
         ],
         [
             ("Ponte Instabile",
-             "Lastre cedono una ad una al tuo passaggio.\n"
+             "Lastre cedono una a una al tuo passaggio.\n"
              "Non c'e' tempo per esitare.\n"),
             ("Sala del Soffio Gelido",
              "Raffiche dal baratro spingono verso il vuoto.\n"
@@ -210,7 +212,7 @@ THEMES_25_49: list[tuple] = [
             ("Arco Spezzato",
              "Un arco monumentale e' crollato a meta'.\n"
              "Iscrizioni in lingua antica si leggono a fatica.\n"),
-            ("Ponte sul Anduin",
+            ("Ponte sull'Anduin",
              "Piloni di pietra emergono dall'acqua sotterranea.\n"
              "Correnti lente portano detriti di una citta' morta.\n"),
         ],
@@ -258,7 +260,7 @@ THEMES_25_49: list[tuple] = [
              "Scale di legno scendono in un cantiere orco.\n"
              "Odore di ferro e carne putrefatta riempie l'aria.\n"),
             ("Varco delle Gole",
-             "Pareti strette sono segnate da artigli e runa di guerra.\n"
+             "Pareti strette sono segnate da artigli e rune di guerra.\n"
              "Grugniti e martelli riecheggiano da sotto.\n"),
         ],
         [
@@ -328,7 +330,7 @@ THEMES_25_49: list[tuple] = [
              "Pietre preziose pulsano di luce interna.\n"),
             ("Biblioteca dei Canti",
              "Pergamene di canzoni antiche sono conservate in seta.\n"
-             "Una arpa d'argento giace su un piedistallo.\n"),
+             "Un'arpa d'argento giace su un piedistallo.\n"),
         ],
         [
             ("Sala delle Illusioni",
@@ -374,7 +376,7 @@ THEMES_25_49: list[tuple] = [
              "Armi e trofei sono ammucchiati con brutalita'.\n"
              "Anelli spezzati brillano tra le ceneri.\n"),
             ("Camera dei Sigilli",
-             "Sigilli di ferro incisi con runa nere.\n"
+             "Sigilli di ferro incisi con rune nere sigillano un forziere.\n"
              "Un forziere e' incatenato alla roccia.\n"),
         ],
         [
@@ -388,7 +390,7 @@ THEMES_25_49: list[tuple] = [
         "Trono delle Ceneri",
         "Un trono di roccia vulcanica domina una pianura di cenere.\n"
         "Il ruggito di un vulcano lontano scuote la terra.\n"
-        "Un signore delle ombre attende coronato di fumo.\n",
+        "Un signore delle ombre attende incornato di fumo.\n",
     ),
     (
         "Fortezza di Helm",
@@ -422,13 +424,13 @@ THEMES_25_49: list[tuple] = [
              "Scudi con il simbolo del cavallo bianco.\n"),
             ("Camera del Corno di Helm",
              "Un corno antico giace su un piedistallo.\n"
-             "La sua eco ancora terrorizza chi la sente.\n"),
+             "La sua eco terrorizza ancora chi la sente.\n"),
         ],
         [
             ("Sala del Crollo",
              "Macigni bloccano passaggi; solo sentieri stretti restano.\n"
              "Polvere si solleva ad ogni passo.\n"),
-            ("Passaggio del Assedio",
+            ("Passaggio dell'Assedio",
              "Dardi incastrati nella pietra segnano un assalto.\n"
              "Olio bollente ha bruciato il pavimento.\n"),
         ],
@@ -559,11 +561,11 @@ THEMES_25_49: list[tuple] = [
         ],
         [
             ("Tesoro delle Vittime",
-             "Equipaggiamento di avventurieri e' ammucchiato con cura.\n"
+             "Equipaggiamento degli avventurieri e' ammucchiato con cura.\n"
              "Anelli e monete brillano tra la seta.\n"),
             ("Camera delle Uova",
              "Uova di ragno pulsano di vita imminente.\n"
-             "Larvae strisciano in cumuli viscidi.\n"),
+             "Larve strisciano in cumuli viscidi.\n"),
         ],
         [
             ("Trappola della Ragnatela",
@@ -634,7 +636,7 @@ THEMES_25_49: list[tuple] = [
              "Una botola nel pavimento rivela cantine umide.\n"
              "Odore di birra e muffa si mescolano.\n"),
             ("Passaggio Segreto",
-             "Un corridoio nascosto dietro un barile vuoto.\n"
+             "Dietro un barile vuoto si apre un corridoio nascosto.\n"
              "Segni di passaggio recente segnano il fango.\n"),
         ],
         [
@@ -661,7 +663,7 @@ THEMES_25_49: list[tuple] = [
         ],
         [
             ("Trappola del Barile",
-             "Un barile cede rivelando punta di ferro sotto.\n"
+             "Un barile cede rivelando punte di ferro sotto.\n"
              "Il contrabbandiere conosceva questo trucco.\n"),
             ("Sala della Birra Avvelenata",
              "Vapori alcolici nascondono gas soporiferi.\n"
@@ -689,13 +691,13 @@ THEMES_25_49: list[tuple] = [
              "Monete e gemme coprono il pavimento come ghiaia.\n"
              "Ogni passo affonda nel tesoro.\n"),
             ("Corridoio delle Ossa",
-             "Cranii di nani e uomini formano cumuli macabri.\n"
-             "Armature fuse dal fuoco del drago.\n"),
+             "Crani di nani e uomini formano cumuli macabri.\n"
+             "Armature fuse dal fuoco del drago giacciono sparse.\n"),
             ("Passaggio delle Coppe",
              "Coppe d'oro e argento sono ammucchiate a torri.\n"
              "Pietre preziose cadono dai mucchi instabili.\n"),
             ("Atrio del Letto del Drago",
-             "Un'impronta immensa segna dove il drago dormiva.\n"
+             "Un'impronta immensa segna dove il drago dorme.\n"
              "Cenere e braci spente coprono tutto.\n"),
         ],
         [
@@ -703,7 +705,7 @@ THEMES_25_49: list[tuple] = [
              "La pila piu' alta di oro e gemme domina la sala.\n"
              "L'Arkenstone stessa sembra brillare da qualche parte.\n"),
             ("Camera delle Armi Fuse",
-             "Armi naniche fuse in lingotti d'oro impossibile.\n"
+             "Armi naniche fuse in lingotti d'oro impossibili.\n"
              "Tributi di regni interi giacciono qui.\n"),
         ],
         [
@@ -725,7 +727,7 @@ THEMES_25_49: list[tuple] = [
         "INDOORS | DARK | UNDERGROUND",
         [
             ("Porta di Erebor",
-             "Una porta nanica massiccia reca runa di benvenuto.\n"
+             "Una porta nanica massiccia reca rune di benvenuto.\n"
              "Torce di cristallo illuminano il vestibolo.\n"),
             ("Scalinata dei Re",
              "Gradini scolpiti nella roccia salgono maestosi.\n"
@@ -739,7 +741,7 @@ THEMES_25_49: list[tuple] = [
              "Filamenti d'argento corrono lungo le pareti.\n"
              "Picconi abbandonati segnano un'era d'oro.\n"),
             ("Passaggio delle Fornaci",
-             "Fornaci naniche ancora tiepide.\n"
+             "Le fornaci naniche sono ancora tiepide.\n"
              "Lingotti d'oro e argento attendono la forgia.\n"),
             ("Atrio del Trono di Pietra",
              "Un trono scolpito nella roccia domina la sala.\n"
@@ -750,7 +752,7 @@ THEMES_25_49: list[tuple] = [
              "Forzieri nanici traboccano di gemme e metallo.\n"
              "Corone dimenticate brillano sulla pietra.\n"),
             ("Armeria Reale",
-             "Armature naniche di qualita' leggendaria.\n"
+             "Armature naniche di qualita' leggendaria giacciono impilate.\n"
              "Asce e martelli runici attendono un guerriero.\n"),
         ],
         [
@@ -759,7 +761,7 @@ THEMES_25_49: list[tuple] = [
              "Solo una trave instabile resta.\n"),
             ("Passaggio delle Lame Rotanti",
              "Lame di pietra si muovono con meccanismi nanici.\n"
-             "Solo i nani conoscevano il ritmo.\n"),
+             "Solo i nani conoscono ancora il ritmo.\n"),
         ],
         "Trono Sotto la Montagna",
         "La sala del trono di Erebor risplende di gemme.\n"
@@ -781,7 +783,7 @@ THEMES_25_49: list[tuple] = [
         [
             ("Galleria dei Drow",
              "Intagli drow raffigurano divinita' aracnide.\n"
-             "Ragnatele decorate con fili d'argento.\n"),
+             "Ragnatele decorate con fili d'argento ricoprono le pareti.\n"),
             ("Corridoio dei Matroni",
              "Troni vuoti di matroni drow segnano il cammino.\n"
              "Veleno secco macchia le pareti.\n"),
@@ -789,15 +791,15 @@ THEMES_25_49: list[tuple] = [
              "Balestre nascoste puntano verso il centro.\n"
              "Dardi avvelenati giacciono in mucchi.\n"),
             ("Atrio del Tempio di Lolth",
-             "Un'ara di ossidiana domina la sala.\n"
+             "Un altare di ossidiana domina la sala.\n"
              "Ragni sacri tessono intorno all'altare.\n"),
         ],
         [
             ("Tesoro della Matrona",
              "Gioielli drow e armi di ossidiana brillano.\n"
              "Schizzi di veleno proteggono i forzieri.\n"),
-            ("Camera delle Incantesimi",
-             "Pergamene drow con incantesimi proibiti.\n"
+            ("Camera degli Incantesimi",
+             "Pergamene drow recanti incantesimi proibiti giacciono impilate.\n"
              "Fiale di oscurita' pulsano debolmente.\n"),
         ],
         [
@@ -834,9 +836,9 @@ THEMES_25_49: list[tuple] = [
              "Acqua sporca arriva alle caviglie.\n"),
             ("Passaggio dei Contrabbandieri",
              "Casse di merci rubate bloccano il cammino.\n"
-             "Segni di Thieves' Guild sono ovunque.\n"),
+             "Segni della Gilda dei Ladri sono ovunque.\n"),
             ("Atrio del Capo Ladro",
-             "Un tavolo con mappe della citta' sopra.\n"
+             "Un tavolo coperto di mappe della citta'.\n"
              "Monete contate in mucchi ordinati.\n"),
         ],
         [
@@ -874,7 +876,7 @@ THEMES_25_49: list[tuple] = [
         ],
         [
             ("Galleria del Gelo",
-             "Stalattiti di ghiaccio pendono minacciosi.\n"
+             "Stalattiti di ghiaccio pendono minacciosamente.\n"
              "Il pavimento e' una lastra scivolosa.\n"),
             ("Corridoio dei Cavalieri di Ghiaccio",
              "Statue di ghiaccio raffigurano cavalieri.\n"
@@ -883,7 +885,7 @@ THEMES_25_49: list[tuple] = [
              "Vento gelido entra da fessure nel muro.\n"
              "Neve si accumula in cumuli alti.\n"),
             ("Atrio del Palazzo Congelato",
-             "Trono di ghiaccio domina una sala abbandonata.\n"
+             "Un trono di ghiaccio domina una sala abbandonata.\n"
              "Stendardi congelati cadono a pezzi.\n"),
         ],
         [
@@ -892,15 +894,15 @@ THEMES_25_49: list[tuple] = [
              "Oro incastonato nel ghiaccio eterno.\n"),
             ("Camera delle Armi Gelide",
              "Armi di ghiaccio magico ancora intatte.\n"
-             "Freddo che non scioglie mai.\n"),
+             "Un freddo che non si scioglie mai.\n"),
         ],
         [
             ("Sala del Ghiaccio Sottile",
              "Il pavimento di ghiaccio cede al peso.\n"
              "Acqua gelida sotto minaccia di affogare.\n"),
-            ("Passaggio degli Avalanche",
+            ("Passaggio delle Valanghe",
              "Neve cade dal soffitto senza preavviso.\n"
-             "Seppellimento e' un rischio costante.\n"),
+             "Essere sepolti e' un rischio costante.\n"),
         ],
         "Trono del Re di Ghiaccio",
         "Un palazzo congelato culmina in un trono di cristallo.\n"
@@ -914,10 +916,10 @@ THEMES_25_49: list[tuple] = [
         [
             ("Porta della Cripta",
              "Un arco gotico conduce a tombe sotterranee.\n"
-             "Candele spente segnano un'abbandono recente.\n"),
+             "Candele spente segnano un abbandono recente.\n"),
             ("Scalinata dei Morti",
              "Gradini consumati scendono tra lapidi inclinate.\n"
-             "Nomi cancelli dal tempo coprono le pietre.\n"),
+             "Nomi cancellati dal tempo sono incisi sulle pietre.\n"),
         ],
         [
             ("Galleria delle Famiglie",
@@ -944,7 +946,7 @@ THEMES_25_49: list[tuple] = [
         [
             ("Sala delle Lame",
              "Lame emergono dal pavimento a intervalli.\n"
-             "Meccanismo attivato dal peso.\n"),
+             "Un meccanismo attivato dal peso.\n"),
             ("Passaggio del Gas Necrotico",
              "Gas verdognolo fuoriesce dalle tombe aperte.\n"
              "Carne marcia e' il prezzo di un respiro lungo.\n"),
@@ -964,7 +966,9 @@ THEMES_25_49: list[tuple] = [
              "Colori impossibili danzano ai bordi della vista.\n"),
             ("Portale Fratturato",
              "Un portale scintillante mostra mondi paralleli.\n"
-             "Vento da mille direzioni ti spinge.\n"),
+             "Venti da mille direzioni ti spingono.\n"
+             "Fratture nel vetro planare pulsano come vene di luce.\n"
+             "Per un istante vedi te stesso camminare in un mondo specchiato.\n"),
         ],
         [
             ("Galleria dei Frammenti",
@@ -1007,7 +1011,7 @@ THEMES_25_49: list[tuple] = [
         "INDOORS | DARK",
         [
             ("Cancello del Castello",
-             "Cancello di ferro arrugginito scricchiola al vento.\n"
+             "Un cancello di ferro arrugginito scricchiola al vento.\n"
              "Torri spezzate perforano un cielo grigio.\n"),
             ("Portone Principale",
              "Un portone massiccio e' socchiuso.\n"
@@ -1066,13 +1070,13 @@ THEMES_25_49: list[tuple] = [
              "Calore aumenta ad ogni passo.\n"),
             ("Corridoio del Tesoro Parziale",
              "Piccoli tesori precedono il tesoro vero.\n"
-             "Monete e gemme sparsi sul pavimento.\n"),
+             "Monete e gemme sparse sul pavimento.\n"),
             ("Passaggio del Soffio",
              "Braci ancora calde segnano il passaggio del drago.\n"
              "Roccia fusa forma stalattiti bizzarre.\n"),
             ("Atrio delle Ossa",
              "Ossa di cavalli, nani e giganti formano muri.\n"
-             "Cranii impilati come decorazione.\n"),
+             "Crani impilati come decorazione.\n"),
         ],
         [
             ("Tesoro del Drago",
@@ -1104,7 +1108,7 @@ THEMES_25_49: list[tuple] = [
              "Pareti pulsano come carne viva.\n"
              "Occhi crescono dalla roccia e scompaiono.\n"),
             ("Bocca della Caverna",
-             "Un odore mentale ti assale prima del fisico.\n"
+             "Un assalto mentale ti colpisce prima del fisico.\n"
              "Geometrie sbagliate fanno male agli occhi.\n"),
         ],
         [
@@ -1119,7 +1123,7 @@ THEMES_25_49: list[tuple] = [
              "La realta' e' negoziabile qui.\n"),
             ("Atrio del Beholder",
              "Una sfera fluttuante osserva ogni angolo.\n"
-             "Raggi di energia hanno bruciato il pavimento.\n"),
+             "Il pavimento e' bruciato dai raggi di energia.\n"),
         ],
         [
             ("Tesoro della Mente",
@@ -1140,7 +1144,7 @@ THEMES_25_49: list[tuple] = [
         "Nido del Beholder",
         "Una caverna sferica ospita un beholder antico.\n"
         "Occhi su tentacoli scrutano ogni difetto.\n"
-        "La creatura alza i suoi ragghi mortali.\n",
+        "La creatura alza i suoi raggi mortali.\n",
     ),
     (
         "Fosso Infernale",
@@ -1148,7 +1152,7 @@ THEMES_25_49: list[tuple] = [
         "INDOORS | DARK",
         [
             ("Porta Infernale",
-             "Un arco di bronzo reca runa infernali.\n"
+             "Un arco di bronzo reca rune infernali.\n"
              "Calore e zolfo escono dal varco.\n"),
             ("Scala dei Dannati",
              "Gradini di ossidiana scendono verso il calore.\n"
@@ -1193,7 +1197,7 @@ THEMES_25_49: list[tuple] = [
 
 
 def cpp_string(text: str) -> str:
-    parts = [p for p in text.strip().split("\n") if p is not None]
+    parts = [p.strip() for p in text.strip().split("\n") if p.strip()]
     if not parts:
         return '""'
     if len(parts) == 1:
@@ -1205,6 +1209,30 @@ def cpp_string(text: str) -> str:
     return "\n\t  ".join(lines)
 
 
+def expand_theme_rooms(
+    theme: tuple,
+) -> tuple:
+    label, sector, flags, entrances, corridors, treasures, traps, boss_name, boss_desc = theme
+
+    def expand_list(rooms: list[tuple[str, str]], kind: str) -> list[tuple[str, str]]:
+        return [
+            (name, ensure_min_lines(desc, MIN_DESC_LINES, sector, name, kind))
+            for name, desc in rooms
+        ]
+
+    return (
+        label,
+        sector,
+        flags,
+        expand_list(entrances, "entrance"),
+        expand_list(corridors, "corridor"),
+        expand_list(treasures, "treasure"),
+        expand_list(traps, "trap"),
+        boss_name,
+        ensure_min_lines(boss_desc, MIN_DESC_LINES, sector, boss_name, "boss"),
+    )
+
+
 def emit_room(name: str, desc: str, sector: str, flags: str) -> str:
     return (
         f'\t{{ "{name}",\n'
@@ -1214,6 +1242,7 @@ def emit_room(name: str, desc: str, sector: str, flags: str) -> str:
 
 
 def emit_theme(idx: int, theme: tuple) -> str:
+    theme = expand_theme_rooms(theme)
     label, sector, flags, entrances, corridors, treasures, traps, boss_name, boss_desc = theme
     n = idx
     chunks: list[str] = [f"/* --- Tema {n}: {label} --- */"]
@@ -1251,7 +1280,112 @@ def emit_kthemesets_entries(start: int, count: int, labels: list[str]) -> str:
     return "\n".join(lines)
 
 
+def c_unescape(text: str) -> str:
+    out: list[str] = []
+    i = 0
+    while i < len(text):
+        if text[i] == "\\" and i + 1 < len(text):
+            nxt = text[i + 1]
+            if nxt == "n":
+                out.append("\n")
+                i += 2
+                continue
+            if nxt == "t":
+                out.append("\t")
+                i += 2
+                continue
+            if nxt == '"':
+                out.append('"')
+                i += 2
+                continue
+            if nxt == "\\":
+                out.append("\\")
+                i += 2
+                continue
+        out.append(text[i])
+        i += 1
+    return "".join(out)
+
+
+def expand_base_themes_inc() -> None:
+    import re
+
+    kind_suffixes = {
+        "Entrances": "entrance",
+        "Corridors": "corridor",
+        "Treasures": "treasure",
+        "Traps": "trap",
+        "Boss": "boss",
+    }
+
+    text = THEMES_INC.read_text(encoding="utf-8")
+    if INCLUDE_MARKER in text:
+        head, tail = text.split(INCLUDE_MARKER, 1)
+        tail = INCLUDE_MARKER + tail
+    else:
+        head, tail = text, ""
+
+    lines = head.splitlines(keepends=True)
+    out: list[str] = []
+    i = 0
+    current_kind = "corridor"
+
+    while i < len(lines):
+        line = lines[i]
+        kind_match = re.search(r"kTheme\d+(Entrances|Corridors|Treasures|Traps|Boss)", line)
+        if kind_match:
+            current_kind = kind_suffixes.get(kind_match.group(1), "corridor")
+
+        name_match = re.match(r"(\t)(\{ )?\"([^\"]+)\",\s*$", line.rstrip("\n"))
+        if name_match:
+            indent, brace, name = name_match.group(1), name_match.group(2), name_match.group(3)
+            is_array = brace is not None
+            i += 1
+
+            string_chunk: list[str] = []
+            while i < len(lines) and not re.search(r"\bSECT_[A-Z_]+\b", lines[i]):
+                string_chunk.append(lines[i])
+                i += 1
+
+            sector_line = lines[i] if i < len(lines) else ""
+            i += 1
+
+            text_parts: list[str] = []
+            for chunk in string_chunk:
+                for sm in re.finditer(r'"((?:[^"\\]|\\.)*)"', chunk):
+                    text_parts.append(c_unescape(sm.group(1)))
+            existing = [part.strip() for part in "".join(text_parts).split("\n") if part.strip()]
+
+            sector = "SECT_INSIDE"
+            sector_match = re.search(r"(SECT_[A-Z_]+)", sector_line)
+            if sector_match:
+                sector = sector_match.group(1)
+
+            expanded = ensure_min_lines(
+                "\n".join(existing) + "\n",
+                MIN_DESC_LINES,
+                sector,
+                name,
+                current_kind,
+            ).rstrip("\n")
+
+            if is_array:
+                out.append(f'{indent}{{ "{name}",\n')
+                out.append(f"\t  {cpp_string(expanded)},\n")
+            else:
+                out.append(f'{indent}"{name}",\n')
+                out.append(f"\t  {cpp_string(expanded)},\n")
+            out.append(sector_line)
+            continue
+
+        out.append(line)
+        i += 1
+
+    THEMES_INC.write_text("".join(out) + tail, encoding="utf-8")
+
+
 def main() -> None:
+    expand_base_themes_inc()
     labels = [t[0] for t in THEMES_25_49]
     body = "\n\n".join(emit_theme(25 + i, t) for i, t in enumerate(THEMES_25_49))
     EXT_INC.write_text(
@@ -1293,8 +1427,9 @@ def main() -> None:
             raise RuntimeError("Could not find kTheme24Boss closing in procarea_themes.inc")
 
     THEMES_INC.write_text(text, encoding="utf-8")
+    print(f"Expanded base themes in {THEMES_INC} (min {MIN_DESC_LINES} desc lines)")
     print(f"Wrote {EXT_INC} ({len(THEMES_25_49)} themes)")
-    print(f"Updated {THEMES_INC}")
+    print(f"Updated {THEMES_INC} kThemeSets entries")
 
 
 if __name__ == "__main__":

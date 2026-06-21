@@ -84,7 +84,6 @@ struct ProcAreaInstance {
 	std::vector<long> treasure_vnums;
 	std::unordered_set<long> treasure_claimed;
 	bool boss_key_dropped = false;
-	bool reward_shield_granted = false;
 	bool solo_mode = false;
 	std::unordered_map<std::string, long> member_saved_load_room;
 	std::unordered_map<std::string, int> member_saved_start_room;
@@ -133,6 +132,13 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss);
 bool try_open_treasure(char_data* ch, struct room_data* room, std::string_view target);
 
 void boot_reward_shields_impl();
+void boot_reward_gear_impl();
+
+[[nodiscard]] long reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant = 0);
+void roll_reward_weapon_impl(struct obj_data* obj, int template_band,
+							 bool instance_has_ranger = false);
+void roll_reward_weapon_impl(struct obj_data* obj, const ProcAreaInstance& inst);
+[[nodiscard]] bool instance_has_ranger(const ProcAreaInstance& inst);
 
 [[nodiscard]] const ProcThemeSet& theme_set(int theme_id);
 
