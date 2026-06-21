@@ -471,7 +471,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_DRAAGDIM", "duergar guerriero", "Duergar Guerriero", "Un duergar grigio brandisce martello da guerra.", "Barba d'acciaio e sguardo ostile.", "Il duergar colpisce.", "Grugnito duergar."),
             _A("RACE_DRAAGDIM", "duergar chierico", "Duergar Chierico", "Un duergar chierico invoca l'oscurita'.", "Simboli profani brillano sull'armatura.", "Il chierico maledice.", "Preghiere profane."),
             _A("RACE_GOLEM", "golem pietra minore", "Golem di Pietra Minore", "Un golem di pietra animato avanza goffamente.", "Rune incise pulsano debolmente.", "Il golem colpisce.", "Pietre che stridono."),
-            _A("RACE_ENFAN", "enfan errante", "Enfan Errante", "Un enfan dalle orecchie lunghe brandisce lama curva.", "Occhi antichi in volto giovane.", "L'enfan attacca.", "Passi leggeri."),
+            _A("RACE_ENFAN", "enfan errante", "Enfan Errante", "Un enfan dalle orecchie lunghe brandisce una lama curva.", "Occhi antichi in volto giovane.", "L'enfan attacca.", "Passi leggeri."),
             _A("RACE_GNOME", "gnomo fessura", "Gnomo delle Fessure", "Un piccolo umanoide dalle mani artigliate ti osserva dall'ombra.", "Occhi troppo grandi brillano di malizia famelosa.", "Lo gnomo sibila un'imprecazione.", "Senti un riso stridulo."),
             _A("RACE_GNOME", "gnomo illusionista", "Gnomo Illusionista", "Un gnomo sotterraneo crea miraggi attorno a se'.", "Sorriso furbo e dita veloci.", "L'illusionista confonde.", "Risate distorte."),
             _A("RACE_SKEXIE", "skexie furtivo", "Skexie Furtivo", "Un skexie dalle movenze rapide brandisce daghe.", "Pelliccia scura lo mimetizza.", "Lo skexie colpisce due volte.", "Fruscio rapido."),

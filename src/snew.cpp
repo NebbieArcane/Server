@@ -6,6 +6,7 @@
 /*$Id: snew.c,v 1.3 2002/03/23 16:43:20 Thunder Exp $
 */
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
@@ -26,6 +27,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "snew.hpp"
+#include "procarea.hpp"
 namespace Alarmud {
 #define KEYLIB "keydir"
 #define BUFLEN 128
@@ -821,6 +823,240 @@ float GetCharBonusIndex(struct char_data* ch) {
 	}
 	return indice;
 }
+
+namespace {
+
+enum class ProcPowerProfile { Fighter, Caster, Hybrid };
+
+struct ProcPowerWeights {
+	float hitndam;
+	float damroll;
+	float spellpower;
+	float hitroll;
+	float hit;
+	float mana;
+	float ac;
+	float save_all;
+	float save_single;
+	float spellfail;
+	float mana_regen;
+	float hit_regen;
+	float move_regen;
+	float stat;
+};
+
+[[nodiscard]] ProcPowerProfile procarea_power_profile(struct char_data* ch) {
+	if(IS_CASTER_N(ch)) {
+		return ProcPowerProfile::Caster;
+	}
+	if(IS_MELEE(ch)) {
+		return ProcPowerProfile::Fighter;
+	}
+	if(IS_CASTER(ch) && IS_FIGHTER(ch)) {
+		return ProcPowerProfile::Hybrid;
+	}
+	if(IS_CASTER(ch)) {
+		return ProcPowerProfile::Caster;
+	}
+	if(IS_FIGHTER(ch)) {
+		return ProcPowerProfile::Fighter;
+	}
+	return ProcPowerProfile::Hybrid;
+}
+
+[[nodiscard]] ProcPowerWeights procarea_power_weights(ProcPowerProfile profile) {
+	switch(profile) {
+	case ProcPowerProfile::Fighter:
+		return { 22.0f, 18.0f, 14.0f, 8.0f, 5.0f, 2.0f, 6.0f, 8.0f, 3.0f, 0.0f,
+				 6.0f, 6.5f, 2.0f, 3.0f };
+	case ProcPowerProfile::Caster:
+		return { 18.0f, 14.0f, 18.0f, 8.0f, 4.0f, 4.0f, 6.0f, 8.0f, 3.0f, 6.0f,
+				 8.0f, 6.0f, 2.0f, 3.0f };
+	case ProcPowerProfile::Hybrid:
+		return { 20.0f, 16.0f, 16.0f, 8.0f, 4.5f, 3.0f, 6.0f, 8.0f, 3.0f, 5.0f,
+				 7.0f, 6.5f, 2.0f, 3.0f };
+	}
+	return { 20.0f, 16.0f, 16.0f, 8.0f, 4.5f, 3.0f, 6.0f, 8.0f, 3.0f, 5.0f,
+			 7.0f, 6.5f, 2.0f, 3.0f };
+}
+
+[[nodiscard]] float procarea_power_contrib(int location, int mod, const ProcPowerWeights& w,
+										   bool caster_n) {
+	switch(location) {
+	case APPLY_NONE:
+	case APPLY_CHAR_WEIGHT:
+	case APPLY_CHAR_HEIGHT:
+	case APPLY_AFF2:
+	case APPLY_RIDE:
+	case APPLY_MOD_THIRST:
+	case APPLY_MOD_HUNGER:
+	case APPLY_MOD_DRUNK:
+	case APPLY_T_STR:
+	case APPLY_T_INT:
+	case APPLY_T_DEX:
+	case APPLY_T_WIS:
+	case APPLY_T_CON:
+	case APPLY_T_CHR:
+	case APPLY_T_HPS:
+	case APPLY_T_MOVE:
+	case APPLY_T_MANA:
+	case APPLY_GOLD:
+	case APPLY_EXP:
+	case APPLY_SEX:
+	case APPLY_LEVEL:
+	case APPLY_AGE:
+	case APPLY_SUSC:
+	case APPLY_SPELL:
+	case APPLY_EAT_SPELL:
+	case APPLY_FIND_TRAPS:
+	case APPLY_BACKSTAB:
+	case APPLY_PICK:
+	case APPLY_STEAL:
+	case APPLY_KICK:
+	case APPLY_BASH:
+	case APPLY_SNEAK:
+	case APPLY_HIDE:
+	case APPLY_TRACK:
+	case APPLY_ATTACKS:
+	case APPLY_HASTE:
+	case APPLY_SLOW:
+	case APPLY_SKIP:
+		return 0.0f;
+	case APPLY_STR:
+	case APPLY_CON:
+	case APPLY_DEX:
+	case APPLY_INT:
+	case APPLY_WIS:
+	case APPLY_CHR:
+		return static_cast<float>(mod) * w.stat;
+	case APPLY_MANA:
+		return static_cast<float>(mod) * w.mana;
+	case APPLY_HIT:
+		return static_cast<float>(mod) * w.hit;
+	case APPLY_MOVE:
+		return static_cast<float>(mod);
+	case APPLY_AC:
+		return std::abs(mod) * w.ac;
+	case APPLY_HITROLL:
+		return static_cast<float>(mod) * w.hitroll;
+	case APPLY_DAMROLL:
+		return static_cast<float>(mod) * w.damroll;
+	case APPLY_SPELLPOWER:
+		return static_cast<float>(mod) * w.spellpower;
+	case APPLY_HITNSP:
+	case APPLY_HITNDAM:
+		return static_cast<float>(mod) * w.hitndam;
+	case APPLY_SAVING_PARA:
+	case APPLY_SAVING_ROD:
+	case APPLY_SAVING_PETRI:
+	case APPLY_SAVING_BREATH:
+	case APPLY_SAVING_SPELL:
+		return std::abs(mod) * w.save_single;
+	case APPLY_SAVE_ALL:
+		return std::abs(mod) * w.save_all;
+	case APPLY_IMMUNE:
+		return 12.0f;
+	case APPLY_M_IMMUNE:
+		return 20.0f;
+	case APPLY_WEAPON_SPELL:
+		return 20.0f;
+	case APPLY_RACE_SLAYER:
+	case APPLY_ALIGN_SLAYER:
+		return 35.0f;
+	case APPLY_SPELLFAIL:
+		if(!caster_n || w.spellfail <= 0.0f) {
+			return 0.0f;
+		}
+		return std::abs(mod) * w.spellfail;
+	case APPLY_MANA_REGEN:
+		return static_cast<float>(mod) * w.mana_regen;
+	case APPLY_HIT_REGEN:
+		return static_cast<float>(mod) * w.hit_regen;
+	case APPLY_MOVE_REGEN:
+		return static_cast<float>(mod) * w.move_regen;
+	default:
+		return 0.0f;
+	}
+}
+
+} // namespace
+
+float ProcAreaPowerIndex(struct char_data* ch) {
+	if(ch == nullptr) {
+		return 0.0f;
+	}
+
+	const ProcPowerProfile profile = procarea_power_profile(ch);
+	const ProcPowerWeights weights = procarea_power_weights(profile);
+	const bool caster_n = IS_CASTER_N(ch);
+
+	float combat = 0.0f;
+	float defense = 0.0f;
+	float sustain = 0.0f;
+	float immune_raw = 0.0f;
+
+	for(int i = 0; i < MAX_WEAR; i++) {
+		struct obj_data* item = ch->equipment[i];
+		if(item == nullptr) {
+			continue;
+		}
+		for(int j = 0; j < MAX_OBJ_AFFECT; j++) {
+			const int location = item->affected[j].location;
+			const int mod = item->affected[j].modifier;
+			if(location == APPLY_NONE && mod == 0) {
+				continue;
+			}
+
+			const float value = procarea_power_contrib(location, mod, weights, caster_n);
+			switch(location) {
+			case APPLY_DAMROLL:
+			case APPLY_HITROLL:
+			case APPLY_HITNDAM:
+			case APPLY_HITNSP:
+			case APPLY_SPELLPOWER:
+			case APPLY_HIT:
+			case APPLY_STR:
+			case APPLY_CON:
+			case APPLY_DEX:
+			case APPLY_INT:
+			case APPLY_WIS:
+			case APPLY_CHR:
+				combat += value;
+				break;
+			case APPLY_AC:
+			case APPLY_SAVE_ALL:
+			case APPLY_SAVING_PARA:
+			case APPLY_SAVING_ROD:
+			case APPLY_SAVING_PETRI:
+			case APPLY_SAVING_BREATH:
+			case APPLY_SAVING_SPELL:
+			case APPLY_RACE_SLAYER:
+			case APPLY_ALIGN_SLAYER:
+			case APPLY_WEAPON_SPELL:
+				defense += value;
+				break;
+			case APPLY_IMMUNE:
+			case APPLY_M_IMMUNE:
+				immune_raw += value;
+				break;
+			case APPLY_MANA:
+			case APPLY_MOVE:
+			case APPLY_SPELLFAIL:
+			case APPLY_MANA_REGEN:
+			case APPLY_HIT_REGEN:
+			case APPLY_MOVE_REGEN:
+				sustain += value;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	defense += std::min(static_cast<float>(PROCAREA_POWER_IMMUNE_CAP), immune_raw);
+	return combat + defense + sustain;
+}
+
 ACTION_FUNC(do_setalign) {
 	long oldalign;
 	long gold;

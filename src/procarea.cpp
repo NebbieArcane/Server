@@ -307,7 +307,7 @@ static constexpr int kSoloVortexLifetimeSec = 45;
 	if(GetMaxLevel(ch) < PROCAREA_MIN_LEVEL) {
 		return false;
 	}
-	eq_index = GetCharBonusIndex(ch);
+	eq_index = ProcAreaPowerIndex(ch);
 	max_level = std::min(GetMaxLevel(ch), PROCAREA_PC_MAX_LEVEL);
 	return true;
 }
@@ -378,6 +378,80 @@ static void procarea_party_add_unique(std::vector<char_data*>& party, char_data*
 	return sum / static_cast<float>(group.size());
 }
 
+[[nodiscard]] static float procarea_group_power_index(const std::vector<char_data*>& group) {
+	if(group.empty()) {
+		return 0.0f;
+	}
+	float sum = 0.0f;
+	float peak = 0.0f;
+	for(char_data* member : group) {
+		const float power = ProcAreaPowerIndex(member);
+		sum += power;
+		peak = std::max(peak, power);
+	}
+	const float avg = sum / static_cast<float>(group.size());
+	return PROCAREA_GROUP_POWER_AVG_WEIGHT * avg + PROCAREA_GROUP_POWER_MAX_WEIGHT * peak;
+}
+
+[[nodiscard]] static int procarea_legacy_template_band(float eq_index) {
+	if(eq_index < 2500.0f) {
+		return 0;
+	}
+	if(eq_index < 4500.0f) {
+		return 1;
+	}
+	if(eq_index < 6500.0f) {
+		return 2;
+	}
+	if(eq_index < 8500.0f) {
+		return 3;
+	}
+	if(eq_index < 10500.0f) {
+		return 4;
+	}
+	return 5;
+}
+
+[[nodiscard]] static int procarea_power_template_band(float power_index) {
+	if(power_index < 800.0f) {
+		return 0;
+	}
+	if(power_index < 2000.0f) {
+		return 1;
+	}
+	if(power_index < 4000.0f) {
+		return 2;
+	}
+	if(power_index < 6500.0f) {
+		return 3;
+	}
+	if(power_index < 9000.0f) {
+		return 4;
+	}
+	return 5;
+}
+
+static void procarea_log_index_comparison(const char* context, const char* name,
+										  float legacy_eq, float power_index) {
+	const char* who = (name != nullptr && *name != '\0') ? name : "?";
+	const int legacy_band = procarea_legacy_template_band(legacy_eq) + 1;
+	const int power_band = procarea_power_template_band(power_index) + 1;
+	mudlog(LOG_CHECK,
+		   "procarea %s '%s': legacy eq %.0f (band %d) -> power %.0f (band %d)", context, who,
+		   legacy_eq, legacy_band, power_index, power_band);
+}
+
+static void procarea_notify_index_comparison(char_data* ch, float legacy_eq, float power_index) {
+	if(ch == nullptr || !IS_IMMORTALE(ch)) {
+		return;
+	}
+	std::ostringstream msg;
+	msg << "[debug procarea] legacy eq " << std::fixed << std::setprecision(0) << legacy_eq
+		<< " (band " << (procarea_legacy_template_band(legacy_eq) + 1) << ") -> potenza "
+		<< power_index << " (band " << (procarea_power_template_band(power_index) + 1) << ")\n\r";
+	send_to_char(msg.str().c_str(), ch);
+}
+
 [[nodiscard]] static int procarea_group_max_level(const std::vector<char_data*>& group) {
 	int max_level = 0;
 	for(char_data* member : group) {
@@ -409,7 +483,7 @@ static void procarea_party_add_unique(std::vector<char_data*>& party, char_data*
 	if(!procarea_group_can_enter(party)) {
 		return false;
 	}
-	group_eq_index = procarea_group_equipment_index(party);
+	group_eq_index = procarea_group_power_index(party);
 	return true;
 }
 
@@ -919,6 +993,9 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		procarea_clear_solo_vortex(false);
 		return;
 	}
+	const float legacy_eq = GetCharBonusIndex(ch);
+	procarea_log_index_comparison("solo entry", GET_NAME(ch), legacy_eq, eq_index);
+	procarea_notify_index_comparison(ch, legacy_eq, eq_index);
 
 	long entrance = 0;
 	const int instance_id = procarea_internal::create_instance(eq_index, max_level, PROCAREA_FOUNTAIN_ROOM,
@@ -945,7 +1022,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		"il mondo si stringe attorno a te, come un corridoio di specchi.\n\r",
 		ch);
 	std::ostringstream enter_msg;
-	enter_msg << "$c0010Ti attende una $c0014Dimensione Solitaria$c0007 (eq "
+	enter_msg << "$c0010Ti attende una $c0014Dimensione Solitaria$c0007 (potenza "
 			  << std::fixed << std::setprecision(0) << eq_index << ").\n\r";
 	send_to_char(enter_msg.str().c_str(), ch);
 
@@ -1042,6 +1119,7 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		return;
 	}
 
+	const float legacy_eq = procarea_group_equipment_index(party);
 	float group_eq_index = 0.0f;
 	if(!procarea_resolve_entry(ch, group_eq_index)) {
 		send_to_char(
@@ -1050,9 +1128,12 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 			ch);
 		return;
 	}
-
 	char_data* owner_ch = IS_AFFECTED(ch, AFF_GROUP) ? procarea_group_leader(ch) : ch;
 	const char* owner = owner_ch != nullptr ? GET_NAME(owner_ch) : GET_NAME(ch);
+	procarea_log_index_comparison("group entry", owner, legacy_eq, group_eq_index);
+	for(char_data* member : party) {
+		procarea_notify_index_comparison(member, legacy_eq, group_eq_index);
+	}
 	const int group_max_level = procarea_group_max_level(party);
 	const int party_size = static_cast<int>(party.size());
 	long entrance = 0;
@@ -1085,7 +1166,7 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 			"corridoi che si piegano come alghe al fondo di un mare dimenticato.\n\r",
 			member);
 		std::ostringstream enter_msg;
-		enter_msg << "$c0010Oltre il velo attende una Dimensione Effimera$c0007 (eq medio gruppo "
+		enter_msg << "$c0010Oltre il velo attende una Dimensione Effimera$c0007 (potenza gruppo "
 				  << std::fixed << std::setprecision(0) << group_eq_index << ").\n\r";
 		send_to_char(enter_msg.str().c_str(), member);
 	}
@@ -1780,9 +1861,9 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 	info << " ===$c0007\n\r";
 	info << "Tema: " << theme_label;
 	if(inst.solo_mode) {
-		info << " | eq personale ";
+		info << " | potenza personale ";
 	} else {
-		info << " | eq medio gruppo ";
+		info << " | potenza gruppo ";
 	}
 	info << std::fixed << std::setprecision(0) << inst.group_eq_index
 		 << " | fascia " << (band + 1) << "/" << PROCAREA_TEMPLATE_BANDS << "\n\r";

@@ -156,8 +156,8 @@ static constexpr std::size_t kThemeSetCount = std::size(kThemeSets);
 }
 
 [[nodiscard]] static float procarea_eq_factor(float eq_index) {
-	return std::clamp((eq_index - PROCAREA_EQ_SCALE_MIN) /
-						  (PROCAREA_EQ_SCALE_MAX - PROCAREA_EQ_SCALE_MIN),
+	return std::clamp((eq_index - PROCAREA_POWER_SCALE_MIN) /
+						  (PROCAREA_POWER_SCALE_MAX - PROCAREA_POWER_SCALE_MIN),
 					  0.0f, 1.0f);
 }
 
@@ -170,19 +170,19 @@ static constexpr std::size_t kThemeSetCount = std::size(kThemeSets);
 }
 
 [[nodiscard]] static int procarea_template_band_from_eq(float eq_index) {
-	if(eq_index < 2500.0f) {
+	if(eq_index < 800.0f) {
 		return 0;
 	}
-	if(eq_index < 4500.0f) {
+	if(eq_index < 2000.0f) {
 		return 1;
 	}
-	if(eq_index < 6500.0f) {
+	if(eq_index < 4000.0f) {
 		return 2;
 	}
-	if(eq_index < 8500.0f) {
+	if(eq_index < 6500.0f) {
 		return 3;
 	}
-	if(eq_index < 10500.0f) {
+	if(eq_index < 9000.0f) {
 		return 4;
 	}
 	return 5;
@@ -397,6 +397,7 @@ static void procarea_apply_band_combat(char_data* mob, int template_band, int ar
 	mob->specials.act = combat.act;
 	SET_BIT(mob->specials.act, ACT_ISNPC);
 	mob->specials.affected_by = combat.affected_by;
+	SET_BIT(mob->specials.affected_by, AFF_TRUE_SIGHT);
 	mob->mult_att = combat.mult_att;
 }
 
@@ -692,6 +693,36 @@ static void procarea_echo_to_instance_pcs(const ProcAreaInstance& inst, const ch
 	}
 }
 
+static void procarea_notify_instance_party(const ProcAreaInstance& inst, const char* msg) {
+	if(msg == nullptr) {
+		return;
+	}
+	std::unordered_set<char_data*> sent;
+	auto deliver = [&](char_data* member) {
+		if(member == nullptr || !IS_PC(member) || member->desc == nullptr) {
+			return;
+		}
+		if(sent.insert(member).second) {
+			send_to_char(msg, member);
+		}
+	};
+	for(long vnum : inst.room_vnums) {
+		struct room_data* rp = real_roomp(vnum);
+		if(rp == nullptr) {
+			continue;
+		}
+		for(char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
+			deliver(ch);
+		}
+	}
+	if(!inst.owner_name.empty()) {
+		deliver(get_char(inst.owner_name.c_str()));
+	}
+	for(const std::string& name : inst.member_names) {
+		deliver(get_char(name.c_str()));
+	}
+}
+
 static void procarea_scale_mob(char_data* mob, float eq_index, int template_band,
 							   int group_max_level, ProcMobKind kind,
 							   ProcMobClassContext class_ctx, bool solo_mode,
@@ -848,27 +879,6 @@ static struct obj_data* procarea_create_treasure_hoard() {
 	return nullptr;
 }
 
-static void procarea_send_to_instance_members(const ProcAreaInstance& inst, const char* msg) {
-	if(msg == nullptr) {
-		return;
-	}
-	std::unordered_set<char_data*> sent;
-	auto deliver = [&](char_data* member) {
-		if(member == nullptr || !IS_PC(member) || member->desc == nullptr) {
-			return;
-		}
-		if(sent.insert(member).second) {
-			send_to_char(msg, member);
-		}
-	};
-	if(!inst.owner_name.empty()) {
-		deliver(get_char(inst.owner_name.c_str()));
-	}
-	for(const std::string& name : inst.member_names) {
-		deliver(get_char(name.c_str()));
-	}
-}
-
 [[nodiscard]] static bool procarea_valid_instance_room(long room_vnum) {
 	const struct room_data* rp = real_roomp(room_vnum);
 	return rp != nullptr && rp->number == room_vnum;
@@ -1007,8 +1017,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 		<< "$c0010I sigilli cedono su ogni cumulo:$c0007 oro e reliquie effimere giacciono nelle stanze del tesoro.\n\r"
 		<< "Recati a raccogliere il bottino.\n\r";
 	const std::string message = msg.str();
-	procarea_echo_to_instance_pcs(inst, message.c_str());
-	procarea_send_to_instance_members(inst, message.c_str());
+	procarea_notify_instance_party(inst, message.c_str());
 }
 
 [[nodiscard]] static int procarea_treasure_gold_amount(const ProcAreaInstance& inst) {
@@ -1557,7 +1566,8 @@ static void procarea_pick_random_treasure_loot(bool& is_shield, ProcRewardGearSl
 	gear_slot = static_cast<ProcRewardGearSlot>(pick);
 }
 
-static bool procarea_try_grant_treasure_item(char_data* ch, ProcAreaInstance& inst, long room_vnum) {
+static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstance& inst,
+											 long room_vnum) {
 	const int hoard_count = static_cast<int>(inst.treasure_vnums.size());
 	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_count);
 	if(number(0, 99) >= drop_pct) {
@@ -1593,9 +1603,9 @@ static bool procarea_try_grant_treasure_item(char_data* ch, ProcAreaInstance& in
 	}
 
 	if(is_shield) {
-		procarea_roll_reward_shield(inst, item, ch);
+		procarea_roll_reward_shield(inst, item, roll_ch);
 	} else {
-		procarea_roll_reward_gear_item(inst, item, ch, slot);
+		procarea_roll_reward_gear_item(inst, item, roll_ch, slot);
 	}
 	if(!procarea_valid_instance_room(room_vnum)) {
 		mudlog(LOG_ERROR, "procarea: treasure item room %ld invalid after roll", room_vnum);
@@ -1603,7 +1613,7 @@ static bool procarea_try_grant_treasure_item(char_data* ch, ProcAreaInstance& in
 		return false;
 	}
 	obj_to_room(item, room_vnum);
-	procarea_announce_treasure_item(ch, item, room_vnum, is_shield);
+	procarea_announce_treasure_item(nullptr, item, room_vnum, is_shield);
 	return true;
 }
 
@@ -1617,17 +1627,7 @@ static bool procarea_plant_treasure_hoard(long room_vnum) {
 	return true;
 }
 
-[[nodiscard]] static int procarea_count_unclaimed_treasures(const ProcAreaInstance& inst) {
-	int count = 0;
-	for(long vnum : inst.treasure_vnums) {
-		if(inst.treasure_claimed.count(vnum) == 0) {
-			++count;
-		}
-	}
-	return count;
-}
-
-static void procarea_grant_treasure_loot(char_data* ch, ProcAreaInstance& inst, long room_vnum) {
+static void procarea_grant_treasure_loot(char_data* roll_ch, ProcAreaInstance& inst, long room_vnum) {
 	if(inst.treasure_claimed.count(room_vnum) != 0) {
 		return;
 	}
@@ -1645,37 +1645,11 @@ static void procarea_grant_treasure_loot(char_data* ch, ProcAreaInstance& inst, 
 		}
 	}
 
-	const bool item_granted = procarea_try_grant_treasure_item(ch, inst, room_vnum);
+	procarea_try_grant_treasure_item(roll_ch, inst, room_vnum);
 
 	struct obj_data* hoard = procarea_find_treasure_hoard(room_vnum);
 	if(hoard != nullptr) {
-		REMOVE_BIT(hoard->obj_flags.value[1], CONT_LOCKED);
-		REMOVE_BIT(hoard->obj_flags.value[1], CONT_CLOSED);
-	}
-
-	if(ch != nullptr) {
-		act("$n spezza il sigillo runico del cumulo!", TRUE, ch, nullptr, nullptr, TO_ROOM);
-		if(item_granted) {
-			act("Apri il cumulo sigillato: oro e un trofeo effimero fuoriescono dalle rune!", FALSE,
-				ch, nullptr, nullptr, TO_CHAR);
-		} else {
-			act("Apri il cumulo sigillato: oro e reliquie effimere fuoriescono dalle rune!", FALSE,
-				ch, nullptr, nullptr, TO_CHAR);
-		}
-	}
-	procarea_safe_send_to_room(
-		room_vnum,
-		"\n\r$c0013Il sigillo cede: il tesoro della dimensione giace ora a terra.$c0007\n\r");
-
-	const int still = procarea_count_unclaimed_treasures(inst);
-	if(still > 0 && ch != nullptr) {
-		std::ostringstream os;
-		os << "Altri sigilli restano attivi: "
-		   << still << " cumul" << (still == 1 ? "o" : "i") << " sigillat"
-		   << (still == 1 ? "o" : "i") << " resta" << (still == 1 ? "" : "no")
-		   << " nella dimensione effimera.\n\r";
-		const std::string notice = os.str();
-		send_to_char(notice.c_str(), ch);
+		extract_obj(hoard);
 	}
 }
 
@@ -1705,21 +1679,16 @@ bool try_open_treasure(struct char_data* ch, struct room_data* room,
 		return false;
 	}
 	if(procarea_find_treasure_hoard(room->number) == nullptr) {
-		send_to_char("Non c'e' nulla da aprire qui.\n\r", ch);
-		return true;
-	}
-	if(inst->treasure_claimed.count(room->number) != 0) {
-		send_to_char("Il tesoro di questo cumulo giace gia' a terra.\n\r", ch);
-		return true;
+		return false;
 	}
 	if(!inst->boss_key_dropped) {
 		send_to_char(
-			"Il sigillo resiste: devi prima sconfiggere il custode della dimensione.\n\r", ch);
+			"Il sigillo resiste finche' vive il custode della dimensione.\n\r"
+			"Alla sua morte oro e reliquie cadranno a terra da soli.\n\r",
+			ch);
 		return true;
 	}
-
-	procarea_grant_treasure_loot(ch, *inst, room->number);
-	return true;
+	return false;
 }
 
 static int procarea_depth_spawn_bonus(const ProcAreaDifficulty& diff, int depth, int max_depth) {
@@ -2368,12 +2337,12 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	const char* const solo_suffix = solo_mode ? ", solo" : "";
 	if(solo_mode) {
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' eq %.0f (factor %.2f%s) with %zu rooms (entrance %ld, boss %ld)",
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) with %zu rooms (entrance %ld, boss %ld)",
 			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix, layout.size(),
 			   inst.entrance_vnum, inst.boss_vnum);
 	} else {
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' eq %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld)",
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld)",
 			   instance_id, theme.label, group_eq_index, diff.factor, diff.party_power_mult,
 			   layout.size(), inst.entrance_vnum, inst.boss_vnum);
 	}

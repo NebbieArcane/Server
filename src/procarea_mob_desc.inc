@@ -1242,7 +1242,7 @@ MOB_DESC(1, mob, 95, RACE_GOLEM,
 MOB_DESC(1, mob, 96, RACE_ENFAN,
 	"enfan errante",
 	"Enfan Errante",
-	"Un enfan dalle orecchie lunghe brandisce lama curva.",
+	"Un enfan dalle orecchie lunghe brandisce una lama curva.",
 	"Occhi antichi in volto giovane.",
 	"L'enfan attacca.",
 	"Passi leggeri.")

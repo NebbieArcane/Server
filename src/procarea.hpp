@@ -27,9 +27,16 @@ constexpr int PROCAREA_PC_MAX_LEVEL = 51;
 /** Cap livello mostrato per mob/trappole/boss generati in dimensione. */
 constexpr int PROCAREA_MOB_LEVEL_CAP = 60;
 
-/* Curva di difficolta' continua da GetCharBonusIndex() medio del gruppo in ingresso. */
+/** Legacy GetCharBonusIndex (score/quest): solo confronto in log all'ingresso. */
 constexpr float PROCAREA_EQ_SCALE_MIN = 30.0f;
 constexpr float PROCAREA_EQ_SCALE_MAX = 12000.0f;
+
+/** Curva difficolta' procarea da ProcAreaPowerIndex() in ingresso. */
+constexpr float PROCAREA_POWER_SCALE_MIN = 200.0f;
+constexpr float PROCAREA_POWER_SCALE_MAX = 9500.0f;
+constexpr int PROCAREA_POWER_IMMUNE_CAP = 350;
+constexpr float PROCAREA_GROUP_POWER_AVG_WEIGHT = 0.70f;
+constexpr float PROCAREA_GROUP_POWER_MAX_WEIGHT = 0.30f;
 
 constexpr int PROCAREA_ROOMS_MIN = 12;
 constexpr int PROCAREA_ROOMS_MAX = 90;
