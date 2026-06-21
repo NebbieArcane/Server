@@ -365,6 +365,15 @@ namespace Alarmud {
 #define SKILL_DETERMINE      293   /* ACIDUS 2003 skill determine established per determinazione teleport */
 #define SKILL_EQUILIBRIUM      294   /* ACIDUS 2003 skill better equilibrium per equilibrio nanesco */
 
+/* Innate affects: not persisted, synced by SyncInnateAffects(). */
+#define INNATE_RACE_FLY             295
+#define INNATE_RACE_WATERBREATH     296
+#define INNATE_RACE_INFRAVISION     297
+#define INNATE_CLASS_DETECT_EVIL    298
+#define INNATE_CLASS_PROT_EVIL      299
+#define INNATE_AFFECT_FIRST         INNATE_RACE_FLY
+#define INNATE_AFFECT_LAST          INNATE_CLASS_PROT_EVIL
+
 #define MAX_EXIST_SPELL         294   /* max number of skills/spells/status */
 
 

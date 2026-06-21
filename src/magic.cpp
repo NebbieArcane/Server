@@ -1081,7 +1081,7 @@ void spell_detect_evil(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(affected_by_spell(victim, SPELL_DETECT_EVIL)) {
+	if(HasActiveDetectEvil(victim)) {
 		return;
 	}
 
@@ -1775,34 +1775,43 @@ void spell_protection_from_evil(byte level, struct char_data* ch,
 
 	assert(victim);
 
-	if(!affected_by_spell(victim, SPELL_PROTECT_FROM_EVIL) && !affected_by_spell(victim, SPELL_PROT_FROM_EVIL_GROUP)) {
-		af.type      = SPELL_PROTECT_FROM_EVIL;
-		af.duration  = 24;
-		af.modifier  = 0;
-		af.location  = APPLY_NONE;
-		af.bitvector = AFF_PROTECT_FROM_EVIL;
-		affect_to_char(victim, &af);
-		send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", victim);
+	if(HasActiveProtEvil(victim)) {
+		return;
 	}
+
+	af.type      = SPELL_PROTECT_FROM_EVIL;
+	af.duration  = 24;
+	af.modifier  = 0;
+	af.location  = APPLY_NONE;
+	af.bitvector = AFF_PROTECT_FROM_EVIL;
+	affect_to_char(victim, &af);
+	send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", victim);
 }
 
 void spell_protection_from_evil_group(byte level, struct char_data* ch,
 									  struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
 	struct char_data* dude;
+	bool applied = false;
 
 	for(dude=real_roomp(ch->in_room)->people; dude; dude=dude->next_in_room)
 		if(IS_FOLLOWING(ch,dude)) {
-			if(!affected_by_spell(dude, SPELL_PROTECT_FROM_EVIL) && !affected_by_spell(dude, SPELL_PROT_FROM_EVIL_GROUP)) {
-				af.type      = SPELL_PROT_FROM_EVIL_GROUP;
-				af.duration  = 24;
-				af.modifier  = 0;
-				af.location  = APPLY_NONE;
-				af.bitvector = AFF_PROTECT_FROM_EVIL;
-				affect_to_char(dude, &af);
-				send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", dude);
+			if(HasActiveProtEvil(dude)) {
+				continue;
 			}
+			af.type      = SPELL_PROT_FROM_EVIL_GROUP;
+			af.duration  = 24;
+			af.modifier  = 0;
+			af.location  = APPLY_NONE;
+			af.bitvector = AFF_PROTECT_FROM_EVIL;
+			affect_to_char(dude, &af);
+			send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", dude);
+			applied = true;
 		}
+
+	if(!applied) {
+		send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+	}
 }
 
 

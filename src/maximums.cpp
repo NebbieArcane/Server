@@ -20,6 +20,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "maximums.hpp"
 #include "act.other.hpp"
@@ -1549,6 +1550,8 @@ void ClassSpecificStuff(struct char_data* ch) {
 			GET_CHR(ch) += GET_LEVEL(ch, THIEF_LEVEL_IND)/10;
 		}
 	}
+
+	SyncInnateAffects(ch);
 }
 
 

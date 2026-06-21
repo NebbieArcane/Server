@@ -799,6 +799,7 @@ void spell_poly_self(byte level, struct char_data* ch,
 
 	char_to_room(mob, ch->in_room);
 	SwitchStuff(ch, mob);
+	SyncInnateAffects(mob);
 
     if(GET_SEX(ch) == SEX_FEMALE)
     {
@@ -971,24 +972,25 @@ void spell_infravision(byte level, struct char_data* ch,
 
 	assert(victim && ch);
 
-	if(!IS_AFFECTED(victim, AFF_INFRAVISION)) {
-		if(ch != victim) {
-			send_to_char("I tuoi occhi $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", victim);
-			act("Gli occhi di $n $c0015brillano$c0007 di un alone $c0009rosso$c0007.\n\r", FALSE, victim, 0, 0, TO_ROOM);
-		}
-		else {
-			send_to_char("I tuoi occhi $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", ch);
-			act("Gli occhi di $n $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", FALSE, ch, 0, 0, TO_ROOM);
-		}
-
-		af.type      = SPELL_INFRAVISION;
-		af.duration  = 4*level;
-		af.modifier  = 0;
-		af.location  = APPLY_NONE;
-		af.bitvector = AFF_INFRAVISION;
-		affect_to_char(victim, &af);
-
+	if(HasActiveInfravision(victim)) {
+		return;
 	}
+
+	if(ch != victim) {
+		send_to_char("I tuoi occhi $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", victim);
+		act("Gli occhi di $n $c0015brillano$c0007 di un alone $c0009rosso$c0007.\n\r", FALSE, victim, 0, 0, TO_ROOM);
+	}
+	else {
+		send_to_char("I tuoi occhi $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", ch);
+		act("Gli occhi di $n $c0015brillano$c0007 di un $c0009alone rosso$c0007.\n\r", FALSE, ch, 0, 0, TO_ROOM);
+	}
+
+	af.type      = SPELL_INFRAVISION;
+	af.duration  = 4*level;
+	af.modifier  = 0;
+	af.location  = APPLY_NONE;
+	af.bitvector = AFF_INFRAVISION;
+	affect_to_char(victim, &af);
 }
 
 void spell_shield(byte level, struct char_data* ch,
@@ -1399,7 +1401,7 @@ void spell_fly(byte level, struct char_data* ch,
 
 	assert(ch && victim);
 
-	if(victim && affected_by_spell(victim, SPELL_FLY)) {
+	if(victim && HasActiveFly(victim)) {
 		send_to_char("L'incantesimo sembra sprecato.\n\r",ch);
 		return;
 	}
@@ -1425,6 +1427,7 @@ void spell_fly_group(byte level, struct char_data* ch,
 					 struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
 	struct char_data* tch;
+	bool applied = false;
 
 	assert(ch);
 
@@ -1434,6 +1437,10 @@ void spell_fly_group(byte level, struct char_data* ch,
 
 	for(tch=real_roomp(ch->in_room)->people; tch; tch=tch->next_in_room) {
 		if(in_group(ch, tch)) {
+			if(HasActiveFly(tch)) {
+				continue;
+			}
+
 			act("Ti senti piu' leggero dell'$c0012aria$c0007!", TRUE, ch, 0, tch, TO_VICT);
 			if(tch != ch) {
 				act("$N si alza in volo.", TRUE, ch, 0, tch, TO_CHAR);
@@ -1449,7 +1456,12 @@ void spell_fly_group(byte level, struct char_data* ch,
 			af.location  = 0;
 			af.bitvector = AFF_FLYING;
 			affect_to_char(tch, &af);
+			applied = true;
 		}
+	}
+
+	if(!applied) {
+		send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
 	}
 }
 
@@ -1483,6 +1495,11 @@ void spell_water_breath(byte level, struct char_data* ch,
 	struct affected_type af;
 
 	assert(ch && victim);
+
+	if(victim && HasActiveWaterBreath(victim)) {
+		send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+		return;
+	}
 
 	act("$c0012Senti di poter respirare come un pesce!", TRUE, ch, 0, victim, TO_VICT);
 	if(victim != ch) {

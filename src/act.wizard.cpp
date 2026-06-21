@@ -2087,6 +2087,9 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 				"\n\r$c0005Affecting Spells:\n\r$c0015--------------");
 			for(struct affected_type* aff = k->affected; aff;
 					aff = aff->next) {
+				if(IsInnateAffectType(aff->type)) {
+					continue;
+				}
 				if(aff->type <= MAX_EXIST_SPELL) {
 					stat_format(ch, "$c0005Spell : '$c0014%s$c0005'",
 						spells[aff->type - 1]);
@@ -3220,6 +3223,7 @@ ACTION_FUNC(do_set) {
 	else if(field == "race") {
 		if(parse_int1(value, parm)) {
 			GET_RACE(mob) = parm;
+			ApplyRaceChange(mob);
 			send_to_char("Razza cambiata.\n\r", ch);
 			set_mudlog(ch, "race", mob, value.c_str());
 		} else {
@@ -3842,6 +3846,7 @@ void force_return(struct char_data* ch, const char* arg, int cmd) {
 
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
+			SyncInnateAffects(per);
 		}
 
 		ch->desc->character = ch->desc->original;
@@ -3908,6 +3913,7 @@ ACTION_FUNC(do_return) {
 
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
+			SyncInnateAffects(per);
 
 		}
 

@@ -997,6 +997,9 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
         {
             for(aff = i->affected; aff; aff = aff->next)
             {
+                if(IsInnateAffectType(aff->type)) {
+                    continue;
+                }
                 if(aff->type < MAX_EXIST_SPELL)
                 {
                     if(spell_desc[ aff->type ] && *spell_desc[ aff->type ])
@@ -5409,6 +5412,9 @@ ACTION_FUNC(do_attribute) {
 		bool bFirstTime = true;
 		bool shown[MAX_EXIST_SPELL + 1] {};
 		for(aff = ch->affected; aff != nullptr; aff = aff->next) {
+			if(IsInnateAffectType(aff->type)) {
+				continue;
+			}
 			if(aff->type <= MAX_EXIST_SPELL && aff->type > 0 && !shown[aff->type]) {
 				shown[aff->type] = true;
 

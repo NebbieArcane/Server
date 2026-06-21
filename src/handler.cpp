@@ -33,6 +33,7 @@
 #include "events.hpp"
 #include "fight.hpp"
 #include "interpreter.hpp"
+#include "utility.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
 #include "reception.hpp"
@@ -113,10 +114,6 @@ void reset_original_numattacks(struct char_data* ch) {
 		}
 		else if(HasClass(ch, CLASS_PALADIN)) {
 			ch->mult_att+=(GET_LEVEL(ch, PALADIN_LEVEL_IND)*.05);
-			if(GET_ALIGNMENT(ch) >= 350) {
-				SET_BIT(ch->specials.affected_by,AFF_DETECT_EVIL);
-				SET_BIT(ch->specials.affected_by,AFF_PROTECT_FROM_EVIL);
-			}
 		}
 		else if(HasClass(ch, CLASS_WARRIOR)) {
 			ch->mult_att+=(GET_LEVEL(ch, WARRIOR_LEVEL_IND)*.05);
@@ -1062,6 +1059,10 @@ void affect_remove(struct char_data* ch, struct affected_type* af) {
 /* Call affect_remove with every spell of spelltype "skill" */
 void affect_from_char(struct char_data* ch, short skill) {
 	struct affected_type* hjp, *pNext;
+
+	if(IsInnateAffectType(skill)) {
+		return;
+	}
 
 	for(hjp = ch->affected; hjp; hjp = pNext) {
 		pNext = hjp->next;

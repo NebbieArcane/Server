@@ -68,6 +68,7 @@
 #include "spell_parser.hpp"
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 using std::string;
@@ -3984,7 +3985,7 @@ void check_affected(char *msg) {
   for (c = character_list; c; c = c->next)
     if (c && c->affected)
       for (hjp = c->affected; hjp; hjp = hjp->next)
-        if (hjp->type > MAX_EXIST_SPELL || hjp->type < 0) {
+        if ((hjp->type > MAX_EXIST_SPELL && !IsInnateAffectType(hjp->type)) || hjp->type < 0) {
           sprintf(buf, "bogus hjp->type for (%s).", GET_NAME(c));
           fprintf(f, "%s", buf);
           /*          abort();    in test site this will be ok.. */

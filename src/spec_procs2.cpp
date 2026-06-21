@@ -5109,6 +5109,7 @@ void DruidTree(struct char_data* ch) {
 	act("$n pronuncia le parole, '$c0015harumph!$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge tree!", FALSE, ch, 0, 0, TO_ROOM);
 	GET_RACE(ch)=RACE_TREE;
+	SyncInnateAffects(ch);
 	ch->points.max_hit = GetMaxLevel(ch)*10;
 	ch->points.hit += GetMaxLevel(ch)*5;
 	free(ch->player.long_descr);
@@ -5128,6 +5129,7 @@ void DruidMob(struct char_data* ch) {
 	act("$n pronuncia le parole, '$c0015lagomorph$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge lion", FALSE, ch, 0, 0, TO_ROOM);
 	GET_RACE(ch)=RACE_PREDATOR;
+	SyncInnateAffects(ch);
 	ch->points.max_hit *= 2;
 	ch->points.hit += GET_HIT(ch)/2;
 	free(ch->player.long_descr);

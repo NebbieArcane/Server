@@ -920,6 +920,9 @@ void change_alignment(struct char_data* ch, struct char_data* victim) {
 	GET_ALIGNMENT(ch) = MAX(GET_ALIGNMENT(ch), -1000);
 	GET_ALIGNMENT(ch) = MIN(GET_ALIGNMENT(ch), 1000);
 
+	if(IS_PC(ch)) {
+		SyncInnateAffects(ch);
+	}
 }
 
 void death_cry(struct char_data* ch) {
@@ -1092,6 +1095,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			SwitchStuff(ch, pers);
 			extract_char(ch);
 			ch = pers;
+			SyncInnateAffects(ch);
 		}
 		else {
 			/* we don't know who the original is.  Gets away with it, i guess*/

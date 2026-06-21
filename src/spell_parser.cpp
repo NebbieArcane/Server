@@ -36,6 +36,7 @@
 #include "interpreter.hpp"
 #include "opinion.hpp"
 #include "regen.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -1042,6 +1043,9 @@ void affect_update(unsigned long localPulse) {
 			/* Affect loop */
 		{
 			next_af_dude = af->next;
+			if(IsInnateAffectType(af->type)) {
+				continue;
+			}
 			CheckSpecialties(ch,af);
 
 			if(af->duration >= 1) {

@@ -43,6 +43,7 @@
 #include "regen.hpp"
 #include "script.hpp"
 #include "Sql.hpp"
+#include "utility.hpp"
 #include "odb/account-odb.hxx" //Sirio per gestione registrazione pg su db
 #include "multiclass.hpp" //Sirio per gestione registrazione pg su db
 #include "toon_migration.hpp"
@@ -3983,6 +3984,9 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	/* Add all spell effects */
 	for(i = 0; i < MAX_AFFECT; i++) {
 		if(st->affected[i].type) {
+			if(IsInnateAffectType(st->affected[i].type)) {
+				continue;
+			}
 			if(affected_by_spell(ch, st->affected[i].type)) {
 				continue;
 			}
@@ -4058,37 +4062,37 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 		}
 	}
 	mudlog(LOG_CHECK, "Removing all affects from %s", GET_NAME(ch));
-	for(af = ch->affected, i = 0; i < MAX_AFFECT; i++) {
-		if(af) {
-			/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
-			 * Now, we need to assign item per item
-			 */
-			st->affected[i].bitvector = af->bitvector;
-			st->affected[i].duration = af->duration;
-			st->affected[i].location = af->location;
-			st->affected[i].modifier = af->modifier;
-			st->affected[i].type = af->type;
-			st->affected[i].next = 0;
-			/* subtract effect of the spell or the effect will be doubled */
-			affect_modify(ch, st->affected[i].location,
-						  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
-			snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
-					apply_types[st->affected[i].location],
-					st->affected[i].modifier);
-
-			af = af->next;
+	for(af = ch->affected, i = 0; af && i < MAX_AFFECT; af = af->next) {
+		if(IsInnateAffectType(af->type)) {
+			continue;
 		}
-		else {
-			st->affected[i].type = 0; /* Zero signifies not used */
-			st->affected[i].duration = 0;
-			st->affected[i].modifier = 0;
-			st->affected[i].location = 0;
-			st->affected[i].bitvector = 0;
-			st->affected[i].next = 0;
-		}
+		/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
+		 * Now, we need to assign item per item
+		 */
+		st->affected[i].bitvector = af->bitvector;
+		st->affected[i].duration = af->duration;
+		st->affected[i].location = af->location;
+		st->affected[i].modifier = af->modifier;
+		st->affected[i].type = af->type;
+		st->affected[i].next = 0;
+		/* subtract effect of the spell or the effect will be doubled */
+		affect_modify(ch, st->affected[i].location,
+					  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
+		snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
+				apply_types[st->affected[i].location],
+				st->affected[i].modifier);
+		i++;
+	}
+	for(; i < MAX_AFFECT; i++) {
+		st->affected[i].type = 0; /* Zero signifies not used */
+		st->affected[i].duration = 0;
+		st->affected[i].modifier = 0;
+		st->affected[i].location = 0;
+		st->affected[i].bitvector = 0;
+		st->affected[i].next = 0;
 	}
 
-	if((i >= MAX_AFFECT) && af && af->next) {
+	if(af != nullptr) {
 		mudlog(LOG_CHECK, "WARNING: OUT OF STORE ROOM FOR AFFECTED TYPES!!!");
 	}
 

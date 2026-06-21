@@ -7943,25 +7943,205 @@ int getFreeAffSlot(struct obj_data* obj) {
 	return -1;
 }
 
+namespace {
+
+constexpr sh_int kInnateAffectDuration = -1;
+
+[[nodiscard]] bool race_innate_fly(int race) {
+	switch(race) {
+	case RACE_BIRD:
+	case RACE_DEMON:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] bool race_innate_water_breath(int race) {
+	switch(race) {
+	case RACE_FISH:
+	case RACE_SEA_ELF:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] bool race_innate_infravision(int race) {
+	switch(race) {
+	case RACE_ELVEN:
+	case RACE_DARK_ELF:
+	case RACE_GOLD_ELF:
+	case RACE_WILD_ELF:
+	case RACE_SEA_ELF:
+	case RACE_DWARF:
+	case RACE_DARK_DWARF:
+	case RACE_DEEP_GNOME:
+	case RACE_GNOME:
+	case RACE_MFLAYER:
+	case RACE_TROLL:
+	case RACE_ORC:
+	case RACE_GOBLIN:
+	case RACE_HALFLING:
+	case RACE_GNOLL:
+	case RACE_DEMON:
+	case RACE_UNDEAD:
+	case RACE_UNDEAD_VAMPIRE:
+	case RACE_UNDEAD_LICH:
+	case RACE_UNDEAD_WIGHT:
+	case RACE_UNDEAD_GHAST:
+	case RACE_UNDEAD_GHOUL:
+	case RACE_UNDEAD_SPECTRE:
+	case RACE_UNDEAD_ZOMBIE:
+	case RACE_UNDEAD_SKELETON:
+	case RACE_HALF_ELVEN:
+	case RACE_HALF_OGRE:
+	case RACE_HALF_ORC:
+	case RACE_HALF_GIANT:
+		return true;
+	default:
+		return false;
+	}
+}
+
+void innate_affect_remove(struct char_data* ch, sh_int type) {
+	if(ch == nullptr) {
+		return;
+	}
+	for(struct affected_type* hjp = ch->affected, *pNext; hjp; hjp = pNext) {
+		pNext = hjp->next;
+		if(hjp->type == type) {
+			affect_remove(ch, hjp);
+		}
+	}
+}
+
+void sync_innate_affect(struct char_data* ch, sh_int type, long bitvector, bool wanted) {
+	if(ch == nullptr) {
+		return;
+	}
+	const bool has = affected_by_spell(ch, type);
+	if(wanted && !has) {
+		struct affected_type af{};
+		af.type = type;
+		af.duration = kInnateAffectDuration;
+		af.modifier = 0;
+		af.location = APPLY_NONE;
+		af.bitvector = bitvector;
+		affect_to_char(ch, &af);
+	}
+	else if(!wanted && has) {
+		innate_affect_remove(ch, type);
+	}
+}
+
+[[nodiscard]] bool class_innate_paladin_aura(struct char_data* ch) {
+	return IS_PC(ch) && HasClass(ch, CLASS_PALADIN) && GET_ALIGNMENT(ch) >= 350;
+}
+
+void sync_paladin_class_innates(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	const bool wanted = class_innate_paladin_aura(ch);
+	sync_innate_affect(ch, INNATE_CLASS_DETECT_EVIL, AFF_DETECT_EVIL, wanted);
+	sync_innate_affect(ch, INNATE_CLASS_PROT_EVIL, AFF_PROTECT_FROM_EVIL, wanted);
+	if(!wanted && IS_PC(ch)) {
+		if(!affected_by_spell(ch, SPELL_DETECT_EVIL)) {
+			REMOVE_BIT(ch->specials.affected_by, AFF_DETECT_EVIL);
+		}
+		if(!affected_by_spell(ch, SPELL_PROTECT_FROM_EVIL) &&
+		   !affected_by_spell(ch, SPELL_PROT_FROM_EVIL_GROUP)) {
+			REMOVE_BIT(ch->specials.affected_by, AFF_PROTECT_FROM_EVIL);
+		}
+	}
+}
+
+} // namespace
+
+bool IsInnateAffectType(sh_int type) {
+	return type >= INNATE_AFFECT_FIRST && type <= INNATE_AFFECT_LAST;
+}
+
+bool HasInnateRaceFly(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_RACE_FLY);
+}
+
+bool HasInnateRaceWaterBreath(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_RACE_WATERBREATH);
+}
+
+bool HasInnateRaceInfravision(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_RACE_INFRAVISION);
+}
+
+bool HasInnateClassDetectEvil(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_CLASS_DETECT_EVIL);
+}
+
+bool HasInnateClassProtEvil(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_CLASS_PROT_EVIL);
+}
+
+bool HasActiveDetectEvil(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_DETECT_EVIL) ||
+		   affected_by_spell(ch, SPELL_DETECT_EVIL) ||
+		   HasInnateClassDetectEvil(ch));
+}
+
+bool HasActiveProtEvil(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_PROTECT_FROM_EVIL) ||
+		   affected_by_spell(ch, SPELL_PROTECT_FROM_EVIL) ||
+		   affected_by_spell(ch, SPELL_PROT_FROM_EVIL_GROUP) ||
+		   HasInnateClassProtEvil(ch));
+}
+
+bool HasActiveFly(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_FLYING) ||
+		   affected_by_spell(ch, SPELL_FLY) ||
+		   HasInnateRaceFly(ch));
+}
+
+bool HasActiveWaterBreath(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_WATERBREATH) ||
+		   affected_by_spell(ch, SPELL_WATER_BREATH) ||
+		   HasInnateRaceWaterBreath(ch));
+}
+
+bool HasActiveInfravision(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_INFRAVISION) ||
+		   affected_by_spell(ch, SPELL_INFRAVISION) ||
+		   HasInnateRaceInfravision(ch));
+}
+
+void SyncInnateAffects(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	const int race = GET_RACE(ch);
+	sync_innate_affect(ch, INNATE_RACE_FLY, AFF_FLYING, race_innate_fly(race));
+	sync_innate_affect(ch, INNATE_RACE_WATERBREATH, AFF_WATERBREATH,
+					   race_innate_water_breath(race));
+	sync_innate_affect(ch, INNATE_RACE_INFRAVISION, AFF_INFRAVISION,
+					   race_innate_infravision(race));
+	sync_paladin_class_innates(ch);
+}
+
+void ApplyRaceChange(struct char_data* ch) {
+	SetRacialStuff(ch);
+}
+
 void SetRacialStuff(struct char_data* mob) {
 
 	switch(GET_RACE(mob)) {
-	case RACE_BIRD:
-		SET_BIT(mob->specials.affected_by, AFF_FLYING);
-		break;
-	case RACE_FISH:
-		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-		break;
 	case RACE_SEA_ELF:
 		/* e poi prosegue per le altre caratteristiche degli elfi */
-		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
 		/* FALLTHRU */
 	/* no break */
 	case RACE_ELVEN:
 	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
-		SET_BIT(mob->specials.affected_by,AFF_INFRAVISION);
 		SET_BIT(mob->immune, IMM_CHARM);
 		break;
 	case RACE_DWARF:
@@ -7974,7 +8154,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_GOBLIN:
 	case RACE_HALFLING:
 	case RACE_GNOLL:
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		break;
 	case RACE_INSECT:
 	case RACE_ARACHNID:
@@ -7986,8 +8165,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_DEMON:
 		SET_BIT(mob->M_immune, IMM_FIRE);
 		SET_BIT(mob->M_immune, IMM_POISON);
-		SET_BIT(mob->specials.affected_by, AFF_FLYING);
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		break;
 	case RACE_LYCANTH:
 		SET_BIT(mob->M_immune, IMM_NONMAG);
@@ -8026,7 +8203,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_UNDEAD_SPECTRE :
 	case RACE_UNDEAD_ZOMBIE  :
 	case RACE_UNDEAD_SKELETON :
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		SET_BIT(mob->M_immune,IMM_POISON+IMM_DRAIN+IMM_SLEEP+IMM_HOLD+IMM_CHARM);
 		break;
 
@@ -8069,12 +8245,13 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_HALF_OGRE:
 	case RACE_HALF_ORC:
 	case RACE_HALF_GIANT:
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		break;
 
 	default:
 		break;
 	}
+
+	SyncInnateAffects(mob);
 
 	/* height and weight      / Hatred Foes! / */
 	if(IS_NPC(mob)) {
