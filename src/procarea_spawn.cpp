@@ -197,15 +197,15 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 [[nodiscard]] int effective_band_from_power(float power_index) {
 	const int nominal = template_band_from_power(power_index);
 	const float lower = kProcPowerBandThresholds[nominal];
-	const float upper = (nominal + 1 < PROCAREA_TEMPLATE_BANDS)
-							? kProcPowerBandThresholds[nominal + 1]
-							: PROCAREA_POWER_SCALE_MAX + 1.0f;
+	const bool has_upper_band = nominal < PROCAREA_TEMPLATE_BANDS - 1;
+	const float upper = has_upper_band ? kProcPowerBandThresholds[nominal + 1]
+									   : PROCAREA_POWER_SCALE_MAX + 1.0f;
 	const float margin = PROCAREA_BAND_EDGE_MARGIN;
 
 	if(nominal > 0 && power_index < lower + margin) {
 		return nominal - 1;
 	}
-	if(nominal + 1 < PROCAREA_TEMPLATE_BANDS && power_index >= upper - margin) {
+	if(has_upper_band && power_index >= upper - margin) {
 		return nominal + 1;
 	}
 	return nominal;
