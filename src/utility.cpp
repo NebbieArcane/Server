@@ -5044,13 +5044,12 @@ int exit_ok(struct room_direction_data* exit, struct room_data** rpp) {
 }
 
 int MobVnum(struct char_data* c) {
-	if(c == nullptr || !IS_NPC(c)) {
-		return 0;
+	if(IS_MOB(c)) {
+		return(mob_index[c->nr].iVNum);
 	}
-	if(c->nr >= 0 && c->nr <= top_of_mobt) {
-		return mob_index[c->nr].iVNum;
+	else {
+		return(0);
 	}
-	return c->generic;
 }
 
 int ObjVnum(struct obj_data* o) {
@@ -5125,7 +5124,7 @@ int SaveZoneFile(FILE* fp, int start_room, int end_room) {
 			 *  first write out monsters
 			 */
 			for(p = room->people; p; p = p->next_in_room) {
-				if(IS_MOB(p)) {
+				if(IS_NPC(p)) {
 					cmd = 'M';
 					arg1 = MobVnum(p);
 					arg2 = mob_index[p->nr].number;
@@ -7091,7 +7090,7 @@ void CallForGuard(struct char_data* ch, struct char_data* vict, int lev,
 	}
 
 	for(i = character_list; i && lev>0; i = i->next) {
-		if(IS_MOB(i) && i != ch) {
+		if(IS_NPC(i) && (i != ch)) {
 			if(!i->specials.fighting) {
 				if(mob_index[i->nr].iVNum == type1) {
 					if(number(1,6) == 1) {
@@ -7125,9 +7124,9 @@ void CallForMobs(struct char_data* pChar, struct char_data* pVict,
 
 	for(pMobToCall = character_list; pMobToCall && iLevel > 0;
 			pMobToCall = pMobToCall->next) {
-		if(IS_MOB(pMobToCall) && pMobToCall != pChar) {
+		if(!IS_PC(pMobToCall) && pMobToCall != pChar) {
 			if(!pMobToCall->specials.fighting) {
-				if(mob_index[pMobToCall->nr].iVNum == iMobToCall) {
+				if(mob_index[ pMobToCall->nr ].iVNum == iMobToCall) {
 					if(number(1, 3) == 1) {
 						if(!IS_SET(pMobToCall->specials.act, ACT_HUNTING)) {
 							if(pVict) {

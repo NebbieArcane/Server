@@ -1136,11 +1136,11 @@ MOB_DESC(1, mob, 82, RACE_BIRD,
 	"Gracchio sinistro.")
 
 MOB_DESC(1, mob, 83, RACE_BIRD,
-	"caveira alata",
-	"Caveira Alata",
+	"avvoltoio alato",
+	"Avvoltoio Alato",
 	"Un uccello carogna grosso come un falco plana.",
 	"Becco ad uncino pronto a squartare.",
-	"La caveira attacca.",
+	"L'avvoltoio attacca.",
 	"Ali che battono.")
 
 MOB_DESC(1, mob, 84, RACE_BIRD,

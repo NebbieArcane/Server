@@ -425,6 +425,29 @@ static void procarea_log_index_comparison(const char* context, const char* name,
 		   context, who, legacy_eq, legacy_band, power_index, power_band, effective_band);
 }
 
+[[nodiscard]] static const char* procarea_log_pc_name(char_data* ch) {
+	if(ch == nullptr) {
+		return "?";
+	}
+	const char* name = GET_NAME(ch);
+	return (name != nullptr && *name != '\0') ? name : "?";
+}
+
+static void procarea_log_instance_action(char_data* ch, const char* verb,
+										 const ProcAreaInstance* inst, const char* extra = nullptr) {
+	std::ostringstream os;
+	os << "procarea: " << verb << " '" << procarea_log_pc_name(ch) << "' room "
+	   << (ch != nullptr ? ch->in_room : 0L);
+	if(inst != nullptr) {
+		os << " instance #" << inst->id << " (" << (inst->solo_mode ? "solo" : "group")
+		   << ", entrance " << inst->entrance_vnum << ")";
+	}
+	if(extra != nullptr && *extra != '\0') {
+		os << ' ' << extra;
+	}
+	mudlog(LOG_CHECK, os.str().c_str());
+}
+
 static void procarea_notify_index_comparison(char_data* ch, float legacy_eq, float power_index) {
 	if(ch == nullptr || !IS_IMMORTALE(ch)) {
 		return;
@@ -885,6 +908,12 @@ static void procarea_invoke_solo_vortex(struct char_data* ch) {
 	g_solo_vortex.opener = name;
 	g_solo_vortex.opened_at = time(nullptr);
 
+	if(existing != nullptr && existing->solo_mode) {
+		procarea_log_instance_action(ch, "solo vortex opened for re-entry", existing, nullptr);
+	} else {
+		procarea_log_instance_action(ch, "solo vortex opened for new entry", nullptr, nullptr);
+	}
+
 	send_to_char(
 		"Appoggi le dita sull'acqua gelida:\n\r"
 		"la fontana risponde solo a te, come ad un nome pronunciato a voce bassa.\n\r",
@@ -948,16 +977,21 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 			return;
 		}
 		if(existing->entrance_vnum <= 0 || real_roomp(existing->entrance_vnum) == nullptr) {
+			procarea_log_instance_action(ch, "solo vortex re-entry failed", existing,
+									   "entrance room missing");
 			send_to_char("La tua Dimensione Solitaria non risponde piu'.\n\r", ch);
 			return;
 		}
 		if(!g_solo_vortex.active || g_solo_vortex.opener != name) {
+			procarea_log_instance_action(ch, "solo vortex re-entry blocked", existing,
+									   "vortex not open (touch fontana first)");
 			send_to_char(
 				"Prima devi richiamare il vortice, ti basta $c0014toccare la fontana$c0007.\n\r",
 				ch);
 			return;
 		}
 		procarea_record_instance_members(*existing, { ch });
+		procarea_log_instance_action(ch, "solo vortex re-entry", existing, nullptr);
 		send_to_char(
 			"Il vortice ti riconosce e ti risucchia di nuovo nel sentiero solitario.\n\r",
 			ch);
@@ -986,6 +1020,8 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 	const float legacy_eq = GetCharBonusIndex(ch);
 	procarea_log_index_comparison("solo entry", GET_NAME(ch), legacy_eq, eq_index);
 	procarea_notify_index_comparison(ch, legacy_eq, eq_index);
+	procarea_log_instance_action(ch, "solo vortex new entry requested", nullptr,
+								 "no linked instance");
 
 	long entrance = 0;
 	const int instance_id = procarea_internal::create_instance(eq_index, max_level, PROCAREA_FOUNTAIN_ROOM,
@@ -1001,6 +1037,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 
 	if(ProcAreaInstance* inst = procarea_internal::find_instance(instance_id); inst != nullptr) {
 		procarea_record_instance_members(*inst, { ch });
+		procarea_log_instance_action(ch, "solo vortex new entry", inst, nullptr);
 	}
 
 	procarea_send_fountain_plaza(
@@ -1091,6 +1128,7 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 			return;
 		}
 		procarea_record_instance_members(*existing, party);
+		procarea_log_instance_action(ch, "nebbia re-entry", existing, nullptr);
 		for(char_data* member : party) {
 			send_to_char(
 				"La nebbia si riapre sul sentiero gia' aperto dal tuo gruppo:\n\r"
@@ -1140,6 +1178,7 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 
 	if(ProcAreaInstance* inst = procarea_internal::find_instance(instance_id); inst != nullptr) {
 		procarea_record_instance_members(*inst, party);
+		procarea_log_instance_action(ch, "nebbia new entry", inst, nullptr);
 	}
 
 	procarea_send_fountain_plaza(
@@ -1327,6 +1366,10 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 		return false;
 	}
 	if(!procarea_can_request_darkstar_aid(ch)) {
+		procarea_log_instance_action(
+			ch, "darkstar prayer denied",
+			procarea_find_instance_for_ch(ch),
+			"wrong location (need instance, piazza, or temple with active instance)");
 		send_to_char(
 			"La preghiera si perde nel vento: DarkStar ti ascolta solo\n\r"
 			"dalle Dimensioni Effimere o dalla Piazza delle Nebbie.\n\r",
@@ -1345,6 +1388,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 
 	const std::vector<char_data*> group = procarea_party_in_room(ch);
 	if(group.empty()) {
+		procarea_log_instance_action(ch, "darkstar prayer ignored", nullptr, "empty party");
 		return true;
 	}
 
@@ -1353,6 +1397,12 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 		char_data* blocked = nullptr;
 		int seconds_left = 0;
 		if(procarea_group_darkstar_exit_blocked(group, blocked, seconds_left)) {
+			std::ostringstream log_msg;
+			log_msg << "procarea: darkstar exit blocked '" << procarea_log_pc_name(ch)
+					<< "' room " << ch->in_room << " instance #" << in_inst->id << " ("
+					<< (in_inst->solo_mode ? "solo" : "group") << ") cooldown "
+					<< seconds_left << 's';
+			mudlog(LOG_CHECK, log_msg.str().c_str());
 			const int minutes = (seconds_left + 59) / 60;
 			if(blocked == ch) {
 				std::ostringstream os;
@@ -1379,6 +1429,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			act("$n invoca DarkStar: la nebbia li avvolge e li conduce al tempio.", TRUE, group[0],
 				nullptr, nullptr, TO_ROOM);
 		}
+		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
 		procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
 		procarea_mark_darkstar_exit_cooldown(group);
 		procarea_touch_instance(in_inst->id);
@@ -1390,10 +1441,13 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 	   (ch->in_room == PROCAREA_FOUNTAIN_ROOM || ch->in_room == PROCAREA_DARKSTAR_TEMPLE)) {
 		if(return_inst->entrance_vnum <= 0 ||
 		   real_roomp(return_inst->entrance_vnum) == nullptr) {
+			procarea_log_instance_action(ch, "darkstar re-entry failed", return_inst,
+									   "entrance room missing");
 			send_to_char("La Dimensione Effimera non risponde piu' alla preghiera.\n\r", ch);
 			return true;
 		}
 		procarea_record_instance_members(*return_inst, group);
+		procarea_log_instance_action(ch, "darkstar re-entry", return_inst, nullptr);
 		for(size_t i = 0; i < group.size(); ++i) {
 			send_to_char(
 				"$c0014DarkStar Luce Oscura$c0007 apre un varco nella nebbia:\n\r"
@@ -1420,6 +1474,12 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 	if(!group.empty()) {
 		act("$n invoca DarkStar: la nebbia li avvolge e li conduce al tempio.", TRUE, group[0],
 			nullptr, nullptr, TO_ROOM);
+	}
+	{
+		std::ostringstream detail;
+		detail << "no linked instance (" << procarea_internal::g_instances.size()
+			   << " active)";
+		procarea_log_instance_action(ch, "darkstar refuge to temple", nullptr, detail.str().c_str());
 	}
 	procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
 	return true;
@@ -1582,6 +1642,13 @@ static void procarea_capture_pc_reentry_on_death(char_data* ch) {
 
 	inst->member_saved_load_room[name] = load_room;
 	inst->member_saved_start_room[name] = start_room;
+	{
+		std::ostringstream log_msg;
+		log_msg << "procarea: death re-entry saved '" << name << "' room " << ch->in_room
+				<< " instance #" << inst->id << " (" << (inst->solo_mode ? "solo" : "group")
+				<< ") load_room " << load_room;
+		mudlog(LOG_CHECK, log_msg.str().c_str());
+	}
 }
 
 static void procarea_restore_pc_reentry(char_data* ch) {
@@ -1683,6 +1750,14 @@ void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data
 		return;
 	}
 	procarea_capture_pc_reentry_on_death(ch);
+	ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(ch->in_room);
+	if(inst != nullptr) {
+		std::ostringstream log_msg;
+		log_msg << "procarea: corpse relocated '" << procarea_log_pc_name(ch) << "' from room "
+				<< ch->in_room << " instance #" << inst->id << " ("
+				<< (inst->solo_mode ? "solo" : "group") << ") to temple";
+		mudlog(LOG_CHECK, log_msg.str().c_str());
+	}
 	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) == nullptr) {
 		return;
 	}
@@ -1724,6 +1799,7 @@ void procarea_tick_cleanup() {
 	}
 
 	for(int instance_id : stale) {
+		mudlog(LOG_CHECK, "procarea: stale cleanup destroying instance %d (idle >600s)", instance_id);
 		procarea_destroy_instance(instance_id);
 	}
 	procarea_tick_fountain_veil();
@@ -2150,7 +2226,13 @@ bool procarea_try_enter_vortice(struct char_data* ch, const char* arg) {
 }
 
 int procarea_mob_iVNum(const char_data* mob) {
-	return MobVnum(const_cast<char_data*>(mob));
+	if(mob == nullptr || !IS_NPC(mob)) {
+		return 0;
+	}
+	if(mob->nr >= 0 && mob->nr <= top_of_mobt) {
+		return mob_index[mob->nr].iVNum;
+	}
+	return mob->generic;
 }
 
 } // namespace Alarmud

@@ -142,7 +142,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	137439479812ull, /* idx 135 Pipistrello Vorace */
 	137439479812ull, /* idx 136 Pipistrello Vampiro */
 	137439479812ull, /* idx 137 Corvo di Caverna */
-	137439479812ull, /* idx 138 Caveira Alata */
+	137439479812ull, /* idx 138 Avvoltoio Alato */
 	137439479812ull, /* idx 139 Gufo di Caverna */
 	137439479812ull, /* idx 140 Arpia Giovane */
 	137439479812ull, /* idx 141 Picchio d'Ossidiana */

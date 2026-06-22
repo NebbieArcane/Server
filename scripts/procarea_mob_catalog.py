@@ -453,7 +453,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_BIRD", "pipistrello vorace", "Pipistrello Vorace", "Un pipistrello grosso come un cane volteggia sopra la tua testa.", "Canini sporgono da un muso allungato e famelico.", "Il pipistrello piomba giu'.", "Ali scalciano l'aria."),
             _A("RACE_BIRD", "pipistrello vampiro", "Pipistrello Vampiro", "Un pipistrello enorme plana con muso porcino.", "Lingua sanguinante lecca l'aria.", "Il pipistrello morde.", "Ronzio famelico."),
             _A("RACE_BIRD", "corvo caverna", "Corvo di Caverna", "Un corvo grosso osserva dall'ombra.", "Piume nere assorbono la luce.", "Il corvo becca violentemente.", "Gracchio sinistro."),
-            _A("RACE_BIRD", "caveira alata", "Caveira Alata", "Un uccello carogna grosso come un falco plana.", "Becco ad uncino pronto a squartare.", "La caveira attacca.", "Ali che battono."),
+            _A("RACE_BIRD", "avvoltoio alato", "Avvoltoio Alato", "Un uccello carogna grosso come un falco plana.", "Becco ad uncino pronto a squartare.", "L'avvoltoio attacca.", "Ali che battono."),
             _A("RACE_BIRD", "gufo caverna", "Gufo di Caverna", "Un gufo gigante fissa con occhi dorati.", "Ali silenziose planano nel buio.", "Il gufo artiglia.", "Verso stridulo."),
             _A("RACE_BIRD", "arpia giovane", "Arpia Giovane", "Un'arpia immatura plana goffamente.", "Artigli non ancora maturi ma affilati.", "L'arpia graffia.", "Grido acuto."),
             _A("RACE_BIRD", "picchio ossidiana", "Picchio d'Ossidiana", "Un picchio dalle piume nere picchietta la roccia.", "Becco duro come acciaio.", "Il picchio becca.", "Picchiettio ossessionante."),
