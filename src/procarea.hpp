@@ -52,7 +52,9 @@ constexpr int PROCAREA_MOB_POOL_SIZE = 150;
 constexpr int PROCAREA_TRAP_POOL_SIZE = 20;
 constexpr int PROCAREA_ARCHETYPE_COUNT = 225;
 constexpr int PROCAREA_THEME_COUNT = 50;
-constexpr int PROCAREA_TEMPLATE_BANDS = 6;
+constexpr int PROCAREA_TEMPLATE_BANDS = 10;
+/** Margine potenza ai confini fascia: evita scalino netto tra bande adiacenti. */
+constexpr float PROCAREA_BAND_EDGE_MARGIN = 50.0f;
 
 /** Gruppo fino a 3 PG: scaling mob invariato; oltre, +7% per PG (cap 9 PG). */
 constexpr int PROCAREA_PARTY_BASE_SIZE = 3;
@@ -64,7 +66,7 @@ constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 
 /** Premi istanza: scudi indossabili su shield e back (65100+). */
 constexpr int PROCAREA_REWARD_SHIELD_VNUM_BASE = 65100;
-constexpr int PROCAREA_REWARD_SHIELD_COUNT = 6;
+constexpr int PROCAREA_REWARD_SHIELD_COUNT = 10;
 /** Bonus scudo premio per livello max gruppo/solitario: 1-10→1 … 51→5 slot. */
 constexpr int PROCAREA_REWARD_BONUS_MAX = 5;
 
@@ -75,7 +77,7 @@ constexpr int PROCAREA_TREASURE_GEAR_DROP_DECAY_PCT = 25;
 
 /** Premi equip istanza (65106+): un prototipo per slot/banda (12 se slot doppio). */
 constexpr int PROCAREA_REWARD_GEAR_VNUM_BASE = 65106;
-constexpr int PROCAREA_REWARD_GEAR_COUNT = 132;
+constexpr int PROCAREA_REWARD_GEAR_COUNT = 220;
 
 enum class ProcRewardWeaponDamage : int {
 	Slash = 0,
@@ -103,10 +105,10 @@ enum class ProcRewardGearSlot : int {
 	Count = 16,
 };
 
-/** Vnum prototipo premio gear per slot, banda (0-5) e sotto-variante (lato doppio o tipo danno). */
+/** Vnum prototipo premio gear per slot, banda (0-9) e sotto-variante (lato doppio o tipo danno). */
 long procarea_reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant = 0);
 
-/** Roll bonus/proc su copia runtime di un'arma premio (band >= 4: slay e cause). */
+/** Roll bonus/proc su copia runtime di un'arma premio (band effettiva >= 7: slay e cause). */
 void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
 								 bool instance_has_ranger = false);
 

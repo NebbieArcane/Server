@@ -69,6 +69,7 @@ struct ProcAreaInstance {
 	int id;
 	float group_eq_index;
 	int template_band;
+	int effective_band;
 	int group_max_level;
 	int theme_id;
 	long base_vnum;
@@ -95,6 +96,7 @@ struct ProcAreaDifficulty {
 	float eq_index;
 	float factor;
 	int template_band;
+	int effective_band;
 	int group_max_level;
 	int rooms_min;
 	int rooms_max;
@@ -110,6 +112,9 @@ struct ProcAreaDifficulty {
 
 extern std::vector<ProcAreaInstance> g_instances;
 extern int g_next_instance_id;
+
+[[nodiscard]] int template_band_from_power(float power_index);
+[[nodiscard]] int effective_band_from_power(float power_index);
 
 [[nodiscard]] inline bool cmd_is(std::string_view token,
 								 std::initializer_list<std::string_view> aliases) {

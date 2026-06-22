@@ -27,6 +27,8 @@ BOSS_PER_TIER = 55
 MOB_VNUM_BASE = 65000
 MOBS_PER_TIER = 170
 ARCHETYPE_COUNT = 225
+TEMPLATE_BANDS = 10
+LEGACY_TIERS = 6
 EXPECTED_ARCHETYPES = 225
 DICE_RE = re.compile(r"^(\d+)d(\d+)\+(-?\d+)$")
 STAT_LINE_RE = re.compile(r"^8 8 ([345]) (\S+) (\S+) (\S+)$")
@@ -699,16 +701,48 @@ def combat_from_build(desc: MobDesc, tier: int) -> dict[str, int]:
     }
 
 
+def lerp_int(lo: int, hi: int, frac: float) -> int:
+    return int(round(lo + (hi - lo) * frac))
+
+
+def combat_interp(desc: MobDesc, band_idx: int) -> dict[str, int | float]:
+    tier_f = 1.0 + band_idx * (LEGACY_TIERS - 1) / (TEMPLATE_BANDS - 1)
+    tier_lo = int(tier_f)
+    tier_hi = min(tier_lo + 1, LEGACY_TIERS)
+    frac = tier_f - tier_lo if tier_hi > tier_lo else 0.0
+    lo = combat_from_build(desc, tier_lo)
+    hi = combat_from_build(desc, tier_hi)
+    out: dict[str, int | float] = {}
+    flag_keys = {
+        "immune",
+        "m_immune",
+        "susc",
+        "act",
+        "affected_by",
+        "sex",
+        "position",
+        "default_pos",
+    }
+    for key in lo:
+        if key in flag_keys:
+            out[key] = hi[key] if frac >= 0.5 else lo[key]
+        elif key == "mult_att":
+            out[key] = float(lo[key]) + (float(hi[key]) - float(lo[key])) * frac
+        else:
+            out[key] = lerp_int(int(lo[key]), int(hi[key]), frac)
+    return out
+
+
 def emit_band_stats_inc(archetypes: list[MobDesc], path: Path) -> None:
     ordered = sorted(
         archetypes,
         key=lambda d: (0 if d.role == "boss" else 1, d.slot if d.role == "boss" else d.slot),
     )
     band_blocks: list[str] = []
-    for band in range(1, 7):
+    for band_idx in range(TEMPLATE_BANDS):
         rows: list[str] = []
         for desc in ordered:
-            combat = combat_from_build(desc, band)
+            combat = combat_interp(desc, band_idx)
             idx = archetype_index(desc)
             rows.append(
                 "\t\t{" + ", ".join(
@@ -732,7 +766,7 @@ def emit_band_stats_inc(archetypes: list[MobDesc], path: Path) -> None:
                         str(combat["mult_att"]),
                     ]
                 )
-                + f"}}, /* band {band - 1} idx {idx} {desc.role} {desc.slot} */"
+                + f"}}, /* band {band_idx} idx {idx} {desc.role} {desc.slot} */"
             )
         band_blocks.append("\t{\n" + "\n".join(rows) + "\n\t}")
     body = ",\n".join(band_blocks)
@@ -761,7 +795,7 @@ struct ProcArchetypeCombat {{
 \tfloat mult_att;
 }};
 
-static constexpr ProcArchetypeCombat kProcBandCombat[{6}][{ARCHETYPE_COUNT}] = {{
+static constexpr ProcArchetypeCombat kProcBandCombat[{TEMPLATE_BANDS}][{ARCHETYPE_COUNT}] = {{
 {body}
 }};
 

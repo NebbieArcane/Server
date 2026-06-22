@@ -412,43 +412,33 @@ static void procarea_party_add_unique(std::vector<char_data*>& party, char_data*
 	return 5;
 }
 
-[[nodiscard]] static int procarea_power_template_band(float power_index) {
-	if(power_index < 800.0f) {
-		return 0;
-	}
-	if(power_index < 2000.0f) {
-		return 1;
-	}
-	if(power_index < 4000.0f) {
-		return 2;
-	}
-	if(power_index < 6500.0f) {
-		return 3;
-	}
-	if(power_index < 9000.0f) {
-		return 4;
-	}
-	return 5;
-}
-
 static void procarea_log_index_comparison(const char* context, const char* name,
 										  float legacy_eq, float power_index) {
 	const char* who = (name != nullptr && *name != '\0') ? name : "?";
 	const int legacy_band = procarea_legacy_template_band(legacy_eq) + 1;
-	const int power_band = procarea_power_template_band(power_index) + 1;
+	const int power_band =
+		procarea_internal::template_band_from_power(power_index) + 1;
+	const int effective_band =
+		procarea_internal::effective_band_from_power(power_index) + 1;
 	mudlog(LOG_CHECK,
-		   "procarea %s '%s': legacy eq %.0f (band %d) -> power %.0f (band %d)", context, who,
-		   legacy_eq, legacy_band, power_index, power_band);
+		   "procarea %s '%s': legacy eq %.0f (band %d) -> power %.0f (fascia %d, effettiva %d)",
+		   context, who, legacy_eq, legacy_band, power_index, power_band, effective_band);
 }
 
 static void procarea_notify_index_comparison(char_data* ch, float legacy_eq, float power_index) {
 	if(ch == nullptr || !IS_IMMORTALE(ch)) {
 		return;
 	}
+	const int nominal = procarea_internal::template_band_from_power(power_index) + 1;
+	const int effective = procarea_internal::effective_band_from_power(power_index) + 1;
 	std::ostringstream msg;
 	msg << "[debug procarea] legacy eq " << std::fixed << std::setprecision(0) << legacy_eq
 		<< " (band " << (procarea_legacy_template_band(legacy_eq) + 1) << ") -> potenza "
-		<< power_index << " (band " << (procarea_power_template_band(power_index) + 1) << ")\n\r";
+		<< power_index << " (fascia " << nominal << "/" << PROCAREA_TEMPLATE_BANDS;
+	if(effective != nominal) {
+		msg << ", effettiva " << effective;
+	}
+	msg << ")\n\r";
 	send_to_char(msg.str().c_str(), ch);
 }
 
@@ -1852,6 +1842,8 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 	const char* theme_label = procarea_internal::theme_set(inst.theme_id).label;
 	const int mobs_left = procarea_internal::count_mobs(inst);
 	const int band = std::clamp(inst.template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	const int effective_band =
+		std::clamp(inst.effective_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 
 	std::ostringstream info;
 	info << "$c0014=== Dimensione Effimera #" << inst.id;
@@ -1866,7 +1858,11 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 		info << " | potenza gruppo ";
 	}
 	info << std::fixed << std::setprecision(0) << inst.group_eq_index
-		 << " | fascia " << (band + 1) << "/" << PROCAREA_TEMPLATE_BANDS << "\n\r";
+		 << " | fascia " << (band + 1) << "/" << PROCAREA_TEMPLATE_BANDS;
+	if(effective_band != band) {
+		info << " (effettiva " << (effective_band + 1) << ")";
+	}
+	info << "\n\r";
 	if(inst.solo_mode) {
 		info << "Modalita': solitaria | esploratore: " << inst.owner_name << " | stanze: "
 			 << inst.room_vnums.size() << "\n\r";
