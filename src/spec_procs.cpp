@@ -3487,7 +3487,7 @@ MOBSPECIAL_FUNC(fido) {
 
 	for(v = rp->people; (v && (!found)); v = next) {
 		next = v->next_in_room;
-		if((IS_NPC(v)) && (mob_index[v->nr].iVNum == 100) &&
+		if(IS_MOB(v) && mob_index[v->nr].iVNum == 100 &&
 				CAN_SEE(ch, v)) {  /* is a zombie */
 			if(v->specials.fighting) {
 				stop_fighting(v);

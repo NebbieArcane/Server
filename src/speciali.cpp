@@ -958,7 +958,7 @@ MOBSPECIAL_FUNC(bambola)
     {
         for(tch = real_roomp(mob->in_room)->people; tch; tch = tch->next_in_room)
         {
-            if(IS_NPC(tch) && mob_index[tch->nr].iVNum == mob_index[ch->nr].iVNum)
+            if(IS_MOB(tch) && IS_MOB(ch) && mob_index[tch->nr].iVNum == mob_index[ch->nr].iVNum)
             {
                 if(tch->specials.fighting)
                 {

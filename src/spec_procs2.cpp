@@ -6690,7 +6690,7 @@ MOBSPECIAL_FUNC(real_rabbit) {
 	}
 
 	for(i = real_roomp(ch->in_room)->people; i; i = i->next_in_room)
-		if(IS_NPC(i) && (mob_index[i->nr].iVNum == 6005) && !number(0,3)) {
+		if(IS_MOB(i) && mob_index[i->nr].iVNum == 6005 && !number(0,3)) {
 			do_emote(ch, "sees the damn fox and runs like hell.", 0);
 			do_flee(ch, "\0", 0);
 			return TRUE;
@@ -6740,7 +6740,7 @@ MOBSPECIAL_FUNC(real_fox) {
 	}
 
 	for(i = real_roomp(ch->in_room)->people; i; i = i->next_in_room)
-		if(IS_NPC(i) && (mob_index[i->nr].iVNum == 6001) && !number(0,3)) {
+		if(IS_MOB(i) && mob_index[i->nr].iVNum == 6001 && !number(0,3)) {
 			do_emote(ch, "yips and starts to make dinner.", 0);
 			hit(ch, i, TYPE_UNDEFINED);
 			return TRUE;

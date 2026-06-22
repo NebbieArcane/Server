@@ -5770,6 +5770,9 @@ void reload_files_and_scripts() {
 	 */
 
 	for(struct char_data* p = character_list; p; p = p->next) {
+		if(!IS_MOB(p)) {
+			continue;
+		}
 		for(int i = 0; i < top_of_scripts; i++) {
 			if(gpScript_data[i].iVNum == mob_index[p->nr].iVNum) {
 				SET_BIT(p->specials.act, ACT_SCRIPT);

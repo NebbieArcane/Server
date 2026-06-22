@@ -2150,13 +2150,7 @@ bool procarea_try_enter_vortice(struct char_data* ch, const char* arg) {
 }
 
 int procarea_mob_iVNum(const char_data* mob) {
-	if(mob == nullptr || !IS_NPC(mob)) {
-		return 0;
-	}
-	if(mob->nr >= 0 && mob->nr <= top_of_mobt) {
-		return mob_index[mob->nr].iVNum;
-	}
-	return mob->generic;
+	return MobVnum(const_cast<char_data*>(mob));
 }
 
 } // namespace Alarmud

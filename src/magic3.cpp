@@ -1641,7 +1641,7 @@ void spell_charm_veggie(byte level, struct char_data* ch,
 		return;
 	}
 
-    if(IS_NPC(victim) && (mob_index[victim->nr].iVNum >= QUEST_ZONE && mob_index[victim->nr].iVNum <= QUEST_ZONE+99))
+    if(IS_MOB(victim) && (mob_index[victim->nr].iVNum >= QUEST_ZONE && mob_index[victim->nr].iVNum <= QUEST_ZONE+99))
     {
         act("$N non vuole seguire nessuno!", TRUE, ch, 0, victim, TO_CHAR);
         return;
