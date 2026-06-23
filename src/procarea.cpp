@@ -1909,6 +1909,34 @@ static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaI
 	send_to_char(info.str().c_str(), ch);
 }
 
+static void procarea_append_treasure_status(std::ostringstream& info,
+											const ProcAreaInstance& inst) {
+	if(inst.treasure_vnums.empty()) {
+		return;
+	}
+
+	const int total = static_cast<int>(inst.treasure_vnums.size());
+	int unclaimed = 0;
+	for(long vnum : inst.treasure_vnums) {
+		if(inst.treasure_claimed.find(vnum) == inst.treasure_claimed.end()) {
+			++unclaimed;
+		}
+	}
+
+	info << "Tesori: ";
+	if(inst.boss_key_dropped) {
+		info << total << (total == 1 ? " cumulo" : " cumuli");
+		if(unclaimed > 0) {
+			info << ", " << unclaimed
+				 << (unclaimed == 1 ? " non ancora aperto" : " non ancora aperti");
+		}
+		info << " | $c0010bottino rilasciato$c0007 — raccogli loot a terra nelle stanze tesoro.\n\r";
+	} else {
+		info << total << (total == 1 ? " cumulo sigillato" : " cumuli sigillati");
+		info << " | sigilli attivi finche' vive il custode della dimensione.\n\r";
+	}
+}
+
 static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& inst) {
 	if(ch == nullptr) {
 		return;
@@ -1983,24 +2011,7 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 		info << "Uscita: il portale si aprira' nella sala finale quando la dimensione sara' ripulita.\n\r";
 	}
 
-	if(!inst.treasure_vnums.empty()) {
-		int treasures_unclaimed = 0;
-		for(long vnum : inst.treasure_vnums) {
-			if(inst.treasure_claimed.find(vnum) == inst.treasure_claimed.end()) {
-				++treasures_unclaimed;
-			}
-		}
-		info << "Tesori: " << inst.treasure_vnums.size() << " cumuli";
-		if(inst.boss_key_dropped) {
-			if(treasures_unclaimed > 0) {
-				info << ", " << treasures_unclaimed << " ancora da raccogliere";
-			}
-			info << " | $c0010bottino rilasciato$c0007 — raccogli loot a terra nelle stanze tesoro.\n\r";
-		} else {
-			info << ", " << treasures_unclaimed << " sigillati"
-				 << " | sigilli attivi finche' vive il custode della dimensione.\n\r";
-		}
-	}
+	procarea_append_treasure_status(info, inst);
 
 	info << "Ripiego: $c0014pray darkstar aiuto$c0007 (tempio o rientro).\n\r";
 	send_to_char(info.str().c_str(), ch);

@@ -54,7 +54,9 @@ int GetNum(struct char_data* pMob,int pos);
 int GetNumR(struct room_data* pRoom,int pos);
 struct char_data* CloneChar(struct char_data* ch,long nroom);
 float GetCharBonusIndex(struct char_data* ch);
-/** Indice potenza equip per procarea (pesi ricalibrati, immune capped). */
+/** Moltiplicatore razziale procarea (1.0 = umano). */
+float ProcAreaRacialFactor(struct char_data* ch);
+/** Indice potenza equip per procarea (pesi ricalibrati, immune capped, racial factor). */
 float ProcAreaPowerIndex(struct char_data* ch);
 } // namespace Alarmud
 #endif

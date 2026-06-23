@@ -979,7 +979,68 @@ struct ProcPowerWeights {
 	}
 }
 
+[[nodiscard]] float procarea_racial_factor(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return 1.0f;
+	}
+
+	const ProcPowerProfile profile = procarea_power_profile(ch);
+
+	switch(GET_RACE(ch)) {
+	case RACE_TROLL:
+		return 1.27f;
+	case RACE_DEMON:
+		return 1.14f;
+	case RACE_HALF_GIANT:
+		return 1.11f;
+	case RACE_DWARF:
+		return 1.08f;
+	case RACE_WILD_ELF:
+		return 1.07f;
+	case RACE_HALFLING:
+		return 1.06f;
+	case RACE_HALF_OGRE:
+		return 1.06f;
+	case RACE_DARK_DWARF:
+		return 1.06f;
+	case RACE_ELVEN:
+		return 1.05f;
+	case RACE_SEA_ELF:
+		return 1.04f;
+	case RACE_HALF_ORC:
+		return 1.03f;
+	case RACE_GNOME:
+		return 1.03f;
+	case RACE_ORC:
+		return 1.02f;
+	case RACE_DARK_ELF:
+		return 1.01f;
+	case RACE_HUMAN:
+	case RACE_HALF_ELVEN:
+	case RACE_DEEP_GNOME:
+		return 1.00f;
+	case RACE_GOLD_ELF:
+		switch(profile) {
+		case ProcPowerProfile::Fighter:
+			return 0.94f;
+		case ProcPowerProfile::Caster:
+			return 1.07f;
+		case ProcPowerProfile::Hybrid:
+			return 1.00f;
+		}
+		return 1.00f;
+	case RACE_GOBLIN:
+		return 0.97f;
+	default:
+		return 1.00f;
+	}
+}
+
 } // namespace
+
+float ProcAreaRacialFactor(struct char_data* ch) {
+	return procarea_racial_factor(ch);
+}
 
 float ProcAreaPowerIndex(struct char_data* ch) {
 	if(ch == nullptr) {
@@ -1054,7 +1115,8 @@ float ProcAreaPowerIndex(struct char_data* ch) {
 	}
 
 	defense += std::min(static_cast<float>(PROCAREA_POWER_IMMUNE_CAP), immune_raw);
-	return combat + defense + sustain;
+	const float equip_index = combat + defense + sustain;
+	return equip_index * procarea_racial_factor(ch);
 }
 
 ACTION_FUNC(do_setalign) {
