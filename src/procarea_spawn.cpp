@@ -111,13 +111,15 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 									  bool follow_anchor_sentinel = false,
 									  int add_slot = -1,
 									  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor,
-									  bool solo_mode = false, float party_power_mult = 1.0f);
+									  bool solo_mode = false, float party_power_mult = 1.0f,
+									  bool solo_owner_is_basher = true);
 static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
 											  int group_max_level, ProcMobKind kind, int theme_id,
 											  bool follow_anchor_sentinel = false,
 											  int add_slot = -1,
 											  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor,
-											  bool solo_mode = false, float party_power_mult = 1.0f);
+											  bool solo_mode = false, float party_power_mult = 1.0f,
+											  bool solo_owner_is_basher = true);
 
 static void procarea_link_boss_add(char_data* add, char_data* boss);
 static void procarea_link_anchor_add(char_data* add, char_data* anchor);
@@ -438,18 +440,34 @@ static constexpr unsigned long kProcClassActMask =
 	ACT_BARBARIAN | ACT_PALADIN | ACT_RANGER | ACT_PSI | ACT_ARCHER;
 
 static void procarea_apply_standalone_class(char_data* mob, int template_band,
-											ProcMobClassContext class_ctx) {
+											ProcMobClassContext class_ctx, bool solo_mode,
+											bool solo_owner_is_fighter) {
 	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const ProcClassChancePct& pct = class_ctx == ProcMobClassContext::Treasure ?
-									  kProcTreasureClassByBand[band] :
-									  kProcCorridorClassByBand[band];
+	const ProcClassChancePct& base = class_ctx == ProcMobClassContext::Treasure ?
+									   kProcTreasureClassByBand[band] :
+									   kProcCorridorClassByBand[band];
+	int warrior_pct = base.warrior;
+	int cleric_pct = base.cleric;
+	int mage_pct = base.mage;
+	if(solo_mode && !solo_owner_is_fighter && mage_pct > 0) {
+		const int fighter_total = warrior_pct + cleric_pct;
+		if(fighter_total > 0) {
+			const int mage_share_warrior = (mage_pct * warrior_pct) / fighter_total;
+			warrior_pct += mage_share_warrior;
+			cleric_pct += mage_pct - mage_share_warrior;
+		} else {
+			warrior_pct = 50;
+			cleric_pct = 50;
+		}
+		mage_pct = 0;
+	}
 	const int roll = number(0, 99);
-	if(roll < pct.warrior) {
+	if(roll < warrior_pct) {
 		SET_BIT(mob->specials.act, ACT_WARRIOR);
 		mob->specials.spellfail = 101;
 		return;
 	}
-	if(roll < pct.warrior + pct.cleric) {
+	if(roll < warrior_pct + cleric_pct) {
 		SET_BIT(mob->specials.act, ACT_CLERIC);
 		mob->specials.spellfail = 0;
 		return;
@@ -459,13 +477,18 @@ static void procarea_apply_standalone_class(char_data* mob, int template_band,
 }
 
 static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_slot,
-									  int template_band, ProcMobClassContext class_ctx) {
+									  int template_band, ProcMobClassContext class_ctx,
+									  bool solo_mode, bool solo_owner_is_fighter) {
 	if(mob == nullptr) {
 		return;
 	}
 	mob->specials.act &= ~kProcClassActMask;
 	if(kind == ProcMobKind::Boss || kind == ProcMobKind::Trap) {
-		SET_BIT(mob->specials.act, ACT_MAGIC_USER | ACT_CLERIC);
+		if(solo_mode && !solo_owner_is_fighter) {
+			SET_BIT(mob->specials.act, ACT_CLERIC);
+		} else {
+			SET_BIT(mob->specials.act, ACT_MAGIC_USER | ACT_CLERIC);
+		}
 		mob->specials.spellfail = 0;
 		return;
 	}
@@ -478,12 +501,16 @@ static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_
 			ACT_CLERIC,
 			ACT_MAGIC_USER,
 		};
-		const int idx = add_slot % static_cast<int>(std::size(kAddClassOrder));
+		int idx = add_slot % static_cast<int>(std::size(kAddClassOrder));
+		if(solo_mode && !solo_owner_is_fighter && idx == 2) {
+			idx = number(0, 1);
+		}
 		SET_BIT(mob->specials.act, kAddClassOrder[static_cast<size_t>(idx)]);
 		mob->specials.spellfail = (idx == 0) ? 101 : 0;
 		return;
 	}
-	procarea_apply_standalone_class(mob, template_band, class_ctx);
+	procarea_apply_standalone_class(mob, template_band, class_ctx, solo_mode,
+									solo_owner_is_fighter);
 }
 
 static void procarea_apply_sentinel(char_data* mob, ProcMobKind kind, bool follow_anchor_sentinel,
@@ -560,13 +587,10 @@ static void procarea_boss_elemental_defenses(unsigned& m_immune, unsigned& immun
 	}
 }
 
-static void procarea_apply_boss_traits(char_data* mob) {
+static void procarea_apply_boss_elemental_traits(char_data* mob) {
 	if(mob == nullptr) {
 		return;
 	}
-
-	SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
-	SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
 
 	unsigned elemental_m_immune = 0;
 	unsigned elemental_resist = 0;
@@ -579,6 +603,116 @@ static void procarea_apply_boss_traits(char_data* mob) {
 	SET_BIT(mob->immune, IMM_BLUNT | IMM_PIERCE | IMM_SLASH);
 	mob->immune |= elemental_resist;
 	mob->susc &= ~elemental_mask;
+}
+
+static constexpr int kProcLowBandMaxInclusive = 3;
+static constexpr int kProcSoloFireshieldMinMobLevel = 50;
+static constexpr int kProcSoloBossFireshieldLowBandMinLevel = 46; /* > 45 */
+/** Solitaria band 4+: corridoio da 30% a 80% (band 4-9), +10% per fascia. */
+static constexpr int kProcSoloCorridorSancPctBand4 = 30;
+static constexpr int kProcSoloCorridorSancPctPerBand = 10;
+/** Solitaria band 4+: tesoro da 50% a 100% (band 4-9), +10% per fascia. */
+static constexpr int kProcSoloTreasureSancPctBand4 = 50;
+static constexpr int kProcSoloTreasureSancPctPerBand = 10;
+static constexpr int kProcGroupSancBonusPct = 10;
+static constexpr int kProcGroupTrapFireshieldPct = 50;
+static constexpr int kProcGroupHighFactorFireshieldPct = 30;
+
+[[nodiscard]] static int procarea_solo_normals_sanc_chance(int band, bool treasure_room) {
+	if(band <= kProcLowBandMaxInclusive) {
+		return 0;
+	}
+	const int steps = band - (kProcLowBandMaxInclusive + 1);
+	if(treasure_room) {
+		return std::min(100, kProcSoloTreasureSancPctBand4 + steps * kProcSoloTreasureSancPctPerBand);
+	}
+	return std::min(100, kProcSoloCorridorSancPctBand4 + steps * kProcSoloCorridorSancPctPerBand);
+}
+
+[[nodiscard]] static int procarea_group_normals_sanc_chance(int band, bool treasure_room) {
+	return std::min(100,
+					procarea_solo_normals_sanc_chance(band, treasure_room) + kProcGroupSancBonusPct);
+}
+
+[[nodiscard]] static bool procarea_is_trap_context(ProcMobKind kind, ProcMobClassContext class_ctx) {
+	return kind == ProcMobKind::Trap || class_ctx == ProcMobClassContext::Trap;
+}
+
+static void procarea_maybe_fireshield(char_data* mob, int mob_level, int min_level, int chance_pct) {
+	if(mob == nullptr || mob_level < min_level || chance_pct <= 0) {
+		return;
+	}
+	if(chance_pct >= 100 || number(0, 99) < chance_pct) {
+		SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
+	}
+}
+
+static void procarea_apply_solo_boss_fireshield(char_data* mob, int mob_level, int band) {
+	if(mob == nullptr || mob_level < kProcSoloFireshieldMinMobLevel) {
+		return;
+	}
+	if(band <= kProcLowBandMaxInclusive) {
+		if(mob_level >= kProcSoloBossFireshieldLowBandMinLevel) {
+			SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
+		}
+		return;
+	}
+	SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
+}
+
+static void procarea_apply_scaling_affects(char_data* mob, float eq_index, int template_band,
+										   int group_max_level, ProcMobKind kind,
+										   ProcMobClassContext class_ctx, bool solo_mode) {
+	if(mob == nullptr) {
+		return;
+	}
+
+	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	const int mob_level = procarea_spawn_level(group_max_level, band, kind);
+	const float factor = procarea_eq_factor(eq_index);
+	const bool trap_ctx = procarea_is_trap_context(kind, class_ctx);
+
+	if(kind == ProcMobKind::Boss) {
+		procarea_apply_boss_elemental_traits(mob);
+		SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
+		if(solo_mode) {
+			procarea_apply_solo_boss_fireshield(mob, mob_level, band);
+		} else {
+			SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
+		}
+		return;
+	}
+
+	if(trap_ctx) {
+		SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
+		if(solo_mode) {
+			return;
+		}
+		procarea_maybe_fireshield(mob, mob_level, 0, kProcGroupTrapFireshieldPct);
+		return;
+	}
+
+	if(solo_mode) {
+		if(band <= kProcLowBandMaxInclusive) {
+			return;
+		}
+		const bool treasure_room = class_ctx == ProcMobClassContext::Treasure;
+		const int sanc_pct = procarea_solo_normals_sanc_chance(band, treasure_room);
+		if(sanc_pct > 0 && number(0, 99) < sanc_pct) {
+			SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
+		}
+		return;
+	}
+
+	const bool treasure_room = class_ctx == ProcMobClassContext::Treasure;
+	const int sanc_pct = procarea_group_normals_sanc_chance(band, treasure_room);
+	if(sanc_pct > 0 && number(0, 99) < sanc_pct) {
+		SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
+		if(factor >= 0.75f && mob_level >= kProcSoloFireshieldMinMobLevel) {
+			procarea_maybe_fireshield(mob, mob_level, kProcSoloFireshieldMinMobLevel,
+									  kProcGroupHighFactorFireshieldPct);
+		}
+	}
 }
 
 [[nodiscard]] static float procarea_party_power_mult(int party_size) {
@@ -595,53 +729,6 @@ static void procarea_apply_boss_traits(char_data* mob) {
 		return 0.78f;
 	default:
 		return 0.70f;
-	}
-}
-
-static void procarea_apply_scaling_affects(char_data* mob, float eq_index, ProcMobKind kind,
-										   ProcMobClassContext class_ctx, bool solo_mode) {
-	if(mob == nullptr) {
-		return;
-	}
-
-	if(kind == ProcMobKind::Boss) {
-		procarea_apply_boss_traits(mob);
-		return;
-	}
-
-	const float factor = procarea_eq_factor(eq_index);
-	if(solo_mode) {
-		const bool trap_or_treasure = kind == ProcMobKind::Trap ||
-									  class_ctx == ProcMobClassContext::Treasure ||
-									  class_ctx == ProcMobClassContext::Trap;
-		if(trap_or_treasure) {
-			SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
-			const int fireshield_pct = (kind == ProcMobKind::Trap ||
-										class_ctx == ProcMobClassContext::Trap) ?
-										   20 :
-										   25;
-			if(number(0, 99) < fireshield_pct) {
-				SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
-			}
-			return;
-		}
-		if(number(0, 99) < 60) {
-			SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
-			if(number(0, 99) < 15) {
-				SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
-			}
-		}
-		return;
-	}
-
-	if(kind == ProcMobKind::Trap) {
-		return;
-	}
-	if(factor >= 0.50f) {
-		SET_BIT(mob->specials.affected_by, AFF_SANCTUARY);
-		if(factor >= 0.75f && number(0, 99) < 30) {
-			SET_BIT(mob->specials.affected_by, AFF_FIRESHIELD);
-		}
 	}
 }
 
@@ -797,7 +884,8 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 	mob->points.hitroll = static_cast<sbyte>(std::clamp(
 		static_cast<int>(mob->points.hitroll * dice_ratio), -50, 50));
 
-	procarea_apply_scaling_affects(mob, eq_index, kind, class_ctx, solo_mode);
+	procarea_apply_scaling_affects(mob, eq_index, template_band, group_max_level, kind, class_ctx,
+								   solo_mode);
 
 	if(group_max_level > 0) {
 		GET_LEVEL(mob, WARRIOR_LEVEL_IND) =
@@ -820,11 +908,12 @@ static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, f
 											bool follow_anchor_sentinel,
 											int add_slot,
 											ProcMobClassContext class_ctx,
-											bool solo_mode, float party_power_mult) {
+											bool solo_mode, float party_power_mult,
+											bool solo_owner_is_basher) {
 	const int archetype = procarea_pick_mob_archetype(theme_id, kind == ProcMobKind::Trap);
 	char_data* mob = procarea_create_mob(archetype, eq_index, template_band, group_max_level,
 										 kind, follow_anchor_sentinel, add_slot, class_ctx,
-										 solo_mode, party_power_mult);
+										 solo_mode, party_power_mult, solo_owner_is_basher);
 	if(mob == nullptr) {
 		mudlog(LOG_ERROR, "procarea: scaled spawn failed room %ld", room_vnum);
 		return nullptr;
@@ -1995,7 +2084,7 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 									  int group_max_level, ProcMobKind kind,
 									  bool follow_anchor_sentinel, int add_slot,
 									  ProcMobClassContext class_ctx, bool solo_mode,
-									  float party_power_mult) {
+									  float party_power_mult, bool solo_owner_is_basher) {
 	if(archetype_index < 0 || archetype_index >= PROCAREA_ARCHETYPE_COUNT) {
 		mudlog(LOG_ERROR, "procarea: invalid archetype index %d", archetype_index);
 		return nullptr;
@@ -2040,7 +2129,8 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 
 	procarea_apply_band_combat(mob, template_band, archetype_index);
 	procarea_apply_aggressive(mob, template_band, kind);
-	procarea_apply_class_role(mob, kind, add_slot, template_band, class_ctx);
+	procarea_apply_class_role(mob, kind, add_slot, template_band, class_ctx, solo_mode,
+							  solo_owner_is_basher);
 	procarea_apply_sentinel(mob, kind, follow_anchor_sentinel, class_ctx);
 	procarea_scale_mob(mob, eq_index, template_band, group_max_level, kind, class_ctx, solo_mode,
 					   party_power_mult);
@@ -2104,14 +2194,14 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, false,
 									  -1, ProcMobClassContext::Corridor, diff.solo_mode,
-									  diff.party_power_mult);
+									  diff.party_power_mult, diff.solo_owner_is_basher);
 		}
 		if(depth >= std::max(2, max_depth / 3) &&
 		   number(0, 99) < std::clamp(25 + depth_bonus, 0, 99)) {
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, false,
 									  -1, ProcMobClassContext::Corridor, diff.solo_mode,
-									  diff.party_power_mult);
+									  diff.party_power_mult, diff.solo_owner_is_basher);
 		}
 		break;
 	}
@@ -2121,13 +2211,13 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, false,
 									  -1, ProcMobClassContext::Treasure, diff.solo_mode,
-									  diff.party_power_mult);
+									  diff.party_power_mult, diff.solo_owner_is_basher);
 		}
 		if(number(0, 99) < std::clamp(40 + depth_bonus, 0, 99)) {
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, false,
 									  -1, ProcMobClassContext::Treasure, diff.solo_mode,
-									  diff.party_power_mult);
+									  diff.party_power_mult, diff.solo_owner_is_basher);
 		}
 		procarea_plant_treasure_hoard(room_vnum);
 		break;
@@ -2137,13 +2227,13 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Trap, theme_id, false, -1,
 									  ProcMobClassContext::Corridor, diff.solo_mode,
-									  diff.party_power_mult);
+									  diff.party_power_mult, diff.solo_owner_is_basher);
 		int add_slot = 0;
 		char_data* add =
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, true,
 									  add_slot++, ProcMobClassContext::Trap, diff.solo_mode,
-									  diff.party_power_mult);
+									  diff.party_power_mult, diff.solo_owner_is_basher);
 		if(trap != nullptr && add != nullptr) {
 			procarea_link_anchor_add(add, trap);
 		}
@@ -2151,7 +2241,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 			add = procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 											diff.group_max_level, ProcMobKind::Normal, theme_id,
 											true, add_slot++, ProcMobClassContext::Trap,
-											diff.solo_mode, diff.party_power_mult);
+											diff.solo_mode, diff.party_power_mult, diff.solo_owner_is_basher);
 			if(trap != nullptr && add != nullptr) {
 				procarea_link_anchor_add(add, trap);
 			}
@@ -2163,7 +2253,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 		char_data* boss = procarea_create_mob(boss_idx, diff.eq_index, diff.effective_band,
 											  diff.group_max_level, ProcMobKind::Boss, false, -1,
 											  ProcMobClassContext::Corridor, diff.solo_mode,
-											  diff.party_power_mult);
+											  diff.party_power_mult, diff.solo_owner_is_basher);
 		if(boss == nullptr) {
 			break;
 		}
@@ -2174,7 +2264,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 				procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 										  diff.group_max_level, ProcMobKind::Normal, theme_id,
 										  true, i, ProcMobClassContext::Corridor, diff.solo_mode,
-										  diff.party_power_mult);
+										  diff.party_power_mult, diff.solo_owner_is_basher);
 			if(add != nullptr) {
 				procarea_link_boss_add(add, boss);
 			}
@@ -2247,13 +2337,15 @@ static int procarea_room_depth(const std::vector<ProcLayoutRoom>& layout, int no
 	return depth[static_cast<size_t>(node)];
 }
 int create_instance(float group_eq_index, int group_max_level, long return_room,
-					long& entrance_vnum, const char* owner_name, bool solo_mode, int party_size) {
+					long& entrance_vnum, const char* owner_name, bool solo_mode, int party_size,
+					bool solo_owner_is_basher) {
 	ProcAreaDifficulty diff = procarea_difficulty_from_eq(group_eq_index);
 	if(solo_mode) {
 		diff = procarea_difficulty_apply_solo(diff);
 	}
 	diff.group_max_level = group_max_level;
 	diff.solo_mode = solo_mode;
+	diff.solo_owner_is_basher = solo_owner_is_basher;
 	if(solo_mode) {
 		diff.party_power_mult = 1.0f;
 	} else {
@@ -2312,6 +2404,7 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 		inst.owner_name = owner_name;
 	}
 	inst.solo_mode = solo_mode;
+	inst.solo_owner_is_basher = solo_mode && solo_owner_is_basher;
 	if(solo_mode) {
 		inst.party_size_at_scale = 1;
 		inst.party_power_mult = 1.0f;

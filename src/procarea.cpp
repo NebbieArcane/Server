@@ -246,6 +246,12 @@ static constexpr int kSoloVortexLifetimeSec = 45;
 
 [[nodiscard]] static char_data* procarea_group_leader(char_data* ch);
 
+/** PG melee/basher: boss e trappole in solitaria possono avere ACT_MAGIC_USER. */
+[[nodiscard]] static bool procarea_solo_owner_is_basher(char_data* ch) {
+	return ch != nullptr && IS_PC(ch) &&
+		   HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN | CLASS_RANGER);
+}
+
 /** Sentiero solitario: nessun compagno di gruppo (AFF_GROUP) in piazza con te. */
 [[nodiscard]] static bool procarea_solo_entry_eligible(char_data* ch) {
 	if(ch == nullptr || !IS_PC(ch)) {
@@ -1024,8 +1030,9 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 								 "no linked instance");
 
 	long entrance = 0;
-	const int instance_id = procarea_internal::create_instance(eq_index, max_level, PROCAREA_FOUNTAIN_ROOM,
-													 entrance, name, true);
+	const int instance_id = procarea_internal::create_instance(
+		eq_index, max_level, PROCAREA_FOUNTAIN_ROOM, entrance, name, true, 1,
+		procarea_solo_owner_is_basher(ch));
 	if(instance_id < 0 || entrance <= 0) {
 		send_to_char(
 			"Il vortice trema e si spezza:\n\r"
@@ -1595,8 +1602,12 @@ static void procarea_boot_darkstar_temple_impl() {
 		   procarea_internal::find_instance_by_vnum(room) == nullptr;
 }
 
+[[nodiscard]] static bool procarea_is_valid_saved_hometown(int hometown) {
+	return hometown > 0 && hometown != PROCAREA_DARKSTAR_TEMPLE;
+}
+
 static bool procarea_read_pc_reentry_from_store(const char* name, long& load_room,
-												int& start_room) {
+												int& start_room, int& hometown) {
 	if(name == nullptr || *name == '\0') {
 		return false;
 	}
@@ -1613,6 +1624,7 @@ static bool procarea_read_pc_reentry_from_store(const char* name, long& load_roo
 	}
 	load_room = procarea_decode_load_room(st.load_room);
 	start_room = st.startroom;
+	hometown = st.hometown;
 	return procarea_is_valid_saved_reentry(load_room);
 }
 
@@ -1632,21 +1644,32 @@ static void procarea_capture_pc_reentry_on_death(char_data* ch) {
 
 	long load_room = 0;
 	int start_room = ch->specials.start_room;
-	if(!procarea_read_pc_reentry_from_store(name, load_room, start_room)) {
+	int hometown = ch->player.hometown;
+	if(!procarea_read_pc_reentry_from_store(name, load_room, start_room, hometown)) {
 		if(procarea_is_valid_saved_reentry(inst->return_room)) {
 			load_room = inst->return_room;
 		} else {
 			return;
 		}
 	}
+	if(!procarea_is_valid_saved_hometown(hometown) &&
+	   procarea_is_valid_saved_hometown(ch->player.hometown)) {
+		hometown = ch->player.hometown;
+	}
 
 	inst->member_saved_load_room[name] = load_room;
 	inst->member_saved_start_room[name] = start_room;
+	if(procarea_is_valid_saved_hometown(hometown)) {
+		inst->member_saved_hometown[name] = hometown;
+	}
 	{
 		std::ostringstream log_msg;
 		log_msg << "procarea: death re-entry saved '" << name << "' room " << ch->in_room
 				<< " instance #" << inst->id << " (" << (inst->solo_mode ? "solo" : "group")
 				<< ") load_room " << load_room;
+		if(procarea_is_valid_saved_hometown(hometown)) {
+			log_msg << " hometown " << hometown;
+		}
 		mudlog(LOG_CHECK, log_msg.str().c_str());
 	}
 }
@@ -1672,6 +1695,7 @@ static void procarea_restore_pc_reentry(char_data* ch) {
 	if(!procarea_is_valid_saved_reentry(load_room)) {
 		inst->member_saved_load_room.erase(load_it);
 		inst->member_saved_start_room.erase(name);
+		inst->member_saved_hometown.erase(name);
 		return;
 	}
 
@@ -1683,17 +1707,52 @@ static void procarea_restore_pc_reentry(char_data* ch) {
 	if(ch->specials.start_room != 2) {
 		ch->specials.start_room = start_room;
 	}
+	if(const auto home_it = inst->member_saved_hometown.find(name);
+	   home_it != inst->member_saved_hometown.end() &&
+	   procarea_is_valid_saved_hometown(home_it->second)) {
+		ch->player.hometown = home_it->second;
+	}
 	if(ch->desc != nullptr) {
 		save_char(ch, procarea_encode_load_room(load_room), 0);
 	}
 
 	inst->member_saved_load_room.erase(load_it);
 	inst->member_saved_start_room.erase(name);
+	inst->member_saved_hometown.erase(name);
 }
 
 static void procarea_restore_pc_reentries(const std::vector<char_data*>& group) {
 	for(char_data* member : group) {
 		procarea_restore_pc_reentry(member);
+	}
+}
+
+static void procarea_fixup_pc_hometown_after_temple_login_impl(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch) || ch->in_room != PROCAREA_DARKSTAR_TEMPLE) {
+		return;
+	}
+
+	ProcAreaInstance* inst = procarea_find_instance_for_ch(ch);
+	if(inst == nullptr) {
+		return;
+	}
+	const char* name = GET_NAME(ch);
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	const auto home_it = inst->member_saved_hometown.find(name);
+	if(home_it == inst->member_saved_hometown.end() ||
+	   !procarea_is_valid_saved_hometown(home_it->second)) {
+		return;
+	}
+	if(ch->player.hometown == home_it->second) {
+		return;
+	}
+
+	ch->player.hometown = home_it->second;
+	if(ch->desc != nullptr) {
+		save_char(ch, procarea_encode_load_room(ch->in_room), 0);
 	}
 }
 
@@ -1770,6 +1829,10 @@ void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data
 
 bool procarea_try_darkstar_aid(struct char_data* ch, const char* prayer) {
 	return procarea_darkstar_aid_impl(ch, prayer);
+}
+
+void procarea_fixup_pc_hometown_after_temple_login(char_data* ch) {
+	procarea_fixup_pc_hometown_after_temple_login_impl(ch);
 }
 
 void procarea_on_mob_death(struct char_data* victim) {
