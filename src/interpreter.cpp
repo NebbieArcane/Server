@@ -2478,7 +2478,11 @@ NANNY_FUNC(con_slct) {
 
       if (real_roomp(d->character->in_room)) {
         char_to_room(d->character, d->character->in_room);
-        d->character->player.hometown = d->character->in_room;
+        if (d->character->in_room == PROCAREA_DARKSTAR_TEMPLE) {
+          procarea_fixup_pc_hometown_after_temple_login(d->character);
+        } else {
+          d->character->player.hometown = d->character->in_room;
+        }
       } else {
         /* Qualcosa e' andato storto o nuovo PC stanza di default */
         char_to_room(d->character, RacialHome[GET_RACE(d->character)][1]);
