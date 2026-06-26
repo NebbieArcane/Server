@@ -1591,6 +1591,17 @@ static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band,
 	return true;
 }
 
+static void procarea_apply_reward_prince_flags(struct obj_data* obj, int group_max_level) {
+	if(obj == nullptr) {
+		return;
+	}
+	if(group_max_level >= PROCAREA_PC_MAX_LEVEL) {
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_ONLY_PRINCE);
+	} else {
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_NO_PRINCE);
+	}
+}
+
 static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct obj_data* obj,
 										 char_data* opener, bool allow_physical_immune,
 										 bool try_ac_upgrade) {
@@ -1728,6 +1739,7 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 	} else {
 		procarea_roll_reward_gear_item(inst, item, roll_ch, slot);
 	}
+	procarea_apply_reward_prince_flags(item, inst.group_max_level);
 	if(!procarea_valid_instance_room(room_vnum)) {
 		mudlog(LOG_ERROR, "procarea: treasure item room %ld invalid after roll", room_vnum);
 		extract_obj(item);
