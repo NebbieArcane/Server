@@ -33,6 +33,10 @@ bool save_char_extra_mysql(const char* name, struct char_data* ch);
 #if USE_MYSQL
 void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id,
 							  struct char_data* ch);
+bool procarea_fatigue_load_mysql(const char* name, int& day_id, int& solo_clears,
+								 int& group_clears);
+void procarea_fatigue_save_mysql(const char* name, int day_id, int solo_clears,
+								 int group_clears);
 #endif
 void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;

@@ -72,8 +72,6 @@ constexpr int PROCAREA_REWARD_BONUS_MAX = 5;
 
 /** Cooldown pray DarkStar aiuto per uscire dalla dimensione → tempio (secondi). */
 constexpr int PROCAREA_DARKSTAR_EXIT_COOLDOWN_SEC = 30 * 60;
-/** Decadimento % drop oggetto tesoro per ogni cumulo oltre il primo. */
-constexpr int PROCAREA_TREASURE_GEAR_DROP_DECAY_PCT = 25;
 
 /** Premi equip istanza (65106+): un prototipo per slot/banda (12 se slot doppio). */
 constexpr int PROCAREA_REWARD_GEAR_VNUM_BASE = 65106;

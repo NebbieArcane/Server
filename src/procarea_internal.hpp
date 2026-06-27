@@ -85,6 +85,8 @@ struct ProcAreaInstance {
 	std::vector<long> treasure_vnums;
 	std::unordered_set<long> treasure_claimed;
 	bool boss_key_dropped = false;
+	/** Tier fatigue premi tesoro (0 = pieno) fissato al kill del boss. */
+	int treasure_fatigue_tier = 0;
 	bool solo_mode = false;
 	/** Solitaria: PG ingresso guerriero/barbaro/paladino/ranger (mob boss/trappola possono castare). */
 	bool solo_owner_is_basher = true;

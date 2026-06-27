@@ -706,6 +706,11 @@ struct char_special_data {
 	int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
 	int mercy[MAX_QUEST_ACHIE];
 
+	/** Dimensione Effimera: contatori boss/giorno (persistiti in character_prefs). */
+	int procarea_fatigue_day;
+	int procarea_fatigue_solo;
+	int procarea_fatigue_group;
+
 	char* poofin;
 	char* poofout;
 	char* prompt;

@@ -20,6 +20,7 @@
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "procarea_internal.hpp"
+#include "procarea_fatigue.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
@@ -1667,11 +1668,8 @@ static void procarea_roll_reward_gear_item(const ProcAreaInstance& inst, struct 
 	procarea_roll_reward_bonuses(inst, obj, opener, allow_physical, try_ac);
 }
 
-[[nodiscard]] static int procarea_treasure_gear_drop_pct(int hoard_count) {
-	if(hoard_count <= 1) {
-		return 100;
-	}
-	return std::max(0, 100 - PROCAREA_TREASURE_GEAR_DROP_DECAY_PCT * (hoard_count - 1));
+[[nodiscard]] static int procarea_treasure_gear_drop_pct(int hoard_count, int fatigue_tier) {
+	return procarea_fatigue_gear_drop_pct(hoard_count, fatigue_tier);
 }
 
 [[nodiscard]] static int procarea_pick_gear_sub_variant(ProcRewardGearSlot slot) {
@@ -1701,7 +1699,7 @@ static void procarea_pick_random_treasure_loot(bool& is_shield, ProcRewardGearSl
 static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstance& inst,
 											 long room_vnum) {
 	const int hoard_count = static_cast<int>(inst.treasure_vnums.size());
-	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_count);
+	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_count, inst.treasure_fatigue_tier);
 	if(number(0, 99) >= drop_pct) {
 		return false;
 	}
@@ -1771,7 +1769,7 @@ static void procarea_grant_treasure_loot(char_data* roll_ch, ProcAreaInstance& i
 	inst.treasure_claimed.insert(room_vnum);
 
 	const int gold = procarea_treasure_gold_amount(inst);
-	if(gold > 0) {
+	if(gold > 0 && procarea_fatigue_roll_gold(inst.treasure_fatigue_tier)) {
 		struct obj_data* money = create_money(gold);
 		if(money != nullptr) {
 			obj_to_room(money, room_vnum);

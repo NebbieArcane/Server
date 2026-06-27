@@ -20,6 +20,7 @@
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "procarea_internal.hpp"
+#include "procarea_fatigue.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
@@ -1503,7 +1504,12 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 	}
 
 	if(victim->commandp == static_cast<int>(ProcMobKind::Boss)) {
-		procarea_internal::break_treasure_seals(*inst, victim);
+		const int treasure_tier = procarea_fatigue_treasure_tier_for_instance(*inst);
+		inst->treasure_fatigue_tier = treasure_tier;
+		if(!inst->treasure_vnums.empty()) {
+			procarea_internal::break_treasure_seals(*inst, victim);
+		}
+		procarea_fatigue_on_boss_killed(*inst, treasure_tier);
 	}
 
 	if(inst->exit_portal_open) {

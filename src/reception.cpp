@@ -33,6 +33,7 @@
 #if USE_MYSQL
 #include "Sql.hpp"
 #include "toon_migration.hpp"
+#include "procarea_fatigue.hpp"
 #include "odb/account-odb.hxx"
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
@@ -2309,6 +2310,22 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 			}
 		}
 	}
+	else if(!strcmp(tag, "procarea_ftg")) {
+		int day = 0;
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(value, "%d:%d:%d", &day, &solo, &group) == 3) {
+			const int today = procarea_fatigue_day_id();
+			if(day != today) {
+				day = today;
+				solo = 0;
+				group = 0;
+			}
+			ch->specials.procarea_fatigue_day = day;
+			ch->specials.procarea_fatigue_solo = std::max(0, solo);
+			ch->specials.procarea_fatigue_group = std::max(0, group);
+		}
+	}
 	else if(!strcmp(tag, "email")) {
 		RECREATE(GET_EMAIL(ch), char, std::strlen(value) + 1);
 		std::strcpy(GET_EMAIL(ch), replace(const_cast<char*>(value), '\n', '\0'));
@@ -2726,6 +2743,23 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 	}
 	extra_insert_pref(db, toon_id, "version", version());
 
+	if(IS_PC(ch) &&
+	   (ch->specials.procarea_fatigue_solo > 0 || ch->specials.procarea_fatigue_group > 0)) {
+		const int today = procarea_fatigue_day_id();
+		if(ch->specials.procarea_fatigue_day != today) {
+			ch->specials.procarea_fatigue_day = today;
+			ch->specials.procarea_fatigue_solo = 0;
+			ch->specials.procarea_fatigue_group = 0;
+		}
+		if(ch->specials.procarea_fatigue_solo > 0 || ch->specials.procarea_fatigue_group > 0) {
+			char vbuf[48];
+			std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", ch->specials.procarea_fatigue_day,
+						   ch->specials.procarea_fatigue_solo,
+						   ch->specials.procarea_fatigue_group);
+			extra_insert_pref(db, toon_id, "procarea_ftg", vbuf);
+		}
+	}
+
 	if(ch->specials.A_list) {
 		for(int i = 0; i < 10; ++i) {
 			if(!GET_ALIAS(ch, i)) {
@@ -2739,6 +2773,69 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 				<< toon_id_str << ',' << i << ',' << extra_sql_literal(GET_ALIAS(ch, i)) << ')';
 			db->execute(sql.str().c_str());
 		}
+	}
+}
+
+bool procarea_fatigue_load_mysql(const char* name, int& day_id, int& solo_clears,
+								 int& group_clears) {
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string sql =
+		"SELECT pref_value FROM character_prefs WHERE toon_id = " + std::to_string(pg->id) +
+		" AND pref_key = 'procarea_ftg' LIMIT 1";
+	MYSQL_RES* res = nullptr;
+	if(!extra_mysql_query(db, sql, res) || res == nullptr) {
+		return false;
+	}
+
+	bool found = false;
+	if(MYSQL_ROW row = mysql_fetch_row(res); row != nullptr && row[0] != nullptr) {
+		int day = 0;
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(row[0], "%d:%d:%d", &day, &solo, &group) == 3) {
+			day_id = day;
+			solo_clears = std::max(0, solo);
+			group_clears = std::max(0, group);
+			found = true;
+		}
+	}
+	mysql_free_result(res);
+	return found;
+}
+
+void procarea_fatigue_save_mysql(const char* name, int day_id, int solo_clears, int group_clears) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "procarea_fatigue_save_mysql: missing toon for %s", name);
+		return;
+	}
+
+	char vbuf[48];
+	std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", day_id, std::max(0, solo_clears),
+				   std::max(0, group_clears));
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		extra_insert_pref(db, pg->id, "procarea_ftg", vbuf);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "procarea_fatigue_save_mysql(%s): %s", name, e.what());
 	}
 }
 
