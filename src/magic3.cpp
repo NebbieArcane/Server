@@ -2629,23 +2629,32 @@ void spell_teleport_wo_error(byte level, struct char_data* ch,
 	location = victim->in_room;
 	rp = real_roomp(location);
 
-	if(GetMaxLevel(victim) > MAX_MORT ||
-			!rp ||
-			IS_SET(rp->room_flags,  PRIVATE) ||
-			IS_SET(rp->room_flags,  NO_SUM) ||
-			IS_SET(rp->room_flags,  NO_MAGIC) ||
-			(IS_SET(rp->room_flags,  TUNNEL) &&
-			 (MobCountInRoom(rp->people) > rp->moblim)))  {
+	if(GetMaxLevel(victim) > MAX_MORT || !rp) {
 		send_to_char("Non riesci.\n\r", ch);
 		return;
 	}
 
-	if(!IsOnPmp(location)) {
-		send_to_char("E' in un piano extra-dimensionale!\n", ch);
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
 		return;
 	}
-	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("Sei in un piano extra-dimensionale!\n\r", ch);
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(BlockOffPmpTravel(ch, location, true, false)) {
+		return;
+	}
+	if(BlockOffPmpTravel(ch, ch->in_room, false, false)) {
+		return;
+	}
+
+	if(IS_SET(rp->room_flags,  PRIVATE) ||
+			ROOM_NO_SUMMON(rp) ||
+			IS_SET(rp->room_flags,  NO_MAGIC) ||
+			(IS_SET(rp->room_flags,  TUNNEL) &&
+			 (MobCountInRoom(rp->people) > rp->moblim)))  {
+		send_to_char("Non riesci.\n\r", ch);
 		return;
 	}
 
@@ -2697,7 +2706,11 @@ void spell_portal(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
+	if(BlockInstanceTravelSelf(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("Un'$c0008oscura magia$c0007 blocca il tuo incantesimo.\n\r", ch);
 		return;
 	}
@@ -2718,18 +2731,20 @@ void spell_portal(byte level, struct char_data* ch,
         return;
     }
 
-	if(IS_SET(real_roomp(tmp_ch->in_room)->room_flags, NO_SUM)) {
+	if(BlockInstanceTravelOther(ch, real_roomp(tmp_ch->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_SUMMON(real_roomp(tmp_ch->in_room))) {
 		send_to_char("Un'$c0012antica magia$c0007 ti blocca.\n\r", ch);
 		return;
 	}
 
-	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("$c0012Sei in un piano extra-dimensionale!\n\r", ch);
+	if(BlockOffPmpTravel(ch, ch->in_room, false, false)) {
 		return;
 	}
 
-	if(!IsOnPmp(tmp_ch->in_room)) {
-		send_to_char("$c0012E' in un piano extra-dimensionale!\n\r", ch);
+	if(BlockOffPmpTravel(ch, tmp_ch->in_room, true, false)) {
 		return;
 	}
 

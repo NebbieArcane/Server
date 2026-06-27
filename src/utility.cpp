@@ -5521,7 +5521,7 @@ void sprinttype(int type, const char* names[], char* result) {
 	int nr;
 
 	for(nr=0; (*names[nr]!='\n'); nr++);
-	if(type < nr) {
+	if(type >= 0 && type < nr) {
 		strcpy(result,names[type]);
 	}
 	else {
@@ -8545,22 +8545,105 @@ int NoSummon(struct char_data* ch) {
 		return(TRUE);
 	}
 
-	if(IS_SET(rp->room_flags, NO_SUM)&& !IS_DIO_MINORE(ch)) {
-		send_to_char("Cryptic powers block your summons.\n\r", ch);
+	if(IS_INSTANCE_ROOM(rp) && !IS_DIO_MINORE(ch)) {
+		if(IS_PC(ch)) {
+			send_to_char(
+				"Sei dentro una $c0015Dimensione Effimera$c0007: nessuna evocazione puo' varcarne i confini.\n\r",
+				ch);
+		}
+		return(TRUE);
+	}
+
+	if(ROOM_NO_SUMMON(rp)&& !IS_DIO_MINORE(ch)) {
+		if(IS_PC(ch)) {
+			send_to_char("Cryptic powers block your summons.\n\r", ch);
+		}
 		return(TRUE);
 	}
 
 	if(IS_SET(rp->room_flags, TUNNEL)) {
-		send_to_char("Strange forces collide in your brain,\n\r", ch);
-		send_to_char("Laws of nature twist, and dissipate before\n\r", ch);
-		send_to_char("your eyes, strange ideas wrestle with green furry\n\r", ch);
-		send_to_char("things, which are crawling up your super-ego...\n\r", ch);
-		send_to_char("  You lose a sanity point.\n\r\n\r", ch);
-		send_to_char("  OOPS!  Sorry, wronge Genre.  :-) \n\r", ch);
+		if(IS_PC(ch)) {
+			send_to_char("Strange forces collide in your brain,\n\r", ch);
+			send_to_char("Laws of nature twist, and dissipate before\n\r", ch);
+			send_to_char("your eyes, strange ideas wrestle with green furry\n\r", ch);
+			send_to_char("things, which are crawling up your super-ego...\n\r", ch);
+			send_to_char("  You lose a sanity point.\n\r\n\r", ch);
+			send_to_char("  OOPS!  Sorry, wronge Genre.  :-) \n\r", ch);
+		}
 		return(TRUE);
 	}
 
 	return(FALSE);
+}
+
+bool MobCanSummonHere(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(IS_DIO_MINORE(ch)) {
+		return true;
+	}
+	struct room_data* rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		return false;
+	}
+	if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL)) {
+		return false;
+	}
+	return true;
+}
+
+bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+		return false;
+	}
+	send_to_char(
+		"Sei dentro una $c0015Dimensione Effimera$c0007: questa magia non puo' varcarne i confini.\n\r",
+		ch);
+	return true;
+}
+
+bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+		return false;
+	}
+	send_to_char(
+		"La $c0015Dimensione Effimera$c0007 avvolge chi cerchi: non riesci a raggiungerlo.\n\r",
+		ch);
+	return true;
+}
+
+bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+		return false;
+	}
+	send_to_char(
+		"La bruma della $c0015Dimensione Effimera$c0007 ti separa dai $c0012piani astrali$c0007.\n\r",
+		ch);
+	return true;
+}
+
+bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english) {
+	if(IsOnPmp(room_nr)) {
+		return false;
+	}
+	struct room_data* rp = real_roomp(room_nr);
+	if(IS_INSTANCE_ROOM(rp)) {
+		return other ? BlockInstanceTravelOther(ch, rp) : BlockInstanceTravelSelf(ch, rp);
+	}
+	if(other) {
+		send_to_char(english ?
+						 "They're on an extra-dimensional plane!\n\r" :
+						 "E' in un altro piano dimensionale!\n\r",
+					 ch);
+	}
+	else {
+		send_to_char(english ?
+						 "You're on an extra-dimensional plane!\n\r" :
+						 "Sei in un piano extra-dimensionale!\n\r",
+					 ch);
+	}
+	return true;
 }
 
 int GetNewRace(struct char_file_u* s) {

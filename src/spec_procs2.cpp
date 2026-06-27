@@ -625,7 +625,8 @@ MOBSPECIAL_FUNC(magic_user) {
 					return(TRUE);
 				}
 				else {
-					if(NumCharmedFollowersInRoom(ch) < 5 &&
+					if(MobCanSummonHere(ch) &&
+							NumCharmedFollowersInRoom(ch) < 5 &&
 							!too_many_followers(ch) && // SALVO controllo che non puo' superare un limite
 							(IS_SET(ch->hatefield, HATE_CHAR) ||
 							 IS_SET(ch->hatefield, FEAR_CHAR))) {
@@ -928,7 +929,8 @@ MOBSPECIAL_FUNC(magic_user) {
 		/*
 		 **  The really nifty case:
 		 */
-		if(NumCharmedFollowersInRoom(ch) < 10 &&
+		if(MobCanSummonHere(ch) &&
+				NumCharmedFollowersInRoom(ch) < 10 &&
 				!too_many_followers(ch)) { // SALVO controllo che non puo' superare un limite
 
 			if(ch->desc) {
@@ -1003,8 +1005,8 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 
 	}
-	else {
-		switch(lspell) {
+
+	switch(lspell) {
 		case 1:
 		case 2:
 			act("$n pronuncia le parole, '$c0015bang! bang! pow!$c0007'.", 1, ch, 0, 0, TO_ROOM);
@@ -1213,7 +1215,6 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 		}
-	}
 	return TRUE;
 }
 
@@ -5273,7 +5274,7 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 			}
 		}
 
-		if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, TUNNEL) ||
+		if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL) ||
 				IS_SET(rp->room_flags, PRIVATE)) {
 			DruidAttackSpells(ch, vict, level);
 		}
@@ -5486,7 +5487,7 @@ MOBSPECIAL_FUNC(druid) {
 		}
 
 
-		if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, TUNNEL) ||
+		if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL) ||
 				IS_SET(rp->room_flags, PRIVATE)) {
 			DruidAttackSpells(ch, vict, level);
 		}

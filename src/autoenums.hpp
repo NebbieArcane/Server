@@ -277,7 +277,7 @@ Bitvector For 'room_flags'*/
 	constexpr unsigned long BRIGHT                                       =8388608;
 	constexpr unsigned long NO_ASTRAL                                    =16777216;
 	constexpr unsigned long NO_REGAIN                                    =33554432;
-	constexpr unsigned long RM_1                                         =67108864;
+	constexpr unsigned long INSTANCE                                     =67108864; /*generated Dimensione Effimera instance room*/
 	constexpr unsigned long RM_2                                         =134217728;
 	constexpr unsigned long RM_3                                         =268435456;
 	constexpr unsigned long RM_4                                         =536870912;

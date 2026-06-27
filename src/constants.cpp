@@ -2726,7 +2726,7 @@ const char* room_bits[] = {
 	"BRIGHT",
 	"NO_ASTRAL",
 	"NO_REGAIN",
-	"RESERVED",
+	"INSTANCE",
 	"RESERVED",
 	"RESERVED",
 	"RESERVED",

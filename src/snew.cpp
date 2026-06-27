@@ -642,10 +642,14 @@ float GetCharBonusIndex(struct char_data* ch) {
 		item=ch->equipment[i];
 		if(item) {
 			for(j=0; j<MAX_OBJ_AFFECT; j++) {
+				const int loc = item->affected[j].location;
+				if(loc < 0 || loc >= E_APPLY_COUNT) {
+					continue;
+				}
 
 				mod=item->affected[j].modifier;
-				sprinttype(item->affected[j].location,apply_types,buf);
-				switch(item->affected[j].location) {
+				sprinttype(loc,apply_types,buf);
+				switch(loc) {
 
 				/* File da Xanathon
 				Per il resto credo questi valori siano quelli che reputo piu' opportuni:)

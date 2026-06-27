@@ -52,7 +52,7 @@ namespace procarea_internal {
 #include "procarea_reward_gear.inc"
 #include "procarea_reward_names.inc"
 
-static constexpr long kProcIsolationFlags = static_cast<long>(NO_ASTRAL | NO_SUM);
+static constexpr long kProcInstanceFlags = static_cast<long>(INSTANCE);
 static constexpr int kProcExitPortalObj = 9071;
 static constexpr int kProcTreasureHoardObj = PROCAREA_TREASURE_HOARD_OBJ;
 static constexpr int kProcSentinelChancePct = 20;
@@ -2081,7 +2081,7 @@ static struct room_data* procarea_create_room(long vnum, const ProcRoomTemplate&
 	rp->number = vnum;
 	rp->zone = assign_zone(vnum);
 	rp->sector_type = tmpl.sector_type;
-	long flags = tmpl.room_flags | kProcIsolationFlags;
+	long flags = tmpl.room_flags | kProcInstanceFlags;
 	if(number(0, 99) < 10) {
 		flags |= NO_TRACK;
 	}

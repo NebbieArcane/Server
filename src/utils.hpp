@@ -104,6 +104,18 @@ namespace Alarmud {
 						 ( !IS_SET( real_roomp(room)->room_flags, DARK ) || \
 						   !IsDarkOutside( real_roomp(room) ) ) )
 
+#define IS_INSTANCE_ROOM(rp) \
+	((rp) && IS_SET((rp)->room_flags, INSTANCE))
+
+#define ROOM_NO_SUMMON(rp) \
+	((rp) && IS_SET((rp)->room_flags, NO_SUM))
+
+#define ROOM_NO_ASTRAL(rp) \
+	((rp) && IS_SET((rp)->room_flags, NO_ASTRAL))
+
+#define ROOM_NO_PSI_RELOCATE(rp) \
+	((rp) && IS_SET((rp)->room_flags, PRIVATE | NO_SUM | NO_MAGIC))
+
 #define SET_BIT(var,bit)  ((var) = (var) | (bit))
 
 #define REMOVE_BIT(var,bit)  ((var) = (var) & ~(bit) )

@@ -4451,6 +4451,10 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+		return;
+	}
+
 	if(!ch->skills[SKILL_DOORWAY].learned) {
 		send_to_char("You have not trained your mind to do this\n\r",ch);
 		return;
@@ -4465,8 +4469,16 @@ ACTION_FUNC(do_doorway) {
 	location = target->in_room;
 	rp = real_roomp(location);
 
-	if(GetMaxLevel(target) > MAX_MORT || !rp ||
-			IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(GetMaxLevel(target) > MAX_MORT || !rp) {
+		send_to_char("Your mind is not yet strong enough.\n\r", ch);
+		return;
+	}
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("Your mind is not yet strong enough.\n\r", ch);
 		return;
 	}
@@ -4476,13 +4488,11 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
-	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("You're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, ch->in_room, false, true)) {
 		return;
 	}
 
-	if(!IsOnPmp(target->in_room)) {
-		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, target->in_room, true, true)) {
 		return;
 	}
 
@@ -4572,6 +4582,15 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(real_roomp(ch->in_room))) {
+		send_to_char("Arcane magics prevent you from opening a portal here.\n\r", ch);
+		return;
+	}
+
 	if(!ch->skills[SKILL_PORTAL].learned) {
 		send_to_char("You have not trained your mind to do this.\n\r",ch);
 		return;
@@ -4585,8 +4604,16 @@ ACTION_FUNC(do_psi_portal) {
 
 	location = target->in_room;
 	rp = real_roomp(location);
-	if(GetMaxLevel(target) > MAX_MORT ||       !rp ||
-			IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(GetMaxLevel(target) > MAX_MORT || !rp) {
+		send_to_char("You cannot penetrate the auras surrounding that person.\n\r", ch);
+		return;
+	}
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("You cannot penetrate the auras surrounding that person.\n\r", ch);
 		return;
 	}
@@ -4596,13 +4623,11 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
-	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("You're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, ch->in_room, false, true)) {
 		return;
 	}
 
-	if(!IsOnPmp(target->in_room)) {
-		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, target->in_room, true, true)) {
 		return;
 	}
 
@@ -4724,6 +4749,15 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(real_roomp(ch->in_room))) {
+		send_to_char("Arcane magics prevent you from summoning here.\n\r", ch);
+		return;
+	}
+
 	if(!ch->skills[SKILL_SUMMON].learned) {
 		send_to_char("You have not trained your mind to do this\n\r",ch);
 		return;
@@ -4747,7 +4781,16 @@ ACTION_FUNC(do_mindsummon) {
 
 	location = target->in_room;
 	rp = real_roomp(location);
-	if(!rp || IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(!rp) {
+		send_to_char("Your mind cannot seem to locate this individual.\n\r", ch);
+		return;
+	}
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("Your mind cannot seem to locate this individual.\n\r", ch);
 		return;
 	}
@@ -4757,14 +4800,11 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
-    if(!IsOnPmp(ch->in_room))
-    {
-        send_to_char("Non puoi evocare nessuno! Sei in un altro piano dimensionale!\n\r", ch);
-        return;
-    }
+	if(BlockOffPmpTravel(ch, ch->in_room, false, true)) {
+		return;
+	}
 
-	if(!IsOnPmp(target->in_room)) {
-		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, target->in_room, true, true)) {
 		return;
 	}
 
@@ -4779,7 +4819,11 @@ ACTION_FUNC(do_mindsummon) {
 
 	location = ch->in_room;
 	rp = real_roomp(location);
-	if(!rp || IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(BlockInstanceTravelSelf(ch, rp)) {
+		return;
+	}
+
+	if(!rp || ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("Arcane magics prevent you from summoning here.\n\r", ch);
 		return;
 	}

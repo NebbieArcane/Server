@@ -439,6 +439,9 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	if(loc == APPLY_SKIP) {
 		return;
 	}
+	if(loc >= E_APPLY_COUNT) {
+		return;
+	}
 
 	if(loc == APPLY_IMMUNE) {
 		if(add) {

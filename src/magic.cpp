@@ -586,7 +586,10 @@ void spell_astral_walk(byte level, struct char_data* ch,
 	}
 
 	rp = real_roomp(ch->in_room);
-	if(IS_SET(rp->room_flags,NO_ASTRAL)) {
+	if(BlockInstanceAstral(ch, rp)) {
+		return;
+	}
+	if(ROOM_NO_ASTRAL(rp)) {
 		send_to_char("Non riesci a raggiungere i $c0012piani astrali$c0007, sono troppo lontani!\n",ch);
 		return;
 	}
@@ -647,8 +650,7 @@ void spell_teleport(byte level, struct char_data* ch,
 		}
 	}
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("Sei in un piano extra-dimensionale!\n\r", ch);
+	if(BlockOffPmpTravel(ch, victim->in_room, false, false)) {
 		return;
 	}
 
@@ -660,7 +662,8 @@ void spell_teleport(byte level, struct char_data* ch,
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					(IS_SET(room->room_flags, NO_SUM)) ||
+					IS_INSTANCE_ROOM(room) ||
+					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room) ||
 					((room->number >= 34000) && (room->number <= 34999))
@@ -2077,9 +2080,7 @@ void spell_word_of_recall(byte level, struct char_data* ch,
 	}
 
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("Non puoi! Sei in un altro piano dimensionale!\n\r",
-					 victim);
+	if(BlockOffPmpTravel(victim, victim->in_room, false, false)) {
 		return;
 	}
 
@@ -2116,7 +2117,11 @@ void spell_summon(byte level, struct char_data* ch,
         return;
     }
 
-	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
+	if(BlockInstanceTravelSelf(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("$c0008Un'oscura magia ti blocca.\n\r", ch);
 		return;
 	}
@@ -2135,9 +2140,7 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-    if(!IsOnPmp(ch->in_room))
-    {
-        send_to_char("Non puoi evocare nessuno! Sei in un altro piano dimensionale!\n\r", ch);
+    if(BlockOffPmpTravel(ch, ch->in_room, false, false)) {
         return;
     }
 
@@ -2146,7 +2149,11 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(IS_SET(real_roomp(victim->in_room)->room_flags, NO_SUM)) {
+	if(BlockInstanceTravelOther(ch, real_roomp(victim->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_SUMMON(real_roomp(victim->in_room))) {
 		send_to_char("Un'antica $c0012magia$c0007 blocca l'evocazione.\n\r", ch);
 		return;
 	}
@@ -2166,8 +2173,7 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("E' in un altro piano dimensionale!\n", ch);
+	if(BlockOffPmpTravel(ch, victim->in_room, true, false)) {
 		return;
 	}
 

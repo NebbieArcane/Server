@@ -1773,6 +1773,10 @@ long procarea_vnum_to_instance(long vnum) {
 }
 
 bool procarea_is_generated_room(long vnum) {
+	struct room_data* rp = real_roomp(vnum);
+	if(rp != nullptr && IS_SET(rp->room_flags, INSTANCE)) {
+		return true;
+	}
 	return procarea_internal::find_instance_by_vnum(vnum) != nullptr;
 }
 

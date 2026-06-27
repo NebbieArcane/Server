@@ -1803,7 +1803,8 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 					return(TRUE);
 				}
 				else {
-					if(NumCharmedFollowersInRoom(ch) < 5 &&
+					if(MobCanSummonHere(ch) &&
+							NumCharmedFollowersInRoom(ch) < 5 &&
 							!too_many_followers(ch) && // SALVO controllo che non puo' superare un limite
 							IS_SET(ch->hatefield, HATE_CHAR)) {
 						act("$n utters the words 'Here boy!'.", 1, ch, 0, 0, TO_ROOM);
@@ -1972,7 +1973,8 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 		}
 
 		/*  The really nifty case: */
-		switch(lspell) {
+		if(MobCanSummonHere(ch)) {
+			switch(lspell) {
 		case 1:
 		case 2:
 		case 3:
@@ -2035,10 +2037,11 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 			do_order(ch, "followers guard on", 0);
 			return(TRUE);
 			break;
+			}
 		}
 	}
-	else {
-		switch(lspell) {
+
+	switch(lspell) {
 		case 1:
 		case 2:
 			sprintf(buf," 'magic missile' %s",GET_NAME(vict));
@@ -2138,7 +2141,6 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 			}
 			break;
 		}
-	}
 	return TRUE;
 }
 
