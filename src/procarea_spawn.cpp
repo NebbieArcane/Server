@@ -53,6 +53,7 @@ namespace procarea_internal {
 
 #include "procarea_reward_gear.inc"
 #include "procarea_reward_names.inc"
+#include "procarea_class_tables.inc"
 
 static constexpr long kProcInstanceFlags = static_cast<long>(INSTANCE);
 static constexpr int kProcExitPortalObj = 9071;
@@ -71,42 +72,33 @@ static constexpr int kProcAggressiveChanceByBand[PROCAREA_TEMPLATE_BANDS] = {
 	100, /* band 9 */
 };
 
-struct ProcClassChancePct {
-	int warrior;
-	int cleric;
-	int mage;
-};
-
-static constexpr ProcClassChancePct kProcCorridorClassByBand[PROCAREA_TEMPLATE_BANDS] = {
-	{70, 22, 8},  /* band 0 */
-	{68, 23, 9},
-	{65, 25, 10},
-	{63, 26, 11},
-	{60, 28, 12},
-	{58, 29, 13},
-	{55, 30, 15},
-	{53, 30, 17},
-	{50, 30, 20},
-	{48, 30, 22}, /* band 9 */
-};
-
-static constexpr ProcClassChancePct kProcTreasureClassByBand[PROCAREA_TEMPLATE_BANDS] = {
-	{65, 25, 10}, /* band 0 */
-	{62, 27, 11},
-	{60, 28, 12},
-	{57, 30, 13},
-	{55, 30, 15},
-	{52, 32, 16},
-	{50, 33, 17},
-	{48, 33, 19},
-	{45, 33, 22},
-	{45, 33, 22}, /* band 9 */
-};
-
 static_assert(std::size(kProcCorridorClassByBand) == PROCAREA_TEMPLATE_BANDS,
 			  "procarea corridor class table must match PROCAREA_TEMPLATE_BANDS");
 static_assert(std::size(kProcTreasureClassByBand) == PROCAREA_TEMPLATE_BANDS,
 			  "procarea treasure class table must match PROCAREA_TEMPLATE_BANDS");
+static_assert([] {
+	for(const ProcCorridorClassChancePct& row : kProcCorridorClassByBand) {
+		if(procarea_corridor_class_sum(row) != 100) {
+			return false;
+		}
+	}
+	return true;
+}(), "procarea corridor class rows must sum to 100");
+static_assert([] {
+	for(const ProcTreasureClassChancePct& row : kProcTreasureClassByBand) {
+		if(procarea_treasure_class_sum(row) != 100) {
+			return false;
+		}
+	}
+	return true;
+}(), "procarea treasure class rows must sum to 100");
+static_assert([] {
+	int total = 0;
+	for(int w : kProcBossClassWeights) {
+		total += w;
+	}
+	return total == 100;
+}(), "procarea boss class weights must sum to 100");
 
 static char_data* procarea_create_mob(int archetype_index, float eq_index, int template_band,
 									  int group_max_level, ProcMobKind kind,
@@ -114,14 +106,17 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 									  int add_slot = -1,
 									  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor,
 									  bool solo_mode = false, float party_power_mult = 1.0f,
-									  bool solo_owner_is_basher = true);
+									  bool solo_owner_is_basher = true,
+									  const char_data* boss_for_add = nullptr);
 static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, float eq_index,
 											  int group_max_level, ProcMobKind kind, int theme_id,
 											  bool follow_anchor_sentinel = false,
 											  int add_slot = -1,
 											  ProcMobClassContext class_ctx = ProcMobClassContext::Corridor,
 											  bool solo_mode = false, float party_power_mult = 1.0f,
-											  bool solo_owner_is_basher = true);
+											  bool solo_owner_is_basher = true,
+											  const char_data* boss_for_add = nullptr);
+static struct obj_data* procarea_create_runtime_obj(int logical_vnum);
 
 static void procarea_link_boss_add(char_data* add, char_data* boss);
 static void procarea_link_anchor_add(char_data* add, char_data* anchor);
@@ -394,7 +389,8 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 
 [[nodiscard]] static bool procarea_title_is_feminine(std::string_view lower_first, int sex) {
 	static const std::unordered_set<std::string> kMasculineFirst = {
-		"predatore", "signore", "custode", "drago", "capo", "demone", "gigante", "re", "lich",
+		"predatore", "signore", "custode", "drago", "capo", "demone", "diavolo", "imp", "manes",
+		"gigante", "re", "lich",
 		"principe", "balrog", "goblin", "troll", "ghoul", "vampiro", "ent", "capobanda",
 		"sovrano", "arconte", "oracolo", "guerriero", "ragno", "worg", "parassito", "fulmine",
 		"cristallo", "ghiaccio", "serpente", "fantasma", "scheletro", "spettro", "orco", "alfa",
@@ -512,56 +508,445 @@ static void procarea_apply_band_combat(char_data* mob, int template_band, int ar
 	mob->mult_att = combat.mult_att;
 }
 
+static void procarea_apply_hold_defense(char_data* mob, ProcMobKind kind) {
+	if(mob == nullptr) {
+		return;
+	}
+	mob->susc &= ~IMM_HOLD;
+	switch(kind) {
+	case ProcMobKind::Boss:
+	case ProcMobKind::Trap:
+		SET_BIT(mob->M_immune, IMM_HOLD);
+		mob->immune &= ~IMM_HOLD;
+		break;
+	case ProcMobKind::Normal:
+		SET_BIT(mob->immune, IMM_HOLD);
+		mob->M_immune &= ~IMM_HOLD;
+		break;
+	}
+}
+
 static constexpr unsigned long kProcClassActMask =
 	ACT_MAGIC_USER | ACT_WARRIOR | ACT_CLERIC | ACT_THIEF | ACT_DRUID | ACT_MONK |
 	ACT_BARBARIAN | ACT_PALADIN | ACT_RANGER | ACT_PSI | ACT_ARCHER;
 
+enum class ProcRollClass : int {
+	Warrior = 0,
+	Cleric,
+	Mage,
+	Thief,
+	Psi,
+	Druid,
+	Monk,
+	Barbarian,
+	Paladin,
+	Ranger,
+	None,
+	Count,
+};
+
+static constexpr unsigned long kProcClassActFlags[static_cast<int>(ProcRollClass::Count)] = {
+	ACT_WARRIOR,
+	ACT_CLERIC,
+	ACT_MAGIC_USER,
+	ACT_THIEF,
+	ACT_PSI,
+	ACT_DRUID,
+	ACT_MONK,
+	ACT_BARBARIAN,
+	ACT_PALADIN,
+	ACT_RANGER,
+	0UL,
+};
+
+static constexpr int kProcSoloNonFighterCasterClasses[] = {
+	static_cast<int>(ProcRollClass::Mage),
+	static_cast<int>(ProcRollClass::Psi),
+	static_cast<int>(ProcRollClass::Druid),
+};
+
+static constexpr int kProcSoloNonFighterMeleeClasses[] = {
+	static_cast<int>(ProcRollClass::Warrior),
+	static_cast<int>(ProcRollClass::Cleric),
+	static_cast<int>(ProcRollClass::Thief),
+	static_cast<int>(ProcRollClass::Monk),
+	static_cast<int>(ProcRollClass::Barbarian),
+	static_cast<int>(ProcRollClass::Paladin),
+	static_cast<int>(ProcRollClass::Ranger),
+};
+
+[[nodiscard]] static bool procarea_roll_class_casts(ProcRollClass roll_class) {
+	switch(roll_class) {
+	case ProcRollClass::Cleric:
+	case ProcRollClass::Mage:
+	case ProcRollClass::Psi:
+	case ProcRollClass::Druid:
+	case ProcRollClass::Paladin:
+	case ProcRollClass::Ranger:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] static bool procarea_roll_class_wields_weapon(ProcRollClass roll_class) {
+	switch(roll_class) {
+	case ProcRollClass::Warrior:
+	case ProcRollClass::Thief:
+	case ProcRollClass::Barbarian:
+	case ProcRollClass::Paladin:
+	case ProcRollClass::Ranger:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] static int procarea_roll_class_weapon_dtype(ProcRollClass roll_class) {
+	switch(roll_class) {
+	case ProcRollClass::Thief:
+		return 11;
+	case ProcRollClass::Barbarian:
+		return 6;
+	default:
+		return 3;
+	}
+}
+
+[[nodiscard]] static int procarea_weighted_pick(const int* weights, int count) {
+	if(weights == nullptr || count <= 0) {
+		return 0;
+	}
+	int total = 0;
+	for(int i = 0; i < count; ++i) {
+		total += std::max(0, weights[i]);
+	}
+	if(total <= 0) {
+		return 0;
+	}
+	const int roll = number(0, total - 1);
+	int acc = 0;
+	for(int i = 0; i < count; ++i) {
+		acc += std::max(0, weights[i]);
+		if(roll < acc) {
+			return i;
+		}
+	}
+	return count - 1;
+}
+
+static void procarea_fill_corridor_class_weights(const ProcCorridorClassChancePct& base,
+												 int* weights) {
+	weights[static_cast<int>(ProcRollClass::Warrior)] = base.warrior;
+	weights[static_cast<int>(ProcRollClass::Cleric)] = base.cleric;
+	weights[static_cast<int>(ProcRollClass::Mage)] = base.mage;
+	weights[static_cast<int>(ProcRollClass::Thief)] = base.thief;
+	weights[static_cast<int>(ProcRollClass::Psi)] = base.psi;
+	weights[static_cast<int>(ProcRollClass::Druid)] = base.druid;
+	weights[static_cast<int>(ProcRollClass::Monk)] = base.monk;
+	weights[static_cast<int>(ProcRollClass::Barbarian)] = base.barbarian;
+	weights[static_cast<int>(ProcRollClass::Paladin)] = base.paladin;
+	weights[static_cast<int>(ProcRollClass::Ranger)] = base.ranger;
+	weights[static_cast<int>(ProcRollClass::None)] = base.none;
+}
+
+static void procarea_fill_treasure_class_weights(const ProcTreasureClassChancePct& base,
+												 int* weights) {
+	weights[static_cast<int>(ProcRollClass::Warrior)] = base.warrior;
+	weights[static_cast<int>(ProcRollClass::Cleric)] = base.cleric;
+	weights[static_cast<int>(ProcRollClass::Mage)] = base.mage;
+	weights[static_cast<int>(ProcRollClass::Thief)] = base.thief;
+	weights[static_cast<int>(ProcRollClass::Psi)] = base.psi;
+	weights[static_cast<int>(ProcRollClass::Druid)] = base.druid;
+	weights[static_cast<int>(ProcRollClass::Monk)] = base.monk;
+	weights[static_cast<int>(ProcRollClass::Barbarian)] = base.barbarian;
+	weights[static_cast<int>(ProcRollClass::Paladin)] = base.paladin;
+	weights[static_cast<int>(ProcRollClass::Ranger)] = base.ranger;
+	weights[static_cast<int>(ProcRollClass::None)] = 0;
+}
+
+static void procarea_adjust_solo_non_fighter_class_weights(int* weights) {
+	int caster_pool = 0;
+	for(const int caster_class : kProcSoloNonFighterCasterClasses) {
+		caster_pool += weights[caster_class];
+		weights[caster_class] = 0;
+	}
+	if(caster_pool <= 0) {
+		return;
+	}
+
+	int melee_sum = 0;
+	for(const int melee_class : kProcSoloNonFighterMeleeClasses) {
+		melee_sum += weights[melee_class];
+	}
+	if(melee_sum <= 0) {
+		weights[static_cast<int>(ProcRollClass::Warrior)] += caster_pool;
+		return;
+	}
+
+	int assigned = 0;
+	const std::size_t melee_count = std::size(kProcSoloNonFighterMeleeClasses);
+	for(std::size_t i = 0; i < melee_count; ++i) {
+		const int melee_class = kProcSoloNonFighterMeleeClasses[i];
+		int share = 0;
+		if(i + 1 == melee_count) {
+			share = caster_pool - assigned;
+		} else {
+			share = (caster_pool * weights[melee_class]) / melee_sum;
+		}
+		weights[melee_class] += share;
+		assigned += share;
+	}
+}
+
+static void procarea_sync_mob_weapon_dice(char_data* mob) {
+	if(mob == nullptr || mob->equipment[WIELD] == nullptr ||
+	   mob->equipment[WIELD]->obj_flags.type_flag != ITEM_WEAPON) {
+		return;
+	}
+	struct obj_data* weapon = mob->equipment[WIELD];
+	weapon->obj_flags.value[1] = std::max(1, static_cast<int>(mob->specials.damnodice));
+	weapon->obj_flags.value[2] = std::max(1, static_cast<int>(mob->specials.damsizedice));
+}
+
+static void procarea_equip_mob_class_weapon(char_data* mob, ProcRollClass roll_class) {
+	if(mob == nullptr || !procarea_roll_class_wields_weapon(roll_class)) {
+		return;
+	}
+	if(mob->equipment[WIELD] != nullptr) {
+		return;
+	}
+
+	struct obj_data* weapon = procarea_create_runtime_obj(PROCAREA_MOB_WEAPON_OBJ);
+	if(weapon == nullptr) {
+		return;
+	}
+
+	weapon->name = strdup("arma effimera dimensione");
+	weapon->short_description = strdup("un'arma effimera");
+	weapon->description = strdup("Un'arma forgiata al volo dalla bruma della dimensione.");
+	weapon->obj_flags.type_flag = ITEM_WEAPON;
+	weapon->obj_flags.wear_flags = ITEM_WIELD;
+	weapon->obj_flags.value[0] = 0;
+	weapon->obj_flags.value[1] = std::max(1, static_cast<int>(mob->specials.damnodice));
+	weapon->obj_flags.value[2] = std::max(1, static_cast<int>(mob->specials.damsizedice));
+	weapon->obj_flags.value[3] = procarea_roll_class_weapon_dtype(roll_class);
+	weapon->obj_flags.weight = 1;
+	weapon->obj_flags.cost = 0;
+
+	equip_char(mob, weapon, WIELD);
+}
+
+static void procarea_apply_roll_class(char_data* mob, ProcRollClass roll_class) {
+	if(mob == nullptr || roll_class == ProcRollClass::None) {
+		if(mob != nullptr) {
+			mob->specials.spellfail = 101;
+		}
+		return;
+	}
+
+	const unsigned long act_flag =
+		kProcClassActFlags[static_cast<int>(roll_class)];
+	if(act_flag != 0UL) {
+		SET_BIT(mob->specials.act, act_flag);
+	}
+	mob->specials.spellfail = procarea_roll_class_casts(roll_class) ? 0 : 101;
+	procarea_equip_mob_class_weapon(mob, roll_class);
+}
+
 static void procarea_apply_standalone_class(char_data* mob, int template_band,
 											ProcMobClassContext class_ctx, bool solo_mode,
-											bool solo_owner_is_fighter) {
+											bool solo_owner_is_basher) {
 	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const ProcClassChancePct& base = class_ctx == ProcMobClassContext::Treasure ?
-									   kProcTreasureClassByBand[band] :
-									   kProcCorridorClassByBand[band];
-	int warrior_pct = base.warrior;
-	int cleric_pct = base.cleric;
-	int mage_pct = base.mage;
-	if(solo_mode && !solo_owner_is_fighter && mage_pct > 0) {
-		const int fighter_total = warrior_pct + cleric_pct;
-		if(fighter_total > 0) {
-			const int mage_share_warrior = (mage_pct * warrior_pct) / fighter_total;
-			warrior_pct += mage_share_warrior;
-			cleric_pct += mage_pct - mage_share_warrior;
-		} else {
-			warrior_pct = 50;
-			cleric_pct = 50;
+	int weights[static_cast<int>(ProcRollClass::Count)] = {};
+	if(class_ctx == ProcMobClassContext::Treasure) {
+		procarea_fill_treasure_class_weights(kProcTreasureClassByBand[band], weights);
+	} else {
+		procarea_fill_corridor_class_weights(kProcCorridorClassByBand[band], weights);
+	}
+	if(solo_mode && !solo_owner_is_basher) {
+		procarea_adjust_solo_non_fighter_class_weights(weights);
+	}
+
+	const int pick = procarea_weighted_pick(
+		weights, static_cast<int>(ProcRollClass::Count));
+	procarea_apply_roll_class(mob, static_cast<ProcRollClass>(pick));
+}
+
+[[nodiscard]] static ProcBossRollClass procarea_roll_boss_class(bool solo_non_basher) {
+	if(solo_non_basher) {
+		return ProcBossRollClass::Cleric;
+	}
+	const int pick = procarea_weighted_pick(
+		kProcBossClassWeights, static_cast<int>(ProcBossRollClass::Count));
+	return static_cast<ProcBossRollClass>(pick);
+}
+
+[[nodiscard]] static ProcRollClass procarea_boss_roll_to_proc_class(ProcBossRollClass roll) {
+	switch(roll) {
+	case ProcBossRollClass::Cleric:
+		return ProcRollClass::Cleric;
+	case ProcBossRollClass::Mage:
+		return ProcRollClass::Mage;
+	case ProcBossRollClass::Warrior:
+		return ProcRollClass::Warrior;
+	case ProcBossRollClass::Thief:
+		return ProcRollClass::Thief;
+	case ProcBossRollClass::Psi:
+		return ProcRollClass::Psi;
+	case ProcBossRollClass::Druid:
+		return ProcRollClass::Druid;
+	case ProcBossRollClass::Monk:
+		return ProcRollClass::Monk;
+	case ProcBossRollClass::Barbarian:
+		return ProcRollClass::Barbarian;
+	case ProcBossRollClass::Paladin:
+		return ProcRollClass::Paladin;
+	case ProcBossRollClass::Ranger:
+		return ProcRollClass::Ranger;
+	default:
+		return ProcRollClass::Cleric;
+	}
+}
+
+[[nodiscard]] static bool procarea_boss_roll_is_melee_pure(ProcBossRollClass roll) {
+	switch(roll) {
+	case ProcBossRollClass::Warrior:
+	case ProcBossRollClass::Thief:
+	case ProcBossRollClass::Monk:
+	case ProcBossRollClass::Barbarian:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] static bool procarea_boss_roll_is_caster(ProcBossRollClass roll) {
+	switch(roll) {
+	case ProcBossRollClass::MuCleric:
+	case ProcBossRollClass::Cleric:
+	case ProcBossRollClass::Mage:
+	case ProcBossRollClass::Psi:
+	case ProcBossRollClass::Druid:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] static bool procarea_boss_roll_is_hybrid(ProcBossRollClass roll) {
+	return roll == ProcBossRollClass::Paladin || roll == ProcBossRollClass::Ranger;
+}
+
+static void procarea_boost_mob_damage_pct(char_data* mob, float pct) {
+	if(mob == nullptr || pct <= 1.0f) {
+		return;
+	}
+	mob->points.damroll = static_cast<sbyte>(std::clamp(
+		static_cast<int>(std::lround(static_cast<float>(mob->points.damroll) * pct)), -30, 40));
+	const float dice_ratio = std::sqrt(pct);
+	if(mob->specials.damnodice > 0) {
+		mob->specials.damnodice = static_cast<ubyte>(std::clamp(
+			static_cast<int>(std::lround(static_cast<float>(mob->specials.damnodice) * dice_ratio)),
+			1, 50));
+	}
+	if(mob->specials.damsizedice > 0) {
+		mob->specials.damsizedice = static_cast<ubyte>(std::clamp(
+			static_cast<int>(std::lround(static_cast<float>(mob->specials.damsizedice) * dice_ratio)),
+			1, 127));
+	}
+	if(mob->equipment[WIELD] != nullptr &&
+	   mob->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON) {
+		struct obj_data* weapon = mob->equipment[WIELD];
+		if(weapon->obj_flags.value[1] > 0) {
+			weapon->obj_flags.value[1] = std::clamp(
+				static_cast<int>(std::lround(static_cast<float>(weapon->obj_flags.value[1]) *
+											 dice_ratio)),
+				1, 50);
 		}
-		mage_pct = 0;
+		if(weapon->obj_flags.value[2] > 0) {
+			weapon->obj_flags.value[2] = std::clamp(
+				static_cast<int>(std::lround(static_cast<float>(weapon->obj_flags.value[2]) *
+											 dice_ratio)),
+				1, 127);
+		}
 	}
-	const int roll = number(0, 99);
-	if(roll < warrior_pct) {
-		SET_BIT(mob->specials.act, ACT_WARRIOR);
-		mob->specials.spellfail = 101;
+}
+
+static void procarea_apply_boss_class_buffs(char_data* mob, int template_band,
+											ProcBossRollClass roll) {
+	if(mob == nullptr) {
 		return;
 	}
-	if(roll < warrior_pct + cleric_pct) {
-		SET_BIT(mob->specials.act, ACT_CLERIC);
+	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(procarea_boss_roll_is_melee_pure(roll)) {
+		mob->mult_att += 1.0f;
+		procarea_boost_mob_damage_pct(mob, 1.15f);
+		return;
+	}
+	if(procarea_boss_roll_is_caster(roll)) {
+		int spellpower = 6 + band;
+		if(roll == ProcBossRollClass::MuCleric) {
+			spellpower += 2;
+		}
+		GET_EQ_SPELLPOWER(mob) += spellpower;
+		return;
+	}
+	if(procarea_boss_roll_is_hybrid(roll)) {
+		GET_EQ_SPELLPOWER(mob) += 4 + band;
+		procarea_boost_mob_damage_pct(mob, 1.08f);
+	}
+}
+
+[[nodiscard]] static ProcBossRollClass procarea_apply_boss_class(char_data* mob,
+																 bool solo_non_basher) {
+	if(mob == nullptr) {
+		return ProcBossRollClass::Cleric;
+	}
+	const ProcBossRollClass roll = procarea_roll_boss_class(solo_non_basher);
+	if(roll == ProcBossRollClass::MuCleric) {
+		SET_BIT(mob->specials.act, ACT_MAGIC_USER | ACT_CLERIC);
 		mob->specials.spellfail = 0;
+		return roll;
+	}
+	procarea_apply_roll_class(mob, procarea_boss_roll_to_proc_class(roll));
+	return roll;
+}
+
+[[nodiscard]] static bool procarea_mob_has_magic_user(const char_data* mob) {
+	return mob != nullptr && IS_SET(mob->specials.act, ACT_MAGIC_USER);
+}
+
+static void procarea_apply_boss_add_class(char_data* mob, const char_data* boss, int template_band,
+										  ProcMobClassContext class_ctx, bool solo_mode,
+										  bool solo_owner_is_basher) {
+	if(mob == nullptr || boss == nullptr) {
 		return;
 	}
-	SET_BIT(mob->specials.act, ACT_MAGIC_USER);
-	mob->specials.spellfail = 0;
+	if(procarea_mob_has_magic_user(boss)) {
+		procarea_apply_standalone_class(mob, template_band, class_ctx, solo_mode,
+										solo_owner_is_basher);
+		return;
+	}
+	if(solo_mode && !solo_owner_is_basher) {
+		procarea_apply_roll_class(mob, ProcRollClass::Cleric);
+		return;
+	}
+	procarea_apply_roll_class(mob, number(0, 1) == 0 ? ProcRollClass::Cleric :
+													   ProcRollClass::Mage);
 }
 
 static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_slot,
 									  int template_band, ProcMobClassContext class_ctx,
-									  bool solo_mode, bool solo_owner_is_fighter) {
+									  bool solo_mode, bool solo_owner_is_basher,
+									  const char_data* boss_for_add,
+									  ProcBossRollClass* out_boss_roll) {
 	if(mob == nullptr) {
 		return;
 	}
 	mob->specials.act &= ~kProcClassActMask;
-	if(kind == ProcMobKind::Boss || kind == ProcMobKind::Trap) {
-		if(solo_mode && !solo_owner_is_fighter) {
+	if(kind == ProcMobKind::Trap) {
+		if(solo_mode && !solo_owner_is_basher) {
 			SET_BIT(mob->specials.act, ACT_CLERIC);
 		} else {
 			SET_BIT(mob->specials.act, ACT_MAGIC_USER | ACT_CLERIC);
@@ -569,25 +954,56 @@ static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_
 		mob->specials.spellfail = 0;
 		return;
 	}
+	if(kind == ProcMobKind::Boss) {
+		const ProcBossRollClass roll =
+			procarea_apply_boss_class(mob, solo_mode && !solo_owner_is_basher);
+		if(out_boss_roll != nullptr) {
+			*out_boss_roll = roll;
+		}
+		return;
+	}
 	if(kind != ProcMobKind::Normal) {
 		return;
 	}
 	if(add_slot >= 0) {
-		static constexpr unsigned long kAddClassOrder[] = {
-			ACT_WARRIOR,
-			ACT_CLERIC,
-			ACT_MAGIC_USER,
-		};
-		int idx = add_slot % static_cast<int>(std::size(kAddClassOrder));
-		if(solo_mode && !solo_owner_is_fighter && idx == 2) {
-			idx = number(0, 1);
+		if(boss_for_add != nullptr) {
+			procarea_apply_boss_add_class(mob, boss_for_add, template_band, class_ctx, solo_mode,
+										  solo_owner_is_basher);
+			return;
 		}
-		SET_BIT(mob->specials.act, kAddClassOrder[static_cast<size_t>(idx)]);
-		mob->specials.spellfail = (idx == 0) ? 101 : 0;
+		static constexpr ProcRollClass kAddClassOrder[] = {
+			ProcRollClass::Warrior,
+			ProcRollClass::Cleric,
+			ProcRollClass::Mage,
+			ProcRollClass::Thief,
+			ProcRollClass::Psi,
+			ProcRollClass::Druid,
+			ProcRollClass::Monk,
+			ProcRollClass::Barbarian,
+			ProcRollClass::Paladin,
+			ProcRollClass::Ranger,
+		};
+		static constexpr ProcRollClass kSoloNonFighterAddClassOrder[] = {
+			ProcRollClass::Warrior,
+			ProcRollClass::Cleric,
+			ProcRollClass::Thief,
+			ProcRollClass::Monk,
+			ProcRollClass::Barbarian,
+			ProcRollClass::Paladin,
+			ProcRollClass::Ranger,
+		};
+		if(solo_mode && !solo_owner_is_basher) {
+			const int idx =
+				add_slot % static_cast<int>(std::size(kSoloNonFighterAddClassOrder));
+			procarea_apply_roll_class(mob, kSoloNonFighterAddClassOrder[static_cast<size_t>(idx)]);
+		} else {
+			const int idx = add_slot % static_cast<int>(std::size(kAddClassOrder));
+			procarea_apply_roll_class(mob, kAddClassOrder[static_cast<size_t>(idx)]);
+		}
 		return;
 	}
 	procarea_apply_standalone_class(mob, template_band, class_ctx, solo_mode,
-									solo_owner_is_fighter);
+									solo_owner_is_basher);
 }
 
 static void procarea_apply_sentinel(char_data* mob, ProcMobKind kind, bool follow_anchor_sentinel,
@@ -986,11 +1402,13 @@ static char_data* procarea_spawn_scaled_mob(long room_vnum, int template_band, f
 											int add_slot,
 											ProcMobClassContext class_ctx,
 											bool solo_mode, float party_power_mult,
-											bool solo_owner_is_basher) {
+											bool solo_owner_is_basher,
+											const char_data* boss_for_add) {
 	const int archetype = procarea_pick_mob_archetype(theme_id, kind == ProcMobKind::Trap);
 	char_data* mob = procarea_create_mob(archetype, eq_index, template_band, group_max_level,
 										 kind, follow_anchor_sentinel, add_slot, class_ctx,
-										 solo_mode, party_power_mult, solo_owner_is_basher);
+										 solo_mode, party_power_mult, solo_owner_is_basher,
+										 boss_for_add);
 	if(mob == nullptr) {
 		mudlog(LOG_ERROR, "procarea: scaled spawn failed room %ld", room_vnum);
 		return nullptr;
@@ -2177,7 +2595,8 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 									  int group_max_level, ProcMobKind kind,
 									  bool follow_anchor_sentinel, int add_slot,
 									  ProcMobClassContext class_ctx, bool solo_mode,
-									  float party_power_mult, bool solo_owner_is_basher) {
+									  float party_power_mult, bool solo_owner_is_basher,
+									  const char_data* boss_for_add) {
 	if(archetype_index < 0 || archetype_index >= PROCAREA_ARCHETYPE_COUNT) {
 		mudlog(LOG_ERROR, "procarea: invalid archetype index %d", archetype_index);
 		return nullptr;
@@ -2226,12 +2645,18 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	}
 
 	procarea_apply_band_combat(mob, template_band, archetype_index);
+	procarea_apply_hold_defense(mob, kind);
 	procarea_apply_aggressive(mob, template_band, kind);
+	ProcBossRollClass boss_roll = ProcBossRollClass::Cleric;
 	procarea_apply_class_role(mob, kind, add_slot, template_band, class_ctx, solo_mode,
-							  solo_owner_is_basher);
+							  solo_owner_is_basher, boss_for_add, &boss_roll);
 	procarea_apply_sentinel(mob, kind, follow_anchor_sentinel, class_ctx);
 	procarea_scale_mob(mob, eq_index, template_band, group_max_level, kind, class_ctx, solo_mode,
 					   party_power_mult);
+	if(kind == ProcMobKind::Boss) {
+		procarea_apply_boss_class_buffs(mob, template_band, boss_roll);
+	}
+	procarea_sync_mob_weapon_dice(mob);
 
 	const int level = GET_LEVEL(mob, WARRIOR_LEVEL_IND);
 	mob->abilities.str = static_cast<ubyte>(MIN(10 + number(0, MAX(1, level / 5)), 18));
@@ -2353,7 +2778,7 @@ static void procarea_populate_room(const ProcAreaDifficulty& diff, long room_vnu
 				procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 										  diff.group_max_level, ProcMobKind::Normal, theme_id,
 										  true, i, ProcMobClassContext::Corridor, diff.solo_mode,
-										  diff.party_power_mult, diff.solo_owner_is_basher);
+										  diff.party_power_mult, diff.solo_owner_is_basher, boss);
 			if(add != nullptr) {
 				procarea_link_boss_add(add, boss);
 			}

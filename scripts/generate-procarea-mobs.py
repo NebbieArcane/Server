@@ -24,6 +24,7 @@ MARKER_START = "# Dimensione Effimera:"  # solo per export .mob opzionale (gener
 
 BOSS_VNUM_BASE = 65000
 BOSS_PER_TIER = 55
+MOB_POOL_SIZE = 150  # procarea_mob_catalog.MOB_COUNT / PROCAREA_MOB_POOL_SIZE
 MOB_VNUM_BASE = 65000
 MOBS_PER_TIER = 170
 ARCHETYPE_COUNT = 225
@@ -93,6 +94,9 @@ MASCULINE_FIRST = frozenset(
         "drago",
         "capo",
         "demone",
+        "diavolo",
+        "imp",
+        "manes",
         "gigante",
         "re",
         "lich",
@@ -769,7 +773,9 @@ def build_stats(desc: MobDesc, profile: TierProfile) -> tuple[str, str, str, str
 def archetype_index(desc: MobDesc) -> int:
     if desc.role == "boss":
         return desc.slot
-    return BOSS_PER_TIER + desc.slot
+    if desc.role == "mob":
+        return BOSS_PER_TIER + desc.slot
+    return BOSS_PER_TIER + MOB_POOL_SIZE + desc.slot
 
 
 def vnum_for(desc: MobDesc) -> int:
@@ -891,10 +897,13 @@ def combat_interp(desc: MobDesc, band_idx: int) -> dict[str, int | float]:
 
 
 def emit_band_stats_inc(archetypes: list[MobDesc], path: Path) -> None:
-    ordered = sorted(
-        archetypes,
-        key=lambda d: (0 if d.role == "boss" else 1, d.slot if d.role == "boss" else d.slot),
-    )
+    ordered = sorted(archetypes, key=archetype_index)
+    for idx, desc in enumerate(ordered):
+        if archetype_index(desc) != idx:
+            raise ValueError(
+                f"band stats row {idx} is {desc.role} {desc.slot} ({desc.short!r}), "
+                f"expected archetype index {idx}, got {archetype_index(desc)}"
+            )
     band_blocks: list[str] = []
     for band_idx in range(TEMPLATE_BANDS):
         rows: list[str] = []

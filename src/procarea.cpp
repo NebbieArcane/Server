@@ -251,7 +251,8 @@ static constexpr int kSoloVortexLifetimeSec = 45;
 /** PG melee/basher: boss e trappole in solitaria possono avere ACT_MAGIC_USER. */
 [[nodiscard]] static bool procarea_solo_owner_is_basher(char_data* ch) {
 	return ch != nullptr && IS_PC(ch) &&
-		   HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN | CLASS_RANGER);
+		   HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN | CLASS_RANGER |
+						  CLASS_CLERIC | CLASS_MONK);
 }
 
 /** Sentiero solitario: nessun compagno di gruppo (AFF_GROUP) in piazza con te. */

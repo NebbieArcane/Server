@@ -63,6 +63,7 @@ constexpr float PROCAREA_PARTY_EXTRA_MULT = 0.07f;
 
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
+constexpr int PROCAREA_MOB_WEAPON_OBJ = PROCAREA_MOB_VNUM_BASE + 2;
 
 /** Premi istanza: scudi indossabili su shield e back (65100+). */
 constexpr int PROCAREA_REWARD_SHIELD_VNUM_BASE = 65100;

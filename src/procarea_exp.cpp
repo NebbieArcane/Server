@@ -165,7 +165,8 @@ void procarea_archetype_pool_range(procarea_internal::ProcMobKind kind,
 	float factor = 1.0f;
 	const bool casts =
 		mob->specials.spellfail == 0 ||
-		IS_SET(mob->specials.act, ACT_MAGIC_USER | ACT_CLERIC | ACT_DRUID);
+		IS_SET(mob->specials.act,
+			   ACT_MAGIC_USER | ACT_CLERIC | ACT_DRUID | ACT_PSI | ACT_PALADIN | ACT_RANGER);
 	if(mob->specials.spellfail == 0) {
 		factor += 0.08f;
 	}
@@ -177,6 +178,15 @@ void procarea_archetype_pool_range(procarea_internal::ProcMobKind kind,
 	}
 	if(IS_SET(mob->specials.act, ACT_DRUID)) {
 		factor += 0.09f;
+	}
+	if(IS_SET(mob->specials.act, ACT_PSI)) {
+		factor += 0.10f;
+	}
+	if(IS_SET(mob->specials.act, ACT_PALADIN)) {
+		factor += 0.06f;
+	}
+	if(IS_SET(mob->specials.act, ACT_RANGER)) {
+		factor += 0.05f;
 	}
 	if(casts) {
 		const int spellpower = SpellpowerTotal(mob);
