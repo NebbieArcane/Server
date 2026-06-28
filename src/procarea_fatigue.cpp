@@ -7,7 +7,6 @@
 #include "structs.hpp"
 #include "utils.hpp"
 #include "handler.hpp"
-#include "comm.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_internal.hpp"
 #include "reception.hpp"
@@ -30,14 +29,20 @@ struct ProcareaFatigueState {
 
 std::unordered_map<std::string, ProcareaFatigueState> g_procarea_fatigue;
 
+/*
+ * tier 0 = run 1-3 piene; tier 1..5 = run 4..8+.
+ * Gear: 75 → 60 → 45 → 30 → 10 (−15/run, floor 10% dall'8ª).
+ * Decay hoard extra: ~25% del base.
+ * Oro: stessa pendenza (−14%/run), floor 30% dall'8ª.
+ */
 static constexpr int kProcFatigueGearBase[PROCAREA_FATIGUE_TIER_COUNT] = {
-	100, 75, 60, 48, 40, 35,
+	100, 75, 60, 45, 30, 10,
 };
 static constexpr int kProcFatigueGearDecay[PROCAREA_FATIGUE_TIER_COUNT] = {
-	25, 30, 35, 40, 42, 45,
+	25, 19, 15, 11, 8, 10,
 };
 static constexpr int kProcFatigueGoldPct[PROCAREA_FATIGUE_TIER_COUNT] = {
-	100, 85, 75, 65, 58, 55,
+	100, 86, 72, 58, 44, 30,
 };
 
 [[nodiscard]] std::string procarea_fatigue_key(const char* name) {
@@ -169,14 +174,39 @@ void procarea_fatigue_increment_name(const char* name, bool solo_mode) {
 	procarea_fatigue_store_state(name, state);
 }
 
-void procarea_fatigue_notify(char_data* ch, int treasure_tier) {
-	if(ch == nullptr || !IS_PC(ch) || treasure_tier <= 0) {
-		return;
+[[nodiscard]] static float procarea_fatigue_group_effective_clears(
+	const procarea_internal::ProcAreaInstance& inst) {
+	std::unordered_set<std::string> names;
+	auto track = [&](const char* name) {
+		if(name != nullptr && *name != '\0') {
+			names.insert(name);
+		}
+	};
+
+	track(inst.owner_name.c_str());
+	for(const std::string& member : inst.member_names) {
+		track(member.c_str());
 	}
-	send_to_char(
-		"$c0010La bruma riconosce chi l'ha gia' attraversata oggi:$c0007 "
-		"le reliquie effimere si formano piu' lentamente.\n\r",
-		ch);
+	if(names.empty()) {
+		return 0.0f;
+	}
+
+	float sum = 0.0f;
+	int peak = 0;
+	for(const std::string& name : names) {
+		const int clears = procarea_fatigue_clears_for_name(name.c_str(), false);
+		sum += static_cast<float>(clears);
+		peak = std::max(peak, clears);
+	}
+	const float avg = sum / static_cast<float>(names.size());
+	return PROCAREA_GROUP_FATIGUE_AVG_WEIGHT * avg +
+		   PROCAREA_GROUP_FATIGUE_MAX_WEIGHT * static_cast<float>(peak);
+}
+
+[[nodiscard]] static int procarea_fatigue_group_tier_for_instance(
+	const procarea_internal::ProcAreaInstance& inst) {
+	return procarea_fatigue_tier_from_effective_clears(
+		procarea_fatigue_group_effective_clears(inst));
 }
 
 } // namespace
@@ -186,15 +216,29 @@ int procarea_fatigue_day_id() {
 }
 
 int procarea_fatigue_tier_from_clears(int clears_before) {
-	if(clears_before < PROCAREA_FATIGUE_FULL_CLEARS) {
+	return procarea_fatigue_tier_from_effective_clears(static_cast<float>(clears_before));
+}
+
+int procarea_fatigue_tier_from_effective_clears(float effective_clears) {
+	if(effective_clears < static_cast<float>(PROCAREA_FATIGUE_FULL_CLEARS)) {
 		return 0;
 	}
-	return std::clamp(clears_before - (PROCAREA_FATIGUE_FULL_CLEARS - 1), 1,
-					  PROCAREA_FATIGUE_TIER_COUNT - 1);
+	const int tier =
+		static_cast<int>(effective_clears - static_cast<float>(PROCAREA_FATIGUE_FULL_CLEARS - 1) +
+						 0.5f);
+	return std::clamp(tier, 1, PROCAREA_FATIGUE_TIER_COUNT - 1);
 }
 
 int procarea_fatigue_tier_for_name(const std::string& name, bool solo_mode) {
 	return procarea_fatigue_tier_from_clears(procarea_fatigue_clears_for_name(name.c_str(), solo_mode));
+}
+
+int procarea_fatigue_solo_clears_for_name(const char* name) {
+	return procarea_fatigue_clears_for_name(name, true);
+}
+
+int procarea_fatigue_group_clears_for_name(const char* name) {
+	return procarea_fatigue_clears_for_name(name, false);
 }
 
 int procarea_fatigue_gear_drop_pct(int hoard_index, int fatigue_tier) {
@@ -205,23 +249,37 @@ int procarea_fatigue_gear_drop_pct(int hoard_index, int fatigue_tier) {
 	return std::max(0, base - decay * (hoard - 1));
 }
 
+int procarea_fatigue_gold_drop_pct(int fatigue_tier) {
+	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
+	return kProcFatigueGoldPct[tier];
+}
+
 bool procarea_fatigue_roll_gold(int fatigue_tier) {
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
 	const int pct = kProcFatigueGoldPct[tier];
 	return pct >= 100 || number(0, 99) < pct;
 }
 
+float procarea_fatigue_group_effective_clears_for_instance(
+	const procarea_internal::ProcAreaInstance& inst) {
+	return procarea_fatigue_group_effective_clears(inst);
+}
+
 int procarea_fatigue_treasure_tier_for_instance(const procarea_internal::ProcAreaInstance& inst) {
-	if(!inst.owner_name.empty()) {
-		return procarea_fatigue_tier_for_name(inst.owner_name, inst.solo_mode);
+	if(inst.solo_mode) {
+		if(!inst.owner_name.empty()) {
+			return procarea_fatigue_tier_for_name(inst.owner_name, true);
+		}
+		for(const std::string& member : inst.member_names) {
+			return procarea_fatigue_tier_for_name(member, true);
+		}
+		return 0;
 	}
-	for(const std::string& member : inst.member_names) {
-		return procarea_fatigue_tier_for_name(member, inst.solo_mode);
-	}
-	return 0;
+	return procarea_fatigue_group_tier_for_instance(inst);
 }
 
 void procarea_fatigue_on_boss_killed(procarea_internal::ProcAreaInstance& inst, int treasure_tier) {
+	(void)treasure_tier;
 	std::unordered_set<std::string> names;
 	auto track = [&](const char* name) {
 		if(name != nullptr && *name != '\0') {
@@ -238,36 +296,6 @@ void procarea_fatigue_on_boss_killed(procarea_internal::ProcAreaInstance& inst, 
 
 	for(const std::string& name : names) {
 		procarea_fatigue_increment_name(name.c_str(), inst.solo_mode);
-	}
-
-	if(treasure_tier <= 0) {
-		return;
-	}
-
-	std::unordered_set<char_data*> notified;
-	auto notify = [&](char_data* ch) {
-		if(ch == nullptr || !IS_PC(ch)) {
-			return;
-		}
-		if(notified.insert(ch).second) {
-			procarea_fatigue_notify(ch, treasure_tier);
-		}
-	};
-
-	for(long vnum : inst.room_vnums) {
-		struct room_data* rp = real_roomp(vnum);
-		if(rp == nullptr) {
-			continue;
-		}
-		for(char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
-			notify(ch);
-		}
-	}
-	for(const std::string& member : inst.member_names) {
-		notify(get_char(member.c_str()));
-	}
-	if(!inst.owner_name.empty()) {
-		notify(get_char(inst.owner_name.c_str()));
 	}
 }
 

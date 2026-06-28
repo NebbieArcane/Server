@@ -2969,8 +2969,6 @@ void spell_identify(byte level, struct char_data* ch,
 		for(i=0; i<MAX_OBJ_AFFECT; i++) {
 			if((obj->affected[i].location != APPLY_NONE) &&
 					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location != APPLY_SPELLPOWER) &&
-					(obj->affected[i].location != APPLY_HITNSP) &&
 					(obj->affected[i].location !=APPLY_SKIP))
 			{
 				if(!found)
