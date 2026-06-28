@@ -317,10 +317,22 @@ void AppendConditionSuffix(std::string& text, int percent, bool useColorFormatti
 	}
 }
 
+void NormalizeObjectRoomDescription(std::string& text) {
+	for(char& c : text) {
+		if(c == '\n' || c == '\r') {
+			c = ' ';
+		}
+	}
+	while(!text.empty() && text.back() == ' ') {
+		text.pop_back();
+	}
+}
+
 bool FillObjectBaseText(struct obj_data* object, struct char_data* ch, int mode,
                         std::string& buffer) {
 	if((mode == 0) && object->description && *object->description) {
 		buffer = object->description;
+		NormalizeObjectRoomDescription(buffer);
 		CapitalizeGameLabel(buffer);
 		return true;
 	}

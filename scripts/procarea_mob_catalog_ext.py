@@ -359,7 +359,7 @@ def get_traps() -> list[dict[str, Any]]:
            "Un freddo che non appartiene a questo mondo.",
            "L'ombra avvolge.", "Sussurro gelido.",
            themes=[MIST, CRYPT, PROFANED, DEAD_PATHS, RAVENLOFT]),
-        _A("RACE_ELEMENT", "trappola fulmine runico", "Fulmine Runico",
+        _A("RACE_ELEMENT", "trappola fulmine runica", "Fulmine Runico",
            "Rune sul pavimento scatenano fulmini a catena.",
            "Odore di ozono riempie la stanza.",
            "Il fulmine colpisce.", "Tuono improvviso.",

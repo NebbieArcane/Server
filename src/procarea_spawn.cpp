@@ -2510,7 +2510,7 @@ void sync_party_power_scale(ProcAreaInstance& inst) {
 	procarea_echo_to_instance_pcs(
 		inst,
 		"\n\r$c0010La bruma effimera trema:\n\r"
-		"nuove presenze piegano l'aldilà, e i suoi custodi si risvegliano più feroci.$c0007\n\r");
+		"nuove presenze piegano l'aldila', e i suoi custodi si risvegliano piu' feroci.$c0007\n\r");
 	mudlog(LOG_CHECK,
 		   "procarea: instance %d party scale %d PG (mult %.2f -> %.2f, delta %.3f)",
 		   inst.id, new_size, old_mult, new_mult, delta);
@@ -2532,80 +2532,70 @@ static constexpr ProcRewardShieldTpl kProcRewardShields[PROCAREA_REWARD_SHIELD_C
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 0,
 		"disco velo bruma opalescente",
 		"un disco opalescente del velo brumoso",
-		"Un disco opalescente giace a terra: la nebbia lo tiene composto\n"
-		"come vetro appena soffiato, pronto a proteggere chi esce dal velo.\n",
+		"Un disco opalescente giace a terra: la nebbia lo tiene composto.",
 		4, ITEM_RESISTANT, 0, 500, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 1,
 		"scudo bruma crepuscolo",
 		"uno scudo del crepuscolo brumoso",
-		"La lamiera e' sottile ma densa di vapori gelidi;\n"
-		"sembra nata per chi esplora ancora con cautela il velo.\n",
+		"La lamiera e' sottile ma densa di vapori gelidi.",
 		5, ITEM_RESISTANT, 0, 950, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 2,
 		"scudo runa sigillo pulsante",
 		"uno scudo dal sigillo pulsante",
-		"Runi argentate si accendono e si spengono sulla lamiera;\n"
-		"il sigillo regge finche' qualcuno osa ancora reggerlo.\n",
+		"Rune argentate si accendono e si spengono sulla lamiera.",
 		5, ITEM_RESISTANT, 0, 1200, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 3,
-		"rotella runa eco spenta",
-		"una rotella dall'eco spenta",
-		"Il metallo trattiene un'eco di incantesimi interrotti;\n"
-		"le rune lampeggiano appena quando qualcuno si avvicina.\n",
+		"scudo runa eco spenta",
+		"uno scudo dell'eco spenta",
+		"Il metallo trattiene un'eco di incantesimi interrotti.",
 		6, ITEM_RESISTANT, 0, 1700, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 4,
 		"buckler nebbia piazza specchiata",
 		"un buckler dalla Piazza specchiata",
-		"La superficie riflette la Piazza delle Nebbie anche lontano da Myst:\n"
-		"vapori gelidi gli danno forma e lo rendono leggero come un sospiro.\n",
+		"La superficie riflette la Piazza delle Nebbie anche lontano da Myst.",
 		7, ITEM_RESISTANT, 0, 2200, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 5,
 		"scudo nebbia soglia intermedia",
 		"uno scudo della soglia intermedia",
-		"E' stato forgiato dove il velo si fa piu' denso e la nebbia pesa come ferro;\n"
-		"chi lo regge sente la dimensione stringersi attorno a se'.\n",
+		"Forgiato dove il velo e' piu' denso e la nebbia pesa come ferro.",
 		8, ITEM_RESISTANT, 0, 2850, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 6,
-		"pavise varco croce darkstar",
-		"un pavise dalla croce DarkStar",
-		"Sul bordo e' incisa la croce obliqua di DarkStar;\n"
-		"pare forgiato per chi torna dal tempio nella foresta con le mani ancora fredde.\n",
+		"pavese varco croce darkstar",
+		"un pavese dalla croce DarkStar",
+		"Sul bordo e' incisa la croce obliqua di DarkStar.",
 		9, ITEM_RESISTANT, 0, 3500, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 7,
 		"scudo custode lamiera vigilata",
 		"uno scudo di lamiera vigilata",
-		"La lamiera porta segni di guardie effimere che non hanno mai ceduto;\n"
-		"e' pesante, ma regge colpi che non dovrebbero esistere fuori dal velo.\n",
+		"La lamiera porta segni di guardie effimere che non hanno mai ceduto.",
 		9, ITEM_RESISTANT, 0, 4250, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 8,
 		"scudo custode lamiera finale",
 		"uno scudo di lamiera finale",
-		"Frammenti di sala finale e sigilli spezzati sono fusi nella lamiera:\n"
-		"e' un trofeo che non dovrebbe esistere fuori dalla Dimensione Effimera.\n",
+		"Frammenti di sala finale e sigilli spezzati sono fusi nella lamiera.",
 		10, ITEM_RESISTANT, 0, 5000, 0,
 	},
 	{
 		PROCAREA_REWARD_SHIELD_VNUM_BASE + 9,
 		"scudo eclisse disco assorbente",
 		"uno scudo disco assorbente",
-		"La lamiera non riflette nulla: assorbe la luce come il varco stesso.\n"
-		"Chi lo regge porta seco l'eco della dimensione ancora aperta.\n",
+		"La lamiera non riflette nulla: assorbe la luce come il varco stesso.",
 		12, ITEM_RESISTANT, 0, 7500, 0,
 	},
 };
@@ -2765,8 +2755,7 @@ static void procarea_build_reward_gear_text(const ProcRewardGearSlotDef& def, in
 		std::snprintf(name, name_len, "reliquia dimensione effimera");
 		std::snprintf(short_descr, short_len, "una reliquia della dimensione effimera");
 		std::snprintf(description, desc_len,
-					  "Il metallo sembra trattenuto da rune instabili:\n"
-					  "e' un premio nato nella Dimensione Effimera, fuori dal tempo di Myst.\n");
+					  "Rune instabili lo tengono fuori dal tempo di Myst.");
 		return;
 	}
 	std::snprintf(name, name_len, "%s", entry->keywords);

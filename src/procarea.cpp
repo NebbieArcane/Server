@@ -796,7 +796,7 @@ static void procarea_invoke_fountain_veil(struct char_data* ch) {
 	if(!g_fountain_veil.spirit_dismissed) {
 		send_to_char(
 			"L'acqua resiste, ancora protetta da un residuo divino.\n\r"
-			"Allontana prima lo spirito della Dea $c0014tirando via lafontana$c0007.\n\r",
+			"Allontana prima lo spirito della Dea $c0014tirando via la fontana$c0007.\n\r",
 			ch);
 		return;
 	}
@@ -1927,7 +1927,7 @@ static void procarea_append_mobs_by_kind(std::ostringstream& info, const ProcAre
 static void procarea_append_fatigue_immortal_info(std::ostringstream& info,
 												  const ProcAreaInstance& inst) {
 	const int today = procarea_fatigue_day_id();
-	info << "Fatigue (giorno " << today << ", reset a mezzanotte locale):\n\r";
+	info << "Affaticamento (giorno " << today << ", reset a mezzanotte locale):\n\r";
 
 	const int locked_tier = inst.treasure_fatigue_tier;
 	const int predicted_tier = procarea_fatigue_treasure_tier_for_instance(inst);
@@ -1935,17 +1935,17 @@ static void procarea_append_fatigue_immortal_info(std::ostringstream& info,
 	const int gear_pct = procarea_fatigue_gear_drop_pct(1, tier);
 	const int gold_pct = procarea_fatigue_gold_drop_pct(tier);
 
-	info << "  Tier tesoro: " << tier;
+	info << "  Fascia tesoro: " << tier;
 	if(locked_tier > 0) {
-		info << " (fissato al boss)";
+		info << " (fissata al custode)";
 	} else {
-		info << " (previsto pre-boss)";
+		info << " (prevista pre-custode)";
 	}
-	info << " | gear 1° hoard " << gear_pct << "% | oro " << gold_pct << "%\n\r";
+	info << " | premio al 1° cumulo " << gear_pct << "% | oro " << gold_pct << "%\n\r";
 
 	if(!inst.solo_mode) {
 		const float effective = procarea_fatigue_group_effective_clears_for_instance(inst);
-		info << "  Gruppo effective clears: " << std::fixed << std::setprecision(1) << effective
+		info << "  Clear di gruppo effettive: " << std::fixed << std::setprecision(1) << effective
 			 << " (80% media + 20% picco)\n\r";
 	}
 
@@ -1969,8 +1969,8 @@ static void procarea_append_fatigue_immortal_info(std::ostringstream& info,
 		const int group = procarea_fatigue_group_clears_for_name(name.c_str());
 		const int solo_tier = procarea_fatigue_tier_for_name(name, true);
 		const int group_tier = procarea_fatigue_tier_for_name(name, false);
-		info << "  " << name << ": solo " << solo << " (tier " << solo_tier << ") | gruppo "
-			 << group << " (tier " << group_tier << ")";
+		info << "  " << name << ": solo " << solo << " (fascia " << solo_tier << ") | gruppo "
+			 << group << " (fascia " << group_tier << ")";
 		if(!inst.owner_name.empty() && name == inst.owner_name) {
 			info << " [capo]";
 		}
@@ -1985,7 +1985,7 @@ static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaI
 
 	std::ostringstream info;
 	info << "$c0011--- Vista immortale ---$c0007\n\r";
-	procarea_append_mobs_by_kind(info, inst, ProcMobKind::Boss, "Boss: ");
+	procarea_append_mobs_by_kind(info, inst, ProcMobKind::Boss, "Custode: ");
 	procarea_append_mobs_by_kind(info, inst, ProcMobKind::Trap, "Trappole: ");
 
 	if(inst.treasure_vnums.empty()) {
@@ -2058,7 +2058,7 @@ static void procarea_append_treasure_status(std::ostringstream& info,
 			info << ", " << unclaimed
 				 << (unclaimed == 1 ? " non ancora aperto" : " non ancora aperti");
 		}
-		info << " | $c0010bottino rilasciato$c0007 — raccogli loot a terra nelle stanze tesoro.\n\r";
+		info << " | $c0010bottino rilasciato$c0007 — raccogli il bottino a terra nelle stanze tesoro.\n\r";
 	} else {
 		info << total << (total == 1 ? " cumulo sigillato" : " cumuli sigillati");
 		info << " | sigilli attivi finche' vive il custode della dimensione.\n\r";
@@ -2166,11 +2166,11 @@ ACTION_FUNC(do_antro) {
 			"  1) $c0014touch fontana$c0007 — apre un vortice personale\n\r"
 			"  2) $c0014entra nel vortice$c0007 — entra subito (il vortice scompare)\n\r"
 			"Dentro o con istanza attiva:\n\r"
-			"  $c0014dimensione info$c0007 — stato run, nemici, tesori, portale\n\r"
+			"  $c0014dimensione info$c0007 — stato, nemici, tesori, portale\n\r"
 			"  $c0014pray darkstar aiuto$c0007 — tempio di rifugio o rientro\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
-			"Tesoro: abbatti il custode della dimensione — i cumuli si aprono e il loot cade a terra\n\r"
+			"Tesoro: abbatti il custode della dimensione — i cumuli si aprono e il bottino cade a terra\n\r"
 			"nelle stanze del tesoro; raccoglilo prima di uscire.\n\r",
 			ch);
 		return;

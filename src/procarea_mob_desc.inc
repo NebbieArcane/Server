@@ -1816,7 +1816,7 @@ MOB_DESC(1, trap, 17, RACE_GHOST,
 	"Sussurro gelido.")
 
 MOB_DESC(1, trap, 18, RACE_ELEMENT,
-	"trappola fulmine runico",
+	"trappola fulmine runica",
 	"Fulmine Runico",
 	"Rune sul pavimento scatenano fulmini a catena.",
 	"Odore di ozono riempie la stanza.",
