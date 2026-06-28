@@ -2041,6 +2041,79 @@ static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaI
 	send_to_char(info.str().c_str(), ch);
 }
 
+[[nodiscard]] static const char* procarea_loot_fortune_phrase(int tier) {
+	switch(std::clamp(tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1)) {
+	case 0:
+		return "ricchezza eccezionale";
+	case 1:
+		return "buona fortuna";
+	case 2:
+		return "fortuna discreta";
+	case 3:
+		return "fortuna modesta";
+	case 4:
+		return "scarse ricompense";
+	default:
+		return "ricompense pessime";
+	}
+}
+
+[[nodiscard]] static const char* procarea_hoard_discovery_phrase(int hoards, int rooms) {
+	if(hoards <= 0) {
+		return "non percepisci alcun cumulo sigillato";
+	}
+	const int explorable = std::max(1, rooms - 2);
+	if(hoards >= 4 || hoards * 100 >= explorable * 12) {
+		return "piu' sentieri odorano d'oro sigillato - scovare un cumulo ti sembra facile";
+	}
+	if(hoards >= 2 || hoards * 100 >= explorable * 6) {
+		return "da qualche ramo laterale arriva un flebile profumo di metallo sigillato";
+	}
+	if(hoards == 1) {
+		return "un solo cumulo sembra celato da qualche parte - esplora i rami laterali";
+	}
+	return "scovare un cumulo richiedera' pazienza";
+}
+
+static void procarea_append_treasure_prognosis(std::ostringstream& info,
+											   const ProcAreaInstance& inst) {
+	if(inst.treasure_vnums.empty()) {
+		return;
+	}
+
+	const int hoards = static_cast<int>(inst.treasure_vnums.size());
+	const int rooms = static_cast<int>(inst.room_vnums.size());
+	const int locked_tier = inst.treasure_fatigue_tier;
+	const int tier =
+		locked_tier > 0 ? locked_tier : procarea_fatigue_treasure_tier_for_instance(inst);
+	const char* loot_fortune = procarea_loot_fortune_phrase(tier);
+	const char* discovery = procarea_hoard_discovery_phrase(hoards, rooms);
+
+	if(inst.boss_key_dropped) {
+		info << "Con la caduta del custode percepisci che il bottino lascera' $c0010" << loot_fortune
+			 << "$c0007.\n\r";
+	} else {
+		info << "Un brivido effimero ti attraversa: oltre il custode il bottino promette $c0010"
+			 << loot_fortune << "$c0007";
+		if(locked_tier > 0) {
+			info << " - la sorte del bottino e' gia' decisa";
+		} else if(tier == 0) {
+			info << " - le prime run del giorno sono ancora generose";
+		} else if(tier >= 4) {
+			info << " - l'affaticamento di oggi ne smorza il lustro";
+		}
+		info << ".\n\r";
+	}
+
+	info << "Nell'aria cela";
+	if(hoards == 1) {
+		info << " almeno un cumulo sigillato";
+	} else {
+		info << "no almeno " << hoards << " cumuli sigillati";
+	}
+	info << "; " << discovery << ".\n\r";
+}
+
 static void procarea_append_treasure_status(std::ostringstream& info,
 											const ProcAreaInstance& inst) {
 	if(inst.treasure_vnums.empty()) {
@@ -2062,7 +2135,7 @@ static void procarea_append_treasure_status(std::ostringstream& info,
 			info << ", " << unclaimed
 				 << (unclaimed == 1 ? " non ancora aperto" : " non ancora aperti");
 		}
-		info << " | $c0010bottino rilasciato$c0007 — raccogli il bottino a terra nelle stanze tesoro.\n\r";
+		info << " | $c0010bottino rilasciato$c0007 - raccogli il bottino a terra nelle stanze tesoro.\n\r";
 	} else {
 		info << total << (total == 1 ? " cumulo sigillato" : " cumuli sigillati");
 		info << " | sigilli attivi finche' vive il custode della dimensione.\n\r";
@@ -2143,6 +2216,7 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 		info << "Uscita: il portale si aprira' nella sala finale quando la dimensione sara' ripulita.\n\r";
 	}
 
+	procarea_append_treasure_prognosis(info, inst);
 	procarea_append_treasure_status(info, inst);
 
 	info << "Ripiego: $c0014pray darkstar aiuto$c0007 (tempio o rientro).\n\r";
@@ -2163,19 +2237,19 @@ ACTION_FUNC(do_antro) {
 			"$c0014=== Dimensione Effimera ===$c0007\n\r"
 			"In $c0014Piazza delle Nebbie$c0007 (Fontana della Vita):\n\r"
 			"  $c0010Gruppo:$c0007\n\r"
-			"  1) $c0014pull fontana$c0007 — allontana lo spirito di DarkStar\n\r"
-			"  2) $c0014push fontana$c0007 — evoca il velo di nebbia\n\r"
-			"  3) $c0014enter nebbia$c0007 — entra con tutto il gruppo in piazza\n\r"
+			"  1) $c0014pull fontana$c0007 - allontana lo spirito di DarkStar\n\r"
+			"  2) $c0014push fontana$c0007 - evoca il velo di nebbia\n\r"
+			"  3) $c0014enter nebbia$c0007 - entra con tutto il gruppo in piazza\n\r"
 			"  $c0010Solitario:$c0007 (senza compagni di gruppo in piazza)\n\r"
-			"  1) $c0014touch fontana$c0007 — apre un vortice personale\n\r"
-			"  2) $c0014entra nel vortice$c0007 — entra subito (il vortice scompare)\n\r"
+			"  1) $c0014touch fontana$c0007 - apre un vortice personale\n\r"
+			"  2) $c0014entra nel vortice$c0007 - entra subito (il vortice scompare)\n\r"
 			"Dentro o con istanza attiva:\n\r"
-			"  $c0014dimensione info$c0007 — stato, nemici, tesori, portale\n\r"
-			"  $c0014pray darkstar aiuto$c0007 — tempio di rifugio o rientro\n\r"
-			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 — 1000 frammenti → 1 runa degli Dei\n\r"
+			"  $c0014dimensione info$c0007 - stato, nemici, tesori, portale\n\r"
+			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
+			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - 1000 frammenti -> 1 runa degli Dei\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
-			"Tesoro: abbatti il custode della dimensione — i cumuli si aprono e il bottino cade a terra\n\r"
+			"Tesoro: abbatti il custode della dimensione - i cumuli si aprono e il bottino cade a terra\n\r"
 			"nelle stanze del tesoro; raccoglilo prima di uscire.\n\r",
 			ch);
 		return;
@@ -2214,7 +2288,7 @@ ACTION_FUNC(do_antro) {
 		if(inst == nullptr) {
 			send_to_char(
 				"Non hai una Dimensione Effimera attiva.\n\r"
-				"Gruppo: pull/push/enter nebbia — solitario: touch fontana/entra nel vortice.\n\r",
+				"Gruppo: pull/push/enter nebbia - solitario: touch fontana/entra nel vortice.\n\r",
 				ch);
 			return;
 		}
@@ -2225,7 +2299,7 @@ ACTION_FUNC(do_antro) {
 	send_to_char(
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione esci$c0007 (sala finale)\n\r"
-		"Piazza gruppo: pull → push → enter nebbia | solitario: touch fontana → entra nel vortice\n\r",
+		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r",
 		ch);
 }
 

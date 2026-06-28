@@ -95,6 +95,10 @@ struct ProcAreaInstance {
 	std::unordered_map<std::string, long> member_saved_load_room;
 	std::unordered_map<std::string, int> member_saved_start_room;
 	std::unordered_map<std::string, int> member_saved_hometown;
+	/** Somma |alignment| dei mob buoni (>=350) gia' spawnati in questa istanza. */
+	int align_good_sum = 0;
+	/** Somma |alignment| dei mob malvagi (<=-350) gia' spawnati in questa istanza. */
+	int align_evil_sum = 0;
 };
 
 struct ProcAreaDifficulty {
