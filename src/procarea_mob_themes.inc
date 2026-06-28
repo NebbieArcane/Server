@@ -164,7 +164,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	2201170748672ull, /* idx 157 Drow Guerriero */
 	2201170748672ull, /* idx 158 Elfo Ombra */
 	2201170748672ull, /* idx 159 Elfo Esiliato */
-	2201170748672ull, /* idx 160 Fey Corrotto */
+	2201170748672ull, /* idx 160 Fey Corrotta */
 	2201170748672ull, /* idx 161 Elfo Spettrale */
 	2201170748672ull, /* idx 162 Drow Assassino */
 	2201170748672ull, /* idx 163 Elfo Custode */

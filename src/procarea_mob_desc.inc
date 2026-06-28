@@ -1313,10 +1313,10 @@ MOB_DESC(1, mob, 104, RACE_ELVEN,
 
 MOB_DESC(1, mob, 105, RACE_PLANAR,
 	"fey corrotto",
-	"Fey Corrotto",
-	"Una creatura fey distorta danza nel buio.",
+	"Fey Corrotta",
+	"Una fey corrotta danza nel buio.",
 	"Ali spezzate e sorriso crudele.",
-	"Il fey confonde.",
+	"La fey confonde.",
 	"Risate argentine e false.")
 
 MOB_DESC(1, mob, 106, RACE_GHOST,

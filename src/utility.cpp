@@ -9502,7 +9502,7 @@ void FORGET(struct char_data* ch, int spl) {
 }
 
 /* return the amount max a person can memorize a single spell */
-int SpellpowerFromInt(struct char_data* ch) {
+int SpellpowerFromInt(const struct char_data* ch) {
 	if(ch == nullptr) {
 		return 0;
 	}
@@ -9510,7 +9510,7 @@ int SpellpowerFromInt(struct char_data* ch) {
 	return (intel > SPELLPOWER_INT_BASELINE) ? (intel - SPELLPOWER_INT_BASELINE) : 0;
 }
 
-int SpellpowerTotal(struct char_data* ch) {
+int SpellpowerTotal(const struct char_data* ch) {
 	if(ch == nullptr) {
 		return 0;
 	}

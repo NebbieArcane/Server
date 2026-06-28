@@ -485,7 +485,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_DARK_ELF", "drow guerriero", "Drow Guerriero", "Un guerriero drow in armatura di mithril scuro.", "Scudo e spada coordinati.", "Il guerriero falcia.", "Armatura elfica."),
             _A("RACE_ELVEN", "elfo ombra", "Elfo Ombra", "Un elfo corrotto dalla bruma brandisce arco lungo.", "Occhi vuoti e movenze fluide.", "L'elfo scocca.", "Frecce nel buio."),
             _A("RACE_ELVEN", "elfo esiliato", "Elfo Esiliato", "Un elfo esiliato combatte con spada sottile.", "Mantello strappato e sguardo amaro.", "L'esiliato attacca.", "Passi silenziosi."),
-            _A("RACE_PLANAR", "fey corrotto", "Fey Corrotto", "Una creatura fey distorta danza nel buio.", "Ali spezzate e sorriso crudele.", "Il fey confonde.", "Risate argentine e false."),
+            _A("RACE_PLANAR", "fey corrotto", "Fey Corrotta", "Una fey corrotta danza nel buio.", "Ali spezzate e sorriso crudele.", "La fey confonde.", "Risate argentine e false."),
             _A("RACE_GHOST", "elfo spettrale", "Elfo Spettrale", "Un elfo morto da secoli vaga senza riposo.", "Armatura elfica ancora lucente.", "L'elfo spettrale colpisce.", "Lamento elfico."),
             _A("RACE_DARK_ELF", "drow assassino", "Drow Assassino", "Un assassino drow attende immobile.", "Veleno gocciola dalla lama.", "L'assassino colpisce alle spalle.", "Silenzio mortale."),
             _A("RACE_ELVEN", "elfo custode", "Elfo Custode", "Un custode elfico protegge un passaggio antico.", "Rune elfiche brillano sull'arco.", "Il custode scocca.", "Canti elfici lontani."),

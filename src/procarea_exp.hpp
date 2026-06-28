@@ -14,9 +14,11 @@ enum class ProcMobKind;
 /** Fascia PG 0..7: newbie, allievo, apprendista, iniziato, esperto, maestro, barone, principe. */
 [[nodiscard]] int procarea_pc_tier(int group_max_level);
 
-/** XP sul mob alla spawn: stessa curva in solitaria e in gruppo (HP restano scalati). */
-[[nodiscard]] int procarea_compute_mob_exp(int group_max_level, int effective_band,
-											procarea_internal::ProcMobKind kind, bool solo_mode);
+/** XP sul mob alla spawn: base per tier/fascia/tipo, moltiplicata per minaccia reale. */
+[[nodiscard]] int procarea_compute_mob_exp(const char_data* mob, int group_max_level,
+											int effective_band,
+											procarea_internal::ProcMobKind kind,
+											int archetype_index);
 
 /** Mob runtime procarea (nr==-1) in stanza istanza. */
 [[nodiscard]] bool procarea_is_procarea_victim(const char_data* victim);

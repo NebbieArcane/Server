@@ -404,6 +404,7 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 		"regina", "dama", "matriarca", "larva", "rana", "anguilla", "voce", "divinita",
 		"arpia", "sentinella", "vipera", "gelatina", "mimica", "ragnatela", "nube", "porta",
 		"trappola", "marea", "fessura", "vespa", "polvere", "madre", "matrona", "ombra",
+		"fey",
 	};
 	if(kMasculineFirst.count(std::string(lower_first)) != 0) {
 		return false;
@@ -1286,7 +1287,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return false;
 }
 
-/** Caster (spellpower) e melee (damroll, hit&dam) sono mutuamente esclusivi. */
+/** hit&dam, damroll e hitroll sono mutuamente esclusivi tra loro; dam vs spellpower idem. */
 [[nodiscard]] static bool procarea_shield_bonus_allowed(const struct obj_data* obj, int location) {
 	if(obj == nullptr) {
 		return false;
@@ -1294,18 +1295,25 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	if(procarea_shield_bonus_used(obj, location)) {
 		return false;
 	}
+	const bool has_hitndam = procarea_shield_bonus_used(obj, APPLY_HITNDAM);
+	const bool has_damroll = procarea_shield_bonus_used(obj, APPLY_DAMROLL);
+	const bool has_hitroll = procarea_shield_bonus_used(obj, APPLY_HITROLL);
 	const bool has_spellpower = procarea_shield_bonus_used(obj, APPLY_SPELLPOWER);
-	const bool has_melee =
-		procarea_shield_bonus_used(obj, APPLY_DAMROLL) ||
-		procarea_shield_bonus_used(obj, APPLY_HITNDAM);
-	if(has_spellpower &&
-	   (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
+	const bool has_dam = has_hitndam || has_damroll;
+
+	if(has_hitndam && (location == APPLY_DAMROLL || location == APPLY_HITROLL)) {
 		return false;
 	}
-	if(has_melee && location == APPLY_SPELLPOWER) {
+	if((has_damroll || has_hitroll) && location == APPLY_HITNDAM) {
 		return false;
 	}
-	if(has_melee && !has_spellpower && location == APPLY_SPELLFAIL) {
+	if(has_spellpower && (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
+		return false;
+	}
+	if(has_dam && location == APPLY_SPELLPOWER) {
+		return false;
+	}
+	if(has_dam && !has_spellpower && location == APPLY_SPELLFAIL) {
 		return false;
 	}
 	return true;
@@ -2240,8 +2248,8 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 			static_cast<sbyte>(MAX(20 - level, 2));
 	}
 
-	GET_EXP(mob) =
-		procarea_compute_mob_exp(group_max_level, template_band, kind, solo_mode);
+	GET_EXP(mob) = procarea_compute_mob_exp(mob, group_max_level, template_band, kind,
+											archetype_index);
 
 	mob->nr = -1;
 	mob->generic = procarea_archetype_vnum(archetype_index, template_band);

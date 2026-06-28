@@ -148,6 +148,7 @@ FEMININE_FIRST = frozenset(
         "fessura",
         "vespa",
         "polvere",
+        "fey",
     }
 )
 MASC_PLURAL_FIRST = frozenset({"scheletri"})
