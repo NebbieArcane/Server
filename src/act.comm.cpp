@@ -42,6 +42,7 @@
 #include "maximums.hpp"
 #include "multiclass.hpp"
 #include "procarea.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "regen.hpp"
 #include "signals.hpp"    // for PopStatus, PushStatus
 #include "spells.hpp"
@@ -1745,6 +1746,9 @@ ACTION_FUNC(do_pray) {
 	mudlog(LOG_CHECK, "%s ha pregato %s", GET_NAME(ch), godName.data());
 
 	if(!strcasecmp(godName.data(), "darkstar")) {
+		if(procarea_try_convert_rune_fragments(ch, arg)) {
+			return;
+		}
 		if(procarea_try_darkstar_aid(ch, arg)) {
 			return;
 		}

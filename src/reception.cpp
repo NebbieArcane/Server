@@ -2326,6 +2326,9 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 			ch->specials.procarea_fatigue_group = std::max(0, group);
 		}
 	}
+	else if(!strcmp(tag, "procarea_rune_frg")) {
+		ch->specials.procarea_rune_fragments = std::max(0, atoi(value));
+	}
 	else if(!strcmp(tag, "email")) {
 		RECREATE(GET_EMAIL(ch), char, std::strlen(value) + 1);
 		std::strcpy(GET_EMAIL(ch), replace(const_cast<char*>(value), '\n', '\0'));
@@ -2760,6 +2763,12 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 		}
 	}
 
+	if(IS_PC(ch) && ch->specials.procarea_rune_fragments > 0) {
+		char vbuf[16];
+		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rune_fragments);
+		extra_insert_pref(db, toon_id, "procarea_rune_frg", vbuf);
+	}
+
 	if(ch->specials.A_list) {
 		for(int i = 0; i < 10; ++i) {
 			if(!GET_ALIAS(ch, i)) {
@@ -2836,6 +2845,60 @@ void procarea_fatigue_save_mysql(const char* name, int day_id, int solo_clears, 
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "procarea_fatigue_save_mysql(%s): %s", name, e.what());
+	}
+}
+
+bool procarea_rune_fragments_load_mysql(const char* name, int& fragments) {
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string sql =
+		"SELECT pref_value FROM character_prefs WHERE toon_id = " + std::to_string(pg->id) +
+		" AND pref_key = 'procarea_rune_frg' LIMIT 1";
+	MYSQL_RES* res = nullptr;
+	if(!extra_mysql_query(db, sql, res) || res == nullptr) {
+		return false;
+	}
+
+	bool found = false;
+	if(MYSQL_ROW row = mysql_fetch_row(res); row != nullptr && row[0] != nullptr) {
+		fragments = std::max(0, atoi(row[0]));
+		found = true;
+	}
+	mysql_free_result(res);
+	return found;
+}
+
+void procarea_rune_fragments_save_mysql(const char* name, int fragments) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "procarea_rune_fragments_save_mysql: missing toon for %s", name);
+		return;
+	}
+
+	char vbuf[16];
+	std::snprintf(vbuf, sizeof(vbuf), "%d", std::max(0, fragments));
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		extra_insert_pref(db, pg->id, "procarea_rune_frg", vbuf);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "procarea_rune_fragments_save_mysql(%s): %s", name, e.what());
 	}
 }
 

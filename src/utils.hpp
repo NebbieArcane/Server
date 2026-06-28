@@ -249,6 +249,7 @@ namespace Alarmud {
 
 //#define GET_PQUEST(ch)  ((ch)->points.pQuest)
 #define GET_RUNEDEI(ch)  ((ch)->points.pRuneDei)
+#define GET_PROCAREA_RUNE_FRAGMENTS(ch) ((ch)->specials.procarea_rune_fragments)
 
 #define GET_BANK(ch)    ((ch)->points.bankgold)
 

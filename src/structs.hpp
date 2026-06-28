@@ -710,6 +710,8 @@ struct char_special_data {
 	int procarea_fatigue_day;
 	int procarea_fatigue_solo;
 	int procarea_fatigue_group;
+	/** Frammenti di runa degli Dei da Dimensione Effimera (character_prefs). */
+	int procarea_rune_fragments;
 
 	char* poofin;
 	char* poofout;

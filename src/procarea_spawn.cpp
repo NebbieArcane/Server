@@ -20,6 +20,7 @@
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "procarea_internal.hpp"
+#include "procarea_exp.hpp"
 #include "procarea_fatigue.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
@@ -2160,17 +2161,8 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 			static_cast<sbyte>(MAX(20 - level, 2));
 	}
 
-	GET_EXP(mob) = DetermineExp(mob, 0) + mob->points.gold;
-	if(IS_SET(mob->specials.act, ACT_WIMPY)) {
-		GET_EXP(mob) -= GET_EXP(mob) / 10;
-	}
-	if(IS_SET(mob->specials.act, ACT_AGGRESSIVE)) {
-		GET_EXP(mob) += GET_EXP(mob) / 10;
-		if(!IS_SET(mob->specials.act, ACT_WIMPY) ||
-		   IS_SET(mob->specials.act, ACT_META_AGG)) {
-			GET_EXP(mob) += GET_EXP(mob) / 2;
-		}
-	}
+	GET_EXP(mob) =
+		procarea_compute_mob_exp(group_max_level, template_band, kind, solo_mode);
 
 	mob->nr = -1;
 	mob->generic = procarea_archetype_vnum(archetype_index, template_band);

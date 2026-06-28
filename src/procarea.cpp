@@ -21,6 +21,7 @@
 #include "procarea.hpp"
 #include "procarea_internal.hpp"
 #include "procarea_fatigue.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
@@ -1503,6 +1504,8 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 		return;
 	}
 
+	procarea_rune_fragments_on_mob_death(victim, *inst);
+
 	if(victim->commandp == static_cast<int>(ProcMobKind::Boss)) {
 		const int treasure_tier = procarea_fatigue_treasure_tier_for_instance(*inst);
 		inst->treasure_fatigue_tier = treasure_tier;
@@ -2168,6 +2171,7 @@ ACTION_FUNC(do_antro) {
 			"Dentro o con istanza attiva:\n\r"
 			"  $c0014dimensione info$c0007 — stato, nemici, tesori, portale\n\r"
 			"  $c0014pray darkstar aiuto$c0007 — tempio di rifugio o rientro\n\r"
+			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 — 1000 frammenti → 1 runa degli Dei\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
 			"Tesoro: abbatti il custode della dimensione — i cumuli si aprono e il bottino cade a terra\n\r"

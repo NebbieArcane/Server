@@ -49,6 +49,7 @@
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "parser.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
 #include "snew.hpp"
@@ -3231,6 +3232,13 @@ ACTION_FUNC(do_score) {
 	runesMsg += std::to_string(static_cast<int>(GET_RUNEDEI(ch)));
 	runesMsg += " ";
 	act(runesMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+
+	std::string fragmentsMsg = "$c0005Frammenti di runa raccolti: $c0015";
+	fragmentsMsg += std::to_string(procarea_rune_fragments_get(ch));
+	fragmentsMsg += "$c0005 (";
+	fragmentsMsg += std::to_string(PROCAREA_RUNE_FRAGMENTS_PER_RUNE);
+	fragmentsMsg += " per una runa degli Dei) ";
+	act(fragmentsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	switch(GET_POS(ch)) {
 	case POSITION_DEAD :
