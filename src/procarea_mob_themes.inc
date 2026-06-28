@@ -224,7 +224,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	16777216ull, /* idx 217 Polvere di Sale Tagliente */
 	17592320266242ull, /* idx 218 Scheletri del Sepolcro */
 	562954248398976ull, /* idx 219 Fessura Infernale */
-	262656ull, /* idx 220 Vespa di Caverna */
+	262656ull, /* idx 220 Vespe di Caverna */
 	8858634241ull, /* idx 221 Worg della Fossa */
 	70385924055046ull, /* idx 222 Ombra Maledetta */
 	42950066192ull, /* idx 223 Fulmine Runico */

@@ -344,7 +344,7 @@ def get_traps() -> list[dict[str, Any]]:
            "Zolfo e artigli emergono dal baratro.",
            "La fessura brucia.", "Odore di zolfo.",
            themes=[PROFANED, ABYSS, FIRE, NINE_HELLS, GORGOROTH]),
-        _A("RACE_INSECT", "trappola vespa caverna", "Vespa di Caverna",
+        _A("RACE_INSECT", "trappola vespa caverna", "Vespe di Caverna",
            "Vespe di caverna escono da un nido nascosto.",
            "Pungiglioni lunghi gocciolano veleno.",
            "Le vespe attaccano.", "Ronzio furioso.",

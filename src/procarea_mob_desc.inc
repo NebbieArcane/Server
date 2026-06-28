@@ -2,7 +2,7 @@
  * Testi mob Dimensione Effimera (225 archetipi).
  * Generato da scripts/generate-procarea-mobs.py — non editare a mano.
  *
- * short_title: titolo senza articolo; procarea.cpp aggiunge Un/Una/Lo/L'.
+ * short_title: titolo senza articolo; procarea_spawn.cpp aggiunge Il/La/Gli/Le.
  * long_desc: frase di presenza in stanza (con articolo).
  * look / sound: procarea.cpp aggiunge \n\r in spawn.
  * agg: messaggio aggressivita' (player.sounds).
@@ -1793,7 +1793,7 @@ MOB_DESC(1, trap, 14, RACE_DEMON,
 
 MOB_DESC(1, trap, 15, RACE_INSECT,
 	"trappola vespa caverna",
-	"Vespa di Caverna",
+	"Vespe di Caverna",
 	"Vespe di caverna escono da un nido nascosto.",
 	"Pungiglioni lunghi gocciolano veleno.",
 	"Le vespe attaccano.",

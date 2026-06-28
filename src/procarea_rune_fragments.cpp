@@ -166,8 +166,9 @@ void procarea_grant_fragments_split(const std::vector<char_data*>& pcs, int tota
 			msg << "\n\r$c0010La trappola lascia cadere un frammento di runa: $c0014+" << grant
 				<< " frammenti$c0007 (totale " << new_total << ").\n\r";
 		} else {
-			msg << "$c0010Raccogli $c0014" << grant
-				<< " frammenti di runa$c0007 (totale " << new_total << ").\n\r";
+			msg << "$c0010Raccogli $c0015" << grant
+				<< "$c0010 frammenti di runa$c0007 (totale $c0015" << new_total
+				<< "$c0010).\n\r";
 		}
 		send_to_char(msg.str().c_str(), pcs[i]);
 	}

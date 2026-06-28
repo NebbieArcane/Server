@@ -316,8 +316,10 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 
 [[nodiscard]] static bool procarea_short_has_article(std::string_view text) {
 	static constexpr std::string_view kArticles[] = {
-		"Un ", "Una ", "Il ", "Lo ", "La ", "L'", "Uno ", "Un' ",
-		"un ", "una ", "il ", "lo ", "la ", "uno ", "un'",
+		"Il ", "Lo ", "La ", "L'", "Gli ", "Le ", "I ",
+		"Un ", "Una ", "Uno ", "Un' ",
+		"il ", "lo ", "la ", "gli ", "le ", "i ",
+		"un ", "una ", "uno ", "un'",
 	};
 	for(const std::string_view prefix : kArticles) {
 		if(text.size() >= prefix.size() &&
@@ -341,7 +343,85 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	return out;
 }
 
-[[nodiscard]] static std::string procarea_article_short(std::string_view title) {
+[[nodiscard]] static bool procarea_first_uses_lo_form(std::string_view lower_first) {
+	static const std::unordered_set<std::string> kLoForms = {
+		"gnomo", "scheletro", "spettro",
+	};
+	if(kLoForms.count(std::string(lower_first)) != 0) {
+		return true;
+	}
+	if(lower_first.size() >= 2 && lower_first[0] == 's' && lower_first[1] != 'a' &&
+	   lower_first[1] != 'e' && lower_first[1] != 'i' && lower_first[1] != 'o' &&
+	   lower_first[1] != 'u' && lower_first[1] != 'h') {
+		return true;
+	}
+	return !lower_first.empty() &&
+		   (lower_first[0] == 'z' || lower_first.rfind("gn", 0) == 0 ||
+			lower_first.rfind("ps", 0) == 0 || lower_first.rfind("pn", 0) == 0);
+}
+
+[[nodiscard]] static bool procarea_first_uses_l_apostrophe(std::string_view lower_first) {
+	static const std::unordered_set<std::string> kLApostrophe = {
+		"alfa", "esecutore", "ermite", "oracolo", "araldo", "augusto", "antico", "avatar",
+		"arpione", "ombra", "augure", "arconte", "archivista", "erinia", "anguilla",
+		"aracnide", "ape",
+	};
+	if(kLApostrophe.count(std::string(lower_first)) != 0) {
+		return true;
+	}
+	return !lower_first.empty() &&
+		   (lower_first[0] == 'a' || lower_first[0] == 'e' || lower_first[0] == 'i' ||
+			lower_first[0] == 'o' || lower_first[0] == 'u');
+}
+
+[[nodiscard]] static bool procarea_title_is_feminine_plural(std::string_view lower_first) {
+	static const std::unordered_set<std::string> kFemPlural = {
+		"vespe", "rondini", "liane", "tarantole", "api",
+	};
+	return kFemPlural.count(std::string(lower_first)) != 0;
+}
+
+[[nodiscard]] static bool procarea_title_is_plural(std::string_view lower_first) {
+	static const std::unordered_set<std::string> kMascPlural = {
+		"scheletri",
+	};
+	if(kMascPlural.count(std::string(lower_first)) != 0 ||
+	   procarea_title_is_feminine_plural(lower_first)) {
+		return true;
+	}
+	return lower_first.size() >= 5 && lower_first.back() == 'i';
+}
+
+[[nodiscard]] static bool procarea_title_is_feminine(std::string_view lower_first, int sex) {
+	static const std::unordered_set<std::string> kMasculineFirst = {
+		"predatore", "signore", "custode", "drago", "capo", "demone", "gigante", "re", "lich",
+		"principe", "balrog", "goblin", "troll", "ghoul", "vampiro", "ent", "capobanda",
+		"sovrano", "arconte", "oracolo", "guerriero", "ragno", "worg", "parassito", "fulmine",
+		"cristallo", "ghiaccio", "serpente", "fantasma", "scheletro", "spettro", "orco", "alfa",
+		"guardiano", "insetto", "pipistrello",
+	};
+	static const std::unordered_set<std::string> kFeminineFirst = {
+		"regina", "dama", "matriarca", "larva", "rana", "anguilla", "voce", "divinita",
+		"arpia", "sentinella", "vipera", "gelatina", "mimica", "ragnatela", "nube", "porta",
+		"trappola", "marea", "fessura", "vespa", "polvere", "madre", "matrona", "ombra",
+	};
+	if(kMasculineFirst.count(std::string(lower_first)) != 0) {
+		return false;
+	}
+	if(kFeminineFirst.count(std::string(lower_first)) != 0 ||
+	   procarea_title_is_feminine_plural(lower_first)) {
+		return true;
+	}
+	if(sex == SEX_FEMALE) {
+		return true;
+	}
+	if(sex == SEX_MALE) {
+		return false;
+	}
+	return lower_first.size() > 1 && lower_first.back() == 'a' && lower_first != "arma";
+}
+
+[[nodiscard]] static std::string procarea_article_short(std::string_view title, int sex) {
 	std::string s(title);
 	if(s.empty() || procarea_short_has_article(s)) {
 		return s;
@@ -352,41 +432,35 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 		c = procarea_lower_first(c);
 	}
 	const std::string body = procarea_lower_first(s);
+	const bool plural = procarea_title_is_plural(lower_first);
+	const bool feminine = procarea_title_is_feminine(lower_first, sex);
 
-	static const std::unordered_set<std::string> kLoFirst = {
-		"gnomo", "scheletro", "spettro",
-	};
-	static const std::unordered_set<std::string> kLApostropheFirst = {
-		"alfa", "esecutore", "ermite", "oracolo", "araldo", "augusto", "antico", "avatar",
-		"arpione", "ombra", "augure", "arconte", "archivista", "erinia",
-	};
-	static const std::unordered_set<std::string> kUnaFirst = {
-		"regina", "dama", "matriarca", "larva", "rana", "anguilla", "voce", "divinita",
-		"arpia", "sentinella",
-	};
+	if(plural) {
+		if(procarea_title_is_feminine_plural(lower_first) ||
+		   (feminine && lower_first.back() == 'e')) {
+			return "Le " + body;
+		}
+		if(procarea_first_uses_lo_form(lower_first) ||
+		   procarea_first_uses_l_apostrophe(lower_first)) {
+			return "Gli " + body;
+		}
+		return "I " + body;
+	}
 
-	if(kLoFirst.count(lower_first) != 0) {
+	if(feminine) {
+		if(procarea_first_uses_l_apostrophe(lower_first)) {
+			return "L'" + body;
+		}
+		return "La " + body;
+	}
+
+	if(procarea_first_uses_lo_form(lower_first)) {
 		return "Lo " + body;
 	}
-	if(kLApostropheFirst.count(lower_first) != 0 ||
-	   (!lower_first.empty() && lower_first[0] == 'a')) {
+	if(procarea_first_uses_l_apostrophe(lower_first)) {
 		return "L'" + body;
 	}
-	if(kUnaFirst.count(lower_first) != 0 ||
-	   (lower_first.size() > 1 && lower_first.back() == 'a' && lower_first != "arma")) {
-		return "Una " + body;
-	}
-	if(lower_first.size() >= 2 && lower_first[0] == 's' &&
-	   lower_first[1] != 'a' && lower_first[1] != 'e' && lower_first[1] != 'i' &&
-	   lower_first[1] != 'o' && lower_first[1] != 'u' && lower_first[1] != 'h') {
-		return "Uno " + body;
-	}
-	if(!lower_first.empty() &&
-	   (lower_first[0] == 'z' || lower_first.rfind("gn", 0) == 0 ||
-		lower_first.rfind("ps", 0) == 0 || lower_first.rfind("pn", 0) == 0)) {
-		return "Uno " + body;
-	}
-	return "Un " + body;
+	return "Il " + body;
 }
 
 [[nodiscard]] static char* procarea_dup_text(const char* text, bool trailing_crlf) {
@@ -2115,7 +2189,12 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	mob->specials.spellfail = 101;
 	mob->specials.mobtype = 'L';
 
-	const std::string short_desc = procarea_article_short(text.short_title);
+	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	const int archetype =
+		std::clamp(archetype_index, 0, PROCAREA_ARCHETYPE_COUNT - 1);
+	const ProcArchetypeCombat& combat = kProcBandCombat[band][archetype];
+	const std::string short_desc =
+		procarea_article_short(text.short_title, combat.sex);
 	mob->player.name = strdup(text.keywords != nullptr ? text.keywords : "");
 	mob->player.short_descr = strdup(short_desc.c_str());
 	mob->player.long_descr = procarea_dup_text(text.long_desc, true);
