@@ -2013,7 +2013,7 @@ ACTION_FUNC(do_cast) {
 				}
 			}
 			else {
-				if(GetMaxLevel(ch) < IMMORTALE) {
+				if(IS_PC(ch) && GetMaxLevel(ch) < IMMORTALE) {
 					if(GET_MANA(ch) < (int)USE_MANA(ch, (int)spl) ||
 							GET_MANA(ch) <=0)
                     {
@@ -2131,8 +2131,10 @@ ACTION_FUNC(do_cast) {
 						}
 					}
 					else {
-						GET_MANA(ch) -= (cost >> 1);
-						alter_mana(ch,0);
+						if(IS_PC(ch)) {
+							GET_MANA(ch) -= (cost >> 1);
+							alter_mana(ch,0);
+						}
 					}
 
 					LearnFromMistake(ch, spl, 0, 95);
@@ -2196,8 +2198,10 @@ ACTION_FUNC(do_cast) {
 					FORGET(ch, spl);
 				}
 				else {
-					GET_MANA(ch) -= cost;
-					alter_mana(ch,0);
+					if(IS_PC(ch)) {
+						GET_MANA(ch) -= cost;
+						alter_mana(ch,0);
+					}
 				}
 				/* Ogni spell ha una costante INTRINSECA di malvagita
 				 * che non dipende dal bersaglio

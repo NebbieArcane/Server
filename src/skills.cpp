@@ -6187,7 +6187,7 @@ ACTION_FUNC(do_blessing) {
 			return;
 		}
 
-	if(GET_MANA(ch)<GET_LEVEL(ch,PALADIN_LEVEL_IND)*2) {
+	if(IS_PC(ch) && GET_MANA(ch)<GET_LEVEL(ch,PALADIN_LEVEL_IND)*2) {
 		send_to_char("You haven't the spiritual resources to do that now.\n\r",ch);
 		return;
 	}
@@ -6199,8 +6199,10 @@ ACTION_FUNC(do_blessing) {
 
 	if(number(1,101)>ch->skills[SKILL_BLESSING].learned) {
 		send_to_char("You fail in the bestow your gods blessing.\n\r",ch);
-		GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND);
-		alter_mana(ch,0);
+		if(IS_PC(ch)) {
+			GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND);
+			alter_mana(ch,0);
+		}
 		LearnFromMistake(ch, SKILL_BLESSING, 0, 95);
 		return;
 	}
@@ -6210,8 +6212,10 @@ ACTION_FUNC(do_blessing) {
 		return;
 	}
 
-	GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND)*2;
-	alter_mana(ch,0);
+	if(IS_PC(ch)) {
+		GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND)*2;
+		alter_mana(ch,0);
+	}
 	factor=0;
 	if(ch==dude) {
 		factor++;
